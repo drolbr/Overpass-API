@@ -1,0 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+       "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Testseite</title>
+</head>
+<body>
+
+<h1>Das hier k&ouml;nnen Sie absenden!</h1>
+
+<p>Es werden keine Daten gespeichert, das verarbeitende
+CGI-Script gibt lediglich die eingelesenen Daten aus.</p>
+
+<form action="cgi-bin/cgi-test" method="post">
+  <table border="0" cellpadding="5" cellspacing="0" bgcolor="#E0E0E0">
+    <tr>
+      <td align="right">Vorname:</td>
+      <td><input name="Vorname" type="text" size="30" maxlength="30"></td>
+    </tr>
+    <tr>
+      <td align="right">Zuname:</td>
+      <td><input name="Zuname" type="text" size="30" maxlength="40"></td>
+    </tr>
+    <tr>
+      <td align="right" valign="top">Kommentar:</td>
+      <td><textarea name="Text" rows="10" cols="50"></textarea></td>
+    </tr>
+    <tr>
+      <td align="right">Formular:</td>
+      <td>
+        <input type="submit" value=" Absenden ">
+      </td>
+    </tr>
+  </table>
+</form>
+
+</body>
+</html>

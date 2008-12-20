@@ -15,6 +15,7 @@
  */
 
 #include <string>
+#include <sstream>
 
 #include <string.h>
 #include <stdio.h>
@@ -41,17 +42,17 @@ void (*working_end)(const char*);
 //for the XMLParser
 char Buff[BUFFSIZE];
 
-const uint MAXCOUNT = 1048576;
-uint counter(MAXCOUNT);
+// const uint MAXCOUNT = 1048576;
+// uint counter(MAXCOUNT);
 
 static void XMLCALL
 expat_wrapper_start(void *data, const char *el, const char **attr)
 {
-  if (--counter == 0)
-  {
-    cerr<<'.';
-    counter = MAXCOUNT;
-  }
+//   if (--counter == 0)
+//   {
+//     cerr<<'.';
+//     counter = MAXCOUNT;
+//   }
 
   working_start(el, attr);
   
@@ -101,4 +102,53 @@ void parse(FILE* in,
   }
 
   XML_ParserFree(p);
+}
+
+int current_line_number(-1);
+
+string parse(string input,
+	   void (*start)(const char*, const char**),
+		  void (*end)(const char*))
+{
+  working_start = start;
+  working_end = end;
+  
+  XML_Parser p = XML_ParserCreate(NULL);
+  if (! p) {
+    return "Couldn't allocate memory for parser\n";
+  }
+
+  XML_SetElementHandler(p, expat_wrapper_start, expat_wrapper_end);
+
+//   len = input.size();
+//   if (len < BUFFSIZE-1)
+//     Buff = ;
+//   else
+//   {
+//     Buff = input.substr(0, BUFFSIZE-1).c_str();
+//     len = BUFFSIZE-1;
+//   }
+
+  int done(0);
+  int len = input.size();
+  if (len > BUFFSIZE-1)
+  {
+    len = BUFFSIZE-1;
+    strcpy(Buff, input.substr(0, len).c_str());
+  }
+  else
+    strcpy(Buff, input.c_str());
+  
+  if (XML_Parse(p, Buff, len, done) == XML_STATUS_ERROR) {
+    ostringstream temp;
+    temp<<"Parse error at line "<<XML_GetCurrentLineNumber(p)<<":\n"
+	<<XML_ErrorString(XML_GetErrorCode(p))<<'\n';
+    current_line_number = XML_GetCurrentLineNumber(p);
+    return temp.str();
+  }
+
+  XML_ParserFree(p);
+  
+  current_line_number = 0;
+  return "";
 }
