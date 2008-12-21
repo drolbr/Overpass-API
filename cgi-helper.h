@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <stdlib.h>
+#include "expat_justparse_interface.h"
 
 using namespace std;
 
@@ -83,16 +84,15 @@ string cgi_form_to_text()
 }
 
 string input;
-int line_offset(0);
 
 void return_error(string error, int type = 0)
 {
   cout<<"Content-type: text/html\n\n";
   
-  cout<<"<html>\n<head>\n<title>Error!</title>\n</head>\n<body>\n<pre>";
+  cout<<"<html>\n<head>\n<title>Parsing Error!</title>\n</head>\n<body>\n<pre>";
 
-  if (current_line_number >= 0)
-    cout<<"The following error has occured in line "<<(current_line_number + line_offset)
+  if (current_line_number() >= 0)
+    cout<<"The following error has occured in line "<<current_line_number()
 	<<" while parsing the input:\n\n";
   else
     cout<<"The following error has occured while parsing the input:\n\n";
@@ -101,7 +101,7 @@ void return_error(string error, int type = 0)
   cout<<"-- Begin of Input --\n";
   unsigned int pos(0);
   unsigned int line_number(1);
-  if ((current_line_number >= 0) && (current_line_number + line_offset == 1))
+  if (current_line_number() == 1)
   {
     cout<<"<strong>";
   }
@@ -110,13 +110,14 @@ void return_error(string error, int type = 0)
     if (input[pos] == '\n')
     {
       ++line_number;
-      if ((current_line_number >= 0) && ((int)line_number == current_line_number + line_offset))
+      if ((current_line_number() >= 0) && ((int)line_number == current_line_number()))
       {
 	cout<<input.substr(0, pos)<<"\n<strong>";
 	input = input.substr(pos+1);
 	pos = 0;
       }
-      else if ((current_line_number >= 0) && ((int)line_number == current_line_number + line_offset + 1))
+      else if ((current_line_number() >= 0) && ((int)line_number
+		== current_line_number() + 1))
       {
 	cout<<input.substr(0, pos)<<"\n</strong>";
 	input = input.substr(pos+1);

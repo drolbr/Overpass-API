@@ -359,6 +359,69 @@ void Return_Statement_3execute(map< string, Set >& maps)
   }
 }
 
+void Return_Statement_4execute(map< string, Set >& maps)
+{
+  string arg;
+  map< string, Set >::const_iterator mit(maps.find(arg));
+  if (mit != maps.end())
+  {
+    
+    //With blockwise direct execution: ~100s per million rows at BLOCKSIZE = 10000
+    //and keys and values - it doesn't affect the speed
+    for (set< unsigned int >::const_iterator it(mit->second.get_nodes().begin());
+	 it != mit->second.get_nodes().end(); )
+    {
+      ostringstream temp;
+      temp<<"select nodes.id, lat, lon, key_s.key_, value_s.value_ "
+	  <<"from nodes left outer join node_tags on node_tags.id = nodes.id "
+	  <<"left outer join key_s on node_tags.key_ = key_s.id "
+	  <<"left outer join value_s on node_tags.value_ = value_s.id "
+	  <<"where nodes.id in ("<<*it;
+      unsigned int i(0);
+      while (((++it) != mit->second.get_nodes().end()) && (i++ < 10000))
+	temp<<", "<<*it;
+      temp<<") order by nodes.id";
+      mysql_query(mysql, temp.str().c_str());
+  
+      MYSQL_RES* result(mysql_store_result(mysql));
+      if (result)
+      {
+	MYSQL_ROW row(mysql_fetch_row(result));
+	while (row)
+	{
+	  if ((row[3]) && (row[4]))
+	  {
+	    cout<<"<node id=\""<<row[0]
+		<<"\" lat=\""<<atof(row[1])/10000000
+		<<"\" lon=\""<<atof(row[2])/10000000<<"\">\n";
+	    unsigned int current_id = atoi(row[0]);
+	    while ((row) && ((unsigned int)(atol(row[0])) == current_id))
+	    {
+	      if ((row[3]) && (row[4]))
+		cout<<"  <tag k=\""<<row[3]<<"\" v=\""<<row[4]<<"\"/>\n";
+	      row = mysql_fetch_row(result);
+	    }
+	    cout<<"</node>\n";
+	  }
+	  else
+	  {
+	    cout<<"<node id=\""<<row[0]
+		<<"\" lat=\""<<atof(row[1])/10000000
+		<<"\" lon=\""<<atof(row[2])/10000000<<"\"/>\n";
+	    row = mysql_fetch_row(result);
+	  }
+	}
+      }
+    }
+    for (set< unsigned int >::const_iterator it(mit->second.get_ways().begin());
+	 it != mit->second.get_ways().end(); ++it)
+      cout<<"<way id=\""<<*it<<"\"/>\n";
+    for (set< unsigned int >::const_iterator it(mit->second.get_relations().begin());
+	 it != mit->second.get_relations().end(); ++it)
+      cout<<"<relation id=\""<<*it<<"\"/>\n";
+  }
+}
+
 void assign_attributes(map< string, string >& attributes, const char **attr)
 {
   for (unsigned int i(0); attr[i]; i += 2)

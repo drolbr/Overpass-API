@@ -14,6 +14,9 @@
  * Must be used with Expat compiled for UTF-8 output.
  */
 
+#ifndef EXPAT_JUSTPARSE_INTERFACE
+#define EXPAT_JUSTPARSE_INTERFACE
+
 #include <string>
 #include <sstream>
 
@@ -104,7 +107,16 @@ void parse(FILE* in,
   XML_ParserFree(p);
 }
 
-int current_line_number(-1);
+XML_Parser p;
+int line_offset(0);
+
+int current_line_number()
+{
+  if (p)
+    return (XML_GetCurrentLineNumber(p) + line_offset);
+  else
+    return -1;
+}
 
 string parse(string input,
 	   void (*start)(const char*, const char**),
@@ -113,7 +125,7 @@ string parse(string input,
   working_start = start;
   working_end = end;
   
-  XML_Parser p = XML_ParserCreate(NULL);
+  p = XML_ParserCreate(NULL);
   if (! p) {
     return "Couldn't allocate memory for parser\n";
   }
@@ -143,12 +155,12 @@ string parse(string input,
     ostringstream temp;
     temp<<"Parse error at line "<<XML_GetCurrentLineNumber(p)<<":\n"
 	<<XML_ErrorString(XML_GetErrorCode(p))<<'\n';
-    current_line_number = XML_GetCurrentLineNumber(p);
     return temp.str();
   }
 
   XML_ParserFree(p);
   
-  current_line_number = 0;
   return "";
 }
+
+#endif

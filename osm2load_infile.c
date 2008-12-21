@@ -199,6 +199,30 @@ void start(const char *el, const char **attr)
 	    key = key.substr(i+1);
 	    i = 0;
 	  }
+	  else if (key[i] == '"')
+	  {
+	    keys_out<<key<<"&quot;";
+	    key = key.substr(i+1);
+	    i = 0;
+	  }
+	  else if (key[i] == '&')
+	  {
+	    keys_out<<key<<"&amp;";
+	    key = key.substr(i+1);
+	    i = 0;
+	  }
+	  else if (key[i] == '<')
+	  {
+	    keys_out<<key<<"&lt;";
+	    key = key.substr(i+1);
+	    i = 0;
+	  }
+	  else if (key[i] == '>')
+	  {
+	    keys_out<<key<<"&gt;";
+	    key = key.substr(i+1);
+	    i = 0;
+	  }
 	  else
 	    ++i;
 	}
@@ -225,6 +249,30 @@ void start(const char *el, const char **attr)
 	  else if (value[i] == '\n')
 	  {
 	    values_out<<value<<"\\\n";
+	    value = value.substr(i+1);
+	    i = 0;
+	  }
+	  else if (value[i] == '"')
+	  {
+	    values_out<<value<<"&quot;";
+	    value = value.substr(i+1);
+	    i = 0;
+	  }
+	  else if (value[i] == '&')
+	  {
+	    values_out<<value<<"&amp;";
+	    value = value.substr(i+1);
+	    i = 0;
+	  }
+	  else if (value[i] == '<')
+	  {
+	    values_out<<value<<"&lt;";
+	    value = value.substr(i+1);
+	    i = 0;
+	  }
+	  else if (value[i] == '>')
+	  {
+	    values_out<<value<<"&gt;";
 	    value = value.substr(i+1);
 	    i = 0;
 	  }
@@ -290,6 +338,30 @@ void start(const char *el, const char **attr)
 	  else if (role[i] == '\n')
 	  {
 	    member_roles_out<<role<<"\\\n";
+	    role = role.substr(i+1);
+	    i = 0;
+	  }
+	  else if (role[i] == '"')
+	  {
+	    member_roles_out<<role<<"&quot;";
+	    role = role.substr(i+1);
+	    i = 0;
+	  }
+	  else if (role[i] == '&')
+	  {
+	    member_roles_out<<role<<"&amp;";
+	    role = role.substr(i+1);
+	    i = 0;
+	  }
+	  else if (role[i] == '<')
+	  {
+	    member_roles_out<<role<<"&lt;";
+	    role = role.substr(i+1);
+	    i = 0;
+	  }
+	  else if (role[i] == '>')
+	  {
+	    member_roles_out<<role<<"&gt;";
 	    role = role.substr(i+1);
 	    i = 0;
 	  }
