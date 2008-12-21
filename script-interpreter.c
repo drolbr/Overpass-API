@@ -116,8 +116,8 @@ void eval_cstr_array(string element, map< string, string >& attributes, const ch
     else
     {
       ostringstream temp;
-      temp<<"Unknown attribute \""<<attr[i]<<"\" in element \""<<element<<'"'
-	  <<" in line "<<current_line_number()<<'!';
+      temp<<"In Line "<<current_line_number()
+	  <<": Unknown attribute \""<<attr[i]<<"\" in element \""<<element<<"\".";
       static_errors.push_back(Error(temp.str(), current_line_number()));
     }
   }
@@ -126,8 +126,8 @@ void eval_cstr_array(string element, map< string, string >& attributes, const ch
 void substatement_error(string parent, Statement* child)
 {
   ostringstream temp;
-  temp<<"Element \""<<child->get_name()<<"\" cannot be subelement of element \""<<parent<<'"'
-      <<". Line: "<<current_line_number();
+  temp<<"In Line "<<current_line_number()
+      <<": Element \""<<child->get_name()<<"\" cannot be subelement of element \""<<parent<<"\".";
   static_errors.push_back(Error(temp.str(), current_line_number()));
   
   delete child;
@@ -419,6 +419,7 @@ void Id_Query_Statement::execute(map< string, Set >& maps)
       temp.str("");
       temp<<"select ref, role from relation_way_members "
 	  <<"where relation_way_members.id = "<<ref;
+      delete result;
       result = mysql_query_wrapper(temp.str());
       if (!result)
 	return;
@@ -437,6 +438,7 @@ void Id_Query_Statement::execute(map< string, Set >& maps)
       temp.str("");
       temp<<"select ref, role from relation_relation_members "
 	  <<"where relation_relation_members.id = "<<ref;
+      delete result;
       result = mysql_query_wrapper(temp.str());
       if (!result)
 	return;
@@ -455,6 +457,7 @@ void Id_Query_Statement::execute(map< string, Set >& maps)
       relations.insert(relation);
     }
   }
+  delete result;
   
   maps[output] = Set(nodes, ways, relations);
 }
@@ -474,17 +477,39 @@ class Print_Statement : public Statement
     
   private:
     string input;
+    unsigned int mode;
 };
+
+const unsigned int PRINT_IDS_ONLY = 1;
+const unsigned int PRINT_SKELETON = 2;
+const unsigned int PRINT_BODY = 3;
 
 void Print_Statement::set_attributes(const char **attr)
 {
   map< string, string > attributes;
   
   attributes["set"] = "_";
+  attributes["mode"] = "skeleton";
   
   eval_cstr_array("print", attributes, attr);
   
   input = attributes["set"];
+  
+  if (attributes["mode"] == "ids_only")
+    mode = PRINT_IDS_ONLY;
+  else if (attributes["mode"] == "skeleton")
+    mode = PRINT_SKELETON;
+  else if (attributes["mode"] == "body")
+    mode = PRINT_BODY;
+  else
+  {
+    mode = 0;
+    ostringstream temp;
+    temp<<"In Line "<<current_line_number()
+	<<": For the attribute \"mode\" of the element \"print\""
+	<<" the only allowed values are \"ids_only\", \"skeleton\" or \"body\".";
+    static_errors.push_back(Error(temp.str(), current_line_number()));
+  }
 }
 
 void Print_Statement::add_statement(Statement* statement)
@@ -492,52 +517,213 @@ void Print_Statement::add_statement(Statement* statement)
   substatement_error("print", statement);
 }
 
+void out_node(const Node& node, bool complete = true)
+{
+  cout<<"<node id=\""<<node.id
+      <<"\" lat=\""<<((double)(node.lat))/10000000
+      <<"\" lon=\""<<((double)(node.lon))/10000000<<'\"'
+      <<(complete ? "/>" : ">")<<'\n';
+}
+
+void out_way(const Way& way, bool complete = true)
+{
+  if (way.members.size() == 0)
+    cout<<"<way id=\""<<way.id<<'\"'
+	<<(complete ? "/>" : ">")<<'\n';
+  else
+  {
+    cout<<"<way id=\""<<way.id<<"\">\n";
+    for (vector< int >::const_iterator it2(way.members.begin());
+	 it2 != way.members.end(); ++it2)
+      cout<<"  <nd ref=\""<<*it2<<"\"/>\n";
+    if (complete)
+      cout<<"</way>\n";
+  }
+}
+
+void out_relation(const Relation& rel, bool complete = true)
+{
+  if ((rel.node_members.size() + rel.way_members.size() + rel.relation_members.size() == 0) && (complete))
+    cout<<"<relation id=\""<<rel.id<<"\"/>\n";
+  else
+  {
+    cout<<"<relation id=\""<<rel.id<<"\">\n";
+    for (multimap< int, int >::const_iterator it2(rel.node_members.begin());
+	 it2 != rel.node_members.end(); ++it2)
+      cout<<"  <member type=\"node\" ref=\""<<it2->first
+	  <<"\" role=\""<<role_cache[it2->second]<<"\"/>\n";
+    for (multimap< int, int >::const_iterator it2(rel.way_members.begin());
+	 it2 != rel.way_members.end(); ++it2)
+      cout<<"  <member type=\"way\" ref=\""<<it2->first
+	  <<"\" role=\""<<role_cache[it2->second]<<"\"/>\n";
+    for (multimap< int, int >::const_iterator it2(rel.relation_members.begin());
+	 it2 != rel.relation_members.end(); ++it2)
+      cout<<"  <member type=\"relation\" ref=\""<<it2->first
+	  <<"\" role=\""<<role_cache[it2->second]<<"\"/>\n";
+    if (complete)
+      cout<<"</relation>\n";
+  }
+}
+
 void Print_Statement::execute(map< string, Set >& maps)
 {
   map< string, Set >::const_iterator mit(maps.find(input));
   if (mit != maps.end())
   {
-    
-    for (set< Node >::const_iterator it(mit->second.get_nodes().begin());
-	 it != mit->second.get_nodes().end(); ++it)
-      cout<<"<node id=\""<<it->id
-	  <<"\" lat=\""<<((double)(it->lat))/10000000
-	  <<"\" lon=\""<<((double)(it->lon))/10000000<<"\"/>\n";
-    for (set< Way >::const_iterator it(mit->second.get_ways().begin());
-	 it != mit->second.get_ways().end(); ++it)
+    if (mode == PRINT_IDS_ONLY)
     {
-      if (it->members.size() == 0)
+      for (set< Node >::const_iterator it(mit->second.get_nodes().begin());
+	   it != mit->second.get_nodes().end(); ++it)
+	cout<<"<node id=\""<<it->id<<"\"/>\n";
+      for (set< Way >::const_iterator it(mit->second.get_ways().begin());
+	   it != mit->second.get_ways().end(); ++it)
 	cout<<"<way id=\""<<it->id<<"\"/>\n";
-      else
-      {
-	cout<<"<way id=\""<<it->id<<"\">\n";
-	for (vector< int >::const_iterator it2(it->members.begin());
-		    it2 != it->members.end(); ++it2)
-	  cout<<"  <nd ref=\""<<*it2<<"\"/>\n";
-	cout<<"</way>\n";
-      }
-    }
-    for (set< Relation >::const_iterator it(mit->second.get_relations().begin());
-	 it != mit->second.get_relations().end(); ++it)
-    {
-      if (it->node_members.size() + it->way_members.size() + it->relation_members.size() == 0)
+      for (set< Relation >::const_iterator it(mit->second.get_relations().begin());
+	   it != mit->second.get_relations().end(); ++it)
 	cout<<"<relation id=\""<<it->id<<"\"/>\n";
-      else
+    }
+    else if (mode == PRINT_SKELETON)
+    {
+      for (set< Node >::const_iterator it(mit->second.get_nodes().begin());
+	   it != mit->second.get_nodes().end(); ++it)
+	out_node(*it);
+      for (set< Way >::const_iterator it(mit->second.get_ways().begin());
+	   it != mit->second.get_ways().end(); ++it)
+	out_way(*it);
+      for (set< Relation >::const_iterator it(mit->second.get_relations().begin());
+	   it != mit->second.get_relations().end(); ++it)
+	out_relation(*it);
+    }
+    else if (mode == PRINT_BODY)
+    {
+      for (set< Node >::const_iterator it(mit->second.get_nodes().begin());
+	   it != mit->second.get_nodes().end(); )
       {
-	cout<<"<relation id=\""<<it->id<<"\">\n";
-	for (multimap< int, int >::const_iterator it2(it->node_members.begin());
-		    it2 != it->node_members.end(); ++it2)
-	  cout<<"  <member type=\"node\" ref=\""<<it2->first
-	      <<"\" role=\""<<role_cache[it2->second]<<"\"/>\n";
-	for (multimap< int, int >::const_iterator it2(it->way_members.begin());
-		    it2 != it->way_members.end(); ++it2)
-	  cout<<"  <member type=\"way\" ref=\""<<it2->first
-	      <<"\" role=\""<<role_cache[it2->second]<<"\"/>\n";
-	for (multimap< int, int >::const_iterator it2(it->relation_members.begin());
-		    it2 != it->relation_members.end(); ++it2)
-	  cout<<"  <member type=\"relation\" ref=\""<<it2->first
-	      <<"\" role=\""<<role_cache[it2->second]<<"\"/>\n";
-	cout<<"</relation>\n";
+	set< Node >::const_iterator it2(it);
+	ostringstream temp;
+	temp<<"select node_tags.id, key_s.key_, value_s.value_ from node_tags "
+	    <<"left join key_s on node_tags.key_ = key_s.id "
+	    <<"left join value_s on node_tags.value_ = value_s.id "
+	    <<"where node_tags.id in ("<<it->id;
+	unsigned int i(0);
+	while (((++it) != mit->second.get_nodes().end()) && (i++ < 10000))
+	  temp<<", "<<it->id;
+	temp<<") order by node_tags.id";
+	MYSQL_RES* result(mysql_query_wrapper(temp.str()));
+	if (!result)
+	  return;
+	
+	MYSQL_ROW row(mysql_fetch_row(result));
+	while ((row) && (row[0]))
+	{
+	  int id(atoi(row[0]));
+	  while (it2->id < id)
+	  {
+	    out_node(*it2);
+	    ++it2;
+	  }
+	  out_node(*it2, false);
+	  while ((row) && (row[0]) && (it2->id == atoi(row[0])))
+	  {
+	    if ((row[1]) && (row[2]))
+	      cout<<"  <tag k=\""<<row[1]<<"\" v=\""<<row[2]<<"\"/>\n";
+	    row = mysql_fetch_row(result);
+	  }
+	  cout<<"</node>\n";
+	  ++it2;
+	}
+	while (it2 != it)
+	{
+	  out_node(*it2);
+	  ++it2;
+	}
+	delete result;
+      }
+      for (set< Way >::const_iterator it(mit->second.get_ways().begin());
+	   it != mit->second.get_ways().end(); )
+      {
+	set< Way >::const_iterator it2(it);
+	ostringstream temp;
+	temp<<"select way_tags.id, key_s.key_, value_s.value_ from way_tags "
+	    <<"left join key_s on way_tags.key_ = key_s.id "
+	    <<"left join value_s on way_tags.value_ = value_s.id "
+	    <<"where way_tags.id in ("<<it->id;
+	unsigned int i(0);
+	while (((++it) != mit->second.get_ways().end()) && (i++ < 10000))
+	  temp<<", "<<it->id;
+	temp<<") order by way_tags.id";
+	MYSQL_RES* result(mysql_query_wrapper(temp.str()));
+	if (!result)
+	  return;
+	
+	MYSQL_ROW row(mysql_fetch_row(result));
+	while ((row) && (row[0]))
+	{
+	  int id(atoi(row[0]));
+	  while (it2->id < id)
+	  {
+	    out_way(*it2);
+	    ++it2;
+	  }
+	  out_way(*it2, false);
+	  while ((row) && (row[0]) && (it2->id == atoi(row[0])))
+	  {
+	    if ((row[1]) && (row[2]))
+	      cout<<"  <tag k=\""<<row[1]<<"\" v=\""<<row[2]<<"\"/>\n";
+	    row = mysql_fetch_row(result);
+	  }
+	  cout<<"</way>\n";
+	  ++it2;
+	}
+	while (it2 != it)
+	{
+	  out_way(*it2);
+	  ++it2;
+	}
+	delete result;
+      }
+      for (set< Relation >::const_iterator it(mit->second.get_relations().begin());
+	   it != mit->second.get_relations().end(); )
+      {
+	set< Relation >::const_iterator it2(it);
+	ostringstream temp;
+	temp<<"select relation_tags.id, key_s.key_, value_s.value_ from relation_tags "
+	    <<"left join key_s on relation_tags.key_ = key_s.id "
+	    <<"left join value_s on relation_tags.value_ = value_s.id "
+	    <<"where relation_tags.id in ("<<it->id;
+	unsigned int i(0);
+	while (((++it) != mit->second.get_relations().end()) && (i++ < 10000))
+	  temp<<", "<<it->id;
+	temp<<") order by relation_tags.id";
+	MYSQL_RES* result(mysql_query_wrapper(temp.str()));
+	if (!result)
+	  return;
+	
+	MYSQL_ROW row(mysql_fetch_row(result));
+	while ((row) && (row[0]))
+	{
+	  int id(atoi(row[0]));
+	  while (it2->id < id)
+	  {
+	    out_relation(*it2);
+	    ++it2;
+	  }
+	  out_relation(*it2, false);
+	  while ((row) && (row[0]) && (it2->id == atoi(row[0])))
+	  {
+	    if ((row[1]) && (row[2]))
+	      cout<<"  <tag k=\""<<row[1]<<"\" v=\""<<row[2]<<"\"/>\n";
+	    row = mysql_fetch_row(result);
+	  }
+	  cout<<"</relation>\n";
+	  ++it2;
+	}
+	while (it2 != it)
+	{
+	  out_relation(*it2);
+	  ++it2;
+	}
+	delete result;
       }
     }
   }
