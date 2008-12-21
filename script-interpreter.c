@@ -50,9 +50,9 @@ struct Relation
     Relation(int id_) : id(id_) {}
     
     const int id;
-    set< int > node_members;
-    set< int > way_members;
-    set< int > relation_members;
+    multimap< int, int > node_members;
+    multimap< int, int > way_members;
+    multimap< int, int > relation_members;
 };
 
 inline bool operator<(const Relation& relation_1, const Relation& relation_2)
@@ -101,9 +101,10 @@ class Statement
     virtual ~Statement() {}
 };
 
-MYSQL* mysql(NULL);
 vector< Error > parsing_errors;
 vector< Error > static_errors;
+MYSQL* mysql(NULL);
+vector< string > role_cache;
 
 void eval_cstr_array(string element, map< string, string >& attributes, const char **attr)
 {
@@ -143,6 +144,46 @@ void display_static_errors()
     cout<<"<p>"<<it->text<<"</p>\n";
   }
   cout<<"\n</body>\n</html>\n";
+}
+
+MYSQL_RES* mysql_query_wrapper(string query)
+{
+  int query_status(mysql_query(mysql, query.c_str()));
+  if (query_status)
+  {
+    cout<<"Error during SQL query ";
+    cout<<'('<<query_status<<"):\n";
+    cout<<"Query: "<<query<<'\n';
+    cout<<"Error: "<<mysql_error(mysql)<<'\n';
+  }
+
+  MYSQL_RES* result(mysql_store_result(mysql));
+  if (!result)
+  {
+    cout<<"Error during SQL query (result is null pointer)\n";
+    cout<<mysql_error(mysql)<<'\n';
+  }
+  
+  return result;
+}
+
+void prepare_caches()
+{
+  role_cache.push_back("");
+  
+  MYSQL_RES* result(mysql_query_wrapper("select id, role from member_roles"));
+  if (!result)
+    return;
+  
+  MYSQL_ROW row(mysql_fetch_row(result));
+  while ((row) && (row[0]) && (row[1]))
+  {
+    unsigned int id((unsigned int)atol(row[0]));
+    if (role_cache.size() <= id)
+      role_cache.resize(id+100);
+    role_cache[id] = row[1];
+    row = mysql_fetch_row(result);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -304,27 +345,6 @@ void Id_Query_Statement::add_statement(Statement* statement)
   substatement_error("id-query", statement);
 }
 
-MYSQL_RES* mysql_query_wrapper(string query)
-{
-  int query_status(mysql_query(mysql, query.c_str()));
-  if (query_status)
-  {
-    cout<<"Error during SQL query ";
-    cout<<'('<<query_status<<"):\n";
-    cout<<"Query: "<<query<<'\n';
-    cout<<"Error: "<<mysql_error(mysql)<<'\n';
-  }
-
-  MYSQL_RES* result(mysql_store_result(mysql));
-  if (!result)
-  {
-    cout<<"Error during SQL query (result is null pointer)\n";
-    cout<<mysql_error(mysql)<<'\n';
-  }
-  
-  return result;
-}
-
 void Id_Query_Statement::execute(map< string, Set >& maps)
 {
   if (ref == 0)
@@ -338,7 +358,7 @@ void Id_Query_Statement::execute(map< string, Set >& maps)
 	<<"from ways left join way_members on ways.id = way_members.id "
 	<<"where ways.id = "<<ref;
   else if (type == QUERY_RELATION)
-    temp<<"select relations.id, relation_node_members.ref from relations "
+    temp<<"select relations.id, relation_node_members.ref, relation_node_members.role from relations "
 	<<"left join relation_node_members on relations.id = relation_node_members.id "
 	<<"where relations.id = "<<ref;
   else
@@ -387,12 +407,17 @@ void Id_Query_Statement::execute(map< string, Set >& maps)
       Relation relation(atoi(row[0]));
       while ((row) && (row[1]))
       {
-	relation.node_members.insert(atoi(row[1]));
+	if (row[2])
+	  relation.node_members.insert
+	      (make_pair< int, int >(atoi(row[1]), atoi(row[2])));
+	else
+	  relation.node_members.insert
+	      (make_pair< int, int >(atoi(row[1]), 0));
 	row = mysql_fetch_row(result);
       }
       
       temp.str("");
-      temp<<"select relation_way_members.ref from relation_way_members "
+      temp<<"select ref, role from relation_way_members "
 	  <<"where relation_way_members.id = "<<ref;
       result = mysql_query_wrapper(temp.str());
       if (!result)
@@ -400,12 +425,17 @@ void Id_Query_Statement::execute(map< string, Set >& maps)
       row = mysql_fetch_row(result);
       while ((row) && (row[0]))
       {
-	relation.way_members.insert(atoi(row[0]));
+	if (row[1])
+	  relation.way_members.insert
+	      (make_pair< int, int >(atoi(row[0]), atoi(row[1])));
+	else
+	  relation.way_members.insert
+	      (make_pair< int, int >(atoi(row[0]), 0));
 	row = mysql_fetch_row(result);
       }
       
       temp.str("");
-      temp<<"select relation_relation_members.ref from relation_relation_members "
+      temp<<"select ref, role from relation_relation_members "
 	  <<"where relation_relation_members.id = "<<ref;
       result = mysql_query_wrapper(temp.str());
       if (!result)
@@ -413,7 +443,12 @@ void Id_Query_Statement::execute(map< string, Set >& maps)
       row = mysql_fetch_row(result);
       while ((row) && (row[0]))
       {
-	relation.relation_members.insert(atoi(row[0]));
+	if (row[1])
+	  relation.relation_members.insert
+	      (make_pair< int, int >(atoi(row[0]), atoi(row[1])));
+	else
+	  relation.relation_members.insert
+	      (make_pair< int, int >(atoi(row[0]), 0));
 	row = mysql_fetch_row(result);
       }
       
@@ -490,15 +525,18 @@ void Print_Statement::execute(map< string, Set >& maps)
       else
       {
 	cout<<"<relation id=\""<<it->id<<"\">\n";
-	for (set< int >::const_iterator it2(it->node_members.begin());
+	for (multimap< int, int >::const_iterator it2(it->node_members.begin());
 		    it2 != it->node_members.end(); ++it2)
-	  cout<<"  <member type=\"node\" ref=\""<<*it2<<"\"/>\n";
-	for (set< int >::const_iterator it2(it->way_members.begin());
+	  cout<<"  <member type=\"node\" ref=\""<<it2->first
+	      <<"\" role=\""<<role_cache[it2->second]<<"\"/>\n";
+	for (multimap< int, int >::const_iterator it2(it->way_members.begin());
 		    it2 != it->way_members.end(); ++it2)
-	  cout<<"  <member type=\"way\" ref=\""<<*it2<<"\"/>\n";
-	for (set< int >::const_iterator it2(it->relation_members.begin());
+	  cout<<"  <member type=\"way\" ref=\""<<it2->first
+	      <<"\" role=\""<<role_cache[it2->second]<<"\"/>\n";
+	for (multimap< int, int >::const_iterator it2(it->relation_members.begin());
 		    it2 != it->relation_members.end(); ++it2)
-	  cout<<"  <member type=\"relation\" ref=\""<<*it2<<"\"/>\n";
+	  cout<<"  <member type=\"relation\" ref=\""<<it2->first
+	      <<"\" role=\""<<role_cache[it2->second]<<"\"/>\n";
 	cout<<"</relation>\n";
       }
     }
@@ -590,6 +628,8 @@ int main(int argc, char *argv[])
       <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<not-osm>\n\n";
   
   cout<<(uintmax_t)time(NULL)<<'\n';
+  
+  prepare_caches();
   
   map< string, Set > maps;
   for (vector< Statement* >::const_iterator it(statement_stack.begin());

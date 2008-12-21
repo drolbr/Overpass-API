@@ -90,17 +90,17 @@ void postprocess_db()
   mysql_query(mysql, "set session myisam_sort_buffer_size = 1073741824");
   
   cerr<<"nodes";
-  mysql_query(mysql, "alter table nodes add key(id)");
+  mysql_query(mysql, "alter table nodes add unique key(id)");
   cerr<<", node_tags";
   mysql_query(mysql, "alter table node_tags add key(id)");
   cerr<<", ways";
-  mysql_query(mysql, "alter table ways add key(id)");
+  mysql_query(mysql, "alter table ways add unique key(id)");
   cerr<<", way_members";
   mysql_query(mysql, "alter table way_members add key(id)");
   cerr<<", way_tags";
   mysql_query(mysql, "alter table way_tags add key(id)");
   cerr<<", relations";
-  mysql_query(mysql, "alter table relations add key(id)");
+  mysql_query(mysql, "alter table relations add unique key(id)");
   cerr<<", relation_node_members";
   mysql_query(mysql, "alter table relation_node_members add key(id)");
   cerr<<", relation_way_members";
@@ -110,11 +110,11 @@ void postprocess_db()
   cerr<<", relation_tags";
   mysql_query(mysql, "alter table relation_tags add key(id)");
   cerr<<", member_roles";
-  mysql_query(mysql, "alter table member_roles add key(id)");
+  mysql_query(mysql, "alter table member_roles add unique key(id)");
   cerr<<", key_s";
-  mysql_query(mysql, "alter table key_s add key(id)");
+  mysql_query(mysql, "alter table key_s add unique key(id)");
   cerr<<", value_s";
-  mysql_query(mysql, "alter table value_s add key(id)");
+  mysql_query(mysql, "alter table value_s add unique key(id)");
   
   cerr<<", nodes";
   mysql_query(mysql, "alter table nodes add index(lon_idx, lat)");
