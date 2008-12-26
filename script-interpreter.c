@@ -50,9 +50,9 @@ struct Relation
     Relation(int id_) : id(id_) {}
     
     const int id;
-    multimap< int, int > node_members;
-    multimap< int, int > way_members;
-    multimap< int, int > relation_members;
+    set< pair< int, int > > node_members;
+    set< pair< int, int > > way_members;
+    set< pair< int, int > > relation_members;
 };
 
 inline bool operator<(const Relation& relation_1, const Relation& relation_2)
@@ -180,7 +180,7 @@ void prepare_caches()
   {
     unsigned int id((unsigned int)atol(row[0]));
     if (role_cache.size() <= id)
-      role_cache.resize(id+100);
+      role_cache.resize(id+64);
     role_cache[id] = row[1];
     row = mysql_fetch_row(result);
   }
@@ -228,6 +228,59 @@ void Root_Statement::execute(map< string, Set >& maps)
 
 //-----------------------------------------------------------------------------
 
+class Has_Key_Value_Statement : public Statement
+{
+  public:
+    Has_Key_Value_Statement() {}
+    virtual void set_attributes(const char **attr);
+    virtual void add_statement(Statement* statement);
+    virtual string get_name() { return "has-kv"; }
+    virtual void execute(map< string, Set >& maps);
+    virtual ~Has_Key_Value_Statement() {}
+    
+    string get_key() { return key; }
+    string get_value() { return value; }
+    
+  private:
+    string key, value;
+};
+
+void Has_Key_Value_Statement::set_attributes(const char **attr)
+{
+  map< string, string > attributes;
+  
+  attributes["k"] = "";
+  attributes["v"] = "";
+  
+  eval_cstr_array("has-kv", attributes, attr);
+  
+  ostringstream temp;
+  escape_xml(temp, attributes["k"]);
+  key = temp.str();
+  temp.str("");
+  escape_xml(temp, attributes["v"]);
+  value = temp.str();
+  if (key == "")
+  {
+    temp.str("");
+    temp<<"In Line "<<current_line_number()
+	<<": For the attribute \"k\" of the element \"has-kv\""
+	<<" the only allowed values are non-empty strings.";
+    static_errors.push_back(Error(temp.str(), current_line_number()));
+  }
+}
+
+void Has_Key_Value_Statement::add_statement(Statement* statement)
+{
+  substatement_error("has-kv", statement);
+}
+
+void Has_Key_Value_Statement::execute(map< string, Set >& maps)
+{
+}
+
+//-----------------------------------------------------------------------------
+
 class Query_Statement : public Statement
 {
   public:
@@ -241,6 +294,7 @@ class Query_Statement : public Statement
   private:
     string output;
     unsigned int type;
+    vector< pair< string, string > > key_values;
 };
 
 const unsigned int QUERY_NODE = 1;
@@ -251,12 +305,12 @@ void Query_Statement::set_attributes(const char **attr)
 {
   map< string, string > attributes;
   
-  attributes["set"] = "_";
+  attributes["into"] = "_";
   attributes["type"] = "";
   
   eval_cstr_array("query", attributes, attr);
   
-  output = attributes["set"];
+  output = attributes["into"];
   if (attributes["type"] == "node")
     type = QUERY_NODE;
   else if (attributes["type"] == "way")
@@ -276,11 +330,490 @@ void Query_Statement::set_attributes(const char **attr)
 
 void Query_Statement::add_statement(Statement* statement)
 {
-  substatement_error("query", statement);
+  if (statement->get_name() == "has-kv")
+    key_values.push_back(make_pair< string, string >
+	(((Has_Key_Value_Statement*)statement)->get_key(),
+	  ((Has_Key_Value_Statement*)statement)->get_value()));
+  else
+    substatement_error("query", statement);
 }
 
 void Query_Statement::execute(map< string, Set >& maps)
 {
+  if (key_values.size() == 0)
+    return;
+  
+  ostringstream temp;
+  if (type == QUERY_NODE)
+  {
+    if (key_values.size() == 1)
+      temp<<"select nodes.id, nodes.lat, nodes.lon from nodes "
+	  <<"left join node_tags on nodes.id = node_tags.id ";
+    else
+      temp<<"select node_tags.id from node_tags ";
+    if (key_values.front().second == "")
+      temp<<"left join key_s on key_s.id = node_tags.key_ "
+	  <<"where key_s.key_ = \""<<key_values.front().first<<"\" "
+	  <<"order by node_tags.id";
+    else
+      temp<<"left join key_s on key_s.id = node_tags.key_ "
+	  <<"left join value_s on value_s.id = node_tags.value_ "
+	  <<"where key_s.key_ = \""<<key_values.front().first<<"\" "
+	  <<"and value_s.value_ = \""<<key_values.front().second<<"\" "
+	  <<"order by node_tags.id";
+  }
+  else if (type == QUERY_WAY)
+  {
+    if (key_values.front().second == "")
+      temp<<"select ways.id from ways "
+	  <<"left join way_tags on ways.id = way_tags.id "
+	  <<"left join key_s on key_s.id = way_tags.key_ "
+	  <<"where key_s.key_ = \""<<key_values.front().first<<"\" "
+	  <<"order by ways.id";
+    else
+      temp<<"select ways.id from ways "
+	  <<"left join way_tags on ways.id = way_tags.id "
+	  <<"left join key_s on key_s.id = way_tags.key_ "
+	  <<"left join value_s on value_s.id = way_tags.value_ "
+	  <<"where key_s.key_ = \""<<key_values.front().first<<"\" "
+	  <<"and value_s.value_ = \""<<key_values.front().second<<"\" "
+	  <<"order by ways.id";
+  }
+  else if (type == QUERY_RELATION)
+  {
+    if (key_values.front().second == "")
+      temp<<"select relations.id from relations "
+	  <<"left join relation_tags on relations.id = relation_tags.id "
+	  <<"left join key_s on key_s.id = relation_tags.key_ "
+	  <<"where key_s.key_ = \""<<key_values.front().first<<"\" "
+	  <<"order by relations.id";
+    else
+      temp<<"select relations.id from relations "
+	  <<"left join relation_tags on relations.id = relation_tags.id "
+	  <<"left join key_s on key_s.id = relation_tags.key_ "
+	  <<"left join value_s on value_s.id = relation_tags.value_ "
+	  <<"where key_s.key_ = \""<<key_values.front().first<<"\" "
+	  <<"and value_s.value_ = \""<<key_values.front().second<<"\" "
+	  <<"order by relations.id";
+  }
+  else
+    return;
+  
+  set< Node > nodes;
+  set< Way > ways;
+  set< Relation > relations;
+  
+  MYSQL_RES* result(mysql_query_wrapper(temp.str()));
+  
+  if (!result)
+    return;
+  
+  if (type == QUERY_NODE)
+  {
+    MYSQL_ROW row(mysql_fetch_row(result));
+    set< int > tnodes;
+    if (key_values.size() > 1)
+    {
+      while ((row) && (row[0]))
+      {
+	tnodes.insert(atoi(row[0]));
+	row = mysql_fetch_row(result);
+      }
+    }
+    else
+    {
+      while ((row) && (row[0]) && (row[1]) && (row[2]))
+      {
+	nodes.insert(Node(atoi(row[0]), atoi(row[1]), atoi(row[2])));
+	row = mysql_fetch_row(result);
+      }
+    }
+    
+    unsigned int key_count(1);
+    while (key_count < key_values.size()-1)
+    {
+      set< int > new_nodes;
+      for (set< int >::const_iterator it(tnodes.begin()); it != tnodes.end(); )
+      {
+	temp.str("");
+	if (key_values[key_count].second == "")
+	  temp<<"select node_tags.id from node_tags "
+	      <<"left join key_s on key_s.id = node_tags.key_ "
+	      <<"where key_s.key_ = \""<<key_values[key_count].first<<"\" "
+	      <<"and node_tags.id in ("<<*it;
+	else
+	  temp<<"select node_tags.id from node_tags "
+	      <<"left join key_s on key_s.id = node_tags.key_ "
+	      <<"left join value_s on value_s.id = node_tags.value_ "
+	      <<"where key_s.key_ = \""<<key_values[key_count].first<<"\" "
+	      <<"and value_s.value_ = \""<<key_values[key_count].second<<"\" "
+	      <<"and node_tags.id in ("<<*it;
+	unsigned int i(0);
+	while (((++it) != tnodes.end()) && (i++ < 10000))
+	  temp<<", "<<*it;
+	temp<<") order by node_tags.id";
+	
+	delete result;
+	result = mysql_query_wrapper(temp.str());
+	
+	if (!result)
+	  return;
+	
+	row = mysql_fetch_row(result);
+	while ((row) && (row[0]))
+	{
+	  new_nodes.insert(atoi(row[0]));
+	  row = mysql_fetch_row(result);
+	}
+      }
+      tnodes = new_nodes;
+      
+      ++key_count;
+    }
+    
+    if (key_values.size() > 1)
+    {
+      for (set< int >::const_iterator it(tnodes.begin()); it != tnodes.end(); )
+      {
+	temp.str("");
+	if (key_values[key_count].second == "")
+	  temp<<"select nodes.id, nodes.lat, nodes.lon from nodes "
+	      <<"left join node_tags on nodes.id = node_tags.id "
+	      <<"left join key_s on key_s.id = node_tags.key_ "
+	      <<"where key_s.key_ = \""<<key_values[key_count].first<<"\" "
+	      <<"and node_tags.id in ("<<*it;
+	else
+	  temp<<"select nodes.id, nodes.lat, nodes.lon from nodes "
+	      <<"left join node_tags on nodes.id = node_tags.id "
+	      <<"left join key_s on key_s.id = node_tags.key_ "
+	      <<"left join value_s on value_s.id = node_tags.value_ "
+	      <<"where key_s.key_ = \""<<key_values[key_count].first<<"\" "
+	      <<"and value_s.value_ = \""<<key_values[key_count].second<<"\" "
+	      <<"and node_tags.id in ("<<*it;
+	unsigned int i(0);
+	while (((++it) != tnodes.end()) && (i++ < 10000))
+	  temp<<", "<<*it;
+	temp<<") order by nodes.id";
+	
+	delete result;
+	result = mysql_query_wrapper(temp.str());
+	
+	if (!result)
+	  return;
+	
+	row = mysql_fetch_row(result);
+	while ((row) && (row[0]) && (row[1]) && (row[2]))
+	{
+	  nodes.insert(Node(atoi(row[0]), atoi(row[1]), atoi(row[2])));
+	  row = mysql_fetch_row(result);
+	}
+      }
+    }
+  }
+  else if (type == QUERY_WAY)
+  {
+    MYSQL_ROW row(mysql_fetch_row(result));
+    set< int > tways;
+    while ((row) && (row[0]))
+    {
+      tways.insert(atoi(row[0]));
+      row = mysql_fetch_row(result);
+    }
+    
+    unsigned int key_count(1);
+    while (key_count < key_values.size())
+    {
+      set< int > new_ways;
+      for (set< int >::const_iterator it(tways.begin()); it != tways.end(); )
+      {
+	temp.str("");
+	if (key_values[key_count].second == "")
+	  temp<<"select way_tags.id from way_tags "
+	      <<"left join key_s on key_s.id = way_tags.key_ "
+	      <<"where key_s.key_ = \""<<key_values[key_count].first<<"\" "
+	      <<"and way_tags.id in ("<<*it;
+	else
+	  temp<<"select way_tags.id from way_tags "
+	      <<"left join key_s on key_s.id = way_tags.key_ "
+	      <<"left join value_s on value_s.id = way_tags.value_ "
+	      <<"where key_s.key_ = \""<<key_values[key_count].first<<"\" "
+	      <<"and value_s.value_ = \""<<key_values[key_count].second<<"\" "
+	      <<"and way_tags.id in ("<<*it;
+	unsigned int i(0);
+	while (((++it) != tways.end()) && (i++ < 10000))
+	  temp<<", "<<*it;
+	temp<<") order by way_tags.id";
+	
+	delete result;
+	result = mysql_query_wrapper(temp.str());
+	
+	if (!result)
+	  return;
+	
+	row = mysql_fetch_row(result);
+	while ((row) && (row[0]))
+	{
+	  new_ways.insert(atoi(row[0]));
+	  row = mysql_fetch_row(result);
+	}
+      }
+      tways = new_ways;
+      
+      ++key_count;
+    }
+    
+    map< int, vector< int > > member_map;
+    for (set< int >::const_iterator it(tways.begin()); it != tways.end(); ++it)
+      member_map[*it] = vector< int >();
+
+    for (map< int, vector< int > >::iterator it(member_map.begin());
+	 it != member_map.end(); )
+    {
+      map< int, vector< int > >::iterator it2(it);
+      temp.str("");
+      temp<<"select id, count, ref from way_members "
+	  <<"where id in ("<<it->first;
+      unsigned int i(0);
+      while (((++it) != member_map.end()) && (i++ < 10000))
+	temp<<", "<<it->first;
+      temp<<") order by id";
+	
+      delete result;
+      result = mysql_query_wrapper(temp.str());
+	
+      if (!result)
+	return;
+	
+      row = mysql_fetch_row(result);
+      while ((row) && (row[0]))
+      {
+	int id(atoi(row[0]));
+	while (it2->first < id)
+	  ++it2;
+	it2->second.reserve(100);
+	while ((row) && (row[0]) && (it2->first == atoi(row[0])))
+	{
+	  if ((row[1]) && (row[2]))
+	  {
+	    unsigned int count((unsigned int)atol(row[1]));
+	    if (it2->second.capacity() < count)
+	      it2->second.reserve(count+100);
+	    if (it2->second.size() < count)
+	      it2->second.resize(count);
+	    it2->second[count-1] = atoi(row[2]);
+	  }
+	  row = mysql_fetch_row(result);
+	}
+	++it2;
+      }
+    }
+
+    for (set< int >::const_iterator it(tways.begin()); it != tways.end(); ++it)
+    {
+      Way way(*it);
+      way.members = member_map[*it];
+      ways.insert(way);
+    }
+  }
+  else if (type == QUERY_RELATION)
+  {
+    MYSQL_ROW row(mysql_fetch_row(result));
+    set< int > rels;
+    while ((row) && (row[0]))
+    {
+      rels.insert(atoi(row[0]));
+      row = mysql_fetch_row(result);
+    }
+    
+    unsigned int key_count(1);
+    while (key_count < key_values.size())
+    {
+      set< int > new_rels;
+      for (set< int >::const_iterator it(rels.begin()); it != rels.end(); )
+      {
+	temp.str("");
+	if (key_values[key_count].second == "")
+	  temp<<"select relation_tags.id from relation_tags "
+	      <<"left join key_s on key_s.id = relation_tags.key_ "
+	      <<"where key_s.key_ = \""<<key_values[key_count].first<<"\" "
+	      <<"and relation_tags.id in ("<<*it;
+	else
+	  temp<<"select relation_tags.id from relation_tags "
+	      <<"left join key_s on key_s.id = relation_tags.key_ "
+	      <<"left join value_s on value_s.id = relation_tags.value_ "
+	      <<"where key_s.key_ = \""<<key_values[key_count].first<<"\" "
+	      <<"and value_s.value_ = \""<<key_values[key_count].second<<"\" "
+	      <<"and relation_tags.id in ("<<*it;
+	unsigned int i(0);
+	while (((++it) != rels.end()) && (i++ < 10000))
+	  temp<<", "<<*it;
+	temp<<") order by relation_tags.id";
+	
+	delete result;
+	result = mysql_query_wrapper(temp.str());
+	
+	if (!result)
+	  return;
+	
+	row = mysql_fetch_row(result);
+	while ((row) && (row[0]))
+	{
+	  new_rels.insert(atoi(row[0]));
+	  row = mysql_fetch_row(result);
+	}
+      }
+      rels = new_rels;
+      
+      ++key_count;
+    }
+    
+    map< int, set< pair< int, int > > > node_member_map;
+    for (set< int >::const_iterator it(rels.begin()); it != rels.end(); ++it)
+      node_member_map[*it] = set< pair< int, int > >();
+
+    for (map< int, set< pair< int, int > > >::iterator it(node_member_map.begin());
+	 it != node_member_map.end(); )
+    {
+      map< int, set< pair< int, int > > >::iterator it2(it);
+      temp.str("");
+      temp<<"select id, ref, role from relation_node_members "
+	  <<"where id in ("<<it->first;
+      unsigned int i(0);
+      while (((++it) != node_member_map.end()) && (i++ < 10000))
+	temp<<", "<<it->first;
+      temp<<") order by id";
+	
+      delete result;
+      result = mysql_query_wrapper(temp.str());
+	
+      if (!result)
+	return;
+	
+      row = mysql_fetch_row(result);
+      while ((row) && (row[0]))
+      {
+	int id(atoi(row[0]));
+	while (it2->first < id)
+	  ++it2;
+	while ((row) && (row[0]) && (it2->first == atoi(row[0])))
+	{
+	  if (row[1])
+	  {
+	    if (row[2])
+	      it2->second.insert
+		  (make_pair< int, int >(atoi(row[1]), atoi(row[2])));
+	    else
+	      it2->second.insert
+		  (make_pair< int, int >(atoi(row[1]), 0));
+	  }
+	  row = mysql_fetch_row(result);
+	}
+	++it2;
+      }
+    }
+
+    map< int, set< pair< int, int > > > way_member_map;
+    for (set< int >::const_iterator it(rels.begin()); it != rels.end(); ++it)
+      way_member_map[*it] = set< pair< int, int > >();
+
+    for (map< int, set< pair< int, int > > >::iterator it(way_member_map.begin());
+	 it != way_member_map.end(); )
+    {
+      map< int, set< pair< int, int > > >::iterator it2(it);
+      temp.str("");
+      temp<<"select id, ref, role from relation_way_members "
+	  <<"where id in ("<<it->first;
+      unsigned int i(0);
+      while (((++it) != way_member_map.end()) && (i++ < 10000))
+	temp<<", "<<it->first;
+      temp<<") order by id";
+	
+      delete result;
+      result = mysql_query_wrapper(temp.str());
+	
+      if (!result)
+	return;
+	
+      row = mysql_fetch_row(result);
+      while ((row) && (row[0]))
+      {
+	int id(atoi(row[0]));
+	while (it2->first < id)
+	  ++it2;
+	while ((row) && (row[0]) && (it2->first == atoi(row[0])))
+	{
+	  if (row[1])
+	  {
+	    if (row[2])
+	      it2->second.insert
+		  (make_pair< int, int >(atoi(row[1]), atoi(row[2])));
+	    else
+	      it2->second.insert
+		  (make_pair< int, int >(atoi(row[1]), 0));
+	  }
+	  row = mysql_fetch_row(result);
+	}
+	++it2;
+      }
+    }
+
+    map< int, set< pair< int, int > > > relation_member_map;
+    for (set< int >::const_iterator it(rels.begin()); it != rels.end(); ++it)
+      relation_member_map[*it] = set< pair< int, int > >();
+
+    for (map< int, set< pair< int, int > > >::iterator it(relation_member_map.begin());
+	 it != relation_member_map.end(); )
+    {
+      map< int, set< pair< int, int > > >::iterator it2(it);
+      temp.str("");
+      temp<<"select id, ref, role from relation_relation_members "
+	  <<"where id in ("<<it->first;
+      unsigned int i(0);
+      while (((++it) != relation_member_map.end()) && (i++ < 10000))
+	temp<<", "<<it->first;
+      temp<<") order by id";
+	
+      delete result;
+      result = mysql_query_wrapper(temp.str());
+	
+      if (!result)
+	return;
+	
+      row = mysql_fetch_row(result);
+      while ((row) && (row[0]))
+      {
+	int id(atoi(row[0]));
+	while (it2->first < id)
+	  ++it2;
+	while ((row) && (row[0]) && (it2->first == atoi(row[0])))
+	{
+	  if (row[1])
+	  {
+	    if (row[2])
+	      it2->second.insert
+		  (make_pair< int, int >(atoi(row[1]), atoi(row[2])));
+	    else
+	      it2->second.insert
+		  (make_pair< int, int >(atoi(row[1]), 0));
+	  }
+	  row = mysql_fetch_row(result);
+	}
+	++it2;
+      }
+    }
+
+    for (set< int >::const_iterator it(rels.begin()); it != rels.end(); ++it)
+    {
+      Relation relation(*it);
+      relation.node_members = node_member_map[*it];
+      relation.way_members = way_member_map[*it];
+      relation.relation_members = relation_member_map[*it];
+      relations.insert(relation);
+    }
+  }
+  delete result;
+  
+  maps[output] = Set(nodes, ways, relations);
 }
 
 //-----------------------------------------------------------------------------
@@ -305,13 +838,13 @@ void Id_Query_Statement::set_attributes(const char **attr)
 {
   map< string, string > attributes;
   
-  attributes["set"] = "_";
+  attributes["into"] = "_";
   attributes["type"] = "";
   attributes["ref"] = "";
   
   eval_cstr_array("query", attributes, attr);
   
-  output = attributes["set"];
+  output = attributes["into"];
   
   if (attributes["type"] == "node")
     type = QUERY_NODE;
@@ -388,6 +921,7 @@ void Id_Query_Statement::execute(map< string, Set >& maps)
     if ((row) && (row[0]))
     {
       Way way(atoi(row[0]));
+      way.members.reserve(16);
       while ((row) && (row[1]) && (row[2]))
       {
 	unsigned int count((unsigned int)atol(row[1]));
@@ -488,12 +1022,12 @@ void Print_Statement::set_attributes(const char **attr)
 {
   map< string, string > attributes;
   
-  attributes["set"] = "_";
+  attributes["from"] = "_";
   attributes["mode"] = "skeleton";
   
   eval_cstr_array("print", attributes, attr);
   
-  input = attributes["set"];
+  input = attributes["from"];
   
   if (attributes["mode"] == "ids_only")
     mode = PRINT_IDS_ONLY;
@@ -548,15 +1082,15 @@ void out_relation(const Relation& rel, bool complete = true)
   else
   {
     cout<<"<relation id=\""<<rel.id<<"\">\n";
-    for (multimap< int, int >::const_iterator it2(rel.node_members.begin());
+    for (set< pair< int, int > >::const_iterator it2(rel.node_members.begin());
 	 it2 != rel.node_members.end(); ++it2)
       cout<<"  <member type=\"node\" ref=\""<<it2->first
 	  <<"\" role=\""<<role_cache[it2->second]<<"\"/>\n";
-    for (multimap< int, int >::const_iterator it2(rel.way_members.begin());
+    for (set< pair< int, int > >::const_iterator it2(rel.way_members.begin());
 	 it2 != rel.way_members.end(); ++it2)
       cout<<"  <member type=\"way\" ref=\""<<it2->first
 	  <<"\" role=\""<<role_cache[it2->second]<<"\"/>\n";
-    for (multimap< int, int >::const_iterator it2(rel.relation_members.begin());
+    for (set< pair< int, int > >::const_iterator it2(rel.relation_members.begin());
 	 it2 != rel.relation_members.end(); ++it2)
       cout<<"  <member type=\"relation\" ref=\""<<it2->first
 	  <<"\" role=\""<<role_cache[it2->second]<<"\"/>\n";
@@ -739,6 +1273,8 @@ Statement* generate_statement(string element)
     return new Id_Query_Statement();
   else if (element == "query")
     return new Query_Statement();
+  else if (element == "has-kv")
+    return new Has_Key_Value_Statement();
   else if (element == "print")
     return new Print_Statement();
   
@@ -752,8 +1288,9 @@ Statement* generate_statement(string element)
 bool is_known_element(string element)
 {
   if ((element == "osm-script") ||
-       (element == "id-query") ||
        (element == "query") ||
+       (element == "has-kv") ||
+       (element == "id-query") ||
        (element == "print"))
     return true;
   
@@ -779,6 +1316,7 @@ void end(const char *el)
   if ((is_known_element(el)) && (statement_stack.size() > 1))
   {
     Statement* statement(statement_stack.back());
+    //Include an end-control to catch e.g. empty query-statements?
     statement_stack.pop_back();
     statement_stack.back()->add_statement(statement);
   }
@@ -809,6 +1347,8 @@ int main(int argc, char *argv[])
     display_static_errors();
     return 0;
   }
+  
+  //Sanity-Check
   
   cout<<"Content-type: application/xml\n\n"
       <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<not-osm>\n\n";

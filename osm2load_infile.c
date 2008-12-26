@@ -184,49 +184,8 @@ void start(const char *el, const char **attr)
 	key_id = keys.size()+1;
 	keys.insert(make_pair< string, unsigned int >(key, key_id));
 	keys_out<<key_id<<'\t';
-	unsigned int i(0);
-	while (i < key.size())
-	{
-	  if (key[i] == '\t')
-	  {
-	    keys_out<<key<<"\\\t";
-	    key = key.substr(i+1);
-	    i = 0;
-	  }
-	  else if (key[i] == '\n')
-	  {
-	    keys_out<<key<<"\\\n";
-	    key = key.substr(i+1);
-	    i = 0;
-	  }
-	  else if (key[i] == '"')
-	  {
-	    keys_out<<key<<"&quot;";
-	    key = key.substr(i+1);
-	    i = 0;
-	  }
-	  else if (key[i] == '&')
-	  {
-	    keys_out<<key<<"&amp;";
-	    key = key.substr(i+1);
-	    i = 0;
-	  }
-	  else if (key[i] == '<')
-	  {
-	    keys_out<<key<<"&lt;";
-	    key = key.substr(i+1);
-	    i = 0;
-	  }
-	  else if (key[i] == '>')
-	  {
-	    keys_out<<key<<"&gt;";
-	    key = key.substr(i+1);
-	    i = 0;
-	  }
-	  else
-	    ++i;
-	}
-	keys_out<<key<<'\n';
+	escape_infile_xml(keys_out, key);
+	keys_out<<'\n';
       }
       unsigned int value_id(0);
       it = values.find(value);
@@ -237,49 +196,8 @@ void start(const char *el, const char **attr)
 	value_id = values.size()+1;
 	values.insert(make_pair< string, unsigned int >(value, value_id));
 	values_out<<value_id<<'\t';
-	unsigned int i(0);
-	while (i < value.size())
-	{
-	  if (value[i] == '\t')
-	  {
-	    values_out<<value<<"\\\t";
-	    value = value.substr(i+1);
-	    i = 0;
-	  }
-	  else if (value[i] == '\n')
-	  {
-	    values_out<<value<<"\\\n";
-	    value = value.substr(i+1);
-	    i = 0;
-	  }
-	  else if (value[i] == '"')
-	  {
-	    values_out<<value<<"&quot;";
-	    value = value.substr(i+1);
-	    i = 0;
-	  }
-	  else if (value[i] == '&')
-	  {
-	    values_out<<value<<"&amp;";
-	    value = value.substr(i+1);
-	    i = 0;
-	  }
-	  else if (value[i] == '<')
-	  {
-	    values_out<<value<<"&lt;";
-	    value = value.substr(i+1);
-	    i = 0;
-	  }
-	  else if (value[i] == '>')
-	  {
-	    values_out<<value<<"&gt;";
-	    value = value.substr(i+1);
-	    i = 0;
-	  }
-	  else
-	    ++i;
-	}
-	values_out<<value<<'\n';
+	escape_infile_xml(values_out, value);
+	values_out<<'\n';
       }
       if (tag_type == NODE)
 	node_tags_out<<current_id<<'\t'<<key_id<<'\t'<<value_id<<'\n';
@@ -326,49 +244,8 @@ void start(const char *el, const char **attr)
 	role_id = member_roles.size()+1;
 	member_roles.insert(make_pair< string, unsigned int >(role, role_id));
 	member_roles_out<<role_id<<'\t';
-	unsigned int i(0);
-	while (i < role.size())
-	{
-	  if (role[i] == '\t')
-	  {
-	    member_roles_out<<role<<"\\\t";
-	    role = role.substr(i+1);
-	    i = 0;
-	  }
-	  else if (role[i] == '\n')
-	  {
-	    member_roles_out<<role<<"\\\n";
-	    role = role.substr(i+1);
-	    i = 0;
-	  }
-	  else if (role[i] == '"')
-	  {
-	    member_roles_out<<role<<"&quot;";
-	    role = role.substr(i+1);
-	    i = 0;
-	  }
-	  else if (role[i] == '&')
-	  {
-	    member_roles_out<<role<<"&amp;";
-	    role = role.substr(i+1);
-	    i = 0;
-	  }
-	  else if (role[i] == '<')
-	  {
-	    member_roles_out<<role<<"&lt;";
-	    role = role.substr(i+1);
-	    i = 0;
-	  }
-	  else if (role[i] == '>')
-	  {
-	    member_roles_out<<role<<"&gt;";
-	    role = role.substr(i+1);
-	    i = 0;
-	  }
-	  else
-	    ++i;
-	}
-	member_roles_out<<role<<'\n';
+	escape_infile_xml(member_roles_out, role);
+	member_roles_out<<'\n';
       }
       if (type == "node")
 	relation_node_members_out<<current_id<<'\t'<<ref<<'\t'<<role_id<<'\n';
@@ -468,6 +345,13 @@ void end(const char *el)
 int main(int argc, char *argv[])
 {
   cerr<<(uintmax_t)time(NULL)<<'\n';
+  
+  if ((argc < 2) || (strcmp(argv[1], "-y")))
+  {
+    cout<<"This would reset the database \"osm\". If you really want to do that, please run\n";
+    cout<<argv[0]<<" -y\n";
+    return 0;
+  }
   
   mysql = mysql_init(NULL);
   
