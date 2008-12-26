@@ -213,7 +213,8 @@ void Root_Statement::add_statement(Statement* statement)
 {
   if ((statement->get_name() == "id-query") ||
        (statement->get_name() == "query") ||
-       (statement->get_name() == "print"))
+       (statement->get_name() == "print") ||
+       (statement->get_name() == "recurse"))
     substatements.push_back(statement);
   else
     substatement_error("osm-script", statement);
@@ -998,6 +999,447 @@ void Id_Query_Statement::execute(map< string, Set >& maps)
 
 //-----------------------------------------------------------------------------
 
+class Recurse_Statement : public Statement
+{
+  public:
+    Recurse_Statement() {}
+    virtual void set_attributes(const char **attr);
+    virtual void add_statement(Statement* statement);
+    virtual string get_name() { return "recurse"; }
+    virtual void execute(map< string, Set >& maps);
+    virtual ~Recurse_Statement() {}
+    
+  private:
+    string input, output;
+    unsigned int type;
+};
+
+const unsigned int RECURSE_WAY_NODE = 1;
+const unsigned int RECURSE_RELATION_RELATION = 2;
+const unsigned int RECURSE_RELATION_WAY = 3;
+const unsigned int RECURSE_RELATION_NODE = 4;
+
+void Recurse_Statement::set_attributes(const char **attr)
+{
+  map< string, string > attributes;
+  
+  attributes["from"] = "_";
+  attributes["into"] = "_";
+  attributes["type"] = "";
+  
+  eval_cstr_array("recurse", attributes, attr);
+  
+  input = attributes["from"];
+  output = attributes["into"];
+  
+  if (attributes["type"] == "way-node")
+    type = RECURSE_WAY_NODE;
+  else if (attributes["type"] == "relation-relation")
+    type = RECURSE_RELATION_RELATION;
+  else if (attributes["type"] == "relation-way")
+    type = RECURSE_RELATION_WAY;
+  else if (attributes["type"] == "relation-node")
+    type = RECURSE_RELATION_NODE;
+  else
+  {
+    type = 0;
+    ostringstream temp;
+    temp<<"In Line "<<current_line_number()
+	<<": For the attribute \"type\" of the element \"recurse\""
+	<<" the only allowed values are \"way-node\", \"relation-relation\","
+	<<"\"relation-way\" or \"relation-node\".";
+    static_errors.push_back(Error(temp.str(), current_line_number()));
+  }
+}
+
+void Recurse_Statement::add_statement(Statement* statement)
+{
+  substatement_error("recurse", statement);
+}
+
+void Recurse_Statement::execute(map< string, Set >& maps)
+{
+  set< Node > nodes;
+  set< Way > ways;
+  set< Relation > relations;
+  if (input == output)
+  {
+    nodes = maps[output].get_nodes();
+    ways = maps[output].get_ways();
+    relations = maps[output].get_relations();
+  }
+  
+  map< string, Set >::const_iterator mit(maps.find(input));
+  if (mit == maps.end())
+  {
+    maps[output] = Set(nodes, ways, relations);
+    return;
+  }
+  
+  if (type == RECURSE_WAY_NODE)
+  {
+    set< int > tnodes;
+    for (set< Way >::const_iterator it(mit->second.get_ways().begin());
+	 it != mit->second.get_ways().end(); )
+    {
+      ostringstream temp;
+      temp<<"select way_members.ref from ways "
+	  <<"left join way_members on way_members.id = ways.id "
+	  <<"where ways.id in ("<<it->id;
+      unsigned int i(0);
+      while (((++it) != mit->second.get_ways().end()) && (i++ < 10000))
+	temp<<", "<<it->id;
+      temp<<") order by ways.id";
+      
+      MYSQL_RES* result(mysql_query_wrapper(temp.str()));
+      if (!result)
+	return;
+	
+      MYSQL_ROW row(mysql_fetch_row(result));
+      while ((row) && (row[0]))
+      {
+	tnodes.insert(atoi(row[0]));
+	row = mysql_fetch_row(result);
+      }
+      delete result;
+    }
+    
+    for (set< int >::const_iterator it(tnodes.begin()); it != tnodes.end(); )
+    {
+      ostringstream temp;
+      temp<<"select id, lat, lon from nodes "
+	  <<"where id in ("<<*it;
+      unsigned int i(0);
+      while (((++it) != tnodes.end()) && (i++ < 10000))
+	temp<<", "<<*it;
+      temp<<") order by id";
+	
+      MYSQL_RES* result(mysql_query_wrapper(temp.str()));
+	
+      if (!result)
+	return;
+	
+      MYSQL_ROW row(mysql_fetch_row(result));
+      while ((row) && (row[0]) && (row[1]) && (row[2]))
+      {
+	nodes.insert(Node(atoi(row[0]), atoi(row[1]), atoi(row[2])));
+	row = mysql_fetch_row(result);
+      }
+      delete result;
+    }
+  }
+  else if (type == RECURSE_RELATION_RELATION)
+  {
+    set< int > rels;
+    for (set< Relation >::const_iterator it(mit->second.get_relations().begin());
+	 it != mit->second.get_relations().end(); )
+    {
+      ostringstream temp;
+      temp<<"select relation_relation_members.ref from relations "
+	  <<"left join relation_relation_members on relation_relation_members.id = relations.id "
+	  <<"where relations.id in ("<<it->id;
+      unsigned int i(0);
+      while (((++it) != mit->second.get_relations().end()) && (i++ < 10000))
+	temp<<", "<<it->id;
+      temp<<") order by relations.id";
+      
+      MYSQL_RES* result(mysql_query_wrapper(temp.str()));
+      if (!result)
+	return;
+	
+      MYSQL_ROW row(mysql_fetch_row(result));
+      while ((row) && (row[0]))
+      {
+	rels.insert(atoi(row[0]));
+	row = mysql_fetch_row(result);
+      }
+      delete result;
+    }
+    
+    map< int, set< pair< int, int > > > node_member_map;
+    for (set< int >::const_iterator it(rels.begin()); it != rels.end(); ++it)
+      node_member_map[*it] = set< pair< int, int > >();
+
+    for (map< int, set< pair< int, int > > >::iterator it(node_member_map.begin());
+	 it != node_member_map.end(); )
+    {
+      map< int, set< pair< int, int > > >::iterator it2(it);
+      ostringstream temp;
+      temp<<"select id, ref, role from relation_node_members "
+	  <<"where id in ("<<it->first;
+      unsigned int i(0);
+      while (((++it) != node_member_map.end()) && (i++ < 10000))
+	temp<<", "<<it->first;
+      temp<<") order by id";
+	
+      MYSQL_RES* result(mysql_query_wrapper(temp.str()));
+	
+      if (!result)
+	return;
+	
+      MYSQL_ROW row(mysql_fetch_row(result));
+      while ((row) && (row[0]))
+      {
+	int id(atoi(row[0]));
+	while (it2->first < id)
+	  ++it2;
+	while ((row) && (row[0]) && (it2->first == atoi(row[0])))
+	{
+	  if (row[1])
+	  {
+	    if (row[2])
+	      it2->second.insert
+		  (make_pair< int, int >(atoi(row[1]), atoi(row[2])));
+	    else
+	      it2->second.insert
+		  (make_pair< int, int >(atoi(row[1]), 0));
+	  }
+	  row = mysql_fetch_row(result);
+	}
+	++it2;
+      }
+      delete result;
+    }
+
+    map< int, set< pair< int, int > > > way_member_map;
+    for (set< int >::const_iterator it(rels.begin()); it != rels.end(); ++it)
+      way_member_map[*it] = set< pair< int, int > >();
+
+    for (map< int, set< pair< int, int > > >::iterator it(way_member_map.begin());
+	 it != way_member_map.end(); )
+    {
+      map< int, set< pair< int, int > > >::iterator it2(it);
+      ostringstream temp;
+      temp<<"select id, ref, role from relation_way_members "
+	  <<"where id in ("<<it->first;
+      unsigned int i(0);
+      while (((++it) != way_member_map.end()) && (i++ < 10000))
+	temp<<", "<<it->first;
+      temp<<") order by id";
+	
+      MYSQL_RES* result(mysql_query_wrapper(temp.str()));
+	
+      if (!result)
+	return;
+	
+      MYSQL_ROW row(mysql_fetch_row(result));
+      while ((row) && (row[0]))
+      {
+	int id(atoi(row[0]));
+	while (it2->first < id)
+	  ++it2;
+	while ((row) && (row[0]) && (it2->first == atoi(row[0])))
+	{
+	  if (row[1])
+	  {
+	    if (row[2])
+	      it2->second.insert
+		  (make_pair< int, int >(atoi(row[1]), atoi(row[2])));
+	    else
+	      it2->second.insert
+		  (make_pair< int, int >(atoi(row[1]), 0));
+	  }
+	  row = mysql_fetch_row(result);
+	}
+	++it2;
+      }
+      delete result;
+    }
+
+    map< int, set< pair< int, int > > > relation_member_map;
+    for (set< int >::const_iterator it(rels.begin()); it != rels.end(); ++it)
+      relation_member_map[*it] = set< pair< int, int > >();
+
+    for (map< int, set< pair< int, int > > >::iterator it(relation_member_map.begin());
+	 it != relation_member_map.end(); )
+    {
+      map< int, set< pair< int, int > > >::iterator it2(it);
+      ostringstream temp;
+      temp<<"select id, ref, role from relation_relation_members "
+	  <<"where id in ("<<it->first;
+      unsigned int i(0);
+      while (((++it) != relation_member_map.end()) && (i++ < 10000))
+	temp<<", "<<it->first;
+      temp<<") order by id";
+	
+      MYSQL_RES* result(mysql_query_wrapper(temp.str()));
+	
+      if (!result)
+	return;
+	
+      MYSQL_ROW row(mysql_fetch_row(result));
+      while ((row) && (row[0]))
+      {
+	int id(atoi(row[0]));
+	while (it2->first < id)
+	  ++it2;
+	while ((row) && (row[0]) && (it2->first == atoi(row[0])))
+	{
+	  if (row[1])
+	  {
+	    if (row[2])
+	      it2->second.insert
+		  (make_pair< int, int >(atoi(row[1]), atoi(row[2])));
+	    else
+	      it2->second.insert
+		  (make_pair< int, int >(atoi(row[1]), 0));
+	  }
+	  row = mysql_fetch_row(result);
+	}
+	++it2;
+      }
+      delete result;
+    }
+
+    for (set< int >::const_iterator it(rels.begin()); it != rels.end(); ++it)
+    {
+      Relation relation(*it);
+      relation.node_members = node_member_map[*it];
+      relation.way_members = way_member_map[*it];
+      relation.relation_members = relation_member_map[*it];
+      relations.insert(relation);
+    }
+  }
+  else if (type == RECURSE_RELATION_WAY)
+  {
+    set< int > tways;
+    for (set< Relation >::const_iterator it(mit->second.get_relations().begin());
+	 it != mit->second.get_relations().end(); )
+    {
+      ostringstream temp;
+      temp<<"select relation_way_members.ref from relations "
+	  <<"left join relation_way_members on relation_way_members.id = relations.id "
+	  <<"where relations.id in ("<<it->id;
+      unsigned int i(0);
+      while (((++it) != mit->second.get_relations().end()) && (i++ < 10000))
+	temp<<", "<<it->id;
+      temp<<") order by relations.id";
+      
+      MYSQL_RES* result(mysql_query_wrapper(temp.str()));
+      if (!result)
+	return;
+	
+      MYSQL_ROW row(mysql_fetch_row(result));
+      while ((row) && (row[0]))
+      {
+	tways.insert(atoi(row[0]));
+	row = mysql_fetch_row(result);
+      }
+      delete result;
+    }
+    
+    map< int, vector< int > > member_map;
+    for (set< int >::const_iterator it(tways.begin()); it != tways.end(); ++it)
+      member_map[*it] = vector< int >();
+
+    for (map< int, vector< int > >::iterator it(member_map.begin());
+	 it != member_map.end(); )
+    {
+      map< int, vector< int > >::iterator it2(it);
+      ostringstream temp;
+      temp<<"select ways.id, way_members.count, way_members.ref from ways "
+	  <<"left join way_members on way_members.id = ways.id "
+	  <<"where ways.id in ("<<it->first;
+      unsigned int i(0);
+      while (((++it) != member_map.end()) && (i++ < 10000))
+	temp<<", "<<it->first;
+      temp<<") order by ways.id";
+	
+      MYSQL_RES* result(mysql_query_wrapper(temp.str()));
+	
+      if (!result)
+	return;
+	
+      MYSQL_ROW row(mysql_fetch_row(result));
+      while ((row) && (row[0]))
+      {
+	int id(atoi(row[0]));
+	while (it2->first < id)
+	  ++it2;
+	it2->second.reserve(100);
+	while ((row) && (row[0]) && (it2->first == atoi(row[0])))
+	{
+	  if ((row[1]) && (row[2]))
+	  {
+	    unsigned int count((unsigned int)atol(row[1]));
+	    if (it2->second.capacity() < count)
+	      it2->second.reserve(count+100);
+	    if (it2->second.size() < count)
+	      it2->second.resize(count);
+	    it2->second[count-1] = atoi(row[2]);
+	  }
+	  row = mysql_fetch_row(result);
+	}
+	++it2;
+      }
+      delete result;
+    }
+
+    for (set< int >::const_iterator it(tways.begin()); it != tways.end(); ++it)
+    {
+      Way way(*it);
+      way.members = member_map[*it];
+      ways.insert(way);
+    }
+  }
+  else if (type == RECURSE_RELATION_NODE)
+  {
+    set< int > tnodes;
+    for (set< Relation >::const_iterator it(mit->second.get_relations().begin());
+	 it != mit->second.get_relations().end(); )
+    {
+      ostringstream temp;
+      temp<<"select relation_node_members.ref from relations "
+	  <<"left join relation_node_members on relation_node_members.id = relations.id "
+	  <<"where relations.id in ("<<it->id;
+      unsigned int i(0);
+      while (((++it) != mit->second.get_relations().end()) && (i++ < 10000))
+	temp<<", "<<it->id;
+      temp<<") order by relations.id";
+      
+      MYSQL_RES* result(mysql_query_wrapper(temp.str()));
+      if (!result)
+	return;
+	
+      MYSQL_ROW row(mysql_fetch_row(result));
+      while ((row) && (row[0]))
+      {
+	tnodes.insert(atoi(row[0]));
+	row = mysql_fetch_row(result);
+      }
+      delete result;
+    }
+    
+    for (set< int >::const_iterator it(tnodes.begin()); it != tnodes.end(); )
+    {
+      ostringstream temp;
+      temp<<"select id, lat, lon from nodes "
+	  <<"where id in ("<<*it;
+      unsigned int i(0);
+      while (((++it) != tnodes.end()) && (i++ < 10000))
+	temp<<", "<<*it;
+      temp<<") order by id";
+	
+      MYSQL_RES* result(mysql_query_wrapper(temp.str()));
+	
+      if (!result)
+	return;
+	
+      MYSQL_ROW row(mysql_fetch_row(result));
+      while ((row) && (row[0]) && (row[1]) && (row[2]))
+      {
+	nodes.insert(Node(atoi(row[0]), atoi(row[1]), atoi(row[2])));
+	row = mysql_fetch_row(result);
+      }
+      delete result;
+    }
+  }
+  
+  maps[output] = Set(nodes, ways, relations);
+}
+
+//-----------------------------------------------------------------------------
+
 class Print_Statement : public Statement
 {
   public:
@@ -1275,6 +1717,8 @@ Statement* generate_statement(string element)
     return new Query_Statement();
   else if (element == "has-kv")
     return new Has_Key_Value_Statement();
+  else if (element == "recurse")
+    return new Recurse_Statement();
   else if (element == "print")
     return new Print_Statement();
   
@@ -1288,9 +1732,10 @@ Statement* generate_statement(string element)
 bool is_known_element(string element)
 {
   if ((element == "osm-script") ||
+       (element == "id-query") ||
        (element == "query") ||
        (element == "has-kv") ||
-       (element == "id-query") ||
+       (element == "recurse") ||
        (element == "print"))
     return true;
   
