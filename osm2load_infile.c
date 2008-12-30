@@ -66,7 +66,7 @@ void prepare_db()
   mysql_query(mysql, "create database osm");
   mysql_query(mysql, "use osm");
 
-  mysql_query(mysql, "create table nodes (id int unsigned, lon_idx int, lat int, lon int)");
+  mysql_query(mysql, "create table nodes (id int unsigned, lat_idx int, lat int, lon int)");
   mysql_query(mysql, "create table node_tags (id int unsigned, key_ int unsigned, value_ int unsigned)");
   mysql_query(mysql, "create table ways (id int unsigned)");
   mysql_query(mysql, "create table way_members (id int unsigned, count int unsigned, ref int unsigned)");
@@ -79,7 +79,9 @@ void prepare_db()
   mysql_query(mysql, "create table member_roles (id int unsigned, role varchar(21844))");
   mysql_query(mysql, "create table key_s (id int unsigned, key_ varchar(21844))");
   mysql_query(mysql, "create table value_s (id int unsigned, value_ varchar(21844))");
-  /*  mysql_query(mysql, "create table nodes (id int unsigned, lat int, lon int, primary key(id))");*/
+
+  mysql_query(mysql, "create table areas (id int unsigned, ref int unsigned, type int unsigned)");
+  mysql_query(mysql, "create table area_segments (ref int unsigned, lat_idx int, min_lat int, max_lat int, min_lon int, max_lon int)");
 }
 
 void postprocess_db()
@@ -117,7 +119,7 @@ void postprocess_db()
   mysql_query(mysql, "alter table value_s add unique key(id)");
   
   cerr<<", nodes";
-  mysql_query(mysql, "alter table nodes add index(lon_idx, lat)");
+  mysql_query(mysql, "alter table nodes add index(lat_idx, lon)");
   cerr<<", node_tags";
   mysql_query(mysql, "alter table node_tags add index(key_, value_)");
   cerr<<", way_tags";
