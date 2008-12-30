@@ -17,8 +17,8 @@
 using namespace std;
 
 const unsigned int ID_QUERY_NODE = 1;
-const unsigned int ID_QUERY_WAY = 1;
-const unsigned int ID_QUERY_RELATION = 1;
+const unsigned int ID_QUERY_WAY = 2;
+const unsigned int ID_QUERY_RELATION = 3;
 
 void Id_Query_Statement::set_attributes(const char **attr)
 {
