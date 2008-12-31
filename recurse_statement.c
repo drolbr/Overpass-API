@@ -66,17 +66,19 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   set< Node > nodes;
   set< Way > ways;
   set< Relation > relations;
+  set< Area > areas;
   if (input == output)
   {
     nodes = maps[output].get_nodes();
     ways = maps[output].get_ways();
     relations = maps[output].get_relations();
+    areas = maps[output].get_areas();
   }
   
   map< string, Set >::const_iterator mit(maps.find(input));
   if (mit == maps.end())
   {
-    maps[output] = Set(nodes, ways, relations);
+    maps[output] = Set(nodes, ways, relations, areas);
     return;
   }
   
@@ -132,5 +134,5 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	(mysql, "select id, lat, lon from nodes where id in", "order by id", tnodes, nodes);
   }
   
-  maps[output] = Set(nodes, ways, relations);
+  maps[output] = Set(nodes, ways, relations, areas);
 }

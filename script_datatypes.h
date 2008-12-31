@@ -5,6 +5,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <math.h>
 
 #include <mysql.h>
 
@@ -54,6 +55,55 @@ inline bool operator<(const Relation& relation_1, const Relation& relation_2)
   return (relation_1.id < relation_2.id);
 }
 
+struct Line_Segment
+{
+  public:
+    Line_Segment(int west_lat_, int west_lon_, int east_lat_, int east_lon_)
+  : west_lon(west_lon_), west_lat(west_lat_), east_lon(east_lon_),  east_lat(east_lat_) {}
+    
+    const int west_lon, west_lat;
+    const int east_lon, east_lat;
+};
+
+inline bool operator<(const Line_Segment& line_segment_1, const Line_Segment& line_segment_2)
+{
+  if (line_segment_1.west_lon < line_segment_2.west_lon)
+    return true;
+  if (line_segment_1.west_lon > line_segment_2.west_lon)
+    return false;
+  if (line_segment_1.west_lat < line_segment_2.west_lat)
+    return true;
+  if (line_segment_1.west_lat > line_segment_2.west_lat)
+    return false;
+  if (line_segment_1.east_lon < line_segment_2.east_lon)
+    return true;
+  if (line_segment_1.east_lon > line_segment_2.east_lon)
+    return false;
+  return (line_segment_1.east_lat < line_segment_2.east_lat);
+}
+
+struct Area
+{
+  public:
+    Area(int id_) : id(id_) {}
+    
+    const int id;
+    set< Line_Segment > segments;
+};
+
+inline bool operator<(const Area& area_1, const Area& area_2)
+{
+  return (area_1.id < area_2.id);
+}
+
+inline int calc_idx(int a)
+{
+  return ((int)floor(((double)a)/10000000));
+}
+
+//TODO: reasonable area counter
+extern int next_area_id;
+
 class Set
 {
   public:
@@ -62,15 +112,22 @@ class Set
 	const set< Way >& ways_,
         const set< Relation >& relations_)
   : nodes(nodes_), ways(ways_), relations(relations_) {}
+    Set(const set< Node >& nodes_,
+	const set< Way >& ways_,
+	const set< Relation >& relations_,
+	const set< Area >& areas_)
+  : nodes(nodes_), ways(ways_), relations(relations_), areas(areas_) {}
     
     const set< Node >& get_nodes() const { return nodes; }
     const set< Way >& get_ways() const { return ways; }
     const set< Relation >& get_relations() const { return relations; }
+    const set< Area >& get_areas() const { return areas; }
   
   private:
     set< Node > nodes;
     set< Way > ways;
     set< Relation > relations;
+    set< Area > areas;
 };
 
 class Statement

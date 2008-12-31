@@ -13,6 +13,7 @@
 #include "query_statement.h"
 #include "id_query_statement.h"
 #include "recurse_statement.h"
+#include "make_area_statement.h"
 #include "print_statement.h"
 
 #include <mysql.h>
@@ -35,6 +36,8 @@ Statement* generate_statement(string element)
     return new Has_Key_Value_Statement();
   else if (element == "recurse")
     return new Recurse_Statement();
+  else if (element == "make-area")
+    return new Make_Area_Statement();
   else if (element == "print")
     return new Print_Statement();
   
@@ -52,6 +55,7 @@ bool is_known_element(string element)
        (element == "query") ||
        (element == "has-kv") ||
        (element == "recurse") ||
+       (element == "make-area") ||
        (element == "print"))
     return true;
   
@@ -82,6 +86,9 @@ void end(const char *el)
     statement_stack.back()->add_statement(statement);
   }
 }
+
+//TODO: reasonable area counter
+int next_area_id(-1);
 
 int main(int argc, char *argv[])
 {

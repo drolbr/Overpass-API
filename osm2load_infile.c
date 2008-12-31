@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
+#include "script_datatypes.h"
 #include "expat_justparse_interface.h"
 
 #include <mysql.h>
@@ -122,6 +123,8 @@ void postprocess_db()
   mysql_query(mysql, "alter table nodes add index(lat_idx, lon)");
   cerr<<", node_tags";
   mysql_query(mysql, "alter table node_tags add index(key_, value_)");
+  cerr<<", way_members";
+  mysql_query(mysql, "alter table way_members add index(ref)");
   cerr<<", way_tags";
   mysql_query(mysql, "alter table way_tags add index(key_, value_)");
   cerr<<", relation_tags";
@@ -260,19 +263,19 @@ void start(const char *el, const char **attr)
   else if (!strcmp(el, "node"))
   {
     unsigned int id(0);
-    int lon_idx(200), lat(100*10000000), lon(200*10000000);
+    int lat_idx(100), lat(100*10000000), lon(200*10000000);
     for (unsigned int i(0); attr[i]; i += 2)
     {
       if (!strcmp(attr[i], "id"))
 	id = atoi(attr[i+1]);
       if (!strcmp(attr[i], "lat"))
-	lat = (int)(atof(attr[i+1])*10000000);
-      if (!strcmp(attr[i], "lon"))
       {
-	double dlon(atof(attr[i+1]));
-	lon = (int)(dlon*10000000);
-	lon_idx = (int)(dlon+180)-180;
+	double dlat(atof(attr[i+1]));
+	lat = (int)(dlat*10000000);
+	lat_idx = calc_idx(lat);
       }
+      if (!strcmp(attr[i], "lon"))
+	lon = (int)(atof(attr[i+1])*10000000);
     }
     nodes_out<<id<<'\t'<<lon/10000000<<'\t'<<lat<<'\t'<<lon<<'\n';
     tag_type = NODE;

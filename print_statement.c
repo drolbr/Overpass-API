@@ -267,5 +267,16 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	delete result;
       }
     }
+    for (set< Area >::const_iterator it(mit->second.get_areas().begin());
+	 it != mit->second.get_areas().end(); ++it)
+    {
+      //TODO: temporary output
+      cout<<"<area id=\""<<it->id<<"\">\n";
+      for (set< Line_Segment >::const_iterator it2(it->segments.begin());
+	   it2 != it->segments.end(); ++it2)
+	cout<<"  <vx west=\""<<it2->west_lat<<' '<<it2->west_lon
+	    <<"\" east=\""<<it2->east_lat<<' '<<it2->east_lon<<"\"/>\n";
+      cout<<"</area>\n";
+    }
   }
 }
