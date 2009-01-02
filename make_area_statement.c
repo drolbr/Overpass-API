@@ -80,6 +80,7 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   const set< Node >& in_nodes(mit->second.get_nodes());
   
   Area area(next_area_id--);
+  vector< set< int > > lat_intersections(179);
   set< int > node_parity_control;
   for (set< Way >::const_iterator it(mit->second.get_ways().begin());
        it != mit->second.get_ways().end(); ++it)
@@ -119,13 +120,21 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	  area_insert(area, onit->lat, onit->lon, (calc_idx(onit->lat)+1)*10000000,
 		      onit->lon + (long long)(nnit->lon - onit->lon)
 			  *((calc_idx(onit->lat)+1)*10000000 - onit->lat)/(nnit->lat - onit->lat));
+	  lat_intersections[calc_idx(onit->lat)+90].insert
+	      (onit->lon + (long long)(nnit->lon - onit->lon)
+	      *((calc_idx(onit->lat)+1)*10000000 - onit->lat)/(nnit->lat - onit->lat));
 	  for (int i(calc_idx(onit->lat)+1); i < calc_idx(nnit->lat); ++i)
+	  {
 	    area_insert(area, i*10000000,
 			onit->lon + (long long)(nnit->lon - onit->lon)
 			    *(i*10000000 - onit->lat)/(nnit->lat - onit->lat),
 			      (i+1)*10000000,
 			onit->lon + (long long)(nnit->lon - onit->lon)
 			    *((i+1)*10000000 - onit->lat)/(nnit->lat - onit->lat));
+	    lat_intersections[i+90].insert
+		(onit->lon + (long long)(nnit->lon - onit->lon)
+		*((i+1)*10000000 - onit->lat)/(nnit->lat - onit->lat));
+	  }
 	  area_insert(area, calc_idx(nnit->lat)*10000000,
 		      onit->lon + (long long)(nnit->lon - onit->lon)
 			  *(calc_idx(nnit->lat)*10000000 - onit->lat)/(nnit->lat - onit->lat),
@@ -136,13 +145,21 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	  area_insert(area, nnit->lat, nnit->lon, (calc_idx(nnit->lat)+1)*10000000,
 		      nnit->lon + (long long)(onit->lon - nnit->lon)
 			  *((calc_idx(nnit->lat)+1)*10000000 - nnit->lat)/(onit->lat - nnit->lat));
+	  lat_intersections[calc_idx(nnit->lat)+90].insert
+	      (nnit->lon + (long long)(onit->lon - nnit->lon)
+	      *((calc_idx(nnit->lat)+1)*10000000 - nnit->lat)/(onit->lat - nnit->lat));
 	  for (int i(calc_idx(nnit->lat)+1); i < calc_idx(onit->lat); ++i)
+	  {
 	    area_insert(area, i*10000000,
 			nnit->lon + (long long)(onit->lon - nnit->lon)
 			    *(i*10000000 - nnit->lat)/(onit->lat - nnit->lat),
 			      (i+1)*10000000,
 			       nnit->lon + (long long)(onit->lon - nnit->lon)
 				   *((i+1)*10000000 - nnit->lat)/(onit->lat - nnit->lat));
+	    lat_intersections[i+90].insert
+		(nnit->lon + (long long)(onit->lon - nnit->lon)
+		*((i+1)*10000000 - nnit->lat)/(onit->lat - nnit->lat));
+	  }
 	  area_insert(area, calc_idx(onit->lat)*10000000,
 		      nnit->lon + (long long)(onit->lon - nnit->lon)
 			  *(calc_idx(onit->lat)*10000000 - nnit->lat)/(onit->lat - nnit->lat),
@@ -167,6 +184,37 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	<<" is contained in an odd number of ways.\n";
     maps[output] = Set(nodes, ways, relations, areas);
     return;
+  }
+  for (unsigned int i(0); i < 179; ++i)
+  {
+    int from(2000000000);
+    for (set< int >::const_iterator it(lat_intersections[i].begin());
+	 it != lat_intersections[i].end(); ++it)
+    {
+      if (from == 2000000000)
+	from = *it;
+      else
+      {
+	if (floor(((double)from)/100000) == floor(((double)(*it))/100000))
+	  area.segments.insert(Line_Segment
+	      ((i-89)*10000000, ((double)(from))/10000000,
+		(i-89)*10000000, ((double)(*it))/10000000));
+	else
+	{
+	  area.segments.insert(Line_Segment
+	      ((i-89)*10000000, from,
+		(i-89)*10000000, ((int)(floor(((double)from)/100000))+1)*100000));
+	  for (int j((int)(floor(((double)from)/100000))+1);
+		      j < floor(((double)(*it))/100000); ++j)
+	    area.segments.insert(Line_Segment
+		((i-89)*10000000, j*100000, (i-89)*10000000, (j+1)*100000));
+	  area.segments.insert(Line_Segment
+	      ((i-89)*10000000, ((int)floor(((double)(*it))/100000))*100000,
+		(i-89)*10000000, *it));
+	}
+	from = 2000000000;
+      }
+    }
   }
   
   areas.insert(area);
