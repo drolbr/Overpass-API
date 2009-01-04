@@ -81,8 +81,9 @@ void prepare_db()
   mysql_query(mysql, "create table key_s (id int unsigned, key_ varchar(21844))");
   mysql_query(mysql, "create table value_s (id int unsigned, value_ varchar(21844))");
 
-  mysql_query(mysql, "create table areas (id int unsigned, ref int unsigned, type int unsigned)");
-  mysql_query(mysql, "create table area_segments (ref int unsigned, lat_idx int, min_lat int, max_lat int, min_lon int, max_lon int)");
+  mysql_query(mysql, "create table areas (id int, ref int unsigned, type int unsigned)");
+  mysql_query(mysql, "create table area_segments (id int, lat_idx int, min_lat int, min_lon int, max_lat int, max_lon int)");
+  mysql_query(mysql, "create table area_tags (id int, key_ int unsigned, value_ int unsigned)");
 }
 
 void postprocess_db()
@@ -118,6 +119,12 @@ void postprocess_db()
   mysql_query(mysql, "alter table key_s add unique key(id)");
   cerr<<", value_s";
   mysql_query(mysql, "alter table value_s add unique key(id)");
+  cerr<<", areas";
+  mysql_query(mysql, "alter table areas add unique key(id)");
+  cerr<<", area_segments";
+  mysql_query(mysql, "alter table area_segments add key(id)");
+  cerr<<", area_tags";
+  mysql_query(mysql, "alter table area_tags add key(id)");
   
   cerr<<", nodes";
   mysql_query(mysql, "alter table nodes add index(lat_idx, lon)");
@@ -133,6 +140,8 @@ void postprocess_db()
   mysql_query(mysql, "alter table key_s add index(key_)");
   cerr<<", value_s";
   mysql_query(mysql, "alter table value_s add index(value_)");
+  cerr<<", area_segments";
+  mysql_query(mysql, "alter table area_segments add index(lat_idx, min_lon)");
   cerr<<'\n';
 }
 

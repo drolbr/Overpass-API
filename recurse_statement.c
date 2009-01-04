@@ -6,12 +6,9 @@
 #include <stdlib.h>
 #include <vector>
 #include "expat_justparse_interface.h"
-#include "cgi-helper.h"
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
-#include "query_statement.h"
-#include "id_query_statement.h"
 #include "recurse_statement.h"
 
 #include <mysql.h>

@@ -33,6 +33,20 @@ MYSQL_RES* mysql_query_wrapper(MYSQL* mysql, string query)
   return result;
 }
 
+int int_query(MYSQL* mysql, string query)
+{
+  int result_val(0);
+  MYSQL_RES* result(mysql_query_wrapper(mysql, query));
+  if (!result)
+    return 0;
+	
+  MYSQL_ROW row(mysql_fetch_row(result));
+  if ((row) && (row[0]))
+    result_val = atoi(row[0]);
+  delete result;
+  return result_val;
+}
+
 set< int >& multiint_query(MYSQL* mysql, string query, set< int >& result_set)
 {
   MYSQL_RES* result(mysql_query_wrapper(mysql, query));

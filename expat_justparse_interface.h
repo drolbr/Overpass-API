@@ -9,7 +9,7 @@
 #include <time.h>
 #include <expat.h>
 
-#define BUFFSIZE        8192
+#define BUFFSIZE        65536
 
 using namespace std;
 

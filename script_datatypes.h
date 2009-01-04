@@ -91,6 +91,10 @@ struct Area
     set< Line_Segment > segments;
 };
 
+const int REF_NODE = 1;
+const int REF_WAY = 2;
+const int REF_RELATION = 3;
+
 inline bool operator<(const Area& area_1, const Area& area_2)
 {
   return (area_1.id < area_2.id);

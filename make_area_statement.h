@@ -31,7 +31,7 @@ class Make_Area_Statement : public Statement
     virtual ~Make_Area_Statement() {}
     
   private:
-    string input, output;
+    string input, output, tags;
     unsigned int type;
 };
 

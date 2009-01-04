@@ -2,11 +2,11 @@
 #include <iostream>
 #include <map>
 #include <set>
+#include <sstream>
 #include <string>
 #include <stdlib.h>
 #include <vector>
 #include "expat_justparse_interface.h"
-#include "cgi-helper.h"
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"

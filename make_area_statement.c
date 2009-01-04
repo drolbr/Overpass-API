@@ -1,4 +1,5 @@
 #include <cctype>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <set>
@@ -7,7 +8,6 @@
 #include <stdlib.h>
 #include <vector>
 #include "expat_justparse_interface.h"
-#include "cgi-helper.h"
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
@@ -23,11 +23,13 @@ void Make_Area_Statement::set_attributes(const char **attr)
   
   attributes["from"] = "_";
   attributes["into"] = "_";
+  attributes["tags"] = "";
   
   eval_cstr_array(get_name(), attributes, attr);
   
   input = attributes["from"];
   output = attributes["into"];
+  tags = attributes["tags"];
 }
 
 void Make_Area_Statement::add_statement(Statement* statement)
@@ -79,7 +81,8 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   }
   const set< Node >& in_nodes(mit->second.get_nodes());
   
-  Area area(next_area_id--);
+  Area area(int_query(mysql, "select min(id) from areas")-1);
+  
   vector< set< int > > lat_intersections(179);
   set< int > node_parity_control;
   for (set< Way >::const_iterator it(mit->second.get_ways().begin());
@@ -215,6 +218,39 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	from = 2000000000;
       }
     }
+  }
+  
+  ostringstream temp;
+  temp<<"insert areas values ("<<area.id<<", 0, 0)";
+  mysql_query(mysql, temp.str().c_str());
+  
+  ofstream area_segments_out("/tmp/db_area_area_segments.tsv");
+  for (set< Line_Segment >::const_iterator it(area.segments.begin());
+       it != area.segments.end(); ++it)
+    area_segments_out<<area.id<<'\t'<<calc_idx(it->west_lat)<<'\t'
+	<<it->west_lat<<'\t'<<it->west_lon<<'\t'
+	<<it->east_lat<<'\t'<<it->east_lon<<'\n';
+  area_segments_out.close();
+  mysql_query(mysql, "load data local infile '/tmp/db_area_area_segments.tsv' into table area_segments");
+  
+  mit = maps.find(tags);
+  if (mit != maps.end())
+  {
+    ostringstream temp;
+    if (mit->second.get_nodes().begin() != mit->second.get_nodes().end())
+      temp<<"insert into area_tags "
+	  <<"select "<<area.id<<", node_tags.key_, node_tags.value_ "
+	  <<"from node_tags where node_tags.id = "<<(mit->second.get_nodes().begin())->id;
+    else if (mit->second.get_ways().begin() != mit->second.get_ways().end())
+      temp<<"insert into area_tags "
+	  <<"select "<<area.id<<", way_tags.key_, way_tags.value_ "
+	  <<"from way_tags where way_tags.id = "<<(mit->second.get_ways().begin())->id;
+    else if (mit->second.get_relations().begin() != mit->second.get_relations().end())
+      temp<<"insert into area_tags "
+	  <<"select "<<area.id<<", relation_tags.key_, relation_tags.value_ "
+	  <<"from relation_tags where relation_tags.id = "<<(mit->second.get_relations().begin())->id;
+    if (temp.str() != "")
+      mysql_query(mysql, temp.str().c_str());
   }
   
   areas.insert(area);

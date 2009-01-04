@@ -2,17 +2,14 @@
 #include <iostream>
 #include <map>
 #include <set>
+#include <sstream>
 #include <string>
 #include <stdlib.h>
 #include <vector>
 #include "expat_justparse_interface.h"
-#include "cgi-helper.h"
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
-#include "query_statement.h"
-#include "id_query_statement.h"
-#include "recurse_statement.h"
 #include "print_statement.h"
 
 #include <mysql.h>
@@ -104,6 +101,22 @@ void out_relation(const Relation& rel, const vector< string >& role_cache, bool 
   }
 }
 
+void out_area(const Area& area, bool complete = true)
+{
+  if (complete)
+    cout<<"<area id=\""<<area.id<<"\"/>\n";
+  else
+  {
+    cout<<"<area id=\""<<area.id<<"\">\n";
+      //TODO: temporary output
+/*	for (set< Line_Segment >::const_iterator it2(it->segments.begin());
+    it2 != it->segments.end(); ++it2)
+    cout<<"  <vx west=\""<<it2->west_lat<<' '<<it2->west_lon
+    <<"\" east=\""<<it2->east_lat<<' '<<it2->east_lon<<"\"/>\n";
+    cout<<"</area>\n";*/
+  }
+}
+
 void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
   const vector< string >& role_cache(get_role_cache());
@@ -122,6 +135,9 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       for (set< Relation >::const_iterator it(mit->second.get_relations().begin());
 	   it != mit->second.get_relations().end(); ++it)
 	cout<<"<relation id=\""<<it->id<<"\"/>\n";
+      for (set< Area >::const_iterator it(mit->second.get_areas().begin());
+	   it != mit->second.get_areas().end(); ++it)
+	cout<<"<area id=\""<<it->id<<"\"/>\n";
     }
     else if (mode == PRINT_SKELETON)
     {
@@ -134,6 +150,9 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       for (set< Relation >::const_iterator it(mit->second.get_relations().begin());
 	   it != mit->second.get_relations().end(); ++it)
 	out_relation(*it, role_cache);
+      for (set< Area >::const_iterator it(mit->second.get_areas().begin());
+	   it != mit->second.get_areas().end(); ++it)
+	out_area(*it);
     }
     else if (mode == PRINT_BODY)
     {
@@ -266,17 +285,49 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	}
 	delete result;
       }
-    }
-    for (set< Area >::const_iterator it(mit->second.get_areas().begin());
-	 it != mit->second.get_areas().end(); ++it)
-    {
-      //TODO: temporary output
-      cout<<"<area id=\""<<it->id<<"\">\n";
-      for (set< Line_Segment >::const_iterator it2(it->segments.begin());
-	   it2 != it->segments.end(); ++it2)
-	cout<<"  <vx west=\""<<it2->west_lat<<' '<<it2->west_lon
-	    <<"\" east=\""<<it2->east_lat<<' '<<it2->east_lon<<"\"/>\n";
-      cout<<"</area>\n";
+      for (set< Area >::const_iterator it(mit->second.get_areas().begin());
+	   it != mit->second.get_areas().end(); )
+      {
+	set< Area >::const_iterator it2(it);
+	ostringstream temp;
+	temp<<"select area_tags.id, key_s.key_, value_s.value_ from area_tags "
+	    <<"left join key_s on area_tags.key_ = key_s.id "
+	    <<"left join value_s on area_tags.value_ = value_s.id "
+	    <<"where area_tags.id in ("<<it->id;
+	unsigned int i(0);
+	while (((++it) != mit->second.get_areas().end()) && (i++ < 10000))
+	  temp<<", "<<it->id;
+	temp<<") order by area_tags.id";
+	MYSQL_RES* result(mysql_query_wrapper(mysql, temp.str()));
+	if (!result)
+	  return;
+	
+	MYSQL_ROW row(mysql_fetch_row(result));
+	while ((row) && (row[0]))
+	{
+	  int id(atoi(row[0]));
+	  while (it2->id < id)
+	  {
+	    out_area(*it2);
+	    ++it2;
+	  }
+	  out_area(*it2, false);
+	  while ((row) && (row[0]) && (it2->id == atoi(row[0])))
+	  {
+	    if ((row[1]) && (row[2]))
+	      cout<<"  <tag k=\""<<row[1]<<"\" v=\""<<row[2]<<"\"/>\n";
+	    row = mysql_fetch_row(result);
+	  }
+	  cout<<"</area>\n";
+	  ++it2;
+	}
+	while (it2 != it)
+	{
+	  out_area(*it2);
+	  ++it2;
+	}
+	delete result;
+      }
     }
   }
 }
