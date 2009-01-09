@@ -105,9 +105,6 @@ inline int calc_idx(int a)
   return ((int)floor(((double)a)/10000000));
 }
 
-//TODO: reasonable area counter
-extern int next_area_id;
-
 class Set
 {
   public:

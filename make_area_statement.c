@@ -221,7 +221,7 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   }
   
   ostringstream temp;
-  temp<<"insert areas values ("<<area.id<<", 0, 0)";
+  temp<<"insert areas values ("<<area.id<<')';
   mysql_query(mysql, temp.str().c_str());
   
   ofstream area_segments_out("/tmp/db_area_area_segments.tsv");
@@ -253,6 +253,7 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       mysql_query(mysql, temp.str().c_str());
   }
   
+  area.segments.clear(); //TODO
   areas.insert(area);
   maps[output] = Set(nodes, ways, relations, areas);
 }

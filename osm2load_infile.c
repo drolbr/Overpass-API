@@ -67,12 +67,12 @@ void prepare_db()
   mysql_query(mysql, "create database osm");
   mysql_query(mysql, "use osm");
 
-  mysql_query(mysql, "create table nodes (id int unsigned, lat_idx int, lat int, lon int)");
+  mysql_query(mysql, "create table nodes (id int, lat_idx int, lat int, lon int)");
   mysql_query(mysql, "create table node_tags (id int unsigned, key_ int unsigned, value_ int unsigned)");
-  mysql_query(mysql, "create table ways (id int unsigned)");
+  mysql_query(mysql, "create table ways (id int)");
   mysql_query(mysql, "create table way_members (id int unsigned, count int unsigned, ref int unsigned)");
   mysql_query(mysql, "create table way_tags (id int unsigned, key_ int unsigned, value_ int unsigned)");
-  mysql_query(mysql, "create table relations (id int unsigned)");
+  mysql_query(mysql, "create table relations (id int)");
   mysql_query(mysql, "create table relation_node_members (id int unsigned, ref int unsigned, role int unsigned)");
   mysql_query(mysql, "create table relation_way_members (id int unsigned, ref int unsigned, role int unsigned)");
   mysql_query(mysql, "create table relation_relation_members (id int unsigned, ref int unsigned, role int unsigned)");
@@ -81,7 +81,7 @@ void prepare_db()
   mysql_query(mysql, "create table key_s (id int unsigned, key_ varchar(21844))");
   mysql_query(mysql, "create table value_s (id int unsigned, value_ varchar(21844))");
 
-  mysql_query(mysql, "create table areas (id int, ref int unsigned, type int unsigned)");
+  mysql_query(mysql, "create table areas (id int)");
   mysql_query(mysql, "create table area_segments (id int, lat_idx int, min_lat int, min_lon int, max_lat int, max_lon int)");
   mysql_query(mysql, "create table area_tags (id int, key_ int unsigned, value_ int unsigned)");
 }
@@ -121,6 +121,7 @@ void postprocess_db()
   mysql_query(mysql, "alter table value_s add unique key(id)");
   cerr<<", areas";
   mysql_query(mysql, "alter table areas add unique key(id)");
+  mysql_query(mysql, "insert areas values (0)");
   cerr<<", area_segments";
   mysql_query(mysql, "alter table area_segments add key(id)");
   cerr<<", area_tags";

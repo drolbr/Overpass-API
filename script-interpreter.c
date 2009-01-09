@@ -13,7 +13,9 @@
 #include "query_statement.h"
 #include "id_query_statement.h"
 #include "recurse_statement.h"
+#include "foreach_statement.h"
 #include "make_area_statement.h"
+#include "coord_query_statement.h"
 #include "print_statement.h"
 
 #include <mysql.h>
@@ -36,8 +38,12 @@ Statement* generate_statement(string element)
     return new Has_Key_Value_Statement();
   else if (element == "recurse")
     return new Recurse_Statement();
+  else if (element == "foreach")
+    return new Foreach_Statement();
   else if (element == "make-area")
     return new Make_Area_Statement();
+  else if (element == "coord-query")
+    return new Coord_Query_Statement();
   else if (element == "print")
     return new Print_Statement();
   
@@ -55,7 +61,9 @@ bool is_known_element(string element)
        (element == "query") ||
        (element == "has-kv") ||
        (element == "recurse") ||
+       (element == "foreach") ||
        (element == "make-area") ||
+       (element == "coord-query") ||
        (element == "print"))
     return true;
   

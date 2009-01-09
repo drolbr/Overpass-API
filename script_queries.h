@@ -21,6 +21,8 @@ set< int >& multiint_query(MYSQL* mysql, string query, set< int >& result_set);
 
 set< Node >& multiNode_query(MYSQL* mysql, string query, set< Node >& result_set);
 
+set< Area >& multiArea_query(MYSQL* mysql, string query, int lat, int lon, set< Area >& result_set);
+
 set< int >& multiint_to_multiint_query
     (MYSQL* mysql, string prefix, string suffix, const set< int >& source, set< int >& result_set);
     

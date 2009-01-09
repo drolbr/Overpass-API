@@ -79,7 +79,9 @@ void Root_Statement::add_statement(Statement* statement)
   if ((statement->get_name() == "id-query") ||
        (statement->get_name() == "query") ||
        (statement->get_name() == "recurse") ||
+       (statement->get_name() == "foreach") ||
        (statement->get_name() == "make-area") ||
+       (statement->get_name() == "coord-query") ||
        (statement->get_name() == "print"))
     substatements.push_back(statement);
   else
