@@ -280,12 +280,11 @@ void start(const char *el, const char **attr)
 	id = atoi(attr[i+1]);
       if (!strcmp(attr[i], "lat"))
       {
-	double dlat(atof(attr[i+1]));
-	lat = (int)(dlat*10000000);
+	lat = (int)in_lat_lon(attr[i+1]);
 	lat_idx = calc_idx(lat);
       }
       if (!strcmp(attr[i], "lon"))
-	lon = (int)(atof(attr[i+1])*10000000);
+	lon = (int)in_lat_lon(attr[i+1]);
     }
     nodes_out<<id<<'\t'<<lon/10000000<<'\t'<<lat<<'\t'<<lon<<'\n';
     tag_type = NODE;

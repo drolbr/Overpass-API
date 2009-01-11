@@ -46,8 +46,8 @@ void Coord_Query_Statement::set_attributes(const char **attr)
 	<<" the only allowed values are floats between -180.0 and 180.0.";
     add_static_error(Error(temp.str(), current_line_number()));
   }
-  lat = (int)floor(lat_d * 10000000);
-  lon = (int)floor(lon_d * 10000000);
+  lat = (int)(lat_d * 10000000 + 0.5);
+  lon = (int)(lon_d * 10000000 + 0.5);
 }
 
 void Coord_Query_Statement::add_statement(Statement* statement)

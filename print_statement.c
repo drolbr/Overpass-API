@@ -1,4 +1,5 @@
 #include <cctype>
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <set>
@@ -56,8 +57,8 @@ void Print_Statement::add_statement(Statement* statement)
 void out_node(const Node& node, bool complete = true)
 {
   cout<<"<node id=\""<<node.id
-      <<"\" lat=\""<<((double)(node.lat))/10000000
-      <<"\" lon=\""<<((double)(node.lon))/10000000<<'\"'
+      <<"\" lat=\""<<setprecision(12)<<((double)(node.lat))/10000000
+      <<"\" lon=\""<<setprecision(12)<<((double)(node.lon))/10000000<<'\"'
       <<(complete ? "/>" : ">")<<'\n';
 }
 

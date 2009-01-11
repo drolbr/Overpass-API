@@ -141,4 +141,54 @@ class Statement
     virtual ~Statement() {}
 };
 
+//-----------------------------------------------------------------------------
+
+inline int in_lat_lon(const char* input)
+{
+  double val(atof(input));
+  if (val < 0)
+    return (int)(val*10000000 - 0.5);
+  return (int)(val*10000000 + 0.5);
+}
+
+inline int in_lat_lon(const string& input)
+{
+  double val(atof(input.c_str()));
+  if (val < 0)
+    return (int)(val*10000000 - 0.5);
+  return (int)(val*10000000 + 0.5);
+}
+
+// faster but less portable
+//
+// inline int in_lat_lon(const string& input)
+// {
+//   unsigned int i(0), j(10000000), size(input.size());
+//   bool minus(false);
+//   int res(0);
+//   if (input[0] == '-')
+//   {
+//     minus = true;
+//     ++i;
+//   }
+//   while ((i < size) && (input[i] >= '0') && (input[i] <= '9'))
+//   {
+//     res = 10*res + (input[i] - '0');
+//     ++i;
+//   }
+//   if (input[i] == '.')
+//     ++i;
+//   while ((i < size) && (input[i] >= '0') && (input[i] <= '9'))
+//   {
+//     res = 10*res + (input[i] - '0');
+//     ++i;
+//     j = j/10;
+//   }
+//   res = res*j;
+//   if ((i < size) || (j == 0))
+//     return 200*10000000;
+//   else
+//     return (minus ? -res : res);
+// }
+
 #endif

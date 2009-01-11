@@ -1,5 +1,20 @@
-main: expat_justparse_interface.o cgi-helper.o script_queries.o script_tools.o script-interpreter.o query_statement.o id_query_statement.o recurse_statement.o foreach_statement.o make_area_statement.o coord_query_statement.o print_statement.o
-	g++ -o cgi-bin/input-interpreter -O3 -Wall -lexpat expat_justparse_interface.o cgi-helper.o script_queries.o script_tools.o script-interpreter.o query_statement.o id_query_statement.o recurse_statement.o foreach_statement.o make_area_statement.o coord_query_statement.o print_statement.o `mysql_config --libs`
+stmts = \
+query_$(suffix) \
+id_query_$(suffix) \
+recurse_$(suffix) \
+foreach_$(suffix) \
+make_area_$(suffix) \
+coord_query_$(suffix) \
+print_$(suffix)
+
+objects = expat_justparse_interface.o cgi-helper.o script_queries.o script_tools.o script-interpreter.o $(stmts)
+
+tool_headers = expat_justparse_interface.h script_datatypes.h script_queries.h script_tools.h
+
+suffix = statement.o
+main: suffix = statement.o
+main: $(objects)
+	g++ -o cgi-bin/input-interpreter -O3 -Wall -lexpat $(objects) `mysql_config --libs`
 	
 init_db: expat_justparse_interface.o osm2load_infile.o
 	g++ -o osm2load_infile -O3 -Wall -lexpat expat_justparse_interface.o osm2load_infile.o `mysql_config --libs`
@@ -13,35 +28,19 @@ cgi-helper.o: cgi-helper.c cgi-helper.h
 script_queries.o: script_queries.c script_datatypes.h script_queries.h
 	g++ -c -O3 -Wall `mysql_config --include` script_queries.c
 	
-script_tools.o: script_tools.c expat_justparse_interface.h script_datatypes.h script_queries.h script_tools.h
+script_tools.o: script_tools.c $(tool_headers)
 	g++ -c -O3 -Wall `mysql_config --include` script_tools.c
 	
-query_statement.o: query_statement.c expat_justparse_interface.h script_datatypes.h script_queries.h script_tools.h query_statement.h
-	g++ -c -O3 -Wall `mysql_config --include` query_statement.c
+%_statement.o: %_statement.c $(tool_headers) %_statement.h
+	g++ -c -O3 -Wall `mysql_config --include` $<
 	
-id_query_statement.o: id_query_statement.c expat_justparse_interface.h script_datatypes.h script_queries.h script_tools.h id_query_statement.h
-	g++ -c -O3 -Wall `mysql_config --include` id_query_statement.c
-	
-recurse_statement.o: recurse_statement.c expat_justparse_interface.h script_datatypes.h script_queries.h script_tools.h recurse_statement.h
-	g++ -c -O3 -Wall `mysql_config --include` recurse_statement.c
-	
-foreach_statement.o: foreach_statement.c expat_justparse_interface.h script_datatypes.h script_queries.h script_tools.h foreach_statement.h
-	g++ -c -O3 -Wall `mysql_config --include` foreach_statement.c
-	
-make_area_statement.o: make_area_statement.c expat_justparse_interface.h script_datatypes.h script_queries.h script_tools.h make_area_statement.h
-	g++ -c -O3 -Wall `mysql_config --include` make_area_statement.c
-	
-coord_query_statement.o: coord_query_statement.c expat_justparse_interface.h script_datatypes.h script_queries.h script_tools.h coord_query_statement.h
-	g++ -c -O3 -Wall `mysql_config --include` coord_query_statement.c
-	
-print_statement.o: print_statement.c expat_justparse_interface.h script_datatypes.h script_queries.h script_tools.h print_statement.h
-	g++ -c -O3 -Wall `mysql_config --include` print_statement.c
-	
-script-interpreter.o: script-interpreter.c expat_justparse_interface.h cgi-helper.h script_datatypes.h script_queries.h script_tools.h query_statement.h id_query_statement.h recurse_statement.h foreach_statement.h make_area_statement.h coord_query_statement.h print_statement.h
+suffix = statement.h
+script-interpreter.o: script-interpreter.c expat_justparse_interface.h cgi-helper.h script_datatypes.h script_queries.h script_tools.h $(stmts)
 	g++ -c -O3 -Wall `mysql_config --include` script-interpreter.c
 	
 osm2load_infile.o: osm2load_infile.c script_datatypes.h expat_justparse_interface.h
 	g++ -c -O3 -Wall `mysql_config --include`  osm2load_infile.c
-	
+
+clean: suffix = statement.o
 clean:
-	rm -f script-interpreter.o osm2load_infile.o expat_justparse_interface.o cgi-helper.o script_queries.o script_tools.o query_statement.o id_query_statement.o recurse_statement.o foreach_statement.o make_area_statement.o coord_query_statement.o print_statement.o
+	rm -f $(objects)
