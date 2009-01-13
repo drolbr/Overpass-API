@@ -20,6 +20,9 @@ void parse(FILE* in,
 void set_line_offset(int line_offset_);
 int current_line_number();
 
+string get_parsed_text();
+void reset_parsed_text();
+
 string parse(string input,
 	     void (*start)(const char*, const char**),
 		    void (*end)(const char*));
@@ -100,6 +103,25 @@ inline Ostream& escape_xml(Ostream& out, string s)
     else if (s[i] == '>')
     {
       out<<s.substr(0, i)<<"&gt;";
+      s = s.substr(i+1);
+      i = 0;
+    }
+    else
+      ++i;
+  }
+  out<<s;
+  return out;
+}
+
+template < class Ostream >
+    inline Ostream& escape_insert(Ostream& out, string s)
+{
+  unsigned int i(0);
+  while (i < s.size())
+  {
+    if (s[i] == '\'')
+    {
+      out<<s.substr(0, i)<<"''";
       s = s.substr(i+1);
       i = 0;
     }

@@ -67,6 +67,34 @@ int display_static_errors()
 
 //-----------------------------------------------------------------------------
 
+void assure_no_text(string text, string name)
+{
+  for (unsigned int i(0); i < text.size(); ++i)
+  {
+    if (!isspace(text[i]))
+    {
+      ostringstream temp;
+      temp<<"In Line "<<current_line_number()
+	  <<": Element \""<<name<<"\" must not contain text.";
+      static_errors.push_back(Error(temp.str(), current_line_number()));
+      break;
+    }
+  }
+}
+
+void Statement::add_statement(Statement* statement, string text)
+{
+  assure_no_text(text, this->get_name());
+  substatement_error(get_name(), statement);
+}
+
+void Statement::add_final_text(string text)
+{
+  assure_no_text(text, this->get_name());
+}
+
+//-----------------------------------------------------------------------------
+
 void Root_Statement::set_attributes(const char **attr)
 {
   map< string, string > attributes;
@@ -74,15 +102,20 @@ void Root_Statement::set_attributes(const char **attr)
   eval_cstr_array(get_name(), attributes, attr);
 }
 
-void Root_Statement::add_statement(Statement* statement)
+void Root_Statement::add_statement(Statement* statement, string text)
 {
-  if ((statement->get_name() == "id-query") ||
+  assure_no_text(text, this->get_name());
+  
+  if ((statement->get_name() == "union") ||
+       (statement->get_name() == "id-query") ||
        (statement->get_name() == "query") ||
        (statement->get_name() == "recurse") ||
        (statement->get_name() == "foreach") ||
        (statement->get_name() == "make-area") ||
        (statement->get_name() == "coord-query") ||
-       (statement->get_name() == "print"))
+       (statement->get_name() == "print") ||
+       (statement->get_name() == "conflict") ||
+       (statement->get_name() == "detect-odd-nodes"))
     substatements.push_back(statement);
   else
     substatement_error(get_name(), statement);

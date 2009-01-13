@@ -15,6 +15,18 @@
 
 using namespace std;
 
+class Statement
+{
+  public:
+    virtual void set_attributes(const char **attr) = 0;
+    virtual void add_statement(Statement* statement, string text);
+    virtual void add_final_text(string text);
+    virtual string get_name() = 0;
+    virtual string get_result_name() = 0;
+    virtual void execute(MYSQL* mysql, map< string, Set >& maps) = 0;
+    virtual ~Statement() {}
+};
+
 struct Error
 {
   public:
@@ -29,6 +41,7 @@ void eval_cstr_array(string element, map< string, string >& attributes, const ch
 
 void substatement_error(string parent, Statement* child);
 void add_static_error(const Error& e);
+void assure_no_text(string text, string name);
 
 int display_static_errors();
 
@@ -40,8 +53,9 @@ class Root_Statement : public Statement
   public:
     Root_Statement() {}
     virtual void set_attributes(const char **attr);
-    virtual void add_statement(Statement* statement);
+    virtual void add_statement(Statement* statement, string text);
     virtual string get_name() { return "osm-script"; }
+    virtual string get_result_name() { return ""; }
     virtual void execute(MYSQL* mysql, map< string, Set >& maps);
     virtual ~Root_Statement() {}
     

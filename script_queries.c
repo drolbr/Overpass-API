@@ -81,7 +81,6 @@ set< Node >& multiNode_query(MYSQL* mysql, string query, set< Node >& result_set
 
 set< Area >& multiArea_query(MYSQL* mysql, string query, int lat, int lon, set< Area >& result_set)
 {
-  cout<<lat<<' '<<lon<<'\n';
   MYSQL_RES* result(mysql_query_wrapper(mysql, query));
   if (!result)
     return result_set;
@@ -92,93 +91,6 @@ set< Area >& multiArea_query(MYSQL* mysql, string query, int lat, int lon, set< 
   while ((row) && (row[0]) && (row[1]) && (row[2]) && (row[3]) && (row[4]))
   {
     int id(atoi(row[0]));
-    if (id == -13857)
-    {
-      cout<<row[0]<<' '<<row[1]<<' '<<row[2]<<' '<<row[3]<<' '<<row[4]<<' ';
-      int min_lon(atoi(row[2]));
-      int max_lon(atoi(row[4]));
-      if (max_lon > lon)
-      {
-	cout<<'a';
-	if (min_lon < lon)
-	{
-	  cout<<'b';
-	  int min_lat(atoi(row[1]));
-	  int max_lat(atoi(row[3]));
-	  if ((min_lat < lat) && (max_lat < lat))
-	  {
-	    cout<<'c';
-	    area_cands[id] = !area_cands[id];
-	  }
-	  else if ((min_lat < lat) || (max_lat < lat))
-	  {
-	    cout<<'d';
-	    int rel_lat(((long long)(max_lat - min_lat))*(lon - min_lon)/(max_lon - min_lon) + min_lat);
-	    if (rel_lat < lat)
-	    {
-	      cout<<'e';
-	      area_cands[id] = !area_cands[id];
-	    }
-	    else if (rel_lat == lat)
-	    //We are on a border segment.
-	    {
-	      cout<<'f';
-	      area_definitives.insert(id);
-	    }
-	  }
-	  else if ((min_lat == lat) && (max_lat == lat))
-	  //We are on a horizontal border segment.
-	  {
-	    cout<<'g';
-	    area_definitives.insert(id);
-	  }
-	}
-	else if (min_lon == lon)
-	//We are north of a node of the border.
-	//We can safely count such a segment if and only if the node is
-	//on its western end.
-	{
-	  cout<<'h';
-	  int min_lat(atoi(row[1]));
-	  if (min_lat < lat)
-	  {
-	    cout<<'i';
-	    area_cands[id] = !area_cands[id];
-	  }
-	  else if (min_lat == lat)
-	  //We have hit a node of the border.
-	  {
-	    cout<<'j';
-	    area_definitives.insert(id);
-	  }
-	}
-      }
-      else if (max_lon == lon)
-      {
-	cout<<'k';
-	int max_lat(atoi(row[3]));
-	if (max_lat == lat)
-	//We have hit a node of the border.
-	{
-	  cout<<'l';
-	  area_definitives.insert(id);
-	}
-	else if (min_lon == max_lon)
-	//We are on a vertical border segment.
-	{
-	  cout<<'m';
-	  int min_lat(atoi(row[1]));
-	  if ((min_lat <= lat) && (lat <= max_lat))
-	  {
-	    cout<<'n';
-	    area_definitives.insert(id);
-	  }
-	}
-      }
-      row = mysql_fetch_row(result);
-      cout<<'\n';
-      continue;
-    }
     int min_lon(atoi(row[2]));
     int max_lon(atoi(row[4]));
     if (max_lon > lon)

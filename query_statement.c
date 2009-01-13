@@ -49,12 +49,16 @@ void Query_Statement::set_attributes(const char **attr)
   }
 }
 
-void Query_Statement::add_statement(Statement* statement)
+void Query_Statement::add_statement(Statement* statement, string text)
 {
-  if (statement->get_name() == "has-kv")
+  assure_no_text(text, this->get_name());
+  
+  Has_Key_Value_Statement* has_kv(dynamic_cast<Has_Key_Value_Statement*>(statement));
+  if (has_kv)
+  {
     key_values.push_back(make_pair< string, string >
-	(((Has_Key_Value_Statement*)statement)->get_key(),
-	  ((Has_Key_Value_Statement*)statement)->get_value()));
+	(has_kv->get_key(), has_kv->get_value()));
+  }
   else
     substatement_error(get_name(), statement);
 }
@@ -284,7 +288,9 @@ void Has_Key_Value_Statement::set_attributes(const char **attr)
   }
 }
 
-void Has_Key_Value_Statement::add_statement(Statement* statement)
+void Has_Key_Value_Statement::add_statement(Statement* statement, string text)
 {
+  assure_no_text(text, this->get_name());
+  
   substatement_error(get_name(), statement);
 }

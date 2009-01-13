@@ -17,8 +17,8 @@ class Print_Statement : public Statement
     Print_Statement() {}
     
     virtual void set_attributes(const char **attr);
-    virtual void add_statement(Statement* statement);
     virtual string get_name() { return "print"; }
+    virtual string get_result_name() { return ""; }
     virtual void execute(MYSQL* mysql, map< string, Set >& maps);
     virtual ~Print_Statement() {}
     

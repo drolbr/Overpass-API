@@ -1,11 +1,15 @@
 stmts = \
+union_$(suffix) \
 query_$(suffix) \
 id_query_$(suffix) \
 recurse_$(suffix) \
 foreach_$(suffix) \
+item_$(suffix) \
 make_area_$(suffix) \
 coord_query_$(suffix) \
-print_$(suffix)
+print_$(suffix) \
+conflict_$(suffix) \
+detect_odd_nodes_$(suffix)
 
 objects = expat_justparse_interface.o cgi-helper.o script_queries.o script_tools.o script-interpreter.o $(stmts)
 

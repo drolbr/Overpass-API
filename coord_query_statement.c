@@ -50,11 +50,6 @@ void Coord_Query_Statement::set_attributes(const char **attr)
   lon = (int)(lon_d * 10000000 + 0.5);
 }
 
-void Coord_Query_Statement::add_statement(Statement* statement)
-{
-  substatement_error(get_name(), statement);
-}
-
 void Coord_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
   ostringstream temp;

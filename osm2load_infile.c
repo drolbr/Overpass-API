@@ -81,6 +81,11 @@ void prepare_db()
   mysql_query(mysql, "create table key_s (id int unsigned, key_ varchar(21844))");
   mysql_query(mysql, "create table value_s (id int unsigned, value_ varchar(21844))");
 
+  mysql_query(mysql, "create table conflicts (id int, message varchar(21844))");
+  mysql_query(mysql, "create table node_conflicts (id int, conflict int)");
+  mysql_query(mysql, "create table way_conflicts (id int, conflict int)");
+  mysql_query(mysql, "create table relation_conflicts (id int, conflict int)");
+  
   mysql_query(mysql, "create table areas (id int)");
   mysql_query(mysql, "create table area_segments (id int, lat_idx int, min_lat int, min_lon int, max_lat int, max_lon int)");
   mysql_query(mysql, "create table area_tags (id int, key_ int unsigned, value_ int unsigned)");
@@ -119,6 +124,15 @@ void postprocess_db()
   mysql_query(mysql, "alter table key_s add unique key(id)");
   cerr<<", value_s";
   mysql_query(mysql, "alter table value_s add unique key(id)");
+  cerr<<", conflicts";
+  mysql_query(mysql, "alter table conflicts add unique key(id)");
+  mysql_query(mysql, "insert conflicts values (0, '')");
+  cerr<<", node_conflicts";
+  mysql_query(mysql, "alter table node_conflicts add key(id)");
+  cerr<<", way_conflicts";
+  mysql_query(mysql, "alter table way_conflicts add key(id)");
+  cerr<<", relation_conflicts";
+  mysql_query(mysql, "alter table relation_conflicts add key(id)");
   cerr<<", areas";
   mysql_query(mysql, "alter table areas add unique key(id)");
   mysql_query(mysql, "insert areas values (0)");

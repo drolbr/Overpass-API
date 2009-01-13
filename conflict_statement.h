@@ -1,5 +1,5 @@
-#ifndef FOREACH_STATEMENT_DEFINED
-#define FOREACH_STATEMENT_DEFINED
+#ifndef CONFLICT_STATEMENT_DEFINED
+#define CONFLICT_STATEMENT_DEFINED
 
 #include <map>
 #include <string>
@@ -10,20 +10,22 @@
 
 using namespace std;
 
-class Foreach_Statement : public Statement
+class Conflict_Statement : public Statement
 {
   public:
-    Foreach_Statement() {}
+    Conflict_Statement() {}
     virtual void set_attributes(const char **attr);
     virtual void add_statement(Statement* statement, string text);
-    virtual string get_name() { return "foreach"; }
+    virtual void add_final_text(string text);
+    virtual string get_name() { return "conflict"; }
     virtual string get_result_name() { return ""; }
     virtual void execute(MYSQL* mysql, map< string, Set >& maps);
-    virtual ~Foreach_Statement() {}
+    virtual ~Conflict_Statement() {}
     
   private:
-    string input, output;
-    vector< Statement* > substatements;
+    string input;
+    vector< string > message;
+    vector< string > items;
 };
 
 #endif

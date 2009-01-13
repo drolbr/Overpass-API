@@ -14,6 +14,8 @@
  * Must be used with Expat compiled for UTF-8 output.
  */
 
+#include <iostream>
+
 #include <string>
 #include <sstream>
 
@@ -52,6 +54,26 @@ static void XMLCALL
 expat_wrapper_end(void *data, const char *el)
 {
   working_end(el);
+}
+
+string result_buf;
+
+static void XMLCALL
+    expat_wrapper_text(void *userData,
+	 const XML_Char *s,
+  int len)
+{
+  result_buf.append(s, len);
+}
+
+string get_parsed_text()
+{
+  return result_buf;
+}
+
+void reset_parsed_text()
+{
+  result_buf = "";
 }
 
 void parse(FILE* in,
@@ -123,31 +145,30 @@ string parse(string input,
   }
 
   XML_SetElementHandler(p, expat_wrapper_start, expat_wrapper_end);
-
-//   len = input.size();
-//   if (len < BUFFSIZE-1)
-//     Buff = ;
-//   else
-//   {
-//     Buff = input.substr(0, BUFFSIZE-1).c_str();
-//     len = BUFFSIZE-1;
-//   }
+  XML_SetCharacterDataHandler(p, expat_wrapper_text);
 
   int done(0);
-  int len = input.size();
-  if (len > BUFFSIZE-1)
+  int len(input.size());
+  int pos(0);
+  while ((!done) && (pos < len))
   {
-    len = BUFFSIZE-1;
-    strcpy(Buff, input.substr(0, len).c_str());
-  }
-  else
-    strcpy(Buff, input.c_str());
+    if (len > BUFFSIZE-1)
+    {
+      strcpy(Buff, input.substr(pos, BUFFSIZE-1).c_str());
+      pos += BUFFSIZE-1;
+    }
+    else
+    {
+      strcpy(Buff, input.c_str());
+      pos += len;
+    }
   
-  if (XML_Parse(p, Buff, len, done) == XML_STATUS_ERROR) {
-    ostringstream temp;
-    temp<<"Parse error at line "<<XML_GetCurrentLineNumber(p)<<":\n"
-	<<XML_ErrorString(XML_GetErrorCode(p))<<'\n';
-    return temp.str();
+    if (XML_Parse(p, Buff, len, done) == XML_STATUS_ERROR) {
+      ostringstream temp;
+      temp<<"Parse error at line "<<XML_GetCurrentLineNumber(p)<<":\n"
+	  <<XML_ErrorString(XML_GetErrorCode(p))<<'\n';
+      return temp.str();
+    }
   }
 
   XML_ParserFree(p);

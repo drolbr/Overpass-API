@@ -32,11 +32,6 @@ void Make_Area_Statement::set_attributes(const char **attr)
   tags = attributes["tags"];
 }
 
-void Make_Area_Statement::add_statement(Statement* statement)
-{
-  substatement_error(get_name(), statement);
-}
-
 inline void area_insert(Area& area, int lat1, int lon1, int lat2, int lon2)
 {
   if (lon1 < lon2)

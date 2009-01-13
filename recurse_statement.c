@@ -53,11 +53,6 @@ void Recurse_Statement::set_attributes(const char **attr)
   }
 }
 
-void Recurse_Statement::add_statement(Statement* statement)
-{
-  substatement_error(get_name(), statement);
-}
-
 void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
   set< Node > nodes;

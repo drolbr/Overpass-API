@@ -49,11 +49,6 @@ void Print_Statement::set_attributes(const char **attr)
   }
 }
 
-void Print_Statement::add_statement(Statement* statement)
-{
-  substatement_error(get_name(), statement);
-}
-
 void out_node(const Node& node, bool complete = true)
 {
   cout<<"<node id=\""<<node.id

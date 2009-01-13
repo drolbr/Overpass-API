@@ -59,11 +59,6 @@ void Id_Query_Statement::set_attributes(const char **attr)
   }
 }
 
-void Id_Query_Statement::add_statement(Statement* statement)
-{
-  substatement_error(get_name(), statement);
-}
-
 void Id_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
   if (ref == 0)

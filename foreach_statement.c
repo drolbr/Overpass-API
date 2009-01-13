@@ -28,15 +28,20 @@ void Foreach_Statement::set_attributes(const char **attr)
   output = attributes["into"];
 }
 
-void Foreach_Statement::add_statement(Statement* statement)
+void Foreach_Statement::add_statement(Statement* statement, string text)
 {
-  if ((statement->get_name() == "id-query") ||
+  assure_no_text(text, this->get_name());
+  
+  if ((statement->get_name() == "union") ||
+       (statement->get_name() == "id-query") ||
        (statement->get_name() == "query") ||
        (statement->get_name() == "recurse") ||
        (statement->get_name() == "foreach") ||
        (statement->get_name() == "make-area") ||
        (statement->get_name() == "coord-query") ||
-       (statement->get_name() == "print"))
+       (statement->get_name() == "print") ||
+       (statement->get_name() == "conflict") ||
+       (statement->get_name() == "detect-odd-nodes"))
     substatements.push_back(statement);
   else
     substatement_error(get_name(), statement);

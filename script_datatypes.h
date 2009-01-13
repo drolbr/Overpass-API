@@ -131,16 +131,6 @@ class Set
     set< Area > areas;
 };
 
-class Statement
-{
-  public:
-    virtual void set_attributes(const char **attr) = 0;
-    virtual void add_statement(Statement* statement) = 0;
-    virtual string get_name() = 0;
-    virtual void execute(MYSQL* mysql, map< string, Set >& maps) = 0;
-    virtual ~Statement() {}
-};
-
 //-----------------------------------------------------------------------------
 
 inline int in_lat_lon(const char* input)

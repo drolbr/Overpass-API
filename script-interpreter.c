@@ -10,13 +10,17 @@
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
+#include "union_statement.h"
 #include "query_statement.h"
 #include "id_query_statement.h"
 #include "recurse_statement.h"
 #include "foreach_statement.h"
+#include "item_statement.h"
 #include "make_area_statement.h"
 #include "coord_query_statement.h"
 #include "print_statement.h"
+#include "conflict_statement.h"
+#include "detect_odd_nodes_statement.h"
 
 #include <mysql.h>
 
@@ -30,6 +34,8 @@ Statement* generate_statement(string element)
 {
   if (element == "osm-script")
     return new Root_Statement();
+  if (element == "union")
+    return new Union_Statement();
   else if (element == "id-query")
     return new Id_Query_Statement();
   else if (element == "query")
@@ -40,12 +46,18 @@ Statement* generate_statement(string element)
     return new Recurse_Statement();
   else if (element == "foreach")
     return new Foreach_Statement();
+  else if (element == "item")
+    return new Item_Statement();
   else if (element == "make-area")
     return new Make_Area_Statement();
   else if (element == "coord-query")
     return new Coord_Query_Statement();
   else if (element == "print")
     return new Print_Statement();
+  else if (element == "conflict")
+    return new Conflict_Statement();
+  else if (element == "detect-odd-nodes")
+    return new Detect_Odd_Nodes_Statement();
   
   ostringstream temp;
   temp<<"Unknown tag \""<<element<<"\" in line "<<current_line_number()<<'!';
@@ -57,14 +69,18 @@ Statement* generate_statement(string element)
 bool is_known_element(string element)
 {
   if ((element == "osm-script") ||
+       (element == "union") ||
        (element == "id-query") ||
        (element == "query") ||
        (element == "has-kv") ||
        (element == "recurse") ||
        (element == "foreach") ||
+       (element == "item") ||
        (element == "make-area") ||
        (element == "coord-query") ||
-       (element == "print"))
+       (element == "print") ||
+       (element == "conflict") ||
+       (element == "detect-odd-nodes"))
     return true;
   
   return false;
@@ -73,6 +89,7 @@ bool is_known_element(string element)
 //-----------------------------------------------------------------------------
 
 vector< Statement* > statement_stack;
+vector< string > text_stack;
 
 void start(const char *el, const char **attr)
 {
@@ -81,6 +98,8 @@ void start(const char *el, const char **attr)
   {
     statement->set_attributes(attr);
     statement_stack.push_back(statement);
+    text_stack.push_back(get_parsed_text());
+    reset_parsed_text();
   }
 }
 
@@ -89,10 +108,15 @@ void end(const char *el)
   if ((is_known_element(el)) && (statement_stack.size() > 1))
   {
     Statement* statement(statement_stack.back());
+    statement->add_final_text(get_parsed_text());
+    reset_parsed_text();
     //Include an end-control to catch e.g. empty query-statements?
     statement_stack.pop_back();
-    statement_stack.back()->add_statement(statement);
+    statement_stack.back()->add_statement(statement, text_stack.back());
+    text_stack.pop_back();
   }
+  else if ((is_known_element(el)) && (statement_stack.size() == 1))
+    statement_stack.front()->add_final_text(get_parsed_text());
 }
 
 //TODO: reasonable area counter
