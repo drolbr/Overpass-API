@@ -1,7 +1,0 @@
-einmalig:
-mysl -u root -p
-> grant all on osm.* to 'osm'@'localhost' identified by 'osm';
-> exit
-
-Kompilieren mit:
-g++ -O3 -Wall `mysql_config --include` -lexpat -o osm2load_infile osm2load_infile.c `mysql_config --libs`

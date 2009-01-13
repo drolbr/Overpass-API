@@ -1,0 +1,5 @@
+einmalig:
+mysl -u root -p
+> grant all on osm.* to 'osm'@'localhost' identified by 'osm';
+> exit
+
