@@ -37,6 +37,9 @@ set< Relation >& multiint_to_multiRelation_query
      string prefix1, string suffix1, string prefix2, string suffix2, string prefix3, string suffix3,
      const set< int >& source, set< Relation >& result_set);
 
+set< int >& multiNode_to_multiint_query
+    (MYSQL* mysql, string prefix, string suffix, const set< Node >& source, set< int >& result_set);
+
 set< int >& multiWay_to_multiint_query
     (MYSQL* mysql, string prefix, string suffix, const set< Way >& source, set< int >& result_set);
 

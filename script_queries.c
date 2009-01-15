@@ -386,6 +386,34 @@ set< Relation >& multiint_to_multiRelation_query
   return result_set;
 }
 
+set< int >& multiNode_to_multiint_query
+    (MYSQL* mysql, string prefix, string suffix, const set< Node >& source, set< int >& result_set)
+{
+  for (set< Node >::const_iterator it(source.begin()); it != source.end(); )
+  {
+    ostringstream temp;
+    temp<<prefix;
+    temp<<" ("<<it->id;
+    unsigned int i(0);
+    while (((++it) != source.end()) && (i++ < 10000))
+      temp<<", "<<it->id;
+    temp<<") "<<suffix;
+	
+    MYSQL_RES* result(mysql_query_wrapper(mysql, temp.str()));
+    if (!result)
+      return result_set;
+	
+    MYSQL_ROW row(mysql_fetch_row(result));
+    while ((row) && (row[0]))
+    {
+      result_set.insert(atoi(row[0]));
+      row = mysql_fetch_row(result);
+    }
+    delete result;
+  }
+  return result_set;
+}
+
 set< int >& multiWay_to_multiint_query
     (MYSQL* mysql, string prefix, string suffix, const set< Way >& source, set< int >& result_set)
 {

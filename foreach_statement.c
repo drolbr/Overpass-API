@@ -41,6 +41,7 @@ void Foreach_Statement::add_statement(Statement* statement, string text)
        (statement->get_name() == "coord-query") ||
        (statement->get_name() == "print") ||
        (statement->get_name() == "conflict") ||
+       (statement->get_name() == "report") ||
        (statement->get_name() == "detect-odd-nodes"))
     substatements.push_back(statement);
   else

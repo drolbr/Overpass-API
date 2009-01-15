@@ -20,11 +20,16 @@
 #include "coord_query_statement.h"
 #include "print_statement.h"
 #include "conflict_statement.h"
+#include "report_statement.h"
 #include "detect_odd_nodes_statement.h"
 
 #include <mysql.h>
 
 using namespace std;
+const int NOTHING = 0;
+const int HTML = 1;
+const int MIXED_XML = 2;
+int output_mode(NOTHING);
 
 MYSQL* mysql(NULL);
 
@@ -53,9 +58,18 @@ Statement* generate_statement(string element)
   else if (element == "coord-query")
     return new Coord_Query_Statement();
   else if (element == "print")
+  {
+    output_mode = MIXED_XML;
     return new Print_Statement();
+  }
   else if (element == "conflict")
     return new Conflict_Statement();
+  else if (element == "report")
+  {
+    if (output_mode == NOTHING)
+      output_mode = HTML;
+    return new Report_Statement();
+  }
   else if (element == "detect-odd-nodes")
     return new Detect_Odd_Nodes_Statement();
   
@@ -80,6 +94,7 @@ bool is_known_element(string element)
        (element == "coord-query") ||
        (element == "print") ||
        (element == "conflict") ||
+       (element == "report") ||
        (element == "detect-odd-nodes"))
     return true;
   
@@ -157,8 +172,16 @@ int main(int argc, char *argv[])
   
   //Sanity-Check
   
-  cout<<"Content-type: application/xml\n\n"
-      <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<not-osm>\n\n";
+  if (output_mode == MIXED_XML)
+    cout<<"Content-type: application/xml\n\n"
+	<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<not-osm>\n\n";
+  else if  (output_mode == HTML)
+    cout<<"Content-type: text/html\n\n"
+	<<"<html>\n<head><title>Query Results</title></head>\n<body>\n\n";
+  else
+    cout<<"Content-type: text/html\n\n"
+	<<"<html>\n<head><title>Nothing</title></head>\n<body>\n\n"
+	<<"Your query doesn't contain any statement that produces output\n";
   
   prepare_caches(mysql);
   
@@ -167,7 +190,10 @@ int main(int argc, char *argv[])
        it != statement_stack.end(); ++it)
     (*it)->execute(mysql, maps);
   
-  cout<<"\n</not-osm>"<<'\n';
+  if (output_mode == MIXED_XML)
+    cout<<"\n</not-osm>"<<'\n';
+  else
+    cout<<"\n</html>"<<'\n';
   
   mysql_close(mysql);
   
