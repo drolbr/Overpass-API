@@ -30,6 +30,105 @@
 
 using namespace std;
 
+class Entry
+{
+  public:
+    Entry() : next(0), id(0), value(0), ey_buf(1048576), lg_buf(1048576) {}
+  
+    Entry* next;
+    int id;
+    char* value;
+};
+
+class Value_Detect
+{
+  public:
+    Value_Detect() : is_new(false), current_max(1)
+    {
+      entries.resize(16*16*16*16*16*16);
+    }
+  
+    int find(const char* val);
+    
+    bool is_new;
+  private:
+    int current_max;
+    vector< Entry > entries;
+};
+
+inline int strposcmp(const char* a, const char* b)
+{
+  unsigned int i(0);
+  while ((a[i] != 0) && (b[i] != 0) && (a[i] == b[i]))
+    ++i;
+  if (a[i] == b[i])
+    return 0;
+  else
+    return i;
+}
+
+int Value_Detect::find(const char* val)
+{
+  unsigned int length(strlen(val));
+  
+  if (!length)
+    return 1;
+  
+  unsigned int i(0);
+  unsigned int idx(0);
+  while ((i < 6) && (i < length))
+    idx = 16*idx + (((unsigned char)val[i++])%16);
+  
+  Entry* entry = &entries[idx];
+  if (entry->value == 0)
+  {
+    entry->value = (char*) malloc(length+1);
+    strcpy(entry->value, val);
+    is_new = true;
+    entry->id = ++current_max;
+    
+    return entry->id;
+  }
+  const char* diff_entry(0);
+  unsigned int diff_max(0);
+  i = 0;
+  while (true)
+  {
+    i = strposcmp(val, entry->value);
+    if (!i)
+    {
+      is_new = false;
+      return entry->id;
+    }
+    if (entry->value[0] == 0)
+    {
+      if (!strposcmp(val+(*((unsigned short*)((entry->value)+1))), (char*)((entry->value)+7)))
+      {
+	is_new = false;
+	return entry->id;
+      }
+    }
+    else if (i > diff_max)
+    {
+      diff_max = i;
+      diff_entry = entry->value;
+    }
+    
+    if (!entry->next)
+      break;
+    entry = entry->next;
+  }
+  entry->next = (Entry*) malloc(sizeof(Entry));
+  entry = entry->next;
+  entry->value = (char*) malloc(length+1);
+  entry->next = 0;
+  strcpy(entry->value, val);
+  is_new = true;
+  entry->id = ++current_max;
+    
+  return entry->id;
+}
+
 const int NODE = 1;
 const int WAY = 2;
 const int RELATION = 3;
@@ -62,12 +161,12 @@ MYSQL* mysql(NULL);
 
 void prepare_db()
 {
-  mysql_query(mysql, "create database if not exists osm");
+/*  mysql_query(mysql, "create database if not exists osm");
   mysql_query(mysql, "drop database osm");
-  mysql_query(mysql, "create database osm");
+  mysql_query(mysql, "create database osm");*/
   mysql_query(mysql, "use osm");
 
-  mysql_query(mysql, "create table nodes (id int, lat_idx int, lat int, lon int)");
+/*  mysql_query(mysql, "create table nodes (id int, lat_idx int, lat int, lon int)");
   mysql_query(mysql, "create table node_tags (id int unsigned, key_ int unsigned, value_ int unsigned)");
   mysql_query(mysql, "create table ways (id int)");
   mysql_query(mysql, "create table way_members (id int unsigned, count int unsigned, ref int unsigned)");
@@ -88,14 +187,14 @@ void prepare_db()
   
   mysql_query(mysql, "create table areas (id int)");
   mysql_query(mysql, "create table area_segments (id int, lat_idx int, min_lat int, min_lon int, max_lat int, max_lon int)");
-  mysql_query(mysql, "create table area_tags (id int, key_ int unsigned, value_ int unsigned)");
+  mysql_query(mysql, "create table area_tags (id int, key_ int unsigned, value_ int unsigned)");*/
 }
 
 void postprocess_db()
 {
   cerr<<'\n'<<(uintmax_t)time(NULL)<<'\n';
   
-  cerr<<"Creating index on ... ";
+/*  cerr<<"Creating index on ... ";
   mysql_query(mysql, "set session myisam_sort_buffer_size = 1073741824");
   
   cerr<<"nodes";
@@ -156,7 +255,7 @@ void postprocess_db()
   cerr<<", value_s";
   mysql_query(mysql, "alter table value_s add index(value_)");
   cerr<<", area_segments";
-  mysql_query(mysql, "alter table area_segments add index(lat_idx, min_lon)");
+  mysql_query(mysql, "alter table area_segments add index(lat_idx, min_lon)");*/
   cerr<<'\n';
 }
 
@@ -192,6 +291,10 @@ void flush_to_db()
 
 void start(const char *el, const char **attr)
 {
+  // patch: map< string > uses about 50 byte overhead per string
+  // which is too much for 100 million strings in 2 GB memory
+  static Value_Detect val_detect = Value_Detect();
+  
   if (!strcmp(el, "tag"))
   {
     if (tag_type != 0)
@@ -216,7 +319,16 @@ void start(const char *el, const char **attr)
 	escape_infile_xml(keys_out, key);
 	keys_out<<'\n';
       }
-      unsigned int value_id(0);
+      // patch: map< string > uses about 50 byte overhead per string
+      // which is too much for 100 million strings in 2 GB memory
+      unsigned int value_id(val_detect.find(value.c_str()));
+      if (val_detect.is_new)
+      {
+	values_out<<value_id<<'\t';
+	escape_infile_xml(values_out, value);
+	values_out<<'\n';
+      }
+/*      unsigned int value_id(0);
       it = values.find(value);
       if (it != values.end())
 	value_id = it->second;
@@ -227,7 +339,7 @@ void start(const char *el, const char **attr)
 	values_out<<value_id<<'\t';
 	escape_infile_xml(values_out, value);
 	values_out<<'\n';
-      }
+      }*/
       if (tag_type == NODE)
 	node_tags_out<<current_id<<'\t'<<key_id<<'\t'<<value_id<<'\n';
       else if (tag_type == WAY)
@@ -374,13 +486,6 @@ int main(int argc, char *argv[])
 {
   cerr<<(uintmax_t)time(NULL)<<'\n';
   
-  if ((argc < 2) || (strcmp(argv[1], "-y")))
-  {
-    cout<<"This would reset the database \"osm\". If you really want to do that, please run\n";
-    cout<<argv[0]<<" -y\n";
-    return 0;
-  }
-  
   mysql = mysql_init(NULL);
   
   if (!mysql_real_connect(mysql, "localhost", "osm", "osm", NULL, 0, NULL,
@@ -392,10 +497,18 @@ int main(int argc, char *argv[])
   
   prepare_db();
   
+  // patch: map< string > uses about 50 byte overhead per string
+  // which is too much for 100 million strings in 2 GB memory
+  values_out<<1<<'\t'<<'\n';
+  
   //reading the main document
   parse(stdin, start, end);
   
   flush_to_db();
+  
+  member_roles.clear();
+  keys.clear();
+  values.clear();
   
   //test whether the database is successfully populated
 /*  mysql_query(mysql, "select * from nodes where id = 317077361");
