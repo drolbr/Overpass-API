@@ -33,7 +33,7 @@ using namespace std;
 class Entry
 {
   public:
-    Entry() : next(0), id(0), value(0), ey_buf(1048576), lg_buf(1048576) {}
+    Entry() : next(0), id(0), value(0) {}
   
     Entry* next;
     int id;
@@ -45,7 +45,7 @@ class Value_Detect
   public:
     Value_Detect() : is_new(false), current_max(1)
     {
-      entries.resize(16*16*16*16*16*16);
+      entries.resize(4*4*4 * 4*4*4 * 4*4*4 * 4*4*4, 0);
     }
   
     int find(const char* val);
@@ -53,16 +53,16 @@ class Value_Detect
     bool is_new;
   private:
     int current_max;
-    vector< Entry > entries;
+    vector< Entry* > entries;
 };
 
 inline int strposcmp(const char* a, const char* b)
 {
-  unsigned int i(0);
+  int i(0);
   while ((a[i] != 0) && (b[i] != 0) && (a[i] == b[i]))
     ++i;
   if (a[i] == b[i])
-    return 0;
+    return -1;
   else
     return i;
 }
@@ -71,62 +71,83 @@ int Value_Detect::find(const char* val)
 {
   unsigned int length(strlen(val));
   
-  if (!length)
+  if (length == 0)
     return 1;
   
   unsigned int i(0);
   unsigned int idx(0);
-  while ((i < 6) && (i < length))
-    idx = 16*idx + (((unsigned char)val[i++])%16);
-  
-  Entry* entry = &entries[idx];
-  if (entry->value == 0)
+  while ((i < 12) && (i < length))
   {
-    entry->value = (char*) malloc(length+1);
-    strcpy(entry->value, val);
-    is_new = true;
-    entry->id = ++current_max;
-    
-    return entry->id;
+    idx = 4*idx + (((unsigned char)val[i])%4);
+    ++i;
   }
-  const char* diff_entry(0);
-  unsigned int diff_max(0);
-  i = 0;
-  while (true)
+  while (i < 12)
   {
-    i = strposcmp(val, entry->value);
-    if (!i)
+    idx = 4*idx + 3;
+    ++i;
+  }
+  
+  Entry* entry(entries[idx]);
+  Entry** last_entry(&entry);
+/*  while (entry->value == 0)
+  {
+    if (entry->next == 0)
+    {
+      entry->value = (char*) malloc(length+1);
+      strcpy(entry->value, val);
+      is_new = true;
+      entry->id = ++current_max;
+    
+      return entry->id;
+    }
+    
+    if (i < length)
+      entry = entry->next + (((unsigned char)val[i++])%4) * sizeof(Entry);
+    else
+      entry = entry->next;
+    ++i;
+  }*/
+  unsigned int chain_count(0);
+  while (entry)
+  {
+    if (!strcmp(val, entry->value))
     {
       is_new = false;
       return entry->id;
     }
-    if (entry->value[0] == 0)
-    {
-      if (!strposcmp(val+(*((unsigned short*)((entry->value)+1))), (char*)((entry->value)+7)))
-      {
-	is_new = false;
-	return entry->id;
-      }
-    }
-    else if (i > diff_max)
-    {
-      diff_max = i;
-      diff_entry = entry->value;
-    }
     
-    if (!entry->next)
-      break;
+    ++chain_count;
+    last_entry = &(entry->next);
     entry = entry->next;
   }
-  entry->next = (Entry*) malloc(sizeof(Entry));
-  entry = entry->next;
-  entry->value = (char*) malloc(length+1);
-  entry->next = 0;
-  strcpy(entry->value, val);
-  is_new = true;
-  entry->id = ++current_max;
+  
+  if (true) //(chain_count < 16)
+  {
+    entry = (Entry*) malloc(sizeof(Entry));
+    *last_entry = entry;
+    entry->value = (char*) malloc(length+1);
+    entry->next = 0;
+    strcpy(entry->value, val);
+    is_new = true;
+    entry->id = ++current_max;
+  
+    return entry->id;
+  }
+  
+/*  Entry* new_ey[4];
+  entry = &entries[idx];
+  
+  Entry* new_block = (Entry*) malloc(sizeof(Entry)*4);
+  
+  while (entry->value != 0)
+  {
+    if (strlen(entry->value) < i)
+      idx = 0;
+    else
+      idx = (unsigned char)(entry->value[i])%4;
+    entry = entry->next;
+  }*/
     
-  return entry->id;
 }
 
 const int NODE = 1;
