@@ -11,6 +11,7 @@
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
+#include "user_interface.h"
 #include "coord_query_statement.h"
 
 #include <mysql.h>
@@ -32,19 +33,17 @@ void Coord_Query_Statement::set_attributes(const char **attr)
   if ((lat_d < -90.0) || (lat_d > 90.0) || (attributes["lat"] == ""))
   {
     ostringstream temp;
-    temp<<"In Line "<<current_line_number()
-	<<": For the attribute \"lat\" of the element \"coord-query\""
+    temp<<"For the attribute \"lat\" of the element \"coord-query\""
 	<<" the only allowed values are floats between -90.0 and 90.0.";
-    add_static_error(Error(temp.str(), current_line_number()));
+    add_static_error(temp.str());
   }
   double lon_d(atof(attributes["lon"].c_str()));
   if ((lon_d < -180.0) || (lat_d > 180.0) || (attributes["lon"] == ""))
   {
     ostringstream temp;
-    temp<<"In Line "<<current_line_number()
-	<<": For the attribute \"lon\" of the element \"coord-query\""
+    temp<<"For the attribute \"lon\" of the element \"coord-query\""
 	<<" the only allowed values are floats between -180.0 and 180.0.";
-    add_static_error(Error(temp.str(), current_line_number()));
+    add_static_error(temp.str());
   }
   lat = (int)(lat_d * 10000000 + 0.5);
   lon = (int)(lon_d * 10000000 + 0.5);

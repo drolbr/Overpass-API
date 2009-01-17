@@ -6,102 +6,22 @@
 #include <stdlib.h>
 #include <vector>
 #include "expat_justparse_interface.h"
-#include "cgi-helper.h"
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
-#include "union_statement.h"
-#include "query_statement.h"
-#include "id_query_statement.h"
-#include "recurse_statement.h"
-#include "foreach_statement.h"
-#include "item_statement.h"
-#include "make_area_statement.h"
-#include "coord_query_statement.h"
-#include "print_statement.h"
-#include "conflict_statement.h"
-#include "report_statement.h"
-#include "detect_odd_nodes_statement.h"
+#include "statement_factory.h"
+#include "user_interface.h"
 
 #include <mysql.h>
 
 using namespace std;
+
 const int NOTHING = 0;
 const int HTML = 1;
 const int MIXED_XML = 2;
 int output_mode(NOTHING);
 
 MYSQL* mysql(NULL);
-
-//-----------------------------------------------------------------------------
-
-Statement* generate_statement(string element)
-{
-  if (element == "osm-script")
-    return new Root_Statement();
-  if (element == "union")
-    return new Union_Statement();
-  else if (element == "id-query")
-    return new Id_Query_Statement();
-  else if (element == "query")
-    return new Query_Statement();
-  else if (element == "has-kv")
-    return new Has_Key_Value_Statement();
-  else if (element == "recurse")
-    return new Recurse_Statement();
-  else if (element == "foreach")
-    return new Foreach_Statement();
-  else if (element == "item")
-    return new Item_Statement();
-  else if (element == "make-area")
-    return new Make_Area_Statement();
-  else if (element == "coord-query")
-    return new Coord_Query_Statement();
-  else if (element == "print")
-  {
-    output_mode = MIXED_XML;
-    return new Print_Statement();
-  }
-  else if (element == "conflict")
-    return new Conflict_Statement();
-  else if (element == "report")
-  {
-    if (output_mode == NOTHING)
-      output_mode = HTML;
-    return new Report_Statement();
-  }
-  else if (element == "detect-odd-nodes")
-    return new Detect_Odd_Nodes_Statement();
-  
-  ostringstream temp;
-  temp<<"Unknown tag \""<<element<<"\" in line "<<current_line_number()<<'!';
-  add_static_error(Error(temp.str(), current_line_number()));
-  
-  return 0;
-}
-
-bool is_known_element(string element)
-{
-  if ((element == "osm-script") ||
-       (element == "union") ||
-       (element == "id-query") ||
-       (element == "query") ||
-       (element == "has-kv") ||
-       (element == "recurse") ||
-       (element == "foreach") ||
-       (element == "item") ||
-       (element == "make-area") ||
-       (element == "coord-query") ||
-       (element == "print") ||
-       (element == "conflict") ||
-       (element == "report") ||
-       (element == "detect-odd-nodes"))
-    return true;
-  
-  return false;
-}
-
-//-----------------------------------------------------------------------------
 
 vector< Statement* > statement_stack;
 vector< string > text_stack;
@@ -111,6 +31,10 @@ void start(const char *el, const char **attr)
   Statement* statement(generate_statement(el));
   if (statement)
   {
+    if (!strcmp(el, "print"))
+      output_mode = MIXED_XML;
+    else if ((!strcmp(el, "report")) && (output_mode == NOTHING))
+      output_mode = HTML;
     statement->set_attributes(attr);
     statement_stack.push_back(statement);
     text_stack.push_back(get_parsed_text());
@@ -134,43 +58,33 @@ void end(const char *el)
     statement_stack.front()->add_final_text(get_parsed_text());
 }
 
-//TODO: reasonable area counter
-int next_area_id(-1);
-
 int main(int argc, char *argv[])
 {
-  int line_offset(0);
-  string xml_raw(get_xml_raw(line_offset));
-  set_line_offset(line_offset);
-  
-  if (xml_raw.size() > BUFFSIZE-1)
-  {
-    ostringstream temp;
-    temp<<"Input too long (length: "<<xml_raw.size()<<", max. allowed: "<<BUFFSIZE-1<<')';
-    return_error(temp.str(), current_line_number());
+  string xml_raw(get_xml_raw());
+  if (display_encoding_errors(cout))
     return 0;
-  }
-  
-  string parse_status(parse(xml_raw, start, end));
-  if (parse_status != "")
-  {
-    return_error(parse_status, current_line_number());
+  if (display_parse_errors(cout, xml_raw))
     return 0;
-  }
   
-  if (display_static_errors())
+  parse(xml_raw, start, end);
+  if (display_parse_errors(cout, xml_raw))
     return 0;
+  if (display_static_errors(cout, xml_raw))
+    return 0;
+  
+  return_runtime_error("Gegenwärtig will ich die Datenbank nicht stören.\n", cout);
+  return 0;
+  
+  //Sanity-Check
   
   mysql = mysql_init(NULL);
   
   if (!mysql_real_connect(mysql, "localhost", "osm", "osm", "osm", 0, NULL,
        CLIENT_LOCAL_FILES))
   {
-    return_error("Connection to database failed.\n");
+    return_runtime_error("Connection to database failed.\n", cout);
     return 0;
   }
-  
-  //Sanity-Check
   
   if (output_mode == MIXED_XML)
     cout<<"Content-type: application/xml\n\n"
@@ -181,7 +95,7 @@ int main(int argc, char *argv[])
   else
     cout<<"Content-type: text/html\n\n"
 	<<"<html>\n<head><title>Nothing</title></head>\n<body>\n\n"
-	<<"Your query doesn't contain any statement that produces output\n";
+	<<"Your query doesn't contain any statement that produces output\n</body>";
   
   prepare_caches(mysql);
   

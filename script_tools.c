@@ -9,11 +9,9 @@
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
+#include "user_interface.h"
 
 using namespace std;
-
-vector< Error > parsing_errors;
-vector< Error > static_errors;
 
 void eval_cstr_array(string element, map< string, string >& attributes, const char **attr)
 {
@@ -25,44 +23,19 @@ void eval_cstr_array(string element, map< string, string >& attributes, const ch
     else
     {
       ostringstream temp;
-      temp<<"In Line "<<current_line_number()
-	  <<": Unknown attribute \""<<attr[i]<<"\" in element \""<<element<<"\".";
-      static_errors.push_back(Error(temp.str(), current_line_number()));
+      temp<<"Unknown attribute \""<<attr[i]<<"\" in element \""<<element<<"\".";
+      add_static_error(temp.str());
     }
   }
-}
-
-void add_static_error(const Error& e)
-{
-  static_errors.push_back(e);
 }
 
 void substatement_error(string parent, Statement* child)
 {
   ostringstream temp;
-  temp<<"In Line "<<current_line_number()
-      <<": Element \""<<child->get_name()<<"\" cannot be subelement of element \""<<parent<<"\".";
-  static_errors.push_back(Error(temp.str(), current_line_number()));
+  temp<<"Element \""<<child->get_name()<<"\" cannot be subelement of element \""<<parent<<"\".";
+  add_static_error(temp.str());
   
   delete child;
-}
-
-int display_static_errors()
-{
-  if (static_errors.size() == 0)
-    return 0;
-    
-  cout<<"Content-type: text/html\n\n";
-  
-  cout<<"<html>\n<head>\n<title>Static Error(s)!</title>\n</head>\n<body>\n";
-  for(vector< Error >::const_iterator it(static_errors.begin());
-      it != static_errors.end(); ++it)
-  {
-    cout<<"<p>"<<it->text<<"</p>\n";
-  }
-  cout<<"\n</body>\n</html>\n";
-
-  return 1;
 }
 
 //-----------------------------------------------------------------------------
@@ -74,9 +47,8 @@ void assure_no_text(string text, string name)
     if (!isspace(text[i]))
     {
       ostringstream temp;
-      temp<<"In Line "<<current_line_number()
-	  <<": Element \""<<name<<"\" must not contain text.";
-      static_errors.push_back(Error(temp.str(), current_line_number()));
+      temp<<"Element \""<<name<<"\" must not contain text.";
+      add_static_error(temp.str());
       break;
     }
   }

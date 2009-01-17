@@ -10,6 +10,7 @@
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
+#include "user_interface.h"
 #include "query_statement.h"
 
 #include <mysql.h>
@@ -42,10 +43,9 @@ void Query_Statement::set_attributes(const char **attr)
   {
     type = 0;
     ostringstream temp;
-    temp<<"In Line "<<current_line_number()
-	<<": For the attribute \"type\" of the element \"query\""
+    temp<<"For the attribute \"type\" of the element \"query\""
 	<<" the only allowed values are \"node\", \"way\" or \"relation\".";
-    add_static_error(Error(temp.str(), current_line_number()));
+    add_static_error(temp.str());
   }
 }
 
@@ -281,10 +281,9 @@ void Has_Key_Value_Statement::set_attributes(const char **attr)
   if (key == "")
   {
     temp.str("");
-    temp<<"In Line "<<current_line_number()
-	<<": For the attribute \"k\" of the element \"has-kv\""
+    temp<<"For the attribute \"k\" of the element \"has-kv\""
 	<<" the only allowed values are non-empty strings.";
-    add_static_error(Error(temp.str(), current_line_number()));
+    add_static_error(temp.str());
   }
 }
 

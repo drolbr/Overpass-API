@@ -23,7 +23,7 @@ int current_line_number();
 string get_parsed_text();
 void reset_parsed_text();
 
-string parse(string input,
+void parse(const string& input,
 	     void (*start)(const char*, const char**),
 		    void (*end)(const char*));
 

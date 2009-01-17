@@ -10,6 +10,7 @@
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
+#include "user_interface.h"
 #include "id_query_statement.h"
 
 #include <mysql.h>
@@ -42,20 +43,18 @@ void Id_Query_Statement::set_attributes(const char **attr)
   {
     type = 0;
     ostringstream temp;
-    temp<<"In Line "<<current_line_number()
-	<<": For the attribute \"type\" of the element \"id-query\""
+    temp<<"For the attribute \"type\" of the element \"id-query\""
 	<<" the only allowed values are \"node\", \"way\" or \"relation\".";
-    add_static_error(Error(temp.str(), current_line_number()));
+    add_static_error(temp.str());
   }
   
   ref = (unsigned int)atol(attributes["ref"].c_str());
   if (ref == 0)
   {
     ostringstream temp;
-    temp<<"In Line "<<current_line_number()
-	<<": For the attribute \"ref\" of the element \"id-query\""
+    temp<<"For the attribute \"ref\" of the element \"id-query\""
 	<<" the only allowed values are positive integers.";
-    add_static_error(Error(temp.str(), current_line_number()));
+    add_static_error(temp.str());
   }
 }
 

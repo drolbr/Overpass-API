@@ -9,6 +9,7 @@
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
+#include "user_interface.h"
 #include "recurse_statement.h"
 
 #include <mysql.h>
@@ -45,11 +46,10 @@ void Recurse_Statement::set_attributes(const char **attr)
   {
     type = 0;
     ostringstream temp;
-    temp<<"In Line "<<current_line_number()
-	<<": For the attribute \"type\" of the element \"recurse\""
+    temp<<"For the attribute \"type\" of the element \"recurse\""
 	<<" the only allowed values are \"way-node\", \"relation-relation\","
 	<<"\"relation-way\" or \"relation-node\".";
-    add_static_error(Error(temp.str(), current_line_number()));
+    add_static_error(temp.str());
   }
 }
 

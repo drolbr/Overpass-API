@@ -25,6 +25,7 @@
 #include <expat.h>
 
 #include "expat_justparse_interface.h"
+#include "user_interface.h"
 
 #ifdef XML_LARGE_SIZE
 #if defined(XML_USE_MSC_EXTENSIONS) && _MSC_VER < 1400
@@ -56,7 +57,7 @@ expat_wrapper_end(void *data, const char *el)
   working_end(el);
 }
 
-string result_buf;
+static string result_buf;
 
 static void XMLCALL
     expat_wrapper_text(void *userData,
@@ -118,6 +119,7 @@ void parse(FILE* in,
 
 XML_Parser p;
 int line_offset(0);
+int parser_online(false);
 
 void set_line_offset(int line_offset_)
 {
@@ -126,13 +128,13 @@ void set_line_offset(int line_offset_)
 
 int current_line_number()
 {
-  if (p)
+  if (parser_online)
     return (XML_GetCurrentLineNumber(p) + line_offset);
   else
     return -1;
 }
 
-string parse(string input,
+void parse(const string& input,
 	   void (*start)(const char*, const char**),
 		  void (*end)(const char*))
 {
@@ -140,9 +142,12 @@ string parse(string input,
   working_end = end;
   
   p = XML_ParserCreate(NULL);
-  if (! p) {
-    return "Couldn't allocate memory for parser\n";
+  if (! p)
+  {
+    add_parse_error("Couldn't allocate memory for parser\n");
+    return;
   }
+  parser_online = true;
 
   XML_SetElementHandler(p, expat_wrapper_start, expat_wrapper_end);
   XML_SetCharacterDataHandler(p, expat_wrapper_text);
@@ -163,15 +168,13 @@ string parse(string input,
       pos += len;
     }
   
-    if (XML_Parse(p, Buff, len, done) == XML_STATUS_ERROR) {
-      ostringstream temp;
-      temp<<"Parse error at line "<<XML_GetCurrentLineNumber(p)<<":\n"
-	  <<XML_ErrorString(XML_GetErrorCode(p))<<'\n';
-      return temp.str();
+    if (XML_Parse(p, Buff, len, done) == XML_STATUS_ERROR)
+    {
+      add_parse_error(XML_ErrorString(XML_GetErrorCode(p)));
+      return;
     }
   }
 
+  parser_online = false;
   XML_ParserFree(p);
-  
-  return "";
 }

@@ -7,8 +7,10 @@
 
 using namespace std;
 
-string cgi_form_to_text();
-void return_error(const string& error, int current_line_number = -1);
-string get_xml_raw(int& line_offset);
+string cgi_get_to_text();
+
+string cgi_post_to_text();
+
+string decode_cgi_to_plain(const string& raw, int& error);
 
 #endif

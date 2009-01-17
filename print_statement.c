@@ -11,6 +11,7 @@
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
+#include "user_interface.h"
 #include "print_statement.h"
 
 #include <mysql.h>
@@ -42,10 +43,9 @@ void Print_Statement::set_attributes(const char **attr)
   {
     mode = 0;
     ostringstream temp;
-    temp<<"In Line "<<current_line_number()
-	<<": For the attribute \"mode\" of the element \"print\""
+    temp<<"For the attribute \"mode\" of the element \"print\""
 	<<" the only allowed values are \"ids_only\", \"skeleton\" or \"body\".";
-    add_static_error(Error(temp.str(), current_line_number()));
+    add_static_error(temp.str());
   }
 }
 

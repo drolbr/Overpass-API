@@ -28,25 +28,39 @@ char hex_digit(char c)
   return 16;
 }
 
-string cgi_form_to_text()
+string cgi_get_to_text()
 {
-  string raw;
   char* method;
   method = getenv("REQUEST_METHOD");
-  if ((method != NULL) && (!strcmp(method, "GET")))
-    raw = getenv("QUERY_STRING");
-  else
-  {
-    string buf;
-    while (!cin.eof())
-    {
-      getline(cin, buf);
-      raw += buf + '\n';
-    }
-  }
+  if ((method) && (!strcmp(method, "GET")))
+    return getenv("QUERY_STRING");
   
+  return "";
+}
+
+string cgi_post_to_text()
+{
+  string raw, buf;
+  while (!cin.eof())
+  {
+    getline(cin, buf);
+    raw += buf + '\n';
+  }
+  return raw;
+}
+
+string decode_cgi_to_plain(const string& raw, int& error)
+{
+  error = 0;
   string result;
-  unsigned int pos(0);
+  string::size_type pos(raw.find("data="));
+  if ((pos >= raw.size()) || (pos == string::npos))
+  {
+    error = 1;
+    return "";
+  }
+  pos += 5;
+  
   while (pos < raw.size())
   {
     if (raw[pos] == '%')
@@ -56,115 +70,22 @@ string cgi_form_to_text()
       char a(hex_digit(raw[pos+1])), b(hex_digit(raw[pos+2]));
       if ((a < 16) && (b < 16))
       {
-	result += raw.substr(0, pos);
 	result += (char)(a*16 + b);
-	raw = raw.substr(pos+3);
-	pos = 0;
+	pos += 3;
       }
       else
-	++pos;
+	result += raw[pos++];
     }
     else if (raw[pos] == '+')
     {
-      raw[pos] = ' ';
+      result += ' ';
       ++pos;
     }
-    else if (raw[pos] == '=')
-    {
-      result = "";
-      raw = raw.substr(pos+1);
-      pos = 0;
-    }
+    else if (raw[pos] == '&')
+      pos = raw.size();
     else
-      ++pos;
+      result += raw[pos++];
   }
-  result += raw;
   
   return result;
-}
-
-static string input;
-
-void return_error(const string& error, int current_line_number)
-{
-  cout<<"Content-type: text/html\n\n";
-  
-  cout<<"<html>\n<head>\n<title>Parsing Error!</title>\n</head>\n<body>\n<pre>";
-
-  if (current_line_number >= 0)
-    cout<<"The following error has occured in line "<<current_line_number
-	<<" while parsing the input:\n\n";
-  else
-    cout<<"The following error has occured while parsing the input:\n\n";
-  cout<<error;
-  cout<<"\n\nYour input:\n";
-  cout<<"-- Begin of Input --\n";
-  unsigned int pos(0);
-  unsigned int line_number(1);
-  if (current_line_number == 1)
-  {
-    cout<<"<strong>";
-  }
-  while (pos < input.size())
-  {
-    if (input[pos] == '\n')
-    {
-      ++line_number;
-      if ((current_line_number >= 0) && ((int)line_number == current_line_number))
-      {
-	cout<<input.substr(0, pos)<<"\n<strong>";
-	input = input.substr(pos+1);
-	pos = 0;
-      }
-      else if ((current_line_number >= 0) && ((int)line_number
-		== current_line_number + 1))
-      {
-	cout<<input.substr(0, pos)<<"\n</strong>";
-	input = input.substr(pos+1);
-	pos = 0;
-      }
-    }
-    if (input[pos] == '<')
-    {
-      cout<<input.substr(0, pos)<<"&lt;";
-      input = input.substr(pos+1);
-      pos = 0;
-    }
-    else if (input[pos] == '&')
-    {
-      cout<<input.substr(0, pos)<<"&amp;";
-      input = input.substr(pos+1);
-      pos = 0;
-    }
-    else
-      ++pos;
-  }
-  cout<<input;
-  cout<<"-- End of Input --\n";
-  
-  cout<<"</pre>\n</body>\n</html>\n";
-}
-
-string get_xml_raw(int& line_offset)
-{
-  input = cgi_form_to_text();
-  
-  unsigned int pos(0);
-  while ((pos < input.size()) && (isspace(input[pos])))
-    ++pos;
-  if (pos == input.size())
-  {
-    return_error("Empty input!");
-    return 0;
-  }
-  
-  string xml_raw(input);
-  if ((input[pos] == '<') && (input[pos+1] != '?'))
-  {
-    xml_raw = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm-script>\n"
-	+ input + "\n</osm-script>\n";
-    line_offset = -2;
-  }
-
-  return xml_raw;
 }

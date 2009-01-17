@@ -30,14 +30,17 @@
 
 using namespace std;
 
+//-----------------------------------------------------------------------------
+//patch to save RAM
+
 class Entry
 {
   public:
-    Entry() : next(0), id(0), value(0) {}
+    Entry() : value(0), next(0), id(0) {}
   
+    char* value;
     Entry* next;
     int id;
-    char* value;
 };
 
 class Value_Detect
@@ -87,26 +90,23 @@ int Value_Detect::find(const char* val)
     ++i;
   }
   
+  Entry** last_entry(&entries[idx]);
   Entry* entry(entries[idx]);
-  Entry** last_entry(&entry);
-/*  while (entry->value == 0)
+  while ((entry) && (((void**)entry)[0] == 0))
   {
-    if (entry->next == 0)
-    {
-      entry->value = (char*) malloc(length+1);
-      strcpy(entry->value, val);
-      is_new = true;
-      entry->id = ++current_max;
-    
-      return entry->id;
-    }
-    
     if (i < length)
-      entry = entry->next + (((unsigned char)val[i++])%4) * sizeof(Entry);
+    {
+      unsigned int idx2(((unsigned char)val[i])%4 + 1);
+      last_entry = (Entry**)(&(((void**)(entry))[idx2]));
+      entry = *(Entry**)(&(((void**)(entry))[idx2]));
+    }
     else
-      entry = entry->next;
+    {
+      last_entry = (Entry**)(&(((void**)(entry))[4]));
+      entry = *(Entry**)(&(((void**)(entry))[4]));
+    }
     ++i;
-  }*/
+  }
   unsigned int chain_count(0);
   while (entry)
   {
@@ -121,40 +121,71 @@ int Value_Detect::find(const char* val)
     entry = entry->next;
   }
   
-  if (true) //(chain_count < 16)
-  {
-    entry = (Entry*) malloc(sizeof(Entry));
-    *last_entry = entry;
-    entry->value = (char*) malloc(length+1);
-    entry->next = 0;
-    strcpy(entry->value, val);
-    is_new = true;
-    entry->id = ++current_max;
+  entry = (Entry*) malloc(sizeof(Entry));
+  *last_entry = entry;
+  entry->value = (char*) malloc(length+1);
+  entry->next = 0;
+  strcpy(entry->value, val);
+  is_new = true;
+  entry->id = ++current_max;
   
+  if (chain_count < 16)
     return entry->id;
+  
+  unsigned int entry_id(entry->id);
+  i = 12;
+  last_entry = &(entries[idx]);
+  entry = entries[idx];
+  while ((entry) && (((void**)entry)[0] == 0))
+  {
+    if (i < length)
+    {
+      unsigned int idx2(((unsigned char)val[i])%4 + 1);
+      last_entry = (Entry**)(&(((void**)(entry))[idx2]));
+      entry = *(Entry**)(&(((void**)(entry))[idx2]));
+    }
+    else
+    {
+      last_entry = (Entry**)(&(((void**)(entry))[4]));
+      entry = *(Entry**)(&(((void**)(entry))[4]));
+    }
+    ++i;
   }
   
-/*  Entry* new_ey[4];
-  entry = &entries[idx];
+  void** new_block = (void**) malloc(5 * sizeof(void*));
+  new_block[0] = 0;
+  Entry** new_ey[4];
+  for (unsigned int j(1); j < 5 ; ++j)
+  {
+    new_ey[j-1] = (Entry**)(&(new_block[j]));
+    new_block[j] = 0;
+  }
   
-  Entry* new_block = (Entry*) malloc(sizeof(Entry)*4);
-  
-  while (entry->value != 0)
+  while (entry)
   {
     if (strlen(entry->value) < i)
-      idx = 0;
+      idx = 3;
     else
       idx = (unsigned char)(entry->value[i])%4;
+    *(new_ey[idx]) = entry;
+    new_ey[idx] = &(entry->next);
     entry = entry->next;
-  }*/
-    
+  }
+  for (unsigned int j(0); j < 4 ; ++j)
+    *(new_ey[j]) = 0;
+  *last_entry = (Entry*) new_block;
+  
+  return entry_id;
 }
+
+//-----------------------------------------------------------------------------
 
 const int NODE = 1;
 const int WAY = 2;
 const int RELATION = 3;
 int tag_type(0);
 unsigned int current_id(0);
+bool lowmem(false);
 
 map< string, unsigned int > member_roles;
 map< string, unsigned int > keys;
@@ -182,102 +213,12 @@ MYSQL* mysql(NULL);
 
 void prepare_db()
 {
-/*  mysql_query(mysql, "create database if not exists osm");
-  mysql_query(mysql, "drop database osm");
-  mysql_query(mysql, "create database osm");*/
   mysql_query(mysql, "use osm");
-
-/*  mysql_query(mysql, "create table nodes (id int, lat_idx int, lat int, lon int)");
-  mysql_query(mysql, "create table node_tags (id int unsigned, key_ int unsigned, value_ int unsigned)");
-  mysql_query(mysql, "create table ways (id int)");
-  mysql_query(mysql, "create table way_members (id int unsigned, count int unsigned, ref int unsigned)");
-  mysql_query(mysql, "create table way_tags (id int unsigned, key_ int unsigned, value_ int unsigned)");
-  mysql_query(mysql, "create table relations (id int)");
-  mysql_query(mysql, "create table relation_node_members (id int unsigned, ref int unsigned, role int unsigned)");
-  mysql_query(mysql, "create table relation_way_members (id int unsigned, ref int unsigned, role int unsigned)");
-  mysql_query(mysql, "create table relation_relation_members (id int unsigned, ref int unsigned, role int unsigned)");
-  mysql_query(mysql, "create table relation_tags (id int unsigned, key_ int unsigned, value_ int unsigned)");
-  mysql_query(mysql, "create table member_roles (id int unsigned, role varchar(21844))");
-  mysql_query(mysql, "create table key_s (id int unsigned, key_ varchar(21844))");
-  mysql_query(mysql, "create table value_s (id int unsigned, value_ varchar(21844))");
-
-  mysql_query(mysql, "create table conflicts (id int, message varchar(21844))");
-  mysql_query(mysql, "create table node_conflicts (id int, conflict int)");
-  mysql_query(mysql, "create table way_conflicts (id int, conflict int)");
-  mysql_query(mysql, "create table relation_conflicts (id int, conflict int)");
-  
-  mysql_query(mysql, "create table areas (id int)");
-  mysql_query(mysql, "create table area_segments (id int, lat_idx int, min_lat int, min_lon int, max_lat int, max_lon int)");
-  mysql_query(mysql, "create table area_tags (id int, key_ int unsigned, value_ int unsigned)");*/
 }
 
 void postprocess_db()
 {
   cerr<<'\n'<<(uintmax_t)time(NULL)<<'\n';
-  
-/*  cerr<<"Creating index on ... ";
-  mysql_query(mysql, "set session myisam_sort_buffer_size = 1073741824");
-  
-  cerr<<"nodes";
-  mysql_query(mysql, "alter table nodes add unique key(id)");
-  cerr<<", node_tags";
-  mysql_query(mysql, "alter table node_tags add key(id)");
-  cerr<<", ways";
-  mysql_query(mysql, "alter table ways add unique key(id)");
-  cerr<<", way_members";
-  mysql_query(mysql, "alter table way_members add key(id)");
-  cerr<<", way_tags";
-  mysql_query(mysql, "alter table way_tags add key(id)");
-  cerr<<", relations";
-  mysql_query(mysql, "alter table relations add unique key(id)");
-  cerr<<", relation_node_members";
-  mysql_query(mysql, "alter table relation_node_members add key(id)");
-  cerr<<", relation_way_members";
-  mysql_query(mysql, "alter table relation_way_members add key(id)");
-  cerr<<", relation_relation_members";
-  mysql_query(mysql, "alter table relation_relation_members add key(id)");
-  cerr<<", relation_tags";
-  mysql_query(mysql, "alter table relation_tags add key(id)");
-  cerr<<", member_roles";
-  mysql_query(mysql, "alter table member_roles add unique key(id)");
-  cerr<<", key_s";
-  mysql_query(mysql, "alter table key_s add unique key(id)");
-  cerr<<", value_s";
-  mysql_query(mysql, "alter table value_s add unique key(id)");
-  cerr<<", conflicts";
-  mysql_query(mysql, "alter table conflicts add unique key(id)");
-  mysql_query(mysql, "insert conflicts values (0, '')");
-  cerr<<", node_conflicts";
-  mysql_query(mysql, "alter table node_conflicts add key(id)");
-  cerr<<", way_conflicts";
-  mysql_query(mysql, "alter table way_conflicts add key(id)");
-  cerr<<", relation_conflicts";
-  mysql_query(mysql, "alter table relation_conflicts add key(id)");
-  cerr<<", areas";
-  mysql_query(mysql, "alter table areas add unique key(id)");
-  mysql_query(mysql, "insert areas values (0)");
-  cerr<<", area_segments";
-  mysql_query(mysql, "alter table area_segments add key(id)");
-  cerr<<", area_tags";
-  mysql_query(mysql, "alter table area_tags add key(id)");
-  
-  cerr<<", nodes";
-  mysql_query(mysql, "alter table nodes add index(lat_idx, lon)");
-  cerr<<", node_tags";
-  mysql_query(mysql, "alter table node_tags add index(key_, value_)");
-  cerr<<", way_members";
-  mysql_query(mysql, "alter table way_members add index(ref)");
-  cerr<<", way_tags";
-  mysql_query(mysql, "alter table way_tags add index(key_, value_)");
-  cerr<<", relation_tags";
-  mysql_query(mysql, "alter table relation_tags add index(key_, value_)");
-  cerr<<", key_s";
-  mysql_query(mysql, "alter table key_s add index(key_)");
-  cerr<<", value_s";
-  mysql_query(mysql, "alter table value_s add index(value_)");
-  cerr<<", area_segments";
-  mysql_query(mysql, "alter table area_segments add index(lat_idx, min_lon)");*/
-  cerr<<'\n';
 }
 
 void flush_to_db()
@@ -340,27 +281,33 @@ void start(const char *el, const char **attr)
 	escape_infile_xml(keys_out, key);
 	keys_out<<'\n';
       }
-      // patch: map< string > uses about 50 byte overhead per string
-      // which is too much for 100 million strings in 2 GB memory
-      unsigned int value_id(val_detect.find(value.c_str()));
-      if (val_detect.is_new)
+      if (lowmem)
       {
-	values_out<<value_id<<'\t';
-	escape_infile_xml(values_out, value);
-	values_out<<'\n';
+        // patch: map< string > uses about 50 byte overhead per string
+        // which is too much for 100 million strings in 2 GB memory
+	unsigned int value_id(val_detect.find(value.c_str()));
+	if (val_detect.is_new)
+	{
+	  values_out<<value_id<<'\t';
+	  escape_infile_xml(values_out, value);
+	  values_out<<'\n';
+	}
       }
-/*      unsigned int value_id(0);
-      it = values.find(value);
-      if (it != values.end())
-	value_id = it->second;
       else
       {
-	value_id = values.size()+1;
-	values.insert(make_pair< string, unsigned int >(value, value_id));
-	values_out<<value_id<<'\t';
-	escape_infile_xml(values_out, value);
-	values_out<<'\n';
-      }*/
+	unsigned int value_id(0);
+	it = values.find(value);
+	if (it != values.end())
+	  value_id = it->second;
+	else
+	{
+	  value_id = values.size()+1;
+	  values.insert(make_pair< string, unsigned int >(value, value_id));
+	  values_out<<value_id<<'\t';
+	  escape_infile_xml(values_out, value);
+	  values_out<<'\n';
+	}
+      }
       if (tag_type == NODE)
 	node_tags_out<<current_id<<'\t'<<key_id<<'\t'<<value_id<<'\n';
       else if (tag_type == WAY)
@@ -505,6 +452,14 @@ void end(const char *el)
 
 int main(int argc, char *argv[])
 {
+  if ((argc == 2) && (!strcmp(argv[1], "--savemem")))
+    lowmem = true;
+  else if (argc > 1)
+  {
+    cout<<"Usage: "<<argv[0]<<" [--savemem]\n";
+    return 0;
+  }
+  
   cerr<<(uintmax_t)time(NULL)<<'\n';
   
   mysql = mysql_init(NULL);
@@ -530,25 +485,6 @@ int main(int argc, char *argv[])
   member_roles.clear();
   keys.clear();
   values.clear();
-  
-  //test whether the database is successfully populated
-/*  mysql_query(mysql, "select * from nodes where id = 317077361");
-  
-  MYSQL_RES* result(mysql_store_result(mysql));
-  if (result)
-  {
-    unsigned int num_fields(mysql_num_fields(result));
-    MYSQL_ROW row(mysql_fetch_row(result));
-    while (row)
-    {
-      for (unsigned int i(0); i < num_fields; ++i)
-	if (row[i])
-	  cout<<row[i]<<'\t';
-      cout<<'\n';
-      row = mysql_fetch_row(result);
-    }
-  }*/
-  //end of test sequence
   
   postprocess_db();
   

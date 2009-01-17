@@ -27,20 +27,9 @@ class Statement
     virtual ~Statement() {}
 };
 
-struct Error
-{
-  public:
-    Error(string text_, int line_number_)
-  : text(text_), line_number(line_number_) {}
-    
-    string text;
-    int line_number;
-};
-
 void eval_cstr_array(string element, map< string, string >& attributes, const char **attr);
 
 void substatement_error(string parent, Statement* child);
-void add_static_error(const Error& e);
 void assure_no_text(string text, string name);
 
 int display_static_errors();
