@@ -25,6 +25,10 @@ int display_sanity_errors(ostream& out, const string& input);
 
 void return_runtime_error(const string& error, ostream& out);
 
+const int MIXED_XML = 1;
+const int HTML = 2;
+const int NOTHING = 3;
+
 ostream& out_header(ostream& out, int type);
 
 ostream& out_footer(ostream& out, int type);

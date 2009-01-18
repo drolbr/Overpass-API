@@ -198,6 +198,33 @@ void add_sanity_remark(const string& error)
 
 ostream& out_header(ostream& out, int type)
 {
+  if (type == MIXED_XML)
+    out<<"Content-type: application/xml\n\n"
+	<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<not-osm>\n\n";
+  else if  (type == HTML)
+    out<<"Content-Type: text/html; charset=utf-8\n\n"
+	<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+	<<"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
+	<<"    \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
+	<<"<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">"
+	<<"<head>\n"
+	<<"  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
+	<<"  <title>Query Results</title>\n"
+	<<"</head>\n"
+	<<"<body>\n\n";
+  else
+    out<<"Content-Type: text/html; charset=utf-8\n\n"
+	<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+	<<"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
+	<<"    \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
+	<<"<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">"
+	<<"<head>\n"
+	<<"  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
+	<<"  <title>Nothing</title>\n"
+	<<"</head>\n"
+	<<"<body>\n\n"
+	<<"Your query doesn't contain any statement that produces output.\n";
+  
   return out;
 }
 
@@ -209,7 +236,7 @@ ostream& out_error_header(ostream& out, string title)
       <<"    \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
       <<"<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">"
       <<"<head>\n"
-      <<"  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"de\"/>\n"
+      <<"  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
       <<"  <title>"<<title<<"</title>\n"
       <<"</head>\n"
       <<"<body>\n";
@@ -218,6 +245,10 @@ ostream& out_error_header(ostream& out, string title)
 
 ostream& out_footer(ostream& out, int type)
 {
+  if (type == MIXED_XML)
+    out<<"\n</not-osm>\n";
+  else
+    out<<"\n</body>\n</html>\n";
   return out;
 }
 

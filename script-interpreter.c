@@ -16,10 +16,7 @@
 
 using namespace std;
 
-const int NOTHING = 0;
-const int HTML = 1;
-const int MIXED_XML = 2;
-int output_mode(NOTHING);
+static int output_mode(NOTHING);
 
 MYSQL* mysql(NULL);
 
@@ -86,16 +83,7 @@ int main(int argc, char *argv[])
     return 0;
   }
   
-  if (output_mode == MIXED_XML)
-    cout<<"Content-type: application/xml\n\n"
-	<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<not-osm>\n\n";
-  else if  (output_mode == HTML)
-    cout<<"Content-type: text/html\n\n"
-	<<"<html>\n<head><title>Query Results</title></head>\n<body>\n\n";
-  else
-    cout<<"Content-type: text/html\n\n"
-	<<"<html>\n<head><title>Nothing</title></head>\n<body>\n\n"
-	<<"Your query doesn't contain any statement that produces output\n</body>";
+  out_header(cout, output_mode);
   
   prepare_caches(mysql);
   
@@ -104,10 +92,7 @@ int main(int argc, char *argv[])
        it != statement_stack.end(); ++it)
     (*it)->execute(mysql, maps);
   
-  if (output_mode == MIXED_XML)
-    cout<<"\n</not-osm>"<<'\n';
-  else
-    cout<<"\n</html>"<<'\n';
+  out_footer(cout, output_mode);
   
   mysql_close(mysql);
   

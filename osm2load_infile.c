@@ -251,6 +251,10 @@ void flush_to_db()
   mysql_query(mysql, "load data local infile '/tmp/db_area_values.tsv' into table value_s");
 }
 
+// patch cope with server power limits by ignoring uncommon node tags
+set< string > allowed_node_tags;
+bool no_tag_limit(true);
+
 void start(const char *el, const char **attr)
 {
   // patch: map< string > uses about 50 byte overhead per string
@@ -269,51 +273,55 @@ void start(const char *el, const char **attr)
 	if (!strcmp(attr[i], "v"))
 	  value = attr[i+1];
       }
-      unsigned int key_id(0);
-      map< string, unsigned int >::const_iterator it(keys.find(key));
-      if (it != keys.end())
-	key_id = it->second;
-      else
+      // patch cope with server power limits by ignoring uncommon node tags
+      if ((tag_type != NODE) || (no_tag_limit) || (allowed_node_tags.find(key) != allowed_node_tags.end()))
       {
-	key_id = keys.size()+1;
-	keys.insert(make_pair< string, unsigned int >(key, key_id));
-	keys_out<<key_id<<'\t';
-	escape_infile_xml(keys_out, key);
-	keys_out<<'\n';
-      }
-      if (lowmem)
-      {
-        // patch: map< string > uses about 50 byte overhead per string
-        // which is too much for 100 million strings in 2 GB memory
-	unsigned int value_id(val_detect.find(value.c_str()));
-	if (val_detect.is_new)
-	{
-	  values_out<<value_id<<'\t';
-	  escape_infile_xml(values_out, value);
-	  values_out<<'\n';
-	}
-      }
-      else
-      {
-	unsigned int value_id(0);
-	it = values.find(value);
-	if (it != values.end())
-	  value_id = it->second;
+	unsigned int key_id(0);
+	map< string, unsigned int >::const_iterator it(keys.find(key));
+	if (it != keys.end())
+	  key_id = it->second;
 	else
 	{
-	  value_id = values.size()+1;
-	  values.insert(make_pair< string, unsigned int >(value, value_id));
-	  values_out<<value_id<<'\t';
-	  escape_infile_xml(values_out, value);
-	  values_out<<'\n';
+	  key_id = keys.size()+1;
+	  keys.insert(make_pair< string, unsigned int >(key, key_id));
+	  keys_out<<key_id<<'\t';
+	  escape_infile_xml(keys_out, key);
+	  keys_out<<'\n';
 	}
+	unsigned int value_id(0);
+	if (lowmem)
+	{
+        // patch: map< string > uses about 50 byte overhead per string
+        // which is too much for 100 million strings in 2 GB memory
+	  value_id = val_detect.find(value.c_str());
+	  if (val_detect.is_new)
+	  {
+	    values_out<<value_id<<'\t';
+	    escape_infile_xml(values_out, value);
+	    values_out<<'\n';
+	  }
+	}
+	else
+	{
+	  it = values.find(value);
+	  if (it != values.end())
+	    value_id = it->second;
+	  else
+	  {
+	    value_id = values.size()+1;
+	    values.insert(make_pair< string, unsigned int >(value, value_id));
+	    values_out<<value_id<<'\t';
+	    escape_infile_xml(values_out, value);
+	    values_out<<'\n';
+	  }
+	}
+	if (tag_type == NODE)
+	  node_tags_out<<current_id<<'\t'<<key_id<<'\t'<<value_id<<'\n';
+	else if (tag_type == WAY)
+	  way_tags_out<<current_id<<'\t'<<key_id<<'\t'<<value_id<<'\n';
+	else if (tag_type == RELATION)
+	  relation_tags_out<<current_id<<'\t'<<key_id<<'\t'<<value_id<<'\n';
       }
-      if (tag_type == NODE)
-	node_tags_out<<current_id<<'\t'<<key_id<<'\t'<<value_id<<'\n';
-      else if (tag_type == WAY)
-	way_tags_out<<current_id<<'\t'<<key_id<<'\t'<<value_id<<'\n';
-      else if (tag_type == RELATION)
-	relation_tags_out<<current_id<<'\t'<<key_id<<'\t'<<value_id<<'\n';
     }
   }
   else if (!strcmp(el, "nd"))
@@ -452,13 +460,71 @@ void end(const char *el)
 
 int main(int argc, char *argv[])
 {
-  if ((argc == 2) && (!strcmp(argv[1], "--savemem")))
-    lowmem = true;
-  else if (argc > 1)
+  int i(0);
+  while (++i < argc)
   {
-    cout<<"Usage: "<<argv[0]<<" [--savemem]\n";
-    return 0;
+    if (!strcmp(argv[i], "--savemem"))
+      lowmem = true;
+    else if (!strcmp(argv[i], "--limit-node-tags"))
+      no_tag_limit = false;
+    else
+    {
+      cout<<"Usage: "<<argv[0]<<" [--savemem] [--limit-node-tags]\n";
+      return 0;
+    }
   }
+  
+  // patch cope with server power limits by ignoring uncommon node tags
+  allowed_node_tags.insert("highway");
+  allowed_node_tags.insert("traffic-calming");
+  allowed_node_tags.insert("barrier");
+  allowed_node_tags.insert("waterway");
+  allowed_node_tags.insert("lock");
+  allowed_node_tags.insert("railway");
+  allowed_node_tags.insert("aeroway");
+  allowed_node_tags.insert("aerialway");
+  allowed_node_tags.insert("power");
+  allowed_node_tags.insert("man_made");
+  allowed_node_tags.insert("leisure");
+  allowed_node_tags.insert("amenity");
+  allowed_node_tags.insert("shop");
+  allowed_node_tags.insert("tourism");
+  allowed_node_tags.insert("historic");
+  allowed_node_tags.insert("landuse");
+  allowed_node_tags.insert("military");
+  allowed_node_tags.insert("natural");
+  allowed_node_tags.insert("route");
+  allowed_node_tags.insert("sport");
+  allowed_node_tags.insert("bridge");
+  allowed_node_tags.insert("crossing");
+  allowed_node_tags.insert("mountain_pass");
+  allowed_node_tags.insert("ele");
+  allowed_node_tags.insert("operator");
+  allowed_node_tags.insert("opening-hours");
+  allowed_node_tags.insert("disused");
+  allowed_node_tags.insert("wheelchair");
+  allowed_node_tags.insert("noexit");
+  allowed_node_tags.insert("traffic_sign");
+  allowed_node_tags.insert("name");
+  allowed_node_tags.insert("alt_name");
+  allowed_node_tags.insert("int_name");
+  allowed_node_tags.insert("nat_name");
+  allowed_node_tags.insert("reg_name");
+  allowed_node_tags.insert("loc_name");
+  allowed_node_tags.insert("ref");
+  allowed_node_tags.insert("int_ref");
+  allowed_node_tags.insert("nat_ref");
+  allowed_node_tags.insert("reg_ref");
+  allowed_node_tags.insert("loc_ref");
+  allowed_node_tags.insert("old_ref");
+  allowed_node_tags.insert("source_ref");
+  allowed_node_tags.insert("icao");
+  allowed_node_tags.insert("iata");
+  allowed_node_tags.insert("place");
+  allowed_node_tags.insert("place_numbers");
+  allowed_node_tags.insert("postal_code");
+  allowed_node_tags.insert("is_in");
+  allowed_node_tags.insert("population");
   
   cerr<<(uintmax_t)time(NULL)<<'\n';
   

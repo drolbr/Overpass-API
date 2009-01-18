@@ -1,0 +1,91 @@
+#!/bin/bash
+
+if [[ -z $1  ]]; then
+{
+  echo Usage: $0 Name_of_bzip2-compressed_file
+  exit 0
+};
+fi
+PATH=./:$PATH
+read -p "Proceeding will drop the current database osm. Do you really want to continue? " FOO
+
+if [[ $FOO != "YES" ]]; then
+{
+  echo "Aborted on user request"
+  exit 0
+};
+fi
+
+mysql -u osm -posm -e "create database if not exists osm"
+mysql -u osm -posm -e "drop database osm"
+mysql -u osm -posm -e "create database osm"
+
+mysql -u osm -posm osm -e "create table nodes (id int, lat_idx int, lat int, lon int)"
+mysql -u osm -posm osm -e "create table node_tags (id int unsigned, key_ int unsigned, value_ int unsigned)"
+mysql -u osm -posm osm -e "create table ways (id int)"
+mysql -u osm -posm osm -e "create table way_members (id int unsigned, count int unsigned, ref int unsigned)"
+mysql -u osm -posm osm -e "create table way_tags (id int unsigned, key_ int unsigned, value_ int unsigned)"
+mysql -u osm -posm osm -e "create table relations (id int)"
+mysql -u osm -posm osm -e "create table relation_node_members (id int unsigned, ref int unsigned, role int unsigned)"
+mysql -u osm -posm osm -e "create table relation_way_members (id int unsigned, ref int unsigned, role int unsigned)"
+mysql -u osm -posm osm -e "create table relation_relation_members (id int unsigned, ref int unsigned, role int unsigned)"
+mysql -u osm -posm osm -e "create table relation_tags (id int unsigned, key_ int unsigned, value_ int unsigned)"
+mysql -u osm -posm osm -e "create table member_roles (id int unsigned, role varchar(21844))"
+mysql -u osm -posm osm -e "create table key_s (id int unsigned, key_ varchar(21844))"
+mysql -u osm -posm osm -e "create table value_s (id int unsigned, value_ varchar(21844))"
+
+mysql -u osm -posm osm -e "create table conflicts (id int, message varchar(21844))"
+mysql -u osm -posm osm -e "create table node_conflicts (id int, conflict int)"
+mysql -u osm -posm osm -e "create table way_conflicts (id int, conflict int)"
+mysql -u osm -posm osm -e "create table relation_conflicts (id int, conflict int)"
+  
+mysql -u osm -posm osm -e "create table areas (id int)"
+mysql -u osm -posm osm -e "create table area_segments (id int, lat_idx int, min_lat int, min_lon int, max_lat int, max_lon int)"
+mysql -u osm -posm osm -e "create table area_tags (id int, key_ int unsigned, value_ int unsigned)"
+
+bunzip2 <$1 | osm2load_infile --savemem
+
+echo "Creating index on ... "
+
+echo "nodes"
+mysql -u osm -posm osm -e "set session myisam_sort_buffer_size = 1073741824; alter table nodes add unique key(id), add index(lat_idx, lon)"
+echo "node_tags"
+mysql -u osm -posm osm -e "set session myisam_sort_buffer_size = 1073741824; alter table node_tags add key(id), add index(key_, value_)"
+echo "ways"
+mysql -u osm -posm osm -e "set session myisam_sort_buffer_size = 1073741824; alter table ways add unique key(id)"
+echo "way_members"
+mysql -u osm -posm osm -e "set session myisam_sort_buffer_size = 1073741824; alter table way_members add key(id), add index(ref)"
+echo "way_tags"
+mysql -u osm -posm osm -e "set session myisam_sort_buffer_size = 1073741824; alter table way_tags add key(id), add index(key_, value_)"
+echo "relations"
+mysql -u osm -posm osm -e "set session myisam_sort_buffer_size = 1073741824; alter table relations add unique key(id)"
+echo "relation_node_members"
+mysql -u osm -posm osm -e "set session myisam_sort_buffer_size = 1073741824; alter table relation_node_members add key(id)"
+echo "relation_way_members"
+mysql -u osm -posm osm -e "set session myisam_sort_buffer_size = 1073741824; alter table relation_way_members add key(id)"
+echo "relation_relation_members"
+mysql -u osm -posm osm -e "set session myisam_sort_buffer_size = 1073741824; alter table relation_relation_members add key(id)"
+echo "relation_tags"
+mysql -u osm -posm osm -e "set session myisam_sort_buffer_size = 1073741824; alter table relation_tags add key(id), add index(key_, value_)"
+echo "member_roles"
+mysql -u osm -posm osm -e "set session myisam_sort_buffer_size = 1073741824; alter table member_roles add unique key(id)"
+echo "key_s"
+mysql -u osm -posm osm -e "set session myisam_sort_buffer_size = 1073741824; alter table key_s add unique key(id), add index(key_)"
+echo "value_s"
+mysql -u osm -posm osm -e "set session myisam_sort_buffer_size = 1073741824; alter table value_s add unique key(id), add index(value_)"
+echo "conflicts"
+mysql -u osm -posm osm -e "alter table conflicts add unique key(id)"
+mysql -u osm -posm osm -e "insert conflicts values (0, '')"
+echo "node_conflicts"
+mysql -u osm -posm osm -e "alter table node_conflicts add key(id)"
+echo "way_conflicts"
+mysql -u osm -posm osm -e "alter table way_conflicts add key(id)"
+echo "relation_conflicts"
+mysql -u osm -posm osm -e "alter table relation_conflicts add key(id)"
+echo "areas"
+mysql -u osm -posm osm -e "alter table areas add unique key(id)"
+mysql -u osm -posm osm -e "insert areas values (0)"
+echo "area_segments"
+mysql -u osm -posm osm -e "alter table area_segments add key(id), add index(lat_idx, min_lon)"
+echo "area_tags"
+mysql -u osm -posm osm -e "alter table area_tags add key(id)"

@@ -21,8 +21,8 @@ main: suffix = statement.o
 main: $(objects)
 	g++ -o cgi-bin/input-interpreter -O3 -Wall -lexpat $(objects) `mysql_config --libs`
 	
-init_db: expat_justparse_interface.o osm2load_infile.o
-	g++ -o osm2load_infile -O3 -Wall -lexpat expat_justparse_interface.o osm2load_infile.o `mysql_config --libs`
+init_db: expat_justparse_interface.o cgi-helper.o user_interface.o osm2load_infile.o
+	g++ -o osm2load_infile -O3 -Wall -lexpat expat_justparse_interface.o cgi-helper.o user_interface.o osm2load_infile.o `mysql_config --libs`
 	
 expat_justparse_interface.o: expat_justparse_interface.c expat_justparse_interface.h user_interface.h
 	g++ -c -O3 -Wall expat_justparse_interface.c
@@ -46,8 +46,8 @@ suffix = statement.h
 script-interpreter.o: script-interpreter.c expat_justparse_interface.h user_interface.h script_datatypes.h script_queries.h script_tools.h $(stmts) statement_factory.h
 	g++ -c -O3 -Wall `mysql_config --include` script-interpreter.c
 	
-osm2load_infile.o: osm2load_infile.c script_datatypes.h expat_justparse_interface.h
-	g++ -c -O3 -Wall `mysql_config --include`  osm2load_infile.c
+osm2load_infile.o: osm2load_infile.c script_datatypes.h expat_justparse_interface.h cgi-helper.h user_interface.h
+	g++ -c -O3 -Wall `mysql_config --include` osm2load_infile.c
 
 clean: suffix = statement.o
 clean:
