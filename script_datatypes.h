@@ -100,11 +100,6 @@ inline bool operator<(const Area& area_1, const Area& area_2)
   return (area_1.id < area_2.id);
 }
 
-inline int calc_idx(int a)
-{
-  return ((int)floor(((double)a)/10000000));
-}
-
 class Set
 {
   public:
@@ -132,6 +127,16 @@ class Set
 };
 
 //-----------------------------------------------------------------------------
+
+inline int calc_idx(int a)
+{
+  return ((int)floor(((double)a)/10000000));
+}
+
+inline int ll_idx(int lat, int lon)
+{
+  return (((lat + 90*10000000) / (512*1024*1024))*8 + ((unsigned int)lon / (512*1024*1024)));
+}
 
 inline int in_lat_lon(const char* input)
 {

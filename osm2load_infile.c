@@ -185,7 +185,12 @@ const int WAY = 2;
 const int RELATION = 3;
 int tag_type(0);
 unsigned int current_id(0);
+// patch cope with server power limits by ignoring uncommon node tags
 bool lowmem(false);
+bool no_tag_limit(true);
+set< string > allowed_node_tags;
+bool split_tables(false);
+unsigned char* node_cache;
 
 map< string, unsigned int > member_roles;
 map< string, unsigned int > keys;
@@ -197,6 +202,7 @@ unsigned int structure_count(0);
 unsigned int way_member_count(0);
 
 ofstream nodes_out("/tmp/db_area_nodes.tsv");
+ofstream* nodes_sub_out;
 ofstream node_tags_out("/tmp/db_area_node_tags.tsv");
 ofstream ways_out("/tmp/db_area_ways.tsv");
 ofstream way_members_out("/tmp/db_area_way_members.tsv");
@@ -214,6 +220,16 @@ MYSQL* mysql(NULL);
 void prepare_db()
 {
   mysql_query(mysql, "use osm");
+  if (split_tables)
+  {
+    nodes_sub_out = new ofstream[32];
+    for (unsigned int i(0); i < 32; ++i)
+    {
+      ostringstream temp;
+      temp<<"/tmp/db_area_nodes_"<<i<<".tsv";
+      nodes_sub_out[i].open(temp.str().c_str());
+    }
+  }
 }
 
 void postprocess_db()
@@ -224,6 +240,11 @@ void postprocess_db()
 void flush_to_db()
 {
   nodes_out.close();
+  if (split_tables)
+  {
+    for (unsigned int i(0); i < 32; ++i)
+      nodes_sub_out[i].close();
+  }
   node_tags_out.close();
   ways_out.close();
   way_members_out.close();
@@ -236,7 +257,21 @@ void flush_to_db()
   member_roles_out.close();
   keys_out.close();
   values_out.close();
-  mysql_query(mysql, "load data local infile '/tmp/db_area_nodes.tsv' into table nodes");
+  
+  if (split_tables)
+  {
+    for (unsigned int i(0); i < 32; ++i)
+    {
+      nodes_sub_out[i].close();
+      
+      ostringstream temp;
+      temp<<"load data local infile '/tmp/db_area_nodes_"<<i<<".tsv' into table nodes_"<<i;
+      mysql_query(mysql, temp.str().c_str());
+    }
+  }
+  else
+    mysql_query(mysql, "load data local infile '/tmp/db_area_nodes.tsv' into table nodes");
+  
   mysql_query(mysql, "load data local infile '/tmp/db_area_node_tags.tsv' into table node_tags");
   mysql_query(mysql, "load data local infile '/tmp/db_area_ways.tsv' into table ways");
   mysql_query(mysql, "load data local infile '/tmp/db_area_way_members.tsv' into table way_members");
@@ -250,10 +285,6 @@ void flush_to_db()
   mysql_query(mysql, "load data local infile '/tmp/db_area_keys.tsv' into table key_s");
   mysql_query(mysql, "load data local infile '/tmp/db_area_values.tsv' into table value_s");
 }
-
-// patch cope with server power limits by ignoring uncommon node tags
-set< string > allowed_node_tags;
-bool no_tag_limit(true);
 
 void start(const char *el, const char **attr)
 {
@@ -375,20 +406,23 @@ void start(const char *el, const char **attr)
   else if (!strcmp(el, "node"))
   {
     unsigned int id(0);
-    int lat_idx(100), lat(100*10000000), lon(200*10000000);
+    int lat(100*10000000), lon(200*10000000);
     for (unsigned int i(0); attr[i]; i += 2)
     {
       if (!strcmp(attr[i], "id"))
 	id = atoi(attr[i+1]);
       if (!strcmp(attr[i], "lat"))
-      {
 	lat = (int)in_lat_lon(attr[i+1]);
-	lat_idx = calc_idx(lat);
-      }
       if (!strcmp(attr[i], "lon"))
 	lon = (int)in_lat_lon(attr[i+1]);
     }
-    nodes_out<<id<<'\t'<<lon/10000000<<'\t'<<lat<<'\t'<<lon<<'\n';
+    if (split_tables)
+    {
+      node_cache[id] = ll_idx(lat, lon);
+      (nodes_sub_out[ll_idx(lat, lon)])<<id<<'\t'<<lat<<'\t'<<lon<<'\n';
+    }
+    else
+      nodes_out<<id<<'\t'<<lat<<'\t'<<lon<<'\n';
     tag_type = NODE;
     current_id = id;
   }
@@ -441,6 +475,15 @@ void end(const char *el)
   {
     flush_to_db();
     cerr<<'.';
+    if (split_tables)
+    {
+      for (unsigned int i(0); i < 32; ++i)
+      {
+	ostringstream temp;
+	temp<<"/tmp/db_area_nodes_"<<i<<".tsv";
+	nodes_sub_out[i].open(temp.str().c_str());
+      }
+    }
     nodes_out.open("/tmp/db_area_nodes.tsv");
     node_tags_out.open("/tmp/db_area_node_tags.tsv");
     ways_out.open("/tmp/db_area_ways.tsv");
@@ -467,12 +510,19 @@ int main(int argc, char *argv[])
       lowmem = true;
     else if (!strcmp(argv[i], "--limit-node-tags"))
       no_tag_limit = false;
+    else if (!strcmp(argv[i], "--split-tables"))
+      split_tables = true;
     else
     {
       cout<<"Usage: "<<argv[0]<<" [--savemem] [--limit-node-tags]\n";
       return 0;
     }
   }
+  
+  // only necessary for split_tables
+  node_cache = (unsigned char*) malloc(512*1024*1024);
+  for (unsigned int i(0); i < 512*1024*1024/sizeof(int); ++i)
+    ((int*)node_cache)[i] = 0;
   
   // patch cope with server power limits by ignoring uncommon node tags
   allowed_node_tags.insert("highway");
@@ -539,9 +589,10 @@ int main(int argc, char *argv[])
   
   prepare_db();
   
-  // patch: map< string > uses about 50 byte overhead per string
-  // which is too much for 100 million strings in 2 GB memory
-  values_out<<1<<'\t'<<'\n';
+  if (lowmem)
+    // patch: map< string > uses about 50 byte overhead per string
+    // which is too much for 100 million strings in 2 GB memory
+    values_out<<1<<'\t'<<'\n';
   
   //reading the main document
   parse(stdin, start, end);

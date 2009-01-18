@@ -20,7 +20,7 @@ mysql -u osm -posm -e "create database if not exists osm"
 mysql -u osm -posm -e "drop database osm"
 mysql -u osm -posm -e "create database osm"
 
-mysql -u osm -posm osm -e "create table nodes (id int, lat_idx int, lat int, lon int)"
+mysql -u osm -posm osm -e "create table nodes (id int, lat int, lon int)"
 mysql -u osm -posm osm -e "create table node_tags (id int unsigned, key_ int unsigned, value_ int unsigned)"
 mysql -u osm -posm osm -e "create table ways (id int)"
 mysql -u osm -posm osm -e "create table way_members (id int unsigned, count int unsigned, ref int unsigned)"
