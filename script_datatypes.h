@@ -135,7 +135,40 @@ inline int calc_idx(int a)
 
 inline int ll_idx(int lat, int lon)
 {
-  return (((lat + 90*10000000) / (512*1024*1024))*8 + ((unsigned int)lon / (512*1024*1024)));
+  int result(0);
+  lat += 90*10000000;
+  result |= ~(lon>>1)&0x40000000;
+  result |= (lat>>1)&0x20000000;
+  result |= (lon>>2)&0x10000000;
+  result |= (lat>>2)&0x08000000;
+  result |= (lon>>3)&0x04000000;
+  result |= (lat>>3)&0x02000000;
+  result |= (lon>>4)&0x01000000;
+  result |= (lat>>4)&0x00800000;
+  result |= (lon>>5)&0x00400000;
+  result |= (lat>>5)&0x00200000;
+  result |= (lon>>6)&0x00100000;
+  result |= (lat>>6)&0x00080000;
+  result |= (lon>>7)&0x00040000;
+  result |= (lat>>7)&0x00020000;
+  result |= (lon>>8)&0x00010000;
+  result |= (lat>>8)&0x00008000;
+  result |= (lon>>9)&0x00004000;
+  result |= (lat>>9)&0x00002000;
+  result |= (lon>>10)&0x00001000;
+  result |= (lat>>10)&0x00000800;
+  result |= (lon>>11)&0x00000400;
+  result |= (lat>>11)&0x00000200;
+  result |= (lon>>12)&0x00000100;
+  result |= (lat>>12)&0x00000080;
+  result |= (lon>>13)&0x00000040;
+  result |= (lat>>13)&0x00000020;
+  result |= (lon>>14)&0x00000010;
+  result |= (lat>>14)&0x00000008;
+  result |= (lon>>15)&0x00000004;
+  result |= (lat>>15)&0x00000002;
+  result |= (lon>>16)&0x00000001;
+  return result;
 }
 
 inline int in_lat_lon(const char* input)

@@ -69,9 +69,6 @@ int main(int argc, char *argv[])
   if (display_static_errors(cout, xml_raw))
     return 0;
   
-  return_runtime_error("Gegenwärtig will ich die Datenbank nicht stören.\n", cout);
-  return 0;
-  
   //Sanity-Check
   
   mysql = mysql_init(NULL);
