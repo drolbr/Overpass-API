@@ -40,7 +40,7 @@ void prepare_caches(MYSQL* mysql);
 class Root_Statement : public Statement
 {
   public:
-    Root_Statement() {}
+    Root_Statement() : timeout(0) {}
     virtual void set_attributes(const char **attr);
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() { return "osm-script"; }
@@ -50,6 +50,7 @@ class Root_Statement : public Statement
     
   private:
     vector< Statement* > substatements;
+    int timeout;
 };
 
 #endif

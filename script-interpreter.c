@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
   if (!mysql_real_connect(mysql, "localhost", "osm", "osm", "osm", 0, NULL,
        CLIENT_LOCAL_FILES))
   {
-    return_runtime_error("Connection to database failed.\n", cout);
+    runtime_error("Connection to database failed.\n", cout);
     return 0;
   }
   

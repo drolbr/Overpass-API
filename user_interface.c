@@ -155,6 +155,10 @@ bool exist_static_errors(false);
 static vector< Error > sanity_errors;
 bool exist_sanity_errors(false);
 
+static int header_state(0);
+static const int WRITTEN_XML = 1;
+static const int WRITTEN_HTML = 2;
+
 void add_encoding_error(const string& error)
 {
   encoding_errors.push_back(Error(error, Error::ERROR, 0));
@@ -198,10 +202,17 @@ void add_sanity_remark(const string& error)
 
 ostream& out_header(ostream& out, int type)
 {
+  if (header_state != 0)
+    return out;
   if (type == MIXED_XML)
+  {
     out<<"Content-type: application/xml\n\n"
 	<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<not-osm>\n\n";
+    header_state = WRITTEN_XML;
+  }
   else if  (type == HTML)
+  {
+    header_state = WRITTEN_HTML;
     out<<"Content-Type: text/html; charset=utf-8\n\n"
 	<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 	<<"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
@@ -212,7 +223,10 @@ ostream& out_header(ostream& out, int type)
 	<<"  <title>Query Results</title>\n"
 	<<"</head>\n"
 	<<"<body>\n\n";
+  }
   else
+  {
+    header_state = WRITTEN_HTML;
     out<<"Content-Type: text/html; charset=utf-8\n\n"
 	<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 	<<"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
@@ -224,12 +238,16 @@ ostream& out_header(ostream& out, int type)
 	<<"</head>\n"
 	<<"<body>\n\n"
 	<<"Your query doesn't contain any statement that produces output.\n";
+  }
   
   return out;
 }
 
 ostream& out_error_header(ostream& out, string title)
 {
+  if (header_state != 0)
+    return out;
+  header_state = WRITTEN_HTML;
   out<<"Content-Type: text/html; charset=utf-8\n\n"
       <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
       <<"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
@@ -457,13 +475,46 @@ int display_sanity_errors(ostream& out, const string& input)
   return 0;
 }
 
-void return_runtime_error(const string& error, ostream& out)
+void runtime_error(const string& error, ostream& out)
 {
-  out_error_header(out, "Runtime Error");
+  if (header_state == 0)
+  {
+    out_error_header(out, "Runtime Error");
   
-  out<<"<h1>Runtime Error</h1>\n";
-  out<<"<p>The following error occured while running your script:</p>\n";
-  out<<"<p><strong style=\"color:#FF0000\">Error</strong>: "<<error<<"</p>\n";
+    out<<"<h1>Runtime Error</h1>\n";
+    out<<"<p>The following error occured while running your script:</p>\n";
+    out<<"<p><strong style=\"color:#FF0000\">Error</strong>: "<<error<<"</p>\n";
   
-  out_error_footer(out);
+    out_error_footer(out);
+  }
+  else if (header_state == WRITTEN_HTML)
+  {
+    out<<"<p><strong style=\"color:#FF0000\">Error</strong>: "<<error<<"</p>\n";
+  }
+  else
+  {
+    out<<"<error type=\"runtime\">"<<error<<"</error>\n";
+  }
+}
+
+void runtime_remark(const string& error, ostream& out)
+{
+  if (header_state == 0)
+  {
+    out_error_header(out, "Runtime Error");
+  
+    out<<"<h1>Runtime Error</h1>\n";
+    out<<"<p>The following error occured while running your script:</p>\n";
+    out<<"<p><strong style=\"color:#00BB00\">Remark</strong>: "<<error<<"</p>\n";
+  
+    out_error_footer(out);
+  }
+  else if (header_state == WRITTEN_HTML)
+  {
+    out<<"<p><strong style=\"color:#00BB00\">Remark</strong>: "<<error<<"</p>\n";
+  }
+  else
+  {
+    out<<"<remark type=\"runtime\">"<<error<<"</remark>\n";
+  }
 }

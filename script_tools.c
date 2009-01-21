@@ -10,6 +10,9 @@
 #include "script_queries.h"
 #include "script_tools.h"
 #include "user_interface.h"
+#include "vigilance_control.h"
+
+#include <mysql.h>
 
 using namespace std;
 
@@ -71,7 +74,11 @@ void Root_Statement::set_attributes(const char **attr)
 {
   map< string, string > attributes;
   
+  attributes["timeout"] = "0";
+  
   eval_cstr_array(get_name(), attributes, attr);
+  
+  timeout = atoi(attributes["timeout"].c_str());
 }
 
 void Root_Statement::add_statement(Statement* statement, string text)
@@ -96,13 +103,27 @@ void Root_Statement::add_statement(Statement* statement, string text)
 
 void Root_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
+  if (timeout > 0)
+  {
+    if (add_timeout(mysql_thread_id(mysql), timeout))
+      return;
+  }
+  
   for (vector< Statement* >::iterator it(substatements.begin());
        it != substatements.end(); ++it)
   {
-    cout<<"+++ "<<(uintmax_t)time(NULL)<<'\n';
+    ostringstream temp;
+    temp<<(uintmax_t)time(NULL);
+    runtime_remark(temp.str(), cout);
+    
     (*it)->execute(mysql, maps);
   }
-  cout<<"+++ "<<(uintmax_t)time(NULL)<<'\n';
+  ostringstream temp;
+  temp<<(uintmax_t)time(NULL);
+  runtime_remark(temp.str(), cout);
+
+  if (timeout > 0)
+    remove_timeout();
 }
 
 //-----------------------------------------------------------------------------

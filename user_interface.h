@@ -23,7 +23,8 @@ int display_parse_errors(ostream& out, const string& input);
 int display_static_errors(ostream& out, const string& input);
 int display_sanity_errors(ostream& out, const string& input);
 
-void return_runtime_error(const string& error, ostream& out);
+void runtime_error(const string& error, ostream& out);
+void runtime_remark(const string& error, ostream& out);
 
 const int MIXED_XML = 1;
 const int HTML = 2;

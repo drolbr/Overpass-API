@@ -8,6 +8,9 @@
 #include <vector>
 #include "script_datatypes.h"
 #include "script_queries.h"
+#include "user_interface.h"
+#include "vigilance_control.h"
+
 #include <mysql.h>
 
 using namespace std;
@@ -17,17 +20,23 @@ MYSQL_RES* mysql_query_wrapper(MYSQL* mysql, string query)
   int query_status(mysql_query(mysql, query.c_str()));
   if (query_status)
   {
-    cout<<"Error during SQL query ";
-    cout<<'('<<query_status<<"):\n";
-    cout<<"Query: "<<query<<'\n';
-    cout<<"Error: "<<mysql_error(mysql)<<'\n';
+    ostringstream temp;
+    temp<<"Error during SQL query ";
+    temp<<'('<<query_status<<"):\n";
+    temp<<"Query: "<<query<<'\n';
+    temp<<"Error: "<<mysql_error(mysql)<<'\n';
+    runtime_error(temp.str(), cout);
   }
 
   MYSQL_RES* result(mysql_store_result(mysql));
   if (!result)
   {
-    cout<<"Error during SQL query (result is null pointer)\n";
-    cout<<mysql_error(mysql)<<'\n';
+    if (is_timed_out())
+      runtime_error("Your query timed out.", cout);
+    ostringstream temp;
+    temp<<"Error during SQL query (result is null pointer)\n";
+    temp<<mysql_error(mysql)<<'\n';
+    runtime_error(temp.str(), cout);
   }
   
   return result;
