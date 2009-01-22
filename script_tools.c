@@ -75,9 +75,13 @@ void Root_Statement::set_attributes(const char **attr)
   map< string, string > attributes;
   
   attributes["timeout"] = "0";
+  attributes["name"] = "";
+  attributes["replace"] = "0";
   
   eval_cstr_array(get_name(), attributes, attr);
   
+  name = attributes["name"];
+  replace = atoi(attributes["replace"].c_str());
   timeout = atoi(attributes["timeout"].c_str());
 }
 

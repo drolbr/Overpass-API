@@ -16,7 +16,7 @@
 
 using namespace std;
 
-static int output_mode(NOTHING);
+static int output_mode(HTML);
 
 MYSQL* mysql(NULL);
 
@@ -28,10 +28,6 @@ void start(const char *el, const char **attr)
   Statement* statement(generate_statement(el));
   if (statement)
   {
-    if (!strcmp(el, "print"))
-      output_mode = MIXED_XML;
-    else if ((!strcmp(el, "report")) && (output_mode == NOTHING))
-      output_mode = HTML;
     statement->set_attributes(attr);
     statement_stack.push_back(statement);
     text_stack.push_back(get_parsed_text());
@@ -66,6 +62,27 @@ int main(int argc, char *argv[])
   parse(xml_raw, start, end);
   if (display_parse_errors(cout, xml_raw))
     return 0;
+  // getting special information for rules
+  string rule_name("");
+  int rule_replace(0);
+  Root_Statement* root_statement(dynamic_cast< Root_Statement* >(statement_stack.front()));
+  if (root_statement)
+  {
+    rule_name = root_statement->get_rule_name();
+    rule_replace = root_statement->get_rule_replace();
+  }
+  if (rule_name == "")
+    add_static_error("Adding a rule requires the name of the rule.");
+  if (rule_replace)
+    add_static_error("Providing a version-id while adding a rule is not allowed.");
+  
+  xml_raw = xml_raw.substr(xml_raw.find("<osm-script"));
+  xml_raw = xml_raw.substr(xml_raw.find('>') + 1);
+  if (xml_raw.find("</osm-script>") != string::npos)
+    xml_raw = xml_raw.substr(0, xml_raw.find("</osm-script>"));
+  else
+    add_static_error("No content between start and end of the root-tag.");
+    
   if (display_static_errors(cout, xml_raw))
     return 0;
   
@@ -77,18 +94,46 @@ int main(int argc, char *argv[])
        CLIENT_LOCAL_FILES))
   {
     runtime_error("Connection to database failed.\n", cout);
-    out_footer(cout, output_mode);
     return 0;
   }
   
   out_header(cout, output_mode);
   
-  prepare_caches(mysql);
+  int body_id(int_query(mysql, "select max(id) from rule_bodys")+1);
   
-  map< string, Set > maps;
-  for (vector< Statement* >::const_iterator it(statement_stack.begin());
-       it != statement_stack.end(); ++it)
-    (*it)->execute(mysql, maps);
+  ostringstream temp;
+  temp<<"select id from rule_names where name = '";
+  escape_insert(temp, rule_name);
+  temp<<'\'';
+  int name_id(int_query(mysql, temp.str()));
+  
+  if (name_id)
+  {
+    temp.str("");
+    temp<<"Rule '"<<rule_name<<"' already exists in the database.";
+    runtime_error(temp.str(), cout);
+    out_footer(cout, output_mode);
+    return 0;
+  }
+  
+  name_id = int_query(mysql, "select max(id) from rule_names") + 1;
+  temp.str("");
+  temp<<"insert rule_names values ("<<name_id<<", '";
+  escape_insert(temp, rule_name);
+  temp<<"')";
+  mysql_query(mysql, temp.str().c_str());
+
+  temp.str("");
+  temp<<"insert rule_bodys values ("<<body_id<<", "<<name_id<<", '";
+  escape_insert(temp, xml_raw);
+  temp<<"')";
+  mysql_query(mysql, temp.str().c_str());
+  
+  temp.str("");
+  temp<<"Rule '"<<rule_name<<"' successfully updated.";
+  runtime_remark(temp.str(), cout);
+  
+  //Rule execution
   
   out_footer(cout, output_mode);
   

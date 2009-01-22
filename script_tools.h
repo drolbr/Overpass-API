@@ -48,9 +48,14 @@ class Root_Statement : public Statement
     virtual void execute(MYSQL* mysql, map< string, Set >& maps);
     virtual ~Root_Statement() {}
     
+    string get_rule_name() { return name; }
+    int get_rule_replace() { return replace; }
+    
   private:
     vector< Statement* > substatements;
     int timeout;
+    string name;
+    int replace;
 };
 
 #endif

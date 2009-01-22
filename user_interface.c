@@ -210,7 +210,7 @@ ostream& out_header(ostream& out, int type)
 	<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<not-osm>\n\n";
     header_state = WRITTEN_XML;
   }
-  else if  (type == HTML)
+  else if (type == HTML)
   {
     header_state = WRITTEN_HTML;
     out<<"Content-Type: text/html; charset=utf-8\n\n"
@@ -501,7 +501,7 @@ void runtime_remark(const string& error, ostream& out)
 {
   if (header_state == 0)
   {
-    out_error_header(out, "Runtime Error");
+    out_error_header(out, "Runtime Remark(s)");
   
     out<<"<h1>Runtime Error</h1>\n";
     out<<"<p>The following error occured while running your script:</p>\n";

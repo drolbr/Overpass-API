@@ -114,7 +114,7 @@ inline Ostream& escape_xml(Ostream& out, string s)
 }
 
 template < class Ostream >
-    inline Ostream& escape_insert(Ostream& out, string s)
+inline Ostream& escape_insert(Ostream& out, string s)
 {
   unsigned int i(0);
   while (i < s.size())
