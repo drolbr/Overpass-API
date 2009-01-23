@@ -64,17 +64,20 @@ int main(int argc, char *argv[])
     return 0;
   // getting special information for rules
   string rule_name("");
-  int rule_replace(0);
+  int rule_replace(0), rule_version(0);
   Root_Statement* root_statement(dynamic_cast< Root_Statement* >(statement_stack.front()));
   if (root_statement)
   {
     rule_name = root_statement->get_rule_name();
     rule_replace = root_statement->get_rule_replace();
+    rule_version = root_statement->get_rule_version();
   }
   if (rule_name == "")
     add_static_error("Updating a rule requires the name of the rule.");
   if (!rule_replace)
     add_static_error("Updating a rule requires providing its last version-id.");
+  if (rule_version)
+    add_static_error("Providing a version-id while updating a rule is not allowed.");
   
   xml_raw = xml_raw.substr(xml_raw.find("<osm-script"));
   xml_raw = xml_raw.substr(xml_raw.find('>') + 1);

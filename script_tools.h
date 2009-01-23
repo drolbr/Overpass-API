@@ -50,12 +50,13 @@ class Root_Statement : public Statement
     
     string get_rule_name() { return name; }
     int get_rule_replace() { return replace; }
+    int get_rule_version() { return version; }
     
   private:
     vector< Statement* > substatements;
     int timeout;
     string name;
-    int replace;
+    int replace, version;
 };
 
 #endif

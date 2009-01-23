@@ -77,12 +77,14 @@ void Root_Statement::set_attributes(const char **attr)
   attributes["timeout"] = "0";
   attributes["name"] = "";
   attributes["replace"] = "0";
+  attributes["version"] = "0";
   
   eval_cstr_array(get_name(), attributes, attr);
   
   name = attributes["name"];
   replace = atoi(attributes["replace"].c_str());
   timeout = atoi(attributes["timeout"].c_str());
+  version = atoi(attributes["version"].c_str());
 }
 
 void Root_Statement::add_statement(Statement* statement, string text)

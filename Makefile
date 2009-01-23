@@ -13,8 +13,8 @@ report_$(suffix) \
 detect_odd_nodes_$(suffix)
 
 objects = expat_justparse_interface.o cgi-helper.o user_interface.o script_queries.o script_tools.o vigilance_control.o $(stmts)
-executables_objects = script-interpreter.o add_rule.o update_rule.o osm2load_infile.o
-executables = cgi-bin/interpreter cgi-bin/add_rule cgi-bin/update_rule import_osm osmy_vigilance
+executables_objects = script-interpreter.o add_rule.o get_rule.o update_rule.o osm2load_infile.o
+executables = cgi-bin/interpreter cgi-bin/add_rule cgi-bin/get_rule cgi-bin/update_rule import_osm osmy_vigilance
 tool_headers = expat_justparse_interface.h script_datatypes.h script_queries.h script_tools.h user_interface.h
 
 main: $(executables)
@@ -28,6 +28,11 @@ suffix = statement.o
 cgi-bin/add_rule: suffix = statement.o
 cgi-bin/add_rule: $(objects) add_rule.o
 	g++ -o cgi-bin/add_rule -O3 -Wall -lexpat $(objects) add_rule.o `mysql_config --libs`
+	
+suffix = statement.o
+cgi-bin/get_rule: suffix = statement.o
+cgi-bin/get_rule: $(objects) get_rule.o
+	g++ -o cgi-bin/get_rule -O3 -Wall -lexpat $(objects) get_rule.o `mysql_config --libs`
 	
 suffix = statement.o
 cgi-bin/update_rule: suffix = statement.o
@@ -68,6 +73,10 @@ script-interpreter.o: script-interpreter.c expat_justparse_interface.h user_inte
 suffix = statement.h
 add_rule.o: add_rule.c expat_justparse_interface.h user_interface.h script_datatypes.h script_queries.h script_tools.h $(stmts) statement_factory.h
 	g++ -c -O3 -Wall `mysql_config --include` add_rule.c
+	
+suffix = statement.h
+get_rule.o: get_rule.c expat_justparse_interface.h user_interface.h script_datatypes.h script_queries.h script_tools.h $(stmts) statement_factory.h
+	g++ -c -O3 -Wall `mysql_config --include` get_rule.c
 	
 suffix = statement.h
 update_rule.o: update_rule.c expat_justparse_interface.h user_interface.h script_datatypes.h script_queries.h script_tools.h $(stmts) statement_factory.h
