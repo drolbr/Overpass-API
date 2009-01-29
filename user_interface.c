@@ -206,7 +206,8 @@ ostream& out_header(ostream& out, int type)
     return out;
   if (type == MIXED_XML)
   {
-    out<<"Content-type: application/xml\n\n"
+    out<<"Content-type: application/xml\n"
+	<<"Content-length: "<<1024*1024*1024<<"\n\n"
 	<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<not-osm>\n\n";
     header_state = WRITTEN_XML;
   }

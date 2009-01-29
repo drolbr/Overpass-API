@@ -193,7 +193,7 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	  out_node(*it2);
 	  ++it2;
 	}
-	delete result;
+	mysql_free_result(result);
       }
       for (set< Way >::const_iterator it(mit->second.get_ways().begin());
 	   it != mit->second.get_ways().end(); )
@@ -236,7 +236,7 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	  out_way(*it2);
 	  ++it2;
 	}
-	delete result;
+	mysql_free_result(result);
       }
       for (set< Relation >::const_iterator it(mit->second.get_relations().begin());
 	   it != mit->second.get_relations().end(); )
@@ -279,7 +279,7 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	  out_relation(*it2, role_cache);
 	  ++it2;
 	}
-	delete result;
+	mysql_free_result(result);
       }
       for (set< Area >::const_iterator it(mit->second.get_areas().begin());
 	   it != mit->second.get_areas().end(); )
@@ -322,7 +322,7 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	  out_area(*it2);
 	  ++it2;
 	}
-	delete result;
+	mysql_free_result(result);
       }
     }
   }

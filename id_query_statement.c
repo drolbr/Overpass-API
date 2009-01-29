@@ -133,7 +133,7 @@ void Id_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       temp.str("");
       temp<<"select ref, role from relation_way_members "
 	  <<"where relation_way_members.id = "<<ref;
-      delete result;
+      mysql_free_result(result);
       result = mysql_query_wrapper(mysql, temp.str());
       if (!result)
 	return;
@@ -152,7 +152,7 @@ void Id_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       temp.str("");
       temp<<"select ref, role from relation_relation_members "
 	  <<"where relation_relation_members.id = "<<ref;
-      delete result;
+      mysql_free_result(result);
       result = mysql_query_wrapper(mysql, temp.str());
       if (!result)
 	return;
@@ -171,7 +171,7 @@ void Id_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       relations.insert(relation);
     }
   }
-  delete result;
+  mysql_free_result(result);
   
   maps[output] = Set(nodes, ways, relations);
 }

@@ -1,0 +1,25 @@
+foreach
+
+* desc
+Loops for each element in _from_ over its substatements. In particular, it stores in the beginning the elements from the _from_ set, then it runs the loop once for each element and makes this element available in _into_ during the loop. After the last loop, _into_ remains unchanged.
+
+* properties
+exec:yes
+ret_set:
+control_flow:yes
+
+* substatements
+exec:
+
+* depending_on
+input = set:from
+
+* changes
+output = set:into
+(There also might be changes by the substatements to other sets)
+
+* time
+(time_of_substatements * set:into)
+
+* space
+set:from

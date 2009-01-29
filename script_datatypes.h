@@ -1,6 +1,9 @@
 #ifndef SCRIPT_DATATYPES
 #define SCRIPT_DATATYPES
 
+// temp
+#include <iostream>
+
 #include <map>
 #include <set>
 #include <string>
@@ -54,6 +57,56 @@ inline bool operator<(const Relation& relation_1, const Relation& relation_2)
 {
   return (relation_1.id < relation_2.id);
 }
+
+// struct Node
+// {
+//   public:
+//     Node(int id_, int lat_, int lon_) : id(id_), lat(lat_), lon(lon_) { cout<<"A(N "<<id<<")\n"; }
+//     Node(const Node& node_) : id(node_.id), lat(node_.lat), lon(node_.lon) { cout<<"C(N "<<id<<")\n"; }
+//     ~Node() { cout<<"D(N "<<id<<")\n"; }
+//     
+//     const int id;
+//     int lat, lon;
+// };
+// 
+// inline bool operator<(const Node& node_1, const Node& node_2)
+// {
+//   return (node_1.id < node_2.id);
+// }
+// 
+// struct Way
+// {
+//   public:
+//     Way(int id_) : id(id_) { cout<<"A(W "<<id<<")\n"; }
+//     Way(const Way& way_) : id(way_.id), members(way_.members) { cout<<"C(W "<<id<<")\n"; }
+//     ~Way() { cout<<"D(W "<<id<<")\n"; }
+//     
+//     const int id;
+//     vector< int > members;
+// };
+// 
+// inline bool operator<(const Way& way_1, const Way& way_2)
+// {
+//   return (way_1.id < way_2.id);
+// }
+// 
+// struct Relation
+// {
+//   public:
+//     Relation(int id_) : id(id_) { cout<<"A(R "<<id<<")\n"; }
+//     Relation(const Relation& rel_) : id(rel_.id), node_members(rel_.node_members), way_members(rel_.way_members), relation_members(rel_.relation_members) { cout<<"C(R "<<id<<")\n"; }
+//     ~Relation() { cout<<"D(R "<<id<<")\n"; }
+//     
+//     const int id;
+//     set< pair< int, int > > node_members;
+//     set< pair< int, int > > way_members;
+//     set< pair< int, int > > relation_members;
+// };
+// 
+// inline bool operator<(const Relation& relation_1, const Relation& relation_2)
+// {
+//   return (relation_1.id < relation_2.id);
+// }
 
 struct Line_Segment
 {
@@ -118,6 +171,11 @@ class Set
     const set< Way >& get_ways() const { return ways; }
     const set< Relation >& get_relations() const { return relations; }
     const set< Area >& get_areas() const { return areas; }
+    
+    set< Node >& get_nodes_handle() { return nodes; }
+    set< Way >& get_ways_handle() { return ways; }
+    set< Relation >& get_relations_handle() { return relations; }
+    set< Area >& get_areas_handle() { return areas; }
   
   private:
     set< Node > nodes;

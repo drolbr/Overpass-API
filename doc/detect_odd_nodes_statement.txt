@@ -1,0 +1,23 @@
+detect_odd_nodes
+
+* desc
+This statement filters from its input the nodes that are contained in an odd number of segments and therefore obstruct the construction of areas or superways.
+
+* properties
+exec:yes
+ret_set:into
+control_flow:no
+
+* substatements
+
+* depending_on
+input = set:from:nodes,ways
+
+* changes
+output = union set:from set:into:nodes (set:from:nodes)
+
+* time
+<0.001 + 0.00001*set:from
+
+* space
+0

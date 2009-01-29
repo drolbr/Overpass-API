@@ -1,0 +1,18 @@
+$(lowercase)
+
+* desc
+
+* properties
+exec:yes
+ret_set:
+control_flow:no
+
+* substatements
+
+* depending_on
+
+* changes
+
+* time
+
+* space

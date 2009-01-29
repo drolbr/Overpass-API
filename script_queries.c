@@ -52,7 +52,7 @@ int int_query(MYSQL* mysql, string query)
   MYSQL_ROW row(mysql_fetch_row(result));
   if ((row) && (row[0]))
     result_val = atoi(row[0]);
-  delete result;
+  mysql_free_result(result);
   return result_val;
 }
 
@@ -68,7 +68,7 @@ set< int >& multiint_query(MYSQL* mysql, string query, set< int >& result_set)
     result_set.insert(atoi(row[0]));
     row = mysql_fetch_row(result);
   }
-  delete result;
+  mysql_free_result(result);
   return result_set;
 }
 
@@ -84,7 +84,7 @@ set< Node >& multiNode_query(MYSQL* mysql, string query, set< Node >& result_set
     result_set.insert(Node(atoi(row[0]), atoi(row[1]), atoi(row[2])));
     row = mysql_fetch_row(result);
   }
-  delete result;
+  mysql_free_result(result);
   return result_set;
 }
 
@@ -152,7 +152,7 @@ set< Area >& multiArea_query(MYSQL* mysql, string query, int lat, int lon, set< 
     }
     row = mysql_fetch_row(result);
   }
-  delete result;
+  mysql_free_result(result);
   for (set< int >::const_iterator it(area_definitives.begin());
        it != area_definitives.end(); ++it)
     result_set.insert(Area(*it));
@@ -188,7 +188,7 @@ set< int >& multiint_to_multiint_query
       result_set.insert(atoi(row[0]));
       row = mysql_fetch_row(result);
     }
-    delete result;
+    mysql_free_result(result);
   }
   return result_set;
 }
@@ -216,7 +216,7 @@ set< Node >& multiint_to_multiNode_query
       result_set.insert(Node(atoi(row[0]), atoi(row[1]), atoi(row[2])));
       row = mysql_fetch_row(result);
     }
-    delete result;
+    mysql_free_result(result);
   }
   return result_set;
 }
@@ -258,7 +258,7 @@ set< Way >& multiint_to_multiWay_query
       }
       result_set.insert(way);
     }
-    delete result;
+    mysql_free_result(result);
   }
   return result_set;
 }
@@ -306,7 +306,7 @@ set< Relation >& multiint_to_multiRelation_query
       }
       node_members[id] = nodes;
     }
-    delete result;
+    mysql_free_result(result);
   }
   
   for (set< int >::const_iterator it(source.begin()); it != source.end(); )
@@ -343,7 +343,7 @@ set< Relation >& multiint_to_multiRelation_query
       }
       way_members[id] = ways;
     }
-    delete result;
+    mysql_free_result(result);
   }
   
   for (set< int >::const_iterator it(source.begin()); it != source.end(); )
@@ -380,7 +380,7 @@ set< Relation >& multiint_to_multiRelation_query
       }
       relation_members[id] = relations;
     }
-    delete result;
+    mysql_free_result(result);
   }
   
   for (set< int >::const_iterator it(source.begin()); it != source.end(); ++it)
@@ -418,7 +418,7 @@ set< int >& multiNode_to_multiint_query
       result_set.insert(atoi(row[0]));
       row = mysql_fetch_row(result);
     }
-    delete result;
+    mysql_free_result(result);
   }
   return result_set;
 }
@@ -446,7 +446,7 @@ set< int >& multiWay_to_multiint_query
       result_set.insert(atoi(row[0]));
       row = mysql_fetch_row(result);
     }
-    delete result;
+    mysql_free_result(result);
   }
   return result_set;
 }
@@ -474,7 +474,7 @@ set< int >& multiRelation_to_multiint_query
       result_set.insert(atoi(row[0]));
       row = mysql_fetch_row(result);
     }
-    delete result;
+    mysql_free_result(result);
   }
   return result_set;
 }

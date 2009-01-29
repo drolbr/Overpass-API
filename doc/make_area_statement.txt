@@ -1,0 +1,25 @@
+make_area
+
+* desc
+The make-area statement produces if possible from the given set of ways and nodes an area, tags it from the item in _tags_ and writes it into the database. The creation of an area is possible if and only if every node referenced by any way is contained in the set, every node that appears as first or last node of a way does so for an even number of times and the tags set contains exactly one item. If it is sucessful it returns the newly created area.
+
+* properties
+exec:yes
+ret_set:
+control_flow:no
+
+* substatements
+
+* depending_on
+input = set:from:nodes,ways
+tags = set:tags
+
+* changes
+db:areas
+output = union set:from set:into:nodes (set:from:nodes)
+
+* time
+1.5 + 0.001*set:into:nodes,ways
+
+* space
+0

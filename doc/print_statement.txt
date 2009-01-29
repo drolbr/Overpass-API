@@ -1,0 +1,27 @@
+print
+
+* desc
+The print statement prints the objects in the given set to the output. The format depends on the parameter _mode_.
+
+* properties
+exec:yes
+ret_set:
+control_flow:no
+
+* substatements
+
+* depending_on
+db_node_tags,way_tags,relation_tags,area_tags
+from = set:from:*
+mode = arg:[ids_only:skeleton:body]:mode
+
+* changes
+web:
+
+* time
+mode:ids_only: <0.001 + 0.00005*set:from
+mode:skeleton: <0.001 + 0.0002*set:from
+mode:body: <0.01 + 0.001*set:from
+
+* space
+0

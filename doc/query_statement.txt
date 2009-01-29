@@ -1,0 +1,28 @@
+query
+
+* desc
+Queries the database for objects matching the given conditions.
+
+* properties
+exec:yes
+ret_set:into
+control_flow:no
+
+* substatements
+:has_kv
+
+* depending_on
+db:nodes,ways,relations
+type = arg:[node,way,relation]:type
+:has_kv
+
+* changes
+into = set:nodes,ways,relations:into
+
+* time
+node: 24s + 0.001s*db:nodes
+way: 90s + 0.001s*db:ways
+relation: 0.1s + 0.001s*db:relations
+
+* space
+0

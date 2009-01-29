@@ -55,76 +55,71 @@ void Recurse_Statement::set_attributes(const char **attr)
 
 void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
-  set< Node > nodes;
-  set< Way > ways;
-  set< Relation > relations;
-  set< Area > areas;
-  if (input == output)
+  set< Node >* nodes(&(maps[output].get_nodes_handle()));
+  set< Way >* ways(&(maps[output].get_ways_handle()));
+  set< Relation >* relations(&(maps[output].get_relations_handle()));
+  set< Area >* areas(&(maps[output].get_areas_handle()));
+  if (input != output)
   {
-    nodes = maps[output].get_nodes();
-    ways = maps[output].get_ways();
-    relations = maps[output].get_relations();
-    areas = maps[output].get_areas();
+    nodes->clear();
+    ways->clear();
+    relations->clear();
+    areas->clear();
   }
   
   map< string, Set >::const_iterator mit(maps.find(input));
   if (mit == maps.end())
-  {
-    maps[output] = Set(nodes, ways, relations, areas);
     return;
-  }
   
   if (type == RECURSE_WAY_NODE)
   {
     set< int > tnodes;
-    tnodes = multiWay_to_multiint_query
+    multiWay_to_multiint_query
 	(mysql, "select way_members.ref from ways "
 	"left join way_members on way_members.id = ways.id "
 	"where ways.id in", "order by ways.id", mit->second.get_ways(), tnodes);
     
-    nodes = multiint_to_multiNode_query
-	(mysql, "select id, lat, lon from nodes where id in", "order by id", tnodes, nodes);
+    multiint_to_multiNode_query
+	(mysql, "select id, lat, lon from nodes where id in", "order by id", tnodes, *nodes);
   }
   else if (type == RECURSE_RELATION_RELATION)
   {
     set< int > rels;
-    rels = multiRelation_to_multiint_query
+    multiRelation_to_multiint_query
 	(mysql, "select relation_relation_members.ref from relations "
 	"left join relation_relation_members on relation_relation_members.id = relations.id "
 	"where relations.id in", "order by relations.id", mit->second.get_relations(), rels);
     
-    relations = multiint_to_multiRelation_query
+    multiint_to_multiRelation_query
 	(mysql, "select id, ref, role from relation_node_members "
 	"where id in", "order by id",
 	"select id, ref, role from relation_way_members "
 	"where id in", "order by id",
 	"select id, ref, role from relation_relation_members "
-	"where id in", "order by id", rels, relations);
+	"where id in", "order by id", rels, *relations);
   }
   else if (type == RECURSE_RELATION_WAY)
   {
     set< int > tways;
-    tways = multiRelation_to_multiint_query
+    multiRelation_to_multiint_query
 	(mysql, "select relation_way_members.ref from relations "
 	"left join relation_way_members on relation_way_members.id = relations.id "
 	"where relations.id in", "order by relations.id", mit->second.get_relations(), tways);
     
-    ways = multiint_to_multiWay_query
+    multiint_to_multiWay_query
 	(mysql, "select ways.id, way_members.count, way_members.ref from ways "
 	"left join way_members on way_members.id = ways.id "
-	"where ways.id in", "order by ways.id", tways, ways);
+	"where ways.id in", "order by ways.id", tways, *ways);
   }
   else if (type == RECURSE_RELATION_NODE)
   {
     set< int > tnodes;
-    tnodes = multiRelation_to_multiint_query
+    multiRelation_to_multiint_query
 	(mysql, "select relation_node_members.ref from relations "
 	"left join relation_node_members on relation_node_members.id = relations.id "
 	"where relations.id in", "order by relations.id", mit->second.get_relations(), tnodes);
     
-    nodes = multiint_to_multiNode_query
-	(mysql, "select id, lat, lon from nodes where id in", "order by id", tnodes, nodes);
+    multiint_to_multiNode_query
+	(mysql, "select id, lat, lon from nodes where id in", "order by id", tnodes, *nodes);
   }
-  
-  maps[output] = Set(nodes, ways, relations, areas);
 }

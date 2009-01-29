@@ -1,0 +1,25 @@
+coord_query
+
+* desc
+Returns all the areas for which the provided coordinates are inside.
+
+* properties
+exec:yes
+ret_set:into
+control_flow:no
+
+* substatements
+
+* depending_on
+db:areas
+lat = arg:float[-90.0, 90.0]:lat
+lon = arg:float[-180.0, 180.0]:lon
+
+* changes
+output = set:into:areas (nr:areas)
+
+* time
+<0.01
+
+* space
+0

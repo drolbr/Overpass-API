@@ -62,6 +62,6 @@ void Report_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       cout<<"<p class=\"report-line\">"<<row[0]<<"</p>\n";
       row = mysql_fetch_row(result);
     }
-    delete result;
+    mysql_free_result(result);
   }
 }

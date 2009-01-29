@@ -1,19 +1,19 @@
 stmts = \
-union_$(suffix) \
-query_$(suffix) \
-id_query_$(suffix) \
-recurse_$(suffix) \
+coord_query_$(suffix) \
+conflict_$(suffix) \
+detect_odd_nodes_$(suffix) \
 foreach_$(suffix) \
+id_query_$(suffix) \
 item_$(suffix) \
 make_area_$(suffix) \
-coord_query_$(suffix) \
 print_$(suffix) \
-conflict_$(suffix) \
+query_$(suffix) \
+recurse_$(suffix) \
 report_$(suffix) \
-detect_odd_nodes_$(suffix)
+union_$(suffix)
 
 objects = expat_justparse_interface.o cgi-helper.o user_interface.o script_queries.o script_tools.o vigilance_control.o $(stmts)
-executables_objects = script-interpreter.o add_rule.o get_rule.o update_rule.o osm2load_infile.o
+executable_objects = script-interpreter.o add_rule.o get_rule.o update_rule.o osm2load_infile.o
 executables = cgi-bin/interpreter cgi-bin/add_rule cgi-bin/get_rule cgi-bin/update_rule import_osm osmy_vigilance
 tool_headers = expat_justparse_interface.h script_datatypes.h script_queries.h script_tools.h user_interface.h
 

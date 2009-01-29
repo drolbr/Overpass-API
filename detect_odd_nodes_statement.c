@@ -8,6 +8,7 @@
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
+#include "user_interface.h"
 #include "detect_odd_nodes_statement.h"
 
 #include <mysql.h>
@@ -77,8 +78,12 @@ void Detect_Odd_Nodes_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       if (nit != in_nodes.end())
 	nodes.insert(*nit);
       else
-	cout<<"Error: Node "<<*it
+      {
+	ostringstream temp;
+	temp<<"Error in detect-odd-nodes: Node "<<*it
 	    <<" is not contained in set \""<<input<<"\".\n";
+	runtime_error(temp.str(), cout);
+      }
     }
   }
   

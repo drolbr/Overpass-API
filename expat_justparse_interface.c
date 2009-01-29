@@ -157,18 +157,13 @@ void parse(const string& input,
   int pos(0);
   while ((!done) && (pos < len))
   {
-    if (len > BUFFSIZE-1)
-    {
-      strcpy(Buff, input.substr(pos, BUFFSIZE-1).c_str());
-      pos += BUFFSIZE-1;
-    }
-    else
-    {
-      strcpy(Buff, input.c_str());
-      pos += len;
-    }
+    int buff_len(len - pos);
+    if (buff_len > BUFFSIZE-1)
+      buff_len = BUFFSIZE-1;
+    strcpy(Buff, input.substr(pos, buff_len).c_str());
+    pos += buff_len;
   
-    if (XML_Parse(p, Buff, len, done) == XML_STATUS_ERROR)
+    if (XML_Parse(p, Buff, buff_len, done) == XML_STATUS_ERROR)
     {
       add_parse_error(XML_ErrorString(XML_GetErrorCode(p)));
       return;

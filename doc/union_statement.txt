@@ -1,0 +1,24 @@
+union
+
+* desc
+The union statement collects all the return statements of its substatements in its output.
+
+* properties
+exec:yes
+ret_set:into
+control_flow:yes
+
+* substatements
+:ret_set != ""
+
+* depending_on
+substatements:ret_set
+
+* changes
+output = union of all substatement:ret_set
+
+* time
+0
+
+* space
+set:into

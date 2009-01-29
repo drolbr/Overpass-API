@@ -1,0 +1,25 @@
+conflict
+
+* desc
+The conflict statement adds for every element in the set _from_ the error message which is composed of the text inside the element and the item-subelements within the element.
+
+* properties
+exec:yes
+ret_set:
+control_flow:no
+
+* substatements
+:item
+
+* depending_on
+input = set:from:nodes,ways,relations
+text
+
+* changes
+db:conflicts
+
+* time
+<0.01 + 0.0001*set:from
+
+* space
+0

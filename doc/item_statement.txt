@@ -1,0 +1,22 @@
+item
+
+* desc
+The item represents a set so that it can be adressed by statements that use the return set.
+
+* properties
+exec:no
+ret_set:set
+control_flow:no
+
+* substatements
+
+* depending_on
+output = set:set
+
+* changes
+
+* time
+0
+
+* space
+0

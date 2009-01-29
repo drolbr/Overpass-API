@@ -32,7 +32,6 @@ class Make_Area_Statement : public Statement
     
   private:
     string input, output, tags;
-    unsigned int type;
 };
 
 #endif

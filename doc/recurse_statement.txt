@@ -1,0 +1,31 @@
+recurse
+
+* desc
+The recurse statement queries for a given set of relations or ways their members.
+
+* properties
+exec:yes
+ret_set:into
+control_flow:no
+
+* substatements
+
+* depending_on
+from = set:ways,relations:from
+type = arg:[way-node,relation-relation,relation-way,relation-node]:type
+
+* changes
+into = union set:from set:into:nodes,ways,relations (set:from:ways,relations)
+way-node: 28 nodes per way
+relation-relation: 1 relation per relation
+relation-way: 22 ways per relation
+relation-node: 2 nodes per relation
+
+* time
+way-node: 2s per way
+relation-relation: 0.1s per relation
+relation-way: 0.1s per relation
+relation-node: 0.1s per relation
+
+* space
+0

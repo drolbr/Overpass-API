@@ -1,0 +1,28 @@
+id_query
+
+* desc
+The Id-Query returns the node, way or relation specified by the given reference.
+
+* properties
+exec:yes
+ret_set:into
+control_flow:no
+
+* substatements
+
+* depending_on
+db:nodes,ways,relations
+type = arg:[node|way|relation]:type
+ref = arg:int:ref
+
+* changes
+output = set:into
+
+* time
+(depending on type)
+nodes: 0.4
+ways: 0.3
+relations: 0.2
+
+* space
+0
