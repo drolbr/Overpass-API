@@ -16,7 +16,7 @@ class Report_Statement : public Statement
     Report_Statement() {}
     virtual void set_attributes(const char **attr);
     virtual string get_name() { return "report"; }
-    virtual string get_result_name() { return input; }
+    virtual string get_result_name() { return ""; }
     virtual void execute(MYSQL* mysql, map< string, Set >& maps);
     virtual ~Report_Statement() {}
     

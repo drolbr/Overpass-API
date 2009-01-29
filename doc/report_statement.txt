@@ -1,0 +1,24 @@
+report
+
+* desc
+Reports all conflicts that are saved in the database for the objects in _from_.
+
+* properties
+exec:yes
+ret_set:
+control_flow:no
+
+* substatements
+
+* depending_on
+db:conflicts
+input = set:nodes,ways,relations:from
+
+* changes
+:web
+
+* time
+??? (highly dependant on amount of errors)
+
+* space
+0
