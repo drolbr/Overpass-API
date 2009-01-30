@@ -23,13 +23,13 @@ void Make_Area_Statement::set_attributes(const char **attr)
   
   attributes["from"] = "_";
   attributes["into"] = "_";
-  attributes["tags"] = "";
+  attributes["pivot"] = "";
   
   eval_cstr_array(get_name(), attributes, attr);
   
   input = attributes["from"];
   output = attributes["into"];
-  tags = attributes["tags"];
+  tags = attributes["pivot"];
 }
 
 inline void area_insert(Area& area, int lat1, int lon1, int lat2, int lon2)

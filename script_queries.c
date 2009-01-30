@@ -42,23 +42,53 @@ MYSQL_RES* mysql_query_wrapper(MYSQL* mysql, string query)
   return result;
 }
 
+MYSQL_RES* mysql_query_use_wrapper(MYSQL* mysql, string query)
+{
+  int query_status(mysql_query(mysql, query.c_str()));
+  if (query_status)
+  {
+    ostringstream temp;
+    temp<<"Error during SQL query ";
+    temp<<'('<<query_status<<"):\n";
+    temp<<"Query: "<<query<<'\n';
+    temp<<"Error: "<<mysql_error(mysql)<<'\n';
+    runtime_error(temp.str(), cout);
+  }
+
+  MYSQL_RES* result(mysql_use_result(mysql));
+  if (!result)
+  {
+    if (is_timed_out())
+      runtime_error("Your query timed out.", cout);
+    ostringstream temp;
+    temp<<"Error during SQL query (result is null pointer)\n";
+    temp<<mysql_error(mysql)<<'\n';
+    runtime_error(temp.str(), cout);
+  }
+  
+  return result;
+}
+
 int int_query(MYSQL* mysql, string query)
 {
   int result_val(0);
-  MYSQL_RES* result(mysql_query_wrapper(mysql, query));
+  MYSQL_RES* result(mysql_query_use_wrapper(mysql, query));
   if (!result)
     return 0;
 	
   MYSQL_ROW row(mysql_fetch_row(result));
   if ((row) && (row[0]))
     result_val = atoi(row[0]);
+  
+  while (mysql_fetch_row(result))
+    ;
   mysql_free_result(result);
   return result_val;
 }
 
 set< int >& multiint_query(MYSQL* mysql, string query, set< int >& result_set)
 {
-  MYSQL_RES* result(mysql_query_wrapper(mysql, query));
+  MYSQL_RES* result(mysql_query_use_wrapper(mysql, query));
   if (!result)
     return result_set;
 	
@@ -68,13 +98,16 @@ set< int >& multiint_query(MYSQL* mysql, string query, set< int >& result_set)
     result_set.insert(atoi(row[0]));
     row = mysql_fetch_row(result);
   }
+  
+  while (mysql_fetch_row(result))
+    ;
   mysql_free_result(result);
   return result_set;
 }
 
 set< Node >& multiNode_query(MYSQL* mysql, string query, set< Node >& result_set)
 {
-  MYSQL_RES* result(mysql_query_wrapper(mysql, query));
+  MYSQL_RES* result(mysql_query_use_wrapper(mysql, query));
   if (!result)
     return result_set;
 	
@@ -84,13 +117,16 @@ set< Node >& multiNode_query(MYSQL* mysql, string query, set< Node >& result_set
     result_set.insert(Node(atoi(row[0]), atoi(row[1]), atoi(row[2])));
     row = mysql_fetch_row(result);
   }
+  
+  while (mysql_fetch_row(result))
+    ;
   mysql_free_result(result);
   return result_set;
 }
 
 set< Area >& multiArea_query(MYSQL* mysql, string query, int lat, int lon, set< Area >& result_set)
 {
-  MYSQL_RES* result(mysql_query_wrapper(mysql, query));
+  MYSQL_RES* result(mysql_query_use_wrapper(mysql, query));
   if (!result)
     return result_set;
 	
@@ -152,6 +188,9 @@ set< Area >& multiArea_query(MYSQL* mysql, string query, int lat, int lon, set< 
     }
     row = mysql_fetch_row(result);
   }
+  
+  while (mysql_fetch_row(result))
+    ;
   mysql_free_result(result);
   for (set< int >::const_iterator it(area_definitives.begin());
        it != area_definitives.end(); ++it)
@@ -178,7 +217,7 @@ set< int >& multiint_to_multiint_query
       temp<<", "<<*it;
     temp<<") "<<suffix;
 	
-    MYSQL_RES* result(mysql_query_wrapper(mysql, temp.str()));
+    MYSQL_RES* result(mysql_query_use_wrapper(mysql, temp.str()));
     if (!result)
       return result_set;
 	
@@ -188,6 +227,9 @@ set< int >& multiint_to_multiint_query
       result_set.insert(atoi(row[0]));
       row = mysql_fetch_row(result);
     }
+    
+    while (mysql_fetch_row(result))
+      ;
     mysql_free_result(result);
   }
   return result_set;
@@ -206,7 +248,7 @@ set< Node >& multiint_to_multiNode_query
       temp<<", "<<*it;
     temp<<") "<<suffix;
 	
-    MYSQL_RES* result(mysql_query_wrapper(mysql, temp.str()));
+    MYSQL_RES* result(mysql_query_use_wrapper(mysql, temp.str()));
     if (!result)
       return result_set;
 	
@@ -216,6 +258,9 @@ set< Node >& multiint_to_multiNode_query
       result_set.insert(Node(atoi(row[0]), atoi(row[1]), atoi(row[2])));
       row = mysql_fetch_row(result);
     }
+    
+    while (mysql_fetch_row(result))
+      ;
     mysql_free_result(result);
   }
   return result_set;
@@ -234,7 +279,7 @@ set< Way >& multiint_to_multiWay_query
       temp<<", "<<*it;
     temp<<") "<<suffix;
 	
-    MYSQL_RES* result(mysql_query_wrapper(mysql, temp.str()));
+    MYSQL_RES* result(mysql_query_use_wrapper(mysql, temp.str()));
     if (!result)
       return result_set;
 	
@@ -258,6 +303,9 @@ set< Way >& multiint_to_multiWay_query
       }
       result_set.insert(way);
     }
+    
+    while (mysql_fetch_row(result))
+      ;
     mysql_free_result(result);
   }
   return result_set;
@@ -282,7 +330,7 @@ set< Relation >& multiint_to_multiRelation_query
       temp<<", "<<*it;
     temp<<") "<<suffix1;
 	
-    MYSQL_RES* result(mysql_query_wrapper(mysql, temp.str()));
+    MYSQL_RES* result(mysql_query_use_wrapper(mysql, temp.str()));
     if (!result)
       return result_set;
 	
@@ -306,6 +354,9 @@ set< Relation >& multiint_to_multiRelation_query
       }
       node_members[id] = nodes;
     }
+    
+    while (mysql_fetch_row(result))
+      ;
     mysql_free_result(result);
   }
   
@@ -319,7 +370,7 @@ set< Relation >& multiint_to_multiRelation_query
       temp<<", "<<*it;
     temp<<") "<<suffix2;
 	
-    MYSQL_RES* result(mysql_query_wrapper(mysql, temp.str()));
+    MYSQL_RES* result(mysql_query_use_wrapper(mysql, temp.str()));
     if (!result)
       return result_set;
 	
@@ -343,6 +394,9 @@ set< Relation >& multiint_to_multiRelation_query
       }
       way_members[id] = ways;
     }
+    
+    while (mysql_fetch_row(result))
+      ;
     mysql_free_result(result);
   }
   
@@ -356,7 +410,7 @@ set< Relation >& multiint_to_multiRelation_query
       temp<<", "<<*it;
     temp<<") "<<suffix3;
 	
-    MYSQL_RES* result(mysql_query_wrapper(mysql, temp.str()));
+    MYSQL_RES* result(mysql_query_use_wrapper(mysql, temp.str()));
     if (!result)
       return result_set;
 	
@@ -380,6 +434,9 @@ set< Relation >& multiint_to_multiRelation_query
       }
       relation_members[id] = relations;
     }
+    
+    while (mysql_fetch_row(result))
+      ;
     mysql_free_result(result);
   }
   
@@ -408,7 +465,7 @@ set< int >& multiNode_to_multiint_query
       temp<<", "<<it->id;
     temp<<") "<<suffix;
 	
-    MYSQL_RES* result(mysql_query_wrapper(mysql, temp.str()));
+    MYSQL_RES* result(mysql_query_use_wrapper(mysql, temp.str()));
     if (!result)
       return result_set;
 	
@@ -418,6 +475,9 @@ set< int >& multiNode_to_multiint_query
       result_set.insert(atoi(row[0]));
       row = mysql_fetch_row(result);
     }
+    
+    while (mysql_fetch_row(result))
+      ;
     mysql_free_result(result);
   }
   return result_set;
@@ -436,7 +496,7 @@ set< int >& multiWay_to_multiint_query
       temp<<", "<<it->id;
     temp<<") "<<suffix;
 	
-    MYSQL_RES* result(mysql_query_wrapper(mysql, temp.str()));
+    MYSQL_RES* result(mysql_query_use_wrapper(mysql, temp.str()));
     if (!result)
       return result_set;
 	
@@ -446,6 +506,9 @@ set< int >& multiWay_to_multiint_query
       result_set.insert(atoi(row[0]));
       row = mysql_fetch_row(result);
     }
+    
+    while (mysql_fetch_row(result))
+      ;
     mysql_free_result(result);
   }
   return result_set;
@@ -464,7 +527,7 @@ set< int >& multiRelation_to_multiint_query
       temp<<", "<<it->id;
     temp<<") "<<suffix;
 	
-    MYSQL_RES* result(mysql_query_wrapper(mysql, temp.str()));
+    MYSQL_RES* result(mysql_query_use_wrapper(mysql, temp.str()));
     if (!result)
       return result_set;
 	
@@ -474,6 +537,9 @@ set< int >& multiRelation_to_multiint_query
       result_set.insert(atoi(row[0]));
       row = mysql_fetch_row(result);
     }
+    
+    while (mysql_fetch_row(result))
+      ;
     mysql_free_result(result);
   }
   return result_set;

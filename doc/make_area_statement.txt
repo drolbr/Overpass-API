@@ -12,7 +12,7 @@ control_flow:no
 
 * depending_on
 input = set:from:nodes,ways
-tags = set:tags
+tags = set:pivot
 
 * changes
 db:areas
