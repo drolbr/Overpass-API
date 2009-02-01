@@ -9,6 +9,7 @@
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
+#include "user_interface.h"
 #include "foreach_statement.h"
 
 #include <mysql.h>
@@ -58,9 +59,14 @@ void Foreach_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     set< Node > nodes;
     nodes.insert(*oit);
     maps[output] = Set(nodes, set< Way >(), set< Relation >());
+    push_stack(NODE, oit->id);
     for (vector< Statement* >::iterator it(substatements.begin());
 	 it != substatements.end(); ++it)
+    {
       (*it)->execute(mysql, maps);
+      statement_finished(*it);
+    }
+    pop_stack();
   }
   for (set< Way >::const_iterator oit(base_set.get_ways().begin());
        oit != base_set.get_ways().end(); ++oit)
@@ -68,9 +74,14 @@ void Foreach_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     set< Way > ways;
     ways.insert(*oit);
     maps[output] = Set(set< Node >(), ways, set< Relation >());
+    push_stack(WAY, oit->id);
     for (vector< Statement* >::iterator it(substatements.begin());
 	 it != substatements.end(); ++it)
+    {
       (*it)->execute(mysql, maps);
+      statement_finished(*it);
+    }
+    pop_stack();
   }
   for (set< Relation >::const_iterator oit(base_set.get_relations().begin());
        oit != base_set.get_relations().end(); ++oit)
@@ -78,9 +89,14 @@ void Foreach_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     set< Relation > relations;
     relations.insert(*oit);
     maps[output] = Set(set< Node >(), set< Way >(), relations);
+    push_stack(RELATION, oit->id);
     for (vector< Statement* >::iterator it(substatements.begin());
 	 it != substatements.end(); ++it)
+    {
       (*it)->execute(mysql, maps);
+      statement_finished(*it);
+    }
+    pop_stack();
   }
   
   if (input == output)

@@ -501,7 +501,7 @@ void runtime_remark(const string& error, ostream& out)
 {
   if (header_state == 0)
   {
-    out_error_header(out, "Runtime Remark(s)");
+    out_error_header(out, "Runtime Error");
   
     out<<"<h1>Runtime Error</h1>\n";
     out<<"<p>The following error occured while running your script:</p>\n";
@@ -516,5 +516,40 @@ void runtime_remark(const string& error, ostream& out)
   else
   {
     out<<"<remark type=\"runtime\">"<<error<<"</remark>\n";
+  }
+}
+
+void statement_finished(const Statement* stmt)
+{
+  if (header_state == 0)
+  {
+    out_error_header(cout, "Runtime Error");
+  
+    cout<<"<h1>Runtime Error</h1>\n";
+    cout<<"<p>The following error occured while running your script:</p>\n";
+  
+    out_error_footer(cout);
+  }
+  else if (header_state == WRITTEN_HTML)
+  {
+    cout<<"<p><strong style=\"color:#00BB00\">Runtime state</strong>: "
+	<<"Your program finished \""<<stmt->get_name()<<"\" from line "<<stmt->get_line_number()
+	<<" at "<<(uintmax_t)time(NULL)<<" seconds after Epoch.";
+    cout<<" Stack: ";
+    for (vector< pair< int, int > >::const_iterator it(get_stack().begin());
+	 it != get_stack().end(); ++it)
+      cout<<it->first<<' '<<it->second<<' ';
+    cout<<"</p>\n";
+  }
+  else
+  {
+    cout<<"<remark type=\"state\">: "
+	<<"Your program finished \""<<stmt->get_name()<<"\" from line "<<stmt->get_line_number()
+	<<" at "<<(uintmax_t)time(NULL)<<" seconds after Epoch.";
+    cout<<" Stack: ";
+    for (vector< pair< int, int > >::const_iterator it(get_stack().begin());
+	 it != get_stack().end(); ++it)
+      cout<<it->first<<' '<<it->second<<' ';
+    cout<<"</remark>\n";
   }
 }

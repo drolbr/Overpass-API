@@ -16,8 +16,8 @@ class Union_Statement : public Statement
     Union_Statement() {}
     virtual void set_attributes(const char **attr);
     virtual void add_statement(Statement* statement, string text);
-    virtual string get_name() { return "union"; }
-    virtual string get_result_name() { return output; }
+    virtual string get_name() const { return "union"; }
+    virtual string get_result_name() const { return output; }
     virtual void execute(MYSQL* mysql, map< string, Set >& maps);
     virtual ~Union_Statement() {}
     

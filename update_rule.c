@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
   if (xml_raw.find("</osm-script>") != string::npos)
     xml_raw = xml_raw.substr(0, xml_raw.find("</osm-script>"));
   else
-    add_static_error("No content between start and end of the root-tag.");
+    xml_raw = "";
     
   if (display_static_errors(cout, xml_raw))
     return 0;
@@ -143,7 +143,57 @@ int main(int argc, char *argv[])
   temp<<"Rule '"<<rule_name<<"' successfully updated.";
   runtime_remark(temp.str(), cout);
   
+  //Undo old version of the rule
+  
+  //conflicts
+  temp.str("");
+  temp<<"select id from conflicts where rule = "<<rule_replace;
+  set< int > attic_conflicts;
+  multiint_query(mysql, temp.str(), attic_conflicts);
+  multiint_to_null_query(mysql, "delete from node_conflicts where conflict in", "", attic_conflicts);
+  multiint_to_null_query(mysql, "delete from way_conflicts where conflict in", "", attic_conflicts);
+  multiint_to_null_query(mysql, "delete from relation_conflicts where conflict in", "", attic_conflicts);
+  temp.str("");
+  temp<<"delete from conflicts where rule = "<<rule_replace;
+  mysql_query(mysql, temp.str().c_str());
+  
+  //areas
+  temp.str("");
+  temp<<"select id from area_origins where rule = "<<rule_replace;
+  set< int > pre_attic_areas, non_attic_areas, attic_areas;
+  multiint_query(mysql, temp.str(), pre_attic_areas);
+  
+  temp.str("");
+  temp<<"delete from area_origins where rule = "<<rule_replace;
+  mysql_query(mysql, temp.str().c_str());
+  
+  temp.str("");
+  multiint_to_multiint_query(mysql, "select id from area_origins where id in", "",
+			     pre_attic_areas, non_attic_areas);
+  set< int >::const_iterator pait(pre_attic_areas.begin());
+  set< int >::const_iterator nait(non_attic_areas.begin());
+  while (pait != pre_attic_areas.end())
+  {
+    if ((nait != non_attic_areas.end()) && (*nait == *pait))
+      ++nait;
+    else
+      attic_areas.insert(*pait);
+    ++pait;
+  }
+
+  multiint_to_null_query(mysql, "delete from areas where id in", "", attic_areas);
+  multiint_to_null_query(mysql, "delete from area_segments where id in", "", attic_areas);
+  multiint_to_null_query(mysql, "delete from area_tags where id in", "", attic_areas);
+  multiint_to_null_query(mysql, "delete from area_ways where id in", "", attic_areas);
+  
+  set_rule(body_id, rule_name);
   //Rule execution
+  prepare_caches(mysql);
+  
+  map< string, Set > maps;
+  for (vector< Statement* >::const_iterator it(statement_stack.begin());
+       it != statement_stack.end(); ++it)
+    (*it)->execute(mysql, maps);
   
   out_footer(cout, output_mode);
   

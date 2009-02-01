@@ -74,13 +74,20 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   if (type == RECURSE_WAY_NODE)
   {
     set< int > tnodes;
-    multiWay_to_multiint_query
+/*    multiWay_to_multiint_query
 	(mysql, "select way_members.ref from ways "
 	"left join way_members on way_members.id = ways.id "
 	"where ways.id in", "order by ways.id", mit->second.get_ways(), tnodes);
     
     multiint_to_multiNode_query
-	(mysql, "select id, lat, lon from nodes where id in", "order by id", tnodes, *nodes);
+	(mysql, "select id, lat, lon from nodes where id in", "order by id", tnodes, *nodes);*/
+    multiWay_to_multiint_query
+	(mysql, "select way_members.ref from ways "
+	"left join way_members on way_members.id = ways.id "
+	    "where ways.id in", "", mit->second.get_ways(), tnodes);
+    
+    multiint_to_multiNode_query
+	(mysql, "select id, lat, lon from nodes where id in", "", tnodes, *nodes);
   }
   else if (type == RECURSE_RELATION_RELATION)
   {

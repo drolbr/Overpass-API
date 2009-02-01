@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include "script_tools.h"
 
 using namespace std;
 
@@ -25,6 +26,8 @@ int display_sanity_errors(ostream& out, const string& input);
 
 void runtime_error(const string& error, ostream& out);
 void runtime_remark(const string& error, ostream& out);
+
+void statement_finished(const Statement* stmt);
 
 const int MIXED_XML = 1;
 const int HTML = 2;

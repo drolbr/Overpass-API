@@ -25,8 +25,8 @@ class Make_Area_Statement : public Statement
   public:
     Make_Area_Statement() {}
     virtual void set_attributes(const char **attr);
-    virtual string get_name() { return "make-area"; }
-    virtual string get_result_name() { return output; }
+    virtual string get_name() const { return "make-area"; }
+    virtual string get_result_name() const { return output; }
     virtual void execute(MYSQL* mysql, map< string, Set >& maps);
     virtual ~Make_Area_Statement() {}
     

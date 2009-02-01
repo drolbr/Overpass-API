@@ -69,6 +69,20 @@ MYSQL_RES* mysql_query_use_wrapper(MYSQL* mysql, string query)
   return result;
 }
 
+void mysql_query_null_wrapper(MYSQL* mysql, string query)
+{
+  int query_status(mysql_query(mysql, query.c_str()));
+  if (query_status)
+  {
+    ostringstream temp;
+    temp<<"Error during SQL query ";
+    temp<<'('<<query_status<<"):\n";
+    temp<<"Query: "<<query<<'\n';
+    temp<<"Error: "<<mysql_error(mysql)<<'\n';
+    runtime_error(temp.str(), cout);
+  }
+}
+
 int int_query(MYSQL* mysql, string query)
 {
   int result_val(0);
@@ -233,6 +247,24 @@ set< int >& multiint_to_multiint_query
     mysql_free_result(result);
   }
   return result_set;
+}
+
+void multiint_to_null_query
+    (MYSQL* mysql, string prefix, string suffix, const set< int >& source)
+{
+  for (set< int >::const_iterator it(source.begin()); it != source.end(); )
+  {
+    ostringstream temp;
+    temp<<prefix;
+    temp<<" ("<<*it;
+    unsigned int i(0);
+    while (((++it) != source.end()) && (i++ < 10000))
+      temp<<", "<<*it;
+    temp<<") "<<suffix;
+	
+    mysql_query_null_wrapper(mysql, temp.str());
+  }
+  return;
 }
 
 set< Node >& multiint_to_multiNode_query

@@ -18,8 +18,8 @@ class Detect_Odd_Nodes_Statement : public Statement
   public:
     Detect_Odd_Nodes_Statement() {}
     virtual void set_attributes(const char **attr);
-    virtual string get_name() { return "detect-odd-nodes"; }
-    virtual string get_result_name() { return output; }
+    virtual string get_name() const { return "detect-odd-nodes"; }
+    virtual string get_result_name() const { return output; }
     virtual void execute(MYSQL* mysql, map< string, Set >& maps);
     virtual ~Detect_Odd_Nodes_Statement() {}
     

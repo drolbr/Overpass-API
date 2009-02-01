@@ -115,12 +115,15 @@ int main(int argc, char *argv[])
     temp<<" and id = "<<rule_version;
   MYSQL_RES* result(mysql_query_wrapper(mysql, temp.str()));
   if (!result)
+  {
+    out_footer(cout, output_mode);
     return 0;
+  }
   
   MYSQL_ROW row(mysql_fetch_row(result));
   while ((row) && (row[0]) && (row[1]))
   {
-    cout<<"<osm-script name=\""<<rule_name<<"\" version=\""<<atoi(row[0])<<"\">\n";
+    cout<<"<osm-script name=\""<<rule_name<<"\" version=\""<<atoi(row[0])<<"\">";
     cout<<row[1];
     cout<<"</osm-script>\n";
     row = mysql_fetch_row(result);

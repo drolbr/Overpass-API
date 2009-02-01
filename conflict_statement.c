@@ -10,6 +10,7 @@
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
+#include "user_interface.h"
 #include "conflict_statement.h"
 #include "item_statement.h"
 
@@ -85,9 +86,17 @@ void Conflict_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   
   const Set& base_set(maps[input]);
   int conflict_id(int_query(mysql, "select max(id) from conflicts")+1);
+  int rule_id(get_rule_id());
+  ostringstream stack;
+  for (vector< pair< int, int > >::const_iterator it(get_stack().begin());
+       it != get_stack().end(); ++it)
+    stack<<it->first<<' '<<it->second<<' ';
   
   temp.str("");
-  temp<<"insert conflicts values ("<<conflict_id<<", '";
+  temp<<"insert conflicts values ("<<conflict_id<<", "
+      <<rule_id<<", "
+      <<this->get_line_number()<<", '"
+      <<stack.str()<<"', '";
   escape_insert(temp, complete_message);
   temp<<"')";
   mysql_query(mysql, temp.str().c_str());

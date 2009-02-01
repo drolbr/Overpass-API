@@ -8,6 +8,7 @@
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
+#include "user_interface.h"
 #include "union_statement.h"
 
 #include <mysql.h>
@@ -46,6 +47,8 @@ void Union_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
        it != substatements.end(); ++it)
   {
     (*it)->execute(mysql, maps);
+    statement_finished(*it);
+    
     const Set& summand(maps[(*it)->get_result_name()]);
     nodes.insert(summand.get_nodes().begin(), summand.get_nodes().end());
     ways.insert(summand.get_ways().begin(), summand.get_ways().end());

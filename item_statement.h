@@ -15,8 +15,8 @@ class Item_Statement : public Statement
   public:
     Item_Statement() {}
     virtual void set_attributes(const char **attr);
-    virtual string get_name() { return "item"; }
-    virtual string get_result_name() { return output; }
+    virtual string get_name() const { return "item"; }
+    virtual string get_result_name() const { return output; }
     virtual void execute(MYSQL* mysql, map< string, Set >& maps) {}
     virtual ~Item_Statement() {}
     

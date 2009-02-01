@@ -11,6 +11,7 @@
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
+#include "user_interface.h"
 #include "make_area_statement.h"
 
 #include <mysql.h>
@@ -75,13 +76,82 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     return;
   }
   const set< Node >& in_nodes(mit->second.get_nodes());
+  const set< Way >& in_ways(mit->second.get_ways());
   
-  Area area(int_query(mysql, "select min(id) from areas")-1);
+  mit = maps.find(tags);
+  int pivot_id(0), pivot_type(0);
+  if (mit != maps.end())
+  {
+    if (mit->second.get_nodes().begin() != mit->second.get_nodes().end())
+    {
+      pivot_id = (mit->second.get_nodes().begin())->id;
+      pivot_type = NODE;
+    }
+    else if (mit->second.get_ways().begin() != mit->second.get_ways().end())
+    {
+      pivot_id = (mit->second.get_ways().begin())->id;
+      pivot_type = WAY;
+    }
+    else if (mit->second.get_relations().begin() != mit->second.get_relations().end())
+    {
+      pivot_id = (mit->second.get_relations().begin())->id;
+      pivot_type = RELATION;
+    }
+  }
+  
+  ostringstream temp;
+  temp<<"select id from areas where pivot = "<<pivot_id
+      <<" and pivot_type = "<<pivot_type;
+  int previous_area(int_query(mysql, temp.str()));
+  if (previous_area)
+  {
+    set< int > previous_ways;
+    temp.str("");
+    temp<<"select way from area_ways where id = "<<previous_area;
+    multiint_query(mysql, temp.str(), previous_ways);
+    
+    set< Way >::const_iterator it(in_ways.begin());
+    set< int >::const_iterator it2(previous_ways.begin());
+    while ((it != in_ways.end()) && (it2 != previous_ways.end()) && ((it++)->id == *(it2++)))
+      ;
+    if ((it == in_ways.end()) && (it2 == previous_ways.end()))
+    {
+      temp.str("");
+      temp<<"Make-Area: The pivot "<<types_lowercase[pivot_type]<<' '<<pivot_id
+	  <<" is already referred by area "<<previous_area<<" made with the same set of ways.\n";
+      runtime_remark(temp.str(), cout);
+      
+      ostringstream stack;
+      for (vector< pair< int, int > >::const_iterator it(get_stack().begin());
+	   it != get_stack().end(); ++it)
+	stack<<it->first<<' '<<it->second<<' ';
+      temp.str("");
+      temp<<"insert area_origins values ("<<previous_area<<", "
+	  <<get_rule_id()<<", "
+	  <<this->get_line_number()<<", '"
+	  <<stack.str()<<"')";
+      mysql_query(mysql, temp.str().c_str());
+      
+      Area area(previous_area);
+      areas.insert(area);
+      maps[output] = Set(nodes, ways, relations, areas);
+      return;
+    }
+    
+    temp.str("");
+    temp<<"Make-Area: The pivot "<<types_lowercase[pivot_type]<<' '<<pivot_id
+	<<" is already referred by area "<<previous_area<<" made from a different set of ways.\n";
+    runtime_error(temp.str(), cout);
+    maps[output] = Set(nodes, ways, relations, areas);
+    return;
+  }
+  
+  Area area(int_query(mysql, "select max(id) from areas")+1);
   
   vector< set< int > > lat_intersections(179);
   set< int > node_parity_control;
-  for (set< Way >::const_iterator it(mit->second.get_ways().begin());
-       it != mit->second.get_ways().end(); ++it)
+  for (set< Way >::const_iterator it(in_ways.begin());
+       it != in_ways.end(); ++it)
   {
     set< Node >::const_iterator onit(in_nodes.end());
     vector< int >::const_iterator iit(it->members.begin());
@@ -94,8 +164,10 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       onit = in_nodes.find(Node(*iit, 0, 0));
       if (onit == in_nodes.end())
       {
-	cout<<"Error: Node "<<*iit<<" referred by way "<<it->id
+	temp.str("");
+	temp<<"Make-Area: Node "<<*iit<<" referred by way "<<it->id
 	    <<" is not contained in set \""<<input<<"\".\n";
+	runtime_error(temp.str(), cout);
 	maps[output] = Set(nodes, ways, relations, areas);
 	return;
       }
@@ -106,8 +178,10 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       set< Node >::const_iterator nnit(in_nodes.find(Node(*iit, 0, 0)));
       if (nnit == in_nodes.end())
       {
-	cout<<"Error: Node "<<*iit<<" referred by way "<<it->id
+	temp.str("");
+	temp<<"Make-Area: Node "<<*iit<<" referred by way "<<it->id
 	    <<" is not contained in set \""<<input<<"\".\n";
+	runtime_error(temp.str(), cout);
 	maps[output] = Set(nodes, ways, relations, areas);
 	return;
       }
@@ -178,8 +252,10 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   }
   if (node_parity_control.size() > 0)
   {
-    cout<<"Error: Node "<<*(node_parity_control.begin())
+    temp.str("");
+    temp<<"Make-Area: Node "<<*(node_parity_control.begin())
 	<<" is contained in an odd number of ways.\n";
+    runtime_error(temp.str(), cout);
     maps[output] = Set(nodes, ways, relations, areas);
     return;
   }
@@ -215,9 +291,16 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     }
   }
   
-  ostringstream temp;
-  temp<<"insert areas values ("<<area.id<<')';
+  temp.str("");
+  temp<<"insert areas values ("<<area.id<<", "<<pivot_id<<", "<<pivot_type<<')';
   mysql_query(mysql, temp.str().c_str());
+  
+  ofstream area_ways_out("/tmp/db_area_area_ways.tsv");
+  for (set< Way >::const_iterator it(in_ways.begin());
+       it != in_ways.end(); ++it)
+    area_ways_out<<area.id<<'\t'<<it->id<<'\n';
+  area_ways_out.close();
+  mysql_query(mysql, "load data local infile '/tmp/db_area_area_ways.tsv' into table area_ways");
   
   ofstream area_segments_out("/tmp/db_area_area_segments.tsv");
   for (set< Line_Segment >::const_iterator it(area.segments.begin());
@@ -228,25 +311,32 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   area_segments_out.close();
   mysql_query(mysql, "load data local infile '/tmp/db_area_area_segments.tsv' into table area_segments");
   
-  mit = maps.find(tags);
-  if (mit != maps.end())
-  {
-    ostringstream temp;
-    if (mit->second.get_nodes().begin() != mit->second.get_nodes().end())
-      temp<<"insert into area_tags "
-	  <<"select "<<area.id<<", node_tags.key_, node_tags.value_ "
-	  <<"from node_tags where node_tags.id = "<<(mit->second.get_nodes().begin())->id;
-    else if (mit->second.get_ways().begin() != mit->second.get_ways().end())
-      temp<<"insert into area_tags "
-	  <<"select "<<area.id<<", way_tags.key_, way_tags.value_ "
-	  <<"from way_tags where way_tags.id = "<<(mit->second.get_ways().begin())->id;
-    else if (mit->second.get_relations().begin() != mit->second.get_relations().end())
-      temp<<"insert into area_tags "
-	  <<"select "<<area.id<<", relation_tags.key_, relation_tags.value_ "
-	  <<"from relation_tags where relation_tags.id = "<<(mit->second.get_relations().begin())->id;
-    if (temp.str() != "")
-      mysql_query(mysql, temp.str().c_str());
-  }
+  temp.str("");
+  if (pivot_type == NODE)
+    temp<<"insert into area_tags "
+	<<"select "<<area.id<<", node_tags.key_, node_tags.value_ "
+	<<"from node_tags where node_tags.id = "<<pivot_id;
+  else if (pivot_type == WAY)
+    temp<<"insert into area_tags "
+	<<"select "<<area.id<<", way_tags.key_, way_tags.value_ "
+	<<"from way_tags where way_tags.id = "<<pivot_id;
+  else if (pivot_type == RELATION)
+    temp<<"insert into area_tags "
+	<<"select "<<area.id<<", relation_tags.key_, relation_tags.value_ "
+	<<"from relation_tags where relation_tags.id = "<<pivot_id;
+  if (temp.str() != "")
+    mysql_query(mysql, temp.str().c_str());
+  
+  ostringstream stack;
+  for (vector< pair< int, int > >::const_iterator it(get_stack().begin());
+       it != get_stack().end(); ++it)
+    stack<<it->first<<' '<<it->second<<' ';
+  temp.str("");
+  temp<<"insert area_origins values ("<<area.id<<", "
+      <<get_rule_id()<<", "
+      <<this->get_line_number()<<", '"
+      <<stack.str()<<"')";
+  mysql_query(mysql, temp.str().c_str());
   
   area.segments.clear(); //TODO
   areas.insert(area);

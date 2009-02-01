@@ -45,6 +45,12 @@ inline Ostream& escape_infile_xml(Ostream& out, string s)
       s = s.substr(i+1);
       i = 0;
     }
+    else if (s[i] == '\\')
+    {
+      out<<s.substr(0, i)<<"\\\\";
+      s = s.substr(i+1);
+      i = 0;
+    }
     else if (s[i] == '"')
     {
       out<<s.substr(0, i)<<"&quot;";
@@ -122,6 +128,12 @@ inline Ostream& escape_insert(Ostream& out, string s)
     if (s[i] == '\'')
     {
       out<<s.substr(0, i)<<"''";
+      s = s.substr(i+1);
+      i = 0;
+    }
+    else if (s[i] == '\\')
+    {
+      out<<s.substr(0, i)<<"\\\\";
       s = s.substr(i+1);
       i = 0;
     }

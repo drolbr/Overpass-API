@@ -136,7 +136,14 @@ int main(int argc, char *argv[])
   temp<<"Rule '"<<rule_name<<"' successfully updated.";
   runtime_remark(temp.str(), cout);
   
+  set_rule(body_id, rule_name);
   //Rule execution
+  prepare_caches(mysql);
+  
+  map< string, Set > maps;
+  for (vector< Statement* >::const_iterator it(statement_stack.begin());
+       it != statement_stack.end(); ++it)
+    (*it)->execute(mysql, maps);
   
   out_footer(cout, output_mode);
   

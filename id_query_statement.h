@@ -15,8 +15,8 @@ class Id_Query_Statement : public Statement
   public:
     Id_Query_Statement() {}
     virtual void set_attributes(const char **attr);
-    virtual string get_name() { return "id-query"; }
-    virtual string get_result_name() { return output; }
+    virtual string get_name() const { return "id-query"; }
+    virtual string get_result_name() const { return output; }
     virtual void execute(MYSQL* mysql, map< string, Set >& maps);
     virtual ~Id_Query_Statement() {}
     

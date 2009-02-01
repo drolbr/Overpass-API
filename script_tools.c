@@ -16,6 +16,46 @@
 
 using namespace std;
 
+const char* types_lowercase[] = { "", "node", "way", "relation", "area" };
+const char* types_uppercase[] = { "", "Node", "Way", "Relation", "Area" };
+
+static string rule_name_;
+static int rule_id_;
+static vector< pair< int, int > > stack;
+
+void set_rule(int rule_id, string rule_name)
+{
+  rule_id_ = rule_id;
+  rule_name_ = rule_name;
+}
+
+int get_rule_id()
+{
+  return rule_id_;
+}
+
+string get_rule_name()
+{
+  return rule_name_;
+}
+
+void push_stack(int type, int id)
+{
+  stack.push_back(make_pair< int, int>(type, id));
+}
+
+void pop_stack()
+{
+  stack.pop_back();
+}
+
+const vector< pair< int, int > >& get_stack()
+{
+  return stack;
+}
+
+//-----------------------------------------------------------------------------
+
 void eval_cstr_array(string element, map< string, string >& attributes, const char **attr)
 {
   for (unsigned int i(0); attr[i]; i += 2)
@@ -118,15 +158,10 @@ void Root_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   for (vector< Statement* >::iterator it(substatements.begin());
        it != substatements.end(); ++it)
   {
-    ostringstream temp;
-    temp<<(uintmax_t)time(NULL);
-    runtime_remark(temp.str(), cout);
-    
     (*it)->execute(mysql, maps);
+    
+    statement_finished(*it);
   }
-  ostringstream temp;
-  temp<<(uintmax_t)time(NULL);
-  runtime_remark(temp.str(), cout);
 
   if (timeout > 0)
     remove_timeout();

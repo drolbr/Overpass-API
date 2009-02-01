@@ -15,8 +15,8 @@ class Report_Statement : public Statement
   public:
     Report_Statement() {}
     virtual void set_attributes(const char **attr);
-    virtual string get_name() { return "report"; }
-    virtual string get_result_name() { return ""; }
+    virtual string get_name() const { return "report"; }
+    virtual string get_result_name() const { return ""; }
     virtual void execute(MYSQL* mysql, map< string, Set >& maps);
     virtual ~Report_Statement() {}
     
