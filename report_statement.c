@@ -25,6 +25,17 @@ void Report_Statement::set_attributes(const char **attr)
   input = attributes["from"];
 }
 
+void Report_Statement::forecast()
+{
+  const Set_Forecast& sf_in(declare_read_set(input));
+    
+  declare_used_time(10 + sf_in.node_count/10 + sf_in.way_count/10 + sf_in.relation_count/10);
+  finish_statement_forecast();
+    
+  display_full();
+  display_state();
+}
+
 void Report_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
   map< string, Set >::const_iterator mit(maps.find(input));

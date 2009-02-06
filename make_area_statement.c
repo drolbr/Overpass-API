@@ -55,6 +55,35 @@ inline void area_insert(Area& area, int lat1, int lon1, int lat2, int lon2)
   }
 }
 
+void Make_Area_Statement::forecast()
+{
+  if (input == output)
+  {
+    Set_Forecast& sf_io(declare_union_set(output));
+    declare_read_set(tags);
+    
+    sf_io.area_count += 1;
+    declare_used_time(1500 + sf_io.node_count + sf_io.way_count);
+    finish_statement_forecast();
+
+    display_full();
+    display_state();
+  }
+  else
+  {
+    const Set_Forecast& sf_in(declare_read_set(input));
+    declare_read_set(tags);
+    Set_Forecast& sf_out(declare_write_set(output));
+    
+    sf_out.area_count = 1;
+    declare_used_time(1500 + sf_in.node_count + sf_in.way_count);
+    finish_statement_forecast();
+    
+    display_full();
+    display_state();
+  }
+}
+
 void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
   set< Node > nodes;

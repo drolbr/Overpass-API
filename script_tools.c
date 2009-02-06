@@ -54,6 +54,12 @@ const vector< pair< int, int > >& get_stack()
   return stack;
 }
 
+int next_stmt_id()
+{
+  static int next_stmt_id(0);
+  return ++next_stmt_id;
+}
+
 //-----------------------------------------------------------------------------
 
 void eval_cstr_array(string element, map< string, string >& attributes, const char **attr)
@@ -108,6 +114,16 @@ void Statement::add_final_text(string text)
   assure_no_text(text, this->get_name());
 }
 
+void Statement::display_full()
+{
+  display_verbatim(get_source(startpos, endpos - startpos), cout);
+}
+
+void Statement::display_starttag()
+{
+  display_verbatim(get_source(startpos, tagendpos - startpos), cout);
+}
+
 //-----------------------------------------------------------------------------
 
 void Root_Statement::set_attributes(const char **attr)
@@ -145,6 +161,13 @@ void Root_Statement::add_statement(Statement* statement, string text)
     substatements.push_back(statement);
   else
     substatement_error(get_name(), statement);
+}
+
+void Root_Statement::forecast()
+{
+  for (vector< Statement* >::iterator it(substatements.begin());
+       it != substatements.end(); ++it)
+    (*it)->forecast();
 }
 
 void Root_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
@@ -193,4 +216,100 @@ void prepare_caches(MYSQL* mysql)
     role_cache[id] = row[1];
     row = mysql_fetch_row(result);
   }
+}
+
+//-----------------------------------------------------------------------------
+
+struct Flow_Forecast {
+  int time_used_so_far;
+  vector< pair< int, string > > pending_sets;
+};
+
+map< string, Set_Forecast > sets;
+
+vector< Flow_Forecast > forecast_stack;
+
+void declare_used_time(int milliseconds)
+{
+  forecast_stack.back().time_used_so_far += milliseconds;
+}
+
+const Set_Forecast& declare_read_set(string name)
+{
+  forecast_stack.back().pending_sets.push_back
+	(make_pair< int, string >(READ_FORECAST, name));
+  
+  map< string, Set_Forecast >::const_iterator it(sets.find(name));
+  if (it != sets.end())
+    return it->second;
+  else
+  {
+    ostringstream temp;
+    temp<<"Statement reads from set \""<<name<<"\" which has not been used before.\n";
+    add_sanity_remark(temp.str());
+    return sets[name];
+  }
+}
+
+Set_Forecast& declare_write_set(string name)
+{
+  forecast_stack.back().pending_sets.push_back
+	(make_pair< int, string >(WRITE_FORECAST, name));
+  
+  sets[name] = Set_Forecast();
+  return sets[name];
+}
+
+Set_Forecast& declare_union_set(string name)
+{
+  forecast_stack.back().pending_sets.push_back
+	(make_pair< int, string >(UNION_FORECAST, name));
+  
+  return sets[name];
+}
+
+void inc_stack()
+{
+  int time_used_so_far(0);
+  if (!(forecast_stack.empty()))
+    time_used_so_far = forecast_stack.back().time_used_so_far;
+  forecast_stack.push_back(Flow_Forecast());
+  forecast_stack.back().time_used_so_far = time_used_so_far;
+  if (stack.size() > 20)
+    add_sanity_error("Stack exceeds size limit of 20.");
+}
+
+void dec_stack()
+{
+  int time_used_so_far(forecast_stack.back().time_used_so_far);
+  forecast_stack.pop_back();
+  if (!(forecast_stack.empty()))
+    forecast_stack.back().time_used_so_far = time_used_so_far;
+}
+
+const vector< pair< int, string > >& pending_stack()
+{
+  return forecast_stack.back().pending_sets;
+}
+
+int stack_time_offset()
+{
+  if (forecast_stack.size() > 1)
+    return (forecast_stack.back().time_used_so_far
+	- forecast_stack[forecast_stack.size() - 2].time_used_so_far);
+  else
+    return forecast_stack.back().time_used_so_far;
+}
+
+void finish_statement_forecast()
+{
+}
+
+void display_state()
+{
+  ostringstream temp;
+  temp<<"The script will reach this point "
+      <<((double)forecast_stack.back().time_used_so_far)/1000
+      <<" seconds after start.";
+  display_state(temp.str(), cout);
 }

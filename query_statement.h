@@ -20,6 +20,7 @@ class Query_Statement : public Statement
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "query"; }
     virtual string get_result_name() const { return output; }
+    virtual void forecast();
     virtual void execute(MYSQL* mysql, map< string, Set >& maps);
     virtual ~Query_Statement() {}
     
@@ -34,9 +35,9 @@ class Has_Key_Value_Statement : public Statement
   public:
     Has_Key_Value_Statement() {}
     virtual void set_attributes(const char **attr);
-    virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "has-kv"; }
     virtual string get_result_name() const { return ""; }
+    virtual void forecast();
     virtual void execute(MYSQL* mysql, map< string, Set >& maps) {}
     virtual ~Has_Key_Value_Statement() {}
     

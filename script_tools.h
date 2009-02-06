@@ -16,22 +16,78 @@
 
 using namespace std;
 
+class Set_Forecast
+{
+  public:
+    Set_Forecast()
+      : origin(-1), node_count(0), way_count(0), relation_count(0), area_count(0), depends_on() {}
+  
+    Set_Forecast(int origin_, int node_count_, int way_count_, int relation_count_, int area_count_)
+      : origin(origin_), node_count(node_count_), way_count(way_count_), relation_count(relation_count_),
+			    area_count(area_count_), depends_on() {}
+			    
+    int origin;
+    int node_count;
+    int way_count;
+    int relation_count;
+    int area_count;
+    vector< pair< string, int > > depends_on;
+};
+
+// inline bool operator<(const Set_Forecast& sf_1, const Set_Forecast& sf_2)
+// {
+//   return (sf_1.name < sf_2.name);
+// }
+
+// class Flow_Forecast
+// {
+//   public:
+//     void begin_statement(string name, int line, int stmt_id) {}
+//     void end_statement() {}
+//     void add_input(string name);
+//     void add_in_out(string name, const Set_Forecast& sf) { sets[name] = sf; }
+//     void add_output(string name, const Set_Forecast& sf) { sets[name] = sf; }
+//     void add_time(int milliseconds) { used_time += milliseconds; }
+//     const Set_Forecast& get_set(string name);
+//     
+//   private:
+//     map< string, Set_Forecast > sets;
+//     long long used_time;
+//     int stack_depth;
+// };
+
+int next_stmt_id();
+
 class Statement
 {
   public:
-    Statement() : line_number(current_line_number()) {}
+    Statement() : line_number(current_line_number()), stmt_id(next_stmt_id()) {}
     
     virtual void set_attributes(const char **attr) = 0;
     virtual void add_statement(Statement* statement, string text);
     virtual void add_final_text(string text);
     virtual string get_name() const = 0;
     virtual string get_result_name() const = 0;
-    virtual int get_line_number() const { return line_number; }
+    virtual void forecast() = 0;
     virtual void execute(MYSQL* mysql, map< string, Set >& maps) = 0;
     virtual ~Statement() {}
     
+    int get_line_number() const { return line_number; }
+    int get_stmt_id() const { return stmt_id; }
+    int get_startpos() const { return startpos; }
+    void set_startpos(int pos) { startpos = pos; }
+    int get_endpos() const { return endpos; }
+    void set_endpos(int pos) { endpos = pos; }
+    int get_tagendpos() const { return tagendpos; }
+    void set_tagendpos(int pos) { tagendpos = pos; }
+    
+    void display_full();
+    void display_starttag();
+    
   private:
     int line_number;
+    int stmt_id;
+    int startpos, endpos, tagendpos;
 };
 
 const int NODE = 1;
@@ -66,6 +122,7 @@ class Root_Statement : public Statement
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "osm-script"; }
     virtual string get_result_name() const { return ""; }
+    virtual void forecast();
     virtual void execute(MYSQL* mysql, map< string, Set >& maps);
     virtual ~Root_Statement() {}
     
@@ -79,5 +136,20 @@ class Root_Statement : public Statement
     string name;
     int replace, version;
 };
+
+const int READ_FORECAST = 1;
+const int WRITE_FORECAST = 2;
+const int UNION_FORECAST = 3;
+
+void declare_used_time(int milliseconds);
+const Set_Forecast& declare_read_set(string name);
+Set_Forecast& declare_write_set(string name);
+Set_Forecast& declare_union_set(string name);
+void inc_stack();
+void dec_stack();
+const vector< pair< int, string > >& pending_stack();
+int stack_time_offset();
+void finish_statement_forecast();
+void display_state();
 
 #endif

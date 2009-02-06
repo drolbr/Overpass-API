@@ -24,6 +24,9 @@ int display_parse_errors(ostream& out, const string& input);
 int display_static_errors(ostream& out, const string& input);
 int display_sanity_errors(ostream& out, const string& input);
 
+void display_verbatim(const string& text, ostream& out);
+void display_state(const string& text, ostream& out);
+
 void runtime_error(const string& error, ostream& out);
 void runtime_remark(const string& error, ostream& out);
 

@@ -11,6 +11,11 @@
 #include "user_interface.h"
 #include "vigilance_control.h"
 
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
+
 #include <mysql.h>
 
 using namespace std;
@@ -574,5 +579,81 @@ set< int >& multiRelation_to_multiint_query
       ;
     mysql_free_result(result);
   }
+  return result_set;
+}
+
+//-----------------------------------------------------------------------------
+
+typedef short int int16;
+typedef int int32;
+typedef long long int64;
+
+typedef unsigned short int uint16;
+typedef unsigned int uint32;
+typedef unsigned long long uint64;
+
+//-----------------------------------------------------------------------------
+
+const unsigned int BLOCKSIZE = 512*1024;
+const char* NODE_DATA = "/opt/osm_why_api/nodes.dat";
+const char* NODE_IDX = "/opt/osm_why_api/nodes.b.idx";
+const char* NODE_IDXA = "/opt/osm_why_api/nodes.1.idx";
+
+//-----------------------------------------------------------------------------
+
+set< Node >& multiint_to_multiNode_query(const set< int >& source, set< Node >& result_set)
+{
+  int nodes_dat_fd = open64(NODE_IDXA, O_RDONLY);
+  if (nodes_dat_fd < 0)
+  {
+    ostringstream temp;
+    temp<<"open64: "<<errno;
+    runtime_error(temp.str(), cout);
+    return result_set;
+  }
+  
+  set< int > blocks;
+  int16 idx_buf(0);
+  for (set< int >::const_iterator it(source.begin()); it != source.end(); ++it)
+  {
+    lseek64(nodes_dat_fd, (*it)*sizeof(int16), SEEK_SET);
+    read(nodes_dat_fd, &idx_buf, sizeof(int16));
+    blocks.insert(idx_buf);
+  }
+  
+  close(nodes_dat_fd);
+  
+  int32* buf_count = (int32*) malloc(sizeof(int) + BLOCKSIZE*sizeof(Node));
+  Node* nd_buf = (Node*) &buf_count[1];
+  if (!buf_count)
+  {
+    runtime_error("Bad alloc in node query", cout);
+    return result_set;
+  }
+  
+  nodes_dat_fd = open64(NODE_DATA, O_RDONLY);
+  if (nodes_dat_fd < 0)
+  {
+    ostringstream temp;
+    temp<<"open64: "<<errno;
+    runtime_error(temp.str(), cout);
+    return result_set;
+  }
+  
+  for (set< int >::const_iterator it(blocks.begin()); it != blocks.end(); ++it)
+  {
+    lseek64(nodes_dat_fd, (int64)(*it)*(sizeof(int) + BLOCKSIZE*sizeof(Node)), SEEK_SET);
+    read(nodes_dat_fd, buf_count, sizeof(int) + BLOCKSIZE*sizeof(Node));
+    for (int32 i(0); i < buf_count[0]; ++i)
+    {
+      if (source.find(nd_buf[i].id) != source.end())
+	result_set.insert(nd_buf[i]);
+    }
+  }
+  
+  close(nodes_dat_fd);
+  
+  free(buf_count);
+  
   return result_set;
 }

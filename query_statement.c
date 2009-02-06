@@ -63,6 +63,31 @@ void Query_Statement::add_statement(Statement* statement, string text)
     substatement_error(get_name(), statement);
 }
 
+void Query_Statement::forecast()
+{
+  Set_Forecast& sf_out(declare_write_set(output));
+    
+  if (type == QUERY_NODE)
+  {
+    sf_out.node_count = 300000;
+    declare_used_time(24000 + sf_out.node_count);
+  }
+  if (type == QUERY_WAY)
+  {
+    sf_out.way_count = 24000;
+    declare_used_time(90000 + sf_out.way_count);
+  }
+  if (type == QUERY_RELATION)
+  {
+    sf_out.relation_count = 70;
+    declare_used_time(100 + sf_out.relation_count);
+  }
+  finish_statement_forecast();
+    
+  display_full();
+  display_state();
+}
+
 void Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
   if (key_values.size() == 0)
@@ -344,9 +369,7 @@ void Has_Key_Value_Statement::set_attributes(const char **attr)
   }
 }
 
-void Has_Key_Value_Statement::add_statement(Statement* statement, string text)
+void Has_Key_Value_Statement::forecast()
 {
-  assure_no_text(text, this->get_name());
-  
-  substatement_error(get_name(), statement);
+  // will never be called
 }

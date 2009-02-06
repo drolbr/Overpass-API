@@ -49,6 +49,183 @@ void Foreach_Statement::add_statement(Statement* statement, string text)
     substatement_error(get_name(), statement);
 }
 
+void Foreach_Statement::forecast()
+{
+  Set_Forecast sf_in(declare_read_set(input));
+  if (sf_in.node_count > 0)
+  {
+    add_sanity_remark("Loop forecast for nodes:");
+    
+    inc_stack();
+    Set_Forecast& sf_out(declare_write_set(output));
+    sf_out.node_count = 1;
+  
+    for (vector< Statement* >::iterator it(substatements.begin());
+	 it != substatements.end(); ++it)
+      (*it)->forecast();
+  
+    const vector< pair< int, string > >& stack(pending_stack());
+    set< string > being_read_only;
+    set< string > being_written;
+    for (vector< pair< int, string > >::const_iterator it(stack.begin());
+	 it != stack.end(); ++it)
+    {
+      if ((it->first == READ_FORECAST) || (it->first == UNION_FORECAST))
+      {
+	if (being_written.find(it->second) == being_written.end())
+	  being_read_only.insert(it->second);
+      }
+      else if ((it->first == WRITE_FORECAST) || (it->first == UNION_FORECAST))
+      {
+	if (being_read_only.find(it->second) == being_read_only.end())
+	  being_written.insert(it->second);
+	else
+	{
+	  ostringstream temp;
+	  temp<<"The data flow of set \""<<it->second
+	      <<"\" makes the loop cycles dependend on each other.";
+	  add_sanity_error(temp.str());
+	  being_written.insert(it->second);
+	}
+      }
+    }
+    
+    int time_offset(stack_time_offset());
+    dec_stack();
+    declare_used_time(time_offset * (sf_in.node_count - 1));
+  }
+  if (sf_in.way_count > 0)
+  {
+    add_sanity_remark("Loop forecast for ways:");
+    
+    inc_stack();
+    Set_Forecast& sf_out(declare_write_set(output));
+    sf_out.way_count = 1;
+  
+    for (vector< Statement* >::iterator it(substatements.begin());
+	 it != substatements.end(); ++it)
+      (*it)->forecast();
+  
+    const vector< pair< int, string > >& stack(pending_stack());
+    set< string > being_read_only;
+    set< string > being_written;
+    for (vector< pair< int, string > >::const_iterator it(stack.begin());
+	 it != stack.end(); ++it)
+    {
+      if ((it->first == READ_FORECAST) || (it->first == UNION_FORECAST))
+      {
+	if (being_written.find(it->second) == being_written.end())
+	  being_read_only.insert(it->second);
+      }
+      else if ((it->first == WRITE_FORECAST) || (it->first == UNION_FORECAST))
+      {
+	if (being_read_only.find(it->second) == being_read_only.end())
+	  being_written.insert(it->second);
+	else
+	{
+	  ostringstream temp;
+	  temp<<"The data flow of set \""<<it->second
+	      <<"\" makes the loop cycles dependend on each other.";
+	  add_sanity_error(temp.str());
+	  being_written.insert(it->second);
+	}
+      }
+    }
+    
+    int time_offset(stack_time_offset());
+    dec_stack();
+    declare_used_time(time_offset * (sf_in.way_count - 1));
+  }
+  if (sf_in.relation_count > 0)
+  {
+    add_sanity_remark("Loop forecast for relations:");
+    
+    inc_stack();
+    Set_Forecast& sf_out(declare_write_set(output));
+    sf_out.relation_count = 1;
+  
+    for (vector< Statement* >::iterator it(substatements.begin());
+	 it != substatements.end(); ++it)
+      (*it)->forecast();
+  
+    const vector< pair< int, string > >& stack(pending_stack());
+    set< string > being_read_only;
+    set< string > being_written;
+    for (vector< pair< int, string > >::const_iterator it(stack.begin());
+	 it != stack.end(); ++it)
+    {
+      if ((it->first == READ_FORECAST) || (it->first == UNION_FORECAST))
+      {
+	if (being_written.find(it->second) == being_written.end())
+	  being_read_only.insert(it->second);
+      }
+      else if ((it->first == WRITE_FORECAST) || (it->first == UNION_FORECAST))
+      {
+	if (being_read_only.find(it->second) == being_read_only.end())
+	  being_written.insert(it->second);
+	else
+	{
+	  ostringstream temp;
+	  temp<<"The data flow of set \""<<it->second
+	      <<"\" makes the loop cycles dependend on each other.";
+	  add_sanity_error(temp.str());
+	  being_written.insert(it->second);
+	}
+      }
+    }
+    
+    int time_offset(stack_time_offset());
+    dec_stack();
+    declare_used_time(time_offset * (sf_in.relation_count - 1));
+  }
+  if (sf_in.area_count > 0)
+  {
+    add_sanity_remark("Loop forecast for areas:");
+    
+    inc_stack();
+    Set_Forecast& sf_out(declare_write_set(output));
+    sf_out.area_count = 1;
+  
+    for (vector< Statement* >::iterator it(substatements.begin());
+	 it != substatements.end(); ++it)
+      (*it)->forecast();
+  
+    const vector< pair< int, string > >& stack(pending_stack());
+    set< string > being_read_only;
+    set< string > being_written;
+    for (vector< pair< int, string > >::const_iterator it(stack.begin());
+	 it != stack.end(); ++it)
+    {
+      if ((it->first == READ_FORECAST) || (it->first == UNION_FORECAST))
+      {
+	if (being_written.find(it->second) == being_written.end())
+	  being_read_only.insert(it->second);
+      }
+      else if ((it->first == WRITE_FORECAST) || (it->first == UNION_FORECAST))
+      {
+	if (being_read_only.find(it->second) == being_read_only.end())
+	  being_written.insert(it->second);
+	else
+	{
+	  ostringstream temp;
+	  temp<<"The data flow of set \""<<it->second
+	      <<"\" makes the loop cycles dependend on each other.";
+	  add_sanity_error(temp.str());
+	  being_written.insert(it->second);
+	}
+      }
+    }
+    
+    int time_offset(stack_time_offset());
+    dec_stack();
+    declare_used_time(time_offset * (sf_in.area_count - 1));
+  }
+  finish_statement_forecast();
+    
+  display_full();
+  display_state();
+}
+
 void Foreach_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
   Set base_set(maps[input]);
@@ -90,6 +267,21 @@ void Foreach_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     relations.insert(*oit);
     maps[output] = Set(set< Node >(), set< Way >(), relations);
     push_stack(RELATION, oit->id);
+    for (vector< Statement* >::iterator it(substatements.begin());
+	 it != substatements.end(); ++it)
+    {
+      (*it)->execute(mysql, maps);
+      statement_finished(*it);
+    }
+    pop_stack();
+  }
+  for (set< Area >::const_iterator oit(base_set.get_areas().begin());
+       oit != base_set.get_areas().end(); ++oit)
+  {
+    set< Area > areas;
+    areas.insert(*oit);
+    maps[output] = Set(set< Node >(), set< Way >(), set< Relation >(), areas);
+    push_stack(AREA, oit->id);
     for (vector< Statement* >::iterator it(substatements.begin());
 	 it != substatements.end(); ++it)
     {

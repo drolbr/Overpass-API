@@ -17,12 +17,13 @@ class Id_Query_Statement : public Statement
     virtual void set_attributes(const char **attr);
     virtual string get_name() const { return "id-query"; }
     virtual string get_result_name() const { return output; }
+    virtual void forecast();
     virtual void execute(MYSQL* mysql, map< string, Set >& maps);
     virtual ~Id_Query_Statement() {}
     
   private:
     string output;
-    unsigned int type;
+    int type;
     unsigned int ref;
 };
 

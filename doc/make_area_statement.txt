@@ -19,7 +19,7 @@ db:areas
 output = union set:from set:into:nodes (set:from:nodes)
 
 * time
-1.5 + 0.001*set:into:nodes,ways
+1.5 + 0.001*set:from:nodes,ways
 
 * space
 0

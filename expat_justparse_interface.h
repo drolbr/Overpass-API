@@ -27,6 +27,14 @@ void parse(const string& input,
 	     void (*start)(const char*, const char**),
 		    void (*end)(const char*));
 
+void parse_script(const string& input,
+	   void (*start)(const char*, const char**),
+		  void (*end)(const char*));
+		  
+unsigned int get_tag_start();
+unsigned int get_tag_end();
+string get_source(int startpos, int endpos);
+
 template < class Ostream >
 inline Ostream& escape_infile_xml(Ostream& out, string s)
 {

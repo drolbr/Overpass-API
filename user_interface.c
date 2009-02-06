@@ -152,7 +152,7 @@ static vector< Error > parse_errors;
 bool exist_parse_errors(false);
 static vector< Error > static_errors;
 bool exist_static_errors(false);
-static vector< Error > sanity_errors;
+ostringstream sanity_out;
 bool exist_sanity_errors(false);
 
 static int header_state(0);
@@ -179,6 +179,8 @@ void add_static_error(const string& error)
 
 void add_sanity_error(const string& error)
 {
+  sanity_out<<"<p><strong style=\"color:#FF0000\">Error</strong>: "<<error<<"</p>\n";
+  exist_sanity_errors = true;
 }
 
 void add_encoding_remark(const string& error)
@@ -198,6 +200,7 @@ void add_static_remark(const string& error)
 
 void add_sanity_remark(const string& error)
 {
+  sanity_out<<"<p><strong style=\"color:#00BB00\">Remark</strong>: "<<error<<"</p>\n";
 }
 
 ostream& out_header(ostream& out, int type)
@@ -472,7 +475,65 @@ int display_static_errors(ostream& out, const string& input)
 
 int display_sanity_errors(ostream& out, const string& input)
 {
-  return 0;
+/*  if (!exist_sanity_errors)
+    return 0;*/
+  
+  out_error_header(out, "Flow Forecast Trouble");
+  
+  out<<"<h1>Flow Forecast Trouble</h1>\n";
+  out<<"<p>The server has converted your input to this <a href=\"#input\">XML document</a>.\n"
+      <<"To avoid congestions, the server tries a rough <a href=\"#forecast\">forecast</a> "
+      <<"for each script about its resource requirements. Unfortunatly, the server was unable "
+      <<"to verify that your script could work on the server's resources. If you have a better "
+      <<"prediction about your script's needs, try using the attributes \"timeout\" and/or "
+      <<"\"element-limit\" on the root element.</p>\n";
+  
+  out<<"<a id=\"encoding\"><h2>Encoding Remarks</h2>\n";
+  for (vector< Error >::const_iterator it(encoding_errors.begin());
+       it != encoding_errors.end(); ++it)
+  {
+    if (it->type == Error::ERROR)
+      out<<"<p><strong style=\"color:#FF0000\">Error</strong>: ";
+    else
+      out<<"<p><strong style=\"color:#00BB00\">Remark</strong>: ";
+    out<<it->text<<"</p>\n";
+  }
+  out<<"</a>\n";
+  
+  out_input_tagged(out, input, static_errors);
+
+  unsigned int i(0);
+  out<<"<a id=\"static\"><h2>Static Remarks</h2></a>\n";
+  for (vector< Error >::const_iterator it(static_errors.begin());
+       it != static_errors.end(); ++it)
+  {
+    out<<"<a id=\"err"<<++i<<"\">";
+    if (it->type == Error::ERROR)
+      out<<"<p><strong style=\"color:#FF0000\">Error</strong>";
+    else
+      out<<"<p><strong style=\"color:#00BB00\">Remark</strong>";
+    if (it->line_number > 0)
+      out<<" in line <strong>"<<it->line_number<<"</strong>";
+    out<<":\n"<<it->text<<"</p></a>\n";
+  }
+  
+  out<<"<a id=\"flow\"><h2>Flow Forecast</h2></a>\n";
+  out<<sanity_out.str();
+  
+  out_error_footer(out);
+  return 1;
+}
+
+void display_verbatim(const string& text, ostream& out)
+{
+  sanity_out<<"<pre>";
+  escape_xml(sanity_out, text);
+  sanity_out<<"</pre>\n";
+}
+
+void display_state(const string& text, ostream& out)
+{
+  sanity_out<<"<p><strong style=\"color:#00BB00\">Forecast</strong>: "<<text<<"</p>\n";
 }
 
 void runtime_error(const string& error, ostream& out)

@@ -49,6 +49,18 @@ void Coord_Query_Statement::set_attributes(const char **attr)
   lon = (int)(lon_d * 10000000 + 0.5);
 }
 
+void Coord_Query_Statement::forecast()
+{
+  Set_Forecast& sf_out(declare_write_set(output));
+    
+  sf_out.area_count = 10;
+  declare_used_time(10);
+  finish_statement_forecast();
+    
+  display_full();
+  display_state();
+}
+
 void Coord_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
   ostringstream temp;

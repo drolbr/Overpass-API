@@ -51,7 +51,7 @@ load_rules: $(objects) load_rules.o
 	
 import_osm: expat_justparse_interface.o cgi-helper.o user_interface.o script_tools.o script_queries.o vigilance_control.o osm2load_infile.o
 	g++ -o import_osm -O3 -Wall -lexpat expat_justparse_interface.o cgi-helper.o user_interface.o  script_tools.o script_queries.o vigilance_control.o osm2load_infile.o `mysql_config --libs`
-	
+
 osmy_vigilance: osmy_vigilance.c
 	g++ -o osmy_vigilance -O3 -Wall `mysql_config --include` osmy_vigilance.c `mysql_config --libs`
 	
@@ -102,6 +102,12 @@ update_rule.o: update_rule.c expat_justparse_interface.h user_interface.h script
 	
 osm2load_infile.o: osm2load_infile.c script_datatypes.h expat_justparse_interface.h cgi-helper.h user_interface.h
 	g++ -c -O3 -Wall `mysql_config --include` osm2load_infile.c
+
+import_osm_nw: expat_justparse_interface.o cgi-helper.o user_interface.o script_tools.o script_queries.o vigilance_control.o import_osm_nw.o
+	g++ -o import_osm_nw -O3 -Wall -lexpat expat_justparse_interface.o cgi-helper.o user_interface.o  script_tools.o script_queries.o vigilance_control.o import_osm_nw.o `mysql_config --libs`
+	
+import_osm_nw.o: import_osm_nw.c script_datatypes.h expat_justparse_interface.h cgi-helper.h user_interface.h
+	g++ -c -O3 -Wall `mysql_config --include` import_osm_nw.c
 
 clean: suffix = statement.o
 clean:

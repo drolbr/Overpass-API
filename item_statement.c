@@ -24,3 +24,13 @@ void Item_Statement::set_attributes(const char **attr)
   
   output = attributes["set"];
 }
+
+void Item_Statement::forecast()
+{
+  declare_union_set(output);
+    
+  finish_statement_forecast();
+    
+  display_full();
+  display_state();
+}

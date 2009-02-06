@@ -49,6 +49,25 @@ void Print_Statement::set_attributes(const char **attr)
   }
 }
 
+void Print_Statement::forecast()
+{
+  const Set_Forecast& sf_in(declare_read_set(input));
+    
+  if (mode == PRINT_IDS_ONLY)
+    declare_used_time(1 + sf_in.node_count/20 + sf_in.way_count/20 + sf_in.relation_count/20
+	+ sf_in.area_count/20);
+  else if (mode == PRINT_SKELETON)
+    declare_used_time(1 + sf_in.node_count/5 + sf_in.way_count/5 + sf_in.relation_count/5
+	+ sf_in.area_count/5);
+  else if (mode == PRINT_BODY)
+    declare_used_time(10 + sf_in.node_count + sf_in.way_count + sf_in.relation_count
+	+ sf_in.area_count);
+  finish_statement_forecast();
+    
+  display_full();
+  display_state();
+}
+
 void out_node(const Node& node, bool complete = true)
 {
   cout<<"<node id=\""<<node.id

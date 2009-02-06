@@ -45,6 +45,17 @@ void Conflict_Statement::add_final_text(string text)
   message.push_back(text);
 }
 
+void Conflict_Statement::forecast()
+{
+  const Set_Forecast& sf_in(declare_read_set(input));
+    
+  declare_used_time(10 + sf_in.node_count/10 + sf_in.way_count/10 + sf_in.relation_count/10);
+  finish_statement_forecast();
+    
+  display_full();
+  display_state();
+}
+
 void Conflict_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
   //temporary

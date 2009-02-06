@@ -18,6 +18,7 @@ class Foreach_Statement : public Statement
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "foreach"; }
     virtual string get_result_name() const { return ""; }
+    virtual void forecast();
     virtual void execute(MYSQL* mysql, map< string, Set >& maps);
     virtual ~Foreach_Statement() {}
     

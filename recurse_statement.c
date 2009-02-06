@@ -53,6 +53,71 @@ void Recurse_Statement::set_attributes(const char **attr)
   }
 }
 
+void Recurse_Statement::forecast()
+{
+  if (input == output)
+  {
+    Set_Forecast& sf_io(declare_union_set(output));
+    
+    if (type == RECURSE_WAY_NODE)
+    {
+      sf_io.node_count += 28*sf_io.way_count;
+      declare_used_time(300*sf_io.way_count);
+    }
+    else if (type == RECURSE_RELATION_RELATION)
+    {
+      declare_used_time(100*sf_io.relation_count);
+      sf_io.relation_count += sf_io.relation_count;
+    }
+    else if (type == RECURSE_RELATION_WAY)
+    {
+      sf_io.way_count += 22*sf_io.relation_count;
+      declare_used_time(100*sf_io.relation_count);
+    }
+    else if (type == RECURSE_RELATION_NODE)
+    {
+      sf_io.node_count += 2*sf_io.relation_count;
+      declare_used_time(100*sf_io.relation_count);
+    }
+    
+    finish_statement_forecast();
+
+    display_full();
+    display_state();
+  }
+  else
+  {
+    const Set_Forecast& sf_in(declare_read_set(input));
+    Set_Forecast& sf_out(declare_write_set(output));
+    
+    if (type == RECURSE_WAY_NODE)
+    {
+      sf_out.node_count += 28*sf_in.way_count;
+      declare_used_time(300*sf_in.way_count);
+    }
+    else if (type == RECURSE_RELATION_RELATION)
+    {
+      sf_out.relation_count += sf_in.relation_count;
+      declare_used_time(100*sf_in.relation_count);
+    }
+    else if (type == RECURSE_RELATION_WAY)
+    {
+      sf_out.way_count += 22*sf_in.relation_count;
+      declare_used_time(100*sf_in.relation_count);
+    }
+    else if (type == RECURSE_RELATION_NODE)
+    {
+      sf_out.node_count += 2*sf_in.relation_count;
+      declare_used_time(100*sf_in.relation_count);
+    }
+    
+    finish_statement_forecast();
+    
+    display_full();
+    display_state();
+  }
+}
+
 void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
   set< Node >* nodes(&(maps[output].get_nodes_handle()));
@@ -86,8 +151,9 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	"left join way_members on way_members.id = ways.id "
 	    "where ways.id in", "", mit->second.get_ways(), tnodes);
     
-    multiint_to_multiNode_query
-	(mysql, "select id, lat, lon from nodes where id in", "", tnodes, *nodes);
+    multiint_to_multiNode_query(tnodes, *nodes);
+    //multiint_to_multiNode_query
+	//(mysql, "select id, lat, lon from nodes where id in", "", tnodes, *nodes);
   }
   else if (type == RECURSE_RELATION_RELATION)
   {

@@ -173,3 +173,73 @@ void parse(const string& input,
   parser_online = false;
   XML_ParserFree(p);
 }
+
+//-----------------------------------------------------------------------------
+
+string source;
+unsigned int old_pos, pos;
+
+void parse_script(const string& input,
+	   void (*start)(const char*, const char**),
+		  void (*end)(const char*))
+{
+  source = input;
+  pos = 0;
+  old_pos = 0;
+  
+  working_start = start;
+  working_end = end;
+  
+  p = XML_ParserCreate(NULL);
+  if (! p)
+  {
+    add_parse_error("Couldn't allocate memory for parser\n");
+    return;
+  }
+  parser_online = true;
+
+  XML_SetElementHandler(p, expat_wrapper_start, expat_wrapper_end);
+  XML_SetCharacterDataHandler(p, expat_wrapper_text);
+
+  int done(0);
+  pos = source.find('<');
+  while ((pos != string::npos) && (pos < source.size()))
+  {
+    if (XML_Parse(p, input.substr(old_pos, pos - old_pos).c_str(), pos - old_pos, done)
+	== XML_STATUS_ERROR)
+    {
+      add_parse_error(XML_ErrorString(XML_GetErrorCode(p)));
+      return;
+    }
+    old_pos = pos;
+    pos = source.find('<', pos+1);
+  }
+  if (XML_Parse(p, input.substr(old_pos, source.size() - old_pos).c_str(), source.size() - old_pos, done)
+      == XML_STATUS_ERROR)
+  {
+    add_parse_error(XML_ErrorString(XML_GetErrorCode(p)));
+    return;
+  }
+
+  parser_online = false;
+  XML_ParserFree(p);
+}
+
+unsigned int get_tag_start()
+{
+  return old_pos;
+}
+
+unsigned int get_tag_end()
+{
+  unsigned int res(source.find('>', old_pos+1));
+  if ((res == string::npos) || (res >= source.size()))
+    return source.size();
+  else
+    return res+1;
+}
+
+string get_source(int startpos, int endpos)
+{
+  return source.substr(startpos, endpos);
+}

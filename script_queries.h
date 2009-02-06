@@ -49,4 +49,8 @@ set< int >& multiWay_to_multiint_query
 set< int >& multiRelation_to_multiint_query
     (MYSQL* mysql, string prefix, string suffix, const set< Relation >& source, set< int >& result_set);
 
+//-----------------------------------------------------------------------------
+
+set< Node >& multiint_to_multiNode_query(const set< int >& source, set< Node >& result_set);
+
 #endif

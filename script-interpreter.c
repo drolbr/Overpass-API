@@ -32,6 +32,8 @@ void start(const char *el, const char **attr)
       output_mode = MIXED_XML;
     else if ((!strcmp(el, "report")) && (output_mode == NOTHING))
       output_mode = HTML;
+    statement->set_startpos(get_tag_start());
+    statement->set_tagendpos(get_tag_end());
     statement->set_attributes(attr);
     statement_stack.push_back(statement);
     text_stack.push_back(get_parsed_text());
@@ -44,9 +46,11 @@ void end(const char *el)
   if ((is_known_element(el)) && (statement_stack.size() > 1))
   {
     Statement* statement(statement_stack.back());
+    
     statement->add_final_text(get_parsed_text());
     reset_parsed_text();
-    //Include an end-control to catch e.g. empty query-statements?
+    statement->set_endpos(get_tag_end());
+    
     statement_stack.pop_back();
     statement_stack.back()->add_statement(statement, text_stack.back());
     text_stack.pop_back();
@@ -63,15 +67,22 @@ int main(int argc, char *argv[])
   if (display_parse_errors(cout, xml_raw))
     return 0;
   
-  parse(xml_raw, start, end);
+  parse_script(xml_raw, start, end);
   if (display_parse_errors(cout, xml_raw))
     return 0;
   if (display_static_errors(cout, xml_raw))
     return 0;
   
-  //Sanity-Check
-  
   mysql = mysql_init(NULL);
+  
+  //Sanity-Check
+  inc_stack();
+  for (vector< Statement* >::const_iterator it(statement_stack.begin());
+       it != statement_stack.end(); ++it)
+    (*it)->forecast();
+  if (display_sanity_errors(cout, xml_raw))
+    return 0;
+  dec_stack();
   
   if (!mysql_real_connect(mysql, "localhost", "osm", "osm", "osm", 0, NULL,
        CLIENT_LOCAL_FILES))
