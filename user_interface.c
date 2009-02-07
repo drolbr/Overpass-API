@@ -482,7 +482,7 @@ int display_sanity_errors(ostream& out, const string& input)
   
   out<<"<h1>Flow Forecast Trouble</h1>\n";
   out<<"<p>The server has converted your input to this <a href=\"#input\">XML document</a>.\n"
-      <<"To avoid congestions, the server tries a rough <a href=\"#forecast\">forecast</a> "
+      <<"To avoid congestions, the server tries a rough <a href=\"#flow\">forecast</a> "
       <<"for each script about its resource requirements. Unfortunatly, the server was unable "
       <<"to verify that your script could work on the server's resources. If you have a better "
       <<"prediction about your script's needs, try using the attributes \"timeout\" and/or "

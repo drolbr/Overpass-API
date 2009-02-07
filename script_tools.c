@@ -275,7 +275,7 @@ void inc_stack()
     time_used_so_far = forecast_stack.back().time_used_so_far;
   forecast_stack.push_back(Flow_Forecast());
   forecast_stack.back().time_used_so_far = time_used_so_far;
-  if (stack.size() > 20)
+  if (forecast_stack.size() > 20)
     add_sanity_error("Stack exceeds size limit of 20.");
 }
 
@@ -303,6 +303,9 @@ int stack_time_offset()
 
 void finish_statement_forecast()
 {
+  if (forecast_stack.back().time_used_so_far > 180*1000)
+    add_sanity_error("Time exceeds limit of 180 seconds.");
+  //TODO
 }
 
 void display_state()
@@ -310,6 +313,18 @@ void display_state()
   ostringstream temp;
   temp<<"The script will reach this point "
       <<((double)forecast_stack.back().time_used_so_far)/1000
-      <<" seconds after start.";
+      <<" seconds after start.<br/>\n";
+  for (map< string, Set_Forecast >::const_iterator it(sets.begin()); ; )
+  {
+    temp<<"Set \""<<it->first<<"\" will contain here "
+	<<it->second.node_count<<" nodes, "
+	<<it->second.way_count<<" ways, "
+	<<it->second.relation_count<<" relations and "
+	<<it->second.area_count<<" areas.";
+    if (++it != sets.end())
+      temp<<"<br/>\n";
+    else
+      break;
+  }
   display_state(temp.str(), cout);
 }

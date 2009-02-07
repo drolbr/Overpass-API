@@ -54,7 +54,9 @@ void Foreach_Statement::forecast()
   Set_Forecast sf_in(declare_read_set(input));
   if (sf_in.node_count > 0)
   {
-    add_sanity_remark("Loop forecast for nodes:");
+    ostringstream temp;
+    temp<<"Loop forecast for one of "<<sf_in.node_count<<" nodes:";
+    add_sanity_remark(temp.str());
     
     inc_stack();
     Set_Forecast& sf_out(declare_write_set(output));
@@ -96,7 +98,9 @@ void Foreach_Statement::forecast()
   }
   if (sf_in.way_count > 0)
   {
-    add_sanity_remark("Loop forecast for ways:");
+    ostringstream temp;
+    temp<<"Loop forecast for one of "<<sf_in.way_count<<" ways:";
+    add_sanity_remark(temp.str());
     
     inc_stack();
     Set_Forecast& sf_out(declare_write_set(output));
@@ -138,7 +142,9 @@ void Foreach_Statement::forecast()
   }
   if (sf_in.relation_count > 0)
   {
-    add_sanity_remark("Loop forecast for relations:");
+    ostringstream temp;
+    temp<<"Loop forecast for one of "<<sf_in.relation_count<<" relations:";
+    add_sanity_remark(temp.str());
     
     inc_stack();
     Set_Forecast& sf_out(declare_write_set(output));
@@ -180,7 +186,9 @@ void Foreach_Statement::forecast()
   }
   if (sf_in.area_count > 0)
   {
-    add_sanity_remark("Loop forecast for areas:");
+    ostringstream temp;
+    temp<<"Loop forecast for one of "<<sf_in.area_count<<" areas:";
+    add_sanity_remark(temp.str());
     
     inc_stack();
     Set_Forecast& sf_out(declare_write_set(output));

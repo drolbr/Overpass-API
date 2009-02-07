@@ -190,6 +190,17 @@ do {
 done
 echo "create table way_tags (id int unsigned, key_ int unsigned, value_ int unsigned, key(id), index(key_, value_)) engine=merge union=($stmt, way_tags_world);" >>init_database.sql
 
+echo "create table node_tag_counts (id int unsigned, count int unsigned);" >>init_database.sql
+echo "insert node_tag_counts select key_, count(key_) from node_tags group by key_;" >>init_database.sql
+echo "alter table node_tag_counts add unique key(id);" >>init_database.sql
+
+echo "create table way_tag_counts (id int unsigned, count int unsigned);" >>init_database.sql
+echo "insert way_tag_counts select key_, count(key_) from way_tags group by key_;" >>init_database.sql
+echo "alter table way_tag_counts add unique key(id);" >>init_database.sql
+
+echo "create table relation_tag_counts (id int unsigned, count int unsigned);" >>init_database.sql
+echo "insert relation_tag_counts select key_, count(key_) from relation_tags group by key_;" >>init_database.sql
+echo "alter table relation_tag_counts add unique key(id);" >>init_database.sql
 
 echo "Creating indices and merged tables ... "
 mysql -u osm -posm osm <init_database.sql
