@@ -25,7 +25,7 @@ void Item_Statement::set_attributes(const char **attr)
   output = attributes["set"];
 }
 
-void Item_Statement::forecast()
+void Item_Statement::forecast(MYSQL* mysql)
 {
   declare_union_set(output);
     

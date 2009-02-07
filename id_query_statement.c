@@ -54,7 +54,7 @@ void Id_Query_Statement::set_attributes(const char **attr)
   }
 }
 
-void Id_Query_Statement::forecast()
+void Id_Query_Statement::forecast(MYSQL* mysql)
 {
   Set_Forecast& sf_out(declare_write_set(output));
   

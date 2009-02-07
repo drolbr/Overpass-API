@@ -68,7 +68,7 @@ class Statement
     virtual void add_final_text(string text);
     virtual string get_name() const = 0;
     virtual string get_result_name() const = 0;
-    virtual void forecast() = 0;
+    virtual void forecast(MYSQL* mysql) = 0;
     virtual void execute(MYSQL* mysql, map< string, Set >& maps) = 0;
     virtual ~Statement() {}
     
@@ -122,7 +122,7 @@ class Root_Statement : public Statement
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "osm-script"; }
     virtual string get_result_name() const { return ""; }
-    virtual void forecast();
+    virtual void forecast(MYSQL* mysql);
     virtual void execute(MYSQL* mysql, map< string, Set >& maps);
     virtual ~Root_Statement() {}
     

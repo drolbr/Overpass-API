@@ -63,23 +63,201 @@ void Query_Statement::add_statement(Statement* statement, string text)
     substatement_error(get_name(), statement);
 }
 
-void Query_Statement::forecast()
+void Query_Statement::forecast(MYSQL* mysql)
 {
   Set_Forecast& sf_out(declare_write_set(output));
     
   if (type == QUERY_NODE)
   {
-    sf_out.node_count = 300000;
+    map< int, pair< string, string > > key_value_counts;
+    for (vector< pair< string, string > >::const_iterator it(key_values.begin());
+	 it != key_values.end(); ++it)
+    {
+      if (it->second == "")
+      {
+	ostringstream temp;
+	temp<<"select count from node_tag_counts "
+	    <<"left join key_s on key_s.id = node_tag_counts.id "
+	    <<"where key_s.key_ = \"";
+	escape_xml(temp, it->first);
+	temp<<"\"";
+	int count(int_query(mysql, temp.str()));
+	key_value_counts.insert
+	    (make_pair< int, pair< string, string > >(count, *it));
+      }
+      else
+      {
+	ostringstream temp;
+	temp<<"select count, spread from node_tag_counts "
+	    <<"left join key_s on key_s.id = node_tag_counts.id "
+	    <<"where key_s.key_ = \"";
+	escape_xml(temp, it->first);
+	temp<<"\"";
+	pair< int, int > count(intint_query(mysql, temp.str()));
+	key_value_counts.insert
+	    (make_pair< int, pair< string, string > >(count.first*2/(count.second+1), *it));
+      }
+    }
+    unsigned int i(0);
+    bool reordered(false);
+    for (map< int, pair< string, string > >::const_iterator it(key_value_counts.begin());
+	 it != key_value_counts.end(); ++it)
+    {
+      reordered |= (it->second != key_values[i]);
+      key_values[i++] = it->second;
+    }
+    if (reordered)
+    {
+      ostringstream temp;
+      temp<<"The clauses of this query have been reordered to improve performance:<br/>\n";
+      for (map< int, pair< string, string > >::const_iterator it(key_value_counts.begin()); ; )
+      {
+	temp<<"Has_Kv \""<<it->second.first<<"\" \""<<it->second.second<<"\": "<<it->first
+	    <<" results expected.";
+	if (++it != key_value_counts.end())
+	  temp<<"<br/>\n";
+	else
+	  break;
+      }
+      add_sanity_remark(temp.str());
+    }
+    
+    if (key_value_counts.empty())
+    {
+      sf_out.node_count = 400*1000*1000;
+      add_sanity_error("A query with empty conditions is not allowed.");
+    }
+    else
+      sf_out.node_count = key_value_counts.begin()->first;
     declare_used_time(24000 + sf_out.node_count);
   }
   if (type == QUERY_WAY)
   {
-    sf_out.way_count = 24000;
+    map< int, pair< string, string > > key_value_counts;
+    for (vector< pair< string, string > >::const_iterator it(key_values.begin());
+	 it != key_values.end(); ++it)
+    {
+      if (it->second == "")
+      {
+	ostringstream temp;
+	temp<<"select count from way_tag_counts "
+	    <<"left join key_s on key_s.id = way_tag_counts.id "
+	    <<"where key_s.key_ = \"";
+	escape_xml(temp, it->first);
+	temp<<"\"";
+	int count(int_query(mysql, temp.str()));
+	key_value_counts.insert
+	    (make_pair< int, pair< string, string > >(count, *it));
+      }
+      else
+      {
+	ostringstream temp;
+	temp<<"select count, spread from way_tag_counts "
+	    <<"left join key_s on key_s.id = way_tag_counts.id "
+	    <<"where key_s.key_ = \"";
+	escape_xml(temp, it->first);
+	temp<<"\"";
+	pair< int, int > count(intint_query(mysql, temp.str()));
+	key_value_counts.insert
+	    (make_pair< int, pair< string, string > >(count.first*2/(count.second+1), *it));
+      }
+    }
+    unsigned int i(0);
+    bool reordered(false);
+    for (map< int, pair< string, string > >::const_iterator it(key_value_counts.begin());
+	 it != key_value_counts.end(); ++it)
+    {
+      reordered |= (it->second != key_values[i]);
+      key_values[i++] = it->second;
+    }
+    if (reordered)
+    {
+      ostringstream temp;
+      temp<<"The clauses of this query have been reordered to improve performance:<br/>\n";
+      for (map< int, pair< string, string > >::const_iterator it(key_value_counts.begin()); ; )
+      {
+	temp<<"Has_Kv \""<<it->second.first<<"\" \""<<it->second.second<<"\": "<<it->first
+	    <<" results expected.";
+	if (++it != key_value_counts.end())
+	  temp<<"<br/>\n";
+	else
+	  break;
+      }
+      add_sanity_remark(temp.str());
+    }
+    
+    if (key_value_counts.empty())
+    {
+      sf_out.way_count = 30*1000*1000;
+      add_sanity_error("A query with empty conditions is not allowed.");
+    }
+    else
+      sf_out.way_count = key_value_counts.begin()->first;
+    
     declare_used_time(90000 + sf_out.way_count);
   }
   if (type == QUERY_RELATION)
   {
-    sf_out.relation_count = 70;
+    map< int, pair< string, string > > key_value_counts;
+    for (vector< pair< string, string > >::const_iterator it(key_values.begin());
+	 it != key_values.end(); ++it)
+    {
+      if (it->second == "")
+      {
+	ostringstream temp;
+	temp<<"select count from relation_tag_counts "
+	    <<"left join key_s on key_s.id = relation_tag_counts.id "
+	    <<"where key_s.key_ = \"";
+	escape_xml(temp, it->first);
+	temp<<"\"";
+	int count(int_query(mysql, temp.str()));
+	key_value_counts.insert
+	    (make_pair< int, pair< string, string > >(count, *it));
+      }
+      else
+      {
+	ostringstream temp;
+	temp<<"select count, spread from relation_tag_counts "
+	    <<"left join key_s on key_s.id = relation_tag_counts.id "
+	    <<"where key_s.key_ = \"";
+	escape_xml(temp, it->first);
+	temp<<"\"";
+	pair< int, int > count(intint_query(mysql, temp.str()));
+	key_value_counts.insert
+	    (make_pair< int, pair< string, string > >(count.first*2/(count.second+1), *it));
+      }
+    }
+    unsigned int i(0);
+    bool reordered(false);
+    for (map< int, pair< string, string > >::const_iterator it(key_value_counts.begin());
+	 it != key_value_counts.end(); ++it)
+    {
+      reordered |= (it->second != key_values[i]);
+      key_values[i++] = it->second;
+    }
+    if (reordered)
+    {
+      ostringstream temp;
+      temp<<"The clauses of this query have been reordered to improve performance:<br/>\n";
+      for (map< int, pair< string, string > >::const_iterator it(key_value_counts.begin()); ; )
+      {
+	temp<<"Has_Kv \""<<it->second.first<<"\" \""<<it->second.second<<"\": "<<it->first
+	    <<" results expected.";
+	if (++it != key_value_counts.end())
+	  temp<<"<br/>\n";
+	else
+	  break;
+      }
+      add_sanity_remark(temp.str());
+    }
+    
+    if (key_value_counts.empty())
+    {
+      sf_out.relation_count = 100*1000;
+      add_sanity_error("A query with empty conditions is not allowed.");
+    }
+    else
+      sf_out.relation_count = key_value_counts.begin()->first;
     declare_used_time(100 + sf_out.relation_count);
   }
   finish_statement_forecast();
@@ -369,7 +547,7 @@ void Has_Key_Value_Statement::set_attributes(const char **attr)
   }
 }
 
-void Has_Key_Value_Statement::forecast()
+void Has_Key_Value_Statement::forecast(MYSQL* mysql)
 {
   // will never be called
 }

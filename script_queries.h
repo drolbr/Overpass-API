@@ -16,6 +16,7 @@ using namespace std;
 MYSQL_RES* mysql_query_wrapper(MYSQL* mysql, string query);
 
 int int_query(MYSQL* mysql, string query);
+pair< int, int > intint_query(MYSQL* mysql, string query);
 
 set< int >& multiint_query(MYSQL* mysql, string query, set< int >& result_set);
 

@@ -17,7 +17,7 @@ class Coord_Query_Statement : public Statement
     virtual void set_attributes(const char **attr);
     virtual string get_name() const { return "coord-query"; }
     virtual string get_result_name() const { return output; }
-    virtual void forecast();
+    virtual void forecast(MYSQL* mysql);
     virtual void execute(MYSQL* mysql, map< string, Set >& maps);
     virtual ~Coord_Query_Statement() {}
     

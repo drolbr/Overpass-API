@@ -49,7 +49,7 @@ void Coord_Query_Statement::set_attributes(const char **attr)
   lon = (int)(lon_d * 10000000 + 0.5);
 }
 
-void Coord_Query_Statement::forecast()
+void Coord_Query_Statement::forecast(MYSQL* mysql)
 {
   Set_Forecast& sf_out(declare_write_set(output));
     

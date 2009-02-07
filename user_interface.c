@@ -475,8 +475,8 @@ int display_static_errors(ostream& out, const string& input)
 
 int display_sanity_errors(ostream& out, const string& input)
 {
-/*  if (!exist_sanity_errors)
-    return 0;*/
+  if (!exist_sanity_errors)
+    return 0;
   
   out_error_header(out, "Flow Forecast Trouble");
   

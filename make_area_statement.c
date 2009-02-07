@@ -55,7 +55,7 @@ inline void area_insert(Area& area, int lat1, int lon1, int lat2, int lon2)
   }
 }
 
-void Make_Area_Statement::forecast()
+void Make_Area_Statement::forecast(MYSQL* mysql)
 {
   if (input == output)
   {
@@ -63,7 +63,7 @@ void Make_Area_Statement::forecast()
     declare_read_set(tags);
     
     sf_io.area_count += 1;
-    declare_used_time(1500 + sf_io.node_count + sf_io.way_count);
+    declare_used_time(100 + sf_io.node_count + sf_io.way_count);
     finish_statement_forecast();
 
     display_full();
@@ -76,7 +76,7 @@ void Make_Area_Statement::forecast()
     Set_Forecast& sf_out(declare_write_set(output));
     
     sf_out.area_count = 1;
-    declare_used_time(1500 + sf_in.node_count + sf_in.way_count);
+    declare_used_time(100 + sf_in.node_count + sf_in.way_count);
     finish_statement_forecast();
     
     display_full();

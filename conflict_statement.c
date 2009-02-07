@@ -45,7 +45,7 @@ void Conflict_Statement::add_final_text(string text)
   message.push_back(text);
 }
 
-void Conflict_Statement::forecast()
+void Conflict_Statement::forecast(MYSQL* mysql)
 {
   const Set_Forecast& sf_in(declare_read_set(input));
     

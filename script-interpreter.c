@@ -75,15 +75,6 @@ int main(int argc, char *argv[])
   
   mysql = mysql_init(NULL);
   
-  //Sanity-Check
-  inc_stack();
-  for (vector< Statement* >::const_iterator it(statement_stack.begin());
-       it != statement_stack.end(); ++it)
-    (*it)->forecast();
-  if (display_sanity_errors(cout, xml_raw))
-    return 0;
-  dec_stack();
-  
   if (!mysql_real_connect(mysql, "localhost", "osm", "osm", "osm", 0, NULL,
        CLIENT_LOCAL_FILES))
   {
@@ -91,6 +82,15 @@ int main(int argc, char *argv[])
     out_footer(cout, output_mode);
     return 0;
   }
+  
+  //Sanity-Check
+  inc_stack();
+  for (vector< Statement* >::const_iterator it(statement_stack.begin());
+       it != statement_stack.end(); ++it)
+    (*it)->forecast(mysql);
+  if (display_sanity_errors(cout, xml_raw))
+    return 0;
+  dec_stack();
   
   out_header(cout, output_mode);
   

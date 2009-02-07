@@ -53,7 +53,7 @@ void Recurse_Statement::set_attributes(const char **attr)
   }
 }
 
-void Recurse_Statement::forecast()
+void Recurse_Statement::forecast(MYSQL* mysql)
 {
   if (input == output)
   {
@@ -62,7 +62,7 @@ void Recurse_Statement::forecast()
     if (type == RECURSE_WAY_NODE)
     {
       sf_io.node_count += 28*sf_io.way_count;
-      declare_used_time(300*sf_io.way_count);
+      declare_used_time(50*sf_io.way_count);
     }
     else if (type == RECURSE_RELATION_RELATION)
     {
@@ -93,7 +93,7 @@ void Recurse_Statement::forecast()
     if (type == RECURSE_WAY_NODE)
     {
       sf_out.node_count += 28*sf_in.way_count;
-      declare_used_time(300*sf_in.way_count);
+      declare_used_time(50*sf_in.way_count);
     }
     else if (type == RECURSE_RELATION_RELATION)
     {

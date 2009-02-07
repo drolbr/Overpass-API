@@ -49,7 +49,7 @@ void Foreach_Statement::add_statement(Statement* statement, string text)
     substatement_error(get_name(), statement);
 }
 
-void Foreach_Statement::forecast()
+void Foreach_Statement::forecast(MYSQL* mysql)
 {
   Set_Forecast sf_in(declare_read_set(input));
   if (sf_in.node_count > 0)
@@ -64,7 +64,7 @@ void Foreach_Statement::forecast()
   
     for (vector< Statement* >::iterator it(substatements.begin());
 	 it != substatements.end(); ++it)
-      (*it)->forecast();
+      (*it)->forecast(mysql);
   
     const vector< pair< int, string > >& stack(pending_stack());
     set< string > being_read_only;
@@ -108,7 +108,7 @@ void Foreach_Statement::forecast()
   
     for (vector< Statement* >::iterator it(substatements.begin());
 	 it != substatements.end(); ++it)
-      (*it)->forecast();
+      (*it)->forecast(mysql);
   
     const vector< pair< int, string > >& stack(pending_stack());
     set< string > being_read_only;
@@ -152,7 +152,7 @@ void Foreach_Statement::forecast()
   
     for (vector< Statement* >::iterator it(substatements.begin());
 	 it != substatements.end(); ++it)
-      (*it)->forecast();
+      (*it)->forecast(mysql);
   
     const vector< pair< int, string > >& stack(pending_stack());
     set< string > being_read_only;
@@ -196,7 +196,7 @@ void Foreach_Statement::forecast()
   
     for (vector< Statement* >::iterator it(substatements.begin());
 	 it != substatements.end(); ++it)
-      (*it)->forecast();
+      (*it)->forecast(mysql);
   
     const vector< pair< int, string > >& stack(pending_stack());
     set< string > being_read_only;

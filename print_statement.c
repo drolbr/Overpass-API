@@ -49,7 +49,7 @@ void Print_Statement::set_attributes(const char **attr)
   }
 }
 
-void Print_Statement::forecast()
+void Print_Statement::forecast(MYSQL* mysql)
 {
   const Set_Forecast& sf_in(declare_read_set(input));
     

@@ -105,6 +105,23 @@ int int_query(MYSQL* mysql, string query)
   return result_val;
 }
 
+pair< int, int > intint_query(MYSQL* mysql, string query)
+{
+  pair< int, int > result_val(make_pair< int, int >(0, 0));
+  MYSQL_RES* result(mysql_query_use_wrapper(mysql, query));
+  if (!result)
+    return result_val;
+	
+  MYSQL_ROW row(mysql_fetch_row(result));
+  if ((row) && (row[0]) && (row[1]))
+    result_val = make_pair< int, int >(atoi(row[0]), atoi(row[1]));
+  
+  while (mysql_fetch_row(result))
+    ;
+  mysql_free_result(result);
+  return result_val;
+}
+
 set< int >& multiint_query(MYSQL* mysql, string query, set< int >& result_set)
 {
   MYSQL_RES* result(mysql_query_use_wrapper(mysql, query));

@@ -28,7 +28,7 @@ void Detect_Odd_Nodes_Statement::set_attributes(const char **attr)
   output = attributes["into"];
 }
 
-void Detect_Odd_Nodes_Statement::forecast()
+void Detect_Odd_Nodes_Statement::forecast(MYSQL* mysql)
 {
   if (input == output)
   {

@@ -36,7 +36,7 @@ void Union_Statement::add_statement(Statement* statement, string text)
     substatement_error(get_name(), statement);
 }
 
-void Union_Statement::forecast()
+void Union_Statement::forecast(MYSQL* mysql)
 {
   int node_count(0);
   int way_count(0);
@@ -46,7 +46,7 @@ void Union_Statement::forecast()
   for (vector< Statement* >::iterator it(substatements.begin());
        it != substatements.end(); ++it)
   {
-    (*it)->forecast();
+    (*it)->forecast(mysql);
     const Set_Forecast& sf_in(declare_read_set((*it)->get_result_name()));
     node_count += sf_in.node_count;
     way_count += sf_in.way_count;

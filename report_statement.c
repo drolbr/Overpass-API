@@ -25,7 +25,7 @@ void Report_Statement::set_attributes(const char **attr)
   input = attributes["from"];
 }
 
-void Report_Statement::forecast()
+void Report_Statement::forecast(MYSQL* mysql)
 {
   const Set_Forecast& sf_in(declare_read_set(input));
     

@@ -126,6 +126,8 @@ void Statement::display_starttag()
 
 //-----------------------------------------------------------------------------
 
+int script_timeout(0);
+
 void Root_Statement::set_attributes(const char **attr)
 {
   map< string, string > attributes;
@@ -141,6 +143,8 @@ void Root_Statement::set_attributes(const char **attr)
   replace = atoi(attributes["replace"].c_str());
   timeout = atoi(attributes["timeout"].c_str());
   version = atoi(attributes["version"].c_str());
+  
+  script_timeout = timeout;
 }
 
 void Root_Statement::add_statement(Statement* statement, string text)
@@ -163,11 +167,11 @@ void Root_Statement::add_statement(Statement* statement, string text)
     substatement_error(get_name(), statement);
 }
 
-void Root_Statement::forecast()
+void Root_Statement::forecast(MYSQL* mysql)
 {
   for (vector< Statement* >::iterator it(substatements.begin());
        it != substatements.end(); ++it)
-    (*it)->forecast();
+    (*it)->forecast(mysql);
 }
 
 void Root_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
@@ -303,9 +307,17 @@ int stack_time_offset()
 
 void finish_statement_forecast()
 {
-  if (forecast_stack.back().time_used_so_far > 180*1000)
+  if ((script_timeout == 0) && (forecast_stack.back().time_used_so_far > 180*1000))
     add_sanity_error("Time exceeds limit of 180 seconds.");
-  //TODO
+  unsigned int element_count(0);
+  for (map< string, Set_Forecast >::const_iterator it(sets.begin()); it != sets.end(); ++it)
+  {
+    element_count += it->second.node_count;
+    element_count += 29*it->second.way_count;
+    element_count += 26*it->second.relation_count;
+  }
+  if (element_count > 10*1000*1000)
+    add_sanity_error("Number of elements exceeds limit of 10,000,000 elements.");
 }
 
 void display_state()
