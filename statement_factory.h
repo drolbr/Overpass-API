@@ -14,6 +14,7 @@
 #include "item_statement.h"
 #include "make_area_statement.h"
 #include "coord_query_statement.h"
+#include "bbox_query_statement.h"
 #include "print_statement.h"
 #include "conflict_statement.h"
 #include "report_statement.h"
@@ -43,6 +44,8 @@ Statement* generate_statement(string element)
     return new Make_Area_Statement();
   else if (element == "coord-query")
     return new Coord_Query_Statement();
+  else if (element == "bbox-query")
+    return new Bbox_Query_Statement();
   else if (element == "print")
     return new Print_Statement();
   else if (element == "conflict")
@@ -71,6 +74,7 @@ bool is_known_element(string element)
        (element == "item") ||
        (element == "make-area") ||
        (element == "coord-query") ||
+       (element == "bbox-query") ||
        (element == "print") ||
        (element == "conflict") ||
        (element == "report") ||

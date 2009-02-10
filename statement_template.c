@@ -8,6 +8,7 @@
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
+#include "user_interface.h"
 #include "$(filename)_statement.h"
 
 #include <mysql.h>

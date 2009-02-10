@@ -24,6 +24,8 @@ int display_parse_errors(ostream& out, const string& input);
 int display_static_errors(ostream& out, const string& input);
 int display_sanity_errors(ostream& out, const string& input);
 
+void static_analysis(ostream& out, const string& input);
+
 void display_verbatim(const string& text, ostream& out);
 void display_state(const string& text, ostream& out);
 
@@ -39,5 +41,13 @@ const int NOTHING = 3;
 ostream& out_header(ostream& out, int type);
 
 ostream& out_footer(ostream& out, int type);
+
+const int QUIET = 1;
+const int ERRORS = 2;
+const int VERBOSE = 3;
+const int STATIC_ANALYSIS = 4;
+
+void set_debug_mode(int mode);
+int get_debug_mode();
 
 #endif

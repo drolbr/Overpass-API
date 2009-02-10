@@ -1,4 +1,5 @@
 stmts = \
+bbox_query_$(suffix) \
 coord_query_$(suffix) \
 conflict_$(suffix) \
 detect_odd_nodes_$(suffix) \

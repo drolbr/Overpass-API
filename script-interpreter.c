@@ -92,6 +92,12 @@ int main(int argc, char *argv[])
     return 0;
   dec_stack();
   
+  if (get_debug_mode() == STATIC_ANALYSIS)
+  {
+    static_analysis(cout, xml_raw);
+    return 0;
+  }
+  
   out_header(cout, output_mode);
   
   prepare_caches(mysql);

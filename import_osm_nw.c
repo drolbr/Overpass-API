@@ -45,13 +45,6 @@ typedef unsigned long long uint64;
 
 //-----------------------------------------------------------------------------
 
-const unsigned int BLOCKSIZE = 512*1024;
-const char* NODE_DATA = "/opt/osm_why_api/nodes.dat";
-const char* NODE_IDX = "/opt/osm_why_api/nodes.b.idx";
-const char* NODE_IDXA = "/opt/osm_why_api/nodes.1.idx";
-
-//-----------------------------------------------------------------------------
-
 int nodes_dat_fd;
 multimap< int, unsigned int > block_index;
 int max_node_id(0);
@@ -67,6 +60,9 @@ void prepare_nodes()
     cerr<<"malloc: "<<errno<<'\n';
     exit(0);
   }
+  
+  nodes_dat_fd = open64(NODE_DATA, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  close(nodes_dat_fd);
   
   nodes_dat_fd = open64(NODE_DATA, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (nodes_dat_fd < 0)
@@ -252,6 +248,50 @@ void postprocess_nodes()
 
 //-----------------------------------------------------------------------------
 
+int prepare_ways(uint32*& buf)
+{
+  int fd = open64(WAY_ALLTMP, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  if (fd < 0)
+  {
+    cerr<<"open64: "<<errno<<'\n';
+    exit(0);
+  }
+  
+  buf = (uint32*) malloc(sizeof(int32)*(MAXWAYNODES+2));
+  return fd;
+}
+
+void postprocess_ways(int fd, uint32*& buf)
+{
+  close(fd);
+  free(buf);
+  buf = 0;
+}
+
+void postprocess_ways_2()
+{
+  const uint32 max_way_id = 50*1000*1000;
+  uint32* way_first_node = (uint32*) calloc(max_way_id, sizeof(uint32));
+  uint32* way_first_idx = (uint32*) calloc(max_way_id, sizeof(uint32));
+  
+  int fd = open64(WAY_ALLTMP, O_RDONLY);
+  
+  uint32 way_id, way_size;
+  while (read(fd, &way_id, sizeof(uint32)))
+  {
+    read(fd, &way_size, sizeof(uint32));
+    read(fd, &(way_first_node[way_id]), sizeof(uint32));
+    lseek64(fd, (way_size-1)*sizeof(uint32), SEEK_CUR);
+  }
+  
+  close(fd);
+  
+  free(way_first_node);
+  way_first_node = 0;
+}
+
+//-----------------------------------------------------------------------------
+
 // const int NODE = 1;
 // const int WAY = 2;
 // const int RELATION = 3;
@@ -261,6 +301,12 @@ void postprocess_nodes()
 const unsigned int FLUSH_INTERVAL = 32*1024*1024;
 const unsigned int DOT_INTERVAL = 512*1024;
 unsigned int structure_count(0);
+int state(0);
+const int NODES = 1;
+const int WAYS = 2;
+int ways_fd;
+uint32* way_buf;
+uint32 way_buf_pos(0);
 
 // unsigned int way_member_count(0);
 
@@ -270,6 +316,17 @@ void start(const char *el, const char **attr)
 {
   if (!strcmp(el, "nd"))
   {
+    if (way_buf_pos < MAXWAYNODES)
+    {
+      unsigned int ref(0);
+      for (unsigned int i(0); attr[i]; i += 2)
+      {
+	if (!strcmp(attr[i], "ref"))
+	  ref = atoi(attr[i+1]);
+      }
+      way_buf[way_buf_pos+2] = ref;
+      ++way_buf_pos;
+    }
   }
   else if (!strcmp(el, "node"))
   {
@@ -289,12 +346,45 @@ void start(const char *el, const char **attr)
   }
   else if (!strcmp(el, "way"))
   {
+    if (state == NODES)
+    {
+      flush_nodes(nodes);
+      nodes.clear();
+      postprocess_nodes();
+      
+      state = WAYS;
+      
+      ways_fd = prepare_ways(way_buf);
+    }
+    uint32 id(0);
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "id"))
+	id = atoi(attr[i+1]);
+    }
+    way_buf[0] = id;
+    way_buf_pos = 0;
+  }
+  else if (!strcmp(el, "relation"))
+  {
+    if (state == WAYS)
+    {
+      postprocess_ways(ways_fd, way_buf);
+      
+      state = 0;
+    }
   }
 }
 
 void end(const char *el)
 {
-  if (!strcmp(el, "node"))
+  if (!strcmp(el, "nd"))
+  {
+    ++structure_count;
+    if (structure_count % DOT_INTERVAL == 0)
+      cerr<<'.';
+  }
+  else if (!strcmp(el, "node"))
   {
     ++structure_count;
     if (structure_count % DOT_INTERVAL == 0)
@@ -302,14 +392,22 @@ void end(const char *el)
   }
   else if (!strcmp(el, "way"))
   {
+    if (way_buf_pos < MAXWAYNODES)
+    {
+      way_buf[1] = way_buf_pos;
+      write(ways_fd, way_buf, sizeof(uint32)*(way_buf_pos+2));
+    }
   }
   else if (!strcmp(el, "relation"))
   {
   }
   if (structure_count >= FLUSH_INTERVAL)
   {
-    flush_nodes(nodes);
-    nodes.clear();
+    if (state == NODES)
+    {
+      flush_nodes(nodes);
+      nodes.clear();
+    }
     
     structure_count = 0;
   }
@@ -319,14 +417,26 @@ int main(int argc, char *argv[])
 {
   cerr<<(uintmax_t)time(NULL)<<'\n';
   
+  postprocess_ways_2();
+  return 0;
+  
   prepare_nodes();
+  
+  state = NODES;
   
   //reading the main document
   parse(stdin, start, end);
   
-  flush_nodes(nodes);
-  nodes.clear();
-  postprocess_nodes();
+  if (state == NODES)
+  {
+    flush_nodes(nodes);
+    nodes.clear();
+    postprocess_nodes();
+  }
+  else if (state == WAYS)
+  {
+    postprocess_ways(ways_fd, way_buf);
+  }
   
   cerr<<'\n'<<(uintmax_t)time(NULL)<<'\n';
   return 0;

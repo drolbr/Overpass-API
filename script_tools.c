@@ -19,6 +19,12 @@ using namespace std;
 const char* types_lowercase[] = { "", "node", "way", "relation", "area" };
 const char* types_uppercase[] = { "", "Node", "Way", "Relation", "Area" };
 
+const char* NODE_DATA = "/opt/osm_why_api/nodes.dat";
+const char* NODE_IDX = "/opt/osm_why_api/nodes.b.idx";
+const char* NODE_IDXA = "/opt/osm_why_api/nodes.1.idx";
+
+const char* WAY_ALLTMP = "/tmp/ways.dat";
+
 static string rule_name_;
 static int rule_id_;
 static vector< pair< int, int > > stack;
@@ -127,24 +133,38 @@ void Statement::display_starttag()
 //-----------------------------------------------------------------------------
 
 int script_timeout(0);
+int element_limit(0);
 
 void Root_Statement::set_attributes(const char **attr)
 {
   map< string, string > attributes;
   
   attributes["timeout"] = "0";
+  attributes["element-limit"] = "0";
   attributes["name"] = "";
   attributes["replace"] = "0";
   attributes["version"] = "0";
+  attributes["debug"] = "quiet";
   
   eval_cstr_array(get_name(), attributes, attr);
   
   name = attributes["name"];
   replace = atoi(attributes["replace"].c_str());
   timeout = atoi(attributes["timeout"].c_str());
+  elem_limit = atoi(attributes["element-limit"].c_str());
   version = atoi(attributes["version"].c_str());
   
+  if (attributes["debug"] == "quiet")
+    set_debug_mode(QUIET);
+  if (attributes["debug"] == "errors")
+    set_debug_mode(ERRORS);
+  if (attributes["debug"] == "verbose")
+    set_debug_mode(VERBOSE);
+  if (attributes["debug"] == "static")
+    set_debug_mode(STATIC_ANALYSIS);
+  
   script_timeout = timeout;
+  element_limit = elem_limit;
 }
 
 void Root_Statement::add_statement(Statement* statement, string text)
@@ -158,6 +178,7 @@ void Root_Statement::add_statement(Statement* statement, string text)
        (statement->get_name() == "foreach") ||
        (statement->get_name() == "make-area") ||
        (statement->get_name() == "coord-query") ||
+       (statement->get_name() == "bbox-query") ||
        (statement->get_name() == "print") ||
        (statement->get_name() == "conflict") ||
        (statement->get_name() == "report") ||
@@ -316,7 +337,7 @@ void finish_statement_forecast()
     element_count += 29*it->second.way_count;
     element_count += 26*it->second.relation_count;
   }
-  if (element_count > 10*1000*1000)
+  if ((element_limit == 0) && (element_count > 10*1000*1000))
     add_sanity_error("Number of elements exceeds limit of 10,000,000 elements.");
 }
 

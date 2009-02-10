@@ -524,6 +524,51 @@ int display_sanity_errors(ostream& out, const string& input)
   return 1;
 }
 
+void static_analysis(ostream& out, const string& input)
+{
+  out_error_header(out, "Static Script Analysis");
+  
+  out<<"<h1>Static Script Analysis</h1>\n";
+  out<<"<p><a href=\"#input\">Your Input</a>.\n<br/>"
+      <<"<p><a href=\"#encoding\">Encoding Remarks</a>.\n<br/>"
+      <<"<p><a href=\"#static\">Static Remarks</a>.\n<br/>"
+      <<"<p><a href=\"#flow\">Flow Forecast</a>.\n<br/></p>\n";
+  
+  out_input_tagged(out, input, static_errors);
+
+  out<<"<a id=\"encoding\"><h2>Encoding Remarks</h2>\n";
+  for (vector< Error >::const_iterator it(encoding_errors.begin());
+       it != encoding_errors.end(); ++it)
+  {
+    if (it->type == Error::ERROR)
+      out<<"<p><strong style=\"color:#FF0000\">Error</strong>: ";
+    else
+      out<<"<p><strong style=\"color:#00BB00\">Remark</strong>: ";
+    out<<it->text<<"</p>\n";
+  }
+  out<<"</a>\n";
+  
+  unsigned int i(0);
+  out<<"<a id=\"static\"><h2>Static Remarks</h2></a>\n";
+  for (vector< Error >::const_iterator it(static_errors.begin());
+       it != static_errors.end(); ++it)
+  {
+    out<<"<a id=\"err"<<++i<<"\">";
+    if (it->type == Error::ERROR)
+      out<<"<p><strong style=\"color:#FF0000\">Error</strong>";
+    else
+      out<<"<p><strong style=\"color:#00BB00\">Remark</strong>";
+    if (it->line_number > 0)
+      out<<" in line <strong>"<<it->line_number<<"</strong>";
+    out<<":\n"<<it->text<<"</p></a>\n";
+  }
+  
+  out<<"<a id=\"flow\"><h2>Flow Forecast</h2></a>\n";
+  out<<sanity_out.str();
+  
+  out_error_footer(out);
+}
+
 void display_verbatim(const string& text, ostream& out)
 {
   sanity_out<<"<pre>";
@@ -568,6 +613,8 @@ void runtime_remark(const string& error, ostream& out)
     out<<"<p>The following error occured while running your script:</p>\n";
     out<<"<p><strong style=\"color:#00BB00\">Remark</strong>: "<<error<<"</p>\n";
   
+    out<<"<p><strong style=\"color:#00BB00\">Remark</strong>: "<<error<<"</p>\n";
+    
     out_error_footer(out);
   }
   else if (header_state == WRITTEN_HTML)
@@ -589,6 +636,15 @@ void statement_finished(const Statement* stmt)
     cout<<"<h1>Runtime Error</h1>\n";
     cout<<"<p>The following error occured while running your script:</p>\n";
   
+    cout<<"<p><strong style=\"color:#00BB00\">Runtime state</strong>: "
+	<<"Your program finished \""<<stmt->get_name()<<"\" from line "<<stmt->get_line_number()
+	<<" at "<<(uintmax_t)time(NULL)<<" seconds after Epoch.";
+    cout<<" Stack: ";
+    for (vector< pair< int, int > >::const_iterator it(get_stack().begin());
+	 it != get_stack().end(); ++it)
+      cout<<it->first<<' '<<it->second<<' ';
+    cout<<"</p>\n";
+    
     out_error_footer(cout);
   }
   else if (header_state == WRITTEN_HTML)
@@ -613,4 +669,16 @@ void statement_finished(const Statement* stmt)
       cout<<it->first<<' '<<it->second<<' ';
     cout<<"</remark>\n";
   }
+}
+
+int debug_mode(0);
+
+void set_debug_mode(int mode)
+{
+  debug_mode = mode;
+}
+
+int get_debug_mode()
+{
+  return debug_mode;
 }

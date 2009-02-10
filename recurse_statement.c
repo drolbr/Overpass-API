@@ -20,6 +20,7 @@ const unsigned int RECURSE_WAY_NODE = 1;
 const unsigned int RECURSE_RELATION_RELATION = 2;
 const unsigned int RECURSE_RELATION_WAY = 3;
 const unsigned int RECURSE_RELATION_NODE = 4;
+const unsigned int RECURSE_NODE_WAY = 5;
 
 void Recurse_Statement::set_attributes(const char **attr)
 {
@@ -42,6 +43,8 @@ void Recurse_Statement::set_attributes(const char **attr)
     type = RECURSE_RELATION_WAY;
   else if (attributes["type"] == "relation-node")
     type = RECURSE_RELATION_NODE;
+  else if (attributes["type"] == "node-way")
+    type = RECURSE_NODE_WAY;
   else
   {
     type = 0;
@@ -79,6 +82,11 @@ void Recurse_Statement::forecast(MYSQL* mysql)
       sf_io.node_count += 2*sf_io.relation_count;
       declare_used_time(100*sf_io.relation_count);
     }
+    else if (type == RECURSE_NODE_WAY)
+    {
+      sf_io.way_count += sf_io.node_count/2;
+      declare_used_time(sf_io.node_count/1000); //TODO
+    }
     
     finish_statement_forecast();
 
@@ -109,6 +117,11 @@ void Recurse_Statement::forecast(MYSQL* mysql)
     {
       sf_out.node_count += 2*sf_in.relation_count;
       declare_used_time(100*sf_in.relation_count);
+    }
+    else if (type == RECURSE_NODE_WAY)
+    {
+      sf_out.way_count += sf_in.node_count/2;
+      declare_used_time(sf_in.node_count/1000); //TODO
     }
     
     finish_statement_forecast();
@@ -194,5 +207,18 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     
     multiint_to_multiNode_query
 	(mysql, "select id, lat, lon from nodes where id in", "order by id", tnodes, *nodes);
+  }
+  else if (type == RECURSE_NODE_WAY)
+  {
+    set< int > tways;
+    multiNode_to_multiint_query
+	(mysql, "select way_members.id from ways "
+	"left join way_members on way_members.id = ways.id "
+	    "where way_members.ref in", "group by way_members.id", mit->second.get_nodes(), tways);
+    
+    multiint_to_multiWay_query
+	(mysql, "select ways.id, way_members.count, way_members.ref from ways "
+	"left join way_members on way_members.id = ways.id "
+	    "where ways.id in", "order by ways.id", tways, *ways);
   }
 }

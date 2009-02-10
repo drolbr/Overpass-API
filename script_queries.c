@@ -611,13 +611,6 @@ typedef unsigned long long uint64;
 
 //-----------------------------------------------------------------------------
 
-const unsigned int BLOCKSIZE = 512*1024;
-const char* NODE_DATA = "/opt/osm_why_api/nodes.dat";
-const char* NODE_IDX = "/opt/osm_why_api/nodes.b.idx";
-const char* NODE_IDXA = "/opt/osm_why_api/nodes.1.idx";
-
-//-----------------------------------------------------------------------------
-
 set< Node >& multiint_to_multiNode_query(const set< int >& source, set< Node >& result_set)
 {
   int nodes_dat_fd = open64(NODE_IDXA, O_RDONLY);
@@ -673,4 +666,147 @@ set< Node >& multiint_to_multiNode_query(const set< int >& source, set< Node >& 
   free(buf_count);
   
   return result_set;
+}
+
+void multiRange_to_multiNode_query
+    (const set< pair< int, int > >& in_inside, const set< pair< int, int > >& in_border,
+     set< Node >& res_inside, set< Node >& res_border)
+{
+  vector< pair< int32, uint32 > > block_index;
+
+  int nodes_idx_fd = open64(NODE_IDX, O_RDONLY);
+  if (nodes_idx_fd < 0)
+  {
+    ostringstream temp;
+    temp<<"open64: "<<errno;
+    runtime_error(temp.str(), cout);
+    return;
+  }
+  
+  int32* buf = (int32*) malloc(sizeof(int32)*2);
+  while (read(nodes_idx_fd, buf, sizeof(int)*2))
+    block_index.push_back(make_pair< int32, uint32 >(buf[0], buf[1]));
+  close(nodes_idx_fd);
+  
+  int nodes_dat_fd = open64(NODE_DATA, O_RDONLY);
+  if (nodes_dat_fd < 0)
+  {
+    ostringstream temp;
+    temp<<"open64: "<<errno;
+    runtime_error(temp.str(), cout);
+    free(buf);
+    return;
+  }
+  
+  int32* buf_count = (int32*) malloc(sizeof(int) + BLOCKSIZE*sizeof(Node));
+  Node* nd_buf = (Node*) &buf_count[1];
+  set< pair< int, int > >::const_iterator it_inside(in_inside.begin());
+  set< pair< int, int > >::const_iterator it_border(in_border.begin());
+  for (unsigned int i(1); i < block_index.size(); ++i)
+  {
+    bool block_inside((it_inside != in_inside.end()) &&
+	(it_inside->first <= block_index[i].first));
+    bool block_border((it_border != in_border.end()) &&
+	(it_border->first <= block_index[i].first));
+    if (block_inside || block_border)
+    {
+      lseek64(nodes_dat_fd,
+	      (int64)(block_index[i-1].second)*(sizeof(int) + BLOCKSIZE*sizeof(Node)), SEEK_SET);
+      read(nodes_dat_fd, buf_count, sizeof(int) + BLOCKSIZE*sizeof(Node));
+    }
+    if (block_inside)
+    {
+      for (int32 j(0); j < buf_count[0]; ++j)
+      {
+	int32 nd_idx(ll_idx(nd_buf[j].lat, nd_buf[j].lon));
+	if (nd_idx >= it_inside->first)
+	{
+	  if (nd_idx <= it_inside->second)
+	    res_inside.insert(nd_buf[j]);
+	  else
+	  {
+	    while ((it_inside != in_inside.end()) && (it_inside->second < nd_idx))
+	      ++it_inside;
+	    if (it_inside == in_inside.end())
+	      break;
+	    if (nd_idx <= it_inside->second)
+	      res_inside.insert(nd_buf[j]);
+	  }
+	}
+      }
+    }
+    if (block_border)
+    {
+      for (int32 j(0); j < buf_count[0]; ++j)
+      {
+	int32 nd_idx(ll_idx(nd_buf[j].lat, nd_buf[j].lon));
+	if (nd_idx >= it_border->first)
+	{
+	  if (nd_idx <= it_border->second)
+	    res_border.insert(nd_buf[j]);
+	  else
+	  {
+	    while ((it_border != in_border.end()) && (it_border->second < nd_idx))
+	      ++it_border;
+	    if (it_border == in_border.end())
+	      break;
+	    if (nd_idx <= it_border->second)
+	      res_border.insert(nd_buf[j]);
+	  }
+	}
+      }
+    }
+    while ((it_inside != in_inside.end()) && (it_inside->second < block_index[i].first))
+      ++it_inside;
+    while ((it_border != in_border.end()) && (it_border->second < block_index[i].first))
+      ++it_border;
+  }
+  
+  close(nodes_dat_fd);
+  
+  free(buf);
+  free(buf_count);
+}
+
+int multiRange_to_count_query
+    (const set< pair< int, int > >& in_inside, const set< pair< int, int > >& in_border)
+{
+  vector< pair< int32, uint32 > > block_index;
+
+  int nodes_idx_fd = open64(NODE_IDX, O_RDONLY);
+  if (nodes_idx_fd < 0)
+  {
+    ostringstream temp;
+    temp<<"open64: "<<errno;
+    runtime_error(temp.str(), cout);
+    return 0;
+  }
+  
+  int32* buf = (int32*) malloc(sizeof(int32)*2);
+  while (read(nodes_idx_fd, buf, sizeof(int)*2))
+    block_index.push_back(make_pair< int32, uint32 >(buf[0], buf[1]));
+  close(nodes_idx_fd);
+  
+  int count(0);
+  set< pair< int, int > >::const_iterator it_inside(in_inside.begin());
+  set< pair< int, int > >::const_iterator it_border(in_border.begin());
+  for (unsigned int i(1); i < block_index.size(); ++i)
+  {
+    while ((it_inside != in_inside.end()) && (it_inside->second < block_index[i].first))
+    {
+      count += (long long)BLOCKSIZE*
+	  (it_inside->second - it_inside->first + 1)/(block_index[i].first - block_index[i-1].first + 1);
+      ++it_inside;
+    }
+    while ((it_border != in_border.end()) && (it_border->second < block_index[i].first))
+    {
+      count += (long long)BLOCKSIZE*
+	  (it_border->second - it_border->first + 1)/(block_index[i].first - block_index[i-1].first + 1);
+      ++it_border;
+    }
+  }
+  
+  free(buf);
+  
+  return count;
 }

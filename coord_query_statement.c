@@ -38,7 +38,7 @@ void Coord_Query_Statement::set_attributes(const char **attr)
     add_static_error(temp.str());
   }
   double lon_d(atof(attributes["lon"].c_str()));
-  if ((lon_d < -180.0) || (lat_d > 180.0) || (attributes["lon"] == ""))
+  if ((lon_d < -180.0) || (lon_d > 180.0) || (attributes["lon"] == ""))
   {
     ostringstream temp;
     temp<<"For the attribute \"lon\" of the element \"coord-query\""

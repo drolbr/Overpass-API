@@ -277,4 +277,14 @@ inline int in_lat_lon(const string& input)
 //     return (minus ? -res : res);
 // }
 
+//-----------------------------------------------------------------------------
+
+const unsigned int BLOCKSIZE = 512*1024;
+extern const char* NODE_DATA;
+extern const char* NODE_IDX;
+extern const char* NODE_IDXA;
+
+const unsigned int MAXWAYNODES = 1024*1024;
+extern const char* WAY_ALLTMP;
+
 #endif

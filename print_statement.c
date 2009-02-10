@@ -54,10 +54,10 @@ void Print_Statement::forecast(MYSQL* mysql)
   const Set_Forecast& sf_in(declare_read_set(input));
     
   if (mode == PRINT_IDS_ONLY)
-    declare_used_time(1 + sf_in.node_count/20 + sf_in.way_count/20 + sf_in.relation_count/20
+    declare_used_time(1 + sf_in.node_count/100 + sf_in.way_count/100 + sf_in.relation_count/100
 	+ sf_in.area_count/20);
   else if (mode == PRINT_SKELETON)
-    declare_used_time(1 + sf_in.node_count/5 + sf_in.way_count/5 + sf_in.relation_count/5
+    declare_used_time(1 + sf_in.node_count/50 + sf_in.way_count/5 + sf_in.relation_count/5
 	+ sf_in.area_count/5);
   else if (mode == PRINT_BODY)
     declare_used_time(10 + sf_in.node_count + sf_in.way_count + sf_in.relation_count

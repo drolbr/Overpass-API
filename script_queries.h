@@ -54,4 +54,13 @@ set< int >& multiRelation_to_multiint_query
 
 set< Node >& multiint_to_multiNode_query(const set< int >& source, set< Node >& result_set);
 
+// in_inside and in_border contain each a list of pairwise distinct intervals of ll_idxes.
+// The nodes with ll_idx in in_inside will be returned in res_inside, the nodes with ll_idx
+// in in_border will be returned in res_border
+void multiRange_to_multiNode_query
+    (const set< pair< int, int > >& in_inside, const set< pair< int, int > >& in_border,
+     set< Node >& res_inside, set< Node >& res_border);
+int multiRange_to_count_query
+    (const set< pair< int, int > >& in_inside, const set< pair< int, int > >& in_border);
+
 #endif

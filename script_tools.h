@@ -132,7 +132,7 @@ class Root_Statement : public Statement
     
   private:
     vector< Statement* > substatements;
-    int timeout;
+    int timeout, elem_limit;
     string name;
     int replace, version;
 };
