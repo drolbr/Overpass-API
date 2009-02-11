@@ -152,21 +152,12 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   if (type == RECURSE_WAY_NODE)
   {
     set< int > tnodes;
-/*    multiWay_to_multiint_query
-	(mysql, "select way_members.ref from ways "
-	"left join way_members on way_members.id = ways.id "
-	"where ways.id in", "order by ways.id", mit->second.get_ways(), tnodes);
-    
-    multiint_to_multiNode_query
-	(mysql, "select id, lat, lon from nodes where id in", "order by id", tnodes, *nodes);*/
     multiWay_to_multiint_query
 	(mysql, "select way_members.ref from ways "
 	"left join way_members on way_members.id = ways.id "
 	    "where ways.id in", "", mit->second.get_ways(), tnodes);
     
     multiint_to_multiNode_query(tnodes, *nodes);
-    //multiint_to_multiNode_query
-	//(mysql, "select id, lat, lon from nodes where id in", "", tnodes, *nodes);
   }
   else if (type == RECURSE_RELATION_RELATION)
   {
@@ -192,10 +183,7 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	"left join relation_way_members on relation_way_members.id = relations.id "
 	"where relations.id in", "order by relations.id", mit->second.get_relations(), tways);
     
-    multiint_to_multiWay_query
-	(mysql, "select ways.id, way_members.count, way_members.ref from ways "
-	"left join way_members on way_members.id = ways.id "
-	"where ways.id in", "order by ways.id", tways, *ways);
+    multiint_to_multiWay_query(tways, *ways);
   }
   else if (type == RECURSE_RELATION_NODE)
   {
@@ -205,20 +193,17 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	"left join relation_node_members on relation_node_members.id = relations.id "
 	"where relations.id in", "order by relations.id", mit->second.get_relations(), tnodes);
     
-    multiint_to_multiNode_query
-	(mysql, "select id, lat, lon from nodes where id in", "order by id", tnodes, *nodes);
+    multiint_to_multiNode_query(tnodes, *nodes);
   }
   else if (type == RECURSE_NODE_WAY)
   {
-    set< int > tways;
+    multiNode_to_multiWay_query(mit->second.get_nodes(), *ways);
+/*    set< int > tways;
     multiNode_to_multiint_query
 	(mysql, "select way_members.id from ways "
 	"left join way_members on way_members.id = ways.id "
 	    "where way_members.ref in", "group by way_members.id", mit->second.get_nodes(), tways);
     
-    multiint_to_multiWay_query
-	(mysql, "select ways.id, way_members.count, way_members.ref from ways "
-	"left join way_members on way_members.id = ways.id "
-	    "where ways.id in", "order by ways.id", tways, *ways);
+    multiint_to_multiWay_query(tways, *ways);*/
   }
 }

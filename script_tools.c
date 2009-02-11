@@ -23,6 +23,10 @@ const char* NODE_DATA = "/opt/osm_why_api/nodes.dat";
 const char* NODE_IDX = "/opt/osm_why_api/nodes.b.idx";
 const char* NODE_IDXA = "/opt/osm_why_api/nodes.1.idx";
 
+const char* WAY_DATA = "/opt/osm_why_api/ways.dat";
+const char* WAY_IDX = "/opt/osm_why_api/ways.b.idx";
+const char* WAY_IDXA = "/opt/osm_why_api/ways.1.idx";
+const char* WAY_IDXSPAT = "/opt/osm_why_api/ways.spatial.idx";
 const char* WAY_ALLTMP = "/tmp/ways.dat";
 
 static string rule_name_;

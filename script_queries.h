@@ -63,4 +63,7 @@ void multiRange_to_multiNode_query
 int multiRange_to_count_query
     (const set< pair< int, int > >& in_inside, const set< pair< int, int > >& in_border);
 
+set< Way >& multiint_to_multiWay_query(const set< int >& source, set< Way >& result_set);
+set< Way >& multiNode_to_multiWay_query(const set< Node >& source, set< Way >& result_set);
+
 #endif

@@ -626,7 +626,7 @@ set< Node >& multiint_to_multiNode_query(const set< int >& source, set< Node >& 
   int16 idx_buf(0);
   for (set< int >::const_iterator it(source.begin()); it != source.end(); ++it)
   {
-    lseek64(nodes_dat_fd, (*it)*sizeof(int16), SEEK_SET);
+    lseek64(nodes_dat_fd, ((*it)-1)*sizeof(int16), SEEK_SET);
     read(nodes_dat_fd, &idx_buf, sizeof(int16));
     blocks.insert(idx_buf);
   }
@@ -809,4 +809,145 @@ int multiRange_to_count_query
   free(buf);
   
   return count;
+}
+
+//-----------------------------------------------------------------------------
+
+set< Way >& multiint_to_multiWay_query(const set< int >& source, set< Way >& result_set)
+{
+  int ways_dat_fd = open64(WAY_IDXA, O_RDONLY);
+  if (ways_dat_fd < 0)
+  {
+    ostringstream temp;
+    temp<<"open64: "<<errno;
+    runtime_error(temp.str(), cout);
+    return result_set;
+  }
+  
+  set< int > blocks;
+  int16 idx_buf(0);
+  for (set< int >::const_iterator it(source.begin()); it != source.end(); ++it)
+  {
+    lseek64(ways_dat_fd, ((*it)-1)*sizeof(int16), SEEK_SET);
+    read(ways_dat_fd, &idx_buf, sizeof(int16));
+    blocks.insert(idx_buf);
+  }
+  
+  close(ways_dat_fd);
+  
+  uint32* way_buf = (uint32*) malloc(sizeof(uint32) + WAY_BLOCKSIZE*sizeof(uint32));
+  if (!way_buf)
+  {
+    runtime_error("Bad alloc in way query", cout);
+    return result_set;
+  }
+
+  ways_dat_fd = open64(WAY_DATA, O_RDONLY);
+  if (ways_dat_fd < 0)
+  {
+    ostringstream temp;
+    temp<<"open64: "<<errno;
+    runtime_error(temp.str(), cout);
+    return result_set;
+  }
+  
+  for (set< int >::const_iterator it(blocks.begin()); it != blocks.end(); ++it)
+  {
+    lseek64(ways_dat_fd, (int64)(*it)*(sizeof(uint32) + WAY_BLOCKSIZE*sizeof(uint32)), SEEK_SET);
+    read(ways_dat_fd, way_buf, sizeof(uint32) + WAY_BLOCKSIZE*sizeof(uint32));
+    for (uint32 i(1); i < way_buf[0]; i += way_buf[i+2]+3)
+    {
+      if (source.find(way_buf[i]) != source.end())
+      {
+	Way way(way_buf[i]);
+	for (uint32 j(0); j < way_buf[i+2]; ++j)
+	  way.members.push_back(way_buf[j+i+3]);
+	result_set.insert(way);
+      }
+    }
+  }
+
+  close(ways_dat_fd);
+  
+  free(way_buf);
+  
+  return result_set;
+}
+
+set< Way >& multiNode_to_multiWay_query(const set< Node >& source, set< Way >& result_set)
+{
+  int ways_dat_fd = open64(WAY_IDXSPAT, O_RDONLY);
+  if (ways_dat_fd < 0)
+  {
+    ostringstream temp;
+    temp<<"open64: "<<errno;
+    runtime_error(temp.str(), cout);
+    return result_set;
+  }
+  uint32 spat_idx_buf_size(lseek64(ways_dat_fd, 0, SEEK_END)/sizeof(pair< int32, uint16 >));
+  pair< int32, uint16 >* spat_idx_buf = (pair< int32, uint16 >*)
+      malloc(spat_idx_buf_size * sizeof(pair< int32, uint16 >));
+  if (!spat_idx_buf)
+  {
+    runtime_error("Bad alloc in way query", cout);
+    return result_set;
+  }
+  lseek64(ways_dat_fd, 0, SEEK_SET);
+  read(ways_dat_fd, spat_idx_buf, spat_idx_buf_size * sizeof(pair< int32, uint16 >));
+  close(ways_dat_fd);
+  
+  set< int > ll_idxs;
+  for (set< Node >::const_iterator it(source.begin()); it != source.end(); ++it)
+    ll_idxs.insert(ll_idx(it->lat, it->lon) & WAY_IDX_BITMASK);
+  
+  set< int > blocks;
+  for (uint32 i(0); i < spat_idx_buf_size; ++i)
+  {
+    if (ll_idxs.find((spat_idx_buf[i].first)) != ll_idxs.end())
+      blocks.insert(spat_idx_buf[i].second);
+  }
+  
+  free(spat_idx_buf);
+  
+  uint32* way_buf = (uint32*) malloc(sizeof(uint32) + WAY_BLOCKSIZE*sizeof(uint32));
+  if (!way_buf)
+  {
+    runtime_error("Bad alloc in way query", cout);
+    return result_set;
+  }
+
+  ways_dat_fd = open64(WAY_DATA, O_RDONLY);
+  if (ways_dat_fd < 0)
+  {
+    free(way_buf);
+    ostringstream temp;
+    temp<<"open64: "<<errno;
+    runtime_error(temp.str(), cout);
+    return result_set;
+  }
+  
+  for (set< int >::const_iterator it(blocks.begin()); it != blocks.end(); ++it)
+  {
+    lseek64(ways_dat_fd, (int64)(*it)*(sizeof(uint32) + WAY_BLOCKSIZE*sizeof(uint32)), SEEK_SET);
+    read(ways_dat_fd, way_buf, sizeof(uint32) + WAY_BLOCKSIZE*sizeof(uint32));
+    for (uint32 i(1); i < way_buf[0]; i += way_buf[i+2]+3)
+    {
+      for (uint32 j(0); j < way_buf[i+2]; ++j)
+      {
+	if (source.find(Node(way_buf[j+i+3], 200*10*1000*1000, 0)) != source.end())
+	{
+	  Way way(way_buf[i]);
+	  for (j = 0; j < way_buf[i+2]; ++j)
+	    way.members.push_back(way_buf[j+i+3]);
+	  result_set.insert(way);
+	}
+      }
+    }
+  }
+
+  close(ways_dat_fd);
+  
+  free(way_buf);
+  
+  return result_set;
 }

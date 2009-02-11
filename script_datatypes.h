@@ -284,6 +284,12 @@ extern const char* NODE_DATA;
 extern const char* NODE_IDX;
 extern const char* NODE_IDXA;
 
+const unsigned int WAY_BLOCKSIZE = 1024*1024;
+extern const char* WAY_DATA;
+extern const char* WAY_IDX;
+extern const char* WAY_IDXA;
+const unsigned int WAY_IDX_BITMASK = 0xfffff000;
+extern const char* WAY_IDXSPAT;
 const unsigned int MAXWAYNODES = 1024*1024;
 extern const char* WAY_ALLTMP;
 
