@@ -3,3 +3,7 @@ cgi-bin/get_rule
 cgi-bin/interpreter
 cgi-bin/update_rule
 testfiles
+dump_rules
+load_rules
+osmy_vigilance
+
