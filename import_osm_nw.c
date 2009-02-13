@@ -657,13 +657,14 @@ void postprocess_ways_4()
 
 //-----------------------------------------------------------------------------
 
-// const int NODE = 1;
-// const int WAY = 2;
-// const int RELATION = 3;
+const int NODE = 1;
+const int WAY = 2;
+const int RELATION = 3;
 // int tag_type(0);
 // unsigned int current_id(0);
 
 const unsigned int FLUSH_INTERVAL = 32*1024*1024;
+const unsigned int FLUSH_TAGS_INTERVAL = 1024*1024;
 const unsigned int DOT_INTERVAL = 512*1024;
 unsigned int structure_count(0);
 int state(0);
@@ -677,9 +678,97 @@ uint32 way_buf_pos(0);
 
 multimap< int, Node > nodes;
 
+//-----------------------------------------------------------------------------
+
+struct KeyValue
+{
+  KeyValue(string key_, string value_) : key(key_), value(value_) {}
+  
+  string key, value;
+};
+
+inline bool operator<(const KeyValue& kv_1, const KeyValue& kv_2)
+{
+  if (kv_1.key < kv_2.key)
+    return true;
+  else if (kv_1.key > kv_2.key)
+    return false;
+  return (kv_1.value < kv_2.value);
+}
+
+struct NodeCollection
+{
+  NodeCollection() : position(0), bitmask(0) {}
+  
+  void insert(int32 node_id, int32 ll_idx)
+  {
+    if (nodes.empty())
+    {
+      position = ll_idx;
+      bitmask = 0;
+    }
+    nodes.push_back(node_id);
+    bitmask |= (position ^ ll_idx);
+  }
+  
+  int32 position;
+  uint32 bitmask;
+  vector< int32 > nodes;
+};
+
+map< KeyValue, NodeCollection > node_tags;
+int current_type(0);
+int32 current_id;
+int32 current_ll_idx;
+set< string > allowed_node_tags;
+bool no_tag_limit(true);
+uint tag_count(0);
+
 void start(const char *el, const char **attr)
 {
-  if (!strcmp(el, "nd"))
+  if (!strcmp(el, "tag"))
+  {
+    if (current_type != 0)
+    {
+      string key(""), value("");
+      for (unsigned int i(0); attr[i]; i += 2)
+      {
+	if (!strcmp(attr[i], "k"))
+	  key = attr[i+1];
+	if (!strcmp(attr[i], "v"))
+	  value = attr[i+1];
+      }
+      // patch cope with server power limits by ignoring uncommon node tags
+      if ((current_type != NODE) || (no_tag_limit) ||
+	   (allowed_node_tags.find(key) != allowed_node_tags.end()))
+      {
+	NodeCollection& nc(node_tags[KeyValue(key, value)]);
+	nc.insert(current_id, current_ll_idx);
+	if (++tag_count >= FLUSH_TAGS_INTERVAL)
+	{
+	  int spread_0(0), spread_8(0), spread_16(0), spread_24(0);
+	  for (map< KeyValue, NodeCollection >::const_iterator it(node_tags.begin());
+		      it != node_tags.end(); ++it)
+	  {
+	    cout<<'['<<it->first.key<<"]["<<it->first.value<<"]: "
+		<<hex<<it->second.bitmask<<' '<<dec<<it->second.nodes.size()<<'\n';
+	    if (it->second.bitmask>>24)
+	      ++spread_0;
+	    else if (it->second.bitmask>>16)
+	      ++spread_8;
+	    else if (it->second.bitmask>>8)
+	      ++spread_16;
+	    else
+	      ++spread_24;
+	  }
+	  cout<<"Stats: "<<spread_0<<' '<<spread_8<<' '<<spread_16<<' '<<spread_24<<"\n\n";
+	  node_tags.clear();
+	  tag_count = 0;
+	}
+      }
+    }
+  }
+  else if (!strcmp(el, "nd"))
   {
     if (way_buf_pos < MAXWAYNODES)
     {
@@ -708,18 +797,42 @@ void start(const char *el, const char **attr)
     }
     nodes.insert(make_pair< int, Node >
 	(ll_idx(lat, lon), Node(id, lat, lon)));
+    
+    current_type = NODE;
+    current_id = id;
+    current_ll_idx = ll_idx(lat, lon);
   }
   else if (!strcmp(el, "way"))
   {
     if (state == NODES)
     {
-      flush_nodes(nodes);
+      {
+	int spread_0(0), spread_8(0), spread_16(0), spread_24(0);
+	for (map< KeyValue, NodeCollection >::const_iterator it(node_tags.begin());
+		    it != node_tags.end(); ++it)
+	{
+	  cout<<'['<<it->first.key<<"]["<<it->first.value<<"]: "
+	      <<hex<<it->second.bitmask<<' '<<dec<<it->second.nodes.size()<<'\n';
+	  if (it->second.bitmask>>24)
+	    ++spread_0;
+	  else if (it->second.bitmask>>16)
+	    ++spread_8;
+	  else if (it->second.bitmask>>8)
+	    ++spread_16;
+	  else
+	    ++spread_24;
+	}
+	cout<<"Stats: "<<spread_0<<' '<<spread_8<<' '<<spread_16<<' '<<spread_24<<"\n\n";
+	tag_count = 0;
+      }
+      exit(0);
+      //flush_nodes(nodes);
       nodes.clear();
-      postprocess_nodes();
+      //postprocess_nodes();
       
       state = WAYS;
       
-      ways_fd = prepare_ways(way_buf);
+      //ways_fd = prepare_ways(way_buf);
     }
     uint32 id(0);
     for (unsigned int i(0); attr[i]; i += 2)
@@ -736,10 +849,10 @@ void start(const char *el, const char **attr)
   {
     if (state == WAYS)
     {
-      postprocess_ways(ways_fd, way_buf);
+/*      postprocess_ways(ways_fd, way_buf);
       postprocess_ways_2();
       postprocess_ways_3();
-      postprocess_ways_4();
+      postprocess_ways_4();*/
       
       state = 0;
     }
@@ -756,6 +869,7 @@ void end(const char *el)
   }
   else if (!strcmp(el, "node"))
   {
+    current_type = 0;
     ++structure_count;
     if (structure_count % DOT_INTERVAL == 0)
       cerr<<'.';
@@ -765,7 +879,7 @@ void end(const char *el)
     if (way_buf_pos < MAXWAYNODES)
     {
       way_buf[1] = way_buf_pos;
-      write(ways_fd, way_buf, sizeof(uint32)*(way_buf_pos+2));
+      //write(ways_fd, way_buf, sizeof(uint32)*(way_buf_pos+2));
     }
   }
   else if (!strcmp(el, "relation"))
@@ -775,7 +889,7 @@ void end(const char *el)
   {
     if (state == NODES)
     {
-      flush_nodes(nodes);
+      //flush_nodes(nodes);
       nodes.clear();
     }
     
@@ -785,6 +899,70 @@ void end(const char *el)
 
 int main(int argc, char *argv[])
 {
+  int i(0);
+  while (++i < argc)
+  {
+    if (!strcmp(argv[i], "--limit-node-tags"))
+      no_tag_limit = false;
+    else
+    {
+      cout<<"Usage: "<<argv[0]<<" [--limit-node-tags]\n";
+      return 0;
+    }
+  }
+  
+  // patch cope with server power limits by ignoring uncommon node tags
+  allowed_node_tags.insert("highway");
+  allowed_node_tags.insert("traffic-calming");
+  allowed_node_tags.insert("barrier");
+  allowed_node_tags.insert("waterway");
+  allowed_node_tags.insert("lock");
+  allowed_node_tags.insert("railway");
+  allowed_node_tags.insert("aeroway");
+  allowed_node_tags.insert("aerialway");
+  allowed_node_tags.insert("power");
+  allowed_node_tags.insert("man_made");
+  allowed_node_tags.insert("leisure");
+  allowed_node_tags.insert("amenity");
+  allowed_node_tags.insert("shop");
+  allowed_node_tags.insert("tourism");
+  allowed_node_tags.insert("historic");
+  allowed_node_tags.insert("landuse");
+  allowed_node_tags.insert("military");
+  allowed_node_tags.insert("natural");
+  allowed_node_tags.insert("route");
+  allowed_node_tags.insert("sport");
+  allowed_node_tags.insert("bridge");
+  allowed_node_tags.insert("crossing");
+  allowed_node_tags.insert("mountain_pass");
+  allowed_node_tags.insert("ele");
+  allowed_node_tags.insert("operator");
+  allowed_node_tags.insert("opening-hours");
+  allowed_node_tags.insert("disused");
+  allowed_node_tags.insert("wheelchair");
+  allowed_node_tags.insert("noexit");
+  allowed_node_tags.insert("traffic_sign");
+  allowed_node_tags.insert("name");
+  allowed_node_tags.insert("alt_name");
+  allowed_node_tags.insert("int_name");
+  allowed_node_tags.insert("nat_name");
+  allowed_node_tags.insert("reg_name");
+  allowed_node_tags.insert("loc_name");
+  allowed_node_tags.insert("ref");
+  allowed_node_tags.insert("int_ref");
+  allowed_node_tags.insert("nat_ref");
+  allowed_node_tags.insert("reg_ref");
+  allowed_node_tags.insert("loc_ref");
+  allowed_node_tags.insert("old_ref");
+  allowed_node_tags.insert("source_ref");
+  allowed_node_tags.insert("icao");
+  allowed_node_tags.insert("iata");
+  allowed_node_tags.insert("place");
+  allowed_node_tags.insert("place_numbers");
+  allowed_node_tags.insert("postal_code");
+  allowed_node_tags.insert("is_in");
+  allowed_node_tags.insert("population");
+  
   cerr<<(uintmax_t)time(NULL)<<'\n';
   
   //TEMP
@@ -796,7 +974,7 @@ int main(int argc, char *argv[])
   cerr<<(uintmax_t)time(NULL)<<'\n';
   return 0;*/
   
-  prepare_nodes();
+  //prepare_nodes();
   
   state = NODES;
   
@@ -805,16 +983,16 @@ int main(int argc, char *argv[])
   
   if (state == NODES)
   {
-    flush_nodes(nodes);
+    //flush_nodes(nodes);
     nodes.clear();
-    postprocess_nodes();
+    //postprocess_nodes();
   }
   else if (state == WAYS)
   {
-    postprocess_ways(ways_fd, way_buf);
+/*    postprocess_ways(ways_fd, way_buf);
     postprocess_ways_2();
     postprocess_ways_3();
-    postprocess_ways_4();
+    postprocess_ways_4();*/
   }
   
   cerr<<'\n'<<(uintmax_t)time(NULL)<<'\n';

@@ -131,6 +131,42 @@ void Recurse_Statement::forecast(MYSQL* mysql)
   }
 }
 
+void multiWay_to_multiint_collect(const set< Way >& source, set< int >& result_set)
+{
+  for (set< Way >::const_iterator it(source.begin()); it != source.end(); ++it)
+  {
+    for(vector< int >::const_iterator it2(it->members.begin()); it2 != it->members.end(); ++it2)
+      result_set.insert(*it2);
+  }
+}
+
+void multiRelation_to_multiint_collect_relations(const set< Relation >& source, set< int >& result_set)
+{
+  for (set< Relation >::const_iterator it(source.begin()); it != source.end(); ++it)
+  {
+    for(set< pair< int, int > >::const_iterator it2(it->relation_members.begin()); it2 != it->relation_members.end(); ++it2)
+      result_set.insert(it2->first);
+  }
+}
+
+void multiRelation_to_multiint_collect_ways(const set< Relation >& source, set< int >& result_set)
+{
+  for (set< Relation >::const_iterator it(source.begin()); it != source.end(); ++it)
+  {
+    for(set< pair< int, int > >::const_iterator it2(it->way_members.begin()); it2 != it->way_members.end(); ++it2)
+      result_set.insert(it2->first);
+  }
+}
+
+void multiRelation_to_multiint_collect_nodes(const set< Relation >& source, set< int >& result_set)
+{
+  for (set< Relation >::const_iterator it(source.begin()); it != source.end(); ++it)
+  {
+    for(set< pair< int, int > >::const_iterator it2(it->node_members.begin()); it2 != it->node_members.end(); ++it2)
+      result_set.insert(it2->first);
+  }
+}
+
 void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
   set< Node >* nodes(&(maps[output].get_nodes_handle()));
@@ -152,21 +188,13 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   if (type == RECURSE_WAY_NODE)
   {
     set< int > tnodes;
-    multiWay_to_multiint_query
-	(mysql, "select way_members.ref from ways "
-	"left join way_members on way_members.id = ways.id "
-	    "where ways.id in", "", mit->second.get_ways(), tnodes);
-    
+    multiWay_to_multiint_collect(mit->second.get_ways(), tnodes);
     multiint_to_multiNode_query(tnodes, *nodes);
   }
   else if (type == RECURSE_RELATION_RELATION)
   {
     set< int > rels;
-    multiRelation_to_multiint_query
-	(mysql, "select relation_relation_members.ref from relations "
-	"left join relation_relation_members on relation_relation_members.id = relations.id "
-	"where relations.id in", "order by relations.id", mit->second.get_relations(), rels);
-    
+    multiRelation_to_multiint_collect_relations(mit->second.get_relations(), rels);
     multiint_to_multiRelation_query
 	(mysql, "select id, ref, role from relation_node_members "
 	"where id in", "order by id",
@@ -178,32 +206,17 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   else if (type == RECURSE_RELATION_WAY)
   {
     set< int > tways;
-    multiRelation_to_multiint_query
-	(mysql, "select relation_way_members.ref from relations "
-	"left join relation_way_members on relation_way_members.id = relations.id "
-	"where relations.id in", "order by relations.id", mit->second.get_relations(), tways);
-    
+    multiRelation_to_multiint_collect_ways(mit->second.get_relations(), tways);
     multiint_to_multiWay_query(tways, *ways);
   }
   else if (type == RECURSE_RELATION_NODE)
   {
     set< int > tnodes;
-    multiRelation_to_multiint_query
-	(mysql, "select relation_node_members.ref from relations "
-	"left join relation_node_members on relation_node_members.id = relations.id "
-	"where relations.id in", "order by relations.id", mit->second.get_relations(), tnodes);
-    
+    multiRelation_to_multiint_collect_nodes(mit->second.get_relations(), tnodes);
     multiint_to_multiNode_query(tnodes, *nodes);
   }
   else if (type == RECURSE_NODE_WAY)
   {
     multiNode_to_multiWay_query(mit->second.get_nodes(), *ways);
-/*    set< int > tways;
-    multiNode_to_multiint_query
-	(mysql, "select way_members.id from ways "
-	"left join way_members on way_members.id = ways.id "
-	    "where way_members.ref in", "group by way_members.id", mit->second.get_nodes(), tways);
-    
-    multiint_to_multiWay_query(tways, *ways);*/
   }
 }

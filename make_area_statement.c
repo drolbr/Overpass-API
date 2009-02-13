@@ -299,9 +299,9 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       else
       {
 	if (floor(((double)from)/100000) == floor(((double)(*it))/100000))
-	  area.segments.insert(Line_Segment
-	      ((i-89)*10000000, ((double)(from))/10000000,
-		(i-89)*10000000, ((double)(*it))/10000000));
+	  area.segments.insert
+  	(Line_Segment((i-89)*10000000, (int)(((double)(from))/10000000),
+  	              (i-89)*10000000, (int)(((double)(*it))/10000000)));
 	else
 	{
 	  area.segments.insert(Line_Segment

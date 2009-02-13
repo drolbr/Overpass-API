@@ -85,57 +85,47 @@ void Id_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   if (ref == 0)
     return;
   
-  ostringstream temp;
+  set< Node >& nodes(maps[output].get_nodes_handle());
+  set< Way >& ways(maps[output].get_ways_handle());
+  set< Relation >& relations((maps[output].get_relations_handle()));
+  set< Area >& areas((maps[output].get_areas_handle()));
+  
+  nodes.clear();
+  ways.clear();
+  relations.clear();
+  areas.clear();
+  
   if (type == NODE)
-    temp<<"select id, lat, lon from nodes where id = "<<ref;
+  {
+    set< int > source;
+    source.insert(ref);
+    multiint_to_multiNode_query(source, nodes);
+    
+    return;
+  }
   else if (type == WAY)
-    temp<<"select ways.id, way_members.count, way_members.ref "
-	<<"from ways left join way_members on ways.id = way_members.id "
-	<<"where ways.id = "<<ref;
-  else if (type == RELATION)
+  {
+    set< int > source;
+    source.insert(ref);
+    multiint_to_multiWay_query(source, ways);
+    
+    return;
+  }
+  
+  ostringstream temp;
+  if (type == RELATION)
     temp<<"select relations.id, relation_node_members.ref, relation_node_members.role from relations "
 	<<"left join relation_node_members on relations.id = relation_node_members.id "
 	<<"where relations.id = "<<ref;
   else
     return;
   
-  set< Node > nodes;
-  set< Way > ways;
-  set< Relation > relations;
-  
   MYSQL_RES* result(mysql_query_wrapper(mysql, temp.str()));
   
   if (!result)
     return;
   
-  if (type == NODE)
-  {
-    MYSQL_ROW row(mysql_fetch_row(result));
-    if ((row) && (row[0]))
-    {
-      if ((row[1]) && (row[2]))
-	nodes.insert(Node(atoi(row[0]), atoi(row[1]), atoi(row[2])));
-    }
-  }
-  else if (type == WAY)
-  {
-    MYSQL_ROW row(mysql_fetch_row(result));
-    if ((row) && (row[0]))
-    {
-      Way way(atoi(row[0]));
-      way.members.reserve(16);
-      while ((row) && (row[1]) && (row[2]))
-      {
-	unsigned int count((unsigned int)atol(row[1]));
-	if (way.members.size() < count)
-	  way.members.resize(count);
-	way.members[count-1] = atoi(row[2]);
-	row = mysql_fetch_row(result);
-      }
-      ways.insert(way);
-    }
-  }
-  else if (type == RELATION)
+  if (type == RELATION)
   {
     MYSQL_ROW row(mysql_fetch_row(result));
     if ((row) && (row[0]))

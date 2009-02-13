@@ -271,144 +271,95 @@ void Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   if (key_values.size() == 0)
     return;
   
+  set< Node >& nodes(maps[output].get_nodes_handle());
+  set< Way >& ways(maps[output].get_ways_handle());
+  set< Relation >& relations((maps[output].get_relations_handle()));
+  set< Area >& areas((maps[output].get_areas_handle()));
+  
+  nodes.clear();
+  ways.clear();
+  relations.clear();
+  areas.clear();
+  
   if (type == QUERY_NODE)
   {
-    if (key_values.size() == 1)
+    ostringstream temp;
+    temp<<"select node_tags.id from node_tags ";
+    if (key_values.front().second == "")
     {
-      ostringstream temp;
-      temp<<"select nodes.id, nodes.lat, nodes.lon from nodes "
-	  <<"left join node_tags on nodes.id = node_tags.id ";
-      if (key_values.front().second == "")
-      {
-	temp<<"left join key_s on key_s.id = node_tags.key_ "
-	    <<"where key_s.key_ = \"";
-	escape_xml(temp, key_values.front().first);
-	temp<<"\" "
-	    <<"order by node_tags.id";
-      }
-      else
-      {
-	temp<<"left join key_s on key_s.id = node_tags.key_ "
-	    <<"left join value_s on value_s.id = node_tags.value_ "
-	    <<"where key_s.key_ = \"";
-	escape_xml(temp, key_values.front().first);
-	temp<<"\" and value_s.value_ = \"";
-	escape_xml(temp, key_values.front().second);
-	temp<<"\" order by node_tags.id";
-      }
-      
-      set< Node > nodes;
-      maps[output] = Set(multiNode_query(mysql, temp.str(), nodes),
-			 set< Way >(), set< Relation >());
+      temp<<"left join key_s on key_s.id = node_tags.key_ "
+        <<"where key_s.key_ = \"";
+      escape_xml(temp, key_values.front().first);
+      temp<<"\" order by node_tags.id";
     }
     else
     {
-      ostringstream temp;
-      temp<<"select node_tags.id from node_tags ";
-      if (key_values.front().second == "")
-      {
-	temp<<"left join key_s on key_s.id = node_tags.key_ "
-	    <<"where key_s.key_ = \"";
-	escape_xml(temp, key_values.front().first);
-	temp<<"\" order by node_tags.id";
-      }
-      else
-      {
-	temp<<"left join key_s on key_s.id = node_tags.key_ "
-	    <<"left join value_s on value_s.id = node_tags.value_ "
-	    <<"where key_s.key_ = \"";
-	escape_xml(temp, key_values.front().first);
-	temp<<"\" and value_s.value_ = \"";
-	escape_xml(temp, key_values.front().second);
-	temp<<"\" order by node_tags.id";
-      }
+      temp<<"left join key_s on key_s.id = node_tags.key_ "
+        <<"left join value_s on value_s.id = node_tags.value_ "
+        <<"where key_s.key_ = \"";
+      escape_xml(temp, key_values.front().first);
+      temp<<"\" and value_s.value_ = \"";
+      escape_xml(temp, key_values.front().second);
+      temp<<"\" order by node_tags.id";
+    }
     
-      set< int > tnodes;
-      tnodes = multiint_query(mysql, temp.str(), tnodes);
+    set< int > tnodes;
+    tnodes = multiint_query(mysql, temp.str(), tnodes);
     
-      unsigned int key_count(1);
-      while (key_count < key_values.size()-1)
-      {
-	temp.str("");
-	if (key_values[key_count].second == "")
-	{
-	  temp<<"select node_tags.id from node_tags "
-	      <<"left join key_s on key_s.id = node_tags.key_ "
-	      <<"where key_s.key_ = \"";
-	  escape_xml(temp, key_values[key_count].first);
-	  temp<<"\" and node_tags.id in";
-	}
-	else
-	{
-	  temp<<"select node_tags.id from node_tags "
-	      <<"left join key_s on key_s.id = node_tags.key_ "
-	      <<"left join value_s on value_s.id = node_tags.value_ "
-	      <<"where key_s.key_ = \"";
-	  escape_xml(temp, key_values[key_count].first);
-	  temp<<"\" and value_s.value_ = \"";
-	  escape_xml(temp, key_values[key_count].second);
-	  temp<<"\" and node_tags.id in";
-	}
-      
-	set< int > new_nodes;
-	tnodes = multiint_to_multiint_query
-	    (mysql, temp.str(), "order by node_tags.id", tnodes, new_nodes);
-      
-	++key_count;
-      }
-    
+    unsigned int key_count(1);
+    while (key_count < key_values.size())
+    {
       temp.str("");
       if (key_values[key_count].second == "")
       {
-	temp<<"select nodes.id, nodes.lat, nodes.lon from nodes "
-	    <<"left join node_tags on nodes.id = node_tags.id "
-	    <<"left join key_s on key_s.id = node_tags.key_ "
-	    <<"where key_s.key_ = \"";
-	escape_xml(temp, key_values[key_count].first);
-	temp<<"\" and node_tags.id in";
+        temp<<"select node_tags.id from node_tags "
+          <<"left join key_s on key_s.id = node_tags.key_ "
+          <<"where key_s.key_ = \"";
+        escape_xml(temp, key_values[key_count].first);
+        temp<<"\" and node_tags.id in";
       }
       else
       {
-	temp<<"select nodes.id, nodes.lat, nodes.lon from nodes "
-	    <<"left join node_tags on nodes.id = node_tags.id "
-	    <<"left join key_s on key_s.id = node_tags.key_ "
-	    <<"left join value_s on value_s.id = node_tags.value_ "
-	    <<"where key_s.key_ = \"";
-	escape_xml(temp, key_values[key_count].first);
-	temp<<"\" and value_s.value_ = \"";
-	escape_xml(temp, key_values[key_count].second);
-	temp<<"\" and node_tags.id in";
+        temp<<"select node_tags.id from node_tags "
+          <<"left join key_s on key_s.id = node_tags.key_ "
+          <<"left join value_s on value_s.id = node_tags.value_ "
+          <<"where key_s.key_ = \"";
+        escape_xml(temp, key_values[key_count].first);
+        temp<<"\" and value_s.value_ = \"";
+        escape_xml(temp, key_values[key_count].second);
+        temp<<"\" and node_tags.id in";
       }
       
-      set< Node > nodes;
-      maps[output] = Set(multiint_to_multiNode_query
-	  (mysql, temp.str(), "order by nodes.id", tnodes, nodes),
-	  set< Way >(), set< Relation >());
+      set< int > new_nodes;
+      tnodes = multiint_to_multiint_query
+        (mysql, temp.str(), "order by node_tags.id", tnodes, new_nodes);
+      
+      ++key_count;
     }
+    
+    multiint_to_multiNode_query(tnodes, nodes);
   }
   else if (type == QUERY_WAY)
   {
     ostringstream temp;
     if (key_values.front().second == "")
     {
-      temp<<"select ways.id from ways "
-	  <<"left join way_tags on ways.id = way_tags.id "
+      temp<<"select way_tags.id from way_tags "
 	  <<"left join key_s on key_s.id = way_tags.key_ "
 	  <<"where key_s.key_ = \"";
       escape_xml(temp, key_values.front().first);
-      temp<<"\" order by ways.id";
+      temp<<'"';
     }
     else
     {
-      temp<<"select ways.id from ways "
-	  <<"left join way_tags on ways.id = way_tags.id "
+      temp<<"select way_tags.id from way_tags "
 	  <<"left join key_s on key_s.id = way_tags.key_ "
 	  <<"left join value_s on value_s.id = way_tags.value_ "
 	  <<"where key_s.key_ = \"";
       escape_xml(temp, key_values.front().first);
       temp<<"\" and value_s.value_ = \"";
       escape_xml(temp, key_values.front().second);
-      temp<<"\" order by ways.id";
+      temp<<'"';
     }
   
     set< int > tways;
@@ -445,9 +396,7 @@ void Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     }
     
     set< Way > ways;
-    ways = multiint_to_multiWay_query
-	(mysql, "select id, count, ref from way_members "
-	"where id in", "order by id", tways, ways);
+    multiint_to_multiWay_query(tways, ways);
     maps[output] = Set(set< Node >(), ways, set< Relation >());
   }
   else if (type == QUERY_RELATION)
