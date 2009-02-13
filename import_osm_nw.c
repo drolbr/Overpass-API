@@ -32,6 +32,8 @@ typedef unsigned long long uint64;
 const int NODE_FILE_BLOCK_SIZE = sizeof(int) + BLOCKSIZE*sizeof(Node);
 const int WAY_FILE_BLOCK_SIZE = sizeof(uint32) + WAY_BLOCKSIZE*sizeof(uint32);
 
+const char* NODE_TAG_TMPPREFIX = "/tmp/node_tags_";
+
 //-----------------------------------------------------------------------------
 
 int nodes_dat_fd;
@@ -674,11 +676,8 @@ int ways_fd;
 uint32* way_buf;
 uint32 way_buf_pos(0);
 
+/*vector< pair< uint32, uint32 > > tag_renumber;*/
 // unsigned int way_member_count(0);
-
-multimap< int, Node > nodes;
-
-//-----------------------------------------------------------------------------
 
 struct KeyValue
 {
@@ -698,7 +697,11 @@ inline bool operator<(const KeyValue& kv_1, const KeyValue& kv_2)
 
 struct NodeCollection
 {
-  NodeCollection() : position(0), bitmask(0) {}
+  NodeCollection() : position(0), bitmask(0)
+  {
+    static uint32 next_id(0);
+    id = ++next_id;
+  }
   
   void insert(int32 node_id, int32 ll_idx)
   {
@@ -711,11 +714,162 @@ struct NodeCollection
     bitmask |= (position ^ ll_idx);
   }
   
+  void merge(int32 id_, int32 ll_idx)
+  {
+    id = id_;
+    bitmask |= (position ^ ll_idx);
+  }
+  
   int32 position;
   uint32 bitmask;
+  uint32 id;
   vector< int32 > nodes;
 };
 
+void flush_node_tags(map< KeyValue, NodeCollection >& node_tags)
+{
+  static uint current_run(0);
+  
+  ostringstream temp;
+  temp<<NODE_TAG_TMPPREFIX<<current_run;
+  int dest_fd = open64(temp.str().c_str(), O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  close(dest_fd);
+  
+  dest_fd = open64(temp.str().c_str(), O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  if (dest_fd < 0)
+  {
+    cerr<<"open64: "<<errno<<'\n';
+    exit(0);
+  }
+  
+  if (current_run == 0)
+  {
+    for (map< KeyValue, NodeCollection >::iterator it(node_tags.begin());
+         it != node_tags.end(); ++it)
+    {
+      uint16 key_size(it->first.key.size());
+      uint16 value_size(it->first.value.size());
+      if (it->second.bitmask>>8)
+        it->second.position = 0xffffffff;
+      else
+        it->second.position &= 0xffffff00;
+      write(dest_fd, &(it->second.id), sizeof(uint32));
+      write(dest_fd, &(it->second.position), sizeof(uint32));
+      write(dest_fd, &(key_size), sizeof(uint16));
+      write(dest_fd, &(value_size), sizeof(uint16));
+      write(dest_fd, &(it->first.key[0]), key_size);
+      write(dest_fd, &(it->first.value[0]), value_size);
+    }
+  }
+  else
+  {
+    uint32* cnt_rd_buf = (uint32*) malloc(2*sizeof(uint32) + 2*sizeof(uint16));
+    uint16* size_rd_buf = (uint16*) &(cnt_rd_buf[2]);
+    char* key_rd_buf = (char*) malloc(64*1024);
+    char* value_rd_buf = (char*) malloc(64*1024);
+    
+    temp.str("");
+    temp<<NODE_TAG_TMPPREFIX<<(current_run-1);
+    int source_fd = open64(temp.str().c_str(), O_RDONLY);
+    if (source_fd < 0)
+    {
+      cerr<<"open64: "<<errno<<'\n';
+      exit(0);
+    }
+    
+    map< KeyValue, NodeCollection >::iterator it(node_tags.begin());
+    while (read(source_fd, cnt_rd_buf, 2*sizeof(uint32) + 2*sizeof(uint16)))
+    {
+      read(source_fd, key_rd_buf, size_rd_buf[0]);
+      key_rd_buf[size_rd_buf[0]] = 0;
+      read(source_fd, value_rd_buf, size_rd_buf[1]);
+      value_rd_buf[size_rd_buf[1]] = 0;
+      while ((it != node_tags.end()) &&
+             (strcmp(key_rd_buf, it->first.key.c_str()) > 0))
+      {
+        uint16 key_size(it->first.key.size());
+        uint16 value_size(it->first.value.size());
+        if (it->second.bitmask>>8)
+          it->second.position = 0xffffffff;
+        else
+          it->second.position &= 0xffffff00;
+        write(dest_fd, &(it->second.id), sizeof(uint32));
+        write(dest_fd, &(it->second.position), sizeof(uint32));
+        write(dest_fd, &(key_size), sizeof(uint16));
+        write(dest_fd, &(value_size), sizeof(uint16));
+        write(dest_fd, &(it->first.key[0]), key_size);
+        write(dest_fd, &(it->first.value[0]), value_size);
+        ++it;
+      }
+      while ((it != node_tags.end()) &&
+             (strcmp(key_rd_buf, it->first.key.c_str()) == 0) &&
+             (strcmp(value_rd_buf, it->first.value.c_str()) > 0))
+      {
+        uint16 key_size(it->first.key.size());
+        uint16 value_size(it->first.value.size());
+        if (it->second.bitmask>>8)
+          it->second.position = 0xffffffff;
+        else
+          it->second.position &= 0xffffff00;
+        write(dest_fd, &(it->second.id), sizeof(uint32));
+        write(dest_fd, &(it->second.position), sizeof(uint32));
+        write(dest_fd, &(key_size), sizeof(uint16));
+        write(dest_fd, &(value_size), sizeof(uint16));
+        write(dest_fd, &(it->first.key[0]), key_size);
+        write(dest_fd, &(it->first.value[0]), value_size);
+        ++it;
+      }
+      if ((it != node_tags.end()) &&
+          (strcmp(key_rd_buf, it->first.key.c_str()) == 0) &&
+          (strcmp(value_rd_buf, it->first.value.c_str()) == 0))
+      {
+/*        tag_renumber.push_back
+          (make_pair< uint32, uint32 >(it->second.id, cnt_rd_buf[0]));*/
+        it->second.merge(cnt_rd_buf[0], cnt_rd_buf[1]);
+        if ((cnt_rd_buf[1] == 0xffffffff) || (it->second.bitmask>>8))
+          cnt_rd_buf[1] = 0xffffffff;
+        else
+          cnt_rd_buf[1] &= 0xffffff00;
+        ++it;
+      }
+      write(dest_fd, cnt_rd_buf, 2*sizeof(uint32) + 2*sizeof(uint16));
+      write(dest_fd, key_rd_buf, size_rd_buf[0]);
+      write(dest_fd, value_rd_buf, size_rd_buf[1]);
+    }
+    
+    free(cnt_rd_buf);
+    free(key_rd_buf);
+    free(value_rd_buf);
+    
+    close(source_fd);
+    temp.str("");
+    temp<<NODE_TAG_TMPPREFIX<<(current_run-1);
+    remove(temp.str().c_str());
+  }
+  
+  close(dest_fd);
+  ++current_run;
+/*  int spread_0(0), spread_8(0), spread_16(0), spread_24(0);
+  for (map< KeyValue, NodeCollection >::const_iterator it(node_tags.begin());
+       it != node_tags.end(); ++it)
+  {
+    cout<<'['<<it->first.key<<"]["<<it->first.value<<"]: "
+      <<hex<<it->second.bitmask<<' '<<dec<<it->second.nodes.size()<<'\n';
+    if (it->second.bitmask>>24)
+      ++spread_0;
+    else if (it->second.bitmask>>16)
+      ++spread_8;
+    else if (it->second.bitmask>>8)
+      ++spread_16;
+    else
+      ++spread_24;
+  }
+  cout<<"Stats: "<<spread_0<<' '<<spread_8<<' '<<spread_16<<' '<<spread_24<<"\n\n";*/
+}
+
+//-----------------------------------------------------------------------------
+
+multimap< int, Node > nodes;
 map< KeyValue, NodeCollection > node_tags;
 int current_type(0);
 int32 current_id;
@@ -746,23 +900,8 @@ void start(const char *el, const char **attr)
 	nc.insert(current_id, current_ll_idx);
 	if (++tag_count >= FLUSH_TAGS_INTERVAL)
 	{
-	  int spread_0(0), spread_8(0), spread_16(0), spread_24(0);
-	  for (map< KeyValue, NodeCollection >::const_iterator it(node_tags.begin());
-		      it != node_tags.end(); ++it)
-	  {
-	    cout<<'['<<it->first.key<<"]["<<it->first.value<<"]: "
-		<<hex<<it->second.bitmask<<' '<<dec<<it->second.nodes.size()<<'\n';
-	    if (it->second.bitmask>>24)
-	      ++spread_0;
-	    else if (it->second.bitmask>>16)
-	      ++spread_8;
-	    else if (it->second.bitmask>>8)
-	      ++spread_16;
-	    else
-	      ++spread_24;
-	  }
-	  cout<<"Stats: "<<spread_0<<' '<<spread_8<<' '<<spread_16<<' '<<spread_24<<"\n\n";
-	  node_tags.clear();
+  	  flush_node_tags(node_tags);
+    	  node_tags.clear();
 	  tag_count = 0;
 	}
       }
@@ -806,26 +945,13 @@ void start(const char *el, const char **attr)
   {
     if (state == NODES)
     {
-      {
-	int spread_0(0), spread_8(0), spread_16(0), spread_24(0);
-	for (map< KeyValue, NodeCollection >::const_iterator it(node_tags.begin());
-		    it != node_tags.end(); ++it)
-	{
-	  cout<<'['<<it->first.key<<"]["<<it->first.value<<"]: "
-	      <<hex<<it->second.bitmask<<' '<<dec<<it->second.nodes.size()<<'\n';
-	  if (it->second.bitmask>>24)
-	    ++spread_0;
-	  else if (it->second.bitmask>>16)
-	    ++spread_8;
-	  else if (it->second.bitmask>>8)
-	    ++spread_16;
-	  else
-	    ++spread_24;
-	}
-	cout<<"Stats: "<<spread_0<<' '<<spread_8<<' '<<spread_16<<' '<<spread_24<<"\n\n";
-	tag_count = 0;
-      }
+      flush_node_tags(node_tags);
+      node_tags.clear();
+      for (vector< pair< uint32, uint32 > >::const_iterator it(tag_renumber.begin());
+           it != tag_renumber.end(); ++it)
+        cout<<it->first<<' '<<it->second<<'\n';
       exit(0);
+      
       //flush_nodes(nodes);
       nodes.clear();
       //postprocess_nodes();
