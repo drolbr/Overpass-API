@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -7,6 +8,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
+#include "raw_file_db.h"
 #include "script_datatypes.h"
 #include "expat_justparse_interface.h"
 
@@ -19,10 +21,12 @@
 
 using namespace std;
 
+typedef char int8;
 typedef short int int16;
 typedef int int32;
 typedef long long int64;
 
+typedef unsigned char uint8;
 typedef unsigned short int uint16;
 typedef unsigned int uint32;
 typedef unsigned long long uint64;
@@ -32,7 +36,238 @@ typedef unsigned long long uint64;
 const int NODE_FILE_BLOCK_SIZE = sizeof(int) + BLOCKSIZE*sizeof(Node);
 const int WAY_FILE_BLOCK_SIZE = sizeof(uint32) + WAY_BLOCKSIZE*sizeof(uint32);
 
-const char* NODE_TAG_TMPPREFIX = "/tmp/node_tags_";
+const char* NODE_STRING_DATA = "/opt/osm_why_api/node_strings.dat";
+const char* NODE_STRING_IDX = "/opt/osm_why_api/node_strings.idx";
+const char* NODE_TAG_ID_NODE_FILE = "/opt/osm_why_api/node_tag_id_node.dat";
+const char* NODE_TAG_ID_NODE_IDX = "/opt/osm_why_api/node_tag_id_node.idx";
+const char* NODE_TAG_TMPAPREFIX = "/tmp/node_strings_";
+const char* NODE_TAG_TMPB = "/tmp/node_tag_ids";
+const uint NODE_TAG_SPATIAL_PARTS = 32;
+const int NODE_STRING_BLOCK_SIZE = 1024*1024;
+const uint32 TAG_ID_NODE_BLOCKSIZE = 4*1024*1024;
+
+//-----------------------------------------------------------------------------
+
+// constraints:
+// T::size_of_buf(T::to_buf()) == T::size_of()
+// T::index_of_buf(T::to_buf()) == T::index_of()
+// T::size_of() < T::blocksize()
+// the block_index iiis coherent with the fileeeeee content and size
+// template< class T, class Iterator >
+//     void flush_data(Iterator elem_begin, Iterator elem_end)
+// {
+//   if (elem_begin == elem_end)
+//     return;
+//   
+//   const uint32 BLOCKSIZE(T::blocksize());
+//   multimap< int32, uint16 >& block_index(T::block_index());
+//   
+//   int next_block_id(block_index.size());
+//   
+//   if (block_index.empty())
+//   {
+//     int dest_fd = open64(T::data_file(), O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+//     close(dest_fd);
+//   
+//     dest_fd = open64(T::data_file(), O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+//     if (dest_fd < 0)
+//     {
+//       cerr<<"open64: "<<errno<<'\n';
+//       exit(0);
+//     }
+//   
+//     uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
+//     unsigned int i(sizeof(uint32));
+//     
+//     block_index.insert(make_pair< int32, uint32 >
+// 	(T::index_of(elem_begin), next_block_id++));
+//     
+//     Iterator it(elem_begin);
+//     while (it != elem_end)
+//     {
+//       if (i >= BLOCKSIZE - T::size_of(it))
+//       {
+// 	((uint32*)dest_buf)[0] = i - sizeof(uint32);
+// 	write(dest_fd, dest_buf, BLOCKSIZE);
+//         
+// 	block_index.insert(make_pair< int, unsigned int >
+// 	    (T::index_of(it), next_block_id++));
+// 	i = sizeof(uint32);
+//       }
+//       
+//       T::to_buf(&(dest_buf[i]), it);
+//       i += T::size_of(it);
+//       ++it;
+//     }
+//     if (i > 1)
+//     {
+//       ((uint32*)dest_buf)[0] = i - sizeof(uint32);
+//       write(dest_fd, dest_buf, BLOCKSIZE);
+//     }
+// 
+//     free(dest_buf);
+//     close(dest_fd);
+//   }
+//   else
+//   {
+//     int dest_fd = open64(T::data_file(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+//     if (dest_fd < 0)
+//     {
+//       cerr<<"open64: "<<errno<<'\n';
+//       exit(0);
+//     }
+//   
+//     uint8* source_buf = (uint8*) malloc(BLOCKSIZE);
+//     uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
+//     
+//     Iterator elem_it(elem_begin);
+//     multimap< int32, uint16 >::const_iterator block_it(block_index.begin());
+//     unsigned int cur_block((block_it++)->second);
+//     while (elem_it != elem_end)
+//     {
+//       while ((block_it != block_index.end()) && (block_it->first <= T::index_of(elem_it)))
+// 	cur_block = (block_it++)->second;
+// 
+//       uint32 new_byte_count(0);
+//       vector< uint32* >::const_iterator elem_it2(elem_it);
+//       if (block_it != block_index.end())
+//       {
+// 	while ((elem_it2 != elem_end) && (block_it->first > T::index_of(elem_it2)))
+// 	{
+// 	  new_byte_count += T::size_of(elem_it2);
+// 	  ++elem_it2;
+// 	}
+//       }
+//       else
+//       {
+// 	while (elem_it2 != elem_end)
+// 	{
+// 	  new_byte_count += T::size_of(elem_it2);
+// 	  ++elem_it2;
+// 	}
+//       }
+//       
+//       lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
+//       read(dest_fd, source_buf, BLOCKSIZE);
+//       new_byte_count += ((uint32*)source_buf)[0];
+//       
+//       uint32 i(sizeof(uint32));
+//       while (new_byte_count > BLOCKSIZE)
+//       {
+// 	uint32 blocksize(new_byte_count/(new_byte_count/BLOCKSIZE + 1));
+//         
+// 	uint32 j(sizeof(uint32));
+// 	while ((j < blocksize) &&
+// 		 (elem_it != elem_it2) && (i < ((uint32*)source_buf)[0]) &&
+// 		 (j < BLOCKSIZE - T::size_of(elem_it)) &&
+// 		       (j < BLOCKSIZE - T::size_of_buf(&(source_buf[i]))))
+// 	{
+// 	  if (T::elem_less_buf(elem_it, &(source_buf[i])))
+// 	  {
+// 	    T::to_buf(&(dest_buf[j]), elem_it);
+// 	    j += T::size_of(elem_it);
+// 	    ++elem_it;
+// 	  }
+// 	  else
+// 	  {
+// 	    memcpy(&(dest_buf[j]), &(source_buf[i]), T::size_of_buf(&(source_buf[i])));
+// 	    j += T::size_of_buf(&(source_buf[i]));
+// 	    i += T::size_of_buf(&(source_buf[i]));
+// 	  }
+// 	}
+// 	while ((j < blocksize) && (elem_it != elem_it2) && (j < BLOCKSIZE - T::size_of(elem_it)))
+// 	{
+// 	  T::to_buf(&(dest_buf[j]), elem_it);
+// 	  j += T::size_of(elem_it);
+// 	  ++elem_it;
+// 	}
+// 	while ((j < blocksize) && (i < ((uint32*)source_buf)[0]) &&
+// 		       (j < BLOCKSIZE - T::size_of_buf(&(source_buf[i]))))
+// 	{
+// 	  memcpy(&(dest_buf[j]), &(source_buf[i]), T::size_of_buf(&(source_buf[i])));
+// 	  j += T::size_of_buf(&(source_buf[i]));
+// 	  i += T::size_of_buf(&(source_buf[i]));
+// 	}
+// 
+// 	lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
+// 	((uint32*)dest_buf)[0] = j - sizeof(uint32);
+// 	write(dest_fd, dest_buf, BLOCKSIZE);
+// 
+// 	cur_block = next_block_id;
+// 	if ((i >= ((uint32*)source_buf)[0]) || (T::elem_less_buf(elem_it, &(source_buf[i]))))
+// 	  block_index.insert(make_pair< int, unsigned int >(T::index_of(elem_it), next_block_id++));
+// 	else
+// 	  block_index.insert(make_pair< int, unsigned int >
+// 	      (T::index_of_buf(&(source_buf[i])), next_block_id++));
+// 	new_byte_count -= (j - sizeof(uint32));
+//       }
+//       
+//       uint32 j(sizeof(uint32));
+//       while ((elem_it != elem_it2) && (i < ((uint32*)source_buf)[0]))
+//       {
+// 	cout<<i<<' '<<*((uint32*)&(source_buf[i]))<<'\n';
+// 	if (T::elem_less_buf(elem_it, &(source_buf[i])))
+// 	{
+// 	  T::to_buf(&(dest_buf[j]), elem_it);
+// 	  j += T::size_of(elem_it);
+// 	  ++elem_it;
+// 	}
+// 	else
+// 	{
+// 	  memcpy(&(dest_buf[j]), &(source_buf[i]), T::size_of_buf(&(source_buf[i])));
+// 	  j += T::size_of_buf(&(source_buf[i]));
+// 	  i += T::size_of_buf(&(source_buf[i]));
+// 	}
+//       }
+//       while (elem_it != elem_it2)
+//       {
+// 	T::to_buf(&(dest_buf[j]), elem_it);
+// 	j += T::size_of(elem_it);
+// 	++elem_it;
+//       }
+//       while (i < ((uint32*)source_buf)[0])
+//       {
+// 	memcpy(&(dest_buf[j]), &(source_buf[i]), T::size_of_buf(&(source_buf[i])));
+// 	j += T::size_of_buf(&(source_buf[i]));
+// 	i += T::size_of_buf(&(source_buf[i]));
+//       }
+//       lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
+//       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
+//       write(dest_fd, dest_buf, BLOCKSIZE);
+//     }
+//     
+//     free(source_buf);
+//     free(dest_buf);
+// 
+//     close(dest_fd);
+//   }
+// }
+// 
+// template< class T >
+//     void make_block_index()
+// {
+//   multimap< int32, uint16 >& block_index(T::block_index());
+//   
+//   pair< int32, uint16 >* buf =
+//       (pair< int32, uint16 >*) malloc(sizeof(int)*2*block_index.size());
+//       
+//   if (!buf)
+//   {
+//     cerr<<"malloc: "<<errno<<'\n';
+//     exit(0);
+//   }
+//   
+//   unsigned int i(0);
+//   for (multimap< int32, uint16 >::const_iterator it(block_index.begin());
+//        it != block_index.end(); ++it)
+//     buf[i++] = *it;
+//   
+//   int dest_fd = open64(T::index_file(), O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+//   write(dest_fd, buf, sizeof(int)*2*block_index.size());
+//   close(dest_fd);
+//   
+//   free(buf);
+// }
 
 //-----------------------------------------------------------------------------
 
@@ -666,7 +901,7 @@ const int RELATION = 3;
 // unsigned int current_id(0);
 
 const unsigned int FLUSH_INTERVAL = 32*1024*1024;
-const unsigned int FLUSH_TAGS_INTERVAL = 1024*1024;
+const unsigned int FLUSH_TAGS_INTERVAL = 32*1024*1024;
 const unsigned int DOT_INTERVAL = 512*1024;
 unsigned int structure_count(0);
 int state(0);
@@ -675,8 +910,13 @@ const int WAYS = 2;
 int ways_fd;
 uint32* way_buf;
 uint32 way_buf_pos(0);
+uint current_run(0);
+vector< uint32 > split_idx;
+uint32 next_node_tag_id(0);
+uint8* cur_block_count;
+uint32* block_of_id;
+multimap< int32, uint16 > block_index_tag_id_node;
 
-/*vector< pair< uint32, uint32 > > tag_renumber;*/
 // unsigned int way_member_count(0);
 
 struct KeyValue
@@ -699,8 +939,7 @@ struct NodeCollection
 {
   NodeCollection() : position(0), bitmask(0)
   {
-    static uint32 next_id(0);
-    id = ++next_id;
+    id = ++next_node_tag_id;
   }
   
   void insert(int32 node_id, int32 ll_idx)
@@ -728,10 +967,8 @@ struct NodeCollection
 
 void flush_node_tags(map< KeyValue, NodeCollection >& node_tags)
 {
-  static uint current_run(0);
-  
   ostringstream temp;
-  temp<<NODE_TAG_TMPPREFIX<<current_run;
+  temp<<NODE_TAG_TMPAPREFIX<<current_run;
   int dest_fd = open64(temp.str().c_str(), O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   close(dest_fd);
   
@@ -744,6 +981,13 @@ void flush_node_tags(map< KeyValue, NodeCollection >& node_tags)
   
   if (current_run == 0)
   {
+    int dest_id_fd = open64(NODE_TAG_TMPB, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    if (dest_id_fd < 0)
+    {
+      cerr<<"open64: "<<errno<<'\n';
+      exit(0);
+    }
+    
     for (map< KeyValue, NodeCollection >::iterator it(node_tags.begin());
          it != node_tags.end(); ++it)
     {
@@ -759,7 +1003,16 @@ void flush_node_tags(map< KeyValue, NodeCollection >& node_tags)
       write(dest_fd, &(value_size), sizeof(uint16));
       write(dest_fd, &(it->first.key[0]), key_size);
       write(dest_fd, &(it->first.value[0]), value_size);
+      
+      uint32 nc_size(it->second.nodes.size());
+      write(dest_id_fd, &(it->second.id), sizeof(uint32));
+      write(dest_id_fd, &(nc_size), sizeof(uint32));
+      for (vector< int32 >::const_iterator it2(it->second.nodes.begin());
+	   it2 != it->second.nodes.end(); ++it2)
+	write(dest_id_fd, &(*it2), sizeof(uint32));	
     }
+    
+    close(dest_id_fd);
   }
   else
   {
@@ -769,7 +1022,7 @@ void flush_node_tags(map< KeyValue, NodeCollection >& node_tags)
     char* value_rd_buf = (char*) malloc(64*1024);
     
     temp.str("");
-    temp<<NODE_TAG_TMPPREFIX<<(current_run-1);
+    temp<<NODE_TAG_TMPAPREFIX<<(current_run-1);
     int source_fd = open64(temp.str().c_str(), O_RDONLY);
     if (source_fd < 0)
     {
@@ -823,8 +1076,6 @@ void flush_node_tags(map< KeyValue, NodeCollection >& node_tags)
           (strcmp(key_rd_buf, it->first.key.c_str()) == 0) &&
           (strcmp(value_rd_buf, it->first.value.c_str()) == 0))
       {
-/*        tag_renumber.push_back
-          (make_pair< uint32, uint32 >(it->second.id, cnt_rd_buf[0]));*/
         it->second.merge(cnt_rd_buf[0], cnt_rd_buf[1]);
         if ((cnt_rd_buf[1] == 0xffffffff) || (it->second.bitmask>>8))
           cnt_rd_buf[1] = 0xffffffff;
@@ -843,28 +1094,379 @@ void flush_node_tags(map< KeyValue, NodeCollection >& node_tags)
     
     close(source_fd);
     temp.str("");
-    temp<<NODE_TAG_TMPPREFIX<<(current_run-1);
+    temp<<NODE_TAG_TMPAPREFIX<<(current_run-1);
     remove(temp.str().c_str());
+    
+    int dest_id_fd = open64(NODE_TAG_TMPB, O_WRONLY|O_APPEND, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    if (dest_id_fd < 0)
+    {
+      cerr<<"open64: "<<errno<<'\n';
+      exit(0);
+    }
+    
+    for (map< KeyValue, NodeCollection >::iterator it(node_tags.begin());
+	 it != node_tags.end(); ++it)
+    {
+      uint32 nc_size(it->second.nodes.size());
+      write(dest_id_fd, &(it->second.id), sizeof(uint32));
+      write(dest_id_fd, &(nc_size), sizeof(uint32));
+      for (vector< int32 >::const_iterator it2(it->second.nodes.begin());
+	   it2 != it->second.nodes.end(); ++it2)
+	write(dest_id_fd, &(*it2), sizeof(uint32));	
+    }
+    
+    close(dest_id_fd);
   }
   
   close(dest_fd);
   ++current_run;
-/*  int spread_0(0), spread_8(0), spread_16(0), spread_24(0);
-  for (map< KeyValue, NodeCollection >::const_iterator it(node_tags.begin());
-       it != node_tags.end(); ++it)
+}
+
+void node_tag_statistics()
+{
+  cerr<<'s';
+  
+  if (current_run == 0)
   {
-    cout<<'['<<it->first.key<<"]["<<it->first.value<<"]: "
-      <<hex<<it->second.bitmask<<' '<<dec<<it->second.nodes.size()<<'\n';
-    if (it->second.bitmask>>24)
-      ++spread_0;
-    else if (it->second.bitmask>>16)
-      ++spread_8;
-    else if (it->second.bitmask>>8)
-      ++spread_16;
-    else
-      ++spread_24;
+    cerr<<"No node tags.\n";
+    return;
   }
-  cout<<"Stats: "<<spread_0<<' '<<spread_8<<' '<<spread_16<<' '<<spread_24<<"\n\n";*/
+  
+  ostringstream temp;
+  temp<<NODE_TAG_TMPAPREFIX<<(current_run-1);
+  int source_fd = open64(temp.str().c_str(), O_RDONLY);
+  if (source_fd < 0)
+  {
+    cerr<<"open64: "<<errno<<'\n';
+    exit(0);
+  }
+  
+  uint32 global_count(0);
+  uint32* spatial_count = (uint32*) calloc(16*1024*1024, sizeof(uint32));
+  uint32* cnt_rd_buf = (uint32*) malloc(2*sizeof(uint32) + 2*sizeof(uint16));
+  uint16* size_rd_buf = (uint16*) &(cnt_rd_buf[2]);
+  
+  while (read(source_fd, cnt_rd_buf, 2*sizeof(uint32) + 2*sizeof(uint16)))
+  {
+    lseek64(source_fd, size_rd_buf[0] + size_rd_buf[1], SEEK_CUR);
+    ++(spatial_count[cnt_rd_buf[1]>>8]);
+    ++global_count;
+  }
+  global_count -= spatial_count[0x00ffffff];
+  
+/*  for (unsigned int i(0); i < 65536; ++i)
+  {
+    cout<<hex<<i<<"0000:";
+    for (unsigned int j(0); j < 256; ++j)
+      cout<<dec<<' '<<spatial_count[i*256 + j];
+    cout<<'\n';
+  }
+  cout<<'\n';*/
+  
+  uint32 split_count(0);
+  for (unsigned int i(0); i < 16*1024*1024; ++i)
+  {
+    split_count += spatial_count[i];
+    if (split_count >= global_count / NODE_TAG_SPATIAL_PARTS)
+    {
+      split_idx.push_back(i<<8);
+/*      cout<<i<<'\n';*/
+      split_count = 0;
+    }
+  }
+  
+  free(cnt_rd_buf);
+  free(spatial_count);
+  
+  close(source_fd);
+
+  cerr<<'s';
+}
+
+void node_tag_split_and_index()
+{
+  cerr<<'p';
+
+  ostringstream temp;
+  temp<<NODE_TAG_TMPAPREFIX<<(current_run-1);
+  int source_fd = open64(temp.str().c_str(), O_RDONLY);
+  if (source_fd < 0)
+  {
+    cerr<<"open64: "<<errno<<'\n';
+    exit(0);
+  }
+  
+  int dest_fd = open64(NODE_STRING_DATA, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  close(dest_fd);
+  
+  dest_fd = open64(NODE_STRING_DATA, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  if (dest_fd < 0)
+  {
+    cerr<<"open64: "<<errno<<'\n';
+    exit(0);
+  }
+  
+  int dest_idx_fd = open64(NODE_STRING_IDX, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  close(dest_idx_fd);
+  
+  dest_idx_fd = open64(NODE_STRING_IDX, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  if (dest_fd < 0)
+  {
+    cerr<<"open64: "<<errno<<'\n';
+    exit(0);
+  }
+  
+  for (uint32 i(0); i < NODE_TAG_SPATIAL_PARTS; ++i)
+    write(dest_idx_fd, &(split_idx[i]), sizeof(uint32));
+  
+  cur_block_count = (uint8*) calloc(NODE_TAG_SPATIAL_PARTS+1, sizeof(uint8));
+  block_of_id = (uint32*) calloc((next_node_tag_id+1), sizeof(uint32));
+  
+  uint32* write_pos = (uint32*) calloc(NODE_TAG_SPATIAL_PARTS+1, sizeof(uint32));
+  char* write_blocks = (char*) malloc((NODE_TAG_SPATIAL_PARTS+1) * NODE_STRING_BLOCK_SIZE);
+  uint32* cnt_rd_buf = (uint32*) malloc(2*sizeof(uint32) + 2*sizeof(uint16));
+  uint16* size_rd_buf = (uint16*) &(cnt_rd_buf[2]);
+  
+  while (read(source_fd, cnt_rd_buf, 2*sizeof(uint32) + 2*sizeof(uint16)))
+  {
+    uint16 block(0);
+    if (cnt_rd_buf[1] != 0xffffffff)
+    {
+      while (split_idx[block] <= cnt_rd_buf[1])
+	++block;
+      ++block;
+    }
+    
+    if (write_pos[block] + 2*sizeof(uint32) + 2*sizeof(uint16) + size_rd_buf[0] + size_rd_buf[1]
+	>= NODE_STRING_BLOCK_SIZE*4/5)
+    {
+      write(dest_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE]), NODE_STRING_BLOCK_SIZE);
+      write(dest_idx_fd, &(block), sizeof(uint16));
+      write_pos[block] = 0;
+    
+      memcpy(&(write_blocks[block * NODE_STRING_BLOCK_SIZE + write_pos[block]]), cnt_rd_buf,
+	       2*sizeof(uint32) + 2*sizeof(uint16));
+      write_pos[block] += 2*sizeof(uint32) + 2*sizeof(uint16);
+      read(source_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE + write_pos[block]]),
+	   size_rd_buf[0] + size_rd_buf[1]);
+      write_pos[block] += size_rd_buf[0] + size_rd_buf[1];
+      
+      write(dest_idx_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE
+	  + 2*sizeof(uint32)]), size_rd_buf[0] + size_rd_buf[1] + 2*sizeof(uint16));
+      
+      block_of_id[cnt_rd_buf[0]] = (++cur_block_count[block]) | ((cnt_rd_buf[1]) & (0xffffff00));
+    }
+    else
+    {
+      memcpy(&(write_blocks[block * NODE_STRING_BLOCK_SIZE + write_pos[block]]), cnt_rd_buf,
+	       2*sizeof(uint32) + 2*sizeof(uint16));
+      write_pos[block] += 2*sizeof(uint32) + 2*sizeof(uint16);
+      read(source_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE + write_pos[block]]),
+	   size_rd_buf[0] + size_rd_buf[1]);
+      write_pos[block] += size_rd_buf[0] + size_rd_buf[1];
+    
+      block_of_id[cnt_rd_buf[0]] = (cur_block_count[block]) | ((cnt_rd_buf[1]) & (0xffffff00));
+    }
+  }
+  
+  for (unsigned int i(0); i < NODE_TAG_SPATIAL_PARTS+1; ++i)
+    write(dest_fd, &(write_blocks[i * NODE_STRING_BLOCK_SIZE]), NODE_STRING_BLOCK_SIZE);
+  
+  free(cur_block_count);
+  free(write_pos);
+  free(write_blocks);
+  free(cnt_rd_buf);
+  
+  close(source_fd);
+  close(dest_fd);
+
+  cerr<<'p';
+}
+
+struct Tag_Id_Node
+{
+  static multimap< int32, uint16 >& block_index() { return block_index_tag_id_node; }
+  static uint32 blocksize() { return TAG_ID_NODE_BLOCKSIZE; }
+  static const char* data_file() { return NODE_TAG_ID_NODE_FILE; }
+  static const char* index_file() { return NODE_TAG_ID_NODE_IDX; }
+  
+  static uint32 size_of(const vector< uint32* >::const_iterator& it)
+  {
+/*    if ((*it)[1] > 255)
+    {
+      cerr<<"size>255: "<<**it<<'\n';
+      exit(0);
+    }*/
+    return ((*it)[1]*sizeof(uint32) + 2*sizeof(uint8) + sizeof(uint32));
+  }
+
+  static uint32 size_of_buf(uint8* elem)
+  {
+    return (elem[4]*sizeof(uint32) + 2*sizeof(uint8) + sizeof(uint32));
+  }
+  
+  static int32 index_of(const vector< uint32* >::const_iterator& it)
+  {
+    return ((block_of_id[**it]) & 0xffffff00);
+  }
+
+  static int32 index_of_buf(uint8* elem)
+  {
+    return ((block_of_id[*((uint32*)elem)]) & 0xffffff00);
+  }
+  
+  static uint32 elem_less_buf(const vector< uint32* >::const_iterator& it, uint8* buf)
+  {
+/*    if (**it > next_node_tag_id)
+    {
+      cerr<<"it "<<**it<<'\n';
+      exit(0);
+    }
+    if (*((uint32*)buf) > next_node_tag_id)
+    {
+      cerr<<"buf "<<*((uint32*)buf)<<'\n';
+      exit(0);
+    }*/
+    if (((block_of_id[**it]) & 0xffffff00) < ((block_of_id[*((uint32*)buf)]) & 0xffffff00))
+      return true;
+    else if (((block_of_id[**it]) & 0xffffff00) > ((block_of_id[*((uint32*)buf)]) & 0xffffff00))
+      return false;
+    return (**it < *((uint32*)buf));
+  }
+  
+  static void to_buf(uint8* dest, const vector< uint32* >::const_iterator& it)
+  {
+    ((uint32*)dest)[0] = (*it)[0];
+    dest[4] = (*it)[1];
+    dest[5] = block_of_id[**it];
+    memcpy(&(dest[6]), &((*it)[2]), (*it)[1]*sizeof(uint32));
+  }
+};
+
+struct tag_id_less : public binary_function< uint32*, uint32*, bool >
+{
+  bool operator() (uint32* const& a, uint32* const& b)
+  {
+    if ((block_of_id[*a] & 0xffffff00) < (block_of_id[*b] & 0xffffff00))
+      return true;
+    else if ((block_of_id[*a] & 0xffffff00) > (block_of_id[*b] & 0xffffff00))
+      return false;
+    return (*a < *b);
+  }
+};
+
+void node_tag_create_id_node_idx()
+{
+  const uint32 TAG_SORT_BUFFER_SIZE = 128*1024*1024;
+  
+  uint32 rd_buf_pos(0);
+  
+  int source_fd = open64(NODE_TAG_TMPB, O_RDONLY);
+  if (source_fd < 0)
+  {
+    cerr<<"open64: "<<errno<<'\n';
+    exit(0);
+  }
+  
+  uint32* tag_rd_buf = (uint32*) malloc(TAG_SORT_BUFFER_SIZE);
+  uint32* tag_alt_buf = (uint32*) malloc(TAG_SORT_BUFFER_SIZE);
+  uint32 max_pos(0);
+  
+  uint32 global_count(0), local_count(0);
+  
+  while ((max_pos =
+	 read(source_fd, &(tag_rd_buf[rd_buf_pos]), TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32))))
+  {
+    vector< uint32* > id_pos;
+    uint32 alt_buf_pos(0);
+    rd_buf_pos = 0;
+  
+    while ((rd_buf_pos + 1 < max_pos / sizeof(uint32)) &&
+	    (rd_buf_pos + tag_rd_buf[rd_buf_pos+1] + 1 < max_pos / sizeof(uint32)))
+    {
+      uint32 next_pos(tag_rd_buf[rd_buf_pos+1] + 2);
+      
+      if ((~(block_of_id[tag_rd_buf[rd_buf_pos]])) & 0xffffff00)
+      {
+	++local_count;
+	id_pos.push_back(&(tag_rd_buf[rd_buf_pos]));
+      
+	while (tag_rd_buf[rd_buf_pos+1] > 255)
+	{
+	  if (tag_rd_buf[rd_buf_pos+1] > 510)
+	  {
+	    id_pos.push_back(&(tag_alt_buf[alt_buf_pos]));
+	    id_pos.push_back(&(tag_rd_buf[rd_buf_pos + 510]));
+	  
+	    tag_alt_buf[alt_buf_pos++] = tag_rd_buf[rd_buf_pos];
+	    tag_alt_buf[alt_buf_pos++] = 255;
+	    memcpy(&(tag_alt_buf[alt_buf_pos]), &(tag_rd_buf[rd_buf_pos+257]), 255*sizeof(uint32));
+	    alt_buf_pos += 255;
+	    tag_rd_buf[rd_buf_pos+1] = 255;
+	  
+	    next_pos -= 510;
+	    rd_buf_pos += 510;
+	  
+	    tag_rd_buf[rd_buf_pos] = tag_rd_buf[rd_buf_pos - 510];
+	    tag_rd_buf[rd_buf_pos+1] = next_pos - 2;
+	  }
+	  else
+	  {
+	    id_pos.push_back(&(tag_alt_buf[alt_buf_pos]));
+	  
+	    tag_alt_buf[alt_buf_pos++] = tag_rd_buf[rd_buf_pos];
+	    tag_alt_buf[alt_buf_pos++] = tag_rd_buf[rd_buf_pos+1] - 255;
+	    memcpy(&(tag_alt_buf[alt_buf_pos]), &(tag_rd_buf[rd_buf_pos+257]),
+		     (tag_rd_buf[rd_buf_pos+1] - 255)*sizeof(uint32));
+	    alt_buf_pos += (tag_rd_buf[rd_buf_pos+1] - 255);
+	    tag_rd_buf[rd_buf_pos+1] = 255;
+	  }
+	}
+      }
+      else
+      {
+	++global_count;
+	//id_pos.push_back(&(tag_rd_buf[rd_buf_pos]));
+      }
+      
+      rd_buf_pos += next_pos;
+    }
+    
+    //TEMP
+/*    cout<<id_pos.size()<<'\n';
+    for (uint32 i(0); i < id_pos.size(); ++i)
+    {
+      if ((uint32)(id_pos[i]) < (uint32)tag_rd_buf)
+	cout<<"a "<<tag_rd_buf<<' '<<*(id_pos[i])<<'\n';
+      if ((uint32)(id_pos[i]) > (uint32)tag_rd_buf + TAG_SORT_BUFFER_SIZE)
+	cout<<"A "<<tag_rd_buf<<' '<<*(id_pos[i])<<'\n';
+      if (*(id_pos[i]) > next_node_tag_id)
+	cout<<"B "<<*(id_pos[i])<<'\n';
+      if (((id_pos[i])[1] > 255))
+	cout<<"C "<<hex<<*(id_pos[i])<<' '<<dec<<(id_pos[i])[1]<<'\n';
+    }*/
+      
+/*    cerr<<id_pos.front()<<' '<<(*id_pos.front())<<' '<<id_pos.front()[1]<<' '
+	<<id_pos.back()<<' '<<(*id_pos.back())<<' '<<id_pos.back()[1]<<'\n';*/
+    
+    sort(id_pos.begin(), id_pos.end(), tag_id_less());
+    
+    flush_data< Tag_Id_Node, vector< uint32* >::const_iterator >(id_pos.begin(), id_pos.end());
+    
+    cerr<<'.';
+    
+    memmove(tag_rd_buf, &(tag_rd_buf[rd_buf_pos]), TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32));
+    rd_buf_pos = TAG_SORT_BUFFER_SIZE / sizeof(uint32) - rd_buf_pos;
+  }
+  
+/*  cout<<local_count<<'\n'<<global_count<<'\n';*/
+  make_block_index< Tag_Id_Node >();
+  
+  free(tag_rd_buf);
+  free(tag_alt_buf);
+  free(block_of_id);
+  
+  close(source_fd);
 }
 
 //-----------------------------------------------------------------------------
@@ -945,20 +1547,21 @@ void start(const char *el, const char **attr)
   {
     if (state == NODES)
     {
+      flush_nodes(nodes);
+      nodes.clear();
+      
       flush_node_tags(node_tags);
       node_tags.clear();
-      for (vector< pair< uint32, uint32 > >::const_iterator it(tag_renumber.begin());
-           it != tag_renumber.end(); ++it)
-        cout<<it->first<<' '<<it->second<<'\n';
-      exit(0);
       
-      //flush_nodes(nodes);
-      nodes.clear();
-      //postprocess_nodes();
+      node_tag_statistics();
+      node_tag_split_and_index();
+      node_tag_create_id_node_idx();
+      
+      postprocess_nodes();
       
       state = WAYS;
       
-      //ways_fd = prepare_ways(way_buf);
+      ways_fd = prepare_ways(way_buf);
     }
     uint32 id(0);
     for (unsigned int i(0); attr[i]; i += 2)
@@ -975,10 +1578,10 @@ void start(const char *el, const char **attr)
   {
     if (state == WAYS)
     {
-/*      postprocess_ways(ways_fd, way_buf);
+      postprocess_ways(ways_fd, way_buf);
       postprocess_ways_2();
       postprocess_ways_3();
-      postprocess_ways_4();*/
+      postprocess_ways_4();
       
       state = 0;
     }
@@ -1005,7 +1608,7 @@ void end(const char *el)
     if (way_buf_pos < MAXWAYNODES)
     {
       way_buf[1] = way_buf_pos;
-      //write(ways_fd, way_buf, sizeof(uint32)*(way_buf_pos+2));
+      write(ways_fd, way_buf, sizeof(uint32)*(way_buf_pos+2));
     }
   }
   else if (!strcmp(el, "relation"))
@@ -1015,7 +1618,7 @@ void end(const char *el)
   {
     if (state == NODES)
     {
-      //flush_nodes(nodes);
+      flush_nodes(nodes);
       nodes.clear();
     }
     
@@ -1100,7 +1703,14 @@ int main(int argc, char *argv[])
   cerr<<(uintmax_t)time(NULL)<<'\n';
   return 0;*/
   
-  //prepare_nodes();
+  //TEMP
+/*  current_run = 49;
+  next_node_tag_id = 150*1000*1000;
+  node_tag_statistics();
+  node_tag_split_and_index();
+  node_tag_create_id_node_idx();*/
+  
+  prepare_nodes();
   
   state = NODES;
   
@@ -1109,16 +1719,16 @@ int main(int argc, char *argv[])
   
   if (state == NODES)
   {
-    //flush_nodes(nodes);
+    flush_nodes(nodes);
     nodes.clear();
-    //postprocess_nodes();
+    postprocess_nodes();
   }
   else if (state == WAYS)
   {
-/*    postprocess_ways(ways_fd, way_buf);
+    postprocess_ways(ways_fd, way_buf);
     postprocess_ways_2();
     postprocess_ways_3();
-    postprocess_ways_4();*/
+    postprocess_ways_4();
   }
   
   cerr<<'\n'<<(uintmax_t)time(NULL)<<'\n';

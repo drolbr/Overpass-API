@@ -206,6 +206,6 @@ echo "Creating indices and merged tables ... "
 mysql -u osm -posm osm <init_database.sql
 
 
-bunzip2 <$1 | ./import_osm_nw
+# bunzip2 <$1 | ./import_osm_nw
 
-./init_derived_database YES
+./init_derived_data YES
