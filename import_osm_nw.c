@@ -38,236 +38,19 @@ const int WAY_FILE_BLOCK_SIZE = sizeof(uint32) + WAY_BLOCKSIZE*sizeof(uint32);
 
 const char* NODE_STRING_DATA = "/opt/osm_why_api/node_strings.dat";
 const char* NODE_STRING_IDX = "/opt/osm_why_api/node_strings.idx";
-const char* NODE_TAG_ID_NODE_FILE = "/opt/osm_why_api/node_tag_id_node.dat";
-const char* NODE_TAG_ID_NODE_IDX = "/opt/osm_why_api/node_tag_id_node.idx";
+const char* NODE_TAG_ID_NODE_LOCAL_FILE = "/opt/osm_why_api/node_tag_id_node_local.dat";
+const char* NODE_TAG_ID_NODE_LOCAL_IDX = "/opt/osm_why_api/node_tag_id_node_local.idx";
+const char* NODE_TAG_ID_NODE_GLOBAL_FILE = "/opt/osm_why_api/node_tag_id_node_global.dat";
+const char* NODE_TAG_ID_NODE_GLOBAL_IDX = "/opt/osm_why_api/node_tag_id_node_global.idx";
+const char* NODE_TAG_NODE_ID_FILE = "/opt/osm_why_api/node_tag_node_id.dat";
+const char* NODE_TAG_NODE_ID_IDX = "/opt/osm_why_api/node_tag_node_id.idx";
 const char* NODE_TAG_TMPAPREFIX = "/tmp/node_strings_";
 const char* NODE_TAG_TMPB = "/tmp/node_tag_ids";
 const uint NODE_TAG_SPATIAL_PARTS = 32;
 const int NODE_STRING_BLOCK_SIZE = 1024*1024;
-const uint32 TAG_ID_NODE_BLOCKSIZE = 4*1024*1024;
-
-//-----------------------------------------------------------------------------
-
-// constraints:
-// T::size_of_buf(T::to_buf()) == T::size_of()
-// T::index_of_buf(T::to_buf()) == T::index_of()
-// T::size_of() < T::blocksize()
-// the block_index iiis coherent with the fileeeeee content and size
-// template< class T, class Iterator >
-//     void flush_data(Iterator elem_begin, Iterator elem_end)
-// {
-//   if (elem_begin == elem_end)
-//     return;
-//   
-//   const uint32 BLOCKSIZE(T::blocksize());
-//   multimap< int32, uint16 >& block_index(T::block_index());
-//   
-//   int next_block_id(block_index.size());
-//   
-//   if (block_index.empty())
-//   {
-//     int dest_fd = open64(T::data_file(), O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-//     close(dest_fd);
-//   
-//     dest_fd = open64(T::data_file(), O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-//     if (dest_fd < 0)
-//     {
-//       cerr<<"open64: "<<errno<<'\n';
-//       exit(0);
-//     }
-//   
-//     uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
-//     unsigned int i(sizeof(uint32));
-//     
-//     block_index.insert(make_pair< int32, uint32 >
-// 	(T::index_of(elem_begin), next_block_id++));
-//     
-//     Iterator it(elem_begin);
-//     while (it != elem_end)
-//     {
-//       if (i >= BLOCKSIZE - T::size_of(it))
-//       {
-// 	((uint32*)dest_buf)[0] = i - sizeof(uint32);
-// 	write(dest_fd, dest_buf, BLOCKSIZE);
-//         
-// 	block_index.insert(make_pair< int, unsigned int >
-// 	    (T::index_of(it), next_block_id++));
-// 	i = sizeof(uint32);
-//       }
-//       
-//       T::to_buf(&(dest_buf[i]), it);
-//       i += T::size_of(it);
-//       ++it;
-//     }
-//     if (i > 1)
-//     {
-//       ((uint32*)dest_buf)[0] = i - sizeof(uint32);
-//       write(dest_fd, dest_buf, BLOCKSIZE);
-//     }
-// 
-//     free(dest_buf);
-//     close(dest_fd);
-//   }
-//   else
-//   {
-//     int dest_fd = open64(T::data_file(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-//     if (dest_fd < 0)
-//     {
-//       cerr<<"open64: "<<errno<<'\n';
-//       exit(0);
-//     }
-//   
-//     uint8* source_buf = (uint8*) malloc(BLOCKSIZE);
-//     uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
-//     
-//     Iterator elem_it(elem_begin);
-//     multimap< int32, uint16 >::const_iterator block_it(block_index.begin());
-//     unsigned int cur_block((block_it++)->second);
-//     while (elem_it != elem_end)
-//     {
-//       while ((block_it != block_index.end()) && (block_it->first <= T::index_of(elem_it)))
-// 	cur_block = (block_it++)->second;
-// 
-//       uint32 new_byte_count(0);
-//       vector< uint32* >::const_iterator elem_it2(elem_it);
-//       if (block_it != block_index.end())
-//       {
-// 	while ((elem_it2 != elem_end) && (block_it->first > T::index_of(elem_it2)))
-// 	{
-// 	  new_byte_count += T::size_of(elem_it2);
-// 	  ++elem_it2;
-// 	}
-//       }
-//       else
-//       {
-// 	while (elem_it2 != elem_end)
-// 	{
-// 	  new_byte_count += T::size_of(elem_it2);
-// 	  ++elem_it2;
-// 	}
-//       }
-//       
-//       lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
-//       read(dest_fd, source_buf, BLOCKSIZE);
-//       new_byte_count += ((uint32*)source_buf)[0];
-//       
-//       uint32 i(sizeof(uint32));
-//       while (new_byte_count > BLOCKSIZE)
-//       {
-// 	uint32 blocksize(new_byte_count/(new_byte_count/BLOCKSIZE + 1));
-//         
-// 	uint32 j(sizeof(uint32));
-// 	while ((j < blocksize) &&
-// 		 (elem_it != elem_it2) && (i < ((uint32*)source_buf)[0]) &&
-// 		 (j < BLOCKSIZE - T::size_of(elem_it)) &&
-// 		       (j < BLOCKSIZE - T::size_of_buf(&(source_buf[i]))))
-// 	{
-// 	  if (T::elem_less_buf(elem_it, &(source_buf[i])))
-// 	  {
-// 	    T::to_buf(&(dest_buf[j]), elem_it);
-// 	    j += T::size_of(elem_it);
-// 	    ++elem_it;
-// 	  }
-// 	  else
-// 	  {
-// 	    memcpy(&(dest_buf[j]), &(source_buf[i]), T::size_of_buf(&(source_buf[i])));
-// 	    j += T::size_of_buf(&(source_buf[i]));
-// 	    i += T::size_of_buf(&(source_buf[i]));
-// 	  }
-// 	}
-// 	while ((j < blocksize) && (elem_it != elem_it2) && (j < BLOCKSIZE - T::size_of(elem_it)))
-// 	{
-// 	  T::to_buf(&(dest_buf[j]), elem_it);
-// 	  j += T::size_of(elem_it);
-// 	  ++elem_it;
-// 	}
-// 	while ((j < blocksize) && (i < ((uint32*)source_buf)[0]) &&
-// 		       (j < BLOCKSIZE - T::size_of_buf(&(source_buf[i]))))
-// 	{
-// 	  memcpy(&(dest_buf[j]), &(source_buf[i]), T::size_of_buf(&(source_buf[i])));
-// 	  j += T::size_of_buf(&(source_buf[i]));
-// 	  i += T::size_of_buf(&(source_buf[i]));
-// 	}
-// 
-// 	lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
-// 	((uint32*)dest_buf)[0] = j - sizeof(uint32);
-// 	write(dest_fd, dest_buf, BLOCKSIZE);
-// 
-// 	cur_block = next_block_id;
-// 	if ((i >= ((uint32*)source_buf)[0]) || (T::elem_less_buf(elem_it, &(source_buf[i]))))
-// 	  block_index.insert(make_pair< int, unsigned int >(T::index_of(elem_it), next_block_id++));
-// 	else
-// 	  block_index.insert(make_pair< int, unsigned int >
-// 	      (T::index_of_buf(&(source_buf[i])), next_block_id++));
-// 	new_byte_count -= (j - sizeof(uint32));
-//       }
-//       
-//       uint32 j(sizeof(uint32));
-//       while ((elem_it != elem_it2) && (i < ((uint32*)source_buf)[0]))
-//       {
-// 	cout<<i<<' '<<*((uint32*)&(source_buf[i]))<<'\n';
-// 	if (T::elem_less_buf(elem_it, &(source_buf[i])))
-// 	{
-// 	  T::to_buf(&(dest_buf[j]), elem_it);
-// 	  j += T::size_of(elem_it);
-// 	  ++elem_it;
-// 	}
-// 	else
-// 	{
-// 	  memcpy(&(dest_buf[j]), &(source_buf[i]), T::size_of_buf(&(source_buf[i])));
-// 	  j += T::size_of_buf(&(source_buf[i]));
-// 	  i += T::size_of_buf(&(source_buf[i]));
-// 	}
-//       }
-//       while (elem_it != elem_it2)
-//       {
-// 	T::to_buf(&(dest_buf[j]), elem_it);
-// 	j += T::size_of(elem_it);
-// 	++elem_it;
-//       }
-//       while (i < ((uint32*)source_buf)[0])
-//       {
-// 	memcpy(&(dest_buf[j]), &(source_buf[i]), T::size_of_buf(&(source_buf[i])));
-// 	j += T::size_of_buf(&(source_buf[i]));
-// 	i += T::size_of_buf(&(source_buf[i]));
-//       }
-//       lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
-//       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-//       write(dest_fd, dest_buf, BLOCKSIZE);
-//     }
-//     
-//     free(source_buf);
-//     free(dest_buf);
-// 
-//     close(dest_fd);
-//   }
-// }
-// 
-// template< class T >
-//     void make_block_index()
-// {
-//   multimap< int32, uint16 >& block_index(T::block_index());
-//   
-//   pair< int32, uint16 >* buf =
-//       (pair< int32, uint16 >*) malloc(sizeof(int)*2*block_index.size());
-//       
-//   if (!buf)
-//   {
-//     cerr<<"malloc: "<<errno<<'\n';
-//     exit(0);
-//   }
-//   
-//   unsigned int i(0);
-//   for (multimap< int32, uint16 >::const_iterator it(block_index.begin());
-//        it != block_index.end(); ++it)
-//     buf[i++] = *it;
-//   
-//   int dest_fd = open64(T::index_file(), O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-//   write(dest_fd, buf, sizeof(int)*2*block_index.size());
-//   close(dest_fd);
-//   
-//   free(buf);
-// }
+const uint32 TAG_ID_NODE_LOCAL_BLOCKSIZE = 4*1024*1024;
+const uint32 TAG_ID_NODE_GLOBAL_BLOCKSIZE = 4*1024*1024;
+const uint32 TAG_NODE_ID_BLOCKSIZE = 4*1024*1024;
 
 //-----------------------------------------------------------------------------
 
@@ -744,6 +527,12 @@ void postprocess_ways_2()
   }
   
   int ways_tmp_fd = open64(WAY_ALLTMP, O_RDONLY);
+  if (ways_tmp_fd < 0)
+  {
+    cerr<<"open64: "<<errno<<'\n';
+    exit(0);
+  }
+  
   int32 offset(0), count(max_nodes_ram);
   uint32* ll_idx = (uint32*) malloc(sizeof(int32)*count);
   
@@ -826,7 +615,12 @@ void postprocess_ways_3()
   uint16* idx_buf = (uint16*) malloc(sizeof(uint16)*max_way_id);
   
   ways_dat_fd = open64(WAY_DATA, O_RDONLY);
-  
+  if (ways_dat_fd < 0)
+  {
+    cerr<<"open64: "<<errno<<'\n';
+    exit(0);
+  }
+
   uint32 i(0);
   while (read(ways_dat_fd, way_rd_buf, WAY_FILE_BLOCK_SIZE))
   {
@@ -851,8 +645,14 @@ void postprocess_ways_4()
   const uint32 max_nodes_ram = 200*1000*1000;
   int32 offset(0), count(max_nodes_ram);
   uint32* ll_idx = (uint32*) malloc(sizeof(int32)*count);
-  ways_dat_fd = open64(WAY_DATA, O_RDONLY);
   
+  ways_dat_fd = open64(WAY_DATA, O_RDONLY);
+  if (ways_dat_fd < 0)
+  {
+    cerr<<"open64: "<<errno<<'\n';
+    exit(0);
+  }
+
   set< pair< int32, uint16 > > idx_block;
   
   while (offset < max_node_id)
@@ -903,6 +703,8 @@ const int RELATION = 3;
 const unsigned int FLUSH_INTERVAL = 32*1024*1024;
 const unsigned int FLUSH_TAGS_INTERVAL = 32*1024*1024;
 const unsigned int DOT_INTERVAL = 512*1024;
+const uint32 TAG_SORT_BUFFER_SIZE = 128*1024*1024;
+  
 unsigned int structure_count(0);
 int state(0);
 const int NODES = 1;
@@ -915,7 +717,9 @@ vector< uint32 > split_idx;
 uint32 next_node_tag_id(0);
 uint8* cur_block_count;
 uint32* block_of_id;
-multimap< int32, uint16 > block_index_tag_id_node;
+multimap< int32, uint16 > block_index_tag_id_local;
+multimap< int32, uint16 > block_index_tag_id_global;
+multimap< int32, uint16 > block_index_tag_node_id;
 
 // unsigned int way_member_count(0);
 
@@ -1154,15 +958,6 @@ void node_tag_statistics()
   }
   global_count -= spatial_count[0x00ffffff];
   
-/*  for (unsigned int i(0); i < 65536; ++i)
-  {
-    cout<<hex<<i<<"0000:";
-    for (unsigned int j(0); j < 256; ++j)
-      cout<<dec<<' '<<spatial_count[i*256 + j];
-    cout<<'\n';
-  }
-  cout<<'\n';*/
-  
   uint32 split_count(0);
   for (unsigned int i(0); i < 16*1024*1024; ++i)
   {
@@ -1170,7 +965,6 @@ void node_tag_statistics()
     if (split_count >= global_count / NODE_TAG_SPATIAL_PARTS)
     {
       split_idx.push_back(i<<8);
-/*      cout<<i<<'\n';*/
       split_count = 0;
     }
   }
@@ -1283,20 +1077,15 @@ void node_tag_split_and_index()
   cerr<<'p';
 }
 
-struct Tag_Id_Node
+struct Tag_Id_Node_Local
 {
-  static multimap< int32, uint16 >& block_index() { return block_index_tag_id_node; }
-  static uint32 blocksize() { return TAG_ID_NODE_BLOCKSIZE; }
-  static const char* data_file() { return NODE_TAG_ID_NODE_FILE; }
-  static const char* index_file() { return NODE_TAG_ID_NODE_IDX; }
+  static multimap< int32, uint16 >& block_index() { return block_index_tag_id_local; }
+  static uint32 blocksize() { return TAG_ID_NODE_LOCAL_BLOCKSIZE; }
+  static const char* data_file() { return NODE_TAG_ID_NODE_LOCAL_FILE; }
+  static const char* index_file() { return NODE_TAG_ID_NODE_LOCAL_IDX; }
   
   static uint32 size_of(const vector< uint32* >::const_iterator& it)
   {
-/*    if ((*it)[1] > 255)
-    {
-      cerr<<"size>255: "<<**it<<'\n';
-      exit(0);
-    }*/
     return ((*it)[1]*sizeof(uint32) + 2*sizeof(uint8) + sizeof(uint32));
   }
 
@@ -1317,16 +1106,6 @@ struct Tag_Id_Node
   
   static uint32 elem_less_buf(const vector< uint32* >::const_iterator& it, uint8* buf)
   {
-/*    if (**it > next_node_tag_id)
-    {
-      cerr<<"it "<<**it<<'\n';
-      exit(0);
-    }
-    if (*((uint32*)buf) > next_node_tag_id)
-    {
-      cerr<<"buf "<<*((uint32*)buf)<<'\n';
-      exit(0);
-    }*/
     if (((block_of_id[**it]) & 0xffffff00) < ((block_of_id[*((uint32*)buf)]) & 0xffffff00))
       return true;
     else if (((block_of_id[**it]) & 0xffffff00) > ((block_of_id[*((uint32*)buf)]) & 0xffffff00))
@@ -1343,7 +1122,47 @@ struct Tag_Id_Node
   }
 };
 
-struct tag_id_less : public binary_function< uint32*, uint32*, bool >
+struct Tag_Id_Node_Global
+{
+  static multimap< int32, uint16 >& block_index() { return block_index_tag_id_global; }
+  static uint32 blocksize() { return TAG_ID_NODE_GLOBAL_BLOCKSIZE; }
+  static const char* data_file() { return NODE_TAG_ID_NODE_GLOBAL_FILE; }
+  static const char* index_file() { return NODE_TAG_ID_NODE_GLOBAL_IDX; }
+  
+  static uint32 size_of(const vector< uint32* >::const_iterator& it)
+  {
+    return ((*it)[1]*sizeof(uint32) + sizeof(uint8) + sizeof(uint32));
+  }
+
+  static uint32 size_of_buf(uint8* elem)
+  {
+    return (elem[4]*sizeof(uint32) + sizeof(uint8) + sizeof(uint32));
+  }
+  
+  static int32 index_of(const vector< uint32* >::const_iterator& it)
+  {
+    return **it;
+  }
+
+  static int32 index_of_buf(uint8* elem)
+  {
+    return *((uint32*)elem);
+  }
+  
+  static uint32 elem_less_buf(const vector< uint32* >::const_iterator& it, uint8* buf)
+  {
+    return (**it < *((uint32*)buf));
+  }
+  
+  static void to_buf(uint8* dest, const vector< uint32* >::const_iterator& it)
+  {
+    ((uint32*)dest)[0] = (*it)[0];
+    dest[4] = (*it)[1];
+    memcpy(&(dest[5]), &((*it)[2]), (*it)[1]*sizeof(uint32));
+  }
+};
+
+struct tag_id_local_less : public binary_function< uint32*, uint32*, bool >
 {
   bool operator() (uint32* const& a, uint32* const& b)
   {
@@ -1355,10 +1174,16 @@ struct tag_id_less : public binary_function< uint32*, uint32*, bool >
   }
 };
 
+struct tag_id_global_less : public binary_function< uint32*, uint32*, bool >
+{
+  bool operator() (uint32* const& a, uint32* const& b)
+  {
+    return (*a < *b);
+  }
+};
+
 void node_tag_create_id_node_idx()
 {
-  const uint32 TAG_SORT_BUFFER_SIZE = 128*1024*1024;
-  
   uint32 rd_buf_pos(0);
   
   int source_fd = open64(NODE_TAG_TMPB, O_RDONLY);
@@ -1372,13 +1197,12 @@ void node_tag_create_id_node_idx()
   uint32* tag_alt_buf = (uint32*) malloc(TAG_SORT_BUFFER_SIZE);
   uint32 max_pos(0);
   
-  uint32 global_count(0), local_count(0);
-  
   while ((max_pos =
 	 read(source_fd, &(tag_rd_buf[rd_buf_pos]), TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32))))
   {
-    vector< uint32* > id_pos;
+    vector< uint32* > tag_id_local, tag_id_global;
     uint32 alt_buf_pos(0);
+    max_pos += rd_buf_pos*sizeof(uint32);
     rd_buf_pos = 0;
   
     while ((rd_buf_pos + 1 < max_pos / sizeof(uint32)) &&
@@ -1388,15 +1212,14 @@ void node_tag_create_id_node_idx()
       
       if ((~(block_of_id[tag_rd_buf[rd_buf_pos]])) & 0xffffff00)
       {
-	++local_count;
-	id_pos.push_back(&(tag_rd_buf[rd_buf_pos]));
+	tag_id_local.push_back(&(tag_rd_buf[rd_buf_pos]));
       
 	while (tag_rd_buf[rd_buf_pos+1] > 255)
 	{
 	  if (tag_rd_buf[rd_buf_pos+1] > 510)
 	  {
-	    id_pos.push_back(&(tag_alt_buf[alt_buf_pos]));
-	    id_pos.push_back(&(tag_rd_buf[rd_buf_pos + 510]));
+	    tag_id_local.push_back(&(tag_alt_buf[alt_buf_pos]));
+	    tag_id_local.push_back(&(tag_rd_buf[rd_buf_pos + 510]));
 	  
 	    tag_alt_buf[alt_buf_pos++] = tag_rd_buf[rd_buf_pos];
 	    tag_alt_buf[alt_buf_pos++] = 255;
@@ -1412,7 +1235,7 @@ void node_tag_create_id_node_idx()
 	  }
 	  else
 	  {
-	    id_pos.push_back(&(tag_alt_buf[alt_buf_pos]));
+	    tag_id_local.push_back(&(tag_alt_buf[alt_buf_pos]));
 	  
 	    tag_alt_buf[alt_buf_pos++] = tag_rd_buf[rd_buf_pos];
 	    tag_alt_buf[alt_buf_pos++] = tag_rd_buf[rd_buf_pos+1] - 255;
@@ -1425,33 +1248,51 @@ void node_tag_create_id_node_idx()
       }
       else
       {
-	++global_count;
-	//id_pos.push_back(&(tag_rd_buf[rd_buf_pos]));
+	tag_id_global.push_back(&(tag_rd_buf[rd_buf_pos]));
+      
+	while (tag_rd_buf[rd_buf_pos+1] > 255)
+	{
+	  if (tag_rd_buf[rd_buf_pos+1] > 510)
+	  {
+	    tag_id_global.push_back(&(tag_alt_buf[alt_buf_pos]));
+	    tag_id_global.push_back(&(tag_rd_buf[rd_buf_pos + 510]));
+	  
+	    tag_alt_buf[alt_buf_pos++] = tag_rd_buf[rd_buf_pos];
+	    tag_alt_buf[alt_buf_pos++] = 255;
+	    memcpy(&(tag_alt_buf[alt_buf_pos]), &(tag_rd_buf[rd_buf_pos+257]), 255*sizeof(uint32));
+	    alt_buf_pos += 255;
+	    tag_rd_buf[rd_buf_pos+1] = 255;
+	  
+	    next_pos -= 510;
+	    rd_buf_pos += 510;
+	  
+	    tag_rd_buf[rd_buf_pos] = tag_rd_buf[rd_buf_pos - 510];
+	    tag_rd_buf[rd_buf_pos+1] = next_pos - 2;
+	  }
+	  else
+	  {
+	    tag_id_global.push_back(&(tag_alt_buf[alt_buf_pos]));
+	  
+	    tag_alt_buf[alt_buf_pos++] = tag_rd_buf[rd_buf_pos];
+	    tag_alt_buf[alt_buf_pos++] = tag_rd_buf[rd_buf_pos+1] - 255;
+	    memcpy(&(tag_alt_buf[alt_buf_pos]), &(tag_rd_buf[rd_buf_pos+257]),
+		     (tag_rd_buf[rd_buf_pos+1] - 255)*sizeof(uint32));
+	    alt_buf_pos += (tag_rd_buf[rd_buf_pos+1] - 255);
+	    tag_rd_buf[rd_buf_pos+1] = 255;
+	  }
+	}
       }
       
       rd_buf_pos += next_pos;
     }
     
-    //TEMP
-/*    cout<<id_pos.size()<<'\n';
-    for (uint32 i(0); i < id_pos.size(); ++i)
-    {
-      if ((uint32)(id_pos[i]) < (uint32)tag_rd_buf)
-	cout<<"a "<<tag_rd_buf<<' '<<*(id_pos[i])<<'\n';
-      if ((uint32)(id_pos[i]) > (uint32)tag_rd_buf + TAG_SORT_BUFFER_SIZE)
-	cout<<"A "<<tag_rd_buf<<' '<<*(id_pos[i])<<'\n';
-      if (*(id_pos[i]) > next_node_tag_id)
-	cout<<"B "<<*(id_pos[i])<<'\n';
-      if (((id_pos[i])[1] > 255))
-	cout<<"C "<<hex<<*(id_pos[i])<<' '<<dec<<(id_pos[i])[1]<<'\n';
-    }*/
-      
-/*    cerr<<id_pos.front()<<' '<<(*id_pos.front())<<' '<<id_pos.front()[1]<<' '
-	<<id_pos.back()<<' '<<(*id_pos.back())<<' '<<id_pos.back()[1]<<'\n';*/
+    sort(tag_id_local.begin(), tag_id_local.end(), tag_id_local_less());
+    sort(tag_id_global.begin(), tag_id_global.end(), tag_id_global_less());
     
-    sort(id_pos.begin(), id_pos.end(), tag_id_less());
-    
-    flush_data< Tag_Id_Node, vector< uint32* >::const_iterator >(id_pos.begin(), id_pos.end());
+    flush_data< Tag_Id_Node_Local, vector< uint32* >::const_iterator >
+	(tag_id_local.begin(), tag_id_local.end());
+    flush_data< Tag_Id_Node_Global, vector< uint32* >::const_iterator >
+	(tag_id_global.begin(), tag_id_global.end());
     
     cerr<<'.';
     
@@ -1459,12 +1300,171 @@ void node_tag_create_id_node_idx()
     rd_buf_pos = TAG_SORT_BUFFER_SIZE / sizeof(uint32) - rd_buf_pos;
   }
   
-/*  cout<<local_count<<'\n'<<global_count<<'\n';*/
-  make_block_index< Tag_Id_Node >();
+  make_block_index< Tag_Id_Node_Local >();
+  make_block_index< Tag_Id_Node_Global >();
   
   free(tag_rd_buf);
   free(tag_alt_buf);
+  
+  close(source_fd);
+}
+
+uint32* ll_idx_;
+vector< vector< int32 > > ids_of_node;
+int32 offset(0);
+
+struct Tag_Node_Id_Iterator
+{
+  Tag_Node_Id_Iterator(uint32 pos) : i(pos)
+  {
+  }
+  
+  uint32 i;
+};
+
+Tag_Node_Id_Iterator& operator++(Tag_Node_Id_Iterator& t)
+{
+  ++t.i;
+  while ((t.i < ids_of_node.size()) && (!(ids_of_node[t.i].size())))
+    ++t.i;
+  if (t.i > ids_of_node.size())
+    t.i = ids_of_node.size();
+  
+  return t;
+}
+
+bool operator==(const Tag_Node_Id_Iterator& a, const Tag_Node_Id_Iterator& b)
+{
+  return (a.i == b.i);
+}
+
+bool operator!=(const Tag_Node_Id_Iterator& a, const Tag_Node_Id_Iterator& b)
+{
+  return (a.i != b.i);
+}
+
+struct Tag_Node_Id
+{
+  static multimap< int32, uint16 >& block_index() { return block_index_tag_node_id; }
+  static uint32 blocksize() { return TAG_NODE_ID_BLOCKSIZE; }
+  static const char* data_file() { return NODE_TAG_NODE_ID_FILE; }
+  static const char* index_file() { return NODE_TAG_NODE_ID_IDX; }
+  
+  static uint32 size_of(const Tag_Node_Id_Iterator& it)
+  {
+    return (ids_of_node[it.i].size()*sizeof(uint32) + sizeof(uint16) + 2*sizeof(uint32));
+  }
+
+  static uint32 size_of_buf(uint8* elem)
+  {
+    return ((*((uint16*)&(elem[8])))*sizeof(uint32) + sizeof(uint16) + 2*sizeof(uint32));
+  }
+  
+  static int32 index_of(const Tag_Node_Id_Iterator& it)
+  {
+    return ll_idx_[it.i];
+  }
+
+  static int32 index_of_buf(uint8* elem)
+  {
+    return *((uint32*)&(elem[4]));
+  }
+  
+  static uint32 elem_less_buf(const Tag_Node_Id_Iterator& it, uint8* buf)
+  {
+    if (ll_idx_[it.i] < *((uint32*)&(buf[4])))
+      return true;
+    else if (ll_idx_[it.i] > *((uint32*)&(buf[4])))
+      return false;
+    return (it.i + offset < *((uint32*)&(buf[0])));
+  }
+  
+  static void to_buf(uint8* dest, const Tag_Node_Id_Iterator& it)
+  {
+    *((uint32*)&(dest[0])) = it.i + offset;
+    *((uint32*)&(dest[4])) = ll_idx_[it.i];
+    *((uint16*)&(dest[8])) = ids_of_node[it.i].size();
+    for (uint32 i(0); i < ids_of_node[it.i].size(); ++i)
+      *((uint32*)&(dest[4*i + 10])) = ids_of_node[it.i][i];
+  }
+};
+
+void node_tag_create_node_id_idx()
+{
+  const uint32 max_nodes_ram = 50*1000*1000;
+  
+  int source_fd = open64(NODE_TAG_TMPB, O_RDONLY);
+  if (source_fd < 0)
+  {
+    cerr<<"open64: "<<errno<<'\n';
+    exit(0);
+  }
+  
+  uint8* blocklet_of_id = (uint8*) malloc((next_node_tag_id+1)*sizeof(uint8));
+  for (unsigned int i(0); i < (next_node_tag_id+1); ++i)
+    blocklet_of_id[i] = block_of_id[i];
   free(block_of_id);
+  
+  uint32* tag_rd_buf = (uint32*) malloc(TAG_SORT_BUFFER_SIZE);
+  
+  int32 count(max_nodes_ram);
+  offset = 0;
+  ll_idx_ = (uint32*) malloc(sizeof(uint32)*count);
+  while (offset < max_node_id)
+  {
+    ids_of_node.clear();
+    ids_of_node.resize(count);
+  
+    cerr<<'n';
+    prepare_nodes_chunk(offset, count, ll_idx_);
+    cerr<<'n';
+    lseek64(source_fd, 0, SEEK_SET);
+    
+    uint32 rd_buf_pos(0), max_pos(0), TEMP(0);
+    while ((max_pos =
+	    read(source_fd, &(tag_rd_buf[rd_buf_pos]), TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32))))
+    {
+      max_pos += rd_buf_pos*sizeof(uint32);
+      rd_buf_pos = 0;
+  
+      while ((rd_buf_pos + 1 < max_pos / sizeof(uint32)) &&
+	      (rd_buf_pos + tag_rd_buf[rd_buf_pos+1] + 1 < max_pos / sizeof(uint32)))
+      {
+	for (uint32 i(0); i < tag_rd_buf[rd_buf_pos+1]; ++i)
+	{
+	  if ((tag_rd_buf[rd_buf_pos+2+i] >= (uint32)offset) &&
+		      ((int32)tag_rd_buf[rd_buf_pos+2+i] - offset < count))
+	  {
+	    ++TEMP;
+	    if (ids_of_node[tag_rd_buf[rd_buf_pos+2+i] - offset].size() < 65535)
+	      ids_of_node[tag_rd_buf[rd_buf_pos+2+i] - offset].push_back(tag_rd_buf[rd_buf_pos]);
+	    else
+	    {
+	      cerr<<"Node "<<dec<<tag_rd_buf[rd_buf_pos+2+i]<<" has more than 2^16 tags.\n";
+	      exit(0);
+	    }
+	  }
+	}
+      
+	rd_buf_pos += tag_rd_buf[rd_buf_pos+1] + 2;
+      }
+      cerr<<'t';
+    
+      memmove(tag_rd_buf, &(tag_rd_buf[rd_buf_pos]), TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32));
+      rd_buf_pos = TAG_SORT_BUFFER_SIZE / sizeof(uint32) - rd_buf_pos;
+    }
+    
+    flush_data< Tag_Node_Id, Tag_Node_Id_Iterator >
+	(Tag_Node_Id_Iterator(0), Tag_Node_Id_Iterator(count));
+    
+    offset += count;
+  }
+  
+  make_block_index< Tag_Node_Id >();
+    
+  free(ll_idx_);
+  free(tag_rd_buf);
+  free(blocklet_of_id);
   
   close(source_fd);
 }
@@ -1556,6 +1556,7 @@ void start(const char *el, const char **attr)
       node_tag_statistics();
       node_tag_split_and_index();
       node_tag_create_id_node_idx();
+      node_tag_create_node_id_idx();
       
       postprocess_nodes();
       
@@ -1704,11 +1705,14 @@ int main(int argc, char *argv[])
   return 0;*/
   
   //TEMP
-/*  current_run = 49;
-  next_node_tag_id = 150*1000*1000;
+/*  current_run = 25;
+  next_node_tag_id = 100*1000*1000;
+  max_node_id = 500*1000*1000;
   node_tag_statistics();
   node_tag_split_and_index();
-  node_tag_create_id_node_idx();*/
+  node_tag_create_id_node_idx();
+  node_tag_create_node_id_idx();
+  exit(0);*/
   
   prepare_nodes();
   

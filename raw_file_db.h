@@ -23,6 +23,7 @@ typedef unsigned long long uint64;
 // T::index_of_buf(T::to_buf()) == T::index_of()
 // T::size_of() < T::blocksize()
 // the block_index is coherent with the file content and size
+// ...
 template< class T, class Iterator >
     void flush_data(Iterator elem_begin, Iterator elem_end)
 {
@@ -49,7 +50,7 @@ template< class T, class Iterator >
     uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
     unsigned int i(sizeof(uint32));
     
-    block_index.insert(make_pair< int32, uint32 >
+    block_index.insert(make_pair< int32, uint16 >
 	(T::index_of(elem_begin), next_block_id++));
     
     Iterator it(elem_begin);
@@ -60,7 +61,7 @@ template< class T, class Iterator >
 	((uint32*)dest_buf)[0] = i - sizeof(uint32);
 	write(dest_fd, dest_buf, BLOCKSIZE);
         
-	block_index.insert(make_pair< int, unsigned int >
+	block_index.insert(make_pair< int32, uint16 >
 	    (T::index_of(it), next_block_id++));
 	i = sizeof(uint32);
       }
@@ -99,7 +100,7 @@ template< class T, class Iterator >
 	cur_block = (block_it++)->second;
 
       uint32 new_byte_count(0);
-      vector< uint32* >::const_iterator elem_it2(elem_it);
+      Iterator elem_it2(elem_it);
       if (block_it != block_index.end())
       {
 	while ((elem_it2 != elem_end) && (block_it->first > T::index_of(elem_it2)))
@@ -165,9 +166,9 @@ template< class T, class Iterator >
 
 	cur_block = next_block_id;
 	if ((i >= ((uint32*)source_buf)[0]) || (T::elem_less_buf(elem_it, &(source_buf[i]))))
-	  block_index.insert(make_pair< int, unsigned int >(T::index_of(elem_it), next_block_id++));
+	  block_index.insert(make_pair< int32, uint16 >(T::index_of(elem_it), next_block_id++));
 	else
-	  block_index.insert(make_pair< int, unsigned int >
+	  block_index.insert(make_pair< int32, uint16 >
 	      (T::index_of_buf(&(source_buf[i])), next_block_id++));
 	new_byte_count -= (j - sizeof(uint32));
       }
