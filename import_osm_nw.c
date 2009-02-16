@@ -54,9 +54,252 @@ const uint32 TAG_NODE_ID_BLOCKSIZE = 4*1024*1024;
 
 //-----------------------------------------------------------------------------
 
+struct Tag_Id_Node_Local
+{
+  Tag_Id_Node_Local(uint32* block_of_id) : block_index_(), block_of_id_(block_of_id) {}
+  
+  const multimap< uint32, uint16 >& block_index() const { return block_index_; }
+  multimap< uint32, uint16 >& block_index() { return block_index_; }
+  uint32 blocksize() const { return TAG_ID_NODE_LOCAL_BLOCKSIZE; }
+  const char* data_file() const { return NODE_TAG_ID_NODE_LOCAL_FILE; }
+  const char* index_file() const { return NODE_TAG_ID_NODE_LOCAL_IDX; }
+  
+  typedef vector< uint32* >::const_iterator Iterator;
+  
+  typedef uint32 Index;
+  uint32 size_of_Index() const { return sizeof(uint32); }
+  
+  uint32 size_of(const vector< uint32* >::const_iterator& it) const
+  {
+    return ((*it)[1]*sizeof(uint32) + 2*sizeof(uint8) + sizeof(uint32));
+  }
+  
+  uint32 size_of_buf(uint8* elem) const
+  {
+    return (elem[4]*sizeof(uint32) + 2*sizeof(uint8) + sizeof(uint32));
+  }
+  
+  uint32 index_of(const vector< uint32* >::const_iterator& it) const
+  {
+    return ((block_of_id_[**it]) & 0xffffff00);
+  }
+  
+  uint32 index_of_buf(uint8* elem) const
+  {
+    return ((block_of_id_[*((uint32*)elem)]) & 0xffffff00);
+  }
+  
+  int32 compare(const vector< uint32* >::const_iterator& it, uint8* buf) const
+  {
+    if (((block_of_id_[**it]) & 0xffffff00) < ((block_of_id_[*((uint32*)buf)]) & 0xffffff00))
+      return RAW_DB_LESS;
+    else if (((block_of_id_[**it]) & 0xffffff00) > ((block_of_id_[*((uint32*)buf)]) & 0xffffff00))
+      return RAW_DB_GREATER;
+    if (**it < *((uint32*)buf))
+      return RAW_DB_LESS;
+    else
+      return RAW_DB_GREATER;
+  }
+  
+  void to_buf(uint8* dest, const vector< uint32* >::const_iterator& it) const
+  {
+    ((uint32*)dest)[0] = (*it)[0];
+    dest[4] = (*it)[1];
+    dest[5] = block_of_id_[**it];
+    memcpy(&(dest[6]), &((*it)[2]), (*it)[1]*sizeof(uint32));
+  }
+  
+  void index_to_buf(uint8* dest, const uint32& i) const
+  {
+    ((uint32*)dest)[0] = i;
+  }
+
+private:
+  multimap< uint32, uint16 > block_index_;
+  uint32* block_of_id_;
+};
+
+//-----------------------------------------------------------------------------
+
+struct Tag_Id_Node_Global
+{
+  Tag_Id_Node_Global() : block_index_() {}
+  
+  const multimap< uint32, uint16 >& block_index() const { return block_index_; }
+  multimap< uint32, uint16 >& block_index() { return block_index_; }
+  uint32 blocksize() const { return TAG_ID_NODE_GLOBAL_BLOCKSIZE; }
+  const char* data_file() const { return NODE_TAG_ID_NODE_GLOBAL_FILE; }
+  const char* index_file() const { return NODE_TAG_ID_NODE_GLOBAL_IDX; }
+  
+  typedef vector< uint32* >::const_iterator Iterator;
+  
+  typedef uint32 Index;
+  uint32 size_of_Index() const { return sizeof(uint32); }
+  
+  uint32 size_of(const vector< uint32* >::const_iterator& it) const
+  {
+    return ((*it)[1]*sizeof(uint32) + sizeof(uint8) + sizeof(uint32));
+  }
+  
+  uint32 size_of_buf(uint8* elem) const
+  {
+    return (elem[4]*sizeof(uint32) + sizeof(uint8) + sizeof(uint32));
+  }
+  
+  uint32 index_of(const vector< uint32* >::const_iterator& it) const
+  {
+    return **it;
+  }
+  
+  uint32 index_of_buf(uint8* elem) const
+  {
+    return *((uint32*)elem);
+  }
+  
+  int32 compare(const vector< uint32* >::const_iterator& it, uint8* buf) const
+  {
+    if (**it < *((uint32*)buf))
+      return RAW_DB_LESS;
+    else
+      return RAW_DB_GREATER;
+  }
+  
+  void to_buf(uint8* dest, const vector< uint32* >::const_iterator& it) const
+  {
+    ((uint32*)dest)[0] = (*it)[0];
+    dest[4] = (*it)[1];
+    memcpy(&(dest[5]), &((*it)[2]), (*it)[1]*sizeof(uint32));
+  }
+  
+  void index_to_buf(uint8* dest, const uint32& i) const
+  {
+    ((uint32*)dest)[0] = i;
+  }
+  
+private:
+  multimap< uint32, uint16 > block_index_;
+};
+
+//-----------------------------------------------------------------------------
+
+struct Tag_Node_Id_Iterator
+{
+  Tag_Node_Id_Iterator(vector< vector< uint32 > >& vect, uint32 pos)
+    : i(pos), ids_of_node(vect)
+  {
+    while ((i < ids_of_node.size()) && (!(ids_of_node[i].size())))
+      ++i;
+  }
+  
+  uint32 i;
+  vector< vector< uint32 > >& ids_of_node;
+};
+
+Tag_Node_Id_Iterator& operator++(Tag_Node_Id_Iterator& t)
+{
+  ++t.i;
+  while ((t.i < t.ids_of_node.size()) && (!(t.ids_of_node[t.i].size())))
+    ++t.i;
+  if (t.i > t.ids_of_node.size())
+    t.i = t.ids_of_node.size();
+  
+  return t;
+}
+
+inline bool operator==(const Tag_Node_Id_Iterator& a, const Tag_Node_Id_Iterator& b)
+{
+  return (a.i == b.i);
+}
+
+inline bool operator!=(const Tag_Node_Id_Iterator& a, const Tag_Node_Id_Iterator& b)
+{
+  return (a.i != b.i);
+}
+
+struct Tag_Node_Id
+{
+  Tag_Node_Id(uint32* ll_idx, uint8* blocklet_of_id)
+    : ids_of_node(), offset(0),
+    block_index_(), ll_idx_(ll_idx), blocklet_of_id_(blocklet_of_id)
+     {}
+  
+  uint32 blocksize() const { return TAG_NODE_ID_BLOCKSIZE; }
+  const char* data_file() const { return NODE_TAG_NODE_ID_FILE; }
+  const char* index_file() const { return NODE_TAG_NODE_ID_IDX; }
+  const multimap< uint32, uint16 >& block_index() const { return block_index_; }
+  multimap< uint32, uint16 >& block_index() { return block_index_; }
+  
+  typedef Tag_Node_Id_Iterator Iterator;
+  
+  Iterator begin() { return Tag_Node_Id_Iterator(ids_of_node, 0); }
+  Iterator end() { return Tag_Node_Id_Iterator(ids_of_node, ids_of_node.size()); }
+
+  typedef uint32 Index;
+  uint32 size_of_Index() const { return sizeof(uint32); }
+  
+  uint32 size_of(const Tag_Node_Id_Iterator& it) const
+  {
+    return (ids_of_node[it.i].size()*(sizeof(uint32) + sizeof(uint8)) + sizeof(uint16) + 2*sizeof(uint32));
+  }
+  
+  uint32 size_of_buf(uint8* elem) const
+  {
+    return ((*((uint16*)&(elem[8])))*(sizeof(uint32) + sizeof(uint8)) + sizeof(uint16) + 2*sizeof(uint32));
+  }
+  
+  uint32 index_of(const Tag_Node_Id_Iterator& it) const
+  {
+    return ll_idx_[it.i];
+  }
+  
+  uint32 index_of_buf(uint8* elem) const
+  {
+    return *((uint32*)&(elem[4]));
+  }
+  
+  int32 compare(const Tag_Node_Id_Iterator& it, uint8* buf) const
+  {
+    if (ll_idx_[it.i] < *((uint32*)&(buf[4])))
+      return RAW_DB_LESS;
+    else if (ll_idx_[it.i] > *((uint32*)&(buf[4])))
+      return RAW_DB_GREATER;
+    if (it.i + offset < *((uint32*)&(buf[0])))
+      return RAW_DB_LESS;
+    else
+      return RAW_DB_GREATER;
+  }
+  
+  void to_buf(uint8* dest, const Tag_Node_Id_Iterator& it) const
+  {
+    *((uint32*)&(dest[0])) = it.i + offset;
+    *((uint32*)&(dest[4])) = ll_idx_[it.i];
+    *((uint16*)&(dest[8])) = ids_of_node[it.i].size();
+    for (uint32 i(0); i < ids_of_node[it.i].size(); ++i)
+    {
+      *((uint32*)&(dest[5*i + 10])) = ids_of_node[it.i][i];
+      *((uint8*)&(dest[5*i + 11])) = blocklet_of_id_[ids_of_node[it.i][i]];
+    }
+  }
+  
+  void index_to_buf(uint8* dest, const uint32& i) const
+  {
+    ((uint32*)dest)[0] = i;
+  }
+  
+  vector< vector< uint32 > > ids_of_node;
+  uint32 offset;
+  
+private:
+  multimap< uint32, uint16 > block_index_;
+  uint32* ll_idx_;
+  uint8* blocklet_of_id_;
+};
+
+//-----------------------------------------------------------------------------
+
 int nodes_dat_fd;
 multimap< int, unsigned int > block_index_nd;
-int32 max_node_id(0);
+uint32 max_node_id(0);
 int* wr_buf;
 int* rd_buf;
 
@@ -104,7 +347,7 @@ void flush_nodes(const multimap< int, Node >& nodes)
       }
       
       new (&nodes_buf[i]) Node(it->second);
-      if (it->second.id > max_node_id)
+      if (it->second.id > (int32)max_node_id)
 	max_node_id = it->second.id;
       ++it;
       ++i;
@@ -131,7 +374,7 @@ void flush_nodes(const multimap< int, Node >& nodes)
       {
 	while ((nodes_it2 != nodes.end()) && (block_it->first > nodes_it2->first))
 	{
-	  if (nodes_it2->second.id > max_node_id)
+	  if (nodes_it2->second.id > (int32)max_node_id)
 	    max_node_id = nodes_it2->second.id;
 	  ++new_element_count;
 	  ++nodes_it2;
@@ -141,7 +384,7 @@ void flush_nodes(const multimap< int, Node >& nodes)
       {
 	while (nodes_it2 != nodes.end())
 	{
-	  if (nodes_it2->second.id > max_node_id)
+	  if (nodes_it2->second.id > (int32)max_node_id)
 	    max_node_id = nodes_it2->second.id;
 	  ++new_element_count;
 	  ++nodes_it2;
@@ -533,7 +776,7 @@ void postprocess_ways_2()
     exit(0);
   }
   
-  int32 offset(0), count(max_nodes_ram);
+  uint32 offset(0), count(max_nodes_ram);
   uint32* ll_idx = (uint32*) malloc(sizeof(int32)*count);
   
   while (offset < max_node_id)
@@ -550,7 +793,7 @@ void postprocess_ways_2()
       way.nodes = (uint32*) malloc(sizeof(uint32)*way.size);
       read(ways_tmp_fd, way.nodes, way.size*sizeof(uint32));
       
-      if (((int32)way.nodes[0] >= offset) && ((int32)way.nodes[0] - offset < count))
+      if ((way.nodes[0] >= offset) && (way.nodes[0] - offset < count))
       {
 	ways_by_first_idx.insert
           (make_pair< uint32, C_Way >(ll_idx[way.nodes[0] - offset], way));
@@ -643,7 +886,7 @@ void postprocess_ways_4()
   way_rd_buf = (uint32*) malloc(WAY_FILE_BLOCK_SIZE);
   
   const uint32 max_nodes_ram = 200*1000*1000;
-  int32 offset(0), count(max_nodes_ram);
+  uint32 offset(0), count(max_nodes_ram);
   uint32* ll_idx = (uint32*) malloc(sizeof(int32)*count);
   
   ways_dat_fd = open64(WAY_DATA, O_RDONLY);
@@ -669,7 +912,7 @@ void postprocess_ways_4()
       {
 	for (uint32 k(j+3); k < j+way_rd_buf[j+2]+3; ++k)
 	{
-	  if (((int32)way_rd_buf[k] >= offset) && ((int32)way_rd_buf[k] - offset < count))
+	  if ((way_rd_buf[k] >= offset) && (way_rd_buf[k] - offset < count))
 	    idx_block.insert(make_pair< int32, uint16 >
 		((ll_idx[way_rd_buf[k] - offset]) & WAY_IDX_BITMASK, i));
 	}
@@ -697,8 +940,6 @@ void postprocess_ways_4()
 const int NODE = 1;
 const int WAY = 2;
 const int RELATION = 3;
-// int tag_type(0);
-// unsigned int current_id(0);
 
 const unsigned int FLUSH_INTERVAL = 32*1024*1024;
 const unsigned int FLUSH_TAGS_INTERVAL = 32*1024*1024;
@@ -717,11 +958,6 @@ vector< uint32 > split_idx;
 uint32 next_node_tag_id(0);
 uint8* cur_block_count;
 uint32* block_of_id;
-multimap< int32, uint16 > block_index_tag_id_local;
-multimap< int32, uint16 > block_index_tag_id_global;
-multimap< int32, uint16 > block_index_tag_node_id;
-
-// unsigned int way_member_count(0);
 
 struct KeyValue
 {
@@ -1077,91 +1313,6 @@ void node_tag_split_and_index()
   cerr<<'p';
 }
 
-struct Tag_Id_Node_Local
-{
-  static multimap< int32, uint16 >& block_index() { return block_index_tag_id_local; }
-  static uint32 blocksize() { return TAG_ID_NODE_LOCAL_BLOCKSIZE; }
-  static const char* data_file() { return NODE_TAG_ID_NODE_LOCAL_FILE; }
-  static const char* index_file() { return NODE_TAG_ID_NODE_LOCAL_IDX; }
-  
-  static uint32 size_of(const vector< uint32* >::const_iterator& it)
-  {
-    return ((*it)[1]*sizeof(uint32) + 2*sizeof(uint8) + sizeof(uint32));
-  }
-
-  static uint32 size_of_buf(uint8* elem)
-  {
-    return (elem[4]*sizeof(uint32) + 2*sizeof(uint8) + sizeof(uint32));
-  }
-  
-  static int32 index_of(const vector< uint32* >::const_iterator& it)
-  {
-    return ((block_of_id[**it]) & 0xffffff00);
-  }
-
-  static int32 index_of_buf(uint8* elem)
-  {
-    return ((block_of_id[*((uint32*)elem)]) & 0xffffff00);
-  }
-  
-  static uint32 elem_less_buf(const vector< uint32* >::const_iterator& it, uint8* buf)
-  {
-    if (((block_of_id[**it]) & 0xffffff00) < ((block_of_id[*((uint32*)buf)]) & 0xffffff00))
-      return true;
-    else if (((block_of_id[**it]) & 0xffffff00) > ((block_of_id[*((uint32*)buf)]) & 0xffffff00))
-      return false;
-    return (**it < *((uint32*)buf));
-  }
-  
-  static void to_buf(uint8* dest, const vector< uint32* >::const_iterator& it)
-  {
-    ((uint32*)dest)[0] = (*it)[0];
-    dest[4] = (*it)[1];
-    dest[5] = block_of_id[**it];
-    memcpy(&(dest[6]), &((*it)[2]), (*it)[1]*sizeof(uint32));
-  }
-};
-
-struct Tag_Id_Node_Global
-{
-  static multimap< int32, uint16 >& block_index() { return block_index_tag_id_global; }
-  static uint32 blocksize() { return TAG_ID_NODE_GLOBAL_BLOCKSIZE; }
-  static const char* data_file() { return NODE_TAG_ID_NODE_GLOBAL_FILE; }
-  static const char* index_file() { return NODE_TAG_ID_NODE_GLOBAL_IDX; }
-  
-  static uint32 size_of(const vector< uint32* >::const_iterator& it)
-  {
-    return ((*it)[1]*sizeof(uint32) + sizeof(uint8) + sizeof(uint32));
-  }
-
-  static uint32 size_of_buf(uint8* elem)
-  {
-    return (elem[4]*sizeof(uint32) + sizeof(uint8) + sizeof(uint32));
-  }
-  
-  static int32 index_of(const vector< uint32* >::const_iterator& it)
-  {
-    return **it;
-  }
-
-  static int32 index_of_buf(uint8* elem)
-  {
-    return *((uint32*)elem);
-  }
-  
-  static uint32 elem_less_buf(const vector< uint32* >::const_iterator& it, uint8* buf)
-  {
-    return (**it < *((uint32*)buf));
-  }
-  
-  static void to_buf(uint8* dest, const vector< uint32* >::const_iterator& it)
-  {
-    ((uint32*)dest)[0] = (*it)[0];
-    dest[4] = (*it)[1];
-    memcpy(&(dest[5]), &((*it)[2]), (*it)[1]*sizeof(uint32));
-  }
-};
-
 struct tag_id_local_less : public binary_function< uint32*, uint32*, bool >
 {
   bool operator() (uint32* const& a, uint32* const& b)
@@ -1185,6 +1336,8 @@ struct tag_id_global_less : public binary_function< uint32*, uint32*, bool >
 void node_tag_create_id_node_idx()
 {
   uint32 rd_buf_pos(0);
+  Tag_Id_Node_Local env_local(block_of_id);
+  Tag_Id_Node_Global env_global;
   
   int source_fd = open64(NODE_TAG_TMPB, O_RDONLY);
   if (source_fd < 0)
@@ -1289,10 +1442,10 @@ void node_tag_create_id_node_idx()
     sort(tag_id_local.begin(), tag_id_local.end(), tag_id_local_less());
     sort(tag_id_global.begin(), tag_id_global.end(), tag_id_global_less());
     
-    flush_data< Tag_Id_Node_Local, vector< uint32* >::const_iterator >
-	(tag_id_local.begin(), tag_id_local.end());
-    flush_data< Tag_Id_Node_Global, vector< uint32* >::const_iterator >
-	(tag_id_global.begin(), tag_id_global.end());
+    flush_data< Tag_Id_Node_Local >
+	(env_local, tag_id_local.begin(), tag_id_local.end());
+    flush_data< Tag_Id_Node_Global >
+        (env_global, tag_id_global.begin(), tag_id_global.end());
     
     cerr<<'.';
     
@@ -1300,94 +1453,14 @@ void node_tag_create_id_node_idx()
     rd_buf_pos = TAG_SORT_BUFFER_SIZE / sizeof(uint32) - rd_buf_pos;
   }
   
-  make_block_index< Tag_Id_Node_Local >();
-  make_block_index< Tag_Id_Node_Global >();
+  make_block_index< Tag_Id_Node_Local >(env_local);
+  make_block_index< Tag_Id_Node_Global >(env_global);
   
   free(tag_rd_buf);
   free(tag_alt_buf);
   
   close(source_fd);
 }
-
-uint32* ll_idx_;
-vector< vector< int32 > > ids_of_node;
-int32 offset(0);
-
-struct Tag_Node_Id_Iterator
-{
-  Tag_Node_Id_Iterator(uint32 pos) : i(pos)
-  {
-  }
-  
-  uint32 i;
-};
-
-Tag_Node_Id_Iterator& operator++(Tag_Node_Id_Iterator& t)
-{
-  ++t.i;
-  while ((t.i < ids_of_node.size()) && (!(ids_of_node[t.i].size())))
-    ++t.i;
-  if (t.i > ids_of_node.size())
-    t.i = ids_of_node.size();
-  
-  return t;
-}
-
-bool operator==(const Tag_Node_Id_Iterator& a, const Tag_Node_Id_Iterator& b)
-{
-  return (a.i == b.i);
-}
-
-bool operator!=(const Tag_Node_Id_Iterator& a, const Tag_Node_Id_Iterator& b)
-{
-  return (a.i != b.i);
-}
-
-struct Tag_Node_Id
-{
-  static multimap< int32, uint16 >& block_index() { return block_index_tag_node_id; }
-  static uint32 blocksize() { return TAG_NODE_ID_BLOCKSIZE; }
-  static const char* data_file() { return NODE_TAG_NODE_ID_FILE; }
-  static const char* index_file() { return NODE_TAG_NODE_ID_IDX; }
-  
-  static uint32 size_of(const Tag_Node_Id_Iterator& it)
-  {
-    return (ids_of_node[it.i].size()*sizeof(uint32) + sizeof(uint16) + 2*sizeof(uint32));
-  }
-
-  static uint32 size_of_buf(uint8* elem)
-  {
-    return ((*((uint16*)&(elem[8])))*sizeof(uint32) + sizeof(uint16) + 2*sizeof(uint32));
-  }
-  
-  static int32 index_of(const Tag_Node_Id_Iterator& it)
-  {
-    return ll_idx_[it.i];
-  }
-
-  static int32 index_of_buf(uint8* elem)
-  {
-    return *((uint32*)&(elem[4]));
-  }
-  
-  static uint32 elem_less_buf(const Tag_Node_Id_Iterator& it, uint8* buf)
-  {
-    if (ll_idx_[it.i] < *((uint32*)&(buf[4])))
-      return true;
-    else if (ll_idx_[it.i] > *((uint32*)&(buf[4])))
-      return false;
-    return (it.i + offset < *((uint32*)&(buf[0])));
-  }
-  
-  static void to_buf(uint8* dest, const Tag_Node_Id_Iterator& it)
-  {
-    *((uint32*)&(dest[0])) = it.i + offset;
-    *((uint32*)&(dest[4])) = ll_idx_[it.i];
-    *((uint16*)&(dest[8])) = ids_of_node[it.i].size();
-    for (uint32 i(0); i < ids_of_node[it.i].size(); ++i)
-      *((uint32*)&(dest[4*i + 10])) = ids_of_node[it.i][i];
-  }
-};
 
 void node_tag_create_node_id_idx()
 {
@@ -1401,24 +1474,32 @@ void node_tag_create_node_id_idx()
   }
   
   uint8* blocklet_of_id = (uint8*) malloc((next_node_tag_id+1)*sizeof(uint8));
-  for (unsigned int i(0); i < (next_node_tag_id+1); ++i)
-    blocklet_of_id[i] = block_of_id[i];
+  for (uint32 i(0); i < (next_node_tag_id+1); ++i)
+  {
+    if ((block_of_id[i] & 0xffffff00) == 0xffffff00)
+      blocklet_of_id[i] = (block_of_id[i] & 0xff);
+    else
+      blocklet_of_id[i] = 0xff;
+  }
   free(block_of_id);
   
-  uint32* tag_rd_buf = (uint32*) malloc(TAG_SORT_BUFFER_SIZE);
+  uint32 count(max_nodes_ram);
+  uint32* ll_idx_ = (uint32*) malloc(sizeof(uint32)*count);
   
-  int32 count(max_nodes_ram);
-  offset = 0;
-  ll_idx_ = (uint32*) malloc(sizeof(uint32)*count);
-  while (offset < max_node_id)
+  Tag_Node_Id env(ll_idx_, blocklet_of_id);
+  env.offset = 1;
+  
+  while (env.offset < max_node_id)
   {
-    ids_of_node.clear();
-    ids_of_node.resize(count);
+    env.ids_of_node.clear();
+    env.ids_of_node.resize(count);
   
     cerr<<'n';
-    prepare_nodes_chunk(offset, count, ll_idx_);
+    prepare_nodes_chunk(env.offset, count, ll_idx_);
     cerr<<'n';
     lseek64(source_fd, 0, SEEK_SET);
+    
+    uint32* tag_rd_buf = (uint32*) malloc(TAG_SORT_BUFFER_SIZE);
     
     uint32 rd_buf_pos(0), max_pos(0), TEMP(0);
     while ((max_pos =
@@ -1432,12 +1513,13 @@ void node_tag_create_node_id_idx()
       {
 	for (uint32 i(0); i < tag_rd_buf[rd_buf_pos+1]; ++i)
 	{
-	  if ((tag_rd_buf[rd_buf_pos+2+i] >= (uint32)offset) &&
-		      ((int32)tag_rd_buf[rd_buf_pos+2+i] - offset < count))
+	  if ((tag_rd_buf[rd_buf_pos+2+i] >= env.offset) &&
+	      (tag_rd_buf[rd_buf_pos+2+i] - env.offset < count) &&
+	      (blocklet_of_id[tag_rd_buf[rd_buf_pos+2+i]] != 0xff))
 	  {
 	    ++TEMP;
-	    if (ids_of_node[tag_rd_buf[rd_buf_pos+2+i] - offset].size() < 65535)
-	      ids_of_node[tag_rd_buf[rd_buf_pos+2+i] - offset].push_back(tag_rd_buf[rd_buf_pos]);
+	    if (env.ids_of_node[tag_rd_buf[rd_buf_pos+2+i] - env.offset].size() < 65535)
+	      env.ids_of_node[tag_rd_buf[rd_buf_pos+2+i] - env.offset].push_back(tag_rd_buf[rd_buf_pos]);
 	    else
 	    {
 	      cerr<<"Node "<<dec<<tag_rd_buf[rd_buf_pos+2+i]<<" has more than 2^16 tags.\n";
@@ -1454,16 +1536,16 @@ void node_tag_create_node_id_idx()
       rd_buf_pos = TAG_SORT_BUFFER_SIZE / sizeof(uint32) - rd_buf_pos;
     }
     
-    flush_data< Tag_Node_Id, Tag_Node_Id_Iterator >
-	(Tag_Node_Id_Iterator(0), Tag_Node_Id_Iterator(count));
+    free(tag_rd_buf);
     
-    offset += count;
+    flush_data< Tag_Node_Id >(env, env.begin(), env.end());
+    
+    env.offset += count;
   }
   
-  make_block_index< Tag_Node_Id >();
+  make_block_index< Tag_Node_Id >(env);
     
   free(ll_idx_);
-  free(tag_rd_buf);
   free(blocklet_of_id);
   
   close(source_fd);
