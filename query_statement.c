@@ -304,7 +304,8 @@ void Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     }
     
     set< int > tnodes;
-    tnodes = multiint_query(mysql, temp.str(), tnodes);
+/*    tnodes = multiint_query(mysql, temp.str(), tnodes);*/
+    kv_to_multiint_query(key_values.front().first, key_values.front().second, tnodes);
     
     unsigned int key_count(1);
     while (key_count < key_values.size())

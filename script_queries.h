@@ -65,5 +65,6 @@ int multiRange_to_count_query
 
 set< Way >& multiint_to_multiWay_query(const set< int >& source, set< Way >& result_set);
 set< Way >& multiNode_to_multiWay_query(const set< Node >& source, set< Way >& result_set);
+set< int >& kv_to_multiint_query(string key, string value, set< int >& result_set);
 
 #endif

@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
+#include "file_types.h"
 #include "raw_file_db.h"
 #include "script_datatypes.h"
 #include "expat_justparse_interface.h"
@@ -36,264 +37,8 @@ typedef unsigned long long uint64;
 const int NODE_FILE_BLOCK_SIZE = sizeof(int) + BLOCKSIZE*sizeof(Node);
 const int WAY_FILE_BLOCK_SIZE = sizeof(uint32) + WAY_BLOCKSIZE*sizeof(uint32);
 
-const char* NODE_STRING_DATA = "/opt/osm_why_api/node_strings.dat";
-const char* NODE_STRING_IDX = "/opt/osm_why_api/node_strings.idx";
-const char* NODE_TAG_ID_NODE_LOCAL_FILE = "/opt/osm_why_api/node_tag_id_node_local.dat";
-const char* NODE_TAG_ID_NODE_LOCAL_IDX = "/opt/osm_why_api/node_tag_id_node_local.idx";
-const char* NODE_TAG_ID_NODE_GLOBAL_FILE = "/opt/osm_why_api/node_tag_id_node_global.dat";
-const char* NODE_TAG_ID_NODE_GLOBAL_IDX = "/opt/osm_why_api/node_tag_id_node_global.idx";
-const char* NODE_TAG_NODE_ID_FILE = "/opt/osm_why_api/node_tag_node_id.dat";
-const char* NODE_TAG_NODE_ID_IDX = "/opt/osm_why_api/node_tag_node_id.idx";
 const char* NODE_TAG_TMPAPREFIX = "/tmp/node_strings_";
 const char* NODE_TAG_TMPB = "/tmp/node_tag_ids";
-const uint NODE_TAG_SPATIAL_PARTS = 32;
-const int NODE_STRING_BLOCK_SIZE = 1024*1024;
-const uint32 TAG_ID_NODE_LOCAL_BLOCKSIZE = 4*1024*1024;
-const uint32 TAG_ID_NODE_GLOBAL_BLOCKSIZE = 4*1024*1024;
-const uint32 TAG_NODE_ID_BLOCKSIZE = 4*1024*1024;
-
-//-----------------------------------------------------------------------------
-
-struct Tag_Id_Node_Local
-{
-  Tag_Id_Node_Local(uint32* block_of_id) : block_index_(), block_of_id_(block_of_id) {}
-  
-  const multimap< uint32, uint16 >& block_index() const { return block_index_; }
-  multimap< uint32, uint16 >& block_index() { return block_index_; }
-  uint32 blocksize() const { return TAG_ID_NODE_LOCAL_BLOCKSIZE; }
-  const char* data_file() const { return NODE_TAG_ID_NODE_LOCAL_FILE; }
-  const char* index_file() const { return NODE_TAG_ID_NODE_LOCAL_IDX; }
-  
-  typedef vector< uint32* >::const_iterator Iterator;
-  
-  typedef uint32 Index;
-  uint32 size_of_Index() const { return sizeof(uint32); }
-  
-  uint32 size_of(const vector< uint32* >::const_iterator& it) const
-  {
-    return ((*it)[1]*sizeof(uint32) + 2*sizeof(uint8) + sizeof(uint32));
-  }
-  
-  uint32 size_of_buf(uint8* elem) const
-  {
-    return (elem[4]*sizeof(uint32) + 2*sizeof(uint8) + sizeof(uint32));
-  }
-  
-  uint32 index_of(const vector< uint32* >::const_iterator& it) const
-  {
-    return ((block_of_id_[**it]) & 0xffffff00);
-  }
-  
-  uint32 index_of_buf(uint8* elem) const
-  {
-    return ((block_of_id_[*((uint32*)elem)]) & 0xffffff00);
-  }
-  
-  int32 compare(const vector< uint32* >::const_iterator& it, uint8* buf) const
-  {
-    if (((block_of_id_[**it]) & 0xffffff00) < ((block_of_id_[*((uint32*)buf)]) & 0xffffff00))
-      return RAW_DB_LESS;
-    else if (((block_of_id_[**it]) & 0xffffff00) > ((block_of_id_[*((uint32*)buf)]) & 0xffffff00))
-      return RAW_DB_GREATER;
-    if (**it < *((uint32*)buf))
-      return RAW_DB_LESS;
-    else
-      return RAW_DB_GREATER;
-  }
-  
-  void to_buf(uint8* dest, const vector< uint32* >::const_iterator& it) const
-  {
-    ((uint32*)dest)[0] = (*it)[0];
-    dest[4] = (*it)[1];
-    dest[5] = block_of_id_[**it];
-    memcpy(&(dest[6]), &((*it)[2]), (*it)[1]*sizeof(uint32));
-  }
-  
-  void index_to_buf(uint8* dest, const uint32& i) const
-  {
-    ((uint32*)dest)[0] = i;
-  }
-
-private:
-  multimap< uint32, uint16 > block_index_;
-  uint32* block_of_id_;
-};
-
-//-----------------------------------------------------------------------------
-
-struct Tag_Id_Node_Global
-{
-  Tag_Id_Node_Global() : block_index_() {}
-  
-  const multimap< uint32, uint16 >& block_index() const { return block_index_; }
-  multimap< uint32, uint16 >& block_index() { return block_index_; }
-  uint32 blocksize() const { return TAG_ID_NODE_GLOBAL_BLOCKSIZE; }
-  const char* data_file() const { return NODE_TAG_ID_NODE_GLOBAL_FILE; }
-  const char* index_file() const { return NODE_TAG_ID_NODE_GLOBAL_IDX; }
-  
-  typedef vector< uint32* >::const_iterator Iterator;
-  
-  typedef uint32 Index;
-  uint32 size_of_Index() const { return sizeof(uint32); }
-  
-  uint32 size_of(const vector< uint32* >::const_iterator& it) const
-  {
-    return ((*it)[1]*sizeof(uint32) + sizeof(uint8) + sizeof(uint32));
-  }
-  
-  uint32 size_of_buf(uint8* elem) const
-  {
-    return (elem[4]*sizeof(uint32) + sizeof(uint8) + sizeof(uint32));
-  }
-  
-  uint32 index_of(const vector< uint32* >::const_iterator& it) const
-  {
-    return **it;
-  }
-  
-  uint32 index_of_buf(uint8* elem) const
-  {
-    return *((uint32*)elem);
-  }
-  
-  int32 compare(const vector< uint32* >::const_iterator& it, uint8* buf) const
-  {
-    if (**it < *((uint32*)buf))
-      return RAW_DB_LESS;
-    else
-      return RAW_DB_GREATER;
-  }
-  
-  void to_buf(uint8* dest, const vector< uint32* >::const_iterator& it) const
-  {
-    ((uint32*)dest)[0] = (*it)[0];
-    dest[4] = (*it)[1];
-    memcpy(&(dest[5]), &((*it)[2]), (*it)[1]*sizeof(uint32));
-  }
-  
-  void index_to_buf(uint8* dest, const uint32& i) const
-  {
-    ((uint32*)dest)[0] = i;
-  }
-  
-private:
-  multimap< uint32, uint16 > block_index_;
-};
-
-//-----------------------------------------------------------------------------
-
-struct Tag_Node_Id_Iterator
-{
-  Tag_Node_Id_Iterator(vector< vector< uint32 > >& vect, uint32 pos)
-    : i(pos), ids_of_node(vect)
-  {
-    while ((i < ids_of_node.size()) && (!(ids_of_node[i].size())))
-      ++i;
-  }
-  
-  uint32 i;
-  vector< vector< uint32 > >& ids_of_node;
-};
-
-Tag_Node_Id_Iterator& operator++(Tag_Node_Id_Iterator& t)
-{
-  ++t.i;
-  while ((t.i < t.ids_of_node.size()) && (!(t.ids_of_node[t.i].size())))
-    ++t.i;
-  if (t.i > t.ids_of_node.size())
-    t.i = t.ids_of_node.size();
-  
-  return t;
-}
-
-inline bool operator==(const Tag_Node_Id_Iterator& a, const Tag_Node_Id_Iterator& b)
-{
-  return (a.i == b.i);
-}
-
-inline bool operator!=(const Tag_Node_Id_Iterator& a, const Tag_Node_Id_Iterator& b)
-{
-  return (a.i != b.i);
-}
-
-struct Tag_Node_Id
-{
-  Tag_Node_Id(uint32* ll_idx, uint8* blocklet_of_id)
-    : ids_of_node(), offset(0),
-    block_index_(), ll_idx_(ll_idx), blocklet_of_id_(blocklet_of_id)
-     {}
-  
-  uint32 blocksize() const { return TAG_NODE_ID_BLOCKSIZE; }
-  const char* data_file() const { return NODE_TAG_NODE_ID_FILE; }
-  const char* index_file() const { return NODE_TAG_NODE_ID_IDX; }
-  const multimap< uint32, uint16 >& block_index() const { return block_index_; }
-  multimap< uint32, uint16 >& block_index() { return block_index_; }
-  
-  typedef Tag_Node_Id_Iterator Iterator;
-  
-  Iterator begin() { return Tag_Node_Id_Iterator(ids_of_node, 0); }
-  Iterator end() { return Tag_Node_Id_Iterator(ids_of_node, ids_of_node.size()); }
-
-  typedef uint32 Index;
-  uint32 size_of_Index() const { return sizeof(uint32); }
-  
-  uint32 size_of(const Tag_Node_Id_Iterator& it) const
-  {
-    return (ids_of_node[it.i].size()*(sizeof(uint32) + sizeof(uint8)) + sizeof(uint16) + 2*sizeof(uint32));
-  }
-  
-  uint32 size_of_buf(uint8* elem) const
-  {
-    return ((*((uint16*)&(elem[8])))*(sizeof(uint32) + sizeof(uint8)) + sizeof(uint16) + 2*sizeof(uint32));
-  }
-  
-  uint32 index_of(const Tag_Node_Id_Iterator& it) const
-  {
-    return ll_idx_[it.i];
-  }
-  
-  uint32 index_of_buf(uint8* elem) const
-  {
-    return *((uint32*)&(elem[4]));
-  }
-  
-  int32 compare(const Tag_Node_Id_Iterator& it, uint8* buf) const
-  {
-    if (ll_idx_[it.i] < *((uint32*)&(buf[4])))
-      return RAW_DB_LESS;
-    else if (ll_idx_[it.i] > *((uint32*)&(buf[4])))
-      return RAW_DB_GREATER;
-    if (it.i + offset < *((uint32*)&(buf[0])))
-      return RAW_DB_LESS;
-    else
-      return RAW_DB_GREATER;
-  }
-  
-  void to_buf(uint8* dest, const Tag_Node_Id_Iterator& it) const
-  {
-    *((uint32*)&(dest[0])) = it.i + offset;
-    *((uint32*)&(dest[4])) = ll_idx_[it.i];
-    *((uint16*)&(dest[8])) = ids_of_node[it.i].size();
-    for (uint32 i(0); i < ids_of_node[it.i].size(); ++i)
-    {
-      *((uint32*)&(dest[5*i + 10])) = ids_of_node[it.i][i];
-      *((uint8*)&(dest[5*i + 11])) = blocklet_of_id_[ids_of_node[it.i][i]];
-    }
-  }
-  
-  void index_to_buf(uint8* dest, const uint32& i) const
-  {
-    ((uint32*)dest)[0] = i;
-  }
-  
-  vector< vector< uint32 > > ids_of_node;
-  uint32 offset;
-  
-private:
-  multimap< uint32, uint16 > block_index_;
-  uint32* ll_idx_;
-  uint8* blocklet_of_id_;
-};
 
 //-----------------------------------------------------------------------------
 
@@ -1252,7 +997,9 @@ void node_tag_split_and_index()
   cur_block_count = (uint8*) calloc(NODE_TAG_SPATIAL_PARTS+1, sizeof(uint8));
   block_of_id = (uint32*) calloc((next_node_tag_id+1), sizeof(uint32));
   
-  uint32* write_pos = (uint32*) calloc(NODE_TAG_SPATIAL_PARTS+1, sizeof(uint32));
+  uint32* write_pos = (uint32*) malloc((NODE_TAG_SPATIAL_PARTS+1)*sizeof(uint32));
+  for (uint32 i(0); i < NODE_TAG_SPATIAL_PARTS+1; ++i)
+    write_pos[i] = sizeof(uint32);
   char* write_blocks = (char*) malloc((NODE_TAG_SPATIAL_PARTS+1) * NODE_STRING_BLOCK_SIZE);
   uint32* cnt_rd_buf = (uint32*) malloc(2*sizeof(uint32) + 2*sizeof(uint16));
   uint16* size_rd_buf = (uint16*) &(cnt_rd_buf[2]);
@@ -1270,9 +1017,10 @@ void node_tag_split_and_index()
     if (write_pos[block] + 2*sizeof(uint32) + 2*sizeof(uint16) + size_rd_buf[0] + size_rd_buf[1]
 	>= NODE_STRING_BLOCK_SIZE*4/5)
     {
+      *((uint32*)&(write_blocks[block * NODE_STRING_BLOCK_SIZE])) = write_pos[block] - sizeof(uint32);
       write(dest_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE]), NODE_STRING_BLOCK_SIZE);
       write(dest_idx_fd, &(block), sizeof(uint16));
-      write_pos[block] = 0;
+      write_pos[block] = sizeof(uint32);
     
       memcpy(&(write_blocks[block * NODE_STRING_BLOCK_SIZE + write_pos[block]]), cnt_rd_buf,
 	       2*sizeof(uint32) + 2*sizeof(uint16));
@@ -1300,7 +1048,10 @@ void node_tag_split_and_index()
   }
   
   for (unsigned int i(0); i < NODE_TAG_SPATIAL_PARTS+1; ++i)
+  {
+    *((uint32*)&(write_blocks[i * NODE_STRING_BLOCK_SIZE])) = write_pos[i] - sizeof(uint32);
     write(dest_fd, &(write_blocks[i * NODE_STRING_BLOCK_SIZE]), NODE_STRING_BLOCK_SIZE);
+  }
   
   free(cur_block_count);
   free(write_pos);
