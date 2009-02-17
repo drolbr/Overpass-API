@@ -953,84 +953,277 @@ set< Way >& multiNode_to_multiWay_query(const set< Node >& source, set< Way >& r
   return result_set;
 }
 
-set< int >& kv_to_multiint_query(string key, string value, set< int >& result_set)
+//-----------------------------------------------------------------------------
+
+void select_kv_to_idx
+    (string key, string value, set< uint32 >& string_ids_global,
+     set< uint32 >& string_ids_local, set< uint32 >& string_idxs_local)
 {
-  vector< uint32 > spatial_boundaries;
-  vector< vector< pair< string, string > > > kv_to_id_idx(NODE_TAG_SPATIAL_PARTS+1);
-  vector< vector< uint16 > > kv_to_id_block_idx(NODE_TAG_SPATIAL_PARTS+1);
+  static vector< uint32 > spatial_boundaries;
+  static vector< vector< pair< string, string > > > kv_to_id_idx;
+  static vector< vector< uint16 > > kv_to_id_block_idx;
   
-  int string_idx_fd = open64(NODE_STRING_IDX, O_RDONLY);
-  if (string_idx_fd < 0)
+  if ((spatial_boundaries.empty()) || (kv_to_id_idx.empty()) || (kv_to_id_block_idx.empty()))
   {
-    ostringstream temp;
-    temp<<"open64: "<<errno;
-    runtime_error(temp.str(), cout);
-    return result_set;
+    spatial_boundaries.clear();
+    
+    int string_idx_fd = open64(NODE_STRING_IDX, O_RDONLY);
+    if (string_idx_fd < 0)
+    {
+      ostringstream temp;
+      temp<<"open64: "<<errno;
+      runtime_error(temp.str(), cout);
+      return;
+    }
+  
+    uint32* string_spat_idx_buf = (uint32*) malloc(NODE_TAG_SPATIAL_PARTS*sizeof(uint32));
+    read(string_idx_fd, string_spat_idx_buf, NODE_TAG_SPATIAL_PARTS*sizeof(uint32));
+    for (uint32 i(0); i < NODE_TAG_SPATIAL_PARTS; ++i)
+      spatial_boundaries.push_back(string_spat_idx_buf[i]);
+    free(string_spat_idx_buf);
+    
+    kv_to_id_idx.clear();
+    kv_to_id_idx.resize(NODE_TAG_SPATIAL_PARTS+1);
+    kv_to_id_block_idx.clear();
+    kv_to_id_block_idx.resize(NODE_TAG_SPATIAL_PARTS+1);
+    
+    uint32* kv_to_id_idx_buf_1 = (uint32*) malloc(3*sizeof(uint16));
+    char* kv_to_id_idx_buf_2 = (char*) malloc(2*64*1024);
+    uint32 block_id(0);
+    while (read(string_idx_fd, kv_to_id_idx_buf_1, 3*sizeof(uint16)))
+    {
+      read(string_idx_fd, kv_to_id_idx_buf_2,
+	   ((uint16*)kv_to_id_idx_buf_1)[1] + ((uint16*)kv_to_id_idx_buf_1)[2]);
+      kv_to_id_idx[((uint16*)kv_to_id_idx_buf_1)[0]].push_back(make_pair< string, string >
+	  (string(kv_to_id_idx_buf_2, ((uint16*)kv_to_id_idx_buf_1)[1]),
+	   string(&(kv_to_id_idx_buf_2[((uint16*)kv_to_id_idx_buf_1)[1]]),
+		    ((uint16*)kv_to_id_idx_buf_1)[2])));
+      kv_to_id_block_idx[((uint16*)kv_to_id_idx_buf_1)[0]].push_back(block_id++);
+    }
+    free(kv_to_id_idx_buf_2);
+    free(kv_to_id_idx_buf_1);
+  
+    close(string_idx_fd);
   }
-  
-  uint32* string_spat_idx_buf = (uint32*) malloc(NODE_TAG_SPATIAL_PARTS*sizeof(uint32));
-  read(string_idx_fd, string_spat_idx_buf, NODE_TAG_SPATIAL_PARTS*sizeof(uint32));
-  for (uint32 i(0); i < NODE_TAG_SPATIAL_PARTS; ++i)
-    spatial_boundaries.push_back(string_spat_idx_buf[i]);
-  free(string_spat_idx_buf);
-  
-  uint32* kv_to_id_idx_buf_1 = (uint32*) malloc(3*sizeof(uint16));
-  char* kv_to_id_idx_buf_2 = (char*) malloc(2*64*1024);
-  uint32 block_id(0);
-  while (read(string_idx_fd, kv_to_id_idx_buf_1, 3*sizeof(uint16)))
-  {
-    read(string_idx_fd, kv_to_id_idx_buf_2,
-	 ((uint16*)kv_to_id_idx_buf_1)[1] + ((uint16*)kv_to_id_idx_buf_1)[2]);
-    kv_to_id_idx[((uint16*)kv_to_id_idx_buf_1)[0]].push_back(make_pair< string, string >
-	(string(kv_to_id_idx_buf_2, ((uint16*)kv_to_id_idx_buf_1)[1]),
-	 string(&(kv_to_id_idx_buf_2[((uint16*)kv_to_id_idx_buf_1)[1]]),
-		((uint16*)kv_to_id_idx_buf_1)[2])));
-    kv_to_id_block_idx[((uint16*)kv_to_id_idx_buf_1)[0]].push_back(block_id++);
-  }
-  free(kv_to_id_idx_buf_2);
-  free(kv_to_id_idx_buf_1);
-  
-  close(string_idx_fd);
-  
-/*  for (uint32 i(0); i < NODE_TAG_SPATIAL_PARTS+1; ++i)
-  {
-    cout<<i<<":\n";
-    for (uint32 j(0); j < kv_to_id_idx[i].size(); ++j)
-      cout<<'['<<kv_to_id_idx[i][j].first<<"]["<<kv_to_id_idx[i][j].second<<"]: "
-          <<kv_to_id_block_idx[i][j]<<'\n';
-  }*/
   
   set< uint16 > kv_to_idx_block_ids;
   for (uint32 i(0); i < NODE_TAG_SPATIAL_PARTS+1; ++i)
   {
     uint32 j(1);
-    while ((j < kv_to_id_idx[i].size()) && ((kv_to_id_idx[i][j].first < key) ||
-	    ((kv_to_id_idx[i][j].first == key) && (kv_to_id_idx[i][j].second <= value))))
-      ++j;
-    kv_to_idx_block_ids.insert(kv_to_id_block_idx[i][j-1]);
-    cout<<kv_to_id_block_idx[i][j-1]<<'\n';
+    if (value == "")
+    {
+      while ((j < kv_to_id_idx[i].size()) && (kv_to_id_idx[i][j].first < key))
+	++j;
+      kv_to_idx_block_ids.insert(kv_to_id_block_idx[i][j-1]);
+      while ((j < kv_to_id_idx[i].size()) && (kv_to_id_idx[i][j].first <= key))
+      {
+	kv_to_idx_block_ids.insert(kv_to_id_block_idx[i][j]);
+	++j;
+      }
+    }
+    else
+    {
+      while ((j < kv_to_id_idx[i].size()) && ((kv_to_id_idx[i][j].first < key) ||
+	      ((kv_to_id_idx[i][j].first == key) && (kv_to_id_idx[i][j].second < value))))
+	++j;
+      kv_to_idx_block_ids.insert(kv_to_id_block_idx[i][j-1]);
+      while ((j < kv_to_id_idx[i].size()) && ((kv_to_id_idx[i][j].first < key) ||
+	      ((kv_to_id_idx[i][j].first == key) && (kv_to_id_idx[i][j].second <= value))))
+      {
+	kv_to_idx_block_ids.insert(kv_to_id_block_idx[i][j]);
+	++j;
+      }
+    }
   }
 
-  set< uint32 > string_idxs;
   int string_fd = open64(NODE_STRING_DATA, O_RDONLY);
   if (string_fd < 0)
   {
     ostringstream temp;
     temp<<"open64: "<<errno;
     runtime_error(temp.str(), cout);
-    return result_set;
+    return;
   }
   
-  uint8* string_idxs_buf = (uint8*) malloc(NODE_STRING_BLOCK_SIZE);
-  for (set< uint16 >::const_iterator it(kv_to_idx_block_ids.begin());
-       it != kv_to_idx_block_ids.end(); ++it)
+  char* string_idxs_buf = (char*) malloc(NODE_STRING_BLOCK_SIZE);
+  if (value == "")
   {
-    lseek64(string_fd, ((uint64)(*it))*NODE_STRING_BLOCK_SIZE, SEEK_SET);
-    read(string_fd, string_idxs_buf, NODE_STRING_BLOCK_SIZE);
-    //TODO
+    for (set< uint16 >::const_iterator it(kv_to_idx_block_ids.begin());
+	 it != kv_to_idx_block_ids.end(); ++it)
+    {
+      lseek64(string_fd, ((uint64)(*it))*NODE_STRING_BLOCK_SIZE, SEEK_SET);
+      read(string_fd, string_idxs_buf, NODE_STRING_BLOCK_SIZE);
+      uint32 pos(sizeof(uint32));
+      while (pos < *((uint32*)string_idxs_buf + sizeof(uint32)))
+      {
+	pos += 2*sizeof(uint32);
+	uint16& key_len(*((uint16*)&(string_idxs_buf[pos])));
+	pos += sizeof(uint16);
+	uint16& value_len(*((uint16*)&(string_idxs_buf[pos])));
+	pos += sizeof(uint16);
+	if (!(strncmp(key.c_str(), &(string_idxs_buf[pos]), key_len)))
+	{
+	  if (*((uint32*)&(string_idxs_buf[pos - 2*sizeof(uint16) - sizeof(uint32)]))
+			== 0xffffff00)
+	    string_ids_global.insert
+		(*((uint32*)&(string_idxs_buf[pos - 2*sizeof(uint16) - 2*sizeof(uint32)])));
+	  else
+	  {
+	    string_idxs_local.insert
+		(*((uint32*)&(string_idxs_buf[pos - 2*sizeof(uint16) - sizeof(uint32)])));
+	    string_ids_local.insert
+		(*((uint32*)&(string_idxs_buf[pos - 2*sizeof(uint16) - 2*sizeof(uint32)])));
+	  }
+	}
+	pos += key_len + value_len;
+      }
+    }
   }
+  else
+  {
+    for (set< uint16 >::const_iterator it(kv_to_idx_block_ids.begin());
+	 it != kv_to_idx_block_ids.end(); ++it)
+    {
+      lseek64(string_fd, ((uint64)(*it))*NODE_STRING_BLOCK_SIZE, SEEK_SET);
+      read(string_fd, string_idxs_buf, NODE_STRING_BLOCK_SIZE);
+      uint32 pos(sizeof(uint32));
+      while (pos < *((uint32*)string_idxs_buf) + sizeof(uint32))
+      {
+	pos += 2*sizeof(uint32);
+	uint16& key_len(*((uint16*)&(string_idxs_buf[pos])));
+	pos += sizeof(uint16);
+	uint16& value_len(*((uint16*)&(string_idxs_buf[pos])));
+	pos += sizeof(uint16);
+	if ((!(strncmp(key.c_str(), &(string_idxs_buf[pos]), key_len))) &&
+		      (!(strncmp(value.c_str(), &(string_idxs_buf[pos + key_len]), value_len))))
+	{
+	  if (*((uint32*)&(string_idxs_buf[pos - 2*sizeof(uint16) - sizeof(uint32)]))
+			== 0xffffff00)
+	    string_ids_global.insert
+		(*((uint32*)&(string_idxs_buf[pos - 2*sizeof(uint16) - 2*sizeof(uint32)])));
+	  else
+	  {
+	    string_idxs_local.insert
+		(*((uint32*)&(string_idxs_buf[pos - 2*sizeof(uint16) - sizeof(uint32)])));
+	    string_ids_local.insert
+		(*((uint32*)&(string_idxs_buf[pos - 2*sizeof(uint16) - 2*sizeof(uint32)])));
+	  }
+	}
+	pos += key_len + value_len;
+      }
+    }
+  }
+  free(string_idxs_buf);
   
   close(string_fd);
+}
+
+void select_idx_to_node_local
+    (const set< uint32 >& source, const set< uint32 >& src_idxs, set< int >& result)
+{
+  const char* IDX_FILE = FOO;
+  const char* DATA_FILE = FOO;
+  
+  static vector< uint32 > idx_boundaries;
+  static vector< uint16 > block_idx;
+  
+  if ((idx_boundaries.empty()) || (block_idx.empty()))
+  {
+    idx_boundaries.clear();
+    block_idx.clear();
+    
+    int idx_fd = open64(IDX_FILE, O_RDONLY);
+    if (idx_fd < 0)
+    {
+      ostringstream temp;
+      temp<<"open64: "<<errno;
+      runtime_error(temp.str(), cout);
+      return;
+    }
+  
+    uint32 idx_file_size(lseek64(idx_fd, 0, SEEK_END));
+    char* idx_buf = (char*) malloc(idx_file_size);
+    lseek64(idx_fd, 0, SEEK_SET);
+    read(idx_fd, idx_buf, idx_file_size);
+    uint32 i(0);
+    while (i < idx_file_size / (sizeof(uint32) + sizeof(uint16)))
+    {
+      idx_boundaries.push_back(*((uint32*)&(idx_buf[i])));
+      i += sizeof(uint32);
+      block_idx.push_back(*(uint16*)&(idx_buf[i]));
+      i += sizeof(uint16);
+    }
+    free(idx_buf);
+  
+    close(idx_fd);
+  }
+  
+  set< uint16 > block_ids;
+  uint32 i(1);
+  set< uint32 >::const_iterator it(src_idxs.begin());
+  while (it != src_idxs.end())
+  {
+    while ((i < idx_boundaries.size()) && (idx_boundaries[i] < *it))
+      ++i;
+    block_ids.insert(block_idx[i-1]);
+    while ((i < idx_boundaries.size()) && (idx_boundaries[i] <= *it))
+    {
+      block_ids.insert(block_idx[i]);
+      ++i;
+    }
+    ++it;
+  }
+
+  int data_fd = open64(DATA_FILE, O_RDONLY);
+  if (data_fd < 0)
+  {
+    ostringstream temp;
+    temp<<"open64: "<<errno;
+    runtime_error(temp.str(), cout);
+    return;
+  }
+  
+  char* data_buf = (char*) malloc(BLOCKSIZE);
+  for (set< uint16 >::const_iterator it(block_ids.begin());
+       it != block_ids.end(); ++it)
+  {
+    lseek64(data_fd, ((uint64)(*it))*BLOCKSIZE, SEEK_SET);
+    read(data_fd, data_buf, BLOCKSIZE);
+    uint32 pos(sizeof(uint32));
+    while (pos < *((uint32*)data_buf) + sizeof(uint32))
+    {
+      if (source.find(*((uint32*)data_buf[pos])) != source.end())
+      {
+	pos += sizeof(uint32);
+	for (uint32 j(0); j < *((uint32*)data_buf[pos]); ++j)
+	  result.insert(*((uint32*)data_buf[pos + sizeof(uint16) + j*sizeof(uint32)]));
+	pos -= sizeof(uint32);
+      }
+      pos += sizeof(uint32);
+      pos += *((uint32*)data_buf[pos])*sizeof(uint32) + sizeof(uint16);
+    }
+  }
+  free(data_buf);
+  
+  close(data_fd);
+}
+
+set< int >& kv_to_multiint_query(string key, string value, set< int >& result_set)
+{
+  set< uint32 > string_ids_global;
+  set< uint32 > string_ids_local;
+  set< uint32 > string_idxs_local;
+  select_kv_to_idx(key, value, string_ids_global, string_ids_local, string_idxs_local);
+  
+  //TEMP
+  cout<<"global: ";
+  for (set< uint32 >::const_iterator it(string_ids_global.begin()); it != string_ids_global.end(); ++it)
+    cout<<*it<<' ';
+  cout<<"\nlocal: ";
+  set< uint32 >::const_iterator it2(string_idxs_local.begin());
+  for (set< uint32 >::const_iterator it(string_ids_local.begin()); it != string_ids_local.end(); ++it)
+    cout<<*it<<' '<<*(it++)<<"   ";
+  cout<<'\n';
   
   return result_set;
 }
