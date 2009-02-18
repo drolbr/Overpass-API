@@ -35,6 +35,12 @@ unsigned int get_tag_start();
 unsigned int get_tag_end();
 string get_source(int startpos, int endpos);
 
+struct Parse_Error
+{
+  Parse_Error(string s) : message(s) {}
+  string message;
+};
+
 template < class Ostream >
 inline Ostream& escape_infile_xml(Ostream& out, string s)
 {

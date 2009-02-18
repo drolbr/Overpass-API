@@ -143,10 +143,7 @@ void parse(const string& input,
   
   p = XML_ParserCreate(NULL);
   if (! p)
-  {
-    add_parse_error("Couldn't allocate memory for parser\n");
-    return;
-  }
+    throw Parse_Error("Couldn't allocate memory for parser\n");
   parser_online = true;
 
   XML_SetElementHandler(p, expat_wrapper_start, expat_wrapper_end);
@@ -164,10 +161,7 @@ void parse(const string& input,
     pos += buff_len;
   
     if (XML_Parse(p, Buff, buff_len, done) == XML_STATUS_ERROR)
-    {
-      add_parse_error(XML_ErrorString(XML_GetErrorCode(p)));
-      return;
-    }
+      throw Parse_Error(XML_ErrorString(XML_GetErrorCode(p)));
   }
 
   parser_online = false;
@@ -192,10 +186,7 @@ void parse_script(const string& input,
   
   p = XML_ParserCreate(NULL);
   if (! p)
-  {
-    add_parse_error("Couldn't allocate memory for parser\n");
-    return;
-  }
+    throw Parse_Error("Couldn't allocate memory for parser\n");
   parser_online = true;
 
   XML_SetElementHandler(p, expat_wrapper_start, expat_wrapper_end);
@@ -207,19 +198,13 @@ void parse_script(const string& input,
   {
     if (XML_Parse(p, input.substr(old_pos, pos - old_pos).c_str(), pos - old_pos, done)
 	== XML_STATUS_ERROR)
-    {
-      add_parse_error(XML_ErrorString(XML_GetErrorCode(p)));
-      return;
-    }
+      throw Parse_Error(XML_ErrorString(XML_GetErrorCode(p)));
     old_pos = pos;
     pos = source.find('<', pos+1);
   }
   if (XML_Parse(p, input.substr(old_pos, source.size() - old_pos).c_str(), source.size() - old_pos, done)
       == XML_STATUS_ERROR)
-  {
-    add_parse_error(XML_ErrorString(XML_GetErrorCode(p)));
-    return;
-  }
+    throw Parse_Error(XML_ErrorString(XML_GetErrorCode(p)));
 
   parser_online = false;
   XML_ParserFree(p);

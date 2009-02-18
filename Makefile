@@ -104,8 +104,8 @@ update_rule.o: update_rule.c expat_justparse_interface.h user_interface.h script
 osm2load_infile.o: osm2load_infile.c script_datatypes.h expat_justparse_interface.h cgi-helper.h user_interface.h
 	g++ -c -O3 -Wall `mysql_config --include` osm2load_infile.c
 
-import_osm_nw: expat_justparse_interface.o cgi-helper.o user_interface.o script_tools.o script_queries.o vigilance_control.o import_osm_nw.o
-	g++ -o import_osm_nw -O3 -Wall -lexpat expat_justparse_interface.o cgi-helper.o user_interface.o  script_tools.o script_queries.o vigilance_control.o import_osm_nw.o `mysql_config --libs`
+import_osm_nw: expat_justparse_interface.o import_osm_nw.o
+	g++ -o import_osm_nw -O3 -Wall -lexpat expat_justparse_interface.o import_osm_nw.o `mysql_config --libs`
 	
 import_osm_nw.o: import_osm_nw.c script_datatypes.h expat_justparse_interface.h raw_file_db.h file_types.h cgi-helper.h user_interface.h
 	g++ -c -O3 -Wall `mysql_config --include` import_osm_nw.c

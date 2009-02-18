@@ -2,16 +2,18 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
-#include <string.h>
-#include <stdio.h>
-#include <time.h>
 #include "file_types.h"
 #include "raw_file_db.h"
 #include "script_datatypes.h"
 #include "expat_justparse_interface.h"
+
+#include <string.h>
+#include <stdio.h>
+#include <time.h>
 
 #include <errno.h>
 #include <fcntl.h>
@@ -1020,17 +1022,19 @@ void node_tag_split_and_index()
       *((uint32*)&(write_blocks[block * NODE_STRING_BLOCK_SIZE])) = write_pos[block] - sizeof(uint32);
       write(dest_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE]), NODE_STRING_BLOCK_SIZE);
       write(dest_idx_fd, &(block), sizeof(uint16));
-      write_pos[block] = sizeof(uint32);
+      write(dest_idx_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE
+	  + 3*sizeof(uint32)]), *(uint16*)&(write_blocks[block * NODE_STRING_BLOCK_SIZE
+	      + 3*sizeof(uint32)]) + *(uint16*)&(write_blocks[block * NODE_STRING_BLOCK_SIZE
+		  + 3*sizeof(uint32) + sizeof(uint16)]) + 2*sizeof(uint16));
     
+      write_pos[block] = sizeof(uint32);
+
       memcpy(&(write_blocks[block * NODE_STRING_BLOCK_SIZE + write_pos[block]]), cnt_rd_buf,
 	       2*sizeof(uint32) + 2*sizeof(uint16));
       write_pos[block] += 2*sizeof(uint32) + 2*sizeof(uint16);
       read(source_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE + write_pos[block]]),
 	   size_rd_buf[0] + size_rd_buf[1]);
       write_pos[block] += size_rd_buf[0] + size_rd_buf[1];
-      
-      write(dest_idx_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE
-	  + 2*sizeof(uint32)]), size_rd_buf[0] + size_rd_buf[1] + 2*sizeof(uint16));
       
       block_of_id[cnt_rd_buf[0]] = (++cur_block_count[block]) | ((cnt_rd_buf[1]) & (0xffffff00));
     }
@@ -1051,6 +1055,11 @@ void node_tag_split_and_index()
   {
     *((uint32*)&(write_blocks[i * NODE_STRING_BLOCK_SIZE])) = write_pos[i] - sizeof(uint32);
     write(dest_fd, &(write_blocks[i * NODE_STRING_BLOCK_SIZE]), NODE_STRING_BLOCK_SIZE);
+    write(dest_idx_fd, &(i), sizeof(uint16));
+    write(dest_idx_fd, &(write_blocks[i * NODE_STRING_BLOCK_SIZE
+	+ 3*sizeof(uint32)]), *(uint16*)&(write_blocks[i * NODE_STRING_BLOCK_SIZE
+	    + 3*sizeof(uint32)]) + *(uint16*)&(write_blocks[i * NODE_STRING_BLOCK_SIZE
+		+ 3*sizeof(uint32) + sizeof(uint16)]) + 2*sizeof(uint16));
   }
   
   free(cur_block_count);
@@ -1087,8 +1096,8 @@ struct tag_id_global_less : public binary_function< uint32*, uint32*, bool >
 void node_tag_create_id_node_idx()
 {
   uint32 rd_buf_pos(0);
-  Tag_Id_Node_Local env_local(block_of_id);
-  Tag_Id_Node_Global env_global;
+  Tag_Id_Node_Local_Writer env_local(block_of_id);
+  Tag_Id_Node_Global_Writer env_global;
   
   int source_fd = open64(NODE_TAG_TMPB, O_RDONLY);
   if (source_fd < 0)
@@ -1193,9 +1202,9 @@ void node_tag_create_id_node_idx()
     sort(tag_id_local.begin(), tag_id_local.end(), tag_id_local_less());
     sort(tag_id_global.begin(), tag_id_global.end(), tag_id_global_less());
     
-    flush_data< Tag_Id_Node_Local >
+    flush_data< Tag_Id_Node_Local_Writer >
 	(env_local, tag_id_local.begin(), tag_id_local.end());
-    flush_data< Tag_Id_Node_Global >
+    flush_data< Tag_Id_Node_Global_Writer >
         (env_global, tag_id_global.begin(), tag_id_global.end());
     
     cerr<<'.';
@@ -1204,8 +1213,8 @@ void node_tag_create_id_node_idx()
     rd_buf_pos = TAG_SORT_BUFFER_SIZE / sizeof(uint32) - rd_buf_pos;
   }
   
-  make_block_index< Tag_Id_Node_Local >(env_local);
-  make_block_index< Tag_Id_Node_Global >(env_global);
+  make_block_index< Tag_Id_Node_Local_Writer >(env_local);
+  make_block_index< Tag_Id_Node_Global_Writer >(env_global);
   
   free(tag_rd_buf);
   free(tag_alt_buf);
@@ -1262,6 +1271,7 @@ void node_tag_create_node_id_idx()
       while ((rd_buf_pos + 1 < max_pos / sizeof(uint32)) &&
 	      (rd_buf_pos + tag_rd_buf[rd_buf_pos+1] + 1 < max_pos / sizeof(uint32)))
       {
+	cerr<<0;
 	for (uint32 i(0); i < tag_rd_buf[rd_buf_pos+1]; ++i)
 	{
 	  if ((tag_rd_buf[rd_buf_pos+2+i] >= env.offset) &&
@@ -1278,6 +1288,7 @@ void node_tag_create_node_id_idx()
 	    }
 	  }
 	}
+	cerr<<5;
       
 	rd_buf_pos += tag_rd_buf[rd_buf_pos+1] + 2;
       }
@@ -1289,12 +1300,16 @@ void node_tag_create_node_id_idx()
     
     free(tag_rd_buf);
     
+    cerr<<1;
     flush_data< Tag_Node_Id >(env, env.begin(), env.end());
+    cerr<<2;
     
     env.offset += count;
   }
   
+  cerr<<3;
   make_block_index< Tag_Node_Id >(env);
+  cerr<<4;
     
   free(ll_idx_);
   free(blocklet_of_id);
@@ -1538,21 +1553,35 @@ int main(int argc, char *argv[])
   return 0;*/
   
   //TEMP
-/*  current_run = 25;
-  next_node_tag_id = 100*1000*1000;
-  max_node_id = 500*1000*1000;
-  node_tag_statistics();
-  node_tag_split_and_index();
-  node_tag_create_id_node_idx();
-  node_tag_create_node_id_idx();
-  exit(0);*/
+  try
+  {
+/*    current_run = 25;
+    next_node_tag_id = 100*1000*1000;
+    max_node_id = 500*1000*1000;
+    node_tag_statistics();
+    node_tag_split_and_index();
+    node_tag_create_id_node_idx();
+    node_tag_create_node_id_idx();
+    exit(0);*/
+  }
+  catch(File_Error e)
+  {
+    cerr<<"\nopen64: "<<e.error_number<<'\n';
+  }
   
   prepare_nodes();
   
   state = NODES;
   
-  //reading the main document
-  parse(stdin, start, end);
+  try
+  {
+    //reading the main document
+    parse(stdin, start, end);
+  }
+  catch(File_Error e)
+  {
+    cerr<<"\nopen64: "<<e.error_number<<'\n';
+  }
   
   if (state == NODES)
   {

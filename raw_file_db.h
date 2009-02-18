@@ -6,6 +6,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <set>
+
 using namespace std;
 
 typedef char int8;
@@ -22,6 +24,14 @@ const int32 RAW_DB_LESS = 1;
 const int32 RAW_DB_GREATER = 2;
 const int32 RAW_DB_EQUAL_SKIP = 3;
 const int32 RAW_DB_EQUAL_REPLACE = 4;
+
+struct File_Error
+{
+  File_Error(uint32 errno_) : error_number(errno_) {}
+  
+  uint32 error_number;
+  set< uint16 > bla;
+};
 
 // constraints:
 // T::size_of_buf(T::to_buf()) == T::size_of()
@@ -47,10 +57,7 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
   
     dest_fd = open64(env.data_file(), O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     if (dest_fd < 0)
-    {
-      cerr<<"open64: "<<errno<<'\n';
-      exit(0);
-    }
+      throw File_Error(errno);
   
     uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
     unsigned int i(sizeof(uint32));
@@ -88,10 +95,7 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
   {
     int dest_fd = open64(env.data_file(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     if (dest_fd < 0)
-    {
-      cerr<<"open64: "<<errno<<'\n';
-      exit(0);
-    }
+      throw File_Error(errno);
   
     uint8* source_buf = (uint8*) malloc(BLOCKSIZE);
     uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
@@ -258,12 +262,6 @@ template< class T >
   
   uint8* buf =
     (uint8*) malloc((env.size_of_Index() + sizeof(uint16))*block_index.size());
-      
-  if (!buf)
-  {
-    cerr<<"malloc: "<<errno<<'\n';
-    exit(0);
-  }
   
   uint32 i(0);
   for (typename multimap< typename T::Index, uint16 >::const_iterator it(block_index.begin());
@@ -276,10 +274,86 @@ template< class T >
   }
   
   int dest_fd = open64(env.index_file(), O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  if (dest_fd < 0)
+    throw File_Error(errno);
   write(dest_fd, buf, (env.size_of_Index() + sizeof(uint16))*block_index.size());
   close(dest_fd);
   
   free(buf);
+}
+
+template < class T >
+    void select_with_idx(T& env)
+{
+  const char* IDX_FILE(env.index_file());
+  const char* DATA_FILE(env.data_file());
+  const uint32 BLOCKSIZE(env.blocksize());
+  
+  static vector< uint32 > idx_boundaries;
+  static vector< uint16 > block_idx;
+  
+  if ((idx_boundaries.empty()) || (block_idx.empty()))
+  {
+    idx_boundaries.clear();
+    block_idx.clear();
+    
+    int idx_fd = open64(IDX_FILE, O_RDONLY);
+    if (idx_fd < 0)
+      throw File_Error(errno);
+  
+    uint32 idx_file_size(lseek64(idx_fd, 0, SEEK_END));
+    char* idx_buf = (char*) malloc(idx_file_size);
+    lseek64(idx_fd, 0, SEEK_SET);
+    read(idx_fd, idx_buf, idx_file_size);
+    uint32 i(0);
+    while (i < idx_file_size)
+    {
+      idx_boundaries.push_back(*((uint32*)&(idx_buf[i])));
+      i += sizeof(uint32);
+      block_idx.push_back(*(uint16*)&(idx_buf[i]));
+      i += sizeof(uint16);
+    }
+    free(idx_buf);
+  
+    close(idx_fd);
+  }
+  
+  set< uint16 > block_ids;
+  uint32 i(1);
+  typename T::Index_Iterator it(env.idxs_begin());
+  while (it != env.idxs_end())
+  {
+    while ((i < idx_boundaries.size()) && (idx_boundaries[i] < *it))
+      ++i;
+    block_ids.insert(block_idx[i-1]);
+    while ((i < idx_boundaries.size()) && (idx_boundaries[i] <= *it))
+    {
+      block_ids.insert(block_idx[i]);
+      ++i;
+    }
+    ++it;
+  }
+
+  int data_fd = open64(DATA_FILE, O_RDONLY);
+  if (data_fd < 0)
+    throw File_Error(errno);
+  
+  uint8* data_buf = (uint8*) malloc(BLOCKSIZE);
+  for (set< uint16 >::const_iterator it(block_ids.begin());
+       it != block_ids.end(); ++it)
+  {
+    lseek64(data_fd, ((uint64)(*it))*BLOCKSIZE, SEEK_SET);
+    read(data_fd, data_buf, BLOCKSIZE);
+    uint32 pos(sizeof(uint32));
+    while (pos < *((uint32*)data_buf) + sizeof(uint32))
+    {
+      env.process(&(data_buf[pos]));
+      pos += env.size_of_buf(&(data_buf[pos]));
+    }
+  }
+  free(data_buf);
+  
+  close(data_fd);
 }
 
 #endif
