@@ -16,7 +16,7 @@ union_$(suffix)
 objects = expat_justparse_interface.o cgi-helper.o user_interface.o script_queries.o script_tools.o vigilance_control.o $(stmts)
 executable_objects = script-interpreter.o add_rule.o dump_rules.o get_rule.o update_rule.o osm2load_infile.o
 executables = cgi-bin/interpreter cgi-bin/add_rule cgi-bin/get_rule cgi-bin/update_rule dump_rules load_rules import_osm osmy_vigilance
-tool_headers = expat_justparse_interface.h script_datatypes.h script_queries.h script_tools.h user_interface.h
+tool_headers = expat_justparse_interface.h script_datatypes.h file_types.h script_queries.h script_tools.h user_interface.h
 
 main: $(executables)
 

@@ -92,10 +92,58 @@ struct Tag_Id_Node_Local_Reader : public Tag_Id_Node_Local
     }
   }
   
-  private:
+  protected:
     set< int >& result_;
     const set< uint32 >& ids_;
     const set< uint32 >& idxs_;
+};
+
+struct Tag_Id_Node_Local_Multiint_Reader : public Tag_Id_Node_Local_Reader
+{
+  Tag_Id_Node_Local_Multiint_Reader
+      (const set< uint32 >& ids, const set< uint32 >& idxs, const set< int >& source, set< int >& result)
+  : Tag_Id_Node_Local_Reader(ids, idxs, result), source_(source) {}
+  
+  void process(uint8* buf)
+  {
+    if (ids_.find(*((uint32*)buf)) != ids_.end())
+    {
+      for (uint32 j(0); j < *((uint8*)&(buf[4])); ++j)
+      {
+	if (source_.find(*((uint32*)&(buf[6 + 4*j]))) != source_.end())
+	  result_.insert(*((uint32*)&(buf[6 + 4*j])));
+      }
+    }
+  }
+  
+  private:
+    const set< int >& source_;
+};
+
+struct Tag_Id_Node_Local_MultiNode_Reader : public Tag_Id_Node_Local
+{
+  Tag_Id_Node_Local_MultiNode_Reader
+      (const set< Node >& ids, const set< Node >& idxs, set< Node >& result)
+  : result_(result), ids_(ids), idxs_(idxs) {}
+  
+  typedef set< uint32 >::const_iterator Index_Iterator;
+  Index_Iterator idxs_begin() const { return idxs_.begin(); }
+  Index_Iterator idxs_end() const { return idxs_.end(); }
+  
+  void process(uint8* buf)
+  {
+    const set< Node >::const_iterator it(ids_.find(Node(*((uint32*)buf))));
+    if (it != ids_.end())
+    {
+      for (uint32 j(0); j < *((uint8*)&(buf[4])); ++j)
+	result_.insert(*it);
+    }
+  }
+  
+  private:
+    set< int >& result_;
+    const set< Node >& ids_;
+    const set< Node >& idxs_;
 };
 
 struct Tag_Id_Node_Local_Writer : public Tag_Id_Node_Local
@@ -187,9 +235,31 @@ struct Tag_Id_Node_Global_Reader : public Tag_Id_Node_Global
     }
   }
   
-  private:
+  protected:
     set< int >& result_;
     const set< uint32 >& ids_;
+};
+
+struct Tag_Id_Node_Global_Multiint_Reader : public Tag_Id_Node_Global_Reader
+{
+  Tag_Id_Node_Global_Multiint_Reader
+      (const set< uint32 >& ids, const set< int >& source, set< int >& result)
+  : Tag_Id_Node_Global_Reader(ids, result), source_(source) {}
+  
+  void process(uint8* buf)
+  {
+    if (ids_.find(*((uint32*)buf)) != ids_.end())
+    {
+      for (uint32 j(0); j < *((uint8*)&(buf[4])); ++j)
+      {
+	if (source_.find(*((uint32*)&(buf[5 + 4*j]))) != source_.end())
+	  result_.insert(*((uint32*)&(buf[5 + 4*j])));
+      }
+    }
+  }
+  
+  private:
+    const set< int >& source_;
 };
 
 struct Tag_Id_Node_Global_Writer : public Tag_Id_Node_Global

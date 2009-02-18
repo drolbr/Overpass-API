@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cctype>
 #include <iostream>
 #include <map>
@@ -1122,30 +1123,124 @@ set< int >& kv_to_multiint_query(string key, string value, set< int >& result_se
   set< uint32 > string_ids_global;
   set< uint32 > string_ids_local;
   set< uint32 > string_idxs_local;
+  cout<<(uintmax_t)time(NULL)<<'\n';
   select_kv_to_ids(key, value, string_ids_global, string_ids_local, string_idxs_local);
-  
-  //TEMP
-/*  cerr<<"global: ";
-  for (set< uint32 >::const_iterator it(string_ids_global.begin()); it != string_ids_global.end(); ++it)
-    cerr<<*it<<' ';
-  cerr<<"\nlocal: ";
-  set< uint32 >::const_iterator it2(string_idxs_local.begin());
-  for (set< uint32 >::const_iterator it(string_ids_local.begin()); it != string_ids_local.end(); ++it)
-    cerr<<*it<<' '<<*(it2++)<<"   ";
-  cerr<<'\n';*/
+  cout<<(uintmax_t)time(NULL)<<'\n';
   
   try
   {
     Tag_Id_Node_Local_Reader local_reader(string_ids_local, string_idxs_local, result_set);
     select_with_idx< Tag_Id_Node_Local_Reader >(local_reader);
+    cout<<(uintmax_t)time(NULL)<<'\n';
     Tag_Id_Node_Global_Reader global_reader(string_ids_global, result_set);
     select_with_idx< Tag_Id_Node_Global_Reader >(global_reader);
+    cout<<(uintmax_t)time(NULL)<<'\n';
   }
   catch(File_Error e)
   {
     ostringstream temp;
     temp<<"open64: "<<errno;
     runtime_error(temp.str(), cout);
+  }
+  
+  return result_set;
+}
+
+set< int >& kv_multiint_to_multiint_query
+    (string key, string value, const set< int >& source, set< int >& result_set)
+{
+  set< uint32 > string_ids_global;
+  set< uint32 > string_ids_local;
+  set< uint32 > string_idxs_local;
+  cout<<(uintmax_t)time(NULL)<<'\n';
+  select_kv_to_ids(key, value, string_ids_global, string_ids_local, string_idxs_local);
+  cout<<(uintmax_t)time(NULL)<<'\n';
+  
+  try
+  {
+    Tag_Id_Node_Local_Multiint_Reader local_reader
+	(string_ids_local, string_idxs_local, source, result_set);
+    select_with_idx< Tag_Id_Node_Local_Multiint_Reader >(local_reader);
+    cout<<(uintmax_t)time(NULL)<<'\n';
+    Tag_Id_Node_Global_Multiint_Reader global_reader
+	(string_ids_global, source, result_set);
+    select_with_idx< Tag_Id_Node_Global_Multiint_Reader >(global_reader);
+    cout<<(uintmax_t)time(NULL)<<'\n';
+  }
+  catch(File_Error e)
+  {
+    ostringstream temp;
+    temp<<"open64: "<<errno;
+    runtime_error(temp.str(), cout);
+  }
+  
+  return result_set;
+}
+
+set< Node >& kvs_multiNode_to_multiNode_query
+    (const vector< pair< string, string > >& kvs, const set< Node >& source, set< Node >& result_set)
+{
+  vector< set< uint32 > > string_ids_global;
+  vector< set< uint32 > > string_ids_local;
+  vector< set< uint32 > > string_idxs_local;
+  for (vector< pair< string, string > >::const_iterator it(kvs.begin());
+       it != kvs.end(); ++it)
+  {
+    string_ids_global.push_back(set< uint32 >());
+    string_ids_local.push_back(set< uint32 >());
+    string_idxs_local.push_back(set< uint32 >());
+    cout<<(uintmax_t)time(NULL)<<'\n';
+    select_kv_to_ids
+	(it->first, it->second, string_ids_global.back(),
+	 string_ids_local.back(), string_idxs_local.back());
+    cout<<(uintmax_t)time(NULL)<<'\n';
+  }
+  
+/*  set< uint32 > node_idxs;
+  for (set< Node >::const_iterator it(source.begin()); it != source.end(); ++it)
+    node_idxs.insert(ll_idx(it->lat, it->lon) & 0xffffff00);
+  vector< set< uint32 > > filtered_idxs_local;
+  for (vector< set< uint32 > >::const_iterator it(string_idxs_local.begin());
+       it != string_idxs_local.end(); ++it)
+  {
+    filtered_idxs_local.push_back(set< uint32 >());
+    set_intersection
+	(it->begin(), it->end(), node_idxs.begin(), node_idxs.end(),
+	 inserter(filtered_idxs_local.back(), filtered_idxs_local.back().begin()));
+  }*/
+  
+  set< int > node_ints;
+  set< int > result;
+  for (set< Node >::const_iterator it(source.begin()); it != source.end(); ++it)
+    node_ints.insert(it->id);
+  
+  try
+  {
+    for (uint32 i(0); i < kvs.size(); ++i)
+    {
+      result.clear();
+      Tag_Id_Node_Local_MultiNode_Reader local_reader
+	  (string_ids_local[i], string_idxs_local[i], node_ints, result);
+      select_with_idx< Tag_Id_Node_Local_Multiint_Reader >(local_reader);
+      cout<<(uintmax_t)time(NULL)<<'\n';
+      Tag_Id_Node_Global_Multiint_Reader global_reader
+	  (string_ids_global[i], node_ints, result);
+      select_with_idx< Tag_Id_Node_Global_Multiint_Reader >(global_reader);
+      cout<<(uintmax_t)time(NULL)<<'\n';
+      node_ints = result;
+    }
+  }
+  catch(File_Error e)
+  {
+    ostringstream temp;
+    temp<<"open64: "<<errno;
+    runtime_error(temp.str(), cout);
+  }
+  
+  for (set< Node >::const_iterator it(source.begin()); it != source.end(); ++it)
+  {
+    if (node_ints.find(it->id) != node_ints.end())
+      result_set.insert(*it);
   }
   
   return result_set;
