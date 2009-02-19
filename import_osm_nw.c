@@ -1222,9 +1222,22 @@ void node_tag_create_id_node_idx()
   close(source_fd);
 }
 
+struct node_idx_less : public binary_function< uint32, uint32, bool >
+{
+  node_idx_less(uint32* ll_idx__) : ll_idx_(ll_idx__) {}
+  
+  bool operator() (const uint32& a, const uint32& b)
+  {
+    return (ll_idx_[a] < ll_idx_[b]);
+  }
+  
+  private:
+    uint32* ll_idx_;
+};
+
 void node_tag_create_node_id_idx()
 {
-  const uint32 max_nodes_ram = 50*1000*1000;
+  const uint32 max_nodes_ram = 32*1024*1024;
   
   int source_fd = open64(NODE_TAG_TMPB, O_RDONLY);
   if (source_fd < 0)
@@ -1246,7 +1259,7 @@ void node_tag_create_node_id_idx()
   uint32 count(max_nodes_ram);
   uint32* ll_idx_ = (uint32*) malloc(sizeof(uint32)*count);
   
-  Tag_Node_Id env(ll_idx_, blocklet_of_id);
+  Tag_Node_Id_Writer env(ll_idx_, blocklet_of_id);
   env.offset = 1;
   
   while (env.offset < max_node_id)
@@ -1261,7 +1274,7 @@ void node_tag_create_node_id_idx()
     
     uint32* tag_rd_buf = (uint32*) malloc(TAG_SORT_BUFFER_SIZE);
     
-    uint32 rd_buf_pos(0), max_pos(0), TEMP(0);
+    uint32 rd_buf_pos(0), max_pos(0);
     while ((max_pos =
 	    read(source_fd, &(tag_rd_buf[rd_buf_pos]), TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32))))
     {
@@ -1271,25 +1284,23 @@ void node_tag_create_node_id_idx()
       while ((rd_buf_pos + 1 < max_pos / sizeof(uint32)) &&
 	      (rd_buf_pos + tag_rd_buf[rd_buf_pos+1] + 1 < max_pos / sizeof(uint32)))
       {
-	cerr<<0;
-	for (uint32 i(0); i < tag_rd_buf[rd_buf_pos+1]; ++i)
+	if (blocklet_of_id[tag_rd_buf[rd_buf_pos]] != 0xff)
 	{
-	  if ((tag_rd_buf[rd_buf_pos+2+i] >= env.offset) &&
-	      (tag_rd_buf[rd_buf_pos+2+i] - env.offset < count) &&
-	      (blocklet_of_id[tag_rd_buf[rd_buf_pos+2+i]] != 0xff))
+	  for (uint32 i(0); i < tag_rd_buf[rd_buf_pos+1]; ++i)
 	  {
-	    ++TEMP;
-	    if (env.ids_of_node[tag_rd_buf[rd_buf_pos+2+i] - env.offset].size() < 65535)
-	      env.ids_of_node[tag_rd_buf[rd_buf_pos+2+i] - env.offset].push_back(tag_rd_buf[rd_buf_pos]);
-	    else
+	    if ((tag_rd_buf[rd_buf_pos+2+i] >= env.offset) &&
+			(tag_rd_buf[rd_buf_pos+2+i] - env.offset < count))
 	    {
-	      cerr<<"Node "<<dec<<tag_rd_buf[rd_buf_pos+2+i]<<" has more than 2^16 tags.\n";
-	      exit(0);
+	      if (env.ids_of_node[tag_rd_buf[rd_buf_pos+2+i] - env.offset].size() < 65535)
+		env.ids_of_node[tag_rd_buf[rd_buf_pos+2+i] - env.offset].push_back(tag_rd_buf[rd_buf_pos]);
+	      else
+	      {
+		cerr<<"Node "<<dec<<tag_rd_buf[rd_buf_pos+2+i]<<" has more than 2^16 tags.\n";
+		exit(0);
+	      }
 	    }
 	  }
 	}
-	cerr<<5;
-      
 	rd_buf_pos += tag_rd_buf[rd_buf_pos+1] + 2;
       }
       cerr<<'t';
@@ -1297,18 +1308,23 @@ void node_tag_create_node_id_idx()
       memmove(tag_rd_buf, &(tag_rd_buf[rd_buf_pos]), TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32));
       rd_buf_pos = TAG_SORT_BUFFER_SIZE / sizeof(uint32) - rd_buf_pos;
     }
+    env.read_order.clear();
+    for (uint32 i(0); i < count; ++i)
+    {
+      if (env.ids_of_node[i].size() > 0)
+	env.read_order.push_back(i);
+    }
+    sort(env.read_order.begin(), env.read_order.end(), node_idx_less(ll_idx_));
     
     free(tag_rd_buf);
     
-    cerr<<1;
-    flush_data< Tag_Node_Id >(env, env.begin(), env.end());
-    cerr<<2;
+    flush_data< Tag_Node_Id_Writer >(env, env.begin(), env.end());
     
     env.offset += count;
   }
   
   cerr<<3;
-  make_block_index< Tag_Node_Id >(env);
+  make_block_index< Tag_Node_Id_Writer >(env);
   cerr<<4;
     
   free(ll_idx_);
@@ -1555,14 +1571,14 @@ int main(int argc, char *argv[])
   //TEMP
   try
   {
-/*    current_run = 25;
+    current_run = 25;
     next_node_tag_id = 100*1000*1000;
     max_node_id = 500*1000*1000;
     node_tag_statistics();
     node_tag_split_and_index();
     node_tag_create_id_node_idx();
     node_tag_create_node_id_idx();
-    exit(0);*/
+    exit(0);
   }
   catch(File_Error e)
   {

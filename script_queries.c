@@ -1182,53 +1182,75 @@ set< Node >& kvs_multiNode_to_multiNode_query
 {
   vector< set< uint32 > > string_ids_global;
   vector< set< uint32 > > string_ids_local;
-  vector< set< uint32 > > string_idxs_local;
+  set< uint32 > string_idxs_local;
   for (vector< pair< string, string > >::const_iterator it(kvs.begin());
        it != kvs.end(); ++it)
   {
     string_ids_global.push_back(set< uint32 >());
     string_ids_local.push_back(set< uint32 >());
-    string_idxs_local.push_back(set< uint32 >());
     cout<<(uintmax_t)time(NULL)<<'\n';
     select_kv_to_ids
 	(it->first, it->second, string_ids_global.back(),
-	 string_ids_local.back(), string_idxs_local.back());
+	 string_ids_local.back(), string_idxs_local);
     cout<<(uintmax_t)time(NULL)<<'\n';
   }
   
-/*  set< uint32 > node_idxs;
+  set< uint32 > node_idxs;
   for (set< Node >::const_iterator it(source.begin()); it != source.end(); ++it)
     node_idxs.insert(ll_idx(it->lat, it->lon) & 0xffffff00);
-  vector< set< uint32 > > filtered_idxs_local;
-  for (vector< set< uint32 > >::const_iterator it(string_idxs_local.begin());
-       it != string_idxs_local.end(); ++it)
-  {
-    filtered_idxs_local.push_back(set< uint32 >());
-    set_intersection
-	(it->begin(), it->end(), node_idxs.begin(), node_idxs.end(),
-	 inserter(filtered_idxs_local.back(), filtered_idxs_local.back().begin()));
-  }*/
+  set< uint32 > filtered_idxs_local;
+  set_intersection
+      (string_idxs_local.begin(), string_idxs_local.end(), node_idxs.begin(), node_idxs.end(),
+       inserter(filtered_idxs_local, filtered_idxs_local.begin()));
+  string_idxs_local.clear();
   
-  set< int > node_ints;
-  set< int > result;
+  map< uint32, set< uint32 > > local_node_to_id;
   for (set< Node >::const_iterator it(source.begin()); it != source.end(); ++it)
-    node_ints.insert(it->id);
+    local_node_to_id[it->id] = set< uint32 >();
   
+  map< uint32, set< uint32 > > global_node_to_id;
+  set< uint32 > global_node_idxs;
+  for (set< Node >::const_iterator it(source.begin()); it != source.end(); ++it)
+  {
+    global_node_to_id[it->id] = set< uint32 >();
+    global_node_idxs.insert(ll_idx(it->lat, it->lon));
+  }
+  
+//   cout<<"local idx:\n";
+//   for (set< uint32 >::const_iterator it(filtered_idxs_local.begin()); it != filtered_idxs_local.end(); ++it)
+//     cout<<hex<<*it<<'\n';
+//   cout<<'\n';
+//   cout<<"local_node_to_id:\n";
+//   for (map< uint32, set< uint32 > >::const_iterator it(local_node_to_id.begin()); it != local_node_to_id.end(); ++it)
+//   {
+//     cout<<hex<<it->first<<": ";
+//     for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+//       cout<<hex<<*it2<<' ';
+//     cout<<'\n';
+//   }
+//   cout<<'\n';
+//   cout<<"global idx:\n";
+//   for (set< uint32 >::const_iterator it(global_node_idxs.begin()); it != global_node_idxs.end(); ++it)
+//     cout<<hex<<*it<<'\n';
+//   cout<<'\n';
+//   cout<<"global_node_to_id:\n";
+//   for (map< uint32, set< uint32 > >::const_iterator it(global_node_to_id.begin()); it != global_node_to_id.end(); ++it)
+//   {
+//     cout<<hex<<it->first<<": ";
+//     for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+//       cout<<hex<<*it2<<' ';
+//     cout<<'\n';
+//   }
+//   cout<<'\n';
+
   try
   {
-    for (uint32 i(0); i < kvs.size(); ++i)
-    {
-      result.clear();
-      Tag_Id_Node_Local_MultiNode_Reader local_reader
-	  (string_ids_local[i], string_idxs_local[i], node_ints, result);
-      select_with_idx< Tag_Id_Node_Local_Multiint_Reader >(local_reader);
-      cout<<(uintmax_t)time(NULL)<<'\n';
-      Tag_Id_Node_Global_Multiint_Reader global_reader
-	  (string_ids_global[i], node_ints, result);
-      select_with_idx< Tag_Id_Node_Global_Multiint_Reader >(global_reader);
-      cout<<(uintmax_t)time(NULL)<<'\n';
-      node_ints = result;
-    }
+    Tag_MultiNode_Id_Local_Reader local_reader(local_node_to_id, filtered_idxs_local);
+    select_with_idx< Tag_MultiNode_Id_Local_Reader >(local_reader);
+    cout<<(uintmax_t)time(NULL)<<'\n';
+    Tag_Node_Id_Reader global_reader(global_node_to_id, global_node_idxs);
+    select_with_idx< Tag_Node_Id_Reader >(global_reader);
+    cout<<(uintmax_t)time(NULL)<<'\n';
   }
   catch(File_Error e)
   {
@@ -1237,9 +1259,43 @@ set< Node >& kvs_multiNode_to_multiNode_query
     runtime_error(temp.str(), cout);
   }
   
+  cout<<"local_node_to_id:\n";
+  for (map< uint32, set< uint32 > >::const_iterator it(local_node_to_id.begin()); it != local_node_to_id.end(); ++it)
+  {
+    cout<<hex<<it->first<<": ";
+    for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+      cout<<hex<<*it2<<' ';
+    cout<<'\n';
+  }
+  cout<<'\n';
+  cout<<"global_node_to_id:\n";
+  for (map< uint32, set< uint32 > >::const_iterator it(global_node_to_id.begin()); it != global_node_to_id.end(); ++it)
+  {
+    cout<<hex<<it->first<<": ";
+    for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+      cout<<hex<<*it2<<' ';
+    cout<<'\n';
+  }
+  cout<<'\n';
+
   for (set< Node >::const_iterator it(source.begin()); it != source.end(); ++it)
   {
-    if (node_ints.find(it->id) != node_ints.end())
+    const set< uint32 >& local_ids(local_node_to_id[it->id]);
+    const set< uint32 >& global_ids(global_node_to_id[it->id]);
+    bool can_be_result(true);
+    for (uint32 i(0); i < kvs.size(); ++i)
+    {
+      set< uint32 > ids_local;
+      set_intersection
+	  (string_ids_local[i].begin(), string_ids_local[i].end(),
+	   local_ids.begin(), local_ids.end(), inserter(ids_local, ids_local.begin()));
+      set< uint32 > ids_global;
+      set_intersection
+	  (string_ids_global[i].begin(), string_ids_global[i].end(),
+	   global_ids.begin(), global_ids.end(), inserter(ids_global, ids_global.begin()));
+      can_be_result &= (!((ids_local.empty()) && (ids_global.empty())));
+    }
+    if (can_be_result)
       result_set.insert(*it);
   }
   

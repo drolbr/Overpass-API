@@ -120,11 +120,11 @@ struct Tag_Id_Node_Local_Multiint_Reader : public Tag_Id_Node_Local_Reader
     const set< int >& source_;
 };
 
-struct Tag_Id_Node_Local_MultiNode_Reader : public Tag_Id_Node_Local
+struct Tag_MultiNode_Id_Local_Reader : public Tag_Id_Node_Local
 {
-  Tag_Id_Node_Local_MultiNode_Reader
-      (const set< Node >& ids, const set< Node >& idxs, set< Node >& result)
-  : result_(result), ids_(ids), idxs_(idxs) {}
+  Tag_MultiNode_Id_Local_Reader
+      (map< uint32, set< uint32 > >& node_to_id, const set< uint32 >& idxs)
+  : node_to_id_(node_to_id), idxs_(idxs) {}
   
   typedef set< uint32 >::const_iterator Index_Iterator;
   Index_Iterator idxs_begin() const { return idxs_.begin(); }
@@ -132,18 +132,18 @@ struct Tag_Id_Node_Local_MultiNode_Reader : public Tag_Id_Node_Local
   
   void process(uint8* buf)
   {
-    const set< Node >::const_iterator it(ids_.find(Node(*((uint32*)buf))));
-    if (it != ids_.end())
+    for (uint32 j(0); j < *((uint8*)&(buf[4])); ++j)
     {
-      for (uint32 j(0); j < *((uint8*)&(buf[4])); ++j)
-	result_.insert(*it);
+      map< uint32, set< uint32 > >::iterator it
+	  (node_to_id_.find(*((uint32*)&(buf[6 + 4*j]))));
+      if (it != node_to_id_.end())
+	it->second.insert(*((uint32*)buf));
     }
   }
   
   private:
-    set< int >& result_;
-    const set< Node >& ids_;
-    const set< Node >& idxs_;
+    map< uint32, set< uint32 > >& node_to_id_;
+    const set< uint32 >& idxs_;
 };
 
 struct Tag_Id_Node_Local_Writer : public Tag_Id_Node_Local
@@ -312,27 +312,60 @@ struct Tag_Id_Node_Global_Writer : public Tag_Id_Node_Global
 
 //-----------------------------------------------------------------------------
 
-struct Tag_Node_Id_Iterator
+struct Tag_Node_Id
 {
-  Tag_Node_Id_Iterator(vector< vector< uint32 > >& vect, uint32 pos)
-    : i(pos), ids_of_node(vect)
+  uint32 blocksize() const { return TAG_NODE_ID_BLOCKSIZE; }
+  const char* data_file() const { return NODE_TAG_NODE_ID_FILE; }
+  const char* index_file() const { return NODE_TAG_NODE_ID_IDX; }
+  
+  typedef uint32 Index;
+  uint32 size_of_Index() const { return sizeof(uint32); }
+  
+  uint32 size_of_buf(uint8* elem) const
   {
-    while ((i < ids_of_node.size()) && (!(ids_of_node[i].size())))
-      ++i;
+    return ((*((uint16*)&(elem[8])))*(sizeof(uint32) + sizeof(uint8)) + sizeof(uint16) + 2*sizeof(uint32));
+  }
+};
+
+struct Tag_Node_Id_Reader : public Tag_Node_Id
+{
+  Tag_Node_Id_Reader
+      (map< uint32, set< uint32 > >& node_to_id, const set< uint32 >& idxs)
+  : node_to_id_(node_to_id), idxs_(idxs) {}
+  
+  typedef set< uint32 >::const_iterator Index_Iterator;
+  Index_Iterator idxs_begin() const { return idxs_.begin(); }
+  Index_Iterator idxs_end() const { return idxs_.end(); }
+  
+  void process(uint8* buf)
+  {
+    map< uint32, set< uint32 > >::iterator it(node_to_id_.find(*((uint32*)buf)));
+    if (it != node_to_id_.end())
+    {
+      for (uint32 j(0); j < *((uint16*)&(buf[8])); ++j)
+	it->second.insert(*((uint32*)&(buf[10 + 5*j])));
+    }
   }
   
+  private:
+    map< uint32, set< uint32 > >& node_to_id_;
+    const set< uint32 >& idxs_;
+};
+
+struct Tag_Node_Id_Iterator
+{
+  Tag_Node_Id_Iterator
+      (vector< vector< uint32 > >& vect, const vector< uint32 >& read_order, uint32 pos)
+    : i(pos), read_order_(read_order), ids_of_node(vect) {}
+  
   uint32 i;
+  const vector< uint32 >& read_order_;
   vector< vector< uint32 > >& ids_of_node;
 };
 
 inline Tag_Node_Id_Iterator& operator++(Tag_Node_Id_Iterator& t)
 {
   ++t.i;
-  while ((t.i < t.ids_of_node.size()) && (!(t.ids_of_node[t.i].size())))
-    ++t.i;
-  if (t.i > t.ids_of_node.size())
-    t.i = t.ids_of_node.size();
-  
   return t;
 }
 
@@ -346,40 +379,30 @@ inline bool operator!=(const Tag_Node_Id_Iterator& a, const Tag_Node_Id_Iterator
   return (a.i != b.i);
 }
 
-struct Tag_Node_Id
+struct Tag_Node_Id_Writer : public Tag_Node_Id
 {
-  Tag_Node_Id(uint32* ll_idx, uint8* blocklet_of_id)
-    : ids_of_node(), offset(0),
+  Tag_Node_Id_Writer(uint32* ll_idx, uint8* blocklet_of_id)
+    : ids_of_node(), offset(1),
     block_index_(), ll_idx_(ll_idx), blocklet_of_id_(blocklet_of_id)
      {}
   
-  uint32 blocksize() const { return TAG_NODE_ID_BLOCKSIZE; }
-  const char* data_file() const { return NODE_TAG_NODE_ID_FILE; }
-  const char* index_file() const { return NODE_TAG_NODE_ID_IDX; }
   const multimap< uint32, uint16 >& block_index() const { return block_index_; }
   multimap< uint32, uint16 >& block_index() { return block_index_; }
   
   typedef Tag_Node_Id_Iterator Iterator;
   
-  Iterator begin() { return Tag_Node_Id_Iterator(ids_of_node, 0); }
-  Iterator end() { return Tag_Node_Id_Iterator(ids_of_node, ids_of_node.size()); }
+  Iterator begin() { return Tag_Node_Id_Iterator(ids_of_node, read_order, 0); }
+  Iterator end() { return Tag_Node_Id_Iterator(ids_of_node, read_order, read_order.size()); }
 
-  typedef uint32 Index;
-  uint32 size_of_Index() const { return sizeof(uint32); }
-  
   uint32 size_of(const Tag_Node_Id_Iterator& it) const
   {
-    return (ids_of_node[it.i].size()*(sizeof(uint32) + sizeof(uint8)) + sizeof(uint16) + 2*sizeof(uint32));
-  }
-  
-  uint32 size_of_buf(uint8* elem) const
-  {
-    return ((*((uint16*)&(elem[8])))*(sizeof(uint32) + sizeof(uint8)) + sizeof(uint16) + 2*sizeof(uint32));
+    return (ids_of_node[read_order[it.i]].size()*(sizeof(uint32)
+	+ sizeof(uint8)) + sizeof(uint16) + 2*sizeof(uint32));
   }
   
   uint32 index_of(const Tag_Node_Id_Iterator& it) const
   {
-    return ll_idx_[it.i];
+    return ll_idx_[read_order[it.i]];
   }
   
   uint32 index_of_buf(uint8* elem) const
@@ -389,11 +412,11 @@ struct Tag_Node_Id
   
   int32 compare(const Tag_Node_Id_Iterator& it, uint8* buf) const
   {
-    if (ll_idx_[it.i] < *((uint32*)&(buf[4])))
+    if (ll_idx_[read_order[it.i]] < *((uint32*)&(buf[4])))
       return RAW_DB_LESS;
-    else if (ll_idx_[it.i] > *((uint32*)&(buf[4])))
+    else if (ll_idx_[read_order[it.i]] > *((uint32*)&(buf[4])))
       return RAW_DB_GREATER;
-    if (it.i + offset < *((uint32*)&(buf[0])))
+    if (read_order[it.i] + offset < *((uint32*)&(buf[0])))
       return RAW_DB_LESS;
     else
       return RAW_DB_GREATER;
@@ -401,13 +424,13 @@ struct Tag_Node_Id
   
   void to_buf(uint8* dest, const Tag_Node_Id_Iterator& it) const
   {
-    *((uint32*)&(dest[0])) = it.i + offset;
-    *((uint32*)&(dest[4])) = ll_idx_[it.i];
-    *((uint16*)&(dest[8])) = ids_of_node[it.i].size();
-    for (uint32 i(0); i < ids_of_node[it.i].size(); ++i)
+    *((uint32*)&(dest[0])) = read_order[it.i] + offset;
+    *((uint32*)&(dest[4])) = ll_idx_[read_order[it.i]];
+    *((uint16*)&(dest[8])) = ids_of_node[read_order[it.i]].size();
+    for (uint32 i(0); i < ids_of_node[read_order[it.i]].size(); ++i)
     {
-      *((uint32*)&(dest[5*i + 10])) = ids_of_node[it.i][i];
-      *((uint8*)&(dest[5*i + 11])) = blocklet_of_id_[ids_of_node[it.i][i]];
+      *((uint32*)&(dest[5*i + 10])) = ids_of_node[read_order[it.i]][i];
+      *((uint8*)&(dest[5*i + 14])) = blocklet_of_id_[ids_of_node[read_order[it.i]][i]];
     }
   }
   
@@ -417,6 +440,7 @@ struct Tag_Node_Id
   }
   
   vector< vector< uint32 > > ids_of_node;
+  vector< uint32 > read_order;
   uint32 offset;
   
 private:
