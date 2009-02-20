@@ -199,49 +199,6 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
           ++tit;
         }
       }
-/*      for (set< Node >::const_iterator it(mit->second.get_nodes().begin());
-	   it != mit->second.get_nodes().end(); )
-      {
-	set< Node >::const_iterator it2(it);
-	ostringstream temp;
-	temp<<"select node_tags.id, key_s.key_, value_s.value_ from node_tags "
-	    <<"left join key_s on node_tags.key_ = key_s.id "
-	    <<"left join value_s on node_tags.value_ = value_s.id "
-	    <<"where node_tags.id in ("<<it->id;
-	unsigned int i(0);
-	while (((++it) != mit->second.get_nodes().end()) && (i++ < 10000))
-	  temp<<", "<<it->id;
-	temp<<") order by node_tags.id";
-	MYSQL_RES* result(mysql_query_wrapper(mysql, temp.str()));
-	if (!result)
-	  return;
-	
-	MYSQL_ROW row(mysql_fetch_row(result));
-	while ((row) && (row[0]))
-	{
-	  int id(atoi(row[0]));
-	  while (it2->id < id)
-	  {
-	    out_node(*it2);
-	    ++it2;
-	  }
-	  out_node(*it2, false);
-	  while ((row) && (row[0]) && (it2->id == atoi(row[0])))
-	  {
-	    if ((row[1]) && (row[2]))
-	      cout<<"  <tag k=\""<<row[1]<<"\" v=\""<<row[2]<<"\"/>\n";
-	    row = mysql_fetch_row(result);
-	  }
-	  cout<<"</node>\n";
-	  ++it2;
-	}
-	while (it2 != it)
-	{
-	  out_node(*it2);
-	  ++it2;
-	}
-	mysql_free_result(result);
-      }*/
       for (set< Way >::const_iterator it(mit->second.get_ways().begin());
 	   it != mit->second.get_ways().end(); )
       {
