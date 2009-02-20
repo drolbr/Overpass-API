@@ -684,22 +684,9 @@ void postprocess_ways_4()
 
 //-----------------------------------------------------------------------------
 
-const int NODE = 1;
-const int WAY = 2;
-const int RELATION = 3;
-
-const unsigned int FLUSH_INTERVAL = 32*1024*1024;
 const unsigned int FLUSH_TAGS_INTERVAL = 32*1024*1024;
-const unsigned int DOT_INTERVAL = 512*1024;
 const uint32 TAG_SORT_BUFFER_SIZE = 128*1024*1024;
   
-unsigned int structure_count(0);
-int state(0);
-const int NODES = 1;
-const int WAYS = 2;
-int ways_fd;
-uint32* way_buf;
-uint32 way_buf_pos(0);
 uint current_run(0);
 vector< uint32 > split_idx;
 uint32 next_node_tag_id(0);
@@ -1343,6 +1330,18 @@ int32 current_ll_idx;
 set< string > allowed_node_tags;
 bool no_tag_limit(true);
 uint tag_count(0);
+unsigned int structure_count(0);
+int state(0);
+const int NODES = 1;
+const int WAYS = 2;
+int ways_fd;
+uint32* way_buf;
+uint32 way_buf_pos(0);
+const int NODE = 1;
+const int WAY = 2;
+const int RELATION = 3;
+const unsigned int FLUSH_INTERVAL = 32*1024*1024;
+const unsigned int DOT_INTERVAL = 512*1024;
 
 void start(const char *el, const char **attr)
 {
@@ -1358,7 +1357,7 @@ void start(const char *el, const char **attr)
 	if (!strcmp(attr[i], "v"))
 	  value = attr[i+1];
       }
-      // patch cope with server power limits by ignoring uncommon node tags
+      //patch cope with server power limits by ignoring uncommon node tags
       if ((current_type != NODE) || (no_tag_limit) ||
 	   (allowed_node_tags.find(key) != allowed_node_tags.end()))
       {
@@ -1569,7 +1568,7 @@ int main(int argc, char *argv[])
   return 0;*/
   
   //TEMP
-  try
+/*  try
   {
     current_run = 25;
     next_node_tag_id = 100*1000*1000;
@@ -1583,7 +1582,7 @@ int main(int argc, char *argv[])
   catch(File_Error e)
   {
     cerr<<"\nopen64: "<<e.error_number<<'\n';
-  }
+  }*/
   
   prepare_nodes();
   

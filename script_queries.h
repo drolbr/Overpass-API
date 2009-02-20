@@ -69,6 +69,8 @@ set< int >& kv_to_multiint_query(string key, string value, set< int >& result_se
 set< int >& kv_multiint_to_multiint_query
     (string key, string value, const set< int >& source, set< int >& result_set);
 set< Node >& kvs_multiNode_to_multiNode_query
-    (const vector< pair< string, string > >& kvs, const set< Node >& source, set< Node >& result_set);
+    (vector< pair< string, string > >::const_iterator kvs_begin,
+     vector< pair< string, string > >::const_iterator kvs_end,
+     const set< Node >& source, set< Node >& result_set);
 
 #endif

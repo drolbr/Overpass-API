@@ -283,71 +283,11 @@ void Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   
   if (type == QUERY_NODE)
   {
-/*    ostringstream temp;
-    temp<<"select node_tags.id from node_tags ";
-    if (key_values.front().second == "")
-    {
-      temp<<"left join key_s on key_s.id = node_tags.key_ "
-        <<"where key_s.key_ = \"";
-      escape_xml(temp, key_values.front().first);
-      temp<<"\" order by node_tags.id";
-    }
-    else
-    {
-      temp<<"left join key_s on key_s.id = node_tags.key_ "
-        <<"left join value_s on value_s.id = node_tags.value_ "
-        <<"where key_s.key_ = \"";
-      escape_xml(temp, key_values.front().first);
-      temp<<"\" and value_s.value_ = \"";
-      escape_xml(temp, key_values.front().second);
-      temp<<"\" order by node_tags.id";
-    }*/
-    
     set< int > tnodes;
-/*    tnodes = multiint_query(mysql, temp.str(), tnodes);*/
     kv_to_multiint_query(key_values.front().first, key_values.front().second, tnodes);
-    
-    //TEMP
     set< Node > tnodes2;
     multiint_to_multiNode_query(tnodes, tnodes2);
-    kvs_multiNode_to_multiNode_query(key_values, tnodes2, nodes);
-    return;
-    
-    unsigned int key_count(1);
-    while (key_count < key_values.size())
-    {
-/*      temp.str("");
-      if (key_values[key_count].second == "")
-      {
-        temp<<"select node_tags.id from node_tags "
-          <<"left join key_s on key_s.id = node_tags.key_ "
-          <<"where key_s.key_ = \"";
-        escape_xml(temp, key_values[key_count].first);
-        temp<<"\" and node_tags.id in";
-      }
-      else
-      {
-        temp<<"select node_tags.id from node_tags "
-          <<"left join key_s on key_s.id = node_tags.key_ "
-          <<"left join value_s on value_s.id = node_tags.value_ "
-          <<"where key_s.key_ = \"";
-        escape_xml(temp, key_values[key_count].first);
-        temp<<"\" and value_s.value_ = \"";
-        escape_xml(temp, key_values[key_count].second);
-        temp<<"\" and node_tags.id in";
-      }*/
-      
-      set< int > new_nodes;
-/*      tnodes = multiint_to_multiint_query
-        (mysql, temp.str(), "order by node_tags.id", tnodes, new_nodes);*/
-      kv_multiint_to_multiint_query
-	  (key_values[key_count].first, key_values[key_count].second, tnodes, new_nodes);
-      tnodes = new_nodes;
-      
-      ++key_count;
-    }
-    
-    multiint_to_multiNode_query(tnodes, nodes);
+    kvs_multiNode_to_multiNode_query(++(key_values.begin()), key_values.end(), tnodes2, nodes);
   }
   else if (type == QUERY_WAY)
   {
