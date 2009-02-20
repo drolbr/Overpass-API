@@ -72,5 +72,8 @@ set< Node >& kvs_multiNode_to_multiNode_query
     (vector< pair< string, string > >::const_iterator kvs_begin,
      vector< pair< string, string > >::const_iterator kvs_end,
      const set< Node >& source, set< Node >& result_set);
+vector< vector< pair< string, string > > >& multiNode_to_kvs_query
+    (const set< Node >& source, set< Node >::const_iterator& pos,
+     vector< vector< pair< string, string > > >& result);
 
 #endif

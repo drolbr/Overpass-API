@@ -171,7 +171,29 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     }
     else if (mode == PRINT_BODY)
     {
-      for (set< Node >::const_iterator it(mit->second.get_nodes().begin());
+      set< Node >::const_iterator itcur(mit->second.get_nodes().begin());
+      while (itcur != mit->second.get_nodes().end())
+      {
+        set< Node >::const_iterator it(itcur);
+        vector< vector< pair< string, string > > > tags;
+        multiNode_to_kvs_query(mit->second.get_nodes(), itcur, tags);
+        vector< vector< pair< string, string > > >::const_iterator tit(tags.begin());
+        while (it != itcur)
+        {
+          if (tit->empty())
+            out_node(*it);
+          else
+          {
+            out_node(*it, false);
+            for (vector< pair< string, string > >::const_iterator tit2(tit->begin());
+                 tit2 != tit->end(); ++tit2)
+              cout<<"  <tag k=\""<<tit2->first<<"\" v=\""<<tit2->second<<"\"/>\n";
+	  }
+          ++it;
+          ++tit;
+        }
+      }
+/*      for (set< Node >::const_iterator it(mit->second.get_nodes().begin());
 	   it != mit->second.get_nodes().end(); )
       {
 	set< Node >::const_iterator it2(it);
@@ -213,7 +235,7 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	  ++it2;
 	}
 	mysql_free_result(result);
-      }
+      }*/
       for (set< Way >::const_iterator it(mit->second.get_ways().begin());
 	   it != mit->second.get_ways().end(); )
       {
