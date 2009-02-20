@@ -187,7 +187,13 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
             out_node(*it, false);
             for (vector< pair< string, string > >::const_iterator tit2(tit->begin());
                  tit2 != tit->end(); ++tit2)
-              cout<<"  <tag k=\""<<tit2->first<<"\" v=\""<<tit2->second<<"\"/>\n";
+	    {
+	      cout<<"  <tag k=\"";
+	      escape_xml(cout, tit2->first);
+	      cout<<"\" v=\"";
+	      escape_xml(cout, tit2->second);
+	      cout<<"\"/>\n";
+	    }
 	  }
           ++it;
           ++tit;

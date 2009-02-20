@@ -1153,46 +1153,35 @@ void select_kv_to_ids
 }
 
 void select_ids_to_kvs
-    (const map< uint32, pair< uint32, uint8 > > ids_local,
-     const map< uint32, uint8 > ids_global,
+    (const map< uint32, uint32 > ids_local,
+     const set< uint32 > ids_global,
      map< uint32, pair< string, string > >& kvs)
 {
-  const vector< uint32 >& spatial_boundaries
-      (Node_String_Cache::get_spatial_boundaries());
-  const vector< vector< pair< string, string > > >& kv_to_id_idx
-      (Node_String_Cache::get_kv_to_id_idx());
-  const vector< vector< uint16 > >& kv_to_id_block_idx
-	  (Node_String_Cache::get_kv_to_id_block_idx());
+  const vector< uint32 >& spatial_boundaries(Node_String_Cache::get_spatial_boundaries());
+  const vector< vector< uint16 > >& kv_to_id_block_idx(Node_String_Cache::get_kv_to_id_block_idx());
   
-/*  set< uint16 > kv_to_idx_block_ids;
-  for (uint32 i(0); i < NODE_TAG_SPATIAL_PARTS+1; ++i)
+  vector< bool > used_spat_parts(NODE_TAG_SPATIAL_PARTS);
+  for (map< uint32, uint32 >::const_iterator it(ids_local.begin());
+       it != ids_local.end(); ++it)
   {
-    uint32 j(1);
-    if (value == "")
+    uint32 i(0);
+    while (spatial_boundaries[i] <= it->second)
+      ++i;
+    used_spat_parts[i] = true;
+  }
+  set< uint16 > used_blocks;
+  for (vector< uint16 >::const_iterator it(kv_to_id_block_idx[0].begin());
+       it != kv_to_id_block_idx[0].end(); ++it)
+    used_blocks.insert(*it);
+  for (uint32 i(1); i < used_spat_parts.size()+1; ++i)
+  {
+    if (used_spat_parts[i-1])
     {
-      while ((j < kv_to_id_idx[i].size()) && (kv_to_id_idx[i][j].first < key))
-	++j;
-      kv_to_idx_block_ids.insert(kv_to_id_block_idx[i][j-1]);
-      while ((j < kv_to_id_idx[i].size()) && (kv_to_id_idx[i][j].first <= key))
-      {
-	kv_to_idx_block_ids.insert(kv_to_id_block_idx[i][j]);
-	++j;
-      }
+      for (vector< uint16 >::const_iterator it(kv_to_id_block_idx[i].begin());
+	   it != kv_to_id_block_idx[i].end(); ++it)
+	used_blocks.insert(*it);
     }
-    else
-    {
-      while ((j < kv_to_id_idx[i].size()) && ((kv_to_id_idx[i][j].first < key) ||
-	      ((kv_to_id_idx[i][j].first == key) && (kv_to_id_idx[i][j].second < value))))
-	++j;
-      kv_to_idx_block_ids.insert(kv_to_id_block_idx[i][j-1]);
-      while ((j < kv_to_id_idx[i].size()) && ((kv_to_id_idx[i][j].first < key) ||
-	      ((kv_to_id_idx[i][j].first == key) && (kv_to_id_idx[i][j].second <= value))))
-      {
-	kv_to_idx_block_ids.insert(kv_to_id_block_idx[i][j]);
-	++j;
-      }
-    }
-  }*/
+  }
 
   int string_fd = open64(NODE_STRING_DATA, O_RDONLY);
   if (string_fd < 0)
@@ -1204,12 +1193,11 @@ void select_ids_to_kvs
   }
   
   char* string_idxs_buf = (char*) malloc(NODE_STRING_BLOCK_SIZE);
-/*    for (set< uint16 >::const_iterator it(kv_to_idx_block_ids.begin());
-  it != kv_to_idx_block_ids.end(); ++it)*/
-  while (read(string_fd, string_idxs_buf, NODE_STRING_BLOCK_SIZE))
+  for (set< uint16 >::const_iterator it(used_blocks.begin());
+       it != used_blocks.end(); ++it)
   {
-/*      lseek64(string_fd, ((uint64)(*it))*NODE_STRING_BLOCK_SIZE, SEEK_SET);
-    read(string_fd, string_idxs_buf, NODE_STRING_BLOCK_SIZE);*/
+    lseek64(string_fd, ((uint64)(*it))*NODE_STRING_BLOCK_SIZE, SEEK_SET);
+    read(string_fd, string_idxs_buf, NODE_STRING_BLOCK_SIZE);
     uint32 pos(sizeof(uint32));
     while (pos < *((uint32*)string_idxs_buf) + sizeof(uint32))
     {
@@ -1413,21 +1401,21 @@ vector< vector< pair< string, string > > >& multiNode_to_kvs_query
     runtime_error(temp.str(), cout);
   }
   
-  map< uint32, uint8 > ids_global;
+  set< uint32 > ids_global;
   for (map< uint32, set< uint32 > >::const_iterator it(global_node_to_id.begin());
        it != global_node_to_id.end(); ++it)
   {
     for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
-      ids_global[*it2] = 0;
+      ids_global.insert(*it2);
   }
-  map< uint32, pair< uint32, uint8 > > ids_local;
+  map< uint32, uint32 > ids_local;
   for (map< uint32, set< uint32 > >::const_iterator it(local_node_to_id.begin());
        it != local_node_to_id.end(); ++it)
   {
     const Node& cur_nd(*(source.find(Node(it->first, 0, 0))));
     uint32 ll_idx_(ll_idx(cur_nd.lat, cur_nd.lon) & 0xffffff00);
     for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
-      ids_local[*it2] = make_pair(ll_idx_, 0);
+      ids_local[*it2] = ll_idx_;
   }
   map< uint32, pair< string, string > > kvs;
   
