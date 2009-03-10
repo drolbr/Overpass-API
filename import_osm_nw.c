@@ -6,10 +6,11 @@
 #include <string>
 #include <vector>
 
+#include "expat_justparse_interface.h"
 #include "file_types.h"
+#include "node_strings_file_io.h"
 #include "raw_file_db.h"
 #include "script_datatypes.h"
-#include "expat_justparse_interface.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -33,14 +34,6 @@ typedef unsigned char uint8;
 typedef unsigned short int uint16;
 typedef unsigned int uint32;
 typedef unsigned long long uint64;
-
-//-----------------------------------------------------------------------------
-
-const int NODE_FILE_BLOCK_SIZE = sizeof(int) + BLOCKSIZE*sizeof(Node);
-const int WAY_FILE_BLOCK_SIZE = sizeof(uint32) + WAY_BLOCKSIZE*sizeof(uint32);
-
-const char* NODE_TAG_TMPAPREFIX = "/tmp/node_strings_";
-const char* NODE_TAG_TMPB = "/tmp/node_tag_ids";
 
 //-----------------------------------------------------------------------------
 
@@ -684,651 +677,12 @@ void postprocess_ways_4()
 
 //-----------------------------------------------------------------------------
 
-const unsigned int FLUSH_TAGS_INTERVAL = 32*1024*1024;
-const uint32 TAG_SORT_BUFFER_SIZE = 128*1024*1024;
-  
-uint current_run(0);
-vector< uint32 > split_idx;
-uint32 next_node_tag_id(0);
-uint8* cur_block_count;
-uint32* block_of_id;
-
-struct KeyValue
-{
-  KeyValue(string key_, string value_) : key(key_), value(value_) {}
-  
-  string key, value;
-};
-
-inline bool operator<(const KeyValue& kv_1, const KeyValue& kv_2)
-{
-  if (kv_1.key < kv_2.key)
-    return true;
-  else if (kv_1.key > kv_2.key)
-    return false;
-  return (kv_1.value < kv_2.value);
-}
-
-struct NodeCollection
-{
-  NodeCollection() : position(0), bitmask(0)
-  {
-    id = ++next_node_tag_id;
-  }
-  
-  void insert(int32 node_id, int32 ll_idx)
-  {
-    if (nodes.empty())
-    {
-      position = ll_idx;
-      bitmask = 0;
-    }
-    nodes.push_back(node_id);
-    bitmask |= (position ^ ll_idx);
-  }
-  
-  void merge(int32 id_, int32 ll_idx)
-  {
-    id = id_;
-    bitmask |= (position ^ ll_idx);
-  }
-  
-  int32 position;
-  uint32 bitmask;
-  uint32 id;
-  vector< int32 > nodes;
-};
-
-void flush_node_tags(map< KeyValue, NodeCollection >& node_tags)
-{
-  ostringstream temp;
-  temp<<NODE_TAG_TMPAPREFIX<<current_run;
-  int dest_fd = open64(temp.str().c_str(), O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-  close(dest_fd);
-  
-  dest_fd = open64(temp.str().c_str(), O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-  if (dest_fd < 0)
-  {
-    cerr<<"open64: "<<errno<<'\n';
-    exit(0);
-  }
-  
-  if (current_run == 0)
-  {
-    int dest_id_fd = open64(NODE_TAG_TMPB, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-    if (dest_id_fd < 0)
-    {
-      cerr<<"open64: "<<errno<<'\n';
-      exit(0);
-    }
-    
-    for (map< KeyValue, NodeCollection >::iterator it(node_tags.begin());
-         it != node_tags.end(); ++it)
-    {
-      uint16 key_size(it->first.key.size());
-      uint16 value_size(it->first.value.size());
-      if (it->second.bitmask>>8)
-        it->second.position = 0xffffffff;
-      else
-        it->second.position &= 0xffffff00;
-      write(dest_fd, &(it->second.id), sizeof(uint32));
-      write(dest_fd, &(it->second.position), sizeof(uint32));
-      write(dest_fd, &(key_size), sizeof(uint16));
-      write(dest_fd, &(value_size), sizeof(uint16));
-      write(dest_fd, &(it->first.key[0]), key_size);
-      write(dest_fd, &(it->first.value[0]), value_size);
-      
-      uint32 nc_size(it->second.nodes.size());
-      write(dest_id_fd, &(it->second.id), sizeof(uint32));
-      write(dest_id_fd, &(nc_size), sizeof(uint32));
-      for (vector< int32 >::const_iterator it2(it->second.nodes.begin());
-	   it2 != it->second.nodes.end(); ++it2)
-	write(dest_id_fd, &(*it2), sizeof(uint32));	
-    }
-    
-    close(dest_id_fd);
-  }
-  else
-  {
-    uint32* cnt_rd_buf = (uint32*) malloc(2*sizeof(uint32) + 2*sizeof(uint16));
-    uint16* size_rd_buf = (uint16*) &(cnt_rd_buf[2]);
-    char* key_rd_buf = (char*) malloc(64*1024);
-    char* value_rd_buf = (char*) malloc(64*1024);
-    
-    temp.str("");
-    temp<<NODE_TAG_TMPAPREFIX<<(current_run-1);
-    int source_fd = open64(temp.str().c_str(), O_RDONLY);
-    if (source_fd < 0)
-    {
-      cerr<<"open64: "<<errno<<'\n';
-      exit(0);
-    }
-    
-    map< KeyValue, NodeCollection >::iterator it(node_tags.begin());
-    while (read(source_fd, cnt_rd_buf, 2*sizeof(uint32) + 2*sizeof(uint16)))
-    {
-      read(source_fd, key_rd_buf, size_rd_buf[0]);
-      key_rd_buf[size_rd_buf[0]] = 0;
-      read(source_fd, value_rd_buf, size_rd_buf[1]);
-      value_rd_buf[size_rd_buf[1]] = 0;
-      while ((it != node_tags.end()) &&
-             (strcmp(key_rd_buf, it->first.key.c_str()) > 0))
-      {
-        uint16 key_size(it->first.key.size());
-        uint16 value_size(it->first.value.size());
-        if (it->second.bitmask>>8)
-          it->second.position = 0xffffffff;
-        else
-          it->second.position &= 0xffffff00;
-        write(dest_fd, &(it->second.id), sizeof(uint32));
-        write(dest_fd, &(it->second.position), sizeof(uint32));
-        write(dest_fd, &(key_size), sizeof(uint16));
-        write(dest_fd, &(value_size), sizeof(uint16));
-        write(dest_fd, &(it->first.key[0]), key_size);
-        write(dest_fd, &(it->first.value[0]), value_size);
-        ++it;
-      }
-      while ((it != node_tags.end()) &&
-             (strcmp(key_rd_buf, it->first.key.c_str()) == 0) &&
-             (strcmp(value_rd_buf, it->first.value.c_str()) > 0))
-      {
-        uint16 key_size(it->first.key.size());
-        uint16 value_size(it->first.value.size());
-        if (it->second.bitmask>>8)
-          it->second.position = 0xffffffff;
-        else
-          it->second.position &= 0xffffff00;
-        write(dest_fd, &(it->second.id), sizeof(uint32));
-        write(dest_fd, &(it->second.position), sizeof(uint32));
-        write(dest_fd, &(key_size), sizeof(uint16));
-        write(dest_fd, &(value_size), sizeof(uint16));
-        write(dest_fd, &(it->first.key[0]), key_size);
-        write(dest_fd, &(it->first.value[0]), value_size);
-        ++it;
-      }
-      if ((it != node_tags.end()) &&
-          (strcmp(key_rd_buf, it->first.key.c_str()) == 0) &&
-          (strcmp(value_rd_buf, it->first.value.c_str()) == 0))
-      {
-        it->second.merge(cnt_rd_buf[0], cnt_rd_buf[1]);
-        if ((cnt_rd_buf[1] == 0xffffffff) || (it->second.bitmask>>8))
-          cnt_rd_buf[1] = 0xffffffff;
-        else
-          cnt_rd_buf[1] &= 0xffffff00;
-        ++it;
-      }
-      write(dest_fd, cnt_rd_buf, 2*sizeof(uint32) + 2*sizeof(uint16));
-      write(dest_fd, key_rd_buf, size_rd_buf[0]);
-      write(dest_fd, value_rd_buf, size_rd_buf[1]);
-    }
-    
-    free(cnt_rd_buf);
-    free(key_rd_buf);
-    free(value_rd_buf);
-    
-    close(source_fd);
-    temp.str("");
-    temp<<NODE_TAG_TMPAPREFIX<<(current_run-1);
-    remove(temp.str().c_str());
-    
-    int dest_id_fd = open64(NODE_TAG_TMPB, O_WRONLY|O_APPEND, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-    if (dest_id_fd < 0)
-    {
-      cerr<<"open64: "<<errno<<'\n';
-      exit(0);
-    }
-    
-    for (map< KeyValue, NodeCollection >::iterator it(node_tags.begin());
-	 it != node_tags.end(); ++it)
-    {
-      uint32 nc_size(it->second.nodes.size());
-      write(dest_id_fd, &(it->second.id), sizeof(uint32));
-      write(dest_id_fd, &(nc_size), sizeof(uint32));
-      for (vector< int32 >::const_iterator it2(it->second.nodes.begin());
-	   it2 != it->second.nodes.end(); ++it2)
-	write(dest_id_fd, &(*it2), sizeof(uint32));	
-    }
-    
-    close(dest_id_fd);
-  }
-  
-  close(dest_fd);
-  ++current_run;
-}
-
-void node_tag_statistics()
-{
-  cerr<<'s';
-  
-  if (current_run == 0)
-  {
-    cerr<<"No node tags.\n";
-    return;
-  }
-  
-  ostringstream temp;
-  temp<<NODE_TAG_TMPAPREFIX<<(current_run-1);
-  int source_fd = open64(temp.str().c_str(), O_RDONLY);
-  if (source_fd < 0)
-  {
-    cerr<<"open64: "<<errno<<'\n';
-    exit(0);
-  }
-  
-  uint32 global_count(0);
-  uint32* spatial_count = (uint32*) calloc(16*1024*1024, sizeof(uint32));
-  uint32* cnt_rd_buf = (uint32*) malloc(2*sizeof(uint32) + 2*sizeof(uint16));
-  uint16* size_rd_buf = (uint16*) &(cnt_rd_buf[2]);
-  
-  while (read(source_fd, cnt_rd_buf, 2*sizeof(uint32) + 2*sizeof(uint16)))
-  {
-    lseek64(source_fd, size_rd_buf[0] + size_rd_buf[1], SEEK_CUR);
-    ++(spatial_count[cnt_rd_buf[1]>>8]);
-    ++global_count;
-  }
-  global_count -= spatial_count[0x00ffffff];
-  
-  uint32 split_count(0);
-  for (unsigned int i(0); i < 16*1024*1024; ++i)
-  {
-    split_count += spatial_count[i];
-    if (split_count >= global_count / NODE_TAG_SPATIAL_PARTS)
-    {
-      split_idx.push_back(i<<8);
-      split_count = 0;
-    }
-  }
-  
-  free(cnt_rd_buf);
-  free(spatial_count);
-  
-  close(source_fd);
-
-  cerr<<'s';
-}
-
-void node_tag_split_and_index()
-{
-  cerr<<'p';
-
-  ostringstream temp;
-  temp<<NODE_TAG_TMPAPREFIX<<(current_run-1);
-  int source_fd = open64(temp.str().c_str(), O_RDONLY);
-  if (source_fd < 0)
-  {
-    cerr<<"open64: "<<errno<<'\n';
-    exit(0);
-  }
-  
-  int dest_fd = open64(NODE_STRING_DATA, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-  close(dest_fd);
-  
-  dest_fd = open64(NODE_STRING_DATA, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-  if (dest_fd < 0)
-  {
-    cerr<<"open64: "<<errno<<'\n';
-    exit(0);
-  }
-  
-  int dest_idx_fd = open64(NODE_STRING_IDX, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-  close(dest_idx_fd);
-  
-  dest_idx_fd = open64(NODE_STRING_IDX, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-  if (dest_fd < 0)
-  {
-    cerr<<"open64: "<<errno<<'\n';
-    exit(0);
-  }
-  
-  for (uint32 i(0); i < NODE_TAG_SPATIAL_PARTS; ++i)
-    write(dest_idx_fd, &(split_idx[i]), sizeof(uint32));
-  
-  cur_block_count = (uint8*) calloc(NODE_TAG_SPATIAL_PARTS+1, sizeof(uint8));
-  block_of_id = (uint32*) calloc((next_node_tag_id+1), sizeof(uint32));
-  
-  uint32* write_pos = (uint32*) malloc((NODE_TAG_SPATIAL_PARTS+1)*sizeof(uint32));
-  for (uint32 i(0); i < NODE_TAG_SPATIAL_PARTS+1; ++i)
-    write_pos[i] = sizeof(uint32);
-  char* write_blocks = (char*) malloc((NODE_TAG_SPATIAL_PARTS+1) * NODE_STRING_BLOCK_SIZE);
-  uint32* cnt_rd_buf = (uint32*) malloc(2*sizeof(uint32) + 2*sizeof(uint16));
-  uint16* size_rd_buf = (uint16*) &(cnt_rd_buf[2]);
-  
-  while (read(source_fd, cnt_rd_buf, 2*sizeof(uint32) + 2*sizeof(uint16)))
-  {
-    uint16 block(0);
-    if (cnt_rd_buf[1] != 0xffffffff)
-    {
-      while (split_idx[block] <= cnt_rd_buf[1])
-	++block;
-      ++block;
-    }
-    
-    if (write_pos[block] + 2*sizeof(uint32) + 2*sizeof(uint16) + size_rd_buf[0] + size_rd_buf[1]
-	>= NODE_STRING_BLOCK_SIZE*4/5)
-    {
-      *((uint32*)&(write_blocks[block * NODE_STRING_BLOCK_SIZE])) = write_pos[block] - sizeof(uint32);
-      write(dest_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE]), NODE_STRING_BLOCK_SIZE);
-      write(dest_idx_fd, &(block), sizeof(uint16));
-      write(dest_idx_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE
-	  + 3*sizeof(uint32)]), *(uint16*)&(write_blocks[block * NODE_STRING_BLOCK_SIZE
-	      + 3*sizeof(uint32)]) + *(uint16*)&(write_blocks[block * NODE_STRING_BLOCK_SIZE
-		  + 3*sizeof(uint32) + sizeof(uint16)]) + 2*sizeof(uint16));
-    
-      write_pos[block] = sizeof(uint32);
-
-      memcpy(&(write_blocks[block * NODE_STRING_BLOCK_SIZE + write_pos[block]]), cnt_rd_buf,
-	       2*sizeof(uint32) + 2*sizeof(uint16));
-      write_pos[block] += 2*sizeof(uint32) + 2*sizeof(uint16);
-      read(source_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE + write_pos[block]]),
-	   size_rd_buf[0] + size_rd_buf[1]);
-      write_pos[block] += size_rd_buf[0] + size_rd_buf[1];
-      
-      block_of_id[cnt_rd_buf[0]] = (++cur_block_count[block]) | ((cnt_rd_buf[1]) & (0xffffff00));
-    }
-    else
-    {
-      memcpy(&(write_blocks[block * NODE_STRING_BLOCK_SIZE + write_pos[block]]), cnt_rd_buf,
-	       2*sizeof(uint32) + 2*sizeof(uint16));
-      write_pos[block] += 2*sizeof(uint32) + 2*sizeof(uint16);
-      read(source_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE + write_pos[block]]),
-	   size_rd_buf[0] + size_rd_buf[1]);
-      write_pos[block] += size_rd_buf[0] + size_rd_buf[1];
-    
-      block_of_id[cnt_rd_buf[0]] = (cur_block_count[block]) | ((cnt_rd_buf[1]) & (0xffffff00));
-    }
-  }
-  
-  for (unsigned int i(0); i < NODE_TAG_SPATIAL_PARTS+1; ++i)
-  {
-    *((uint32*)&(write_blocks[i * NODE_STRING_BLOCK_SIZE])) = write_pos[i] - sizeof(uint32);
-    write(dest_fd, &(write_blocks[i * NODE_STRING_BLOCK_SIZE]), NODE_STRING_BLOCK_SIZE);
-    write(dest_idx_fd, &(i), sizeof(uint16));
-    write(dest_idx_fd, &(write_blocks[i * NODE_STRING_BLOCK_SIZE
-	+ 3*sizeof(uint32)]), *(uint16*)&(write_blocks[i * NODE_STRING_BLOCK_SIZE
-	    + 3*sizeof(uint32)]) + *(uint16*)&(write_blocks[i * NODE_STRING_BLOCK_SIZE
-		+ 3*sizeof(uint32) + sizeof(uint16)]) + 2*sizeof(uint16));
-  }
-  
-  free(cur_block_count);
-  free(write_pos);
-  free(write_blocks);
-  free(cnt_rd_buf);
-  
-  close(source_fd);
-  close(dest_fd);
-
-  cerr<<'p';
-}
-
-struct tag_id_local_less : public binary_function< uint32*, uint32*, bool >
-{
-  bool operator() (uint32* const& a, uint32* const& b)
-  {
-    if ((block_of_id[*a] & 0xffffff00) < (block_of_id[*b] & 0xffffff00))
-      return true;
-    else if ((block_of_id[*a] & 0xffffff00) > (block_of_id[*b] & 0xffffff00))
-      return false;
-    return (*a < *b);
-  }
-};
-
-struct tag_id_global_less : public binary_function< uint32*, uint32*, bool >
-{
-  bool operator() (uint32* const& a, uint32* const& b)
-  {
-    return (*a < *b);
-  }
-};
-
-void node_tag_create_id_node_idx()
-{
-  uint32 rd_buf_pos(0);
-  Tag_Id_Node_Local_Writer env_local(block_of_id);
-  Tag_Id_Node_Global_Writer env_global;
-  
-  int source_fd = open64(NODE_TAG_TMPB, O_RDONLY);
-  if (source_fd < 0)
-  {
-    cerr<<"open64: "<<errno<<'\n';
-    exit(0);
-  }
-  
-  uint32* tag_rd_buf = (uint32*) malloc(TAG_SORT_BUFFER_SIZE);
-  uint32* tag_alt_buf = (uint32*) malloc(TAG_SORT_BUFFER_SIZE);
-  uint32 max_pos(0);
-  
-  while ((max_pos =
-	 read(source_fd, &(tag_rd_buf[rd_buf_pos]), TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32))))
-  {
-    vector< uint32* > tag_id_local, tag_id_global;
-    uint32 alt_buf_pos(0);
-    max_pos += rd_buf_pos*sizeof(uint32);
-    rd_buf_pos = 0;
-  
-    while ((rd_buf_pos + 1 < max_pos / sizeof(uint32)) &&
-	    (rd_buf_pos + tag_rd_buf[rd_buf_pos+1] + 1 < max_pos / sizeof(uint32)))
-    {
-      uint32 next_pos(tag_rd_buf[rd_buf_pos+1] + 2);
-      
-      if ((~(block_of_id[tag_rd_buf[rd_buf_pos]])) & 0xffffff00)
-      {
-	tag_id_local.push_back(&(tag_rd_buf[rd_buf_pos]));
-      
-	while (tag_rd_buf[rd_buf_pos+1] > 255)
-	{
-	  if (tag_rd_buf[rd_buf_pos+1] > 510)
-	  {
-	    tag_id_local.push_back(&(tag_alt_buf[alt_buf_pos]));
-	    tag_id_local.push_back(&(tag_rd_buf[rd_buf_pos + 510]));
-	  
-	    tag_alt_buf[alt_buf_pos++] = tag_rd_buf[rd_buf_pos];
-	    tag_alt_buf[alt_buf_pos++] = 255;
-	    memcpy(&(tag_alt_buf[alt_buf_pos]), &(tag_rd_buf[rd_buf_pos+257]), 255*sizeof(uint32));
-	    alt_buf_pos += 255;
-	    tag_rd_buf[rd_buf_pos+1] = 255;
-	  
-	    next_pos -= 510;
-	    rd_buf_pos += 510;
-	  
-	    tag_rd_buf[rd_buf_pos] = tag_rd_buf[rd_buf_pos - 510];
-	    tag_rd_buf[rd_buf_pos+1] = next_pos - 2;
-	  }
-	  else
-	  {
-	    tag_id_local.push_back(&(tag_alt_buf[alt_buf_pos]));
-	  
-	    tag_alt_buf[alt_buf_pos++] = tag_rd_buf[rd_buf_pos];
-	    tag_alt_buf[alt_buf_pos++] = tag_rd_buf[rd_buf_pos+1] - 255;
-	    memcpy(&(tag_alt_buf[alt_buf_pos]), &(tag_rd_buf[rd_buf_pos+257]),
-		     (tag_rd_buf[rd_buf_pos+1] - 255)*sizeof(uint32));
-	    alt_buf_pos += (tag_rd_buf[rd_buf_pos+1] - 255);
-	    tag_rd_buf[rd_buf_pos+1] = 255;
-	  }
-	}
-      }
-      else
-      {
-	tag_id_global.push_back(&(tag_rd_buf[rd_buf_pos]));
-      
-	while (tag_rd_buf[rd_buf_pos+1] > 255)
-	{
-	  if (tag_rd_buf[rd_buf_pos+1] > 510)
-	  {
-	    tag_id_global.push_back(&(tag_alt_buf[alt_buf_pos]));
-	    tag_id_global.push_back(&(tag_rd_buf[rd_buf_pos + 510]));
-	  
-	    tag_alt_buf[alt_buf_pos++] = tag_rd_buf[rd_buf_pos];
-	    tag_alt_buf[alt_buf_pos++] = 255;
-	    memcpy(&(tag_alt_buf[alt_buf_pos]), &(tag_rd_buf[rd_buf_pos+257]), 255*sizeof(uint32));
-	    alt_buf_pos += 255;
-	    tag_rd_buf[rd_buf_pos+1] = 255;
-	  
-	    next_pos -= 510;
-	    rd_buf_pos += 510;
-	  
-	    tag_rd_buf[rd_buf_pos] = tag_rd_buf[rd_buf_pos - 510];
-	    tag_rd_buf[rd_buf_pos+1] = next_pos - 2;
-	  }
-	  else
-	  {
-	    tag_id_global.push_back(&(tag_alt_buf[alt_buf_pos]));
-	  
-	    tag_alt_buf[alt_buf_pos++] = tag_rd_buf[rd_buf_pos];
-	    tag_alt_buf[alt_buf_pos++] = tag_rd_buf[rd_buf_pos+1] - 255;
-	    memcpy(&(tag_alt_buf[alt_buf_pos]), &(tag_rd_buf[rd_buf_pos+257]),
-		     (tag_rd_buf[rd_buf_pos+1] - 255)*sizeof(uint32));
-	    alt_buf_pos += (tag_rd_buf[rd_buf_pos+1] - 255);
-	    tag_rd_buf[rd_buf_pos+1] = 255;
-	  }
-	}
-      }
-      
-      rd_buf_pos += next_pos;
-    }
-    
-    sort(tag_id_local.begin(), tag_id_local.end(), tag_id_local_less());
-    sort(tag_id_global.begin(), tag_id_global.end(), tag_id_global_less());
-    
-    flush_data< Tag_Id_Node_Local_Writer >
-	(env_local, tag_id_local.begin(), tag_id_local.end());
-    flush_data< Tag_Id_Node_Global_Writer >
-        (env_global, tag_id_global.begin(), tag_id_global.end());
-    
-    cerr<<'.';
-    
-    memmove(tag_rd_buf, &(tag_rd_buf[rd_buf_pos]), TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32));
-    rd_buf_pos = TAG_SORT_BUFFER_SIZE / sizeof(uint32) - rd_buf_pos;
-  }
-  
-  make_block_index< Tag_Id_Node_Local_Writer >(env_local);
-  make_block_index< Tag_Id_Node_Global_Writer >(env_global);
-  
-  free(tag_rd_buf);
-  free(tag_alt_buf);
-  
-  close(source_fd);
-}
-
-struct node_idx_less : public binary_function< uint32, uint32, bool >
-{
-  node_idx_less(uint32* ll_idx__) : ll_idx_(ll_idx__) {}
-  
-  bool operator() (const uint32& a, const uint32& b)
-  {
-    return (ll_idx_[a] < ll_idx_[b]);
-  }
-  
-  private:
-    uint32* ll_idx_;
-};
-
-void node_tag_create_node_id_idx()
-{
-  const uint32 max_nodes_ram = 32*1024*1024;
-  
-  int source_fd = open64(NODE_TAG_TMPB, O_RDONLY);
-  if (source_fd < 0)
-  {
-    cerr<<"open64: "<<errno<<'\n';
-    exit(0);
-  }
-  
-  uint8* blocklet_of_id = (uint8*) malloc((next_node_tag_id+1)*sizeof(uint8));
-  for (uint32 i(0); i < (next_node_tag_id+1); ++i)
-  {
-    if ((block_of_id[i] & 0xffffff00) == 0xffffff00)
-      blocklet_of_id[i] = (block_of_id[i] & 0xff);
-    else
-      blocklet_of_id[i] = 0xff;
-  }
-  free(block_of_id);
-  
-  uint32 count(max_nodes_ram);
-  uint32* ll_idx_ = (uint32*) malloc(sizeof(uint32)*count);
-  
-  Tag_Node_Id_Writer env(ll_idx_, blocklet_of_id);
-  env.offset = 1;
-  
-  while (env.offset < max_node_id)
-  {
-    env.ids_of_node.clear();
-    env.ids_of_node.resize(count);
-  
-    cerr<<'n';
-    prepare_nodes_chunk(env.offset, count, ll_idx_);
-    cerr<<'n';
-    lseek64(source_fd, 0, SEEK_SET);
-    
-    uint32* tag_rd_buf = (uint32*) malloc(TAG_SORT_BUFFER_SIZE);
-    
-    uint32 rd_buf_pos(0), max_pos(0);
-    while ((max_pos =
-	    read(source_fd, &(tag_rd_buf[rd_buf_pos]), TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32))))
-    {
-      max_pos += rd_buf_pos*sizeof(uint32);
-      rd_buf_pos = 0;
-  
-      while ((rd_buf_pos + 1 < max_pos / sizeof(uint32)) &&
-	      (rd_buf_pos + tag_rd_buf[rd_buf_pos+1] + 1 < max_pos / sizeof(uint32)))
-      {
-	if (blocklet_of_id[tag_rd_buf[rd_buf_pos]] != 0xff)
-	{
-	  for (uint32 i(0); i < tag_rd_buf[rd_buf_pos+1]; ++i)
-	  {
-	    if ((tag_rd_buf[rd_buf_pos+2+i] >= env.offset) &&
-			(tag_rd_buf[rd_buf_pos+2+i] - env.offset < count))
-	    {
-	      if (env.ids_of_node[tag_rd_buf[rd_buf_pos+2+i] - env.offset].size() < 65535)
-		env.ids_of_node[tag_rd_buf[rd_buf_pos+2+i] - env.offset].push_back(tag_rd_buf[rd_buf_pos]);
-	      else
-	      {
-		cerr<<"Node "<<dec<<tag_rd_buf[rd_buf_pos+2+i]<<" has more than 2^16 tags.\n";
-		exit(0);
-	      }
-	    }
-	  }
-	}
-	rd_buf_pos += tag_rd_buf[rd_buf_pos+1] + 2;
-      }
-      cerr<<'t';
-    
-      memmove(tag_rd_buf, &(tag_rd_buf[rd_buf_pos]), TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32));
-      rd_buf_pos = TAG_SORT_BUFFER_SIZE / sizeof(uint32) - rd_buf_pos;
-    }
-    env.read_order.clear();
-    for (uint32 i(0); i < count; ++i)
-    {
-      if (env.ids_of_node[i].size() > 0)
-	env.read_order.push_back(i);
-    }
-    sort(env.read_order.begin(), env.read_order.end(), node_idx_less(ll_idx_));
-    
-    free(tag_rd_buf);
-    
-    flush_data< Tag_Node_Id_Writer >(env, env.begin(), env.end());
-    
-    env.offset += count;
-  }
-  
-  cerr<<3;
-  make_block_index< Tag_Node_Id_Writer >(env);
-  cerr<<4;
-    
-  free(ll_idx_);
-  free(blocklet_of_id);
-  
-  close(source_fd);
-}
-
-//-----------------------------------------------------------------------------
-
 multimap< int, Node > nodes;
 map< KeyValue, NodeCollection > node_tags;
 int current_type(0);
 int32 current_id;
 int32 current_ll_idx;
 set< string > allowed_node_tags;
-bool no_tag_limit(true);
 uint tag_count(0);
 unsigned int structure_count(0);
 int state(0);
@@ -1342,6 +696,9 @@ const int WAY = 2;
 const int RELATION = 3;
 const unsigned int FLUSH_INTERVAL = 32*1024*1024;
 const unsigned int DOT_INTERVAL = 512*1024;
+uint current_run(0);
+vector< uint32 > split_idx;
+uint32* block_of_id;
 
 void start(const char *el, const char **attr)
 {
@@ -1357,18 +714,13 @@ void start(const char *el, const char **attr)
 	if (!strcmp(attr[i], "v"))
 	  value = attr[i+1];
       }
-      //patch cope with server power limits by ignoring uncommon node tags
-      if ((current_type != NODE) || (no_tag_limit) ||
-	   (allowed_node_tags.find(key) != allowed_node_tags.end()))
+      NodeCollection& nc(node_tags[KeyValue(key, value)]);
+      nc.insert(current_id, current_ll_idx);
+      if (++tag_count >= FLUSH_TAGS_INTERVAL)
       {
-	NodeCollection& nc(node_tags[KeyValue(key, value)]);
-	nc.insert(current_id, current_ll_idx);
-	if (++tag_count >= FLUSH_TAGS_INTERVAL)
-	{
-  	  flush_node_tags(node_tags);
-    	  node_tags.clear();
-	  tag_count = 0;
-	}
+	flush_node_tags(current_run, split_idx, node_tags);
+	node_tags.clear();
+	tag_count = 0;
       }
     }
   }
@@ -1413,13 +765,13 @@ void start(const char *el, const char **attr)
       flush_nodes(nodes);
       nodes.clear();
       
-      flush_node_tags(node_tags);
+      flush_node_tags(current_run, split_idx, node_tags);
       node_tags.clear();
       
-      node_tag_statistics();
-      node_tag_split_and_index();
-      node_tag_create_id_node_idx();
-      node_tag_create_node_id_idx();
+      node_tag_statistics(current_run, split_idx);
+      node_tag_split_and_index(current_run, split_idx, block_of_id);
+      node_tag_create_id_node_idx(block_of_id);
+      node_tag_create_node_id_idx(block_of_id, max_node_id);
       
       postprocess_nodes();
       
@@ -1492,70 +844,6 @@ void end(const char *el)
 
 int main(int argc, char *argv[])
 {
-  int i(0);
-  while (++i < argc)
-  {
-    if (!strcmp(argv[i], "--limit-node-tags"))
-      no_tag_limit = false;
-    else
-    {
-      cout<<"Usage: "<<argv[0]<<" [--limit-node-tags]\n";
-      return 0;
-    }
-  }
-  
-  // patch cope with server power limits by ignoring uncommon node tags
-  allowed_node_tags.insert("highway");
-  allowed_node_tags.insert("traffic-calming");
-  allowed_node_tags.insert("barrier");
-  allowed_node_tags.insert("waterway");
-  allowed_node_tags.insert("lock");
-  allowed_node_tags.insert("railway");
-  allowed_node_tags.insert("aeroway");
-  allowed_node_tags.insert("aerialway");
-  allowed_node_tags.insert("power");
-  allowed_node_tags.insert("man_made");
-  allowed_node_tags.insert("leisure");
-  allowed_node_tags.insert("amenity");
-  allowed_node_tags.insert("shop");
-  allowed_node_tags.insert("tourism");
-  allowed_node_tags.insert("historic");
-  allowed_node_tags.insert("landuse");
-  allowed_node_tags.insert("military");
-  allowed_node_tags.insert("natural");
-  allowed_node_tags.insert("route");
-  allowed_node_tags.insert("sport");
-  allowed_node_tags.insert("bridge");
-  allowed_node_tags.insert("crossing");
-  allowed_node_tags.insert("mountain_pass");
-  allowed_node_tags.insert("ele");
-  allowed_node_tags.insert("operator");
-  allowed_node_tags.insert("opening-hours");
-  allowed_node_tags.insert("disused");
-  allowed_node_tags.insert("wheelchair");
-  allowed_node_tags.insert("noexit");
-  allowed_node_tags.insert("traffic_sign");
-  allowed_node_tags.insert("name");
-  allowed_node_tags.insert("alt_name");
-  allowed_node_tags.insert("int_name");
-  allowed_node_tags.insert("nat_name");
-  allowed_node_tags.insert("reg_name");
-  allowed_node_tags.insert("loc_name");
-  allowed_node_tags.insert("ref");
-  allowed_node_tags.insert("int_ref");
-  allowed_node_tags.insert("nat_ref");
-  allowed_node_tags.insert("reg_ref");
-  allowed_node_tags.insert("loc_ref");
-  allowed_node_tags.insert("old_ref");
-  allowed_node_tags.insert("source_ref");
-  allowed_node_tags.insert("icao");
-  allowed_node_tags.insert("iata");
-  allowed_node_tags.insert("place");
-  allowed_node_tags.insert("place_numbers");
-  allowed_node_tags.insert("postal_code");
-  allowed_node_tags.insert("is_in");
-  allowed_node_tags.insert("population");
-  
   cerr<<(uintmax_t)time(NULL)<<'\n';
   
   //TEMP
@@ -1568,21 +856,25 @@ int main(int argc, char *argv[])
   return 0;*/
   
   //TEMP
-/*  try
+  try
   {
     current_run = 25;
-    next_node_tag_id = 100*1000*1000;
+    NodeCollection::next_node_tag_id = 100*1000*1000;
     max_node_id = 500*1000*1000;
-    node_tag_statistics();
-    node_tag_split_and_index();
-    node_tag_create_id_node_idx();
-    node_tag_create_node_id_idx();
+    //TEMP
+    node_tag_id_statistics();
+    exit(0);
+    
+    node_tag_statistics(current_run, split_idx);
+    node_tag_split_and_index(current_run, split_idx, block_of_id);
+    node_tag_create_id_node_idx(block_of_id);
+    node_tag_create_node_id_idx(block_of_id, max_node_id);
     exit(0);
   }
   catch(File_Error e)
   {
     cerr<<"\nopen64: "<<e.error_number<<'\n';
-  }*/
+  }
   
   prepare_nodes();
   

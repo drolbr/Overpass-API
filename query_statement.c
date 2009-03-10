@@ -73,30 +73,9 @@ void Query_Statement::forecast(MYSQL* mysql)
     for (vector< pair< string, string > >::const_iterator it(key_values.begin());
 	 it != key_values.end(); ++it)
     {
-      if (it->second == "")
-      {
-	ostringstream temp;
-	temp<<"select count from node_tag_counts "
-	    <<"left join key_s on key_s.id = node_tag_counts.id "
-	    <<"where key_s.key_ = \"";
-	escape_xml(temp, it->first);
-	temp<<"\"";
-	int count(int_query(mysql, temp.str()));
-	key_value_counts.insert
-	    (make_pair< int, pair< string, string > >(count, *it));
-      }
-      else
-      {
-	ostringstream temp;
-	temp<<"select count, spread from node_tag_counts "
-	    <<"left join key_s on key_s.id = node_tag_counts.id "
-	    <<"where key_s.key_ = \"";
-	escape_xml(temp, it->first);
-	temp<<"\"";
-	pair< int, int > count(intint_query(mysql, temp.str()));
-	key_value_counts.insert
-	    (make_pair< int, pair< string, string > >(count.first*2/(count.second+1), *it));
-      }
+      int count(kv_to_count_query(it->first, it->second));
+      key_value_counts.insert
+	  (make_pair< int, pair< string, string > >(count, *it));
     }
     unsigned int i(0);
     bool reordered(false);

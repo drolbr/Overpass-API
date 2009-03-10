@@ -194,6 +194,7 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	      escape_xml(cout, tit2->second);
 	      cout<<"\"/>\n";
 	    }
+	    cout<<"</node>\n";
 	  }
           ++it;
           ++tit;

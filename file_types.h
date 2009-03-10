@@ -39,23 +39,20 @@ const uint32 TAG_ID_NODE_LOCAL_BLOCKSIZE = 4*1024*1024;
 const uint32 TAG_ID_NODE_GLOBAL_BLOCKSIZE = 4*1024*1024;
 const uint32 TAG_NODE_ID_BLOCKSIZE = 4*1024*1024;
 
-static const char* NODE_STRING_DATA = "/opt/osm_why_api/node_strings.dat";
-static const char* NODE_STRING_IDX = "/opt/osm_why_api/node_strings.idx";
-
 const uint NODE_TAG_SPATIAL_PARTS = 32;
 const int NODE_STRING_BLOCK_SIZE = 1024*1024;
 
 //-----------------------------------------------------------------------------
 
-const char* NODE_DATA = "/opt/osm_why_api/nodes.dat";
-const char* NODE_IDX = "/opt/osm_why_api/nodes.b.idx";
-const char* NODE_IDXA = "/opt/osm_why_api/nodes.1.idx";
+static const char* NODE_DATA = "/opt/osm_why_api/nodes.dat";
+static const char* NODE_IDX = "/opt/osm_why_api/nodes.b.idx";
+static const char* NODE_IDXA = "/opt/osm_why_api/nodes.1.idx";
 
-const char* WAY_DATA = "/opt/osm_why_api/ways.dat";
-const char* WAY_IDX = "/opt/osm_why_api/ways.b.idx";
-const char* WAY_IDXA = "/opt/osm_why_api/ways.1.idx";
-const char* WAY_IDXSPAT = "/opt/osm_why_api/ways.spatial.idx";
-const char* WAY_ALLTMP = "/tmp/ways.dat";
+static const char* WAY_DATA = "/opt/osm_why_api/ways.dat";
+static const char* WAY_IDX = "/opt/osm_why_api/ways.b.idx";
+static const char* WAY_IDXA = "/opt/osm_why_api/ways.1.idx";
+static const char* WAY_IDXSPAT = "/opt/osm_why_api/ways.spatial.idx";
+static const char* WAY_ALLTMP = "/tmp/ways.dat";
 
 //-----------------------------------------------------------------------------
 
@@ -144,6 +141,22 @@ struct Tag_MultiNode_Id_Local_Reader : public Tag_Id_Node_Local
   private:
     map< uint32, set< uint32 > >& node_to_id_;
     const set< uint32 >& idxs_;
+};
+
+struct Tag_Id_Count_Local_Reader : public Tag_Id_Node_Local
+{
+  Tag_Id_Count_Local_Reader(vector< uint32 >& id_count)
+  : id_count_(id_count) {}
+  
+  void process(uint8* buf)
+  {
+    if (id_count_.size() < *((uint32*)buf))
+      id_count_.resize(*((uint32*)buf));
+    id_count_[*((uint32*)buf)-1] += *((uint8*)&(buf[4]));
+  }
+  
+  private:
+    vector< uint32 >& id_count_;
 };
 
 struct Tag_Id_Node_Local_Writer : public Tag_Id_Node_Local
@@ -260,6 +273,22 @@ struct Tag_Id_Node_Global_Multiint_Reader : public Tag_Id_Node_Global_Reader
   
   private:
     const set< int >& source_;
+};
+
+struct Tag_Id_Count_Global_Reader : public Tag_Id_Node_Global
+{
+  Tag_Id_Count_Global_Reader(vector< uint32 >& id_count)
+  : id_count_(id_count) {}
+  
+  void process(uint8* buf)
+  {
+    if (id_count_.size() < *((uint32*)buf))
+      id_count_.resize(*((uint32*)buf));
+    id_count_[*((uint32*)buf)-1] += *((uint8*)&(buf[4]));
+  }
+  
+  private:
+    vector< uint32 >& id_count_;
 };
 
 struct Tag_Id_Node_Global_Writer : public Tag_Id_Node_Global

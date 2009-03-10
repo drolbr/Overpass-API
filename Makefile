@@ -13,10 +13,10 @@ recurse_$(suffix) \
 report_$(suffix) \
 union_$(suffix)
 
-objects = expat_justparse_interface.o cgi-helper.o user_interface.o script_queries.o script_tools.o vigilance_control.o $(stmts)
+objects = expat_justparse_interface.o cgi-helper.o user_interface.o script_queries.o node_strings_file_io.o script_tools.o vigilance_control.o $(stmts)
 executable_objects = script-interpreter.o add_rule.o dump_rules.o get_rule.o update_rule.o osm2load_infile.o
 executables = cgi-bin/interpreter cgi-bin/add_rule cgi-bin/get_rule cgi-bin/update_rule dump_rules load_rules import_osm osmy_vigilance
-tool_headers = expat_justparse_interface.h script_datatypes.h file_types.h script_queries.h script_tools.h user_interface.h
+tool_headers = expat_justparse_interface.h script_datatypes.h file_types.h node_strings_file_io.h script_queries.h script_tools.h user_interface.h
 
 main: $(executables)
 
@@ -50,8 +50,8 @@ load_rules: suffix = statement.o
 load_rules: $(objects) load_rules.o
 	g++ -o load_rules -O3 -Wall -lexpat $(objects) load_rules.o `mysql_config --libs`
 	
-import_osm: expat_justparse_interface.o cgi-helper.o user_interface.o script_tools.o script_queries.o vigilance_control.o osm2load_infile.o
-	g++ -o import_osm -O3 -Wall -lexpat expat_justparse_interface.o cgi-helper.o user_interface.o  script_tools.o script_queries.o vigilance_control.o osm2load_infile.o `mysql_config --libs`
+import_osm: expat_justparse_interface.o cgi-helper.o user_interface.o script_tools.o script_queries.o node_strings_file_io.o vigilance_control.o osm2load_infile.o
+	g++ -o import_osm -O3 -Wall -lexpat expat_justparse_interface.o cgi-helper.o user_interface.o  script_tools.o script_queries.o node_strings_file_io.o vigilance_control.o osm2load_infile.o `mysql_config --libs`
 
 osmy_vigilance: osmy_vigilance.c
 	g++ -o osmy_vigilance -O3 -Wall `mysql_config --include` osmy_vigilance.c `mysql_config --libs`
@@ -104,11 +104,14 @@ update_rule.o: update_rule.c expat_justparse_interface.h user_interface.h script
 osm2load_infile.o: osm2load_infile.c script_datatypes.h expat_justparse_interface.h cgi-helper.h user_interface.h
 	g++ -c -O3 -Wall `mysql_config --include` osm2load_infile.c
 
-import_osm_nw: expat_justparse_interface.o import_osm_nw.o
-	g++ -o import_osm_nw -O3 -Wall -lexpat expat_justparse_interface.o import_osm_nw.o `mysql_config --libs`
+import_osm_nw: expat_justparse_interface.o node_strings_file_io.o import_osm_nw.o
+	g++ -o import_osm_nw -O3 -Wall -lexpat expat_justparse_interface.o node_strings_file_io.o import_osm_nw.o `mysql_config --libs`
 	
-import_osm_nw.o: import_osm_nw.c script_datatypes.h expat_justparse_interface.h raw_file_db.h file_types.h cgi-helper.h user_interface.h
+import_osm_nw.o: import_osm_nw.c script_datatypes.h expat_justparse_interface.h raw_file_db.h file_types.h node_strings_file_io.h
 	g++ -c -O3 -Wall `mysql_config --include` import_osm_nw.c
+
+node_strings_file_io.o: node_strings_file_io.c node_strings_file_io.h raw_file_db.h file_types.h script_datatypes.h
+	g++ -c -O3 -Wall node_strings_file_io.c
 
 clean: suffix = statement.o
 clean:

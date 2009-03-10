@@ -283,7 +283,7 @@ template< class T >
 }
 
 template < class T >
-    void select_with_idx(T& env)
+void select_with_idx(T& env)
 {
   const char* IDX_FILE(env.index_file());
   const char* DATA_FILE(env.data_file());
@@ -344,6 +344,31 @@ template < class T >
   {
     lseek64(data_fd, ((uint64)(*it))*BLOCKSIZE, SEEK_SET);
     read(data_fd, data_buf, BLOCKSIZE);
+    uint32 pos(sizeof(uint32));
+    while (pos < *((uint32*)data_buf) + sizeof(uint32))
+    {
+      env.process(&(data_buf[pos]));
+      pos += env.size_of_buf(&(data_buf[pos]));
+    }
+  }
+  free(data_buf);
+  
+  close(data_fd);
+}
+
+template < class T >
+void select_all(T& env)
+{
+  const char* DATA_FILE(env.data_file());
+  const uint32 BLOCKSIZE(env.blocksize());
+  
+  int data_fd = open64(DATA_FILE, O_RDONLY);
+  if (data_fd < 0)
+    throw File_Error(errno);
+  
+  uint8* data_buf = (uint8*) malloc(BLOCKSIZE);
+  while (read(data_fd, data_buf, BLOCKSIZE))
+  {
     uint32 pos(sizeof(uint32));
     while (pos < *((uint32*)data_buf) + sizeof(uint32))
     {

@@ -10,9 +10,19 @@
 #include <vector>
 #include <math.h>
 
-#include <mysql.h>
-
 using namespace std;
+
+typedef char int8;
+typedef short int int16;
+typedef int int32;
+typedef long long int64;
+
+typedef unsigned char uint8;
+typedef unsigned short int uint16;
+typedef unsigned int uint32;
+typedef unsigned long long uint64;
+
+//-----------------------------------------------------------------------------
 
 struct Node
 {
@@ -283,6 +293,7 @@ const unsigned int BLOCKSIZE = 512*1024;
 extern const char* NODE_DATA;
 extern const char* NODE_IDX;
 extern const char* NODE_IDXA;
+const int NODE_FILE_BLOCK_SIZE = sizeof(int) + BLOCKSIZE*sizeof(Node);
 
 const unsigned int WAY_BLOCKSIZE = 1024*1024;
 extern const char* WAY_DATA;
@@ -292,5 +303,6 @@ const unsigned int WAY_IDX_BITMASK = 0xfffff000;
 extern const char* WAY_IDXSPAT;
 const unsigned int MAXWAYNODES = 1024*1024;
 extern const char* WAY_ALLTMP;
+const int WAY_FILE_BLOCK_SIZE = sizeof(uint32) + WAY_BLOCKSIZE*sizeof(uint32);
 
 #endif
