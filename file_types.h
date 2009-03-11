@@ -14,6 +14,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "script_datatypes.h"
+
 using namespace std;
 
 typedef char int8;
@@ -28,6 +30,8 @@ typedef unsigned long long uint64;
 
 //-----------------------------------------------------------------------------
 
+static const char* NODE_ID_NODE_FILE = "/opt/osm_why_api/nodes_2.dat";
+static const char* NODE_ID_NODE_IDX = "/opt/osm_why_api/nodes_2.b.idx";
 static const char* NODE_TAG_ID_NODE_LOCAL_FILE = "/opt/osm_why_api/node_tag_id_node_local.dat";
 static const char* NODE_TAG_ID_NODE_LOCAL_IDX = "/opt/osm_why_api/node_tag_id_node_local.idx";
 static const char* NODE_TAG_ID_NODE_GLOBAL_FILE = "/opt/osm_why_api/node_tag_id_node_global.dat";
@@ -35,6 +39,7 @@ static const char* NODE_TAG_ID_NODE_GLOBAL_IDX = "/opt/osm_why_api/node_tag_id_n
 static const char* NODE_TAG_NODE_ID_FILE = "/opt/osm_why_api/node_tag_node_id.dat";
 static const char* NODE_TAG_NODE_ID_IDX = "/opt/osm_why_api/node_tag_node_id.idx";
 
+const uint32 NODE_ID_NODE_BLOCKSIZE = 8*1024*1024;
 const uint32 TAG_ID_NODE_LOCAL_BLOCKSIZE = 4*1024*1024;
 const uint32 TAG_ID_NODE_GLOBAL_BLOCKSIZE = 4*1024*1024;
 const uint32 TAG_NODE_ID_BLOCKSIZE = 4*1024*1024;
@@ -53,6 +58,122 @@ static const char* WAY_IDX = "/opt/osm_why_api/ways.b.idx";
 static const char* WAY_IDXA = "/opt/osm_why_api/ways.1.idx";
 static const char* WAY_IDXSPAT = "/opt/osm_why_api/ways.spatial.idx";
 static const char* WAY_ALLTMP = "/tmp/ways.dat";
+
+//-----------------------------------------------------------------------------
+
+struct Node_Id_Node
+{
+  uint32 blocksize() const { return NODE_ID_NODE_BLOCKSIZE; }
+  const char* data_file() const { return NODE_ID_NODE_FILE; }
+  const char* index_file() const { return NODE_ID_NODE_IDX; }
+  
+  typedef uint32 Index;
+  uint32 size_of_Index() const { return sizeof(uint32); }
+  
+  uint32 size_of_buf(uint8* elem) const
+  {
+    return (3*sizeof(uint32));
+  }
+};
+
+struct Node_Id_Node_Index_Iterator
+{
+};
+
+inline Node_Id_Node_Index_Iterator& operator++(Node_Id_Node_Index_Iterator& it)
+{
+  return it;
+}
+
+inline bool operator==(const Node_Id_Node_Index_Iterator& a, const Node_Id_Node_Index_Iterator& b)
+{
+  return true;
+}
+
+inline bool operator!=(const Node_Id_Node_Index_Iterator& a, const Node_Id_Node_Index_Iterator& b)
+{
+  return true;
+}
+
+struct Node_Id_Node_Reader : public Node_Id_Node
+{
+  Node_Id_Node_Reader(const set< uint32 >& ids, const set< uint32 >& idxs, set< Node >& result)
+  : result_(result), ids_(ids), idxs_(idxs) {}
+  
+/*  typedef Node_Id_Node_Index_Iterator Index_Iterator;*/
+  typedef set< uint32 >::const_iterator Index_Iterator;
+  Index_Iterator idxs_begin() const { return idxs_.begin(); }
+  Index_Iterator idxs_end() const { return idxs_.end(); }
+  void inc_idx(Index_Iterator& it, Index& idx)
+  {
+    ++it;
+    while ((it != idxs_end()) && (*it <= idx))
+      ++it;
+  }
+
+  void process(uint8* buf)
+  {
+    if (ids_.find(*((int32*)buf)) != ids_.end())
+      result_.insert(Node(*(int32*)&(buf[0]), *(int32*)&(buf[4]), *(int32*)&(buf[8])));
+  }
+  
+protected:
+  set< Node >& result_;
+  const set< uint32 >& ids_;
+  const set< uint32 >& idxs_;
+};
+
+struct Node_Id_Node_Writer : public Node_Id_Node
+{
+  Node_Id_Node_Writer() : block_index_() {}
+  
+  const multimap< uint32, uint16 >& block_index() const { return block_index_; }
+  multimap< uint32, uint16 >& block_index() { return block_index_; }
+  
+  typedef multimap< int, Node >::const_iterator Iterator;
+  
+  uint32 size_of(const Iterator& it) const
+  {
+    return (3*sizeof(uint32));
+  }
+  
+  uint32 index_of(const Iterator& it) const
+  {
+    return (it->first);
+  }
+  
+  uint32 index_of_buf(uint8* elem) const
+  {
+    return (ll_idx(*(int32*)&(elem[4]), *(int32*)&(elem[8])));
+  }
+  
+  int32 compare(const Iterator& it, uint8* buf) const
+  {
+    if (it->first < ll_idx(*(int32*)&(buf[4]), *(int32*)&(buf[8])))
+      return RAW_DB_LESS;
+    else if (it->first > ll_idx(*(int32*)&(buf[4]), *(int32*)&(buf[8])))
+      return RAW_DB_GREATER;
+    if (it->second.id < *(int32*)&(buf[0]))
+      return RAW_DB_LESS;
+    else
+      return RAW_DB_GREATER;
+  }
+  
+  void to_buf(uint8* dest, const Iterator& it) const
+  {
+    *(uint32*)&(dest[0]) = it->second.id;
+    *(int32*)&(dest[4]) = it->second.lat;
+    *(int32*)&(dest[8]) = it->second.lon;
+  }
+  
+  void index_to_buf(uint8* dest, const uint32& i) const
+  {
+    *(uint32*)&(dest[0]) = i;
+  }
+
+  private:
+    multimap< uint32, uint16 > block_index_;
+};
 
 //-----------------------------------------------------------------------------
 
@@ -79,6 +200,12 @@ struct Tag_Id_Node_Local_Reader : public Tag_Id_Node_Local
   typedef set< uint32 >::const_iterator Index_Iterator;
   Index_Iterator idxs_begin() const { return idxs_.begin(); }
   Index_Iterator idxs_end() const { return idxs_.end(); }
+  void inc_idx(Index_Iterator& it, Index& idx)
+  {
+    ++it;
+    while ((it != idxs_end()) && (*it <= idx))
+      ++it;
+  }
   
   void process(uint8* buf)
   {
@@ -126,7 +253,13 @@ struct Tag_MultiNode_Id_Local_Reader : public Tag_Id_Node_Local
   typedef set< uint32 >::const_iterator Index_Iterator;
   Index_Iterator idxs_begin() const { return idxs_.begin(); }
   Index_Iterator idxs_end() const { return idxs_.end(); }
-  
+  void inc_idx(Index_Iterator& it, Index& idx)
+  {
+    ++it;
+    while ((it != idxs_end()) && (*it <= idx))
+      ++it;
+  }
+
   void process(uint8* buf)
   {
     for (uint32 j(0); j < *((uint8*)&(buf[4])); ++j)
@@ -238,7 +371,13 @@ struct Tag_Id_Node_Global_Reader : public Tag_Id_Node_Global
   typedef set< uint32 >::const_iterator Index_Iterator;
   Index_Iterator idxs_begin() const { return ids_.begin(); }
   Index_Iterator idxs_end() const { return ids_.end(); }
-  
+  void inc_idx(Index_Iterator& it, Index& idx)
+  {
+    ++it;
+    while ((it != idxs_end()) && (*it <= idx))
+      ++it;
+  }
+
   void process(uint8* buf)
   {
     if (ids_.find(*((uint32*)buf)) != ids_.end())
@@ -365,7 +504,13 @@ struct Tag_Node_Id_Reader : public Tag_Node_Id
   typedef set< uint32 >::const_iterator Index_Iterator;
   Index_Iterator idxs_begin() const { return idxs_.begin(); }
   Index_Iterator idxs_end() const { return idxs_.end(); }
-  
+  void inc_idx(Index_Iterator& it, Index& idx)
+  {
+    ++it;
+    while ((it != idxs_end()) && (*it <= idx))
+      ++it;
+  }
+
   void process(uint8* buf)
   {
     map< uint32, set< uint32 > >::iterator it(node_to_id_.find(*((uint32*)buf)));

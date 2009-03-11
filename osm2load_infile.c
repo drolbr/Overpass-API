@@ -210,8 +210,8 @@ unsigned int way_member_count(0);
 
 /*ofstream nodes_out("/tmp/db_area_nodes.tsv");
 ofstream* nodes_sub_out;*/
-ofstream node_tags_out("/tmp/db_area_node_tags.tsv");
-ofstream* node_tags_sub_out;
+/*ofstream node_tags_out("/tmp/db_area_node_tags.tsv");
+ofstream* node_tags_sub_out;*/
 /*ofstream ways_out("/tmp/db_area_ways.tsv");
 ofstream* ways_sub_out;*/
 /*ofstream way_members_out("/tmp/db_area_way_members.tsv");
@@ -234,7 +234,7 @@ void prepare_db()
   if (split_tables)
   {
 /*    nodes_sub_out = new ofstream[NR_SUBTABLES];*/
-    node_tags_sub_out = new ofstream[NR_SUBTABLES];
+/*    node_tags_sub_out = new ofstream[NR_SUBTABLES];*/
 /*    ways_sub_out = new ofstream[NR_SUBTABLES];*/
 /*    way_members_sub_out = new ofstream[NR_SUBTABLES];*/
     way_tags_sub_out = new ofstream[NR_SUBTABLES];
@@ -244,9 +244,9 @@ void prepare_db()
 /*      temp<<"/tmp/db_area_nodes_"<<i<<".tsv";
       nodes_sub_out[i].open(temp.str().c_str());
       temp.str("");*/
-      temp<<"/tmp/db_area_node_tags_"<<i<<".tsv";
+/*      temp<<"/tmp/db_area_node_tags_"<<i<<".tsv";
       node_tags_sub_out[i].open(temp.str().c_str());
-      temp.str("");
+      temp.str("");*/
 /*      temp<<"/tmp/db_area_ways_"<<i<<".tsv";
       ways_sub_out[i].open(temp.str().c_str());
       temp.str("");*/
@@ -267,7 +267,7 @@ void postprocess_db()
 void flush_to_db()
 {
 /*  nodes_out.close();*/
-  node_tags_out.close();
+/*  node_tags_out.close();*/
 /*  ways_out.close();*/
 /*  way_members_out.close();*/
   way_tags_out.close();
@@ -285,7 +285,7 @@ void flush_to_db()
     for (unsigned int i(0); i < NR_SUBTABLES; ++i)
     {
 /*      nodes_sub_out[i].close();*/
-      node_tags_sub_out[i].close();
+/*      node_tags_sub_out[i].close();*/
 /*      ways_sub_out[i].close();*/
 /*      way_members_sub_out[i].close();*/
       way_tags_sub_out[i].close();
@@ -294,8 +294,8 @@ void flush_to_db()
 /*      temp<<"load data local infile '/tmp/db_area_nodes_"<<i<<".tsv' into table nodes_"<<i;
       mysql_query(mysql, temp.str().c_str());
       temp.str("");*/
-      temp<<"load data local infile '/tmp/db_area_node_tags_"<<i<<".tsv' into table node_tags_"<<i;
-      mysql_query(mysql, temp.str().c_str());
+/*      temp<<"load data local infile '/tmp/db_area_node_tags_"<<i<<".tsv' into table node_tags_"<<i;
+      mysql_query(mysql, temp.str().c_str());*/
 /*      temp.str("");
       temp<<"load data local infile '/tmp/db_area_ways_"<<i<<".tsv' into table ways_"<<i;
       mysql_query(mysql, temp.str().c_str());*/
@@ -312,7 +312,7 @@ void flush_to_db()
   else
   {
 /*    mysql_query(mysql, "load data local infile '/tmp/db_area_nodes.tsv' into table nodes");*/
-    mysql_query(mysql, "load data local infile '/tmp/db_area_node_tags.tsv' into table node_tags");
+/*    mysql_query(mysql, "load data local infile '/tmp/db_area_node_tags.tsv' into table node_tags");*/
 /*    mysql_query(mysql, "load data local infile '/tmp/db_area_ways.tsv' into table ways");
     mysql_query(mysql, "load data local infile '/tmp/db_area_way_members.tsv' into table way_members");*/
     mysql_query(mysql, "load data local infile '/tmp/db_area_way_tags.tsv' into table way_tags");
@@ -347,7 +347,8 @@ void start(const char *el, const char **attr)
 	  value = attr[i+1];
       }
       // patch cope with server power limits by ignoring uncommon node tags
-      if ((tag_type != NODE) || (no_tag_limit) || (allowed_node_tags.find(key) != allowed_node_tags.end()))
+/*      if ((tag_type != NODE) || (no_tag_limit) || (allowed_node_tags.find(key) != allowed_node_tags.end()))*/
+      if (tag_type != NODE)
       {
 	unsigned int key_id(0);
 	map< string, unsigned int >::const_iterator it(keys.find(key));
@@ -390,14 +391,14 @@ void start(const char *el, const char **attr)
 	}
 	if (tag_type == NODE)
 	{
-	  if (split_tables)
+/*	  if (split_tables)
 	  {
 	    unsigned char idx(node_cache[current_id]);
 	    if (idx < NR_SUBTABLES)
 	      (node_tags_sub_out[idx])<<current_id<<'\t'<<key_id<<'\t'<<value_id<<'\n';
 	  }
 	  else
-	    node_tags_out<<current_id<<'\t'<<key_id<<'\t'<<value_id<<'\n';
+	    node_tags_out<<current_id<<'\t'<<key_id<<'\t'<<value_id<<'\n';*/
 	}
 	else if (tag_type == WAY)
 	{
@@ -571,8 +572,8 @@ void end(const char *el)
 /*	temp<<"/tmp/db_area_nodes_"<<i<<".tsv";
 	nodes_sub_out[i].open(temp.str().c_str());
 	temp.str("");*/
-	temp<<"/tmp/db_area_node_tags_"<<i<<".tsv";
-	node_tags_sub_out[i].open(temp.str().c_str());
+/*	temp<<"/tmp/db_area_node_tags_"<<i<<".tsv";
+	node_tags_sub_out[i].open(temp.str().c_str());*/
 /*	temp.str("");
 	temp<<"/tmp/db_area_ways_"<<i<<".tsv";
 	ways_sub_out[i].open(temp.str().c_str());*/
@@ -585,7 +586,7 @@ void end(const char *el)
       }
     }
 /*    nodes_out.open("/tmp/db_area_nodes.tsv");*/
-    node_tags_out.open("/tmp/db_area_node_tags.tsv");
+/*    node_tags_out.open("/tmp/db_area_node_tags.tsv");*/
 /*    ways_out.open("/tmp/db_area_ways.tsv");*/
 /*    way_members_out.open("/tmp/db_area_way_members.tsv");*/
     way_tags_out.open("/tmp/db_area_way_tags.tsv");

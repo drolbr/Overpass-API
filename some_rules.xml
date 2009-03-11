@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<not-osm>
+
+<osm-script name="Area::Create_from_admin_level" version="1">
+
+<query type="relation">
+  <has-kv k="admin_level"/>
+  <has-kv k="name"/>
+</query>
+<foreach into="rel">
+  <recurse type="relation-way" from="rel"/>
+  <recurse type="way-node"/>
+  <make-area pivot="rel"/>
+</foreach>
+
+</osm-script>
+
+<osm-script name="Area::Create_from_multipolygon" version="2">
+
+<query type="relation">
+  <has-kv k="type" v="multipolygon"/>
+  <has-kv k="name"/>
+</query>
+<foreach into="rel">
+  <recurse type="relation-way" from="rel"/>
+  <recurse type="way-node"/>
+  <make-area pivot="rel"/>
+</foreach>
+
+</osm-script>
+
+<osm-script name="Area::Detect_errors_admin_level" version="3">
+
+<query type="relation">
+  <has-kv k="admin_level"/>
+  <has-kv k="name"/>
+</query>
+<foreach into="rel">
+  <recurse type="relation-way" from="rel"/>
+  <recurse type="way-node"/>
+  <detect-odd-nodes into="odd"/>
+  <foreach from="odd" into="i">
+    <union><item set="i"/><item set="rel"/></union>
+    <conflict>In <item set="rel"/>, the <item set="i"/> is contained in an odd number of segments.</conflict>
+  </foreach>
+</foreach>
+
+</osm-script>
+
+<osm-script name="Area::Detect_errors_multipolygon" version="4">
+
+<query type="relation">
+  <has-kv k="type" v="multipolygon"/>
+  <has-kv k="name"/>
+</query>
+<foreach into="rel">
+  <recurse type="relation-way" from="rel"/>
+  <recurse type="way-node"/>
+  <detect-odd-nodes into="odd"/>
+  <foreach from="odd" into="i">
+    <union><item set="i"/><item set="rel"/></union>
+    <conflict>In <item set="rel"/>, the <item set="i"/> is contained in an odd number of segments.</conflict>
+  </foreach>
+</foreach>
+
+</osm-script>
+
+
+</not-osm>

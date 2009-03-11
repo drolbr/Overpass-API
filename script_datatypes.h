@@ -290,19 +290,19 @@ inline int in_lat_lon(const string& input)
 //-----------------------------------------------------------------------------
 
 const unsigned int BLOCKSIZE = 512*1024;
-extern const char* NODE_DATA;
+/*extern const char* NODE_DATA;
 extern const char* NODE_IDX;
-extern const char* NODE_IDXA;
+extern const char* NODE_IDXA;*/
 const int NODE_FILE_BLOCK_SIZE = sizeof(int) + BLOCKSIZE*sizeof(Node);
 
 const unsigned int WAY_BLOCKSIZE = 1024*1024;
-extern const char* WAY_DATA;
+/*extern const char* WAY_DATA;
 extern const char* WAY_IDX;
-extern const char* WAY_IDXA;
+extern const char* WAY_IDXA;*/
 const unsigned int WAY_IDX_BITMASK = 0xfffff000;
-extern const char* WAY_IDXSPAT;
+/*extern const char* WAY_IDXSPAT;*/
 const unsigned int MAXWAYNODES = 1024*1024;
-extern const char* WAY_ALLTMP;
+/*extern const char* WAY_ALLTMP;*/
 const int WAY_FILE_BLOCK_SIZE = sizeof(uint32) + WAY_BLOCKSIZE*sizeof(uint32);
 
 #endif

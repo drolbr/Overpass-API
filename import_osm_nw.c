@@ -216,6 +216,8 @@ void nodes_make_block_index()
 
 void nodes_make_id_index(int32* rd_buf)
 {
+  int nodes_dat_fd = open64(NODE_DATA, O_RDONLY);
+
   uint16* idx_buf = (uint16*) malloc(sizeof(uint16)*max_node_id);
   if (!idx_buf)
   {
@@ -237,6 +239,8 @@ void nodes_make_id_index(int32* rd_buf)
   close(nodes_idx_fd);
   
   free(idx_buf);
+  
+  close(nodes_dat_fd);
 }
 
 void postprocess_nodes()
@@ -245,12 +249,12 @@ void postprocess_nodes()
   wr_buf = 0;
   
   nodes_make_block_index();
+  close(nodes_dat_fd);
   nodes_make_id_index(rd_buf);
   
   free(rd_buf);
   rd_buf = 0;
   
-  close(nodes_dat_fd);
 }
 
 //-----------------------------------------------------------------------------
@@ -718,7 +722,7 @@ void start(const char *el, const char **attr)
       nc.insert(current_id, current_ll_idx);
       if (++tag_count >= FLUSH_TAGS_INTERVAL)
       {
-	flush_node_tags(current_run, split_idx, node_tags);
+	flush_node_tags(current_run, node_tags);
 	node_tags.clear();
 	tag_count = 0;
       }
@@ -765,7 +769,7 @@ void start(const char *el, const char **attr)
       flush_nodes(nodes);
       nodes.clear();
       
-      flush_node_tags(current_run, split_idx, node_tags);
+      flush_node_tags(current_run, node_tags);
       node_tags.clear();
       
       node_tag_statistics(current_run, split_idx);
@@ -847,6 +851,9 @@ int main(int argc, char *argv[])
   cerr<<(uintmax_t)time(NULL)<<'\n';
   
   //TEMP
+  exit(0);
+  
+  //TEMP
 /*  max_node_id = 400*1000*1000;
   max_way_id = 50*1000*1000;
   postprocess_ways_2();
@@ -856,7 +863,7 @@ int main(int argc, char *argv[])
   return 0;*/
   
   //TEMP
-  try
+/*  try
   {
     current_run = 25;
     NodeCollection::next_node_tag_id = 100*1000*1000;
@@ -874,7 +881,7 @@ int main(int argc, char *argv[])
   catch(File_Error e)
   {
     cerr<<"\nopen64: "<<e.error_number<<'\n';
-  }
+  }*/
   
   prepare_nodes();
   

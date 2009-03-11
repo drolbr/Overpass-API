@@ -22,8 +22,6 @@ typedef unsigned long long uint64;
 
 const int32 RAW_DB_LESS = 1;
 const int32 RAW_DB_GREATER = 2;
-const int32 RAW_DB_EQUAL_SKIP = 3;
-const int32 RAW_DB_EQUAL_REPLACE = 4;
 
 struct File_Error
 {
@@ -155,20 +153,6 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
 	    j += env.size_of_buf(&(source_buf[i]));
 	    i += env.size_of_buf(&(source_buf[i]));
 	  }
-	  else if (cmp_val == RAW_DB_EQUAL_SKIP)
-	  {
-	    memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
-	    j += env.size_of_buf(&(source_buf[i]));
-	    i += env.size_of_buf(&(source_buf[i]));
-	    ++elem_it;
-	  }
-	  else if (cmp_val == RAW_DB_EQUAL_REPLACE)
-	  {
-	    env.to_buf(&(dest_buf[j]), elem_it);
-	    j += env.size_of(elem_it);
-	    ++elem_it;
-	    i += env.size_of_buf(&(source_buf[i]));
-	  }
 	}
 	while ((j < blocksize) &&
 	       (elem_it != elem_it2) && (j < BLOCKSIZE - env.size_of(elem_it)) &&
@@ -214,20 +198,6 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
 	{
 	  memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
 	  j += env.size_of_buf(&(source_buf[i]));
-	  i += env.size_of_buf(&(source_buf[i]));
-	}
-	else if (cmp_val == RAW_DB_EQUAL_SKIP)
-	{
-	  memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
-	  j += env.size_of_buf(&(source_buf[i]));
-	  i += env.size_of_buf(&(source_buf[i]));
-	  ++elem_it;
-	}
-	else if (cmp_val == RAW_DB_EQUAL_REPLACE)
-	{
-	  env.to_buf(&(dest_buf[j]), elem_it);
-	  j += env.size_of(elem_it);
-	  ++elem_it;
 	  i += env.size_of_buf(&(source_buf[i]));
 	}
       }
@@ -289,7 +259,7 @@ void select_with_idx(T& env)
   const char* DATA_FILE(env.data_file());
   const uint32 BLOCKSIZE(env.blocksize());
   
-  static vector< uint32 > idx_boundaries;
+  static vector< typename T::Index > idx_boundaries;
   static vector< uint16 > block_idx;
   
   if ((idx_boundaries.empty()) || (block_idx.empty()))
@@ -308,8 +278,8 @@ void select_with_idx(T& env)
     uint32 i(0);
     while (i < idx_file_size)
     {
-      idx_boundaries.push_back(*((uint32*)&(idx_buf[i])));
-      i += sizeof(uint32);
+      idx_boundaries.push_back(*((typename T::Index*)&(idx_buf[i])));
+      i += env.size_of_Index();
       block_idx.push_back(*(uint16*)&(idx_buf[i]));
       i += sizeof(uint16);
     }
@@ -331,7 +301,10 @@ void select_with_idx(T& env)
       block_ids.insert(block_idx[i]);
       ++i;
     }
-    ++it;
+    if (i < idx_boundaries.size())
+      inc_idx(it, idx_boundaries[i]);
+    else
+      it = env.idxs_end();
   }
 
   int data_fd = open64(DATA_FILE, O_RDONLY);

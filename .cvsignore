@@ -3,7 +3,11 @@ cgi-bin/get_rule
 cgi-bin/interpreter
 cgi-bin/update_rule
 testfiles
+import_osm
+import_osm_nw
 dump_rules
 load_rules
 osmy_vigilance
+init_database.sql
+init_derived_data.sql
 

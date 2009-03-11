@@ -955,6 +955,8 @@ set< Way >& multiNode_to_multiWay_query(const set< Node >& source, set< Way >& r
   return result_set;
 }
 
+//-----------------------------------------------------------------------------
+
 set< int >& kv_to_multiint_query(string key, string value, set< int >& result_set)
 {
   set< uint32 > string_ids_global;
