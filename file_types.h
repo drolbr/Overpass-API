@@ -30,14 +30,17 @@ typedef unsigned long long uint64;
 
 //-----------------------------------------------------------------------------
 
-static const char* NODE_ID_NODE_FILE = "/opt/osm_why_api/nodes_2.dat";
-static const char* NODE_ID_NODE_IDX = "/opt/osm_why_api/nodes_2.b.idx";
-static const char* NODE_TAG_ID_NODE_LOCAL_FILE = "/opt/osm_why_api/node_tag_id_node_local.dat";
-static const char* NODE_TAG_ID_NODE_LOCAL_IDX = "/opt/osm_why_api/node_tag_id_node_local.idx";
-static const char* NODE_TAG_ID_NODE_GLOBAL_FILE = "/opt/osm_why_api/node_tag_id_node_global.dat";
-static const char* NODE_TAG_ID_NODE_GLOBAL_IDX = "/opt/osm_why_api/node_tag_id_node_global.idx";
-static const char* NODE_TAG_NODE_ID_FILE = "/opt/osm_why_api/node_tag_node_id.dat";
-static const char* NODE_TAG_NODE_ID_IDX = "/opt/osm_why_api/node_tag_node_id.idx";
+static const char* DATADIR = "/home/olbricht/nobackup/osm/";
+
+static const char* NODE_ID_NODE_FILE = "nodes_2.dat";
+static const char* NODE_ID_NODE_IDX = "nodes_2.idx";
+static const char* NODE_ID_NODE_IDIDX = "nodes_2.i.idx";
+static const char* NODE_TAG_ID_NODE_LOCAL_FILE = "node_tag_id_node_local.dat";
+static const char* NODE_TAG_ID_NODE_LOCAL_IDX = "node_tag_id_node_local.idx";
+static const char* NODE_TAG_ID_NODE_GLOBAL_FILE = "node_tag_id_node_global.dat";
+static const char* NODE_TAG_ID_NODE_GLOBAL_IDX = "node_tag_id_node_global.idx";
+static const char* NODE_TAG_NODE_ID_FILE = "node_tag_node_id.dat";
+static const char* NODE_TAG_NODE_ID_IDX = "node_tag_node_id.idx";
 
 const uint32 NODE_ID_NODE_BLOCKSIZE = 8*1024*1024;
 const uint32 TAG_ID_NODE_LOCAL_BLOCKSIZE = 4*1024*1024;
@@ -49,14 +52,14 @@ const int NODE_STRING_BLOCK_SIZE = 1024*1024;
 
 //-----------------------------------------------------------------------------
 
-static const char* NODE_DATA = "/opt/osm_why_api/nodes.dat";
-static const char* NODE_IDX = "/opt/osm_why_api/nodes.b.idx";
-static const char* NODE_IDXA = "/opt/osm_why_api/nodes.1.idx";
+static const char* NODE_DATA = ((string)DATADIR + "nodes.dat").c_str();
+static const char* NODE_IDX = ((string)DATADIR + "nodes.b.idx").c_str();
+static const char* NODE_IDXA = ((string)DATADIR + "nodes.1.idx").c_str();
 
-static const char* WAY_DATA = "/opt/osm_why_api/ways.dat";
-static const char* WAY_IDX = "/opt/osm_why_api/ways.b.idx";
-static const char* WAY_IDXA = "/opt/osm_why_api/ways.1.idx";
-static const char* WAY_IDXSPAT = "/opt/osm_why_api/ways.spatial.idx";
+static const char* WAY_DATA = ((string)DATADIR + "ways.dat").c_str();
+static const char* WAY_IDX = ((string)DATADIR + "ways.b.idx").c_str();
+static const char* WAY_IDXA = ((string)DATADIR + "ways.1.idx").c_str();
+static const char* WAY_IDXSPAT = ((string)DATADIR + "ways.spatial.idx").c_str();
 static const char* WAY_ALLTMP = "/tmp/ways.dat";
 
 //-----------------------------------------------------------------------------
@@ -64,8 +67,9 @@ static const char* WAY_ALLTMP = "/tmp/ways.dat";
 struct Node_Id_Node
 {
   uint32 blocksize() const { return NODE_ID_NODE_BLOCKSIZE; }
-  const char* data_file() const { return NODE_ID_NODE_FILE; }
-  const char* index_file() const { return NODE_ID_NODE_IDX; }
+  const char* data_file() const { return ((string)DATADIR + NODE_ID_NODE_FILE).c_str(); }
+  const char* index_file() const { return ((string)DATADIR + NODE_ID_NODE_IDX).c_str(); }
+  const char* id_idx_file() const { return ((string)DATADIR + NODE_ID_NODE_IDIDX).c_str(); }
   
   typedef uint32 Index;
   uint32 size_of_Index() const { return sizeof(uint32); }
@@ -123,6 +127,26 @@ protected:
   const set< uint32 >& idxs_;
 };
 
+struct Node_Id_Node_By_Id_Reader : public Node_Id_Node
+{
+  Node_Id_Node_By_Id_Reader(const set< int32 >& ids, set< Node >& result)
+    : result_(result), ids_(ids) {}
+  
+  typedef set< int32 >::const_iterator Iterator;
+  Iterator ids_begin() const { return ids_.begin(); }
+  Iterator ids_end() const { return ids_.end(); }
+  
+  void process(uint8* buf)
+  {
+    if (ids_.find(*((int32*)buf)) != ids_.end())
+      result_.insert(Node(*(int32*)&(buf[0]), *(int32*)&(buf[4]), *(int32*)&(buf[8])));
+  }
+  
+protected:
+  set< Node >& result_;
+  const set< int32 >& ids_;
+};
+
 struct Node_Id_Node_Writer : public Node_Id_Node
 {
   Node_Id_Node_Writer() : block_index_() {}
@@ -171,7 +195,14 @@ struct Node_Id_Node_Writer : public Node_Id_Node
     *(uint32*)&(dest[0]) = i;
   }
 
-  private:
+  uint32 id_of_buf(uint8* elem) const
+  {
+    return (*(int32*)&(elem[0]));
+  }
+  
+  uint32 first_new_block() const { return 0; }
+  
+private:
     multimap< uint32, uint16 > block_index_;
 };
 
@@ -180,8 +211,8 @@ struct Node_Id_Node_Writer : public Node_Id_Node
 struct Tag_Id_Node_Local
 {
   uint32 blocksize() const { return TAG_ID_NODE_LOCAL_BLOCKSIZE; }
-  const char* data_file() const { return NODE_TAG_ID_NODE_LOCAL_FILE; }
-  const char* index_file() const { return NODE_TAG_ID_NODE_LOCAL_IDX; }
+  const char* data_file() const { return ((string)DATADIR + NODE_TAG_ID_NODE_LOCAL_FILE).c_str(); }
+  const char* index_file() const { return ((string)DATADIR + NODE_TAG_ID_NODE_LOCAL_IDX).c_str(); }
   
   typedef uint32 Index;
   uint32 size_of_Index() const { return sizeof(uint32); }
@@ -351,8 +382,8 @@ struct Tag_Id_Node_Local_Writer : public Tag_Id_Node_Local
 struct Tag_Id_Node_Global
 {
   uint32 blocksize() const { return TAG_ID_NODE_GLOBAL_BLOCKSIZE; }
-  const char* data_file() const { return NODE_TAG_ID_NODE_GLOBAL_FILE; }
-  const char* index_file() const { return NODE_TAG_ID_NODE_GLOBAL_IDX; }
+  const char* data_file() const { return ((string)DATADIR + NODE_TAG_ID_NODE_GLOBAL_FILE).c_str(); }
+  const char* index_file() const { return ((string)DATADIR + NODE_TAG_ID_NODE_GLOBAL_IDX).c_str(); }
   
   typedef uint32 Index;
   uint32 size_of_Index() const { return sizeof(uint32); }
@@ -483,8 +514,8 @@ struct Tag_Id_Node_Global_Writer : public Tag_Id_Node_Global
 struct Tag_Node_Id
 {
   uint32 blocksize() const { return TAG_NODE_ID_BLOCKSIZE; }
-  const char* data_file() const { return NODE_TAG_NODE_ID_FILE; }
-  const char* index_file() const { return NODE_TAG_NODE_ID_IDX; }
+  const char* data_file() const { return ((string)DATADIR + NODE_TAG_NODE_ID_FILE).c_str(); }
+  const char* index_file() const { return ((string)DATADIR + NODE_TAG_NODE_ID_IDX).c_str(); }
   
   typedef uint32 Index;
   uint32 size_of_Index() const { return sizeof(uint32); }

@@ -243,11 +243,13 @@ void nodes_make_id_index(int32* rd_buf)
   close(nodes_dat_fd);
 }
 
-void postprocess_nodes()
+void postprocess_nodes(Node_Id_Node_Writer& node_writer)
 {
   free(wr_buf);
   wr_buf = 0;
   
+  make_block_index(node_writer);
+  make_id_index(node_writer);
   nodes_make_block_index();
   close(nodes_dat_fd);
   nodes_make_id_index(rd_buf);
@@ -682,6 +684,7 @@ void postprocess_ways_4()
 //-----------------------------------------------------------------------------
 
 multimap< int, Node > nodes;
+Node_Id_Node_Writer node_writer;
 map< KeyValue, NodeCollection > node_tags;
 int current_type(0);
 int32 current_id;
@@ -766,6 +769,8 @@ void start(const char *el, const char **attr)
   {
     if (state == NODES)
     {
+      flush_data< Node_Id_Node_Writer >
+        (node_writer, nodes.begin(), nodes.end());
       flush_nodes(nodes);
       nodes.clear();
       
@@ -777,7 +782,7 @@ void start(const char *el, const char **attr)
       node_tag_create_id_node_idx(block_of_id);
       node_tag_create_node_id_idx(block_of_id, max_node_id);
       
-      postprocess_nodes();
+      postprocess_nodes(node_writer);
       
       state = WAYS;
       
@@ -838,6 +843,8 @@ void end(const char *el)
   {
     if (state == NODES)
     {
+      flush_data< Node_Id_Node_Writer >
+        (node_writer, nodes.begin(), nodes.end());
       flush_nodes(nodes);
       nodes.clear();
     }
@@ -849,9 +856,6 @@ void end(const char *el)
 int main(int argc, char *argv[])
 {
   cerr<<(uintmax_t)time(NULL)<<'\n';
-  
-  //TEMP
-  exit(0);
   
   //TEMP
 /*  max_node_id = 400*1000*1000;
@@ -899,9 +903,11 @@ int main(int argc, char *argv[])
   
   if (state == NODES)
   {
+    flush_data< Node_Id_Node_Writer >
+      (node_writer, nodes.begin(), nodes.end());
     flush_nodes(nodes);
     nodes.clear();
-    postprocess_nodes();
+    postprocess_nodes(node_writer);
   }
   else if (state == WAYS)
   {

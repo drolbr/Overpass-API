@@ -226,7 +226,7 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
 }
 
 template< class T >
-    void make_block_index(const T& env)
+void make_block_index(const T& env)
 {
   const multimap< typename T::Index, uint16 >& block_index(env.block_index());
   
@@ -250,6 +250,59 @@ template< class T >
   close(dest_fd);
   
   free(buf);
+}
+
+template < class T >
+void make_id_index(T& env)
+{
+  const char* DATA_FILE(env.data_file());
+  const char* ID_IDX_FILE(env.id_idx_file());
+  const uint32 BLOCKSIZE(env.blocksize());
+  set< uint32 > current_ids;
+  
+  int data_fd = open64(DATA_FILE, O_RDONLY);
+  if (data_fd < 0)
+    throw File_Error(errno);
+  lseek64(data_fd, (int64)(env.first_new_block())*BLOCKSIZE, SEEK_SET);
+  
+  int dest_fd = open64(ID_IDX_FILE, O_RDWR|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  if (dest_fd < 0)
+    throw File_Error(errno);
+  
+  uint16 block_id(env.first_new_block());
+  uint8* data_buf = (uint8*) malloc(BLOCKSIZE);
+  while (read(data_fd, data_buf, BLOCKSIZE))
+  {
+    uint32 pos(sizeof(uint32));
+    while (pos < *((uint32*)data_buf) + sizeof(uint32))
+    {
+      current_ids.insert(env.id_of_buf(&(data_buf[pos])));
+      pos += env.size_of_buf(&(data_buf[pos]));
+    }
+    for (set< uint32 >::const_iterator it(current_ids.begin());
+         it != current_ids.end(); ++it)
+    {
+      int64 dest_pos(lseek64(dest_fd, (int64)((*it) - 1)*sizeof(uint16), SEEK_SET));
+      if (dest_pos < (int64)((*it) - 1)*sizeof(uint16))
+      {
+        int64 zero_buf(0);
+        while (dest_pos + sizeof(int64) < (int64)((*it) - 1)*sizeof(uint16))
+        {
+          write(dest_fd, &zero_buf, sizeof(int64));
+          dest_pos += sizeof(int64);
+        }
+        if (dest_pos < (int64)((*it) - 1)*sizeof(uint16))
+          write(dest_fd, &zero_buf, (int64)((*it) - 1)*sizeof(uint16) - dest_pos);
+      }
+      write(dest_fd, &block_id, sizeof(uint16));
+    }
+    current_ids.clear();
+    ++block_id;
+  }
+  free(data_buf);
+  
+  close(data_fd);
+  close(dest_fd);
 }
 
 template < class T >
@@ -302,11 +355,55 @@ void select_with_idx(T& env)
       ++i;
     }
     if (i < idx_boundaries.size())
-      inc_idx(it, idx_boundaries[i]);
+      env.inc_idx(it, idx_boundaries[i]);
     else
       it = env.idxs_end();
   }
 
+  int data_fd = open64(DATA_FILE, O_RDONLY);
+  if (data_fd < 0)
+    throw File_Error(errno);
+  
+  uint8* data_buf = (uint8*) malloc(BLOCKSIZE);
+  for (set< uint16 >::const_iterator it(block_ids.begin());
+       it != block_ids.end(); ++it)
+  {
+    lseek64(data_fd, ((uint64)(*it))*BLOCKSIZE, SEEK_SET);
+    read(data_fd, data_buf, BLOCKSIZE);
+    uint32 pos(sizeof(uint32));
+    while (pos < *((uint32*)data_buf) + sizeof(uint32))
+    {
+      env.process(&(data_buf[pos]));
+      pos += env.size_of_buf(&(data_buf[pos]));
+    }
+  }
+  free(data_buf);
+  
+  close(data_fd);
+}
+
+template < class T >
+void select_by_id(T& env)
+{
+  const char* ID_IDX_FILE(env.id_idx_file());
+  const char* DATA_FILE(env.data_file());
+  const uint32 BLOCKSIZE(env.blocksize());
+  
+  int idx_fd = open64(ID_IDX_FILE, O_RDONLY);
+  if (idx_fd < 0)
+    throw File_Error(errno);
+  
+  set< uint16 > block_ids;
+  int16 idx_buf(0);
+  for (typename T::Iterator it(env.ids_begin()); it != env.ids_end(); ++it)
+  {
+    lseek64(idx_fd, ((*it)-1)*sizeof(int16), SEEK_SET);
+    read(idx_fd, &idx_buf, sizeof(int16));
+    block_ids.insert(idx_buf);
+  }
+  
+  close(idx_fd);
+  
   int data_fd = open64(DATA_FILE, O_RDONLY);
   if (data_fd < 0)
     throw File_Error(errno);

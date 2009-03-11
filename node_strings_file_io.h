@@ -35,7 +35,7 @@ typedef unsigned long long uint64;
 
 //-----------------------------------------------------------------------------
 
-static const char* NODE_TAG_ID_STATS = "/opt/osm_why_api/node_tag_id_stats.dat";
+static const char* NODE_TAG_ID_STATS = ((string)DATADIR + "node_tag_id_stats.dat").c_str();
 
 const unsigned int FLUSH_TAGS_INTERVAL = 32*1024*1024;
 const uint32 TAG_SORT_BUFFER_SIZE = 128*1024*1024;

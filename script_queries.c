@@ -668,6 +668,18 @@ set< Node >& multiint_to_multiNode_query(const set< int >& source, set< Node >& 
   
   free(buf_count);
   
+/*  try
+  {
+    Node_Id_Node_By_Id_Reader reader(source, result_set);
+    select_by_id< Node_Id_Node_By_Id_Reader >(reader);
+  }
+  catch(File_Error e)
+  {
+    ostringstream temp;
+    temp<<"open64: "<<errno;
+    runtime_error(temp.str(), cout);
+  }*/
+  
   return result_set;
 }
 

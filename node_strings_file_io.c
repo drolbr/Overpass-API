@@ -35,8 +35,8 @@ typedef unsigned long long uint64;
 
 //-----------------------------------------------------------------------------
 
-const char* NODE_STRING_DATA = "/opt/osm_why_api/node_strings.dat";
-const char* NODE_STRING_IDX = "/opt/osm_why_api/node_strings.idx";
+const char* NODE_STRING_DATA = ((string)DATADIR + "node_strings.dat").c_str();
+const char* NODE_STRING_IDX = ((string)DATADIR + "node_strings.idx").c_str();
 
 const char* NODE_TAG_TMPAPREFIX = "/tmp/node_strings_";
 const char* NODE_TAG_TMPB = "/tmp/node_tag_ids";
