@@ -370,7 +370,7 @@ void select_with_idx(T& env)
     if (i < idx_boundaries.size())
       env.inc_idx(it, idx_boundaries[i]);
     else
-      it = env.idxs_end();
+      break;
   }
 
   int data_fd = open64(DATA_FILE.c_str(), O_RDONLY);

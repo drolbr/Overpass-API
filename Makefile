@@ -65,7 +65,7 @@ cgi-helper.o: cgi-helper.c cgi-helper.h
 user_interface.o: user_interface.c user_interface.h expat_justparse_interface.h cgi-helper.h
 	g++ -c -O3 -Wall `mysql_config --include` user_interface.c
 	
-script_queries.o: script_queries.c script_queries.h script_datatypes.h vigilance_control.h user_interface.h
+script_queries.o: script_queries.c file_types.h raw_file_db.h node_strings_file_io.h script_datatypes.h script_queries.h user_interface.h vigilance_control.h
 	g++ -c -O3 -Wall `mysql_config --include` script_queries.c
 	
 script_tools.o: script_tools.c $(tool_headers) expat_justparse_interface.h vigilance_control.h

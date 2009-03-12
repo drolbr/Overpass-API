@@ -72,7 +72,8 @@ void out_node(const Node& node, bool complete = true)
 {
   cout<<"<node id=\""<<node.id
       <<"\" lat=\""<<setprecision(12)<<((double)(node.lat))/10000000
-      <<"\" lon=\""<<setprecision(12)<<((double)(node.lon))/10000000<<'\"'
+      <<"\" lon=\""<<setprecision(12)<<((double)(node.lon))/10000000
+      <<"\" ll_idx=\""<<ll_idx(node.lat, node.lon)<<'\"' /*TEMP*/
       <<(complete ? "/>" : ">")<<'\n';
 }
 

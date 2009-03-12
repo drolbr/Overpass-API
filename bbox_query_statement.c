@@ -80,7 +80,7 @@ void indices_of_bbox
   vector< pair< int, int > > pending;
   pending.push_back(make_pair(-90*10*1000*1000, -128*256*256*256));
   pending.push_back(make_pair(-90*10*1000*1000, 0));
-  while (size >= 256*256)
+  while (size >= 256*256 - 1)
   {
     const char INSIDE = 1;
     const char BORDER = 2;
@@ -161,8 +161,11 @@ void indices_of_bbox
     size = size/2;
   }
   for (vector< pair< int, int > >::const_iterator it(pending.begin()); it != pending.end(); ++it)
+  {
+/*    cout<<'['<<ll_idx(it->first, it->second)<<' '<<ll_idx(it->first + size, it->second + size)<<"]\n";*/
     res_border.insert(make_pair< int, int >
 	(ll_idx(it->first, it->second), ll_idx(it->first + size, it->second + size)));
+  }
 }
 
 void Bbox_Query_Statement::forecast(MYSQL* mysql)
@@ -199,7 +202,7 @@ void Bbox_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   {
     for (set< Node >::const_iterator it(on_border.begin()); it != on_border.end(); ++it)
     {
-      if ((it->lat >= south) && (it->lat <= south) &&
+      if ((it->lat >= south) && (it->lat <= north) &&
 	   (it->lon >= west) && (it->lon <= east))
 	nodes->insert(*it);
     }
@@ -208,7 +211,7 @@ void Bbox_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   {
     for (set< Node >::const_iterator it(on_border.begin()); it != on_border.end(); ++it)
     {
-      if ((it->lat >= south) && (it->lat <= south) &&
+      if ((it->lat >= south) && (it->lat <= north) &&
 	   ((it->lon >= west) || (it->lon <= east)))
 	nodes->insert(*it);
     }
