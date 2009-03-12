@@ -616,11 +616,11 @@ typedef unsigned long long uint64;
 
 set< Node >& multiint_to_multiNode_query(const set< int >& source, set< Node >& result_set)
 {
-  int nodes_dat_fd = open64(NODE_IDXA, O_RDONLY);
+/*  int nodes_dat_fd = open64(NODE_IDXA, O_RDONLY);
   if (nodes_dat_fd < 0)
   {
     ostringstream temp;
-    temp<<"open64: "<<errno;
+    temp<<"open64: "<<errno<<' '<<NODE_IDXA<<" multiint_to_multiNode_query:1";
     runtime_error(temp.str(), cout);
     return result_set;
   }
@@ -648,7 +648,7 @@ set< Node >& multiint_to_multiNode_query(const set< int >& source, set< Node >& 
   if (nodes_dat_fd < 0)
   {
     ostringstream temp;
-    temp<<"open64: "<<errno;
+    temp<<"open64: "<<errno<<' '<<NODE_DATA<<" multiint_to_multiNode_query:2";
     runtime_error(temp.str(), cout);
     return result_set;
   }
@@ -666,19 +666,10 @@ set< Node >& multiint_to_multiNode_query(const set< int >& source, set< Node >& 
   
   close(nodes_dat_fd);
   
-  free(buf_count);
+  free(buf_count);*/
   
-/*  try
-  {
-    Node_Id_Node_By_Id_Reader reader(source, result_set);
-    select_by_id< Node_Id_Node_By_Id_Reader >(reader);
-  }
-  catch(File_Error e)
-  {
-    ostringstream temp;
-    temp<<"open64: "<<errno;
-    runtime_error(temp.str(), cout);
-  }*/
+  Node_Id_Node_By_Id_Reader reader(source, result_set);
+  select_by_id< Node_Id_Node_By_Id_Reader >(reader);
   
   return result_set;
 }
@@ -693,7 +684,7 @@ void multiRange_to_multiNode_query
   if (nodes_idx_fd < 0)
   {
     ostringstream temp;
-    temp<<"open64: "<<errno;
+    temp<<"open64: "<<errno<<' '<<NODE_IDX<<" multiRange_to_multiNode_query:1";
     runtime_error(temp.str(), cout);
     return;
   }
@@ -707,7 +698,7 @@ void multiRange_to_multiNode_query
   if (nodes_dat_fd < 0)
   {
     ostringstream temp;
-    temp<<"open64: "<<errno;
+    temp<<"open64: "<<errno<<' '<<NODE_IDX<<" multiRange_to_multiNode_query:2";
     runtime_error(temp.str(), cout);
     free(buf);
     return;
@@ -792,7 +783,7 @@ int multiRange_to_count_query
   if (nodes_idx_fd < 0)
   {
     ostringstream temp;
-    temp<<"open64: "<<errno;
+    temp<<"open64: "<<errno<<' '<<NODE_IDX<<" multiRange_to_count_query:1";
     runtime_error(temp.str(), cout);
     return 0;
   }
@@ -834,7 +825,7 @@ set< Way >& multiint_to_multiWay_query(const set< int >& source, set< Way >& res
   if (ways_dat_fd < 0)
   {
     ostringstream temp;
-    temp<<"open64: "<<errno;
+    temp<<"open64: "<<errno<<' '<<WAY_IDXA<<" multiint_to_multiWay_query:1";
     runtime_error(temp.str(), cout);
     return result_set;
   }
@@ -861,7 +852,7 @@ set< Way >& multiint_to_multiWay_query(const set< int >& source, set< Way >& res
   if (ways_dat_fd < 0)
   {
     ostringstream temp;
-    temp<<"open64: "<<errno;
+    temp<<"open64: "<<errno<<' '<<WAY_DATA<<" multiint_to_multiWay_query:2";
     runtime_error(temp.str(), cout);
     return result_set;
   }
@@ -895,7 +886,7 @@ set< Way >& multiNode_to_multiWay_query(const set< Node >& source, set< Way >& r
   if (ways_dat_fd < 0)
   {
     ostringstream temp;
-    temp<<"open64: "<<errno;
+    temp<<"open64: "<<errno<<' '<<WAY_IDXSPAT<<" multiNode_to_multiWay_query:1";
     runtime_error(temp.str(), cout);
     return result_set;
   }
@@ -936,7 +927,7 @@ set< Way >& multiNode_to_multiWay_query(const set< Node >& source, set< Way >& r
   {
     free(way_buf);
     ostringstream temp;
-    temp<<"open64: "<<errno;
+    temp<<"open64: "<<errno<<' '<<WAY_DATA<<" multiNode_to_multiWay_query:2";
     runtime_error(temp.str(), cout);
     return result_set;
   }
@@ -976,19 +967,10 @@ set< int >& kv_to_multiint_query(string key, string value, set< int >& result_se
   set< uint32 > string_idxs_local;
   select_kv_to_ids(key, value, string_ids_global, string_ids_local, string_idxs_local);
   
-  try
-  {
-    Tag_Id_Node_Local_Reader local_reader(string_ids_local, string_idxs_local, result_set);
-    select_with_idx< Tag_Id_Node_Local_Reader >(local_reader);
-    Tag_Id_Node_Global_Reader global_reader(string_ids_global, result_set);
-    select_with_idx< Tag_Id_Node_Global_Reader >(global_reader);
-  }
-  catch(File_Error e)
-  {
-    ostringstream temp;
-    temp<<"open64: "<<errno;
-    runtime_error(temp.str(), cout);
-  }
+  Tag_Id_Node_Local_Reader local_reader(string_ids_local, string_idxs_local, result_set);
+  select_with_idx< Tag_Id_Node_Local_Reader >(local_reader);
+  Tag_Id_Node_Global_Reader global_reader(string_ids_global, result_set);
+  select_with_idx< Tag_Id_Node_Global_Reader >(global_reader);
   
   return result_set;
 }
@@ -999,11 +981,11 @@ uint32 kv_to_count_query(string key, string value)
   set< uint32 > string_idxs_local;
   select_kv_to_ids(key, value, string_ids, string_ids, string_idxs_local);
   
-  int source_fd = open64(NODE_TAG_ID_STATS, O_RDONLY);
+  int source_fd = open64(NODE_TAG_ID_STATS.c_str(), O_RDONLY);
   if (source_fd < 0)
   {
     ostringstream temp;
-    temp<<"open64: "<<errno;
+    temp<<"open64: "<<errno<<' '<<NODE_TAG_ID_STATS<<" kv_to_count_query:1";
     runtime_error(temp.str(), cout);
     return 0;
   }
@@ -1030,21 +1012,12 @@ set< int >& kv_multiint_to_multiint_query
   set< uint32 > string_idxs_local;
   select_kv_to_ids(key, value, string_ids_global, string_ids_local, string_idxs_local);
   
-  try
-  {
-    Tag_Id_Node_Local_Multiint_Reader local_reader
-	(string_ids_local, string_idxs_local, source, result_set);
-    select_with_idx< Tag_Id_Node_Local_Multiint_Reader >(local_reader);
-    Tag_Id_Node_Global_Multiint_Reader global_reader
-	(string_ids_global, source, result_set);
-    select_with_idx< Tag_Id_Node_Global_Multiint_Reader >(global_reader);
-  }
-  catch(File_Error e)
-  {
-    ostringstream temp;
-    temp<<"open64: "<<errno;
-    runtime_error(temp.str(), cout);
-  }
+  Tag_Id_Node_Local_Multiint_Reader local_reader
+      (string_ids_local, string_idxs_local, source, result_set);
+  select_with_idx< Tag_Id_Node_Local_Multiint_Reader >(local_reader);
+  Tag_Id_Node_Global_Multiint_Reader global_reader
+      (string_ids_global, source, result_set);
+  select_with_idx< Tag_Id_Node_Global_Multiint_Reader >(global_reader);
   
   return result_set;
 }
@@ -1088,19 +1061,10 @@ set< Node >& kvs_multiNode_to_multiNode_query
     global_node_idxs.insert(ll_idx(it->lat, it->lon));
   }
   
-  try
-  {
-    Tag_MultiNode_Id_Local_Reader local_reader(local_node_to_id, filtered_idxs_local);
-    select_with_idx< Tag_MultiNode_Id_Local_Reader >(local_reader);
-    Tag_Node_Id_Reader global_reader(global_node_to_id, global_node_idxs);
-    select_with_idx< Tag_Node_Id_Reader >(global_reader);
-  }
-  catch(File_Error e)
-  {
-    ostringstream temp;
-    temp<<"open64: "<<errno;
-    runtime_error(temp.str(), cout);
-  }
+  Tag_MultiNode_Id_Local_Reader local_reader(local_node_to_id, filtered_idxs_local);
+  select_with_idx< Tag_MultiNode_Id_Local_Reader >(local_reader);
+  Tag_Node_Id_Reader global_reader(global_node_to_id, global_node_idxs);
+  select_with_idx< Tag_Node_Id_Reader >(global_reader);
   
   for (set< Node >::const_iterator it(source.begin()); it != source.end(); ++it)
   {
@@ -1154,19 +1118,10 @@ vector< vector< pair< string, string > > >& multiNode_to_kvs_query
     global_node_idxs.insert(ll_idx(it->lat, it->lon));
   }
   
-  try
-  {
-    Tag_MultiNode_Id_Local_Reader local_reader(local_node_to_id, node_idxs);
-    select_with_idx< Tag_MultiNode_Id_Local_Reader >(local_reader);
-    Tag_Node_Id_Reader global_reader(global_node_to_id, global_node_idxs);
-    select_with_idx< Tag_Node_Id_Reader >(global_reader);
-  }
-  catch(File_Error e)
-  {
-    ostringstream temp;
-    temp<<"open64: "<<errno;
-    runtime_error(temp.str(), cout);
-  }
+  Tag_MultiNode_Id_Local_Reader local_reader(local_node_to_id, node_idxs);
+  select_with_idx< Tag_MultiNode_Id_Local_Reader >(local_reader);
+  Tag_Node_Id_Reader global_reader(global_node_to_id, global_node_idxs);
+  select_with_idx< Tag_Node_Id_Reader >(global_reader);
   
   set< uint32 > ids_global;
   for (map< uint32, set< uint32 > >::const_iterator it(global_node_to_id.begin());

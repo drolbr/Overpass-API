@@ -907,6 +907,12 @@ int main(int argc, char *argv[])
       (node_writer, nodes.begin(), nodes.end());
     flush_nodes(nodes);
     nodes.clear();
+      
+    node_tag_statistics(current_run, split_idx);
+    node_tag_split_and_index(current_run, split_idx, block_of_id);
+    node_tag_create_id_node_idx(block_of_id);
+    node_tag_create_node_id_idx(block_of_id, max_node_id);
+      
     postprocess_nodes(node_writer);
   }
   else if (state == WAYS)

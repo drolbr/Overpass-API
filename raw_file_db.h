@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include <set>
+#include <string>
 
 using namespace std;
 
@@ -25,10 +26,12 @@ const int32 RAW_DB_GREATER = 2;
 
 struct File_Error
 {
-  File_Error(uint32 errno_) : error_number(errno_) {}
+  File_Error(uint32 errno_, string filename_, string origin_)
+  : error_number(errno_), filename(filename_), origin(origin_) {}
   
   uint32 error_number;
-  set< uint16 > bla;
+  string filename;
+  string origin;
 };
 
 // constraints:
@@ -50,12 +53,13 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
   
   if (block_index.empty())
   {
-    int dest_fd = open64(env.data_file(), O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    int dest_fd = open64(env.data_file().c_str(), O_WRONLY|O_CREAT|O_TRUNC,
+			 S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     close(dest_fd);
   
-    dest_fd = open64(env.data_file(), O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    dest_fd = open64(env.data_file().c_str(), O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     if (dest_fd < 0)
-      throw File_Error(errno);
+      throw File_Error(errno, env.data_file(), "flush_data:1");
   
     uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
     unsigned int i(sizeof(uint32));
@@ -91,9 +95,9 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
   }
   else
   {
-    int dest_fd = open64(env.data_file(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    int dest_fd = open64(env.data_file().c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     if (dest_fd < 0)
-      throw File_Error(errno);
+      throw File_Error(errno, env.data_file(), "flush_data:2");
   
     uint8* source_buf = (uint8*) malloc(BLOCKSIZE);
     uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
@@ -243,9 +247,10 @@ void make_block_index(const T& env)
     i += sizeof(uint16);
   }
   
-  int dest_fd = open64(env.index_file(), O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  int dest_fd = open64(env.index_file().c_str(), O_WRONLY|O_CREAT|O_TRUNC,
+		       S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)
-    throw File_Error(errno);
+    throw File_Error(errno, env.index_file(), "make_block_index:1");
   write(dest_fd, buf, (env.size_of_Index() + sizeof(uint16))*block_index.size());
   close(dest_fd);
   
@@ -255,19 +260,19 @@ void make_block_index(const T& env)
 template < class T >
 void make_id_index(T& env)
 {
-  const char* DATA_FILE(env.data_file());
-  const char* ID_IDX_FILE(env.id_idx_file());
+  const string DATA_FILE(env.data_file());
+  const string ID_IDX_FILE(env.id_idx_file());
   const uint32 BLOCKSIZE(env.blocksize());
   set< uint32 > current_ids;
   
-  int data_fd = open64(DATA_FILE, O_RDONLY);
+  int data_fd = open64(DATA_FILE.c_str(), O_RDONLY);
   if (data_fd < 0)
-    throw File_Error(errno);
+    throw File_Error(errno, DATA_FILE, "make_id_index:1");
   lseek64(data_fd, (int64)(env.first_new_block())*BLOCKSIZE, SEEK_SET);
   
-  int dest_fd = open64(ID_IDX_FILE, O_RDWR|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  int dest_fd = open64(ID_IDX_FILE.c_str(), O_RDWR|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)
-    throw File_Error(errno);
+    throw File_Error(errno, ID_IDX_FILE, "make_id_index:2");
   
   uint16 block_id(env.first_new_block());
   uint8* data_buf = (uint8*) malloc(BLOCKSIZE);
@@ -308,8 +313,8 @@ void make_id_index(T& env)
 template < class T >
 void select_with_idx(T& env)
 {
-  const char* IDX_FILE(env.index_file());
-  const char* DATA_FILE(env.data_file());
+  const string IDX_FILE(env.index_file());
+  const string DATA_FILE(env.data_file());
   const uint32 BLOCKSIZE(env.blocksize());
   
   static vector< typename T::Index > idx_boundaries;
@@ -320,9 +325,9 @@ void select_with_idx(T& env)
     idx_boundaries.clear();
     block_idx.clear();
     
-    int idx_fd = open64(IDX_FILE, O_RDONLY);
+    int idx_fd = open64(IDX_FILE.c_str(), O_RDONLY);
     if (idx_fd < 0)
-      throw File_Error(errno);
+      throw File_Error(errno, IDX_FILE, "select_with_idx:1");
   
     uint32 idx_file_size(lseek64(idx_fd, 0, SEEK_END));
     char* idx_buf = (char*) malloc(idx_file_size);
@@ -360,9 +365,9 @@ void select_with_idx(T& env)
       it = env.idxs_end();
   }
 
-  int data_fd = open64(DATA_FILE, O_RDONLY);
+  int data_fd = open64(DATA_FILE.c_str(), O_RDONLY);
   if (data_fd < 0)
-    throw File_Error(errno);
+    throw File_Error(errno, DATA_FILE, "select_with_idx:2");
   
   uint8* data_buf = (uint8*) malloc(BLOCKSIZE);
   for (set< uint16 >::const_iterator it(block_ids.begin());
@@ -385,13 +390,13 @@ void select_with_idx(T& env)
 template < class T >
 void select_by_id(T& env)
 {
-  const char* ID_IDX_FILE(env.id_idx_file());
-  const char* DATA_FILE(env.data_file());
+  const string ID_IDX_FILE(env.id_idx_file());
+  const string DATA_FILE(env.data_file());
   const uint32 BLOCKSIZE(env.blocksize());
   
-  int idx_fd = open64(ID_IDX_FILE, O_RDONLY);
+  int idx_fd = open64(ID_IDX_FILE.c_str(), O_RDONLY);
   if (idx_fd < 0)
-    throw File_Error(errno);
+    throw File_Error(errno, ID_IDX_FILE, "select_by_id:1");
   
   set< uint16 > block_ids;
   int16 idx_buf(0);
@@ -404,9 +409,9 @@ void select_by_id(T& env)
   
   close(idx_fd);
   
-  int data_fd = open64(DATA_FILE, O_RDONLY);
+  int data_fd = open64(DATA_FILE.c_str(), O_RDONLY);
   if (data_fd < 0)
-    throw File_Error(errno);
+    throw File_Error(errno, DATA_FILE, "select_by_id:2");
   
   uint8* data_buf = (uint8*) malloc(BLOCKSIZE);
   for (set< uint16 >::const_iterator it(block_ids.begin());
@@ -429,12 +434,12 @@ void select_by_id(T& env)
 template < class T >
 void select_all(T& env)
 {
-  const char* DATA_FILE(env.data_file());
+  const string DATA_FILE(env.data_file());
   const uint32 BLOCKSIZE(env.blocksize());
   
-  int data_fd = open64(DATA_FILE, O_RDONLY);
+  int data_fd = open64(DATA_FILE.c_str(), O_RDONLY);
   if (data_fd < 0)
-    throw File_Error(errno);
+    throw File_Error(errno, DATA_FILE, "select_all:1");
   
   uint8* data_buf = (uint8*) malloc(BLOCKSIZE);
   while (read(data_fd, data_buf, BLOCKSIZE))

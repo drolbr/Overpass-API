@@ -30,7 +30,7 @@ typedef unsigned long long uint64;
 
 //-----------------------------------------------------------------------------
 
-static const char* DATADIR = "/home/olbricht/nobackup/osm/";
+static const char* DATADIR = "/opt/osm_why_api/";
 
 static const char* NODE_ID_NODE_FILE = "nodes_2.dat";
 static const char* NODE_ID_NODE_IDX = "nodes_2.idx";
@@ -52,14 +52,22 @@ const int NODE_STRING_BLOCK_SIZE = 1024*1024;
 
 //-----------------------------------------------------------------------------
 
-static const char* NODE_DATA = ((string)DATADIR + "nodes.dat").c_str();
+static const char* NODE_DATA = "/opt/osm_why_api/nodes.dat";
+static const char* NODE_IDX = "/opt/osm_why_api/nodes.b.idx";
+static const char* NODE_IDXA = "/opt/osm_why_api/nodes.1.idx";
+
+static const char* WAY_DATA = "/opt/osm_why_api/ways.dat";
+static const char* WAY_IDX = "/opt/osm_why_api/ways.b.idx";
+static const char* WAY_IDXA = "/opt/osm_why_api/ways.1.idx";
+static const char* WAY_IDXSPAT = "/opt/osm_why_api/ways.spatial.idx";
+/*static const char* NODE_DATA = ((string)DATADIR + "nodes.dat").c_str();
 static const char* NODE_IDX = ((string)DATADIR + "nodes.b.idx").c_str();
 static const char* NODE_IDXA = ((string)DATADIR + "nodes.1.idx").c_str();
 
 static const char* WAY_DATA = ((string)DATADIR + "ways.dat").c_str();
 static const char* WAY_IDX = ((string)DATADIR + "ways.b.idx").c_str();
 static const char* WAY_IDXA = ((string)DATADIR + "ways.1.idx").c_str();
-static const char* WAY_IDXSPAT = ((string)DATADIR + "ways.spatial.idx").c_str();
+static const char* WAY_IDXSPAT = ((string)DATADIR + "ways.spatial.idx").c_str();*/
 static const char* WAY_ALLTMP = "/tmp/ways.dat";
 
 //-----------------------------------------------------------------------------
@@ -67,11 +75,11 @@ static const char* WAY_ALLTMP = "/tmp/ways.dat";
 struct Node_Id_Node
 {
   uint32 blocksize() const { return NODE_ID_NODE_BLOCKSIZE; }
-  const char* data_file() const { return ((string)DATADIR + NODE_ID_NODE_FILE).c_str(); }
-  const char* index_file() const { return ((string)DATADIR + NODE_ID_NODE_IDX).c_str(); }
-  const char* id_idx_file() const { return ((string)DATADIR + NODE_ID_NODE_IDIDX).c_str(); }
+  const string data_file() const { return ((string)DATADIR + NODE_ID_NODE_FILE); }
+  const string index_file() const { return ((string)DATADIR + NODE_ID_NODE_IDX); }
+  const string id_idx_file() const { return ((string)DATADIR + NODE_ID_NODE_IDIDX); }
   
-  typedef uint32 Index;
+  typedef int32 Index;
   uint32 size_of_Index() const { return sizeof(uint32); }
   
   uint32 size_of_buf(uint8* elem) const
@@ -82,49 +90,87 @@ struct Node_Id_Node
 
 struct Node_Id_Node_Index_Iterator
 {
+  Node_Id_Node_Index_Iterator(const set< pair< int32, int32 > >::const_iterator& it_inside_,
+			      const set< pair< int32, int32 > >::const_iterator& it_border_, int32 pos_)
+  : it_inside(it_inside_), it_border(it_border_), pos(pos_) {}
+  
+  set< pair< int32, int32 > >::const_iterator it_inside, it_border;
+  int32 pos;
 };
 
-inline Node_Id_Node_Index_Iterator& operator++(Node_Id_Node_Index_Iterator& it)
+inline bool operator*(const Node_Id_Node_Index_Iterator& a)
 {
-  return it;
+  return a.pos;
 }
 
 inline bool operator==(const Node_Id_Node_Index_Iterator& a, const Node_Id_Node_Index_Iterator& b)
 {
-  return true;
+  return ((a.it_inside == b.it_inside) && (b.it_border == b.it_border) && (a.pos == b.pos));
 }
 
 inline bool operator!=(const Node_Id_Node_Index_Iterator& a, const Node_Id_Node_Index_Iterator& b)
 {
-  return true;
+  return (!((a.it_inside == b.it_inside) && (b.it_border == b.it_border) && (a.pos == b.pos)));
 }
 
-struct Node_Id_Node_Reader : public Node_Id_Node
+struct Node_Id_Node_Range_Reader : public Node_Id_Node
 {
-  Node_Id_Node_Reader(const set< uint32 >& ids, const set< uint32 >& idxs, set< Node >& result)
-  : result_(result), ids_(ids), idxs_(idxs) {}
+  Node_Id_Node_Range_Reader(const set< pair< int32, int32 > >& idxs_inside,
+			    const set< pair< int32, int32 > >& idxs_border, set< Node >& result)
+  : result_(result), idxs_inside_(idxs_inside), idxs_border_(idxs_border),
+	    it_inside(idxs_inside.begin()), it_border(idxs_border.begin()) {}
   
-/*  typedef Node_Id_Node_Index_Iterator Index_Iterator;*/
-  typedef set< uint32 >::const_iterator Index_Iterator;
-  Index_Iterator idxs_begin() const { return idxs_.begin(); }
-  Index_Iterator idxs_end() const { return idxs_.end(); }
+  typedef Node_Id_Node_Index_Iterator Index_Iterator;
+  Index_Iterator idxs_begin() const
+  {
+    int32 pos(0);
+    if ((!(idxs_inside_.empty())) && ((idxs_border_.empty()) ||
+	   (idxs_inside_.begin()->first < idxs_border_.begin()->first)))
+      pos = idxs_inside_.begin()->first;
+    else if (!(idxs_border_.empty()))
+      pos = idxs_border_.begin()->first;
+    return Node_Id_Node_Index_Iterator(idxs_inside_.begin(), idxs_border_.begin(), pos);
+  }
+  Index_Iterator idxs_end() const
+  {
+    return Node_Id_Node_Index_Iterator(idxs_inside_.end(), idxs_border_.end(), 0);
+  }
   void inc_idx(Index_Iterator& it, Index& idx)
   {
-    ++it;
-    while ((it != idxs_end()) && (*it <= idx))
-      ++it;
+    while ((it.it_inside != idxs_inside_.end()) && (it.it_inside->second <= idx))
+      ++it.it_inside;
+    while ((it.it_border != idxs_border_.end()) && (it.it_border->second <= idx))
+      ++it.it_border;
+    if (it.it_inside != idxs_inside_.end())
+    {
+      it.pos = it.it_inside->first;
+      if ((it.it_border != idxs_border_.end()) &&
+	   (idxs_border_.begin()->first < idxs_inside_.begin()->first))
+	it.pos = it.it_border->first;
+      if (idx >= it.pos)
+	it.pos = idx+1;
+    }
+    else if (it.it_border != idxs_border_.end())
+    {
+      it.pos = it.it_border->first;
+      if (idx >= it.pos)
+	it.pos = idx+1;
+    }
+    else
+      it.pos = 0;
   }
 
   void process(uint8* buf)
   {
-    if (ids_.find(*((int32*)buf)) != ids_.end())
-      result_.insert(Node(*(int32*)&(buf[0]), *(int32*)&(buf[4]), *(int32*)&(buf[8])));
+    //TODO
+/*    if (ids_.find(*((int32*)buf)) != ids_.end())
+      result_.insert(Node(*(int32*)&(buf[0]), *(int32*)&(buf[4]), *(int32*)&(buf[8])));*/
   }
   
-protected:
+private:
   set< Node >& result_;
-  const set< uint32 >& ids_;
-  const set< uint32 >& idxs_;
+  const set< pair< int32, int32 > >& idxs_inside_, idxs_border_;
+  set< pair< int32, int32 > >::const_iterator it_inside, it_border;
 };
 
 struct Node_Id_Node_By_Id_Reader : public Node_Id_Node
@@ -211,8 +257,8 @@ private:
 struct Tag_Id_Node_Local
 {
   uint32 blocksize() const { return TAG_ID_NODE_LOCAL_BLOCKSIZE; }
-  const char* data_file() const { return ((string)DATADIR + NODE_TAG_ID_NODE_LOCAL_FILE).c_str(); }
-  const char* index_file() const { return ((string)DATADIR + NODE_TAG_ID_NODE_LOCAL_IDX).c_str(); }
+  const string data_file() const { return ((string)DATADIR + NODE_TAG_ID_NODE_LOCAL_FILE); }
+  const string index_file() const { return ((string)DATADIR + NODE_TAG_ID_NODE_LOCAL_IDX); }
   
   typedef uint32 Index;
   uint32 size_of_Index() const { return sizeof(uint32); }
@@ -382,8 +428,8 @@ struct Tag_Id_Node_Local_Writer : public Tag_Id_Node_Local
 struct Tag_Id_Node_Global
 {
   uint32 blocksize() const { return TAG_ID_NODE_GLOBAL_BLOCKSIZE; }
-  const char* data_file() const { return ((string)DATADIR + NODE_TAG_ID_NODE_GLOBAL_FILE).c_str(); }
-  const char* index_file() const { return ((string)DATADIR + NODE_TAG_ID_NODE_GLOBAL_IDX).c_str(); }
+  const string data_file() const { return ((string)DATADIR + NODE_TAG_ID_NODE_GLOBAL_FILE); }
+  const string index_file() const { return ((string)DATADIR + NODE_TAG_ID_NODE_GLOBAL_IDX); }
   
   typedef uint32 Index;
   uint32 size_of_Index() const { return sizeof(uint32); }
@@ -514,8 +560,8 @@ struct Tag_Id_Node_Global_Writer : public Tag_Id_Node_Global
 struct Tag_Node_Id
 {
   uint32 blocksize() const { return TAG_NODE_ID_BLOCKSIZE; }
-  const char* data_file() const { return ((string)DATADIR + NODE_TAG_NODE_ID_FILE).c_str(); }
-  const char* index_file() const { return ((string)DATADIR + NODE_TAG_NODE_ID_IDX).c_str(); }
+  const string data_file() const { return ((string)DATADIR + NODE_TAG_NODE_ID_FILE); }
+  const string index_file() const { return ((string)DATADIR + NODE_TAG_NODE_ID_IDX); }
   
   typedef uint32 Index;
   uint32 size_of_Index() const { return sizeof(uint32); }

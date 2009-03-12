@@ -35,8 +35,8 @@ typedef unsigned long long uint64;
 
 //-----------------------------------------------------------------------------
 
-const char* NODE_STRING_DATA = ((string)DATADIR + "node_strings.dat").c_str();
-const char* NODE_STRING_IDX = ((string)DATADIR + "node_strings.idx").c_str();
+const string NODE_STRING_DATA = (string)DATADIR + "node_strings.dat";
+const string NODE_STRING_IDX = (string)DATADIR + "node_strings.idx";
 
 const char* NODE_TAG_TMPAPREFIX = "/tmp/node_strings_";
 const char* NODE_TAG_TMPB = "/tmp/node_tag_ids";
@@ -54,13 +54,13 @@ void flush_node_tags(uint& current_run, map< KeyValue, NodeCollection >& node_ta
   
   dest_fd = open64(temp.str().c_str(), O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)
-    throw File_Error(errno);
+    throw File_Error(errno, temp.str().c_str(), "flush_node_tags:1");
   
   if (current_run == 0)
   {
     int dest_id_fd = open64(NODE_TAG_TMPB, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     if (dest_id_fd < 0)
-      throw File_Error(errno);
+      throw File_Error(errno, NODE_TAG_TMPB, "flush_node_tags:2");
     
     for (map< KeyValue, NodeCollection >::iterator it(node_tags.begin());
          it != node_tags.end(); ++it)
@@ -99,7 +99,7 @@ void flush_node_tags(uint& current_run, map< KeyValue, NodeCollection >& node_ta
     temp<<NODE_TAG_TMPAPREFIX<<(current_run-1);
     int source_fd = open64(temp.str().c_str(), O_RDONLY);
     if (source_fd < 0)
-      throw File_Error(errno);
+      throw File_Error(errno, temp.str().c_str(), "flush_node_tags:3");
     
     map< KeyValue, NodeCollection >::iterator it(node_tags.begin());
     while (read(source_fd, cnt_rd_buf, 2*sizeof(uint32) + 2*sizeof(uint16)))
@@ -170,7 +170,7 @@ void flush_node_tags(uint& current_run, map< KeyValue, NodeCollection >& node_ta
     
     int dest_id_fd = open64(NODE_TAG_TMPB, O_WRONLY|O_APPEND, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     if (dest_id_fd < 0)
-      throw File_Error(errno);
+      throw File_Error(errno, NODE_TAG_TMPB, "flush_node_tags:4");
     
     for (map< KeyValue, NodeCollection >::iterator it(node_tags.begin());
 	 it != node_tags.end(); ++it)
@@ -204,7 +204,7 @@ void node_tag_statistics(uint& current_run, vector< uint32 >& split_idx)
   temp<<NODE_TAG_TMPAPREFIX<<(current_run-1);
   int source_fd = open64(temp.str().c_str(), O_RDONLY);
   if (source_fd < 0)
-    throw File_Error(errno);
+    throw File_Error(errno, temp.str().c_str(), "node_tag_statistics:1");
   
   uint32 global_count(0);
   uint32* spatial_count = (uint32*) calloc(16*1024*1024, sizeof(uint32));
@@ -246,21 +246,23 @@ void node_tag_split_and_index(uint& current_run, vector< uint32 >& split_idx, ui
   temp<<NODE_TAG_TMPAPREFIX<<(current_run-1);
   int source_fd = open64(temp.str().c_str(), O_RDONLY);
   if (source_fd < 0)
-    throw File_Error(errno);
+    throw File_Error(errno, temp.str().c_str(), "node_tag_split_and_index:1");
   
-  int dest_fd = open64(NODE_STRING_DATA, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  int dest_fd = open64(NODE_STRING_DATA.c_str(), O_WRONLY|O_CREAT|O_TRUNC,
+		       S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   close(dest_fd);
   
-  dest_fd = open64(NODE_STRING_DATA, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  dest_fd = open64(NODE_STRING_DATA.c_str(), O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)
-    throw File_Error(errno);
+    throw File_Error(errno, NODE_STRING_DATA, "node_tag_split_and_index:2");
   
-  int dest_idx_fd = open64(NODE_STRING_IDX, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  int dest_idx_fd = open64(NODE_STRING_IDX.c_str(), O_WRONLY|O_CREAT|O_TRUNC,
+			   S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   close(dest_idx_fd);
   
-  dest_idx_fd = open64(NODE_STRING_IDX, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  dest_idx_fd = open64(NODE_STRING_IDX.c_str(), O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)
-    throw File_Error(errno);
+    throw File_Error(errno, NODE_STRING_IDX, "node_tag_split_and_index:3");
   
   for (uint32 i(0); i < NODE_TAG_SPATIAL_PARTS; ++i)
     write(dest_idx_fd, &(split_idx[i]), sizeof(uint32));
@@ -374,7 +376,7 @@ void node_tag_create_id_node_idx(uint32* block_of_id)
   
   int source_fd = open64(NODE_TAG_TMPB, O_RDONLY);
   if (source_fd < 0)
-    throw File_Error(errno);
+    throw File_Error(errno, NODE_TAG_TMPB, "node_tag_create_id_node_idx:1");
   
   uint32* tag_rd_buf = (uint32*) malloc(TAG_SORT_BUFFER_SIZE);
   uint32* tag_alt_buf = (uint32*) malloc(TAG_SORT_BUFFER_SIZE);
@@ -533,7 +535,7 @@ void node_tag_create_node_id_idx(uint32* block_of_id, uint32 max_node_id)
   
   int source_fd = open64(NODE_TAG_TMPB, O_RDONLY);
   if (source_fd < 0)
-    throw File_Error(errno);
+    throw File_Error(errno, NODE_TAG_TMPB, "node_tag_create_id_node_idx:2");
   
   uint8* blocklet_of_id = (uint8*) malloc((NodeCollection::next_node_tag_id+1)*sizeof(uint8));
   for (uint32 i(0); i < (NodeCollection::next_node_tag_id+1); ++i)
@@ -624,12 +626,13 @@ void node_tag_create_node_id_idx(uint32* block_of_id, uint32 max_node_id)
 
 void node_tag_id_statistics()
 {
-  int dest_fd = open64(NODE_TAG_ID_STATS, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  int dest_fd = open64(NODE_TAG_ID_STATS.c_str(), O_WRONLY|O_CREAT|O_TRUNC,
+		       S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   close(dest_fd);
   
-  dest_fd = open64(NODE_TAG_ID_STATS, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  dest_fd = open64(NODE_TAG_ID_STATS.c_str(), O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)
-    throw File_Error(errno);
+    throw File_Error(errno, NODE_TAG_ID_STATS, "node_tag_id_statistics:1");
   
   vector< uint32 > id_count(NodeCollection::next_node_tag_id);
   Tag_Id_Count_Local_Reader local_stats(id_count);
@@ -673,9 +676,9 @@ struct Node_String_Cache
     {
       spatial_boundaries.clear();
     
-      int string_idx_fd = open64(NODE_STRING_IDX, O_RDONLY);
+      int string_idx_fd = open64(NODE_STRING_IDX.c_str(), O_RDONLY);
       if (string_idx_fd < 0)
-	throw File_Error(errno);
+	throw File_Error(errno, NODE_STRING_IDX, "Node_String_Cache.init():1");
   
       uint32* string_spat_idx_buf = (uint32*) malloc(NODE_TAG_SPATIAL_PARTS*sizeof(uint32));
       read(string_idx_fd, string_spat_idx_buf, NODE_TAG_SPATIAL_PARTS*sizeof(uint32));
@@ -753,9 +756,9 @@ void select_kv_to_ids
     }
   }
 
-  int string_fd = open64(NODE_STRING_DATA, O_RDONLY);
+  int string_fd = open64(NODE_STRING_DATA.c_str(), O_RDONLY);
   if (string_fd < 0)
-    throw File_Error(errno);
+    throw File_Error(errno, NODE_STRING_DATA, "select_kv_to_ids:1");
   
   char* string_idxs_buf = (char*) malloc(NODE_STRING_BLOCK_SIZE);
   if (value == "")
@@ -862,9 +865,9 @@ void select_ids_to_kvs
     }
   }
 
-  int string_fd = open64(NODE_STRING_DATA, O_RDONLY);
+  int string_fd = open64(NODE_STRING_DATA.c_str(), O_RDONLY);
   if (string_fd < 0)
-    throw File_Error(errno);
+    throw File_Error(errno, NODE_STRING_DATA, "select_ids_to_kvs:1");
   
   char* string_idxs_buf = (char*) malloc(NODE_STRING_BLOCK_SIZE);
   for (set< uint16 >::const_iterator it(used_blocks.begin());

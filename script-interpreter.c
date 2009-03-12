@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <vector>
 #include "expat_justparse_interface.h"
+#include "raw_file_db.h"
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
@@ -83,33 +84,42 @@ int main(int argc, char *argv[])
     return 0;
   }
   
-  //Sanity-Check
-  inc_stack();
-  for (vector< Statement* >::const_iterator it(statement_stack.begin());
-       it != statement_stack.end(); ++it)
-    (*it)->forecast(mysql);
-  if (display_sanity_errors(cout, xml_raw))
-    return 0;
-  dec_stack();
-  
-  if (get_debug_mode() == STATIC_ANALYSIS)
+  try
   {
-    static_analysis(cout, xml_raw);
-    return 0;
+    //Sanity-Check
+    inc_stack();
+    for (vector< Statement* >::const_iterator it(statement_stack.begin());
+	 it != statement_stack.end(); ++it)
+      (*it)->forecast(mysql);
+    if (display_sanity_errors(cout, xml_raw))
+      return 0;
+    dec_stack();
+  
+    if (get_debug_mode() == STATIC_ANALYSIS)
+    {
+      static_analysis(cout, xml_raw);
+      return 0;
+    }
+  
+    out_header(cout, output_mode);
+  
+    prepare_caches(mysql);
+  
+    map< string, Set > maps;
+    for (vector< Statement* >::const_iterator it(statement_stack.begin());
+	 it != statement_stack.end(); ++it)
+      (*it)->execute(mysql, maps);
+  
+    out_footer(cout, output_mode);
+  
+    mysql_close(mysql);
   }
-  
-  out_header(cout, output_mode);
-  
-  prepare_caches(mysql);
-  
-  map< string, Set > maps;
-  for (vector< Statement* >::const_iterator it(statement_stack.begin());
-       it != statement_stack.end(); ++it)
-    (*it)->execute(mysql, maps);
-  
-  out_footer(cout, output_mode);
-  
-  mysql_close(mysql);
+  catch(File_Error e)
+  {
+    ostringstream temp;
+    temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin;
+    runtime_error(temp.str(), cout);
+  }
   
   return 0;
 }
