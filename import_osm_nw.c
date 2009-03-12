@@ -248,8 +248,8 @@ void postprocess_nodes(Node_Id_Node_Writer& node_writer)
   free(wr_buf);
   wr_buf = 0;
   
-  make_block_index(node_writer);
-  make_id_index(node_writer);
+  make_block_index< Node_Id_Node_Writer >(node_writer);
+  make_id_index< Node_Id_Node_Writer >(node_writer);
   nodes_make_block_index();
   close(nodes_dat_fd);
   nodes_make_id_index(rd_buf);
@@ -529,6 +529,8 @@ void postprocess_ways_2()
   {
     C_Way way;
     cerr<<'n';
+/*    Node_Id_Node_Dump dump(offset, count, ll_idx);
+    select_all< Node_Id_Node_Dump >(dump);*/
     prepare_nodes_chunk(offset, count, ll_idx);
     cerr<<'n';
     lseek64(ways_tmp_fd, 0, SEEK_SET);
@@ -647,6 +649,8 @@ void postprocess_ways_4()
   while (offset < max_node_id)
   {
     cerr<<'n';
+/*    Node_Id_Node_Dump dump(offset, count, ll_idx);
+    select_all< Node_Id_Node_Dump >(dump);*/
     prepare_nodes_chunk(offset, count, ll_idx);
     cerr<<'n';
     
@@ -856,6 +860,32 @@ void end(const char *el)
 int main(int argc, char *argv[])
 {
   cerr<<(uintmax_t)time(NULL)<<'\n';
+  
+  //TEMP
+  uint32 max_nodes_ram(150*1000*1000), max_nodes(400*1000*1000), offset(0), count(max_nodes_ram);
+  uint32* ll_idx_1 = (uint32*) calloc(count, sizeof(int32));
+  uint32* ll_idx_2 = (uint32*) calloc(count, sizeof(int32));
+  while (offset < max_nodes)
+  {
+    if (count > max_nodes - offset)
+      count = max_nodes - offset;
+    
+    Node_Id_Node_Dump dump(offset, count, ll_idx_1);
+    select_all< Node_Id_Node_Dump >(dump);
+    prepare_nodes_chunk(offset, count, ll_idx_2);
+    
+    for (uint32 i(0); i < count; ++i)
+    {
+      if (ll_idx_1[i] != ll_idx_2[i])
+        cout<<i<<' '<<ll_idx_1[i]<<' '<<ll_idx_2[i]<<'\n';
+    }
+    cout<<"---\n";
+    
+    offset += count;
+  }
+  free(ll_idx_1);
+  free(ll_idx_2);
+  exit(0);
   
   //TEMP
 /*  max_node_id = 400*1000*1000;

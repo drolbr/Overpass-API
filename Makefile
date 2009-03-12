@@ -16,7 +16,7 @@ union_$(suffix)
 objects = expat_justparse_interface.o cgi-helper.o user_interface.o script_queries.o node_strings_file_io.o script_tools.o vigilance_control.o $(stmts)
 executable_objects = script-interpreter.o add_rule.o dump_rules.o get_rule.o update_rule.o osm2load_infile.o
 executables = cgi-bin/interpreter cgi-bin/add_rule cgi-bin/get_rule cgi-bin/update_rule dump_rules load_rules import_osm osmy_vigilance
-tool_headers = expat_justparse_interface.h script_datatypes.h file_types.h node_strings_file_io.h script_queries.h script_tools.h user_interface.h
+tool_headers = expat_justparse_interface.h script_datatypes.h file_types.h raw_file_db.h node_strings_file_io.h script_queries.h script_tools.h user_interface.h
 
 main: $(executables)
 
@@ -78,27 +78,27 @@ vigilance_control.o: vigilance_control.c vigilance_control.h script_datatypes.h 
 	g++ -c -O3 -Wall `mysql_config --include` vigilance_control.c
 
 suffix = statement.h
-script-interpreter.o: script-interpreter.c expat_justparse_interface.h user_interface.h script_datatypes.h script_queries.h script_tools.h $(stmts) statement_factory.h
+script-interpreter.o: script-interpreter.c $(tool_headers) $(stmts) statement_factory.h
 	g++ -c -O3 -Wall `mysql_config --include` script-interpreter.c
 	
 suffix = statement.h
-add_rule.o: add_rule.c expat_justparse_interface.h user_interface.h script_datatypes.h script_queries.h script_tools.h $(stmts) statement_factory.h
+add_rule.o: add_rule.c $(tool_headers) $(stmts) statement_factory.h
 	g++ -c -O3 -Wall `mysql_config --include` add_rule.c
 	
 suffix = statement.h
-dump_rules.o: dump_rules.c expat_justparse_interface.h user_interface.h script_datatypes.h script_queries.h script_tools.h $(stmts) statement_factory.h
+dump_rules.o: dump_rules.c $(tool_headers) $(stmts) statement_factory.h
 	g++ -c -O3 -Wall `mysql_config --include` dump_rules.c
 	
 suffix = statement.h
-get_rule.o: get_rule.c expat_justparse_interface.h user_interface.h script_datatypes.h script_queries.h script_tools.h $(stmts) statement_factory.h
+get_rule.o: get_rule.c $(tool_headers) $(stmts) statement_factory.h
 	g++ -c -O3 -Wall `mysql_config --include` get_rule.c
 	
 suffix = statement.h
-load_rules.o: load_rules.c expat_justparse_interface.h user_interface.h script_datatypes.h script_queries.h script_tools.h $(stmts) statement_factory.h
+load_rules.o: load_rules.c $(tool_headers) $(stmts) statement_factory.h
 	g++ -c -O3 -Wall `mysql_config --include` load_rules.c
 	
 suffix = statement.h
-update_rule.o: update_rule.c expat_justparse_interface.h user_interface.h script_datatypes.h script_queries.h script_tools.h $(stmts) statement_factory.h
+update_rule.o: update_rule.c $(tool_headers) $(stmts) statement_factory.h
 	g++ -c -O3 -Wall `mysql_config --include` update_rule.c
 	
 osm2load_infile.o: osm2load_infile.c script_datatypes.h expat_justparse_interface.h cgi-helper.h user_interface.h

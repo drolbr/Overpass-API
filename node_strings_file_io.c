@@ -559,6 +559,8 @@ void node_tag_create_node_id_idx(uint32* block_of_id, uint32 max_node_id)
     env.ids_of_node.resize(count);
   
     cerr<<'n';
+/*    Node_Id_Node_Dump dump(env.offset, count, ll_idx_);
+    select_all< Node_Id_Node_Dump >(dump);*/
     prepare_nodes_chunk(env.offset, count, ll_idx_);
     cerr<<'n';
     lseek64(source_fd, 0, SEEK_SET);

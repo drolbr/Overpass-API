@@ -34,6 +34,8 @@ struct File_Error
   string origin;
 };
 
+//-----------------------------------------------------------------------------
+
 // constraints:
 // T::size_of_buf(T::to_buf()) == T::size_of()
 // T::index_of_buf(T::to_buf()) == T::index_of()
@@ -229,6 +231,8 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
   }
 }
 
+//-----------------------------------------------------------------------------
+
 template< class T >
 void make_block_index(const T& env)
 {
@@ -256,6 +260,8 @@ void make_block_index(const T& env)
   
   free(buf);
 }
+
+//-----------------------------------------------------------------------------
 
 template < class T >
 void make_id_index(T& env)
@@ -309,6 +315,8 @@ void make_id_index(T& env)
   close(data_fd);
   close(dest_fd);
 }
+
+//-----------------------------------------------------------------------------
 
 template < class T >
 void select_with_idx(T& env)
@@ -376,6 +384,8 @@ void select_with_idx(T& env)
     lseek64(data_fd, ((uint64)(*it))*BLOCKSIZE, SEEK_SET);
     read(data_fd, data_buf, BLOCKSIZE);
     uint32 pos(sizeof(uint32));
+    if (pos < *((uint32*)data_buf) + sizeof(uint32))
+      env.block_notify(&(data_buf[pos]));
     while (pos < *((uint32*)data_buf) + sizeof(uint32))
     {
       env.process(&(data_buf[pos]));
@@ -386,6 +396,47 @@ void select_with_idx(T& env)
   
   close(data_fd);
 }
+
+//-----------------------------------------------------------------------------
+
+template < class T >
+void count_with_idx(T& env)
+{
+  const string IDX_FILE(env.index_file());
+  
+  static vector< typename T::Index > idx_boundaries;
+  static vector< uint16 > block_idx;
+  
+  if ((idx_boundaries.empty()) || (block_idx.empty()))
+  {
+    idx_boundaries.clear();
+    block_idx.clear();
+    
+    int idx_fd = open64(IDX_FILE.c_str(), O_RDONLY);
+    if (idx_fd < 0)
+      throw File_Error(errno, IDX_FILE, "select_with_idx:1");
+    
+    uint32 idx_file_size(lseek64(idx_fd, 0, SEEK_END));
+    char* idx_buf = (char*) malloc(idx_file_size);
+    lseek64(idx_fd, 0, SEEK_SET);
+    read(idx_fd, idx_buf, idx_file_size);
+    uint32 i(0);
+    while (i < idx_file_size)
+    {
+      idx_boundaries.push_back(*((typename T::Index*)&(idx_buf[i])));
+      i += env.size_of_Index();
+      block_idx.push_back(*(uint16*)&(idx_buf[i]));
+      i += sizeof(uint16);
+    }
+    free(idx_buf);
+    
+    close(idx_fd);
+  }
+  
+  env.count_idx(idx_boundaries.begin(), idx_boundaries.end());
+}
+
+//-----------------------------------------------------------------------------
 
 template < class T >
 void select_by_id(T& env)
@@ -430,6 +481,8 @@ void select_by_id(T& env)
   
   close(data_fd);
 }
+
+//-----------------------------------------------------------------------------
 
 template < class T >
 void select_all(T& env)

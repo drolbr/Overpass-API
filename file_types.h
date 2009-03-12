@@ -60,14 +60,6 @@ static const char* WAY_DATA = "/opt/osm_why_api/ways.dat";
 static const char* WAY_IDX = "/opt/osm_why_api/ways.b.idx";
 static const char* WAY_IDXA = "/opt/osm_why_api/ways.1.idx";
 static const char* WAY_IDXSPAT = "/opt/osm_why_api/ways.spatial.idx";
-/*static const char* NODE_DATA = ((string)DATADIR + "nodes.dat").c_str();
-static const char* NODE_IDX = ((string)DATADIR + "nodes.b.idx").c_str();
-static const char* NODE_IDXA = ((string)DATADIR + "nodes.1.idx").c_str();
-
-static const char* WAY_DATA = ((string)DATADIR + "ways.dat").c_str();
-static const char* WAY_IDX = ((string)DATADIR + "ways.b.idx").c_str();
-static const char* WAY_IDXA = ((string)DATADIR + "ways.1.idx").c_str();
-static const char* WAY_IDXSPAT = ((string)DATADIR + "ways.spatial.idx").c_str();*/
 static const char* WAY_ALLTMP = "/tmp/ways.dat";
 
 //-----------------------------------------------------------------------------
@@ -116,9 +108,11 @@ inline bool operator!=(const Node_Id_Node_Index_Iterator& a, const Node_Id_Node_
 struct Node_Id_Node_Range_Reader : public Node_Id_Node
 {
   Node_Id_Node_Range_Reader(const set< pair< int32, int32 > >& idxs_inside,
-			    const set< pair< int32, int32 > >& idxs_border, set< Node >& result)
-  : result_(result), idxs_inside_(idxs_inside), idxs_border_(idxs_border),
-	    it_inside(idxs_inside.begin()), it_border(idxs_border.begin()) {}
+			    const set< pair< int32, int32 > >& idxs_border,
+                            set< Node >& result_inside, set< Node >& result_border)
+    : result_inside_(result_inside), result_border_(result_border),
+    idxs_inside_(idxs_inside), idxs_border_(idxs_border),
+    it_inside(idxs_inside.begin()), it_border(idxs_border.begin()) {}
   
   typedef Node_Id_Node_Index_Iterator Index_Iterator;
   Index_Iterator idxs_begin() const
@@ -160,17 +154,72 @@ struct Node_Id_Node_Range_Reader : public Node_Id_Node
       it.pos = 0;
   }
 
+  void block_notify(uint8* buf)
+  {
+    int32 buf_idx(ll_idx(*(int32*)&(buf[4]), *(int32*)&(buf[8])));
+    it_inside = idxs_inside_.lower_bound(make_pair< int32, int32 >
+	(buf_idx, buf_idx));
+    it_border = idxs_border_.lower_bound(make_pair< int32, int32 >
+	(buf_idx, buf_idx));
+  }
+  
   void process(uint8* buf)
   {
-    //TODO
-/*    if (ids_.find(*((int32*)buf)) != ids_.end())
-      result_.insert(Node(*(int32*)&(buf[0]), *(int32*)&(buf[4]), *(int32*)&(buf[8])));*/
+    int32 buf_idx(ll_idx(*(int32*)&(buf[4]), *(int32*)&(buf[8])));
+    while ((it_inside != idxs_inside_.end()) && (it_inside->second < buf_idx))
+      ++it_inside;
+    while ((it_border != idxs_border_.end()) && (it_border->second < buf_idx))
+      ++it_border;
+    if ((it_inside != idxs_inside_.end()) && (buf_idx >= it_inside->first))
+      result_inside_.insert(Node(*(int32*)&(buf[0]), *(int32*)&(buf[4]), *(int32*)&(buf[8])));
+    if ((it_border != idxs_border_.end()) && (buf_idx >= it_border->first))
+      result_border_.insert(Node(*(int32*)&(buf[0]), *(int32*)&(buf[4]), *(int32*)&(buf[8])));
   }
   
 private:
-  set< Node >& result_;
+  set< Node >& result_inside_, result_border_;
   const set< pair< int32, int32 > >& idxs_inside_, idxs_border_;
   set< pair< int32, int32 > >::const_iterator it_inside, it_border;
+};
+
+struct Node_Id_Node_Range_Count : public Node_Id_Node
+{
+  Node_Id_Node_Range_Count(const set< pair< int32, int32 > >& idxs_inside,
+			    const set< pair< int32, int32 > >& idxs_border)
+  : idxs_inside_(idxs_inside), idxs_border_(idxs_border), result(0) {}
+  
+  void count_idx(const vector< Index >::const_iterator& idx_begin,
+		 const vector< Index >::const_iterator& idx_end)
+  {
+    set< pair< int32, int32 > >::const_iterator it_inside(idxs_inside_.begin());
+    set< pair< int32, int32 > >::const_iterator it_border(idxs_border_.begin());
+    vector< Index >::const_iterator it(idx_begin);
+    if (it == idx_end)
+      return;
+    Index last_idx(*it);
+    while (++it != idx_end)
+    {
+      while ((it_inside != idxs_inside_.end()) && (it_inside->second < *it))
+      {
+	result += (long long)blocksize()*
+	    (it_inside->second - it_inside->first + 1)/(*it - last_idx + 1);
+	++it_inside;
+      }
+      while ((it_border != idxs_border_.end()) && (it_border->second < *it))
+      {
+	result += (long long)blocksize()*
+	    (it_border->second - it_border->first + 1)/(*it - last_idx + 1);
+	++it_border;
+      }
+      last_idx = *it;
+    }
+  }
+  
+  uint32 get_result() { return result; }
+  
+private:
+  const set< pair< int32, int32 > >& idxs_inside_, idxs_border_;
+  uint32 result;
 };
 
 struct Node_Id_Node_By_Id_Reader : public Node_Id_Node
@@ -193,12 +242,30 @@ protected:
   const set< int32 >& ids_;
 };
 
+struct Node_Id_Node_Dump : public Node_Id_Node
+{
+  Node_Id_Node_Dump(uint32 offset, uint32 count, uint32* ll_idx_buf)
+  : offset_(offset), count_(count), ll_idx_buf_(ll_idx_buf) {}
+  
+  void process(uint8* buf)
+  {
+    if ((*(int32*)&(buf[0]) >= offset_) && ((*(int32*)&(buf[0])) - offset_ < count_))
+      ll_idx_buf_[(*(int32*)&(buf[0])) - offset_] =
+	  ll_idx((*(int32*)&(buf[4])), (*(int32*)&(buf[8])));
+  }
+  
+  private:
+    int32 offset_;
+    int32 count_;
+    uint32* ll_idx_buf_;
+};
+
 struct Node_Id_Node_Writer : public Node_Id_Node
 {
   Node_Id_Node_Writer() : block_index_() {}
   
-  const multimap< uint32, uint16 >& block_index() const { return block_index_; }
-  multimap< uint32, uint16 >& block_index() { return block_index_; }
+  const multimap< Index, uint16 >& block_index() const { return block_index_; }
+  multimap< Index, uint16 >& block_index() { return block_index_; }
   
   typedef multimap< int, Node >::const_iterator Iterator;
   
@@ -207,12 +274,12 @@ struct Node_Id_Node_Writer : public Node_Id_Node
     return (3*sizeof(uint32));
   }
   
-  uint32 index_of(const Iterator& it) const
+  Index index_of(const Iterator& it) const
   {
     return (it->first);
   }
   
-  uint32 index_of_buf(uint8* elem) const
+  Index index_of_buf(uint8* elem) const
   {
     return (ll_idx(*(int32*)&(elem[4]), *(int32*)&(elem[8])));
   }
@@ -249,7 +316,7 @@ struct Node_Id_Node_Writer : public Node_Id_Node
   uint32 first_new_block() const { return 0; }
   
 private:
-    multimap< uint32, uint16 > block_index_;
+    multimap< Index, uint16 > block_index_;
 };
 
 //-----------------------------------------------------------------------------
@@ -283,6 +350,8 @@ struct Tag_Id_Node_Local_Reader : public Tag_Id_Node_Local
     while ((it != idxs_end()) && (*it <= idx))
       ++it;
   }
+  
+  void block_notify(uint8* buf) const {}
   
   void process(uint8* buf)
   {
@@ -337,6 +406,8 @@ struct Tag_MultiNode_Id_Local_Reader : public Tag_Id_Node_Local
       ++it;
   }
 
+  void block_notify(uint8* buf) const {}
+  
   void process(uint8* buf)
   {
     for (uint32 j(0); j < *((uint8*)&(buf[4])); ++j)
@@ -455,6 +526,8 @@ struct Tag_Id_Node_Global_Reader : public Tag_Id_Node_Global
       ++it;
   }
 
+  void block_notify(uint8* buf) const {}
+  
   void process(uint8* buf)
   {
     if (ids_.find(*((uint32*)buf)) != ids_.end())
@@ -588,6 +661,8 @@ struct Tag_Node_Id_Reader : public Tag_Node_Id
       ++it;
   }
 
+  void block_notify(uint8* buf) const {}
+  
   void process(uint8* buf)
   {
     map< uint32, set< uint32 > >::iterator it(node_to_id_.find(*((uint32*)buf)));

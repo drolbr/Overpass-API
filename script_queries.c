@@ -616,58 +616,6 @@ typedef unsigned long long uint64;
 
 set< Node >& multiint_to_multiNode_query(const set< int >& source, set< Node >& result_set)
 {
-/*  int nodes_dat_fd = open64(NODE_IDXA, O_RDONLY);
-  if (nodes_dat_fd < 0)
-  {
-    ostringstream temp;
-    temp<<"open64: "<<errno<<' '<<NODE_IDXA<<" multiint_to_multiNode_query:1";
-    runtime_error(temp.str(), cout);
-    return result_set;
-  }
-  
-  set< int > blocks;
-  int16 idx_buf(0);
-  for (set< int >::const_iterator it(source.begin()); it != source.end(); ++it)
-  {
-    lseek64(nodes_dat_fd, ((*it)-1)*sizeof(int16), SEEK_SET);
-    read(nodes_dat_fd, &idx_buf, sizeof(int16));
-    blocks.insert(idx_buf);
-  }
-  
-  close(nodes_dat_fd);
-  
-  int32* buf_count = (int32*) malloc(sizeof(int) + BLOCKSIZE*sizeof(Node));
-  Node* nd_buf = (Node*) &buf_count[1];
-  if (!buf_count)
-  {
-    runtime_error("Bad alloc in node query", cout);
-    return result_set;
-  }
-  
-  nodes_dat_fd = open64(NODE_DATA, O_RDONLY);
-  if (nodes_dat_fd < 0)
-  {
-    ostringstream temp;
-    temp<<"open64: "<<errno<<' '<<NODE_DATA<<" multiint_to_multiNode_query:2";
-    runtime_error(temp.str(), cout);
-    return result_set;
-  }
-  
-  for (set< int >::const_iterator it(blocks.begin()); it != blocks.end(); ++it)
-  {
-    lseek64(nodes_dat_fd, (int64)(*it)*(sizeof(int) + BLOCKSIZE*sizeof(Node)), SEEK_SET);
-    read(nodes_dat_fd, buf_count, sizeof(int) + BLOCKSIZE*sizeof(Node));
-    for (int32 i(0); i < buf_count[0]; ++i)
-    {
-      if (source.find(nd_buf[i].id) != source.end())
-	result_set.insert(nd_buf[i]);
-    }
-  }
-  
-  close(nodes_dat_fd);
-  
-  free(buf_count);*/
-  
   Node_Id_Node_By_Id_Reader reader(source, result_set);
   select_by_id< Node_Id_Node_By_Id_Reader >(reader);
   
@@ -772,6 +720,9 @@ void multiRange_to_multiNode_query
   
   free(buf);
   free(buf_count);
+  
+/*  Node_Id_Node_Range_Reader reader(in_inside, in_border, res_inside, res_border);
+  select_with_idx< Node_Id_Node_Range_Reader >(reader);*/
 }
 
 int multiRange_to_count_query
@@ -815,6 +766,11 @@ int multiRange_to_count_query
   free(buf);
   
   return count;
+  
+/*  Node_Id_Node_Range_Count reader(in_inside, in_border);
+  count_with_idx< Node_Id_Node_Range_Count >(reader);
+  
+  return reader.get_result();*/
 }
 
 //-----------------------------------------------------------------------------
