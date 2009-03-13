@@ -618,7 +618,6 @@ set< Node >& multiint_to_multiNode_query(const set< int >& source, set< Node >& 
 {
   Node_Id_Node_By_Id_Reader reader(source, result_set);
   select_by_id< Node_Id_Node_By_Id_Reader >(reader);
-  
   return result_set;
 }
 
@@ -626,105 +625,8 @@ void multiRange_to_multiNode_query
     (const set< pair< int, int > >& in_inside, const set< pair< int, int > >& in_border,
      set< Node >& res_inside, set< Node >& res_border)
 {
-/*  vector< pair< int32, uint32 > > block_index;
-
-  int nodes_idx_fd = open64(NODE_IDX, O_RDONLY);
-  if (nodes_idx_fd < 0)
-  {
-    ostringstream temp;
-    temp<<"open64: "<<errno<<' '<<NODE_IDX<<" multiRange_to_multiNode_query:1";
-    runtime_error(temp.str(), cout);
-    return;
-  }
-  
-  int32* buf = (int32*) malloc(sizeof(int32)*2);
-  while (read(nodes_idx_fd, buf, sizeof(int)*2))
-    block_index.push_back(make_pair< int32, uint32 >(buf[0], buf[1]));
-  close(nodes_idx_fd);
-  
-  int nodes_dat_fd = open64(NODE_DATA, O_RDONLY);
-  if (nodes_dat_fd < 0)
-  {
-    ostringstream temp;
-    temp<<"open64: "<<errno<<' '<<NODE_IDX<<" multiRange_to_multiNode_query:2";
-    runtime_error(temp.str(), cout);
-    free(buf);
-    return;
-  }
-  
-  int32* buf_count = (int32*) malloc(sizeof(int) + BLOCKSIZE*sizeof(Node));
-  Node* nd_buf = (Node*) &buf_count[1];
-  set< pair< int, int > >::const_iterator it_inside(in_inside.begin());
-  set< pair< int, int > >::const_iterator it_border(in_border.begin());
-  for (unsigned int i(1); i < block_index.size(); ++i)
-  {
-    bool block_inside((it_inside != in_inside.end()) &&
-	(it_inside->first <= block_index[i].first));
-    bool block_border((it_border != in_border.end()) &&
-	(it_border->first <= block_index[i].first));
-    if (block_inside || block_border)
-    {
-      lseek64(nodes_dat_fd,
-	      (int64)(block_index[i-1].second)*(sizeof(int) + BLOCKSIZE*sizeof(Node)), SEEK_SET);
-      read(nodes_dat_fd, buf_count, sizeof(int) + BLOCKSIZE*sizeof(Node));
-    }
-    if (block_inside)
-    {
-      for (int32 j(0); j < buf_count[0]; ++j)
-      {
-	int32 nd_idx(ll_idx(nd_buf[j].lat, nd_buf[j].lon));
-	if (nd_idx >= it_inside->first)
-	{
-	  if (nd_idx <= it_inside->second)
-	    res_inside.insert(nd_buf[j]);
-	  else
-	  {
-	    while ((it_inside != in_inside.end()) && (it_inside->second < nd_idx))
-	      ++it_inside;
-	    if (it_inside == in_inside.end())
-	      break;
-	    if (nd_idx <= it_inside->second)
-	      res_inside.insert(nd_buf[j]);
-	  }
-	}
-      }
-    }
-    if (block_border)
-    {
-      for (int32 j(0); j < buf_count[0]; ++j)
-      {
-	int32 nd_idx(ll_idx(nd_buf[j].lat, nd_buf[j].lon));
-	if (nd_idx >= it_border->first)
-	{
-	  if (nd_idx <= it_border->second)
-	    res_border.insert(nd_buf[j]);
-	  else
-	  {
-	    while ((it_border != in_border.end()) && (it_border->second < nd_idx))
-	      ++it_border;
-	    if (it_border == in_border.end())
-	      break;
-	    if (nd_idx <= it_border->second)
-	      res_border.insert(nd_buf[j]);
-	  }
-	}
-      }
-    }
-    while ((it_inside != in_inside.end()) && (it_inside->second < block_index[i].first))
-      ++it_inside;
-    while ((it_border != in_border.end()) && (it_border->second < block_index[i].first))
-      ++it_border;
-  }
-  
-  close(nodes_dat_fd);
-  
-  free(buf);
-  free(buf_count);*/
-  
   Node_Id_Node_Range_Reader reader(in_inside, in_border, res_inside, res_border);
   select_with_idx< Node_Id_Node_Range_Reader >(reader);
-/*  cout<<'['<<res_border.size()<<"]\n";*/
-/*  cout<<'['<<(res_border.find(Node(36478259, 0, 0)) != res_border.end())<<"]\n";*/
 }
 
 int multiRange_to_count_query
@@ -732,7 +634,6 @@ int multiRange_to_count_query
 {
   Node_Id_Node_Range_Count reader(in_inside, in_border);
   count_with_idx< Node_Id_Node_Range_Count >(reader);
-  
   return reader.get_result();
 }
 

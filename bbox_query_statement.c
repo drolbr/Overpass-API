@@ -161,11 +161,8 @@ void indices_of_bbox
     size = size/2;
   }
   for (vector< pair< int, int > >::const_iterator it(pending.begin()); it != pending.end(); ++it)
-  {
-/*    cout<<'['<<ll_idx(it->first, it->second)<<' '<<ll_idx(it->first + size, it->second + size)<<"]\n";*/
     res_border.insert(make_pair< int, int >
 	(ll_idx(it->first, it->second), ll_idx(it->first + size, it->second + size)));
-  }
 }
 
 void Bbox_Query_Statement::forecast(MYSQL* mysql)

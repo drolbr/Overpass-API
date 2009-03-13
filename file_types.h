@@ -159,59 +159,25 @@ struct Node_Id_Node_Range_Reader : public Node_Id_Node
     int32 buf_idx(ll_idx(*(int32*)&(buf[4]), *(int32*)&(buf[8])));
     it_inside = idxs_inside_.lower_bound(make_pair< int32, int32 >
 	(buf_idx, buf_idx));
+    if (it_inside != idxs_inside_.begin())
+      --it_inside;
     it_border = idxs_border_.lower_bound(make_pair< int32, int32 >
 	(buf_idx, buf_idx));
+    if (it_border != idxs_border_.begin())
+      --it_border;
   }
   
   void process(uint8* buf)
   {
     int32 buf_idx(ll_idx(*(int32*)&(buf[4]), *(int32*)&(buf[8])));
-/*    if (*(int32*)buf == 165269)
-    {
-      cout<<"[node found]\n";
-      cout<<'['<<buf_idx<<"]\n";
-      if (it_inside != idxs_inside_.end())
-	cout<<'['<<it_inside->first<<' '<<it_inside->second<<"]\n";
-      else
-	cout<<"[end]\n";
-      if (it_border != idxs_border_.end())
-	cout<<'['<<it_border->first<<' '<<it_border->second<<"]\n";
-      else
-	cout<<"[end]\n";
-    }*/
     while ((it_inside != idxs_inside_.end()) && (it_inside->second < buf_idx))
       ++it_inside;
     while ((it_border != idxs_border_.end()) && (it_border->second < buf_idx))
-    {
       ++it_border;
-/*      if (it_border != idxs_border_.end())
-	cout<<'['<<it_border->first<<' '<<it_border->second<<"]\n";
-      else
-	cout<<"[end]\n";*/
-    }
-/*    if (*(int32*)buf == 165269)
-    {
-      cout<<'['<<buf_idx<<"]\n";
-      if (it_inside != idxs_inside_.end())
-	cout<<'['<<it_inside->first<<' '<<it_inside->second<<"]\n";
-      else
-	cout<<"[end]\n";
-      if (it_border != idxs_border_.end())
-	cout<<'['<<it_border->first<<' '<<it_border->second<<"]\n";
-      else
-	cout<<"[end]\n";
-    }*/
     if ((it_inside != idxs_inside_.end()) && (buf_idx >= it_inside->first))
       result_inside_.insert(Node(*(int32*)&(buf[0]), *(int32*)&(buf[4]), *(int32*)&(buf[8])));
     if ((it_border != idxs_border_.end()) && (buf_idx >= it_border->first))
-    {
       result_border_.insert(Node(*(int32*)&(buf[0]), *(int32*)&(buf[4]), *(int32*)&(buf[8])));
-/*      if (*(int32*)buf == 165269)
-      {
-	cout<<"[node added]\n";
-      }*/
-/*      cout<<'['<<result_border_.size()<<"]\n";*/
-    }
   }
   
 private:
