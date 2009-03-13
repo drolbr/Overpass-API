@@ -37,226 +37,10 @@ typedef unsigned long long uint64;
 
 //-----------------------------------------------------------------------------
 
-int nodes_dat_fd;
-multimap< int, unsigned int > block_index_nd;
-uint32 max_node_id(0);
-int* wr_buf;
-int* rd_buf;
-
-void prepare_nodes()
-{
-  wr_buf = (int*) malloc(NODE_FILE_BLOCK_SIZE);
-  rd_buf = (int*) malloc(NODE_FILE_BLOCK_SIZE);
-  if ((!wr_buf) || (!rd_buf))
-  {
-    cerr<<"malloc: "<<errno<<'\n';
-    exit(0);
-  }
-  
-  nodes_dat_fd = open64(NODE_DATA, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-  close(nodes_dat_fd);
-  nodes_dat_fd = open64(NODE_DATA, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-  if (nodes_dat_fd < 0)
-  {
-    cerr<<"open64: "<<errno<<'\n';
-    exit(0);
-  }
-}
-
-void flush_nodes(const multimap< int, Node >& nodes)
-{
-  static int next_block_id(0);
-  
-  if (block_index_nd.empty())
-  {
-    unsigned int i(0);
-    Node* nodes_buf((Node*)(&wr_buf[1]));
-    
-    block_index_nd.insert(make_pair< int, unsigned int >(nodes.begin()->first, next_block_id++));
-    
-    multimap< int, Node >::const_iterator it(nodes.begin());
-    while (it != nodes.end())
-    {
-      if (i == BLOCKSIZE)
-      {
-	wr_buf[0] = i;
-	write(nodes_dat_fd, wr_buf, NODE_FILE_BLOCK_SIZE);
-	
-	block_index_nd.insert(make_pair< int, unsigned int >(it->first, next_block_id++));
-	i = 0;
-      }
-      
-      new (&nodes_buf[i]) Node(it->second);
-      if (it->second.id > (int32)max_node_id)
-	max_node_id = it->second.id;
-      ++it;
-      ++i;
-    }
-    if (i > 0)
-    {
-      wr_buf[0] = i;
-      write(nodes_dat_fd, wr_buf, NODE_FILE_BLOCK_SIZE);
-    }
-  }
-  else
-  {
-    multimap< int, Node >::const_iterator nodes_it(nodes.begin());
-    multimap< int, unsigned int >::const_iterator block_it(block_index_nd.begin());
-    unsigned int cur_block((block_it++)->second);
-    while (nodes_it != nodes.end())
-    {
-      while ((block_it != block_index_nd.end()) && (block_it->first <= nodes_it->first))
-	cur_block = (block_it++)->second;
-      
-      unsigned int new_element_count(0);
-      multimap< int, Node >::const_iterator nodes_it2(nodes_it);
-      if (block_it != block_index_nd.end())
-      {
-	while ((nodes_it2 != nodes.end()) && (block_it->first > nodes_it2->first))
-	{
-	  if (nodes_it2->second.id > (int32)max_node_id)
-	    max_node_id = nodes_it2->second.id;
-	  ++new_element_count;
-	  ++nodes_it2;
-	}
-      }
-      else
-      {
-	while (nodes_it2 != nodes.end())
-	{
-	  if (nodes_it2->second.id > (int32)max_node_id)
-	    max_node_id = nodes_it2->second.id;
-	  ++new_element_count;
-	  ++nodes_it2;
-	}
-      }
-      
-      lseek64(nodes_dat_fd, (int64)cur_block*(NODE_FILE_BLOCK_SIZE), SEEK_SET);
-      read(nodes_dat_fd, rd_buf, NODE_FILE_BLOCK_SIZE);
-      new_element_count += rd_buf[0];
-      
-      int i(0);
-      while (new_element_count > BLOCKSIZE)
-      {
-	unsigned int blocksize(new_element_count/(new_element_count/BLOCKSIZE + 1));
-	
-	unsigned int j(0);
-	wr_buf[0] = blocksize;
-	Node* nodes_rd_buf((Node*)(&rd_buf[1]));
-	Node* nodes_wr_buf((Node*)(&wr_buf[1]));
-	while ((j < blocksize) && (nodes_it != nodes_it2) && (i < rd_buf[0]))
-	{
-	  if (nodes_it->first < ll_idx(nodes_rd_buf[i].lat, nodes_rd_buf[i].lon))
-	    new (&nodes_wr_buf[j++]) Node((nodes_it++)->second);
-	  else
-	    new (&nodes_wr_buf[j++]) Node(nodes_rd_buf[i++]);
-	}
-	while ((j < blocksize) && (nodes_it != nodes_it2))
-	  new (&nodes_wr_buf[j++]) Node((nodes_it++)->second);
-	while ((j < blocksize) && (i < rd_buf[0]))
-	  new (&nodes_wr_buf[j++]) Node(nodes_rd_buf[i++]);
-	
-	lseek64(nodes_dat_fd, (int64)cur_block*(NODE_FILE_BLOCK_SIZE), SEEK_SET);
-	write(nodes_dat_fd, wr_buf, NODE_FILE_BLOCK_SIZE);
-	
-	cur_block = next_block_id;
-	if ((i >= rd_buf[0]) || (nodes_it->first < ll_idx(nodes_rd_buf[i].lat, nodes_rd_buf[i].lon)))
-	  block_index_nd.insert(make_pair< int, unsigned int >(nodes_it->first, next_block_id++));
-	else
-	  block_index_nd.insert(make_pair< int, unsigned int >
-	      (ll_idx(nodes_rd_buf[i].lat, nodes_rd_buf[i].lon), next_block_id++));
-	new_element_count -= blocksize;	
-      }
-      
-      unsigned int j(0);
-      wr_buf[0] = new_element_count;
-      Node* nodes_rd_buf((Node*)(&rd_buf[1]));
-      Node* nodes_wr_buf((Node*)(&wr_buf[1]));
-      while ((nodes_it != nodes_it2) && (i < rd_buf[0]))
-      {
-	if (nodes_it->first < ll_idx(nodes_rd_buf[i].lat, nodes_rd_buf[i].lon))
-	  new (&nodes_wr_buf[j++]) Node((nodes_it++)->second);
-	else
-	  new (&nodes_wr_buf[j++]) Node(nodes_rd_buf[i++]);
-      }
-      while (nodes_it != nodes_it2)
-	new (&nodes_wr_buf[j++]) Node((nodes_it++)->second);
-      while (i < rd_buf[0])
-	new (&nodes_wr_buf[j++]) Node(nodes_rd_buf[i++]);
-	
-      lseek64(nodes_dat_fd, (int64)cur_block*(NODE_FILE_BLOCK_SIZE), SEEK_SET);
-      write(nodes_dat_fd, wr_buf, NODE_FILE_BLOCK_SIZE);
-      
-      nodes_it = nodes_it2;
-    }
-  }
-}
-
-void nodes_make_block_index()
-{
-  pair< int, unsigned int >* buf = (pair< int, unsigned int >*)
-      malloc(sizeof(int)*2*block_index_nd.size());
-  if (!buf)
-  {
-    cerr<<"malloc: "<<errno<<'\n';
-    exit(0);
-  }
-  
-  unsigned int i(0);
-  for (multimap< int, unsigned int >::const_iterator it(block_index_nd.begin());
-       it != block_index_nd.end(); ++it)
-    buf[i++] = *it;
-  
-  int nodes_idx_fd = open64(NODE_IDX, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-  write(nodes_idx_fd, buf, sizeof(int)*2*block_index_nd.size());
-  close(nodes_idx_fd);
-  
-  free(buf);
-}
-
-void nodes_make_id_index(int32* rd_buf)
-{
-  int nodes_dat_fd = open64(NODE_DATA, O_RDONLY);
-
-  uint16* idx_buf = (uint16*) malloc(sizeof(uint16)*max_node_id);
-  if (!idx_buf)
-  {
-    cerr<<"malloc: "<<errno<<'\n';
-    exit(0);
-  }
-  
-  lseek64(nodes_dat_fd, 0, SEEK_SET);
-  for (unsigned int i(0); i < block_index_nd.size(); ++i)
-  {
-    read(nodes_dat_fd, rd_buf, NODE_FILE_BLOCK_SIZE);
-    
-    Node* nodes_rd_buf((Node*)(&rd_buf[1]));
-    for (int j(0); j < rd_buf[0]; ++j)
-      idx_buf[nodes_rd_buf[j].id-1] = i;
-  }
-  int nodes_idx_fd = open64(NODE_IDXA, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-  write(nodes_idx_fd, idx_buf, sizeof(uint16)*max_node_id);
-  close(nodes_idx_fd);
-  
-  free(idx_buf);
-  
-  close(nodes_dat_fd);
-}
-
 void postprocess_nodes(Node_Id_Node_Writer& node_writer)
 {
-  free(wr_buf);
-  wr_buf = 0;
-  
   make_block_index< Node_Id_Node_Writer >(node_writer);
   make_id_index< Node_Id_Node_Writer >(node_writer);
-  nodes_make_block_index();
-  close(nodes_dat_fd);
-  nodes_make_id_index(rd_buf);
-  
-  free(rd_buf);
-  rd_buf = 0;
-  
 }
 
 //-----------------------------------------------------------------------------
@@ -264,6 +48,7 @@ void postprocess_nodes(Node_Id_Node_Writer& node_writer)
 const unsigned int WAY_FLUSH_INTERVAL = 32*1024*1024;
 const unsigned int WAY_DOT_INTERVAL = 512*1024;
 
+uint32 max_node_id(0);
 uint32 max_way_id(0);
 
 struct C_Way
@@ -469,28 +254,6 @@ void flush_ways(const multimap< int, C_Way >& ways)
   }
 }
 
-void prepare_nodes_chunk(uint32 offset, uint32 count, uint32* ll_idx_buf)
-{
-  int nodes_dat_fd = open64(NODE_DATA, O_RDONLY);
-  
-  int* rd_buf = (int*) malloc(NODE_FILE_BLOCK_SIZE);
-  Node* nodes_rd_buf((Node*)(&rd_buf[1]));
-  
-  while (read(nodes_dat_fd, rd_buf, NODE_FILE_BLOCK_SIZE))
-  {
-    for (int j(0); j < rd_buf[0]; ++j)
-    {
-      if (((uint32)(nodes_rd_buf[j].id) >= offset) && (nodes_rd_buf[j].id - offset < count))
-        ll_idx_buf[nodes_rd_buf[j].id - offset] = ll_idx(nodes_rd_buf[j].lat, nodes_rd_buf[j].lon);
-    }
-  }
-  
-  free(rd_buf);
-  rd_buf = 0;
-  
-  close(nodes_dat_fd);
-}
-
 void postprocess_ways(int fd, uint32*& buf)
 {
   close(fd);
@@ -529,9 +292,8 @@ void postprocess_ways_2()
   {
     C_Way way;
     cerr<<'n';
-/*    Node_Id_Node_Dump dump(offset, count, ll_idx);
-    select_all< Node_Id_Node_Dump >(dump);*/
-    prepare_nodes_chunk(offset, count, ll_idx);
+    Node_Id_Node_Dump dump(offset, count, ll_idx);
+    select_all< Node_Id_Node_Dump >(dump);
     cerr<<'n';
     lseek64(ways_tmp_fd, 0, SEEK_SET);
     
@@ -649,9 +411,8 @@ void postprocess_ways_4()
   while (offset < max_node_id)
   {
     cerr<<'n';
-/*    Node_Id_Node_Dump dump(offset, count, ll_idx);
-    select_all< Node_Id_Node_Dump >(dump);*/
-    prepare_nodes_chunk(offset, count, ll_idx);
+    Node_Id_Node_Dump dump(offset, count, ll_idx);
+    select_all< Node_Id_Node_Dump >(dump);
     cerr<<'n';
     
     lseek64(ways_dat_fd, 0, SEEK_SET);
@@ -768,6 +529,9 @@ void start(const char *el, const char **attr)
     current_type = NODE;
     current_id = id;
     current_ll_idx = ll_idx(lat, lon);
+    
+    if (id > max_node_id)
+      max_node_id = id;
   }
   else if (!strcmp(el, "way"))
   {
@@ -775,7 +539,6 @@ void start(const char *el, const char **attr)
     {
       flush_data< Node_Id_Node_Writer >
         (node_writer, nodes.begin(), nodes.end());
-      flush_nodes(nodes);
       nodes.clear();
       
       flush_node_tags(current_run, node_tags);
@@ -785,6 +548,7 @@ void start(const char *el, const char **attr)
       node_tag_split_and_index(current_run, split_idx, block_of_id);
       node_tag_create_id_node_idx(block_of_id);
       node_tag_create_node_id_idx(block_of_id, max_node_id);
+      node_tag_id_statistics();
       
       postprocess_nodes(node_writer);
       
@@ -849,7 +613,6 @@ void end(const char *el)
     {
       flush_data< Node_Id_Node_Writer >
         (node_writer, nodes.begin(), nodes.end());
-      flush_nodes(nodes);
       nodes.clear();
     }
     
@@ -860,32 +623,6 @@ void end(const char *el)
 int main(int argc, char *argv[])
 {
   cerr<<(uintmax_t)time(NULL)<<'\n';
-  
-  //TEMP
-  uint32 max_nodes_ram(150*1000*1000), max_nodes(400*1000*1000), offset(0), count(max_nodes_ram);
-  uint32* ll_idx_1 = (uint32*) calloc(count, sizeof(int32));
-  uint32* ll_idx_2 = (uint32*) calloc(count, sizeof(int32));
-  while (offset < max_nodes)
-  {
-    if (count > max_nodes - offset)
-      count = max_nodes - offset;
-    
-    Node_Id_Node_Dump dump(offset, count, ll_idx_1);
-    select_all< Node_Id_Node_Dump >(dump);
-    prepare_nodes_chunk(offset, count, ll_idx_2);
-    
-    for (uint32 i(0); i < count; ++i)
-    {
-      if (ll_idx_1[i] != ll_idx_2[i])
-        cout<<i<<' '<<ll_idx_1[i]<<' '<<ll_idx_2[i]<<'\n';
-    }
-    cout<<"---\n";
-    
-    offset += count;
-  }
-  free(ll_idx_1);
-  free(ll_idx_2);
-  exit(0);
   
   //TEMP
 /*  max_node_id = 400*1000*1000;
@@ -917,8 +654,6 @@ int main(int argc, char *argv[])
     cerr<<"\nopen64: "<<e.error_number<<'\n';
   }*/
   
-  prepare_nodes();
-  
   state = NODES;
   
   try
@@ -935,13 +670,13 @@ int main(int argc, char *argv[])
   {
     flush_data< Node_Id_Node_Writer >
       (node_writer, nodes.begin(), nodes.end());
-    flush_nodes(nodes);
     nodes.clear();
       
     node_tag_statistics(current_run, split_idx);
     node_tag_split_and_index(current_run, split_idx, block_of_id);
     node_tag_create_id_node_idx(block_of_id);
     node_tag_create_node_id_idx(block_of_id, max_node_id);
+    node_tag_id_statistics();
       
     postprocess_nodes(node_writer);
   }

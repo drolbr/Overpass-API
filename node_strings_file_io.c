@@ -507,28 +507,6 @@ struct node_idx_less : public binary_function< uint32, uint32, bool >
     uint32* ll_idx_;
 };
 
-static void prepare_nodes_chunk(uint32 offset, uint32 count, uint32* ll_idx_buf)
-{
-  int nodes_dat_fd = open64(NODE_DATA, O_RDONLY);
-  
-  int* rd_buf = (int*) malloc(NODE_FILE_BLOCK_SIZE);
-  Node* nodes_rd_buf((Node*)(&rd_buf[1]));
-  
-  while (read(nodes_dat_fd, rd_buf, NODE_FILE_BLOCK_SIZE))
-  {
-    for (int j(0); j < rd_buf[0]; ++j)
-    {
-      if (((uint32)(nodes_rd_buf[j].id) >= offset) && (nodes_rd_buf[j].id - offset < count))
-	ll_idx_buf[nodes_rd_buf[j].id - offset] = ll_idx(nodes_rd_buf[j].lat, nodes_rd_buf[j].lon);
-    }
-  }
-  
-  free(rd_buf);
-  rd_buf = 0;
-  
-  close(nodes_dat_fd);
-}
-
 void node_tag_create_node_id_idx(uint32* block_of_id, uint32 max_node_id)
 {
   const uint32 max_nodes_ram = 32*1024*1024;
@@ -559,9 +537,8 @@ void node_tag_create_node_id_idx(uint32* block_of_id, uint32 max_node_id)
     env.ids_of_node.resize(count);
   
     cerr<<'n';
-/*    Node_Id_Node_Dump dump(env.offset, count, ll_idx_);
-    select_all< Node_Id_Node_Dump >(dump);*/
-    prepare_nodes_chunk(env.offset, count, ll_idx_);
+    Node_Id_Node_Dump dump(env.offset, count, ll_idx_);
+    select_all< Node_Id_Node_Dump >(dump);
     cerr<<'n';
     lseek64(source_fd, 0, SEEK_SET);
     

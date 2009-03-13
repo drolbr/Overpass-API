@@ -52,9 +52,9 @@ const int NODE_STRING_BLOCK_SIZE = 1024*1024;
 
 //-----------------------------------------------------------------------------
 
-static const char* NODE_DATA = "/opt/osm_why_api/nodes.dat";
-static const char* NODE_IDX = "/opt/osm_why_api/nodes.b.idx";
-static const char* NODE_IDXA = "/opt/osm_why_api/nodes.1.idx";
+// static const char* NODE_DATA = "/opt/osm_why_api/nodes.dat";
+// static const char* NODE_IDX = "/opt/osm_why_api/nodes.b.idx";
+// static const char* NODE_IDXA = "/opt/osm_why_api/nodes.1.idx";
 
 static const char* WAY_DATA = "/opt/osm_why_api/ways.dat";
 static const char* WAY_IDX = "/opt/osm_why_api/ways.b.idx";
