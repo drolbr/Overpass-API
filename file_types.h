@@ -32,9 +32,9 @@ typedef unsigned long long uint64;
 
 static const char* DATADIR = "/opt/osm_why_api/";
 
-static const char* NODE_ID_NODE_FILE = "nodes_2.dat";
-static const char* NODE_ID_NODE_IDX = "nodes_2.idx";
-static const char* NODE_ID_NODE_IDIDX = "nodes_2.i.idx";
+static const char* NODE_ID_NODE_FILE = "nodes.dat";
+static const char* NODE_ID_NODE_IDX = "nodes.idx";
+static const char* NODE_ID_NODE_IDIDX = "nodes.i.idx";
 static const char* NODE_TAG_ID_NODE_LOCAL_FILE = "node_tag_id_node_local.dat";
 static const char* NODE_TAG_ID_NODE_LOCAL_IDX = "node_tag_id_node_local.idx";
 static const char* NODE_TAG_ID_NODE_GLOBAL_FILE = "node_tag_id_node_global.dat";
@@ -51,10 +51,6 @@ const uint NODE_TAG_SPATIAL_PARTS = 32;
 const int NODE_STRING_BLOCK_SIZE = 1024*1024;
 
 //-----------------------------------------------------------------------------
-
-// static const char* NODE_DATA = "/opt/osm_why_api/nodes.dat";
-// static const char* NODE_IDX = "/opt/osm_why_api/nodes.b.idx";
-// static const char* NODE_IDXA = "/opt/osm_why_api/nodes.1.idx";
 
 static const char* WAY_DATA = "/opt/osm_why_api/ways.dat";
 static const char* WAY_IDX = "/opt/osm_why_api/ways.b.idx";
