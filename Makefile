@@ -107,8 +107,14 @@ osm2load_infile.o: osm2load_infile.c script_datatypes.h expat_justparse_interfac
 import_osm_nw: expat_justparse_interface.o node_strings_file_io.o import_osm_nw.o
 	g++ -o import_osm_nw -O3 -Wall -lexpat expat_justparse_interface.o node_strings_file_io.o import_osm_nw.o `mysql_config --libs`
 	
+update_database: expat_justparse_interface.o node_strings_file_io.o update_database.o
+	g++ -o update_database -O3 -Wall -lexpat expat_justparse_interface.o node_strings_file_io.o update_database.o `mysql_config --libs`
+	
 import_osm_nw.o: import_osm_nw.c script_datatypes.h expat_justparse_interface.h raw_file_db.h file_types.h node_strings_file_io.h
 	g++ -c -O3 -Wall `mysql_config --include` import_osm_nw.c
+
+update_database.o: update_database.c script_datatypes.h expat_justparse_interface.h raw_file_db.h file_types.h node_strings_file_io.h
+	g++ -c -O3 -Wall `mysql_config --include` update_database.c
 
 node_strings_file_io.o: node_strings_file_io.c node_strings_file_io.h raw_file_db.h file_types.h script_datatypes.h
 	g++ -c -O3 -Wall node_strings_file_io.c
