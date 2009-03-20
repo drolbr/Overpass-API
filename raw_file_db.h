@@ -270,12 +270,6 @@ void delete_insert(T& env)
   int next_block_id(block_index.size());
   
   //TEMP
-  for (typename multimap< typename T::Index, uint16 >::const_iterator it(block_index.begin());
-       it != block_index.end(); ++it)
-    cout<<it->first<<'\t'<<it->second<<'\n';
-  cout<<"---\n";
-  
-  //TEMP
   int dest_fd = open64(env.data_file().c_str(), O_RDONLY);
 /*  int dest_fd = open64(env.data_file().c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);*/
   if (dest_fd < 0)
@@ -322,18 +316,9 @@ void delete_insert(T& env)
       uint32 size_of_buf(env.size_of_buf(&(source_buf[pos])));
       if (deletion_buf[elem_count])
 	new_byte_count += size_of_buf;
-      //TEMP
-      else
-/*	cout<<*(int32*)&(source_buf[pos])<<'\n';*/
-      cout<<*(int32*)&(source_buf[pos])<<'\t'
-	  <<*(int32*)&(source_buf[pos+4])<<'\t'
-	  <<*(int32*)&(source_buf[pos+8])<<'\t'
-	  <<(uint32)deletion_buf[elem_count]<<'\n';
       ++elem_count;
       pos += size_of_buf;
     }
-    //TEMP
-    cout<<"---\n";
     
     uint32 i(sizeof(uint32));
     elem_count = 0;
@@ -389,15 +374,6 @@ void delete_insert(T& env)
       lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
       //TEMP
-      uint32 pos(sizeof(uint32));
-      while (pos < *((uint32*)dest_buf) + sizeof(uint32))
-      {
-	cout<<*(int32*)&(dest_buf[pos])<<'\t'
-	    <<*(int32*)&(dest_buf[pos+4])<<'\t'
-	    <<*(int32*)&(dest_buf[pos+8])<<'\n';
-	pos += env.size_of_buf(&(dest_buf[pos]));
-      }
-      cout<<"---\n";
 //       write(dest_fd, dest_buf, BLOCKSIZE);
 
       cur_block = next_block_id;
@@ -449,19 +425,7 @@ void delete_insert(T& env)
     lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
     //TEMP
-    uint32 pos2(sizeof(uint32));
-    while (pos2 < *((uint32*)dest_buf) + sizeof(uint32))
-    {
-      cout<<*(int32*)&(dest_buf[pos2])<<'\t'
-	  <<*(int32*)&(dest_buf[pos2+4])<<'\t'
-	  <<*(int32*)&(dest_buf[pos2+8])<<'\n';
-      pos2 += env.size_of_buf(&(dest_buf[pos2]));
-    }
-    cout<<"---\n";
     /*    write(dest_fd, dest_buf, BLOCKSIZE);*/
-    static uint count(0);
-    if (++count >= 3)
-      return;
   }
     
   free(source_buf);
