@@ -37,7 +37,12 @@ typedef unsigned long long uint64;
 
 //-----------------------------------------------------------------------------
 
+uint edit_status(0);
+const uint CREATE = 1;
+const uint DELETE = 2;
+const uint MODIFY = 3;
 set< int32 > t_delete_nodes;
+set< Node > new_nodes;
 
 void start(const char *el, const char **attr)
 {
@@ -69,6 +74,8 @@ void start(const char *el, const char **attr)
 	lon = (int)in_lat_lon(attr[i+1]);
     }
     t_delete_nodes.insert(id);
+    if ((edit_status == CREATE) || (edit_status == MODIFY))
+      new_nodes.insert(Node(id, lat, lon));
   }
   else if (!strcmp(el, "way"))
   {
@@ -76,6 +83,12 @@ void start(const char *el, const char **attr)
   else if (!strcmp(el, "relation"))
   {
   }
+  else if (!strcmp(el, "create"))
+    edit_status = CREATE;
+  else if (!strcmp(el, "modify"))
+    edit_status = MODIFY;
+  else if (!strcmp(el, "delete"))
+    edit_status = DELETE;
 }
 
 void end(const char *el)
@@ -92,6 +105,12 @@ void end(const char *el)
   else if (!strcmp(el, "relation"))
   {
   }
+  else if (!strcmp(el, "create"))
+    edit_status = 0;
+  else if (!strcmp(el, "modify"))
+    edit_status = 0;
+  else if (!strcmp(el, "delete"))
+    edit_status = 0;
 }
 
 int main(int argc, char *argv[])
@@ -111,6 +130,10 @@ int main(int argc, char *argv[])
     
     for (set< Node >::const_iterator it(delete_nodes.begin());
 	 it != delete_nodes.end(); ++it)
+      cout<<it->id<<'\t'<<it->lat<<'\t'<<it->lon<<'\n';
+    cout<<"---\n";
+    for (set< Node >::const_iterator it(new_nodes.begin());
+	 it != new_nodes.end(); ++it)
       cout<<it->id<<'\t'<<it->lat<<'\t'<<it->lon<<'\n';
   }
   catch(File_Error e)
