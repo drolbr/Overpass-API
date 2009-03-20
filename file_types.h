@@ -320,6 +320,98 @@ private:
     multimap< Index, uint16 > block_index_;
 };
 
+struct Node_Id_Node_Updater : public Node_Id_Node
+{
+  Node_Id_Node_Updater(const set< Node >& delete_nodes, const set< Node >& new_nodes)
+    : data(), block_index_()
+  {
+    for (set< Node >::const_iterator it(delete_nodes.begin()); it != delete_nodes.end(); ++it)
+      data.insert(make_pair< pair< int32, int32 >, pair< bool, Node > >
+	  (make_pair< int32, int32 >(ll_idx(it->lat, it->lon), it->id),
+	   make_pair< bool, Node >(false, *it)));
+    for (set< Node >::const_iterator it(new_nodes.begin()); it != new_nodes.end(); ++it)
+      data.insert(make_pair< pair< int32, int32 >, pair< bool, Node > >
+	  (make_pair< int32, int32 >(ll_idx(it->lat, it->lon), it->id),
+	   make_pair< bool, Node >(true, *it)));
+  }
+  
+  const multimap< Index, uint16 >& block_index() const { return block_index_; }
+  multimap< Index, uint16 >& block_index() { return block_index_; }
+  
+  typedef multimap< pair< int32, int32 >, pair< bool, Node > >::const_iterator Iterator;
+  Iterator elem_begin() { return data.begin(); }
+  Iterator elem_end() { return data.end(); }
+  
+  uint32 size_of(const Iterator& it) const
+  {
+    if (it->second.first)
+      return (3*sizeof(uint32));
+    else
+      return 0;
+  }
+  
+  Index index_of(const Iterator& it) const
+  {
+    return (it->first.first);
+  }
+  
+  Index index_of_buf(uint8* elem) const
+  {
+    return (ll_idx(*(int32*)&(elem[4]), *(int32*)&(elem[8])));
+  }
+  
+  int32 compare(const Iterator& it, uint8* buf) const
+  {
+    if (it->first.first < ll_idx(*(int32*)&(buf[4]), *(int32*)&(buf[8])))
+      return RAW_DB_LESS;
+    else if (it->first.first > ll_idx(*(int32*)&(buf[4]), *(int32*)&(buf[8])))
+      return RAW_DB_GREATER;
+    if (it->first.second < *(int32*)&(buf[0]))
+      return RAW_DB_LESS;
+    else
+      return RAW_DB_GREATER;
+  }
+  
+  void to_buf(uint8* dest, const Iterator& it) const
+  {
+    if (it->second.first)
+    {
+      *(uint32*)&(dest[0]) = it->second.second.id;
+      *(int32*)&(dest[4]) = it->second.second.lat;
+      *(int32*)&(dest[8]) = it->second.second.lon;
+    }
+  }
+  
+  uint8 keep_this_elem(uint8* elem) const
+  {
+    int32 ll_idx_(ll_idx(*(int32*)&(elem[4]), *(int32*)&(elem[8])));
+    Iterator it(data.lower_bound(make_pair< int32, int32 >(ll_idx_, *(int32*)&(elem[0]))));
+    while ((it != data.end()) && (it->first.second == *(int32*)&(elem[0])))
+    {
+      if ((!(it->second.first)) && (it->second.second.id == *(int32*)&(elem[0])))
+        return 0;
+      ++it;
+    }
+    return 1;
+  }
+  
+  void index_to_buf(uint8* dest, const uint32& i) const
+  {
+    *(uint32*)&(dest[0]) = i;
+  }
+
+  uint32 id_of_buf(uint8* elem) const
+  {
+    return (*(int32*)&(elem[0]));
+  }
+  
+  uint32 first_new_block() const { return 0; }
+  
+private:
+    multimap< pair< int32, int32 >, pair< bool, Node > > data;
+    multimap< Index, uint16 > block_index_;
+};
+
 //-----------------------------------------------------------------------------
 
 struct Tag_Id_Node_Local

@@ -233,6 +233,246 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
 
 //-----------------------------------------------------------------------------
 
+// constraints:
+// all flush_data constraints
+template< class T >
+void delete_insert(T& env)
+{
+  if (env.elem_begin() == env.elem_end())
+    return;
+  
+  const uint32 BLOCKSIZE(env.blocksize());
+  multimap< typename T::Index, uint16 >& block_index(env.block_index());
+  
+  if (block_index.empty())
+  {
+    int idx_fd = open64(env.index_file().c_str(), O_RDONLY);
+    if (idx_fd < 0)
+      throw File_Error(errno, env.index_file(), "delete_insert:1");
+  
+    uint32 idx_file_size(lseek64(idx_fd, 0, SEEK_END));
+    char* idx_buf = (char*) malloc(idx_file_size);
+    lseek64(idx_fd, 0, SEEK_SET);
+    read(idx_fd, idx_buf, idx_file_size);
+    uint32 i(0);
+    while (i < idx_file_size)
+    {
+      block_index.insert(make_pair< typename T::Index, uint16 >
+	  (*((typename T::Index*)&(idx_buf[i])),
+	      *(uint16*)&(idx_buf[i + env.size_of_Index()])));
+      i += env.size_of_Index() + sizeof(uint16);
+    }
+    free(idx_buf);
+  
+    close(idx_fd);
+  }
+  
+  int next_block_id(block_index.size());
+  
+  //TEMP
+  for (typename multimap< typename T::Index, uint16 >::const_iterator it(block_index.begin());
+       it != block_index.end(); ++it)
+    cout<<it->first<<'\t'<<it->second<<'\n';
+  cout<<"---\n";
+  
+  //TEMP
+  int dest_fd = open64(env.data_file().c_str(), O_RDONLY);
+/*  int dest_fd = open64(env.data_file().c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);*/
+  if (dest_fd < 0)
+    throw File_Error(errno, env.data_file(), "delete_insert:2");
+  
+  uint8* source_buf = (uint8*) malloc(BLOCKSIZE);
+  uint8* deletion_buf = (uint8*) malloc(BLOCKSIZE);
+  uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
+  
+  typename T::Iterator elem_it(env.elem_begin());
+  typename multimap< typename T::Index, uint16 >::const_iterator block_it(block_index.begin());
+  unsigned int cur_block((block_it++)->second);
+  while (elem_it != env.elem_end())
+  {
+    while ((block_it != block_index.end()) && (block_it->first <= env.index_of(elem_it)))
+      cur_block = (block_it++)->second;
+
+    uint32 new_byte_count(0);
+    typename T::Iterator elem_it2(elem_it);
+    if (block_it != block_index.end())
+    {
+      while ((elem_it2 != env.elem_end()) && (block_it->first > env.index_of(elem_it2)))
+      {
+	new_byte_count += env.size_of(elem_it2);
+	++elem_it2;
+      }
+    }
+    else
+    {
+      while (elem_it2 != env.elem_end())
+      {
+	new_byte_count += env.size_of(elem_it2);
+	++elem_it2;
+      }
+    }
+    
+    lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
+    read(dest_fd, source_buf, BLOCKSIZE);
+    uint32 pos(sizeof(uint32));
+    uint32 elem_count(0);
+    while (pos < *((uint32*)source_buf) + sizeof(uint32))
+    {
+      deletion_buf[elem_count] = env.keep_this_elem(&(source_buf[pos]));
+      uint32 size_of_buf(env.size_of_buf(&(source_buf[pos])));
+      if (deletion_buf[elem_count])
+	new_byte_count += size_of_buf;
+      //TEMP
+      else
+/*	cout<<*(int32*)&(source_buf[pos])<<'\n';*/
+      cout<<*(int32*)&(source_buf[pos])<<'\t'
+	  <<*(int32*)&(source_buf[pos+4])<<'\t'
+	  <<*(int32*)&(source_buf[pos+8])<<'\t'
+	  <<(uint32)deletion_buf[elem_count]<<'\n';
+      ++elem_count;
+      pos += size_of_buf;
+    }
+    //TEMP
+    cout<<"---\n";
+    
+    uint32 i(sizeof(uint32));
+    elem_count = 0;
+    while (new_byte_count > BLOCKSIZE)
+    {
+      uint32 blocksize(new_byte_count/(new_byte_count/BLOCKSIZE + 1));
+        
+      uint32 j(sizeof(uint32));
+      while ((j < blocksize) &&
+	      (elem_it != elem_it2) && (i < ((uint32*)source_buf)[0]) &&
+	      (j < BLOCKSIZE - env.size_of(elem_it)) &&
+	      (j < BLOCKSIZE - env.size_of_buf(&(source_buf[i]))))
+      {
+	int cmp_val(env.compare(elem_it, &(source_buf[i])));
+	if (cmp_val == RAW_DB_LESS)
+	{
+	  env.to_buf(&(dest_buf[j]), elem_it);
+	  j += env.size_of(elem_it);
+	  ++elem_it;
+	}
+	else if (cmp_val == RAW_DB_GREATER)
+	{
+	  if (deletion_buf[elem_count])
+	  {
+	    memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
+	    j += env.size_of_buf(&(source_buf[i]));
+	  }
+	  ++elem_count;
+	  i += env.size_of_buf(&(source_buf[i]));
+	}
+      }
+      while ((j < blocksize) &&
+	      (elem_it != elem_it2) && (j < BLOCKSIZE - env.size_of(elem_it)) &&
+	      ((i >= ((uint32*)source_buf)[0]) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_LESS)))
+      {
+	env.to_buf(&(dest_buf[j]), elem_it);
+	j += env.size_of(elem_it);
+	++elem_it;
+      }
+      while ((j < blocksize) &&
+	      (i < ((uint32*)source_buf)[0]) && (j < BLOCKSIZE - env.size_of_buf(&(source_buf[i]))) &&
+	      ((elem_it == elem_it2) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_GREATER)))
+      {
+	if (deletion_buf[elem_count])
+	{
+	  memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
+	  j += env.size_of_buf(&(source_buf[i]));
+	}
+	++elem_count;
+	i += env.size_of_buf(&(source_buf[i]));
+      }
+
+      lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
+      ((uint32*)dest_buf)[0] = j - sizeof(uint32);
+      //TEMP
+      uint32 pos(sizeof(uint32));
+      while (pos < *((uint32*)dest_buf) + sizeof(uint32))
+      {
+	cout<<*(int32*)&(dest_buf[pos])<<'\t'
+	    <<*(int32*)&(dest_buf[pos+4])<<'\t'
+	    <<*(int32*)&(dest_buf[pos+8])<<'\n';
+	pos += env.size_of_buf(&(dest_buf[pos]));
+      }
+      cout<<"---\n";
+//       write(dest_fd, dest_buf, BLOCKSIZE);
+
+      cur_block = next_block_id;
+      if ((i >= ((uint32*)source_buf)[0]) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_LESS))
+	block_index.insert(make_pair< typename T::Index, uint16 >(env.index_of(elem_it), next_block_id++));
+      else
+	block_index.insert(make_pair< typename T::Index, uint16 >
+	    (env.index_of_buf(&(source_buf[i])), next_block_id++));
+      new_byte_count -= (j - sizeof(uint32));
+    }
+    
+    uint32 j(sizeof(uint32));
+    while ((elem_it != elem_it2) && (i < ((uint32*)source_buf)[0]))
+    {
+      int cmp_val(env.compare(elem_it, &(source_buf[i])));
+      if (cmp_val == RAW_DB_LESS)
+      {
+	env.to_buf(&(dest_buf[j]), elem_it);
+	j += env.size_of(elem_it);
+	++elem_it;
+      }
+      else if (cmp_val == RAW_DB_GREATER)
+      {
+	if (deletion_buf[elem_count])
+	{
+	  memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
+	  j += env.size_of_buf(&(source_buf[i]));
+	}
+	++elem_count;
+	i += env.size_of_buf(&(source_buf[i]));
+      }
+    }
+    while (elem_it != elem_it2)
+    {
+      env.to_buf(&(dest_buf[j]), elem_it);
+      j += env.size_of(elem_it);
+      ++elem_it;
+    }
+    while (i < ((uint32*)source_buf)[0])
+    {
+      if (deletion_buf[elem_count])
+      {
+	memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
+	j += env.size_of_buf(&(source_buf[i]));
+      }
+      ++elem_count;
+      i += env.size_of_buf(&(source_buf[i]));
+    }
+    lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
+    ((uint32*)dest_buf)[0] = j - sizeof(uint32);
+    //TEMP
+    uint32 pos2(sizeof(uint32));
+    while (pos2 < *((uint32*)dest_buf) + sizeof(uint32))
+    {
+      cout<<*(int32*)&(dest_buf[pos2])<<'\t'
+	  <<*(int32*)&(dest_buf[pos2+4])<<'\t'
+	  <<*(int32*)&(dest_buf[pos2+8])<<'\n';
+      pos2 += env.size_of_buf(&(dest_buf[pos2]));
+    }
+    cout<<"---\n";
+    /*    write(dest_fd, dest_buf, BLOCKSIZE);*/
+    static uint count(0);
+    if (++count >= 3)
+      return;
+  }
+    
+  free(source_buf);
+  free(deletion_buf);
+  free(dest_buf);
+
+  close(dest_fd);
+}
+
+//-----------------------------------------------------------------------------
+
 template< class T >
 void make_block_index(const T& env)
 {
