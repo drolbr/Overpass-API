@@ -134,12 +134,20 @@ int main(int argc, char *argv[])
     parse(stdin, start, end);
     
     //retrieving old coordinates of the nodes that will be deleted
+    cerr<<(uintmax_t)time(NULL)<<'\n';
     Node_Id_Node_By_Id_Reader reader(t_delete_nodes, delete_nodes);
     select_by_id< Node_Id_Node_By_Id_Reader >(reader);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
     
     //updating the nodes file
+    cerr<<(uintmax_t)time(NULL)<<'\n';
     Node_Id_Node_Updater node_updater(delete_nodes, new_nodes);
     delete_insert< Node_Id_Node_Updater >(node_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    make_block_index< Node_Id_Node_Updater >(node_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    update_id_index< Node_Id_Node_Updater >(node_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
     
     map< pair< string, string >, set< uint32 > > kv_local_ids;
     map< pair< string, string >, set< uint32 > > kv_global_ids;

@@ -342,6 +342,9 @@ struct Node_Id_Node_Updater : public Node_Id_Node
   Iterator elem_begin() { return data.begin(); }
   Iterator elem_end() { return data.end(); }
   
+  typedef vector< uint16 >::const_iterator Id_Block_Iterator;
+  Id_Block_Iterator block_of_elem_begin() { return block_ids.begin(); }
+  
   uint32 size_of(const Iterator& it) const
   {
     if (it->second.first)
@@ -372,13 +375,14 @@ struct Node_Id_Node_Updater : public Node_Id_Node
       return RAW_DB_GREATER;
   }
   
-  void to_buf(uint8* dest, const Iterator& it) const
+  void to_buf(uint8* dest, const Iterator& it, uint16 block_id)
   {
     if (it->second.first)
     {
       *(uint32*)&(dest[0]) = it->second.second.id;
       *(int32*)&(dest[4]) = it->second.second.lat;
       *(int32*)&(dest[8]) = it->second.second.lon;
+      block_ids.push_back(block_id);
     }
   }
   
@@ -400,16 +404,24 @@ struct Node_Id_Node_Updater : public Node_Id_Node
     *(uint32*)&(dest[0]) = i;
   }
 
+  int32 id_of(const Iterator& it) const
+  {
+    return it->second.second.id;
+  }
+  
   uint32 id_of_buf(uint8* elem) const
   {
     return (*(int32*)&(elem[0]));
   }
   
-  uint32 first_new_block() const { return 0; }
+  void set_first_new_block(uint16 block_id) { first_new_block_ = block_id; }
+  uint16 first_new_block() const { return first_new_block_; }
   
 private:
-    multimap< pair< int32, int32 >, pair< bool, Node > > data;
-    multimap< Index, uint16 > block_index_;
+  multimap< pair< int32, int32 >, pair< bool, Node > > data;
+  multimap< Index, uint16 > block_index_;
+  uint16 first_new_block_;
+  vector< uint16 > block_ids;
 };
 
 //-----------------------------------------------------------------------------

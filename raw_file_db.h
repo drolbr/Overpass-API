@@ -268,6 +268,7 @@ void delete_insert(T& env)
   }
   
   int next_block_id(block_index.size());
+  env.set_first_new_block(next_block_id);
   
   //TEMP
   int dest_fd = open64(env.data_file().c_str(), O_RDONLY);
@@ -335,7 +336,7 @@ void delete_insert(T& env)
 	int cmp_val(env.compare(elem_it, &(source_buf[i])));
 	if (cmp_val == RAW_DB_LESS)
 	{
-	  env.to_buf(&(dest_buf[j]), elem_it);
+	  env.to_buf(&(dest_buf[j]), elem_it, cur_block);
 	  j += env.size_of(elem_it);
 	  ++elem_it;
 	}
@@ -354,7 +355,7 @@ void delete_insert(T& env)
 	      (elem_it != elem_it2) && (j < BLOCKSIZE - env.size_of(elem_it)) &&
 	      ((i >= ((uint32*)source_buf)[0]) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_LESS)))
       {
-	env.to_buf(&(dest_buf[j]), elem_it);
+	env.to_buf(&(dest_buf[j]), elem_it, cur_block);
 	j += env.size_of(elem_it);
 	++elem_it;
       }
@@ -391,7 +392,7 @@ void delete_insert(T& env)
       int cmp_val(env.compare(elem_it, &(source_buf[i])));
       if (cmp_val == RAW_DB_LESS)
       {
-	env.to_buf(&(dest_buf[j]), elem_it);
+	env.to_buf(&(dest_buf[j]), elem_it, cur_block);
 	j += env.size_of(elem_it);
 	++elem_it;
       }
@@ -408,7 +409,7 @@ void delete_insert(T& env)
     }
     while (elem_it != elem_it2)
     {
-      env.to_buf(&(dest_buf[j]), elem_it);
+      env.to_buf(&(dest_buf[j]), elem_it, cur_block);
       j += env.size_of(elem_it);
       ++elem_it;
     }
@@ -425,7 +426,7 @@ void delete_insert(T& env)
     lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
     //TEMP
-    /*    write(dest_fd, dest_buf, BLOCKSIZE);*/
+/*    write(dest_fd, dest_buf, BLOCKSIZE);*/
   }
     
   free(source_buf);
@@ -508,6 +509,91 @@ void make_id_index(T& env)
         }
         if (dest_pos < (int64)((*it) - 1)*sizeof(uint16))
           write(dest_fd, &zero_buf, (int64)((*it) - 1)*sizeof(uint16) - dest_pos);
+      }
+      write(dest_fd, &block_id, sizeof(uint16));
+    }
+    current_ids.clear();
+    ++block_id;
+  }
+  free(data_buf);
+  
+  close(data_fd);
+  close(dest_fd);
+}
+
+//-----------------------------------------------------------------------------
+
+template < class T >
+void update_id_index(T& env)
+{
+  const string DATA_FILE(env.data_file());
+  const string ID_IDX_FILE(env.id_idx_file());
+  const uint32 BLOCKSIZE(env.blocksize());
+  set< uint32 > current_ids;
+  
+  int data_fd = open64(DATA_FILE.c_str(), O_RDONLY);
+  if (data_fd < 0)
+    throw File_Error(errno, DATA_FILE, "make_id_index:1");
+  lseek64(data_fd, (int64)(env.first_new_block())*BLOCKSIZE, SEEK_SET);
+  
+  int dest_fd = open64(ID_IDX_FILE.c_str(), O_RDWR|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  if (dest_fd < 0)
+    throw File_Error(errno, ID_IDX_FILE, "make_id_index:2");
+  
+  map< uint32, uint16 > current_id_blocks;
+  typename T::Id_Block_Iterator it_block(env.block_of_elem_begin());
+  for (typename T::Iterator it(env.elem_begin());
+       it != env.elem_end(); ++it)
+  {
+    if (env.size_of(it) > 0)
+    {
+      current_id_blocks[env.id_of(it)] = *it_block;
+      ++it_block;
+    }
+  }
+  for (map< uint32, uint16 >::const_iterator it(current_id_blocks.begin());
+       it != current_id_blocks.end(); ++it)
+  {
+    int64 dest_pos(lseek64(dest_fd, (int64)(it->first - 1)*sizeof(uint16), SEEK_SET));
+    if (dest_pos < (int64)(it->first - 1)*sizeof(uint16))
+    {
+      int64 zero_buf(0);
+      while (dest_pos + sizeof(int64) < (int64)(it->first - 1)*sizeof(uint16))
+      {
+	write(dest_fd, &zero_buf, sizeof(int64));
+	dest_pos += sizeof(int64);
+      }
+      if (dest_pos < (int64)(it->first - 1)*sizeof(uint16))
+	write(dest_fd, &zero_buf, (int64)(it->first - 1)*sizeof(uint16) - dest_pos);
+    }
+    write(dest_fd, &(it->second), sizeof(uint16));
+  }
+  current_id_blocks.clear();
+  
+  uint16 block_id(env.first_new_block());
+  uint8* data_buf = (uint8*) malloc(BLOCKSIZE);
+  while (read(data_fd, data_buf, BLOCKSIZE))
+  {
+    uint32 pos(sizeof(uint32));
+    while (pos < *((uint32*)data_buf) + sizeof(uint32))
+    {
+      current_ids.insert(env.id_of_buf(&(data_buf[pos])));
+      pos += env.size_of_buf(&(data_buf[pos]));
+    }
+    for (set< uint32 >::const_iterator it(current_ids.begin());
+	 it != current_ids.end(); ++it)
+    {
+      int64 dest_pos(lseek64(dest_fd, (int64)((*it) - 1)*sizeof(uint16), SEEK_SET));
+      if (dest_pos < (int64)((*it) - 1)*sizeof(uint16))
+      {
+	int64 zero_buf(0);
+	while (dest_pos + sizeof(int64) < (int64)((*it) - 1)*sizeof(uint16))
+	{
+	  write(dest_fd, &zero_buf, sizeof(int64));
+	  dest_pos += sizeof(int64);
+	}
+	if (dest_pos < (int64)((*it) - 1)*sizeof(uint16))
+	  write(dest_fd, &zero_buf, (int64)((*it) - 1)*sizeof(uint16) - dest_pos);
       }
       write(dest_fd, &block_id, sizeof(uint16));
     }
