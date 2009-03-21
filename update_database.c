@@ -42,10 +42,12 @@ const uint CREATE = 1;
 const uint DELETE = 2;
 const uint MODIFY = 3;
 int32 current_node(0);
+uint32 current_ll_idx(0);
 
 set< int32 > t_delete_nodes;
 set< Node > new_nodes;
-map< int32, map< string, string > > new_nodes_tags;
+map< pair< int32, uint32 >, vector< pair< uint32, uint32 >* > > new_nodes_tags;
+map< pair< string, string >, pair< uint32, uint32 >* > new_tags_ids;
 
 void start(const char *el, const char **attr)
 {
@@ -60,7 +62,21 @@ void start(const char *el, const char **attr)
 	value = attr[i+1];
     }
     if (current_node)
-      new_nodes_tags[current_node][key] = value;
+    {
+      pair< uint32, uint32 >* coord_id(NULL);
+      if (new_tags_ids.find(make_pair< string, string >(key, value)) == new_tags_ids.end())
+      {
+	coord_id = new pair< uint32, uint32 >((current_ll_idx & 0xffffff00), 0);
+	new_tags_ids[make_pair< string, string >(key, value)] = coord_id;
+      }
+      else
+      {
+	coord_id = new_tags_ids.find(make_pair< string, string >(key, value))->second;
+	if (coord_id->first != (current_ll_idx & 0xffffff00))
+	  coord_id->first = 0xffffffff;
+      }
+      new_nodes_tags[make_pair< int32, uint32 >(current_node, current_ll_idx)].push_back(coord_id);
+    }
   }
   else if (!strcmp(el, "nd"))
   {
@@ -83,6 +99,7 @@ void start(const char *el, const char **attr)
     {
       new_nodes.insert(Node(id, lat, lon));
       current_node = id;
+      current_ll_idx = ll_idx(lat, lon);
     }
   }
   else if (!strcmp(el, "way"))
@@ -140,27 +157,34 @@ int main(int argc, char *argv[])
     cerr<<(uintmax_t)time(NULL)<<'\n';
     
     //updating the nodes file
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+/*    cerr<<(uintmax_t)time(NULL)<<'\n';
     Node_Id_Node_Updater node_updater(delete_nodes, new_nodes);
     delete_insert< Node_Id_Node_Updater >(node_updater);
     cerr<<(uintmax_t)time(NULL)<<'\n';
     make_block_index< Node_Id_Node_Updater >(node_updater);
     cerr<<(uintmax_t)time(NULL)<<'\n';
     update_id_index< Node_Id_Node_Updater >(node_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    cerr<<(uintmax_t)time(NULL)<<'\n';*/
     
-    map< pair< string, string >, set< uint32 > > kv_local_ids;
-    map< pair< string, string >, set< uint32 > > kv_global_ids;
-    for (map< int32, map< string, string > >::const_iterator it(new_nodes_tags.begin());
-	 it != new_nodes_tags.end(); ++it)
+/*    for (map< pair< int32, uint32 >, vector< pair< uint32, uint32 >* > >::const_iterator
+	 it(new_nodes_tags.begin()); it != new_nodes_tags.end(); ++it)
     {
-      for (map< string, string >::const_iterator it2(it->second.begin());
+      cout<<it->first.first<<'\t'<<it->first.second<<'\n';
+      for (vector< pair< uint32, uint32 >* >::const_iterator it2(it->second.begin());
 	   it2 != it->second.end(); ++it2)
-      {
-	kv_local_ids.insert(make_pair< pair< string, string >, set< uint32 > >(*it2, set< uint32 >()));
-	kv_global_ids.insert(make_pair< pair< string, string >, set< uint32 > >(*it2, set< uint32 >()));
-      }
+	cout<<'\t'<<(*it2)->first<<'\t'<<(*it2)->second<<'\n';
+      cout<<'\n';
     }
+    for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator it(new_tags_ids.begin());
+	 it != new_tags_ids.end(); ++it)
+      cout<<'['<<it->first.first<<"]["<<it->first.second<<"]\n\t"
+	  <<it->second->first<<'\t'<<it->second->second<<'\n';*/
+    
+    new_nodes_tags.clear();
+    for (map< pair< string, string >, pair< uint32, uint32 >* >::iterator it(new_tags_ids.begin());
+	 it != new_tags_ids.end(); ++it)
+      delete(it->second);
+    new_tags_ids.clear();
     
 /*    for (set< Node >::const_iterator it(delete_nodes.begin());
 	 it != delete_nodes.end(); ++it)
@@ -177,14 +201,7 @@ int main(int argc, char *argv[])
 	   it2 != it->second.end(); ++it2)
 	cout<<'['<<it2->first<<"]["<<it2->second<<"]\n";
     }
-    cout<<"---\n";
-    for (map< pair< string, string >, set< uint32 > >::const_iterator it(kv_local_ids.begin());
-	 it != kv_local_ids.end(); ++it)
-      cout<<'['<<it->first.first<<"]["<<it->first.second<<"]\n";
-    cout<<"---\n";
-    for (map< pair< string, string >, set< uint32 > >::const_iterator it(kv_global_ids.begin());
-	 it != kv_global_ids.end(); ++it)
-      cout<<'['<<it->first.first<<"]["<<it->first.second<<"]\n";*/
+    cout<<"---\n"; */
   }
   catch(File_Error e)
   {
