@@ -151,10 +151,10 @@ int main(int argc, char *argv[])
     parse(stdin, start, end);
     
     //retrieving old coordinates of the nodes that will be deleted
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+/*    cerr<<(uintmax_t)time(NULL)<<'\n';
     Node_Id_Node_By_Id_Reader reader(t_delete_nodes, delete_nodes);
     select_by_id< Node_Id_Node_By_Id_Reader >(reader);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    cerr<<(uintmax_t)time(NULL)<<'\n';*/
     
     //updating the nodes file
 /*    cerr<<(uintmax_t)time(NULL)<<'\n';
@@ -179,6 +179,8 @@ int main(int argc, char *argv[])
 	 it != new_tags_ids.end(); ++it)
       cout<<'['<<it->first.first<<"]["<<it->first.second<<"]\n\t"
 	  <<it->second->first<<'\t'<<it->second->second<<'\n';*/
+    
+    node_string_delete_insert(new_tags_ids);
     
     new_nodes_tags.clear();
     for (map< pair< string, string >, pair< uint32, uint32 >* >::iterator it(new_tags_ids.begin());

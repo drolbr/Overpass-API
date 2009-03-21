@@ -716,7 +716,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   const vector< vector< pair< string, string > > >& kv_to_id_idx(Node_String_Cache::get_kv_to_id_idx());
   const vector< vector< uint16 > >& kv_to_id_block_idx(Node_String_Cache::get_kv_to_id_block_idx());
   
-  int block_id_bound(0);
+  uint block_id_bound(0);
   for (vector< vector< uint16 > >::const_iterator it(kv_to_id_block_idx.begin());
        it != kv_to_id_block_idx.end(); ++it)
     block_id_bound += it->size();
@@ -741,15 +741,26 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   
 /*  typename T::Iterator elem_it(env.elem_begin());
   typename multimap< typename T::Index, uint16 >::const_iterator block_it(block_index.begin());*/
-  unsigned int cur_source_block(0), cur_dest_block(0);
+  uint cur_source_block(0), cur_dest_block(0);
   while (cur_source_block < block_id_bound)
   {
+    //TEMP
+    cout<<cur_source_block<<'\t'<<spatial_part_in_block[cur_source_block]<<'\n';
+    
     uint32 new_byte_count(0);
     pair< string, string >* upper_limit(NULL);
     map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_it;
     map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_end;
     if (kv_to_id_block_idx[spatial_part_in_block[cur_source_block]][0] == cur_source_block)
     {
+      //TEMP
+      cout<<"(begin)\n";
+      if (1 < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
+        cout<<'['<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][1].first
+	    <<"]["<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][1].second<<"]\n";
+      else
+        cout<<"(end)\n";
+      
       elem_it = new_tags_ids.begin();
       if (1 < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
         elem_end = new_tags_ids.lower_bound(kv_to_id_idx[spatial_part_in_block[cur_source_block]][1]);
@@ -762,7 +773,16 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
       {
         if (kv_to_id_block_idx[spatial_part_in_block[cur_source_block]][i] == cur_source_block)
         {
-          elem_it = new_tags_ids.lower_bound(kv_to_id_idx[spatial_part_in_block[cur_source_block]][i]);
+          //TEMP
+	  cout<<'['<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][i].first
+	      <<"]["<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][i].second<<"]\n";
+	  if (i+1 < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
+	    cout<<'['<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][i+1].first
+		<<"]["<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][i+1].second<<"]\n";
+	  else
+	    cout<<"(end)\n";
+      
+	  elem_it = new_tags_ids.lower_bound(kv_to_id_idx[spatial_part_in_block[cur_source_block]][i]);
           if (++i < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
             elem_end = new_tags_ids.lower_bound(kv_to_id_idx[spatial_part_in_block[cur_source_block]][i]);
           else
@@ -770,6 +790,16 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
         }
       }
     }
+    //TEMP
+    if (elem_it != new_tags_ids.end())
+      cout<<'['<<elem_it->first.first<<"]["<<elem_it->first.second<<"]\n";
+    else
+      cout<<"(end)\n";
+    if (elem_end != new_tags_ids.end())
+      cout<<'['<<elem_end->first.first<<"]["<<elem_end->first.second<<"]\n";
+    else
+      cout<<"(end)\n";
+    
     //typename T::Iterator elem_it2(elem_it);
     /*while ((elem_it2 != env.elem_end()) && (block_it->first > env.index_of(elem_it2)))
     {
@@ -897,6 +927,8 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);*/
     //TEMP
     //write(dest_fd, dest_buf, BLOCKSIZE);
+    
+    ++cur_source_block;
   }
     
   free(source_buf);
