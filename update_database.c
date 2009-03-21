@@ -66,7 +66,7 @@ void start(const char *el, const char **attr)
       pair< uint32, uint32 >* coord_id(NULL);
       if (new_tags_ids.find(make_pair< string, string >(key, value)) == new_tags_ids.end())
       {
-	coord_id = new pair< uint32, uint32 >((current_ll_idx & 0xffffff00), 0);
+	coord_id = new pair< uint32, uint32 >((current_ll_idx & 0xffffff00), 0xffffffff);
 	new_tags_ids[make_pair< string, string >(key, value)] = coord_id;
       }
       else

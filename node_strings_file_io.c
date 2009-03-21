@@ -264,6 +264,7 @@ void node_tag_split_and_index(uint& current_run, vector< uint32 >& split_idx, ui
   if (dest_fd < 0)
     throw File_Error(errno, NODE_STRING_IDX, "node_tag_split_and_index:3");
   
+  write(dest_idx_fd, &(NodeCollection::next_node_tag_id), sizeof(uint32));
   for (uint32 i(0); i < NODE_TAG_SPATIAL_PARTS; ++i)
     write(dest_idx_fd, &(split_idx[i]), sizeof(uint32));
   
@@ -650,6 +651,8 @@ struct Node_String_Cache
     return kv_to_id_block_idx;
   }
   
+  static const uint32 get_next_node_tag_id() { return next_node_tag_id; }
+  
   private:
     static void init()
     {
@@ -660,6 +663,7 @@ struct Node_String_Cache
 	throw File_Error(errno, NODE_STRING_IDX, "Node_String_Cache.init():1");
   
       uint32* string_spat_idx_buf = (uint32*) malloc(NODE_TAG_SPATIAL_PARTS*sizeof(uint32));
+      read(string_idx_fd, &next_node_tag_id, sizeof(uint32));
       read(string_idx_fd, string_spat_idx_buf, NODE_TAG_SPATIAL_PARTS*sizeof(uint32));
       for (uint32 i(0); i < NODE_TAG_SPATIAL_PARTS; ++i)
 	spatial_boundaries.push_back(string_spat_idx_buf[i]);
@@ -690,11 +694,219 @@ struct Node_String_Cache
     static vector< uint32 > spatial_boundaries;
     static vector< vector< pair< string, string > > > kv_to_id_idx;
     static vector< vector< uint16 > > kv_to_id_block_idx;
+    static uint32 next_node_tag_id;
 };
 
 vector< uint32 > Node_String_Cache::spatial_boundaries;
 vector< vector< pair< string, string > > > Node_String_Cache::kv_to_id_idx;
 vector< vector< uint16 > > Node_String_Cache::kv_to_id_block_idx;
+uint32 Node_String_Cache::next_node_tag_id;
+
+//-----------------------------------------------------------------------------
+
+// constraints:
+// all flush_data constraints
+void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 >* >& new_tags_ids)
+{
+  if (new_tags_ids.empty())
+    return;
+  
+  const uint32 BLOCKSIZE(NODE_STRING_BLOCK_SIZE);
+  const vector< uint32 >& spatial_boundaries(Node_String_Cache::get_spatial_boundaries());
+  const vector< vector< pair< string, string > > >& kv_to_id_idx(Node_String_Cache::get_kv_to_id_idx());
+  const vector< vector< uint16 > >& kv_to_id_block_idx(Node_String_Cache::get_kv_to_id_block_idx());
+  
+  int block_id_bound(0);
+  for (vector< vector< uint16 > >::const_iterator it(kv_to_id_block_idx.begin());
+       it != kv_to_id_block_idx.end(); ++it)
+    block_id_bound += it->size();
+  int next_block_id(block_id_bound);
+  vector< uint16 > spatial_part_in_block(block_id_bound);
+  for (uint i(0); i < kv_to_id_block_idx.size(); ++i)
+  {
+    for (vector< uint16 >::const_iterator it(kv_to_id_block_idx[i].begin());
+	 it != kv_to_id_block_idx[i].end(); ++it)
+      spatial_part_in_block[*it] = i;
+  }
+  
+  //TEMP
+  int dest_fd = open64(NODE_STRING_DATA.c_str(), O_RDONLY);
+  //int dest_fd = open64(env.data_file().c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  if (dest_fd < 0)
+    throw File_Error(errno, NODE_STRING_DATA, "node_string_delete_insert:1");
+  
+  uint8* source_buf = (uint8*) malloc(BLOCKSIZE);
+  uint8* deletion_buf = (uint8*) malloc(BLOCKSIZE);
+  uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
+  
+/*  typename T::Iterator elem_it(env.elem_begin());
+  typename multimap< typename T::Index, uint16 >::const_iterator block_it(block_index.begin());*/
+  unsigned int cur_source_block(0), cur_dest_block(0);
+  while (cur_source_block < block_id_bound)
+  {
+    uint32 new_byte_count(0);
+    pair< string, string >* upper_limit(NULL);
+    map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_it;
+    map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_end;
+    if (kv_to_id_block_idx[spatial_part_in_block[cur_source_block]][0] == cur_source_block)
+    {
+      elem_it = new_tags_ids.begin();
+      if (1 < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
+        elem_end = new_tags_ids.lower_bound(kv_to_id_idx[spatial_part_in_block[cur_source_block]][1]);
+      else
+        elem_end = new_tags_ids.end();
+    }
+    else
+    {
+      for (uint i(1); i < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size(); ++i)
+      {
+        if (kv_to_id_block_idx[spatial_part_in_block[cur_source_block]][i] == cur_source_block)
+        {
+          elem_it = new_tags_ids.lower_bound(kv_to_id_idx[spatial_part_in_block[cur_source_block]][i]);
+          if (++i < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
+            elem_end = new_tags_ids.lower_bound(kv_to_id_idx[spatial_part_in_block[cur_source_block]][i]);
+          else
+            elem_end = new_tags_ids.end();
+        }
+      }
+    }
+    //typename T::Iterator elem_it2(elem_it);
+    /*while ((elem_it2 != env.elem_end()) && (block_it->first > env.index_of(elem_it2)))
+    {
+      new_byte_count += env.size_of(elem_it2);
+      ++elem_it2;
+    }
+    
+    lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
+    read(dest_fd, source_buf, BLOCKSIZE);
+    uint32 pos(sizeof(uint32));
+    uint32 elem_count(0);
+    while (pos < *((uint32*)source_buf) + sizeof(uint32))
+    {
+      deletion_buf[elem_count] = env.keep_this_elem(&(source_buf[pos]));
+      uint32 size_of_buf(env.size_of_buf(&(source_buf[pos])));
+      if (deletion_buf[elem_count])
+	new_byte_count += size_of_buf;
+      ++elem_count;
+      pos += size_of_buf;
+    }
+    
+    uint32 i(sizeof(uint32));
+    elem_count = 0;
+    while (new_byte_count > BLOCKSIZE)
+    {
+      uint32 blocksize(new_byte_count/(new_byte_count/BLOCKSIZE + 1));
+        
+      uint32 j(sizeof(uint32));
+      while ((j < blocksize) &&
+	      (elem_it != elem_it2) && (i < ((uint32*)source_buf)[0]) &&
+	      (j < BLOCKSIZE - env.size_of(elem_it)) &&
+	      (j < BLOCKSIZE - env.size_of_buf(&(source_buf[i]))))
+      {
+	int cmp_val(env.compare(elem_it, &(source_buf[i])));
+	if (cmp_val == RAW_DB_LESS)
+	{
+	  env.to_buf(&(dest_buf[j]), elem_it, cur_block);
+	  j += env.size_of(elem_it);
+	  ++elem_it;
+	}
+	else if (cmp_val == RAW_DB_GREATER)
+	{
+	  if (deletion_buf[elem_count])
+	  {
+	    memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
+	    j += env.size_of_buf(&(source_buf[i]));
+	  }
+	  ++elem_count;
+	  i += env.size_of_buf(&(source_buf[i]));
+	}
+      }
+      while ((j < blocksize) &&
+	      (elem_it != elem_it2) && (j < BLOCKSIZE - env.size_of(elem_it)) &&
+	      ((i >= ((uint32*)source_buf)[0]) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_LESS)))
+      {
+	env.to_buf(&(dest_buf[j]), elem_it, cur_block);
+	j += env.size_of(elem_it);
+	++elem_it;
+      }
+      while ((j < blocksize) &&
+	      (i < ((uint32*)source_buf)[0]) && (j < BLOCKSIZE - env.size_of_buf(&(source_buf[i]))) &&
+	      ((elem_it == elem_it2) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_GREATER)))
+      {
+	if (deletion_buf[elem_count])
+	{
+	  memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
+	  j += env.size_of_buf(&(source_buf[i]));
+	}
+	++elem_count;
+	i += env.size_of_buf(&(source_buf[i]));
+      }
+
+      lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
+      ((uint32*)dest_buf)[0] = j - sizeof(uint32);
+      //TEMP
+//       write(dest_fd, dest_buf, BLOCKSIZE);
+
+      cur_block = next_block_id;
+      if ((i >= ((uint32*)source_buf)[0]) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_LESS))
+	block_index.insert(make_pair< typename T::Index, uint16 >(env.index_of(elem_it), next_block_id++));
+      else
+	block_index.insert(make_pair< typename T::Index, uint16 >
+	    (env.index_of_buf(&(source_buf[i])), next_block_id++));
+      new_byte_count -= (j - sizeof(uint32));
+    }
+    
+    uint32 j(sizeof(uint32));
+    while ((elem_it != elem_it2) && (i < ((uint32*)source_buf)[0]))
+    {
+      int cmp_val(env.compare(elem_it, &(source_buf[i])));
+      if (cmp_val == RAW_DB_LESS)
+      {
+	env.to_buf(&(dest_buf[j]), elem_it, cur_block);
+	j += env.size_of(elem_it);
+	++elem_it;
+      }
+      else if (cmp_val == RAW_DB_GREATER)
+      {
+	if (deletion_buf[elem_count])
+	{
+	  memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
+	  j += env.size_of_buf(&(source_buf[i]));
+	}
+	++elem_count;
+	i += env.size_of_buf(&(source_buf[i]));
+      }
+    }
+    while (elem_it != elem_it2)
+    {
+      env.to_buf(&(dest_buf[j]), elem_it, cur_block);
+      j += env.size_of(elem_it);
+      ++elem_it;
+    }
+    while (i < ((uint32*)source_buf)[0])
+    {
+      if (deletion_buf[elem_count])
+      {
+	memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
+	j += env.size_of_buf(&(source_buf[i]));
+      }
+      ++elem_count;
+      i += env.size_of_buf(&(source_buf[i]));
+    }
+    lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
+    ((uint32*)dest_buf)[0] = j - sizeof(uint32);*/
+    //TEMP
+    //write(dest_fd, dest_buf, BLOCKSIZE);
+  }
+    
+  free(source_buf);
+  free(deletion_buf);
+  free(dest_buf);
+
+  close(dest_fd);
+}
+
+//-----------------------------------------------------------------------------
 
 void select_kv_to_ids
     (string key, string value, set< uint32 >& string_ids_global,
