@@ -669,26 +669,40 @@ struct Node_String_Cache
 	spatial_boundaries.push_back(string_spat_idx_buf[i]);
       free(string_spat_idx_buf);
     
-      kv_to_id_idx.clear();
-      kv_to_id_idx.resize(NODE_TAG_SPATIAL_PARTS+1);
-      kv_to_id_block_idx.clear();
-      kv_to_id_block_idx.resize(NODE_TAG_SPATIAL_PARTS+1);
-    
+      vector< vector< pair< pair< string, string >, uint16 > > >
+	  kv_to_all(NODE_TAG_SPATIAL_PARTS+1);
+      
       uint16* kv_to_id_idx_buf_1 = (uint16*) malloc(3*sizeof(uint16));
       char* kv_to_id_idx_buf_2 = (char*) malloc(2*64*1024);
       uint32 block_id(0);
       while (read(string_idx_fd, kv_to_id_idx_buf_1, 3*sizeof(uint16)))
       {
 	read(string_idx_fd, kv_to_id_idx_buf_2, kv_to_id_idx_buf_1[1] + kv_to_id_idx_buf_1[2]);
-	kv_to_id_idx[kv_to_id_idx_buf_1[0]].push_back(make_pair< string, string >
-	    (string(kv_to_id_idx_buf_2, kv_to_id_idx_buf_1[1]),
-	     string(&(kv_to_id_idx_buf_2[kv_to_id_idx_buf_1[1]]), kv_to_id_idx_buf_1[2])));
-	kv_to_id_block_idx[kv_to_id_idx_buf_1[0]].push_back(block_id++);
+	kv_to_all[kv_to_id_idx_buf_1[0]].push_back(make_pair< pair< string, string >, uint16 >
+	    (make_pair< string, string >
+	     (string(kv_to_id_idx_buf_2, kv_to_id_idx_buf_1[1]),
+	      string(&(kv_to_id_idx_buf_2[kv_to_id_idx_buf_1[1]]), kv_to_id_idx_buf_1[2])),
+		       block_id++));
       }
       free(kv_to_id_idx_buf_2);
       free(kv_to_id_idx_buf_1);
   
       close(string_idx_fd);
+    
+      kv_to_id_idx.clear();
+      kv_to_id_idx.resize(NODE_TAG_SPATIAL_PARTS+1);
+      kv_to_id_block_idx.clear();
+      kv_to_id_block_idx.resize(NODE_TAG_SPATIAL_PARTS+1);
+      for (uint32 i(0); i < NODE_TAG_SPATIAL_PARTS+1; ++i)
+      {
+	sort(kv_to_all[i].begin(), kv_to_all[i].end());
+	for (vector< pair< pair< string, string >, uint16 > >::const_iterator
+		    it(kv_to_all[i].begin()); it != kv_to_all[i].end(); ++it)
+	{
+	  kv_to_id_idx[i].push_back(it->first);
+	  kv_to_id_block_idx[i].push_back(it->second);
+	}
+      }
     }
   
     static vector< uint32 > spatial_boundaries;
@@ -707,10 +721,10 @@ uint32 Node_String_Cache::next_node_tag_id;
 inline bool is_local_here(map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_it2,
                           uint16 spatial_part, const vector< uint32 >& spatial_boundaries)
 {
-  if (spatial_part > 1)
+  if (spatial_part >= 2)
   {
-    if ((elem_it2->second->first < spatial_boundaries[spatial_part])
-        && (elem_it2->second->first >= spatial_boundaries[spatial_part-1]))
+    if ((elem_it2->second->first < spatial_boundaries[spatial_part-1])
+        && (elem_it2->second->first >= spatial_boundaries[spatial_part-2]))
       return true;
   }
   else if (spatial_part == 1)
@@ -865,12 +879,13 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     }
     
     //TEMP
-    /*    cout<<cur_source_block<<'\t'<<spatial_part_in_block[cur_source_block]<<'\n';*/
+/*    cout<<cur_source_block<<'\t'<<spatial_part_in_block[cur_source_block]<<'\n';*/
     
     uint32 new_byte_count(0);
     map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_it;
     map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_end;
-    if (kv_to_id_block_idx[spatial_part_in_block[cur_source_block]][0] == cur_source_block)
+    uint16 spatial(spatial_part_in_block[cur_source_block]);
+    if (kv_to_id_block_idx[spatial][0] == cur_source_block)
     {
       //TEMP
 /*      cout<<"(begin)\n";
@@ -881,16 +896,16 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
       cout<<"(end)\n";*/
       
       elem_it = new_tags_ids.begin();
-      if (1 < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
-	elem_end = new_tags_ids.lower_bound(kv_to_id_idx[spatial_part_in_block[cur_source_block]][1]);
+      if (1 < kv_to_id_block_idx[spatial].size())
+	elem_end = new_tags_ids.lower_bound(kv_to_id_idx[spatial][1]);
       else
 	elem_end = new_tags_ids.end();
     }
     else
     {
-      for (uint i(1); i < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size(); ++i)
+      for (uint i(1); i < kv_to_id_block_idx[spatial].size(); ++i)
       {
-	if (kv_to_id_block_idx[spatial_part_in_block[cur_source_block]][i] == cur_source_block)
+	if (kv_to_id_block_idx[spatial][i] == cur_source_block)
 	{
           //TEMP
 /*	  cout<<'['<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][i].first
@@ -901,10 +916,10 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
 	  else
 	  cout<<"(end)\n";*/
       
-	  elem_it = new_tags_ids.lower_bound(kv_to_id_idx[spatial_part_in_block[cur_source_block]][i]);
-	  if (i+1 < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
+	  elem_it = new_tags_ids.lower_bound(kv_to_id_idx[spatial][i]);
+	  if (i+1 < kv_to_id_block_idx[spatial].size())
 	    elem_end = new_tags_ids.lower_bound
-		(kv_to_id_idx[spatial_part_in_block[cur_source_block]][i+1]);
+		(kv_to_id_idx[spatial][i+1]);
 	  else
 	    elem_end = new_tags_ids.end();
 	}
@@ -912,13 +927,13 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     }
     //TEMP
 /*    if (elem_it != new_tags_ids.end())
-    cout<<'['<<elem_it->first.first<<"]["<<elem_it->first.second<<"]\n";
+      cout<<'['<<elem_it->first.first<<"]["<<elem_it->first.second<<"]\n";
     else
-    cout<<"(end)\n";
+      cout<<"(end)\n";
     if (elem_end != new_tags_ids.end())
-    cout<<'['<<elem_end->first.first<<"]["<<elem_end->first.second<<"]\n";
+      cout<<'['<<elem_end->first.first<<"]["<<elem_end->first.second<<"]\n";
     else
-    cout<<"(end)\n";*/
+      cout<<"(end)\n";*/
     
     if (elem_it == elem_end)
     {
@@ -934,8 +949,6 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_it2(elem_it);
     while ((elem_it2 != elem_end) && (pos < *((uint32*)source_buf) + sizeof(uint32)))
     {
-      if ((elem_it2->first.first == "ele") && (elem_it2->first.second == "1096.741455"))
-	cerr<<"(a "<<spatial_part_in_block[cur_source_block]<<')';
       int cmp_val(stringpair_cstringpair_compare(elem_it2->first, &(source_buf[pos+8])));
       uint32 size_of_buf(12 + *(uint16*)&(source_buf[pos+8]) + *(uint16*)&(source_buf[pos+10]));
       if (cmp_val < 0)
