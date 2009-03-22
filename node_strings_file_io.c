@@ -651,7 +651,7 @@ struct Node_String_Cache
     return kv_to_id_block_idx;
   }
   
-  static const uint32 get_next_node_tag_id() { return next_node_tag_id; }
+  static uint32 get_next_node_tag_id() { return next_node_tag_id; }
   
   private:
     static void init()
@@ -704,6 +704,41 @@ uint32 Node_String_Cache::next_node_tag_id;
 
 //-----------------------------------------------------------------------------
 
+inline bool is_local_here(map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_it2,
+                          uint16 spatial_part, const vector< uint32 >& spatial_boundaries)
+{
+  if (spatial_part > 1)
+  {
+    if ((elem_it2->second->first < spatial_boundaries[spatial_part])
+        && (elem_it2->second->first >= spatial_boundaries[spatial_part-1]))
+      return true;
+  }
+  else if (spatial_part == 1)
+  {
+    if (elem_it2->second->first < spatial_boundaries[0])
+      return true;
+  }
+  return false;
+}
+
+inline int stringpair_cstringpair_compare(const pair< string, string > stringpair,
+                                          uint8* cstringpairbuf)
+{
+  const uint16& key_len(*(uint16*)&(cstringpairbuf[0]));
+  int key_cmp(strncmp(stringpair.first.c_str(), (char*)&(cstringpairbuf[4]), key_len));
+  if (key_cmp)
+    return key_cmp;
+  if (stringpair.first.size() > key_len)
+    return 1;
+  const uint16& value_len(*(uint16*)&(cstringpairbuf[2]));
+  int value_cmp(strncmp(stringpair.second.c_str(), (char*)&(cstringpairbuf[4 + key_len]), value_len));
+  if (value_cmp)
+    return value_cmp;
+  if (stringpair.second.size() > value_len)
+    return 1;
+  return 0;
+}
+
 // constraints:
 // all flush_data constraints
 void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 >* >& new_tags_ids)
@@ -715,6 +750,9 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   const vector< uint32 >& spatial_boundaries(Node_String_Cache::get_spatial_boundaries());
   const vector< vector< pair< string, string > > >& kv_to_id_idx(Node_String_Cache::get_kv_to_id_idx());
   const vector< vector< uint16 > >& kv_to_id_block_idx(Node_String_Cache::get_kv_to_id_block_idx());
+  uint32 next_node_tag_id(Node_String_Cache::get_next_node_tag_id());
+  vector< pair< string, string > > new_block_kvs;
+  vector< uint16 > new_block_spatial;
   
   uint block_id_bound(0);
   for (vector< vector< uint16 > >::const_iterator it(kv_to_id_block_idx.begin());
@@ -739,28 +777,26 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   uint8* deletion_buf = (uint8*) malloc(BLOCKSIZE);
   uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
   
-/*  typename T::Iterator elem_it(env.elem_begin());
-  typename multimap< typename T::Index, uint16 >::const_iterator block_it(block_index.begin());*/
-  uint cur_source_block(0), cur_dest_block(0);
+  //TEMP
+  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
+       elem_it2(new_tags_ids.begin()); elem_it2 != new_tags_ids.end(); ++elem_it2)
+    cout<<elem_it2->second->first<<'\t'<<elem_it2->second->second<<'\t'
+	<<'['<<elem_it2->first.first<<"]["<<elem_it2->first.second<<"]\n";
+  cout<<"---\n";
+  
+  uint cur_source_block(0);
   while (cur_source_block < block_id_bound)
   {
-    //TEMP
-    cout<<cur_source_block<<'\t'<<spatial_part_in_block[cur_source_block]<<'\n';
+    if (spatial_part_in_block[cur_source_block] != 0)
+    {
+      ++cur_source_block;
+      continue;
+    }
     
-    uint32 new_byte_count(0);
-    pair< string, string >* upper_limit(NULL);
     map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_it;
     map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_end;
     if (kv_to_id_block_idx[spatial_part_in_block[cur_source_block]][0] == cur_source_block)
     {
-      //TEMP
-      cout<<"(begin)\n";
-      if (1 < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
-        cout<<'['<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][1].first
-	    <<"]["<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][1].second<<"]\n";
-      else
-        cout<<"(end)\n";
-      
       elem_it = new_tags_ids.begin();
       if (1 < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
         elem_end = new_tags_ids.lower_bound(kv_to_id_idx[spatial_part_in_block[cur_source_block]][1]);
@@ -773,15 +809,6 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
       {
         if (kv_to_id_block_idx[spatial_part_in_block[cur_source_block]][i] == cur_source_block)
         {
-          //TEMP
-	  cout<<'['<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][i].first
-	      <<"]["<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][i].second<<"]\n";
-	  if (i+1 < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
-	    cout<<'['<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][i+1].first
-		<<"]["<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][i+1].second<<"]\n";
-	  else
-	    cout<<"(end)\n";
-      
 	  elem_it = new_tags_ids.lower_bound(kv_to_id_idx[spatial_part_in_block[cur_source_block]][i]);
           if (++i < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
             elem_end = new_tags_ids.lower_bound(kv_to_id_idx[spatial_part_in_block[cur_source_block]][i]);
@@ -790,141 +817,597 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
         }
       }
     }
-    //TEMP
-    if (elem_it != new_tags_ids.end())
-      cout<<'['<<elem_it->first.first<<"]["<<elem_it->first.second<<"]\n";
-    else
-      cout<<"(end)\n";
-    if (elem_end != new_tags_ids.end())
-      cout<<'['<<elem_end->first.first<<"]["<<elem_end->first.second<<"]\n";
-    else
-      cout<<"(end)\n";
     
-    //typename T::Iterator elem_it2(elem_it);
-    /*while ((elem_it2 != env.elem_end()) && (block_it->first > env.index_of(elem_it2)))
+    if (elem_it == elem_end)
     {
-      new_byte_count += env.size_of(elem_it2);
-      ++elem_it2;
+      ++cur_source_block;
+      continue;
     }
     
-    lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
+    lseek64(dest_fd, (int64)cur_source_block*(BLOCKSIZE), SEEK_SET);
     read(dest_fd, source_buf, BLOCKSIZE);
     uint32 pos(sizeof(uint32));
+    map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_it2(elem_it);
+    while ((elem_it2 != elem_end) && (pos < *((uint32*)source_buf) + sizeof(uint32)))
+    {
+      int cmp_val(stringpair_cstringpair_compare(elem_it2->first, &(source_buf[pos+8])));
+      uint32 size_of_buf(12 + *(uint16*)&(source_buf[pos+8]) + *(uint16*)&(source_buf[pos+10]));
+      if (cmp_val < 0)
+	++elem_it2;
+      else if (cmp_val == 0)
+      {
+	elem_it2->second->first = 0xffffffff;
+	elem_it2->second->second = *(uint32*)&(source_buf[pos]);
+        pos += size_of_buf;
+      }
+      else
+	pos += size_of_buf;
+    }
+    
+    ++cur_source_block;
+  }
+    
+  //TEMP
+  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
+       elem_it2(new_tags_ids.begin()); elem_it2 != new_tags_ids.end(); ++elem_it2)
+    cout<<elem_it2->second->first<<'\t'<<elem_it2->second->second<<'\t'
+	<<'['<<elem_it2->first.first<<"]["<<elem_it2->first.second<<"]\n";
+  cout<<"---\n";
+  
+  cur_source_block = 0;
+  uint cur_dest_block(0);
+  while (cur_source_block < block_id_bound)
+  {
+    if (spatial_part_in_block[cur_source_block] == 0)
+    {
+      ++cur_source_block;
+      continue;
+    }
+    
+    //TEMP
+    /*    cout<<cur_source_block<<'\t'<<spatial_part_in_block[cur_source_block]<<'\n';*/
+    
+    uint32 new_byte_count(0);
+    map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_it;
+    map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_end;
+    if (kv_to_id_block_idx[spatial_part_in_block[cur_source_block]][0] == cur_source_block)
+    {
+      //TEMP
+/*      cout<<"(begin)\n";
+      if (1 < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
+      cout<<'['<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][1].first
+      <<"]["<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][1].second<<"]\n";
+      else
+      cout<<"(end)\n";*/
+      
+      elem_it = new_tags_ids.begin();
+      if (1 < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
+	elem_end = new_tags_ids.lower_bound(kv_to_id_idx[spatial_part_in_block[cur_source_block]][1]);
+      else
+	elem_end = new_tags_ids.end();
+    }
+    else
+    {
+      for (uint i(1); i < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size(); ++i)
+      {
+	if (kv_to_id_block_idx[spatial_part_in_block[cur_source_block]][i] == cur_source_block)
+	{
+          //TEMP
+/*	  cout<<'['<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][i].first
+	  <<"]["<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][i].second<<"]\n";
+	  if (i+1 < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
+	  cout<<'['<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][i+1].first
+	  <<"]["<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][i+1].second<<"]\n";
+	  else
+	  cout<<"(end)\n";*/
+      
+	  elem_it = new_tags_ids.lower_bound(kv_to_id_idx[spatial_part_in_block[cur_source_block]][i]);
+	  if (i+1 < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
+	    elem_end = new_tags_ids.lower_bound
+		(kv_to_id_idx[spatial_part_in_block[cur_source_block]][i+1]);
+	  else
+	    elem_end = new_tags_ids.end();
+	}
+      }
+    }
+    //TEMP
+/*    if (elem_it != new_tags_ids.end())
+    cout<<'['<<elem_it->first.first<<"]["<<elem_it->first.second<<"]\n";
+    else
+    cout<<"(end)\n";
+    if (elem_end != new_tags_ids.end())
+    cout<<'['<<elem_end->first.first<<"]["<<elem_end->first.second<<"]\n";
+    else
+    cout<<"(end)\n";*/
+    
+    if (elem_it == elem_end)
+    {
+      ++cur_source_block;
+      continue;
+    }
+    
+    lseek64(dest_fd, (int64)cur_source_block*(BLOCKSIZE), SEEK_SET);
+    read(dest_fd, source_buf, BLOCKSIZE);
+    cur_dest_block = cur_source_block;
+    uint32 pos(sizeof(uint32));
     uint32 elem_count(0);
+    map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_it2(elem_it);
+    while ((elem_it2 != elem_end) && (pos < *((uint32*)source_buf) + sizeof(uint32)))
+    {
+      if ((elem_it2->first.first == "ele") && (elem_it2->first.second == "1096.741455"))
+	cerr<<"(a "<<spatial_part_in_block[cur_source_block]<<')';
+      int cmp_val(stringpair_cstringpair_compare(elem_it2->first, &(source_buf[pos+8])));
+      uint32 size_of_buf(12 + *(uint16*)&(source_buf[pos+8]) + *(uint16*)&(source_buf[pos+10]));
+      if (cmp_val < 0)
+      {
+	if ((elem_it2->first.first == "ele") && (elem_it2->first.second == "1096.741455"))
+	  cerr<<"(b "<<spatial_part_in_block[cur_source_block]<<')';
+	if (is_local_here(elem_it2, spatial_part_in_block[cur_source_block], spatial_boundaries))
+	{
+	  if ((elem_it2->first.first == "ele") && (elem_it2->first.second == "1096.741455"))
+	    cerr<<"(c "<<spatial_part_in_block[cur_source_block]<<')';
+	  elem_it2->second->second = next_node_tag_id++;
+	  new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size();
+	}
+	++elem_it2;
+      }
+      else if (cmp_val == 0)
+      {
+	elem_it2->second->second = *(uint32*)&(source_buf[pos]);
+	if (elem_it2->second->first == *(uint32*)&(source_buf[pos+4]))
+	{
+	  new_byte_count += size_of_buf;
+	  deletion_buf[elem_count] = 1;
+	}
+	else
+	{
+	  elem_it2->second->first = 0xffffffff;
+	  deletion_buf[elem_count] = 0;
+	}
+	pos += size_of_buf;
+	++elem_count;
+	++elem_it2;
+      }
+      else
+      {
+	deletion_buf[elem_count] = 1;
+	new_byte_count += size_of_buf;
+	pos += size_of_buf;
+	++elem_count;
+      }
+    }
     while (pos < *((uint32*)source_buf) + sizeof(uint32))
     {
-      deletion_buf[elem_count] = env.keep_this_elem(&(source_buf[pos]));
-      uint32 size_of_buf(env.size_of_buf(&(source_buf[pos])));
-      if (deletion_buf[elem_count])
-	new_byte_count += size_of_buf;
-      ++elem_count;
+      uint32 size_of_buf(12 + *(uint16*)&(source_buf[pos+8]) + *(uint16*)&(source_buf[pos+10]));
+      deletion_buf[elem_count] = 1;
+      new_byte_count += size_of_buf;
       pos += size_of_buf;
+      ++elem_count;
+    }
+    while (elem_it2 != elem_end)
+    {
+      if ((elem_it2->first.first == "ele") && (elem_it2->first.second == "1096.741455"))
+	cerr<<"(d "<<spatial_part_in_block[cur_source_block]<<')';
+      if (is_local_here(elem_it2, spatial_part_in_block[cur_source_block], spatial_boundaries))
+      {
+	if ((elem_it2->first.first == "ele") && (elem_it2->first.second == "1096.741455"))
+	  cerr<<"(e "<<spatial_part_in_block[cur_source_block]<<')';
+	elem_it2->second->second = next_node_tag_id++;
+	new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size();
+      }
+      ++elem_it2;
     }
     
     uint32 i(sizeof(uint32));
     elem_count = 0;
-    while (new_byte_count > BLOCKSIZE)
+    while (new_byte_count > BLOCKSIZE - sizeof(uint32))
     {
       uint32 blocksize(new_byte_count/(new_byte_count/BLOCKSIZE + 1));
         
       uint32 j(sizeof(uint32));
       while ((j < blocksize) &&
 	      (elem_it != elem_it2) && (i < ((uint32*)source_buf)[0]) &&
-	      (j < BLOCKSIZE - env.size_of(elem_it)) &&
-	      (j < BLOCKSIZE - env.size_of_buf(&(source_buf[i]))))
+	      (j < BLOCKSIZE - (12 + elem_it->first.first.size() + elem_it->first.second.size())) &&
+	      (j < BLOCKSIZE - (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]))))
       {
-	int cmp_val(env.compare(elem_it, &(source_buf[i])));
-	if (cmp_val == RAW_DB_LESS)
+	int cmp_val(stringpair_cstringpair_compare(elem_it->first, &(source_buf[i+8])));
+	if (cmp_val < 0)
 	{
-	  env.to_buf(&(dest_buf[j]), elem_it, cur_block);
-	  j += env.size_of(elem_it);
+	  if (is_local_here(elem_it, spatial_part_in_block[cur_source_block], spatial_boundaries))
+	  {
+	    *(uint32*)&(dest_buf[j]) = elem_it->second->second;
+	    *(uint32*)&(dest_buf[j+4]) = elem_it->second->first;
+	    *(uint16*)&(dest_buf[j+8]) = elem_it->first.first.size();
+	    *(uint16*)&(dest_buf[j+10]) = elem_it->first.second.size();
+	    elem_it->first.first.copy((char*)&(dest_buf[j+12]), string::npos);
+	    elem_it->first.second.copy((char*)&(dest_buf[j+12+elem_it->first.first.size()]), string::npos);
+	    j += (12 + elem_it->first.first.size() + elem_it->first.second.size());
+	  }
 	  ++elem_it;
 	}
-	else if (cmp_val == RAW_DB_GREATER)
+	else
 	{
 	  if (deletion_buf[elem_count])
 	  {
-	    memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
-	    j += env.size_of_buf(&(source_buf[i]));
+	    memcpy(&(dest_buf[j]), &(source_buf[i]),
+		     (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10])));
+	    j += (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]));
 	  }
 	  ++elem_count;
-	  i += env.size_of_buf(&(source_buf[i]));
+	  i += (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]));
 	}
       }
       while ((j < blocksize) &&
-	      (elem_it != elem_it2) && (j < BLOCKSIZE - env.size_of(elem_it)) &&
-	      ((i >= ((uint32*)source_buf)[0]) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_LESS)))
+	      (elem_it != elem_it2) &&
+	      (j < BLOCKSIZE - (12 + elem_it->first.first.size() + elem_it->first.second.size())) &&
+	      ((i >= ((uint32*)source_buf)[0]) ||
+	      (stringpair_cstringpair_compare(elem_it->first, &(source_buf[i+8])) < 0)))
       {
-	env.to_buf(&(dest_buf[j]), elem_it, cur_block);
-	j += env.size_of(elem_it);
+	if (is_local_here(elem_it, spatial_part_in_block[cur_source_block], spatial_boundaries))
+	{
+	  *(uint32*)&(dest_buf[j]) = elem_it->second->second;
+	  *(uint32*)&(dest_buf[j+4]) = elem_it->second->first;
+	  *(uint16*)&(dest_buf[j+8]) = elem_it->first.first.size();
+	  *(uint16*)&(dest_buf[j+10]) = elem_it->first.second.size();
+	  elem_it->first.first.copy((char*)&(dest_buf[j+12]), string::npos);
+	  elem_it->first.second.copy((char*)&(dest_buf[j+12+elem_it->first.first.size()]), string::npos);
+	  j += (12 + elem_it->first.first.size() + elem_it->first.second.size());
+	}
 	++elem_it;
       }
       while ((j < blocksize) &&
-	      (i < ((uint32*)source_buf)[0]) && (j < BLOCKSIZE - env.size_of_buf(&(source_buf[i]))) &&
-	      ((elem_it == elem_it2) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_GREATER)))
+	      (i < ((uint32*)source_buf)[0]) &&
+	      (j < BLOCKSIZE - (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10])) &&
+	      ((elem_it == elem_it2) ||
+	      (stringpair_cstringpair_compare(elem_it->first, &(source_buf[i+8])) >= 0))))
       {
 	if (deletion_buf[elem_count])
 	{
-	  memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
-	  j += env.size_of_buf(&(source_buf[i]));
+	  memcpy(&(dest_buf[j]), &(source_buf[i]),
+		   (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10])));
+	  j += (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]));
 	}
 	++elem_count;
-	i += env.size_of_buf(&(source_buf[i]));
+	i += (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]));
       }
 
-      lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
+      lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
       //TEMP
 //       write(dest_fd, dest_buf, BLOCKSIZE);
 
-      cur_block = next_block_id;
-      if ((i >= ((uint32*)source_buf)[0]) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_LESS))
-	block_index.insert(make_pair< typename T::Index, uint16 >(env.index_of(elem_it), next_block_id++));
+      cur_dest_block = next_block_id;
+      if ((i >= ((uint32*)source_buf)[0]) ||
+	   (stringpair_cstringpair_compare(elem_it->first, &(source_buf[i+8])) < 0))
+	new_block_kvs.push_back(elem_it->first);
       else
-	block_index.insert(make_pair< typename T::Index, uint16 >
-	    (env.index_of_buf(&(source_buf[i])), next_block_id++));
+      {
+	string key((char*)&(dest_buf[j+12]), *(uint16*)&(dest_buf[j+8]));
+	string value((char*)&(dest_buf[j+12+*(uint16*)&(dest_buf[j+8])]), *(uint16*)&(dest_buf[j+10]));
+	new_block_kvs.push_back(make_pair< string, string >
+	    (key, value));
+      }
+      new_block_spatial.push_back(spatial_part_in_block[cur_source_block]);
+      ++next_block_id;
       new_byte_count -= (j - sizeof(uint32));
     }
     
     uint32 j(sizeof(uint32));
     while ((elem_it != elem_it2) && (i < ((uint32*)source_buf)[0]))
     {
-      int cmp_val(env.compare(elem_it, &(source_buf[i])));
-      if (cmp_val == RAW_DB_LESS)
+      int cmp_val(stringpair_cstringpair_compare(elem_it->first, &(source_buf[i+8])));
+      if (cmp_val < 0)
       {
-	env.to_buf(&(dest_buf[j]), elem_it, cur_block);
-	j += env.size_of(elem_it);
+	if (is_local_here(elem_it, spatial_part_in_block[cur_source_block], spatial_boundaries))
+	{
+	  *(uint32*)&(dest_buf[j]) = elem_it->second->second;
+	  *(uint32*)&(dest_buf[j+4]) = elem_it->second->first;
+	  *(uint16*)&(dest_buf[j+8]) = elem_it->first.first.size();
+	  *(uint16*)&(dest_buf[j+10]) = elem_it->first.second.size();
+	  elem_it->first.first.copy((char*)&(dest_buf[j+12]), string::npos);
+	  elem_it->first.second.copy((char*)&(dest_buf[j+12+elem_it->first.first.size()]), string::npos);
+	  j += (12 + elem_it->first.first.size() + elem_it->first.second.size());
+	}
 	++elem_it;
       }
-      else if (cmp_val == RAW_DB_GREATER)
+      else
       {
 	if (deletion_buf[elem_count])
 	{
-	  memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
-	  j += env.size_of_buf(&(source_buf[i]));
+	  memcpy(&(dest_buf[j]), &(source_buf[i]),
+		   (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10])));
+	  j += (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]));
 	}
 	++elem_count;
-	i += env.size_of_buf(&(source_buf[i]));
+	i += (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]));
       }
     }
     while (elem_it != elem_it2)
     {
-      env.to_buf(&(dest_buf[j]), elem_it, cur_block);
-      j += env.size_of(elem_it);
+      if (is_local_here(elem_it, spatial_part_in_block[cur_source_block], spatial_boundaries))
+      {
+	*(uint32*)&(dest_buf[j]) = elem_it->second->second;
+	*(uint32*)&(dest_buf[j+4]) = elem_it->second->first;
+	*(uint16*)&(dest_buf[j+8]) = elem_it->first.first.size();
+	*(uint16*)&(dest_buf[j+10]) = elem_it->first.second.size();
+	elem_it->first.first.copy((char*)&(dest_buf[j+12]), string::npos);
+	elem_it->first.second.copy((char*)&(dest_buf[j+12+elem_it->first.first.size()]), string::npos);
+	j += (12 + elem_it->first.first.size() + elem_it->first.second.size());
+      }
       ++elem_it;
     }
     while (i < ((uint32*)source_buf)[0])
     {
       if (deletion_buf[elem_count])
       {
-	memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
-	j += env.size_of_buf(&(source_buf[i]));
+	memcpy(&(dest_buf[j]), &(source_buf[i]),
+		 (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10])));
+	j += (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]));
       }
       ++elem_count;
-      i += env.size_of_buf(&(source_buf[i]));
+      i += (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]));
     }
-    lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
-    ((uint32*)dest_buf)[0] = j - sizeof(uint32);*/
+    lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
+    ((uint32*)dest_buf)[0] = j - sizeof(uint32);
+    //TEMP
+    //write(dest_fd, dest_buf, BLOCKSIZE);
+    
+    ++cur_source_block;
+  }
+    
+  //TEMP
+  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
+       elem_it2(new_tags_ids.begin()); elem_it2 != new_tags_ids.end(); ++elem_it2)
+    cout<<elem_it2->second->first<<'\t'<<elem_it2->second->second<<'\t'
+	<<'['<<elem_it2->first.first<<"]["<<elem_it2->first.second<<"]\n";
+  cout<<"---\n";
+  
+  cur_source_block = 0;
+  while (cur_source_block < block_id_bound)
+  {
+    if (spatial_part_in_block[cur_source_block] != 0)
+    {
+      ++cur_source_block;
+      continue;
+    }
+    
+    uint32 new_byte_count(0);
+    map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_it;
+    map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_end;
+    if (kv_to_id_block_idx[spatial_part_in_block[cur_source_block]][0] == cur_source_block)
+    {
+      elem_it = new_tags_ids.begin();
+      if (1 < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
+	elem_end = new_tags_ids.lower_bound(kv_to_id_idx[spatial_part_in_block[cur_source_block]][1]);
+      else
+	elem_end = new_tags_ids.end();
+    }
+    else
+    {
+      for (uint i(1); i < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size(); ++i)
+      {
+	if (kv_to_id_block_idx[spatial_part_in_block[cur_source_block]][i] == cur_source_block)
+	{
+	  elem_it = new_tags_ids.lower_bound(kv_to_id_idx[spatial_part_in_block[cur_source_block]][i]);
+	  if (++i < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
+	    elem_end = new_tags_ids.lower_bound(kv_to_id_idx[spatial_part_in_block[cur_source_block]][i]);
+	  else
+	    elem_end = new_tags_ids.end();
+	}
+      }
+    }
+    
+    if (elem_it == elem_end)
+    {
+      ++cur_source_block;
+      continue;
+    }
+    
+    lseek64(dest_fd, (int64)cur_source_block*(BLOCKSIZE), SEEK_SET);
+    read(dest_fd, source_buf, BLOCKSIZE);
+    cur_dest_block = cur_source_block;
+    uint32 pos(sizeof(uint32));
+    uint32 elem_count(0);
+    map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_it2(elem_it);
+    while ((elem_it2 != elem_end) && (pos < *((uint32*)source_buf) + sizeof(uint32)))
+    {
+      int cmp_val(stringpair_cstringpair_compare(elem_it2->first, &(source_buf[pos+8])));
+      uint32 size_of_buf(12 + *(uint16*)&(source_buf[pos+8]) + *(uint16*)&(source_buf[pos+10]));
+      if (cmp_val < 0)
+      {
+	if (elem_it2->second->first == 0xffffffff)
+	{
+	  elem_it2->second->second = next_node_tag_id++;
+	  new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size();
+	}
+	++elem_it2;
+      }
+      else if (cmp_val == 0)
+      {
+	elem_it2->second->second = *(uint32*)&(source_buf[pos]);
+	new_byte_count += size_of_buf;
+	deletion_buf[elem_count] = 1;
+	pos += size_of_buf;
+	++elem_count;
+	++elem_it2;
+      }
+      else
+      {
+	deletion_buf[elem_count] = 1;
+	new_byte_count += size_of_buf;
+	pos += size_of_buf;
+	++elem_count;
+      }
+    }
+    while (pos < *((uint32*)source_buf) + sizeof(uint32))
+    {
+      uint32 size_of_buf(12 + *(uint16*)&(source_buf[pos+8]) + *(uint16*)&(source_buf[pos+10]));
+      deletion_buf[elem_count] = 1;
+      new_byte_count += size_of_buf;
+      pos += size_of_buf;
+      ++elem_count;
+    }
+    while (elem_it2 != elem_end)
+    {
+      if (elem_it2->second->first == 0xffffffff)
+      {
+	elem_it2->second->second = next_node_tag_id++;
+	new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size();
+      }
+      ++elem_it2;
+    }
+    
+    uint32 i(sizeof(uint32));
+    elem_count = 0;
+    while (new_byte_count > BLOCKSIZE - sizeof(uint32))
+    {
+      uint32 blocksize(new_byte_count/(new_byte_count/BLOCKSIZE + 1));
+        
+      uint32 j(sizeof(uint32));
+      while ((j < blocksize) &&
+	      (elem_it != elem_it2) && (i < ((uint32*)source_buf)[0]) &&
+	      (j < BLOCKSIZE - (12 + elem_it->first.first.size() + elem_it->first.second.size())) &&
+	      (j < BLOCKSIZE - (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]))))
+      {
+	int cmp_val(stringpair_cstringpair_compare(elem_it->first, &(source_buf[i+8])));
+	if (cmp_val < 0)
+	{
+	  if (is_local_here(elem_it, spatial_part_in_block[cur_source_block], spatial_boundaries))
+	  {
+	    *(uint32*)&(dest_buf[j]) = elem_it->second->second;
+	    *(uint32*)&(dest_buf[j+4]) = elem_it->second->first;
+	    *(uint16*)&(dest_buf[j+8]) = elem_it->first.first.size();
+	    *(uint16*)&(dest_buf[j+10]) = elem_it->first.second.size();
+	    elem_it->first.first.copy((char*)&(dest_buf[j+12]), string::npos);
+	    elem_it->first.second.copy((char*)&(dest_buf[j+12+elem_it->first.first.size()]), string::npos);
+	    j += (12 + elem_it->first.first.size() + elem_it->first.second.size());
+	  }
+	  ++elem_it;
+	}
+	else
+	{
+	  if (deletion_buf[elem_count])
+	  {
+	    memcpy(&(dest_buf[j]), &(source_buf[i]),
+		     (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10])));
+	    j += (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]));
+	  }
+	  ++elem_count;
+	  i += (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]));
+	}
+      }
+      while ((j < blocksize) &&
+	      (elem_it != elem_it2) &&
+	      (j < BLOCKSIZE - (12 + elem_it->first.first.size() + elem_it->first.second.size())) &&
+	      ((i >= ((uint32*)source_buf)[0]) ||
+	      (stringpair_cstringpair_compare(elem_it->first, &(source_buf[i+8])) < 0)))
+      {
+	if (is_local_here(elem_it, spatial_part_in_block[cur_source_block], spatial_boundaries))
+	{
+	  *(uint32*)&(dest_buf[j]) = elem_it->second->second;
+	  *(uint32*)&(dest_buf[j+4]) = elem_it->second->first;
+	  *(uint16*)&(dest_buf[j+8]) = elem_it->first.first.size();
+	  *(uint16*)&(dest_buf[j+10]) = elem_it->first.second.size();
+	  elem_it->first.first.copy((char*)&(dest_buf[j+12]), string::npos);
+	  elem_it->first.second.copy((char*)&(dest_buf[j+12+elem_it->first.first.size()]), string::npos);
+	  j += (12 + elem_it->first.first.size() + elem_it->first.second.size());
+	}
+	++elem_it;
+      }
+      while ((j < blocksize) &&
+	      (i < ((uint32*)source_buf)[0]) &&
+	      (j < BLOCKSIZE - (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10])) &&
+	      ((elem_it == elem_it2) ||
+	      (stringpair_cstringpair_compare(elem_it->first, &(source_buf[i+8])) >= 0))))
+      {
+	if (deletion_buf[elem_count])
+	{
+	  memcpy(&(dest_buf[j]), &(source_buf[i]),
+		   (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10])));
+	  j += (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]));
+	}
+	++elem_count;
+	i += (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]));
+      }
+
+      lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
+      ((uint32*)dest_buf)[0] = j - sizeof(uint32);
+      //TEMP
+//       write(dest_fd, dest_buf, BLOCKSIZE);
+
+      cur_dest_block = next_block_id;
+      if ((i >= ((uint32*)source_buf)[0]) ||
+	   (stringpair_cstringpair_compare(elem_it->first, &(source_buf[i+8])) < 0))
+	new_block_kvs.push_back(elem_it->first);
+      else
+      {
+	string key((char*)&(dest_buf[j+12]), *(uint16*)&(dest_buf[j+8]));
+	string value((char*)&(dest_buf[j+12+*(uint16*)&(dest_buf[j+8])]), *(uint16*)&(dest_buf[j+10]));
+	new_block_kvs.push_back(make_pair< string, string >
+	    (key, value));
+      }
+      new_block_spatial.push_back(spatial_part_in_block[cur_source_block]);
+      ++next_block_id;
+      new_byte_count -= (j - sizeof(uint32));
+    }
+    
+    uint32 j(sizeof(uint32));
+    while ((elem_it != elem_it2) && (i < ((uint32*)source_buf)[0]))
+    {
+      int cmp_val(stringpair_cstringpair_compare(elem_it->first, &(source_buf[i+8])));
+      if (cmp_val < 0)
+      {
+	if (is_local_here(elem_it, spatial_part_in_block[cur_source_block], spatial_boundaries))
+	{
+	  *(uint32*)&(dest_buf[j]) = elem_it->second->second;
+	  *(uint32*)&(dest_buf[j+4]) = elem_it->second->first;
+	  *(uint16*)&(dest_buf[j+8]) = elem_it->first.first.size();
+	  *(uint16*)&(dest_buf[j+10]) = elem_it->first.second.size();
+	  elem_it->first.first.copy((char*)&(dest_buf[j+12]), string::npos);
+	  elem_it->first.second.copy((char*)&(dest_buf[j+12+elem_it->first.first.size()]), string::npos);
+	  j += (12 + elem_it->first.first.size() + elem_it->first.second.size());
+	}
+	++elem_it;
+      }
+      else
+      {
+	if (deletion_buf[elem_count])
+	{
+	  memcpy(&(dest_buf[j]), &(source_buf[i]),
+		   (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10])));
+	  j += (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]));
+	}
+	++elem_count;
+	i += (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]));
+      }
+    }
+    while (elem_it != elem_it2)
+    {
+      if (is_local_here(elem_it, spatial_part_in_block[cur_source_block], spatial_boundaries))
+      {
+	*(uint32*)&(dest_buf[j]) = elem_it->second->second;
+	*(uint32*)&(dest_buf[j+4]) = elem_it->second->first;
+	*(uint16*)&(dest_buf[j+8]) = elem_it->first.first.size();
+	*(uint16*)&(dest_buf[j+10]) = elem_it->first.second.size();
+	elem_it->first.first.copy((char*)&(dest_buf[j+12]), string::npos);
+	elem_it->first.second.copy((char*)&(dest_buf[j+12+elem_it->first.first.size()]), string::npos);
+	j += (12 + elem_it->first.first.size() + elem_it->first.second.size());
+      }
+      ++elem_it;
+    }
+    while (i < ((uint32*)source_buf)[0])
+    {
+      if (deletion_buf[elem_count])
+      {
+	memcpy(&(dest_buf[j]), &(source_buf[i]),
+		 (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10])));
+	j += (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]));
+      }
+      ++elem_count;
+      i += (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]));
+    }
+    lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
+    ((uint32*)dest_buf)[0] = j - sizeof(uint32);
     //TEMP
     //write(dest_fd, dest_buf, BLOCKSIZE);
     
@@ -935,7 +1418,17 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   free(deletion_buf);
   free(dest_buf);
 
+  //TEMP
+  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
+       elem_it2(new_tags_ids.begin()); elem_it2 != new_tags_ids.end(); ++elem_it2)
+    cout<<elem_it2->second->first<<'\t'<<elem_it2->second->second<<'\t'
+	<<'['<<elem_it2->first.first<<"]["<<elem_it2->first.second<<"]\n";
+  cout<<"---\n";
+  
   close(dest_fd);
+  
+  //update Node_String_Cache
+  //update migrated ids
 }
 
 //-----------------------------------------------------------------------------

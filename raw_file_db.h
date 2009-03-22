@@ -136,7 +136,7 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
       new_byte_count += ((uint32*)source_buf)[0];
       
       uint32 i(sizeof(uint32));
-      while (new_byte_count > BLOCKSIZE)
+      while (new_byte_count > BLOCKSIZE - sizeof(uint32))
       {
 	uint32 blocksize(new_byte_count/(new_byte_count/BLOCKSIZE + 1));
         
@@ -323,7 +323,7 @@ void delete_insert(T& env)
     
     uint32 i(sizeof(uint32));
     elem_count = 0;
-    while (new_byte_count > BLOCKSIZE)
+    while (new_byte_count > BLOCKSIZE - sizeof(uint32))
     {
       uint32 blocksize(new_byte_count/(new_byte_count/BLOCKSIZE + 1));
         
