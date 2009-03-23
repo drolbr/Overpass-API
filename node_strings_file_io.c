@@ -792,11 +792,11 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
   
   //TEMP
-  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
+/*  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
        elem_it2(new_tags_ids.begin()); elem_it2 != new_tags_ids.end(); ++elem_it2)
     cout<<elem_it2->second->first<<'\t'<<elem_it2->second->second<<'\t'
 	<<'['<<elem_it2->first.first<<"]["<<elem_it2->first.second<<"]\n";
-  cout<<"---\n";
+  cout<<"---\n";*/
   
   uint cur_source_block(0);
   while (cur_source_block < block_id_bound)
@@ -862,11 +862,11 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   }
     
   //TEMP
-  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
+/*  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
        elem_it2(new_tags_ids.begin()); elem_it2 != new_tags_ids.end(); ++elem_it2)
     cout<<elem_it2->second->first<<'\t'<<elem_it2->second->second<<'\t'
 	<<'['<<elem_it2->first.first<<"]["<<elem_it2->first.second<<"]\n";
-  cout<<"---\n";
+  cout<<"---\n";*/
   
   cur_source_block = 0;
   uint cur_dest_block(0);
@@ -953,12 +953,8 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
       uint32 size_of_buf(12 + *(uint16*)&(source_buf[pos+8]) + *(uint16*)&(source_buf[pos+10]));
       if (cmp_val < 0)
       {
-	if ((elem_it2->first.first == "ele") && (elem_it2->first.second == "1096.741455"))
-	  cerr<<"(b "<<spatial_part_in_block[cur_source_block]<<')';
 	if (is_local_here(elem_it2, spatial_part_in_block[cur_source_block], spatial_boundaries))
 	{
-	  if ((elem_it2->first.first == "ele") && (elem_it2->first.second == "1096.741455"))
-	    cerr<<"(c "<<spatial_part_in_block[cur_source_block]<<')';
 	  elem_it2->second->second = next_node_tag_id++;
 	  new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size();
 	}
@@ -999,12 +995,8 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     }
     while (elem_it2 != elem_end)
     {
-      if ((elem_it2->first.first == "ele") && (elem_it2->first.second == "1096.741455"))
-	cerr<<"(d "<<spatial_part_in_block[cur_source_block]<<')';
       if (is_local_here(elem_it2, spatial_part_in_block[cur_source_block], spatial_boundaries))
       {
-	if ((elem_it2->first.first == "ele") && (elem_it2->first.second == "1096.741455"))
-	  cerr<<"(e "<<spatial_part_in_block[cur_source_block]<<')';
 	elem_it2->second->second = next_node_tag_id++;
 	new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size();
       }
@@ -1169,11 +1161,11 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   }
     
   //TEMP
-  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
+/*  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
        elem_it2(new_tags_ids.begin()); elem_it2 != new_tags_ids.end(); ++elem_it2)
     cout<<elem_it2->second->first<<'\t'<<elem_it2->second->second<<'\t'
 	<<'['<<elem_it2->first.first<<"]["<<elem_it2->first.second<<"]\n";
-  cout<<"---\n";
+  cout<<"---\n";*/
   
   cur_source_block = 0;
   while (cur_source_block < block_id_bound)
@@ -1432,11 +1424,11 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   free(dest_buf);
 
   //TEMP
-  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
+/*  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
        elem_it2(new_tags_ids.begin()); elem_it2 != new_tags_ids.end(); ++elem_it2)
     cout<<elem_it2->second->first<<'\t'<<elem_it2->second->second<<'\t'
 	<<'['<<elem_it2->first.first<<"]["<<elem_it2->first.second<<"]\n";
-  cout<<"---\n";
+  cout<<"---\n";*/
   
   close(dest_fd);
   
