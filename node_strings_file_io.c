@@ -1440,11 +1440,11 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   free(dest_buf);
 
   //TEMP
-/*  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
+  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
        elem_it2(new_tags_ids.begin()); elem_it2 != new_tags_ids.end(); ++elem_it2)
     cout<<elem_it2->second->first<<'\t'<<elem_it2->second->second<<'\t'
 	<<'['<<elem_it2->first.first<<"]["<<elem_it2->first.second<<"]\n";
-  cout<<"---\n";*/
+  cout<<"---\n";
   
   close(dest_fd);
   
@@ -1466,8 +1466,6 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   }
   
   close(string_idx_fd);
-  
-  //update migrated ids
 }
 
 //-----------------------------------------------------------------------------
