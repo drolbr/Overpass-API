@@ -142,6 +142,7 @@ void end(const char *el)
 int main(int argc, char *argv[])
 {
   set< Node > delete_nodes;
+  set< pair< uint32, uint32 > > moved_local_ids;
   
   cerr<<(uintmax_t)time(NULL)<<'\n';
   
@@ -157,14 +158,14 @@ int main(int argc, char *argv[])
     cerr<<(uintmax_t)time(NULL)<<'\n';
     
     //updating the nodes file
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+/*    cerr<<(uintmax_t)time(NULL)<<'\n';
     Node_Id_Node_Updater node_updater(delete_nodes, new_nodes);
     delete_insert< Node_Id_Node_Updater >(node_updater);
     cerr<<(uintmax_t)time(NULL)<<'\n';
     make_block_index< Node_Id_Node_Updater >(node_updater);
     cerr<<(uintmax_t)time(NULL)<<'\n';
     update_id_index< Node_Id_Node_Updater >(node_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    cerr<<(uintmax_t)time(NULL)<<'\n';*/
     
 /*    for (map< pair< int32, uint32 >, vector< pair< uint32, uint32 >* > >::const_iterator
 	 it(new_nodes_tags.begin()); it != new_nodes_tags.end(); ++it)
@@ -180,7 +181,18 @@ int main(int argc, char *argv[])
       cout<<'['<<it->first.first<<"]["<<it->first.second<<"]\n\t"
 	  <<it->second->first<<'\t'<<it->second->second<<'\n';*/
     
-    node_string_delete_insert(new_tags_ids);
+    node_string_delete_insert(new_tags_ids, moved_local_ids);
+    set< uint32 > delete_node_idxs;
+    for (set< Node >::const_iterator it(delete_nodes.begin()); it != delete_nodes.end(); ++it)
+      delete_node_idxs.insert(ll_idx(it->lat, it->lon) & 0xffffff00);
+    map< pair< uint32, uint32 >, pair< set< uint32 >, set< uint32 > > > local_ids;
+    Tag_Id_MultiNode_Local_Reader local_reader(local_ids, delete_nodes, delete_node_idxs);
+    select_with_idx< Tag_Id_MultiNode_Local_Reader >(local_reader);
+    
+    //TEMP
+/*    for (set< pair< uint32, uint32 > >::const_iterator it(moved_local_ids.begin());
+	it != moved_local_ids.end(); ++it)
+      cout<<it->first<<'\t'<<it->second<<'\n';*/
     
     new_nodes_tags.clear();
     for (map< pair< string, string >, pair< uint32, uint32 >* >::iterator it(new_tags_ids.begin());

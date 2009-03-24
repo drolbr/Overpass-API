@@ -651,7 +651,20 @@ struct Node_String_Cache
     return kv_to_id_block_idx;
   }
   
-  static uint32 get_next_node_tag_id() { return next_node_tag_id; }
+  static uint32 get_next_node_tag_id()
+  {
+    if (next_node_tag_id == 0xffffffff)
+      init();
+    return next_node_tag_id;
+  }
+  
+  static void reset()
+  {
+    spatial_boundaries.clear();
+    kv_to_id_idx.clear();
+    kv_to_id_block_idx.clear();
+    next_node_tag_id = 0xffffffff;
+  }
   
   private:
     static void init()
@@ -755,7 +768,8 @@ inline int stringpair_cstringpair_compare(const pair< string, string > stringpai
 
 // constraints:
 // all flush_data constraints
-void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 >* >& new_tags_ids)
+void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 >* >& new_tags_ids,
+                               set< pair< uint32, uint32 > >& moved_local_ids)
 {
   if (new_tags_ids.empty())
     return;
@@ -783,7 +797,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   
   //TEMP
   int dest_fd = open64(NODE_STRING_DATA.c_str(), O_RDONLY);
-  //int dest_fd = open64(env.data_file().c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  //int dest_fd = open64(NODE_STRING_DATA.c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)
     throw File_Error(errno, NODE_STRING_DATA, "node_string_delete_insert:1");
   
@@ -971,6 +985,8 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
 	else
 	{
 	  elem_it2->second->first = 0xffffffff;
+	  moved_local_ids.insert(make_pair< uint32, uint32 >
+	      (*(uint32*)&(source_buf[pos+4]), *(uint32*)&(source_buf[pos])));
 	  deletion_buf[elem_count] = 0;
 	}
 	pos += size_of_buf;
@@ -1433,6 +1449,24 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   close(dest_fd);
   
   //update Node_String_Cache
+  Node_String_Cache::reset();
+  
+  int string_idx_fd = open64("/dev/stdout"/*NODE_STRING_IDX.c_str()*/, O_WRONLY|O_APPEND);
+  if (string_idx_fd < 0)
+    throw File_Error(errno, NODE_STRING_IDX, "Node_String_Cache.init():1");
+  
+  for (unsigned int i(0); i < new_block_spatial.size(); ++i)
+  {
+    uint16 key_len(new_block_kvs[i].first.size()), value_len(new_block_kvs[i].second.size());
+    write(string_idx_fd, &(new_block_spatial[i]), 2);
+    write(string_idx_fd, &key_len, 2);
+    write(string_idx_fd, &value_len, 2);
+    write(string_idx_fd, new_block_kvs[i].first.data(), key_len);
+    write(string_idx_fd, new_block_kvs[i].second.data(), value_len);
+  }
+  
+  close(string_idx_fd);
+  
   //update migrated ids
 }
 
