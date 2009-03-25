@@ -271,8 +271,8 @@ void delete_insert(T& env)
   env.set_first_new_block(next_block_id);
   
   //TEMP
-/*  int dest_fd = open64(env.data_file().c_str(), O_RDONLY);*/
-  int dest_fd = open64(env.data_file().c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  int dest_fd = open64(env.data_file().c_str(), O_RDONLY);
+/*  int dest_fd = open64(env.data_file().c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);*/
   if (dest_fd < 0)
     throw File_Error(errno, env.data_file(), "delete_insert:2");
   
@@ -289,6 +289,20 @@ void delete_insert(T& env)
       cur_block = (block_it++)->second;
 
     uint32 new_byte_count(0);
+    lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
+    read(dest_fd, source_buf, BLOCKSIZE);
+    uint32 pos(sizeof(uint32));
+    uint32 elem_count(0);
+    while (pos < *((uint32*)source_buf) + sizeof(uint32))
+    {
+      deletion_buf[elem_count] = env.keep_this_elem(&(source_buf[pos]));
+      uint32 size_of_buf(env.size_of_buf(&(source_buf[pos])));
+      if (deletion_buf[elem_count])
+	new_byte_count += size_of_buf;
+      ++elem_count;
+      pos += size_of_buf;
+    }
+    
     typename T::Iterator elem_it2(elem_it);
     if (block_it != block_index.end())
     {
@@ -305,20 +319,6 @@ void delete_insert(T& env)
 	new_byte_count += env.size_of(elem_it2);
 	++elem_it2;
       }
-    }
-    
-    lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
-    read(dest_fd, source_buf, BLOCKSIZE);
-    uint32 pos(sizeof(uint32));
-    uint32 elem_count(0);
-    while (pos < *((uint32*)source_buf) + sizeof(uint32))
-    {
-      deletion_buf[elem_count] = env.keep_this_elem(&(source_buf[pos]));
-      uint32 size_of_buf(env.size_of_buf(&(source_buf[pos])));
-      if (deletion_buf[elem_count])
-	new_byte_count += size_of_buf;
-      ++elem_count;
-      pos += size_of_buf;
     }
     
     uint32 i(sizeof(uint32));
@@ -375,7 +375,7 @@ void delete_insert(T& env)
       lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
       //TEMP
-      write(dest_fd, dest_buf, BLOCKSIZE);
+//       write(dest_fd, dest_buf, BLOCKSIZE);
 
       cur_block = next_block_id;
       if ((i >= ((uint32*)source_buf)[0]) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_LESS))
@@ -426,7 +426,7 @@ void delete_insert(T& env)
     lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
     //TEMP
-    write(dest_fd, dest_buf, BLOCKSIZE);
+/*    write(dest_fd, dest_buf, BLOCKSIZE);*/
   }
     
   free(source_buf);

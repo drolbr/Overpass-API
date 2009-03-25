@@ -636,109 +636,163 @@ struct Tag_Id_Node_Local_Writer : public Tag_Id_Node_Local
     uint32* block_of_id_;
 };
 
-// struct Tag_Id_Node_Local_Updater : public Tag_Id_Node_Local
-// {
-//   Tag_Id_Node_Local_Updater()
-//   : data(), block_index_()
-//   {
-//     for (set< Node >::const_iterator it(delete_nodes.begin()); it != delete_nodes.end(); ++it)
-//       data.insert(make_pair< pair< int32, int32 >, pair< bool, Node > >
-// 	  (make_pair< int32, int32 >(ll_idx(it->lat, it->lon), it->id),
-// 	   make_pair< bool, Node >(false, *it)));
-//     for (set< Node >::const_iterator it(new_nodes.begin()); it != new_nodes.end(); ++it)
-//       data.insert(make_pair< pair< int32, int32 >, pair< bool, Node > >
-// 	  (make_pair< int32, int32 >(ll_idx(it->lat, it->lon), it->id),
-// 	   make_pair< bool, Node >(true, *it)));
-//   }
-//   
-//   const multimap< Index, uint16 >& block_index() const { return block_index_; }
-//   multimap< Index, uint16 >& block_index() { return block_index_; }
-//   
-//   typedef multimap< pair< int32, int32 >, pair< bool, Node > >::const_iterator Iterator;
-//   Iterator elem_begin() { return data.begin(); }
-//   Iterator elem_end() { return data.end(); }
-//   
-//   typedef vector< uint16 >::const_iterator Id_Block_Iterator;
-//   Id_Block_Iterator block_of_elem_begin() { return block_ids.begin(); }
-//   
-//   uint32 size_of(const Iterator& it) const
-//   {
-//     if (it->second.first)
-//       return (3*sizeof(uint32));
-//     else
-//       return 0;
-//   }
-//   
-//   Index index_of(const Iterator& it) const
-//   {
-//     return (it->first.first);
-//   }
-//   
-//   Index index_of_buf(uint8* elem) const
-//   {
-//     return (ll_idx(*(int32*)&(elem[4]), *(int32*)&(elem[8])));
-//   }
-//   
-//   int32 compare(const Iterator& it, uint8* buf) const
-//   {
-//     if (it->first.first < ll_idx(*(int32*)&(buf[4]), *(int32*)&(buf[8])))
-//       return RAW_DB_LESS;
-//     else if (it->first.first > ll_idx(*(int32*)&(buf[4]), *(int32*)&(buf[8])))
-//       return RAW_DB_GREATER;
-//     if (it->first.second < *(int32*)&(buf[0]))
-//       return RAW_DB_LESS;
-//     else
-//       return RAW_DB_GREATER;
-//   }
-//   
-//   void to_buf(uint8* dest, const Iterator& it, uint16 block_id)
-//   {
-//     if (it->second.first)
-//     {
-//       *(uint32*)&(dest[0]) = it->second.second.id;
-//       *(int32*)&(dest[4]) = it->second.second.lat;
-//       *(int32*)&(dest[8]) = it->second.second.lon;
-//       block_ids.push_back(block_id);
-//     }
-//   }
-//   
-//   uint8 keep_this_elem(uint8* elem) const
-//   {
-//     int32 ll_idx_(ll_idx(*(int32*)&(elem[4]), *(int32*)&(elem[8])));
-//     Iterator it(data.lower_bound(make_pair< int32, int32 >(ll_idx_, *(int32*)&(elem[0]))));
-//     while ((it != data.end()) && (it->first.second == *(int32*)&(elem[0])))
-//     {
-//       if ((!(it->second.first)) && (it->second.second.id == *(int32*)&(elem[0])))
-// 	return 0;
-//       ++it;
-//     }
-//     return 1;
-//   }
-//   
-//   void index_to_buf(uint8* dest, const uint32& i) const
-//   {
-//     *(uint32*)&(dest[0]) = i;
-//   }
-// 
-//   int32 id_of(const Iterator& it) const
-//   {
-//     return it->second.second.id;
-//   }
-//   
-//   uint32 id_of_buf(uint8* elem) const
-//   {
-//     return (*(int32*)&(elem[0]));
-//   }
-//   
-//   void set_first_new_block(uint16 block_id) { first_new_block_ = block_id; }
-//   uint16 first_new_block() const { return first_new_block_; }
-//   
-//   private:
-//     multimap< pair< int32, int32 >, pair< bool, Node > > data;
-//     multimap< Index, uint16 > block_index_;
-//     uint16 first_new_block_;
-//     vector< uint16 > block_ids;
-// };
+struct Tag_Id_Node_Local_Updater : public Tag_Id_Node_Local
+{
+  Tag_Id_Node_Local_Updater
+      (const map< pair< uint32, uint32 >, pair< set< uint32 >, set< uint32 > > >& local_ids,
+       map< uint32, set< uint32 > >& moved_ids, const vector< uint32 >& local_id_idxs,
+       const vector< uint32 >& spatial_boundaries)
+  : local_ids_(local_ids), patched_local_ids_(), moved_ids_(moved_ids), block_index_(),
+	       local_id_idxs_(local_id_idxs), spatial_boundaries_(spatial_boundaries) {}
+  
+  const multimap< Index, uint16 >& block_index() const { return block_index_; }
+  multimap< Index, uint16 >& block_index() { return block_index_; }
+  
+  typedef map< pair< uint32, uint32 >, pair< set< uint32 >, set< uint32 > > >::const_iterator Iterator;
+  Iterator elem_begin() { return local_ids_.begin(); }
+  Iterator elem_end() { return local_ids_.end(); }
+  
+  uint32 size_of(const Iterator& it) const
+  {
+    map< pair< uint32, uint32 >, set< uint32 > >::const_iterator
+	pit(patched_local_ids_.find(it->first));
+    if (pit != patched_local_ids_.end())
+    {
+      int32 size_of_(pit->second.size());
+      return (((size_of_ + 254) / 255)*6 + size_of_*4);
+    }
+    return 0;
+  }
+  
+  Index index_of(const Iterator& it) const
+  {
+    return (it->first.first);
+  }
+  
+  Index index_of_buf(uint8* elem) const
+  {
+    return ((local_id_idxs_[*(uint32*)&(elem[0])] & 0xffffff00));
+  }
+  
+  int32 compare(const Iterator& it, uint8* buf) const
+  {
+    if (it->first.first < (local_id_idxs_[*(uint32*)&(buf[0])] & 0xffffff00))
+      return RAW_DB_LESS;
+    else if (it->first.first > (local_id_idxs_[*(uint32*)&(buf[0])] & 0xffffff00))
+      return RAW_DB_GREATER;
+    if (it->first.second < *((uint32*)buf))
+      return RAW_DB_LESS;
+    else
+      return RAW_DB_GREATER;
+  }
+  
+  void to_buf(uint8* dest, const Iterator& it, uint16 block_id)
+  {
+    map< pair< uint32, uint32 >, set< uint32 > >::const_iterator
+	pit(patched_local_ids_.find(it->first));
+    if (pit == patched_local_ids_.end())
+      return;
+    set< uint32 >::const_iterator nit(pit->second.begin());
+    uint remaining_size(pit->second.size()), pos(6);
+    uint spatial_part(0);
+    while (spatial_boundaries_[spatial_part] < it->first.first)
+      ++spatial_part;
+    ++spatial_part;
+    while (remaining_size > 255)
+    {
+      ((uint32*)dest)[0] = it->first.second;
+      dest[4] = 255;
+      dest[5] = spatial_part;
+      remaining_size -= 255;
+      uint i(0);
+      while (i < 255)
+      {
+	*(uint32*)&(dest[pos]) = *nit;
+	++nit;
+	pos += 4;
+	++i;
+      }
+    }
+    ((uint32*)dest)[0] = it->first.second;
+    dest[4] = remaining_size;
+    dest[5] = spatial_part;
+    while (nit != pit->second.end())
+    {
+      *(uint32*)&(dest[pos]) = *nit;
+      ++nit;
+      pos += 4;
+    }
+  }
+  
+  uint8 keep_this_elem(uint8* elem)
+  {
+    map< pair< uint32, uint32 >, pair< set< uint32 >, set< uint32 > > >::const_iterator
+	it(local_ids_.find(make_pair< uint32, uint32 >
+	(local_id_idxs_[*(uint32*)&(elem[0])] & 0xffffff00, *(uint32*)&(elem[0]))));
+    if (it == local_ids_.end())
+      return 1;
+    if ((!(it->second.second.empty())) && (*(it->second.second.begin()) == 0))
+    {
+      map< uint32, set< uint32 > >::iterator mit(moved_ids_.insert(make_pair< uint32, set< uint32 > >
+	  (*(uint32*)&(elem[0]), set< uint32 >())).first);
+      for (uint i(0); i < elem[4]; ++i)
+      {
+	if (it->second.first.find(*(uint32*)&(elem[6+4*i])) == it->second.first.end())
+	  mit->second.insert(*(uint32*)&(elem[6+4*i]));
+      }
+      return 0;
+    }
+    map< pair< uint32, uint32 >, set< uint32 > >::iterator
+	pit(patched_local_ids_.insert(make_pair< pair< uint32, uint32 >, set< uint32 > >
+	(make_pair< uint32, uint32 >
+	    (local_id_idxs_[*(uint32*)&(elem[0])] & 0xffffff00, *(uint32*)&(elem[0])), set< uint32 >()))
+	.first);
+    for (uint i(0); i < elem[4]; ++i)
+    {
+      if (it->second.first.find(*(uint32*)&(elem[6+4*i])) == it->second.first.end())
+	pit->second.insert(*(uint32*)&(elem[6+4*i]));
+    }
+    return 1;
+  }
+  
+  void index_to_buf(uint8* dest, const uint32& i) const
+  {
+    *(uint32*)&(dest[0]) = i;
+  }
+
+  void set_first_new_block(uint16 block_id) {}
+  
+  //TEMP
+  void dump()
+  {
+    for (map< uint32, set< uint32 > >::const_iterator it(moved_ids_.begin());
+	 it != moved_ids_.end(); ++it)
+    {
+      cout<<it->first<<'\n';
+      for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+	cout<<*it2<<'\t';
+      cout<<'\n';
+    }
+    cout<<"---\n";
+    for (map< pair< uint32, uint32 >, set< uint32 > >::const_iterator it(patched_local_ids_.begin());
+	 it != patched_local_ids_.end(); ++it)
+    {
+      cout<<it->first.first<<'\t'<<it->first.second<<'\n';
+      for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+	cout<<*it2<<'\t';
+      cout<<'\n';
+    }
+    cout<<"---\n";
+  }
+  
+  private:
+    const map< pair< uint32, uint32 >, pair< set< uint32 >, set< uint32 > > >& local_ids_;
+    map< pair< uint32, uint32 >, set< uint32 > > patched_local_ids_;
+    map< uint32, set< uint32 > >& moved_ids_;
+    multimap< Index, uint16 > block_index_;
+    const vector< uint32 >& local_id_idxs_;
+    const vector< uint32 >& spatial_boundaries_;
+};
 
 //-----------------------------------------------------------------------------
 
@@ -1019,6 +1073,149 @@ private:
   multimap< uint32, uint16 > block_index_;
   uint32* ll_idx_;
   uint8* blocklet_of_id_;
+};
+
+struct Tag_Node_Id_Updater : public Tag_Node_Id
+{
+  static const uint DELETE = 1;
+  static const uint INSERT = 2;
+  static const uint UPDATE = 3;
+  
+  Tag_Node_Id_Updater
+      (const map< pair< uint32, uint32 >, pair< set< uint32 >, uint > >& nodes_to_be_edited,
+       map< uint32, set< uint32 > >& deleted_nodes_ids)
+  : nodes_to_be_edited_(nodes_to_be_edited), deleted_nodes_ids_(deleted_nodes_ids),
+    patched_nodes_ids_(), block_index_() {}
+  
+  const multimap< Index, uint16 >& block_index() const { return block_index_; }
+  multimap< Index, uint16 >& block_index() { return block_index_; }
+  
+  typedef map< pair< uint32, uint32 >, pair< set< uint32 >, uint > >::const_iterator Iterator;
+  Iterator elem_begin() { return nodes_to_be_edited_.begin(); }
+  Iterator elem_end() { return nodes_to_be_edited_.end(); }
+  
+  uint32 size_of(const Iterator& it) const
+  {
+    if (it->second.second == DELETE)
+      return 0;
+    if (it->second.second == INSERT)
+      return 10+5*(it->second.first.size());
+    map< uint32, set< uint32 > >::const_iterator pit(patched_nodes_ids_.find(it->first.second));
+    return 10+5*(pit->second.size());
+  }
+  
+  Index index_of(const Iterator& it) const
+  {
+    return (it->first.first);
+  }
+  
+  Index index_of_buf(uint8* elem) const
+  {
+    return (*(uint32*)&(elem[4]));
+  }
+  
+  int32 compare(const Iterator& it, uint8* buf) const
+  {
+    if (it->first.first < *((uint32*)&(buf[4])))
+      return RAW_DB_LESS;
+    else if (it->first.first > *((uint32*)&(buf[4])))
+      return RAW_DB_GREATER;
+    if (it->first.second < *((uint32*)&(buf[0])))
+      return RAW_DB_LESS;
+    else
+      return RAW_DB_GREATER;
+  }
+  
+  void to_buf(uint8* dest, const Iterator& it, uint16 block_id)
+  {
+    if (it->second.second == DELETE)
+      return;
+    *((uint32*)&(dest[0])) = it->first.second;
+    *((uint32*)&(dest[4])) = it->first.first;
+    map< uint32, set< uint32 > >::const_iterator pit(patched_nodes_ids_.find(it->first.second));
+    if (pit == patched_nodes_ids_.end())
+    {
+      *((uint16*)&(dest[8])) = it->second.first.size();
+      uint i(0);
+      for (set< uint32 >::const_iterator it2(it->second.first.begin());
+           it2 != it->second.first.end(); ++it2)
+      {
+        *((uint32*)&(dest[5*i + 10])) = *it2;
+        *((uint8*)&(dest[5*i + 14])) = 0;
+        ++i;
+      }
+      return;
+    }
+    *((uint16*)&(dest[8])) = pit->second.size();
+    uint i(0);
+    for (set< uint32 >::const_iterator it2(pit->second.begin());
+         it2 != pit->second.end(); ++it2)
+    {
+      *((uint32*)&(dest[5*i + 10])) = *it2;
+      *((uint8*)&(dest[5*i + 14])) = 0;
+      ++i;
+    }
+  }
+  
+  uint8 keep_this_elem(uint8* elem)
+  {
+    map< pair< uint32, uint32 >, pair< set< uint32 >, uint > >::const_iterator
+      it(nodes_to_be_edited_.find(make_pair< uint32, uint32 >
+	(*((uint32*)&(elem[4])), *((uint32*)&(elem[0])))));
+    if (it == nodes_to_be_edited_.end())
+      return 1;
+    if (it->second.second == DELETE)
+    {
+      set< uint32 >& id_set(deleted_nodes_ids_[it->first.second]);
+      for (uint16 i(0); i < *((uint16*)&(elem[8])); ++i)
+	id_set.insert(*(uint32*)&(elem[5*i + 10]));
+      return 0;
+    }
+    if (it->second.second == INSERT)
+      return 0;
+    set< uint32 >& id_set(patched_nodes_ids_[it->first.second]);
+    id_set = it->second.first;
+    for (uint16 i(0); i < *((uint16*)&(elem[8])); ++i)
+      id_set.insert(*(uint32*)&(elem[5*i + 10]));
+    return 0;
+  }
+  
+  void index_to_buf(uint8* dest, const uint32& i) const
+  {
+    *(uint32*)&(dest[0]) = i;
+  }
+
+  void set_first_new_block(uint16 block_id) {}
+  
+  //TEMP
+  void dump()
+  {
+    cout<<"---\n";
+    for (map< uint32, set< uint32 > >::const_iterator it(deleted_nodes_ids_.begin());
+	 it != deleted_nodes_ids_.end(); ++it)
+    {
+      cout<<it->first<<'\n';
+      for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+	cout<<*it2<<'\t';
+      cout<<'\n';
+    }
+    cout<<"---\n";
+    for (map< uint32, set< uint32 > >::const_iterator it(patched_nodes_ids_.begin());
+	 it != patched_nodes_ids_.end(); ++it)
+    {
+      cout<<it->first<<'\n';
+      for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+	cout<<*it2<<'\t';
+      cout<<'\n';
+    }
+    cout<<"---\n";
+  }
+  
+private:
+  const map< pair< uint32, uint32 >, pair< set< uint32 >, uint > >& nodes_to_be_edited_;
+  map< uint32, set< uint32 > >& deleted_nodes_ids_;
+  map< uint32, set< uint32 > > patched_nodes_ids_;
+  multimap< Index, uint16 > block_index_;
 };
 
 #endif

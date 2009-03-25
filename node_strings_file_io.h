@@ -102,7 +102,8 @@ void node_tag_create_node_id_idx(uint32* block_of_id, uint32 max_node_id);
 void node_tag_id_statistics();
 
 void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 >* >& new_tags_ids,
-			       set< pair< uint32, uint32 > >& moved_local_ids);
+			       set< pair< uint32, uint32 > >& moved_local_ids,
+	  vector< uint32 >& local_id_idx, vector< uint32 >& spatial_boundaries_);
 
 void select_kv_to_ids
     (string key, string value, set< uint32 >& string_ids_global,

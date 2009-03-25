@@ -157,16 +157,6 @@ int main(int argc, char *argv[])
     select_by_id< Node_Id_Node_By_Id_Reader >(reader);
     cerr<<(uintmax_t)time(NULL)<<'\n';
     
-    //updating the nodes file
-/*    cerr<<(uintmax_t)time(NULL)<<'\n';
-    Node_Id_Node_Updater node_updater(delete_nodes, new_nodes);
-    delete_insert< Node_Id_Node_Updater >(node_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
-    make_block_index< Node_Id_Node_Updater >(node_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
-    update_id_index< Node_Id_Node_Updater >(node_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';*/
-    
 /*    for (map< pair< int32, uint32 >, vector< pair< uint32, uint32 >* > >::const_iterator
 	 it(new_nodes_tags.begin()); it != new_nodes_tags.end(); ++it)
     {
@@ -181,8 +171,11 @@ int main(int argc, char *argv[])
       cout<<'['<<it->first.first<<"]["<<it->first.second<<"]\n\t"
 	  <<it->second->first<<'\t'<<it->second->second<<'\n';*/
     
-    node_string_delete_insert(new_tags_ids, moved_local_ids);
-    
+    vector< uint32 > local_id_idx;
+    vector< uint32 > spatial_boundaries;
+    node_string_delete_insert(new_tags_ids, moved_local_ids, local_id_idx, spatial_boundaries);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+
     set< uint32 > delete_node_idxs;
     for (set< Node >::const_iterator it(delete_nodes.begin()); it != delete_nodes.end(); ++it)
       delete_node_idxs.insert(ll_idx(it->lat, it->lon) & 0xffffff00);
@@ -203,7 +196,17 @@ int main(int argc, char *argv[])
       }
     }
     
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    map< uint32, set< uint32 > > moved_ids;
+    Tag_Id_Node_Local_Updater id_node_local_updater
+	(local_ids, moved_ids, local_id_idx, spatial_boundaries);
+    delete_insert< Tag_Id_Node_Local_Updater >(id_node_local_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+/*    make_block_index< Tag_Id_Node_Local_Updater >(id_node_local_updater);*/
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    
     //TEMP
+    id_node_local_updater.dump();
 /*    for (set< pair< uint32, uint32 > >::const_iterator it(moved_local_ids.begin());
 	it != moved_local_ids.end(); ++it)
       cout<<it->first<<'\t'<<it->second<<'\n';*/
@@ -221,12 +224,84 @@ int main(int argc, char *argv[])
       cout<<'\n';
     }
     
+    //retrieving old coordinates of the nodes that appear in local ids which are moving to global
+    set< int32 > t_move_involved_nodes;
+    for (map< uint32, set< uint32 > >::const_iterator it(moved_ids.begin());
+	 it != moved_ids.end(); ++it)
+    {
+      for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+	t_move_involved_nodes.insert(*it2);
+    }
+    set< Node > move_involved_nodes;
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    Node_Id_Node_By_Id_Reader reader2(t_move_involved_nodes, move_involved_nodes);
+    select_by_id< Node_Id_Node_By_Id_Reader >(reader2);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    
+    map< pair< uint32, uint32 >, pair< set< uint32 >, uint > > global_nodes_to_be_edited;
+    for (map< uint32, set< uint32 > >::const_iterator it(moved_ids.begin());
+	 it != moved_ids.end(); ++it)
+    {
+      for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+      {
+	set< Node >::const_iterator nit(move_involved_nodes.find(Node(*it2, 0, 0)));
+	if (nit == move_involved_nodes.end())
+	  continue;
+	pair< set< uint32 >, uint >& tail(global_nodes_to_be_edited[make_pair< uint32, uint32 >
+	    (ll_idx(nit->lat, nit->lon), nit->id)]);
+	tail.first.insert(it->first);
+	tail.second = Tag_Node_Id_Updater::UPDATE;
+      }
+    }
+    for (set< Node >::const_iterator it(delete_nodes.begin());
+	 it != delete_nodes.end(); ++it)
+      global_nodes_to_be_edited[make_pair< uint32, uint32 >
+	  (ll_idx(it->lat, it->lon), it->id)] = make_pair< set< uint32 >, uint >
+	      (set< uint32 >(), Tag_Node_Id_Updater::DELETE);
+    for (map< pair< int32, uint32 >, vector< pair< uint32, uint32 >* > >::const_iterator
+	 it(new_nodes_tags.begin()); it != new_nodes_tags.end(); ++it)
+    {
+      set< uint32 > global_ids;
+      for (vector< pair< uint32, uint32 >* >::const_iterator it2(it->second.begin());
+	   it2 != it->second.end(); ++it2)
+      {
+	if ((*it2)->first == 0xffffffff)
+	  global_ids.insert((*it2)->second);
+      }
+      global_nodes_to_be_edited[make_pair< uint32, uint32 >
+	  (it->first.second, it->first.first)] = make_pair< set< uint32 >, uint >
+	      (global_ids, Tag_Node_Id_Updater::INSERT);
+    }
+    
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    map< uint32, set< uint32 > > deleted_nodes_ids;
+    Tag_Node_Id_Updater node_id_updater
+	(global_nodes_to_be_edited, deleted_nodes_ids);
+    delete_insert< Tag_Node_Id_Updater >(node_id_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+/*    make_block_index< Tag_Node_Id_Updater >(node_id_updater);*/
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    
+    //TEMP
+    node_id_updater.dump();
+
     new_nodes_tags.clear();
     for (map< pair< string, string >, pair< uint32, uint32 >* >::iterator it(new_tags_ids.begin());
 	 it != new_tags_ids.end(); ++it)
       delete(it->second);
     new_tags_ids.clear();
     
+    //updating the nodes file
+/*    cerr<<(uintmax_t)time(NULL)<<'\n';
+    Node_Id_Node_Updater node_updater(delete_nodes, new_nodes);
+    delete_insert< Node_Id_Node_Updater >(node_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    make_block_index< Node_Id_Node_Updater >(node_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    update_id_index< Node_Id_Node_Updater >(node_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';*/
+    
+    //TEMP
 /*    for (set< Node >::const_iterator it(delete_nodes.begin());
 	 it != delete_nodes.end(); ++it)
       cout<<it->id<<'\t'<<it->lat<<'\t'<<it->lon<<'\n';
@@ -246,7 +321,7 @@ int main(int argc, char *argv[])
   }
   catch(File_Error e)
   {
-    cerr<<"\nopen64: "<<e.error_number<<'\n';
+    cerr<<"\nopen64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
   
   cerr<<'\n'<<(uintmax_t)time(NULL)<<'\n';

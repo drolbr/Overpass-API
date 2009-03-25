@@ -769,18 +769,21 @@ inline int stringpair_cstringpair_compare(const pair< string, string > stringpai
 // constraints:
 // all flush_data constraints
 void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 >* >& new_tags_ids,
-                               set< pair< uint32, uint32 > >& moved_local_ids)
+                               set< pair< uint32, uint32 > >& moved_local_ids,
+			       vector< uint32 >& local_id_idx, vector< uint32 >& spatial_boundaries_)
 {
   if (new_tags_ids.empty())
     return;
   
   const uint32 BLOCKSIZE(NODE_STRING_BLOCK_SIZE);
   const vector< uint32 >& spatial_boundaries(Node_String_Cache::get_spatial_boundaries());
+  spatial_boundaries_ = spatial_boundaries;
   const vector< vector< pair< string, string > > >& kv_to_id_idx(Node_String_Cache::get_kv_to_id_idx());
   const vector< vector< uint16 > >& kv_to_id_block_idx(Node_String_Cache::get_kv_to_id_block_idx());
   uint32 next_node_tag_id(Node_String_Cache::get_next_node_tag_id());
   vector< pair< string, string > > new_block_kvs;
   vector< uint16 > new_block_spatial;
+  local_id_idx.resize(next_node_tag_id);
   
   uint block_id_bound(0);
   for (vector< vector< uint16 > >::const_iterator it(kv_to_id_block_idx.begin());
@@ -876,11 +879,11 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   }
     
   //TEMP
-/*  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
+  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
        elem_it2(new_tags_ids.begin()); elem_it2 != new_tags_ids.end(); ++elem_it2)
     cout<<elem_it2->second->first<<'\t'<<elem_it2->second->second<<'\t'
 	<<'['<<elem_it2->first.first<<"]["<<elem_it2->first.second<<"]\n";
-  cout<<"---\n";*/
+  cout<<"---\n";
   
   cur_source_block = 0;
   uint cur_dest_block(0);
@@ -976,6 +979,8 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
       }
       else if (cmp_val == 0)
       {
+	local_id_idx[*(uint32*)&(source_buf[pos])] =
+	    (*(uint32*)&(source_buf[pos+4]) | spatial_part_in_block[cur_source_block]);
 	elem_it2->second->second = *(uint32*)&(source_buf[pos]);
 	if (elem_it2->second->first == *(uint32*)&(source_buf[pos+4]))
 	{
@@ -995,6 +1000,8 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
       }
       else
       {
+	local_id_idx[*(uint32*)&(source_buf[pos])] = 
+	    (*(uint32*)&(source_buf[pos+4]) | spatial_part_in_block[cur_source_block]);
 	deletion_buf[elem_count] = 1;
 	new_byte_count += size_of_buf;
 	pos += size_of_buf;
@@ -1177,11 +1184,11 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   }
     
   //TEMP
-/*  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
+  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
        elem_it2(new_tags_ids.begin()); elem_it2 != new_tags_ids.end(); ++elem_it2)
     cout<<elem_it2->second->first<<'\t'<<elem_it2->second->second<<'\t'
 	<<'['<<elem_it2->first.first<<"]["<<elem_it2->first.second<<"]\n";
-  cout<<"---\n";*/
+  cout<<"---\n";
   
   cur_source_block = 0;
   while (cur_source_block < block_id_bound)
@@ -1236,7 +1243,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
       uint32 size_of_buf(12 + *(uint16*)&(source_buf[pos+8]) + *(uint16*)&(source_buf[pos+10]));
       if (cmp_val < 0)
       {
-	if (elem_it2->second->first == 0xffffffff)
+	if (elem_it2->second->second == 0xffffffff)
 	{
 	  elem_it2->second->second = next_node_tag_id++;
 	  new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size();
