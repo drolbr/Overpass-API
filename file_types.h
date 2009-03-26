@@ -680,6 +680,8 @@ struct Tag_Id_Node_Local_Updater : public Tag_Id_Node_Local
       else
         size_of_ = pit->second.size();
     }
+    if (remaining_size > 255)
+      size_of_ = 255;
     return (6 + size_of_*4);
   }
   
@@ -1005,6 +1007,8 @@ struct Tag_Id_Node_Global_Updater : public Tag_Id_Node_Global
       else
         size_of_ = pit->second.size();
     }
+    if (remaining_size > 255)
+      size_of_ = 255;
     return (5 + size_of_*4);
   }
   
@@ -1088,8 +1092,8 @@ struct Tag_Id_Node_Global_Updater : public Tag_Id_Node_Global
     id_set = it->second.second;
     for (uint16 i(0); i < *((uint8*)&(elem[4])); ++i)
     {
-      if (it->second.first.find(*(uint32*)&(elem[4*i + 6])) == it->second.first.end())
-        id_set.insert(*(uint32*)&(elem[4*i + 6]));
+      if (it->second.first.find(*(uint32*)&(elem[4*i + 5])) == it->second.first.end())
+        id_set.insert(*(uint32*)&(elem[4*i + 5]));
     }
     return 0;
   }
@@ -1362,15 +1366,13 @@ struct Tag_Node_Id_Updater : public Tag_Node_Id
 	(*((uint32*)&(elem[4])), *((uint32*)&(elem[0])))));
     if (it == nodes_to_be_edited_.end())
       return 1;
-    if (it->second.second == DELETE)
+    if ((it->second.second == DELETE) || (it->second.second == INSERT))
     {
       set< uint32 >& id_set(deleted_nodes_ids_[it->first.second]);
       for (uint16 i(0); i < *((uint16*)&(elem[8])); ++i)
 	id_set.insert(*(uint32*)&(elem[5*i + 10]));
       return 0;
     }
-    if (it->second.second == INSERT)
-      return 0;
     set< uint32 >& id_set(patched_nodes_ids_[it->first.second]);
     id_set = it->second.first;
     for (uint16 i(0); i < *((uint16*)&(elem[8])); ++i)

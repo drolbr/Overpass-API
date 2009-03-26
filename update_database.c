@@ -285,6 +285,70 @@ int main(int argc, char *argv[])
     //TEMP
     node_id_updater.dump();
 
+    map< uint32, pair< set< uint32 >, set< uint32 > > > global_ids_to_be_edited;
+    for (map< uint32, set< uint32 > >::const_iterator it(moved_ids.begin());
+	 it != moved_ids.end(); ++it)
+    {
+      global_ids_to_be_edited[it->first] = make_pair< set< uint32 >, set< uint32 > >
+        (set< uint32 >(), set< uint32 >());
+      set< uint32 >& inserted_nodes(global_ids_to_be_edited[it->first].second);
+      for (set< uint32 >::const_iterator it2(it->second.begin());
+           it2 != it->second.end(); ++it2)
+      {
+        if (deleted_nodes_ids.find(*it2) == deleted_nodes_ids.end())
+          inserted_nodes.insert(*it2);
+      }
+    }
+    for (map< uint32, set< uint32 > >::const_iterator it(deleted_nodes_ids.begin());
+	 it != deleted_nodes_ids.end(); ++it)
+    {
+      for (set< uint32 >::const_iterator it2(it->second.begin());
+           it2 != it->second.end(); ++it2)
+        global_ids_to_be_edited[*it2].first.insert(it->first);
+    }
+    for (map< pair< int32, uint32 >, vector< pair< uint32, uint32 >* > >::const_iterator
+         it(new_nodes_tags.begin()); it != new_nodes_tags.end(); ++it)
+    {
+      for (vector< pair< uint32, uint32 >* >::const_iterator it2(it->second.begin());
+           it2 != it->second.end(); ++it2)
+      {
+        if ((*it2)->first == 0xffffffff)
+        {
+          pair< set< uint32 >, set< uint32 > >& tail(global_ids_to_be_edited[(*it2)->second]);
+          if (tail.first.find(it->first.first) == tail.first.end())
+            tail.second.insert(it->first.first);
+          else
+            tail.first.erase(it->first.first);
+        }
+      }
+    }
+    
+    //TEMP
+    for (map< uint32, pair< set< uint32 >, set< uint32 > > >::const_iterator
+         it(global_ids_to_be_edited.begin());
+         it != global_ids_to_be_edited.end(); ++it)
+    {
+      cout<<it->first<<'\n';
+      for (set< uint32 >::const_iterator it2(it->second.first.begin());
+           it2 != it->second.first.end(); ++it2)
+        cout<<*it2<<'\t';
+      cout<<"di\n";
+      for (set< uint32 >::const_iterator it2(it->second.second.begin());
+           it2 != it->second.second.end(); ++it2)
+        cout<<*it2<<'\t';
+      cout<<'\n';
+    }
+    
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    Tag_Id_Node_Global_Updater id_global_updater(global_ids_to_be_edited);
+    delete_insert< Tag_Id_Node_Global_Updater >(id_global_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+/*    make_block_index< Tag_Id_Node_Global_Updater >(id_global_updater);*/
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    
+    //TEMP
+    id_global_updater.dump();
+
     new_nodes_tags.clear();
     for (map< pair< string, string >, pair< uint32, uint32 >* >::iterator it(new_tags_ids.begin());
 	 it != new_tags_ids.end(); ++it)
