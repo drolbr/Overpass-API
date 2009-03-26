@@ -928,6 +928,139 @@ struct Tag_Id_Node_Global_Writer : public Tag_Id_Node_Global
     multimap< uint32, uint16 > block_index_;
 };
 
+struct Tag_Id_Node_Global_Updater : public Tag_Id_Node_Global
+{
+  Tag_Id_Node_Global_Updater
+      (const map< uint32, pair< set< uint32 >, set< uint32 > > >& ids_to_be_edited)
+  : ids_to_be_edited_(ids_to_be_edited), patched_ids_nodes_(), block_index_() {}
+  
+  const multimap< Index, uint16 >& block_index() const { return block_index_; }
+  multimap< Index, uint16 >& block_index() { return block_index_; }
+  
+  typedef map< uint32, pair< set< uint32 >, set< uint32 > > >::const_iterator Iterator;
+  Iterator elem_begin() { return ids_to_be_edited_.begin(); }
+  Iterator elem_end() { return ids_to_be_edited_.end(); }
+  
+  uint32 size_of(const Iterator& it) const
+  {
+    map< uint32, set< uint32 > >::const_iterator pit(patched_ids_nodes_.find(it->first));
+    int32 size_of_(pit->second.size());
+    if (pit == patched_ids_nodes_.end())
+      size_of_ = it->second.first.size();
+    return (((size_of_ + 254) / 255)*5 + size_of_*4);
+  }
+  
+  Index index_of(const Iterator& it) const
+  {
+    return (it->first);
+  }
+  
+  Index index_of_buf(uint8* elem) const
+  {
+    return (*(uint32*)&(elem[0]));
+  }
+  
+  int32 compare(const Iterator& it, uint8* buf) const
+  {
+    if (it->first < *(uint32*)&(buf[0]))
+      return RAW_DB_LESS;
+    else
+      return RAW_DB_GREATER;
+  }
+  
+  void to_buf(uint8* dest, const Iterator& it, uint16 block_id)
+  {
+    static uint remaining_size(0);
+    static set< uint32 >::const_iterator nit;
+    *(uint32*)&(dest[0]) = it->first;
+    *(uint8*)&(dest[4]) = 0;
+    map< uint32, set< uint32 > >::const_iterator pit(patched_ids_nodes_.find(it->first));
+    if (pit == patched_ids_nodes_.end())
+    {
+      /*TODO*/
+    }
+    uint pos(5);
+    if (!remaining_size)
+    {
+      remaining_size = pit->second.size();
+      nit = pit->second.begin();
+    }
+    uint upper_limit(remaining_size);
+    if (upper_limit > 255)
+      upper_limit = 255;
+    uint i(0);
+    while (i < upper_limit)
+    {
+      *(uint32*)&(dest[pos]) = *nit;
+      ++nit;
+      pos += 4;
+      ++i;
+    }
+    remaining_size -= upper_limit;
+      
+    return /*TODO*/;
+  }
+  
+/*  uint8 keep_this_elem(uint8* elem)
+  {
+    map< pair< uint32, uint32 >, pair< set< uint32 >, uint > >::const_iterator
+      it(nodes_to_be_edited_.find(make_pair< uint32, uint32 >
+	(*((uint32*)&(elem[4])), *((uint32*)&(elem[0])))));
+    if (it == nodes_to_be_edited_.end())
+      return 1;
+    if (it->second.second == DELETE)
+    {
+      set< uint32 >& id_set(deleted_nodes_ids_[it->first.second]);
+      for (uint16 i(0); i < *((uint16*)&(elem[8])); ++i)
+	id_set.insert(*(uint32*)&(elem[5*i + 10]));
+      return 0;
+    }
+    if (it->second.second == INSERT)
+      return 0;
+    set< uint32 >& id_set(patched_nodes_ids_[it->first.second]);
+    id_set = it->second.first;
+    for (uint16 i(0); i < *((uint16*)&(elem[8])); ++i)
+      id_set.insert(*(uint32*)&(elem[5*i + 10]));
+    return 0;
+  }*/
+  
+/*  void index_to_buf(uint8* dest, const uint32& i) const
+  {
+    *(uint32*)&(dest[0]) = i;
+  }
+
+  void set_first_new_block(uint16 block_id) {}*/
+  
+  //TEMP
+/*  void dump()
+  {
+    cout<<"---\n";
+    for (map< uint32, set< uint32 > >::const_iterator it(deleted_nodes_ids_.begin());
+	 it != deleted_nodes_ids_.end(); ++it)
+    {
+      cout<<it->first<<'\n';
+      for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+	cout<<*it2<<'\t';
+      cout<<'\n';
+    }
+    cout<<"---\n";
+    for (map< uint32, set< uint32 > >::const_iterator it(patched_nodes_ids_.begin());
+	 it != patched_nodes_ids_.end(); ++it)
+    {
+      cout<<it->first<<'\n';
+      for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+	cout<<*it2<<'\t';
+      cout<<'\n';
+    }
+    cout<<"---\n";
+  }*/
+  
+private:
+  const map< uint32, pair< set< uint32 >, set< uint32 > > >& ids_to_be_edited_;
+  map< uint32, set< uint32 > > patched_ids_nodes_;
+  multimap< Index, uint16 > block_index_;
+};
+
 //-----------------------------------------------------------------------------
 
 struct Tag_Node_Id
@@ -1098,9 +1231,9 @@ struct Tag_Node_Id_Updater : public Tag_Node_Id
   {
     if (it->second.second == DELETE)
       return 0;
-    if (it->second.second == INSERT)
-      return 10+5*(it->second.first.size());
     map< uint32, set< uint32 > >::const_iterator pit(patched_nodes_ids_.find(it->first.second));
+    if (pit == patched_nodes_ids_.end())
+      return 10+5*(it->second.first.size());
     return 10+5*(pit->second.size());
   }
   
