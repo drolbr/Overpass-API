@@ -336,9 +336,9 @@ void delete_insert(T& env)
 	int cmp_val(env.compare(elem_it, &(source_buf[i])));
 	if (cmp_val == RAW_DB_LESS)
 	{
-	  env.to_buf(&(dest_buf[j]), elem_it, cur_block);
-	  j += env.size_of(elem_it);
-	  ++elem_it;
+  	  j += env.size_of_part(elem_it);
+	  if (env.to_buf(&(dest_buf[j]), elem_it, cur_block))
+	    ++elem_it;
 	}
 	else if (cmp_val == RAW_DB_GREATER)
 	{
@@ -355,9 +355,9 @@ void delete_insert(T& env)
 	      (elem_it != elem_it2) && (j < BLOCKSIZE - env.size_of(elem_it)) &&
 	      ((i >= ((uint32*)source_buf)[0]) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_LESS)))
       {
-	env.to_buf(&(dest_buf[j]), elem_it, cur_block);
-	j += env.size_of(elem_it);
-	++elem_it;
+        j += env.size_of_part(elem_it);
+	if (env.to_buf(&(dest_buf[j]), elem_it, cur_block))
+	  ++elem_it;
       }
       while ((j < blocksize) &&
 	      (i < ((uint32*)source_buf)[0]) && (j < BLOCKSIZE - env.size_of_buf(&(source_buf[i]))) &&
@@ -392,9 +392,9 @@ void delete_insert(T& env)
       int cmp_val(env.compare(elem_it, &(source_buf[i])));
       if (cmp_val == RAW_DB_LESS)
       {
-	env.to_buf(&(dest_buf[j]), elem_it, cur_block);
-	j += env.size_of(elem_it);
-	++elem_it;
+        j += env.size_of_part(elem_it);
+        if (env.to_buf(&(dest_buf[j]), elem_it, cur_block))
+	  ++elem_it;
       }
       else if (cmp_val == RAW_DB_GREATER)
       {
@@ -409,9 +409,9 @@ void delete_insert(T& env)
     }
     while (elem_it != elem_it2)
     {
-      env.to_buf(&(dest_buf[j]), elem_it, cur_block);
-      j += env.size_of(elem_it);
-      ++elem_it;
+      j += env.size_of_part(elem_it);
+      if (env.to_buf(&(dest_buf[j]), elem_it, cur_block))
+	++elem_it;
     }
     while (i < ((uint32*)source_buf)[0])
     {
