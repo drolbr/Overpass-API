@@ -159,6 +159,9 @@ void Root_Statement::set_attributes(const char **attr)
   
   script_timeout = timeout;
   element_limit = elem_limit;
+  ostringstream temp;
+  temp<<"Timeout is set to "<<timeout<<", element_limit is "<<elem_limit;
+  add_static_remark(temp.str());
 }
 
 void Root_Statement::add_statement(Statement* statement, string text)

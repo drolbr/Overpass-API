@@ -799,8 +799,8 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   }
   
   //TEMP
-  int dest_fd = open64(NODE_STRING_DATA.c_str(), O_RDONLY);
-  //int dest_fd = open64(NODE_STRING_DATA.c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+/*  int dest_fd = open64(NODE_STRING_DATA.c_str(), O_RDONLY);*/
+  int dest_fd = open64(NODE_STRING_DATA.c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)
     throw File_Error(errno, NODE_STRING_DATA, "node_string_delete_insert:1");
   
@@ -879,11 +879,11 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   }
     
   //TEMP
-  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
+/*  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
        elem_it2(new_tags_ids.begin()); elem_it2 != new_tags_ids.end(); ++elem_it2)
     cout<<elem_it2->second->first<<'\t'<<elem_it2->second->second<<'\t'
 	<<'['<<elem_it2->first.first<<"]["<<elem_it2->first.second<<"]\n";
-  cout<<"---\n";
+  cout<<"---\n";*/
   
   cur_source_block = 0;
   uint cur_dest_block(0);
@@ -1102,7 +1102,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
       lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
       //TEMP
-//       write(dest_fd, dest_buf, BLOCKSIZE);
+      write(dest_fd, dest_buf, BLOCKSIZE);
 
       cur_dest_block = next_block_id;
       if ((i >= ((uint32*)source_buf)[0]) ||
@@ -1178,17 +1178,17 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
     //TEMP
-    //write(dest_fd, dest_buf, BLOCKSIZE);
+    write(dest_fd, dest_buf, BLOCKSIZE);
     
     ++cur_source_block;
   }
     
   //TEMP
-  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
+/*  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
        elem_it2(new_tags_ids.begin()); elem_it2 != new_tags_ids.end(); ++elem_it2)
     cout<<elem_it2->second->first<<'\t'<<elem_it2->second->second<<'\t'
 	<<'['<<elem_it2->first.first<<"]["<<elem_it2->first.second<<"]\n";
-  cout<<"---\n";
+  cout<<"---\n";*/
   
   cur_source_block = 0;
   while (cur_source_block < block_id_bound)
@@ -1361,7 +1361,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
       lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
       //TEMP
-//       write(dest_fd, dest_buf, BLOCKSIZE);
+      write(dest_fd, dest_buf, BLOCKSIZE);
 
       cur_dest_block = next_block_id;
       if ((i >= ((uint32*)source_buf)[0]) ||
@@ -1437,7 +1437,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
     //TEMP
-    //write(dest_fd, dest_buf, BLOCKSIZE);
+    write(dest_fd, dest_buf, BLOCKSIZE);
     
     ++cur_source_block;
   }
@@ -1447,18 +1447,18 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   free(dest_buf);
 
   //TEMP
-  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
+/*  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
        elem_it2(new_tags_ids.begin()); elem_it2 != new_tags_ids.end(); ++elem_it2)
     cout<<elem_it2->second->first<<'\t'<<elem_it2->second->second<<'\t'
 	<<'['<<elem_it2->first.first<<"]["<<elem_it2->first.second<<"]\n";
-  cout<<"---\n";
+  cout<<"---\n";*/
   
   close(dest_fd);
   
   //update Node_String_Cache
   Node_String_Cache::reset();
   
-  int string_idx_fd = open64("/dev/stdout"/*NODE_STRING_IDX.c_str()*/, O_WRONLY|O_APPEND);
+  int string_idx_fd = open64(/*"/dev/stdout"*/NODE_STRING_IDX.c_str(), O_WRONLY|O_APPEND);
   if (string_idx_fd < 0)
     throw File_Error(errno, NODE_STRING_IDX, "Node_String_Cache.init():1");
   

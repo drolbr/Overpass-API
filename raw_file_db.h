@@ -271,8 +271,8 @@ void delete_insert(T& env)
   env.set_first_new_block(next_block_id);
   
   //TEMP
-  int dest_fd = open64(env.data_file().c_str(), O_RDONLY);
-/*  int dest_fd = open64(env.data_file().c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);*/
+/*  int dest_fd = open64(env.data_file().c_str(), O_RDONLY);*/
+  int dest_fd = open64(env.data_file().c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)
     throw File_Error(errno, env.data_file(), "delete_insert:2");
   
@@ -375,7 +375,7 @@ void delete_insert(T& env)
       lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
       //TEMP
-//       write(dest_fd, dest_buf, BLOCKSIZE);
+      write(dest_fd, dest_buf, BLOCKSIZE);
 
       cur_block = next_block_id;
       if ((i >= ((uint32*)source_buf)[0]) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_LESS))
@@ -426,7 +426,7 @@ void delete_insert(T& env)
     lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
     //TEMP
-/*    write(dest_fd, dest_buf, BLOCKSIZE);*/
+    write(dest_fd, dest_buf, BLOCKSIZE);
   }
     
   free(source_buf);
@@ -536,7 +536,7 @@ void update_id_index(T& env)
     throw File_Error(errno, DATA_FILE, "make_id_index:1");
   lseek64(data_fd, (int64)(env.first_new_block())*BLOCKSIZE, SEEK_SET);
   
-  int dest_fd = open64(ID_IDX_FILE.c_str(), O_RDWR|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  int dest_fd = open64(ID_IDX_FILE.c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)
     throw File_Error(errno, ID_IDX_FILE, "make_id_index:2");
   
@@ -586,6 +586,9 @@ void update_id_index(T& env)
       int64 dest_pos(lseek64(dest_fd, (int64)((*it) - 1)*sizeof(uint16), SEEK_SET));
       if (dest_pos < (int64)((*it) - 1)*sizeof(uint16))
       {
+        //TEMP
+	cout<<dest_pos<<'\n';
+      
 	int64 zero_buf(0);
 	while (dest_pos + sizeof(int64) < (int64)((*it) - 1)*sizeof(uint16))
 	{

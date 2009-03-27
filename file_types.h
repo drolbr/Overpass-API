@@ -807,7 +807,7 @@ struct Tag_Id_Node_Local_Updater : public Tag_Id_Node_Local
   void set_first_new_block(uint16 block_id) {}
   
   //TEMP
-  void dump()
+/*  void dump()
   {
     for (map< uint32, set< uint32 > >::const_iterator it(moved_ids_.begin());
 	 it != moved_ids_.end(); ++it)
@@ -827,7 +827,7 @@ struct Tag_Id_Node_Local_Updater : public Tag_Id_Node_Local
       cout<<'\n';
     }
     cout<<"---\n";
-  }
+  }*/
   
   private:
     const map< pair< uint32, uint32 >, pair< set< uint32 >, set< uint32 > > >& local_ids_;
@@ -1106,7 +1106,7 @@ struct Tag_Id_Node_Global_Updater : public Tag_Id_Node_Global
   void set_first_new_block(uint16 block_id) {}
   
   //TEMP
-  void dump()
+/*  void dump()
   {
     cout<<"---\n";
     for (map< uint32, set< uint32 > >::const_iterator it(patched_ids_nodes_.begin());
@@ -1118,7 +1118,7 @@ struct Tag_Id_Node_Global_Updater : public Tag_Id_Node_Global
       cout<<'\n';
     }
     cout<<"---\n";
-  }
+  }*/
   
 private:
   const map< uint32, pair< set< uint32 >, set< uint32 > > >& ids_to_be_edited_;
@@ -1388,7 +1388,7 @@ struct Tag_Node_Id_Updater : public Tag_Node_Id
   void set_first_new_block(uint16 block_id) {}
   
   //TEMP
-  void dump()
+/*  void dump()
   {
     cout<<"---\n";
     for (map< uint32, set< uint32 > >::const_iterator it(deleted_nodes_ids_.begin());
@@ -1409,7 +1409,7 @@ struct Tag_Node_Id_Updater : public Tag_Node_Id
       cout<<'\n';
     }
     cout<<"---\n";
-  }
+  }*/
   
 private:
   const map< pair< uint32, uint32 >, pair< set< uint32 >, uint > >& nodes_to_be_edited_;
