@@ -808,13 +808,6 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   uint8* deletion_buf = (uint8*) malloc(BLOCKSIZE);
   uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
   
-  //TEMP
-/*  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
-       elem_it2(new_tags_ids.begin()); elem_it2 != new_tags_ids.end(); ++elem_it2)
-    cout<<elem_it2->second->first<<'\t'<<elem_it2->second->second<<'\t'
-	<<'['<<elem_it2->first.first<<"]["<<elem_it2->first.second<<"]\n";
-  cout<<"---\n";*/
-  
   uint cur_source_block(0);
   while (cur_source_block < block_id_bound)
   {
@@ -878,13 +871,6 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     ++cur_source_block;
   }
     
-  //TEMP
-/*  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
-       elem_it2(new_tags_ids.begin()); elem_it2 != new_tags_ids.end(); ++elem_it2)
-    cout<<elem_it2->second->first<<'\t'<<elem_it2->second->second<<'\t'
-	<<'['<<elem_it2->first.first<<"]["<<elem_it2->first.second<<"]\n";
-  cout<<"---\n";*/
-  
   cur_source_block = 0;
   uint cur_dest_block(0);
   while (cur_source_block < block_id_bound)
@@ -895,23 +881,12 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
       continue;
     }
     
-    //TEMP
-/*    cout<<cur_source_block<<'\t'<<spatial_part_in_block[cur_source_block]<<'\n';*/
-    
     uint32 new_byte_count(0);
     map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_it;
     map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_end;
     uint16 spatial(spatial_part_in_block[cur_source_block]);
     if (kv_to_id_block_idx[spatial][0] == cur_source_block)
     {
-      //TEMP
-/*      cout<<"(begin)\n";
-      if (1 < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
-      cout<<'['<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][1].first
-      <<"]["<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][1].second<<"]\n";
-      else
-      cout<<"(end)\n";*/
-      
       elem_it = new_tags_ids.begin();
       if (1 < kv_to_id_block_idx[spatial].size())
 	elem_end = new_tags_ids.lower_bound(kv_to_id_idx[spatial][1]);
@@ -924,15 +899,6 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
       {
 	if (kv_to_id_block_idx[spatial][i] == cur_source_block)
 	{
-          //TEMP
-/*	  cout<<'['<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][i].first
-	  <<"]["<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][i].second<<"]\n";
-	  if (i+1 < kv_to_id_block_idx[spatial_part_in_block[cur_source_block]].size())
-	  cout<<'['<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][i+1].first
-	  <<"]["<<kv_to_id_idx[spatial_part_in_block[cur_source_block]][i+1].second<<"]\n";
-	  else
-	  cout<<"(end)\n";*/
-      
 	  elem_it = new_tags_ids.lower_bound(kv_to_id_idx[spatial][i]);
 	  if (i+1 < kv_to_id_block_idx[spatial].size())
 	    elem_end = new_tags_ids.lower_bound
@@ -942,16 +908,6 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
 	}
       }
     }
-    //TEMP
-/*    if (elem_it != new_tags_ids.end())
-      cout<<'['<<elem_it->first.first<<"]["<<elem_it->first.second<<"]\n";
-    else
-      cout<<"(end)\n";
-    if (elem_end != new_tags_ids.end())
-      cout<<'['<<elem_end->first.first<<"]["<<elem_end->first.second<<"]\n";
-    else
-      cout<<"(end)\n";*/
-    
     if (elem_it == elem_end)
     {
       ++cur_source_block;
@@ -1183,13 +1139,6 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     ++cur_source_block;
   }
     
-  //TEMP
-/*  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
-       elem_it2(new_tags_ids.begin()); elem_it2 != new_tags_ids.end(); ++elem_it2)
-    cout<<elem_it2->second->first<<'\t'<<elem_it2->second->second<<'\t'
-	<<'['<<elem_it2->first.first<<"]["<<elem_it2->first.second<<"]\n";
-  cout<<"---\n";*/
-  
   cur_source_block = 0;
   while (cur_source_block < block_id_bound)
   {
@@ -1446,13 +1395,6 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   free(deletion_buf);
   free(dest_buf);
 
-  //TEMP
-/*  for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
-       elem_it2(new_tags_ids.begin()); elem_it2 != new_tags_ids.end(); ++elem_it2)
-    cout<<elem_it2->second->first<<'\t'<<elem_it2->second->second<<'\t'
-	<<'['<<elem_it2->first.first<<"]["<<elem_it2->first.second<<"]\n";
-  cout<<"---\n";*/
-  
   close(dest_fd);
   
   //update Node_String_Cache

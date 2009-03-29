@@ -938,40 +938,10 @@ vector< vector< pair< string, string > > >& multiNode_to_kvs_query
     global_node_idxs.insert(ll_idx(it->lat, it->lon));
   }
   
-  //TEMP
-/*  for (map< uint32, set< uint32 > >::const_iterator it(global_node_to_id.begin());
-       it != global_node_to_id.end(); ++it)
-  {
-    cout<<it->first<<":\t";
-    for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
-      cout<<*it2<<'\t';
-    cout<<'\n';
-  }
-  for (set< uint32 >::const_iterator it2(global_node_idxs.begin()); it2 != global_node_idxs.end(); ++it2)
-    cout<<*it2<<'\n';*/
-  
   Tag_MultiNode_Id_Local_Reader local_reader(local_node_to_id, node_idxs);
   select_with_idx< Tag_MultiNode_Id_Local_Reader >(local_reader);
   Tag_Node_Id_Reader global_reader(global_node_to_id, global_node_idxs);
   select_with_idx< Tag_Node_Id_Reader >(global_reader);
-  
-  //TEMP
-/*  for (map< uint32, set< uint32 > >::const_iterator it(global_node_to_id.begin());
-       it != global_node_to_id.end(); ++it)
-  {
-    cout<<it->first<<":\t";
-    for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
-      cout<<*it2<<'\t';
-    cout<<'\n';
-  }
-  for (map< uint32, set< uint32 > >::const_iterator it(local_node_to_id.begin());
-       it != local_node_to_id.end(); ++it)
-  {
-    cout<<it->first<<":\t";
-    for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
-      cout<<*it2<<'\t';
-    cout<<'\n';
-  }*/
   
   set< uint32 > ids_global;
   for (map< uint32, set< uint32 > >::const_iterator it(global_node_to_id.begin());
