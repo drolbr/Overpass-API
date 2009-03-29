@@ -660,10 +660,13 @@ struct Tag_Id_Node_Local_Updater : public Tag_Id_Node_Local
     if ((!(it->second.second.empty())) && (*(it->second.second.begin()) == 0))
       return 0;
     map< pair< uint32, uint32 >, set< uint32 > >::const_iterator pit(patched_local_ids_.find(it->first));
-    int32 size_of_(it->second.first.size());
+    int32 size_of_(it->second.second.size());
     if (pit != patched_local_ids_.end())
       size_of_ = pit->second.size();
-    return ((size_of_ / 255 + 1)*6 + size_of_*4);
+    if (size_of_ >= 1)
+      return (((size_of_ - 1) / 255 + 1)*6 + size_of_*4);
+    else
+      return 6;
   }
   
   uint32 size_of_part(const Iterator& it) const
@@ -680,7 +683,7 @@ struct Tag_Id_Node_Local_Updater : public Tag_Id_Node_Local
       else
         size_of_ = pit->second.size();
     }
-    if (remaining_size > 255)
+    if (size_of_ > 255)
       size_of_ = 255;
     return (6 + size_of_*4);
   }
@@ -1164,11 +1167,14 @@ struct Tag_Node_Id_Reader : public Tag_Node_Id
   
   void process(uint8* buf)
   {
-    map< uint32, set< uint32 > >::iterator it(node_to_id_.find(*((uint32*)buf)));
+    //TEMP
+/*    cout<<*(uint32*)buf<<'\n';*/
+    
+    map< uint32, set< uint32 > >::iterator it(node_to_id_.find(*(uint32*)buf));
     if (it != node_to_id_.end())
     {
-      for (uint32 j(0); j < *((uint16*)&(buf[8])); ++j)
-	it->second.insert(*((uint32*)&(buf[10 + 5*j])));
+      for (uint32 j(0); j < *(uint16*)&(buf[8]); ++j)
+	it->second.insert(*(uint32*)&(buf[10 + 5*j]));
     }
   }
   

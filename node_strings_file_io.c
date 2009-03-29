@@ -1277,7 +1277,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     }
     while (elem_it2 != elem_end)
     {
-      if (elem_it2->second->first == 0xffffffff)
+      if (elem_it2->second->second == 0xffffffff)
       {
 	elem_it2->second->second = next_node_tag_id++;
 	new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size();
@@ -1300,7 +1300,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
 	int cmp_val(stringpair_cstringpair_compare(elem_it->first, &(source_buf[i+8])));
 	if (cmp_val < 0)
 	{
-	  if (is_local_here(elem_it, spatial_part_in_block[cur_source_block], spatial_boundaries))
+	  if (elem_it->second->first == 0xffffffff)
 	  {
 	    *(uint32*)&(dest_buf[j]) = elem_it->second->second;
 	    *(uint32*)&(dest_buf[j+4]) = elem_it->second->first;
@@ -1330,7 +1330,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
 	      ((i >= ((uint32*)source_buf)[0]) ||
 	      (stringpair_cstringpair_compare(elem_it->first, &(source_buf[i+8])) < 0)))
       {
-	if (is_local_here(elem_it, spatial_part_in_block[cur_source_block], spatial_boundaries))
+	if (elem_it->second->first == 0xffffffff)
 	{
 	  *(uint32*)&(dest_buf[j]) = elem_it->second->second;
 	  *(uint32*)&(dest_buf[j+4]) = elem_it->second->first;
@@ -1385,7 +1385,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
       int cmp_val(stringpair_cstringpair_compare(elem_it->first, &(source_buf[i+8])));
       if (cmp_val < 0)
       {
-	if (is_local_here(elem_it, spatial_part_in_block[cur_source_block], spatial_boundaries))
+	if (elem_it->second->first == 0xffffffff)
 	{
 	  *(uint32*)&(dest_buf[j]) = elem_it->second->second;
 	  *(uint32*)&(dest_buf[j+4]) = elem_it->second->first;
@@ -1411,7 +1411,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     }
     while (elem_it != elem_it2)
     {
-      if (is_local_here(elem_it, spatial_part_in_block[cur_source_block], spatial_boundaries))
+      if (elem_it->second->first == 0xffffffff)
       {
 	*(uint32*)&(dest_buf[j]) = elem_it->second->second;
 	*(uint32*)&(dest_buf[j+4]) = elem_it->second->first;
@@ -1458,7 +1458,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   //update Node_String_Cache
   Node_String_Cache::reset();
   
-  int string_idx_fd = open64(/*"/dev/stdout"*/NODE_STRING_IDX.c_str(), O_WRONLY|O_APPEND);
+  int string_idx_fd = open64(NODE_STRING_IDX.c_str(), O_WRONLY|O_APPEND);
   if (string_idx_fd < 0)
     throw File_Error(errno, NODE_STRING_IDX, "Node_String_Cache.init():1");
   
@@ -1471,6 +1471,14 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     write(string_idx_fd, new_block_kvs[i].first.data(), key_len);
     write(string_idx_fd, new_block_kvs[i].second.data(), value_len);
   }
+  
+  close(string_idx_fd);
+
+  string_idx_fd = open64(NODE_STRING_IDX.c_str(), O_WRONLY);
+  if (string_idx_fd < 0)
+    throw File_Error(errno, NODE_STRING_IDX, "Node_String_Cache.init():1");
+  
+  write(string_idx_fd, &next_node_tag_id, sizeof(uint32));
   
   close(string_idx_fd);
 }

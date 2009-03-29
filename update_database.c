@@ -158,28 +158,6 @@ int main(int argc, char *argv[])
     cerr<<(uintmax_t)time(NULL)<<'\n';
     
     //TEMP
-    cerr<<(uintmax_t)time(NULL)<<'\n';
-    Node_Id_Node_Updater node_updater(delete_nodes, new_nodes);
-    delete_insert< Node_Id_Node_Updater >(node_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
-    make_block_index< Node_Id_Node_Updater >(node_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
-    update_id_index< Node_Id_Node_Updater >(node_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
-    
-    //TEMP
-/*    for (set< Node >::const_iterator it(delete_nodes.begin());
-	 it != delete_nodes.end(); ++it)
-      cout<<it->id<<'\t'<<it->lat<<'\t'<<it->lon<<'\n';
-    cout<<"---\n";
-    for (set< Node >::const_iterator it(new_nodes.begin());
-	 it != new_nodes.end(); ++it)
-      cout<<it->id<<'\t'<<it->lat<<'\t'<<it->lon<<'\n';
-    cout<<"---\n"; */
-    
-    exit(0);
-
-    //TEMP
 /*    for (map< pair< int32, uint32 >, vector< pair< uint32, uint32 >* > >::const_iterator
 	 it(new_nodes_tags.begin()); it != new_nodes_tags.end(); ++it)
     {
@@ -194,11 +172,17 @@ int main(int argc, char *argv[])
       cout<<'['<<it->first.first<<"]["<<it->first.second<<"]\n\t"
 	  <<it->second->first<<'\t'<<it->second->second<<'\n';*/
     
+    //TEMP
+    cout<<"---0\n";
+    
     vector< uint32 > local_id_idx;
     vector< uint32 > spatial_boundaries;
     node_string_delete_insert(new_tags_ids, moved_local_ids, local_id_idx, spatial_boundaries);
     cerr<<(uintmax_t)time(NULL)<<'\n';
 
+    //TEMP
+    cout<<"---4\n";
+    
     set< uint32 > delete_node_idxs;
     for (set< Node >::const_iterator it(delete_nodes.begin()); it != delete_nodes.end(); ++it)
       delete_node_idxs.insert(ll_idx(it->lat, it->lon) & 0xffffff00);
@@ -218,6 +202,9 @@ int main(int argc, char *argv[])
           local_ids[**it2].second.insert(it->first.first);
       }
     }
+    
+    //TEMP
+    cout<<"---1\n";
     
     cerr<<(uintmax_t)time(NULL)<<'\n';
     map< uint32, set< uint32 > > moved_ids;
@@ -246,6 +233,9 @@ int main(int argc, char *argv[])
         cout<<*it2<<'\t';
       cout<<'\n';
     }*/
+    
+    //TEMP
+    cout<<"---2\n";
     
     //retrieving old coordinates of the nodes that appear in local ids which are moving to global
     set< int32 > t_move_involved_nodes;
@@ -347,6 +337,9 @@ int main(int argc, char *argv[])
     }
     
     //TEMP
+    cout<<"---3\n";
+    
+    //TEMP
 /*    for (map< uint32, pair< set< uint32 >, set< uint32 > > >::const_iterator
          it(global_ids_to_be_edited.begin());
          it != global_ids_to_be_edited.end(); ++it)
@@ -380,7 +373,7 @@ int main(int argc, char *argv[])
     
     //updating the nodes file
     cerr<<(uintmax_t)time(NULL)<<'\n';
-    //Node_Id_Node_Updater node_updater(delete_nodes, new_nodes);
+    Node_Id_Node_Updater node_updater(delete_nodes, new_nodes);
     delete_insert< Node_Id_Node_Updater >(node_updater);
     cerr<<(uintmax_t)time(NULL)<<'\n';
     make_block_index< Node_Id_Node_Updater >(node_updater);

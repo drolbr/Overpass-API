@@ -288,6 +288,10 @@ void delete_insert(T& env)
     while ((block_it != block_index.end()) && (block_it->first <= env.index_of(elem_it)))
       cur_block = (block_it++)->second;
 
+    //TEMP
+/*    if (cur_block == 279)
+      cout<<"---\n";*/
+    
     uint32 new_byte_count(0);
     lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
     read(dest_fd, source_buf, BLOCKSIZE);
@@ -330,15 +334,16 @@ void delete_insert(T& env)
       uint32 j(sizeof(uint32));
       while ((j < blocksize) &&
 	      (elem_it != elem_it2) && (i < ((uint32*)source_buf)[0]) &&
-	      (j < BLOCKSIZE - env.size_of(elem_it)) &&
+	      (j < BLOCKSIZE - env.size_of_part(elem_it)) &&
 	      (j < BLOCKSIZE - env.size_of_buf(&(source_buf[i]))))
       {
 	int cmp_val(env.compare(elem_it, &(source_buf[i])));
 	if (cmp_val == RAW_DB_LESS)
 	{
-  	  j += env.size_of_part(elem_it);
+  	  uint elem_size(env.size_of_part(elem_it));
 	  if (env.to_buf(&(dest_buf[j]), elem_it, cur_block))
 	    ++elem_it;
+	  j += elem_size;
 	}
 	else if (cmp_val == RAW_DB_GREATER)
 	{
@@ -352,12 +357,13 @@ void delete_insert(T& env)
 	}
       }
       while ((j < blocksize) &&
-	      (elem_it != elem_it2) && (j < BLOCKSIZE - env.size_of(elem_it)) &&
+	      (elem_it != elem_it2) && (j < BLOCKSIZE - env.size_of_part(elem_it)) &&
 	      ((i >= ((uint32*)source_buf)[0]) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_LESS)))
       {
-        j += env.size_of_part(elem_it);
+	uint elem_size(env.size_of_part(elem_it));
 	if (env.to_buf(&(dest_buf[j]), elem_it, cur_block))
 	  ++elem_it;
+	j += elem_size;
       }
       while ((j < blocksize) &&
 	      (i < ((uint32*)source_buf)[0]) && (j < BLOCKSIZE - env.size_of_buf(&(source_buf[i]))) &&
@@ -389,17 +395,31 @@ void delete_insert(T& env)
     uint32 j(sizeof(uint32));
     while ((elem_it != elem_it2) && (i < ((uint32*)source_buf)[0]))
     {
+      //TEMP
+/*      if (cur_block == 279)
+	cout<<j<<'\t';*/
+    
       int cmp_val(env.compare(elem_it, &(source_buf[i])));
       if (cmp_val == RAW_DB_LESS)
       {
-        j += env.size_of_part(elem_it);
-        if (env.to_buf(&(dest_buf[j]), elem_it, cur_block))
+        //TEMP
+/*	if (cur_block == 279)
+	  cout<<"a\n";*/
+    
+	uint elem_size(env.size_of_part(elem_it));
+	if (env.to_buf(&(dest_buf[j]), elem_it, cur_block))
 	  ++elem_it;
+	j += elem_size;
       }
       else if (cmp_val == RAW_DB_GREATER)
       {
+	//TEMP
+/*	if (cur_block == 279)
+	  cout<<"b\n";*/
+    
 	if (deletion_buf[elem_count])
 	{
+          //TEMP
 	  memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
 	  j += env.size_of_buf(&(source_buf[i]));
 	}
@@ -409,12 +429,21 @@ void delete_insert(T& env)
     }
     while (elem_it != elem_it2)
     {
-      j += env.size_of_part(elem_it);
+      //TEMP
+/*      if (cur_block == 279)
+	cout<<j<<"\tc\n";*/
+    
+      uint elem_size(env.size_of_part(elem_it));
       if (env.to_buf(&(dest_buf[j]), elem_it, cur_block))
 	++elem_it;
+      j += elem_size;
     }
     while (i < ((uint32*)source_buf)[0])
     {
+      //TEMP
+/*      if (cur_block == 279)
+	cout<<j<<"\td\n";*/
+    
       if (deletion_buf[elem_count])
       {
 	memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
@@ -427,6 +456,10 @@ void delete_insert(T& env)
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
     //TEMP
     write(dest_fd, dest_buf, BLOCKSIZE);
+    
+    //TEMP
+/*    if (cur_block == 279)
+      cout<<"---\n";*/
   }
     
   free(source_buf);
@@ -587,7 +620,7 @@ void update_id_index(T& env)
       if (dest_pos < (int64)((*it) - 1)*sizeof(uint16))
       {
         //TEMP
-	cout<<dest_pos<<'\n';
+/*	cout<<dest_pos<<'\n';*/
       
 	int64 zero_buf(0);
 	while (dest_pos + sizeof(int64) < (int64)((*it) - 1)*sizeof(uint16))
@@ -665,6 +698,11 @@ void select_with_idx(T& env)
     else
       break;
   }
+  
+  //TEMP
+//   for (set< uint16 >::const_iterator it(block_ids.begin()); it != block_ids.end(); ++it)
+//     cout<<*it<<'\t';
+//   cout<<"\n---\n";
 
   int data_fd = open64(DATA_FILE.c_str(), O_RDONLY);
   if (data_fd < 0)
@@ -681,6 +719,9 @@ void select_with_idx(T& env)
       env.block_notify(&(data_buf[pos]));
     while (pos < *((uint32*)data_buf) + sizeof(uint32))
     {
+      //TEMP
+/*      cout<<((uint64)(*it))*BLOCKSIZE<<' '<<pos<<'\t'<<*(uint32*)&(data_buf[pos])<<'\n';*/
+      
       env.process(&(data_buf[pos]));
       pos += env.size_of_buf(&(data_buf[pos]));
     }
