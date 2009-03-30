@@ -1105,7 +1105,7 @@ struct Tag_Node_Id
   
   uint32 size_of_buf(uint8* elem) const
   {
-    return ((*((uint16*)&(elem[8])))*(sizeof(uint32) + sizeof(uint8)) + sizeof(uint16) + 2*sizeof(uint32));
+    return ((*((uint16*)&(elem[8])))*4 + 10);
   }
 };
 
@@ -1133,7 +1133,7 @@ struct Tag_Node_Id_Reader : public Tag_Node_Id
     if (it != node_to_id_.end())
     {
       for (uint32 j(0); j < *(uint16*)&(buf[8]); ++j)
-	it->second.insert(*(uint32*)&(buf[10 + 5*j]));
+	it->second.insert(*(uint32*)&(buf[10 + 4*j]));
     }
   }
   
@@ -1186,8 +1186,7 @@ struct Tag_Node_Id_Writer : public Tag_Node_Id
 
   uint32 size_of(const Tag_Node_Id_Iterator& it) const
   {
-    return (ids_of_node[read_order[it.i]].size()*(sizeof(uint32)
-	+ sizeof(uint8)) + sizeof(uint16) + 2*sizeof(uint32));
+    return (ids_of_node[read_order[it.i]].size()*4 + 10);
   }
   
   uint32 index_of(const Tag_Node_Id_Iterator& it) const
@@ -1218,10 +1217,7 @@ struct Tag_Node_Id_Writer : public Tag_Node_Id
     *((uint32*)&(dest[4])) = ll_idx_[read_order[it.i]];
     *((uint16*)&(dest[8])) = ids_of_node[read_order[it.i]].size();
     for (uint32 i(0); i < ids_of_node[read_order[it.i]].size(); ++i)
-    {
-      *((uint32*)&(dest[5*i + 10])) = ids_of_node[read_order[it.i]][i];
-      *((uint8*)&(dest[5*i + 14])) = blocklet_of_id_[ids_of_node[read_order[it.i]][i]];
-    }
+      *((uint32*)&(dest[4*i + 10])) = ids_of_node[read_order[it.i]][i];
   }
   
   void index_to_buf(uint8* dest, const uint32& i) const
@@ -1264,8 +1260,8 @@ struct Tag_Node_Id_Updater : public Tag_Node_Id
       return 0;
     map< uint32, set< uint32 > >::const_iterator pit(patched_nodes_ids_.find(it->first.second));
     if (pit == patched_nodes_ids_.end())
-      return 10+5*(it->second.first.size());
-    return 10+5*(pit->second.size());
+      return (10 + 4*(it->second.first.size()));
+    return (10 + 4*(pit->second.size()));
   }
   
   uint32 size_of_part(const Iterator& it) const { return size_of(it); }
@@ -1306,8 +1302,7 @@ struct Tag_Node_Id_Updater : public Tag_Node_Id
       for (set< uint32 >::const_iterator it2(it->second.first.begin());
            it2 != it->second.first.end(); ++it2)
       {
-        *((uint32*)&(dest[5*i + 10])) = *it2;
-        *((uint8*)&(dest[5*i + 14])) = 0;
+        *((uint32*)&(dest[4*i + 10])) = *it2;
         ++i;
       }
       return true;
@@ -1317,8 +1312,8 @@ struct Tag_Node_Id_Updater : public Tag_Node_Id
     for (set< uint32 >::const_iterator it2(pit->second.begin());
          it2 != pit->second.end(); ++it2)
     {
-      *((uint32*)&(dest[5*i + 10])) = *it2;
-      *((uint8*)&(dest[5*i + 14])) = 0;
+      *((uint32*)&(dest[4*i + 10])) = *it2;
+      *((uint8*)&(dest[4*i + 14])) = 0;
       ++i;
     }
     return true;
@@ -1335,13 +1330,13 @@ struct Tag_Node_Id_Updater : public Tag_Node_Id
     {
       set< uint32 >& id_set(deleted_nodes_ids_[it->first.second]);
       for (uint16 i(0); i < *((uint16*)&(elem[8])); ++i)
-	id_set.insert(*(uint32*)&(elem[5*i + 10]));
+	id_set.insert(*(uint32*)&(elem[4*i + 10]));
       return 0;
     }
     set< uint32 >& id_set(patched_nodes_ids_[it->first.second]);
     id_set = it->second.first;
     for (uint16 i(0); i < *((uint16*)&(elem[8])); ++i)
-      id_set.insert(*(uint32*)&(elem[5*i + 10]));
+      id_set.insert(*(uint32*)&(elem[4*i + 10]));
     return 0;
   }
   
