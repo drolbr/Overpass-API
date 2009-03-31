@@ -1077,12 +1077,13 @@ struct Tag_Id_Node_Global_Updater : public Tag_Id_Node_Global
       it(ids_to_be_edited_.find(*((uint32*)&(elem[0]))));
     if (it == ids_to_be_edited_.end())
       return 1;
-    set< uint32 >& id_set(patched_ids_nodes_[it->first]);
-    id_set = it->second.second;
+    map< uint32, set< uint32 > >::iterator it_set(patched_ids_nodes_.find(it->first));
+    if (it_set == patched_ids_nodes_.end())
+      it_set = patched_ids_nodes_.insert(make_pair(it->first, it->second.second)).first;
     for (uint16 i(0); i < *((uint8*)&(elem[4])); ++i)
     {
       if (it->second.first.find(*(uint32*)&(elem[4*i + 5])) == it->second.first.end())
-        id_set.insert(*(uint32*)&(elem[4*i + 5]));
+        it_set->second.insert(*(uint32*)&(elem[4*i + 5]));
     }
     return 0;
   }
@@ -1345,7 +1346,7 @@ struct Tag_Node_Id_Updater : public Tag_Node_Id
       return 0;
     }
     set< uint32 >& id_set(patched_nodes_ids_[it->first.second]);
-    id_set = it->second.first; //TODO
+    id_set = it->second.first;
     for (uint16 i(0); i < *((uint16*)&(elem[8])); ++i)
       id_set.insert(*(uint32*)&(elem[4*i + 10]));
     return 0;

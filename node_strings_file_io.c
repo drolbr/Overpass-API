@@ -1443,12 +1443,20 @@ void node_tag_id_statistics_remake()
   if (dest_fd < 0)
     throw File_Error(errno, NODE_TAG_ID_STATS, "node_tag_id_statistics_remake:1");
   
-  vector< uint32 > id_count(Node_String_Cache::get_next_node_tag_id());
-  Tag_Id_Count_Local_Reader local_stats(id_count);
-  select_all< Tag_Id_Count_Local_Reader >(local_stats);
-  Tag_Id_Count_Global_Reader global_stats(id_count);
-  select_all< Tag_Id_Count_Global_Reader >(global_stats);
+  //TEMP
+  cerr<<Node_String_Cache::get_next_node_tag_id()<<'\n';
   
+  vector< uint32 > id_count(Node_String_Cache::get_next_node_tag_id());
+  cerr<<0;
+  Tag_Id_Count_Local_Reader local_stats(id_count);
+  cerr<<1;
+  select_all< Tag_Id_Count_Local_Reader >(local_stats);
+  cerr<<2;
+  Tag_Id_Count_Global_Reader global_stats(id_count);
+  cerr<<3;
+  select_all< Tag_Id_Count_Global_Reader >(global_stats);
+  cerr<<4;
+
   for (vector< uint32 >::const_iterator it(id_count.begin()); it != id_count.end(); ++it)
     write(dest_fd, &(*it), sizeof(uint32));
   
