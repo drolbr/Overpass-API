@@ -50,6 +50,9 @@ const uint32 TAG_NODE_ID_BLOCKSIZE = 4*1024*1024;
 const uint NODE_TAG_SPATIAL_PARTS = 32;
 const int NODE_STRING_BLOCK_SIZE = 1024*1024;
 
+static const char* WAY_FILE_BASE = "ways_2";
+// const uint32 WAY_BLOCKSIZE = 4*1024*1024;
+
 //-----------------------------------------------------------------------------
 
 static const char* WAY_DATA = "/opt/osm_why_api/ways.dat";
@@ -274,6 +277,7 @@ struct Node_Id_Node_Writer : public Node_Id_Node
   {
     return (3*sizeof(uint32));
   }
+  uint32 size_of_part(const Iterator& it) const { return size_of(it); }
   
   Index index_of(const Iterator& it) const
   {
@@ -297,11 +301,12 @@ struct Node_Id_Node_Writer : public Node_Id_Node
       return RAW_DB_GREATER;
   }
   
-  void to_buf(uint8* dest, const Iterator& it) const
+  bool to_buf(uint8* dest, const Iterator& it) const
   {
     *(uint32*)&(dest[0]) = it->second.id;
     *(int32*)&(dest[4]) = it->second.lat;
     *(int32*)&(dest[8]) = it->second.lon;
+    return true;
   }
   
   void index_to_buf(uint8* dest, const uint32& i) const
@@ -598,6 +603,7 @@ struct Tag_Id_Node_Local_Writer : public Tag_Id_Node_Local
   {
     return ((*it)[1]*sizeof(uint32) + 2*sizeof(uint8) + sizeof(uint32));
   }
+  uint32 size_of_part(const vector< uint32* >::const_iterator& it) const { return size_of(it); }
   
   uint32 index_of(const vector< uint32* >::const_iterator& it) const
   {
@@ -621,12 +627,13 @@ struct Tag_Id_Node_Local_Writer : public Tag_Id_Node_Local
       return RAW_DB_GREATER;
   }
   
-  void to_buf(uint8* dest, const vector< uint32* >::const_iterator& it) const
+  bool to_buf(uint8* dest, const vector< uint32* >::const_iterator& it) const
   {
     ((uint32*)dest)[0] = (*it)[0];
     dest[4] = (*it)[1];
     dest[5] = block_of_id_[**it];
     memcpy(&(dest[6]), &((*it)[2]), (*it)[1]*sizeof(uint32));
+    return true;
   }
   
   void index_to_buf(uint8* dest, const uint32& i) const
@@ -832,7 +839,7 @@ struct Tag_Id_Node_Global
   
   uint32 size_of_buf(uint8* elem) const
   {
-    return (elem[4]*sizeof(uint32) + sizeof(uint8) + sizeof(uint32));
+    return (elem[4]*4 + 5);
   }
 };
 
@@ -916,8 +923,9 @@ struct Tag_Id_Node_Global_Writer : public Tag_Id_Node_Global
   
   uint32 size_of(const vector< uint32* >::const_iterator& it) const
   {
-    return ((*it)[1]*sizeof(uint32) + sizeof(uint8) + sizeof(uint32));
+    return ((*it)[1]*4 + 5);
   }
+  uint32 size_of_part(const vector< uint32* >::const_iterator& it) const { return size_of(it); }
   
   uint32 index_of(const vector< uint32* >::const_iterator& it) const
   {
@@ -937,11 +945,12 @@ struct Tag_Id_Node_Global_Writer : public Tag_Id_Node_Global
       return RAW_DB_GREATER;
   }
   
-  void to_buf(uint8* dest, const vector< uint32* >::const_iterator& it) const
+  bool to_buf(uint8* dest, const vector< uint32* >::const_iterator& it) const
   {
     ((uint32*)dest)[0] = (*it)[0];
     dest[4] = (*it)[1];
     memcpy(&(dest[5]), &((*it)[2]), (*it)[1]*sizeof(uint32));
+    return true;
   }
   
   void index_to_buf(uint8* dest, const uint32& i) const
@@ -973,7 +982,7 @@ struct Tag_Id_Node_Global_Updater : public Tag_Id_Node_Global
     int32 size_of_(it->second.first.size());
     if (pit != patched_ids_nodes_.end())
       size_of_ = pit->second.size();
-    return ((size_of_ / 255 + 1)*5 + size_of_*4);
+    return (((size_of_ - 1) / 255 + 1)*5 + size_of_*4);
   }
   
   uint32 size_of_part(const Iterator& it) const
@@ -987,7 +996,7 @@ struct Tag_Id_Node_Global_Updater : public Tag_Id_Node_Global
       else
         size_of_ = pit->second.size();
     }
-    if (remaining_size > 255)
+    if (size_of_ > 255)
       size_of_ = 255;
     return (5 + size_of_*4);
   }
@@ -1188,6 +1197,7 @@ struct Tag_Node_Id_Writer : public Tag_Node_Id
   {
     return (ids_of_node[read_order[it.i]].size()*4 + 10);
   }
+  uint32 size_of_part(const Tag_Node_Id_Iterator& it) const { return size_of(it); }
   
   uint32 index_of(const Tag_Node_Id_Iterator& it) const
   {
@@ -1211,13 +1221,14 @@ struct Tag_Node_Id_Writer : public Tag_Node_Id
       return RAW_DB_GREATER;
   }
   
-  void to_buf(uint8* dest, const Tag_Node_Id_Iterator& it) const
+  bool to_buf(uint8* dest, const Tag_Node_Id_Iterator& it) const
   {
     *((uint32*)&(dest[0])) = read_order[it.i] + offset;
     *((uint32*)&(dest[4])) = ll_idx_[read_order[it.i]];
     *((uint16*)&(dest[8])) = ids_of_node[read_order[it.i]].size();
     for (uint32 i(0); i < ids_of_node[read_order[it.i]].size(); ++i)
       *((uint32*)&(dest[4*i + 10])) = ids_of_node[read_order[it.i]][i];
+    return true;
   }
   
   void index_to_buf(uint8* dest, const uint32& i) const
@@ -1334,7 +1345,7 @@ struct Tag_Node_Id_Updater : public Tag_Node_Id
       return 0;
     }
     set< uint32 >& id_set(patched_nodes_ids_[it->first.second]);
-    id_set = it->second.first;
+    id_set = it->second.first; //TODO
     for (uint16 i(0); i < *((uint16*)&(elem[8])); ++i)
       id_set.insert(*(uint32*)&(elem[4*i + 10]));
     return 0;
@@ -1353,5 +1364,233 @@ private:
   map< uint32, set< uint32 > > patched_nodes_ids_;
   multimap< Index, uint16 > block_index_;
 };
+
+//-----------------------------------------------------------------------------
+
+struct Way_Storage
+{
+  typedef Way Basetype;
+  typedef uint32 Id;
+  static string base_file_name() { return ((string)DATADIR + WAY_FILE_BASE); }
+  static uint32 blocksize() { return (WAY_BLOCKSIZE); }
+  
+  typedef uint32 Index;
+  static uint size_of_Index() { return 4; }
+  static void index_to_buf(uint8* buf, const Index& i)
+  {
+    *(uint32*)&(buf[0]) = i;
+  }
+  
+  typedef pair< Index, Id > Head;
+  static uint size_of_Head() { return 8; }
+  static void head_from_buf(uint8 const* buf, Head& h)
+  {
+    h.first = *(uint32*)&(buf[0]);
+    h.second = *(uint32*)&(buf[4]);
+  }
+  static void head_to_buf(uint8* buf, const Head& h)
+  {
+    *(uint32*)&(buf[0]) = h.first;
+    *(uint32*)&(buf[4]) = h.second;
+  }
+  static Index index_of(const Head& h) { return h.first; }
+  static Index index_of_buf(uint8 const* buf) { return *(uint32*)&(buf[0]); }
+  static int32 compare(const Head& h, uint8 const* buf)
+  {
+    if (h.first < *(uint32*)&(buf[0]))
+      return RAW_DB_LESS;
+    if (h.first > *(uint32*)&(buf[0]))
+      return RAW_DB_GREATER;
+    if (h.second < *(uint32*)&(buf[4]))
+      return RAW_DB_LESS;
+    else
+      return RAW_DB_GREATER;
+  }
+  static Id id_of(const Head& h) { return h.second; }
+  static Id id_of_buf(uint8* buf) { return *(uint32*)&(buf[4]); }
+  
+  typedef uint32 Data;
+  static uint size_of_Data() { return 4; }
+  static void data_from_buf(uint8 const* buf, Data& d) { d = *(uint32*)&(buf[0]); }
+  static void data_to_buf(uint8* buf, const Data& d) { *(uint32*)&(buf[0]) = d; }
+};
+
+//-----------------------------------------------------------------------------
+
+template < typename Storage >
+struct Indexed_Ordered_Id_To_Many_Base
+{
+  uint32 blocksize() const { return Storage::blocksize(); }
+  const string data_file() const { return Storage::base_file_name() + ".dat"; }
+  const string index_file() const { return Storage::base_file_name() + ".idx"; }
+  const string id_idx_file() const { return Storage::base_file_name() + ".i.idx"; }
+  
+  uint32 size_of_Index() const { return Storage::size_of_Index(); }
+  static void size_of_buf(uint8 const* buf)
+  {
+    return Storage::size_of_Head() + 1
+      + buf[Storage::size_of_Head()]*Storage::size_of_Data();
+  }
+};
+
+// assertions:
+//   Container c supports
+// Container::const_iterator c.begin(), Container::const_iterator c.end(),
+// Container::const_iterator c.find(Storage::Basetype), uint32 c.size() and
+// Storage::Basetype operator*(Container::const_iterator).
+//   Storage::Basetype has fields: Head head and vector< Data > data
+template < typename Storage, typename Container >
+struct Indexed_Ordered_Id_To_Many_Writer : Indexed_Ordered_Id_To_Many_Base< Storage >
+{
+  Indexed_Ordered_Id_To_Many_Writer(const Container& container)
+    : container_(container), block_index_(), remaining_size(0), dit()
+  {}
+  
+  const multimap< typename Storage::Index, uint16 >& block_index() const { return block_index_; }
+  multimap< typename Storage::Index, uint16 >& block_index() { return block_index_; }
+  
+  typedef typename Container::const_iterator Iterator;
+  Iterator begin() { return container_.begin(); }
+  Iterator end() { return container_.end(); }
+  
+  typename Storage::Index index_of(const Iterator& it) const { return Storage::index_of(it->head); }
+  typename Storage::Index index_of_buf(uint8* buf) const { return Storage::index_of_buf(buf); }
+  
+  uint32 size_of(const Iterator& it) const
+  {
+    int32 size_of_(it->data.size());
+    return (((size_of_ - 1) / 255 + 1)*(Storage::size_of_Head() + 1)
+            + size_of_*Storage::size_of_Data());
+  }
+  
+  uint32 size_of_part(const Iterator& it) const
+  {
+    int32 size_of_(remaining_size);
+    if (remaining_size == 0)
+      size_of_ = it->data.size();
+    if (size_of_ > 255)
+      size_of_ = 255;
+    return (Storage::size_of_Head() + 1 + size_of_*Storage::size_of_Data());
+  }
+  
+  int32 compare(const Iterator& it, uint8 const* buf) const { return Storage::compare(it->head, buf); }
+  
+  bool to_buf(uint8* buf, const Iterator& it)
+  {
+    Storage::head_to_buf(buf);
+    uint pos(Storage::size_of_Head() + 1);
+    if (remaining_size == 0)
+    {
+      remaining_size = it->data.size();
+      dit = it->data.begin();
+    }
+    uint upper_limit(remaining_size);
+    if (upper_limit > 255)
+      upper_limit = 255;
+    uint i(0);
+    while (i < upper_limit)
+    {
+      Storage::data_to_buf(buf, *dit);
+      ++dit;
+      pos += Storage::size_of_Data();
+      ++i;
+    }
+    remaining_size -= upper_limit;
+    *(uint8*)&(buf[Storage::size_of_Head()]) = upper_limit;
+    
+    return (remaining_size == 0);
+  }
+  
+  void index_to_buf(uint8* buf, const typename Storage::Index& i) const { Storage::index_to_buf(buf, i); }
+  
+private:
+  const Container& container_;
+  multimap< typename Storage::Index, uint16 > block_index_;
+  uint32 remaining_size;
+  typename vector< typename Storage::Data >::const_iterator dit;
+};
+
+// assertions:
+//   Container c supports
+// Container::const_iterator c.begin(), Container::const_iterator c.end(),
+// Container::const_iterator c.find(Storage::Basetype), uint32 c.size() and
+// Storage::Basetype operator*(Container::const_iterator).
+//   Storage::Basetype has fields: Head head and vector< Data > data
+// template < typename Storage, typename Container >
+// struct Indexed_Ordered_Id_To_Many_Updater : Indexed_Ordered_Id_To_Many_Base< Storage >
+// {
+//   Indexed_Ordered_Id_To_Many_Updater(const Container& container)
+//     : container_(container), block_index_(), remaining_size(0), dit()
+//   {}
+//   
+//   const multimap< typename Storage::Index, uint16 >& block_index() const { return block_index_; }
+//   multimap< typename Storage::Index, uint16 >& block_index() { return block_index_; }
+//   
+//   typedef typename Container::const_iterator Iterator;
+//   Iterator elem_begin() { return container_.begin(); }
+//   Iterator elem_end() { return container_.end(); }
+//   
+//   typename Storage::Index index_of(const Iterator& it) const { return Storage::index_of(it->head); }
+//   typename Storage::Index index_of_buf(uint8* buf) const { return Storage::index_of_buf(buf); }
+//   
+//   uint32 size_of(const Iterator& it) const
+//   {
+//     int32 size_of_(it->data.size());
+//     return (((size_of_ - 1) / 255 + 1)*(Storage::size_of_Head() + 1)
+//             + size_of_*Storage::size_of_Data());
+//   }
+//   
+//   uint32 size_of_part(const Iterator& it) const
+//   {
+//     int32 size_of_(remaining_size);
+//     if (remaining_size == 0)
+//       size_of_ = it->data.size();
+//     if (size_of_ > 255)
+//       size_of_ = 255;
+//     return (Storage::size_of_Head() + 1 + size_of_*Storage::size_of_Data());
+//   }
+//   
+//   int32 compare(const Iterator& it, uint8 const* buf) const { return Storage::compare(it->head, buf); }
+//   
+//   bool to_buf(uint8* buf, const Iterator& it)
+//   {
+//     Storage::head_to_buf(buf);
+//     uint pos(Storage::size_of_Head() + 1);
+//     if (remaining_size == 0)
+//     {
+//       remaining_size = it->data.size();
+//       dit = it->data.begin();
+//     }
+//     uint upper_limit(remaining_size);
+//     if (upper_limit > 255)
+//       upper_limit = 255;
+//     uint i(0);
+//     while (i < upper_limit)
+//     {
+//       Storage::data_to_buf(buf, *dit);
+//       ++dit;
+//       pos += Storage::size_of_Data();
+//       ++i;
+//     }
+//     remaining_size -= upper_limit;
+//     *(uint8*)&(buf[Storage::size_of_Head()]) = upper_limit;
+//     
+//     return (remaining_size == 0);
+//   }
+//   
+//   uint8 keep_this_elem(uint8* elem)
+//   {
+//   }
+//   
+//   void set_first_new_block(uint16 block_id) {}
+//   
+//   void index_to_buf(uint8* buf, const typename Storage::Index& i) const { Storage::index_to_buf(buf, i); }
+//   
+// private:
+//   const Container& container_;
+//   multimap< typename Storage::Index, uint16 > block_index_;
+//   uint32 remaining_size;
+//   typename vector< typename Storage::Data >::const_iterator dit;
+// };
 
 #endif

@@ -82,8 +82,10 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
 	i = sizeof(uint32);
       }
       
-      env.to_buf(&(dest_buf[i]), it);
-      i += env.size_of(it);
+      uint elem_size(env.size_of_part(it));
+      if (env.to_buf(&(dest_buf[i]), it))
+	++it;
+      i += elem_size;
       ++it;
     }
     if (i > 1)
@@ -143,15 +145,16 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
 	uint32 j(sizeof(uint32));
 	while ((j < blocksize) &&
 		 (elem_it != elem_it2) && (i < ((uint32*)source_buf)[0]) &&
-		 (j < BLOCKSIZE - env.size_of(elem_it)) &&
+		 (j < BLOCKSIZE - env.size_of_part(elem_it)) &&
 		       (j < BLOCKSIZE - env.size_of_buf(&(source_buf[i]))))
 	{
 	  int cmp_val(env.compare(elem_it, &(source_buf[i])));
 	  if (cmp_val == RAW_DB_LESS)
 	  {
-	    env.to_buf(&(dest_buf[j]), elem_it);
-	    j += env.size_of(elem_it);
-	    ++elem_it;
+	    uint elem_size(env.size_of_part(elem_it));
+	    if (env.to_buf(&(dest_buf[j]), elem_it))
+	      ++elem_it;
+	    j += elem_size;
 	  }
   	  else if (cmp_val == RAW_DB_GREATER)
   	  {
@@ -161,12 +164,13 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
 	  }
 	}
 	while ((j < blocksize) &&
-	       (elem_it != elem_it2) && (j < BLOCKSIZE - env.size_of(elem_it)) &&
+	       (elem_it != elem_it2) && (j < BLOCKSIZE - env.size_of_part(elem_it)) &&
 	       ((i >= ((uint32*)source_buf)[0]) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_LESS)))
 	{
-	  env.to_buf(&(dest_buf[j]), elem_it);
-	  j += env.size_of(elem_it);
-	  ++elem_it;
+	  uint elem_size(env.size_of_part(elem_it));
+	  if (env.to_buf(&(dest_buf[j]), elem_it))
+	    ++elem_it;
+	  j += elem_size;
 	}
 	while ((j < blocksize) &&
 	       (i < ((uint32*)source_buf)[0]) && (j < BLOCKSIZE - env.size_of_buf(&(source_buf[i]))) &&
@@ -196,9 +200,10 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
 	int cmp_val(env.compare(elem_it, &(source_buf[i])));
 	if (cmp_val == RAW_DB_LESS)
 	{
-	  env.to_buf(&(dest_buf[j]), elem_it);
-	  j += env.size_of(elem_it);
-	  ++elem_it;
+	  uint elem_size(env.size_of_part(elem_it));
+	  if (env.to_buf(&(dest_buf[j]), elem_it))
+	    ++elem_it;
+	  j += elem_size;
 	}
 	else if (cmp_val == RAW_DB_GREATER)
 	{
@@ -209,9 +214,10 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
       }
       while (elem_it != elem_it2)
       {
-	env.to_buf(&(dest_buf[j]), elem_it);
-	j += env.size_of(elem_it);
-	++elem_it;
+	uint elem_size(env.size_of_part(elem_it));
+	if (env.to_buf(&(dest_buf[j]), elem_it))
+	  ++elem_it;
+	j += elem_size;
       }
       while (i < ((uint32*)source_buf)[0])
       {
@@ -484,7 +490,6 @@ void make_id_index(T& env)
   int data_fd = open64(DATA_FILE.c_str(), O_RDONLY);
   if (data_fd < 0)
     throw File_Error(errno, DATA_FILE, "make_id_index:1");
-  lseek64(data_fd, (int64)(env.first_new_block())*BLOCKSIZE, SEEK_SET);
   
   int dest_fd = open64(ID_IDX_FILE.c_str(), O_RDWR|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)

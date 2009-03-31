@@ -289,11 +289,8 @@ inline int in_lat_lon(const string& input)
 
 //-----------------------------------------------------------------------------
 
-const unsigned int BLOCKSIZE = 512*1024;
-/*extern const char* NODE_DATA;
-extern const char* NODE_IDX;
-extern const char* NODE_IDXA;*/
-const int NODE_FILE_BLOCK_SIZE = sizeof(int) + BLOCKSIZE*sizeof(Node);
+/*const unsigned int BLOCKSIZE = 512*1024;*/
+// const int NODE_FILE_BLOCK_SIZE = sizeof(int) + BLOCKSIZE*sizeof(Node);
 
 const unsigned int WAY_BLOCKSIZE = 1024*1024;
 /*extern const char* WAY_DATA;
