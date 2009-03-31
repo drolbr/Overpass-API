@@ -658,6 +658,11 @@ struct Node_String_Cache
     return next_node_tag_id;
   }
   
+  static void set_next_node_tag_id(uint32 i)
+  {
+    next_node_tag_id = i;
+  }
+  
   static void reset()
   {
     spatial_boundaries.clear();
@@ -1399,6 +1404,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   
   //update Node_String_Cache
   Node_String_Cache::reset();
+  Node_String_Cache::set_next_node_tag_id(next_node_tag_id);
   
   int string_idx_fd = open64(NODE_STRING_IDX.c_str(), O_WRONLY|O_APPEND);
   if (string_idx_fd < 0)
@@ -1423,6 +1429,30 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   write(string_idx_fd, &next_node_tag_id, sizeof(uint32));
   
   close(string_idx_fd);
+}
+
+//-----------------------------------------------------------------------------
+
+void node_tag_id_statistics_remake()
+{
+  int dest_fd = open64(NODE_TAG_ID_STATS.c_str(), O_WRONLY|O_CREAT|O_TRUNC,
+                       S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  close(dest_fd);
+  
+  dest_fd = open64(NODE_TAG_ID_STATS.c_str(), O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  if (dest_fd < 0)
+    throw File_Error(errno, NODE_TAG_ID_STATS, "node_tag_id_statistics_remake:1");
+  
+  vector< uint32 > id_count(Node_String_Cache::get_next_node_tag_id());
+  Tag_Id_Count_Local_Reader local_stats(id_count);
+  select_all< Tag_Id_Count_Local_Reader >(local_stats);
+  Tag_Id_Count_Global_Reader global_stats(id_count);
+  select_all< Tag_Id_Count_Global_Reader >(global_stats);
+  
+  for (vector< uint32 >::const_iterator it(id_count.begin()); it != id_count.end(); ++it)
+    write(dest_fd, &(*it), sizeof(uint32));
+  
+  close(dest_fd);
 }
 
 //-----------------------------------------------------------------------------

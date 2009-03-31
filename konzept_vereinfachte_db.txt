@@ -1,0 +1,86 @@
+base_file_name
+blocksize
+
+const size_of_Index
+.index_to_buf(Index)
+operator<(Index)
+
+const size_of_Head
+operator<(Head)
+.head_to_buf(Head)
+.index_of(Head)
+.index_of_buf()
+.id_of(Head)
+.id_of_buf()
+
+const size_of_Data
+.data_to_buf(Data)
+
+(Annahme: Interne Datenstruktur ist (Head, vector< Data >))
+
+struct Indexed_Ordered_Id_To_Many< Index, Head, Data > {
+.blocksize()
+.data_file()
+.index_file()
+.id_idx_file()
+{
+  base_file_name
+}
+.size_of_buf()
+{
+  const size_of_Head
+  const size_of_Data
+}
+
+void flush_data(elem_begin(), elem_end())
+.block_index< Index >()
+.index_of()
+.size_of()
+.to_buf()
+.compare()
+.index_of_buf()
+.index_to_buf()
+
+void delete_insert(elem_begin(), elem_end())
+.block_index()
+.elem_begin()
+.elem_end()
+.index_of()
+.keep_this_elem()
+.size_of()
+.size_of_part()
+.to_buf()
+
+void make_block_index()
+.block_index()
+.size_of_Index()
+.index_to_buf()
+
+void make_id_index()
+.first_new_block()
+.id_of_buf()
+
+void update_id_index(elem_begin(), elem_end())
+.first_new_block()
+.block_of_elem_begin()
+.elem_begin()
+.elem_end()
+.id_of()
+
+Container& select_by_id< Container >(ids_begin(), ids_end())
+.ids_begin()
+.ids_end()
+.process()
+
+Container& select_with_idx< Container >(idxs_begin(), idxs_end())
+pair< Container, Container >& select_with_idx_dbl_range< Container >(idxs_inside_begin(), idxs_inside_end(), idxs_border_begin(), idxs_border_end())
+.idxs_begin()
+.idxs_end()
+.block_notify()
+.process()
+
+select_all
+.process()
+
+count_with_idx
+.count_idx()

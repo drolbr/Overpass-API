@@ -158,21 +158,6 @@ int main(int argc, char *argv[])
     cerr<<(uintmax_t)time(NULL)<<'\n';
     
     //TEMP
-/*    for (map< pair< int32, uint32 >, vector< pair< uint32, uint32 >* > >::const_iterator
-	 it(new_nodes_tags.begin()); it != new_nodes_tags.end(); ++it)
-    {
-      cout<<it->first.first<<'\t'<<it->first.second<<'\n';
-      for (vector< pair< uint32, uint32 >* >::const_iterator it2(it->second.begin());
-	   it2 != it->second.end(); ++it2)
-	cout<<'\t'<<(*it2)->first<<'\t'<<(*it2)->second<<'\n';
-      cout<<'\n';
-    }
-    for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator it(new_tags_ids.begin());
-	 it != new_tags_ids.end(); ++it)
-      cout<<'['<<it->first.first<<"]["<<it->first.second<<"]\n\t"
-	  <<it->second->first<<'\t'<<it->second->second<<'\n';*/
-    
-    //TEMP
     cout<<"---0\n";
     
     vector< uint32 > local_id_idx;
@@ -214,25 +199,6 @@ int main(int argc, char *argv[])
     cerr<<(uintmax_t)time(NULL)<<'\n';
     make_block_index< Tag_Id_Node_Local_Updater >(id_node_local_updater);
     cerr<<(uintmax_t)time(NULL)<<'\n';
-    
-    //TEMP
-/*    id_node_local_updater.dump();*/
-/*    for (set< pair< uint32, uint32 > >::const_iterator it(moved_local_ids.begin());
-	it != moved_local_ids.end(); ++it)
-      cout<<it->first<<'\t'<<it->second<<'\n';*/
-/*    for (map< pair< uint32, uint32 >, pair< set< uint32 >, set< uint32 > > >::const_iterator
-         it(local_ids.begin()); it != local_ids.end(); ++it)
-    {
-      cout<<it->first.first<<'\t'<<it->first.second<<'\n';
-      for (set< uint32 >::const_iterator it2(it->second.first.begin());
-           it2 != it->second.first.end(); ++it2)
-        cout<<*it2<<'\t';
-      cout<<'\n';
-      for (set< uint32 >::const_iterator it2(it->second.second.begin());
-           it2 != it->second.second.end(); ++it2)
-        cout<<*it2<<'\t';
-      cout<<'\n';
-    }*/
     
     //TEMP
     cout<<"---2\n";
@@ -339,22 +305,6 @@ int main(int argc, char *argv[])
     //TEMP
     cout<<"---3\n";
     
-    //TEMP
-/*    for (map< uint32, pair< set< uint32 >, set< uint32 > > >::const_iterator
-         it(global_ids_to_be_edited.begin());
-         it != global_ids_to_be_edited.end(); ++it)
-    {
-      cout<<it->first<<'\n';
-      for (set< uint32 >::const_iterator it2(it->second.first.begin());
-           it2 != it->second.first.end(); ++it2)
-        cout<<*it2<<'\t';
-      cout<<"di\n";
-      for (set< uint32 >::const_iterator it2(it->second.second.begin());
-           it2 != it->second.second.end(); ++it2)
-        cout<<*it2<<'\t';
-      cout<<'\n';
-    }*/
-    
     cerr<<(uintmax_t)time(NULL)<<'\n';
     Tag_Id_Node_Global_Updater id_global_updater(global_ids_to_be_edited);
     delete_insert< Tag_Id_Node_Global_Updater >(id_global_updater);
@@ -381,23 +331,7 @@ int main(int argc, char *argv[])
     update_id_index< Node_Id_Node_Updater >(node_updater);
     cerr<<(uintmax_t)time(NULL)<<'\n';
     
-    //TEMP
-/*    for (set< Node >::const_iterator it(delete_nodes.begin());
-	 it != delete_nodes.end(); ++it)
-      cout<<it->id<<'\t'<<it->lat<<'\t'<<it->lon<<'\n';
-    cout<<"---\n";
-    for (set< Node >::const_iterator it(new_nodes.begin());
-	 it != new_nodes.end(); ++it)
-      cout<<it->id<<'\t'<<it->lat<<'\t'<<it->lon<<'\n';
-    for (map< int32, map< string, string > >::const_iterator it(new_nodes_tags.begin());
-	 it != new_nodes_tags.end(); ++it)
-    {
-      cout<<it->first<<'\n';
-      for (map< string, string >::const_iterator it2(it->second.begin());
-	   it2 != it->second.end(); ++it2)
-	cout<<'['<<it2->first<<"]["<<it2->second<<"]\n";
-    }
-    cout<<"---\n"; */
+    node_tag_id_statistics_remake();
   }
   catch(File_Error e)
   {

@@ -105,6 +105,8 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
 			       set< pair< uint32, uint32 > >& moved_local_ids,
 	  vector< uint32 >& local_id_idx, vector< uint32 >& spatial_boundaries_);
 
+void node_tag_id_statistics_remake();
+
 void select_kv_to_ids
     (string key, string value, set< uint32 >& string_ids_global,
      set< uint32 >& string_ids_local, set< uint32 >& string_idxs_local);
