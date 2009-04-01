@@ -141,6 +141,12 @@ void end(const char *el)
 
 int main(int argc, char *argv[])
 {
+  set< Way_ > testset;
+  Indexed_Ordered_Id_To_Many_Updater< Way_Storage, set< Way_ > > testobj(testset, testset);
+  delete_insert(testobj);
+  make_block_index(testobj);
+  update_id_index(testobj);
+  
   set< Node > delete_nodes;
   set< pair< uint32, uint32 > > moved_local_ids;
   

@@ -52,6 +52,25 @@ inline bool operator<(const Way& way_1, const Way& way_2)
   return (way_1.id < way_2.id);
 }
 
+struct Way_
+{
+public:
+  typedef uint32 Index;
+  typedef uint32 Id;
+  typedef uint32 Data;
+  
+  Way_(Index index_, Id id_) : head(make_pair(index_, id_)) {}
+  Way_(pair< Index, Id >& head_) : head(head_) {}
+  
+  const pair< Index, Id > head;
+  vector< Data > data;
+};
+
+inline bool operator<(const Way_& way_1, const Way_& way_2)
+{
+  return (way_1.head < way_2.head);
+}
+
 struct Relation
 {
   public:

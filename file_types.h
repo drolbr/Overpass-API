@@ -1370,7 +1370,7 @@ private:
 
 struct Way_Storage
 {
-  typedef Way Basetype;
+  typedef Way_ Basetype;
   typedef uint32 Id;
   static string base_file_name() { return ((string)DATADIR + WAY_FILE_BASE); }
   static uint32 blocksize() { return (WAY_BLOCKSIZE); }
@@ -1426,8 +1426,10 @@ struct Indexed_Ordered_Id_To_Many_Base
   const string index_file() const { return Storage::base_file_name() + ".idx"; }
   const string id_idx_file() const { return Storage::base_file_name() + ".i.idx"; }
   
+  typedef typename Storage::Index Index;
+  
   uint32 size_of_Index() const { return Storage::size_of_Index(); }
-  static void size_of_buf(uint8 const* buf)
+  static uint size_of_buf(uint8 const* buf)
   {
     return Storage::size_of_Head() + 1
       + buf[Storage::size_of_Head()]*Storage::size_of_Data();
@@ -1437,8 +1439,7 @@ struct Indexed_Ordered_Id_To_Many_Base
 // assertions:
 //   Container c supports
 // Container::const_iterator c.begin(), Container::const_iterator c.end(),
-// Container::const_iterator c.find(Storage::Basetype), uint32 c.size() and
-// Storage::Basetype operator*(Container::const_iterator).
+// uint32 c.size() and Storage::Basetype operator*(Container::const_iterator).
 //   Storage::Basetype has fields: Head head and vector< Data > data
 template < typename Storage, typename Container >
 struct Indexed_Ordered_Id_To_Many_Writer : Indexed_Ordered_Id_To_Many_Base< Storage >
@@ -1478,7 +1479,7 @@ struct Indexed_Ordered_Id_To_Many_Writer : Indexed_Ordered_Id_To_Many_Base< Stor
   
   bool to_buf(uint8* buf, const Iterator& it)
   {
-    Storage::head_to_buf(buf);
+    Storage::head_to_buf(buf, it->head);
     uint pos(Storage::size_of_Head() + 1);
     if (remaining_size == 0)
     {
@@ -1511,87 +1512,172 @@ private:
   typename vector< typename Storage::Data >::const_iterator dit;
 };
 
+template < typename Basetype_, typename Container_ >
+struct Parallel_Container_Iterator
+{
+  Parallel_Container_Iterator
+    (const Container_& cont1_, const Container_& cont2_,
+     const typename Container_::const_iterator& it1_, const typename Container_::const_iterator& it2_)
+    : cont1(cont1_), cont2(cont2_), it1(it1_), it2(it2_), current_it(0)
+  {
+    if ((it2 == cont2_.end()) || ((it1 != cont1_.end()) && (*it1 < *it2)))
+      current_it = 1;
+    else
+      current_it = 2;
+  }
+  
+  typedef Basetype_ Basetype;
+  typedef Container_ Container;
+  
+  const Container& cont1;
+  const Container& cont2;
+  typename Container::const_iterator it1;
+  typename Container::const_iterator it2;
+  uint current_it;
+};
+
+template < typename Parallel_Container_Iterator >
+inline typename Parallel_Container_Iterator::Basetype operator*(const Parallel_Container_Iterator& it)
+{
+  if (it.current_it == 1)
+    return *(it.it1);
+  else
+    return *(it.it2);
+}
+
+template < typename Parallel_Container_Iterator >
+inline bool operator==(const Parallel_Container_Iterator& a, const Parallel_Container_Iterator& b)
+{
+  return ((a.it1 == b.it1) && (a.it2 == b.it2));
+}
+
+template < typename Parallel_Container_Iterator >
+inline bool operator!=(const Parallel_Container_Iterator& a, const Parallel_Container_Iterator& b)
+{
+  return (!((a.it1 == b.it1) && (a.it2 == b.it2)));
+}
+
+template < typename Parallel_Container_Iterator >
+inline Parallel_Container_Iterator& operator++(Parallel_Container_Iterator& it)
+{
+  if (it.current_it == 1)
+    ++it.it1;
+  else
+    ++it.it2;
+  if ((it.it2 == it.cont2.end()) || ((it.it1 != it.cont1.end()) && (*(it.it1) < *(it.it2))))
+    it.current_it = 1;
+  else
+    it.current_it = 2;
+  return it;
+}
+
 // assertions:
 //   Container c supports
 // Container::const_iterator c.begin(), Container::const_iterator c.end(),
 // Container::const_iterator c.find(Storage::Basetype), uint32 c.size() and
 // Storage::Basetype operator*(Container::const_iterator).
 //   Storage::Basetype has fields: Head head and vector< Data > data
-// template < typename Storage, typename Container >
-// struct Indexed_Ordered_Id_To_Many_Updater : Indexed_Ordered_Id_To_Many_Base< Storage >
-// {
-//   Indexed_Ordered_Id_To_Many_Updater(const Container& container)
-//     : container_(container), block_index_(), remaining_size(0), dit()
-//   {}
-//   
-//   const multimap< typename Storage::Index, uint16 >& block_index() const { return block_index_; }
-//   multimap< typename Storage::Index, uint16 >& block_index() { return block_index_; }
-//   
-//   typedef typename Container::const_iterator Iterator;
-//   Iterator elem_begin() { return container_.begin(); }
-//   Iterator elem_end() { return container_.end(); }
-//   
-//   typename Storage::Index index_of(const Iterator& it) const { return Storage::index_of(it->head); }
-//   typename Storage::Index index_of_buf(uint8* buf) const { return Storage::index_of_buf(buf); }
-//   
-//   uint32 size_of(const Iterator& it) const
-//   {
-//     int32 size_of_(it->data.size());
-//     return (((size_of_ - 1) / 255 + 1)*(Storage::size_of_Head() + 1)
-//             + size_of_*Storage::size_of_Data());
-//   }
-//   
-//   uint32 size_of_part(const Iterator& it) const
-//   {
-//     int32 size_of_(remaining_size);
-//     if (remaining_size == 0)
-//       size_of_ = it->data.size();
-//     if (size_of_ > 255)
-//       size_of_ = 255;
-//     return (Storage::size_of_Head() + 1 + size_of_*Storage::size_of_Data());
-//   }
-//   
-//   int32 compare(const Iterator& it, uint8 const* buf) const { return Storage::compare(it->head, buf); }
-//   
-//   bool to_buf(uint8* buf, const Iterator& it)
-//   {
-//     Storage::head_to_buf(buf);
-//     uint pos(Storage::size_of_Head() + 1);
-//     if (remaining_size == 0)
-//     {
-//       remaining_size = it->data.size();
-//       dit = it->data.begin();
-//     }
-//     uint upper_limit(remaining_size);
-//     if (upper_limit > 255)
-//       upper_limit = 255;
-//     uint i(0);
-//     while (i < upper_limit)
-//     {
-//       Storage::data_to_buf(buf, *dit);
-//       ++dit;
-//       pos += Storage::size_of_Data();
-//       ++i;
-//     }
-//     remaining_size -= upper_limit;
-//     *(uint8*)&(buf[Storage::size_of_Head()]) = upper_limit;
-//     
-//     return (remaining_size == 0);
-//   }
-//   
-//   uint8 keep_this_elem(uint8* elem)
-//   {
-//   }
-//   
-//   void set_first_new_block(uint16 block_id) {}
-//   
-//   void index_to_buf(uint8* buf, const typename Storage::Index& i) const { Storage::index_to_buf(buf, i); }
-//   
-// private:
-//   const Container& container_;
-//   multimap< typename Storage::Index, uint16 > block_index_;
-//   uint32 remaining_size;
-//   typename vector< typename Storage::Data >::const_iterator dit;
-// };
+template < typename Storage, typename Container >
+struct Indexed_Ordered_Id_To_Many_Updater : Indexed_Ordered_Id_To_Many_Base< Storage >
+{
+  Indexed_Ordered_Id_To_Many_Updater(const Container& to_delete, const Container& to_insert)
+    : to_delete_(to_delete), to_insert_(to_insert), block_index_(), remaining_size(0), dit(), first_new_block_(0), block_ids()
+  {}
+  
+  const multimap< typename Storage::Index, uint16 >& block_index() const { return block_index_; }
+  multimap< typename Storage::Index, uint16 >& block_index() { return block_index_; }
+  
+  typedef Parallel_Container_Iterator< typename Storage::Basetype, Container > Iterator;
+  Iterator elem_begin() { return Iterator(to_delete_, to_insert_, to_delete_.begin(), to_insert_.begin()); }
+  Iterator elem_end() { return Iterator(to_delete_, to_insert_, to_delete_.end(), to_insert_.end()); }
+  
+  typename Storage::Index index_of(const Iterator& it) const { return Storage::index_of((*it).head); }
+  typename Storage::Index index_of_buf(uint8* buf) const { return Storage::index_of_buf(buf); }
+  
+  typedef vector< uint16 >::const_iterator Id_Block_Iterator;
+  Id_Block_Iterator block_of_elem_begin() { return block_ids.begin(); }
+  
+  uint32 size_of(const Iterator& it) const
+  {
+    if (it.current_it == 1)
+      return 0;
+    
+    int32 size_of_((*it).data.size());
+    return (((size_of_ - 1) / 255 + 1)*(Storage::size_of_Head() + 1)
+            + size_of_*Storage::size_of_Data());
+  }
+  
+  uint32 size_of_part(const Iterator& it) const
+  {
+    if (it.current_it == 1)
+      return 0;
+    
+    int32 size_of_(remaining_size);
+    if (remaining_size == 0)
+      size_of_ = (*it).data.size();
+    if (size_of_ > 255)
+      size_of_ = 255;
+    return (Storage::size_of_Head() + 1 + size_of_*Storage::size_of_Data());
+  }
+  
+  int32 compare(const Iterator& it, uint8 const* buf) const { return Storage::compare((*it).head, buf); }
+
+  bool to_buf(uint8* buf, const Iterator& it, uint16 block_id)
+  {
+    if (it.current_it == 1)
+      return true;
+    
+    Storage::head_to_buf(buf, (*it).head);
+    uint pos(Storage::size_of_Head() + 1);
+    if (remaining_size == 0)
+    {
+      remaining_size = (*it).data.size();
+      dit = (*it).data.begin();
+    }
+    uint upper_limit(remaining_size);
+    if (upper_limit > 255)
+      upper_limit = 255;
+    uint i(0);
+    while (i < upper_limit)
+    {
+      Storage::data_to_buf(buf, *dit);
+      ++dit;
+      pos += Storage::size_of_Data();
+      ++i;
+    }
+    remaining_size -= upper_limit;
+    *(uint8*)&(buf[Storage::size_of_Head()]) = upper_limit;
+    
+    block_ids.push_back(block_id);
+    return (remaining_size == 0);
+  }
+  
+  uint8 keep_this_elem(uint8* buf)
+  {
+    typename Storage::Head h;
+    Storage::head_from_buf(buf, h);
+    typename Container::const_iterator it(to_delete_.find(typename Storage::Basetype(h)));
+    if (it == to_delete_.end())
+      return 1;
+    else
+      return 0;
+  }
+  
+  void set_first_new_block(uint16 block_id) { first_new_block_ = block_id; }
+  uint16 first_new_block() const { return first_new_block_; }
+  
+  typename Storage::Id id_of(const Iterator& it) { return Storage::id_of((*it).head); }
+  typename Storage::Id id_of_buf(uint8* buf) const { return Storage::id_of_buf(buf); }
+  void index_to_buf(uint8* buf, const typename Storage::Index& i) const { Storage::index_to_buf(buf, i); }
+  
+private:
+  const Container& to_delete_;
+  const Container& to_insert_;
+  multimap< typename Storage::Index, uint16 > block_index_;
+  uint32 remaining_size;
+  typename vector< typename Storage::Data >::const_iterator dit;
+  uint16 first_new_block_;
+  vector< uint16 > block_ids;
+};
 
 #endif

@@ -52,6 +52,9 @@ void delete_insert(elem_begin(), elem_end())
 .size_of_part()
 .to_buf()
 
+Ansatz mit to_delete, to_insert
+- Drei Durchläufe über die Datei, ggf. Nutzung des Caches
+
 void make_block_index()
 .block_index()
 .size_of_Index()
@@ -86,3 +89,10 @@ select_all
 
 count_with_idx
 .count_idx()
+
+---
+
+zu den Wegen:
+- füge die Wege einschließlich Knoten in eine Map< Way_ > ein
+- erzeuge daraus die Node-Anfrage
+- leite aus dem Ergebnis die richtigen Ids für die Ways ab
