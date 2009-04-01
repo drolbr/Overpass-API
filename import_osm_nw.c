@@ -446,6 +446,54 @@ void postprocess_ways_4()
   close(ways_dat_fd);
 }
 
+void localise_and_flush_ways(vector< Way_ >& ways)
+{
+  set< Node > used_nodes;
+  set< int32 > used_nodes_ids;
+  for (vector< Way_ >::const_iterator it(ways.begin()); it != ways.end(); ++it)
+  {
+    for (vector< Way_::Data >::const_iterator it2((*it).data.begin());
+	 it2 != (*it).data.end(); ++it2)
+      used_nodes_ids.insert(*it2);
+  }
+  Node_Id_Node_By_Id_Reader nodes_reader(used_nodes_ids, used_nodes);
+  select_by_id< Node_Id_Node_By_Id_Reader >(nodes_reader);
+  used_nodes_ids.clear();
+  
+  for (vector< Way_ >::iterator it(ways.begin()); it != ways.end(); ++it)
+  {
+    Way_::Index bitmask(0), position(0);
+    for (vector< Way_::Data >::const_iterator it2((*it).data.begin());
+	 it2 != (*it).data.end(); ++it2)
+    {
+      const set< Node >::const_iterator node_it(used_nodes.find(Node(*it2, 0, 0)));
+      if (node_it == used_nodes.end())
+      {
+	//this node is referenced but does not exist
+	//cerr<<"E "<<*it2<<'\n';
+	continue;
+      }
+      if (position == 0)
+	position = ll_idx(node_it->lat, node_it->lon);
+      else
+	bitmask |= (position ^ ll_idx(node_it->lat, node_it->lon));
+    }
+    
+    //TEMP
+    cout<<bitmask<<'\t'<<hex<<position<<'\n';
+    
+    while (bitmask)
+    {
+      bitmask = bitmask>>8;
+      position = (position>>8) | 0xff000000;
+    }
+    (*it).head.first = position;
+    
+    //TEMP
+    cout<<dec<<(*it).head.second<<'\t'<<hex<<(*it).head.first<<'\n';
+  }
+}
+
 //-----------------------------------------------------------------------------
 
 multimap< int, Node > nodes;
@@ -472,11 +520,14 @@ uint current_run(0);
 vector< uint32 > split_idx;
 uint32* block_of_id;
 
+vector< Way_ > ways_;
+Way_ current_way(0, 0);
+
 void start(const char *el, const char **attr)
 {
   if (!strcmp(el, "tag"))
   {
-    if (current_type != 0)
+/*    if (current_type != 0)
     {
       string key(""), value("");
       for (unsigned int i(0); attr[i]; i += 2)
@@ -494,11 +545,19 @@ void start(const char *el, const char **attr)
 	node_tags.clear();
 	tag_count = 0;
       }
-    }
+    }*/
   }
   else if (!strcmp(el, "nd"))
   {
-    if (way_buf_pos < MAXWAYNODES)
+    unsigned int ref(0);
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "ref"))
+	ref = atoi(attr[i+1]);
+    }
+    current_way.data.push_back(ref);
+    
+/*    if (way_buf_pos < MAXWAYNODES)
     {
       unsigned int ref(0);
       for (unsigned int i(0); attr[i]; i += 2)
@@ -508,11 +567,11 @@ void start(const char *el, const char **attr)
       }
       way_buf[way_buf_pos+2] = ref;
       ++way_buf_pos;
-    }
+    }*/
   }
   else if (!strcmp(el, "node"))
   {
-    unsigned int id(0);
+/*    unsigned int id(0);
     int lat(100*10000000), lon(200*10000000);
     for (unsigned int i(0); attr[i]; i += 2)
     {
@@ -531,11 +590,24 @@ void start(const char *el, const char **attr)
     current_ll_idx = ll_idx(lat, lon);
     
     if (id > max_node_id)
-      max_node_id = id;
+      max_node_id = id;*/
   }
   else if (!strcmp(el, "way"))
   {
     if (state == NODES)
+    {
+      structure_count = 0;
+      state = 0;
+    }
+    Way_::Id id(0);
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "id"))
+	id = atoi(attr[i+1]);
+    }
+    current_way.head.second = id;
+    
+/*    if (state == NODES)
     {
       flush_data< Node_Id_Node_Writer >
         (node_writer, nodes.begin(), nodes.end());
@@ -565,11 +637,11 @@ void start(const char *el, const char **attr)
     way_buf[0] = id;
     way_buf_pos = 0;
     if (id > max_way_id)
-      max_way_id = id;
+      max_way_id = id;*/
   }
   else if (!strcmp(el, "relation"))
   {
-    if (state == WAYS)
+/*    if (state == WAYS)
     {
       postprocess_ways(ways_fd, way_buf);
       postprocess_ways_2();
@@ -577,7 +649,7 @@ void start(const char *el, const char **attr)
       postprocess_ways_4();
       
       state = 0;
-    }
+    }*/
   }
 }
 
@@ -598,16 +670,26 @@ void end(const char *el)
   }
   else if (!strcmp(el, "way"))
   {
-    if (way_buf_pos < MAXWAYNODES)
+    ways_.push_back(current_way);
+    current_way.data.clear();
+    
+    if (structure_count > 65536)
+    {
+      localise_and_flush_ways(ways_);
+      ways_.clear();
+      exit(0);
+    }
+    
+/*    if (way_buf_pos < MAXWAYNODES)
     {
       way_buf[1] = way_buf_pos;
       write(ways_fd, way_buf, sizeof(uint32)*(way_buf_pos+2));
-    }
+    }*/
   }
   else if (!strcmp(el, "relation"))
   {
   }
-  if (structure_count >= FLUSH_INTERVAL)
+/*  if (structure_count >= FLUSH_INTERVAL)
   {
     if (state == NODES)
     {
@@ -617,7 +699,7 @@ void end(const char *el)
     }
     
     structure_count = 0;
-  }
+  }*/
 }
 
 int main(int argc, char *argv[])
@@ -666,7 +748,7 @@ int main(int argc, char *argv[])
     cerr<<"\nopen64: "<<e.error_number<<'\n';
   }
   
-  if (state == NODES)
+/*  if (state == NODES)
   {
     flush_data< Node_Id_Node_Writer >
       (node_writer, nodes.begin(), nodes.end());
@@ -686,7 +768,7 @@ int main(int argc, char *argv[])
     postprocess_ways_2();
     postprocess_ways_3();
     postprocess_ways_4();
-  }
+  }*/
   
   cerr<<'\n'<<(uintmax_t)time(NULL)<<'\n';
   return 0;

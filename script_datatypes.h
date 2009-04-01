@@ -62,7 +62,7 @@ public:
   Way_(Index index_, Id id_) : head(make_pair(index_, id_)) {}
   Way_(pair< Index, Id >& head_) : head(head_) {}
   
-  const pair< Index, Id > head;
+  pair< Index, Id > head;
   vector< Data > data;
 };
 

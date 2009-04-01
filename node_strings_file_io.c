@@ -944,17 +944,14 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
 	    (*(uint32*)&(source_buf[pos+4]) | spatial_part_in_block[cur_source_block]);
 	elem_it2->second->second = *(uint32*)&(source_buf[pos]);
 	if (elem_it2->second->first == *(uint32*)&(source_buf[pos+4]))
-	{
 	  new_byte_count += size_of_buf;
-	  deletion_buf[elem_count] = 1;
-	}
 	else
 	{
 	  elem_it2->second->first = 0xffffffff;
 	  moved_local_ids.insert(make_pair< uint32, uint32 >
 	      (*(uint32*)&(source_buf[pos+4]), *(uint32*)&(source_buf[pos])));
-	  deletion_buf[elem_count] = 0;
 	}
+	deletion_buf[elem_count] = 0;
 	pos += size_of_buf;
 	++elem_count;
 	++elem_it2;
@@ -1208,7 +1205,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
       {
 	elem_it2->second->second = *(uint32*)&(source_buf[pos]);
 	new_byte_count += size_of_buf;
-	deletion_buf[elem_count] = 1;
+	deletion_buf[elem_count] = 0;
 	pos += size_of_buf;
 	++elem_count;
 	++elem_it2;
