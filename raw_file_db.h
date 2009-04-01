@@ -86,7 +86,6 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
       if (env.to_buf(&(dest_buf[i]), it))
 	++it;
       i += elem_size;
-      ++it;
     }
     if (i > 1)
     {
@@ -485,7 +484,8 @@ void make_id_index(T& env)
   const string DATA_FILE(env.data_file());
   const string ID_IDX_FILE(env.id_idx_file());
   const uint32 BLOCKSIZE(env.blocksize());
-  set< uint32 > current_ids;
+  const uint32 BLOCKS_PER_PASS(4);
+  map< uint32, uint16 > current_ids;
   
   int data_fd = open64(DATA_FILE.c_str(), O_RDONLY);
   if (data_fd < 0)
@@ -495,36 +495,59 @@ void make_id_index(T& env)
   if (dest_fd < 0)
     throw File_Error(errno, ID_IDX_FILE, "make_id_index:2");
   
-  uint16 block_id(env.first_new_block());
+  uint16 block_id(0);
   uint8* data_buf = (uint8*) malloc(BLOCKSIZE);
-  while (read(data_fd, data_buf, BLOCKSIZE))
+  uint32 read_count(read(data_fd, data_buf, BLOCKSIZE));
+  while (read_count)
   {
     uint32 pos(sizeof(uint32));
     while (pos < *((uint32*)data_buf) + sizeof(uint32))
     {
-      current_ids.insert(env.id_of_buf(&(data_buf[pos])));
+      current_ids[env.id_of_buf(&(data_buf[pos]))] = block_id;
       pos += env.size_of_buf(&(data_buf[pos]));
     }
-    for (set< uint32 >::const_iterator it(current_ids.begin());
-         it != current_ids.end(); ++it)
+    if ((++block_id) % BLOCKS_PER_PASS == 0)
     {
-      int64 dest_pos(lseek64(dest_fd, (int64)((*it) - 1)*sizeof(uint16), SEEK_SET));
-      if (dest_pos < (int64)((*it) - 1)*sizeof(uint16))
+      for (map< uint32, uint16 >::const_iterator it(current_ids.begin());
+	   it != current_ids.end(); ++it)
       {
-        int64 zero_buf(0);
-        while (dest_pos + sizeof(int64) < (int64)((*it) - 1)*sizeof(uint16))
-        {
-          write(dest_fd, &zero_buf, sizeof(int64));
-          dest_pos += sizeof(int64);
-        }
-        if (dest_pos < (int64)((*it) - 1)*sizeof(uint16))
-          write(dest_fd, &zero_buf, (int64)((*it) - 1)*sizeof(uint16) - dest_pos);
+	int64 dest_pos(lseek64(dest_fd, (int64)(it->first - 1)*sizeof(uint16), SEEK_SET));
+	if (dest_pos < (int64)(it->first - 1)*sizeof(uint16))
+	{
+	  int64 zero_buf(0);
+	  while (dest_pos + sizeof(int64) < (int64)(it->first - 1)*sizeof(uint16))
+	  {
+	    write(dest_fd, &zero_buf, sizeof(int64));
+	    dest_pos += sizeof(int64);
+	  }
+	  if (dest_pos < (int64)(it->first - 1)*sizeof(uint16))
+	    write(dest_fd, &zero_buf, (int64)(it->first - 1)*sizeof(uint16) - dest_pos);
+	}
+	write(dest_fd, &(it->second), sizeof(uint16));
       }
-      write(dest_fd, &block_id, sizeof(uint16));
+      current_ids.clear();
     }
-    current_ids.clear();
-    ++block_id;
+    read_count = read(data_fd, data_buf, BLOCKSIZE);
   }
+  for (map< uint32, uint16 >::const_iterator it(current_ids.begin());
+       it != current_ids.end(); ++it)
+  {
+    int64 dest_pos(lseek64(dest_fd, (int64)(it->first - 1)*sizeof(uint16), SEEK_SET));
+    if (dest_pos < (int64)(it->first - 1)*sizeof(uint16))
+    {
+      int64 zero_buf(0);
+      while (dest_pos + sizeof(int64) < (int64)(it->first - 1)*sizeof(uint16))
+      {
+	write(dest_fd, &zero_buf, sizeof(int64));
+	dest_pos += sizeof(int64);
+      }
+      if (dest_pos < (int64)(it->first - 1)*sizeof(uint16))
+	write(dest_fd, &zero_buf, (int64)(it->first - 1)*sizeof(uint16) - dest_pos);
+    }
+    write(dest_fd, &(it->second), sizeof(uint16));
+  }
+  current_ids.clear();
+  
   free(data_buf);
   
   close(data_fd);
