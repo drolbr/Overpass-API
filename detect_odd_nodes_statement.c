@@ -81,7 +81,7 @@ void Detect_Odd_Nodes_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   for (set< Way >::const_iterator it(mit->second.get_ways().begin());
        it != mit->second.get_ways().end(); ++it)
   {
-    vector< int >::const_iterator iit(it->members.begin());
+    vector< uint32 >::const_iterator iit(it->members.begin());
     if (iit != it->members.end())
     {
       if (node_parity_control.find(*iit) != node_parity_control.end())

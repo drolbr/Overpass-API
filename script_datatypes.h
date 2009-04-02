@@ -43,8 +43,8 @@ struct Way
   public:
     Way(int id_) : id(id_) {}
     
-    const int id;
-    vector< int > members;
+    const uint32 id;
+    vector< uint32 > members;
 };
 
 inline bool operator<(const Way& way_1, const Way& way_2)
@@ -59,6 +59,7 @@ public:
   typedef uint32 Id;
   typedef uint32 Data;
   
+  Way_() : head(make_pair(0, 0)) {}
   Way_(Index index_, Id id_) : head(make_pair(index_, id_)) {}
   Way_(pair< Index, Id >& head_) : head(head_) {}
   

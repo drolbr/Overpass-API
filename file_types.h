@@ -1437,12 +1437,54 @@ struct Indexed_Ordered_Id_To_Many_Base
 };
 
 // assertions:
+//   In_Container c supports
+// In_Container::const_iterator c.begin(), In_Container::const_iterator c.end(),
+// In_Container::const_iterator c.find(Index), uint32 c.size() and
+// Storage::Id operator*(Container::const_iterator).
+//   Out_Container c supports
+// pair< Out_Container::iterator, void > c.insert(Storage::Basetype).
+//   Storage::Basetype has fields: Head head and vector< Data > data
+// and a constructor Storage::Basetype(Storage::Head).
+template < typename Storage, typename In_Container, typename Out_Container >
+struct Indexed_Ordered_Id_To_Many_By_Id_Reader : public Indexed_Ordered_Id_To_Many_Base< Storage >
+{
+  Indexed_Ordered_Id_To_Many_By_Id_Reader(const In_Container& ids, Out_Container& result)
+  : result_(result), ids_(ids) {}
+  
+  typedef typename In_Container::const_iterator Iterator;
+  Iterator ids_begin() const { return ids_.begin(); }
+  Iterator ids_end() const { return ids_.end(); }
+  
+  void process(uint8* buf)
+  {
+    if (ids_.find(Storage::id_of_buf(&(buf[0]))) != ids_.end())
+    {
+      typename Storage::Head head;
+      Storage::head_from_buf(&(buf[0]), head);
+      typename Storage::Basetype* base
+	  ((typename Storage::Basetype*)&*(result_.insert(typename Storage::Basetype(head)).first));
+      uint data_offset(base->data.size()), pos(Storage::size_of_Head() + 1);
+      base->data.resize(data_offset + buf[Storage::size_of_Head()]);
+      for (uint i(0); i < buf[Storage::size_of_Head()]; ++i)
+      {
+	Storage::data_from_buf(&(buf[pos]), base->data[i + data_offset]);
+	pos += Storage::size_of_Data();
+      }
+    }
+  }
+  
+  protected:
+    Out_Container& result_;
+    const In_Container& ids_;
+};
+
+// assertions:
 //   Container c supports
 // Container::const_iterator c.begin(), Container::const_iterator c.end(),
 // uint32 c.size() and Storage::Basetype operator*(Container::const_iterator).
 //   Storage::Basetype has fields: Head head and vector< Data > data
 template < typename Storage, typename Container >
-struct Indexed_Ordered_Id_To_Many_Writer : Indexed_Ordered_Id_To_Many_Base< Storage >
+struct Indexed_Ordered_Id_To_Many_Writer : public Indexed_Ordered_Id_To_Many_Base< Storage >
 {
   Indexed_Ordered_Id_To_Many_Writer(const Container& container)
     : container_(container), block_index_(), remaining_size(0), dit()
@@ -1579,7 +1621,7 @@ inline Parallel_Container_Iterator& operator++(Parallel_Container_Iterator& it)
 // Storage::Basetype operator*(Container::const_iterator).
 //   Storage::Basetype has fields: Head head and vector< Data > data
 template < typename Storage, typename Container >
-struct Indexed_Ordered_Id_To_Many_Updater : Indexed_Ordered_Id_To_Many_Base< Storage >
+struct Indexed_Ordered_Id_To_Many_Updater : public Indexed_Ordered_Id_To_Many_Base< Storage >
 {
   Indexed_Ordered_Id_To_Many_Updater(const Container& to_delete, const Container& to_insert)
     : to_delete_(to_delete), to_insert_(to_insert), block_index_(), remaining_size(0), dit(), first_new_block_(0), block_ids()

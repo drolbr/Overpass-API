@@ -141,7 +141,7 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     
     set< Way >::const_iterator it(in_ways.begin());
     set< int >::const_iterator it2(previous_ways.begin());
-    while ((it != in_ways.end()) && (it2 != previous_ways.end()) && ((it++)->id == *(it2++)))
+    while ((it != in_ways.end()) && (it2 != previous_ways.end()) && ((it++)->id == (uint32)*(it2++)))
       ;
     if ((it == in_ways.end()) && (it2 == previous_ways.end()))
     {
@@ -183,7 +183,7 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
        it != in_ways.end(); ++it)
   {
     set< Node >::const_iterator onit(in_nodes.end());
-    vector< int >::const_iterator iit(it->members.begin());
+    vector< uint32 >::const_iterator iit(it->members.begin());
     if (iit != it->members.end())
     {
       if (node_parity_control.find(*iit) != node_parity_control.end())

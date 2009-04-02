@@ -292,82 +292,6 @@ void multiint_to_null_query
   return;
 }
 
-set< Node >& multiint_to_multiNode_query
-    (MYSQL* mysql, string prefix, string suffix, const set< int >& source, set< Node >& result_set)
-{
-  for (set< int >::const_iterator it(source.begin()); it != source.end(); )
-  {
-    ostringstream temp;
-    temp<<prefix;
-    temp<<" ("<<*it;
-    unsigned int i(0);
-    while (((++it) != source.end()) && (i++ < 10000))
-      temp<<", "<<*it;
-    temp<<") "<<suffix;
-	
-    MYSQL_RES* result(mysql_query_use_wrapper(mysql, temp.str()));
-    if (!result)
-      return result_set;
-	
-    MYSQL_ROW row(mysql_fetch_row(result));
-    while ((row) && (row[0]) && (row[1]) && (row[2]))
-    {
-      result_set.insert(Node(atoi(row[0]), atoi(row[1]), atoi(row[2])));
-      row = mysql_fetch_row(result);
-    }
-    
-    while (mysql_fetch_row(result))
-      ;
-    mysql_free_result(result);
-  }
-  return result_set;
-}
-
-set< Way >& multiint_to_multiWay_query
-    (MYSQL* mysql, string prefix, string suffix, const set< int >& source, set< Way >& result_set)
-{
-  for (set< int >::const_iterator it(source.begin()); it != source.end(); )
-  {
-    ostringstream temp;
-    temp<<prefix;
-    temp<<" ("<<*it;
-    unsigned int i(0);
-    while (((++it) != source.end()) && (i++ < 10000))
-      temp<<", "<<*it;
-    temp<<") "<<suffix;
-	
-    MYSQL_RES* result(mysql_query_use_wrapper(mysql, temp.str()));
-    if (!result)
-      return result_set;
-	
-    MYSQL_ROW row(mysql_fetch_row(result));
-    while ((row) && (row[0]))
-    {
-      Way way(atoi(row[0]));
-      way.members.reserve(10);
-      while ((row) && (row[0]) && (way.id == atoi(row[0])))
-      {
-	if ((row[1]) && (row[2]))
-	{
-	  unsigned int count((unsigned int)atol(row[1]));
-	  if (way.members.capacity() < count)
-	    way.members.reserve(count+10);
-	  if (way.members.size() < count)
-	    way.members.resize(count);
-	  way.members[count-1] = atoi(row[2]);
-	}
-	row = mysql_fetch_row(result);
-      }
-      result_set.insert(way);
-    }
-    
-    while (mysql_fetch_row(result))
-      ;
-    mysql_free_result(result);
-  }
-  return result_set;
-}
-
 set< Relation >& multiint_to_multiRelation_query
     (MYSQL* mysql, 
      string prefix1, string suffix1, string prefix2, string suffix2, string prefix3, string suffix3,
@@ -641,62 +565,16 @@ int multiRange_to_count_query
 
 set< Way >& multiint_to_multiWay_query(const set< int >& source, set< Way >& result_set)
 {
-  int ways_dat_fd = open64(WAY_IDXA, O_RDONLY);
-  if (ways_dat_fd < 0)
+  set< Way_ > result;
+  Indexed_Ordered_Id_To_Many_By_Id_Reader< Way_Storage, set< int >, set< Way_ > >
+      reader(source, result);
+  select_by_id(reader);
+  for (set< Way_ >::const_iterator it(result.begin()); it != result.end(); ++it)
   {
-    ostringstream temp;
-    temp<<"open64: "<<errno<<' '<<WAY_IDXA<<" multiint_to_multiWay_query:1";
-    runtime_error(temp.str(), cout);
-    return result_set;
+    Way way(it->head.second);
+    way.members = ((*it).data);
+    result_set.insert(way);
   }
-  
-  set< int > blocks;
-  int16 idx_buf(0);
-  for (set< int >::const_iterator it(source.begin()); it != source.end(); ++it)
-  {
-    lseek64(ways_dat_fd, ((*it)-1)*sizeof(int16), SEEK_SET);
-    read(ways_dat_fd, &idx_buf, sizeof(int16));
-    blocks.insert(idx_buf);
-  }
-  
-  close(ways_dat_fd);
-  
-  uint32* way_buf = (uint32*) malloc(sizeof(uint32) + WAY_BLOCKSIZE*sizeof(uint32));
-  if (!way_buf)
-  {
-    runtime_error("Bad alloc in way query", cout);
-    return result_set;
-  }
-
-  ways_dat_fd = open64(WAY_DATA, O_RDONLY);
-  if (ways_dat_fd < 0)
-  {
-    ostringstream temp;
-    temp<<"open64: "<<errno<<' '<<WAY_DATA<<" multiint_to_multiWay_query:2";
-    runtime_error(temp.str(), cout);
-    return result_set;
-  }
-  
-  for (set< int >::const_iterator it(blocks.begin()); it != blocks.end(); ++it)
-  {
-    lseek64(ways_dat_fd, (int64)(*it)*(sizeof(uint32) + WAY_BLOCKSIZE*sizeof(uint32)), SEEK_SET);
-    read(ways_dat_fd, way_buf, sizeof(uint32) + WAY_BLOCKSIZE*sizeof(uint32));
-    for (uint32 i(1); i < way_buf[0]; i += way_buf[i+2]+3)
-    {
-      if (source.find(way_buf[i]) != source.end())
-      {
-	Way way(way_buf[i]);
-	for (uint32 j(0); j < way_buf[i+2]; ++j)
-	  way.members.push_back(way_buf[j+i+3]);
-	result_set.insert(way);
-      }
-    }
-  }
-
-  close(ways_dat_fd);
-  
-  free(way_buf);
-  
   return result_set;
 }
 

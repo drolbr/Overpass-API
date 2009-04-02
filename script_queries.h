@@ -30,12 +30,6 @@ set< int >& multiint_to_multiint_query
 void multiint_to_null_query
     (MYSQL* mysql, string prefix, string suffix, const set< int >& source);
     
-set< Node >& multiint_to_multiNode_query
-    (MYSQL* mysql, string prefix, string suffix, const set< int >& source, set< Node >& result_set);
-
-set< Way >& multiint_to_multiWay_query
-    (MYSQL* mysql, string prefix, string suffix, const set< int >& source, set< Way >& result_set);
-    
 set< Relation >& multiint_to_multiRelation_query
     (MYSQL* mysql,
      string prefix1, string suffix1, string prefix2, string suffix2, string prefix3, string suffix3,

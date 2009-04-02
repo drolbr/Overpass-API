@@ -5,6 +5,7 @@ cgi-bin/update_rule
 testfiles
 import_osm
 import_osm_nw
+update_database
 dump_rules
 load_rules
 osmy_vigilance

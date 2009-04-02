@@ -135,7 +135,7 @@ void multiWay_to_multiint_collect(const set< Way >& source, set< int >& result_s
 {
   for (set< Way >::const_iterator it(source.begin()); it != source.end(); ++it)
   {
-    for(vector< int >::const_iterator it2(it->members.begin()); it2 != it->members.end(); ++it2)
+    for(vector< uint32 >::const_iterator it2(it->members.begin()); it2 != it->members.end(); ++it2)
       result_set.insert(*it2);
   }
 }
