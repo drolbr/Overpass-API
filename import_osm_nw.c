@@ -446,8 +446,11 @@ void postprocess_ways_4()
   close(ways_dat_fd);
 }
 
-void localise_and_flush_ways(vector< Way_ >& ways)
+void localise_and_flush_ways
+    (vector< Way_ >& ways,
+     Indexed_Ordered_Id_To_Many_Writer< Way_Storage, vector< Way_ > >& writer)
 {
+  //query used nodes
   set< Node > used_nodes;
   set< int32 > used_nodes_ids;
   for (vector< Way_ >::const_iterator it(ways.begin()); it != ways.end(); ++it)
@@ -460,6 +463,7 @@ void localise_and_flush_ways(vector< Way_ >& ways)
   select_by_id< Node_Id_Node_By_Id_Reader >(nodes_reader);
   used_nodes_ids.clear();
   
+  //calculate for each ways its index
   for (vector< Way_ >::iterator it(ways.begin()); it != ways.end(); ++it)
   {
     Way_::Index bitmask(0), position(0);
@@ -479,19 +483,17 @@ void localise_and_flush_ways(vector< Way_ >& ways)
 	bitmask |= (position ^ ll_idx(node_it->lat, node_it->lon));
     }
     
-    //TEMP
-    cout<<bitmask<<'\t'<<hex<<position<<'\n';
-    
     while (bitmask)
     {
       bitmask = bitmask>>8;
       position = (position>>8) | 0xff000000;
     }
     (*it).head.first = position;
-    
-    //TEMP
-    cout<<dec<<(*it).head.second<<'\t'<<hex<<(*it).head.first<<'\n';
   }
+  
+  //write ways to file
+  sort(ways.begin(), ways.end());
+  flush_data(writer, ways.begin(), ways.end());
 }
 
 //-----------------------------------------------------------------------------
@@ -522,6 +524,7 @@ uint32* block_of_id;
 
 vector< Way_ > ways_;
 Way_ current_way(0, 0);
+Indexed_Ordered_Id_To_Many_Writer< Way_Storage, vector< Way_ > > ways_writer(ways_);
 
 void start(const char *el, const char **attr)
 {
@@ -670,14 +673,17 @@ void end(const char *el)
   }
   else if (!strcmp(el, "way"))
   {
+    //TEMP
+    cout<<current_way.data.size()<<'\t'<<current_way.head.second<<'\n';
+    
     ways_.push_back(current_way);
     current_way.data.clear();
     
-    if (structure_count > 65536)
+    if (structure_count > 32*1024*1024)
     {
-      localise_and_flush_ways(ways_);
+      localise_and_flush_ways(ways_, ways_writer);
       ways_.clear();
-      exit(0);
+      structure_count = 0;
     }
     
 /*    if (way_buf_pos < MAXWAYNODES)
@@ -742,6 +748,12 @@ int main(int argc, char *argv[])
   {
     //reading the main document
     parse(stdin, start, end);
+    
+    //TEMP
+    localise_and_flush_ways(ways_, ways_writer);
+    ways_.clear();
+    make_block_index(ways_writer);
+    make_id_index(ways_writer);
   }
   catch(File_Error e)
   {

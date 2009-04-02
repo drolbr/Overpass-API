@@ -95,4 +95,4 @@ count_with_idx
 zu den Wegen:
 - füge die Wege einschließlich Knoten in eine Map< Way_ > ein
 - erzeuge daraus die Node-Anfrage
-- leite aus dem Ergebnis die richtigen Ids für die Ways ab
+- leite aus dem Ergebnis die richtigen Indexe für die Ways ab

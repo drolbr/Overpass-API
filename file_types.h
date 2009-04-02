@@ -1479,7 +1479,7 @@ struct Indexed_Ordered_Id_To_Many_Writer : Indexed_Ordered_Id_To_Many_Base< Stor
   
   bool to_buf(uint8* buf, const Iterator& it)
   {
-    Storage::head_to_buf(buf, it->head);
+    Storage::head_to_buf(&(buf[0]), it->head);
     uint pos(Storage::size_of_Head() + 1);
     if (remaining_size == 0)
     {
@@ -1492,7 +1492,7 @@ struct Indexed_Ordered_Id_To_Many_Writer : Indexed_Ordered_Id_To_Many_Base< Stor
     uint i(0);
     while (i < upper_limit)
     {
-      Storage::data_to_buf(buf, *dit);
+      Storage::data_to_buf(&(buf[pos]), *dit);
       ++dit;
       pos += Storage::size_of_Data();
       ++i;
@@ -1503,6 +1503,7 @@ struct Indexed_Ordered_Id_To_Many_Writer : Indexed_Ordered_Id_To_Many_Base< Stor
     return (remaining_size == 0);
   }
   
+  typename Storage::Id id_of_buf(uint8* buf) const { return Storage::id_of_buf(buf); }
   void index_to_buf(uint8* buf, const typename Storage::Index& i) const { Storage::index_to_buf(buf, i); }
   
 private:
@@ -1627,7 +1628,7 @@ struct Indexed_Ordered_Id_To_Many_Updater : Indexed_Ordered_Id_To_Many_Base< Sto
     if (it.current_it == 1)
       return true;
     
-    Storage::head_to_buf(buf, (*it).head);
+    Storage::head_to_buf(&(buf[0]), (*it).head);
     uint pos(Storage::size_of_Head() + 1);
     if (remaining_size == 0)
     {
@@ -1640,7 +1641,7 @@ struct Indexed_Ordered_Id_To_Many_Updater : Indexed_Ordered_Id_To_Many_Base< Sto
     uint i(0);
     while (i < upper_limit)
     {
-      Storage::data_to_buf(buf, *dit);
+      Storage::data_to_buf(&(buf[pos]), *dit);
       ++dit;
       pos += Storage::size_of_Data();
       ++i;
@@ -1655,7 +1656,7 @@ struct Indexed_Ordered_Id_To_Many_Updater : Indexed_Ordered_Id_To_Many_Base< Sto
   uint8 keep_this_elem(uint8* buf)
   {
     typename Storage::Head h;
-    Storage::head_from_buf(buf, h);
+    Storage::head_from_buf(&(buf[0]), h);
     typename Container::const_iterator it(to_delete_.find(typename Storage::Basetype(h)));
     if (it == to_delete_.end())
       return 1;
