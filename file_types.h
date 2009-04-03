@@ -41,17 +41,16 @@ static const char* NODE_TAG_ID_NODE_GLOBAL_FILE = "node_tag_id_node_global.dat";
 static const char* NODE_TAG_ID_NODE_GLOBAL_IDX = "node_tag_id_node_global.idx";
 static const char* NODE_TAG_NODE_ID_FILE = "node_tag_node_id.dat";
 static const char* NODE_TAG_NODE_ID_IDX = "node_tag_node_id.idx";
+static const char* WAY_FILE_BASE = "ways";
 
-const uint32 NODE_ID_NODE_BLOCKSIZE = 8*1024*1024;
+const uint32 NODE_ID_NODE_BLOCKSIZE = 4*1024*1024;
 const uint32 TAG_ID_NODE_LOCAL_BLOCKSIZE = 4*1024*1024;
 const uint32 TAG_ID_NODE_GLOBAL_BLOCKSIZE = 4*1024*1024;
 const uint32 TAG_NODE_ID_BLOCKSIZE = 4*1024*1024;
+const uint32 WAY_BLOCKSIZE = 4*1024*1024;
 
 const uint NODE_TAG_SPATIAL_PARTS = 32;
 const int NODE_STRING_BLOCK_SIZE = 1024*1024;
-
-static const char* WAY_FILE_BASE = "ways_2";
-// const uint32 WAY_BLOCKSIZE = 4*1024*1024;
 
 //-----------------------------------------------------------------------------
 

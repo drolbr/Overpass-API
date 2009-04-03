@@ -566,11 +566,11 @@ set< Way >& multiNode_to_multiWay_query(const set< Node >& source, set< Way >& r
   {
     Way_Storage::Index ll_idx_(ll_idx(it->lat, it->lon));
     ll_idxs.insert(ll_idx_);
-    ll_idxs.insert(0xff000000 | (ll_idx_>>8));
-    ll_idxs.insert(0xffff0000 | (ll_idx_>>16));
-    ll_idxs.insert(0xffffff00 | (ll_idx_>>24));
+    ll_idxs.insert(0x88000000 | (ll_idx_>>8));
+    ll_idxs.insert(0x88880000 | (ll_idx_>>16));
+    ll_idxs.insert(0x88888800 | (ll_idx_>>24));
   }
-  ll_idxs.insert(0xffffffff);
+  ll_idxs.insert(0x88888888);
   
   set< Way_ > result;
   Indexed_Ordered_Id_To_Many_Index_Reader< Way_Storage, set< Way_Storage::Index >, set< Way_ > >
@@ -604,7 +604,7 @@ set< int >& kv_to_multiint_query(string key, string value, set< int >& result_se
   set< uint32 > string_ids_global;
   set< uint32 > string_ids_local;
   set< uint32 > string_idxs_local;
-  select_kv_to_ids(key, value, string_ids_global, string_ids_local, string_idxs_local);
+  select_node_kv_to_ids(key, value, string_ids_global, string_ids_local, string_idxs_local);
   
   Tag_Id_Node_Local_Reader local_reader(string_ids_local, string_idxs_local, result_set);
   select_with_idx< Tag_Id_Node_Local_Reader >(local_reader);
@@ -618,7 +618,7 @@ uint32 kv_to_count_query(string key, string value)
 {
   set< uint32 > string_ids;
   set< uint32 > string_idxs_local;
-  select_kv_to_ids(key, value, string_ids, string_ids, string_idxs_local);
+  select_node_kv_to_ids(key, value, string_ids, string_ids, string_idxs_local);
   
   int source_fd = open64(NODE_TAG_ID_STATS.c_str(), O_RDONLY);
   if (source_fd < 0)
@@ -649,7 +649,7 @@ set< int >& kv_multiint_to_multiint_query
   set< uint32 > string_ids_global;
   set< uint32 > string_ids_local;
   set< uint32 > string_idxs_local;
-  select_kv_to_ids(key, value, string_ids_global, string_ids_local, string_idxs_local);
+  select_node_kv_to_ids(key, value, string_ids_global, string_ids_local, string_idxs_local);
   
   Tag_Id_Node_Local_Multiint_Reader local_reader
       (string_ids_local, string_idxs_local, source, result_set);
@@ -674,7 +674,7 @@ set< Node >& kvs_multiNode_to_multiNode_query
   {
     string_ids_global.push_back(set< uint32 >());
     string_ids_local.push_back(set< uint32 >());
-    select_kv_to_ids
+    select_node_kv_to_ids
 	(it->first, it->second, string_ids_global.back(),
 	 string_ids_local.back(), string_idxs_local);
   }
@@ -780,7 +780,7 @@ vector< vector< pair< string, string > > >& multiNode_to_kvs_query
   }
   map< uint32, pair< string, string > > kvs;
   
-  select_ids_to_kvs(ids_local, ids_global, kvs);
+  select_node_ids_to_kvs(ids_local, ids_global, kvs);
   
   result.clear();
   result.resize(source.size());

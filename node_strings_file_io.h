@@ -37,19 +37,19 @@ typedef unsigned long long uint64;
 
 static string NODE_TAG_ID_STATS = (string)DATADIR + "node_tag_id_stats.dat";
 
-const unsigned int FLUSH_TAGS_INTERVAL = 32*1024*1024;
-const uint32 TAG_SORT_BUFFER_SIZE = 128*1024*1024;
+const unsigned int FLUSH_NODE_TAGS_INTERVAL = 32*1024*1024;
+const uint32 NODE_TAG_SORT_BUFFER_SIZE = 128*1024*1024;
 
 //-----------------------------------------------------------------------------
 
-struct KeyValue
+struct NodeKeyValue
 {
-  KeyValue(string key_, string value_) : key(key_), value(value_) {}
+  NodeKeyValue(string key_, string value_) : key(key_), value(value_) {}
   
   string key, value;
 };
 
-inline bool operator<(const KeyValue& kv_1, const KeyValue& kv_2)
+inline bool operator<(const NodeKeyValue& kv_1, const NodeKeyValue& kv_2)
 {
   if (kv_1.key < kv_2.key)
     return true;
@@ -89,7 +89,7 @@ struct NodeCollection
   static uint32 next_node_tag_id;
 };
 
-void flush_node_tags(uint& current_run, map< KeyValue, NodeCollection >& node_tags);
+void flush_node_tags(uint& current_run, map< NodeKeyValue, NodeCollection >& node_tags);
 		     
 void node_tag_statistics(uint& current_run, vector< uint32 >& split_idx);
 
@@ -107,11 +107,11 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
 
 void node_tag_id_statistics_remake();
 
-void select_kv_to_ids
+void select_node_kv_to_ids
     (string key, string value, set< uint32 >& string_ids_global,
      set< uint32 >& string_ids_local, set< uint32 >& string_idxs_local);
 
-void select_ids_to_kvs
+void select_node_ids_to_kvs
     (const map< uint32, uint32 > ids_local,
      const set< uint32 > ids_global,
      map< uint32, pair< string, string > >& kvs);

@@ -85,7 +85,7 @@ void localise_and_flush_ways
     while (bitmask)
     {
       bitmask = bitmask>>8;
-      position = (position>>8) | 0xff000000;
+      position = (position>>8) | 0x88000000;
     }
     (*it).head.first = position;
   }
@@ -102,7 +102,7 @@ uint32 max_way_id(0);
 
 multimap< int, Node > nodes;
 Node_Id_Node_Writer node_writer;
-map< KeyValue, NodeCollection > node_tags;
+map< NodeKeyValue, NodeCollection > node_tags;
 int current_type(0);
 int32 current_id;
 int32 current_ll_idx;
@@ -110,8 +110,6 @@ set< string > allowed_node_tags;
 uint tag_count(0);
 unsigned int structure_count(0);
 int state(0);
-const int NODES = 1;
-const int WAYS = 2;
 int ways_fd;
 uint32* way_buf;
 uint32 way_buf_pos(0);
@@ -133,7 +131,7 @@ void start(const char *el, const char **attr)
 {
   if (!strcmp(el, "tag"))
   {
-    if (current_type != 0)
+    if (current_type == NODE)
     {
       string key(""), value("");
       for (unsigned int i(0); attr[i]; i += 2)
@@ -143,9 +141,9 @@ void start(const char *el, const char **attr)
 	if (!strcmp(attr[i], "v"))
 	  value = attr[i+1];
       }
-      NodeCollection& nc(node_tags[KeyValue(key, value)]);
+      NodeCollection& nc(node_tags[NodeKeyValue(key, value)]);
       nc.insert(current_id, current_ll_idx);
-      if (++tag_count >= FLUSH_TAGS_INTERVAL)
+      if (++tag_count >= FLUSH_NODE_TAGS_INTERVAL)
       {
 	flush_node_tags(current_run, node_tags);
 	node_tags.clear();
@@ -188,7 +186,7 @@ void start(const char *el, const char **attr)
   }
   else if (!strcmp(el, "way"))
   {
-    if (state == NODES)
+    if (state == NODE)
     {
       flush_data< Node_Id_Node_Writer >
 	  (node_writer, nodes.begin(), nodes.end());
@@ -205,7 +203,7 @@ void start(const char *el, const char **attr)
       
       postprocess_nodes(node_writer);
       
-      state = WAYS;
+      state = WAY;
       structure_count = 0;
     }
     
@@ -222,7 +220,7 @@ void start(const char *el, const char **attr)
   }
   else if (!strcmp(el, "relation"))
   {
-    if (state == NODES)
+    if (state == NODE)
     {
       flush_data< Node_Id_Node_Writer >
 	  (node_writer, nodes.begin(), nodes.end());
@@ -236,13 +234,15 @@ void start(const char *el, const char **attr)
       
       postprocess_nodes(node_writer);
     }
-    else if (state == WAYS)
+    else if (state == WAY)
     {
       localise_and_flush_ways(ways_, ways_writer);
       ways_.clear();
       make_block_index(ways_writer);
       make_id_index(ways_writer);
     }
+    
+    state = RELATION;
   }
 }
 
@@ -263,7 +263,7 @@ void end(const char *el)
   
     if (structure_count >= FLUSH_INTERVAL)
     {
-      if (state == NODES)
+      if (state == NODE)
       {
 	flush_data< Node_Id_Node_Writer >
 	    (node_writer, nodes.begin(), nodes.end());
@@ -294,14 +294,14 @@ int main(int argc, char *argv[])
 {
   cerr<<(uintmax_t)time(NULL)<<'\n';
   
-  state = NODES;
+  state = NODE;
   
   try
   {
     //reading the main document
     parse(stdin, start, end);
     
-    if (state == NODES)
+    if (state == NODE)
     {
       flush_data< Node_Id_Node_Writer >
 	  (node_writer, nodes.begin(), nodes.end());
@@ -315,7 +315,7 @@ int main(int argc, char *argv[])
       
       postprocess_nodes(node_writer);
     }
-    else if (state == WAYS)
+    else if (state == WAY)
     {
       localise_and_flush_ways(ways_, ways_writer);
       ways_.clear();

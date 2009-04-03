@@ -484,7 +484,7 @@ void make_id_index(T& env)
   const string DATA_FILE(env.data_file());
   const string ID_IDX_FILE(env.id_idx_file());
   const uint32 BLOCKSIZE(env.blocksize());
-  const uint32 BLOCKS_PER_PASS(4);
+  const uint32 BLOCKS_PER_PASS(16);
   map< uint32, uint16 > current_ids;
   
   int data_fd = open64(DATA_FILE.c_str(), O_RDONLY);

@@ -45,7 +45,7 @@ const char* NODE_TAG_TMPB = "/tmp/node_tag_ids";
 
 uint32 NodeCollection::next_node_tag_id(0);
 
-void flush_node_tags(uint& current_run, map< KeyValue, NodeCollection >& node_tags)
+void flush_node_tags(uint& current_run, map< NodeKeyValue, NodeCollection >& node_tags)
 {
   ostringstream temp;
   temp<<NODE_TAG_TMPAPREFIX<<current_run;
@@ -62,7 +62,7 @@ void flush_node_tags(uint& current_run, map< KeyValue, NodeCollection >& node_ta
     if (dest_id_fd < 0)
       throw File_Error(errno, NODE_TAG_TMPB, "flush_node_tags:2");
     
-    for (map< KeyValue, NodeCollection >::iterator it(node_tags.begin());
+    for (map< NodeKeyValue, NodeCollection >::iterator it(node_tags.begin());
          it != node_tags.end(); ++it)
     {
       uint16 key_size(it->first.key.size());
@@ -101,7 +101,7 @@ void flush_node_tags(uint& current_run, map< KeyValue, NodeCollection >& node_ta
     if (source_fd < 0)
       throw File_Error(errno, temp.str().c_str(), "flush_node_tags:3");
     
-    map< KeyValue, NodeCollection >::iterator it(node_tags.begin());
+    map< NodeKeyValue, NodeCollection >::iterator it(node_tags.begin());
     while (read(source_fd, cnt_rd_buf, 2*sizeof(uint32) + 2*sizeof(uint16)))
     {
       read(source_fd, key_rd_buf, size_rd_buf[0]);
@@ -172,7 +172,7 @@ void flush_node_tags(uint& current_run, map< KeyValue, NodeCollection >& node_ta
     if (dest_id_fd < 0)
       throw File_Error(errno, NODE_TAG_TMPB, "flush_node_tags:4");
     
-    for (map< KeyValue, NodeCollection >::iterator it(node_tags.begin());
+    for (map< NodeKeyValue, NodeCollection >::iterator it(node_tags.begin());
 	 it != node_tags.end(); ++it)
     {
       uint32 nc_size(it->second.nodes.size());
@@ -379,12 +379,12 @@ void node_tag_create_id_node_idx(uint32* block_of_id)
   if (source_fd < 0)
     throw File_Error(errno, NODE_TAG_TMPB, "node_tag_create_id_node_idx:1");
   
-  uint32* tag_rd_buf = (uint32*) malloc(TAG_SORT_BUFFER_SIZE);
-  uint32* tag_alt_buf = (uint32*) malloc(TAG_SORT_BUFFER_SIZE);
+  uint32* tag_rd_buf = (uint32*) malloc(NODE_TAG_SORT_BUFFER_SIZE);
+  uint32* tag_alt_buf = (uint32*) malloc(NODE_TAG_SORT_BUFFER_SIZE);
   uint32 max_pos(0);
   
   while ((max_pos =
-	 read(source_fd, &(tag_rd_buf[rd_buf_pos]), TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32))))
+	 read(source_fd, &(tag_rd_buf[rd_buf_pos]), NODE_TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32))))
   {
     vector< uint32* > tag_id_local, tag_id_global;
     uint32 alt_buf_pos(0);
@@ -482,8 +482,8 @@ void node_tag_create_id_node_idx(uint32* block_of_id)
     
     cerr<<'.';
     
-    memmove(tag_rd_buf, &(tag_rd_buf[rd_buf_pos]), TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32));
-    rd_buf_pos = TAG_SORT_BUFFER_SIZE / sizeof(uint32) - rd_buf_pos;
+    memmove(tag_rd_buf, &(tag_rd_buf[rd_buf_pos]), NODE_TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32));
+    rd_buf_pos = NODE_TAG_SORT_BUFFER_SIZE / sizeof(uint32) - rd_buf_pos;
   }
   
   make_block_index< Tag_Id_Node_Local_Writer >(env_local);
@@ -543,11 +543,11 @@ void node_tag_create_node_id_idx(uint32* block_of_id, uint32 max_node_id)
     cerr<<'n';
     lseek64(source_fd, 0, SEEK_SET);
     
-    uint32* tag_rd_buf = (uint32*) malloc(TAG_SORT_BUFFER_SIZE);
+    uint32* tag_rd_buf = (uint32*) malloc(NODE_TAG_SORT_BUFFER_SIZE);
     
     uint32 rd_buf_pos(0), max_pos(0);
     while ((max_pos =
-	    read(source_fd, &(tag_rd_buf[rd_buf_pos]), TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32))))
+	    read(source_fd, &(tag_rd_buf[rd_buf_pos]), NODE_TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32))))
     {
       max_pos += rd_buf_pos*sizeof(uint32);
       rd_buf_pos = 0;
@@ -576,8 +576,8 @@ void node_tag_create_node_id_idx(uint32* block_of_id, uint32 max_node_id)
       }
       cerr<<'t';
     
-      memmove(tag_rd_buf, &(tag_rd_buf[rd_buf_pos]), TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32));
-      rd_buf_pos = TAG_SORT_BUFFER_SIZE / sizeof(uint32) - rd_buf_pos;
+      memmove(tag_rd_buf, &(tag_rd_buf[rd_buf_pos]), NODE_TAG_SORT_BUFFER_SIZE - rd_buf_pos*sizeof(uint32));
+      rd_buf_pos = NODE_TAG_SORT_BUFFER_SIZE / sizeof(uint32) - rd_buf_pos;
     }
     env.read_order.clear();
     for (uint32 i(0); i < count; ++i)
@@ -1462,7 +1462,7 @@ void node_tag_id_statistics_remake()
 
 //-----------------------------------------------------------------------------
 
-void select_kv_to_ids
+void select_node_kv_to_ids
     (string key, string value, set< uint32 >& string_ids_global,
      set< uint32 >& string_ids_local, set< uint32 >& string_idxs_local)
 {
@@ -1579,7 +1579,7 @@ void select_kv_to_ids
   close(string_fd);
 }
 
-void select_ids_to_kvs
+void select_node_ids_to_kvs
     (const map< uint32, uint32 > ids_local,
      const set< uint32 > ids_global,
      map< uint32, pair< string, string > >& kvs)
