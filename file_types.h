@@ -55,11 +55,11 @@ static const char* WAY_FILE_BASE = "ways_2";
 
 //-----------------------------------------------------------------------------
 
-static const char* WAY_DATA = "/opt/osm_why_api/ways.dat";
-static const char* WAY_IDX = "/opt/osm_why_api/ways.b.idx";
-static const char* WAY_IDXA = "/opt/osm_why_api/ways.1.idx";
-static const char* WAY_IDXSPAT = "/opt/osm_why_api/ways.spatial.idx";
-static const char* WAY_ALLTMP = "/tmp/ways.dat";
+// static const char* WAY_DATA = "/opt/osm_why_api/ways.dat";
+// static const char* WAY_IDX = "/opt/osm_why_api/ways.b.idx";
+// static const char* WAY_IDXA = "/opt/osm_why_api/ways.1.idx";
+// static const char* WAY_IDXSPAT = "/opt/osm_why_api/ways.spatial.idx";
+// static const char* WAY_ALLTMP = "/tmp/ways.dat";
 
 //-----------------------------------------------------------------------------
 
@@ -1439,7 +1439,7 @@ struct Indexed_Ordered_Id_To_Many_Base
 // assertions:
 //   In_Container c supports
 // In_Container::const_iterator c.begin(), In_Container::const_iterator c.end(),
-// In_Container::const_iterator c.find(Index), uint32 c.size() and
+// In_Container::const_iterator c.find(Id), uint32 c.size() and
 // Storage::Id operator*(Container::const_iterator).
 //   Out_Container c supports
 // pair< Out_Container::iterator, void > c.insert(Storage::Basetype).
@@ -1473,9 +1473,65 @@ struct Indexed_Ordered_Id_To_Many_By_Id_Reader : public Indexed_Ordered_Id_To_Ma
     }
   }
   
-  protected:
+  private:
     Out_Container& result_;
     const In_Container& ids_;
+};
+
+// assertions:
+//   In_Container c supports
+// In_Container::const_iterator c.begin(), In_Container::const_iterator c.end(),
+// and In_Container::const_iterator c.lower_bound(Index).
+//   Out_Container c supports
+// pair< Out_Container::iterator, void > c.insert(Storage::Basetype).
+//   Storage::Basetype has fields: Head head and vector< Data > data
+// and a constructor Storage::Basetype(Storage::Head).
+template < typename Storage, typename In_Container, typename Out_Container >
+struct Indexed_Ordered_Id_To_Many_Index_Reader : public Indexed_Ordered_Id_To_Many_Base< Storage >
+{
+  Indexed_Ordered_Id_To_Many_Index_Reader(const In_Container& idxs, Out_Container& result)
+    : result_(result), idxs_(idxs), it_inside(idxs.begin()) {}
+  
+  typedef typename In_Container::const_iterator Index_Iterator;
+  Index_Iterator idxs_begin() const { return idxs_.begin(); }
+  Index_Iterator idxs_end() const { return idxs_.end(); }
+  void inc_idx(Index_Iterator& it, const typename Storage::Index& idx)
+  {
+    while ((it != idxs_.end()) && (*it <= idx))
+      ++it;
+  }
+
+  void block_notify(uint8* buf) {
+    it_inside = idxs_.lower_bound(Storage::index_of_buf(&(buf[0])));
+    if (it_inside != idxs_.begin())
+      --it_inside;
+  }
+  
+  void process(uint8* buf)
+  {
+    typename Storage::Index buf_idx(Storage::index_of_buf(&(buf[0])));
+    while ((it_inside != idxs_.end()) && (*it_inside < buf_idx))
+      ++it_inside;
+    if ((it_inside != idxs_.end()) && (buf_idx >= *it_inside))
+    {
+      typename Storage::Head head;
+      Storage::head_from_buf(&(buf[0]), head);
+      typename Storage::Basetype* base
+        ((typename Storage::Basetype*)&*(result_.insert(typename Storage::Basetype(head)).first));
+      uint data_offset(base->data.size()), pos(Storage::size_of_Head() + 1);
+      base->data.resize(data_offset + buf[Storage::size_of_Head()]);
+      for (uint i(0); i < buf[Storage::size_of_Head()]; ++i)
+      {
+        Storage::data_from_buf(&(buf[pos]), base->data[i + data_offset]);
+        pos += Storage::size_of_Data();
+      }
+    }
+  }
+  
+private:
+  Out_Container& result_;
+  const In_Container& idxs_;
+  Index_Iterator it_inside;
 };
 
 // assertions:
