@@ -73,7 +73,7 @@ void Query_Statement::forecast(MYSQL* mysql)
     for (vector< pair< string, string > >::const_iterator it(key_values.begin());
 	 it != key_values.end(); ++it)
     {
-      int count(kv_to_count_query(it->first, it->second));
+      int count(node_kv_to_count_query(it->first, it->second));
       key_value_counts.insert
 	  (make_pair< int, pair< string, string > >(count, *it));
     }
@@ -263,7 +263,7 @@ void Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   if (type == QUERY_NODE)
   {
     set< int > tnodes;
-    kv_to_multiint_query(key_values.front().first, key_values.front().second, tnodes);
+    node_kv_to_multiint_query(key_values.front().first, key_values.front().second, tnodes);
     set< Node > tnodes2;
     multiint_to_multiNode_query(tnodes, tnodes2);
     kvs_multiNode_to_multiNode_query(++(key_values.begin()), key_values.end(), tnodes2, nodes);

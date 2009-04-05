@@ -9,6 +9,7 @@
 #include "expat_justparse_interface.h"
 #include "file_types.h"
 #include "node_strings_file_io.h"
+#include "way_strings_file_io.h"
 #include "raw_file_db.h"
 #include "script_datatypes.h"
 
@@ -126,6 +127,7 @@ uint32* block_of_id;
 vector< Way_ > ways_;
 Way_ current_way(0, 0);
 Indexed_Ordered_Id_To_Many_Writer< Way_Storage, vector< Way_ > > ways_writer(ways_);
+map< WayKeyValue, WayCollection > way_tags;
 
 void start(const char *el, const char **attr)
 {
@@ -149,6 +151,19 @@ void start(const char *el, const char **attr)
 	node_tags.clear();
 	tag_count = 0;
       }
+    }
+    else if (current_type == WAY)
+    {
+      string key(""), value("");
+      for (unsigned int i(0); attr[i]; i += 2)
+      {
+	if (!strcmp(attr[i], "k"))
+	  key = attr[i+1];
+	if (!strcmp(attr[i], "v"))
+	  value = attr[i+1];
+      }
+      WayCollection& nc(way_tags[WayKeyValue(key, value)]);
+      nc.insert(current_id, 0xffffffff);
     }
   }
   else if (!strcmp(el, "nd"))
@@ -203,6 +218,8 @@ void start(const char *el, const char **attr)
       
       postprocess_nodes(node_writer);
       
+      current_run = 0;
+      split_idx.clear();
       state = WAY;
       structure_count = 0;
     }
@@ -214,6 +231,9 @@ void start(const char *el, const char **attr)
 	id = atoi(attr[i+1]);
     }
     current_way.head.second = id;
+    
+    current_type = WAY;
+    current_id = id;
     
     if (id > max_way_id)
       max_way_id = id;
@@ -237,11 +257,22 @@ void start(const char *el, const char **attr)
     else if (state == WAY)
     {
       localise_and_flush_ways(ways_, ways_writer);
+      flush_way_tags(current_run, way_tags, ways_);
       ways_.clear();
+      way_tags.clear();
+      tag_count = 0;
+      
+      way_tag_statistics(current_run, split_idx);
+      way_tag_split_and_index(current_run, split_idx, block_of_id);
+      way_tag_create_id_way_idx(block_of_id);
+      way_tag_create_way_id_idx(block_of_id, max_way_id);
+      way_tag_id_statistics();
+      
       make_block_index(ways_writer);
       make_id_index(ways_writer);
     }
     
+    current_run = 0;
     state = RELATION;
   }
 }
@@ -281,6 +312,9 @@ void end(const char *el)
     if (structure_count > WAYND_FLUSH_INTERVAL)
     {
       localise_and_flush_ways(ways_, ways_writer);
+      flush_way_tags(current_run, way_tags, ways_);
+      way_tags.clear();
+      tag_count = 0;
       ways_.clear();
       structure_count = 0;
     }
@@ -318,14 +352,24 @@ int main(int argc, char *argv[])
     else if (state == WAY)
     {
       localise_and_flush_ways(ways_, ways_writer);
+      flush_way_tags(current_run, way_tags, ways_);
       ways_.clear();
+      way_tags.clear();
+      tag_count = 0;
+      
+      way_tag_statistics(current_run, split_idx);
+      way_tag_split_and_index(current_run, split_idx, block_of_id);
+      way_tag_create_id_way_idx(block_of_id);
+      way_tag_create_way_id_idx(block_of_id, max_way_id);
+      way_tag_id_statistics();
+      
       make_block_index(ways_writer);
       make_id_index(ways_writer);
     }
   }
   catch(File_Error e)
   {
-    cerr<<"\nopen64: "<<e.error_number<<'\n';
+    cout<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
   
   cerr<<'\n'<<(uintmax_t)time(NULL)<<'\n';

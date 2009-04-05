@@ -13,6 +13,7 @@
 #include "script_queries.h"
 #include "user_interface.h"
 #include "vigilance_control.h"
+#include "way_strings_file_io.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -559,6 +560,14 @@ set< Way >& multiint_to_multiWay_query(const set< int >& source, set< Way >& res
   return result_set;
 }
 
+set< Way_ >& multiint_to_multiWay_query(const set< int >& source, set< Way_ >& result)
+{
+  Indexed_Ordered_Id_To_Many_By_Id_Reader< Way_Storage, set< int >, set< Way_ > >
+      reader(source, result);
+  select_by_id(reader);
+  return result;
+}
+
 set< Way >& multiNode_to_multiWay_query(const set< Node >& source, set< Way >& result_set)
 {
   set< Way_Storage::Index > ll_idxs;
@@ -599,7 +608,7 @@ set< Way >& multiNode_to_multiWay_query(const set< Node >& source, set< Way >& r
 
 //-----------------------------------------------------------------------------
 
-set< int >& kv_to_multiint_query(string key, string value, set< int >& result_set)
+set< int >& node_kv_to_multiint_query(string key, string value, set< int >& result_set)
 {
   set< uint32 > string_ids_global;
   set< uint32 > string_ids_local;
@@ -614,7 +623,7 @@ set< int >& kv_to_multiint_query(string key, string value, set< int >& result_se
   return result_set;
 }
 
-uint32 kv_to_count_query(string key, string value)
+uint32 node_kv_to_count_query(string key, string value)
 {
   set< uint32 > string_ids;
   set< uint32 > string_idxs_local;
@@ -643,7 +652,7 @@ uint32 kv_to_count_query(string key, string value)
   return result;
 }
 
-set< int >& kv_multiint_to_multiint_query
+set< int >& node_kv_multiint_to_multiint_query
     (string key, string value, const set< int >& source, set< int >& result_set)
 {
   set< uint32 > string_ids_global;
@@ -792,6 +801,93 @@ vector< vector< pair< string, string > > >& multiNode_to_kvs_query
       rit->push_back(kvs[*it2]);
     for (set< uint32 >::const_iterator it2(global_node_to_id[it->id].begin());
          it2 != global_node_to_id[it->id].end(); ++it2)
+      rit->push_back(kvs[*it2]);
+    ++rit;
+  }
+  
+  pos = endpos;
+  return result;
+}
+
+//-----------------------------------------------------------------------------
+
+vector< vector< pair< string, string > > >& multiWay_to_kvs_query
+    (const set< Way >& source, set< Way >::const_iterator& pos,
+     vector< vector< pair< string, string > > >& result)
+{
+  set< Way >::const_iterator endpos(pos);
+  uint32 i(0);
+  while ((endpos != source.end()) && (i < 64*1024))
+  {
+    ++endpos;
+    ++i;
+  }
+  
+  set< Way_::Index > source_ids;
+  for (set< Way >::const_iterator it(pos); it != endpos; ++it)
+    source_ids.insert(it->id);
+  set< Way_ > way_coords_set;
+  Indexed_Ordered_Id_To_Many_By_Id_Reader< Way_Storage, set< Way_::Index >, set< Way_ > >
+      way_coord_reader(source_ids, way_coords_set);
+  select_by_id(way_coord_reader);
+  vector< Way_ > way_coords;
+  way_coords.reserve(way_coords_set.size());
+  for (set< Way_ >::const_iterator it(way_coords_set.begin()); it != way_coords_set.end(); ++it)
+    way_coords.push_back(*it);
+  
+  set< uint32 > way_idxs;
+  for (vector< Way_ >::const_iterator it(way_coords.begin()); it != way_coords.end(); ++it)
+    way_idxs.insert(it->head.first & 0xffffff00);
+  
+  map< uint32, set< uint32 > > local_way_to_id;
+  for (set< Way >::const_iterator it(pos); it != endpos; ++it)
+    local_way_to_id[it->id] = set< uint32 >();
+  
+  map< uint32, set< uint32 > > global_way_to_id;
+  set< uint32 > global_way_idxs;
+  for (vector< Way_ >::const_iterator it(way_coords.begin()); it != way_coords.end(); ++it)
+  {
+    global_way_to_id[it->head.second] = set< uint32 >();
+    global_way_idxs.insert(it->head.first);
+  }
+  
+  Tag_MultiWay_Id_Local_Reader local_reader(local_way_to_id, way_idxs);
+  select_with_idx< Tag_MultiWay_Id_Local_Reader >(local_reader);
+  Tag_Way_Id_Reader global_reader(global_way_to_id, global_way_idxs);
+  select_with_idx< Tag_Way_Id_Reader >(global_reader);
+  
+  set< uint32 > ids_global;
+  for (map< uint32, set< uint32 > >::const_iterator it(global_way_to_id.begin());
+       it != global_way_to_id.end(); ++it)
+  {
+    for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+      ids_global.insert(*it2);
+  }
+  sort(way_coords.begin(), way_coords.end(), Way_Less_By_Id());
+  map< uint32, uint32 > ids_local;
+  for (map< uint32, set< uint32 > >::const_iterator it(local_way_to_id.begin());
+       it != local_way_to_id.end(); ++it)
+  {
+    const Way_& cur_wy(*(lower_bound
+	(way_coords.begin(), way_coords.end(), Way_(0, it->first), Way_Less_By_Id())));
+    uint32 ll_idx_(cur_wy.head.first & 0xffffff00);
+    for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+      ids_local[*it2] = ll_idx_;
+  }
+  map< uint32, pair< string, string > > kvs;
+  
+  select_way_ids_to_kvs(ids_local, ids_global, kvs);
+  
+  result.clear();
+  result.resize(source.size());
+  vector< vector< pair< string, string > > >::iterator rit(result.begin());
+  for (set< Way >::const_iterator it(pos); it != endpos; ++it)
+  {
+    for (set< uint32 >::const_iterator it2(local_way_to_id[it->id].begin());
+         it2 != local_way_to_id[it->id].end(); ++it2)
+      rit->push_back(kvs[*it2]);
+    for (set< uint32 >::const_iterator it2(global_way_to_id[it->id].begin());
+         it2 != global_way_to_id[it->id].end(); ++it2)
       rit->push_back(kvs[*it2]);
     ++rit;
   }

@@ -171,14 +171,14 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     }
     else if (mode == PRINT_BODY)
     {
-      set< Node >::const_iterator itcur(mit->second.get_nodes().begin());
-      while (itcur != mit->second.get_nodes().end())
+      set< Node >::const_iterator it_nodes(mit->second.get_nodes().begin());
+      while (it_nodes != mit->second.get_nodes().end())
       {
-        set< Node >::const_iterator it(itcur);
+        set< Node >::const_iterator it(it_nodes);
         vector< vector< pair< string, string > > > tags;
-        multiNode_to_kvs_query(mit->second.get_nodes(), itcur, tags);
+        multiNode_to_kvs_query(mit->second.get_nodes(), it_nodes, tags);
         vector< vector< pair< string, string > > >::const_iterator tit(tags.begin());
-        while (it != itcur)
+        while (it != it_nodes)
         {
           if (tit->empty())
             out_node(*it);
@@ -200,7 +200,36 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
           ++tit;
         }
       }
-      for (set< Way >::const_iterator it(mit->second.get_ways().begin());
+      set< Way >::const_iterator it_ways(mit->second.get_ways().begin());
+      while (it_ways != mit->second.get_ways().end())
+      {
+	set< Way >::const_iterator it(it_ways);
+	vector< vector< pair< string, string > > > tags;
+	multiWay_to_kvs_query(mit->second.get_ways(), it_ways, tags);
+	vector< vector< pair< string, string > > >::const_iterator tit(tags.begin());
+	while (it != it_ways)
+	{
+	  if (tit->empty())
+	    out_way(*it);
+	  else
+	  {
+	    out_way(*it, false);
+	    for (vector< pair< string, string > >::const_iterator tit2(tit->begin());
+			tit2 != tit->end(); ++tit2)
+	    {
+	      cout<<"  <tag k=\"";
+	      escape_xml(cout, tit2->first);
+	      cout<<"\" v=\"";
+	      escape_xml(cout, tit2->second);
+	      cout<<"\"/>\n";
+	    }
+	    cout<<"</way>\n";
+	  }
+	  ++it;
+	  ++tit;
+	}
+      }
+/*      for (set< Way >::const_iterator it(mit->second.get_ways().begin());
 	   it != mit->second.get_ways().end(); )
       {
 	set< Way >::const_iterator it2(it);
@@ -242,7 +271,7 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	  ++it2;
 	}
 	mysql_free_result(result);
-      }
+      }*/
       for (set< Relation >::const_iterator it(mit->second.get_relations().begin());
 	   it != mit->second.get_relations().end(); )
       {
