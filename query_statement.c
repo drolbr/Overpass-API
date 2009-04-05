@@ -69,17 +69,17 @@ void Query_Statement::forecast(MYSQL* mysql)
     
   if (type == QUERY_NODE)
   {
-    map< int, pair< string, string > > key_value_counts;
+    map< uint, pair< string, string > > key_value_counts;
     for (vector< pair< string, string > >::const_iterator it(key_values.begin());
 	 it != key_values.end(); ++it)
     {
-      int count(node_kv_to_count_query(it->first, it->second));
+      uint count(node_kv_to_count_query(it->first, it->second));
       key_value_counts.insert
-	  (make_pair< int, pair< string, string > >(count, *it));
+	  (make_pair< uint, pair< string, string > >(count, *it));
     }
-    unsigned int i(0);
+    uint i(0);
     bool reordered(false);
-    for (map< int, pair< string, string > >::const_iterator it(key_value_counts.begin());
+    for (map< uint, pair< string, string > >::const_iterator it(key_value_counts.begin());
 	 it != key_value_counts.end(); ++it)
     {
       reordered |= (it->second != key_values[i]);
@@ -89,7 +89,7 @@ void Query_Statement::forecast(MYSQL* mysql)
     {
       ostringstream temp;
       temp<<"The clauses of this query have been reordered to improve performance:<br/>\n";
-      for (map< int, pair< string, string > >::const_iterator it(key_value_counts.begin()); ; )
+      for (map< uint32, pair< string, string > >::const_iterator it(key_value_counts.begin()); ; )
       {
 	temp<<"Has_Kv \""<<it->second.first<<"\" \""<<it->second.second<<"\": "<<it->first
 	    <<" results expected.";
@@ -112,38 +112,17 @@ void Query_Statement::forecast(MYSQL* mysql)
   }
   if (type == QUERY_WAY)
   {
-    map< int, pair< string, string > > key_value_counts;
+    map< uint, pair< string, string > > key_value_counts;
     for (vector< pair< string, string > >::const_iterator it(key_values.begin());
 	 it != key_values.end(); ++it)
     {
-      if (it->second == "")
-      {
-	ostringstream temp;
-	temp<<"select count from way_tag_counts "
-	    <<"left join key_s on key_s.id = way_tag_counts.id "
-	    <<"where key_s.key_ = \"";
-	escape_xml(temp, it->first);
-	temp<<"\"";
-	int count(int_query(mysql, temp.str()));
-	key_value_counts.insert
-	    (make_pair< int, pair< string, string > >(count, *it));
-      }
-      else
-      {
-	ostringstream temp;
-	temp<<"select count, spread from way_tag_counts "
-	    <<"left join key_s on key_s.id = way_tag_counts.id "
-	    <<"where key_s.key_ = \"";
-	escape_xml(temp, it->first);
-	temp<<"\"";
-	pair< int, int > count(intint_query(mysql, temp.str()));
-	key_value_counts.insert
-	    (make_pair< int, pair< string, string > >(count.first*2/(count.second+1), *it));
-      }
+      uint count(way_kv_to_count_query(it->first, it->second));
+      key_value_counts.insert
+	  (make_pair< uint, pair< string, string > >(count, *it));
     }
-    unsigned int i(0);
+    uint i(0);
     bool reordered(false);
-    for (map< int, pair< string, string > >::const_iterator it(key_value_counts.begin());
+    for (map< uint, pair< string, string > >::const_iterator it(key_value_counts.begin());
 	 it != key_value_counts.end(); ++it)
     {
       reordered |= (it->second != key_values[i]);
@@ -153,7 +132,7 @@ void Query_Statement::forecast(MYSQL* mysql)
     {
       ostringstream temp;
       temp<<"The clauses of this query have been reordered to improve performance:<br/>\n";
-      for (map< int, pair< string, string > >::const_iterator it(key_value_counts.begin()); ; )
+      for (map< uint32, pair< string, string > >::const_iterator it(key_value_counts.begin()); ; )
       {
 	temp<<"Has_Kv \""<<it->second.first<<"\" \""<<it->second.second<<"\": "<<it->first
 	    <<" results expected.";
@@ -270,63 +249,17 @@ void Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   }
   else if (type == QUERY_WAY)
   {
-    ostringstream temp;
-    if (key_values.front().second == "")
+    set< Way_::Id > tways;
+    way_kv_to_multiint_query(key_values.front().first, key_values.front().second, tways);
+    set< Way_ > tways2, coord_ways;
+    multiint_to_multiWay_query(tways, tways2);
+    kvs_multiWay_to_multiWay_query(++(key_values.begin()), key_values.end(), tways2, coord_ways);
+    for (set< Way_ >::const_iterator it(coord_ways.begin()); it != coord_ways.end(); ++it)
     {
-      temp<<"select way_tags.id from way_tags "
-	  <<"left join key_s on key_s.id = way_tags.key_ "
-	  <<"where key_s.key_ = \"";
-      escape_xml(temp, key_values.front().first);
-      temp<<'"';
+      Way way(it->head.second);
+      way.members = ((*it).data);
+      ways.insert(way);
     }
-    else
-    {
-      temp<<"select way_tags.id from way_tags "
-	  <<"left join key_s on key_s.id = way_tags.key_ "
-	  <<"left join value_s on value_s.id = way_tags.value_ "
-	  <<"where key_s.key_ = \"";
-      escape_xml(temp, key_values.front().first);
-      temp<<"\" and value_s.value_ = \"";
-      escape_xml(temp, key_values.front().second);
-      temp<<'"';
-    }
-  
-    set< int > tways;
-    tways = multiint_query(mysql, temp.str(), tways);
-    
-    unsigned int key_count(1);
-    while (key_count < key_values.size())
-    {
-      temp.str("");
-      if (key_values[key_count].second == "")
-      {
-	temp<<"select way_tags.id from way_tags "
-	    <<"left join key_s on key_s.id = way_tags.key_ "
-	    <<"where key_s.key_ = \"";
-	escape_xml(temp, key_values[key_count].first);
-	temp<<"\" and way_tags.id in";
-      }
-      else
-      {
-	temp<<"select way_tags.id from way_tags "
-	    <<"left join key_s on key_s.id = way_tags.key_ "
-	    <<"left join value_s on value_s.id = way_tags.value_ "
-	    <<"where key_s.key_ = \"";
-	escape_xml(temp, key_values[key_count].first);
-	temp<<"\" and value_s.value_ = \"";
-	escape_xml(temp, key_values[key_count].second);
-	temp<<"\" and way_tags.id in";
-      }
-      
-      set< int > new_ways;
-      tways = multiint_to_multiint_query(mysql, temp.str(), "order by way_tags.id", tways, new_ways);
-      
-      ++key_count;
-    }
-    
-    set< Way > ways;
-    multiint_to_multiWay_query(tways, ways);
-    maps[output] = Set(set< Node >(), ways, set< Relation >());
   }
   else if (type == QUERY_RELATION)
   {

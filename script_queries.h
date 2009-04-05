@@ -56,7 +56,7 @@ int multiRange_to_count_query
     (const set< pair< int, int > >& in_inside, const set< pair< int, int > >& in_border);
 
 set< Way >& multiint_to_multiWay_query(const set< int >& source, set< Way >& result_set);
-set< Way_ >& multiint_to_multiWay_query(const set< int >& source, set< Way_ >& result_set);
+set< Way_ >& multiint_to_multiWay_query(const set< uint32 >& source, set< Way_ >& result_set);
 set< Way >& multiNode_to_multiWay_query(const set< Node >& source, set< Way >& result_set);
 
 set< int >& node_kv_to_multiint_query(string key, string value, set< int >& result_set);
@@ -71,6 +71,12 @@ vector< vector< pair< string, string > > >& multiNode_to_kvs_query
     (const set< Node >& source, set< Node >::const_iterator& pos,
      vector< vector< pair< string, string > > >& result);
 
+set< Way_::Id >& way_kv_to_multiint_query(string key, string value, set< Way_::Id >& result_set);
+uint32 way_kv_to_count_query(string key, string value);
+set< Way_ >& kvs_multiWay_to_multiWay_query
+    (vector< pair< string, string > >::const_iterator kvs_begin,
+     vector< pair< string, string > >::const_iterator kvs_end,
+     const set< Way_ >& source, set< Way_ >& result_set);
 vector< vector< pair< string, string > > >& multiWay_to_kvs_query
     (const set< Way >& source, set< Way >::const_iterator& pos,
      vector< vector< pair< string, string > > >& result);

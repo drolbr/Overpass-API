@@ -560,9 +560,9 @@ set< Way >& multiint_to_multiWay_query(const set< int >& source, set< Way >& res
   return result_set;
 }
 
-set< Way_ >& multiint_to_multiWay_query(const set< int >& source, set< Way_ >& result)
+set< Way_ >& multiint_to_multiWay_query(const set< uint32 >& source, set< Way_ >& result)
 {
-  Indexed_Ordered_Id_To_Many_By_Id_Reader< Way_Storage, set< int >, set< Way_ > >
+  Indexed_Ordered_Id_To_Many_By_Id_Reader< Way_Storage, set< uint32 >, set< Way_ > >
       reader(source, result);
   select_by_id(reader);
   return result;
@@ -811,6 +811,50 @@ vector< vector< pair< string, string > > >& multiNode_to_kvs_query
 
 //-----------------------------------------------------------------------------
 
+set< Way_::Id >& way_kv_to_multiint_query(string key, string value, set< Way_::Id >& result_set)
+{
+  set< Way_::Id > string_ids_global;
+  set< Way_::Id > string_ids_local;
+  set< Way_::Id > string_idxs_local;
+  select_way_kv_to_ids(key, value, string_ids_global, string_ids_local, string_idxs_local);
+  
+  Tag_Id_Way_Local_Reader local_reader(string_ids_local, string_idxs_local, result_set);
+  select_with_idx< Tag_Id_Way_Local_Reader >(local_reader);
+  Tag_Id_Way_Global_Reader global_reader(string_ids_global, result_set);
+  select_with_idx< Tag_Id_Way_Global_Reader >(global_reader);
+  
+  return result_set;
+}
+
+uint32 way_kv_to_count_query(string key, string value)
+{
+  set< uint32 > string_ids;
+  set< uint32 > string_idxs_local;
+  select_way_kv_to_ids(key, value, string_ids, string_ids, string_idxs_local);
+  
+  int source_fd = open64(WAY_TAG_ID_STATS.c_str(), O_RDONLY);
+  if (source_fd < 0)
+  {
+    ostringstream temp;
+    temp<<"open64: "<<errno<<' '<<WAY_TAG_ID_STATS<<" way_kv_to_count_query:1";
+    runtime_error(temp.str(), cout);
+    return 0;
+  }
+  
+  uint32 result(0);
+  for (set< uint32 >::const_iterator it(string_ids.begin()); it != string_ids.end(); ++it)
+  {
+    uint32 summand(0);
+    lseek64(source_fd, (*it - 1)*sizeof(uint32), SEEK_SET);
+    read(source_fd, &summand, sizeof(uint32));
+    result += summand;
+  }
+  
+  close(source_fd);
+  
+  return result;
+}
+
 vector< vector< pair< string, string > > >& multiWay_to_kvs_query
     (const set< Way >& source, set< Way >::const_iterator& pos,
      vector< vector< pair< string, string > > >& result)
@@ -894,4 +938,72 @@ vector< vector< pair< string, string > > >& multiWay_to_kvs_query
   
   pos = endpos;
   return result;
+}
+
+set< Way_ >& kvs_multiWay_to_multiWay_query
+    (vector< pair< string, string > >::const_iterator kvs_begin,
+     vector< pair< string, string > >::const_iterator kvs_end,
+     const set< Way_ >& source, set< Way_ >& result_set)
+{
+  vector< set< uint32 > > string_ids_global;
+  vector< set< uint32 > > string_ids_local;
+  set< uint32 > string_idxs_local;
+  for (vector< pair< string, string > >::const_iterator it(kvs_begin);
+       it != kvs_end; ++it)
+  {
+    string_ids_global.push_back(set< uint32 >());
+    string_ids_local.push_back(set< uint32 >());
+    select_way_kv_to_ids
+	(it->first, it->second, string_ids_global.back(),
+	 string_ids_local.back(), string_idxs_local);
+  }
+  
+  set< uint32 > way_idxs;
+  for (set< Way_ >::const_iterator it(source.begin()); it != source.end(); ++it)
+    way_idxs.insert(it->head.first & 0xffffff00);
+  set< uint32 > filtered_idxs_local;
+  set_intersection
+      (string_idxs_local.begin(), string_idxs_local.end(), way_idxs.begin(), way_idxs.end(),
+       inserter(filtered_idxs_local, filtered_idxs_local.begin()));
+  string_idxs_local.clear();
+  
+  map< uint32, set< uint32 > > local_way_to_id;
+  for (set< Way_ >::const_iterator it(source.begin()); it != source.end(); ++it)
+    local_way_to_id[it->head.second] = set< uint32 >();
+  
+  map< uint32, set< uint32 > > global_way_to_id;
+  set< uint32 > global_way_idxs;
+  for (set< Way_ >::const_iterator it(source.begin()); it != source.end(); ++it)
+  {
+    global_way_to_id[it->head.second] = set< uint32 >();
+    global_way_idxs.insert(it->head.first);
+  }
+  
+  Tag_MultiWay_Id_Local_Reader local_reader(local_way_to_id, filtered_idxs_local);
+  select_with_idx< Tag_MultiWay_Id_Local_Reader >(local_reader);
+  Tag_Way_Id_Reader global_reader(global_way_to_id, global_way_idxs);
+  select_with_idx< Tag_Way_Id_Reader >(global_reader);
+  
+  for (set< Way_ >::const_iterator it(source.begin()); it != source.end(); ++it)
+  {
+    const set< uint32 >& local_ids(local_way_to_id[it->head.second]);
+    const set< uint32 >& global_ids(global_way_to_id[it->head.second]);
+    bool can_be_result(true);
+    for (uint32 i(0); i < string_ids_local.size(); ++i)
+    {
+      bool local_match(false);
+      for (set< uint32 >::const_iterator it2(local_ids.begin());
+	   it2 != local_ids.end(); ++it2)
+	local_match |= (string_ids_local[i].find(*it2) != string_ids_local[i].end());
+      bool global_match(false);
+      for (set< uint32 >::const_iterator it2(global_ids.begin());
+	   it2 != global_ids.end(); ++it2)
+	global_match |= (string_ids_global[i].find(*it2) != string_ids_global[i].end());
+      can_be_result &= (local_match || global_match);
+    }
+    if (can_be_result)
+      result_set.insert(*it);
+  }
+  
+  return result_set;
 }

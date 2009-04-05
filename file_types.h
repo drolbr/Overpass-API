@@ -1387,7 +1387,7 @@ struct Tag_Id_Way_Local
 
 struct Tag_Id_Way_Local_Reader : public Tag_Id_Way_Local
 {
-  Tag_Id_Way_Local_Reader(const set< uint32 >& ids, const set< uint32 >& idxs, set< int >& result)
+  Tag_Id_Way_Local_Reader(const set< uint32 >& ids, const set< uint32 >& idxs, set< uint32 >& result)
     : result_(result), ids_(ids), idxs_(idxs) {}
   
   typedef set< uint32 >::const_iterator Index_Iterator;
@@ -1412,7 +1412,7 @@ struct Tag_Id_Way_Local_Reader : public Tag_Id_Way_Local
   }
   
 protected:
-  set< int >& result_;
+  set< uint32 >& result_;
   const set< uint32 >& ids_;
   const set< uint32 >& idxs_;
 };
@@ -1420,7 +1420,8 @@ protected:
 struct Tag_Id_Way_Local_Multiint_Reader : public Tag_Id_Way_Local_Reader
 {
   Tag_Id_Way_Local_Multiint_Reader
-    (const set< uint32 >& ids, const set< uint32 >& idxs, const set< int >& source, set< int >& result)
+    (const set< uint32 >& ids, const set< uint32 >& idxs, const set< uint32 >& source,
+     set< uint32 >& result)
     : Tag_Id_Way_Local_Reader(ids, idxs, result), source_(source) {}
   
   void process(uint8* buf)
@@ -1436,7 +1437,7 @@ struct Tag_Id_Way_Local_Multiint_Reader : public Tag_Id_Way_Local_Reader
   }
   
 private:
-  const set< int >& source_;
+  const set< uint32 >& source_;
 };
 
 struct Tag_MultiWay_Id_Local_Reader : public Tag_Id_Way_Local
@@ -1781,7 +1782,7 @@ struct Tag_Id_Way_Global
 
 struct Tag_Id_Way_Global_Reader : public Tag_Id_Way_Global
 {
-  Tag_Id_Way_Global_Reader(const set< uint32 >& ids, set< int >& result)
+  Tag_Id_Way_Global_Reader(const set< uint32 >& ids, set< uint32 >& result)
     : result_(result), ids_(ids) {}
   
   typedef set< uint32 >::const_iterator Index_Iterator;
@@ -1806,14 +1807,14 @@ struct Tag_Id_Way_Global_Reader : public Tag_Id_Way_Global
   }
   
 protected:
-  set< int >& result_;
+  set< uint32 >& result_;
   const set< uint32 >& ids_;
 };
 
 struct Tag_Id_Way_Global_Multiint_Reader : public Tag_Id_Way_Global_Reader
 {
   Tag_Id_Way_Global_Multiint_Reader
-    (const set< uint32 >& ids, const set< int >& source, set< int >& result)
+    (const set< uint32 >& ids, const set< uint32 >& source, set< uint32 >& result)
     : Tag_Id_Way_Global_Reader(ids, result), source_(source) {}
   
   void process(uint8* buf)
@@ -1829,7 +1830,7 @@ struct Tag_Id_Way_Global_Multiint_Reader : public Tag_Id_Way_Global_Reader
   }
   
 private:
-  const set< int >& source_;
+  const set< uint32 >& source_;
 };
 
 struct Way_Tag_Id_Count_Global_Reader : public Tag_Id_Way_Global
