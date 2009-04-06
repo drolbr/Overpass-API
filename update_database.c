@@ -41,13 +41,19 @@ uint edit_status(0);
 const uint CREATE = 1;
 const uint DELETE = 2;
 const uint MODIFY = 3;
-int32 current_node(0);
+uint32 current_node(0);
 uint32 current_ll_idx(0);
 
-set< int32 > t_delete_nodes;
+set< uint32 > t_delete_nodes;
 set< Node > new_nodes;
-map< pair< int32, uint32 >, vector< pair< uint32, uint32 >* > > new_nodes_tags;
-map< pair< string, string >, pair< uint32, uint32 >* > new_tags_ids;
+map< pair< uint32, uint32 >, vector< pair< uint32, uint32 >* > > new_nodes_tags;
+map< pair< string, string >, pair< uint32, uint32 >* > new_node_tags_ids;
+
+Way_ current_way(Way_(0, 0));
+set< uint32 > t_delete_ways;
+set< Way_ > new_ways;
+map< pair< uint32, uint32 >, vector< pair< uint32, uint32 >* > > new_ways_tags;
+map< pair< string, string >, pair< uint32, uint32 >* > new_way_tags_ids;
 
 void start(const char *el, const char **attr)
 {
@@ -64,22 +70,45 @@ void start(const char *el, const char **attr)
     if (current_node)
     {
       pair< uint32, uint32 >* coord_id(NULL);
-      if (new_tags_ids.find(make_pair< string, string >(key, value)) == new_tags_ids.end())
+      if (new_node_tags_ids.find(make_pair< string, string >(key, value)) == new_node_tags_ids.end())
       {
 	coord_id = new pair< uint32, uint32 >((current_ll_idx & 0xffffff00), 0xffffffff);
-	new_tags_ids[make_pair< string, string >(key, value)] = coord_id;
+        new_node_tags_ids[make_pair< string, string >(key, value)] = coord_id;
       }
       else
       {
-	coord_id = new_tags_ids.find(make_pair< string, string >(key, value))->second;
+        coord_id = new_node_tags_ids.find(make_pair< string, string >(key, value))->second;
 	if (coord_id->first != (current_ll_idx & 0xffffff00))
 	  coord_id->first = 0xffffffff;
       }
-      new_nodes_tags[make_pair< int32, uint32 >(current_node, current_ll_idx)].push_back(coord_id);
+      new_nodes_tags[make_pair< uint32, uint32 >(current_node, current_ll_idx)].push_back(coord_id);
+    }
+    else if (current_way.head.second)
+    {
+      pair< uint32, uint32 >* coord_id(NULL);
+      if (new_way_tags_ids.find(make_pair< string, string >(key, value)) == new_way_tags_ids.end())
+      {
+        coord_id = new pair< uint32, uint32 >(0, 0xffffffff);
+        new_way_tags_ids[make_pair< string, string >(key, value)] = coord_id;
+      }
+      else
+        coord_id = new_way_tags_ids.find(make_pair< string, string >(key, value))->second;
+      new_ways_tags[make_pair< uint32, uint32 >
+                    (current_way.head.second, current_ll_idx)].push_back(coord_id);
     }
   }
   else if (!strcmp(el, "nd"))
   {
+    if (current_way.head.second)
+    {
+      unsigned int ref(0);
+      for (unsigned int i(0); attr[i]; i += 2)
+      {
+        if (!strcmp(attr[i], "ref"))
+          ref = atoi(attr[i+1]);
+      }
+      current_way.data.push_back(ref);
+    }
   }
   else if (!strcmp(el, "node"))
   {
@@ -104,6 +133,15 @@ void start(const char *el, const char **attr)
   }
   else if (!strcmp(el, "way"))
   {
+    unsigned int id(0);
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "id"))
+        id = atoi(attr[i+1]);
+    }
+    t_delete_ways.insert(id);
+    if ((edit_status == CREATE) || (edit_status == MODIFY))
+      current_way.head.second = id;
   }
   else if (!strcmp(el, "relation"))
   {
@@ -122,11 +160,12 @@ void end(const char *el)
   {
   }
   else if (!strcmp(el, "node"))
-  {
     current_node = 0;
-  }
   else if (!strcmp(el, "way"))
   {
+    new_ways.insert(current_way);
+    current_way.head.second = 0;
+    current_way.data.clear();
   }
   else if (!strcmp(el, "relation"))
   {
@@ -159,7 +198,7 @@ int main(int argc, char *argv[])
     
     vector< uint32 > local_id_idx;
     vector< uint32 > spatial_boundaries;
-    node_string_delete_insert(new_tags_ids, moved_local_ids, local_id_idx, spatial_boundaries);
+    node_string_delete_insert(new_node_tags_ids, moved_local_ids, local_id_idx, spatial_boundaries);
     cerr<<(uintmax_t)time(NULL)<<'\n';
 
     set< uint32 > delete_node_idxs;
@@ -171,7 +210,7 @@ int main(int argc, char *argv[])
     for (set< pair< uint32, uint32 > >::const_iterator it(moved_local_ids.begin());
          it != moved_local_ids.end(); ++it)
       local_ids[*it].second.insert(0);
-    for (map< pair< int32, uint32 >, vector< pair< uint32, uint32 >* > >::const_iterator
+    for (map< pair< uint32, uint32 >, vector< pair< uint32, uint32 >* > >::const_iterator
          it(new_nodes_tags.begin()); it != new_nodes_tags.end(); ++it)
     {
       for (vector< pair< uint32, uint32 >* >::const_iterator it2(it->second.begin());
@@ -192,7 +231,7 @@ int main(int argc, char *argv[])
     cerr<<(uintmax_t)time(NULL)<<'\n';
     
     //retrieving old coordinates of the nodes that appear in local ids which are moving to global
-    set< int32 > t_move_involved_nodes;
+    set< uint32 > t_move_involved_nodes;
     for (map< uint32, set< uint32 > >::const_iterator it(moved_ids.begin());
 	 it != moved_ids.end(); ++it)
     {
@@ -225,7 +264,7 @@ int main(int argc, char *argv[])
       global_nodes_to_be_edited[make_pair< uint32, uint32 >
 	  (ll_idx(it->lat, it->lon), it->id)] = make_pair< set< uint32 >, uint >
 	      (set< uint32 >(), Tag_Node_Id_Updater::DELETE);
-    for (map< pair< int32, uint32 >, vector< pair< uint32, uint32 >* > >::const_iterator
+    for (map< pair< uint32, uint32 >, vector< pair< uint32, uint32 >* > >::const_iterator
 	 it(new_nodes_tags.begin()); it != new_nodes_tags.end(); ++it)
     {
       set< uint32 > global_ids;
@@ -270,7 +309,7 @@ int main(int argc, char *argv[])
            it2 != it->second.end(); ++it2)
         global_ids_to_be_edited[*it2].first.insert(it->first);
     }
-    for (map< pair< int32, uint32 >, vector< pair< uint32, uint32 >* > >::const_iterator
+    for (map< pair< uint32, uint32 >, vector< pair< uint32, uint32 >* > >::const_iterator
          it(new_nodes_tags.begin()); it != new_nodes_tags.end(); ++it)
     {
       for (vector< pair< uint32, uint32 >* >::const_iterator it2(it->second.begin());
@@ -295,10 +334,10 @@ int main(int argc, char *argv[])
     cerr<<(uintmax_t)time(NULL)<<'\n';
     
     new_nodes_tags.clear();
-    for (map< pair< string, string >, pair< uint32, uint32 >* >::iterator it(new_tags_ids.begin());
-	 it != new_tags_ids.end(); ++it)
+    for (map< pair< string, string >, pair< uint32, uint32 >* >::iterator it(new_node_tags_ids.begin());
+         it != new_node_tags_ids.end(); ++it)
       delete(it->second);
-    new_tags_ids.clear();
+    new_node_tags_ids.clear();
     
     //updating the nodes file
     cerr<<(uintmax_t)time(NULL)<<'\n';

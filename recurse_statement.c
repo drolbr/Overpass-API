@@ -131,7 +131,7 @@ void Recurse_Statement::forecast(MYSQL* mysql)
   }
 }
 
-void multiWay_to_multiint_collect(const set< Way >& source, set< int >& result_set)
+void multiWay_to_multiint_collect(const set< Way >& source, set< uint32 >& result_set)
 {
   for (set< Way >::const_iterator it(source.begin()); it != source.end(); ++it)
   {
@@ -140,7 +140,7 @@ void multiWay_to_multiint_collect(const set< Way >& source, set< int >& result_s
   }
 }
 
-void multiRelation_to_multiint_collect_relations(const set< Relation >& source, set< int >& result_set)
+void multiRelation_to_multiint_collect_relations(const set< Relation >& source, set< uint32 >& result_set)
 {
   for (set< Relation >::const_iterator it(source.begin()); it != source.end(); ++it)
   {
@@ -149,7 +149,7 @@ void multiRelation_to_multiint_collect_relations(const set< Relation >& source, 
   }
 }
 
-void multiRelation_to_multiint_collect_ways(const set< Relation >& source, set< int >& result_set)
+void multiRelation_to_multiint_collect_ways(const set< Relation >& source, set< uint32 >& result_set)
 {
   for (set< Relation >::const_iterator it(source.begin()); it != source.end(); ++it)
   {
@@ -158,7 +158,7 @@ void multiRelation_to_multiint_collect_ways(const set< Relation >& source, set< 
   }
 }
 
-void multiRelation_to_multiint_collect_nodes(const set< Relation >& source, set< int >& result_set)
+void multiRelation_to_multiint_collect_nodes(const set< Relation >& source, set< uint32 >& result_set)
 {
   for (set< Relation >::const_iterator it(source.begin()); it != source.end(); ++it)
   {
@@ -187,13 +187,13 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   
   if (type == RECURSE_WAY_NODE)
   {
-    set< int > tnodes;
+    set< uint32 > tnodes;
     multiWay_to_multiint_collect(mit->second.get_ways(), tnodes);
     multiint_to_multiNode_query(tnodes, *nodes);
   }
   else if (type == RECURSE_RELATION_RELATION)
   {
-    set< int > rels;
+    set< uint32 > rels;
     multiRelation_to_multiint_collect_relations(mit->second.get_relations(), rels);
     multiint_to_multiRelation_query
 	(mysql, "select id, ref, role from relation_node_members "
@@ -205,13 +205,13 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   }
   else if (type == RECURSE_RELATION_WAY)
   {
-    set< int > tways;
+    set< uint32 > tways;
     multiRelation_to_multiint_collect_ways(mit->second.get_relations(), tways);
     multiint_to_multiWay_query(tways, *ways);
   }
   else if (type == RECURSE_RELATION_NODE)
   {
-    set< int > tnodes;
+    set< uint32 > tnodes;
     multiRelation_to_multiint_collect_nodes(mit->second.get_relations(), tnodes);
     multiint_to_multiNode_query(tnodes, *nodes);
   }

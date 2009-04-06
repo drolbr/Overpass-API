@@ -134,13 +134,13 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   int previous_area(int_query(mysql, temp.str()));
   if (previous_area)
   {
-    set< int > previous_ways;
+    set< uint32 > previous_ways;
     temp.str("");
     temp<<"select way from area_ways where id = "<<previous_area;
     multiint_query(mysql, temp.str(), previous_ways);
     
     set< Way >::const_iterator it(in_ways.begin());
-    set< int >::const_iterator it2(previous_ways.begin());
+    set< uint32 >::const_iterator it2(previous_ways.begin());
     while ((it != in_ways.end()) && (it2 != previous_ways.end()) && ((it++)->id == (uint32)*(it2++)))
       ;
     if ((it == in_ways.end()) && (it2 == previous_ways.end()))

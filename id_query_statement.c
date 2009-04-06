@@ -97,7 +97,7 @@ void Id_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   
   if (type == NODE)
   {
-    set< int > source;
+    set< uint32 > source;
     source.insert(ref);
     multiint_to_multiNode_query(source, nodes);
     
@@ -105,7 +105,7 @@ void Id_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   }
   else if (type == WAY)
   {
-    set< int > source;
+    set< uint32 > source;
     source.insert(ref);
     multiint_to_multiWay_query(source, ways);
     

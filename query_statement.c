@@ -241,7 +241,7 @@ void Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   
   if (type == QUERY_NODE)
   {
-    set< int > tnodes;
+    set< uint32 > tnodes;
     node_kv_to_multiint_query(key_values.front().first, key_values.front().second, tnodes);
     set< Node > tnodes2;
     multiint_to_multiNode_query(tnodes, tnodes2);
@@ -286,7 +286,7 @@ void Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       temp<<"\" order by relations.id";
     }
   
-    set< int > rels;
+    set< uint32 > rels;
     rels = multiint_query(mysql, temp.str(), rels);
     
     unsigned int key_count(1);
@@ -313,7 +313,7 @@ void Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	temp<<"\" and relation_tags.id in";
       }
       
-      set< int > new_rels;
+      set< uint32 > new_rels;
       rels = multiint_to_multiint_query
 	  (mysql, temp.str(), "order by relation_tags.id", rels, new_rels);
       

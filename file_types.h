@@ -230,22 +230,22 @@ private:
 
 struct Node_Id_Node_By_Id_Reader : public Node_Id_Node
 {
-  Node_Id_Node_By_Id_Reader(const set< int32 >& ids, set< Node >& result)
+  Node_Id_Node_By_Id_Reader(const set< uint32 >& ids, set< Node >& result)
     : result_(result), ids_(ids) {}
   
-  typedef set< int32 >::const_iterator Iterator;
+  typedef set< uint32 >::const_iterator Iterator;
   Iterator ids_begin() const { return ids_.begin(); }
   Iterator ids_end() const { return ids_.end(); }
   
   void process(uint8* buf)
   {
-    if (ids_.find(*((int32*)buf)) != ids_.end())
+    if (ids_.find(*((uint32*)buf)) != ids_.end())
       result_.insert(Node(*(int32*)&(buf[0]), *(int32*)&(buf[4]), *(int32*)&(buf[8])));
   }
   
 protected:
   set< Node >& result_;
-  const set< int32 >& ids_;
+  const set< uint32 >& ids_;
 };
 
 struct Node_Id_Node_Dump : public Node_Id_Node
@@ -453,7 +453,7 @@ struct Tag_Id_Node_Local
 
 struct Tag_Id_Node_Local_Reader : public Tag_Id_Node_Local
 {
-  Tag_Id_Node_Local_Reader(const set< uint32 >& ids, const set< uint32 >& idxs, set< int >& result)
+  Tag_Id_Node_Local_Reader(const set< uint32 >& ids, const set< uint32 >& idxs, set< uint32 >& result)
   : result_(result), ids_(ids), idxs_(idxs) {}
   
   typedef set< uint32 >::const_iterator Index_Iterator;
@@ -478,7 +478,7 @@ struct Tag_Id_Node_Local_Reader : public Tag_Id_Node_Local
   }
   
   protected:
-    set< int >& result_;
+    set< uint32 >& result_;
     const set< uint32 >& ids_;
     const set< uint32 >& idxs_;
 };
@@ -486,7 +486,8 @@ struct Tag_Id_Node_Local_Reader : public Tag_Id_Node_Local
 struct Tag_Id_Node_Local_Multiint_Reader : public Tag_Id_Node_Local_Reader
 {
   Tag_Id_Node_Local_Multiint_Reader
-      (const set< uint32 >& ids, const set< uint32 >& idxs, const set< int >& source, set< int >& result)
+      (const set< uint32 >& ids, const set< uint32 >& idxs,
+       const set< uint32 >& source, set< uint32 >& result)
   : Tag_Id_Node_Local_Reader(ids, idxs, result), source_(source) {}
   
   void process(uint8* buf)
@@ -502,7 +503,7 @@ struct Tag_Id_Node_Local_Multiint_Reader : public Tag_Id_Node_Local_Reader
   }
   
   private:
-    const set< int >& source_;
+    const set< uint32 >& source_;
 };
 
 struct Tag_MultiNode_Id_Local_Reader : public Tag_Id_Node_Local
@@ -847,7 +848,7 @@ struct Tag_Id_Node_Global
 
 struct Tag_Id_Node_Global_Reader : public Tag_Id_Node_Global
 {
-  Tag_Id_Node_Global_Reader(const set< uint32 >& ids, set< int >& result)
+  Tag_Id_Node_Global_Reader(const set< uint32 >& ids, set< uint32 >& result)
   : result_(result), ids_(ids) {}
   
   typedef set< uint32 >::const_iterator Index_Iterator;
@@ -872,14 +873,14 @@ struct Tag_Id_Node_Global_Reader : public Tag_Id_Node_Global
   }
   
   protected:
-    set< int >& result_;
+    set< uint32 >& result_;
     const set< uint32 >& ids_;
 };
 
 struct Tag_Id_Node_Global_Multiint_Reader : public Tag_Id_Node_Global_Reader
 {
   Tag_Id_Node_Global_Multiint_Reader
-      (const set< uint32 >& ids, const set< int >& source, set< int >& result)
+      (const set< uint32 >& ids, const set< uint32 >& source, set< uint32 >& result)
   : Tag_Id_Node_Global_Reader(ids, result), source_(source) {}
   
   void process(uint8* buf)
@@ -895,7 +896,7 @@ struct Tag_Id_Node_Global_Multiint_Reader : public Tag_Id_Node_Global_Reader
   }
   
   private:
-    const set< int >& source_;
+    const set< uint32 >& source_;
 };
 
 struct Node_Tag_Id_Count_Global_Reader : public Tag_Id_Node_Global

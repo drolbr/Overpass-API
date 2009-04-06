@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
   //conflicts
   temp.str("");
   temp<<"select id from conflicts where rule = "<<rule_replace;
-  set< int > attic_conflicts;
+  set< uint32 > attic_conflicts;
   multiint_query(mysql, temp.str(), attic_conflicts);
   multiint_to_null_query(mysql, "delete from node_conflicts where conflict in", "", attic_conflicts);
   multiint_to_null_query(mysql, "delete from way_conflicts where conflict in", "", attic_conflicts);
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
   //areas
   temp.str("");
   temp<<"select id from area_origins where rule = "<<rule_replace;
-  set< int > pre_attic_areas, non_attic_areas, attic_areas;
+  set< uint32 > pre_attic_areas, non_attic_areas, attic_areas;
   multiint_query(mysql, temp.str(), pre_attic_areas);
   
   temp.str("");
@@ -174,8 +174,8 @@ int main(int argc, char *argv[])
   temp.str("");
   multiint_to_multiint_query(mysql, "select id from area_origins where id in", "",
 			     pre_attic_areas, non_attic_areas);
-  set< int >::const_iterator pait(pre_attic_areas.begin());
-  set< int >::const_iterator nait(non_attic_areas.begin());
+  set< uint32 >::const_iterator pait(pre_attic_areas.begin());
+  set< uint32 >::const_iterator nait(non_attic_areas.begin());
   while (pait != pre_attic_areas.end())
   {
     if ((nait != non_attic_areas.end()) && (*nait == *pait))

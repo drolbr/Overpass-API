@@ -126,7 +126,7 @@ pair< int, int > intint_query(MYSQL* mysql, string query)
   return result_val;
 }
 
-set< int >& multiint_query(MYSQL* mysql, string query, set< int >& result_set)
+set< uint32 >& multiint_query(MYSQL* mysql, string query, set< uint32 >& result_set)
 {
   MYSQL_RES* result(mysql_query_use_wrapper(mysql, query));
   if (!result)
@@ -225,10 +225,10 @@ set< Area >& multiArea_query(MYSQL* mysql, string query, int lat, int lon, set< 
   return result_set;
 }
 
-set< int >& multiint_to_multiint_query
-    (MYSQL* mysql, string prefix, string suffix, const set< int >& source, set< int >& result_set)
+set< uint32 >& multiint_to_multiint_query
+    (MYSQL* mysql, string prefix, string suffix, const set< uint32 >& source, set< uint32 >& result_set)
 {
-  for (set< int >::const_iterator it(source.begin()); it != source.end(); )
+  for (set< uint32 >::const_iterator it(source.begin()); it != source.end(); )
   {
     ostringstream temp;
     temp<<prefix;
@@ -257,9 +257,9 @@ set< int >& multiint_to_multiint_query
 }
 
 void multiint_to_null_query
-    (MYSQL* mysql, string prefix, string suffix, const set< int >& source)
+    (MYSQL* mysql, string prefix, string suffix, const set< uint32 >& source)
 {
-  for (set< int >::const_iterator it(source.begin()); it != source.end(); )
+  for (set< uint32 >::const_iterator it(source.begin()); it != source.end(); )
   {
     ostringstream temp;
     temp<<prefix;
@@ -277,13 +277,13 @@ void multiint_to_null_query
 set< Relation >& multiint_to_multiRelation_query
     (MYSQL* mysql, 
      string prefix1, string suffix1, string prefix2, string suffix2, string prefix3, string suffix3,
-     const set< int >& source, set< Relation >& result_set)
+     const set< uint32 >& source, set< Relation >& result_set)
 {
   map< int, set< pair< int, int > > > node_members;
   map< int, set< pair< int, int > > > way_members;
   map< int, set< pair< int, int > > > relation_members;
   
-  for (set< int >::const_iterator it(source.begin()); it != source.end(); )
+  for (set< uint32 >::const_iterator it(source.begin()); it != source.end(); )
   {
     ostringstream temp;
     temp<<prefix1;
@@ -323,7 +323,7 @@ set< Relation >& multiint_to_multiRelation_query
     mysql_free_result(result);
   }
   
-  for (set< int >::const_iterator it(source.begin()); it != source.end(); )
+  for (set< uint32 >::const_iterator it(source.begin()); it != source.end(); )
   {
     ostringstream temp;
     temp<<prefix2;
@@ -363,7 +363,7 @@ set< Relation >& multiint_to_multiRelation_query
     mysql_free_result(result);
   }
   
-  for (set< int >::const_iterator it(source.begin()); it != source.end(); )
+  for (set< uint32 >::const_iterator it(source.begin()); it != source.end(); )
   {
     ostringstream temp;
     temp<<prefix3;
@@ -403,7 +403,7 @@ set< Relation >& multiint_to_multiRelation_query
     mysql_free_result(result);
   }
   
-  for (set< int >::const_iterator it(source.begin()); it != source.end(); ++it)
+  for (set< uint32 >::const_iterator it(source.begin()); it != source.end(); ++it)
   {
     Relation relation(*it);
     relation.node_members = node_members[*it];
@@ -520,7 +520,7 @@ typedef unsigned long long uint64;
 
 //-----------------------------------------------------------------------------
 
-set< Node >& multiint_to_multiNode_query(const set< int >& source, set< Node >& result_set)
+set< Node >& multiint_to_multiNode_query(const set< uint32 >& source, set< Node >& result_set)
 {
   Node_Id_Node_By_Id_Reader reader(source, result_set);
   select_by_id< Node_Id_Node_By_Id_Reader >(reader);
@@ -545,10 +545,10 @@ int multiRange_to_count_query
 
 //-----------------------------------------------------------------------------
 
-set< Way >& multiint_to_multiWay_query(const set< int >& source, set< Way >& result_set)
+set< Way >& multiint_to_multiWay_query(const set< uint32 >& source, set< Way >& result_set)
 {
   set< Way_ > result;
-  Indexed_Ordered_Id_To_Many_By_Id_Reader< Way_Storage, set< int >, set< Way_ > >
+  Indexed_Ordered_Id_To_Many_By_Id_Reader< Way_Storage, set< uint32 >, set< Way_ > >
       reader(source, result);
   select_by_id(reader);
   for (set< Way_ >::const_iterator it(result.begin()); it != result.end(); ++it)
@@ -608,7 +608,7 @@ set< Way >& multiNode_to_multiWay_query(const set< Node >& source, set< Way >& r
 
 //-----------------------------------------------------------------------------
 
-set< int >& node_kv_to_multiint_query(string key, string value, set< int >& result_set)
+set< uint32 >& node_kv_to_multiint_query(string key, string value, set< uint32 >& result_set)
 {
   set< uint32 > string_ids_global;
   set< uint32 > string_ids_local;
@@ -652,8 +652,8 @@ uint32 node_kv_to_count_query(string key, string value)
   return result;
 }
 
-set< int >& node_kv_multiint_to_multiint_query
-    (string key, string value, const set< int >& source, set< int >& result_set)
+set< uint32 >& node_kv_multiint_to_multiint_query
+    (string key, string value, const set< uint32 >& source, set< uint32 >& result_set)
 {
   set< uint32 > string_ids_global;
   set< uint32 > string_ids_local;

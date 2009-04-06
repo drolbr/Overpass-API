@@ -52,7 +52,7 @@ void localise_and_flush_ways
 {
   //query used nodes
   set< Node > used_nodes;
-  set< int32 > used_nodes_ids;
+  set< uint32 > used_nodes_ids;
   for (vector< Way_ >::const_iterator it(ways.begin()); it != ways.end(); ++it)
   {
     for (vector< Way_::Data >::const_iterator it2((*it).data.begin());
