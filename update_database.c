@@ -11,6 +11,7 @@
 #include "node_strings_file_io.h"
 #include "raw_file_db.h"
 #include "script_datatypes.h"
+#include "way_strings_file_io.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -51,7 +52,7 @@ map< pair< string, string >, pair< uint32, uint32 >* > new_node_tags_ids;
 
 Way_ current_way(Way_(0, 0));
 set< uint32 > t_delete_ways;
-set< Way_ > new_ways;
+set< Way_ > new_ways_floating;
 map< pair< uint32, uint32 >, vector< pair< uint32, uint32 >* > > new_ways_tags;
 map< pair< string, string >, pair< uint32, uint32 >* > new_way_tags_ids;
 
@@ -163,7 +164,8 @@ void end(const char *el)
     current_node = 0;
   else if (!strcmp(el, "way"))
   {
-    new_ways.insert(current_way);
+    if (!(current_way.data.empty()))
+      new_ways_floating.insert(current_way);
     current_way.head.second = 0;
     current_way.data.clear();
   }
@@ -190,7 +192,7 @@ int main(int argc, char *argv[])
     //reading the main document
     parse(stdin, start, end);
     
-    //retrieving old coordinates of the nodes that will be deleted
+/*    //retrieving old coordinates of the nodes that will be deleted
     cerr<<(uintmax_t)time(NULL)<<'\n';
     Node_Id_Node_By_Id_Reader reader(t_delete_nodes, delete_nodes);
     select_by_id< Node_Id_Node_By_Id_Reader >(reader);
@@ -349,7 +351,81 @@ int main(int argc, char *argv[])
     update_id_index< Node_Id_Node_Updater >(node_updater);
     cerr<<(uintmax_t)time(NULL)<<'\n';
     
-    node_tag_id_statistics_remake();
+    node_tag_id_statistics_remake();*/
+    
+    //computing coordinates of the new ways
+    //query used nodes
+    set< Node > used_nodes;
+    set< uint32 > used_nodes_ids;
+    for (set< Way_ >::const_iterator it(new_ways_floating.begin());
+         it != new_ways_floating.end(); ++it)
+    {
+      for (vector< Way_::Data >::const_iterator it2((*it).data.begin());
+           it2 != (*it).data.end(); ++it2)
+        used_nodes_ids.insert(*it2);
+    }
+    Node_Id_Node_By_Id_Reader nodes_reader(used_nodes_ids, used_nodes);
+    select_by_id< Node_Id_Node_By_Id_Reader >(nodes_reader);
+    used_nodes_ids.clear();
+    
+    //retrieving old coordinates of the ways that will be deleted
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    set< Way_ > delete_ways;
+    Indexed_Ordered_Id_To_Many_By_Id_Reader< Way_Storage, set< uint32 >, set< Way_ > >
+      way_id_reader(t_delete_ways, delete_ways);
+    select_by_id(way_id_reader);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    
+    //calculate for each ways its index
+    set< Way_ > new_ways;
+    for (set< Way_ >::const_iterator it(new_ways_floating.begin()); it != new_ways_floating.end(); ++it)
+    {
+      Way_::Index bitmask(0), position(0);
+      Way_ way(*it);
+      for (vector< Way_::Data >::const_iterator it2(way.data.begin());
+           it2 != way.data.end(); ++it2)
+      {
+        const set< Node >::const_iterator node_it(used_nodes.find(Node(*it2, 0, 0)));
+        if (node_it == used_nodes.end())
+        {
+	  //this node is referenced but does not exist
+	  //cerr<<"E "<<*it2<<'\n';
+          continue;
+        }
+        if (position == 0)
+          position = ll_idx(node_it->lat, node_it->lon);
+        else
+          bitmask |= (position ^ ll_idx(node_it->lat, node_it->lon));
+      }
+      
+      while (bitmask)
+      {
+        bitmask = bitmask>>8;
+        position = (position>>8) | 0x88000000;
+      }
+      way.head.first = position;
+      new_ways.insert(way);
+    }
+    new_ways_floating.clear();
+    
+/*    for (set< Way_ >::const_iterator it(new_ways.begin()); it != new_ways.end(); ++it)
+    {
+      cout<<hex<<it->head.first<<'\t'<<dec<<it->head.second<<'\n';
+      for (vector< Way_::Data >::const_iterator it2(it->data.begin()); it2 != it->data.end(); ++it2)
+        cout<<'\t'<<*it2<<'\n';
+    }*/
+    
+    //updating the ways file
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    Indexed_Ordered_Id_To_Many_Updater< Way_Storage, set< Way_ > > way_updater(delete_ways, new_ways);
+    delete_insert(way_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    make_block_index(way_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    update_id_index(way_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    
+/*    way_tag_id_statistics_remake();*/
   }
   catch(File_Error e)
   {

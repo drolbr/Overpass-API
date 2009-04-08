@@ -2524,15 +2524,6 @@ struct Parallel_Container_Iterator
 };
 
 template < typename Parallel_Container_Iterator >
-inline typename Parallel_Container_Iterator::Basetype operator*(const Parallel_Container_Iterator& it)
-{
-  if (it.current_it == 1)
-    return *(it.it1);
-  else
-    return *(it.it2);
-}
-
-template < typename Parallel_Container_Iterator >
 inline bool operator==(const Parallel_Container_Iterator& a, const Parallel_Container_Iterator& b)
 {
   return ((a.it1 == b.it1) && (a.it2 == b.it2));
@@ -2569,7 +2560,16 @@ struct Indexed_Ordered_Id_To_Many_Updater : public Indexed_Ordered_Id_To_Many_Ba
 {
   Indexed_Ordered_Id_To_Many_Updater(const Container& to_delete, const Container& to_insert)
     : to_delete_(to_delete), to_insert_(to_insert), block_index_(), remaining_size(0), dit(), first_new_block_(0), block_ids()
-  {}
+  {
+    //TEMP
+    for (typename Container::const_iterator it(to_insert_.begin()); it != to_insert_.end(); ++it)
+    {
+      cout<<hex<<it->head.first<<'\t'<<dec<<it->head.second<<'\n';
+      for (vector< Way_::Data >::const_iterator it2(it->data.begin()); it2 != it->data.end(); ++it2)
+	cout<<'\t'<<*it2<<'\n';
+    }
+    cout<<"---\n";
+  }
   
   const multimap< typename Storage::Index, uint16 >& block_index() const { return block_index_; }
   multimap< typename Storage::Index, uint16 >& block_index() { return block_index_; }
@@ -2578,7 +2578,13 @@ struct Indexed_Ordered_Id_To_Many_Updater : public Indexed_Ordered_Id_To_Many_Ba
   Iterator elem_begin() { return Iterator(to_delete_, to_insert_, to_delete_.begin(), to_insert_.begin()); }
   Iterator elem_end() { return Iterator(to_delete_, to_insert_, to_delete_.end(), to_insert_.end()); }
   
-  typename Storage::Index index_of(const Iterator& it) const { return Storage::index_of((*it).head); }
+  typename Storage::Index index_of(const Iterator& it) const
+  {
+    if (it.current_it == 1)
+      return Storage::index_of((*(it.it1)).head);
+    else
+      return Storage::index_of((*(it.it2)).head);
+  }
   typename Storage::Index index_of_buf(uint8* buf) const { return Storage::index_of_buf(buf); }
   
   typedef vector< uint16 >::const_iterator Id_Block_Iterator;
@@ -2589,7 +2595,7 @@ struct Indexed_Ordered_Id_To_Many_Updater : public Indexed_Ordered_Id_To_Many_Ba
     if (it.current_it == 1)
       return 0;
     
-    int32 size_of_((*it).data.size());
+    int32 size_of_((*(it.it2)).data.size());
     return (((size_of_ - 1) / 255 + 1)*(Storage::size_of_Head() + 1)
             + size_of_*Storage::size_of_Data());
   }
@@ -2601,25 +2607,36 @@ struct Indexed_Ordered_Id_To_Many_Updater : public Indexed_Ordered_Id_To_Many_Ba
     
     int32 size_of_(remaining_size);
     if (remaining_size == 0)
-      size_of_ = (*it).data.size();
+      size_of_ = (*(it.it2)).data.size();
     if (size_of_ > 255)
       size_of_ = 255;
     return (Storage::size_of_Head() + 1 + size_of_*Storage::size_of_Data());
   }
   
-  int32 compare(const Iterator& it, uint8 const* buf) const { return Storage::compare((*it).head, buf); }
+  int32 compare(const Iterator& it, uint8 const* buf) const
+  {
+    if (it.current_it == 1)
+      return Storage::compare((*(it.it1)).head, buf);
+    else
+      return Storage::compare((*(it.it2)).head, buf);
+  }
 
   bool to_buf(uint8* buf, const Iterator& it, uint16 block_id)
   {
+    //TEMP
+    cout<<hex<<(*(it.it2)).head.first<<'\t'<<dec<<(*(it.it2)).head.second<<'\n';
+    for (vector< Way_::Data >::const_iterator it2((*(it.it2)).data.begin()); it2 != (*(it.it2)).data.end(); ++it2)
+      cout<<'\t'<<*it2<<'\n';
+    
     if (it.current_it == 1)
       return true;
     
-    Storage::head_to_buf(&(buf[0]), (*it).head);
+    Storage::head_to_buf(&(buf[0]), (*(it.it2)).head);
     uint pos(Storage::size_of_Head() + 1);
     if (remaining_size == 0)
     {
-      remaining_size = (*it).data.size();
-      dit = (*it).data.begin();
+      remaining_size = (*(it.it2)).data.size();
+      dit = (*(it.it2)).data.begin();
     }
     uint upper_limit(remaining_size);
     if (upper_limit > 255)
@@ -2653,7 +2670,13 @@ struct Indexed_Ordered_Id_To_Many_Updater : public Indexed_Ordered_Id_To_Many_Ba
   void set_first_new_block(uint16 block_id) { first_new_block_ = block_id; }
   uint16 first_new_block() const { return first_new_block_; }
   
-  typename Storage::Id id_of(const Iterator& it) { return Storage::id_of((*it).head); }
+  typename Storage::Id id_of(const Iterator& it)
+  {
+    if (it.current_it == 1)
+      return Storage::id_of((*(it.it1)).head);
+    else
+      return Storage::id_of((*(it.it2)).head);
+  }
   typename Storage::Id id_of_buf(uint8* buf) const { return Storage::id_of_buf(buf); }
   void index_to_buf(uint8* buf, const typename Storage::Index& i) const { Storage::index_to_buf(buf, i); }
   
