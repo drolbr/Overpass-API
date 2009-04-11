@@ -1438,9 +1438,6 @@ void node_tag_id_statistics_remake()
   if (dest_fd < 0)
     throw File_Error(errno, NODE_TAG_ID_STATS, "node_tag_id_statistics_remake:1");
   
-  //TEMP
-  cerr<<Node_String_Cache::get_next_node_tag_id()<<'\n';
-  
   vector< uint32 > id_count(Node_String_Cache::get_next_node_tag_id());
   Node_Tag_Id_Count_Local_Reader local_stats(id_count);
   select_all< Node_Tag_Id_Count_Local_Reader >(local_stats);

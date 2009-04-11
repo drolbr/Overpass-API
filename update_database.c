@@ -94,8 +94,7 @@ void start(const char *el, const char **attr)
       }
       else
         coord_id = new_way_tags_ids.find(make_pair< string, string >(key, value))->second;
-      new_ways_tags[make_pair< uint32, uint32 >
-                    (current_way.head.second, current_ll_idx)].push_back(coord_id);
+      new_ways_tags[make_pair< uint32, uint32 >(current_way.head.second, 0)].push_back(coord_id);
     }
   }
   else if (!strcmp(el, "nd"))
@@ -192,7 +191,7 @@ int main(int argc, char *argv[])
     //reading the main document
     parse(stdin, start, end);
     
-/*    //retrieving old coordinates of the nodes that will be deleted
+    //retrieving old coordinates of the nodes that will be deleted
     cerr<<(uintmax_t)time(NULL)<<'\n';
     Node_Id_Node_By_Id_Reader reader(t_delete_nodes, delete_nodes);
     select_by_id< Node_Id_Node_By_Id_Reader >(reader);
@@ -351,7 +350,13 @@ int main(int argc, char *argv[])
     update_id_index< Node_Id_Node_Updater >(node_updater);
     cerr<<(uintmax_t)time(NULL)<<'\n';
     
-    node_tag_id_statistics_remake();*/
+    node_tag_id_statistics_remake();
+    
+/*    vector< uint32 > local_id_idx;
+    vector< uint32 > spatial_boundaries;
+    map< pair< uint32, uint32 >, pair< set< uint32 >, set< uint32 > > > local_ids;
+    map< uint32, set< uint32 > > moved_ids;
+    map< uint32, pair< set< uint32 >, set< uint32 > > > global_ids_to_be_edited;*/
     
     //computing coordinates of the new ways
     //query used nodes
@@ -376,7 +381,7 @@ int main(int argc, char *argv[])
     select_by_id(way_id_reader);
     cerr<<(uintmax_t)time(NULL)<<'\n';
     
-    //calculate for each ways its index
+    //calculate for each way its index
     set< Way_ > new_ways;
     for (set< Way_ >::const_iterator it(new_ways_floating.begin()); it != new_ways_floating.end(); ++it)
     {
@@ -405,15 +410,189 @@ int main(int argc, char *argv[])
       }
       way.head.first = position;
       new_ways.insert(way);
+      map< pair< uint32, uint32 >, vector< pair< uint32, uint32 >* > >::const_iterator
+        tit(new_ways_tags.find(make_pair< uint32, uint32 >(way.head.second, 0)));
+      if (tit != new_ways_tags.end())
+      {
+        new_ways_tags[make_pair< uint32, uint32 >(way.head.second, position)] = tit->second;
+        new_ways_tags.erase(make_pair< uint32, uint32 >(way.head.second, 0));
+      }
+      
     }
     new_ways_floating.clear();
     
-/*    for (set< Way_ >::const_iterator it(new_ways.begin()); it != new_ways.end(); ++it)
+    //calculate for each way tag its index
+    for (map< pair< uint32, uint32 >, vector< pair< uint32, uint32 >* > >::const_iterator
+         it(new_ways_tags.begin()); it != new_ways_tags.end(); ++it)
     {
-      cout<<hex<<it->head.first<<'\t'<<dec<<it->head.second<<'\n';
-      for (vector< Way_::Data >::const_iterator it2(it->data.begin()); it2 != it->data.end(); ++it2)
-        cout<<'\t'<<*it2<<'\n';
-    }*/
+      for (vector< pair< uint32, uint32 >* >::const_iterator it2(it->second.begin());
+           it2 != it->second.end(); ++it2)
+      {
+        if ((*it2)->first == 0)
+          (*it2)->first = (it->first.second & 0xffffff00);
+        else if ((*it2)->first != (it->first.second & 0xffffff00))
+          (*it2)->first = 0xffffffff;
+      }
+    }
+
+    //updating the string dictionary of the way tags
+    moved_local_ids.clear();
+    local_id_idx.clear();
+    spatial_boundaries.clear();
+    way_string_delete_insert(new_way_tags_ids, moved_local_ids, local_id_idx, spatial_boundaries);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    
+    //preparing the update of the local id to way data
+    set< uint32 > delete_way_idxs;
+    map< Way_::Id, Way_::Index > delete_ways_by_id;
+    for (set< Way_ >::const_iterator it(delete_ways.begin()); it != delete_ways.end(); ++it)
+    {
+      delete_way_idxs.insert(it->head.first & 0xffffff00);
+      delete_ways_by_id[it->head.second] = it->head.first;
+    }
+    local_ids.clear();
+    Tag_Id_MultiWay_Local_Reader local_id_way_reader(local_ids, delete_ways_by_id, delete_way_idxs);
+    select_with_idx< Tag_Id_MultiWay_Local_Reader >(local_id_way_reader);
+    for (set< pair< uint32, uint32 > >::const_iterator it(moved_local_ids.begin());
+         it != moved_local_ids.end(); ++it)
+      local_ids[*it].second.insert(0);
+    for (map< pair< uint32, uint32 >, vector< pair< uint32, uint32 >* > >::const_iterator
+         it(new_ways_tags.begin()); it != new_ways_tags.end(); ++it)
+    {
+      for (vector< pair< uint32, uint32 >* >::const_iterator it2(it->second.begin());
+           it2 != it->second.end(); ++it2)
+      {
+        if ((*it2)->first != 0xffffffff)
+          local_ids[**it2].second.insert(it->first.first);
+      }
+    }
+    
+    //updating of the local id to way data
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    moved_ids.clear();
+    Tag_Id_Way_Local_Updater id_way_local_updater
+      (local_ids, moved_ids, local_id_idx, spatial_boundaries);
+    delete_insert< Tag_Id_Way_Local_Updater >(id_way_local_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    make_block_index< Tag_Id_Way_Local_Updater >(id_way_local_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    
+    //retrieving old coordinates of the ways that appear in local ids which are moving to global
+    set< uint32 > t_move_involved_ways;
+    for (map< uint32, set< uint32 > >::const_iterator it(moved_ids.begin());
+         it != moved_ids.end(); ++it)
+    {
+      for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+        t_move_involved_ways.insert(*it2);
+    }
+    set< Way_ > move_involved_ways;
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    Indexed_Ordered_Id_To_Many_By_Id_Reader< Way_Storage, set< uint32 >, set< Way_ > >
+      way_id_reader2(t_move_involved_ways, move_involved_ways);
+    select_by_id(way_id_reader2);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    map< Way_::Id, Way_::Index > move_involved_ways_by_id;
+    for (set< Way_ >::const_iterator it(move_involved_ways.begin()); it != move_involved_ways.end(); ++it)
+      move_involved_ways_by_id[it->head.second] = it->head.first;
+    
+    //preparing the update of the global way to id data
+    map< pair< uint32, uint32 >, pair< set< uint32 >, uint > > global_ways_to_be_edited;
+    for (map< uint32, set< uint32 > >::const_iterator it(moved_ids.begin());
+         it != moved_ids.end(); ++it)
+    {
+      for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+      {
+        map< Way_::Id, Way_::Index >::const_iterator nit(move_involved_ways_by_id.find(*it2));
+        if (nit == move_involved_ways_by_id.end())
+          continue;
+        pair< set< uint32 >, uint >& tail(global_ways_to_be_edited[make_pair< uint32, uint32 >
+          (nit->second, nit->first)]);
+        tail.first.insert(it->first);
+        tail.second = Tag_Way_Id_Updater::UPDATE;
+      }
+    }
+    for (set< Way_ >::const_iterator it(delete_ways.begin());
+         it != delete_ways.end(); ++it)
+      global_ways_to_be_edited[make_pair< uint32, uint32 >
+                                (it->head.first, it->head.second)] = make_pair< set< uint32 >, uint >
+      (set< uint32 >(), Tag_Way_Id_Updater::DELETE);
+    for (map< pair< uint32, uint32 >, vector< pair< uint32, uint32 >* > >::const_iterator
+         it(new_ways_tags.begin()); it != new_ways_tags.end(); ++it)
+    {
+      set< uint32 > global_ids;
+      for (vector< pair< uint32, uint32 >* >::const_iterator it2(it->second.begin());
+           it2 != it->second.end(); ++it2)
+      {
+        if ((*it2)->first == 0xffffffff)
+          global_ids.insert((*it2)->second);
+      }
+      global_ways_to_be_edited[make_pair< uint32, uint32 >
+                                (it->first.second, it->first.first)] = make_pair< set< uint32 >, uint >
+        (global_ids, Tag_Way_Id_Updater::INSERT);
+    }
+    
+    //updating of the global way to id data
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    map< uint32, set< uint32 > > deleted_ways_ids;
+    Tag_Way_Id_Updater way_id_updater
+      (global_ways_to_be_edited, deleted_ways_ids);
+    delete_insert< Tag_Way_Id_Updater >(way_id_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    make_block_index< Tag_Way_Id_Updater >(way_id_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    
+    //preparing the update of the global id to way data
+    global_ids_to_be_edited.clear();
+    for (map< uint32, set< uint32 > >::const_iterator it(moved_ids.begin());
+         it != moved_ids.end(); ++it)
+    {
+      global_ids_to_be_edited[it->first] = make_pair< set< uint32 >, set< uint32 > >
+        (set< uint32 >(), set< uint32 >());
+      set< uint32 >& inserted_ways(global_ids_to_be_edited[it->first].second);
+      for (set< uint32 >::const_iterator it2(it->second.begin());
+           it2 != it->second.end(); ++it2)
+      {
+        if (deleted_ways_ids.find(*it2) == deleted_ways_ids.end())
+          inserted_ways.insert(*it2);
+      }
+    }
+    for (map< uint32, set< uint32 > >::const_iterator it(deleted_ways_ids.begin());
+         it != deleted_ways_ids.end(); ++it)
+    {
+      for (set< uint32 >::const_iterator it2(it->second.begin());
+           it2 != it->second.end(); ++it2)
+        global_ids_to_be_edited[*it2].first.insert(it->first);
+    }
+    for (map< pair< uint32, uint32 >, vector< pair< uint32, uint32 >* > >::const_iterator
+         it(new_ways_tags.begin()); it != new_ways_tags.end(); ++it)
+    {
+      for (vector< pair< uint32, uint32 >* >::const_iterator it2(it->second.begin());
+           it2 != it->second.end(); ++it2)
+      {
+        if ((*it2)->first == 0xffffffff)
+        {
+          pair< set< uint32 >, set< uint32 > >& tail(global_ids_to_be_edited[(*it2)->second]);
+          if (tail.first.find(it->first.first) == tail.first.end())
+            tail.second.insert(it->first.first);
+          else
+            tail.first.erase(it->first.first);
+        }
+      }
+    }
+    
+    //updating of the global id to way data
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    Tag_Id_Way_Global_Updater id_way_global_updater(global_ids_to_be_edited);
+    delete_insert< Tag_Id_Way_Global_Updater >(id_way_global_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    make_block_index< Tag_Id_Way_Global_Updater >(id_way_global_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    
+    new_ways_tags.clear();
+    for (map< pair< string, string >, pair< uint32, uint32 >* >::iterator it(new_way_tags_ids.begin());
+         it != new_way_tags_ids.end(); ++it)
+      delete(it->second);
+    new_way_tags_ids.clear();
     
     //updating the ways file
     cerr<<(uintmax_t)time(NULL)<<'\n';
@@ -425,7 +604,7 @@ int main(int argc, char *argv[])
     update_id_index(way_updater);
     cerr<<(uintmax_t)time(NULL)<<'\n';
     
-/*    way_tag_id_statistics_remake();*/
+    way_tag_id_statistics_remake();
   }
   catch(File_Error e)
   {

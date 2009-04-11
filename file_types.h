@@ -1475,42 +1475,42 @@ private:
   const set< uint32 >& idxs_;
 };
 
-// struct Tag_Id_MultiWay_Local_Reader : public Tag_Id_Way_Local
-// {
-//   Tag_Id_MultiWay_Local_Reader
-//     (map< pair< uint32, uint32 >, pair< set< uint32 >, set< uint32 > > >& id_to_way,
-//      const set< Way >& ways, const set< uint32 >& idxs)
-//     : id_to_way_(id_to_way), ways_(ways), idxs_(idxs) {}
-//   
-//   typedef set< uint32 >::const_iterator Index_Iterator;
-//   Index_Iterator idxs_begin() const { return idxs_.begin(); }
-//   Index_Iterator idxs_end() const { return idxs_.end(); }
-//   void inc_idx(Index_Iterator& it, Index& idx)
-//   {
-//     ++it;
-//     while ((it != idxs_end()) && (*it <= idx))
-//       ++it;
-//   }
-//   
-//   void block_notify(uint8* buf) const {}
-//   
-//   void process(uint8* buf)
-//   {
-//     for (uint32 j(0); j < *((uint8*)&(buf[4])); ++j)
-//     {
-//       set< Way >::const_iterator it
-//         (ways_.find(Way(*(uint32*)&(buf[6 + 4*j]))));
-//       if (it != ways_.end())
-//         id_to_way_[make_pair< uint32, uint32 >
-//                     (ll_idx(it->lat, it->lon) & 0xffffff00, *(uint32*)&(buf[0]))].first.insert(it->id);
-//     }
-//   }
-//   
-// private:
-//   map< pair< uint32, uint32 >, pair< set< uint32 >, set< uint32 > > >& id_to_way_;
-//   const set< Way >& ways_;
-//   const set< uint32 >& idxs_;
-// };
+struct Tag_Id_MultiWay_Local_Reader : public Tag_Id_Way_Local
+{
+  Tag_Id_MultiWay_Local_Reader
+    (map< pair< uint32, uint32 >, pair< set< uint32 >, set< uint32 > > >& id_to_way,
+     const map< Way_::Id, Way_::Index >& ways, const set< uint32 >& idxs)
+    : id_to_way_(id_to_way), ways_(ways), idxs_(idxs) {}
+  
+  typedef set< uint32 >::const_iterator Index_Iterator;
+  Index_Iterator idxs_begin() const { return idxs_.begin(); }
+  Index_Iterator idxs_end() const { return idxs_.end(); }
+  void inc_idx(Index_Iterator& it, Index& idx)
+  {
+    ++it;
+    while ((it != idxs_end()) && (*it <= idx))
+      ++it;
+  }
+  
+  void block_notify(uint8* buf) const {}
+  
+  void process(uint8* buf)
+  {
+    for (uint32 j(0); j < *((uint8*)&(buf[4])); ++j)
+    {
+      map< Way_::Id, Way_::Index >::const_iterator it
+	  (ways_.find(*(uint32*)&(buf[6 + 4*j])));
+      if (it != ways_.end())
+        id_to_way_[make_pair< uint32, uint32 >
+	    (it->second & 0xffffff00, *(uint32*)&(buf[0]))].first.insert(it->first);
+    }
+  }
+  
+private:
+  map< pair< uint32, uint32 >, pair< set< uint32 >, set< uint32 > > >& id_to_way_;
+  const map< Way_::Id, Way_::Index > ways_;
+  const set< uint32 >& idxs_;
+};
 
 struct Way_Tag_Id_Count_Local_Reader : public Tag_Id_Way_Local
 {
@@ -2559,17 +2559,7 @@ template < typename Storage, typename Container >
 struct Indexed_Ordered_Id_To_Many_Updater : public Indexed_Ordered_Id_To_Many_Base< Storage >
 {
   Indexed_Ordered_Id_To_Many_Updater(const Container& to_delete, const Container& to_insert)
-    : to_delete_(to_delete), to_insert_(to_insert), block_index_(), remaining_size(0), dit(), first_new_block_(0), block_ids()
-  {
-    //TEMP
-    for (typename Container::const_iterator it(to_insert_.begin()); it != to_insert_.end(); ++it)
-    {
-      cout<<hex<<it->head.first<<'\t'<<dec<<it->head.second<<'\n';
-      for (vector< Way_::Data >::const_iterator it2(it->data.begin()); it2 != it->data.end(); ++it2)
-	cout<<'\t'<<*it2<<'\n';
-    }
-    cout<<"---\n";
-  }
+    : to_delete_(to_delete), to_insert_(to_insert), block_index_(), remaining_size(0), dit(), first_new_block_(0), block_ids() {}
   
   const multimap< typename Storage::Index, uint16 >& block_index() const { return block_index_; }
   multimap< typename Storage::Index, uint16 >& block_index() { return block_index_; }
@@ -2623,11 +2613,6 @@ struct Indexed_Ordered_Id_To_Many_Updater : public Indexed_Ordered_Id_To_Many_Ba
 
   bool to_buf(uint8* buf, const Iterator& it, uint16 block_id)
   {
-    //TEMP
-    cout<<hex<<(*(it.it2)).head.first<<'\t'<<dec<<(*(it.it2)).head.second<<'\n';
-    for (vector< Way_::Data >::const_iterator it2((*(it.it2)).data.begin()); it2 != (*(it.it2)).data.end(); ++it2)
-      cout<<'\t'<<*it2<<'\n';
-    
     if (it.current_it == 1)
       return true;
     
@@ -2652,7 +2637,10 @@ struct Indexed_Ordered_Id_To_Many_Updater : public Indexed_Ordered_Id_To_Many_Ba
     remaining_size -= upper_limit;
     *(uint8*)&(buf[Storage::size_of_Head()]) = upper_limit;
     
-    block_ids.push_back(block_id);
+    //open bug: a part of a way may got lost or in the wrong order
+    //if it has been split at a block border
+    if (remaining_size == 0)
+      block_ids.push_back(block_id);
     return (remaining_size == 0);
   }
   
