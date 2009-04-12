@@ -275,8 +275,6 @@ void delete_insert(T& env)
   int next_block_id(block_index.size());
   env.set_first_new_block(next_block_id);
   
-  //TEMP
-/*  int dest_fd = open64(env.data_file().c_str(), O_RDONLY);*/
   int dest_fd = open64(env.data_file().c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)
     throw File_Error(errno, env.data_file(), "delete_insert:2");
@@ -381,7 +379,6 @@ void delete_insert(T& env)
 
       lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-      //TEMP
       write(dest_fd, dest_buf, BLOCKSIZE);
 
       cur_block = next_block_id;
@@ -408,7 +405,6 @@ void delete_insert(T& env)
       {
 	if (deletion_buf[elem_count])
 	{
-          //TEMP
 	  memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
 	  j += env.size_of_buf(&(source_buf[i]));
 	}
@@ -435,7 +431,6 @@ void delete_insert(T& env)
     }
     lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-    //TEMP
     write(dest_fd, dest_buf, BLOCKSIZE);
   }
     
@@ -671,9 +666,6 @@ void select_with_idx(T& env)
       i += env.size_of_Index();
       block_idx.push_back(*(uint16*)&(idx_buf[i]));
       i += sizeof(uint16);
-      //TEMP
-/*      if ((block_idx.size() > 1) && (*(--(--(block_idx.end()))) == 0x47c))
-	cout<<*(--(--(idx_boundaries.end())))<<'\t'<<*(--(idx_boundaries.end()))<<'\n';*/
     }
     free(idx_buf);
   
@@ -685,30 +677,19 @@ void select_with_idx(T& env)
   typename T::Index_Iterator it(env.idxs_begin());
   while (it != env.idxs_end())
   {
-    cout<<"a "<<i<<' '<<idx_boundaries[i]<<' '<<*it<<'\n';
     while ((i < idx_boundaries.size()) && (idx_boundaries[i] < *it))
       ++i;
-    cout<<"b "<<i<<' '<<idx_boundaries[i]<<' '<<*it<<'\n';
     block_ids.insert(block_idx[i-1]);
-    cout<<"c "<<i<<' '<<idx_boundaries[i]<<' '<<*it<<'\n';
     while ((i < idx_boundaries.size()) && (idx_boundaries[i] <= *it))
     {
       block_ids.insert(block_idx[i]);
       ++i;
     }
-    cout<<"d "<<i<<' '<<*it<<'\n';
     if (i < idx_boundaries.size())
       env.inc_idx(it, idx_boundaries[i]);
     else
       break;
-    cout<<"e "<<i<<' '<<idx_boundaries[i]<<'\n';
   }
-  
-  //TEMP
-/*  if (block_ids.find(0x47c) != block_ids.end())
-    cout<<"block selected\n";
-  else
-    cout<<"block ignored\n";*/
   
   int data_fd = open64(DATA_FILE.c_str(), O_RDONLY);
   if (data_fd < 0)
