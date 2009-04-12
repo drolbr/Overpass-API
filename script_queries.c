@@ -531,8 +531,36 @@ void multiRange_to_multiNode_query
     (const set< pair< int, int > >& in_inside, const set< pair< int, int > >& in_border,
      set< Node >& res_inside, set< Node >& res_border)
 {
+  //TEMP
+/*  cout<<ll_idx(514631977, 74093730)<<'\n';
+  set< pair< int, int > >::const_iterator iit(in_inside.lower_bound(make_pair(ll_idx(514631977, 74093730), ll_idx(514631977, 74093730))));
+  if (iit != in_inside.end())
+    cout<<iit->first<<'\t'<<iit->second<<'\n';
+  if (iit != in_inside.begin())
+  {
+    --iit;
+    cout<<iit->first<<'\t'<<iit->second<<'\n';
+  }
+  set< pair< int, int > >::const_iterator bit(in_border.lower_bound(make_pair(ll_idx(514631977, 74093730), ll_idx(514631977, 74093730))));
+  if (bit != in_border.end())
+    cout<<bit->first<<'\t'<<bit->second<<'\n';
+  if (bit != in_border.begin())
+  {
+    --bit;
+    cout<<bit->first<<'\t'<<bit->second<<'\n';
+  }*/
+  
   Node_Id_Node_Range_Reader reader(in_inside, in_border, res_inside, res_border);
   select_with_idx< Node_Id_Node_Range_Reader >(reader);
+  //TEMP
+/*  if (res_inside.find(Node(21540032, 0, 0)) == res_inside.end())
+    cout<<"not inside\n";
+  else
+    cout<<"is inside\n";
+  if (res_border.find(Node(21540032, 0, 0)) == res_border.end())
+    cout<<"not border\n";
+  else
+    cout<<"is border\n";*/
 }
 
 int multiRange_to_count_query

@@ -671,6 +671,9 @@ void select_with_idx(T& env)
       i += env.size_of_Index();
       block_idx.push_back(*(uint16*)&(idx_buf[i]));
       i += sizeof(uint16);
+      //TEMP
+/*      if ((block_idx.size() > 1) && (*(--(--(block_idx.end()))) == 0x47c))
+	cout<<*(--(--(idx_boundaries.end())))<<'\t'<<*(--(idx_boundaries.end()))<<'\n';*/
     }
     free(idx_buf);
   
@@ -682,19 +685,30 @@ void select_with_idx(T& env)
   typename T::Index_Iterator it(env.idxs_begin());
   while (it != env.idxs_end())
   {
+    cout<<"a "<<i<<' '<<idx_boundaries[i]<<' '<<*it<<'\n';
     while ((i < idx_boundaries.size()) && (idx_boundaries[i] < *it))
       ++i;
+    cout<<"b "<<i<<' '<<idx_boundaries[i]<<' '<<*it<<'\n';
     block_ids.insert(block_idx[i-1]);
+    cout<<"c "<<i<<' '<<idx_boundaries[i]<<' '<<*it<<'\n';
     while ((i < idx_boundaries.size()) && (idx_boundaries[i] <= *it))
     {
       block_ids.insert(block_idx[i]);
       ++i;
     }
+    cout<<"d "<<i<<' '<<*it<<'\n';
     if (i < idx_boundaries.size())
       env.inc_idx(it, idx_boundaries[i]);
     else
       break;
+    cout<<"e "<<i<<' '<<idx_boundaries[i]<<'\n';
   }
+  
+  //TEMP
+/*  if (block_ids.find(0x47c) != block_ids.end())
+    cout<<"block selected\n";
+  else
+    cout<<"block ignored\n";*/
   
   int data_fd = open64(DATA_FILE.c_str(), O_RDONLY);
   if (data_fd < 0)

@@ -140,7 +140,7 @@ struct Node_Id_Node_Range_Reader : public Node_Id_Node
     {
       it.pos = it.it_inside->first;
       if ((it.it_border != idxs_border_.end()) &&
-	   (idxs_border_.begin()->first < idxs_inside_.begin()->first))
+	   (it.it_border->first < it.it_inside->first))
 	it.pos = it.it_border->first;
       if (idx >= it.pos)
 	it.pos = idx+1;
