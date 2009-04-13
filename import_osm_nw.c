@@ -98,8 +98,46 @@ void localise_and_flush_ways
 
 //-----------------------------------------------------------------------------
 
+void flush_relations
+    (vector< Relation_ >& relations,
+     Indexed_Ordered_Id_To_Many_Writer< Relation_Storage, vector< Relation_ > >& writer)
+{
+  //write relations to file
+  sort(relations.begin(), relations.end());
+  flush_data(writer, relations.begin(), relations.end());
+}
+
+void dump_member_roles(const map< string, uint >& member_roles)
+{
+  vector< string > roles_by_id(member_roles.size());
+  for (map< string, uint >::const_iterator it(member_roles.begin()); it != member_roles.end(); ++it)
+    roles_by_id[it->second] = it->first;
+
+  int dest_fd = open64(((string)DATADIR + MEMBER_ROLES_FILENAME).c_str(),
+			 O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  close(dest_fd);
+  
+  dest_fd = open64(((string)DATADIR + MEMBER_ROLES_FILENAME).c_str(),
+		     O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  if (dest_fd < 0)
+    throw File_Error(errno, ((string)DATADIR + MEMBER_ROLES_FILENAME), "dump_member_roles:1");
+  
+  for (vector< string >::const_iterator it(roles_by_id.begin());
+       it != roles_by_id.end(); ++it)
+  {
+    uint16 size(it->size());
+    write(dest_fd, &(size), sizeof(uint16));
+    write(dest_fd, it->data(), size);
+  }
+  
+  close(dest_fd);
+}
+
+//-----------------------------------------------------------------------------
+
 uint32 max_node_id(0);
 uint32 max_way_id(0);
+uint32 max_relation_id(0);
 
 multimap< int, Node > nodes;
 Node_Id_Node_Writer node_writer;
@@ -119,6 +157,7 @@ const int WAY = 2;
 const int RELATION = 3;
 const unsigned int FLUSH_INTERVAL = 32*1024*1024;
 const unsigned int WAYND_FLUSH_INTERVAL = 32*1024*1024;
+const unsigned int RELATION_MEMBER_FLUSH_INTERVAL = 8*1024*1024;
 const unsigned int DOT_INTERVAL = 512*1024;
 uint current_run(0);
 vector< uint32 > split_idx;
@@ -128,6 +167,12 @@ vector< Way_ > ways_;
 Way_ current_way(0, 0);
 Indexed_Ordered_Id_To_Many_Writer< Way_Storage, vector< Way_ > > ways_writer(ways_);
 map< WayKeyValue, WayCollection > way_tags;
+
+vector< Relation_ > relations_;
+Relation_ current_relation(0);
+Indexed_Ordered_Id_To_Many_Writer< Relation_Storage, vector< Relation_ > > relations_writer(relations_);
+// map< RelationKeyValue, RelationCollection > relation_tags;
+map< string, uint > member_roles;
 
 void start(const char *el, const char **attr)
 {
@@ -165,6 +210,19 @@ void start(const char *el, const char **attr)
       WayCollection& nc(way_tags[WayKeyValue(key, value)]);
       nc.insert(current_id, 0xffffffff);
     }
+    else if (current_type == RELATION)
+    {
+      string key(""), value("");
+      for (unsigned int i(0); attr[i]; i += 2)
+      {
+	if (!strcmp(attr[i], "k"))
+	  key = attr[i+1];
+	if (!strcmp(attr[i], "v"))
+	  value = attr[i+1];
+      }
+/*      RelationCollection& nc(relation_tags[RelationKeyValue(key, value)]);
+      nc.insert(current_id, 0xffffffff);*/
+    }
   }
   else if (!strcmp(el, "nd"))
   {
@@ -175,6 +233,38 @@ void start(const char *el, const char **attr)
 	ref = atoi(attr[i+1]);
     }
     current_way.data.push_back(ref);
+  }
+  else if (!strcmp(el, "member"))
+  {
+    if (current_type == RELATION)
+    {
+      unsigned int ref(0);
+      string role(""), type("");
+      for (unsigned int i(0); attr[i]; i += 2)
+      {
+	if (!strcmp(attr[i], "ref"))
+	  ref = atoi(attr[i+1]);
+	if (!strcmp(attr[i], "role"))
+	  role = attr[i+1];
+	if (!strcmp(attr[i], "type"))
+	  type = attr[i+1];
+      }
+      uint role_id(0);
+      map< string, uint >::const_iterator it(member_roles.find(role));
+      if (it != member_roles.end())
+	role_id = it->second;
+      else
+      {
+	role_id = member_roles.size();
+	member_roles.insert(make_pair< string, uint >(role, role_id));
+      }
+      if (type == "node")
+	current_relation.data.push_back(Relation_Member(ref, Relation_Member::NODE, role_id));
+      else if (type == "way")
+	current_relation.data.push_back(Relation_Member(ref, Relation_Member::WAY, role_id));
+      else if (type == "relation")
+	current_relation.data.push_back(Relation_Member(ref, Relation_Member::RELATION, role_id));
+    }
   }
   else if (!strcmp(el, "node"))
   {
@@ -253,6 +343,9 @@ void start(const char *el, const char **attr)
       node_tag_id_statistics();
       
       postprocess_nodes(node_writer);
+    
+      current_run = 0;
+      state = RELATION;
     }
     else if (state == WAY)
     {
@@ -260,7 +353,6 @@ void start(const char *el, const char **attr)
       flush_way_tags(current_run, way_tags, ways_);
       ways_.clear();
       way_tags.clear();
-      tag_count = 0;
       
       way_tag_statistics(current_run, split_idx);
       way_tag_split_and_index(current_run, split_idx, block_of_id);
@@ -270,10 +362,24 @@ void start(const char *el, const char **attr)
       
       make_block_index(ways_writer);
       make_id_index(ways_writer);
+    
+      current_run = 0;
+      state = RELATION;
     }
     
-    current_run = 0;
-    state = RELATION;
+    Relation_::Id id(0);
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "id"))
+	id = atoi(attr[i+1]);
+    }
+    current_relation.head = id;
+    
+    current_type = RELATION;
+    current_id = id;
+    
+    if (id > max_relation_id)
+      max_relation_id = id;
   }
 }
 
@@ -314,13 +420,23 @@ void end(const char *el)
       localise_and_flush_ways(ways_, ways_writer);
       flush_way_tags(current_run, way_tags, ways_);
       way_tags.clear();
-      tag_count = 0;
       ways_.clear();
       structure_count = 0;
     }
   }
   else if (!strcmp(el, "relation"))
   {
+    relations_.push_back(current_relation);
+    current_relation.data.clear();
+    
+    if (structure_count > RELATION_MEMBER_FLUSH_INTERVAL)
+    {
+      flush_relations(relations_, relations_writer);
+/*      flush_relation_tags(current_run, relation_tags, relations_);
+      relation_tags.clear();*/
+      relations_.clear();
+      structure_count = 0;
+    }
   }
 }
 
@@ -355,7 +471,6 @@ int main(int argc, char *argv[])
       flush_way_tags(current_run, way_tags, ways_);
       ways_.clear();
       way_tags.clear();
-      tag_count = 0;
       
       way_tag_statistics(current_run, split_idx);
       way_tag_split_and_index(current_run, split_idx, block_of_id);
@@ -365,6 +480,29 @@ int main(int argc, char *argv[])
       
       make_block_index(ways_writer);
       make_id_index(ways_writer);
+    }
+    else if (state == RELATION)
+    {
+      cerr<<0;
+      flush_relations(relations_, relations_writer);
+/*      flush_relation_tags(current_run, relation_tags, relations_);
+      relation_tags.clear();*/
+      cerr<<1;
+      relations_.clear();
+      
+/*      relation_tag_statistics(current_run, split_idx);
+      relation_tag_split_and_index(current_run, split_idx, block_of_id);
+      relation_tag_create_id_way_idx(block_of_id);
+      relation_tag_create_way_id_idx(block_of_id, max_relation_id);
+      relation_tag_id_statistics();*/
+      
+      cerr<<2;
+      dump_member_roles(member_roles);
+      cerr<<3;
+      make_block_index(relations_writer);
+      cerr<<4;
+      make_id_index(relations_writer);
+      cerr<<5;
     }
   }
   catch(File_Error e)

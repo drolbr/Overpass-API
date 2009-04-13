@@ -608,6 +608,44 @@ set< Way >& multiNode_to_multiWay_query(const set< Node >& source, set< Way >& r
 
 //-----------------------------------------------------------------------------
 
+set< Relation_ >& multiint_to_multiRelation_query
+    (const set< uint32 >& source, set< Relation_ >& result_set)
+{
+  Indexed_Ordered_Id_To_Many_By_Id_Reader< Relation_Storage, set< uint32 >, set< Relation_ > >
+      reader(source, result_set);
+  select_by_id(reader);
+  return result_set;
+}
+
+set< Relation >& multiint_to_multiRelation_query
+    (const set< uint32 >& source, set< Relation >& result_set)
+{
+  set< Relation_ > result;
+  Indexed_Ordered_Id_To_Many_By_Id_Reader< Relation_Storage, set< uint32 >, set< Relation_ > >
+      reader(source, result);
+  select_by_id(reader);
+  
+  for (set< Relation_ >::const_iterator it(result.begin()); it != result.end(); ++it)
+  {
+    Relation relation(it->head);
+    for (vector< Relation_::Data >::const_iterator it2(it->data.begin());
+	 it2 != it->data.end(); ++it2)
+    {
+      if (it2->type == Relation_Member::NODE)
+	relation.node_members.insert(make_pair< int, int >(it2->id, it2->role+1));
+      else if (it2->type == Relation_Member::WAY)
+	relation.way_members.insert(make_pair< int, int >(it2->id, it2->role+1));
+      else if (it2->type == Relation_Member::RELATION)
+	relation.relation_members.insert(make_pair< int, int >(it2->id, it2->role+1));
+    }
+    result_set.insert(relation);
+  }
+  
+  return result_set;
+}
+
+//-----------------------------------------------------------------------------
+
 set< uint32 >& node_kv_to_multiint_query(string key, string value, set< uint32 >& result_set)
 {
   set< uint32 > string_ids_global;

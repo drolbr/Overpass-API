@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <vector>
 #include "expat_justparse_interface.h"
+#include "file_types.h"
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
@@ -225,7 +226,7 @@ void prepare_caches(MYSQL* mysql)
 {
   role_cache.push_back("");
   
-  MYSQL_RES* result(mysql_query_wrapper(mysql, "select id, role from member_roles"));
+/*  MYSQL_RES* result(mysql_query_wrapper(mysql, "select id, role from member_roles"));
   if (!result)
     return;
   
@@ -237,7 +238,21 @@ void prepare_caches(MYSQL* mysql)
       role_cache.resize(id+64);
     role_cache[id] = row[1];
     row = mysql_fetch_row(result);
+  }*/
+
+  int data_fd = open64(((string)DATADIR + MEMBER_ROLES_FILENAME).c_str(), O_RDONLY);
+  if (data_fd < 0)
+    throw File_Error(errno, ((string)DATADIR + MEMBER_ROLES_FILENAME), "prepare_caches:1");
+  
+  uint16 size(0);
+  char* buf = (char*) malloc(65536);
+  while (read(data_fd, &size, 2))
+  {
+    read(data_fd, buf, size);
+    role_cache.push_back(string(buf, size));
   }
+  
+  close(data_fd);
 }
 
 //-----------------------------------------------------------------------------

@@ -48,6 +48,8 @@ static const char* WAY_TAG_ID_WAY_GLOBAL_FILE = "way_tag_id_way_global.dat";
 static const char* WAY_TAG_ID_WAY_GLOBAL_IDX = "way_tag_id_way_global.idx";
 static const char* WAY_TAG_WAY_ID_FILE = "way_tag_way_id.dat";
 static const char* WAY_TAG_WAY_ID_IDX = "way_tag_way_id.idx";
+static const char* RELATION_FILE_BASE = "relations";
+static string MEMBER_ROLES_FILENAME = "member_roles.dat";
 
 const uint32 NODE_ID_NODE_BLOCKSIZE = 4*1024*1024;
 const uint32 TAG_ID_NODE_LOCAL_BLOCKSIZE = 4*1024*1024;
@@ -57,6 +59,7 @@ const uint32 WAY_BLOCKSIZE = 4*1024*1024;
 const uint32 TAG_ID_WAY_LOCAL_BLOCKSIZE = 4*1024*1024;
 const uint32 TAG_ID_WAY_GLOBAL_BLOCKSIZE = 4*1024*1024;
 const uint32 TAG_WAY_ID_BLOCKSIZE = 4*1024*1024;
+const uint32 RELATION_BLOCKSIZE = 4*1024*1024;
 
 const uint NODE_TAG_SPATIAL_PARTS = 32;
 const int NODE_STRING_BLOCK_SIZE = 1024*1024;
@@ -2451,7 +2454,7 @@ struct Indexed_Ordered_Id_To_Many_Writer : public Indexed_Ordered_Id_To_Many_Bas
             + size_of_*Storage::size_of_Data());
   }
   
-  uint32 size_of_part(const Iterator& it) const
+/*  uint32 size_of_part(const Iterator& it) const
   {
     int32 size_of_(remaining_size);
     if (remaining_size == 0)
@@ -2459,11 +2462,12 @@ struct Indexed_Ordered_Id_To_Many_Writer : public Indexed_Ordered_Id_To_Many_Bas
     if (size_of_ > 255)
       size_of_ = 255;
     return (Storage::size_of_Head() + 1 + size_of_*Storage::size_of_Data());
-  }
+  }*/
+  uint32 size_of_part(const Iterator& it) const { return size_of(it); }
   
   int32 compare(const Iterator& it, uint8 const* buf) const { return Storage::compare(it->head, buf); }
   
-  bool to_buf(uint8* buf, const Iterator& it)
+/*  bool to_buf(uint8* buf, const Iterator& it)
   {
     Storage::head_to_buf(&(buf[0]), it->head);
     uint pos(Storage::size_of_Head() + 1);
@@ -2487,6 +2491,43 @@ struct Indexed_Ordered_Id_To_Many_Writer : public Indexed_Ordered_Id_To_Many_Bas
     *(uint8*)&(buf[Storage::size_of_Head()]) = upper_limit;
     
     return (remaining_size == 0);
+  }
+  */
+  bool to_buf(uint8* buf, const Iterator& it)
+  {
+    remaining_size = it->data.size();
+    dit = it->data.begin();
+    uint pos(0);
+    
+    if (remaining_size == 0)
+    {
+      Storage::head_to_buf(&(buf[0]), it->head);
+      *(uint8*)&(buf[Storage::size_of_Head()]) = 0;
+      
+      return true;
+    }
+    
+    while (remaining_size > 0)
+    {
+      uint count_pos(pos + Storage::size_of_Head());
+      Storage::head_to_buf(&(buf[pos]), it->head);
+      pos += Storage::size_of_Head() + 1;
+      uint upper_limit(remaining_size);
+      if (upper_limit > 255)
+	upper_limit = 255;
+      uint i(0);
+      while (i < upper_limit)
+      {
+	Storage::data_to_buf(&(buf[pos]), *dit);
+	++dit;
+	pos += Storage::size_of_Data();
+	++i;
+      }
+      remaining_size -= upper_limit;
+      *(uint8*)&(buf[count_pos]) = upper_limit;
+    }
+    
+    return true;
   }
   
   typename Storage::Id id_of_buf(uint8* buf) const { return Storage::id_of_buf(buf); }
@@ -2590,7 +2631,7 @@ struct Indexed_Ordered_Id_To_Many_Updater : public Indexed_Ordered_Id_To_Many_Ba
             + size_of_*Storage::size_of_Data());
   }
   
-  uint32 size_of_part(const Iterator& it) const
+/*  uint32 size_of_part(const Iterator& it) const
   {
     if (it.current_it == 1)
       return 0;
@@ -2602,6 +2643,8 @@ struct Indexed_Ordered_Id_To_Many_Updater : public Indexed_Ordered_Id_To_Many_Ba
       size_of_ = 255;
     return (Storage::size_of_Head() + 1 + size_of_*Storage::size_of_Data());
   }
+  */
+  uint32 size_of_part(const Iterator& it) const { return size_of(it); }
   
   int32 compare(const Iterator& it, uint8 const* buf) const
   {
@@ -2611,7 +2654,7 @@ struct Indexed_Ordered_Id_To_Many_Updater : public Indexed_Ordered_Id_To_Many_Ba
       return Storage::compare((*(it.it2)).head, buf);
   }
 
-  bool to_buf(uint8* buf, const Iterator& it, uint16 block_id)
+/*  bool to_buf(uint8* buf, const Iterator& it, uint16 block_id)
   {
     if (it.current_it == 1)
       return true;
@@ -2642,6 +2685,47 @@ struct Indexed_Ordered_Id_To_Many_Updater : public Indexed_Ordered_Id_To_Many_Ba
     if (remaining_size == 0)
       block_ids.push_back(block_id);
     return (remaining_size == 0);
+  }
+  */
+  bool to_buf(uint8* buf, const Iterator& it, uint16 block_id)
+  {
+    if (it.current_it == 1)
+      return true;
+    
+    remaining_size = (*(it.it2)).data.size();
+    dit = (*(it.it2)).data.begin();
+    uint pos(0);
+    
+    if (remaining_size == 0)
+    {
+      Storage::head_to_buf(&(buf[0]), (*(it.it2)).head);
+      *(uint8*)&(buf[Storage::size_of_Head()]) = 0;
+      
+      return true;
+    }
+    
+    while (remaining_size > 0)
+    {
+      uint count_pos(pos + Storage::size_of_Head());
+      Storage::head_to_buf(&(buf[pos]), (*(it.it2)).head);
+      pos += Storage::size_of_Head() + 1;
+      uint upper_limit(remaining_size);
+      if (upper_limit > 255)
+	upper_limit = 255;
+      uint i(0);
+      while (i < upper_limit)
+      {
+	Storage::data_to_buf(&(buf[pos]), *dit);
+	++dit;
+	pos += Storage::size_of_Data();
+	++i;
+      }
+      remaining_size -= upper_limit;
+      *(uint8*)&(buf[count_pos]) = upper_limit;
+    }
+    
+    block_ids.push_back(block_id);
+    return true;
   }
   
   uint8 keep_this_elem(uint8* buf)
@@ -2744,6 +2828,54 @@ struct Way_Id_Way_Dump : public Indexed_Ordered_Id_To_Many_Base< Way_Storage >
     uint32 offset_;
     uint32 count_;
     uint32* ll_idx_buf_;
+};
+
+//-----------------------------------------------------------------------------
+
+struct Relation_Storage
+{
+  typedef Relation_ Basetype;
+  typedef uint32 Id;
+  static string base_file_name() { return ((string)DATADIR + RELATION_FILE_BASE); }
+  static uint32 blocksize() { return (RELATION_BLOCKSIZE); }
+  
+  typedef uint32 Index;
+  static uint size_of_Index() { return 4; }
+  static void index_to_buf(uint8* buf, const Index& i)
+  {
+    *(uint32*)&(buf[0]) = i;
+  }
+  
+  typedef uint32 Head;
+  static uint size_of_Head() { return 4; }
+  static void head_from_buf(uint8 const* buf, Head& h) { h = *(uint32*)&(buf[0]); }
+  static void head_to_buf(uint8* buf, const Head& h) { *(uint32*)&(buf[0]) = h; }
+  static Index index_of(const Head& h) { return h; }
+  static Index index_of_buf(uint8 const* buf) { return *(uint32*)&(buf[0]); }
+  static int32 compare(const Head& h, uint8 const* buf)
+  {
+    if (h < *(uint32*)&(buf[0]))
+      return RAW_DB_LESS;
+    else
+      return RAW_DB_GREATER;
+  }
+  static Id id_of(const Head& h) { return h; }
+  static Id id_of_buf(uint8* buf) { return *(uint32*)&(buf[0]); }
+  
+  typedef Relation_Member Data;
+  static uint size_of_Data() { return 9; }
+  static void data_from_buf(uint8 const* buf, Data& d)
+  {
+    d.id = *(uint32*)&(buf[0]);
+    d.type = *(uint8*)&(buf[4]);
+    d.role = *(uint32*)&(buf[5]);
+  }
+  static void data_to_buf(uint8* buf, const Data& d)
+  {
+    *(uint32*)&(buf[0]) = d.id;
+    *(uint8*)&(buf[4]) = d.type;
+    *(uint32*)&(buf[5]) = d.role;
+  }
 };
 
 #endif

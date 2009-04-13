@@ -88,6 +88,39 @@ inline bool operator<(const Relation& relation_1, const Relation& relation_2)
   return (relation_1.id < relation_2.id);
 }
 
+struct Relation_Member
+{
+  Relation_Member() : id(0), type(0), role(0) {}
+  Relation_Member(uint32 id_, uint type_, uint32 role_) : id(id_), type(type_), role(role_) {}
+  
+  uint32 id;
+  uint type;
+  uint32 role;
+  
+  static const uint NODE = 1;
+  static const uint WAY = 2;
+  static const uint RELATION = 3;
+};
+
+struct Relation_
+{
+  public:
+    typedef uint32 Id;
+    typedef Id Index;
+    typedef Relation_Member Data;
+    
+    Relation_() : head(0) {}
+    Relation_(Id id_) : head(id_) {}
+  
+    Id head;
+    vector< Data > data;
+};
+
+inline bool operator<(const Relation_& relation_1, const Relation_& relation_2)
+{
+  return (relation_1.head < relation_2.head);
+}
+
 // struct Node
 // {
 //   public:

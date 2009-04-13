@@ -59,6 +59,11 @@ set< Way >& multiint_to_multiWay_query(const set< uint32 >& source, set< Way >& 
 set< Way_ >& multiint_to_multiWay_query(const set< uint32 >& source, set< Way_ >& result_set);
 set< Way >& multiNode_to_multiWay_query(const set< Node >& source, set< Way >& result_set);
 
+set< Relation_ >& multiint_to_multiRelation_query
+    (const set< uint32 >& source, set< Relation_ >& result_set);
+set< Relation >& multiint_to_multiRelation_query
+    (const set< uint32 >& source, set< Relation >& result_set);
+
 set< uint32 >& node_kv_to_multiint_query(string key, string value, set< uint32 >& result_set);
 uint32 node_kv_to_count_query(string key, string value);
 set< uint32 >& node_kv_multiint_to_multiint_query

@@ -111,6 +111,14 @@ void Id_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     
     return;
   }
+  else if (type == RELATION)
+  {
+    set< uint32 > source;
+    source.insert(ref);
+    multiint_to_multiRelation_query(source, relations);
+    
+    return;
+  }
   
   ostringstream temp;
   if (type == RELATION)
