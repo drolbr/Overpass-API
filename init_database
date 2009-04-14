@@ -16,71 +16,13 @@ if [[ $CONFIRM != "YES" ]]; then
 };
 fi
 
-numberofsubtables=128
-
 mysql -u osm -posm -e "create database if not exists osm"
 mysql -u osm -posm -e "drop database osm"
 mysql -u osm -posm -e "create database osm"
 
 
-# i=0
-# while [[ $i -lt $numberofsubtables ]];
-# do {
-#   mysql -u osm -posm osm -e  "create table nodes_$i (id int, lat int, lon int)"
-#   i=$(($i + 1))
-# };
-# done
-
-# i=0
-# while [[ $i -lt $numberofsubtables ]];
-# do {
-#   mysql -u osm -posm osm -e "create table node_tags_$i (id int unsigned, key_ int unsigned, value_ int unsigned)"
-#   i=$(($i + 1))
-# };
-# done
-
-
-# i=0
-# while [[ $i -lt $numberofsubtables ]];
-# do {
-#   mysql -u osm -posm osm -e "create table ways_$i (id int)"
-#   i=$(($i + 1))
-# };
-# done
-# mysql -u osm -posm osm -e "create table ways_world (id int)"
-
-# i=0
-# while [[ $i -lt $numberofsubtables ]];
-# do {
-#   mysql -u osm -posm osm -e "create table way_members_$i (id int unsigned, count int unsigned, ref int unsigned)"
-#   i=$(($i + 1))
-# };
-# done
-
-# i=0
-# while [[ $i -lt $numberofsubtables ]];
-# do {
-#   mysql -u osm -posm osm -e "create table way_tags_$i (id int unsigned, key_ int unsigned, value_ int unsigned)"
-#   i=$(($i + 1))
-# };
-# done
-# mysql -u osm -posm osm -e "create table way_tags_world (id int unsigned, key_ int unsigned, value_ int unsigned)"
-
-
-# mysql -u osm -posm osm -e "create table relations (id int)"
-# mysql -u osm -posm osm -e "create table relation_node_members (id int unsigned, ref int unsigned, role int unsigned)"
-# mysql -u osm -posm osm -e "create table relation_way_members (id int unsigned, ref int unsigned, role int unsigned)"
-# mysql -u osm -posm osm -e "create table relation_relation_members (id int unsigned, ref int unsigned, role int unsigned)"
-# mysql -u osm -posm osm -e "create table relation_tags (id int unsigned, key_ int unsigned, value_ int unsigned)"
-
-
-# mysql -u osm -posm osm -e "create table member_roles (id int unsigned, role varchar(21844))"
 mysql -u osm -posm osm -e "create table key_s (id int unsigned, key_ varchar(21844))"
 mysql -u osm -posm osm -e "create table value_s (id int unsigned, value_ varchar(21844))"
-
-
-# bunzip2 <$1 | ./import_osm --savemem --limit-node-tags --split-tables
-
 
 echo "Collecting statements  ... "
 
@@ -88,124 +30,12 @@ echo "set session myisam_sort_buffer_size = 1073741824;" >init_database.sql
 echo "set session max_heap_table_size = 1073741824;" >>init_database.sql
 echo "set session tmp_table_size = 1073741824;" >>init_database.sql
 
-# i=0
-# while [[ $i -lt $numberofsubtables ]];
-# do {
-#   echo "alter table nodes_$i add unique key(id), add index(lat, lon);" >>init_database.sql
-#   i=$(($i + 1))
-# };
-# done
-
-# i=0
-# while [[ $i -lt $numberofsubtables ]];
-# do {
-#   echo "alter table node_tags_$i add key(id), add index(key_, value_);" >>init_database.sql
-#   i=$(($i + 1))
-# };
-# done
-
-# i=0
-# while [[ $i -lt $numberofsubtables ]];
-# do {
-#   echo "alter table ways_$i add unique key(id);" >>init_database.sql
-#   i=$(($i + 1))
-# };
-# done
-# echo "alter table ways_world add unique key(id);" >>init_database.sql
-
-# i=0
-# while [[ $i -lt $numberofsubtables ]];
-# do {
-#   echo "alter table way_members_$i add key(id), add index(ref);" >>init_database.sql
-#   i=$(($i + 1))
-# };
-# done
-
-# i=0
-# while [[ $i -lt $numberofsubtables ]];
-# do {
-#   echo "alter table way_tags_$i add key(id), add index(key_, value_);" >>init_database.sql
-#   i=$(($i + 1))
-# };
-# done
-# echo "alter table way_tags_world add key(id), add index(key_, value_);" >>init_database.sql
-
-# echo "alter table relations add unique key(id);" >>init_database.sql
-# echo "alter table relation_node_members add key(id);" >>init_database.sql
-# echo "alter table relation_way_members add key(id);" >>init_database.sql
-# echo "alter table relation_relation_members add key(id);" >>init_database.sql
-# echo "alter table relation_tags add key(id), add index(key_, value_);" >>init_database.sql
-
-# echo "alter table member_roles add unique key(id);" >>init_database.sql
 echo "alter table key_s add unique key(id), add index(key_);" >>init_database.sql
 echo "alter table value_s add unique key(id), add index(value_);" >>init_database.sql
-
-# stmt="nodes_0"
-# i=1
-# while [[ $i -lt $numberofsubtables ]];
-# do {
-#   stmt=$stmt", nodes_"$i
-#   i=$(($i + 1))
-# };
-# done
-# echo "create table nodes (id int, lat int, lon int, unique key(id), index(lat, lon)) engine=merge union=($stmt);" >>init_database.sql
-
-# stmt="node_tags_0"
-# i=1
-# while [[ $i -lt $numberofsubtables ]];
-# do {
-#   stmt=$stmt", node_tags_"$i
-#   i=$(($i + 1))
-# };
-# done
-# echo "create table node_tags (id int unsigned, key_ int unsigned, value_ int unsigned, key(id), index(key_, value_)) engine=merge union=($stmt);" >>init_database.sql
-
-# stmt="ways_0"
-# i=1
-# while [[ $i -lt $numberofsubtables ]];
-# do {
-#   stmt=$stmt", ways_"$i
-#   i=$(($i + 1))
-# };
-# done
-# echo "create table ways (id int, unique key(id)) engine=merge union=($stmt, ways_world);" >>init_database.sql
-
-# stmt="way_members_0"
-# i=1
-# while [[ $i -lt $numberofsubtables ]];
-# do {
-#   stmt=$stmt", way_members_"$i
-#   i=$(($i + 1))
-# };
-# done
-# echo "create table way_members (id int unsigned, count int unsigned, ref int unsigned, key(id), index(ref)) engine=merge union=($stmt);" >>init_database.sql
-
-# stmt="way_tags_0"
-# i=1
-# while [[ $i -lt $numberofsubtables ]];
-# do {
-#   stmt=$stmt", way_tags_"$i
-#   i=$(($i + 1))
-# };
-# done
-# echo "create table way_tags (id int unsigned, key_ int unsigned, value_ int unsigned, key(id), index(key_, value_)) engine=merge union=($stmt, way_tags_world);" >>init_database.sql
-
-# echo "create table node_tag_counts (id int unsigned, count int unsigned, spread int unsigned);" >>init_database.sql
-# echo "insert node_tag_counts select key_, count(key_), count(distinct value_) from node_tags group by key_;" >>init_database.sql
-# echo "alter table node_tag_counts add unique key(id);" >>init_database.sql
-
-# echo "create table way_tag_counts (id int unsigned, count int unsigned, spread int unsigned);" >>init_database.sql
-# echo "insert way_tag_counts select key_, count(key_), count(distinct value_) from way_tags group by key_;" >>init_database.sql
-# echo "alter table way_tag_counts add unique key(id);" >>init_database.sql
-
-# echo "create table relation_tag_counts (id int unsigned, count int unsigned, spread int unsigned);" >>init_database.sql
-# echo "insert relation_tag_counts select key_, count(key_), count(distinct value_) from relation_tags group by key_;" >>init_database.sql
-# echo "alter table relation_tag_counts add unique key(id);" >>init_database.sql
 
 echo "Creating indices and merged tables ... "
 mysql -u osm -posm osm <init_database.sql
 
-
-bunzip2 <$1 | ./import_osm_nw
+bunzip2 <$1 | ./import_osm
 
 ./init_derived_data YES
