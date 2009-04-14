@@ -9,9 +9,10 @@
 #include "expat_justparse_interface.h"
 #include "file_types.h"
 #include "node_strings_file_io.h"
-#include "way_strings_file_io.h"
 #include "raw_file_db.h"
+#include "relation_strings_file_io.h"
 #include "script_datatypes.h"
+#include "way_strings_file_io.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -171,7 +172,7 @@ map< WayKeyValue, WayCollection > way_tags;
 vector< Relation_ > relations_;
 Relation_ current_relation(0);
 Indexed_Ordered_Id_To_Many_Writer< Relation_Storage, vector< Relation_ > > relations_writer(relations_);
-// map< RelationKeyValue, RelationCollection > relation_tags;
+map< RelationKeyValue, RelationCollection > relation_tags;
 map< string, uint > member_roles;
 
 void start(const char *el, const char **attr)
@@ -220,8 +221,8 @@ void start(const char *el, const char **attr)
 	if (!strcmp(attr[i], "v"))
 	  value = attr[i+1];
       }
-/*      RelationCollection& nc(relation_tags[RelationKeyValue(key, value)]);
-      nc.insert(current_id, 0xffffffff);*/
+      RelationCollection& nc(relation_tags[RelationKeyValue(key, value)]);
+      nc.insert(current_id, 0xffffffff);
     }
   }
   else if (!strcmp(el, "nd"))
@@ -432,8 +433,8 @@ void end(const char *el)
     if (structure_count > RELATION_MEMBER_FLUSH_INTERVAL)
     {
       flush_relations(relations_, relations_writer);
-/*      flush_relation_tags(current_run, relation_tags, relations_);
-      relation_tags.clear();*/
+      flush_relation_tags(current_run, relation_tags, relations_);
+      relation_tags.clear();
       relations_.clear();
       structure_count = 0;
     }
@@ -485,16 +486,16 @@ int main(int argc, char *argv[])
     {
       cerr<<0;
       flush_relations(relations_, relations_writer);
-/*      flush_relation_tags(current_run, relation_tags, relations_);
-      relation_tags.clear();*/
+      flush_relation_tags(current_run, relation_tags, relations_);
+      relation_tags.clear();
       cerr<<1;
       relations_.clear();
       
-/*      relation_tag_statistics(current_run, split_idx);
+      relation_tag_statistics(current_run, split_idx);
       relation_tag_split_and_index(current_run, split_idx, block_of_id);
-      relation_tag_create_id_way_idx(block_of_id);
-      relation_tag_create_way_id_idx(block_of_id, max_relation_id);
-      relation_tag_id_statistics();*/
+      relation_tag_create_id_relation_idx(block_of_id);
+      relation_tag_create_relation_id_idx(block_of_id, max_relation_id);
+      relation_tag_id_statistics();
       
       cerr<<2;
       dump_member_roles(member_roles);
