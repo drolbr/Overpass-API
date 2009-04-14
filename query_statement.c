@@ -263,72 +263,27 @@ void Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   }
   else if (type == QUERY_RELATION)
   {
-    ostringstream temp;
-    if (key_values.front().second == "")
+    set< Relation_::Id > trelations;
+    relation_kv_to_multiint_query(key_values.front().first, key_values.front().second, trelations);
+    set< Relation_ > trelations2, coord_relations;
+    multiint_to_multiRelation_query(trelations, trelations2);
+    kvs_multiRelation_to_multiRelation_query
+	(++(key_values.begin()), key_values.end(), trelations2, coord_relations);
+    for (set< Relation_ >::const_iterator it(coord_relations.begin()); it != coord_relations.end(); ++it)
     {
-      temp<<"select relations.id from relations "
-	  <<"left join relation_tags on relations.id = relation_tags.id "
-	  <<"left join key_s on key_s.id = relation_tags.key_ "
-	  <<"where key_s.key_ = \"";
-      escape_xml(temp, key_values.front().first);
-      temp<<"\" order by relations.id";
-    }
-    else
-    {
-      temp<<"select relations.id from relations "
-	  <<"left join relation_tags on relations.id = relation_tags.id "
-	  <<"left join key_s on key_s.id = relation_tags.key_ "
-	  <<"left join value_s on value_s.id = relation_tags.value_ "
-	  <<"where key_s.key_ = \"";
-      escape_xml(temp, key_values.front().first);
-      temp<<"\" and value_s.value_ = \"";
-      escape_xml(temp, key_values.front().second);
-      temp<<"\" order by relations.id";
-    }
-  
-    set< uint32 > rels;
-    rels = multiint_query(mysql, temp.str(), rels);
-    
-    unsigned int key_count(1);
-    while (key_count < key_values.size())
-    {
-      temp.str("");
-      if (key_values[key_count].second == "")
+      Relation relation(it->head);
+      for (vector< Relation_::Data >::const_iterator it2(it->data.begin());
+	   it2 != it->data.end(); ++it2)
       {
-	temp<<"select relation_tags.id from relation_tags "
-	    <<"left join key_s on key_s.id = relation_tags.key_ "
-	    <<"where key_s.key_ = \"";
-	escape_xml(temp, key_values[key_count].first);
-	temp<<"\" and relation_tags.id in";
+	if (it2->type == Relation_Member::NODE)
+	  relation.node_members.insert(make_pair< int, int >(it2->id, it2->role+1));
+	else if (it2->type == Relation_Member::WAY)
+	  relation.way_members.insert(make_pair< int, int >(it2->id, it2->role+1));
+	else if (it2->type == Relation_Member::RELATION)
+	  relation.relation_members.insert(make_pair< int, int >(it2->id, it2->role+1));
       }
-      else
-      {
-	temp<<"select relation_tags.id from relation_tags "
-	    <<"left join key_s on key_s.id = relation_tags.key_ "
-	    <<"left join value_s on value_s.id = relation_tags.value_ "
-	    <<"where key_s.key_ = \"";
-	escape_xml(temp, key_values[key_count].first);
-	temp<<"\" and value_s.value_ = \"";
-	escape_xml(temp, key_values[key_count].second);
-	temp<<"\" and relation_tags.id in";
-      }
-      
-      set< uint32 > new_rels;
-      rels = multiint_to_multiint_query
-	  (mysql, temp.str(), "order by relation_tags.id", rels, new_rels);
-      
-      ++key_count;
+      relations.insert(relation);
     }
-  
-    set< Relation > relations;
-    relations = multiint_to_multiRelation_query
-	(mysql, "select id, ref, role from relation_node_members "
-	"where id in", "order by id",
-	"select id, ref, role from relation_way_members "
-	"where id in", "order by id",
-	"select id, ref, role from relation_relation_members "
-	"where id in", "order by id", rels, relations);
-    maps[output] = Set(set< Node >(), set< Way >(), relations);
   }
 }
 

@@ -9,6 +9,7 @@
 #include <vector>
 #include "file_types.h"
 #include "node_strings_file_io.h"
+#include "relation_strings_file_io.h"
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "user_interface.h"
@@ -1026,6 +1027,206 @@ set< Way_ >& kvs_multiWay_to_multiWay_query
   {
     const set< uint32 >& local_ids(local_way_to_id[it->head.second]);
     const set< uint32 >& global_ids(global_way_to_id[it->head.second]);
+    bool can_be_result(true);
+    for (uint32 i(0); i < string_ids_local.size(); ++i)
+    {
+      bool local_match(false);
+      for (set< uint32 >::const_iterator it2(local_ids.begin());
+	   it2 != local_ids.end(); ++it2)
+	local_match |= (string_ids_local[i].find(*it2) != string_ids_local[i].end());
+      bool global_match(false);
+      for (set< uint32 >::const_iterator it2(global_ids.begin());
+	   it2 != global_ids.end(); ++it2)
+	global_match |= (string_ids_global[i].find(*it2) != string_ids_global[i].end());
+      can_be_result &= (local_match || global_match);
+    }
+    if (can_be_result)
+      result_set.insert(*it);
+  }
+  
+  return result_set;
+}
+
+//-----------------------------------------------------------------------------
+
+set< Relation_::Id >& relation_kv_to_multiint_query(string key, string value, set< Relation_::Id >& result_set)
+{
+  set< Relation_::Id > string_ids_global;
+  set< Relation_::Id > string_ids_local;
+  set< Relation_::Id > string_idxs_local;
+  select_relation_kv_to_ids(key, value, string_ids_global, string_ids_local, string_idxs_local);
+  
+  Tag_Id_Relation_Local_Reader local_reader(string_ids_local, string_idxs_local, result_set);
+  select_with_idx< Tag_Id_Relation_Local_Reader >(local_reader);
+  Tag_Id_Relation_Global_Reader global_reader(string_ids_global, result_set);
+  select_with_idx< Tag_Id_Relation_Global_Reader >(global_reader);
+  
+  return result_set;
+}
+
+uint32 relation_kv_to_count_query(string key, string value)
+{
+  set< uint32 > string_ids;
+  set< uint32 > string_idxs_local;
+  select_relation_kv_to_ids(key, value, string_ids, string_ids, string_idxs_local);
+  
+  int source_fd = open64(RELATION_TAG_ID_STATS.c_str(), O_RDONLY);
+  if (source_fd < 0)
+  {
+    ostringstream temp;
+    temp<<"open64: "<<errno<<' '<<RELATION_TAG_ID_STATS<<" relation_kv_to_count_query:1";
+    runtime_error(temp.str(), cout);
+    return 0;
+  }
+  
+  uint32 result(0);
+  for (set< uint32 >::const_iterator it(string_ids.begin()); it != string_ids.end(); ++it)
+  {
+    uint32 summand(0);
+    lseek64(source_fd, (*it - 1)*sizeof(uint32), SEEK_SET);
+    read(source_fd, &summand, sizeof(uint32));
+    result += summand;
+  }
+  
+  close(source_fd);
+  
+  return result;
+}
+
+vector< vector< pair< string, string > > >& multiRelation_to_kvs_query
+    (const set< Relation >& source, set< Relation >::const_iterator& pos,
+     vector< vector< pair< string, string > > >& result)
+{
+  set< Relation >::const_iterator endpos(pos);
+  uint32 i(0);
+  while ((endpos != source.end()) && (i < 64*1024))
+  {
+    ++endpos;
+    ++i;
+  }
+  
+  set< Relation_::Index > source_ids;
+  for (set< Relation >::const_iterator it(pos); it != endpos; ++it)
+    source_ids.insert(it->id);
+  set< Relation_ > relation_coords_set;
+  Indexed_Ordered_Id_To_Many_By_Id_Reader< Relation_Storage, set< Relation_::Index >, set< Relation_ > >
+      relation_coord_reader(source_ids, relation_coords_set);
+  select_by_id(relation_coord_reader);
+  vector< Relation_ > relation_coords;
+  relation_coords.reserve(relation_coords_set.size());
+  for (set< Relation_ >::const_iterator it(relation_coords_set.begin());
+       it != relation_coords_set.end(); ++it)
+    relation_coords.push_back(*it);
+  
+  set< uint32 > relation_idxs;
+  for (vector< Relation_ >::const_iterator it(relation_coords.begin()); it != relation_coords.end(); ++it)
+    relation_idxs.insert(it->head & 0xffffff00);
+  
+  map< uint32, set< uint32 > > local_relation_to_id;
+  for (set< Relation >::const_iterator it(pos); it != endpos; ++it)
+    local_relation_to_id[it->id] = set< uint32 >();
+  
+  map< uint32, set< uint32 > > global_relation_to_id;
+  set< uint32 > global_relation_idxs;
+  for (vector< Relation_ >::const_iterator it(relation_coords.begin()); it != relation_coords.end(); ++it)
+  {
+    global_relation_to_id[it->head] = set< uint32 >();
+    global_relation_idxs.insert(it->head);
+  }
+  
+  Tag_MultiRelation_Id_Local_Reader local_reader(local_relation_to_id, relation_idxs);
+  select_with_idx< Tag_MultiRelation_Id_Local_Reader >(local_reader);
+  Tag_Relation_Id_Reader global_reader(global_relation_to_id, global_relation_idxs);
+  select_with_idx< Tag_Relation_Id_Reader >(global_reader);
+  
+  set< uint32 > ids_global;
+  for (map< uint32, set< uint32 > >::const_iterator it(global_relation_to_id.begin());
+       it != global_relation_to_id.end(); ++it)
+  {
+    for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+      ids_global.insert(*it2);
+  }
+  sort(relation_coords.begin(), relation_coords.end(), Relation_Less_By_Id());
+  map< uint32, uint32 > ids_local;
+  for (map< uint32, set< uint32 > >::const_iterator it(local_relation_to_id.begin());
+       it != local_relation_to_id.end(); ++it)
+  {
+    const Relation_& cur_wy(*(lower_bound
+	(relation_coords.begin(), relation_coords.end(), Relation_(it->first), Relation_Less_By_Id())));
+    uint32 ll_idx_(cur_wy.head & 0xffffff00);
+    for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+      ids_local[*it2] = ll_idx_;
+  }
+  map< uint32, pair< string, string > > kvs;
+  
+  select_relation_ids_to_kvs(ids_local, ids_global, kvs);
+  
+  result.clear();
+  result.resize(source.size());
+  vector< vector< pair< string, string > > >::iterator rit(result.begin());
+  for (set< Relation >::const_iterator it(pos); it != endpos; ++it)
+  {
+    for (set< uint32 >::const_iterator it2(local_relation_to_id[it->id].begin());
+	 it2 != local_relation_to_id[it->id].end(); ++it2)
+      rit->push_back(kvs[*it2]);
+    for (set< uint32 >::const_iterator it2(global_relation_to_id[it->id].begin());
+	 it2 != global_relation_to_id[it->id].end(); ++it2)
+      rit->push_back(kvs[*it2]);
+    ++rit;
+  }
+  
+  pos = endpos;
+  return result;
+}
+
+set< Relation_ >& kvs_multiRelation_to_multiRelation_query
+    (vector< pair< string, string > >::const_iterator kvs_begin,
+     vector< pair< string, string > >::const_iterator kvs_end,
+     const set< Relation_ >& source, set< Relation_ >& result_set)
+{
+  vector< set< uint32 > > string_ids_global;
+  vector< set< uint32 > > string_ids_local;
+  set< uint32 > string_idxs_local;
+  for (vector< pair< string, string > >::const_iterator it(kvs_begin);
+       it != kvs_end; ++it)
+  {
+    string_ids_global.push_back(set< uint32 >());
+    string_ids_local.push_back(set< uint32 >());
+    select_relation_kv_to_ids
+	(it->first, it->second, string_ids_global.back(),
+	 string_ids_local.back(), string_idxs_local);
+  }
+  
+  set< uint32 > relation_idxs;
+  for (set< Relation_ >::const_iterator it(source.begin()); it != source.end(); ++it)
+    relation_idxs.insert(it->head & 0xffffff00);
+  set< uint32 > filtered_idxs_local;
+  set_intersection
+      (string_idxs_local.begin(), string_idxs_local.end(), relation_idxs.begin(), relation_idxs.end(),
+       inserter(filtered_idxs_local, filtered_idxs_local.begin()));
+  string_idxs_local.clear();
+  
+  map< uint32, set< uint32 > > local_relation_to_id;
+  for (set< Relation_ >::const_iterator it(source.begin()); it != source.end(); ++it)
+    local_relation_to_id[it->head] = set< uint32 >();
+  
+  map< uint32, set< uint32 > > global_relation_to_id;
+  set< uint32 > global_relation_idxs;
+  for (set< Relation_ >::const_iterator it(source.begin()); it != source.end(); ++it)
+  {
+    global_relation_to_id[it->head] = set< uint32 >();
+    global_relation_idxs.insert(it->head);
+  }
+  
+  Tag_MultiRelation_Id_Local_Reader local_reader(local_relation_to_id, filtered_idxs_local);
+  select_with_idx< Tag_MultiRelation_Id_Local_Reader >(local_reader);
+  Tag_Relation_Id_Reader global_reader(global_relation_to_id, global_relation_idxs);
+  select_with_idx< Tag_Relation_Id_Reader >(global_reader);
+  
+  for (set< Relation_ >::const_iterator it(source.begin()); it != source.end(); ++it)
+  {
+    const set< uint32 >& local_ids(local_relation_to_id[it->head]);
+    const set< uint32 >& global_ids(global_relation_to_id[it->head]);
     bool can_be_result(true);
     for (uint32 i(0); i < string_ids_local.size(); ++i)
     {
