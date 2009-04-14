@@ -156,38 +156,17 @@ void Query_Statement::forecast(MYSQL* mysql)
   }
   if (type == QUERY_RELATION)
   {
-    map< int, pair< string, string > > key_value_counts;
+    map< uint, pair< string, string > > key_value_counts;
     for (vector< pair< string, string > >::const_iterator it(key_values.begin());
 	 it != key_values.end(); ++it)
     {
-      if (it->second == "")
-      {
-	ostringstream temp;
-	temp<<"select count from relation_tag_counts "
-	    <<"left join key_s on key_s.id = relation_tag_counts.id "
-	    <<"where key_s.key_ = \"";
-	escape_xml(temp, it->first);
-	temp<<"\"";
-	int count(int_query(mysql, temp.str()));
-	key_value_counts.insert
-	    (make_pair< int, pair< string, string > >(count, *it));
-      }
-      else
-      {
-	ostringstream temp;
-	temp<<"select count, spread from relation_tag_counts "
-	    <<"left join key_s on key_s.id = relation_tag_counts.id "
-	    <<"where key_s.key_ = \"";
-	escape_xml(temp, it->first);
-	temp<<"\"";
-	pair< int, int > count(intint_query(mysql, temp.str()));
-	key_value_counts.insert
-	    (make_pair< int, pair< string, string > >(count.first*2/(count.second+1), *it));
-      }
+      uint count(relation_kv_to_count_query(it->first, it->second));
+      key_value_counts.insert
+	  (make_pair< uint, pair< string, string > >(count, *it));
     }
-    unsigned int i(0);
+    uint i(0);
     bool reordered(false);
-    for (map< int, pair< string, string > >::const_iterator it(key_value_counts.begin());
+    for (map< uint, pair< string, string > >::const_iterator it(key_value_counts.begin());
 	 it != key_value_counts.end(); ++it)
     {
       reordered |= (it->second != key_values[i]);
@@ -197,7 +176,7 @@ void Query_Statement::forecast(MYSQL* mysql)
     {
       ostringstream temp;
       temp<<"The clauses of this query have been reordered to improve performance:<br/>\n";
-      for (map< int, pair< string, string > >::const_iterator it(key_value_counts.begin()); ; )
+      for (map< uint32, pair< string, string > >::const_iterator it(key_value_counts.begin()); ; )
       {
 	temp<<"Has_Kv \""<<it->second.first<<"\" \""<<it->second.second<<"\": "<<it->first
 	    <<" results expected.";
