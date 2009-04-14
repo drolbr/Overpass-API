@@ -67,19 +67,19 @@ mysql -u osm -posm -e "create database osm"
 # mysql -u osm -posm osm -e "create table way_tags_world (id int unsigned, key_ int unsigned, value_ int unsigned)"
 
 
-mysql -u osm -posm osm -e "create table relations (id int)"
-mysql -u osm -posm osm -e "create table relation_node_members (id int unsigned, ref int unsigned, role int unsigned)"
-mysql -u osm -posm osm -e "create table relation_way_members (id int unsigned, ref int unsigned, role int unsigned)"
-mysql -u osm -posm osm -e "create table relation_relation_members (id int unsigned, ref int unsigned, role int unsigned)"
-mysql -u osm -posm osm -e "create table relation_tags (id int unsigned, key_ int unsigned, value_ int unsigned)"
+# mysql -u osm -posm osm -e "create table relations (id int)"
+# mysql -u osm -posm osm -e "create table relation_node_members (id int unsigned, ref int unsigned, role int unsigned)"
+# mysql -u osm -posm osm -e "create table relation_way_members (id int unsigned, ref int unsigned, role int unsigned)"
+# mysql -u osm -posm osm -e "create table relation_relation_members (id int unsigned, ref int unsigned, role int unsigned)"
+# mysql -u osm -posm osm -e "create table relation_tags (id int unsigned, key_ int unsigned, value_ int unsigned)"
 
 
-mysql -u osm -posm osm -e "create table member_roles (id int unsigned, role varchar(21844))"
+# mysql -u osm -posm osm -e "create table member_roles (id int unsigned, role varchar(21844))"
 mysql -u osm -posm osm -e "create table key_s (id int unsigned, key_ varchar(21844))"
 mysql -u osm -posm osm -e "create table value_s (id int unsigned, value_ varchar(21844))"
 
 
-bunzip2 <$1 | ./import_osm --savemem --limit-node-tags --split-tables
+# bunzip2 <$1 | ./import_osm --savemem --limit-node-tags --split-tables
 
 
 echo "Collecting statements  ... "
@@ -130,13 +130,13 @@ echo "set session tmp_table_size = 1073741824;" >>init_database.sql
 # done
 # echo "alter table way_tags_world add key(id), add index(key_, value_);" >>init_database.sql
 
-echo "alter table relations add unique key(id);" >>init_database.sql
-echo "alter table relation_node_members add key(id);" >>init_database.sql
-echo "alter table relation_way_members add key(id);" >>init_database.sql
-echo "alter table relation_relation_members add key(id);" >>init_database.sql
-echo "alter table relation_tags add key(id), add index(key_, value_);" >>init_database.sql
+# echo "alter table relations add unique key(id);" >>init_database.sql
+# echo "alter table relation_node_members add key(id);" >>init_database.sql
+# echo "alter table relation_way_members add key(id);" >>init_database.sql
+# echo "alter table relation_relation_members add key(id);" >>init_database.sql
+# echo "alter table relation_tags add key(id), add index(key_, value_);" >>init_database.sql
 
-echo "alter table member_roles add unique key(id);" >>init_database.sql
+# echo "alter table member_roles add unique key(id);" >>init_database.sql
 echo "alter table key_s add unique key(id), add index(key_);" >>init_database.sql
 echo "alter table value_s add unique key(id), add index(value_);" >>init_database.sql
 
@@ -198,9 +198,9 @@ echo "alter table value_s add unique key(id), add index(value_);" >>init_databas
 # echo "insert way_tag_counts select key_, count(key_), count(distinct value_) from way_tags group by key_;" >>init_database.sql
 # echo "alter table way_tag_counts add unique key(id);" >>init_database.sql
 
-echo "create table relation_tag_counts (id int unsigned, count int unsigned, spread int unsigned);" >>init_database.sql
-echo "insert relation_tag_counts select key_, count(key_), count(distinct value_) from relation_tags group by key_;" >>init_database.sql
-echo "alter table relation_tag_counts add unique key(id);" >>init_database.sql
+# echo "create table relation_tag_counts (id int unsigned, count int unsigned, spread int unsigned);" >>init_database.sql
+# echo "insert relation_tag_counts select key_, count(key_), count(distinct value_) from relation_tags group by key_;" >>init_database.sql
+# echo "alter table relation_tag_counts add unique key(id);" >>init_database.sql
 
 echo "Creating indices and merged tables ... "
 mysql -u osm -posm osm <init_database.sql
