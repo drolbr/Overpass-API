@@ -101,16 +101,28 @@ void out_relation(const Relation& rel, const vector< string >& role_cache, bool 
     cout<<"<relation id=\""<<rel.id<<"\">\n";
     for (set< pair< int, int > >::const_iterator it2(rel.node_members.begin());
 	 it2 != rel.node_members.end(); ++it2)
+    {
       cout<<"  <member type=\"node\" ref=\""<<it2->first
-	  <<"\" role=\""<<role_cache[it2->second]<<"\"/>\n";
+	  <<"\" role=\"";
+      escape_xml(cout, role_cache[it2->second]);
+      cout<<"\"/>\n";
+    }
     for (set< pair< int, int > >::const_iterator it2(rel.way_members.begin());
 	 it2 != rel.way_members.end(); ++it2)
+    {
       cout<<"  <member type=\"way\" ref=\""<<it2->first
-	  <<"\" role=\""<<role_cache[it2->second]<<"\"/>\n";
+	  <<"\" role=\"";
+      escape_xml(cout, role_cache[it2->second]);
+      cout<<"\"/>\n";
+    }
     for (set< pair< int, int > >::const_iterator it2(rel.relation_members.begin());
 	 it2 != rel.relation_members.end(); ++it2)
+    {
       cout<<"  <member type=\"relation\" ref=\""<<it2->first
-	  <<"\" role=\""<<role_cache[it2->second]<<"\"/>\n";
+	  <<"\" role=\"";
+      escape_xml(cout, role_cache[it2->second]);
+      cout<<"\"/>\n";
+    }
     if (complete)
       cout<<"</relation>\n";
   }
@@ -229,48 +241,34 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	  ++tit;
 	}
       }
-      for (set< Relation >::const_iterator it(mit->second.get_relations().begin());
-	   it != mit->second.get_relations().end(); )
+      set< Relation >::const_iterator it_relations(mit->second.get_relations().begin());
+      while (it_relations != mit->second.get_relations().end())
       {
-	set< Relation >::const_iterator it2(it);
-	ostringstream temp;
-	temp<<"select relation_tags.id, key_s.key_, value_s.value_ from relation_tags "
-	    <<"left join key_s on relation_tags.key_ = key_s.id "
-	    <<"left join value_s on relation_tags.value_ = value_s.id "
-	    <<"where relation_tags.id in ("<<it->id;
-	unsigned int i(0);
-	while (((++it) != mit->second.get_relations().end()) && (i++ < 10000))
-	  temp<<", "<<it->id;
-	temp<<") order by relation_tags.id";
-	MYSQL_RES* result(mysql_query_wrapper(mysql, temp.str()));
-	if (!result)
-	  return;
-	
-	MYSQL_ROW row(mysql_fetch_row(result));
-	while ((row) && (row[0]))
+	set< Relation >::const_iterator it(it_relations);
+	vector< vector< pair< string, string > > > tags;
+	multiRelation_to_kvs_query(mit->second.get_relations(), it_relations, tags);
+	vector< vector< pair< string, string > > >::const_iterator tit(tags.begin());
+	while (it != it_relations)
 	{
-	  int id(atoi(row[0]));
-	  while (it2->id < id)
+	  if (tit->empty())
+	    out_relation(*it, role_cache);
+	  else
 	  {
-	    out_relation(*it2, role_cache);
-	    ++it2;
+	    out_relation(*it, role_cache, false);
+	    for (vector< pair< string, string > >::const_iterator tit2(tit->begin());
+			tit2 != tit->end(); ++tit2)
+	    {
+	      cout<<"  <tag k=\"";
+	      escape_xml(cout, tit2->first);
+	      cout<<"\" v=\"";
+	      escape_xml(cout, tit2->second);
+	      cout<<"\"/>\n";
+	    }
+	    cout<<"</relation>\n";
 	  }
-	  out_relation(*it2, role_cache, false);
-	  while ((row) && (row[0]) && (it2->id == atoi(row[0])))
-	  {
-	    if ((row[1]) && (row[2]))
-	      cout<<"  <tag k=\""<<row[1]<<"\" v=\""<<row[2]<<"\"/>\n";
-	    row = mysql_fetch_row(result);
-	  }
-	  cout<<"</relation>\n";
-	  ++it2;
+	  ++it;
+	  ++tit;
 	}
-	while (it2 != it)
-	{
-	  out_relation(*it2, role_cache);
-	  ++it2;
-	}
-	mysql_free_result(result);
       }
       for (set< Area >::const_iterator it(mit->second.get_areas().begin());
 	   it != mit->second.get_areas().end(); )
