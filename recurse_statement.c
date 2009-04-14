@@ -193,15 +193,9 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   }
   else if (type == RECURSE_RELATION_RELATION)
   {
-    set< uint32 > rels;
-    multiRelation_to_multiint_collect_relations(mit->second.get_relations(), rels);
-    multiint_to_multiRelation_query
-	(mysql, "select id, ref, role from relation_node_members "
-	"where id in", "order by id",
-	"select id, ref, role from relation_way_members "
-	"where id in", "order by id",
-	"select id, ref, role from relation_relation_members "
-	"where id in", "order by id", rels, *relations);
+    set< uint32 > trelations;
+    multiRelation_to_multiint_collect_relations(mit->second.get_relations(), trelations);
+    multiint_to_multiRelation_query(trelations, *relations);
   }
   else if (type == RECURSE_RELATION_WAY)
   {
