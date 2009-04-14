@@ -341,10 +341,10 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   mysql_query(mysql, "load data local infile '/tmp/db_area_area_segments.tsv' into table area_segments");
   
   temp.str("");
+  vector< vector< pair< string, string > > > tags;
   if (pivot_type == NODE)
   {
     set< Node >::const_iterator it(mit->second.get_nodes().begin());
-    vector< vector< pair< string, string > > > tags;
     multiNode_to_kvs_query(mit->second.get_nodes(), it, tags);
     vector< pair< string, string > >::const_iterator tit(tags.begin()->begin());
     temp<<"insert into area_tags values ";
@@ -393,7 +393,6 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   else if (pivot_type == WAY)
   {
     set< Way >::const_iterator it(mit->second.get_ways().begin());
-    vector< vector< pair< string, string > > > tags;
     multiWay_to_kvs_query(mit->second.get_ways(), it, tags);
     vector< pair< string, string > >::const_iterator tit(tags.begin()->begin());
     temp<<"insert into area_tags values ";
@@ -441,9 +440,50 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   }
   else if (pivot_type == RELATION)
   {
-    temp<<"insert into area_tags "
-	<<"select "<<area.id<<", relation_tags.key_, relation_tags.value_ "
-	<<"from relation_tags where relation_tags.id = "<<pivot_id;
+    set< Relation >::const_iterator it(mit->second.get_relations().begin());
+    multiRelation_to_kvs_query(mit->second.get_relations(), it, tags);
+    vector< pair< string, string > >::const_iterator tit(tags.begin()->begin());
+    temp<<"insert into area_tags values ";
+    while (tit != tags.begin()->end())
+    {
+      ostringstream temp2;
+      temp2<<"select id from key_s where key_s.key_ = '";
+      escape_insert(temp2, tit->first);
+      temp2<<"'";
+      int key_id(int_query(mysql, temp2.str()));
+      if (key_id == 0)
+      {
+	key_id = int_query
+	    (mysql, "select max(id) from key_s") + 1;
+	temp2.str("");
+	temp2<<"insert into key_s values "
+	    <<"("<<key_id<<", '";
+	escape_insert(temp2, tit->first);
+	temp2<<"')";
+	mysql_query(mysql, temp2.str().c_str());
+      }
+      
+      temp2.str("");
+      temp2<<"select id from value_s where value_s.value_ = '";
+      escape_insert(temp2, tit->second);
+      temp2<<"'";
+      int value_id(int_query(mysql, temp2.str()));
+      if (value_id == 0)
+      {
+	value_id = int_query
+	    (mysql, "select max(id) from value_s") + 1;
+	temp2.str("");
+	temp2<<"insert into value_s values "
+	    <<"("<<value_id<<", '";
+	escape_insert(temp2, tit->second);
+	temp2<<"')";	
+	mysql_query(mysql, temp2.str().c_str());
+      }
+      
+      temp<<"("<<area.id<<", "<<key_id<<", "<<value_id<<")";
+      if (++tit != tags.begin()->end())
+	temp<<", ";
+    }
     mysql_query(mysql, temp.str().c_str());
   }
   
