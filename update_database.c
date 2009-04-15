@@ -45,7 +45,7 @@ void load_member_roles(map< string, uint >& member_roles)
 
   int data_fd = open64(((string)DATADIR + MEMBER_ROLES_FILENAME).c_str(), O_RDONLY);
   if (data_fd < 0)
-    throw File_Error(errno, ((string)DATADIR + MEMBER_ROLES_FILENAME), "prepare_caches:1");
+    throw File_Error(errno, ((string)DATADIR + MEMBER_ROLES_FILENAME), "load_member_roles:1");
   
   uint pos(0);
   uint16 size(0);
@@ -57,6 +57,32 @@ void load_member_roles(map< string, uint >& member_roles)
   }
   
   close(data_fd);
+}
+
+void dump_member_roles(const map< string, uint >& member_roles)
+{
+  vector< string > roles_by_id(member_roles.size());
+  for (map< string, uint >::const_iterator it(member_roles.begin()); it != member_roles.end(); ++it)
+    roles_by_id[it->second] = it->first;
+  
+  int dest_fd = open64(((string)DATADIR + MEMBER_ROLES_FILENAME).c_str(),
+                       O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  close(dest_fd);
+  
+  dest_fd = open64(((string)DATADIR + MEMBER_ROLES_FILENAME).c_str(),
+                   O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  if (dest_fd < 0)
+    throw File_Error(errno, ((string)DATADIR + MEMBER_ROLES_FILENAME), "dump_member_roles:1");
+  
+  for (vector< string >::const_iterator it(roles_by_id.begin());
+       it != roles_by_id.end(); ++it)
+  {
+    uint16 size(it->size());
+    write(dest_fd, &(size), sizeof(uint16));
+    write(dest_fd, it->data(), size);
+  }
+  
+  close(dest_fd);
 }
 
 //-----------------------------------------------------------------------------
@@ -279,37 +305,9 @@ int main(int argc, char *argv[])
     //reading the main document
     parse(stdin, start, end);
     
-    for (set< uint32 >::const_iterator it(t_delete_relations.begin());
-         it != t_delete_relations.end(); ++it)
-      cout<<*it<<'\n';
-    cout<<"---\n";
-    for (set< Relation_ >::const_iterator it(new_relations.begin()); it != new_relations.end(); ++it)
-    {
-      cout<<it->head<<'\n';
-      for (vector< Relation_::Data >::const_iterator it2(it->data.begin()); it2 != it->data.end(); ++it2)
-        cout<<'\t'<<it2->id<<'\t'<<it2->type<<'\t'<<it2->role<<'\n';
-    }
-    cout<<"---\n";
-    for (map< string, uint >::const_iterator it(member_roles.begin()); it != member_roles.end(); ++it)
-      cout<<'['<<it->first<<"]["<<it->second<<"]\n";
-    cout<<"---\n";
-    for (map< uint32, vector< pair< uint32, uint32 >* > >::const_iterator it(new_relations_tags.begin());
-         it != new_relations_tags.end(); ++it)
-    {
-      cout<<it->first<<'\n';
-      for (vector< pair< uint32, uint32 >* >::const_iterator it2(it->second.begin());
-           it2 != it->second.end(); ++it2)
-        cout<<'\t'<<(*it2)<<'\n';
-    }
-    cout<<"---\n";
-    for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
-         it(new_relation_tags_ids.begin());
-         it != new_relation_tags_ids.end(); ++it)
-    {
-      cout<<'['<<it->first.first<<"]["<<it->first.second<<"]\n";
-      cout<<'\t'<<it->second<<'\n';
-    }
-    return 0;
+    //save updated member roles
+    dump_member_roles(member_roles);
+    member_roles.clear();
     
     //retrieving old coordinates of the nodes that will be deleted
     cerr<<(uintmax_t)time(NULL)<<'\n';
@@ -472,14 +470,9 @@ int main(int argc, char *argv[])
     
     node_tag_id_statistics_remake();
     
-/*    vector< uint32 > local_id_idx;
-    vector< uint32 > spatial_boundaries;
-    map< pair< uint32, uint32 >, pair< set< uint32 >, set< uint32 > > > local_ids;
-    map< uint32, set< uint32 > > moved_ids;
-    map< uint32, pair< set< uint32 >, set< uint32 > > > global_ids_to_be_edited;*/
-    
     //computing coordinates of the new ways
     //query used nodes
+    cerr<<(uintmax_t)time(NULL)<<'\n';
     set< Node > used_nodes;
     set< uint32 > used_nodes_ids;
     for (set< Way_ >::const_iterator it(new_ways_floating.begin());
@@ -725,6 +718,204 @@ int main(int argc, char *argv[])
     cerr<<(uintmax_t)time(NULL)<<'\n';
     
     way_tag_id_statistics_remake();
+  
+    //computing coordinates of the new relations
+    
+    //retrieving old coordinates of the relations that will be deleted
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    set< Relation_ > delete_relations;
+    Indexed_Ordered_Id_To_Many_By_Id_Reader< Relation_Storage, set< uint32 >, set< Relation_ > >
+      relation_id_reader(t_delete_relations, delete_relations);
+    select_by_id(relation_id_reader);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    
+    //calculate for each relation tag its index
+    for (map< uint32, vector< pair< uint32, uint32 >* > >::const_iterator
+         it(new_relations_tags.begin()); it != new_relations_tags.end(); ++it)
+    {
+      for (vector< pair< uint32, uint32 >* >::const_iterator it2(it->second.begin());
+           it2 != it->second.end(); ++it2)
+      {
+        if ((*it2)->first == 0)
+          (*it2)->first = (it->first & 0xffffff00);
+        else if ((*it2)->first != (it->first & 0xffffff00))
+          (*it2)->first = 0xffffffff;
+      }
+    }
+    
+    //updating the string dictionary of the relation tags
+    moved_local_ids.clear();
+    local_id_idx.clear();
+    spatial_boundaries.clear();
+    relation_string_delete_insert(new_relation_tags_ids, moved_local_ids, local_id_idx, spatial_boundaries);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    
+    //preparing the update of the local id to relation data
+    set< uint32 > delete_relation_idxs;
+    map< Relation_::Id, Relation_::Index > delete_relations_by_id;
+    for (set< Relation_ >::const_iterator it(delete_relations.begin()); it != delete_relations.end(); ++it)
+    {
+      delete_relation_idxs.insert(it->head & 0xffffff00);
+      delete_relations_by_id[it->head] = it->head;
+    }
+    local_ids.clear();
+    Tag_Id_MultiRelation_Local_Reader local_id_relation_reader(local_ids, delete_relations_by_id, delete_relation_idxs);
+    select_with_idx< Tag_Id_MultiRelation_Local_Reader >(local_id_relation_reader);
+    for (set< pair< uint32, uint32 > >::const_iterator it(moved_local_ids.begin());
+         it != moved_local_ids.end(); ++it)
+      local_ids[*it].second.insert(0);
+    for (map< uint32, vector< pair< uint32, uint32 >* > >::const_iterator
+         it(new_relations_tags.begin()); it != new_relations_tags.end(); ++it)
+    {
+      for (vector< pair< uint32, uint32 >* >::const_iterator it2(it->second.begin());
+           it2 != it->second.end(); ++it2)
+      {
+        if ((*it2)->first != 0xffffffff)
+          local_ids[**it2].second.insert(it->first);
+      }
+    }
+    
+    //updating of the local id to relation data
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    moved_ids.clear();
+    Tag_Id_Relation_Local_Updater id_relation_local_updater
+      (local_ids, moved_ids, local_id_idx, spatial_boundaries);
+    delete_insert< Tag_Id_Relation_Local_Updater >(id_relation_local_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    make_block_index< Tag_Id_Relation_Local_Updater >(id_relation_local_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    
+    //retrieving old coordinates of the relations that appear in local ids which are moving to global
+    set< uint32 > t_move_involved_relations;
+    for (map< uint32, set< uint32 > >::const_iterator it(moved_ids.begin());
+         it != moved_ids.end(); ++it)
+    {
+      for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+        t_move_involved_relations.insert(*it2);
+    }
+    set< Relation_ > move_involved_relations;
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    Indexed_Ordered_Id_To_Many_By_Id_Reader< Relation_Storage, set< uint32 >, set< Relation_ > >
+      relation_id_reader2(t_move_involved_relations, move_involved_relations);
+    select_by_id(relation_id_reader2);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    map< Relation_::Id, Relation_::Index > move_involved_relations_by_id;
+    for (set< Relation_ >::const_iterator it(move_involved_relations.begin());
+         it != move_involved_relations.end(); ++it)
+      move_involved_relations_by_id[it->head] = it->head;
+    
+    //preparing the update of the global relation to id data
+    map< pair< uint32, uint32 >, pair< set< uint32 >, uint > > global_relations_to_be_edited;
+    for (map< uint32, set< uint32 > >::const_iterator it(moved_ids.begin());
+         it != moved_ids.end(); ++it)
+    {
+      for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+      {
+        map< Relation_::Id, Relation_::Index >::const_iterator nit(move_involved_relations_by_id.find(*it2));
+        if (nit == move_involved_relations_by_id.end())
+          continue;
+        pair< set< uint32 >, uint >& tail(global_relations_to_be_edited[make_pair< uint32, uint32 >
+          (nit->second, nit->first)]);
+        tail.first.insert(it->first);
+        tail.second = Tag_Relation_Id_Updater::UPDATE;
+      }
+    }
+    for (set< Relation_ >::const_iterator it(delete_relations.begin());
+         it != delete_relations.end(); ++it)
+      global_relations_to_be_edited[make_pair< uint32, uint32 >
+                               (it->head, it->head)] = make_pair< set< uint32 >, uint >
+      (set< uint32 >(), Tag_Relation_Id_Updater::DELETE);
+    for (map< uint32, vector< pair< uint32, uint32 >* > >::const_iterator
+         it(new_relations_tags.begin()); it != new_relations_tags.end(); ++it)
+    {
+      set< uint32 > global_ids;
+      for (vector< pair< uint32, uint32 >* >::const_iterator it2(it->second.begin());
+           it2 != it->second.end(); ++it2)
+      {
+        if ((*it2)->first == 0xffffffff)
+          global_ids.insert((*it2)->second);
+      }
+      global_relations_to_be_edited[make_pair< uint32, uint32 >
+                               (it->first, it->first)] = make_pair< set< uint32 >, uint >
+        (global_ids, Tag_Relation_Id_Updater::INSERT);
+    }
+    
+    //updating of the global relation to id data
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    map< uint32, set< uint32 > > deleted_relations_ids;
+    Tag_Relation_Id_Updater relation_id_updater
+      (global_relations_to_be_edited, deleted_relations_ids);
+    delete_insert< Tag_Relation_Id_Updater >(relation_id_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    make_block_index< Tag_Relation_Id_Updater >(relation_id_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    
+    //preparing the update of the global id to relation data
+    global_ids_to_be_edited.clear();
+    for (map< uint32, set< uint32 > >::const_iterator it(moved_ids.begin());
+         it != moved_ids.end(); ++it)
+    {
+      global_ids_to_be_edited[it->first] = make_pair< set< uint32 >, set< uint32 > >
+        (set< uint32 >(), set< uint32 >());
+      set< uint32 >& inserted_relations(global_ids_to_be_edited[it->first].second);
+      for (set< uint32 >::const_iterator it2(it->second.begin());
+           it2 != it->second.end(); ++it2)
+      {
+        if (deleted_relations_ids.find(*it2) == deleted_relations_ids.end())
+          inserted_relations.insert(*it2);
+      }
+    }
+    for (map< uint32, set< uint32 > >::const_iterator it(deleted_relations_ids.begin());
+         it != deleted_relations_ids.end(); ++it)
+    {
+      for (set< uint32 >::const_iterator it2(it->second.begin());
+           it2 != it->second.end(); ++it2)
+        global_ids_to_be_edited[*it2].first.insert(it->first);
+    }
+    for (map< uint32, vector< pair< uint32, uint32 >* > >::const_iterator
+         it(new_relations_tags.begin()); it != new_relations_tags.end(); ++it)
+    {
+      for (vector< pair< uint32, uint32 >* >::const_iterator it2(it->second.begin());
+           it2 != it->second.end(); ++it2)
+      {
+        if ((*it2)->first == 0xffffffff)
+        {
+          pair< set< uint32 >, set< uint32 > >& tail(global_ids_to_be_edited[(*it2)->second]);
+          if (tail.first.find(it->first) == tail.first.end())
+            tail.second.insert(it->first);
+          else
+            tail.first.erase(it->first);
+        }
+      }
+    }
+    
+    //updating of the global id to relation data
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    Tag_Id_Relation_Global_Updater id_relation_global_updater(global_ids_to_be_edited);
+    delete_insert< Tag_Id_Relation_Global_Updater >(id_relation_global_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    make_block_index< Tag_Id_Relation_Global_Updater >(id_relation_global_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    
+    new_relations_tags.clear();
+    for (map< pair< string, string >, pair< uint32, uint32 >* >::iterator
+         it(new_relation_tags_ids.begin());
+         it != new_relation_tags_ids.end(); ++it)
+      delete(it->second);
+    new_relation_tags_ids.clear();
+    
+    //updating the relations file
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    Indexed_Ordered_Id_To_Many_Updater< Relation_Storage, set< Relation_ > >
+      relation_updater(delete_relations, new_relations);
+    delete_insert(relation_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    make_block_index(relation_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    update_id_index(relation_updater);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    
+    relation_tag_id_statistics_remake();
   }
   catch(File_Error e)
   {

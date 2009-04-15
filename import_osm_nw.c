@@ -484,11 +484,9 @@ int main(int argc, char *argv[])
     }
     else if (state == RELATION)
     {
-      cerr<<0;
       flush_relations(relations_, relations_writer);
       flush_relation_tags(current_run, relation_tags, relations_);
       relation_tags.clear();
-      cerr<<1;
       relations_.clear();
       
       relation_tag_statistics(current_run, split_idx);
@@ -497,13 +495,9 @@ int main(int argc, char *argv[])
       relation_tag_create_relation_id_idx(block_of_id, max_relation_id);
       relation_tag_id_statistics();
       
-      cerr<<2;
       dump_member_roles(member_roles);
-      cerr<<3;
       make_block_index(relations_writer);
-      cerr<<4;
       make_id_index(relations_writer);
-      cerr<<5;
     }
   }
   catch(File_Error e)
