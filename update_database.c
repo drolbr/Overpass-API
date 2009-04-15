@@ -10,6 +10,7 @@
 #include "file_types.h"
 #include "node_strings_file_io.h"
 #include "raw_file_db.h"
+#include "relation_strings_file_io.h"
 #include "script_datatypes.h"
 #include "way_strings_file_io.h"
 
@@ -38,6 +39,28 @@ typedef unsigned long long uint64;
 
 //-----------------------------------------------------------------------------
 
+void load_member_roles(map< string, uint >& member_roles)
+{
+  member_roles.clear();
+
+  int data_fd = open64(((string)DATADIR + MEMBER_ROLES_FILENAME).c_str(), O_RDONLY);
+  if (data_fd < 0)
+    throw File_Error(errno, ((string)DATADIR + MEMBER_ROLES_FILENAME), "prepare_caches:1");
+  
+  uint pos(0);
+  uint16 size(0);
+  char* buf = (char*) malloc(65536);
+  while (read(data_fd, &size, 2))
+  {
+    read(data_fd, buf, size);
+    member_roles[string(buf, size)] = pos++;
+  }
+  
+  close(data_fd);
+}
+
+//-----------------------------------------------------------------------------
+
 uint edit_status(0);
 const uint CREATE = 1;
 const uint DELETE = 2;
@@ -50,11 +73,18 @@ set< Node > new_nodes;
 map< pair< uint32, uint32 >, vector< pair< uint32, uint32 >* > > new_nodes_tags;
 map< pair< string, string >, pair< uint32, uint32 >* > new_node_tags_ids;
 
-Way_ current_way(Way_(0, 0));
+Way_ current_way(0, 0);
 set< uint32 > t_delete_ways;
 set< Way_ > new_ways_floating;
 map< pair< uint32, uint32 >, vector< pair< uint32, uint32 >* > > new_ways_tags;
 map< pair< string, string >, pair< uint32, uint32 >* > new_way_tags_ids;
+
+Relation_ current_relation(0);
+set< uint32 > t_delete_relations;
+set< Relation_ > new_relations;
+map< string, uint > member_roles;
+map< uint32, vector< pair< uint32, uint32 >* > > new_relations_tags;
+map< pair< string, string >, pair< uint32, uint32 >* > new_relation_tags_ids;
 
 void start(const char *el, const char **attr)
 {
@@ -96,6 +126,19 @@ void start(const char *el, const char **attr)
         coord_id = new_way_tags_ids.find(make_pair< string, string >(key, value))->second;
       new_ways_tags[make_pair< uint32, uint32 >(current_way.head.second, 0)].push_back(coord_id);
     }
+    else if (current_relation.head)
+    {
+      pair< uint32, uint32 >* coord_id(NULL);
+      if (new_relation_tags_ids.find(make_pair< string, string >(key, value)) ==
+          new_relation_tags_ids.end())
+      {
+        coord_id = new pair< uint32, uint32 >(0, 0xffffffff);
+        new_relation_tags_ids[make_pair< string, string >(key, value)] = coord_id;
+      }
+      else
+        coord_id = new_relation_tags_ids.find(make_pair< string, string >(key, value))->second;
+      new_relations_tags[current_relation.head].push_back(coord_id);
+    }
   }
   else if (!strcmp(el, "nd"))
   {
@@ -108,6 +151,38 @@ void start(const char *el, const char **attr)
           ref = atoi(attr[i+1]);
       }
       current_way.data.push_back(ref);
+    }
+  }
+  else if (!strcmp(el, "member"))
+  {
+    if (current_relation.head)
+    {
+      unsigned int ref(0);
+      string role(""), type("");
+      for (unsigned int i(0); attr[i]; i += 2)
+      {
+        if (!strcmp(attr[i], "ref"))
+          ref = atoi(attr[i+1]);
+        if (!strcmp(attr[i], "role"))
+          role = attr[i+1];
+        if (!strcmp(attr[i], "type"))
+          type = attr[i+1];
+      }
+      uint role_id(0);
+      map< string, uint >::const_iterator it(member_roles.find(role));
+      if (it != member_roles.end())
+        role_id = it->second;
+      else
+      {
+        role_id = member_roles.size();
+        member_roles.insert(make_pair< string, uint >(role, role_id));
+      }
+      if (type == "node")
+        current_relation.data.push_back(Relation_Member(ref, Relation_Member::NODE, role_id));
+      else if (type == "way")
+        current_relation.data.push_back(Relation_Member(ref, Relation_Member::WAY, role_id));
+      else if (type == "relation")
+        current_relation.data.push_back(Relation_Member(ref, Relation_Member::RELATION, role_id));
     }
   }
   else if (!strcmp(el, "node"))
@@ -145,6 +220,15 @@ void start(const char *el, const char **attr)
   }
   else if (!strcmp(el, "relation"))
   {
+    unsigned int id(0);
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "id"))
+        id = atoi(attr[i+1]);
+    }
+    t_delete_relations.insert(id);
+    if ((edit_status == CREATE) || (edit_status == MODIFY))
+      current_relation.head = id;
   }
   else if (!strcmp(el, "create"))
     edit_status = CREATE;
@@ -156,10 +240,7 @@ void start(const char *el, const char **attr)
 
 void end(const char *el)
 {
-  if (!strcmp(el, "nd"))
-  {
-  }
-  else if (!strcmp(el, "node"))
+  if (!strcmp(el, "node"))
     current_node = 0;
   else if (!strcmp(el, "way"))
   {
@@ -170,6 +251,10 @@ void end(const char *el)
   }
   else if (!strcmp(el, "relation"))
   {
+    if (!(current_relation.data.empty()))
+      new_relations.insert(current_relation);
+    current_relation.head = 0;
+    current_relation.data.clear();
   }
   else if (!strcmp(el, "create"))
     edit_status = 0;
@@ -188,8 +273,43 @@ int main(int argc, char *argv[])
   
   try
   {
+    //load existing member roles
+    load_member_roles(member_roles);
+    
     //reading the main document
     parse(stdin, start, end);
+    
+    for (set< uint32 >::const_iterator it(t_delete_relations.begin());
+         it != t_delete_relations.end(); ++it)
+      cout<<*it<<'\n';
+    cout<<"---\n";
+    for (set< Relation_ >::const_iterator it(new_relations.begin()); it != new_relations.end(); ++it)
+    {
+      cout<<it->head<<'\n';
+      for (vector< Relation_::Data >::const_iterator it2(it->data.begin()); it2 != it->data.end(); ++it2)
+        cout<<'\t'<<it2->id<<'\t'<<it2->type<<'\t'<<it2->role<<'\n';
+    }
+    cout<<"---\n";
+    for (map< string, uint >::const_iterator it(member_roles.begin()); it != member_roles.end(); ++it)
+      cout<<'['<<it->first<<"]["<<it->second<<"]\n";
+    cout<<"---\n";
+    for (map< uint32, vector< pair< uint32, uint32 >* > >::const_iterator it(new_relations_tags.begin());
+         it != new_relations_tags.end(); ++it)
+    {
+      cout<<it->first<<'\n';
+      for (vector< pair< uint32, uint32 >* >::const_iterator it2(it->second.begin());
+           it2 != it->second.end(); ++it2)
+        cout<<'\t'<<(*it2)<<'\n';
+    }
+    cout<<"---\n";
+    for (map< pair< string, string >, pair< uint32, uint32 >* >::const_iterator
+         it(new_relation_tags_ids.begin());
+         it != new_relation_tags_ids.end(); ++it)
+    {
+      cout<<'['<<it->first.first<<"]["<<it->first.second<<"]\n";
+      cout<<'\t'<<it->second<<'\n';
+    }
+    return 0;
     
     //retrieving old coordinates of the nodes that will be deleted
     cerr<<(uintmax_t)time(NULL)<<'\n';
