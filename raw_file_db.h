@@ -448,6 +448,9 @@ void make_block_index(const T& env)
 {
   const multimap< typename T::Index, uint16 >& block_index(env.block_index());
   
+  if (block_index.empty())
+    return;
+  
   uint8* buf =
     (uint8*) malloc((env.size_of_Index() + sizeof(uint16))*block_index.size());
   

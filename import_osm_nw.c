@@ -72,16 +72,17 @@ void localise_and_flush_ways
 	 it2 != (*it).data.end(); ++it2)
     {
       const set< Node >::const_iterator node_it(used_nodes.find(Node(*it2, 0, 0)));
-      if (node_it == used_nodes.end())
+      uint32 ll_idx_(0x00000001);
+      if (node_it != used_nodes.end())
       {
-	//this node is referenced but does not exist
-	//cerr<<"E "<<*it2<<'\n';
-	continue;
+	ll_idx_ = ll_idx(node_it->lat, node_it->lon);
+	  //otherwise this node is referenced but does not exist and is treated as
+          //lying on position 0x00000001
       }
       if (position == 0)
-	position = ll_idx(node_it->lat, node_it->lon);
+	position = ll_idx_;
       else
-	bitmask |= (position ^ ll_idx(node_it->lat, node_it->lon));
+	bitmask |= (position ^ ll_idx_);
     }
     
     while (bitmask)

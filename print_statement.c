@@ -188,8 +188,8 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       {
         set< Node >::const_iterator it(it_nodes);
         vector< vector< pair< string, string > > > tags;
-        multiNode_to_kvs_query(mit->second.get_nodes(), it_nodes, tags);
-        vector< vector< pair< string, string > > >::const_iterator tit(tags.begin());
+	multiNode_to_kvs_query(mit->second.get_nodes(), it_nodes, tags);
+	vector< vector< pair< string, string > > >::const_iterator tit(tags.begin());
         while (it != it_nodes)
         {
           if (tit->empty())

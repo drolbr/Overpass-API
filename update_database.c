@@ -39,6 +39,47 @@ typedef unsigned long long uint64;
 
 //-----------------------------------------------------------------------------
 
+void multiNode_to_multiWay_query
+(const set< Node >& source_1, const set< Node >& source_2, set< Way_ >& result_set)
+{
+  set< Way_Storage::Index > ll_idxs;
+  for (set< Node >::const_iterator it(source_1.begin()); it != source_1.end(); ++it)
+  {
+    Way_Storage::Index ll_idx_(ll_idx(it->lat, it->lon));
+    ll_idxs.insert(ll_idx_);
+    ll_idxs.insert(0x88000000 | (ll_idx_>>8));
+    ll_idxs.insert(0x88880000 | (ll_idx_>>16));
+    ll_idxs.insert(0x88888800 | (ll_idx_>>24));
+  }
+  ll_idxs.insert(0x00000001);
+  ll_idxs.insert(0x88000000);
+  ll_idxs.insert(0x88880000);
+  ll_idxs.insert(0x88888800);
+  ll_idxs.insert(0x88888888);
+  
+  set< Way_ > result;
+  Indexed_Ordered_Id_To_Many_Index_Reader< Way_Storage, set< Way_Storage::Index >, set< Way_ > >
+    reader(ll_idxs, result);
+  select_with_idx(reader);
+  
+  for (set< Way_ >::const_iterator it(result.begin()); it != result.end(); ++it)
+  {
+    bool is_referred(false);
+    for (vector< Way_::Data >::const_iterator it2(it->data.begin()); it2 != it->data.end(); ++it2)
+    {
+      if ((source_1.find(Node(*it2, 0, 0)) != source_1.end()) ||
+          (source_2.find(Node(*it2, 0, 0)) != source_2.end()))
+      {
+        is_referred = true;
+        break;
+      }
+    }
+    if (!is_referred)
+      continue;
+    result_set.insert(*it);
+  }
+}
+
 void load_member_roles(map< string, uint >& member_roles)
 {
   member_roles.clear();
@@ -94,7 +135,7 @@ const uint MODIFY = 3;
 uint32 current_node(0);
 uint32 current_ll_idx(0);
 
-set< uint32 > t_delete_nodes;
+set< uint32 > delete_node_ids;
 set< Node > new_nodes;
 map< pair< uint32, uint32 >, vector< pair< uint32, uint32 >* > > new_nodes_tags;
 map< pair< string, string >, pair< uint32, uint32 >* > new_node_tags_ids;
@@ -224,7 +265,7 @@ void start(const char *el, const char **attr)
       if (!strcmp(attr[i], "lon"))
 	lon = (int)in_lat_lon(attr[i+1]);
     }
-    t_delete_nodes.insert(id);
+    delete_node_ids.insert(id);
     if ((edit_status == CREATE) || (edit_status == MODIFY))
     {
       new_nodes.insert(Node(id, lat, lon));
@@ -311,7 +352,7 @@ int main(int argc, char *argv[])
     
     //retrieving old coordinates of the nodes that will be deleted
     cerr<<(uintmax_t)time(NULL)<<'\n';
-    Node_Id_Node_By_Id_Reader reader(t_delete_nodes, delete_nodes);
+    Node_Id_Node_By_Id_Reader reader(delete_node_ids, delete_nodes);
     select_by_id< Node_Id_Node_By_Id_Reader >(reader);
     cerr<<(uintmax_t)time(NULL)<<'\n';
     
@@ -470,6 +511,99 @@ int main(int argc, char *argv[])
     
     node_tag_id_statistics_remake();
     
+    //collect ways that may be affected by moving nodes
+    //patch any way that is not sceduled to be deleted into new_ways_floating
+    cerr<<(uintmax_t)time(NULL)<<" (entering ways)"<<'\n';
+    set< Way_ > touched_ways;
+    vector< Way_ > way_coords;
+    multiNode_to_multiWay_query(delete_nodes, new_nodes, touched_ways);
+    cerr<<(uintmax_t)time(NULL)<<'\n';
+    for (set< Way_ >::const_iterator it(touched_ways.begin());
+         it != touched_ways.end(); ++it)
+    {
+      if (t_delete_ways.find(it->head.second) == t_delete_ways.end())
+      {
+        t_delete_ways.insert(it->head.second);
+        new_ways_floating.insert(*it);
+        way_coords.push_back(*it);
+      }
+    }
+    
+    //get the tags for the node move affected ways
+    set< uint32 > way_idxs;
+    for (vector< Way_ >::const_iterator it(way_coords.begin()); it != way_coords.end(); ++it)
+      way_idxs.insert(it->head.first & 0xffffff00);
+    
+    map< uint32, set< uint32 > > local_way_to_id;
+    for (vector< Way_ >::const_iterator it(way_coords.begin()); it != way_coords.end(); ++it)
+      local_way_to_id[it->head.second] = set< uint32 >();
+    
+    map< uint32, set< uint32 > > global_way_to_id;
+    set< uint32 > global_way_idxs;
+    for (vector< Way_ >::const_iterator it(way_coords.begin()); it != way_coords.end(); ++it)
+    {
+      global_way_to_id[it->head.second] = set< uint32 >();
+      global_way_idxs.insert(it->head.first);
+    }
+    
+    Tag_MultiWay_Id_Local_Reader local_reader_2(local_way_to_id, way_idxs);
+    select_with_idx< Tag_MultiWay_Id_Local_Reader >(local_reader_2);
+    Tag_Way_Id_Reader global_reader(global_way_to_id, global_way_idxs);
+    select_with_idx< Tag_Way_Id_Reader >(global_reader);
+    
+    set< uint32 > ids_global;
+    for (map< uint32, set< uint32 > >::const_iterator it(global_way_to_id.begin());
+         it != global_way_to_id.end(); ++it)
+    {
+      for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+        ids_global.insert(*it2);
+    }
+    sort(way_coords.begin(), way_coords.end(), Way_Less_By_Id());
+    map< uint32, uint32 > ids_local;
+    for (map< uint32, set< uint32 > >::const_iterator it(local_way_to_id.begin());
+         it != local_way_to_id.end(); ++it)
+    {
+      const Way_& cur_wy(*(lower_bound
+                           (way_coords.begin(), way_coords.end(), Way_(0, it->first), Way_Less_By_Id())));
+      uint32 ll_idx_(cur_wy.head.first & 0xffffff00);
+      for (set< uint32 >::const_iterator it2(it->second.begin()); it2 != it->second.end(); ++it2)
+        ids_local[*it2] = ll_idx_;
+    }
+    map< uint32, pair< string, string > > kvs;
+    
+    select_way_ids_to_kvs(ids_local, ids_global, kvs);
+    
+    //insert found tags properly into new_way_tags and new_way_tag_ids
+    for (vector< Way_ >::const_iterator it(way_coords.begin()); it != way_coords.end(); ++it)
+    {
+      for (set< uint32 >::const_iterator it2(local_way_to_id[it->head.second].begin());
+           it2 != local_way_to_id[it->head.second].end(); ++it2)
+      {
+        pair< uint32, uint32 >* coord_id(NULL);
+        if (new_way_tags_ids.find(kvs[*it2]) == new_way_tags_ids.end())
+        {
+          coord_id = new pair< uint32, uint32 >(0, 0xffffffff);
+          new_way_tags_ids[kvs[*it2]] = coord_id;
+        }
+        else
+          coord_id = new_way_tags_ids.find(kvs[*it2])->second;
+        new_ways_tags[make_pair< uint32, uint32 >(it->head.second, 0)].push_back(coord_id);
+      }
+      for (set< uint32 >::const_iterator it2(global_way_to_id[it->head.second].begin());
+           it2 != global_way_to_id[it->head.second].end(); ++it2)
+      {
+        pair< uint32, uint32 >* coord_id(NULL);
+        if (new_way_tags_ids.find(kvs[*it2]) == new_way_tags_ids.end())
+        {
+          coord_id = new pair< uint32, uint32 >(0, 0xffffffff);
+          new_way_tags_ids[kvs[*it2]] = coord_id;
+        }
+        else
+          coord_id = new_way_tags_ids.find(kvs[*it2])->second;
+        new_ways_tags[make_pair< uint32, uint32 >(it->head.second, 0)].push_back(coord_id);
+      }
+    }
+    
     //computing coordinates of the new ways
     //query used nodes
     cerr<<(uintmax_t)time(NULL)<<'\n';
@@ -504,16 +638,17 @@ int main(int argc, char *argv[])
            it2 != way.data.end(); ++it2)
       {
         const set< Node >::const_iterator node_it(used_nodes.find(Node(*it2, 0, 0)));
-        if (node_it == used_nodes.end())
+        uint32 ll_idx_(0x00000001);
+        if (node_it != used_nodes.end())
         {
-	  //this node is referenced but does not exist
-	  //cerr<<"E "<<*it2<<'\n';
-          continue;
+          ll_idx_ = ll_idx(node_it->lat, node_it->lon);
+	  //otherwise this node is referenced but does not exist and is treated as
+          //lying on position 0x00000001
         }
         if (position == 0)
-          position = ll_idx(node_it->lat, node_it->lon);
+          position = ll_idx_;
         else
-          bitmask |= (position ^ ll_idx(node_it->lat, node_it->lon));
+          bitmask |= (position ^ ll_idx_);
       }
       
       while (bitmask)
@@ -722,7 +857,7 @@ int main(int argc, char *argv[])
     //computing coordinates of the new relations
     
     //retrieving old coordinates of the relations that will be deleted
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    cerr<<(uintmax_t)time(NULL)<<" (entering relations)"<<'\n';
     set< Relation_ > delete_relations;
     Indexed_Ordered_Id_To_Many_By_Id_Reader< Relation_Storage, set< uint32 >, set< Relation_ > >
       relation_id_reader(t_delete_relations, delete_relations);
