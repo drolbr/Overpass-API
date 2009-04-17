@@ -1,0 +1,65 @@
+#!/bin/bash
+
+if [[ -z $3  ]]; then
+{
+  echo Usage: $0 Year Month Next_Month
+  exit 0
+};
+fi
+
+YEAR=$1
+MONTH=$2
+NEXT_MONTH=$3
+
+fetch_file()
+{
+  until [[ -s hourly/$1$2-$1$3.osc.gz ]];
+  do {
+    sleep 300
+  };
+  done
+  
+  gunzip <hourly/$1$2-$1$3.osc.gz | update_database
+  echo
+  echo $1$2-$1$3.osc.gz applied
+  echo
+};
+
+HOURS="01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23"
+# DAYS="02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31"
+DAYS="02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31"
+DAY="01"
+if [[ ($MONTH == 04) || ($MONTH == 06) || ($MONTH == 09) || ($MONTH == 11) ]];
+then {
+  DAYS="02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30"
+};
+fi
+if [[ $MONTH == 02 ]];
+then {
+  DAYS="12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28"
+  DAY="11"
+};
+fi
+
+for NEXT_DAY in $DAYS
+do {
+  LAST_HOUR=00
+  for HOUR in $HOURS
+  do {
+    fetch_file $YEAR$MONTH$DAY $LAST_HOUR $HOUR
+    LAST_HOUR=$HOUR
+  };
+  done
+  fetch_file $YEAR$MONTH $DAY$()23 $NEXT_DAY$()00
+  DAY=$NEXT_DAY
+};
+done
+
+LAST_HOUR=00
+for HOUR in $HOURS
+do {
+  fetch_file $YEAR$MONTH$DAY $LAST_HOUR $HOUR
+  LAST_HOUR=$HOUR
+};
+done
+fetch_file $YEAR $MONTH$DAY$()23 $NEXT_MONTH$()0100
