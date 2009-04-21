@@ -818,8 +818,6 @@ void relation_string_delete_insert(map< pair< string, string >, pair< uint32, ui
       spatial_part_in_block[*it] = i;
   }
   
-  //TEMP
-/*  int dest_fd = open64(RELATION_STRING_DATA.c_str(), O_RDONLY);*/
   int dest_fd = open64(RELATION_STRING_DATA.c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)
     throw File_Error(errno, RELATION_STRING_DATA, "relation_string_delete_insert:1");
@@ -1074,7 +1072,6 @@ void relation_string_delete_insert(map< pair< string, string >, pair< uint32, ui
 
       lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-      //TEMP
       write(dest_fd, dest_buf, BLOCKSIZE);
 
       cur_dest_block = next_block_id;
@@ -1150,7 +1147,6 @@ void relation_string_delete_insert(map< pair< string, string >, pair< uint32, ui
     }
     lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-    //TEMP
     write(dest_fd, dest_buf, BLOCKSIZE);
     
     ++cur_source_block;
@@ -1328,7 +1324,6 @@ void relation_string_delete_insert(map< pair< string, string >, pair< uint32, ui
 
       lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-      //TEMP
       write(dest_fd, dest_buf, BLOCKSIZE);
 
       cur_dest_block = next_block_id;
@@ -1404,7 +1399,6 @@ void relation_string_delete_insert(map< pair< string, string >, pair< uint32, ui
     }
     lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-    //TEMP
     write(dest_fd, dest_buf, BLOCKSIZE);
     
     ++cur_source_block;

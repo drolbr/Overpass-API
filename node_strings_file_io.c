@@ -801,8 +801,6 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
       spatial_part_in_block[*it] = i;
   }
   
-  //TEMP
-/*  int dest_fd = open64(NODE_STRING_DATA.c_str(), O_RDONLY);*/
   int dest_fd = open64(NODE_STRING_DATA.c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)
     throw File_Error(errno, NODE_STRING_DATA, "node_string_delete_insert:1");
@@ -1057,7 +1055,6 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
 
       lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-      //TEMP
       write(dest_fd, dest_buf, BLOCKSIZE);
 
       cur_dest_block = next_block_id;
@@ -1133,7 +1130,6 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     }
     lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-    //TEMP
     write(dest_fd, dest_buf, BLOCKSIZE);
     
     ++cur_source_block;
@@ -1311,7 +1307,6 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
 
       lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-      //TEMP
       write(dest_fd, dest_buf, BLOCKSIZE);
 
       cur_dest_block = next_block_id;
@@ -1387,7 +1382,6 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     }
     lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-    //TEMP
     write(dest_fd, dest_buf, BLOCKSIZE);
     
     ++cur_source_block;

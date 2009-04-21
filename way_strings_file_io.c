@@ -795,7 +795,6 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
   if (new_tags_ids.empty())
     return;
   
-  cerr<<"(1)\n";
   const uint32 BLOCKSIZE(WAY_STRING_BLOCK_SIZE);
   const vector< uint32 >& spatial_boundaries(Way_String_Cache::get_spatial_boundaries());
   spatial_boundaries_ = spatial_boundaries;
@@ -819,8 +818,6 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
       spatial_part_in_block[*it] = i;
   }
   
-  //TEMP
-/*  int dest_fd = open64(WAY_STRING_DATA.c_str(), O_RDONLY);*/
   int dest_fd = open64(WAY_STRING_DATA.c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)
     throw File_Error(errno, WAY_STRING_DATA, "way_string_delete_insert:1");
@@ -829,7 +826,6 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
   uint8* deletion_buf = (uint8*) malloc(BLOCKSIZE);
   uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
   
-  cerr<<"(2)\n";
   uint cur_source_block(0);
   while (cur_source_block < block_id_bound)
   {
@@ -893,15 +889,6 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
     ++cur_source_block;
   }
     
-  cerr<<"(3)\n";
-  cerr<<*(uint32*)&source_buf<<'\t'<<*(uint32*)&deletion_buf<<'\t'<<*(uint32*)&dest_buf<<'\n';
-  uint8* deletion_buf_2 = (uint8*) malloc(BLOCKSIZE);
-  memcpy(deletion_buf_2, deletion_buf, BLOCKSIZE);
-  free(deletion_buf);
-  deletion_buf = deletion_buf_2;
-  cerr<<*(uint32*)&source_buf<<'\t'<<*(uint32*)&deletion_buf<<'\t'<<*(uint32*)&dest_buf<<'\n';
-  
-  cerr<<"(3)\n";
   cur_source_block = 0;
   uint cur_dest_block(0);
   while (cur_source_block < block_id_bound)
@@ -1086,7 +1073,6 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
 
       lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-      //TEMP
       write(dest_fd, dest_buf, BLOCKSIZE);
 
       cur_dest_block = next_block_id;
@@ -1164,20 +1150,11 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
     }
     lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-    //TEMP
     write(dest_fd, dest_buf, BLOCKSIZE);
     
     ++cur_source_block;
   }
     
-  cerr<<"(4)\n";
-  cerr<<*(uint32*)&source_buf<<'\t'<<*(uint32*)&deletion_buf<<'\t'<<*(uint32*)&dest_buf<<'\n';
-  deletion_buf_2 = (uint8*) malloc(BLOCKSIZE);
-  memcpy(deletion_buf_2, deletion_buf, BLOCKSIZE);
-  free(deletion_buf);
-  deletion_buf = deletion_buf_2;
-  cerr<<*(uint32*)&source_buf<<'\t'<<*(uint32*)&deletion_buf<<'\t'<<*(uint32*)&dest_buf<<'\n';
-  
   cur_source_block = 0;
   while (cur_source_block < block_id_bound)
   {
@@ -1350,7 +1327,6 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
 
       lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-      //TEMP
       write(dest_fd, dest_buf, BLOCKSIZE);
 
       cur_dest_block = next_block_id;
@@ -1427,23 +1403,17 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
     
     lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-    //TEMP
     write(dest_fd, dest_buf, BLOCKSIZE);
     
     ++cur_source_block;
   }
   
-  cerr<<"(5)\n";
   free(source_buf);
-  cerr<<"(8)\n";
   free(deletion_buf);
-  cerr<<"(9)\n";
   free(dest_buf);
-  cerr<<"(10)\n";
 
   close(dest_fd);
   
-  cerr<<"(6)\n";
   //update Way_String_Cache
   Way_String_Cache::reset();
   Way_String_Cache::set_next_way_tag_id(next_way_tag_id);
@@ -1471,7 +1441,6 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
   write(string_idx_fd, &next_way_tag_id, sizeof(uint32));
   
   close(string_idx_fd);
-  cerr<<"(7)\n";
 }
 
 //-----------------------------------------------------------------------------

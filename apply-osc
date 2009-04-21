@@ -50,7 +50,7 @@ fi
 if [[ $MONTH == 02 ]];
 then {
   # DAYS="02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28"
-  DAYS="12 13 14 15 16 17"
+  DAYS="12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28"
   DAY="11"
 };
 fi
@@ -69,11 +69,11 @@ do {
 };
 done
 
-# LAST_HOUR=00
-# for HOUR in $HOURS
-# do {
-#   fetch_file_intermediate $YEAR$MONTH$DAY $LAST_HOUR $HOUR
-#   LAST_HOUR=$HOUR
-# };
-# done
-# fetch_file_final $YEAR $MONTH$DAY$()23 $NEXT_MONTH$()0100
+LAST_HOUR=00
+for HOUR in $HOURS
+do {
+  fetch_file_intermediate $YEAR$MONTH$DAY $LAST_HOUR $HOUR
+  LAST_HOUR=$HOUR
+};
+done
+fetch_file_final $YEAR $MONTH$DAY$()23 $NEXT_MONTH$()0100
