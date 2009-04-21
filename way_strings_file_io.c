@@ -795,6 +795,7 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
   if (new_tags_ids.empty())
     return;
   
+  cerr<<"(1)\n";
   const uint32 BLOCKSIZE(WAY_STRING_BLOCK_SIZE);
   const vector< uint32 >& spatial_boundaries(Way_String_Cache::get_spatial_boundaries());
   spatial_boundaries_ = spatial_boundaries;
@@ -828,6 +829,7 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
   uint8* deletion_buf = (uint8*) malloc(BLOCKSIZE);
   uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
   
+  cerr<<"(2)\n";
   uint cur_source_block(0);
   while (cur_source_block < block_id_bound)
   {
@@ -891,6 +893,15 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
     ++cur_source_block;
   }
     
+  cerr<<"(3)\n";
+  cerr<<*(uint32*)&source_buf<<'\t'<<*(uint32*)&deletion_buf<<'\t'<<*(uint32*)&dest_buf<<'\n';
+  uint8* deletion_buf_2 = (uint8*) malloc(BLOCKSIZE);
+  memcpy(deletion_buf_2, deletion_buf, BLOCKSIZE);
+  free(deletion_buf);
+  deletion_buf = deletion_buf_2;
+  cerr<<*(uint32*)&source_buf<<'\t'<<*(uint32*)&deletion_buf<<'\t'<<*(uint32*)&dest_buf<<'\n';
+  
+  cerr<<"(3)\n";
   cur_source_block = 0;
   uint cur_dest_block(0);
   while (cur_source_block < block_id_bound)
@@ -949,7 +960,7 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
 	if (is_local_here(elem_it2, spatial_part_in_block[cur_source_block], spatial_boundaries))
 	{
 	  elem_it2->second->second = next_way_tag_id++;
-	  new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size();
+	  new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size() + 12;
 	}
 	++elem_it2;
       }
@@ -981,6 +992,7 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
 	++elem_count;
       }
     }
+    
     while (pos < *((uint32*)source_buf) + sizeof(uint32))
     {
       uint32 size_of_buf(12 + *(uint16*)&(source_buf[pos+8]) + *(uint16*)&(source_buf[pos+10]));
@@ -994,7 +1006,7 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
       if (is_local_here(elem_it2, spatial_part_in_block[cur_source_block], spatial_boundaries))
       {
 	elem_it2->second->second = next_way_tag_id++;
-	new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size();
+	new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size() + 12;
       }
       ++elem_it2;
     }
@@ -1097,6 +1109,7 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
     while ((elem_it != elem_it2) && (i < ((uint32*)source_buf)[0]))
     {
       int cmp_val(stringpair_cstringpair_compare(elem_it->first, &(source_buf[i+8])));
+      
       if (cmp_val < 0)
       {
 	if (is_local_here(elem_it, spatial_part_in_block[cur_source_block], spatial_boundaries))
@@ -1123,6 +1136,7 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
 	i += (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]));
       }
     }
+    
     while (elem_it != elem_it2)
     {
       if (is_local_here(elem_it, spatial_part_in_block[cur_source_block], spatial_boundaries))
@@ -1156,6 +1170,14 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
     ++cur_source_block;
   }
     
+  cerr<<"(4)\n";
+  cerr<<*(uint32*)&source_buf<<'\t'<<*(uint32*)&deletion_buf<<'\t'<<*(uint32*)&dest_buf<<'\n';
+  deletion_buf_2 = (uint8*) malloc(BLOCKSIZE);
+  memcpy(deletion_buf_2, deletion_buf, BLOCKSIZE);
+  free(deletion_buf);
+  deletion_buf = deletion_buf_2;
+  cerr<<*(uint32*)&source_buf<<'\t'<<*(uint32*)&deletion_buf<<'\t'<<*(uint32*)&dest_buf<<'\n';
+  
   cur_source_block = 0;
   while (cur_source_block < block_id_bound)
   {
@@ -1209,10 +1231,11 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
       uint32 size_of_buf(12 + *(uint16*)&(source_buf[pos+8]) + *(uint16*)&(source_buf[pos+10]));
       if (cmp_val < 0)
       {
-	if (elem_it2->second->second == 0xffffffff)
+	if (elem_it2->second->first == 0xffffffff)
 	{
-	  elem_it2->second->second = next_way_tag_id++;
-	  new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size();
+	  new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size() + 12;
+	  if (elem_it2->second->second == 0xffffffff)
+	    elem_it2->second->second = next_way_tag_id++;
 	}
 	++elem_it2;
       }
@@ -1243,10 +1266,11 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
     }
     while (elem_it2 != elem_end)
     {
-      if (elem_it2->second->second == 0xffffffff)
+      if (elem_it2->second->first == 0xffffffff)
       {
-	elem_it2->second->second = next_way_tag_id++;
-	new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size();
+	new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size() + 12;
+	if (elem_it2->second->second == 0xffffffff)
+	  elem_it2->second->second = next_way_tag_id++;
       }
       ++elem_it2;
     }
@@ -1400,6 +1424,7 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
       ++elem_count;
       i += (12 + *(uint16*)&(source_buf[i+8]) + *(uint16*)&(source_buf[i+10]));
     }
+    
     lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
     //TEMP
@@ -1407,13 +1432,18 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
     
     ++cur_source_block;
   }
-    
+  
+  cerr<<"(5)\n";
   free(source_buf);
+  cerr<<"(8)\n";
   free(deletion_buf);
+  cerr<<"(9)\n";
   free(dest_buf);
+  cerr<<"(10)\n";
 
   close(dest_fd);
   
+  cerr<<"(6)\n";
   //update Way_String_Cache
   Way_String_Cache::reset();
   Way_String_Cache::set_next_way_tag_id(next_way_tag_id);
@@ -1441,6 +1471,7 @@ void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 
   write(string_idx_fd, &next_way_tag_id, sizeof(uint32));
   
   close(string_idx_fd);
+  cerr<<"(7)\n";
 }
 
 //-----------------------------------------------------------------------------

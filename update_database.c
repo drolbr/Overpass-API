@@ -333,6 +333,10 @@ void end(const char *el)
 
 int main(int argc, char *argv[])
 {
+  bool intermediate_run(false);
+  if (argc == 2)
+    intermediate_run = ((string)"--intermediate" == argv[1]);
+  
   set< Node > delete_nodes;
   set< pair< uint32, uint32 > > moved_local_ids;
   
@@ -509,7 +513,8 @@ int main(int argc, char *argv[])
     update_id_index< Node_Id_Node_Updater >(node_updater);
     cerr<<(uintmax_t)time(NULL)<<'\n';
     
-    node_tag_id_statistics_remake();
+    if (!intermediate_run)
+      node_tag_id_statistics_remake();
     
     //collect ways that may be affected by moving nodes
     //patch any way that is not sceduled to be deleted into new_ways_floating
@@ -687,6 +692,7 @@ int main(int argc, char *argv[])
     moved_local_ids.clear();
     local_id_idx.clear();
     spatial_boundaries.clear();
+    cerr<<"(0)\n";
     way_string_delete_insert(new_way_tags_ids, moved_local_ids, local_id_idx, spatial_boundaries);
     cerr<<(uintmax_t)time(NULL)<<'\n';
     
@@ -852,7 +858,8 @@ int main(int argc, char *argv[])
     update_id_index(way_updater);
     cerr<<(uintmax_t)time(NULL)<<'\n';
     
-    way_tag_id_statistics_remake();
+    if (!intermediate_run)
+      way_tag_id_statistics_remake();
   
     //computing coordinates of the new relations
     
@@ -1050,7 +1057,8 @@ int main(int argc, char *argv[])
     update_id_index(relation_updater);
     cerr<<(uintmax_t)time(NULL)<<'\n';
     
-    relation_tag_id_statistics_remake();
+    if (!intermediate_run)
+      relation_tag_id_statistics_remake();
   }
   catch(File_Error e)
   {

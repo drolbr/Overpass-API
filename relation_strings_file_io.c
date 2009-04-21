@@ -949,7 +949,7 @@ void relation_string_delete_insert(map< pair< string, string >, pair< uint32, ui
 	if (is_local_here(elem_it2, spatial_part_in_block[cur_source_block], spatial_boundaries))
 	{
 	  elem_it2->second->second = next_relation_tag_id++;
-	  new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size();
+	  new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size() + 12;
 	}
 	++elem_it2;
       }
@@ -994,7 +994,7 @@ void relation_string_delete_insert(map< pair< string, string >, pair< uint32, ui
       if (is_local_here(elem_it2, spatial_part_in_block[cur_source_block], spatial_boundaries))
       {
 	elem_it2->second->second = next_relation_tag_id++;
-	new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size();
+	new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size() + 12;
       }
       ++elem_it2;
     }
@@ -1209,10 +1209,11 @@ void relation_string_delete_insert(map< pair< string, string >, pair< uint32, ui
       uint32 size_of_buf(12 + *(uint16*)&(source_buf[pos+8]) + *(uint16*)&(source_buf[pos+10]));
       if (cmp_val < 0)
       {
-	if (elem_it2->second->second == 0xffffffff)
+	if (elem_it2->second->first == 0xffffffff)
 	{
-	  elem_it2->second->second = next_relation_tag_id++;
-	  new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size();
+	  new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size() + 12;
+	  if (elem_it2->second->second == 0xffffffff)
+	    elem_it2->second->second = next_relation_tag_id++;
 	}
 	++elem_it2;
       }
@@ -1243,10 +1244,11 @@ void relation_string_delete_insert(map< pair< string, string >, pair< uint32, ui
     }
     while (elem_it2 != elem_end)
     {
-      if (elem_it2->second->second == 0xffffffff)
+      if (elem_it2->second->first == 0xffffffff)
       {
-	elem_it2->second->second = next_relation_tag_id++;
-	new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size();
+	new_byte_count += elem_it2->first.first.size() + elem_it2->first.second.size() + 12;
+	if (elem_it2->second->second == 0xffffffff)
+	  elem_it2->second->second = next_relation_tag_id++;
       }
       ++elem_it2;
     }
