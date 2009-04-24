@@ -1,6 +1,160 @@
-<html>
-<head></head>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
+  <title>OSM Server Side Script</title>
+</head>
 <body>
-Dies ist eine Testseite.
+
+<h1>OSM Server Side Script</h1>
+
+<!--
+offene Probleme:
+- XML-Fehler in script_interpreter werden falsch behandelt
+- Verbosity-Level anpassen
+//-->
+
+<p>
+<a href="#chapter.introduction">Introduction</a><br/>
+<a href="#chapter.use_cases">Use Cases</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.reverse_gazetteer">To which country belongs this location?</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.download_area">Download an entire city</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.debug_area">Why doesn't my city appear?</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.rule_example">Declare a new type of area</a><br/>
+<a href="#chapter.interface_calls">Interface Calls</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.interpreter">/api/interpreter</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.get_rule">/api/get_rule</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.add_rule">/api/add_rule</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.update_rule">/api/update_rule</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.status">/api/status</a><br/>
+<a href="#chapter.statements">Statements</a><br/>
+<a href="#chapter.input_formats">Input Formats</a><br/>
+<a href="#chapter.output_formats">Output Formats</a><br/>
+</p>
+
+<div>
+<a id="chapter.introduction"/>
+<h2>Introduction</h2>
+</div>
+
+<p>
+</p>
+
+<div>
+<a id="chapter.use_cases"/>
+<h2>Use Cases</h2>
+</div>
+
+<p>
+<a href="#section.reverse_gazetteer">To which country belongs this location?</a><br/>
+<a href="#section.download_area">Download an entire city</a><br/>
+<a href="#section.debug_area">Why doesn't my city appear?</a><br/>
+<a href="#section.rule_example">Declare a new type of area</a><br/>
+</p>
+
+<div>
+<a id="section.reverse_gazetteer"/>
+<h3>To which country belongs this location?</h3>
+</div>
+
+<p>
+To determine in which areas a location specified by latitude and longitude lies, just change the latitude and longitude in the following script to appriate values:<br/>
+<form action="api/interpreter" method="post" accept-charset="UTF-8">
+  <textarea name="data" rows="3" cols="80">&lt;coord-query lat="51.25" lon="7.15"/&gt;
+&lt;print mode="body"/&gt;
+</textarea>
+  <input type="submit" value="Explore"/>
+</form><br/>
+Of course, you can send this script also via any other <a href="#chapter.input_formats">way of submitting input</a> to <a href="#section.interpreter">/api/interpreter</a>. You will recieve a gzip-compressed XML-file in an <a href="#chapter.output_formats">adapted OSM format</a> that contains the areas the location lies in.
+</p>
+
+<p>
+The first command, ...
+</p>
+
+<div>
+<a id="section.download_area"/>
+<h3>Download an entire city</h3>
+</div>
+
+<div>
+<a id="section.debug_area"/>
+<h3>Why doesn't my city appear?</h3>
+</div>
+
+<div>
+<a id="section.rule_example"/>
+<h3>Declare a new type of area</h3>
+</div>
+
+<div>
+<a id="chapter.interface_calls"/>
+<h2>Interface Calls</h2>
+</div>
+
+<p>
+<a href="#section.interpreter">/api/interpreter</a><br/>
+<a href="#section.get_rule">/api/get_rule</a><br/>
+<a href="#section.add_rule">/api/add_rule</a><br/>
+<a href="#section.update_rule">/api/update_rule</a><br/>
+<a href="#section.status">/api/status</a><br/>
+</p>
+
+<div>
+<a id="section.interpreter"/>
+<h3>/api/interpreter</h3>
+</div>
+
+<div>
+<a id="section.get_rule"/>
+<h3>/api/get_rule</h3>
+</div>
+
+<div>
+<a id="section.add_rule"/>
+<h3>/api/add_rule</h3>
+</div>
+
+<div>
+<a id="section.update_rule"/>
+<h3>/api/update_rule</h3>
+</div>
+
+<div>
+<a id="section.status"/>
+<h3>/api/status</h3>
+</div>
+
+<div>
+<a id="chapter.statements"/>
+<h2>Statements</h2>
+</div>
+
+<p>
+</p>
+
+<div>
+<a id="chapter.input_formats"/>
+<h2>Input Formats</h2>
+</div>
+
+<p>
+</p>
+
+<div>
+<a id="chapter.output_formats"/>
+<h2>Output Formats</h2>
+</div>
+
+<p>
+</p>
+
+<div>
+<a id="section."/>
+<h3></h3>
+</div>
+
 </body>
 </html>
