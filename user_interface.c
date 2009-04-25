@@ -581,8 +581,12 @@ void display_state(const string& text, ostream& out)
   sanity_out<<"<p><strong style=\"color:#00BB00\">Forecast</strong>: "<<text<<"</p>\n";
 }
 
+int debug_mode(0);
+
 void runtime_error(const string& error, ostream& out)
 {
+  if (debug_mode == QUIET)
+    return;
   if (header_state == 0)
   {
     out_error_header(out, "Runtime Error");
@@ -605,14 +609,14 @@ void runtime_error(const string& error, ostream& out)
 
 void runtime_remark(const string& error, ostream& out)
 {
+  if (debug_mode != VERBOSE)
+    return;
   if (header_state == 0)
   {
     out_error_header(out, "Runtime Error");
   
-    out<<"<h1>Runtime Error</h1>\n";
-    out<<"<p>The following error occured while running your script:</p>\n";
-    out<<"<p><strong style=\"color:#00BB00\">Remark</strong>: "<<error<<"</p>\n";
-  
+    out<<"<h1>Runtime Remark</h1>\n";
+    out<<"<p>The following remark occured while running your script:</p>\n";
     out<<"<p><strong style=\"color:#00BB00\">Remark</strong>: "<<error<<"</p>\n";
     
     out_error_footer(out);
@@ -629,6 +633,8 @@ void runtime_remark(const string& error, ostream& out)
 
 void statement_finished(const Statement* stmt)
 {
+  if (debug_mode != VERBOSE)
+    return;
   if (header_state == 0)
   {
     out_error_header(cout, "Runtime Error");
@@ -670,8 +676,6 @@ void statement_finished(const Statement* stmt)
     cout<<"</remark>\n";
   }
 }
-
-int debug_mode(0);
 
 void set_debug_mode(int mode)
 {

@@ -12,8 +12,10 @@
 
 <!--
 offene Probleme:
-- XML-Fehler in script_interpreter werden falsch behandelt
-- Verbosity-Level anpassen
++ XML-Fehler in script_interpreter werden falsch behandelt
+- verteilen auf übrige API-Calls
++ Verbosity-Level anpassen
+- gzip-Komprimierung
 //-->
 
 <p>
@@ -30,8 +32,30 @@ offene Probleme:
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.update_rule">/api/update_rule</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.status">/api/status</a><br/>
 <a href="#chapter.statements">Statements</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.conflict">conflict</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.coord_query">coord-query</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.detect_odd_nodes">detect-odd-nodes</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.foreach">foreach</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.id_query">id-query</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.item">item</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.make_area">make-area</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.print">print</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.query">query</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.recurse">recurse</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.report">report</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.union">union</a><br/>
+<a href="#chapter.concepts">Concepts</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.data_structures">Data structures</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.control_flow">Control Flow</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.variables">Variables</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.other_sets">Other Sets in Scripts</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.quotas">Limits and Quotas</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.database_layout">Database Layout</a><br/>
 <a href="#chapter.input_formats">Input Formats</a><br/>
 <a href="#chapter.output_formats">Output Formats</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.payload">Payload</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.status_remarks">Status Remarks</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.hypertext_reports">Hypertext Reports</a><br/>
 </p>
 
 <div>
@@ -54,6 +78,10 @@ offene Probleme:
 <a href="#section.rule_example">Declare a new type of area</a><br/>
 </p>
 
+<p>The following examples are some sample use cases to give you an idea
+what you can do with the system. Of course, there are many more useful
+use cases, and you are kindly invited to add other use cases.</p>
+
 <div>
 <a id="section.reverse_gazetteer"/>
 <h3>To which country belongs this location?</h3>
@@ -67,11 +95,11 @@ To determine in which areas a location specified by latitude and longitude lies,
 </textarea>
   <input type="submit" value="Explore"/>
 </form><br/>
-Of course, you can send this script also via any other <a href="#chapter.input_formats">way of submitting input</a> to <a href="#section.interpreter">/api/interpreter</a>. You will recieve a gzip-compressed XML-file in an <a href="#chapter.output_formats">adapted OSM format</a> that contains the areas the location lies in.
+Of course, you can send this script also via any other <a href="#chapter.input_formats">way of submitting input</a> to <a href="#section.interpreter">/api/interpreter</a>. You will recieve a gzip-compressed XML-file in an <a href="#chapter.output_formats">adapted OSM format</a> that <a href="#section.payload">contains the areas</a> the location lies in.
 </p>
 
 <p>
-The first command, ...
+The first command, <a href="#section.coord_query">&lt;coord-query lat="51.25" lon="7.15"/&gt;</a>, searches the database for every area that covers the location defined by the latitude and longitude values. Then it stores the result into the <a href="#section.variables">default set</a>. Afterwards, the second command <a href="#section.print">&lt;print mode="body"/&gt;</a> prints the content of the default set. The mode="body" indicates there that it shall print the <a href="#section.data_structures">id and members</a> of the area as well as is <a href="#section.data_structures">tags</a>.<br/>
 </p>
 
 <div>
@@ -133,7 +161,124 @@ The first command, ...
 </div>
 
 <p>
+<a href="#section.conflict">conflict</a><br/>
+<a href="#section.coord_query">coord-query</a><br/>
+<a href="#section.detect_odd_nodes">detect-odd-nodes</a><br/>
+<a href="#section.foreach">foreach</a><br/>
+<a href="#section.id_query">id-query</a><br/>
+<a href="#section.item">item</a><br/>
+<a href="#section.make_area">make-area</a><br/>
+<a href="#section.print">print</a><br/>
+<a href="#section.query">query</a><br/>
+<a href="#section.recurse">recurse</a><br/>
+<a href="#section.report">report</a><br/>
+<a href="#section.union">union</a><br/>
 </p>
+
+<div>
+<a id="section.conflict"/>
+<h3>conflict</h3>
+</div>
+
+<div>
+<a id="section.coord_query"/>
+<h3>coord-query</h3>
+</div>
+
+<div>
+<a id="section.detect_odd_nodes"/>
+<h3>detect-odd-nodes</h3>
+</div>
+
+<div>
+<a id="section.foreach"/>
+<h3>foreach</h3>
+</div>
+
+<div>
+<a id="section.id_query"/>
+<h3>id-query</h3>
+</div>
+
+<div>
+<a id="section.item"/>
+<h3>item</h3>
+</div>
+
+<div>
+<a id="section.make_area"/>
+<h3>make-area</h3>
+</div>
+
+<div>
+<a id="section.print"/>
+<h3>print</h3>
+</div>
+
+<div>
+<a id="section.query"/>
+<h3>query</h3>
+</div>
+
+<div>
+<a id="section.recurse"/>
+<h3>recurse</h3>
+</div>
+
+<div>
+<a id="section.report"/>
+<h3>report</h3>
+</div>
+
+<div>
+<a id="section.union"/>
+<h3>union</h3>
+</div>
+
+
+<div>
+<a id="chapter.concepts"/>
+<h2>Concepts</h2>
+</div>
+
+<p>
+<a href="#section.data_structures">Data structures</a><br/>
+<a href="#section.control_flow">Control Flow</a><br/>
+<a href="#section.variables">Variables</a><br/>
+<a href="#section.other_sets">Other Sets in Scripts</a><br/>
+<a href="#section.quotas">Limits and Quotas</a><br/>
+<a href="#section.database_layout">Database Layout</a><br/>
+</p>
+
+<div>
+<a id="section.data_structures"/>
+<h3>Data structures</h3>
+</div>
+
+<div>
+<a id="section.control_flow"/>
+<h3>Control Flow</h3>
+</div>
+
+<div>
+<a id="section.variables"/>
+<h3>Variables</h3>
+</div>
+
+<div>
+<a id="section.other_sets"/>
+<h3>Other Sets in Scripts</h3>
+</div>
+
+<div>
+<a id="section.quotas"/>
+<h3>Limits and Quotas</h3>
+</div>
+
+<div>
+<a id="section.database_layout"/>
+<h3>Database Layout</h3>
+</div>
 
 <div>
 <a id="chapter.input_formats"/>
@@ -149,11 +294,24 @@ The first command, ...
 </div>
 
 <p>
+<a href="#section.payload">Payload</a><br/>
+<a href="#section.status_remarks">Status Remarks</a><br/>
+<a href="#section.hypertext_reports">Hypertext Reports</a><br/>
 </p>
 
 <div>
-<a id="section."/>
-<h3></h3>
+<a id="section.payload"/>
+<h3>Payload</h3>
+</div>
+
+<div>
+<a id="section.status_remarks"/>
+<h3>Status Remarks</h3>
+</div>
+
+<div>
+<a id="section.hypertext_reports"/>
+<h3>Hypertext Reports</h3>
 </div>
 
 </body>

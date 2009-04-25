@@ -68,7 +68,14 @@ int main(int argc, char *argv[])
   if (display_parse_errors(cout, xml_raw))
     return 0;
   
-  parse_script(xml_raw, start, end);
+  try
+  {
+    parse_script(xml_raw, start, end);
+  }
+  catch(Parse_Error parse_error)
+  {
+    add_parse_error(parse_error.message);
+  }
   if (display_parse_errors(cout, xml_raw))
     return 0;
   if (display_static_errors(cout, xml_raw))
