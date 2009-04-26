@@ -645,6 +645,76 @@ set< Relation >& multiint_to_multiRelation_query
   return result_set;
 }
 
+set< Relation_ >& multiNode_to_multiRelation_query(const set< Node >& source, set< Relation_ >& result_set)
+{
+  set< Relation_ > all_relations;
+  Relation_Relation_Dump reader(all_relations);
+  select_all(reader);
+  
+  for (set< Relation_ >::const_iterator it(all_relations.begin()); it != all_relations.end(); ++it)
+  {
+    bool is_referred(false);
+    for (vector< Relation_::Data >::const_iterator it2(it->data.begin()); it2 != it->data.end(); ++it2)
+    {
+      if ((it2->type == Relation_Member::NODE) && (source.find(Node(it2->id, 0, 0)) != source.end()))
+      {
+	is_referred = true;
+	break;
+      }
+    }
+    if (is_referred)
+      result_set.insert(*it);
+  }
+  return result_set;
+}
+
+set< Relation_ >& multiWay_to_multiRelation_query(const set< Way >& source, set< Relation_ >& result_set)
+{
+  set< Relation_ > all_relations;
+  Relation_Relation_Dump reader(all_relations);
+  select_all(reader);
+  
+  for (set< Relation_ >::const_iterator it(all_relations.begin()); it != all_relations.end(); ++it)
+  {
+    bool is_referred(false);
+    for (vector< Relation_::Data >::const_iterator it2(it->data.begin()); it2 != it->data.end(); ++it2)
+    {
+      if ((it2->type == Relation_Member::WAY) && (source.find(Way(it2->id)) != source.end()))
+      {
+	is_referred = true;
+	break;
+      }
+    }
+    if (is_referred)
+      result_set.insert(*it);
+  }
+  return result_set;
+}
+
+set< Relation_ >& multiRelation_backwards_query
+    (const set< Relation_ >& source, set< Relation_ >& result_set)
+{
+  set< Relation_ > all_relations;
+  Relation_Relation_Dump reader(all_relations);
+  select_all(reader);
+  
+  for (set< Relation_ >::const_iterator it(all_relations.begin()); it != all_relations.end(); ++it)
+  {
+    bool is_referred(false);
+    for (vector< Relation_::Data >::const_iterator it2(it->data.begin()); it2 != it->data.end(); ++it2)
+    {
+      if ((it2->type == Relation_Member::RELATION) && (source.find(Relation_(it2->id)) != source.end()))
+      {
+	is_referred = true;
+	break;
+      }
+    }
+    if (is_referred)
+      result_set.insert(*it);
+  }
+  return result_set;
+}
+
 //-----------------------------------------------------------------------------
 
 set< uint32 >& node_kv_to_multiint_query(string key, string value, set< uint32 >& result_set)

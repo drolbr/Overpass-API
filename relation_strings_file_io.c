@@ -52,13 +52,11 @@ void flush_relation_tags(uint& current_run, map< RelationKeyValue, RelationColle
   for (map< RelationKeyValue, RelationCollection >::iterator it(relation_tags.begin());
        it != relation_tags.end(); ++it)
   {
-    uint32 position(lower_bound
-	(relations.begin(), relations.end(), Relation_(*(it->second.relations.begin())), Relation_Less_By_Id())->head);
+    uint32 position(*(it->second.relations.begin()));
     uint32 bitmask(0);
     for (vector< uint32 >::iterator it2(it->second.relations.begin()); it2 != it->second.relations.end(); ++it2)
     {
-      bitmask |= (position ^ (lower_bound
-	  (relations.begin(), relations.end(), Relation_(*it2), Relation_Less_By_Id())->head));
+      bitmask |= (position ^ (*it2));
     }
     it->second.position = position;
     it->second.bitmask = bitmask;
@@ -236,6 +234,7 @@ void relation_tag_statistics(uint& current_run, vector< uint32 >& split_idx)
   }
   global_count -= spatial_count[0x00ffffff];
   
+  split_idx.clear();
   uint32 split_count(0);
   for (unsigned int i(0); i < 16*1024*1024; ++i)
   {
@@ -243,9 +242,12 @@ void relation_tag_statistics(uint& current_run, vector< uint32 >& split_idx)
     if (split_count >= global_count / RELATION_TAG_SPATIAL_PARTS)
     {
       split_idx.push_back(i<<8);
-      split_count = 0;
+      split_count -= global_count / RELATION_TAG_SPATIAL_PARTS;
     }
   }
+  while (split_idx.size() < RELATION_TAG_SPATIAL_PARTS)
+    split_idx.push_back(0xffffff<<8);
+  split_idx[RELATION_TAG_SPATIAL_PARTS-1] = 0xffffff<<8;
   
   free(cnt_rd_buf);
   free(spatial_count);

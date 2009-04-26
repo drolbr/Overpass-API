@@ -223,7 +223,7 @@ void start(const char *el, const char **attr)
 	  value = attr[i+1];
       }
       RelationCollection& nc(relation_tags[RelationKeyValue(key, value)]);
-      nc.insert(current_id, 0xffffffff);
+      nc.insert(current_id);
     }
   }
   else if (!strcmp(el, "nd"))

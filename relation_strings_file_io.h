@@ -65,15 +65,9 @@ struct RelationCollection
     id = ++next_relation_tag_id;
   }
   
-  void insert(uint32 relation_id, uint32 ll_idx)
+  void insert(uint32 relation_id)
   {
-    if (relations.empty())
-    {
-      position = ll_idx;
-      bitmask = 0;
-    }
     relations.push_back(relation_id);
-    bitmask |= (position ^ ll_idx);
   }
   
   void merge(uint32 id_, uint32 ll_idx)

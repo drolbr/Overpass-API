@@ -3404,45 +3404,10 @@ struct Indexed_Ordered_Id_To_Many_Writer : public Indexed_Ordered_Id_To_Many_Bas
             + size_of_*Storage::size_of_Data());
   }
   
-/*  uint32 size_of_part(const Iterator& it) const
-  {
-    int32 size_of_(remaining_size);
-    if (remaining_size == 0)
-      size_of_ = it->data.size();
-    if (size_of_ > 255)
-      size_of_ = 255;
-    return (Storage::size_of_Head() + 1 + size_of_*Storage::size_of_Data());
-  }*/
   uint32 size_of_part(const Iterator& it) const { return size_of(it); }
   
   int32 compare(const Iterator& it, uint8 const* buf) const { return Storage::compare(it->head, buf); }
   
-/*  bool to_buf(uint8* buf, const Iterator& it)
-  {
-    Storage::head_to_buf(&(buf[0]), it->head);
-    uint pos(Storage::size_of_Head() + 1);
-    if (remaining_size == 0)
-    {
-      remaining_size = it->data.size();
-      dit = it->data.begin();
-    }
-    uint upper_limit(remaining_size);
-    if (upper_limit > 255)
-      upper_limit = 255;
-    uint i(0);
-    while (i < upper_limit)
-    {
-      Storage::data_to_buf(&(buf[pos]), *dit);
-      ++dit;
-      pos += Storage::size_of_Data();
-      ++i;
-    }
-    remaining_size -= upper_limit;
-    *(uint8*)&(buf[Storage::size_of_Head()]) = upper_limit;
-    
-    return (remaining_size == 0);
-  }
-  */
   bool to_buf(uint8* buf, const Iterator& it)
   {
     remaining_size = it->data.size();
@@ -3581,19 +3546,6 @@ struct Indexed_Ordered_Id_To_Many_Updater : public Indexed_Ordered_Id_To_Many_Ba
             + size_of_*Storage::size_of_Data());
   }
   
-/*  uint32 size_of_part(const Iterator& it) const
-  {
-    if (it.current_it == 1)
-      return 0;
-    
-    int32 size_of_(remaining_size);
-    if (remaining_size == 0)
-      size_of_ = (*(it.it2)).data.size();
-    if (size_of_ > 255)
-      size_of_ = 255;
-    return (Storage::size_of_Head() + 1 + size_of_*Storage::size_of_Data());
-  }
-  */
   uint32 size_of_part(const Iterator& it) const { return size_of(it); }
   
   int32 compare(const Iterator& it, uint8 const* buf) const
@@ -3604,39 +3556,6 @@ struct Indexed_Ordered_Id_To_Many_Updater : public Indexed_Ordered_Id_To_Many_Ba
       return Storage::compare((*(it.it2)).head, buf);
   }
 
-/*  bool to_buf(uint8* buf, const Iterator& it, uint16 block_id)
-  {
-    if (it.current_it == 1)
-      return true;
-    
-    Storage::head_to_buf(&(buf[0]), (*(it.it2)).head);
-    uint pos(Storage::size_of_Head() + 1);
-    if (remaining_size == 0)
-    {
-      remaining_size = (*(it.it2)).data.size();
-      dit = (*(it.it2)).data.begin();
-    }
-    uint upper_limit(remaining_size);
-    if (upper_limit > 255)
-      upper_limit = 255;
-    uint i(0);
-    while (i < upper_limit)
-    {
-      Storage::data_to_buf(&(buf[pos]), *dit);
-      ++dit;
-      pos += Storage::size_of_Data();
-      ++i;
-    }
-    remaining_size -= upper_limit;
-    *(uint8*)&(buf[Storage::size_of_Head()]) = upper_limit;
-    
-    //open bug: a part of a way may got lost or in the wrong order
-    //if it has been split at a block border
-    if (remaining_size == 0)
-      block_ids.push_back(block_id);
-    return (remaining_size == 0);
-  }
-  */
   bool to_buf(uint8* buf, const Iterator& it, uint16 block_id)
   {
     if (it.current_it == 1)
@@ -3844,6 +3763,30 @@ struct Relation_Id_Relation_Dump : public Indexed_Ordered_Id_To_Many_Base< Relat
     uint32 offset_;
     uint32 count_;
     uint32* ll_idx_buf_;
+};
+
+struct Relation_Relation_Dump : public Indexed_Ordered_Id_To_Many_Base< Relation_Storage >
+{
+  Relation_Relation_Dump(set< Relation_ >& result)
+  : result_(result) {}
+  
+  void process(uint8* buf)
+  {
+    Relation_Storage::Head head;
+    Relation_Storage::head_from_buf(&(buf[0]), head);
+    Relation_Storage::Basetype* base
+	((Relation_Storage::Basetype*)&*(result_.insert(Relation_Storage::Basetype(head)).first));
+    uint data_offset(base->data.size()), pos(Relation_Storage::size_of_Head() + 1);
+    base->data.resize(data_offset + buf[Relation_Storage::size_of_Head()]);
+    for (uint i(0); i < buf[Relation_Storage::size_of_Head()]; ++i)
+    {
+      Relation_Storage::data_from_buf(&(buf[pos]), base->data[i + data_offset]);
+      pos += Relation_Storage::size_of_Data();
+    }
+  }
+  
+  private:
+    set< Relation_ >& result_;
 };
 
 #endif

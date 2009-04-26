@@ -236,6 +236,7 @@ void way_tag_statistics(uint& current_run, vector< uint32 >& split_idx)
   }
   global_count -= spatial_count[0x00ffffff];
   
+  split_idx.clear();
   uint32 split_count(0);
   for (unsigned int i(0); i < 16*1024*1024; ++i)
   {
@@ -243,9 +244,12 @@ void way_tag_statistics(uint& current_run, vector< uint32 >& split_idx)
     if (split_count >= global_count / WAY_TAG_SPATIAL_PARTS)
     {
       split_idx.push_back(i<<8);
-      split_count = 0;
+      split_count -= global_count / WAY_TAG_SPATIAL_PARTS;
     }
   }
+  while (split_idx.size() < WAY_TAG_SPATIAL_PARTS)
+    split_idx.push_back(0xffffff<<8);
+  split_idx[WAY_TAG_SPATIAL_PARTS-1] = 0xffffff<<8;
   
   free(cnt_rd_buf);
   free(spatial_count);
