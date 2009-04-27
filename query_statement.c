@@ -210,7 +210,7 @@ void Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   
   set< Node >& nodes(maps[output].get_nodes_handle());
   set< Way >& ways(maps[output].get_ways_handle());
-  set< Relation >& relations((maps[output].get_relations_handle()));
+  set< Relation_ >& relations((maps[output].get_relations_handle()));
   set< Area >& areas((maps[output].get_areas_handle()));
   
   nodes.clear();
@@ -244,25 +244,10 @@ void Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   {
     set< Relation_::Id > trelations;
     relation_kv_to_multiint_query(key_values.front().first, key_values.front().second, trelations);
-    set< Relation_ > trelations2, coord_relations;
+    set< Relation_ > trelations2;
     multiint_to_multiRelation_query(trelations, trelations2);
     kvs_multiRelation_to_multiRelation_query
-	(++(key_values.begin()), key_values.end(), trelations2, coord_relations);
-    for (set< Relation_ >::const_iterator it(coord_relations.begin()); it != coord_relations.end(); ++it)
-    {
-      Relation relation(it->head);
-      for (vector< Relation_::Data >::const_iterator it2(it->data.begin());
-	   it2 != it->data.end(); ++it2)
-      {
-	if (it2->type == Relation_Member::NODE)
-	  relation.node_members.insert(make_pair< int, int >(it2->id, it2->role+1));
-	else if (it2->type == Relation_Member::WAY)
-	  relation.way_members.insert(make_pair< int, int >(it2->id, it2->role+1));
-	else if (it2->type == Relation_Member::RELATION)
-	  relation.relation_members.insert(make_pair< int, int >(it2->id, it2->role+1));
-      }
-      relations.insert(relation);
-    }
+	(++(key_values.begin()), key_values.end(), trelations2, relations);
   }
 }
 

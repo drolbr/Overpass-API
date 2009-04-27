@@ -244,7 +244,7 @@ void Foreach_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   {
     set< Node > nodes;
     nodes.insert(*oit);
-    maps[output] = Set(nodes, set< Way >(), set< Relation >());
+    maps[output] = Set(nodes, set< Way >(), set< Relation_ >());
     push_stack(NODE, oit->id);
     for (vector< Statement* >::iterator it(substatements.begin());
 	 it != substatements.end(); ++it)
@@ -259,7 +259,7 @@ void Foreach_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   {
     set< Way > ways;
     ways.insert(*oit);
-    maps[output] = Set(set< Node >(), ways, set< Relation >());
+    maps[output] = Set(set< Node >(), ways, set< Relation_ >());
     push_stack(WAY, oit->id);
     for (vector< Statement* >::iterator it(substatements.begin());
 	 it != substatements.end(); ++it)
@@ -269,13 +269,13 @@ void Foreach_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     }
     pop_stack();
   }
-  for (set< Relation >::const_iterator oit(base_set.get_relations().begin());
+  for (set< Relation_ >::const_iterator oit(base_set.get_relations().begin());
        oit != base_set.get_relations().end(); ++oit)
   {
-    set< Relation > relations;
+    set< Relation_ > relations;
     relations.insert(*oit);
     maps[output] = Set(set< Node >(), set< Way >(), relations);
-    push_stack(RELATION, oit->id);
+    push_stack(RELATION, oit->head);
     for (vector< Statement* >::iterator it(substatements.begin());
 	 it != substatements.end(); ++it)
     {
@@ -289,7 +289,7 @@ void Foreach_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   {
     set< Area > areas;
     areas.insert(*oit);
-    maps[output] = Set(set< Node >(), set< Way >(), set< Relation >(), areas);
+    maps[output] = Set(set< Node >(), set< Way >(), set< Relation_ >(), areas);
     push_stack(AREA, oit->id);
     for (vector< Statement* >::iterator it(substatements.begin());
 	 it != substatements.end(); ++it)

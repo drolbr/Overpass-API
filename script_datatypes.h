@@ -172,28 +172,28 @@ class Set
     Set() {}
     Set(const set< Node >& nodes_,
 	const set< Way >& ways_,
-        const set< Relation >& relations_)
+        const set< Relation_ >& relations_)
   : nodes(nodes_), ways(ways_), relations(relations_) {}
     Set(const set< Node >& nodes_,
 	const set< Way >& ways_,
-	const set< Relation >& relations_,
+	const set< Relation_ >& relations_,
 	const set< Area >& areas_)
   : nodes(nodes_), ways(ways_), relations(relations_), areas(areas_) {}
     
     const set< Node >& get_nodes() const { return nodes; }
     const set< Way >& get_ways() const { return ways; }
-    const set< Relation >& get_relations() const { return relations; }
+    const set< Relation_ >& get_relations() const { return relations; }
     const set< Area >& get_areas() const { return areas; }
     
     set< Node >& get_nodes_handle() { return nodes; }
     set< Way >& get_ways_handle() { return ways; }
-    set< Relation >& get_relations_handle() { return relations; }
+    set< Relation_ >& get_relations_handle() { return relations; }
     set< Area >& get_areas_handle() { return areas; }
   
   private:
     set< Node > nodes;
     set< Way > ways;
-    set< Relation > relations;
+    set< Relation_ > relations;
     set< Area > areas;
 };
 

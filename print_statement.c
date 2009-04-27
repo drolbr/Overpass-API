@@ -92,35 +92,21 @@ void out_way(const Way& way, bool complete = true)
   }
 }
 
-void out_relation(const Relation& rel, const vector< string >& role_cache, bool complete = true)
+void out_relation
+    (const Relation_& rel, const vector< string >& role_cache,
+     bool complete = true)
 {
-  if ((rel.node_members.size() + rel.way_members.size() + rel.relation_members.size() == 0) && (complete))
-    cout<<"<relation id=\""<<rel.id<<"\"/>\n";
+  if ((rel.data.size() == 0) && (complete))
+    cout<<"<relation id=\""<<rel.head<<"\"/>\n";
   else
   {
-    cout<<"<relation id=\""<<rel.id<<"\">\n";
-    for (set< pair< int, int > >::const_iterator it2(rel.node_members.begin());
-	 it2 != rel.node_members.end(); ++it2)
+    cout<<"<relation id=\""<<rel.head<<"\">\n";
+    for (vector< Relation_Member >::const_iterator it2(rel.data.begin());
+         it2 != rel.data.end(); ++it2)
     {
-      cout<<"  <member type=\"node\" ref=\""<<it2->first
-	  <<"\" role=\"";
-      escape_xml(cout, role_cache[it2->second]);
-      cout<<"\"/>\n";
-    }
-    for (set< pair< int, int > >::const_iterator it2(rel.way_members.begin());
-	 it2 != rel.way_members.end(); ++it2)
-    {
-      cout<<"  <member type=\"way\" ref=\""<<it2->first
-	  <<"\" role=\"";
-      escape_xml(cout, role_cache[it2->second]);
-      cout<<"\"/>\n";
-    }
-    for (set< pair< int, int > >::const_iterator it2(rel.relation_members.begin());
-	 it2 != rel.relation_members.end(); ++it2)
-    {
-      cout<<"  <member type=\"relation\" ref=\""<<it2->first
-	  <<"\" role=\"";
-      escape_xml(cout, role_cache[it2->second]);
+      cout<<"  <member type=\""<<types_lowercase[it2->type]
+	  <<"\" ref=\""<<it2->id<<"\" role=\"";
+      escape_xml(cout, role_cache[it2->role+1]);
       cout<<"\"/>\n";
     }
     if (complete)
@@ -159,9 +145,9 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       for (set< Way >::const_iterator it(mit->second.get_ways().begin());
 	   it != mit->second.get_ways().end(); ++it)
 	cout<<"<way id=\""<<it->id<<"\"/>\n";
-      for (set< Relation >::const_iterator it(mit->second.get_relations().begin());
+      for (set< Relation_ >::const_iterator it(mit->second.get_relations().begin());
 	   it != mit->second.get_relations().end(); ++it)
-	cout<<"<relation id=\""<<it->id<<"\"/>\n";
+	cout<<"<relation id=\""<<it->head<<"\"/>\n";
       for (set< Area >::const_iterator it(mit->second.get_areas().begin());
 	   it != mit->second.get_areas().end(); ++it)
 	cout<<"<area id=\""<<it->id<<"\"/>\n";
@@ -174,7 +160,7 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       for (set< Way >::const_iterator it(mit->second.get_ways().begin());
 	   it != mit->second.get_ways().end(); ++it)
 	out_way(*it);
-      for (set< Relation >::const_iterator it(mit->second.get_relations().begin());
+      for (set< Relation_ >::const_iterator it(mit->second.get_relations().begin());
 	   it != mit->second.get_relations().end(); ++it)
 	out_relation(*it, role_cache);
       for (set< Area >::const_iterator it(mit->second.get_areas().begin());
@@ -241,10 +227,10 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	  ++tit;
 	}
       }
-      set< Relation >::const_iterator it_relations(mit->second.get_relations().begin());
+      set< Relation_ >::const_iterator it_relations(mit->second.get_relations().begin());
       while (it_relations != mit->second.get_relations().end())
       {
-	set< Relation >::const_iterator it(it_relations);
+	set< Relation_ >::const_iterator it(it_relations);
 	vector< vector< pair< string, string > > > tags;
 	multiRelation_to_kvs_query(mit->second.get_relations(), it_relations, tags);
 	vector< vector< pair< string, string > > >::const_iterator tit(tags.begin());

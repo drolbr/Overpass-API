@@ -479,16 +479,17 @@ set< int >& multiWay_to_multiint_query
 }
 
 set< int >& multiRelation_to_multiint_query
-    (MYSQL* mysql, string prefix, string suffix, const set< Relation >& source, set< int >& result_set)
+    (MYSQL* mysql, string prefix, string suffix, const set< Relation_ >& source, set< int >& result_set)
 {
-  for (set< Relation >::const_iterator it(source.begin()); it != source.end(); )
+  for (set< Relation_ >::const_iterator it(source.begin());
+       it != source.end(); )
   {
     ostringstream temp;
     temp<<prefix;
-    temp<<" ("<<it->id;
+    temp<<" ("<<it->head;
     unsigned int i(0);
     while (((++it) != source.end()) && (i++ < 10000))
-      temp<<", "<<it->id;
+      temp<<", "<<it->head;
     temp<<") "<<suffix;
 	
     MYSQL_RES* result(mysql_query_use_wrapper(mysql, temp.str()));
@@ -1164,10 +1165,10 @@ uint32 relation_kv_to_count_query(string key, string value)
 }
 
 vector< vector< pair< string, string > > >& multiRelation_to_kvs_query
-    (const set< Relation >& source, set< Relation >::const_iterator& pos,
+    (const set< Relation_ >& source, set< Relation_ >::const_iterator& pos,
      vector< vector< pair< string, string > > >& result)
 {
-  set< Relation >::const_iterator endpos(pos);
+  set< Relation_ >::const_iterator endpos(pos);
   uint32 i(0);
   while ((endpos != source.end()) && (i < 64*1024))
   {
@@ -1176,8 +1177,8 @@ vector< vector< pair< string, string > > >& multiRelation_to_kvs_query
   }
   
   set< Relation_::Index > source_ids;
-  for (set< Relation >::const_iterator it(pos); it != endpos; ++it)
-    source_ids.insert(it->id);
+  for (set< Relation_ >::const_iterator it(pos); it != endpos; ++it)
+    source_ids.insert(it->head);
   set< Relation_ > relation_coords_set;
   Indexed_Ordered_Id_To_Many_By_Id_Reader< Relation_Storage, set< Relation_::Index >, set< Relation_ > >
       relation_coord_reader(source_ids, relation_coords_set);
@@ -1193,8 +1194,8 @@ vector< vector< pair< string, string > > >& multiRelation_to_kvs_query
     relation_idxs.insert(it->head & 0xffffff00);
   
   map< uint32, set< uint32 > > local_relation_to_id;
-  for (set< Relation >::const_iterator it(pos); it != endpos; ++it)
-    local_relation_to_id[it->id] = set< uint32 >();
+  for (set< Relation_ >::const_iterator it(pos); it != endpos; ++it)
+    local_relation_to_id[it->head] = set< uint32 >();
   
   map< uint32, set< uint32 > > global_relation_to_id;
   set< uint32 > global_relation_idxs;
@@ -1234,13 +1235,15 @@ vector< vector< pair< string, string > > >& multiRelation_to_kvs_query
   result.clear();
   result.resize(source.size());
   vector< vector< pair< string, string > > >::iterator rit(result.begin());
-  for (set< Relation >::const_iterator it(pos); it != endpos; ++it)
+  for (set< Relation_ >::const_iterator it(pos); it != endpos; ++it)
   {
-    for (set< uint32 >::const_iterator it2(local_relation_to_id[it->id].begin());
-	 it2 != local_relation_to_id[it->id].end(); ++it2)
+    for (set< uint32 >::const_iterator
+         it2(local_relation_to_id[it->head].begin());
+	 it2 != local_relation_to_id[it->head].end(); ++it2)
       rit->push_back(kvs[*it2]);
-    for (set< uint32 >::const_iterator it2(global_relation_to_id[it->id].begin());
-	 it2 != global_relation_to_id[it->id].end(); ++it2)
+    for (set< uint32 >::const_iterator
+         it2(global_relation_to_id[it->head].begin());
+	 it2 != global_relation_to_id[it->head].end(); ++it2)
       rit->push_back(kvs[*it2]);
     ++rit;
   }

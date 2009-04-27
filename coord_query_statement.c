@@ -70,6 +70,6 @@ void Coord_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       <<"and min_lon <= "<<lon;
   
   set< Area > areas;
-  maps[output] = Set(set< Node >(), set< Way >(), set< Relation >(),
+  maps[output] = Set(set< Node >(), set< Way >(), set< Relation_ >(),
 		     multiArea_query(mysql, temp.str(), lat, lon, areas));
 }

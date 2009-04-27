@@ -45,7 +45,7 @@ void Detect_Odd_Nodes_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
   set< Node > nodes;
   set< Way > ways;
-  set< Relation > relations;
+  set< Relation_ > relations;
   set< Area > areas;
   
   map< string, Set >::const_iterator mit(maps.find(input));

@@ -71,9 +71,30 @@ void Make_Area_Statement::forecast(MYSQL* mysql)
 
 void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
+/*  Zieldatenstruktur
+    Head: (Id, waylike Coord)
+    Data: (Coord, Type/Significant_Bits)
+    später zweite Tabelle:
+    Head: (Id, waylike Coord)
+    Data: (Coord, Segment)
+    
+    1. Schritt: Prüfe Parität der Nodes
+    2. Schritt: Trage Segmente in map< uint32, map< Segment, south_to_north > > segments_in_tile ein
+    3. Schritt: rekursiv
+    Wenn leer
+    - wenn südlicher Anschluss drin ist, auch drin
+    - sonst draußen
+    return
+    (also nicht leer)
+    Wenn kein Blatt
+    - verzweige nach unten
+    sonst
+    - durchlaufe mit Sweep-Line die Segmente
+    - trage einen ggf. enthaltenen Teil nach recht und oben in die Nachbarsegmente ein*/
+  
   set< Node > nodes;
   set< Way > ways;
-  set< Relation > relations;
+  set< Relation_ > relations;
   set< Area > areas;
   
   map< string, Set >::const_iterator mit(maps.find(input));
@@ -101,7 +122,7 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     }
     else if (mit->second.get_relations().begin() != mit->second.get_relations().end())
     {
-      pivot_id = (mit->second.get_relations().begin())->id;
+      pivot_id = (mit->second.get_relations().begin())->head;
       pivot_type = RELATION;
     }
   }
@@ -332,7 +353,7 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   }
   else if (pivot_type == RELATION)
   {
-    set< Relation >::const_iterator it(mit->second.get_relations().begin());
+    set< Relation_ >::const_iterator it(mit->second.get_relations().begin());
     multiRelation_to_kvs_query(mit->second.get_relations(), it, tags);
   }
   vector< pair< string, string > >::const_iterator tit(tags.begin()->begin());

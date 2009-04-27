@@ -127,30 +127,45 @@ void multiWay_to_multiint_collect(const set< Way >& source, set< uint32 >& resul
   }
 }
 
-void multiRelation_to_multiint_collect_relations(const set< Relation >& source, set< uint32 >& result_set)
+void multiRelation_to_multiint_collect_relations(const set< Relation_ >& source, set< uint32 >& result_set)
 {
-  for (set< Relation >::const_iterator it(source.begin()); it != source.end(); ++it)
+  for (set< Relation_ >::const_iterator it(source.begin());
+       it != source.end(); ++it)
   {
-    for(set< pair< int, int > >::const_iterator it2(it->relation_members.begin()); it2 != it->relation_members.end(); ++it2)
-      result_set.insert(it2->first);
+    for (vector< Relation_Member >::const_iterator it2(it->data.begin());
+         it2 != it->data.end(); ++it2)
+    {
+      if (it2->type == Relation_Member::RELATION)
+        result_set.insert(it2->id);
+    }
   }
 }
 
-void multiRelation_to_multiint_collect_ways(const set< Relation >& source, set< uint32 >& result_set)
+void multiRelation_to_multiint_collect_ways(const set< Relation_ >& source, set< uint32 >& result_set)
 {
-  for (set< Relation >::const_iterator it(source.begin()); it != source.end(); ++it)
+  for (set< Relation_ >::const_iterator it(source.begin());
+       it != source.end(); ++it)
   {
-    for(set< pair< int, int > >::const_iterator it2(it->way_members.begin()); it2 != it->way_members.end(); ++it2)
-      result_set.insert(it2->first);
+    for (vector< Relation_Member >::const_iterator it2(it->data.begin());
+         it2 != it->data.end(); ++it2)
+    {
+      if (it2->type == Relation_Member::WAY)
+        result_set.insert(it2->id);
+    }
   }
 }
 
-void multiRelation_to_multiint_collect_nodes(const set< Relation >& source, set< uint32 >& result_set)
+void multiRelation_to_multiint_collect_nodes(const set< Relation_ >& source, set< uint32 >& result_set)
 {
-  for (set< Relation >::const_iterator it(source.begin()); it != source.end(); ++it)
+  for (set< Relation_ >::const_iterator it(source.begin());
+       it != source.end(); ++it)
   {
-    for(set< pair< int, int > >::const_iterator it2(it->node_members.begin()); it2 != it->node_members.end(); ++it2)
-      result_set.insert(it2->first);
+    for (vector< Relation_Member >::const_iterator it2(it->data.begin());
+         it2 != it->data.end(); ++it2)
+    {
+      if (it2->type == Relation_Member::NODE)
+        result_set.insert(it2->id);
+    }
   }
 }
 
@@ -158,17 +173,24 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
   set< Node >* nodes(&(maps[output].get_nodes_handle()));
   set< Way >* ways(&(maps[output].get_ways_handle()));
-  set< Relation >* relations(&(maps[output].get_relations_handle()));
+  set< Relation_ >* relations(&(maps[output].get_relations_handle()));
   set< Area >* areas(&(maps[output].get_areas_handle()));
   
   map< string, Set >::const_iterator mit(maps.find(input));
   if (mit == maps.end())
+  {
+    nodes->clear();
+    ways->clear();
+    areas->clear();
+    relations->clear();
     return;
+  }
   
   if (type == RECURSE_RELATION_RELATION)
   {
     set< uint32 > trelations;
-    multiRelation_to_multiint_collect_relations(mit->second.get_relations(), trelations);
+    multiRelation_to_multiint_collect_relations
+      (mit->second.get_relations(), trelations);
     nodes->clear();
     ways->clear();
     areas->clear();
@@ -177,36 +199,18 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   }
   else if (type == RECURSE_RELATION_BACKWARDS)
   {
-    set< Relation_ > source;
-    for (set< Relation >::const_iterator it(mit->second.get_relations().begin());
-	 it != mit->second.get_relations().end(); ++it)
-      source.insert(Relation_(it->id));
     set< Relation_ > result;
-    multiRelation_backwards_query(source, result);
+    multiRelation_backwards_query(mit->second.get_relations(), result);
     nodes->clear();
     ways->clear();
     areas->clear();
-    relations->clear();
-    for (set< Relation_ >::const_iterator it(result.begin()); it != result.end(); ++it)
-    {
-      Relation relation(it->head);
-      for (vector< Relation_::Data >::const_iterator it2(it->data.begin());
-	   it2 != it->data.end(); ++it2)
-      {
-	if (it2->type == Relation_Member::NODE)
-	  relation.node_members.insert(make_pair< int, int >(it2->id, it2->role+1));
-	else if (it2->type == Relation_Member::WAY)
-	  relation.way_members.insert(make_pair< int, int >(it2->id, it2->role+1));
-	else if (it2->type == Relation_Member::RELATION)
-	  relation.relation_members.insert(make_pair< int, int >(it2->id, it2->role+1));
-      }
-      relations->insert(relation);
-    }
+    *relations = result;
   }
   else if (type == RECURSE_RELATION_WAY)
   {
     set< uint32 > tways;
-    multiRelation_to_multiint_collect_ways(mit->second.get_relations(), tways);
+    multiRelation_to_multiint_collect_ways
+      (mit->second.get_relations(), tways);
     nodes->clear();
     ways->clear();
     areas->clear();
@@ -216,7 +220,8 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   else if (type == RECURSE_RELATION_NODE)
   {
     set< uint32 > tnodes;
-    multiRelation_to_multiint_collect_nodes(mit->second.get_relations(), tnodes);
+    multiRelation_to_multiint_collect_nodes
+      (mit->second.get_relations(), tnodes);
     nodes->clear();
     ways->clear();
     areas->clear();
@@ -235,27 +240,11 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   }
   else if (type == RECURSE_WAY_RELATION)
   {
-    set< Relation_ > result;
-    multiWay_to_multiRelation_query(mit->second.get_ways(), result);
     nodes->clear();
-    ways->clear();
-    areas->clear();
     relations->clear();
-    for (set< Relation_ >::const_iterator it(result.begin()); it != result.end(); ++it)
-    {
-      Relation relation(it->head);
-      for (vector< Relation_::Data >::const_iterator it2(it->data.begin());
-	   it2 != it->data.end(); ++it2)
-      {
-	if (it2->type == Relation_Member::NODE)
-	  relation.node_members.insert(make_pair< int, int >(it2->id, it2->role+1));
-	else if (it2->type == Relation_Member::WAY)
-	  relation.way_members.insert(make_pair< int, int >(it2->id, it2->role+1));
-	else if (it2->type == Relation_Member::RELATION)
-	  relation.relation_members.insert(make_pair< int, int >(it2->id, it2->role+1));
-      }
-      relations->insert(relation);
-    }
+    areas->clear();
+    multiWay_to_multiRelation_query(mit->second.get_ways(), *relations);
+    ways->clear();
   }
   else if (type == RECURSE_NODE_WAY)
   {
@@ -267,26 +256,10 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   }
   else if (type == RECURSE_NODE_RELATION)
   {
-    set< Relation_ > result;
-    multiNode_to_multiRelation_query(mit->second.get_nodes(), result);
-    nodes->clear();
     ways->clear();
     areas->clear();
     relations->clear();
-    for (set< Relation_ >::const_iterator it(result.begin()); it != result.end(); ++it)
-    {
-      Relation relation(it->head);
-      for (vector< Relation_::Data >::const_iterator it2(it->data.begin());
-	   it2 != it->data.end(); ++it2)
-      {
-	if (it2->type == Relation_Member::NODE)
-	  relation.node_members.insert(make_pair< int, int >(it2->id, it2->role+1));
-	else if (it2->type == Relation_Member::WAY)
-	  relation.way_members.insert(make_pair< int, int >(it2->id, it2->role+1));
-	else if (it2->type == Relation_Member::RELATION)
-	  relation.relation_members.insert(make_pair< int, int >(it2->id, it2->role+1));
-      }
-      relations->insert(relation);
-    }
+    multiNode_to_multiRelation_query(mit->second.get_nodes(), *relations);
+    nodes->clear();
   }
 }

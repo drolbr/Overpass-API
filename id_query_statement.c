@@ -87,7 +87,7 @@ void Id_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   
   set< Node >& nodes(maps[output].get_nodes_handle());
   set< Way >& ways(maps[output].get_ways_handle());
-  set< Relation >& relations((maps[output].get_relations_handle()));
+  set< Relation_ >& relations((maps[output].get_relations_handle()));
   set< Area >& areas((maps[output].get_areas_handle()));
   
   nodes.clear();

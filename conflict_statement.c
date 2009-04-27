@@ -84,10 +84,10 @@ void Conflict_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       if (++it != item_set.get_ways().end())
 	temp<<", ";
     }
-    for (set< Relation >::const_iterator it(item_set.get_relations().begin());
+    for (set< Relation_ >::const_iterator it(item_set.get_relations().begin());
 	 it != item_set.get_relations().end(); )
     {
-      temp<<"relation "<<it->id;
+      temp<<"relation "<<it->head;
       if (++it != item_set.get_relations().end())
 	temp<<", ";
     }
@@ -126,11 +126,12 @@ void Conflict_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     temp<<"insert way_conflicts values ("<<it->id<<", "<<conflict_id<<')';
     mysql_query(mysql, temp.str().c_str());
   }
-  for (set< Relation >::const_iterator it(base_set.get_relations().begin());
+  for (set< Relation_ >::const_iterator it(base_set.get_relations().begin());
        it != base_set.get_relations().end(); ++it)
   {
     temp.str("");
-    temp<<"insert relation_conflicts values ("<<it->id<<", "<<conflict_id<<')';
+    temp<<"insert relation_conflicts values ("<<it->head
+        <<", "<<conflict_id<<')';
     mysql_query(mysql, temp.str().c_str());
   }
   
