@@ -139,7 +139,7 @@ void Root_Statement::set_attributes(const char **attr)
   attributes["name"] = "";
   attributes["replace"] = "0";
   attributes["version"] = "0";
-  attributes["debug"] = "quiet";
+  attributes["debug"] = "errors";
   
   eval_cstr_array(get_name(), attributes, attr);
   
@@ -346,8 +346,8 @@ void finish_statement_forecast()
   for (map< string, Set_Forecast >::const_iterator it(sets.begin()); it != sets.end(); ++it)
   {
     element_count += it->second.node_count;
-    element_count += 29*it->second.way_count;
-    element_count += 26*it->second.relation_count;
+    element_count += 10*it->second.way_count;
+    element_count += 20*it->second.relation_count;
   }
   if ((element_limit == 0) && (element_count > 10*1000*1000))
     add_sanity_error("Number of elements exceeds limit of 10,000,000 elements.");

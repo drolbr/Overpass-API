@@ -15,7 +15,7 @@ from = set:ways,relations:from
 type = arg:[way-node,relation-relation,relation-way,relation-node]:type
 
 * changes
-into = union set:from set:into:nodes,ways,relations (set:from:ways,relations)
+into = set:into:nodes,ways,relations (set:from:ways,relations)
 way-node: 28 nodes per way
 relation-relation: 1 relation per relation
 relation-way: 22 ways per relation

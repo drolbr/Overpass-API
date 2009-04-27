@@ -30,29 +30,15 @@ void Detect_Odd_Nodes_Statement::set_attributes(const char **attr)
 
 void Detect_Odd_Nodes_Statement::forecast(MYSQL* mysql)
 {
-  if (input == output)
-  {
-    Set_Forecast& sf_io(declare_union_set(output));
+  Set_Forecast sf_in(declare_read_set(input));
+  Set_Forecast& sf_out(declare_write_set(output));
     
-    declare_used_time(1 + sf_io.way_count/10);
-    finish_statement_forecast();
-
-    display_full();
-    add_sanity_remark("\"detect-odd-nodes\" won't produce any result if from and into are equal.");
-    display_state();
-  }
-  else
-  {
-    const Set_Forecast& sf_in(declare_read_set(input));
-    Set_Forecast& sf_out(declare_write_set(output));
+  sf_out.node_count = sf_in.way_count;
+  declare_used_time(1 + sf_in.way_count/10);
+  finish_statement_forecast();
     
-    sf_out.node_count = sf_in.way_count;
-    declare_used_time(1 + sf_in.way_count/10);
-    finish_statement_forecast();
-    
-    display_full();
-    display_state();
-  }
+  display_full();
+  display_state();
 }
 
 void Detect_Odd_Nodes_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
@@ -61,13 +47,6 @@ void Detect_Odd_Nodes_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   set< Way > ways;
   set< Relation > relations;
   set< Area > areas;
-  if (input == output)
-  {
-    nodes = maps[output].get_nodes();
-    ways = maps[output].get_ways();
-    relations = maps[output].get_relations();
-    areas = maps[output].get_areas();
-  }
   
   map< string, Set >::const_iterator mit(maps.find(input));
   if (mit == maps.end())

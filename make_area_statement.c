@@ -57,31 +57,16 @@ inline void area_insert(Area& area, int lat1, int lon1, int lat2, int lon2)
 
 void Make_Area_Statement::forecast(MYSQL* mysql)
 {
-  if (input == output)
-  {
-    Set_Forecast& sf_io(declare_union_set(output));
-    declare_read_set(tags);
+  Set_Forecast sf_in(declare_read_set(input));
+  declare_read_set(tags);
+  Set_Forecast& sf_out(declare_write_set(output));
     
-    sf_io.area_count += 1;
-    declare_used_time(100 + sf_io.node_count + sf_io.way_count);
-    finish_statement_forecast();
-
-    display_full();
-    display_state();
-  }
-  else
-  {
-    const Set_Forecast& sf_in(declare_read_set(input));
-    declare_read_set(tags);
-    Set_Forecast& sf_out(declare_write_set(output));
+  sf_out.area_count = 1;
+  declare_used_time(100 + sf_in.node_count + sf_in.way_count);
+  finish_statement_forecast();
     
-    sf_out.area_count = 1;
-    declare_used_time(100 + sf_in.node_count + sf_in.way_count);
-    finish_statement_forecast();
-    
-    display_full();
-    display_state();
-  }
+  display_full();
+  display_state();
 }
 
 void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
@@ -90,13 +75,6 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   set< Way > ways;
   set< Relation > relations;
   set< Area > areas;
-  if (input == output)
-  {
-    nodes = maps[output].get_nodes();
-    ways = maps[output].get_ways();
-    relations = maps[output].get_relations();
-    areas = maps[output].get_areas();
-  }
   
   map< string, Set >::const_iterator mit(maps.find(input));
   if (mit == maps.end())

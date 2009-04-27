@@ -68,107 +68,54 @@ void Recurse_Statement::set_attributes(const char **attr)
 
 void Recurse_Statement::forecast(MYSQL* mysql)
 {
-  if (input == output)
+  Set_Forecast sf_in(declare_read_set(input));
+  Set_Forecast& sf_out(declare_write_set(output));
+    
+  if (type == RECURSE_RELATION_RELATION)
   {
-    Set_Forecast& sf_io(declare_union_set(output));
-    
-    if (type == RECURSE_RELATION_RELATION)
-    {
-      sf_io.relation_count += sf_io.relation_count;
-      declare_used_time(100*sf_io.relation_count);
-    }
-    else if (type == RECURSE_RELATION_BACKWARDS)
-    {
-      sf_io.relation_count += sf_io.relation_count;
-      declare_used_time(2000);
-    }
-    else if (type == RECURSE_RELATION_WAY)
-    {
-      sf_io.way_count += 22*sf_io.relation_count;
-      declare_used_time(100*sf_io.relation_count);
-    }
-    else if (type == RECURSE_RELATION_NODE)
-    {
-      sf_io.node_count += 2*sf_io.relation_count;
-      declare_used_time(100*sf_io.relation_count);
-    }
-    else if (type == RECURSE_WAY_NODE)
-    {
-      sf_io.node_count += 28*sf_io.way_count;
-      declare_used_time(50*sf_io.way_count);
-    }
-    else if (type == RECURSE_WAY_RELATION)
-    {
-      sf_io.relation_count += sf_io.way_count/10;
-      declare_used_time(2000);
-    }
-    else if (type == RECURSE_NODE_WAY)
-    {
-      sf_io.way_count += sf_io.node_count/2;
-      declare_used_time(sf_io.node_count/1000); //TODO
-    }
-    else if (type == RECURSE_NODE_RELATION)
-    {
-      sf_io.relation_count += sf_io.node_count/100;
-      declare_used_time(2000);
-    }
-    
-    finish_statement_forecast();
-
-    display_full();
-    display_state();
+    sf_out.relation_count = sf_in.relation_count;
+    declare_used_time(100*sf_in.relation_count);
   }
-  else
+  else if (type == RECURSE_RELATION_BACKWARDS)
   {
-    const Set_Forecast& sf_in(declare_read_set(input));
-    Set_Forecast& sf_out(declare_write_set(output));
-    
-    if (type == RECURSE_RELATION_RELATION)
-    {
-      sf_out.relation_count += sf_in.relation_count;
-      declare_used_time(100*sf_in.relation_count);
-    }
-    else if (type == RECURSE_RELATION_BACKWARDS)
-    {
-      sf_out.relation_count += sf_in.relation_count;
-      declare_used_time(2000);
-    }
-    else if (type == RECURSE_RELATION_WAY)
-    {
-      sf_out.way_count += 22*sf_in.relation_count;
-      declare_used_time(100*sf_in.relation_count);
-    }
-    else if (type == RECURSE_RELATION_NODE)
-    {
-      sf_out.node_count += 2*sf_in.relation_count;
-      declare_used_time(100*sf_in.relation_count);
-    }
-    else if (type == RECURSE_WAY_NODE)
-    {
-      sf_out.node_count += 28*sf_in.way_count;
-      declare_used_time(50*sf_in.way_count);
-    }
-    else if (type == RECURSE_WAY_RELATION)
-    {
-      sf_out.relation_count += sf_in.way_count/10;
-      declare_used_time(2000);
-    }
-    else if (type == RECURSE_NODE_WAY)
-    {
-      sf_out.way_count += sf_in.node_count/2;
-      declare_used_time(sf_in.node_count/1000); //TODO
-    }
-    else if (type == RECURSE_NODE_RELATION)
-    {
-      sf_out.relation_count += sf_in.node_count/100;
-      declare_used_time(2000);
-    }
-    
-    finish_statement_forecast();
-    
-    display_full();
-    display_state();
+    sf_out.relation_count = sf_in.relation_count;
+    declare_used_time(2000);
   }
+  else if (type == RECURSE_RELATION_WAY)
+  {
+    sf_out.way_count = 22*sf_in.relation_count;
+    declare_used_time(100*sf_in.relation_count);
+  }
+  else if (type == RECURSE_RELATION_NODE)
+  {
+    sf_out.node_count = 2*sf_in.relation_count;
+    declare_used_time(100*sf_in.relation_count);
+  }
+  else if (type == RECURSE_WAY_NODE)
+  {
+    sf_out.node_count = 28*sf_in.way_count;
+    declare_used_time(50*sf_in.way_count);
+  }
+  else if (type == RECURSE_WAY_RELATION)
+  {
+    sf_out.relation_count = sf_in.way_count/10;
+    declare_used_time(2000);
+  }
+  else if (type == RECURSE_NODE_WAY)
+  {
+    sf_out.way_count = sf_in.node_count/2;
+    declare_used_time(sf_in.node_count/1000); //TODO
+  }
+  else if (type == RECURSE_NODE_RELATION)
+  {
+    sf_out.relation_count = sf_in.node_count/100;
+    declare_used_time(2000);
+  }
+    
+  finish_statement_forecast();
+    
+  display_full();
+  display_state();
 }
 
 void multiWay_to_multiint_collect(const set< Way >& source, set< uint32 >& result_set)
@@ -213,13 +160,6 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   set< Way >* ways(&(maps[output].get_ways_handle()));
   set< Relation >* relations(&(maps[output].get_relations_handle()));
   set< Area >* areas(&(maps[output].get_areas_handle()));
-  if (input != output)
-  {
-    nodes->clear();
-    ways->clear();
-    relations->clear();
-    areas->clear();
-  }
   
   map< string, Set >::const_iterator mit(maps.find(input));
   if (mit == maps.end())
@@ -229,6 +169,10 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   {
     set< uint32 > trelations;
     multiRelation_to_multiint_collect_relations(mit->second.get_relations(), trelations);
+    nodes->clear();
+    ways->clear();
+    areas->clear();
+    relations->clear();
     multiint_to_multiRelation_query(trelations, *relations);
   }
   else if (type == RECURSE_RELATION_BACKWARDS)
@@ -239,6 +183,10 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       source.insert(Relation_(it->id));
     set< Relation_ > result;
     multiRelation_backwards_query(source, result);
+    nodes->clear();
+    ways->clear();
+    areas->clear();
+    relations->clear();
     for (set< Relation_ >::const_iterator it(result.begin()); it != result.end(); ++it)
     {
       Relation relation(it->head);
@@ -259,24 +207,40 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   {
     set< uint32 > tways;
     multiRelation_to_multiint_collect_ways(mit->second.get_relations(), tways);
+    nodes->clear();
+    ways->clear();
+    areas->clear();
+    relations->clear();
     multiint_to_multiWay_query(tways, *ways);
   }
   else if (type == RECURSE_RELATION_NODE)
   {
     set< uint32 > tnodes;
     multiRelation_to_multiint_collect_nodes(mit->second.get_relations(), tnodes);
+    nodes->clear();
+    ways->clear();
+    areas->clear();
+    relations->clear();
     multiint_to_multiNode_query(tnodes, *nodes);
   }
   else if (type == RECURSE_WAY_NODE)
   {
     set< uint32 > tnodes;
     multiWay_to_multiint_collect(mit->second.get_ways(), tnodes);
+    nodes->clear();
+    ways->clear();
+    areas->clear();
+    relations->clear();
     multiint_to_multiNode_query(tnodes, *nodes);
   }
   else if (type == RECURSE_WAY_RELATION)
   {
     set< Relation_ > result;
     multiWay_to_multiRelation_query(mit->second.get_ways(), result);
+    nodes->clear();
+    ways->clear();
+    areas->clear();
+    relations->clear();
     for (set< Relation_ >::const_iterator it(result.begin()); it != result.end(); ++it)
     {
       Relation relation(it->head);
@@ -295,12 +259,20 @@ void Recurse_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   }
   else if (type == RECURSE_NODE_WAY)
   {
+    ways->clear();
+    areas->clear();
+    relations->clear();
     multiNode_to_multiWay_query(mit->second.get_nodes(), *ways);
+    nodes->clear();
   }
   else if (type == RECURSE_NODE_RELATION)
   {
     set< Relation_ > result;
     multiNode_to_multiRelation_query(mit->second.get_nodes(), result);
+    nodes->clear();
+    ways->clear();
+    areas->clear();
+    relations->clear();
     for (set< Relation_ >::const_iterator it(result.begin()); it != result.end(); ++it)
     {
       Relation relation(it->head);
