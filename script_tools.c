@@ -151,12 +151,19 @@ void Root_Statement::set_attributes(const char **attr)
   
   if (attributes["debug"] == "quiet")
     set_debug_mode(QUIET);
-  if (attributes["debug"] == "errors")
+  else if (attributes["debug"] == "errors")
     set_debug_mode(ERRORS);
-  if (attributes["debug"] == "verbose")
+  else if (attributes["debug"] == "verbose")
     set_debug_mode(VERBOSE);
-  if (attributes["debug"] == "static")
+  else if (attributes["debug"] == "static")
     set_debug_mode(STATIC_ANALYSIS);
+  else
+  {
+    ostringstream temp;
+    temp<<"For the attribute \"debug\" of the element \"osm-script\""
+	<<" the only allowed values are \"quiet\", \"errors\", \"verbose\" or \"static\".";
+    add_static_error(temp.str());
+  }
   
   script_timeout = timeout;
   element_limit = elem_limit;

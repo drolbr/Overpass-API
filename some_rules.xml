@@ -8,9 +8,16 @@
   <has-kv k="name"/>
 </query>
 <foreach into="rel">
-  <recurse type="relation-way" from="rel"/>
-  <recurse type="way-node"/>
+  <union>
+    <recurse type="relation-way" from="rel"/>
+    <recurse type="way-node"/>
+  </union>
   <make-area pivot="rel"/>
+  <detect-odd-nodes into="odd"/>
+  <foreach from="odd" into="i">
+    <union><item set="i"/><item set="rel"/></union>
+    <conflict>In <item set="rel"/>, the <item set="i"/> is contained in an odd number of segments.</conflict>
+  </foreach>
 </foreach>
 
 </osm-script>
@@ -22,40 +29,11 @@
   <has-kv k="name"/>
 </query>
 <foreach into="rel">
-  <recurse type="relation-way" from="rel"/>
-  <recurse type="way-node"/>
+  <union>
+    <recurse type="relation-way" from="rel"/>
+    <recurse type="way-node"/>
+  </union>
   <make-area pivot="rel"/>
-</foreach>
-
-</osm-script>
-
-<osm-script name="Area::Detect_errors_admin_level" version="3">
-
-<query type="relation">
-  <has-kv k="admin_level"/>
-  <has-kv k="name"/>
-</query>
-<foreach into="rel">
-  <recurse type="relation-way" from="rel"/>
-  <recurse type="way-node"/>
-  <detect-odd-nodes into="odd"/>
-  <foreach from="odd" into="i">
-    <union><item set="i"/><item set="rel"/></union>
-    <conflict>In <item set="rel"/>, the <item set="i"/> is contained in an odd number of segments.</conflict>
-  </foreach>
-</foreach>
-
-</osm-script>
-
-<osm-script name="Area::Detect_errors_multipolygon" version="4">
-
-<query type="relation">
-  <has-kv k="type" v="multipolygon"/>
-  <has-kv k="name"/>
-</query>
-<foreach into="rel">
-  <recurse type="relation-way" from="rel"/>
-  <recurse type="way-node"/>
   <detect-odd-nodes into="odd"/>
   <foreach from="odd" into="i">
     <union><item set="i"/><item set="rel"/></union>

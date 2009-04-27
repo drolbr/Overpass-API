@@ -69,6 +69,94 @@ void Make_Area_Statement::forecast(MYSQL* mysql)
   display_state();
 }
 
+void insert_segment
+    (map< uint32, set< Line_Segment > >& segments_per_tile,
+     const Node& nd1, const Node& nd2)
+{
+  //force nde to be the eastmost node
+  Node const* ndw(&nd1);
+  Node const* nde(&nd2);
+  if ((nd2.lon < nd1.lon) || ((nd1.lon == nd2.lon) && (nd2.lat < nd1.lat)))
+  {
+    ndw = &nd2;
+    nde = &nd1;
+  }
+  
+  //catch the special case that we pass the longitude -180.0
+  if (nde->lon - ndw->lon > 180*10*1000*1000)
+  {
+    //TODO
+    return;
+  }
+  
+  //split the segment at tile borders
+  //first longitudinal
+  vector< pair< int32, int32 > > coords;
+  coords.push_back(make_pair(ndw->lat + 90*10*1000*1000, ndw->lon));
+  int32 lon_split_number((nde->lon>>16) - (ndw->lon>>16));
+  if (lon_split_number > 0)
+  {
+    int64 latdiff(nde->lat - ndw->lat);
+    int32 londiff(nde->lon - ndw->lon);
+    for (int32 i(1); i <= lon_split_number; ++i)
+    {
+      coords.push_back
+	  (make_pair(
+	   (int32)(latdiff*(((i + (ndw->lon>>16))<<16) - ndw->lon)/londiff + ndw->lat + 90*10*1000*1000),
+	   (i + (ndw->lon>>16))<<16));
+    }
+  }
+  coords.push_back(make_pair(nde->lat + 90*10*1000*1000, nde->lon));
+  //then latitudinal
+  //this includes inserting the segments into their tiles
+  vector< pair< int32, int32 > >::const_iterator it(coords.begin());
+  pair< int32, int32 > last_coord(*it);
+  for (++it; it != coords.end(); ++it)
+  {
+    int32 lat_split_number((it->first>>16) - (last_coord.first>>16));
+    if (lat_split_number > 0)
+    {
+      int32 latdiff(it->first - last_coord.first);
+      int64 londiff(it->second - last_coord.second);
+      int32 lastlat(last_coord.first);
+      int32 lastlon(last_coord.second);
+      for (int32 i(1); i <= lat_split_number; ++i)
+      {
+	pair< int32, int32 > cur_coord
+	    (make_pair(
+	     (i + (lastlat>>16))<<16,
+	     (int32)(londiff*(((i + (lastlat>>16))<<16) - lastlat)/latdiff + lastlon)));
+	segments_per_tile[ll_idx(last_coord.first - 90*10*1000*1000, last_coord.second)].insert
+	    (Line_Segment(last_coord.first - 90*10*1000*1000, last_coord.second,
+	     cur_coord.first - 90*10*1000*1000, cur_coord.second));
+	last_coord = cur_coord;
+      }
+    }
+    else if (lat_split_number < 0)
+    {
+      int32 latdiff(it->first - last_coord.first);
+      int64 londiff(it->second - last_coord.second);
+      int32 lastlat(last_coord.first);
+      int32 lastlon(last_coord.second);
+      for (int32 i(0); i > lat_split_number; --i)
+      {
+	pair< int32, int32 > cur_coord
+	    (make_pair(
+	     (i + (lastlat>>16))<<16,
+	     (int32)(londiff*(((i + (lastlat>>16))<<16) - lastlat)/latdiff + lastlon)));
+	segments_per_tile[ll_idx(cur_coord.first - 90*10*1000*1000, last_coord.second)].insert
+	    (Line_Segment(last_coord.first - 90*10*1000*1000, last_coord.second,
+	     cur_coord.first - 90*10*1000*1000, cur_coord.second));
+	last_coord = cur_coord;
+      }
+    }
+    segments_per_tile[ll_idx(it->first - 90*10*1000*1000, last_coord.second)].insert
+	(Line_Segment(last_coord.first - 90*10*1000*1000, last_coord.second,
+	 it->first - 90*10*1000*1000, it->second));
+    last_coord = *it;
+  }
+}
+
 void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
 /*  Zieldatenstruktur
@@ -78,7 +166,7 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     Head: (Id, waylike Coord)
     Data: (Coord, Segment)
     
-    1. Schritt: Prüfe Parität der Nodes
+    1. Schritt: Prüfe Parität der Nodes, Anwesenheit der Nodes
     2. Schritt: Trage Segmente in map< uint32, map< Segment, south_to_north > > segments_in_tile ein
     3. Schritt: rekursiv
     Wenn leer
@@ -88,6 +176,7 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     (also nicht leer)
     Wenn kein Blatt
     - verzweige nach unten
+    - wenn alle vier drin, vereinige
     sonst
     - durchlaufe mit Sweep-Line die Segmente
     - trage einen ggf. enthaltenen Teil nach recht und oben in die Nachbarsegmente ein*/
@@ -105,6 +194,34 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   }
   const set< Node >& in_nodes(mit->second.get_nodes());
   const set< Way >& in_ways(mit->second.get_ways());
+  
+  map< uint32, set< Line_Segment > > segments_per_tile;
+  for (set< Way >::const_iterator it(in_ways.begin());
+       it != in_ways.end(); ++it)
+  {
+    for (vector< uint32 >::const_iterator nit(it->members.begin()); nit != it->members.end(); )
+    {
+      set< Node >::const_iterator nit1(in_nodes.find(Node(*nit, 0, 0)));
+      if (++nit == it->members.end())
+	break;
+      set< Node >::const_iterator nit2(in_nodes.find(Node(*nit, 0, 0)));
+      if ((nit1 != in_nodes.end()) && (nit2 != in_nodes.end()))
+	insert_segment(segments_per_tile, *nit1, *nit2);
+    }
+  }
+  
+  //TEMP
+  for (map< uint32, set< Line_Segment > >::const_iterator
+       it(segments_per_tile.begin());
+       it != segments_per_tile.end(); ++it)
+  {
+    cout<<hex<<it->first<<'\n';
+    for (set< Line_Segment >::const_iterator it2(it->second.begin());
+	 it2 != it->second.end(); ++it2)
+      cout<<hex<<(it2->west_lat + 90*10*1000*1000)<<'\t'<<it2->west_lon<<'\t'<<(it2->east_lat + 90*10*1000*1000)<<'\t'<<it2->east_lon<<'\n';
+    cout<<'\n';
+  }
+  return;
   
   mit = maps.find(tags);
   int pivot_id(0), pivot_type(0);

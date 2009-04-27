@@ -13,7 +13,7 @@
 <!--
 offene Probleme:
 - gzip-Komprimierung
-- Umstellung auf Relation_
++ Umstellung auf Relation_
 - Reorganisation von make-area
 - area-query
 - recurse: area-node
@@ -113,8 +113,8 @@ The first command, <a href="#section.coord_query">&lt;coord-query lat="51.25" lo
 <form action="api/interpreter" method="post" accept-charset="UTF-8">
   <textarea name="data" rows="8" cols="80">&lt;union&gt;
   &lt;bbox-query n="51.5" s="51.1" w="7.0" e="7.3"/&gt;
+  &lt;recurse type="node-relation" into="rels"/&gt;
   &lt;recurse type="node-way"/&gt;
-  &lt;recurse type="node-relation"/&gt;
   &lt;recurse type="way-relation"/&gt;
 &lt;/union&gt;
 &lt;print mode="body"/&gt;
