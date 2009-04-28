@@ -154,7 +154,7 @@ struct Area
     Area(int id_) : id(id_) {}
     
     const int id;
-    set< Line_Segment > segments;
+    //set< Line_Segment > segments;
 };
 
 const int REF_NODE = 1;

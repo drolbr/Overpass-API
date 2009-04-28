@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <vector>
 #include "expat_justparse_interface.h"
+#include "raw_file_db.h"
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
@@ -31,28 +32,6 @@ void Make_Area_Statement::set_attributes(const char **attr)
   input = attributes["from"];
   output = attributes["into"];
   tags = attributes["pivot"];
-}
-
-inline void area_insert(Area& area, int lat1, int lon1, int lat2, int lon2)
-{
-  if (lon1 < lon2)
-  {
-    unsigned int div((lon2 - lon1)/100000+1);
-    for (unsigned int i(0); i < div; ++i)
-      area.segments.insert(Line_Segment
-	  (lat1+((long long)(lat2-lat1))*i/div, lon1+((long long)(lon2-lon1))*i/div,
-	   lat1+((long long)(lat2-lat1))*(i+1)/div, lon1+((long long)(lon2-lon1))*(i+1)/div));
-  }
-  else
-  {
-    unsigned int div((lon1 - lon2)/100000+1);
-    for (unsigned int i(0); i < div; ++i)
-    {
-      area.segments.insert(Line_Segment
-	  (lat2+((long long)(lat1-lat2))*i/div, lon2+((long long)(lon1-lon2))*i/div,
-	   lat2+((long long)(lat1-lat2))*(i+1)/div, lon2+((long long)(lon1-lon2))*(i+1)/div));
-    }
-  }
 }
 
 void Make_Area_Statement::forecast(MYSQL* mysql)
@@ -85,7 +64,14 @@ void insert_segment
   //catch the special case that we pass the longitude -180.0
   if (nde->lon - ndw->lon > 180*10*1000*1000)
   {
-    //TODO
+    int64 latdiff(ndw->lat - nde->lat);
+    int32 londiff((180*10*1000*1000 - nde->lon) + (ndw->lon + 180*10*1000*1000));
+    Node intersection
+	(0, (int32)(latdiff*(180*10*1000*1000 - nde->lon)/londiff + ndw->lat + 90*10*1000*1000),
+	  -180*10*1000*1000);
+    insert_segment(segments_per_tile, *ndw, intersection);
+    intersection.lon = 180*10*1000*1000;
+    insert_segment(segments_per_tile, *nde, intersection);
     return;
   }
   
@@ -175,6 +161,14 @@ void insert_segment
   }
 }
 
+void report_missing_node(const Way& way, uint32 node_id, const string& input)
+{
+  ostringstream temp;
+  temp<<"Make-Area: Node "<<node_id<<" referred by way "<<way.id
+      <<" is not contained in set \""<<input<<"\".\n";
+  runtime_error(temp.str(), cout);
+}
+
 void insert_bottomlines(map< uint32, set< Line_Segment > >& segments_per_tile)
 {
   map< uint32, set< Line_Segment > >::const_iterator tile_it(segments_per_tile.begin());
@@ -213,28 +207,6 @@ void insert_bottomlines(map< uint32, set< Line_Segment > >& segments_per_tile)
 
 void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
-/*  Zieldatenstruktur
-    Head: (Id, waylike Coord)
-    Data: (Coord, Type/Significant_Bits)
-    später zweite Tabelle:
-    Head: (Id, waylike Coord)
-    Data: (Coord, Segment)
-    
-    1. Schritt: Prüfe Parität der Nodes, Anwesenheit der Nodes
-    2. Schritt: Trage Segmente in map< uint32, map< Segment, south_to_north > > segments_in_tile ein
-    3. Schritt: rekursiv
-    Wenn leer
-    - wenn südlicher Anschluss drin ist, auch drin
-    - sonst draußen
-    return
-    (also nicht leer)
-    Wenn kein Blatt
-    - verzweige nach unten
-    - wenn alle vier drin, vereinige
-    sonst
-    - durchlaufe mit Sweep-Line die Segmente
-    - trage einen ggf. enthaltenen Teil nach recht und oben in die Nachbarsegmente ein*/
-  
   set< Node > nodes;
   set< Way > ways;
   set< Relation_ > relations;
@@ -248,37 +220,9 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   }
   const set< Node >& in_nodes(mit->second.get_nodes());
   const set< Way >& in_ways(mit->second.get_ways());
+  bool data_is_valid(true);
   
-  map< uint32, set< Line_Segment > > segments_per_tile;
-  for (set< Way >::const_iterator it(in_ways.begin());
-       it != in_ways.end(); ++it)
-  {
-    for (vector< uint32 >::const_iterator nit(it->members.begin()); nit != it->members.end(); )
-    {
-      set< Node >::const_iterator nit1(in_nodes.find(Node(*nit, 0, 0)));
-      if (++nit == it->members.end())
-	break;
-      set< Node >::const_iterator nit2(in_nodes.find(Node(*nit, 0, 0)));
-      if ((nit1 != in_nodes.end()) && (nit2 != in_nodes.end()))
-	insert_segment(segments_per_tile, *nit1, *nit2);
-    }
-  }
-  
-  insert_bottomlines(segments_per_tile);
-  
-  //TEMP
-  for (map< uint32, set< Line_Segment > >::const_iterator
-       it(segments_per_tile.begin());
-       it != segments_per_tile.end(); ++it)
-  {
-    cout<<hex<<it->first<<'\n';
-    for (set< Line_Segment >::const_iterator it2(it->second.begin());
-	 it2 != it->second.end(); ++it2)
-      cout<<hex<<(it2->west_lat + 90*10*1000*1000)<<'\t'<<it2->west_lon<<'\t'<<(it2->east_lat + 90*10*1000*1000)<<'\t'<<it2->east_lon<<'\n';
-    cout<<'\n';
-  }
-  return;
-  
+  //detect pivot element
   mit = maps.find(tags);
   int pivot_id(0), pivot_type(0);
   if (mit != maps.end())
@@ -300,6 +244,7 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     }
   }
   
+  //check whether the area already exists
   ostringstream temp;
   temp<<"select id from areas where pivot = "<<pivot_id
       <<" and pivot_type = "<<pivot_type;
@@ -347,156 +292,102 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     return;
   }
   
-  Area area(int_query(mysql, "select max(id) from areas")+1);
-  
-  vector< set< int > > lat_intersections(179);
-  set< int > node_parity_control;
+  //check node parity
+  set< uint32 > node_parity_control;
   for (set< Way >::const_iterator it(in_ways.begin());
        it != in_ways.end(); ++it)
   {
-    set< Node >::const_iterator onit(in_nodes.end());
-    vector< uint32 >::const_iterator iit(it->members.begin());
-    if (iit != it->members.end())
-    {
-      if (node_parity_control.find(*iit) != node_parity_control.end())
-	node_parity_control.erase(*iit);
-      else
-	node_parity_control.insert(*iit);
-      onit = in_nodes.find(Node(*iit, 0, 0));
-      if (onit == in_nodes.end())
-      {
-	temp.str("");
-	temp<<"Make-Area: Node "<<*iit<<" referred by way "<<it->id
-	    <<" is not contained in set \""<<input<<"\".\n";
-	runtime_error(temp.str(), cout);
-	maps[output] = Set(nodes, ways, relations, areas);
-	return;
-      }
-      ++iit;
-    }
-    for (; iit != it->members.end(); ++iit)
-    {
-      set< Node >::const_iterator nnit(in_nodes.find(Node(*iit, 0, 0)));
-      if (nnit == in_nodes.end())
-      {
-	temp.str("");
-	temp<<"Make-Area: Node "<<*iit<<" referred by way "<<it->id
-	    <<" is not contained in set \""<<input<<"\".\n";
-	runtime_error(temp.str(), cout);
-	maps[output] = Set(nodes, ways, relations, areas);
-	return;
-      }
-      if (calc_idx(onit->lat) != calc_idx(nnit->lat))
-      {
-	if (calc_idx(onit->lat) < calc_idx(nnit->lat))
-	{
-	  area_insert(area, onit->lat, onit->lon, (calc_idx(onit->lat)+1)*10000000,
-		      onit->lon + (long long)(nnit->lon - onit->lon)
-			  *((calc_idx(onit->lat)+1)*10000000 - onit->lat)/(nnit->lat - onit->lat));
-	  lat_intersections[calc_idx(onit->lat)+90].insert
-	      (onit->lon + (long long)(nnit->lon - onit->lon)
-	      *((calc_idx(onit->lat)+1)*10000000 - onit->lat)/(nnit->lat - onit->lat));
-	  for (int i(calc_idx(onit->lat)+1); i < calc_idx(nnit->lat); ++i)
-	  {
-	    area_insert(area, i*10000000,
-			onit->lon + (long long)(nnit->lon - onit->lon)
-			    *(i*10000000 - onit->lat)/(nnit->lat - onit->lat),
-			      (i+1)*10000000,
-			onit->lon + (long long)(nnit->lon - onit->lon)
-			    *((i+1)*10000000 - onit->lat)/(nnit->lat - onit->lat));
-	    lat_intersections[i+90].insert
-		(onit->lon + (long long)(nnit->lon - onit->lon)
-		*((i+1)*10000000 - onit->lat)/(nnit->lat - onit->lat));
-	  }
-	  area_insert(area, calc_idx(nnit->lat)*10000000,
-		      onit->lon + (long long)(nnit->lon - onit->lon)
-			  *(calc_idx(nnit->lat)*10000000 - onit->lat)/(nnit->lat - onit->lat),
-			    nnit->lat, nnit->lon);
-	}
-	else
-	{
-	  area_insert(area, nnit->lat, nnit->lon, (calc_idx(nnit->lat)+1)*10000000,
-		      nnit->lon + (long long)(onit->lon - nnit->lon)
-			  *((calc_idx(nnit->lat)+1)*10000000 - nnit->lat)/(onit->lat - nnit->lat));
-	  lat_intersections[calc_idx(nnit->lat)+90].insert
-	      (nnit->lon + (long long)(onit->lon - nnit->lon)
-	      *((calc_idx(nnit->lat)+1)*10000000 - nnit->lat)/(onit->lat - nnit->lat));
-	  for (int i(calc_idx(nnit->lat)+1); i < calc_idx(onit->lat); ++i)
-	  {
-	    area_insert(area, i*10000000,
-			nnit->lon + (long long)(onit->lon - nnit->lon)
-			    *(i*10000000 - nnit->lat)/(onit->lat - nnit->lat),
-			      (i+1)*10000000,
-			       nnit->lon + (long long)(onit->lon - nnit->lon)
-				   *((i+1)*10000000 - nnit->lat)/(onit->lat - nnit->lat));
-	    lat_intersections[i+90].insert
-		(nnit->lon + (long long)(onit->lon - nnit->lon)
-		*((i+1)*10000000 - nnit->lat)/(onit->lat - nnit->lat));
-	  }
-	  area_insert(area, calc_idx(onit->lat)*10000000,
-		      nnit->lon + (long long)(onit->lon - nnit->lon)
-			  *(calc_idx(onit->lat)*10000000 - nnit->lat)/(onit->lat - nnit->lat),
-			    onit->lat, onit->lon);
-	}
-      }
-      else
-	area_insert(area, onit->lat, onit->lon, nnit->lat, nnit->lon);
-      onit = nnit;
-    }
-    if (it->members.size() > 0)
-    {
-      if (node_parity_control.find(onit->id) != node_parity_control.end())
-	node_parity_control.erase(onit->id);
-      else
-	node_parity_control.insert(onit->id);
-    }
+    if (it->members.size() < 2)
+      continue;
+    pair< set< uint32 >::iterator, bool > npp(node_parity_control.insert
+	(it->members.front()));
+	if (!npp.second)
+	  node_parity_control.erase(npp.first);
+	npp = node_parity_control.insert
+	    (it->members.back());
+	if (!npp.second)
+	  node_parity_control.erase(npp.first);
   }
   if (node_parity_control.size() > 0)
   {
-    temp.str("");
+    ostringstream temp;
     temp<<"Make-Area: Node "<<*(node_parity_control.begin())
 	<<" is contained in an odd number of ways.\n";
     runtime_error(temp.str(), cout);
-    maps[output] = Set(nodes, ways, relations, areas);
-    return;
+    data_is_valid = false;
   }
-  for (unsigned int i(0); i < 179; ++i)
+  
+  //split and collect segments into their respective tiles
+  map< uint32, set< Line_Segment > > segments_per_tile;
+  for (set< Way >::const_iterator it(in_ways.begin());
+       it != in_ways.end(); ++it)
   {
-    int from(2000000000);
-    for (set< int >::const_iterator it(lat_intersections[i].begin());
-	 it != lat_intersections[i].end(); ++it)
+    vector< uint32 >::const_iterator nit(it->members.begin());
+    if (nit == it->members.end())
+      continue;
+    set< Node >::const_iterator nit1(in_nodes.find(Node(*nit, 0, 0)));
+    
+    //protect against missing nodes: ensure that nit1 refers to a valid node
+    while ((nit1 == in_nodes.end()) && (nit != it->members.end()))
     {
-      if (from == 2000000000)
-	from = *it;
+      report_missing_node(*it, *nit, input);
+      data_is_valid = false;
+      if (++nit == it->members.end())
+	break;
+      nit1 = in_nodes.find(Node(*nit, 0, 0));
+    }
+    if (nit == it->members.end())
+      continue;
+    
+    for (++nit; nit != it->members.end(); ++nit)
+    {
+      set< Node >::const_iterator nit2(in_nodes.find(Node(*nit, 0, 0)));
+      if (nit2 == in_nodes.end())
+      {
+	report_missing_node(*it, *nit, input);
+	data_is_valid = false;
+      }
       else
       {
-	if (floor(((double)from)/100000) == floor(((double)(*it))/100000))
-	  area.segments.insert
-  	(Line_Segment((i-89)*10000000, (int)(((double)(from))/10000000),
-  	              (i-89)*10000000, (int)(((double)(*it))/10000000)));
-	else
-	{
-	  area.segments.insert(Line_Segment
-	      ((i-89)*10000000, from,
-		(i-89)*10000000, ((int)(floor(((double)from)/100000))+1)*100000));
-	  for (int j((int)(floor(((double)from)/100000))+1);
-		      j < floor(((double)(*it))/100000); ++j)
-	    area.segments.insert(Line_Segment
-		((i-89)*10000000, j*100000, (i-89)*10000000, (j+1)*100000));
-	  area.segments.insert(Line_Segment
-	      ((i-89)*10000000, ((int)floor(((double)(*it))/100000))*100000,
-		(i-89)*10000000, *it));
-	}
-	from = 2000000000;
+	insert_segment(segments_per_tile, *nit1, *nit2);
+	nit1 = nit2;
       }
     }
   }
+  
+  if (!data_is_valid)
+  {
+    maps[output] = Set(nodes, ways, relations, areas);
+    return;
+  }
+  
+  insert_bottomlines(segments_per_tile);
+  
+  //TEMP
+/*  uint32 total_size(0);
+  for (map< uint32, set< Line_Segment > >::const_iterator
+       it(segments_per_tile.begin());
+       it != segments_per_tile.end(); ++it)
+  {
+    cout<<hex<<it->first<<'\t'<<dec<<it->second.size()<<'\n';
+    total_size += it->second.size();
+    for (set< Line_Segment >::const_iterator it2(it->second.begin());
+	 it2 != it->second.end(); ++it2)
+      cout<<hex<<(it2->west_lat + 90*10*1000*1000)<<'\t'<<it2->west_lon<<'\t'<<(it2->east_lat + 90*10*1000*1000)<<'\t'<<it2->east_lon<<'\n';
+    cout<<'\n';
+  }
+  cout<<"sum\t"<<total_size<<"\n\n";*/
+/*  return;*/
+  
+  Area area(int_query(mysql, "select max(id) from areas")+1);
   
   temp.str("");
   temp<<"insert areas values ("<<area.id<<", "<<pivot_id<<", "<<pivot_type<<')';
   mysql_query(mysql, temp.str().c_str());
   
   ofstream area_ways_out("/tmp/db_area_area_ways.tsv");
+  if (!area_ways_out)
+    throw File_Error(0, "/tmp/db_area_area_ways.tsv", "make_area_statement:1");
   for (set< Way >::const_iterator it(in_ways.begin());
        it != in_ways.end(); ++it)
     area_ways_out<<area.id<<'\t'<<it->id<<'\n';
@@ -504,11 +395,17 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   mysql_query(mysql, "load data local infile '/tmp/db_area_area_ways.tsv' into table area_ways");
   
   ofstream area_segments_out("/tmp/db_area_area_segments.tsv");
-  for (set< Line_Segment >::const_iterator it(area.segments.begin());
-       it != area.segments.end(); ++it)
-    area_segments_out<<area.id<<'\t'<<calc_idx(it->west_lat)<<'\t'
-	<<it->west_lat<<'\t'<<it->west_lon<<'\t'
-	<<it->east_lat<<'\t'<<it->east_lon<<'\n';
+  if (!area_segments_out)
+    throw File_Error(0, "/tmp/db_area_area_segments.tsv", "make_area_statement:2");
+  for (map< uint32, set< Line_Segment > >::const_iterator sit(segments_per_tile.begin());
+       sit != segments_per_tile.end(); ++sit)
+  {
+    for (set< Line_Segment >::const_iterator it(sit->second.begin());
+	 it != sit->second.end(); ++it)
+      area_segments_out<<area.id<<'\t'<<sit->first<<'\t'
+	  <<it->west_lat<<'\t'<<it->west_lon<<'\t'
+	  <<it->east_lat<<'\t'<<it->east_lon<<'\n';
+  }
   area_segments_out.close();
   mysql_query(mysql, "load data local infile '/tmp/db_area_area_segments.tsv' into table area_segments");
   
@@ -584,7 +481,6 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       <<stack.str()<<"')";
   mysql_query(mysql, temp.str().c_str());
   
-  area.segments.clear(); //TODO
   areas.insert(area);
   maps[output] = Set(nodes, ways, relations, areas);
 }

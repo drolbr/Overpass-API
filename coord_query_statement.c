@@ -65,9 +65,7 @@ void Coord_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
   ostringstream temp;
   temp<<"select id, min_lat, min_lon, max_lat, max_lon from area_segments "
-      <<"where lat_idx = "<<calc_idx(lat)<<' '
-      <<"and min_lon > "<<lon - 100000<<' '
-      <<"and min_lon <= "<<lon;
+      <<"where ll_idx = "<<(ll_idx(lat, lon) & 0xffffff55);
   
   set< Area > areas;
   maps[output] = Set(set< Node >(), set< Way >(), set< Relation_ >(),
