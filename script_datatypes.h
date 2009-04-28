@@ -242,6 +242,27 @@ inline int ll_idx(int lat, int lon)
   return result;
 }
 
+inline int32 lat_of_ll(uint32 ll_idx_)
+{
+  int32 lat(0);
+  lat |= (ll_idx_<<1)&0x40000000;
+  lat |= (ll_idx_<<2)&0x20000000;
+  lat |= (ll_idx_<<3)&0x10000000;
+  lat |= (ll_idx_<<4)&0x08000000;
+  lat |= (ll_idx_<<5)&0x04000000;
+  lat |= (ll_idx_<<6)&0x02000000;
+  lat |= (ll_idx_<<7)&0x01000000;
+  lat |= (ll_idx_<<8)&0x00800000;
+  lat |= (ll_idx_<<9)&0x00400000;
+  lat |= (ll_idx_<<10)&0x00200000;
+  lat |= (ll_idx_<<11)&0x00100000;
+  lat |= (ll_idx_<<12)&0x00080000;
+  lat |= (ll_idx_<<13)&0x00040000;
+  lat |= (ll_idx_<<14)&0x00020000;
+  lat |= (ll_idx_<<15)&0x00010000;
+  return (lat -= 90*10*1000*1000);
+}
+
 inline int in_lat_lon(const char* input)
 {
   double val(atof(input));

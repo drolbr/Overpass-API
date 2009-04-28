@@ -126,9 +126,12 @@ void insert_segment
 	    (make_pair(
 	     (i + (lastlat>>16))<<16,
 	     (int32)(londiff*(((i + (lastlat>>16))<<16) - lastlat)/latdiff + lastlon)));
-	segments_per_tile[ll_idx(last_coord.first - 90*10*1000*1000, last_coord.second)].insert
-	    (Line_Segment(last_coord.first - 90*10*1000*1000, last_coord.second,
-	     cur_coord.first - 90*10*1000*1000, cur_coord.second));
+	pair< set< Line_Segment >::iterator, bool > sp
+	    (segments_per_tile[ll_idx(last_coord.first - 90*10*1000*1000, last_coord.second)].insert
+		(Line_Segment(last_coord.first - 90*10*1000*1000, last_coord.second,
+		 cur_coord.first - 90*10*1000*1000, cur_coord.second)));
+	if (!sp.second)
+	  segments_per_tile[ll_idx(last_coord.first - 90*10*1000*1000, last_coord.second)].erase(sp.first);
 	last_coord = cur_coord;
       }
     }
@@ -144,16 +147,57 @@ void insert_segment
 	    (make_pair(
 	     (i + (lastlat>>16))<<16,
 	     (int32)(londiff*(((i + (lastlat>>16))<<16) - lastlat)/latdiff + lastlon)));
-	segments_per_tile[ll_idx(cur_coord.first - 90*10*1000*1000, last_coord.second)].insert
+	pair< set< Line_Segment >::iterator, bool > sp
+	    (segments_per_tile[ll_idx(cur_coord.first - 90*10*1000*1000, last_coord.second)].insert
 	    (Line_Segment(last_coord.first - 90*10*1000*1000, last_coord.second,
-	     cur_coord.first - 90*10*1000*1000, cur_coord.second));
+	     cur_coord.first - 90*10*1000*1000, cur_coord.second)));
+	if (!sp.second)
+	  segments_per_tile[ll_idx(cur_coord.first - 90*10*1000*1000, last_coord.second)].erase(sp.first);
 	last_coord = cur_coord;
       }
     }
-    segments_per_tile[ll_idx(it->first - 90*10*1000*1000, last_coord.second)].insert
+    pair< set< Line_Segment >::iterator, bool > sp
+	(segments_per_tile[ll_idx(it->first - 90*10*1000*1000, last_coord.second)].insert
 	(Line_Segment(last_coord.first - 90*10*1000*1000, last_coord.second,
-	 it->first - 90*10*1000*1000, it->second));
+	 it->first - 90*10*1000*1000, it->second)));
+    if (!sp.second)
+      segments_per_tile[ll_idx(it->first - 90*10*1000*1000, last_coord.second)].erase(sp.first);
     last_coord = *it;
+  }
+}
+
+void insert_bottomlines(map< uint32, set< Line_Segment > >& segments_per_tile)
+{
+  map< uint32, set< Line_Segment > >::const_iterator tile_it(segments_per_tile.begin());
+  while (tile_it != segments_per_tile.end())
+  {
+    set< int32 > lat_projections;
+    for (set< Line_Segment >::const_iterator it(tile_it->second.begin());
+	 it != tile_it->second.end(); ++it)
+    {
+      pair< set< int32 >::iterator, bool > lip(lat_projections.insert(it->west_lon));
+      if (!lip.second)
+	lat_projections.erase(lip.first);
+      lip = lat_projections.insert(it->east_lon);
+      if (!lip.second)
+	lat_projections.erase(lip.first);
+    }
+    uint32 cur_tile(tile_it->first);
+    if (!lat_projections.empty())
+    {
+      int32 cur_lat(lat_of_ll(cur_tile) + 65536);
+      map< uint32, set< Line_Segment > >::iterator upper_tile_it
+	  (segments_per_tile.insert(make_pair(ll_idx(cur_lat, tile_it->second.begin()->west_lon),
+	   set< Line_Segment >())).first);
+      set< int32 >::const_iterator it(lat_projections.begin());
+      while (it != lat_projections.end())
+      {
+	uint32 west_lon(*it);
+	upper_tile_it->second.insert(Line_Segment(cur_lat, west_lon, cur_lat, *(++it)));
+	++it;
+      }
+    }
+    tile_it = segments_per_tile.upper_bound(cur_tile);
   }
 }
 
@@ -209,6 +253,8 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	insert_segment(segments_per_tile, *nit1, *nit2);
     }
   }
+  
+  insert_bottomlines(segments_per_tile);
   
   //TEMP
   for (map< uint32, set< Line_Segment > >::const_iterator
