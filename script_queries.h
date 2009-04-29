@@ -22,6 +22,9 @@ set< uint32 >& multiint_query(MYSQL* mysql, string query, set< uint32 >& result_
 
 set< Area >& multiArea_query(MYSQL* mysql, string query, int lat, int lon, set< Area >& result_set);
 
+map< uint32, set< Line_Segment > >& singleArea_query
+    (MYSQL* mysql, string query, map< uint32, set< Line_Segment > >& result_set);
+
 set< uint32 >& multiint_to_multiint_query
     (MYSQL* mysql, string prefix, string suffix, const set< uint32 >& source, set< uint32 >& result_set);
     

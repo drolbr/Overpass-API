@@ -156,6 +156,13 @@ int main(int argc, char *argv[])
   
   for (map< string, int >::const_iterator it(versions.begin()); it != versions.end(); ++it)
   {
+    set_debug_mode(VERBOSE);
+  
+    //TEMP
+    ostringstream temp;
+    temp<<"Entering Rule "<<it->first;
+    runtime_remark(temp.str(), cout);
+    
     string xml_raw("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm-script>");
     xml_raw += bodys[it->first] + "</osm-script>\n";
     
@@ -166,9 +173,9 @@ int main(int argc, char *argv[])
     prepare_caches(mysql);
   
     map< string, Set > maps;
-    for (vector< Statement* >::const_iterator it(statement_stack.begin());
-	 it != statement_stack.end(); ++it)
-      (*it)->execute(mysql, maps);
+    for (vector< Statement* >::const_iterator it2(statement_stack.begin());
+	 it2 != statement_stack.end(); ++it2)
+      (*it2)->execute(mysql, maps);
   
     statement_stack.clear();
   }

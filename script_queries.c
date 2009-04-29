@@ -226,6 +226,28 @@ set< Area >& multiArea_query(MYSQL* mysql, string query, int lat, int lon, set< 
   return result_set;
 }
 
+map< uint32, set< Line_Segment > >& singleArea_query
+    (MYSQL* mysql, string query, map< uint32, set< Line_Segment > >& result_set)
+{
+  MYSQL_RES* result(mysql_query_use_wrapper(mysql, query));
+  if (!result)
+    return result_set;
+  
+  MYSQL_ROW row(mysql_fetch_row(result));
+  while ((row) && (row[0]) && (row[1]) && (row[2]) && (row[3]) && (row[4]))
+  {
+    result_set[(uint32)atoi(row[0])].insert(Line_Segment
+	(atoi(row[1]), atoi(row[2]), atoi(row[3]), atoi(row[4])));
+    row = mysql_fetch_row(result);
+  }
+  
+  while (mysql_fetch_row(result))
+    ;
+  mysql_free_result(result);
+  
+  return result_set;
+}
+
 set< uint32 >& multiint_to_multiint_query
     (MYSQL* mysql, string prefix, string suffix, const set< uint32 >& source, set< uint32 >& result_set)
 {

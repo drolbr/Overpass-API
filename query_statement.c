@@ -22,6 +22,7 @@ using namespace std;
 const unsigned int QUERY_NODE = 1;
 const unsigned int QUERY_WAY = 2;
 const unsigned int QUERY_RELATION = 3;
+// const unsigned int QUERY_AREA = 4;
 
 void Query_Statement::set_attributes(const char **attr)
 {
@@ -39,12 +40,16 @@ void Query_Statement::set_attributes(const char **attr)
     type = QUERY_WAY;
   else if (attributes["type"] == "relation")
     type = QUERY_RELATION;
+/*  else if (attributes["type"] == "area")
+    type = QUERY_AREA;*/
   else
   {
     type = 0;
     ostringstream temp;
     temp<<"For the attribute \"type\" of the element \"query\""
 	<<" the only allowed values are \"node\", \"way\" or \"relation\".";
+/*    temp<<"For the attribute \"type\" of the element \"query\""
+	<<" the only allowed values are \"node\", \"way\", \"relation\" or \"area\".";*/
     add_static_error(temp.str());
   }
 }
@@ -110,7 +115,7 @@ void Query_Statement::forecast(MYSQL* mysql)
       sf_out.node_count = key_value_counts.begin()->first;
     declare_used_time(24000 + sf_out.node_count);
   }
-  if (type == QUERY_WAY)
+  else if (type == QUERY_WAY)
   {
     map< uint, pair< string, string > > key_value_counts;
     for (vector< pair< string, string > >::const_iterator it(key_values.begin());
@@ -154,7 +159,7 @@ void Query_Statement::forecast(MYSQL* mysql)
     
     declare_used_time(90000 + sf_out.way_count);
   }
-  if (type == QUERY_RELATION)
+  else if (type == QUERY_RELATION)
   {
     map< uint, pair< string, string > > key_value_counts;
     for (vector< pair< string, string > >::const_iterator it(key_values.begin());
@@ -197,6 +202,17 @@ void Query_Statement::forecast(MYSQL* mysql)
       sf_out.relation_count = key_value_counts.begin()->first;
     declare_used_time(100 + sf_out.relation_count);
   }
+/*  else if (type == QUERY_AREA)
+  {
+    if (key_value_counts.empty())
+    {
+      sf_out.area_count = 100*1000;
+      add_sanity_error("A query with empty conditions is not allowed.");
+    }
+    else
+      sf_out.area_count = 15;
+    declare_used_time(30*1000);
+  }*/
   finish_statement_forecast();
     
   display_full();

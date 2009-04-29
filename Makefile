@@ -1,4 +1,5 @@
 stmts = \
+area_query_$(suffix) \
 bbox_query_$(suffix) \
 coord_query_$(suffix) \
 conflict_$(suffix) \

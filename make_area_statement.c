@@ -197,7 +197,8 @@ void insert_bottomlines(map< uint32, set< Line_Segment > >& segments_per_tile)
       while (it != lat_projections.end())
       {
 	uint32 west_lon(*it);
-	upper_tile_it->second.insert(Line_Segment(cur_lat, west_lon, cur_lat, *(++it)));
+	upper_tile_it->second.insert(Line_Segment
+	    (- 100*10*1000*1000, west_lon, - 100*10*1000*1000, *(++it)));
 	++it;
       }
     }
@@ -301,12 +302,12 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       continue;
     pair< set< uint32 >::iterator, bool > npp(node_parity_control.insert
 	(it->members.front()));
-	if (!npp.second)
-	  node_parity_control.erase(npp.first);
-	npp = node_parity_control.insert
-	    (it->members.back());
-	if (!npp.second)
-	  node_parity_control.erase(npp.first);
+    if (!npp.second)
+      node_parity_control.erase(npp.first);
+    npp = node_parity_control.insert
+    	(it->members.back());
+    if (!npp.second)
+      node_parity_control.erase(npp.first);
   }
   if (node_parity_control.size() > 0)
   {
