@@ -151,9 +151,9 @@ inline bool operator<(const Line_Segment& line_segment_1, const Line_Segment& li
 struct Area
 {
   public:
-    Area(int id_) : id(id_) {}
+    Area(uint32 id_) : id(id_) {}
     
-    const int id;
+    const uint32 id;
     //set< Line_Segment > segments;
 };
 

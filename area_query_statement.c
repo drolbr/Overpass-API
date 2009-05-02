@@ -26,7 +26,7 @@ void Area_Query_Statement::set_attributes(const char **attr)
   
   output = attributes["into"];
   
-  area_ref = (unsigned int)atol(attributes["ref"].c_str());
+  area_ref = (uint32)atoll(attributes["ref"].c_str());
   if (area_ref == 0)
   {
     ostringstream temp;

@@ -152,12 +152,12 @@ set< Area >& multiArea_query(MYSQL* mysql, string query, int lat, int lon, set< 
   if (!result)
     return result_set;
 	
-  map< int, bool > area_cands;
-  set< int > area_definitives;
+  map< uint32, bool > area_cands;
+  set< uint32 > area_definitives;
   MYSQL_ROW row(mysql_fetch_row(result));
   while ((row) && (row[0]) && (row[1]) && (row[2]) && (row[3]) && (row[4]))
   {
-    int id(atoi(row[0]));
+    uint32 id(atoll(row[0]));
     int min_lon(atoi(row[2]));
     int max_lon(atoi(row[4]));
     if (max_lon > lon)
@@ -214,10 +214,10 @@ set< Area >& multiArea_query(MYSQL* mysql, string query, int lat, int lon, set< 
   while (mysql_fetch_row(result))
     ;
   mysql_free_result(result);
-  for (set< int >::const_iterator it(area_definitives.begin());
+  for (set< uint32 >::const_iterator it(area_definitives.begin());
        it != area_definitives.end(); ++it)
     result_set.insert(Area(*it));
-  for (map< int, bool >::const_iterator it(area_cands.begin());
+  for (map< uint32, bool >::const_iterator it(area_cands.begin());
        it != area_cands.end(); ++it)
   {
     if (it->second)

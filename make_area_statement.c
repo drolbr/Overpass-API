@@ -364,23 +364,12 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   
   insert_bottomlines(segments_per_tile);
   
-  //TEMP
-/*  uint32 total_size(0);
-  for (map< uint32, set< Line_Segment > >::const_iterator
-       it(segments_per_tile.begin());
-       it != segments_per_tile.end(); ++it)
-  {
-    cout<<hex<<it->first<<'\t'<<dec<<it->second.size()<<'\n';
-    total_size += it->second.size();
-    for (set< Line_Segment >::const_iterator it2(it->second.begin());
-	 it2 != it->second.end(); ++it2)
-      cout<<hex<<(it2->west_lat + 90*10*1000*1000)<<'\t'<<it2->west_lon<<'\t'<<(it2->east_lat + 90*10*1000*1000)<<'\t'<<it2->east_lon<<'\n';
-    cout<<'\n';
-  }
-  cout<<"sum\t"<<total_size<<"\n\n";*/
-/*  return;*/
-  
-  Area area(int_query(mysql, "select max(id) from areas")+1);
+  uint32 area_id(pivot_id);
+  if (pivot_type == WAY)
+    area_id += 2400*1000*1000;
+  else if (pivot_type == RELATION)
+    area_id += 3600*1000*1000;
+  Area area(area_id);
   
   temp.str("");
   temp<<"insert areas values ("<<area.id<<", "<<pivot_id<<", "<<pivot_type<<')';

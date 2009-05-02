@@ -276,14 +276,14 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	MYSQL_ROW row(mysql_fetch_row(result));
 	while ((row) && (row[0]))
 	{
-	  int id(atoi(row[0]));
+	  uint32 id(atoll(row[0]));
 	  while (it2->id < id)
 	  {
 	    out_area(*it2);
 	    ++it2;
 	  }
 	  out_area(*it2, false);
-	  while ((row) && (row[0]) && (it2->id == atoi(row[0])))
+	  while ((row) && (row[0]) && (it2->id == (uint32)atoll(row[0])))
 	  {
 	    if ((row[1]) && (row[2]))
 	      cout<<"  <tag k=\""<<row[1]<<"\" v=\""<<row[2]<<"\"/>\n";

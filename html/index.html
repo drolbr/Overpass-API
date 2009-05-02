@@ -32,6 +32,7 @@ offene Probleme:
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.update_rule">/api/update_rule</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.status">/api/status</a><br/>
 <a href="#chapter.statements">Statements</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.area_query">area-query</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.conflict">conflict</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.coord_query">coord-query</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.detect_odd_nodes">detect-odd-nodes</a><br/>
@@ -39,6 +40,7 @@ offene Probleme:
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.id_query">id-query</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.item">item</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.make_area">make-area</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.osm_script">osm-script</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.print">print</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.query">query</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.recurse">recurse</a><br/>
@@ -49,6 +51,7 @@ offene Probleme:
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.control_flow">Control Flow</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.variables">Variables</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.other_sets">Other Sets in Scripts</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.flow_forecast">Flow Forecast</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.quotas">Limits and Quotas</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.database_layout">Database Layout</a><br/>
 <a href="#chapter.input_formats">Input Formats</a><br/>
@@ -56,6 +59,7 @@ offene Probleme:
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.payload">Payload</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.status_remarks">Status Remarks</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.hypertext_reports">Hypertext Reports</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.static_feedback">Static Error Feedback</a><br/>
 </p>
 
 <div>
@@ -108,9 +112,20 @@ The first command, <a href="#section.coord_query">&lt;coord-query lat="51.25" lo
 </div>
 
 <p>
+This is in general a two-step process. For the first step, determine the id of the area to download, e.g. from the result of a <a href="#section.coord_query">coord-query</a> like in the <a href="#section.reverse_gazetteer">above example</a>. Another way to determine the id is to take advantage of <a href="#section.data_structures">the way the areas obtain their id</a>:
+<ul>
+<li>An area based on a node has the same id as the node.</li>
+<li>An area based on a way has the the id of the way plus 2,400,000,000.</li>
+<li>An area based on a relation has the id of the relation plus 3,600,000,000.</li>
+</ul>
+For example, the area representing the German city "Wuppertal" has id 3,600,062,478 because its pivot element is the relation 62,478 describing the borders of Wuppertal. In particular this means that area ids are as stable as the ids in the OSM database.
+</p>
+
+<p>
+The second step is the script to actually download the area: This script will take 15-30 seconds before it gives a response depending on server load.<br/>
 <form action="api/interpreter" method="post" accept-charset="UTF-8">
   <textarea name="data" rows="8" cols="80">&lt;union&gt;
-  &lt;bbox-query n="51.5" s="51.1" w="7.0" e="7.3"/&gt;
+  &lt;area-query ref="3600062478"/&gt;
   &lt;recurse type="node-relation" into="rels"/&gt;
   &lt;recurse type="node-way"/&gt;
   &lt;recurse type="way-relation"/&gt;
@@ -119,6 +134,38 @@ The first command, <a href="#section.coord_query">&lt;coord-query lat="51.25" lo
 </textarea>
   <input type="submit" value="Download"/>
 </form><br/>
+Again, you can send this script also via any other <a href="#chapter.input_formats">way of submitting input</a> to <a href="#section.interpreter">/api/interpreter</a>. You will recieve a gzip-compressed XML-file in an <a href="#chapter.output_formats">adapted OSM format</a> that <a href="#section.payload">contains</a> all nodes that lie in this area (including all the nodes on the boundary), all ways that are referred from such a node and all relations that are referred by such a way or such a node.
+</p>
+
+<p>
+If you prefer to receive additionally all nodes any way refers to, you can change the script to: This script also will take some time before it gives a response depending on server load.<br/>
+<form action="api/interpreter" method="post" accept-charset="UTF-8">
+  <textarea name="data" rows="16" cols="80">&lt;osm-script timeout="180"&gt;
+
+&lt;union&gt;
+  &lt;area-query ref="3600062478"/&gt;
+  &lt;recurse type="node-relation" into="rels"/&gt;
+  &lt;recurse type="node-way"/&gt;
+  &lt;recurse type="way-relation"/&gt;
+&lt;/union&gt;
+&lt;union&gt;
+  &lt;item/&gt;
+  &lt;recurse type="way-node"/&gt;
+&lt;/union&gt;
+&lt;print mode="body"/&gt;
+
+&lt;/osm-script&gt;
+</textarea>
+  <input type="submit" value="Download"/>
+</form><br/>
+</p>
+
+<p>
+We briefly explain both scripts and start with the first one: The statement <a href="#section.union">&lt;union&gt;</a> <a href="#section.other_sets">collects</a> the output of the enclosed statements in line 2 to 6. The block starts with the query <a href="#section.area_query">&lt;area-query ref="3600062478"/&gt;</a>. This statement returns all the nodes that lie inside or on the border of the area with id given by the parameter ref and stores them in into the <a href="#section.variables">default set</a>. In the third line, <a href="#section.recurse">&lt;recurse type="node-relation" into="rels"/&gt;</a> returns all relations that have as member a node from the input, in this case the <a href="#section.variables">default set</a>, into the set "rels". As this happens within an <a href="#section.union">union</a>-block, the new content of the set "rels" is added to the result of the <a href="#section.union">union</a>-block as a whole. In the next line, <a href="#section.recurse">&lt;recurse type="node-way"/&gt;</a> puts into the <a href="#section.variables">default set</a> the ways that refer to at least one node from the <a href="#section.variables">default set</a>. In particular, the default set now contains only ways, the <a href="#section.union">union</a>-block has collected so far all nodes and ways and some relations. In the last line of the block, <a href="#section.recurse">&lt;recurse type="way-relation"/&gt;</a> puts into the <a href="#section.variables">default set</a> all relations that refer to at least one way from the <a href="#section.variables">default set</a> beforehand. The <a href="#section.union">union</a>-block again collects these relations. Now the <a href="#section.union">union</a>-block contains altogether the nodes within the area and the ways and relations that refer to such a node or way. As there is no output parameter given, this set is stored into the <a href="#section.variables">default set</a>. The statement after the block, <a href="#section.print">&lt;print mode="body"/&gt;</a> then prints the entire content of the <a href="#section.variables">default set</a> with all its details as specified by the value "body" of the parameter "mode".
+</p>
+
+<p>
+The second script differs from the first one in two aspects: It exhibits the root element <a href="#section.osm_script">&lt;osm-script timeout="180"&gt;</a> to change a global setting from its default: Without explicit timeout, the server <a href="#section.flow_forecast">forecasts</a> the runtime of the script and refuses its execution if it could take too much ressources. With a manual <a href="#section.quotas">timeout</a>, the script will be accepted regardless of its predicted runtime, but it will be aborted if it exceeeds its timeout. The second difference is the second <a href="#section.union">union</a>-block: The first statement <a href="#section.item">&lt;item/&gt;</a> just makes the current <a href="#section.variables">default set</a> part of the result of the <a href="#section.union">union</a>-block. The second statement <a href="#section.recurse">&lt;recurse type="way-node"/&gt;</a> replaces the <a href="#section.variables">default set</a> with the set of all nodes that are referred by the ways in the <a href="#section.variables">default set</a> beforehand. This result is collected by the <a href="#section.union">union</a>-block. Thus, the result now conatins all nodes that are referred by a way appearing in the set.
 </p>
 
 <div>
@@ -175,6 +222,7 @@ The first command, <a href="#section.coord_query">&lt;coord-query lat="51.25" lo
 </div>
 
 <p>
+<a href="#section.area_query">area-query</a><br/>
 <a href="#section.conflict">conflict</a><br/>
 <a href="#section.coord_query">coord-query</a><br/>
 <a href="#section.detect_odd_nodes">detect-odd-nodes</a><br/>
@@ -182,12 +230,18 @@ The first command, <a href="#section.coord_query">&lt;coord-query lat="51.25" lo
 <a href="#section.id_query">id-query</a><br/>
 <a href="#section.item">item</a><br/>
 <a href="#section.make_area">make-area</a><br/>
+<a href="#section.osm_script">osm-script</a><br/>
 <a href="#section.print">print</a><br/>
 <a href="#section.query">query</a><br/>
 <a href="#section.recurse">recurse</a><br/>
 <a href="#section.report">report</a><br/>
 <a href="#section.union">union</a><br/>
 </p>
+
+<div>
+<a id="section.area_query"/>
+<h3>area-query</h3>
+</div>
 
 <div>
 <a id="section.conflict"/>
@@ -222,6 +276,11 @@ The first command, <a href="#section.coord_query">&lt;coord-query lat="51.25" lo
 <div>
 <a id="section.make_area"/>
 <h3>make-area</h3>
+</div>
+
+<div>
+<a id="section.osm_script"/>
+<h3>osm-script</h3>
 </div>
 
 <div>
@@ -260,6 +319,7 @@ The first command, <a href="#section.coord_query">&lt;coord-query lat="51.25" lo
 <a href="#section.control_flow">Control Flow</a><br/>
 <a href="#section.variables">Variables</a><br/>
 <a href="#section.other_sets">Other Sets in Scripts</a><br/>
+<a href="#section.flow_forecast">Flow Forecast</a><br/>
 <a href="#section.quotas">Limits and Quotas</a><br/>
 <a href="#section.database_layout">Database Layout</a><br/>
 </p>
@@ -282,6 +342,11 @@ The first command, <a href="#section.coord_query">&lt;coord-query lat="51.25" lo
 <div>
 <a id="section.other_sets"/>
 <h3>Other Sets in Scripts</h3>
+</div>
+
+<div>
+<a id="section.flow_forecast"/>
+<h3>Flow Forecast</h3>
 </div>
 
 <div>
@@ -311,6 +376,7 @@ The first command, <a href="#section.coord_query">&lt;coord-query lat="51.25" lo
 <a href="#section.payload">Payload</a><br/>
 <a href="#section.status_remarks">Status Remarks</a><br/>
 <a href="#section.hypertext_reports">Hypertext Reports</a><br/>
+<a href="#section.static_feedback">Static Error Feedback</a><br/>
 </p>
 
 <div>
@@ -326,6 +392,11 @@ The first command, <a href="#section.coord_query">&lt;coord-query lat="51.25" lo
 <div>
 <a id="section.hypertext_reports"/>
 <h3>Hypertext Reports</h3>
+</div>
+
+<div>
+<a id="section.static_feedback"/>
+<h3>Static Error Feedback</h3>
 </div>
 
 </body>
