@@ -143,8 +143,10 @@ int main(int argc, char *argv[])
   temp<<"')";
   mysql_query(mysql, temp.str().c_str());
   
+  set_debug_mode(VERBOSE);
   temp.str("");
-  temp<<"Rule '"<<rule_name<<"' successfully updated.";
+  temp<<"Rule '"<<rule_name<<"' successfully added with version "
+      <<body_id<<".";
   runtime_remark(temp.str(), cout);
   
   set_rule(body_id, rule_name);

@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
   if (!rule_replace)
     add_static_error("Updating a rule requires providing its last version-id.");
   if (rule_version)
-    add_static_error("Providing a version-id while updating a rule is not allowed.");
+    add_static_error("Providing an arbitrary version-id while updating a rule is not allowed.");
   
   xml_raw = xml_raw.substr(xml_raw.find("<osm-script"));
   xml_raw = xml_raw.substr(xml_raw.find('>') + 1);
@@ -150,8 +150,10 @@ int main(int argc, char *argv[])
   temp<<"')";
   mysql_query(mysql, temp.str().c_str());
   
+  set_debug_mode(VERBOSE);
   temp.str("");
-  temp<<"Rule '"<<rule_name<<"' successfully updated.";
+  temp<<"Rule '"<<rule_name<<"' successfully updated to version "
+      <<body_id<<".";
   runtime_remark(temp.str(), cout);
   
   //Undo old version of the rule

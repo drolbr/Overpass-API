@@ -12,7 +12,7 @@
     <recurse type="relation-way" from="rel"/>
     <recurse type="way-node"/>
   </union>
-  <make-area pivot="rel"/>
+  <make-area pivot="rel" into="odd"/>
   <detect-odd-nodes into="odd"/>
   <foreach from="odd" into="i">
     <union><item set="i"/><item set="rel"/></union>
@@ -33,7 +33,7 @@
     <recurse type="relation-way" from="rel"/>
     <recurse type="way-node"/>
   </union>
-  <make-area pivot="rel"/>
+  <make-area pivot="rel" into="odd"/>
   <detect-odd-nodes into="odd"/>
   <foreach from="odd" into="i">
     <union><item set="i"/><item set="rel"/></union>
