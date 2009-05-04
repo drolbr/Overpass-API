@@ -19,6 +19,20 @@ offene Probleme:
 //-->
 
 <p>
+<a href="#chapter.introduction">Introduction</a> -
+<a href="#chapter.use_cases">Use Cases</a> -
+<a href="#chapter.interface_calls">Interface Calls</a> -
+<a href="#chapter.statements">Statements</a> -
+<a href="#chapter.concepts">Concepts</a> -
+<a href="#chapter.input_formats">Input Formats</a> -
+<a href="#chapter.output_formats">Output Formats</a>
+</p>
+
+<div>
+<h2>Table of Contents</h2>
+</div>
+
+<p>
 <a href="#chapter.introduction">Introduction</a><br/>
 <a href="#chapter.use_cases">Use Cases</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.reverse_gazetteer">To which country belongs this location?</a><br/>
@@ -875,6 +889,68 @@ Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a hr
 </div>
 
 <p>
+Basically, the input is a complete XML document with root element <a href="#section.osm_script">osm-script</a>. There is no formal DTD but the allowed elements are exactly the statements as explained in the <a href="#chapter.statements">statement</a> chapter of this manual. This includes for each statement its allowed subelements, called substatements in <a href="#chapter.statements">this</a> context, and tags, called parameters in <a href="#chapter.statements">this</a> context. The XML syntax is modified in two ways: To make input as brief as possible, you can omit some parts of the XML code. To make input as flexible as possible, you can encode the input in different manners. In the following sections, we explain both modifications in detail with the simple script <code>&lt;print mode="body"/&gt;</code>
+</p>
+
+<p>
+You can always omit the file type declaration. For example, the input
+<form action="api/interpreter" method="post" accept-charset="UTF-8">
+  <textarea name="data" rows="7" cols="80">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;osm-script&gt;
+
+&lt;print mode="body"/&gt;
+
+&lt;/osm-script&gt;
+</textarea>
+  <input type="submit" value="Return nothing"/>
+</form><br/>
+and the input
+<form action="api/interpreter" method="post" accept-charset="UTF-8">
+  <textarea name="data" rows="6" cols="80">&lt;osm-script&gt;
+
+&lt;print mode="body"/&gt;
+
+&lt;/osm-script&gt;
+</textarea>
+  <input type="submit" value="Return nothing"/>
+</form><br/>
+are from the servers point of view equal. If you don't need to specify any parameters in the <a href="#section.osm_script">root element</a>, you can even omit the root element itself. So, even the input
+<form action="api/interpreter" method="post" accept-charset="UTF-8">
+  <textarea name="data" rows="2" cols="80">&lt;print mode="body"/&gt;
+</textarea>
+  <input type="submit" value="Return nothing"/>
+</form><br/>
+is for the server the same input as the above examples.
+</p>
+
+<p>
+We explain the different possible encodings. To make it possible to submit data via HTML forms, you can either send you data verbatim or prefix it by "<code>data=</code>" and escape all special characters to a sequence of a percent sign, followed by the value of the respective byte as hexdecimal number. Multi-byte characters should be expanded in a individual sequence for each byte. For example, the inputs
+<pre><code>
+&lt;print mode="body"/&gt;
+</code></pre>
+and
+<pre><code>
+data=%3Cprint%20mode=%22body%22/%3E
+</code></pre>
+and
+<pre><code>
+data=%3Cprint%20mode=%22body%22/%3E&amp;this_garbage_will_be_ignored
+</code></pre>
+and
+<pre><code>
+foo=bar&amp;data=%3Cprint%20mode=%22body%22/%3E&amp;this_garbage_will_be_ignored
+</code></pre>
+are equal. The transformation from the former to the latter is normally done by your browser or client program automatically or even from the users point of view unintentionally. So if you get a <a href="#section.static_feedback">encoding error</a>, try prefixing your script by "data=". The server tries to interpret your input verbatim if the first non-whitespace character found is a verbatim "&lt;", in all other cases it searches for a "data=" substring, takes and decodes the input from that position until the next verbatim "&amp;".
+</p>
+
+<p>
+We explain the different possible encodings. You can send your data by a HTTP GET request as well as by a HTTP POST request, with precedence for the GET payload if you send both simultaneously. To continue the above example, the URL<br/>
+<pre>  <a href="http://localhost/api/interpreter?data=%3Cprint%20mode=%22body%22/%3E">http://localhost/api/interpreter?data=%3Cprint%20mode=%22body%22/%3E</a></pre>
+is equal to any of the above queries.
+</p>
+
+<p>
+...
 </p>
 
 <div>
