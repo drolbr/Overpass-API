@@ -16,7 +16,7 @@ union_$(suffix)
 
 objects = expat_justparse_interface.o cgi-helper.o user_interface.o script_queries.o node_strings_file_io.o way_strings_file_io.o relation_strings_file_io.o script_tools.o vigilance_control.o $(stmts)
 executable_objects = script-interpreter.o add_rule.o dump_rules.o get_rule.o update_rule.o osm2load_infile.o
-executables = cgi-bin/interpreter cgi-bin/add_rule cgi-bin/get_rule cgi-bin/update_rule dump_rules load_rules import_osm osmy_vigilance update_database
+executables = cgi-bin/interpreter cgi-bin/add_rule cgi-bin/get_rule cgi-bin/update_rule dump_rules load_rules import_osm osmy_vigilance update_database bin/database_daemon bin/dispatcher
 tool_headers = expat_justparse_interface.h script_datatypes.h file_types.h raw_file_db.h node_strings_file_io.h way_strings_file_io.h relation_strings_file_io.h script_queries.h script_tools.h user_interface.h
 
 main: $(executables)
@@ -53,6 +53,12 @@ load_rules: $(objects) load_rules.o
 	
 osmy_vigilance: osmy_vigilance.c
 	g++ -o osmy_vigilance -O3 -Wall `mysql_config --include` osmy_vigilance.c `mysql_config --libs`
+	
+bin/dispatcher: dispatcher/dispatcher.c
+	g++ -o bin/dispatcher -O3 -Wall `mysql_config --include` dispatcher/dispatcher.c `mysql_config --libs`
+	
+bin/database_daemon: dispatcher/database_daemon.c
+	g++ -o bin/database_daemon -O3 -Wall `mysql_config --include` dispatcher/database_daemon.c `mysql_config --libs`
 	
 expat_justparse_interface.o: expat_justparse_interface.c expat_justparse_interface.h user_interface.h
 	g++ -c -O3 -Wall `mysql_config --include` expat_justparse_interface.c
