@@ -35,7 +35,7 @@ typedef unsigned long long uint64;
 
 //-----------------------------------------------------------------------------
 
-static string NODE_TAG_ID_STATS = (string)DATADIR + "node_tag_id_stats.dat";
+const static string NODE_TAG_ID_STATS = "node_tag_id_stats.dat";
 
 const unsigned int FLUSH_NODE_TAGS_INTERVAL = 32*1024*1024;
 const uint32 NODE_TAG_SORT_BUFFER_SIZE = 128*1024*1024;

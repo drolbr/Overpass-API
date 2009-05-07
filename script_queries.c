@@ -761,11 +761,13 @@ uint32 node_kv_to_count_query(string key, string value)
   set< uint32 > string_idxs_local;
   select_node_kv_to_ids(key, value, string_ids, string_ids, string_idxs_local);
   
-  int source_fd = open64(NODE_TAG_ID_STATS.c_str(), O_RDONLY);
+  int source_fd = open64((DATADIR + db_subdir + NODE_TAG_ID_STATS).c_str(),
+                         O_RDONLY);
   if (source_fd < 0)
   {
     ostringstream temp;
-    temp<<"open64: "<<errno<<' '<<NODE_TAG_ID_STATS<<" kv_to_count_query:1";
+    temp<<"open64: "<<errno<<' '
+        <<DATADIR + db_subdir + NODE_TAG_ID_STATS<<" kv_to_count_query:1";
     runtime_error(temp.str(), cout);
     return 0;
   }
@@ -964,11 +966,13 @@ uint32 way_kv_to_count_query(string key, string value)
   set< uint32 > string_idxs_local;
   select_way_kv_to_ids(key, value, string_ids, string_ids, string_idxs_local);
   
-  int source_fd = open64(WAY_TAG_ID_STATS.c_str(), O_RDONLY);
+  int source_fd = open64((DATADIR + db_subdir + WAY_TAG_ID_STATS).c_str(),
+                         O_RDONLY);
   if (source_fd < 0)
   {
     ostringstream temp;
-    temp<<"open64: "<<errno<<' '<<WAY_TAG_ID_STATS<<" way_kv_to_count_query:1";
+    temp<<"open64: "<<errno<<' '
+      <<DATADIR + db_subdir + WAY_TAG_ID_STATS<<" way_kv_to_count_query:1";
     runtime_error(temp.str(), cout);
     return 0;
   }
@@ -1163,11 +1167,14 @@ uint32 relation_kv_to_count_query(string key, string value)
   set< uint32 > string_idxs_local;
   select_relation_kv_to_ids(key, value, string_ids, string_ids, string_idxs_local);
   
-  int source_fd = open64(RELATION_TAG_ID_STATS.c_str(), O_RDONLY);
+  int source_fd = open64((DATADIR + db_subdir + RELATION_TAG_ID_STATS).c_str(),
+                         O_RDONLY);
   if (source_fd < 0)
   {
     ostringstream temp;
-    temp<<"open64: "<<errno<<' '<<RELATION_TAG_ID_STATS<<" relation_kv_to_count_query:1";
+    temp<<"open64: "<<errno<<' '
+      <<DATADIR + db_subdir + RELATION_TAG_ID_STATS
+      <<" relation_kv_to_count_query:1";
     runtime_error(temp.str(), cout);
     return 0;
   }

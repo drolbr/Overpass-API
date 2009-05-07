@@ -60,6 +60,8 @@ void end(const char *el)
     statement_stack.front()->add_final_text(get_parsed_text());
 }
 
+string db_subdir;
+
 int main(int argc, char *argv[])
 {
   string xml_raw(get_xml_raw());
@@ -81,9 +83,15 @@ int main(int argc, char *argv[])
   if (display_static_errors(cout, xml_raw))
     return 0;
   
+  string current_db(detect_active_database());
+  db_subdir = current_db;
+  if ((db_subdir.size() > 0) && (db_subdir[db_subdir.size()-1] != '/'))
+    db_subdir += '/';
+  
   mysql = mysql_init(NULL);
   
-  if (!mysql_real_connect(mysql, "localhost", "osm", "osm", "osm", 0, NULL,
+  if (!mysql_real_connect
+      (mysql, "localhost", "osm", "osm", current_db.c_str(), 0, NULL,
        CLIENT_LOCAL_FILES))
   {
     runtime_error("Connection to database failed.\n", cout);
@@ -108,6 +116,12 @@ int main(int argc, char *argv[])
       return 0;
     }
   
+    current_db = detect_active_database();
+    db_subdir = current_db;
+    if ((db_subdir.size() > 0) && (db_subdir[db_subdir.size()-1] != '/'))
+      db_subdir += '/';
+    int_query(mysql, (string)("use ") + current_db);
+    
     out_header(cout, output_mode);
   
     prepare_caches(mysql);

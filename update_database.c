@@ -84,9 +84,11 @@ void load_member_roles(map< string, uint >& member_roles)
 {
   member_roles.clear();
 
-  int data_fd = open64(((string)DATADIR + MEMBER_ROLES_FILENAME).c_str(), O_RDONLY);
+  int data_fd = open64((DATADIR + db_subdir + MEMBER_ROLES_FILENAME).c_str(),
+                       O_RDONLY);
   if (data_fd < 0)
-    throw File_Error(errno, ((string)DATADIR + MEMBER_ROLES_FILENAME), "load_member_roles:1");
+    throw File_Error(errno, (DATADIR + db_subdir + MEMBER_ROLES_FILENAME),
+                     "load_member_roles:1");
   
   uint pos(0);
   uint16 size(0);
@@ -103,17 +105,20 @@ void load_member_roles(map< string, uint >& member_roles)
 void dump_member_roles(const map< string, uint >& member_roles)
 {
   vector< string > roles_by_id(member_roles.size());
-  for (map< string, uint >::const_iterator it(member_roles.begin()); it != member_roles.end(); ++it)
+  for (map< string, uint >::const_iterator it(member_roles.begin());
+       it != member_roles.end(); ++it)
     roles_by_id[it->second] = it->first;
   
-  int dest_fd = open64(((string)DATADIR + MEMBER_ROLES_FILENAME).c_str(),
-                       O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  int dest_fd = open64((DATADIR + db_subdir + MEMBER_ROLES_FILENAME).c_str(),
+                       O_WRONLY|O_CREAT|O_TRUNC,
+                       S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   close(dest_fd);
   
-  dest_fd = open64(((string)DATADIR + MEMBER_ROLES_FILENAME).c_str(),
+  dest_fd = open64((DATADIR + db_subdir + MEMBER_ROLES_FILENAME).c_str(),
                    O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)
-    throw File_Error(errno, ((string)DATADIR + MEMBER_ROLES_FILENAME), "dump_member_roles:1");
+    throw File_Error(errno, DATADIR + db_subdir + MEMBER_ROLES_FILENAME,
+                     "dump_member_roles:1");
   
   for (vector< string >::const_iterator it(roles_by_id.begin());
        it != roles_by_id.end(); ++it)
@@ -331,11 +336,23 @@ void end(const char *el)
     edit_status = 0;
 }
 
+string db_subdir;
+
 int main(int argc, char *argv[])
 {
   bool intermediate_run(false);
-  if (argc == 2)
-    intermediate_run = ((string)"--intermediate" == argv[1]);
+  
+  int argpos(0);
+  while (argpos < argc)
+  {
+    intermediate_run = ((string)"--intermediate" == argv[argpos]);
+    if (!(strncmp(argv[argpos], "--db=", 5)))
+    {
+      db_subdir = ((string)argv[argpos]).substr(5);
+      if ((db_subdir.size() > 0) && (db_subdir[db_subdir.size()-1] != '/'))
+        db_subdir += '/';
+    }
+  }
   
   set< Node > delete_nodes;
   set< pair< uint32, uint32 > > moved_local_ids;

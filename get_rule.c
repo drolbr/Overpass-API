@@ -57,6 +57,8 @@ void end(const char *el)
     statement_stack.front()->add_final_text(get_parsed_text());
 }
 
+string db_subdir;
+
 int main(int argc, char *argv[])
 {
   string xml_raw(get_xml_raw());
@@ -134,7 +136,8 @@ int main(int argc, char *argv[])
   MYSQL_ROW row(mysql_fetch_row(result));
   while ((row) && (row[0]) && (row[1]))
   {
-    cout<<"<osm-script name=\""<<rule_name<<"\" version=\""<<atoi(row[0])<<"\">";
+    cout<<"<osm-script name=\""<<rule_name
+      <<"\" version=\""<<atoi(row[0])<<"\">";
     cout<<row[1];
     cout<<"</osm-script>\n";
     row = mysql_fetch_row(result);

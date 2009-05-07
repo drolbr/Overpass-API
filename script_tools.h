@@ -151,5 +151,6 @@ const vector< pair< int, string > >& pending_stack();
 int stack_time_offset();
 void finish_statement_forecast();
 void display_state();
+string detect_active_database();
 
 #endif

@@ -20,6 +20,8 @@ static int output_mode(MIXED_XML);
 
 MYSQL* mysql(NULL);
 
+string db_subdir;
+
 int main(int argc, char *argv[])
 {
   mysql = mysql_init(NULL);

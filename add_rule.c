@@ -55,6 +55,8 @@ void end(const char *el)
     statement_stack.front()->add_final_text(get_parsed_text());
 }
 
+string db_subdir;
+
 int main(int argc, char *argv[])
 {
   string xml_raw(get_xml_raw());
@@ -148,17 +150,6 @@ int main(int argc, char *argv[])
   temp<<"Rule '"<<rule_name<<"' successfully added with version "
       <<body_id<<".";
   runtime_remark(temp.str(), cout);
-  
-  set_rule(body_id, rule_name);
-  //Rule execution
-  prepare_caches(mysql);
-  
-  map< string, Set > maps;
-  for (vector< Statement* >::const_iterator it(statement_stack.begin());
-       it != statement_stack.end(); ++it)
-    (*it)->execute(mysql, maps);
-  
-  out_footer(cout, output_mode);
   
   mysql_close(mysql);
   

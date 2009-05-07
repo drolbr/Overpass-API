@@ -55,6 +55,8 @@ void end(const char *el)
     statement_stack.front()->add_final_text(get_parsed_text());
 }
 
+string db_subdir;
+
 int main(int argc, char *argv[])
 {
   string xml_total_raw(get_xml_raw());
@@ -62,6 +64,11 @@ int main(int argc, char *argv[])
     return 0;
   if (display_parse_errors(cout, xml_total_raw))
     return 0;
+  
+  string current_db(detect_active_database());
+  db_subdir = current_db;
+  if ((db_subdir.size() > 0) && (db_subdir[db_subdir.size()-1] != '/'))
+    db_subdir += '/';
   
   mysql = mysql_init(NULL);
   
@@ -153,6 +160,8 @@ int main(int argc, char *argv[])
     statement_stack.clear();
     pos = xml_total_raw.find("<osm-script", ++pos);
   }
+  
+  int_query(mysql, (string)("use ") + current_db);
   
   for (map< string, int >::const_iterator it(versions.begin()); it != versions.end(); ++it)
   {

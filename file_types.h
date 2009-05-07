@@ -30,7 +30,8 @@ typedef unsigned long long uint64;
 
 //-----------------------------------------------------------------------------
 
-static const char* DATADIR = "/opt/osm_why_api/";
+static const string DATADIR("/opt/osm_why_api/");
+extern string db_subdir;
 
 static const char* NODE_ID_NODE_FILE = "nodes.dat";
 static const char* NODE_ID_NODE_IDX = "nodes.idx";
@@ -86,9 +87,9 @@ const int RELATION_STRING_BLOCK_SIZE = 1024*1024;
 struct Node_Id_Node
 {
   uint32 blocksize() const { return NODE_ID_NODE_BLOCKSIZE; }
-  const string data_file() const { return ((string)DATADIR + NODE_ID_NODE_FILE); }
-  const string index_file() const { return ((string)DATADIR + NODE_ID_NODE_IDX); }
-  const string id_idx_file() const { return ((string)DATADIR + NODE_ID_NODE_IDIDX); }
+  const string data_file() const { return (DATADIR + db_subdir + NODE_ID_NODE_FILE); }
+  const string index_file() const { return (DATADIR + db_subdir + NODE_ID_NODE_IDX); }
+  const string id_idx_file() const { return (DATADIR + db_subdir + NODE_ID_NODE_IDIDX); }
   
   typedef int32 Index;
   uint32 size_of_Index() const { return sizeof(uint32); }
@@ -457,8 +458,8 @@ private:
 struct Tag_Id_Node_Local
 {
   uint32 blocksize() const { return TAG_ID_NODE_LOCAL_BLOCKSIZE; }
-  const string data_file() const { return ((string)DATADIR + NODE_TAG_ID_NODE_LOCAL_FILE); }
-  const string index_file() const { return ((string)DATADIR + NODE_TAG_ID_NODE_LOCAL_IDX); }
+  const string data_file() const { return (DATADIR + db_subdir + NODE_TAG_ID_NODE_LOCAL_FILE); }
+  const string index_file() const { return (DATADIR + db_subdir + NODE_TAG_ID_NODE_LOCAL_IDX); }
   
   typedef uint32 Index;
   uint32 size_of_Index() const { return sizeof(uint32); }
@@ -852,8 +853,8 @@ struct Tag_Id_Node_Local_Updater : public Tag_Id_Node_Local
 struct Tag_Id_Node_Global
 {
   uint32 blocksize() const { return TAG_ID_NODE_GLOBAL_BLOCKSIZE; }
-  const string data_file() const { return ((string)DATADIR + NODE_TAG_ID_NODE_GLOBAL_FILE); }
-  const string index_file() const { return ((string)DATADIR + NODE_TAG_ID_NODE_GLOBAL_IDX); }
+  const string data_file() const { return (DATADIR + db_subdir + NODE_TAG_ID_NODE_GLOBAL_FILE); }
+  const string index_file() const { return (DATADIR + db_subdir + NODE_TAG_ID_NODE_GLOBAL_IDX); }
   
   typedef uint32 Index;
   uint32 size_of_Index() const { return sizeof(uint32); }
@@ -1128,8 +1129,8 @@ private:
 struct Tag_Node_Id
 {
   uint32 blocksize() const { return TAG_NODE_ID_BLOCKSIZE; }
-  const string data_file() const { return ((string)DATADIR + NODE_TAG_NODE_ID_FILE); }
-  const string index_file() const { return ((string)DATADIR + NODE_TAG_NODE_ID_IDX); }
+  const string data_file() const { return (DATADIR + db_subdir + NODE_TAG_NODE_ID_FILE); }
+  const string index_file() const { return (DATADIR + db_subdir + NODE_TAG_NODE_ID_IDX); }
   
   typedef uint32 Index;
   uint32 size_of_Index() const { return sizeof(uint32); }
@@ -1392,8 +1393,8 @@ private:
 struct Tag_Id_Way_Local
 {
   uint32 blocksize() const { return TAG_ID_WAY_LOCAL_BLOCKSIZE; }
-  const string data_file() const { return ((string)DATADIR + WAY_TAG_ID_WAY_LOCAL_FILE); }
-  const string index_file() const { return ((string)DATADIR + WAY_TAG_ID_WAY_LOCAL_IDX); }
+  const string data_file() const { return (DATADIR + db_subdir + WAY_TAG_ID_WAY_LOCAL_FILE); }
+  const string index_file() const { return (DATADIR + db_subdir + WAY_TAG_ID_WAY_LOCAL_IDX); }
   
   typedef uint32 Index;
   uint32 size_of_Index() const { return sizeof(uint32); }
@@ -1787,8 +1788,8 @@ private:
 struct Tag_Id_Way_Global
 {
   uint32 blocksize() const { return TAG_ID_WAY_GLOBAL_BLOCKSIZE; }
-  const string data_file() const { return ((string)DATADIR + WAY_TAG_ID_WAY_GLOBAL_FILE); }
-  const string index_file() const { return ((string)DATADIR + WAY_TAG_ID_WAY_GLOBAL_IDX); }
+  const string data_file() const { return (DATADIR + db_subdir + WAY_TAG_ID_WAY_GLOBAL_FILE); }
+  const string index_file() const { return (DATADIR + db_subdir + WAY_TAG_ID_WAY_GLOBAL_IDX); }
   
   typedef uint32 Index;
   uint32 size_of_Index() const { return sizeof(uint32); }
@@ -2063,8 +2064,8 @@ private:
 struct Tag_Way_Id
 {
   uint32 blocksize() const { return TAG_WAY_ID_BLOCKSIZE; }
-  const string data_file() const { return ((string)DATADIR + WAY_TAG_WAY_ID_FILE); }
-  const string index_file() const { return ((string)DATADIR + WAY_TAG_WAY_ID_IDX); }
+  const string data_file() const { return (DATADIR + db_subdir + WAY_TAG_WAY_ID_FILE); }
+  const string index_file() const { return (DATADIR + db_subdir + WAY_TAG_WAY_ID_IDX); }
   
   typedef uint32 Index;
   uint32 size_of_Index() const { return sizeof(uint32); }
@@ -2327,8 +2328,8 @@ private:
 struct Tag_Id_Relation_Local
 {
   uint32 blocksize() const { return TAG_ID_RELATION_LOCAL_BLOCKSIZE; }
-  const string data_file() const { return ((string)DATADIR + RELATION_TAG_ID_RELATION_LOCAL_FILE); }
-  const string index_file() const { return ((string)DATADIR + RELATION_TAG_ID_RELATION_LOCAL_IDX); }
+  const string data_file() const { return (DATADIR + db_subdir + RELATION_TAG_ID_RELATION_LOCAL_FILE); }
+  const string index_file() const { return (DATADIR + db_subdir + RELATION_TAG_ID_RELATION_LOCAL_IDX); }
   
   typedef uint32 Index;
   uint32 size_of_Index() const { return sizeof(uint32); }
@@ -2722,8 +2723,8 @@ private:
 struct Tag_Id_Relation_Global
 {
   uint32 blocksize() const { return TAG_ID_RELATION_GLOBAL_BLOCKSIZE; }
-  const string data_file() const { return ((string)DATADIR + RELATION_TAG_ID_RELATION_GLOBAL_FILE); }
-  const string index_file() const { return ((string)DATADIR + RELATION_TAG_ID_RELATION_GLOBAL_IDX); }
+  const string data_file() const { return (DATADIR + db_subdir + RELATION_TAG_ID_RELATION_GLOBAL_FILE); }
+  const string index_file() const { return (DATADIR + db_subdir + RELATION_TAG_ID_RELATION_GLOBAL_IDX); }
   
   typedef uint32 Index;
   uint32 size_of_Index() const { return sizeof(uint32); }
@@ -2998,8 +2999,8 @@ private:
 struct Tag_Relation_Id
 {
   uint32 blocksize() const { return TAG_RELATION_ID_BLOCKSIZE; }
-  const string data_file() const { return ((string)DATADIR + RELATION_TAG_RELATION_ID_FILE); }
-  const string index_file() const { return ((string)DATADIR + RELATION_TAG_RELATION_ID_IDX); }
+  const string data_file() const { return (DATADIR + db_subdir + RELATION_TAG_RELATION_ID_FILE); }
+  const string index_file() const { return (DATADIR + db_subdir + RELATION_TAG_RELATION_ID_IDX); }
   
   typedef uint32 Index;
   uint32 size_of_Index() const { return sizeof(uint32); }
@@ -3637,7 +3638,7 @@ struct Way_Storage
 {
   typedef Way_ Basetype;
   typedef uint32 Id;
-  static string base_file_name() { return ((string)DATADIR + WAY_FILE_BASE); }
+  static string base_file_name() { return (DATADIR + db_subdir + WAY_FILE_BASE); }
   static uint32 blocksize() { return (WAY_BLOCKSIZE); }
   
   typedef uint32 Index;
@@ -3705,7 +3706,7 @@ struct Relation_Storage
 {
   typedef Relation_ Basetype;
   typedef uint32 Id;
-  static string base_file_name() { return ((string)DATADIR + RELATION_FILE_BASE); }
+  static string base_file_name() { return (DATADIR + db_subdir + RELATION_FILE_BASE); }
   static uint32 blocksize() { return (RELATION_BLOCKSIZE); }
   
   typedef uint32 Index;

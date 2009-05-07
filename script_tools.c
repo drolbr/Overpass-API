@@ -248,9 +248,11 @@ void prepare_caches(MYSQL* mysql)
     row = mysql_fetch_row(result);
   }*/
 
-  int data_fd = open64(((string)DATADIR + MEMBER_ROLES_FILENAME).c_str(), O_RDONLY);
+  int data_fd = open64((DATADIR + db_subdir + MEMBER_ROLES_FILENAME).c_str(),
+                       O_RDONLY);
   if (data_fd < 0)
-    throw File_Error(errno, ((string)DATADIR + MEMBER_ROLES_FILENAME), "prepare_caches:1");
+    throw File_Error(errno, DATADIR + db_subdir + MEMBER_ROLES_FILENAME,
+                     "prepare_caches:1");
   
   uint16 size(0);
   char* buf = (char*) malloc(65536);
@@ -380,4 +382,21 @@ void display_state()
       break;
   }
   display_state(temp.str(), cout);
+}
+
+//-----------------------------------------------------------------------------
+
+string detect_active_database()
+{
+  uint32 database_id, available_memory;
+  ifstream ssin("/tmp/small_status");
+  if (!ssin)
+    throw File_Error(errno, "/tmp/small_status", "detect_active_database:1");
+  ssin>>database_id;
+  ssin>>available_memory;
+  ssin.close();
+  
+  ostringstream temp;
+  temp<<"osm_"<<database_id;
+  return temp.str();
 }

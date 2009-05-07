@@ -35,7 +35,7 @@ typedef unsigned long long uint64;
 
 //-----------------------------------------------------------------------------
 
-static string RELATION_TAG_ID_STATS = (string)DATADIR + "relation_tag_id_stats.dat";
+const static string RELATION_TAG_ID_STATS("relation_tag_id_stats.dat");
 
 const unsigned int FLUSH_RELATION_TAGS_INTERVAL = 32*1024*1024;
 const uint32 RELATION_TAG_SORT_BUFFER_SIZE = 128*1024*1024;
