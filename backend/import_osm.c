@@ -6,12 +6,12 @@
 #include <string>
 #include <vector>
 
-#include "expat_justparse_interface.h"
+#include "../expat_justparse_interface.h"
+#include "../script_datatypes.h"
 #include "file_types.h"
 #include "node_strings_file_io.h"
 #include "raw_file_db.h"
 #include "relation_strings_file_io.h"
-#include "script_datatypes.h"
 #include "way_strings_file_io.h"
 
 #include <string.h>

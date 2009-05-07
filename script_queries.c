@@ -7,14 +7,14 @@
 #include <string>
 #include <stdlib.h>
 #include <vector>
-#include "file_types.h"
-#include "node_strings_file_io.h"
-#include "relation_strings_file_io.h"
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "user_interface.h"
 #include "vigilance_control.h"
-#include "way_strings_file_io.h"
+#include "backend/file_types.h"
+#include "backend/node_strings_file_io.h"
+#include "backend/relation_strings_file_io.h"
+#include "backend/way_strings_file_io.h"
 
 #include <errno.h>
 #include <fcntl.h>

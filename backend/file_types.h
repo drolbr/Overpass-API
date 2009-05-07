@@ -8,13 +8,13 @@
 #include <string>
 #include <vector>
 
-#include "raw_file_db.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "script_datatypes.h"
+#include "../script_datatypes.h"
+#include "raw_file_db.h"
 
 using namespace std;
 

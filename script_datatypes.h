@@ -333,4 +333,16 @@ inline int in_lat_lon(const string& input)
 //     return (minus ? -res : res);
 // }
 
+//-----------------------------------------------------------------------------
+
+struct File_Error
+{
+  File_Error(uint32 errno_, string filename_, string origin_)
+  : error_number(errno_), filename(filename_), origin(origin_) {}
+  
+  uint32 error_number;
+  string filename;
+  string origin;
+};
+
 #endif

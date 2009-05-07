@@ -6,12 +6,12 @@
 #include <stdlib.h>
 #include <vector>
 #include "expat_justparse_interface.h"
-#include "file_types.h"
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"
 #include "user_interface.h"
 #include "vigilance_control.h"
+#include "backend/file_types.h"
 
 #include <mysql.h>
 

@@ -9,6 +9,8 @@
 #include <set>
 #include <string>
 
+#include "../script_datatypes.h"
+
 using namespace std;
 
 typedef char int8;
@@ -23,16 +25,6 @@ typedef unsigned long long uint64;
 
 const int32 RAW_DB_LESS = 1;
 const int32 RAW_DB_GREATER = 2;
-
-struct File_Error
-{
-  File_Error(uint32 errno_, string filename_, string origin_)
-  : error_number(errno_), filename(filename_), origin(origin_) {}
-  
-  uint32 error_number;
-  string filename;
-  string origin;
-};
 
 //-----------------------------------------------------------------------------
 

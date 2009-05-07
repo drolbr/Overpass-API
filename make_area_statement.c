@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <vector>
 #include "expat_justparse_interface.h"
-#include "raw_file_db.h"
 #include "script_datatypes.h"
 #include "script_queries.h"
 #include "script_tools.h"

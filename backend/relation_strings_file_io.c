@@ -7,10 +7,10 @@
 #include <string>
 #include <vector>
 
+#include "../script_datatypes.h"
 #include "file_types.h"
 #include "relation_strings_file_io.h"
 #include "raw_file_db.h"
-#include "script_datatypes.h"
 
 #include <string.h>
 #include <stdio.h>

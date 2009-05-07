@@ -10,7 +10,6 @@
 #include <vector>
 #include "expat_justparse_interface.h"
 #include "script_datatypes.h"
-#include "script_tools.h"
 
 #include <mysql.h>
 
