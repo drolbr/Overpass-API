@@ -150,7 +150,7 @@ void check_pending_database(State& state, MYSQL* mysql)
     if (!(outdated && unused))
       return;
     
-    cerr<<"Update auslösen: 1 "<<state.db2.last_changefile<<' '<<state.last_changefile<<'\n';
+    cerr<<"Update auslösen: 1 "<<state.db1.last_changefile<<' '<<state.last_changefile<<'\n';
     ostringstream temp;
     temp<<" update "<<state.db1.last_changefile<<' '<<state.last_changefile<<' ';
     int fd = open(DB1_FIFO, O_WRONLY|O_NONBLOCK);

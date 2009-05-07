@@ -1,0 +1,37 @@
+#!/bin/bash
+
+if [[ -z $1  ]]; then
+{
+  echo Usage: $0 Hourly_Timestamp
+  exit 0
+};
+fi
+
+HOURLY_TIMESTAMP=$1
+
+fetch_file()
+{
+  if [[ ! -s ../hourly/$1.osc.gz ]];
+  then {
+    wget -O ../hourly/$1.osc.gz http://planet.openstreetmap.org/hourly/$2-$3.osc.gz
+  };
+  fi
+  until [[ -s ../hourly/$1.osc.gz ]];
+  do {
+    sleep 300
+    wget -O ../hourly/$1.osc.gz http://planet.openstreetmap.org/hourly/$2-$3.osc.gz
+  };
+  done
+};
+
+while [[ 0 -eq 0 ]];
+do
+{
+  STARTTIME=`timestamp_of $HOURLY_TIMESTAMP`
+  HOURLY_TIMESTAMP=$(($HOURLY_TIMESTAMP+1))
+  ENDTIME=`timestamp_of $HOURLY_TIMESTAMP`
+  fetch_file $HOURLY_TIMESTAMP $STARTTIME $ENDTIME
+  sleep 1
+  echo " new_changefile $HOURLY_TIMESTAMP " >>/tmp/dispatcher.pipe
+};
+done
