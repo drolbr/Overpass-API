@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [[ -z $1  ]]; then
+{
+  echo Usage: $0 Hourly_Timestamp
+  exit 0
+};
+fi
+
+rm -f /tmp/dispatcher.pipe /tmp/database_1.pipe /tmp/database_2.pipe
+
+./database_daemon osm_1 1 &
+./database_daemon osm_2 2 &
+./dispatcher $1 $1 &
+./fetch_osc $1 &

@@ -5,8 +5,10 @@
 #include <string>
 
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/select.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 
 #include <mysql.h>
 
@@ -69,7 +71,21 @@ void process_update
      uint from_version, uint to_version)
 {
   cerr<<"Updating OSM data\n";
-  //sleep for a second - dummy
+  //execute gunzip and apply_osc
+  int pid = fork();
+  if (pid == 0)
+  {
+    ostringstream from, to;
+    from<<from_version;
+    to<<to_version;
+    execlp("./apply_gz_osc", "./apply_gz_osc",
+	   database_name.c_str(), from.str().c_str(), to.str().c_str(), NULL);
+  }
+  else
+  {
+    int status;
+    pid = wait(&status);
+  }
   struct timeval timeout;
   timeout.tv_sec = 30;
   timeout.tv_usec = 0;

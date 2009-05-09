@@ -23,8 +23,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <mysql.h>
-
 using namespace std;
 
 typedef char int8;

@@ -45,7 +45,9 @@ MYSQL_RES* mysql_query_wrapper(MYSQL* mysql, string query)
       runtime_error("Your query timed out.", cout);
     ostringstream temp;
     temp<<"Error during SQL query (result is null pointer)\n";
-    temp<<mysql_error(mysql)<<'\n';
+    temp<<'('<<query_status<<"):\n";
+    temp<<"Query: "<<query<<'\n';
+    temp<<"Error: "<<mysql_error(mysql)<<'\n';
     runtime_error(temp.str(), cout);
   }
   
@@ -72,7 +74,9 @@ MYSQL_RES* mysql_query_use_wrapper(MYSQL* mysql, string query)
       runtime_error("Your query timed out.", cout);
     ostringstream temp;
     temp<<"Error during SQL query (result is null pointer)\n";
-    temp<<mysql_error(mysql)<<'\n';
+    temp<<'('<<query_status<<"):\n";
+    temp<<"Query: "<<query<<'\n';
+    temp<<"Error: "<<mysql_error(mysql)<<'\n';
     runtime_error(temp.str(), cout);
   }
   
@@ -91,6 +95,11 @@ void mysql_query_null_wrapper(MYSQL* mysql, string query)
     temp<<"Error: "<<mysql_error(mysql)<<'\n';
     runtime_error(temp.str(), cout);
   }
+}
+
+void void_query(MYSQL* mysql, string query)
+{
+  mysql_query_null_wrapper(mysql, query);
 }
 
 int int_query(MYSQL* mysql, string query)

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+echo "apply_gz_osc $1 $2 $3"
+if [[ $2 -eq $3 ]]; then
+  exit 0;
+fi
+
+CURRENT=$(($2 + 1))
+ALMOST_TO=$3
+
+while [[ CURRENT -lt ALMOST_TO ]];
+do
+{
+  echo "applying $CURRENT.osc.gz"
+  gunzip <../hourly/$CURRENT.osc.gz | ./apply_osc --intermediate --db=$1
+  CURRENT=$(($CURRENT+1))
+};
+done
+echo "applying $ALMOST_TO.osc.gz"
+gunzip <../hourly/$ALMOST_TO.osc.gz | ./apply_osc --db=$1

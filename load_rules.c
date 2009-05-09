@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
     pos = xml_total_raw.find("<osm-script", ++pos);
   }
   
-  int_query(mysql, (string)("use ") + current_db);
+  void_query(mysql, (string)("use ") + current_db);
   
   for (map< string, int >::const_iterator it(versions.begin()); it != versions.end(); ++it)
   {

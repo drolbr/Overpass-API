@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
     db_subdir = current_db;
     if ((db_subdir.size() > 0) && (db_subdir[db_subdir.size()-1] != '/'))
       db_subdir += '/';
-    int_query(mysql, (string)("use ") + current_db);
+    void_query(mysql, (string)("use ") + current_db);
     
     out_header(cout, output_mode);
   

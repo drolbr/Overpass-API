@@ -23,8 +23,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <mysql.h>
-
 using namespace std;
 
 typedef char int8;
@@ -342,22 +340,23 @@ int main(int argc, char *argv[])
 {
   bool intermediate_run(false);
   
-  int argpos(0);
+  int argpos(1);
   while (argpos < argc)
   {
-    intermediate_run = ((string)"--intermediate" == argv[argpos]);
+    intermediate_run |= ((string)"--intermediate" == argv[argpos]);
     if (!(strncmp(argv[argpos], "--db=", 5)))
     {
       db_subdir = ((string)argv[argpos]).substr(5);
       if ((db_subdir.size() > 0) && (db_subdir[db_subdir.size()-1] != '/'))
         db_subdir += '/';
     }
+    ++argpos;
   }
   
   set< Node > delete_nodes;
   set< pair< uint32, uint32 > > moved_local_ids;
   
-  cerr<<(uintmax_t)time(NULL)<<'\n';
+  //cerr<<(uintmax_t)time(NULL)<<'\n';
   
   try
   {
@@ -372,15 +371,15 @@ int main(int argc, char *argv[])
     member_roles.clear();
     
     //retrieving old coordinates of the nodes that will be deleted
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     Node_Id_Node_By_Id_Reader reader(delete_node_ids, delete_nodes);
     select_by_id< Node_Id_Node_By_Id_Reader >(reader);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     
     vector< uint32 > local_id_idx;
     vector< uint32 > spatial_boundaries;
     node_string_delete_insert(new_node_tags_ids, moved_local_ids, local_id_idx, spatial_boundaries);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
 
     set< uint32 > delete_node_idxs;
     for (set< Node >::const_iterator it(delete_nodes.begin()); it != delete_nodes.end(); ++it)
@@ -402,14 +401,14 @@ int main(int argc, char *argv[])
       }
     }
     
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     map< uint32, set< uint32 > > moved_ids;
     Tag_Id_Node_Local_Updater id_node_local_updater
 	(local_ids, moved_ids, local_id_idx, spatial_boundaries);
     delete_insert< Tag_Id_Node_Local_Updater >(id_node_local_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     make_block_index< Tag_Id_Node_Local_Updater >(id_node_local_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     
     //retrieving old coordinates of the nodes that appear in local ids which are moving to global
     set< uint32 > t_move_involved_nodes;
@@ -420,10 +419,10 @@ int main(int argc, char *argv[])
 	t_move_involved_nodes.insert(*it2);
     }
     set< Node > move_involved_nodes;
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     Node_Id_Node_By_Id_Reader reader2(t_move_involved_nodes, move_involved_nodes);
     select_by_id< Node_Id_Node_By_Id_Reader >(reader2);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     
     map< pair< uint32, uint32 >, pair< set< uint32 >, uint > > global_nodes_to_be_edited;
     for (map< uint32, set< uint32 > >::const_iterator it(moved_ids.begin());
@@ -460,14 +459,14 @@ int main(int argc, char *argv[])
 	      (global_ids, Tag_Node_Id_Updater::INSERT);
     }
     
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     map< uint32, set< uint32 > > deleted_nodes_ids;
     Tag_Node_Id_Updater node_id_updater
 	(global_nodes_to_be_edited, deleted_nodes_ids);
     delete_insert< Tag_Node_Id_Updater >(node_id_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     make_block_index< Tag_Node_Id_Updater >(node_id_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     
     map< uint32, pair< set< uint32 >, set< uint32 > > > global_ids_to_be_edited;
     for (map< uint32, set< uint32 > >::const_iterator it(moved_ids.begin());
@@ -507,12 +506,12 @@ int main(int argc, char *argv[])
       }
     }
     
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     Tag_Id_Node_Global_Updater id_global_updater(global_ids_to_be_edited);
     delete_insert< Tag_Id_Node_Global_Updater >(id_global_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     make_block_index< Tag_Id_Node_Global_Updater >(id_global_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     
     new_nodes_tags.clear();
     for (map< pair< string, string >, pair< uint32, uint32 >* >::iterator it(new_node_tags_ids.begin());
@@ -521,25 +520,25 @@ int main(int argc, char *argv[])
     new_node_tags_ids.clear();
     
     //updating the nodes file
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     Node_Id_Node_Updater node_updater(delete_nodes, new_nodes);
     delete_insert< Node_Id_Node_Updater >(node_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     make_block_index< Node_Id_Node_Updater >(node_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     update_id_index< Node_Id_Node_Updater >(node_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     
     if (!intermediate_run)
       node_tag_id_statistics_remake();
     
     //collect ways that may be affected by moving nodes
     //patch any way that is not sceduled to be deleted into new_ways_floating
-    cerr<<(uintmax_t)time(NULL)<<" (entering ways)"<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<" (entering ways)"<<'\n';
     set< Way_ > touched_ways;
     vector< Way_ > way_coords;
     multiNode_to_multiWay_query(delete_nodes, new_nodes, touched_ways);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     for (set< Way_ >::const_iterator it(touched_ways.begin());
          it != touched_ways.end(); ++it)
     {
@@ -628,7 +627,7 @@ int main(int argc, char *argv[])
     
     //computing coordinates of the new ways
     //query used nodes
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     set< Node > used_nodes;
     set< uint32 > used_nodes_ids;
     for (set< Way_ >::const_iterator it(new_ways_floating.begin());
@@ -643,12 +642,12 @@ int main(int argc, char *argv[])
     used_nodes_ids.clear();
     
     //retrieving old coordinates of the ways that will be deleted
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     set< Way_ > delete_ways;
     Indexed_Ordered_Id_To_Many_By_Id_Reader< Way_Storage, set< uint32 >, set< Way_ > >
       way_id_reader(t_delete_ways, delete_ways);
     select_by_id(way_id_reader);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     
     //calculate for each way its index
     set< Way_ > new_ways;
@@ -709,9 +708,8 @@ int main(int argc, char *argv[])
     moved_local_ids.clear();
     local_id_idx.clear();
     spatial_boundaries.clear();
-    cerr<<"(0)\n";
     way_string_delete_insert(new_way_tags_ids, moved_local_ids, local_id_idx, spatial_boundaries);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     
     //preparing the update of the local id to way data
     set< uint32 > delete_way_idxs;
@@ -739,14 +737,14 @@ int main(int argc, char *argv[])
     }
     
     //updating of the local id to way data
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     moved_ids.clear();
     Tag_Id_Way_Local_Updater id_way_local_updater
       (local_ids, moved_ids, local_id_idx, spatial_boundaries);
     delete_insert< Tag_Id_Way_Local_Updater >(id_way_local_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     make_block_index< Tag_Id_Way_Local_Updater >(id_way_local_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     
     //retrieving old coordinates of the ways that appear in local ids which are moving to global
     set< uint32 > t_move_involved_ways;
@@ -757,11 +755,11 @@ int main(int argc, char *argv[])
         t_move_involved_ways.insert(*it2);
     }
     set< Way_ > move_involved_ways;
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     Indexed_Ordered_Id_To_Many_By_Id_Reader< Way_Storage, set< uint32 >, set< Way_ > >
       way_id_reader2(t_move_involved_ways, move_involved_ways);
     select_by_id(way_id_reader2);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     map< Way_::Id, Way_::Index > move_involved_ways_by_id;
     for (set< Way_ >::const_iterator it(move_involved_ways.begin()); it != move_involved_ways.end(); ++it)
       move_involved_ways_by_id[it->head.second] = it->head.first;
@@ -803,14 +801,14 @@ int main(int argc, char *argv[])
     }
     
     //updating of the global way to id data
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     map< uint32, set< uint32 > > deleted_ways_ids;
     Tag_Way_Id_Updater way_id_updater
       (global_ways_to_be_edited, deleted_ways_ids);
     delete_insert< Tag_Way_Id_Updater >(way_id_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     make_block_index< Tag_Way_Id_Updater >(way_id_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     
     //preparing the update of the global id to way data
     global_ids_to_be_edited.clear();
@@ -852,12 +850,12 @@ int main(int argc, char *argv[])
     }
     
     //updating of the global id to way data
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     Tag_Id_Way_Global_Updater id_way_global_updater(global_ids_to_be_edited);
     delete_insert< Tag_Id_Way_Global_Updater >(id_way_global_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     make_block_index< Tag_Id_Way_Global_Updater >(id_way_global_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     
     new_ways_tags.clear();
     for (map< pair< string, string >, pair< uint32, uint32 >* >::iterator it(new_way_tags_ids.begin());
@@ -866,14 +864,14 @@ int main(int argc, char *argv[])
     new_way_tags_ids.clear();
     
     //updating the ways file
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     Indexed_Ordered_Id_To_Many_Updater< Way_Storage, set< Way_ > > way_updater(delete_ways, new_ways);
     delete_insert(way_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     make_block_index(way_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     update_id_index(way_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     
     if (!intermediate_run)
       way_tag_id_statistics_remake();
@@ -881,12 +879,12 @@ int main(int argc, char *argv[])
     //computing coordinates of the new relations
     
     //retrieving old coordinates of the relations that will be deleted
-    cerr<<(uintmax_t)time(NULL)<<" (entering relations)"<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<" (entering relations)"<<'\n';
     set< Relation_ > delete_relations;
     Indexed_Ordered_Id_To_Many_By_Id_Reader< Relation_Storage, set< uint32 >, set< Relation_ > >
       relation_id_reader(t_delete_relations, delete_relations);
     select_by_id(relation_id_reader);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     
     //calculate for each relation tag its index
     for (map< uint32, vector< pair< uint32, uint32 >* > >::const_iterator
@@ -907,7 +905,7 @@ int main(int argc, char *argv[])
     local_id_idx.clear();
     spatial_boundaries.clear();
     relation_string_delete_insert(new_relation_tags_ids, moved_local_ids, local_id_idx, spatial_boundaries);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     
     //preparing the update of the local id to relation data
     set< uint32 > delete_relation_idxs;
@@ -935,14 +933,14 @@ int main(int argc, char *argv[])
     }
     
     //updating of the local id to relation data
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     moved_ids.clear();
     Tag_Id_Relation_Local_Updater id_relation_local_updater
       (local_ids, moved_ids, local_id_idx, spatial_boundaries);
     delete_insert< Tag_Id_Relation_Local_Updater >(id_relation_local_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     make_block_index< Tag_Id_Relation_Local_Updater >(id_relation_local_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     
     //retrieving old coordinates of the relations that appear in local ids which are moving to global
     set< uint32 > t_move_involved_relations;
@@ -953,11 +951,11 @@ int main(int argc, char *argv[])
         t_move_involved_relations.insert(*it2);
     }
     set< Relation_ > move_involved_relations;
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     Indexed_Ordered_Id_To_Many_By_Id_Reader< Relation_Storage, set< uint32 >, set< Relation_ > >
       relation_id_reader2(t_move_involved_relations, move_involved_relations);
     select_by_id(relation_id_reader2);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     map< Relation_::Id, Relation_::Index > move_involved_relations_by_id;
     for (set< Relation_ >::const_iterator it(move_involved_relations.begin());
          it != move_involved_relations.end(); ++it)
@@ -1000,14 +998,14 @@ int main(int argc, char *argv[])
     }
     
     //updating of the global relation to id data
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     map< uint32, set< uint32 > > deleted_relations_ids;
     Tag_Relation_Id_Updater relation_id_updater
       (global_relations_to_be_edited, deleted_relations_ids);
     delete_insert< Tag_Relation_Id_Updater >(relation_id_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     make_block_index< Tag_Relation_Id_Updater >(relation_id_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     
     //preparing the update of the global id to relation data
     global_ids_to_be_edited.clear();
@@ -1049,12 +1047,12 @@ int main(int argc, char *argv[])
     }
     
     //updating of the global id to relation data
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     Tag_Id_Relation_Global_Updater id_relation_global_updater(global_ids_to_be_edited);
     delete_insert< Tag_Id_Relation_Global_Updater >(id_relation_global_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     make_block_index< Tag_Id_Relation_Global_Updater >(id_relation_global_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     
     new_relations_tags.clear();
     for (map< pair< string, string >, pair< uint32, uint32 >* >::iterator
@@ -1064,15 +1062,15 @@ int main(int argc, char *argv[])
     new_relation_tags_ids.clear();
     
     //updating the relations file
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     Indexed_Ordered_Id_To_Many_Updater< Relation_Storage, set< Relation_ > >
       relation_updater(delete_relations, new_relations);
     delete_insert(relation_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     make_block_index(relation_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     update_id_index(relation_updater);
-    cerr<<(uintmax_t)time(NULL)<<'\n';
+    //cerr<<(uintmax_t)time(NULL)<<'\n';
     
     if (!intermediate_run)
       relation_tag_id_statistics_remake();
@@ -1082,6 +1080,6 @@ int main(int argc, char *argv[])
     cerr<<"\nopen64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
   
-  cerr<<'\n'<<(uintmax_t)time(NULL)<<'\n';
+  //cerr<<'\n'<<(uintmax_t)time(NULL)<<'\n';
   return 0;
 }

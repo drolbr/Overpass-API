@@ -16,14 +16,17 @@ union_$(suffix)
 
 objects = expat_justparse_interface.o cgi-helper.o user_interface.o script_queries.o node_strings_file_io.o way_strings_file_io.o relation_strings_file_io.o script_tools.o vigilance_control.o $(stmts)
 executable_objects = script-interpreter.o add_rule.o dump_rules.o get_rule.o update_rule.o osm2load_infile.o
-executables = cgi-bin/interpreter cgi-bin/add_rule cgi-bin/get_rule cgi-bin/update_rule dump_rules load_rules osmy_vigilance bin/import_osm bin/apply_osc bin/database_daemon bin/dispatcher bin/fetch_osc bin/timestamp_of
+executables = cgi-bin/interpreter cgi-bin/add_rule cgi-bin/get_rule cgi-bin/update_rule dump_rules load_rules osmy_vigilance
 tool_headers = expat_justparse_interface.h script_datatypes.h script_queries.h script_tools.h user_interface.h
 
 backend_generic_h = backend/raw_file_db.h backend/file_types.h script_datatypes.h
 backend_types_h = backend/node_strings_file_io.h backend/way_strings_file_io.h backend/relation_strings_file_io.h
 backend_objects = node_strings_file_io.o way_strings_file_io.o relation_strings_file_io.o
+backend_executables = bin/import_osm bin/apply_osc
 
-main: $(executables)
+dispatcher_executables = bin/dispatcher bin/database_daemon bin/timestamp_of bin/fetch_osc bin/apply_gz_osc bin/init_dispatcher
+
+main: $(executables) $(backend_executables) $(dispatcher_executables)
 
 suffix = statement.o
 cgi-bin/interpreter: suffix = statement.o
@@ -57,19 +60,6 @@ load_rules: $(objects) load_rules.o
 
 osmy_vigilance: osmy_vigilance.c
 	g++ -o osmy_vigilance -O3 -Wall `mysql_config --include` osmy_vigilance.c `mysql_config --libs`
-
-bin/dispatcher: dispatcher/dispatcher.c
-	g++ -o bin/dispatcher -O3 -Wall `mysql_config --include` dispatcher/dispatcher.c `mysql_config --libs`
-
-bin/database_daemon: dispatcher/database_daemon.c
-	g++ -o bin/database_daemon -O3 -Wall `mysql_config --include` dispatcher/database_daemon.c `mysql_config --libs`
-
-bin/timestamp_of: dispatcher/timestamp_of.c
-	g++ -o bin/timestamp_of -O3 -Wall dispatcher/timestamp_of.c
-
-bin/fetch_osc: dispatcher/fetch_osc
-	cp dispatcher/fetch_osc bin/fetch_osc
-	chmod 755 bin/fetch_osc
 
 expat_justparse_interface.o: expat_justparse_interface.c expat_justparse_interface.h user_interface.h
 	g++ -c -O3 -Wall `mysql_config --include` expat_justparse_interface.c
@@ -121,17 +111,17 @@ osm2load_infile.o: osm2load_infile.c script_datatypes.h expat_justparse_interfac
 
 
 bin/import_osm: import_osm.o expat_justparse_interface.o $(backend_objects)
-	g++ -o $@ -O3 -Wall -lexpat $^ `mysql_config --libs`
+	g++ -o $@ -O3 -Wall -lexpat $^
 
 import_osm.o: backend/import_osm.c expat_justparse_interface.h $(backend_types_h) $(backend_generic_h)
-	g++ -o $@ -c -O3 -Wall `mysql_config --include` $<
+	g++ -o $@ -c -O3 -Wall $<
 
 
 bin/apply_osc: apply_osc.o expat_justparse_interface.o $(backend_objects)
-	g++ -o $@ -O3 -Wall -lexpat $^ `mysql_config --libs`
+	g++ -o $@ -O3 -Wall -lexpat $^
 	
 apply_osc.o: backend/apply_osc.c expat_justparse_interface.h $(backend_types_h) $(backend_generic_h)
-	g++ -o $@ -c -O3 -Wall `mysql_config --include` $<
+	g++ -o $@ -c -O3 -Wall $<
 
 
 node_strings_file_io.o: backend/node_strings_file_io.c backend/node_strings_file_io.h $(backend_generic_h)
@@ -142,6 +132,28 @@ way_strings_file_io.o: backend/way_strings_file_io.c backend/way_strings_file_io
 
 relation_strings_file_io.o: backend/relation_strings_file_io.c backend/relation_strings_file_io.h $(backend_generic_h)
 	g++ -o $@ -c -O3 -Wall $<
+
+
+bin/dispatcher: dispatcher/dispatcher.c
+	g++ -o $@ -O3 -Wall `mysql_config --include` $< `mysql_config --libs`
+
+bin/database_daemon: dispatcher/database_daemon.c
+	g++ -o $@ -O3 -Wall `mysql_config --include` $< `mysql_config --libs`
+
+bin/timestamp_of: dispatcher/timestamp_of.c
+	g++ -o $@ -O3 -Wall $<
+
+bin/fetch_osc: dispatcher/fetch_osc
+	cp $< $@
+	chmod 755 $@
+
+bin/apply_gz_osc: dispatcher/apply_gz_osc
+	cp $< $@
+	chmod 755 $@
+
+bin/init_dispatcher: dispatcher/init_dispatcher
+	cp $< $@
+	chmod 755 $@
 
 
 clean: suffix = statement.o

@@ -27,9 +27,9 @@ fetch_file()
 while [[ 0 -eq 0 ]];
 do
 {
-  STARTTIME=`timestamp_of $HOURLY_TIMESTAMP`
+  STARTTIME=`./timestamp_of $HOURLY_TIMESTAMP`
   HOURLY_TIMESTAMP=$(($HOURLY_TIMESTAMP+1))
-  ENDTIME=`timestamp_of $HOURLY_TIMESTAMP`
+  ENDTIME=`./timestamp_of $HOURLY_TIMESTAMP`
   fetch_file $HOURLY_TIMESTAMP $STARTTIME $ENDTIME
   sleep 1
   echo " new_changefile $HOURLY_TIMESTAMP " >>/tmp/dispatcher.pipe

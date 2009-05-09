@@ -21,21 +21,22 @@ mysql -u osm -posm -e "drop database osm"
 mysql -u osm -posm -e "create database osm"
 
 
-mysql -u osm -posm osm -e "create table key_s (id int unsigned, key_ varchar(21844))"
-mysql -u osm -posm osm -e "create table value_s (id int unsigned, value_ varchar(21844))"
-
 echo "Collecting statements  ... "
 
 echo "set session myisam_sort_buffer_size = 1073741824;" >init_database.sql
 echo "set session max_heap_table_size = 1073741824;" >>init_database.sql
 echo "set session tmp_table_size = 1073741824;" >>init_database.sql
 
-echo "alter table key_s add unique key(id), add index(key_);" >>init_database.sql
-echo "alter table value_s add unique key(id), add index(value_);" >>init_database.sql
-
 echo "Creating indices and merged tables ... "
 mysql -u osm -posm osm <init_database.sql
 
-bunzip2 <$1 | ./import_osm
+bunzip2 <$1 | ./bin/import_osm
 
 ./init_derived_data YES
+
+mkdir /opt/osm_why_api/osm_1/
+mkdir /opt/osm_why_api/osm_2/
+cp -pv /opt/osm_why_api/*.dat /opt/osm_why_api/osm_1/
+cp -pv /opt/osm_why_api/*.idx /opt/osm_why_api/osm_1/
+mv /opt/osm_why_api/*.dat /opt/osm_why_api/osm_2/
+mv /opt/osm_why_api/*.idx /opt/osm_why_api/osm_2/

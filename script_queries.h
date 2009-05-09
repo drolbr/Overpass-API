@@ -15,6 +15,7 @@ using namespace std;
 
 MYSQL_RES* mysql_query_wrapper(MYSQL* mysql, string query);
 
+void void_query(MYSQL* mysql, string query);
 int int_query(MYSQL* mysql, string query);
 pair< int, int > intint_query(MYSQL* mysql, string query);
 

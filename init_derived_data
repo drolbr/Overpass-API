@@ -16,7 +16,18 @@ if [[ $CONFIRM != "YES" ]]; then
 fi
 
 
-echo "drop table if exists rule_names, rule_bodys, conflicts, node_conflicts, way_conflicts, relation_conflicts, areas, area_segments, area_tags, area_origins, area_ways;" >init_derived_data.sql
+mysql -u osm -posm -e "create database if not exists osm_1"
+mysql -u osm -posm -e "drop database osm_1"
+mysql -u osm -posm -e "create database osm_1"
+
+mysql -u osm -posm -e "create database if not exists osm_2"
+mysql -u osm -posm -e "drop database osm_2"
+mysql -u osm -posm -e "create database osm_2"
+
+echo "drop table if exists key_s, value_s, rule_names, rule_bodys, conflicts, node_conflicts, way_conflicts, relation_conflicts, areas, area_segments, area_tags, area_origins, area_ways;" >init_derived_data.sql
+
+echo "create table key_s (id int unsigned, key_ varchar(21844));" >>init_derived_data.sql
+echo "create table value_s (id int unsigned, value_ varchar(21844));" >>init_derived_data.sql
 
 echo "create table rule_names (id int, name varchar(21844));" >>init_derived_data.sql
 echo "create table rule_bodys (id int, rule int, source varchar(21844));" >>init_derived_data.sql
@@ -32,6 +43,8 @@ echo "create table area_tags (id int unsigned, key_ int unsigned, value_ int uns
 echo "create table area_origins (id int unsigned, rule int, line int, stack tinytext);" >>init_derived_data.sql
 echo "create table area_ways (id int unsigned, way int);" >>init_derived_data.sql
 
+echo "alter table key_s add unique key(id), add index(key_);" >>init_derived_data.sql
+echo "alter table value_s add unique key(id), add index(value_);" >>init_derived_data.sql
 echo "insert rule_names values (0, '');" >>init_derived_data.sql
 echo "alter table rule_names add unique key(id), add key(name);" >>init_derived_data.sql
 echo "insert rule_bodys values (0, 0, '');" >>init_derived_data.sql
@@ -51,4 +64,7 @@ echo "alter table area_ways add index(id);" >>init_derived_data.sql
 
 echo "Creating tables for derived data ... "
 
+mysql -u osm -posm -e "use osm_1"
+mysql -u osm -posm osm <init_derived_data.sql
+mysql -u osm -posm -e "use osm_2"
 mysql -u osm -posm osm <init_derived_data.sql
