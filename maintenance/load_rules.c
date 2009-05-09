@@ -5,12 +5,12 @@
 #include <string>
 #include <stdlib.h>
 #include <vector>
-#include "expat_justparse_interface.h"
-#include "script_datatypes.h"
-#include "script_queries.h"
-#include "script_tools.h"
-#include "statement_factory.h"
-#include "user_interface.h"
+#include "../expat_justparse_interface.h"
+#include "../script_datatypes.h"
+#include "../script_queries.h"
+#include "../script_tools.h"
+#include "../statement_factory.h"
+#include "../user_interface.h"
 
 #include <mysql.h>
 
