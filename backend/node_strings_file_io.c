@@ -521,7 +521,7 @@ struct node_idx_less : public binary_function< uint32, uint32, bool >
 
 void node_tag_create_node_id_idx(uint32* block_of_id, uint32 max_node_id)
 {
-  const uint32 max_nodes_ram = 32*1024*1024;
+  const uint32 max_nodes_ram = 16*1024*1024;
   
   int source_fd = open64(NODE_TAG_TMPB, O_RDONLY);
   if (source_fd < 0)
