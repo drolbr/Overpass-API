@@ -1,3 +1,13 @@
+bin/apply_gz_osc
+bin/apply_osc
+bin/database_daemon
+bin/dispatcher
+bin/dump_rules
+bin/fetch_osc
+bin/import_osm
+bin/init_dispatcher
+bin/load_rules
+bin/timestamp_of
 cgi-bin/add_rule
 cgi-bin/get_rule
 cgi-bin/interpreter
