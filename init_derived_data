@@ -64,7 +64,5 @@ echo "alter table area_ways add index(id);" >>init_derived_data.sql
 
 echo "Creating tables for derived data ... "
 
-mysql -u osm -posm -e "use osm_1"
-mysql -u osm -posm osm <init_derived_data.sql
-mysql -u osm -posm -e "use osm_2"
-mysql -u osm -posm osm <init_derived_data.sql
+mysql -u osm -posm osm_1 <init_derived_data.sql
+mysql -u osm -posm osm_2 <init_derived_data.sql

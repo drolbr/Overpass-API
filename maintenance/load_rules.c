@@ -65,10 +65,10 @@ int main(int argc, char *argv[])
   if (display_parse_errors(cout, xml_total_raw))
     return 0;
   
-  string current_db(detect_active_database());
+/*  string current_db(detect_active_database());
   db_subdir = current_db;
   if ((db_subdir.size() > 0) && (db_subdir[db_subdir.size()-1] != '/'))
-    db_subdir += '/';
+    db_subdir += '/';*/
   
   mysql = mysql_init(NULL);
   
@@ -81,87 +81,96 @@ int main(int argc, char *argv[])
   
   out_header(cout, output_mode);
   
-  map< string, int > versions;
-  map< string, string > bodys;
-  
-  string::size_type pos(0);
-  pos = xml_total_raw.find("<osm-script");
-  while ((pos != string::npos) && (pos < xml_total_raw.size()))
+  try
   {
-    string xml_raw("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-    string::size_type endpos(xml_total_raw.find("</osm-script", pos+1));
-    if ((endpos != string::npos) && (endpos < xml_total_raw.find("<osm-script", pos+1)))
-      xml_raw += xml_total_raw.substr(pos, endpos - pos + 13);
-    else
-      xml_raw += xml_total_raw.substr(pos, xml_raw.find('>', pos+1) - pos + 1);
+    map< string, int > versions;
+    map< string, string > bodys;
+  
+    string::size_type pos(0);
+    pos = xml_total_raw.find("<osm-script");
+    while ((pos != string::npos) && (pos < xml_total_raw.size()))
+    {
+      string xml_raw("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+      string::size_type endpos(xml_total_raw.find("</osm-script", pos+1));
+      if ((endpos != string::npos) && (endpos < xml_total_raw.find("<osm-script", pos+1)))
+	xml_raw += xml_total_raw.substr(pos, endpos - pos + 13);
+      else
+	xml_raw += xml_total_raw.substr(pos, xml_raw.find('>', pos+1) - pos + 1);
     
-    parse_script(xml_raw, start, end);
-    if (display_parse_errors(cout, xml_raw))
-      return 0;
+      parse_script(xml_raw, start, end);
+      if (display_parse_errors(cout, xml_raw))
+	return 0;
     // getting special information for rules
-    string rule_name("");
-    int rule_replace(0), rule_version(0);
-    Root_Statement* root_statement(dynamic_cast< Root_Statement* >(statement_stack.front()));
-    if (root_statement)
-    {
-      rule_name = root_statement->get_rule_name();
-      rule_replace = root_statement->get_rule_replace();
-      rule_version = root_statement->get_rule_version();
-    }
-    if (rule_name == "")
-      add_static_error("Loading a rule requires the name of the rule.");
-    if (rule_replace)
-      add_static_error("Providing which version to replace while loading rules is not allowed.");
+      string rule_name("");
+      int rule_replace(0), rule_version(0);
+      Root_Statement* root_statement(dynamic_cast< Root_Statement* >(statement_stack.front()));
+      if (root_statement)
+      {
+	rule_name = root_statement->get_rule_name();
+	rule_replace = root_statement->get_rule_replace();
+	rule_version = root_statement->get_rule_version();
+      }
+      if (rule_name == "")
+	add_static_error("Loading a rule requires the name of the rule.");
+      if (rule_replace)
+	add_static_error("Providing which version to replace while loading rules is not allowed.");
   
-    xml_raw = xml_raw.substr(xml_raw.find("<osm-script"));
-    xml_raw = xml_raw.substr(xml_raw.find('>') + 1);
-    if (xml_raw.find("</osm-script>") != string::npos)
-      xml_raw = xml_raw.substr(0, xml_raw.find("</osm-script>"));
-    else
-      xml_raw = "";
+      xml_raw = xml_raw.substr(xml_raw.find("<osm-script"));
+      xml_raw = xml_raw.substr(xml_raw.find('>') + 1);
+      if (xml_raw.find("</osm-script>") != string::npos)
+	xml_raw = xml_raw.substr(0, xml_raw.find("</osm-script>"));
+      else
+	xml_raw = "";
     
-    if (display_static_errors(cout, xml_raw))
-      return 0;
+      if (display_static_errors(cout, xml_raw))
+	return 0;
   
-    ostringstream temp;
-    temp<<"select id from rule_names where name = '";
-    escape_insert(temp, rule_name);
-    temp<<'\'';
-    int name_id(int_query(mysql, temp.str()));
-  
-    if (!name_id)
-    {
-      name_id = int_query(mysql, "select max(id) from rule_names") + 1;
-      temp.str("");
-      temp<<"insert rule_names values ("<<name_id<<", '";
+      ostringstream temp;
+      temp<<"select id from rule_names where name = '";
       escape_insert(temp, rule_name);
+      temp<<'\'';
+      int name_id(int_query(mysql, temp.str()));
+  
+      if (!name_id)
+      {
+	name_id = int_query(mysql, "select max(id) from rule_names") + 1;
+	temp.str("");
+	temp<<"insert rule_names values ("<<name_id<<", '";
+	escape_insert(temp, rule_name);
+	temp<<"')";
+	mysql_query(mysql, temp.str().c_str());
+      }
+  
+      int body_id(rule_version);
+
+      temp.str("");
+      temp<<"insert rule_bodys values ("<<body_id<<", "<<name_id<<", '";
+      escape_insert(temp, xml_raw);
       temp<<"')";
       mysql_query(mysql, temp.str().c_str());
+  
+      temp.str("");
+      temp<<"Rule '"<<rule_name<<"' version "<<body_id<<" successfully updated.";
+      runtime_remark(temp.str(), cout);
+  
+      if (versions[rule_name] < rule_version)
+      {
+	versions[rule_name] = rule_version;
+	bodys[rule_name] = xml_raw;
+      }
+  
+      statement_stack.clear();
+      pos = xml_total_raw.find("<osm-script", ++pos);
     }
-  
-    int body_id(rule_version);
-
-    temp.str("");
-    temp<<"insert rule_bodys values ("<<body_id<<", "<<name_id<<", '";
-    escape_insert(temp, xml_raw);
-    temp<<"')";
-    mysql_query(mysql, temp.str().c_str());
-  
-    temp.str("");
-    temp<<"Rule '"<<rule_name<<"' version "<<body_id<<" successfully updated.";
-    runtime_remark(temp.str(), cout);
-  
-    if (versions[rule_name] < rule_version)
-    {
-      versions[rule_name] = rule_version;
-      bodys[rule_name] = xml_raw;
-    }
-  
-    statement_stack.clear();
-    pos = xml_total_raw.find("<osm-script", ++pos);
+  }
+  catch(File_Error e)
+  {
+    ostringstream temp;
+    temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin;
+    runtime_error(temp.str(), cout);
   }
   
-  void_query(mysql, (string)("use ") + current_db);
+/*  void_query(mysql, (string)("use ") + current_db);
   
   for (map< string, int >::const_iterator it(versions.begin()); it != versions.end(); ++it)
   {
@@ -189,7 +198,7 @@ int main(int argc, char *argv[])
     statement_stack.clear();
   }
   
-  out_footer(cout, output_mode);
+  out_footer(cout, output_mode);*/
   
   mysql_close(mysql);
     

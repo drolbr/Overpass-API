@@ -10,6 +10,9 @@
 #include <sys/time.h>
 #include <sys/wait.h>
 
+#include "../script_datatypes.h"
+#include "process_rules.h"
+
 #include <mysql.h>
 
 using namespace std;
@@ -42,7 +45,7 @@ uint read_uint64(const string& input, uint pos, uint64& result)
   return pos;
 }
 
-MYSQL_RES* mysql_query_use_wrapper(MYSQL* mysql, string query)
+MYSQL_RES* mysql_query_simple_wrapper(MYSQL* mysql, string query)
 {
   mysql_query(mysql, query.c_str());
   MYSQL_RES* result(mysql_use_result(mysql));
@@ -52,7 +55,7 @@ MYSQL_RES* mysql_query_use_wrapper(MYSQL* mysql, string query)
 uint uint_query(MYSQL* mysql, string query)
 {
   uint result_val(0);
-  MYSQL_RES* result(mysql_query_use_wrapper(mysql, query));
+  MYSQL_RES* result(mysql_query_simple_wrapper(mysql, query));
   if (!result)
     return 0;
 	
@@ -65,6 +68,8 @@ uint uint_query(MYSQL* mysql, string query)
   mysql_free_result(result);
   return result_val;
 }
+
+string db_subdir;
 
 void process_update
     (MYSQL* mysql, const string& database_name, uint database_id,
@@ -86,10 +91,6 @@ void process_update
     int status;
     pid = wait(&status);
   }
-  struct timeval timeout;
-  timeout.tv_sec = 30;
-  timeout.tv_usec = 0;
-  select (FD_SETSIZE, NULL, NULL, NULL, &timeout);
   
   uint rule_version(uint_query(mysql, "select max(id) from rule_bodys"));
   //notify dispatcher
@@ -100,10 +101,20 @@ void process_update
   close(fd);
   
   cerr<<"Updating rules\n";
+  db_subdir = database_name + '/';
+  try
+  {
+    process_rules(mysql, database_name, rule_version);
+  }
+  catch(File_Error e)
+  {
+    cerr<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin;
+  }
   //sleep for a second - dummy
-  timeout.tv_sec = 60;
-  timeout.tv_usec = 0;
-  select (FD_SETSIZE, NULL, NULL, NULL, &timeout);
+//   struct timeval timeout;
+//   timeout.tv_sec = 60;
+//   timeout.tv_usec = 0;
+//   select (FD_SETSIZE, NULL, NULL, NULL, &timeout);
 
   //notify dispatcher
   temp.str("");

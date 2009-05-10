@@ -7,7 +7,12 @@ if [[ -z $1  ]]; then
 };
 fi
 PATH=./:$PATH
-read -p "Proceeding will drop the current database osm. Do you really want to continue? " CONFIRM
+CONFIRM=$1
+if [[ $1 != "YES" ]]; then
+{
+  read -p "Proceeding will drop the current databases osm_1 and osm_2 and the raw_db. Do you really want to continue? " CONFIRM
+};
+fi
 
 if [[ $CONFIRM != "YES" ]]; then
 {
@@ -20,15 +25,6 @@ mysql -u osm -posm -e "create database if not exists osm"
 mysql -u osm -posm -e "drop database osm"
 mysql -u osm -posm -e "create database osm"
 
-
-echo "Collecting statements  ... "
-
-echo "set session myisam_sort_buffer_size = 1073741824;" >init_database.sql
-echo "set session max_heap_table_size = 1073741824;" >>init_database.sql
-echo "set session tmp_table_size = 1073741824;" >>init_database.sql
-
-echo "Creating indices and merged tables ... "
-mysql -u osm -posm osm <init_database.sql
 
 bunzip2 <$1 | ./bin/import_osm
 

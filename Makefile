@@ -85,19 +85,19 @@ vigilance_control.o: vigilance_control.c vigilance_control.h script_datatypes.h 
 
 suffix = statement.h
 script-interpreter.o: script-interpreter.c $(tool_headers) $(stmts) statement_factory.h
-	g++ -c -O3 -Wall `mysql_config --include` script-interpreter.c
+	g++ -c -O3 -Wall `mysql_config --include` $<
 
 suffix = statement.h
 add_rule.o: add_rule.c $(tool_headers) $(stmts) statement_factory.h
-	g++ -c -O3 -Wall `mysql_config --include` add_rule.c
+	g++ -c -O3 -Wall `mysql_config --include` $<
 
 suffix = statement.h
 get_rule.o: get_rule.c $(tool_headers) $(stmts) statement_factory.h
-	g++ -c -O3 -Wall `mysql_config --include` get_rule.c
+	g++ -c -O3 -Wall `mysql_config --include` $<
 
 suffix = statement.h
 update_rule.o: update_rule.c $(tool_headers) $(stmts) statement_factory.h
-	g++ -c -O3 -Wall `mysql_config --include` update_rule.c
+	g++ -c -O3 -Wall `mysql_config --include` $<
 
 
 suffix = statement.h
@@ -136,11 +136,19 @@ relation_strings_file_io.o: backend/relation_strings_file_io.c backend/relation_
 bin/dispatcher: dispatcher/dispatcher.c
 	g++ -o $@ -O3 -Wall `mysql_config --include` $< `mysql_config --libs`
 
-bin/database_daemon: dispatcher/database_daemon.c
-	g++ -o $@ -O3 -Wall `mysql_config --include` $< `mysql_config --libs`
+suffix = statement.o
+bin/database_daemon: suffix = statement.o
+bin/database_daemon: database_daemon.o process_rules.o $(objects)
+	g++ -o $@ -O3 -Wall -lexpat $^ `mysql_config --libs`
+
+database_daemon.o: dispatcher/database_daemon.c dispatcher/process_rules.h
+	g++ -o $@ -c -O3 -Wall `mysql_config --include` $<
 
 bin/timestamp_of: dispatcher/timestamp_of.c
 	g++ -o $@ -O3 -Wall $<
+
+process_rules.o: dispatcher/process_rules.c dispatcher/process_rules.h script_datatypes.h
+	g++ -o $@ -c -O3 -Wall `mysql_config --include` $<
 
 bin/fetch_osc: dispatcher/fetch_osc
 	cp $< $@
