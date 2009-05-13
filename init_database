@@ -21,11 +21,6 @@ if [[ $CONFIRM != "YES" ]]; then
 };
 fi
 
-mysql -u osm -posm -e "create database if not exists osm"
-mysql -u osm -posm -e "drop database osm"
-mysql -u osm -posm -e "create database osm"
-
-
 bunzip2 <$1 | ./bin/import_osm
 
 ./init_derived_data YES

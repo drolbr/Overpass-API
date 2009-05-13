@@ -104,6 +104,7 @@ void process_update
   db_subdir = database_name + '/';
   try
   {
+    mysql_ping(mysql);
     process_rules(mysql, database_name, rule_version);
   }
   catch(File_Error e)

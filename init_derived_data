@@ -16,6 +16,22 @@ if [[ $CONFIRM != "YES" ]]; then
 fi
 
 
+echo "create database if not exists osm;" >init_rules.sql
+echo "drop database osm;" >>init_rules.sql
+echo "create database osm;" >>init_rules.sql
+
+echo "use osm;" >>init_rules.sql
+echo "create table rule_names (id int, name varchar(21844));" >>init_rules.sql
+echo "create table rule_bodys (id int, rule int, source varchar(21844));" >>init_rules.sql
+
+echo "insert rule_names values (0, '');" >>init_rules.sql
+echo "alter table rule_names add unique key(id), add key(name);" >>init_rules.sql
+echo "insert rule_bodys values (0, 0, '');" >>init_rules.sql
+echo "alter table rule_bodys add key(id), add key(rule);" >>init_rules.sql
+
+mysql -u osm -posm <init_rules.sql
+
+
 mysql -u osm -posm -e "create database if not exists osm_1"
 mysql -u osm -posm -e "drop database osm_1"
 mysql -u osm -posm -e "create database osm_1"
@@ -24,13 +40,10 @@ mysql -u osm -posm -e "create database if not exists osm_2"
 mysql -u osm -posm -e "drop database osm_2"
 mysql -u osm -posm -e "create database osm_2"
 
-echo "drop table if exists key_s, value_s, rule_names, rule_bodys, conflicts, node_conflicts, way_conflicts, relation_conflicts, areas, area_segments, area_tags, area_origins, area_ways;" >init_derived_data.sql
+echo "drop table if exists key_s, value_s, conflicts, node_conflicts, way_conflicts, relation_conflicts, areas, area_segments, area_tags, area_origins, area_ways;" >init_derived_data.sql
 
 echo "create table key_s (id int unsigned, key_ varchar(21844));" >>init_derived_data.sql
 echo "create table value_s (id int unsigned, value_ varchar(21844));" >>init_derived_data.sql
-
-echo "create table rule_names (id int, name varchar(21844));" >>init_derived_data.sql
-echo "create table rule_bodys (id int, rule int, source varchar(21844));" >>init_derived_data.sql
 
 echo "create table conflicts (id int, rule int, line int, stack tinytext, message varchar(21844));" >>init_derived_data.sql
 echo "create table node_conflicts (id int, conflict int);" >>init_derived_data.sql
@@ -45,10 +58,6 @@ echo "create table area_ways (id int unsigned, way int);" >>init_derived_data.sq
 
 echo "alter table key_s add unique key(id), add index(key_);" >>init_derived_data.sql
 echo "alter table value_s add unique key(id), add index(value_);" >>init_derived_data.sql
-echo "insert rule_names values (0, '');" >>init_derived_data.sql
-echo "alter table rule_names add unique key(id), add key(name);" >>init_derived_data.sql
-echo "insert rule_bodys values (0, 0, '');" >>init_derived_data.sql
-echo "alter table rule_bodys add key(id), add key(rule);" >>init_derived_data.sql
 echo "insert conflicts values (0, 0, 0, '', '');" >>init_derived_data.sql
 echo "alter table conflicts add unique key(id), add index(rule, stack(27));" >>init_derived_data.sql
 echo "alter table node_conflicts add key(id);" >>init_derived_data.sql
