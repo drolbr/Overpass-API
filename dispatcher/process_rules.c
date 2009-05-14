@@ -80,17 +80,21 @@ void retrieve_rules(MYSQL* mysql, uint32 max_version,
     row = mysql_fetch_row(result);
   }
   mysql_free_result(result);
-  
-  out_footer(cout, output_mode);
 }
 
 void execute_rules(MYSQL* mysql, const map< string, uint32 >& rules, const map< string, string >& bodys)
 {
+  prepare_caches(mysql);
+  
+  ostringstream temp;
+  temp<<"Applying Rules";
+  runtime_remark(temp.str(), cout);
+    
   for (map< string, uint32 >::const_iterator it(rules.begin()); it != rules.end(); ++it)
   {
     set_debug_mode(VERBOSE);
   
-    ostringstream temp;
+    temp.str("");
     temp<<"Entering Rule "<<it->first;
     runtime_remark(temp.str(), cout);
     
@@ -101,8 +105,6 @@ void execute_rules(MYSQL* mysql, const map< string, uint32 >& rules, const map< 
   
     set_rule(it->second, it->first);
     //Rule execution
-    prepare_caches(mysql);
-  
     map< string, Set > maps;
     for (vector< Statement* >::const_iterator it2(statement_stack.begin());
 	 it2 != statement_stack.end(); ++it2)

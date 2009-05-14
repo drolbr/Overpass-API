@@ -77,6 +77,14 @@ int main(int argc, char *argv[])
   {
     add_parse_error(parse_error.message);
   }
+  catch(File_Error e)
+  {
+    ostringstream temp;
+    temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin;
+    runtime_error(temp.str(), cout);
+    
+    return 0;
+  }
   if (display_parse_errors(cout, xml_raw))
     return 0;
   if (display_static_errors(cout, xml_raw))
@@ -140,6 +148,6 @@ int main(int argc, char *argv[])
     temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin;
     runtime_error(temp.str(), cout);
   }
-  
+
   return 0;
 }

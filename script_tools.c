@@ -391,7 +391,10 @@ string detect_active_database()
   uint32 database_id, available_memory;
   ifstream ssin("/tmp/small_status");
   if (!ssin)
-    throw File_Error(errno, "/tmp/small_status", "detect_active_database:1");
+  {
+    runtime_error("Status file not found. Check if the dispatcher is running.", cout);
+    //throw File_Error(errno, "/tmp/small_status", "detect_active_database:1");
+  }
   ssin>>database_id;
   ssin>>available_memory;
   ssin.close();
