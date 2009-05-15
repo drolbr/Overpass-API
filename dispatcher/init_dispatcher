@@ -1,15 +1,20 @@
 #!/bin/bash
 
-if [[ -z $1  ]]; then
+if [[ -z $2  ]]; then
 {
-  echo Usage: $0 Hourly_Timestamp
+  echo Usage: $0 Hourly_Timestamp_Of_Db1 Hourly_Timestamp_Of_Db2
   exit 0
 };
 fi
 
 rm -f /tmp/dispatcher.pipe /tmp/database_1.pipe /tmp/database_2.pipe
 
+FETCH_OSC_VER=$1
+if [[ $1 -lt $2 ]]; then
+  FETCH_OSC_VER=$2;
+fi
+
 ./database_daemon osm_1 1 &
 ./database_daemon osm_2 2 &
-./dispatcher $1 $1 &
-./fetch_osc $1 &
+./dispatcher $1 $2 &
+./fetch_osc $FETCH_OSC_VER &

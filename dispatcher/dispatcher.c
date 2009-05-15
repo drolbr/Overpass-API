@@ -158,6 +158,9 @@ void check_pending_database(State& state, MYSQL* mysql)
     if (!(outdated && unused))
       return;
     
+    uint new_version(state.last_changefile);
+    if (state.db1.last_changefile > new_version)
+      new_version = state.db1.last_changefile;
     ostringstream temp;
     temp<<" update "<<state.db1.last_changefile<<' '<<state.last_changefile<<' ';
     log_event(temp.str());
@@ -188,6 +191,9 @@ void check_pending_database(State& state, MYSQL* mysql)
     if (!(outdated && unused))
       return;
     
+    uint new_version(state.last_changefile);
+    if (state.db2.last_changefile > new_version)
+      new_version = state.db2.last_changefile;
     ostringstream temp;
     temp<<" update "<<state.db2.last_changefile<<' '<<state.last_changefile<<' ';
     log_event(temp.str());
@@ -338,7 +344,10 @@ int main(int argc, char *argv[])
   state.db1.last_changefile = atoi(argv[1]);
   state.db2.state = Database_State::PENDING;
   state.db2.last_changefile = atoi(argv[2]);
-  
+  state.last_changefile = state.db1.last_changefile;
+  if (state.db2.last_changefile > state.db1.last_changefile)
+    state.last_changefile = state.db2.last_changefile;
+      
   check_pending_database(state, mysql);
   write_status_files(state);
   

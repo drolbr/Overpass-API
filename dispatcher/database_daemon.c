@@ -83,7 +83,7 @@ void process_update
     (MYSQL* mysql, const string& database_name, uint database_id,
      uint from_version, uint to_version)
 {
-  log_event(database_id, "Updating OSM data\n");
+  log_event(database_id, "Updating OSM data.");
   //execute gunzip and apply_osc
   int pid = fork();
   if (pid == 0)
@@ -109,7 +109,6 @@ void process_update
   write(fd, temp.str().data(), temp.str().size());
   close(fd);
   
-  log_event(database_id, "Updating rules\n");
   db_subdir = database_name + '/';
   try
   {
