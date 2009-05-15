@@ -29,6 +29,7 @@ typedef unsigned long long uint64;
 
 const char* DISPATCH_FIFO = "/tmp/dispatcher.pipe";
 string DB_FIFO("/tmp/database_%.pipe");
+const char* LOGFILE = "/opt/osm_why_api/dispatcher.log";
 
 uint ignore_whitespace(const string& input, uint pos)
 {
@@ -69,13 +70,20 @@ uint uint_query(MYSQL* mysql, string query)
   return result_val;
 }
 
+void log_event(uint database_id, const string& message)
+{
+  ofstream log(LOGFILE, ios_base::app);
+  log<<"database_daemon("<<database_id<<")@"<<(uintmax_t)time(NULL)<<": "<<message<<'\n';
+  log.close();
+}
+
 string db_subdir;
 
 void process_update
     (MYSQL* mysql, const string& database_name, uint database_id,
      uint from_version, uint to_version)
 {
-  cerr<<"Updating OSM data\n";
+  log_event(database_id, "Updating OSM data\n");
   //execute gunzip and apply_osc
   int pid = fork();
   if (pid == 0)
@@ -96,15 +104,17 @@ void process_update
   //notify dispatcher
   ostringstream temp;
   temp<<" update_rules "<<database_id<<' '<<rule_version<<' ';
+  log_event(database_id, temp.str());
   int fd = open(DISPATCH_FIFO, O_WRONLY|O_NONBLOCK);
   write(fd, temp.str().data(), temp.str().size());
   close(fd);
   
-  cerr<<"Updating rules\n";
+  log_event(database_id, "Updating rules\n");
   db_subdir = database_name + '/';
   try
   {
     mysql_ping(mysql);
+    mysql_query(mysql, ((string)("use ") + database_name).c_str());
     process_rules(mysql, database_name, rule_version);
   }
   catch(File_Error e)
@@ -120,6 +130,7 @@ void process_update
   //notify dispatcher
   temp.str("");
   temp<<" update_finished "<<database_id<<' ';
+  log_event(database_id, temp.str());
   fd = open(DISPATCH_FIFO, O_WRONLY|O_NONBLOCK);
   write(fd, temp.str().data(), temp.str().size());
   close(fd);

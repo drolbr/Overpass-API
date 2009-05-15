@@ -82,7 +82,9 @@ void retrieve_rules(MYSQL* mysql, uint32 max_version,
   mysql_free_result(result);
 }
 
-void execute_rules(MYSQL* mysql, const map< string, uint32 >& rules, const map< string, string >& bodys)
+void execute_rules
+    (MYSQL* mysql, const string& current_db,
+     const map< string, uint32 >& rules, const map< string, string >& bodys)
 {
   prepare_caches(mysql);
   
@@ -104,6 +106,8 @@ void execute_rules(MYSQL* mysql, const map< string, uint32 >& rules, const map< 
     parse_script(xml_raw, start, end);
   
     set_rule(it->second, it->first);
+    (*dynamic_cast< Root_Statement* >(statement_stack.front()))
+	.set_database_id(current_db[current_db.size()-1] - 48);
     //Rule execution
     map< string, Set > maps;
     for (vector< Statement* >::const_iterator it2(statement_stack.begin());
@@ -124,6 +128,6 @@ void process_rules(MYSQL* mysql, const string& current_db, uint32 max_version)
   void_query(mysql, "use osm");
   retrieve_rules(mysql, max_version, rules, bodys);
   void_query(mysql, (string)("use ") + current_db);
-  execute_rules(mysql, rules, bodys);
+  execute_rules(mysql, current_db, rules, bodys);
   void_query(mysql, "use osm");
 }

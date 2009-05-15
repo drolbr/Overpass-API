@@ -203,10 +203,14 @@ void Root_Statement::forecast(MYSQL* mysql)
 
 void Root_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
-  if (timeout > 0)
+  uint max_element_count(get_element_count());
+  if (element_limit > 0)
+    max_element_count = element_limit;
+  if (rule_id_ == 0)
   {
-    if (add_timeout(mysql_thread_id(mysql), timeout))
-      return;
+    if (database_id == 0)
+      runtime_error("Internal: No database id set.\n", cout);
+    register_process(mysql_thread_id(mysql), database_id, timeout, max_element_count);
   }
   
   for (vector< Statement* >::iterator it(substatements.begin());
@@ -217,8 +221,8 @@ void Root_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     statement_finished(*it);
   }
 
-  if (timeout > 0)
-    remove_timeout();
+  if (rule_id_ == 0)
+    unregister_process(mysql_thread_id(mysql));
 }
 
 //-----------------------------------------------------------------------------
@@ -273,6 +277,7 @@ struct Flow_Forecast {
 };
 
 map< string, Set_Forecast > sets;
+uint64 max_element_count(0);
 
 vector< Flow_Forecast > forecast_stack;
 
@@ -359,8 +364,15 @@ void finish_statement_forecast()
     element_count += 10*it->second.way_count;
     element_count += 20*it->second.relation_count;
   }
+  if (element_count > max_element_count)
+    max_element_count = element_count;
   if ((element_limit == 0) && (element_count > 10*1000*1000))
     add_sanity_error("Number of elements exceeds limit of 10,000,000 elements.");
+}
+
+uint64 get_element_count()
+{
+  return max_element_count;
 }
 
 void display_state()

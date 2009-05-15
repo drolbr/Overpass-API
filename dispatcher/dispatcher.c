@@ -27,6 +27,7 @@ const char* DB1_FIFO = "/tmp/database_1.pipe";
 const char* DB2_FIFO = "/tmp/database_2.pipe";
 const char* SMALL_STATUS_FILE = "/tmp/small_status";
 const char* BIG_STATUS_FILE = "/tmp/big_status";
+const char* LOGFILE = "/opt/osm_why_api/dispatcher.log";
 
 const uint TOTAL_MEMORY = 40*1000*1000;
 
@@ -67,6 +68,13 @@ uint uint_query(MYSQL* mysql, string query)
     ;
   mysql_free_result(result);
   return result_val;
+}
+
+void log_event(const string& message)
+{
+  ofstream log(LOGFILE, ios_base::app);
+  log<<"dispatcher@"<<(uintmax_t)time(NULL)<<": "<<message<<'\n';
+  log.close();
 }
 
 struct Database_State
@@ -150,9 +158,9 @@ void check_pending_database(State& state, MYSQL* mysql)
     if (!(outdated && unused))
       return;
     
-    cerr<<"Update auslösen: 1 "<<state.db1.last_changefile<<' '<<state.last_changefile<<'\n';
     ostringstream temp;
     temp<<" update "<<state.db1.last_changefile<<' '<<state.last_changefile<<' ';
+    log_event(temp.str());
     int fd = open(DB1_FIFO, O_WRONLY|O_NONBLOCK);
     write(fd, temp.str().data(), temp.str().size());
     close(fd);
@@ -180,9 +188,9 @@ void check_pending_database(State& state, MYSQL* mysql)
     if (!(outdated && unused))
       return;
     
-    cerr<<"Update auslösen: 2 "<<state.db2.last_changefile<<' '<<state.last_changefile<<'\n';
     ostringstream temp;
     temp<<" update "<<state.db2.last_changefile<<' '<<state.last_changefile<<' ';
+    log_event(temp.str());
     int fd = open(DB2_FIFO, O_WRONLY|O_NONBLOCK);
     write(fd, temp.str().data(), temp.str().size());
     close(fd);
@@ -205,6 +213,7 @@ void check_process_time(State& state, MYSQL* mysql)
       mysql_ping(mysql);
       ostringstream temp;
       temp<<"kill "<<it->process_id;
+      log_event(temp.str());
       mysql_query(mysql, temp.str().c_str());
     
       it = state.processes.erase(it);
@@ -266,6 +275,8 @@ void query_start(State& state, uint database_id, uint process_id, uint timeout, 
   Process_State new_process(process_id);
   new_process.database_id = database_id;
   new_process.timeout_time = (uintmax_t)time(NULL) + timeout;
+  if (timeout == 0)
+    new_process.timeout_time += 540;
   new_process.reserved_memory = size;
   state.processes.push_back(new_process);
 
@@ -328,6 +339,9 @@ int main(int argc, char *argv[])
   state.db2.state = Database_State::PENDING;
   state.db2.last_changefile = atoi(argv[2]);
   
+  check_pending_database(state, mysql);
+  write_status_files(state);
+  
   // create named pipe
   umask(0);
   mknod(DISPATCH_FIFO, S_IFIFO|0666, 0);
@@ -368,6 +382,9 @@ int main(int argc, char *argv[])
 	pos += 14;
 	pos = ignore_whitespace(input, pos);
 	pos = read_uint64(input, pos, changefile_version);
+	ostringstream temp;
+	temp<<"new_changefile "<<changefile_version;
+	log_event(temp.str());
 	new_changefile(state, mysql, changefile_version);
       }
       else if (input.substr(pos, 12) == "update_rules")
@@ -378,6 +395,9 @@ int main(int argc, char *argv[])
 	pos = read_uint64(input, pos, database_id);
 	pos = ignore_whitespace(input, pos);
 	pos = read_uint64(input, pos, rule_version);
+	ostringstream temp;
+	temp<<"update_rules "<<database_id<<' '<<rule_version;
+	log_event(temp.str());
 	update_rules(state, database_id, rule_version);
       }
       else if (input.substr(pos, 15) == "update_finished")
@@ -386,6 +406,9 @@ int main(int argc, char *argv[])
 	pos += 15;
 	pos = ignore_whitespace(input, pos);
 	pos = read_uint64(input, pos, database_id);
+	ostringstream temp;
+	temp<<"update_finished "<<database_id;
+	log_event(temp.str());
 	update_finished(state, mysql, database_id);
       }
       else if (input.substr(pos, 11) == "query_start")
@@ -400,6 +423,9 @@ int main(int argc, char *argv[])
 	pos = read_uint64(input, pos, timeout);
 	pos = ignore_whitespace(input, pos);
 	pos = read_uint64(input, pos, size);
+	ostringstream temp;
+	temp<<"query_start "<<process_id<<' '<<database_id<<' '<<timeout<<' '<<size;
+	log_event(temp.str());
 	query_start(state, database_id, process_id, timeout, size);
       }
       else if (input.substr(pos, 9) == "query_end")
@@ -408,12 +434,18 @@ int main(int argc, char *argv[])
 	pos += 9;
 	pos = ignore_whitespace(input, pos);
 	pos = read_uint64(input, pos, process_id);
+	ostringstream temp;
+	temp<<"query_end "<<process_id;
+	log_event(temp.str());
 	query_end(state, mysql, process_id);
       }
       else if (input.substr(pos, 8) == "shutdown")
       {
 	pos += 8;
 	shutdown_req = true;
+	ostringstream temp;
+	temp<<"shutdown";
+	log_event(temp.str());
       }
       else
       {

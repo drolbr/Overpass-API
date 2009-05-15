@@ -128,11 +128,13 @@ int main(int argc, char *argv[])
     if ((db_subdir.size() > 0) && (db_subdir[db_subdir.size()-1] != '/'))
       db_subdir += '/';
     void_query(mysql, (string)("use ") + current_db);
+    (*dynamic_cast< Root_Statement* >(statement_stack.front()))
+	.set_database_id(current_db[current_db.size()-1] - 48);
     
     out_header(cout, output_mode);
-  
+    
     prepare_caches(mysql);
-  
+    
     map< string, Set > maps;
     for (vector< Statement* >::const_iterator it(statement_stack.begin());
 	 it != statement_stack.end(); ++it)

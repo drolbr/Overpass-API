@@ -116,7 +116,7 @@ void prepare_caches(MYSQL* mysql);
 class Root_Statement : public Statement
 {
   public:
-    Root_Statement() : timeout(0) {}
+    Root_Statement() : timeout(0), database_id(0) {}
     virtual void set_attributes(const char **attr);
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "osm-script"; }
@@ -128,12 +128,14 @@ class Root_Statement : public Statement
     string get_rule_name() { return name; }
     int get_rule_replace() { return replace; }
     int get_rule_version() { return version; }
+    void set_database_id(uint database_id_) { database_id = database_id_; }
     
   private:
     vector< Statement* > substatements;
     int timeout, elem_limit;
     string name;
     int replace, version;
+    uint database_id;
 };
 
 const int READ_FORECAST = 1;
@@ -149,6 +151,7 @@ void dec_stack();
 const vector< pair< int, string > >& pending_stack();
 int stack_time_offset();
 void finish_statement_forecast();
+uint64 get_element_count();
 void display_state();
 string detect_active_database();
 

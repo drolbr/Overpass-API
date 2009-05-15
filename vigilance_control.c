@@ -11,59 +11,21 @@
 
 using namespace std;
 
-const char* FIFO_FILE = "/tmp/osmy_watchdog.pipe";
+const char* FIFO_FILE = "/tmp/dispatcher.pipe";
 
-static unsigned long timeout_time(0);
-static unsigned long pid_(0);
+static uint64 timeout_(0);
 
 // register the process for a penalty brake on a given timeout
 // It starts the vigilance daemon if necesscary.
-int add_timeout(int pid, int timeout)
+int register_process(uint mysql_id, uint database_id, uint32 timeout, uint64 max_element_count)
 {
-  // automatic start of osmy_vigilance does somehow prevent the query from returning
-  // it's by the way also a security issue
-  /*  int fd = open(FIFO_FILE, O_WRONLY|O_NONBLOCK);
-  
-  if (fd == -1)
-  {
-    if (errno == ENOENT)
-    {
-      int child = fork();
-      if (child)
-      {
-	if (child == -1)
-	  runtime_error("Something's wrong with vigilance control - can't start vigilance process.", cout);
-	
-	// number of retries for opening the pipe
-	// -- maybe the just started 
-	int retries(10);
-	fd = open(FIFO_FILE, O_WRONLY|O_NONBLOCK);
-	while ((fd == -1) && (--retries >= 0))
-	{
-	  //sleep for a second
-	  struct timeval timeout;
-	  timeout.tv_sec = 1;
-	  timeout.tv_usec = 0;
-	  select (FD_SETSIZE, NULL, NULL, NULL, &timeout);
-    
-	  fd = open(FIFO_FILE, O_WRONLY|O_NONBLOCK);
-	}
-	if (fd == -1)
-	  runtime_error("Something's wrong with vigilance control - can't open timeout pipe.", cout);
-      }
-      else
-	execl("../osmy_vigilance", "osmy_vigilance", (char*) NULL);
-    }
-    else
-      runtime_error("Something's wrong with vigilance control - can't open timeout pipe.", cout);
-  }*/
-  
   // store current time.
-  timeout_time = (uintmax_t)time(NULL) + timeout;
-  pid_ = pid;
+  timeout_ = (uintmax_t)time(NULL) + timeout;
+  if (timeout == 0)
+    timeout_ += 540;
   
   ostringstream temp;
-  temp<<' '<<pid<<' '<<timeout<<' ';
+  temp<<" query_start "<<mysql_id<<' '<<database_id<<' '<<timeout<<' '<<max_element_count<<' ';
   
   int fd = open(FIFO_FILE, O_WRONLY|O_NONBLOCK);
   
@@ -80,10 +42,10 @@ int add_timeout(int pid, int timeout)
 }
 
 // unregister the process' timeout
-int remove_timeout()
+int unregister_process(uint mysql_id)
 {
   ostringstream temp;
-  temp<<' '<<pid_<<" accomplished ";
+  temp<<" query_end "<<mysql_id<<' ';
   
   int fd = open(FIFO_FILE, O_WRONLY|O_NONBLOCK);
   
@@ -99,10 +61,9 @@ int remove_timeout()
   return 0;
 }
 
-// unregister the process' timeout
 bool is_timed_out()
 {
-  return ((timeout_time > 0) && ((uintmax_t)time(NULL) >= timeout_time));
+  return ((timeout_ > 0) && ((uintmax_t)time(NULL) >= timeout_));
 }
 
 // int main(int argc, char *argv[])
