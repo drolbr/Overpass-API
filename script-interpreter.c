@@ -1,4 +1,5 @@
 #include <cctype>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <set>
@@ -16,6 +17,7 @@
 
 using namespace std;
 
+const char* LOGFILE = "/opt/osm_why_api/dispatcher.log";
 static int output_mode(NOTHING);
 
 MYSQL* mysql(NULL);
@@ -60,6 +62,13 @@ void end(const char *el)
 }
 
 string db_subdir;
+
+void log_script(const string& xml_body)
+{
+  ofstream log(LOGFILE, ios_base::app);
+  log<<"interpreter@"<<(uintmax_t)time(NULL)<<": execute\n"<<xml_body<<'\n';
+  log.close();
+}
 
 int main(int argc, char *argv[])
 {
@@ -123,6 +132,8 @@ int main(int argc, char *argv[])
       return 0;
     }
   
+    log_script(xml_raw);
+    
     current_db = detect_active_database();
     db_subdir = current_db;
     if ((db_subdir.size() > 0) && (db_subdir[db_subdir.size()-1] != '/'))
