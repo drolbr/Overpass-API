@@ -409,6 +409,15 @@ string detect_active_database()
   }
   ssin>>database_id;
   ssin>>available_memory;
+  
+  uint max_element_count(get_element_count());
+  if (element_limit > 0)
+    max_element_count = element_limit;
+  if (available_memory < max_element_count)
+  {
+    runtime_error("The Server currently doesn't have enough free memory to execute your request. Please try again later.", cout);
+  }
+  
   ssin.close();
   
   ostringstream temp;

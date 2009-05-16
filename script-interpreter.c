@@ -135,6 +135,12 @@ int main(int argc, char *argv[])
     log_script(xml_raw);
     
     current_db = detect_active_database();
+    if (current_db == "")
+    {
+      out_footer(cout, output_mode);
+      return 0;
+    }
+    
     db_subdir = current_db;
     if ((db_subdir.size() > 0) && (db_subdir[db_subdir.size()-1] != '/'))
       db_subdir += '/';

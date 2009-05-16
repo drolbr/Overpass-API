@@ -210,7 +210,11 @@ ostream& out_header(ostream& out, int type)
   if (type == MIXED_XML)
   {
     out<<"Content-type: application/xml\n\n"
-	<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<not-osm>\n\n";
+	<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm-derived>\n"
+	<<"<note>The data included in this document is from www.openstreetmap.org. "
+	<<"It has there been collected by a large group of contributors. For individual "
+	<<"attribution of each item please refer to "
+	<<"http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\n";
     header_state = WRITTEN_XML;
   }
   else if (type == HTML)
@@ -267,7 +271,7 @@ ostream& out_error_header(ostream& out, string title)
 ostream& out_footer(ostream& out, int type)
 {
   if (type == MIXED_XML)
-    out<<"\n</not-osm>\n";
+    out<<"\n</osm-derived>\n";
   else
     out<<"\n</body>\n</html>\n";
   return out;
