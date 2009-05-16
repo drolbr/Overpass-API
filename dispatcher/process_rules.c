@@ -128,6 +128,17 @@ void process_rules(MYSQL* mysql, const string& current_db, uint32 max_version)
   void_query(mysql, "use osm");
   retrieve_rules(mysql, max_version, rules, bodys);
   void_query(mysql, (string)("use ") + current_db);
+  void_query(mysql, "delete from key_s");
+  void_query(mysql, "delete from value_s");
+  void_query(mysql, "delete from conflicts");
+  void_query(mysql, "delete from node_conflicts");
+  void_query(mysql, "delete from way_conflicts");
+  void_query(mysql, "delete from relation_conflicts");
+  void_query(mysql, "delete from areas");
+  void_query(mysql, "delete from area_segments");
+  void_query(mysql, "delete from area_tags");
+  void_query(mysql, "delete from area_origins");
+  void_query(mysql, "delete from area_ways");
   execute_rules(mysql, current_db, rules, bodys);
   void_query(mysql, "use osm");
 }

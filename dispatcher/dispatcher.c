@@ -163,7 +163,7 @@ void check_pending_database(State& state, MYSQL* mysql)
       new_version = state.db1.last_changefile;
     ostringstream temp;
     temp<<" update "<<state.db1.last_changefile<<' '<<state.last_changefile<<' ';
-    log_event(temp.str());
+    log_event((string)"sent: " + temp.str());
     int fd = open(DB1_FIFO, O_WRONLY|O_NONBLOCK);
     write(fd, temp.str().data(), temp.str().size());
     close(fd);
@@ -196,7 +196,7 @@ void check_pending_database(State& state, MYSQL* mysql)
       new_version = state.db2.last_changefile;
     ostringstream temp;
     temp<<" update "<<state.db2.last_changefile<<' '<<state.last_changefile<<' ';
-    log_event(temp.str());
+    log_event((string)"sent: " + temp.str());
     int fd = open(DB2_FIFO, O_WRONLY|O_NONBLOCK);
     write(fd, temp.str().data(), temp.str().size());
     close(fd);

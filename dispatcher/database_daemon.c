@@ -104,7 +104,7 @@ void process_update
   //notify dispatcher
   ostringstream temp;
   temp<<" update_rules "<<database_id<<' '<<rule_version<<' ';
-  log_event(database_id, temp.str());
+  log_event(database_id, (string)"sent: " + temp.str());
   int fd = open(DISPATCH_FIFO, O_WRONLY|O_NONBLOCK);
   write(fd, temp.str().data(), temp.str().size());
   close(fd);
@@ -129,7 +129,7 @@ void process_update
   //notify dispatcher
   temp.str("");
   temp<<" update_finished "<<database_id<<' ';
-  log_event(database_id, temp.str());
+  log_event(database_id, (string)"sent: " + temp.str());
   fd = open(DISPATCH_FIFO, O_WRONLY|O_NONBLOCK);
   write(fd, temp.str().data(), temp.str().size());
   close(fd);
