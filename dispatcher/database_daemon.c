@@ -100,6 +100,8 @@ void process_update
     pid = wait(&status);
   }
   
+  mysql_ping(mysql);
+  mysql_query(mysql, "use osm");
   uint rule_version(uint_query(mysql, "select max(id) from rule_bodys"));
   //notify dispatcher
   ostringstream temp;

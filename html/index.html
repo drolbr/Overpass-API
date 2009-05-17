@@ -240,7 +240,7 @@ Not all relations that refer to ways give automatically rise to a relation. The 
 <p>
 You can <a href="#section.get_rule">retrieve</a> an existing rule to get a blueprint for our new rule. For example, the following query will return the rule that creates areas from administrative units:
 <form action="api/get_rule" method="post" accept-charset="UTF-8">
-  <textarea name="data" rows="2" cols="80">&lt;osm-script name="Area::Create_from_admin_level"&gt;
+  <textarea name="data" rows="2" cols="80">&lt;osm-script name="Area::Create_from_admin_level"/&gt;
 </textarea>
   <input type="submit" value="Retrieve rule"/>
 </form><br/>
@@ -300,13 +300,13 @@ You should recieve a message that the rule has successfully been added along wit
 <p>
 To avoid cluttering the server, please complete this tutorial with removing your rule. Just call <a href="#section.update_rule">update_rule</a> with the empty rule and the parameter <a href="#section.osm_script">replace</a> set to the version number just recieved:
 <form action="api/update_rule" method="post" accept-charset="UTF-8">
-  <textarea name="data" rows="2" cols="80">&lt;osm-script name="Example::Foo" replace="0"&gt;
+  <textarea name="data" rows="2" cols="80">&lt;osm-script name="Example::Foo" replace="0"/&gt;
 </textarea>
   <input type="submit" value="Delete rule"/>
 </form><br/>
 You should recieve a message that the rule has successfully been updated. If you recieve the error that you should provide the last version-id, then call again <a href="#section.get_rule">get_rule</a> on you rule:
 <form action="api/get_rule" method="post" accept-charset="UTF-8">
-  <textarea name="data" rows="2" cols="80">&lt;osm-script name="Example::Foo"&gt;
+  <textarea name="data" rows="2" cols="80">&lt;osm-script name="Example::Foo"/&gt;
 </textarea>
   <input type="submit" value="Retrieve rule"/>
 </form><br/>
@@ -914,7 +914,7 @@ and the input
 </textarea>
   <input type="submit" value="Return nothing"/>
 </form><br/>
-are from the servers point of view equal. If you don't need to specify any parameters in the <a href="#section.osm_script">root element</a>, you can even omit the root element itself. So, even the input
+are from the server's point of view equal. If you don't need to specify any parameters in the <a href="#section.osm_script">root element</a>, you can even omit the root element itself. So, even the input
 <form action="api/interpreter" method="post" accept-charset="UTF-8">
   <textarea name="data" rows="2" cols="80">&lt;print mode="body"/&gt;
 </textarea>
