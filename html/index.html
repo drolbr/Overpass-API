@@ -416,15 +416,27 @@ Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a hr
 <h4>Mandatory parameters</h4>
 </div>
 
+<ul>
+<li><strong>ref</strong>: the <a href="#section.data_structures">id of the area</a> to consider.</li>
+</ul>
+
 <div>
 <a id="subsection.area_query.optional"/>
 <h4>Optional parameters</h4>
 </div>
 
+<ul>
+<li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+</ul>
+
 <div>
 <a id="subsection.area_query.description"/>
 <h4>Description</h4>
 </div>
+
+<p>
+The area-query returns all nodes that have coordinates within the provided area, identified by <a href="#section.variables">its id</a>. A node is considered to be <a href="#section.variables">within</a> an area if it is in the interior or on the boundary of an area. The nodes are stored in the set specified by "into".
+</p>
 
 <div>
 <a id="subsection.area_query.properties"/>
@@ -446,15 +458,27 @@ Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a hr
 <h4>Mandatory parameters</h4>
 </div>
 
+<p>
+none
+</p>
+
 <div>
 <a id="subsection.conflict.optional"/>
 <h4>Optional parameters</h4>
 </div>
 
+<ul>
+<li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+</ul>
+
 <div>
 <a id="subsection.conflict.description"/>
 <h4>Description</h4>
 </div>
+
+<p>
+The conflict statement tags permanently (until the next rule application) one or more objects in the database as being invoked into a conflict. It is intended to be used in rules to mark objects that should be reviewed by a human in the context of the rule. The statement composes from the text and the <a href="#section.item">item</a> subelements within the element a message that should describe the conflict. Every object contained int the input set as specified by the parameter from is then tagged with this message. The messages for a given object can at any instant afterwards be query with the <a href="#section.report">report</a> statement.
+</p>
 
 <div>
 <a id="subsection.conflict.properties"/>
@@ -476,15 +500,28 @@ Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a hr
 <h4>Mandatory parameters</h4>
 </div>
 
+<ul>
+<li><strong>lat</strong>: a valid latitude on earth, i.e. a floating point number between -90.0 and 90.0. It is evaluted with a precision of 10<sup>-7</sup> degrees.</li>
+<li><strong>lon</strong>: a valid longitude on earth, i.e. a floating point number between -180.0 and 180.0. It is evaluted with a precision of 10<sup>-7</sup> degrees.</li>
+</ul>
+
 <div>
 <a id="subsection.coord_query.optional"/>
 <h4>Optional parameters</h4>
 </div>
 
+<ul>
+<li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+</ul>
+
 <div>
 <a id="subsection.coord_query.description"/>
 <h4>Description</h4>
 </div>
+
+<p>
+This statement returns as the set specifed by "into" all areas that cover the location on earth specified by the coordinates lat and lon. An area is also returned if the given location lies on its boundary.
+</p>
 
 <div>
 <a id="subsection.coord_query.properties"/>
@@ -506,10 +543,19 @@ Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a hr
 <h4>Mandatory parameters</h4>
 </div>
 
+<p>
+...
+</p>
+
 <div>
 <a id="subsection.detect_odd_nodes.optional"/>
 <h4>Optional parameters</h4>
 </div>
+
+<ul>
+<li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+<li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+</ul>
 
 <div>
 <a id="subsection.detect_odd_nodes.description"/>
@@ -541,6 +587,11 @@ Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a hr
 <h4>Optional parameters</h4>
 </div>
 
+<ul>
+<li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+<li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+</ul>
+
 <div>
 <a id="subsection.foreach.description"/>
 <h4>Description</h4>
@@ -570,6 +621,11 @@ Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a hr
 <a id="subsection.id_query.optional"/>
 <h4>Optional parameters</h4>
 </div>
+
+<ul>
+<li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+<li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+</ul>
 
 <div>
 <a id="subsection.id_query.description"/>
@@ -601,6 +657,11 @@ Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a hr
 <h4>Optional parameters</h4>
 </div>
 
+<ul>
+<li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+<li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+</ul>
+
 <div>
 <a id="subsection.item.description"/>
 <h4>Description</h4>
@@ -630,6 +691,11 @@ Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a hr
 <a id="subsection.make_area.optional"/>
 <h4>Optional parameters</h4>
 </div>
+
+<ul>
+<li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+<li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+</ul>
 
 <div>
 <a id="subsection.make_area.description"/>
@@ -661,6 +727,11 @@ Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a hr
 <h4>Optional parameters</h4>
 </div>
 
+<ul>
+<li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+<li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+</ul>
+
 <div>
 <a id="subsection.osm_script.description"/>
 <h4>Description</h4>
@@ -690,6 +761,11 @@ Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a hr
 <a id="subsection.print.optional"/>
 <h4>Optional parameters</h4>
 </div>
+
+<ul>
+<li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+<li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+</ul>
 
 <div>
 <a id="subsection.print.description"/>
@@ -721,6 +797,11 @@ Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a hr
 <h4>Optional parameters</h4>
 </div>
 
+<ul>
+<li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+<li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+</ul>
+
 <div>
 <a id="subsection.query.description"/>
 <h4>Description</h4>
@@ -746,15 +827,38 @@ Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a hr
 <h4>Mandatory parameters</h4>
 </div>
 
+<ul>
+<li><strong>type</strong>: one of the values "relation-relation", "relation-backwards", "relation-way", "relation-node", "way-node", "way-relation", "node-relation" or "node-way"</li>
+</ul>
+
 <div>
 <a id="subsection.recurse.optional"/>
 <h4>Optional parameters</h4>
 </div>
 
+<ul>
+<li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+<li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+</ul>
+
 <div>
 <a id="subsection.recurse.description"/>
 <h4>Description</h4>
 </div>
+
+<p>
+The statement deduces from all nodes, ways or relations in the input set the referred nodes, ways or relations and returns them into the output set. Depending on the value of "type", the statement behaves as follows:
+</p>
+<ul>
+<li><strong>relation-relation</strong>: The statement returns all relations that are members of at least one relation from the input set.</li>
+<li><strong>relation-way</strong>: The statement returns all ways that are members of at least one relation from the input set.</li>
+<li><strong>relation-node</strong>: The statement returns all nodes that are members of at least one relation from the input set.</li>
+<li><strong>relation-backwards</strong>: The statement returns every relation that refers to at least one relation from the input set as a member.</li>
+<li><strong>way-node"</strong>: The statement returns all nodes that are members of at least one way from the input set.</li>
+<li><strong>way-relation"</strong>: The statement returns every relation that refers to at least one way from the input set as a member.</li>
+<li><strong>node-relation"</strong>: The statement returns every relation that refers to at least one node from the input set as a member.</li>
+<li><strong>node-way"</strong>: The statement returns every way that refers to at least one node from the input set as a member.</li>
+</ul>
 
 <div>
 <a id="subsection.recurse.properties"/>
@@ -780,6 +884,11 @@ Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a hr
 <a id="subsection.report.optional"/>
 <h4>Optional parameters</h4>
 </div>
+
+<ul>
+<li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+<li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+</ul>
 
 <div>
 <a id="subsection.report.description"/>
@@ -810,6 +919,11 @@ Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a hr
 <a id="subsection.union.optional"/>
 <h4>Optional parameters</h4>
 </div>
+
+<ul>
+<li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+<li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+</ul>
 
 <div>
 <a id="subsection.union.description"/>
@@ -924,7 +1038,7 @@ is for the server the same input as the above examples.
 </p>
 
 <p>
-We explain the different possible encodings. To make it possible to submit data via HTML forms, you can either send you data verbatim or prefix it by "<code>data=</code>" and escape all special characters to a sequence of a percent sign, followed by the value of the respective byte as hexdecimal number. Multi-byte characters should be expanded in a individual sequence for each byte. For example, the inputs
+We explain the different possible encodings. To make it possible to submit data via HTML forms, you can either send your data verbatim or prefix it by "<code>data=</code>" and escape all special characters to a sequence of a percent sign, followed by the value of the respective byte as hexdecimal number. Multi-byte characters should be expanded in a individual sequence for each byte. For example, the inputs
 <pre><code>
 &lt;print mode="body"/&gt;
 </code></pre>
@@ -945,12 +1059,27 @@ are equal. The transformation from the former to the latter is normally done by 
 
 <p>
 We explain the different possible encodings. You can send your data by a HTTP GET request as well as by a HTTP POST request, with precedence for the GET payload if you send both simultaneously. To continue the above example, the URL<br/>
-<pre>  <a href="http://localhost/api/interpreter?data=%3Cprint%20mode=%22body%22/%3E">http://localhost/api/interpreter?data=%3Cprint%20mode=%22body%22/%3E</a></pre>
+<pre>  <a href="http://78.46.81.38/api/interpreter?data=%3Cprint%20mode=%22body%22/%3E">http://78.46.81.38/api/interpreter?data=%3Cprint%20mode=%22body%22/%3E</a></pre>
 is equal to any of the above queries.
 </p>
 
 <p>
-...
+If you want to use the famous program wget to retrieve the data from the server, you can use any of the sample command lines
+<pre><code>
+wget -O - http://78.46.81.38/api/interpreter?data=%3Cprint%20mode=%22body%22/%3E | gunzip
+</code></pre>
+or
+<pre><code>
+wget -O - --post-data="data=%3Cprint%20mode=%22body%22/%3E" http://78.46.81.38/api/interpreter | gunzip
+</code></pre>
+or
+<pre><code>
+wget -O - --post-data="&lt;print mode=\"body\"/&gt;" http://78.46.81.38/api/interpreter | gunzip
+</code></pre>
+Note that in the third variant the quotation marks are escaped in the usual shell style. The output is piped into gunzip to make it visible as uncompressed XML. A more appropriate way for longer script would be to save your script into a file, e.g. <code>foo.xml</code> and then use the command
+<pre><code>
+wget -O - --post-file=foo.xml http://78.46.81.38/api/interpreter | gunzip
+</code></pre>
 </p>
 
 <div>
