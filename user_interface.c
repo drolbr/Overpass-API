@@ -209,7 +209,7 @@ ostream& out_header(ostream& out, int type)
     return out;
   if (type == MIXED_XML)
   {
-    out<<"Content-type: application/xml\n\n"
+    out<<"Content-type: application/osm3s\n\n"
 	<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm-derived>\n"
 	<<"<note>The data included in this document is from www.openstreetmap.org. "
 	<<"It has there been collected by a large group of contributors. For individual "

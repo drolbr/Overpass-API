@@ -629,13 +629,17 @@ The foreach statement executes the sequence of its inner elements once for each 
 <h4>Mandatory parameters</h4>
 </div>
 
+<ul>
+<li><strong>type</strong>: one of the values "relation", "way" or "node".</li>
+<li><strong>ref</strong>: the <a href="#section.data_structures">id</a> of the object to consider.</li>
+</ul>
+
 <div>
 <a id="subsection.id_query.optional"/>
 <h4>Optional parameters</h4>
 </div>
 
 <ul>
-<li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
 <li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
 </ul>
 
@@ -643,6 +647,10 @@ The foreach statement executes the sequence of its inner elements once for each 
 <a id="subsection.id_query.description"/>
 <h4>Description</h4>
 </div>
+
+<p>
+This statement queries the database for the single object of the specified type and with the specified id. It returns as the set specified by the argument "into" the set consisting of this object or an empty set if the object doesnt exist.
+</p>
 
 <div>
 <a id="subsection.id_query.properties"/>
@@ -664,20 +672,27 @@ The foreach statement executes the sequence of its inner elements once for each 
 <h4>Mandatory parameters</h4>
 </div>
 
+<p>
+none
+</p>
+
 <div>
 <a id="subsection.item.optional"/>
 <h4>Optional parameters</h4>
 </div>
 
 <ul>
-<li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
-<li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+<li><strong>set</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
 </ul>
 
 <div>
 <a id="subsection.item.description"/>
 <h4>Description</h4>
 </div>
+
+<p>
+The item statement declares its argument as output. This is used within the <a href="#section.union">union</a> statement and the <a href="#section.conflict">conflict</a> statement to refer to an existing set.
+</p>
 
 <div>
 <a id="subsection.item.properties"/>
@@ -699,6 +714,10 @@ The foreach statement executes the sequence of its inner elements once for each 
 <h4>Mandatory parameters</h4>
 </div>
 
+<ul>
+<li><strong>pivot</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+</ul>
+
 <div>
 <a id="subsection.make_area.optional"/>
 <h4>Optional parameters</h4>
@@ -713,6 +732,16 @@ The foreach statement executes the sequence of its inner elements once for each 
 <a id="subsection.make_area.description"/>
 <h4>Description</h4>
 </div>
+
+<p>
+This statement creates an area from a multipolygon, writes this area into the database and returns this area as output. From a general mathematical point of view, one can define an area from its boundary as follows: you fix the boundary and a single point that is outside the area. Then a point is outside if and only if any curve to the outside point crosses an even number of segments. We use this definition and take as the outside point always the south pole and the set of ways in the input set (specified by the argument "from") as boundary. The make-area statement now requires that the input set contains all nodes that are referred by at least one way in the set. Furthermore, it requires that the ways fit together. This means that any node is referred by an even number of segments. Otherwise there would be a boundary with interior or the exterior on both sides. The area then consists of all points such that you have to cross an odd number of segments to reach the south pole. The area is tagged with all tags from the pivot element and obtains its <a href="#section.data_structures">id</a> as follows:
+<ul>
+<li>An area based on a node has the same id as the node.</li>
+<li>An area based on a way has the the id of the way plus 2,400,000,000.</li>
+<li>An area based on a relation has the id of the relation plus 3,600,000,000.</li>
+</ul>
+The statement finally returns as the output set specified by "into" the set consisting of the newly created area. If a precondition fails, it writes nothing to the database, produces a <a href="#section.status_remarks">status remark</a> and returns the empty set.
+</p>
 
 <div>
 <a id="subsection.make_area.properties"/>
@@ -734,20 +763,40 @@ The foreach statement executes the sequence of its inner elements once for each 
 <h4>Mandatory parameters</h4>
 </div>
 
+<p>
+none
+</p>
+
 <div>
 <a id="subsection.osm_script.optional"/>
 <h4>Optional parameters</h4>
 </div>
 
 <ul>
-<li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
-<li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+<li><strong>timeout</strong> (only with <a href="#section.interpreter">/api/interpreter</a>): a nonnegative integer describing an amount of seconds.</li>
+<li><strong>element-limit</strong> (only with <a href="#section.interpreter">/api/interpreter</a>): a nonnegative integer describing a limit for element usage.</li>
+<li><strong>debug</strong> (only with <a href="#section.interpreter">/api/interpreter</a>): one of the values "quiet", "errors", "verbose" or "static". It defaults to "errors".</li>
+<li><strong>name</strong> (only with <a href="#section.get_rule">/api/get_rule</a>, <a href="#section.add_rule">/api/add_rule</a> or <a href="#section.update_rule">/api/update_rule</a>): an arbitrary string describing an identifier for a rule.</li>
+<li><strong>version</strong> (only with <a href="#section.get_rule">/api/get_rule</a>): the version id of the rule.</li>
+<li><strong>replace</strong> (only with <a href="#section.update_rule">/api/update_rule</a>): the version id of the rule to replace.</li>
 </ul>
 
 <div>
 <a id="subsection.osm_script.description"/>
 <h4>Description</h4>
 </div>
+
+<p>
+This is the root element of all scripts. You <a href="#chapter.input_formats">may omit</a> this element if you don't need to provide an explicit argument. Which arguments are useful depends on whether you write a <a href="#section.scripts_rules">script</a> or a <a href="#section.scripts_rules">rule</a>.
+</p>
+
+<p>
+The parameters "timeout" and "element-limit" are used to <a href="#section.quotas">assert</a> that a script has a reasonable ressource consumption. It is only necessary if the <a href="#section.flow_forecast">flow forecast</a> can't predict a modest ressource consumption directly. If the script exceeds its asserted limits, it will be aborted. The parameter "debug" controls how much meta information is included: if it is set to "quiet", no meta information will be added. If it is set to "errors", it displays only errors. If it is set to "verbose", it shows all the messages explained in <a href="#section.status_remarks">Status Remarks</a>. If it is set to "static", it won't run the script but display the <a href="#section.flow_forecast">flow forecast</a> for this script.
+</p>
+
+<p>
+For a rule, the parameter "name" provides to name of the rule. It is used to <a href="#section.add_rule">add</a> a rule or to <a href="#section.update_rule">update</a> an existing one, as well as to <a href="#section.get_rule">query</a> a rule. The parameter "version" tells you which <a href="#section.scripts_rules">version</a> a given rule has. As a safety measure, if you intent want to update a rule, you need to specify by the "replace" parameter the version of the rule to replace.
+</p>
 
 <div>
 <a id="subsection.osm_script.properties"/>
@@ -769,6 +818,10 @@ The foreach statement executes the sequence of its inner elements once for each 
 <h4>Mandatory parameters</h4>
 </div>
 
+<p>
+none
+</p>
+
 <div>
 <a id="subsection.print.optional"/>
 <h4>Optional parameters</h4>
@@ -776,13 +829,17 @@ The foreach statement executes the sequence of its inner elements once for each 
 
 <ul>
 <li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
-<li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+<li><strong>mode</strong>: one of the values "ids_only", "skeleton" or "body". If it is omitted, it defaults to "skeleton".</li>
 </ul>
 
 <div>
 <a id="subsection.print.description"/>
 <h4>Description</h4>
 </div>
+
+<p>
+...
+</p>
 
 <div>
 <a id="subsection.print.properties"/>
@@ -804,13 +861,16 @@ The foreach statement executes the sequence of its inner elements once for each 
 <h4>Mandatory parameters</h4>
 </div>
 
+<ul>
+<li><strong>type</strong>: one of the values "relation", "way" or "node".</li>
+</ul>
+
 <div>
 <a id="subsection.query.optional"/>
 <h4>Optional parameters</h4>
 </div>
 
 <ul>
-<li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
 <li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
 </ul>
 
@@ -818,6 +878,10 @@ The foreach statement executes the sequence of its inner elements once for each 
 <a id="subsection.query.description"/>
 <h4>Description</h4>
 </div>
+
+<p>
+...
+</p>
 
 <div>
 <a id="subsection.query.properties"/>
@@ -892,6 +956,10 @@ The statement deduces from all nodes, ways or relations in the input set the ref
 <h4>Mandatory parameters</h4>
 </div>
 
+<p>
+none
+</p>
+
 <div>
 <a id="subsection.report.optional"/>
 <h4>Optional parameters</h4>
@@ -899,13 +967,16 @@ The statement deduces from all nodes, ways or relations in the input set the ref
 
 <ul>
 <li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
-<li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
 </ul>
 
 <div>
 <a id="subsection.report.description"/>
 <h4>Description</h4>
 </div>
+
+<p>
+...
+</p>
 
 <div>
 <a id="subsection.report.properties"/>
@@ -927,13 +998,16 @@ The statement deduces from all nodes, ways or relations in the input set the ref
 <h4>Mandatory parameters</h4>
 </div>
 
+<p>
+none
+</p>
+
 <div>
 <a id="subsection.union.optional"/>
 <h4>Optional parameters</h4>
 </div>
 
 <ul>
-<li><strong>from</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
 <li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
 </ul>
 
@@ -941,6 +1015,10 @@ The statement deduces from all nodes, ways or relations in the input set the ref
 <a id="subsection.union.description"/>
 <h4>Description</h4>
 </div>
+
+<p>
+...
+</p>
 
 <div>
 <a id="subsection.union.properties"/>

@@ -157,6 +157,7 @@ int main(int argc, char *argv[])
   if (!mysql_real_connect(mysql, "localhost", "osm", "osm", "osm", 0, NULL,
        CLIENT_LOCAL_FILES))
   {
+    cerr<<"Connection to database failed.\n";
     remove(fifo_name.c_str());
     return 0;
   }
@@ -218,7 +219,7 @@ int main(int argc, char *argv[])
       }
     }
   }
-  
+
   // delete named pipe
   close(fd);
   remove(fifo_name.c_str());
