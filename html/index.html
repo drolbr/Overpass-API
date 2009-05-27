@@ -544,7 +544,7 @@ This statement returns as the set specifed by "into" all areas that cover the lo
 </div>
 
 <p>
-...
+none
 </p>
 
 <div>
@@ -561,6 +561,10 @@ This statement returns as the set specifed by "into" all areas that cover the lo
 <a id="subsection.detect_odd_nodes.description"/>
 <h4>Description</h4>
 </div>
+
+<p>
+This statements detects in a set of ways all nodes that appear odd times as a endpoint. For a couple of tasks like the <a href="#section.area_query">derivation of an area</a> from a set of ways, an essential precondition is that the ways fit together. Fitting together means in this context that there is no junction of an odd number of segments at any node, because it that case, it is not well-defined which points of that polygon are inner and which not. Inner nodes of a way are always adjacent to two segments within that way so that they can be ignored. The statement takes the ways from the set specified by the argument "from" and puts the detected nodes into the argument "into".
+</p>
 
 <div>
 <a id="subsection.detect_odd_nodes.properties"/>
@@ -582,6 +586,10 @@ This statement returns as the set specifed by "into" all areas that cover the lo
 <h4>Mandatory parameters</h4>
 </div>
 
+<p>
+none
+</p>
+
 <div>
 <a id="subsection.foreach.optional"/>
 <h4>Optional parameters</h4>
@@ -596,6 +604,10 @@ This statement returns as the set specifed by "into" all areas that cover the lo
 <a id="subsection.foreach.description"/>
 <h4>Description</h4>
 </div>
+
+<p>
+The foreach statement executes the sequence of its inner elements once for each element in the set specified by the argument "from". In particular, the set specified by the argument "from" will be stored on an internal stack. Then, for each element in the set specified by the argument "from", the following things will happen: first, the set specified by the argument "into" will be set to contain solely the element the loop is dedicated to. Then, the statements in the loop are executed. Finally, the server continues with the next loop. The order of the indivdual loops is unspecified, only the order within a loop adheres to the order in the source code.
+</p>
 
 <div>
 <a id="subsection.foreach.properties"/>
