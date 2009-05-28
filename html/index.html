@@ -838,7 +838,7 @@ none
 </div>
 
 <p>
-...
+The statement prints the content of its input set specified by "from" into the response document. The output contains only the objects' ids if mode is set to "ids_only". It contains the ids, the coordinates of nodes and the members of ways and relations if mode is set to "skeleton". It contains all the information about the objects including their tags if the mode is set to "body".
 </p>
 
 <div>
@@ -880,7 +880,7 @@ none
 </div>
 
 <p>
-...
+The query statement finds all objects of the specified type that have all the provided tags. The search criteria is formulated with one or more subelements of the form <code>&lt;has-kv k="foo" v="bar"/&gt;</code> or <code>&lt;has-kv k="foo"/&gt;</code>. The strings "foo" and "bar" should be replaced by the respective tags to search for. The former element restricts the result to objects that have a tag with the given key and the given value, the latter element restricts the result to objects that have a tag with the given key and arbitrary value.
 </p>
 
 <div>
@@ -930,10 +930,10 @@ The statement deduces from all nodes, ways or relations in the input set the ref
 <li><strong>relation-way</strong>: The statement returns all ways that are members of at least one relation from the input set.</li>
 <li><strong>relation-node</strong>: The statement returns all nodes that are members of at least one relation from the input set.</li>
 <li><strong>relation-backwards</strong>: The statement returns every relation that refers to at least one relation from the input set as a member.</li>
-<li><strong>way-node"</strong>: The statement returns all nodes that are members of at least one way from the input set.</li>
-<li><strong>way-relation"</strong>: The statement returns every relation that refers to at least one way from the input set as a member.</li>
-<li><strong>node-relation"</strong>: The statement returns every relation that refers to at least one node from the input set as a member.</li>
-<li><strong>node-way"</strong>: The statement returns every way that refers to at least one node from the input set as a member.</li>
+<li><strong>way-node</strong>: The statement returns all nodes that are members of at least one way from the input set.</li>
+<li><strong>way-relation</strong>: The statement returns every relation that refers to at least one way from the input set as a member.</li>
+<li><strong>node-relation</strong>: The statement returns every relation that refers to at least one node from the input set as a member.</li>
+<li><strong>node-way</strong>: The statement returns every way that refers to at least one node from the input set as a member.</li>
 </ul>
 
 <div>
@@ -975,7 +975,7 @@ none
 </div>
 
 <p>
-...
+The statement queries the database for conflicts recorded by the <a href="#section.conflict">conflict</a> statement. It prints all conflicts that are related to any object in the set specified by "from" into the response document. If there is no <a href="#section.print">print</a> statement in the script, the output is formatted as <a href="#section.hypertext_reports">hypertext report</a>.
 </p>
 
 <div>
@@ -1017,7 +1017,7 @@ none
 </div>
 
 <p>
-...
+The union statement collects the output sets of its subelements and returns them as the set specified by "into". For each statement, the output set is the set specified by the parameter "into" or the empty set if the statement has no parameter "into". The only exception from this rule is the <a href="#section.item">item</a> statement. This statement designates its output set by its sole argument "set".
 </p>
 
 <div>
