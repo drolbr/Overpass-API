@@ -7,8 +7,8 @@ if [[ -z $1  ]]; then
 };
 fi
 PATH=./:$PATH
-CONFIRM=$1
-if [[ $1 != "YES" ]]; then
+CONFIRM=$2
+if [[ $2 != "YES" ]]; then
 {
   read -p "Proceeding will drop the current databases osm_1 and osm_2 and the raw_db. Do you really want to continue? " CONFIRM
 };

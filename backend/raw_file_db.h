@@ -280,8 +280,32 @@ void delete_insert(T& env)
   unsigned int cur_block((block_it++)->second);
   while (elem_it != env.elem_end())
   {
-    while ((block_it != block_index.end()) && (block_it->first <= env.index_of(elem_it)))
+    while ((block_it != block_index.end()) && (block_it->first < env.index_of(elem_it)))
       cur_block = (block_it++)->second;
+    
+    while ((block_it != block_index.end()) && (block_it->first == env.index_of(elem_it)))
+    {
+      lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
+      read(dest_fd, source_buf, BLOCKSIZE);
+      
+      uint32 i(sizeof(uint32));
+      uint32 j(sizeof(uint32));
+      while (i < ((uint32*)source_buf)[0])
+      {
+        if (env.keep_this_elem(&(source_buf[i])))
+        {
+          memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
+          j += env.size_of_buf(&(source_buf[i]));
+        }
+        i += env.size_of_buf(&(source_buf[i]));
+      }
+      
+      lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
+      ((uint32*)dest_buf)[0] = j - sizeof(uint32);
+      write(dest_fd, dest_buf, BLOCKSIZE);
+      
+      cur_block = (block_it++)->second;
+    }
 
     uint32 new_byte_count(0);
     lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
