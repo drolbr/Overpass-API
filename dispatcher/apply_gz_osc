@@ -12,9 +12,11 @@ while [[ CURRENT -lt ALMOST_TO ]];
 do
 {
   echo "apply_gz_osc($1)@"`date "+%s"`": applying $CURRENT.osc.gz" >>/opt/osm_why_api/dispatcher.log
+  echo "apply_gz_osc($1)@"`date "+%s"`": applying $CURRENT.osc.gz"
   gunzip <../hourly/$CURRENT.osc.gz | ./apply_osc --intermediate --db=$1
   CURRENT=$(($CURRENT+1))
 };
 done
 echo "apply_gz_osc($1)@"`date "+%s"`": applying $ALMOST_TO.osc.gz" >>/opt/osm_why_api/dispatcher.log
+echo "apply_gz_osc($1)@"`date "+%s"`": applying $ALMOST_TO.osc.gz"
 gunzip <../hourly/$ALMOST_TO.osc.gz | ./apply_osc --db=$1

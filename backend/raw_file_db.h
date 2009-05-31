@@ -235,6 +235,8 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
 template< class T >
 void delete_insert(T& env)
 {
+  cerr<<'0';
+  
   if (env.elem_begin() == env.elem_end())
     return;
   
@@ -271,10 +273,14 @@ void delete_insert(T& env)
   if (dest_fd < 0)
     throw File_Error(errno, env.data_file(), "delete_insert:2");
   
+  cerr<<'1';
+  
   uint8* source_buf = (uint8*) malloc(BLOCKSIZE);
   uint8* deletion_buf = (uint8*) malloc(BLOCKSIZE);
   uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
   
+  cerr<<'2';
+
   typename T::Iterator elem_it(env.elem_begin());
   typename multimap< typename T::Index, uint16 >::const_iterator block_it(block_index.begin());
   unsigned int cur_block((block_it++)->second);
@@ -282,15 +288,16 @@ void delete_insert(T& env)
   {
     while ((block_it != block_index.end()) && (block_it->first < env.index_of(elem_it)))
       cur_block = (block_it++)->second;
+    cerr<<'3';
     
     while ((block_it != block_index.end()) && (block_it->first == env.index_of(elem_it)))
     {
-      lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
+      lseek64(dest_fd, ((int64)cur_block)*BLOCKSIZE, SEEK_SET);
       read(dest_fd, source_buf, BLOCKSIZE);
       
       uint32 i(sizeof(uint32));
       uint32 j(sizeof(uint32));
-      while (i < ((uint32*)source_buf)[0])
+      while (i < ((uint32*)source_buf)[0] + sizeof(uint32))
       {
         if (env.keep_this_elem(&(source_buf[i])))
         {
@@ -300,15 +307,17 @@ void delete_insert(T& env)
         i += env.size_of_buf(&(source_buf[i]));
       }
       
-      lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
+      cerr<<'('<<i<<")("<<j<<")";
+      lseek64(dest_fd, ((int64)cur_block)*BLOCKSIZE, SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
       write(dest_fd, dest_buf, BLOCKSIZE);
       
       cur_block = (block_it++)->second;
     }
+    cerr<<'4';
 
     uint32 new_byte_count(0);
-    lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
+    lseek64(dest_fd, (int64)cur_block*BLOCKSIZE, SEEK_SET);
     read(dest_fd, source_buf, BLOCKSIZE);
     uint32 pos(sizeof(uint32));
     uint32 elem_count(0);
@@ -339,6 +348,8 @@ void delete_insert(T& env)
 	++elem_it2;
       }
     }
+    
+    cerr<<'5';
     
     uint32 i(sizeof(uint32));
     elem_count = 0;
@@ -445,16 +456,24 @@ void delete_insert(T& env)
       ++elem_count;
       i += env.size_of_buf(&(source_buf[i]));
     }
+    
+    cerr<<'6';
+
     lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
     write(dest_fd, dest_buf, BLOCKSIZE);
+    
+    cerr<<'7';
   }
+  cerr<<'8';
     
   free(source_buf);
   free(deletion_buf);
   free(dest_buf);
 
   close(dest_fd);
+  
+  cerr<<'9';
 }
 
 //-----------------------------------------------------------------------------
