@@ -266,9 +266,6 @@ void delete_insert(T& env)
     close(idx_fd);
   }
   
-  int next_block_id(block_index.size());
-  env.set_first_new_block(next_block_id);
-  
   int dest_fd = open64(env.data_file().c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)
     throw File_Error(errno, env.data_file(), "delete_insert:2");
@@ -278,6 +275,23 @@ void delete_insert(T& env)
   uint8* source_buf = (uint8*) malloc(BLOCKSIZE);
   uint8* deletion_buf = (uint8*) malloc(BLOCKSIZE);
   uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
+  
+  vector< bool > block_nonempty(block_index.size(), false);
+  vector< uint16 > empty_blocks;
+  for (typename multimap< typename T::Index, uint16 >::const_iterator it(block_index.begin());
+       it != block_index.end(); ++it)
+  {
+    if (it->second > block_nonempty.size())
+      block_nonempty.resize(it->second + 1);
+    block_nonempty[it->second] = true;
+  }
+  for (uint32 i(0); i < block_nonempty.size(); ++i)
+  {
+    if (!block_nonempty[i])
+      empty_blocks.push_back(i);
+  }
+  int next_block_id(block_nonempty.size());
+  env.set_first_new_block(next_block_id);
   
   cerr<<'2';
 
@@ -312,6 +326,23 @@ void delete_insert(T& env)
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
       write(dest_fd, dest_buf, BLOCKSIZE);
       
+      if (((uint32*)dest_buf)[0] == 0)
+      {
+	empty_blocks.push_back(cur_block);
+	typename multimap< typename T::Index, uint16 >::iterator
+	    it(block_index.lower_bound(env.index_of(elem_it)));
+	typename multimap< typename T::Index, uint16 >::iterator
+	    upper(block_index.upper_bound(env.index_of(elem_it)));
+	while (it != upper)
+	{
+	  if (it->second == cur_block)
+	  {
+	    block_index.erase(it);
+	    break;
+	  }
+	  ++it;
+	}
+      }
       cur_block = (block_it++)->second;
     }
     cerr<<'4';
@@ -410,10 +441,11 @@ void delete_insert(T& env)
 
       cur_block = next_block_id;
       if ((i >= ((uint32*)source_buf)[0]) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_LESS))
-	block_index.insert(make_pair< typename T::Index, uint16 >(env.index_of(elem_it), next_block_id++));
+	block_index.insert(make_pair< typename T::Index, uint16 >(env.index_of(elem_it), next_block_id));
       else
 	block_index.insert(make_pair< typename T::Index, uint16 >
-	    (env.index_of_buf(&(source_buf[i])), next_block_id++));
+	    (env.index_of_buf(&(source_buf[i])), next_block_id));
+      next_block_id++;
       new_byte_count -= (j - sizeof(uint32));
     }
     

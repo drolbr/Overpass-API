@@ -520,14 +520,14 @@ int main(int argc, char *argv[])
     
     cerr<<'i';
     //give id_global_updater a local scope to save memory
-    {
+/*    {
       //cerr<<(uintmax_t)time(NULL)<<'\n';
       Tag_Id_Node_Global_Updater id_global_updater(global_ids_to_be_edited);
       delete_insert< Tag_Id_Node_Global_Updater >(id_global_updater);
       //cerr<<(uintmax_t)time(NULL)<<'\n';
       make_block_index< Tag_Id_Node_Global_Updater >(id_global_updater);
       //cerr<<(uintmax_t)time(NULL)<<'\n';
-    }
+    }*/
     
     new_nodes_tags.clear();
     for (map< pair< string, string >, pair< uint32, uint32 >* >::iterator it(new_node_tags_ids.begin());
@@ -892,7 +892,7 @@ int main(int argc, char *argv[])
     }
     
     cerr<<'A';
-    {
+/*    {
       //updating of the global id to way data
       //cerr<<(uintmax_t)time(NULL)<<'\n';
       Tag_Id_Way_Global_Updater id_way_global_updater(global_ids_to_be_edited);
@@ -900,7 +900,7 @@ int main(int argc, char *argv[])
       //cerr<<(uintmax_t)time(NULL)<<'\n';
       make_block_index< Tag_Id_Way_Global_Updater >(id_way_global_updater);
       //cerr<<(uintmax_t)time(NULL)<<'\n';
-    }
+    }*/
     
     new_ways_tags.clear();
     for (map< pair< string, string >, pair< uint32, uint32 >* >::iterator it(new_way_tags_ids.begin());

@@ -3516,7 +3516,7 @@ template < typename Storage, typename Container >
 struct Indexed_Ordered_Id_To_Many_Updater : public Indexed_Ordered_Id_To_Many_Base< Storage >
 {
   Indexed_Ordered_Id_To_Many_Updater(const Container& to_delete, const Container& to_insert)
-    : to_delete_(to_delete), to_insert_(to_insert), block_index_(), remaining_size(0), dit(), first_new_block_(0), block_ids() {}
+    : to_delete_(to_delete), to_insert_(to_insert), block_index_(), remaining_size(0), dit(), /*first_new_block_(0),*/ block_ids() {}
   
   const multimap< typename Storage::Index, uint16 >& block_index() const { return block_index_; }
   multimap< typename Storage::Index, uint16 >& block_index() { return block_index_; }
