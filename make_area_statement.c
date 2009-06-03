@@ -222,6 +222,17 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   const set< Way >& in_ways(mit->second.get_ways());
   bool data_is_valid(true);
   
+  //TEMP
+  cout<<"---\n";
+  for (set< Way >::const_iterator it(in_ways.begin());
+       it != in_ways.end(); ++it)
+    cout<<it->id<<'\n';
+  cout<<"---\n";
+  for (set< Node >::const_iterator it(in_nodes.begin());
+       it != in_nodes.end(); ++it)
+    cout<<it->id<<'\n';
+  cout<<"---\n";
+
   //detect pivot element
   mit = maps.find(tags);
   int pivot_id(0), pivot_type(0);

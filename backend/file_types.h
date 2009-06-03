@@ -381,10 +381,7 @@ struct Node_Id_Node_Updater : public Node_Id_Node
   
   uint32 size_of_part(const Iterator& it) const { return size_of(it); }
   
-  Index index_of(const Iterator& it) const
-  {
-    return (it->first.first);
-  }
+  Index index_of(const Iterator& it) const { return (it->first.first); }
   
   Index index_of_buf(uint8* elem) const
   {
@@ -440,10 +437,7 @@ struct Node_Id_Node_Updater : public Node_Id_Node
     return it->second.second.id;
   }
   
-  uint32 id_of_buf(uint8* elem) const
-  {
-    return (*(int32*)&(elem[0]));
-  }
+  uint32 id_of_buf(uint8* elem) const { return (*(int32*)&(elem[0])); }
   
   void set_first_new_block(uint16 block_id) { first_new_block_ = block_id; }
   uint16 first_new_block() const { return first_new_block_; }

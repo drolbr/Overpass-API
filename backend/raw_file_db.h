@@ -310,12 +310,13 @@ void delete_insert(T& env)
       uint32 j(sizeof(uint32));
       while (i < ((uint32*)source_buf)[0] + sizeof(uint32))
       {
-        if (env.keep_this_elem(&(source_buf[i])) == RAW_DB_KEEP)
+	uint8 elem_edit(env.keep_this_elem(&(source_buf[i])));
+	if (elem_edit == RAW_DB_KEEP)
         {
           memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
           j += env.size_of_buf(&(source_buf[i]));
         }
-	else if (env.keep_this_elem(&(source_buf[i])) == RAW_DB_SHRINK)
+	else if (elem_edit == RAW_DB_SHRINK)
 	{
 	  env.modify_this_buf(&(dest_buf[j]), &(source_buf[i]));
 	  j += env.size_of_buf(&(dest_buf[j]));
@@ -407,7 +408,7 @@ void delete_insert(T& env)
 	    memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
 	    j += env.size_of_buf(&(source_buf[i]));
 	  }
-	  else if (env.keep_this_elem(&(source_buf[i])) == RAW_DB_SHRINK)
+	  else if (deletion_buf[elem_count] == RAW_DB_SHRINK)
 	  {
 	    env.modify_this_buf(&(dest_buf[j]), &(source_buf[i]));
 	    j += env.size_of_buf(&(dest_buf[j]));
@@ -434,7 +435,7 @@ void delete_insert(T& env)
 	  memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
 	  j += env.size_of_buf(&(source_buf[i]));
 	}
-	else if (env.keep_this_elem(&(source_buf[i])) == RAW_DB_SHRINK)
+	else if (deletion_buf[elem_count] == RAW_DB_SHRINK)
 	{
 	  env.modify_this_buf(&(dest_buf[j]), &(source_buf[i]));
 	  j += env.size_of_buf(&(dest_buf[j]));
@@ -475,7 +476,7 @@ void delete_insert(T& env)
 	  memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
 	  j += env.size_of_buf(&(source_buf[i]));
 	}
-	else if (env.keep_this_elem(&(source_buf[i])) == RAW_DB_SHRINK)
+	else if (deletion_buf[elem_count] == RAW_DB_SHRINK)
 	{
 	  env.modify_this_buf(&(dest_buf[j]), &(source_buf[i]));
 	  j += env.size_of_buf(&(dest_buf[j]));
@@ -498,7 +499,7 @@ void delete_insert(T& env)
 	memcpy(&(dest_buf[j]), &(source_buf[i]), env.size_of_buf(&(source_buf[i])));
 	j += env.size_of_buf(&(source_buf[i]));
       }
-      else if (env.keep_this_elem(&(source_buf[i])) == RAW_DB_SHRINK)
+      else if (deletion_buf[elem_count] == RAW_DB_SHRINK)
       {
 	env.modify_this_buf(&(dest_buf[j]), &(source_buf[i]));
 	j += env.size_of_buf(&(dest_buf[j]));
@@ -510,8 +511,11 @@ void delete_insert(T& env)
     lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
     write(dest_fd, dest_buf, BLOCKSIZE);
+  
+    if (block_it != block_index.end())
+      cur_block = (block_it++)->second;
   }
-    
+  
   free(source_buf);
   free(deletion_buf);
   free(dest_buf);
