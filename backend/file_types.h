@@ -415,6 +415,8 @@ struct Node_Id_Node_Updater : public Node_Id_Node
     return true;
   }
   
+  void modify_this_buf(uint8* dest, uint8* source) {}
+  
   uint8 keep_this_elem(uint8* elem) const
   {
     int32 ll_idx_(ll_idx(*(int32*)&(elem[4]), *(int32*)&(elem[8])));
@@ -422,10 +424,10 @@ struct Node_Id_Node_Updater : public Node_Id_Node
     while ((it != data.end()) && (it->first.second == *(int32*)&(elem[0])))
     {
       if ((!(it->second.first)) && (it->second.second.id == *(int32*)&(elem[0])))
-        return 0;
+        return RAW_DB_DELETE;
       ++it;
     }
-    return 1;
+    return RAW_DB_KEEP;
   }
   
   void index_to_buf(uint8* dest, const uint32& i) const
@@ -800,13 +802,15 @@ struct Tag_Id_Node_Local_Updater : public Tag_Id_Node_Local
     return (remaining_size == 0);
   }
   
+  void modify_this_buf(uint8* dest, uint8* source) {}
+  
   uint8 keep_this_elem(uint8* elem)
   {
     map< pair< uint32, uint32 >, pair< set< uint32 >, set< uint32 > > >::const_iterator
 	it(local_ids_.find(make_pair< uint32, uint32 >
 	(local_id_idxs_[*(uint32*)&(elem[0])] & 0xffffff00, *(uint32*)&(elem[0]))));
     if (it == local_ids_.end())
-      return 1;
+      return RAW_DB_KEEP;
     if ((!(it->second.second.empty())) && (*(it->second.second.begin()) == 0))
     {
       map< uint32, set< uint32 > >::iterator mit(moved_ids_.insert(make_pair< uint32, set< uint32 > >
@@ -816,7 +820,7 @@ struct Tag_Id_Node_Local_Updater : public Tag_Id_Node_Local
 	if (it->second.first.find(*(uint32*)&(elem[6+4*i])) == it->second.first.end())
 	  mit->second.insert(*(uint32*)&(elem[6+4*i]));
       }
-      return 0;
+      return RAW_DB_DELETE;
     }
     map< pair< uint32, uint32 >, set< uint32 > >::iterator
 	pit(patched_local_ids_.insert(make_pair< pair< uint32, uint32 >, set< uint32 > >
@@ -828,7 +832,7 @@ struct Tag_Id_Node_Local_Updater : public Tag_Id_Node_Local
       if (it->second.first.find(*(uint32*)&(elem[6+4*i])) == it->second.first.end())
 	pit->second.insert(*(uint32*)&(elem[6+4*i]));
     }
-    return 1;
+    return RAW_DB_KEEP;
   }
   
   void index_to_buf(uint8* dest, const uint32& i) const
@@ -988,7 +992,7 @@ struct Tag_Id_Node_Global_Updater : public Tag_Id_Node_Global
 {
   Tag_Id_Node_Global_Updater
       (const map< uint32, pair< set< uint32 >, set< uint32 > > >& ids_to_be_edited)
-  : ids_to_be_edited_(ids_to_be_edited), patched_ids_nodes_(), block_index_(),
+  : ids_to_be_edited_(ids_to_be_edited), block_index_(),
     remaining_size(0) {}
   
   const multimap< Index, uint16 >& block_index() const { return block_index_; }
@@ -1000,10 +1004,7 @@ struct Tag_Id_Node_Global_Updater : public Tag_Id_Node_Global
   
   uint32 size_of(const Iterator& it) const
   {
-    map< uint32, set< uint32 > >::const_iterator pit(patched_ids_nodes_.find(it->first));
-    int32 size_of_(it->second.first.size());
-    if (pit != patched_ids_nodes_.end())
-      size_of_ = pit->second.size();
+    int32 size_of_(it->second.second.size());
     return (((size_of_ - 1) / 255 + 1)*5 + size_of_*4);
   }
   
@@ -1011,13 +1012,7 @@ struct Tag_Id_Node_Global_Updater : public Tag_Id_Node_Global
   {
     int32 size_of_(remaining_size);
     if (remaining_size == 0)
-    {
-      map< uint32, set< uint32 > >::const_iterator pit(patched_ids_nodes_.find(it->first));
-      if (pit == patched_ids_nodes_.end())
-        size_of_ = it->second.first.size();
-      else
-        size_of_ = pit->second.size();
-    }
+      size_of_ = it->second.second.size();
     if (size_of_ > 255)
       size_of_ = 255;
     return (5 + size_of_*4);
@@ -1045,36 +1040,11 @@ struct Tag_Id_Node_Global_Updater : public Tag_Id_Node_Global
   {
     static set< uint32 >::const_iterator nit;
     *(uint32*)&(dest[0]) = it->first;
-    map< uint32, set< uint32 > >::const_iterator pit(patched_ids_nodes_.find(it->first));
-    if (pit == patched_ids_nodes_.end())
-    {
-      uint pos(5);
-      if (!remaining_size)
-      {
-        remaining_size = it->second.first.size();
-        nit = it->second.first.begin();
-      }
-      uint upper_limit(remaining_size);
-      if (upper_limit > 255)
-        upper_limit = 255;
-      uint i(0);
-      while (i < upper_limit)
-      {
-        *(uint32*)&(dest[pos]) = *nit;
-        ++nit;
-        pos += 4;
-        ++i;
-      }
-      remaining_size -= upper_limit;
-      *(uint8*)&(dest[4]) = upper_limit;
-      
-      return (remaining_size == 0);
-    }
     uint pos(5);
     if (!remaining_size)
     {
-      remaining_size = pit->second.size();
-      nit = pit->second.begin();
+      remaining_size = it->second.second.size();
+      nit = it->second.second.begin();
     }
     uint upper_limit(remaining_size);
     if (upper_limit > 255)
@@ -1089,8 +1059,25 @@ struct Tag_Id_Node_Global_Updater : public Tag_Id_Node_Global
     }
     remaining_size -= upper_limit;
     *(uint8*)&(dest[4]) = upper_limit;
-    
+      
     return (remaining_size == 0);
+  }
+  
+  void modify_this_buf(uint8* dest, uint8* source)
+  {
+    map< uint32, pair< set< uint32 >, set< uint32 > > >::const_iterator
+	it(ids_to_be_edited_.find(*((uint32*)&(source[0]))));
+    uint32 j(0);
+    *((uint32*)&(dest[0])) = *((uint32*)&(source[0]));
+    for (uint32 i(0); i < *((uint8*)&(source[4])); ++i)
+    {
+      if (it->second.first.find(*(uint32*)&(source[5 + 4*i])) == it->second.first.end())
+      {
+	*((uint32*)&(dest[5 + 4*j])) = *((uint32*)&(source[5 + 4*i]));
+	++j;
+      }
+    }
+    *((uint8*)&(dest[4])) = j;
   }
   
   uint8 keep_this_elem(uint8* elem)
@@ -1098,16 +1085,13 @@ struct Tag_Id_Node_Global_Updater : public Tag_Id_Node_Global
     map< uint32, pair< set< uint32 >, set< uint32 > > >::const_iterator
       it(ids_to_be_edited_.find(*((uint32*)&(elem[0]))));
     if (it == ids_to_be_edited_.end())
-      return 1;
-    map< uint32, set< uint32 > >::iterator it_set(patched_ids_nodes_.find(it->first));
-    if (it_set == patched_ids_nodes_.end())
-      it_set = patched_ids_nodes_.insert(make_pair(it->first, it->second.second)).first;
-    for (uint16 i(0); i < *((uint8*)&(elem[4])); ++i)
+      return RAW_DB_KEEP;
+    for (uint32 i(0); i < *((uint8*)&(elem[4])); ++i)
     {
-      if (it->second.first.find(*(uint32*)&(elem[4*i + 5])) == it->second.first.end())
-        it_set->second.insert(*(uint32*)&(elem[4*i + 5]));
+      if (it->second.first.find(*(uint32*)&(elem[5 + 4*i])) == it->second.first.end())
+	return RAW_DB_SHRINK;
     }
-    return 0;
+    return RAW_DB_DELETE;
   }
   
   void index_to_buf(uint8* dest, const uint32& i) const
@@ -1119,7 +1103,6 @@ struct Tag_Id_Node_Global_Updater : public Tag_Id_Node_Global
   
 private:
   const map< uint32, pair< set< uint32 >, set< uint32 > > >& ids_to_be_edited_;
-  map< uint32, set< uint32 > > patched_ids_nodes_;
   multimap< Index, uint16 > block_index_;
   uint remaining_size;
 };
@@ -1353,25 +1336,27 @@ struct Tag_Node_Id_Updater : public Tag_Node_Id
     return true;
   }
   
+  void modify_this_buf(uint8* dest, uint8* source) {}
+  
   uint8 keep_this_elem(uint8* elem)
   {
     map< pair< uint32, uint32 >, pair< set< uint32 >, uint > >::const_iterator
       it(nodes_to_be_edited_.find(make_pair< uint32, uint32 >
 	(*((uint32*)&(elem[4])), *((uint32*)&(elem[0])))));
     if (it == nodes_to_be_edited_.end())
-      return 1;
+      return RAW_DB_KEEP;
     if ((it->second.second == DELETE) || (it->second.second == INSERT))
     {
       set< uint32 >& id_set(deleted_nodes_ids_[it->first.second]);
       for (uint16 i(0); i < *((uint16*)&(elem[8])); ++i)
 	id_set.insert(*(uint32*)&(elem[4*i + 10]));
-      return 0;
+      return RAW_DB_DELETE;
     }
     set< uint32 >& id_set(patched_nodes_ids_[it->first.second]);
     id_set = it->second.first;
     for (uint16 i(0); i < *((uint16*)&(elem[8])); ++i)
       id_set.insert(*(uint32*)&(elem[4*i + 10]));
-    return 0;
+    return RAW_DB_DELETE;
   }
   
   void index_to_buf(uint8* dest, const uint32& i) const
@@ -1735,13 +1720,15 @@ struct Tag_Id_Way_Local_Updater : public Tag_Id_Way_Local
     return (remaining_size == 0);
   }
   
+  void modify_this_buf(uint8* dest, uint8* source) {}
+  
   uint8 keep_this_elem(uint8* elem)
   {
     map< pair< uint32, uint32 >, pair< set< uint32 >, set< uint32 > > >::const_iterator
       it(local_ids_.find(make_pair< uint32, uint32 >
                          (local_id_idxs_[*(uint32*)&(elem[0])] & 0xffffff00, *(uint32*)&(elem[0]))));
     if (it == local_ids_.end())
-      return 1;
+      return RAW_DB_KEEP;
     if ((!(it->second.second.empty())) && (*(it->second.second.begin()) == 0))
     {
       map< uint32, set< uint32 > >::iterator mit(moved_ids_.insert(make_pair< uint32, set< uint32 > >
@@ -1751,7 +1738,7 @@ struct Tag_Id_Way_Local_Updater : public Tag_Id_Way_Local
         if (it->second.first.find(*(uint32*)&(elem[6+4*i])) == it->second.first.end())
           mit->second.insert(*(uint32*)&(elem[6+4*i]));
       }
-      return 0;
+      return RAW_DB_DELETE;
     }
     map< pair< uint32, uint32 >, set< uint32 > >::iterator
       pit(patched_local_ids_.insert(make_pair< pair< uint32, uint32 >, set< uint32 > >
@@ -1763,7 +1750,7 @@ struct Tag_Id_Way_Local_Updater : public Tag_Id_Way_Local
       if (it->second.first.find(*(uint32*)&(elem[6+4*i])) == it->second.first.end())
         pit->second.insert(*(uint32*)&(elem[6+4*i]));
     }
-    return 1;
+    return RAW_DB_KEEP;
   }
   
   void index_to_buf(uint8* dest, const uint32& i) const
@@ -1922,8 +1909,8 @@ private:
 struct Tag_Id_Way_Global_Updater : public Tag_Id_Way_Global
 {
   Tag_Id_Way_Global_Updater
-    (const map< uint32, pair< set< uint32 >, set< uint32 > > >& ids_to_be_edited)
-    : ids_to_be_edited_(ids_to_be_edited), patched_ids_ways_(), block_index_(),
+      (const map< uint32, pair< set< uint32 >, set< uint32 > > >& ids_to_be_edited)
+  : ids_to_be_edited_(ids_to_be_edited), block_index_(),
     remaining_size(0) {}
   
   const multimap< Index, uint16 >& block_index() const { return block_index_; }
@@ -1935,10 +1922,7 @@ struct Tag_Id_Way_Global_Updater : public Tag_Id_Way_Global
   
   uint32 size_of(const Iterator& it) const
   {
-    map< uint32, set< uint32 > >::const_iterator pit(patched_ids_ways_.find(it->first));
-    int32 size_of_(it->second.first.size());
-    if (pit != patched_ids_ways_.end())
-      size_of_ = pit->second.size();
+    int32 size_of_(it->second.second.size());
     return (((size_of_ - 1) / 255 + 1)*5 + size_of_*4);
   }
   
@@ -1946,13 +1930,7 @@ struct Tag_Id_Way_Global_Updater : public Tag_Id_Way_Global
   {
     int32 size_of_(remaining_size);
     if (remaining_size == 0)
-    {
-      map< uint32, set< uint32 > >::const_iterator pit(patched_ids_ways_.find(it->first));
-      if (pit == patched_ids_ways_.end())
-        size_of_ = it->second.first.size();
-      else
-        size_of_ = pit->second.size();
-    }
+      size_of_ = it->second.second.size();
     if (size_of_ > 255)
       size_of_ = 255;
     return (5 + size_of_*4);
@@ -1980,36 +1958,11 @@ struct Tag_Id_Way_Global_Updater : public Tag_Id_Way_Global
   {
     static set< uint32 >::const_iterator nit;
     *(uint32*)&(dest[0]) = it->first;
-    map< uint32, set< uint32 > >::const_iterator pit(patched_ids_ways_.find(it->first));
-    if (pit == patched_ids_ways_.end())
-    {
-      uint pos(5);
-      if (!remaining_size)
-      {
-        remaining_size = it->second.first.size();
-        nit = it->second.first.begin();
-      }
-      uint upper_limit(remaining_size);
-      if (upper_limit > 255)
-        upper_limit = 255;
-      uint i(0);
-      while (i < upper_limit)
-      {
-        *(uint32*)&(dest[pos]) = *nit;
-        ++nit;
-        pos += 4;
-        ++i;
-      }
-      remaining_size -= upper_limit;
-      *(uint8*)&(dest[4]) = upper_limit;
-      
-      return (remaining_size == 0);
-    }
     uint pos(5);
     if (!remaining_size)
     {
-      remaining_size = pit->second.size();
-      nit = pit->second.begin();
+      remaining_size = it->second.second.size();
+      nit = it->second.second.begin();
     }
     uint upper_limit(remaining_size);
     if (upper_limit > 255)
@@ -2024,8 +1977,25 @@ struct Tag_Id_Way_Global_Updater : public Tag_Id_Way_Global
     }
     remaining_size -= upper_limit;
     *(uint8*)&(dest[4]) = upper_limit;
-    
+      
     return (remaining_size == 0);
+  }
+  
+  void modify_this_buf(uint8* dest, uint8* source)
+  {
+    map< uint32, pair< set< uint32 >, set< uint32 > > >::const_iterator
+	it(ids_to_be_edited_.find(*((uint32*)&(source[0]))));
+    uint32 j(0);
+    *((uint32*)&(dest[0])) = *((uint32*)&(source[0]));
+    for (uint32 i(0); i < *((uint8*)&(source[4])); ++i)
+    {
+      if (it->second.first.find(*(uint32*)&(source[5 + 4*i])) == it->second.first.end())
+      {
+	*((uint32*)&(dest[5 + 4*j])) = *((uint32*)&(source[5 + 4*i]));
+	++j;
+      }
+    }
+    *((uint8*)&(dest[4])) = j;
   }
   
   uint8 keep_this_elem(uint8* elem)
@@ -2033,28 +2003,24 @@ struct Tag_Id_Way_Global_Updater : public Tag_Id_Way_Global
     map< uint32, pair< set< uint32 >, set< uint32 > > >::const_iterator
       it(ids_to_be_edited_.find(*((uint32*)&(elem[0]))));
     if (it == ids_to_be_edited_.end())
-      return 1;
-    map< uint32, set< uint32 > >::iterator it_set(patched_ids_ways_.find(it->first));
-    if (it_set == patched_ids_ways_.end())
-      it_set = patched_ids_ways_.insert(make_pair(it->first, it->second.second)).first;
-    for (uint16 i(0); i < *((uint8*)&(elem[4])); ++i)
+      return RAW_DB_KEEP;
+    for (uint32 i(0); i < *((uint8*)&(elem[4])); ++i)
     {
-      if (it->second.first.find(*(uint32*)&(elem[4*i + 5])) == it->second.first.end())
-        it_set->second.insert(*(uint32*)&(elem[4*i + 5]));
+      if (it->second.first.find(*(uint32*)&(elem[5 + 4*i])) == it->second.first.end())
+	return RAW_DB_SHRINK;
     }
-    return 0;
+    return RAW_DB_DELETE;
   }
   
   void index_to_buf(uint8* dest, const uint32& i) const
   {
     *(uint32*)&(dest[0]) = i;
   }
-  
+
   void set_first_new_block(uint16 block_id) {}
   
 private:
   const map< uint32, pair< set< uint32 >, set< uint32 > > >& ids_to_be_edited_;
-  map< uint32, set< uint32 > > patched_ids_ways_;
   multimap< Index, uint16 > block_index_;
   uint remaining_size;
 };
@@ -2288,25 +2254,27 @@ struct Tag_Way_Id_Updater : public Tag_Way_Id
     return true;
   }
   
+  void modify_this_buf(uint8* dest, uint8* source) {}
+  
   uint8 keep_this_elem(uint8* elem)
   {
     map< pair< uint32, uint32 >, pair< set< uint32 >, uint > >::const_iterator
       it(ways_to_be_edited_.find(make_pair< uint32, uint32 >
                                   (*((uint32*)&(elem[4])), *((uint32*)&(elem[0])))));
     if (it == ways_to_be_edited_.end())
-      return 1;
+      return RAW_DB_KEEP;
     if ((it->second.second == DELETE) || (it->second.second == INSERT))
     {
       set< uint32 >& id_set(deleted_ways_ids_[it->first.second]);
       for (uint16 i(0); i < *((uint16*)&(elem[8])); ++i)
         id_set.insert(*(uint32*)&(elem[4*i + 10]));
-      return 0;
+      return RAW_DB_DELETE;
     }
     set< uint32 >& id_set(patched_ways_ids_[it->first.second]);
     id_set = it->second.first;
     for (uint16 i(0); i < *((uint16*)&(elem[8])); ++i)
       id_set.insert(*(uint32*)&(elem[4*i + 10]));
-    return 0;
+    return RAW_DB_DELETE;
   }
   
   void index_to_buf(uint8* dest, const uint32& i) const
@@ -2670,13 +2638,15 @@ struct Tag_Id_Relation_Local_Updater : public Tag_Id_Relation_Local
     return (remaining_size == 0);
   }
   
+  void modify_this_buf(uint8* dest, uint8* source) {}
+  
   uint8 keep_this_elem(uint8* elem)
   {
     map< pair< uint32, uint32 >, pair< set< uint32 >, set< uint32 > > >::const_iterator
       it(local_ids_.find(make_pair< uint32, uint32 >
                          (local_id_idxs_[*(uint32*)&(elem[0])] & 0xffffff00, *(uint32*)&(elem[0]))));
     if (it == local_ids_.end())
-      return 1;
+      return RAW_DB_KEEP;
     if ((!(it->second.second.empty())) && (*(it->second.second.begin()) == 0))
     {
       map< uint32, set< uint32 > >::iterator mit(moved_ids_.insert(make_pair< uint32, set< uint32 > >
@@ -2686,7 +2656,7 @@ struct Tag_Id_Relation_Local_Updater : public Tag_Id_Relation_Local
         if (it->second.first.find(*(uint32*)&(elem[6+4*i])) == it->second.first.end())
           mit->second.insert(*(uint32*)&(elem[6+4*i]));
       }
-      return 0;
+      return RAW_DB_DELETE;
     }
     map< pair< uint32, uint32 >, set< uint32 > >::iterator
       pit(patched_local_ids_.insert(make_pair< pair< uint32, uint32 >, set< uint32 > >
@@ -2698,7 +2668,7 @@ struct Tag_Id_Relation_Local_Updater : public Tag_Id_Relation_Local
       if (it->second.first.find(*(uint32*)&(elem[6+4*i])) == it->second.first.end())
         pit->second.insert(*(uint32*)&(elem[6+4*i]));
     }
-    return 1;
+    return RAW_DB_KEEP;
   }
   
   void index_to_buf(uint8* dest, const uint32& i) const
@@ -2857,8 +2827,8 @@ private:
 struct Tag_Id_Relation_Global_Updater : public Tag_Id_Relation_Global
 {
   Tag_Id_Relation_Global_Updater
-    (const map< uint32, pair< set< uint32 >, set< uint32 > > >& ids_to_be_edited)
-    : ids_to_be_edited_(ids_to_be_edited), patched_ids_relations_(), block_index_(),
+      (const map< uint32, pair< set< uint32 >, set< uint32 > > >& ids_to_be_edited)
+  : ids_to_be_edited_(ids_to_be_edited), block_index_(),
     remaining_size(0) {}
   
   const multimap< Index, uint16 >& block_index() const { return block_index_; }
@@ -2870,10 +2840,7 @@ struct Tag_Id_Relation_Global_Updater : public Tag_Id_Relation_Global
   
   uint32 size_of(const Iterator& it) const
   {
-    map< uint32, set< uint32 > >::const_iterator pit(patched_ids_relations_.find(it->first));
-    int32 size_of_(it->second.first.size());
-    if (pit != patched_ids_relations_.end())
-      size_of_ = pit->second.size();
+    int32 size_of_(it->second.second.size());
     return (((size_of_ - 1) / 255 + 1)*5 + size_of_*4);
   }
   
@@ -2881,13 +2848,7 @@ struct Tag_Id_Relation_Global_Updater : public Tag_Id_Relation_Global
   {
     int32 size_of_(remaining_size);
     if (remaining_size == 0)
-    {
-      map< uint32, set< uint32 > >::const_iterator pit(patched_ids_relations_.find(it->first));
-      if (pit == patched_ids_relations_.end())
-        size_of_ = it->second.first.size();
-      else
-        size_of_ = pit->second.size();
-    }
+      size_of_ = it->second.second.size();
     if (size_of_ > 255)
       size_of_ = 255;
     return (5 + size_of_*4);
@@ -2915,36 +2876,11 @@ struct Tag_Id_Relation_Global_Updater : public Tag_Id_Relation_Global
   {
     static set< uint32 >::const_iterator nit;
     *(uint32*)&(dest[0]) = it->first;
-    map< uint32, set< uint32 > >::const_iterator pit(patched_ids_relations_.find(it->first));
-    if (pit == patched_ids_relations_.end())
-    {
-      uint pos(5);
-      if (!remaining_size)
-      {
-        remaining_size = it->second.first.size();
-        nit = it->second.first.begin();
-      }
-      uint upper_limit(remaining_size);
-      if (upper_limit > 255)
-        upper_limit = 255;
-      uint i(0);
-      while (i < upper_limit)
-      {
-        *(uint32*)&(dest[pos]) = *nit;
-        ++nit;
-        pos += 4;
-        ++i;
-      }
-      remaining_size -= upper_limit;
-      *(uint8*)&(dest[4]) = upper_limit;
-      
-      return (remaining_size == 0);
-    }
     uint pos(5);
     if (!remaining_size)
     {
-      remaining_size = pit->second.size();
-      nit = pit->second.begin();
+      remaining_size = it->second.second.size();
+      nit = it->second.second.begin();
     }
     uint upper_limit(remaining_size);
     if (upper_limit > 255)
@@ -2959,8 +2895,25 @@ struct Tag_Id_Relation_Global_Updater : public Tag_Id_Relation_Global
     }
     remaining_size -= upper_limit;
     *(uint8*)&(dest[4]) = upper_limit;
-    
+      
     return (remaining_size == 0);
+  }
+  
+  void modify_this_buf(uint8* dest, uint8* source)
+  {
+    map< uint32, pair< set< uint32 >, set< uint32 > > >::const_iterator
+	it(ids_to_be_edited_.find(*((uint32*)&(source[0]))));
+    uint32 j(0);
+    *((uint32*)&(dest[0])) = *((uint32*)&(source[0]));
+    for (uint32 i(0); i < *((uint8*)&(source[4])); ++i)
+    {
+      if (it->second.first.find(*(uint32*)&(source[5 + 4*i])) == it->second.first.end())
+      {
+	*((uint32*)&(dest[5 + 4*j])) = *((uint32*)&(source[5 + 4*i]));
+	++j;
+      }
+    }
+    *((uint8*)&(dest[4])) = j;
   }
   
   uint8 keep_this_elem(uint8* elem)
@@ -2968,28 +2921,24 @@ struct Tag_Id_Relation_Global_Updater : public Tag_Id_Relation_Global
     map< uint32, pair< set< uint32 >, set< uint32 > > >::const_iterator
       it(ids_to_be_edited_.find(*((uint32*)&(elem[0]))));
     if (it == ids_to_be_edited_.end())
-      return 1;
-    map< uint32, set< uint32 > >::iterator it_set(patched_ids_relations_.find(it->first));
-    if (it_set == patched_ids_relations_.end())
-      it_set = patched_ids_relations_.insert(make_pair(it->first, it->second.second)).first;
-    for (uint16 i(0); i < *((uint8*)&(elem[4])); ++i)
+      return RAW_DB_KEEP;
+    for (uint32 i(0); i < *((uint8*)&(elem[4])); ++i)
     {
-      if (it->second.first.find(*(uint32*)&(elem[4*i + 5])) == it->second.first.end())
-        it_set->second.insert(*(uint32*)&(elem[4*i + 5]));
+      if (it->second.first.find(*(uint32*)&(elem[5 + 4*i])) == it->second.first.end())
+	return RAW_DB_SHRINK;
     }
-    return 0;
+    return RAW_DB_DELETE;
   }
   
   void index_to_buf(uint8* dest, const uint32& i) const
   {
     *(uint32*)&(dest[0]) = i;
   }
-  
+
   void set_first_new_block(uint16 block_id) {}
   
 private:
   const map< uint32, pair< set< uint32 >, set< uint32 > > >& ids_to_be_edited_;
-  map< uint32, set< uint32 > > patched_ids_relations_;
   multimap< Index, uint16 > block_index_;
   uint remaining_size;
 };
@@ -3223,25 +3172,27 @@ struct Tag_Relation_Id_Updater : public Tag_Relation_Id
     return true;
   }
   
+  void modify_this_buf(uint8* dest, uint8* source) {}
+  
   uint8 keep_this_elem(uint8* elem)
   {
     map< pair< uint32, uint32 >, pair< set< uint32 >, uint > >::const_iterator
       it(relations_to_be_edited_.find(make_pair< uint32, uint32 >
                                   (*((uint32*)&(elem[4])), *((uint32*)&(elem[0])))));
     if (it == relations_to_be_edited_.end())
-      return 1;
+      return RAW_DB_KEEP;
     if ((it->second.second == DELETE) || (it->second.second == INSERT))
     {
       set< uint32 >& id_set(deleted_relations_ids_[it->first.second]);
       for (uint16 i(0); i < *((uint16*)&(elem[8])); ++i)
         id_set.insert(*(uint32*)&(elem[4*i + 10]));
-      return 0;
+      return RAW_DB_DELETE;
     }
     set< uint32 >& id_set(patched_relations_ids_[it->first.second]);
     id_set = it->second.first;
     for (uint16 i(0); i < *((uint16*)&(elem[8])); ++i)
       id_set.insert(*(uint32*)&(elem[4*i + 10]));
-    return 0;
+    return RAW_DB_DELETE;
   }
   
   void index_to_buf(uint8* dest, const uint32& i) const
@@ -3598,15 +3549,17 @@ struct Indexed_Ordered_Id_To_Many_Updater : public Indexed_Ordered_Id_To_Many_Ba
     return true;
   }
   
+  void modify_this_buf(uint8* dest, uint8* source) {}
+  
   uint8 keep_this_elem(uint8* buf)
   {
     typename Storage::Head h;
     Storage::head_from_buf(&(buf[0]), h);
     typename Container::const_iterator it(to_delete_.find(typename Storage::Basetype(h)));
     if (it == to_delete_.end())
-      return 1;
+      return RAW_DB_KEEP;
     else
-      return 0;
+      return RAW_DB_DELETE;
   }
   
   void set_first_new_block(uint16 block_id) { first_new_block_ = block_id; }

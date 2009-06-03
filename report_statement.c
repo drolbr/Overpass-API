@@ -57,9 +57,9 @@ void Report_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
        it != conflict_ids.end(); )
   {
     ostringstream temp;
-    temp<<"select conflicts.message, conflicts.line, conflicts.stack, rule_names.name from conflicts "
-	<<"left join rule_bodys on rule_bodys.id = conflicts.rule "
-	<<"left join rule_names on rule_names.id = rule_bodys.rule "
+    temp<<"select conflicts.message, conflicts.line, conflicts.stack, osm.rule_names.name from conflicts "
+	<<"left join osm.rule_bodys on osm.rule_bodys.id = conflicts.rule "
+	<<"left join osm.rule_names on osm.rule_names.id = osm.rule_bodys.rule "
 	<<"where conflicts.id in ("<<*it;
     unsigned int i(0);
     while (((++it) != conflict_ids.end()) && (i++ < 10000))

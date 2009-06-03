@@ -161,6 +161,10 @@ int main(int argc, char *argv[])
     remove(fifo_name.c_str());
     return 0;
   }
+  {
+    my_bool my_true(true);
+    mysql_options(mysql, MYSQL_OPT_RECONNECT, &my_true);
+  }
 
   // create named pipe
   umask(0);
