@@ -103,6 +103,7 @@ int main(int argc, char *argv[])
   db_subdir = current_db;
   if ((db_subdir.size() > 0) && (db_subdir[db_subdir.size()-1] != '/'))
     db_subdir += '/';
+  set_meta_db(current_db);
   
   mysql = mysql_init(NULL);
   

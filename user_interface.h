@@ -49,5 +49,6 @@ const int STATIC_ANALYSIS = 4;
 
 void set_debug_mode(int mode);
 int get_debug_mode();
+void set_meta_db(string current_db_);
 
 #endif

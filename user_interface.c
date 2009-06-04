@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <string>
@@ -203,8 +204,58 @@ void add_sanity_remark(const string& error)
   sanity_out<<"<p><strong style=\"color:#00BB00\">Remark</strong>: "<<error<<"</p>\n";
 }
 
+string current_db;
+
+string timestamp_of(uint32 timestamp)
+{
+  int month_borders[] =
+  { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365,
+  31+365, 59+365, 90+365, 120+365, 151+365, 181+365,
+  212+365, 243+365, 273+365, 304+365, 334+365, 365+365,
+  31+2*365, 59+2*365, 90+2*365, 120+2*365, 151+2*365, 181+2*365,
+  212+2*365, 243+2*365, 273+2*365, 304+2*365, 334+2*365, 365+2*365,
+  31+3*365, 60+3*365, 91+3*365, 121+3*365, 152+3*365, 182+3*365,
+  213+3*365, 244+3*365, 274+3*365, 305+3*365, 335+3*365, 366+3*365 };
+  
+  int hour_number(timestamp);
+  int day_number(hour_number / 24);
+  int four_year_remainder(day_number % (4 * 365));
+  int year(day_number / 365 / 4 + 2009);
+  
+  int month(1);
+  while (four_year_remainder >= month_borders[month])
+    ++month;
+  
+  hour_number = hour_number % 24;
+  int day(four_year_remainder - month_borders[month-1] + 1);
+  year += (month-1) / 12;
+  month = (month-1) % 12 + 1;
+  
+  ostringstream temp;
+  temp<<(long long)year*1000000 + month*10000 + day*100 + hour_number;
+  return temp.str();
+}
+
 ostream& out_header(ostream& out, int type)
 {
+  ifstream status_in("/tmp/big_status");
+  uint32 db_timestamp, db_rule_version;
+  status_in>>db_timestamp;
+  status_in>>db_timestamp;
+  if (current_db == "osm_1")
+  {
+    status_in>>db_timestamp;
+    status_in>>db_rule_version;
+  }
+  else if (current_db == "osm_2")
+  {
+    status_in>>db_timestamp;
+    status_in>>db_timestamp;
+    status_in>>db_timestamp;
+    status_in>>db_timestamp;
+    status_in>>db_rule_version;
+  }
+  
   if (header_state != 0)
     return out;
   if (type == MIXED_XML)
@@ -214,7 +265,9 @@ ostream& out_header(ostream& out, int type)
 	<<"<note>The data included in this document is from www.openstreetmap.org. "
 	<<"It has there been collected by a large group of contributors. For individual "
 	<<"attribution of each item please refer to "
-	<<"http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\n";
+	<<"http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\n"
+	<<"<meta data_included_until=\""<<timestamp_of(db_timestamp)
+	<<"\" last_rule_applied=\""<<db_rule_version<<"\"/>\n\n";
     header_state = WRITTEN_XML;
   }
   else if (type == HTML)
@@ -229,7 +282,9 @@ ostream& out_header(ostream& out, int type)
 	<<"  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
 	<<"  <title>Query Results</title>\n"
 	<<"</head>\n"
-	<<"<body>\n\n";
+	<<"<body>\n\n"
+	<<"<p>Data included until: "<<timestamp_of(db_timestamp)
+	<<"<br/>Last rule applied: "<<db_rule_version<<"</p>\n\n";
   }
   else
   {
@@ -244,7 +299,9 @@ ostream& out_header(ostream& out, int type)
 	<<"  <title>Nothing</title>\n"
 	<<"</head>\n"
 	<<"<body>\n\n"
-	<<"Your query doesn't contain any statement that produces output.\n";
+	<<"<p>Data included until: "<<timestamp_of(db_timestamp)
+	<<"<br/>Last rule applied: "<<db_rule_version<<"</p>\n"
+	<<"<p>Your query doesn't contain any statement that produces output.</p>\n";
   }
   
   return out;
@@ -689,4 +746,9 @@ void set_debug_mode(int mode)
 int get_debug_mode()
 {
   return debug_mode;
+}
+
+void set_meta_db(string current_db_)
+{
+  current_db = current_db_;
 }
