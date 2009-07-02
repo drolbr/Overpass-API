@@ -330,6 +330,7 @@ void delete_insert(T& env)
       
       if (((uint32*)dest_buf)[0] == 0)
       {
+	unsigned int next_block(block_it->second);
 	empty_blocks.push_back(cur_block);
 	typename multimap< typename T::Index, uint16 >::iterator
 	    it(block_index.lower_bound(env.index_of(elem_it)));
@@ -344,8 +345,12 @@ void delete_insert(T& env)
 	  }
 	  ++it;
 	}
+	block_it = block_index.lower_bound(env.index_of(elem_it));
+	while ((block_it != block_index.end()) && (block_it->second != next_block))
+	  ++block_it;
       }
-      cur_block = (block_it++)->second;
+      else
+	cur_block = (block_it++)->second;
     }
 
     uint32 new_byte_count(0);

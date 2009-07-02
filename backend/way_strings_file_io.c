@@ -175,6 +175,22 @@ void flush_way_tags(uint& current_run, map< WayKeyValue, WayCollection >& way_ta
       write(dest_fd, key_rd_buf, size_rd_buf[0]);
       write(dest_fd, value_rd_buf, size_rd_buf[1]);
     }
+    while (it != way_tags.end())
+    {
+      uint16 key_size(it->first.key.size());
+      uint16 value_size(it->first.value.size());
+      if (it->second.bitmask>>8)
+	it->second.position = 0xffffffff;
+      else
+	it->second.position &= 0xffffff00;
+      write(dest_fd, &(it->second.id), sizeof(uint32));
+      write(dest_fd, &(it->second.position), sizeof(uint32));
+      write(dest_fd, &(key_size), sizeof(uint16));
+      write(dest_fd, &(value_size), sizeof(uint16));
+      write(dest_fd, &(it->first.key[0]), key_size);
+      write(dest_fd, &(it->first.value[0]), value_size);
+      ++it;
+    }
     
     free(cnt_rd_buf);
     free(key_rd_buf);
