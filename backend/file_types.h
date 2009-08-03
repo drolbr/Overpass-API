@@ -816,17 +816,20 @@ struct Tag_Id_Node_Local_Updater : public Tag_Id_Node_Local
       }
       return RAW_DB_DELETE;
     }
-    map< pair< uint32, uint32 >, set< uint32 > >::iterator
-	pit(patched_local_ids_.insert(make_pair< pair< uint32, uint32 >, set< uint32 > >
-	(make_pair< uint32, uint32 >
-	    (local_id_idxs_[*(uint32*)&(elem[0])] & 0xffffff00, *(uint32*)&(elem[0])), set< uint32 >()))
-	.first);
+    pair< map< pair< uint32, uint32 >, set< uint32 > >::iterator, bool >
+	pit(patched_local_ids_.insert
+	    (make_pair< pair< uint32, uint32 >, set< uint32 > >
+	    (make_pair< uint32, uint32 >
+		(local_id_idxs_[*(uint32*)&(elem[0])] & 0xffffff00, *(uint32*)&(elem[0])),
+		 set< uint32 >())));
+    if (pit.second)
+      pit.first->second = it->second.second;
     for (uint i(0); i < elem[4]; ++i)
     {
       if (it->second.first.find(*(uint32*)&(elem[6+4*i])) == it->second.first.end())
-	pit->second.insert(*(uint32*)&(elem[6+4*i]));
+	pit.first->second.insert(*(uint32*)&(elem[6+4*i]));
     }
-    return RAW_DB_KEEP;
+    return RAW_DB_DELETE;
   }
   
   void index_to_buf(uint8* dest, const uint32& i) const
@@ -1734,17 +1737,20 @@ struct Tag_Id_Way_Local_Updater : public Tag_Id_Way_Local
       }
       return RAW_DB_DELETE;
     }
-    map< pair< uint32, uint32 >, set< uint32 > >::iterator
-      pit(patched_local_ids_.insert(make_pair< pair< uint32, uint32 >, set< uint32 > >
-                                    (make_pair< uint32, uint32 >
-                                     (local_id_idxs_[*(uint32*)&(elem[0])] & 0xffffff00, *(uint32*)&(elem[0])), set< uint32 >()))
-          .first);
+    pair< map< pair< uint32, uint32 >, set< uint32 > >::iterator, bool >
+	pit(patched_local_ids_.insert
+	    (make_pair< pair< uint32, uint32 >, set< uint32 > >
+	    (make_pair< uint32, uint32 >
+		(local_id_idxs_[*(uint32*)&(elem[0])] & 0xffffff00, *(uint32*)&(elem[0])),
+		 set< uint32 >())));
+    if (pit.second)
+      pit.first->second = it->second.second;
     for (uint i(0); i < elem[4]; ++i)
     {
       if (it->second.first.find(*(uint32*)&(elem[6+4*i])) == it->second.first.end())
-        pit->second.insert(*(uint32*)&(elem[6+4*i]));
+	pit.first->second.insert(*(uint32*)&(elem[6+4*i]));
     }
-    return RAW_DB_KEEP;
+    return RAW_DB_DELETE;
   }
   
   void index_to_buf(uint8* dest, const uint32& i) const
@@ -2652,17 +2658,19 @@ struct Tag_Id_Relation_Local_Updater : public Tag_Id_Relation_Local
       }
       return RAW_DB_DELETE;
     }
-    map< pair< uint32, uint32 >, set< uint32 > >::iterator
-      pit(patched_local_ids_.insert(make_pair< pair< uint32, uint32 >, set< uint32 > >
-                                    (make_pair< uint32, uint32 >
-                                     (local_id_idxs_[*(uint32*)&(elem[0])] & 0xffffff00, *(uint32*)&(elem[0])), set< uint32 >()))
-          .first);
+    pair< map< pair< uint32, uint32 >, set< uint32 > >::iterator, bool >
+      pit(patched_local_ids_.insert
+	(make_pair< pair< uint32, uint32 >, set< uint32 > >
+	(make_pair< uint32, uint32 >
+	    (local_id_idxs_[*(uint32*)&(elem[0])] & 0xffffff00, *(uint32*)&(elem[0])), set< uint32 >())));
+    if (pit.second)
+      pit.first->second = it->second.second;
     for (uint i(0); i < elem[4]; ++i)
     {
       if (it->second.first.find(*(uint32*)&(elem[6+4*i])) == it->second.first.end())
-        pit->second.insert(*(uint32*)&(elem[6+4*i]));
+        pit.first->second.insert(*(uint32*)&(elem[6+4*i]));
     }
-    return RAW_DB_KEEP;
+    return RAW_DB_DELETE;
   }
   
   void index_to_buf(uint8* dest, const uint32& i) const
