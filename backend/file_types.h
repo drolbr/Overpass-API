@@ -349,7 +349,7 @@ private:
 struct Node_Id_Node_Updater : public Node_Id_Node
 {
   Node_Id_Node_Updater(const set< Node >& delete_nodes, const set< Node >& new_nodes)
-    : data(), block_index_()
+  : data(), block_index_(), first_new_block_(0xffff)
   {
     for (set< Node >::const_iterator it(delete_nodes.begin()); it != delete_nodes.end(); ++it)
       data.insert(make_pair< pair< int32, int32 >, pair< bool, Node > >
@@ -3469,7 +3469,7 @@ template < typename Storage, typename Container >
 struct Indexed_Ordered_Id_To_Many_Updater : public Indexed_Ordered_Id_To_Many_Base< Storage >
 {
   Indexed_Ordered_Id_To_Many_Updater(const Container& to_delete, const Container& to_insert)
-    : to_delete_(to_delete), to_insert_(to_insert), block_index_(), remaining_size(0), dit(), /*first_new_block_(0),*/ block_ids() {}
+    : to_delete_(to_delete), to_insert_(to_insert), block_index_(), remaining_size(0), dit(), first_new_block_(0xffff), block_ids() {}
   
   const multimap< typename Storage::Index, uint16 >& block_index() const { return block_index_; }
   multimap< typename Storage::Index, uint16 >& block_index() { return block_index_; }

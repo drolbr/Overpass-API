@@ -652,7 +652,8 @@ void update_id_index(T& env)
   int data_fd = open64(DATA_FILE.c_str(), O_RDONLY);
   if (data_fd < 0)
     throw File_Error(errno, DATA_FILE, "make_id_index:1");
-  lseek64(data_fd, (int64)(env.first_new_block())*BLOCKSIZE, SEEK_SET);
+  if (env.first_new_block() != 0xffff)
+    lseek64(data_fd, (int64)(env.first_new_block())*BLOCKSIZE, SEEK_SET);
   
   int dest_fd = open64(ID_IDX_FILE.c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)
@@ -688,37 +689,40 @@ void update_id_index(T& env)
   }
   current_id_blocks.clear();
   
-  uint16 block_id(env.first_new_block());
-  uint8* data_buf = (uint8*) malloc(BLOCKSIZE);
-  while (read(data_fd, data_buf, BLOCKSIZE))
+  if (env.first_new_block() != 0xffff)
   {
-    uint32 pos(sizeof(uint32));
-    while (pos < *((uint32*)data_buf) + sizeof(uint32))
+    uint16 block_id(env.first_new_block());
+    uint8* data_buf = (uint8*) malloc(BLOCKSIZE);
+    while (read(data_fd, data_buf, BLOCKSIZE))
     {
-      current_ids.insert(env.id_of_buf(&(data_buf[pos])));
-      pos += env.size_of_buf(&(data_buf[pos]));
-    }
-    for (set< uint32 >::const_iterator it(current_ids.begin());
-	 it != current_ids.end(); ++it)
-    {
-      int64 dest_pos(lseek64(dest_fd, (int64)((*it) - 1)*sizeof(uint16), SEEK_SET));
-      if (dest_pos < (int64)((*it) - 1)*sizeof(uint16))
+      uint32 pos(sizeof(uint32));
+      while (pos < *((uint32*)data_buf) + sizeof(uint32))
       {
-	int64 zero_buf(0);
-	while (dest_pos + sizeof(int64) < (int64)((*it) - 1)*sizeof(uint16))
-	{
-	  write(dest_fd, &zero_buf, sizeof(int64));
-	  dest_pos += sizeof(int64);
-	}
-	if (dest_pos < (int64)((*it) - 1)*sizeof(uint16))
-	  write(dest_fd, &zero_buf, (int64)((*it) - 1)*sizeof(uint16) - dest_pos);
+	current_ids.insert(env.id_of_buf(&(data_buf[pos])));
+	pos += env.size_of_buf(&(data_buf[pos]));
       }
-      write(dest_fd, &block_id, sizeof(uint16));
+      for (set< uint32 >::const_iterator it(current_ids.begin());
+	   it != current_ids.end(); ++it)
+      {
+	int64 dest_pos(lseek64(dest_fd, (int64)((*it) - 1)*sizeof(uint16), SEEK_SET));
+	if (dest_pos < (int64)((*it) - 1)*sizeof(uint16))
+	{
+	  int64 zero_buf(0);
+	  while (dest_pos + sizeof(int64) < (int64)((*it) - 1)*sizeof(uint16))
+	  {
+	    write(dest_fd, &zero_buf, sizeof(int64));
+	    dest_pos += sizeof(int64);
+	  }
+	  if (dest_pos < (int64)((*it) - 1)*sizeof(uint16))
+	    write(dest_fd, &zero_buf, (int64)((*it) - 1)*sizeof(uint16) - dest_pos);
+	}
+	write(dest_fd, &block_id, sizeof(uint16));
+      }
+      current_ids.clear();
+      ++block_id;
     }
-    current_ids.clear();
-    ++block_id;
+    free(data_buf);
   }
-  free(data_buf);
   
   close(data_fd);
   close(dest_fd);
