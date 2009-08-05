@@ -1096,6 +1096,7 @@ int main(int argc, char *argv[])
   catch(File_Error e)
   {
     cerr<<"\nopen64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    return -1;
   }
   
   //cerr<<'\n'<<(uintmax_t)time(NULL)<<'\n';

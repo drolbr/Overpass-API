@@ -42,7 +42,7 @@ do
   sleep 300
   echo "apply_gz_osc($1)@"`date "+%s"`": applying $ALMOST_TO.osc.gz" >>/opt/osm_why_api/dispatcher.log
   echo "apply_gz_osc($1)@"`date "+%s"`": applying $ALMOST_TO.osc.gz"
-  gunzip <../hourly/$CURRENT.osc.gz | ./apply_osc --db=$1
+  gunzip <../hourly/$ALMOST_TO.osc.gz | ./apply_osc --db=$1
   EXITCODE=$?
 };
 done
