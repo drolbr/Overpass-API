@@ -762,7 +762,6 @@ struct Relation_String_Cache
 		    it(kv_to_all[i].begin()); it != kv_to_all[i].end(); ++it)
 	{
 	  kv_to_id_idx[i].push_back(it->first);
-	  cout<<i<<'\t'<<it->second<<'\t'<<it->first.first<<'\t'<<it->first.second<<'\n';
 	  kv_to_id_block_idx[i].push_back(it->second);
 	}
       }
