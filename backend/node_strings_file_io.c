@@ -1098,8 +1098,8 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
 	new_block_kvs.push_back(elem_it->first);
       else
       {
-	string key((char*)&(dest_buf[j+12]), *(uint16*)&(dest_buf[j+8]));
-	string value((char*)&(dest_buf[j+12+*(uint16*)&(dest_buf[j+8])]), *(uint16*)&(dest_buf[j+10]));
+	string key((char*)&(source_buf[i+12]), *(uint16*)&(source_buf[i+8]));
+	string value((char*)&(source_buf[i+12+*(uint16*)&(source_buf[i+8])]), *(uint16*)&(source_buf[i+10]));
 	new_block_kvs.push_back(make_pair< string, string >
 	    (key, value));
       }
@@ -1350,8 +1350,8 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
 	new_block_kvs.push_back(elem_it->first);
       else
       {
-	string key((char*)&(dest_buf[j+12]), *(uint16*)&(dest_buf[j+8]));
-	string value((char*)&(dest_buf[j+12+*(uint16*)&(dest_buf[j+8])]), *(uint16*)&(dest_buf[j+10]));
+	string key((char*)&(source_buf[i+12]), *(uint16*)&(source_buf[i+8]));
+	string value((char*)&(source_buf[i+12+*(uint16*)&(source_buf[i+8])]), *(uint16*)&(source_buf[i+10]));
 	new_block_kvs.push_back(make_pair< string, string >
 	    (key, value));
       }
