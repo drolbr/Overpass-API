@@ -1161,31 +1161,11 @@ set< Relation_::Id >& relation_kv_to_multiint_query(string key, string value, se
   set< Relation_::Id > string_ids_local;
   set< Relation_::Id > string_idxs_local;
   select_relation_kv_to_ids(key, value, string_ids_global, string_ids_local, string_idxs_local);
-  cout<<"string local ids:\n";
-  for (set< Relation_::Id >::const_iterator it(string_ids_local.begin()); it != string_ids_local.end(); ++it)
-    cout<<*it<<'\t';
-  cout<<'\n';
-  cout<<"string local idxs:\n";
-  for (set< Relation_::Id >::const_iterator it(string_idxs_local.begin()); it != string_idxs_local.end(); ++it)
-    cout<<hex<<*it<<'\t';
-  cout<<'\n';
-  cout<<"string global ids:\n";
-  for (set< Relation_::Id >::const_iterator it(string_ids_global.begin()); it != string_ids_global.end(); ++it)
-    cout<<dec<<*it<<'\t';
-  cout<<'\n';
   
   Tag_Id_Relation_Local_Reader local_reader(string_ids_local, string_idxs_local, result_set);
   select_with_idx< Tag_Id_Relation_Local_Reader >(local_reader);
-  cout<<"local ids:\n";
-  for (set< Relation_::Id >::const_iterator it(result_set.begin()); it != result_set.end(); ++it)
-    cout<<*it<<'\t';
-  cout<<'\n';
   Tag_Id_Relation_Global_Reader global_reader(string_ids_global, result_set);
   select_with_idx< Tag_Id_Relation_Global_Reader >(global_reader);
-  cout<<"all ids:\n";
-  for (set< Relation_::Id >::const_iterator it(result_set.begin()); it != result_set.end(); ++it)
-    cout<<*it<<'\t';
-  cout<<'\n';
   
   return result_set;
 }
