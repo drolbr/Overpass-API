@@ -35,20 +35,20 @@ MYSQL_RES* mysql_query_wrapper(MYSQL* mysql, string query)
     temp<<'('<<query_status<<"):\n";
     temp<<"Query: "<<query<<'\n';
     temp<<"Error: "<<mysql_error(mysql)<<'\n';
-    runtime_error(temp.str(), cout);
+    runtime_error(temp.str());
   }
 
   MYSQL_RES* result(mysql_store_result(mysql));
   if (!result)
   {
     if (is_timed_out())
-      runtime_error("Your query timed out.", cout);
+      runtime_error("Your query timed out.");
     ostringstream temp;
     temp<<"Error during SQL query (result is null pointer)\n";
     temp<<'('<<query_status<<"):\n";
     temp<<"Query: "<<query<<'\n';
     temp<<"Error: "<<mysql_error(mysql)<<'\n';
-    runtime_error(temp.str(), cout);
+    runtime_error(temp.str());
   }
   
   return result;
@@ -64,20 +64,20 @@ MYSQL_RES* mysql_query_use_wrapper(MYSQL* mysql, string query)
     temp<<'('<<query_status<<"):\n";
     temp<<"Query: "<<query<<'\n';
     temp<<"Error: "<<mysql_error(mysql)<<'\n';
-    runtime_error(temp.str(), cout);
+    runtime_error(temp.str());
   }
 
   MYSQL_RES* result(mysql_use_result(mysql));
   if (!result)
   {
     if (is_timed_out())
-      runtime_error("Your query timed out.", cout);
+      runtime_error("Your query timed out.");
     ostringstream temp;
     temp<<"Error during SQL query (result is null pointer)\n";
     temp<<'('<<query_status<<"):\n";
     temp<<"Query: "<<query<<'\n';
     temp<<"Error: "<<mysql_error(mysql)<<'\n';
-    runtime_error(temp.str(), cout);
+    runtime_error(temp.str());
   }
   
   return result;
@@ -93,7 +93,7 @@ void mysql_query_null_wrapper(MYSQL* mysql, string query)
     temp<<'('<<query_status<<"):\n";
     temp<<"Query: "<<query<<'\n';
     temp<<"Error: "<<mysql_error(mysql)<<'\n';
-    runtime_error(temp.str(), cout);
+    runtime_error(temp.str());
   }
 }
 
@@ -777,7 +777,7 @@ uint32 node_kv_to_count_query(string key, string value)
     ostringstream temp;
     temp<<"open64: "<<errno<<' '
         <<DATADIR + db_subdir + NODE_TAG_ID_STATS<<" kv_to_count_query:1";
-    runtime_error(temp.str(), cout);
+    runtime_error(temp.str());
     return 0;
   }
   
@@ -982,7 +982,7 @@ uint32 way_kv_to_count_query(string key, string value)
     ostringstream temp;
     temp<<"open64: "<<errno<<' '
       <<DATADIR + db_subdir + WAY_TAG_ID_STATS<<" way_kv_to_count_query:1";
-    runtime_error(temp.str(), cout);
+    runtime_error(temp.str());
     return 0;
   }
   
@@ -1184,7 +1184,7 @@ uint32 relation_kv_to_count_query(string key, string value)
     temp<<"open64: "<<errno<<' '
       <<DATADIR + db_subdir + RELATION_TAG_ID_STATS
       <<" relation_kv_to_count_query:1";
-    runtime_error(temp.str(), cout);
+    runtime_error(temp.str());
     return 0;
   }
   

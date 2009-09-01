@@ -133,6 +133,44 @@ inline Ostream& escape_xml(Ostream& out, string s)
   return out;
 }
 
+inline string escape_xml(string s)
+{
+  string result;
+  
+  unsigned int i(0);
+  while (i < s.size())
+  {
+    if (s[i] == '"')
+    {
+      result += s.substr(0, i) + "&quot;";
+      s = s.substr(i+1);
+      i = 0;
+    }
+    else if (s[i] == '&')
+    {
+      result += s.substr(0, i) + "&amp;";
+      s = s.substr(i+1);
+      i = 0;
+    }
+    else if (s[i] == '<')
+    {
+      result += s.substr(0, i) + "&lt;";
+      s = s.substr(i+1);
+      i = 0;
+    }
+    else if (s[i] == '>')
+    {
+      result += s.substr(0, i) + "&gt;";
+      s = s.substr(i+1);
+      i = 0;
+    }
+    else
+      ++i;
+  }
+  result += s;
+  return result;
+}
+
 template < class Ostream >
 inline Ostream& escape_insert(Ostream& out, string s)
 {

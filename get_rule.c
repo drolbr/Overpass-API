@@ -62,9 +62,9 @@ string db_subdir;
 int main(int argc, char *argv[])
 {
   string xml_raw(get_xml_raw());
-  if (display_encoding_errors(cout))
+  if (display_encoding_errors())
     return 0;
-  if (display_parse_errors(cout, xml_raw))
+  if (display_parse_errors(xml_raw))
     return 0;
   
   try
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
   {
     add_parse_error(parse_error.message);
   }
-  if (display_parse_errors(cout, xml_raw))
+  if (display_parse_errors(xml_raw))
     return 0;
   // getting special information for rules
   string rule_name("");
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
   if (rule_replace)
     add_static_error("Providing a version which to replace while getting a rule is not allowed.");
   
-  if (display_static_errors(cout, xml_raw))
+  if (display_static_errors(xml_raw))
     return 0;
   
   mysql = mysql_init(NULL);
@@ -100,12 +100,12 @@ int main(int argc, char *argv[])
   if (!mysql_real_connect(mysql, "localhost", "osm", "osm", "osm", 0, NULL,
        CLIENT_LOCAL_FILES))
   {
-    runtime_error("Connection to database failed.\n", cout);
-    out_footer(cout, output_mode);
+    runtime_error("Connection to database failed.\n");
+    out_footer(output_mode);
     return 0;
   }
   
-  out_header(cout, output_mode);
+  out_header(output_mode);
   
   ostringstream temp;
   temp<<"select id from rule_names where name = '";
@@ -117,8 +117,8 @@ int main(int argc, char *argv[])
   {
     temp.str("");
     temp<<"Rule '"<<rule_name<<"' not found in the database.";
-    runtime_error(temp.str(), cout);
-    out_footer(cout, output_mode);
+    runtime_error(temp.str());
+    out_footer(output_mode);
     return 0;
   }
   
@@ -129,22 +129,25 @@ int main(int argc, char *argv[])
   MYSQL_RES* result(mysql_query_wrapper(mysql, temp.str()));
   if (!result)
   {
-    out_footer(cout, output_mode);
+    out_footer(output_mode);
     return 0;
   }
   
   MYSQL_ROW row(mysql_fetch_row(result));
   while ((row) && (row[0]) && (row[1]))
   {
-    cout<<"<osm-script name=\""<<rule_name
-      <<"\" version=\""<<atoi(row[0])<<"\">";
-    cout<<row[1];
-    cout<<"</osm-script>\n";
+    get_output().print("<osm-script name=\"");
+    get_output().print(rule_name);
+    get_output().print("\" version=\"");
+    get_output().print(atoi(row[0]));
+    get_output().print("\">");
+    get_output().print(row[1]);
+    get_output().print("</osm-script>\n");
     row = mysql_fetch_row(result);
   }
   mysql_free_result(result);
   
-  out_footer(cout, output_mode);
+  out_footer(output_mode);
   
   mysql_close(mysql);
   

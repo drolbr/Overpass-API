@@ -31,7 +31,7 @@ int register_process(uint mysql_id, uint database_id, uint32 timeout, uint64 max
   
   if (fd == -1)
   {
-    runtime_error("Something's wrong with vigilance control - can't open timeout pipe.", cout);
+    runtime_error("Something's wrong with vigilance control - can't open timeout pipe.");
     return -1;
   }
   
@@ -51,7 +51,7 @@ int unregister_process(uint mysql_id)
   
   if (fd == -1)
   {
-    runtime_error("Something's wrong with vigilance control - can't open timeout pipe for unregistering.", cout);
+    runtime_error("Something's wrong with vigilance control - can't open timeout pipe for unregistering.");
     return -1;
   }
   
@@ -69,9 +69,9 @@ bool is_timed_out()
 // int main(int argc, char *argv[])
 // {
 //   int pid, timeout;
-//   cout<<"Id: ";
+//   get_output_stream()<<"Id: ";
 //   cin>>pid;
-//   cout<<" timeout: ";
+//   get_output_stream()<<" timeout: ";
 //   cin>>timeout;
 //   
 //   if (timeout > 0)

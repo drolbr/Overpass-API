@@ -1,4 +1,5 @@
 #include <cctype>
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <set>
@@ -14,6 +15,7 @@
 #include "backend/file_types.h"
 
 #include <mysql.h>
+#include "zlib.h"
 
 using namespace std;
 
@@ -117,12 +119,12 @@ void Statement::add_final_text(string text)
 
 void Statement::display_full()
 {
-  display_verbatim(get_source(startpos, endpos - startpos), cout);
+  display_verbatim(get_source(startpos, endpos - startpos));
 }
 
 void Statement::display_starttag()
 {
-  display_verbatim(get_source(startpos, tagendpos - startpos), cout);
+  display_verbatim(get_source(startpos, tagendpos - startpos));
 }
 
 //-----------------------------------------------------------------------------
@@ -209,7 +211,7 @@ void Root_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   if (rule_id_ == 0)
   {
     if (database_id == 0)
-      runtime_error("Internal: No database id set.\n", cout);
+      runtime_error("Internal: No database id set.\n");
     register_process(mysql_thread_id(mysql), database_id, timeout, max_element_count);
   }
   
@@ -393,7 +395,7 @@ void display_state()
     else
       break;
   }
-  display_state(temp.str(), cout);
+  display_state(temp.str());
 }
 
 //-----------------------------------------------------------------------------
@@ -404,7 +406,7 @@ string detect_active_database()
   ifstream ssin("/tmp/small_status");
   if (!ssin)
   {
-    runtime_error("Status file not found. Check if the dispatcher is running.", cout);
+    runtime_error("Status file not found. Check if the dispatcher is running.");
     //throw File_Error(errno, "/tmp/small_status", "detect_active_database:1");
   }
   ssin>>database_id;
@@ -415,7 +417,7 @@ string detect_active_database()
     max_element_count = element_limit;
   if (available_memory < max_element_count)
   {
-    runtime_error("The Server currently doesn't have enough free memory to execute your request. Please try again later.", cout);
+    runtime_error("The Server currently doesn't have enough free memory to execute your request. Please try again later.");
   }
   
   ssin.close();
@@ -423,4 +425,103 @@ string detect_active_database()
   ostringstream temp;
   temp<<"osm_"<<database_id;
   return temp.str();
+}
+
+//-----------------------------------------------------------------------------
+
+class User_Cout : public User_Output
+{
+  public:
+    virtual void print(string s)
+    {
+      cout<<s;
+    }
+    
+    virtual void print(int i)
+    {
+      cout<<i;
+    }
+    
+    virtual void print(long long l)
+    {
+      cout<<l;
+    }
+
+    virtual void print(int precision, double d)
+    {
+      cout<<setprecision(precision)<<d;
+    }
+
+    virtual void finish_header()
+    {
+      cout<<'\n';
+    }
+    
+    virtual void finish_output()
+    {
+    }
+};
+
+class User_Gz : public User_Output
+{
+  public:
+    User_Gz() : buf("") {}
+    
+    virtual void print(string s)
+    {
+      buf<<s;
+    }
+    
+    virtual void print(int i)
+    {
+      buf<<i;
+    }
+    
+    virtual void print(long long l)
+    {
+      buf<<l;
+    }
+
+    virtual void print(int precision, double d)
+    {
+      buf<<setprecision(precision)<<d;
+    }
+
+    virtual void finish_header()
+    {
+      buf<<"Content-Encoding: gzip\n\n";
+      write(1, (unsigned char*)(buf.str().data()), buf.str().size());
+      buf.str("");
+    }
+    
+    virtual void finish_output()
+    {
+      gzFile gzout(gzdopen(1, "a"));
+      gzwrite(gzout, (unsigned char*)(buf.str().data()), buf.str().size());
+      gzclose(gzout);
+    }
+    
+  private:
+    ostringstream buf;
+};
+
+User_Output* out_(0);
+
+void set_output_cout()
+{
+  if (out_)
+    delete(out_);
+  out_ = new User_Cout();
+}
+
+void set_output_gz()
+{
+  if (out_)
+    delete(out_);
+  out_ = new User_Gz();
+}
+
+User_Output& get_output()
+{
+  return *out_;
 }

@@ -144,7 +144,7 @@ database_daemon.o: dispatcher/database_daemon.c dispatcher/process_rules.h
 bin/timestamp_of: dispatcher/timestamp_of.c
 	g++ -o $@ -O3 -Wall $<
 
-process_rules.o: dispatcher/process_rules.c dispatcher/process_rules.h script_datatypes.h
+process_rules.o: dispatcher/process_rules.c dispatcher/process_rules.h $(tool_headers) $(stmts) script_datatypes.h
 	g++ -o $@ -c -O3 -Wall `mysql_config --include` $<
 
 bin/fetch_osc: dispatcher/fetch_osc

@@ -165,7 +165,7 @@ void report_missing_node(const Way& way, uint32 node_id, const string& input)
   ostringstream temp;
   temp<<"Make-Area: Node "<<node_id<<" referred by way "<<way.id
       <<" is not contained in set \""<<input<<"\".\n";
-  runtime_error(temp.str(), cout);
+  runtime_error(temp.str());
 }
 
 void insert_bottomlines(map< uint32, set< Line_Segment > >& segments_per_tile)
@@ -265,7 +265,7 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       temp.str("");
       temp<<"Make-Area: The pivot "<<types_lowercase[pivot_type]<<' '<<pivot_id
 	  <<" is already referred by area "<<previous_area<<" made with the same set of ways.\n";
-      runtime_remark(temp.str(), cout);
+      runtime_remark(temp.str());
       
       ostringstream stack;
       for (vector< pair< int, int > >::const_iterator it(get_stack().begin());
@@ -287,7 +287,7 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     temp.str("");
     temp<<"Make-Area: The pivot "<<types_lowercase[pivot_type]<<' '<<pivot_id
 	<<" is already referred by area "<<previous_area<<" made from a different set of ways.\n";
-    runtime_error(temp.str(), cout);
+    runtime_error(temp.str());
     maps[output] = Set(nodes, ways, relations, areas);
     return;
   }
@@ -313,7 +313,7 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     ostringstream temp;
     temp<<"Make-Area: Node "<<*(node_parity_control.begin())
 	<<" is contained in an odd number of ways.\n";
-    runtime_error(temp.str(), cout);
+    runtime_error(temp.str());
     data_is_valid = false;
   }
   

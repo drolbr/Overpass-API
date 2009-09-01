@@ -60,9 +60,9 @@ string db_subdir;
 int main(int argc, char *argv[])
 {
   string xml_total_raw(get_xml_raw());
-  if (display_encoding_errors(cout))
+  if (display_encoding_errors())
     return 0;
-  if (display_parse_errors(cout, xml_total_raw))
+  if (display_parse_errors(xml_total_raw))
     return 0;
   
 /*  string current_db(detect_active_database());
@@ -75,11 +75,11 @@ int main(int argc, char *argv[])
   if (!mysql_real_connect(mysql, "localhost", "osm", "osm", "osm", 0, NULL,
        CLIENT_LOCAL_FILES))
   {
-    runtime_error("Connection to database failed.\n", cout);
+    runtime_error("Connection to database failed.\n");
     return 0;
   }
   
-  out_header(cout, output_mode);
+  out_header(output_mode);
   
   try
   {
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 	xml_raw += xml_total_raw.substr(pos, xml_raw.find('>', pos+1) - pos + 1);
     
       parse_script(xml_raw, start, end);
-      if (display_parse_errors(cout, xml_raw))
+      if (display_parse_errors(xml_raw))
 	return 0;
     // getting special information for rules
       string rule_name("");
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
       else
 	xml_raw = "";
     
-      if (display_static_errors(cout, xml_raw))
+      if (display_static_errors(xml_raw))
 	return 0;
   
       ostringstream temp;
@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
   
       temp.str("");
       temp<<"Rule '"<<rule_name<<"' version "<<body_id<<" successfully updated.";
-      runtime_remark(temp.str(), cout);
+      runtime_remark(temp.str());
   
       if (versions[rule_name] < rule_version)
       {
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
   {
     ostringstream temp;
     temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin;
-    runtime_error(temp.str(), cout);
+    runtime_error(temp.str());
   }
   
 /*  void_query(mysql, (string)("use ") + current_db);
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
     //TEMP
     ostringstream temp;
     temp<<"Entering Rule "<<it->first;
-    runtime_remark(temp.str(), cout);
+    runtime_remark(temp.str());
     
     string xml_raw("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm-script>");
     xml_raw += bodys[it->first] + "</osm-script>\n";
@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
     statement_stack.clear();
   }
   
-  out_footer(cout, output_mode);*/
+  out_footer(output_mode);*/
   
   mysql_close(mysql);
     

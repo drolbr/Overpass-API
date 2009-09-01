@@ -88,7 +88,7 @@ void Detect_Odd_Nodes_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	ostringstream temp;
 	temp<<"Error in detect-odd-nodes: Node "<<*it
 	    <<" is not contained in set \""<<input<<"\".\n";
-	runtime_error(temp.str(), cout);
+	runtime_error(temp.str());
       }
     }
   }

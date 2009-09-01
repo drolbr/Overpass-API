@@ -60,9 +60,9 @@ string db_subdir;
 int main(int argc, char *argv[])
 {
   string xml_raw(get_xml_raw());
-  if (display_encoding_errors(cout))
+  if (display_encoding_errors())
     return 0;
-  if (display_parse_errors(cout, xml_raw))
+  if (display_parse_errors(xml_raw))
     return 0;
   
   try
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
   {
     add_parse_error(parse_error.message);
   }
-  if (display_parse_errors(cout, xml_raw))
+  if (display_parse_errors(xml_raw))
     return 0;
   // getting special information for rules
   string rule_name("");
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
   else
     xml_raw = "";
     
-  if (display_static_errors(cout, xml_raw))
+  if (display_static_errors(xml_raw))
     return 0;
   
   //Sanity-Check
@@ -109,12 +109,12 @@ int main(int argc, char *argv[])
   if (!mysql_real_connect(mysql, "localhost", "osm", "osm", "osm", 0, NULL,
        CLIENT_LOCAL_FILES))
   {
-    runtime_error("Connection to database failed.\n", cout);
-    out_footer(cout, output_mode);
+    runtime_error("Connection to database failed.\n");
+    out_footer(output_mode);
     return 0;
   }
   
-  out_header(cout, output_mode);
+  out_header(output_mode);
   
   ostringstream temp;
   temp<<"select id from rule_names where name = '";
@@ -126,8 +126,8 @@ int main(int argc, char *argv[])
   {
     temp.str("");
     temp<<"Rule '"<<rule_name<<"' not found in the database.";
-    runtime_error(temp.str(), cout);
-    out_footer(cout, output_mode);
+    runtime_error(temp.str());
+    out_footer(output_mode);
     return 0;
   }
   
@@ -139,8 +139,8 @@ int main(int argc, char *argv[])
     temp.str("");
     temp<<"A newer version ("<<last_id<<") of rule '"<<rule_name
 	<<"' has meanwhile been stored in the database.";
-    runtime_error(temp.str(), cout);
-    out_footer(cout, output_mode);
+    runtime_error(temp.str());
+    out_footer(output_mode);
     return 0;
   }
   
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
   temp.str("");
   temp<<"Rule '"<<rule_name<<"' successfully updated to version "
       <<body_id<<".";
-  runtime_remark(temp.str(), cout);
+  runtime_remark(temp.str());
   
   mysql_close(mysql);
   

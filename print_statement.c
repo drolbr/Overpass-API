@@ -70,25 +70,45 @@ void Print_Statement::forecast(MYSQL* mysql)
 
 void out_node(const Node& node, bool complete = true)
 {
-  cout<<"<node id=\""<<node.id
-      <<"\" lat=\""<<setprecision(12)<<((double)(node.lat))/10000000
-      <<"\" lon=\""<<setprecision(12)<<((double)(node.lon))/10000000<<'\"'
-      <<(complete ? "/>" : ">")<<'\n';
+  User_Output& out(get_output());
+  
+  out.print("<node id=\"");
+  out.print(node.id);
+  out.print("\" lat=\"");
+  out.print(12, ((double)(node.lat))/10000000);
+  out.print("\" lon=\"");
+  out.print(12, ((double)(node.lon))/10000000);
+  out.print("\"");
+  out.print((complete ? "/>" : ">"));
+  out.print("\n");
 }
 
 void out_way(const Way& way, bool complete = true)
 {
+  User_Output& out(get_output());
+  
   if (way.members.size() == 0)
-    cout<<"<way id=\""<<way.id<<'\"'
-	<<(complete ? "/>" : ">")<<'\n';
+  {
+    out.print("<way id=\"");
+    out.print((long long)way.id);
+    out.print("\"");
+    out.print((complete ? "/>" : ">"));
+    out.print("\n");
+  }
   else
   {
-    cout<<"<way id=\""<<way.id<<"\">\n";
+    out.print("<way id=\"");
+    out.print((long long)way.id);
+    out.print("\">\n");
     for (vector< uint32 >::const_iterator it2(way.members.begin());
 	 it2 != way.members.end(); ++it2)
-      cout<<"  <nd ref=\""<<*it2<<"\"/>\n";
+    {
+      out.print("  <nd ref=\"");
+      out.print((long long)*it2);
+      out.print("\"/>\n");
+    }
     if (complete)
-      cout<<"</way>\n";
+      out.print("</way>\n");
   }
 }
 
@@ -96,43 +116,63 @@ void out_relation
     (const Relation_& rel, const vector< string >& role_cache,
      bool complete = true)
 {
+  User_Output& out(get_output());
+  
   if ((rel.data.size() == 0) && (complete))
-    cout<<"<relation id=\""<<rel.head<<"\"/>\n";
+  {
+    out.print("<relation id=\"");
+    out.print((long long)rel.head);
+    out.print("\"/>\n");
+  }
   else
   {
-    cout<<"<relation id=\""<<rel.head<<"\">\n";
+    out.print("<relation id=\"");
+    out.print((long long)rel.head);
+    out.print("\">\n");
     for (vector< Relation_Member >::const_iterator it2(rel.data.begin());
          it2 != rel.data.end(); ++it2)
     {
-      cout<<"  <member type=\""<<types_lowercase[it2->type]
-	  <<"\" ref=\""<<it2->id<<"\" role=\"";
-      escape_xml(cout, role_cache[it2->role+1]);
-      cout<<"\"/>\n";
+      out.print("  <member type=\"");
+      out.print(types_lowercase[it2->type]);
+      out.print("\" ref=\"");
+      out.print((long long)it2->id);
+      out.print("\" role=\"");
+      out.print(escape_xml(role_cache[it2->role+1]));
+      out.print("\"/>\n");
     }
     if (complete)
-      cout<<"</relation>\n";
+      out.print("</relation>\n");
   }
 }
 
 void out_area(const Area& area, bool complete = true)
 {
+  User_Output& out(get_output());
+  
   if (complete)
-    cout<<"<area id=\""<<area.id<<"\"/>\n";
+  {
+    out.print("<area id=\"");
+    out.print((long long)area.id);
+    out.print("\"/>\n");
+  }
   else
   {
-    cout<<"<area id=\""<<area.id<<"\">\n";
+    out.print("<area id=\"");
+    out.print((long long)area.id);
+    out.print("\">\n");
       //TODO: temporary output
 /*	for (set< Line_Segment >::const_iterator it2(it->segments.begin());
     it2 != it->segments.end(); ++it2)
-    cout<<"  <vx west=\""<<it2->west_lat<<' '<<it2->west_lon
+    out<<"  <vx west=\""<<it2->west_lat<<' '<<it2->west_lon
     <<"\" east=\""<<it2->east_lat<<' '<<it2->east_lon<<"\"/>\n";
-    cout<<"</area>\n";*/
+    out<<"</area>\n";*/
   }
 }
 
 void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
   const vector< string >& role_cache(get_role_cache());
+  User_Output& out(get_output());
   
   map< string, Set >::const_iterator mit(maps.find(input));
   if (mit != maps.end())
@@ -141,16 +181,32 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     {
       for (set< Node >::const_iterator it(mit->second.get_nodes().begin());
 	   it != mit->second.get_nodes().end(); ++it)
-	cout<<"<node id=\""<<it->id<<"\"/>\n";
+      {
+	out.print("<node id=\"");
+	out.print(it->id);
+	out.print("\"/>\n");
+      }
       for (set< Way >::const_iterator it(mit->second.get_ways().begin());
 	   it != mit->second.get_ways().end(); ++it)
-	cout<<"<way id=\""<<it->id<<"\"/>\n";
+      {
+	out.print("<way id=\"");
+	out.print((long long)it->id);
+	out.print("\"/>\n");
+      }
       for (set< Relation_ >::const_iterator it(mit->second.get_relations().begin());
 	   it != mit->second.get_relations().end(); ++it)
-	cout<<"<relation id=\""<<it->head<<"\"/>\n";
+      {
+	out.print("<relation id=\"");
+	out.print((long long)it->head);
+	out.print("\"/>\n");
+      }
       for (set< Area >::const_iterator it(mit->second.get_areas().begin());
 	   it != mit->second.get_areas().end(); ++it)
-	cout<<"<area id=\""<<it->id<<"\"/>\n";
+      {
+	out.print("<area id=\"");
+	out.print((long long)it->id);
+	out.print("\"/>\n");
+      }
     }
     else if (mode == PRINT_SKELETON)
     {
@@ -186,13 +242,13 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
             for (vector< pair< string, string > >::const_iterator tit2(tit->begin());
                  tit2 != tit->end(); ++tit2)
 	    {
-	      cout<<"  <tag k=\"";
-	      escape_xml(cout, tit2->first);
-	      cout<<"\" v=\"";
-	      escape_xml(cout, tit2->second);
-	      cout<<"\"/>\n";
+	      out.print("  <tag k=\"");
+	      out.print(escape_xml(tit2->first));
+	      out.print("\" v=\"");
+	      out.print(escape_xml(tit2->second));
+	      out.print("\"/>\n");
 	    }
-	    cout<<"</node>\n";
+	    out.print("</node>\n");
 	  }
           ++it;
           ++tit;
@@ -215,13 +271,13 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	    for (vector< pair< string, string > >::const_iterator tit2(tit->begin());
 			tit2 != tit->end(); ++tit2)
 	    {
-	      cout<<"  <tag k=\"";
-	      escape_xml(cout, tit2->first);
-	      cout<<"\" v=\"";
-	      escape_xml(cout, tit2->second);
-	      cout<<"\"/>\n";
+	      out.print("  <tag k=\"");
+	      out.print(escape_xml(tit2->first));
+	      out.print("\" v=\"");
+	      out.print(escape_xml(tit2->second));
+	      out.print("\"/>\n");
 	    }
-	    cout<<"</way>\n";
+	    out.print("</way>\n");
 	  }
 	  ++it;
 	  ++tit;
@@ -244,13 +300,13 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	    for (vector< pair< string, string > >::const_iterator tit2(tit->begin());
 			tit2 != tit->end(); ++tit2)
 	    {
-	      cout<<"  <tag k=\"";
-	      escape_xml(cout, tit2->first);
-	      cout<<"\" v=\"";
-	      escape_xml(cout, tit2->second);
-	      cout<<"\"/>\n";
+	      out.print("  <tag k=\"");
+	      out.print(escape_xml(tit2->first));
+	      out.print("\" v=\"");
+	      out.print(escape_xml(tit2->second));
+	      out.print("\"/>\n");
 	    }
-	    cout<<"</relation>\n";
+	    out.print("</relation>\n");
 	  }
 	  ++it;
 	  ++tit;
@@ -286,10 +342,16 @@ void Print_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	  while ((row) && (row[0]) && (it2->id == (uint32)atoll(row[0])))
 	  {
 	    if ((row[1]) && (row[2]))
-	      cout<<"  <tag k=\""<<row[1]<<"\" v=\""<<row[2]<<"\"/>\n";
+	    {
+	      out.print("  <tag k=\"");
+	      out.print(row[1]);
+	      out.print("\" v=\"");
+	      out.print(row[2]);
+	      out.print("\"/>\n");
+	    }
 	    row = mysql_fetch_row(result);
 	  }
-	  cout<<"</area>\n";
+	  out.print("</area>\n");
 	  ++it2;
 	}
 	while (it2 != it)

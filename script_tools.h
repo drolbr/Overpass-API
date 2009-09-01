@@ -155,4 +155,20 @@ uint64 get_element_count();
 void display_state();
 string detect_active_database();
 
+class User_Output
+{
+  public:
+    virtual void print(string s) = 0;
+    virtual void print(int i) = 0;
+    virtual void print(long long l) = 0;
+    virtual void print(int precision, double d) = 0;
+    
+    virtual void finish_header() = 0;
+    virtual void finish_output() = 0;
+};
+
+void set_output_cout();
+void set_output_gz();
+User_Output& get_output();
+
 #endif

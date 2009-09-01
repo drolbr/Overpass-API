@@ -236,8 +236,10 @@ string timestamp_of(uint32 timestamp)
   return temp.str();
 }
 
-ostream& out_header(ostream& out, int type)
+void out_header(int type)
 {
+  User_Output& out(get_output());
+  
   ifstream status_in("/tmp/big_status");
   uint32 db_timestamp, db_rule_version;
   status_in>>db_timestamp;
@@ -257,91 +259,116 @@ ostream& out_header(ostream& out, int type)
   }
   
   if (header_state != 0)
-    return out;
+    return;
   if (type == MIXED_XML)
   {
-    out<<"Content-type: application/osm3s\n\n"
-	<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm-derived>\n"
-	<<"<note>The data included in this document is from www.openstreetmap.org. "
-	<<"It has there been collected by a large group of contributors. For individual "
-	<<"attribution of each item please refer to "
-	<<"http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\n"
-	<<"<meta data_included_until=\""<<timestamp_of(db_timestamp)
-	<<"\" last_rule_applied=\""<<db_rule_version<<"\"/>\n\n";
+    out.print("Content-type: application/osm3s\n");
+    out.finish_header();
+    out.print("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm-derived>\n"
+	"<note>The data included in this document is from www.openstreetmap.org. "
+	"It has there been collected by a large group of contributors. For individual "
+	"attribution of each item please refer to "
+	"http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\n"
+	"<meta data_included_until=\"");
+    out.print(timestamp_of(db_timestamp));
+    out.print("\" last_rule_applied=\"");
+    out.print((long long)db_rule_version);
+    out.print("\"/>\n\n");
     header_state = WRITTEN_XML;
   }
   else if (type == HTML)
   {
     header_state = WRITTEN_HTML;
-    out<<"Content-Type: text/html; charset=utf-8\n\n"
-	<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-	<<"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
-	<<"    \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
-	<<"<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">"
-	<<"<head>\n"
-	<<"  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
-	<<"  <title>Query Results</title>\n"
-	<<"</head>\n"
-	<<"<body>\n\n"
-	<<"<p>Data included until: "<<timestamp_of(db_timestamp)
-	<<"<br/>Last rule applied: "<<db_rule_version<<"</p>\n\n";
+    out.print("Content-Type: text/html; charset=utf-8\n");
+    out.finish_header();
+    out.print("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+	"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
+	"    \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
+	"<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">"
+	"<head>\n"
+	"  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
+	"  <title>Query Results</title>\n"
+	"</head>\n"
+	"<body>\n\n"
+	"<p>Data included until: ");
+    out.print(timestamp_of(db_timestamp));
+    out.print("<br/>Last rule applied: ");
+    out.print((long long)db_rule_version);
+    out.print("</p>\n\n");
   }
   else
   {
     header_state = WRITTEN_HTML;
-    out<<"Content-Type: text/html; charset=utf-8\n\n"
-	<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-	<<"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
-	<<"    \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
-	<<"<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">"
-	<<"<head>\n"
-	<<"  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
-	<<"  <title>Nothing</title>\n"
-	<<"</head>\n"
-	<<"<body>\n\n"
-	<<"<p>Data included until: "<<timestamp_of(db_timestamp)
-	<<"<br/>Last rule applied: "<<db_rule_version<<"</p>\n"
-	<<"<p>Your query doesn't contain any statement that produces output.</p>\n";
+    out.print("Content-Type: text/html; charset=utf-8\n");
+    out.finish_header();
+    out.print("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+	"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
+	"    \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
+	"<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">"
+	"<head>\n"
+	"  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
+	"  <title>Nothing</title>\n"
+	"</head>\n"
+	"<body>\n\n"
+	"<p>Data included until: ");
+    out.print(timestamp_of(db_timestamp));
+    out.print("<br/>Last rule applied: ");
+    out.print((long long)db_rule_version);
+    out.print("</p>\n"
+	"<p>Your query doesn't contain any statement that produces output.</p>\n");
   }
   
-  return out;
+  return;
 }
 
-ostream& out_error_header(ostream& out, string title)
+void out_error_header(string title)
 {
+  User_Output& out(get_output());
+  
   if (header_state != 0)
-    return out;
+    return;
   header_state = WRITTEN_HTML;
-  out<<"Content-Type: text/html; charset=utf-8\n\n"
-      <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-      <<"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
-      <<"    \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
-      <<"<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">"
-      <<"<head>\n"
-      <<"  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
-      <<"  <title>"<<title<<"</title>\n"
-      <<"</head>\n"
-      <<"<body>\n";
-  return out;
+  out.print("Content-Type: text/html; charset=utf-8\n");
+  out.finish_header();
+  out.print("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+      "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
+      "    \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
+      "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">"
+      "<head>\n"
+      "  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
+      "  <title>");
+  out.print(title);
+  out.print("</title>\n"
+      "</head>\n"
+      "<body>\n");
+  return;
 }
 
-ostream& out_footer(ostream& out, int type)
+void out_footer(int type)
 {
+  User_Output& out(get_output());
+  
   if (type == MIXED_XML)
-    out<<"\n</osm-derived>\n";
+    out.print("\n</osm-derived>\n");
   else
-    out<<"\n</body>\n</html>\n";
-  return out;
+    out.print("\n</body>\n</html>\n");
+  out.finish_output();
+  return;
 }
 
-ostream& out_error_footer(ostream& out)
+void out_error_footer()
 {
-  out<<"</body>\n</html>\n";
-  return out;
+  User_Output& out(get_output());
+  
+  out.print("</body>\n</html>\n");
+  out.finish_output();
+  return;
 }
 
-ostream& out_input_tagged(ostream& out, const string& input, const vector< Error >& errors)
+void out_input_tagged(const string& input, const vector< Error >& errors)
 {
+  User_Output& out(get_output());
+  
   // collect line numbers with errors
   int i(0);
   multimap< int, int > error_numbers;
@@ -357,8 +384,8 @@ ostream& out_input_tagged(ostream& out, const string& input, const vector< Error
     }
   }
   
-  out<<"<a id=\"input\"><h2>Your input formatted for XML parsing</h2>\n";
-  out<<"<pre>\n";
+  out.print("<a id=\"input\"><h2>Your input formatted for XML parsing</h2>\n");
+  out.print("<pre>\n");
   // mark line numbers with errors
   int line(1);
   string::size_type pos(0), new_pos(0), input_size(input.size());
@@ -373,7 +400,7 @@ ostream& out_input_tagged(ostream& out, const string& input, const vector< Error
 	pos = input_size;
 	break;
       }
-      escape_xml(out, input.substr(pos, new_pos - pos));
+      out.print(escape_xml(input.substr(pos, new_pos - pos)));
       pos = new_pos;
       ++line;
     }
@@ -384,25 +411,29 @@ ostream& out_input_tagged(ostream& out, const string& input, const vector< Error
     while ((it2 != error_numbers.end()) && (it2->first == line))
       is_error = ((it2++)->second > 0);
     if (is_error)
-      out<<"<strong style=\"color:#FF0000\">";
+      out.print("<strong style=\"color:#FF0000\">");
     else
-      out<<"<strong style=\"color:#00BB00\">";
+      out.print("<strong style=\"color:#00BB00\">");
     new_pos = input.find('\n', pos);
     if (new_pos >= input_size)
-      escape_xml(out, input.substr(pos));
+      out.print(escape_xml(input.substr(pos)));
     else
-      escape_xml(out, input.substr(pos, new_pos - pos));
-    out<<"</strong> (";
-    out<<"<a href=\"#err"<<abs(it->second)<<"\">";
-    out<<((it++)->second > 0 ? "E" : "R");
-    out<<"</a>";
+      out.print(escape_xml(input.substr(pos, new_pos - pos)));
+    out.print("</strong> (");
+    out.print("<a href=\"#err");
+    out.print(abs(it->second));
+    out.print("\">");
+    out.print(((it++)->second > 0 ? "E" : "R"));
+    out.print("</a>");
     while ((it != error_numbers.end()) && (it->first == line))
     {
-      out<<", <a href=\"#err"<<abs(it->second)<<"\">";
-      out<<((it++)->second > 0 ? "E" : "R");
-      out<<"</a>";
+      out.print(", <a href=\"#err");
+      out.print(abs(it->second));
+      out.print("\">");
+      out.print(((it++)->second > 0 ? "E" : "R"));
+      out.print("</a>");
     }
-    out<<")\n";
+    out.print(")\n");
     if ((new_pos >= input_size) || (new_pos == string::npos))
     {
       pos = input_size;
@@ -411,330 +442,425 @@ ostream& out_input_tagged(ostream& out, const string& input, const vector< Error
     pos = new_pos + 1;
     ++line;
   }
-  escape_xml(out, input.substr(pos));
-  out<<"</pre></a>\n";
+  out.print(escape_xml(input.substr(pos)));
+  out.print("</pre></a>\n");
   
-  return out;
+  return;
 }
 
 
-int display_encoding_errors(ostream& out)
+int display_encoding_errors()
 {
+  User_Output& out(get_output());
+  
   if (!exist_encoding_errors)
     return 0;
   
-  out_error_header(out, "Encoding Error");
+  out_error_header("Encoding Error");
   
-  out<<"<h1>Encoding Error</h1>\n";
-  out<<"<p>The server was unable to convert your input to an XML file.\n"
-      <<"The following happened so far:</p>\n";
+  out.print("<h1>Encoding Error</h1>\n");
+  out.print("<p>The server was unable to convert your input to an XML file.\n"
+      "The following happened so far:</p>\n");
   
   for (vector< Error >::const_iterator it(encoding_errors.begin());
        it != encoding_errors.end(); ++it)
   {
     if (it->type == Error::ERROR)
-      out<<"<p><strong style=\"color:#FF0000\">Error</strong>: ";
+      out.print("<p><strong style=\"color:#FF0000\">Error</strong>: ");
     else
-      out<<"<p><strong style=\"color:#00BB00\">Remark</strong>: ";
-    out<<it->text<<"</p>\n";
+      out.print("<p><strong style=\"color:#00BB00\">Remark</strong>: ");
+    out.print(it->text);
+    out.print("</p>\n");
   }
   
-  out_error_footer(out);
+  out_error_footer();
   return 1;
 }
 
-int display_parse_errors(ostream& out, const string& input)
+int display_parse_errors(const string& input)
 {
+  User_Output& out(get_output());
+  
   if (!exist_parse_errors)
     return 0;
   
-  out_error_header(out, "Parse Error");
+  out_error_header("Parse Error");
   
-  out<<"<h1>Parse Error</h1>\n";
-  out<<"<p>The server has converted your input to this <a href=\"#input\">XML document</a>.\n"
-      <<"Then, <a href=\"#parse\">these errors</a> happened. For your information,\n"
-      <<"<a href=\"#encoding\">the remarks</a> from decoding your input are also included.</p>\n";
+  out.print("<h1>Parse Error</h1>\n");
+  out.print("<p>The server has converted your input to this <a href=\"#input\">XML document</a>.\n"
+      "Then, <a href=\"#parse\">these errors</a> happened. For your information,\n"
+      "<a href=\"#encoding\">the remarks</a> from decoding your input are also included.</p>\n");
   
-  out<<"<a id=\"encoding\"><h2>Encoding Remarks</h2>\n";
+  out.print("<a id=\"encoding\"><h2>Encoding Remarks</h2>\n");
   for (vector< Error >::const_iterator it(encoding_errors.begin());
        it != encoding_errors.end(); ++it)
   {
     if (it->type == Error::ERROR)
-      out<<"<p><strong style=\"color:#FF0000\">Error</strong>: ";
+      out.print("<p><strong style=\"color:#FF0000\">Error</strong>: ");
     else
-      out<<"<p><strong style=\"color:#00BB00\">Remark</strong>: ";
-    out<<it->text<<"</p>\n";
+      out.print("<p><strong style=\"color:#00BB00\">Remark</strong>: ");
+    out.print(it->text);
+    out.print("</p>\n");
   }
-  out<<"</a>\n";
+  out.print("</a>\n");
   
-  out_input_tagged(out, input, parse_errors);
+  out_input_tagged(input, parse_errors);
 
   unsigned int i(0);
-  out<<"<a id=\"parse\"><h2>Parse Remarks and Errors</h2></a>\n";
+  out.print("<a id=\"parse\"><h2>Parse Remarks and Errors</h2></a>\n");
   for (vector< Error >::const_iterator it(parse_errors.begin());
        it != parse_errors.end(); ++it)
   {
-    out<<"<a id=\"err"<<++i<<"\">";
+    out.print("<a id=\"err");
+    out.print((long long)++i);
+    out.print("\">");
     if (it->type == Error::ERROR)
-      out<<"<p><strong style=\"color:#FF0000\">Error</strong>";
+      out.print("<p><strong style=\"color:#FF0000\">Error</strong>");
     else
-      out<<"<p><strong style=\"color:#00BB00\">Remark</strong>";
+      out.print("<p><strong style=\"color:#00BB00\">Remark</strong>");
     if (it->line_number > 0)
-      out<<" in line <strong>"<<it->line_number<<"</strong>";
-    out<<":\n"<<it->text<<"</p></a>\n";
+    {
+      out.print(" in line <strong>");
+      out.print(it->line_number);
+      out.print("</strong>");
+    }
+    out.print(":\n");
+    out.print(it->text);
+    out.print("</p></a>\n");
   }
   
-  out_error_footer(out);
+  out_error_footer();
   return 1;
 }
 
-int display_static_errors(ostream& out, const string& input)
+int display_static_errors(const string& input)
 {
+  User_Output& out(get_output());
+  
   if (!exist_static_errors)
     return 0;
   
-  out_error_header(out, "Static Error");
+  out_error_header("Static Error");
   
-  out<<"<h1>Static Error</h1>\n";
-  out<<"<p>The server has converted your input to this <a href=\"#input\">XML document</a>.\n"
-      <<"It is well-formed XML but it has <a href=\"#static\">the following<a> semantic errors.\n"
-      <<"For your information, <a href=\"#encoding\">the remarks</a> from decoding your input\n"
-      <<"are also included.</p>\n";
+  out.print("<h1>Static Error</h1>\n");
+  out.print("<p>The server has converted your input to this <a href=\"#input\">XML document</a>.\n"
+      "It is well-formed XML but it has <a href=\"#static\">the following<a> semantic errors.\n"
+      "For your information, <a href=\"#encoding\">the remarks</a> from decoding your input\n"
+      "are also included.</p>\n");
   
-  out<<"<a id=\"encoding\"><h2>Encoding Remarks</h2>\n";
+  out.print("<a id=\"encoding\"><h2>Encoding Remarks</h2>\n");
   for (vector< Error >::const_iterator it(encoding_errors.begin());
        it != encoding_errors.end(); ++it)
   {
     if (it->type == Error::ERROR)
-      out<<"<p><strong style=\"color:#FF0000\">Error</strong>: ";
+      out.print("<p><strong style=\"color:#FF0000\">Error</strong>: ");
     else
-      out<<"<p><strong style=\"color:#00BB00\">Remark</strong>: ";
-    out<<it->text<<"</p>\n";
+      out.print("<p><strong style=\"color:#00BB00\">Remark</strong>: ");
+    out.print(it->text);
+    out.print("</p>\n");
   }
-  out<<"</a>\n";
+  out.print("</a>\n");
   
-  out_input_tagged(out, input, static_errors);
+  out_input_tagged(input, static_errors);
 
   unsigned int i(0);
-  out<<"<a id=\"static\"><h2>Static Remarks and Errors</h2></a>\n";
+  out.print("<a id=\"static\"><h2>Static Remarks and Errors</h2></a>\n");
   for (vector< Error >::const_iterator it(static_errors.begin());
        it != static_errors.end(); ++it)
   {
-    out<<"<a id=\"err"<<++i<<"\">";
+    out.print("<a id=\"err");
+    out.print((long long)++i);
+    out.print("\">");
     if (it->type == Error::ERROR)
-      out<<"<p><strong style=\"color:#FF0000\">Error</strong>";
+      out.print("<p><strong style=\"color:#FF0000\">Error</strong>");
     else
-      out<<"<p><strong style=\"color:#00BB00\">Remark</strong>";
+      out.print("<p><strong style=\"color:#00BB00\">Remark</strong>");
     if (it->line_number > 0)
-      out<<" in line <strong>"<<it->line_number<<"</strong>";
-    out<<":\n"<<it->text<<"</p></a>\n";
+    {
+      out.print(" in line <strong>");
+      out.print(it->line_number);
+      out.print("</strong>");
+    }
+    out.print(":\n");
+    out.print(it->text);
+    out.print("</p></a>\n");
   }
   
-  out_error_footer(out);
+  out_error_footer();
   return 1;
 }
 
-int display_sanity_errors(ostream& out, const string& input)
+int display_sanity_errors(const string& input)
 {
+  User_Output& out(get_output());
+  
   if (!exist_sanity_errors)
     return 0;
   
-  out_error_header(out, "Flow Forecast Trouble");
+  out_error_header("Flow Forecast Trouble");
   
-  out<<"<h1>Flow Forecast Trouble</h1>\n";
-  out<<"<p>The server has converted your input to this <a href=\"#input\">XML document</a>.\n"
-      <<"To avoid congestions, the server tries a rough <a href=\"#flow\">forecast</a> "
-      <<"for each script about its resource requirements. Unfortunatly, the server was unable "
-      <<"to verify that your script could work on the server's resources. If you have a better "
-      <<"prediction about your script's needs, try using the attributes \"timeout\" and/or "
-      <<"\"element-limit\" on the root element.</p>\n";
+  out.print("<h1>Flow Forecast Trouble</h1>\n");
+  out.print("<p>The server has converted your input to this <a href=\"#input\">XML document</a>.\n"
+      "To avoid congestions, the server tries a rough <a href=\"#flow\">forecast</a> "
+      "for each script about its resource requirements. Unfortunatly, the server was unable "
+      "to verify that your script could work on the server's resources. If you have a better "
+      "prediction about your script's needs, try using the attributes \"timeout\" and/or "
+      "\"element-limit\" on the root element.</p>\n");
   
-  out<<"<a id=\"encoding\"><h2>Encoding Remarks</h2>\n";
+  out.print("<a id=\"encoding\"><h2>Encoding Remarks</h2>\n");
   for (vector< Error >::const_iterator it(encoding_errors.begin());
        it != encoding_errors.end(); ++it)
   {
     if (it->type == Error::ERROR)
-      out<<"<p><strong style=\"color:#FF0000\">Error</strong>: ";
+      out.print("<p><strong style=\"color:#FF0000\">Error</strong>: ");
     else
-      out<<"<p><strong style=\"color:#00BB00\">Remark</strong>: ";
-    out<<it->text<<"</p>\n";
+      out.print("<p><strong style=\"color:#00BB00\">Remark</strong>: ");
+    out.print(it->text);
+    out.print("</p>\n");
   }
-  out<<"</a>\n";
+  out.print("</a>\n");
   
-  out_input_tagged(out, input, static_errors);
+  out_input_tagged(input, static_errors);
 
   unsigned int i(0);
-  out<<"<a id=\"static\"><h2>Static Remarks</h2></a>\n";
+  out.print("<a id=\"static\"><h2>Static Remarks</h2></a>\n");
   for (vector< Error >::const_iterator it(static_errors.begin());
        it != static_errors.end(); ++it)
   {
-    out<<"<a id=\"err"<<++i<<"\">";
+    out.print("<a id=\"err");
+    out.print((long long)++i);
+    out.print("\">");
     if (it->type == Error::ERROR)
-      out<<"<p><strong style=\"color:#FF0000\">Error</strong>";
+      out.print("<p><strong style=\"color:#FF0000\">Error</strong>");
     else
-      out<<"<p><strong style=\"color:#00BB00\">Remark</strong>";
+      out.print("<p><strong style=\"color:#00BB00\">Remark</strong>");
     if (it->line_number > 0)
-      out<<" in line <strong>"<<it->line_number<<"</strong>";
-    out<<":\n"<<it->text<<"</p></a>\n";
+    {
+      out.print(" in line <strong>");
+      out.print(it->line_number);
+      out.print("</strong>");
+    }
+    out.print(":\n");
+    out.print(it->text);
+    out.print("</p></a>\n");
   }
   
-  out<<"<a id=\"flow\"><h2>Flow Forecast</h2></a>\n";
-  out<<sanity_out.str();
+  out.print("<a id=\"flow\"><h2>Flow Forecast</h2></a>\n");
+  out.print(sanity_out.str());
   
-  out_error_footer(out);
+  out_error_footer();
   return 1;
 }
 
-void static_analysis(ostream& out, const string& input)
+void static_analysis(const string& input)
 {
-  out_error_header(out, "Static Script Analysis");
+  User_Output& out(get_output());
   
-  out<<"<h1>Static Script Analysis</h1>\n";
-  out<<"<p><a href=\"#input\">Your Input</a>.\n<br/>"
-      <<"<p><a href=\"#encoding\">Encoding Remarks</a>.\n<br/>"
-      <<"<p><a href=\"#static\">Static Remarks</a>.\n<br/>"
-      <<"<p><a href=\"#flow\">Flow Forecast</a>.\n<br/></p>\n";
+  out_error_header("Static Script Analysis");
   
-  out_input_tagged(out, input, static_errors);
+  out.print("<h1>Static Script Analysis</h1>\n");
+  out.print("<p><a href=\"#input\">Your Input</a>.\n<br/>"
+      "<p><a href=\"#encoding\">Encoding Remarks</a>.\n<br/>"
+      "<p><a href=\"#static\">Static Remarks</a>.\n<br/>"
+      "<p><a href=\"#flow\">Flow Forecast</a>.\n<br/></p>\n");
+  
+  out_input_tagged(input, static_errors);
 
-  out<<"<a id=\"encoding\"><h2>Encoding Remarks</h2>\n";
+  out.print("<a id=\"encoding\"><h2>Encoding Remarks</h2>\n");
   for (vector< Error >::const_iterator it(encoding_errors.begin());
        it != encoding_errors.end(); ++it)
   {
     if (it->type == Error::ERROR)
-      out<<"<p><strong style=\"color:#FF0000\">Error</strong>: ";
+      out.print("<p><strong style=\"color:#FF0000\">Error</strong>: ");
     else
-      out<<"<p><strong style=\"color:#00BB00\">Remark</strong>: ";
-    out<<it->text<<"</p>\n";
+      out.print("<p><strong style=\"color:#00BB00\">Remark</strong>: ");
+    out.print(it->text);
+    out.print("</p>\n");
   }
-  out<<"</a>\n";
+  out.print("</a>\n");
   
   unsigned int i(0);
-  out<<"<a id=\"static\"><h2>Static Remarks</h2></a>\n";
+  out.print("<a id=\"static\"><h2>Static Remarks</h2></a>\n");
   for (vector< Error >::const_iterator it(static_errors.begin());
        it != static_errors.end(); ++it)
   {
-    out<<"<a id=\"err"<<++i<<"\">";
+    out.print("<a id=\"err");
+    out.print((long long)++i);
+    out.print("\">");
     if (it->type == Error::ERROR)
-      out<<"<p><strong style=\"color:#FF0000\">Error</strong>";
+      out.print("<p><strong style=\"color:#FF0000\">Error</strong>");
     else
-      out<<"<p><strong style=\"color:#00BB00\">Remark</strong>";
+      out.print("<p><strong style=\"color:#00BB00\">Remark</strong>");
     if (it->line_number > 0)
-      out<<" in line <strong>"<<it->line_number<<"</strong>";
-    out<<":\n"<<it->text<<"</p></a>\n";
+    {
+      out.print(" in line <strong>");
+      out.print(it->line_number);
+      out.print("</strong>");
+    }
+    out.print(":\n");
+    out.print(it->text);
+    out.print("</p></a>\n");
   }
   
-  out<<"<a id=\"flow\"><h2>Flow Forecast</h2></a>\n";
-  out<<sanity_out.str();
+  out.print("<a id=\"flow\"><h2>Flow Forecast</h2></a>\n");
+  out.print(sanity_out.str());
   
-  out_error_footer(out);
+  out_error_footer();
 }
 
-void display_verbatim(const string& text, ostream& out)
+void display_verbatim(const string& text)
 {
   sanity_out<<"<pre>";
   escape_xml(sanity_out, text);
   sanity_out<<"</pre>\n";
 }
 
-void display_state(const string& text, ostream& out)
+void display_state(const string& text)
 {
   sanity_out<<"<p><strong style=\"color:#00BB00\">Forecast</strong>: "<<text<<"</p>\n";
 }
 
 int debug_mode(0);
 
-void runtime_error(const string& error, ostream& out)
+void runtime_error(const string& error)
 {
+  User_Output& out(get_output());
+  
   if (debug_mode == QUIET)
     return;
   if (header_state == 0)
   {
-    out_error_header(out, "Runtime Error");
+    out_error_header("Runtime Error");
   
-    out<<"<h1>Runtime Error</h1>\n";
-    out<<"<p>The following error occured while running your script:</p>\n";
-    out<<"<p><strong style=\"color:#FF0000\">Error</strong>: "<<error<<"</p>\n";
+    out.print("<h1>Runtime Error</h1>\n");
+    out.print("<p>The following error occured while running your script:</p>\n");
+    out.print("<p><strong style=\"color:#FF0000\">Error</strong>: ");
+    out.print(error);
+    out.print("</p>\n");
   
-    out_error_footer(out);
+    out_error_footer();
   }
   else if (header_state == WRITTEN_HTML)
   {
-    out<<"<p><strong style=\"color:#FF0000\">Error</strong>: "<<error<<"</p>\n";
+    out.print("<p><strong style=\"color:#FF0000\">Error</strong>: ");
+    out.print(error);
+    out.print("</p>\n");
   }
   else
   {
-    out<<"<error type=\"runtime\">"<<error<<"</error>\n";
+    out.print("<error type=\"runtime\">");
+    out.print(error);
+    out.print("</error>\n");
   }
 }
 
-void runtime_remark(const string& error, ostream& out)
+void runtime_remark(const string& error)
 {
+  User_Output& out(get_output());
+  
   if (debug_mode != VERBOSE)
     return;
   if (header_state == 0)
   {
-    out_error_header(out, "Runtime Error");
+    out_error_header("Runtime Error");
   
-    out<<"<h1>Runtime Remark</h1>\n";
-    out<<"<p>The following remark occured while running your script:</p>\n";
-    out<<"<p><strong style=\"color:#00BB00\">Remark</strong>: "<<error<<"</p>\n";
+    out.print("<h1>Runtime Remark</h1>\n");
+    out.print("<p>The following remark occured while running your script:</p>\n");
+    out.print("<p><strong style=\"color:#00BB00\">Remark</strong>: ");
+    out.print(error);
+    out.print("</p>\n");
     
-    out_error_footer(out);
+    out_error_footer();
   }
   else if (header_state == WRITTEN_HTML)
   {
-    out<<"<p><strong style=\"color:#00BB00\">Remark</strong>: "<<error<<"</p>\n";
+    out.print("<p><strong style=\"color:#00BB00\">Remark</strong>: ");
+    out.print(error);
+    out.print("</p>\n");
   }
   else
   {
-    out<<"<remark type=\"runtime\">"<<error<<"</remark>\n";
+    out.print("<remark type=\"runtime\">");
+    out.print(error);
+    out.print("</remark>\n");
   }
 }
 
 void statement_finished(const Statement* stmt)
 {
+  User_Output& out(get_output());
+  
   if (debug_mode != VERBOSE)
     return;
   if (header_state == 0)
   {
-    out_error_header(cout, "Runtime Error");
+    out_error_header("Runtime Error");
   
-    cout<<"<h1>Runtime Error</h1>\n";
-    cout<<"<p>The following error occured while running your script:</p>\n";
+    out.print("<h1>Runtime Error</h1>\n");
+    out.print("<p>The following error occured while running your script:</p>\n");
   
-    cout<<"<p><strong style=\"color:#00BB00\">Runtime state</strong>: "
-	<<"Your program finished \""<<stmt->get_name()<<"\" from line "<<stmt->get_line_number()
-	<<" at "<<(uintmax_t)time(NULL)<<" seconds after Epoch.";
-    cout<<" Stack: ";
+    out.print("<p><strong style=\"color:#00BB00\">Runtime state</strong>: "
+	"Your program finished \"");
+    out.print(stmt->get_name());
+    out.print("\" from line ");
+    out.print(stmt->get_line_number());
+    out.print(" at ");
+    out.print((long long)(uintmax_t)time(NULL));
+    out.print(" seconds after Epoch.");
+    out.print(" Stack: ");
     for (vector< pair< int, int > >::const_iterator it(get_stack().begin());
 	 it != get_stack().end(); ++it)
-      cout<<it->first<<' '<<it->second<<' ';
-    cout<<"</p>\n";
+    {
+      out.print(it->first);
+      out.print(" ");
+      out.print(it->second);
+      out.print(" ");
+    }
+    out.print("</p>\n");
     
-    out_error_footer(cout);
+    out_error_footer();
   }
   else if (header_state == WRITTEN_HTML)
   {
-    cout<<"<p><strong style=\"color:#00BB00\">Runtime state</strong>: "
-	<<"Your program finished \""<<stmt->get_name()<<"\" from line "<<stmt->get_line_number()
-	<<" at "<<(uintmax_t)time(NULL)<<" seconds after Epoch.";
-    cout<<" Stack: ";
+    out.print("<p><strong style=\"color:#00BB00\">Runtime state</strong>: "
+	"Your program finished \"");
+    out.print(stmt->get_name());
+    out.print("\" from line ");
+    out.print(stmt->get_line_number());
+    out.print(" at ");
+    out.print((long long)(uintmax_t)time(NULL));
+    out.print(" seconds after Epoch.");
+    out.print(" Stack: ");
     for (vector< pair< int, int > >::const_iterator it(get_stack().begin());
 	 it != get_stack().end(); ++it)
-      cout<<it->first<<' '<<it->second<<' ';
-    cout<<"</p>\n";
+    {
+      out.print(it->first);
+      out.print(" ");
+      out.print(it->second);
+      out.print(" ");
+    }
+    out.print("</p>\n");
   }
   else
   {
-    cout<<"<remark type=\"state\">: "
-	<<"Your program finished \""<<stmt->get_name()<<"\" from line "<<stmt->get_line_number()
-	<<" at "<<(uintmax_t)time(NULL)<<" seconds after Epoch.";
-    cout<<" Stack: ";
+    out.print("<remark type=\"state\">: "
+	"Your program finished \"");
+    out.print(stmt->get_name());
+    out.print("\" from line ");
+    out.print(stmt->get_line_number());
+    out.print(" at ");
+    out.print((long long)(uintmax_t)time(NULL));
+    out.print(" seconds after Epoch.");
+    out.print(" Stack: ");
     for (vector< pair< int, int > >::const_iterator it(get_stack().begin());
 	 it != get_stack().end(); ++it)
-      cout<<it->first<<' '<<it->second<<' ';
-    cout<<"</remark>\n";
+    {
+      out.print(it->first);
+      out.print(" ");
+      out.print(it->second);
+      out.print(" ");
+    }
+    out.print("</remark>\n");
   }
 }
 

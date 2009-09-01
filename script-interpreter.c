@@ -72,10 +72,12 @@ void log_script(const string& xml_body)
 
 int main(int argc, char *argv[])
 {
+  set_output_gz();
+  
   string xml_raw(get_xml_raw());
-  if (display_encoding_errors(cout))
+  if (display_encoding_errors())
     return 0;
-  if (display_parse_errors(cout, xml_raw))
+  if (display_parse_errors(xml_raw))
     return 0;
   
   try
@@ -90,13 +92,13 @@ int main(int argc, char *argv[])
   {
     ostringstream temp;
     temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin;
-    runtime_error(temp.str(), cout);
+    runtime_error(temp.str());
     
     return 0;
   }
-  if (display_parse_errors(cout, xml_raw))
+  if (display_parse_errors(xml_raw))
     return 0;
-  if (display_static_errors(cout, xml_raw))
+  if (display_static_errors(xml_raw))
     return 0;
   
   string current_db(detect_active_database());
@@ -111,8 +113,8 @@ int main(int argc, char *argv[])
       (mysql, "localhost", "osm", "osm", current_db.c_str(), 0, NULL,
        CLIENT_LOCAL_FILES))
   {
-    runtime_error("Connection to database failed.\n", cout);
-    out_footer(cout, output_mode);
+    runtime_error("Connection to database failed.\n");
+    out_footer(output_mode);
     return 0;
   }
   
@@ -123,13 +125,13 @@ int main(int argc, char *argv[])
     for (vector< Statement* >::const_iterator it(statement_stack.begin());
 	 it != statement_stack.end(); ++it)
       (*it)->forecast(mysql);
-    if (display_sanity_errors(cout, xml_raw))
+    if (display_sanity_errors(xml_raw))
       return 0;
     dec_stack();
   
     if (get_debug_mode() == STATIC_ANALYSIS)
     {
-      static_analysis(cout, xml_raw);
+      static_analysis(xml_raw);
       return 0;
     }
   
@@ -138,7 +140,7 @@ int main(int argc, char *argv[])
     current_db = detect_active_database();
     if (current_db == "")
     {
-      out_footer(cout, output_mode);
+      out_footer(output_mode);
       return 0;
     }
     
@@ -149,7 +151,7 @@ int main(int argc, char *argv[])
     (*dynamic_cast< Root_Statement* >(statement_stack.front()))
 	.set_database_id(current_db[current_db.size()-1] - 48);
     
-    out_header(cout, output_mode);
+    out_header(output_mode);
     
     prepare_caches(mysql);
     
@@ -158,7 +160,7 @@ int main(int argc, char *argv[])
 	 it != statement_stack.end(); ++it)
       (*it)->execute(mysql, maps);
   
-    out_footer(cout, output_mode);
+    out_footer(output_mode);
   
     mysql_close(mysql);
   }
@@ -166,7 +168,7 @@ int main(int argc, char *argv[])
   {
     ostringstream temp;
     temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin;
-    runtime_error(temp.str(), cout);
+    runtime_error(temp.str());
   }
 
   return 0;

@@ -19,18 +19,18 @@ void add_parse_remark(const string& error);
 void add_static_remark(const string& error);
 void add_sanity_remark(const string& error);
 
-int display_encoding_errors(ostream& out);
-int display_parse_errors(ostream& out, const string& input);
-int display_static_errors(ostream& out, const string& input);
-int display_sanity_errors(ostream& out, const string& input);
+int display_encoding_errors();
+int display_parse_errors(const string& input);
+int display_static_errors(const string& input);
+int display_sanity_errors(const string& input);
 
-void static_analysis(ostream& out, const string& input);
+void static_analysis(const string& input);
 
-void display_verbatim(const string& text, ostream& out);
-void display_state(const string& text, ostream& out);
+void display_verbatim(const string& text);
+void display_state(const string& text);
 
-void runtime_error(const string& error, ostream& out);
-void runtime_remark(const string& error, ostream& out);
+void runtime_error(const string& error);
+void runtime_remark(const string& error);
 
 void statement_finished(const Statement* stmt);
 
@@ -38,9 +38,9 @@ const int MIXED_XML = 1;
 const int HTML = 2;
 const int NOTHING = 3;
 
-ostream& out_header(ostream& out, int type);
+void out_header(int type);
 
-ostream& out_footer(ostream& out, int type);
+void out_footer(int type);
 
 const int QUIET = 1;
 const int ERRORS = 2;

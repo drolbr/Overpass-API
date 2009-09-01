@@ -90,7 +90,7 @@ void execute_rules
   
   ostringstream temp;
   temp<<"Applying Rules";
-  runtime_remark(temp.str(), cout);
+  runtime_remark(temp.str());
     
   for (map< string, uint32 >::const_iterator it(rules.begin()); it != rules.end(); ++it)
   {
@@ -98,7 +98,7 @@ void execute_rules
   
     temp.str("");
     temp<<"Entering Rule "<<it->first;
-    runtime_remark(temp.str(), cout);
+    runtime_remark(temp.str());
     
     string xml_raw("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm-script>");
     xml_raw += bodys.find(it->first)->second + "</osm-script>\n";
@@ -117,7 +117,7 @@ void execute_rules
     statement_stack.clear();
   }
   
-  out_footer(cout, output_mode);
+  out_footer(output_mode);
 }
 
 void process_rules(MYSQL* mysql, const string& current_db, uint32 max_version)

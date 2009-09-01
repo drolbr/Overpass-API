@@ -38,6 +38,8 @@ void Report_Statement::forecast(MYSQL* mysql)
 
 void Report_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
+  User_Output& out(get_output());
+  
   map< string, Set >::const_iterator mit(maps.find(input));
   if (mit == maps.end())
     return;
@@ -74,7 +76,9 @@ void Report_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
     {
       if ((row[1]) && (row[2]) && (row[3]))
       {
-	cout<<"<p class=\"report-line\">In rule "<<row[3]<<"(";
+	out.print("<p class=\"report-line\">In rule ");
+	out.print(row[3]);
+	out.print("(");
 	unsigned int pos(0);
 	bool first(true);
 	while (row[2][pos])
@@ -93,19 +97,35 @@ void Report_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	  if (first)
 	    first = false;
 	  else
-	    cout<<", ";
+	    out.print(", ");
 	  if (type == NODE)
-	    cout<<"node "<<item_id;
+	  {
+	    out.print("node ");
+	    out.print(item_id);
+	  }
 	  if (type == WAY)
-	    cout<<"way "<<item_id;
+	  {
+	    out.print("way ");
+	    out.print(item_id);
+	  }
 	  if (type == RELATION)
-	    cout<<"relation "<<item_id;
+	  {
+	    out.print("relation ");
+	    out.print(item_id);
+	  }
 	}
-	cout<<"), line "<<atoi(row[1])<<":<br/>\n"
-	    <<row[0]<<"</p>\n";
+	out.print("), line ");
+	out.print(atoi(row[1]));
+	out.print(":<br/>\n");
+	out.print(row[0]);
+	out.print("</p>\n");
       }
       else
-	cout<<"<p class=\"report-line\">"<<row[0]<<"</p>\n";
+      {
+	out.print("<p class=\"report-line\">");
+	out.print(row[0]);
+	out.print("</p>\n");
+      }
       row = mysql_fetch_row(result);
     }
     mysql_free_result(result);
