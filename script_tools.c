@@ -464,27 +464,50 @@ class User_Cout : public User_Output
 
 class User_Gz : public User_Output
 {
+  private:
+    static const uint FLUSHSIZE = 256;
+  
   public:
-    User_Gz() : buf("") {}
+    User_Gz() : buf(""), gzout(gzdopen(1, "a")) {}
     
     virtual void print(string s)
     {
       buf<<s;
+      if (buf.str().size() >= FLUSHSIZE)
+      {
+	gzwrite(gzout, (unsigned char*)(buf.str().data()), buf.str().size());
+	buf.str("");
+      }
     }
     
     virtual void print(int i)
     {
       buf<<i;
+      if (buf.str().size() >= FLUSHSIZE)
+      {
+	gzwrite(gzout, (unsigned char*)(buf.str().data()), buf.str().size());
+	buf.str("");
+      }
     }
     
     virtual void print(long long l)
     {
       buf<<l;
+      if (buf.str().size() >= FLUSHSIZE)
+      {
+	gzwrite(gzout, (unsigned char*)(buf.str().data()), buf.str().size());
+	buf.str("");
+      }
     }
 
     virtual void print(int precision, double d)
     {
       buf<<setprecision(precision)<<d;
+      if (buf.str().size() >= FLUSHSIZE)
+      {
+	gzwrite(gzout, (unsigned char*)(buf.str().data()), buf.str().size());
+	buf.str("");
+      }
     }
 
     virtual void finish_header()
@@ -496,13 +519,13 @@ class User_Gz : public User_Output
     
     virtual void finish_output()
     {
-      gzFile gzout(gzdopen(1, "a"));
       gzwrite(gzout, (unsigned char*)(buf.str().data()), buf.str().size());
       gzclose(gzout);
     }
     
   private:
     ostringstream buf;
+    gzFile gzout;
 };
 
 User_Output* out_(0);

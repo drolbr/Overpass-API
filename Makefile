@@ -31,32 +31,32 @@ main: $(executables) $(backend_executables) $(dispatcher_executables)
 suffix = statement.o
 cgi-bin/interpreter: suffix = statement.o
 cgi-bin/interpreter: $(objects) script-interpreter.o
-	g++ -o cgi-bin/interpreter -O3 -Wall -lexpat $(objects) script-interpreter.o `mysql_config --libs`
+	g++ -o cgi-bin/interpreter -O3 -Wall -lexpat -lz $(objects) script-interpreter.o `mysql_config --libs`
 
 suffix = statement.o
 cgi-bin/add_rule: suffix = statement.o
 cgi-bin/add_rule: $(objects) add_rule.o
-	g++ -o cgi-bin/add_rule -O3 -Wall -lexpat $(objects) add_rule.o `mysql_config --libs`
+	g++ -o cgi-bin/add_rule -O3 -Wall -lexpat -lz $(objects) add_rule.o `mysql_config --libs`
 
 suffix = statement.o
 cgi-bin/get_rule: suffix = statement.o
 cgi-bin/get_rule: $(objects) get_rule.o
-	g++ -o cgi-bin/get_rule -O3 -Wall -lexpat $(objects) get_rule.o `mysql_config --libs`
+	g++ -o cgi-bin/get_rule -O3 -Wall -lexpat -lz $(objects) get_rule.o `mysql_config --libs`
 
 suffix = statement.o
 cgi-bin/update_rule: suffix = statement.o
 cgi-bin/update_rule: $(objects) update_rule.o
-	g++ -o cgi-bin/update_rule -O3 -Wall -lexpat $(objects) update_rule.o `mysql_config --libs`
+	g++ -o cgi-bin/update_rule -O3 -Wall -lexpat -lz  $(objects) update_rule.o `mysql_config --libs`
 
 suffix = statement.o
 bin/dump_rules: suffix = statement.o
 bin/dump_rules: $(objects) dump_rules.o
-	g++ -o $@ -O3 -Wall -lexpat $(objects) dump_rules.o `mysql_config --libs`
+	g++ -o $@ -O3 -Wall -lexpat -lz $(objects) dump_rules.o `mysql_config --libs`
 
 suffix = statement.o
 bin/load_rules: suffix = statement.o
 bin/load_rules: $(objects) load_rules.o
-	g++ -o $@ -O3 -Wall -lexpat $(objects) load_rules.o `mysql_config --libs`
+	g++ -o $@ -O3 -Wall -lexpat -lz $(objects) load_rules.o `mysql_config --libs`
 
 expat_justparse_interface.o: expat_justparse_interface.c expat_justparse_interface.h user_interface.h
 	g++ -c -O3 -Wall `mysql_config --include` expat_justparse_interface.c
@@ -107,14 +107,14 @@ load_rules.o: maintenance/load_rules.c $(tool_headers) $(stmts) statement_factor
 
 
 bin/import_osm: import_osm.o expat_justparse_interface.o $(backend_objects)
-	g++ -o $@ -O3 -Wall -lexpat $^
+	g++ -o $@ -O3 -Wall -lexpat -lz $^
 
 import_osm.o: backend/import_osm.c expat_justparse_interface.h $(backend_types_h) $(backend_generic_h)
 	g++ -o $@ -c -O3 -Wall $<
 
 
 bin/apply_osc: apply_osc.o expat_justparse_interface.o $(backend_objects)
-	g++ -o $@ -O3 -Wall -lexpat $^
+	g++ -o $@ -O3 -Wall -lexpat -lz $^
 	
 apply_osc.o: backend/apply_osc.c expat_justparse_interface.h $(backend_types_h) $(backend_generic_h)
 	g++ -o $@ -c -O3 -Wall $<
@@ -136,7 +136,7 @@ bin/dispatcher: dispatcher/dispatcher.c
 suffix = statement.o
 bin/database_daemon: suffix = statement.o
 bin/database_daemon: database_daemon.o process_rules.o $(objects)
-	g++ -o $@ -O3 -Wall -lexpat $^ `mysql_config --libs`
+	g++ -o $@ -O3 -Wall -lexpat -lz $^ `mysql_config --libs`
 
 database_daemon.o: dispatcher/database_daemon.c dispatcher/process_rules.h
 	g++ -o $@ -c -O3 -Wall `mysql_config --include` $<
