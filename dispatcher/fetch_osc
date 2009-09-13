@@ -32,6 +32,7 @@ do
   ENDTIME=`./timestamp_of $HOURLY_TIMESTAMP`
   fetch_file $HOURLY_TIMESTAMP $STARTTIME $ENDTIME
   sleep 1
+  echo "fetch_osc($1)@"`date "+%s"`": new_changefile $HOURLY_TIMESTAMP" >>/opt/osm_why_api/dispatcher.log
   echo " new_changefile $HOURLY_TIMESTAMP " >>/tmp/dispatcher.pipe
 };
 done
