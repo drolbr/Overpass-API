@@ -774,6 +774,11 @@ struct Way_String_Cache
     static uint32 next_way_tag_id;
 };
 
+void way_string_cache_reset()
+{
+  Way_String_Cache::reset();
+}
+
 vector< uint32 > Way_String_Cache::spatial_boundaries;
 vector< vector< pair< string, string > > > Way_String_Cache::kv_to_id_idx;
 vector< vector< uint16 > > Way_String_Cache::kv_to_id_block_idx;

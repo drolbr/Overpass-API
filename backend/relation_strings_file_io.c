@@ -773,6 +773,11 @@ struct Relation_String_Cache
     static uint32 next_relation_tag_id;
 };
 
+void relation_string_cache_reset()
+{
+  Relation_String_Cache::reset();
+}
+
 vector< uint32 > Relation_String_Cache::spatial_boundaries;
 vector< vector< pair< string, string > > > Relation_String_Cache::kv_to_id_idx;
 vector< vector< uint16 > > Relation_String_Cache::kv_to_id_block_idx;

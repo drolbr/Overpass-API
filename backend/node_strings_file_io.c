@@ -760,6 +760,11 @@ struct Node_String_Cache
     static uint32 next_node_tag_id;
 };
 
+void node_string_cache_reset()
+{
+  Node_String_Cache::reset();
+}
+
 vector< uint32 > Node_String_Cache::spatial_boundaries;
 vector< vector< pair< string, string > > > Node_String_Cache::kv_to_id_idx;
 vector< vector< uint16 > > Node_String_Cache::kv_to_id_block_idx;

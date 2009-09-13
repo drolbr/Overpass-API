@@ -57,12 +57,6 @@ const vector< pair< int, int > >& get_stack()
   return stack;
 }
 
-int next_stmt_id()
-{
-  static int next_stmt_id(0);
-  return ++next_stmt_id;
-}
-
 //-----------------------------------------------------------------------------
 
 void eval_cstr_array(string element, map< string, string >& attributes, const char **attr)
@@ -126,6 +120,8 @@ void Statement::display_starttag()
 {
   display_verbatim(get_source(startpos, tagendpos - startpos));
 }
+
+int Statement::next_stmt_id(0);
 
 //-----------------------------------------------------------------------------
 
@@ -238,6 +234,9 @@ const vector< string >& get_role_cache()
 
 void prepare_caches(MYSQL* mysql)
 {
+  string_caches_reset();
+  Statement::reset_stmt_counter();
+  
   role_cache.push_back("");
   
 /*  MYSQL_RES* result(mysql_query_wrapper(mysql, "select id, role from member_roles"));

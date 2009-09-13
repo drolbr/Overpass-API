@@ -749,6 +749,15 @@ set< Relation_ >& multiRelation_backwards_query
 
 //-----------------------------------------------------------------------------
 
+void string_caches_reset()
+{
+  node_string_cache_reset();
+  way_string_cache_reset();
+  relation_string_cache_reset();
+}
+
+//-----------------------------------------------------------------------------
+
 set< uint32 >& node_kv_to_multiint_query(string key, string value, set< uint32 >& result_set)
 {
   set< uint32 > string_ids_global;

@@ -101,6 +101,8 @@ void way_tag_create_way_id_idx(uint32* block_of_id, uint32 max_way_id);
 
 void way_tag_id_statistics();
 
+void way_string_cache_reset();
+
 void way_string_delete_insert(map< pair< string, string >, pair< uint32, uint32 >* >& new_tags_ids,
 			       set< pair< uint32, uint32 > >& moved_local_ids,
 	  vector< uint32 >& local_id_idx, vector< uint32 >& spatial_boundaries_);

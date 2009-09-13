@@ -55,12 +55,10 @@ class Set_Forecast
 //     int stack_depth;
 // };
 
-int next_stmt_id();
-
 class Statement
 {
   public:
-    Statement() : line_number(current_line_number()), stmt_id(next_stmt_id()) {}
+    Statement() : line_number(current_line_number()), stmt_id(next_stmt_id++) {}
     
     virtual void set_attributes(const char **attr) = 0;
     virtual void add_statement(Statement* statement, string text);
@@ -83,7 +81,11 @@ class Statement
     void display_full();
     void display_starttag();
     
+    static void reset_stmt_counter() { next_stmt_id = 0; }
+    
   private:
+    static int next_stmt_id;
+    
     int line_number;
     int stmt_id;
     int startpos, endpos, tagendpos;

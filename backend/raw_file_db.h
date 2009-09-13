@@ -739,8 +739,8 @@ void select_with_idx(T& env)
   const string DATA_FILE(env.data_file());
   const uint32 BLOCKSIZE(env.blocksize());
   
-  static vector< typename T::Index > idx_boundaries;
-  static vector< uint16 > block_idx;
+  /*static*/ vector< typename T::Index > idx_boundaries;
+  /*static*/ vector< uint16 > block_idx;
   
   if ((idx_boundaries.empty()) || (block_idx.empty()))
   {
@@ -818,8 +818,8 @@ void count_with_idx(T& env)
 {
   const string IDX_FILE(env.index_file());
   
-  static vector< typename T::Index > idx_boundaries;
-  static vector< uint16 > block_idx;
+  /*static*/ vector< typename T::Index > idx_boundaries;
+  /*static*/ vector< uint16 > block_idx;
   
   if ((idx_boundaries.empty()) || (block_idx.empty()))
   {

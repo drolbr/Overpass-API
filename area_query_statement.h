@@ -21,9 +21,17 @@ class Area_Query_Statement : public Statement
     virtual void execute(MYSQL* mysql, map< string, Set >& maps);
     virtual ~Area_Query_Statement() {}
     
+    void get_nodes(MYSQL* mysql, set< Node >& nodes);
+    
   private:
     string output;
     uint32 area_ref;
+    map< uint32, set< Line_Segment > > segments_per_tile;
+    set< pair< int32, int32 > > in_inside;
+    set< pair< int32, int32 > > in_border;
+
+    void indices_of_area(MYSQL* mysql, uint32 area_ref);
+    bool is_contained(const Node& node);
 };
 
 #endif

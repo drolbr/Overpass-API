@@ -129,33 +129,36 @@ void deduce_intervals
     in_inside.insert(make_pair(current_bigblock + pending_inside, current_bigblock + 255));
 }
 
-void indices_of_area
-    (MYSQL* mysql, uint32 area_ref,
-     set< pair< int32, int32 > >& in_inside, set< pair< int32, int32 > >&  in_border,
-     map< uint32, set< Line_Segment > >& segments_per_tile)
+void Area_Query_Statement::indices_of_area(MYSQL* mysql, uint32 area_ref)
 {
-  ostringstream temp;
-  temp<<"select ll_idx, min_lat, min_lon, max_lat, max_lon from area_segments "
-      <<"where id = "<<area_ref;
-  singleArea_query(mysql, temp.str(), segments_per_tile);
-  
-  vector< vector< uint8 > > block_status(16, vector< uint8 >(16, OUTSIDE));
-  for (map< uint32, set< Line_Segment > >::const_iterator
-       it(segments_per_tile.begin());
-       it != segments_per_tile.end(); )
+  if (segments_per_tile.empty())
   {
-    uint32 current_bigblock(it->first & 0xffffff00);
-    set_block_status(it->first, it->second, block_status[(lon_of_ll(it->first)>>16) & 0xf]);
+    ostringstream temp;
+    temp<<"select ll_idx, min_lat, min_lon, max_lat, max_lon from area_segments "
+	<<"where id = "<<area_ref;
+    singleArea_query(mysql, temp.str(), segments_per_tile);
+  }
+  
+  if ((in_inside.empty()) && (in_border.empty()))
+  {
+    vector< vector< uint8 > > block_status(16, vector< uint8 >(16, OUTSIDE));
+    for (map< uint32, set< Line_Segment > >::const_iterator
+	 it(segments_per_tile.begin());
+	 it != segments_per_tile.end(); )
+    {
+      uint32 current_bigblock(it->first & 0xffffff00);
+      set_block_status(it->first, it->second, block_status[(lon_of_ll(it->first)>>16) & 0xf]);
     
-    if (++it == segments_per_tile.end())
-    {
-      deduce_intervals(block_status, current_bigblock, in_inside, in_border);
-      break;
-    }
-    if ((it->first & 0xffffff00) != current_bigblock)
-    {
-      deduce_intervals(block_status, current_bigblock, in_inside, in_border);
-      block_status = vector< vector< uint8 > >(16, vector< uint8 >(16, OUTSIDE));
+      if (++it == segments_per_tile.end())
+      {
+	deduce_intervals(block_status, current_bigblock, in_inside, in_border);
+	break;
+      }
+      if ((it->first & 0xffffff00) != current_bigblock)
+      {
+	deduce_intervals(block_status, current_bigblock, in_inside, in_border);
+	block_status = vector< vector< uint8 > >(16, vector< uint8 >(16, OUTSIDE));
+      }
     }
   }
 }
@@ -164,9 +167,7 @@ void Area_Query_Statement::forecast(MYSQL* mysql)
 {
   Set_Forecast& sf_out(declare_write_set(output));
   
-  set< pair< int32, int32 > > in_inside, in_border;
-  map< uint32, set< Line_Segment > > segments_per_tile;
-  indices_of_area(mysql, area_ref, in_inside, in_border, segments_per_tile);
+  indices_of_area(mysql, area_ref);
   
   sf_out.node_count = multiRange_to_count_query(in_inside, in_border);
   declare_used_time(1000 + sf_out.node_count/100000);
@@ -176,8 +177,7 @@ void Area_Query_Statement::forecast(MYSQL* mysql)
   display_state();
 }
 
-bool is_contained_in
-    (const Node& node, map< uint32, set< Line_Segment > >& segments_per_tile)
+bool Area_Query_Statement::is_contained(const Node& node)
 {
   set< Line_Segment > column(segments_per_tile[ll_idx(node.lat, node.lon) & 0xffffff55]);
   bool is_contained(false);
@@ -233,6 +233,18 @@ bool is_contained_in
   return is_contained;
 }
 
+void Area_Query_Statement::get_nodes(MYSQL* mysql, set< Node >& nodes)
+{
+  indices_of_area(mysql, area_ref);
+  set< Node > on_border;
+  multiRange_to_multiNode_query(in_inside, in_border, nodes, on_border);
+  for (set< Node >::const_iterator it(on_border.begin()); it != on_border.end(); ++it)
+  {
+    if (is_contained(*it))
+      nodes.insert(*it);
+  }
+}
+
 void Area_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 {
   set< Node >* nodes(&(maps[output].get_nodes_handle()));
@@ -244,14 +256,5 @@ void Area_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   relations->clear();
   areas->clear();
   
-  map< uint32, set< Line_Segment > > segments_per_tile;
-  set< pair< int, int > > in_inside, in_border;
-  indices_of_area(mysql, area_ref, in_inside, in_border, segments_per_tile);
-  set< Node > on_border;
-  multiRange_to_multiNode_query(in_inside, in_border, *nodes, on_border);
-  for (set< Node >::const_iterator it(on_border.begin()); it != on_border.end(); ++it)
-  {
-    if (is_contained_in(*it, segments_per_tile))
-      nodes->insert(*it);
-  }
+  get_nodes(mysql, *nodes);
 }

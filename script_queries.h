@@ -74,6 +74,8 @@ set< Relation_ >& multiWay_to_multiRelation_query
 set< Relation_ >& multiRelation_backwards_query
     (const set< Relation_ >& source, set< Relation_ >& result_set);
 
+void string_caches_reset();
+
 set< uint32 >& node_kv_to_multiint_query(string key, string value, set< uint32 >& result_set);
 uint32 node_kv_to_count_query(string key, string value);
 set< uint32 >& node_kv_multiint_to_multiint_query
