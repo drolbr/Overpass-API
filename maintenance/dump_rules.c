@@ -24,6 +24,8 @@ string db_subdir;
 
 int main(int argc, char *argv[])
 {
+  set_output_cout();
+  
   mysql = mysql_init(NULL);
   
   if (!mysql_real_connect(mysql, "localhost", "osm", "osm", "osm", 0, NULL,

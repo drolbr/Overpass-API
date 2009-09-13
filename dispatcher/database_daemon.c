@@ -11,6 +11,7 @@
 #include <sys/wait.h>
 
 #include "../script_datatypes.h"
+#include "../user_interface.h"
 #include "process_rules.h"
 
 #include <mysql.h>
@@ -139,6 +140,8 @@ void process_update
 
 int main(int argc, char *argv[])
 {
+  set_output_cout();
+  
   if (argc != 3)
   {
     cerr<<"Usage: "<<argv[0]<<" Database_Name Database_Id\n";

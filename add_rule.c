@@ -59,6 +59,8 @@ string db_subdir;
 
 int main(int argc, char *argv[])
 {
+  set_output_cout();
+  
   string xml_raw(get_xml_raw());
   if (display_encoding_errors())
     return 0;

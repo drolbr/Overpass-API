@@ -59,6 +59,8 @@ string db_subdir;
 
 int main(int argc, char *argv[])
 {
+  set_output_cout();
+  
   string xml_total_raw(get_xml_raw());
   if (display_encoding_errors())
     return 0;
@@ -83,6 +85,7 @@ int main(int argc, char *argv[])
   
   try
   {
+    cerr<<4;
     map< string, int > versions;
     map< string, string > bodys;
   
