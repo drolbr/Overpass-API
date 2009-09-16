@@ -12,6 +12,7 @@
 #include "script_tools.h"
 #include "user_interface.h"
 #include "query_statement.h"
+#include "area_query_statement.h"
 
 #include <mysql.h>
 
@@ -63,6 +64,27 @@ void Query_Statement::add_statement(Statement* statement, string text)
   {
     key_values.push_back(make_pair< string, string >
 	(has_kv->get_key(), has_kv->get_value()));
+    return;
+  }
+  Area_Query_Statement* area(dynamic_cast<Area_Query_Statement*>(statement));
+  if (area)
+  {
+    if (type != QUERY_NODE)
+    {
+      ostringstream temp;
+      temp<<"An area-query as substatement is only allowed for queries of type \"node\".";
+      add_static_error(temp.str());
+      return;
+    }
+    if (area_restriction != 0)
+    {
+      ostringstream temp;
+      temp<<"A query statement may contain at most one area-query as substatement.";
+      add_static_error(temp.str());
+      return;
+    }
+    area_restriction = area;
+    return;
   }
   else
     substatement_error(get_name(), statement);
@@ -236,11 +258,24 @@ void Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   
   if (type == QUERY_NODE)
   {
-    set< uint32 > tnodes;
-    node_kv_to_multiint_query(key_values.front().first, key_values.front().second, tnodes);
-    set< Node > tnodes2;
-    multiint_to_multiNode_query(tnodes, tnodes2);
-    kvs_multiNode_to_multiNode_query(++(key_values.begin()), key_values.end(), tnodes2, nodes);
+    if (area_restriction)
+    {
+      uint32 part_count(area_restriction->prepare_split(mysql));
+      for (uint32 i(0); i < part_count; ++i)
+      {
+	set< Node > tnodes;
+	area_restriction->get_nodes(mysql, tnodes, i);
+	kvs_multiNode_to_multiNode_query(key_values.begin(), key_values.end(), tnodes, nodes);
+      }
+    }
+    else
+    {
+      set< uint32 > tnodes;
+      node_kv_to_multiint_query(key_values.front().first, key_values.front().second, tnodes);
+      set< Node > tnodes2;
+      multiint_to_multiNode_query(tnodes, tnodes2);
+      kvs_multiNode_to_multiNode_query(++(key_values.begin()), key_values.end(), tnodes2, nodes);
+    }
   }
   else if (type == QUERY_WAY)
   {

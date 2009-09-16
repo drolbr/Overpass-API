@@ -247,6 +247,72 @@ private:
   uint32 result;
 };
 
+struct Node_Id_Node_Range_Split : public Node_Id_Node
+{
+  Node_Id_Node_Range_Split(const set< pair< int32, int32 > >& idxs_inside,
+			   const set< pair< int32, int32 > >& idxs_border,
+      vector< set< pair< int32, int32 > > >& idxs_inside_v,
+      vector< set< pair< int32, int32 > > >& idxs_border_v)
+  : idxs_inside_(idxs_inside), idxs_border_(idxs_border),
+    idxs_inside_v_(idxs_inside_v), idxs_border_v_(idxs_border_v) {}
+  
+  void count_idx(const vector< Index >::const_iterator& idx_begin,
+		 const vector< Index >::const_iterator& idx_end)
+  {
+    uint32 count(0);
+    idxs_inside_v_.clear();
+    idxs_inside_v_.push_back(set< pair< int32, int32 > >());
+    idxs_border_v_.clear();
+    idxs_border_v_.push_back(set< pair< int32, int32 > >());
+    
+    set< pair< int32, int32 > >::const_iterator it_inside(idxs_inside_.begin());
+    set< pair< int32, int32 > >::const_iterator it_border(idxs_border_.begin());
+    vector< Index >::const_iterator it(idx_begin);
+    if (it == idx_end)
+      return;
+    Index last_idx(*it);
+    while (++it != idx_end)
+    {
+      while ((it_inside != idxs_inside_.end()) && (it_inside->second < *it))
+      {
+	uint32 lcount((long long)blocksize()*
+	    (it_inside->second - it_inside->first + 1)/(*it - last_idx + 1)/12);
+	if (count + lcount > 5*1000*1000)
+	{
+	  idxs_inside_v_.push_back(set< pair< int32, int32 > >());
+	  idxs_border_v_.push_back(set< pair< int32, int32 > >());
+	  count = lcount;
+	}
+	else
+	  count += lcount;
+	idxs_inside_v_.back().insert(*it_inside);
+	++it_inside;
+      }
+      while ((it_border != idxs_border_.end()) && (it_border->second < *it))
+      {
+	uint32 lcount((long long)blocksize()*
+	    (it_border->second - it_border->first + 1)/(*it - last_idx + 1)/12);
+	if (count + lcount > 5*1000*1000)
+	{
+	  idxs_inside_v_.push_back(set< pair< int32, int32 > >());
+	  idxs_border_v_.push_back(set< pair< int32, int32 > >());
+	  count = lcount;
+	}
+	else
+	  count += lcount;
+	idxs_border_v_.back().insert(*it_border);
+	++it_border;
+      }
+      last_idx = *it;
+    }
+  }
+  
+  private:
+    const set< pair< int32, int32 > >& idxs_inside_, idxs_border_;
+    vector< set< pair< int32, int32 > > >& idxs_inside_v_;
+    vector< set< pair< int32, int32 > > >& idxs_border_v_;
+};
+
 struct Node_Id_Node_By_Id_Reader : public Node_Id_Node
 {
   Node_Id_Node_By_Id_Reader(const set< uint32 >& ids, set< Node >& result)

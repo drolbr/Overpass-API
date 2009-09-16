@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "script_datatypes.h"
+#include "area_query_statement.h"
 
 #include <mysql.h>
 
@@ -15,7 +16,7 @@ using namespace std;
 class Query_Statement : public Statement
 {
   public:
-    Query_Statement() {}
+    Query_Statement() : area_restriction(0) {}
     virtual void set_attributes(const char **attr);
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "query"; }
@@ -28,6 +29,7 @@ class Query_Statement : public Statement
     string output;
     unsigned int type;
     vector< pair< string, string > > key_values;
+    Area_Query_Statement* area_restriction;
 };
 
 class Has_Key_Value_Statement : public Statement

@@ -576,6 +576,14 @@ int multiRange_to_count_query
   return reader.get_result();
 }
 
+void multiRange_to_split_query
+    (const set< pair< int, int > >& in_inside, const set< pair< int, int > >& in_border,
+     vector< set< pair< int, int > > >& in_inside_v, vector< set< pair< int, int > > >& in_border_v)
+{
+  Node_Id_Node_Range_Split reader(in_inside, in_border, in_inside_v, in_border_v);
+  count_with_idx< Node_Id_Node_Range_Split >(reader);
+}
+
 //-----------------------------------------------------------------------------
 
 set< Way >& multiint_to_multiWay_query(const set< uint32 >& source, set< Way >& result_set)
@@ -870,18 +878,32 @@ set< Node >& kvs_multiNode_to_multiNode_query
   {
     const set< uint32 >& local_ids(local_node_to_id[it->id]);
     const set< uint32 >& global_ids(global_node_to_id[it->id]);
+    
+    if ((local_ids.empty()) && (global_ids.empty()))
+      continue;
+    
     bool can_be_result(true);
     for (uint32 i(0); i < string_ids_local.size(); ++i)
     {
-      set< uint32 > ids_local;
-      set_intersection
-	  (string_ids_local[i].begin(), string_ids_local[i].end(),
-	   local_ids.begin(), local_ids.end(), inserter(ids_local, ids_local.begin()));
-      set< uint32 > ids_global;
-      set_intersection
-	  (string_ids_global[i].begin(), string_ids_global[i].end(),
-	   global_ids.begin(), global_ids.end(), inserter(ids_global, ids_global.begin()));
-      can_be_result &= (!((ids_local.empty()) && (ids_global.empty())));
+      set< uint32 >::const_iterator it2(local_ids.begin());
+      while (it2 != local_ids.end())
+      {
+	if (string_ids_local[i].find(*it2) != string_ids_local[i].end())
+	  break;
+	++it2;
+      }
+      set< uint32 >::const_iterator it3(global_ids.begin());
+      while (it3 != global_ids.end())
+      {
+	if (string_ids_global[i].find(*it3) != string_ids_global[i].end())
+	  break;
+	++it3;
+      }
+      if ((it2 == local_ids.end()) && (it3 == global_ids.end()))
+      {
+	can_be_result = false;
+	break;
+      }
     }
     if (can_be_result)
       result_set.insert(*it);

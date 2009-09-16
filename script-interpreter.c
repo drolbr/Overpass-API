@@ -72,7 +72,7 @@ void log_script(const string& xml_body)
 
 int main(int argc, char *argv[])
 {
-  set_output_cout();
+  set_output_gz();
   
   string xml_raw(get_xml_raw());
   if (display_encoding_errors())

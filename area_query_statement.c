@@ -129,7 +129,7 @@ void deduce_intervals
     in_inside.insert(make_pair(current_bigblock + pending_inside, current_bigblock + 255));
 }
 
-void Area_Query_Statement::indices_of_area(MYSQL* mysql, uint32 area_ref)
+void Area_Query_Statement::indices_of_area(MYSQL* mysql)
 {
   if (segments_per_tile.empty())
   {
@@ -167,7 +167,7 @@ void Area_Query_Statement::forecast(MYSQL* mysql)
 {
   Set_Forecast& sf_out(declare_write_set(output));
   
-  indices_of_area(mysql, area_ref);
+  indices_of_area(mysql);
   
   sf_out.node_count = multiRange_to_count_query(in_inside, in_border);
   declare_used_time(1000 + sf_out.node_count/100000);
@@ -235,9 +235,30 @@ bool Area_Query_Statement::is_contained(const Node& node)
 
 void Area_Query_Statement::get_nodes(MYSQL* mysql, set< Node >& nodes)
 {
-  indices_of_area(mysql, area_ref);
+  indices_of_area(mysql);
   set< Node > on_border;
   multiRange_to_multiNode_query(in_inside, in_border, nodes, on_border);
+  for (set< Node >::const_iterator it(on_border.begin()); it != on_border.end(); ++it)
+  {
+    if (is_contained(*it))
+      nodes.insert(*it);
+  }
+}
+
+uint32 Area_Query_Statement::prepare_split(MYSQL* mysql)
+{
+  indices_of_area(mysql);
+  
+  multiRange_to_split_query(in_inside, in_border, in_inside_v, in_border_v);
+  
+  return in_inside_v.size();
+}
+
+void Area_Query_Statement::get_nodes(MYSQL* mysql, set< Node >& nodes, uint32 part)
+{
+  indices_of_area(mysql);
+  set< Node > on_border;
+  multiRange_to_multiNode_query(in_inside_v[part], in_border_v[part], nodes, on_border);
   for (set< Node >::const_iterator it(on_border.begin()); it != on_border.end(); ++it)
   {
     if (is_contained(*it))
