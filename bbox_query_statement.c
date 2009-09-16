@@ -66,13 +66,12 @@ void Bbox_Query_Statement::set_attributes(const char **attr)
   east = (int)(e_d * 10000000 + 0.5);
 }
 
-void indices_of_bbox
-    (int south, int north, int west, int east,
-     set< pair< int, int > >& res_inside, set< pair< int, int > >& res_border)
+void Bbox_Query_Statement::indices_of_bbox
+    (int32 south, int32 north, int32 west, int32 east)
 {
   if (east < west)
   {
-    indices_of_bbox(south, north, east, 180*10*1000*1000, res_inside, res_border);
+    indices_of_bbox(south, north, east, 180*10*1000*1000);
     east = -180*10*1000*1000;
   }
   
@@ -131,26 +130,26 @@ void indices_of_bbox
 	  right = ((west <= it->second + 2*size + 1) ? BORDER : 0);
       }
       if ((lower == INSIDE) && (left == INSIDE))
-	res_inside.insert(make_pair< int, int >
+	in_inside.insert(make_pair< int, int >
 	    (ll_idx(it->first, it->second), ll_idx(it->first + size, it->second + size)));
       else if ((lower) && (left))
 	next.push_back(*it);
       if ((lower == INSIDE) && (right == INSIDE))
-	res_inside.insert(make_pair< int, int >
+	in_inside.insert(make_pair< int, int >
 	    (ll_idx(it->first, it->second + size + 1),
 	     ll_idx(it->first + size, it->second + 2*size + 1)));
       else if ((lower) && (right))
 	next.push_back(make_pair< int, int >
 	    (it->first, it->second + size + 1));
       if ((upper == INSIDE) && (left == INSIDE))
-	res_inside.insert(make_pair< int, int >
+	in_inside.insert(make_pair< int, int >
 	    (ll_idx(it->first + size + 1, it->second),
 	     ll_idx(it->first + 2*size + 1, it->second + size)));
       else if ((upper) && (left))
 	next.push_back(make_pair< int, int >
 	    (it->first + size + 1, it->second));
       if ((upper == INSIDE) && (right == INSIDE))
-	res_inside.insert(make_pair< int, int >
+	in_inside.insert(make_pair< int, int >
 	    (ll_idx(it->first + size + 1, it->second + size + 1),
 	     ll_idx(it->first + 2*size + 1, it->second + 2*size + 1)));
       else if ((upper) && (right))
@@ -161,7 +160,7 @@ void indices_of_bbox
     size = size/2;
   }
   for (vector< pair< int, int > >::const_iterator it(pending.begin()); it != pending.end(); ++it)
-    res_border.insert(make_pair< int, int >
+    in_border.insert(make_pair< int, int >
 	(ll_idx(it->first, it->second), ll_idx(it->first + size, it->second + size)));
 }
 
@@ -169,8 +168,7 @@ void Bbox_Query_Statement::forecast(MYSQL* mysql)
 {
   Set_Forecast& sf_out(declare_write_set(output));
   
-  set< pair< int, int > > in_inside, in_border;
-  indices_of_bbox(south, north, west, east, in_inside, in_border);
+  indices_of_bbox(south, north, west, east);
   
   sf_out.node_count = multiRange_to_count_query(in_inside, in_border);
   declare_used_time(1000 + sf_out.node_count/100);
@@ -178,6 +176,56 @@ void Bbox_Query_Statement::forecast(MYSQL* mysql)
   
   display_full();
   display_state();
+}
+
+bool Bbox_Query_Statement::is_contained(const Node& node)
+{
+  if (west <= east)
+  {
+    if ((node.lat >= south) && (node.lat <= north) &&
+	 (node.lon >= west) && (node.lon <= east))
+      return true;
+  }
+  else
+  {
+    if ((node.lat >= south) && (node.lat <= north) &&
+	 ((node.lon >= west) || (node.lon <= east)))
+      return true;
+  }
+  return false;
+}
+
+void Bbox_Query_Statement::get_nodes(MYSQL* mysql, set< Node >& nodes)
+{
+  indices_of_bbox(south, north, west, east);
+  set< Node > on_border;
+  multiRange_to_multiNode_query(in_inside, in_border, nodes, on_border);
+  for (set< Node >::const_iterator it(on_border.begin()); it != on_border.end(); ++it)
+  {
+    if (is_contained(*it))
+      nodes.insert(*it);
+  }
+}
+
+uint32 Bbox_Query_Statement::prepare_split(MYSQL* mysql)
+{
+  indices_of_bbox(south, north, west, east);
+  
+  multiRange_to_split_query(in_inside, in_border, in_inside_v, in_border_v);
+  
+  return in_inside_v.size();
+}
+
+void Bbox_Query_Statement::get_nodes(MYSQL* mysql, set< Node >& nodes, uint32 part)
+{
+  indices_of_bbox(south, north, west, east);
+  set< Node > on_border;
+  multiRange_to_multiNode_query(in_inside_v[part], in_border_v[part], nodes, on_border);
+  for (set< Node >::const_iterator it(on_border.begin()); it != on_border.end(); ++it)
+  {
+    if (is_contained(*it))
+      nodes.insert(*it);
+  }
 }
 
 void Bbox_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
@@ -191,26 +239,5 @@ void Bbox_Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   relations->clear();
   areas->clear();
   
-  set< pair< int, int > > in_inside, in_border;
-  indices_of_bbox(south, north, west, east, in_inside, in_border);
-  set< Node > on_border;
-  multiRange_to_multiNode_query(in_inside, in_border, *nodes, on_border);
-  if (west <= east)
-  {
-    for (set< Node >::const_iterator it(on_border.begin()); it != on_border.end(); ++it)
-    {
-      if ((it->lat >= south) && (it->lat <= north) &&
-	   (it->lon >= west) && (it->lon <= east))
-	nodes->insert(*it);
-    }
-  }
-  else
-  {
-    for (set< Node >::const_iterator it(on_border.begin()); it != on_border.end(); ++it)
-    {
-      if ((it->lat >= south) && (it->lat <= north) &&
-	   ((it->lon >= west) || (it->lon <= east)))
-	nodes->insert(*it);
-    }
-  }
+  get_nodes(mysql, *nodes);
 }

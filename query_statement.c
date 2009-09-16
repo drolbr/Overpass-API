@@ -76,14 +76,36 @@ void Query_Statement::add_statement(Statement* statement, string text)
       add_static_error(temp.str());
       return;
     }
-    if (area_restriction != 0)
+    if ((area_restriction != 0) || (bbox_restriction != 0))
     {
       ostringstream temp;
-      temp<<"A query statement may contain at most one area-query as substatement.";
+      temp<<"A query statement may contain at most one area-query or bbox-query "
+	  <<"as substatement.";
       add_static_error(temp.str());
       return;
     }
     area_restriction = area;
+    return;
+  }
+  Bbox_Query_Statement* bbox(dynamic_cast<Bbox_Query_Statement*>(statement));
+  if (bbox)
+  {
+    if (type != QUERY_NODE)
+    {
+      ostringstream temp;
+      temp<<"A bbox-query as substatement is only allowed for queries of type \"node\".";
+      add_static_error(temp.str());
+      return;
+    }
+    if ((area_restriction != 0) || (bbox_restriction != 0))
+    {
+      ostringstream temp;
+      temp<<"A query statement may contain at most one area-query or bbox-query "
+	  <<"as substatement.";
+      add_static_error(temp.str());
+      return;
+    }
+    bbox_restriction = bbox;
     return;
   }
   else
@@ -265,6 +287,16 @@ void Query_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
       {
 	set< Node > tnodes;
 	area_restriction->get_nodes(mysql, tnodes, i);
+	kvs_multiNode_to_multiNode_query(key_values.begin(), key_values.end(), tnodes, nodes);
+      }
+    }
+    else if (bbox_restriction)
+    {
+      uint32 part_count(bbox_restriction->prepare_split(mysql));
+      for (uint32 i(0); i < part_count; ++i)
+      {
+	set< Node > tnodes;
+	bbox_restriction->get_nodes(mysql, tnodes, i);
 	kvs_multiNode_to_multiNode_query(key_values.begin(), key_values.end(), tnodes, nodes);
       }
     }
