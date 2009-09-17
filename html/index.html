@@ -10,14 +10,6 @@
 
 <h1>OSM Server Side Script</h1>
 
-<!--
-offene Probleme:
-- gzip-Komprimierung
-- area-query
-- recurse: area-node
-- Durchsetzung der Constraints
-//-->
-
 <p>
 <a href="#chapter.introduction">Introduction</a> -
 <a href="#chapter.use_cases">Use Cases</a> -
@@ -47,6 +39,7 @@ offene Probleme:
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.status">/api/status</a><br/>
 <a href="#chapter.statements">Statements</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.area_query">area-query</a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.bbox_query">bbox-query</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.conflict">conflict</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.coord_query">coord-query</a><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.detect_odd_nodes">detect-odd-nodes</a><br/>
@@ -77,6 +70,8 @@ offene Probleme:
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#section.static_feedback">Static Error Feedback</a><br/>
 </p>
 
+<!-- ==================================================================== //-->
+
 <div>
 <a id="chapter.introduction"/>
 <h2>Introduction</h2>
@@ -84,6 +79,8 @@ offene Probleme:
 
 <p>
 </p>
+
+<!-- ==================================================================== //-->
 
 <div>
 <a id="chapter.use_cases"/>
@@ -118,7 +115,7 @@ Of course, you can send this script also via any other <a href="#chapter.input_f
 </p>
 
 <p>
-The first command, <a href="#section.coord_query">&lt;coord-query lat="51.25" lon="7.15"/&gt;</a>, searches the database for every area that covers the location defined by the latitude and longitude values. Then it stores the result into the <a href="#section.variables">default set</a>. Afterwards, the second command <a href="#section.print">&lt;print mode="body"/&gt;</a> prints the content of the default set. The mode="body" indicates there that it shall print the <a href="#section.data_structures">id and members</a> of the area as well as is <a href="#section.data_structures">tags</a>.<br/>
+The first command, <a href="#section.coord_query">&lt;coord-query lat="51.25" lon="7.15"/&gt;</a>, searches the database for every area that covers the location defined by the latitude and longitude values. Then it stores the result into the <a href="#section.variables">default set</a>. Afterwards, the second command <a href="#section.print">&lt;print mode="body"/&gt;</a> prints the content of the default set. The mode="body" indicates there that it shall print the <a href="#section.data_structures">id</a> of the area as well as its <a href="#section.data_structures">tags</a>.<br/>
 </p>
 
 <div>
@@ -330,7 +327,7 @@ The <a href="#section.foreach">foreach</a>-body starts with an <a href="#section
 </p>
 
 <p>
-The statement <a href="#section.make_area">&lt;make-area pivot="rel" into="odd"/&gt;</a> now creates the area: It takes input from two different sets. The first one not specified, thus being the <a href="#section.variables">default set</a>, contains the ways and nodes that decribe the spatial extent of the area; it contains any point that is separated from the south pole by an odd number of way segments. The second input set is specified by the <a href="#section.make_area">pivot</a> parameter. It should contain exactly one element, and the set "rel", set by <a href="#section.foreach">foreach</a>, does so. The area's <a href="#section.data_structures">id and tags</a> are derived from this element. The output of <a href="#section.make_area">make-area</a> is the created area if any. It is simultanenously written to the output set as well as the <a href="#section.data_structures">database</a>. The set is in our case redirected to the set "odd" as we don't need the area anymore.
+The statement <a href="#section.make_area">&lt;make-area pivot="rel" into="odd"/&gt;</a> now creates the area: It takes input from two different sets. The first one not specified, thus being the <a href="#section.variables">default set</a>, contains the ways and nodes that decribe the spatial extent of the area; it contains any point that is separated from the south pole by an odd number of way segments. The second input set is specified by the <a href="#section.make_area">pivot</a> parameter. It should contain exactly one element, and the set "rel", set by <a href="#section.foreach">foreach</a>, does so. The area's <a href="#section.data_structures">id and tags</a> are derived from this element. The output of <a href="#section.make_area">make-area</a> is the created area if any. It is simultanenously written to the output set as well as the <a href="#section.data_structures">database of derived data</a>. The set is in our case redirected to the set "odd" as we don't need the area anymore.
 </p>
 
 <p>
@@ -345,6 +342,7 @@ The <a href="#section.foreach">&lt;foreach from="odd" into="i"&gt;</a> statement
 Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a href="#section.conflict">&lt;item set="rel"/&gt;</a>, the <a href="#section.conflict">&lt;item set="i"/&gt;</a> is contained in an odd number of segments.<a href="#section.conflict">&lt;/conflict&gt;</a></code> writes the conflict message into the database for the elements of the current inner and current outer loop. It obtains these elements from its input set, the <a href="#section.variables">default set</a>. In the conflict message, the subtags <a href="#section.conflict">&lt;item set="rel"/&gt;</a> and <a href="#section.conflict">&lt;item set="i"/&gt;</a> are replaced by their contents. The <a href="#section.conflict">conflict</a> statement does not return anything. Then the script continues with another inner loop or outer loop respectively.
 </p>
 
+<!-- ==================================================================== //-->
 
 <div>
 <a id="chapter.interface_calls"/>
@@ -384,6 +382,8 @@ Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a hr
 <h3>/api/status</h3>
 </div>
 
+<!-- ==================================================================== //-->
+
 <div>
 <a id="chapter.statements"/>
 <h2>Statements</h2>
@@ -391,6 +391,7 @@ Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a hr
 
 <p>
 <a href="#section.area_query">area-query</a><br/>
+<a href="#section.bbox_query">bbox-query</a><br/>
 <a href="#section.conflict">conflict</a><br/>
 <a href="#section.coord_query">coord-query</a><br/>
 <a href="#section.detect_odd_nodes">detect-odd-nodes</a><br/>
@@ -445,6 +446,51 @@ The area-query returns all nodes that have coordinates within the provided area,
 
 <div>
 <a id="subsection.area_query.examples"/>
+<h4>Examples</h4>
+</div>
+
+<div>
+<a id="section.bbox_query"/>
+<h3>bbox-query</h3>
+</div>
+
+<div>
+<a id="subsection.bbox_query.mandatory"/>
+<h4>Mandatory parameters</h4>
+</div>
+
+<ul>
+<li><strong>n</strong>: the northern limit of the bbox, provided as latitude.</li>
+<li><strong>s</strong>: the southern limit of the bbox, provided as latitude.</li>
+<li><strong>w</strong>: the western limit of the bbox, provided as longitude.</li>
+<li><strong>e</strong>: the eastern limit of the bbox, provided as longitude.</li>
+</ul>
+
+<div>
+<a id="subsection.bbox_query.optional"/>
+<h4>Optional parameters</h4>
+</div>
+
+<ul>
+<li><strong>into</strong>: the name of a set. If it is omitted, it defaults to the <a href="#section.variables">default set</a> "_".</li>
+</ul>
+
+<div>
+<a id="subsection.bbox_query.description"/>
+<h4>Description</h4>
+</div>
+
+<p>
+The bbox-query returns all nodes that have coordinates within the provided bbox. A node is considered to be within the bbox if it is in the interior or on the boundary of the bbox. The nodes are stored in the set specified by "into".
+</p>
+
+<div>
+<a id="subsection.bbox_query.properties"/>
+<h4>Properties</h4>
+</div>
+
+<div>
+<a id="subsection.bbox_query.examples"/>
 <h4>Examples</h4>
 </div>
 
@@ -1030,6 +1076,7 @@ The union statement collects the output sets of its subelements and returns them
 <h4>Examples</h4>
 </div>
 
+<!-- ==================================================================== //-->
 
 <div>
 <a id="chapter.concepts"/>
@@ -1051,6 +1098,32 @@ The union statement collects the output sets of its subelements and returns them
 <a id="section.data_structures"/>
 <h3>Data structures</h3>
 </div>
+
+<p>
+OSM Server Side Script adheres to the data structure of the <a href="http://wiki.openstreetmap.org/wiki/API">OSM main database</a> as close as possible, but there are differences. This server is intended to respond to advanced queries for spatial data as fast as possible. It does neither provide a possibility to edit data nor the community support features of the <a href="http://wiki.openstreetmap.org/wiki/API">OSM main database</a>. The server mirrors the <a href="http://wiki.openstreetmap.org/wiki/Elements">spatial elements</a> from the OSM main database: <strong>nodes</strong> with their ids and tags, <strong>ways</strong> with their ids, members and tags and <strong>relations</strong> with their ids, members, roles and tags. The ids for the <a href="http://wiki.openstreetmap.org/wiki/Elements">elements</a> are the same as in the <a href="http://wiki.openstreetmap.org/wiki/API">OSM main database</a>.
+</p>
+
+<p>
+Furthermore, the OSM Server Side Script server stores some useful derived data structures. At the moment, these are <strong>areas</strong> and <strong>conflicts</strong>.
+</p>
+
+<p>
+<strong>Areas</strong> are stored with their id, their spatial extend and tags that describe them. The areas are derived by <a href="#section.scripts_rules">user mutable rules</a> from the OSM data. Each area inherits its id and its tags from its pivot element. The tags are copied verbatim from the pivot element. The id is derived as follows:
+<ul>
+<li>An area based on a node has the same id as the node.</li>
+<li>An area based on a way has the the id of the way plus 2,400,000,000.</li>
+<li>An area based on a relation has the id of the relation plus 3,600,000,000.</li>
+</ul>
+Note that two different areas can't have the same pivot element.
+</p>
+
+<p>
+<strong>Conflicts</strong> contain a message that a certain arrangement of <a href="http://wiki.openstreetmap.org/wiki/Elements">elements</a> does not meet the expectations set up by one or more <a href="#section.scripts_rules">rule</a>. They consist of a message and they are attached to the nodes, ways and relations that are in conflict with the rule. They are generated by a <a href="#section.conflict">conflict</a> statement within a rule. They can be retrieved by the <a href="#section.report">report</a> statement.
+</p>
+
+<p>
+The following data structures that appear in the <a href="http://wiki.openstreetmap.org/wiki/API_v0.6">current API</a> of the OSM main database aren't stored here: we don't store timestamps, versions, changesets, any user information or historical data, i.e. deleted elements or old versions of updated elements.
+</p>
 
 <div>
 <a id="section.scripts_rules"/>
@@ -1086,6 +1159,8 @@ The union statement collects the output sets of its subelements and returns them
 <a id="section.database_layout"/>
 <h3>Database Layout</h3>
 </div>
+
+<!-- ==================================================================== //-->
 
 <div>
 <a id="chapter.input_formats"/>
@@ -1171,6 +1246,8 @@ Note that in the third variant the quotation marks are escaped in the usual shel
 wget -O - --post-file=foo.xml http://78.46.81.38/api/interpreter | gunzip
 </code></pre>
 </p>
+
+<!-- ==================================================================== //-->
 
 <div>
 <a id="chapter.output_formats"/>
