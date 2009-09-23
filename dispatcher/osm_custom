@@ -2,7 +2,7 @@
 
 case "$1" in
   start|"")
-        sudo -u olbricht /home/roland/osm-3s/bin/autorestart
+        sudo -u roland /home/roland/osm-3s/bin/autorestart
         ;;
   restart|reload|force-reload)
         echo "Error: argument '$1' not supported" >&2

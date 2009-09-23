@@ -16,5 +16,6 @@ fi
 
 ./database_daemon osm_1 1 &
 ./database_daemon osm_2 2 &
+sleep 5
 ./dispatcher $1 $2 &
 ./fetch_osc $FETCH_OSC_VER &
