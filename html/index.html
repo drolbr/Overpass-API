@@ -1224,10 +1224,42 @@ The <strong>space usage</strong> estimates the expected memory usage of the quer
 <h3>Limits and Quotas</h3>
 </div>
 
+<p>
+Each query is subject to limits and quotas. This protects the server from getting overcrowded by runaway queries. On the other hand, the worries about ressource consumption should bother the normal user as fewly as possible. Thus, the ressource management of the OSM Server Side Script knows two ways of ressource management. A standard query is assessed by the <a href="#section.flow_forecast">Flow Forecast</a>. If this analysis accepts the query, no further restrictions apply to it.
+</p>
+
+<p>
+A query with a <a href="#section.osm_script">manually set timeout</a> will be stopped by the server after the specified amount of time. There is no limit to the amount of time you can sepcify. If you set a manual timeout, please ensure that your client is waiting long enough. Some browsers or other clients cancel a request after 60, 120 or 180 seconds unless you configure them not to do so. If the server aborts a query, you will find the <a href="#section.status_remarks">error message</a> "Your query timed out". You may get this message after a partial response or along with other messages.
+</p>
+
+<p>
+Slightly more complicated are the <strong>space restrictions</strong>. In general, the amount of elements which are in the server's RAM simultaneously is limited by the amount of RAM the server has. Thus, the <a href="#section.flow_forecast">element limit</a> of 10,000,000 element equivalents (these use roughly 500 MB of RAM) is a hard limit. You can <a href="#section.osm_script">assert</a> a lower limit, but not a higher limit. The server aborts the query if it grows to a bigger size than its limit.
+</p>
+
 <div>
 <a id="section.database_layout"/>
 <h3>Database Layout</h3>
 </div>
+
+<p>
+The database is designed to serve complex spatial queries. Note that the OSM database is an extraordinary big database. Thus, the speed of almost all queries is limited by the speed of the server's harddisks. We cope with this problem by keeping data that is spatially related as closely to each other on the disk as possible. This is combined with a rather fine grained data structure. We will give you details to clarify which queries are fast and which are rather slow.
+</p>
+
+<p>
+The data is split up into the skeleton and the tags. The skeleton consists for nodes of their id and coordinates, for ways and relations of their ids and the ids of their members. For nodes and ways, the storage of the skeleton data is organised with respect to the quadtiles they belong to. As relations don't have a spatial position, they are organised by id.
+</p>
+
+<p>
+The data for the tags is organised again spatially in a separate table. But we take into account that keys and values often repeat frequently (like <code>highway=motorway</code>). This favors queries for generic tags like <code>highway=motorway</code> as well as for specific tags like <code>name=Elberfeld</code>. A query for a tag with may values as for example <code>name=*</code> will be comparably slow because it reads and compares large portions of the tag data.
+</p>
+
+<p>
+Another effect of the splitting in skeleton and tag data is that a print query is significatly faster if it does not refer to tags. This is the reason for the "skeleton" and "ids_only" option of the <a href="#section.print">print</a> statement.
+</p>
+
+<p>
+<strong>Areas</strong> and <strong>conflicts</strong> are currently stored in MySQL MyISAM tables. These are anyway rather small amounts of data and should not constitute a bottleneck.
+</p>
 
 <!-- ==================================================================== //-->
 
