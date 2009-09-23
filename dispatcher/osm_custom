@@ -1,8 +1,13 @@
 #!/bin/sh
 
+# Don't forget to adapt this to your local situation
+OSM3S_BASEDIR=/home/roland/osm-3s
+OSM3S_DATADIR=/opt/osm_why_api
+OSM3S_USER=roland
+
 case "$1" in
   start|"")
-        sudo -u roland /home/roland/osm-3s/bin/autorestart
+        sudo -u $OSM3S_USER OSM3S_BASEDIR=$OSM3S_BASEDIR OSM3S_DATADIR=$OSM3S_DATADIR $OSM3S_BASEDIR/bin/autorestart
         ;;
   restart|reload|force-reload)
         echo "Error: argument '$1' not supported" >&2

@@ -1,19 +1,19 @@
 #!/bin/bash
 
-read ARG_1 ARG_2 </opt/osm_why_api/rescue_status
+read ARG_1 ARG_2 <$OSM3S_DATADIR/rescue_status
 
 if [[ $ARG_1 == "dirty" ]]; then
 {
-  cp -p /opt/osm_why_api/osm_2/* /opt/osm_why_api/osm_1/ >/tmp/osm_autorestart
+  cp -p $OSM3S_DATADIR/osm_2/* $OSM3S_DATADIR/osm_1/ >/tmp/osm_autorestart
   ARG_1=$ARG_2
  };
 fi
 if [[ $ARG_2 == "dirty" ]]; then
 {
-  cp -p /opt/osm_why_api/osm_1/* /opt/osm_why_api/osm_2/ >/tmp/osm_autorestart
+  cp -p $OSM3S_DATADIR/osm_1/* $OSM3S_DATADIR/osm_2/ >/tmp/osm_autorestart
   ARG_2=$ARG_1
  };
 fi
 
-cd /home/roland/osm-3s/bin/ >>/tmp/osm_autorestart
+cd $OSM3S_BASEDIR/bin/ >>/tmp/osm_autorestart
 ./init_dispatcher $ARG_1 $ARG_2 >>/tmp/osm_autorestart
