@@ -1367,10 +1367,38 @@ wget -O - --post-file=foo.xml http://78.46.81.38/api/interpreter | gunzip
 <h3>Payload</h3>
 </div>
 
+<p>
+If the query has been answered successfully, you will receive a gzip compressed XML document of MIME type "application/osm3s". It is, as specified by HTTP, announced with header "Content-Encoding: gzip". Thus, your client may uncompress the data before storing it.
+</p>
+
+<p>
+The root-tag of the XML document is "osm-derived". Furthermore, each document contains an attribution note and, in the tag "meta", a timestamp and an information which rule was applied. The timestamp is the timestamp of the OSM data that has been used for the query.
+</p>
+
+<p>
+In the remainder, you get the data your query produced. In general, these are nodes, way and relations in a similar syntax as the <a href="http://wiki.openstreetmap.org/wiki/API">OSM API</a> but without version, user data and timestamp. The <a href="#section.data_structures">areas</a> have the same syntax for tags as nodes, but they only have an id. Most likely, this is data from a <a href="#section.print">print</a> statement.
+</p>
+
 <div>
 <a id="section.status_remarks"/>
 <h3>Status Remarks</h3>
 </div>
+
+<p>
+Basically, you can get three different types of runtime remarks, <strong>state remarks</strong>, <strong>runtime remarks</strong> or <strong>runtime errors</strong>.
+</p>
+
+<p>
+The <strong>state remarks</strong> provide you with information about how much time a certain statement consumed and which output was produced by which statement. They are included if you set in the <a href="#section.osm_script">root statement</a> the parameter <code>debug</code> to <code>verbose</code>. They are tagged as <code>&lt;remark type="state"&gt;</code> and included after the termination of each statement. They contain a timestamp at what time they have finished, the statement's line number and the contents of the stack at that moment.
+</p>
+
+<p>
+The <strong>runtime remarks</strong> inform you about important events that appeared during your request but that don't mean an error. At the moment, only the <a href="#section.add_rule">add_rule</a> and <a href="#section.update_rule">update_rule</a> api calls use this kind of remark to inform you that your request has been successful.
+</p>
+
+<p>
+The <strong>runtime errors</strong> inform you about problems that definitely made your query to fail. The most common would be a <a href="#section.quotas">timeout</a> or <a href="#section.quotas">out of memory</a> error. But also a lot of unrecoverable database errors will be treated that way. Or ways that refer to nonexisiting nodes. In most of these cases you can't do much yourself, but please write an email to <em>osm3s.admin</em>&nbsp;AT&nbsp;<em>lokove.de</em>.
+</p>
 
 <div>
 <a id="section.hypertext_reports"/>

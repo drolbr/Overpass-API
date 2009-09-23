@@ -71,8 +71,8 @@ void Conflict_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
 	 it != item_set.get_nodes().end(); )
     {
       temp<<"<a href=\"http://www.openstreetmap.org/?"
-	  <<"lat="<<setprecision(12)<<((double)(it->lat))/10000000<<'&'
-	  <<"lon="<<setprecision(12)<<((double)(it->lon))/10000000<<'&'
+	  <<"lat="<<setprecision(12)<<((double)(it->lat))/10000000<<"&amp;"
+	  <<"lon="<<setprecision(12)<<((double)(it->lon))/10000000<<"&amp;"
 	  <<"zoom=16\">node "<<it->id<<"</a>";
       if (++it != item_set.get_nodes().end())
 	temp<<", ";
