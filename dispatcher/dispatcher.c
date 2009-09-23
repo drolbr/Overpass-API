@@ -27,6 +27,7 @@ const char* DB1_FIFO = "/tmp/database_1.pipe";
 const char* DB2_FIFO = "/tmp/database_2.pipe";
 const char* SMALL_STATUS_FILE = "/tmp/small_status";
 const char* BIG_STATUS_FILE = "/tmp/big_status";
+const char* RESCUE_STATUS_FILE = "/opt/osm_why_api/rescue_status";
 const char* LOGFILE = "/opt/osm_why_api/dispatcher.log";
 
 const uint TOTAL_MEMORY = 40*1000*1000;
@@ -134,6 +135,17 @@ void write_status_files(const State& state)
        it != state.processes.end(); ++it)
     big_status<<it->database_id<<' '<<it->timeout_time<<' '<<it->reserved_memory<<'\n';
   big_status.close();
+
+  ofstream rescue_status(RESCUE_STATUS_FILE);
+  if (state.db1.state == Database_State::DATA_UPDATE)
+    rescue_status<<"dirty ";
+  else
+    rescue_status<<state.db1.last_changefile<<' ';
+  if (state.db2.state == Database_State::DATA_UPDATE)
+    rescue_status<<"dirty\n";
+  else
+    rescue_status<<state.db2.last_changefile<<'\n';
+  rescue_status.close();
 }
 
 void check_pending_database(State& state, MYSQL* mysql)

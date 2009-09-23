@@ -24,7 +24,7 @@ backend_types_h = backend/node_strings_file_io.h backend/way_strings_file_io.h b
 backend_objects = node_strings_file_io.o way_strings_file_io.o relation_strings_file_io.o
 backend_executables = bin/import_osm bin/apply_osc
 
-dispatcher_executables = bin/dispatcher bin/database_daemon bin/timestamp_of bin/fetch_osc bin/apply_gz_osc bin/init_dispatcher
+dispatcher_executables = bin/dispatcher bin/database_daemon bin/timestamp_of bin/fetch_osc bin/apply_gz_osc bin/init_dispatcher bin/autorestart
 
 main: $(executables) $(backend_executables) $(dispatcher_executables)
 
@@ -156,6 +156,10 @@ bin/apply_gz_osc: dispatcher/apply_gz_osc
 	chmod 755 $@
 
 bin/init_dispatcher: dispatcher/init_dispatcher
+	cp $< $@
+	chmod 755 $@
+
+bin/autorestart: dispatcher/autorestart
 	cp $< $@
 	chmod 755 $@
 

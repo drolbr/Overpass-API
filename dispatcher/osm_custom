@@ -1,0 +1,18 @@
+#!/bin/sh
+
+case "$1" in
+  start|"")
+        sudo -u olbricht /home/roland/osm-3s/bin/autorestart
+        ;;
+  restart|reload|force-reload)
+        echo "Error: argument '$1' not supported" >&2
+        exit 3
+        ;;
+  stop)
+        # No-op
+        ;;
+  *)
+        echo "Usage: $0 [start|stop]" >&2
+        exit 3
+        ;;
+esac
