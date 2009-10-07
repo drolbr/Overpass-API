@@ -102,16 +102,17 @@ use cases, and you are kindly invited to add other use cases in the wiki.</p>
 <h3>To which country belongs this location?</h3>
 </div>
 
+<form action="api/interpreter" method="post" accept-charset="UTF-8">
 <p>
 To determine in which areas a location specified by latitude and longitude lies, just change the latitude and longitude in the following query to appriate values: If your browser asks you what to do, just open the file with a text editor.<br/>
-<form action="api/interpreter" method="post" accept-charset="UTF-8">
-  <textarea name="data" rows="3" cols="80">&lt;coord-query lat="51.25" lon="7.15"/&gt;
+<textarea name="data" rows="3" cols="80">&lt;coord-query lat="51.25" lon="7.15"/&gt;
 &lt;print mode="body"/&gt;
 </textarea>
-  <input type="submit" value="Explore"/>
-</form><br/>
+<input type="submit" value="Explore"/>
+<br/>
 Of course, you can send this query also via any other <a href="#chapter.input_formats">way of submitting input</a> to <a href="#section.interpreter">/api/interpreter</a>. You will recieve a gzip-compressed XML-file in an <a href="#chapter.output_formats">adapted OSM format</a> that <a href="#section.payload">contains the areas</a> the location lies in.
 </p>
+</form>
 
 <p>
 The first command, <a href="#section.coord_query">&lt;coord-query lat="51.25" lon="7.15"/&gt;</a>, searches the database for every area that covers the location defined by the latitude and longitude values. Then it stores the result into the <a href="#section.variables">default set</a>. Afterwards, the second command <a href="#section.print">&lt;print mode="body"/&gt;</a> prints the content of the default set. The mode="body" indicates there that it shall print the <a href="#section.data_structures">id</a> of the area as well as its <a href="#section.data_structures">tags</a>.<br/>
@@ -132,10 +133,10 @@ This is in general a two-step process. For the first step, determine the id of t
 For example, the area representing the German city "Wuppertal" has id 3,600,062,478 because its pivot element is the relation 62,478 describing the borders of Wuppertal. In particular this means that area ids are as stable as the ids in the OSM database. If you don't know the id of the OSM entity in question, then can simply <a href="#section.query">query</a> it.
 </p>
 
+<form action="api/interpreter" method="post" accept-charset="UTF-8">
 <p>
 The second step is the query to actually download the area: This query will take 15-30 seconds before it gives a response depending on server load.<br/>
-<form action="api/interpreter" method="post" accept-charset="UTF-8">
-  <textarea name="data" rows="8" cols="80">&lt;union&gt;
+<textarea name="data" rows="8" cols="80">&lt;union&gt;
   &lt;area-query ref="3600062478"/&gt;
   &lt;recurse type="node-relation" into="rels"/&gt;
   &lt;recurse type="node-way"/&gt;
@@ -143,15 +144,16 @@ The second step is the query to actually download the area: This query will take
 &lt;/union&gt;
 &lt;print mode="body"/&gt;
 </textarea>
-  <input type="submit" value="Download"/>
-</form><br/>
+<input type="submit" value="Download"/>
+<br/>
 Again, you can send this query also via any other <a href="#chapter.input_formats">way of submitting input</a> to <a href="#section.interpreter">/api/interpreter</a>. You will recieve a gzip-compressed XML-file in an <a href="#chapter.output_formats">adapted OSM format</a> that <a href="#section.payload">contains</a> all nodes that lie in this area (including all the nodes on the boundary), all ways that are referred from such a node and all relations that are referred by such a way or such a node.
 </p>
+</form>
 
+<form action="api/interpreter" method="post" accept-charset="UTF-8">
 <p>
 If you prefer to receive additionally all nodes any way refers to, you can change the query to: This query also will take some time depending on server load before it gives a response.<br/>
-<form action="api/interpreter" method="post" accept-charset="UTF-8">
-  <textarea name="data" rows="16" cols="80">&lt;osm-script timeout="180"&gt;
+<textarea name="data" rows="16" cols="80">&lt;osm-script timeout="180"&gt;
 
 &lt;union&gt;
   &lt;area-query ref="3600062478"/&gt;
@@ -167,9 +169,10 @@ If you prefer to receive additionally all nodes any way refers to, you can chang
 
 &lt;/osm-script&gt;
 </textarea>
-  <input type="submit" value="Download"/>
-</form><br/>
+<input type="submit" value="Download"/>
+<br/>
 </p>
+</form>
 
 <p>
 We briefly explain both queries and start with the first one: The statement <a href="#section.union">&lt;union&gt;</a> <a href="#section.other_sets">collects</a> the output of the enclosed statements in line 2 to 6. The block starts with the query <a href="#section.area_query">&lt;area-query ref="3600062478"/&gt;</a>. This statement returns all the nodes that lie inside or on the border of the area with id given by the parameter ref and stores them in into the <a href="#section.variables">default set</a>. In the third line, <a href="#section.recurse">&lt;recurse type="node-relation" into="rels"/&gt;</a> returns all relations that have as member a node from the input, in this case the <a href="#section.variables">default set</a>, into the set "rels". As this happens within an <a href="#section.union">union</a>-block, the new content of the set "rels" is added to the result of the <a href="#section.union">union</a>-block as a whole. In the next line, <a href="#section.recurse">&lt;recurse type="node-way"/&gt;</a> puts into the <a href="#section.variables">default set</a> the ways that refer to at least one node from the <a href="#section.variables">default set</a>. In particular, the default set now contains only ways, the <a href="#section.union">union</a>-block has collected so far all nodes and ways and some relations. In the last line of the block, <a href="#section.recurse">&lt;recurse type="way-relation"/&gt;</a> puts into the <a href="#section.variables">default set</a> all relations that refer to at least one way from the <a href="#section.variables">default set</a> beforehand. The <a href="#section.union">union</a>-block again collects these relations. Now the <a href="#section.union">union</a>-block contains altogether the nodes within the area and the ways and relations that refer to such a node or way. As there is no output parameter given, this set is stored into the <a href="#section.variables">default set</a>. The statement after the block, <a href="#section.print">&lt;print mode="body"/&gt;</a> then prints the entire content of the <a href="#section.variables">default set</a> with all its details as specified by the value "body" of the parameter "mode".
@@ -184,41 +187,44 @@ The second query differs from the first one in two aspects: It exhibits the root
 <h3>Why doesn't my city appear?</h3>
 </div>
 
+<form action="api/interpreter" method="post" accept-charset="UTF-8">
 <p>
 You may get into the situation that you don't find an area where you expect one. In particular, a coord-query like the <a href="#section.reverse_gazetteer">first</a> use case doesn't contain the data of an area although there exists for example a relation to create it. In this case, you can query the <a href="#section.data_structures">conflicts</a> that prevented the respective area creation <a href="#section.queries_rules">rule</a> to create an area from this. The following query will try to find conflicts related to the relation of the German city "Wuppertal": You should replace "Wuppertal, Stadt" by a suitable value for you relation.
-<form action="api/interpreter" method="post" accept-charset="UTF-8">
-  <textarea name="data" rows="5" cols="80">&lt;query type="relation"&gt;
+<textarea name="data" rows="5" cols="80">&lt;query type="relation"&gt;
   &lt;has-kv k="name" v="Wuppertal, Stadt"/&gt;
 &lt;/query&gt;
 &lt;report/&gt;
 </textarea>
-  <input type="submit" value="Find Conflicts"/>
-</form><br/>
+<input type="submit" value="Find Conflicts"/>
+<br/>
 The server will return a <a href="#section.hypertext_reports">human readable HTML document</a> that lists the conflicts related to this relation; these are generated by <a href="#section.rule_example">user editable rules</a> and should be self-explanatory. The result can be empty (and probably will be empty for Wuppertal because the respective area has successfully been created), but we simply can't leave an area in permanently broken state to show how the conflict feedback system works.
 </p>
+</form>
 
+<form action="api/interpreter" method="post" accept-charset="UTF-8">
 <p>
 If you get an empty result from the first query, check whether there exists a relation at all:
-<form action="api/interpreter" method="post" accept-charset="UTF-8">
-  <textarea name="data" rows="5" cols="80">&lt;query type="relation"&gt;
+<textarea name="data" rows="5" cols="80">&lt;query type="relation"&gt;
   &lt;has-kv k="name" v="Wuppertal, Stadt"/&gt;
 &lt;/query&gt;
 &lt;print mode="body"/&gt;
 </textarea>
-  <input type="submit" value="Find Relations"/>
-</form><br/>
+<input type="submit" value="Find Relations"/>
+<br/>
 This searches the data for all relations that match the given criteria, i.e. that have a tag with key "name" and value "Wuppertal".
 </p>
+</form>
 
+<form action="api/interpreter" method="post" accept-charset="UTF-8">
 <p>
 If you already know the id of your relation, you can use instead the following to find conflicts:
-<form action="api/interpreter" method="post" accept-charset="UTF-8">
-  <textarea name="data" rows="3" cols="80">&lt;id-query type="relation" ref="62478"/&gt;
+<textarea name="data" rows="3" cols="80">&lt;id-query type="relation" ref="62478"/&gt;
 &lt;report/&gt;
 </textarea>
-  <input type="submit" value="Find Conflicts"/>
-</form><br/>
+<input type="submit" value="Find Conflicts"/>
+<br/>
 </p>
+</form>
 
 <p>
 We give a short overview of the used statement: the query <a href="#section.query">&lt;query type="relation"&gt;&lt;has-kv k="name" v="Wuppertal, Stadt"/&gt;&lt;/query&gt;</a> searches for relations (this is specified by the parameter type) that have a tag with key "name" and value "Wuppertal, Stadt" (this condition is specified by the tag <a href="#section.query">&lt;has-kv k="name" v="Wuppertal, Stadt"/&gt;</a>. A full explanation of the quite versatile syntax of the query statement can be found in <a href="#section.query">its documentation</a>. The <a href="#section.id_query">&lt;id-query type="relation" ref="62478"/&gt;</a> by contrast finds the single relation with id 62478 as specified by the parameter ref. Both store their result into the <a href="#section.variables">default set</a> because there is no other set specified. Then, the statement <a href="#section.report">&lt;report/&gt;</a> prints to the user all conflicts that are related to an item in its input, again the <a href="#section.variables">default set</a>. It doesn't change any values in the query. Alternatively, the <a href="#section.print">&lt;print mode="body"/&gt;</a> simply prints the entire content of the <a href="#section.variables">default set</a>.
@@ -233,13 +239,13 @@ We give a short overview of the used statement: the query <a href="#section.quer
 Not all relations that refer to ways give automatically rise to a relation. The server recognizes a certain relation (or any other designated set of ways) as an area if a <a href="#section.queries_rules">rule</a> matches this relation or set of ways. The amazing thing is that you (or anybody else) can <a href="#section.add_rule">add</a> rules or <a href="#section.update_rule">change</a> the existing ones. Now assume that you want to designate all relations with a tag with key "foo" and value "bar" to represent areas.
 </p>
 
+<form action="api/get_rule" method="post" accept-charset="UTF-8">
 <p>
 You can <a href="#section.get_rule">retrieve</a> an existing rule to get a blueprint for our new rule. For example, the following query will return the rule that creates areas from administrative units:
-<form action="api/get_rule" method="post" accept-charset="UTF-8">
-  <textarea name="data" rows="2" cols="80">&lt;osm-script name="Area::Create_from_admin_level"/&gt;
+<textarea name="data" rows="2" cols="80">&lt;osm-script name="Area::Create_from_admin_level"/&gt;
 </textarea>
-  <input type="submit" value="Retrieve rule"/>
-</form><br/>
+<input type="submit" value="Retrieve rule"/>
+<br/>
 This will give you a result like the following:
 <code><pre>
 &lt;osm-script name="Area::Create_from_admin_level" version="1"&gt;
@@ -264,11 +270,12 @@ This will give you a result like the following:
 &lt;/osm-script&gt;
 </pre></code>
 </p>
+</form>
 
+<form action="api/add_rule" method="post" accept-charset="UTF-8">
 <p>
 We take the following modifications: In the first line, we replace the <a href="#section.osm_script">name</a> of the rule by a new, descriptive name because we are adding a new rule. We remove the <a href="#section.osm_script">version tag</a> because this will be chosen by the server. Then, we replace the two lines starting with <a href="#section.query">has-kv</a> by a single line that describes the designation for the relations in question. Then we post the new rule to <a href="#section.add_rule">add_rule</a>:
-<form action="api/add_rule" method="post" accept-charset="UTF-8">
-  <textarea name="data" rows="21" cols="80">&lt;osm-script name="Example::Foo"&gt;
+<textarea name="data" rows="21" cols="80">&lt;osm-script name="Example::Foo"&gt;
 
 &lt;query type="relation"&gt;
   &lt;has-kv k="foo" v="bar"/&gt;
@@ -288,26 +295,33 @@ We take the following modifications: In the first line, we replace the <a href="
 
 &lt;/osm-script&gt;
 </textarea>
-  <input type="submit" value="Add sample rule"/>
-</form><br/>
+<input type="submit" value="Add sample rule"/>
+<br/>
 You should recieve a message that the rule has successfully been added along with its new version number. If you recieve a the error that a rule with this name already exists, you have probably not changed the name in the above rule (and another guy already has left this example in the rule base).
 </p>
+</form>
 
+<form action="api/update_rule" method="post" accept-charset="UTF-8">
 <p>
 To avoid cluttering the server, please complete this tutorial with removing your rule. Just call <a href="#section.update_rule">update_rule</a> with the empty rule and the parameter <a href="#section.osm_script">replace</a> set to the version number just recieved:
-<form action="api/update_rule" method="post" accept-charset="UTF-8">
-  <textarea name="data" rows="2" cols="80">&lt;osm-script name="Example::Foo" replace="0"/&gt;
+<textarea name="data" rows="2" cols="80">&lt;osm-script name="Example::Foo" replace="0"/&gt;
 </textarea>
-  <input type="submit" value="Delete rule"/>
-</form><br/>
-You should recieve a message that the rule has successfully been updated. If you recieve the error that you should provide the last version-id, then call again <a href="#section.get_rule">get_rule</a> on you rule:
+<input type="submit" value="Delete rule"/>
+<br/>
+You should recieve a message that the rule has successfully been updated.
+</p>
+</form>
+
 <form action="api/get_rule" method="post" accept-charset="UTF-8">
-  <textarea name="data" rows="2" cols="80">&lt;osm-script name="Example::Foo"/&gt;
+<p>
+If you recieve the error that you should provide the last version-id, then call again <a href="#section.get_rule">get_rule</a> on you rule:
+<textarea name="data" rows="2" cols="80">&lt;osm-script name="Example::Foo"/&gt;
 </textarea>
-  <input type="submit" value="Retrieve rule"/>
-</form><br/>
+<input type="submit" value="Retrieve rule"/>
+<br/>
 The result contains the correct version number.
 </p>
+</form>
 
 <p>
 We conclude by explaining the statements in the rule "Area::Create_from_admin_level": The first line <a href="#section.osm_script">&lt;osm-script name="Area::Create_from_admin_level" version="1"&gt;</a> is an explicit statement of the <a href="#section.osm_script">root element</a> because a rule <a href="#section.queries_rules">needs always</a> a name and the name is provided as parameter of the root element. The <a href="#section.osm_script">version tag</a> is added by the server to indicate which version of the rule it has returned - in our example the most recent version which is by incidence 1.
@@ -1272,9 +1286,9 @@ Another effect of the splitting in skeleton and tag data is that a print query i
 Basically, the input is a complete XML document with root element <a href="#section.osm_script">osm-script</a>. There is no formal DTD but the allowed elements are exactly the statements as explained in the <a href="#chapter.statements">statement</a> chapter of this manual. This includes for each statement its allowed subelements, called substatements in <a href="#chapter.statements">this</a> context, and tags, called parameters in <a href="#chapter.statements">this</a> context. The XML syntax is modified in two ways: To make input as brief as possible, you can omit some parts of the XML code. To make input as flexible as possible, you can encode the input in different manners. In the following sections, we explain both modifications in detail with the simple query <code>&lt;print mode="body"/&gt;</code>
 </p>
 
+<form action="api/interpreter" method="post" accept-charset="UTF-8">
 <p>
 You can always omit the file type declaration. For example, the input
-<form action="api/interpreter" method="post" accept-charset="UTF-8">
   <textarea name="data" rows="7" cols="80">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;osm-script&gt;
 
@@ -1282,26 +1296,35 @@ You can always omit the file type declaration. For example, the input
 
 &lt;/osm-script&gt;
 </textarea>
-  <input type="submit" value="Return nothing"/>
-</form><br/>
-and the input
+<input type="submit" value="Return nothing"/>
+</p>
+</form>
+
 <form action="api/interpreter" method="post" accept-charset="UTF-8">
-  <textarea name="data" rows="6" cols="80">&lt;osm-script&gt;
+<p>
+and the input
+<textarea name="data" rows="6" cols="80">&lt;osm-script&gt;
 
 &lt;print mode="body"/&gt;
 
 &lt;/osm-script&gt;
 </textarea>
-  <input type="submit" value="Return nothing"/>
-</form><br/>
-are from the server's point of view equal. If you don't need to specify any parameters in the <a href="#section.osm_script">root element</a>, you can even omit the root element itself. So, even the input
+<input type="submit" value="Return nothing"/>
+<br/>
+are from the server's point of view equal.
+</p>
+</form>
+
 <form action="api/interpreter" method="post" accept-charset="UTF-8">
-  <textarea name="data" rows="2" cols="80">&lt;print mode="body"/&gt;
+<p>
+If you don't need to specify any parameters in the <a href="#section.osm_script">root element</a>, you can even omit the root element itself. So, even the input
+<textarea name="data" rows="2" cols="80">&lt;print mode="body"/&gt;
 </textarea>
-  <input type="submit" value="Return nothing"/>
-</form><br/>
+<input type="submit" value="Return nothing"/>
+<br/>
 is for the server the same input as the above examples.
 </p>
+</form>
 
 <p>
 We explain the different possible encodings. To make it possible to submit data via HTML forms, you can either send your data verbatim or prefix it by "<code>data=</code>" and escape all special characters to a sequence of a percent sign, followed by the value of the respective byte as hexdecimal number. Multi-byte characters should be expanded in a individual sequence for each byte. For example, the inputs
@@ -1405,10 +1428,76 @@ The <strong>runtime errors</strong> inform you about problems that definitely ma
 <h3>Hypertext Reports</h3>
 </div>
 
+<p>
+If your query contains only <a href="#section.report">report</a> statements as statements with output, the server answers your quey with a human readable HTML document. It contains  messages that have been generated by <a href="#section.conflict">conflict</a> statements during the rule computation. Each is presented in a paragraph. If the message contains nodes, there will be direct links to the respective location on the <a href="http://www.openstreetmap.org">OpenStreetMap.org</a> map.
+</p>
+
 <div>
 <a id="section.static_feedback"/>
 <h3>Static Error Feedback</h3>
 </div>
+
+<p>
+The static error feedback will be displayed if the server can't make a feasible query out of your input. It consists of up to four sections, "Encoding Remarks", "Your input formatted for XML parsing", "Static Remarks" and "Flow Forecast". The later sections don't appear if in the earlier sections an error has been detected.
+</p>
+
+<p>
+The section <strong>Encoding Remarks</strong> contains information how the server has extracted in input from the <a href="#chapter.input_formats">incoming data</a>. Details about the possible formats are explained in the chapter <a href="#chapter.input_formats">Input formats</a>. The server tells you whether it has found data by method GET (that means, it has found something that looks like data in the request URI) or uses data from PUT or has not found any data at all - this will be indicated as "only whitespace found". The next issue is the encoding: either your data starts with a "&lt;", or it is assumed to be CGI encoded. Again, the server tells you in this section what it assumes your data to be. The third thing that's detected automatically is whether your query has an explicit <a href="#section.osm_script">root statement</a> and DTD declaration. If no root statement or DTD declaration is found, the server adds one and tells you that it has done so.
+</p>
+
+<p>
+The section <strong>Your input formatted for XML parsing</strong> consists of a pretty printed version of what the server has taken as input from the client. If this does not match your intended input, probably something has gone wrong during the <a href="#chapter.input_formats">input decoding</a>. If your input is properly displayed, the problem appears in a later step of processing. If there exists a static remark for a line, it is displayed in green and a link with letter "R" in parentheses is appended. If there exists a static error related to a certain line, the line is displayed in red and a link with letter "E" in parentheses is appended.
+</p>
+
+<p>
+The section <strong>Static Remarks</strong> contains for a feasible query only remarks, no errors. The remarks contain information that might be useful for further analysis and do not indicate any trouble with the <a href="#section.queries_rules">script</a>. The errors indicate that your script is syntactically incorrect. There are errors that are common to most statements, errors which are specific for some statements and errors that appear only with <a href="#section.queries_rules">rules</a>.
+</p>
+
+<p>
+The common and general errors include:
+</p>
+
+<!--
+  temp<<"Unknown tag \""<<element<<"\" in line "<<current_line_number()<<'!';
+      temp<<"Unknown attribute \""<<attr[i]<<"\" in element \""<<element<<"\".";
+  temp<<"Element \""<<child->get_name()<<"\" cannot be subelement of element \""<<parent<<"\".";
+      temp<<"An area-query as substatement is only allowed for queries of type \"node\".";
+      temp<<"A query statement may contain at most one area-query or bbox-query "
+	  <<"as substatement.";
+      temp<<"Element \""<<name<<"\" must not contain text.";
+    temp<<"For the attribute \"type\" of the element \"query\""
+	<<" the only allowed values are \"node\", \"way\" or \"relation\"."; et al
+      temp<<"A bbox-query as substatement is only allowed for queries of type \"node\".";
+    temp<<"For the attribute \"k\" of the element \"has-kv\""
+	<<" the only allowed values are non-empty strings.";
+    temp<<"For the attribute \"ref\" of the element \"area-query\""
+	<<" the only allowed values are positive integers.";
+    temp<<"For the attribute \"s\" of the element \"bbox-query\""
+	<<" the only allowed values are floats between -90.0 and 90.0.";
+  
+    add_static_error("Adding a rule requires the name of the rule.");
+    add_static_error("Providing which version to replace while adding a rule is not allowed.");
+    add_static_error("Providing a version-id while adding a rule is not allowed.");
+    add_static_error("No content between start and end of the root-tag.");
+./add_rule.c
+        add_static_error("Loading a rule requires the name of the rule.");
+        add_static_error("Providing which version to replace while loading rules is not allowed.");
+./maintenance/load_rules.c
+      add_static_error("No content between start and end of the root tag allowed when getting a rule.");
+    add_static_error("Retrieving a rule requires the name of the rule.");
+    add_static_error("Providing a version which to replace while getting a rule is not allowed.");
+./get_rule.c
+    add_static_error("Updating a rule requires the name of the rule.");
+    add_static_error("Updating a rule requires providing its last version-id.");
+    add_static_error("Providing an arbitrary version-id while updating a rule is not allowed.");
+./update_rule.c
+  
+temp<<"Timeout is set to "<<timeout<<", element_limit is "<<elem_limit;
+-->
+
+<p>
+<strong>Flow Forecast</strong>
+</p>
 
 </body>
 </html>
