@@ -1462,7 +1462,7 @@ The static error feedback will be displayed if the server can't make a feasible 
 </p>
 
 <p>
-The section <strong>Encoding Remarks</strong> contains information how the server has extracted in input from the <a href="#chapter.input_formats">incoming data</a>. Details about the possible formats are explained in the chapter <a href="#chapter.input_formats">Input formats</a>. The server tells you whether it has found data by method GET (that means, it has found something that looks like data in the request URI) or uses data from PUT or has not found any data at all - this will be indicated as "only whitespace found". The next issue is the encoding: either your data starts with a "&lt;", or it is assumed to be CGI encoded. Again, the server tells you in this section what it assumes your data to be. The third thing that's detected automatically is whether your query has an explicit <a href="#section.osm_script">root statement</a> and DTD declaration. If no root statement or DTD declaration is found, the server adds one and tells you that it has done so.
+The section <strong>Encoding Remarks</strong> contains information how the server has extracted the input from the <a href="#chapter.input_formats">incoming data</a>. Details about the possible formats are explained in the chapter <a href="#chapter.input_formats">Input formats</a>. The server tells you whether it has found data by method GET (that means, it has found something that looks like data in the request URI) or uses data from PUT or has not found any data at all - this will be indicated as "only whitespace found". The next issue is the encoding: either your data starts with a "&lt;", or it is assumed to be CGI encoded. Again, the server tells you in this section what it assumes your data to be. The third thing that's detected automatically is whether your query has an explicit <a href="#section.osm_script">root statement</a> and DTD declaration. If no root statement or DTD declaration is found, the server adds one and tells you that it has done so.
 </p>
 
 <p>
@@ -1479,58 +1479,45 @@ The common and general errors include:
 <ul>
 <li><code>Unknown tag "</code>element<code>" in line "</code>line number<code>"!</code>: This means that the tag you try to use as statement is not a known <a href="#chapter.statements">name of a statement</a>. Please check if you have misspelled the tag.</li>
 <li><code>Unknown attribute "</code>attribute<code>" in element "</code>element<code>".</code>: This means that you use an unknown attribute on a known <a href="#chapter.statements">statement</a>. Please check if you have misspelled the attribute name at the description of the respective <a href="#chapter.statements">statement</a>.</li>
-<li><code>Element "</code><code>" cannot be subelement of element "</code><code>".</code>: </li>
-<li><code>Element "</code><code>" must not contain text.</code></li>
-<li><code>For the attribute "</code><code>" of the element "</code><code>" the only allowed values are</code> some description<code>.</code>: </li>
+<li><code>Element "</code><code>" cannot be subelement of element "</code><code>".</code>: For the most statements, only few statements make sense as substatements. Please read the <a href="#chapter.statements">description</a> of the outer <a href="#chapter.statements">statement</a> to determine which substatements are possible.</li>
+<li><code>Element "</code><code>" must not contain text.</code>: Only very few statements like <a href="#section.report">report</a> accept text as subelement.</li>
+<li><code>For the attribute "</code><code>" of the element "</code><code>" the only allowed values are</code> some description<code>.</code>: The possible value of some description varies with the statements and their attributes. <em>Some description</em> designates the class of allowed values. These can be a list of fixed values. Or it can be degrees of latitude or longitude, i.e. floats between -90.0 and 90.0 respective -180.0 and 180.0, e.g. in the <a href="#section.bbox_query">bbox-query</a> or <a href="#section.coord_query">coord-query</a> statement. Or it can be an id, i.e. a positive integer, e.g. in the <a href="#section.area_query">area-query</a> or <a href="#section.id_query">id-query</a> statement. Or it can be a nonempty string like in the <em>has-kv</em> substatement of a <a href="#section.query">query</a> statement.</li>
 </ul>
 
-<!--
-    temp<<"For the attribute \"type\" of the element \"query\""
-	<<" the only allowed values are \"node\", \"way\" or \"relation\"."; et al
-      temp<<"A bbox-query as substatement is only allowed for queries of type \"node\".";
-    temp<<"For the attribute \"k\" of the element \"has-kv\""
-	<<" the only allowed values are non-empty strings.";
-    temp<<"For the attribute \"ref\" of the element \"area-query\""
-	<<" the only allowed values are positive integers.";
-    temp<<"For the attribute \"s\" of the element \"bbox-query\""
-	<<" the only allowed values are floats between -90.0 and 90.0.";
-
-      temp<<"An area-query as substatement is only allowed for queries of type \"node\".";
-      temp<<"A query statement may contain at most one area-query or bbox-query "
-	  <<"as substatement.";
-  
-    add_static_error("Adding a rule requires the name of the rule.");
-    add_static_error("Providing which version to replace while adding a rule is not allowed.");
-    add_static_error("Providing a version-id while adding a rule is not allowed.");
-    add_static_error("No content between start and end of the root-tag.");
-./add_rule.c
-        add_static_error("Loading a rule requires the name of the rule.");
-        add_static_error("Providing which version to replace while loading rules is not allowed.");
-./maintenance/load_rules.c
-      add_static_error("No content between start and end of the root tag allowed when getting a rule.");
-    add_static_error("Retrieving a rule requires the name of the rule.");
-    add_static_error("Providing a version which to replace while getting a rule is not allowed.");
-./get_rule.c
-    add_static_error("Updating a rule requires the name of the rule.");
-    add_static_error("Updating a rule requires providing its last version-id.");
-    add_static_error("Providing an arbitrary version-id while updating a rule is not allowed.");
-./update_rule.c
-  
-temp<<"Timeout is set to "<<timeout<<", element_limit is "<<elem_limit;
--->
-
+<p>
+There exist the following errors related to a specific statement:
+</p>
 <ul>
-<li><code></code></li>
-<li><code></code></li>
-<li><code></code></li>
-<li><code></code></li>
-<li><code></code></li>
-<li><code></code></li>
+<li>For the <a href="#section.query">query</a> statement, <code>An area-query as substatement is only allowed for queries of type "node"</code>: You can restrict spatially the results of a query statement. But you can only restrict queries for nodes. For ways and relations, there is no clear notion of where they spatially belong to. Support for ways and relations will be added when a clear decision has been made by the <a href="http://www.openstreetmap.org">OpenStreetMap</a> community about semantics.</li>
+<li>For the <a href="#section.query">query</a> statement, <code>A query statement may contain at most one area-query or bbox-query as substatement.</code>: You can restrict spatially the results of a query statement. But you can only use one spatial restriction per query statement.</li>
+</ul>
+
+<p>
+You may get the following errors on the <a href="#section.osm_script">root element</a> if you perform another <a href="#chapter.interface_calls">interface call</a> than <a href="#section.interpreter">/api/interpreter</a>:
+</p>
+<ul>
+<li>For the <a href="#section.add_rule">/api/add_rule</a> call, <code>Adding a rule requires the name of the rule.</code>: Any <a href="#section.queries_rules">rule</a> must have a unique name and the name must be added as value of the <code>name</code> attribute for the <a href="#section.osm_script">root element</a>.</li>
+<li>For the <a href="#section.add_rule">/api/add_rule</a> call, <code>Providing which version to replace while adding a rule is not allowed.</code>: This api call lets you add new and only new rules. Hence, there can't be a <a href="#section.queries_rules">version to replace</a> of this rule.</li>
+<li>For the <a href="#section.add_rule">/api/add_rule</a> call, <code>Providing a version-id while adding a rule is not allowed.</code>: This api call lets you add new and only new rules. Thus, the <a href="#section.queries_rules">version</a> of the new rule will be determined by the server.</li>
+<li>For the <a href="#section.add_rule">/api/add_rule</a> call, <code>No content between start and end of the root-tag.</code>: You are trying to add an empty rule. This doesn't make sense. If you don't intended to upload an empty rule, please check the above section <em>Your input formatted for XML parsing</em> to determine what has happened to your input.</li>
+<li>For the <a href="#section.get_rule">/api/get_rule</a> call, <code>No content between start and end of the root tag allowed when getting a rule.</code>: You are trying to retrieve an existing rule. Thus, there is no use for any content inside the <a href="#section.osm_script">root element</a>.</li>
+<li>For the <a href="#section.get_rule">/api/get_rule</a> call, <code>Retrieving a rule requires the name of the rule.</code>: Any <a href="#section.queries_rules">rule</a> must have a unique name and the name must be added as value of the <code>name</code> attribute for the <a href="#section.osm_script">root element</a>.</li>
+<li>For the <a href="#section.get_rule">/api/get_rule</a> call, <code>Providing a version which to replace while getting a rule is not allowed.</code>: This api call lets you retrieve rules. Most probably, you wanted to select a certain version of a rule. You can do so by using the <em>version</em> attribute of the <a href="#section.osm_script">root element</a>.</li>
+<li>For the <a href="#section.update_rule">/api/update_rule</a> call, <code>Updating a rule requires the name of the rule.</code>: Any <a href="#section.queries_rules">rule</a> must have a unique name and the name must be added as value of the <code>name</code> attribute for the <a href="#section.osm_script">root element</a>.</li>
+<li>For the <a href="#section.update_rule">/api/update_rule</a> call, <code>Updating a rule requires providing its last version-id.</code>: You are trying to replace an existing rule. To prevent <a href="#section.queries_rules">accidental edits</a>, you must specify the most current version of the existing rule as value to the <em>replace</em> attribute of the <a href="#section.osm_script">root element</a>.</li>
+<li>For the <a href="#section.update_rule">/api/update_rule</a> call, <code>Providing an arbitrary version-id while updating a rule is not allowed.</code>: You are trying to replace an existing rule. You must specify the most recent version of the existing rule as value to the <em>replace</em> attribute of the <a href="#section.osm_script">root element</a>. But you can't specify the version id of the new version of the <a href="#section.queries_rules">rule</a>; the server itself selects to version id of the new version.</li>
+</ul>
+
+<!-- <p>
+The only existing remark so far is:
+</p>
+<ul>
+<li><code>Timeout is set to </code>timeout<code>, element_limit is </code>count: </li>
 </ul>
 
 <p>
 <strong>Flow Forecast</strong>
-</p>
+</p> -->
 
 </body>
 </html>
