@@ -93,9 +93,7 @@
 <a href="#section.rule_example">Declare a new type of area</a><br/>
 </p>
 
-<p>The following examples are some sample use cases to give you an idea
-what you can do with the system. Of course, there are many more useful
-use cases, and you are kindly invited to add other use cases in the wiki.</p>
+<p>The following examples are some sample use cases to give you an idea what you can do with the system. Of course, there are many more useful use cases, and you are kindly invited to add other use cases in the wiki.</p>
 
 <div>
 <a id="section.reverse_gazetteer"/>
@@ -125,11 +123,13 @@ The first command, <a href="#section.coord_query">&lt;coord-query lat="51.25" lo
 
 <p>
 This is in general a two-step process. For the first step, determine the id of the area to download, e.g. from the result of a <a href="#section.coord_query">coord-query</a> like in the <a href="#section.reverse_gazetteer">above example</a>. Another way to determine the id is to take advantage of <a href="#section.data_structures">the way the areas obtain their id</a>:
+</p>
 <ul>
 <li>An area based on a node has the same id as the node.</li>
 <li>An area based on a way has the the id of the way plus 2,400,000,000.</li>
 <li>An area based on a relation has the id of the relation plus 3,600,000,000.</li>
 </ul>
+<p>
 For example, the area representing the German city "Wuppertal" has id 3,600,062,478 because its pivot element is the relation 62,478 describing the borders of Wuppertal. In particular this means that area ids are as stable as the ids in the OSM database. If you don't know the id of the OSM entity in question, then can simply <a href="#section.query">query</a> it.
 </p>
 
@@ -247,7 +247,8 @@ You can <a href="#section.get_rule">retrieve</a> an existing rule to get a bluep
 <input type="submit" value="Retrieve rule"/>
 <br/>
 This will give you a result like the following:
-<code><pre>
+</p>
+<pre><code>
 &lt;osm-script name="Area::Create_from_admin_level" version="1"&gt;
 
 &lt;query type="relation"&gt;
@@ -268,8 +269,7 @@ This will give you a result like the following:
 &lt;/foreach&gt;
 
 &lt;/osm-script&gt;
-</pre></code>
-</p>
+</code></pre>
 </form>
 
 <form action="api/add_rule" method="post" accept-charset="UTF-8">
@@ -788,11 +788,13 @@ The item statement declares its argument as output. This is used within the <a h
 
 <p>
 This statement creates an area from a multipolygon, writes this area into the database and returns this area as output. From a general mathematical point of view, one can define an area from its boundary as follows: you fix the boundary and a single point that is outside the area. Then a point is outside if and only if any curve to the outside point crosses an even number of segments. We use this definition and take as the outside point always the south pole and the set of ways in the input set (specified by the argument "from") as boundary. The make-area statement now requires that the input set contains all nodes that are referred by at least one way in the set. Furthermore, it requires that the ways fit together. This means that any node is referred by an even number of segments. Otherwise there would be a boundary with interior or the exterior on both sides. The area then consists of all points such that you have to cross an odd number of segments to reach the south pole. The area is tagged with all tags from the pivot element and obtains its <a href="#section.data_structures">id</a> as follows:
+</p>
 <ul>
 <li>An area based on a node has the same id as the node.</li>
 <li>An area based on a way has the the id of the way plus 2,400,000,000.</li>
 <li>An area based on a relation has the id of the relation plus 3,600,000,000.</li>
 </ul>
+<p>
 The statement finally returns as the output set specified by "into" the set consisting of the newly created area. If a precondition fails, it writes nothing to the database, produces a <a href="#section.status_remarks">status remark</a> and returns the empty set.
 </p>
 
@@ -1116,11 +1118,13 @@ Furthermore, the OSM Server Side Script server stores some useful derived data s
 
 <p>
 <strong>Areas</strong> are stored with their id, their spatial extend and tags that describe them. The areas are derived by <a href="#section.queries_rules">user mutable rules</a> from the OSM data. Each area inherits its id and its tags from its pivot element. The tags are copied verbatim from the pivot element. The id is derived as follows:
+</p>
 <ul>
 <li>An area based on a node has the same id as the node.</li>
 <li>An area based on a way has the the id of the way plus 2,400,000,000.</li>
 <li>An area based on a relation has the id of the relation plus 3,600,000,000.</li>
 </ul>
+<p>
 Note that two different areas can't have the same pivot element.
 </p>
 
@@ -1328,48 +1332,64 @@ is for the server the same input as the above examples.
 
 <p>
 We explain the different possible encodings. To make it possible to submit data via HTML forms, you can either send your data verbatim or prefix it by "<code>data=</code>" and escape all special characters to a sequence of a percent sign, followed by the value of the respective byte as hexdecimal number. Multi-byte characters should be expanded in a individual sequence for each byte. For example, the inputs
+</p>
 <pre><code>
 &lt;print mode="body"/&gt;
 </code></pre>
+<p>
 and
+</p>
 <pre><code>
 data=%3Cprint%20mode=%22body%22/%3E
 </code></pre>
+<p>
 and
+</p>
 <pre><code>
 data=%3Cprint%20mode=%22body%22/%3E&amp;this_garbage_will_be_ignored
 </code></pre>
+<p>
 and
+</p>
 <pre><code>
 foo=bar&amp;data=%3Cprint%20mode=%22body%22/%3E&amp;this_garbage_will_be_ignored
 </code></pre>
+<p>
 are equal. The transformation from the former to the latter is normally done by your browser or client program automatically or even from the users point of view unintentionally. So if you get a <a href="#section.static_feedback">encoding error</a>, try prefixing your query by "data=". The server tries to interpret your input verbatim if the first non-whitespace character found is a verbatim "&lt;", in all other cases it searches for a "data=" substring, takes and decodes the input from that position until the next verbatim "&amp;".
 </p>
 
 <p>
-We explain the different possible encodings. You can send your data by a HTTP GET request as well as by a HTTP POST request, with precedence for the GET payload if you send both simultaneously. To continue the above example, the URL<br/>
+We explain the different possible encodings. You can send your data by a HTTP GET request as well as by a HTTP POST request, with precedence for the GET payload if you send both simultaneously. To continue the above example, the URL
+</p>
 <pre>  <a href="http://78.46.81.38/api/interpreter?data=%3Cprint%20mode=%22body%22/%3E">http://78.46.81.38/api/interpreter?data=%3Cprint%20mode=%22body%22/%3E</a></pre>
+<p>
 is equal to any of the above queries.
 </p>
 
 <p>
 If you want to use the famous program wget to retrieve the data from the server, you can use any of the sample command lines
+</p>
 <pre><code>
 wget -O - http://78.46.81.38/api/interpreter?data=%3Cprint%20mode=%22body%22/%3E | gunzip
 </code></pre>
+<p>
 or
+</p>
 <pre><code>
 wget -O - --post-data="data=%3Cprint%20mode=%22body%22/%3E" http://78.46.81.38/api/interpreter | gunzip
 </code></pre>
+<p>
 or
+</p>
 <pre><code>
 wget -O - --post-data="&lt;print mode=\"body\"/&gt;" http://78.46.81.38/api/interpreter | gunzip
 </code></pre>
+<p>
 Note that in the third variant the quotation marks are escaped in the usual shell style. The output is piped into gunzip to make it visible as uncompressed XML. A more appropriate way for a longer query would be to save your query into a file, e.g. <code>foo.xml</code> and then use the command
+</p>
 <pre><code>
 wget -O - --post-file=foo.xml http://78.46.81.38/api/interpreter | gunzip
 </code></pre>
-</p>
 
 <!-- ==================================================================== //-->
 
@@ -1456,15 +1476,15 @@ The section <strong>Static Remarks</strong> contains for a feasible query only r
 <p>
 The common and general errors include:
 </p>
+<ul>
+<li><code>Unknown tag "</code>element<code>" in line "</code>line number<code>"!</code>: This means that the tag you try to use as statement is not a known <a href="#chapter.statements">name of a statement</a>. Please check if you have misspelled the tag.</li>
+<li><code>Unknown attribute "</code>attribute<code>" in element "</code>element<code>".</code>: This means that you use an unknown attribute on a known <a href="#chapter.statements">statement</a>. Please check if you have misspelled the attribute name at the description of the respective <a href="#chapter.statements">statement</a>.</li>
+<li><code>Element "</code><code>" cannot be subelement of element "</code><code>".</code>: </li>
+<li><code>Element "</code><code>" must not contain text.</code></li>
+<li><code>For the attribute "</code><code>" of the element "</code><code>" the only allowed values are</code> some description<code>.</code>: </li>
+</ul>
 
 <!--
-  temp<<"Unknown tag \""<<element<<"\" in line "<<current_line_number()<<'!';
-      temp<<"Unknown attribute \""<<attr[i]<<"\" in element \""<<element<<"\".";
-  temp<<"Element \""<<child->get_name()<<"\" cannot be subelement of element \""<<parent<<"\".";
-      temp<<"An area-query as substatement is only allowed for queries of type \"node\".";
-      temp<<"A query statement may contain at most one area-query or bbox-query "
-	  <<"as substatement.";
-      temp<<"Element \""<<name<<"\" must not contain text.";
     temp<<"For the attribute \"type\" of the element \"query\""
 	<<" the only allowed values are \"node\", \"way\" or \"relation\"."; et al
       temp<<"A bbox-query as substatement is only allowed for queries of type \"node\".";
@@ -1474,6 +1494,10 @@ The common and general errors include:
 	<<" the only allowed values are positive integers.";
     temp<<"For the attribute \"s\" of the element \"bbox-query\""
 	<<" the only allowed values are floats between -90.0 and 90.0.";
+
+      temp<<"An area-query as substatement is only allowed for queries of type \"node\".";
+      temp<<"A query statement may contain at most one area-query or bbox-query "
+	  <<"as substatement.";
   
     add_static_error("Adding a rule requires the name of the rule.");
     add_static_error("Providing which version to replace while adding a rule is not allowed.");
@@ -1494,6 +1518,15 @@ The common and general errors include:
   
 temp<<"Timeout is set to "<<timeout<<", element_limit is "<<elem_limit;
 -->
+
+<ul>
+<li><code></code></li>
+<li><code></code></li>
+<li><code></code></li>
+<li><code></code></li>
+<li><code></code></li>
+<li><code></code></li>
+</ul>
 
 <p>
 <strong>Flow Forecast</strong>
