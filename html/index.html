@@ -850,7 +850,7 @@ The parameters "timeout" and "element-limit" are used to <a href="#section.quota
 </p>
 
 <p>
-For a rule, the parameter "name" provides to name of the rule. It is used to <a href="#section.add_rule">add</a> a rule or to <a href="#section.update_rule">update</a> an existing one, as well as to <a href="#section.get_rule">query</a> a rule. The parameter "version" tells you which <a href="#section.queries_rules">version</a> a given rule has. As a safety measure, if you intent want to update a rule, you need to specify by the "replace" parameter the version of the rule to replace.
+For a rule, the parameter "name" provides the name of the rule. It is used to <a href="#section.add_rule">add</a> a rule or to <a href="#section.update_rule">update</a> an existing one, as well as to <a href="#section.get_rule">query</a> a rule. The parameter "version" tells you which <a href="#section.queries_rules">version</a> a given rule has. As a safety measure, if you intent want to update a rule, you need to specify by the "replace" parameter the version of the rule to replace.
 </p>
 
 <div>
@@ -1479,9 +1479,9 @@ The common and general errors include:
 <ul>
 <li><code>Unknown tag "</code>element<code>" in line "</code>line number<code>"!</code>: This means that the tag you try to use as statement is not a known <a href="#chapter.statements">name of a statement</a>. Please check if you have misspelled the tag.</li>
 <li><code>Unknown attribute "</code>attribute<code>" in element "</code>element<code>".</code>: This means that you use an unknown attribute on a known <a href="#chapter.statements">statement</a>. Please check if you have misspelled the attribute name at the description of the respective <a href="#chapter.statements">statement</a>.</li>
-<li><code>Element "</code><code>" cannot be subelement of element "</code><code>".</code>: For the most statements, only few statements make sense as substatements. Please read the <a href="#chapter.statements">description</a> of the outer <a href="#chapter.statements">statement</a> to determine which substatements are possible.</li>
-<li><code>Element "</code><code>" must not contain text.</code>: Only very few statements like <a href="#section.report">report</a> accept text as subelement.</li>
-<li><code>For the attribute "</code><code>" of the element "</code><code>" the only allowed values are</code> some description<code>.</code>: The possible value of some description varies with the statements and their attributes. <em>Some description</em> designates the class of allowed values. These can be a list of fixed values. Or it can be degrees of latitude or longitude, i.e. floats between -90.0 and 90.0 respective -180.0 and 180.0, e.g. in the <a href="#section.bbox_query">bbox-query</a> or <a href="#section.coord_query">coord-query</a> statement. Or it can be an id, i.e. a positive integer, e.g. in the <a href="#section.area_query">area-query</a> or <a href="#section.id_query">id-query</a> statement. Or it can be a nonempty string like in the <em>has-kv</em> substatement of a <a href="#section.query">query</a> statement.</li>
+<li><code>Element "</code>inner element<code>" cannot be subelement of element "</code>outer element<code>".</code>: For the most statements, only few statements make sense as substatements. Please read the <a href="#chapter.statements">description</a> of the outer <a href="#chapter.statements">statement</a> to determine which substatements are possible.</li>
+<li><code>Element "</code>element<code>" must not contain text.</code>: Only very few statements like <a href="#section.conflict">conflict</a> accept text as subelement.</li>
+<li><code>For the attribute "</code>attribute<code>" of the element "</code>element<code>" the only allowed values are</code> some description<code>.</code>: The possible value of some description varies with the statements and their attributes. <em>Some description</em> designates the class of allowed values. These can be a list of fixed values. Or it can be degrees of latitude or longitude, i.e. floats between -90.0 and 90.0 respective -180.0 and 180.0, e.g. in the <a href="#section.bbox_query">bbox-query</a> or <a href="#section.coord_query">coord-query</a> statement. Or it can be an id, i.e. a positive integer, e.g. in the <a href="#section.area_query">area-query</a> or <a href="#section.id_query">id-query</a> statement. Or it can be a nonempty string like in the <em>has-kv</em> substatement of a <a href="#section.query">query</a> statement. If you get this error although you haven't written the attribute in question, it will indicate that this attribute is mandatory.</li>
 </ul>
 
 <p>
@@ -1508,16 +1508,16 @@ You may get the following errors on the <a href="#section.osm_script">root eleme
 <li>For the <a href="#section.update_rule">/api/update_rule</a> call, <code>Providing an arbitrary version-id while updating a rule is not allowed.</code>: You are trying to replace an existing rule. You must specify the most recent version of the existing rule as value to the <em>replace</em> attribute of the <a href="#section.osm_script">root element</a>. But you can't specify the version id of the new version of the <a href="#section.queries_rules">rule</a>; the server itself selects to version id of the new version.</li>
 </ul>
 
-<!-- <p>
+<p>
 The only existing remark so far is:
 </p>
 <ul>
-<li><code>Timeout is set to </code>timeout<code>, element_limit is </code>count: </li>
+<li><code>Timeout is set to </code>timeout<code>, element_limit is </code>count: This repeats the value for the <a href="#section.quotas">amount of time</a> after which a query will be canceled and the <a href="#section.quotas">upper bound of element equivalents</a> beyond which the query will be canceled due to too much ressource comsuption. If one of the two is zero, the respective ressource is unlimited. You can specify these values with attributes of the <a href="#section.osm_script">root element</a>.</li>
 </ul>
 
 <p>
-<strong>Flow Forecast</strong>
-</p> -->
+The section <strong>Flow Forecast</strong> contains the <a href="#section.flow_forecast">Flow Forecast</a> analysis. This analysis will be displayed as follows: Each statement is printed in the order of the <a href="#section.control_flow">control flow</a>. After each statement, in a section <em>Forecast</em>, the <a href="#section.flow_forecast">estimated time</a> elapsed at this point is displayed. Also for each existing <a href="#section.data_structures">set</a> at this point, <a href="#section.data_structures">its name</a> and the <a href="#section.flow_forecast">estimated number</a> of <a href="#section.data_structures">nodes, ways, relations and areas</a> contained in the set are printed. If you see the error message <code>Time exceeds limit of 180 seconds.</code>, your query is estimated to exceed the <a href="#section.quotas">default timeout</a> of 180 seconds and you need to <a href="#section.osm_script">manually set a timeout</a>. If you see the error message <code>Number of elements exceeds limit of 10,000,000 elements.</code>, your query is estimated to exceed the <a href="#section.quotas">amount of element equivalents limit</a>. Again, you need to <a href="#section.osm_script">manually set a limit for the amount of element equivalents</a>.
+</p>
 
 </body>
 </html>
