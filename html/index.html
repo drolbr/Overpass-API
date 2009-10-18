@@ -374,20 +374,36 @@ Finally, the line <code><a href="#section.conflict">&lt;conflict&gt;</a>In <a hr
 <h3>/api/interpreter</h3>
 </div>
 
+<p>
+This is the API call to send a <a href="#section.queries_rules">query</a>, i.e. a request that returns the desired part of the OSM data. Some examples for queries are explained in "<a href="#section.reverse_gazetteer">To which country belongs this location?</a>", "<a href="#section.download_area">Download an entire city</a>" or "<a href="#section.debug_area">Why doesn't my city appear?</a>". The exact <a href="#chapter.input_formats">possibilities of formatting input</a> are explained in the chapter "<a href="#chapter.input_formats">Input Formats</a>". The <a href="#section.static_feedback">possible errors</a> and the <a href="#section.payload">output format</a> are explained in the chapter "<a href="#chapter.output_formats">Output Formats</a>".
+</p>
+
 <div>
 <a id="section.get_rule"/>
 <h3>/api/get_rule</h3>
 </div>
+
+<p>
+This API call returns the source code of an existing <a href="#section.queries_rules">rule</a>. An example how to use this API call can be found in "<a href="#section.rule_example">Declare a new type of area</a>". To use this call you must <a href="#chapter.input_formats">send a request</a> that consists only of the <a href="#section.osm_script">root element</a>, with proper values for the attribute <a href="#section.osm_script">name</a> and maybe a value for the attribute <a href="#section.osm_script">version</a>. The returned data is a plain XML document without any compression.
+</p>
 
 <div>
 <a id="section.add_rule"/>
 <h3>/api/add_rule</h3>
 </div>
 
+<p>
+This API call adds a new <a href="#section.queries_rules">rule</a>. An example how to use this API call can be found in "<a href="#section.rule_example">Declare a new type of area</a>". To use this call you must <a href="#chapter.input_formats">send a request</a> that containes the rule. This means in particular that you must specify the attribute <a href="#section.osm_script">name</a> of the <a href="#section.osm_script">root element</a>. The returned data is a plain XHTML document without any compression and tells you whether <a href="#section.status_remarks">the rule has been added</a> or <a href="#section.static_feedback">why it hasn't been added</a>.
+</p>
+
 <div>
 <a id="section.update_rule"/>
 <h3>/api/update_rule</h3>
 </div>
+
+<p>
+This API call updates an existing <a href="#section.queries_rules">rule</a>. An example how to use this API call can be found in "<a href="#section.rule_example">Declare a new type of area</a>". To use this call you must <a href="#chapter.input_formats">send a request</a> that containes the new source code of the rule. This means in particular that you must specify the attributes <a href="#section.osm_script">name</a> and <a href="#section.osm_script">replace</a> of the <a href="#section.osm_script">root element</a>. <em>Name</em> must match the name of the exsiting rule and <em>replace</em> must match the <a href="#section.queries_rules">version</a> of the existing rule. This is a protection against accidently overwriting a rule. You can always obtain the current version number of a rule by a call to <a href="#section.get_rule">/api/get_rule</a>. The returned data is a plain XHTML document without any compression and tells you whether <a href="#section.status_remarks">the rule has been updated</a> or <a href="#section.static_feedback">why it hasn't been added</a>.
+</p>
 
 <!-- ==================================================================== //-->
 
