@@ -9,6 +9,8 @@ ARG_6=`echo $QUERY_STRING | awk -F [=,\&] '{ print $6; }'`
 ARG_7=`echo $QUERY_STRING | awk -F [=,\&] '{ print $7; }'`
 ARG_8=`echo $QUERY_STRING | awk -F [=,\&] '{ print $8; }'`
 
+REF=`date "+%s"`
+
 echo -e "\
 data=<osm-script timeout=\"180\" element-limit=\"10000000\"> \
  \
@@ -18,7 +20,9 @@ data=<osm-script timeout=\"180\" element-limit=\"10000000\"> \
 <print mode=\"bodyy\"/> \
  \
 </osm-script> \
-" >/tmp/bbox_req
+" >/tmp/req.$REF
 
 REQUEST_METHOD=
-/home/roland/osm-3s/cgi-bin/interpreter </tmp/bbox_req
+/home/roland/osm-3s/cgi-bin/interpreter </tmp/req.$REF
+
+rm /tmp/req.$REF
