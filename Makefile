@@ -17,6 +17,7 @@ union_$(suffix)
 objects = expat_justparse_interface.o cgi-helper.o user_interface.o script_queries.o node_strings_file_io.o way_strings_file_io.o relation_strings_file_io.o script_tools.o vigilance_control.o $(stmts)
 executable_objects = script-interpreter.o add_rule.o dump_rules.o get_rule.o load_rules.o update_rule.o import_osm.o apply_osc.o
 executables = cgi-bin/interpreter cgi-bin/add_rule cgi-bin/get_rule cgi-bin/update_rule bin/dump_rules bin/load_rules
+shortcuts = cgi-bin/download cgi-bin/poi cgi-bin/elems
 tool_headers = expat_justparse_interface.h script_datatypes.h script_queries.h script_tools.h user_interface.h
 
 backend_generic_h = backend/raw_file_db.h backend/file_types.h script_datatypes.h
@@ -26,7 +27,7 @@ backend_executables = bin/import_osm bin/apply_osc
 
 dispatcher_executables = bin/dispatcher bin/database_daemon bin/timestamp_of bin/fetch_osc bin/apply_gz_osc bin/init_dispatcher bin/autorestart
 
-main: $(executables) $(backend_executables) $(dispatcher_executables)
+main: $(executables) $(backend_executables) $(dispatcher_executables) $(shortcuts)
 
 suffix = statement.o
 cgi-bin/interpreter: suffix = statement.o
@@ -163,6 +164,17 @@ bin/autorestart: dispatcher/autorestart
 	cp $< $@
 	chmod 755 $@
 
+cgi-bin/poi: query_shortcuts/poi.sh
+	cp $< $@
+	chmod 755 $@
+
+cgi-bin/download: query_shortcuts/download.sh
+	cp $< $@
+	chmod 755 $@
+
+cgi-bin/elems: query_shortcuts/elems.sh
+	cp $< $@
+	chmod 755 $@
 
 clean: suffix = statement.o
 clean:
