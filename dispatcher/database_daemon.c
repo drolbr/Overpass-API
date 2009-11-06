@@ -117,17 +117,17 @@ void process_update
   {
     mysql_ping(mysql);
     mysql_query(mysql, ((string)("use ") + database_name).c_str());
-    process_rules(mysql, database_name, rule_version);
+/*    process_rules(mysql, database_name, rule_version);*/
   }
   catch(File_Error e)
   {
     cerr<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin;
   }
   //sleep for a second - dummy
-//   struct timeval timeout;
-//   timeout.tv_sec = 60;
-//   timeout.tv_usec = 0;
-//   select (FD_SETSIZE, NULL, NULL, NULL, &timeout);
+  struct timeval timeout;
+  timeout.tv_sec = 60;
+  timeout.tv_usec = 0;
+  select (FD_SETSIZE, NULL, NULL, NULL, &timeout);
 
   //notify dispatcher
   temp.str("");

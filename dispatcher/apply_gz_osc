@@ -5,44 +5,53 @@ if [[ $2 -ge $3 ]]; then
   exit 0;
 fi
 
-CURRENT=$(($2 + 1))
-ALMOST_TO=$3
+LOCAL_DIR=../replicate
 
-while [[ CURRENT -lt ALMOST_TO ]];
-do
+apply_minute_diffs()
 {
-  echo "apply_gz_osc($1)@"`date "+%s"`": applying $CURRENT.osc.gz" >>/opt/osm_why_api/dispatcher.log
-  echo "apply_gz_osc($1)@"`date "+%s"`": applying $CURRENT.osc.gz"
-  gunzip <../hourly/$CURRENT.osc.gz | ./apply_osc --intermediate --db=$1
+  CURRENT=$(($2 + 1))
+  TARGET=$3
+
+  echo "apply_gz_osc($1)@"`date "+%s"`": applying $1 $CURRENT $TARGET" >>/opt/osm_why_api/dispatcher.log
+  echo "apply_gz_osc($1)@"`date "+%s"`": applying $1 $CURRENT $TARGET"
+
+  mkdir /tmp/apply_gz_osc.$1.$2.$3
+  while [[ $CURRENT -le $TARGET ]];
+  do
+  {
+    printf -v TDIGIT3 %03u $(($CURRENT % 1000))
+    ARG=$(($CURRENT / 1000))
+    printf -v TDIGIT2 %03u $(($ARG % 1000))
+    ARG=$(($ARG / 1000))
+    printf -v TDIGIT1 %03u $ARG
+    gunzip <$LOCAL_DIR/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz >/tmp/apply_gz_osc.$1.$2.$3/$CURRENT.osc
+    CURRENT=$(($CURRENT+1))
+  };
+  done
+
+  ./apply_osc --db=$1 --dir=/tmp/apply_gz_osc.$1.$2.$3
   EXITCODE=$?
   while [[ $EXITCODE -ne 0 ]];
   do
   {
-    echo "apply_gz_osc($1)@"`date "+%s"`": apply_osc failed with error code "$EXITCODE >>/opt/osm_why_api/dispatcher.log
-    echo "apply_gz_osc($1)@"`date "+%s"`": apply_osc failed with error code "$EXITCODE
-    sleep 30
-    echo "apply_gz_osc($1)@"`date "+%s"`": applying $CURRENT.osc.gz" >>/opt/osm_why_api/dispatcher.log
-    echo "apply_gz_osc($1)@"`date "+%s"`": applying $CURRENT.osc.gz"
-    gunzip <../hourly/$CURRENT.osc.gz | ./apply_osc --intermediate --db=$1
+    sleep 60
+    ./apply_osc --db=$1 --dir=/tmp/apply_gz_osc.$1.$2.$3
     EXITCODE=$?
   };
   done
-  CURRENT=$(($CURRENT+1))
+
+  rm /tmp/apply_gz_osc.$1.$2.$3/*
+  rmdir /tmp/apply_gz_osc.$1.$2.$3
 };
-done
-echo "apply_gz_osc($1)@"`date "+%s"`": applying $ALMOST_TO.osc.gz" >>/opt/osm_why_api/dispatcher.log
-echo "apply_gz_osc($1)@"`date "+%s"`": applying $ALMOST_TO.osc.gz"
-gunzip <../hourly/$ALMOST_TO.osc.gz | ./apply_osc --db=$1
-EXITCODE=$?
-while [[ $EXITCODE -ne 0 ]];
+
+G_CURRENT=$2
+G_TARGET=$3
+
+while [[ $G_CURRENT -le $(($G_TARGET - 720)) ]];
 do
 {
-  echo "apply_gz_osc($1)@"`date "+%s"`": apply_osc failed with error code "$EXITCODE >>/opt/osm_why_api/dispatcher.log
-  echo "apply_gz_osc($1)@"`date "+%s"`": apply_osc failed with error code "$EXITCODE
-  sleep 300
-  echo "apply_gz_osc($1)@"`date "+%s"`": applying $ALMOST_TO.osc.gz" >>/opt/osm_why_api/dispatcher.log
-  echo "apply_gz_osc($1)@"`date "+%s"`": applying $ALMOST_TO.osc.gz"
-  gunzip <../hourly/$ALMOST_TO.osc.gz | ./apply_osc --db=$1
-  EXITCODE=$?
+  apply_minute_diffs $1 $G_CURRENT $(($G_CURRENT + 720))
+  G_CURRENT=$(($G_CURRENT + 720))
 };
 done
+apply_minute_diffs $1 $G_CURRENT $G_TARGET

@@ -402,7 +402,7 @@ void display_state()
 string detect_active_database()
 {
   uint32 database_id, available_memory;
-  ifstream ssin("/tmp/small_status");
+  ifstream ssin("/tmp/osm3s.small_status");
   if (!ssin)
   {
     runtime_error("Status file not found. Check if the dispatcher is running.");
