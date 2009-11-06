@@ -25,8 +25,8 @@ typedef unsigned long long uint64;
 const char* DISPATCH_FIFO = "/tmp/dispatcher.pipe";
 const char* DB1_FIFO = "/tmp/database_1.pipe";
 const char* DB2_FIFO = "/tmp/database_2.pipe";
-const char* SMALL_STATUS_FILE = "/tmp/small_status";
-const char* BIG_STATUS_FILE = "/tmp/big_status";
+const char* SMALL_STATUS_FILE = "/tmp/osm3s.small_status";
+const char* BIG_STATUS_FILE = "/tmp/osm3s.big_status";
 const char* RESCUE_STATUS_FILE = "/opt/osm_why_api/rescue_status";
 const char* LOGFILE = "/opt/osm_why_api/dispatcher.log";
 
@@ -36,6 +36,15 @@ uint ignore_whitespace(const string& input, uint pos)
 {
   while ((pos < input.size()) && (isspace(input[pos])))
     ++pos;
+  return pos;
+}
+
+uint read_non_whitespace(const string& input, uint pos, string& result)
+{
+  uint old_pos(pos);
+  while ((pos < input.size()) && (!isspace(input[pos])))
+    ++pos;
+  result = input.substr(old_pos, pos - old_pos);
   return pos;
 }
 
@@ -73,13 +82,17 @@ uint uint_query(MYSQL* mysql, string query)
 
 void log_event(const string& message)
 {
+  static uint32 message_id(0);
+  
   ofstream log(LOGFILE, ios_base::app);
-  log<<"dispatcher@"<<(uintmax_t)time(NULL)<<": "<<message<<'\n';
+  log<<"dispatcher("<<message_id++<<")@"<<(uintmax_t)time(NULL)<<": "<<message<<'\n';
   log.close();
 }
 
 struct Database_State
 {
+  Database_State() : state(0), last_changefile(0), last_rule(0), last_timestamp("void") {}
+  
   static const uint ACTIVE;
   static const uint PENDING;
   static const uint DATA_UPDATE;
@@ -88,6 +101,7 @@ struct Database_State
   uint state;
   uint last_changefile;
   uint last_rule;
+  string last_timestamp;
 };
 
 struct Process_State
@@ -103,9 +117,10 @@ struct Process_State
 
 struct State
 {
-  State() : last_changefile(0), db1(), db2(), processes() {}
+  State() : last_changefile(0), last_timestamp("void"), db1(), db2(), processes() {}
   
   uint last_changefile;
+  string last_timestamp;
   Database_State db1;
   Database_State db2;
   list< Process_State > processes;
@@ -129,8 +144,10 @@ void write_status_files(const State& state)
   
   ofstream big_status(BIG_STATUS_FILE);
   big_status<<state.last_changefile<<'\n';
-  big_status<<state.db1.state<<' '<<state.db1.last_changefile<<' '<<state.db1.last_rule<<'\n'
-      <<state.db2.state<<' '<<state.db2.last_changefile<<' '<<state.db2.last_rule<<'\n';
+  big_status<<state.db1.state<<' '<<state.db1.last_changefile<<' '<<state.db1.last_rule
+      <<' '<<state.db1.last_timestamp<<'\n'
+      <<state.db2.state<<' '<<state.db2.last_changefile<<' '<<state.db2.last_rule
+      <<' '<<state.db2.last_timestamp<<'\n';
   for (list< Process_State >::const_iterator it(state.processes.begin());
        it != state.processes.end(); ++it)
     big_status<<it->database_id<<' '<<it->timeout_time<<' '<<it->reserved_memory<<'\n';
@@ -182,6 +199,7 @@ void check_pending_database(State& state, MYSQL* mysql)
     
     state.db1.state = Database_State::DATA_UPDATE;
     state.db1.last_changefile = state.last_changefile;
+    state.db1.last_timestamp = state.last_timestamp;
   }
   else if (state.db2.state == Database_State::PENDING)
   {
@@ -215,6 +233,7 @@ void check_pending_database(State& state, MYSQL* mysql)
     
     state.db2.state = Database_State::DATA_UPDATE;
     state.db2.last_changefile = state.last_changefile;
+    state.db2.last_timestamp = state.last_timestamp;
   }
 }
 
@@ -248,9 +267,10 @@ void check_process_time(State& state, MYSQL* mysql)
   }
 }
 
-void new_changefile(State& state, MYSQL* mysql, uint changefile_version)
+void new_changefile(State& state, MYSQL* mysql, uint changefile_id, string timestamp)
 {
-  state.last_changefile = changefile_version;
+  state.last_changefile = changefile_id;
+  state.last_timestamp = timestamp;
 
   check_pending_database(state, mysql);
   write_status_files(state);
@@ -403,14 +423,17 @@ int main(int argc, char *argv[])
       
       if (input.substr(pos, 14) == "new_changefile")
       {
-	uint64 changefile_version;
+	uint64 changefile_id;
+	string timestamp;
 	pos += 14;
 	pos = ignore_whitespace(input, pos);
-	pos = read_uint64(input, pos, changefile_version);
+	pos = read_uint64(input, pos, changefile_id);
+	pos = ignore_whitespace(input, pos);
+	pos = read_non_whitespace(input, pos, timestamp);
 	ostringstream temp;
-	temp<<"new_changefile "<<changefile_version;
+	temp<<"new_changefile "<<changefile_id;
 	log_event(temp.str());
-	new_changefile(state, mysql, changefile_version);
+	new_changefile(state, mysql, changefile_id, timestamp);
       }
       else if (input.substr(pos, 12) == "update_rules")
       {

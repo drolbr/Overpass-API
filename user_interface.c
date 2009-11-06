@@ -240,23 +240,28 @@ void out_header(int type)
 {
   User_Output& out(get_output());
   
-  ifstream status_in("/tmp/big_status");
-  uint32 db_timestamp, db_rule_version;
+  ifstream status_in("/tmp/osm3s.big_status");
+  uint32 db_rule_version;
+  string db_timestamp;
   status_in>>db_timestamp;
   status_in>>db_timestamp;
   if (current_db == "osm_1")
   {
     status_in>>db_timestamp;
     status_in>>db_rule_version;
+    getline(status_in, db_timestamp);
   }
   else if (current_db == "osm_2")
   {
     status_in>>db_timestamp;
     status_in>>db_timestamp;
+    getline(status_in, db_timestamp);
     status_in>>db_timestamp;
     status_in>>db_timestamp;
     status_in>>db_rule_version;
+    getline(status_in, db_timestamp);
   }
+  db_timestamp = db_timestamp.substr(1);
   
   if (header_state != 0)
     return;
@@ -270,7 +275,7 @@ void out_header(int type)
 	"attribution of each item please refer to "
 	"http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\n"
 	"<meta data_included_until=\"");
-    out.print(timestamp_of(db_timestamp));
+    out.print(db_timestamp);
     out.print("\" last_rule_applied=\"");
     out.print((long long)db_rule_version);
     out.print("\"/>\n\n");
@@ -291,7 +296,7 @@ void out_header(int type)
 	"</head>\n"
 	"<body>\n\n"
 	"<p>Data included until: ");
-    out.print(timestamp_of(db_timestamp));
+    out.print(db_timestamp);
     out.print("<br/>Last rule applied: ");
     out.print((long long)db_rule_version);
     out.print("</p>\n\n");
@@ -311,7 +316,7 @@ void out_header(int type)
 	"</head>\n"
 	"<body>\n\n"
 	"<p>Data included until: ");
-    out.print(timestamp_of(db_timestamp));
+    out.print(db_timestamp);
     out.print("<br/>Last rule applied: ");
     out.print((long long)db_rule_version);
     out.print("</p>\n"

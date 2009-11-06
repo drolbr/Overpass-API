@@ -105,6 +105,8 @@ void execute_rules
     
     parse_script(xml_raw, start, end);
   
+    set_debug_mode(VERBOSE);
+  
     set_rule(it->second, it->first);
     (*dynamic_cast< Root_Statement* >(statement_stack.front()))
 	.set_database_id(current_db[current_db.size()-1] - 48);
