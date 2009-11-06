@@ -17,7 +17,7 @@ data=<osm-script timeout=\"180\" element-limit=\"10000000\"> \
 <query type=\"$ARG_1\"> \
   <has-kv k=\"$ARG_2\" v=\"$ARG_3\"/> \
 </query> \
-<print mode=\"bodyy\"/> \
+<print mode=\"body\"/> \
  \
 </osm-script> \
 " >/tmp/req.$REF
