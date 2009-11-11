@@ -10,7 +10,7 @@
 
 using namespace std;
 
-string get_xml_raw()
+string get_xml_raw(uint32 max_input_size)
 {
   int line_number(1);
   // If there is nonempty input from GET method, use GET
@@ -92,10 +92,10 @@ string get_xml_raw()
     add_encoding_remark("The first non-whitespace character is '<'. Thus, your input will be interpreted verbatim.");
   
   // assert length restriction
-  if (input.size() > 1048576)
+  if (input.size() > max_input_size)
   {
     ostringstream temp;
-    temp<<"Input too long (length: "<<input.size()<<", max. allowed: "<<1048576<<')';
+    temp<<"Input too long (length: "<<input.size()<<", max. allowed: "<<max_input_size<<')';
     add_encoding_error(temp.str());
     return input;
   }

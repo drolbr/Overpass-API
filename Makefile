@@ -44,6 +44,10 @@ cgi-bin/get_rule: suffix = statement.o
 cgi-bin/get_rule: $(objects) get_rule.o
 	g++ -o cgi-bin/get_rule -O3 -Wall -lexpat -lz $(objects) get_rule.o `mysql_config --libs`
 
+check_xml: suffix = statement.o
+check_xml: $(objects) check_xml.o
+	g++ -o check_xml -O3 -Wall -lexpat -lz $(objects) check_xml.o `mysql_config --libs`
+
 suffix = statement.o
 cgi-bin/update_rule: suffix = statement.o
 cgi-bin/update_rule: $(objects) update_rule.o
@@ -91,6 +95,10 @@ add_rule.o: add_rule.c $(tool_headers) $(stmts) statement_factory.h
 
 suffix = statement.h
 get_rule.o: get_rule.c $(tool_headers) $(stmts) statement_factory.h
+	g++ -c -O3 -Wall `mysql_config --include` $<
+
+suffix = statement.h
+check_xml.o: check_xml.c $(tool_headers) $(stmts) statement_factory.h
 	g++ -c -O3 -Wall `mysql_config --include` $<
 
 suffix = statement.h

@@ -182,10 +182,10 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
 
 	cur_block = next_block_id;
 	if ((i >= ((uint32*)source_buf)[0]) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_LESS))
-	  block_it = block_index.insert(make_pair< typename T::Index, uint16 >(env.index_of(elem_it), next_block_id));
+	  block_it = block_index.insert(make_pair< typename T::Index, uint16 >(env.index_of(elem_it), next_block_id++));
 	else
 	  block_it = block_index.insert(make_pair< typename T::Index, uint16 >
-	      (env.index_of_buf(&(source_buf[i])), next_block_id));
+	      (env.index_of_buf(&(source_buf[i])), next_block_id++));
 	++block_it;
 	new_byte_count -= (j - sizeof(uint32));
       }

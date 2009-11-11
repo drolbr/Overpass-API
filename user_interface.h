@@ -7,7 +7,7 @@
 
 using namespace std;
 
-string get_xml_raw();
+string get_xml_raw(uint32 max_input_size = 1048576);
 
 void add_encoding_error(const string& error);
 void add_parse_error(const string& error);

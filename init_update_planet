@@ -22,13 +22,14 @@ if [[ $CONFIRM != "YES" ]]; then
 };
 fi
 
-echo "Import planet"
-bunzip2 <$1 | ./bin/import_osm
-
-pushd /opt/osm_why_api/
-tar cvf - ./ | gzip >/media/buffalo500/osm$2.tar.gz
-ls -l ./
-popd
+# rm /opt/osm_why_api/osm_1/*
+# echo "Import planet"
+# bunzip2 <$1 | ./bin/import_osm --db=osm_1 >testfiles/planet-nodes.log
+# 
+# pushd /opt/osm_why_api/
+# tar cvf - osm_1/ | gzip >/media/buffalo500/osm$2.tar.gz
+# ls -l osm_1/
+# popd
 
 echo "Init derived data"
 ./init_derived_data YES
@@ -66,7 +67,7 @@ do
   };
   done
   
-  ./apply_gz_osc . $REPLICATE_ID $(($REPLICATE_ID + 480))
+  ./apply_gz_osc osm_1 $REPLICATE_ID $(($REPLICATE_ID + 480))
   REPLICATE_ID=$(($REPLICATE_ID + 480))
   
   echo "Have a break @ $REPLICATE_ID"
