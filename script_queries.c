@@ -119,6 +119,23 @@ int int_query(MYSQL* mysql, string query)
   return result_val;
 }
 
+uint32 uint32_query(MYSQL* mysql, string query)
+{
+  uint32 result_val(0);
+  MYSQL_RES* result(mysql_query_use_wrapper(mysql, query));
+  if (!result)
+    return 0;
+	
+  MYSQL_ROW row(mysql_fetch_row(result));
+  if ((row) && (row[0]))
+    result_val = atoll(row[0]);
+  
+  while (mysql_fetch_row(result))
+    ;
+  mysql_free_result(result);
+  return result_val;
+}
+
 pair< int, int > intint_query(MYSQL* mysql, string query)
 {
   pair< int, int > result_val(make_pair< int, int >(0, 0));

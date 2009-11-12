@@ -60,7 +60,7 @@ void retrieve_rules(MYSQL* mysql, uint32 max_version,
   ostringstream temp;
   temp<<"select rule_bodys.id, rule_names.name, rule_bodys.source from rule_bodys "
       <<"left join rule_names on rule_names.id = rule_bodys.rule where rule_bodys.id > 0 "
-      <<"and rule_bodys.id < "<<max_version;
+      <<"and rule_bodys.id <= "<<max_version;
   MYSQL_RES* result(mysql_query_wrapper(mysql, temp.str()));
   if (!result)
     return;
@@ -105,7 +105,7 @@ void execute_rules
     
     parse_script(xml_raw, start, end);
   
-    set_debug_mode(VERBOSE);
+    //set_debug_mode(VERBOSE);
   
     set_rule(it->second, it->first);
     (*dynamic_cast< Root_Statement* >(statement_stack.front()))

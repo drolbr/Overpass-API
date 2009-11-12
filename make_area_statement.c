@@ -248,7 +248,7 @@ void Make_Area_Statement::execute(MYSQL* mysql, map< string, Set >& maps)
   ostringstream temp;
   temp<<"select id from areas where pivot = "<<pivot_id
       <<" and pivot_type = "<<pivot_type;
-  int previous_area(int_query(mysql, temp.str()));
+  uint32 previous_area(uint32_query(mysql, temp.str()));
   if (previous_area)
   {
     set< uint32 > previous_ways;

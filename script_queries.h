@@ -17,6 +17,7 @@ MYSQL_RES* mysql_query_wrapper(MYSQL* mysql, string query);
 
 void void_query(MYSQL* mysql, string query);
 int int_query(MYSQL* mysql, string query);
+uint32 uint32_query(MYSQL* mysql, string query);
 pair< int, int > intint_query(MYSQL* mysql, string query);
 
 set< uint32 >& multiint_query(MYSQL* mysql, string query, set< uint32 >& result_set);
