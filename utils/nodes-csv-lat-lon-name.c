@@ -16,10 +16,10 @@
 
 #include <iomanip>
 #include <iostream>
+#include <list>
 #include <map>
 #include <sstream>
 #include <string>
-#include <vector>
 
 #include <math.h>
 #include <string.h>
@@ -39,9 +39,10 @@ struct NamedNode
 };
 
 map< unsigned int, NamedNode > nodes;
-vector< unsigned int > stops;
+list< unsigned int > stops;
 NamedNode nnode;
 unsigned int id;
+int direction(0);
 
 void start(const char *el, const char **attr)
 {
@@ -72,17 +73,32 @@ void start(const char *el, const char **attr)
   }
   else if (!strcmp(el, "member"))
   {
-    unsigned int ref;
-    string type;
+    unsigned int ref(0);
+    string type, role;
     for (unsigned int i(0); attr[i]; i += 2)
     {
       if (!strcmp(attr[i], "ref"))
 	ref = atol(attr[i+1]);
       else if (!strcmp(attr[i], "type"))
 	type = attr[i+1];
+      else if (!strcmp(attr[i], "role"))
+	role = attr[i+1];
     }
     if (type == "node")
-      stops.push_back(ref);
+    {
+      if (direction == 0)
+	stops.push_back(ref);
+      else if (direction == 1)
+      {
+	if ((role == "forward_stop") || (role == "forward_stop_0"))
+	  stops.push_back(ref);
+      }
+      else if (direction == -1)
+      {
+	if ((role == "backward_stop") || (role == "backward_stop_0"))
+	  stops.push_front(ref);
+      }
+    }
   }
 }
 
@@ -96,10 +112,22 @@ void end(const char *el)
 
 int main(int argc, char *argv[])
 {
+  if (argc == 2)
+  {
+    if (!strcmp(argv[1], "--forward"))
+    {
+      direction = 1;
+    }
+    if (!strcmp(argv[1], "--backward"))
+    {
+      direction = -1;
+    }
+  }
+  
   //reading the main document
   parse(stdin, start, end);
   
-  for (vector< unsigned int >::const_iterator it(stops.begin()); it != stops.end(); ++it)
+  for (list< unsigned int >::const_iterator it(stops.begin()); it != stops.end(); ++it)
   {
     NamedNode nnode(nodes[*it]);
     if (nnode.lat <= 90.0)
