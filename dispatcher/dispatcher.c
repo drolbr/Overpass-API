@@ -4,7 +4,10 @@
 #include <sstream>
 #include <string>
 
+#include <string.h>
 #include <fcntl.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <sys/select.h>
 #include <sys/time.h>
 

@@ -4,6 +4,8 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <stdint.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "user_interface.h"

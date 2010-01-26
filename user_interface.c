@@ -1,7 +1,9 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <stdint.h>
 #include <string>
+#include <time.h>
 #include <vector>
 #include <stdlib.h>
 #include "cgi-helper.h"

@@ -71,7 +71,7 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
       if (i >= BLOCKSIZE - env.size_of(it))
       {
 	((uint32*)dest_buf)[0] = i - sizeof(uint32);
-	write(dest_fd, dest_buf, BLOCKSIZE);
+	uint32 foo(write(dest_fd, dest_buf, BLOCKSIZE)); foo = 0;
         
         block_index.insert(make_pair< typename T::Index, uint16 >
 	    (env.index_of(it), next_block_id++));
@@ -86,7 +86,7 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
     if (i > 1)
     {
       ((uint32*)dest_buf)[0] = i - sizeof(uint32);
-      write(dest_fd, dest_buf, BLOCKSIZE);
+      uint32 foo(write(dest_fd, dest_buf, BLOCKSIZE)); foo = 0;
     }
 
     free(dest_buf);
@@ -129,7 +129,7 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
       }
       
       lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
-      read(dest_fd, source_buf, BLOCKSIZE);
+      uint32 foo(read(dest_fd, source_buf, BLOCKSIZE)); foo = 0;
       new_byte_count += ((uint32*)source_buf)[0];
       
       uint32 i(sizeof(uint32));
@@ -178,7 +178,7 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
 
 	lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
 	((uint32*)dest_buf)[0] = j - sizeof(uint32);
-	write(dest_fd, dest_buf, BLOCKSIZE);
+	uint32 foo(write(dest_fd, dest_buf, BLOCKSIZE)); foo = 0;
 
 	cur_block = next_block_id;
 	if ((i >= ((uint32*)source_buf)[0]) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_LESS))
@@ -223,7 +223,7 @@ void flush_data(T& env, typename T::Iterator elem_begin, typename T::Iterator el
       }
       lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-      write(dest_fd, dest_buf, BLOCKSIZE);
+      foo = write(dest_fd, dest_buf, BLOCKSIZE);
     }
     
     free(source_buf);
@@ -255,7 +255,7 @@ void delete_insert(T& env)
     uint32 idx_file_size(lseek64(idx_fd, 0, SEEK_END));
     char* idx_buf = (char*) malloc(idx_file_size);
     lseek64(idx_fd, 0, SEEK_SET);
-    read(idx_fd, idx_buf, idx_file_size);
+    uint32 foo(read(idx_fd, idx_buf, idx_file_size)); foo = 0;
     uint32 i(0);
     while (i < idx_file_size)
     {
@@ -297,6 +297,7 @@ void delete_insert(T& env)
   typename T::Iterator elem_it(env.elem_begin());
   typename multimap< typename T::Index, uint16 >::const_iterator block_it(block_index.begin());
   unsigned int cur_block((block_it++)->second);
+  uint32 foo(0); //suppress stupid read/write warnings
   while (elem_it != env.elem_end())
   {
     while ((block_it != block_index.end()) && (block_it->first < env.index_of(elem_it)))
@@ -305,7 +306,7 @@ void delete_insert(T& env)
     while ((block_it != block_index.end()) && (block_it->first == env.index_of(elem_it)))
     {
       lseek64(dest_fd, ((int64)cur_block)*BLOCKSIZE, SEEK_SET);
-      read(dest_fd, source_buf, BLOCKSIZE);
+      foo = read(dest_fd, source_buf, BLOCKSIZE);
       
       uint32 i(sizeof(uint32));
       uint32 j(sizeof(uint32));
@@ -327,7 +328,7 @@ void delete_insert(T& env)
       
       lseek64(dest_fd, ((int64)cur_block)*BLOCKSIZE, SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-      write(dest_fd, dest_buf, BLOCKSIZE);
+      foo = write(dest_fd, dest_buf, BLOCKSIZE);
       
       if (((uint32*)dest_buf)[0] == 0)
       {
@@ -357,7 +358,7 @@ void delete_insert(T& env)
 
     uint32 new_byte_count(0);
     lseek64(dest_fd, (int64)cur_block*BLOCKSIZE, SEEK_SET);
-    read(dest_fd, source_buf, BLOCKSIZE);
+    foo = read(dest_fd, source_buf, BLOCKSIZE);
     uint32 pos(sizeof(uint32));
     uint32 elem_count(0);
     while (pos < *((uint32*)source_buf) + sizeof(uint32))
@@ -453,7 +454,7 @@ void delete_insert(T& env)
 
       lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-      write(dest_fd, dest_buf, BLOCKSIZE);
+      foo = write(dest_fd, dest_buf, BLOCKSIZE);
 
       cur_block = next_block_id;
       if ((i >= ((uint32*)source_buf)[0]) || (env.compare(elem_it, &(source_buf[i])) == RAW_DB_LESS))
@@ -517,7 +518,7 @@ void delete_insert(T& env)
     
     lseek64(dest_fd, (int64)cur_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-    write(dest_fd, dest_buf, BLOCKSIZE);
+    foo = write(dest_fd, dest_buf, BLOCKSIZE);
   
     if (block_it != block_index.end())
       cur_block = (block_it++)->second;
@@ -557,7 +558,7 @@ void make_block_index(const T& env)
 		       S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   if (dest_fd < 0)
     throw File_Error(errno, env.index_file(), "make_block_index:1");
-  write(dest_fd, buf, (env.size_of_Index() + sizeof(uint16))*block_index.size());
+  uint32 foo(write(dest_fd, buf, (env.size_of_Index() + sizeof(uint16))*block_index.size())); foo = 0;
   close(dest_fd);
   
   free(buf);
@@ -583,6 +584,7 @@ void make_id_index(T& env)
     throw File_Error(errno, ID_IDX_FILE, "make_id_index:2");
   
   uint16 block_id(0);
+  uint32 foo(0); //suppress stupid read/write warnings
   uint8* data_buf = (uint8*) malloc(BLOCKSIZE);
   uint32 read_count(read(data_fd, data_buf, BLOCKSIZE));
   while (read_count)
@@ -604,13 +606,13 @@ void make_id_index(T& env)
 	  int64 zero_buf(0);
 	  while (dest_pos + sizeof(int64) < (int64)(it->first - 1)*sizeof(uint16))
 	  {
-	    write(dest_fd, &zero_buf, sizeof(int64));
+	    foo = write(dest_fd, &zero_buf, sizeof(int64));
 	    dest_pos += sizeof(int64);
 	  }
 	  if (dest_pos < (int64)(it->first - 1)*sizeof(uint16))
-	    write(dest_fd, &zero_buf, (int64)(it->first - 1)*sizeof(uint16) - dest_pos);
+	    foo = write(dest_fd, &zero_buf, (int64)(it->first - 1)*sizeof(uint16) - dest_pos);
 	}
-	write(dest_fd, &(it->second), sizeof(uint16));
+	foo = write(dest_fd, &(it->second), sizeof(uint16));
       }
       current_ids.clear();
     }
@@ -625,13 +627,13 @@ void make_id_index(T& env)
       int64 zero_buf(0);
       while (dest_pos + sizeof(int64) < (int64)(it->first - 1)*sizeof(uint16))
       {
-	write(dest_fd, &zero_buf, sizeof(int64));
+	foo = write(dest_fd, &zero_buf, sizeof(int64));
 	dest_pos += sizeof(int64);
       }
       if (dest_pos < (int64)(it->first - 1)*sizeof(uint16))
-	write(dest_fd, &zero_buf, (int64)(it->first - 1)*sizeof(uint16) - dest_pos);
+	foo = write(dest_fd, &zero_buf, (int64)(it->first - 1)*sizeof(uint16) - dest_pos);
     }
-    write(dest_fd, &(it->second), sizeof(uint16));
+    foo = write(dest_fd, &(it->second), sizeof(uint16));
   }
   current_ids.clear();
   
@@ -662,6 +664,7 @@ void update_id_index(T& env)
     throw File_Error(errno, ID_IDX_FILE, "make_id_index:2");
   
   map< uint32, uint16 > current_id_blocks;
+  uint32 foo(0); //suppress stupid read/write warnings
   typename T::Id_Block_Iterator it_block(env.block_of_elem_begin());
   for (typename T::Iterator it(env.elem_begin());
        it != env.elem_end(); ++it)
@@ -681,13 +684,13 @@ void update_id_index(T& env)
       int64 zero_buf(0);
       while (dest_pos + sizeof(int64) < (int64)(it->first - 1)*sizeof(uint16))
       {
-	write(dest_fd, &zero_buf, sizeof(int64));
+	foo = write(dest_fd, &zero_buf, sizeof(int64));
 	dest_pos += sizeof(int64);
       }
       if (dest_pos < (int64)(it->first - 1)*sizeof(uint16))
-	write(dest_fd, &zero_buf, (int64)(it->first - 1)*sizeof(uint16) - dest_pos);
+	foo = write(dest_fd, &zero_buf, (int64)(it->first - 1)*sizeof(uint16) - dest_pos);
     }
-    write(dest_fd, &(it->second), sizeof(uint16));
+    foo = write(dest_fd, &(it->second), sizeof(uint16));
   }
   current_id_blocks.clear();
   
@@ -712,13 +715,13 @@ void update_id_index(T& env)
 	  int64 zero_buf(0);
 	  while (dest_pos + sizeof(int64) < (int64)((*it) - 1)*sizeof(uint16))
 	  {
-	    write(dest_fd, &zero_buf, sizeof(int64));
+	    foo = write(dest_fd, &zero_buf, sizeof(int64));
 	    dest_pos += sizeof(int64);
 	  }
 	  if (dest_pos < (int64)((*it) - 1)*sizeof(uint16))
-	    write(dest_fd, &zero_buf, (int64)((*it) - 1)*sizeof(uint16) - dest_pos);
+	    foo = write(dest_fd, &zero_buf, (int64)((*it) - 1)*sizeof(uint16) - dest_pos);
 	}
-	write(dest_fd, &block_id, sizeof(uint16));
+	foo = write(dest_fd, &block_id, sizeof(uint16));
       }
       current_ids.clear();
       ++block_id;
@@ -754,7 +757,7 @@ void select_with_idx(T& env)
     uint32 idx_file_size(lseek64(idx_fd, 0, SEEK_END));
     char* idx_buf = (char*) malloc(idx_file_size);
     lseek64(idx_fd, 0, SEEK_SET);
-    read(idx_fd, idx_buf, idx_file_size);
+    uint32 foo(read(idx_fd, idx_buf, idx_file_size)); foo = 0;
     uint32 i(0);
     while (i < idx_file_size)
     {
@@ -796,7 +799,7 @@ void select_with_idx(T& env)
        it != block_ids.end(); ++it)
   {
     lseek64(data_fd, ((uint64)(*it))*BLOCKSIZE, SEEK_SET);
-    read(data_fd, data_buf, BLOCKSIZE);
+    uint32 foo(read(data_fd, data_buf, BLOCKSIZE)); foo = 0;
     uint32 pos(sizeof(uint32));
     if (pos < *((uint32*)data_buf) + sizeof(uint32))
       env.block_notify(&(data_buf[pos]));
@@ -833,7 +836,7 @@ void count_with_idx(T& env)
     uint32 idx_file_size(lseek64(idx_fd, 0, SEEK_END));
     char* idx_buf = (char*) malloc(idx_file_size);
     lseek64(idx_fd, 0, SEEK_SET);
-    read(idx_fd, idx_buf, idx_file_size);
+    uint32 foo(read(idx_fd, idx_buf, idx_file_size)); foo = 0;
     uint32 i(0);
     while (i < idx_file_size)
     {
@@ -868,7 +871,7 @@ void select_by_id(T& env)
   for (typename T::Iterator it(env.ids_begin()); it != env.ids_end(); ++it)
   {
     lseek64(idx_fd, ((*it)-1)*sizeof(int16), SEEK_SET);
-    read(idx_fd, &idx_buf, sizeof(int16));
+    uint32 foo(read(idx_fd, &idx_buf, sizeof(int16))); foo = 0;
     block_ids.insert(idx_buf);
   }
   
@@ -883,7 +886,7 @@ void select_by_id(T& env)
        it != block_ids.end(); ++it)
   {
     lseek64(data_fd, ((uint64)(*it))*BLOCKSIZE, SEEK_SET);
-    read(data_fd, data_buf, BLOCKSIZE);
+    uint32 foo(read(data_fd, data_buf, BLOCKSIZE)); foo = 0;
     uint32 pos(sizeof(uint32));
     while (pos < *((uint32*)data_buf) + sizeof(uint32))
     {

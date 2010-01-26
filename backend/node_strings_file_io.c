@@ -56,6 +56,7 @@ void flush_node_tags(uint& current_run, map< NodeKeyValue, NodeCollection >& nod
   if (dest_fd < 0)
     throw File_Error(errno, temp.str().c_str(), "flush_node_tags:1");
   
+  uint32 foo(0); //suppress stupid read/write warnings
   if (current_run == 0)
   {
     int dest_id_fd = open64(NODE_TAG_TMPB, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
@@ -71,19 +72,19 @@ void flush_node_tags(uint& current_run, map< NodeKeyValue, NodeCollection >& nod
         it->second.position = 0xffffffff;
       else
         it->second.position &= 0xffffff00;
-      write(dest_fd, &(it->second.id), sizeof(uint32));
-      write(dest_fd, &(it->second.position), sizeof(uint32));
-      write(dest_fd, &(key_size), sizeof(uint16));
-      write(dest_fd, &(value_size), sizeof(uint16));
-      write(dest_fd, &(it->first.key[0]), key_size);
-      write(dest_fd, &(it->first.value[0]), value_size);
+      foo = write(dest_fd, &(it->second.id), sizeof(uint32));
+      foo = write(dest_fd, &(it->second.position), sizeof(uint32));
+      foo = write(dest_fd, &(key_size), sizeof(uint16));
+      foo = write(dest_fd, &(value_size), sizeof(uint16));
+      foo = write(dest_fd, &(it->first.key[0]), key_size);
+      foo = write(dest_fd, &(it->first.value[0]), value_size);
       
       uint32 nc_size(it->second.nodes.size());
-      write(dest_id_fd, &(it->second.id), sizeof(uint32));
-      write(dest_id_fd, &(nc_size), sizeof(uint32));
+      foo = write(dest_id_fd, &(it->second.id), sizeof(uint32));
+      foo = write(dest_id_fd, &(nc_size), sizeof(uint32));
       for (vector< int32 >::const_iterator it2(it->second.nodes.begin());
 	   it2 != it->second.nodes.end(); ++it2)
-	write(dest_id_fd, &(*it2), sizeof(uint32));	
+	foo = write(dest_id_fd, &(*it2), sizeof(uint32));	
     }
     
     close(dest_id_fd);
@@ -104,9 +105,9 @@ void flush_node_tags(uint& current_run, map< NodeKeyValue, NodeCollection >& nod
     map< NodeKeyValue, NodeCollection >::iterator it(node_tags.begin());
     while (read(source_fd, cnt_rd_buf, 2*sizeof(uint32) + 2*sizeof(uint16)))
     {
-      read(source_fd, key_rd_buf, size_rd_buf[0]);
+      foo = read(source_fd, key_rd_buf, size_rd_buf[0]);
       key_rd_buf[size_rd_buf[0]] = 0;
-      read(source_fd, value_rd_buf, size_rd_buf[1]);
+      foo = read(source_fd, value_rd_buf, size_rd_buf[1]);
       value_rd_buf[size_rd_buf[1]] = 0;
       while ((it != node_tags.end()) &&
              (strcmp(key_rd_buf, it->first.key.c_str()) > 0))
@@ -117,12 +118,12 @@ void flush_node_tags(uint& current_run, map< NodeKeyValue, NodeCollection >& nod
           it->second.position = 0xffffffff;
         else
           it->second.position &= 0xffffff00;
-        write(dest_fd, &(it->second.id), sizeof(uint32));
-        write(dest_fd, &(it->second.position), sizeof(uint32));
-        write(dest_fd, &(key_size), sizeof(uint16));
-        write(dest_fd, &(value_size), sizeof(uint16));
-        write(dest_fd, &(it->first.key[0]), key_size);
-        write(dest_fd, &(it->first.value[0]), value_size);
+	foo = write(dest_fd, &(it->second.id), sizeof(uint32));
+	foo = write(dest_fd, &(it->second.position), sizeof(uint32));
+	foo = write(dest_fd, &(key_size), sizeof(uint16));
+	foo = write(dest_fd, &(value_size), sizeof(uint16));
+	foo = write(dest_fd, &(it->first.key[0]), key_size);
+	foo = write(dest_fd, &(it->first.value[0]), value_size);
         ++it;
       }
       while ((it != node_tags.end()) &&
@@ -135,12 +136,12 @@ void flush_node_tags(uint& current_run, map< NodeKeyValue, NodeCollection >& nod
           it->second.position = 0xffffffff;
         else
           it->second.position &= 0xffffff00;
-        write(dest_fd, &(it->second.id), sizeof(uint32));
-        write(dest_fd, &(it->second.position), sizeof(uint32));
-        write(dest_fd, &(key_size), sizeof(uint16));
-        write(dest_fd, &(value_size), sizeof(uint16));
-        write(dest_fd, &(it->first.key[0]), key_size);
-        write(dest_fd, &(it->first.value[0]), value_size);
+	foo = write(dest_fd, &(it->second.id), sizeof(uint32));
+	foo = write(dest_fd, &(it->second.position), sizeof(uint32));
+	foo = write(dest_fd, &(key_size), sizeof(uint16));
+	foo = write(dest_fd, &(value_size), sizeof(uint16));
+	foo = write(dest_fd, &(it->first.key[0]), key_size);
+	foo = write(dest_fd, &(it->first.value[0]), value_size);
         ++it;
       }
       if ((it != node_tags.end()) &&
@@ -154,9 +155,9 @@ void flush_node_tags(uint& current_run, map< NodeKeyValue, NodeCollection >& nod
           cnt_rd_buf[1] &= 0xffffff00;
         ++it;
       }
-      write(dest_fd, cnt_rd_buf, 2*sizeof(uint32) + 2*sizeof(uint16));
-      write(dest_fd, key_rd_buf, size_rd_buf[0]);
-      write(dest_fd, value_rd_buf, size_rd_buf[1]);
+      foo = write(dest_fd, cnt_rd_buf, 2*sizeof(uint32) + 2*sizeof(uint16));
+      foo = write(dest_fd, key_rd_buf, size_rd_buf[0]);
+      foo = write(dest_fd, value_rd_buf, size_rd_buf[1]);
     }
     while (it != node_tags.end())
     {
@@ -166,12 +167,12 @@ void flush_node_tags(uint& current_run, map< NodeKeyValue, NodeCollection >& nod
 	it->second.position = 0xffffffff;
       else
 	it->second.position &= 0xffffff00;
-      write(dest_fd, &(it->second.id), sizeof(uint32));
-      write(dest_fd, &(it->second.position), sizeof(uint32));
-      write(dest_fd, &(key_size), sizeof(uint16));
-      write(dest_fd, &(value_size), sizeof(uint16));
-      write(dest_fd, &(it->first.key[0]), key_size);
-      write(dest_fd, &(it->first.value[0]), value_size);
+      foo = write(dest_fd, &(it->second.id), sizeof(uint32));
+      foo = write(dest_fd, &(it->second.position), sizeof(uint32));
+      foo = write(dest_fd, &(key_size), sizeof(uint16));
+      foo = write(dest_fd, &(value_size), sizeof(uint16));
+      foo = write(dest_fd, &(it->first.key[0]), key_size);
+      foo = write(dest_fd, &(it->first.value[0]), value_size);
       ++it;
     }
     
@@ -192,11 +193,11 @@ void flush_node_tags(uint& current_run, map< NodeKeyValue, NodeCollection >& nod
 	 it != node_tags.end(); ++it)
     {
       uint32 nc_size(it->second.nodes.size());
-      write(dest_id_fd, &(it->second.id), sizeof(uint32));
-      write(dest_id_fd, &(nc_size), sizeof(uint32));
+      foo = write(dest_id_fd, &(it->second.id), sizeof(uint32));
+      foo = write(dest_id_fd, &(nc_size), sizeof(uint32));
       for (vector< int32 >::const_iterator it2(it->second.nodes.begin());
 	   it2 != it->second.nodes.end(); ++it2)
-	write(dest_id_fd, &(*it2), sizeof(uint32));	
+	   foo = write(dest_id_fd, &(*it2), sizeof(uint32));	
     }
     
     close(dest_id_fd);
@@ -263,6 +264,7 @@ void node_tag_split_and_index(uint& current_run, vector< uint32 >& split_idx, ui
   cerr<<'p';
 
   ostringstream temp;
+  uint32 foo(0); //suppress stupid read/write warnings
   temp<<NODE_TAG_TMPAPREFIX<<(current_run-1);
   int source_fd = open64(temp.str().c_str(), O_RDONLY);
   if (source_fd < 0)
@@ -291,9 +293,9 @@ void node_tag_split_and_index(uint& current_run, vector< uint32 >& split_idx, ui
     throw File_Error(errno, DATADIR + db_subdir + NODE_STRING_IDX,
                      "node_tag_split_and_index:3");
   
-  write(dest_idx_fd, &(NodeCollection::next_node_tag_id), sizeof(uint32));
+  foo = write(dest_idx_fd, &(NodeCollection::next_node_tag_id), sizeof(uint32));
   for (uint32 i(0); i < NODE_TAG_SPATIAL_PARTS; ++i)
-    write(dest_idx_fd, &(split_idx[i]), sizeof(uint32));
+    foo = write(dest_idx_fd, &(split_idx[i]), sizeof(uint32));
   
   uint8* cur_block_count = (uint8*) calloc(NODE_TAG_SPATIAL_PARTS+1, sizeof(uint8));
   block_of_id = (uint32*) calloc((NodeCollection::next_node_tag_id+1), sizeof(uint32));
@@ -319,9 +321,9 @@ void node_tag_split_and_index(uint& current_run, vector< uint32 >& split_idx, ui
 	>= NODE_STRING_BLOCK_SIZE*4/5)
     {
       *((uint32*)&(write_blocks[block * NODE_STRING_BLOCK_SIZE])) = write_pos[block] - sizeof(uint32);
-      write(dest_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE]), NODE_STRING_BLOCK_SIZE);
-      write(dest_idx_fd, &(block), sizeof(uint16));
-      write(dest_idx_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE
+      foo = write(dest_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE]), NODE_STRING_BLOCK_SIZE);
+      foo = write(dest_idx_fd, &(block), sizeof(uint16));
+      foo = write(dest_idx_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE
 	  + 3*sizeof(uint32)]), *(uint16*)&(write_blocks[block * NODE_STRING_BLOCK_SIZE
 	      + 3*sizeof(uint32)]) + *(uint16*)&(write_blocks[block * NODE_STRING_BLOCK_SIZE
 		  + 3*sizeof(uint32) + sizeof(uint16)]) + 2*sizeof(uint16));
@@ -331,7 +333,7 @@ void node_tag_split_and_index(uint& current_run, vector< uint32 >& split_idx, ui
       memcpy(&(write_blocks[block * NODE_STRING_BLOCK_SIZE + write_pos[block]]), cnt_rd_buf,
 	       2*sizeof(uint32) + 2*sizeof(uint16));
       write_pos[block] += 2*sizeof(uint32) + 2*sizeof(uint16);
-      read(source_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE + write_pos[block]]),
+      foo = read(source_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE + write_pos[block]]),
 	   size_rd_buf[0] + size_rd_buf[1]);
       write_pos[block] += size_rd_buf[0] + size_rd_buf[1];
       
@@ -342,7 +344,7 @@ void node_tag_split_and_index(uint& current_run, vector< uint32 >& split_idx, ui
       memcpy(&(write_blocks[block * NODE_STRING_BLOCK_SIZE + write_pos[block]]), cnt_rd_buf,
 	       2*sizeof(uint32) + 2*sizeof(uint16));
       write_pos[block] += 2*sizeof(uint32) + 2*sizeof(uint16);
-      read(source_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE + write_pos[block]]),
+      foo = read(source_fd, &(write_blocks[block * NODE_STRING_BLOCK_SIZE + write_pos[block]]),
 	   size_rd_buf[0] + size_rd_buf[1]);
       write_pos[block] += size_rd_buf[0] + size_rd_buf[1];
     
@@ -353,9 +355,9 @@ void node_tag_split_and_index(uint& current_run, vector< uint32 >& split_idx, ui
   for (unsigned int i(0); i < NODE_TAG_SPATIAL_PARTS+1; ++i)
   {
     *((uint32*)&(write_blocks[i * NODE_STRING_BLOCK_SIZE])) = write_pos[i] - sizeof(uint32);
-    write(dest_fd, &(write_blocks[i * NODE_STRING_BLOCK_SIZE]), NODE_STRING_BLOCK_SIZE);
-    write(dest_idx_fd, &(i), sizeof(uint16));
-    write(dest_idx_fd, &(write_blocks[i * NODE_STRING_BLOCK_SIZE
+    foo = write(dest_fd, &(write_blocks[i * NODE_STRING_BLOCK_SIZE]), NODE_STRING_BLOCK_SIZE);
+    foo = write(dest_idx_fd, &(i), sizeof(uint16));
+    foo = write(dest_idx_fd, &(write_blocks[i * NODE_STRING_BLOCK_SIZE
 	+ 3*sizeof(uint32)]), *(uint16*)&(write_blocks[i * NODE_STRING_BLOCK_SIZE
 	    + 3*sizeof(uint32)]) + *(uint16*)&(write_blocks[i * NODE_STRING_BLOCK_SIZE
 		+ 3*sizeof(uint32) + sizeof(uint16)]) + 2*sizeof(uint16));
@@ -649,8 +651,9 @@ void node_tag_id_statistics()
   Node_Tag_Id_Count_Global_Reader global_stats(id_count);
   select_all< Node_Tag_Id_Count_Global_Reader >(global_stats);
   
+  uint32 foo(0); //suppress stupid read/write warnings
   for (vector< uint32 >::const_iterator it(id_count.begin()); it != id_count.end(); ++it)
-    write(dest_fd, &(*it), sizeof(uint32));
+    foo = write(dest_fd, &(*it), sizeof(uint32));
 
   close(dest_fd);
 }
@@ -712,8 +715,9 @@ struct Node_String_Cache
 	                 "Node_String_Cache.init():1");
   
       uint32* string_spat_idx_buf = (uint32*) malloc(NODE_TAG_SPATIAL_PARTS*sizeof(uint32));
-      read(string_idx_fd, &next_node_tag_id, sizeof(uint32));
-      read(string_idx_fd, string_spat_idx_buf, NODE_TAG_SPATIAL_PARTS*sizeof(uint32));
+      uint32 foo(0); //suppress stupid read/write warnings
+      foo = read(string_idx_fd, &next_node_tag_id, sizeof(uint32));
+      foo = read(string_idx_fd, string_spat_idx_buf, NODE_TAG_SPATIAL_PARTS*sizeof(uint32));
       for (uint32 i(0); i < NODE_TAG_SPATIAL_PARTS; ++i)
 	spatial_boundaries.push_back(string_spat_idx_buf[i]);
       free(string_spat_idx_buf);
@@ -726,7 +730,7 @@ struct Node_String_Cache
       uint32 block_id(0);
       while (read(string_idx_fd, kv_to_id_idx_buf_1, 3*sizeof(uint16)))
       {
-	read(string_idx_fd, kv_to_id_idx_buf_2, kv_to_id_idx_buf_1[1] + kv_to_id_idx_buf_1[2]);
+	foo = read(string_idx_fd, kv_to_id_idx_buf_2, kv_to_id_idx_buf_1[1] + kv_to_id_idx_buf_1[2]);
 	kv_to_all[kv_to_id_idx_buf_1[0]].push_back(make_pair< pair< string, string >, uint16 >
 	    (make_pair< string, string >
 	     (string(kv_to_id_idx_buf_2, kv_to_id_idx_buf_1[1]),
@@ -848,6 +852,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   uint8* source_buf = (uint8*) malloc(BLOCKSIZE);
   uint8* deletion_buf = (uint8*) malloc(BLOCKSIZE);
   uint8* dest_buf = (uint8*) malloc(BLOCKSIZE);
+  uint32 foo(0); //suppress stupid read/write warnings
   
   uint cur_source_block(0);
   while (cur_source_block < block_id_bound)
@@ -890,7 +895,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     }
     
     lseek64(dest_fd, (int64)cur_source_block*(BLOCKSIZE), SEEK_SET);
-    read(dest_fd, source_buf, BLOCKSIZE);
+    foo = read(dest_fd, source_buf, BLOCKSIZE);
     uint32 pos(sizeof(uint32));
     map< pair< string, string >, pair< uint32, uint32 >* >::iterator elem_it2(elem_it);
     while ((elem_it2 != elem_end) && (pos < *((uint32*)source_buf) + sizeof(uint32)))
@@ -956,7 +961,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     }
     
     lseek64(dest_fd, (int64)cur_source_block*(BLOCKSIZE), SEEK_SET);
-    read(dest_fd, source_buf, BLOCKSIZE);
+    foo = read(dest_fd, source_buf, BLOCKSIZE);
     cur_dest_block = cur_source_block;
     uint32 pos(sizeof(uint32));
     uint32 elem_count(0);
@@ -1095,7 +1100,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
 
       lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-      write(dest_fd, dest_buf, BLOCKSIZE);
+      foo = write(dest_fd, dest_buf, BLOCKSIZE);
 
       cur_dest_block = next_block_id;
       if ((i >= ((uint32*)source_buf)[0]) ||
@@ -1170,7 +1175,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     }
     lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-    write(dest_fd, dest_buf, BLOCKSIZE);
+    foo = write(dest_fd, dest_buf, BLOCKSIZE);
     
     ++cur_source_block;
   }
@@ -1217,7 +1222,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     }
     
     lseek64(dest_fd, (int64)cur_source_block*(BLOCKSIZE), SEEK_SET);
-    read(dest_fd, source_buf, BLOCKSIZE);
+    foo = read(dest_fd, source_buf, BLOCKSIZE);
     cur_dest_block = cur_source_block;
     uint32 pos(sizeof(uint32));
     uint32 elem_count(0);
@@ -1347,7 +1352,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
 
       lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
       ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-      write(dest_fd, dest_buf, BLOCKSIZE);
+      foo = write(dest_fd, dest_buf, BLOCKSIZE);
 
       cur_dest_block = next_block_id;
       if ((i >= ((uint32*)source_buf)[0]) ||
@@ -1422,7 +1427,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     }
     lseek64(dest_fd, (int64)cur_dest_block*(BLOCKSIZE), SEEK_SET);
     ((uint32*)dest_buf)[0] = j - sizeof(uint32);
-    write(dest_fd, dest_buf, BLOCKSIZE);
+    foo = write(dest_fd, dest_buf, BLOCKSIZE);
     
     ++cur_source_block;
   }
@@ -1446,11 +1451,11 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
   for (unsigned int i(0); i < new_block_spatial.size(); ++i)
   {
     uint16 key_len(new_block_kvs[i].first.size()), value_len(new_block_kvs[i].second.size());
-    write(string_idx_fd, &(new_block_spatial[i]), 2);
-    write(string_idx_fd, &key_len, 2);
-    write(string_idx_fd, &value_len, 2);
-    write(string_idx_fd, new_block_kvs[i].first.data(), key_len);
-    write(string_idx_fd, new_block_kvs[i].second.data(), value_len);
+    foo = write(string_idx_fd, &(new_block_spatial[i]), 2);
+    foo = write(string_idx_fd, &key_len, 2);
+    foo = write(string_idx_fd, &value_len, 2);
+    foo = write(string_idx_fd, new_block_kvs[i].first.data(), key_len);
+    foo = write(string_idx_fd, new_block_kvs[i].second.data(), value_len);
   }
   
   close(string_idx_fd);
@@ -1461,7 +1466,7 @@ void node_string_delete_insert(map< pair< string, string >, pair< uint32, uint32
     throw File_Error(errno, DATADIR + db_subdir + NODE_STRING_IDX,
                      "Node_String_Cache.init():1");
   
-  write(string_idx_fd, &next_node_tag_id, sizeof(uint32));
+  foo = write(string_idx_fd, &next_node_tag_id, sizeof(uint32));
   
   close(string_idx_fd);
 }
@@ -1487,8 +1492,9 @@ void node_tag_id_statistics_remake()
   Node_Tag_Id_Count_Global_Reader global_stats(id_count);
   select_all< Node_Tag_Id_Count_Global_Reader >(global_stats);
 
+  uint32 foo(0); //suppress stupid read/write warnings
   for (vector< uint32 >::const_iterator it(id_count.begin()); it != id_count.end(); ++it)
-    write(dest_fd, &(*it), sizeof(uint32));
+    foo = write(dest_fd, &(*it), sizeof(uint32));
   
   close(dest_fd);
 }
@@ -1541,13 +1547,14 @@ void select_node_kv_to_ids
                      "select_kv_to_ids:1");
   
   char* string_idxs_buf = (char*) malloc(NODE_STRING_BLOCK_SIZE);
+  uint32 foo(0); //suppress stupid read/write warnings
   if (value == "")
   {
     for (set< uint16 >::const_iterator it(kv_to_idx_block_ids.begin());
 	 it != kv_to_idx_block_ids.end(); ++it)
     {
       lseek64(string_fd, ((uint64)(*it))*NODE_STRING_BLOCK_SIZE, SEEK_SET);
-      read(string_fd, string_idxs_buf, NODE_STRING_BLOCK_SIZE);
+      foo = read(string_fd, string_idxs_buf, NODE_STRING_BLOCK_SIZE);
       uint32 pos(sizeof(uint32));
       while (pos < *((uint32*)string_idxs_buf) + sizeof(uint32))
       {
@@ -1580,7 +1587,7 @@ void select_node_kv_to_ids
 	 it != kv_to_idx_block_ids.end(); ++it)
     {
       lseek64(string_fd, ((uint64)(*it))*NODE_STRING_BLOCK_SIZE, SEEK_SET);
-      read(string_fd, string_idxs_buf, NODE_STRING_BLOCK_SIZE);
+      foo = read(string_fd, string_idxs_buf, NODE_STRING_BLOCK_SIZE);
       uint32 pos(sizeof(uint32));
       while (pos < *((uint32*)string_idxs_buf) + sizeof(uint32))
       {
@@ -1652,11 +1659,12 @@ void select_node_ids_to_kvs
                      "select_ids_to_kvs:1");
   
   char* string_idxs_buf = (char*) malloc(NODE_STRING_BLOCK_SIZE);
+  uint32 foo(0); //suppress stupid read/write warnings
   for (set< uint16 >::const_iterator it(used_blocks.begin());
        it != used_blocks.end(); ++it)
   {
     lseek64(string_fd, ((uint64)(*it))*NODE_STRING_BLOCK_SIZE, SEEK_SET);
-    read(string_fd, string_idxs_buf, NODE_STRING_BLOCK_SIZE);
+    foo = read(string_fd, string_idxs_buf, NODE_STRING_BLOCK_SIZE);
     uint32 pos(sizeof(uint32));
     while (pos < *((uint32*)string_idxs_buf) + sizeof(uint32))
     {

@@ -4,7 +4,9 @@
 #include <map>
 #include <set>
 #include <string>
+#include <stdint.h>
 #include <stdlib.h>
+#include <time.h>
 #include <vector>
 #include "expat_justparse_interface.h"
 #include "script_datatypes.h"

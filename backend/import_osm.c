@@ -15,6 +15,7 @@
 #include "way_strings_file_io.h"
 
 #include <string.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <time.h>
 
