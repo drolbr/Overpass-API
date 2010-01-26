@@ -25,7 +25,7 @@ echo "Content-Type: text/html; charset=utf-8"
 echo
 
 REQUEST_METHOD=
-/home/roland/projekte/osm/db_area/cgi-bin/interpreter </tmp/nodes_csv_req >/tmp/nodes_csv_result.1
+/home/roland/osm-3s/cgi-bin/interpreter </tmp/nodes_csv_req >/tmp/nodes_csv_result.1
 dd if=/tmp/nodes_csv_result.1 of=/tmp/nodes_csv_result.2 bs=1 skip=56
 if [[ $ARG_2 == "forward" ]]; then
 {
