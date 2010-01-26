@@ -64,3 +64,6 @@ echo
 
 cd /tmp/
 tar cf - nodes_csv_rels/ | gzip
+
+rm /tmp/nodes_csv_req/*
+rmdir /tmp/nodes_csv_req
