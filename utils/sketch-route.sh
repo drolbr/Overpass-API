@@ -9,6 +9,25 @@ ARG_6=`echo $QUERY_STRING | awk -F [=,\&] '{ print $6; }'`
 ARG_7=`echo $QUERY_STRING | awk -F [=,\&] '{ print $7; }'`
 ARG_8=`echo $QUERY_STRING | awk -F [=,\&] '{ print $8; }'`
 
+if [[ -n $ARG_2 ]]; then
+{
+echo -e "\
+<osm-script timeout=\"180\" element-limit=\"10000000\"> \
+ \
+<union> \
+  <union> \
+    <id-query type=\"relation\" ref=\"$ARG_1\"/> \
+    <id-query type=\"relation\" ref=\"$ARG_2\"/> \
+  </union> \
+  <recurse type=\"relation-node\"/> \
+</union> \
+<print mode=\"body\"/> \
+ \
+</osm-script> \
+" >/tmp/nodes_csv_req
+};
+else
+{
 echo -e "\
 <osm-script timeout=\"180\" element-limit=\"10000000\"> \
  \
@@ -20,6 +39,8 @@ echo -e "\
  \
 </osm-script> \
 " >/tmp/nodes_csv_req
+};
+fi
 
 echo "Content-Type: application/xml; charset=utf-8"
 echo
