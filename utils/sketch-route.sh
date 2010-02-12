@@ -23,7 +23,7 @@ echo -e "\
 </osm-script> \
 " >/tmp/nodes_csv_req
 };
-else if [[ -n $ARG_2 ]]; then
+elseif [[ -n $ARG_2 ]];
 {
 echo -e "\
 <osm-script timeout=\"180\" element-limit=\"10000000\"> \
@@ -70,3 +70,4 @@ else
 {
   gunzip </tmp/nodes_csv_result.2 | ../bin/sketch-route-svg
 };
+fi
