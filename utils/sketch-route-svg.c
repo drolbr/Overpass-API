@@ -135,6 +135,7 @@ void end(const char *el)
 {
   if (!strcmp(el, "node"))
   {
+    nnode.name = escape_xml(nnode.name);
     nodes[id] = nnode;
   }
   else if (!strcmp(el, "relation"))
@@ -148,6 +149,11 @@ int main(int argc, char *argv[])
   //reading the main document
   parse(stdin, start, end);
   
+  rel_ref = escape_xml(rel_ref);
+  rel_from = escape_xml(rel_from);
+  rel_to = escape_xml(rel_to);
+  rel_color = escape_xml(rel_color);
+
   /* make a common stoplist from both relations */
   list< Stop > stoplist;
   if (rel_count == 1)
