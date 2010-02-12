@@ -175,7 +175,9 @@ int direction(0);
 
 bool inRelation(false);
 int rel_count(0);
-bool doubleread_rel(false);
+int doubleread_rel(0);
+const int TIME_ORDERED = 1;
+const int SPACE_ORDERED = 2;
 
 void start(const char *el, const char **attr)
 {
@@ -202,7 +204,7 @@ void start(const char *el, const char **attr)
     }
     if ((key == "from") && inRelation)
     {
-      if (doubleread_rel)
+      if (doubleread_rel != 0)
 	rel_from = value;
     }
     if ((key == "color") && inRelation)
@@ -235,16 +237,23 @@ void start(const char *el, const char **attr)
     }
     if (type == "node")
     {
-      if (doubleread_rel)
+      if (doubleread_rel == TIME_ORDERED)
       {
 	if (role.substr(0, 7) == "forward")
 	  stops.push_back(ref);
 	else if (role.substr(0, 8) == "backward")
 	  stops_back.push_front(ref);
+      }
+      else if (doubleread_rel == SPACE_ORDERED)
+      {
+	if (role.substr(0, 7) == "forward")
+	  stops.push_back(ref);
+	else if (role.substr(0, 8) == "backward")
+	  stops_back.push_back(ref);
 	else
 	{
 	  stops.push_back(ref);
-	  stops_back.push_front(ref);
+	  stops_back.push_back(ref);
 	}
       }
       else if (rel_count == 1)
@@ -277,8 +286,10 @@ int main(int argc, char *argv[])
 {
   if (argc >= 2)
   {
-    if (!strcmp("--doubleread-rel", argv[1]))
-      doubleread_rel = true;
+    if (!strcmp("--backspace", argv[1]))
+      doubleread_rel = SPACE_ORDERED;
+    else if (!strcmp("--backtime", argv[1]))
+      doubleread_rel = TIME_ORDERED;
   }
   
   //reading the main document

@@ -9,7 +9,7 @@ ARG_6=`echo $QUERY_STRING | awk -F [=,\&] '{ print $6; }'`
 ARG_7=`echo $QUERY_STRING | awk -F [=,\&] '{ print $7; }'`
 ARG_8=`echo $QUERY_STRING | awk -F [=,\&] '{ print $8; }'`
 
-if [[ $ARG_2 == "doubleread" ]]; then
+if [[ $ARG_2 == "backspace" ]]; then
 {
 echo -e "\
 <osm-script timeout=\"180\" element-limit=\"10000000\"> \
@@ -23,7 +23,21 @@ echo -e "\
 </osm-script> \
 " >/tmp/nodes_csv_req
 };
-elseif [[ -n $ARG_2 ]];
+elif [[ $ARG_2 == "backtime" ]]; then
+{
+echo -e "\
+<osm-script timeout=\"180\" element-limit=\"10000000\"> \
+ \
+<union> \
+  <id-query type=\"relation\" ref=\"$ARG_1\"/> \
+  <recurse type=\"relation-node\"/> \
+</union> \
+<print mode=\"body\"/> \
+ \
+</osm-script> \
+" >/tmp/nodes_csv_req
+};
+elif [[ -n $ARG_2 ]]; then
 {
 echo -e "\
 <osm-script timeout=\"180\" element-limit=\"10000000\"> \
@@ -62,9 +76,13 @@ echo
 REQUEST_METHOD=
 /home/roland/osm-3s/cgi-bin/interpreter </tmp/nodes_csv_req >/tmp/nodes_csv_result.1
 dd if=/tmp/nodes_csv_result.1 of=/tmp/nodes_csv_result.2 bs=1 skip=56
-if [[ $ARG_2 == "doubleread" ]]; then
+if [[ $ARG_2 == "backspace" ]]; then
 {
-  gunzip </tmp/nodes_csv_result.2 | ../bin/sketch-route-svg --doubleread-rel
+  gunzip </tmp/nodes_csv_result.2 | ../bin/sketch-route-svg --backspace
+};
+elif [[ $ARG_2 == "backtime" ]]; then
+{
+  gunzip </tmp/nodes_csv_result.2 | ../bin/sketch-route-svg --backtime
 };
 else
 {
