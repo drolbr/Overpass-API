@@ -29,6 +29,118 @@
 
 using namespace std;
 
+template< class Inserted >
+class Replacer
+{
+  public:
+    Replacer(string match_, Inserted insert_) : match(match_), insert(insert_) {}
+    
+    // Returns the string template, where all occurrences of match are
+    // replaced by insert
+    string apply(string source)
+    {
+      ostringstream result("");
+      string::size_type pos(0), found(source.find(match));
+      while (found != string::npos)
+      {
+	result<<source.substr(pos, found - pos);
+	result<<insert;
+	pos = found + match.length();
+	found = source.find(match, pos);
+      }
+      result<<source.substr(pos);
+      
+      return result.str();
+    }
+    
+  private:
+    string match;
+    Inserted insert;
+};
+
+string frame_template()
+{
+  return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+    "<svg xmlns=\"http://www.w3.org/2000/svg\"\n"
+    "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
+    "     xmlns:ev=\"http://www.w3.org/2001/xml-events\"\n"
+    "     version=\"1.1\" baseProfile=\"full\"\n"
+    "     width=\"700px\" height=\"330px\">\n"
+    "\n"
+    "<headline/>\n"
+    "\n"
+    "<stops-diagram/>\n"
+    "\n"
+    "</svg>\n";
+}
+
+string from_to_headline_template()
+{
+  return "<title>Line &rel_ref; from &rel_from; to &rel_to;</title>\n"
+      "<desc>Line &rel_ref; from &rel_from; to &rel_to;</desc>\n"
+      "\n"
+      "<text x=\"30\" y=\"30\" font-family=\"verdana\"><tspan font-size=\"32px\" fill=\"none\">&rel_ref;</tspan>\n"
+      "  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
+      "  <tspan font-size=\"16px\">from</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
+      "  <tspan font-size=\"24px\">&rel_from;</tspan></text>\n"
+      "<text x=\"30\" y=\"60\" font-family=\"verdana\"><tspan font-size=\"32px\" fill=\"none\">&rel_ref;</tspan>\n"
+      "  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
+      "  <tspan font-size=\"16px\">to</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
+      "  <tspan font-size=\"24px\">&rel_to;</tspan></text>\n"
+      "<text x=\"30\" y=\"45\" font-family=\"verdana\" font-size=\"32px\" fill=\"&rel_color;\">&rel_ref;</text>\n"
+      "\n";
+}
+
+string only_to_headline_template()
+{
+  return "<title>Line &rel_ref; to &rel_to;</title>\n"
+      "<desc>Line &rel_ref; to &rel_to;</desc>\n"
+      "\n"
+      "<text x=\"30\" y=\"60\" font-family=\"verdana\"><tspan font-size=\"32px\" fill=\"&rel_color;\">&rel_ref;</tspan>\n"
+      "  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
+      "  <tspan font-size=\"16px\">to</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
+      "  <tspan font-size=\"24px\">&rel_to;</tspan></text>\n"
+      "\n";
+}
+
+string line_template()
+{
+  return "<polyline fill=\"none\" stroke=\"&rel_color;\" stroke-width=\"7px\""
+      " points=\"&hmin; &vpos;, &hmax; &vpos;\"/>\n";
+}
+
+string bidirectional_stop_template()
+{
+  return "<circle cx=\"&hpos;\" cy=\"&vpos;\" r=\"7\" fill=\"&rel_color;\"/>\n"
+      "<text x=\"0\" y=\"-10\" transform=\"translate(&hpos;,&vpos;) rotate(-45,0,-10)\""
+      " font-family=\"verdana\" font-size=\"&stop_fontsize;\">&stopname;</text>\n"
+      "\n";
+}
+
+string forward_stop_template()
+{
+  return "<path d=\"M -7,0 a 7 7 0 0 0 14,0 Z\" style=\"fill:&rel_color;\""
+      " transform=\"translate(&hpos;,&vpos;)\"/>\n"
+      "<polyline fill=\"none\" stroke=\"&rel_color;\" stroke-width=\"2px\" points=\"-6 14, 2 14\"" 
+      " transform=\"translate(&hpos;,&vpos;)\"/>\n"
+      "<path d=\"M 0,9 l 0,10 l 6,-5 Z\" style=\"fill:&rel_color;\" transform=\"translate(&hpos;,&vpos;)\"/>\n"
+      "<text x=\"0\" y=\"-10\" transform=\"translate(&hpos;,&vpos;) rotate(-45,0,-10)\""
+      " font-family=\"verdana\" font-size=\"&stop_fontsize;\">&stopname;</text>\n"
+      "\n";
+}
+
+string backward_stop_template()
+{
+  return "<path d=\"M -7,0 a 7 7 0 0 1 14,0 Z\" style=\"fill:&rel_color;\""
+      " transform=\"translate(&hpos;,&vpos;)\"/>\n"
+      "<polyline fill=\"none\" stroke=\"&rel_color;\" stroke-width=\"2px\" points=\"6 14, -2 14\"" 
+      " transform=\"translate(&hpos;,&vpos;)\"/>\n"
+      "<path d=\"M 0,9 l 0,10 l -6,-5 Z\" style=\"fill:&rel_color;\" transform=\"translate(&hpos;,&vpos;)\"/>\n"
+      "<text x=\"0\" y=\"-10\" transform=\"translate(&hpos;,&vpos;) rotate(-45,0,-10)\""
+      " font-family=\"verdana\" font-size=\"&stop_fontsize;\">&stopname;</text>\n"
+      "\n";
+}
+
 struct NamedNode
 {
   public:
@@ -37,7 +149,6 @@ struct NamedNode
     double lat, lon;
     string name;
 };
-
 
 struct Stop
 {
@@ -64,6 +175,7 @@ int direction(0);
 
 bool inRelation(false);
 int rel_count(0);
+bool doubleread_rel(false);
 
 void start(const char *el, const char **attr)
 {
@@ -86,6 +198,11 @@ void start(const char *el, const char **attr)
       if (rel_count == 1)
 	rel_to = value;
       else
+	rel_from = value;
+    }
+    if ((key == "from") && inRelation)
+    {
+      if (doubleread_rel)
 	rel_from = value;
     }
     if ((key == "color") && inRelation)
@@ -118,7 +235,19 @@ void start(const char *el, const char **attr)
     }
     if (type == "node")
     {
-      if (rel_count == 1)
+      if (doubleread_rel)
+      {
+	if (role.substr(0, 7) == "forward")
+	  stops.push_back(ref);
+	else if (role.substr(0, 8) == "backward")
+	  stops_back.push_front(ref);
+	else
+	{
+	  stops.push_back(ref);
+	  stops_back.push_front(ref);
+	}
+      }
+      else if (rel_count == 1)
 	stops.push_back(ref);
       else
 	stops_back.push_front(ref);
@@ -146,6 +275,12 @@ void end(const char *el)
 
 int main(int argc, char *argv[])
 {
+  if (argc >= 2)
+  {
+    if (!strcmp("--doubleread-rel", argv[1]))
+      doubleread_rel = true;
+  }
+  
   //reading the main document
   parse(stdin, start, end);
   
@@ -156,15 +291,26 @@ int main(int argc, char *argv[])
 
   /* make a common stoplist from both relations */
   list< Stop > stoplist;
-  if (rel_count == 1)
+  if ((rel_count == 1) && (!doubleread_rel))
   {
-    for (list< unsigned int >::const_iterator it(stops.begin()); it != stops.end(); ++it)
+    list< unsigned int >::const_iterator it(stops.begin());
+    if (it != stops.end())
     {
       Stop stop;
       stop.id = *it;
       stop.type = Stop::BOTH;
       stoplist.push_back(stop);
     }
+    while (it != stops.end())
+    {
+      Stop stop;
+      stop.id = *it;
+      stop.type = Stop::FORWARD;
+      stoplist.push_back(stop);
+      ++it;
+    }
+    if (!stoplist.empty())
+      stoplist.back().type = Stop::BOTH;
   }
   else
   {
@@ -218,59 +364,25 @@ int main(int argc, char *argv[])
     }
   }
   
-  cout<<"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-      <<"<svg xmlns=\"http://www.w3.org/2000/svg\"\n"
-      <<"     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
-      <<"     xmlns:ev=\"http://www.w3.org/2001/xml-events\"\n"
-      <<"     version=\"1.1\" baseProfile=\"full\"\n"
-      <<"     width=\"700px\" height=\"330px\">\n"
-      <<"\n";
-  
-  if (rel_count == 1)
-    cout<<"<title>Line "<<rel_ref<<" to "<<rel_to<<"</title>\n"
-	<<"<desc>Line "<<rel_ref<<" to "<<rel_to<<"</desc>\n"
-	<<"\n"
-/*	<<"<defs>\n"
-	<<"  <style type=\"text/css\">\n"
-	<<"    <![CDATA[\n"
-	<<"      path {fill:"<<rel_color<<"; stroke:none;}\n"
-	<<"    ]]>\n"
-	<<"  </style>\n"
-	<<"</defs>\n"*/
-	<<"\n"
-	<<"<text x=\"30\" y=\"60\" font-family=\"verdana\"><tspan font-size=\"32px\" fill=\""<<rel_color<<"\">"<<rel_ref<<"</tspan>\n"
-	<<"  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-	<<"  <tspan font-size=\"16px\">to</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-	<<"  <tspan font-size=\"24px\">"<<rel_to<<"</tspan></text>\n"
-	<<"\n"
-	<<"<polyline fill=\"none\" stroke=\""<<rel_color<<"\" stroke-width=\"7px\" points=\"30 300, 510 300\"/>\n";
+  string headline;
+  if ((rel_count == 1) && (!doubleread_rel))
+    headline = only_to_headline_template();
   else
-    cout<<"<title>Line "<<rel_ref<<" from "<<rel_from<<" to "<<rel_to<<"</title>\n"
-	<<"<desc>Line "<<rel_ref<<" from "<<rel_from<<" to "<<rel_to<<"</desc>\n"
-	<<"\n"
-/*	<<"<defs>\n"
-	<<"  <style type=\"text/css\">\n"
-	<<"    <![CDATA[\n"
-	<<"      path {fill:"<<rel_color<<"; stroke:none;}\n"
-	<<"    ]]>\n"
-	<<"  </style>\n"
-	<<"</defs>\n"*/
-	<<"\n"
-	<<"<text x=\"30\" y=\"30\" font-family=\"verdana\"><tspan font-size=\"32px\" fill=\"none\">"<<rel_ref<<"</tspan>\n"
-	<<"  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-	<<"  <tspan font-size=\"16px\">from</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-	<<"  <tspan font-size=\"24px\">"<<rel_from<<"</tspan></text>\n"
-	<<"<text x=\"30\" y=\"60\" font-family=\"verdana\"><tspan font-size=\"32px\" fill=\"none\">"<<rel_ref<<"</tspan>\n"
-	<<"  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-	<<"  <tspan font-size=\"16px\">to</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-	<<"  <tspan font-size=\"24px\">"<<rel_to<<"</tspan></text>\n"
-	<<"<text x=\"30\" y=\"45\" font-family=\"verdana\" font-size=\"32px\" fill=\""<<rel_color<<"\">"<<rel_ref<<"</text>\n"
-	<<"\n"
-	<<"<polyline fill=\"none\" stroke=\""<<rel_color<<"\" stroke-width=\"7px\" points=\"30 300, 510 300\"/>\n";
+    headline = from_to_headline_template();
+  
+  headline = Replacer< string >("&rel_from;", rel_from).apply
+	    (Replacer< string >("&rel_to;", rel_to).apply
+	    (Replacer< string >("&rel_ref;", rel_ref).apply
+	    (Replacer< string >("&rel_color;", rel_color).apply(headline))));
+  
+  ostringstream result("");
   
   if ((stoplist.size() > 1) && (stoplist.size() <= 21))
   {
-    cout<<"<polyline fill=\"none\" stroke=\""<<rel_color<<"\" stroke-width=\"7px\" points=\"30 300, 510 300\"/>\n";
+    result<<Replacer< string >("&rel_color;", rel_color).apply
+	    (Replacer< double >("&hmin;",  30).apply
+	    (Replacer< double >("&hmax;", 510).apply
+	    (Replacer< double >("&vpos;", 300).apply(line_template()))));
     
     double pos(30);
     double stop_distance(0);
@@ -282,26 +394,33 @@ int main(int argc, char *argv[])
       NamedNode nnode(nodes[it->id]);
       if (nnode.lat <= 90.0)
       {
+	string stop_template;
 	if (it->type == Stop::BOTH)
-	  cout<<"<circle cx=\""<<pos<<"\" cy=\"300\" r=\"7\" fill=\""<<rel_color<<"\"/>\n";
+	  stop_template = bidirectional_stop_template();
 	else if (it->type == Stop::FORWARD)
-	  cout<<"<path d=\"M "<<pos - 7<<",300 a 7 7 0 0 0 14,0 Z\" style=\"fill:"<<rel_color<<"\"/>\n"
-	      <<"<polyline fill=\"none\" stroke=\""<<rel_color<<"\" stroke-width=\"2px\" points=\""<<pos - 6<<" 314, "<<pos + 2<<" 314\"/>\n"
-	      <<"<path d=\"M "<<pos<<",309 l 0,10 l 6,-5 Z\" style=\"fill:"<<rel_color<<"\"/>\n";
+	  stop_template = forward_stop_template();
 	else if (it->type == Stop::BACKWARD)
-	  cout<<"<path d=\"M "<<pos - 7<<",300 a 7 7 0 0 1 14,0 Z\" style=\"fill:"<<rel_color<<"\"/>\n"
-	      <<"<polyline fill=\"none\" stroke=\""<<rel_color<<"\" stroke-width=\"2px\" points=\""<<pos - 2<<" 314, "<<pos + 6<<" 314\"/>\n"
-	      <<"<path d=\"M "<<pos<<",309 l 0,10 l -6,-5 Z\" style=\"fill:"<<rel_color<<"\"/>\n";
-	cout<<"<text x=\""<<pos<<"\" y=\"290\" transform=\"rotate(-45,"<<pos<<",290)\" font-family=\"verdana\" font-size=\"16px\">"<<nnode.name<<"</text>\n";
+	  stop_template = backward_stop_template();
+	
+	result<<Replacer< string >("&stopname;", nnode.name).apply
+	    (Replacer< string >("&rel_color;", rel_color).apply
+	    (Replacer< string >("&stop_fontsize;", "16px").apply
+	    (Replacer< double >("&hpos;", pos).apply
+	    (Replacer< double >("&vpos;", 300).apply(stop_template)))));	
       }
       pos += stop_distance;
     }
   }
   else if (stoplist.size() > 21)
   {
-    cout<<"<polyline fill=\"none\" stroke=\""<<rel_color<<"\" stroke-width=\"7px\" points=\"30 170, 530 170\"/>\n"
-    	<<"<polyline fill=\"none\" stroke=\""<<rel_color<<"\" stroke-width=\"7px\" points=\"30 300, 510 300\"/>\n";
-
+    result<<Replacer< string >("&rel_color;", rel_color).apply
+	    (Replacer< double >("&hmin;",  30).apply
+	    (Replacer< double >("&hmax;", 530).apply
+	    (Replacer< double >("&vpos;", 170).apply(line_template()))));
+    result<<Replacer< string >("&rel_color;", rel_color).apply
+	    (Replacer< double >("&hmin;",  30).apply
+	    (Replacer< double >("&hmax;", 510).apply
+	    (Replacer< double >("&vpos;", 300).apply(line_template()))))<<'\n';
     
     unsigned int count(0);
     double pos(30), vpos(170);
@@ -314,17 +433,19 @@ int main(int argc, char *argv[])
       NamedNode nnode(nodes[it->id]);
       if (nnode.lat <= 90.0)
       {
+	string stop_template;
 	if (it->type == Stop::BOTH)
-	  cout<<"<circle cx=\""<<pos<<"\" cy=\""<<vpos<<"\" r=\"7\" fill=\""<<rel_color<<"\"/>\n";
+	  stop_template = bidirectional_stop_template();
 	else if (it->type == Stop::FORWARD)
-	  cout<<"<path d=\"M "<<pos - 7<<","<<vpos<<" a 7 7 0 0 0 14,0 Z\" style=\"fill:"<<rel_color<<"\"/>\n"
-	      <<"<polyline fill=\"none\" stroke=\""<<rel_color<<"\" stroke-width=\"2px\" points=\""<<pos - 6<<" "<<vpos + 14<<", "<<pos + 2<<" "<<vpos + 14<<"\"/>\n"
-	      <<"<path d=\"M "<<pos<<","<<vpos + 9<<" l 0,10 l 6,-5 Z\" style=\"fill:"<<rel_color<<"\"/>\n";
+	  stop_template = forward_stop_template();
 	else if (it->type == Stop::BACKWARD)
-	  cout<<"<path d=\"M "<<pos - 7<<","<<vpos<<" a 7 7 0 0 1 14,0 Z\" style=\"fill:"<<rel_color<<"\"/>\n"
-	      <<"<polyline fill=\"none\" stroke=\""<<rel_color<<"\" stroke-width=\"2px\" points=\""<<pos - 2<<" "<<vpos + 14<<", "<<pos + 6<<" "<<vpos + 14<<"\"/>\n"
-	      <<"<path d=\"M "<<pos<<","<<vpos + 9<<" l 0,10 l -6,-5 Z\" style=\"fill:"<<rel_color<<"\"/>\n";
-	cout<<"<text x=\""<<pos<<"\" y=\""<<vpos-10<<"\" transform=\"rotate(-45,"<<pos<<","<<vpos-10<<")\" font-family=\"verdana\" font-size=\"10px\">"<<nnode.name<<"</text>\n";
+	  stop_template = backward_stop_template();
+	
+	result<<Replacer< string >("&stopname;", nnode.name).apply
+	    (Replacer< string >("&rel_color;", rel_color).apply
+	    (Replacer< string >("&stop_fontsize;", "10px").apply
+	    (Replacer< double >("&hpos;", pos).apply
+	    (Replacer< double >("&vpos;", vpos).apply(stop_template)))));
       }
       pos += stop_distance;
       if (++count >= (stoplist.size()+1)/2)
@@ -337,7 +458,8 @@ int main(int argc, char *argv[])
     }
   }
   
-  cout<<"</svg>\n";
+  cout<<Replacer< string >("<headline/>", headline).apply
+      (Replacer< string >("<stops-diagram/>", result.str()).apply(frame_template()));
   
   return 0;
 }

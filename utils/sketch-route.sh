@@ -9,7 +9,21 @@ ARG_6=`echo $QUERY_STRING | awk -F [=,\&] '{ print $6; }'`
 ARG_7=`echo $QUERY_STRING | awk -F [=,\&] '{ print $7; }'`
 ARG_8=`echo $QUERY_STRING | awk -F [=,\&] '{ print $8; }'`
 
-if [[ -n $ARG_2 ]]; then
+if [[ $ARG_2 == "doubleread" ]]; then
+{
+echo -e "\
+<osm-script timeout=\"180\" element-limit=\"10000000\"> \
+ \
+<union> \
+  <id-query type=\"relation\" ref=\"$ARG_1\"/> \
+  <recurse type=\"relation-node\"/> \
+</union> \
+<print mode=\"body\"/> \
+ \
+</osm-script> \
+" >/tmp/nodes_csv_req
+};
+else if [[ -n $ARG_2 ]]; then
 {
 echo -e "\
 <osm-script timeout=\"180\" element-limit=\"10000000\"> \
@@ -48,4 +62,11 @@ echo
 REQUEST_METHOD=
 /home/roland/osm-3s/cgi-bin/interpreter </tmp/nodes_csv_req >/tmp/nodes_csv_result.1
 dd if=/tmp/nodes_csv_result.1 of=/tmp/nodes_csv_result.2 bs=1 skip=56
-gunzip </tmp/nodes_csv_result.2 | ../bin/sketch-route-svg
+if [[ $ARG_2 == "doubleread" ]]; then
+{
+  gunzip </tmp/nodes_csv_result.2 | ../bin/sketch-route-svg --doubleread-rel
+};
+else
+{
+  gunzip </tmp/nodes_csv_result.2 | ../bin/sketch-route-svg
+};
