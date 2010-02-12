@@ -42,7 +42,7 @@ echo -e "\
 };
 fi
 
-echo "Content-Type: application/xml; charset=utf-8"
+echo "Content-Type: image/svg+xml; charset=utf-8"
 echo
 
 REQUEST_METHOD=
