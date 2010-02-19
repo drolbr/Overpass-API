@@ -1,16 +1,4 @@
 /*****************************************************************
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the license contained in the
- * COPYING file that comes with the expat distribution.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  * Must be used with Expat compiled for UTF-8 output.
  */
 
@@ -18,8 +6,10 @@
 #include <iostream>
 #include <list>
 #include <map>
+#include <set>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include <math.h>
 #include <string.h>
@@ -65,7 +55,7 @@ string frame_template()
     "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
     "     xmlns:ev=\"http://www.w3.org/2001/xml-events\"\n"
     "     version=\"1.1\" baseProfile=\"full\"\n"
-    "     width=\"700px\" height=\"330px\">\n"
+    "     width=\"700px\" height=\"495px\">\n"
     "\n"
     "<headline/>\n"
     "\n"
@@ -79,15 +69,15 @@ string from_to_headline_template()
   return "<title>Line &rel_ref; from &rel_from; to &rel_to;</title>\n"
       "<desc>Line &rel_ref; from &rel_from; to &rel_to;</desc>\n"
       "\n"
-      "<text x=\"30\" y=\"30\" font-family=\"verdana\"><tspan font-size=\"32px\" fill=\"none\">&rel_ref;</tspan>\n"
+      "<text x=\"30\" y=\"30\" font-family=\"Liberation Sans, sans-serif\"><tspan font-size=\"32px\" fill=\"none\">&rel_ref;</tspan>\n"
       "  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
       "  <tspan font-size=\"16px\">from</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
       "  <tspan font-size=\"24px\">&rel_from;</tspan></text>\n"
-      "<text x=\"30\" y=\"60\" font-family=\"verdana\"><tspan font-size=\"32px\" fill=\"none\">&rel_ref;</tspan>\n"
+      "<text x=\"30\" y=\"60\" font-family=\"Liberation Sans, sans-serif\"><tspan font-size=\"32px\" fill=\"none\">&rel_ref;</tspan>\n"
       "  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
       "  <tspan font-size=\"16px\">to</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
       "  <tspan font-size=\"24px\">&rel_to;</tspan></text>\n"
-      "<text x=\"30\" y=\"45\" font-family=\"verdana\" font-size=\"32px\" fill=\"&rel_color;\">&rel_ref;</text>\n"
+      "<text x=\"30\" y=\"45\" font-family=\"Liberation Sans, sans-serif\" font-size=\"32px\" fill=\"&rel_color;\">&rel_ref;</text>\n"
       "\n";
 }
 
@@ -96,7 +86,7 @@ string only_to_headline_template()
   return "<title>Line &rel_ref; to &rel_to;</title>\n"
       "<desc>Line &rel_ref; to &rel_to;</desc>\n"
       "\n"
-      "<text x=\"30\" y=\"60\" font-family=\"verdana\"><tspan font-size=\"32px\" fill=\"&rel_color;\">&rel_ref;</tspan>\n"
+      "<text x=\"30\" y=\"60\" font-family=\"Liberation Sans, sans-serif\"><tspan font-size=\"32px\" fill=\"&rel_color;\">&rel_ref;</tspan>\n"
       "  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
       "  <tspan font-size=\"16px\">to</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
       "  <tspan font-size=\"24px\">&rel_to;</tspan></text>\n"
@@ -109,11 +99,16 @@ string line_template()
       " points=\"&hmin; &vpos;, &hmax; &vpos;\"/>\n";
 }
 
+string stop_name_template()
+{
+  return "<text x=\"0\" y=\"-10\" transform=\"translate(&hpos;,&vpos;) rotate(-45,0,-10)\""
+      " font-family=\"Liberation Sans, sans-serif\" font-size=\"&stop_fontsize;\">&stopname;</text>\n"
+      "\n";
+}
+
 string bidirectional_stop_template()
 {
   return "<circle cx=\"&hpos;\" cy=\"&vpos;\" r=\"7\" fill=\"&rel_color;\"/>\n"
-      "<text x=\"0\" y=\"-10\" transform=\"translate(&hpos;,&vpos;) rotate(-45,0,-10)\""
-      " font-family=\"verdana\" font-size=\"&stop_fontsize;\">&stopname;</text>\n"
       "\n";
 }
 
@@ -121,11 +116,9 @@ string forward_stop_template()
 {
   return "<path d=\"M -7,0 a 7 7 0 0 0 14,0 Z\" style=\"fill:&rel_color;\""
       " transform=\"translate(&hpos;,&vpos;)\"/>\n"
-      "<polyline fill=\"none\" stroke=\"&rel_color;\" stroke-width=\"2px\" points=\"-6 14, 2 14\"" 
+      "<polyline fill=\"none\" stroke=\"&rel_color;\" stroke-width=\"2px\" points=\"0 -8, 6 -8\"" 
       " transform=\"translate(&hpos;,&vpos;)\"/>\n"
-      "<path d=\"M 0,9 l 0,10 l 6,-5 Z\" style=\"fill:&rel_color;\" transform=\"translate(&hpos;,&vpos;)\"/>\n"
-      "<text x=\"0\" y=\"-10\" transform=\"translate(&hpos;,&vpos;) rotate(-45,0,-10)\""
-      " font-family=\"verdana\" font-size=\"&stop_fontsize;\">&stopname;</text>\n"
+      "<path d=\"M 4,-4 l 0,-8 l 6,4 Z\" style=\"fill:&rel_color;\" transform=\"translate(&hpos;,&vpos;)\"/>\n"
       "\n";
 }
 
@@ -133,13 +126,109 @@ string backward_stop_template()
 {
   return "<path d=\"M -7,0 a 7 7 0 0 1 14,0 Z\" style=\"fill:&rel_color;\""
       " transform=\"translate(&hpos;,&vpos;)\"/>\n"
-      "<polyline fill=\"none\" stroke=\"&rel_color;\" stroke-width=\"2px\" points=\"6 14, -2 14\"" 
+      "<polyline fill=\"none\" stroke=\"&rel_color;\" stroke-width=\"2px\" points=\"-6 8, 0 8\"" 
       " transform=\"translate(&hpos;,&vpos;)\"/>\n"
-      "<path d=\"M 0,9 l 0,10 l -6,-5 Z\" style=\"fill:&rel_color;\" transform=\"translate(&hpos;,&vpos;)\"/>\n"
-      "<text x=\"0\" y=\"-10\" transform=\"translate(&hpos;,&vpos;) rotate(-45,0,-10)\""
-      " font-family=\"verdana\" font-size=\"&stop_fontsize;\">&stopname;</text>\n"
+      "<path d=\"M -4,4 l 0,8 l -6,-4 Z\" style=\"fill:&rel_color;\" transform=\"translate(&hpos;,&vpos;)\"/>\n"
       "\n";
 }
+
+//-----------------------------------------------------------------------------
+
+vector< unsigned int > longest_ascending_subsequence(const vector< unsigned int >& sequence)
+{
+  vector< vector< unsigned int > > sublists;
+  
+  vector< unsigned int >::const_iterator it(sequence.begin());
+  if (it != sequence.end())
+  {
+    vector< unsigned int > sublist;
+    sublist.push_back(*it);
+    sublists.push_back(sublist);
+    ++it;
+  }
+  while (it != sequence.end())
+  {
+    unsigned int i(sublists.size());
+    while (i > 0)
+    {
+      --i;
+      
+      if (*it > sublists[i].back())
+      {
+	if (sublists.size() == i+1)
+	{
+	  sublists.push_back(sublists[i]);
+	  sublists[i+1].push_back(*it);
+	}
+	else if (*it < sublists[i+1].back())
+	{
+	  sublists[i+1] = sublists[i];
+	  sublists[i+1].push_back(*it);
+	}
+      }
+      else if (*it < sublists[i].back())
+      {
+	if (sublists[i].size() == 1)
+	  sublists[i][0] = *it;
+	else if (*it > sublists[i][sublists[i].size()-2])
+	  sublists[i][sublists[i].size()-1] = *it;
+      }
+    }
+    
+    ++it;
+  }
+  
+  return sublists.back();
+}
+
+vector< unsigned int > longest_descending_subsequence(const vector< unsigned int >& sequence)
+{
+  vector< vector< unsigned int > > sublists;
+  
+  vector< unsigned int >::const_reverse_iterator it(sequence.rbegin());
+  if (it != sequence.rend())
+  {
+    vector< unsigned int > sublist;
+    sublist.push_back(*it);
+    sublists.push_back(sublist);
+    ++it;
+  }
+  while (it != sequence.rend())
+  {
+    unsigned int i(sublists.size());
+    while (i > 0)
+    {
+      --i;
+      
+      if (*it > sublists[i].back())
+      {
+	if (sublists.size() == i+1)
+	{
+	  sublists.push_back(sublists[i]);
+	  sublists[i+1].push_back(*it);
+	}
+	else if (*it < sublists[i+1].back())
+	{
+	  sublists[i+1] = sublists[i];
+	  sublists[i+1].push_back(*it);
+	}
+      }
+      else if (*it < sublists[i].back())
+      {
+	if (sublists[i].size() == 1)
+	  sublists[i][0] = *it;
+	else if (*it > sublists[i][sublists[i].size()-2])
+	  sublists[i][sublists[i].size()-1] = *it;
+      }
+    }
+    
+    ++it;
+  }
+  
+  return sublists.back();
+}
+
+//-----------------------------------------------------------------------------
 
 struct NamedNode
 {
@@ -150,34 +239,53 @@ struct NamedNode
     string name;
 };
 
+struct Relation
+{
+  public:
+    Relation() : forward_stops(), backward_stops(), ref(""), color("blue"),
+	     from(""), to(""), direction(0) {}
+    
+    vector< unsigned int > forward_stops;
+    vector< unsigned int > backward_stops;
+    
+    string ref;
+    string color;
+    string from;
+    string to;
+    int direction;
+    const static int FORWARD = 1;
+    const static int BACKWARD = 2;
+    const static int BOTH = 3;
+};
+
 struct Stop
 {
   public:
-    Stop() : id(0), type(0) {}
+    Stop() : name(""), used_by() {}
     
-    unsigned int id;
-    int type;
-    
-    static const int BOTH = 0;
-    static const int FORWARD = 1;
-    static const int BACKWARD = 2;
+    string name;
+    vector< int > used_by;
+    const static int FORWARD = 1;
+    const static int BACKWARD = 2;
+    const static int BOTH = 3;
 };
 
 map< unsigned int, NamedNode > nodes;
 NamedNode nnode;
-
-list< unsigned int > stops;
-list< unsigned int > stops_back;
 unsigned int id;
-string rel_ref, rel_from, rel_to;
-string rel_color("blue");
-int direction(0);
 
-bool inRelation(false);
-int rel_count(0);
-int doubleread_rel(0);
-const int TIME_ORDERED = 1;
-const int SPACE_ORDERED = 2;
+vector< Relation > relations;
+Relation relation;
+
+unsigned int parse_status;
+const unsigned int IN_NODE = 1;
+const unsigned int IN_RELATION = 2;
+
+bool doubleread_rel;
+// int rel_count(0);
+// int doubleread_rel(0);
+// const int TIME_ORDERED = 1;
+// const int SPACE_ORDERED = 2;
 
 void start(const char *el, const char **attr)
 {
@@ -191,27 +299,20 @@ void start(const char *el, const char **attr)
       else if (!strcmp(attr[i], "v"))
 	value = attr[i+1];
     }
-    if (key == "name")
-      nnode.name = value;
-    if ((key == "ref") && inRelation)
-      rel_ref = value;
-    if ((key == "to") && inRelation)
-    {
-      if (rel_count == 1)
-	rel_to = value;
-      else
-	rel_from = value;
-    }
-    if ((key == "from") && inRelation)
-    {
-      if (doubleread_rel != 0)
-	rel_from = value;
-    }
-    if ((key == "color") && inRelation)
-      rel_color = value;
+    if ((key == "name") && (parse_status == IN_NODE))
+      nnode.name = escape_xml(value);
+    if ((key == "ref") && (parse_status == IN_RELATION))
+      relation.ref = escape_xml(value);
+    if ((key == "to") && (parse_status == IN_RELATION))
+      relation.to = escape_xml(value);
+    if ((key == "from") && (parse_status == IN_RELATION))
+      relation.from = escape_xml(value);
+    if ((key == "color") && (parse_status == IN_RELATION))
+      relation.color = escape_xml(value);
   }
   else if (!strcmp(el, "node"))
   {
+    parse_status = IN_NODE;
     for (unsigned int i(0); attr[i]; i += 2)
     {
       if (!strcmp(attr[i], "id"))
@@ -237,35 +338,27 @@ void start(const char *el, const char **attr)
     }
     if (type == "node")
     {
-      if (doubleread_rel == TIME_ORDERED)
+      if (role.substr(0, 7) == "forward")
       {
-	if (role.substr(0, 7) == "forward")
-	  stops.push_back(ref);
-	else if (role.substr(0, 8) == "backward")
-	  stops_back.push_front(ref);
+	relation.forward_stops.push_back(ref);
+	relation.direction = Relation::BOTH;
       }
-      else if (doubleread_rel == SPACE_ORDERED)
+      else if (role.substr(0, 8) == "backward")
       {
-	if (role.substr(0, 7) == "forward")
-	  stops.push_back(ref);
-	else if (role.substr(0, 8) == "backward")
-	  stops_back.push_back(ref);
-	else
-	{
-	  stops.push_back(ref);
-	  stops_back.push_back(ref);
-	}
+	relation.backward_stops.push_back(ref);
+	relation.direction = Relation::BOTH;
       }
-      else if (rel_count == 1)
-	stops.push_back(ref);
       else
-	stops_back.push_front(ref);
+      {
+	relation.forward_stops.push_back(ref);
+	relation.backward_stops.push_back(ref);
+      }
     }
   }
   else if (!strcmp(el, "relation"))
   {
-    inRelation = true;
-    ++rel_count;
+    parse_status = IN_RELATION;
+    relation = Relation();
   }
 }
 
@@ -273,127 +366,368 @@ void end(const char *el)
 {
   if (!strcmp(el, "node"))
   {
-    nnode.name = escape_xml(nnode.name);
     nodes[id] = nnode;
+    parse_status = 0;
   }
   else if (!strcmp(el, "relation"))
   {
-    inRelation = false;
+    parse_status = 0;
+    relations.push_back(relation);
   }
 }
 
 int main(int argc, char *argv[])
 {
+  doubleread_rel = false;
   if (argc >= 2)
   {
     if (!strcmp("--backspace", argv[1]))
-      doubleread_rel = SPACE_ORDERED;
+      doubleread_rel = true;
     else if (!strcmp("--backtime", argv[1]))
-      doubleread_rel = TIME_ORDERED;
+      doubleread_rel = true;
   }
   
-  //reading the main document
+  // read the XML input
+  parse_status = 0;
   parse(stdin, start, end);
-  
-  rel_ref = escape_xml(rel_ref);
-  rel_from = escape_xml(rel_from);
-  rel_to = escape_xml(rel_to);
-  rel_color = escape_xml(rel_color);
 
-  /* make a common stoplist from both relations */
+  // make a common stoplist from both relations
   list< Stop > stoplist;
-  if ((rel_count == 1) && (!doubleread_rel))
+  if (relations.size() == 0)
   {
-    list< unsigned int >::const_iterator it(stops.begin());
-    if (it != stops.end())
-    {
-      Stop stop;
-      stop.id = *it;
-      stop.type = Stop::BOTH;
-      stoplist.push_back(stop);
-    }
-    while (it != stops.end())
-    {
-      Stop stop;
-      stop.id = *it;
-      stop.type = Stop::FORWARD;
-      stoplist.push_back(stop);
-      ++it;
-    }
-    if (!stoplist.empty())
-      stoplist.back().type = Stop::BOTH;
+    cout<<Replacer< string >("<headline/>", "").apply
+	(Replacer< string >("<stops-diagram/>", "<text>No relation found</text>").apply(frame_template()));
+    return 0;
   }
-  else
+  
+//   for (vector< Relation >::const_iterator it(relations.begin()); it != relations.end(); ++it)
+//   {
+//     cerr<<"from: "<<it->from<<'\n';
+//     cerr<<"to: "<<it->from<<'\n';
+//     for (vector< unsigned int >::const_iterator iit(it->forward_stops.begin());
+//         iit != it->forward_stops.end(); ++iit)
+//       cerr<<nodes[*iit].lat<<' '<<nodes[*iit].name<<'\n';
+//     cerr<<'\n';
+//     for (vector< unsigned int >::const_iterator iit(it->backward_stops.begin());
+//     iit != it->backward_stops.end(); ++iit)
+//     cerr<<nodes[*iit].lat<<' '<<nodes[*iit].name<<'\n';
+//     cerr<<'\n';
+//   }
+
+  relation = relations.front();
+  for(vector< unsigned int >::const_iterator it(relation.forward_stops.begin());
+      it != relation.forward_stops.end(); ++it)
   {
-    list< unsigned int >::const_iterator back_it(stops_back.begin());
-    for (list< unsigned int >::const_iterator it(stops.begin()); it != stops.end(); ++it)
+    Stop stop;
+    stop.used_by.resize(relations.size());
+    if (nodes[*it].lat <= 90.0)
     {
-      if (back_it == stops_back.end())
+      stop.name = nodes[*it].name;
+      stop.used_by[0] = Stop::FORWARD;
+    }
+    stoplist.push_back(stop);
+  }
+  if (relations.begin()->direction == 0)
+    relations.begin()->direction = Relation::FORWARD;
+
+//   for (list< Stop >::const_iterator it(stoplist.begin());
+//       it != stoplist.end(); ++it)
+//   {
+//     cerr<<it->name<<' '<<it->used_by.size()<<'\n';
+//   }
+//   cerr<<'\n';
+
+  vector< Relation >::iterator rit(relations.begin());
+  unsigned int rel_count(1);
+  ++rit;
+  while (rit != relations.end())
+  {
+    map< string, unsigned int > stopdict;
+    for (unsigned int i(0); i < rit->forward_stops.size(); ++i)
+    {
+      if (nodes[rit->forward_stops[i]].lat <= 90.0)
+	stopdict[nodes[rit->forward_stops[i]].name] = i+1;
+    }
+    
+    vector< unsigned int > indices_of_present_stops;
+    for (list< Stop >::const_iterator it(stoplist.begin());
+        it != stoplist.end(); ++it)
+    {
+      if (stopdict[it->name] > 0)
+	indices_of_present_stops.push_back(stopdict[it->name]);
+    }
+    
+    vector< unsigned int > ascending(longest_ascending_subsequence
+        (indices_of_present_stops));
+    vector< unsigned int > descending(longest_descending_subsequence
+        (indices_of_present_stops));
+    
+    if (ascending.size() > descending.size())
+    {
+      if (rit->direction == 0)
+	rit->direction = Relation::FORWARD;
+      
+      vector< unsigned int >::const_iterator sit(ascending.begin());
+      unsigned int last_idx(1);
+      for (list< Stop >::iterator it(stoplist.begin());
+      it != stoplist.end(); ++it)
       {
-	Stop stop;
-	stop.id = *it;
-	stop.type = Stop::FORWARD;
-	stoplist.push_back(stop);
-      }
-      else if (nodes[*back_it].name == nodes[*it].name)
-      {
-	Stop stop;
-	stop.id = *it;
-	stop.type = Stop::BOTH;
-	stoplist.push_back(stop);
-	++back_it;
-      }
-      else
-      {
-	list< unsigned int >::const_iterator back_it2(back_it);
-	while ((back_it2 != stops_back.end()) && (nodes[*back_it2].name != nodes[*it].name))
-	  ++back_it2;
-	if (back_it2 != stops_back.end())
+	if (stopdict[it->name] == *sit)
 	{
-	  while (back_it != back_it2)
+	  // insert stops that aren't yet inserted
+	  while (*sit > last_idx)
 	  {
 	    Stop stop;
-	    stop.id = *back_it;
-	    stop.type = Stop::BACKWARD;
-	    stoplist.push_back(stop);
-	    ++back_it;
+	    stop.used_by.resize(relations.size());
+	    if (nodes[rit->forward_stops[last_idx-1]].lat <= 90.0)
+	    {
+	      stop.name = nodes[rit->forward_stops[last_idx-1]].name;
+	      stop.used_by[rel_count] = Stop::FORWARD;
+	      stoplist.insert(it, stop);
+	    }
+	    ++last_idx;
 	  }
-	  Stop stop;
-	  stop.id = *it;
-	  stop.type = Stop::BOTH;
-	  stoplist.push_back(stop);
-	  ++back_it;
-	}
-	else
-	{
-	  Stop stop;
-	  stop.id = *it;
-	  stop.type = Stop::FORWARD;
-	  stoplist.push_back(stop);
+	  ++last_idx;
+	  
+	  // match the current stop
+	  it->used_by[rel_count] = Stop::FORWARD;;
+	  
+	  if (++sit == ascending.end())
+	    break;
 	}
       }
+      
+      // insert stops at the end
+      while (last_idx < rit->forward_stops.size())
+      {
+	Stop stop;
+	stop.used_by.resize(relations.size());
+	if (nodes[rit->forward_stops[last_idx-1]].lat <= 90.0)
+	{
+	  stop.name = nodes[rit->forward_stops[last_idx-1]].name;
+	  stop.used_by[rel_count] = Stop::FORWARD;
+	  stoplist.push_back(stop);
+	}
+	++last_idx;
+      }
     }
+    else
+    {
+      if (rit->direction == 0)
+	rit->direction = Relation::BACKWARD;
+      
+      vector< unsigned int >::const_reverse_iterator sit(descending.rbegin());
+      unsigned int last_idx(rit->forward_stops.size());
+      for (list< Stop >::iterator it(stoplist.begin());
+	  it != stoplist.end(); ++it)
+      {
+	if (stopdict[it->name] == *sit)
+	{
+	  // insert stops that aren't yet inserted
+	  while (*sit < last_idx)
+	  {
+	    Stop stop;
+	    stop.used_by.resize(relations.size());
+	    if (nodes[rit->forward_stops[last_idx-1]].lat <= 90.0)
+	    {
+	      stop.name = nodes[rit->forward_stops[last_idx-1]].name;
+	      stop.used_by[rel_count] = Stop::BACKWARD;
+	      stoplist.insert(it, stop);
+	    }
+	    --last_idx;
+	  }
+	  --last_idx;
+	  
+	  // match the current stop
+	  it->used_by[rel_count] = Stop::BACKWARD;;
+	  
+	  if (++sit == descending.rend())
+	    break;
+	}
+      }
+      
+      // insert stops at the end
+      while (last_idx > 0)
+      {
+	Stop stop;
+	stop.used_by.resize(relations.size());
+	if (nodes[rit->forward_stops[last_idx-1]].lat <= 90.0)
+	{
+	  stop.name = nodes[rit->forward_stops[last_idx-1]].name;
+	  stop.used_by[rel_count] = Stop::BACKWARD;
+	  stoplist.push_back(stop);
+	}
+	--last_idx;
+      }
+    }
+    
+    ++rit;
+    ++rel_count;
   }
   
+/*  for (list< Stop >::const_iterator it(stoplist.begin());
+  it != stoplist.end(); ++it)
+  {
+    cerr<<it->name<<' '<<it->used_by.size()<<'\n';
+  }
+  cerr<<'\n';*/
+  
+  rit = relations.begin();
+  rel_count = 0;
+  while (rit != relations.end())
+  {
+    if (!(rit->direction == Relation::BOTH) && (!doubleread_rel))
+    {
+      ++rit;
+      ++rel_count;
+      continue;
+    }
+    
+    map< string, unsigned int > stopdict;
+    for (unsigned int i(0); i < rit->backward_stops.size(); ++i)
+    {
+      if (nodes[rit->backward_stops[i]].lat <= 90.0)
+	stopdict[nodes[rit->backward_stops[i]].name] = i+1;
+    }
+    
+    vector< unsigned int > indices_of_present_stops;
+    for (list< Stop >::const_iterator it(stoplist.begin());
+    it != stoplist.end(); ++it)
+    {
+      if (stopdict[it->name] > 0)
+	indices_of_present_stops.push_back(stopdict[it->name]);
+    }
+    
+    vector< unsigned int > ascending(longest_ascending_subsequence
+    (indices_of_present_stops));
+    vector< unsigned int > descending(longest_descending_subsequence
+    (indices_of_present_stops));
+    
+    if (ascending.size() > descending.size())
+    {
+      vector< unsigned int >::const_iterator sit(ascending.begin());
+      unsigned int last_idx(1);
+      for (list< Stop >::iterator it(stoplist.begin());
+      it != stoplist.end(); ++it)
+      {
+	if (stopdict[it->name] == *sit)
+	{
+	  // insert stops that aren't yet inserted
+	  while (*sit > last_idx)
+	  {
+	    Stop stop;
+	    stop.used_by.resize(relations.size());
+	    if (nodes[rit->backward_stops[last_idx-1]].lat <= 90.0)
+	    {
+	      stop.name = nodes[rit->backward_stops[last_idx-1]].name;
+	      stop.used_by[rel_count] = Stop::BACKWARD;
+	      stoplist.insert(it, stop);
+	    }
+	    ++last_idx;
+	  }
+	  ++last_idx;
+	  
+	  // match the current stop
+	  it->used_by[rel_count] |= Stop::BACKWARD;
+	  
+	  if (++sit == ascending.end())
+	    break;
+	}
+      }
+      
+      // insert stops at the end
+      while (last_idx < rit->backward_stops.size())
+      {
+	Stop stop;
+	stop.used_by.resize(relations.size());
+	if (nodes[rit->backward_stops[last_idx-1]].lat <= 90.0)
+	{
+	  stop.name = nodes[rit->backward_stops[last_idx-1]].name;
+	  stop.used_by[rel_count] = Stop::BACKWARD;
+	  stoplist.push_back(stop);
+	}
+	++last_idx;
+      }
+    }
+    else
+    {
+      vector< unsigned int >::const_reverse_iterator sit(descending.rbegin());
+      unsigned int last_idx(rit->backward_stops.size());
+      for (list< Stop >::iterator it(stoplist.begin());
+      it != stoplist.end(); ++it)
+      {
+	if (stopdict[it->name] == *sit)
+	{
+	  // insert stops that aren't yet inserted
+	  while (*sit < last_idx)
+	  {
+	    Stop stop;
+	    stop.used_by.resize(relations.size());
+	    if (nodes[rit->backward_stops[last_idx-1]].lat <= 90.0)
+	    {
+	      stop.name = nodes[rit->backward_stops[last_idx-1]].name;
+	      stop.used_by[rel_count] = Stop::FORWARD;
+	      stoplist.insert(it, stop);
+	    }
+	    --last_idx;
+	  }
+	  --last_idx;
+	  
+	  // match the current stop
+	  it->used_by[rel_count] |= Stop::FORWARD;;
+	  
+	  if (++sit == descending.rend())
+	    break;
+	}
+      }
+      
+      // insert stops at the end
+      while (last_idx > 0)
+      {
+	Stop stop;
+	stop.used_by.resize(relations.size());
+	if (nodes[rit->backward_stops[last_idx-1]].lat <= 90.0)
+	{
+	  stop.name = nodes[rit->backward_stops[last_idx-1]].name;
+	  stop.used_by[rel_count] = Stop::FORWARD;
+	  stoplist.push_back(stop);
+	}
+	--last_idx;
+      }
+    }
+    
+    ++rit;
+    ++rel_count;
+  }
+
+/*  for (list< Stop >::const_iterator it(stoplist.begin());
+  it != stoplist.end(); ++it)
+  {
+    cerr<<it->name<<' '<<it->used_by.size()<<'\n';
+  }
+  cerr<<'\n';*/
+
   string headline;
-  if ((rel_count == 1) && (!doubleread_rel))
+  headline = from_to_headline_template();
+/*  if ((rel_count == 1) && (!doubleread_rel))
     headline = only_to_headline_template();
   else
-    headline = from_to_headline_template();
+    headline = from_to_headline_template();*/
   
-  headline = Replacer< string >("&rel_from;", rel_from).apply
-	    (Replacer< string >("&rel_to;", rel_to).apply
-	    (Replacer< string >("&rel_ref;", rel_ref).apply
-	    (Replacer< string >("&rel_color;", rel_color).apply(headline))));
+  headline = Replacer< string >("&rel_from;", relation.from).apply
+	    (Replacer< string >("&rel_to;", relation.to).apply
+	    (Replacer< string >("&rel_ref;", relation.ref).apply
+	    (Replacer< string >("&rel_color;", relation.color).apply(headline))));
   
   ostringstream result("");
   
   if ((stoplist.size() > 1) && (stoplist.size() <= 21))
   {
-    result<<Replacer< string >("&rel_color;", rel_color).apply
+    for (unsigned int i(0); i < stoplist.begin()->used_by.size(); ++i)
+      result<<Replacer< string >("&rel_color;", relation.color).apply
 	    (Replacer< double >("&hmin;",  30).apply
 	    (Replacer< double >("&hmax;", 510).apply
-	    (Replacer< double >("&vpos;", 300).apply(line_template()))));
+	    (Replacer< double >("&vpos;", 380 + 20*i).apply(line_template()))));
     
     double pos(30);
     double stop_distance(0);
@@ -402,67 +736,80 @@ int main(int argc, char *argv[])
   
     for (list< Stop >::const_iterator it(stoplist.begin()); it != stoplist.end(); ++it)
     {
-      NamedNode nnode(nodes[it->id]);
-      if (nnode.lat <= 90.0)
+      for (unsigned int i(0); i < it->used_by.size(); ++i)
       {
 	string stop_template;
-	if (it->type == Stop::BOTH)
+	if (it->used_by[i] == Stop::BOTH)
 	  stop_template = bidirectional_stop_template();
-	else if (it->type == Stop::FORWARD)
+	else if (it->used_by[i] == Stop::FORWARD)
 	  stop_template = forward_stop_template();
-	else if (it->type == Stop::BACKWARD)
+	else if (it->used_by[i] == Stop::BACKWARD)
 	  stop_template = backward_stop_template();
-	
-	result<<Replacer< string >("&stopname;", nnode.name).apply
-	    (Replacer< string >("&rel_color;", rel_color).apply
+      
+	result<<Replacer< string >("&stopname;", it->name).apply
+	    (Replacer< string >("&rel_color;", relation.color).apply
 	    (Replacer< string >("&stop_fontsize;", "16px").apply
 	    (Replacer< double >("&hpos;", pos).apply
-	    (Replacer< double >("&vpos;", 300).apply(stop_template)))));	
+	    (Replacer< double >("&vpos;", 380 + 20*i).apply(stop_template)))));	
       }
+      
+      result<<Replacer< string >("&stopname;", it->name).apply
+          (Replacer< string >("&rel_color;", relation.color).apply
+          (Replacer< string >("&stop_fontsize;", "16px").apply
+          (Replacer< double >("&hpos;", pos).apply
+          (Replacer< double >("&vpos;", 380).apply(stop_name_template())))));	
       pos += stop_distance;
     }
   }
   else if (stoplist.size() > 21)
   {
-    result<<Replacer< string >("&rel_color;", rel_color).apply
+    for (unsigned int i(0); i < stoplist.begin()->used_by.size(); ++i)
+    {
+      result<<Replacer< string >("&rel_color;", relation.color).apply
 	    (Replacer< double >("&hmin;",  30).apply
 	    (Replacer< double >("&hmax;", 530).apply
-	    (Replacer< double >("&vpos;", 170).apply(line_template()))));
-    result<<Replacer< string >("&rel_color;", rel_color).apply
+	    (Replacer< double >("&vpos;", 210 + 20*i).apply(line_template()))));
+      result<<Replacer< string >("&rel_color;", relation.color).apply
 	    (Replacer< double >("&hmin;",  30).apply
 	    (Replacer< double >("&hmax;", 510).apply
-	    (Replacer< double >("&vpos;", 300).apply(line_template()))))<<'\n';
+	    (Replacer< double >("&vpos;", 380 + 20*i).apply(line_template()))))<<'\n';
+    }
     
     unsigned int count(0);
-    double pos(30), vpos(170);
+    double pos(30), vpos(210);
     double stop_distance(0);
   
     stop_distance = 480.0/((stoplist.size()+1)/2-1);
   
     for (list< Stop >::const_iterator it(stoplist.begin()); it != stoplist.end(); ++it)
     {
-      NamedNode nnode(nodes[it->id]);
-      if (nnode.lat <= 90.0)
+      for (unsigned int i(0); i < it->used_by.size(); ++i)
       {
 	string stop_template;
-	if (it->type == Stop::BOTH)
+	if (it->used_by[i] == Stop::BOTH)
 	  stop_template = bidirectional_stop_template();
-	else if (it->type == Stop::FORWARD)
+	else if (it->used_by[i] == Stop::FORWARD)
 	  stop_template = forward_stop_template();
-	else if (it->type == Stop::BACKWARD)
+	else if (it->used_by[i] == Stop::BACKWARD)
 	  stop_template = backward_stop_template();
-	
-	result<<Replacer< string >("&stopname;", nnode.name).apply
-	    (Replacer< string >("&rel_color;", rel_color).apply
-	    (Replacer< string >("&stop_fontsize;", "10px").apply
+      
+	result<<Replacer< string >("&stopname;", it->name).apply
+	    (Replacer< string >("&rel_color;", relation.color).apply
+	    (Replacer< string >("&stop_fontsize;", "16px").apply
 	    (Replacer< double >("&hpos;", pos).apply
-	    (Replacer< double >("&vpos;", vpos).apply(stop_template)))));
+	    (Replacer< double >("&vpos;", vpos + 20*i).apply(stop_template)))));	
       }
+      
+      result<<Replacer< string >("&stopname;", it->name).apply
+          (Replacer< string >("&rel_color;", relation.color).apply
+          (Replacer< string >("&stop_fontsize;", "10px").apply
+          (Replacer< double >("&hpos;", pos).apply
+          (Replacer< double >("&vpos;", 380).apply(stop_name_template())))));	
       pos += stop_distance;
       if (++count >= (stoplist.size()+1)/2)
       {
 	count = 0;
-	vpos = 300;
+	vpos = 380;
 	stop_distance = 480.0/(stoplist.size()/2);
 	pos = 30 + stop_distance;
       }
