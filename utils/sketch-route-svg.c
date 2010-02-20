@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 
+#include <errno.h>
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -48,6 +49,28 @@ class Replacer
     Inserted insert;
 };
 
+string multi_replace(map< string, string > replace, string data)
+{
+  for (map< string, string >::const_iterator it(replace.begin()); it != replace.end(); ++it)
+  {
+    if (it->first == "")
+      continue;
+    ostringstream result("");
+    string::size_type pos(0), found(data.find(it->first, 0));
+    while (found != string::npos)
+    {
+      result<<data.substr(pos, found - pos);
+      result<<it->second;
+      pos = found + it->first.length();
+      found = data.find(it->first, pos);
+    }
+    result<<data.substr(pos);
+      
+    data = result.str();
+  }
+  return data;
+}
+
 string frame_template()
 {
   return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -66,16 +89,16 @@ string frame_template()
 
 string from_to_headline_template()
 {
-  return "<title>Line &rel_ref; from &rel_from; to &rel_to;</title>\n"
-      "<desc>Line &rel_ref; from &rel_from; to &rel_to;</desc>\n"
+  return "<title>Line &rel_ref; &tr_from; &rel_from; &tr_to; &rel_to;</title>\n"
+      "<desc>Line &rel_ref; &tr_from; &rel_from; &tr_to; &rel_to;</desc>\n"
       "\n"
       "<text x=\"30\" y=\"30\" font-family=\"Liberation Sans, sans-serif\"><tspan font-size=\"32px\" fill=\"none\">&rel_ref;</tspan>\n"
       "  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  <tspan font-size=\"16px\">from</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
+      "  <tspan font-size=\"16px\">&tr_from;</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
       "  &from_tail;</text>\n"
       "<text x=\"30\" y=\"60\" font-family=\"Liberation Sans, sans-serif\"><tspan font-size=\"32px\" fill=\"none\">&rel_ref;</tspan>\n"
       "  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  <tspan font-size=\"16px\">to</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
+      "  <tspan font-size=\"16px\">&tr_to;</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
       "  &to_tail;</text>\n"
       "<text x=\"30\" y=\"45\" font-family=\"Liberation Sans, sans-serif\" font-size=\"32px\" fill=\"&rel_color;\">&rel_ref;</text>\n"
       "\n";
@@ -85,7 +108,7 @@ string alternate_headline_extension_template()
 {
   return "  &head;\n"
       "  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  <tspan font-size=\"16px\">or</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
+      "  <tspan font-size=\"16px\">&tr_or;</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
       "  &tail;";
 }
 
@@ -96,12 +119,12 @@ string destination_headline_template()
 
 string only_to_headline_template()
 {
-  return "<title>Line &rel_ref; to &rel_to;</title>\n"
-      "<desc>Line &rel_ref; to &rel_to;</desc>\n"
+  return "<title>Line &rel_ref; &tr_to; &rel_to;</title>\n"
+      "<desc>Line &rel_ref; &tr_to; &rel_to;</desc>\n"
       "\n"
       "<text x=\"30\" y=\"60\" font-family=\"Liberation Sans, sans-serif\"><tspan font-size=\"32px\" fill=\"&rel_color;\">&rel_ref;</tspan>\n"
       "  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  <tspan font-size=\"16px\">to</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
+      "  <tspan font-size=\"16px\">&tr_to;</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
       "  <tspan font-size=\"24px\">&rel_to;</tspan></text>\n"
       "\n";
 }
@@ -131,6 +154,14 @@ string stop_name_template()
       "\n";
 }
 
+string terminus_name_template()
+{
+  return "<text x=\"0\" y=\"-10\" transform=\"translate(&hpos;,&vpos;) rotate(-45,0,-10)\""
+      " font-family=\"Liberation Sans, sans-serif\" font-size=\"&stop_fontsize;px\""
+      " font-weight=\"bold\">&stopname;</text>\n"
+      "\n";
+}
+
 string bidirectional_stop_template()
 {
   return "<circle cx=\"&hpos;\" cy=\"&vpos;\" r=\"7\" fill=\"&rel_color;\"/>\n"
@@ -155,6 +186,35 @@ string backward_stop_template()
       " transform=\"translate(&hpos;,&vpos;)\"/>\n"
       "<path d=\"M -4,4 l 0,8 l -6,-4 Z\" style=\"fill:&rel_color;\" transform=\"translate(&hpos;,&vpos;)\"/>\n"
       "\n";
+}
+
+string bidirectional_terminus_template()
+{
+  return "<circle cx=\"&hpos;\" cy=\"&vpos;\" r=\"9\" fill=\"&rel_color;\"/>\n"
+      "\n";
+}
+
+string forward_terminus_template()
+{
+  return "<circle cx=\"&hpos;\" cy=\"&vpos;\" r=\"9\" fill=\"&rel_color;\"/>\n"
+      "\n";
+}
+
+string backward_terminus_template()
+{
+  return "<circle cx=\"&hpos;\" cy=\"&vpos;\" r=\"9\" fill=\"&rel_color;\"/>\n"
+      "\n";
+}
+
+map< string, string > default_translations()
+{
+  map< string, string > translations;
+  
+  translations["&tr_from;"] = "from";
+  translations["&tr_to;"] = "to";
+  translations["&tr_or;"] = "or";
+  
+  return translations;
 }
 
 //-----------------------------------------------------------------------------
@@ -304,11 +364,13 @@ unsigned int parse_status;
 const unsigned int IN_NODE = 1;
 const unsigned int IN_RELATION = 2;
 
+double width(700);
+double height(495);
+double stop_font_size(0);
+int force_rows(0);
+map< string, string > name_shortcuts;
+map< string, string > translations;
 bool doubleread_rel;
-// int rel_count(0);
-// int doubleread_rel(0);
-// const int TIME_ORDERED = 1;
-// const int SPACE_ORDERED = 2;
 
 void start(const char *el, const char **attr)
 {
@@ -399,17 +461,95 @@ void end(const char *el)
   }
 }
 
+void options_start(const char *el, const char **attr)
+{
+  if (!strcmp(el, "reduce"))
+  {
+    string expr, to;
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "expr"))
+	expr = attr[i+1];
+      else if (!strcmp(attr[i], "to"))
+	to = attr[i+1];
+    }
+    name_shortcuts[expr] = to;
+  }
+  else if (!strcmp(el, "translate"))
+  {
+    string expr, to;
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "expr"))
+	expr = attr[i+1];
+      else if (!strcmp(attr[i], "to"))
+	to = attr[i+1];
+    }
+    translations[((string)"&tr_") + expr + ";"] = to;
+  }
+  else if (!strcmp(el, "width"))
+  {
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "px"))
+	width = atof(attr[i+1]);
+    }
+  }
+  else if (!strcmp(el, "height"))
+  {
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "px"))
+	height = atof(attr[i+1]);
+    }
+  }
+  else if (!strcmp(el, "stop-font-size"))
+  {
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "px"))
+	stop_font_size = atof(attr[i+1]);
+    }
+  }
+  else if (!strcmp(el, "force"))
+  {
+    string expr, to;
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "rows"))
+	force_rows = atoi(attr[i+1]);
+    }
+  }
+}
+
+void options_end(const char *el)
+{
+}
+
 int main(int argc, char *argv[])
 {
+  translations = default_translations();
+  
   doubleread_rel = false;
   int argi(1);
-  double width(700);
-  double height(495);
-  double stop_font_size(0);
-  int force_rows(0);
   while (argi < argc)
   {
-    if (!strncmp("--width=", argv[argi], 8))
+    if (!strncmp("--options=", argv[argi], 10))
+    {
+      FILE* options_file(fopen(((string)(argv[argi])).substr(10).c_str(), "r"));
+      if (!options_file)
+      {
+        cout<<Replacer< double >("&width;", width).apply
+	    (Replacer< double >("&height;", height).apply
+	    (Replacer< string >("<headline/>", "").apply
+	    (Replacer< string >("<stops-diagram/>", "<text x=\"100\" y=\"100\">"
+		"Can't open options file. Try running without \"--options\".</text>").apply
+	    (frame_template()))));
+        return 0;
+      }
+      parse(options_file, options_start, options_end);
+    }
+    else if (!strncmp("--width=", argv[argi], 8))
       width = atof(((string)(argv[argi])).substr(8).c_str());
     else if (!strncmp("--height=", argv[argi], 9))
       height = atof(((string)(argv[argi])).substr(9).c_str());
@@ -866,7 +1006,7 @@ int main(int argc, char *argv[])
       }
     }
   }
-    
+  
   string from_buffer, to_buffer, headline, last_from, last_to;
   headline = from_to_headline_template();
   from_buffer = "&tail;";
@@ -962,6 +1102,7 @@ int main(int argc, char *argv[])
     int stopcount(0);
     for (list< Stop >::const_iterator it(stoplist.begin()); it != stoplist.end(); ++it)
     {
+      bool is_a_terminus(false);
       for (unsigned int i(0); i < relations.size(); ++i)
       {
 	if (relations[i].direction == 0)
@@ -972,26 +1113,47 @@ int main(int argc, char *argv[])
 	  continue;
 	
 	string stop_template;
-	if (it->used_by[i] == Stop::BOTH)
-	  stop_template = bidirectional_stop_template();
-	else if (it->used_by[i] == Stop::FORWARD)
-	  stop_template = forward_stop_template();
-	else if (it->used_by[i] == Stop::BACKWARD)
-	  stop_template = backward_stop_template();
+	if (((stopcount == first_stop_idx[i]) && (left_join_to[i] < 0)) ||
+	    ((stopcount == last_stop_idx[i]) && (right_join_to[i] < 0)))
+	{
+	  is_a_terminus = true;
+	  if (it->used_by[i] == Stop::BOTH)
+	    stop_template = bidirectional_terminus_template();
+	  else if (it->used_by[i] == Stop::FORWARD)
+	    stop_template = forward_terminus_template();
+	  else if (it->used_by[i] == Stop::BACKWARD)
+	    stop_template = backward_terminus_template();
+	}
+	else
+	{
+	  if (it->used_by[i] == Stop::BOTH)
+	    stop_template = bidirectional_stop_template();
+	  else if (it->used_by[i] == Stop::FORWARD)
+	    stop_template = forward_stop_template();
+	  else if (it->used_by[i] == Stop::BACKWARD)
+	    stop_template = backward_stop_template();
+	}
       
-	result<<Replacer< string >("&stopname;", it->name).apply
-	    (Replacer< string >("&rel_color;", relation.color).apply
+	result<<Replacer< string >("&rel_color;", relation.color).apply
 	    (Replacer< string >("&stop_fontsize;", "16px").apply
 	    (Replacer< double >("&hpos;", pos).apply
-	    (Replacer< double >("&vpos;", height - 115 + offset_of[i]).apply(stop_template)))));	
+	    (Replacer< double >("&vpos;", height - 115 + offset_of[i]).apply(stop_template))));
       }
       ++stopcount;
       
-      result<<Replacer< string >("&stopname;", it->name).apply
-          (Replacer< string >("&rel_color;", relation.color).apply
-          (Replacer< double >("&stop_fontsize;", stop_font_size).apply
-          (Replacer< double >("&hpos;", pos).apply
-          (Replacer< double >("&vpos;", height - 115).apply(stop_name_template())))));	
+      string stopname(multi_replace(name_shortcuts, it->name));
+      if (is_a_terminus)
+	result<<Replacer< string >("&stopname;", stopname).apply
+            (Replacer< string >("&rel_color;", relation.color).apply
+            (Replacer< double >("&stop_fontsize;", stop_font_size).apply
+            (Replacer< double >("&hpos;", pos).apply
+            (Replacer< double >("&vpos;", height - 115).apply(terminus_name_template())))));
+      else
+	result<<Replacer< string >("&stopname;", stopname).apply
+            (Replacer< string >("&rel_color;", relation.color).apply
+            (Replacer< double >("&stop_fontsize;", stop_font_size).apply
+            (Replacer< double >("&hpos;", pos).apply
+            (Replacer< double >("&vpos;", height - 115).apply(stop_name_template())))));	
       pos += stop_distance;
     }
   }
@@ -1075,6 +1237,7 @@ int main(int argc, char *argv[])
     int stopcount(0);
     for (list< Stop >::const_iterator it(stoplist.begin()); it != stoplist.end(); ++it)
     {
+      bool is_a_terminus(false);
       for (unsigned int i(0); i < relations.size(); ++i)
       {
 	if (relations[i].direction == 0)
@@ -1085,26 +1248,47 @@ int main(int argc, char *argv[])
 	  continue;
 	
 	string stop_template;
-	if (it->used_by[i] == Stop::BOTH)
-	  stop_template = bidirectional_stop_template();
-	else if (it->used_by[i] == Stop::FORWARD)
-	  stop_template = forward_stop_template();
-	else if (it->used_by[i] == Stop::BACKWARD)
-	  stop_template = backward_stop_template();
+	if (((stopcount == first_stop_idx[i]) && (left_join_to[i] < 0)) ||
+	    ((stopcount == last_stop_idx[i]) && (right_join_to[i] < 0)))
+	{
+	  is_a_terminus = true;
+	  if (it->used_by[i] == Stop::BOTH)
+	    stop_template = bidirectional_terminus_template();
+	  else if (it->used_by[i] == Stop::FORWARD)
+	    stop_template = forward_terminus_template();
+	  else if (it->used_by[i] == Stop::BACKWARD)
+	    stop_template = backward_terminus_template();
+	}
+	else
+	{
+	  if (it->used_by[i] == Stop::BOTH)
+	    stop_template = bidirectional_stop_template();
+	  else if (it->used_by[i] == Stop::FORWARD)
+	    stop_template = forward_stop_template();
+	  else if (it->used_by[i] == Stop::BACKWARD)
+	    stop_template = backward_stop_template();
+	}
       
-	result<<Replacer< string >("&stopname;", it->name).apply
-	    (Replacer< string >("&rel_color;", relation.color).apply
+	result<<Replacer< string >("&rel_color;", relation.color).apply
 	    (Replacer< string >("&stop_fontsize;", "16px").apply
 	    (Replacer< double >("&hpos;", pos).apply
-	    (Replacer< double >("&vpos;", vpos + offset_of[i]).apply(stop_template)))));	
+	    (Replacer< double >("&vpos;", vpos + offset_of[i]).apply(stop_template))));
       }
       ++stopcount;
       
-      result<<Replacer< string >("&stopname;", it->name).apply
-          (Replacer< string >("&rel_color;", relation.color).apply
-          (Replacer< double >("&stop_fontsize;", stop_font_size).apply
-          (Replacer< double >("&hpos;", pos).apply
-          (Replacer< double >("&vpos;", vpos).apply(stop_name_template())))));	
+      string stopname(multi_replace(name_shortcuts, it->name));
+      if (is_a_terminus)
+        result<<Replacer< string >("&stopname;", stopname).apply
+            (Replacer< string >("&rel_color;", relation.color).apply
+            (Replacer< double >("&stop_fontsize;", stop_font_size).apply
+            (Replacer< double >("&hpos;", pos).apply
+            (Replacer< double >("&vpos;", vpos).apply(terminus_name_template())))));
+      else
+        result<<Replacer< string >("&stopname;", stopname).apply
+            (Replacer< string >("&rel_color;", relation.color).apply
+            (Replacer< double >("&stop_fontsize;", stop_font_size).apply
+            (Replacer< double >("&hpos;", pos).apply
+            (Replacer< double >("&vpos;", vpos).apply(stop_name_template())))));	
       pos += stop_distance;
       if (++count >= (stoplist.size()+1)/2)
       {
@@ -1116,10 +1300,10 @@ int main(int argc, char *argv[])
     }
   }
   
-  cout<<Replacer< double >("&width;", width).apply
+  cout<<multi_replace(translations, Replacer< double >("&width;", width).apply
       (Replacer< double >("&height;", height).apply
       (Replacer< string >("<headline/>", headline).apply
-      (Replacer< string >("<stops-diagram/>", result.str()).apply(frame_template()))));
+      (Replacer< string >("<stops-diagram/>", result.str()).apply(frame_template())))));
   
   return 0;
 }

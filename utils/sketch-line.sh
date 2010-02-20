@@ -5,6 +5,8 @@ BUF=$QUERY_STRING\&
 # echo "Content-Type: text/plain; charset=utf-8"
 # echo
 
+SKETCH_PARAMS=
+
 while [[ -n $BUF ]]; do
 {
   KEY=`echo $BUF | awk '{ print substr($0,0,match($0,"=")); }'`
@@ -12,13 +14,19 @@ while [[ -n $BUF ]]; do
   VALUE=`echo $BUF | awk '{ print substr($0,0,match($0,"\&")); }'`
   BUF=`echo $BUF | awk '{ print substr($0,match($0,"\&")+1); }'`
   if [[ $KEY == "network" ]]; then
-  {
     NETWORK=$VALUE
-  };
   elif [[ $KEY == "ref" ]]; then
-  {
     REF=$VALUE
-  };
+  elif [[ $KEY == "width" ]]; then
+    SKETCH_PARAMS="$SKETCH_PARAMS --width=$VALUE"
+  elif [[ $KEY == "height" ]]; then
+    SKETCH_PARAMS="$SKETCH_PARAMS --height=$VALUE"
+  elif [[ $KEY == "font-size" ]]; then
+    SKETCH_PARAMS="$SKETCH_PARAMS --stop-font-size=$VALUE"
+  elif [[ $KEY == "force-rows" ]]; then
+    SKETCH_PARAMS="$SKETCH_PARAMS --rows=$VALUE"
+  elif [[ $KEY == "style" ]]; then
+    SKETCH_PARAMS="$SKETCH_PARAMS --options=/opt/osm_why_api/options/sketch-line.$VALUE"
   fi
 };
 done
@@ -44,4 +52,4 @@ echo
 REQUEST_METHOD=
 /home/roland/osm-3s/cgi-bin/interpreter </tmp/sketch_line_req >/tmp/sketch_line_req.1
 dd if=/tmp/sketch_line_req.1 of=/tmp/sketch_line_req.2 bs=1 skip=56
-gunzip </tmp/sketch_line_req.2 | ../bin/sketch-route-svg
+gunzip </tmp/sketch_line_req.2 | ../bin/sketch-route-svg $SKETCH_PARAMS

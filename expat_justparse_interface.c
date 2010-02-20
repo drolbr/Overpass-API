@@ -96,7 +96,7 @@ void parse(FILE* in,
     int done;
     int len;
 
-    len = (int)fread(Buff, 1, BUFFSIZE, in);
+    len = (int)fread(Buff, 1, BUFFSIZE-1, in);
     if (ferror(in)) {
       fprintf(stderr, "Read error\n");
       exit(-1);
