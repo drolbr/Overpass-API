@@ -481,19 +481,20 @@ int main(int argc, char *argv[])
   ++rit;
   while (rit != relations.end())
   {
-    map< string, unsigned int > stopdict;
+    multimap< string, unsigned int > stopdict;
     for (unsigned int i(0); i < rit->forward_stops.size(); ++i)
     {
       if (nodes[rit->forward_stops[i]].lat <= 90.0)
-	stopdict[nodes[rit->forward_stops[i]].name] = i+1;
+	stopdict.insert(make_pair(nodes[rit->forward_stops[i]].name, i+1));
     }
     
     vector< unsigned int > indices_of_present_stops;
     for (list< Stop >::const_iterator it(stoplist.begin());
         it != stoplist.end(); ++it)
     {
-      if (stopdict[it->name] > 0)
-	indices_of_present_stops.push_back(stopdict[it->name]);
+      for (multimap< string, unsigned int >::const_iterator
+	   iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
+	indices_of_present_stops.push_back(iit->second);
     }
     
     vector< unsigned int > ascending(longest_ascending_subsequence
@@ -510,7 +511,11 @@ int main(int argc, char *argv[])
       for (list< Stop >::iterator it(stoplist.begin());
       it != stoplist.end(); ++it)
       {
-	if (stopdict[it->name] == *sit)
+	bool sit_found(false);
+	for (multimap< string, unsigned int >::const_iterator
+		    iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
+	  sit_found |= (iit->second == *sit);
+	if (sit_found)
 	{
 	  // insert stops that aren't yet inserted
 	  while (*sit > last_idx)
@@ -558,7 +563,11 @@ int main(int argc, char *argv[])
       for (list< Stop >::iterator it(stoplist.begin());
 	  it != stoplist.end(); ++it)
       {
-	if (stopdict[it->name] == *sit)
+	bool sit_found(false);
+	for (multimap< string, unsigned int >::const_iterator
+		    iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
+	  sit_found |= (iit->second == *sit);
+	if (sit_found)
 	{
 	  // insert stops that aren't yet inserted
 	  while (*sit < last_idx)
