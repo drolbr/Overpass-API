@@ -13,19 +13,19 @@ while [[ -n $BUF ]]; do
   BUF=`echo $BUF | awk '{ print substr($0,match($0,"=")+1); }'`
   VALUE=`echo $BUF | awk '{ print substr($0,0,match($0,"\&")); }'`
   BUF=`echo $BUF | awk '{ print substr($0,match($0,"\&")+1); }'`
-  if [[ $KEY == "network" ]]; then
+  if [[ $KEY == "network" && -n $VALUE ]]; then
     NETWORK=$VALUE
-  elif [[ $KEY == "ref" ]]; then
+  elif [[ $KEY == "ref" && -n $VALUE ]]; then
     REF=$VALUE
-  elif [[ $KEY == "width" ]]; then
+  elif [[ $KEY == "width" && -n $VALUE ]]; then
     SKETCH_PARAMS="$SKETCH_PARAMS --width=$VALUE"
-  elif [[ $KEY == "height" ]]; then
+  elif [[ $KEY == "height" && -n $VALUE ]]; then
     SKETCH_PARAMS="$SKETCH_PARAMS --height=$VALUE"
-  elif [[ $KEY == "font-size" ]]; then
+  elif [[ $KEY == "font-size" && -n $VALUE ]]; then
     SKETCH_PARAMS="$SKETCH_PARAMS --stop-font-size=$VALUE"
-  elif [[ $KEY == "force-rows" ]]; then
+  elif [[ $KEY == "force-rows" && -n $VALUE ]]; then
     SKETCH_PARAMS="$SKETCH_PARAMS --rows=$VALUE"
-  elif [[ $KEY == "style" ]]; then
+  elif [[ $KEY == "style" && -n $VALUE ]]; then
     SKETCH_PARAMS="$SKETCH_PARAMS --options=/opt/osm_why_api/options/sketch-line.$VALUE"
   fi
 };

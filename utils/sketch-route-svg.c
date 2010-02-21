@@ -78,7 +78,7 @@ string frame_template()
     "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
     "     xmlns:ev=\"http://www.w3.org/2001/xml-events\"\n"
     "     version=\"1.1\" baseProfile=\"full\"\n"
-    "     width=\"&width;px\" height=\"&height;px\">\n"
+    "     width=\"$width;px\" height=\"$height;px\">\n"
     "\n"
     "<headline/>\n"
     "\n"
@@ -89,120 +89,120 @@ string frame_template()
 
 string from_to_headline_template()
 {
-  return "<title>Line &rel_ref; &tr_from; &rel_from; &tr_to; &rel_to;</title>\n"
-      "<desc>Line &rel_ref; &tr_from; &rel_from; &tr_to; &rel_to;</desc>\n"
+  return "<title>Line $rel_ref; $tr_from; $rel_from; $tr_to; $rel_to;</title>\n"
+      "<desc>Line $rel_ref; $tr_from; $rel_from; $tr_to; $rel_to;</desc>\n"
       "\n"
-      "<text x=\"30\" y=\"30\" font-family=\"Liberation Sans, sans-serif\"><tspan font-size=\"32px\" fill=\"none\">&rel_ref;</tspan>\n"
+      "<text x=\"30\" y=\"30\" font-family=\"Liberation Sans, sans-serif\"><tspan font-size=\"32px\" fill=\"none\">$rel_ref;</tspan>\n"
       "  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  <tspan font-size=\"16px\">&tr_from;</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  &from_tail;</text>\n"
-      "<text x=\"30\" y=\"60\" font-family=\"Liberation Sans, sans-serif\"><tspan font-size=\"32px\" fill=\"none\">&rel_ref;</tspan>\n"
+      "  <tspan font-size=\"16px\">$tr_from;</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
+      "  $from_tail;</text>\n"
+      "<text x=\"30\" y=\"60\" font-family=\"Liberation Sans, sans-serif\"><tspan font-size=\"32px\" fill=\"none\">$rel_ref;</tspan>\n"
       "  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  <tspan font-size=\"16px\">&tr_to;</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  &to_tail;</text>\n"
-      "<text x=\"30\" y=\"45\" font-family=\"Liberation Sans, sans-serif\" font-size=\"32px\" fill=\"&rel_color;\">&rel_ref;</text>\n"
+      "  <tspan font-size=\"16px\">$tr_to;</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
+      "  $to_tail;</text>\n"
+      "<text x=\"30\" y=\"45\" font-family=\"Liberation Sans, sans-serif\" font-size=\"32px\" fill=\"$rel_color;\">$rel_ref;</text>\n"
       "\n";
 }
 
 string alternate_headline_extension_template()
 {
-  return "  &head;\n"
+  return "  $head;\n"
       "  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  <tspan font-size=\"16px\">&tr_or;</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  &tail;";
+      "  <tspan font-size=\"16px\">$tr_or;</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
+      "  $tail;";
 }
 
 string destination_headline_template()
 {
-  return "<tspan font-size=\"24px\">&content;</tspan>";
+  return "<tspan font-size=\"24px\">$content;</tspan>";
 }
 
 string only_to_headline_template()
 {
-  return "<title>Line &rel_ref; &tr_to; &rel_to;</title>\n"
-      "<desc>Line &rel_ref; &tr_to; &rel_to;</desc>\n"
+  return "<title>Line $rel_ref; $tr_to; $rel_to;</title>\n"
+      "<desc>Line $rel_ref; $tr_to; $rel_to;</desc>\n"
       "\n"
-      "<text x=\"30\" y=\"60\" font-family=\"Liberation Sans, sans-serif\"><tspan font-size=\"32px\" fill=\"&rel_color;\">&rel_ref;</tspan>\n"
+      "<text x=\"30\" y=\"60\" font-family=\"Liberation Sans, sans-serif\"><tspan font-size=\"32px\" fill=\"$rel_color;\">$rel_ref;</tspan>\n"
       "  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  <tspan font-size=\"16px\">&tr_to;</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  <tspan font-size=\"24px\">&rel_to;</tspan></text>\n"
+      "  <tspan font-size=\"16px\">$tr_to;</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
+      "  <tspan font-size=\"24px\">$rel_to;</tspan></text>\n"
       "\n";
 }
 
 string line_template()
 {
-  return "<polyline fill=\"none\" stroke=\"&rel_color;\" stroke-width=\"7px\""
-      " points=\"&hmin; &vpos;, &hmax; &vpos;\"/>\n";
+  return "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"7px\""
+      " points=\"$hmin; $vpos;, $hmax; $vpos;\"/>\n";
 }
 
 string left_join_template()
 {
-  return "<polyline fill=\"none\" stroke=\"&rel_color;\" stroke-width=\"7px\""
-  " points=\"&htop; &vpos_join;, &hmin; &vpos_self;, &hmax; &vpos_self;\"/>\n";
+  return "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"7px\""
+  " points=\"$htop; $vpos_join;, $hmin; $vpos_self;, $hmax; $vpos_self;\"/>\n";
 }
 
 string right_join_template()
 {
-  return "<polyline fill=\"none\" stroke=\"&rel_color;\" stroke-width=\"7px\""
-  " points=\"&hmin; &vpos_self;, &hmax; &vpos_self;, &htop; &vpos_join;\"/>\n";
+  return "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"7px\""
+  " points=\"$hmin; $vpos_self;, $hmax; $vpos_self;, $htop; $vpos_join;\"/>\n";
 }
 
 string stop_name_template()
 {
-  return "<text x=\"0\" y=\"-10\" transform=\"translate(&hpos;,&vpos;) rotate(-45,0,-10)\""
-      " font-family=\"Liberation Sans, sans-serif\" font-size=\"&stop_fontsize;px\">&stopname;</text>\n"
+  return "<text x=\"0\" y=\"-10\" transform=\"translate($hpos;,$vpos;) rotate(-45,0,-10)\""
+      " font-family=\"Liberation Sans, sans-serif\" font-size=\"$stop_fontsize;px\">$stopname;</text>\n"
       "\n";
 }
 
 string terminus_name_template()
 {
-  return "<text x=\"0\" y=\"-10\" transform=\"translate(&hpos;,&vpos;) rotate(-45,0,-10)\""
-      " font-family=\"Liberation Sans, sans-serif\" font-size=\"&stop_fontsize;px\""
-      " font-weight=\"bold\">&stopname;</text>\n"
+  return "<text x=\"0\" y=\"-10\" transform=\"translate($hpos;,$vpos;) rotate(-45,0,-10)\""
+      " font-family=\"Liberation Sans, sans-serif\" font-size=\"$stop_fontsize;px\""
+      " font-weight=\"bold\">$stopname;</text>\n"
       "\n";
 }
 
 string bidirectional_stop_template()
 {
-  return "<circle cx=\"&hpos;\" cy=\"&vpos;\" r=\"7\" fill=\"&rel_color;\"/>\n"
+  return "<circle cx=\"$hpos;\" cy=\"$vpos;\" r=\"7\" fill=\"$rel_color;\"/>\n"
       "\n";
 }
 
 string forward_stop_template()
 {
-  return "<path d=\"M -7,0 a 7 7 0 0 0 14,0 Z\" style=\"fill:&rel_color;\""
-      " transform=\"translate(&hpos;,&vpos;)\"/>\n"
-      "<polyline fill=\"none\" stroke=\"&rel_color;\" stroke-width=\"2px\" points=\"0 -8, 6 -8\"" 
-      " transform=\"translate(&hpos;,&vpos;)\"/>\n"
-      "<path d=\"M 4,-4 l 0,-8 l 6,4 Z\" style=\"fill:&rel_color;\" transform=\"translate(&hpos;,&vpos;)\"/>\n"
+  return "<path d=\"M -7,0 a 7 7 0 0 0 14,0 Z\" style=\"fill:$rel_color;\""
+      " transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"0 -8, 6 -8\"" 
+      " transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "<path d=\"M 4,-4 l 0,-8 l 6,4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
       "\n";
 }
 
 string backward_stop_template()
 {
-  return "<path d=\"M -7,0 a 7 7 0 0 1 14,0 Z\" style=\"fill:&rel_color;\""
-      " transform=\"translate(&hpos;,&vpos;)\"/>\n"
-      "<polyline fill=\"none\" stroke=\"&rel_color;\" stroke-width=\"2px\" points=\"-6 8, 0 8\"" 
-      " transform=\"translate(&hpos;,&vpos;)\"/>\n"
-      "<path d=\"M -4,4 l 0,8 l -6,-4 Z\" style=\"fill:&rel_color;\" transform=\"translate(&hpos;,&vpos;)\"/>\n"
+  return "<path d=\"M -7,0 a 7 7 0 0 1 14,0 Z\" style=\"fill:$rel_color;\""
+      " transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"-6 8, 0 8\"" 
+      " transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "<path d=\"M -4,4 l 0,8 l -6,-4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
       "\n";
 }
 
 string bidirectional_terminus_template()
 {
-  return "<circle cx=\"&hpos;\" cy=\"&vpos;\" r=\"9\" fill=\"&rel_color;\"/>\n"
+  return "<circle cx=\"$hpos;\" cy=\"$vpos;\" r=\"9\" fill=\"$rel_color;\"/>\n"
       "\n";
 }
 
 string forward_terminus_template()
 {
-  return "<circle cx=\"&hpos;\" cy=\"&vpos;\" r=\"9\" fill=\"&rel_color;\"/>\n"
+  return "<circle cx=\"$hpos;\" cy=\"$vpos;\" r=\"9\" fill=\"$rel_color;\"/>\n"
       "\n";
 }
 
 string backward_terminus_template()
 {
-  return "<circle cx=\"&hpos;\" cy=\"&vpos;\" r=\"9\" fill=\"&rel_color;\"/>\n"
+  return "<circle cx=\"$hpos;\" cy=\"$vpos;\" r=\"9\" fill=\"$rel_color;\"/>\n"
       "\n";
 }
 
@@ -210,9 +210,9 @@ map< string, string > default_translations()
 {
   map< string, string > translations;
   
-  translations["&tr_from;"] = "from";
-  translations["&tr_to;"] = "to";
-  translations["&tr_or;"] = "or";
+  translations["$tr_from;"] = "from";
+  translations["$tr_to;"] = "to";
+  translations["$tr_or;"] = "or";
   
   return translations;
 }
@@ -485,7 +485,7 @@ void options_start(const char *el, const char **attr)
       else if (!strcmp(attr[i], "to"))
 	to = attr[i+1];
     }
-    translations[((string)"&tr_") + expr + ";"] = to;
+    translations[((string)"$tr_") + expr + ";"] = to;
   }
   else if (!strcmp(el, "width"))
   {
@@ -539,8 +539,8 @@ int main(int argc, char *argv[])
       FILE* options_file(fopen(((string)(argv[argi])).substr(10).c_str(), "r"));
       if (!options_file)
       {
-        cout<<Replacer< double >("&width;", width).apply
-	    (Replacer< double >("&height;", height).apply
+        cout<<Replacer< double >("$width;", width).apply
+	    (Replacer< double >("$height;", height).apply
 	    (Replacer< string >("<headline/>", "").apply
 	    (Replacer< string >("<stops-diagram/>", "<text x=\"100\" y=\"100\">"
 		"Can't open options file. Try running without \"--options\".</text>").apply
@@ -586,8 +586,8 @@ int main(int argc, char *argv[])
   list< Stop > stoplist;
   if (relations.size() == 0)
   {
-    cout<<Replacer< double >("&width;", width).apply
-	(Replacer< double >("&height;", height).apply
+    cout<<Replacer< double >("$width;", width).apply
+	(Replacer< double >("$height;", height).apply
 	(Replacer< string >("<headline/>", "").apply
 	(Replacer< string >("<stops-diagram/>", "<text x=\"100\" y=\"100\">No relation found</text>").apply(frame_template()))));
     return 0;
@@ -1009,8 +1009,8 @@ int main(int argc, char *argv[])
   
   string from_buffer, to_buffer, headline, last_from, last_to;
   headline = from_to_headline_template();
-  from_buffer = "&tail;";
-  to_buffer = "&tail;";
+  from_buffer = "$tail;";
+  to_buffer = "$tail;";
   for (unsigned int i(0); i < relations.size(); ++i)
   {
     if (relations[i].direction == 0)
@@ -1020,8 +1020,8 @@ int main(int argc, char *argv[])
     else if (last_from != relations[i].from)
     {
       from_buffer = Replacer< string >
-	  ("&tail;", Replacer< string >("&head;", Replacer< string >
-	  ("&content;", last_from).apply(destination_headline_template())).apply
+	  ("$tail;", Replacer< string >("$head;", Replacer< string >
+	  ("$content;", last_from).apply(destination_headline_template())).apply
 	  (alternate_headline_extension_template())).apply(from_buffer);
       last_from = relations[i].from;
     }
@@ -1030,30 +1030,30 @@ int main(int argc, char *argv[])
     else if (last_to != relations[i].to)
     {
       to_buffer = Replacer< string >
-	  ("&tail;", Replacer< string >("&head;", Replacer< string >
-	  ("&content;", last_to).apply(destination_headline_template())).apply
+	  ("$tail;", Replacer< string >("$head;", Replacer< string >
+	  ("$content;", last_to).apply(destination_headline_template())).apply
 	      (alternate_headline_extension_template())).apply(to_buffer);
       last_to = relations[i].to;
     }
   }
-  from_buffer = Replacer< string >("&tail;", Replacer< string >
-      ("&content;", last_from).apply(destination_headline_template())).apply(from_buffer);
-  to_buffer = Replacer< string >("&tail;", Replacer< string >
-      ("&content;", last_to).apply(destination_headline_template())).apply(to_buffer);
+  from_buffer = Replacer< string >("$tail;", Replacer< string >
+      ("$content;", last_from).apply(destination_headline_template())).apply(from_buffer);
+  to_buffer = Replacer< string >("$tail;", Replacer< string >
+      ("$content;", last_to).apply(destination_headline_template())).apply(to_buffer);
   
-  headline = Replacer< string >("&from_tail;", from_buffer).apply
-	    (Replacer< string >("&to_tail;", to_buffer).apply
-	    (Replacer< string >("&rel_ref;", relation.ref).apply
-	    (Replacer< string >("&rel_color;", relation.color).apply(headline))));
+  headline = Replacer< string >("$from_tail;", from_buffer).apply
+	    (Replacer< string >("$to_tail;", to_buffer).apply
+	    (Replacer< string >("$rel_ref;", relation.ref).apply
+	    (Replacer< string >("$rel_color;", relation.color).apply(headline))));
   
   ostringstream result("");
   
   if (stoplist.size() <= 1)
   {
-    cout<<Replacer< double >("&width;", width).apply
-        (Replacer< double >("&height;", height).apply
+    cout<<multi_replace(translations, Replacer< double >("$width;", width).apply
+        (Replacer< double >("$height;", height).apply
         (Replacer< string >("<headline/>", headline).apply
-        (Replacer< string >("<stops-diagram/>", "<text>Only one stop found</text>").apply(frame_template()))));
+        (Replacer< string >("<stops-diagram/>", "<text x=\"100\" y=\"100\">At most one stop found</text>").apply(frame_template())))));
     return 0;
   }
   if (((stoplist.size() <= 21) && (force_rows == 0)) || (force_rows == 1))
@@ -1077,25 +1077,25 @@ int main(int argc, char *argv[])
       double hmin(30 + first_stop_idx[i]*stop_distance);
       double hmax(30 + last_stop_idx[i]*stop_distance);
       
-      result<<Replacer< string >("&rel_color;", relation.color).apply
-	    (Replacer< double >("&hmin;", hmin).apply
-	    (Replacer< double >("&hmax;", hmax).apply
-	    (Replacer< double >("&vpos;", height - 115 + offset_of[i]).apply(line_template()))));
+      result<<Replacer< string >("$rel_color;", relation.color).apply
+	    (Replacer< double >("$hmin;", hmin).apply
+	    (Replacer< double >("$hmax;", hmax).apply
+	    (Replacer< double >("$vpos;", height - 115 + offset_of[i]).apply(line_template()))));
       if (left_join_to[i] >= 0)
-	result<<Replacer< string >("&rel_color;", relation.color).apply
-	    (Replacer< double >("&hmin;", hmin+4-stop_distance/2).apply
-	    (Replacer< double >("&hmax;", hmin+2).apply
-	    (Replacer< double >("&htop;", hmin-4-stop_distance/2).apply
-	    (Replacer< double >("&vpos_self;", height - 115 + offset_of[i]).apply
-	    (Replacer< double >("&vpos_join;", height - 115 + offset_of[left_join_to[i]]).apply
+	result<<Replacer< string >("$rel_color;", relation.color).apply
+	    (Replacer< double >("$hmin;", hmin+4-stop_distance/2).apply
+	    (Replacer< double >("$hmax;", hmin+2).apply
+	    (Replacer< double >("$htop;", hmin-4-stop_distance/2).apply
+	    (Replacer< double >("$vpos_self;", height - 115 + offset_of[i]).apply
+	    (Replacer< double >("$vpos_join;", height - 115 + offset_of[left_join_to[i]]).apply
 	    (left_join_template()))))));
       if (right_join_to[i] >= 0)
-	result<<Replacer< string >("&rel_color;", relation.color).apply
-	    (Replacer< double >("&hmin;", hmax-2).apply
-	    (Replacer< double >("&hmax;", hmax-4+stop_distance/2).apply
-	    (Replacer< double >("&htop;", hmax+4+stop_distance/2).apply
-	    (Replacer< double >("&vpos_self;", height - 115 + offset_of[i]).apply
-	    (Replacer< double >("&vpos_join;", height - 115 + offset_of[left_join_to[i]]).apply
+	result<<Replacer< string >("$rel_color;", relation.color).apply
+	    (Replacer< double >("$hmin;", hmax-2).apply
+	    (Replacer< double >("$hmax;", hmax-4+stop_distance/2).apply
+	    (Replacer< double >("$htop;", hmax+4+stop_distance/2).apply
+	    (Replacer< double >("$vpos_self;", height - 115 + offset_of[i]).apply
+	    (Replacer< double >("$vpos_join;", height - 115 + offset_of[left_join_to[i]]).apply
 	    (right_join_template()))))));
     }
     
@@ -1134,26 +1134,26 @@ int main(int argc, char *argv[])
 	    stop_template = backward_stop_template();
 	}
       
-	result<<Replacer< string >("&rel_color;", relation.color).apply
-	    (Replacer< string >("&stop_fontsize;", "16px").apply
-	    (Replacer< double >("&hpos;", pos).apply
-	    (Replacer< double >("&vpos;", height - 115 + offset_of[i]).apply(stop_template))));
+	result<<Replacer< string >("$rel_color;", relation.color).apply
+	    (Replacer< string >("$stop_fontsize;", "16px").apply
+	    (Replacer< double >("$hpos;", pos).apply
+	    (Replacer< double >("$vpos;", height - 115 + offset_of[i]).apply(stop_template))));
       }
       ++stopcount;
       
       string stopname(multi_replace(name_shortcuts, it->name));
       if (is_a_terminus)
-	result<<Replacer< string >("&stopname;", stopname).apply
-            (Replacer< string >("&rel_color;", relation.color).apply
-            (Replacer< double >("&stop_fontsize;", stop_font_size).apply
-            (Replacer< double >("&hpos;", pos).apply
-            (Replacer< double >("&vpos;", height - 115).apply(terminus_name_template())))));
+	result<<Replacer< string >("$stopname;", stopname).apply
+            (Replacer< string >("$rel_color;", relation.color).apply
+            (Replacer< double >("$stop_fontsize;", stop_font_size).apply
+            (Replacer< double >("$hpos;", pos).apply
+            (Replacer< double >("$vpos;", height - 115).apply(terminus_name_template())))));
       else
-	result<<Replacer< string >("&stopname;", stopname).apply
-            (Replacer< string >("&rel_color;", relation.color).apply
-            (Replacer< double >("&stop_fontsize;", stop_font_size).apply
-            (Replacer< double >("&hpos;", pos).apply
-            (Replacer< double >("&vpos;", height - 115).apply(stop_name_template())))));	
+	result<<Replacer< string >("$stopname;", stopname).apply
+            (Replacer< string >("$rel_color;", relation.color).apply
+            (Replacer< double >("$stop_fontsize;", stop_font_size).apply
+            (Replacer< double >("$hpos;", pos).apply
+            (Replacer< double >("$vpos;", height - 115).apply(stop_name_template())))));	
       pos += stop_distance;
     }
   }
@@ -1177,25 +1177,25 @@ int main(int argc, char *argv[])
 	double hmax(30 + last_stop_idx[i]*stop_distance);
 	if (last_stop_idx[i] >= (int)(stoplist.size()+1)/2)
 	  hmax = width - 170;
-	result<<Replacer< string >("&rel_color;", relation.color).apply
-	    (Replacer< double >("&hmin;", hmin).apply
-	    (Replacer< double >("&hmax;", hmax).apply
-	    (Replacer< double >("&vpos;", height/2 - 40 + offset_of[i]).apply(line_template()))));
+	result<<Replacer< string >("$rel_color;", relation.color).apply
+	    (Replacer< double >("$hmin;", hmin).apply
+	    (Replacer< double >("$hmax;", hmax).apply
+	    (Replacer< double >("$vpos;", height/2 - 40 + offset_of[i]).apply(line_template()))));
         if (left_join_to[i] >= 0)
-	  result<<Replacer< string >("&rel_color;", relation.color).apply
-	      (Replacer< double >("&hmin;", hmin+4-stop_distance/2).apply
-	      (Replacer< double >("&hmax;", hmin+2).apply
-	      (Replacer< double >("&htop;", hmin-4-stop_distance/2).apply
-	      (Replacer< double >("&vpos_self;", height/2 - 40 + offset_of[i]).apply
-	      (Replacer< double >("&vpos_join;", height/2 - 40 + offset_of[left_join_to[i]]).apply
+	  result<<Replacer< string >("$rel_color;", relation.color).apply
+	      (Replacer< double >("$hmin;", hmin+4-stop_distance/2).apply
+	      (Replacer< double >("$hmax;", hmin+2).apply
+	      (Replacer< double >("$htop;", hmin-4-stop_distance/2).apply
+	      (Replacer< double >("$vpos_self;", height/2 - 40 + offset_of[i]).apply
+	      (Replacer< double >("$vpos_join;", height/2 - 40 + offset_of[left_join_to[i]]).apply
 	      (left_join_template()))))));
         if ((right_join_to[i] >= 0) && (last_stop_idx[i] < (int)(stoplist.size()+1)/2))
-	  result<<Replacer< string >("&rel_color;", relation.color).apply
-	      (Replacer< double >("&hmin;", hmax-2).apply
-	      (Replacer< double >("&hmax;", hmax-4+stop_distance/2).apply
-	      (Replacer< double >("&htop;", hmax+4+stop_distance/2).apply
-	      (Replacer< double >("&vpos_self;", height/2 - 40 + offset_of[i]).apply
-	      (Replacer< double >("&vpos_join;", height/2 - 40 + offset_of[left_join_to[i]]).apply
+	  result<<Replacer< string >("$rel_color;", relation.color).apply
+	      (Replacer< double >("$hmin;", hmax-2).apply
+	      (Replacer< double >("$hmax;", hmax-4+stop_distance/2).apply
+	      (Replacer< double >("$htop;", hmax+4+stop_distance/2).apply
+	      (Replacer< double >("$vpos_self;", height/2 - 40 + offset_of[i]).apply
+	      (Replacer< double >("$vpos_join;", height/2 - 40 + offset_of[left_join_to[i]]).apply
 	      (right_join_template()))))));
       }
       if (last_stop_idx[i] >= (int)(stoplist.size()+1)/2)
@@ -1205,25 +1205,25 @@ int main(int argc, char *argv[])
 	double hmax(30 + (last_stop_idx[i]-(int)(stoplist.size()-1)/2)*stop_distance);
 	if (first_stop_idx[i] < (int)(stoplist.size()+1)/2)
 	  hmin = 30;
-	result<<Replacer< string >("&rel_color;", relation.color).apply
-	    (Replacer< double >("&hmin;", hmin).apply
-	    (Replacer< double >("&hmax;", hmax).apply
-	    (Replacer< double >("&vpos;", height - 115 + offset_of[i]).apply(line_template()))))<<'\n';
+	result<<Replacer< string >("$rel_color;", relation.color).apply
+	    (Replacer< double >("$hmin;", hmin).apply
+	    (Replacer< double >("$hmax;", hmax).apply
+	    (Replacer< double >("$vpos;", height - 115 + offset_of[i]).apply(line_template()))))<<'\n';
         if ((left_join_to[i] >= 0) && (first_stop_idx[i] >= (int)(stoplist.size()+1)/2))
-	  result<<Replacer< string >("&rel_color;", relation.color).apply
-	      (Replacer< double >("&hmin;", hmin+4-stop_distance/2).apply
-	      (Replacer< double >("&hmax;", hmin+2).apply
-	      (Replacer< double >("&htop;", hmin-4-stop_distance/2).apply
-	      (Replacer< double >("&vpos_self;", height - 115 + offset_of[i]).apply
-	      (Replacer< double >("&vpos_join;", height - 115 + offset_of[left_join_to[i]]).apply
+	  result<<Replacer< string >("$rel_color;", relation.color).apply
+	      (Replacer< double >("$hmin;", hmin+4-stop_distance/2).apply
+	      (Replacer< double >("$hmax;", hmin+2).apply
+	      (Replacer< double >("$htop;", hmin-4-stop_distance/2).apply
+	      (Replacer< double >("$vpos_self;", height - 115 + offset_of[i]).apply
+	      (Replacer< double >("$vpos_join;", height - 115 + offset_of[left_join_to[i]]).apply
 	      (left_join_template()))))));
         if (right_join_to[i] >= 0)
-	  result<<Replacer< string >("&rel_color;", relation.color).apply
-	      (Replacer< double >("&hmin;", hmax-2).apply
-	      (Replacer< double >("&hmax;", hmax-4-stop_distance/2).apply
-	      (Replacer< double >("&htop;", hmax+4+stop_distance/2).apply
-	      (Replacer< double >("&vpos_self;", height - 115 + offset_of[i]).apply
-	      (Replacer< double >("&vpos_join;", height - 115 + offset_of[left_join_to[i]]).apply
+	  result<<Replacer< string >("$rel_color;", relation.color).apply
+	      (Replacer< double >("$hmin;", hmax-2).apply
+	      (Replacer< double >("$hmax;", hmax-4-stop_distance/2).apply
+	      (Replacer< double >("$htop;", hmax+4+stop_distance/2).apply
+	      (Replacer< double >("$vpos_self;", height - 115 + offset_of[i]).apply
+	      (Replacer< double >("$vpos_join;", height - 115 + offset_of[left_join_to[i]]).apply
 	      (right_join_template()))))));
       }
     }
@@ -1269,26 +1269,26 @@ int main(int argc, char *argv[])
 	    stop_template = backward_stop_template();
 	}
       
-	result<<Replacer< string >("&rel_color;", relation.color).apply
-	    (Replacer< string >("&stop_fontsize;", "16px").apply
-	    (Replacer< double >("&hpos;", pos).apply
-	    (Replacer< double >("&vpos;", vpos + offset_of[i]).apply(stop_template))));
+	result<<Replacer< string >("$rel_color;", relation.color).apply
+	    (Replacer< string >("$stop_fontsize;", "16px").apply
+	    (Replacer< double >("$hpos;", pos).apply
+	    (Replacer< double >("$vpos;", vpos + offset_of[i]).apply(stop_template))));
       }
       ++stopcount;
       
       string stopname(multi_replace(name_shortcuts, it->name));
       if (is_a_terminus)
-        result<<Replacer< string >("&stopname;", stopname).apply
-            (Replacer< string >("&rel_color;", relation.color).apply
-            (Replacer< double >("&stop_fontsize;", stop_font_size).apply
-            (Replacer< double >("&hpos;", pos).apply
-            (Replacer< double >("&vpos;", vpos).apply(terminus_name_template())))));
+        result<<Replacer< string >("$stopname;", stopname).apply
+            (Replacer< string >("$rel_color;", relation.color).apply
+            (Replacer< double >("$stop_fontsize;", stop_font_size).apply
+            (Replacer< double >("$hpos;", pos).apply
+            (Replacer< double >("$vpos;", vpos).apply(terminus_name_template())))));
       else
-        result<<Replacer< string >("&stopname;", stopname).apply
-            (Replacer< string >("&rel_color;", relation.color).apply
-            (Replacer< double >("&stop_fontsize;", stop_font_size).apply
-            (Replacer< double >("&hpos;", pos).apply
-            (Replacer< double >("&vpos;", vpos).apply(stop_name_template())))));	
+        result<<Replacer< string >("$stopname;", stopname).apply
+            (Replacer< string >("$rel_color;", relation.color).apply
+            (Replacer< double >("$stop_fontsize;", stop_font_size).apply
+            (Replacer< double >("$hpos;", pos).apply
+            (Replacer< double >("$vpos;", vpos).apply(stop_name_template())))));	
       pos += stop_distance;
       if (++count >= (stoplist.size()+1)/2)
       {
@@ -1300,8 +1300,8 @@ int main(int argc, char *argv[])
     }
   }
   
-  cout<<multi_replace(translations, Replacer< double >("&width;", width).apply
-      (Replacer< double >("&height;", height).apply
+  cout<<multi_replace(translations, Replacer< double >("$width;", width).apply
+      (Replacer< double >("$height;", height).apply
       (Replacer< string >("<headline/>", headline).apply
       (Replacer< string >("<stops-diagram/>", result.str()).apply(frame_template())))));
   
