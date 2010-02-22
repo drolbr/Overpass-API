@@ -66,10 +66,17 @@ http://78.46.81.38/api/sketch-route?<em>relation-id</em>&amp;<em>relation-id</em
 
 <h3>Using style files</h3>
 
-<!--<form action="api/update_rule" method="post" accept-charset="UTF-8">
-  <textarea name="data" rows="10" cols="80"></textarea>
-  <input type="submit">
-</form>-->
+<form action="api/sketch-options" method="get" accept-charset="UTF-8">
+  <input type="text" name="style" size="40"/>
+  <input type="hidden" name="action" value="edit"/>
+  <input type="submit"/>
+</form>
+
+These style files allow to maintain a set of preferences. For example, an url like<br/>
+http://78.46.81.38/api/sketch-line?style=wuppertal&amp;network=<em>network</em>&amp;ref=<em>line number</em><br/>
+will show you a diagram with German abbrevations, while
+http://78.46.81.38/api/sketch-line?style=padua&amp;network=<em>network</em>&amp;ref=<em>line number</em><br/>
+would have Italian abbrevations. To edit the styles, type <em>wuppertal</em> or <em>padua</em> in the above box an click the button.
 
 </body>
 </html>

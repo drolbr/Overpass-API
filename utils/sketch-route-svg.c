@@ -20,6 +20,8 @@
 
 using namespace std;
 
+const double PI = acos(0)*2;
+
 template< class Inserted >
 class Replacer
 {
@@ -322,6 +324,14 @@ struct NamedNode
     string name;
 };
 
+double spat_distance(const NamedNode& nnode1, const NamedNode& nnode2)
+{
+  return acos(sin(nnode1.lat/180.0*PI)*sin(nnode2.lat/180.0*PI)
+      + sin(nnode1.lon/180.0*PI)*cos(nnode1.lat/180.0*PI)*sin(nnode2.lon/180.0*PI)*cos(nnode2.lat/180.0*PI)
+      + cos(nnode1.lon/180.0*PI)*cos(nnode1.lat/180.0*PI)*cos(nnode2.lon/180.0*PI)*cos(nnode2.lat/180.0*PI))
+      /PI*20000000;
+}
+
 struct Relation
 {
   public:
@@ -348,6 +358,7 @@ struct Stop
     
     string name;
     vector< int > used_by;
+    set< string > correspondences;
     const static int FORWARD = 1;
     const static int BACKWARD = 2;
     const static int BOTH = 3;
@@ -358,11 +369,16 @@ NamedNode nnode;
 unsigned int id;
 
 vector< Relation > relations;
+vector< Relation > correspondences;
+map< unsigned int, set< string > > what_calls_here;
+string pivot_ref;
 Relation relation;
 
 unsigned int parse_status;
 const unsigned int IN_NODE = 1;
 const unsigned int IN_RELATION = 2;
+bool is_stop = false;
+bool is_route = false;
 
 double width(700);
 double height(495);
@@ -394,10 +410,27 @@ void start(const char *el, const char **attr)
       relation.from = escape_xml(value);
     if ((key == "color") && (parse_status == IN_RELATION))
       relation.color = escape_xml(value);
+    if ((key == "highway") && (value == "bus_stop"))
+      is_stop = true;
+    if ((key == "highway") && (value == "tram_stop"))
+      is_stop = true;
+    if ((key == "railway") && (value == "station"))
+      is_stop = true;
+    if ((key == "route") && (value == "bus"))
+      is_route = true;
+    if ((key == "route") && (value == "tram"))
+      is_route = true;
+    if ((key == "route") && (value == "light_rail"))
+      is_route = true;
+    if ((key == "route") && (value == "subway"))
+      is_route = true;
+    if ((key == "route") && (value == "rail"))
+      is_route = true;
   }
   else if (!strcmp(el, "node"))
   {
     parse_status = IN_NODE;
+    is_stop = false;
     for (unsigned int i(0); attr[i]; i += 2)
     {
       if (!strcmp(attr[i], "id"))
@@ -443,6 +476,7 @@ void start(const char *el, const char **attr)
   else if (!strcmp(el, "relation"))
   {
     parse_status = IN_RELATION;
+    is_route = false;
     relation = Relation();
   }
 }
@@ -451,13 +485,20 @@ void end(const char *el)
 {
   if (!strcmp(el, "node"))
   {
-    nodes[id] = nnode;
+    if (is_stop)
+      nodes[id] = nnode;
     parse_status = 0;
   }
   else if (!strcmp(el, "relation"))
   {
     parse_status = 0;
-    relations.push_back(relation);
+    if (is_route)
+    {
+      if ((pivot_ref == "") || (relation.ref == pivot_ref))
+	relations.push_back(relation);
+      else
+	correspondences.push_back(relation);
+    }
   }
 }
 
@@ -529,6 +570,8 @@ void options_end(const char *el)
 int main(int argc, char *argv[])
 {
   translations = default_translations();
+  pivot_ref = "";
+  double walk_limit_for_changes(300);
   
   doubleread_rel = false;
   int argi(1);
@@ -557,6 +600,8 @@ int main(int argc, char *argv[])
       stop_font_size = atof(((string)(argv[argi])).substr(17).c_str());
     else if (!strncmp("--rows=", argv[argi], 7))
       force_rows = atoi(((string)(argv[argi])).substr(7).c_str());
+    else if (!strncmp("--ref=", argv[argi], 6))
+      pivot_ref = ((string)(argv[argi])).substr(6);
     else if (!strcmp("--backspace", argv[argi]))
       doubleread_rel = true;
     else if (!strcmp("--backtime", argv[argi]))
@@ -567,6 +612,33 @@ int main(int argc, char *argv[])
   // read the XML input
   parse_status = 0;
   parse(stdin, start, end);
+  
+  // create the dictionary bus_stop -> ref
+  for (vector< Relation >::iterator rit(correspondences.begin());
+       rit != correspondences.end(); ++rit)
+  {
+    for(vector< unsigned int >::const_iterator it(rit->forward_stops.begin());
+	it != rit->forward_stops.end(); ++it)
+    {
+      if (nodes[*it].lat <= 90.0)
+	what_calls_here[*it].insert(rit->ref);
+    }
+    for(vector< unsigned int >::const_iterator it(rit->backward_stops.begin());
+	it != rit->backward_stops.end(); ++it)
+    {
+      if (nodes[*it].lat <= 90.0)
+	what_calls_here[*it].insert(rit->ref);
+    }
+  }
+  
+  for (map< unsigned int, set< string > >::const_iterator it(what_calls_here.begin());
+       it != what_calls_here.end(); ++it)
+  {
+    cerr<<it->first;
+    for (set< string >::const_iterator iit(it->second.begin()); iit != it->second.end(); ++iit)
+	 cerr<<"  "<<*iit;
+    cerr<<'\n';
+  }
 
 //   for (vector< Relation >::const_iterator it(relations.begin()); it != relations.end(); ++it)
 //   {
@@ -604,6 +676,16 @@ int main(int argc, char *argv[])
     {
       stop.name = nodes[*it].name;
       stop.used_by[0] = Stop::FORWARD;
+      for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
+	   it1 != what_calls_here.end(); ++it1)
+      {
+	if ((nodes[it1->first].lat <= 90.0) &&
+	    (spat_distance(nodes[*it], nodes[it1->first]) < walk_limit_for_changes))
+	{
+	  for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
+	    stop.correspondences.insert(*iit);
+	}
+      }
     }
     stoplist.push_back(stop);
   }
@@ -666,6 +748,17 @@ int main(int argc, char *argv[])
 	    {
 	      stop.name = nodes[rit->forward_stops[last_idx-1]].name;
 	      stop.used_by[rel_count] = Stop::FORWARD;
+	      for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
+			  it1 != what_calls_here.end(); ++it1)
+	      {
+		if ((nodes[it1->first].lat <= 90.0) &&
+		   (spat_distance(nodes[rit->forward_stops[last_idx-1]], nodes[it1->first])
+				   < walk_limit_for_changes))
+		{
+		  for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
+		    stop.correspondences.insert(*iit);
+		}
+	      }
 	      stoplist.insert(it, stop);
 	    }
 	    ++last_idx;
@@ -673,8 +766,19 @@ int main(int argc, char *argv[])
 	  ++last_idx;
 	  
 	  // match the current stop
-	  it->used_by[rel_count] = Stop::FORWARD;;
-	  
+	  it->used_by[rel_count] = Stop::FORWARD;
+	  for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
+		      it1 != what_calls_here.end(); ++it1)
+	  {
+	    if ((nodes[it1->first].lat <= 90.0) &&
+			(spat_distance(nodes[rit->forward_stops[last_idx-1]], nodes[it1->first])
+			< walk_limit_for_changes))
+	    {
+	      for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
+		it->correspondences.insert(*iit);
+	    }
+	  }
+
 	  if (++sit == ascending.end())
 	    break;
 	}
@@ -689,6 +793,17 @@ int main(int argc, char *argv[])
 	{
 	  stop.name = nodes[rit->forward_stops[last_idx-1]].name;
 	  stop.used_by[rel_count] = Stop::FORWARD;
+	  for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
+		      it1 != what_calls_here.end(); ++it1)
+	  {
+	    if ((nodes[it1->first].lat <= 90.0) &&
+			(spat_distance(nodes[rit->forward_stops[last_idx-1]], nodes[it1->first])
+			< walk_limit_for_changes))
+	    {
+	      for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
+		stop.correspondences.insert(*iit);
+	    }
+	  }
 	  stoplist.push_back(stop);
 	}
 	++last_idx;
@@ -718,6 +833,17 @@ int main(int argc, char *argv[])
 	    {
 	      stop.name = nodes[rit->forward_stops[last_idx-1]].name;
 	      stop.used_by[rel_count] = Stop::BACKWARD;
+	      for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
+			  it1 != what_calls_here.end(); ++it1)
+	      {
+		if ((nodes[it1->first].lat <= 90.0) &&
+				   (spat_distance(nodes[rit->forward_stops[last_idx-1]], nodes[it1->first])
+				   < walk_limit_for_changes))
+		{
+		  for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
+		    stop.correspondences.insert(*iit);
+		}
+	      }
 	      stoplist.insert(it, stop);
 	    }
 	    --last_idx;
@@ -725,8 +851,19 @@ int main(int argc, char *argv[])
 	  --last_idx;
 	  
 	  // match the current stop
-	  it->used_by[rel_count] = Stop::BACKWARD;;
-	  
+	  it->used_by[rel_count] = Stop::BACKWARD;
+	  for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
+		      it1 != what_calls_here.end(); ++it1)
+	  {
+	    if ((nodes[it1->first].lat <= 90.0) &&
+			(spat_distance(nodes[rit->forward_stops[last_idx-1]], nodes[it1->first])
+			< walk_limit_for_changes))
+	    {
+	      for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
+		it->correspondences.insert(*iit);
+	    }
+	  }
+
 	  if (++sit == descending.rend())
 	    break;
 	}
@@ -741,6 +878,17 @@ int main(int argc, char *argv[])
 	{
 	  stop.name = nodes[rit->forward_stops[last_idx-1]].name;
 	  stop.used_by[rel_count] = Stop::BACKWARD;
+	  for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
+		      it1 != what_calls_here.end(); ++it1)
+	  {
+	    if ((nodes[it1->first].lat <= 90.0) &&
+			(spat_distance(nodes[rit->forward_stops[last_idx-1]], nodes[it1->first])
+			< walk_limit_for_changes))
+	    {
+	      for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
+		stop.correspondences.insert(*iit);
+	    }
+	  }
 	  stoplist.push_back(stop);
 	}
 	--last_idx;
@@ -751,12 +899,15 @@ int main(int argc, char *argv[])
     ++rel_count;
   }
   
-/*  for (list< Stop >::const_iterator it(stoplist.begin());
+  for (list< Stop >::const_iterator it(stoplist.begin());
   it != stoplist.end(); ++it)
   {
-    cerr<<it->name<<' '<<it->used_by.size()<<'\n';
+    cerr<<it->name<<' ';
+    for (set< string >::const_iterator it2(it->correspondences.begin()); it2 != it->correspondences.end(); ++it2)
+      cerr<<*it2<<' ';
+    cerr<<'\n';
   }
-  cerr<<'\n';*/
+  cerr<<'\n';
   
   // integrate second direction (where it exists) into stoplist
   rit = relations.begin();
@@ -814,6 +965,17 @@ int main(int argc, char *argv[])
 	    {
 	      stop.name = nodes[rit->backward_stops[last_idx-1]].name;
 	      stop.used_by[rel_count] = direction_const;
+	      for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
+			  it1 != what_calls_here.end(); ++it1)
+	      {
+		if ((nodes[it1->first].lat <= 90.0) &&
+				   (spat_distance(nodes[rit->backward_stops[last_idx-1]], nodes[it1->first])
+				   < walk_limit_for_changes))
+		{
+		  for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
+		    stop.correspondences.insert(*iit);
+		}
+	      }
 	      stoplist.insert(it, stop);
 	    }
 	    ++last_idx;
@@ -822,6 +984,17 @@ int main(int argc, char *argv[])
 	  
 	  // match the current stop
 	  it->used_by[rel_count] |= direction_const;
+	  for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
+		      it1 != what_calls_here.end(); ++it1)
+	  {
+	    if ((nodes[it1->first].lat <= 90.0) &&
+			(spat_distance(nodes[rit->backward_stops[last_idx-1]], nodes[it1->first])
+			< walk_limit_for_changes))
+	    {
+	      for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
+		it->correspondences.insert(*iit);
+	    }
+	  }
 	  
 	  if (++sit == ascending.end())
 	    break;
@@ -837,6 +1010,17 @@ int main(int argc, char *argv[])
 	{
 	  stop.name = nodes[rit->backward_stops[last_idx-1]].name;
 	  stop.used_by[rel_count] = direction_const;
+	  for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
+		      it1 != what_calls_here.end(); ++it1)
+	  {
+	    if ((nodes[it1->first].lat <= 90.0) &&
+			(spat_distance(nodes[rit->backward_stops[last_idx-1]], nodes[it1->first])
+			< walk_limit_for_changes))
+	    {
+	      for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
+		stop.correspondences.insert(*iit);
+	    }
+	  }
 	  stoplist.push_back(stop);
 	}
 	++last_idx;
@@ -860,6 +1044,17 @@ int main(int argc, char *argv[])
 	    {
 	      stop.name = nodes[rit->backward_stops[last_idx-1]].name;
 	      stop.used_by[rel_count] = direction_const;
+	      for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
+			  it1 != what_calls_here.end(); ++it1)
+	      {
+		if ((nodes[it1->first].lat <= 90.0) &&
+				   (spat_distance(nodes[rit->backward_stops[last_idx-1]], nodes[it1->first])
+				   < walk_limit_for_changes))
+		{
+		  for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
+		    stop.correspondences.insert(*iit);
+		}
+	      }
 	      stoplist.insert(it, stop);
 	    }
 	    --last_idx;
@@ -868,7 +1063,18 @@ int main(int argc, char *argv[])
 	  
 	  // match the current stop
 	  it->used_by[rel_count] |= direction_const;
-	  
+	  for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
+		      it1 != what_calls_here.end(); ++it1)
+	  {
+	    if ((nodes[it1->first].lat <= 90.0) &&
+			(spat_distance(nodes[rit->backward_stops[last_idx-1]], nodes[it1->first])
+			< walk_limit_for_changes))
+	    {
+	      for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
+		it->correspondences.insert(*iit);
+	    }
+	  }
+
 	  if (++sit == descending.rend())
 	    break;
 	}
@@ -883,6 +1089,17 @@ int main(int argc, char *argv[])
 	{
 	  stop.name = nodes[rit->backward_stops[last_idx-1]].name;
 	  stop.used_by[rel_count] = direction_const;
+	  for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
+		      it1 != what_calls_here.end(); ++it1)
+	  {
+	    if ((nodes[it1->first].lat <= 90.0) &&
+			(spat_distance(nodes[rit->backward_stops[last_idx-1]], nodes[it1->first])
+			< walk_limit_for_changes))
+	    {
+	      for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
+		stop.correspondences.insert(*iit);
+	    }
+	  }
 	  stoplist.push_back(stop);
 	}
 	--last_idx;

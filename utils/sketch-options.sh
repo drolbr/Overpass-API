@@ -53,6 +53,40 @@ if [[ $ACTION == "edit" ]]; then
   <input type=\"submit\"/>
 </form>
 
+<h2>Example file:</h2>
+
+<pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;options&gt;</pre>
+
+The necessary XML header.
+
+<pre>&lt;translate expr=&quot;to&quot; to=&quot;['to' in Italian]&quot;/&gt;
+&lt;translate expr=&quot;from&quot; to=&quot;['from' in Italian]&quot;/&gt;
+&lt;translate expr=&quot;or&quot; to=&quot;['or' in Italian]&quot;/&gt;</pre>
+
+These three words appear literally in the diagrams and can be replaced by
+suitable translations.
+
+<pre>&lt;reduce expr=&quot;Via &quot; to=&quot;&quot;/&gt;
+&lt;reduce expr=&quot;Straße&quot; to=&quot;Str.&quot;/&gt;
+&lt;reduce expr=&quot;straße&quot; to=&quot;str.&quot;/&gt;</pre>
+
+The first one is an ommission of the prefix <em>Via</em> which is common in Italian.
+The other two are examples for typical German abbrevations for the German transltion
+of street.
+
+<pre>&lt;width px=&quot;1200&quot;/&gt;
+&lt;height px=&quot;400&quot;/&gt;
+&lt;stop-font-size px=&quot;10&quot;/&gt;
+&lt;force rows=&quot;1&quot;/&gt;</pre>
+
+These correspond to the options that can be directly passed to sketch-line. They are
+explained at the <a href=\"../public_transport.html\">public transport page</a>.
+
+<pre>&lt;/options&gt;</pre>
+
+The necessary footer.
+
 </body>\
 "
 };
