@@ -2,3 +2,13 @@ add_rule
 get_rule
 interpreter
 update_rule
+download
+elems
+foo
+nodes-csv
+nodes-csv-gzip
+nodes-csv-lat-lon-name
+poi
+sketch-line
+sketch-options
+sketch-route

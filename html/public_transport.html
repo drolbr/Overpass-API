@@ -46,10 +46,14 @@ http://78.46.81.38/api/sketch-route?<em>relation-id</em>&amp;<em>relation-id</em
   The value of the tag <em>network</em> of the relation(s) to consider. A working example is <em>VRR</em> for the German <em>Verkehrsverbund Rhein-Ruhr</em>.<br/>
   <strong>Line number</strong>: <input name="ref" type="text" size="40"/><br/>
   The value of the tag <em>ref</em> of the relation(s) to consider. A working example is <em>625</em>.<br/>
+  <strong>Correspondences</strong>: <input name="correspondences" type="text" size="10"/><br/>
+  A nonempty value in this field enables the display of correspondences. This slows down the response
+  times but gives more information. The value is interpreted as maximum acceptable distance in meters
+  between two stations or bus stops to still be acceptable for changing vehicles. The default value is 100.<br/>
   <strong>Width</strong>: <input name="width" type="text" value="700" size="10"/><br/>
   The width of the generated SVG in pixels. Default is 700.<br/>
   <strong>Height</strong>: <input name="height" type="text" value="495" size="10"/><br/>
-  The heigth of the generated SVG in pixels. Default is 700.<br/>
+  The heigth of the generated SVG in pixels. Default is 495.<br/>
   <strong>Font size of stop names</strong>: <input name="font-size" type="text" size="10"/><br/>
   The font size in pixels for the stopname in the generated SVG. Default is is empty field.
   This means that the generator takes font size 10 for lines displayed in two rows and font size 16
@@ -58,6 +62,12 @@ http://78.46.81.38/api/sketch-route?<em>relation-id</em>&amp;<em>relation-id</em
   This field can have values 1 or 2 or can be empty. If it is empty, the generator chooses whether to
   display the line in one or two rows. If it is set to 1 resp. 2, the generator displays the line
   in an case in one resp. two rows.<br/>
+  <strong>Maximum correspondences per row</strong>: <input name="max-cors-per-line" type="text" size="10"/><br/>
+  The limit for the acceptable number of line numbers to be printed per line. This option is only
+  effective when correspondences aer enabled. Its default value is 6.<br/>
+  <strong>Maximum correspondences below</strong>: <input name="max-cors-below" type="text" size="10"/><br/>
+  The limit for the acceptable number of line numbers to be printed below the line bar. This option is only
+  effective when correspondences aer enabled. Its default value is 0.<br/>
   <strong>Style</strong>: <input name="style" type="text" size="40"/><br/>
   This parameter makes the generator using an existing style for formatting the diagram. A working example
   is <em>wuppertal</em> for a style with German translations and abbreviations.<br/>

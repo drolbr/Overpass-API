@@ -22,6 +22,244 @@ using namespace std;
 
 const double PI = acos(0)*2;
 
+string frame_template()
+{
+  return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+    "<svg xmlns=\"http://www.w3.org/2000/svg\"\n"
+    "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
+    "     xmlns:ev=\"http://www.w3.org/2001/xml-events\"\n"
+    "     version=\"1.1\" baseProfile=\"full\"\n"
+    "     width=\"$width;px\" height=\"$height;px\">\n"
+    "\n"
+    "<headline/>\n"
+    "\n"
+    "<stops-diagram/>\n"
+    "\n"
+    "</svg>\n";
+}
+
+string from_to_headline_template()
+{
+  return "<title>Line $rel_ref; $tr_from; $rel_from; $tr_to; $rel_to;</title>\n"
+      "<desc>Line $rel_ref; $tr_from; $rel_from; $tr_to; $rel_to;</desc>\n"
+      "\n"
+      "<text x=\"30\" y=\"30\" font-family=\"Liberation Sans, sans-serif\"><tspan font-size=\"32px\" fill=\"none\">$rel_ref;</tspan>\n"
+      "  <tspan font-size=\"16px\" dx=\"20\">$tr_from;</tspan>\n"
+      "  $from_tail;</text>\n"
+      "<text x=\"30\" y=\"60\" font-family=\"Liberation Sans, sans-serif\"><tspan font-size=\"32px\" fill=\"none\">$rel_ref;</tspan>\n"
+      "  <tspan font-size=\"16px\" dx=\"20\">$tr_to;</tspan>\n"
+      "  $to_tail;</text>\n"
+      "<text x=\"30\" y=\"45\" font-family=\"Liberation Sans, sans-serif\" font-size=\"32px\" fill=\"$rel_color;\">$rel_ref;</text>\n"
+      "\n";
+}
+
+string alternate_headline_extension_template()
+{
+  return "  $head;\n"
+      "  <tspan font-size=\"16px\" dx=\"20\">$tr_or;</tspan>\n"
+      "  $tail;";
+}
+
+string destination_headline_template()
+{
+  return "<tspan font-size=\"24px\" dx=\"20\">$content;</tspan>";
+}
+
+string only_to_headline_template()
+{
+  return "<title>Line $rel_ref; $tr_to; $rel_to;</title>\n"
+      "<desc>Line $rel_ref; $tr_to; $rel_to;</desc>\n"
+      "\n"
+      "<text x=\"30\" y=\"60\" font-family=\"Liberation Sans, sans-serif\"><tspan font-size=\"32px\" fill=\"$rel_color;\">$rel_ref;</tspan>\n"
+      "  <tspan font-size=\"16px\" dx=\"20\">$tr_to;</tspan>\n"
+      "  <tspan font-size=\"24px\">$rel_to;</tspan></text>\n"
+      "\n";
+}
+
+string line_template()
+{
+  return "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"7px\""
+      " points=\"$hmin; $vpos;, $hmax; $vpos;\"/>\n";
+}
+
+string left_join_template()
+{
+  return "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"7px\""
+  " points=\"$htop; $vpos_join;, $hmin; $vpos_self;, $hmax; $vpos_self;\"/>\n";
+}
+
+string right_join_template()
+{
+  return "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"7px\""
+  " points=\"$hmin; $vpos_self;, $hmax; $vpos_self;, $htop; $vpos_join;\"/>\n";
+}
+
+string stop_name_template()
+{
+  return "<text x=\"0\" y=\"-10\" transform=\"translate($hpos;,$vpos;) rotate(-45,0,-10)\""
+      " font-family=\"Liberation Sans, sans-serif\" font-size=\"$stop_fontsize;px\">$stopname;</text>\n"
+      "\n";
+}
+
+string terminus_name_template()
+{
+  return "<text x=\"0\" y=\"-10\" transform=\"translate($hpos;,$vpos;) rotate(-45,0,-10)\""
+      " font-family=\"Liberation Sans, sans-serif\" font-size=\"$stop_fontsize;px\""
+      " font-weight=\"bold\">$stopname;</text>\n"
+      "\n";
+}
+
+string stop_background_template()
+{
+  return "<polyline fill=\"none\" stroke=\"gray\" stroke-width=\"1px\""
+  " points=\"$hpos; $vpos_upper;, $hpos; $vpos_lower;\"/>\n";
+}
+
+string bidirectional_stop_template()
+{
+  return "<circle cx=\"$hpos;\" cy=\"$vpos;\" r=\"7\" fill=\"$rel_color;\"/>\n"
+      "\n";
+}
+
+string forward_stop_template()
+{
+  return "<path d=\"M -7,0 a 7 7 0 0 0 14,0 Z\" style=\"fill:$rel_color;\""
+      " transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"0 -8, 6 -8\"" 
+      " transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "<path d=\"M 4,-4 l 0,-8 l 6,4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "\n";
+}
+
+string backward_stop_template()
+{
+  return "<path d=\"M -7,0 a 7 7 0 0 1 14,0 Z\" style=\"fill:$rel_color;\""
+      " transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"-6 8, 0 8\"" 
+      " transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "<path d=\"M -4,4 l 0,8 l -6,-4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "\n";
+}
+
+string bidirectional_terminus_template()
+{
+  return "<circle cx=\"$hpos;\" cy=\"$vpos;\" r=\"9\" fill=\"$rel_color;\"/>\n"
+      "\n";
+}
+
+string forward_terminus_template()
+{
+  return "<circle cx=\"$hpos;\" cy=\"$vpos;\" r=\"9\" fill=\"$rel_color;\"/>\n"
+      "\n"
+      /*"<path d=\"M -9,0 a 9 9 0 0 0 18,0 Z\" style=\"fill:$rel_color;\""
+      " transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"2 -8, 8 -8\"" 
+      " transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "<path d=\"M 6,-4 l 0,-8 l 6,4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "\n"*/;
+}
+
+string backward_terminus_template()
+{
+  return "<circle cx=\"$hpos;\" cy=\"$vpos;\" r=\"9\" fill=\"$rel_color;\"/>\n"
+      "\n"
+      /*"<path d=\"M -9,0 a 9 9 0 0 1 18,0 Z\" style=\"fill:$rel_color;\""
+      " transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"-8 8, -2 8\"" 
+      " transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "<path d=\"M -6,4 l 0,8 l -6,-4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "\n"*/;
+}
+
+string bidirectional_hub_template()
+{
+  return "<circle cx=\"$hpos;\" cy=\"$vpos;\" r=\"7\" fill=\"white\" stroke=\"$rel_color;\" stroke-width=\"2px\"/>\n"
+  "\n";
+}
+
+string forward_hub_template()
+{
+  return "<path d=\"M -7,0 a 7 7 0 0 0 14,0 Z\" style=\"fill:white; stroke:$rel_color;; stroke-width:2px;\""
+  " transform=\"translate($hpos;,$vpos;)\"/>\n"
+  "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"0 -8, 6 -8\"" 
+  " transform=\"translate($hpos;,$vpos;)\"/>\n"
+  "<path d=\"M 4,-4 l 0,-8 l 6,4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
+  "\n";
+}
+
+string backward_hub_template()
+{
+  return "<path d=\"M -7,0 a 7 7 0 0 1 14,0 Z\" style=\"fill:white; stroke:$rel_color;; stroke-width:2px;\""
+  " transform=\"translate($hpos;,$vpos;)\"/>\n"
+  "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"-6 8, 0 8\"" 
+  " transform=\"translate($hpos;,$vpos;)\"/>\n"
+  "<path d=\"M -4,4 l 0,8 l -6,-4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
+  "\n";
+}
+
+string bidirectional_terminus_hub_template()
+{
+  return "<circle cx=\"$hpos;\" cy=\"$vpos;\" r=\"9\" fill=\"white\" stroke=\"$rel_color;\" stroke-width=\"2px\"/>\n"
+  "\n";
+}
+
+string forward_terminus_hub_template()
+{
+  return "<circle cx=\"$hpos;\" cy=\"$vpos;\" r=\"9\" fill=\"white\" stroke=\"$rel_color;\" stroke-width=\"2px\"/>\n"
+      "\n"
+      /*"<path d=\"M -9,0 a 9 9 0 0 0 18,0 Z\" style=\"fill:white; stroke:$rel_color;; stroke-width:2px;\""
+      " transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"2 -8, 8 -8\"" 
+      " transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "<path d=\"M 6,-4 l 0,-8 l 6,4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "\n"*/;
+}
+
+string backward_terminus_hub_template()
+{
+  return "<circle cx=\"$hpos;\" cy=\"$vpos;\" r=\"9\" fill=\"white\" stroke=\"$rel_color;\" stroke-width=\"2px\"/>\n"
+      "\n"
+      /*"<path d=\"M -9,0 a 9 9 0 0 1 18,0 Z\" style=\"fill:white; stroke:$rel_color;; stroke-width:2px;\""
+      " transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"-8 8, -2 8\"" 
+      " transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "<path d=\"M -6,4 l 0,8 l -6,-4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
+      "\n"*/;
+}
+
+string correspondence_row_template()
+{
+  return "<text x=\"0\" y=\"-10\" transform=\"translate($hpos;,$vpos;) rotate(-45,0,-10)\""
+  " font-family=\"Liberation Sans, sans-serif\" font-size=\"$stop_fontsize;px\">\n$data;</text>\n"
+  "\n";
+}
+
+string correspondence_item_template()
+{
+  return "  <tspan dx=\"$offset;\" fill=\"$color;\">$ref;</tspan>\n";
+}
+
+string correspondence_below_template()
+{
+  return "<text x=\"0\" y=\"0\" transform=\"translate($hpos;,$vpos;)\""
+  " font-family=\"Liberation Sans, sans-serif\" font-size=\"$stop_fontsize;px\""
+  " text-anchor=\"middle\" fill=\"$color;\">$ref;</text>\n"
+  "\n";
+}
+
+map< string, string > default_translations()
+{
+  map< string, string > translations;
+  
+  translations["$tr_from;"] = "from";
+  translations["$tr_to;"] = "to";
+  translations["$tr_or;"] = "or";
+  
+  return translations;
+}
+
+//-----------------------------------------------------------------------------
+
 template< class Inserted >
 class Replacer
 {
@@ -67,156 +305,10 @@ string multi_replace(map< string, string > replace, string data)
       found = data.find(it->first, pos);
     }
     result<<data.substr(pos);
-      
+    
     data = result.str();
   }
   return data;
-}
-
-string frame_template()
-{
-  return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-    "<svg xmlns=\"http://www.w3.org/2000/svg\"\n"
-    "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
-    "     xmlns:ev=\"http://www.w3.org/2001/xml-events\"\n"
-    "     version=\"1.1\" baseProfile=\"full\"\n"
-    "     width=\"$width;px\" height=\"$height;px\">\n"
-    "\n"
-    "<headline/>\n"
-    "\n"
-    "<stops-diagram/>\n"
-    "\n"
-    "</svg>\n";
-}
-
-string from_to_headline_template()
-{
-  return "<title>Line $rel_ref; $tr_from; $rel_from; $tr_to; $rel_to;</title>\n"
-      "<desc>Line $rel_ref; $tr_from; $rel_from; $tr_to; $rel_to;</desc>\n"
-      "\n"
-      "<text x=\"30\" y=\"30\" font-family=\"Liberation Sans, sans-serif\"><tspan font-size=\"32px\" fill=\"none\">$rel_ref;</tspan>\n"
-      "  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  <tspan font-size=\"16px\">$tr_from;</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  $from_tail;</text>\n"
-      "<text x=\"30\" y=\"60\" font-family=\"Liberation Sans, sans-serif\"><tspan font-size=\"32px\" fill=\"none\">$rel_ref;</tspan>\n"
-      "  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  <tspan font-size=\"16px\">$tr_to;</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  $to_tail;</text>\n"
-      "<text x=\"30\" y=\"45\" font-family=\"Liberation Sans, sans-serif\" font-size=\"32px\" fill=\"$rel_color;\">$rel_ref;</text>\n"
-      "\n";
-}
-
-string alternate_headline_extension_template()
-{
-  return "  $head;\n"
-      "  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  <tspan font-size=\"16px\">$tr_or;</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  $tail;";
-}
-
-string destination_headline_template()
-{
-  return "<tspan font-size=\"24px\">$content;</tspan>";
-}
-
-string only_to_headline_template()
-{
-  return "<title>Line $rel_ref; $tr_to; $rel_to;</title>\n"
-      "<desc>Line $rel_ref; $tr_to; $rel_to;</desc>\n"
-      "\n"
-      "<text x=\"30\" y=\"60\" font-family=\"Liberation Sans, sans-serif\"><tspan font-size=\"32px\" fill=\"$rel_color;\">$rel_ref;</tspan>\n"
-      "  <tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  <tspan font-size=\"16px\">$tr_to;</tspan><tspan font-size=\"32px\" fill=\"none\">_</tspan>\n"
-      "  <tspan font-size=\"24px\">$rel_to;</tspan></text>\n"
-      "\n";
-}
-
-string line_template()
-{
-  return "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"7px\""
-      " points=\"$hmin; $vpos;, $hmax; $vpos;\"/>\n";
-}
-
-string left_join_template()
-{
-  return "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"7px\""
-  " points=\"$htop; $vpos_join;, $hmin; $vpos_self;, $hmax; $vpos_self;\"/>\n";
-}
-
-string right_join_template()
-{
-  return "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"7px\""
-  " points=\"$hmin; $vpos_self;, $hmax; $vpos_self;, $htop; $vpos_join;\"/>\n";
-}
-
-string stop_name_template()
-{
-  return "<text x=\"0\" y=\"-10\" transform=\"translate($hpos;,$vpos;) rotate(-45,0,-10)\""
-      " font-family=\"Liberation Sans, sans-serif\" font-size=\"$stop_fontsize;px\">$stopname;</text>\n"
-      "\n";
-}
-
-string terminus_name_template()
-{
-  return "<text x=\"0\" y=\"-10\" transform=\"translate($hpos;,$vpos;) rotate(-45,0,-10)\""
-      " font-family=\"Liberation Sans, sans-serif\" font-size=\"$stop_fontsize;px\""
-      " font-weight=\"bold\">$stopname;</text>\n"
-      "\n";
-}
-
-string bidirectional_stop_template()
-{
-  return "<circle cx=\"$hpos;\" cy=\"$vpos;\" r=\"7\" fill=\"$rel_color;\"/>\n"
-      "\n";
-}
-
-string forward_stop_template()
-{
-  return "<path d=\"M -7,0 a 7 7 0 0 0 14,0 Z\" style=\"fill:$rel_color;\""
-      " transform=\"translate($hpos;,$vpos;)\"/>\n"
-      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"0 -8, 6 -8\"" 
-      " transform=\"translate($hpos;,$vpos;)\"/>\n"
-      "<path d=\"M 4,-4 l 0,-8 l 6,4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
-      "\n";
-}
-
-string backward_stop_template()
-{
-  return "<path d=\"M -7,0 a 7 7 0 0 1 14,0 Z\" style=\"fill:$rel_color;\""
-      " transform=\"translate($hpos;,$vpos;)\"/>\n"
-      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"-6 8, 0 8\"" 
-      " transform=\"translate($hpos;,$vpos;)\"/>\n"
-      "<path d=\"M -4,4 l 0,8 l -6,-4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
-      "\n";
-}
-
-string bidirectional_terminus_template()
-{
-  return "<circle cx=\"$hpos;\" cy=\"$vpos;\" r=\"9\" fill=\"$rel_color;\"/>\n"
-      "\n";
-}
-
-string forward_terminus_template()
-{
-  return "<circle cx=\"$hpos;\" cy=\"$vpos;\" r=\"9\" fill=\"$rel_color;\"/>\n"
-      "\n";
-}
-
-string backward_terminus_template()
-{
-  return "<circle cx=\"$hpos;\" cy=\"$vpos;\" r=\"9\" fill=\"$rel_color;\"/>\n"
-      "\n";
-}
-
-map< string, string > default_translations()
-{
-  map< string, string > translations;
-  
-  translations["$tr_from;"] = "from";
-  translations["$tr_to;"] = "to";
-  translations["$tr_or;"] = "or";
-  
-  return translations;
 }
 
 //-----------------------------------------------------------------------------
@@ -327,15 +419,17 @@ struct NamedNode
 double spat_distance(const NamedNode& nnode1, const NamedNode& nnode2)
 {
   return acos(sin(nnode1.lat/180.0*PI)*sin(nnode2.lat/180.0*PI)
-      + sin(nnode1.lon/180.0*PI)*cos(nnode1.lat/180.0*PI)*sin(nnode2.lon/180.0*PI)*cos(nnode2.lat/180.0*PI)
-      + cos(nnode1.lon/180.0*PI)*cos(nnode1.lat/180.0*PI)*cos(nnode2.lon/180.0*PI)*cos(nnode2.lat/180.0*PI))
+      + sin(nnode1.lon/180.0*PI)*cos(nnode1.lat/180.0*PI)
+        *sin(nnode2.lon/180.0*PI)*cos(nnode2.lat/180.0*PI)
+      + cos(nnode1.lon/180.0*PI)*cos(nnode1.lat/180.0*PI)
+        *cos(nnode2.lon/180.0*PI)*cos(nnode2.lat/180.0*PI))
       /PI*20000000;
 }
 
 struct Relation
 {
   public:
-    Relation() : forward_stops(), backward_stops(), ref(""), color("blue"),
+    Relation() : forward_stops(), backward_stops(), ref(""), color("navy"),
 	     from(""), to(""), direction(0) {}
     
     vector< unsigned int > forward_stops;
@@ -351,6 +445,21 @@ struct Relation
     const static int BOTH = 4;
 };
 
+struct RelationHumanId
+{
+  public:
+    RelationHumanId() : ref(""), color("") {}
+    RelationHumanId(string ref_, string color_) : ref(ref_), color(color_) {}
+    
+    string ref;
+    string color;
+};
+
+inline bool operator<(const RelationHumanId& rhi_1, const RelationHumanId& rhi_2)
+{
+  return (rhi_1.ref < rhi_2.ref);
+}
+
 struct Stop
 {
   public:
@@ -358,19 +467,59 @@ struct Stop
     
     string name;
     vector< int > used_by;
-    set< string > correspondences;
+    set< RelationHumanId > correspondences;
     const static int FORWARD = 1;
     const static int BACKWARD = 2;
     const static int BOTH = 3;
 };
 
+struct Stoplist
+{
+  public:
+    Stoplist(const map< unsigned int, set< RelationHumanId > >& what_calls_here_,
+	     const map< unsigned int, NamedNode >& nodes_,
+	     const double& walk_limit_for_changes_)
+    : what_calls_here(what_calls_here_), nodes(nodes_),
+      walk_limit_for_changes(walk_limit_for_changes_) {}
+    
+    void populate_stop
+    (Stop& stop, const NamedNode& nnode, int rel_index, int mode, bool additive)
+     {
+       if (nnode.lat <= 90.0)
+       {
+	 stop.name = nnode.name;
+	 if (additive)
+	   stop.used_by[rel_index] |= mode;
+	 else
+	   stop.used_by[rel_index] = mode;
+	 for (map< unsigned int, set< RelationHumanId > >::const_iterator it(what_calls_here.begin());
+	 it != what_calls_here.end(); ++it)
+	 {
+	   if ((nodes.find(it->first) != nodes.end()) &&
+	     (spat_distance(nnode, nodes.find(it->first)->second) < walk_limit_for_changes))
+	   {
+	     for (set< RelationHumanId >::const_iterator iit(it->second.begin()); iit != it->second.end(); ++iit)
+	       stop.correspondences.insert(*iit);
+	   }
+	 }
+       }
+     }
+     
+     list< Stop > stops;
+     
+     //necessary only for correspondences
+     const map< unsigned int, set< RelationHumanId > >& what_calls_here;
+     const map< unsigned int, NamedNode >& nodes;
+     const double& walk_limit_for_changes;
+};
+ 
 map< unsigned int, NamedNode > nodes;
 NamedNode nnode;
 unsigned int id;
 
 vector< Relation > relations;
 vector< Relation > correspondences;
-map< unsigned int, set< string > > what_calls_here;
+map< unsigned int, set< RelationHumanId > > what_calls_here;
 string pivot_ref;
 Relation relation;
 
@@ -384,6 +533,9 @@ double width(700);
 double height(495);
 double stop_font_size(0);
 int force_rows(0);
+double walk_limit_for_changes(300);
+unsigned int max_correspondences_per_line(6);
+unsigned int max_correspondences_below(0);
 map< string, string > name_shortcuts;
 map< string, string > translations;
 bool doubleread_rel;
@@ -413,6 +565,8 @@ void start(const char *el, const char **attr)
     if ((key == "highway") && (value == "bus_stop"))
       is_stop = true;
     if ((key == "highway") && (value == "tram_stop"))
+      is_stop = true;
+    if ((key == "railway") && (value == "tram_stop"))
       is_stop = true;
     if ((key == "railway") && (value == "station"))
       is_stop = true;
@@ -561,6 +715,17 @@ void options_start(const char *el, const char **attr)
 	force_rows = atoi(attr[i+1]);
     }
   }
+  else if (!strcmp(el, "max-correspondences"))
+  {
+    string expr, to;
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "per-line"))
+	max_correspondences_per_line = atoi(attr[i+1]);
+      if (!strcmp(attr[i], "below"))
+	max_correspondences_below = atoi(attr[i+1]);
+    }
+  }
 }
 
 void options_end(const char *el)
@@ -571,10 +736,12 @@ int main(int argc, char *argv[])
 {
   translations = default_translations();
   pivot_ref = "";
-  double walk_limit_for_changes(300);
+  walk_limit_for_changes = 300;
+  max_correspondences_per_line = 6;
   
   doubleread_rel = false;
   int argi(1);
+  // check on early run for options only
   while (argi < argc)
   {
     if (!strncmp("--options=", argv[argi], 10))
@@ -582,17 +749,23 @@ int main(int argc, char *argv[])
       FILE* options_file(fopen(((string)(argv[argi])).substr(10).c_str(), "r"));
       if (!options_file)
       {
-        cout<<Replacer< double >("$width;", width).apply
-	    (Replacer< double >("$height;", height).apply
-	    (Replacer< string >("<headline/>", "").apply
-	    (Replacer< string >("<stops-diagram/>", "<text x=\"100\" y=\"100\">"
-		"Can't open options file. Try running without \"--options\".</text>").apply
-	    (frame_template()))));
-        return 0;
+	cout<<Replacer< double >("$width;", width).apply
+	(Replacer< double >("$height;", height).apply
+	(Replacer< string >("<headline/>", "").apply
+	(Replacer< string >("<stops-diagram/>", "<text x=\"100\" y=\"100\">"
+	"Can't open options file. Try running without \"--options\".</text>").apply
+	(frame_template()))));
+	return 0;
       }
       parse(options_file, options_start, options_end);
     }
-    else if (!strncmp("--width=", argv[argi], 8))
+    ++argi;
+  }
+  // get every other argument
+  argi = 1;
+  while (argi < argc)
+  {
+    if (!strncmp("--width=", argv[argi], 8))
       width = atof(((string)(argv[argi])).substr(8).c_str());
     else if (!strncmp("--height=", argv[argi], 9))
       height = atof(((string)(argv[argi])).substr(9).c_str());
@@ -602,6 +775,12 @@ int main(int argc, char *argv[])
       force_rows = atoi(((string)(argv[argi])).substr(7).c_str());
     else if (!strncmp("--ref=", argv[argi], 6))
       pivot_ref = ((string)(argv[argi])).substr(6);
+    else if (!strncmp("--walk-limit=", argv[argi], 13))
+      walk_limit_for_changes = atof(((string)(argv[argi])).substr(13).c_str());
+    else if (!strncmp("--max-correspondences-per-line=", argv[argi], 31))
+      max_correspondences_per_line = atoi(((string)(argv[argi])).substr(31).c_str());
+    else if (!strncmp("--max-correspondences-below=", argv[argi], 28))
+      max_correspondences_below = atoi(((string)(argv[argi])).substr(28).c_str());
     else if (!strcmp("--backspace", argv[argi]))
       doubleread_rel = true;
     else if (!strcmp("--backtime", argv[argi]))
@@ -621,24 +800,24 @@ int main(int argc, char *argv[])
 	it != rit->forward_stops.end(); ++it)
     {
       if (nodes[*it].lat <= 90.0)
-	what_calls_here[*it].insert(rit->ref);
+	what_calls_here[*it].insert(RelationHumanId(rit->ref, rit->color));
     }
     for(vector< unsigned int >::const_iterator it(rit->backward_stops.begin());
 	it != rit->backward_stops.end(); ++it)
     {
       if (nodes[*it].lat <= 90.0)
-	what_calls_here[*it].insert(rit->ref);
+	what_calls_here[*it].insert(RelationHumanId(rit->ref, rit->color));
     }
   }
   
-  for (map< unsigned int, set< string > >::const_iterator it(what_calls_here.begin());
-       it != what_calls_here.end(); ++it)
-  {
-    cerr<<it->first;
-    for (set< string >::const_iterator iit(it->second.begin()); iit != it->second.end(); ++iit)
-	 cerr<<"  "<<*iit;
-    cerr<<'\n';
-  }
+//   for (map< unsigned int, set< RelationHumanId > >::const_iterator it(what_calls_here.begin());
+//        it != what_calls_here.end(); ++it)
+//   {
+//     cerr<<it->first;
+//     for (set< RelationHumanId >::const_iterator iit(it->second.begin()); iit != it->second.end(); ++iit)
+// 	 cerr<<"  "<<iit->ref<<' '<<iit->color;
+//     cerr<<'\n';
+//   }
 
 //   for (vector< Relation >::const_iterator it(relations.begin()); it != relations.end(); ++it)
 //   {
@@ -655,49 +834,28 @@ int main(int argc, char *argv[])
 //   }
 
   // make a common stoplist from all relations
-  list< Stop > stoplist;
+  Stoplist stoplist(what_calls_here, nodes, walk_limit_for_changes);
   if (relations.size() == 0)
   {
     cout<<Replacer< double >("$width;", width).apply
-	(Replacer< double >("$height;", height).apply
-	(Replacer< string >("<headline/>", "").apply
-	(Replacer< string >("<stops-diagram/>", "<text x=\"100\" y=\"100\">No relation found</text>").apply(frame_template()))));
+        (Replacer< double >("$height;", height).apply
+        (Replacer< string >("<headline/>", "").apply
+        (Replacer< string >("<stops-diagram/>", "<text x=\"100\" y=\"100\">No relation found</text>").apply(frame_template()))));
     return 0;
   }
   
   // integrate all relations (their forward direction) into the stoplist
   relation = relations.front();
   for(vector< unsigned int >::const_iterator it(relation.forward_stops.begin());
-      it != relation.forward_stops.end(); ++it)
+  it != relation.forward_stops.end(); ++it)
   {
     Stop stop;
     stop.used_by.resize(relations.size());
-    if (nodes[*it].lat <= 90.0)
-    {
-      stop.name = nodes[*it].name;
-      stop.used_by[0] = Stop::FORWARD;
-      for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
-	   it1 != what_calls_here.end(); ++it1)
-      {
-	if ((nodes[it1->first].lat <= 90.0) &&
-	    (spat_distance(nodes[*it], nodes[it1->first]) < walk_limit_for_changes))
-	{
-	  for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
-	    stop.correspondences.insert(*iit);
-	}
-      }
-    }
-    stoplist.push_back(stop);
+    stoplist.populate_stop(stop, nodes[*it], 0, Stop::FORWARD, false);
+    stoplist.stops.push_back(stop);
   }
   relations.begin()->direction |= Relation::FORWARD;
-
-//   for (list< Stop >::const_iterator it(stoplist.begin());
-//       it != stoplist.end(); ++it)
-//   {
-//     cerr<<it->name<<' '<<it->used_by.size()<<'\n';
-//   }
-//   cerr<<'\n';
-
+  
   vector< Relation >::iterator rit(relations.begin());
   unsigned int rel_count(1);
   ++rit;
@@ -711,18 +869,18 @@ int main(int argc, char *argv[])
     }
     
     vector< unsigned int > indices_of_present_stops;
-    for (list< Stop >::const_iterator it(stoplist.begin());
-        it != stoplist.end(); ++it)
+    for (list< Stop >::const_iterator it(stoplist.stops.begin());
+    it != stoplist.stops.end(); ++it)
     {
       for (multimap< string, unsigned int >::const_iterator
-	   iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
+	iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
 	indices_of_present_stops.push_back(iit->second);
     }
     
     vector< unsigned int > ascending(longest_ascending_subsequence
-        (indices_of_present_stops));
+    (indices_of_present_stops));
     vector< unsigned int > descending(longest_descending_subsequence
-        (indices_of_present_stops));
+    (indices_of_present_stops));
     
     if (ascending.size() > descending.size())
     {
@@ -730,12 +888,12 @@ int main(int argc, char *argv[])
       
       vector< unsigned int >::const_iterator sit(ascending.begin());
       unsigned int last_idx(1);
-      for (list< Stop >::iterator it(stoplist.begin());
-      it != stoplist.end(); ++it)
+      for (list< Stop >::iterator it(stoplist.stops.begin());
+      it != stoplist.stops.end(); ++it)
       {
 	bool sit_found(false);
 	for (multimap< string, unsigned int >::const_iterator
-		    iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
+	  iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
 	  sit_found |= (iit->second == *sit);
 	if (sit_found)
 	{
@@ -744,41 +902,16 @@ int main(int argc, char *argv[])
 	  {
 	    Stop stop;
 	    stop.used_by.resize(relations.size());
-	    if (nodes[rit->forward_stops[last_idx-1]].lat <= 90.0)
-	    {
-	      stop.name = nodes[rit->forward_stops[last_idx-1]].name;
-	      stop.used_by[rel_count] = Stop::FORWARD;
-	      for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
-			  it1 != what_calls_here.end(); ++it1)
-	      {
-		if ((nodes[it1->first].lat <= 90.0) &&
-		   (spat_distance(nodes[rit->forward_stops[last_idx-1]], nodes[it1->first])
-				   < walk_limit_for_changes))
-		{
-		  for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
-		    stop.correspondences.insert(*iit);
-		}
-	      }
-	      stoplist.insert(it, stop);
-	    }
+	    stoplist.populate_stop(stop, nodes[rit->forward_stops[last_idx-1]], rel_count, Stop::FORWARD, false);
+	    stoplist.stops.insert(it, stop);
 	    ++last_idx;
 	  }
-	  ++last_idx;
 	  
 	  // match the current stop
-	  it->used_by[rel_count] = Stop::FORWARD;
-	  for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
-		      it1 != what_calls_here.end(); ++it1)
-	  {
-	    if ((nodes[it1->first].lat <= 90.0) &&
-			(spat_distance(nodes[rit->forward_stops[last_idx-1]], nodes[it1->first])
-			< walk_limit_for_changes))
-	    {
-	      for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
-		it->correspondences.insert(*iit);
-	    }
-	  }
-
+	  stoplist.populate_stop(*it, nodes[rit->forward_stops[last_idx-1]], rel_count, Stop::FORWARD, false);
+			
+	  ++last_idx;
+	  	  
 	  if (++sit == ascending.end())
 	    break;
 	}
@@ -789,23 +922,8 @@ int main(int argc, char *argv[])
       {
 	Stop stop;
 	stop.used_by.resize(relations.size());
-	if (nodes[rit->forward_stops[last_idx-1]].lat <= 90.0)
-	{
-	  stop.name = nodes[rit->forward_stops[last_idx-1]].name;
-	  stop.used_by[rel_count] = Stop::FORWARD;
-	  for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
-		      it1 != what_calls_here.end(); ++it1)
-	  {
-	    if ((nodes[it1->first].lat <= 90.0) &&
-			(spat_distance(nodes[rit->forward_stops[last_idx-1]], nodes[it1->first])
-			< walk_limit_for_changes))
-	    {
-	      for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
-		stop.correspondences.insert(*iit);
-	    }
-	  }
-	  stoplist.push_back(stop);
-	}
+	stoplist.populate_stop(stop, nodes[rit->forward_stops[last_idx-1]], rel_count, Stop::FORWARD, false);
+	stoplist.stops.push_back(stop);
 	++last_idx;
       }
     }
@@ -815,8 +933,8 @@ int main(int argc, char *argv[])
       
       vector< unsigned int >::const_reverse_iterator sit(descending.rbegin());
       unsigned int last_idx(rit->forward_stops.size());
-      for (list< Stop >::iterator it(stoplist.begin());
-	  it != stoplist.end(); ++it)
+      for (list< Stop >::iterator it(stoplist.stops.begin());
+	  it != stoplist.stops.end(); ++it)
       {
 	bool sit_found(false);
 	for (multimap< string, unsigned int >::const_iterator
@@ -829,41 +947,16 @@ int main(int argc, char *argv[])
 	  {
 	    Stop stop;
 	    stop.used_by.resize(relations.size());
-	    if (nodes[rit->forward_stops[last_idx-1]].lat <= 90.0)
-	    {
-	      stop.name = nodes[rit->forward_stops[last_idx-1]].name;
-	      stop.used_by[rel_count] = Stop::BACKWARD;
-	      for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
-			  it1 != what_calls_here.end(); ++it1)
-	      {
-		if ((nodes[it1->first].lat <= 90.0) &&
-				   (spat_distance(nodes[rit->forward_stops[last_idx-1]], nodes[it1->first])
-				   < walk_limit_for_changes))
-		{
-		  for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
-		    stop.correspondences.insert(*iit);
-		}
-	      }
-	      stoplist.insert(it, stop);
-	    }
+	    stoplist.populate_stop(stop, nodes[rit->forward_stops[last_idx-1]], rel_count, Stop::BACKWARD, false);
+	    stoplist.stops.insert(it, stop);
 	    --last_idx;
 	  }
-	  --last_idx;
 	  
 	  // match the current stop
-	  it->used_by[rel_count] = Stop::BACKWARD;
-	  for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
-		      it1 != what_calls_here.end(); ++it1)
-	  {
-	    if ((nodes[it1->first].lat <= 90.0) &&
-			(spat_distance(nodes[rit->forward_stops[last_idx-1]], nodes[it1->first])
-			< walk_limit_for_changes))
-	    {
-	      for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
-		it->correspondences.insert(*iit);
-	    }
-	  }
+	  stoplist.populate_stop(*it, nodes[rit->forward_stops[last_idx-1]], rel_count, Stop::BACKWARD, false);
 
+	  --last_idx;
+	  
 	  if (++sit == descending.rend())
 	    break;
 	}
@@ -874,23 +967,8 @@ int main(int argc, char *argv[])
       {
 	Stop stop;
 	stop.used_by.resize(relations.size());
-	if (nodes[rit->forward_stops[last_idx-1]].lat <= 90.0)
-	{
-	  stop.name = nodes[rit->forward_stops[last_idx-1]].name;
-	  stop.used_by[rel_count] = Stop::BACKWARD;
-	  for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
-		      it1 != what_calls_here.end(); ++it1)
-	  {
-	    if ((nodes[it1->first].lat <= 90.0) &&
-			(spat_distance(nodes[rit->forward_stops[last_idx-1]], nodes[it1->first])
-			< walk_limit_for_changes))
-	    {
-	      for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
-		stop.correspondences.insert(*iit);
-	    }
-	  }
-	  stoplist.push_back(stop);
-	}
+	stoplist.populate_stop(stop, nodes[rit->forward_stops[last_idx-1]], rel_count, Stop::BACKWARD, false);
+	stoplist.stops.push_back(stop);
 	--last_idx;
       }
     }
@@ -899,15 +977,15 @@ int main(int argc, char *argv[])
     ++rel_count;
   }
   
-  for (list< Stop >::const_iterator it(stoplist.begin());
-  it != stoplist.end(); ++it)
+  /*  for (list< Stop >::const_iterator it(stoplist.stops.begin());
+  it != stoplist.stops.end(); ++it)
   {
     cerr<<it->name<<' ';
-    for (set< string >::const_iterator it2(it->correspondences.begin()); it2 != it->correspondences.end(); ++it2)
-      cerr<<*it2<<' ';
+    for (set< RelationHumanId >::const_iterator it2(it->correspondences.begin()); it2 != it->correspondences.end(); ++it2)
+    cerr<<it2->ref<<' '<<it2->color<<' ';
     cerr<<'\n';
-  }
-  cerr<<'\n';
+}
+cerr<<'\n';*/
   
   // integrate second direction (where it exists) into stoplist
   rit = relations.begin();
@@ -921,19 +999,20 @@ int main(int argc, char *argv[])
       continue;
     }
     
-    map< string, unsigned int > stopdict;
+    multimap< string, unsigned int > stopdict;
     for (unsigned int i(0); i < rit->backward_stops.size(); ++i)
     {
       if (nodes[rit->backward_stops[i]].lat <= 90.0)
-	stopdict[nodes[rit->backward_stops[i]].name] = i+1;
+	stopdict.insert(make_pair(nodes[rit->backward_stops[i]].name, i+1));
     }
     
     vector< unsigned int > indices_of_present_stops;
-    for (list< Stop >::const_iterator it(stoplist.begin());
-    it != stoplist.end(); ++it)
+    for (list< Stop >::const_iterator it(stoplist.stops.begin());
+    it != stoplist.stops.end(); ++it)
     {
-      if (stopdict[it->name] > 0)
-	indices_of_present_stops.push_back(stopdict[it->name]);
+      for (multimap< string, unsigned int >::const_iterator
+	iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
+	indices_of_present_stops.push_back(iit->second);
     }
     
     int direction_const(0);
@@ -951,50 +1030,28 @@ int main(int argc, char *argv[])
     {
       vector< unsigned int >::const_iterator sit(ascending.begin());
       unsigned int last_idx(1);
-      for (list< Stop >::iterator it(stoplist.begin());
-      it != stoplist.end(); ++it)
+      for (list< Stop >::iterator it(stoplist.stops.begin());
+      it != stoplist.stops.end(); ++it)
       {
-	if (stopdict[it->name] == *sit)
+	bool sit_found(false);
+	for (multimap< string, unsigned int >::const_iterator
+	  iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
+	  sit_found |= (iit->second == *sit);
+	if (sit_found)
 	{
 	  // insert stops that aren't yet inserted
 	  while (*sit > last_idx)
 	  {
 	    Stop stop;
 	    stop.used_by.resize(relations.size());
-	    if (nodes[rit->backward_stops[last_idx-1]].lat <= 90.0)
-	    {
-	      stop.name = nodes[rit->backward_stops[last_idx-1]].name;
-	      stop.used_by[rel_count] = direction_const;
-	      for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
-			  it1 != what_calls_here.end(); ++it1)
-	      {
-		if ((nodes[it1->first].lat <= 90.0) &&
-				   (spat_distance(nodes[rit->backward_stops[last_idx-1]], nodes[it1->first])
-				   < walk_limit_for_changes))
-		{
-		  for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
-		    stop.correspondences.insert(*iit);
-		}
-	      }
-	      stoplist.insert(it, stop);
-	    }
+	    stoplist.populate_stop(stop, nodes[rit->backward_stops[last_idx-1]], rel_count, direction_const, false);
+	    stoplist.stops.insert(it, stop);
 	    ++last_idx;
 	  }
 	  ++last_idx;
 	  
 	  // match the current stop
-	  it->used_by[rel_count] |= direction_const;
-	  for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
-		      it1 != what_calls_here.end(); ++it1)
-	  {
-	    if ((nodes[it1->first].lat <= 90.0) &&
-			(spat_distance(nodes[rit->backward_stops[last_idx-1]], nodes[it1->first])
-			< walk_limit_for_changes))
-	    {
-	      for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
-		it->correspondences.insert(*iit);
-	    }
-	  }
+	  stoplist.populate_stop(*it, nodes[rit->backward_stops[last_idx-2]], rel_count, direction_const, true);
 	  
 	  if (++sit == ascending.end())
 	    break;
@@ -1006,23 +1063,8 @@ int main(int argc, char *argv[])
       {
 	Stop stop;
 	stop.used_by.resize(relations.size());
-	if (nodes[rit->backward_stops[last_idx-1]].lat <= 90.0)
-	{
-	  stop.name = nodes[rit->backward_stops[last_idx-1]].name;
-	  stop.used_by[rel_count] = direction_const;
-	  for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
-		      it1 != what_calls_here.end(); ++it1)
-	  {
-	    if ((nodes[it1->first].lat <= 90.0) &&
-			(spat_distance(nodes[rit->backward_stops[last_idx-1]], nodes[it1->first])
-			< walk_limit_for_changes))
-	    {
-	      for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
-		stop.correspondences.insert(*iit);
-	    }
-	  }
-	  stoplist.push_back(stop);
-	}
+	stoplist.populate_stop(stop, nodes[rit->backward_stops[last_idx-1]], rel_count, direction_const, false);
+	stoplist.stops.push_back(stop);
 	++last_idx;
       }
     }
@@ -1030,50 +1072,28 @@ int main(int argc, char *argv[])
     {
       vector< unsigned int >::const_reverse_iterator sit(descending.rbegin());
       unsigned int last_idx(rit->backward_stops.size());
-      for (list< Stop >::iterator it(stoplist.begin());
-          it != stoplist.end(); ++it)
+      for (list< Stop >::iterator it(stoplist.stops.begin());
+          it != stoplist.stops.end(); ++it)
       {
-	if (stopdict[it->name] == *sit)
+	bool sit_found(false);
+	for (multimap< string, unsigned int >::const_iterator
+	  iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
+	  sit_found |= (iit->second == *sit);
+	if (sit_found)
 	{
 	  // insert stops that aren't yet inserted
 	  while (*sit < last_idx)
 	  {
 	    Stop stop;
 	    stop.used_by.resize(relations.size());
-	    if (nodes[rit->backward_stops[last_idx-1]].lat <= 90.0)
-	    {
-	      stop.name = nodes[rit->backward_stops[last_idx-1]].name;
-	      stop.used_by[rel_count] = direction_const;
-	      for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
-			  it1 != what_calls_here.end(); ++it1)
-	      {
-		if ((nodes[it1->first].lat <= 90.0) &&
-				   (spat_distance(nodes[rit->backward_stops[last_idx-1]], nodes[it1->first])
-				   < walk_limit_for_changes))
-		{
-		  for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
-		    stop.correspondences.insert(*iit);
-		}
-	      }
-	      stoplist.insert(it, stop);
-	    }
+	    stoplist.populate_stop(stop, nodes[rit->backward_stops[last_idx-1]], rel_count, direction_const, false);
+	    stoplist.stops.insert(it, stop);
 	    --last_idx;
 	  }
 	  --last_idx;
 	  
 	  // match the current stop
-	  it->used_by[rel_count] |= direction_const;
-	  for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
-		      it1 != what_calls_here.end(); ++it1)
-	  {
-	    if ((nodes[it1->first].lat <= 90.0) &&
-			(spat_distance(nodes[rit->backward_stops[last_idx-1]], nodes[it1->first])
-			< walk_limit_for_changes))
-	    {
-	      for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
-		it->correspondences.insert(*iit);
-	    }
-	  }
+	  stoplist.populate_stop(*it, nodes[rit->backward_stops[last_idx]], rel_count, direction_const, true);
 
 	  if (++sit == descending.rend())
 	    break;
@@ -1085,30 +1105,25 @@ int main(int argc, char *argv[])
       {
 	Stop stop;
 	stop.used_by.resize(relations.size());
-	if (nodes[rit->backward_stops[last_idx-1]].lat <= 90.0)
-	{
-	  stop.name = nodes[rit->backward_stops[last_idx-1]].name;
-	  stop.used_by[rel_count] = direction_const;
-	  for (map< unsigned int, set< string > >::const_iterator it1(what_calls_here.begin());
-		      it1 != what_calls_here.end(); ++it1)
-	  {
-	    if ((nodes[it1->first].lat <= 90.0) &&
-			(spat_distance(nodes[rit->backward_stops[last_idx-1]], nodes[it1->first])
-			< walk_limit_for_changes))
-	    {
-	      for (set< string >::const_iterator iit(it1->second.begin()); iit != it1->second.end(); ++iit)
-		stop.correspondences.insert(*iit);
-	    }
-	  }
-	  stoplist.push_back(stop);
-	}
+	stoplist.populate_stop(stop, nodes[rit->backward_stops[last_idx-1]], rel_count, direction_const, false);
+	stoplist.stops.push_back(stop);
 	--last_idx;
       }
     }
     
     ++rit;
     ++rel_count;
+  }  
+    
+/*  for (list< Stop >::const_iterator it(stoplist.stops.begin());
+  it != stoplist.stops.end(); ++it)
+  {
+    cerr<<it->name<<' ';
+    for (set< RelationHumanId >::const_iterator it2(it->correspondences.begin()); it2 != it->correspondences.end(); ++it2)
+      cerr<<it2->ref<<' '<<it2->color<<' ';
+    cerr<<'\n';
   }
+  cerr<<'\n';*/
   
   // unify one-directional relations as good as possible
   multimap< double, pair< int, int > > possible_pairs;
@@ -1121,8 +1136,8 @@ int main(int argc, char *argv[])
       int common(0), total(0);
       if (relations[j].direction != Relation::BACKWARD)
 	continue;
-      for (list< Stop >::const_iterator it(stoplist.begin());
-          it != stoplist.end(); ++it)
+      for (list< Stop >::const_iterator it(stoplist.stops.begin());
+          it != stoplist.stops.end(); ++it)
       {
 	if (it->used_by[i] == Stop::FORWARD)
 	{
@@ -1143,14 +1158,14 @@ int main(int argc, char *argv[])
   {
     if (relations[it->second.second].direction != Relation::BACKWARD)
       continue;
-    for (list< Stop >::iterator sit(stoplist.begin());
-        sit != stoplist.end(); ++sit)
+    for (list< Stop >::iterator sit(stoplist.stops.begin());
+        sit != stoplist.stops.end(); ++sit)
       sit->used_by[it->second.first] |= sit->used_by[it->second.second];
     relations[it->second.second].direction = 0;
   }
 
-/*  for (list< Stop >::const_iterator it(stoplist.begin());
-  it != stoplist.end(); ++it)
+/*  for (list< Stop >::const_iterator it(stoplist.stops.begin());
+  it != stoplist.stops.end(); ++it)
   {
     cerr<<it->name<<' '<<it->used_by.size()<<'\n';
   }
@@ -1165,16 +1180,16 @@ int main(int argc, char *argv[])
       continue;
     
     first_stop_idx[i] = 0;
-    last_stop_idx[i] = stoplist.size()-1;
-    for (list< Stop >::const_iterator it(stoplist.begin());
-        it != stoplist.end(); ++it)
+    last_stop_idx[i] = stoplist.stops.size()-1;
+    for (list< Stop >::const_iterator it(stoplist.stops.begin());
+        it != stoplist.stops.end(); ++it)
     {
       if (it->used_by[i] != 0)
 	break;
       ++first_stop_idx[i];
     }
-    for (list< Stop >::const_reverse_iterator it(stoplist.rbegin());
-        it != stoplist.rend(); ++it)
+    for (list< Stop >::const_reverse_iterator it(stoplist.stops.rbegin());
+        it != stoplist.stops.rend(); ++it)
     {
       if (it->used_by[i] != 0)
 	break;
@@ -1190,8 +1205,8 @@ int main(int argc, char *argv[])
     for (unsigned int j(0); j < i; ++j)
     {
       int ijsimilar(0);
-      for (list< Stop >::const_iterator it(stoplist.begin());
-          it != stoplist.end(); ++it)
+      for (list< Stop >::const_iterator it(stoplist.stops.begin());
+          it != stoplist.stops.end(); ++it)
       {
 	if (it->used_by[i] != it->used_by[j])
 	  break;
@@ -1208,9 +1223,9 @@ int main(int argc, char *argv[])
   {
     for (unsigned int j(0); j < i; ++j)
     {
-      int ijsimilar(stoplist.size()-1);
-      for (list< Stop >::const_reverse_iterator it(stoplist.rbegin());
-      it != stoplist.rend(); ++it)
+      int ijsimilar(stoplist.stops.size()-1);
+      for (list< Stop >::const_reverse_iterator it(stoplist.stops.rbegin());
+      it != stoplist.stops.rend(); ++it)
       {
 	if (it->used_by[i] != it->used_by[j])
 	  break;
@@ -1264,61 +1279,99 @@ int main(int argc, char *argv[])
 	    (Replacer< string >("$rel_color;", relation.color).apply(headline))));
   
   ostringstream result("");
+  ostringstream backlines("");
   
-  if (stoplist.size() <= 1)
+  // count the number of line row that actually appear
+  vector< int > offset_of(relations.size()+1);
+  offset_of[0] = 0;
+  for (unsigned int i(0); i < relations.size(); ++i)
+  {
+    if (relations[i].direction != 0)
+      offset_of[i+1] = offset_of[i] + 1;
+    else
+      offset_of[i+1] = offset_of[i];
+  }
+  
+  // calculate extra space used by multiline labels
+  vector< unsigned int > extra_rows(stoplist.stops.size()+1);
+  unsigned int stop_idx(0);
+  extra_rows[0] = 0;
+  for (list< Stop >::const_iterator it(stoplist.stops.begin()); it != stoplist.stops.end(); ++it)
+  {
+    if (it->correspondences.size() > max_correspondences_below)
+      extra_rows[stop_idx+1] = extra_rows[stop_idx] +
+          (it->correspondences.size()+max_correspondences_per_line-1)
+          /max_correspondences_per_line;
+    else
+      extra_rows[stop_idx+1] = extra_rows[stop_idx];
+    ++stop_idx;
+  }
+  
+  if (stoplist.stops.size() <= 1)
   {
     cout<<multi_replace(translations, Replacer< double >("$width;", width).apply
         (Replacer< double >("$height;", height).apply
+	(Replacer< string >("$rel_from;", relations.begin()->from).apply
+	(Replacer< string >("$rel_to;", relations.begin()->to).apply
         (Replacer< string >("<headline/>", headline).apply
-        (Replacer< string >("<stops-diagram/>", "<text x=\"100\" y=\"100\">At most one stop found</text>").apply(frame_template())))));
+        (Replacer< string >("<stops-diagram/>", "<text x=\"100\" y=\"100\">At most one stop found</text>").apply
+	(frame_template())))))));
     return 0;
   }
-  if (((stoplist.size() <= 21) && (force_rows == 0)) || (force_rows == 1))
+  if (((stoplist.stops.size() <= 21) && (force_rows == 0)) || (force_rows == 1))
   {
-    double pos(30);
-    double stop_distance(0);
-    
-    stop_distance = (width - 220)/(stoplist.size()-1);
-    
     if (stop_font_size == 0)
       stop_font_size = 16;
     
-    int offset(0);
-    vector< int > offset_of(relations.size());
+    double stop_distance(0);
+    double vpos
+        (height - 20*offset_of[relations.size()]
+        - stop_font_size*max_correspondences_below);
+    
+    stop_distance = (width - 220 - sqrt(2.0)*stop_font_size*extra_rows[stoplist.stops.size()])/(stoplist.stops.size()-1);
+    
     for (unsigned int i(0); i < relations.size(); ++i)
     {
       if (relations[i].direction == 0)
 	continue;
-      offset_of[i] = 20*(offset++);
       
-      double hmin(30 + first_stop_idx[i]*stop_distance);
-      double hmax(30 + last_stop_idx[i]*stop_distance);
+      double hmin(30 + first_stop_idx[i]*stop_distance + extra_rows[first_stop_idx[i]]*sqrt(2.0)*stop_font_size);
+      double hmax(30 + last_stop_idx[i]*stop_distance + extra_rows[last_stop_idx[i]]*sqrt(2.0)*stop_font_size);
       
       result<<Replacer< string >("$rel_color;", relation.color).apply
 	    (Replacer< double >("$hmin;", hmin).apply
 	    (Replacer< double >("$hmax;", hmax).apply
-	    (Replacer< double >("$vpos;", height - 115 + offset_of[i]).apply(line_template()))));
+	    (Replacer< double >("$vpos;", vpos + 20*offset_of[i]).apply
+	    (line_template()))));
       if (left_join_to[i] >= 0)
 	result<<Replacer< string >("$rel_color;", relation.color).apply
 	    (Replacer< double >("$hmin;", hmin+4-stop_distance/2).apply
 	    (Replacer< double >("$hmax;", hmin+2).apply
 	    (Replacer< double >("$htop;", hmin-4-stop_distance/2).apply
-	    (Replacer< double >("$vpos_self;", height - 115 + offset_of[i]).apply
-	    (Replacer< double >("$vpos_join;", height - 115 + offset_of[left_join_to[i]]).apply
+	    (Replacer< double >("$vpos_self;", vpos + 20*offset_of[i]).apply
+	    (Replacer< double >("$vpos_join;", vpos + 20*offset_of[left_join_to[i]]).apply
 	    (left_join_template()))))));
       if (right_join_to[i] >= 0)
 	result<<Replacer< string >("$rel_color;", relation.color).apply
 	    (Replacer< double >("$hmin;", hmax-2).apply
 	    (Replacer< double >("$hmax;", hmax-4+stop_distance/2).apply
 	    (Replacer< double >("$htop;", hmax+4+stop_distance/2).apply
-	    (Replacer< double >("$vpos_self;", height - 115 + offset_of[i]).apply
-	    (Replacer< double >("$vpos_join;", height - 115 + offset_of[left_join_to[i]]).apply
+	    (Replacer< double >("$vpos_self;", vpos + 20*offset_of[i]).apply
+	    (Replacer< double >("$vpos_join;", vpos + 20*offset_of[left_join_to[i]]).apply
 	    (right_join_template()))))));
     }
     
     int stopcount(0);
-    for (list< Stop >::const_iterator it(stoplist.begin()); it != stoplist.end(); ++it)
+    for (list< Stop >::const_iterator it(stoplist.stops.begin()); it != stoplist.stops.end(); ++it)
     {
+      double pos(30 + stopcount*stop_distance + extra_rows[stopcount]*sqrt(2.0)*stop_font_size);
+      
+      if ((!it->correspondences.empty()) && (it->correspondences.size() <= max_correspondences_below))
+	backlines<<Replacer< double >("$hpos;", pos).apply
+            (Replacer< double >("$vpos_upper;", vpos - 10).apply
+            (Replacer< double >("$vpos_lower;", vpos - 10 + 20*offset_of[relations.size()]).apply
+	    (stop_background_template())))<<'\n';
+      
       bool is_a_terminus(false);
       for (unsigned int i(0); i < relations.size(); ++i)
       {
@@ -1330,31 +1383,58 @@ int main(int argc, char *argv[])
 	  continue;
 	
 	string stop_template;
-	if (((stopcount == first_stop_idx[i]) && (left_join_to[i] < 0)) ||
-	    ((stopcount == last_stop_idx[i]) && (right_join_to[i] < 0)))
+	if (it->correspondences.empty())
 	{
-	  is_a_terminus = true;
-	  if (it->used_by[i] == Stop::BOTH)
-	    stop_template = bidirectional_terminus_template();
-	  else if (it->used_by[i] == Stop::FORWARD)
-	    stop_template = forward_terminus_template();
-	  else if (it->used_by[i] == Stop::BACKWARD)
-	    stop_template = backward_terminus_template();
+	  if (((stopcount == first_stop_idx[i]) && (left_join_to[i] < 0)) ||
+	    ((stopcount == last_stop_idx[i]) && (right_join_to[i] < 0)))
+	  {
+	    is_a_terminus = true;
+	    if (it->used_by[i] == Stop::BOTH)
+	      stop_template = bidirectional_terminus_template();
+	    else if (it->used_by[i] == Stop::FORWARD)
+	      stop_template = forward_terminus_template();
+	    else if (it->used_by[i] == Stop::BACKWARD)
+	      stop_template = backward_terminus_template();
+	  }
+	  else
+	  {
+	    if (it->used_by[i] == Stop::BOTH)
+	      stop_template = bidirectional_stop_template();
+	    else if (it->used_by[i] == Stop::FORWARD)
+	      stop_template = forward_stop_template();
+	    else if (it->used_by[i] == Stop::BACKWARD)
+	      stop_template = backward_stop_template();
+	  }
 	}
 	else
 	{
-	  if (it->used_by[i] == Stop::BOTH)
-	    stop_template = bidirectional_stop_template();
-	  else if (it->used_by[i] == Stop::FORWARD)
-	    stop_template = forward_stop_template();
-	  else if (it->used_by[i] == Stop::BACKWARD)
-	    stop_template = backward_stop_template();
+	  if (((stopcount == first_stop_idx[i]) && (left_join_to[i] < 0)) ||
+	    ((stopcount == last_stop_idx[i]) && (right_join_to[i] < 0)))
+	  {
+	    is_a_terminus = true;
+	    if (it->used_by[i] == Stop::BOTH)
+	      stop_template = bidirectional_terminus_hub_template();
+	    else if (it->used_by[i] == Stop::FORWARD)
+	      stop_template = forward_terminus_hub_template();
+	    else if (it->used_by[i] == Stop::BACKWARD)
+	      stop_template = backward_terminus_hub_template();
+	  }
+	  else
+	  {
+	    if (it->used_by[i] == Stop::BOTH)
+	      stop_template = bidirectional_hub_template();
+	    else if (it->used_by[i] == Stop::FORWARD)
+	      stop_template = forward_hub_template();
+	    else if (it->used_by[i] == Stop::BACKWARD)
+	      stop_template = backward_hub_template();
+	  }
 	}
       
 	result<<Replacer< string >("$rel_color;", relation.color).apply
 	    (Replacer< string >("$stop_fontsize;", "16px").apply
 	    (Replacer< double >("$hpos;", pos).apply
-	    (Replacer< double >("$vpos;", height - 115 + offset_of[i]).apply(stop_template))));
+	    (Replacer< double >("$vpos;", vpos + 20*offset_of[i]).apply
+	    (stop_template))));
       }
       ++stopcount;
       
@@ -1364,96 +1444,167 @@ int main(int argc, char *argv[])
             (Replacer< string >("$rel_color;", relation.color).apply
             (Replacer< double >("$stop_fontsize;", stop_font_size).apply
             (Replacer< double >("$hpos;", pos).apply
-            (Replacer< double >("$vpos;", height - 115).apply(terminus_name_template())))));
+            (Replacer< double >("$vpos;", vpos).apply(terminus_name_template())))));
       else
 	result<<Replacer< string >("$stopname;", stopname).apply
             (Replacer< string >("$rel_color;", relation.color).apply
             (Replacer< double >("$stop_fontsize;", stop_font_size).apply
             (Replacer< double >("$hpos;", pos).apply
-            (Replacer< double >("$vpos;", height - 115).apply(stop_name_template())))));	
-      pos += stop_distance;
+            (Replacer< double >("$vpos;", vpos).apply(stop_name_template())))));
+
+      if (it->correspondences.size() <= max_correspondences_below)
+      {
+	// add correspondences below the line bar
+	unsigned int i(0);
+	for (set< RelationHumanId >::const_iterator cit(it->correspondences.begin());
+	cit != it->correspondences.end(); ++cit)
+	{
+	  result<<Replacer< string >("$ref;", cit->ref).apply
+	      (Replacer< string >("$color;", cit->color).apply
+	      (Replacer< double >("$stop_fontsize;", stop_font_size).apply
+	      (Replacer< double >("$hpos;", pos).apply
+	      (Replacer< double >("$vpos;", vpos + stop_font_size*(i+1) + 20*offset_of[relations.size()] - 10).apply
+	      (correspondence_below_template())))));
+	  ++i;
+	}
+      }
+      else
+      {
+	// add correspondences to the right of the stop's name
+	string corr_buf("");
+	unsigned int corr_count(0);
+	pos += sqrt(2.0)*stop_font_size;
+	for (set< RelationHumanId >::const_iterator cit(it->correspondences.begin());
+	cit != it->correspondences.end(); ++cit)
+	{
+	  corr_buf += Replacer< double >("$offset;", stop_font_size/2.0).apply
+	      (Replacer< string >("$ref;", cit->ref).apply
+	      (Replacer< string >("$color;", cit->color).apply(correspondence_item_template())));
+	  if (++corr_count == max_correspondences_per_line)
+	  {
+	    result<<Replacer< double >("$stop_fontsize;", stop_font_size).apply
+	        (Replacer< double >("$hpos;", pos).apply
+	        (Replacer< double >("$vpos;", vpos).apply
+	        (Replacer< string >("$data;", corr_buf).apply(correspondence_row_template()))));
+	    corr_buf = "";
+	    corr_count = 0;
+	    pos += sqrt(2.0)*stop_font_size;
+	  }
+	}
+	if (corr_count > 0)
+	  result<<Replacer< double >("$stop_fontsize;", stop_font_size).apply
+	      (Replacer< double >("$hpos;", pos).apply
+	      (Replacer< double >("$vpos;", vpos).apply
+	      (Replacer< string >("$data;", corr_buf).apply
+	      (correspondence_row_template()))));
+      }
     }
   }
   else
   {
     if (stop_font_size == 0)
       stop_font_size = 10;
-    
-    int offset(0);
-    vector< int > offset_of(relations.size());
+
+    double stop_distance_upper((width - 220
+        - sqrt(2.0)*stop_font_size*extra_rows[(stoplist.stops.size()+1)/2])
+	/((stoplist.stops.size()+1)/2-1));
+    double stop_distance_lower((width - 220
+        - sqrt(2.0)*stop_font_size*(extra_rows[stoplist.stops.size()] - extra_rows[(stoplist.stops.size()-1)/2]))
+	/(stoplist.stops.size()/2));
+    double vpos_upper(height/2 - 20*offset_of[relations.size()]
+	- stop_font_size*max_correspondences_below + 60);
+    double vpos_lower(height - 20*offset_of[relations.size()]
+	- stop_font_size*max_correspondences_below);
+    double vpos(vpos_upper);
+	
     for (unsigned int i(0); i < relations.size(); ++i)
     {
       if (relations[i].direction == 0)
 	continue;
-      offset_of[i] = 20*(offset++);
       
-      if (first_stop_idx[i] < (int)(stoplist.size()+1)/2)
+      if (first_stop_idx[i] < (int)(stoplist.stops.size()+1)/2)
       {
-	double stop_distance((width - 220)/((stoplist.size()+1)/2-1));
-	double hmin(30 + first_stop_idx[i]*stop_distance);
-	double hmax(30 + last_stop_idx[i]*stop_distance);
-	if (last_stop_idx[i] >= (int)(stoplist.size()+1)/2)
+	double stop_distance(stop_distance_upper);
+	double hmin(30 + first_stop_idx[i]*stop_distance + extra_rows[first_stop_idx[i]]*sqrt(2.0)*stop_font_size);
+	double hmax(30 + last_stop_idx[i]*stop_distance + extra_rows[last_stop_idx[i]]*sqrt(2.0)*stop_font_size);
+	if (last_stop_idx[i] >= (int)(stoplist.stops.size()+1)/2)
 	  hmax = width - 170;
 	result<<Replacer< string >("$rel_color;", relation.color).apply
 	    (Replacer< double >("$hmin;", hmin).apply
 	    (Replacer< double >("$hmax;", hmax).apply
-	    (Replacer< double >("$vpos;", height/2 - 40 + offset_of[i]).apply(line_template()))));
+	    (Replacer< double >("$vpos;", vpos_upper + 20*offset_of[i]).apply
+	    (line_template()))));
         if (left_join_to[i] >= 0)
 	  result<<Replacer< string >("$rel_color;", relation.color).apply
 	      (Replacer< double >("$hmin;", hmin+4-stop_distance/2).apply
 	      (Replacer< double >("$hmax;", hmin+2).apply
 	      (Replacer< double >("$htop;", hmin-4-stop_distance/2).apply
-	      (Replacer< double >("$vpos_self;", height/2 - 40 + offset_of[i]).apply
-	      (Replacer< double >("$vpos_join;", height/2 - 40 + offset_of[left_join_to[i]]).apply
+	      (Replacer< double >("$vpos_self;", vpos_upper + 20*offset_of[i]).apply
+	      (Replacer< double >("$vpos_join;", vpos_upper + 20*offset_of[left_join_to[i]]).apply
 	      (left_join_template()))))));
-        if ((right_join_to[i] >= 0) && (last_stop_idx[i] < (int)(stoplist.size()+1)/2))
+        if ((right_join_to[i] >= 0) && (last_stop_idx[i] < (int)(stoplist.stops.size()+1)/2))
 	  result<<Replacer< string >("$rel_color;", relation.color).apply
 	      (Replacer< double >("$hmin;", hmax-2).apply
 	      (Replacer< double >("$hmax;", hmax-4+stop_distance/2).apply
 	      (Replacer< double >("$htop;", hmax+4+stop_distance/2).apply
-	      (Replacer< double >("$vpos_self;", height/2 - 40 + offset_of[i]).apply
-	      (Replacer< double >("$vpos_join;", height/2 - 40 + offset_of[left_join_to[i]]).apply
+	      (Replacer< double >("$vpos_self;", vpos_upper + 20*offset_of[i]).apply
+	      (Replacer< double >("$vpos_join;", vpos_upper + 20*offset_of[left_join_to[i]]).apply
 	      (right_join_template()))))));
       }
-      if (last_stop_idx[i] >= (int)(stoplist.size()+1)/2)
+      if (last_stop_idx[i] >= (int)(stoplist.stops.size()+1)/2)
       {
-	double stop_distance = (width - 220)/(stoplist.size()/2);
-	double hmin(30 + (first_stop_idx[i]-(int)(stoplist.size()-1)/2)*stop_distance);
-	double hmax(30 + (last_stop_idx[i]-(int)(stoplist.size()-1)/2)*stop_distance);
-	if (first_stop_idx[i] < (int)(stoplist.size()+1)/2)
+	double stop_distance(stop_distance_lower);
+	double hmin(30 + (first_stop_idx[i]-(int)(stoplist.stops.size()-1)/2)*stop_distance
+	    +  (extra_rows[first_stop_idx[i]] - extra_rows[(stoplist.stops.size()+1)/2])*sqrt(2.0)*stop_font_size);
+	double hmax(30 + (last_stop_idx[i]-(int)(stoplist.stops.size()-1)/2)*stop_distance
+	    +  (extra_rows[last_stop_idx[i]] - extra_rows[(stoplist.stops.size()+1)/2])*sqrt(2.0)*stop_font_size);
+	if (first_stop_idx[i] < (int)(stoplist.stops.size()+1)/2)
 	  hmin = 30;
 	result<<Replacer< string >("$rel_color;", relation.color).apply
 	    (Replacer< double >("$hmin;", hmin).apply
 	    (Replacer< double >("$hmax;", hmax).apply
-	    (Replacer< double >("$vpos;", height - 115 + offset_of[i]).apply(line_template()))))<<'\n';
-        if ((left_join_to[i] >= 0) && (first_stop_idx[i] >= (int)(stoplist.size()+1)/2))
+	    (Replacer< double >("$vpos;", vpos_lower + 20*offset_of[i]).apply
+	    (line_template()))))<<'\n';
+        if ((left_join_to[i] >= 0) && (first_stop_idx[i] >= (int)(stoplist.stops.size()+1)/2))
 	  result<<Replacer< string >("$rel_color;", relation.color).apply
 	      (Replacer< double >("$hmin;", hmin+4-stop_distance/2).apply
 	      (Replacer< double >("$hmax;", hmin+2).apply
 	      (Replacer< double >("$htop;", hmin-4-stop_distance/2).apply
-	      (Replacer< double >("$vpos_self;", height - 115 + offset_of[i]).apply
-	      (Replacer< double >("$vpos_join;", height - 115 + offset_of[left_join_to[i]]).apply
+	      (Replacer< double >("$vpos_self;", vpos_lower + 20*offset_of[i]).apply
+	      (Replacer< double >("$vpos_join;", vpos_lower + 20*offset_of[left_join_to[i]]).apply
 	      (left_join_template()))))));
         if (right_join_to[i] >= 0)
 	  result<<Replacer< string >("$rel_color;", relation.color).apply
 	      (Replacer< double >("$hmin;", hmax-2).apply
 	      (Replacer< double >("$hmax;", hmax-4-stop_distance/2).apply
 	      (Replacer< double >("$htop;", hmax+4+stop_distance/2).apply
-	      (Replacer< double >("$vpos_self;", height - 115 + offset_of[i]).apply
-	      (Replacer< double >("$vpos_join;", height - 115 + offset_of[left_join_to[i]]).apply
+	      (Replacer< double >("$vpos_self;", vpos_lower + 20*offset_of[i]).apply
+	      (Replacer< double >("$vpos_join;", vpos_lower + 20*offset_of[left_join_to[i]]).apply
 	      (right_join_template()))))));
       }
     }
     
     unsigned int count(0);
-    double pos(30), vpos(height/2 - 40);
     double stop_distance(0);
   
-    stop_distance = (width - 220)/((stoplist.size()+1)/2-1);
+    stop_distance = stop_distance_upper;
   
     int stopcount(0);
-    for (list< Stop >::const_iterator it(stoplist.begin()); it != stoplist.end(); ++it)
+    for (list< Stop >::const_iterator it(stoplist.stops.begin()); it != stoplist.stops.end(); ++it)
     {
+      double pos;
+      if (stopcount < (int)(stoplist.stops.size()+1)/2)
+	pos = 30 + stopcount*stop_distance + extra_rows[stopcount]*sqrt(2.0)*stop_font_size;
+      else
+	pos = 30 + (stopcount-(int)(stoplist.stops.size()-1)/2)*stop_distance
+	    + (extra_rows[stopcount] - extra_rows[(stoplist.stops.size()+1)/2])*sqrt(2.0)*stop_font_size;
+      
+      if ((!it->correspondences.empty()) && (it->correspondences.size() <= max_correspondences_below))
+        backlines<<Replacer< double >("$hpos;", pos).apply
+            (Replacer< double >("$vpos_upper;", vpos - 10).apply
+            (Replacer< double >("$vpos_lower;", vpos - 10 + 20*offset_of[relations.size()]).apply
+	    (stop_background_template())))<<'\n';
+      
       bool is_a_terminus(false);
       for (unsigned int i(0); i < relations.size(); ++i)
       {
@@ -1465,31 +1616,58 @@ int main(int argc, char *argv[])
 	  continue;
 	
 	string stop_template;
-	if (((stopcount == first_stop_idx[i]) && (left_join_to[i] < 0)) ||
-	    ((stopcount == last_stop_idx[i]) && (right_join_to[i] < 0)))
+	if (it->correspondences.empty())
 	{
-	  is_a_terminus = true;
-	  if (it->used_by[i] == Stop::BOTH)
-	    stop_template = bidirectional_terminus_template();
-	  else if (it->used_by[i] == Stop::FORWARD)
-	    stop_template = forward_terminus_template();
-	  else if (it->used_by[i] == Stop::BACKWARD)
-	    stop_template = backward_terminus_template();
+	  if (((stopcount == first_stop_idx[i]) && (left_join_to[i] < 0)) ||
+	    ((stopcount == last_stop_idx[i]) && (right_join_to[i] < 0)))
+	  {
+	    is_a_terminus = true;
+	    if (it->used_by[i] == Stop::BOTH)
+	      stop_template = bidirectional_terminus_template();
+	    else if (it->used_by[i] == Stop::FORWARD)
+	      stop_template = forward_terminus_template();
+	    else if (it->used_by[i] == Stop::BACKWARD)
+	      stop_template = backward_terminus_template();
+	  }
+	  else
+	  {
+	    if (it->used_by[i] == Stop::BOTH)
+	      stop_template = bidirectional_stop_template();
+	    else if (it->used_by[i] == Stop::FORWARD)
+	      stop_template = forward_stop_template();
+	    else if (it->used_by[i] == Stop::BACKWARD)
+	      stop_template = backward_stop_template();
+	  }
 	}
 	else
 	{
-	  if (it->used_by[i] == Stop::BOTH)
-	    stop_template = bidirectional_stop_template();
-	  else if (it->used_by[i] == Stop::FORWARD)
-	    stop_template = forward_stop_template();
-	  else if (it->used_by[i] == Stop::BACKWARD)
-	    stop_template = backward_stop_template();
+	  if (((stopcount == first_stop_idx[i]) && (left_join_to[i] < 0)) ||
+	    ((stopcount == last_stop_idx[i]) && (right_join_to[i] < 0)))
+	  {
+	    is_a_terminus = true;
+	    if (it->used_by[i] == Stop::BOTH)
+	      stop_template = bidirectional_terminus_hub_template();
+	    else if (it->used_by[i] == Stop::FORWARD)
+	      stop_template = forward_terminus_hub_template();
+	    else if (it->used_by[i] == Stop::BACKWARD)
+	      stop_template = backward_terminus_hub_template();
+	  }
+	  else
+	  {
+	    if (it->used_by[i] == Stop::BOTH)
+	      stop_template = bidirectional_hub_template();
+	    else if (it->used_by[i] == Stop::FORWARD)
+	      stop_template = forward_hub_template();
+	    else if (it->used_by[i] == Stop::BACKWARD)
+	      stop_template = backward_hub_template();
+	  }
 	}
       
 	result<<Replacer< string >("$rel_color;", relation.color).apply
 	    (Replacer< string >("$stop_fontsize;", "16px").apply
 	    (Replacer< double >("$hpos;", pos).apply
-	    (Replacer< double >("$vpos;", vpos + offset_of[i]).apply(stop_template))));
+	    (Replacer< double >("$vpos;", vpos + 20*offset_of[i]).apply
+	    (stop_template))));
       }
       ++stopcount;
       
@@ -1506,21 +1684,69 @@ int main(int argc, char *argv[])
             (Replacer< double >("$stop_fontsize;", stop_font_size).apply
             (Replacer< double >("$hpos;", pos).apply
             (Replacer< double >("$vpos;", vpos).apply(stop_name_template())))));	
-      pos += stop_distance;
-      if (++count >= (stoplist.size()+1)/2)
+
+      if (it->correspondences.size() <= max_correspondences_below)
+      {
+	// add correspondences below the line bar
+	unsigned int i(0);
+	for (set< RelationHumanId >::const_iterator cit(it->correspondences.begin());
+	cit != it->correspondences.end(); ++cit)
+	{
+	  result<<Replacer< string >("$ref;", cit->ref).apply
+	  (Replacer< string >("$color;", cit->color).apply
+	  (Replacer< double >("$stop_fontsize;", stop_font_size).apply
+	  (Replacer< double >("$hpos;", pos).apply
+	  (Replacer< double >("$vpos;", vpos + stop_font_size*(i+1) + 20*offset_of[relations.size()] - 10).apply
+	  (correspondence_below_template())))));
+	  ++i;
+	}
+      }
+      else
+      {
+	// add correspondences to the right of the stop's name
+	string corr_buf("");
+	unsigned int corr_count(0);
+	pos += sqrt(2.0)*stop_font_size;
+	for (set< RelationHumanId >::const_iterator cit(it->correspondences.begin());
+	cit != it->correspondences.end(); ++cit)
+	{
+	  corr_buf += Replacer< double >("$offset;", stop_font_size/2.0).apply
+	      (Replacer< string >("$ref;", cit->ref).apply
+	      (Replacer< string >("$color;", cit->color).apply(correspondence_item_template())));
+	  if (++corr_count == max_correspondences_per_line)
+	  {
+	    result<<Replacer< double >("$stop_fontsize;", stop_font_size).apply
+		(Replacer< double >("$hpos;", pos).apply
+		(Replacer< double >("$vpos;", vpos).apply
+		(Replacer< string >("$data;", corr_buf).apply
+		(correspondence_row_template()))));
+	    corr_buf = "";
+	    corr_count = 0;
+	    pos += sqrt(2.0)*stop_font_size;
+	  }
+	}
+	if (corr_count > 0)
+	  result<<Replacer< double >("$stop_fontsize;", stop_font_size).apply
+	      (Replacer< double >("$hpos;", pos).apply
+	      (Replacer< double >("$vpos;", vpos).apply
+	      (Replacer< string >("$data;", corr_buf).apply(correspondence_row_template()))));
+      }
+      
+      if (++count >= (stoplist.stops.size()+1)/2)
       {
 	count = 0;
-	vpos = height - 115;
-	stop_distance = (width - 220)/(stoplist.size()/2);
-	pos = 30 + stop_distance;
+	vpos = vpos_lower;
+	stop_distance = stop_distance_lower;
       }
     }
   }
   
   cout<<multi_replace(translations, Replacer< double >("$width;", width).apply
       (Replacer< double >("$height;", height).apply
+      (Replacer< string >("$rel_from;", relations.begin()->from).apply
+      (Replacer< string >("$rel_to;", relations.begin()->to).apply
       (Replacer< string >("<headline/>", headline).apply
-      (Replacer< string >("<stops-diagram/>", result.str()).apply(frame_template())))));
+      (Replacer< string >("<stops-diagram/>", backlines.str() + result.str()).apply(frame_template())))))));
   
   return 0;
 }

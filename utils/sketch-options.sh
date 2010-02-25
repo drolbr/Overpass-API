@@ -78,7 +78,8 @@ of street.
 <pre>&lt;width px=&quot;1200&quot;/&gt;
 &lt;height px=&quot;400&quot;/&gt;
 &lt;stop-font-size px=&quot;10&quot;/&gt;
-&lt;force rows=&quot;1&quot;/&gt;</pre>
+&lt;force rows=&quot;1&quot;/&gt;
+&lt;max-correspondences per-line=&quot;6&quot; below=&quot;0&quot;/&gt;</pre>
 
 These correspond to the options that can be directly passed to sketch-line. They are
 explained at the <a href=\"../public_transport.html\">public transport page</a>.

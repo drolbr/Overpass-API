@@ -2,6 +2,7 @@
  * Must be used with Expat compiled for UTF-8 output.
  */
 
+#include <iomanip>
 #include <iostream>
 
 #include <math.h>
@@ -9,8 +10,9 @@
 
 using namespace std;
 
-const double BRIM = 0.02;
 const double PI = acos(0)*2;
+
+double brim;
 
 string frame_template()
 {
@@ -42,14 +44,14 @@ void start(const char *el, const char **attr)
     }
     cout<<"  <query type=\"node\">\n"
 	<<"    <bbox-query "
-	<<"n=\""<<lat + BRIM<<"\" s=\""<<lat - BRIM<<"\" "
-	<<"w=\""<<lon - BRIM/cos(lat/180.0*PI)<<"\" e=\""<<lon + BRIM/cos(lat/180.0*PI)<<"\"/>\n"
+	<<"n=\""<<setprecision(14)<<lat + brim<<"\" s=\""<<setprecision(14)<<lat - brim<<"\" "
+	<<"w=\""<<setprecision(14)<<lon - brim/cos(lat/180.0*PI)<<"\" e=\""<<setprecision(14)<<lon + brim/cos(lat/180.0*PI)<<"\"/>\n"
 	<<"    <has-kv k=\"railway\"/>\n"
 	<<"  </query>\n"
 	<<"  <query type=\"node\">\n"
 	<<"    <bbox-query "
-	<<"n=\""<<lat + BRIM<<"\" s=\""<<lat - BRIM<<"\" "
-	<<"w=\""<<lon - BRIM/cos(lat/180.0*PI)<<"\" e=\""<<lon + BRIM/cos(lat/180.0*PI)<<"\"/>\n"
+	<<"n=\""<<setprecision(14)<<lat + brim<<"\" s=\""<<setprecision(14)<<lat - brim<<"\" "
+	<<"w=\""<<setprecision(14)<<lon - brim/cos(lat/180.0*PI)<<"\" e=\""<<setprecision(14)<<lon + brim/cos(lat/180.0*PI)<<"\"/>\n"
 	<<"    <has-kv k=\"highway\"/>\n"
 	<<"  </query>\n";
   }
@@ -61,6 +63,16 @@ void end(const char *el)
 
 int main(int argc, char *argv[])
 {
+  brim = 0.009;
+  
+  int argi(1);
+  while (argi < argc)
+  {
+    if (!strncmp("--size=", argv[argi], 7))
+      brim = atof(((string)(argv[argi])).substr(7).c_str())/1000.0/40000.0*360.0;
+    ++argi;
+  }
+  
   cout<<"<osm-script timeout=\"180\" element-limit=\"10000000\">\n"
       <<"\n"
       <<"<union>\n";

@@ -8,10 +8,6 @@ bin/import_osm
 bin/init_dispatcher
 bin/load_rules
 bin/timestamp_of
-cgi-bin/add_rule
-cgi-bin/get_rule
-cgi-bin/interpreter
-cgi-bin/update_rule
 testfiles
 import_osm
 import_osm_nw

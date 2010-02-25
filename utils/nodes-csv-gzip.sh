@@ -20,6 +20,13 @@ echo -e "\
 
 REQUEST_METHOD=
 /home/roland/osm-3s/cgi-bin/interpreter </tmp/nodes_csv_rel_req >/tmp/nodes_csv_rel_result.1
+RESPONSE_TYPE=`head -n 1 </tmp/nodes_csv_rel_result.1`
+if [[ $RESPONSE_TYPE != "Content-type: application/osm3s" ]]; then
+{
+  cat </tmp/nodes_csv_rel_result.1
+  exit 0
+};
+fi
 dd if=/tmp/nodes_csv_rel_result.1 of=/tmp/nodes_csv_rel_result.2 bs=1 skip=56
 gunzip </tmp/nodes_csv_rel_result.2 | ../bin/memberlist >/tmp/nodes_rel_csv_result.3
 
@@ -40,6 +47,13 @@ while read -u 3 REL; do
 
   REQUEST_METHOD=
   /home/roland/osm-3s/cgi-bin/interpreter </tmp/nodes_csv_req >/tmp/nodes_csv_result.1
+  RESPONSE_TYPE=`head -n 1 </tmp/nodes_csv_result.1`
+  if [[ $RESPONSE_TYPE != "Content-type: application/osm3s" ]]; then
+  {
+    cat </tmp/nodes_csv_result.1
+    exit 0
+  };
+  fi
   dd if=/tmp/nodes_csv_result.1 of=/tmp/nodes_csv_result.2 bs=1 skip=56
   if [[ $ARG_2 == "forward" ]]; then
   {
