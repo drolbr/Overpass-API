@@ -443,6 +443,10 @@ struct Relation
     const static int FORWARD = 1;
     const static int BACKWARD = 2;
     const static int BOTH = 4;
+    
+    int from_mo_fr, to_mo_fr;
+    int from_sa, to_sa;
+    int from_su, to_su;
 };
 
 struct RelationHumanId
@@ -463,63 +467,261 @@ inline bool operator<(const RelationHumanId& rhi_1, const RelationHumanId& rhi_2
 struct Stop
 {
   public:
-    Stop() : name(""), used_by() {}
+    Stop() : name(""), used_by(used_by_size) {}
     
     string name;
+    
     vector< int > used_by;
+    static unsigned int used_by_size;
+    
     set< RelationHumanId > correspondences;
     const static int FORWARD = 1;
     const static int BACKWARD = 2;
     const static int BOTH = 3;
 };
 
+unsigned int Stop::used_by_size = 0;
+
+struct Correspondence_Data
+{
+  public:
+    Correspondence_Data(const map< unsigned int, set< RelationHumanId > >& what_calls_here_,
+	     const map< unsigned int, NamedNode >& nodes_,
+	     double walk_limit_for_changes_)
+    : what_calls_here(what_calls_here_), nodes(nodes_),
+      walk_limit_for_changes(walk_limit_for_changes_) {}
+      
+    Correspondence_Data(const vector< Relation >& correspondences,
+	     const map< unsigned int, NamedNode >& nodes_,
+	     double walk_limit_for_changes_)
+    : what_calls_here(), nodes(nodes_),
+      walk_limit_for_changes(walk_limit_for_changes_)
+    {
+      // create the dictionary bus_stop -> ref
+      for (vector< Relation >::const_iterator rit(correspondences.begin());
+	   rit != correspondences.end(); ++rit)
+      {
+	for(vector< unsigned int >::const_iterator it(rit->forward_stops.begin());
+		   it != rit->forward_stops.end(); ++it)
+	{
+	  if ((nodes.find(*it) != nodes.end()) && (nodes.find(*it)->second.lat <= 90.0))
+	    what_calls_here[*it].insert(RelationHumanId(rit->ref, rit->color));
+	}
+	for(vector< unsigned int >::const_iterator it(rit->backward_stops.begin());
+		   it != rit->backward_stops.end(); ++it)
+	{
+	  if ((nodes.find(*it) != nodes.end()) && (nodes.find(*it)->second.lat <= 90.0))
+	    what_calls_here[*it].insert(RelationHumanId(rit->ref, rit->color));
+	}
+      }
+    }
+    
+    set< RelationHumanId > correspondences_at(const NamedNode& nnode) const
+    {
+      set< RelationHumanId > result;
+      
+      for (map< unsigned int, set< RelationHumanId > >::const_iterator it(what_calls_here.begin());
+	   it != what_calls_here.end(); ++it)
+      {
+	if ((nodes.find(it->first) != nodes.end()) &&
+		    (spat_distance(nnode, nodes.find(it->first)->second) < walk_limit_for_changes))
+	{
+	  for (set< RelationHumanId >::const_iterator iit(it->second.begin()); iit != it->second.end(); ++iit)
+	    result.insert(*iit);
+	}
+      }
+      return result;
+    }
+    
+    map< unsigned int, set< RelationHumanId > > what_calls_here;
+    const map< unsigned int, NamedNode >& nodes;
+    const double walk_limit_for_changes;
+};
+
 struct Stoplist
 {
   public:
-    Stoplist(const map< unsigned int, set< RelationHumanId > >& what_calls_here_,
-	     const map< unsigned int, NamedNode >& nodes_,
-	     const double& walk_limit_for_changes_)
-    : what_calls_here(what_calls_here_), nodes(nodes_),
-      walk_limit_for_changes(walk_limit_for_changes_) {}
+    Stoplist() : stops() {}
     
     void populate_stop
-    (Stop& stop, const NamedNode& nnode, int rel_index, int mode, bool additive)
-     {
-       if (nnode.lat <= 90.0)
-       {
-	 stop.name = nnode.name;
-	 if (additive)
-	   stop.used_by[rel_index] |= mode;
-	 else
-	   stop.used_by[rel_index] = mode;
-	 for (map< unsigned int, set< RelationHumanId > >::const_iterator it(what_calls_here.begin());
-	 it != what_calls_here.end(); ++it)
-	 {
-	   if ((nodes.find(it->first) != nodes.end()) &&
-	     (spat_distance(nnode, nodes.find(it->first)->second) < walk_limit_for_changes))
-	   {
-	     for (set< RelationHumanId >::const_iterator iit(it->second.begin()); iit != it->second.end(); ++iit)
-	       stop.correspondences.insert(*iit);
-	   }
-	 }
-       }
-     }
-     
-     list< Stop > stops;
-     
-     //necessary only for correspondences
-     const map< unsigned int, set< RelationHumanId > >& what_calls_here;
-     const map< unsigned int, NamedNode >& nodes;
-     const double& walk_limit_for_changes;
+	(Stop& stop, const NamedNode& nnode, int rel_index, int mode, bool additive,
+	 const Correspondence_Data& cors_data)
+    {
+      if (nnode.lat <= 90.0)
+      {
+	stop.name = nnode.name;
+	if (additive)
+	  stop.used_by[rel_index] |= mode;
+	else
+	  stop.used_by[rel_index] = mode;
+	
+	set< RelationHumanId > cors(cors_data.correspondences_at(nnode));
+	stop.correspondences.insert(cors.begin(), cors.end());
+      }
+    }
+    
+    void push_back
+	(const NamedNode& nnode, int rel_index, int mode,
+	 const Correspondence_Data& cors_data)
+    {
+      Stop stop;
+      populate_stop(stop, nnode, rel_index, mode, false, cors_data);
+      stops.push_back(stop);
+    }
+    
+    void insert
+	(list< Stop >::iterator it, const NamedNode& nnode, int rel_index, int mode,
+	 const Correspondence_Data& cors_data)
+    {
+      Stop stop;
+      populate_stop(stop, nnode, rel_index, mode, false, cors_data);
+      stops.insert(it, stop);
+    }
+    
+    list< Stop > stops;
 };
- 
+
+int process_relation
+    (const Relation& rel, const map< unsigned int, NamedNode >& nodes,
+     unsigned int rel_count, int direction_const, int forward_backward,
+     Stoplist& stoplist, const Correspondence_Data& cors_data)
+{
+  vector< unsigned int > const* rel_stops;
+  if (forward_backward == Relation::FORWARD)
+    rel_stops = &(rel.forward_stops);
+  else if (forward_backward == Relation::BACKWARD)
+    rel_stops = &(rel.backward_stops);
+  else
+    return direction_const;
+  
+  multimap< string, unsigned int > stopdict;
+  for (unsigned int i(0); i < rel_stops->size(); ++i)
+  {
+    if ((nodes.find((*rel_stops)[i]) != nodes.end())
+	 && (nodes.find((*rel_stops)[i])->second.lat <= 90.0))
+      stopdict.insert(make_pair(nodes.find((*rel_stops)[i])->second.name, i+1));
+  }
+    
+  vector< unsigned int > indices_of_present_stops;
+  for (list< Stop >::const_iterator it(stoplist.stops.begin());
+       it != stoplist.stops.end(); ++it)
+  {
+    for (multimap< string, unsigned int >::const_iterator
+	 iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
+      indices_of_present_stops.push_back(iit->second);
+  }
+    
+  vector< unsigned int > ascending(longest_ascending_subsequence
+      (indices_of_present_stops));
+  vector< unsigned int > descending(longest_descending_subsequence
+      (indices_of_present_stops));
+  
+  if (ascending.size() > descending.size())
+  {
+    if (direction_const == 0)
+      direction_const = Stop::FORWARD;
+    
+    vector< unsigned int >::const_iterator sit(ascending.begin());
+    unsigned int last_idx(1);
+    for (list< Stop >::iterator it(stoplist.stops.begin());
+	 it != stoplist.stops.end(); ++it)
+    {
+      bool sit_found(false);
+      for (multimap< string, unsigned int >::const_iterator
+	   iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
+	sit_found |= (iit->second == *sit);
+      if (sit_found)
+      {
+	  // insert stops that aren't yet inserted
+	while (*sit > last_idx)
+	{
+	  if (nodes.find((*rel_stops)[last_idx-1]) != nodes.end())
+	    stoplist.insert(it, nodes.find((*rel_stops)[last_idx-1])->second,
+			    rel_count, direction_const, cors_data);
+	  ++last_idx;
+	}
+	  
+	// match the current stop
+	if (nodes.find((*rel_stops)[last_idx-1]) != nodes.end())
+	  stoplist.populate_stop(*it, nodes.find((*rel_stops)[last_idx-1])->second,
+				  rel_count, direction_const, true, cors_data);
+	  
+	++last_idx;
+	  
+	if (++sit == ascending.end())
+	  break;
+      }
+    }
+      
+      // insert stops at the end
+    while (last_idx <= rel_stops->size())
+    {
+      if (nodes.find((*rel_stops)[last_idx-1]) != nodes.end())
+	stoplist.push_back(nodes.find((*rel_stops)[last_idx-1])->second,
+			   rel_count, direction_const, cors_data);
+      ++last_idx;
+    }
+    
+    return Relation::FORWARD;
+  }
+  else if (descending.size() > 0)
+  {
+    if (direction_const == 0)
+      direction_const = Stop::BACKWARD;
+    
+    vector< unsigned int >::const_reverse_iterator sit(descending.rbegin());
+    unsigned int last_idx(rel_stops->size());
+    for (list< Stop >::iterator it(stoplist.stops.begin());
+	 it != stoplist.stops.end(); ++it)
+    {
+      bool sit_found(false);
+      for (multimap< string, unsigned int >::const_iterator
+	   iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
+	sit_found |= (iit->second == *sit);
+      if (sit_found)
+      {
+	// insert stops that aren't yet inserted
+	while (*sit < last_idx)
+	{
+	  if (nodes.find((*rel_stops)[last_idx-1]) != nodes.end())
+	    stoplist.insert(it, nodes.find((*rel_stops)[last_idx-1])->second,
+			    rel_count, direction_const, cors_data);
+	  --last_idx;
+	}
+	  
+	// match the current stop
+	if (nodes.find((*rel_stops)[last_idx-1]) != nodes.end())
+	  stoplist.populate_stop(*it, nodes.find((*rel_stops)[last_idx-1])->second,
+				rel_count, direction_const, true, cors_data);
+
+	--last_idx;
+	
+	if (++sit == descending.rend())
+	  break;
+      }
+    }
+      
+    // insert stops at the end
+    while (last_idx > 0)
+    {
+      if (nodes.find((*rel_stops)[last_idx-1]) != nodes.end())
+	stoplist.push_back(nodes.find((*rel_stops)[last_idx-1])->second,
+			     rel_count, direction_const, cors_data);
+      --last_idx;
+    }
+    
+    return Relation::BACKWARD;
+  }
+  
+  return direction_const;
+}
+
 map< unsigned int, NamedNode > nodes;
 NamedNode nnode;
 unsigned int id;
 
 vector< Relation > relations;
 vector< Relation > correspondences;
-map< unsigned int, set< RelationHumanId > > what_calls_here;
 string pivot_ref;
 Relation relation;
 
@@ -792,49 +994,12 @@ int main(int argc, char *argv[])
   parse_status = 0;
   parse(stdin, start, end);
   
-  // create the dictionary bus_stop -> ref
-  for (vector< Relation >::iterator rit(correspondences.begin());
-       rit != correspondences.end(); ++rit)
-  {
-    for(vector< unsigned int >::const_iterator it(rit->forward_stops.begin());
-	it != rit->forward_stops.end(); ++it)
-    {
-      if (nodes[*it].lat <= 90.0)
-	what_calls_here[*it].insert(RelationHumanId(rit->ref, rit->color));
-    }
-    for(vector< unsigned int >::const_iterator it(rit->backward_stops.begin());
-	it != rit->backward_stops.end(); ++it)
-    {
-      if (nodes[*it].lat <= 90.0)
-	what_calls_here[*it].insert(RelationHumanId(rit->ref, rit->color));
-    }
-  }
+  // initialise complex data structures
+  Correspondence_Data cors_data(correspondences, nodes, walk_limit_for_changes);
+  Stoplist stoplist;
+  Stop::used_by_size = relations.size();
   
-//   for (map< unsigned int, set< RelationHumanId > >::const_iterator it(what_calls_here.begin());
-//        it != what_calls_here.end(); ++it)
-//   {
-//     cerr<<it->first;
-//     for (set< RelationHumanId >::const_iterator iit(it->second.begin()); iit != it->second.end(); ++iit)
-// 	 cerr<<"  "<<iit->ref<<' '<<iit->color;
-//     cerr<<'\n';
-//   }
-
-//   for (vector< Relation >::const_iterator it(relations.begin()); it != relations.end(); ++it)
-//   {
-//     cerr<<"from: "<<it->from<<'\n';
-//     cerr<<"to: "<<it->from<<'\n';
-//     for (vector< unsigned int >::const_iterator iit(it->forward_stops.begin());
-//         iit != it->forward_stops.end(); ++iit)
-//       cerr<<nodes[*iit].lat<<' '<<nodes[*iit].name<<'\n';
-//     cerr<<'\n';
-//     for (vector< unsigned int >::const_iterator iit(it->backward_stops.begin());
-//     iit != it->backward_stops.end(); ++iit)
-//     cerr<<nodes[*iit].lat<<' '<<nodes[*iit].name<<'\n';
-//     cerr<<'\n';
-//   }
-
   // make a common stoplist from all relations
-  Stoplist stoplist(what_calls_here, nodes, walk_limit_for_changes);
   if (relations.size() == 0)
   {
     cout<<Replacer< double >("$width;", width).apply
@@ -847,12 +1012,9 @@ int main(int argc, char *argv[])
   // integrate all relations (their forward direction) into the stoplist
   relation = relations.front();
   for(vector< unsigned int >::const_iterator it(relation.forward_stops.begin());
-  it != relation.forward_stops.end(); ++it)
+      it != relation.forward_stops.end(); ++it)
   {
-    Stop stop;
-    stop.used_by.resize(relations.size());
-    stoplist.populate_stop(stop, nodes[*it], 0, Stop::FORWARD, false);
-    stoplist.stops.push_back(stop);
+    stoplist.push_back(nodes[*it], 0, Stop::FORWARD, cors_data);
   }
   relations.begin()->direction |= Relation::FORWARD;
   
@@ -861,131 +1023,12 @@ int main(int argc, char *argv[])
   ++rit;
   while (rit != relations.end())
   {
-    multimap< string, unsigned int > stopdict;
-    for (unsigned int i(0); i < rit->forward_stops.size(); ++i)
-    {
-      if (nodes[rit->forward_stops[i]].lat <= 90.0)
-	stopdict.insert(make_pair(nodes[rit->forward_stops[i]].name, i+1));
-    }
-    
-    vector< unsigned int > indices_of_present_stops;
-    for (list< Stop >::const_iterator it(stoplist.stops.begin());
-    it != stoplist.stops.end(); ++it)
-    {
-      for (multimap< string, unsigned int >::const_iterator
-	iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
-	indices_of_present_stops.push_back(iit->second);
-    }
-    
-    vector< unsigned int > ascending(longest_ascending_subsequence
-    (indices_of_present_stops));
-    vector< unsigned int > descending(longest_descending_subsequence
-    (indices_of_present_stops));
-    
-    if (ascending.size() > descending.size())
-    {
-      rit->direction |= Relation::FORWARD;
-      
-      vector< unsigned int >::const_iterator sit(ascending.begin());
-      unsigned int last_idx(1);
-      for (list< Stop >::iterator it(stoplist.stops.begin());
-      it != stoplist.stops.end(); ++it)
-      {
-	bool sit_found(false);
-	for (multimap< string, unsigned int >::const_iterator
-	  iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
-	  sit_found |= (iit->second == *sit);
-	if (sit_found)
-	{
-	  // insert stops that aren't yet inserted
-	  while (*sit > last_idx)
-	  {
-	    Stop stop;
-	    stop.used_by.resize(relations.size());
-	    stoplist.populate_stop(stop, nodes[rit->forward_stops[last_idx-1]], rel_count, Stop::FORWARD, false);
-	    stoplist.stops.insert(it, stop);
-	    ++last_idx;
-	  }
-	  
-	  // match the current stop
-	  stoplist.populate_stop(*it, nodes[rit->forward_stops[last_idx-1]], rel_count, Stop::FORWARD, false);
-			
-	  ++last_idx;
-	  	  
-	  if (++sit == ascending.end())
-	    break;
-	}
-      }
-      
-      // insert stops at the end
-      while (last_idx <= rit->forward_stops.size())
-      {
-	Stop stop;
-	stop.used_by.resize(relations.size());
-	stoplist.populate_stop(stop, nodes[rit->forward_stops[last_idx-1]], rel_count, Stop::FORWARD, false);
-	stoplist.stops.push_back(stop);
-	++last_idx;
-      }
-    }
-    else
-    {
-      rit->direction |= Relation::BACKWARD;
-      
-      vector< unsigned int >::const_reverse_iterator sit(descending.rbegin());
-      unsigned int last_idx(rit->forward_stops.size());
-      for (list< Stop >::iterator it(stoplist.stops.begin());
-	  it != stoplist.stops.end(); ++it)
-      {
-	bool sit_found(false);
-	for (multimap< string, unsigned int >::const_iterator
-		    iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
-	  sit_found |= (iit->second == *sit);
-	if (sit_found)
-	{
-	  // insert stops that aren't yet inserted
-	  while (*sit < last_idx)
-	  {
-	    Stop stop;
-	    stop.used_by.resize(relations.size());
-	    stoplist.populate_stop(stop, nodes[rit->forward_stops[last_idx-1]], rel_count, Stop::BACKWARD, false);
-	    stoplist.stops.insert(it, stop);
-	    --last_idx;
-	  }
-	  
-	  // match the current stop
-	  stoplist.populate_stop(*it, nodes[rit->forward_stops[last_idx-1]], rel_count, Stop::BACKWARD, false);
-
-	  --last_idx;
-	  
-	  if (++sit == descending.rend())
-	    break;
-	}
-      }
-      
-      // insert stops at the end
-      while (last_idx > 0)
-      {
-	Stop stop;
-	stop.used_by.resize(relations.size());
-	stoplist.populate_stop(stop, nodes[rit->forward_stops[last_idx-1]], rel_count, Stop::BACKWARD, false);
-	stoplist.stops.push_back(stop);
-	--last_idx;
-      }
-    }
+    rit->direction |= process_relation
+	(*rit, nodes, rel_count, 0, Relation::FORWARD, stoplist, cors_data);
     
     ++rit;
     ++rel_count;
   }
-  
-  /*  for (list< Stop >::const_iterator it(stoplist.stops.begin());
-  it != stoplist.stops.end(); ++it)
-  {
-    cerr<<it->name<<' ';
-    for (set< RelationHumanId >::const_iterator it2(it->correspondences.begin()); it2 != it->correspondences.end(); ++it2)
-    cerr<<it2->ref<<' '<<it2->color<<' ';
-    cerr<<'\n';
-}
-cerr<<'\n';*/
   
   // integrate second direction (where it exists) into stoplist
   rit = relations.begin();
@@ -999,131 +1042,17 @@ cerr<<'\n';*/
       continue;
     }
     
-    multimap< string, unsigned int > stopdict;
-    for (unsigned int i(0); i < rit->backward_stops.size(); ++i)
-    {
-      if (nodes[rit->backward_stops[i]].lat <= 90.0)
-	stopdict.insert(make_pair(nodes[rit->backward_stops[i]].name, i+1));
-    }
-    
-    vector< unsigned int > indices_of_present_stops;
-    for (list< Stop >::const_iterator it(stoplist.stops.begin());
-    it != stoplist.stops.end(); ++it)
-    {
-      for (multimap< string, unsigned int >::const_iterator
-	iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
-	indices_of_present_stops.push_back(iit->second);
-    }
-    
     int direction_const(0);
     if ((rit->direction & Relation::FORWARD) != 0)
       direction_const = Stop::BACKWARD;
     if ((rit->direction & Relation::BACKWARD) != 0)
       direction_const = Stop::FORWARD;
     
-    vector< unsigned int > ascending(longest_ascending_subsequence
-    (indices_of_present_stops));
-    vector< unsigned int > descending(longest_descending_subsequence
-    (indices_of_present_stops));
-    
-    if (ascending.size() > descending.size())
-    {
-      vector< unsigned int >::const_iterator sit(ascending.begin());
-      unsigned int last_idx(1);
-      for (list< Stop >::iterator it(stoplist.stops.begin());
-      it != stoplist.stops.end(); ++it)
-      {
-	bool sit_found(false);
-	for (multimap< string, unsigned int >::const_iterator
-	  iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
-	  sit_found |= (iit->second == *sit);
-	if (sit_found)
-	{
-	  // insert stops that aren't yet inserted
-	  while (*sit > last_idx)
-	  {
-	    Stop stop;
-	    stop.used_by.resize(relations.size());
-	    stoplist.populate_stop(stop, nodes[rit->backward_stops[last_idx-1]], rel_count, direction_const, false);
-	    stoplist.stops.insert(it, stop);
-	    ++last_idx;
-	  }
-	  ++last_idx;
-	  
-	  // match the current stop
-	  stoplist.populate_stop(*it, nodes[rit->backward_stops[last_idx-2]], rel_count, direction_const, true);
-	  
-	  if (++sit == ascending.end())
-	    break;
-	}
-      }
-      
-      // insert stops at the end
-      while (last_idx <= rit->backward_stops.size())
-      {
-	Stop stop;
-	stop.used_by.resize(relations.size());
-	stoplist.populate_stop(stop, nodes[rit->backward_stops[last_idx-1]], rel_count, direction_const, false);
-	stoplist.stops.push_back(stop);
-	++last_idx;
-      }
-    }
-    else if (descending.size() > 0)
-    {
-      vector< unsigned int >::const_reverse_iterator sit(descending.rbegin());
-      unsigned int last_idx(rit->backward_stops.size());
-      for (list< Stop >::iterator it(stoplist.stops.begin());
-          it != stoplist.stops.end(); ++it)
-      {
-	bool sit_found(false);
-	for (multimap< string, unsigned int >::const_iterator
-	  iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
-	  sit_found |= (iit->second == *sit);
-	if (sit_found)
-	{
-	  // insert stops that aren't yet inserted
-	  while (*sit < last_idx)
-	  {
-	    Stop stop;
-	    stop.used_by.resize(relations.size());
-	    stoplist.populate_stop(stop, nodes[rit->backward_stops[last_idx-1]], rel_count, direction_const, false);
-	    stoplist.stops.insert(it, stop);
-	    --last_idx;
-	  }
-	  --last_idx;
-	  
-	  // match the current stop
-	  stoplist.populate_stop(*it, nodes[rit->backward_stops[last_idx]], rel_count, direction_const, true);
-
-	  if (++sit == descending.rend())
-	    break;
-	}
-      }
-      
-      // insert stops at the end
-      while (last_idx > 0)
-      {
-	Stop stop;
-	stop.used_by.resize(relations.size());
-	stoplist.populate_stop(stop, nodes[rit->backward_stops[last_idx-1]], rel_count, direction_const, false);
-	stoplist.stops.push_back(stop);
-	--last_idx;
-      }
-    }
+    process_relation(*rit, nodes, rel_count, direction_const, Relation::BACKWARD, stoplist, cors_data);
     
     ++rit;
     ++rel_count;
   }  
-    
-/*  for (list< Stop >::const_iterator it(stoplist.stops.begin());
-  it != stoplist.stops.end(); ++it)
-  {
-    cerr<<it->name<<' ';
-    for (set< RelationHumanId >::const_iterator it2(it->correspondences.begin()); it2 != it->correspondences.end(); ++it2)
-      cerr<<it2->ref<<' '<<it2->color<<' ';
-    cerr<<'\n';
-  }
-  cerr<<'\n';*/
   
   // unify one-directional relations as good as possible
   multimap< double, pair< int, int > > possible_pairs;
@@ -1163,13 +1092,6 @@ cerr<<'\n';*/
       sit->used_by[it->second.first] |= sit->used_by[it->second.second];
     relations[it->second.second].direction = 0;
   }
-
-/*  for (list< Stop >::const_iterator it(stoplist.stops.begin());
-  it != stoplist.stops.end(); ++it)
-  {
-    cerr<<it->name<<' '<<it->used_by.size()<<'\n';
-  }
-  cerr<<'\n';*/
 
   // trim the horizontal itinerary lines
   vector< int > first_stop_idx(relations.size());
