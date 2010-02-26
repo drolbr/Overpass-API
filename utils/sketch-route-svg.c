@@ -65,6 +65,12 @@ string destination_headline_template()
   return "<tspan font-size=\"24px\" dx=\"20\">$content;</tspan>";
 }
 
+string operation_time_template()
+{
+  return "<text x=\"30\" y=\"$vpos;\" font-family=\"Liberation Sans, sans-serif\""
+      " font-size=\"16px\">$text;</text>\n";
+}
+
 string only_to_headline_template()
 {
   return "<title>Line $rel_ref; $tr_to; $rel_to;</title>\n"
@@ -255,6 +261,13 @@ map< string, string > default_translations()
   translations["$tr_to;"] = "to";
   translations["$tr_or;"] = "or";
   
+  translations["$tr_operates_mo_fr;"] = "operates on Mondays to Fridays except public holidays"
+      " from $from_h;$from_m; to $to_h;$to_m;";
+  translations["$tr_operates_sa;"] = "operates on Saturdays except public holidays"
+      " from $from_h;$from_m; to $to_h;$to_m;";
+  translations["$tr_operates_su;"] = "operates on Sundays and public holidays"
+      " from $from_h;$from_m; to $to_h;$to_m;";
+  
   return translations;
 }
 
@@ -288,6 +301,14 @@ class Replacer
     string match;
     Inserted insert;
 };
+
+string two_digit(int number)
+{
+  string result("00");
+  result[0] = (number / 10) + 48;
+  result[1] = (number % 10) + 48;
+  return result;
+}
 
 string multi_replace(map< string, string > replace, string data)
 {
@@ -430,7 +451,10 @@ struct Relation
 {
   public:
     Relation() : forward_stops(), backward_stops(), ref(""), color("navy"),
-	     from(""), to(""), direction(0) {}
+	     from(""), to(""), direction(0),
+		  from_mo_fr(0), to_mo_fr(0),
+		  from_sa(0), to_sa(0),
+		  from_su(0), to_su(0)  {}
     
     vector< unsigned int > forward_stops;
     vector< unsigned int > backward_stops;
@@ -782,6 +806,21 @@ void start(const char *el, const char **attr)
       is_route = true;
     if ((key == "route") && (value == "rail"))
       is_route = true;
+    if (key == "operates_Mo_Fr")
+    {
+      relation.from_mo_fr = atoi(value.substr(0, 2).c_str()) * 60 + atoi(value.substr(2, 2).c_str());
+      relation.to_mo_fr = atoi(value.substr(5, 2).c_str()) * 60 + atoi(value.substr(7, 2).c_str());
+    }
+    if (key == "operates_Sa")
+    {
+      relation.from_sa = atoi(value.substr(0, 2).c_str()) * 60 + atoi(value.substr(2, 2).c_str());
+      relation.to_sa = atoi(value.substr(5, 2).c_str()) * 60 + atoi(value.substr(7, 2).c_str());
+    }
+    if (key == "operates_Su")
+    {
+      relation.from_su = atoi(value.substr(0, 2).c_str()) * 60 + atoi(value.substr(2, 2).c_str());
+      relation.to_su = atoi(value.substr(5, 2).c_str()) * 60 + atoi(value.substr(7, 2).c_str());
+    }
   }
   else if (!strcmp(el, "node"))
   {
@@ -994,6 +1033,51 @@ int main(int argc, char *argv[])
   parse_status = 0;
   parse(stdin, start, end);
   
+  // check whether the relations have uniform operation times
+  int from_mo_fr(relations[0].from_mo_fr);
+  int to_mo_fr(relations[0].to_mo_fr);
+  int from_sa(relations[0].from_sa);
+  int to_sa(relations[0].to_sa);
+  int from_su(relations[0].from_su);
+  int to_su(relations[0].to_su);
+  bool have_uniform_operation_times(true);
+  for (unsigned int i(1); i < relations.size(); ++i)
+  {
+    if (relations[i].from_mo_fr != from_mo_fr)
+      have_uniform_operation_times = false;
+    if (relations[i].to_mo_fr != to_mo_fr)
+      have_uniform_operation_times = false;
+    if (relations[i].from_sa != from_sa)
+      have_uniform_operation_times = false;
+    if (relations[i].to_sa != to_sa)
+      have_uniform_operation_times = false;
+    if (relations[i].from_su != from_su)
+      have_uniform_operation_times = false;
+    if (relations[i].to_su != to_su)
+      have_uniform_operation_times = false;
+  }
+  if (have_uniform_operation_times)
+  {
+    for (int i(0); i < (int)correspondences.size(); ++i)
+    {
+      if ((correspondences[i].to_mo_fr == 0) && (correspondences[i].to_sa == 0)
+	   && (correspondences[i].to_su == 0))
+	continue;
+      if (((from_mo_fr >= correspondences[i].to_mo_fr)
+	   || (to_mo_fr <= correspondences[i].from_mo_fr))
+	    && ((from_sa >= correspondences[i].to_sa)
+	    || (to_sa <= correspondences[i].from_sa))
+	    && ((from_su >= correspondences[i].to_su)
+	    || (to_su <= correspondences[i].from_su)))
+      {
+	if (i < (int)correspondences.size()-1)
+	  correspondences[i] = correspondences[correspondences.size()-1];
+	--i;
+	correspondences.resize(correspondences.size()-1);
+      }
+    }
+  }
+
   // initialise complex data structures
   Correspondence_Data cors_data(correspondences, nodes, walk_limit_for_changes);
   Stoplist stoplist;
@@ -1199,6 +1283,45 @@ int main(int argc, char *argv[])
 	    (Replacer< string >("$to_tail;", to_buffer).apply
 	    (Replacer< string >("$rel_ref;", relation.ref).apply
 	    (Replacer< string >("$rel_color;", relation.color).apply(headline))));
+  
+  // display operation times
+  double headline_vpos(64);
+  if (have_uniform_operation_times && (to_mo_fr != 0))
+  {
+    headline_vpos += 18;
+    headline += Replacer< double >("$vpos;", headline_vpos).apply
+	    (Replacer< string >("$from_h;", two_digit(from_mo_fr / 60)).apply
+	    (Replacer< string >("$from_m;", two_digit(from_mo_fr % 60)).apply
+	    (Replacer< string >("$to_h;", two_digit(to_mo_fr / 60)).apply
+	    (Replacer< string >("$to_m;", two_digit(to_mo_fr % 60)).apply
+	    (multi_replace(translations,
+	     Replacer< string >("$text;", "$tr_operates_mo_fr;").apply
+	    (operation_time_template())))))));
+  }
+  if (have_uniform_operation_times && (to_sa != 0))
+  {
+    headline_vpos += 18;
+    headline += Replacer< double >("$vpos;", headline_vpos).apply
+	    (Replacer< string >("$from_h;", two_digit(from_sa / 60)).apply
+	    (Replacer< string >("$from_m;", two_digit(from_sa % 60)).apply
+	    (Replacer< string >("$to_h;", two_digit(to_sa / 60)).apply
+	    (Replacer< string >("$to_m;", two_digit(to_sa % 60)).apply
+	    (multi_replace(translations,
+	     Replacer< string >("$text;", "$tr_operates_sa;").apply
+	    (operation_time_template())))))));
+  }
+  if (have_uniform_operation_times && (to_su != 0))
+  {
+    headline_vpos += 18;
+    headline += Replacer< double >("$vpos;", headline_vpos).apply
+	    (Replacer< string >("$from_h;", two_digit(from_su / 60)).apply
+	    (Replacer< string >("$from_m;", two_digit(from_su % 60)).apply
+	    (Replacer< string >("$to_h;", two_digit(to_su / 60)).apply
+	    (Replacer< string >("$to_m;", two_digit(to_su % 60)).apply
+	    (multi_replace(translations,
+	     Replacer< string >("$text;", "$tr_operates_su;").apply
+	    (operation_time_template())))))));
+  }
   
   ostringstream result("");
   ostringstream backlines("");
