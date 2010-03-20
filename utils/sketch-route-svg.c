@@ -260,13 +260,12 @@ map< string, string > default_translations()
   translations["$tr_from;"] = "from";
   translations["$tr_to;"] = "to";
   translations["$tr_or;"] = "or";
+  translations["$tr_and;"] = "and";
   
-  translations["$tr_operates_mo_fr;"] = "operates on Mondays to Fridays except public holidays"
-      " from $from_h;$from_m; to $to_h;$to_m;";
-  translations["$tr_operates_sa;"] = "operates on Saturdays except public holidays"
-      " from $from_h;$from_m; to $to_h;$to_m;";
-  translations["$tr_operates_su;"] = "operates on Sundays and public holidays"
-      " from $from_h;$from_m; to $to_h;$to_m;";
+  translations["$tr_operates_mo_fr;"] = "operates on Mondays to Fridays except public holidays";
+  translations["$tr_operates_sa;"] = "operates on Saturdays except public holidays";
+  translations["$tr_operates_su;"] = "operates on Sundays and public holidays";
+  translations["$tr_from_to;"] = "from $from_h;$from_m; to $to_h;$to_m;";
   
   return translations;
 }
@@ -450,8 +449,8 @@ double spat_distance(const NamedNode& nnode1, const NamedNode& nnode2)
 struct Relation
 {
   public:
-    Relation() : forward_stops(), backward_stops(), ref(""), color("navy"),
-	     from(""), to(""), direction(0),
+    Relation() : forward_stops(), backward_stops(), ref(""), network(""),
+      color("navy"), from(""), to(""), direction(0),
 		  from_mo_fr(0), to_mo_fr(0),
 		  from_sa(0), to_sa(0),
 		  from_su(0), to_su(0)  {}
@@ -460,6 +459,7 @@ struct Relation
     vector< unsigned int > backward_stops;
     
     string ref;
+    string network;
     string color;
     string from;
     string to;
@@ -747,6 +747,7 @@ unsigned int id;
 vector< Relation > relations;
 vector< Relation > correspondences;
 string pivot_ref;
+string pivot_network;
 Relation relation;
 
 unsigned int parse_status;
@@ -782,6 +783,8 @@ void start(const char *el, const char **attr)
       nnode.name = escape_xml(value);
     if ((key == "ref") && (parse_status == IN_RELATION))
       relation.ref = escape_xml(value);
+    if ((key == "network") && (parse_status == IN_RELATION))
+      relation.network = escape_xml(value);
     if ((key == "to") && (parse_status == IN_RELATION))
       relation.to = escape_xml(value);
     if ((key == "from") && (parse_status == IN_RELATION))
@@ -820,6 +823,25 @@ void start(const char *el, const char **attr)
     {
       relation.from_su = atoi(value.substr(0, 2).c_str()) * 60 + atoi(value.substr(2, 2).c_str());
       relation.to_su = atoi(value.substr(5, 2).c_str()) * 60 + atoi(value.substr(7, 2).c_str());
+    }
+    if (key == "day_on")
+    {
+      if ((value == "Mo-Fr") || (value == "Mo-Sa") || (value == "Mo-Su"))
+      {
+	relation.from_mo_fr = 0;
+	relation.to_mo_fr = 24*60;
+      }
+      if ((value == "Sa") || (value == "Mo-Sa") || (value == "Sa-Su")
+	|| (value == "Mo-Su"))
+      {
+	relation.from_sa = 0;
+	relation.to_sa = 24*60;
+      }
+      if ((value == "Su") || (value == "Sa-Su") || (value == "Mo-Su"))
+      {
+	relation.from_su = 0;
+	relation.to_su = 24*60;
+      }
     }
   }
   else if (!strcmp(el, "node"))
@@ -889,7 +911,8 @@ void end(const char *el)
     parse_status = 0;
     if (is_route)
     {
-      if ((pivot_ref == "") || (relation.ref == pivot_ref))
+      if (((pivot_ref == "") || (relation.ref == pivot_ref))
+	&& ((pivot_network == "") || (relation.network == pivot_network)))
 	relations.push_back(relation);
       else
 	correspondences.push_back(relation);
@@ -1016,6 +1039,8 @@ int main(int argc, char *argv[])
       force_rows = atoi(((string)(argv[argi])).substr(7).c_str());
     else if (!strncmp("--ref=", argv[argi], 6))
       pivot_ref = ((string)(argv[argi])).substr(6);
+    else if (!strncmp("--network=", argv[argi], 10))
+      pivot_network = ((string)(argv[argi])).substr(10);
     else if (!strncmp("--walk-limit=", argv[argi], 13))
       walk_limit_for_changes = atof(((string)(argv[argi])).substr(13).c_str());
     else if (!strncmp("--max-correspondences-per-line=", argv[argi], 31))
@@ -1032,6 +1057,16 @@ int main(int argc, char *argv[])
   // read the XML input
   parse_status = 0;
   parse(stdin, start, end);
+  
+  // bailout if no relation is found
+  if (relations.size() == 0)
+  {
+    cout<<Replacer< double >("$width;", width).apply
+    (Replacer< double >("$height;", height).apply
+    (Replacer< string >("<headline/>", "").apply
+    (Replacer< string >("<stops-diagram/>", "<text x=\"100\" y=\"100\">No relation found</text>").apply(frame_template()))));
+    return 0;
+  }
   
   // check whether the relations have uniform operation times
   int from_mo_fr(relations[0].from_mo_fr);
@@ -1056,10 +1091,12 @@ int main(int argc, char *argv[])
     if (relations[i].to_su != to_su)
       have_uniform_operation_times = false;
   }
-  if (have_uniform_operation_times)
+  if ((have_uniform_operation_times) &&
+    ((to_mo_fr != 0) || (to_sa != 0) || (to_su != 0)))
   {
     for (int i(0); i < (int)correspondences.size(); ++i)
     {
+      cerr<<correspondences[i].ref<<' ';
       if ((correspondences[i].to_mo_fr == 0) && (correspondences[i].to_sa == 0)
 	   && (correspondences[i].to_su == 0))
 	continue;
@@ -1074,7 +1111,9 @@ int main(int argc, char *argv[])
 	  correspondences[i] = correspondences[correspondences.size()-1];
 	--i;
 	correspondences.resize(correspondences.size()-1);
+	cerr<<"d";
       }
+      cerr<<'\n';
     }
   }
 
@@ -1084,15 +1123,6 @@ int main(int argc, char *argv[])
   Stop::used_by_size = relations.size();
   
   // make a common stoplist from all relations
-  if (relations.size() == 0)
-  {
-    cout<<Replacer< double >("$width;", width).apply
-        (Replacer< double >("$height;", height).apply
-        (Replacer< string >("<headline/>", "").apply
-        (Replacer< string >("<stops-diagram/>", "<text x=\"100\" y=\"100\">No relation found</text>").apply(frame_template()))));
-    return 0;
-  }
-  
   // integrate all relations (their forward direction) into the stoplist
   relation = relations.front();
   for(vector< unsigned int >::const_iterator it(relation.forward_stops.begin());
@@ -1289,37 +1319,46 @@ int main(int argc, char *argv[])
   if (have_uniform_operation_times && (to_mo_fr != 0))
   {
     headline_vpos += 18;
+    string operation_text("$tr_operates_mo_fr; $tr_from_to;");
+    if (to_mo_fr == 24*60)
+      operation_text = "$tr_operates_mo_fr;";
     headline += Replacer< double >("$vpos;", headline_vpos).apply
 	    (Replacer< string >("$from_h;", two_digit(from_mo_fr / 60)).apply
 	    (Replacer< string >("$from_m;", two_digit(from_mo_fr % 60)).apply
 	    (Replacer< string >("$to_h;", two_digit(to_mo_fr / 60)).apply
 	    (Replacer< string >("$to_m;", two_digit(to_mo_fr % 60)).apply
 	    (multi_replace(translations,
-	     Replacer< string >("$text;", "$tr_operates_mo_fr;").apply
+	     Replacer< string >("$text;", operation_text).apply
 	    (operation_time_template())))))));
   }
   if (have_uniform_operation_times && (to_sa != 0))
   {
     headline_vpos += 18;
+    string operation_text("$tr_operates_sa; $tr_from_to;");
+    if (to_sa == 24*60)
+      operation_text = "$tr_operates_sa;";
     headline += Replacer< double >("$vpos;", headline_vpos).apply
 	    (Replacer< string >("$from_h;", two_digit(from_sa / 60)).apply
 	    (Replacer< string >("$from_m;", two_digit(from_sa % 60)).apply
 	    (Replacer< string >("$to_h;", two_digit(to_sa / 60)).apply
 	    (Replacer< string >("$to_m;", two_digit(to_sa % 60)).apply
 	    (multi_replace(translations,
-	     Replacer< string >("$text;", "$tr_operates_sa;").apply
+	     Replacer< string >("$text;", operation_text).apply
 	    (operation_time_template())))))));
   }
   if (have_uniform_operation_times && (to_su != 0))
   {
     headline_vpos += 18;
+    string operation_text("$tr_operates_su; $tr_from_to;");
+    if (to_su == 24*60)
+      operation_text = "$tr_operates_su;";
     headline += Replacer< double >("$vpos;", headline_vpos).apply
 	    (Replacer< string >("$from_h;", two_digit(from_su / 60)).apply
 	    (Replacer< string >("$from_m;", two_digit(from_su % 60)).apply
 	    (Replacer< string >("$to_h;", two_digit(to_su / 60)).apply
 	    (Replacer< string >("$to_m;", two_digit(to_su % 60)).apply
 	    (multi_replace(translations,
-	     Replacer< string >("$text;", "$tr_operates_su;").apply
+	     Replacer< string >("$text;", operation_text).apply
 	    (operation_time_template())))))));
   }
   
@@ -1351,7 +1390,7 @@ int main(int argc, char *argv[])
       extra_rows[stop_idx+1] = extra_rows[stop_idx];
     ++stop_idx;
   }
-  
+
   if (stoplist.stops.size() <= 1)
   {
     cout<<multi_replace(translations, Replacer< double >("$width;", width).apply
@@ -1402,7 +1441,7 @@ int main(int argc, char *argv[])
 	    (Replacer< double >("$hmax;", hmax-4+stop_distance/2).apply
 	    (Replacer< double >("$htop;", hmax+4+stop_distance/2).apply
 	    (Replacer< double >("$vpos_self;", vpos + 20*offset_of[i]).apply
-	    (Replacer< double >("$vpos_join;", vpos + 20*offset_of[left_join_to[i]]).apply
+	    (Replacer< double >("$vpos_join;", vpos + 20*offset_of[right_join_to[i]]).apply
 	    (right_join_template()))))));
     }
     
@@ -1593,7 +1632,7 @@ int main(int argc, char *argv[])
 	      (Replacer< double >("$hmax;", hmax-4+stop_distance/2).apply
 	      (Replacer< double >("$htop;", hmax+4+stop_distance/2).apply
 	      (Replacer< double >("$vpos_self;", vpos_upper + 20*offset_of[i]).apply
-	      (Replacer< double >("$vpos_join;", vpos_upper + 20*offset_of[left_join_to[i]]).apply
+	      (Replacer< double >("$vpos_join;", vpos_upper + 20*offset_of[right_join_to[i]]).apply
 	      (right_join_template()))))));
       }
       if (last_stop_idx[i] >= (int)(stoplist.stops.size()+1)/2)
@@ -1624,7 +1663,7 @@ int main(int argc, char *argv[])
 	      (Replacer< double >("$hmax;", hmax-4-stop_distance/2).apply
 	      (Replacer< double >("$htop;", hmax+4+stop_distance/2).apply
 	      (Replacer< double >("$vpos_self;", vpos_lower + 20*offset_of[i]).apply
-	      (Replacer< double >("$vpos_join;", vpos_lower + 20*offset_of[left_join_to[i]]).apply
+	      (Replacer< double >("$vpos_join;", vpos_lower + 20*offset_of[right_join_to[i]]).apply
 	      (right_join_template()))))));
       }
     }

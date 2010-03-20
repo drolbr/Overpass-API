@@ -11,7 +11,10 @@ while [[ -n $BUF ]]; do
   VALUE=`echo $BUF | awk '{ print substr($0,0,match($0,"\&")); }'`
   BUF=`echo $BUF | awk '{ print substr($0,match($0,"\&")+1); }'`
   if [[ $KEY == "network" && -n $VALUE ]]; then
+  {
     NETWORK=$VALUE
+    NETWORK_=`echo $VALUE | ../bin/uncgi`
+  };
   elif [[ $KEY == "ref" && -n $VALUE ]]; then
   {
     REF=$VALUE
@@ -100,7 +103,7 @@ if [[ -n $CORRESPONDENCES ]]; then
   };
   fi;
 
-  gunzip </tmp/sketch_line_req.5 | ../bin/sketch-route-svg --walk-limit=$CORRESPONDENCES --ref="$REF_" $SKETCH_PARAMS
+  gunzip </tmp/sketch_line_req.5 | ../bin/sketch-route-svg --walk-limit=$CORRESPONDENCES --ref="$REF_" --network="$NETWORK_" $SKETCH_PARAMS
 };
 else
 {
@@ -114,6 +117,17 @@ else
   };
   fi
   dd if=/tmp/sketch_line_req.1 of=/tmp/sketch_line_req.2 bs=1 skip=56
+
+  if [[ $DEBUG == "full-query" ]]; then
+  {
+    echo "Content-Type: text/plain; charset=utf-8"
+    echo
+
+    gunzip </tmp/sketch_line_req.2
+
+    echo
+  };
+  fi;
 
   echo "Content-Type: image/svg+xml; charset=utf-8"
   echo
