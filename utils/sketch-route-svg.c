@@ -2,6 +2,7 @@
  * Must be used with Expat compiled for UTF-8 output.
  */
 
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <list>
@@ -446,14 +447,38 @@ double spat_distance(const NamedNode& nnode1, const NamedNode& nnode2)
       /PI*20000000;
 }
 
+/* represents a weekly timespan */
+struct Timespan
+{
+  Timespan(unsigned int begin_d, unsigned int begin_h, unsigned int begin_m,
+	   unsigned int end_d, unsigned int end_h, unsigned int end_m)
+  : begin(begin_d*60*24 + begin_h*60 + begin_m),
+    end(end_d*60*24 + end_h*60 + end_m) {}
+  
+  bool operator<(const Timespan& a) const
+  {
+    if (begin < a.begin)
+      return true;
+    if (begin > a.begin)
+      return false;
+    return end < a.end;
+  }
+  
+  bool operator==(const Timespan& a) const
+  {
+    return ((begin == a.begin) && (end == a.end));
+  }
+  
+  // values are minutes since monday midnight
+  unsigned int begin;
+  unsigned int end;
+};
+
 struct Relation
 {
   public:
     Relation() : forward_stops(), backward_stops(), ref(""), network(""),
-      color("navy"), from(""), to(""), direction(0),
-		  from_mo_fr(0), to_mo_fr(0),
-		  from_sa(0), to_sa(0),
-		  from_su(0), to_su(0)  {}
+      color("navy"), from(""), to(""), direction(0), opening_hours() {}
     
     vector< unsigned int > forward_stops;
     vector< unsigned int > backward_stops;
@@ -467,11 +492,50 @@ struct Relation
     const static int FORWARD = 1;
     const static int BACKWARD = 2;
     const static int BOTH = 4;
-    
-    int from_mo_fr, to_mo_fr;
-    int from_sa, to_sa;
-    int from_su, to_su;
+
+    vector< Timespan > opening_hours;
 };
+
+void cleanup_opening_hours(Relation& rel)
+{
+  sort(rel.opening_hours.begin(), rel.opening_hours.end());
+  // ...
+}
+
+bool have_uniform_operation_times(const Relation& a, const Relation& b)
+{
+  if (a.opening_hours.size() != b.opening_hours.size())
+    return false;
+  for(unsigned int i(0); i < a.opening_hours.size(); ++i)
+  {
+    if (!(a.opening_hours[i] == b.opening_hours[i]))
+      return false;
+  }
+  return true;
+}
+
+bool have_intersecting_operation_times(const Relation& a, const Relation& b)
+{
+  vector< Timespan >::const_iterator ita(a.opening_hours.begin());
+  vector< Timespan >::const_iterator itb(b.opening_hours.begin());
+  
+  while ((ita != a.opening_hours.end()) && (itb != b.opening_hours.end()))
+  {
+    if (ita->begin < itb->begin)
+    {
+      if (ita->end > itb->begin)
+	return true;
+      ++ita;
+    }
+    else
+    {
+      if (itb->end > ita->begin)
+	return true;
+      ++itb;
+    }
+  }
+  return false;
+}
 
 struct RelationHumanId
 {
@@ -487,6 +551,39 @@ inline bool operator<(const RelationHumanId& rhi_1, const RelationHumanId& rhi_2
 {
   return (rhi_1.ref < rhi_2.ref);
 }
+
+struct RelationHumanId_Comparator
+{
+  bool operator()(const RelationHumanId& rhi_1, const RelationHumanId& rhi_2)
+  {
+    unsigned int numval_1(0), numval_2(0);
+    
+    unsigned int pos(0);
+    while ((pos < rhi_1.ref.size()) && (!isdigit(rhi_1.ref[pos])))
+      ++pos;
+    while ((pos < rhi_1.ref.size()) && (isdigit(rhi_1.ref[pos])))
+    {
+      numval_1 = numval_1*10 + (rhi_1.ref[pos] - 48);
+      ++pos;
+    }
+    
+    pos = 0;
+    while ((pos < rhi_2.ref.size()) && (!isdigit(rhi_2.ref[pos])))
+      ++pos;
+    while ((pos < rhi_2.ref.size()) && (isdigit(rhi_2.ref[pos])))
+    {
+      numval_2 = numval_2*10 + (rhi_2.ref[pos] - 48);
+      ++pos;
+    }
+    
+    if (numval_1 < numval_2)
+      return true;
+    else if (numval_1 > numval_2)
+      return false;
+    
+    return (rhi_1.ref < rhi_2.ref);
+  }
+};
 
 struct Stop
 {
@@ -811,37 +908,32 @@ void start(const char *el, const char **attr)
       is_route = true;
     if (key == "operates_Mo_Fr")
     {
-      relation.from_mo_fr = atoi(value.substr(0, 2).c_str()) * 60 + atoi(value.substr(2, 2).c_str());
-      relation.to_mo_fr = atoi(value.substr(5, 2).c_str()) * 60 + atoi(value.substr(7, 2).c_str());
+      for (unsigned int i(0); i < 5; ++i)
+	relation.opening_hours.push_back(Timespan
+	    (i, atoi(value.substr(0, 2).c_str()), atoi(value.substr(2, 2).c_str()),
+	     i, atoi(value.substr(5, 2).c_str()), atoi(value.substr(7, 2).c_str())));
     }
     if (key == "operates_Sa")
     {
-      relation.from_sa = atoi(value.substr(0, 2).c_str()) * 60 + atoi(value.substr(2, 2).c_str());
-      relation.to_sa = atoi(value.substr(5, 2).c_str()) * 60 + atoi(value.substr(7, 2).c_str());
+      relation.opening_hours.push_back(Timespan
+	(5, atoi(value.substr(0, 2).c_str()), atoi(value.substr(2, 2).c_str()),
+	 5, atoi(value.substr(5, 2).c_str()), atoi(value.substr(7, 2).c_str())));
     }
     if (key == "operates_Su")
     {
-      relation.from_su = atoi(value.substr(0, 2).c_str()) * 60 + atoi(value.substr(2, 2).c_str());
-      relation.to_su = atoi(value.substr(5, 2).c_str()) * 60 + atoi(value.substr(7, 2).c_str());
+      relation.opening_hours.push_back(Timespan
+	(6, atoi(value.substr(0, 2).c_str()), atoi(value.substr(2, 2).c_str()),
+	 6, atoi(value.substr(5, 2).c_str()), atoi(value.substr(7, 2).c_str())));
     }
     if (key == "day_on")
     {
       if ((value == "Mo-Fr") || (value == "Mo-Sa") || (value == "Mo-Su"))
-      {
-	relation.from_mo_fr = 0;
-	relation.to_mo_fr = 24*60;
-      }
+	relation.opening_hours.push_back(Timespan(0, 0, 0, 4, 24, 0));
       if ((value == "Sa") || (value == "Mo-Sa") || (value == "Sa-Su")
 	|| (value == "Mo-Su"))
-      {
-	relation.from_sa = 0;
-	relation.to_sa = 24*60;
-      }
+	relation.opening_hours.push_back(Timespan(5, 0, 0, 5, 24, 0));
       if ((value == "Su") || (value == "Sa-Su") || (value == "Mo-Su"))
-      {
-	relation.from_su = 0;
-	relation.to_su = 24*60;
-      }
+	relation.opening_hours.push_back(Timespan(6, 0, 0, 6, 24, 0));
     }
   }
   else if (!strcmp(el, "node"))
@@ -911,6 +1003,7 @@ void end(const char *el)
     parse_status = 0;
     if (is_route)
     {
+      cleanup_opening_hours(relation);
       if (((pivot_ref == "") || (relation.ref == pivot_ref))
 	&& ((pivot_network == "") || (relation.network == pivot_network)))
 	relations.push_back(relation);
@@ -1069,51 +1162,29 @@ int main(int argc, char *argv[])
   }
   
   // check whether the relations have uniform operation times
-  int from_mo_fr(relations[0].from_mo_fr);
-  int to_mo_fr(relations[0].to_mo_fr);
-  int from_sa(relations[0].from_sa);
-  int to_sa(relations[0].to_sa);
-  int from_su(relations[0].from_su);
-  int to_su(relations[0].to_su);
-  bool have_uniform_operation_times(true);
+  bool have_uniform_operation_times_(true);
   for (unsigned int i(1); i < relations.size(); ++i)
   {
-    if (relations[i].from_mo_fr != from_mo_fr)
-      have_uniform_operation_times = false;
-    if (relations[i].to_mo_fr != to_mo_fr)
-      have_uniform_operation_times = false;
-    if (relations[i].from_sa != from_sa)
-      have_uniform_operation_times = false;
-    if (relations[i].to_sa != to_sa)
-      have_uniform_operation_times = false;
-    if (relations[i].from_su != from_su)
-      have_uniform_operation_times = false;
-    if (relations[i].to_su != to_su)
-      have_uniform_operation_times = false;
+    if (!(have_uniform_operation_times(relations[0], relations[i])))
+    {
+      have_uniform_operation_times_ = false;
+      break;
+    }
   }
-  if ((have_uniform_operation_times) &&
-    ((to_mo_fr != 0) || (to_sa != 0) || (to_su != 0)))
+  if ((have_uniform_operation_times_) &&
+    (!(relations[0].opening_hours.empty())))
   {
     for (int i(0); i < (int)correspondences.size(); ++i)
     {
-      cerr<<correspondences[i].ref<<' ';
-      if ((correspondences[i].to_mo_fr == 0) && (correspondences[i].to_sa == 0)
-	   && (correspondences[i].to_su == 0))
+      if (relations[i].opening_hours.empty())
 	continue;
-      if (((from_mo_fr >= correspondences[i].to_mo_fr)
-	   || (to_mo_fr <= correspondences[i].from_mo_fr))
-	    && ((from_sa >= correspondences[i].to_sa)
-	    || (to_sa <= correspondences[i].from_sa))
-	    && ((from_su >= correspondences[i].to_su)
-	    || (to_su <= correspondences[i].from_su)))
+      if (!(have_intersecting_operation_times(relations[0], relations[i])))
       {
 	if (i < (int)correspondences.size()-1)
 	  correspondences[i] = correspondences[correspondences.size()-1];
 	--i;
 	correspondences.resize(correspondences.size()-1);
-	cerr<<"d";
       }
-      cerr<<'\n';
     }
   }
 
@@ -1166,7 +1237,7 @@ int main(int argc, char *argv[])
     
     ++rit;
     ++rel_count;
-  }  
+  }
   
   // unify one-directional relations as good as possible
   multimap< double, pair< int, int > > possible_pairs;
@@ -1248,7 +1319,9 @@ int main(int argc, char *argv[])
 	  break;
 	++ijsimilar;
       }
-      if (ijsimilar > first_stop_idx[i])
+      if (ijsimilar > last_stop_idx[i])
+	relations[i].direction = 0;
+      else if (ijsimilar > first_stop_idx[i])
       {
 	first_stop_idx[i] = ijsimilar;
 	left_join_to[i] = j;
@@ -1267,7 +1340,9 @@ int main(int argc, char *argv[])
 	  break;
 	--ijsimilar;
       }
-      if (ijsimilar < last_stop_idx[i])
+      if (ijsimilar < first_stop_idx[i])
+	relations[i].direction = 0;
+      else if (ijsimilar < last_stop_idx[i])
       {
 	last_stop_idx[i] = ijsimilar;
 	right_join_to[i] = j;
@@ -1315,8 +1390,8 @@ int main(int argc, char *argv[])
 	    (Replacer< string >("$rel_color;", relation.color).apply(headline))));
   
   // display operation times
-  double headline_vpos(64);
-  if (have_uniform_operation_times && (to_mo_fr != 0))
+/*  double headline_vpos(64);
+  if (have_uniform_operation_times_ && (to_mo_fr != 0))
   {
     headline_vpos += 18;
     string operation_text("$tr_operates_mo_fr; $tr_from_to;");
@@ -1331,7 +1406,7 @@ int main(int argc, char *argv[])
 	     Replacer< string >("$text;", operation_text).apply
 	    (operation_time_template())))))));
   }
-  if (have_uniform_operation_times && (to_sa != 0))
+  if (have_uniform_operation_times_ && (to_sa != 0))
   {
     headline_vpos += 18;
     string operation_text("$tr_operates_sa; $tr_from_to;");
@@ -1346,7 +1421,7 @@ int main(int argc, char *argv[])
 	     Replacer< string >("$text;", operation_text).apply
 	    (operation_time_template())))))));
   }
-  if (have_uniform_operation_times && (to_su != 0))
+  if (have_uniform_operation_times_ && (to_su != 0))
   {
     headline_vpos += 18;
     string operation_text("$tr_operates_su; $tr_from_to;");
@@ -1360,7 +1435,7 @@ int main(int argc, char *argv[])
 	    (multi_replace(translations,
 	     Replacer< string >("$text;", operation_text).apply
 	    (operation_time_template())))))));
-  }
+  }*/
   
   ostringstream result("");
   ostringstream backlines("");
@@ -1536,12 +1611,18 @@ int main(int argc, char *argv[])
             (Replacer< double >("$hpos;", pos).apply
             (Replacer< double >("$vpos;", vpos).apply(stop_name_template())))));
 
+      vector< RelationHumanId > correspondences;
+      for (set< RelationHumanId >::const_iterator cit(it->correspondences.begin());
+	  cit != it->correspondences.end(); ++cit)
+	correspondences.push_back(*cit);
+      sort(correspondences.begin(), correspondences.end(), RelationHumanId_Comparator());
+
       if (it->correspondences.size() <= max_correspondences_below)
       {
 	// add correspondences below the line bar
 	unsigned int i(0);
-	for (set< RelationHumanId >::const_iterator cit(it->correspondences.begin());
-	cit != it->correspondences.end(); ++cit)
+	for (vector< RelationHumanId >::const_iterator cit(correspondences.begin());
+	    cit != correspondences.end(); ++cit)
 	{
 	  result<<Replacer< string >("$ref;", cit->ref).apply
 	      (Replacer< string >("$color;", cit->color).apply
@@ -1558,8 +1639,8 @@ int main(int argc, char *argv[])
 	string corr_buf("");
 	unsigned int corr_count(0);
 	pos += sqrt(2.0)*stop_font_size;
-	for (set< RelationHumanId >::const_iterator cit(it->correspondences.begin());
-	cit != it->correspondences.end(); ++cit)
+	for (vector< RelationHumanId >::const_iterator cit(correspondences.begin());
+	cit != correspondences.end(); ++cit)
 	{
 	  corr_buf += Replacer< double >("$offset;", stop_font_size/2.0).apply
 	      (Replacer< string >("$ref;", cit->ref).apply
@@ -1768,6 +1849,12 @@ int main(int argc, char *argv[])
             (Replacer< double >("$stop_fontsize;", stop_font_size).apply
             (Replacer< double >("$hpos;", pos).apply
             (Replacer< double >("$vpos;", vpos).apply(stop_name_template())))));	
+
+      vector< RelationHumanId > correspondences;
+      for (set< RelationHumanId >::const_iterator cit(it->correspondences.begin());
+	  cit != it->correspondences.end(); ++cit)
+	correspondences.push_back(*cit);
+      sort(correspondences.begin(), correspondences.end(), RelationHumanId_Comparator());
 
       if (it->correspondences.size() <= max_correspondences_below)
       {
