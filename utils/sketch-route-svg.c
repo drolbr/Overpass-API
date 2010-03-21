@@ -68,8 +68,8 @@ string destination_headline_template()
 
 string operation_time_template()
 {
-  return "<text x=\"30\" y=\"$vpos;\" font-family=\"Liberation Sans, sans-serif\""
-      " font-size=\"16px\">$text;</text>\n";
+  return "<text x=\"30\" y=\"80\" font-family=\"Liberation Sans, sans-serif\""
+      " font-size=\"16px\">$tr_operates;: $timespans;</text>\n";
 }
 
 string only_to_headline_template()
@@ -254,6 +254,24 @@ string correspondence_below_template()
   "\n";
 }
 
+string tr_weekday(unsigned int wd)
+{
+  static vector< string > tr_weekdays;
+  if (tr_weekdays.empty())
+  {
+    tr_weekdays.push_back("$tr_monday_short;");
+    tr_weekdays.push_back("$tr_tuesday_short;");
+    tr_weekdays.push_back("$tr_wednesday_short;");
+    tr_weekdays.push_back("$tr_thursday_short;");
+    tr_weekdays.push_back("$tr_friday_short;");
+    tr_weekdays.push_back("$tr_saturday_short;");
+    tr_weekdays.push_back("$tr_sunday_short;");
+  }
+  if (wd < 7)
+    return tr_weekdays[wd];
+  return "";
+}
+
 map< string, string > default_translations()
 {
   map< string, string > translations;
@@ -263,10 +281,15 @@ map< string, string > default_translations()
   translations["$tr_or;"] = "or";
   translations["$tr_and;"] = "and";
   
-  translations["$tr_operates_mo_fr;"] = "operates on Mondays to Fridays except public holidays";
-  translations["$tr_operates_sa;"] = "operates on Saturdays except public holidays";
-  translations["$tr_operates_su;"] = "operates on Sundays and public holidays";
-  translations["$tr_from_to;"] = "from $from_h;$from_m; to $to_h;$to_m;";
+  translations["$tr_monday_short;"] = "monday";
+  translations["$tr_tuesday_short;"] = "tuesday";
+  translations["$tr_wednesday_short;"] = "wednesday";
+  translations["$tr_thursday_short;"] = "thursday";
+  translations["$tr_friday_short;"] = "friday";
+  translations["$tr_saturday_short;"] = "saturday";
+  translations["$tr_sunday_short;"] = "sunday";
+  
+  translations["$tr_operates;"] = "operates";
   
   return translations;
 }
@@ -469,10 +492,116 @@ struct Timespan
     return ((begin == a.begin) && (end == a.end));
   }
   
+  string hh_mm() const
+  {
+    string result("##:##-##:##");
+    int hours(begin/60%24);
+    int minutes(begin%60);
+    result[0] = hours/10 + 48;
+    result[1] = hours%10 + 48;
+    result[3] = minutes/10 + 48;
+    result[4] = minutes%10 + 48;
+    hours = end/60%24;
+    minutes = end%60;
+    if ((end%(24*60) == 0) && (end != begin))
+      hours = 24;
+    result[6] = hours/10 + 48;
+    result[7] = hours%10 + 48;
+    result[9] = minutes/10 + 48;
+    result[10] = minutes%10 + 48;
+    return result;
+  }
+  
   // values are minutes since monday midnight
   unsigned int begin;
   unsigned int end;
 };
+
+void parse_timespans(vector< Timespan >& timespans, string data)
+{
+  static map< string, unsigned int > weekdays;
+  if (weekdays.empty())
+  {
+    weekdays["Mo"] = 0;
+    weekdays["Tu"] = 1;
+    weekdays["We"] = 2;
+    weekdays["Th"] = 3;
+    weekdays["Fr"] = 4;
+    weekdays["Sa"] = 5;
+    weekdays["Su"] = 6;
+    weekdays[""] = 8;
+  }
+  
+  string::size_type pos(0);
+  while ((pos < data.size()) && isspace(data[pos]))
+    ++pos;
+  
+  string begin_wd(data.substr(pos, 2)), end_wd;
+  
+  while ((pos < data.size()) && isspace(data[pos]))
+    ++pos;
+  if (!((pos < data.size()) && isalpha(data[pos])))
+    return;
+  pos += 2;
+  if ((pos < data.size()) && (data[pos] == '-'))
+  {
+    ++pos;
+    end_wd = data.substr(pos, 2);
+    pos += 2;
+  }
+  
+  if (weekdays.find(begin_wd) == weekdays.end())
+    return;
+  if (weekdays.find(end_wd) == weekdays.end())
+    return;
+  unsigned int begin_day(weekdays[begin_wd]), end_day(weekdays[end_wd]);
+  if (end_wd == "")
+    end_day = begin_day;
+  if (begin_day > end_day)
+    return;
+  
+  while ((pos < data.size()) && isspace(data[pos]))
+    ++pos;
+  while ((pos < data.size()) && isdigit(data[pos]))
+  {
+    unsigned int start_hour(0), start_minute(0), end_hour(0), end_minute(0);
+    while ((pos < data.size()) && isdigit(data[pos]))
+    {
+      start_hour = start_hour*10 + (data[pos] - 48);
+      ++pos;
+    }
+    ++pos;
+    while ((pos < data.size()) && isdigit(data[pos]))
+    {
+      start_minute = start_minute*10 + (data[pos] - 48);
+      ++pos;
+    }
+    while ((pos < data.size()) && !isdigit(data[pos]))
+      ++pos;
+    while ((pos < data.size()) && isdigit(data[pos]))
+    {
+      end_hour = end_hour*10 + (data[pos] - 48);
+      ++pos;
+    }
+    ++pos;
+    while ((pos < data.size()) && isdigit(data[pos]))
+    {
+      end_minute = end_minute*10 + (data[pos] - 48);
+      ++pos;
+    }
+    while ((pos < data.size()) && !isdigit(data[pos]))
+      ++pos;
+    
+    unsigned int start_time(start_hour*60 + start_minute);
+    unsigned int end_time(end_hour*60 + end_minute);
+    if ((start_time >= end_time) || (end_time > 60*24))
+      continue;
+    
+    for (unsigned int day(begin_day); day <= end_day; ++day)
+      timespans.push_back(Timespan
+	  (day, start_hour, start_minute, day, end_hour, end_minute));
+  }
+}
 
 struct Relation
 {
@@ -499,7 +628,25 @@ struct Relation
 void cleanup_opening_hours(Relation& rel)
 {
   sort(rel.opening_hours.begin(), rel.opening_hours.end());
-  // ...
+  
+  // join overlapping timespans
+  unsigned int last_valid(0);
+  for (unsigned int i(1); i < rel.opening_hours.size(); ++i)
+  {
+    if (rel.opening_hours[i].begin > rel.opening_hours[last_valid].end)
+    {
+      last_valid = i;
+      continue;
+    }
+    if (rel.opening_hours[i].end > rel.opening_hours[last_valid].end)
+    {
+      rel.opening_hours[last_valid].end = rel.opening_hours[i].end;
+      rel.opening_hours[i].begin = 60*24*7;
+    }
+  }
+  sort(rel.opening_hours.begin(), rel.opening_hours.end());
+  while ((!rel.opening_hours.empty()) && (rel.opening_hours.back().begin >= 60*24*7))
+    rel.opening_hours.pop_back();
 }
 
 bool have_uniform_operation_times(const Relation& a, const Relation& b)
@@ -935,6 +1082,17 @@ void start(const char *el, const char **attr)
       if ((value == "Su") || (value == "Sa-Su") || (value == "Mo-Su"))
 	relation.opening_hours.push_back(Timespan(6, 0, 0, 6, 24, 0));
     }
+    if (key == "opening_hours")
+    {
+      string::size_type pos(0), colon_found(value.find(";"));
+      while (colon_found != string::npos)
+      {
+	parse_timespans(relation.opening_hours, value.substr(pos, colon_found - pos));
+	pos = colon_found + 1;
+	colon_found = value.find(";", pos);
+      }
+      parse_timespans(relation.opening_hours, value.substr(pos));
+    }
   }
   else if (!strcmp(el, "node"))
   {
@@ -1162,23 +1320,23 @@ int main(int argc, char *argv[])
   }
   
   // check whether the relations have uniform operation times
-  bool have_uniform_operation_times_(true);
+  bool have_valid_operation_times(!relations[0].opening_hours.empty());
   for (unsigned int i(1); i < relations.size(); ++i)
   {
     if (!(have_uniform_operation_times(relations[0], relations[i])))
     {
-      have_uniform_operation_times_ = false;
+      have_valid_operation_times = false;
       break;
     }
   }
-  if ((have_uniform_operation_times_) &&
+  if ((have_valid_operation_times) &&
     (!(relations[0].opening_hours.empty())))
   {
     for (int i(0); i < (int)correspondences.size(); ++i)
     {
-      if (relations[i].opening_hours.empty())
+      if (correspondences[i].opening_hours.empty())
 	continue;
-      if (!(have_intersecting_operation_times(relations[0], relations[i])))
+      if (!(have_intersecting_operation_times(relations[0], correspondences[i])))
       {
 	if (i < (int)correspondences.size()-1)
 	  correspondences[i] = correspondences[correspondences.size()-1];
@@ -1390,52 +1548,73 @@ int main(int argc, char *argv[])
 	    (Replacer< string >("$rel_color;", relation.color).apply(headline))));
   
   // display operation times
-/*  double headline_vpos(64);
-  if (have_uniform_operation_times_ && (to_mo_fr != 0))
+  if (have_valid_operation_times)
   {
-    headline_vpos += 18;
-    string operation_text("$tr_operates_mo_fr; $tr_from_to;");
-    if (to_mo_fr == 24*60)
-      operation_text = "$tr_operates_mo_fr;";
-    headline += Replacer< double >("$vpos;", headline_vpos).apply
-	    (Replacer< string >("$from_h;", two_digit(from_mo_fr / 60)).apply
-	    (Replacer< string >("$from_m;", two_digit(from_mo_fr % 60)).apply
-	    (Replacer< string >("$to_h;", two_digit(to_mo_fr / 60)).apply
-	    (Replacer< string >("$to_m;", two_digit(to_mo_fr % 60)).apply
-	    (multi_replace(translations,
-	     Replacer< string >("$text;", operation_text).apply
-	    (operation_time_template())))))));
+    string opening_hours_text;
+    vector< Timespan > last_day;
+    unsigned int range_begin(0);
+    vector< Timespan >::const_iterator it(relations[0].opening_hours.begin());
+    for (unsigned int i(0); i < 7; ++i)
+    {
+      vector< Timespan > day;
+      if ((it != relations[0].opening_hours.end()) && (it->begin < i*24*60))
+      {
+	Timespan timespan(0, 0, 0, 0, 0, 0);
+	timespan.begin = 0;
+	timespan.end = it->end % (24*60);
+	day.push_back(timespan);
+	++it;
+      }
+      while ((it != relations[0].opening_hours.end()) && (it->end <= (i+1)*24*60))
+      {
+	Timespan timespan(0, 0, 0, 0, 0, 0);
+	timespan.begin = it->begin % (24*60);
+	timespan.end = it->end % (24*60);
+	day.push_back(timespan);
+	++it;
+      }
+      if ((it != relations[0].opening_hours.end()) && (it->begin < (i+1)*24*60))
+      {
+	Timespan timespan(0, 0, 0, 0, 0, 0);
+	timespan.begin = it->begin % (24*60);
+	timespan.end = 24*60;
+	day.push_back(timespan);
+      }
+      
+      if (last_day != day)
+      {
+	// print last_day
+	if (!last_day.empty())
+	{
+	  if (range_begin < i-1)
+	    opening_hours_text += tr_weekday(range_begin) + '-' + tr_weekday(i-1) + ' ';
+	  else
+	    opening_hours_text += tr_weekday(range_begin) + ' ';
+	  for (vector< Timespan >::const_iterator it(last_day.begin());
+		      it != last_day.end(); ++it)
+	    opening_hours_text += it->hh_mm() + ", ";
+	}
+	range_begin = i;
+	last_day = day;
+      }
+    }
+    // print last day
+    if (!last_day.empty())
+    {
+      if (range_begin < 6)
+	opening_hours_text += tr_weekday(range_begin) + '-' + tr_weekday(6) + ' ';
+      else
+	opening_hours_text += tr_weekday(range_begin) + ' ';
+      for (vector< Timespan >::const_iterator it(last_day.begin());
+	   it != last_day.end(); ++it)
+	opening_hours_text += it->hh_mm() + ", ";
+    }
+    
+    opening_hours_text = opening_hours_text.substr(0, opening_hours_text.size()-2);
+    headline += multi_replace(translations,
+	     Replacer< string >("$timespans;", opening_hours_text).apply
+	    (operation_time_template()));
   }
-  if (have_uniform_operation_times_ && (to_sa != 0))
-  {
-    headline_vpos += 18;
-    string operation_text("$tr_operates_sa; $tr_from_to;");
-    if (to_sa == 24*60)
-      operation_text = "$tr_operates_sa;";
-    headline += Replacer< double >("$vpos;", headline_vpos).apply
-	    (Replacer< string >("$from_h;", two_digit(from_sa / 60)).apply
-	    (Replacer< string >("$from_m;", two_digit(from_sa % 60)).apply
-	    (Replacer< string >("$to_h;", two_digit(to_sa / 60)).apply
-	    (Replacer< string >("$to_m;", two_digit(to_sa % 60)).apply
-	    (multi_replace(translations,
-	     Replacer< string >("$text;", operation_text).apply
-	    (operation_time_template())))))));
-  }
-  if (have_uniform_operation_times_ && (to_su != 0))
-  {
-    headline_vpos += 18;
-    string operation_text("$tr_operates_su; $tr_from_to;");
-    if (to_su == 24*60)
-      operation_text = "$tr_operates_su;";
-    headline += Replacer< double >("$vpos;", headline_vpos).apply
-	    (Replacer< string >("$from_h;", two_digit(from_su / 60)).apply
-	    (Replacer< string >("$from_m;", two_digit(from_su % 60)).apply
-	    (Replacer< string >("$to_h;", two_digit(to_su / 60)).apply
-	    (Replacer< string >("$to_m;", two_digit(to_su % 60)).apply
-	    (multi_replace(translations,
-	     Replacer< string >("$text;", operation_text).apply
-	    (operation_time_template())))))));
-  }*/
   
   ostringstream result("");
   ostringstream backlines("");
