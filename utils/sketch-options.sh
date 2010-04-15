@@ -64,12 +64,16 @@ The necessary XML header.
 &lt;translate expr=&quot;from&quot; to=&quot;['from' in Italian]&quot;/&gt;
 &lt;translate expr=&quot;or&quot; to=&quot;['or' in Italian]&quot;/&gt;
 &lt;translate expr=&quot;and&quot; to=&quot;['and' in Italian]&quot;/&gt;
-&lt;translate expr=&quot;operates_mo_fr&quot; to=&quot;operates on Mondays to Fridays except public holidays&quot;/&gt;
-&lt;translate expr=&quot;operates_sa&quot; to=&quot;operates on Saturdays except public holidays&quot;/&gt;
-&lt;translate expr=&quot;operates_su&quot; to=&quot;operates on Sundays and public holidays&quot;/&gt;
-&lt;translate expr=&quot;from_to&quot; to=&quot;from \$from_h;\$from_m; to \$to_h;\$to_m;&quot;/&gt;</pre>
+&lt;translate expr=&quot;operates&quot; to=&quot;operates&quot;/&gt;
+&lt;translate expr=&quot;monday_short&quot; to=&quot;mo&quot;/&gt;
+&lt;translate expr=&quot;tuesday_short&quot; to=&quot;tu&quot;/&gt;
+&lt;translate expr=&quot;wednesday_short&quot; to=&quot;we&quot;/&gt;
+&lt;translate expr=&quot;thursday_short&quot; to=&quot;th&quot;/&gt;
+&lt;translate expr=&quot;friday_short&quot; to=&quot;fr&quot;/&gt;
+&lt;translate expr=&quot;saturday_short&quot; to=&quot;sa&quot;/&gt;
+&lt;translate expr=&quot;sunday_short&quot; to=&quot;su&quot;/&gt;</pre>
 
-These three words appear literally in the diagrams and can be replaced by
+These words appear literally in the diagrams and can be replaced by
 suitable translations.
 
 <pre>&lt;reduce expr=&quot;Via &quot; to=&quot;&quot;/&gt;

@@ -68,7 +68,7 @@ string destination_headline_template()
 
 string operation_time_template()
 {
-  return "<text x=\"30\" y=\"80\" font-family=\"Liberation Sans, sans-serif\""
+  return "<text x=\"30\" y=\"90\" font-family=\"Liberation Sans, sans-serif\""
       " font-size=\"16px\">$tr_operates;: $timespans;</text>\n";
 }
 
@@ -270,6 +270,24 @@ string tr_weekday(unsigned int wd)
   if (wd < 7)
     return tr_weekdays[wd];
   return "";
+}
+
+const vector< unsigned int >& default_colors()
+{
+  static vector< unsigned int > colors;
+  if (colors.empty())
+  {
+    colors.push_back(0x000000);
+    colors.push_back(0x777777);
+    colors.push_back(0xff0000);
+    colors.push_back(0xff00ff);
+    colors.push_back(0x0000aa);
+    colors.push_back(0x00dddd);
+    colors.push_back(0x00ff00);
+    colors.push_back(0x008800);
+    colors.push_back(0x999900);
+  }
+  return colors;
 }
 
 map< string, string > default_translations()
@@ -607,7 +625,7 @@ struct Relation
 {
   public:
     Relation() : forward_stops(), backward_stops(), ref(""), network(""),
-      color("navy"), from(""), to(""), direction(0), opening_hours() {}
+      color(""), from(""), to(""), direction(0), opening_hours() {}
     
     vector< unsigned int > forward_stops;
     vector< unsigned int > backward_stops;
@@ -623,6 +641,50 @@ struct Relation
     const static int BOTH = 4;
 
     vector< Timespan > opening_hours;
+};
+
+char hex(int i)
+{
+  if (i < 10)
+    return (i + '0');
+  else
+    return (i + 'a' - 10);
+}
+
+string default_color(string ref)
+{
+  unsigned int numval(0), pos(0), color(0);
+  while ((pos < ref.size()) && (!isdigit(ref[pos])))
+    ++pos;
+  while ((pos < ref.size()) && (isdigit(ref[pos])))
+  {
+    numval = numval*10 + (ref[pos] - 48);
+    ++pos;
+  }
+  
+  if (numval == 0)
+  {
+    for (unsigned int i(0); i < ref.size(); ++i)
+      numval += i*(unsigned char)ref[i];
+    numval = numval % 1000;
+  }
+  
+  if (numval < 10)
+    color = default_colors()[numval];
+  else if (numval < 100)
+    color = (default_colors()[numval % 10]*3 + default_colors()[numval/10])/4;
+  else
+    color = (default_colors()[numval % 10]*12 + default_colors()[numval/10%10]*3
+      + default_colors()[numval/100%10])/16;
+  
+  string result("#......");
+  result[1] = hex((color & 0xf00000)/0x100000);
+  result[2] = hex((color & 0x0f0000)/0x10000);
+  result[3] = hex((color & 0x00f000)/0x1000);
+  result[4] = hex((color & 0x000f00)/0x100);
+  result[5] = hex((color & 0x0000f0)/0x10);
+  result[6] = hex(color & 0x00000f);
+  return result;
 };
 
 void cleanup_opening_hours(Relation& rel)
@@ -1161,6 +1223,8 @@ void end(const char *el)
     parse_status = 0;
     if (is_route)
     {
+      if (relation.color == "")
+	relation.color = default_color(relation.ref);
       cleanup_opening_hours(relation);
       if (((pivot_ref == "") || (relation.ref == pivot_ref))
 	&& ((pivot_network == "") || (relation.network == pivot_network)))
@@ -1312,7 +1376,7 @@ int main(int argc, char *argv[])
   // bailout if no relation is found
   if (relations.size() == 0)
   {
-    cout<<Replacer< double >("$width;", width).apply
+    cout<<Replacer< double >("$width;", 700).apply
     (Replacer< double >("$height;", height).apply
     (Replacer< string >("<headline/>", "").apply
     (Replacer< string >("<stops-diagram/>", "<text x=\"100\" y=\"100\">No relation found</text>").apply(frame_template()))));
@@ -1397,6 +1461,19 @@ int main(int argc, char *argv[])
     ++rel_count;
   }
   
+  //desactivated, for debugging purposes only
+/*  for (unsigned int i(0); i < relations.size(); ++i)
+    cerr<<relations[i].direction<<' ';
+  cerr<<'\n';
+  for (list< Stop >::const_iterator it(stoplist.stops.begin());
+  it != stoplist.stops.end(); ++it)
+  {
+    for (unsigned int i(0); i < relations.size(); ++i)
+      cerr<<it->used_by[i]<<' ';
+    cerr<<it->name<<'\n';
+  }
+  cerr<<'\n';*/
+  
   // unify one-directional relations as good as possible
   multimap< double, pair< int, int > > possible_pairs;
   for (unsigned int i(0); i < relations.size(); ++i)
@@ -1436,6 +1513,19 @@ int main(int argc, char *argv[])
     relations[it->second.second].direction = 0;
   }
 
+  //desactivated, for debugging purposes only
+/*  for (unsigned int i(0); i < relations.size(); ++i)
+    cerr<<relations[i].direction<<' ';
+  cerr<<'\n';
+  for (list< Stop >::const_iterator it(stoplist.stops.begin());
+  it != stoplist.stops.end(); ++it)
+  {
+    for (unsigned int i(0); i < relations.size(); ++i)
+      cerr<<it->used_by[i]<<' ';
+    cerr<<it->name<<'\n';
+  }
+  cerr<<'\n';*/
+  
   // trim the horizontal itinerary lines
   vector< int > first_stop_idx(relations.size());
   vector< int > last_stop_idx(relations.size());
@@ -1462,6 +1552,25 @@ int main(int argc, char *argv[])
     }
   }
   
+  //desactivated, for debugging purposes only
+/*  for (unsigned int i(0); i < relations.size(); ++i)
+    cerr<<relations[i].direction<<' ';
+  cerr<<'\n';
+  for (unsigned int i(0); i < relations.size(); ++i)
+    cerr<<first_stop_idx[i]<<' ';
+  cerr<<'\n';
+  for (unsigned int i(0); i < relations.size(); ++i)
+    cerr<<last_stop_idx[i]<<' ';
+  cerr<<'\n';
+  for (list< Stop >::const_iterator it(stoplist.stops.begin());
+  it != stoplist.stops.end(); ++it)
+  {
+    for (unsigned int i(0); i < relations.size(); ++i)
+      cerr<<it->used_by[i]<<' ';
+    cerr<<it->name<<'\n';
+  }
+  cerr<<'\n';*/
+  
   // unify itinerary lines with similar begin
   vector< int > left_join_to(relations.size(), -1);
   vector< int > right_join_to(relations.size(), -1);
@@ -1474,6 +1583,8 @@ int main(int argc, char *argv[])
           it != stoplist.stops.end(); ++it)
       {
 	if (it->used_by[i] != it->used_by[j])
+	  break;
+	if (ijsimilar > last_stop_idx[j])
 	  break;
 	++ijsimilar;
       }
@@ -1496,6 +1607,8 @@ int main(int argc, char *argv[])
       {
 	if (it->used_by[i] != it->used_by[j])
 	  break;
+	if (ijsimilar < first_stop_idx[j])
+	  break;
 	--ijsimilar;
       }
       if (ijsimilar < first_stop_idx[i])
@@ -1507,6 +1620,31 @@ int main(int argc, char *argv[])
       }
     }
   }
+  
+  //desactivated, for debugging purposes only
+/*  for (unsigned int i(0); i < relations.size(); ++i)
+    cerr<<relations[i].direction<<' ';
+  cerr<<'\n';
+  for (unsigned int i(0); i < relations.size(); ++i)
+    cerr<<first_stop_idx[i]<<' ';
+  cerr<<'\n';
+  for (unsigned int i(0); i < relations.size(); ++i)
+    cerr<<last_stop_idx[i]<<' ';
+  cerr<<'\n';
+  for (unsigned int i(0); i < relations.size(); ++i)
+    cerr<<left_join_to[i]<<' ';
+  cerr<<'\n';
+  for (unsigned int i(0); i < relations.size(); ++i)
+    cerr<<right_join_to[i]<<' ';
+  cerr<<'\n';
+  for (list< Stop >::const_iterator it(stoplist.stops.begin());
+  it != stoplist.stops.end(); ++it)
+  {
+    for (unsigned int i(0); i < relations.size(); ++i)
+      cerr<<it->used_by[i]<<' ';
+    cerr<<it->name<<'\n';
+  }
+  cerr<<'\n';*/
   
   string from_buffer, to_buffer, headline, last_from, last_to;
   headline = from_to_headline_template();
@@ -1647,7 +1785,7 @@ int main(int argc, char *argv[])
 
   if (stoplist.stops.size() <= 1)
   {
-    cout<<multi_replace(translations, Replacer< double >("$width;", width).apply
+    cout<<multi_replace(translations, Replacer< double >("$width;", 700).apply
         (Replacer< double >("$height;", height).apply
 	(Replacer< string >("$rel_from;", relations.begin()->from).apply
 	(Replacer< string >("$rel_to;", relations.begin()->to).apply
@@ -1666,7 +1804,16 @@ int main(int argc, char *argv[])
         (height - 20*offset_of[relations.size()]
         - stop_font_size*max_correspondences_below);
     
-    stop_distance = (width - 220 - sqrt(2.0)*stop_font_size*extra_rows[stoplist.stops.size()])/(stoplist.stops.size()-1);
+    if (width > 0)
+      stop_distance = (width - 220
+        - sqrt(2.0)*stop_font_size*extra_rows[stoplist.stops.size()])
+	/(stoplist.stops.size()-1);
+    else
+    {
+      stop_distance = stop_font_size*sqrt(2.0)*3;
+      width = stop_distance*(stoplist.stops.size()-1) + 220
+        + sqrt(2.0)*stop_font_size*extra_rows[stoplist.stops.size()];
+    }
     
     for (unsigned int i(0); i < relations.size(); ++i)
     {
@@ -1849,6 +1996,19 @@ int main(int argc, char *argv[])
     if (stop_font_size == 0)
       stop_font_size = 10;
 
+    if (width == 0)
+    {
+      double stop_distance(stop_font_size*sqrt(2.0)*3);
+      double width_upper(stop_distance*((stoplist.stops.size()+1)/2-1) + 220
+        + sqrt(2.0)*stop_font_size*extra_rows[(stoplist.stops.size()+1)/2]);
+      double width_lower(stop_distance*(stoplist.stops.size()/2) + 220
+        + sqrt(2.0)*stop_font_size*(extra_rows[stoplist.stops.size()] -
+	extra_rows[(stoplist.stops.size()-1)/2]));
+      if (width_lower < width_upper)
+	width = width_upper;
+      else
+        width = width_lower;
+    }
     double stop_distance_upper((width - 220
         - sqrt(2.0)*stop_font_size*extra_rows[(stoplist.stops.size()+1)/2])
 	/((stoplist.stops.size()+1)/2-1));
@@ -1920,7 +2080,7 @@ int main(int argc, char *argv[])
         if (right_join_to[i] >= 0)
 	  result<<Replacer< string >("$rel_color;", relation.color).apply
 	      (Replacer< double >("$hmin;", hmax-2).apply
-	      (Replacer< double >("$hmax;", hmax-4-stop_distance/2).apply
+	      (Replacer< double >("$hmax;", hmax-4+stop_distance/2).apply
 	      (Replacer< double >("$htop;", hmax+4+stop_distance/2).apply
 	      (Replacer< double >("$vpos_self;", vpos_lower + 20*offset_of[i]).apply
 	      (Replacer< double >("$vpos_join;", vpos_lower + 20*offset_of[right_join_to[i]]).apply

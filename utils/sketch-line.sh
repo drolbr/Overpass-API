@@ -42,6 +42,8 @@ while [[ -n $BUF ]]; do
 };
 done
 
+BASEDIR=`mktemp -d`
+
 echo -e "\
 data=<osm-script timeout=\"180\" element-limit=\"10000000\"> \
  \
@@ -55,75 +57,77 @@ data=<osm-script timeout=\"180\" element-limit=\"10000000\"> \
 <print mode=\"body\"/> \
  \
 </osm-script>
-" >/tmp/sketch_line_req
+" >$BASEDIR/request.1
 
 if [[ -n $CORRESPONDENCES ]]; then
 {
   REQUEST_METHOD=
-  /home/roland/osm-3s/cgi-bin/interpreter </tmp/sketch_line_req >/tmp/sketch_line_req.1
-  RESPONSE_TYPE=`head -n 1 </tmp/sketch_line_req.1`
+  /home/roland/osm-3s/cgi-bin/interpreter <$BASEDIR/request.1 >$BASEDIR/answer.1
+  RESPONSE_TYPE=`head -n 1 <$BASEDIR/answer.1`
   if [[ $RESPONSE_TYPE != "Content-type: application/osm3s" ]]; then
   {
-    cat </tmp/sketch_line_req.1
+    cat <$BASEDIR/answer.1
     exit 0
   };
   fi
-  dd if=/tmp/sketch_line_req.1 of=/tmp/sketch_line_req.2 bs=1 skip=56
-  gunzip </tmp/sketch_line_req.2 | ../bin/bbox-brim-query --size=$CORRESPONDENCES >/tmp/sketch_line_req.3
+  dd if=$BASEDIR/answer.1 of=$BASEDIR/answer.2 bs=1 skip=56
+  gunzip <$BASEDIR/answer.2 | ../bin/bbox-brim-query --size=$CORRESPONDENCES >$BASEDIR/request.2
 
   if [[ $DEBUG == "full-query" ]]; then
   {
     echo "Content-Type: text/plain; charset=utf-8"
     echo
 
-    cat </tmp/sketch_line_req.3
+    cat <$BASEDIR/request.2
 
     echo
   };
   fi;
 
   REQUEST_METHOD=
-  /home/roland/osm-3s/cgi-bin/interpreter </tmp/sketch_line_req.3 >/tmp/sketch_line_req.4
-  RESPONSE_TYPE=`head -n 1 </tmp/sketch_line_req.4`
+  /home/roland/osm-3s/cgi-bin/interpreter <$BASEDIR/request.2 >$BASEDIR/answer.3
+  RESPONSE_TYPE=`head -n 1 <$BASEDIR/answer.3`
   if [[ $RESPONSE_TYPE != "Content-type: application/osm3s" ]]; then
   {
-    cat </tmp/sketch_line_req.4
+    cat <$BASEDIR/answer.3
     exit 0
   };
   fi
-  dd if=/tmp/sketch_line_req.4 of=/tmp/sketch_line_req.5 bs=1 skip=56
+  dd if=$BASEDIR/answer.3 of=$BASEDIR/answer.4 bs=1 skip=56
 
   echo "Content-Type: image/svg+xml; charset=utf-8"
   echo
 
   if [[ $DEBUG == "full-query" ]]; then
   {
-    gunzip </tmp/sketch_line_req.5
+    gunzip <$BASEDIR/answer.4
+    echo
+    echo "../bin/sketch-route-svg --walk-limit=$CORRESPONDENCES --ref=\"$REF_\" --network=\"$NETWORK_\" $SKETCH_PARAMS"
     exit 0;
   };
   fi;
 
-  gunzip </tmp/sketch_line_req.5 | ../bin/sketch-route-svg --walk-limit=$CORRESPONDENCES --ref="$REF_" --network="$NETWORK_" $SKETCH_PARAMS
+  gunzip <$BASEDIR/answer.4 | ../bin/sketch-route-svg --walk-limit=$CORRESPONDENCES --ref="$REF_" --network="$NETWORK_" $SKETCH_PARAMS
 };
 else
 {
   REQUEST_METHOD=
-  /home/roland/osm-3s/cgi-bin/interpreter </tmp/sketch_line_req >/tmp/sketch_line_req.1
-  RESPONSE_TYPE=`head -n 1 </tmp/sketch_line_req.1`
+  /home/roland/osm-3s/cgi-bin/interpreter <$BASEDIR/request.1 >$BASEDIR/answer.1
+  RESPONSE_TYPE=`head -n 1 <$BASEDIR/answer.1`
   if [[ $RESPONSE_TYPE != "Content-type: application/osm3s" ]]; then
   {
-    cat </tmp/sketch_line_req.1
+    cat <$BASEDIR/answer.1
     exit 0
   };
   fi
-  dd if=/tmp/sketch_line_req.1 of=/tmp/sketch_line_req.2 bs=1 skip=56
+  dd if=$BASEDIR/answer.1 of=$BASEDIR/answer.2 bs=1 skip=56
 
   if [[ $DEBUG == "full-query" ]]; then
   {
     echo "Content-Type: text/plain; charset=utf-8"
     echo
 
-    gunzip </tmp/sketch_line_req.2
+    gunzip <$BASEDIR/answer.2
 
     echo
   };
@@ -132,6 +136,6 @@ else
   echo "Content-Type: image/svg+xml; charset=utf-8"
   echo
 
-  gunzip </tmp/sketch_line_req.2 | ../bin/sketch-route-svg $SKETCH_PARAMS
+  gunzip <$BASEDIR/answer.2 | ../bin/sketch-route-svg $SKETCH_PARAMS
 };
 fi
