@@ -64,10 +64,10 @@ http://78.46.81.38/api/sketch-route?<em>relation-id</em>&amp;<em>relation-id</em
   in an case in one resp. two rows.<br/>
   <strong>Maximum correspondences per row</strong>: <input name="max-cors-per-line" type="text" size="10"/><br/>
   The limit for the acceptable number of line numbers to be printed per line. This option is only
-  effective when correspondences aer enabled. Its default value is 6.<br/>
+  effective when correspondences are enabled. Its default value is 6.<br/>
   <strong>Maximum correspondences below</strong>: <input name="max-cors-below" type="text" size="10"/><br/>
   The limit for the acceptable number of line numbers to be printed below the line bar. This option is only
-  effective when correspondences aer enabled. Its default value is 0.<br/>
+  effective when correspondences are enabled. Its default value is 0.<br/>
   <strong>Style</strong>: <input name="style" type="text" size="40"/><br/>
   This parameter makes the generator using an existing style for formatting the diagram. A working example
   is <em>wuppertal</em> for a style with German translations and abbreviations.<br/>
@@ -87,6 +87,24 @@ http://78.46.81.38/api/sketch-line?style=wuppertal&amp;network=<em>network</em>&
 will show you a diagram with German abbrevations, while
 http://78.46.81.38/api/sketch-line?style=padua&amp;network=<em>network</em>&amp;ref=<em>line number</em><br/>
 would have Italian abbrevations. To edit the styles, type <em>wuppertal</em> or <em>padua</em> in the above box an click the button.
+
+<h3>Opening hours</h3>
+
+For the times of the week when the bus service is operational, the generator uses the tag <emph>opening_hours</emph>. These times manifest themselves in two ways:
+<ul>
+<li>For every line which has operation times set, a text line <emph>operates ...</emph> is added below the line number.</li>
+<li>Connections are only shown between services that operate at a common time. I.e. a night bus doesn't appear on the list of correspondences for a service running only over the day.</li>
+</ul>
+
+The accepted format for <emph>opening_hours</emph> is as follows: Different entries are separated by colons. An entry consists of either a day (one of <emph>Mo</emph>, <emph>Tu</emph>, <emph>We</emph>, <emph>Th</emph>, <emph>Fr</emph>, <emph>Sa</emph> or <emph>Su</emph>) or a range of days (e.g. <emph>Mo-Fr</emph>), a blank and then a range of times in the format <emph>hh:mm-hh:mm</emph>. Times may not surpass midnight and day ranges may not surpass sunday. The timespans are considered additve. Some eaxmples:
+<ul>
+<li><emph>Mo-Fr 06:00-20:00</emph>: The service runs from monday to friday from 06h00 to 20h00.</li>
+<li><emph>Mo-Su 06:00-20:00</emph>: The service runs daily from 06h00 to 20h00.</li>
+<li><emph>Mo-Fr 00:00-24:00</emph>: The service runs 24 hours from monday to friday but not on the weekend.</li>
+<li><emph>Mo-Su 21:00-24:00, 00:00-00:30; Su 07:00-10:00</emph>The service runs every evening from 21:00 to half past midnight and also on sunday mornings. Note that the timespan 21:00-00:30 has to be split.</li>
+<li><emph>Mo-Fr 09:00-12:00, 15:00-18:00; We 09:00-12:00</emph>: This is the same as <emph>Mo-Fr 09:00-12:00, 15:00-18:00</emph>, because the wednesday is contained in <emph>Mo-Fr</emph>.</li>
+<li><emph>Mo-Fr 09:00-12:00; Mo-Tu 15:00-18:00; Th-Fr 15:00-18:00</emph>. This service is not operational on wednesday afternoons.</li>
+</ul>
 
 </body>
 </html>

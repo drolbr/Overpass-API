@@ -489,6 +489,15 @@ struct NamedNode
     string name;
 };
 
+struct DisplayNode
+{
+  public:
+    DisplayNode() : node(), limit(-1.0) {}
+    
+    NamedNode node;
+    double limit;
+};
+
 double spat_distance(const NamedNode& nnode1, const NamedNode& nnode2)
 {
   return acos(sin(nnode1.lat/180.0*PI)*sin(nnode2.lat/180.0*PI)
@@ -843,7 +852,7 @@ struct Correspondence_Data
   public:
     Correspondence_Data(const map< unsigned int, set< RelationHumanId > >& what_calls_here_,
 	     const map< unsigned int, NamedNode >& nodes_,
-	     const vector< NamedNode > display_nodes_,
+	     const vector< DisplayNode > display_nodes_,
 	     double walk_limit_for_changes_)
     : what_calls_here(what_calls_here_), nodes(nodes_),
       display_nodes(display_nodes_),
@@ -851,7 +860,7 @@ struct Correspondence_Data
       
     Correspondence_Data(const vector< Relation >& correspondences,
 	     const map< unsigned int, NamedNode >& nodes_,
-	     const vector< NamedNode > display_nodes_,
+	     const vector< DisplayNode > display_nodes_,
 	     double walk_limit_for_changes_)
     : what_calls_here(), nodes(nodes_),
       display_nodes(display_nodes_),
@@ -896,18 +905,18 @@ struct Correspondence_Data
     set< RelationHumanId >& display_nodes_at
     (const NamedNode& nnode, set< RelationHumanId >& result) const
     {
-      for (vector< NamedNode >::const_iterator it(display_nodes.begin());
+      for (vector< DisplayNode >::const_iterator it(display_nodes.begin());
       it != display_nodes.end(); ++it)
       {
-	if (spat_distance(nnode, *it) < walk_limit_for_changes)
-	  result.insert(RelationHumanId(it->name, "#777777"));
+	if (spat_distance(nnode, it->node) < it->limit)
+	  result.insert(RelationHumanId(it->node.name, "#777777"));
       }
       return result;
     }
     
     map< unsigned int, set< RelationHumanId > > what_calls_here;
     const map< unsigned int, NamedNode >& nodes;
-    vector< NamedNode > display_nodes;
+    vector< DisplayNode > display_nodes;
     const double walk_limit_for_changes;
 };
 
@@ -957,9 +966,12 @@ struct Stoplist
 
 struct Display_Class
 {
+  Display_Class() : key(""), value(""), text(""), limit(-1) {}
+  
   string key;
   string value;
   string text;
+  double limit;
 };
 
 int process_relation
@@ -1104,7 +1116,7 @@ unsigned int id;
 vector< Relation > relations;
 vector< Relation > correspondences;
 vector< Display_Class > display_classes;
-vector< NamedNode > display_nodes;
+vector< DisplayNode > display_nodes;
 string pivot_ref;
 string pivot_network;
 Relation relation;
@@ -1213,8 +1225,10 @@ void start(const char *el, const char **attr)
     {
       if ((key == it->key) && ((it->value == "") || (value == it->value)))
       {
-	NamedNode dnode(nnode);
-	dnode.name = it->text;
+	DisplayNode dnode;
+	dnode.node = nnode;
+	dnode.node.name = it->text;
+	dnode.limit = it->limit;
 	display_nodes.push_back(dnode);
       }
     }
@@ -1383,10 +1397,12 @@ void options_start(const char *el, const char **attr)
     {
       if (!strcmp(attr[i], "k"))
 	dc.key = attr[i+1];
-      if (!strcmp(attr[i], "v"))
+      else if (!strcmp(attr[i], "v"))
 	dc.value = attr[i+1];
-      if (!strcmp(attr[i], "text"))
+      else if (!strcmp(attr[i], "text"))
 	dc.text = attr[i+1];
+      else if (!strcmp(attr[i], "limit"))
+	dc.limit = atof(attr[i+1]);
     }
     display_classes.push_back(dc);
   }

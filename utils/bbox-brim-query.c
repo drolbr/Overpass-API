@@ -33,9 +33,12 @@ string frame_template()
 
 struct Display_Class
 {
+  Display_Class() : key(""), value(""), text(""), limit(-1) {}
+  
   string key;
   string value;
   string text;
+  double limit;
 };
 
 vector< Display_Class > display_classes;
@@ -66,12 +69,17 @@ void start(const char *el, const char **attr)
 	<<"  </query>\n";
     for (vector< Display_Class >::const_iterator it(display_classes.begin());
         it != display_classes.end(); ++it)
+    {
+      double limit(it->limit);
+      if (limit < 0)
+	limit = brim;
       cout<<"  <query type=\"node\">\n"
 	  <<"    <bbox-query "
-	  <<"n=\""<<setprecision(14)<<lat + brim<<"\" s=\""<<setprecision(14)<<lat - brim<<"\" "
-	  <<"w=\""<<setprecision(14)<<lon - brim/cos(lat/180.0*PI)<<"\" e=\""<<setprecision(14)<<lon + brim/cos(lat/180.0*PI)<<"\"/>\n"
+	  <<"n=\""<<setprecision(14)<<lat + limit<<"\" s=\""<<setprecision(14)<<lat - limit<<"\" "
+	  <<"w=\""<<setprecision(14)<<lon - limit/cos(lat/180.0*PI)<<"\" e=\""<<setprecision(14)<<lon + limit/cos(lat/180.0*PI)<<"\"/>\n"
 	  <<"    <has-kv k=\""<<it->key<<"\" v=\""<<it->value<<"\"/>\n"
 	  <<"  </query>\n";
+    }
   }
 }
 
@@ -96,11 +104,14 @@ void options_start(const char *el, const char **attr)
     {
       if (!strcmp(attr[i], "k"))
 	dc.key = attr[i+1];
-      if (!strcmp(attr[i], "v"))
+      else if (!strcmp(attr[i], "v"))
 	dc.value = attr[i+1];
-      if (!strcmp(attr[i], "text"))
+      else if (!strcmp(attr[i], "text"))
 	dc.text = attr[i+1];
+      else if (!strcmp(attr[i], "limit"))
+	dc.limit = atof(attr[i+1]);
     }
+    dc.limit = dc.limit/1000.0/40000.0*360.0;
     display_classes.push_back(dc);
   }
 }
