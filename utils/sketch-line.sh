@@ -3,6 +3,7 @@
 BUF=$QUERY_STRING\&
 
 SKETCH_PARAMS=
+BRIM_PARAMS=
 
 while [[ -n $BUF ]]; do
 {
@@ -29,9 +30,15 @@ while [[ -n $BUF ]]; do
   elif [[ $KEY == "force-rows" && -n $VALUE ]]; then
     SKETCH_PARAMS="$SKETCH_PARAMS --rows=$VALUE"
   elif [[ $KEY == "style" && -n $VALUE ]]; then
+  {
     SKETCH_PARAMS="$SKETCH_PARAMS --options=/opt/osm_why_api/options/sketch-line.$VALUE"
+    BRIM_PARAMS="$BRIM_PARAMS --options=/opt/osm_why_api/options/sketch-line.$VALUE"
+  };
   elif [[ $KEY == "correspondences" && -n $VALUE ]]; then
-    CORRESPONDENCES=$VALUE
+  {
+    SKETCH_PARAMS="$SKETCH_PARAMS --walk-limit=$VALUE"
+    BRIM_PARAMS="$BRIM_PARAMS --size=$VALUE"
+  };
   elif [[ $KEY == "max-cors-per-line" && -n $VALUE ]]; then
     SKETCH_PARAMS="$SKETCH_PARAMS --max-correspondences-per-line=$VALUE"
   elif [[ $KEY == "max-cors-below" && -n $VALUE ]]; then
@@ -59,7 +66,19 @@ data=<osm-script timeout=\"180\" element-limit=\"10000000\"> \
 </osm-script>
 " >$BASEDIR/request.1
 
-if [[ -n $CORRESPONDENCES ]]; then
+if [[ -z $REF ]]; then
+{                     
+  echo "Content-Type: text/plain; charset=utf-8"
+  echo                                          
+  echo "An empty value for ref is not allowed"  
+
+  exit 0
+};    
+fi      
+
+CORRESPONDENCES=`../bin/bbox-brim-query --only-corrs $BRIM_PARAMS`
+
+if [[ $CORRESPONDENCES -gt 0 ]]; then
 {
   REQUEST_METHOD=
   /home/roland/osm-3s/cgi-bin/interpreter <$BASEDIR/request.1 >$BASEDIR/answer.1
@@ -71,7 +90,7 @@ if [[ -n $CORRESPONDENCES ]]; then
   };
   fi
   dd if=$BASEDIR/answer.1 of=$BASEDIR/answer.2 bs=1 skip=56
-  gunzip <$BASEDIR/answer.2 | ../bin/bbox-brim-query --size=$CORRESPONDENCES >$BASEDIR/request.2
+  gunzip <$BASEDIR/answer.2 | ../bin/bbox-brim-query $BRIM_PARAMS >$BASEDIR/request.2
 
   if [[ $DEBUG == "full-query" ]]; then
   {
@@ -82,7 +101,7 @@ if [[ -n $CORRESPONDENCES ]]; then
 
     echo
   };
-  fi;
+  fi
 
   REQUEST_METHOD=
   /home/roland/osm-3s/cgi-bin/interpreter <$BASEDIR/request.2 >$BASEDIR/answer.3
@@ -102,12 +121,12 @@ if [[ -n $CORRESPONDENCES ]]; then
   {
     gunzip <$BASEDIR/answer.4
     echo
-    echo "../bin/sketch-route-svg --walk-limit=$CORRESPONDENCES --ref=\"$REF_\" --network=\"$NETWORK_\" $SKETCH_PARAMS"
+    echo "../bin/sketch-route-svg --ref=\"$REF_\" --network=\"$NETWORK_\" $SKETCH_PARAMS"
     exit 0;
   };
   fi;
 
-  gunzip <$BASEDIR/answer.4 | ../bin/sketch-route-svg --walk-limit=$CORRESPONDENCES --ref="$REF_" --network="$NETWORK_" $SKETCH_PARAMS
+  gunzip <$BASEDIR/answer.4 | ../bin/sketch-route-svg --ref="$REF_" --network="$NETWORK_" $SKETCH_PARAMS
 };
 else
 {

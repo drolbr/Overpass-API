@@ -93,6 +93,17 @@ of street.
 These correspond to the options that can be directly passed to sketch-line. They are
 explained at the <a href=\"../public_transport.html\">public transport page</a>.
 
+<pre>&lt;correspondences limit=&quot;100&quot;/&gt;</pre>
+
+Enables the display of correspondences and sets the maximum walking distance to change
+to 100 meters.
+
+<pre>&lt;display k=&quot;amenity&quot; v=&quot;bank&quot; text=&quot;bank&quot;/&gt;
+&lt;display k=&quot;park_ride&quot; text=&quot;P+R&quot;/&gt;</pre>
+
+Displays at every stop where a nearby node is tagged as &quot;amenity&quot;=&quot;bank&quot;
+the text &quot;bank&quot;. A node is nearby if it is less than the corredpondence walking distance from the stop. The second line lets display at every stop where a nearby node is tagged as &quot;park_ride&quot; with any value the text &quot;P+R&quot;.
+
 <pre>&lt;/options&gt;</pre>
 
 The necessary footer.

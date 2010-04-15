@@ -277,15 +277,26 @@ const vector< unsigned int >& default_colors()
   static vector< unsigned int > colors;
   if (colors.empty())
   {
-    colors.push_back(0x000000);
-    colors.push_back(0x777777);
+/*    colors.push_back(0x777777);
     colors.push_back(0xff0000);
     colors.push_back(0xff00ff);
+    colors.push_back(0x7700aa);
     colors.push_back(0x0000aa);
     colors.push_back(0x00dddd);
     colors.push_back(0x00ff00);
     colors.push_back(0x008800);
     colors.push_back(0x999900);
+    colors.push_back(0xff7700);*/
+    colors.push_back(0x0000ff);
+    colors.push_back(0x00ffff);
+    colors.push_back(0x007777);
+    colors.push_back(0x00ff00);
+    colors.push_back(0xffff00);
+    colors.push_back(0x777700);
+    colors.push_back(0x777777);
+    colors.push_back(0xff0000);
+    colors.push_back(0xff00ff);
+    colors.push_back(0x770077);
   }
   return colors;
 }
@@ -672,10 +683,25 @@ string default_color(string ref)
   if (numval < 10)
     color = default_colors()[numval];
   else if (numval < 100)
-    color = (default_colors()[numval % 10]*3 + default_colors()[numval/10])/4;
+  {
+    unsigned int color1 = default_colors()[numval % 10];
+    unsigned int color2 = default_colors()[numval/10];
+    color = ((((color1 & 0x0000ff)*3 + (color2 & 0x0000ff))/4) & 0x0000ff)
+        | ((((color1 & 0x00ff00)*3 + (color2 & 0x00ff00))/4) & 0x00ff00)
+	| ((((color1 & 0xff0000)*3 + (color2 & 0xff0000))/4) & 0xff0000);
+  }
   else
-    color = (default_colors()[numval % 10]*12 + default_colors()[numval/10%10]*3
-      + default_colors()[numval/100%10])/16;
+  {
+    unsigned int color1 = default_colors()[numval % 10];
+    unsigned int color2 = default_colors()[numval/10%10];
+    unsigned int color3 = default_colors()[numval/100%10];
+    color = ((((color1 & 0x0000ff)*10 + (color2 & 0x0000ff)*5 + (color3 & 0x0000ff))
+	  /16) & 0x0000ff)
+        | ((((color1 & 0x00ff00)*10 + (color2 & 0x00ff00)*5 + (color3 & 0x00ff00))
+	  /16) & 0x00ff00)
+	| ((((color1 & 0xff0000)*10 + (color2 & 0xff0000)*5 + (color3 & 0xff0000))
+	  /16) & 0xff0000);
+  }
   
   string result("#......");
   result[1] = hex((color & 0xf00000)/0x100000);
@@ -817,14 +843,18 @@ struct Correspondence_Data
   public:
     Correspondence_Data(const map< unsigned int, set< RelationHumanId > >& what_calls_here_,
 	     const map< unsigned int, NamedNode >& nodes_,
+	     const vector< NamedNode > display_nodes_,
 	     double walk_limit_for_changes_)
     : what_calls_here(what_calls_here_), nodes(nodes_),
+      display_nodes(display_nodes_),
       walk_limit_for_changes(walk_limit_for_changes_) {}
       
     Correspondence_Data(const vector< Relation >& correspondences,
 	     const map< unsigned int, NamedNode >& nodes_,
+	     const vector< NamedNode > display_nodes_,
 	     double walk_limit_for_changes_)
     : what_calls_here(), nodes(nodes_),
+      display_nodes(display_nodes_),
       walk_limit_for_changes(walk_limit_for_changes_)
     {
       // create the dictionary bus_stop -> ref
@@ -863,8 +893,21 @@ struct Correspondence_Data
       return result;
     }
     
+    set< RelationHumanId >& display_nodes_at
+    (const NamedNode& nnode, set< RelationHumanId >& result) const
+    {
+      for (vector< NamedNode >::const_iterator it(display_nodes.begin());
+      it != display_nodes.end(); ++it)
+      {
+	if (spat_distance(nnode, *it) < walk_limit_for_changes)
+	  result.insert(RelationHumanId(it->name, "#777777"));
+      }
+      return result;
+    }
+    
     map< unsigned int, set< RelationHumanId > > what_calls_here;
     const map< unsigned int, NamedNode >& nodes;
+    vector< NamedNode > display_nodes;
     const double walk_limit_for_changes;
 };
 
@@ -886,6 +929,7 @@ struct Stoplist
 	  stop.used_by[rel_index] = mode;
 	
 	set< RelationHumanId > cors(cors_data.correspondences_at(nnode));
+	cors_data.display_nodes_at(nnode, cors);
 	stop.correspondences.insert(cors.begin(), cors.end());
       }
     }
@@ -909,6 +953,13 @@ struct Stoplist
     }
     
     list< Stop > stops;
+};
+
+struct Display_Class
+{
+  string key;
+  string value;
+  string text;
 };
 
 int process_relation
@@ -1052,6 +1103,8 @@ unsigned int id;
 
 vector< Relation > relations;
 vector< Relation > correspondences;
+vector< Display_Class > display_classes;
+vector< NamedNode > display_nodes;
 string pivot_ref;
 string pivot_network;
 Relation relation;
@@ -1154,6 +1207,16 @@ void start(const char *el, const char **attr)
 	colon_found = value.find(";", pos);
       }
       parse_timespans(relation.opening_hours, value.substr(pos));
+    }
+    for (vector< Display_Class >::const_iterator it(display_classes.begin());
+	it != display_classes.end(); ++it)
+    {
+      if ((key == it->key) && ((it->value == "") || (value == it->value)))
+      {
+	NamedNode dnode(nnode);
+	dnode.name = it->text;
+	display_nodes.push_back(dnode);
+      }
     }
   }
   else if (!strcmp(el, "node"))
@@ -1294,6 +1357,14 @@ void options_start(const char *el, const char **attr)
 	force_rows = atoi(attr[i+1]);
     }
   }
+  else if (!strcmp(el, "correspondences"))
+  {
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "limit"))
+	walk_limit_for_changes = atof(attr[i+1]);
+    }
+  }
   else if (!strcmp(el, "max-correspondences"))
   {
     string expr, to;
@@ -1304,6 +1375,20 @@ void options_start(const char *el, const char **attr)
       if (!strcmp(attr[i], "below"))
 	max_correspondences_below = atoi(attr[i+1]);
     }
+  }
+  else if (!strcmp(el, "display"))
+  {
+    Display_Class dc;
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "k"))
+	dc.key = attr[i+1];
+      if (!strcmp(attr[i], "v"))
+	dc.value = attr[i+1];
+      if (!strcmp(attr[i], "text"))
+	dc.text = attr[i+1];
+    }
+    display_classes.push_back(dc);
   }
 }
 
@@ -1411,7 +1496,8 @@ int main(int argc, char *argv[])
   }
 
   // initialise complex data structures
-  Correspondence_Data cors_data(correspondences, nodes, walk_limit_for_changes);
+  Correspondence_Data cors_data
+      (correspondences, nodes, display_nodes, walk_limit_for_changes);
   Stoplist stoplist;
   Stop::used_by_size = relations.size();
   
@@ -2199,8 +2285,8 @@ int main(int argc, char *argv[])
       {
 	// add correspondences below the line bar
 	unsigned int i(0);
-	for (set< RelationHumanId >::const_iterator cit(it->correspondences.begin());
-	cit != it->correspondences.end(); ++cit)
+	for (vector< RelationHumanId >::const_iterator cit(correspondences.begin());
+	cit != correspondences.end(); ++cit)
 	{
 	  result<<Replacer< string >("$ref;", cit->ref).apply
 	  (Replacer< string >("$color;", cit->color).apply
@@ -2217,8 +2303,8 @@ int main(int argc, char *argv[])
 	string corr_buf("");
 	unsigned int corr_count(0);
 	pos += sqrt(2.0)*stop_font_size;
-	for (set< RelationHumanId >::const_iterator cit(it->correspondences.begin());
-	cit != it->correspondences.end(); ++cit)
+	for (vector< RelationHumanId >::const_iterator cit(correspondences.begin());
+	cit != correspondences.end(); ++cit)
 	{
 	  corr_buf += Replacer< double >("$offset;", stop_font_size/2.0).apply
 	      (Replacer< string >("$ref;", cit->ref).apply
