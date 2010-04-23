@@ -142,6 +142,8 @@ void fill_db
    const map< IntIndex, set< IntObject > >& to_insert,
    unsigned int step)
 {
+  remove((get_file_base_name(0) + get_index_suffix(0)).c_str());
+  remove((get_file_base_name(0) + get_data_suffix(0)).c_str());
   try
   {
     Block_Backend< IntIndex, IntObject > db_backend(0, true);
@@ -402,9 +404,9 @@ int main(int argc, char* args[])
   to_delete.clear();
   to_insert.clear();
   objects.clear();
-  for (unsigned int i(0); i < 100; ++i)
-    objects.insert(IntObject(i*100 + 124));
-  to_insert[24] = objects;
+  for (unsigned int i(0); i < 200; ++i)
+    objects.insert(IntObject(i*100 + 150));
+  to_insert[50] = objects;
   
   fill_db(to_delete, to_insert, 14);
   read_test(15);

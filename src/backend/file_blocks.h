@@ -217,6 +217,11 @@ struct File_Blocks_Iterator
     }
     return *this;
   }
+  
+  const TIndex& index()
+  {
+    return block_it->index;
+  }
 
   TIterator* index_it;
   typename list< File_Block_Index_Entry< TIndex > >::iterator block_it;

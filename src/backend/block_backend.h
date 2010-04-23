@@ -126,9 +126,6 @@ struct Block_Backend_Iterator
       buffer(0), block_size(block_size_), pos(0), current_idx_pos(0), current_index(0), current_object(0)
   {
     buffer = (uint8*)malloc(block_size);
-    if (buffer != 0)
-      free(buffer);
-    buffer = 0;
     if (read_block())
       return;
     while (true)
@@ -263,7 +260,7 @@ struct Block_Backend_Iterator
   const TIndex& index()
   {
     if (current_index == 0)
-      current_index = new TIndex((void*)(current_index + 4));
+      current_index = new TIndex((void*)(current_idx_pos + 1));
     return *current_index;
   }
   
@@ -504,7 +501,7 @@ struct Block_Backend_Range_Iterator
   const TIndex& index()
   {
     if (current_index == 0)
-      current_index = new TIndex((void*)(current_index + 4));
+      current_index = new TIndex((void*)(current_idx_pos + 1));
     return *current_index;
   }
   
@@ -643,8 +640,6 @@ struct Block_Backend
       (const map< TIndex, set< TObject > >& to_delete,
        const map< TIndex, set< TObject > >& to_insert)
   {
-    return;
-    
     set< TIndex > relevant_idxs;
     for (typename map< TIndex, set< TObject > >::const_iterator
         it(to_delete.begin()); it != to_delete.end(); ++it)
@@ -662,7 +657,8 @@ struct Block_Backend
 
     if (file_it == file_blocks.end())
     {
-      // TODO: kein Block
+      if (!to_insert.empty())
+	create_from_scratch(to_insert);
       return;
     }
     typename File_Blocks
@@ -670,13 +666,147 @@ struct Block_Backend
 	  typename set< TIndex >::const_iterator,
 	  Default_Range_Iterator< TIndex > >::Iterator
       file_it_2(file_it);
-    //TODO
+    while (!(file_it_2 == file_blocks.end()))
+    {
+      if (file_it.index() == file_it_2.index())
+      {
+	//TODO
+	TIndex current_idx(file_it.index());
+	while ((!(file_it_2 == file_blocks.end())) && (current_idx == file_it_2.index()))
+	{
+	  ++file_it;
+	  ++file_it_2;
+	}
+      }
+      else
+      {
+	//TODO
+	++file_it;
+	++file_it_2;
+      }
+    }
   }
   
 private:
   File_Blocks< TIndex, typename set< TIndex >::const_iterator, Default_Range_Iterator< TIndex > >
     file_blocks;
   uint32 block_size;
+  
+  void calc_split_idxs
+      (vector< typename map< TIndex, set< TObject > >::const_iterator >& split,
+       const vector< uint32 >& sizes,
+       const map< TIndex, set< TObject > >& data)
+  {
+    //TODO: This is just a greedy algorithm and should be replace by something smarter
+    vector< uint > vsplit;
+    uint32 pos(4);
+    for (uint i(0); i < sizes.size(); ++i)
+    {
+      pos += sizes[i];
+      if (pos <= block_size)
+	continue;
+      if (i == 0)
+	continue;
+      vsplit.push_back(i-1);
+      pos = 4 + sizes[i];
+    }
+    
+    // This converts the result in a more convienient form
+    uint i(0), j(0);
+    typename map< TIndex, set< TObject > >::const_iterator it(data.begin());
+    while ((j < vsplit.size()) && (it != data.end()))
+    {
+      if (vsplit[j] == i)
+      {
+	split.push_back(it);
+	++j;
+      }
+      ++i;
+      ++it;
+    }
+    split.push_back(data.end());
+  }
+  
+  void create_from_scratch
+      (const map< TIndex, set< TObject > >& to_insert)
+  {
+    // compute the distribution over different blocks
+    map< TIndex, uint32 > sizes;
+    vector< uint32 > vsizes;
+    for (typename map< TIndex, set< TObject > >::const_iterator it(to_insert.begin());
+	 it != to_insert.end(); ++it)
+    {
+      // only add nonempty indices
+      if (it->second.empty())
+	continue;
+      
+      uint32 current_size(4);
+      current_size += it->first.size_of();
+      for (typename set< TObject >::const_iterator it2(it->second.begin());
+	   it2 != it->second.end(); ++it2)
+	current_size += it2->size_of();
+      
+      sizes[it->first] = current_size;
+      vsizes.push_back(current_size);
+    }
+    vector< typename map< TIndex, set< TObject > >::const_iterator > split;
+    calc_split_idxs(split, vsizes, to_insert);
+    
+    // really write data
+    uint8* buffer = (uint8*)malloc(block_size);
+    typename map< TIndex, set< TObject > >::const_iterator idx_it(to_insert.begin());
+    typename set< TObject >::const_iterator obj_it(idx_it->second.begin());
+    for (typename vector< typename map< TIndex, set< TObject > >::const_iterator >::const_iterator
+	 split_it(split.begin()); split_it != split.end(); ++split_it)
+    {
+      uint32 pos(4), max_size(0);
+      if (sizes[idx_it->first] <= block_size - 4)
+      {
+	for (; idx_it != *split_it; ++idx_it)
+	{
+	  if (sizes[idx_it->first] == 0)
+	    continue;
+	  if (sizes[idx_it->first] > max_size)
+	    max_size = sizes[idx_it->first];
+	  *(uint32*)(buffer + pos) = pos + sizes[idx_it->first];
+	  pos += 4;
+	  idx_it->first.to_data(buffer + pos);
+	  pos += idx_it->first.size_of();
+	  for (typename set< TObject >::const_iterator it2(idx_it->second.begin());
+	       it2 != idx_it->second.end(); ++it2)
+	  {
+	    it2->to_data(buffer + pos);
+	    pos += it2->size_of();
+	  }
+	}
+	*(uint32*)buffer = pos;
+      }
+      else
+      {
+	pos += 4;
+	idx_it->first.to_data(buffer + pos);
+	pos += idx_it->first.size_of();	
+	for (typename set< TObject >::const_iterator it2(idx_it->second.begin());
+		    it2 != idx_it->second.end(); ++it2)
+	{
+	  if (pos + it2->size_of() > block_size)
+	  {
+	    *(uint32*)buffer = pos;
+	    *(uint32*)(buffer + 4) = pos;
+	    file_blocks.insert_block(file_blocks.end(), buffer, max_size);
+	    pos = 8 + idx_it->first.size_of();
+	  }
+	  it2->to_data(buffer + pos);
+	  pos += it2->size_of();
+	}
+	++idx_it;
+	*(uint32*)buffer = pos;
+	*(uint32*)(buffer + 4) = pos;
+      }
+      file_blocks.insert_block(file_blocks.end(), buffer, max_size);
+    }
+    free(buffer);
+  }
 };
 
 #endif
