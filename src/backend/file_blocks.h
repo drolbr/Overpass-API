@@ -365,6 +365,10 @@ struct File_Blocks
   typedef File_Blocks_Iterator< TIndex, TIterator > Iterator;
   typedef File_Blocks_Range_Iterator< TIndex, TRangeIterator > Range_Iterator;
   
+private:
+  File_Blocks(const File_Blocks& f) {}
+  
+public:
   File_Blocks(int32 FILE_PROPERTIES, bool writeable)
   {
     index_file_name = get_file_base_name(FILE_PROPERTIES) + get_index_suffix(FILE_PROPERTIES);

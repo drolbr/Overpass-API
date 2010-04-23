@@ -110,8 +110,8 @@ template< class TIndex, class TObject, class TIterator >
 struct Block_Backend_Iterator
 {
   Block_Backend_Iterator
-      (File_Blocks< TIndex, typename set< TIndex >::const_iterator,
-           Default_Range_Iterator< TIndex > > file_blocks_,
+      (const File_Blocks< TIndex, typename set< TIndex >::const_iterator,
+           Default_Range_Iterator< TIndex > >& file_blocks_,
        typename File_Blocks
           < TIndex,
             typename set< TIndex >::const_iterator,
@@ -126,6 +126,9 @@ struct Block_Backend_Iterator
       buffer(0), block_size(block_size_), pos(0), current_idx_pos(0), current_index(0), current_object(0)
   {
     buffer = (uint8*)malloc(block_size);
+    if (buffer != 0)
+      free(buffer);
+    buffer = 0;
     if (read_block())
       return;
     while (true)
@@ -140,8 +143,8 @@ struct Block_Backend_Iterator
   }
   
   Block_Backend_Iterator
-      (File_Blocks< TIndex, typename set< TIndex >::const_iterator,
-           Default_Range_Iterator< TIndex > > file_blocks_,
+      (const File_Blocks< TIndex, typename set< TIndex >::const_iterator,
+           Default_Range_Iterator< TIndex > >& file_blocks_,
        typename File_Blocks
           < TIndex,
             typename set< TIndex >::const_iterator,
@@ -182,9 +185,12 @@ struct Block_Backend_Iterator
       index_it = new typename set< TIndex >::const_iterator(*it.index_it);
     if (it.index_end != 0)
       index_end = new typename set< TIndex >::const_iterator(*it.index_end);
-    buffer = (uint8*)malloc(block_size);
-    memcpy(buffer, it.buffer, block_size);
-    current_idx_pos = (uint32*)(buffer + ((uint32)it.current_idx_pos - (uint32)it.buffer));
+    if (it.buffer != 0)
+    {
+      buffer = (uint8*)malloc(block_size);
+      memcpy(buffer, it.buffer, block_size);
+      current_idx_pos = (uint32*)(buffer + ((uint32)it.current_idx_pos - (uint32)it.buffer));
+    }
   }
   
   ~Block_Backend_Iterator()
@@ -217,7 +223,8 @@ struct Block_Backend_Iterator
   
   bool operator==(const Block_Backend_Iterator& it) const
   {
-    return ((pos == it.pos) && (file_it == it.file_it));
+    bool res((pos == it.pos) && (file_it == it.file_it));
+    return (res);
   }
   
   const Block_Backend_Iterator& operator++()
@@ -281,7 +288,6 @@ struct Block_Backend_Iterator
     file_end;
   typename set< TIndex >::const_iterator* index_it;
   typename set< TIndex >::const_iterator* index_end;
-  uint8* buffer;
   uint32 block_size;
   uint32 pos;
   uint32* current_idx_pos;
@@ -289,6 +295,8 @@ struct Block_Backend_Iterator
   TObject* current_object;
   
 private:
+  uint8* buffer;
+  
   // returns true if we have found something
   bool search_next_index()
   {
@@ -335,7 +343,7 @@ private:
     // we need to load a new block
     if (file_it == file_end)
     {
-        // there is no block left
+      // there is no block left
       pos = 0;
       return true;
     }
@@ -350,8 +358,8 @@ template< class TIndex, class TObject, class TRangeIterator >
 struct Block_Backend_Range_Iterator
 {
   Block_Backend_Range_Iterator
-      (File_Blocks< TIndex, typename set< TIndex >::const_iterator,
-           Default_Range_Iterator< TIndex > > file_blocks_,
+      (const File_Blocks< TIndex, typename set< TIndex >::const_iterator,
+           Default_Range_Iterator< TIndex > >& file_blocks_,
        typename File_Blocks
           < TIndex,
             typename set< TIndex >::const_iterator,
@@ -380,8 +388,8 @@ struct Block_Backend_Range_Iterator
   }
   
   Block_Backend_Range_Iterator
-      (File_Blocks< TIndex, typename set< TIndex >::const_iterator,
-           Default_Range_Iterator< TIndex > > file_blocks_,
+      (const File_Blocks< TIndex, typename set< TIndex >::const_iterator,
+           Default_Range_Iterator< TIndex > >& file_blocks_,
        typename File_Blocks
           < TIndex,
             typename set< TIndex >::const_iterator,
@@ -635,13 +643,15 @@ struct Block_Backend
       (const map< TIndex, set< TObject > >& to_delete,
        const map< TIndex, set< TObject > >& to_insert)
   {
+    return;
+    
     set< TIndex > relevant_idxs;
     for (typename map< TIndex, set< TObject > >::const_iterator
         it(to_delete.begin()); it != to_delete.end(); ++it)
       relevant_idxs.insert(it->first);
     for (typename map< TIndex, set< TObject > >::const_iterator
         it(to_insert.begin()); it != to_insert.end(); ++it)
-      relevant_idxs.insert(it->first);	
+      relevant_idxs.insert(it->first);
     
     typename File_Blocks
         < TIndex,
