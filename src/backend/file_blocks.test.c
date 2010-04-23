@@ -73,11 +73,28 @@ struct IntIndex
 
 typedef list< IntIndex >::const_iterator IntIterator;
 
+struct IntRangeIterator : list< pair< IntIndex, IntIndex > >::const_iterator
+{
+  IntRangeIterator
+    (const list< pair< IntIndex, IntIndex > >::const_iterator it)
+    : list< pair< IntIndex, IntIndex > >::const_iterator(it) {}
+  
+  const IntIndex& lower_bound() const
+  {
+    return (*this)->first;
+  }
+  
+  const IntIndex& upper_bound() const
+  {
+    return (*this)->second;
+  }
+};
+
 //-----------------------------------------------------------------------------
 
 void read_loop
-  (File_Blocks< IntIndex, IntIterator >& blocks,
-   File_Blocks< IntIndex, IntIterator >::Iterator& it)
+  (File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
+   File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Iterator& it)
 {
   while (!(it == blocks.end()))
   {
@@ -98,12 +115,35 @@ void read_loop
   }
 }
 
-void read_test(File_Blocks< IntIndex, IntIterator >& blocks)
+void read_loop
+  (File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
+   File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Range_Iterator& it)
+{
+  while (!(it == blocks.range_end()))
+  {
+    cout<<"Predicted size "<<blocks.answer_size(it);
+    uint8* data((uint8*)(blocks.read_block(it)));
+    cout<<", real size "<<(*(uint32*)data)<<" bytes, "
+    <<"first block size "<<*(uint32*)(data+sizeof(uint32))<<" bytes, "
+    <<"first index "<<*(uint32*)(data+2*sizeof(uint32));
+    if (*(uint32*)(data+sizeof(uint32)) < (*(uint32*)data)-sizeof(uint32))
+    {
+      uint8* pos(data+sizeof(uint32));
+      pos += *(uint32*)pos;
+      cout<<", second block size "<<(*(uint32*)pos)<<" bytes, "
+      <<"second index "<<*(uint32*)(pos+sizeof(uint32));
+    }
+    cout<<'\n';
+    ++it;
+  }
+}
+
+void read_test(File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks)
 {
   cout<<"Read test\n";
   
   cout<<"Reading all blocks ...\n";
-  File_Blocks< IntIndex, IntIterator >::Iterator it(blocks.begin());
+  File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Iterator it(blocks.begin());
   read_loop(blocks, it);
   cout<<"... all blocks read.\n";
 
@@ -122,6 +162,16 @@ void read_test(File_Blocks< IntIndex, IntIterator >& blocks)
   it = blocks.select_blocks(index_list.begin(), index_list.end());
   read_loop(blocks, it);
   cout<<"... all blocks read.\n";
+
+  list< pair< IntIndex, IntIndex > > range_list;
+  uint32 fool(0), foou(10);
+  range_list.push_back(make_pair(IntIndex(&fool), IntIndex(&foou)));
+  cout<<"Reading blocks with indices [0, 10[ ...\n";
+  File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Range_Iterator
+    rit(blocks.select_blocks
+      (IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end())));
+  read_loop(blocks, rit);
+  cout<<"... all blocks read.\n";
   
   index_list.clear();
   for (unsigned int i(90); i < 100; ++i)
@@ -131,12 +181,48 @@ void read_test(File_Blocks< IntIndex, IntIterator >& blocks)
   read_loop(blocks, it);
   cout<<"... all blocks read.\n";
   
+  range_list.clear();
+  fool = 90;
+  foou = 100;
+  range_list.push_back(make_pair(IntIndex(&fool), IntIndex(&foou)));
+  cout<<"Reading blocks with indices [90, 100[ ...\n";
+  rit = blocks.select_blocks
+    (IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end()));
+  read_loop(blocks, rit);
+  cout<<"... all blocks read.\n";
+  
   index_list.clear();
   uint32 foo(50);
   index_list.push_back(&foo);
   cout<<"Reading blocks with index 50 ...\n";
   it = blocks.select_blocks(index_list.begin(), index_list.end());
   read_loop(blocks, it);
+  cout<<"... all blocks read.\n";
+  
+  range_list.clear();
+  fool = 50;
+  foou = 51;
+  range_list.push_back(make_pair(IntIndex(&fool), IntIndex(&foou)));
+  cout<<"Reading blocks with indices [50, 51[ ...\n";
+  rit = blocks.select_blocks
+    (IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end()));
+  read_loop(blocks, rit);
+  cout<<"... all blocks read.\n";
+  
+  range_list.clear();
+  fool = 0;
+  foou = 10;
+  range_list.push_back(make_pair(IntIndex(&fool), IntIndex(&foou)));
+  fool = 50;
+  foou = 51;
+  range_list.push_back(make_pair(IntIndex(&fool), IntIndex(&foou)));
+  fool = 90;
+  foou = 100;
+  range_list.push_back(make_pair(IntIndex(&fool), IntIndex(&foou)));
+  cout<<"Reading blocks with indices [0,10[\\cup [50, 51[\\cup [90, 100[ ...\n";
+  rit = blocks.select_blocks
+    (IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end()));
+  read_loop(blocks, rit);
   cout<<"... all blocks read.\n";
   
   index_list.clear();
@@ -182,7 +268,7 @@ int main(int argc, char* args[])
   remove((get_file_base_name(0) + get_data_suffix(0)).c_str());
   try
   {
-    File_Blocks< IntIndex, IntIterator > blocks(0, false);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, false);
     read_test(blocks);
   }
   catch (File_Error e)
@@ -203,7 +289,7 @@ int main(int argc, char* args[])
   close(index_fd);
   try
   {
-    File_Blocks< IntIndex, IntIterator > blocks(0, false);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, false);
     read_test(blocks);
   }
   catch (File_Error e)
@@ -216,7 +302,7 @@ int main(int argc, char* args[])
   cout<<"** Test the behaviour for a file with one entry - part 1\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator > blocks(0, true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
     list< uint32 > indices;
     
     indices.clear();
@@ -235,7 +321,7 @@ int main(int argc, char* args[])
   }
   try
   {
-    File_Blocks< IntIndex, IntIterator > blocks(0, false);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, false);
     read_test(blocks);
   }
   catch (File_Error e)
@@ -248,7 +334,7 @@ int main(int argc, char* args[])
   cout<<"** Test the behaviour for a file with one entry - part 2\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator > blocks(0, true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
     list< uint32 > indices;
     
     indices.clear();
@@ -266,7 +352,7 @@ int main(int argc, char* args[])
   }
   try
   {
-    File_Blocks< IntIndex, IntIterator > blocks(0, false);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, false);
     read_test(blocks);
   }
   catch (File_Error e)
@@ -279,7 +365,7 @@ int main(int argc, char* args[])
   cout<<"** Test the behaviour if the only block has been deleted\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator > blocks(0, true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
     list< uint32 > indices;
     
     indices.clear();
@@ -296,7 +382,7 @@ int main(int argc, char* args[])
   }
   try
   {
-    File_Blocks< IntIndex, IntIterator > blocks(0, false);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, false);
     read_test(blocks);
   }
   catch (File_Error e)
@@ -309,7 +395,7 @@ int main(int argc, char* args[])
   cout<<"** Test the behaviour for a file with one entry - part 3\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator > blocks(0, true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
     list< uint32 > indices;
     
     indices.clear();
@@ -327,7 +413,7 @@ int main(int argc, char* args[])
   }
   try
   {
-    File_Blocks< IntIndex, IntIterator > blocks(0, false);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, false);
     read_test(blocks);
   }
   catch (File_Error e)
@@ -340,7 +426,7 @@ int main(int argc, char* args[])
   cout<<"** Test the behaviour for a file with several blocks - part 1\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator > blocks(0, true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
     list< uint32 > indices;
     
     indices.clear();
@@ -365,7 +451,7 @@ int main(int argc, char* args[])
   }
   try
   {
-    File_Blocks< IntIndex, IntIterator > blocks(0, false);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, false);
     read_test(blocks);
   }
   catch (File_Error e)
@@ -378,7 +464,7 @@ int main(int argc, char* args[])
   cout<<"** Test the behaviour for a file with several blocks - part 2\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator > blocks(0, true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
     list< uint32 > indices;
     
     indices.clear();
@@ -386,12 +472,12 @@ int main(int argc, char* args[])
     indices.push_back(46);
     void* buf = malloc(get_block_size(0));
     uint32 max_keysize(prepare_block(buf, indices));
-    blocks.insert_block(blocks.begin(), buf, max_keysize);
+    blocks.replace_block(blocks.begin(), buf, max_keysize);
     free(buf);
     
     indices.clear();
-    indices.push_back(54);
     indices.push_back(55);
+    indices.push_back(56);
     buf = malloc(get_block_size(0));
     max_keysize = prepare_block(buf, indices);
     blocks.insert_block(blocks.end(), buf, max_keysize);
@@ -405,7 +491,7 @@ int main(int argc, char* args[])
   }
   try
   {
-    File_Blocks< IntIndex, IntIterator > blocks(0, false);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, false);
     read_test(blocks);
   }
   catch (File_Error e)

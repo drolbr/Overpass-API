@@ -1,0 +1,54 @@
+nodes: Index = LL_upper, Object = Id LL_lower
+node_tags_global: Index = (Key Value), Object = LL_upper Id
+node_tags_local: Index = (LL_upper_24 Key Value), Object = Id
+ways: Index = LL_upper, Object = Id Count (Node-Id)*
+way_tags_global: Index = (Key Value), Object = LL_upper Id
+way_tags_local: Index = (LL_upper_24 Key Value), Object = Id
+relations: Index = LL_upper, Object = Id Count (Type Id Role-Id)*
+relation_tags_global: Index = (Key Value), Object = LL_upper Id
+relation_tags_local: Index = (LL_upper_24 Key Value), Object = Id
+
+area-query
+bbox-query
+filter
+query
+recurse
+print
+
+import
+update
+
+0, f96, 260a, 3276, 348c, 34ce
+
+void update(const map< TIndex, map< TObject > >& to_delete,
+  const map< TIndex, map< TObject > >& to_insert);
+
+update: 3 Fälle
+a) leerer Bestand
+b) 1 Block Bestand, ggf. mehrere Blöcke neu
+c) mehrere Blöcke Bestand
+
+a)+b) erfordern Algorithmus zur Blockteilung:
+- Verwende stets höchstens so viele Blöcke wie nötig, verteile so gleichmäßig wie möglich.
+- Wenn zwei aufeinanderfolgende Indizes nicht zusammen in einen Block passen, muss dazwischen geteilt werden.
+- Minimal mögliche Anzahl an Blöcken kann per Greedy ermittelt werden.
+- Heuristik: fülle von hinten nach vorne jeweils bis zum Durchschnitt auf
+
+calc_split_idxs(vector< TIndex >& split, const map< TIndex, int32 >& sizes);
+
+benötigt: TObject.sizeof()
+Größenberechnung: Tindex.sizeof() + sizeof(uint32) + \sum TObject.sizeof()
+
+bei a)
+- berechne die Indexgrößen allein aus den Neuzugängen
+- schreibe alle Blöcke mittels insert_block(end)
+
+bei b)
+- berücksichtigte Bestandsdaten, Löschungen und Neuzugänge für Indexgrößen
+- achte auf Indizes, die nicht mehr existieren
+- schreibe alle bis auf den letzten Block mittels insert_block(it), dann replace_block(it)
+
+bei c)
+- fülle Blöcke mit Löschungen mit Neudaten auf, sofern möglich
+- fülle den letzten Block auf, also replace_block bzw. insert_block
+- wenn etwas übrig bleibt, hänge einen Block an, also replace_block und insert_block davor

@@ -1,6 +1,6 @@
 grep -A 1 "<a id=\"chapter" index.html | awk "{ RS=\"--\"; match(\$0, \"\\\".*\\\"\"); TARGET=substr(\$0, RSTART+1, RLENGTH-2); match(\$0, \"<h.>.*</h.>\"); TEXT=substr(\$0, RSTART+4, RLENGTH-9); print \"<a href=\\\"#\"TARGET\"\\\">\"TEXT\"</a> - \"; }"
 
-grep -A 1 "<a id=" index.html | awk "{ RS=\"--\"; match(\$0, \"\\\".*\\\"\"); TARGET=substr(\$0, RSTART+1, RLENGTH-2); match(\$0, \"<h.>.*</h.>\"); TEXT=substr(\$0, RSTART+4, RLENGTH-9); if (substr(\$0, 9, 7) == \"chapter\") INDENT=\"\"; else INDENT=\"&nbsp;&nbsp;&nbsp;&nbsp;\"; print INDENT\"<a href=\\\"#\"TARGET\"\\\">\"TEXT\"</a><br/>\"; }"
+grep -A 1 "<a id=" index.html | awk "{ RS=\"--\"; match(\$0, \"\\\".*\\\"\"); TARGET=substr(\$0, RSTART+1, RLENGTH-2); match(\$0, \"<h.>.*</h.>\"); TEXT=substr(\$0, RSTART+4, RLENGTH-9); if (substr(\$0, 9, 7) == \"chapter\") INDENT=\"\"; else if (substr(\$0, 9, 7) == \"section\") INDENT=\"&nbsp;&nbsp;&nbsp;&nbsp;\"; else INDENT=\"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\"; print INDENT\"<a href=\\\"#\"TARGET\"\\\">\"TEXT\"</a><br/>\"; }"
 
 grep -A 1 "<a id=" index.html | awk "{ RS=\"--\"; match(\$0, \"\\\".*\\\"\"); TARGET=substr(\$0, RSTART+1, RLENGTH-2); match(\$0, \"<h.>.*</h.>\"); TEXT=substr(\$0, RSTART+4, RLENGTH-9); print \"<a href=\\\"#\"TARGET\"\\\">\"TEXT\"</a><br/>\"; }"
 
