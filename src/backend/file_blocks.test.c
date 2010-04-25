@@ -86,6 +86,8 @@ typedef list< IntIndex >::const_iterator IntIterator;
 
 struct IntRangeIterator : list< pair< IntIndex, IntIndex > >::const_iterator
 {
+  IntRangeIterator() {}
+  
   IntRangeIterator
     (const list< pair< IntIndex, IntIndex > >::const_iterator it)
     : list< pair< IntIndex, IntIndex > >::const_iterator(it) {}
@@ -204,7 +206,7 @@ void read_test(File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks)
   range_list.push_back(make_pair(IntIndex(&fool), IntIndex(&foou)));
   cout<<"Reading blocks with indices [0, 10[ ...\n";
   File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Range_Iterator
-    rit(blocks.select_blocks
+    rit(blocks.range_begin
       (IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end())));
   read_loop(blocks, rit);
   cout<<"... all blocks read.\n";
@@ -222,7 +224,7 @@ void read_test(File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks)
   foou = 100;
   range_list.push_back(make_pair(IntIndex(&fool), IntIndex(&foou)));
   cout<<"Reading blocks with indices [90, 100[ ...\n";
-  rit = blocks.select_blocks
+  rit = blocks.range_begin
     (IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end()));
   read_loop(blocks, rit);
   cout<<"... all blocks read.\n";
@@ -240,7 +242,7 @@ void read_test(File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks)
   foou = 51;
   range_list.push_back(make_pair(IntIndex(&fool), IntIndex(&foou)));
   cout<<"Reading blocks with indices [50, 51[ ...\n";
-  rit = blocks.select_blocks
+  rit = blocks.range_begin
     (IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end()));
   read_loop(blocks, rit);
   cout<<"... all blocks read.\n";
@@ -256,7 +258,7 @@ void read_test(File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks)
   foou = 100;
   range_list.push_back(make_pair(IntIndex(&fool), IntIndex(&foou)));
   cout<<"Reading blocks with indices [0,10[\\cup [50, 51[\\cup [90, 100[ ...\n";
-  rit = blocks.select_blocks
+  rit = blocks.range_begin
     (IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end()));
   read_loop(blocks, rit);
   cout<<"... all blocks read.\n";

@@ -329,88 +329,35 @@ private:
 };
 
 template< class TIndex, class TRangeIterator >
-struct File_Blocks_Range_Iterator
+struct File_Blocks_Range_Iterator : File_Blocks_Basic_Iterator< TIndex >
 {
   File_Blocks_Range_Iterator
-      (typename list< File_Block_Index_Entry< TIndex > >::iterator begin,
-       typename list< File_Block_Index_Entry< TIndex > >::iterator end)
-         : block_it(begin), block_end(end), index_it(0), index_end(0) {}
-   
-  File_Blocks_Range_Iterator
-       (TRangeIterator const& idx_it,
-        typename list< File_Block_Index_Entry< TIndex > >::iterator begin,
-        TRangeIterator const& idx_end,
-        typename list< File_Block_Index_Entry< TIndex > >::iterator end)
-          : index_it(0), block_it(begin), index_end(0), block_end(end)
+      (const typename list< File_Block_Index_Entry< TIndex > >::iterator& begin,
+       const typename list< File_Block_Index_Entry< TIndex > >::iterator& end,
+       const TRangeIterator& index_it_,  const TRangeIterator& index_end_)
+    : File_Blocks_Basic_Iterator< TIndex >(begin, end),
+      index_it(index_it_), index_end(index_end_)
   {
-    index_it = new TRangeIterator(idx_it);
-    index_end = new TRangeIterator(idx_end);
-    
-    if (block_it == block_end)
-      return;
-    if (*index_it == *index_end)
-    {
-      block_it = block_end;
-      return;
-    }
-    if (!(block_it->index < index_it->lower_bound()))
-      return;
-    typename list< File_Block_Index_Entry< TIndex > >::iterator
-    next_block(block_it);
-    ++next_block;
-    
-    // The right block fulfills
-    //   block_it == index_it->lower || block_it < index_it->lower < next_block
-    while ((next_block != block_end) &&
-      (!(index_it->lower_bound() < next_block->index)))
-    {
-      ++block_it;
-      if (!(block_it->index < index_it->lower_bound()))
-	return;
-      ++next_block;
-    }
+    find_next_block();
   }
+  
+  File_Blocks_Range_Iterator
+      (const typename list< File_Block_Index_Entry< TIndex > >::iterator& end)
+    : File_Blocks_Basic_Iterator< TIndex >(end, end) {}
   
   File_Blocks_Range_Iterator(const File_Blocks_Range_Iterator& a)
-    : index_it(a.index_it), block_it(a.block_it),
-      index_end(a.index_end), block_end(a.block_end)
-  {
-    if (index_it != 0)
-      index_it = new TRangeIterator(*index_it);
-    if (index_end != 0)
-      index_end = new TRangeIterator(*index_end);
+    : File_Blocks_Basic_Iterator< TIndex >(a.block_it, a.block_end),
+      index_it(a.index_it), index_end(a.index_end) {}
     
-    block_it = a.block_it;
-    block_end = a.block_end;
-  }
-  
-  ~File_Blocks_Range_Iterator()
+  ~File_Blocks_Range_Iterator() {}
+    
+  const File_Blocks_Range_Iterator& operator=
+      (const File_Blocks_Range_Iterator& a)
   {
-    if (index_it != 0)
-      delete index_it;
-    if (index_end != 0)
-      delete index_end;
-  }
-  
-  const File_Blocks_Range_Iterator& operator=(const File_Blocks_Range_Iterator& b)
-  {
-    if (this == &b)
+    if (this == &a)
       return *this;
-    
-    if (index_it != 0)
-      delete index_it;
-    if (index_end != 0)
-      delete index_end;
-    index_it = 0;
-    index_end = 0;
-    
-    if (b.index_it != 0)
-      this->index_it = new TRangeIterator(*(b.index_it));
-    if (b.index_end != 0)
-      this->index_end = new TRangeIterator(*(b.index_end));
-    
-    block_it = b.block_it;
-    block_end = b.block_end;
+    this->~File_Blocks_Range_Iterator();
+    new (this) File_Blocks_Range_Iterator(a);
   }
   
   bool operator==(const File_Blocks_Range_Iterator& b) const
@@ -420,46 +367,53 @@ struct File_Blocks_Range_Iterator
   
   File_Blocks_Range_Iterator& operator++()
   {
-    ++block_it;
-    if (index_it == 0)
-      return *this;
-    
-    if (block_it == block_end)
-      return *this;
-    if (block_it->index < index_it->upper_bound())
-      return *this;
-    while ((*index_it != *index_end) &&
-      (!(block_it->index < index_it->upper_bound())))
-      ++(*index_it);
-    if (*index_it == *index_end)
-    {
-      block_it = block_end;
-      return *this;
-    }
-    if (!(block_it->index < index_it->upper_bound()))
-      return *this;
-    typename list< File_Block_Index_Entry< TIndex > >::iterator
-      next_block(block_it);
-    ++next_block;
-    
-    // The right block fulfills
-    //   block_it == index_it || block_it < index_it < next_block
-    while ((next_block != block_end) &&
-      (!(index_it->lower_bound() < next_block->index)))
-    {
-      ++block_it;
-      if (!(block_it->index < index_it->lower_bound()))
-	return *this;
-      ++next_block;
-    }
+    ++(this->block_it);
+    find_next_block();
     return *this;
   }
   
-  typename list< File_Block_Index_Entry< TIndex > >::iterator block_it;
-  typename list< File_Block_Index_Entry< TIndex > >::iterator block_end;
-  
-  TRangeIterator* index_it;
-  TRangeIterator* index_end;
+private:
+  TRangeIterator index_it;
+  TRangeIterator index_end;
+
+  void find_next_block()
+  {
+    if (this->block_it == this->block_end)
+      // We are done - there are no more file blocks left
+      return;
+    
+    while (true)
+    {
+      while ((index_it != index_end) &&
+	      (!(this->block_it->index < index_it.upper_bound())))
+	++index_it;
+    
+      if (index_it == index_end)
+      {
+        // We are done - there are no more indices left
+	this->block_it = this->block_end;
+	return;
+      }
+    
+      typename list< File_Block_Index_Entry< TIndex > >::const_iterator
+	  next_block(this->block_it);
+      ++next_block;
+      while ((next_block != this->block_end) &&
+	      (!(index_it.lower_bound() < next_block->index)))
+      {
+	++next_block;
+	++(this->block_it);
+      }
+      
+      if ((this->block_type() != File_Block_Index_Entry< TIndex >::LAST_SEGMENT)
+	  || (!(this->block_it->index < index_it.lower_bound())))
+	break;
+      
+      ++(this->block_it);
+      if (this->block_it == this->block_end)
+	break;
+    }
+  }
 };
 
 template< class TIndex, class TIterator, class TRangeIterator >
@@ -543,6 +497,7 @@ public:
     flat_begin_it = new Flat_Iterator(block_index.begin(), block_index.end());
     flat_end_it = new Flat_Iterator(block_index.end(), block_index.end());
     discrete_end_it = new Discrete_Iterator(block_index.end());
+    range_end_it = new Range_Iterator(block_index.end());
     
     // reserve buffer for read/write actions
     buffer = malloc(block_size);
@@ -582,6 +537,7 @@ public:
     delete flat_begin_it;
     delete flat_end_it;
     delete discrete_end_it;
+    delete range_end_it;
     
     close(index_fd);
     close(data_fd);
@@ -608,16 +564,15 @@ public:
     return *discrete_end_it;
   }
   
-  Range_Iterator range_end()
+  Range_Iterator range_begin(const TRangeIterator& begin, const TRangeIterator& end)
   {
     return File_Blocks_Range_Iterator< TIndex, TRangeIterator >
-        (block_index.end(), block_index.end());
+	(block_index.begin(), block_index.end(), begin, end);
   }
   
-  Range_Iterator select_blocks(const TRangeIterator& begin, const TRangeIterator& end)
+  const Range_Iterator& range_end()
   {
-    return File_Blocks_Range_Iterator< TIndex, TRangeIterator >
-        (begin, block_index.begin(), end, block_index.end());
+    return *range_end_it;
   }
   
   void* read_block(const File_Blocks_Basic_Iterator< TIndex >& it) const
@@ -743,6 +698,7 @@ public:
     Flat_Iterator* flat_begin_it;
     Flat_Iterator* flat_end_it;
     Discrete_Iterator* discrete_end_it;
+    Range_Iterator* range_end_it;
     
     int index_fd, data_fd;
     void* buffer;
