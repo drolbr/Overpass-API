@@ -44,6 +44,7 @@ uint32 get_block_size(int32 FILE_PROPERTIES)
 /* Sample class for TIndex */
 struct IntIndex
 {
+  IntIndex(uint32 i) : value(i) {}
   IntIndex(void* data) : value(*(uint32*)data) {}
   
   uint32 size_of() const
@@ -70,6 +71,11 @@ struct IntIndex
   bool operator==(const IntIndex& index) const
   {
     return this->value == index.value;
+  }
+  
+  uint32 val() const
+  {
+    return value;
   }
   
   private:
@@ -264,7 +270,7 @@ void read_test(File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks)
   cout<<"This block of read tests is complete.\n";
 }
 
-uint32 prepare_block(void* block, list< uint32 > indices)
+uint32 prepare_block(void* block, const list< IntIndex >& indices)
 {
   uint32 max_keysize(0);
   
@@ -275,15 +281,15 @@ uint32 prepare_block(void* block, list< uint32 > indices)
   }
   
   uint32 pos(sizeof(uint32));
-  for (list< uint32 >::const_iterator it(indices.begin());
+  for (list< IntIndex >::const_iterator it(indices.begin());
       it != indices.end(); ++it)
   {
-    if (*it + sizeof(uint32) > max_keysize)
-      max_keysize = *it + sizeof(uint32);
+    if ((*it).val() + sizeof(uint32) > max_keysize)
+      max_keysize = (*it).val() + sizeof(uint32);
     
-    *(uint32*)(((uint8*)block)+pos) = *it + sizeof(uint32);
-    *(uint32*)(((uint8*)block)+pos+sizeof(uint32)) = *it;
-    pos += *it + sizeof(uint32);
+    *(uint32*)(((uint8*)block)+pos) = (*it).val() + sizeof(uint32);
+    *(uint32*)(((uint8*)block)+pos+sizeof(uint32)) = (*it).val();
+    pos += (*it).val() + sizeof(uint32);
   }
   
   *(uint32*)block = pos;
@@ -333,14 +339,14 @@ int main(int argc, char* args[])
   try
   {
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
-    list< uint32 > indices;
+    list< IntIndex > indices;
     
     indices.clear();
-    indices.push_back(49);
-    indices.push_back(50);
+    indices.push_back(IntIndex(49));
+    indices.push_back(IntIndex(50));
     void* buf = malloc(get_block_size(0));
     uint32 max_keysize(prepare_block(buf, indices));
-    blocks.insert_block(blocks.end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -365,13 +371,13 @@ int main(int argc, char* args[])
   try
   {
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
-    list< uint32 > indices;
+    list< IntIndex > indices;
     
     indices.clear();
-    indices.push_back(51);
+    indices.push_back(IntIndex(51));
     void* buf = malloc(get_block_size(0));
     uint32 max_keysize(prepare_block(buf, indices));
-    blocks.replace_block(blocks.begin(), buf, max_keysize);
+    blocks.replace_block(blocks.discrete_begin(indices.begin(), indices.end()), buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -396,12 +402,12 @@ int main(int argc, char* args[])
   try
   {
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
-    list< uint32 > indices;
+    list< IntIndex > indices;
     
     indices.clear();
     void* buf = malloc(get_block_size(0));
     uint32 max_keysize(prepare_block(buf, indices));
-    blocks.replace_block(blocks.begin(), buf, max_keysize);
+    blocks.replace_block(blocks.discrete_begin(indices.begin(), indices.end()), buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -426,13 +432,13 @@ int main(int argc, char* args[])
   try
   {
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
-    list< uint32 > indices;
+    list< IntIndex > indices;
     
     indices.clear();
     indices.push_back(50);
     void* buf = malloc(get_block_size(0));
     uint32 max_keysize(prepare_block(buf, indices));
-    blocks.insert_block(blocks.end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -457,20 +463,20 @@ int main(int argc, char* args[])
   try
   {
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
-    list< uint32 > indices;
+    list< IntIndex > indices;
     
     indices.clear();
     indices.push_back(45);
     void* buf = malloc(get_block_size(0));
     uint32 max_keysize(prepare_block(buf, indices));
-    blocks.insert_block(blocks.begin(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_begin(indices.begin(), indices.end()), buf, max_keysize);
     free(buf);
     
     indices.clear();
     indices.push_back(54);
     buf = malloc(get_block_size(0));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -495,14 +501,14 @@ int main(int argc, char* args[])
   try
   {
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
-    list< uint32 > indices;
+    list< IntIndex > indices;
     
     indices.clear();
     indices.push_back(45);
     indices.push_back(46);
     void* buf = malloc(get_block_size(0));
     uint32 max_keysize(prepare_block(buf, indices));
-    blocks.replace_block(blocks.begin(), buf, max_keysize);
+    blocks.replace_block(blocks.discrete_begin(indices.begin(), indices.end()), buf, max_keysize);
     free(buf);
     
     indices.clear();
@@ -510,7 +516,7 @@ int main(int argc, char* args[])
     indices.push_back(56);
     buf = malloc(get_block_size(0));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
