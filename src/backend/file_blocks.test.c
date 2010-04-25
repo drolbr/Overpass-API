@@ -67,6 +67,11 @@ struct IntIndex
     return this->value < index.value;
   }
   
+  bool operator==(const IntIndex& index) const
+  {
+    return this->value == index.value;
+  }
+  
   private:
     uint32 value;
 };
@@ -93,10 +98,33 @@ struct IntRangeIterator : list< pair< IntIndex, IntIndex > >::const_iterator
 //-----------------------------------------------------------------------------
 
 void read_loop
-  (File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
-   File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Iterator& it)
+(File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
+ File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator& it)
 {
-  while (!(it == blocks.end()))
+  while (!(it == blocks.flat_end()))
+  {
+    cout<<"Predicted size "<<blocks.answer_size(it);
+    uint8* data((uint8*)(blocks.read_block(it)));
+    cout<<", real size "<<(*(uint32*)data)<<" bytes, "
+    <<"first block size "<<*(uint32*)(data+sizeof(uint32))<<" bytes, "
+    <<"first index "<<*(uint32*)(data+2*sizeof(uint32));
+    if (*(uint32*)(data+sizeof(uint32)) < (*(uint32*)data)-sizeof(uint32))
+    {
+      uint8* pos(data+sizeof(uint32));
+      pos += *(uint32*)pos;
+      cout<<", second block size "<<(*(uint32*)pos)<<" bytes, "
+      <<"second index "<<*(uint32*)(pos+sizeof(uint32));
+    }
+    cout<<'\n';
+    ++it;
+  }
+}
+
+void read_loop
+  (File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
+   File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator& it)
+{
+  while (!(it == blocks.discrete_end()))
   {
     cout<<"Predicted size "<<blocks.answer_size(it);
     uint8* data((uint8*)(blocks.read_block(it)));
@@ -143,15 +171,17 @@ void read_test(File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks)
   cout<<"Read test\n";
   
   cout<<"Reading all blocks ...\n";
-  File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Iterator it(blocks.begin());
-  read_loop(blocks, it);
+  File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
+    fit(blocks.flat_begin());
+  read_loop(blocks, fit);
   cout<<"... all blocks read.\n";
 
   list< IntIndex > index_list;
   for (unsigned int i(0); i < 100; i += 9)
     index_list.push_back(&i);
   cout<<"Reading blocks with indices {0, 9, ..., 99} ...\n";
-  it = blocks.select_blocks(index_list.begin(), index_list.end());
+  File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
+    it(blocks.discrete_begin(index_list.begin(), index_list.end()));
   read_loop(blocks, it);
   cout<<"... all blocks read.\n";
   
@@ -159,7 +189,7 @@ void read_test(File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks)
   for (unsigned int i(0); i < 10; ++i)
     index_list.push_back(&i);
   cout<<"Reading blocks with indices {0, 1, ..., 9} ...\n";
-  it = blocks.select_blocks(index_list.begin(), index_list.end());
+  it = blocks.discrete_begin(index_list.begin(), index_list.end());
   read_loop(blocks, it);
   cout<<"... all blocks read.\n";
 
@@ -177,7 +207,7 @@ void read_test(File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks)
   for (unsigned int i(90); i < 100; ++i)
     index_list.push_back(&i);
   cout<<"Reading blocks with indices {90, 91, ..., 99} ...\n";
-  it = blocks.select_blocks(index_list.begin(), index_list.end());
+  it = blocks.discrete_begin(index_list.begin(), index_list.end());
   read_loop(blocks, it);
   cout<<"... all blocks read.\n";
   
@@ -195,7 +225,7 @@ void read_test(File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks)
   uint32 foo(50);
   index_list.push_back(&foo);
   cout<<"Reading blocks with index 50 ...\n";
-  it = blocks.select_blocks(index_list.begin(), index_list.end());
+  it = blocks.discrete_begin(index_list.begin(), index_list.end());
   read_loop(blocks, it);
   cout<<"... all blocks read.\n";
   
@@ -227,7 +257,7 @@ void read_test(File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks)
   
   index_list.clear();
   cout<<"Reading blocks with indices \\emptyset ...\n";
-  it = blocks.select_blocks(index_list.begin(), index_list.end());
+  it = blocks.discrete_begin(index_list.begin(), index_list.end());
   read_loop(blocks, it);
   cout<<"... all blocks read.\n";
   

@@ -18,6 +18,61 @@ print
 import
 update
 
+Welcher Index gehört wo hin?
+Sei ein Index q gegeben.
+a) Gibt es einen Blockindex b mit Index b' des Folgeblocks, so dass b\leq q < b' gilt, so gehört q in diesen Block.
+b) q gehört genau dann in einen Mehrfachblock, wenn q gleich dem Blockindex ist.
+c) Gehört der größte Blockindex a, der kleiner als q ist, zu einem Mehrfachblock, so gehört q in den Nachfolgeblock.
+d) Ist q größer als der größte Blockindex a und dieser ein Mehrfachblock, so gehört q in einen eigenen Block hinterher.
+e) Ist q kleiner als jeder Blockindex und der erste Block ist kein Mehrfachblock, so gehört q in den ersten Block.
+f) Ist q kleiner als jeder Blockindex und der erste Block ist ein Mehrfachblock, so gehört q in einen eigenen Block voraus.
+
+Anders formuliert:
+a) Es gibt "Segmentblöcke" (= mehrere Blöcke enthalten Daten zu nur einem Index) und "Gruppenblöcke" (= Nachfolge- und Vorgängerblock haben beide verschiedene Indizes).
+b) Suchen nach Blöcken (zum Lesen wie zum Einfügen) können daher leere Ergebnisse haben, einen oder mehrere Blöcke zurückliefern.
+c) Die Blockstruktur der Datenbank definiert eine Zerlegung des Indexraum wie folgt:
+- eine Familie von Segmentblöcken ist genau ihr Blockindex zugeordnet
+- hat ein Gruppenblock einen Gruppenblock als Vorgänger, so hat er als Untergrenze der Blockindizes seinen eigenen Startwert, sonst der minimale Index oder der Index, der infitesimal größer als der vorhergehende Blockindex ist
+- hat ein Gruppenblock einen Gruppenblock oder Segmentblock als Nachfolger, so hat er die Obergrenze infinitesimal kleiner als sein Nachfolgeblock, sonst das Supremum des Indexraums
+
+Pragmatisch:
+- wir wollen flach suchen (alles finden), mit einer diskreten Menge von Indizes suchen oder mit der Vereinigung diverser Intervalle suchen können.
+- Lesen wollen wir mit allen drei Methoden, schreiben nur mit diskreten Indizes (denn die zu schreibenden und zu löschenden Objekte haben ja Indizes).
+- der letzte Block eines Segmentblock-Familie muss beim Schreiben anders behandelt werden.
+- wir können keine infinitesimal größeren oder kleineren sowie keine Infima und Suprema sinnvoll generisch darstellen. Für das Lesen reicht es aber, sich auf tatsächlich in der Datenbank vorkommende Indizes zu beschränken, für das Schreiben reicht es, sich auf in der Schreibanfrage vorkommende Indizes zu beschränken.
+
+Flacher Iterator:
+  block_type()
+  ++, ==, =, (self), ~
+  flat_begin(), flat_end()
+  read_block(..)
+
+Diskreter Iterator:
+  block_type()
+  lower_bound(), upper_bound()
+  ++, ==, =, (self), ~
+discrete_begin(..), discrete_end()
+  read_block(..)
+insert_block(..)
+replace_block(..)
+
+Intervall-Iterator:
+block_type()
+lower_bound(), upper_bound()
+++, ==, =, (self), ~
+range_begin(..), range_end()
+read_block(..)
+
+Die Semantik von ++, ==, =, (self), ~, *_end() und flat_begin() ist die übliche.
+discrete_begin(..) nimmt ein Paar von Iteratoren über einen Container mit Indizes entgegen und iteriert über genau die Blöcke, die für diese Menge von Iteratoren relevant sein können.
+range_begin(..) tut das analoge für ein Paar von Iteratoren über einen Container von Intervallen.
+block_type() liefert einen der Werte \{ EMPTY, BLOCK, PARTIAL, LAST_PART \}
+read_block(..) ist eine Methode von File_Blocks, erhält als Argument einen Iterator und liefert den zugehörigen Datenblock aus.
+insert_block(..) ist eine Methode von File_Blocks, erhält als Argument einen diskreten Iterator und fügt den Block unmittelbar vor dem Block ein.
+replace_block(..) ist eine Methode von File_Blocks, erhält als Argument einen diskreten Iterator und ersetzt den vom Iterator bezeichneten Block.
+lower_bound() liefert die jeweils sinnvolle Untergrenze: für einen diskreten Iterator ist das der kleinste Index aus der Anfragemenge, der zum aktuellen Block des Iterators gehört. Für einen Intervall-Iterator ist dies der kleinste Index, der zum Block gehört und tatsächlich in der Datenbank existiert.
+upper_bound() liefert den kleinsten Index, der schon außerhalb des Blocks liegt. Für einen diskreten Iterator ist dies der kleinste Index aus der Anfragemenge, für den dies zutrifft und ggf. ==end(). Bei Intervallen ist es der erste Index des nächsten Blocks oder ==end() im Falle des letzten Blocks in der Datenbank.
+
 0, f96, 260a, 3276, 348c, 34ce
 
 void update(const map< TIndex, map< TObject > >& to_delete,
