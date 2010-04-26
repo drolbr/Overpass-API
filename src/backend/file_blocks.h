@@ -106,6 +106,10 @@ struct File_Blocks_Basic_Iterator
    const typename list< File_Block_Index_Entry< TIndex > >::iterator& end)
     : block_begin(begin), block_it(begin), block_end(end), is_empty(false) {}
     
+  File_Blocks_Basic_Iterator(const File_Blocks_Basic_Iterator& a)
+  : block_begin(a.block_begin), block_it(a.block_it), block_end(a.block_end),
+    is_empty(a.is_empty) {}
+    
   int block_type() const
   {
     if ((block_it == block_end) || (is_empty))
@@ -156,7 +160,7 @@ struct File_Blocks_Flat_Iterator : File_Blocks_Basic_Iterator< TIndex >
     : File_Blocks_Basic_Iterator< TIndex >(begin, end) {}
   
   File_Blocks_Flat_Iterator(const File_Blocks_Flat_Iterator& a)
-    : File_Blocks_Basic_Iterator< TIndex >(a.block_it, a.block_end) {}
+    : File_Blocks_Basic_Iterator< TIndex >(a) {}
   
   ~File_Blocks_Flat_Iterator() {}
   
@@ -190,6 +194,13 @@ struct File_Blocks_Discrete_Iterator : File_Blocks_Basic_Iterator< TIndex >
     : File_Blocks_Basic_Iterator< TIndex >(begin, end),
       index_lower(index_it_), index_upper(index_it_), index_end(index_end_)
   {
+    if (index_lower == index_end)
+    {
+      // empty index set
+      this->block_it = this->block_end;
+      return;
+    }
+    
     if (this->block_it == this->block_end)
     {
       // empty file
@@ -213,7 +224,7 @@ struct File_Blocks_Discrete_Iterator : File_Blocks_Basic_Iterator< TIndex >
     : File_Blocks_Basic_Iterator< TIndex >(end, end) {}
   
   File_Blocks_Discrete_Iterator(const File_Blocks_Discrete_Iterator& a)
-    : File_Blocks_Basic_Iterator< TIndex >(a.block_it, a.block_end),
+    : File_Blocks_Basic_Iterator< TIndex >(a),
       index_lower(a.index_lower), index_upper(a.index_upper),
       index_end(a.index_end)
   {}
@@ -232,19 +243,49 @@ struct File_Blocks_Discrete_Iterator : File_Blocks_Basic_Iterator< TIndex >
   bool operator==
       (const File_Blocks_Discrete_Iterator& a) const
   {
-    return (this->block_it == a.block_it);
+    return ((this->block_it == a.block_it) && (this->is_empty == a.is_empty));
   }
   
   File_Blocks_Discrete_Iterator& operator++()
   {
-    if (this->block_type() == File_Block_Index_Entry< TIndex >::EMPTY)
+    int block_type(this->block_type());
+    if (block_type == File_Block_Index_Entry< TIndex >::EMPTY)
     {
       this->is_empty = false;
+      find_next_block();
       return *this;
     }
-    if (this->block_type() == File_Block_Index_Entry< TIndex >::SEGMENT)
+    if (block_type == File_Block_Index_Entry< TIndex >::SEGMENT)
     {
       ++(this->block_it);
+      return *this;
+    }
+    if (block_type == File_Block_Index_Entry< TIndex >::LAST_SEGMENT)
+    {
+      ++(this->block_it);
+      if (this->block_it == this->block_end)
+      {
+	if (index_upper == index_end)
+	  index_lower = index_end;
+	else
+	{
+	  this->is_empty = true;
+	  index_lower = index_upper;
+	  index_upper = index_end;
+	}
+      }
+      else if (this->block_type() == File_Block_Index_Entry< TIndex >::SEGMENT)
+      {
+	if (*index_upper < this->block_it->index)
+	{
+	  this->is_empty = true;
+	  index_lower = index_upper;
+	  while ((!(index_upper == index_end)) && (*index_upper < this->block_it->index))
+	    ++index_upper;
+	}
+	else
+	  find_next_block();
+      }
       return *this;
     }
     
@@ -270,11 +311,11 @@ struct File_Blocks_Discrete_Iterator : File_Blocks_Basic_Iterator< TIndex >
     return index_upper;
   }
   
-private:
   TIterator index_lower;
   TIterator index_upper;
   TIterator index_end;
   
+private:
   void find_next_block()
   {
     if (this->block_it == this->block_end)
@@ -288,13 +329,13 @@ private:
     while ((next_block != this->block_end) &&
       (!(*index_lower < next_block->index)))
     {
-      ++(this->block_it);
       if (!(this->block_it->index < *index_lower))
       {
 	// We have found a relevant block that is a segment
 	++index_upper;
 	return;
       }
+      ++(this->block_it);
       ++next_block;
     }
     if (this->block_type() == File_Block_Index_Entry< TIndex >::LAST_SEGMENT)
@@ -346,7 +387,7 @@ struct File_Blocks_Range_Iterator : File_Blocks_Basic_Iterator< TIndex >
     : File_Blocks_Basic_Iterator< TIndex >(end, end) {}
   
   File_Blocks_Range_Iterator(const File_Blocks_Range_Iterator& a)
-    : File_Blocks_Basic_Iterator< TIndex >(a.block_it, a.block_end),
+    : File_Blocks_Basic_Iterator< TIndex >(a),
       index_it(a.index_it), index_end(a.index_end) {}
     
   ~File_Blocks_Range_Iterator() {}
@@ -401,8 +442,11 @@ private:
       while ((next_block != this->block_end) &&
 	      (!(index_it.lower_bound() < next_block->index)))
       {
-	++next_block;
+	if (!(this->block_it->index < index_it.lower_bound()))
+	  // We have found a relevant block that is a segment
+	  return;
 	++(this->block_it);
+	++next_block;
       }
       
       if ((this->block_type() != File_Block_Index_Entry< TIndex >::LAST_SEGMENT)
@@ -421,7 +465,6 @@ struct File_Blocks
 {
   typedef File_Blocks_Flat_Iterator< TIndex > Flat_Iterator;
   typedef File_Blocks_Discrete_Iterator< TIndex, TIterator > Discrete_Iterator;
-/*  typedef File_Blocks_Iterator< TIndex, TIterator > Iterator;*/
   typedef File_Blocks_Range_Iterator< TIndex, TRangeIterator > Range_Iterator;
   
 private:
@@ -475,7 +518,7 @@ public:
         entry(index,
 	      *(uint32*)(index_buf + (pos + TIndex::size_of(index_buf+pos))),
 	      *(uint32*)(index_buf + (pos + TIndex::size_of(index_buf+pos)
-	        + 4))/*, 0*/);
+	        + 4)));
       block_index.push_back(entry);
       if (entry.pos > block_count)
 	throw File_Error(0, index_file_name, "File_Blocks: bad pos in index file");
@@ -590,20 +633,6 @@ public:
     return buffer;
   }
   
-  void* read_block(const Range_Iterator& it) const
-  {
-    lseek64(data_fd, (int64)(it.block_it->pos)*(block_size), SEEK_SET);
-    uint32 foo(read(data_fd, buffer, block_size));
-    return buffer;
-  }
-  
-  void* read_block(const Range_Iterator& it, void* buffer) const
-  {
-    lseek64(data_fd, (int64)(it.block_it->pos)*(block_size), SEEK_SET);
-    uint32 foo(read(data_fd, buffer, block_size));
-    return buffer;
-  }
-  
   uint32 answer_size(const Flat_Iterator& it) const
   {
     return (block_size - sizeof(uint32));
@@ -650,13 +679,14 @@ public:
     lseek64(data_fd, (int64)pos*(block_size), SEEK_SET);
     uint32 foo(write(data_fd, buf, block_size));
     
-    if (*(uint32*)buf != 0)
+    if (buf != 0)
     {
       TIndex index(((uint8*)buf)+(sizeof(uint32)+sizeof(uint32)));
       File_Block_Index_Entry< TIndex > entry
-	  (index, pos, max_keysize/*, block_type*/);
+	  (index, pos, max_keysize);
       Discrete_Iterator return_it(it);
-      return_it.block_it = block_index.insert(it.block_it, entry);
+      return_it.block_it = block_index.insert(return_it.block_it, entry);
+      return_it.index_upper = return_it.index_lower;
       return_it.is_empty = false;
       return return_it;
     }
@@ -667,13 +697,13 @@ public:
     }
   }
   
-  void replace_block(Discrete_Iterator it, void* buf, uint32 max_keysize)
+  Discrete_Iterator replace_block(Discrete_Iterator it, void* buf, uint32 max_keysize)
   {
-    lseek64(data_fd, (int64)(it.block_it->pos)*(block_size), SEEK_SET);
-    uint32 foo(write(data_fd, buf, block_size));
-    
-    if (*(uint32*)buf != 0)
+    if (buf != 0)
     {
+      lseek64(data_fd, (int64)(it.block_it->pos)*(block_size), SEEK_SET);
+      uint32 foo(write(data_fd, buf, block_size));
+    
       it.block_it->index = TIndex((uint8*)buf+(sizeof(uint32)+sizeof(uint32)));
       it.block_it->max_keysize = max_keysize;
     }
@@ -681,8 +711,10 @@ public:
     {
       void_blocks.push_back(it.block_it->pos);
       it.block_it = block_index.erase(it.block_it);
+      it.index_upper = it.index_lower;
       it.is_empty = true;
     }
+    return it;
   }
   
   private:
