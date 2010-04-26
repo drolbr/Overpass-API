@@ -159,16 +159,40 @@ void fill_db
 
 void read_loop
     (Block_Backend< IntIndex, IntObject >& blocks,
-     Block_Backend< IntIndex, IntObject >::Read_Iterator& it)
+     Block_Backend< IntIndex, IntObject >::Flat_Iterator& it)
 {
-  if (it == blocks.end())
+  if (it == blocks.flat_end())
   {
     cout<<"[empty]\n";
     return;
   }
   IntIndex current_idx(it.index());
   cout<<"Index "<<current_idx.val()<<": ";
-  while (!(it == blocks.end()))
+  while (!(it == blocks.flat_end()))
+  {
+    if (!(current_idx == it.index()))
+    {
+      current_idx = it.index();
+      cout<<"\nIndex "<<current_idx.val()<<": ";
+    }
+    cout<<it.object().val()<<' ';
+    ++it;
+  }
+  cout<<'\n';
+}
+
+void read_loop
+    (Block_Backend< IntIndex, IntObject >& blocks,
+     Block_Backend< IntIndex, IntObject >::Discrete_Iterator& it)
+{
+  if (it == blocks.discrete_end())
+  {
+    cout<<"[empty]\n";
+    return;
+  }
+  IntIndex current_idx(it.index());
+  cout<<"Index "<<current_idx.val()<<": ";
+  while (!(it == blocks.discrete_end()))
   {
     if (!(current_idx == it.index()))
     {
@@ -215,15 +239,16 @@ void read_test(unsigned int step)
     cout<<"Read test\n";
   
     cout<<"Reading all blocks ...\n";
-    Block_Backend< IntIndex, IntObject >::Read_Iterator it(db_backend.begin());
-    read_loop(db_backend, it);
+    Block_Backend< IntIndex, IntObject >::Flat_Iterator fit(db_backend.flat_begin());
+    read_loop(db_backend, fit);
     cout<<"... all blocks read.\n";
 
     set< IntIndex > index_list;
     for (unsigned int i(0); i < 100; i += 9)
       index_list.insert(&i);
     cout<<"Reading blocks with indices {0, 9, ..., 99} ...\n";
-    it = db_backend.select_blocks(index_list.begin(), index_list.end());
+    Block_Backend< IntIndex, IntObject >::Discrete_Iterator
+	it(db_backend.discrete_begin(index_list.begin(), index_list.end()));
     read_loop(db_backend, it);
     cout<<"... all blocks read.\n";
   
@@ -231,7 +256,7 @@ void read_test(unsigned int step)
     for (unsigned int i(0); i < 10; ++i)
       index_list.insert(&i);
     cout<<"Reading blocks with indices {0, 1, ..., 9} ...\n";
-    it = db_backend.select_blocks(index_list.begin(), index_list.end());
+    it = db_backend.discrete_begin(index_list.begin(), index_list.end());
     read_loop(db_backend, it);
     cout<<"... all blocks read.\n";
 
@@ -240,7 +265,7 @@ void read_test(unsigned int step)
     range_list.insert(make_pair(IntIndex(&fool), IntIndex(&foou)));
     cout<<"Reading blocks with indices [0, 10[ ...\n";
     Block_Backend< IntIndex, IntObject >::Range_Iterator
-	rit(db_backend.select_blocks
+	rit(db_backend.range_begin
 	(Default_Range_Iterator< IntIndex >(range_list.begin()),
 	 Default_Range_Iterator< IntIndex >(range_list.end())));
     read_loop(db_backend, rit);
@@ -250,7 +275,7 @@ void read_test(unsigned int step)
     for (unsigned int i(90); i < 100; ++i)
       index_list.insert(&i);
     cout<<"Reading blocks with indices {90, 91, ..., 99} ...\n";
-    it = db_backend.select_blocks(index_list.begin(), index_list.end());
+    it = db_backend.discrete_begin(index_list.begin(), index_list.end());
     read_loop(db_backend, it);
     cout<<"... all blocks read.\n";
   
@@ -259,7 +284,7 @@ void read_test(unsigned int step)
     foou = 100;
     range_list.insert(make_pair(IntIndex(&fool), IntIndex(&foou)));
     cout<<"Reading blocks with indices [90, 100[ ...\n";
-    rit = db_backend.select_blocks
+    rit = db_backend.range_begin
 	(Default_Range_Iterator< IntIndex >(range_list.begin()),
 	 Default_Range_Iterator< IntIndex >(range_list.end()));
     read_loop(db_backend, rit);
@@ -269,7 +294,7 @@ void read_test(unsigned int step)
     uint32 foo(50);
     index_list.insert(&foo);
     cout<<"Reading blocks with index 50 ...\n";
-    it = db_backend.select_blocks(index_list.begin(), index_list.end());
+    it = db_backend.discrete_begin(index_list.begin(), index_list.end());
     read_loop(db_backend, it);
     cout<<"... all blocks read.\n";
   
@@ -278,7 +303,7 @@ void read_test(unsigned int step)
     foou = 51;
     range_list.insert(make_pair(IntIndex(&fool), IntIndex(&foou)));
     cout<<"Reading blocks with indices [50, 51[ ...\n";
-    rit = db_backend.select_blocks
+    rit = db_backend.range_begin
 	(Default_Range_Iterator< IntIndex >(range_list.begin()),
 	 Default_Range_Iterator< IntIndex >(range_list.end()));
     read_loop(db_backend, rit);
@@ -295,7 +320,7 @@ void read_test(unsigned int step)
     foou = 100;
     range_list.insert(make_pair(IntIndex(&fool), IntIndex(&foou)));
     cout<<"Reading blocks with indices [0,10[\\cup [50, 51[\\cup [90, 100[ ...\n";
-    rit = db_backend.select_blocks
+    rit = db_backend.range_begin
 	(Default_Range_Iterator< IntIndex >(range_list.begin()),
 	 Default_Range_Iterator< IntIndex >(range_list.end()));
     read_loop(db_backend, rit);
@@ -303,7 +328,7 @@ void read_test(unsigned int step)
   
     index_list.clear();
     cout<<"Reading blocks with indices \\emptyset ...\n";
-    it = db_backend.select_blocks(index_list.begin(), index_list.end());
+    it = db_backend.discrete_begin(index_list.begin(), index_list.end());
     read_loop(db_backend, it);
     cout<<"... all blocks read.\n";
   

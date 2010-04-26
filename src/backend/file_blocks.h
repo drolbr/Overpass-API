@@ -586,12 +586,12 @@ public:
     close(data_fd);
   }
   
-  const Flat_Iterator& flat_begin()
+  const Flat_Iterator& flat_begin() const
   {
     return *flat_begin_it;
   }
   
-  const Flat_Iterator& flat_end()
+  const Flat_Iterator& flat_end() const
   {
     return *flat_end_it;
   }
@@ -602,7 +602,7 @@ public:
 	(begin, end, block_index.begin(), block_index.end());
   }
   
-  const Discrete_Iterator& discrete_end()
+  const Discrete_Iterator& discrete_end() const
   {
     return *discrete_end_it;
   }
@@ -613,7 +613,7 @@ public:
 	(block_index.begin(), block_index.end(), begin, end);
   }
   
-  const Range_Iterator& range_end()
+  const Range_Iterator& range_end() const
   {
     return *range_end_it;
   }
