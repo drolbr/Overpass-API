@@ -34,6 +34,11 @@ string get_data_suffix(int32 FILE_PROPERTIES)
   return DATA_SUFFIX;
 }
 
+string get_id_suffix(int32 FILE_PROPERTIES)
+{
+  return "";
+}
+
 uint32 get_block_size(int32 FILE_PROPERTIES)
 {
   return 512;
@@ -665,7 +670,6 @@ int main(int argc, char* args[])
     it = blocks.insert_block(it, buf, max_keysize);
     ++it;
     it = blocks.insert_block(it, buf, max_keysize);
-    ++it;
     ++it;
     
     it = blocks.replace_block(it, 0, 0);

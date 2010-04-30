@@ -192,7 +192,8 @@ struct File_Blocks_Discrete_Iterator : File_Blocks_Basic_Iterator< TIndex >
        const typename list< File_Block_Index_Entry< TIndex > >::iterator& begin,
        const typename list< File_Block_Index_Entry< TIndex > >::iterator& end)
     : File_Blocks_Basic_Iterator< TIndex >(begin, end),
-      index_lower(index_it_), index_upper(index_it_), index_end(index_end_)
+      index_lower(index_it_), index_upper(index_it_), index_end(index_end_),
+      just_inserted(false)
   {
     if (index_lower == index_end)
     {
@@ -226,7 +227,7 @@ struct File_Blocks_Discrete_Iterator : File_Blocks_Basic_Iterator< TIndex >
   File_Blocks_Discrete_Iterator(const File_Blocks_Discrete_Iterator& a)
     : File_Blocks_Basic_Iterator< TIndex >(a),
       index_lower(a.index_lower), index_upper(a.index_upper),
-      index_end(a.index_end)
+      index_end(a.index_end), just_inserted(a.just_inserted)
   {}
     
   ~File_Blocks_Discrete_Iterator() {}
@@ -249,9 +250,18 @@ struct File_Blocks_Discrete_Iterator : File_Blocks_Basic_Iterator< TIndex >
   File_Blocks_Discrete_Iterator& operator++()
   {
     int block_type(this->block_type());
+    if (just_inserted)
+    {
+      just_inserted = false;
+      ++(this->block_it);
+      return *this;
+    }
     if (block_type == File_Block_Index_Entry< TIndex >::EMPTY)
     {
       this->is_empty = false;
+      if ((this->block_type() == File_Block_Index_Entry< TIndex >::SEGMENT)
+	  && (*index_lower == this->block_it->index))
+	return *this;
       find_next_block();
       return *this;
     }
@@ -286,6 +296,8 @@ struct File_Blocks_Discrete_Iterator : File_Blocks_Basic_Iterator< TIndex >
 	else
 	  find_next_block();
       }
+      else
+	find_next_block();
       return *this;
     }
     
@@ -314,6 +326,7 @@ struct File_Blocks_Discrete_Iterator : File_Blocks_Basic_Iterator< TIndex >
   TIterator index_lower;
   TIterator index_upper;
   TIterator index_end;
+  bool just_inserted;
   
 private:
   void find_next_block()
@@ -323,6 +336,13 @@ private:
       return;
     
     index_lower = index_upper;
+    if (index_upper == index_end)
+    {
+      // We are done - there are no more indices left
+      this->block_it = this->block_end;
+      return;
+    }
+      
     typename list< File_Block_Index_Entry< TIndex > >::const_iterator
       next_block(this->block_it);
     ++next_block;
@@ -685,8 +705,14 @@ public:
       File_Block_Index_Entry< TIndex > entry
 	  (index, pos, max_keysize);
       Discrete_Iterator return_it(it);
-      return_it.block_it = block_index.insert(return_it.block_it, entry);
-      return_it.index_upper = return_it.index_lower;
+      if (return_it.block_it == return_it.block_begin)
+      {
+	return_it.block_it = block_index.insert(return_it.block_it, entry);
+	return_it.block_begin = return_it.block_it;
+      }
+      else
+	return_it.block_it = block_index.insert(return_it.block_it, entry);
+      return_it.just_inserted = true;
       return_it.is_empty = false;
       return return_it;
     }
@@ -710,8 +736,14 @@ public:
     else
     {
       void_blocks.push_back(it.block_it->pos);
-      it.block_it = block_index.erase(it.block_it);
-      it.index_upper = it.index_lower;
+      if (it.block_it == it.block_begin)
+      {
+	it.block_it = block_index.erase(it.block_it);
+	it.block_begin = it.block_it;
+      }
+      else
+	it.block_it = block_index.erase(it.block_it);
+//       it.index_upper = it.index_lower;
       it.is_empty = true;
     }
     return it;

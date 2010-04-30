@@ -35,6 +35,11 @@ string get_data_suffix(int32 FILE_PROPERTIES)
   return DATA_SUFFIX;
 }
 
+string get_id_suffix(int32 FILE_PROPERTIES)
+{
+  return "";
+}
+
 uint32 get_block_size(int32 FILE_PROPERTIES)
 {
   return 512;
@@ -142,8 +147,8 @@ void fill_db
    const map< IntIndex, set< IntObject > >& to_insert,
    unsigned int step)
 {
-  remove((get_file_base_name(0) + get_index_suffix(0)).c_str());
-  remove((get_file_base_name(0) + get_data_suffix(0)).c_str());
+/*  remove((get_file_base_name(0) + get_index_suffix(0)).c_str());
+  remove((get_file_base_name(0) + get_data_suffix(0)).c_str());*/
   try
   {
     Block_Backend< IntIndex, IntObject > db_backend(0, true);
@@ -436,6 +441,52 @@ int main(int argc, char* args[])
   fill_db(to_delete, to_insert, 14);
   read_test(15);
   
+  cout<<"** Blow up an index and delete some data\n";
+  to_delete.clear();
+  to_insert.clear();
+  objects.clear();
+  for (unsigned int i(0); i < 200; ++i)
+    objects.insert(IntObject(i*100 + 148));
+  to_insert[48] = objects;
+  objects.clear();
+  objects.insert(IntObject(949));
+  objects.insert(IntObject(2049));
+  to_delete[49] = objects;
+  
+  fill_db(to_delete, to_insert, 16);
+  read_test(17);
+  
+  cout<<"** Blow up two indices\n";
+  to_delete.clear();
+  to_insert.clear();
+  objects.clear();
+  for (unsigned int i(0); i < 200; ++i)
+    objects.insert(IntObject(i*100 + 147));
+  to_insert[47] = objects;
+  objects.clear();
+  for (unsigned int i(0); i < 200; ++i)
+    objects.insert(IntObject(i*100 + 199));
+  to_insert[99] = objects;
+  
+  fill_db(to_delete, to_insert, 18);
+  read_test(19);
+  
+  cout<<"** Delete an entire block\n";
+  to_delete.clear();
+  to_insert.clear();
+  for (unsigned int i(55); i < 95; ++i)
+  {
+    set< IntObject > objects;
+    objects.insert(IntObject(900 + i));
+    objects.insert(IntObject(2000 + i));
+    if (i%9 == 0)
+      objects.insert(IntObject((i%10 + 10)*100 + i));
+    to_delete[i] = objects;
+  }
+  
+  fill_db(to_delete, to_insert, 22);
+  read_test(23);
+  
   cout<<"** Delete much items\n";
   to_delete.clear();
   to_insert.clear();
@@ -447,8 +498,8 @@ int main(int argc, char* args[])
     to_delete[i] = objects;
   }
   
-  fill_db(to_delete, to_insert, 16);
-  read_test(17);
+  fill_db(to_delete, to_insert, 22);
+  read_test(23);
   
   return 0;
 }
