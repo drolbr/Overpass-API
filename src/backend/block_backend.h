@@ -227,7 +227,7 @@ struct Block_Backend_Flat_Iterator : Block_Backend_Basic_Iterator< TIndex, TObje
       Default_Range_Iterator< TIndex > > File_Blocks_;
   
   Block_Backend_Flat_Iterator
-      (const File_Blocks_& file_blocks_, uint32 block_size_, bool is_end = false)
+      (File_Blocks_& file_blocks_, uint32 block_size_, bool is_end = false)
     : Block_Backend_Basic_Iterator< TIndex, TObject >(block_size_, is_end),
       file_blocks(file_blocks_), file_it(file_blocks_.flat_begin()),
       file_end(file_blocks_.flat_end())
@@ -617,7 +617,7 @@ struct Block_Backend
     range_end_it = new Range_Iterator(file_blocks, block_size);
   }
   
-  Flat_Iterator flat_begin() const
+  Flat_Iterator flat_begin()
   {
     return Flat_Iterator(file_blocks, block_size, false);
   }
@@ -714,8 +714,76 @@ private:
        typename set< TIndex >::const_iterator it,
        const typename set< TIndex >::const_iterator& end)
   {
-    //TODO: This is just a greedy algorithm and should be replace by something smarter
-    vector< uint > vsplit;
+/*    for (int i(0); i < sizes.size(); ++i)
+      cerr<<sizes[i]<<' ';*/
+    
+    vector< uint32 > vsplit;
+    vector< uint64 > max_split_pos, min_split_pos, preferred_split_pos;
+    uint64 cur_size(0), sum_size(0), total_size(0);
+    uint32 split_i(0);
+    for (uint i(0); i < sizes.size(); ++i)
+      total_size += sizes[i];
+    if (sizes.size() > 0)
+      cur_size = sizes[0];
+    for (uint i(1); i < sizes.size(); ++i)
+    {
+      cur_size += sizes[i];
+      if (cur_size <= block_size-4)
+	continue;
+      sum_size += cur_size - sizes[i];
+      max_split_pos.push_back(sum_size);
+      cur_size = sizes[i];
+    }
+    cur_size = 0;
+    sum_size = 0;
+    if (sizes.size() > 0)
+      cur_size = sizes[sizes.size() - 1];
+    for (int i(sizes.size()-2); i >= 0; --i)
+    {
+      cur_size += sizes[i];
+      if (cur_size <= block_size-4)
+	continue;
+      sum_size += cur_size - sizes[i];
+      min_split_pos.push_back(sum_size);
+      cur_size = sizes[i];
+    }
+    int from(0);
+    cur_size = 0;
+    for (int i(0); i < max_split_pos.size(); ++i)
+    {
+      if (total_size - min_split_pos[min_split_pos.size()-i-1]
+	  < max_split_pos[i])
+	continue;
+      for (int j(from); j <= i; ++j)
+	preferred_split_pos.push_back(cur_size +
+	    ((uint64)(j-from+1))*(max_split_pos[i] - cur_size)/(i+1-from));
+      from = i+1;
+      cur_size = max_split_pos[i];
+    }
+    for (int j(from); j < max_split_pos.size(); ++j)
+    {
+      preferred_split_pos.push_back(cur_size +
+	  (((uint64)(j-from+1))*(total_size - cur_size))
+	  /(max_split_pos.size()+1-from));
+    }
+    if (!preferred_split_pos.empty())
+    {
+      sum_size = 0;
+      for (uint i(0); i < sizes.size(); ++i)
+      {
+	if (split_i == preferred_split_pos.size())
+	  break;
+	
+	sum_size += sizes[i];
+	if (sum_size <= preferred_split_pos[split_i])
+	  continue;
+	vsplit.push_back(i);
+	++split_i;
+      }
+    }
+
+    // This is just a greedy algorithm and should be replace by something smarter
+/*    vector< uint > vsplit;
     uint32 pos(4);
     for (uint i(0); i < sizes.size(); ++i)
     {
@@ -726,7 +794,7 @@ private:
 	continue;
       vsplit.push_back(i);
       pos = 4 + sizes[i];
-    }
+    }*/
     
     // This converts the result in a more convienient form
     uint i(0), j(0);
@@ -737,6 +805,12 @@ private:
 	split.push_back(*it);
 	++j;
       }
+      
+      ++i;
+      ++it;
+    }
+    while (it != end)
+    {
       ++i;
       ++it;
     }
@@ -976,8 +1050,13 @@ private:
     pos = (dest + 4);
     uint32 max_size(0);
     for (typename map< TIndex, Index_Collection< TIndex, TObject > >::const_iterator
+	 it(index_values.begin()); it != index_values.end(); ++it);
+    for (typename map< TIndex, Index_Collection< TIndex, TObject > >::const_iterator
       it(index_values.begin()); it != index_values.end(); ++it)
     {
+      typename map< TIndex, Index_Collection< TIndex, TObject > >::const_iterator
+	  debug_it(it);
+      
       if ((split_it != split.end()) && (it->first == *split_it))
       {
 	*(uint32*)dest = (uint32)pos - (uint32)dest;
@@ -987,7 +1066,7 @@ private:
 	pos = dest + 4;
 	max_size = 0;
       }
-      
+            
       if (sizes[it->first] > max_size)
 	max_size = sizes[it->first];
       
@@ -1077,7 +1156,7 @@ private:
 	max_size = (*(uint32*)(dest + 4)) - 4;
       }
     }
-    
+
     if (pos > dest + 4)
     {
       *(uint32*)dest = (uint32)pos - (uint32)dest;

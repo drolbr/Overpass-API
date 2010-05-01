@@ -557,7 +557,6 @@ public:
     }
     
     // prepare standard iterators
-    flat_begin_it = new Flat_Iterator(block_index.begin(), block_index.end());
     flat_end_it = new Flat_Iterator(block_index.end(), block_index.end());
     discrete_end_it = new Discrete_Iterator(block_index.end());
     range_end_it = new Range_Iterator(block_index.end());
@@ -597,7 +596,6 @@ public:
     
     free(buffer);
     
-    delete flat_begin_it;
     delete flat_end_it;
     delete discrete_end_it;
     delete range_end_it;
@@ -606,9 +604,9 @@ public:
     close(data_fd);
   }
   
-  const Flat_Iterator& flat_begin() const
+  Flat_Iterator flat_begin()
   {
-    return *flat_begin_it;
+    return Flat_Iterator(block_index.begin(), block_index.end());
   }
   
   const Flat_Iterator& flat_end() const
@@ -759,7 +757,6 @@ public:
     vector< uint32 > void_blocks;
     uint32 block_count;
     
-    Flat_Iterator* flat_begin_it;
     Flat_Iterator* flat_end_it;
     Discrete_Iterator* discrete_end_it;
     Range_Iterator* range_end_it;
