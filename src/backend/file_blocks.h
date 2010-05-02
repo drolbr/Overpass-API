@@ -491,10 +491,12 @@ private:
   File_Blocks(const File_Blocks& f) {}
   
 public:
-  File_Blocks(int32 FILE_PROPERTIES, bool writeable)
+  File_Blocks(int32 FILE_PROPERTIES, bool writeable, string file_name_extension = "")
   {
-    index_file_name = get_file_base_name(FILE_PROPERTIES) + get_index_suffix(FILE_PROPERTIES);
-    data_file_name = get_file_base_name(FILE_PROPERTIES) + get_data_suffix(FILE_PROPERTIES);
+    index_file_name = get_file_base_name(FILE_PROPERTIES) + file_name_extension
+	+ get_index_suffix(FILE_PROPERTIES);
+    data_file_name = get_file_base_name(FILE_PROPERTIES) + file_name_extension
+	+ get_data_suffix(FILE_PROPERTIES);
     block_size = get_block_size(FILE_PROPERTIES);
     this->writeable = writeable;
     

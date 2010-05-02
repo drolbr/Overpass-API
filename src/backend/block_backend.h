@@ -714,15 +714,129 @@ private:
        typename set< TIndex >::const_iterator it,
        const typename set< TIndex >::const_iterator& end)
   {
-/*    for (int i(0); i < sizes.size(); ++i)
-      cerr<<sizes[i]<<' ';*/
-    
     vector< uint32 > vsplit;
-    vector< uint64 > max_split_pos, min_split_pos, preferred_split_pos;
-    uint64 cur_size(0), sum_size(0), total_size(0);
-    uint32 split_i(0);
+    vector< uint64 > min_split_pos;
+    
+    // calc total size
+    uint64 total_size(0);
     for (uint i(0); i < sizes.size(); ++i)
       total_size += sizes[i];
+    
+    // calc minimal splitting points
+    uint64 cur_size(0), sum_size(0);
+    if (sizes.size() > 0)
+      cur_size = sizes[sizes.size() - 1];
+    for (int i(sizes.size()-2); i >= 0; --i)
+    {
+      cur_size += sizes[i];
+      if (cur_size <= block_size-4)
+	continue;
+      sum_size += cur_size - sizes[i];
+      min_split_pos.push_back(total_size - sum_size);
+      cur_size = sizes[i];
+    }
+    
+    //DEBUG
+/*    cerr<<'\n';
+    for (int i(min_split_pos.size()-1); i >= 0; --i)
+      cerr<<min_split_pos[i]<<' ';
+    cerr<<'\n';*/
+    
+    vector< uint64 > oversize_splits;
+    // find oversized blocks and force splits there
+    sum_size = 0;
+    if (sizes.size() > 0)
+      sum_size = sizes[0];
+    bool split_after((sizes.size() > 0) && (sizes[0] > block_size - 4));
+    for (uint i(1); i < sizes.size(); ++i)
+    {
+      if (sizes[i] > block_size - 4)
+      {
+	oversize_splits.push_back(sum_size);
+	split_after = true;
+      }
+      else if (split_after)
+      {
+	oversize_splits.push_back(sum_size);
+	split_after = false;
+      }
+      sum_size += sizes[i];
+    }
+    oversize_splits.push_back(sum_size);
+    
+    //DEBUG
+/*    for (vector< uint64 >::const_iterator oit(oversize_splits.begin());
+	 oit != oversize_splits.end(); ++oit)
+      cerr<<*oit<<' ';
+    cerr<<'\n';*/
+    
+    vector< pair< uint64, uint32 > > forced_splits;
+    // find splitting points where the average is below the minimum
+    // - here needs the fitting to be corrected
+    sum_size = 0;
+    uint64 min_sum_size = 0;
+    int min_split_i(min_split_pos.size() - 1);
+    for (vector< uint64 >::const_iterator oit(oversize_splits.begin());
+	oit != oversize_splits.end(); ++oit)
+    {
+      uint block_count(0);
+      while ((min_split_i >= 0) && (min_sum_size < *oit))
+      {
+	min_sum_size = min_split_pos[min_split_i];
+	--min_split_i;
+	++block_count;
+      }
+      if (min_sum_size < *oit)
+	++block_count;
+      uint32 used_blocks(0);
+      // correct the fitting if necessary
+      for (int i(min_split_i + block_count - 1); i > min_split_i; --i)
+      {
+	if ((*oit - sum_size)*(min_split_i + block_count - i)/block_count
+		      + sum_size <= min_split_pos[i])
+	{
+	  forced_splits.push_back
+	    (make_pair(min_split_pos[i], min_split_i + block_count - i
+		    - used_blocks));
+	  used_blocks = min_split_i + block_count - i;
+	}
+      }
+      forced_splits.push_back(make_pair(*oit, block_count - used_blocks));
+      sum_size = *oit;
+    }
+
+    //DEBUG
+/*    for (vector< pair< uint64, uint32 > >::const_iterator fit(forced_splits.begin());
+	 fit != forced_splits.end(); ++fit)
+      cerr<<'('<<fit->first<<", "<<fit->second<<") ";
+    cerr<<'\n';*/
+    
+    vector< pair< uint64, uint32 > >::const_iterator forced_it(forced_splits.begin());
+    // calculate the real splitting positions
+    sum_size = 0;
+    min_sum_size = 0;
+    uint32 cur_block(0);
+    for (uint i(0); i < sizes.size(); ++i)
+    {
+      sum_size += sizes[i];
+      if (sum_size > forced_it->first)
+      {
+	vsplit.push_back(i);
+	cur_block = 0;
+	min_sum_size = forced_it->first;
+	++forced_it;
+      }
+      else if (sum_size > (forced_it->first - min_sum_size)/
+	       (forced_it->second - cur_block) + min_sum_size)
+      {
+	vsplit.push_back(i);
+	++cur_block;
+	min_sum_size = sum_size - sizes[i];
+      }
+    }
+
+/*    uint32 split_i(0);
+    //TODO
     if (sizes.size() > 0)
       cur_size = sizes[0];
     for (uint i(1); i < sizes.size(); ++i)
@@ -734,19 +848,21 @@ private:
       max_split_pos.push_back(sum_size);
       cur_size = sizes[i];
     }
+    min_split_pos.resize(max_split_pos.size());
     cur_size = 0;
     sum_size = 0;
-    if (sizes.size() > 0)
-      cur_size = sizes[sizes.size() - 1];
-    for (int i(sizes.size()-2); i >= 0; --i)
+    split_i = max_split_pos.size();
+    
+    bool splitpos_modified(true);
+    list< pair< uint64, uint32 > > splitpos;
+    splitpos.push_back(make_pair(total_size, max_split_pos.size()));
+    while (modified)
     {
-      cur_size += sizes[i];
-      if (cur_size <= block_size-4)
-	continue;
-      sum_size += cur_size - sizes[i];
-      min_split_pos.push_back(sum_size);
-      cur_size = sizes[i];
+      modified = false;
+      pair< uint64, uint32 > last_splitpos(make_pair< uint64, uint32 >(0, 0));
+      
     }
+    //TODO
     int from(0);
     cur_size = 0;
     for (int i(0); i < max_split_pos.size(); ++i)
@@ -766,6 +882,7 @@ private:
 	  (((uint64)(j-from+1))*(total_size - cur_size))
 	  /(max_split_pos.size()+1-from));
     }
+    split_i = 0;
     if (!preferred_split_pos.empty())
     {
       sum_size = 0;
@@ -780,7 +897,7 @@ private:
 	vsplit.push_back(i);
 	++split_i;
       }
-    }
+    }*/
 
     // This is just a greedy algorithm and should be replace by something smarter
 /*    vector< uint > vsplit;
