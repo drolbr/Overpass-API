@@ -126,7 +126,7 @@ int main(int argc, char* args[])
     for (Block_Backend< Node_Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(nodes_local_db.flat_begin()); !(it == nodes_local_db.flat_end()); ++it)
     {
-      tags_local_out<<it.object().val()<<'\t'<<setprecision(10)
+      tags_local_out<<it.object().val()<<'\t'
 	  <<it.index().key<<'\t'<<it.index().value<<'\n';
     }
     
@@ -136,7 +136,7 @@ int main(int argc, char* args[])
     for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(nodes_global_db.flat_begin()); !(it == nodes_global_db.flat_end()); ++it)
     {
-      tags_global_out<<it.object().val()<<'\t'<<setprecision(10)
+      tags_global_out<<it.object().val()<<'\t'
 	  <<it.index().key<<'\t'<<it.index().value<<'\n';
     }
   }

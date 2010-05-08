@@ -2,6 +2,7 @@
 #define DE_OSM3S__BACKEND__NODE_UPDATER
 
 #include <algorithm>
+#include <iostream>
 #include <map>
 #include <set>
 #include <vector>
@@ -52,8 +53,8 @@ struct Uint32_Index
     return value;
   }
   
-  private:
-    uint32 value;
+protected:
+  uint32 value;
 };
 
 struct Node
@@ -171,7 +172,7 @@ struct Node_Skeleton
   
   bool operator==(const Node_Skeleton& a) const
   {
-    return this->id < a.id;
+    return this->id == a.id;
   }
 };
 
@@ -182,15 +183,6 @@ struct Node_Tag_Entry
   string value;
   vector< uint32 > node_ids;
 };
-
-// struct Node_Tag_Entry_Comparator_By_Key_Value {
-//   bool operator() (const Node_Tag_Entry& a, const Node_Tag_Entry& b)
-//   {
-//     if (a.key != b.key)
-//       return (a.key < b.key);
-//     return (a.value < b.value);
-//   }
-// };
 
 struct Node_Tag_Index_Local
 {
@@ -326,34 +318,24 @@ struct Node_Updater
   
   void update()
   {
-    cerr<<'A';
     map< uint32, vector< uint32 > > to_delete;
-    cerr<<'B';
     update_node_ids(to_delete);
-    cerr<<'C';
     update_coords(to_delete);
-    cerr<<'D';
 
     vector< Node_Tag_Entry > tags_to_delete;
-    cerr<<'E';
     prepare_delete_tags(tags_to_delete, to_delete);
-    cerr<<'F';
     update_node_tags_local(tags_to_delete);
-    cerr<<'G';
     update_node_tags_global(tags_to_delete);
-    cerr<<'H';
 
     ids_to_delete.clear();
-    cerr<<'I';
     nodes_to_insert.clear();
-    cerr<<"J\n";
+    cerr<<'.';
   }
   
 private:
   vector< uint32 > ids_to_delete;
   vector< Node > nodes_to_insert;
   static Node_Comparator_By_Id node_comparator_by_id;
-/*  static Node_Tag_Entry_Comparator_By_Key_Value node_tag_entry_comparator_by_key_value;*/
   
   void update_node_ids(map< uint32, vector< uint32 > >& to_delete)
   {
@@ -511,8 +493,6 @@ private:
     map< Node_Tag_Index_Global, set< Uint32_Index > > db_to_delete;
     map< Node_Tag_Index_Global, set< Uint32_Index > > db_to_insert;
     
-/*    sort(tags_to_delete.begin(), tags_to_delete.end(),
-	 node_tag_entry_comparator_by_key_value);*/
     for (vector< Node_Tag_Entry >::const_iterator it(tags_to_delete.begin());
 	 it != tags_to_delete.end(); ++it)
     {

@@ -174,7 +174,7 @@ struct Block_Backend_Basic_Iterator
   bool advance()
   {
     pos += TObject::size_of((void*)(buffer + pos));
-    
+
     // invalidate cached object
     if (current_object != 0)
     {
@@ -609,8 +609,9 @@ struct Block_Backend
 	  typename set< TIndex >::const_iterator,
 	  Default_Range_Iterator< TIndex > > File_Blocks_;
   
-  Block_Backend(int32 FILE_PROPERTIES, bool writeable)
-    : file_blocks(FILE_PROPERTIES, writeable), block_size(get_block_size(FILE_PROPERTIES))
+  Block_Backend(int32 FILE_PROPERTIES, bool writeable, string file_name_extension = "")
+    : file_blocks(FILE_PROPERTIES, writeable, file_name_extension),
+		  block_size(get_block_size(FILE_PROPERTIES))
   {
     flat_end_it = new Flat_Iterator(file_blocks, block_size, true);
     discrete_end_it = new Discrete_Iterator(file_blocks, block_size);
@@ -814,8 +815,8 @@ private:
     vector< pair< uint64, uint32 > >::const_iterator forced_it(forced_splits.begin());
     // calculate the real splitting positions
     sum_size = 0;
-    min_sum_size = 0;
     uint32 cur_block(0);
+    uint64 next_limit(forced_it->first/forced_it->second);
     for (uint i(0); i < sizes.size(); ++i)
     {
       sum_size += sizes[i];
@@ -825,94 +826,27 @@ private:
 	cur_block = 0;
 	min_sum_size = forced_it->first;
 	++forced_it;
+	next_limit = (forced_it->first - min_sum_size)/
+	    (forced_it->second - cur_block) + min_sum_size;
+	uint j(min_split_pos.size() - 1 - vsplit.size());
+	if ((vsplit.size() < min_split_pos.size()) &&
+	    (min_split_pos[j] > next_limit))
+	  next_limit = min_split_pos[j];
       }
-      else if (sum_size > (forced_it->first - min_sum_size)/
-	       (forced_it->second - cur_block) + min_sum_size)
+      else if (sum_size > next_limit)
       {
 	vsplit.push_back(i);
 	++cur_block;
 	min_sum_size = sum_size - sizes[i];
+	next_limit = (forced_it->first - min_sum_size)/
+	    (forced_it->second - cur_block) + min_sum_size;
+	uint j(min_split_pos.size() - 1 - vsplit.size());
+	if ((vsplit.size() < min_split_pos.size()) &&
+	    (min_split_pos[j] > next_limit))
+	  next_limit = min_split_pos[j];
       }
     }
 
-/*    uint32 split_i(0);
-    //TODO
-    if (sizes.size() > 0)
-      cur_size = sizes[0];
-    for (uint i(1); i < sizes.size(); ++i)
-    {
-      cur_size += sizes[i];
-      if (cur_size <= block_size-4)
-	continue;
-      sum_size += cur_size - sizes[i];
-      max_split_pos.push_back(sum_size);
-      cur_size = sizes[i];
-    }
-    min_split_pos.resize(max_split_pos.size());
-    cur_size = 0;
-    sum_size = 0;
-    split_i = max_split_pos.size();
-    
-    bool splitpos_modified(true);
-    list< pair< uint64, uint32 > > splitpos;
-    splitpos.push_back(make_pair(total_size, max_split_pos.size()));
-    while (modified)
-    {
-      modified = false;
-      pair< uint64, uint32 > last_splitpos(make_pair< uint64, uint32 >(0, 0));
-      
-    }
-    //TODO
-    int from(0);
-    cur_size = 0;
-    for (int i(0); i < max_split_pos.size(); ++i)
-    {
-      if (total_size - min_split_pos[min_split_pos.size()-i-1]
-	  < max_split_pos[i])
-	continue;
-      for (int j(from); j <= i; ++j)
-	preferred_split_pos.push_back(cur_size +
-	    ((uint64)(j-from+1))*(max_split_pos[i] - cur_size)/(i+1-from));
-      from = i+1;
-      cur_size = max_split_pos[i];
-    }
-    for (int j(from); j < max_split_pos.size(); ++j)
-    {
-      preferred_split_pos.push_back(cur_size +
-	  (((uint64)(j-from+1))*(total_size - cur_size))
-	  /(max_split_pos.size()+1-from));
-    }
-    split_i = 0;
-    if (!preferred_split_pos.empty())
-    {
-      sum_size = 0;
-      for (uint i(0); i < sizes.size(); ++i)
-      {
-	if (split_i == preferred_split_pos.size())
-	  break;
-	
-	sum_size += sizes[i];
-	if (sum_size <= preferred_split_pos[split_i])
-	  continue;
-	vsplit.push_back(i);
-	++split_i;
-      }
-    }*/
-
-    // This is just a greedy algorithm and should be replace by something smarter
-/*    vector< uint > vsplit;
-    uint32 pos(4);
-    for (uint i(0); i < sizes.size(); ++i)
-    {
-      pos += sizes[i];
-      if (pos <= block_size)
-	continue;
-      if (i == 0)
-	continue;
-      vsplit.push_back(i);
-      pos = 4 + sizes[i];
-    }*/
-    
     // This converts the result in a more convienient form
     uint i(0), j(0);
     while ((j < vsplit.size()) && (it != end))
@@ -926,11 +860,29 @@ private:
       ++i;
       ++it;
     }
-    while (it != end)
+  
+    //DEBUG
+/*    i = 0;
+    j = 0;
+    uint64 debug(0);
+    while (j < vsplit.size())
     {
+      if (vsplit[j] == i)
+      {
+	cerr<<debug<<' ';
+	debug = 0;
+	++j;
+      }
+      
+      debug += sizes[i];
       ++i;
-      ++it;
     }
+    while (i < sizes.size())
+    {
+      debug += sizes[i];
+      ++i;
+    }
+    cerr<<debug<<'\n';*/
   }
   
   void create_from_scratch
