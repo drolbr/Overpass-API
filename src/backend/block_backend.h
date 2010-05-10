@@ -151,7 +151,7 @@ struct Block_Backend_Basic_Iterator
     {
       buffer = (uint8*)malloc(block_size);
       memcpy(buffer, it.buffer, block_size);
-      current_idx_pos = (uint32*)(buffer + ((uint32)it.current_idx_pos - (uint32)it.buffer));
+      current_idx_pos = (uint32*)(buffer + ((uint8*)it.current_idx_pos - it.buffer));
     }
   }
   
@@ -718,6 +718,16 @@ private:
     vector< uint32 > vsplit;
     vector< uint64 > min_split_pos;
     
+    //DEBUG
+/*    for (uint i(0); i < sizes.size(); ++i)
+    {
+      if (sizes[i] > block_size/4)
+	cerr<<dec<<sizes[i]<<' ';
+      else
+	cerr<<'.';
+    }
+    cerr<<'\n';*/
+    
     // calc total size
     uint64 total_size(0);
     for (uint i(0); i < sizes.size(); ++i)
@@ -740,7 +750,7 @@ private:
     //DEBUG
 /*    cerr<<'\n';
     for (int i(min_split_pos.size()-1); i >= 0; --i)
-      cerr<<min_split_pos[i]<<' ';
+      cerr<<dec<<min_split_pos[i]<<' ';
     cerr<<'\n';*/
     
     vector< uint64 > oversize_splits;
@@ -775,34 +785,28 @@ private:
     // find splitting points where the average is below the minimum
     // - here needs the fitting to be corrected
     sum_size = 0;
-    uint64 min_sum_size = 0;
-    int min_split_i(min_split_pos.size() - 1);
+    int min_split_i(min_split_pos.size());
     for (vector< uint64 >::const_iterator oit(oversize_splits.begin());
 	oit != oversize_splits.end(); ++oit)
     {
-      uint block_count(0);
-      while ((min_split_i >= 0) && (min_sum_size < *oit))
-      {
-	min_sum_size = min_split_pos[min_split_i];
-	--min_split_i;
+      int block_count(1);
+      while ((min_split_i - block_count >= 0) &&
+	  (min_split_pos[min_split_i - block_count] < *oit))
 	++block_count;
-      }
-      if (min_sum_size < *oit)
-	++block_count;
-      uint32 used_blocks(0);
       // correct the fitting if necessary
-      for (int i(min_split_i + block_count - 1); i > min_split_i; --i)
+      uint32 used_blocks(0);
+      for (int j(1); j < block_count; ++j)
       {
-	if ((*oit - sum_size)*(min_split_i + block_count - i)/block_count
-		      + sum_size <= min_split_pos[i])
+	if ((*oit - sum_size)*j/block_count + sum_size
+	    <= min_split_pos[min_split_i - j])
 	{
 	  forced_splits.push_back
-	    (make_pair(min_split_pos[i], min_split_i + block_count - i
-		    - used_blocks));
-	  used_blocks = min_split_i + block_count - i;
+	    (make_pair(min_split_pos[min_split_i - j], j - used_blocks));
+	  used_blocks = j;
 	}
       }
       forced_splits.push_back(make_pair(*oit, block_count - used_blocks));
+      min_split_i = min_split_i - block_count;
       sum_size = *oit;
     }
 
@@ -815,6 +819,7 @@ private:
     vector< pair< uint64, uint32 > >::const_iterator forced_it(forced_splits.begin());
     // calculate the real splitting positions
     sum_size = 0;
+    uint64 min_sum_size(0);
     uint32 cur_block(0);
     uint64 next_limit(forced_it->first/forced_it->second);
     for (uint i(0); i < sizes.size(); ++i)
@@ -913,7 +918,7 @@ private:
 	  current_size += it2->size_of();
       }
       
-      sizes[it->first] = current_size;
+      sizes[it->first] += current_size;
       vsizes.push_back(current_size);
     }
     calc_split_idxs(split, vsizes, file_it.lower_bound(), file_it.upper_bound());
@@ -931,7 +936,7 @@ private:
       
       if ((split_it != split.end()) && (it->first == *split_it))
       {
-	*(uint32*)buffer = (uint32)pos - (uint32)buffer;
+	*(uint32*)buffer = pos - buffer;
 	file_it = file_blocks.insert_block(file_it, buffer, max_size);
 	++file_it;
 	++split_it;
@@ -946,7 +951,7 @@ private:
 	continue;
       else if (sizes[it->first] < block_size - 4)
       {
-	*(uint32*)pos = (uint32)pos - (uint32)buffer + sizes[it->first];
+	uint8* current_pos(pos);
 	it->first.to_data(pos + 4);
 	pos = pos + it->first.size_of() + 4;
 	for (typename set< TObject >::const_iterator
@@ -955,6 +960,7 @@ private:
 	  it2->to_data(pos);
 	  pos = pos + it2->size_of();
 	}
+	*(uint32*)current_pos = pos - buffer;
       }
       else
       {
@@ -966,9 +972,9 @@ private:
 	  for (typename set< TObject >::const_iterator
 	    it2(it->second.begin()); it2 != it->second.end(); ++it2)
 	  {
-	    if ((uint32)pos - (uint32)buffer + it2->size_of() > block_size)
+	    if (pos - buffer + it2->size_of() > block_size)
 	    {
-	      *(uint32*)buffer = (uint32)pos - (uint32)buffer;
+	      *(uint32*)buffer = pos - buffer;
 	      *(uint32*)(buffer+4) = *(uint32*)buffer;
 	      file_it = file_blocks.insert_block(file_it, buffer, max_size);
 	      ++file_it;
@@ -980,20 +986,19 @@ private:
 	  }
 	}
 	
-	*(uint32*)(buffer+4) = (uint32)pos - (uint32)buffer;
+	*(uint32*)(buffer+4) = pos - buffer;
 	max_size = (*(uint32*)(buffer + 4)) - 4;
       }
     }
     if (pos > buffer + 4)
     {
-      *(uint32*)buffer = (uint32)pos - (uint32)buffer;
+      *(uint32*)buffer = pos - buffer;
       file_it = file_blocks.insert_block(file_it, buffer, max_size);
       ++file_it;
     }
     ++file_it;
-
-    free(buffer);
     
+    free(buffer);
   }
 
   void update_group
@@ -1013,8 +1018,8 @@ private:
     // prepare a unified iterator over all indices, from file, to_delete
     // and to_insert
     uint8* pos(source + 4);
-    uint32 source_end((uint32)source + *(uint32*)source);
-    while ((uint32)pos < source_end)
+    uint8* source_end(source + *(uint32*)source);
+    while (pos < source_end)
     {
       Index_Collection< TIndex, TObject > index_value;
       index_value.delete_it = to_delete.end();
@@ -1104,7 +1109,7 @@ private:
 	  current_size += it2->size_of();
       }
       
-      sizes[it->first] = current_size;
+      sizes[it->first] += current_size;
       vsizes.push_back(current_size);
     }
     
@@ -1128,7 +1133,7 @@ private:
       
       if ((split_it != split.end()) && (it->first == *split_it))
       {
-	*(uint32*)dest = (uint32)pos - (uint32)dest;
+	*(uint32*)dest = pos - dest;
 	file_it = file_blocks.insert_block(file_it, dest, max_size);
 	++file_it;
 	++split_it;
@@ -1143,7 +1148,7 @@ private:
 	continue;
       else if (sizes[it->first] < block_size - 4)
       {
-	*(uint32*)pos = (uint32)pos - (uint32)dest + sizes[it->first];
+	uint8* current_pos(pos);
 	it->first.to_data(pos + 4);
 	pos += it->first.size_of() + 4;
 	
@@ -1176,6 +1181,7 @@ private:
 	    pos = pos + it2->size_of();
 	  }
 	}
+	*(uint32*)current_pos = pos - dest;
       }
       else
       {
@@ -1207,9 +1213,9 @@ private:
 	    it2(it->second.insert_it->second.begin());
 	  it2 != it->second.insert_it->second.end(); ++it2)
 	  {
-	    if ((uint32)pos - (uint32)dest + it2->size_of() > block_size)
+	    if (pos - dest + it2->size_of() > block_size)
 	    {
-	      *(uint32*)dest = (uint32)pos - (uint32)dest;
+	      *(uint32*)dest = pos - dest;
 	      *(uint32*)(dest+4) = *(uint32*)dest;
 	      file_it = file_blocks.insert_block(file_it, dest, (*(uint32*)dest) - 4);
 	      ++file_it;
@@ -1221,14 +1227,14 @@ private:
 	  }
 	}
 	
-	*(uint32*)(dest+4) = (uint32)pos - (uint32)dest;
+	*(uint32*)(dest+4) = pos - dest;
 	max_size = (*(uint32*)(dest + 4)) - 4;
       }
     }
 
     if (pos > dest + 4)
     {
-      *(uint32*)dest = (uint32)pos - (uint32)dest;
+      *(uint32*)dest = pos - dest;
       file_it = file_blocks.replace_block(file_it, dest, max_size);
     }
     else
@@ -1264,10 +1270,10 @@ private:
       
       uint8* spos(source + 8 + TIndex::size_of(source + 8));
       uint8* pos(dest + 8 + TIndex::size_of(source + 8));
-      memcpy(dest, source, (uint32)spos - (uint32)source);
+      memcpy(dest, source, spos - source);
       
       //copy everything that is not deleted yet
-      while ((uint32)spos - (uint32)source < *(uint32*)source)
+      while (spos - source < *(uint32*)source)
       {
 	TObject obj(spos);
 	if ((delete_it == to_delete.end()) ||
@@ -1302,7 +1308,7 @@ private:
       
       if (pos > dest + 8 + TIndex::size_of(source + 8))
       {
-	*(uint32*)dest = (uint32)pos - (uint32)dest;
+	*(uint32*)dest = pos - dest;
 	*(uint32*)(dest+4) = *(uint32*)dest;
 	file_it = file_blocks.replace_block(file_it, dest, (*(uint32*)dest) - 4);
       }
@@ -1315,10 +1321,10 @@ private:
     
     uint8* spos(source + 8 + TIndex::size_of(source + 8));
     uint8* pos(dest + 8 + TIndex::size_of(source + 8));
-    memcpy(dest, source, (uint32)spos - (uint32)source);
+    memcpy(dest, source, spos - source);
     
     //copy everything that is not deleted yet
-    while ((uint32)spos - (uint32)source < *(uint32*)source)
+    while (spos - source < *(uint32*)source)
     {
       TObject obj(spos);
       if ((delete_it == to_delete.end()) ||
@@ -1337,7 +1343,7 @@ private:
       {
 	if (pos + cur_insert->size_of() >= dest + block_size)
 	{
-	  *(uint32*)dest = (uint32)pos - (uint32)dest;
+	  *(uint32*)dest = pos - dest;
 	  *(uint32*)(dest+4) = *(uint32*)dest;
 	  file_it = file_blocks.insert_block(file_it, dest, (*(uint32*)dest) - 4);
 	  ++file_it;
@@ -1352,7 +1358,7 @@ private:
     
     if (pos > dest + 8 + TIndex::size_of(source + 8))
     {
-      *(uint32*)dest = (uint32)pos - (uint32)dest;
+      *(uint32*)dest = pos - dest;
       *(uint32*)(dest+4) = *(uint32*)dest;
       file_it = file_blocks.replace_block(file_it, dest, (*(uint32*)dest) - 4);
     }

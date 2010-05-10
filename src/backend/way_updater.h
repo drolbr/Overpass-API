@@ -21,7 +21,11 @@ struct Uint31_Index : Uint32_Index
   
   bool operator<(const Uint31_Index& index) const
   {
-    return (this->value & 0x8fffffff) < (index.value & 0x8fffffff);
+    if ((this->value & 0x7fffffff) != (index.value & 0x7fffffff))
+    {
+      return (this->value & 0x7fffffff) < (index.value & 0x7fffffff);
+    }
+    return (this->value < index.value);
   }
 };
 
@@ -162,7 +166,9 @@ struct Way_Tag_Index_Local
   
   bool operator<(const Way_Tag_Index_Local& a) const
   {
-    if ((index & 0x8fffffff) != (a.index & 0x8fffffff))
+    if ((index & 0x7fffffff) != (a.index & 0x7fffffff))
+      return ((index & 0x7fffffff) < (a.index & 0x7fffffff));
+    if (index != a.index)
       return (index < a.index);
     if (key != a.key)
       return (key < a.key);
@@ -171,7 +177,7 @@ struct Way_Tag_Index_Local
   
   bool operator==(const Way_Tag_Index_Local& a) const
   {
-    if ((index & 0x8fffffff) != (a.index & 0x8fffffff))
+    if (index != a.index)
       return false;
     if (key != a.key)
       return false;
@@ -257,27 +263,18 @@ struct Way_Updater
   
   void update()
   {
-    cerr<<'A';
     map< uint32, vector< uint32 > > to_delete;
-    cerr<<'B';
     update_way_ids(to_delete);
-    cerr<<'C';
     update_members(to_delete);
-    cerr<<'D';
 
     vector< Way_Tag_Entry > tags_to_delete;
-    cerr<<'E';
     prepare_delete_tags(tags_to_delete, to_delete);
-    cerr<<'F';
     update_way_tags_local(tags_to_delete);
-    cerr<<'G';
     update_way_tags_global(tags_to_delete);
-    cerr<<'H';
 
     ids_to_delete.clear();
-    cerr<<'I';
     ways_to_insert.clear();
-    cerr<<"J\n";
+    cerr<<'w';
   }
   
 private:
@@ -296,7 +293,7 @@ private:
 	   nit != wit->nds.end(); ++nit)
 	used_nodes[*nit] = 0;
     }
-    Random_File< Uint32_Index > node_random(de_osm3s_file_ids::NODES, true);
+    Random_File< Uint32_Index > node_random(de_osm3s_file_ids::NODES, false);
     for (map< uint32, uint32 >::iterator it(used_nodes.begin());
 	 it != used_nodes.end(); ++it)
       it->second = node_random.get(it->first).val();
@@ -392,7 +389,7 @@ private:
 	(de_osm3s_file_ids::WAY_TAGS_LOCAL, true);
     Way_Tag_Index_Local current_index;
     Way_Tag_Entry way_tag_entry;
-    current_index.index = 0x80000000;
+    current_index.index = 0xffffffff;
     for (Block_Backend< Way_Tag_Index_Local, Uint32_Index >::Range_Iterator
 	 it(ways_db.range_begin
 	     (Default_Range_Iterator< Way_Tag_Index_Local >(range_set.begin()),
@@ -401,7 +398,7 @@ private:
     {
       if (!(current_index == it.index()))
       {
-	if (current_index.index != 0x80000000)
+	if (current_index.index != 0xffffffff)
 	  tags_to_delete.push_back(way_tag_entry);
 	current_index = it.index();
 	way_tag_entry.index = it.index().index;
@@ -414,7 +411,7 @@ private:
       if (handle.find(it.object().val()) != handle.end())
 	way_tag_entry.way_ids.push_back(it.object().val());
     }
-    if (current_index.index != 0x80000000)
+    if (current_index.index != 0xffffffff)
       tags_to_delete.push_back(way_tag_entry);
   }
        

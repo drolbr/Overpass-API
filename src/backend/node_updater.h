@@ -321,15 +321,15 @@ struct Node_Updater
     map< uint32, vector< uint32 > > to_delete;
     update_node_ids(to_delete);
     update_coords(to_delete);
-
+    
     vector< Node_Tag_Entry > tags_to_delete;
     prepare_delete_tags(tags_to_delete, to_delete);
     update_node_tags_local(tags_to_delete);
     update_node_tags_global(tags_to_delete);
-
+    
     ids_to_delete.clear();
     nodes_to_insert.clear();
-    cerr<<'.';
+    cerr<<'n';
   }
   
 private:
@@ -420,7 +420,7 @@ private:
 	(de_osm3s_file_ids::NODE_TAGS_LOCAL, true);
     Node_Tag_Index_Local current_index;
     Node_Tag_Entry node_tag_entry;
-    current_index.index = 0x80000000;
+    current_index.index = 0xffffffff;
     for (Block_Backend< Node_Tag_Index_Local, Uint32_Index >::Range_Iterator
 	 it(nodes_db.range_begin
 	     (Default_Range_Iterator< Node_Tag_Index_Local >(range_set.begin()),
@@ -429,7 +429,7 @@ private:
     {
       if (!(current_index == it.index()))
       {
-	if (current_index.index != 0x80000000)
+	if (current_index.index != 0xffffffff)
 	  tags_to_delete.push_back(node_tag_entry);
 	current_index = it.index();
 	node_tag_entry.index = it.index().index;
@@ -442,7 +442,7 @@ private:
       if (handle.find(it.object().val()) != handle.end())
 	node_tag_entry.node_ids.push_back(it.object().val());
     }
-    if (current_index.index != 0x80000000)
+    if (current_index.index != 0xffffffff)
       tags_to_delete.push_back(node_tag_entry);
   }
        

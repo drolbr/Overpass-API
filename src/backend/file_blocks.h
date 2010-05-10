@@ -589,7 +589,7 @@ public:
 	pos += sizeof(uint32);
       }
       if (index_size < lseek64(index_fd, 0, SEEK_END))
-	ftruncate64(index_fd, index_size);
+	int foo(ftruncate64(index_fd, index_size));
       lseek64(index_fd, 0, SEEK_SET);
       uint32 foo(write(index_fd, index_buf, index_size));
       
