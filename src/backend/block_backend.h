@@ -611,7 +611,9 @@ struct Block_Backend
   
   Block_Backend(int32 FILE_PROPERTIES, bool writeable, string file_name_extension = "")
     : file_blocks(FILE_PROPERTIES, writeable, file_name_extension),
-		  block_size(get_block_size(FILE_PROPERTIES))
+      block_size(get_block_size(FILE_PROPERTIES)),
+      data_filename(get_file_base_name(FILE_PROPERTIES) + file_name_extension
+	+ get_data_suffix(FILE_PROPERTIES))
   {
     flat_end_it = new Flat_Iterator(file_blocks, block_size, true);
     discrete_end_it = new Discrete_Iterator(file_blocks, block_size);
@@ -708,6 +710,7 @@ private:
   Range_Iterator* range_end_it;
   uint32 block_size;
   set< TIndex > relevant_idxs;
+  string data_filename;
   
   void calc_split_idxs
       (vector< TIndex >& split,
@@ -937,6 +940,7 @@ private:
       if ((split_it != split.end()) && (it->first == *split_it))
       {
 	*(uint32*)buffer = pos - buffer;
+	check_block(buffer, file_it.block_it->pos, "create_from_scratch.write.1");
 	file_it = file_blocks.insert_block(file_it, buffer, max_size);
 	++file_it;
 	++split_it;
@@ -976,6 +980,7 @@ private:
 	    {
 	      *(uint32*)buffer = pos - buffer;
 	      *(uint32*)(buffer+4) = *(uint32*)buffer;
+	      check_block(buffer, file_it.block_it->pos, "create_from_scratch.write.2");
 	      file_it = file_blocks.insert_block(file_it, buffer, max_size);
 	      ++file_it;
 	      pos = buffer + 8 + it->first.size_of();
@@ -993,6 +998,7 @@ private:
     if (pos > buffer + 4)
     {
       *(uint32*)buffer = pos - buffer;
+      check_block(buffer, file_it.block_it->pos, "create_from_scratch.write.3");
       file_it = file_blocks.insert_block(file_it, buffer, max_size);
       ++file_it;
     }
@@ -1014,6 +1020,7 @@ private:
     uint8* dest = (uint8*)malloc(block_size);
     
     file_blocks.read_block(file_it, source);
+    check_block(source, file_it.block_it->pos, "update_group.read");
 
     // prepare a unified iterator over all indices, from file, to_delete
     // and to_insert
@@ -1134,6 +1141,7 @@ private:
       if ((split_it != split.end()) && (it->first == *split_it))
       {
 	*(uint32*)dest = pos - dest;
+	check_block(dest, file_it.block_it->pos, "update_group.write.1");
 	file_it = file_blocks.insert_block(file_it, dest, max_size);
 	++file_it;
 	++split_it;
@@ -1217,6 +1225,7 @@ private:
 	    {
 	      *(uint32*)dest = pos - dest;
 	      *(uint32*)(dest+4) = *(uint32*)dest;
+	      check_block(dest, file_it.block_it->pos, "update_group.write.2");
 	      file_it = file_blocks.insert_block(file_it, dest, (*(uint32*)dest) - 4);
 	      ++file_it;
 	      pos = dest + 8 + it->first.size_of();
@@ -1235,6 +1244,7 @@ private:
     if (pos > dest + 4)
     {
       *(uint32*)dest = pos - dest;
+      check_block(dest, file_it.block_it->pos, "update_group.write.3");
       file_it = file_blocks.replace_block(file_it, dest, max_size);
     }
     else
@@ -1267,7 +1277,8 @@ private:
       bool block_modified(false);
       
       file_blocks.read_block(file_it, source);
-      
+      check_block(source, file_it.block_it->pos, "update_segments.read.1");
+
       uint8* spos(source + 8 + TIndex::size_of(source + 8));
       uint8* pos(dest + 8 + TIndex::size_of(source + 8));
       memcpy(dest, source, spos - source);
@@ -1310,6 +1321,7 @@ private:
       {
 	*(uint32*)dest = pos - dest;
 	*(uint32*)(dest+4) = *(uint32*)dest;
+	check_block(dest, file_it.block_it->pos, "update_segments.write.4");
 	file_it = file_blocks.replace_block(file_it, dest, (*(uint32*)dest) - 4);
       }
       else
@@ -1318,7 +1330,8 @@ private:
     }
     
     file_blocks.read_block(file_it, source);
-    
+    check_block(source, file_it.block_it->pos, "update_segments.read.2");
+
     uint8* spos(source + 8 + TIndex::size_of(source + 8));
     uint8* pos(dest + 8 + TIndex::size_of(source + 8));
     memcpy(dest, source, spos - source);
@@ -1345,6 +1358,7 @@ private:
 	{
 	  *(uint32*)dest = pos - dest;
 	  *(uint32*)(dest+4) = *(uint32*)dest;
+	  check_block(dest, file_it.block_it->pos, "update_segments.write.1");
 	  file_it = file_blocks.insert_block(file_it, dest, (*(uint32*)dest) - 4);
 	  ++file_it;
 	  pos = dest + 8 + TIndex::size_of(source + 8);
@@ -1360,6 +1374,7 @@ private:
     {
       *(uint32*)dest = pos - dest;
       *(uint32*)(dest+4) = *(uint32*)dest;
+      check_block(dest, file_it.block_it->pos, "update_segments.write.2");
       file_it = file_blocks.replace_block(file_it, dest, (*(uint32*)dest) - 4);
     }
     else
@@ -1369,6 +1384,31 @@ private:
     
     free(source);
     free(dest);
+  }
+  
+  void check_block(void* block, uint32 block_pos, string desc)
+  {
+    uint8* source = (uint8*)block;
+    uint8* pos = source + 4;
+    
+    while (pos - source < *(uint32*)source)
+    {
+      uint8* index_start = pos;
+      if (*(uint32*)index_start > *(uint32*)source)
+      {
+	cerr<<"At "<<data_filename<<' '<<block_pos<<' '<<(pos - source)
+	    <<" during "<<desc<<": index_size greater than block_size\n";
+      }
+      pos += 4;
+      pos += TIndex::size_of(pos);
+      while (pos - source < *(uint32*)index_start)
+	pos += TObject::size_of(pos);
+      if (pos - source > *(uint32*)index_start)
+      {
+	cerr<<"At "<<data_filename<<' '<<block_pos<<' '<<(pos - source)
+	    <<" during "<<desc<<": last object ends further than index_size\n";
+      }
+    }
   }
 };
 

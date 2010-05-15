@@ -10,7 +10,7 @@ struct Properties
 
 //-----------------------------------------------------------------------------
 
-string BASE_DIRECTORY("./");
+string BASE_DIRECTORY("/opt/new_db/");
 string DATA_SUFFIX(".bin");
 string INDEX_SUFFIX(".idx");
 string ID_SUFFIX(".map");

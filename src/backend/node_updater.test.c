@@ -3,7 +3,9 @@
 #include <iostream>
 #include <list>
 
+#include <locale.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "../dispatch/settings.h"
 #include "../expat/expat_justparse_interface.h"
@@ -67,6 +69,7 @@ void end(const char *el)
 {
   if (!strcmp(el, "node"))
   {
+    
     node_updater.set_node(current_node);
     current_node.id = 0;
 
@@ -74,6 +77,48 @@ void end(const char *el)
     {
       node_updater.update(true);
       osm_element_count = 0;
+    
+      //DEBUG
+      ofstream tags_global_out((get_basedir() + "tags_global_temp.csv").c_str());
+      {
+        Block_Backend< Node_Tag_Index_Global, Uint32_Index > nodes_global_db
+	    (de_osm3s_file_ids::NODE_TAGS_GLOBAL, true);
+        for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Flat_Iterator
+	     it(nodes_global_db.flat_begin()); !(it == nodes_global_db.flat_end()); ++it)
+        {
+	  tags_global_out<<it.object().val()<<'\t'
+	      <<it.index().key<<'\t'<<it.index().value<<'\n';
+        }
+      }
+      {
+        Block_Backend< Node_Tag_Index_Global, Uint32_Index > nodes_global_db
+	    (de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, ".0");
+        for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Flat_Iterator
+	     it(nodes_global_db.flat_begin()); !(it == nodes_global_db.flat_end()); ++it)
+        {
+	  tags_global_out<<it.object().val()<<'\t'
+	      <<it.index().key<<'\t'<<it.index().value<<'\n';
+        }
+      }
+      {
+        Block_Backend< Node_Tag_Index_Global, Uint32_Index > nodes_global_db
+	    (de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, ".1");
+        for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Flat_Iterator
+	     it(nodes_global_db.flat_begin()); !(it == nodes_global_db.flat_end()); ++it)
+        {
+	  tags_global_out<<it.object().val()<<'\t'
+	      <<it.index().key<<'\t'<<it.index().value<<'\n';
+        }
+      }
+      tags_global_out.close();
+      tags_source_out.flush();
+      system("sort -n </opt/new_db/tags_global_temp.csv >/opt/new_db/tags_sorted.csv");
+      system("sort -n </opt/new_db/tags_source.csv >/opt/new_db/tags_sorted_source.csv");
+      system("diff /opt/new_db/tags_sorted_source.csv /opt/new_db/tags_sorted.csv >/opt/new_db/diff.txt");
+      int data_fd = open64
+	  ("/opt/new_db/diff.txt", O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+      if (lseek64(data_fd, 0, SEEK_END) > 0)
+	exit(0);
     }
   }
   ++osm_element_count;
@@ -130,7 +175,7 @@ int main(int argc, char* args[])
 	  <<it.index().key<<'\t'<<it.index().value<<'\n';
     }
     
-    // check update_node_tags_local - compare both files for the result
+    // check update_node_tags_global - compare both files for the result
     Block_Backend< Node_Tag_Index_Global, Uint32_Index > nodes_global_db
 	(de_osm3s_file_ids::NODE_TAGS_GLOBAL, false);
     for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Flat_Iterator
