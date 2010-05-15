@@ -38,7 +38,7 @@ void start(const char *el, const char **attr)
 	if (!strcmp(attr[i], "v"))
 	  value = attr[i+1];
       }
-      current_node.tags[key] = value;
+      current_node.tags.push_back(make_pair(key, value));
       
       tags_source_out<<current_node.id<<'\t'<<key<<'\t'<<value<<'\n';
     }

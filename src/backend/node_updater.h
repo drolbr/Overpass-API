@@ -62,7 +62,7 @@ struct Node
   uint32 id;
   uint32 ll_upper_;
   uint32 ll_lower_;
-  map< string, string > tags;
+  vector< pair< string, string > > tags;
   
   Node() {}
   
@@ -298,7 +298,7 @@ struct Node_Updater
   
   void set_node
       (uint32 id, uint32 lat, uint32 lon,
-       const map< string, string >& tags)
+       const vector< pair< string, string > >& tags)
   {
     ids_to_delete.push_back(id);
     
@@ -473,7 +473,7 @@ private:
       Node_Tag_Index_Local index;
       index.index = it->ll_upper_ & 0xffffff00;
       
-      for (map< string, string >::const_iterator it2(it->tags.begin());
+      for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
 	   it2 != it->tags.end(); ++it2)
       {
 	index.key = it2->first;
@@ -511,7 +511,7 @@ private:
     {
       Node_Tag_Index_Global index;
       
-      for (map< string, string >::const_iterator it2(it->tags.begin());
+      for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
 	   it2 != it->tags.end(); ++it2)
       {
 	index.key = it2->first;

@@ -24,7 +24,6 @@ Way current_way;
 int state;
 const int IN_NODES = 1;
 const int IN_WAYS = 2;
-vector< pair< uint32, uint32 > > id_idxs;
 ofstream member_source_out((get_basedir() + "member_source.csv").c_str());
 ofstream tags_source_out((get_basedir() + "tags_source.csv").c_str());
 
@@ -43,7 +42,7 @@ void start(const char *el, const char **attr)
 	value = attr[i+1];
     }
     if (current_node.id > 0)
-      current_node.tags[key] = value;
+      current_node.tags.push_back(make_pair(key, value));
     else if (current_way.id > 0)
     {
       current_way.tags[key] = value;
@@ -83,7 +82,6 @@ void start(const char *el, const char **attr)
 	lon = atof(attr[i+1]);
     }
     current_node = Node(id, lat, lon);
-    id_idxs.push_back(make_pair(id, Node::ll_upper(lat, lon)));
   }
   else if (!strcmp(el, "way"))
   {
