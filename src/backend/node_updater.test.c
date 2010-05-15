@@ -18,7 +18,7 @@ using namespace std;
 
 Node_Updater node_updater;
 Node current_node;
-vector< pair< uint32, uint32 > > id_idxs;
+//vector< pair< uint32, uint32 > > id_idxs;
 ofstream coord_source_out((get_basedir() + "coord_source.csv").c_str());
 ofstream tags_source_out((get_basedir() + "tags_source.csv").c_str());
 
@@ -57,7 +57,7 @@ void start(const char *el, const char **attr)
 	lon = atof(attr[i+1]);
     }
     current_node = Node(id, lat, lon);
-    id_idxs.push_back(make_pair(id, Node::ll_upper(lat, lon)));
+    //id_idxs.push_back(make_pair(id, Node::ll_upper(lat, lon)));
     
     coord_source_out<<id<<'\t'<<setprecision(10)<<lat<<'\t'<<lon<<'\n';
   }
@@ -72,7 +72,7 @@ void end(const char *el)
 
     if (osm_element_count >= 4*1024*1024)
     {
-      node_updater.update();
+      node_updater.update(true);
       osm_element_count = 0;
     }
   }
@@ -94,7 +94,7 @@ int main(int argc, char* args[])
     node_updater.update();
   
     // check update_node_ids
-    uint32 false_count(0);
+/*    uint32 false_count(0);
     Random_File< Uint32_Index > random(de_osm3s_file_ids::NODES, true);
     for (vector< pair< uint32, uint32 > >::const_iterator it(id_idxs.begin());
 	 it != id_idxs.end(); ++it)
@@ -107,7 +107,7 @@ int main(int argc, char* args[])
       }
     }
     cout<<'('<<id_idxs.size()<<" nodes checked, "
-	<<false_count<<" are inconsistent)\n";
+	<<false_count<<" are inconsistent)\n";*/
     
     // check update_coords - compare both files for the result
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db

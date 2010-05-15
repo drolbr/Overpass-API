@@ -34,7 +34,7 @@ struct Way
   uint32 id;
   uint32 index;
   vector< uint32 > nds;
-  map< string, string > tags;
+  vector< pair< string, string > > tags;
   
   Way() {}
   
@@ -243,7 +243,7 @@ struct Way_Updater
   }
   
   void set_way
-      (uint32 id, uint32 lat, uint32 lon, const map< string, string >& tags,
+      (uint32 id, uint32 lat, uint32 lon, const vector< pair< string, string > >& tags,
        const vector< uint32 > nds)
   {
     ids_to_delete.push_back(id);
@@ -442,7 +442,7 @@ private:
       Way_Tag_Index_Local index;
       index.index = it->index & 0xffffff00;
       
-      for (map< string, string >::const_iterator it2(it->tags.begin());
+      for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
 	   it2 != it->tags.end(); ++it2)
       {
 	index.key = it2->first;
@@ -480,7 +480,7 @@ private:
     {
       Way_Tag_Index_Global index;
       
-      for (map< string, string >::const_iterator it2(it->tags.begin());
+      for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
 	   it2 != it->tags.end(); ++it2)
       {
 	index.key = it2->first;

@@ -15,6 +15,49 @@
 
 using namespace std;
 
+struct String_Object
+{
+  String_Object(string s) : value(s) {}
+  String_Object(void* data) : value()
+  {
+    value = string(((int8*)data + 2), *(uint16*)data);
+  }
+  
+  uint32 size_of() const
+  {
+    return value.length() + 2;
+  }
+  
+  static uint32 size_of(void* data)
+  {
+    return *(uint16*)data + 2;
+  }
+  
+  void to_data(void* data) const
+  {
+    *(uint16*)data = value.length();
+    memcpy(((uint8*)data + 2), value.c_str(), value.length());
+  }
+  
+  bool operator<(const String_Object& index) const
+  {
+    return this->value < index.value;
+  }
+  
+  bool operator==(const String_Object& index) const
+  {
+    return this->value == index.value;
+  }
+  
+  string val() const
+  {
+    return value;
+  }
+  
+  protected:
+    string value;
+};
+
 struct Relation_Entry
 {
   uint32 ref;
@@ -30,7 +73,7 @@ struct Relation
   uint32 id;
   uint32 index;
   vector< Relation_Entry > members;
-  map< string, string > tags;
+  vector< pair< string, string > > tags;
   
   Relation() {}
   
@@ -239,7 +282,21 @@ struct Relation_Tag_Index_Global
 
 struct Relation_Updater
 {
-  Relation_Updater() {}
+  Relation_Updater()
+  {
+    // load roles
+    Block_Backend< Uint32_Index, String_Object > roles_db
+      (de_osm3s_file_ids::RELATION_ROLES, true);
+    max_role_id = 0;
+    for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
+        it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
+    {
+      role_ids[it.object().val()] = it.index().val();
+      if (max_role_id <= it.index().val())
+	max_role_id = it.index().val()+1;
+    }
+    max_written_role_id = max_role_id;
+  }
   
   void set_id_deleted(uint32 id)
   {
@@ -247,7 +304,7 @@ struct Relation_Updater
   }
   
   void set_relation
-      (uint32 id, uint32 lat, uint32 lon, const map< string, string >& tags,
+      (uint32 id, uint32 lat, uint32 lon, const vector< pair< string, string > >& tags,
        const vector< Relation_Entry >& members)
   {
     ids_to_delete.push_back(id);
@@ -263,6 +320,16 @@ struct Relation_Updater
   {
     ids_to_delete.push_back(rel.id);
     rels_to_insert.push_back(rel);
+  }
+  
+  uint32 get_role_id(const string& s)
+  {
+    map< string, uint32 >::const_iterator it(role_ids.find(s));
+    if (it != role_ids.end())
+      return it->second;
+    role_ids[s] = max_role_id;
+    ++max_role_id;
+    return (max_role_id - 1);
   }
   
   void update()
@@ -283,14 +350,19 @@ struct Relation_Updater
     cerr<<'G';
     update_rel_tags_global(tags_to_delete);
     cerr<<'H';
+    flush_roles();
+    cerr<<'I';
 
     ids_to_delete.clear();
-    cerr<<'I';
+    cerr<<'J';
     rels_to_insert.clear();
-    cerr<<"J\n";
+    cerr<<"K\n";
   }
   
 private:
+  map< string, uint32 > role_ids;
+  uint32 max_written_role_id;
+  uint32 max_role_id;
   vector< uint32 > ids_to_delete;
   vector< Relation > rels_to_insert;
   static Relation_Comparator_By_Id rel_comparator_by_id;
@@ -471,7 +543,7 @@ private:
       Relation_Tag_Index_Local index;
       index.index = it->index & 0xffffff00;
       
-      for (map< string, string >::const_iterator it2(it->tags.begin());
+      for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
 	   it2 != it->tags.end(); ++it2)
       {
 	index.key = it2->first;
@@ -509,7 +581,7 @@ private:
     {
       Relation_Tag_Index_Global index;
       
-      for (map< string, string >::const_iterator it2(it->tags.begin());
+      for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
 	   it2 != it->tags.end(); ++it2)
       {
 	index.key = it2->first;
@@ -518,10 +590,28 @@ private:
 	db_to_delete[index];
       }
     }
-
+    
     Block_Backend< Relation_Tag_Index_Global, Uint32_Index > rel_db
-	(de_osm3s_file_ids::RELATION_TAGS_GLOBAL, true);
+      (de_osm3s_file_ids::RELATION_TAGS_GLOBAL, true);
     rel_db.update(db_to_delete, db_to_insert);
+  }
+
+  void flush_roles()
+  {
+    map< Uint32_Index, set< String_Object > > db_to_delete;
+    map< Uint32_Index, set< String_Object > > db_to_insert;
+    
+    for (map< string, uint32 >::const_iterator it(role_ids.begin());
+    it != role_ids.end(); ++it)
+    {
+      if (it->second >= max_written_role_id)
+	db_to_insert[Uint32_Index(it->second)].insert
+	(String_Object(it->first));
+    }
+    
+    Block_Backend< Uint32_Index, String_Object > roles_db
+    (de_osm3s_file_ids::RELATION_ROLES, true);
+    roles_db.update(db_to_delete, db_to_insert);
   }
 };
 

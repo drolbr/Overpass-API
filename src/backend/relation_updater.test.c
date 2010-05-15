@@ -65,10 +65,10 @@ void start(const char *el, const char **attr)
     if (current_node.id > 0)
       current_node.tags.push_back(make_pair(key, value));
     else if (current_way.id > 0)
-      current_way.tags[key] = value;
+      current_way.tags.push_back(make_pair(key, value));
     else if (current_relation.id > 0)
     {
-      current_relation.tags[key] = value;
+      current_relation.tags.push_back(make_pair(key, value));
       tags_source_out<<current_relation.id<<'\t'<<key<<'\t'<<value<<'\n';
     }
   }
@@ -108,10 +108,10 @@ void start(const char *el, const char **attr)
 	entry.type = Relation_Entry::WAY;
       else if (type == "relation")
 	entry.type = Relation_Entry::RELATION;
-      entry.role = 0;
+      entry.role = relation_updater.get_role_id(role);
       current_relation.members.push_back(entry);
       
-      member_source_out<<ref<<' '<<entry.type<<' ';
+      member_source_out<<ref<<' '<<entry.type<<' '<<role<<' ';
     }
   }
   else if (!strcmp(el, "node"))
@@ -188,7 +188,7 @@ void end(const char *el)
 
     if (osm_element_count >= 4*1024*1024)
     {
-      node_updater.update();
+      node_updater.update(true);
       show_mem_status();
       osm_element_count = 0;
     }
@@ -237,12 +237,23 @@ int main(int argc, char* args[])
     //reading the main document
     parse(stdin, start, end);
   
-    node_updater.update();
-    way_updater.update();
-    relation_updater.update();
+    if (state == IN_NODES)
+      node_updater.update();
+    else if (state == IN_WAYS)
+      way_updater.update();
+    else if (state == IN_RELATIONS)
+      relation_updater.update();
     
     show_mem_status();
 
+    // prepare check update_members - load roles
+    map< uint32, string > roles;
+    Block_Backend< Uint32_Index, String_Object > roles_db
+      (de_osm3s_file_ids::RELATION_ROLES, true);
+    for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
+        it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
+      roles[it.index().val()] = it.object().val();
+    
     // check update_members - compare both files for the result
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
 	(de_osm3s_file_ids::RELATIONS, false);
@@ -252,7 +263,8 @@ int main(int argc, char* args[])
       member_db_out<<it.object().id<<'\t';
       for (int i(0); i < it.object().members.size(); ++i)
 	member_db_out<<it.object().members[i].ref<<' '
-	    <<it.object().members[i].type<<' ';
+	    <<it.object().members[i].type<<' '
+	    <<roles[it.object().members[i].role]<<' ';
       member_db_out<<'\n';
     }
     

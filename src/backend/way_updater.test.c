@@ -45,7 +45,7 @@ void start(const char *el, const char **attr)
       current_node.tags.push_back(make_pair(key, value));
     else if (current_way.id > 0)
     {
-      current_way.tags[key] = value;
+      current_way.tags.push_back(make_pair(key, value));
       
       tags_source_out<<current_way.id<<'\t'<<key<<'\t'<<value<<'\n';
     }
@@ -113,7 +113,7 @@ void end(const char *el)
 
     if (osm_element_count >= 4*1024*1024)
     {
-      node_updater.update();
+      node_updater.update(true);
       osm_element_count = 0;
     }
   }
@@ -146,8 +146,10 @@ int main(int argc, char* args[])
     //reading the main document
     parse(stdin, start, end);
   
-    node_updater.update();
-    way_updater.update();
+    if (state == IN_NODES)
+      node_updater.update();
+    else if (state == IN_WAYS)
+      way_updater.update();
     
     // check update_members - compare both files for the result
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db

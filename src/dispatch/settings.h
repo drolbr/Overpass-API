@@ -26,6 +26,7 @@ struct de_osm3s_file_ids
   const static int32 WAY_TAGS_LOCAL = 2011;
   const static int32 WAY_TAGS_GLOBAL = 2012;
   const static int32 RELATIONS = 3001;
+  const static int32 RELATION_ROLES = 3002;
   const static int32 RELATION_TAGS_LOCAL = 3011;
   const static int32 RELATION_TAGS_GLOBAL = 3012;
 };

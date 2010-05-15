@@ -18,6 +18,45 @@ print
 import
 update
 
+---
+
+Update-Abhängigkeiten:
+node_tags_global: Um alte Tags finden zu können, müssen wir diese zunächst auslesen. Passiert über node_tags_local
+node_tags_local: Um alte Tags finden zu können, müssen wir diese zunächst auslesen. Dies erfordert den alten LL_index der Node, also Lesen von nodes
+nodes: Für alten LL_index muss diese Datei sowieso zunächst gelesen werden. Alternativ: LL_index-Verzeichnis
+
+*_tags_global/_local: analog
+ways/relations: werden auch aus ihrem LL_index-Verzeichnis ausgerüstet
+Für die neuen LL-Indizes müssen allerdings die LL-Indizes der betroffenen Nodes bzw. Ways bekannt sein. (können aus dem aktualisierten LL_index gelesen werden)
+
+Update-Strategie:
+a) Nodes
+aa) Lese die Löschindizes der alten Nodes aus
+ab) Lösche und Aktualisiere die Nodes
+ac) Lese die Tags der alten Nodes ein
+ad) Lösche und Aktualisiere nodes_local
+ae) Lösche und Aktualisiere nodes_global
+b) Ways
+ba) Lese die Positionen der benutzten Nodes aus LL_index aus
+bb) Lese die Löschindizes der alten Ways aus
+bc) Lösche und Aktualisiere die Ways
+bd) Lese die Tags der alten Ways ein
+be) Lösche und Aktualisiere ways_local
+bf) Lösche und Aktualisiere ways_global
+c) Relations
+ca) Lese die Positionen der benutzten Nodes und Ways aus LL_index aus
+cb) Lese die Löschindizes der alten Relations aus
+cc) Lösche und Aktualisiere die Relations
+cd) Lese die Tags der alten Relations ein
+ce) Lösche und Aktualisiere relations_local
+cf) Lösche und Aktualisiere relations_global
+
+Node_Updater:
+to_delete_ids
+to_delete_idxs
+
+---
+
 Welcher Index gehört wo hin?
 Sei ein Index q gegeben.
 a) Gibt es einen Blockindex b mit Index b' des Folgeblocks, so dass b\leq q < b' gilt, so gehört q in diesen Block.

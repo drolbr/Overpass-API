@@ -17,7 +17,7 @@ union_$(suffix)
 objects = expat_justparse_interface.o cgi-helper.o user_interface.o script_queries.o node_strings_file_io.o way_strings_file_io.o relation_strings_file_io.o script_tools.o vigilance_control.o $(stmts)
 executable_objects = script-interpreter.o add_rule.o dump_rules.o get_rule.o load_rules.o update_rule.o import_osm.o apply_osc.o
 executables = cgi-bin/interpreter cgi-bin/add_rule cgi-bin/get_rule cgi-bin/update_rule bin/dump_rules bin/load_rules
-shortcuts = cgi-bin/download cgi-bin/poi cgi-bin/elems bin/nodes-csv-lat-lon-name cgi-bin/nodes-csv bin/memberlist cgi-bin/nodes-csv-gzip cgi-bin/sketch-route cgi-bin/sketch-line bin/sketch-route-svg cgi-bin/sketch-options bin/uncgi bin/escape_xml bin/bbox-brim-query
+shortcuts = cgi-bin/download cgi-bin/poi cgi-bin/elems bin/nodes-csv-lat-lon-name cgi-bin/nodes-csv bin/memberlist cgi-bin/nodes-csv-gzip cgi-bin/sketch-route cgi-bin/sketch-line bin/sketch-route-svg cgi-bin/sketch-options bin/uncgi bin/escape_xml bin/bbox-brim-query cgi-bin/rels-extended
 tool_headers = expat_justparse_interface.h script_datatypes.h script_queries.h script_tools.h user_interface.h
 
 backend_generic_h = backend/raw_file_db.h backend/file_types.h script_datatypes.h

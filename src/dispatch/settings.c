@@ -10,7 +10,7 @@ struct Properties
 
 //-----------------------------------------------------------------------------
 
-string BASE_DIRECTORY("/opt/osm_why_api/");
+string BASE_DIRECTORY("./");
 string DATA_SUFFIX(".bin");
 string INDEX_SUFFIX(".idx");
 string ID_SUFFIX(".map");
@@ -47,6 +47,10 @@ map< uint32, Properties > init_settings()
   p.file_base_name = BASE_DIRECTORY + "relations";
   p.block_size = 1*1024*1024;
   settings[de_osm3s_file_ids::RELATIONS] = p;
+  
+  p.file_base_name = BASE_DIRECTORY + "relation_roles";
+  p.block_size = 1*1024*1024;
+  settings[de_osm3s_file_ids::RELATION_ROLES] = p;
   
   p.file_base_name = BASE_DIRECTORY + "relation_tags_local";
   p.block_size = 1*1024*1024;
