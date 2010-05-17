@@ -112,13 +112,14 @@ void end(const char *el)
       }
       tags_global_out.close();
       tags_source_out.flush();
-      system("sort -n </opt/new_db/tags_global_temp.csv >/opt/new_db/tags_sorted.csv");
-      system("sort -n </opt/new_db/tags_source.csv >/opt/new_db/tags_sorted_source.csv");
-      system("diff /opt/new_db/tags_sorted_source.csv /opt/new_db/tags_sorted.csv >/opt/new_db/diff.txt");
       int data_fd = open64
-	  ("/opt/new_db/diff.txt", O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-      if (lseek64(data_fd, 0, SEEK_END) > 0)
+	  ("/opt/new_db/tags_global_temp.csv", O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+      int data_2_fd = open64
+	  ("/opt/new_db/tags_source.csv", O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+      if (lseek64(data_fd, 0, SEEK_END) != lseek64(data_2_fd, 0, SEEK_END))
 	exit(0);
+      close(data_fd);
+      close(data_2_fd);
     }
   }
   ++osm_element_count;

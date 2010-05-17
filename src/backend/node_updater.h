@@ -347,8 +347,6 @@ struct Node_Updater
     {
       if (++update_counter % 8 == 0)
 	merge_files("", ".0");
-      if (update_counter == 128)
-	exit(0); //DEBUG
       if (update_counter % 64 == 0)
 	merge_files(".0", ".1");
     }

@@ -981,7 +981,7 @@ private:
 	      *(uint32*)buffer = pos - buffer;
 	      *(uint32*)(buffer+4) = *(uint32*)buffer;
 	      check_block(buffer, file_it.block_it->pos, "create_from_scratch.write.2");
-	      file_it = file_blocks.insert_block(file_it, buffer, max_size);
+	      file_it = file_blocks.insert_block(file_it, buffer, (*(uint32*)buffer) - 4);
 	      ++file_it;
 	      pos = buffer + 8 + it->first.size_of();
 	    }

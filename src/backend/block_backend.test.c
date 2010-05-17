@@ -435,7 +435,7 @@ int main(int argc, char* args[])
   to_insert.clear();
   objects.clear();
   for (unsigned int i(0); i < 200; ++i)
-    objects.insert(IntObject(i*100 + 150));
+    objects.insert(IntObject(i*200 + 150));
   to_insert[50] = objects;
   
   fill_db(to_delete, to_insert, 14);
@@ -456,6 +456,17 @@ int main(int argc, char* args[])
   fill_db(to_delete, to_insert, 16);
   read_test(17);
   
+  cout<<"** Blow up further the same index\n";
+  to_delete.clear();
+  to_insert.clear();
+  objects.clear();
+  for (unsigned int i(0); i < 201; ++i)
+    objects.insert(IntObject(i*200 + 50));
+  to_insert[50] = objects;
+  
+  fill_db(to_delete, to_insert, 18);
+  read_test(19);
+  
   cout<<"** Blow up two indices\n";
   to_delete.clear();
   to_insert.clear();
@@ -468,8 +479,8 @@ int main(int argc, char* args[])
     objects.insert(IntObject(i*100 + 199));
   to_insert[99] = objects;
   
-  fill_db(to_delete, to_insert, 18);
-  read_test(19);
+  fill_db(to_delete, to_insert, 20);
+  read_test(21);
   
   cout<<"** Delete an entire block\n";
   to_delete.clear();
@@ -498,8 +509,8 @@ int main(int argc, char* args[])
     to_delete[i] = objects;
   }
   
-  fill_db(to_delete, to_insert, 22);
-  read_test(23);
+  fill_db(to_delete, to_insert, 24);
+  read_test(25);
   
   return 0;
 }
