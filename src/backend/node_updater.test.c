@@ -120,7 +120,7 @@ void end(const char *el)
 /*      cerr<<DEBUG_nodes_count<<' ';*/
       uint32 tags_count(0);
       Block_Backend< Node_Tag_Index_Global, Uint32_Index > nodes_global_db
-	  (de_osm3s_file_ids::NODE_TAGS_GLOBAL, false);
+	  (de_osm3s_file_ids::NODE_TAGS_GLOBAL, true);
       for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	   it(nodes_global_db.flat_begin()); !(it == nodes_global_db.flat_end()); ++it)
         ++tags_count;
@@ -129,7 +129,7 @@ void end(const char *el)
       {
 	DEBUG_nodes_8 = 0;
         Block_Backend< Node_Tag_Index_Global, Uint32_Index > nodes_global_db
-	    (de_osm3s_file_ids::NODE_TAGS_GLOBAL, false, ".0");
+	    (de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, ".0");
         for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	     it(nodes_global_db.flat_begin()); !(it == nodes_global_db.flat_end()); ++it)
 	  ++DEBUG_nodes_8;
@@ -140,7 +140,7 @@ void end(const char *el)
       {
 	DEBUG_nodes_64 = 0;
 	Block_Backend< Node_Tag_Index_Global, Uint32_Index > nodes_global_db
-	    (de_osm3s_file_ids::NODE_TAGS_GLOBAL, false, ".0");
+	    (de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, ".1");
         for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	     it(nodes_global_db.flat_begin()); !(it == nodes_global_db.flat_end()); ++it)
           ++DEBUG_nodes_64;

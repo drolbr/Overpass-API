@@ -376,17 +376,17 @@ struct Node_Updater
     if (!partial && (update_counter > 0))
     {
       if (update_counter > 64)
-	merge_files_DEBUG(".1", ".0");
+	merge_files(".1", ".0");
       if (update_counter > 8)
-	merge_files_DEBUG(".0", "");
+	merge_files(".0", "");
       update_counter = 0;
     }
     else if (partial)
     {
       if (++update_counter % 8 == 0)
-	merge_files_DEBUG("", ".0");
+	merge_files("", ".0");
       if (update_counter % 64 == 0)
-	merge_files_DEBUG(".0", ".1");
+	merge_files(".0", ".1");
     }
     
     cerr<<'n'<<' '<<time(NULL)<<' ';
@@ -676,39 +676,6 @@ private:
       + get_index_suffix(de_osm3s_file_ids::NODE_TAGS_GLOBAL)).c_str());
     remove((get_file_base_name(de_osm3s_file_ids::NODE_TAGS_GLOBAL) + from 
       + get_data_suffix(de_osm3s_file_ids::NODE_TAGS_GLOBAL)).c_str());
-  }
-  
-  void merge_files_DEBUG(string from, string into)
-  {
-    {
-      map< Uint32_Index, set< Node_Skeleton > > db_to_delete;
-      map< Uint32_Index, set< Node_Skeleton > > db_to_insert;
-      
-      uint32 item_count(0);
-      Block_Backend< Uint32_Index, Node_Skeleton > from_db
-	  (de_osm3s_file_ids::NODES, false, from);
-	  for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
-		      it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
-	  {
-	    db_to_insert[it.index()].insert(it.object());
-	    if (++item_count >= 4*1024*1024)
-	    {
-	      Block_Backend< Uint32_Index, Node_Skeleton > into_db
-		  (de_osm3s_file_ids::NODES, true, into);
-		  into_db.update(db_to_delete, db_to_insert);
-		  db_to_insert.clear();
-		  item_count = 0;
-	    }
-	  }
-      
-	  Block_Backend< Uint32_Index, Node_Skeleton > into_db
-	      (de_osm3s_file_ids::NODES, true, into);
-	      into_db.update(db_to_delete, db_to_insert);
-    }
-    remove((get_file_base_name(de_osm3s_file_ids::NODES) + from 
-	+ get_index_suffix(de_osm3s_file_ids::NODES)).c_str());
-    remove((get_file_base_name(de_osm3s_file_ids::NODES) + from 
-	+ get_data_suffix(de_osm3s_file_ids::NODES)).c_str());
   }
 };
 
