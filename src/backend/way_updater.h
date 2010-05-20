@@ -261,8 +261,10 @@ struct Way_Updater
     ways_to_insert.push_back(way);
   }
   
-  void update()
+  void update(bool partial = false)
   {
+    cerr<<'.'<<' '<<time(NULL)<<' ';
+    
     map< uint32, vector< uint32 > > to_delete;
     update_way_ids(to_delete);
     update_members(to_delete);
@@ -274,13 +276,33 @@ struct Way_Updater
 
     ids_to_delete.clear();
     ways_to_insert.clear();
-    cerr<<'w';
+    
+    cerr<<'W'<<' '<<time(NULL)<<' ';
+    
+    if (!partial && (update_counter > 0))
+    {
+      if (update_counter > 64)
+	merge_files(".1", ".0");
+      if (update_counter > 8)
+	merge_files(".0", "");
+      update_counter = 0;
+    }
+    else if (partial)
+    {
+      if (++update_counter % 8 == 0)
+	merge_files("", ".0");
+      if (update_counter % 64 == 0)
+	merge_files(".0", ".1");
+    }
+    
+    cerr<<'w'<<' '<<time(NULL)<<' ';
   }
   
 private:
   vector< uint32 > ids_to_delete;
   vector< Way > ways_to_insert;
   static Way_Comparator_By_Id way_comparator_by_id;
+  uint32 update_counter;
   
   void update_way_ids(map< uint32, vector< uint32 > >& to_delete)
   {
@@ -493,6 +515,97 @@ private:
     Block_Backend< Way_Tag_Index_Global, Uint32_Index > way_db
 	(de_osm3s_file_ids::WAY_TAGS_GLOBAL, true);
     way_db.update(db_to_delete, db_to_insert);
+  }
+  
+  void merge_files(string from, string into)
+  {
+    {
+      map< Uint31_Index, set< Way_Skeleton > > db_to_delete;
+      map< Uint31_Index, set< Way_Skeleton > > db_to_insert;
+      
+      uint32 item_count(0);
+      Block_Backend< Uint31_Index, Way_Skeleton > from_db
+      (de_osm3s_file_ids::WAYS, false, from);
+      for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
+	it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
+      {
+	db_to_insert[it.index()].insert(it.object());
+	if (++item_count >= 4*1024*1024)
+	{
+	  Block_Backend< Uint31_Index, Way_Skeleton > into_db
+	  (de_osm3s_file_ids::WAYS, true, into);
+	  into_db.update(db_to_delete, db_to_insert);
+	  db_to_insert.clear();
+	  item_count = 0;
+	}
+      }
+      
+      Block_Backend< Uint31_Index, Way_Skeleton > into_db
+      (de_osm3s_file_ids::WAYS, true, into);
+      into_db.update(db_to_delete, db_to_insert);
+    }
+    remove((get_file_base_name(de_osm3s_file_ids::WAYS) + from 
+    + get_index_suffix(de_osm3s_file_ids::WAYS)).c_str());
+    remove((get_file_base_name(de_osm3s_file_ids::WAYS) + from 
+    + get_data_suffix(de_osm3s_file_ids::WAYS)).c_str());
+    {
+      map< Way_Tag_Index_Local, set< Uint32_Index > > db_to_delete;
+      map< Way_Tag_Index_Local, set< Uint32_Index > > db_to_insert;
+      
+      uint32 item_count(0);
+      Block_Backend< Way_Tag_Index_Local, Uint32_Index > from_db
+      (de_osm3s_file_ids::WAY_TAGS_LOCAL, false, from);
+      for (Block_Backend< Way_Tag_Index_Local, Uint32_Index >::Flat_Iterator
+	it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
+      {
+	db_to_insert[it.index()].insert(it.object());
+	if (++item_count >= 4*1024*1024)
+	{
+	  Block_Backend< Way_Tag_Index_Local, Uint32_Index > into_db
+	  (de_osm3s_file_ids::WAY_TAGS_LOCAL, true, into);
+	  into_db.update(db_to_delete, db_to_insert);
+	  db_to_insert.clear();
+	  item_count = 0;
+	}
+      }
+      
+      Block_Backend< Way_Tag_Index_Local, Uint32_Index > into_db
+      (de_osm3s_file_ids::WAY_TAGS_LOCAL, true, into);
+      into_db.update(db_to_delete, db_to_insert);
+    }
+    remove((get_file_base_name(de_osm3s_file_ids::WAY_TAGS_LOCAL) + from 
+    + get_index_suffix(de_osm3s_file_ids::WAY_TAGS_LOCAL)).c_str());
+    remove((get_file_base_name(de_osm3s_file_ids::WAY_TAGS_LOCAL) + from 
+    + get_data_suffix(de_osm3s_file_ids::WAY_TAGS_LOCAL)).c_str());
+    {
+      map< Way_Tag_Index_Global, set< Uint32_Index > > db_to_delete;
+      map< Way_Tag_Index_Global, set< Uint32_Index > > db_to_insert;
+      
+      uint32 item_count(0);
+      Block_Backend< Way_Tag_Index_Global, Uint32_Index > from_db
+      (de_osm3s_file_ids::WAY_TAGS_GLOBAL, false, from);
+      for (Block_Backend< Way_Tag_Index_Global, Uint32_Index >::Flat_Iterator
+	it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
+      {
+	db_to_insert[it.index()].insert(it.object());
+	if (++item_count >= 4*1024*1024)
+	{
+	  Block_Backend< Way_Tag_Index_Global, Uint32_Index > into_db
+	  (de_osm3s_file_ids::WAY_TAGS_GLOBAL, true, into);
+	  into_db.update(db_to_delete, db_to_insert);
+	  db_to_insert.clear();
+	  item_count = 0;
+	}
+      }
+      
+      Block_Backend< Way_Tag_Index_Global, Uint32_Index > into_db
+      (de_osm3s_file_ids::WAY_TAGS_GLOBAL, true, into);
+      into_db.update(db_to_delete, db_to_insert);
+    }
+    remove((get_file_base_name(de_osm3s_file_ids::WAY_TAGS_GLOBAL) + from 
+    + get_index_suffix(de_osm3s_file_ids::WAY_TAGS_GLOBAL)).c_str());
+    remove((get_file_base_name(de_osm3s_file_ids::WAY_TAGS_GLOBAL) + from 
+    + get_data_suffix(de_osm3s_file_ids::WAY_TAGS_GLOBAL)).c_str());
   }
 };
 

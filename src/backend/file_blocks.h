@@ -286,7 +286,9 @@ struct File_Blocks_Discrete_Iterator : File_Blocks_Basic_Iterator< TIndex >
       }
       else if (this->block_type() == File_Block_Index_Entry< TIndex >::SEGMENT)
       {
-	if (*index_upper < this->block_it->index)
+	if (index_upper == index_end)
+	  this->block_it = this->block_end;
+	else if (*index_upper < this->block_it->index)
 	{
 	  this->is_empty = true;
 	  index_lower = index_upper;
@@ -377,6 +379,7 @@ private:
 	  ++index_upper;
 	return;
       }
+      ++next_block;
     }
     if (next_block == this->block_end)
     {

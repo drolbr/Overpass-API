@@ -126,7 +126,7 @@ void end(const char *el)
 
     if (osm_element_count >= 4*1024*1024)
     {
-      way_updater.update();
+      way_updater.update(true);
       osm_element_count = 0;
     }
   }

@@ -353,7 +353,7 @@ struct Node_Updater
     
     cerr<<'n'<<' '<<time(NULL)<<' ';
   }
-  
+
 private:
   vector< uint32 > ids_to_delete;
   vector< Node > nodes_to_insert;
