@@ -1309,11 +1309,11 @@ private:
       *(uint32*)dest = pos - dest;
       check_block(dest, file_it.block_it->pos, "update_group.write.3");
       file_it = file_blocks.replace_block(file_it, dest, max_size);
+      ++file_it;
+    
     }
     else
       file_it = file_blocks.replace_block(file_it, 0, 0);
-    
-    ++file_it;
     
     free(source);
     free(dest);
@@ -1386,10 +1386,10 @@ private:
 	*(uint32*)(dest+4) = *(uint32*)dest;
 	check_block(dest, file_it.block_it->pos, "update_segments.write.4");
 	file_it = file_blocks.replace_block(file_it, dest, (*(uint32*)dest) - 4);
+	++file_it;
       }
       else
 	file_it = file_blocks.replace_block(file_it, 0, 0);
-      ++file_it;
     }
     
     file_blocks.read_block(file_it, source);
@@ -1439,11 +1439,11 @@ private:
       *(uint32*)(dest+4) = *(uint32*)dest;
       check_block(dest, file_it.block_it->pos, "update_segments.write.2");
       file_it = file_blocks.replace_block(file_it, dest, (*(uint32*)dest) - 4);
+      ++file_it;
+    
     }
     else
       file_it = file_blocks.replace_block(file_it, 0, 0);
-    
-    ++file_it;
     
     free(source);
     free(dest);

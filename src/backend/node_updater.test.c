@@ -334,7 +334,7 @@ int main(int argc, char* args[])
     DEBUG_nodes_64 = 0;
     osm_element_count = 0;
     //reading the main document
-    parse(stdin, start_DEBUG, end);
+    parse(stdin, start, end);
   
     node_updater.update();
 

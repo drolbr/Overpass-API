@@ -252,7 +252,7 @@ Zusicherung:
 - es gilt nicht is_empty (Ausnahme!)
 - es werden nur Indices und alle verbleibenden Indices eingetragen, die >= index_lower und < index_upper sind
 
-Es wird is_empty gesetzt. Durch die Zusicherung ist sichergestellt, dass sich dies so mit operator++ verträgt.
+Durch die Zusicherung ist sichergestellt, dass sich dies so mit operator++ verträgt.
 
 ---
 
@@ -262,4 +262,4 @@ Zusicherung:
 - es gilt is_writeable (Ausnahme!)
 - es gilt nicht is_empty (Ausnahme!)
 
-Es wird is_empty gesetzt. Durch die Zusicherung ist sichergestellt, dass sich dies so mit operator++ verträgt.
+Es wird zum nächsten Block gewechselt. Durch die Zusicherung ist sichergestellt, dass sich dies so mit operator++ verträgt.

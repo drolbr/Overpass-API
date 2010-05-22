@@ -473,14 +473,12 @@ int main(int argc, char* args[])
     void* buf = malloc(get_block_size(0));
     uint32 max_keysize(prepare_block(buf, work));
     it = blocks.replace_block(it, buf, max_keysize);
-    ++it;
     
     work.clear();
     work.push_back(IntIndex(51));
     work.push_back(IntIndex(52));
     max_keysize = prepare_block(buf, work);
     it = blocks.replace_block(it, buf, max_keysize);
-    ++it;
       
     work.clear();
     work.push_back(IntIndex(89));
@@ -512,11 +510,7 @@ int main(int argc, char* args[])
 	it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     it = blocks.replace_block(it, 0, 0);
-    ++it;
-    
     it = blocks.replace_block(it, 0, 0);
-    ++it;
-    
     it = blocks.replace_block(it, 0, 0);
   }
   catch (File_Error e)
@@ -541,8 +535,6 @@ int main(int argc, char* args[])
 	it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     it = blocks.replace_block(it, 0, 0);
-    ++it;
-    
     it = blocks.replace_block(it, 0, 0);
   }
   catch (File_Error e)
@@ -603,7 +595,6 @@ int main(int argc, char* args[])
     while (!(it == blocks.discrete_end()))
     {
       it = blocks.replace_block(it, 0, 0);
-      ++it;
     }
   }
   catch (File_Error e)
@@ -671,15 +662,12 @@ int main(int argc, char* args[])
     ++it;
     it = blocks.insert_block(it, buf, max_keysize);
     ++it;
+    ++it;
     
     it = blocks.replace_block(it, 0, 0);
-    ++it;
     it = blocks.replace_block(it, 0, 0);
-    ++it;
     it = blocks.replace_block(it, 0, 0);
-    ++it;
     it = blocks.replace_block(it, 0, 0);
-    ++it;
     
     work.clear();
     work.push_back(IntIndex(50));
@@ -688,15 +676,12 @@ int main(int argc, char* args[])
     ++it;
     it = blocks.insert_block(it, buf, max_keysize);
     ++it;
+    ++it;
     
     it = blocks.replace_block(it, 0, 0);
-    ++it;
     it = blocks.replace_block(it, 0, 0);
-    ++it;
     it = blocks.replace_block(it, 0, 0);
-    ++it;
     it = blocks.replace_block(it, 0, 0);
-    ++it;
     
     work.clear();
     work.push_back(IntIndex(90));
