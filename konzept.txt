@@ -146,3 +146,120 @@ bei c)
 - fülle Blöcke mit Löschungen mit Neudaten auf, sofern möglich
 - fülle den letzten Block auf, also replace_block bzw. insert_block
 - wenn etwas übrig bleibt, hänge einen Block an, also replace_block und insert_block davor
+
+---
+zum Thema Discrete_Iterator, hier: Verifikation von operator++ und Konstruktor
+
+Konstruktor:
+
+Wenn Indizes leer, dann Ende
+Wenn leer, dann leer zurück [ index_upper = (end) ]
+Wenn Block Segment ist und Index < Block.Index
+  is_empty = true [ index_upper der erste Index, der >= Block.Index ist ]
+Wenn (Nachfolger != (end) && Nachfolger.Index <= erster Index)
+{
+  Wenn (Index == erster Index)
+    Segment (einzige Möglichkeit für Segment): liefere dieses zurück [ index_upper = index + 1 ]
+  ++Block, ++Nachfolger
+}
+(*)
+Wenn (Nachfolger == (end))
+{
+  (relevantes Segment kann nicht passieren, da Segmente mehrteilig sind)
+  wenn Last_Segment, dann liefere dahinter (leer) zurück [ index_upper = (end) ]
+  ansonsten liefere diesen Block zurück [ index_upper = (end) ]
+}
+Wenn (Block ein Last_Segment ist)
+  is_empty = true [ index_upper der erste Index, der >= Block.Index ist ]
+liefere Block zurück [ index_upper der erste Index, der >= Nachfolger.Index ist ]
+
+Wohldef: ok
+Terminierung: ok, da endlich viele Blöcke
+Korrektheit:
+- richtiger Block: nur erster Index relevant. Korrekt, falls er auf ein Segment passt. An (*) gilt, dass (Nachfolger == (end) || (Nachfolger.Index > erster Index)), also wird auf keinen Fall ein zur kleiner Block zurückgeliefert. Außerdem gilt für keinen Block vor Nachfolger, dass (Index > erster Index). Also richtiger Block.
+- index_upper: für Segments korrekt per Definition, für Groups per Konstruktion
+
+---
+
+operator++:
+
+mögliche Zustände:
+- group
+- segment
+- last_segment
+- is_inserted
+- is_empty (bezieht sich auf den Folgeblock wenn is_inserted gesetzt ist)
+
+Wenn (is_inserted)
+  liefere ++Block zurück [ index, is_empty unverändert ]
+Wenn (is_empty)
+  setze (is_empty) zurück
+  setze index_lower = index_upper und index_upper:
+    falls Block == (end) auf (end)
+    ansonsten [ index_upper der erste Index, der >= Block.Index ist ]
+  fertig
+Wenn Segment
+  liefere ++Block zurück, Indices unverändert
+(*)
+index_lower = index_upper
+++Block
+Wenn (Block == (end))
+  fertig
+Wenn Block Segment ist und Index < Block.Index
+  is_empty = true [ index_upper der erste Index, der >= Block.Index ist ]
+Wenn (Nachfolger != (end) && Nachfolger.Index <= erster Index)
+{
+  Wenn (Index == erster Index)
+    Segment (einzige Möglichkeit für Segment): liefere dieses zurück [ index_upper = index + 1 ]
+  ++Block, ++Nachfolger
+}
+Wenn (Nachfolger == (end))
+{
+  (relevantes Segment kann nicht passieren, da Segmente mehrteilig sind)
+  wenn Last_Segment, dann liefere dahinter (leer) zurück [ index_upper = (end) ]
+  ansonsten liefere diesen Block zurück [ index_upper = (end) ]
+}
+Wenn (Block ein Last_Segment ist)
+  is_empty = true [ index_upper der erste Index, der >= Block.Index ist ]
+liefere Block zurück [ index_upper der erste Index, der >= Nachfolger.Index ist ]
+
+Ab (*) gilt, dass mit dem Ende von Block alle Indices mit < index_upper abgearbeitet sind.
+Wohldef: ok
+Terminierung: ok, da endlich viele Blöcke
+Korrektheit:
+- richtiger Block: Im Normalfall wird (*) erreicht, dann siehe oben. Für Segments wird korrekt der Folgeblock zurückgeliefert. is_empty und is_inserted werden ebenso explizit behandelt
+- index_lower: s. index_upper
+- index_upper: Im Normalfall wird (*) erreicht, dann siehe oben. Segments, is_empty und is_inserted werden explizit behandelt.
+
+---
+
+insert
+
+Zusicherung:
+- es gilt is_writeable (Ausnahme!)
+- es ist nicht is_inserted gesetzt (Ausnahme!)
+- es werden nur Indices eingetragen, die >= index_lower und < index_upper sind
+- für jeden Index in diesem Block gilt, dass er kleiner als Block.Index (des Blocks unter dem Iterator) wird, nachdem der Block bearbeitet ist.
+
+Block wird auf den neuen Block gesetzt und dessen Index in die Blockliste aufgenommen; es wird is_inserted gesetzt. Achtung: is_empty bezieht sich (wie die Indexgrenzen) nun auf den Folgeblock.
+
+---
+
+replace
+
+Zusicherung:
+- es gilt is_writeable (Ausnahme!)
+- es gilt nicht is_empty (Ausnahme!)
+- es werden nur Indices und alle verbleibenden Indices eingetragen, die >= index_lower und < index_upper sind
+
+Es wird is_empty gesetzt. Durch die Zusicherung ist sichergestellt, dass sich dies so mit operator++ verträgt.
+
+---
+
+replace delete
+
+Zusicherung:
+- es gilt is_writeable (Ausnahme!)
+- es gilt nicht is_empty (Ausnahme!)
+
+Es wird is_empty gesetzt. Durch die Zusicherung ist sichergestellt, dass sich dies so mit operator++ verträgt.

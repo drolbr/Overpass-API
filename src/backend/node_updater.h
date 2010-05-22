@@ -329,7 +329,7 @@ struct Node_Updater
     vector< Node_Tag_Entry > tags_to_delete;
     prepare_delete_tags(tags_to_delete, to_delete);
     update_node_tags_local(tags_to_delete);
-    update_node_tags_global(tags_to_delete);
+    update_node_tags_global_DEBUG(tags_to_delete);
     
     ids_to_delete.clear();
     nodes_to_insert.clear();
@@ -339,23 +339,23 @@ struct Node_Updater
     if (!partial && (update_counter > 0))
     {
       if (update_counter > 64)
-	merge_files(".1", ".0");
+	merge_files_DEBUG(".1", ".0");
       if (update_counter > 8)
-	merge_files(".0", "");
+	merge_files_DEBUG(".0", "");
       update_counter = 0;
     }
     else if (partial)
     {
       if (++update_counter % 8 == 0)
-	merge_files("", ".0");
+	merge_files_DEBUG("", ".0");
       if (update_counter % 64 == 0)
-	merge_files(".0", ".1");
+	merge_files_DEBUG(".0", ".1");
     }
     
     cerr<<'n'<<' '<<time(NULL)<<' ';
   }
   
-  void update_DEBUG(bool partial = false)
+/*  void update_DEBUG(bool partial = false)
   {
     cerr<<'.'<<' '<<time(NULL)<<' ';
     
@@ -404,38 +404,50 @@ struct Node_Updater
     map< Node_Tag_Index_Global, set< Uint32_Index > > db_to_delete;
     map< Node_Tag_Index_Global, set< Uint32_Index > > db_to_insert;
     
-    for (vector< Node_Tag_Entry >::const_iterator it(tags_to_delete.begin());
-	 it != tags_to_delete.end(); ++it)
-    {
-      Node_Tag_Index_Global index;
-      index.key = it->key;
-      index.value = it->value;
+    Block_Backend< Node_Tag_Index_Global, Uint32_Index > nodes_global_128_db
+    (de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, ".128");
+    for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Flat_Iterator
+        it(nodes_global_128_db.flat_begin()); !(it == nodes_global_128_db.flat_end());
+        ++it)
+      db_to_insert[it.index()].insert(it.object());
       
-      set< Uint32_Index > node_ids;
-      for (vector< uint32 >::const_iterator it2(it->node_ids.begin());
-	   it2 != it->node_ids.end(); ++it2)
-	db_to_delete[index].insert(*it2);
-    }
-    
-    for (vector< Node >::const_iterator it(nodes_to_insert.begin());
-	 it != nodes_to_insert.end(); ++it)
-    {
-      Node_Tag_Index_Global index;
-      
-      for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
-	   it2 != it->tags.end(); ++it2)
-      {
-	index.key = it2->first;
-	index.value = it2->second;
-	db_to_insert[index].insert(it->id);
-	db_to_delete[index];
-      }
-    }
-
     Block_Backend< Node_Tag_Index_Global, Uint32_Index > node_db
-	(de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, ".128");
+	(de_osm3s_file_ids::NODE_TAGS_GLOBAL, true);
     node_db.update(db_to_delete, db_to_insert);
   }
+  
+  void merge_files_DEBUG(string from, string into)
+  {
+    {
+      map< Node_Tag_Index_Global, set< Uint32_Index > > db_to_delete;
+      map< Node_Tag_Index_Global, set< Uint32_Index > > db_to_insert;
+      
+      uint32 item_count(0);
+      Block_Backend< Node_Tag_Index_Global, Uint32_Index > from_db
+        (de_osm3s_file_ids::NODE_TAGS_GLOBAL, false, from);
+      for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Flat_Iterator
+	it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
+      {
+	db_to_insert[it.index()].insert(it.object());
+	if (++item_count >= 4*1024*1024)
+	{
+	  Block_Backend< Node_Tag_Index_Global, Uint32_Index > into_db
+	    (de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, into);
+	  into_db.update_DEBUG(db_to_delete, db_to_insert);
+	  db_to_insert.clear();
+	  item_count = 0;
+	}
+      }
+      
+      Block_Backend< Node_Tag_Index_Global, Uint32_Index > into_db
+        (de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, into);
+      into_db.update_DEBUG(db_to_delete, db_to_insert);
+    }
+    remove((get_file_base_name(de_osm3s_file_ids::NODE_TAGS_GLOBAL) + from 
+      + get_index_suffix(de_osm3s_file_ids::NODE_TAGS_GLOBAL)).c_str());
+    remove((get_file_base_name(de_osm3s_file_ids::NODE_TAGS_GLOBAL) + from 
+      + get_data_suffix(de_osm3s_file_ids::NODE_TAGS_GLOBAL)).c_str());
+  }*/
   
 private:
   vector< uint32 > ids_to_delete;
@@ -638,7 +650,7 @@ private:
     map< Node_Tag_Index_Global, set< Uint32_Index > > db_to_insert;
     
     for (vector< Node_Tag_Entry >::const_iterator it(tags_to_delete.begin());
-	 it != tags_to_delete.end(); ++it)
+    it != tags_to_delete.end(); ++it)
     {
       Node_Tag_Index_Global index;
       index.key = it->key;
@@ -646,28 +658,34 @@ private:
       
       set< Uint32_Index > node_ids;
       for (vector< uint32 >::const_iterator it2(it->node_ids.begin());
-	   it2 != it->node_ids.end(); ++it2)
-	db_to_delete[index].insert(*it2);
+      it2 != it->node_ids.end(); ++it2)
+      db_to_delete[index].insert(*it2);
     }
     
     for (vector< Node >::const_iterator it(nodes_to_insert.begin());
-	 it != nodes_to_insert.end(); ++it)
+    it != nodes_to_insert.end(); ++it)
     {
       Node_Tag_Index_Global index;
       
       for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
-	   it2 != it->tags.end(); ++it2)
+      it2 != it->tags.end(); ++it2)
       {
+	if ((it->id == 307009451) &&
+	  (it2->second == "Office of Geographic and Environmental Information (MassGIS)"))
+	{
+	  cerr<<"e "<<update_counter<<'\n';
+	  exit(0);
+	}
 	index.key = it2->first;
 	index.value = it2->second;
 	db_to_insert[index].insert(it->id);
 	db_to_delete[index];
       }
     }
-
+    
     Block_Backend< Node_Tag_Index_Global, Uint32_Index > node_db
-	(de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, ".128");
-    node_db.update(db_to_delete, db_to_insert);
+    (de_osm3s_file_ids::NODE_TAGS_GLOBAL, true);
+    node_db.update_DEBUG(db_to_delete, db_to_insert);
   }
   
   void merge_files(string from, string into)
@@ -745,7 +763,7 @@ private:
 	{
 	  Block_Backend< Node_Tag_Index_Global, Uint32_Index > into_db
 	    (de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, into);
-	  into_db.update(db_to_delete, db_to_insert);
+	  into_db.update_DEBUG(db_to_delete, db_to_insert);
 	  db_to_insert.clear();
 	  item_count = 0;
 	}
@@ -753,12 +771,109 @@ private:
       
       Block_Backend< Node_Tag_Index_Global, Uint32_Index > into_db
         (de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, into);
-      into_db.update(db_to_delete, db_to_insert);
+      into_db.update_DEBUG(db_to_delete, db_to_insert);
     }
     remove((get_file_base_name(de_osm3s_file_ids::NODE_TAGS_GLOBAL) + from 
       + get_index_suffix(de_osm3s_file_ids::NODE_TAGS_GLOBAL)).c_str());
     remove((get_file_base_name(de_osm3s_file_ids::NODE_TAGS_GLOBAL) + from 
       + get_data_suffix(de_osm3s_file_ids::NODE_TAGS_GLOBAL)).c_str());
+  }
+  
+  void merge_files_DEBUG(string from, string into)
+  {
+    {
+      map< Uint32_Index, set< Node_Skeleton > > db_to_delete;
+      map< Uint32_Index, set< Node_Skeleton > > db_to_insert;
+      
+      uint32 item_count(0);
+      Block_Backend< Uint32_Index, Node_Skeleton > from_db
+      (de_osm3s_file_ids::NODES, false, from);
+      for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
+	it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
+      {
+	db_to_insert[it.index()].insert(it.object());
+	if (++item_count >= 4*1024*1024)
+	{
+	  Block_Backend< Uint32_Index, Node_Skeleton > into_db
+	  (de_osm3s_file_ids::NODES, true, into);
+	  into_db.update(db_to_delete, db_to_insert);
+	  db_to_insert.clear();
+	  item_count = 0;
+	}
+      }
+      
+      Block_Backend< Uint32_Index, Node_Skeleton > into_db
+      (de_osm3s_file_ids::NODES, true, into);
+      into_db.update(db_to_delete, db_to_insert);
+    }
+    remove((get_file_base_name(de_osm3s_file_ids::NODES) + from 
+    + get_index_suffix(de_osm3s_file_ids::NODES)).c_str());
+    remove((get_file_base_name(de_osm3s_file_ids::NODES) + from 
+    + get_data_suffix(de_osm3s_file_ids::NODES)).c_str());
+    {
+      map< Node_Tag_Index_Local, set< Uint32_Index > > db_to_delete;
+      map< Node_Tag_Index_Local, set< Uint32_Index > > db_to_insert;
+      
+      uint32 item_count(0);
+      Block_Backend< Node_Tag_Index_Local, Uint32_Index > from_db
+      (de_osm3s_file_ids::NODE_TAGS_LOCAL, false, from);
+      for (Block_Backend< Node_Tag_Index_Local, Uint32_Index >::Flat_Iterator
+	it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
+      {
+	db_to_insert[it.index()].insert(it.object());
+	if (++item_count >= 4*1024*1024)
+	{
+	  Block_Backend< Node_Tag_Index_Local, Uint32_Index > into_db
+	  (de_osm3s_file_ids::NODE_TAGS_LOCAL, true, into);
+	  into_db.update(db_to_delete, db_to_insert);
+	  db_to_insert.clear();
+	  item_count = 0;
+	}
+      }
+      
+      Block_Backend< Node_Tag_Index_Local, Uint32_Index > into_db
+      (de_osm3s_file_ids::NODE_TAGS_LOCAL, true, into);
+      into_db.update(db_to_delete, db_to_insert);
+    }
+    remove((get_file_base_name(de_osm3s_file_ids::NODE_TAGS_LOCAL) + from 
+    + get_index_suffix(de_osm3s_file_ids::NODE_TAGS_LOCAL)).c_str());
+    remove((get_file_base_name(de_osm3s_file_ids::NODE_TAGS_LOCAL) + from 
+    + get_data_suffix(de_osm3s_file_ids::NODE_TAGS_LOCAL)).c_str());
+    {
+      map< Node_Tag_Index_Global, set< Uint32_Index > > db_to_delete;
+      map< Node_Tag_Index_Global, set< Uint32_Index > > db_to_insert;
+      
+      uint32 item_count(0);
+      Block_Backend< Node_Tag_Index_Global, Uint32_Index > from_db
+      (de_osm3s_file_ids::NODE_TAGS_GLOBAL, false, from);
+      for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Flat_Iterator
+	it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
+      {
+	if ((it.object().val() == 307009451) &&
+	  (it.index().value == "Office of Geographic and Environmental Information (MassGIS)"))
+	{
+	  cerr<<"d "<<update_counter<<'\t'<<from<<'\t'<<into<<'\n';
+	  exit(0);
+	}
+	db_to_insert[it.index()].insert(it.object());
+	if (++item_count >= 4*1024*1024)
+	{
+	  Block_Backend< Node_Tag_Index_Global, Uint32_Index > into_db
+	  (de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, into);
+	  into_db.update_DEBUG(db_to_delete, db_to_insert);
+	  db_to_insert.clear();
+	  item_count = 0;
+	}
+      }
+      
+      Block_Backend< Node_Tag_Index_Global, Uint32_Index > into_db
+      (de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, into);
+      into_db.update_DEBUG(db_to_delete, db_to_insert);
+    }
+    remove((get_file_base_name(de_osm3s_file_ids::NODE_TAGS_GLOBAL) + from 
+    + get_index_suffix(de_osm3s_file_ids::NODE_TAGS_GLOBAL)).c_str());
+    remove((get_file_base_name(de_osm3s_file_ids::NODE_TAGS_GLOBAL) + from 
+    + get_data_suffix(de_osm3s_file_ids::NODE_TAGS_GLOBAL)).c_str());
   }
 };
 

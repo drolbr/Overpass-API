@@ -703,6 +703,65 @@ struct Block_Backend
     }
   }
   
+  void update_DEBUG
+      (const map< TIndex, set< TObject > >& to_delete,
+       const map< TIndex, set< TObject > >& to_insert)
+  {
+    relevant_idxs.clear();
+    for (typename map< TIndex, set< TObject > >::const_iterator
+        it(to_delete.begin()); it != to_delete.end(); ++it)
+      relevant_idxs.insert(it->first);
+    for (typename map< TIndex, set< TObject > >::const_iterator
+        it(to_insert.begin()); it != to_insert.end(); ++it)
+      relevant_idxs.insert(it->first);
+    
+    typename File_Blocks_::Discrete_Iterator
+      file_it(file_blocks.discrete_begin
+        (relevant_idxs.begin(), relevant_idxs.end()));
+
+    while (!(file_it == file_blocks.discrete_end()))
+    {
+      cerr<<file_it.block_it->pos<<'\t'<<file_it.block_type()<<'\t';
+      if (file_it.lower_bound() != relevant_idxs.end())
+	cerr<<file_it.lower_bound()->key<<'\t'<<file_it.lower_bound()->value<<'\t';
+      else
+	cerr<<"(end)\t";
+      if (file_it.upper_bound() != relevant_idxs.end())
+	cerr<<file_it.upper_bound()->key<<'\t'<<file_it.upper_bound()->value<<'\n';
+      else
+	cerr<<"(end)\n";
+      
+      if (file_it.block_type() == File_Block_Index_Entry< TIndex >::EMPTY)
+      {
+	create_from_scratch(file_it, to_insert);
+      }
+      else if (file_it.block_type() == File_Block_Index_Entry< TIndex >::GROUP)
+      {
+/*	cerr<<"B "<<file_it.lower_bound()->val()<<'\n';
+	uint32* buffer = (uint32*)malloc(block_size);
+	file_blocks.read_block(file_it, buffer);
+	cerr<<"B "<<*(buffer + 0)<<' '<<*(buffer + 1)<<' '<<*(buffer + 2)<<'\n';
+	free(buffer);*/
+	update_group(file_it, to_delete, to_insert);
+      }
+      else //if (file_it.block_type() == File_Block_Index_Entry< TIndex >::SEGMENT)
+      {
+	update_segments(file_it, to_delete, to_insert);
+      }
+      
+/*      typename File_Blocks_::Flat_Iterator
+      file_it3(file_blocks.flat_begin());
+      while (!(file_it3 == file_blocks.flat_end()))
+      {
+	uint32* buffer = (uint32*)malloc(block_size);
+	file_blocks.read_block(file_it3, buffer);
+	cerr<<"D "<<*(buffer + 0)<<' '<<*(buffer + 1)<<' '<<*(buffer + 2)<<'\n';
+	free(buffer);
+	++file_it3;
+      }*/
+    }
+  }
+  
 private:
   File_Blocks_ file_blocks;
   Flat_Iterator* flat_end_it;
@@ -1235,6 +1294,10 @@ private:
 	    pos = pos + it2->size_of();
 	  }
 	}
+	
+	if (pos - dest == it->first.size_of() + 8)
+	  // the block is in fact empty
+	  pos = dest + 4;
 	
 	*(uint32*)(dest+4) = pos - dest;
 	max_size = (*(uint32*)(dest + 4)) - 4;
