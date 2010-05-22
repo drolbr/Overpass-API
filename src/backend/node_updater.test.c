@@ -144,10 +144,21 @@ void end(const char *el)
         for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	     it(nodes_global_db.flat_begin()); !(it == nodes_global_db.flat_end()); ++it)
           ++DEBUG_nodes_64;
+	Block_Backend< Node_Tag_Index_Global, Uint32_Index > nodes_global_128_db
+	    (de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, ".128");
+        for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Flat_Iterator
+	     it(nodes_global_128_db.flat_begin()); !(it == nodes_global_128_db.flat_end()); ++it)
+          ++DEBUG_nodes_64;
       }
       tags_count += DEBUG_nodes_64;
 /*      cerr<<nodes_count<<' ';*/
       if (tags_count != DEBUG_nodes_count)
+      {
+	cerr<<"DB count: "<<tags_count<<'\n'
+	    <<"Source count: "<<DEBUG_nodes_count<<'\n';
+	exit(0);
+      }
+      if (DEBUG_update_count == 128)
 	exit(0);
     }
   }

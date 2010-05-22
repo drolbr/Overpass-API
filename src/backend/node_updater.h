@@ -366,7 +366,14 @@ struct Node_Updater
     vector< Node_Tag_Entry > tags_to_delete;
     prepare_delete_tags(tags_to_delete, to_delete);
     update_node_tags_local(tags_to_delete);
-    update_node_tags_global(tags_to_delete);
+    
+    if (update_counter < 127)
+      update_node_tags_global(tags_to_delete);
+    else
+    {
+      update_node_tags_global_DEBUG(tags_to_delete);
+      return;
+    }
     
     ids_to_delete.clear();
     nodes_to_insert.clear();
@@ -392,6 +399,44 @@ struct Node_Updater
     cerr<<'n'<<' '<<time(NULL)<<' ';
   }
 
+  void update_node_tags_global_DEBUG_2()
+  {
+    map< Node_Tag_Index_Global, set< Uint32_Index > > db_to_delete;
+    map< Node_Tag_Index_Global, set< Uint32_Index > > db_to_insert;
+    
+    for (vector< Node_Tag_Entry >::const_iterator it(tags_to_delete.begin());
+	 it != tags_to_delete.end(); ++it)
+    {
+      Node_Tag_Index_Global index;
+      index.key = it->key;
+      index.value = it->value;
+      
+      set< Uint32_Index > node_ids;
+      for (vector< uint32 >::const_iterator it2(it->node_ids.begin());
+	   it2 != it->node_ids.end(); ++it2)
+	db_to_delete[index].insert(*it2);
+    }
+    
+    for (vector< Node >::const_iterator it(nodes_to_insert.begin());
+	 it != nodes_to_insert.end(); ++it)
+    {
+      Node_Tag_Index_Global index;
+      
+      for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
+	   it2 != it->tags.end(); ++it2)
+      {
+	index.key = it2->first;
+	index.value = it2->second;
+	db_to_insert[index].insert(it->id);
+	db_to_delete[index];
+      }
+    }
+
+    Block_Backend< Node_Tag_Index_Global, Uint32_Index > node_db
+	(de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, ".128");
+    node_db.update(db_to_delete, db_to_insert);
+  }
+  
 private:
   vector< uint32 > ids_to_delete;
   vector< Node > nodes_to_insert;
@@ -584,6 +629,44 @@ private:
 
     Block_Backend< Node_Tag_Index_Global, Uint32_Index > node_db
 	(de_osm3s_file_ids::NODE_TAGS_GLOBAL, true);
+    node_db.update(db_to_delete, db_to_insert);
+  }
+  
+  void update_node_tags_global_DEBUG(const vector< Node_Tag_Entry >& tags_to_delete)
+  {
+    map< Node_Tag_Index_Global, set< Uint32_Index > > db_to_delete;
+    map< Node_Tag_Index_Global, set< Uint32_Index > > db_to_insert;
+    
+    for (vector< Node_Tag_Entry >::const_iterator it(tags_to_delete.begin());
+	 it != tags_to_delete.end(); ++it)
+    {
+      Node_Tag_Index_Global index;
+      index.key = it->key;
+      index.value = it->value;
+      
+      set< Uint32_Index > node_ids;
+      for (vector< uint32 >::const_iterator it2(it->node_ids.begin());
+	   it2 != it->node_ids.end(); ++it2)
+	db_to_delete[index].insert(*it2);
+    }
+    
+    for (vector< Node >::const_iterator it(nodes_to_insert.begin());
+	 it != nodes_to_insert.end(); ++it)
+    {
+      Node_Tag_Index_Global index;
+      
+      for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
+	   it2 != it->tags.end(); ++it2)
+      {
+	index.key = it2->first;
+	index.value = it2->second;
+	db_to_insert[index].insert(it->id);
+	db_to_delete[index];
+      }
+    }
+
+    Block_Backend< Node_Tag_Index_Global, Uint32_Index > node_db
+	(de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, ".128");
     node_db.update(db_to_delete, db_to_insert);
   }
   
