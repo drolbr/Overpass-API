@@ -36,7 +36,7 @@ struct String_Object
   void to_data(void* data) const
   {
     *(uint16*)data = value.length();
-    memcpy(((uint8*)data + 2), value.c_str(), value.length());
+    memcpy(((uint8*)data + 2), value.data(), value.length());
   }
   
   bool operator<(const String_Object& index) const
@@ -206,8 +206,8 @@ struct Relation_Tag_Index_Local
     *(uint16*)data = key.length();
     *((uint16*)data + 1) = value.length();
     *((uint32*)data + 1) = index>>8;
-    memcpy(((uint8*)data + 7), key.c_str(), key.length());
-    memcpy(((uint8*)data + 7 + key.length()), value.c_str(),
+    memcpy(((uint8*)data + 7), key.data(), key.length());
+    memcpy(((uint8*)data + 7 + key.length()), value.data(),
 	     value.length());
   }
   
@@ -260,8 +260,8 @@ struct Relation_Tag_Index_Global
   {
     *(uint16*)data = key.length();
     *((uint16*)data + 1) = value.length();
-    memcpy(((uint8*)data + 4), key.c_str(), key.length());
-    memcpy(((uint8*)data + 4 + key.length()), value.c_str(),
+    memcpy(((uint8*)data + 4), key.data(), key.length());
+    memcpy(((uint8*)data + 4 + key.length()), value.data(),
 	     value.length());
   }
   
@@ -499,7 +499,7 @@ private:
     {
       if (!(current_index == it.index()))
       {
-	if (current_index.index != 0xffffffff)
+	if ((current_index.index != 0xffffffff) && (!rel_tag_entry.rel_ids.empty()))
 	  tags_to_delete.push_back(rel_tag_entry);
 	current_index = it.index();
 	rel_tag_entry.index = it.index().index;
@@ -512,7 +512,7 @@ private:
       if (handle.find(it.object().val()) != handle.end())
 	rel_tag_entry.rel_ids.push_back(it.object().val());
     }
-    if (current_index.index != 0xffffffff)
+    if ((current_index.index != 0xffffffff) && (!rel_tag_entry.rel_ids.empty()))
       tags_to_delete.push_back(rel_tag_entry);
   }
        

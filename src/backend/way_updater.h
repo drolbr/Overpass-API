@@ -159,8 +159,8 @@ struct Way_Tag_Index_Local
     *(uint16*)data = key.length();
     *((uint16*)data + 1) = value.length();
     *((uint32*)data + 1) = index>>8;
-    memcpy(((uint8*)data + 7), key.c_str(), key.length());
-    memcpy(((uint8*)data + 7 + key.length()), value.c_str(),
+    memcpy(((uint8*)data + 7), key.data(), key.length());
+    memcpy(((uint8*)data + 7 + key.length()), value.data(),
 	     value.length());
   }
   
@@ -213,8 +213,8 @@ struct Way_Tag_Index_Global
   {
     *(uint16*)data = key.length();
     *((uint16*)data + 1) = value.length();
-    memcpy(((uint8*)data + 4), key.c_str(), key.length());
-    memcpy(((uint8*)data + 4 + key.length()), value.c_str(),
+    memcpy(((uint8*)data + 4), key.data(), key.length());
+    memcpy(((uint8*)data + 4 + key.length()), value.data(),
 	     value.length());
   }
   
@@ -420,7 +420,7 @@ private:
     {
       if (!(current_index == it.index()))
       {
-	if (current_index.index != 0xffffffff)
+	if ((current_index.index != 0xffffffff) && (!way_tag_entry.way_ids.empty()))
 	  tags_to_delete.push_back(way_tag_entry);
 	current_index = it.index();
 	way_tag_entry.index = it.index().index;
@@ -433,7 +433,7 @@ private:
       if (handle.find(it.object().val()) != handle.end())
 	way_tag_entry.way_ids.push_back(it.object().val());
     }
-    if (current_index.index != 0xffffffff)
+    if ((current_index.index != 0xffffffff) && (!way_tag_entry.way_ids.empty()))
       tags_to_delete.push_back(way_tag_entry);
   }
        
