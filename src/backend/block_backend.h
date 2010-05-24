@@ -673,92 +673,11 @@ struct Block_Backend
     while (!(file_it == file_blocks.discrete_end()))
     {
       if (file_it.block_type() == File_Block_Index_Entry< TIndex >::EMPTY)
-      {
 	create_from_scratch(file_it, to_insert);
-      }
       else if (file_it.block_type() == File_Block_Index_Entry< TIndex >::GROUP)
-      {
-/*	cerr<<"B "<<file_it.lower_bound()->val()<<'\n';
-	uint32* buffer = (uint32*)malloc(block_size);
-	file_blocks.read_block(file_it, buffer);
-	cerr<<"B "<<*(buffer + 0)<<' '<<*(buffer + 1)<<' '<<*(buffer + 2)<<'\n';
-	free(buffer);*/
 	update_group(file_it, to_delete, to_insert);
-      }
       else //if (file_it.block_type() == File_Block_Index_Entry< TIndex >::SEGMENT)
-      {
 	update_segments(file_it, to_delete, to_insert);
-      }
-      
-/*      typename File_Blocks_::Flat_Iterator
-      file_it3(file_blocks.flat_begin());
-      while (!(file_it3 == file_blocks.flat_end()))
-      {
-	uint32* buffer = (uint32*)malloc(block_size);
-	file_blocks.read_block(file_it3, buffer);
-	cerr<<"D "<<*(buffer + 0)<<' '<<*(buffer + 1)<<' '<<*(buffer + 2)<<'\n';
-	free(buffer);
-	++file_it3;
-      }*/
-    }
-  }
-  
-  void update_DEBUG
-      (const map< TIndex, set< TObject > >& to_delete,
-       const map< TIndex, set< TObject > >& to_insert)
-  {
-    relevant_idxs.clear();
-    for (typename map< TIndex, set< TObject > >::const_iterator
-        it(to_delete.begin()); it != to_delete.end(); ++it)
-      relevant_idxs.insert(it->first);
-    for (typename map< TIndex, set< TObject > >::const_iterator
-        it(to_insert.begin()); it != to_insert.end(); ++it)
-      relevant_idxs.insert(it->first);
-    
-    typename File_Blocks_::Discrete_Iterator
-      file_it(file_blocks.discrete_begin
-        (relevant_idxs.begin(), relevant_idxs.end()));
-
-    while (!(file_it == file_blocks.discrete_end()))
-    {
-      cerr<<file_it.block_it->pos<<'\t'<<file_it.block_type()<<'\t';
-      if (file_it.lower_bound() != relevant_idxs.end())
-	cerr<<file_it.lower_bound()->key<<'\t'<<file_it.lower_bound()->value<<'\t';
-      else
-	cerr<<"(end)\t";
-      if (file_it.upper_bound() != relevant_idxs.end())
-	cerr<<file_it.upper_bound()->key<<'\t'<<file_it.upper_bound()->value<<'\n';
-      else
-	cerr<<"(end)\n";
-      
-      if (file_it.block_type() == File_Block_Index_Entry< TIndex >::EMPTY)
-      {
-	create_from_scratch(file_it, to_insert);
-      }
-      else if (file_it.block_type() == File_Block_Index_Entry< TIndex >::GROUP)
-      {
-/*	cerr<<"B "<<file_it.lower_bound()->val()<<'\n';
-	uint32* buffer = (uint32*)malloc(block_size);
-	file_blocks.read_block(file_it, buffer);
-	cerr<<"B "<<*(buffer + 0)<<' '<<*(buffer + 1)<<' '<<*(buffer + 2)<<'\n';
-	free(buffer);*/
-	update_group(file_it, to_delete, to_insert);
-      }
-      else //if (file_it.block_type() == File_Block_Index_Entry< TIndex >::SEGMENT)
-      {
-	update_segments(file_it, to_delete, to_insert);
-      }
-      
-/*      typename File_Blocks_::Flat_Iterator
-      file_it3(file_blocks.flat_begin());
-      while (!(file_it3 == file_blocks.flat_end()))
-      {
-	uint32* buffer = (uint32*)malloc(block_size);
-	file_blocks.read_block(file_it3, buffer);
-	cerr<<"D "<<*(buffer + 0)<<' '<<*(buffer + 1)<<' '<<*(buffer + 2)<<'\n';
-	free(buffer);
-	++file_it3;
-      }*/
     }
   }
   
@@ -780,16 +699,6 @@ private:
     vector< uint32 > vsplit;
     vector< uint64 > min_split_pos;
     
-    //DEBUG
-/*    for (uint i(0); i < sizes.size(); ++i)
-    {
-      if (sizes[i] > block_size/4)
-	cerr<<dec<<sizes[i]<<' ';
-      else
-	cerr<<'.';
-    }
-    cerr<<'\n';*/
-    
     // calc total size
     uint64 total_size(0);
     for (uint i(0); i < sizes.size(); ++i)
@@ -808,12 +717,6 @@ private:
       min_split_pos.push_back(total_size - sum_size);
       cur_size = sizes[i];
     }
-    
-    //DEBUG
-/*    cerr<<'\n';
-    for (int i(min_split_pos.size()-1); i >= 0; --i)
-      cerr<<dec<<min_split_pos[i]<<' ';
-    cerr<<'\n';*/
     
     vector< uint64 > oversize_splits;
     // find oversized blocks and force splits there
@@ -836,12 +739,6 @@ private:
       sum_size += sizes[i];
     }
     oversize_splits.push_back(sum_size);
-    
-    //DEBUG
-/*    for (vector< uint64 >::const_iterator oit(oversize_splits.begin());
-	 oit != oversize_splits.end(); ++oit)
-      cerr<<*oit<<' ';
-    cerr<<'\n';*/
     
     vector< pair< uint64, uint32 > > forced_splits;
     // find splitting points where the average is below the minimum
@@ -872,12 +769,6 @@ private:
       sum_size = *oit;
     }
 
-    //DEBUG
-/*    for (vector< pair< uint64, uint32 > >::const_iterator fit(forced_splits.begin());
-	 fit != forced_splits.end(); ++fit)
-      cerr<<'('<<fit->first<<", "<<fit->second<<") ";
-    cerr<<'\n';*/
-    
     vector< pair< uint64, uint32 > >::const_iterator forced_it(forced_splits.begin());
     // calculate the real splitting positions
     sum_size = 0;
@@ -927,29 +818,6 @@ private:
       ++i;
       ++it;
     }
-  
-    //DEBUG
-/*    i = 0;
-    j = 0;
-    uint64 debug(0);
-    while (j < vsplit.size())
-    {
-      if (vsplit[j] == i)
-      {
-	cerr<<debug<<' ';
-	debug = 0;
-	++j;
-      }
-      
-      debug += sizes[i];
-      ++i;
-    }
-    while (i < sizes.size())
-    {
-      debug += sizes[i];
-      ++i;
-    }
-    cerr<<debug<<'\n';*/
   }
   
   void create_from_scratch
@@ -999,7 +867,6 @@ private:
       if ((split_it != split.end()) && (it->first == *split_it))
       {
 	*(uint32*)buffer = pos - buffer;
-	check_block(buffer, file_it.block_it->pos, "create_from_scratch.write.1");
 	file_it = file_blocks.insert_block(file_it, buffer, max_size);
 	++file_it;
 	++split_it;
@@ -1039,7 +906,6 @@ private:
 	    {
 	      *(uint32*)buffer = pos - buffer;
 	      *(uint32*)(buffer+4) = *(uint32*)buffer;
-	      check_block(buffer, file_it.block_it->pos, "create_from_scratch.write.2");
 	      file_it = file_blocks.insert_block(file_it, buffer, max_size);
 	      ++file_it;
 	      pos = buffer + 8 + it->first.size_of();
@@ -1057,7 +923,6 @@ private:
     if (pos > buffer + 4)
     {
       *(uint32*)buffer = pos - buffer;
-      check_block(buffer, file_it.block_it->pos, "create_from_scratch.write.3");
       file_it = file_blocks.insert_block(file_it, buffer, max_size);
       ++file_it;
     }
@@ -1079,7 +944,6 @@ private:
     uint8* dest = (uint8*)malloc(block_size);
     
     file_blocks.read_block(file_it, source);
-    check_block(source, file_it.block_it->pos, "update_group.read");
 
     // prepare a unified iterator over all indices, from file, to_delete
     // and to_insert
@@ -1200,7 +1064,6 @@ private:
       if ((split_it != split.end()) && (it->first == *split_it))
       {
 	*(uint32*)dest = pos - dest;
-	check_block(dest, file_it.block_it->pos, "update_group.write.1");
 	file_it = file_blocks.insert_block(file_it, dest, max_size);
 	++file_it;
 	++split_it;
@@ -1284,7 +1147,6 @@ private:
 	    {
 	      *(uint32*)dest = pos - dest;
 	      *(uint32*)(dest+4) = *(uint32*)dest;
-	      check_block(dest, file_it.block_it->pos, "update_group.write.2");
 	      file_it = file_blocks.insert_block(file_it, dest, (*(uint32*)dest) - 4);
 	      ++file_it;
 	      pos = dest + 8 + it->first.size_of();
@@ -1307,7 +1169,6 @@ private:
     if (pos > dest + 4)
     {
       *(uint32*)dest = pos - dest;
-      check_block(dest, file_it.block_it->pos, "update_group.write.3");
       file_it = file_blocks.replace_block(file_it, dest, max_size);
       ++file_it;
     
@@ -1340,7 +1201,6 @@ private:
       bool block_modified(false);
       
       file_blocks.read_block(file_it, source);
-      check_block(source, file_it.block_it->pos, "update_segments.read.1");
 
       uint8* spos(source + 8 + TIndex::size_of(source + 8));
       uint8* pos(dest + 8 + TIndex::size_of(source + 8));
@@ -1384,7 +1244,6 @@ private:
       {
 	*(uint32*)dest = pos - dest;
 	*(uint32*)(dest+4) = *(uint32*)dest;
-	check_block(dest, file_it.block_it->pos, "update_segments.write.4");
 	file_it = file_blocks.replace_block(file_it, dest, (*(uint32*)dest) - 4);
 	++file_it;
       }
@@ -1393,7 +1252,6 @@ private:
     }
     
     file_blocks.read_block(file_it, source);
-    check_block(source, file_it.block_it->pos, "update_segments.read.2");
 
     uint8* spos(source + 8 + TIndex::size_of(source + 8));
     uint8* pos(dest + 8 + TIndex::size_of(source + 8));
@@ -1421,7 +1279,6 @@ private:
 	{
 	  *(uint32*)dest = pos - dest;
 	  *(uint32*)(dest+4) = *(uint32*)dest;
-	  check_block(dest, file_it.block_it->pos, "update_segments.write.1");
 	  file_it = file_blocks.insert_block(file_it, dest, (*(uint32*)dest) - 4);
 	  ++file_it;
 	  pos = dest + 8 + TIndex::size_of(source + 8);
@@ -1437,7 +1294,6 @@ private:
     {
       *(uint32*)dest = pos - dest;
       *(uint32*)(dest+4) = *(uint32*)dest;
-      check_block(dest, file_it.block_it->pos, "update_segments.write.2");
       file_it = file_blocks.replace_block(file_it, dest, (*(uint32*)dest) - 4);
       ++file_it;
     
@@ -1447,31 +1303,6 @@ private:
     
     free(source);
     free(dest);
-  }
-  
-  void check_block(void* block, uint32 block_pos, string desc)
-  {
-    uint8* source = (uint8*)block;
-    uint8* pos = source + 4;
-    
-    while (pos - source < *(uint32*)source)
-    {
-      uint8* index_start = pos;
-      if (*(uint32*)index_start > *(uint32*)source)
-      {
-	cerr<<"At "<<data_filename<<' '<<block_pos<<' '<<(pos - source)
-	    <<" during "<<desc<<": index_size greater than block_size\n";
-      }
-      pos += 4;
-      pos += TIndex::size_of(pos);
-      while (pos - source < *(uint32*)index_start)
-	pos += TObject::size_of(pos);
-      if (pos - source > *(uint32*)index_start)
-      {
-	cerr<<"At "<<data_filename<<' '<<block_pos<<' '<<(pos - source)
-	    <<" during "<<desc<<": last object ends further than index_size\n";
-      }
-    }
   }
 };
 

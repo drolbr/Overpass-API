@@ -18,7 +18,8 @@
 using namespace std;
 
 /**
- * Tests the library node_updater with a sample OSM file
+ * Tests the library node_updater, way_updater and relation_updater
+ * with a sample OSM file
  */
 
 Node_Updater node_updater;
