@@ -334,29 +334,23 @@ struct Relation_Updater
   
   void update()
   {
-    cerr<<'A';
+    cerr<<'.'<<' '<<time(NULL)<<' ';
+    
     map< uint32, vector< uint32 > > to_delete;
-    cerr<<'B';
     update_rel_ids(to_delete);
-    cerr<<'C';
     update_members(to_delete);
-    cerr<<'D';
 
     vector< Relation_Tag_Entry > tags_to_delete;
-    cerr<<'E';
     prepare_delete_tags(tags_to_delete, to_delete);
-    cerr<<'F';
     update_rel_tags_local(tags_to_delete);
-    cerr<<'G';
     update_rel_tags_global(tags_to_delete);
-    cerr<<'H';
     flush_roles();
-    cerr<<'I';
 
     ids_to_delete.clear();
-    cerr<<'J';
     rels_to_insert.clear();
-    cerr<<"K\n";
+    
+    cerr<<'R'<<' '<<time(NULL)<<' ';
+    cerr<<'r'<<' '<<time(NULL)<<' ';
   }
   
 private:
