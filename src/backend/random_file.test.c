@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 
-#include "../dispatch/settings.h"
 #include "random_file.h"
 
 using namespace std;
@@ -18,30 +17,38 @@ using namespace std;
 string BASE_DIRECTORY("./");
 string ID_SUFFIX(".map");
 
-string get_file_base_name(int32 FILE_PROPERTIES)
+struct Test_File : File_Properties
 {
-  return BASE_DIRECTORY + "testfile";
-}
-
-string get_index_suffix(int32 FILE_PROPERTIES)
-{
-  return "";
-}
-
-string get_data_suffix(int32 FILE_PROPERTIES)
-{
-  return "";
-}
-
-string get_id_suffix(int32 FILE_PROPERTIES)
-{
-  return ID_SUFFIX;
-}
-
-uint32 get_block_size(int32 FILE_PROPERTIES)
-{
-  return 512;
-}
+  string get_basedir() const
+  {
+    return BASE_DIRECTORY;
+  }
+  
+  string get_file_base_name() const
+  {
+    return BASE_DIRECTORY + "testfile";
+  }
+  
+  string get_index_suffix() const
+  {
+    return "";
+  }
+  
+  string get_data_suffix() const
+  {
+    return "";
+  }
+  
+  string get_id_suffix() const
+  {
+    return ID_SUFFIX;
+  }
+  
+  uint32 get_block_size() const
+  {
+    return 512;
+  }
+};
 
 //-----------------------------------------------------------------------------
 
@@ -87,7 +94,7 @@ void read_test()
   try
   {
     cout<<"Read test\n";
-    Random_File< IntIndex > id_file(0, false);
+    Random_File< IntIndex > id_file(Test_File(), false);
   
     cout<<id_file.get(0).val()<<'\n';
     cout<<id_file.get(2).val()<<'\n';
@@ -110,7 +117,7 @@ int main(int argc, char* args[])
 {
   cout<<"** Test the behaviour for an empty file\n";
   int data_fd = open64
-      ((get_file_base_name(0) + get_id_suffix(0)).c_str(),
+      ((Test_File().get_file_base_name() + Test_File().get_id_suffix()).c_str(),
        O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   close(data_fd);
   read_test();
@@ -118,7 +125,7 @@ int main(int argc, char* args[])
   cout<<"** Test the behaviour for a file with two entries - part 1\n";
   try
   {
-    Random_File< IntIndex > blocks(0, true);
+    Random_File< IntIndex > blocks(Test_File(), true);
     
 /*    blocks.put(0, 10);
     blocks.put(1, 11);*/
@@ -138,7 +145,7 @@ int main(int argc, char* args[])
   cout<<"** Add at the end\n";
   try
   {
-    Random_File< IntIndex > blocks(0, true);
+    Random_File< IntIndex > blocks(Test_File(), true);
     
     blocks.put(6, 16);
   }
@@ -153,7 +160,7 @@ int main(int argc, char* args[])
   cout<<"** Overwrite an existing block\n";
   try
   {
-    Random_File< IntIndex > blocks(0, true);
+    Random_File< IntIndex > blocks(Test_File(), true);
     
     blocks.put(2, 32);
   }

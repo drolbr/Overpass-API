@@ -4,7 +4,6 @@
 
 #include <stdio.h>
 
-#include "../dispatch/settings.h"
 #include "block_backend.h"
 
 using namespace std;
@@ -20,30 +19,38 @@ string BASE_DIRECTORY("./");
 string DATA_SUFFIX(".bin");
 string INDEX_SUFFIX(".idx");
 
-string get_file_base_name(int32 FILE_PROPERTIES)
+struct Test_File : File_Properties
 {
-  return BASE_DIRECTORY + "testfile";
-}
-
-string get_index_suffix(int32 FILE_PROPERTIES)
-{
-  return INDEX_SUFFIX;
-}
-
-string get_data_suffix(int32 FILE_PROPERTIES)
-{
-  return DATA_SUFFIX;
-}
-
-string get_id_suffix(int32 FILE_PROPERTIES)
-{
-  return "";
-}
-
-uint32 get_block_size(int32 FILE_PROPERTIES)
-{
-  return 512;
-}
+  string get_basedir() const
+  {
+    return BASE_DIRECTORY;
+  }
+  
+  string get_file_base_name() const
+  {
+    return BASE_DIRECTORY + "testfile";
+  }
+  
+  string get_index_suffix() const
+  {
+    return INDEX_SUFFIX;
+  }
+  
+  string get_data_suffix() const
+  {
+    return DATA_SUFFIX;
+  }
+  
+  string get_id_suffix() const
+  {
+    return "";
+  }
+  
+  uint32 get_block_size() const
+  {
+    return 512;
+  }
+};
 
 //-----------------------------------------------------------------------------
 
@@ -151,7 +158,7 @@ void fill_db
   remove((get_file_base_name(0) + get_data_suffix(0)).c_str());*/
   try
   {
-    Block_Backend< IntIndex, IntObject > db_backend(0, true);
+    Block_Backend< IntIndex, IntObject > db_backend(Test_File(), true);
     db_backend.update(to_delete, to_insert);
   }
   catch (File_Error e)
@@ -239,7 +246,7 @@ void read_test(unsigned int step)
   try
   {
     Block_Backend< IntIndex, IntObject >
-	db_backend(0, false);
+	db_backend(Test_File(), false);
     
     cout<<"Read test\n";
   
@@ -350,11 +357,11 @@ void read_test(unsigned int step)
 int main(int argc, char* args[])
 {
   cout<<"** Test the behaviour for non-exsiting files\n";
-  remove((get_file_base_name(0) + get_index_suffix(0)).c_str());
-  remove((get_file_base_name(0) + get_data_suffix(0)).c_str());
+  remove((Test_File().get_file_base_name() + Test_File().get_index_suffix()).c_str());
+  remove((Test_File().get_file_base_name() + Test_File().get_data_suffix()).c_str());
   try
   {
-    Block_Backend< IntIndex, IntIndex > db_backend(0, false);
+    Block_Backend< IntIndex, IntIndex > db_backend(Test_File(), false);
   }
   catch (File_Error e)
   {

@@ -1,3 +1,18 @@
+testing: test-bin/file_blocks test-bin/block_backend test-bin/random_file
+
+test-bin/file_blocks: src/backend/file_blocks.test.c test-bin src/backend/types.h src/backend/file_blocks.h
+	g++ -o $@ -O3 -Wall $<
+
+test-bin/block_backend: src/backend/block_backend.test.c test-bin src/backend/types.h src/backend/file_blocks.h src/backend/block_backend.h
+	g++ -o $@ -O3 -Wall $<
+
+test-bin/random_file: src/backend/random_file.test.c test-bin src/backend/types.h src/backend/random_file.h
+	g++ -o $@ -O3 -Wall $<
+
+test-bin:
+	mkdir test-bin
+
+
 stmts = \
 area_query_$(suffix) \
 bbox_query_$(suffix) \

@@ -10,7 +10,7 @@
 #include <list>
 #include <vector>
 
-#include "../dispatch/settings.h"
+#include "types.h"
 
 /**
  * File_Blocks: a template to write and read database data blockwise
@@ -69,16 +69,6 @@
  */
 
 using namespace std;
-
-struct File_Error
-{
-  File_Error(uint32 errno_, string filename_, string origin_)
-  : error_number(errno_), filename(filename_), origin(origin_) {}
-  
-  uint32 error_number;
-  string filename;
-  string origin;
-};
 
 template< class TIndex >
 struct File_Block_Index_Entry
@@ -171,6 +161,7 @@ struct File_Blocks_Flat_Iterator : File_Blocks_Basic_Iterator< TIndex >
       return *this;
     this->~File_Blocks_Flat_Iterator();
     new (this) File_Blocks_Flat_Iterator(a);
+    return *this;
   }
   
   bool operator==(const File_Blocks_Flat_Iterator& a) const
@@ -181,6 +172,7 @@ struct File_Blocks_Flat_Iterator : File_Blocks_Basic_Iterator< TIndex >
   File_Blocks_Flat_Iterator& operator++()
   {
     ++(this->block_it);
+    return *this;
   }
 };
 
@@ -217,6 +209,7 @@ struct File_Blocks_Discrete_Iterator : File_Blocks_Basic_Iterator< TIndex >
       return *this;
     this->~File_Blocks_Discrete_Iterator();
     new (this) File_Blocks_Discrete_Iterator(a);
+    return *this;
   }
     
   bool operator==
@@ -359,6 +352,7 @@ struct File_Blocks_Range_Iterator : File_Blocks_Basic_Iterator< TIndex >
       return *this;
     this->~File_Blocks_Range_Iterator();
     new (this) File_Blocks_Range_Iterator(a);
+    return *this;
   }
   
   bool operator==(const File_Blocks_Range_Iterator& b) const
@@ -431,13 +425,17 @@ private:
   File_Blocks(const File_Blocks& f) {}
   
 public:
-  File_Blocks(int32 FILE_PROPERTIES, bool writeable, string file_name_extension = "")
+  File_Blocks
+    (const File_Properties& file_prop, bool writeable,
+     string file_name_extension = "")
   {
-    index_file_name = get_file_base_name(FILE_PROPERTIES) + file_name_extension
-	+ get_index_suffix(FILE_PROPERTIES);
-    data_file_name = get_file_base_name(FILE_PROPERTIES) + file_name_extension
-	+ get_data_suffix(FILE_PROPERTIES);
-    block_size = get_block_size(FILE_PROPERTIES);
+    index_file_name = file_prop.get_file_base_name()
+        + file_name_extension
+	+ file_prop.get_index_suffix();
+    data_file_name = file_prop.get_file_base_name()
+        + file_name_extension
+	+ file_prop.get_data_suffix();
+    block_size = file_prop.get_block_size();
     this->writeable = writeable;
     
     // open data file
@@ -470,7 +468,7 @@ public:
     uint32 index_size(lseek64(index_fd, 0, SEEK_END));
     uint8* index_buf = (uint8*)malloc(index_size);
     lseek64(index_fd, 0, SEEK_SET);
-    uint32 foo(read(index_fd, index_buf, index_size));
+    uint32 foo(read(index_fd, index_buf, index_size)); foo = 0;
     
     uint32 pos(0);
     while (pos < index_size)
@@ -529,9 +527,11 @@ public:
 	pos += sizeof(uint32);
       }
       if (index_size < lseek64(index_fd, 0, SEEK_END))
-	int foo(ftruncate64(index_fd, index_size));
+      {
+	int foo(ftruncate64(index_fd, index_size)); foo = 0;
+      }
       lseek64(index_fd, 0, SEEK_SET);
-      uint32 foo(write(index_fd, index_buf, index_size));
+      uint32 foo(write(index_fd, index_buf, index_size)); foo = 0;
       
       free(index_buf);
     }
@@ -581,7 +581,7 @@ public:
   void* read_block(const File_Blocks_Basic_Iterator< TIndex >& it) const
   {
     lseek64(data_fd, (int64)(it.block_it->pos)*(block_size), SEEK_SET);
-    uint32 foo(read(data_fd, buffer, block_size));
+    uint32 foo(read(data_fd, buffer, block_size)); foo = 0;
     return buffer;
   }
   
@@ -589,7 +589,7 @@ public:
       (const File_Blocks_Basic_Iterator< TIndex >& it, void* buffer) const
   {
     lseek64(data_fd, (int64)(it.block_it->pos)*(block_size), SEEK_SET);
-    uint32 foo(read(data_fd, buffer, block_size));
+    uint32 foo(read(data_fd, buffer, block_size)); foo = 0;
     return buffer;
   }
   
@@ -640,7 +640,7 @@ public:
     }
     
     lseek64(data_fd, (int64)pos*(block_size), SEEK_SET);
-    uint32 foo(write(data_fd, buf, block_size));
+    uint32 foo(write(data_fd, buf, block_size)); foo = 0;
     
     TIndex index(((uint8*)buf)+(sizeof(uint32)+sizeof(uint32)));
     File_Block_Index_Entry< TIndex > entry
@@ -663,7 +663,7 @@ public:
     if (buf != 0)
     {
       lseek64(data_fd, (int64)(it.block_it->pos)*(block_size), SEEK_SET);
-      uint32 foo(write(data_fd, buf, block_size));
+      uint32 foo(write(data_fd, buf, block_size)); foo = 0;
     
       it.block_it->index = TIndex((uint8*)buf+(sizeof(uint32)+sizeof(uint32)));
       it.block_it->max_keysize = max_keysize;

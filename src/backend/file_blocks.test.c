@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 
-#include "../dispatch/settings.h"
 #include "file_blocks.h"
 
 using namespace std;
@@ -19,30 +18,38 @@ string BASE_DIRECTORY("./");
 string DATA_SUFFIX(".bin");
 string INDEX_SUFFIX(".idx");
 
-string get_file_base_name(int32 FILE_PROPERTIES)
+struct Test_File : File_Properties
 {
-  return BASE_DIRECTORY + "testfile";
-}
+  string get_basedir() const
+  {
+    return BASE_DIRECTORY;
+  }
+  
+  string get_file_base_name() const
+  {
+    return BASE_DIRECTORY + "testfile";
+  }
 
-string get_index_suffix(int32 FILE_PROPERTIES)
-{
-  return INDEX_SUFFIX;
-}
+  string get_index_suffix() const
+  {
+    return INDEX_SUFFIX;
+  }
 
-string get_data_suffix(int32 FILE_PROPERTIES)
-{
-  return DATA_SUFFIX;
-}
+  string get_data_suffix() const
+  {
+    return DATA_SUFFIX;
+  }
 
-string get_id_suffix(int32 FILE_PROPERTIES)
-{
-  return "";
-}
+  string get_id_suffix() const
+  {
+    return "";
+  }
 
-uint32 get_block_size(int32 FILE_PROPERTIES)
-{
-  return 512;
-}
+  uint32 get_block_size() const
+  {
+    return 512;
+  }
+};
 
 //-----------------------------------------------------------------------------
 
@@ -188,7 +195,7 @@ void read_test()
   try
   {
     cout<<"Read test\n";
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, false);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), false);
   
     cout<<"Reading all blocks ...\n";
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
@@ -322,11 +329,11 @@ int main(int argc, char* args[])
 {
   cout<<"** Test the behaviour for an empty file\n";
   int data_fd = open64
-      ((get_file_base_name(0) + get_data_suffix(0)).c_str(),
+      ((Test_File().get_file_base_name() + Test_File().get_data_suffix()).c_str(),
        O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   close(data_fd);
   int index_fd = open64
-      ((get_file_base_name(0) + get_index_suffix(0)).c_str(),
+      ((Test_File().get_file_base_name() + Test_File().get_index_suffix()).c_str(),
        O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   close(index_fd);
   read_test();
@@ -334,13 +341,13 @@ int main(int argc, char* args[])
   cout<<"** Test the behaviour for a file with one entry - part 1\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
     list< IntIndex > indices;
     
     indices.clear();
     indices.push_back(IntIndex(49));
     indices.push_back(IntIndex(50));
-    void* buf = malloc(get_block_size(0));
+    void* buf = malloc(Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
     blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
     free(buf);
@@ -356,12 +363,12 @@ int main(int argc, char* args[])
   cout<<"** Test the behaviour for a file with one entry - part 2\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
     list< IntIndex > indices;
     
     indices.clear();
     indices.push_back(IntIndex(51));
-    void* buf = malloc(get_block_size(0));
+    void* buf = malloc(Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
     blocks.replace_block(blocks.discrete_begin(indices.begin(), indices.end()), buf, max_keysize);
     free(buf);
@@ -377,12 +384,12 @@ int main(int argc, char* args[])
   cout<<"** Test the behaviour for a file with three entries\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
     list< IntIndex > indices;
     
     indices.clear();
     indices.push_back(IntIndex(9));
-    void* buf = malloc(get_block_size(0));
+    void* buf = malloc(Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
     blocks.insert_block(blocks.discrete_begin(indices.begin(), indices.end()), buf, max_keysize);
     
@@ -403,7 +410,7 @@ int main(int argc, char* args[])
   cout<<"** Test insertion everywhere\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
     list< IntIndex > indices;
     
     indices.clear();
@@ -420,7 +427,7 @@ int main(int argc, char* args[])
     ++it;
     indices.clear();
     indices.push_back(IntIndex(10));
-    void* buf = malloc(get_block_size(0));
+    void* buf = malloc(Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
     it = blocks.insert_block(it, buf, max_keysize);
     ++it;
@@ -455,7 +462,7 @@ int main(int argc, char* args[])
   cout<<"** Test to replace blocks\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
     list< IntIndex > indices, work;
     
     indices.clear();
@@ -470,7 +477,7 @@ int main(int argc, char* args[])
     
     work.clear();
     work.push_back(IntIndex(7));
-    void* buf = malloc(get_block_size(0));
+    void* buf = malloc(Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, work));
     it = blocks.replace_block(it, buf, max_keysize);
     
@@ -498,7 +505,7 @@ int main(int argc, char* args[])
   cout<<"** Delete blocks in between\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
     list< IntIndex > indices;
     
     indices.clear();
@@ -524,7 +531,7 @@ int main(int argc, char* args[])
   cout<<"** Delete blocks at the begin and the end\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
     list< IntIndex > indices;
     
     indices.clear();
@@ -548,7 +555,7 @@ int main(int argc, char* args[])
   cout<<"** Test insertion again\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
     list< IntIndex > indices, work;
     
     indices.clear();
@@ -564,7 +571,7 @@ int main(int argc, char* args[])
     {
       work.clear();
       work.push_back(IntIndex(i));
-      void* buf = malloc(get_block_size(0));
+      void* buf = malloc(Test_File().get_block_size());
       uint32 max_keysize(prepare_block(buf, work));
       it = blocks.insert_block(it, buf, max_keysize);
       free(buf);
@@ -582,7 +589,7 @@ int main(int argc, char* args[])
   cout<<"** Delete everything\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
     list< IntIndex > indices;
     
     indices.clear();
@@ -608,12 +615,12 @@ int main(int argc, char* args[])
   cout<<"** Insert two series of segments\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
     list< IntIndex > indices;
     
     indices.clear();
     indices.push_back(IntIndex(40));
-    void* buf = malloc(get_block_size(0));
+    void* buf = malloc(Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
     blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
     blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
@@ -640,7 +647,7 @@ int main(int argc, char* args[])
   cout<<"** Replace by other series of segments\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(0, true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
     list< IntIndex > indices, work;
     
     indices.clear();
@@ -656,7 +663,7 @@ int main(int argc, char* args[])
     
     work.clear();
     work.push_back(IntIndex(8));
-    void* buf = malloc(get_block_size(0));
+    void* buf = malloc(Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, work));
     it = blocks.insert_block(it, buf, max_keysize);
     ++it;

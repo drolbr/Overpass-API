@@ -6,7 +6,6 @@
 
 #include <string.h>
 
-#include "../dispatch/settings.h"
 #include "file_blocks.h"
 
 /**
@@ -134,8 +133,8 @@ template< class TIndex, class TObject >
 struct Block_Backend_Basic_Iterator
 {
   Block_Backend_Basic_Iterator(uint32 block_size_, bool is_end)
-    : buffer(0), block_size(block_size_), pos(0),
-      current_idx_pos(0), current_index(0), current_object(0)
+  : block_size(block_size_), pos(0),
+    current_idx_pos(0), current_index(0), current_object(0), buffer(0)
   {
     if (is_end)
       return;
@@ -144,8 +143,8 @@ struct Block_Backend_Basic_Iterator
   }
   
   Block_Backend_Basic_Iterator(const Block_Backend_Basic_Iterator& it)
-    : buffer(0), block_size(it.block_size), pos(it.pos),
-      current_idx_pos(0), current_index(0), current_object(0)
+  : block_size(it.block_size), pos(it.pos),
+    current_idx_pos(0), current_index(0), current_object(0), buffer(0)
   {
     if (it.buffer != 0)
     {
@@ -375,6 +374,7 @@ struct Block_Backend_Discrete_Iterator : Block_Backend_Basic_Iterator< TIndex, T
       return *this;
     this->~Block_Backend_Discrete_Iterator();
     new (this) Block_Backend_Discrete_Iterator(it);
+    return *this;
   }
   
   bool operator==(const Block_Backend_Discrete_Iterator& it) const
@@ -511,6 +511,7 @@ struct Block_Backend_Range_Iterator : Block_Backend_Basic_Iterator< TIndex, TObj
       return *this;
     this->~Block_Backend_Range_Iterator();
     new (this) Block_Backend_Range_Iterator(it);
+    return *this;
   }
   
   bool operator==(const Block_Backend_Range_Iterator& it) const
@@ -609,11 +610,13 @@ struct Block_Backend
 	  typename set< TIndex >::const_iterator,
 	  Default_Range_Iterator< TIndex > > File_Blocks_;
   
-  Block_Backend(int32 FILE_PROPERTIES, bool writeable, string file_name_extension = "")
-    : file_blocks(FILE_PROPERTIES, writeable, file_name_extension),
-      block_size(get_block_size(FILE_PROPERTIES)),
-      data_filename(get_file_base_name(FILE_PROPERTIES) + file_name_extension
-	+ get_data_suffix(FILE_PROPERTIES))
+  Block_Backend
+      (const File_Properties& file_prop, bool writeable,
+       string file_name_extension = "")
+    : file_blocks(file_prop, writeable, file_name_extension),
+      block_size(file_prop.get_block_size()),
+      data_filename(file_prop.get_file_base_name() + file_name_extension
+	+ file_prop.get_data_suffix())
   {
     flat_end_it = new Flat_Iterator(file_blocks, block_size, true);
     discrete_end_it = new Discrete_Iterator(file_blocks, block_size);
@@ -1157,7 +1160,7 @@ private:
 	  }
 	}
 	
-	if (pos - dest == it->first.size_of() + 8)
+	if ((uint32)(pos - dest) == it->first.size_of() + 8)
 	  // the block is in fact empty
 	  pos = dest + 4;
 	
@@ -1207,7 +1210,7 @@ private:
       memcpy(dest, source, spos - source);
       
       //copy everything that is not deleted yet
-      while (spos - source < *(uint32*)source)
+      while ((uint32)(spos - source) < *(uint32*)source)
       {
 	TObject obj(spos);
 	if ((delete_it == to_delete.end()) ||
@@ -1258,7 +1261,7 @@ private:
     memcpy(dest, source, spos - source);
     
     //copy everything that is not deleted yet
-    while (spos - source < *(uint32*)source)
+    while ((uint32)(spos - source) < *(uint32*)source)
     {
       TObject obj(spos);
       if ((delete_it == to_delete.end()) ||

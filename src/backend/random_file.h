@@ -10,8 +10,7 @@
 #include <list>
 #include <vector>
 
-#include "../dispatch/settings.h"
-#include "file_blocks.h"
+#include "types.h"
 
 /**
  *
@@ -30,11 +29,11 @@ private:
   Random_File(const Random_File& f) {}
   
 public:
-  Random_File(int32 FILE_PROPERTIES, bool writeable)
+  Random_File(const File_Properties& file_prop, bool writeable)
     : index_size(TIndex::max_size_of())
   {
-    id_file_name = get_file_base_name(FILE_PROPERTIES)
-        + get_id_suffix(FILE_PROPERTIES);
+    id_file_name = file_prop.get_file_base_name()
+        + file_prop.get_id_suffix();
     this->writeable = writeable;
     
     // open data file
@@ -67,12 +66,12 @@ public:
   {
     uint8* result((uint8*)buffer);
     
-    if ((int64)pos*(index_size) >= file_size)
+    if ((uint64)pos*(index_size) >= file_size)
       result = (uint8*)zero;
     else
     {
       lseek64(data_fd, (int64)pos*(index_size), SEEK_SET);
-      uint32 foo(read(data_fd, buffer, index_size));
+      uint32 foo(read(data_fd, buffer, index_size)); foo = 0;
     }
     
     return TIndex(result);
@@ -82,20 +81,20 @@ public:
   {
     index.to_data(buffer);
     
-    if ((int64)pos*(index_size) > file_size)
+    if ((uint64)pos*(index_size) > file_size)
     {
       lseek64(data_fd, file_size, SEEK_SET);
-      while ((int64)pos*(index_size) > file_size)
+      while ((uint64)pos*(index_size) > file_size)
       {
-	uint32 foo(write(data_fd, zero, index_size*64*1024));
+	uint32 foo(write(data_fd, zero, index_size*64*1024)); foo = 0;
 	file_size += 64*1024*index_size;
       }
     }
-    if ((int64)pos*(index_size) == file_size)
+    if ((uint64)pos*(index_size) == file_size)
       file_size += index_size;
     
     lseek64(data_fd, (int64)pos*(index_size), SEEK_SET);
-    uint32 foo(write(data_fd, buffer, index_size));
+    uint32 foo(write(data_fd, buffer, index_size)); foo = 0;
   }
   
 private:
