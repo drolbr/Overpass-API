@@ -8,9 +8,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../dispatch/settings.h"
+#include "../backend/random_file.h"
+#include "../core/settings.h"
 #include "node_updater.h"
-#include "random_file.h"
 #include "relation_updater.h"
 #include "way_updater.h"
 
@@ -53,7 +53,7 @@ int main(int argc, char* args[])
     // get ids of nodes with this tag
     vector< uint32 > node_ids;
     Block_Backend< Node_Tag_Index_Global, Uint32_Index > node_tags_db
-	(de_osm3s_file_ids::NODE_TAGS_GLOBAL, false);
+	(*de_osm3s_file_ids::NODE_TAGS_GLOBAL, false);
     for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Range_Iterator
 	 it(node_tags_db.range_begin
 	     (Default_Range_Iterator< Node_Tag_Index_Global >(range_set.begin()),
@@ -67,7 +67,7 @@ int main(int argc, char* args[])
     
     // get indexes of nodes
     map< uint32, vector< uint32 > > node_idxs;
-    Random_File< Uint32_Index > random(de_osm3s_file_ids::NODES, false);
+    Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, false);
     for (vector< uint32 >::const_iterator it(node_ids.begin());
 	 it != node_ids.end(); ++it)
       node_idxs[random.get(*it).val()].push_back(*it);
@@ -82,7 +82,7 @@ int main(int argc, char* args[])
 
     // get node_skeletons
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-	(de_osm3s_file_ids::NODES, false);
+	(*de_osm3s_file_ids::NODES, false);
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
 	 it(nodes_db.discrete_begin(req.begin(), req.end()));
 	 !(it == nodes_db.discrete_end()); ++it)

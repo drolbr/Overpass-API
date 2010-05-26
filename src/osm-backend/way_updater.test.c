@@ -5,11 +5,11 @@
 
 #include <stdio.h>
 
-#include "../dispatch/settings.h"
+#include "../backend/random_file.h"
+#include "../core/settings.h"
 #include "../expat/expat_justparse_interface.h"
 #include "node_updater.h"
 #include "way_updater.h"
-#include "random_file.h"
 
 using namespace std;
 
@@ -153,19 +153,19 @@ int main(int argc, char* args[])
     
     // check update_members - compare both files for the result
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-	(de_osm3s_file_ids::WAYS, false);
+	(*de_osm3s_file_ids::WAYS, false);
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
 	 it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
     {
       member_db_out<<it.object().id<<'\t';
-      for (int i(0); i < it.object().nds.size(); ++i)
+      for (uint i(0); i < it.object().nds.size(); ++i)
 	member_db_out<<it.object().nds[i]<<' ';
       member_db_out<<'\n';
     }
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Way_Tag_Index_Local, Uint32_Index > ways_local_db
-	(de_osm3s_file_ids::WAY_TAGS_LOCAL, false);
+	(*de_osm3s_file_ids::WAY_TAGS_LOCAL, false);
     for (Block_Backend< Way_Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(ways_local_db.flat_begin()); !(it == ways_local_db.flat_end()); ++it)
     {
@@ -175,7 +175,7 @@ int main(int argc, char* args[])
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Way_Tag_Index_Global, Uint32_Index > ways_global_db
-	(de_osm3s_file_ids::WAY_TAGS_GLOBAL, false);
+	(*de_osm3s_file_ids::WAY_TAGS_GLOBAL, false);
     for (Block_Backend< Way_Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(ways_global_db.flat_begin()); !(it == ways_global_db.flat_end()); ++it)
     {

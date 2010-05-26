@@ -8,10 +8,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../dispatch/settings.h"
+#include "../backend/random_file.h"
+#include "../core/settings.h"
 #include "../expat/expat_justparse_interface.h"
 #include "node_updater.h"
-#include "random_file.h"
 #include "relation_updater.h"
 #include "way_updater.h"
 

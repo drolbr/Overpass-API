@@ -1,11 +1,14 @@
 #ifndef DATATYPES_DEFINED
 #define DATATYPES_DEFINED
 
+#include <cstring>
 #include <map>
 #include <set>
 #include <vector>
 
 using namespace std;
+
+typedef unsigned int uint;
 
 typedef char int8;
 typedef short int int16;
@@ -139,8 +142,8 @@ struct Node
     
     for (uint32 i(0); i < 16; ++i)
     {
-      result |= ((0x1<<i+16)&ilat)>>(15-i);
-      result |= ((0x1<<i+16)&(uint32)ilon)>>(16-i);
+      result |= ((0x1<<(i+16))&ilat)>>(15-i);
+      result |= ((0x1<<(i+16))&(uint32)ilon)>>(16-i);
     }
     
     return result;
@@ -166,8 +169,8 @@ struct Node
     
     for (uint32 i(0); i < 16; i+=1)
     {
-      result |= ((0x1<<31-2*i)&ll_upper)<<i;
-      result |= ((0x1<<31-2*i)&ll_lower)>>16-i;
+      result |= ((0x1<<(31-2*i))&ll_upper)<<i;
+      result |= ((0x1<<(31-2*i))&ll_lower)>>(16-i);
     }
     
     return ((double)result)/10000000 - 90.0;
@@ -179,8 +182,8 @@ struct Node
     
     for (uint32 i(0); i < 16; i+=1)
     {
-      result |= ((0x1<<30-2*i)&ll_upper)<<i+1;
-      result |= ((0x1<<30-2*i)&ll_lower)>>15-i;
+      result |= ((0x1<<(30-2*i))&ll_upper)<<(i+1);
+      result |= ((0x1<<(30-2*i))&ll_lower)>>(15-i);
     }
     
     return ((double)result)/10000000;
@@ -316,7 +319,7 @@ struct Way_Skeleton
   {
     *(uint32*)data = id;
     *((uint16*)data + 2) = nds.size();
-    for (int i(0); i < nds.size(); ++i)
+    for (uint i(0); i < nds.size(); ++i)
       *(uint32*)((uint16*)data + 3 + 2*i) = nds[i];
   }
   
@@ -333,6 +336,8 @@ struct Way_Skeleton
 
 struct Relation_Entry
 {
+  Relation_Entry() : ref(0), type(0), role(0) {}
+  
   uint32 ref;
   uint32 type;
   uint32 role;
@@ -393,7 +398,7 @@ struct Relation_Skeleton
   {
     id = *(uint32*)data;
     members.resize(*((uint32*)data + 1));
-    for (int i(0); i < *((uint32*)data + 1); ++i)
+    for (uint i(0); i < *((uint32*)data + 1); ++i)
     {
       members[i].ref = *((uint32*)data + 2 + 2*i);
       members[i].role = *((uint32*)data + 3 + 2*i) & 0xffffff;
@@ -421,7 +426,7 @@ struct Relation_Skeleton
   {
     *(uint32*)data = id;
     *((uint32*)data + 1) = members.size();
-    for (int i(0); i < members.size(); ++i)
+    for (uint i(0); i < members.size(); ++i)
     {
       *((uint32*)data + 2 + 2*i) = members[i].ref;
       *((uint32*)data + 3 + 2*i) = members[i].role & 0xffffff;

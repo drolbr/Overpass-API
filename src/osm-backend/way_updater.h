@@ -7,10 +7,10 @@
 #include <set>
 #include <vector>
 
+#include "../backend/block_backend.h"
+#include "../backend/random_file.h"
 #include "../core/datatypes.h"
-#include "../dispatch/settings.h"
-#include "block_backend.h"
-#include "random_file.h"
+#include "../core/settings.h"
 
 using namespace std;
 
@@ -209,7 +209,7 @@ private:
 	   nit != wit->nds.end(); ++nit)
 	used_nodes[*nit] = 0;
     }
-    Random_File< Uint32_Index > node_random(de_osm3s_file_ids::NODES, false);
+    Random_File< Uint32_Index > node_random(*de_osm3s_file_ids::NODES, false);
     for (map< uint32, uint32 >::iterator it(used_nodes.begin());
 	 it != used_nodes.end(); ++it)
       it->second = node_random.get(it->first).val();
@@ -227,7 +227,7 @@ private:
     sort(ids_to_delete.begin(), ids_to_delete.end());
     sort(ways_to_insert.begin(), ways_to_insert.end(), way_comparator_by_id);
     
-    Random_File< Uint31_Index > random(de_osm3s_file_ids::WAYS, true);
+    Random_File< Uint31_Index > random(*de_osm3s_file_ids::WAYS, true);
     vector< Way >::const_iterator wit(ways_to_insert.begin());
     for (vector< uint32 >::const_iterator it(ids_to_delete.begin());
         it != ids_to_delete.end(); ++it)
@@ -264,7 +264,7 @@ private:
     }
     
     Block_Backend< Uint31_Index, Way_Skeleton > way_db
-      (de_osm3s_file_ids::WAYS, true);
+      (*de_osm3s_file_ids::WAYS, true);
     way_db.update(db_to_delete, db_to_insert);
   }
   
@@ -302,7 +302,7 @@ private:
     
     // iterate over the result
     Block_Backend< Way_Tag_Index_Local, Uint32_Index > ways_db
-	(de_osm3s_file_ids::WAY_TAGS_LOCAL, true);
+	(*de_osm3s_file_ids::WAY_TAGS_LOCAL, true);
     Way_Tag_Index_Local current_index;
     Way_Tag_Entry way_tag_entry;
     current_index.index = 0xffffffff;
@@ -369,7 +369,7 @@ private:
     }
     
     Block_Backend< Way_Tag_Index_Local, Uint32_Index > way_db
-	(de_osm3s_file_ids::WAY_TAGS_LOCAL, true);
+	(*de_osm3s_file_ids::WAY_TAGS_LOCAL, true);
     way_db.update(db_to_delete, db_to_insert);
   }
   
@@ -407,7 +407,7 @@ private:
     }
 
     Block_Backend< Way_Tag_Index_Global, Uint32_Index > way_db
-	(de_osm3s_file_ids::WAY_TAGS_GLOBAL, true);
+	(*de_osm3s_file_ids::WAY_TAGS_GLOBAL, true);
     way_db.update(db_to_delete, db_to_insert);
   }
   
@@ -419,7 +419,7 @@ private:
       
       uint32 item_count(0);
       Block_Backend< Uint31_Index, Way_Skeleton > from_db
-      (de_osm3s_file_ids::WAYS, false, from);
+      (*de_osm3s_file_ids::WAYS, false, from);
       for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
 	it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
       {
@@ -427,7 +427,7 @@ private:
 	if (++item_count >= 4*1024*1024)
 	{
 	  Block_Backend< Uint31_Index, Way_Skeleton > into_db
-	  (de_osm3s_file_ids::WAYS, true, into);
+	  (*de_osm3s_file_ids::WAYS, true, into);
 	  into_db.update(db_to_delete, db_to_insert);
 	  db_to_insert.clear();
 	  item_count = 0;
@@ -435,20 +435,20 @@ private:
       }
       
       Block_Backend< Uint31_Index, Way_Skeleton > into_db
-      (de_osm3s_file_ids::WAYS, true, into);
+      (*de_osm3s_file_ids::WAYS, true, into);
       into_db.update(db_to_delete, db_to_insert);
     }
-    remove((get_file_base_name(de_osm3s_file_ids::WAYS) + from 
-    + get_index_suffix(de_osm3s_file_ids::WAYS)).c_str());
-    remove((get_file_base_name(de_osm3s_file_ids::WAYS) + from 
-    + get_data_suffix(de_osm3s_file_ids::WAYS)).c_str());
+    remove((de_osm3s_file_ids::WAYS->get_file_base_name() + from 
+    + de_osm3s_file_ids::WAYS->get_index_suffix()).c_str());
+    remove((de_osm3s_file_ids::WAYS->get_file_base_name() + from 
+    + de_osm3s_file_ids::WAYS->get_data_suffix()).c_str());
     {
       map< Way_Tag_Index_Local, set< Uint32_Index > > db_to_delete;
       map< Way_Tag_Index_Local, set< Uint32_Index > > db_to_insert;
       
       uint32 item_count(0);
       Block_Backend< Way_Tag_Index_Local, Uint32_Index > from_db
-      (de_osm3s_file_ids::WAY_TAGS_LOCAL, false, from);
+      (*de_osm3s_file_ids::WAY_TAGS_LOCAL, false, from);
       for (Block_Backend< Way_Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
       {
@@ -456,7 +456,7 @@ private:
 	if (++item_count >= 4*1024*1024)
 	{
 	  Block_Backend< Way_Tag_Index_Local, Uint32_Index > into_db
-	  (de_osm3s_file_ids::WAY_TAGS_LOCAL, true, into);
+	  (*de_osm3s_file_ids::WAY_TAGS_LOCAL, true, into);
 	  into_db.update(db_to_delete, db_to_insert);
 	  db_to_insert.clear();
 	  item_count = 0;
@@ -464,20 +464,20 @@ private:
       }
       
       Block_Backend< Way_Tag_Index_Local, Uint32_Index > into_db
-      (de_osm3s_file_ids::WAY_TAGS_LOCAL, true, into);
+      (*de_osm3s_file_ids::WAY_TAGS_LOCAL, true, into);
       into_db.update(db_to_delete, db_to_insert);
     }
-    remove((get_file_base_name(de_osm3s_file_ids::WAY_TAGS_LOCAL) + from 
-    + get_index_suffix(de_osm3s_file_ids::WAY_TAGS_LOCAL)).c_str());
-    remove((get_file_base_name(de_osm3s_file_ids::WAY_TAGS_LOCAL) + from 
-    + get_data_suffix(de_osm3s_file_ids::WAY_TAGS_LOCAL)).c_str());
+    remove((de_osm3s_file_ids::WAY_TAGS_LOCAL->get_file_base_name() + from 
+    + de_osm3s_file_ids::WAY_TAGS_LOCAL->get_index_suffix()).c_str());
+    remove((de_osm3s_file_ids::WAY_TAGS_LOCAL->get_file_base_name() + from 
+    + de_osm3s_file_ids::WAY_TAGS_LOCAL->get_data_suffix()).c_str());
     {
       map< Way_Tag_Index_Global, set< Uint32_Index > > db_to_delete;
       map< Way_Tag_Index_Global, set< Uint32_Index > > db_to_insert;
       
       uint32 item_count(0);
       Block_Backend< Way_Tag_Index_Global, Uint32_Index > from_db
-      (de_osm3s_file_ids::WAY_TAGS_GLOBAL, false, from);
+      (*de_osm3s_file_ids::WAY_TAGS_GLOBAL, false, from);
       for (Block_Backend< Way_Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
       {
@@ -485,7 +485,7 @@ private:
 	if (++item_count >= 4*1024*1024)
 	{
 	  Block_Backend< Way_Tag_Index_Global, Uint32_Index > into_db
-	  (de_osm3s_file_ids::WAY_TAGS_GLOBAL, true, into);
+	  (*de_osm3s_file_ids::WAY_TAGS_GLOBAL, true, into);
 	  into_db.update(db_to_delete, db_to_insert);
 	  db_to_insert.clear();
 	  item_count = 0;
@@ -493,13 +493,13 @@ private:
       }
       
       Block_Backend< Way_Tag_Index_Global, Uint32_Index > into_db
-      (de_osm3s_file_ids::WAY_TAGS_GLOBAL, true, into);
+      (*de_osm3s_file_ids::WAY_TAGS_GLOBAL, true, into);
       into_db.update(db_to_delete, db_to_insert);
     }
-    remove((get_file_base_name(de_osm3s_file_ids::WAY_TAGS_GLOBAL) + from 
-    + get_index_suffix(de_osm3s_file_ids::WAY_TAGS_GLOBAL)).c_str());
-    remove((get_file_base_name(de_osm3s_file_ids::WAY_TAGS_GLOBAL) + from 
-    + get_data_suffix(de_osm3s_file_ids::WAY_TAGS_GLOBAL)).c_str());
+    remove((de_osm3s_file_ids::WAY_TAGS_GLOBAL->get_file_base_name() + from 
+    + de_osm3s_file_ids::WAY_TAGS_GLOBAL->get_index_suffix()).c_str());
+    remove((de_osm3s_file_ids::WAY_TAGS_GLOBAL->get_file_base_name() + from 
+    + de_osm3s_file_ids::WAY_TAGS_GLOBAL->get_data_suffix()).c_str());
   }
 };
 

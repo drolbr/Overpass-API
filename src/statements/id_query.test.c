@@ -1,5 +1,6 @@
 #include <iostream>
 #include "../backend/block_backend.h"
+#include "../core/settings.h"
 #include "id_query.h"
 
 using namespace std;
@@ -49,7 +50,7 @@ int main(int argc, char* args[])
   // prepare check update_members - load roles
   map< uint32, string > roles;
   Block_Backend< Uint32_Index, String_Object > roles_db
-      (de_osm3s_file_ids::RELATION_ROLES, true);
+      (*de_osm3s_file_ids::RELATION_ROLES, true);
   for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
       it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
     roles[it.index().val()] = it.object().val();

@@ -8,10 +8,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../dispatch/settings.h"
+#include "../backend/random_file.h"
+#include "../core/settings.h"
 #include "../expat/expat_justparse_interface.h"
 #include "node_updater.h"
-#include "random_file.h"
 #include "relation_updater.h"
 #include "way_updater.h"
 
@@ -94,7 +94,7 @@ void dump_nodes()
   Ofstream_Collection node_tags_global_out(get_basedir() + "node_tags_", "_global.csv");
     
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-      (de_osm3s_file_ids::NODES, false);
+      (*de_osm3s_file_ids::NODES, false);
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
       it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
   {
@@ -106,7 +106,7 @@ void dump_nodes()
     
     // check update_node_tags_local - compare both files for the result
     Block_Backend< Node_Tag_Index_Local, Uint32_Index > nodes_local_db
-	(de_osm3s_file_ids::NODE_TAGS_LOCAL, false);
+	(*de_osm3s_file_ids::NODE_TAGS_LOCAL, false);
     for (Block_Backend< Node_Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(nodes_local_db.flat_begin());
          !(it == nodes_local_db.flat_end()); ++it)
@@ -118,7 +118,7 @@ void dump_nodes()
     
     // check update_node_tags_global - compare both files for the result
     Block_Backend< Node_Tag_Index_Global, Uint32_Index > nodes_global_db
-	(de_osm3s_file_ids::NODE_TAGS_GLOBAL, false);
+	(*de_osm3s_file_ids::NODE_TAGS_GLOBAL, false);
     for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(nodes_global_db.flat_begin());
          !(it == nodes_global_db.flat_end()); ++it)
@@ -137,20 +137,20 @@ void dump_ways()
     
   // check update_members - compare both files for the result
   Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-      (de_osm3s_file_ids::WAYS, false);
+      (*de_osm3s_file_ids::WAYS, false);
   for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
       it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
   {
     ofstream* out(way_db_out.get(it.object().id / 1000000));
     (*out)<<it.object().id<<'\t';
-    for (int i(0); i < it.object().nds.size(); ++i)
+    for (uint i(0); i < it.object().nds.size(); ++i)
       (*out)<<it.object().nds[i]<<' ';
     (*out)<<'\n';
   }
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Way_Tag_Index_Local, Uint32_Index > ways_local_db
-	(de_osm3s_file_ids::WAY_TAGS_LOCAL, false);
+	(*de_osm3s_file_ids::WAY_TAGS_LOCAL, false);
     for (Block_Backend< Way_Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(ways_local_db.flat_begin());
          !(it == ways_local_db.flat_end()); ++it)
@@ -162,7 +162,7 @@ void dump_ways()
     
     // check update_way_tags_global - compare both files for the result
     Block_Backend< Way_Tag_Index_Global, Uint32_Index > ways_global_db
-	(de_osm3s_file_ids::WAY_TAGS_GLOBAL, false);
+	(*de_osm3s_file_ids::WAY_TAGS_GLOBAL, false);
     for (Block_Backend< Way_Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(ways_global_db.flat_begin());
          !(it == ways_global_db.flat_end()); ++it)
@@ -182,20 +182,20 @@ void dump_relations()
     // prepare check update_members - load roles
     map< uint32, string > roles;
     Block_Backend< Uint32_Index, String_Object > roles_db
-      (de_osm3s_file_ids::RELATION_ROLES, true);
+      (*de_osm3s_file_ids::RELATION_ROLES, true);
     for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
         it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
       roles[it.index().val()] = it.object().val();
     
     // check update_members - compare both files for the result
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(de_osm3s_file_ids::RELATIONS, false);
+	(*de_osm3s_file_ids::RELATIONS, false);
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
 	 it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
     {
       ofstream* out(relation_db_out.get(it.object().id / 500000));
       (*out)<<it.object().id<<'\t';
-      for (int i(0); i < it.object().members.size(); ++i)
+      for (uint i(0); i < it.object().members.size(); ++i)
 	(*out)<<it.object().members[i].ref<<' '
 	    <<it.object().members[i].type<<' '
 	    <<roles[it.object().members[i].role]<<' ';
@@ -204,7 +204,7 @@ void dump_relations()
     
     // check update_relation_tags_local - compare both files for the result
     Block_Backend< Relation_Tag_Index_Local, Uint32_Index > relations_local_db
-	(de_osm3s_file_ids::RELATION_TAGS_LOCAL, false);
+	(*de_osm3s_file_ids::RELATION_TAGS_LOCAL, false);
     for (Block_Backend< Relation_Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(relations_local_db.flat_begin());
          !(it == relations_local_db.flat_end()); ++it)
@@ -216,7 +216,7 @@ void dump_relations()
     
     // check update_relation_tags_global - compare both files for the result
     Block_Backend< Relation_Tag_Index_Global, Uint32_Index > relations_global_db
-	(de_osm3s_file_ids::RELATION_TAGS_GLOBAL, false);
+	(*de_osm3s_file_ids::RELATION_TAGS_GLOBAL, false);
     for (Block_Backend< Relation_Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(relations_global_db.flat_begin());
          !(it == relations_global_db.flat_end()); ++it)

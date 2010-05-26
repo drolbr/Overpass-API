@@ -1,17 +1,39 @@
-testing: test-bin/file_blocks test-bin/block_backend test-bin/random_file
+testing: test-bin/file_blocks test-bin/block_backend test-bin/random_file test-bin/node_updater test-bin/way_updater test-bin/relation_updater test-bin/complete_updater
 
-test-bin/file_blocks: src/backend/file_blocks.test.c test-bin src/backend/types.h src/backend/file_blocks.h
+backend_tests = test-bin/file_blocks test-bin/block_backend test-bin/random_file
+$(backend_tests): test-bin/%: src/backend/%.test.c
+	mkdir -p test-bin
 	g++ -o $@ -O3 -Wall $<
 
-test-bin/block_backend: src/backend/block_backend.test.c test-bin src/backend/types.h src/backend/file_blocks.h src/backend/block_backend.h
-	g++ -o $@ -O3 -Wall $<
+osm_backend_tests = test-bin/node_updater test-bin/way_updater test-bin/relation_updater test-bin/complete_updater
+test-bin/%: src/osm-backend/%.test.c src/core/settings.c
+	mkdir -p test-bin
+	g++ -o $@ -O3 -Wall -lexpat $^
 
-test-bin/random_file: src/backend/random_file.test.c test-bin src/backend/types.h src/backend/random_file.h
-	g++ -o $@ -O3 -Wall $<
+backend = src/backend/types.h src/backend/random_file.h src/backend/file_blocks.h src/backend/block_backend.h
 
-test-bin:
-	mkdir test-bin
+src/backend/random_file.h: src/backend/types.h
+	touch $@
 
+src/backend/file_blocks.h: src/backend/types.h
+	touch $@
+
+src/backend/block_backend.h: src/backend/file_blocks.h
+	touch $@
+
+src/core/datatypes.h: src/backend/types.h
+	touch $@
+
+src/osm-backend/%_updater.h: src/core/datatypes.h $(backend)
+	touch $@
+
+testsrcs = src/backend/file_blocks.test.c src/backend/block_backend.test.c src/backend/random_file.test.c src/osm-backend/node_updater.test.c src/osm-backend/way_updater.test.c src/osm-backend/relation_updater.test.c
+
+$(testsrcs): %.test.c: %.h
+	touch $@
+
+src/osm_backend/complete_updater.test.c: src/osm-backend/%_updater.h src/core/datatypes.h $(backend)
+	touch $@
 
 stmts = \
 area_query_$(suffix) \

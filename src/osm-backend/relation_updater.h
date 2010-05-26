@@ -7,10 +7,10 @@
 #include <set>
 #include <vector>
 
+#include "../backend/block_backend.h"
+#include "../backend/random_file.h"
 #include "../core/datatypes.h"
-#include "../dispatch/settings.h"
-#include "block_backend.h"
-#include "random_file.h"
+#include "../core/settings.h"
 
 using namespace std;
 
@@ -133,7 +133,7 @@ struct Relation_Updater
   {
     // load roles
     Block_Backend< Uint32_Index, String_Object > roles_db
-      (de_osm3s_file_ids::RELATION_ROLES, true);
+      (*de_osm3s_file_ids::RELATION_ROLES, true);
     max_role_id = 0;
     for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
         it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
@@ -226,8 +226,8 @@ private:
       }
     }
     
-    Random_File< Uint32_Index > node_random(de_osm3s_file_ids::NODES, false);
-    Random_File< Uint31_Index > way_random(de_osm3s_file_ids::WAYS, false);
+    Random_File< Uint32_Index > node_random(*de_osm3s_file_ids::NODES, false);
+    Random_File< Uint31_Index > way_random(*de_osm3s_file_ids::WAYS, false);
     for (map< uint32, uint32 >::iterator it(used_nodes.begin());
 	 it != used_nodes.end(); ++it)
       it->second = node_random.get(it->first).val();
@@ -253,7 +253,7 @@ private:
     sort(ids_to_delete.begin(), ids_to_delete.end());
     sort(rels_to_insert.begin(), rels_to_insert.end(), rel_comparator_by_id);
     
-    Random_File< Uint31_Index > random(de_osm3s_file_ids::RELATIONS, true);
+    Random_File< Uint31_Index > random(*de_osm3s_file_ids::RELATIONS, true);
     vector< Relation >::const_iterator wit(rels_to_insert.begin());
     for (vector< uint32 >::const_iterator it(ids_to_delete.begin());
         it != ids_to_delete.end(); ++it)
@@ -290,7 +290,7 @@ private:
     }
     
     Block_Backend< Uint31_Index, Relation_Skeleton > rel_db
-      (de_osm3s_file_ids::RELATIONS, true);
+      (*de_osm3s_file_ids::RELATIONS, true);
     rel_db.update(db_to_delete, db_to_insert);
   }
   
@@ -328,7 +328,7 @@ private:
     
     // iterate over the result
     Block_Backend< Relation_Tag_Index_Local, Uint32_Index > rels_db
-	(de_osm3s_file_ids::RELATION_TAGS_LOCAL, true);
+	(*de_osm3s_file_ids::RELATION_TAGS_LOCAL, true);
     Relation_Tag_Index_Local current_index;
     Relation_Tag_Entry rel_tag_entry;
     current_index.index = 0xffffffff;
@@ -395,7 +395,7 @@ private:
     }
     
     Block_Backend< Relation_Tag_Index_Local, Uint32_Index > rel_db
-	(de_osm3s_file_ids::RELATION_TAGS_LOCAL, true);
+	(*de_osm3s_file_ids::RELATION_TAGS_LOCAL, true);
     rel_db.update(db_to_delete, db_to_insert);
   }
   
@@ -433,7 +433,7 @@ private:
     }
     
     Block_Backend< Relation_Tag_Index_Global, Uint32_Index > rel_db
-      (de_osm3s_file_ids::RELATION_TAGS_GLOBAL, true);
+      (*de_osm3s_file_ids::RELATION_TAGS_GLOBAL, true);
     rel_db.update(db_to_delete, db_to_insert);
   }
 
@@ -451,7 +451,7 @@ private:
     }
     
     Block_Backend< Uint32_Index, String_Object > roles_db
-    (de_osm3s_file_ids::RELATION_ROLES, true);
+    (*de_osm3s_file_ids::RELATION_ROLES, true);
     roles_db.update(db_to_delete, db_to_insert);
   }
 };

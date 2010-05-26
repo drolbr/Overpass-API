@@ -8,10 +8,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../dispatch/settings.h"
+#include "../backend/random_file.h"
+#include "../core/settings.h"
 #include "../expat/expat_justparse_interface.h"
 #include "node_updater.h"
-#include "random_file.h"
 #include "relation_updater.h"
 #include "way_updater.h"
 
@@ -249,19 +249,19 @@ int main(int argc, char* args[])
     // prepare check update_members - load roles
     map< uint32, string > roles;
     Block_Backend< Uint32_Index, String_Object > roles_db
-      (de_osm3s_file_ids::RELATION_ROLES, true);
+      (*de_osm3s_file_ids::RELATION_ROLES, true);
     for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
         it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
       roles[it.index().val()] = it.object().val();
     
     // check update_members - compare both files for the result
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(de_osm3s_file_ids::RELATIONS, false);
+	(*de_osm3s_file_ids::RELATIONS, false);
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
 	 it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
     {
       member_db_out<<it.object().id<<'\t';
-      for (int i(0); i < it.object().members.size(); ++i)
+      for (uint i(0); i < it.object().members.size(); ++i)
 	member_db_out<<it.object().members[i].ref<<' '
 	    <<it.object().members[i].type<<' '
 	    <<roles[it.object().members[i].role]<<' ';
@@ -270,7 +270,7 @@ int main(int argc, char* args[])
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Relation_Tag_Index_Local, Uint32_Index > relations_local_db
-	(de_osm3s_file_ids::RELATION_TAGS_LOCAL, false);
+	(*de_osm3s_file_ids::RELATION_TAGS_LOCAL, false);
     for (Block_Backend< Relation_Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(relations_local_db.flat_begin());
          !(it == relations_local_db.flat_end()); ++it)
@@ -281,7 +281,7 @@ int main(int argc, char* args[])
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Relation_Tag_Index_Global, Uint32_Index > relations_global_db
-	(de_osm3s_file_ids::RELATION_TAGS_GLOBAL, false);
+	(*de_osm3s_file_ids::RELATION_TAGS_GLOBAL, false);
     for (Block_Backend< Relation_Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(relations_global_db.flat_begin());
          !(it == relations_global_db.flat_end()); ++it)

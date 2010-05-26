@@ -2,6 +2,7 @@
 
 #include "../backend/block_backend.h"
 #include "../backend/random_file.h"
+#include "../core/settings.h"
 #include "id_query.h"
 
 using namespace std;
@@ -89,13 +90,13 @@ void Id_Query_Statement::execute(map< string, Set >& maps)
     set< Uint32_Index > req;
     Uint32_Index idx((uint32)0);
     {
-      Random_File< Uint32_Index > random(de_osm3s_file_ids::NODES, false);
+      Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, false);
       idx = random.get(ref);
     }
     req.insert(idx);
 
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-	(de_osm3s_file_ids::NODES, false);
+	(*de_osm3s_file_ids::NODES, false);
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
 	 it(nodes_db.discrete_begin(req.begin(), req.end()));
 	 !(it == nodes_db.discrete_end()); ++it)
@@ -109,13 +110,13 @@ void Id_Query_Statement::execute(map< string, Set >& maps)
     set< Uint31_Index > req;
     Uint31_Index idx((uint32)0);
     {
-      Random_File< Uint31_Index > random(de_osm3s_file_ids::WAYS, false);
+      Random_File< Uint31_Index > random(*de_osm3s_file_ids::WAYS, false);
       idx = random.get(ref);
     }
     req.insert(idx);
 
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-	(de_osm3s_file_ids::WAYS, false);
+	(*de_osm3s_file_ids::WAYS, false);
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
 	 it(ways_db.discrete_begin(req.begin(), req.end()));
 	 !(it == ways_db.discrete_end()); ++it)
@@ -129,13 +130,13 @@ void Id_Query_Statement::execute(map< string, Set >& maps)
     set< Uint31_Index > req;
     Uint31_Index idx((uint32)0);
     {
-      Random_File< Uint31_Index > random(de_osm3s_file_ids::RELATIONS, false);
+      Random_File< Uint31_Index > random(*de_osm3s_file_ids::RELATIONS, false);
       idx = random.get(ref);
     }
     req.insert(idx);
 
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(de_osm3s_file_ids::RELATIONS, false);
+	(*de_osm3s_file_ids::RELATIONS, false);
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
 	 it(relations_db.discrete_begin(req.begin(), req.end()));
 	 !(it == relations_db.discrete_end()); ++it)
