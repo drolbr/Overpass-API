@@ -27,7 +27,7 @@ struct OSM_File_Properties : File_Properties
   
   string get_file_base_name() const
   {
-    return file_base_name;
+    return BASE_DIRECTORY + file_base_name;
   }
   
   string get_index_suffix() const

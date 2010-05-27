@@ -445,6 +445,119 @@ struct Relation_Skeleton
   }
 };
 
+struct Tag_Entry
+{
+  uint32 index;
+  string key;
+  string value;
+  vector< uint32 > ids;
+};
+
+struct Tag_Index_Local
+{
+  uint32 index;
+  string key;
+  string value;
+  
+  Tag_Index_Local() {}
+  
+  Tag_Index_Local(void* data)
+  {
+    index = (*((uint32*)data + 1))<<8;
+    key = string(((int8*)data + 7), *(uint16*)data);
+    value = string(((int8*)data + 7 + key.length()),
+		   *((uint16*)data + 1));
+  }
+  
+  uint32 size_of() const
+  {
+    return 7 + key.length() + value.length();
+  }
+  
+  static uint32 size_of(void* data)
+  {
+    return (*((uint16*)data) + *((uint16*)data + 1) + 7);
+  }
+  
+  void to_data(void* data) const
+  {
+    *(uint16*)data = key.length();
+    *((uint16*)data + 1) = value.length();
+    *((uint32*)data + 1) = index>>8;
+    memcpy(((uint8*)data + 7), key.data(), key.length());
+    memcpy(((uint8*)data + 7 + key.length()), value.data(),
+	   value.length());
+  }
+  
+  bool operator<(const Tag_Index_Local& a) const
+  {
+    if ((index & 0x7fffffff) != (a.index & 0x7fffffff))
+      return ((index & 0x7fffffff) < (a.index & 0x7fffffff));
+    if (index != a.index)
+      return (index < a.index);
+    if (key != a.key)
+      return (key < a.key);
+    return (value < a.value);
+  }
+  
+  bool operator==(const Tag_Index_Local& a) const
+  {
+    if (index != a.index)
+      return false;
+    if (key != a.key)
+      return false;
+    return (value == a.value);
+  }
+};
+
+struct Tag_Index_Global
+{
+  string key;
+  string value;
+  
+  Tag_Index_Global() {}
+  
+  Tag_Index_Global(void* data)
+  {
+    key = string(((int8*)data + 4), *(uint16*)data);
+    value = string(((int8*)data + 4 + key.length()),
+		   *((uint16*)data + 1));
+  }
+  
+  uint32 size_of() const
+  {
+    return 4 + key.length() + value.length();
+  }
+  
+  static uint32 size_of(void* data)
+  {
+    return (*((uint16*)data) + *((uint16*)data + 1) + 4);
+  }
+  
+  void to_data(void* data) const
+  {
+    *(uint16*)data = key.length();
+    *((uint16*)data + 1) = value.length();
+    memcpy(((uint8*)data + 4), key.data(), key.length());
+    memcpy(((uint8*)data + 4 + key.length()), value.data(),
+	   value.length());
+  }
+  
+  bool operator<(const Tag_Index_Global& a) const
+  {
+    if (key != a.key)
+      return (key < a.key);
+    return (value < a.value);
+  }
+  
+  bool operator==(const Tag_Index_Global& a) const
+  {
+    if (key != a.key)
+      return false;
+    return (value == a.value);
+  }
+};
+
 /**
   * A dataset that is referred in the scripts by a variable.
   */

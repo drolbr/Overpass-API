@@ -14,119 +14,6 @@
 
 using namespace std;
 
-struct Relation_Tag_Entry
-{
-  uint32 index;
-  string key;
-  string value;
-  vector< uint32 > rel_ids;
-};
-
-struct Relation_Tag_Index_Local
-{
-  uint32 index;
-  string key;
-  string value;
-  
-  Relation_Tag_Index_Local() {}
-  
-  Relation_Tag_Index_Local(void* data)
-  {
-    index = (*((uint32*)data + 1))<<8;
-    key = string(((int8*)data + 7), *(uint16*)data);
-    value = string(((int8*)data + 7 + key.length()),
-			   *((uint16*)data + 1));
-  }
-  
-  uint32 size_of() const
-  {
-    return 7 + key.length() + value.length();
-  }
-  
-  static uint32 size_of(void* data)
-  {
-    return (*((uint16*)data) + *((uint16*)data + 1) + 7);
-  }
-  
-  void to_data(void* data) const
-  {
-    *(uint16*)data = key.length();
-    *((uint16*)data + 1) = value.length();
-    *((uint32*)data + 1) = index>>8;
-    memcpy(((uint8*)data + 7), key.data(), key.length());
-    memcpy(((uint8*)data + 7 + key.length()), value.data(),
-	     value.length());
-  }
-  
-  bool operator<(const Relation_Tag_Index_Local& a) const
-  {
-    if ((index & 0x7fffffff) != (a.index & 0x7fffffff))
-      return ((index & 0x7fffffff) < (a.index & 0x7fffffff));
-    if (index != a.index)
-      return (index < a.index);
-    if (key != a.key)
-      return (key < a.key);
-    return (value < a.value);
-  }
-  
-  bool operator==(const Relation_Tag_Index_Local& a) const
-  {
-    if (index != a.index)
-      return false;
-    if (key != a.key)
-      return false;
-    return (value == a.value);
-  }
-};
-
-struct Relation_Tag_Index_Global
-{
-  string key;
-  string value;
-  
-  Relation_Tag_Index_Global() {}
-  
-  Relation_Tag_Index_Global(void* data)
-  {
-    key = string(((int8*)data + 4), *(uint16*)data);
-    value = string(((int8*)data + 4 + key.length()),
-		     *((uint16*)data + 1));
-  }
-  
-  uint32 size_of() const
-  {
-    return 4 + key.length() + value.length();
-  }
-  
-  static uint32 size_of(void* data)
-  {
-    return (*((uint16*)data) + *((uint16*)data + 1) + 4);
-  }
-  
-  void to_data(void* data) const
-  {
-    *(uint16*)data = key.length();
-    *((uint16*)data + 1) = value.length();
-    memcpy(((uint8*)data + 4), key.data(), key.length());
-    memcpy(((uint8*)data + 4 + key.length()), value.data(),
-	     value.length());
-  }
-  
-  bool operator<(const Relation_Tag_Index_Global& a) const
-  {
-    if (key != a.key)
-      return (key < a.key);
-    return (value < a.value);
-  }
-  
-  bool operator==(const Relation_Tag_Index_Global& a) const
-  {
-    if (key != a.key)
-      return false;
-    return (value == a.value);
-  }
-};
-
 struct Relation_Updater
 {
   Relation_Updater()
@@ -187,7 +74,7 @@ struct Relation_Updater
     update_rel_ids(to_delete);
     update_members(to_delete);
 
-    vector< Relation_Tag_Entry > tags_to_delete;
+    vector< Tag_Entry > tags_to_delete;
     prepare_delete_tags(tags_to_delete, to_delete);
     update_rel_tags_local(tags_to_delete);
     update_rel_tags_global(tags_to_delete);
@@ -295,7 +182,7 @@ private:
   }
   
   void prepare_delete_tags
-      (vector< Relation_Tag_Entry >& tags_to_delete,
+      (vector< Tag_Entry >& tags_to_delete,
        const map< uint32, vector< uint32 > >& to_delete)
   {
     // make indices appropriately coarse
@@ -312,11 +199,11 @@ private:
     }
     
     // formulate range query
-    set< pair< Relation_Tag_Index_Local, Relation_Tag_Index_Local > > range_set;
+    set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
     for (map< uint32, set< uint32 > >::const_iterator
 	 it(to_delete_coarse.begin()); it != to_delete_coarse.end(); ++it)
     {
-      Relation_Tag_Index_Local lower, upper;
+      Tag_Index_Local lower, upper;
       lower.index = it->first;
       lower.key = "";
       lower.value = "";
@@ -327,52 +214,52 @@ private:
     }
     
     // iterate over the result
-    Block_Backend< Relation_Tag_Index_Local, Uint32_Index > rels_db
+    Block_Backend< Tag_Index_Local, Uint32_Index > rels_db
 	(*de_osm3s_file_ids::RELATION_TAGS_LOCAL, true);
-    Relation_Tag_Index_Local current_index;
-    Relation_Tag_Entry rel_tag_entry;
+    Tag_Index_Local current_index;
+    Tag_Entry tag_entry;
     current_index.index = 0xffffffff;
-    for (Block_Backend< Relation_Tag_Index_Local, Uint32_Index >::Range_Iterator
+    for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
 	 it(rels_db.range_begin
-	     (Default_Range_Iterator< Relation_Tag_Index_Local >(range_set.begin()),
-	      Default_Range_Iterator< Relation_Tag_Index_Local >(range_set.end())));
+	     (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+	      Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
 	 !(it == rels_db.range_end()); ++it)
     {
       if (!(current_index == it.index()))
       {
-	if ((current_index.index != 0xffffffff) && (!rel_tag_entry.rel_ids.empty()))
-	  tags_to_delete.push_back(rel_tag_entry);
+	if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
+	  tags_to_delete.push_back(tag_entry);
 	current_index = it.index();
-	rel_tag_entry.index = it.index().index;
-	rel_tag_entry.key = it.index().key;
-	rel_tag_entry.value = it.index().value;
-	rel_tag_entry.rel_ids.clear();
+	tag_entry.index = it.index().index;
+	tag_entry.key = it.index().key;
+	tag_entry.value = it.index().value;
+	tag_entry.ids.clear();
       }
       
       set< uint32 >& handle(to_delete_coarse[it.index().index]);
       if (handle.find(it.object().val()) != handle.end())
-	rel_tag_entry.rel_ids.push_back(it.object().val());
+	tag_entry.ids.push_back(it.object().val());
     }
-    if ((current_index.index != 0xffffffff) && (!rel_tag_entry.rel_ids.empty()))
-      tags_to_delete.push_back(rel_tag_entry);
+    if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
+      tags_to_delete.push_back(tag_entry);
   }
        
-  void update_rel_tags_local(const vector< Relation_Tag_Entry >& tags_to_delete)
+  void update_rel_tags_local(const vector< Tag_Entry >& tags_to_delete)
   {
-    map< Relation_Tag_Index_Local, set< Uint32_Index > > db_to_delete;
-    map< Relation_Tag_Index_Local, set< Uint32_Index > > db_to_insert;
+    map< Tag_Index_Local, set< Uint32_Index > > db_to_delete;
+    map< Tag_Index_Local, set< Uint32_Index > > db_to_insert;
     
-    for (vector< Relation_Tag_Entry >::const_iterator it(tags_to_delete.begin());
+    for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
 	 it != tags_to_delete.end(); ++it)
     {
-      Relation_Tag_Index_Local index;
+      Tag_Index_Local index;
       index.index = it->index;
       index.key = it->key;
       index.value = it->value;
       
       set< Uint32_Index > rel_ids;
-      for (vector< uint32 >::const_iterator it2(it->rel_ids.begin());
-	   it2 != it->rel_ids.end(); ++it2)
+      for (vector< uint32 >::const_iterator it2(it->ids.begin());
+	   it2 != it->ids.end(); ++it2)
 	rel_ids.insert(*it2);
       
       db_to_delete[index] = rel_ids;
@@ -381,7 +268,7 @@ private:
     for (vector< Relation >::const_iterator it(rels_to_insert.begin());
 	 it != rels_to_insert.end(); ++it)
     {
-      Relation_Tag_Index_Local index;
+      Tag_Index_Local index;
       index.index = it->index & 0xffffff00;
       
       for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
@@ -394,33 +281,33 @@ private:
       }
     }
     
-    Block_Backend< Relation_Tag_Index_Local, Uint32_Index > rel_db
+    Block_Backend< Tag_Index_Local, Uint32_Index > rel_db
 	(*de_osm3s_file_ids::RELATION_TAGS_LOCAL, true);
     rel_db.update(db_to_delete, db_to_insert);
   }
   
-  void update_rel_tags_global(const vector< Relation_Tag_Entry >& tags_to_delete)
+  void update_rel_tags_global(const vector< Tag_Entry >& tags_to_delete)
   {
-    map< Relation_Tag_Index_Global, set< Uint32_Index > > db_to_delete;
-    map< Relation_Tag_Index_Global, set< Uint32_Index > > db_to_insert;
+    map< Tag_Index_Global, set< Uint32_Index > > db_to_delete;
+    map< Tag_Index_Global, set< Uint32_Index > > db_to_insert;
     
-    for (vector< Relation_Tag_Entry >::const_iterator it(tags_to_delete.begin());
+    for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
 	 it != tags_to_delete.end(); ++it)
     {
-      Relation_Tag_Index_Global index;
+      Tag_Index_Global index;
       index.key = it->key;
       index.value = it->value;
       
       set< Uint32_Index > rel_ids;
-      for (vector< uint32 >::const_iterator it2(it->rel_ids.begin());
-	   it2 != it->rel_ids.end(); ++it2)
+      for (vector< uint32 >::const_iterator it2(it->ids.begin());
+	   it2 != it->ids.end(); ++it2)
 	db_to_delete[index].insert(*it2);
     }
     
     for (vector< Relation >::const_iterator it(rels_to_insert.begin());
 	 it != rels_to_insert.end(); ++it)
     {
-      Relation_Tag_Index_Global index;
+      Tag_Index_Global index;
       
       for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
 	   it2 != it->tags.end(); ++it2)
@@ -432,7 +319,7 @@ private:
       }
     }
     
-    Block_Backend< Relation_Tag_Index_Global, Uint32_Index > rel_db
+    Block_Backend< Tag_Index_Global, Uint32_Index > rel_db
       (*de_osm3s_file_ids::RELATION_TAGS_GLOBAL, true);
     rel_db.update(db_to_delete, db_to_insert);
   }

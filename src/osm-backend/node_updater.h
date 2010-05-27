@@ -14,117 +14,6 @@
 
 using namespace std;
 
-struct Node_Tag_Entry
-{
-  uint32 index;
-  string key;
-  string value;
-  vector< uint32 > node_ids;
-};
-
-struct Node_Tag_Index_Local
-{
-  uint32 index;
-  string key;
-  string value;
-  
-  Node_Tag_Index_Local() {}
-  
-  Node_Tag_Index_Local(void* data)
-  {
-    index = (*((uint32*)data + 1))<<8;
-    key = string(((int8*)data + 7), *(uint16*)data);
-    value = string(((int8*)data + 7 + key.length()),
-			   *((uint16*)data + 1));
-  }
-  
-  uint32 size_of() const
-  {
-    return 7 + key.length() + value.length();
-  }
-  
-  static uint32 size_of(void* data)
-  {
-    return (*((uint16*)data) + *((uint16*)data + 1) + 7);
-  }
-  
-  void to_data(void* data) const
-  {
-    *(uint16*)data = key.length();
-    *((uint16*)data + 1) = value.length();
-    *((uint32*)data + 1) = index>>8;
-    memcpy(((uint8*)data + 7), key.data(), key.length());
-    memcpy(((uint8*)data + 7 + key.length()), value.data(),
-	     value.length());
-  }
-  
-  bool operator<(const Node_Tag_Index_Local& a) const
-  {
-    if (index != a.index)
-      return (index < a.index);
-    if (key != a.key)
-      return (key < a.key);
-    return (value < a.value);
-  }
-  
-  bool operator==(const Node_Tag_Index_Local& a) const
-  {
-    if (index != a.index)
-      return false;
-    if (key != a.key)
-      return false;
-    return (value == a.value);
-  }
-};
-
-struct Node_Tag_Index_Global
-{
-  string key;
-  string value;
-  
-  Node_Tag_Index_Global() {}
-  
-  Node_Tag_Index_Global(void* data)
-  {
-    key = string(((int8*)data + 4), *(uint16*)data);
-    value = string(((int8*)data + 4 + key.length()),
-		     *((uint16*)data + 1));
-  }
-  
-  uint32 size_of() const
-  {
-    return 4 + key.length() + value.length();
-  }
-  
-  static uint32 size_of(void* data)
-  {
-    return (*((uint16*)data) + *((uint16*)data + 1) + 4);
-  }
-  
-  void to_data(void* data) const
-  {
-    *(uint16*)data = key.length();
-    *((uint16*)data + 1) = value.length();
-    memcpy(((uint8*)data + 4), key.data(), key.length());
-    memcpy(((uint8*)data + 4 + key.length()), value.data(),
-	     value.length());
-  }
-  
-  bool operator<(const Node_Tag_Index_Global& a) const
-  {
-    if (key != a.key)
-      return (key < a.key);
-    return (value < a.value);
-  }
-  
-  bool operator==(const Node_Tag_Index_Global& a) const
-  {
-    if (key != a.key)
-      return false;
-    return (value == a.value);
-  }
-};
-
 struct Node_Updater
 {
   Node_Updater() : update_counter(0) {}
@@ -162,7 +51,7 @@ struct Node_Updater
     update_node_ids(to_delete);
     update_coords(to_delete);
     
-    vector< Node_Tag_Entry > tags_to_delete;
+    vector< Tag_Entry > tags_to_delete;
     prepare_delete_tags(tags_to_delete, to_delete);
     update_node_tags_local(tags_to_delete);
     update_node_tags_global(tags_to_delete);
@@ -244,7 +133,7 @@ private:
   }
   
   void prepare_delete_tags
-      (vector< Node_Tag_Entry >& tags_to_delete,
+      (vector< Tag_Entry >& tags_to_delete,
        const map< uint32, vector< uint32 > >& to_delete)
   {
     // make indices appropriately coarse
@@ -261,11 +150,11 @@ private:
     }
     
     // formulate range query
-    set< pair< Node_Tag_Index_Local, Node_Tag_Index_Local > > range_set;
+    set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
     for (map< uint32, set< uint32 > >::const_iterator
 	 it(to_delete_coarse.begin()); it != to_delete_coarse.end(); ++it)
     {
-      Node_Tag_Index_Local lower, upper;
+      Tag_Index_Local lower, upper;
       lower.index = it->first;
       lower.key = "";
       lower.value = "";
@@ -276,52 +165,52 @@ private:
     }
     
     // iterate over the result
-    Block_Backend< Node_Tag_Index_Local, Uint32_Index > nodes_db
+    Block_Backend< Tag_Index_Local, Uint32_Index > nodes_db
 	(*de_osm3s_file_ids::NODE_TAGS_LOCAL, true);
-    Node_Tag_Index_Local current_index;
-    Node_Tag_Entry node_tag_entry;
+    Tag_Index_Local current_index;
+    Tag_Entry node_tag_entry;
     current_index.index = 0xffffffff;
-    for (Block_Backend< Node_Tag_Index_Local, Uint32_Index >::Range_Iterator
+    for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
 	 it(nodes_db.range_begin
-	     (Default_Range_Iterator< Node_Tag_Index_Local >(range_set.begin()),
-	      Default_Range_Iterator< Node_Tag_Index_Local >(range_set.end())));
+	     (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+	      Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
 	 !(it == nodes_db.range_end()); ++it)
     {
       if (!(current_index == it.index()))
       {
-	if ((current_index.index != 0xffffffff) && (!node_tag_entry.node_ids.empty()))
+	if ((current_index.index != 0xffffffff) && (!node_tag_entry.ids.empty()))
 	  tags_to_delete.push_back(node_tag_entry);
 	current_index = it.index();
 	node_tag_entry.index = it.index().index;
 	node_tag_entry.key = it.index().key;
 	node_tag_entry.value = it.index().value;
-	node_tag_entry.node_ids.clear();
+	node_tag_entry.ids.clear();
       }
       
       set< uint32 >& handle(to_delete_coarse[it.index().index]);
       if (handle.find(it.object().val()) != handle.end())
-	node_tag_entry.node_ids.push_back(it.object().val());
+	node_tag_entry.ids.push_back(it.object().val());
     }
-    if ((current_index.index != 0xffffffff) && (!node_tag_entry.node_ids.empty()))
+    if ((current_index.index != 0xffffffff) && (!node_tag_entry.ids.empty()))
       tags_to_delete.push_back(node_tag_entry);
   }
        
-  void update_node_tags_local(const vector< Node_Tag_Entry >& tags_to_delete)
+  void update_node_tags_local(const vector< Tag_Entry >& tags_to_delete)
   {
-    map< Node_Tag_Index_Local, set< Uint32_Index > > db_to_delete;
-    map< Node_Tag_Index_Local, set< Uint32_Index > > db_to_insert;
+    map< Tag_Index_Local, set< Uint32_Index > > db_to_delete;
+    map< Tag_Index_Local, set< Uint32_Index > > db_to_insert;
     
-    for (vector< Node_Tag_Entry >::const_iterator it(tags_to_delete.begin());
+    for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
 	 it != tags_to_delete.end(); ++it)
     {
-      Node_Tag_Index_Local index;
+      Tag_Index_Local index;
       index.index = it->index;
       index.key = it->key;
       index.value = it->value;
       
       set< Uint32_Index > node_ids;
-      for (vector< uint32 >::const_iterator it2(it->node_ids.begin());
-	   it2 != it->node_ids.end(); ++it2)
+      for (vector< uint32 >::const_iterator it2(it->ids.begin());
+	   it2 != it->ids.end(); ++it2)
 	node_ids.insert(*it2);
       
       db_to_delete[index] = node_ids;
@@ -330,7 +219,7 @@ private:
     for (vector< Node >::const_iterator it(nodes_to_insert.begin());
 	 it != nodes_to_insert.end(); ++it)
     {
-      Node_Tag_Index_Local index;
+      Tag_Index_Local index;
       index.index = it->ll_upper_ & 0xffffff00;
       
       for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
@@ -343,33 +232,33 @@ private:
       }
     }
     
-    Block_Backend< Node_Tag_Index_Local, Uint32_Index > node_db
+    Block_Backend< Tag_Index_Local, Uint32_Index > node_db
 	(*de_osm3s_file_ids::NODE_TAGS_LOCAL, true);
     node_db.update(db_to_delete, db_to_insert);
   }
   
-  void update_node_tags_global(const vector< Node_Tag_Entry >& tags_to_delete)
+  void update_node_tags_global(const vector< Tag_Entry >& tags_to_delete)
   {
-    map< Node_Tag_Index_Global, set< Uint32_Index > > db_to_delete;
-    map< Node_Tag_Index_Global, set< Uint32_Index > > db_to_insert;
+    map< Tag_Index_Global, set< Uint32_Index > > db_to_delete;
+    map< Tag_Index_Global, set< Uint32_Index > > db_to_insert;
     
-    for (vector< Node_Tag_Entry >::const_iterator it(tags_to_delete.begin());
+    for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
 	 it != tags_to_delete.end(); ++it)
     {
-      Node_Tag_Index_Global index;
+      Tag_Index_Global index;
       index.key = it->key;
       index.value = it->value;
       
       set< Uint32_Index > node_ids;
-      for (vector< uint32 >::const_iterator it2(it->node_ids.begin());
-	   it2 != it->node_ids.end(); ++it2)
+      for (vector< uint32 >::const_iterator it2(it->ids.begin());
+	   it2 != it->ids.end(); ++it2)
 	db_to_delete[index].insert(*it2);
     }
     
     for (vector< Node >::const_iterator it(nodes_to_insert.begin());
 	 it != nodes_to_insert.end(); ++it)
     {
-      Node_Tag_Index_Global index;
+      Tag_Index_Global index;
       
       for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
 	   it2 != it->tags.end(); ++it2)
@@ -381,7 +270,7 @@ private:
       }
     }
 
-    Block_Backend< Node_Tag_Index_Global, Uint32_Index > node_db
+    Block_Backend< Tag_Index_Global, Uint32_Index > node_db
 	(*de_osm3s_file_ids::NODE_TAGS_GLOBAL, true);
     node_db.update(db_to_delete, db_to_insert);
   }
@@ -418,19 +307,19 @@ private:
     remove((de_osm3s_file_ids::NODES->get_file_base_name() + from 
       + de_osm3s_file_ids::NODES->get_data_suffix()).c_str());
     {
-      map< Node_Tag_Index_Local, set< Uint32_Index > > db_to_delete;
-      map< Node_Tag_Index_Local, set< Uint32_Index > > db_to_insert;
+      map< Tag_Index_Local, set< Uint32_Index > > db_to_delete;
+      map< Tag_Index_Local, set< Uint32_Index > > db_to_insert;
       
       uint32 item_count(0);
-      Block_Backend< Node_Tag_Index_Local, Uint32_Index > from_db
+      Block_Backend< Tag_Index_Local, Uint32_Index > from_db
         (*de_osm3s_file_ids::NODE_TAGS_LOCAL, false, from);
-      for (Block_Backend< Node_Tag_Index_Local, Uint32_Index >::Flat_Iterator
+      for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
       {
 	db_to_insert[it.index()].insert(it.object());
 	if (++item_count >= 4*1024*1024)
 	{
-	  Block_Backend< Node_Tag_Index_Local, Uint32_Index > into_db
+	  Block_Backend< Tag_Index_Local, Uint32_Index > into_db
 	    (*de_osm3s_file_ids::NODE_TAGS_LOCAL, true, into);
 	  into_db.update(db_to_delete, db_to_insert);
 	  db_to_insert.clear();
@@ -438,7 +327,7 @@ private:
 	}
       }
       
-      Block_Backend< Node_Tag_Index_Local, Uint32_Index > into_db
+      Block_Backend< Tag_Index_Local, Uint32_Index > into_db
       (*de_osm3s_file_ids::NODE_TAGS_LOCAL, true, into);
       into_db.update(db_to_delete, db_to_insert);
     }
@@ -447,19 +336,19 @@ private:
     remove((de_osm3s_file_ids::NODE_TAGS_LOCAL->get_file_base_name() + from 
       + de_osm3s_file_ids::NODE_TAGS_LOCAL->get_data_suffix()).c_str());
     {
-      map< Node_Tag_Index_Global, set< Uint32_Index > > db_to_delete;
-      map< Node_Tag_Index_Global, set< Uint32_Index > > db_to_insert;
+      map< Tag_Index_Global, set< Uint32_Index > > db_to_delete;
+      map< Tag_Index_Global, set< Uint32_Index > > db_to_insert;
       
       uint32 item_count(0);
-      Block_Backend< Node_Tag_Index_Global, Uint32_Index > from_db
+      Block_Backend< Tag_Index_Global, Uint32_Index > from_db
         (*de_osm3s_file_ids::NODE_TAGS_GLOBAL, false, from);
-      for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Flat_Iterator
+      for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
       {
 	db_to_insert[it.index()].insert(it.object());
 	if (++item_count >= 4*1024*1024)
 	{
-	  Block_Backend< Node_Tag_Index_Global, Uint32_Index > into_db
+	  Block_Backend< Tag_Index_Global, Uint32_Index > into_db
 	    (*de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, into);
 	  into_db.update(db_to_delete, db_to_insert);
 	  db_to_insert.clear();
@@ -467,7 +356,7 @@ private:
 	}
       }
       
-      Block_Backend< Node_Tag_Index_Global, Uint32_Index > into_db
+      Block_Backend< Tag_Index_Global, Uint32_Index > into_db
         (*de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, into);
       into_db.update(db_to_delete, db_to_insert);
     }

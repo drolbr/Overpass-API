@@ -269,9 +269,9 @@ int main(int argc, char* args[])
     }
     
     // check update_way_tags_local - compare both files for the result
-    Block_Backend< Relation_Tag_Index_Local, Uint32_Index > relations_local_db
+    Block_Backend< Tag_Index_Local, Uint32_Index > relations_local_db
 	(*de_osm3s_file_ids::RELATION_TAGS_LOCAL, false);
-    for (Block_Backend< Relation_Tag_Index_Local, Uint32_Index >::Flat_Iterator
+    for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(relations_local_db.flat_begin());
          !(it == relations_local_db.flat_end()); ++it)
     {
@@ -280,9 +280,9 @@ int main(int argc, char* args[])
     }
     
     // check update_way_tags_local - compare both files for the result
-    Block_Backend< Relation_Tag_Index_Global, Uint32_Index > relations_global_db
+    Block_Backend< Tag_Index_Global, Uint32_Index > relations_global_db
 	(*de_osm3s_file_ids::RELATION_TAGS_GLOBAL, false);
-    for (Block_Backend< Relation_Tag_Index_Global, Uint32_Index >::Flat_Iterator
+    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(relations_global_db.flat_begin());
          !(it == relations_global_db.flat_end()); ++it)
     {

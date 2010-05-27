@@ -131,9 +131,9 @@ int main(int argc, char* args[])
     }
     
     // check update_node_tags_local - compare both files for the result
-    Block_Backend< Node_Tag_Index_Local, Uint32_Index > nodes_local_db
+    Block_Backend< Tag_Index_Local, Uint32_Index > nodes_local_db
 	(*de_osm3s_file_ids::NODE_TAGS_LOCAL, false);
-    for (Block_Backend< Node_Tag_Index_Local, Uint32_Index >::Flat_Iterator
+    for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(nodes_local_db.flat_begin()); !(it == nodes_local_db.flat_end()); ++it)
     {
       tags_local_out<<it.object().val()<<'\t'
@@ -141,9 +141,9 @@ int main(int argc, char* args[])
     }
     
     // check update_node_tags_global - compare both files for the result
-    Block_Backend< Node_Tag_Index_Global, Uint32_Index > nodes_global_db
+    Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
 	(*de_osm3s_file_ids::NODE_TAGS_GLOBAL, false);
-    for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Flat_Iterator
+    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(nodes_global_db.flat_begin()); !(it == nodes_global_db.flat_end()); ++it)
     {
       tags_global_out<<it.object().val()<<'\t'

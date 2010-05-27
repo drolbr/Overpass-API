@@ -14,119 +14,6 @@
 
 using namespace std;
 
-struct Way_Tag_Entry
-{
-  uint32 index;
-  string key;
-  string value;
-  vector< uint32 > way_ids;
-};
-
-struct Way_Tag_Index_Local
-{
-  uint32 index;
-  string key;
-  string value;
-  
-  Way_Tag_Index_Local() {}
-  
-  Way_Tag_Index_Local(void* data)
-  {
-    index = (*((uint32*)data + 1))<<8;
-    key = string(((int8*)data + 7), *(uint16*)data);
-    value = string(((int8*)data + 7 + key.length()),
-			   *((uint16*)data + 1));
-  }
-  
-  uint32 size_of() const
-  {
-    return 7 + key.length() + value.length();
-  }
-  
-  static uint32 size_of(void* data)
-  {
-    return (*((uint16*)data) + *((uint16*)data + 1) + 7);
-  }
-  
-  void to_data(void* data) const
-  {
-    *(uint16*)data = key.length();
-    *((uint16*)data + 1) = value.length();
-    *((uint32*)data + 1) = index>>8;
-    memcpy(((uint8*)data + 7), key.data(), key.length());
-    memcpy(((uint8*)data + 7 + key.length()), value.data(),
-	     value.length());
-  }
-  
-  bool operator<(const Way_Tag_Index_Local& a) const
-  {
-    if ((index & 0x7fffffff) != (a.index & 0x7fffffff))
-      return ((index & 0x7fffffff) < (a.index & 0x7fffffff));
-    if (index != a.index)
-      return (index < a.index);
-    if (key != a.key)
-      return (key < a.key);
-    return (value < a.value);
-  }
-  
-  bool operator==(const Way_Tag_Index_Local& a) const
-  {
-    if (index != a.index)
-      return false;
-    if (key != a.key)
-      return false;
-    return (value == a.value);
-  }
-};
-
-struct Way_Tag_Index_Global
-{
-  string key;
-  string value;
-  
-  Way_Tag_Index_Global() {}
-  
-  Way_Tag_Index_Global(void* data)
-  {
-    key = string(((int8*)data + 4), *(uint16*)data);
-    value = string(((int8*)data + 4 + key.length()),
-		     *((uint16*)data + 1));
-  }
-  
-  uint32 size_of() const
-  {
-    return 4 + key.length() + value.length();
-  }
-  
-  static uint32 size_of(void* data)
-  {
-    return (*((uint16*)data) + *((uint16*)data + 1) + 4);
-  }
-  
-  void to_data(void* data) const
-  {
-    *(uint16*)data = key.length();
-    *((uint16*)data + 1) = value.length();
-    memcpy(((uint8*)data + 4), key.data(), key.length());
-    memcpy(((uint8*)data + 4 + key.length()), value.data(),
-	     value.length());
-  }
-  
-  bool operator<(const Way_Tag_Index_Global& a) const
-  {
-    if (key != a.key)
-      return (key < a.key);
-    return (value < a.value);
-  }
-  
-  bool operator==(const Way_Tag_Index_Global& a) const
-  {
-    if (key != a.key)
-      return false;
-    return (value == a.value);
-  }
-};
-
 struct Way_Updater
 {
   Way_Updater() {}
@@ -163,7 +50,7 @@ struct Way_Updater
     update_way_ids(to_delete);
     update_members(to_delete);
 
-    vector< Way_Tag_Entry > tags_to_delete;
+    vector< Tag_Entry > tags_to_delete;
     prepare_delete_tags(tags_to_delete, to_delete);
     update_way_tags_local(tags_to_delete);
     update_way_tags_global(tags_to_delete);
@@ -269,7 +156,7 @@ private:
   }
   
   void prepare_delete_tags
-      (vector< Way_Tag_Entry >& tags_to_delete,
+      (vector< Tag_Entry >& tags_to_delete,
        const map< uint32, vector< uint32 > >& to_delete)
   {
     // make indices appropriately coarse
@@ -286,11 +173,11 @@ private:
     }
     
     // formulate range query
-    set< pair< Way_Tag_Index_Local, Way_Tag_Index_Local > > range_set;
+    set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
     for (map< uint32, set< uint32 > >::const_iterator
 	 it(to_delete_coarse.begin()); it != to_delete_coarse.end(); ++it)
     {
-      Way_Tag_Index_Local lower, upper;
+      Tag_Index_Local lower, upper;
       lower.index = it->first;
       lower.key = "";
       lower.value = "";
@@ -301,52 +188,52 @@ private:
     }
     
     // iterate over the result
-    Block_Backend< Way_Tag_Index_Local, Uint32_Index > ways_db
+    Block_Backend< Tag_Index_Local, Uint32_Index > ways_db
 	(*de_osm3s_file_ids::WAY_TAGS_LOCAL, true);
-    Way_Tag_Index_Local current_index;
-    Way_Tag_Entry way_tag_entry;
+    Tag_Index_Local current_index;
+    Tag_Entry tag_entry;
     current_index.index = 0xffffffff;
-    for (Block_Backend< Way_Tag_Index_Local, Uint32_Index >::Range_Iterator
+    for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
 	 it(ways_db.range_begin
-	     (Default_Range_Iterator< Way_Tag_Index_Local >(range_set.begin()),
-	      Default_Range_Iterator< Way_Tag_Index_Local >(range_set.end())));
+	     (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+	      Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
 	 !(it == ways_db.range_end()); ++it)
     {
       if (!(current_index == it.index()))
       {
-	if ((current_index.index != 0xffffffff) && (!way_tag_entry.way_ids.empty()))
-	  tags_to_delete.push_back(way_tag_entry);
+	if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
+	  tags_to_delete.push_back(tag_entry);
 	current_index = it.index();
-	way_tag_entry.index = it.index().index;
-	way_tag_entry.key = it.index().key;
-	way_tag_entry.value = it.index().value;
-	way_tag_entry.way_ids.clear();
+	tag_entry.index = it.index().index;
+	tag_entry.key = it.index().key;
+	tag_entry.value = it.index().value;
+	tag_entry.ids.clear();
       }
       
       set< uint32 >& handle(to_delete_coarse[it.index().index]);
       if (handle.find(it.object().val()) != handle.end())
-	way_tag_entry.way_ids.push_back(it.object().val());
+	tag_entry.ids.push_back(it.object().val());
     }
-    if ((current_index.index != 0xffffffff) && (!way_tag_entry.way_ids.empty()))
-      tags_to_delete.push_back(way_tag_entry);
+    if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
+      tags_to_delete.push_back(tag_entry);
   }
        
-  void update_way_tags_local(const vector< Way_Tag_Entry >& tags_to_delete)
+  void update_way_tags_local(const vector< Tag_Entry >& tags_to_delete)
   {
-    map< Way_Tag_Index_Local, set< Uint32_Index > > db_to_delete;
-    map< Way_Tag_Index_Local, set< Uint32_Index > > db_to_insert;
+    map< Tag_Index_Local, set< Uint32_Index > > db_to_delete;
+    map< Tag_Index_Local, set< Uint32_Index > > db_to_insert;
     
-    for (vector< Way_Tag_Entry >::const_iterator it(tags_to_delete.begin());
+    for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
 	 it != tags_to_delete.end(); ++it)
     {
-      Way_Tag_Index_Local index;
+      Tag_Index_Local index;
       index.index = it->index;
       index.key = it->key;
       index.value = it->value;
       
       set< Uint32_Index > way_ids;
-      for (vector< uint32 >::const_iterator it2(it->way_ids.begin());
-	   it2 != it->way_ids.end(); ++it2)
+      for (vector< uint32 >::const_iterator it2(it->ids.begin());
+	   it2 != it->ids.end(); ++it2)
 	way_ids.insert(*it2);
       
       db_to_delete[index] = way_ids;
@@ -355,7 +242,7 @@ private:
     for (vector< Way >::const_iterator it(ways_to_insert.begin());
 	 it != ways_to_insert.end(); ++it)
     {
-      Way_Tag_Index_Local index;
+      Tag_Index_Local index;
       index.index = it->index & 0xffffff00;
       
       for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
@@ -368,33 +255,33 @@ private:
       }
     }
     
-    Block_Backend< Way_Tag_Index_Local, Uint32_Index > way_db
+    Block_Backend< Tag_Index_Local, Uint32_Index > way_db
 	(*de_osm3s_file_ids::WAY_TAGS_LOCAL, true);
     way_db.update(db_to_delete, db_to_insert);
   }
   
-  void update_way_tags_global(const vector< Way_Tag_Entry >& tags_to_delete)
+  void update_way_tags_global(const vector< Tag_Entry >& tags_to_delete)
   {
-    map< Way_Tag_Index_Global, set< Uint32_Index > > db_to_delete;
-    map< Way_Tag_Index_Global, set< Uint32_Index > > db_to_insert;
+    map< Tag_Index_Global, set< Uint32_Index > > db_to_delete;
+    map< Tag_Index_Global, set< Uint32_Index > > db_to_insert;
     
-    for (vector< Way_Tag_Entry >::const_iterator it(tags_to_delete.begin());
+    for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
 	 it != tags_to_delete.end(); ++it)
     {
-      Way_Tag_Index_Global index;
+      Tag_Index_Global index;
       index.key = it->key;
       index.value = it->value;
       
       set< Uint32_Index > way_ids;
-      for (vector< uint32 >::const_iterator it2(it->way_ids.begin());
-	   it2 != it->way_ids.end(); ++it2)
+      for (vector< uint32 >::const_iterator it2(it->ids.begin());
+	   it2 != it->ids.end(); ++it2)
 	db_to_delete[index].insert(*it2);
     }
     
     for (vector< Way >::const_iterator it(ways_to_insert.begin());
 	 it != ways_to_insert.end(); ++it)
     {
-      Way_Tag_Index_Global index;
+      Tag_Index_Global index;
       
       for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
 	   it2 != it->tags.end(); ++it2)
@@ -406,7 +293,7 @@ private:
       }
     }
 
-    Block_Backend< Way_Tag_Index_Global, Uint32_Index > way_db
+    Block_Backend< Tag_Index_Global, Uint32_Index > way_db
 	(*de_osm3s_file_ids::WAY_TAGS_GLOBAL, true);
     way_db.update(db_to_delete, db_to_insert);
   }
@@ -443,19 +330,19 @@ private:
     remove((de_osm3s_file_ids::WAYS->get_file_base_name() + from 
     + de_osm3s_file_ids::WAYS->get_data_suffix()).c_str());
     {
-      map< Way_Tag_Index_Local, set< Uint32_Index > > db_to_delete;
-      map< Way_Tag_Index_Local, set< Uint32_Index > > db_to_insert;
+      map< Tag_Index_Local, set< Uint32_Index > > db_to_delete;
+      map< Tag_Index_Local, set< Uint32_Index > > db_to_insert;
       
       uint32 item_count(0);
-      Block_Backend< Way_Tag_Index_Local, Uint32_Index > from_db
+      Block_Backend< Tag_Index_Local, Uint32_Index > from_db
       (*de_osm3s_file_ids::WAY_TAGS_LOCAL, false, from);
-      for (Block_Backend< Way_Tag_Index_Local, Uint32_Index >::Flat_Iterator
+      for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
       {
 	db_to_insert[it.index()].insert(it.object());
 	if (++item_count >= 4*1024*1024)
 	{
-	  Block_Backend< Way_Tag_Index_Local, Uint32_Index > into_db
+	  Block_Backend< Tag_Index_Local, Uint32_Index > into_db
 	  (*de_osm3s_file_ids::WAY_TAGS_LOCAL, true, into);
 	  into_db.update(db_to_delete, db_to_insert);
 	  db_to_insert.clear();
@@ -463,8 +350,8 @@ private:
 	}
       }
       
-      Block_Backend< Way_Tag_Index_Local, Uint32_Index > into_db
-      (*de_osm3s_file_ids::WAY_TAGS_LOCAL, true, into);
+      Block_Backend< Tag_Index_Local, Uint32_Index > into_db
+          (*de_osm3s_file_ids::WAY_TAGS_LOCAL, true, into);
       into_db.update(db_to_delete, db_to_insert);
     }
     remove((de_osm3s_file_ids::WAY_TAGS_LOCAL->get_file_base_name() + from 
@@ -472,19 +359,19 @@ private:
     remove((de_osm3s_file_ids::WAY_TAGS_LOCAL->get_file_base_name() + from 
     + de_osm3s_file_ids::WAY_TAGS_LOCAL->get_data_suffix()).c_str());
     {
-      map< Way_Tag_Index_Global, set< Uint32_Index > > db_to_delete;
-      map< Way_Tag_Index_Global, set< Uint32_Index > > db_to_insert;
+      map< Tag_Index_Global, set< Uint32_Index > > db_to_delete;
+      map< Tag_Index_Global, set< Uint32_Index > > db_to_insert;
       
       uint32 item_count(0);
-      Block_Backend< Way_Tag_Index_Global, Uint32_Index > from_db
+      Block_Backend< Tag_Index_Global, Uint32_Index > from_db
       (*de_osm3s_file_ids::WAY_TAGS_GLOBAL, false, from);
-      for (Block_Backend< Way_Tag_Index_Global, Uint32_Index >::Flat_Iterator
+      for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
       {
 	db_to_insert[it.index()].insert(it.object());
 	if (++item_count >= 4*1024*1024)
 	{
-	  Block_Backend< Way_Tag_Index_Global, Uint32_Index > into_db
+	  Block_Backend< Tag_Index_Global, Uint32_Index > into_db
 	  (*de_osm3s_file_ids::WAY_TAGS_GLOBAL, true, into);
 	  into_db.update(db_to_delete, db_to_insert);
 	  db_to_insert.clear();
@@ -492,7 +379,7 @@ private:
 	}
       }
       
-      Block_Backend< Way_Tag_Index_Global, Uint32_Index > into_db
+      Block_Backend< Tag_Index_Global, Uint32_Index > into_db
       (*de_osm3s_file_ids::WAY_TAGS_GLOBAL, true, into);
       into_db.update(db_to_delete, db_to_insert);
     }
