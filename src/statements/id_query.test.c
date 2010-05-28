@@ -10,7 +10,7 @@ int main(int argc, char* args[])
   Id_Query_Statement stmt_1(1, 101);
   map< string, Set > sets;
   
-  const char* attributes[] = { "type", "node", "ref", "471224974", 0 };
+  const char* attributes[] = { "type", "node", "ref", "471224123"/*"471224974"*/, 0 };
   stmt_1.set_attributes(attributes);  
   stmt_1.execute(sets);
   

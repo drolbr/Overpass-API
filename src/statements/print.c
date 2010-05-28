@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <map>
@@ -21,6 +22,8 @@ const unsigned int PRINT_TAGS = 16;
 
 const unsigned int ORDER_BY_ID = 1;
 const unsigned int ORDER_BY_QUADTILE = 2;
+
+const unsigned int FLUSH_SIZE = 512*1024;
 
 void Print_Statement::set_attributes(const char **attr)
 {
@@ -196,14 +199,20 @@ void print_node(uint32 ll_upper, const Node_Skeleton& skel,
   cout<<"  </node>\n";
 }
 
-void retrieve_node_tags_quadtile
+void node_tags_quadtile
     (const map< Uint32_Index, vector< Node_Skeleton > >& nodes)
 {
   //generate set of relevant coarse indices
   set< uint32 > coarse_indices;
+  map< uint32, vector< uint32 > > ids_by_coarse;
   for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
       it(nodes.begin()); it != nodes.end(); ++it)
+  {
     coarse_indices.insert(it->first.val() & 0xffffff00);
+    for (vector< Node_Skeleton >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      ids_by_coarse[it->first.val() & 0xffffff00].push_back(it2->id);
+  }
   
   //formulate range query
   set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
@@ -222,7 +231,7 @@ void retrieve_node_tags_quadtile
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, Uint32_Index > nodes_db
-      (*de_osm3s_file_ids::NODE_TAGS_LOCAL, true);
+      (*de_osm3s_file_ids::NODE_TAGS_LOCAL, false);
   Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
     tag_it(nodes_db.range_begin
     (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
@@ -232,11 +241,15 @@ void retrieve_node_tags_quadtile
   for (set< uint32 >::const_iterator
     it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
   {
+    sort(ids_by_coarse[*it].begin(), ids_by_coarse[*it].end());
+    
     map< uint32, vector< pair< string, string > > > tags_by_id;
     while ((!(tag_it == nodes_db.range_end())) && (tag_it.index().index == *it))
     {
-      tags_by_id[tag_it.object().val()].push_back
-          (make_pair(tag_it.index().key, tag_it.index().value));
+      if (binary_search(ids_by_coarse[*it].begin(), ids_by_coarse[*it].end(),
+	  tag_it.object().val()))
+        tags_by_id[tag_it.object().val()].push_back
+            (make_pair(tag_it.index().key, tag_it.index().value));
       ++tag_it;
     }
     
@@ -251,12 +264,110 @@ void retrieve_node_tags_quadtile
   }
 };
 
+struct Node_Skeleton_Comparator_By_Id {
+  bool operator() (const pair< const Node_Skeleton*, uint32 >& a, 
+		   const pair< const Node_Skeleton*, uint32 >& b)
+  {
+    return (a.first->id < b.first->id);
+  }
+};
+
+void node_tags_by_id
+(const map< Uint32_Index, vector< Node_Skeleton > >& nodes)
+{
+  // order relevant elements by id
+  vector< pair< const Node_Skeleton*, uint32 > > nodes_by_id;
+  for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
+    it(nodes.begin()); it != nodes.end(); ++it)
+  {
+    for (vector< Node_Skeleton >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      nodes_by_id.push_back(make_pair(&(*it2), it->first.val()));
+  }
+  sort(nodes_by_id.begin(), nodes_by_id.end(), Node_Skeleton_Comparator_By_Id());
+  
+  //generate set of relevant coarse indices
+  set< uint32 > coarse_indices;
+  map< uint32, vector< uint32 > > ids_by_coarse;
+  for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
+    it(nodes.begin()); it != nodes.end(); ++it)
+  {
+    coarse_indices.insert(it->first.val() & 0xffffff00);
+    for (vector< Node_Skeleton >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      ids_by_coarse[it->first.val() & 0xffffff00].push_back(it2->id);
+  }
+  
+  //formulate range query
+  set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
+  for (set< uint32 >::const_iterator
+    it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
+  {
+    Tag_Index_Local lower, upper;
+    lower.index = *it;
+    lower.key = "";
+    lower.value = "";
+    upper.index = (*it) + 1;
+    upper.key = "";
+    upper.value = "";
+    range_set.insert(make_pair(lower, upper));
+  }
+  
+  for (set< uint32 >::const_iterator
+      it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
+    sort(ids_by_coarse[*it].begin(), ids_by_coarse[*it].end());
+  
+  // iterate over the result
+  Block_Backend< Tag_Index_Local, Uint32_Index > nodes_db
+  (*de_osm3s_file_ids::NODE_TAGS_LOCAL, false);
+  for (uint32 id_pos(0); id_pos < nodes_by_id.size(); id_pos += FLUSH_SIZE)
+  {
+    map< uint32, vector< pair< string, string > > > tags_by_id;
+    uint32 lower_id_bound(nodes_by_id[id_pos].first->id);
+    uint32 upper_id_bound(0);
+    if (id_pos + FLUSH_SIZE < nodes_by_id.size())
+      upper_id_bound = nodes_by_id[id_pos + FLUSH_SIZE].first->id;
+    else
+      upper_id_bound = nodes_by_id[nodes_by_id.size()-1].first->id + 1;
+    
+    Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
+        tag_it(nodes_db.range_begin
+        (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+         Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+    map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
+        node_it(nodes.begin());
+    for (set< uint32 >::const_iterator
+        it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
+    {
+      while ((!(tag_it == nodes_db.range_end())) && (tag_it.index().index == *it))
+      {
+	if ((tag_it.object().val() >= lower_id_bound) &&
+	  (tag_it.object().val() < upper_id_bound) &&
+	  (binary_search(ids_by_coarse[*it].begin(), ids_by_coarse[*it].end(),
+			 tag_it.object().val())))
+	  tags_by_id[tag_it.object().val()].push_back
+	  (make_pair(tag_it.index().key, tag_it.index().value));
+	++tag_it;
+      }
+    }
+    
+    // print the result
+    for (uint32 i(id_pos);
+         (i < id_pos + FLUSH_SIZE) && (i < nodes_by_id.size()); ++i)
+      print_node(nodes_by_id[i].second, *(nodes_by_id[i].first),
+		 tags_by_id[nodes_by_id[i].first->id]);
+  }
+};
+
 void Print_Statement::execute(map< string, Set >& maps)
 {
   map< string, Set >::const_iterator mit(maps.find(input));
   if (mit == maps.end())
     return;
-  retrieve_node_tags_quadtile(mit->second.nodes);
+  if (order == ORDER_BY_ID)
+    node_tags_by_id(mit->second.nodes);
+  else
+    node_tags_quadtile(mit->second.nodes);
   
   /*  const vector< string >& role_cache(get_role_cache());
   User_Output& out(get_output());

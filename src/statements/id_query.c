@@ -94,7 +94,7 @@ void Id_Query_Statement::execute(map< string, Set >& maps)
       idx = random.get(ref);
     }
     req.insert(idx);
-
+    
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
 	(*de_osm3s_file_ids::NODES, false);
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
