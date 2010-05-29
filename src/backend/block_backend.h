@@ -652,7 +652,7 @@ struct Block_Backend
     return Range_Iterator(file_blocks, begin, end, block_size);
   }
   
-  Range_Iterator range_end()
+  Range_Iterator range_end() const
   {
     return *range_end_it;
   }
