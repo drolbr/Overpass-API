@@ -366,7 +366,21 @@ struct Relation
     
     uint32 bitmask(0), value(memb_idxs[0]);
     for (uint i(1); i < memb_idxs.size(); ++i)
-      bitmask |= (value ^ memb_idxs[i]);
+    {
+      if (memb_idxs[i] & 0x80000000)
+      {
+	if (memb_idxs[i] & 0xff == 0x10)
+	  bitmask |= 0xff;
+	else if (memb_idxs[i] & 0xff == 0x20)
+	  bitmask |= 0xffff;
+	else if (memb_idxs[i] & 0xff == 0x30)
+	  bitmask |= 0xffffff;
+	else
+	  bitmask |= 0xffffffff;
+      }
+      else
+        bitmask |= (value ^ memb_idxs[i]);
+    }
     if (bitmask & 0xff000000)
       value = 0x80000040;
     else if (bitmask & 0xffff0000)

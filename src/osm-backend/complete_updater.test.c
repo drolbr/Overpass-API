@@ -193,7 +193,7 @@ void dump_relations()
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
 	 it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
     {
-      ofstream* out(relation_db_out.get(it.object().id / 500000));
+      ofstream* out(relation_db_out.get(it.object().id / 200000));
       (*out)<<it.object().id<<'\t';
       for (uint i(0); i < it.object().members.size(); ++i)
 	(*out)<<it.object().members[i].ref<<' '
@@ -209,7 +209,7 @@ void dump_relations()
 	 it(relations_local_db.flat_begin());
          !(it == relations_local_db.flat_end()); ++it)
     {
-      ofstream* out(relation_tags_local_out.get(it.object().val() / 500000));
+      ofstream* out(relation_tags_local_out.get(it.object().val() / 200000));
       (*out)<<it.object().val()<<'\t'
 	  <<it.index().key<<'\t'<<it.index().value<<'\n';
     }
@@ -221,7 +221,7 @@ void dump_relations()
 	 it(relations_global_db.flat_begin());
          !(it == relations_global_db.flat_end()); ++it)
     {
-      ofstream* out(relation_tags_global_out.get(it.object().val() / 500000));
+      ofstream* out(relation_tags_global_out.get(it.object().val() / 200000));
       (*out)<<it.object().val()<<'\t'
 	  <<it.index().key<<'\t'<<it.index().value<<'\n';
     }
@@ -418,7 +418,7 @@ void start(const char *el, const char **attr)
     }
     current_relation = Relation(id);
     
-    if (current_relation.id / 500000 > csv_count)
+    if (current_relation.id / 200000 > csv_count)
     {
       relation_source_out->close();
       delete(relation_source_out);
