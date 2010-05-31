@@ -105,9 +105,9 @@ void dump_nodes()
   }
     
     // check update_node_tags_local - compare both files for the result
-    Block_Backend< Node_Tag_Index_Local, Uint32_Index > nodes_local_db
+    Block_Backend< Tag_Index_Local, Uint32_Index > nodes_local_db
 	(*de_osm3s_file_ids::NODE_TAGS_LOCAL, false);
-    for (Block_Backend< Node_Tag_Index_Local, Uint32_Index >::Flat_Iterator
+    for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(nodes_local_db.flat_begin());
          !(it == nodes_local_db.flat_end()); ++it)
     {
@@ -117,9 +117,9 @@ void dump_nodes()
     }
     
     // check update_node_tags_global - compare both files for the result
-    Block_Backend< Node_Tag_Index_Global, Uint32_Index > nodes_global_db
+    Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
 	(*de_osm3s_file_ids::NODE_TAGS_GLOBAL, false);
-    for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Flat_Iterator
+    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(nodes_global_db.flat_begin());
          !(it == nodes_global_db.flat_end()); ++it)
     {
@@ -149,9 +149,9 @@ void dump_ways()
   }
     
     // check update_way_tags_local - compare both files for the result
-    Block_Backend< Way_Tag_Index_Local, Uint32_Index > ways_local_db
+    Block_Backend< Tag_Index_Local, Uint32_Index > ways_local_db
 	(*de_osm3s_file_ids::WAY_TAGS_LOCAL, false);
-    for (Block_Backend< Way_Tag_Index_Local, Uint32_Index >::Flat_Iterator
+    for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(ways_local_db.flat_begin());
          !(it == ways_local_db.flat_end()); ++it)
     {
@@ -161,9 +161,9 @@ void dump_ways()
     }
     
     // check update_way_tags_global - compare both files for the result
-    Block_Backend< Way_Tag_Index_Global, Uint32_Index > ways_global_db
+    Block_Backend< Tag_Index_Global, Uint32_Index > ways_global_db
 	(*de_osm3s_file_ids::WAY_TAGS_GLOBAL, false);
-    for (Block_Backend< Way_Tag_Index_Global, Uint32_Index >::Flat_Iterator
+    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(ways_global_db.flat_begin());
          !(it == ways_global_db.flat_end()); ++it)
     {
@@ -203,9 +203,9 @@ void dump_relations()
     }
     
     // check update_relation_tags_local - compare both files for the result
-    Block_Backend< Relation_Tag_Index_Local, Uint32_Index > relations_local_db
+    Block_Backend< Tag_Index_Local, Uint32_Index > relations_local_db
 	(*de_osm3s_file_ids::RELATION_TAGS_LOCAL, false);
-    for (Block_Backend< Relation_Tag_Index_Local, Uint32_Index >::Flat_Iterator
+    for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(relations_local_db.flat_begin());
          !(it == relations_local_db.flat_end()); ++it)
     {
@@ -215,9 +215,9 @@ void dump_relations()
     }
     
     // check update_relation_tags_global - compare both files for the result
-    Block_Backend< Relation_Tag_Index_Global, Uint32_Index > relations_global_db
+    Block_Backend< Tag_Index_Global, Uint32_Index > relations_global_db
 	(*de_osm3s_file_ids::RELATION_TAGS_GLOBAL, false);
-    for (Block_Backend< Relation_Tag_Index_Global, Uint32_Index >::Flat_Iterator
+    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(relations_global_db.flat_begin());
          !(it == relations_global_db.flat_end()); ++it)
     {

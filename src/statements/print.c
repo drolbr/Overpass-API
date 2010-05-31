@@ -217,7 +217,7 @@ void print_item(uint32 ll_upper, const Relation_Skeleton& skel, uint32 mode,
   {
     // prepare check update_members - load roles
     Block_Backend< Uint32_Index, String_Object > roles_db
-        (*de_osm3s_file_ids::RELATION_ROLES, true);
+        (*de_osm3s_file_ids::RELATION_ROLES, false);
     for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
         it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
       roles[it.index().val()] = it.object().val();
