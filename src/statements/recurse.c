@@ -134,6 +134,45 @@ void Recurse_Statement::execute(map< string, Set >& maps)
   
   if (type == RECURSE_RELATION_RELATION)
   {
+    set< Uint31_Index > req;
+    vector< uint32 > ids;
+    
+    {
+      Random_File< Uint31_Index > random(*de_osm3s_file_ids::RELATIONS, false);
+      for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
+	   it(mit->second.relations.begin()); it != mit->second.relations.end(); ++it)
+      {
+	for (vector< Relation_Skeleton >::const_iterator it2(it->second.begin());
+	    it2 != it->second.end(); ++it2)
+	{
+	  for (vector< Relation_Entry >::const_iterator it3(it2->members.begin());
+		      it3 != it2->members.end(); ++it3)
+	  {
+	    if (it3->type == Relation_Entry::RELATION)
+	    {
+	      req.insert(random.get(it3->ref));
+	      ids.push_back(it3->ref);
+	    }
+	  }
+	}
+      }
+    }
+    sort(ids.begin(), ids.end());
+    
+    nodes.clear();
+    ways.clear();
+    relations.clear();
+    //areas.clear();
+  
+    Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
+	(*de_osm3s_file_ids::RELATIONS, false);
+    for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
+	 it(relations_db.discrete_begin(req.begin(), req.end()));
+	 !(it == relations_db.discrete_end()); ++it)
+    {
+      if (binary_search(ids.begin(), ids.end(), it.object().id))
+	relations[it.index()].push_back(it.object());
+    }
   }
   else if (type == RECURSE_RELATION_BACKWARDS)
   {

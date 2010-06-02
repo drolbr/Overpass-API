@@ -20,12 +20,28 @@ int main(int argc, char* args[])
   attributes[0] = "type";
   attributes[1] = "relation";
   attributes[2] = "ref";
-  attributes[3] = "163298";
+  attributes[3] = "122635"/*"163298"*/;
   attributes[4] = 0;
     
   stmt_1.set_attributes(attributes);
   stmt_1.execute(sets);
     
+  attributes[0] = "mode";
+  attributes[1] = "body";
+  attributes[2] = "order";
+  attributes[3] = "id";
+  attributes[4] = 0;
+  
+  stmt_3.set_attributes(attributes);
+  stmt_3.execute(sets);
+  
+  attributes[0] = "type";
+  attributes[1] = "relation-relation";
+  attributes[2] = 0;
+  
+  stmt_2.set_attributes(attributes);
+  stmt_2.execute(sets);
+  
   attributes[0] = "mode";
   attributes[1] = "body";
   attributes[2] = "order";

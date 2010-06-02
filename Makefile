@@ -44,7 +44,7 @@ testsrcs = src/backend/file_blocks.test.c src/backend/block_backend.test.c src/b
 $(testsrcs): %.test.c: %.h
 	touch $@
 
-src/osm_backend/complete_updater.test.c: src/osm-backend/%_updater.h src/core/datatypes.h $(backend)
+src/osm-backend/complete_updater.test.c: src/osm-backend/%_updater.h src/core/datatypes.h $(backend)
 	touch $@
 
 src/osm_backend/example_queries.c: src/osm-backend/node_updater.h src/osm-backend/way_updater.h src/osm-backend/relation_updater.h src/core/settings.h $(backend)
