@@ -176,6 +176,41 @@ void Recurse_Statement::execute(map< string, Set >& maps)
   }
   else if (type == RECURSE_RELATION_BACKWARDS)
   {
+    vector< uint32 > ids;
+    
+    {
+      for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
+	   it(mit->second.relations.begin()); it != mit->second.relations.end(); ++it)
+      {
+	for (vector< Relation_Skeleton >::const_iterator it2(it->second.begin());
+	    it2 != it->second.end(); ++it2)
+	  ids.push_back(it2->id);
+      }
+    }
+    sort(ids.begin(), ids.end());
+    
+    nodes.clear();
+    ways.clear();
+    relations.clear();
+    //areas.clear();
+  
+    Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
+	(*de_osm3s_file_ids::RELATIONS, false);
+    for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
+	 it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
+    {
+      const Relation_Skeleton& relation(it.object());
+      for (vector< Relation_Entry >::const_iterator it3(relation.members.begin());
+          it3 != relation.members.end(); ++it3)
+      {
+	if ((it3->type == Relation_Entry::RELATION) &&
+	    (binary_search(ids.begin(), ids.end(), it3->ref)))
+	{
+	  relations[it.index()].push_back(relation);
+	  break;
+	}
+      }
+    }
   }
   else if (type == RECURSE_RELATION_WAY)
   {
@@ -302,11 +337,143 @@ void Recurse_Statement::execute(map< string, Set >& maps)
   }
   else if (type == RECURSE_WAY_RELATION)
   {
+    set< Uint31_Index > req;
+    vector< uint32 > ids;
+    
+    {
+      for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
+	   it(mit->second.ways.begin()); it != mit->second.ways.end(); ++it)
+      {
+	if ((it->first.val() & 0x80000000) == 0)
+	  req.insert(Uint31_Index(it->first.val()));
+	if (((it->first.val() & 0x80000000) == 0) ||
+	    ((it->first.val() & 0xf0) <= 0x10))
+	  req.insert(Uint31_Index((it->first.val() & 0x7fffff00) | 0x80000010));
+	if (((it->first.val() & 0x80000000) == 0) ||
+	    ((it->first.val() & 0xf0) <= 0x20))
+	  req.insert(Uint31_Index((it->first.val() & 0x7fff0000) | 0x80000020));
+	if (((it->first.val() & 0x80000000) == 0) ||
+	    ((it->first.val() & 0xf0) <= 0x30))
+	  req.insert(Uint31_Index((it->first.val() & 0x7f000000) | 0x80000030));
+	for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
+	    it2 != it->second.end(); ++it2)
+	  ids.push_back(it2->id);
+      }
+      req.insert(Uint31_Index(0x80000040));
+    }
+    sort(ids.begin(), ids.end());
+    
+    nodes.clear();
+    ways.clear();
+    relations.clear();
+    //areas.clear();
+  
+    Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
+	(*de_osm3s_file_ids::RELATIONS, false);
+    for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
+	 it(relations_db.discrete_begin(req.begin(), req.end()));
+	 !(it == relations_db.discrete_end()); ++it)
+    {
+      const Relation_Skeleton& relation(it.object());
+      for (vector< Relation_Entry >::const_iterator it3(relation.members.begin());
+          it3 != relation.members.end(); ++it3)
+      {
+	if ((it3->type == Relation_Entry::WAY) &&
+	    (binary_search(ids.begin(), ids.end(), it3->ref)))
+	{
+	  relations[it.index()].push_back(relation);
+	  break;
+	}
+      }
+    }
   }
   else if (type == RECURSE_NODE_WAY)
   {
+    set< Uint31_Index > req;
+    vector< uint32 > ids;
+    
+    {
+      for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
+	   it(mit->second.nodes.begin()); it != mit->second.nodes.end(); ++it)
+      {
+	req.insert(Uint31_Index(it->first.val()));
+	req.insert(Uint31_Index((it->first.val() & 0x7fffff00) | 0x80000010));
+	req.insert(Uint31_Index((it->first.val() & 0x7fff0000) | 0x80000020));
+	req.insert(Uint31_Index((it->first.val() & 0x7f000000) | 0x80000030));
+	for (vector< Node_Skeleton >::const_iterator it2(it->second.begin());
+	    it2 != it->second.end(); ++it2)
+	  ids.push_back(it2->id);
+      }
+      req.insert(Uint31_Index(0x80000040));
+    }
+    sort(ids.begin(), ids.end());
+    
+    nodes.clear();
+    ways.clear();
+    relations.clear();
+    //areas.clear();
+  
+    Block_Backend< Uint31_Index, Way_Skeleton > ways_db
+	(*de_osm3s_file_ids::WAYS, false);
+    for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
+	 it(ways_db.discrete_begin(req.begin(), req.end()));
+	 !(it == ways_db.discrete_end()); ++it)
+    {
+      const Way_Skeleton& way(it.object());
+      for (vector< uint32 >::const_iterator it3(way.nds.begin());
+          it3 != way.nds.end(); ++it3)
+      {
+        if (binary_search(ids.begin(), ids.end(), *it3))
+	{
+	  ways[it.index()].push_back(way);
+	  break;
+	}
+      }
+    }
   }
   else if (type == RECURSE_NODE_RELATION)
   {
+    set< Uint31_Index > req;
+    vector< uint32 > ids;
+    
+    {
+      for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
+	   it(mit->second.nodes.begin()); it != mit->second.nodes.end(); ++it)
+      {
+	req.insert(Uint31_Index(it->first.val()));
+	req.insert(Uint31_Index((it->first.val() & 0x7fffff00) | 0x80000010));
+	req.insert(Uint31_Index((it->first.val() & 0x7fff0000) | 0x80000020));
+	req.insert(Uint31_Index((it->first.val() & 0x7f000000) | 0x80000030));
+	for (vector< Node_Skeleton >::const_iterator it2(it->second.begin());
+	    it2 != it->second.end(); ++it2)
+	  ids.push_back(it2->id);
+      }
+      req.insert(Uint31_Index(0x80000040));
+    }
+    sort(ids.begin(), ids.end());
+    
+    nodes.clear();
+    ways.clear();
+    relations.clear();
+    //areas.clear();
+  
+    Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
+	(*de_osm3s_file_ids::RELATIONS, false);
+    for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
+	 it(relations_db.discrete_begin(req.begin(), req.end()));
+	 !(it == relations_db.discrete_end()); ++it)
+    {
+      const Relation_Skeleton& relation(it.object());
+      for (vector< Relation_Entry >::const_iterator it3(relation.members.begin());
+          it3 != relation.members.end(); ++it3)
+      {
+	if ((it3->type == Relation_Entry::NODE) &&
+	    (binary_search(ids.begin(), ids.end(), it3->ref)))
+	{
+	  relations[it.index()].push_back(relation);
+	  break;
+	}
+      }
+    }
   }
 }
