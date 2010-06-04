@@ -22,5 +22,5 @@ AC_HEADER_STDBOOL
 # Checks for library functions.
 AC_FUNC_MALLOC
 
-AC_CONFIG_FILES([Makefile backend/Makefile osm-backend/Makefile])
+AC_CONFIG_FILES([Makefile backend/Makefile osm-backend/Makefile statements/Makefile])
 AC_OUTPUT

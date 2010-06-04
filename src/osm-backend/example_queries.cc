@@ -41,8 +41,8 @@ int main(int argc, char* args[])
     cerr<<time(NULL)<<' ';
     
     // formulate range query
-    set< pair< Node_Tag_Index_Global, Node_Tag_Index_Global > > range_set;
-    Node_Tag_Index_Global lower, upper;
+    set< pair< Tag_Index_Global, Tag_Index_Global > > range_set;
+    Tag_Index_Global lower, upper;
     lower.key = "addr:housenumber";
     lower.value = "";
     upper.key = "addr:housenumber ";
@@ -52,12 +52,12 @@ int main(int argc, char* args[])
     
     // get ids of nodes with this tag
     vector< uint32 > node_ids;
-    Block_Backend< Node_Tag_Index_Global, Uint32_Index > node_tags_db
+    Block_Backend< Tag_Index_Global, Uint32_Index > node_tags_db
 	(*de_osm3s_file_ids::NODE_TAGS_GLOBAL, false);
-    for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Range_Iterator
+    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
 	 it(node_tags_db.range_begin
-	     (Default_Range_Iterator< Node_Tag_Index_Global >(range_set.begin()),
-	      Default_Range_Iterator< Node_Tag_Index_Global >(range_set.end())));
+	     (Default_Range_Iterator< Tag_Index_Global >(range_set.begin()),
+	      Default_Range_Iterator< Tag_Index_Global >(range_set.end())));
 	 !(it == node_tags_db.range_end()); ++it)
       node_ids.push_back(it.object().val());
     
@@ -91,14 +91,14 @@ int main(int argc, char* args[])
 	  <<it.index().val()<<'\t'<<it.object().ll_lower<<'\n';
     }
     
-/*    Block_Backend< Node_Tag_Index_Global, Uint32_Index > nodes_global_db
+/*    Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
 	(de_osm3s_file_ids::NODE_TAGS_GLOBAL, false);
-    set< Node_Tag_Index_Global > req;
-    Node_Tag_Index_Global req_n;
+    set< Tag_Index_Global > req;
+    Tag_Index_Global req_n;
     req_n.key = "attribution";
     req_n.value = "Natural Resources Canada";
     req.insert(req_n);
-    for (Block_Backend< Node_Tag_Index_Global, Uint32_Index >::Discrete_Iterator
+    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Discrete_Iterator
 	 it(nodes_global_db.discrete_begin(req.begin(), req.end()));
 	 !(it == nodes_global_db.discrete_end()); ++it)
     {
