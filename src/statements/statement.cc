@@ -20,18 +20,7 @@ void Statement::eval_cstr_array(string element, map< string, string >& attribute
   }
 }
 
-void Statement::substatement_error(string parent, Statement* child)
-{
-  ostringstream temp;
-  temp<<"Element \""<<child->get_name()<<"\" cannot be subelement of element \""<<parent<<"\".";
-  //add_static_error(temp.str());
-  
-  delete child;
-}
-
-//-----------------------------------------------------------------------------
-
-void assure_no_text(string text, string name)
+void Statement::assure_no_text(string text, string name)
 {
   for (unsigned int i(0); i < text.size(); ++i)
   {
@@ -43,6 +32,15 @@ void assure_no_text(string text, string name)
       break;
     }
   }
+}
+
+void Statement::substatement_error(string parent, Statement* child)
+{
+  ostringstream temp;
+  temp<<"Element \""<<child->get_name()<<"\" cannot be subelement of element \""<<parent<<"\".";
+  //add_static_error(temp.str());
+  
+  delete child;
 }
 
 void Statement::add_statement(Statement* statement, string text)

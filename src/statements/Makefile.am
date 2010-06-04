@@ -1,4 +1,5 @@
-bin_PROGRAMS = test_id_query test_print test_recurse
-test_id_query_SOURCES = statement.c id_query.test.c id_query.c ../core/settings.cc
-test_print_SOURCES = statement.c print.test.c print.c id_query.c ../core/settings.cc
-test_recurse_SOURCES = statement.c recurse.test.c recurse.c print.c id_query.c ../core/settings.cc
+bin_PROGRAMS = test_id_query test_print test_recurse test_query
+test_id_query_SOURCES = statement.cc id_query.test.cc id_query.cc ../core/settings.cc
+test_print_SOURCES = statement.cc print.test.cc print.cc id_query.cc ../core/settings.cc
+test_recurse_SOURCES = statement.cc recurse.test.cc recurse.cc print.cc id_query.cc ../core/settings.cc
+test_query_SOURCES = statement.cc query.test.cc print.cc query.cc ../core/settings.cc

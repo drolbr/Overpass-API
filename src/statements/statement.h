@@ -40,6 +40,7 @@ class Statement
     
     static void eval_cstr_array
 	(string element, map< string, string >& attributes, const char **attr);
+    static void assure_no_text(string text, string name);
     static void substatement_error(string parent, Statement* child);
     static void reset_stmt_counter() { next_stmt_id = 0; }
     
