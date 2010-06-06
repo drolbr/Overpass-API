@@ -94,6 +94,8 @@ vector< pair< uint32, uint32 > >* Bbox_Query_Statement::calc_ranges
 
 void Bbox_Query_Statement::execute(map< string, Set >& maps)
 {
+  stopwatch_start();
+  
   map< Uint32_Index, vector< Node_Skeleton > >& nodes(maps[output].nodes);
   map< Uint31_Index, vector< Way_Skeleton > >& ways(maps[output].ways);
   map< Uint31_Index, vector< Relation_Skeleton > >& relations(maps[output].relations);
@@ -117,6 +119,7 @@ void Bbox_Query_Statement::execute(map< string, Set >& maps)
   }
   delete(uint_ranges);
   
+  stopwatch_stop(NO_DISK);
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
     (*de_osm3s_file_ids::NODES, false);
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
@@ -132,4 +135,7 @@ void Bbox_Query_Statement::execute(map< string, Set >& maps)
 	  || ((east < west) && ((lon >= west) || (lon <= east)))))
       nodes[it.index()].push_back(it.object());
   }
+  stopwatch_stop(NODES);
+  
+  stopwatch_report();
 }

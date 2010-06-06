@@ -1,6 +1,10 @@
-bin_PROGRAMS = test_id_query test_print test_recurse test_query test_bbox_query
+bin_PROGRAMS = test_id_query test_print test_recurse test_query test_bbox_query test_foreach test_union test_benchmark
+AM_LDFLAGS = -lrt
 test_id_query_SOURCES = statement.cc id_query.test.cc id_query.cc ../core/settings.cc
 test_print_SOURCES = statement.cc print.test.cc print.cc id_query.cc ../core/settings.cc
 test_recurse_SOURCES = statement.cc recurse.test.cc recurse.cc print.cc id_query.cc ../core/settings.cc
-test_query_SOURCES = statement.cc query.test.cc print.cc query.cc ../core/settings.cc
+test_query_SOURCES = statement.cc query.test.cc bbox_query.cc print.cc query.cc ../core/settings.cc
 test_bbox_query_SOURCES = statement.cc bbox_query.test.cc print.cc bbox_query.cc ../core/settings.cc
+test_foreach_SOURCES = statement.cc foreach.test.cc bbox_query.cc foreach.cc query.cc recurse.cc print.cc ../core/settings.cc
+test_union_SOURCES = statement.cc union.test.cc bbox_query.cc union.cc query.cc print.cc ../core/settings.cc
+test_benchmark_SOURCES = statement.cc benchmark.cc bbox_query.cc foreach.cc id_query.cc print.cc query.cc recurse.cc union.cc ../core/settings.cc

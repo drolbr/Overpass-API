@@ -10,8 +10,10 @@ int main(int argc, char* args[])
   Id_Query_Statement stmt_1(1, 101);
   map< string, Set > sets;
   
-  const char* attributes[] = { "type", "node", "ref", "471224123"/*"471224974"*/, 0 };
-  stmt_1.set_attributes(attributes);  
+  {
+    const char* attributes[] = { "type", "node", "ref", "471224123"/*"471224974"*/, 0 };
+    stmt_1.set_attributes(attributes);
+  }
   stmt_1.execute(sets);
   
   map< Uint32_Index, vector< Node_Skeleton > >& nodes(sets["_"].nodes);
@@ -25,9 +27,10 @@ int main(int argc, char* args[])
     cout<<'\n';
   }
   
-  attributes[1] = "way";
-  attributes[3] = "8237924";
-  stmt_1.set_attributes(attributes);
+  {
+    const char* attributes[] = { "type", "way", "ref", "8237924", 0 };
+    stmt_1.set_attributes(attributes);
+  }
   stmt_1.execute(sets);
   
   map< Uint31_Index, vector< Way_Skeleton > >& ways(sets["_"].ways);
@@ -55,9 +58,10 @@ int main(int argc, char* args[])
       it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
     roles[it.index().val()] = it.object().val();
   
-  attributes[1] = "relation";
-  attributes[3] = "163298";
-  stmt_1.set_attributes(attributes);
+  {
+    const char* attributes[] = { "type", "relation", "ref", "163298", 0 };
+    stmt_1.set_attributes(attributes);
+  }
   stmt_1.execute(sets);
   
   map< Uint31_Index, vector< Relation_Skeleton > >& relations(sets["_"].relations);

@@ -23,6 +23,17 @@ class Print_Statement : public Statement
     string input;
     unsigned int mode;
     unsigned int order;
+
+    template< class TIndex, class TObject >
+    void tags_quadtile
+      (const map< TIndex, vector< TObject > >& items,
+       const File_Properties& file_prop, uint32 mode, uint32 stopwatch_account);
+    
+    template< class TIndex, class TObject >
+    void tags_by_id
+      (const map< TIndex, vector< TObject > >& items,
+       const File_Properties& file_prop,
+       uint32 FLUSH_SIZE, uint32 mode, uint32 stopwatch_account);
 };
 
 #endif

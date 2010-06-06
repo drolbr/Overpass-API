@@ -15,7 +15,7 @@ using namespace std;
 class Statement
 {
   public:
-    Statement(int line_number_, int stmt_id_) : line_number(line_number_), stmt_id(stmt_id_) {}
+    Statement(int line_number_, int stmt_id_) : line_number(line_number_), stmt_id(stmt_id_), stopwatches(14) {}
     
     virtual void set_attributes(const char **attr) = 0;
     virtual void add_statement(Statement* statement, string text);
@@ -54,6 +54,31 @@ class Statement
     int line_number;
     int stmt_id;
     int startpos, endpos, tagendpos;
+    
+    double stopwatch;
+    vector< double > stopwatches;
+    
+  protected:
+    const static int NO_DISK = 0;
+    const static int NODES_MAP = 1;
+    const static int NODES = 2;
+    const static int NODE_TAGS_LOCAL = 3;
+    const static int NODE_TAGS_GLOBAL = 4;
+    const static int WAYS_MAP = 5;
+    const static int WAYS = 6;
+    const static int WAY_TAGS_LOCAL = 7;
+    const static int WAY_TAGS_GLOBAL = 8;
+    const static int RELATIONS_MAP = 9;
+    const static int RELATIONS = 10;
+    const static int RELATION_ROLES = 11;
+    const static int RELATION_TAGS_LOCAL = 12;
+    const static int RELATION_TAGS_GLOBAL = 13;
+    
+    void stopwatch_start();
+    void stopwatch_skip();
+    void stopwatch_stop(uint32 account);    
+    void stopwatch_report() const;
+    void stopwatch_sum(const Statement* s);
 };
 
 #endif
