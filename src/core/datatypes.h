@@ -122,6 +122,20 @@ struct String_Object
     string value;
 };
 
+struct Pair_Comparator_By_Id {
+  bool operator() (const pair< uint32, bool>& a, const pair< uint32, bool>& b)
+  {
+    return (a.first < b.first);
+  }
+};
+
+struct Pair_Equal_Id {
+  bool operator() (const pair< uint32, bool>& a, const pair< uint32, bool>& b)
+  {
+    return (a.first == b.first);
+  }
+};
+
 struct Node
 {
   uint32 id;
@@ -194,6 +208,13 @@ struct Node_Comparator_By_Id {
   bool operator() (const Node& a, const Node& b)
   {
     return (a.id < b.id);
+  }
+};
+
+struct Node_Equal_Id {
+  bool operator() (const Node& a, const Node& b)
+  {
+    return (a.id == b.id);
   }
 };
 

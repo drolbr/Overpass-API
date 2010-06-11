@@ -1,8 +1,9 @@
-bin_PROGRAMS = node_updater way_updater relation_updater complete_updater update_database example_queries
+bin_PROGRAMS = node_updater way_updater relation_updater complete_updater update_database diff_updater example_queries
 AM_LDFLAGS = -lexpat
 node_updater_SOURCES = node_updater.test.cc ../core/settings.cc
 way_updater_SOURCES = way_updater.test.cc ../core/settings.cc
 relation_updater_SOURCES = relation_updater.test.cc ../core/settings.cc
 complete_updater_SOURCES = complete_updater.test.cc ../core/settings.cc
 update_database_SOURCES = update_database.cc ../core/settings.cc
+diff_updater_SOURCES = diff_updater.test.cc ../core/settings.cc
 example_queries_SOURCES = example_queries.cc ../core/settings.cc

@@ -20,14 +20,14 @@ struct Node_Updater
   
   void set_id_deleted(uint32 id)
   {
-    ids_to_delete.push_back(id);
+    ids_to_modify.push_back(make_pair(id, false));
   }
   
   void set_node
       (uint32 id, uint32 lat, uint32 lon,
        const vector< pair< string, string > >& tags)
   {
-    ids_to_delete.push_back(id);
+    ids_to_modify.push_back(make_pair(id, true));
     
     Node node;
     node.id = id;
@@ -39,7 +39,7 @@ struct Node_Updater
   
   void set_node(const Node& node)
   {
-    ids_to_delete.push_back(node.id);
+    ids_to_modify.push_back(make_pair(node.id, true));
     nodes_to_insert.push_back(node);
   }
   
@@ -56,7 +56,7 @@ struct Node_Updater
     update_node_tags_local(tags_to_delete);
     update_node_tags_global(tags_to_delete);
     
-    ids_to_delete.clear();
+    ids_to_modify.clear();
     nodes_to_insert.clear();
     
     cerr<<'N'<<' '<<time(NULL)<<' ';
@@ -81,27 +81,40 @@ struct Node_Updater
   }
   
 private:
-  vector< uint32 > ids_to_delete;
+  vector< pair< uint32, bool > > ids_to_modify;
   vector< Node > nodes_to_insert;
   static Node_Comparator_By_Id node_comparator_by_id;
+  static Node_Equal_Id node_equal_id;
+  static Pair_Comparator_By_Id pair_comparator_by_id;
+  static Pair_Equal_Id pair_equal_id;
   uint32 update_counter;
   
   void update_node_ids(map< uint32, vector< uint32 > >& to_delete)
   {
-    sort(ids_to_delete.begin(), ids_to_delete.end());
-    sort(nodes_to_insert.begin(), nodes_to_insert.end(), node_comparator_by_id);
+    //keep always the most recent (last) element of all equal elements
+    stable_sort(ids_to_modify.begin(), ids_to_modify.end(),
+		pair_comparator_by_id);
+    vector< pair< uint32, bool > >::iterator modi_begin
+      (unique(ids_to_modify.rbegin(), ids_to_modify.rend(), pair_equal_id)
+      .base());
+    stable_sort(nodes_to_insert.begin(), nodes_to_insert.end(),
+		node_comparator_by_id);
+    vector< Node >::iterator nodes_begin
+      (unique(nodes_to_insert.rbegin(), nodes_to_insert.rend(), node_equal_id)
+      .base());
     
     Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, true);
-    vector< Node >::const_iterator nit(nodes_to_insert.begin());
-    for (vector< uint32 >::const_iterator it(ids_to_delete.begin());
-        it != ids_to_delete.end(); ++it)
+    vector< Node >::const_iterator nit(nodes_begin);
+    for (vector< pair< uint32, bool > >::const_iterator it(modi_begin);
+        it != ids_to_modify.end(); ++it)
     {
-      Uint32_Index index(random.get(*it));
+      Uint32_Index index(random.get(it->first));
       if (index.val() > 0)
-	to_delete[index.val()].push_back(*it);
-      if ((nit != nodes_to_insert.end()) && (*it == nit->id))
+	to_delete[index.val()].push_back(it->first);
+      if ((it->second) && (nit != nodes_to_insert.end()) &&
+	  (it->first == nit->id))
       {
-	random.put(*it, Uint32_Index(nit->ll_upper_));
+	random.put(it->first, Uint32_Index(nit->ll_upper_));
 	++nit;
       }
     }
