@@ -34,14 +34,14 @@ struct Relation_Updater
   
   void set_id_deleted(uint32 id)
   {
-    ids_to_delete.push_back(id);
+    ids_to_modify.push_back(make_pair(id, false));
   }
   
   void set_relation
       (uint32 id, uint32 lat, uint32 lon, const vector< pair< string, string > >& tags,
        const vector< Relation_Entry >& members)
   {
-    ids_to_delete.push_back(id);
+    ids_to_modify.push_back(make_pair(id, true));
     
     Relation rel;
     rel.id = id;
@@ -52,7 +52,7 @@ struct Relation_Updater
   
   void set_relation(const Relation& rel)
   {
-    ids_to_delete.push_back(rel.id);
+    ids_to_modify.push_back(make_pair(rel.id, true));
     rels_to_insert.push_back(rel);
   }
   
@@ -80,7 +80,7 @@ struct Relation_Updater
     update_rel_tags_global(tags_to_delete);
     flush_roles();
 
-    ids_to_delete.clear();
+    ids_to_modify.clear();
     rels_to_insert.clear();
     
     cerr<<'R'<<' '<<time(NULL)<<' ';
@@ -91,12 +91,27 @@ private:
   map< string, uint32 > role_ids;
   uint32 max_written_role_id;
   uint32 max_role_id;
-  vector< uint32 > ids_to_delete;
+  vector< pair< uint32, bool > > ids_to_modify;
   vector< Relation > rels_to_insert;
   static Relation_Comparator_By_Id rel_comparator_by_id;
+  static Relation_Equal_Id rel_equal_id;
+  static Pair_Comparator_By_Id pair_comparator_by_id;
+  static Pair_Equal_Id pair_equal_id;
   
   void update_rel_ids(map< uint32, vector< uint32 > >& to_delete)
   {
+    // keep always the most recent (last) element of all equal elements
+    stable_sort(ids_to_modify.begin(), ids_to_modify.end(), pair_comparator_by_id);
+    vector< pair< uint32, bool > >::iterator modi_begin
+      (unique(ids_to_modify.rbegin(), ids_to_modify.rend(), pair_equal_id)
+      .base());
+    ids_to_modify.erase(ids_to_modify.begin(), modi_begin);
+    stable_sort(rels_to_insert.begin(), rels_to_insert.end(), rel_comparator_by_id);
+    vector< Relation >::iterator relations_begin
+      (unique(rels_to_insert.rbegin(), rels_to_insert.rend(),
+	      rel_equal_id).base());
+    rels_to_insert.erase(rels_to_insert.begin(), relations_begin);
+    
     // retrieve the indices of the referred nodes and ways
     map< uint32, uint32 > used_nodes;
     map< uint32, uint32 > used_ways;
@@ -136,22 +151,20 @@ private:
       wit->index = Relation::calc_index(member_idxs);
     }
     
-    // process the rels itself
-    sort(ids_to_delete.begin(), ids_to_delete.end());
-    sort(rels_to_insert.begin(), rels_to_insert.end(), rel_comparator_by_id);
-    
+    // process the relations themselves
     Random_File< Uint31_Index > random(*de_osm3s_file_ids::RELATIONS, true);
-    vector< Relation >::const_iterator wit(rels_to_insert.begin());
-    for (vector< uint32 >::const_iterator it(ids_to_delete.begin());
-        it != ids_to_delete.end(); ++it)
+    vector< Relation >::const_iterator rit(rels_to_insert.begin());
+    for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
+        it != ids_to_modify.end(); ++it)
     {
-      Uint31_Index index(random.get(*it));
+      Uint31_Index index(random.get(it->first));
       if (index.val() > 0)
-	to_delete[index.val()].push_back(*it);
-      if ((wit != rels_to_insert.end()) && (*it == wit->id))
+	to_delete[index.val()].push_back(it->first);
+      if ((rit != rels_to_insert.end()) && (it->first == rit->id))
       {
-	random.put(*it, Uint31_Index(wit->index));
-	++wit;
+	if (it->second)
+	  random.put(it->first, Uint31_Index(rit->index));
+	++rit;
       }
     }
   }
@@ -167,13 +180,23 @@ private:
       Uint31_Index idx(it->first);
       for (vector< uint32 >::const_iterator it2(it->second.begin());
           it2 != it->second.end(); ++it2)
+      {
 	db_to_delete[idx].insert(Relation_Skeleton(*it2, vector< Relation_Entry >()));
+      }
     }
-    for (vector< Relation >::const_iterator it(rels_to_insert.begin());
-        it != rels_to_insert.end(); ++it)
+    vector< Relation >::const_iterator rit(rels_to_insert.begin());
+    for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
+        it != ids_to_modify.end(); ++it)
     {
-      Uint31_Index idx(it->index);
-      db_to_insert[idx].insert(Relation_Skeleton(*it));
+      if ((rit != rels_to_insert.end()) && (it->first == rit->id))
+      {
+	if (it->second)
+	{
+	  Uint31_Index idx(rit->index);
+	  db_to_insert[idx].insert(Relation_Skeleton(*rit));
+	}
+	++rit;
+      }
     }
     
     Block_Backend< Uint31_Index, Relation_Skeleton > rel_db
@@ -265,22 +288,30 @@ private:
       db_to_delete[index] = rel_ids;
     }
     
-    for (vector< Relation >::const_iterator it(rels_to_insert.begin());
-	 it != rels_to_insert.end(); ++it)
+    vector< Relation >::const_iterator rit(rels_to_insert.begin());
+    for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
+        it != ids_to_modify.end(); ++it)
     {
-      Tag_Index_Local index;
-      index.index = it->index & 0xffffff00;
-      
-      for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
-	   it2 != it->tags.end(); ++it2)
+      if ((rit != rels_to_insert.end()) && (it->first == rit->id))
       {
-	index.key = it2->first;
-	index.value = it2->second;
-	db_to_insert[index].insert(it->id);
-	db_to_delete[index];
+	if (it->second)
+	{
+	  Tag_Index_Local index;
+	  index.index = rit->index & 0xffffff00;
+	  
+	  for (vector< pair< string, string > >::const_iterator
+	      it2(rit->tags.begin()); it2 != rit->tags.end(); ++it2)
+	  {
+	    index.key = it2->first;
+	    index.value = it2->second;
+	    db_to_insert[index].insert(rit->id);
+	    db_to_delete[index];
+	  }
+	}
+	++rit;
       }
     }
-    
+	
     Block_Backend< Tag_Index_Local, Uint32_Index > rel_db
 	(*de_osm3s_file_ids::RELATION_TAGS_LOCAL, true);
     rel_db.update(db_to_delete, db_to_insert);
@@ -304,21 +335,29 @@ private:
 	db_to_delete[index].insert(*it2);
     }
     
-    for (vector< Relation >::const_iterator it(rels_to_insert.begin());
-	 it != rels_to_insert.end(); ++it)
+    vector< Relation >::const_iterator rit(rels_to_insert.begin());
+    for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
+    it != ids_to_modify.end(); ++it)
     {
-      Tag_Index_Global index;
-      
-      for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
-	   it2 != it->tags.end(); ++it2)
+      if ((rit != rels_to_insert.end()) && (it->first == rit->id))
       {
-	index.key = it2->first;
-	index.value = it2->second;
-	db_to_insert[index].insert(it->id);
-	db_to_delete[index];
+	if (it->second)
+	{
+	  Tag_Index_Global index;
+	  
+	  for (vector< pair< string, string > >::const_iterator
+	      it2(rit->tags.begin()); it2 != rit->tags.end(); ++it2)
+	  {
+	    index.key = it2->first;
+	    index.value = it2->second;
+	    db_to_insert[index].insert(rit->id);
+	    db_to_delete[index];
+	  }
+	}
+	++rit;
       }
     }
-    
+	
     Block_Backend< Tag_Index_Global, Uint32_Index > rel_db
       (*de_osm3s_file_ids::RELATION_TAGS_GLOBAL, true);
     rel_db.update(db_to_delete, db_to_insert);

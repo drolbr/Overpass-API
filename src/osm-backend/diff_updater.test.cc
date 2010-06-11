@@ -303,7 +303,6 @@ int main(int argc, char* args[])
     relation_updater.set_relation(current_relation);
       
     current_relation = Relation(163299);
-    Relation_Entry entry;
     entry.ref = 8237924;
     entry.type = Relation_Entry::WAY;
     entry.role = relation_updater.get_role_id("forward");
@@ -320,7 +319,6 @@ int main(int argc, char* args[])
     relation_updater.set_relation(current_relation);
     
     current_relation = Relation(163300);
-    Relation_Entry entry;
     entry.ref = 8237924;
     entry.type = Relation_Entry::WAY;
     entry.role = relation_updater.get_role_id("backward");
@@ -365,7 +363,6 @@ int main(int argc, char* args[])
     way_updater.set_id_deleted(8237927);
     
     current_relation = Relation(163298);
-    Relation_Entry entry;
     entry.ref = 8237924;
     entry.type = Relation_Entry::WAY;
     entry.role = relation_updater.get_role_id("forward");

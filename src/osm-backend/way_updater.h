@@ -20,14 +20,14 @@ struct Way_Updater
   
   void set_id_deleted(uint32 id)
   {
-    ids_to_delete.push_back(id);
+    ids_to_modify.push_back(make_pair(id, false));
   }
   
   void set_way
       (uint32 id, uint32 lat, uint32 lon, const vector< pair< string, string > >& tags,
        const vector< uint32 > nds)
   {
-    ids_to_delete.push_back(id);
+    ids_to_modify.push_back(make_pair(id, true));
     
     Way way;
     way.id = id;
@@ -38,7 +38,7 @@ struct Way_Updater
   
   void set_way(const Way& way)
   {
-    ids_to_delete.push_back(way.id);
+    ids_to_modify.push_back(make_pair(way.id, true));
     ways_to_insert.push_back(way);
   }
   
@@ -55,7 +55,7 @@ struct Way_Updater
     update_way_tags_local(tags_to_delete);
     update_way_tags_global(tags_to_delete);
 
-    ids_to_delete.clear();
+    ids_to_modify.clear();
     ways_to_insert.clear();
     
     cerr<<'W'<<' '<<time(NULL)<<' ';
@@ -80,9 +80,12 @@ struct Way_Updater
   }
   
 private:
-  vector< uint32 > ids_to_delete;
+  vector< pair< uint32, bool > > ids_to_modify;
   vector< Way > ways_to_insert;
   static Way_Comparator_By_Id way_comparator_by_id;
+  static Way_Equal_Id way_equal_id;
+  static Pair_Comparator_By_Id pair_comparator_by_id;
+  static Pair_Equal_Id pair_equal_id;
   uint32 update_counter;
   
   void update_way_ids(map< uint32, vector< uint32 > >& to_delete)
@@ -111,20 +114,31 @@ private:
     }
     
     // process the ways itself
-    sort(ids_to_delete.begin(), ids_to_delete.end());
-    sort(ways_to_insert.begin(), ways_to_insert.end(), way_comparator_by_id);
+    // keep always the most recent (last) element of all equal elements
+    stable_sort(ids_to_modify.begin(), ids_to_modify.end(),
+		pair_comparator_by_id);
+    vector< pair< uint32, bool > >::iterator modi_begin
+      (unique(ids_to_modify.rbegin(), ids_to_modify.rend(), pair_equal_id)
+      .base());
+    ids_to_modify.erase(ids_to_modify.begin(), modi_begin);
+    stable_sort(ways_to_insert.begin(), ways_to_insert.end(), way_comparator_by_id);
+    vector< Way >::iterator ways_begin
+      (unique(ways_to_insert.rbegin(), ways_to_insert.rend(), way_equal_id)
+      .base());
+    ways_to_insert.erase(ways_to_insert.begin(), ways_begin);
     
     Random_File< Uint31_Index > random(*de_osm3s_file_ids::WAYS, true);
     vector< Way >::const_iterator wit(ways_to_insert.begin());
-    for (vector< uint32 >::const_iterator it(ids_to_delete.begin());
-        it != ids_to_delete.end(); ++it)
+    for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
+        it != ids_to_modify.end(); ++it)
     {
-      Uint31_Index index(random.get(*it));
+      Uint31_Index index(random.get(it->first));
       if (index.val() > 0)
-	to_delete[index.val()].push_back(*it);
-      if ((wit != ways_to_insert.end()) && (*it == wit->id))
+	to_delete[index.val()].push_back(it->first);
+      if ((wit != ways_to_insert.end()) && (it->first == wit->id))
       {
-	random.put(*it, Uint31_Index(wit->index));
+	if (it->second)
+	  random.put(it->first, Uint31_Index(wit->index));
 	++wit;
       }
     }
@@ -143,11 +157,19 @@ private:
           it2 != it->second.end(); ++it2)
 	db_to_delete[idx].insert(Way_Skeleton(*it2, vector< uint32 >()));
     }
-    for (vector< Way >::const_iterator it(ways_to_insert.begin());
-        it != ways_to_insert.end(); ++it)
+    vector< Way >::const_iterator wit(ways_to_insert.begin());
+    for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
+    it != ids_to_modify.end(); ++it)
     {
-      Uint31_Index idx(it->index);
-      db_to_insert[idx].insert(Way_Skeleton(*it));
+      if ((wit != ways_to_insert.end()) && (it->first == wit->id))
+      {
+	if (it->second)
+	{
+	  Uint31_Index idx(wit->index);
+	  db_to_insert[idx].insert(Way_Skeleton(*wit));
+	}
+	++wit;
+      }
     }
     
     Block_Backend< Uint31_Index, Way_Skeleton > way_db
@@ -239,19 +261,27 @@ private:
       db_to_delete[index] = way_ids;
     }
     
-    for (vector< Way >::const_iterator it(ways_to_insert.begin());
-	 it != ways_to_insert.end(); ++it)
+    vector< Way >::const_iterator wit(ways_to_insert.begin());
+    for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
+    it != ids_to_modify.end(); ++it)
     {
-      Tag_Index_Local index;
-      index.index = it->index & 0xffffff00;
-      
-      for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
-	   it2 != it->tags.end(); ++it2)
+      if ((wit != ways_to_insert.end()) && (it->first == wit->id))
       {
-	index.key = it2->first;
-	index.value = it2->second;
-	db_to_insert[index].insert(it->id);
-	db_to_delete[index];
+	if (it->second)
+	{
+	  Tag_Index_Local index;
+	  index.index = wit->index & 0xffffff00;
+	  
+	  for (vector< pair< string, string > >::const_iterator
+	      it2(wit->tags.begin()); it2 != wit->tags.end(); ++it2)
+	  {
+	    index.key = it2->first;
+	    index.value = it2->second;
+	    db_to_insert[index].insert(wit->id);
+	    db_to_delete[index];
+	  }
+	}
+	++wit;
       }
     }
     
@@ -278,18 +308,26 @@ private:
 	db_to_delete[index].insert(*it2);
     }
     
-    for (vector< Way >::const_iterator it(ways_to_insert.begin());
-	 it != ways_to_insert.end(); ++it)
+    vector< Way >::const_iterator wit(ways_to_insert.begin());
+    for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
+    it != ids_to_modify.end(); ++it)
     {
-      Tag_Index_Global index;
-      
-      for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
-	   it2 != it->tags.end(); ++it2)
+      if ((wit != ways_to_insert.end()) && (it->first == wit->id))
       {
-	index.key = it2->first;
-	index.value = it2->second;
-	db_to_insert[index].insert(it->id);
-	db_to_delete[index];
+	if (it->second)
+	{
+	  Tag_Index_Global index;
+      
+	  for (vector< pair< string, string > >::const_iterator
+	      it2(wit->tags.begin()); it2 != wit->tags.end(); ++it2)
+	  {
+	    index.key = it2->first;
+	    index.value = it2->second;
+	    db_to_insert[index].insert(wit->id);
+	    db_to_delete[index];
+	  }
+	}
+	++wit;
       }
     }
 

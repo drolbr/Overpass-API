@@ -23,8 +23,6 @@ struct de_osm3s_file_ids
 
 string get_basedir();
 
-void set_overall_blocksize(uint32 size);
-
 //-----------------------------------------------------------------------------
 
 #endif

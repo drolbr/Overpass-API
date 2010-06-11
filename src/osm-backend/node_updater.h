@@ -91,30 +91,32 @@ private:
   
   void update_node_ids(map< uint32, vector< uint32 > >& to_delete)
   {
-    //keep always the most recent (last) element of all equal elements
+    // keep always the most recent (last) element of all equal elements
     stable_sort(ids_to_modify.begin(), ids_to_modify.end(),
 		pair_comparator_by_id);
     vector< pair< uint32, bool > >::iterator modi_begin
       (unique(ids_to_modify.rbegin(), ids_to_modify.rend(), pair_equal_id)
       .base());
+    ids_to_modify.erase(ids_to_modify.begin(), modi_begin);
     stable_sort(nodes_to_insert.begin(), nodes_to_insert.end(),
 		node_comparator_by_id);
     vector< Node >::iterator nodes_begin
       (unique(nodes_to_insert.rbegin(), nodes_to_insert.rend(), node_equal_id)
       .base());
+    nodes_to_insert.erase(nodes_to_insert.begin(), nodes_begin);
     
     Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, true);
-    vector< Node >::const_iterator nit(nodes_begin);
-    for (vector< pair< uint32, bool > >::const_iterator it(modi_begin);
+    vector< Node >::const_iterator nit(nodes_to_insert.begin());
+    for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
         it != ids_to_modify.end(); ++it)
     {
       Uint32_Index index(random.get(it->first));
       if (index.val() > 0)
 	to_delete[index.val()].push_back(it->first);
-      if ((it->second) && (nit != nodes_to_insert.end()) &&
-	  (it->first == nit->id))
+      if ((nit != nodes_to_insert.end()) && (it->first == nit->id))
       {
-	random.put(it->first, Uint32_Index(nit->ll_upper_));
+	if (it->second)
+	  random.put(it->first, Uint32_Index(nit->ll_upper_));
 	++nit;
       }
     }
@@ -133,11 +135,19 @@ private:
           it2 != it->second.end(); ++it2)
 	db_to_delete[idx].insert(Node_Skeleton(*it2, 0));
     }
-    for (vector< Node >::const_iterator it(nodes_to_insert.begin());
-        it != nodes_to_insert.end(); ++it)
+    vector< Node >::const_iterator nit(nodes_to_insert.begin());
+    for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
+        it != ids_to_modify.end(); ++it)
     {
-      Uint32_Index idx(it->ll_upper_);
-      db_to_insert[idx].insert(Node_Skeleton(*it));
+      if ((nit != nodes_to_insert.end()) && (it->first == nit->id))
+      {
+	if (it->second)
+	{
+	  Uint32_Index idx(nit->ll_upper_);
+	  db_to_insert[idx].insert(Node_Skeleton(*nit));
+	}
+	++nit;
+      }
     }
     
     Block_Backend< Uint32_Index, Node_Skeleton > node_db
@@ -229,19 +239,27 @@ private:
       db_to_delete[index] = node_ids;
     }
     
-    for (vector< Node >::const_iterator it(nodes_to_insert.begin());
-	 it != nodes_to_insert.end(); ++it)
+    vector< Node >::const_iterator nit(nodes_to_insert.begin());
+    for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
+        it != ids_to_modify.end(); ++it)
     {
-      Tag_Index_Local index;
-      index.index = it->ll_upper_ & 0xffffff00;
-      
-      for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
-	   it2 != it->tags.end(); ++it2)
+      if ((nit != nodes_to_insert.end()) && (it->first == nit->id))
       {
-	index.key = it2->first;
-	index.value = it2->second;
-	db_to_insert[index].insert(it->id);
-	db_to_delete[index];
+	if (it->second)
+	{
+	  Tag_Index_Local index;
+	  index.index = nit->ll_upper_ & 0xffffff00;
+	  
+	  for (vector< pair< string, string > >::const_iterator it2(nit->tags.begin());
+	  it2 != nit->tags.end(); ++it2)
+	  {
+	    index.key = it2->first;
+	    index.value = it2->second;
+	    db_to_insert[index].insert(nit->id);
+	    db_to_delete[index];
+	  }
+	}
+	++nit;
       }
     }
     
@@ -268,18 +286,26 @@ private:
 	db_to_delete[index].insert(*it2);
     }
     
-    for (vector< Node >::const_iterator it(nodes_to_insert.begin());
-	 it != nodes_to_insert.end(); ++it)
+    vector< Node >::const_iterator nit(nodes_to_insert.begin());
+    for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
+    it != ids_to_modify.end(); ++it)
     {
-      Tag_Index_Global index;
-      
-      for (vector< pair< string, string > >::const_iterator it2(it->tags.begin());
-	   it2 != it->tags.end(); ++it2)
+      if ((nit != nodes_to_insert.end()) && (it->first == nit->id))
       {
-	index.key = it2->first;
-	index.value = it2->second;
-	db_to_insert[index].insert(it->id);
-	db_to_delete[index];
+	if (it->second)
+	{
+	  Tag_Index_Global index;
+	  
+	  for (vector< pair< string, string > >::const_iterator it2(nit->tags.begin());
+	  it2 != nit->tags.end(); ++it2)
+	  {
+	    index.key = it2->first;
+	    index.value = it2->second;
+	    db_to_insert[index].insert(nit->id);
+	    db_to_delete[index];
+	  }
+	}
+	++nit;
       }
     }
 

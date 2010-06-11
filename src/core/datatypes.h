@@ -20,6 +20,47 @@ typedef unsigned short int uint16;
 typedef unsigned int uint32;
 typedef unsigned long long uint64;
 
+// template< class T >
+// struct Memory_Count : public allocator< T > {
+//   Memory_Count()
+//   {
+//     cerr<<"Memory_Count()\n";
+//   }
+//   
+//   ~Memory_Count()
+//   {
+//     cerr<<"~Memory_Count()\n";
+//   }
+//   
+//   Memory_Count(Memory_Count const&)
+//   {
+//     cerr<<"Memory_Count(Memory_Count const&)\n";
+//   }
+//   
+//   template< class U >
+//   Memory_Count(Memory_Count< U > const&)
+//   {
+//     cerr<<"Memory_Count(Memory_Count< U > const&)\n";
+//   }
+//   
+//   T* allocate(size_t cnt, typename allocator< void >::const_pointer = 0)
+//   {
+//     cerr<<'+'<<cnt*sizeof(T)<<' ';
+//     return (T*)malloc(cnt*sizeof(T));
+//   }
+//   
+//   void deallocate(T* p, size_t cnt)
+//   { 
+//     cerr<<'-'<<cnt*sizeof(T)<<' ';
+//     free(p);
+//   }
+//   
+//   template< class U >
+//   struct rebind {
+//     typedef Memory_Count< U > other;
+//   };
+// };
+
 struct Uint32_Index
 {
   Uint32_Index(uint32 i) : value(i) {}
@@ -138,6 +179,8 @@ struct Pair_Equal_Id {
 
 struct Node
 {
+//   typedef basic_string< char, std::char_traits< char >, Memory_Count< char > > SS;
+  
   uint32 id;
   uint32 ll_upper_;
   uint32 ll_lower_;
@@ -305,6 +348,13 @@ struct Way_Comparator_By_Id {
   }
 };
 
+struct Way_Equal_Id {
+  bool operator() (const Way& a, const Way& b)
+  {
+    return (a.id == b.id);
+  }
+};
+
 struct Way_Skeleton
 {
   uint32 id;
@@ -419,6 +469,13 @@ struct Relation_Comparator_By_Id {
   bool operator() (const Relation& a, const Relation& b)
   {
     return (a.id < b.id);
+  }
+};
+
+struct Relation_Equal_Id {
+  bool operator() (const Relation& a, const Relation& b)
+  {
+    return (a.id == b.id);
   }
 };
 
