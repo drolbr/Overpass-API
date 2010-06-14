@@ -14,9 +14,6 @@ using namespace std;
 
 int main(int argc, char* args[])
 {
-  if (argc == 2)
-    set_overall_blocksize(atol(args[1]));
-  
   map< string, Set > sets;
   
   cout<<"Query to create areas:\n";

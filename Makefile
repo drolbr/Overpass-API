@@ -1,61 +1,61 @@
-testing: test-bin/file_blocks test-bin/block_backend test-bin/random_file test-bin/node_updater test-bin/way_updater test-bin/relation_updater test-bin/complete_updater
-
-backend_tests = test-bin/file_blocks test-bin/block_backend test-bin/random_file
-$(backend_tests): test-bin/%: src/backend/%.test.c
-	mkdir -p test-bin
-	g++ -o $@ -O3 -Wall $<
-
-osm_backend_tests = test-bin/node_updater test-bin/way_updater test-bin/relation_updater test-bin/complete_updater
-test-bin/%: src/osm-backend/%.test.c src/core/settings.c
-	mkdir -p test-bin
-	g++ -o $@ -O3 -Wall -lexpat $^
-
-backend = src/backend/types.h src/backend/random_file.h src/backend/file_blocks.h src/backend/block_backend.h
-
-src/backend/random_file.h: src/backend/types.h
-	touch $@
-
-src/backend/file_blocks.h: src/backend/types.h
-	touch $@
-
-src/backend/block_backend.h: src/backend/file_blocks.h
-	touch $@
-
-src/core/settings.h: src/backend/types.h
-	touch $@
-
-src/osm-backend/%_updater.h: src/core/datatypes.h $(backend)
-	touch $@
-
-statements = src/statements/id_query.$(suffix) src/statements/print.$(suffix)
-
-src/statements/statement.h: src/core/datatypes.h
-
-suffix = .h
-$(statements): src/statements/%.h: src/statements/statement.h $(backend)
-	touch $@
-
-
-src/core/settings.c: src/core/settings.h
-	touch $@
-
-testsrcs = src/backend/file_blocks.test.c src/backend/block_backend.test.c src/backend/random_file.test.c src/osm-backend/node_updater.test.c src/osm-backend/way_updater.test.c src/osm-backend/relation_updater.test.c
-
-$(testsrcs): %.test.c: %.h
-	touch $@
-
-src/osm-backend/complete_updater.test.c: src/osm-backend/%_updater.h src/core/datatypes.h $(backend)
-	touch $@
-
-src/osm_backend/example_queries.c: src/osm-backend/node_updater.h src/osm-backend/way_updater.h src/osm-backend/relation_updater.h src/core/settings.h $(backend)
-	touch $@
-
-src/osm_backend/update_database.c: src/osm-backend/node_updater.h src/osm-backend/way_updater.h src/osm-backend/relation_updater.h src/core/settings.h $(backend)
-	touch $@
-
-suffix = .c
-$(statements): src/statements/%.c: src/statements/%.h
-	touch $@
+# testing: test-bin/file_blocks test-bin/block_backend test-bin/random_file test-bin/node_updater test-bin/way_updater test-bin/relation_updater test-bin/complete_updater
+# 
+# backend_tests = test-bin/file_blocks test-bin/block_backend test-bin/random_file
+# $(backend_tests): test-bin/%: src/backend/%.test.c
+# 	mkdir -p test-bin
+# 	g++ -o $@ -O3 -Wall $<
+# 
+# osm_backend_tests = test-bin/node_updater test-bin/way_updater test-bin/relation_updater test-bin/complete_updater
+# test-bin/%: src/osm-backend/%.test.c src/core/settings.c
+# 	mkdir -p test-bin
+# 	g++ -o $@ -O3 -Wall -lexpat $^
+# 
+# backend = src/backend/types.h src/backend/random_file.h src/backend/file_blocks.h src/backend/block_backend.h
+# 
+# src/backend/random_file.h: src/backend/types.h
+# 	touch $@
+# 
+# src/backend/file_blocks.h: src/backend/types.h
+# 	touch $@
+# 
+# src/backend/block_backend.h: src/backend/file_blocks.h
+# 	touch $@
+# 
+# src/core/settings.h: src/backend/types.h
+# 	touch $@
+# 
+# src/osm-backend/%_updater.h: src/core/datatypes.h $(backend)
+# 	touch $@
+# 
+# statements = src/statements/id_query.$(suffix) src/statements/print.$(suffix)
+# 
+# src/statements/statement.h: src/core/datatypes.h
+# 
+# suffix = .h
+# $(statements): src/statements/%.h: src/statements/statement.h $(backend)
+# 	touch $@
+# 
+# 
+# src/core/settings.c: src/core/settings.h
+# 	touch $@
+# 
+# testsrcs = src/backend/file_blocks.test.c src/backend/block_backend.test.c src/backend/random_file.test.c src/osm-backend/node_updater.test.c src/osm-backend/way_updater.test.c src/osm-backend/relation_updater.test.c
+# 
+# $(testsrcs): %.test.c: %.h
+# 	touch $@
+# 
+# src/osm-backend/complete_updater.test.c: src/osm-backend/%_updater.h src/core/datatypes.h $(backend)
+# 	touch $@
+# 
+# src/osm_backend/example_queries.c: src/osm-backend/node_updater.h src/osm-backend/way_updater.h src/osm-backend/relation_updater.h src/core/settings.h $(backend)
+# 	touch $@
+# 
+# src/osm_backend/update_database.c: src/osm-backend/node_updater.h src/osm-backend/way_updater.h src/osm-backend/relation_updater.h src/core/settings.h $(backend)
+# 	touch $@
+# 
+# suffix = .c
+# $(statements): src/statements/%.c: src/statements/%.h
+# 	touch $@
 
 stmts = \
 area_query_$(suffix) \

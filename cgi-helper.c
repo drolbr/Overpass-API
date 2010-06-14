@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <stdlib.h>
+#include <string.h>
 #include "cgi-helper.h"
 
 using namespace std;

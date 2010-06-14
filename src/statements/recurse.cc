@@ -318,22 +318,42 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     vector< uint32 > ids;
     
     {
-      stopwatch_stop(NO_DISK);
-      Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, false);
+      vector< uint32 > ids_for_index_req;
+      
       for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
 	   it(mit->second.ways.begin()); it != mit->second.ways.end(); ++it)
       {
-	for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
-	    it2 != it->second.end(); ++it2)
+	if (it->first.val() & 0x80000000)
 	{
-	  for (vector< uint32 >::const_iterator it3(it2->nds.begin());
-		      it3 != it2->nds.end(); ++it3)
+	  for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
+	      it2 != it->second.end(); ++it2)
 	  {
-	    req.insert(random.get(*it3));
-	    ids.push_back(*it3);
+	    for (vector< uint32 >::const_iterator it3(it2->nds.begin());
+	        it3 != it2->nds.end(); ++it3)
+	    {
+	      ids.push_back(*it3);
+	      ids_for_index_req.push_back(*it3);
+	    }
+	  }
+	}
+	else
+	{
+	  req.insert(it->first);
+	  for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
+	      it2 != it->second.end(); ++it2)
+	  {
+	    for (vector< uint32 >::const_iterator it3(it2->nds.begin());
+	        it3 != it2->nds.end(); ++it3)
+	      ids.push_back(*it3);
 	  }
 	}
       }
+      stopwatch_stop(NO_DISK);
+      sort(ids_for_index_req.begin(), ids_for_index_req.end());
+      Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, false);
+      for (vector< uint32 >::const_iterator
+	  it(ids_for_index_req.begin()); it != ids_for_index_req.end(); ++it)
+	req.insert(random.get(*it));
       stopwatch_stop(NODES_MAP);
     }
     sort(ids.begin(), ids.end());

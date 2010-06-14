@@ -47,7 +47,7 @@ struct OSM_File_Properties : File_Properties
   
   uint32 get_block_size() const
   {
-    return overall_blocksize;
+    return block_size;
   }
 
   string file_base_name;
