@@ -14,12 +14,14 @@ AC_PROG_CXX
 # Checks for libraries.
 
 # Checks for header files.
+AC_TYPE_SIZE_T
 AC_CHECK_HEADERS([fcntl.h locale.h stdlib.h string.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
 
 # Checks for library functions.
+AC_CHECK_FUNCS([clock_gettime])
 AC_FUNC_MALLOC
 
 AC_CONFIG_FILES([Makefile backend/Makefile osm-backend/Makefile statements/Makefile])

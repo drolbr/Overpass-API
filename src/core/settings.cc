@@ -10,7 +10,7 @@ struct Properties
 
 //-----------------------------------------------------------------------------
 
-string BASE_DIRECTORY("./");
+string base_directory("./");
 string DATA_SUFFIX(".bin");
 string INDEX_SUFFIX(".idx");
 string ID_SUFFIX(".map");
@@ -22,12 +22,12 @@ struct OSM_File_Properties : File_Properties
   
   string get_basedir() const
   {
-    return BASE_DIRECTORY;
+    return base_directory;
   }
   
   string get_file_base_name() const
   {
-    return BASE_DIRECTORY + file_base_name;
+    return base_directory + file_base_name;
   }
   
   string get_index_suffix() const
@@ -77,5 +77,10 @@ File_Properties* de_osm3s_file_ids::RELATION_TAGS_GLOBAL
 
 string get_basedir()
 {
-  return BASE_DIRECTORY;
+  return base_directory;
+}
+
+string set_basedir(string basedir)
+{
+  base_directory = basedir;
 }

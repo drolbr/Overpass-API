@@ -4,6 +4,7 @@
 #include <list>
 #include <sstream>
 
+#include <dirent.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -207,26 +208,87 @@ void end(const char *el)
   ++osm_element_count;
 }
 
-int main(int argc, char* args[])
+int main(int argc, char* argv[])
 {
+  // read command line arguments
+  string source_dir, db_dir;
+  vector< string > source_file_names;
+  
+  int argpos(1);
+  while (argpos < argc)
+  {
+    if (!(strncmp(argv[argpos], "--db-dir=", 5)))
+    {
+      db_dir = ((string)argv[argpos]).substr(5);
+      if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
+	db_dir += '/';
+    }
+    if (!(strncmp(argv[argpos], "--osc-dir=", 6)))
+    {
+      source_dir = ((string)argv[argpos]).substr(6);
+      if ((source_dir.size() > 0) && (source_dir[source_dir.size()-1] != '/'))
+	source_dir += '/';
+    }
+    ++argpos;
+  }
+  
+  // read file names from source directory
+  DIR *dp;
+  struct dirent *ep;
+  
+  dp = opendir(source_dir.c_str());
+  if (dp != NULL)
+  {
+    while ((ep = readdir (dp)))
+      source_file_names.push_back(ep->d_name);
+    closedir(dp);
+  }
+  else
+  {
+    cerr<<"\nopendir: can't open directory "<<source_dir<<'\n';
+    return -1;
+  }
+  sort(source_file_names.begin(), source_file_names.end());
+  
   try
   {
-    osm_element_count = 0;
-    state = 0;
-    //reading the main document
-    parse(stdin, start, end);
-  
-    if (state == IN_NODES)
-      node_updater.update();
-    else if (state == IN_WAYS)
-      way_updater.update();
-    else if (state == IN_RELATIONS)
-      relation_updater.update();
+    vector< string >::const_iterator it(source_file_names.begin());
+    while (it != source_file_names.end())
+    {
+      if ((*it == ".") || (*it == ".."))
+      {
+	++it;
+	continue;
+      }
+      FILE* osc_file(fopen((source_dir + *it).c_str(), "r"));
+      if (osc_file)
+      {
+	osm_element_count = 0;
+	state = 0;
+	//reading the main document
+	parse(osc_file, start, end);
+	
+	if (state == IN_NODES)
+	  node_updater.update();
+	else if (state == IN_WAYS)
+	  way_updater.update();
+	else if (state == IN_RELATIONS)
+	  relation_updater.update();
+
+	fclose(osc_file);
+      }
+      else
+      {
+	cerr<<"\nopendir: can't open file "<<source_dir + *it<<'\n';
+	return -1;
+      }
+    }
   }
   catch (File_Error e)
   {
     cerr<<"File error caught: "
 	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    return -1;
   }
   
   return 0;

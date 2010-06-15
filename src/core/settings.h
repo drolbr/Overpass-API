@@ -22,6 +22,7 @@ struct de_osm3s_file_ids
 };
 
 string get_basedir();
+string set_basedir(string basedir);
 
 //-----------------------------------------------------------------------------
 
