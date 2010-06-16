@@ -23,7 +23,7 @@ class Bbox_Query_Statement : public Statement
     
     vector< pair< uint32, uint32 > >* calc_ranges()
     {
-      return calc_ranges(south, north, west, east);
+      return Node::calc_ranges(south, north, west, east);
     }
     
     double get_south() const { return south; }
@@ -35,9 +35,6 @@ class Bbox_Query_Statement : public Statement
     string output;
     unsigned int type;
     double south, north, west, east;
-    
-    static vector< pair< uint32, uint32 > >* calc_ranges
-        (double south, double north, double west, double east);
 };
 
 #endif

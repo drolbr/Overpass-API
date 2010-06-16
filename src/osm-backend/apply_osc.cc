@@ -38,7 +38,7 @@ const int DELETE = 1;
 
 uint32 osm_element_count;
 
-void start(const char *el, const char **attr)
+void node_start(const char *el, const char **attr)
 {
   if (!strcmp(el, "tag"))
   {
@@ -52,10 +52,63 @@ void start(const char *el, const char **attr)
     }
     if (current_node.id > 0)
       current_node.tags.push_back(make_pair(key, value));
-    else if (current_way.id > 0)
+  }
+  else if (!strcmp(el, "node"))
+  {
+    if (state == 0)
+      state = IN_NODES;
+    
+    unsigned int id(0);
+    double lat(100.0), lon(200.0);
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "id"))
+	id = atoi(attr[i+1]);
+      if (!strcmp(attr[i], "lat"))
+	lat = atof(attr[i+1]);
+      if (!strcmp(attr[i], "lon"))
+	lon = atof(attr[i+1]);
+    }
+    current_node = Node(id, lat, lon);
+  }
+  else if (!strcmp(el, "delete"))
+    modify_mode = DELETE;
+}
+
+void node_end(const char *el)
+{
+  if (!strcmp(el, "node"))
+  {
+    if (modify_mode == DELETE)
+      node_updater.set_id_deleted(current_node.id);
+    else
+      node_updater.set_node(current_node);
+    if (osm_element_count >= 4*1024*1024)
+    {
+      node_updater.update();
+      osm_element_count = 0;
+    }
+    current_node.id = 0;
+  }
+  else if (!strcmp(el, "delete"))
+    modify_mode = 0;
+  ++osm_element_count;
+}
+
+void way_start(const char *el, const char **attr)
+{
+  if (!strcmp(el, "tag"))
+  {
+    string key(""), value("");
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "k"))
+	key = attr[i+1];
+      if (!strcmp(attr[i], "v"))
+	value = attr[i+1];
+    }
+    if (current_way.id > 0)
       current_way.tags.push_back(make_pair(key, value));
-    else if (current_relation.id > 0)
-      current_relation.tags.push_back(make_pair(key, value));
   }
   else if (!strcmp(el, "nd"))
   {
@@ -69,6 +122,55 @@ void start(const char *el, const char **attr)
       }
       current_way.nds.push_back(ref);
     }
+  }
+  else if (!strcmp(el, "way"))
+  {
+    unsigned int id(0);
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "id"))
+	id = atoi(attr[i+1]);
+    }
+    current_way = Way(id);
+  }
+  else if (!strcmp(el, "delete"))
+    modify_mode = DELETE;
+}
+
+void way_end(const char *el)
+{
+  if (!strcmp(el, "way"))
+  {
+    if (modify_mode == DELETE)
+      way_updater.set_id_deleted(current_way.id);
+    else
+      way_updater.set_way(current_way);
+    if (osm_element_count >= 4*1024*1024)
+    {
+      way_updater.update();
+      osm_element_count = 0;
+    }
+    current_way.id = 0;
+  }
+  else if (!strcmp(el, "delete"))
+    modify_mode = 0;
+  ++osm_element_count;
+}
+
+void relation_start(const char *el, const char **attr)
+{
+  if (!strcmp(el, "tag"))
+  {
+    string key(""), value("");
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "k"))
+	key = attr[i+1];
+      if (!strcmp(attr[i], "v"))
+	value = attr[i+1];
+    }
+    if (current_relation.id > 0)
+      current_relation.tags.push_back(make_pair(key, value));
   }
   else if (!strcmp(el, "member"))
   {
@@ -97,56 +199,8 @@ void start(const char *el, const char **attr)
       current_relation.members.push_back(entry);
     }
   }
-  else if (!strcmp(el, "node"))
-  {
-    if (state == 0)
-      state = IN_NODES;
-    
-    unsigned int id(0);
-    double lat(100.0), lon(200.0);
-    for (unsigned int i(0); attr[i]; i += 2)
-    {
-      if (!strcmp(attr[i], "id"))
-	id = atoi(attr[i+1]);
-      if (!strcmp(attr[i], "lat"))
-	lat = atof(attr[i+1]);
-      if (!strcmp(attr[i], "lon"))
-	lon = atof(attr[i+1]);
-    }
-    current_node = Node(id, lat, lon);
-  }
-  else if (!strcmp(el, "way"))
-  {
-    if (state == IN_NODES)
-    {
-      node_updater.update();
-      osm_element_count = 0;
-      state = IN_WAYS;
-    }
-    
-    unsigned int id(0);
-    for (unsigned int i(0); attr[i]; i += 2)
-    {
-      if (!strcmp(attr[i], "id"))
-	id = atoi(attr[i+1]);
-    }
-    current_way = Way(id);
-  }
   else if (!strcmp(el, "relation"))
   {
-    if (state == IN_NODES)
-    {
-      node_updater.update();
-      osm_element_count = 0;
-      state = IN_RELATIONS;
-    }
-    else if (state == IN_WAYS)
-    {
-      way_updater.update();
-      osm_element_count = 0;
-      state = IN_RELATIONS;
-    }
-    
     unsigned int id(0);
     for (unsigned int i(0); attr[i]; i += 2)
     {
@@ -159,37 +213,9 @@ void start(const char *el, const char **attr)
     modify_mode = DELETE;
 }
 
-void end(const char *el)
+void relation_end(const char *el)
 {
-  if (!strcmp(el, "node"))
-  {
-    if (modify_mode == DELETE)
-      node_updater.set_id_deleted(current_node.id);
-    else
-      node_updater.set_node(current_node);
-    if (osm_element_count >= 4*1024*1024)
-    {
-      cerr<<"Id: "<<current_node.id<<' ';
-      node_updater.update(true);
-      osm_element_count = 0;
-    }
-    current_node.id = 0;
-  }
-  else if (!strcmp(el, "way"))
-  {
-    if (modify_mode == DELETE)
-      way_updater.set_id_deleted(current_way.id);
-    else
-      way_updater.set_way(current_way);
-    if (osm_element_count >= 4*1024*1024)
-    {
-      cerr<<"Id: "<<current_way.id<<' ';
-      way_updater.update(true);
-      osm_element_count = 0;
-    }
-    current_way.id = 0;
-  }
-  else if (!strcmp(el, "relation"))
+  if (!strcmp(el, "relation"))
   {
     if (modify_mode == DELETE)
       relation_updater.set_id_deleted(current_relation.id);
@@ -197,7 +223,6 @@ void end(const char *el)
       relation_updater.set_relation(current_relation);
     if (osm_element_count >= 4*1024*1024)
     {
-      cerr<<"Id: "<<current_relation.id<<' ';
       relation_updater.update();
       osm_element_count = 0;
     }
@@ -253,6 +278,7 @@ int main(int argc, char* argv[])
   
   try
   {
+    osm_element_count = 0;
     vector< string >::const_iterator it(source_file_names.begin());
     while (it != source_file_names.end())
     {
@@ -264,17 +290,36 @@ int main(int argc, char* argv[])
       FILE* osc_file(fopen((source_dir + *it).c_str(), "r"));
       if (osc_file)
       {
-	osm_element_count = 0;
 	state = 0;
 	//reading the main document
-	parse(osc_file, start, end);
+	parse(osc_file, node_start, node_end);
 	
-	if (state == IN_NODES)
-	  node_updater.update();
-	else if (state == IN_WAYS)
-	  way_updater.update();
-	else if (state == IN_RELATIONS)
-	  relation_updater.update();
+	fclose(osc_file);
+      }
+      else
+      {
+	cerr<<"\nopendir: can't open file "<<source_dir + *it<<'\n';
+	return -1;
+      }
+      ++it;
+    }
+    node_updater.update();
+    
+    osm_element_count = 0;    
+    it = source_file_names.begin();
+    while (it != source_file_names.end())
+    {
+      if ((*it == ".") || (*it == ".."))
+      {
+	++it;
+	continue;
+      }
+      FILE* osc_file(fopen((source_dir + *it).c_str(), "r"));
+      if (osc_file)
+      {
+	state = 0;
+	//reading the main document
+	parse(osc_file, way_start, way_end);
 
 	fclose(osc_file);
       }
@@ -285,6 +330,34 @@ int main(int argc, char* argv[])
       }
       ++it;
     }
+    way_updater.update();
+    
+    osm_element_count = 0;    
+    it = source_file_names.begin();
+    while (it != source_file_names.end())
+    {
+      if ((*it == ".") || (*it == ".."))
+      {
+	++it;
+	continue;
+      }
+      FILE* osc_file(fopen((source_dir + *it).c_str(), "r"));
+      if (osc_file)
+      {
+	state = 0;
+	//reading the main document
+	parse(osc_file, relation_start, relation_end);
+	
+	fclose(osc_file);
+      }
+      else
+      {
+	cerr<<"\nopendir: can't open file "<<source_dir + *it<<'\n';
+	return -1;
+      }
+      ++it;
+    }
+    relation_updater.update();
   }
   catch (File_Error e)
   {

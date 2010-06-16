@@ -67,31 +67,6 @@ void Bbox_Query_Statement::forecast()
 {
 }
 
-vector< pair< uint32, uint32 > >* Bbox_Query_Statement::calc_ranges
-    (double south, double north, double west, double east)
-{
-  vector< pair< uint32, uint32 > >* ranges;
-  if (west <= east)
-    ranges = new vector< pair< uint32, uint32 > >();
-  else
-  {
-    ranges = calc_ranges(south, north, west, 180.0);
-    west = -180.0;
-  }
-  for (int i(0); 65536.0/10000000.0*i <= north - south; ++i)
-  {
-    for (int j(0); 65536.0/10000000.0*j <= east - west; ++j)
-    {
-      pair< uint32, uint32 > range;
-      range.first = Node::ll_upper
-        (south + 65536.0/10000000.0*i, west + 65536.0/10000000.0*j);
-      range.second = range.first + 1;
-      ranges->push_back(range);
-    }
-  }
-  return ranges;
-}
-
 void Bbox_Query_Statement::execute(map< string, Set >& maps)
 {
   stopwatch_start();
@@ -107,7 +82,7 @@ void Bbox_Query_Statement::execute(map< string, Set >& maps)
   //areas.clear();
 
   vector< pair< uint32, uint32 > >* uint_ranges
-    (calc_ranges(south, north, west, east));
+    (Node::calc_ranges(south, north, west, east));
     
   set< pair< Uint32_Index, Uint32_Index > > req;
   for (vector< pair< uint32, uint32 > >::const_iterator
