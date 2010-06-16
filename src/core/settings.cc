@@ -1,3 +1,4 @@
+#include <iostream>
 #include <map>
 #include <string>
 #include "settings.h"
@@ -80,7 +81,7 @@ string get_basedir()
   return base_directory;
 }
 
-string set_basedir(string basedir)
+void set_basedir(string basedir)
 {
   base_directory = basedir;
 }

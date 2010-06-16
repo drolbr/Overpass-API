@@ -217,20 +217,21 @@ int main(int argc, char* argv[])
   int argpos(1);
   while (argpos < argc)
   {
-    if (!(strncmp(argv[argpos], "--db-dir=", 5)))
+    if (!(strncmp(argv[argpos], "--db-dir=", 9)))
     {
-      db_dir = ((string)argv[argpos]).substr(5);
+      db_dir = ((string)argv[argpos]).substr(9);
       if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
 	db_dir += '/';
     }
-    if (!(strncmp(argv[argpos], "--osc-dir=", 6)))
+    if (!(strncmp(argv[argpos], "--osc-dir=", 10)))
     {
-      source_dir = ((string)argv[argpos]).substr(6);
+      source_dir = ((string)argv[argpos]).substr(10);
       if ((source_dir.size() > 0) && (source_dir[source_dir.size()-1] != '/'))
 	source_dir += '/';
     }
     ++argpos;
   }
+  set_basedir(db_dir);
   
   // read file names from source directory
   DIR *dp;
@@ -282,6 +283,7 @@ int main(int argc, char* argv[])
 	cerr<<"\nopendir: can't open file "<<source_dir + *it<<'\n';
 	return -1;
       }
+      ++it;
     }
   }
   catch (File_Error e)

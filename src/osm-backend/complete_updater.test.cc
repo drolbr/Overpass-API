@@ -482,8 +482,24 @@ void end(const char *el)
   ++osm_element_count;
 }
 
-int main(int argc, char* args[])
+int main(int argc, char* argv[])
 {
+  // read command line arguments
+  string db_dir;
+  
+  int argpos(1);
+  while (argpos < argc)
+  {
+    if (!(strncmp(argv[argpos], "--db-dir=", 9)))
+    {
+      db_dir = ((string)argv[argpos]).substr(9);
+      if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
+	db_dir += '/';
+    }
+    ++argpos;
+  }
+  set_basedir(db_dir);
+  
   try
   {
     node_source_out = new ofstream

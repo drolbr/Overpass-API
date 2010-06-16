@@ -1,2 +1,1 @@
-AM_CFLAGS = -O3
-SUBDIRS = backend osm-backend statements
+SUBDIRS = bin test-bin
