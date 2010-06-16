@@ -29,6 +29,7 @@ Way_Updater way_updater;
 Way current_way;
 Relation_Updater relation_updater;
 Relation current_relation;
+vector< pair< uint32, uint32 > > moved_nodes;
 int state;
 const int IN_NODES = 1;
 const int IN_WAYS = 2;
@@ -85,7 +86,7 @@ void node_end(const char *el)
       node_updater.set_node(current_node);
     if (osm_element_count >= 4*1024*1024)
     {
-      node_updater.update();
+      node_updater.update(moved_nodes);
       osm_element_count = 0;
     }
     current_node.id = 0;
@@ -303,7 +304,13 @@ int main(int argc, char* argv[])
       }
       ++it;
     }
-    node_updater.update();
+    node_updater.update(moved_nodes);
+    
+    cout<<"A\n";
+    for (vector< pair< uint32, uint32 > >::const_iterator
+        it(moved_nodes.begin()); it != moved_nodes.end(); ++it)
+      cout<<dec<<it->first<<'\t'<<hex<<it->second<<'\n';
+    cout<<"B\n";
     
     osm_element_count = 0;    
     it = source_file_names.begin();

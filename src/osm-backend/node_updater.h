@@ -80,6 +80,21 @@ struct Node_Updater
     cerr<<'n'<<' '<<time(NULL)<<' ';
   }
   
+  void update(vector< pair< uint32, uint32 > >& moved_nodes)
+  {
+    map< uint32, vector< uint32 > > to_delete;
+    update_node_ids(to_delete, &moved_nodes);
+    update_coords(to_delete);
+    
+    vector< Tag_Entry > tags_to_delete;
+    prepare_delete_tags(tags_to_delete, to_delete);
+    update_node_tags_local(tags_to_delete);
+    update_node_tags_global(tags_to_delete);
+    
+    ids_to_modify.clear();
+    nodes_to_insert.clear();
+  }
+  
 private:
   vector< pair< uint32, bool > > ids_to_modify;
   vector< Node > nodes_to_insert;
@@ -89,7 +104,8 @@ private:
   static Pair_Equal_Id pair_equal_id;
   uint32 update_counter;
   
-  void update_node_ids(map< uint32, vector< uint32 > >& to_delete)
+  void update_node_ids(map< uint32, vector< uint32 > >& to_delete,
+		       vector< pair< uint32, uint32 > >* moved_nodes = 0)
   {
     // keep always the most recent (last) element of all equal elements
     stable_sort(ids_to_modify.begin(), ids_to_modify.end(),
@@ -116,7 +132,12 @@ private:
       if ((nit != nodes_to_insert.end()) && (it->first == nit->id))
       {
 	if (it->second)
+	{
 	  random.put(it->first, Uint32_Index(nit->ll_upper_));
+	  if ((moved_nodes != 0) && (index.val() > 0) &&
+	      (index.val() != nit->ll_upper_))
+	    moved_nodes->push_back(make_pair(it->first, index.val()));
+	}
 	++nit;
       }
     }

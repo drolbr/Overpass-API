@@ -72,13 +72,13 @@ echo -e "\
   <node id=\"345\"/>
   <node id=\"445\"/>
 </delete>
-<node id=\"446\" lat=\"46.01\" lon=\"2.01\"/>
-<node id=\"448\" lat=\"48.05\" lon=\"2.05\"/>
+<node id=\"446\" lat=\"46.001\" lon=\"2.001\"/>
+<node id=\"448\" lat=\"48.005\" lon=\"2.005\"/>
 <node id=\"947\" lat=\"47\" lon=\"7\">
   <tag k=\"lat\" v=\"fourty-seven\"/>
   <tag k=\"lon_spoken\" v=\"seven\"/>
 </node>
-<node id=\"948\" lat=\"48.01\" lon=\"7\"/>
+<node id=\"948\" lat=\"48.001\" lon=\"7\"/>
 <node id=\"2000\" lat=\"55.55\" lon=\"11.11\"/>
 <node id=\"2005\" lat=\"55.11\" lon=\"11.55\"/>
 <way id=\"5\">
@@ -110,14 +110,14 @@ echo -e "\
 echo -e "\
 <osm-change>
 
-<node id=\"445\" lat=\"45.01\" lon=\"2.01\">
+<node id=\"445\" lat=\"45.001\" lon=\"2.001\">
   <tag k=\"lat\" v=\"45\"/>
   <tag k=\"lon\" v=\"2\"/>
 </node>
 <delete>
   <node id=\"446\"/>
 </delete>
-<node id=\"448\" lat=\"48.01\" lon=\"2.01\"/>
+<node id=\"448\" lat=\"48.001\" lon=\"2.001\"/>
 <delete>
   <node id=\"2000\"/>
   <node id=\"2001\"/>
