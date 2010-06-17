@@ -35,6 +35,9 @@ struct Relation
   : id(id_)
   {}
   
+  Relation(uint32 id_, uint32 index_, const vector< Relation_Entry >& members_)
+  : id(id_), index(index_), members(members_) {}
+  
   static uint32 calc_index(const vector< uint32 >& memb_idxs)
   {
     if (memb_idxs.empty())

@@ -31,6 +31,7 @@ Relation_Updater relation_updater;
 Relation current_relation;
 vector< pair< uint32, uint32 > > moved_nodes;
 vector< pair< uint32, uint32 > > moved_ways;
+vector< pair< uint32, uint32 > > moved_relations;
 int state;
 const int IN_NODES = 1;
 const int IN_WAYS = 2;
@@ -225,7 +226,7 @@ void relation_end(const char *el)
       relation_updater.set_relation(current_relation);
     if (osm_element_count >= 4*1024*1024)
     {
-      relation_updater.update();
+      relation_updater.update(moved_relations);
       osm_element_count = 0;
     }
     current_relation.id = 0;
@@ -344,9 +345,11 @@ int main(int argc, char* argv[])
     
     cout<<"C\n";
     for (vector< pair< uint32, uint32 > >::const_iterator
-      it(moved_ways.begin()); it != moved_ways.end(); ++it)
+        it(moved_ways.begin()); it != moved_ways.end(); ++it)
       cout<<dec<<it->first<<'\t'<<hex<<it->second<<'\n';
     cout<<"D\n";
+    
+    relation_updater.update_moved_idxs(moved_nodes, moved_ways, moved_relations);
     
     osm_element_count = 0;    
     it = source_file_names.begin();
@@ -373,7 +376,13 @@ int main(int argc, char* argv[])
       }
       ++it;
     }
-    relation_updater.update();
+    relation_updater.update(moved_relations);
+    
+    cout<<"E\n";
+    for (vector< pair< uint32, uint32 > >::const_iterator
+        it(moved_relations.begin()); it != moved_relations.end(); ++it)
+      cout<<dec<<it->first<<'\t'<<hex<<it->second<<'\n';
+    cout<<"F\n";
   }
   catch (File_Error e)
   {

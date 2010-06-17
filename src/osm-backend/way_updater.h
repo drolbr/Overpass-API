@@ -96,11 +96,12 @@ struct Way_Updater
     ways_to_insert.clear();
   }
   
-  void update_moved_idxs(const vector< pair< uint32, uint32 > >& moved_nodes,
+  void update_moved_idxs(vector< pair< uint32, uint32 > >& moved_nodes,
 			 vector< pair< uint32, uint32 > >& moved_ways)
   {
     ids_to_modify.clear();
     ways_to_insert.clear();
+    sort(moved_nodes.begin(), moved_nodes.end());
     
     map< uint32, vector< uint32 > > to_delete;
     find_affected_ways(moved_nodes);
@@ -276,7 +277,7 @@ private:
     }
     vector< Way >::const_iterator wit(ways_to_insert.begin());
     for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
-    it != ids_to_modify.end(); ++it)
+        it != ids_to_modify.end(); ++it)
     {
       if ((wit != ways_to_insert.end()) && (it->first == wit->id))
       {

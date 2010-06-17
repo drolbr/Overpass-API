@@ -19,12 +19,12 @@ struct Way
   
   Way() : id(0), index(0) {}
   
-  Way(uint32 id_, uint32 index_, const vector< uint32 >& nds_)
-  : id(id_), index(index_), nds(nds_) {}
-  
   Way(uint32 id_)
   : id(id_), index(0)
   {}
+  
+  Way(uint32 id_, uint32 index_, const vector< uint32 >& nds_)
+  : id(id_), index(index_), nds(nds_) {}
   
   static uint32 calc_index(const vector< uint32 >& nd_idxs)
   {

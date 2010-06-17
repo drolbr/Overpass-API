@@ -54,6 +54,7 @@ while [[ $I -le 10 ]]; do
   echo "  <member type=\"node\" ref=\"${I}45\"/>" >>$TEMP_DIR/apply_osc_test.osm
   echo "  <member type=\"node\" ref=\"${I}46\"/>" >>$TEMP_DIR/apply_osc_test.osm
   echo "  <member type=\"way\" ref=\"$I\"/>" >>$TEMP_DIR/apply_osc_test.osm
+  echo "  <tag k=\"5fold_id\" v=\"$(($I * 5))\"/>" >>$TEMP_DIR/apply_osc_test.osm
   echo "</relation>" >>$TEMP_DIR/apply_osc_test.osm
   I=$(($I + 1))
 };
@@ -104,6 +105,28 @@ echo -e "\
   <nd ref=\"747\"/>
   <nd ref=\"1047\"/>
 </way>
+<relation id=\"5\">
+  <member type=\"node\" ref=\"548\"/>
+  <member type=\"node\" ref=\"550\"/>
+  <member type=\"node\" ref=\"552\"/>
+  <member type=\"node\" ref=\"554\"/>
+</relation>
+<relation id=\"6\">
+  <member type=\"node\" ref=\"647\"/>
+  <member type=\"node\" ref=\"649\"/>
+  <member type=\"node\" ref=\"651\"/>
+  <member type=\"node\" ref=\"653\"/>
+</relation>
+<delete>
+  <relation id=\"7\"/>
+  <relation id=\"8\"/>
+</delete>
+<relation id=\"11\">
+  <member type=\"node\" ref=\"147\"/>
+  <member type=\"node\" ref=\"447\"/>
+  <member type=\"node\" ref=\"747\"/>
+  <member type=\"node\" ref=\"1047\"/>
+</relation>
 
 </osm-change>\
 " >$TEMP_DIR/osc/apply_osc_test.1.osc
@@ -140,6 +163,24 @@ echo -e "\
 </way>
 <delete>
   <way id=\"21\"/>
+</delete>
+<relation id=\"5\">
+  <member type=\"node\" ref=\"547\"/>
+  <member type=\"node\" ref=\"549\"/>
+  <member type=\"node\" ref=\"551\"/>
+  <member type=\"node\" ref=\"553\"/>
+</relation>
+<delete>
+  <relation id=\"6\"/>
+</delete>
+<relation id=\"7\">
+  <member type=\"node\" ref=\"747\"/>
+  <member type=\"node\" ref=\"749\"/>
+  <member type=\"node\" ref=\"751\"/>
+  <member type=\"node\" ref=\"753\"/>
+</relation>
+<delete>
+  <relation id=\"21\"/>
 </delete>
 
 </osm-change>\
