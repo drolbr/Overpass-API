@@ -79,6 +79,41 @@ struct Way_Updater
     cerr<<'w'<<' '<<time(NULL)<<' ';
   }
   
+  void update(vector< pair< uint32, uint32 > >& moved_ways)
+  {
+    map< uint32, vector< uint32 > > to_delete;
+    update_way_ids(to_delete, &moved_ways);
+    update_members(to_delete);
+
+    vector< Tag_Entry > tags_to_delete;
+    prepare_delete_tags(tags_to_delete, to_delete);
+    update_way_tags_local(tags_to_delete);
+    update_way_tags_global(tags_to_delete);
+
+    ids_to_modify.clear();
+    ways_to_insert.clear();
+  }
+  
+  void update_moved_idxs(const vector< pair< uint32, uint32 > >& moved_nodes,
+			 vector< pair< uint32, uint32 > >& moved_ways)
+  {
+    ids_to_modify.clear();
+    ways_to_insert.clear();
+    
+    map< uint32, vector< uint32 > > to_delete;
+    find_affected_ways(moved_nodes);
+    update_way_ids(to_delete, &moved_ways);
+    update_members(to_delete);
+
+    vector< Tag_Entry > tags_to_delete;
+    prepare_tags(tags_to_delete, to_delete);
+    update_way_tags_local(tags_to_delete);
+    update_way_tags_global(tags_to_delete);
+  
+    ids_to_modify.clear();
+    ways_to_insert.clear();
+  }
+  
 private:
   vector< pair< uint32, bool > > ids_to_modify;
   vector< Way > ways_to_insert;
@@ -88,7 +123,46 @@ private:
   static Pair_Equal_Id pair_equal_id;
   uint32 update_counter;
   
-  void update_way_ids(map< uint32, vector< uint32 > >& to_delete)
+  void find_affected_ways(const vector< pair< uint32, uint32 > >& moved_nodes)
+  {
+    set< Uint31_Index > req;
+    for (vector< pair< uint32, uint32 > >::const_iterator
+	 it(moved_nodes.begin()); it != moved_nodes.end(); ++it)
+    {
+      req.insert(Uint31_Index(it->second));
+      req.insert(Uint31_Index((it->second & 0x7fffff00) | 0x80000010));
+      req.insert(Uint31_Index((it->second & 0x7fff0000) | 0x80000020));
+      req.insert(Uint31_Index((it->second & 0x7f000000) | 0x80000030));
+    }
+    req.insert(Uint31_Index(0x80000040));
+    
+    Block_Backend< Uint31_Index, Way_Skeleton > ways_db
+	(*de_osm3s_file_ids::WAYS, false);
+    for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
+	 it(ways_db.discrete_begin(req.begin(), req.end()));
+	 !(it == ways_db.discrete_end()); ++it)
+    {
+      const Way_Skeleton& way(it.object());
+      bool is_affected(false);
+      for (vector< uint32 >::const_iterator it3(way.nds.begin());
+          it3 != way.nds.end(); ++it3)
+      {
+	if (binary_search(moved_nodes.begin(), moved_nodes.end(), *it3, pair_equal_id))
+	{
+	  is_affected.true();
+	  break;
+	}
+      }
+      if (is_affected)
+      {
+	ids_to_modify.push_back(make_pair(way.id, true));
+	ways_to_insert.push_back(Way(it.index(), way));
+      }
+    }
+  }
+  
+  void update_way_ids(map< uint32, vector< uint32 > >& to_delete,
+		      vector< pair< uint32, uint32 > >* moved_ways = 0)
   {
     // retrieve the indices of the referred nodes
     map< uint32, uint32 > used_nodes;
@@ -138,7 +212,12 @@ private:
       if ((wit != ways_to_insert.end()) && (it->first == wit->id))
       {
 	if (it->second)
+	{
 	  random.put(it->first, Uint31_Index(wit->index));
+	  if ((moved_ways != 0) && (index.val() > 0) &&
+		      (index.val() != wit->index))
+	    moved_ways->push_back(make_pair(it->first, index.val()));
+	}
 	++wit;
       }
     }
@@ -240,6 +319,72 @@ private:
       tags_to_delete.push_back(tag_entry);
   }
        
+  void prepare_tags
+      (vector< Tag_Entry >& tags_to_delete,
+       const map< uint32, vector< uint32 > >& to_delete)
+  {
+    // make indices appropriately coarse
+    map< uint32, set< uint32 > > to_delete_coarse;
+    for (map< uint32, vector< uint32 > >::const_iterator
+	 it(to_delete.begin()); it != to_delete.end(); ++it)
+    {
+      set< uint32 >& handle(to_delete_coarse[it->first & 0xffffff00]);
+      for (vector< uint32 >::const_iterator it2(it->second.begin());
+	   it2 != it->second.end(); ++it2)
+      {
+	handle.insert(*it2);
+      }
+    }
+    
+    // formulate range query
+    set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
+    for (map< uint32, set< uint32 > >::const_iterator
+	 it(to_delete_coarse.begin()); it != to_delete_coarse.end(); ++it)
+    {
+      Tag_Index_Local lower, upper;
+      lower.index = it->first;
+      lower.key = "";
+      lower.value = "";
+      upper.index = it->first + 1;
+      upper.key = "";
+      upper.value = "";
+      range_set.insert(make_pair(lower, upper));
+    }
+    
+    // iterate over the result
+    Block_Backend< Tag_Index_Local, Uint32_Index > ways_db
+	(*de_osm3s_file_ids::WAY_TAGS_LOCAL, true);
+    Tag_Index_Local current_index;
+    Tag_Entry tag_entry;
+    current_index.index = 0xffffffff;
+    for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
+	 it(ways_db.range_begin
+	     (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+	      Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+	 !(it == ways_db.range_end()); ++it)
+    {
+      if (!(current_index == it.index()))
+      {
+	if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
+	  tags_to_delete.push_back(tag_entry);
+	current_index = it.index();
+	tag_entry.index = it.index().index;
+	tag_entry.key = it.index().key;
+	tag_entry.value = it.index().value;
+	tag_entry.ids.clear();
+      }
+      
+      set< uint32 >& handle(to_delete_coarse[it.index().index]);
+      if (handle.find(it.object().val()) != handle.end())
+      {
+	//Way mit Tag ausstatten
+	tag_entry.ids.push_back(it.object().val());
+      }
+    }
+    if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
+      tags_to_delete.push_back(tag_entry);
+  }
+  
   void update_way_tags_local(const vector< Tag_Entry >& tags_to_delete)
   {
     map< Tag_Index_Local, set< Uint32_Index > > db_to_delete;

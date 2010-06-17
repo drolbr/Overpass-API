@@ -57,14 +57,24 @@ struct String_Object
 };
 
 struct Pair_Comparator_By_Id {
-  bool operator() (const pair< uint32, bool>& a, const pair< uint32, bool>& b)
+  bool operator() (const pair< uint32, bool >& a, const pair< uint32, bool >& b)
+  {
+    return (a.first < b.first);
+  }
+
+  bool operator() (const pair< uint32, uint32 >& a, const pair< uint32, uint32 >& b)
   {
     return (a.first < b.first);
   }
 };
 
 struct Pair_Equal_Id {
-  bool operator() (const pair< uint32, bool>& a, const pair< uint32, bool>& b)
+  bool operator() (const pair< uint32, bool >& a, const pair< uint32, bool >& b)
+  {
+    return (a.first == b.first);
+  }
+  
+  bool operator() (const pair< uint32, uint32 >& a, const pair< uint32, uint32 >& b)
   {
     return (a.first == b.first);
   }
