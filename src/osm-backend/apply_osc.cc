@@ -30,6 +30,7 @@ Way current_way;
 Relation_Updater relation_updater;
 Relation current_relation;
 vector< pair< uint32, uint32 > > moved_nodes;
+vector< pair< uint32, uint32 > > moved_ways;
 int state;
 const int IN_NODES = 1;
 const int IN_WAYS = 2;
@@ -148,7 +149,7 @@ void way_end(const char *el)
       way_updater.set_way(current_way);
     if (osm_element_count >= 4*1024*1024)
     {
-      way_updater.update();
+      way_updater.update(moved_ways);
       osm_element_count = 0;
     }
     current_way.id = 0;
@@ -312,6 +313,8 @@ int main(int argc, char* argv[])
       cout<<dec<<it->first<<'\t'<<hex<<it->second<<'\n';
     cout<<"B\n";
     
+    way_updater.update_moved_idxs(moved_nodes, moved_ways);
+    
     osm_element_count = 0;    
     it = source_file_names.begin();
     while (it != source_file_names.end())
@@ -337,7 +340,13 @@ int main(int argc, char* argv[])
       }
       ++it;
     }
-    way_updater.update();
+    way_updater.update(moved_ways);
+    
+    cout<<"C\n";
+    for (vector< pair< uint32, uint32 > >::const_iterator
+      it(moved_ways.begin()); it != moved_ways.end(); ++it)
+      cout<<dec<<it->first<<'\t'<<hex<<it->second<<'\n';
+    cout<<"D\n";
     
     osm_element_count = 0;    
     it = source_file_names.begin();

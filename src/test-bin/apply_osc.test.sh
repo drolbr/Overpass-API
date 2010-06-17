@@ -42,6 +42,7 @@ while [[ $I -le 10 ]]; do
     J=$(($J + 1))
   };
   done
+  echo "  <tag k=\"10fold_id\" v=\"$(($I * 10))\"/>" >>$TEMP_DIR/apply_osc_test.osm
   echo "</way>" >>$TEMP_DIR/apply_osc_test.osm
   I=$(($I + 1))
 };

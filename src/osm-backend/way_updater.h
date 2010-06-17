@@ -47,6 +47,7 @@ struct Way_Updater
     cerr<<'.'<<' '<<time(NULL)<<' ';
     
     map< uint32, vector< uint32 > > to_delete;
+    compute_indexes();
     update_way_ids(to_delete);
     update_members(to_delete);
 
@@ -82,6 +83,7 @@ struct Way_Updater
   void update(vector< pair< uint32, uint32 > >& moved_ways)
   {
     map< uint32, vector< uint32 > > to_delete;
+    compute_indexes();
     update_way_ids(to_delete, &moved_ways);
     update_members(to_delete);
 
@@ -108,7 +110,6 @@ struct Way_Updater
     vector< Tag_Entry > tags_to_delete;
     prepare_tags(tags_to_delete, to_delete);
     update_way_tags_local(tags_to_delete);
-    update_way_tags_global(tags_to_delete);
   
     ids_to_modify.clear();
     ways_to_insert.clear();
@@ -147,22 +148,53 @@ private:
       for (vector< uint32 >::const_iterator it3(way.nds.begin());
           it3 != way.nds.end(); ++it3)
       {
-	if (binary_search(moved_nodes.begin(), moved_nodes.end(), *it3, pair_equal_id))
+	if (binary_search(moved_nodes.begin(), moved_nodes.end(),
+	  make_pair(*it3, 0), pair_equal_id))
 	{
-	  is_affected.true();
+	  is_affected = true;
 	  break;
 	}
       }
       if (is_affected)
+	ways_to_insert.push_back(Way(way.id, it.index().val(), way.nds));
+    }
+
+    // retrieve the indices of the referred nodes
+    map< uint32, uint32 > used_nodes;
+    for (vector< Way >::const_iterator wit(ways_to_insert.begin());
+	 wit != ways_to_insert.end(); ++wit)
+    {
+      for (vector< uint32 >::const_iterator nit(wit->nds.begin());
+	   nit != wit->nds.end(); ++nit)
+	used_nodes[*nit] = 0;
+    }
+    Random_File< Uint32_Index > node_random(*de_osm3s_file_ids::NODES, false);
+    for (map< uint32, uint32 >::iterator it(used_nodes.begin());
+	 it != used_nodes.end(); ++it)
+      it->second = node_random.get(it->first).val();
+    vector< Way >::iterator wwit(ways_to_insert.begin());
+    for (vector< Way >::iterator wit(ways_to_insert.begin());
+	 wit != ways_to_insert.end(); ++wit)
+    {
+      vector< uint32 > nd_idxs;
+      for (vector< uint32 >::const_iterator nit(wit->nds.begin());
+	   nit != wit->nds.end(); ++nit)
+	nd_idxs.push_back(used_nodes[*nit]);
+      
+      uint32 index(Way::calc_index(nd_idxs));
+      if (wit != wwit)
+	*wwit = *wit;
+      if (wwit->index != index)
       {
-	ids_to_modify.push_back(make_pair(way.id, true));
-	ways_to_insert.push_back(Way(it.index(), way));
+	ids_to_modify.push_back(make_pair(wwit->id, true));
+	wwit->index = index;
+	++wwit;
       }
     }
+    ways_to_insert.erase(wwit, ways_to_insert.end());  
   }
   
-  void update_way_ids(map< uint32, vector< uint32 > >& to_delete,
-		      vector< pair< uint32, uint32 > >* moved_ways = 0)
+  void compute_indexes()
   {
     // retrieve the indices of the referred nodes
     map< uint32, uint32 > used_nodes;
@@ -177,6 +209,7 @@ private:
     for (map< uint32, uint32 >::iterator it(used_nodes.begin());
 	 it != used_nodes.end(); ++it)
       it->second = node_random.get(it->first).val();
+    vector< Way >::iterator wwit(ways_to_insert.begin());
     for (vector< Way >::iterator wit(ways_to_insert.begin());
 	 wit != ways_to_insert.end(); ++wit)
     {
@@ -184,9 +217,14 @@ private:
       for (vector< uint32 >::const_iterator nit(wit->nds.begin());
 	   nit != wit->nds.end(); ++nit)
 	nd_idxs.push_back(used_nodes[*nit]);
+      
       wit->index = Way::calc_index(nd_idxs);
     }
-    
+  }
+
+  void update_way_ids(map< uint32, vector< uint32 > >& to_delete,
+		      vector< pair< uint32, uint32 > >* moved_ways = 0)
+  {
     // process the ways itself
     // keep always the most recent (last) element of all equal elements
     stable_sort(ids_to_modify.begin(), ids_to_modify.end(),
@@ -377,7 +415,9 @@ private:
       set< uint32 >& handle(to_delete_coarse[it.index().index]);
       if (handle.find(it.object().val()) != handle.end())
       {
-	//Way mit Tag ausstatten
+	Way* way(binary_search_for_id(ways_to_insert, it.object().val()));
+	if (way != 0)
+	  way->tags.push_back(make_pair(it.index().key, it.index().value));
 	tag_entry.ids.push_back(it.object().val());
       }
     }
