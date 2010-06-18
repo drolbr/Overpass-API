@@ -82,6 +82,8 @@ struct Node_Updater
   
   void update(vector< pair< uint32, uint32 > >& moved_nodes)
   {
+    show_mem_status();
+    
     map< uint32, vector< uint32 > > to_delete;
     update_node_ids(to_delete, &moved_nodes);
     update_coords(to_delete);
@@ -90,6 +92,8 @@ struct Node_Updater
     prepare_delete_tags(tags_to_delete, to_delete);
     update_node_tags_local(tags_to_delete);
     update_node_tags_global(tags_to_delete);
+    
+    show_mem_status();
     
     ids_to_modify.clear();
     nodes_to_insert.clear();

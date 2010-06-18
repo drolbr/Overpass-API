@@ -90,6 +90,8 @@ struct Relation_Updater
   
   void update(vector< pair< uint32, uint32 > >& moved_relations)
   {
+    show_mem_status();
+    
     map< uint32, vector< uint32 > > to_delete;
     compute_indexes();
     update_rel_ids(to_delete, &moved_relations);
@@ -101,6 +103,8 @@ struct Relation_Updater
     update_rel_tags_global(tags_to_delete);
     flush_roles();
 
+    show_mem_status();
+    
     ids_to_modify.clear();
     rels_to_insert.clear();
   }
@@ -109,6 +113,8 @@ struct Relation_Updater
 			 vector< pair< uint32, uint32 > >& moved_ways,
 			 vector< pair< uint32, uint32 > >& moved_relations)
   {
+    show_mem_status();
+    
     ids_to_modify.clear();
     rels_to_insert.clear();
     sort(moved_nodes.begin(), moved_nodes.end());
@@ -124,6 +130,8 @@ struct Relation_Updater
     update_rel_tags_local(tags_to_delete);
     flush_roles();
 
+    show_mem_status();
+    
     ids_to_modify.clear();
     rels_to_insert.clear();
   }

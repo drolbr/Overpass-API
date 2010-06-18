@@ -24,6 +24,8 @@ struct de_osm3s_file_ids
 string get_basedir();
 void set_basedir(string basedir);
 
+void show_mem_status();
+
 //-----------------------------------------------------------------------------
 
 #endif

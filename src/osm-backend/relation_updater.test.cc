@@ -36,19 +36,19 @@ ofstream tags_source_out((get_basedir() + "tags_source.csv").c_str());
 
 uint32 osm_element_count;
 
-void show_mem_status()
-{
-  ostringstream proc_file_name_("");
-  proc_file_name_<<"/proc/"<<getpid()<<"/stat";
-  ifstream stat(proc_file_name_.str().c_str());
-  while (stat.good())
-  {
-    string line;
-    getline(stat, line);
-    cerr<<line;
-  }
-  cerr<<'\n';
-}
+// void show_mem_status()
+// {
+//   ostringstream proc_file_name_("");
+//   proc_file_name_<<"/proc/"<<getpid()<<"/stat";
+//   ifstream stat(proc_file_name_.str().c_str());
+//   while (stat.good())
+//   {
+//     string line;
+//     getline(stat, line);
+//     cerr<<line;
+//   }
+//   cerr<<'\n';
+// }
 
 void start(const char *el, const char **attr)
 {

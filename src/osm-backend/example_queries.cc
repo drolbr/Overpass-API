@@ -20,19 +20,19 @@ using namespace std;
  * Tests the library node_updater with a sample OSM file
  */
 
-void show_mem_status()
-{
-  ostringstream proc_file_name_("");
-  proc_file_name_<<"/proc/"<<getpid()<<"/stat";
-  ifstream stat(proc_file_name_.str().c_str());
-  while (stat.good())
-  {
-    string line;
-    getline(stat, line);
-    cerr<<line;
-  }
-  cerr<<'\n';
-}
+// void show_mem_status()
+// {
+//   ostringstream proc_file_name_("");
+//   proc_file_name_<<"/proc/"<<getpid()<<"/stat";
+//   ifstream stat(proc_file_name_.str().c_str());
+//   while (stat.good())
+//   {
+//     string line;
+//     getline(stat, line);
+//     cerr<<line;
+//   }
+//   cerr<<'\n';
+// }
 
 int main(int argc, char* args[])
 {

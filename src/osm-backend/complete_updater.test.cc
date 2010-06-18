@@ -42,19 +42,19 @@ ofstream* relation_tags_source_out;
 
 uint32 osm_element_count;
 
-void show_mem_status()
-{
-  ostringstream proc_file_name_("");
-  proc_file_name_<<"/proc/"<<getpid()<<"/stat";
-  ifstream stat(proc_file_name_.str().c_str());
-  while (stat.good())
-  {
-    string line;
-    getline(stat, line);
-    cerr<<line;
-  }
-  cerr<<'\n';
-}
+// void show_mem_status()
+// {
+//   ostringstream proc_file_name_("");
+//   proc_file_name_<<"/proc/"<<getpid()<<"/stat";
+//   ifstream stat(proc_file_name_.str().c_str());
+//   while (stat.good())
+//   {
+//     string line;
+//     getline(stat, line);
+//     cerr<<line;
+//   }
+//   cerr<<'\n';
+// }
 
 struct Ofstream_Collection
 {
@@ -495,8 +495,8 @@ int main(int argc, char* argv[])
       db_dir = ((string)argv[argpos]).substr(9);
       if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
 	db_dir += '/';
+      set_basedir(db_dir);
     }
-    set_basedir(db_dir);
     ++argpos;
   }
   

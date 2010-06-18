@@ -3,6 +3,13 @@
 #include <string>
 #include "settings.h"
 
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 struct Properties
 {
   string file_base_name;
@@ -84,4 +91,18 @@ string get_basedir()
 void set_basedir(string basedir)
 {
   base_directory = basedir;
+}
+
+void show_mem_status()
+{
+  ostringstream proc_file_name_("");
+  proc_file_name_<<"/proc/"<<getpid()<<"/stat";
+  ifstream stat(proc_file_name_.str().c_str());
+  while (stat.good())
+  {
+    string line;
+    getline(stat, line);
+    cerr<<line;
+  }
+  cerr<<'\n';
 }

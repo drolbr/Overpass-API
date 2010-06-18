@@ -82,16 +82,20 @@ struct Way_Updater
   
   void update(vector< pair< uint32, uint32 > >& moved_ways)
   {
+    show_mem_status();
+    
     map< uint32, vector< uint32 > > to_delete;
     compute_indexes();
     update_way_ids(to_delete, &moved_ways);
     update_members(to_delete);
-
+    
     vector< Tag_Entry > tags_to_delete;
     prepare_delete_tags(tags_to_delete, to_delete);
     update_way_tags_local(tags_to_delete);
     update_way_tags_global(tags_to_delete);
-
+    
+    show_mem_status();
+    
     ids_to_modify.clear();
     ways_to_insert.clear();
   }
@@ -99,19 +103,34 @@ struct Way_Updater
   void update_moved_idxs(vector< pair< uint32, uint32 > >& moved_nodes,
 			 vector< pair< uint32, uint32 > >& moved_ways)
   {
+    cerr<<"a) ";
+    show_mem_status();
+    
     ids_to_modify.clear();
     ways_to_insert.clear();
     sort(moved_nodes.begin(), moved_nodes.end());
+    cerr<<"b) ";
+    show_mem_status();
     
     map< uint32, vector< uint32 > > to_delete;
     find_affected_ways(moved_nodes);
+    cerr<<"c) ";
+    show_mem_status();
     update_way_ids(to_delete, &moved_ways);
+    cerr<<"d) ";
+    show_mem_status();
     update_members(to_delete);
-
+    cerr<<"e) ";
+    show_mem_status();
+    
     vector< Tag_Entry > tags_to_delete;
     prepare_tags(tags_to_delete, to_delete);
+    cerr<<"f) ";
+    show_mem_status();
     update_way_tags_local(tags_to_delete);
-  
+    cerr<<"g) ";
+    show_mem_status();
+    
     ids_to_modify.clear();
     ways_to_insert.clear();
   }
@@ -125,8 +144,43 @@ private:
   static Pair_Equal_Id pair_equal_id;
   uint32 update_counter;
   
+  void filter_affected_ways(const vector< Way >& maybe_affected_ways)
+  {
+    // retrieve the indices of the referred nodes
+    map< uint32, uint32 > used_nodes;
+    for (vector< Way >::const_iterator wit(maybe_affected_ways.begin());
+        wit != maybe_affected_ways.end(); ++wit)
+    {
+      for (vector< uint32 >::const_iterator nit(wit->nds.begin());
+          nit != wit->nds.end(); ++nit)
+        used_nodes[*nit] = 0;
+    }
+    Random_File< Uint32_Index > node_random(*de_osm3s_file_ids::NODES, false);
+    for (map< uint32, uint32 >::iterator it(used_nodes.begin());
+        it != used_nodes.end(); ++it)
+      it->second = node_random.get(it->first).val();
+    for (vector< Way >::const_iterator wit(maybe_affected_ways.begin());
+        wit != maybe_affected_ways.end(); ++wit)
+    {
+      vector< uint32 > nd_idxs;
+      for (vector< uint32 >::const_iterator nit(wit->nds.begin());
+          nit != wit->nds.end(); ++nit)
+        nd_idxs.push_back(used_nodes[*nit]);
+      
+      uint32 index(Way::calc_index(nd_idxs));
+      if (wit->index != index)
+      {
+	ids_to_modify.push_back(make_pair(wit->id, true));
+	ways_to_insert.push_back(*wit);
+	ways_to_insert.back().index = index;
+      }
+    }
+  }
+  
   void find_affected_ways(const vector< pair< uint32, uint32 > >& moved_nodes)
   {
+    vector< Way > maybe_affected_ways;
+    
     set< Uint31_Index > req;
     for (vector< pair< uint32, uint32 > >::const_iterator
 	 it(moved_nodes.begin()); it != moved_nodes.end(); ++it)
@@ -157,42 +211,16 @@ private:
 	}
       }
       if (is_affected)
-	ways_to_insert.push_back(Way(way.id, it.index().val(), way.nds));
-    }
-
-    // retrieve the indices of the referred nodes
-    map< uint32, uint32 > used_nodes;
-    for (vector< Way >::const_iterator wit(ways_to_insert.begin());
-	 wit != ways_to_insert.end(); ++wit)
-    {
-      for (vector< uint32 >::const_iterator nit(wit->nds.begin());
-	   nit != wit->nds.end(); ++nit)
-	used_nodes[*nit] = 0;
-    }
-    Random_File< Uint32_Index > node_random(*de_osm3s_file_ids::NODES, false);
-    for (map< uint32, uint32 >::iterator it(used_nodes.begin());
-	 it != used_nodes.end(); ++it)
-      it->second = node_random.get(it->first).val();
-    vector< Way >::iterator wwit(ways_to_insert.begin());
-    for (vector< Way >::iterator wit(ways_to_insert.begin());
-	 wit != ways_to_insert.end(); ++wit)
-    {
-      vector< uint32 > nd_idxs;
-      for (vector< uint32 >::const_iterator nit(wit->nds.begin());
-	   nit != wit->nds.end(); ++nit)
-	nd_idxs.push_back(used_nodes[*nit]);
-      
-      uint32 index(Way::calc_index(nd_idxs));
-      if (wit != wwit)
-	*wwit = *wit;
-      if (wwit->index != index)
+	maybe_affected_ways.push_back(Way(way.id, it.index().val(), way.nds));
+      if (maybe_affected_ways.size() >= 512*1024)
       {
-	ids_to_modify.push_back(make_pair(wwit->id, true));
-	wwit->index = index;
-	++wwit;
+	filter_affected_ways(maybe_affected_ways);
+	maybe_affected_ways.clear();
       }
     }
-    ways_to_insert.erase(wwit, ways_to_insert.end());  
+    
+    filter_affected_ways(maybe_affected_ways);
+    maybe_affected_ways.clear();
   }
   
   void compute_indexes()
