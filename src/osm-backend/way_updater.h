@@ -204,7 +204,7 @@ private:
           it3 != way.nds.end(); ++it3)
       {
 	if (binary_search(moved_nodes.begin(), moved_nodes.end(),
-	  make_pair(*it3, 0), pair_equal_id))
+	  make_pair(*it3, 0), pair_comparator_by_id))
 	{
 	  is_affected = true;
 	  break;

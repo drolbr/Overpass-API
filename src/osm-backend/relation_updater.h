@@ -183,7 +183,7 @@ private:
 	if (it3->type == Relation_Entry::NODE)
 	{
 	  if (binary_search(moved_nodes.begin(), moved_nodes.end(),
-	      make_pair(it3->ref, 0), pair_equal_id))
+	      make_pair(it3->ref, 0), pair_comparator_by_id))
 	  {
 	    is_affected = true;
 	    break;
@@ -192,7 +192,7 @@ private:
 	else if (it3->type == Relation_Entry::WAY)
 	{
 	  if (binary_search(moved_ways.begin(), moved_ways.end(),
-	      make_pair(it3->ref, 0), pair_equal_id))
+	      make_pair(it3->ref, 0), pair_comparator_by_id))
 	  {
 	    is_affected = true;
 	    break;
