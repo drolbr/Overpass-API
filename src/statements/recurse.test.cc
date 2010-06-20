@@ -10,9 +10,9 @@ using namespace std;
 
 int main(int argc, char* args[])
 {
-  Id_Query_Statement stmt_1(1, 101);
-  Recurse_Statement stmt_2(2, 102);
-  Print_Statement stmt_3(3, 103);
+  Id_Query_Statement stmt_1(1);
+  Recurse_Statement stmt_2(2);
+  Print_Statement stmt_3(3);
   
   map< string, Set > sets;
   

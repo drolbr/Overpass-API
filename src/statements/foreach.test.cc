@@ -11,11 +11,11 @@ using namespace std;
 
 int main(int argc, char* args[])
 {
-  Foreach_Statement stmt_1(1, 101), stmt_7(7, 107), stmt_12(12, 1012);
-  Print_Statement stmt_2(2, 102);
-  Query_Statement stmt_3(3, 103), stmt_5(5, 105), stmt_10(10, 1010);
-  Has_Key_Value_Statement stmt_4(4, 104), stmt_6(6, 106), stmt_11(11, 1011);
-  Recurse_Statement stmt_8(8, 108);
+  Foreach_Statement stmt_1(1), stmt_7(7), stmt_12(12);
+  Print_Statement stmt_2(2);
+  Query_Statement stmt_3(3), stmt_5(5), stmt_10(10);
+  Has_Key_Value_Statement stmt_4(4), stmt_6(6), stmt_11(11);
+  Recurse_Statement stmt_8(8);
   
   map< string, Set > sets;
   

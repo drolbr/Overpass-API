@@ -11,8 +11,8 @@ using namespace std;
 class Bbox_Query_Statement : public Statement
 {
   public:
-    Bbox_Query_Statement(int line_number_, int stmt_id_)
-      : Statement(line_number_, stmt_id_)/*, area_restriction(0),
+    Bbox_Query_Statement(int line_number_)
+      : Statement(line_number_)/*, area_restriction(0),
         bbox_restriction(0)*/ {}
     virtual void set_attributes(const char **attr);
     virtual string get_name() const { return "bbox-query"; }

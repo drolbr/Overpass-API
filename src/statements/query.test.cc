@@ -10,11 +10,11 @@ using namespace std;
 
 int main(int argc, char* args[])
 {
-  Query_Statement stmt_1(1, 101), stmt_3(3, 103), stmt_4(4, 104),
-      stmt_5(5, 105), stmt_6(6, 106);
-  Bbox_Query_Statement stmt_1b(12, 1012);
-  Has_Key_Value_Statement stmt_1a(11, 1011);
-  Print_Statement stmt_2(2, 102);
+  Query_Statement stmt_1(1), stmt_3(3), stmt_4(4),
+      stmt_5(5), stmt_6(6);
+  Bbox_Query_Statement stmt_1b(12);
+  Has_Key_Value_Statement stmt_1a(11);
+  Print_Statement stmt_2(2);
   
   map< string, Set > sets;
   

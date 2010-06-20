@@ -12,8 +12,8 @@ using namespace std;
 class Query_Statement : public Statement
 {
   public:
-    Query_Statement(int line_number_, int stmt_id_)
-      : Statement(line_number_, stmt_id_)/*, area_restriction(0)*/,
+    Query_Statement(int line_number_)
+      : Statement(line_number_)/*, area_restriction(0)*/,
         bbox_restriction(0) {}
     virtual void set_attributes(const char **attr);
     virtual void add_statement(Statement* statement, string text);
@@ -38,8 +38,7 @@ class Query_Statement : public Statement
 class Has_Key_Value_Statement : public Statement
 {
   public:
-    Has_Key_Value_Statement(int line_number_, int stmt_id_)
-      : Statement(line_number_, stmt_id_) {}
+    Has_Key_Value_Statement(int line_number_) : Statement(line_number_) {}
     virtual void set_attributes(const char **attr);
     virtual string get_name() const { return "has-kv"; }
     virtual string get_result_name() const { return ""; }

@@ -10,10 +10,10 @@ using namespace std;
 
 int main(int argc, char* args[])
 {
-  Union_Statement stmt_1(1, 101);
-  Print_Statement stmt_2(2, 102);
-  Query_Statement stmt_3(3, 103), stmt_5(5, 105), stmt_7(7, 107), stmt_9(9, 109), stmt_11(11, 111), stmt_13(13, 113);
-  Has_Key_Value_Statement stmt_4(4, 104), stmt_6(6, 106), stmt_8(8, 108), stmt_10(10, 110), stmt_12(12, 112), stmt_14(14, 114);
+  Union_Statement stmt_1(1);
+  Print_Statement stmt_2(2);
+  Query_Statement stmt_3(3), stmt_5(5), stmt_7(7), stmt_9(9), stmt_11(11), stmt_13(13);
+  Has_Key_Value_Statement stmt_4(4), stmt_6(6), stmt_8(8), stmt_10(10), stmt_12(12), stmt_14(14);
   
   map< string, Set > sets;
   

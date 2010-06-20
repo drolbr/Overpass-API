@@ -11,7 +11,7 @@ using namespace std;
 class Id_Query_Statement : public Statement
 {
   public:
-    Id_Query_Statement(int line_number_, int stmt_id_) : Statement(line_number_, stmt_id_) {}
+    Id_Query_Statement(int line_number_) : Statement(line_number_) {}
     virtual void set_attributes(const char **attr);
     virtual string get_name() const { return "id-query"; }
     virtual string get_result_name() const { return output; }

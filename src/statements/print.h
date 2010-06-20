@@ -11,7 +11,7 @@ using namespace std;
 class Print_Statement : public Statement
 {
   public:
-    Print_Statement(int line_number_, int stmt_id_) : Statement(line_number_, stmt_id_) {}
+    Print_Statement(int line_number_) : Statement(line_number_) {}
     virtual void set_attributes(const char **attr);
     virtual string get_name() const { return "print"; }
     virtual string get_result_name() const { return ""; }

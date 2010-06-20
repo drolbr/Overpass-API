@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "../core/datatypes.h"
+#include "../core/settings.h"
 
 using namespace std;
 
@@ -15,7 +16,7 @@ using namespace std;
 class Statement
 {
   public:
-    Statement(int line_number_, int stmt_id_) : line_number(line_number_), stmt_id(stmt_id_), stopwatches(14) {}
+    Statement(int line_number_) : line_number(line_number_), stopwatches(14) {}
     
     virtual void set_attributes(const char **attr) = 0;
     virtual void add_statement(Statement* statement, string text);
@@ -27,7 +28,6 @@ class Statement
     virtual ~Statement() {}
     
     int get_line_number() const { return line_number; }
-    int get_stmt_id() const { return stmt_id; }
     int get_startpos() const { return startpos; }
     void set_startpos(int pos) { startpos = pos; }
     int get_endpos() const { return endpos; }
@@ -44,6 +44,8 @@ class Statement
     static void substatement_error(string parent, Statement* child);
     static void reset_stmt_counter() { next_stmt_id = 0; }
     
+    static Statement* create_statement(string name);
+    
     const static int NODE = 1;
     const static int WAY = 2;
     const static int RELATION = 3;
@@ -52,7 +54,6 @@ class Statement
     static int next_stmt_id;
     
     int line_number;
-    int stmt_id;
     int startpos, endpos, tagendpos;
     
     double stopwatch;

@@ -11,7 +11,7 @@ using namespace std;
 class Recurse_Statement : public Statement
 {
   public:
-    Recurse_Statement(int line_number_, int stmt_id_) : Statement(line_number_, stmt_id_) {}
+    Recurse_Statement(int line_number_) : Statement(line_number_) {}
     virtual void set_attributes(const char **attr);
     virtual string get_name() const { return "recurse"; }
     virtual string get_result_name() const { return output; }

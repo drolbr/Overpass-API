@@ -7,7 +7,7 @@ using namespace std;
 
 int main(int argc, char* args[])
 {
-  Id_Query_Statement stmt_1(1, 101);
+  Id_Query_Statement stmt_1(1);
   map< string, Set > sets;
   
   {

@@ -9,8 +9,8 @@ using namespace std;
 
 int main(int argc, char* args[])
 {
-  Id_Query_Statement stmt_1(1, 101);
-  Print_Statement stmt_2(2, 102);
+  Id_Query_Statement stmt_1(1);
+  Print_Statement stmt_2(2);
   
   map< string, Set > sets, total_sets;
   
