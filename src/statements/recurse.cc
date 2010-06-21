@@ -58,7 +58,7 @@ void Recurse_Statement::set_attributes(const char **attr)
 	<<" the only allowed values are \"relation-relation\", \"relation-backwards\","
 	<<"\"relation-way\", \"relation-node\", \"way-node\", \"way-relation\","
 	<<"\"node-relation\" or \"node-way\".";
-    //add_static_error(temp.str());
+    add_static_error(temp.str());
   }
 }
 

@@ -43,7 +43,7 @@ void Query_Statement::set_attributes(const char **attr)
 	<<" the only allowed values are \"node\", \"way\" or \"relation\".";
 /*    temp<<"For the attribute \"type\" of the element \"query\""
 	<<" the only allowed values are \"node\", \"way\", \"relation\" or \"area\".";*/
-    //add_static_error(temp.str());
+    add_static_error(temp.str());
   }
 }
 
@@ -86,7 +86,7 @@ void Query_Statement::add_statement(Statement* statement, string text)
     {
       ostringstream temp;
       temp<<"A bbox-query as substatement is only allowed for queries of type \"node\".";
-      //add_static_error(temp.str());
+      add_static_error(temp.str());
       return;
     }
     if (/*(area_restriction != 0) || */(bbox_restriction != 0))
@@ -94,7 +94,7 @@ void Query_Statement::add_statement(Statement* statement, string text)
       ostringstream temp;
       temp<<"A query statement may contain at most one area-query or bbox-query "
 	  <<"as substatement.";
-      //add_static_error(temp.str());
+      add_static_error(temp.str());
       return;
     }
     bbox_restriction = bbox;
@@ -516,7 +516,7 @@ void Has_Key_Value_Statement::set_attributes(const char **attr)
     ostringstream temp("");
     temp<<"For the attribute \"k\" of the element \"has-kv\""
 	<<" the only allowed values are non-empty strings.";
-    //add_static_error(temp.str());
+    add_static_error(temp.str());
   }
 }
 

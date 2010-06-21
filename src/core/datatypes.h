@@ -222,4 +222,24 @@ struct Set
   map< Uint31_Index, vector< Relation_Skeleton > > relations;
 };
 
+struct Error_Output
+{
+  virtual void add_encoding_error(const string& error) = 0;
+  virtual void add_parse_error(const string& error, int line_number) = 0;
+  virtual void add_static_error(const string& error, int line_number) = 0;
+  // void add_sanity_error(const string& error);
+  
+  virtual void add_encoding_remark(const string& error) = 0;
+  virtual void add_parse_remark(const string& error, int line_number) = 0;
+  virtual void add_static_remark(const string& error, int line_number) = 0;
+  // void add_sanity_remark(const string& error);
+  
+  virtual void runtime_error(const string& error) = 0;
+  virtual void runtime_remark(const string& error) = 0;
+  
+  virtual bool display_encoding_errors() = 0;
+  virtual bool display_parse_errors() = 0;
+  virtual bool display_static_errors() = 0;
+};
+
 #endif

@@ -9,6 +9,7 @@
 #include "bbox_query.h"
 #include "foreach.h"
 #include "id_query.h"
+#include "osm_script.h"
 #include "print.h"
 #include "query.h"
 #include "recurse.h"
@@ -27,7 +28,7 @@ void Statement::eval_cstr_array(string element, map< string, string >& attribute
     {
       ostringstream temp;
       temp<<"Unknown attribute \""<<attr[i]<<"\" in element \""<<element<<"\".";
-      //add_static_error(temp.str());
+      add_static_error(temp.str());
     }
   }
 }
@@ -40,7 +41,7 @@ void Statement::assure_no_text(string text, string name)
     {
       ostringstream temp;
       temp<<"Element \""<<name<<"\" must not contain text.";
-      //add_static_error(temp.str());
+      add_static_error(temp.str());
       break;
     }
   }
@@ -50,7 +51,7 @@ void Statement::substatement_error(string parent, Statement* child)
 {
   ostringstream temp;
   temp<<"Element \""<<child->get_name()<<"\" cannot be subelement of element \""<<parent<<"\".";
-  //add_static_error(temp.str());
+  add_static_error(temp.str());
   
   delete child;
 }
@@ -117,7 +118,7 @@ void Statement::stopwatch_sum(const Statement* s)
     stopwatches[i] += s->stopwatches[i];
 }
 
-Statement::Statement* create_statement(string element, int line_number)
+Statement::Statement* Statement::create_statement(string element, int line_number)
 {
   /*if (element == "area-query")
     return new Area_Query_Statement();
@@ -139,6 +140,8 @@ Statement::Statement* create_statement(string element, int line_number)
     return new Item_Statement();*/
 /*  else if (element == "make-area")
     return new Make_Area_Statement();*/
+  else if (element == "osm-script")
+    return new Osm_Script_Statement(line_number);
   else if (element == "print")
     return new Print_Statement(line_number);
   else if (element == "query")
@@ -151,8 +154,23 @@ Statement::Statement* create_statement(string element, int line_number)
     return new Union_Statement(line_number);
   
   ostringstream temp;
-  temp<<"Unknown tag \""<<element<<"\" in line "<<line_number<<'!';
-  //add_static_error(temp.str());
+  temp<<"Unknown tag \""<<element<<"\" in line "<<line_number<<'.';
+  if (error_output)
+    error_output->add_static_error(temp.str(), line_number);
   
   return 0;
+}
+
+Error_Output* Statement::error_output = 0;
+
+void Statement::add_static_error(string error)
+{
+  if (error_output)
+    error_output->add_static_error(error, line_number);
+}
+
+void Statement::add_static_remark(string remark)
+{
+  if (error_output)
+    error_output->add_static_remark(remark, line_number);
 }

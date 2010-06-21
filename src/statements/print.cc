@@ -53,7 +53,7 @@ void Print_Statement::set_attributes(const char **attr)
     ostringstream temp;
     temp<<"For the attribute \"mode\" of the element \"print\""
 	<<" the only allowed values are \"ids_only\", \"skeleton\" or \"body\".";
-    //add_static_error(temp.str());
+    add_static_error(temp.str());
   }
   if (attributes["order"] == "id")
     order = ORDER_BY_ID;
@@ -64,8 +64,8 @@ void Print_Statement::set_attributes(const char **attr)
     order = 0;
     ostringstream temp;
     temp<<"For the attribute \"order\" of the element \"print\""
-    <<" the only allowed values are \"id\" or \"quadtile\".";
-    //add_static_error(temp.str());
+        <<" the only allowed values are \"id\" or \"quadtile\".";
+    add_static_error(temp.str());
   }
 }
 

@@ -35,70 +35,105 @@
 
 using namespace std;
 
-void (*working_start)(const char*, const char**);
-void (*working_end)(const char*);
-
-//for the XMLParser
-char Buff[BUFFSIZE];
-
-const uint MAXCOUNT = 1048576;
-uint counter(MAXCOUNT);
-
-static void XMLCALL
-expat_wrapper_start(void *data, const char *el, const char **attr)
+struct Parse_Error
 {
-//   if (--counter == 0)
-//   {
-//     cerr<<'.';
-//     counter = MAXCOUNT;
-//   }
+  Parse_Error(string s) : message(s) {}
+  string message;
+};
 
-  working_start(el, attr);
+struct Script_Parser
+{
+  Script_Parser() : p(XML_ParserCreate(NULL)), parser_online(true), counter(MAXCOUNT)
+  {
+    if (!p)
+      throw Parse_Error("Couldn't allocate memory for parser.");
+  }
   
-}
+  ~Script_Parser()
+  {
+    XML_ParserFree(p);
+  }
+  
+  void parse(const string& input,
+	void (*start)(const char*, const char**),
+	void (*end)(const char*))
+  {
+    working_start = start;
+    working_end = end;
+  
+    XML_SetElementHandler(p, expat_wrapper_start, expat_wrapper_end);
+    XML_SetCharacterDataHandler(p, expat_wrapper_text);
+    XML_SetUserData(p, this);
 
-static void XMLCALL
-expat_wrapper_end(void *data, const char *el)
-{
-  working_end(el);
-}
+    int done(0);
+    int len(input.size());
+    int pos(0);
+    while ((!done) && (pos < len))
+    {
+      int buff_len(len - pos);
+      if (buff_len > BUFFSIZE-1)
+        buff_len = BUFFSIZE-1;
+      strcpy(Buff, input.substr(pos, buff_len).c_str());
+      pos += buff_len;
+  
+      if (XML_Parse(p, Buff, buff_len, done) == XML_STATUS_ERROR)
+        throw Parse_Error(XML_ErrorString(XML_GetErrorCode(p)));
+    }
+
+    parser_online = false;
+  }
+
+  int current_line_number()
+  {
+    if (parser_online)
+      return (XML_GetCurrentLineNumber(p));
+    else
+      return -1;
+  }
+
+  static void XMLCALL expat_wrapper_start
+      (void *data, const char *el, const char **attr)
+  {
+    ((Script_Parser*)data)->working_start(el, attr);
+  }
+
+  static void XMLCALL expat_wrapper_end
+      (void *data, const char *el)
+  {
+    ((Script_Parser*)data)->working_end(el);
+  }
+
+  static void XMLCALL expat_wrapper_text
+      (void *userData, const XML_Char *s, int len)
+  {
+    ((Script_Parser*)userData)->result_buf.append(s, len);
+  }
+
+  string get_parsed_text()
+  {
+    return result_buf;
+  }
+
+  void reset_parsed_text()
+  {
+    result_buf = "";
+  }
+
+private:
+  XML_Parser p;
+  bool parser_online;  
+  string result_buf;
+
+  void (*working_start)(const char*, const char**);
+  void (*working_end)(const char*);
+  
+  //for the XMLParser
+  char Buff[BUFFSIZE];
+  
+  const static uint MAXCOUNT = 1048576;
+  uint counter;
+};
 
 void parse(FILE* in,
 	   void (*start)(const char*, const char**),
-	   void (*end)(const char*))
-{
-  working_start = start;
-  working_end = end;
-  
-  XML_Parser p = XML_ParserCreate(NULL);
-  if (! p) {
-    fprintf(stderr, "Couldn't allocate memory for parser\n");
-    exit(-1);
-  }
-
-  XML_SetElementHandler(p, expat_wrapper_start, expat_wrapper_end);
-
-  for (;;) {
-    int done;
-    int len;
-
-    len = (int)fread(Buff, 1, BUFFSIZE, in);
-    if (ferror(in)) {
-      fprintf(stderr, "Read error\n");
-      exit(-1);
-    }
-    done = feof(in);
-
-    if (XML_Parse(p, Buff, len, done) == XML_STATUS_ERROR) {
-      fprintf(stderr, "Parse error at line %" XML_FMT_INT_MOD "u:\n%s\n",
-	      XML_GetCurrentLineNumber(p),
-				       XML_ErrorString(XML_GetErrorCode(p)));
-      exit(-1);
-    }
-
-    if (done)
-      break;
-  }
-
-  XML_ParserFree(p);
-}
+	   void (*end)(const char*));

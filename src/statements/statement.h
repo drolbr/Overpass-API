@@ -37,21 +37,19 @@ class Statement
     
     void display_full();
     void display_starttag();
-    
-    static void eval_cstr_array
-	(string element, map< string, string >& attributes, const char **attr);
-    static void assure_no_text(string text, string name);
-    static void substatement_error(string parent, Statement* child);
-    static void reset_stmt_counter() { next_stmt_id = 0; }
-    
-    static Statement* create_statement(string name);
+        
+    static Statement* create_statement(string element, int line_number);
+    static void set_error_output(Error_Output* error_output_)
+    {
+      error_output = error_output_;
+    }
     
     const static int NODE = 1;
     const static int WAY = 2;
     const static int RELATION = 3;
     
   private:
-    static int next_stmt_id;
+    static Error_Output* error_output;
     
     int line_number;
     int startpos, endpos, tagendpos;
@@ -80,6 +78,14 @@ class Statement
     void stopwatch_stop(uint32 account);    
     void stopwatch_report() const;
     void stopwatch_sum(const Statement* s);
+    
+    void eval_cstr_array
+        (string element, map< string, string >& attributes, const char **attr);
+    void assure_no_text(string text, string name);
+    void substatement_error(string parent, Statement* child);
+    
+    void add_static_error(string error);
+    void add_static_remark(string remark);
 };
 
 #endif

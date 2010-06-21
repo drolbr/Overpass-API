@@ -31,7 +31,7 @@ void Id_Query_Statement::set_attributes(const char **attr)
     ostringstream temp;
     temp<<"For the attribute \"type\" of the element \"id-query\""
 	<<" the only allowed values are \"node\", \"way\" or \"relation\".";
-    //add_static_error(temp.str());
+    add_static_error(temp.str());
   }
   
   ref = (unsigned int)atol(attributes["ref"].c_str());
@@ -40,7 +40,7 @@ void Id_Query_Statement::set_attributes(const char **attr)
     ostringstream temp;
     temp<<"For the attribute \"ref\" of the element \"id-query\""
 	<<" the only allowed values are positive integers.";
-    //add_static_error(temp.str());
+    add_static_error(temp.str());
   }
 }
 

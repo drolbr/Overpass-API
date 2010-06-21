@@ -1,6 +1,10 @@
-bin_PROGRAMS = update_database apply_osc
+bin_PROGRAMS = update_database apply_osc osm3s_query
 
-update_database_SOURCES = ../osm-backend/update_database.cc ../core/settings.cc
+statements_cc = ../statements/statement.cc ../statements/bbox_query.cc ../statements/foreach.cc ../statements/id_query.cc ../statements/osm_script.cc ../statements/print.cc ../statements/query.cc ../statements/recurse.cc ../statements/union.cc 
+
+update_database_SOURCES = ../osm-backend/update_database.cc ../core/settings.cc ../expat/expat_justparse_interface.cc
 update_database_LDADD = -lexpat
-apply_osc_SOURCES = ../osm-backend/apply_osc.cc ../core/settings.cc
+apply_osc_SOURCES = ../osm-backend/apply_osc.cc ../core/settings.cc ../expat/expat_justparse_interface.cc
 apply_osc_LDADD = -lexpat
+osm3s_query_SOURCES = ../dispatch/osm3s_query.cc ${statements_cc} ../core/settings.cc ../frontend/console_output.cc ../frontend/cgi-helper.cc ../frontend/user_interface.cc ../expat/expat_justparse_interface.cc
+osm3s_query_LDADD = -lexpat -lrt

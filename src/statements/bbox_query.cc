@@ -35,7 +35,7 @@ void Bbox_Query_Statement::set_attributes(const char **attr)
     ostringstream temp;
     temp<<"For the attribute \"s\" of the element \"bbox-query\""
     <<" the only allowed values are floats between -90.0 and 90.0.";
-    //add_static_error(temp.str());
+    add_static_error(temp.str());
   }
   north = atof(attributes["n"].c_str());
   if ((north < -90.0) || (north > 90.0) || (attributes["n"] == ""))
@@ -43,7 +43,7 @@ void Bbox_Query_Statement::set_attributes(const char **attr)
     ostringstream temp;
     temp<<"For the attribute \"n\" of the element \"bbox-query\""
     <<" the only allowed values are floats between -90.0 and 90.0.";
-    //add_static_error(temp.str());
+    add_static_error(temp.str());
   }
   west = atof(attributes["w"].c_str());
   if ((west < -180.0) || (west > 180.0) || (attributes["w"] == ""))
@@ -51,7 +51,7 @@ void Bbox_Query_Statement::set_attributes(const char **attr)
     ostringstream temp;
     temp<<"For the attribute \"w\" of the element \"bbox-query\""
     <<" the only allowed values are floats between -180.0 and 180.0.";
-    //add_static_error(temp.str());
+    add_static_error(temp.str());
   }
   east = atof(attributes["e"].c_str());
   if ((east < -180.0) || (east > 180.0) || (attributes["e"] == ""))
@@ -59,7 +59,7 @@ void Bbox_Query_Statement::set_attributes(const char **attr)
     ostringstream temp;
     temp<<"For the attribute \"e\" of the element \"bbox-query\""
     <<" the only allowed values are floats between -180.0 and 180.0.";
-    //add_static_error(temp.str());
+    add_static_error(temp.str());
   }
 }
 
