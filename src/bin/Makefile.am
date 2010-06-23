@@ -1,4 +1,5 @@
 bin_PROGRAMS = update_database apply_osc osm3s_query
+dist_bin_SCRIPTS = apply_osc_to_db.sh
 
 statements_cc = ../statements/statement.cc ../statements/bbox_query.cc ../statements/foreach.cc ../statements/id_query.cc ../statements/osm_script.cc ../statements/print.cc ../statements/query.cc ../statements/recurse.cc ../statements/union.cc 
 
