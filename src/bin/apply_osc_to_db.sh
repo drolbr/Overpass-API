@@ -44,7 +44,7 @@ collect_minute_diffs()
 
 apply_minute_diffs()
 {
-  ./apply_osc --db-dir=$DB_DIR --osc-dir=$1
+  echo ./apply_osc --db-dir=$DB_DIR --osc-dir=$1
   EXITCODE=$?
   while [[ $EXITCODE -ne 0 ]];
   do
@@ -80,12 +80,12 @@ while [[ true ]]; do
   echo "`date '+%F %T'`: database is dirty" >>$DB_DIR/apply_osc_to_db.log
   echo "`date '+%F %T'`: updating from $START" >>$DB_DIR/apply_osc_to_db.log
 
-  mkdir /tmp/apply_osc_to_db.$START >>$DB_DIR/apply_osc_to_db.log
-  collect_minute_diffs /tmp/apply_osc_to_db.$START
+  TEMP_DIR=`mktemp -d`
+  collect_minute_diffs $TEMP_DIR
 
   echo "`date '+%F %T'`: updating to $TARGET" >>$DB_DIR/apply_osc_to_db.log
 
-  apply_minute_diffs /tmp/apply_osc_to_db.$START
+  apply_minute_diffs $TEMP_DIR
 
   echo "`date '+%F %T'`: update complete" $TARGET >>$DB_DIR/apply_osc_to_db.log
 
@@ -97,8 +97,8 @@ while [[ true ]]; do
 
   echo "`date '+%F %T'`: database is cleared" $TARGET >>$DB_DIR/apply_osc_to_db.log
 
-  rm /tmp/apply_osc_to_db.$START/*
-  rmdir /tmp/apply_osc_to_db.$START
+  rm -f $TEMP_DIR/*
+  rmdir $TEMP_DIR
 
   START=$TARGET
   TARGET=$(($START + 1))
