@@ -44,7 +44,7 @@ collect_minute_diffs()
 
 apply_minute_diffs()
 {
-  echo ./apply_osc --db-dir=$DB_DIR --osc-dir=$1
+  ./apply_osc --db-dir=$DB_DIR --osc-dir=$1
   EXITCODE=$?
   while [[ $EXITCODE -ne 0 ]];
   do

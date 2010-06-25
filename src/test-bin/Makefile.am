@@ -1,5 +1,5 @@
 testbindir = ${prefix}/test-bin
-testbin_PROGRAMS = file_blocks block_backend random_file node_updater way_updater relation_updater complete_updater diff_updater dump_database example_queries id_query print recurse query bbox_query foreach union benchmark
+testbin_PROGRAMS = file_blocks block_backend random_file node_updater way_updater relation_updater complete_updater diff_updater dump_database test_dispatcher example_queries id_query print recurse query bbox_query foreach union benchmark
 dist_testbin_SCRIPTS = apply_osc.test.sh
 
 statements_cc = ../statements/statement.cc ../statements/bbox_query.cc ../statements/foreach.cc ../statements/id_query.cc ../statements/osm_script.cc ../statements/print.cc ../statements/query.cc ../statements/recurse.cc ../statements/union.cc 
@@ -39,3 +39,5 @@ union_SOURCES = ../statements/union.test.cc ${statements_cc} ../core/settings.cc
 union_LDADD = -lrt
 benchmark_SOURCES = ../statements/benchmark.cc ${statements_cc} ../core/settings.cc
 benchmark_LDADD = -lrt
+test_dispatcher_SOURCES = ../dispatch/dispatcher.test.cc ../core/settings.cc
+test_dispatcher_LDADD = -lrt
