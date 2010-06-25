@@ -199,14 +199,14 @@ void poll_db_state(uint8* shm_ptr, const string& db_dir)
       cerr<<"Database 1 is clean but doesn't have a timestamp\n";
       exit(1);
     }
-    timestamp.getline(buf, 256);
+    timestamp.getline(buf, 255);
     string timestamp_s(buf);
     if (timestamp_s.find('=') != string::npos)
       timestamp_s = timestamp_s.substr(timestamp_s.find('=') + 1);
     while (timestamp_s.find('\\') != string::npos)
       timestamp_s = timestamp_s.substr(0, timestamp_s.find('\\'))
       + timestamp_s.substr(timestamp_s.find('\\') + 1);
-    memcpy(shm_ptr+OFFSET_DB_1+4, timestamp_s.data(), timestamp_s.size());
+    memcpy(shm_ptr+OFFSET_DB_1+4+1, timestamp_s.c_str(), timestamp_s.size()+1);
   }
   
   // query state of database 2
@@ -229,14 +229,14 @@ void poll_db_state(uint8* shm_ptr, const string& db_dir)
       cerr<<"Database 2 is clean but doesn't have a timestamp\n";
       exit(1);
     }
-    timestamp.getline(buf, 256);
+    timestamp.getline(buf, 255);
     string timestamp_s(buf);
     if (timestamp_s.find('=') != string::npos)
       timestamp_s = timestamp_s.substr(timestamp_s.find('=') + 1);
     while (timestamp_s.find('\\') != string::npos)
       timestamp_s = timestamp_s.substr(0, timestamp_s.find('\\'))
       + timestamp_s.substr(timestamp_s.find('\\') + 1);
-    memcpy(shm_ptr+OFFSET_DB_2+4, timestamp_s.data(), timestamp_s.size());
+    memcpy(shm_ptr+OFFSET_DB_2+4+1, timestamp_s.data(), timestamp_s.size()+1);
   }
 }
 

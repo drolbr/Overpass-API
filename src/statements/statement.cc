@@ -105,11 +105,8 @@ void Statement::stopwatch_stop(uint32 account)
 
 void Statement::stopwatch_report() const
 {
-  cout<<"Stopwatch "<<get_name();
-  for (vector< double >::const_iterator it(stopwatches.begin());
-      it != stopwatches.end(); ++it)
-    cout<<setprecision(3)<<fixed<<'\t'<<*it;
-  cout<<'\n';
+  if (error_output)
+    error_output->display_statement_stopwatch(get_name(), stopwatches);
 }
 
 void Statement::stopwatch_sum(const Statement* s)

@@ -308,12 +308,6 @@ int main(int argc, char* argv[])
     }
     node_updater.update(moved_nodes);
     
-    cout<<"A\n";
-    for (vector< pair< uint32, uint32 > >::const_iterator
-        it(moved_nodes.begin()); it != moved_nodes.end(); ++it)
-      cout<<dec<<it->first<<'\t'<<hex<<it->second<<'\n';
-    cout<<"B\n";
-    
     way_updater.update_moved_idxs(moved_nodes, moved_ways);
     
     osm_element_count = 0;    
@@ -343,12 +337,6 @@ int main(int argc, char* argv[])
     }
     way_updater.update(moved_ways);
     
-    cout<<"C\n";
-    for (vector< pair< uint32, uint32 > >::const_iterator
-        it(moved_ways.begin()); it != moved_ways.end(); ++it)
-      cout<<dec<<it->first<<'\t'<<hex<<it->second<<'\n';
-    cout<<"D\n";
-    
     relation_updater.update_moved_idxs(moved_nodes, moved_ways, moved_relations);
     
     osm_element_count = 0;    
@@ -377,12 +365,6 @@ int main(int argc, char* argv[])
       ++it;
     }
     relation_updater.update(moved_relations);
-    
-    cout<<"E\n";
-    for (vector< pair< uint32, uint32 > >::const_iterator
-        it(moved_relations.begin()); it != moved_relations.end(); ++it)
-      cout<<dec<<it->first<<'\t'<<hex<<it->second<<'\n';
-    cout<<"F\n";
   }
   catch (File_Error e)
   {

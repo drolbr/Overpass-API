@@ -103,32 +103,19 @@ struct Way_Updater
   void update_moved_idxs(vector< pair< uint32, uint32 > >& moved_nodes,
 			 vector< pair< uint32, uint32 > >& moved_ways)
   {
-    cerr<<"a) ";
-    show_mem_status();
-    
     ids_to_modify.clear();
     ways_to_insert.clear();
     sort(moved_nodes.begin(), moved_nodes.end());
-    cerr<<"b) ";
-    show_mem_status();
     
     map< uint32, vector< uint32 > > to_delete;
     find_affected_ways(moved_nodes);
-    cerr<<"c) ";
-    show_mem_status();
     update_way_ids(to_delete, &moved_ways);
-    cerr<<"d) ";
-    show_mem_status();
     update_members(to_delete);
-    cerr<<"e) ";
-    show_mem_status();
     
     vector< Tag_Entry > tags_to_delete;
     prepare_tags(tags_to_delete, to_delete);
-    cerr<<"f) ";
-    show_mem_status();
     update_way_tags_local(tags_to_delete);
-    cerr<<"g) ";
+    
     show_mem_status();
     
     ids_to_modify.clear();
