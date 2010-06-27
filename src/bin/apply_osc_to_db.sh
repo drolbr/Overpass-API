@@ -85,7 +85,14 @@ while [[ true ]]; do
 
   echo "`date '+%F %T'`: updating to $TARGET" >>$DB_DIR/apply_osc_to_db.log
 
-  apply_minute_diffs $TEMP_DIR
+  if [[ $TARGET -gt $START ]]; then
+  {
+    apply_minute_diffs $TEMP_DIR
+  };
+  else
+  {
+    sleep 30
+  }; fi
 
   echo "`date '+%F %T'`: update complete" $TARGET >>$DB_DIR/apply_osc_to_db.log
 

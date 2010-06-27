@@ -9,10 +9,12 @@ ARG_6=`echo $QUERY_STRING | awk -F [=,\&] '{ print $6; }'`
 ARG_7=`echo $QUERY_STRING | awk -F [=,\&] '{ print $7; }'`
 ARG_8=`echo $QUERY_STRING | awk -F [=,\&] '{ print $8; }'`
 
-if [[ $ARG_2 == "backspace" ]]; then
+BASEDIR=`mktemp -d`
+
+if [[ ( $ARG_2 == "backspace" ) || ($ARG_2 == "backtime") || ($ARG_2 == "debug") ]]; then
 {
 echo -e "\
-<osm-script timeout=\"180\" element-limit=\"10000000\"> \
+<osm-script> \
  \
 <union> \
   <id-query type=\"relation\" ref=\"$ARG_1\"/> \
@@ -21,26 +23,12 @@ echo -e "\
 <print mode=\"body\"/> \
  \
 </osm-script> \
-" >/tmp/nodes_csv_req
-};
-elif [[ $ARG_2 == "backtime" ]]; then
-{
-echo -e "\
-<osm-script timeout=\"180\" element-limit=\"10000000\"> \
- \
-<union> \
-  <id-query type=\"relation\" ref=\"$ARG_1\"/> \
-  <recurse type=\"relation-node\"/> \
-</union> \
-<print mode=\"body\"/> \
- \
-</osm-script> \
-" >/tmp/nodes_csv_req
+" >$BASEDIR/req
 };
 elif [[ -n $ARG_2 ]]; then
 {
 echo -e "\
-<osm-script timeout=\"180\" element-limit=\"10000000\"> \
+<osm-script> \
  \
 <union> \
   <union> \
@@ -52,12 +40,12 @@ echo -e "\
 <print mode=\"body\"/> \
  \
 </osm-script> \
-" >/tmp/nodes_csv_req
+" >$BASEDIR/req
 };
 else
 {
 echo -e "\
-<osm-script timeout=\"180\" element-limit=\"10000000\"> \
+<osm-script> \
  \
 <union> \
   <id-query type=\"relation\" ref=\"$ARG_1\"/> \
@@ -66,34 +54,52 @@ echo -e "\
 <print mode=\"body\"/> \
  \
 </osm-script> \
-" >/tmp/nodes_csv_req
+" >$BASEDIR/req
 };
 fi
+
+# REQUEST_METHOD=
+# /home/roland/osm-3s/cgi-bin/interpreter </tmp/nodes_csv_req >/tmp/nodes_csv_result.1
+# RESPONSE_TYPE=`head -n 1 </tmp/nodes_csv_result.1`
+# if [[ $RESPONSE_TYPE != "Content-type: application/osm3s" ]]; then
+# {
+#   cat </tmp/nodes_csv_result.1
+#   exit 0
+# };
+# fi
+# dd if=/tmp/nodes_csv_result.1 of=/tmp/nodes_csv_result.2 bs=1 skip=56
 
 REQUEST_METHOD=
-/home/roland/osm-3s/cgi-bin/interpreter </tmp/nodes_csv_req >/tmp/nodes_csv_result.1
-RESPONSE_TYPE=`head -n 1 </tmp/nodes_csv_result.1`
-if [[ $RESPONSE_TYPE != "Content-type: application/osm3s" ]]; then
-{
-  cat </tmp/nodes_csv_result.1
-  exit 0
-};
-fi
-dd if=/tmp/nodes_csv_result.1 of=/tmp/nodes_csv_result.2 bs=1 skip=56
-
-echo "Content-Type: image/svg+xml; charset=utf-8"
-echo
+/home/roland/osm-3s/build/bin/osm3s_query --quiet --no-mime <$BASEDIR/req >$BASEDIR/result
 
 if [[ $ARG_2 == "backspace" ]]; then
 {
-  gunzip </tmp/nodes_csv_result.2 | ../bin/sketch-route-svg --backspace
+  echo "Content-Type: image/svg+xml; charset=utf-8"
+  echo
+
+  #gunzip </tmp/nodes_csv_result.2 | ../bin/sketch-route-svg --backspace
+  ../bin/sketch-route-svg --backspace <$BASEDIR/result
 };
 elif [[ $ARG_2 == "backtime" ]]; then
 {
-  gunzip </tmp/nodes_csv_result.2 | ../bin/sketch-route-svg --backtime
+  echo "Content-Type: image/svg+xml; charset=utf-8"
+  echo
+
+  #gunzip </tmp/nodes_csv_result.2 | ../bin/sketch-route-svg --backtime
+  ../bin/sketch-route-svg --backtime <$BASEDIR/result
+};
+elif [[ ($ARG_2 == "debug") || ($ARG_3 == "debug") ]]; then
+{
+  echo "Content-Type: text/plain"
+  echo
+  cat <$BASEDIR/result
 };
 else
 {
-  gunzip </tmp/nodes_csv_result.2 | ../bin/sketch-route-svg
+  echo "Content-Type: image/svg+xml; charset=utf-8"
+  echo
+
+  #gunzip </tmp/nodes_csv_result.2 | ../bin/sketch-route-svg
+  ../bin/sketch-route-svg <$BASEDIR/result
 };
 fi

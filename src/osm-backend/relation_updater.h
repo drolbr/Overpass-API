@@ -29,6 +29,7 @@ struct Relation_Updater
       if (max_role_id <= it.index().val())
 	max_role_id = it.index().val()+1;
     }
+    cerr<<"max_role_id on load "<<max_role_id<<'\n';
     max_written_role_id = max_role_id;
   }
   
@@ -58,10 +59,15 @@ struct Relation_Updater
   
   uint32 get_role_id(const string& s)
   {
+/*    cerr<<'('<<s<<") ";*/
     map< string, uint32 >::const_iterator it(role_ids.find(s));
     if (it != role_ids.end())
+    {
+/*      cerr<<it->second<<'\n';*/
       return it->second;
+    }
     role_ids[s] = max_role_id;
+/*    cerr<<max_role_id<<'\n';*/
     ++max_role_id;
     return (max_role_id - 1);
   }
@@ -596,20 +602,25 @@ private:
 
   void flush_roles()
   {
+    cerr<<"max_role_id "<<max_role_id<<'\n'
+        <<"max_written_role_id "<<max_written_role_id<<'\n';
     map< Uint32_Index, set< String_Object > > db_to_delete;
     map< Uint32_Index, set< String_Object > > db_to_insert;
     
     for (map< string, uint32 >::const_iterator it(role_ids.begin());
-    it != role_ids.end(); ++it)
+        it != role_ids.end(); ++it)
     {
       if (it->second >= max_written_role_id)
 	db_to_insert[Uint32_Index(it->second)].insert
-	(String_Object(it->first));
+	  (String_Object(it->first));
+      if (it->second >= max_role_id)
+	max_role_id = it->second + 1;
     }
     
     Block_Backend< Uint32_Index, String_Object > roles_db
-    (*de_osm3s_file_ids::RELATION_ROLES, true);
+        (*de_osm3s_file_ids::RELATION_ROLES, true);
     roles_db.update(db_to_delete, db_to_insert);
+    max_written_role_id = max_role_id;
   }
 };
 

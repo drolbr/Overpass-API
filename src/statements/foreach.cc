@@ -28,13 +28,14 @@ void Foreach_Statement::add_statement(Statement* statement, string text)
 {
   assure_no_text(text, this->get_name());
   
-  if ((statement->get_name() == "union") ||
+  if ((statement->get_name() == "bbox-query") ||
+       (statement->get_name() == "foreach") ||
        (statement->get_name() == "id-query") ||
+       (statement->get_name() == "item") ||
+       (statement->get_name() == "print") ||
        (statement->get_name() == "query") ||
        (statement->get_name() == "recurse") ||
-       (statement->get_name() == "foreach") ||
-       (statement->get_name() == "bbox-query") ||
-       (statement->get_name() == "print")/* ||
+       (statement->get_name() == "union")/* ||
        (statement->get_name() == "make-area") ||
        (statement->get_name() == "coord-query") ||
        (statement->get_name() == "area-query") ||

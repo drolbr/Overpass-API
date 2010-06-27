@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
   }
   brim = brim/1000.0/40000.0*360.0;
   
-  cout<<"<osm-script timeout=\"180\" element-limit=\"10000000\">\n"
+  cout<<"<osm-script>\n"
       <<"\n"
       <<"<union>\n";
   
@@ -165,8 +165,9 @@ int main(int argc, char *argv[])
   parse(stdin, start, end);
   
   cout<<"</union>\n"
+      <<"<print mode=\"body\"/>\n"
       <<"<union>\n"
-      <<"  <item/>\n"
+      //<<"  <item/>\n"
       <<"  <recurse type=\"node-relation\"/>\n"
       <<"</union>\n"
       <<"<print mode=\"body\"/>\n"

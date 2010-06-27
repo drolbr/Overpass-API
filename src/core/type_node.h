@@ -89,9 +89,9 @@ struct Node
       ranges = calc_ranges(south, north, west, 180.0);
       west = -180.0;
     }
-    for (int i(0); 65536.0/10000000.0*i <= north - south; ++i)
+    for (int i(0); 65536.0/10000000.0*(i-1) < north - south; ++i)
     {
-      for (int j(0); 65536.0/10000000.0*j <= east - west; ++j)
+      for (int j(0); 65536.0/10000000.0*(j-1) < east - west; ++j)
       {
 	pair< uint32, uint32 > range;
 	range.first = Node::ll_upper

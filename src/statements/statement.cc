@@ -9,6 +9,7 @@
 #include "bbox_query.h"
 #include "foreach.h"
 #include "id_query.h"
+#include "item.h"
 #include "osm_script.h"
 #include "print.h"
 #include "query.h"
@@ -133,8 +134,8 @@ Statement::Statement* Statement::create_statement(string element, int line_numbe
     return new Has_Key_Value_Statement(line_number);
   else if (element == "id-query")
     return new Id_Query_Statement(line_number);
-/*  else if (element == "item")
-    return new Item_Statement();*/
+  else if (element == "item")
+    return new Item_Statement(line_number);
 /*  else if (element == "make-area")
     return new Make_Area_Statement();*/
   else if (element == "osm-script")

@@ -52,7 +52,7 @@ done
 BASEDIR=`mktemp -d`
 
 echo -e "\
-data=<osm-script timeout=\"180\" element-limit=\"10000000\"> \
+data=<osm-script> \
  \
 <union> \
   <query type=\"relation\"> \
@@ -81,15 +81,17 @@ CORRESPONDENCES=`../bin/bbox-brim-query --only-corrs $BRIM_PARAMS`
 if [[ $CORRESPONDENCES -gt 0 ]]; then
 {
   REQUEST_METHOD=
-  /home/roland/osm-3s/cgi-bin/interpreter <$BASEDIR/request.1 >$BASEDIR/answer.1
-  RESPONSE_TYPE=`head -n 1 <$BASEDIR/answer.1`
-  if [[ $RESPONSE_TYPE != "Content-type: application/osm3s" ]]; then
-  {
-    cat <$BASEDIR/answer.1
-    exit 0
-  };
-  fi
-  dd if=$BASEDIR/answer.1 of=$BASEDIR/answer.2 bs=1 skip=56
+  /home/roland/osm-3s/build/bin/osm3s_query --quiet --no-mime <$BASEDIR/request.1 >$BASEDIR/answer.1
+  gzip <$BASEDIR/answer.1 >$BASEDIR/answer.2
+  #/home/roland/osm-3s/cgi-bin/interpreter <$BASEDIR/request.1 >$BASEDIR/answer.1
+  #RESPONSE_TYPE=`head -n 1 <$BASEDIR/answer.1`
+  #if [[ $RESPONSE_TYPE != "Content-type: application/osm3s" ]]; then
+  #{
+  #  cat <$BASEDIR/answer.1
+  #  exit 0
+  #};
+  #fi
+  #dd if=$BASEDIR/answer.1 of=$BASEDIR/answer.2 bs=1 skip=56
   gunzip <$BASEDIR/answer.2 | ../bin/bbox-brim-query $BRIM_PARAMS >$BASEDIR/request.2
 
   if [[ $DEBUG == "full-query" ]]; then
@@ -104,15 +106,17 @@ if [[ $CORRESPONDENCES -gt 0 ]]; then
   fi
 
   REQUEST_METHOD=
-  /home/roland/osm-3s/cgi-bin/interpreter <$BASEDIR/request.2 >$BASEDIR/answer.3
-  RESPONSE_TYPE=`head -n 1 <$BASEDIR/answer.3`
-  if [[ $RESPONSE_TYPE != "Content-type: application/osm3s" ]]; then
-  {
-    cat <$BASEDIR/answer.3
-    exit 0
-  };
-  fi
-  dd if=$BASEDIR/answer.3 of=$BASEDIR/answer.4 bs=1 skip=56
+  /home/roland/osm-3s/build/bin/osm3s_query --quiet --no-mime <$BASEDIR/request.2 >$BASEDIR/answer.3
+  gzip <$BASEDIR/answer.3 >$BASEDIR/answer.4
+  #/home/roland/osm-3s/cgi-bin/interpreter <$BASEDIR/request.2 >$BASEDIR/answer.3
+  #RESPONSE_TYPE=`head -n 1 <$BASEDIR/answer.3`
+  #if [[ $RESPONSE_TYPE != "Content-type: application/osm3s" ]]; then
+  #{
+  #  cat <$BASEDIR/answer.3
+  #  exit 0
+  #};
+  #fi
+  #dd if=$BASEDIR/answer.3 of=$BASEDIR/answer.4 bs=1 skip=56
 
   echo "Content-Type: image/svg+xml; charset=utf-8"
   echo
@@ -131,15 +135,17 @@ if [[ $CORRESPONDENCES -gt 0 ]]; then
 else
 {
   REQUEST_METHOD=
-  /home/roland/osm-3s/cgi-bin/interpreter <$BASEDIR/request.1 >$BASEDIR/answer.1
-  RESPONSE_TYPE=`head -n 1 <$BASEDIR/answer.1`
-  if [[ $RESPONSE_TYPE != "Content-type: application/osm3s" ]]; then
-  {
-    cat <$BASEDIR/answer.1
-    exit 0
-  };
-  fi
-  dd if=$BASEDIR/answer.1 of=$BASEDIR/answer.2 bs=1 skip=56
+  /home/roland/osm-3s/build/bin/osm3s_query --quiet --no-mime <$BASEDIR/request.1 >$BASEDIR/answer.1
+  gzip <$BASEDIR/answer.1 >$BASEDIR/answer.2
+  #/home/roland/osm-3s/cgi-bin/interpreter <$BASEDIR/request.1 >$BASEDIR/answer.1
+  #RESPONSE_TYPE=`head -n 1 <$BASEDIR/answer.1`
+  #if [[ $RESPONSE_TYPE != "Content-type: application/osm3s" ]]; then
+  #{
+  #  cat <$BASEDIR/answer.1
+  #  exit 0
+  #};
+  #fi
+  #dd if=$BASEDIR/answer.1 of=$BASEDIR/answer.2 bs=1 skip=56
 
   if [[ $DEBUG == "full-query" ]]; then
   {
