@@ -93,6 +93,8 @@ while [[ true ]]; do
   {
     sleep 30
   }; fi
+  mkdir $DB_DIR/$TARGET
+  cp $DB_DIR/relation_roles.* $DB_DIR/$TARGET
 
   echo "`date '+%F %T'`: update complete" $TARGET >>$DB_DIR/apply_osc_to_db.log
 

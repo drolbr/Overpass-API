@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <iostream> //DEBUG
 #include <list>
 #include <vector>
 
@@ -453,6 +454,8 @@ public:
     block_count = lseek64(data_fd, 0, SEEK_END)/block_size;
     vector< bool > is_referred(block_count, false);
 
+    cerr<<"open "<<data_file_name.c_str()<<' '<<block_count<<'\n';
+    
     // open index file
     if (writeable)
       index_fd = open64
