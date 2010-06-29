@@ -1172,6 +1172,8 @@ void start(const char *el, const char **attr)
       is_stop = true;
     if ((key == "railway") && (value == "station"))
       is_stop = true;
+    if ((key == "public_transport") && (value == "stop_position"))
+      is_stop = true;
     if ((key == "route") && (value == "bus"))
       is_route = true;
     if ((key == "route") && (value == "tram"))

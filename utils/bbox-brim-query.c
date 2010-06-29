@@ -66,6 +66,12 @@ void start(const char *el, const char **attr)
 	<<"n=\""<<setprecision(14)<<lat + brim<<"\" s=\""<<setprecision(14)<<lat - brim<<"\" "
 	<<"w=\""<<setprecision(14)<<lon - brim/cos(lat/180.0*PI)<<"\" e=\""<<setprecision(14)<<lon + brim/cos(lat/180.0*PI)<<"\"/>\n"
 	<<"    <has-kv k=\"highway\"/>\n"
+	<<"  </query>\n"
+	<<"  <query type=\"node\">\n"
+	<<"    <bbox-query "
+	<<"n=\""<<setprecision(14)<<lat + brim<<"\" s=\""<<setprecision(14)<<lat - brim<<"\" "
+	<<"w=\""<<setprecision(14)<<lon - brim/cos(lat/180.0*PI)<<"\" e=\""<<setprecision(14)<<lon + brim/cos(lat/180.0*PI)<<"\"/>\n"
+	<<"    <has-kv k=\"public_transport\"/>\n"
 	<<"  </query>\n";
     for (vector< Display_Class >::const_iterator it(display_classes.begin());
         it != display_classes.end(); ++it)

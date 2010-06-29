@@ -28,7 +28,7 @@ collect_minute_diffs()
 
   get_replicate_filename
 
-  while [[ ( -s $REPLICATE_FILENAME.osc.gz ) && ( $(($START + 720)) -ge $(($TARGET)) ) ]];
+  while [[ ( -s $REPLICATE_FILENAME.state.txt ) && ( $(($START + 720)) -ge $(($TARGET)) ) ]];
   do
   {
     printf -v TARGET_FILE %09u $TARGET
@@ -93,8 +93,6 @@ while [[ true ]]; do
   {
     sleep 30
   }; fi
-  mkdir $DB_DIR/$TARGET
-  cp $DB_DIR/relation_roles.* $DB_DIR/$TARGET
 
   echo "`date '+%F %T'`: update complete" $TARGET >>$DB_DIR/apply_osc_to_db.log
 
