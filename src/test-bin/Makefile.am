@@ -1,8 +1,8 @@
 testbindir = ${prefix}/test-bin
-testbin_PROGRAMS = file_blocks block_backend random_file node_updater way_updater relation_updater complete_updater diff_updater dump_database test_dispatcher example_queries id_query print recurse query bbox_query foreach union benchmark
+testbin_PROGRAMS = file_blocks block_backend random_file node_updater way_updater relation_updater complete_updater diff_updater dump_database test_dispatcher example_queries id_query print recurse query bbox_query foreach union make_area benchmark
 dist_testbin_SCRIPTS = apply_osc.test.sh
 
-statements_cc = ../statements/statement.cc ../statements/bbox_query.cc ../statements/foreach.cc ../statements/id_query.cc ../statements/item.cc ../statements/osm_script.cc ../statements/print.cc ../statements/query.cc ../statements/recurse.cc ../statements/union.cc 
+statements_cc = ../statements/statement.cc ../statements/bbox_query.cc ../statements/foreach.cc ../statements/id_query.cc ../statements/item.cc  ../statements/make_area.cc ../statements/osm_script.cc ../statements/print.cc ../statements/query.cc ../statements/recurse.cc ../statements/union.cc 
 
 file_blocks_SOURCES = ../backend/file_blocks.test.cc
 block_backend_SOURCES = ../backend/block_backend.test.cc
@@ -29,6 +29,8 @@ foreach_SOURCES = ../statements/foreach.test.cc ${statements_cc} ../core/setting
 foreach_LDADD = -lrt
 id_query_SOURCES = ../statements/id_query.test.cc ${statements_cc} ../core/settings.cc
 id_query_LDADD = -lrt
+make_area_SOURCES = ../statements/make_area.test.cc ${statements_cc} ../core/settings.cc ../frontend/console_output.cc
+make_area_LDADD = -lrt
 print_SOURCES = ../statements/print.test.cc ${statements_cc} ../core/settings.cc
 print_LDADD = -lrt
 query_SOURCES = ../statements/query.test.cc ${statements_cc} ../core/settings.cc

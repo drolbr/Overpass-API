@@ -10,6 +10,7 @@
 #include "type_node.h"
 #include "type_way.h"
 #include "type_relation.h"
+#include "type_area.h"
 
 using namespace std;
 

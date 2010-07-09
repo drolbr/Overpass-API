@@ -1,7 +1,7 @@
 bin_PROGRAMS = update_database apply_osc osm3s_query dispatcher
 dist_bin_SCRIPTS = apply_osc_to_db.sh
 
-statements_cc = ../statements/statement.cc ../statements/bbox_query.cc ../statements/foreach.cc ../statements/id_query.cc ../statements/item.cc ../statements/osm_script.cc ../statements/print.cc ../statements/query.cc ../statements/recurse.cc ../statements/union.cc 
+statements_cc = ../statements/statement.cc ../statements/bbox_query.cc ../statements/foreach.cc ../statements/id_query.cc ../statements/item.cc ../statements/make_area.cc ../statements/osm_script.cc ../statements/print.cc ../statements/query.cc ../statements/recurse.cc ../statements/union.cc 
 
 update_database_SOURCES = ../osm-backend/update_database.cc ../core/settings.cc ../expat/expat_justparse_interface.cc
 update_database_LDADD = -lexpat

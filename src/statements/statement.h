@@ -86,6 +86,8 @@ class Statement
     
     void add_static_error(string error);
     void add_static_remark(string remark);
+
+    void runtime_remark(string error);
 };
 
 #endif

@@ -172,3 +172,9 @@ void Statement::add_static_remark(string remark)
   if (error_output)
     error_output->add_static_remark(remark, line_number);
 }
+
+void Statement::runtime_remark(string error)
+{
+  if (error_output)
+    error_output->runtime_remark(error);
+}
