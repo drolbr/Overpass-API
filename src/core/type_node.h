@@ -2,6 +2,7 @@
 #define TYPE_NODE_DEFINED
 
 #include <cstring>
+#include <iostream> //DEBUG
 #include <map>
 #include <set>
 #include <string>
@@ -148,23 +149,23 @@ struct Node
     
     for (uint32 i(0); i < 16; i+=1)
     {
-      from_lat |= ((0x1<<(31-2*i))&(from>>32))<<i;
-      from_lat |= ((0x1<<(31-2*i))&from)>>(16-i);
+      from_lat |= (((uint64)0x1<<(31-2*i))&(from>>32))<<i;
+      from_lat |= (((uint64)0x1<<(31-2*i))&from)>>(16-i);
     }
     for (uint32 i(0); i < 16; i+=1)
     {
-      to_lat |= ((0x1<<(31-2*i))&(to>>32))<<i;
-      to_lat |= ((0x1<<(31-2*i))&to)>>(16-i);
+      to_lat |= (((uint64)0x1<<(31-2*i))&(to>>32))<<i;
+      to_lat |= (((uint64)0x1<<(31-2*i))&to)>>(16-i);
     }
     for (uint32 i(0); i < 16; i+=1)
     {
-      from_lon |= ((0x1<<(30-2*i))&(from>>32))<<(i+1);
-      from_lon |= ((0x1<<(30-2*i))&from)>>(15-i);
+      from_lon |= (((uint64)0x1<<(30-2*i))&(from>>32))<<(i+1);
+      from_lon |= (((uint64)0x1<<(30-2*i))&from)>>(15-i);
     }
     for (uint32 i(0); i < 16; i+=1)
     {
-      to_lon |= ((0x1<<(30-2*i))&(to>>32))<<(i+1);
-      to_lon |= ((0x1<<(30-2*i))&to)>>(15-i);
+      to_lon |= (((uint64)0x1<<(30-2*i))&(to>>32))<<(i+1);
+      to_lon |= (((uint64)0x1<<(30-2*i))&to)>>(15-i);
     }
     
     if ((from_lon < -900000000) && (to_lon > 900000000))
@@ -245,11 +246,12 @@ struct Node
     {
       Aligned_Segment seg;
       uint32 split_lat((from_lat & 0xfff00000) + 0x100000);
+      cerr<<split_lat<<' '<<((from_lat & 0xfff00000) + 0x100000)<<'\n';
       seg.ll_upper_ = ll_upper(from_lat, from_lon);
       seg.ll_lower_a = ((uint64)seg.ll_upper_<<32) | ll_lower(from_lat, from_lon);
       seg.ll_lower_b = ((uint64)seg.ll_upper_<<32) | ll_lower
-          (split_lat,
-	   (int32)(((uint64)to_lon - from_lon)*((uint64)split_lat - from_lat)/
+          (split_lat - 1,
+	   (int32)(((uint64)to_lon - from_lon)*((uint64)split_lat - 1 - from_lat)/
 	    (to_lat - from_lat) + from_lon));
       seg.ll_upper_ &= 0xffffff00;
       aligned_segments.push_back(seg);
@@ -260,8 +262,8 @@ struct Node
 	seg.ll_upper_ = ll_upper(split_lat, split_lon);
 	seg.ll_lower_a = ((uint64)seg.ll_upper_<<32) | ll_lower(split_lat, split_lon);
 	seg.ll_lower_b = ((uint64)seg.ll_upper_<<32) | ll_lower
-	  (split_lat + 0x100000,
-	   ((uint64)to_lon - from_lon)*((uint64)split_lat + 0x100000 - from_lat)/
+	  (split_lat + 0xfffff,
+	   ((uint64)to_lon - from_lon)*((uint64)split_lat + 0xfffff - from_lat)/
 	   (to_lat - from_lat) + from_lat);
         seg.ll_upper_ &= 0xffffff00;
 	aligned_segments.push_back(seg);
