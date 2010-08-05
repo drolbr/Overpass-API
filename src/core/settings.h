@@ -19,6 +19,11 @@ struct de_osm3s_file_ids
   static File_Properties* RELATION_ROLES;
   static File_Properties* RELATION_TAGS_LOCAL;
   static File_Properties* RELATION_TAGS_GLOBAL;
+  static File_Properties* AREA_BLOCKS;
+  static File_Properties* AREAS;
+  static File_Properties* AREA_ROLES;
+  static File_Properties* AREA_TAGS_LOCAL;
+  static File_Properties* AREA_TAGS_GLOBAL;
 };
 
 string get_basedir();

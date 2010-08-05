@@ -9,6 +9,9 @@
 #include <math.h>
 #include <stdlib.h>
 #include <vector>
+
+#include "../backend/block_backend.h"
+#include "../backend/random_file.h"
 #include "make_area.h"
 
 using namespace std;
@@ -300,12 +303,28 @@ pair< uint32, uint32 > Make_Area_Statement::create_area_blocks
 	{
 	  if (cur_idx != 0)
 	  {
+	    areas[cur_idx].push_back(Area_Block(id, cur_polyline));
+	    
 	    vector< Aligned_Segment > aligned_segments;
-	    Node::calc_aligned_segments
+	    Area::calc_aligned_segments
 	        (aligned_segments, cur_polyline.back(),
 		 ((uint64)node->ll_upper_<<32) | node->ll_lower_);
-	    areas[cur_idx].push_back(Area_Block(id, cur_polyline));
 	    cur_polyline.clear();
+	    for (vector< Aligned_Segment >::const_iterator
+	        it(aligned_segments.begin()); it != aligned_segments.end();
+	        ++it)
+	    {
+	      cout<<Node::lat(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
+	      <<Node::lon(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
+	      <<Node::lat(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\t'
+	      <<Node::lon(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\n';
+	      cur_polyline.push_back(((uint64)it->ll_upper_<<32)
+	        | it->ll_lower_a);
+	      cur_polyline.push_back(((uint64)it->ll_upper_<<32)
+	        | it->ll_lower_b);
+	      areas[it->ll_upper_].push_back(Area_Block(id, cur_polyline));
+	      cur_polyline.clear();
+	    }
 	  }
 	  cur_idx = (node->ll_upper_ & 0xffffff00);
 	}
@@ -383,11 +402,27 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
           <<Node::lon(it->first.val(), 0)<<":\t";
       for (vector< uint64 >::const_iterator it3(it2->coors.begin());
           it3 != it2->coors.end(); ++it3)
-	cout<<Node::lat(it->first.val() | (*it3)>>32, (*it3) & 0xffffffff)<<'\t'
-	    <<Node::lon(it->first.val() | (*it3)>>32, (*it3) & 0xffffffff)<<"\t";
+	  cout<<Node::lat(it->first.val() | (*it3)>>32, (*it3) & 0xffffffff)<<'\t'
+	      <<Node::lon(it->first.val() | (*it3)>>32, (*it3) & 0xffffffff)<<"\t";
       cout<<'\n';
     }
   }
+  
+  map< Uint31_Index, set< Area_Block > > db_to_delete;
+  map< Uint31_Index, set< Area_Block > > db_to_insert;
+  
+  for (map< Uint31_Index, vector< Area_Block > >::const_iterator
+      it(area_blocks.begin()); it != area_blocks.end(); ++it)
+  {
+    db_to_delete[it->first].insert(Area_Block(pivot_id, vector< uint64 >()));
+    for (vector< Area_Block >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      db_to_insert[it->first].insert(*it2);
+  }
+  
+  Block_Backend< Uint31_Index, Area_Block > area_db
+      (*de_osm3s_file_ids::AREA_BLOCKS, true);
+  area_db.update(db_to_delete, db_to_insert);
   
   /*  set< Node > nodes;
   set< Way > ways;

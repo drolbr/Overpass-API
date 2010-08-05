@@ -82,6 +82,16 @@ File_Properties* de_osm3s_file_ids::RELATION_TAGS_LOCAL
   = new OSM_File_Properties("relation_tags_local", 512*1024);
 File_Properties* de_osm3s_file_ids::RELATION_TAGS_GLOBAL
   = new OSM_File_Properties("relation_tags_global", 2*1024*1024);
+File_Properties* de_osm3s_file_ids::AREA_BLOCKS
+  = new OSM_File_Properties("area_blocks", 2*1024*1024);
+File_Properties* de_osm3s_file_ids::AREAS
+  = new OSM_File_Properties("areas", 512*1024);
+File_Properties* de_osm3s_file_ids::AREA_ROLES
+  = new OSM_File_Properties("area_roles", 512*1024);
+File_Properties* de_osm3s_file_ids::AREA_TAGS_LOCAL
+  = new OSM_File_Properties("area_tags_local", 512*1024);
+File_Properties* de_osm3s_file_ids::AREA_TAGS_GLOBAL
+  = new OSM_File_Properties("area_tags_global", 2*1024*1024);
 
 string get_basedir()
 {
