@@ -158,21 +158,53 @@ int32 Coord_Query_Statement::lon(uint32 ll_index, uint64 coord)
       old_lon = lon, old_lat = lat
     }
 */
-/* other notes:
-  - baseline segments
-  - proportion with zero sizes
-  - proportion at the boundary
-*/
 int Coord_Query_Statement::check_area_block
     (uint32 ll_index, const Area_Block& area_block,
      uint32 coord_lat, int32 coord_lon)
 {
-  if (area_block.coors.size() == 0)
+  vector< uint64 >::const_iterator it(area_block.coors.begin());
+  bool odd_segs_below(false);
+  if (it == area_block.coors.end())
     return 0;
-  uint64 coord(area_block.coors.front());
-  int32 lat(Node::lat(ll_index | (coord>>32), coord & 0xfffffffful));
-  int32 lon(Node::lat(ll_index | (coord>>32), coord & 0xfffffffful));
-  //...
+  uint32 lat(shifted_lat(ll_index, *it));
+  int32 lon(Coord_Query_Statement::lon(ll_index, *it));
+  if ((coord_lon == lon) && (coord_lat == lat))
+    return HIT;
+  bool last_less(lon < coord_lon);
+  uint32 last_lat(lat);
+  int32 last_lon(lon);
+  while (++it != area_block.coors.end())
+  {
+    lat = shifted_lat(ll_index, *it);
+    lon = Coord_Query_Statement::lon(ll_index, *it);
+    if (last_less)
+    {
+      if (lon < coord_lon)
+	continue;
+      last_less = false;
+    }
+    else
+    {
+      if (lon == coord_lon)
+      {
+	if (last_lon == coord_lon)
+	{
+	  if ((last_lat <= coord_lat) && (lat >= coord_lat))
+	    return HIT;
+	  if ((lat <= coord_lat) && (last_lat >= coord_lat))
+	    return HIT;
+	}
+	int check(check_segment
+	    (last_lat, last_lon, lat, lon, coord_lat, coord_lon));
+	if (check == HIT)
+	  return HIT;
+      }
+      if (lon >= coord_lon)
+	continue;
+      last_less = true;
+    }
+    //...
+  }
 }
  
 void Coord_Query_Statement::execute(map< string, Set >& maps)

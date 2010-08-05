@@ -410,19 +410,33 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   
   map< Uint31_Index, set< Area_Block > > db_to_delete;
   map< Uint31_Index, set< Area_Block > > db_to_insert;
+
+  Block_Backend< Uint31_Index, Area_Block > area_blocks_db
+      (*de_osm3s_file_ids::AREA_BLOCKS, true);
+  
+  //TODO: temporary bailout - needs to be changed to the correct Discrete_Iterator
+  /* other notes:
+  - baseline segments
+  - proportion with zero sizes
+  - proportion at the boundary
+  */
+  for (Block_Backend< Uint31_Index, Area_Block >::Flat_Iterator
+      it(area_blocks_db.flat_begin());
+      !(it == area_blocks_db.flat_end()); ++it)
+  {
+    if (it.object().id == pivot_id)
+      db_to_delete[it.index()].insert(it.object());
+  }
   
   for (map< Uint31_Index, vector< Area_Block > >::const_iterator
       it(area_blocks.begin()); it != area_blocks.end(); ++it)
   {
-    db_to_delete[it->first].insert(Area_Block(pivot_id, vector< uint64 >()));
     for (vector< Area_Block >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
       db_to_insert[it->first].insert(*it2);
   }
   
-  Block_Backend< Uint31_Index, Area_Block > area_db
-      (*de_osm3s_file_ids::AREA_BLOCKS, true);
-  area_db.update(db_to_delete, db_to_insert);
+  area_blocks_db.update(db_to_delete, db_to_insert);
   
   /*  set< Node > nodes;
   set< Way > ways;

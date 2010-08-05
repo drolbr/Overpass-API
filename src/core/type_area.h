@@ -273,12 +273,16 @@ struct Area_Block
   
   bool operator<(const Area_Block& a) const
   {
-    return this->id < a.id;
+    if (this->id < a.id)
+      return true;
+    else if (this->id > a.id)
+      return false;
+    return (this->coors < a.coors);
   }
   
   bool operator==(const Area_Block& a) const
   {
-    return this->id == a.id;
+    return ((this->id == a.id) && (this->coors == a.coors));
   }
 };
 

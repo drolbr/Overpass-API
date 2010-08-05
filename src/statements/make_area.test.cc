@@ -319,14 +319,11 @@ int main(int argc, char* args[])
   
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
       (*de_osm3s_file_ids::AREA_BLOCKS, false);
-/*  for (Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
+  for (Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
       it(area_blocks_db.discrete_begin(req.begin(), req.end()));
-      !(it == area_blocks_db.discrete_end()); ++it)*/
-  for (Block_Backend< Uint31_Index, Area_Block >::Flat_Iterator
-      it(area_blocks_db.flat_begin());
-      !(it == area_blocks_db.flat_end()); ++it)
+      !(it == area_blocks_db.discrete_end()); ++it)
   {
-    cout<<it.object().id<<": ";
+    cout<<"0x"<<hex<<it.index().val()<<' '<<dec<<it.object().id<<": ";
     for (uint i(0); i < it.object().coors.size(); ++i)
       cout<<Coord_Query_Statement::shifted_lat(it.index().val(), it.object().coors[i])
           <<' '<<Coord_Query_Statement::lon(it.index().val(), it.object().coors[i])
