@@ -23,7 +23,7 @@ class Coord_Query_Statement : public Statement
         (uint32 a_lat, int32 a_lon, uint32 b_lat, int32 b_lon,
          uint32 coord_lat, int32 coord_lon);
     static uint32 shifted_lat(uint32 ll_index, uint64 coord);
-    static int32 lon(uint32 ll_index, uint64 coord);
+    static int32 lon_(uint32 ll_index, uint64 coord);
     static int check_area_block
         (uint32 ll_index, const Area_Block& area_block,
          uint32 coord_lat, int32 coord_lon);
@@ -33,7 +33,7 @@ class Coord_Query_Statement : public Statement
     
   private:
     string output;
-    uint64 coords;
+    double lat, lon;
 };
 
 #endif

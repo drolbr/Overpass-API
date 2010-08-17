@@ -82,6 +82,8 @@ struct Area
   
   static int32 proportion(int32 clow, int32 cmid, int32 cup, int32 low, int32 up)
   {
+    if (cup == clow)
+      return low;
     return ((int64)(up - low))*(cmid - clow)/(cup - clow) + low;
   }
   
@@ -99,13 +101,13 @@ struct Area
       uint32 split_lat((from_lat & 0xfff00000) + 0x100000);
       aligned_segments.push_back(segment_from_ll_quad
           (from_lat, from_lon, split_lat - 1,
-           proportion(from_lat, split_lat - 1, to_lat, from_lon, to_lon)));
+           proportion(from_lat, split_lat, to_lat, from_lon, to_lon)));
       for (; split_lat < (to_lat & 0xfff00000); split_lat += 0x100000)
       {
 	aligned_segments.push_back(segment_from_ll_quad
 	    (split_lat, proportion(from_lat, split_lat, to_lat, from_lon, to_lon),
 	     split_lat + 0xfffff,
-	     proportion(from_lat, split_lat + 0xfffff, to_lat, from_lon, to_lon)));
+	     proportion(from_lat, split_lat + 0x100000, to_lat, from_lon, to_lon)));
       }
       aligned_segments.push_back(segment_from_ll_quad
           (split_lat, proportion(from_lat, split_lat, to_lat, from_lon, to_lon),
@@ -116,13 +118,13 @@ struct Area
       uint32 split_lat((to_lat & 0xfff00000) + 0x100000);
       aligned_segments.push_back(segment_from_ll_quad
           (to_lat, to_lon, split_lat - 1,
-           proportion(to_lat, split_lat - 1, from_lat, to_lon, from_lon)));
+           proportion(to_lat, split_lat, from_lat, to_lon, from_lon)));
       for (; split_lat < (to_lat & 0xfff00000); split_lat += 0x100000)
       {
 	aligned_segments.push_back(segment_from_ll_quad
 	    (split_lat, proportion(to_lat, split_lat, from_lat, to_lon, from_lon),
 	     split_lat + 0xfffff,
-	     proportion(to_lat, split_lat + 0xfffff, from_lat, to_lon, from_lon)));
+	     proportion(to_lat, split_lat + 0x100000, from_lat, to_lon, from_lon)));
       }
       aligned_segments.push_back(segment_from_ll_quad
           (split_lat, proportion(to_lat, split_lat, from_lat, to_lon, from_lon),
@@ -229,6 +231,92 @@ struct Area
     else
       calc_vert_aligned_segments
         (aligned_segments, from_lat, from_lon, to_lat, to_lon);
+  }
+};
+
+struct Area_Location
+{
+  uint32 id;
+  set< uint32 > used_indices;
+  
+  Area_Location() {}
+  
+  Area_Location(void* data)
+  {
+    id = *(uint32*)data;
+    for (int i(0); i < *((uint32*)data + 1); ++i)
+      used_indices.insert(*((uint32*)data + i + 2));
+  }
+  
+  Area_Location(uint32 id_, const set< uint32 >& used_indices_)
+  : id(id_), used_indices(used_indices_) {}
+  
+  uint32 size_of() const
+  {
+    return 8 + 4*used_indices.size();
+  }
+  
+  static uint32 size_of(void* data)
+  {
+    return (8 + 4 * *((uint32*)data + 1));
+  }
+  
+  void to_data(void* data) const
+  {
+    *(uint32*)data = id;
+    *((uint32*)data + 1) = used_indices.size();
+    uint i(2);
+    for (set< uint32 >::const_iterator it(used_indices.begin());
+        it != used_indices.end(); ++it)
+    {
+      *((uint32*)data + i) = *it;
+      ++i;
+    }
+  }
+  
+  bool operator<(const Area_Location& a) const
+  {
+    return (this->id < a.id);
+  }
+  
+  bool operator==(const Area_Location& a) const
+  {
+    return (this->id == a.id);
+  }
+
+  uint32 calc_index()
+  {
+    if (used_indices.empty())
+      return 0;
+    
+    uint32 bitmask(0), value(*used_indices.begin());
+    for (set< uint32 >::const_iterator it(used_indices.begin());
+        it != used_indices.end(); ++it)
+    {
+      bitmask |= (value ^ (*it));
+      if (*it & 0x80000000)
+      {
+	if ((*it & 0xff) == 0x10)
+	  bitmask |= 0xff;
+	else if ((*it & 0xff) == 0x20)
+	  bitmask |= 0xffff;
+	else if ((*it & 0xff) == 0x30)
+	  bitmask |= 0xffffff;
+	else
+	  bitmask |= 0xffffffff;
+      }
+    }
+    bitmask = bitmask & 0x7fffffff;
+    if (bitmask & 0xff000000)
+      value = 0x80000040;
+    else if (bitmask & 0xffff0000)
+      value = (value & 0xff000000) | 0x80000030;
+    else if (bitmask & 0xffffff00)
+      value = (value & 0xffff0000) | 0x80000020;
+    else if (bitmask)
+      value = (value & 0xffffff00) | 0x80000010;
+    
+    return value;
   }
 };
 

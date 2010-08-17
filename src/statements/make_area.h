@@ -36,6 +36,10 @@ class Make_Area_Statement : public Statement
     static pair< uint32, uint32 > create_area_blocks
         (map< Uint31_Index, vector< Area_Block > >& areas,
 	 uint32 id, const Set& pivot);
+    static uint32 shifted_lat(uint32 ll_index, uint64 coord);
+    static int32 lon_(uint32 ll_index, uint64 coord);
+    static void add_segment_blocks
+        (map< Uint31_Index, vector< Area_Block > >& areas, uint32 id);
 };
 
 #endif

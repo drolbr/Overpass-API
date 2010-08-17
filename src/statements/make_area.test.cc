@@ -20,7 +20,7 @@ int main(int argc, char* args[])
   vector< Aligned_Segment > segs;
   
   //tests for functions to calculate tile clipping
-  Area::calc_vert_aligned_segments
+/*  Area::calc_vert_aligned_segments
     (segs,
      1422000000, 71500000, 1422100000, 71510000);
   for (vector< Aligned_Segment >::const_iterator it(segs.begin());
@@ -171,7 +171,7 @@ int main(int argc, char* args[])
 	<<Node::lat(it->ll_upper_ | it->ll_lower_b>>32, it->ll_lower_b)<<'\t'
 	<<Node::lon(it->ll_upper_ | it->ll_lower_b>>32, it->ll_lower_b)<<'\n';
   cout<<'\n';
-  segs.clear();
+  segs.clear();*/
   
   Error_Output* error_output(new Console_Output(false));
   Statement::set_error_output(error_output);
@@ -254,7 +254,57 @@ int main(int argc, char* args[])
     stmt1->execute(sets);
   }
 
-  cout<<Coord_Query_Statement::check_segment(0, 0, 0, 0, 0, 0)<<'\n';
+  cout<<"Query to create areas:\n";
+  {
+    Query_Statement* stmt2 = new Query_Statement(0);
+    const char* attributes[] = { "type", "relation", 0 };
+    stmt2->set_attributes(attributes);
+    {
+      Has_Key_Value_Statement* stmt3 = new Has_Key_Value_Statement(0);
+      const char* attributes[] = { "k", "admin_level", 0 };
+      stmt3->set_attributes(attributes);
+      stmt2->add_statement(stmt3, "");
+    }
+    stmt2->execute(sets);
+  }
+  {
+    Foreach_Statement* stmt3 = new Foreach_Statement(0);
+    const char* attributes[] = { "into", "rels", 0 };
+    stmt3->set_attributes(attributes);
+    {
+      Union_Statement* stmt2 = new Union_Statement(0);
+      const char* attributes[] = { 0 };
+      stmt2->set_attributes(attributes);
+      {
+	Recurse_Statement* stmt3 = new Recurse_Statement(0);
+	const char* attributes[] = { "type", "relation-way", "from", "rels", 0 };
+	stmt3->set_attributes(attributes);
+	stmt2->add_statement(stmt3, "");
+      }
+      {
+	Recurse_Statement* stmt3 = new Recurse_Statement(0);
+	const char* attributes[] = { "type", "way-node", 0 };
+	stmt3->set_attributes(attributes);
+	stmt2->add_statement(stmt3, "");
+      }
+      stmt3->add_statement(stmt2, "");
+    }
+    {
+      Make_Area_Statement* stmt1 = new Make_Area_Statement(0);
+      const char* attributes[] = { "pivot", "rels", 0 };
+      stmt1->set_attributes(attributes);
+      stmt3->add_statement(stmt1, "");
+    }
+    {
+      Print_Statement* stmt1 = new Print_Statement(0);
+      const char* attributes[] = { "mode", "ids_only", "from", "rels", 0 };
+      stmt1->set_attributes(attributes);
+      stmt3->add_statement(stmt1, "");
+    }
+    stmt3->execute(sets);
+  }
+  
+/*  cout<<Coord_Query_Statement::check_segment(0, 0, 0, 0, 0, 0)<<'\n';
   cout<<Coord_Query_Statement::check_segment(1, 1, 1, 1, 1, 1)<<'\n';
   cout<<Coord_Query_Statement::check_segment(1, -1, 1, -1, 1, -1)<<'\n';
   cout<<'\n';
@@ -312,9 +362,9 @@ int main(int argc, char* args[])
   cout<<Coord_Query_Statement::check_segment(0, 15, 10, 5, 0, 10)<<'\n';
   cout<<Coord_Query_Statement::check_segment(10, -15, 0, -5, 0, -10)<<'\n';
   cout<<Coord_Query_Statement::check_segment(0, -5, 10, -15, 0, -10)<<'\n';
-  cout<<'\n';
+  cout<<'\n';*/
   
-  set< Uint31_Index > req;
+/*  set< Uint31_Index > req;
   req.insert(Uint31_Index(Node::ll_upper(51.25, 7.15) & 0xffffff00));
   
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
@@ -326,10 +376,38 @@ int main(int argc, char* args[])
     cout<<"0x"<<hex<<it.index().val()<<' '<<dec<<it.object().id<<": ";
     for (uint i(0); i < it.object().coors.size(); ++i)
       cout<<Coord_Query_Statement::shifted_lat(it.index().val(), it.object().coors[i])
-          <<' '<<Coord_Query_Statement::lon(it.index().val(), it.object().coors[i])
+          <<' '<<Coord_Query_Statement::lon_(it.index().val(), it.object().coors[i])
 	  <<", ";
     cout<<'\n';
+  }*/
+
+  for (uint j(51400); j >= 51100; j -= 5) 
+  {
+    if (j%100 == 95)
+      cout<<'\n';
+    for (uint i(6900); i <= 7500; i += 4)
+    {
+      if (i%100 == 0)
+	cout<<' ';
+      
+      ostringstream temp;
+      char lat[40];
+      temp<<((double)j/1000);
+      strcpy(lat, temp.str().c_str());
+      temp.str("");
+      char lon[40];
+      temp<<((double)i/1000);
+      strcpy(lon, temp.str().c_str());
+      
+      Coord_Query_Statement* stmt1 = new Coord_Query_Statement(0);
+      const char* attributes[] = { "lat", "51.25", "lon", "7.15", 0 };
+      attributes[1] = (const char*)lat;
+      attributes[3] = (const char*)lon;
+      stmt1->set_attributes(attributes);
+      stmt1->execute(sets);
+    }
+    cout<<'\n';
   }
-  
+
   return 0;
 }

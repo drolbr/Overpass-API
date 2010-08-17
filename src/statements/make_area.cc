@@ -45,164 +45,6 @@ void Make_Area_Statement::forecast()
   display_state();*/
 }
 
-// void insert_segment
-//     (map< uint32, set< Line_Segment > >& segments_per_tile,
-//      const Node& nd1, const Node& nd2)
-// {
-//   //force nde to be the eastmost node
-//   Node const* ndw(&nd1);
-//   Node const* nde(&nd2);
-//   if ((nd2.lon < nd1.lon) || ((nd1.lon == nd2.lon) && (nd2.lat < nd1.lat)))
-//   {
-//     ndw = &nd2;
-//     nde = &nd1;
-//   }
-//   
-//   //catch the special case that we pass the longitude -180.0
-//   if (nde->lon - ndw->lon > 180*10*1000*1000)
-//   {
-//     int64 latdiff(ndw->lat - nde->lat);
-//     int32 londiff((180*10*1000*1000 - nde->lon) + (ndw->lon + 180*10*1000*1000));
-//     Node intersection
-// 	(0, (int32)(latdiff*(180*10*1000*1000 - nde->lon)/londiff + ndw->lat + 90*10*1000*1000),
-// 	  -180*10*1000*1000);
-//     insert_segment(segments_per_tile, *ndw, intersection);
-//     intersection.lon = 180*10*1000*1000;
-//     insert_segment(segments_per_tile, *nde, intersection);
-//     return;
-//   }
-//   
-//   //split the segment at tile borders
-//   //first longitudinal
-//   vector< pair< int32, int32 > > coords;
-//   coords.push_back(make_pair(ndw->lat + 90*10*1000*1000, ndw->lon));
-//   int32 lon_split_number((nde->lon>>16) - (ndw->lon>>16));
-//   if (lon_split_number > 0)
-//   {
-//     int64 latdiff(nde->lat - ndw->lat);
-//     int32 londiff(nde->lon - ndw->lon);
-//     for (int32 i(1); i <= lon_split_number; ++i)
-//     {
-//       coords.push_back
-// 	  (make_pair(
-// 	   (int32)(latdiff*(((i + (ndw->lon>>16))<<16) - ndw->lon)/londiff + ndw->lat + 90*10*1000*1000),
-// 	   (i + (ndw->lon>>16))<<16));
-//     }
-//   }
-//   coords.push_back(make_pair(nde->lat + 90*10*1000*1000, nde->lon));
-//   //then latitudinal
-//   //this includes inserting the segments into their tiles
-//   vector< pair< int32, int32 > >::const_iterator it(coords.begin());
-//   pair< int32, int32 > last_coord(*it);
-//   for (++it; it != coords.end(); ++it)
-//   {
-//     int32 lat_split_number((it->first>>20) - (last_coord.first>>20));
-//     if (lat_split_number > 0)
-//     {
-//       int32 latdiff(it->first - last_coord.first);
-//       int64 londiff(it->second - last_coord.second);
-//       int32 lastlat(last_coord.first);
-//       int32 lastlon(last_coord.second);
-//       for (int32 i(1); i <= lat_split_number; ++i)
-//       {
-// 	pair< int32, int32 > cur_coord
-// 	    (make_pair(
-// 	     (i + (lastlat>>20))<<20,
-// 	     (int32)(londiff*(((i + (lastlat>>20))<<20) - lastlat)/latdiff + lastlon)));
-// 	pair< set< Line_Segment >::iterator, bool > sp
-// 	    (segments_per_tile
-// 		[ll_idx(last_coord.first - 90*10*1000*1000, last_coord.second) & 0xffffff55].insert
-// 		(Line_Segment(last_coord.first - 90*10*1000*1000, last_coord.second,
-// 		 cur_coord.first - 90*10*1000*1000, cur_coord.second)));
-// 	if (!sp.second)
-// 	  segments_per_tile
-// 	      [ll_idx(last_coord.first - 90*10*1000*1000, last_coord.second) & 0xffffff55].erase
-// 	      (sp.first);
-// 	last_coord = cur_coord;
-//       }
-//     }
-//     else if (lat_split_number < 0)
-//     {
-//       int32 latdiff(it->first - last_coord.first);
-//       int64 londiff(it->second - last_coord.second);
-//       int32 lastlat(last_coord.first);
-//       int32 lastlon(last_coord.second);
-//       for (int32 i(0); i > lat_split_number; --i)
-//       {
-// 	pair< int32, int32 > cur_coord
-// 	    (make_pair(
-// 	     (i + (lastlat>>20))<<20,
-// 	     (int32)(londiff*(((i + (lastlat>>20))<<20) - lastlat)/latdiff + lastlon)));
-// 	pair< set< Line_Segment >::iterator, bool > sp
-// 	    (segments_per_tile
-// 		[ll_idx(cur_coord.first - 90*10*1000*1000, last_coord.second) & 0xffffff55].insert
-// 	    (Line_Segment(last_coord.first - 90*10*1000*1000, last_coord.second,
-// 	     cur_coord.first - 90*10*1000*1000, cur_coord.second)));
-// 	if (!sp.second)
-// 	  segments_per_tile
-// 	      [ll_idx(cur_coord.first - 90*10*1000*1000, last_coord.second) & 0xffffff55].erase
-// 	      (sp.first);
-// 	last_coord = cur_coord;
-//       }
-//     }
-//     pair< set< Line_Segment >::iterator, bool > sp
-// 	(segments_per_tile
-// 	    [ll_idx(it->first - 90*10*1000*1000, last_coord.second) & 0xffffff55].insert
-// 	(Line_Segment(last_coord.first - 90*10*1000*1000, last_coord.second,
-// 	 it->first - 90*10*1000*1000, it->second)));
-//     if (!sp.second)
-//       segments_per_tile
-// 	  [ll_idx(it->first - 90*10*1000*1000, last_coord.second) & 0xffffff55].erase
-// 	  (sp.first);
-//     last_coord = *it;
-//   }
-// }
-// 
-// void report_missing_node(const Way& way, uint32 node_id, const string& input)
-// {
-//   ostringstream temp;
-//   temp<<"Make-Area: Node "<<node_id<<" referred by way "<<way.id
-//       <<" is not contained in set \""<<input<<"\".\n";
-//   runtime_error(temp.str());
-// }
-// 
-// void insert_bottomlines(map< uint32, set< Line_Segment > >& segments_per_tile)
-// {
-//   map< uint32, set< Line_Segment > >::const_iterator tile_it(segments_per_tile.begin());
-//   while (tile_it != segments_per_tile.end())
-//   {
-//     set< int32 > lat_projections;
-//     for (set< Line_Segment >::const_iterator it(tile_it->second.begin());
-// 	 it != tile_it->second.end(); ++it)
-//     {
-//       pair< set< int32 >::iterator, bool > lip(lat_projections.insert(it->west_lon));
-//       if (!lip.second)
-// 	lat_projections.erase(lip.first);
-//       lip = lat_projections.insert(it->east_lon);
-//       if (!lip.second)
-// 	lat_projections.erase(lip.first);
-//     }
-//     uint32 cur_tile(tile_it->first);
-//     if (!lat_projections.empty())
-//     {
-//       int32 cur_lat(lat_of_ll(cur_tile) + 16*65536);
-//       map< uint32, set< Line_Segment > >::iterator upper_tile_it
-// 	  (segments_per_tile.insert(make_pair
-// 	  (ll_idx(cur_lat, tile_it->second.begin()->west_lon) & 0xffffff55,
-// 	   set< Line_Segment >())).first);
-//       set< int32 >::const_iterator it(lat_projections.begin());
-//       while (it != lat_projections.end())
-//       {
-// 	uint32 west_lon(*it);
-// 	upper_tile_it->second.insert(Line_Segment
-// 	    (- 100*10*1000*1000, west_lon, - 100*10*1000*1000, *(++it)));
-// 	++it;
-//       }
-//     }
-//     tile_it = segments_per_tile.upper_bound(cur_tile);
-//   }
-// }
-
 pair< uint32, uint32 > Make_Area_Statement::detect_pivot(const Set& pivot)
 {
   uint32 pivot_id(0), pivot_type(0);
@@ -314,10 +156,6 @@ pair< uint32, uint32 > Make_Area_Statement::create_area_blocks
 	        it(aligned_segments.begin()); it != aligned_segments.end();
 	        ++it)
 	    {
-	      cout<<Node::lat(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-	      <<Node::lon(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-	      <<Node::lat(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\t'
-	      <<Node::lon(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\n';
 	      cur_polyline.push_back(((uint64)it->ll_upper_<<32)
 	        | it->ll_lower_a);
 	      cur_polyline.push_back(((uint64)it->ll_upper_<<32)
@@ -335,6 +173,92 @@ pair< uint32, uint32 > Make_Area_Statement::create_area_blocks
     }
   }
   return make_pair< uint32, uint32 >(0, 0);
+}
+
+uint32 Make_Area_Statement::shifted_lat(uint32 ll_index, uint64 coord)
+{
+  uint32 lat(0);
+  coord |= (((uint64)ll_index)<<32);
+  for (uint32 i(0); i < 16; i+=1)
+  {
+    lat |= (((uint64)0x1<<(31-2*i))&(coord>>32))<<i;
+    lat |= (((uint64)0x1<<(31-2*i))&coord)>>(16-i);
+  }
+  return lat;
+}
+
+int32 Make_Area_Statement::lon_(uint32 ll_index, uint64 coord)
+{
+  int32 lon(0);
+  coord |= (((uint64)ll_index)<<32);
+  for (uint32 i(0); i < 16; i+=1)
+  {
+    lon |= (((uint64)0x1<<(30-2*i))&(coord>>32))<<(i+1);
+    lon |= (((uint64)0x1<<(30-2*i))&coord)>>(15-i);
+  }
+  return lon;
+}
+
+void Make_Area_Statement::add_segment_blocks
+    (map< Uint31_Index, vector< Area_Block > >& area_blocks, uint32 id)
+{
+  /* We use that more northern segments always have bigger indices.
+    Thus we can collect each block's end points and add them, if they do not
+    cancel out, to the next block further northern.*/
+  for (map< Uint31_Index, vector< Area_Block > >::const_iterator
+    it(area_blocks.begin()); it != area_blocks.end(); ++it)
+  {
+    set< int32 > lons;
+    
+    for (vector< Area_Block >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+    {
+      if (it2->coors.empty())
+	continue;
+      
+      const uint64& ll_front(it2->coors.front());
+      int32 lon_front(lon_(ll_front>>32, ll_front & 0xffffffffull));
+      uint32 lat_front(shifted_lat(ll_front>>32, ll_front & 0xffffffffull));
+      const uint64& ll_back(it2->coors.back());
+      int32 lon_back(lon_(ll_back>>32, ll_back & 0xffffffffull));
+      uint32 lat_back(shifted_lat(ll_back>>32, ll_back & 0xffffffffull));
+      if (lons.find(lon_front) == lons.end())
+	lons.insert(lon_front);
+      else
+	lons.erase(lon_front);
+      if (lons.find(lon_back) == lons.end())
+	lons.insert(lon_back);
+      else
+	lons.erase(lon_back);
+    }
+    
+    if (lons.empty())
+      continue;
+    
+    uint32 current_idx(it->first.val());
+    
+    // calc lat
+    uint32 lat(shifted_lat(it->first.val(), 0) + 16*65536);
+    int32 lon(lon_(it->first.val(), 0));
+    uint32 northern_ll_upper(Node::ll_upper(lat, lon));
+    // insert lons
+    vector< Area_Block >& northern_block(area_blocks[northern_ll_upper]);
+    for (set< int32 >::const_iterator it2(lons.begin()); it2 != lons.end(); ++it2)
+    {
+      int32 from(*it2);
+      ++it2;
+      int32 to(*it2);
+      vector< uint64 > coors;
+      coors.push_back
+          ((((uint64)Node::ll_upper(lat, from))<<32) | Node::ll_lower(lat, from));
+      coors.push_back
+          ((((uint64)Node::ll_upper(lat, to))<<32) | Node::ll_lower(lat, to));
+      Area_Block new_block(id, coors);
+      northern_block.push_back(new_block);
+    }
+    
+    it = area_blocks.find(Uint31_Index(current_idx));
+  }
 }
 
 void Make_Area_Statement::execute(map< string, Set >& maps)
@@ -392,21 +316,52 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
         <<" is not contained in set \""<<input<<"\".\n";
     runtime_remark(temp.str());
   }
+  
+  if ((odd_id != 0) || (odd_pair.first != 0))
+    return;
+  
+  add_segment_blocks(area_blocks, pivot_id);
+  
+/*  cout<<pivot_id<<": ";*/
+  set< uint32 > used_indices;
   for (map< Uint31_Index, vector< Area_Block > >::const_iterator
       it(area_blocks.begin()); it != area_blocks.end(); ++it)
   {
-    for (vector< Area_Block >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
+    used_indices.insert(it->first.val());
+/*    cout<<it->first.val()<<' ';*/
+  }
+/*  cout<<'\n';*/
+  Area_Location new_location(pivot_id, used_indices);
+  Uint31_Index new_index(new_location.calc_index());
+  
+  if (new_index.val() == 0)
+    return;
+
+  map< Uint31_Index, set< Area_Location > > location_to_delete;
+  map< Uint31_Index, set< Area_Location > > location_to_insert;
+  set< Uint31_Index > blocks_req;
+  
+  Block_Backend< Uint31_Index, Area_Location > area_locations_db
+      (*de_osm3s_file_ids::AREAS, true);
+  for (Block_Backend< Uint31_Index, Area_Location >::Flat_Iterator
+      it(area_locations_db.flat_begin());
+      !(it == area_locations_db.flat_end()); ++it)
+  {
+    if (it.object().id == pivot_id)
     {
-      cout<<Node::lat(it->first.val(), 0)<<'\t'
-          <<Node::lon(it->first.val(), 0)<<":\t";
-      for (vector< uint64 >::const_iterator it3(it2->coors.begin());
-          it3 != it2->coors.end(); ++it3)
-	  cout<<Node::lat(it->first.val() | (*it3)>>32, (*it3) & 0xffffffff)<<'\t'
-	      <<Node::lon(it->first.val() | (*it3)>>32, (*it3) & 0xffffffff)<<"\t";
-      cout<<'\n';
+/*      cout<<"d "<<pivot_id;*/
+      for (set< uint32 >::const_iterator it2(it.object().used_indices.begin());
+          it2 != it.object().used_indices.end(); ++it2)
+      {
+/*	cout<<' '<<hex<<*it2<<dec;*/
+        blocks_req.insert(*it2);
+      }
+/*      cout<<'\n';*/
+      location_to_delete[it.index()].insert(it.object());
     }
   }
+  location_to_insert[new_index].insert(new_location);
+  area_locations_db.update(location_to_delete, location_to_insert);
   
   map< Uint31_Index, set< Area_Block > > db_to_delete;
   map< Uint31_Index, set< Area_Block > > db_to_insert;
@@ -414,15 +369,9 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
       (*de_osm3s_file_ids::AREA_BLOCKS, true);
   
-  //TODO: temporary bailout - needs to be changed to the correct Discrete_Iterator
-  /* other notes:
-  - baseline segments
-  - proportion with zero sizes
-  - proportion at the boundary
-  */
-  for (Block_Backend< Uint31_Index, Area_Block >::Flat_Iterator
-      it(area_blocks_db.flat_begin());
-      !(it == area_blocks_db.flat_end()); ++it)
+  for (Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
+      it(area_blocks_db.discrete_begin(blocks_req.begin(), blocks_req.end()));
+      !(it == area_blocks_db.discrete_end()); ++it)
   {
     if (it.object().id == pivot_id)
       db_to_delete[it.index()].insert(it.object());

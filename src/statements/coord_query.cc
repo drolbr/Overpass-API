@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <vector>
 
+#include "../backend/block_backend.h"
 #include "coord_query.h"
 
 using namespace std;
@@ -24,24 +25,22 @@ void Coord_Query_Statement::set_attributes(const char **attr)
   eval_cstr_array(get_name(), attributes, attr);
   
   output = attributes["into"];
-  double lat_d(atof(attributes["lat"].c_str()));
-  if ((lat_d < -90.0) || (lat_d > 90.0) || (attributes["lat"] == ""))
+  lat = atof(attributes["lat"].c_str());
+  if ((lat < -90.0) || (lat > 90.0) || (attributes["lat"] == ""))
   {
     ostringstream temp;
     temp<<"For the attribute \"lat\" of the element \"coord-query\""
 	<<" the only allowed values are floats between -90.0 and 90.0.";
     add_static_error(temp.str());
   }
-  double lon_d(atof(attributes["lon"].c_str()));
-  if ((lon_d < -180.0) || (lon_d > 180.0) || (attributes["lon"] == ""))
+  lon = atof(attributes["lon"].c_str());
+  if ((lon < -180.0) || (lon > 180.0) || (attributes["lon"] == ""))
   {
     ostringstream temp;
     temp<<"For the attribute \"lon\" of the element \"coord-query\""
 	<<" the only allowed values are floats between -180.0 and 180.0.";
     add_static_error(temp.str());
   }
-  //lat = (int)(lat_d * 10000000 + 0.5);
-  //lon = (int)(lon_d * 10000000 + 0.5);
 }
 
 void Coord_Query_Statement::forecast()
@@ -109,7 +108,7 @@ uint32 Coord_Query_Statement::shifted_lat(uint32 ll_index, uint64 coord)
   return lat;
 }
 
-int32 Coord_Query_Statement::lon(uint32 ll_index, uint64 coord)
+int32 Coord_Query_Statement::lon_(uint32 ll_index, uint64 coord)
 {
   int32 lon(0);
   coord |= (((uint64)ll_index)<<32);
@@ -132,31 +131,6 @@ int32 Coord_Query_Statement::lon(uint32 ll_index, uint64 coord)
   - both lats are equal or bigger than the lats of the coordinate => don't count
   - one lon is less and the other one is bigger than the lon of the coordinate
     => iff the intersection is equal or south of the coordinate's lat, then count
-    
-    if (end) return
-    lon = ...
-    bool less(lon < coord_lon);
-    old_lon = lon, old_lat = lat
-    while (!end)
-    {
-      lon = ...
-      if (less)
-        if (lon < coord_lon)
-	  continue
-	less = false
-      else
-	if (lon == coord_lon)
-	  if (old_lon == coord_lon)
-	    if ((old_lat <= coord_lat) && (lat >= coord_lat)) || ...
-	      SEGMENT_HIT
-	  else
-	    check_segment(lat, lon, old_lat, old_lon, coord_lat, coord_lon)
-	if (lon >= coord_lon)
-	  continue
-	less = true
-      check_segment(lat, lon, old_lat, old_lon, coord_lat, coord_lon)
-      old_lon = lon, old_lat = lat
-    }
 */
 int Coord_Query_Statement::check_area_block
     (uint32 ll_index, const Area_Block& area_block,
@@ -167,16 +141,16 @@ int Coord_Query_Statement::check_area_block
   if (it == area_block.coors.end())
     return 0;
   uint32 lat(shifted_lat(ll_index, *it));
-  int32 lon(Coord_Query_Statement::lon(ll_index, *it));
+  int32 lon(lon_(ll_index, *it));
   if ((coord_lon == lon) && (coord_lat == lat))
     return HIT;
   bool last_less(lon < coord_lon);
-  uint32 last_lat(lat);
-  int32 last_lon(lon);
   while (++it != area_block.coors.end())
   {
+    uint32 last_lat(lat);
+    int32 last_lon(lon);
     lat = shifted_lat(ll_index, *it);
-    lon = Coord_Query_Statement::lon(ll_index, *it);
+    lon = lon_(ll_index, *it);
     if (last_less)
     {
       if (lon < coord_lon)
@@ -203,17 +177,51 @@ int Coord_Query_Statement::check_area_block
 	continue;
       last_less = true;
     }
-    //...
+    int check(check_segment
+        (last_lat, last_lon, lat, lon, coord_lat, coord_lon));
+    if (check == HIT)
+      return HIT;
+    if (check != 0)
+      odd_segs_below = !odd_segs_below;
   }
+  if (odd_segs_below)
+    return TOGGLE;
+  return 0;
 }
- 
+
 void Coord_Query_Statement::execute(map< string, Set >& maps)
 { 
-/*  ostringstream temp;
-  temp<<"select id, min_lat, min_lon, max_lat, max_lon from area_segments "
-      <<"where ll_idx = "<<(ll_idx(lat, lon) & 0xffffff55);
+  set< Uint31_Index > req;
+  set< uint32 > areas_inside;
+  set< uint32 > areas_on_border;
+  req.insert(Uint31_Index(Node::ll_upper(lat, lon) & 0xffffff00));
+
+  uint32 ilat((lat + 91.0)*10000000+0.5);
+  int32 ilon(lon*10000000 + (lon > 0 ? 0.5 : -0.5));
   
-  set< Area > areas;
-  maps[output] = Set(set< Node >(), set< Way >(), set< Relation_ >(),
-		     multiArea_query(mysql, temp.str(), lat, lon, areas));*/
+  Block_Backend< Uint31_Index, Area_Block > area_blocks_db
+      (*de_osm3s_file_ids::AREA_BLOCKS, false);
+  for (Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
+      it(area_blocks_db.discrete_begin(req.begin(), req.end()));
+      !(it == area_blocks_db.discrete_end()); ++it)
+  {
+    int check(check_area_block(it.index().val(), it.object(), ilat, ilon));
+    if (check == HIT)
+      areas_on_border.insert(it.object().id);
+    else if (check == TOGGLE)
+    {
+      if (areas_inside.find(it.object().id) != areas_inside.end())
+	areas_inside.erase(it.object().id);
+      else
+	areas_inside.insert(it.object().id);
+    }
+  }
+/*  cout<<lat<<", "<<lon<<":";
+  for (set< uint32 >::const_iterator it(areas_inside.begin()); it != areas_inside.end(); ++it)
+    cout<<' '<<*it;
+  cout<<"; ";
+  for (set< uint32 >::const_iterator it(areas_on_border.begin()); it != areas_on_border.end(); ++it)
+    cout<<' '<<*it;
+  cout<<'\n';*/
+  //cout<<(areas_inside.size() + areas_on_border.size());
 }
