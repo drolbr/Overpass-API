@@ -36,4 +36,9 @@ class Print_Statement : public Statement
        uint32 FLUSH_SIZE, uint32 mode, uint32 stopwatch_account);
 };
 
+template< class TIndex >
+void formulate_range_query
+    (set< pair< Tag_Index_Local, Tag_Index_Local > >& range_set,
+     const set< TIndex >& coarse_indices);
+
 #endif

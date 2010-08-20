@@ -238,6 +238,7 @@ struct Area_Location
 {
   uint32 id;
   set< uint32 > used_indices;
+  vector< pair< string, string > > tags;
   
   Area_Location() {}
   

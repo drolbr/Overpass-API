@@ -290,11 +290,6 @@ void Print_Statement::tags_quadtile
   for (typename set< TIndex >::const_iterator
       it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
   {
-    cout<<hex<<it->val()<<' '<<ids_by_coarse[it->val()].size()<<' ';
-    if (item_it != items.end())
-      cout<<item_it->first.val()<<' ';
-    else
-      cout<<"(end) ";
     sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
     
     map< uint32, vector< pair< string, string > > > tags_by_id;
@@ -304,7 +299,6 @@ void Print_Statement::tags_quadtile
     while ((item_it != items.end()) &&
         ((item_it->first.val() & 0x7fffff00) == it->val()))
     {
-/*      cout<<item_it->first.val()<<' ';*/
       for (typename vector< TObject >::const_iterator it2(item_it->second.begin());
           it2 != item_it->second.end(); ++it2)
         print_item(item_it->first.val(), *it2, mode, &(tags_by_id[it2->id]));

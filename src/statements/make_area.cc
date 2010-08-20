@@ -12,7 +12,9 @@
 
 #include "../backend/block_backend.h"
 #include "../backend/random_file.h"
+#include "../osm-backend/area_updater.h"
 #include "make_area.h"
+#include "print.h"
 
 using namespace std;
 
@@ -278,6 +280,38 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   if (pivot_type == 0)
     return;
   
+  //formulate range query
+  set< Uint31_Index > coarse_indices;
+  set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
+  if (pivot_type == NODE)
+    coarse_indices.insert(mit->second.nodes.begin()->first.val() & 0xffffff00);
+  else if (pivot_type == WAY)
+    coarse_indices.insert(mit->second.ways.begin()->first.val() & 0xffffff00);
+  else if (pivot_type == RELATION)
+    coarse_indices.insert(mit->second.relations.begin()->first.val() & 0xffffff00);
+  
+  formulate_range_query(range_set, coarse_indices);
+  
+  // iterate over the result
+  //stopwatch_stop(NO_DISK);
+  File_Properties* file_prop;
+  if (pivot_type == NODE)
+    file_prop = de_osm3s_file_ids::NODE_TAGS_LOCAL;
+  else if (pivot_type == WAY)
+    file_prop = de_osm3s_file_ids::WAY_TAGS_LOCAL;
+  else if (pivot_type == RELATION)
+    file_prop = de_osm3s_file_ids::RELATION_TAGS_LOCAL;
+  Block_Backend< Tag_Index_Local, Uint32_Index > items_db(*file_prop, false);
+  Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
+      tag_it(items_db.range_begin
+        (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+         Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+  for (; !(tag_it == items_db.range_end()); ++tag_it)
+  {
+    if (tag_it.object().val() == pivot_id)
+      cout<<hex<<"0x"<<tag_it.index().index<<dec<<" \""<<tag_it.index().key<<"\"=\""<<tag_it.index().value<<"\"\n";
+  }
+  
   if (pivot_type == WAY)
     pivot_id += 2400000000u;
   else if (pivot_type == RELATION)
@@ -322,15 +356,10 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   
   add_segment_blocks(area_blocks, pivot_id);
   
-/*  cout<<pivot_id<<": ";*/
   set< uint32 > used_indices;
   for (map< Uint31_Index, vector< Area_Block > >::const_iterator
       it(area_blocks.begin()); it != area_blocks.end(); ++it)
-  {
     used_indices.insert(it->first.val());
-/*    cout<<it->first.val()<<' ';*/
-  }
-/*  cout<<'\n';*/
   Area_Location new_location(pivot_id, used_indices);
   Uint31_Index new_index(new_location.calc_index());
   
@@ -342,7 +371,7 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   set< Uint31_Index > blocks_req;
   
   Block_Backend< Uint31_Index, Area_Location > area_locations_db
-      (*de_osm3s_file_ids::AREAS, true);
+      (*de_osm3s_file_ids::AREAS, false);
   for (Block_Backend< Uint31_Index, Area_Location >::Flat_Iterator
       it(area_locations_db.flat_begin());
       !(it == area_locations_db.flat_end()); ++it)
@@ -386,270 +415,4 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   }
   
   area_blocks_db.update(db_to_delete, db_to_insert);
-  
-  /*  set< Node > nodes;
-  set< Way > ways;
-  set< Relation_ > relations;
-  set< Area > areas;
-  
-  map< string, Set >::const_iterator mit(maps.find(input));
-  if (mit == maps.end())
-  {
-    maps[output] = Set(nodes, ways, relations, areas);
-    return;
-  }
-  const set< Node >& in_nodes(mit->second.get_nodes());
-  const set< Way >& in_ways(mit->second.get_ways());
-  bool data_is_valid(true);
-  
-  //detect pivot element
-  mit = maps.find(tags);
-  int pivot_id(0), pivot_type(0);
-  if (mit != maps.end())
-  {
-    if (mit->second.get_nodes().begin() != mit->second.get_nodes().end())
-    {
-      pivot_id = (mit->second.get_nodes().begin())->id;
-      pivot_type = NODE;
-    }
-    else if (mit->second.get_ways().begin() != mit->second.get_ways().end())
-    {
-      pivot_id = (mit->second.get_ways().begin())->id;
-      pivot_type = WAY;
-    }
-    else if (mit->second.get_relations().begin() != mit->second.get_relations().end())
-    {
-      pivot_id = (mit->second.get_relations().begin())->head;
-      pivot_type = RELATION;
-    }
-  }
-  
-  //check whether the area already exists
-  ostringstream temp;
-  temp<<"select id from areas where pivot = "<<pivot_id
-      <<" and pivot_type = "<<pivot_type;
-  uint32 previous_area(uint32_query(mysql, temp.str()));
-  if (previous_area)
-  {
-    set< uint32 > previous_ways;
-    temp.str("");
-    temp<<"select way from area_ways where id = "<<previous_area;
-    multiint_query(mysql, temp.str(), previous_ways);
-    
-    set< Way >::const_iterator it(in_ways.begin());
-    set< uint32 >::const_iterator it2(previous_ways.begin());
-    while ((it != in_ways.end()) && (it2 != previous_ways.end()) && ((it++)->id == (uint32)*(it2++)))
-      ;
-    if ((it == in_ways.end()) && (it2 == previous_ways.end()))
-    {
-      temp.str("");
-      temp<<"Make-Area: The pivot "<<types_lowercase[pivot_type]<<' '<<pivot_id
-	  <<" is already referred by area "<<previous_area<<" made with the same set of ways.\n";
-      runtime_remark(temp.str());
-      
-      ostringstream stack;
-      for (vector< pair< int, int > >::const_iterator it(get_stack().begin());
-	   it != get_stack().end(); ++it)
-	stack<<it->first<<' '<<it->second<<' ';
-      temp.str("");
-      temp<<"insert area_origins values ("<<previous_area<<", "
-	  <<get_rule_id()<<", "
-	  <<this->get_line_number()<<", '"
-	  <<stack.str()<<"')";
-      mysql_query(mysql, temp.str().c_str());
-      
-      Area area(previous_area);
-      areas.insert(area);
-      maps[output] = Set(nodes, ways, relations, areas);
-      return;
-    }
-    
-    temp.str("");
-    temp<<"Make-Area: The pivot "<<types_lowercase[pivot_type]<<' '<<pivot_id
-	<<" is already referred by area "<<previous_area<<" made from a different set of ways.\n";
-    runtime_error(temp.str());
-    maps[output] = Set(nodes, ways, relations, areas);
-    return;
-  }
-  
-  //check node parity
-  set< uint32 > node_parity_control;
-  for (set< Way >::const_iterator it(in_ways.begin());
-       it != in_ways.end(); ++it)
-  {
-    if (it->members.size() < 2)
-      continue;
-    pair< set< uint32 >::iterator, bool > npp(node_parity_control.insert
-	(it->members.front()));
-    if (!npp.second)
-      node_parity_control.erase(npp.first);
-    npp = node_parity_control.insert
-    	(it->members.back());
-    if (!npp.second)
-      node_parity_control.erase(npp.first);
-  }
-  if (node_parity_control.size() > 0)
-  {
-    ostringstream temp;
-    temp<<"Make-Area: Node "<<*(node_parity_control.begin())
-	<<" is contained in an odd number of ways.\n";
-    runtime_error(temp.str());
-    data_is_valid = false;
-  }
-  
-  //split and collect segments into their respective tiles
-  map< uint32, set< Line_Segment > > segments_per_tile;
-  for (set< Way >::const_iterator it(in_ways.begin());
-       it != in_ways.end(); ++it)
-  {
-    vector< uint32 >::const_iterator nit(it->members.begin());
-    if (nit == it->members.end())
-      continue;
-    set< Node >::const_iterator nit1(in_nodes.find(Node(*nit, 0, 0)));
-    
-    //protect against missing nodes: ensure that nit1 refers to a valid node
-    while ((nit1 == in_nodes.end()) && (nit != it->members.end()))
-    {
-      report_missing_node(*it, *nit, input);
-      data_is_valid = false;
-      if (++nit == it->members.end())
-	break;
-      nit1 = in_nodes.find(Node(*nit, 0, 0));
-    }
-    if (nit == it->members.end())
-      continue;
-    
-    for (++nit; nit != it->members.end(); ++nit)
-    {
-      set< Node >::const_iterator nit2(in_nodes.find(Node(*nit, 0, 0)));
-      if (nit2 == in_nodes.end())
-      {
-	report_missing_node(*it, *nit, input);
-	data_is_valid = false;
-      }
-      else
-      {
-	insert_segment(segments_per_tile, *nit1, *nit2);
-	nit1 = nit2;
-      }
-    }
-  }
-  
-  if (!data_is_valid)
-  {
-    maps[output] = Set(nodes, ways, relations, areas);
-    return;
-  }
-  
-  insert_bottomlines(segments_per_tile);
-  
-  uint32 area_id(pivot_id);
-  if (pivot_type == WAY)
-    area_id += 2400*1000*1000;
-  else if (pivot_type == RELATION)
-    area_id += 3600*1000*1000;
-  Area area(area_id);
-  
-  temp.str("");
-  temp<<"insert areas values ("<<area.id<<", "<<pivot_id<<", "<<pivot_type<<')';
-  mysql_query(mysql, temp.str().c_str());
-  
-  ofstream area_ways_out("/tmp/db_area_area_ways.tsv");
-  if (!area_ways_out)
-    throw File_Error(0, "/tmp/db_area_area_ways.tsv", "make_area_statement:1");
-  for (set< Way >::const_iterator it(in_ways.begin());
-       it != in_ways.end(); ++it)
-    area_ways_out<<area.id<<'\t'<<it->id<<'\n';
-  area_ways_out.close();
-  mysql_query(mysql, "load data local infile '/tmp/db_area_area_ways.tsv' into table area_ways");
-  
-  ofstream area_segments_out("/tmp/db_area_area_segments.tsv");
-  if (!area_segments_out)
-    throw File_Error(0, "/tmp/db_area_area_segments.tsv", "make_area_statement:2");
-  for (map< uint32, set< Line_Segment > >::const_iterator sit(segments_per_tile.begin());
-       sit != segments_per_tile.end(); ++sit)
-  {
-    for (set< Line_Segment >::const_iterator it(sit->second.begin());
-	 it != sit->second.end(); ++it)
-      area_segments_out<<area.id<<'\t'<<sit->first<<'\t'
-	  <<it->west_lat<<'\t'<<it->west_lon<<'\t'
-	  <<it->east_lat<<'\t'<<it->east_lon<<'\n';
-  }
-  area_segments_out.close();
-  mysql_query(mysql, "load data local infile '/tmp/db_area_area_segments.tsv' into table area_segments");
-  
-  temp.str("");
-  vector< vector< pair< string, string > > > tags;
-  if (pivot_type == NODE)
-  {
-    set< Node >::const_iterator it(mit->second.get_nodes().begin());
-    multiNode_to_kvs_query(mit->second.get_nodes(), it, tags);
-  }
-  else if (pivot_type == WAY)
-  {
-    set< Way >::const_iterator it(mit->second.get_ways().begin());
-    multiWay_to_kvs_query(mit->second.get_ways(), it, tags);
-  }
-  else if (pivot_type == RELATION)
-  {
-    set< Relation_ >::const_iterator it(mit->second.get_relations().begin());
-    multiRelation_to_kvs_query(mit->second.get_relations(), it, tags);
-  }
-  vector< pair< string, string > >::const_iterator tit(tags.begin()->begin());
-  temp<<"insert into area_tags values ";
-  while (tit != tags.begin()->end())
-  {
-    ostringstream temp2;
-    temp2<<"select id from key_s where key_s.key_ = '";
-    escape_insert(temp2, tit->first);
-    temp2<<"'";
-    int key_id(int_query(mysql, temp2.str()));
-    if (key_id == 0)
-    {
-      key_id = int_query
-	  (mysql, "select max(id) from key_s") + 1;
-      temp2.str("");
-      temp2<<"insert into key_s values "
-	  <<"("<<key_id<<", '";
-      escape_insert(temp2, tit->first);
-      temp2<<"')";
-      mysql_query(mysql, temp2.str().c_str());
-    }
-      
-    temp2.str("");
-    temp2<<"select id from value_s where value_s.value_ = '";
-    escape_insert(temp2, tit->second);
-    temp2<<"'";
-    int value_id(int_query(mysql, temp2.str()));
-    if (value_id == 0)
-    {
-      value_id = int_query
-	  (mysql, "select max(id) from value_s") + 1;
-      temp2.str("");
-      temp2<<"insert into value_s values "
-	  <<"("<<value_id<<", '";
-      escape_insert(temp2, tit->second);
-      temp2<<"')";	
-      mysql_query(mysql, temp2.str().c_str());
-    }
-      
-    temp<<"("<<area.id<<", "<<key_id<<", "<<value_id<<")";
-    if (++tit != tags.begin()->end())
-      temp<<", ";
-  }
-  mysql_query(mysql, temp.str().c_str());
-  
-  ostringstream stack;
-  for (vector< pair< int, int > >::const_iterator it(get_stack().begin());
-       it != get_stack().end(); ++it)
-    stack<<it->first<<' '<<it->second<<' ';
-  temp.str("");
-  temp<<"insert area_origins values ("<<area.id<<", "
-      <<get_rule_id()<<", "
-      <<this->get_line_number()<<", '"
-      <<stack.str()<<"')";
-  mysql_query(mysql, temp.str().c_str());
-  
-  areas.insert(area);
-  maps[output] = Set(nodes, ways, relations, areas);*/
 }

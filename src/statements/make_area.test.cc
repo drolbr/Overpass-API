@@ -383,12 +383,12 @@ int main(int argc, char* args[])
 
   for (uint j(51400); j >= 51100; j -= 5) 
   {
-    if (j%100 == 95)
-      cout<<'\n';
+/*    if (j%100 == 95)
+      cout<<'\n';*/
     for (uint i(6900); i <= 7500; i += 4)
     {
-      if (i%100 == 0)
-	cout<<' ';
+/*      if (i%100 == 0)
+	cout<<' ';*/
       
       ostringstream temp;
       char lat[40];
@@ -406,7 +406,7 @@ int main(int argc, char* args[])
       stmt1->set_attributes(attributes);
       stmt1->execute(sets);
     }
-    cout<<'\n';
+/*    cout<<'\n';*/
   }
 
   return 0;
