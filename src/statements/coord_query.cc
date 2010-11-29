@@ -200,7 +200,7 @@ void Coord_Query_Statement::execute(map< string, Set >& maps)
   int32 ilon(lon*10000000 + (lon > 0 ? 0.5 : -0.5));
   
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
-      (*de_osm3s_file_ids::AREA_BLOCKS, false);
+      (*de_osm3s_file_ids::AREA_BLOCKS, true);
   for (Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
       it(area_blocks_db.discrete_begin(req.begin(), req.end()));
       !(it == area_blocks_db.discrete_end()); ++it)
@@ -216,16 +216,26 @@ void Coord_Query_Statement::execute(map< string, Set >& maps)
 	areas_inside.insert(it.object().id);
     }
   }
-/*  cout<<lat<<", "<<lon<<":";
-  for (set< uint32 >::const_iterator it(areas_inside.begin()); it != areas_inside.end(); ++it)
-    cout<<' '<<*it;
-  cout<<"; ";
-  for (set< uint32 >::const_iterator it(areas_on_border.begin()); it != areas_on_border.end(); ++it)
-    cout<<' '<<*it;
-  cout<<'\n';*/
-  if (areas_inside.find(3600062478ull) != areas_inside.end())
-    cout<<'#';
-  else
-    cout<<'.';
-  //cout<<(areas_inside.size() + areas_on_border.size());
+
+  map< Uint32_Index, vector< Node_Skeleton > >& nodes(maps[output].nodes);
+  map< Uint31_Index, vector< Way_Skeleton > >& ways(maps[output].ways);
+  map< Uint31_Index, vector< Relation_Skeleton > >& relations(maps[output].relations);
+  map< Uint31_Index, vector< Area_Skeleton > >& areas(maps[output].areas);
+  
+  nodes.clear();
+  ways.clear();
+  relations.clear();
+  areas.clear();
+
+  Block_Backend< Uint31_Index, Area_Skeleton > area_locations_db
+      (*de_osm3s_file_ids::AREAS, true);
+  for (Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
+      it(area_locations_db.flat_begin());
+      !(it == area_locations_db.flat_end()); ++it)
+  {
+    if (areas_inside.find(it.object().id) != areas_inside.end())
+      areas[it.index()].push_back(it.object());
+    else if (areas_on_border.find(it.object().id) != areas_on_border.end())
+      areas[it.index()].push_back(it.object());
+  }
 }

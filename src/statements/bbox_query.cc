@@ -74,12 +74,12 @@ void Bbox_Query_Statement::execute(map< string, Set >& maps)
   map< Uint32_Index, vector< Node_Skeleton > >& nodes(maps[output].nodes);
   map< Uint31_Index, vector< Way_Skeleton > >& ways(maps[output].ways);
   map< Uint31_Index, vector< Relation_Skeleton > >& relations(maps[output].relations);
-  //set< Area >& areas(maps[output].areas);
+  map< Uint31_Index, vector< Area_Skeleton > >& areas(maps[output].areas);
   
   nodes.clear();
   ways.clear();
   relations.clear();
-  //areas.clear();
+  areas.clear();
 
   vector< pair< uint32, uint32 > >* uint_ranges
     (Node::calc_ranges(south, north, west, east));

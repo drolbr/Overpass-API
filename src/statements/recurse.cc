@@ -121,7 +121,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
   map< Uint32_Index, vector< Node_Skeleton > >& nodes(maps[output].nodes);
   map< Uint31_Index, vector< Way_Skeleton > >& ways(maps[output].ways);
   map< Uint31_Index, vector< Relation_Skeleton > >& relations(maps[output].relations);
-  //set< Area >& areas(maps[output].areas);
+  map< Uint31_Index, vector< Area_Skeleton > >& areas(maps[output].areas);
   
   map< string, Set >::const_iterator mit(maps.find(input));
   if (mit == maps.end())
@@ -129,7 +129,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     nodes.clear();
     ways.clear();
     relations.clear();
-    //areas.clear();
+    areas.clear();
     
     return;
   }
@@ -166,7 +166,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     nodes.clear();
     ways.clear();
     relations.clear();
-    //areas.clear();
+    areas.clear();
   
     stopwatch_stop(NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
@@ -198,7 +198,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     nodes.clear();
     ways.clear();
     relations.clear();
-    //areas.clear();
+    areas.clear();
   
     stopwatch_stop(NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
@@ -252,7 +252,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     nodes.clear();
     ways.clear();
     relations.clear();
-    //areas.clear();
+    areas.clear();
   
     stopwatch_stop(NO_DISK);
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
@@ -298,7 +298,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     nodes.clear();
     ways.clear();
     relations.clear();
-    //areas.clear();
+    areas.clear();
   
     stopwatch_stop(NO_DISK);
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
@@ -361,7 +361,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     nodes.clear();
     ways.clear();
     relations.clear();
-    //areas.clear();
+    areas.clear();
   
     stopwatch_stop(NO_DISK);
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
@@ -406,7 +406,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     nodes.clear();
     ways.clear();
     relations.clear();
-    //areas.clear();
+    areas.clear();
   
     stopwatch_stop(NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
@@ -453,7 +453,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     nodes.clear();
     ways.clear();
     relations.clear();
-    //areas.clear();
+    areas.clear();
   
     stopwatch_stop(NO_DISK);
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
@@ -499,7 +499,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     nodes.clear();
     ways.clear();
     relations.clear();
-    //areas.clear();
+    areas.clear();
   
     stopwatch_stop(NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db

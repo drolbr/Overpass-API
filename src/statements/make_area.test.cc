@@ -215,12 +215,12 @@ int main(int argc, char* args[])
     stmt1->set_attributes(attributes);
     stmt1->execute(sets);
   }
-  /*  {
+  {
     Print_Statement* stmt1 = new Print_Statement(0);
-    const char* attributes[] = { "mode", "body", 0 };
+    const char* attributes[] = { 0 };
     stmt1->set_attributes(attributes);
     stmt1->execute(sets);
-  }*/
+  }
 
   cout<<"Query to create areas:\n";
   {
@@ -292,6 +292,12 @@ int main(int argc, char* args[])
     {
       Make_Area_Statement* stmt1 = new Make_Area_Statement(0);
       const char* attributes[] = { "pivot", "rels", 0 };
+      stmt1->set_attributes(attributes);
+      stmt3->add_statement(stmt1, "");
+    }
+    {
+      Print_Statement* stmt1 = new Print_Statement(0);
+      const char* attributes[] = { 0 };
       stmt1->set_attributes(attributes);
       stmt3->add_statement(stmt1, "");
     }
@@ -405,6 +411,20 @@ int main(int argc, char* args[])
       attributes[3] = (const char*)lon;
       stmt1->set_attributes(attributes);
       stmt1->execute(sets);
+      
+      map< Uint31_Index, vector< Area_Skeleton > >& areas(sets["_"].areas);
+      bool contains_w(false);
+      for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator
+	  it(areas.begin()); it != areas.end(); ++it)
+      {
+	for (vector< Area_Skeleton >::const_iterator it2(it->second.begin());
+	    it2 != it->second.end(); ++it2)
+	  contains_w |= (it2->id == 3600062478ull);
+      }
+      if (contains_w)
+	cout<<'#';
+      else
+	cout<<'.';
     }
     cout<<'\n';
   }

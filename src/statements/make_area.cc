@@ -268,17 +268,32 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   map< Uint32_Index, vector< Node_Skeleton > >& nodes(maps[output].nodes);
   map< Uint31_Index, vector< Way_Skeleton > >& ways(maps[output].ways);
   map< Uint31_Index, vector< Relation_Skeleton > >& relations(maps[output].relations);
+  map< Uint31_Index, vector< Area_Skeleton > >& areas(maps[output].areas);
   
   // detect pivot element
   map< string, Set >::const_iterator mit(maps.find(pivot));
   if (mit == maps.end())
+  {
+    nodes.clear();
+    ways.clear();
+    relations.clear();
+    areas.clear();
+    
     return;
+  }
   pair< uint32, uint32 > pivot_pair(detect_pivot(mit->second));
   uint32 pivot_type(pivot_pair.first);
   uint32 pivot_id(pivot_pair.second);
   
   if (pivot_type == 0)
+  {
+    nodes.clear();
+    ways.clear();
+    relations.clear();
+    areas.clear();
+    
     return;
+  }
   
   //formulate range query
   set< Uint31_Index > coarse_indices;
@@ -292,9 +307,9 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   
   formulate_range_query(range_set, coarse_indices);
   
-  vector< pair< string, string > > new_tags;
   // iterate over the result
   //stopwatch_stop(NO_DISK);
+  vector< pair< string, string > > new_tags;
   File_Properties* file_prop;
   if (pivot_type == NODE)
     file_prop = de_osm3s_file_ids::NODE_TAGS_LOCAL;
@@ -324,7 +339,7 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
     nodes.clear();
     ways.clear();
     relations.clear();
-    //areas.clear();
+    areas.clear();
     
     return;
   }
@@ -353,7 +368,14 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   }
   
   if ((odd_id != 0) || (odd_pair.first != 0))
+  {
+    nodes.clear();
+    ways.clear();
+    relations.clear();
+    areas.clear();
+    
     return;
+  }
   
   add_segment_blocks(area_blocks, pivot_id);
   
@@ -365,11 +387,18 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   new_location.tags = new_tags;
   Uint31_Index new_index(new_location.calc_index());
   
+  nodes.clear();
+  ways.clear();
+  relations.clear();
+  areas.clear();
+  
   if (new_index.val() == 0)
     return;
-
+  
   Area_Updater area_updater;
   area_updater.set_area(new_index, new_location);
   area_updater.add_blocks(area_blocks);
   area_updater.update();
+  
+  areas[new_index].push_back(Area_Skeleton(new_location));
 }

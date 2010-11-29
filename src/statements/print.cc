@@ -26,6 +26,7 @@ const unsigned int ORDER_BY_QUADTILE = 2;
 const unsigned int NODE_FLUSH_SIZE = 1024*1024;
 const unsigned int WAY_FLUSH_SIZE = 512*1024;
 const unsigned int RELATION_FLUSH_SIZE = 512*1024;
+const unsigned int AREA_FLUSH_SIZE = 64*1024;
 
 const char* MEMBER_TYPE[] = { 0, "node", "way", "relation" };
 
@@ -248,6 +249,24 @@ void print_item(uint32 ll_upper, const Relation_Skeleton& skel, uint32 mode,
   }
 }
 
+void print_item(uint32 ll_upper, const Area_Skeleton& skel, uint32 mode,
+		const vector< pair< string, string > >* tags = 0)
+{
+  cout<<"  <area";
+  if (mode & PRINT_IDS)
+    cout<<" id=\""<<skel.id<<'\"';
+  if ((tags == 0) || (tags->empty()))
+    cout<<"/>\n";
+  else
+  {
+    cout<<">\n";
+    for (vector< pair< string, string > >::const_iterator it(tags->begin());
+        it != tags->end(); ++it)
+      cout<<"    <tag k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n";
+    cout<<"  </area>\n";
+  }
+}
+
 template< class TIndex, class TObject >
 void quadtile
     (const map< TIndex, vector< TObject > >& items, uint32 mode)
@@ -418,6 +437,8 @@ void Print_Statement::execute(map< string, Set >& maps)
 		 WAY_FLUSH_SIZE, mode, WAY_TAGS_LOCAL);
       tags_by_id(mit->second.relations, *de_osm3s_file_ids::RELATION_TAGS_LOCAL,
 		 RELATION_FLUSH_SIZE, mode, RELATION_TAGS_LOCAL);
+      tags_by_id(mit->second.areas, *de_osm3s_file_ids::AREA_TAGS_LOCAL,
+		 AREA_FLUSH_SIZE, mode, AREA_TAGS_LOCAL);
     }
     else
     {
@@ -427,6 +448,8 @@ void Print_Statement::execute(map< string, Set >& maps)
 		    mode, WAY_TAGS_LOCAL);
       tags_quadtile(mit->second.relations, *de_osm3s_file_ids::RELATION_TAGS_LOCAL,
 		    mode, RELATION_TAGS_LOCAL);
+      tags_quadtile(mit->second.areas, *de_osm3s_file_ids::AREA_TAGS_LOCAL,
+		    mode, AREA_TAGS_LOCAL);
     }
   }
   else
@@ -436,12 +459,14 @@ void Print_Statement::execute(map< string, Set >& maps)
       by_id(mit->second.nodes, mode);
       by_id(mit->second.ways, mode);
       by_id(mit->second.relations, mode);
+      by_id(mit->second.areas, mode);
     }
     else
     {
       quadtile(mit->second.nodes, mode);
       quadtile(mit->second.ways, mode);
       quadtile(mit->second.relations, mode);
+      quadtile(mit->second.areas, mode);
     }
   }
   

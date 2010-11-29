@@ -354,7 +354,7 @@ void Query_Statement::execute(map< string, Set >& maps)
   map< Uint32_Index, vector< Node_Skeleton > >& nodes(maps[output].nodes);
   map< Uint31_Index, vector< Way_Skeleton > >& ways(maps[output].ways);
   map< Uint31_Index, vector< Relation_Skeleton > >& relations(maps[output].relations);
-  //set< Area >& areas(maps[output].areas);
+  map< Uint31_Index, vector< Area_Skeleton > >& areas(maps[output].areas);
   
   if (key_values.empty())
     return;
@@ -392,7 +392,7 @@ void Query_Statement::execute(map< string, Set >& maps)
     nodes.clear();
     ways.clear();
     relations.clear();
-    //areas.clear();
+    areas.clear();
   
     stopwatch_stop(NO_DISK);
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
@@ -440,7 +440,7 @@ void Query_Statement::execute(map< string, Set >& maps)
       stopwatch_stop(NO_DISK);
       Random_File< Uint31_Index > random(*de_osm3s_file_ids::WAYS, false);
       for (vector< uint32 >::const_iterator it(ids->begin());
-      it != ids->end(); ++it)
+          it != ids->end(); ++it)
       obj_req.insert(random.get(*it));
       stopwatch_stop(WAYS_MAP);
     }
@@ -448,7 +448,7 @@ void Query_Statement::execute(map< string, Set >& maps)
     nodes.clear();
     ways.clear();
     relations.clear();
-    //areas.clear();
+    areas.clear();
     
     stopwatch_stop(NO_DISK);
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
@@ -480,7 +480,7 @@ void Query_Statement::execute(map< string, Set >& maps)
     nodes.clear();
     ways.clear();
     relations.clear();
-    //areas.clear();
+    areas.clear();
     
     stopwatch_stop(NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db

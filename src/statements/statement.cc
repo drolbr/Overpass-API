@@ -7,9 +7,11 @@
 
 #include "statement.h"
 #include "bbox_query.h"
+#include "coord_query.h"
 #include "foreach.h"
 #include "id_query.h"
 #include "item.h"
+#include "make_area.h"
 #include "osm_script.h"
 #include "print.h"
 #include "query.h"
@@ -124,8 +126,8 @@ Statement::Statement* Statement::create_statement(string element, int line_numbe
     return new Bbox_Query_Statement(line_number);
 /*  else if (element == "conflict")
     return new Conflict_Statement(line_number);*/
-/*  else if (element == "coord-query")
-    return new Coord_Query_Statement();*/
+  else if (element == "coord-query")
+    return new Coord_Query_Statement(line_number);
 /*  else if (element == "detect-odd-nodes")
     return new Detect_Odd_Nodes_Statement();*/
   else if (element == "foreach")
@@ -136,8 +138,8 @@ Statement::Statement* Statement::create_statement(string element, int line_numbe
     return new Id_Query_Statement(line_number);
   else if (element == "item")
     return new Item_Statement(line_number);
-/*  else if (element == "make-area")
-    return new Make_Area_Statement();*/
+  else if (element == "make-area")
+    return new Make_Area_Statement(line_number);
   else if (element == "osm-script")
     return new Osm_Script_Statement(line_number);
   else if (element == "print")

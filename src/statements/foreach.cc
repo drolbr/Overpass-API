@@ -38,8 +38,6 @@ void Foreach_Statement::add_statement(Statement* statement, string text)
        (statement->get_name() == "query") ||
        (statement->get_name() == "recurse") ||
        (statement->get_name() == "union")/* ||
-       (statement->get_name() == "make-area") ||
-       (statement->get_name() == "coord-query") ||
        (statement->get_name() == "area-query") ||
        (statement->get_name() == "conflict") ||
        (statement->get_name() == "report") ||
@@ -249,6 +247,7 @@ void Foreach_Statement::execute(map< string, Set >& maps)
       maps[output].nodes.clear();
       maps[output].ways.clear();
       maps[output].relations.clear();
+      maps[output].areas.clear();
       maps[output].nodes[it->first].push_back(*it2);
       stopwatch_stop(NO_DISK);
       for (vector< Statement* >::iterator it(substatements.begin());
@@ -269,6 +268,7 @@ void Foreach_Statement::execute(map< string, Set >& maps)
       maps[output].nodes.clear();
       maps[output].ways.clear();
       maps[output].relations.clear();
+      maps[output].areas.clear();
       maps[output].ways[it->first].push_back(*it2);
       stopwatch_stop(NO_DISK);
       for (vector< Statement* >::iterator it(substatements.begin());
@@ -289,7 +289,29 @@ void Foreach_Statement::execute(map< string, Set >& maps)
       maps[output].nodes.clear();
       maps[output].ways.clear();
       maps[output].relations.clear();
+      maps[output].areas.clear();
       maps[output].relations[it->first].push_back(*it2);
+      stopwatch_stop(NO_DISK);
+      for (vector< Statement* >::iterator it(substatements.begin());
+      it != substatements.end(); ++it)
+      {
+	(*it)->execute(maps);
+	stopwatch_sum(*it);
+      }
+      stopwatch_skip();
+    }
+  }
+  for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator
+    it(base_set.areas.begin()); it != base_set.areas.end(); ++it)
+  {
+    for (vector< Area_Skeleton >::const_iterator it2(it->second.begin());
+    it2 != it->second.end(); ++it2)
+    {
+      maps[output].nodes.clear();
+      maps[output].ways.clear();
+      maps[output].relations.clear();
+      maps[output].areas.clear();
+      maps[output].areas[it->first].push_back(*it2);
       stopwatch_stop(NO_DISK);
       for (vector< Statement* >::iterator it(substatements.begin());
       it != substatements.end(); ++it)

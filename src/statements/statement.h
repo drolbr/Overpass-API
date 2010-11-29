@@ -16,7 +16,7 @@ using namespace std;
 class Statement
 {
   public:
-    Statement(int line_number_) : line_number(line_number_), stopwatches(14) {}
+    Statement(int line_number_) : line_number(line_number_), stopwatches(18) {}
     
     virtual void set_attributes(const char **attr) = 0;
     virtual void add_statement(Statement* statement, string text);
@@ -72,6 +72,10 @@ class Statement
     const static int RELATION_ROLES = 11;
     const static int RELATION_TAGS_LOCAL = 12;
     const static int RELATION_TAGS_GLOBAL = 13;
+    const static int AREAS = 14;
+    const static int AREA_BLOCKS = 15;
+    const static int AREA_TAGS_LOCAL = 16;
+    const static int AREA_TAGS_GLOBAL = 17;
     
     void stopwatch_start();
     void stopwatch_skip();

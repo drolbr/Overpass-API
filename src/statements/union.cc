@@ -69,7 +69,7 @@ void Union_Statement::execute(map< string, Set >& maps)
   map< Uint32_Index, vector< Node_Skeleton > > nodes;
   map< Uint31_Index, vector< Way_Skeleton > > ways;
   map< Uint31_Index, vector< Relation_Skeleton > > relations;
-  //set< Area > areas;
+  map< Uint31_Index, vector< Area_Skeleton > > areas;
   
   for (vector< Statement* >::iterator it(substatements.begin());
        it != substatements.end(); ++it)
@@ -108,13 +108,21 @@ void Union_Statement::execute(map< string, Set >& maps)
       set_union(it->second.begin(), it->second.end(), other.begin(), other.end(),
 	    back_inserter(relations[it->first]));
     }
-    // areas
+    for (map< Uint31_Index, vector< Area_Skeleton > >::iterator
+      it(summand.areas.begin()); it != summand.areas.end(); ++it)
+    {
+      sort(it->second.begin(), it->second.end());
+      vector< Area_Skeleton > other(areas[it->first]);
+      areas[it->first].clear();
+      set_union(it->second.begin(), it->second.end(), other.begin(), other.end(),
+		back_inserter(areas[it->first]));
+    }
   }
   
   maps[output].nodes = nodes;
   maps[output].ways = ways;
   maps[output].relations = relations;
-  //maps[output].areas = areas;
+  maps[output].areas = areas;
   
   stopwatch_stop(NO_DISK);
   stopwatch_report();
