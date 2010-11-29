@@ -221,6 +221,7 @@ struct Set
   map< Uint32_Index, vector< Node_Skeleton > > nodes;
   map< Uint31_Index, vector< Way_Skeleton > > ways;
   map< Uint31_Index, vector< Relation_Skeleton > > relations;
+  map< Uint31_Index, vector< Area_Skeleton > > areas;
 };
 
 struct Error_Output

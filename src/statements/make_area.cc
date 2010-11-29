@@ -310,10 +310,7 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   for (; !(tag_it == items_db.range_end()); ++tag_it)
   {
     if (tag_it.object().val() == pivot_id)
-    {
       new_tags.push_back(make_pair(tag_it.index().key, tag_it.index().value));
-      //cout<<hex<<"0x"<<tag_it.index().index<<dec<<" \""<<tag_it.index().key<<"\"=\""<<tag_it.index().value<<"\"\n";
-    }
   }
   
   if (pivot_type == WAY)

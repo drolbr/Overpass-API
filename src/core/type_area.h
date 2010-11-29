@@ -18,53 +18,6 @@ struct Aligned_Segment
 
 struct Area
 {
-//   uint32 id;
-//   uint32 index;
-//   vector< uint32 > nds;
-//   vector< pair< string, string > > tags;
-//   
-//   Way() : id(0), index(0) {}
-//   
-//   Way(uint32 id_)
-//   : id(id_), index(0)
-//   {}
-//   
-//   Way(uint32 id_, uint32 index_, const vector< uint32 >& nds_)
-//   : id(id_), index(index_), nds(nds_) {}
-//   
-//   static uint32 calc_index(const vector< uint32 >& nd_idxs)
-//   {
-//     if (nd_idxs.empty())
-//       return 0;
-//     
-//     uint32 bitmask(0), value(nd_idxs[0]);
-//     for (uint i(1); i < nd_idxs.size(); ++i)
-//       bitmask |= (value ^ nd_idxs[i]);
-//     if (bitmask & 0xff000000)
-//       value = 0x80000040;
-//     else if (bitmask & 0xffff0000)
-//       value = (value & 0xff000000) | 0x80000030;
-//     else if (bitmask & 0xffffff00)
-//       value = (value & 0xffff0000) | 0x80000020;
-//     else if (bitmask)
-//       value = (value & 0xffffff00) | 0x80000010;
-//     
-//     return value;
-//   }
-// };
-// 
-// struct Way_Comparator_By_Id {
-//   bool operator() (const Way& a, const Way& b)
-//   {
-//     return (a.id < b.id);
-//   }
-// };
-// 
-// struct Way_Equal_Id {
-//   bool operator() (const Way& a, const Way& b)
-//   {
-//     return (a.id == b.id);
-//   }
   static Aligned_Segment segment_from_ll_quad
       (uint32 from_lat, int32 from_lon, uint32 to_lat, int32 to_lon)
   {
@@ -242,38 +195,8 @@ struct Area_Location
   
   Area_Location() {}
   
-  Area_Location(void* data)
-  {
-    id = *(uint32*)data;
-    for (int i(0); i < *((uint32*)data + 1); ++i)
-      used_indices.insert(*((uint32*)data + i + 2));
-  }
-  
   Area_Location(uint32 id_, const set< uint32 >& used_indices_)
   : id(id_), used_indices(used_indices_) {}
-  
-  uint32 size_of() const
-  {
-    return 8 + 4*used_indices.size();
-  }
-  
-  static uint32 size_of(void* data)
-  {
-    return (8 + 4 * *((uint32*)data + 1));
-  }
-  
-  void to_data(void* data) const
-  {
-    *(uint32*)data = id;
-    *((uint32*)data + 1) = used_indices.size();
-    uint i(2);
-    for (set< uint32 >::const_iterator it(used_indices.begin());
-        it != used_indices.end(); ++it)
-    {
-      *((uint32*)data + i) = *it;
-      ++i;
-    }
-  }
   
   bool operator<(const Area_Location& a) const
   {
@@ -318,6 +241,57 @@ struct Area_Location
       value = (value & 0xffffff00) | 0x80000010;
     
     return value;
+  }
+};
+
+struct Area_Skeleton
+{
+  uint32 id;
+  set< uint32 > used_indices;
+  
+  Area_Skeleton() {}
+  
+  Area_Skeleton(void* data)
+  {
+    id = *(uint32*)data;
+    for (int i(0); i < *((uint32*)data + 1); ++i)
+      used_indices.insert(*((uint32*)data + i + 2));
+  }
+  
+  Area_Skeleton(const Area_Location& loc)
+  : id(loc.id), used_indices(loc.used_indices) {}
+  
+  uint32 size_of() const
+  {
+    return 8 + 4*used_indices.size();
+  }
+  
+  static uint32 size_of(void* data)
+  {
+    return (8 + 4 * *((uint32*)data + 1));
+  }
+  
+  void to_data(void* data) const
+  {
+    *(uint32*)data = id;
+    *((uint32*)data + 1) = used_indices.size();
+    uint i(2);
+    for (set< uint32 >::const_iterator it(used_indices.begin());
+    it != used_indices.end(); ++it)
+    {
+      *((uint32*)data + i) = *it;
+      ++i;
+    }
+  }
+  
+  bool operator<(const Area_Skeleton& a) const
+  {
+    return (this->id < a.id);
+  }
+  
+  bool operator==(const Area_Skeleton& a) const
+  {
+    return (this->id == a.id);
   }
 };
 
