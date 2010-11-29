@@ -406,7 +406,7 @@ int main(int argc, char* args[])
       stmt1->set_attributes(attributes);
       stmt1->execute(sets);
     }
-/*    cout<<'\n';*/
+    cout<<'\n';
   }
 
   return 0;

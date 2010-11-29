@@ -223,5 +223,9 @@ void Coord_Query_Statement::execute(map< string, Set >& maps)
   for (set< uint32 >::const_iterator it(areas_on_border.begin()); it != areas_on_border.end(); ++it)
     cout<<' '<<*it;
   cout<<'\n';*/
+  if (areas_inside.find(3600062478ull) != areas_inside.end())
+    cout<<'#';
+  else
+    cout<<'.';
   //cout<<(areas_inside.size() + areas_on_border.size());
 }

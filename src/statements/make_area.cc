@@ -292,6 +292,7 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   
   formulate_range_query(range_set, coarse_indices);
   
+  vector< pair< string, string > > new_tags;
   // iterate over the result
   //stopwatch_stop(NO_DISK);
   File_Properties* file_prop;
@@ -309,7 +310,10 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   for (; !(tag_it == items_db.range_end()); ++tag_it)
   {
     if (tag_it.object().val() == pivot_id)
-      cout<<hex<<"0x"<<tag_it.index().index<<dec<<" \""<<tag_it.index().key<<"\"=\""<<tag_it.index().value<<"\"\n";
+    {
+      new_tags.push_back(make_pair(tag_it.index().key, tag_it.index().value));
+      //cout<<hex<<"0x"<<tag_it.index().index<<dec<<" \""<<tag_it.index().key<<"\"=\""<<tag_it.index().value<<"\"\n";
+    }
   }
   
   if (pivot_type == WAY)
@@ -361,58 +365,14 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
       it(area_blocks.begin()); it != area_blocks.end(); ++it)
     used_indices.insert(it->first.val());
   Area_Location new_location(pivot_id, used_indices);
+  new_location.tags = new_tags;
   Uint31_Index new_index(new_location.calc_index());
   
   if (new_index.val() == 0)
     return;
 
-  map< Uint31_Index, set< Area_Location > > location_to_delete;
-  map< Uint31_Index, set< Area_Location > > location_to_insert;
-  set< Uint31_Index > blocks_req;
-  
-  Block_Backend< Uint31_Index, Area_Location > area_locations_db
-      (*de_osm3s_file_ids::AREAS, false);
-  for (Block_Backend< Uint31_Index, Area_Location >::Flat_Iterator
-      it(area_locations_db.flat_begin());
-      !(it == area_locations_db.flat_end()); ++it)
-  {
-    if (it.object().id == pivot_id)
-    {
-/*      cout<<"d "<<pivot_id;*/
-      for (set< uint32 >::const_iterator it2(it.object().used_indices.begin());
-          it2 != it.object().used_indices.end(); ++it2)
-      {
-/*	cout<<' '<<hex<<*it2<<dec;*/
-        blocks_req.insert(*it2);
-      }
-/*      cout<<'\n';*/
-      location_to_delete[it.index()].insert(it.object());
-    }
-  }
-  location_to_insert[new_index].insert(new_location);
-  area_locations_db.update(location_to_delete, location_to_insert);
-  
-  map< Uint31_Index, set< Area_Block > > db_to_delete;
-  map< Uint31_Index, set< Area_Block > > db_to_insert;
-
-  Block_Backend< Uint31_Index, Area_Block > area_blocks_db
-      (*de_osm3s_file_ids::AREA_BLOCKS, true);
-  
-  for (Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
-      it(area_blocks_db.discrete_begin(blocks_req.begin(), blocks_req.end()));
-      !(it == area_blocks_db.discrete_end()); ++it)
-  {
-    if (it.object().id == pivot_id)
-      db_to_delete[it.index()].insert(it.object());
-  }
-  
-  for (map< Uint31_Index, vector< Area_Block > >::const_iterator
-      it(area_blocks.begin()); it != area_blocks.end(); ++it)
-  {
-    for (vector< Area_Block >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-      db_to_insert[it->first].insert(*it2);
-  }
-  
-  area_blocks_db.update(db_to_delete, db_to_insert);
+  Area_Updater area_updater;
+  area_updater.set_area(new_index, new_location);
+  area_updater.add_blocks(area_blocks);
+  area_updater.update();
 }

@@ -57,18 +57,30 @@ struct Area_Updater
     areas_to_insert.push_back(make_pair(area, index));
   }
   
+  void add_blocks(const map< Uint31_Index, vector< Area_Block > >& area_blocks_)
+  {
+    for (map< Uint31_Index, vector< Area_Block > >::const_iterator
+        it(area_blocks_.begin()); it != area_blocks_.end(); ++it)
+    {
+      for (vector< Area_Block >::const_iterator it2(it->second.begin());
+          it2 != it->second.end(); ++it2)
+        area_blocks[it->first].push_back(*it2);
+    }
+  }
+  
   void update()
   {
     cerr<<'.'<<' '<<time(NULL)<<' ';
     
-     map< Uint31_Index, set< Area_Location > > to_delete;
-     update_area_ids(to_delete);
-     update_members(to_delete);
+    map< Uint31_Index, set< Area_Location > > locations_to_delete;
+    map< Uint31_Index, set< Area_Block > > blocks_to_delete;
+    update_area_ids(locations_to_delete, blocks_to_delete);
+    update_members(locations_to_delete, blocks_to_delete);
  
-     vector< Tag_Entry > tags_to_delete;
-     prepare_delete_tags(tags_to_delete, to_delete);
-     update_area_tags_local(tags_to_delete);
-     update_area_tags_global(tags_to_delete);
+    vector< Tag_Entry > tags_to_delete;
+    prepare_delete_tags(tags_to_delete, locations_to_delete);
+    update_area_tags_local(tags_to_delete);
+    update_area_tags_global(tags_to_delete);
 
     ids_to_modify.clear();
     areas_to_insert.clear();
@@ -78,6 +90,7 @@ struct Area_Updater
   }
   
 private:
+  map< Uint31_Index, vector< Area_Block > > area_blocks;
   map< string, uint32 > role_ids;
   uint32 max_written_role_id;
   uint32 max_role_id;
@@ -88,32 +101,70 @@ private:
   static Pair_Comparator_By_Id pair_comparator_by_id;
   static Pair_Equal_Id pair_equal_id;
   
-  void update_area_ids(map< Uint31_Index, set< Area_Location > >& to_delete)
+  public:
+    set< Uint31_Index > blocks_req;
+  private:
+  void update_area_ids
+      (map< Uint31_Index, set< Area_Location > >& locations_to_delete,
+       map< Uint31_Index, set< Area_Block > >& blocks_to_delete)
   {
+    //set< Uint31_Index > blocks_req;
+    
     // process the areas themselves
     Block_Backend< Uint31_Index, Area_Location > area_locations_db
-        (*de_osm3s_file_ids::AREAS, false);
+        (*de_osm3s_file_ids::AREAS, true);
     for (Block_Backend< Uint31_Index, Area_Location >::Flat_Iterator
         it(area_locations_db.flat_begin());
         !(it == area_locations_db.flat_end()); ++it)
     {
       if (ids_to_modify.find(it.object().id) != ids_to_modify.end())
       {
-	to_delete[it.index().val()].insert(it.object());
+	for (set< uint32 >::const_iterator it2(it.object().used_indices.begin());
+	    it2 != it.object().used_indices.end(); ++it2)
+	  blocks_req.insert(*it2);
+	locations_to_delete[it.index().val()].insert(it.object());
+      }
+    }
+
+    Block_Backend< Uint31_Index, Area_Block > area_blocks_db
+        (*de_osm3s_file_ids::AREA_BLOCKS, true);
+    for (Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
+        it(area_blocks_db.discrete_begin(blocks_req.begin(), blocks_req.end()));
+        !(it == area_blocks_db.discrete_end()); ++it)
+    {
+      if (ids_to_modify.find(it.object().id) != ids_to_modify.end())
+      {
+	cout<<hex<<it.index().val()<<dec<<'\t'<<it.object().id<<'\n';
+        blocks_to_delete[it.index()].insert(it.object());
       }
     }
   }
   
-  void update_members(const map< Uint31_Index, set< Area_Location > >& to_delete)
+  void update_members
+      (const map< Uint31_Index, set< Area_Location > >& locations_to_delete,
+       const map< Uint31_Index, set< Area_Block > >& blocks_to_delete)
   {
-    map< Uint31_Index, set< Area_Location > > db_to_insert;
+    map< Uint31_Index, set< Area_Location > > locations_to_insert;
     for (vector< pair< Area_Location, Uint31_Index > >::const_iterator
         it(areas_to_insert.begin()); it != areas_to_insert.end(); ++it)
-      db_to_insert[it->second].insert(it->first);
-    
+      locations_to_insert[it->second].insert(it->first);
+
     Block_Backend< Uint31_Index, Area_Location > area_locations_db
         (*de_osm3s_file_ids::AREAS, true);
-    area_locations_db.update(to_delete, db_to_insert);
+    area_locations_db.update(locations_to_delete, locations_to_insert);
+
+    map< Uint31_Index, set< Area_Block > > blocks_to_insert;
+    for (map< Uint31_Index, vector< Area_Block > >::const_iterator
+        it(area_blocks.begin()); it != area_blocks.end(); ++it)
+    {
+      for (vector< Area_Block >::const_iterator it2(it->second.begin());
+          it2 != it->second.end(); ++it2)
+        blocks_to_insert[it->first].insert(*it2);
+    }
+    
+    Block_Backend< Uint31_Index, Area_Block > area_blocks
+        (*de_osm3s_file_ids::AREA_BLOCKS, true);
+    area_blocks.update(blocks_to_delete, blocks_to_insert);
   }
   
   void prepare_delete_tags
