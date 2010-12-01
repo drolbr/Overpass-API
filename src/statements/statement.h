@@ -7,6 +7,7 @@
 
 #include "../core/datatypes.h"
 #include "../core/settings.h"
+#include "../osm-backend/stopwatch.h"
 
 using namespace std;
 
@@ -16,7 +17,7 @@ using namespace std;
 class Statement
 {
   public:
-    Statement(int line_number_) : line_number(line_number_), stopwatches(18) {}
+    Statement(int line_number_) : line_number(line_number_) {}
     
     virtual void set_attributes(const char **attr) = 0;
     virtual void add_statement(Statement* statement, string text);
@@ -42,6 +43,7 @@ class Statement
     static void set_error_output(Error_Output* error_output_)
     {
       error_output = error_output_;
+      Stopwatch::set_error_output(error_output);
     }
     
     const static int NODE = 1;
@@ -53,11 +55,10 @@ class Statement
     
     int line_number;
     int startpos, endpos, tagendpos;
-    
-    double stopwatch;
-    vector< double > stopwatches;
-    
+        
   protected:
+    Stopwatch stopwatch;
+    
     const static int NO_DISK = 0;
     const static int NODES_MAP = 1;
     const static int NODES = 2;
@@ -77,11 +78,11 @@ class Statement
     const static int AREA_TAGS_LOCAL = 16;
     const static int AREA_TAGS_GLOBAL = 17;
     
-    void stopwatch_start();
-    void stopwatch_skip();
-    void stopwatch_stop(uint32 account);    
-    void stopwatch_report() const;
-    void stopwatch_sum(const Statement* s);
+    void stopwatch_start() { stopwatch.start(); }
+    void stopwatch_skip() { stopwatch.skip(); }
+    void stopwatch_stop(uint32 account) { stopwatch.stop(account); }
+    void stopwatch_report() const { stopwatch.report(get_name()); }
+    void stopwatch_sum(const Statement* s) { stopwatch.sum(s->stopwatch); }
     
     void eval_cstr_array
         (string element, map< string, string >& attributes, const char **attr);

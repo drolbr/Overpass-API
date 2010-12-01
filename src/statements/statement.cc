@@ -3,8 +3,6 @@
 #include <sstream>
 #include <string>
 
-#include <time.h>
-
 #include "statement.h"
 #include "bbox_query.h"
 #include "coord_query.h"
@@ -78,44 +76,6 @@ void Statement::display_full()
 void Statement::display_starttag()
 {
   //display_verbatim(get_source(startpos, tagendpos - startpos));
-}
-
-void Statement::stopwatch_start()
-{
-  for (uint i(0); i < stopwatches.size(); ++i)
-    stopwatches[i] = 0;
-  timespec ts;
-  clock_gettime(CLOCK_REALTIME, &ts);
-  stopwatch = ts.tv_sec + ((double)ts.tv_nsec)/1000000000.0;
-}
-
-void Statement::stopwatch_skip()
-{
-  timespec ts;
-  clock_gettime(CLOCK_REALTIME, &ts);
-  stopwatch = ts.tv_sec + ((double)ts.tv_nsec)/1000000000.0;
-}
-
-void Statement::stopwatch_stop(uint32 account)
-{
-  timespec ts;
-  clock_gettime(CLOCK_REALTIME, &ts);
-  stopwatches[account] += (ts.tv_sec + ((double)ts.tv_nsec)/1000000000.0)
-    - stopwatch;
-  clock_gettime(CLOCK_REALTIME, &ts);
-  stopwatch = ts.tv_sec + ((double)ts.tv_nsec)/1000000000.0;
-}
-
-void Statement::stopwatch_report() const
-{
-  if (error_output)
-    error_output->display_statement_stopwatch(get_name(), stopwatches);
-}
-
-void Statement::stopwatch_sum(const Statement* s)
-{
-  for (uint i(0); i < stopwatches.size(); ++i)
-    stopwatches[i] += s->stopwatches[i];
 }
 
 Statement::Statement* Statement::create_statement(string element, int line_number)

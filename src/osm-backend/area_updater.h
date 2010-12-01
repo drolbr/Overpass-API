@@ -11,6 +11,8 @@
 #include "../backend/random_file.h"
 #include "../core/datatypes.h"
 #include "../core/settings.h"
+#include "../statements/statement.h"
+#include "stopwatch.h"
 
 using namespace std;
 
@@ -68,32 +70,25 @@ struct Area_Updater
     }
   }
   
-  void update()
+  void update(Stopwatch& stopwatch)
   {
-    cerr<<'.'<<' '<<time(NULL)<<' ';
-    
     map< Uint31_Index, set< Area_Skeleton > > locations_to_delete;
     map< Uint31_Index, set< Area_Block > > blocks_to_delete;
-    update_area_ids(locations_to_delete, blocks_to_delete);
-    update_members(locations_to_delete, blocks_to_delete);
+    update_area_ids(locations_to_delete, blocks_to_delete, stopwatch);
+    update_members(locations_to_delete, blocks_to_delete, stopwatch);
  
     vector< Tag_Entry > tags_to_delete;
-    prepare_delete_tags(tags_to_delete, locations_to_delete);
-    update_area_tags_local(tags_to_delete);
-    update_area_tags_global(tags_to_delete);
+    prepare_delete_tags(tags_to_delete, locations_to_delete, stopwatch);
+    update_area_tags_local(tags_to_delete, stopwatch);
+    update_area_tags_global(tags_to_delete, stopwatch);
 
     ids_to_modify.clear();
     areas_to_insert.clear();
-    
-    cerr<<'A'<<' '<<time(NULL)<<' ';
-    cerr<<'a'<<' '<<time(NULL)<<' ';
+    area_blocks.clear();
   }
   
 private:
   map< Uint31_Index, vector< Area_Block > > area_blocks;
-  map< string, uint32 > role_ids;
-  uint32 max_written_role_id;
-  uint32 max_role_id;
   set< uint32 > ids_to_modify;
   vector< pair< Area_Location, Uint31_Index > > areas_to_insert;
   static Area_Pair_Comparator_By_Id area_comparator_by_id;
@@ -103,9 +98,12 @@ private:
   
   void update_area_ids
       (map< Uint31_Index, set< Area_Skeleton > >& locations_to_delete,
-       map< Uint31_Index, set< Area_Block > >& blocks_to_delete)
+       map< Uint31_Index, set< Area_Block > >& blocks_to_delete,
+       Stopwatch& stopwatch)
   {
     set< Uint31_Index > blocks_req;
+    
+    stopwatch.stop(Stopwatch::NO_DISK);
     
     // process the areas themselves
     Block_Backend< Uint31_Index, Area_Skeleton > area_locations_db
@@ -122,7 +120,9 @@ private:
 	locations_to_delete[it.index().val()].insert(it.object());
       }
     }
-
+    
+    stopwatch.stop(Stopwatch::AREAS);
+    
     Block_Backend< Uint31_Index, Area_Block > area_blocks_db
         (*de_osm3s_file_ids::AREA_BLOCKS, true);
     for (Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
@@ -132,21 +132,28 @@ private:
       if (ids_to_modify.find(it.object().id) != ids_to_modify.end())
         blocks_to_delete[it.index()].insert(it.object());
     }
+
+    stopwatch.stop(Stopwatch::AREA_BLOCKS);
   }
   
   void update_members
       (const map< Uint31_Index, set< Area_Skeleton > >& locations_to_delete,
-       const map< Uint31_Index, set< Area_Block > >& blocks_to_delete)
+       const map< Uint31_Index, set< Area_Block > >& blocks_to_delete,
+       Stopwatch& stopwatch)
   {
     map< Uint31_Index, set< Area_Skeleton > > locations_to_insert;
     for (vector< pair< Area_Location, Uint31_Index > >::const_iterator
         it(areas_to_insert.begin()); it != areas_to_insert.end(); ++it)
       locations_to_insert[it->second].insert(Area_Skeleton(it->first));
 
+    stopwatch.stop(Stopwatch::NO_DISK);
+    
     Block_Backend< Uint31_Index, Area_Skeleton > area_locations
         (*de_osm3s_file_ids::AREAS, true);
     area_locations.update(locations_to_delete, locations_to_insert);
-
+    
+    stopwatch.stop(Stopwatch::AREAS);
+    
     map< Uint31_Index, set< Area_Block > > blocks_to_insert;
     for (map< Uint31_Index, vector< Area_Block > >::const_iterator
         it(area_blocks.begin()); it != area_blocks.end(); ++it)
@@ -156,15 +163,20 @@ private:
         blocks_to_insert[it->first].insert(*it2);
     }
     
-    Block_Backend< Uint31_Index, Area_Block > area_blocks
+    Block_Backend< Uint31_Index, Area_Block > area_blocks_db
         (*de_osm3s_file_ids::AREA_BLOCKS, true);
-    area_blocks.update(blocks_to_delete, blocks_to_insert);
+    area_blocks_db.update(blocks_to_delete, blocks_to_insert);
+  
+    stopwatch.stop(Stopwatch::AREA_BLOCKS);
   }
   
   void prepare_delete_tags
       (vector< Tag_Entry >& tags_to_delete,
-       const map< Uint31_Index, set< Area_Skeleton > >& to_delete)
+       const map< Uint31_Index, set< Area_Skeleton > >& to_delete,
+       Stopwatch& stopwatch)
   {
+    stopwatch.stop(Stopwatch::NO_DISK);
+    
     // make indices appropriately coarse
     map< uint32, set< uint32 > > to_delete_coarse;
     for (map< Uint31_Index, set< Area_Skeleton > >::const_iterator
@@ -220,12 +232,17 @@ private:
     }
     if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
       tags_to_delete.push_back(tag_entry);
+    
+    stopwatch.stop(Stopwatch::AREA_TAGS_LOCAL);
   }
        
   void prepare_tags
       (vector< Tag_Entry >& tags_to_delete,
-       const map< uint32, vector< uint32 > >& to_delete)
+       const map< uint32, vector< uint32 > >& to_delete,
+       Stopwatch& stopwatch)
   {
+    stopwatch.stop(Stopwatch::NO_DISK);
+    
     // make indices appropriately coarse
     map< uint32, set< uint32 > > to_delete_coarse;
     for (map< uint32, vector< uint32 > >::const_iterator
@@ -289,12 +306,18 @@ private:
     }
     if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
       tags_to_delete.push_back(tag_entry);
+    
+    stopwatch.stop(Stopwatch::AREA_TAGS_LOCAL);  
   }
        
-  void update_area_tags_local(const vector< Tag_Entry >& tags_to_delete)
+  void update_area_tags_local
+      (const vector< Tag_Entry >& tags_to_delete,
+       Stopwatch& stopwatch)
   {
     map< Tag_Index_Local, set< Uint32_Index > > db_to_delete;
     map< Tag_Index_Local, set< Uint32_Index > > db_to_insert;
+    
+    stopwatch.stop(Stopwatch::NO_DISK);
     
     for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
 	 it != tags_to_delete.end(); ++it)
@@ -337,12 +360,18 @@ private:
     Block_Backend< Tag_Index_Local, Uint32_Index > area_db
 	(*de_osm3s_file_ids::AREA_TAGS_LOCAL, true);
     area_db.update(db_to_delete, db_to_insert);
+    
+    stopwatch.stop(Stopwatch::AREA_TAGS_LOCAL);
   }
   
-  void update_area_tags_global(const vector< Tag_Entry >& tags_to_delete)
+  void update_area_tags_global
+      (const vector< Tag_Entry >& tags_to_delete,
+       Stopwatch& stopwatch)
   {
     map< Tag_Index_Global, set< Uint32_Index > > db_to_delete;
     map< Tag_Index_Global, set< Uint32_Index > > db_to_insert;
+    
+    stopwatch.stop(Stopwatch::NO_DISK);
     
     for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
 	 it != tags_to_delete.end(); ++it)
@@ -380,6 +409,8 @@ private:
     Block_Backend< Tag_Index_Global, Uint32_Index > area_db
       (*de_osm3s_file_ids::AREA_TAGS_GLOBAL, true);
     area_db.update(db_to_delete, db_to_insert);
+
+    stopwatch.stop(Stopwatch::AREA_TAGS_GLOBAL);  
   }
 };
 

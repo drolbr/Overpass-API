@@ -410,6 +410,7 @@ int main(int argc, char* args[])
       attributes[1] = (const char*)lat;
       attributes[3] = (const char*)lon;
       stmt1->set_attributes(attributes);
+      Statement::set_error_output(0);
       stmt1->execute(sets);
       
       map< Uint31_Index, vector< Area_Skeleton > >& areas(sets["_"].areas);

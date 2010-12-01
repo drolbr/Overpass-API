@@ -265,6 +265,8 @@ void Make_Area_Statement::add_segment_blocks
 
 void Make_Area_Statement::execute(map< string, Set >& maps)
 {
+  stopwatch_start();
+  
   map< Uint32_Index, vector< Node_Skeleton > >& nodes(maps[output].nodes);
   map< Uint31_Index, vector< Way_Skeleton > >& ways(maps[output].ways);
   map< Uint31_Index, vector< Relation_Skeleton > >& relations(maps[output].relations);
@@ -278,6 +280,8 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
     ways.clear();
     relations.clear();
     areas.clear();
+    stopwatch_stop(NO_DISK);
+    stopwatch_report();
     
     return;
   }
@@ -285,17 +289,20 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   uint32 pivot_type(pivot_pair.first);
   uint32 pivot_id(pivot_pair.second);
   
+  stopwatch_stop(NO_DISK);
+  
   if (pivot_type == 0)
   {
     nodes.clear();
     ways.clear();
     relations.clear();
     areas.clear();
+    stopwatch_report();
     
     return;
   }
   
-  //formulate range query
+  //formulate range query to query tags of the pivot
   set< Uint31_Index > coarse_indices;
   set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
   if (pivot_type == NODE)
@@ -308,7 +315,6 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   formulate_range_query(range_set, coarse_indices);
   
   // iterate over the result
-  //stopwatch_stop(NO_DISK);
   vector< pair< string, string > > new_tags;
   File_Properties* file_prop;
   if (pivot_type == NODE)
@@ -328,6 +334,13 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
       new_tags.push_back(make_pair(tag_it.index().key, tag_it.index().value));
   }
   
+  if (pivot_type == NODE)
+    stopwatch_stop(NODE_TAGS_LOCAL);
+  else if (pivot_type == WAY)
+    stopwatch_stop(WAY_TAGS_LOCAL);
+  else if (pivot_type == RELATION)
+    stopwatch_stop(RELATION_TAGS_LOCAL);
+  
   if (pivot_type == WAY)
     pivot_id += 2400000000u;
   else if (pivot_type == RELATION)
@@ -340,6 +353,8 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
     ways.clear();
     relations.clear();
     areas.clear();
+    stopwatch_stop(NO_DISK);
+    stopwatch_report();
     
     return;
   }
@@ -373,6 +388,8 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
     ways.clear();
     relations.clear();
     areas.clear();
+    stopwatch_stop(NO_DISK);
+    stopwatch_report();
     
     return;
   }
@@ -391,14 +408,23 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   ways.clear();
   relations.clear();
   areas.clear();
-  
+
   if (new_index.val() == 0)
+  {
+    stopwatch_stop(NO_DISK); 
+    stopwatch_report();
     return;
+  }
   
   Area_Updater area_updater;
   area_updater.set_area(new_index, new_location);
   area_updater.add_blocks(area_blocks);
-  area_updater.update();
+  stopwatch_stop(NO_DISK);
+  area_updater.update(stopwatch);
+  stopwatch_stop(NO_DISK);
   
   areas[new_index].push_back(Area_Skeleton(new_location));
+  
+  stopwatch_stop(NO_DISK); 
+  stopwatch_report();
 }
