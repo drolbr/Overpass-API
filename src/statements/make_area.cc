@@ -265,7 +265,7 @@ void Make_Area_Statement::add_segment_blocks
 
 void Make_Area_Statement::execute(map< string, Set >& maps)
 {
-  stopwatch_start();
+  stopwatch.start();
   
   map< Uint32_Index, vector< Node_Skeleton > >& nodes(maps[output].nodes);
   map< Uint31_Index, vector< Way_Skeleton > >& ways(maps[output].ways);
@@ -280,8 +280,8 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
     ways.clear();
     relations.clear();
     areas.clear();
-    stopwatch_stop(NO_DISK);
-    stopwatch_report();
+    stopwatch.stop(Stopwatch::NO_DISK);
+    stopwatch.report(get_name());
     
     return;
   }
@@ -289,7 +289,7 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   uint32 pivot_type(pivot_pair.first);
   uint32 pivot_id(pivot_pair.second);
   
-  stopwatch_stop(NO_DISK);
+  stopwatch.stop(Stopwatch::NO_DISK);
   
   if (pivot_type == 0)
   {
@@ -297,7 +297,7 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
     ways.clear();
     relations.clear();
     areas.clear();
-    stopwatch_report();
+    stopwatch.report(get_name());
     
     return;
   }
@@ -335,11 +335,11 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   }
   
   if (pivot_type == NODE)
-    stopwatch_stop(NODE_TAGS_LOCAL);
+    stopwatch.stop(Stopwatch::NODE_TAGS_LOCAL);
   else if (pivot_type == WAY)
-    stopwatch_stop(WAY_TAGS_LOCAL);
+    stopwatch.stop(Stopwatch::WAY_TAGS_LOCAL);
   else if (pivot_type == RELATION)
-    stopwatch_stop(RELATION_TAGS_LOCAL);
+    stopwatch.stop(Stopwatch::RELATION_TAGS_LOCAL);
   
   if (pivot_type == WAY)
     pivot_id += 2400000000u;
@@ -353,8 +353,8 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
     ways.clear();
     relations.clear();
     areas.clear();
-    stopwatch_stop(NO_DISK);
-    stopwatch_report();
+    stopwatch.stop(Stopwatch::NO_DISK);
+    stopwatch.report(get_name());
     
     return;
   }
@@ -388,8 +388,8 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
     ways.clear();
     relations.clear();
     areas.clear();
-    stopwatch_stop(NO_DISK);
-    stopwatch_report();
+    stopwatch.stop(Stopwatch::NO_DISK);
+    stopwatch.report(get_name());
     
     return;
   }
@@ -411,20 +411,20 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
 
   if (new_index.val() == 0)
   {
-    stopwatch_stop(NO_DISK); 
-    stopwatch_report();
+    stopwatch.stop(Stopwatch::NO_DISK); 
+    stopwatch.report(get_name());
     return;
   }
   
   Area_Updater area_updater;
   area_updater.set_area(new_index, new_location);
   area_updater.add_blocks(area_blocks);
-  stopwatch_stop(NO_DISK);
+  stopwatch.stop(Stopwatch::NO_DISK);
   area_updater.update(stopwatch);
-  stopwatch_stop(NO_DISK);
+  stopwatch.stop(Stopwatch::NO_DISK);
   
   areas[new_index].push_back(Area_Skeleton(new_location));
   
-  stopwatch_stop(NO_DISK); 
-  stopwatch_report();
+  stopwatch.stop(Stopwatch::NO_DISK); 
+  stopwatch.report(get_name());
 }

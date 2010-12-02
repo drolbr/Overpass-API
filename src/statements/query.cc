@@ -262,7 +262,7 @@ vector< uint32 >* Query_Statement::collect_ids
   if (key_values.empty())
     return new vector< uint32 >();
  
-  stopwatch_stop(NO_DISK);
+  stopwatch.stop(Stopwatch::NO_DISK);
   Block_Backend< Tag_Index_Global, Uint32_Index > tags_db
       (file_prop, false);
   
@@ -296,9 +296,9 @@ vector< uint32 >* Query_Statement::collect_ids
         !(it2 == tags_db.range_end()); ++it2)
       new_ids->push_back(it2.object().val());
   }
-  stopwatch_stop(stopwatch_account);
+  stopwatch.stop(stopwatch_account);
   sort(new_ids->begin(), new_ids->end());
-  stopwatch_stop(NO_DISK);
+  stopwatch.stop(Stopwatch::NO_DISK);
   ++it;
   
   for (; it != key_values.end(); ++it)
@@ -339,9 +339,9 @@ vector< uint32 >* Query_Statement::collect_ids
       }
     }
     delete(old_ids);
-    stopwatch_stop(stopwatch_account);
+    stopwatch.stop(stopwatch_account);
     sort(new_ids->begin(), new_ids->end());
-    stopwatch_stop(NO_DISK);
+    stopwatch.stop(Stopwatch::NO_DISK);
   }
   
   return new_ids;
@@ -349,7 +349,7 @@ vector< uint32 >* Query_Statement::collect_ids
 
 void Query_Statement::execute(map< string, Set >& maps)
 {
-  stopwatch_start();
+  stopwatch.start();
   
   map< Uint32_Index, vector< Node_Skeleton > >& nodes(maps[output].nodes);
   map< Uint31_Index, vector< Way_Skeleton > >& ways(maps[output].ways);
@@ -368,7 +368,8 @@ void Query_Statement::execute(map< string, Set >& maps)
   if (type == QUERY_NODE)
   {
     vector< uint32 >* ids(collect_ids
-        (key_values, *de_osm3s_file_ids::NODE_TAGS_GLOBAL, NODE_TAGS_GLOBAL));
+        (key_values, *de_osm3s_file_ids::NODE_TAGS_GLOBAL,
+         Stopwatch::NODE_TAGS_GLOBAL));
 	
     set< Uint32_Index > obj_req;
     if (bbox_restriction)
@@ -381,12 +382,12 @@ void Query_Statement::execute(map< string, Set >& maps)
     }
     else
     {
-      stopwatch_stop(NO_DISK);
+      stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, false);
       for (vector< uint32 >::const_iterator it(ids->begin());
           it != ids->end(); ++it)
 	obj_req.insert(random.get(*it));
-      stopwatch_stop(NODES_MAP);
+      stopwatch.stop(Stopwatch::NODES_MAP);
     }
     
     nodes.clear();
@@ -394,7 +395,7 @@ void Query_Statement::execute(map< string, Set >& maps)
     relations.clear();
     areas.clear();
   
-    stopwatch_stop(NO_DISK);
+    stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
 	(*de_osm3s_file_ids::NODES, false);
     if (bbox_restriction)
@@ -428,21 +429,22 @@ void Query_Statement::execute(map< string, Set >& maps)
 	  nodes[it.index()].push_back(it.object());
       }    
     }
-    stopwatch_stop(NODES);
+    stopwatch.stop(Stopwatch::NODES);
   }
   else if (type == QUERY_WAY)
   {
     vector< uint32 >* ids(collect_ids
-        (key_values, *de_osm3s_file_ids::WAY_TAGS_GLOBAL, WAY_TAGS_GLOBAL));
+        (key_values, *de_osm3s_file_ids::WAY_TAGS_GLOBAL,
+	 Stopwatch::WAY_TAGS_GLOBAL));
     
     set< Uint31_Index > obj_req;
     {
-      stopwatch_stop(NO_DISK);
+      stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint31_Index > random(*de_osm3s_file_ids::WAYS, false);
       for (vector< uint32 >::const_iterator it(ids->begin());
           it != ids->end(); ++it)
       obj_req.insert(random.get(*it));
-      stopwatch_stop(WAYS_MAP);
+      stopwatch.stop(Stopwatch::WAYS_MAP);
     }
     
     nodes.clear();
@@ -450,7 +452,7 @@ void Query_Statement::execute(map< string, Set >& maps)
     relations.clear();
     areas.clear();
     
-    stopwatch_stop(NO_DISK);
+    stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
         (*de_osm3s_file_ids::WAYS, false);
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
@@ -460,21 +462,22 @@ void Query_Statement::execute(map< string, Set >& maps)
       if (binary_search(ids->begin(), ids->end(), it.object().id))
 	ways[it.index()].push_back(it.object());
     }    
-    stopwatch_stop(WAYS);
+    stopwatch.stop(Stopwatch::WAYS);
   }
   else if (type == QUERY_RELATION)
   {
     vector< uint32 >* ids(collect_ids
-        (key_values, *de_osm3s_file_ids::RELATION_TAGS_GLOBAL, RELATION_TAGS_GLOBAL));
+        (key_values, *de_osm3s_file_ids::RELATION_TAGS_GLOBAL,
+	 Stopwatch::RELATION_TAGS_GLOBAL));
     
     set< Uint31_Index > obj_req;
     {
-      stopwatch_stop(NO_DISK);
+      stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint31_Index > random(*de_osm3s_file_ids::RELATIONS, false);
       for (vector< uint32 >::const_iterator it(ids->begin());
           it != ids->end(); ++it)
       obj_req.insert(random.get(*it));
-      stopwatch_stop(RELATIONS_MAP);
+      stopwatch.stop(Stopwatch::RELATIONS_MAP);
     }
     
     nodes.clear();
@@ -482,7 +485,7 @@ void Query_Statement::execute(map< string, Set >& maps)
     relations.clear();
     areas.clear();
     
-    stopwatch_stop(NO_DISK);
+    stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
         (*de_osm3s_file_ids::RELATIONS, false);
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
@@ -492,10 +495,10 @@ void Query_Statement::execute(map< string, Set >& maps)
       if (binary_search(ids->begin(), ids->end(), it.object().id))
 	relations[it.index()].push_back(it.object());
     }    
-    stopwatch_stop(RELATIONS);
+    stopwatch.stop(Stopwatch::RELATIONS);
   }
   
-  stopwatch_report();  
+  stopwatch.report(get_name());  
 }
 
 //-----------------------------------------------------------------------------

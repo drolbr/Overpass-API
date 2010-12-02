@@ -50,6 +50,8 @@ class Statement
     const static int WAY = 2;
     const static int RELATION = 3;
     
+    Stopwatch stopwatch;
+  
   private:
     static Error_Output* error_output;
     
@@ -57,33 +59,6 @@ class Statement
     int startpos, endpos, tagendpos;
         
   protected:
-    Stopwatch stopwatch;
-    
-    const static int NO_DISK = 0;
-    const static int NODES_MAP = 1;
-    const static int NODES = 2;
-    const static int NODE_TAGS_LOCAL = 3;
-    const static int NODE_TAGS_GLOBAL = 4;
-    const static int WAYS_MAP = 5;
-    const static int WAYS = 6;
-    const static int WAY_TAGS_LOCAL = 7;
-    const static int WAY_TAGS_GLOBAL = 8;
-    const static int RELATIONS_MAP = 9;
-    const static int RELATIONS = 10;
-    const static int RELATION_ROLES = 11;
-    const static int RELATION_TAGS_LOCAL = 12;
-    const static int RELATION_TAGS_GLOBAL = 13;
-    const static int AREAS = 14;
-    const static int AREA_BLOCKS = 15;
-    const static int AREA_TAGS_LOCAL = 16;
-    const static int AREA_TAGS_GLOBAL = 17;
-    
-    void stopwatch_start() { stopwatch.start(); }
-    void stopwatch_skip() { stopwatch.skip(); }
-    void stopwatch_stop(uint32 account) { stopwatch.stop(account); }
-    void stopwatch_report() const { stopwatch.report(get_name()); }
-    void stopwatch_sum(const Statement* s) { stopwatch.sum(s->stopwatch); }
-    
     void eval_cstr_array
         (string element, map< string, string >& attributes, const char **attr);
     void assure_no_text(string text, string name);

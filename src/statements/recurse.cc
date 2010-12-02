@@ -116,7 +116,7 @@ void Recurse_Statement::forecast()
 
 void Recurse_Statement::execute(map< string, Set >& maps)
 {
-  stopwatch_start();
+  stopwatch.start();
   
   map< Uint32_Index, vector< Node_Skeleton > >& nodes(maps[output].nodes);
   map< Uint31_Index, vector< Way_Skeleton > >& ways(maps[output].ways);
@@ -140,7 +140,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     vector< uint32 > ids;
     
     {
-      stopwatch_stop(NO_DISK);
+      stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint31_Index > random(*de_osm3s_file_ids::RELATIONS, false);
       for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
 	   it(mit->second.relations.begin()); it != mit->second.relations.end(); ++it)
@@ -159,7 +159,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
 	  }
 	}
       }
-      stopwatch_stop(RELATIONS_MAP);
+      stopwatch.stop(Stopwatch::RELATIONS_MAP);
     }
     sort(ids.begin(), ids.end());
     
@@ -168,7 +168,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     relations.clear();
     areas.clear();
   
-    stopwatch_stop(NO_DISK);
+    stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
 	(*de_osm3s_file_ids::RELATIONS, false);
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
@@ -178,7 +178,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
       if (binary_search(ids.begin(), ids.end(), it.object().id))
 	relations[it.index()].push_back(it.object());
     }
-    stopwatch_stop(RELATIONS);
+    stopwatch.stop(Stopwatch::RELATIONS);
   }
   else if (type == RECURSE_RELATION_BACKWARDS)
   {
@@ -200,7 +200,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     relations.clear();
     areas.clear();
   
-    stopwatch_stop(NO_DISK);
+    stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
 	(*de_osm3s_file_ids::RELATIONS, false);
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
@@ -218,7 +218,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
 	}
       }
     }
-    stopwatch_stop(RELATIONS);
+    stopwatch.stop(Stopwatch::RELATIONS);
   }
   else if (type == RECURSE_RELATION_WAY)
   {
@@ -226,7 +226,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     vector< uint32 > ids;
     
     {
-      stopwatch_stop(NO_DISK);
+      stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint31_Index > random(*de_osm3s_file_ids::WAYS, false);
       for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
 	   it(mit->second.relations.begin()); it != mit->second.relations.end(); ++it)
@@ -245,7 +245,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
 	  }
 	}
       }
-      stopwatch_stop(WAYS_MAP);
+      stopwatch.stop(Stopwatch::WAYS_MAP);
     }
     sort(ids.begin(), ids.end());
     
@@ -254,7 +254,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     relations.clear();
     areas.clear();
   
-    stopwatch_stop(NO_DISK);
+    stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
 	(*de_osm3s_file_ids::WAYS, false);
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
@@ -264,7 +264,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
       if (binary_search(ids.begin(), ids.end(), it.object().id))
 	ways[it.index()].push_back(it.object());
     }
-    stopwatch_stop(WAYS);
+    stopwatch.stop(Stopwatch::WAYS);
   }
   else if (type == RECURSE_RELATION_NODE)
   {
@@ -272,7 +272,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     vector< uint32 > ids;
     
     {
-      stopwatch_stop(NO_DISK);
+      stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, false);
       for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
 	   it(mit->second.relations.begin()); it != mit->second.relations.end(); ++it)
@@ -291,7 +291,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
 	  }
 	}
       }
-      stopwatch_stop(NODES_MAP);
+      stopwatch.stop(Stopwatch::NODES_MAP);
     }
     sort(ids.begin(), ids.end());
     
@@ -300,7 +300,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     relations.clear();
     areas.clear();
   
-    stopwatch_stop(NO_DISK);
+    stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
 	(*de_osm3s_file_ids::NODES, false);
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
@@ -310,7 +310,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
       if (binary_search(ids.begin(), ids.end(), it.object().id))
 	nodes[it.index()].push_back(it.object());
     }
-    stopwatch_stop(NODES);
+    stopwatch.stop(Stopwatch::NODES);
   }
   else if (type == RECURSE_WAY_NODE)
   {
@@ -348,13 +348,13 @@ void Recurse_Statement::execute(map< string, Set >& maps)
 	  }
 	}
       }
-      stopwatch_stop(NO_DISK);
+      stopwatch.stop(Stopwatch::NO_DISK);
       sort(ids_for_index_req.begin(), ids_for_index_req.end());
       Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, false);
       for (vector< uint32 >::const_iterator
 	  it(ids_for_index_req.begin()); it != ids_for_index_req.end(); ++it)
 	req.insert(random.get(*it));
-      stopwatch_stop(NODES_MAP);
+      stopwatch.stop(Stopwatch::NODES_MAP);
     }
     sort(ids.begin(), ids.end());
     
@@ -363,7 +363,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     relations.clear();
     areas.clear();
   
-    stopwatch_stop(NO_DISK);
+    stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
 	(*de_osm3s_file_ids::NODES, false);
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
@@ -373,7 +373,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
       if (binary_search(ids.begin(), ids.end(), it.object().id))
 	nodes[it.index()].push_back(it.object());
     }
-    stopwatch_stop(NODES);
+    stopwatch.stop(Stopwatch::NODES);
   }
   else if (type == RECURSE_WAY_RELATION)
   {
@@ -408,7 +408,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     relations.clear();
     areas.clear();
   
-    stopwatch_stop(NO_DISK);
+    stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
 	(*de_osm3s_file_ids::RELATIONS, false);
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
@@ -427,7 +427,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
 	}
       }
     }
-    stopwatch_stop(RELATIONS);
+    stopwatch.stop(Stopwatch::RELATIONS);
   }
   else if (type == RECURSE_NODE_WAY)
   {
@@ -455,7 +455,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     relations.clear();
     areas.clear();
   
-    stopwatch_stop(NO_DISK);
+    stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
 	(*de_osm3s_file_ids::WAYS, false);
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
@@ -473,7 +473,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
 	}
       }
     }
-    stopwatch_stop(WAYS);
+    stopwatch.stop(Stopwatch::WAYS);
   }
   else if (type == RECURSE_NODE_RELATION)
   {
@@ -501,7 +501,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     relations.clear();
     areas.clear();
   
-    stopwatch_stop(NO_DISK);
+    stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
 	(*de_osm3s_file_ids::RELATIONS, false);
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
@@ -520,9 +520,9 @@ void Recurse_Statement::execute(map< string, Set >& maps)
 	}
       }
     }
-    stopwatch_stop(RELATIONS);
+    stopwatch.stop(Stopwatch::RELATIONS);
   }
 
-  stopwatch_stop(NO_DISK);
-  stopwatch_report();
+  stopwatch.stop(Stopwatch::NO_DISK);
+  stopwatch.report(get_name());
 }

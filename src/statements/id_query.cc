@@ -72,7 +72,7 @@ void Id_Query_Statement::forecast()
 
 void Id_Query_Statement::execute(map< string, Set >& maps)
 {
-  stopwatch_start();
+  stopwatch.start();
   
   if (ref == 0)
     return;
@@ -92,14 +92,14 @@ void Id_Query_Statement::execute(map< string, Set >& maps)
     set< Uint32_Index > req;
     Uint32_Index idx((uint32)0);
     {
-      stopwatch_stop(NO_DISK);
+      stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, false);
       idx = random.get(ref);
-      stopwatch_stop(NODES_MAP);
+      stopwatch.stop(Stopwatch::NODES_MAP);
     }
     req.insert(idx);
     
-    stopwatch_stop(NO_DISK);
+    stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
 	(*de_osm3s_file_ids::NODES, false);
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
@@ -109,21 +109,21 @@ void Id_Query_Statement::execute(map< string, Set >& maps)
       if (it.object().id == ref)
 	nodes[it.index()].push_back(it.object());
     }
-    stopwatch_stop(NODES);
+    stopwatch.stop(Stopwatch::NODES);
   }
   else if (type == WAY)
   {
     set< Uint31_Index > req;
     Uint31_Index idx((uint32)0);
     {
-      stopwatch_stop(NO_DISK);
+      stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint31_Index > random(*de_osm3s_file_ids::WAYS, false);
       idx = random.get(ref);
-      stopwatch_stop(WAYS_MAP);
+      stopwatch.stop(Stopwatch::WAYS_MAP);
     }
     req.insert(idx);
 
-    stopwatch_stop(NO_DISK);
+    stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
 	(*de_osm3s_file_ids::WAYS, false);
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
@@ -133,21 +133,21 @@ void Id_Query_Statement::execute(map< string, Set >& maps)
       if (it.object().id == ref)
 	ways[it.index()].push_back(it.object());
     }
-    stopwatch_stop(WAYS);
+    stopwatch.stop(Stopwatch::WAYS);
   }
   else if (type == RELATION)
   {
     set< Uint31_Index > req;
     Uint31_Index idx((uint32)0);
     {
-      stopwatch_stop(NO_DISK);
+      stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint31_Index > random(*de_osm3s_file_ids::RELATIONS, false);
       idx = random.get(ref);
-      stopwatch_stop(RELATIONS_MAP);
+      stopwatch.stop(Stopwatch::RELATIONS_MAP);
     }
     req.insert(idx);
 
-    stopwatch_stop(NO_DISK);
+    stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
 	(*de_osm3s_file_ids::RELATIONS, false);
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
@@ -157,8 +157,8 @@ void Id_Query_Statement::execute(map< string, Set >& maps)
       if (it.object().id == ref)
 	relations[it.index()].push_back(it.object());
     }
-    stopwatch_stop(RELATIONS);
+    stopwatch.stop(Stopwatch::RELATIONS);
   }
   
-  stopwatch_report();
+  stopwatch.report(get_name());
 }

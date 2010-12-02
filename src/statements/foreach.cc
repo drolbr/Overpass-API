@@ -234,7 +234,7 @@ void Foreach_Statement::forecast()
 
 void Foreach_Statement::execute(map< string, Set >& maps)
 {
-  stopwatch_start();
+  stopwatch.start();
   
   Set base_set(maps[input]);
   
@@ -249,14 +249,14 @@ void Foreach_Statement::execute(map< string, Set >& maps)
       maps[output].relations.clear();
       maps[output].areas.clear();
       maps[output].nodes[it->first].push_back(*it2);
-      stopwatch_stop(NO_DISK);
+      stopwatch.stop(Stopwatch::NO_DISK);
       for (vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
       {
 	(*it)->execute(maps);
-	stopwatch_sum(*it);
+	stopwatch.sum((*it)->stopwatch);
       }
-      stopwatch_skip();
+      stopwatch.skip();
     }
   }
   for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
@@ -270,14 +270,14 @@ void Foreach_Statement::execute(map< string, Set >& maps)
       maps[output].relations.clear();
       maps[output].areas.clear();
       maps[output].ways[it->first].push_back(*it2);
-      stopwatch_stop(NO_DISK);
+      stopwatch.stop(Stopwatch::NO_DISK);
       for (vector< Statement* >::iterator it(substatements.begin());
       it != substatements.end(); ++it)
       {
 	(*it)->execute(maps);
-	stopwatch_sum(*it);
+	stopwatch.sum((*it)->stopwatch);
       }
-      stopwatch_skip();
+      stopwatch.skip();
     }
   }
   for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
@@ -291,14 +291,14 @@ void Foreach_Statement::execute(map< string, Set >& maps)
       maps[output].relations.clear();
       maps[output].areas.clear();
       maps[output].relations[it->first].push_back(*it2);
-      stopwatch_stop(NO_DISK);
+      stopwatch.stop(Stopwatch::NO_DISK);
       for (vector< Statement* >::iterator it(substatements.begin());
       it != substatements.end(); ++it)
       {
 	(*it)->execute(maps);
-	stopwatch_sum(*it);
+	stopwatch.sum((*it)->stopwatch);
       }
-      stopwatch_skip();
+      stopwatch.skip();
     }
   }
   for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator
@@ -312,20 +312,20 @@ void Foreach_Statement::execute(map< string, Set >& maps)
       maps[output].relations.clear();
       maps[output].areas.clear();
       maps[output].areas[it->first].push_back(*it2);
-      stopwatch_stop(NO_DISK);
+      stopwatch.stop(Stopwatch::NO_DISK);
       for (vector< Statement* >::iterator it(substatements.begin());
       it != substatements.end(); ++it)
       {
 	(*it)->execute(maps);
-	stopwatch_sum(*it);
+	stopwatch.sum((*it)->stopwatch);
       }
-      stopwatch_skip();
+      stopwatch.skip();
     }
   }
   
   if (input == output)
     maps[output] = base_set;
   
-  stopwatch_stop(NO_DISK);
-  stopwatch_report();
+  stopwatch.stop(Stopwatch::NO_DISK);
+  stopwatch.report(get_name());
 }

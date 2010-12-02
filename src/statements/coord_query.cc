@@ -191,7 +191,7 @@ int Coord_Query_Statement::check_area_block
 
 void Coord_Query_Statement::execute(map< string, Set >& maps)
 { 
-  stopwatch_start();
+  stopwatch.start();
   
   set< Uint31_Index > req;
   set< uint32 > areas_inside;
@@ -201,7 +201,7 @@ void Coord_Query_Statement::execute(map< string, Set >& maps)
   uint32 ilat((lat + 91.0)*10000000+0.5);
   int32 ilon(lon*10000000 + (lon > 0 ? 0.5 : -0.5));
   
-  stopwatch_stop(NO_DISK);
+  stopwatch.stop(Stopwatch::NO_DISK);
   
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
       (*de_osm3s_file_ids::AREA_BLOCKS, true);
@@ -221,7 +221,7 @@ void Coord_Query_Statement::execute(map< string, Set >& maps)
     }
   }
   
-  stopwatch_stop(AREA_BLOCKS);
+  stopwatch.stop(Stopwatch::AREA_BLOCKS);
 
   map< Uint32_Index, vector< Node_Skeleton > >& nodes(maps[output].nodes);
   map< Uint31_Index, vector< Way_Skeleton > >& ways(maps[output].ways);
@@ -233,7 +233,7 @@ void Coord_Query_Statement::execute(map< string, Set >& maps)
   relations.clear();
   areas.clear();
 
-  stopwatch_stop(NO_DISK);
+  stopwatch.stop(Stopwatch::NO_DISK);
   
   Block_Backend< Uint31_Index, Area_Skeleton > area_locations_db
       (*de_osm3s_file_ids::AREAS, true);
@@ -247,7 +247,7 @@ void Coord_Query_Statement::execute(map< string, Set >& maps)
       areas[it.index()].push_back(it.object());
   }
 
-  stopwatch_stop(AREAS);
+  stopwatch.stop(Stopwatch::AREAS);
   
-  stopwatch_report();
+  stopwatch.report(get_name());
 }

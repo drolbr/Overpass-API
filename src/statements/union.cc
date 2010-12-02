@@ -64,7 +64,7 @@ void Union_Statement::forecast()
 
 void Union_Statement::execute(map< string, Set >& maps)
 {
-  stopwatch_start();
+  stopwatch.start();
   
   map< Uint32_Index, vector< Node_Skeleton > > nodes;
   map< Uint31_Index, vector< Way_Skeleton > > ways;
@@ -74,10 +74,10 @@ void Union_Statement::execute(map< string, Set >& maps)
   for (vector< Statement* >::iterator it(substatements.begin());
        it != substatements.end(); ++it)
   {
-    stopwatch_stop(NO_DISK);
+    stopwatch.stop(Stopwatch::NO_DISK);
     (*it)->execute(maps);
-    stopwatch_skip();
-    stopwatch_sum(*it);
+    stopwatch.skip();
+    stopwatch.sum((*it)->stopwatch);
     
     Set& summand(maps[(*it)->get_result_name()]);
 
@@ -124,6 +124,6 @@ void Union_Statement::execute(map< string, Set >& maps)
   maps[output].relations = relations;
   maps[output].areas = areas;
   
-  stopwatch_stop(NO_DISK);
-  stopwatch_report();
+  stopwatch.stop(Stopwatch::NO_DISK);
+  stopwatch.report(get_name());
 }

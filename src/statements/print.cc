@@ -298,7 +298,7 @@ void Print_Statement::tags_quadtile
   formulate_range_query(range_set, coarse_indices);
   
   // iterate over the result
-  stopwatch_stop(NO_DISK);
+  stopwatch.stop(Stopwatch::NO_DISK);
   Block_Backend< Tag_Index_Local, Uint32_Index > items_db(file_prop, false);
   Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
     tag_it(items_db.range_begin
@@ -324,7 +324,7 @@ void Print_Statement::tags_quadtile
       ++item_it;
     }
   }
-  stopwatch_stop(stopwatch_account);
+  stopwatch.stop(stopwatch_account);
 };
 
 template< class TComp >
@@ -389,7 +389,7 @@ void Print_Statement::tags_by_id
     sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
   
   // iterate over the result
-  stopwatch_stop(NO_DISK);
+  stopwatch.stop(Stopwatch::NO_DISK);
   Block_Backend< Tag_Index_Local, Uint32_Index > items_db
       (file_prop, false);
   for (uint32 id_pos(0); id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
@@ -417,12 +417,12 @@ void Print_Statement::tags_by_id
       print_item(items_by_id[i].second, *(items_by_id[i].first), mode,
 		 &(tags_by_id[items_by_id[i].first->id]));
   }
-  stopwatch_stop(stopwatch_account);
+  stopwatch.stop(stopwatch_account);
 };
 
 void Print_Statement::execute(map< string, Set >& maps)
 {
-  stopwatch_start();
+  stopwatch.start();
   
   map< string, Set >::const_iterator mit(maps.find(input));
   if (mit == maps.end())
@@ -432,24 +432,24 @@ void Print_Statement::execute(map< string, Set >& maps)
     if (order == ORDER_BY_ID)
     {
       tags_by_id(mit->second.nodes, *de_osm3s_file_ids::NODE_TAGS_LOCAL,
-		 NODE_FLUSH_SIZE, mode, NODE_TAGS_LOCAL);
+		 NODE_FLUSH_SIZE, mode, Stopwatch::NODE_TAGS_LOCAL);
       tags_by_id(mit->second.ways, *de_osm3s_file_ids::WAY_TAGS_LOCAL,
-		 WAY_FLUSH_SIZE, mode, WAY_TAGS_LOCAL);
+		 WAY_FLUSH_SIZE, mode, Stopwatch::WAY_TAGS_LOCAL);
       tags_by_id(mit->second.relations, *de_osm3s_file_ids::RELATION_TAGS_LOCAL,
-		 RELATION_FLUSH_SIZE, mode, RELATION_TAGS_LOCAL);
+		 RELATION_FLUSH_SIZE, mode, Stopwatch::RELATION_TAGS_LOCAL);
       tags_by_id(mit->second.areas, *de_osm3s_file_ids::AREA_TAGS_LOCAL,
-		 AREA_FLUSH_SIZE, mode, AREA_TAGS_LOCAL);
+		 AREA_FLUSH_SIZE, mode, Stopwatch::AREA_TAGS_LOCAL);
     }
     else
     {
       tags_quadtile(mit->second.nodes, *de_osm3s_file_ids::NODE_TAGS_LOCAL,
-		    mode, NODE_TAGS_LOCAL);
+		    mode, Stopwatch::NODE_TAGS_LOCAL);
       tags_quadtile(mit->second.ways, *de_osm3s_file_ids::WAY_TAGS_LOCAL,
-		    mode, WAY_TAGS_LOCAL);
+		    mode, Stopwatch::WAY_TAGS_LOCAL);
       tags_quadtile(mit->second.relations, *de_osm3s_file_ids::RELATION_TAGS_LOCAL,
-		    mode, RELATION_TAGS_LOCAL);
+		    mode, Stopwatch::RELATION_TAGS_LOCAL);
       tags_quadtile(mit->second.areas, *de_osm3s_file_ids::AREA_TAGS_LOCAL,
-		    mode, AREA_TAGS_LOCAL);
+		    mode, Stopwatch::AREA_TAGS_LOCAL);
     }
   }
   else
@@ -470,6 +470,6 @@ void Print_Statement::execute(map< string, Set >& maps)
     }
   }
   
-  stopwatch_stop(NO_DISK);
-  stopwatch_report();
+  stopwatch.stop(Stopwatch::NO_DISK);
+  stopwatch.report(get_name());
 }
