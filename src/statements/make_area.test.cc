@@ -7,6 +7,7 @@
 #include "coord_query.h"
 #include "foreach.h"
 #include "id_query.h"
+#include "item.h"
 #include "make_area.h"
 #include "print.h"
 #include "query.h"
@@ -290,24 +291,36 @@ int main(int argc, char* args[])
       stmt3->add_statement(stmt2, "");
     }
     {
-      Make_Area_Statement* stmt1 = new Make_Area_Statement(0);
-      const char* attributes[] = { "pivot", "rels", 0 };
-      stmt1->set_attributes(attributes);
-      stmt3->add_statement(stmt1, "");
+      Union_Statement* stmt2 = new Union_Statement(0);
+      const char* attributes[] = { "into", "areas", 0 };
+      stmt2->set_attributes(attributes);
+      {
+	Make_Area_Statement* stmt1 = new Make_Area_Statement(0);
+	const char* attributes[] = { "pivot", "rels", 0 };
+	stmt1->set_attributes(attributes);
+	stmt2->add_statement(stmt1, "");
+      }
+      {
+	Item_Statement* stmt3 = new Item_Statement(0);
+	const char* attributes[] = { "set", "areas", 0 };
+	stmt3->set_attributes(attributes);
+	stmt2->add_statement(stmt3, "");
+      }
+      stmt3->add_statement(stmt2, "");
     }
-    {
-      Print_Statement* stmt1 = new Print_Statement(0);
-      const char* attributes[] = { 0 };
-      stmt1->set_attributes(attributes);
-      stmt3->add_statement(stmt1, "");
-    }
-    {
+/*    {
       Print_Statement* stmt1 = new Print_Statement(0);
       const char* attributes[] = { "mode", "ids_only", "from", "rels", 0 };
       stmt1->set_attributes(attributes);
       stmt3->add_statement(stmt1, "");
-    }
+    }*/
     stmt3->execute(sets);
+  }
+  {
+    Print_Statement* stmt1 = new Print_Statement(0);
+    const char* attributes[] = { "from", "areas", 0 };
+    stmt1->set_attributes(attributes);
+    stmt1->execute(sets);
   }
   
 /*  cout<<Coord_Query_Statement::check_segment(0, 0, 0, 0, 0, 0)<<'\n';

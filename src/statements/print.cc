@@ -423,6 +423,7 @@ void Print_Statement::tags_by_id
 void Print_Statement::execute(map< string, Set >& maps)
 {
   stopwatch.start();
+  Statement::get_area_updater()->flush(stopwatch);
   
   map< string, Set >::const_iterator mit(maps.find(input));
   if (mit == maps.end())

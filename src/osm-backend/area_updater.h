@@ -1,5 +1,5 @@
-#ifndef DE_OSM3S__BACKEND__AREA_UPDATER
-#define DE_OSM3S__BACKEND__AREA_UPDATER
+#ifndef DE_OSM3S__OSM_BACKEND__AREA_UPDATER
+#define DE_OSM3S__OSM_BACKEND__AREA_UPDATER
 
 #include <algorithm>
 #include <iostream>
@@ -11,7 +11,6 @@
 #include "../backend/random_file.h"
 #include "../core/datatypes.h"
 #include "../core/settings.h"
-#include "../statements/statement.h"
 #include "stopwatch.h"
 
 using namespace std;
@@ -34,7 +33,7 @@ struct Area_Pair_Equal_Id {
 
 struct Area_Updater
 {
-  Area_Updater() {}
+  Area_Updater() : total_area_blocks_count(0) {}
   
   void set_id_deleted(uint32 id)
   {
@@ -67,34 +66,53 @@ struct Area_Updater
       for (vector< Area_Block >::const_iterator it2(it->second.begin());
           it2 != it->second.end(); ++it2)
         area_blocks[it->first].push_back(*it2);
+      total_area_blocks_count += it->second.size();
     }
   }
   
-  void update(Stopwatch& stopwatch)
+  void commit(Stopwatch& stopwatch)
   {
-    map< Uint31_Index, set< Area_Skeleton > > locations_to_delete;
-    map< Uint31_Index, set< Area_Block > > blocks_to_delete;
-    update_area_ids(locations_to_delete, blocks_to_delete, stopwatch);
-    update_members(locations_to_delete, blocks_to_delete, stopwatch);
- 
-    vector< Tag_Entry > tags_to_delete;
-    prepare_delete_tags(tags_to_delete, locations_to_delete, stopwatch);
-    update_area_tags_local(tags_to_delete, stopwatch);
-    update_area_tags_global(tags_to_delete, stopwatch);
-
-    ids_to_modify.clear();
-    areas_to_insert.clear();
-    area_blocks.clear();
+    if (total_area_blocks_count > 64*1024)
+      update(stopwatch);
+  }
+  
+  void flush(Stopwatch& stopwatch)
+  {
+    if ((!ids_to_modify.empty()) ||
+      (!areas_to_insert.empty()) ||
+      (!area_blocks.empty()))
+    update(stopwatch);
   }
   
 private:
   map< Uint31_Index, vector< Area_Block > > area_blocks;
+  unsigned int total_area_blocks_count;
   set< uint32 > ids_to_modify;
   vector< pair< Area_Location, Uint31_Index > > areas_to_insert;
   static Area_Pair_Comparator_By_Id area_comparator_by_id;
   static Area_Pair_Equal_Id area_equal_id;
   static Pair_Comparator_By_Id pair_comparator_by_id;
   static Pair_Equal_Id pair_equal_id;
+  
+  void update(Stopwatch& stopwatch)
+  {
+    sort(areas_to_insert.begin(), areas_to_insert.end());
+    
+    map< Uint31_Index, set< Area_Skeleton > > locations_to_delete;
+    map< Uint31_Index, set< Area_Block > > blocks_to_delete;
+    update_area_ids(locations_to_delete, blocks_to_delete, stopwatch);
+    update_members(locations_to_delete, blocks_to_delete, stopwatch);
+    
+    vector< Tag_Entry > tags_to_delete;
+    prepare_delete_tags(tags_to_delete, locations_to_delete, stopwatch);
+    update_area_tags_local(tags_to_delete, stopwatch);
+    update_area_tags_global(tags_to_delete, stopwatch);
+    
+    ids_to_modify.clear();
+    areas_to_insert.clear();
+    area_blocks.clear();
+    total_area_blocks_count = 0;
+  }
   
   void update_area_ids
       (map< Uint31_Index, set< Area_Skeleton > >& locations_to_delete,

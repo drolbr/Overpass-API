@@ -416,11 +416,11 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
     return;
   }
   
-  Area_Updater area_updater;
+  Area_Updater& area_updater(*Statement::get_area_updater());
   area_updater.set_area(new_index, new_location);
   area_updater.add_blocks(area_blocks);
   stopwatch.stop(Stopwatch::NO_DISK);
-  area_updater.update(stopwatch);
+  area_updater.commit(stopwatch);
   stopwatch.stop(Stopwatch::NO_DISK);
   
   areas[new_index].push_back(Area_Skeleton(new_location));

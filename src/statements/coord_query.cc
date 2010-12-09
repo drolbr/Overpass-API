@@ -192,6 +192,7 @@ int Coord_Query_Statement::check_area_block
 void Coord_Query_Statement::execute(map< string, Set >& maps)
 { 
   stopwatch.start();
+  Statement::get_area_updater()->flush(stopwatch);
   
   set< Uint31_Index > req;
   set< uint32 > areas_inside;

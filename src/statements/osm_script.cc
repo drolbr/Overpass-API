@@ -89,4 +89,9 @@ void Osm_Script_Statement::execute(map< string, Set >& maps)
   for (vector< Statement* >::iterator it(substatements.begin());
       it != substatements.end(); ++it)
     (*it)->execute(maps);
+  
+  stopwatch.start();
+  Statement::get_area_updater()->flush(stopwatch);
+  stopwatch.report(get_name());
+  stopwatch.stop(Stopwatch::NO_DISK);
 }
