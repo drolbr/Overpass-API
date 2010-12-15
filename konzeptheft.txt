@@ -1,0 +1,399 @@
+Gesamtprojekt - Methodik
+
+---
+
+*Lastenheft
+
+Ziele
+- Crowdsourcing einer Tag-Semantik
+- Backend für Anwendungen
+- Ermögliche komplexe Anfragen auf sichere Weise
+- Ermögliche Punkt-In-Polygon-Abfrage
+
+*Pflichtenheft
+
+Vorgehen
+Design als Server mit den folgenden Eigenschaften:
+- Als Datenmodell werden die räumlichen Daten von OSM gespiegelt plus abgeleitete Daten
+- Die Regeln für die Datenableitung werden Crowdgesourct
+- Der Server gestattet Abfragen gespiegelte und abgeleitete Daten
+- Es wird eine möglichst einfache Syntax, einheitlich für Regeln und Abfragen, verwendet. Wir verwenden XML, weil dies Unklarheiten mit Sonderzeichen minimiert und das Parsen erspart, verzichten aber auf eine formale DTD
+- Der Server analysiert Abfragen auf ihren Aufwand und verhindert so eine Überlastung a-priori
+- Die Datenaktualisierung erfolgt blockweise, so dass der Server gegenüber OSM immer einige Stunden im Rückstand ist
+Datenmodell
+Abfragesprache
+Vorhersageregeln
+
+Priorisierung
+1. der Server soll einfache Abfragen der gespiegelten Daten beantworten können, ohne Aufwandsvorhersage
+2. der Server soll alle Abfragen der gespiegelten Daten beantworten können, ohne Aufwandsvorhersage
+3. der Server soll alle Abfragen der gespiegelten Daten beantworten können, mit Aufwandsvorhersage
+4. der Server soll Regeln bearbeiten können
+5. der Server soll alle Abfragen der gespiegelten und abgeleiteten Daten beantworten können, mit Aufwandsvorhersage
+
+*Projektstrukturplan
+
+Vorab:
+0. Struktur des Systems
+6. Review der Dokumentation
+
+Zu jeder Phase:
+a) Spezifikation, Dokumentation
+b) (Gesamt-)Tests, Regression beachten
+c) strukturelle Implikationen, ggf. Refactoring
+d) Implementierung
+
+Entwurf des Projektstrukturplans:
+0, 1a, 1b, 1c, 1d, 2a, 2b, 2c, 2d, 3a, 3b, 3c, 3d, 4a, 4b, 4c, 4d, 5a, 5b, 5c, 5d
+
+Abhängigkeiten sind strikt linear. Da nur eine Person implementiert, ist weitere Gliederung nicht nötig
+
+---
+
+ad 0.:
+Strukturierung des Servers in
+- Disponenten
+- Frontend
+- Regelbearbeitung
+
+OSM-Backend: Dieser Teil des Systems ist verantwortlich dafür, die Daten aus der OSM-Datenbank in die interne Datenbank zu spiegeln.
+
+generisches Backend: Dieser Teil übernimmt die Umsetzung der abstrakten Datenbank-Operationen Lesen und Update in das Lesen und Schreiben in Dateien
+
+Setup der Tools:
+Verwendung von C++ mit POSIX-Systemfunktionen. Modularisiert wird über die Einteilung in Klassen. Vererbung wird ausschließlich genutzt, um Subtyping, insbesondere Polymorphie zu realisieren. Die Deklaration wird, sofern möglich, in .h-Dateien durchgeführt, die Definition befindet sich möglichst in .cc-Dateien.
+Automatische Quellcode-Builds mit den GNU Autotools, grob nach Standard:
+Im Detail:
+src/ - Enthält die kompletten Quellen
+build/ - Hilfsverzeichnis für configure/make
+cgi-bin/ - Enthält die aus dem Netz aufrufbaren Programme
+html/ - Enthält die Dokumentation
+bin/ - Enthält die übrigen Programme des Produktivsystems
+test-bin/ - Enthält die Programme für Testzwecke
+Versionverwaltung mit CVS
+
+---
+
+ad 1.:
+/!\ die modulare Gliederung erfordert eine Änderung des Projektstrukturplans
+1.1 erst a-d für das generische Backend durchlaufen und dieses Teilsystem funktionsfähig bekommen
+1.2 dann a-d für das OSM-Backend durchlaufen und dieses Teilsystem funktionsfähig bekommen
+1.3 dann a-d für die Skriptbearbeitung durchlaufen und dieses Teilsystem funktionsfähig bekommen
+1.4 dann a-d für Frontend durchlaufen und dieses Teilsystem funktionsfähig bekommen
+
+ad 1.1.a):
+keine expliziten Artefakte erstellt, Schnittstellen:
+aus src/backend/block_backend.h:
+
+template< class TIndex >
+struct Default_Range_Iterator : set< pair< TIndex, TIndex > >::const_iterator
+{
+  Default_Range_Iterator
+      (const typename set< pair< TIndex, TIndex > >::const_iterator it);
+  
+  Default_Range_Iterator();
+  
+  const TIndex& lower_bound() const;
+  
+  const TIndex& upper_bound() const;
+};
+
+template< class TIndex, class TObject >
+struct Block_Backend
+{
+  typedef ... Flat_Iterator;
+  typedef ... Discrete_Iterator;
+  typedef ... Range_Iterator;
+      
+  Block_Backend
+      (const File_Properties& file_prop, bool writeable,
+       string file_name_extension = "");
+  
+  Flat_Iterator flat_begin();
+  
+  Flat_Iterator flat_end() const;
+  
+  Discrete_Iterator discrete_begin
+      (typename set< TIndex >::const_iterator begin,
+       typename set< TIndex >::const_iterator end);
+  
+  Discrete_Iterator discrete_end() const;
+  
+  Range_Iterator range_begin
+      (Default_Range_Iterator< TIndex > begin,
+       Default_Range_Iterator< TIndex > end);
+  
+  Range_Iterator range_end() const;
+  
+  void update
+      (const map< TIndex, set< TObject > >& to_delete,
+       const map< TIndex, set< TObject > >& to_insert);
+}
+
+aus src/backend/random_file.h:
+
+template< class TIndex >
+struct Random_File
+{
+  Random_File(const File_Properties& file_prop, bool writeable);
+  
+  ~Random_File();
+
+  TIndex get(uint32 pos) const;
+
+  void put(uint32 pos, const TIndex& index);
+}
+
+---
+
+ad 1.1.b):
+erstellter Sourcecode: src/backend/block_backend.test.cc, src/backend/file_blocks.test.cc, src/backend/random_file.test.cc
+daraus ergeben sich nach 1.1.d): test-bin/block_backend, test-bin/file_blocks, test-bin/random_file
+
+---
+
+ad 1.1.c):
+Vorbereitungen für 1.1.d)
+
+---
+
+ad 1.1.d):
+erstellter Sourcecode: src/backend/block_backend.cc, src/backend/file_blocks.cc, src/backend/random_file.cc
+daraus ergeben sich nun: test-bin/block_backend, test-bin/file_blocks, test-bin/random_file
+
+---
+
+ad 1.2.a):
+Das Programm apply_osc liest eine OSM-Change-Datei oder OSM-XML-Datei in die Datenbank ein; mit weiteren OSM-Change-Dateien kann es die Datenbank aktualisieren.
+
+---
+
+ad 1.2.b):
+erstellter Sourcecode: src/osm-backend/diff_updater.test.cc, src/osm-backend/node_updater.test.cc, src/osm-backend/complete_updater.test.cc, src/osm-backend/way_updater.test.cc, src/osm-backend/relation_updater.test.cc, src/osm-backend/dump_database.test.cc
+daraus ergeben sich nach 1.2.d): test-bin/example_queries, test-bin/dump_database, test-bin/node_updater, test-bin/apply_osc.test.sh, test-bin/relation_updater, test-bin/way_updater, test-bin/complete_updater, test-bin/diff_updater
+Ausgeführt werden soll test-bin/apply_osc.test.sh
+
+---
+
+ad 1.2.c):
+Vorbereitungen für 1.2.d)
+
+---
+
+ad 1.2.d):
+erstellter Sourcecode: src/osm-backend/apply_osc.cc, src/osm-backend/relation_updater.h, src/osm-backend/way_updater.h, src/osm-backend/example_queries.cc, src/osm-backend/update_database.cc, src/osm-backend/node_updater.h, src/core/datatypes.h, src/core/settings.h, src/core/type_way.h, src/core/basic_types.h, src/core/type_relation.h, src/core/settings.cc, src/core/type_node.h
+daraus ergeben sich nun: bin/apply_osc, bin/update_database, test-bin/example_queries, test-bin/dump_database, test-bin/node_updater, test-bin/apply_osc.test.sh, test-bin/relation_updater, test-bin/way_updater, test-bin/complete_updater, test-bin/diff_updater
+Ausgeführt werden soll test-bin/apply_osc.test.sh
+
+Ab dieser Stelle können mit apply_osc Dateien im OSM-Change-Format eingelesen werden. Es gibt allerdings noch keine sinnvolle Abfragemöglichkeit.
+
+---
+
+ad 1.3.a):
+Die grundliegenden Funktionen in der Skriptbearbeitung sind "id-query", "print" und "recurse". Diese sollen erst einmal funktionsfähig bekommen werden. Als Testmenge verwenden wir diesmal echte Testdaten, und zwar einen Nordrhein-Westfalen-Extrakt.
+
+Wir verwenden eine generische Schnittstelle für Statements wie folgt:
+class Statement
+{
+  public:
+    Statement(int line_number_);
+    
+    virtual void set_attributes(const char **attr) = 0;
+    virtual void add_statement(Statement* statement, string text);
+    virtual void add_final_text(string text);
+    virtual string get_name() const = 0;
+    virtual string get_result_name() const = 0;
+    virtual void forecast() = 0;
+    virtual void execute(map< string, Set >& maps) = 0;
+    virtual ~Statement() {}
+    
+    int get_line_number() const;
+    int get_startpos() const;
+    void set_startpos(int pos);
+    int get_endpos() const;
+    void set_endpos(int pos);
+    int get_tagendpos() const;
+    void set_tagendpos(int pos);
+    
+    void display_full();
+    void display_starttag();
+        
+    static Statement* create_statement(string element, int line_number);
+    static void set_error_output(Error_Output* error_output_);
+    
+    const static int NODE = 1;
+    const static int WAY = 2;
+    const static int RELATION = 3;
+    
+  protected:
+    void eval_cstr_array
+        (string element, map< string, string >& attributes, const char **attr);
+    void assure_no_text(string text, string name);
+    void substatement_error(string parent, Statement* child);
+    
+    void add_static_error(string error);
+    void add_static_remark(string remark);
+
+    void runtime_remark(string error);
+};
+Zu diesem Zweck sind alle Statements als Unterklassen der Klasse Statement realisiert.
+
+---
+
+ad 1.3.b):
+erstellter Sourcecode: src/statements/statement.h, src/statements/id_query.test.cc, src/statements/print.test.cc, src/statements/recurse.test.cc
+daraus ergeben sich nach 1.3.d): test-bin/id_query, test-bin/print, test-bin/recurse
+
+---
+
+ad 1.3.c):
+Vorbereitungen für 1.3.d)
+
+---
+
+ad 1.3.d):
+erstellter Sourcecode: src/statements/statement.cc, src/statements/id_query.h, src/statements/print.h, src/statements/recurse.h, src/statements/id_query.cc, src/statements/print.cc, src/statements/recurse.cc
+daraus ergeben sich nun: test-bin/id_query, test-bin/print, test-bin/recurse
+
+Zwar steht nun noch keine Möglichkeit zur XML-Abfrage zur Verfügung, aber mit einfachen Anmpassungen des Sourcescodes der .test.cc können im Rahmen der drei Statements alle Abfragen realisiert werden.
+
+---
+
+ad 1.4.a):
+Das Frontend nimmt Eingaben über die Console entgegen bzw. in dem Stil, in dem Apache die Eingabe eines POST-Requests umsetzt. Darüber hinaus wird vorrangig geprüft, ob eine Eingabe im Stil eines GET-Requests vorliegt und ggf. diese verarbeitet.
+Die Ausgabe erfolgt vorläufig auf die Standardausgabe, mit ggf. unterdrücktem Mime-Typ, ohne Kompression.
+Im Hintergrund laufen zwei Datenbanken, die jeweils abwechselnd aktualisiert werden oder für Abfragen zur Verfügung stehen.
+
+---
+
+ad 1.4.b):
+erstellter Sourcecode: src/dispatch/dispatcher.test.cc
+daraus ergeben sich nach 1.4.d): test-bin/test_dispatcher
+Darüber hinaus muss osm3s_query darauf gestestet werden, ob es korrekte Ergebnisse liefert. 
+
+---
+
+ad 1.4.c):
+Wir strukturieren das Frontend wie folgt:
+osm3s_query enthält die eigentliche Programmlogik zur Ausführung der Abfrage, wobei zur Vereinfachung die Ausgabe stets auf die Standardausgabe erfolgt.
+Die Aufbereitung der Benutzereingabe ist nach user_interface ausgelagert. Die Fehlerausgabe wird über das leicht austauschbare Modul console_output abgewickelt. Das Parsen der Benutzereingabe wird in expat/expat_justparse_interface erledigt.
+Die Koordination der Datenbanken sowie der laufenden Anfragen übernimmt dispatcher.
+Die Datenbank-Aktualisierung übernimmt apply_osc_to_db.
+Die Kommunikation zwischen den Prozessen erfolgt über Datei-Semaphoren bzw. Shared Memory.
+
+---
+
+ad 1.4.d):
+erstellter Sourcecode: src/dispatch/dispatcher.cc, src/dispatch/dispatcher.h, src/dispatch/osm3s_query.cc, src/expat/expat_justparse_interface.cc, src/expat/expat_justparse_interface.h, src/frontend/cgi-helper.cc, src/frontend/cgi-helper.h, src/frontend/console_output.cc, src/frontend/console_output.h, src/frontend/user_interface.cc, src/frontend/user_interface.h, src/osm-backend/apply_osc.cc
+daraus ergeben sich nun: test-bin/test_dispatcher, bin/osm3s_query
+
+osm3s_query kann jetzt an der Konsole für Abfragen auf die Datenbank benutzt werden.
+
+---
+
+ad 2.:
+Die Bearbeitung von Flächen ist zwar eigentlich erst in Teil 4 vorgesehen, aber aus zwei Gründen ziehen wir dies vor: Zum einen ist die Flächenverarbeitung mit hohem Rechenaufwand und eigenen Datentabellen recht aufwendig. Zum anderen sollen die Statements durchgängig sinnvoll mit Flächen umgehen können; dies kann nur mit erzeugten Flächen auch sinnvoll getestet werden. Wir teilen daher ein.
+2.1 Statements ohne Flächenbezug
+2.2 Statements mit Flächenbezug
+
+ad 2.1.a):
+Zu bearbeiten sind die verbleibenden Statements "bbox_query", "foreach", "item", "query" und "union". Zusätzlich wird mittels Benchmark geprüft, ob die Neuimplementierung eine akzeptable Geschwindigkeit aufweist.
+
+---
+
+ad 2.1.b):
+erstellter Sourcecode: src/statements/bbox_query.test.cc, src/statements/foreach.test.cc, src/statements/query.test.cc, src/statements/union.test.cc
+daraus ergeben sich nach 2.1.d): test-bin/bbox_query, test-bin/foreach_query, test-bin/query, test-bin/union
+
+---
+
+ad 2.1.c):
+Vorarbeiten für 2.1.d). Die zusätzlichen Statements erzeugen keinen Bedarf für Refaktorisierung.
+
+---
+
+ad 2.1.d):
+erstellter Sourcecode: src/statements/bbox_query.h, src/statements/bbox_query.cc, src/statements/foreach.h, src/statements/foreach.cc, src/statements/item.h, src/statements/item.cc, src/statements/query.h, src/statements/query.cc, src/statements/union.h, src/statements/union.cc
+daraus ergeben sich nun: test-bin/bbox_query, test-bin/foreach_query, test-bin/query, test-bin/union
+
+Die Abfragefunktionalität ohne abgeleitete Daten ist nun komplett vorhanden.
+
+An dieser Stelle hat ein externes Ereignis (schwerwiegende Störung im alten Code) dafür gesorgt, dass dieser Code produktiv gehen muss. Dies ist unschädlich, da der Code noch nicht öffentlich erreichbar wird, sondern nur als Komponente für die ÖPNV-Funktionalität zur Verfügung steht.
+
+---
+
+src/backend/block_backend.h                                  
+src/backend/block_backend.test.cc                            
+src/backend/file_blocks.h                                    
+src/backend/file_blocks.test.cc                              
+src/backend/random_file.h                                    
+src/backend/random_file.test.cc                              
+src/backend/types.h                                          
+src/bin/apply_osc_to_db.sh                                   
+src/core/basic_types.h                                       
+src/core/datatypes.h                                         
+src/core/settings.cc                                         
+src/core/settings.h                                          
+src/core/type_area.h                                         
+src/core/type_node.h                                         
+src/core/type_relation.h                                     
+src/core/type_way.h                                          
+src/dispatch/dispatcher.cc                                   
+src/dispatch/dispatcher.h                                    
+src/dispatch/dispatcher.test.cc                              
+src/dispatch/osm3s_query.cc                                  
+src/expat/expat_justparse_interface.cc                       
+src/expat/expat_justparse_interface.h                        
+src/frontend/cgi-helper.cc                                   
+src/frontend/cgi-helper.h                                    
+src/frontend/console_output.cc                               
+src/frontend/console_output.h                                
+src/frontend/user_interface.cc                               
+src/frontend/user_interface.h                                
+src/osm-backend/apply_osc.cc
+src/osm-backend/area_updater.h
+src/osm-backend/complete_updater.test.cc
+src/osm-backend/diff_updater.test.cc
+src/osm-backend/dump_database.test.cc
+src/osm-backend/example_queries.cc
+src/osm-backend/node_updater.h
+src/osm-backend/node_updater.test.cc
+src/osm-backend/relation_updater.h
+src/osm-backend/relation_updater.test.cc
+src/osm-backend/update_database.cc
+src/osm-backend/way_updater.h
+src/osm-backend/way_updater.test.cc
+src/statements/bbox_query.cc
+src/statements/bbox_query.h
+src/statements/bbox_query.test.cc
+src/statements/benchmark.cc
+src/statements/coord_query.cc
+src/statements/coord_query.h
+src/statements/foreach.cc
+src/statements/foreach.h
+src/statements/foreach.test.cc
+src/statements/id_query.cc
+src/statements/id_query.h
+src/statements/id_query.test.cc
+src/statements/item.cc
+src/statements/item.h
+src/statements/make_area.cc
+src/statements/make_area.h
+src/statements/make_area.test.cc
+src/statements/osm_script.cc
+src/statements/osm_script.h
+src/statements/print.cc
+src/statements/print.h
+src/statements/print.test.cc
+src/statements/query.cc
+src/statements/query.h
+src/statements/query.test.cc
+src/statements/recurse.cc
+src/statements/recurse.h
+src/statements/recurse.test.cc
+src/statements/statement.cc
+src/statements/statement.h
+src/statements/union.cc
+src/statements/union.h
+src/statements/union.test.cc
+src/test-bin/apply_osc.test.sh

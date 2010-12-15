@@ -4,6 +4,7 @@
 #include <string>
 
 #include "statement.h"
+#include "area_query.h"
 #include "bbox_query.h"
 #include "coord_query.h"
 #include "foreach.h"
@@ -82,9 +83,9 @@ void Statement::display_starttag()
 
 Statement::Statement* Statement::create_statement(string element, int line_number)
 {
-  /*if (element == "area-query")
-    return new Area_Query_Statement();
-  else */if (element == "bbox-query")
+  if (element == "area-query")
+    return new Area_Query_Statement(line_number);
+  else if (element == "bbox-query")
     return new Bbox_Query_Statement(line_number);
 /*  else if (element == "conflict")
     return new Conflict_Statement(line_number);*/
