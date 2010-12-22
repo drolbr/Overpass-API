@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "statement.h"
+#include "area_query.h"
 #include "bbox_query.h"
 
 using namespace std;
@@ -13,7 +14,7 @@ class Query_Statement : public Statement
 {
   public:
     Query_Statement(int line_number_)
-      : Statement(line_number_)/*, area_restriction(0)*/,
+      : Statement(line_number_), area_restriction(0),
         bbox_restriction(0) {}
     virtual void set_attributes(const char **attr);
     virtual void add_statement(Statement* statement, string text);
@@ -27,7 +28,7 @@ class Query_Statement : public Statement
     string output;
     unsigned int type;
     vector< pair< string, string > > key_values;
-    //Area_Query_Statement* area_restriction;
+    Area_Query_Statement* area_restriction;
     Bbox_Query_Statement* bbox_restriction;
     
     vector< uint32 >* collect_ids
@@ -35,16 +36,16 @@ class Query_Statement : public Statement
 	 const File_Properties& file_prop, uint32 stopwatch_account);
 };
 
-class Has_Key_Value_Statement : public Statement
+class Has_Kv_Statement : public Statement
 {
   public:
-    Has_Key_Value_Statement(int line_number_) : Statement(line_number_) {}
+    Has_Kv_Statement(int line_number_) : Statement(line_number_) {}
     virtual void set_attributes(const char **attr);
     virtual string get_name() const { return "has-kv"; }
     virtual string get_result_name() const { return ""; }
     virtual void forecast();
     virtual void execute(map< string, Set >& maps) {}
-    virtual ~Has_Key_Value_Statement() {}
+    virtual ~Has_Kv_Statement() {}
     
     string get_key() { return key; }
     string get_value() { return value; }

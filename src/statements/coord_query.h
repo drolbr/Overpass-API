@@ -26,7 +26,7 @@ class Coord_Query_Statement : public Statement
     static int32 lon_(uint32 ll_index, uint64 coord);
     static int check_area_block
         (uint32 ll_index, const Area_Block& area_block,
-         uint32 coord_lat, int32 coord_lon);
+	 uint32 coord_lat, int32 coord_lon);
     
     const static int TOGGLE = 1;
     const static int HIT = 2;

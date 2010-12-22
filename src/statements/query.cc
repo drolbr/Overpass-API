@@ -4,9 +4,9 @@
 #include "../backend/block_backend.h"
 #include "../backend/random_file.h"
 #include "../core/settings.h"
+#include "area_query.h"
 #include "bbox_query.h"
 #include "query.h"
-// #include "area_query.h"
 
 using namespace std;
 
@@ -51,15 +51,16 @@ void Query_Statement::add_statement(Statement* statement, string text)
 {
   assure_no_text(text, this->get_name());
   
-  Has_Key_Value_Statement* has_kv(dynamic_cast<Has_Key_Value_Statement*>(statement));
+  Has_Kv_Statement* has_kv(dynamic_cast<Has_Kv_Statement*>(statement));
   if (has_kv)
   {
     key_values.push_back(make_pair< string, string >
 	(has_kv->get_key(), has_kv->get_value()));
     return;
   }
-/*  Area_Query_Statement* area(dynamic_cast<Area_Query_Statement*>(statement));
-  if (area)
+  Area_Query_Statement* area(dynamic_cast<Area_Query_Statement*>(statement));
+  Bbox_Query_Statement* bbox(dynamic_cast<Bbox_Query_Statement*>(statement));
+  if (area != 0)
   {
     if (type != QUERY_NODE)
     {
@@ -78,9 +79,8 @@ void Query_Statement::add_statement(Statement* statement, string text)
     }
     area_restriction = area;
     return;
-  }*/
-  Bbox_Query_Statement* bbox(dynamic_cast<Bbox_Query_Statement*>(statement));
-  if (bbox)
+  }
+  else if (bbox != 0)
   {
     if (type != QUERY_NODE)
     {
@@ -89,7 +89,7 @@ void Query_Statement::add_statement(Statement* statement, string text)
       add_static_error(temp.str());
       return;
     }
-    if (/*(area_restriction != 0) || */(bbox_restriction != 0))
+    if ((area_restriction != 0) || (bbox_restriction != 0))
     {
       ostringstream temp;
       temp<<"A query statement may contain at most one area-query or bbox-query "
@@ -370,14 +370,31 @@ void Query_Statement::execute(map< string, Set >& maps)
     vector< uint32 >* ids(collect_ids
         (key_values, *de_osm3s_file_ids::NODE_TAGS_GLOBAL,
          Stopwatch::NODE_TAGS_GLOBAL));
-	
+
+    set< pair< Uint32_Index, Uint32_Index > > nodes_req;
+    set< Uint31_Index > area_blocks_req;	
     set< Uint32_Index > obj_req;
-    if (bbox_restriction)
+    if (area_restriction != 0)
+    {
+      stopwatch.stop(Stopwatch::NO_DISK);
+      area_restriction->get_ranges(nodes_req, area_blocks_req);
+      stopwatch.stop(Stopwatch::AREAS);
+      for (set< pair< Uint32_Index, Uint32_Index > >::const_iterator
+	  it(nodes_req.begin()); it != nodes_req.end(); ++it)
+      {
+	for (uint32 i(it->first.val()); i < it->second.val(); ++i)
+	  obj_req.insert(Uint32_Index(i));
+      }
+    }
+    else if (bbox_restriction != 0)
     {
       vector< pair< uint32, uint32 > >* ranges(bbox_restriction->calc_ranges());
       for (vector< pair< uint32, uint32 > >::const_iterator
 	  it(ranges->begin()); it != ranges->end(); ++it)
-	obj_req.insert(Uint32_Index(it->first));
+      {
+	for (uint32 i(it->first); i < it->second; ++i)
+	  obj_req.insert(Uint32_Index(i));
+      }
       delete(ranges);
     }
     else
@@ -396,10 +413,16 @@ void Query_Statement::execute(map< string, Set >& maps)
     areas.clear();
   
     stopwatch.stop(Stopwatch::NO_DISK);
-    Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-	(*de_osm3s_file_ids::NODES, false);
-    if (bbox_restriction)
+    if (area_restriction != 0)
     {
+      area_restriction->collect_nodes
+          (nodes_req, area_blocks_req, ids, nodes, stopwatch);
+      stopwatch.stop(Stopwatch::NO_DISK);
+    }
+    else if (bbox_restriction != 0)
+    {
+      Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
+	  (*de_osm3s_file_ids::NODES, false);
       for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
 	  it(nodes_db.discrete_begin(obj_req.begin(), obj_req.end()));
           !(it == nodes_db.discrete_end()); ++it)
@@ -418,9 +441,12 @@ void Query_Statement::execute(map< string, Set >& maps)
 	    nodes[it.index()].push_back(it.object());
 	}
       }
+      stopwatch.stop(Stopwatch::NODES);
     }
     else
     {
+      Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
+          (*de_osm3s_file_ids::NODES, false);
       for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
 	  it(nodes_db.discrete_begin(obj_req.begin(), obj_req.end()));
           !(it == nodes_db.discrete_end()); ++it)
@@ -428,8 +454,8 @@ void Query_Statement::execute(map< string, Set >& maps)
 	if (binary_search(ids->begin(), ids->end(), it.object().id))
 	  nodes[it.index()].push_back(it.object());
       }    
+      stopwatch.stop(Stopwatch::NODES);
     }
-    stopwatch.stop(Stopwatch::NODES);
   }
   else if (type == QUERY_WAY)
   {
@@ -503,7 +529,7 @@ void Query_Statement::execute(map< string, Set >& maps)
 
 //-----------------------------------------------------------------------------
 
-void Has_Key_Value_Statement::set_attributes(const char **attr)
+void Has_Kv_Statement::set_attributes(const char **attr)
 {
   map< string, string > attributes;
   
@@ -523,7 +549,7 @@ void Has_Key_Value_Statement::set_attributes(const char **attr)
   }
 }
 
-void Has_Key_Value_Statement::forecast()
+void Has_Kv_Statement::forecast()
 {
   // will never be called
 }

@@ -19,6 +19,16 @@ class Area_Query_Statement : public Statement
     virtual void execute(map< string, Set >& maps);
     virtual ~Area_Query_Statement() {}
         
+    void get_ranges
+      (set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
+       set< Uint31_Index >& area_block_req);
+    void collect_nodes
+      (const set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
+       const set< Uint31_Index >& req,
+       vector< uint32 >* ids,
+       map< Uint32_Index, vector< Node_Skeleton > >& nodes,
+       Stopwatch& stopwatch);
+
   private:
     string output;
     unsigned int area_id;

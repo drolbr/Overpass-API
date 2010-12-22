@@ -261,7 +261,7 @@ int main(int argc, char* args[])
     const char* attributes[] = { "type", "relation", 0 };
     stmt2->set_attributes(attributes);
     {
-      Has_Key_Value_Statement* stmt3 = new Has_Key_Value_Statement(0);
+      Has_Kv_Statement* stmt3 = new Has_Kv_Statement(0);
       const char* attributes[] = { "k", "admin_level", 0 };
       stmt3->set_attributes(attributes);
       stmt2->add_statement(stmt3, "");

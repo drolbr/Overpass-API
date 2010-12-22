@@ -13,7 +13,7 @@ int main(int argc, char* args[])
   Union_Statement stmt_1(1);
   Print_Statement stmt_2(2);
   Query_Statement stmt_3(3), stmt_5(5), stmt_7(7), stmt_9(9), stmt_11(11), stmt_13(13);
-  Has_Key_Value_Statement stmt_4(4), stmt_6(6), stmt_8(8), stmt_10(10), stmt_12(12), stmt_14(14);
+  Has_Kv_Statement stmt_4(4), stmt_6(6), stmt_8(8), stmt_10(10), stmt_12(12), stmt_14(14);
   
   map< string, Set > sets;
   

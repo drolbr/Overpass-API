@@ -7,6 +7,7 @@
 #include "bbox_query.h"
 #include "coord_query.h"
 #include "print.h"
+#include "query.h"
 #include "union.h"
 
 using namespace std;
@@ -425,6 +426,46 @@ int main(int argc, char* args[])
     Area_Query_Statement* stmt1 = new Area_Query_Statement(0);
     const char* attributes[] = { "ref", "3600062478", 0 };
     stmt1->set_attributes(attributes);
+    stmt1->execute(sets);
+  }
+  comp_sets(sets["comp"], sets["_"]);
+
+  {
+    Query_Statement* stmt1 = new Query_Statement(0);
+    const char* attributes[] = { "type", "node", "into", "comp", 0 };
+    stmt1->set_attributes(attributes);
+    {
+      Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0);
+      const char* attributes[] = { "k", "highway", "v", "bus_stop", 0 };
+      stmt2->set_attributes(attributes);
+      stmt1->add_statement(stmt2, "");
+    }
+    {
+      Area_Query_Statement* stmt2 = new Area_Query_Statement(0);
+      const char* attributes[] = { "ref", "3600062478", 0 };
+      stmt2->set_attributes(attributes);
+      stmt1->add_statement(stmt2, "");
+    }
+    stmt1->execute(sets);
+  }
+  comp_sets(sets["comp"], sets["_"]);
+  
+  {
+    Query_Statement* stmt1 = new Query_Statement(0);
+    const char* attributes[] = { "type", "node", 0 };
+    stmt1->set_attributes(attributes);
+    {
+      Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0);
+      const char* attributes[] = { "k", "highway", "v", "bus_stop", 0 };
+      stmt2->set_attributes(attributes);
+      stmt1->add_statement(stmt2, "");
+    }
+    {
+      Bbox_Query_Statement* stmt2 = new Bbox_Query_Statement(0);
+      const char* attributes[] = { "s", "51.1675", "n", "51.3175", "w", "7.014", "e", "7.310", 0 };
+      stmt2->set_attributes(attributes);
+      stmt1->add_statement(stmt2, "");
+    }
     stmt1->execute(sets);
   }
   comp_sets(sets["comp"], sets["_"]);

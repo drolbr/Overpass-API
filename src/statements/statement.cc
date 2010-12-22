@@ -96,7 +96,7 @@ Statement::Statement* Statement::create_statement(string element, int line_numbe
   else if (element == "foreach")
     return new Foreach_Statement(line_number);
   else if (element == "has-kv")
-    return new Has_Key_Value_Statement(line_number);
+    return new Has_Kv_Statement(line_number);
   else if (element == "id-query")
     return new Id_Query_Statement(line_number);
   else if (element == "item")

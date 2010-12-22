@@ -26,13 +26,13 @@ int main(int argc, char* args[])
       const char* attributes[] = { "type", "relation", 0 };
       stmt2->set_attributes(attributes);
       {
-        Has_Key_Value_Statement* stmt3 = new Has_Key_Value_Statement(0);
+        Has_Kv_Statement* stmt3 = new Has_Kv_Statement(0);
         const char* attributes[] = { "k", "type", "v", "multipolygon", 0 };
         stmt3->set_attributes(attributes);
         stmt2->add_statement(stmt3, "");
       }
       {
-        Has_Key_Value_Statement* stmt3 = new Has_Key_Value_Statement(0);
+        Has_Kv_Statement* stmt3 = new Has_Kv_Statement(0);
         const char* attributes[] = { "k", "name", 0 };
         stmt3->set_attributes(attributes);
         stmt2->add_statement(stmt3, "");
@@ -44,13 +44,13 @@ int main(int argc, char* args[])
       const char* attributes[] = { "type", "relation", 0 };
       stmt2->set_attributes(attributes);
       {
-        Has_Key_Value_Statement* stmt3 = new Has_Key_Value_Statement(0);
+        Has_Kv_Statement* stmt3 = new Has_Kv_Statement(0);
         const char* attributes[] = { "k", "admin_level", 0 };
         stmt3->set_attributes(attributes);
         stmt2->add_statement(stmt3, "");
       }
       {
-        Has_Key_Value_Statement* stmt3 = new Has_Key_Value_Statement(0);
+        Has_Kv_Statement* stmt3 = new Has_Kv_Statement(0);
         const char* attributes[] = { "k", "name", 0 };
         stmt3->set_attributes(attributes);
         stmt2->add_statement(stmt3, "");
@@ -134,7 +134,7 @@ int main(int argc, char* args[])
       stmt1->add_statement(stmt2, "");
     }
     {
-      Has_Key_Value_Statement* stmt2 = new Has_Key_Value_Statement(0);
+      Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0);
       const char* attributes[] = { "k", "railway", "v", "station", 0 };
       stmt2->set_attributes(attributes);
       stmt1->add_statement(stmt2, "");
@@ -160,7 +160,7 @@ int main(int argc, char* args[])
       stmt1->add_statement(stmt2, "");
     }
     {
-      Has_Key_Value_Statement* stmt2 = new Has_Key_Value_Statement(0);
+      Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0);
       const char* attributes[] = { "k", "highway", "v", "bus_stop", 0 };
       stmt2->set_attributes(attributes);
       stmt1->add_statement(stmt2, "");
@@ -186,7 +186,7 @@ int main(int argc, char* args[])
       stmt1->add_statement(stmt2, "");
     }
     {
-      Has_Key_Value_Statement* stmt2 = new Has_Key_Value_Statement(0);
+      Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0);
       const char* attributes[] = { "k", "amenity", "v", "bank", 0 };
       stmt2->set_attributes(attributes);
       stmt1->add_statement(stmt2, "");
@@ -274,7 +274,7 @@ int main(int argc, char* args[])
       stmt1->add_statement(stmt2, "");
     }
     {
-      Has_Key_Value_Statement* stmt2 = new Has_Key_Value_Statement(0);
+      Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0);
       const char* attributes[] = { "k", "addr:housenumber", 0 };
       stmt2->set_attributes(attributes);
       stmt1->add_statement(stmt2, "");
@@ -296,7 +296,7 @@ int main(int argc, char* args[])
       const char* attributes[] = { "type", "way", 0 };
       stmt2->set_attributes(attributes);
       {
-        Has_Key_Value_Statement* stmt3 = new Has_Key_Value_Statement(0);
+        Has_Kv_Statement* stmt3 = new Has_Kv_Statement(0);
         const char* attributes[] = { "k", "addr:housenumber", 0 };
         stmt3->set_attributes(attributes);
         stmt2->add_statement(stmt3, "");
@@ -308,7 +308,7 @@ int main(int argc, char* args[])
       const char* attributes[] = { "type", "way", 0 };
       stmt2->set_attributes(attributes);
       {
-        Has_Key_Value_Statement* stmt3 = new Has_Key_Value_Statement(0);
+        Has_Kv_Statement* stmt3 = new Has_Kv_Statement(0);
         const char* attributes[] = { "k", "addr:interpolation", 0 };
         stmt3->set_attributes(attributes);
         stmt2->add_statement(stmt3, "");

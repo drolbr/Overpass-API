@@ -49,22 +49,10 @@ void Area_Query_Statement::forecast()
   display_state();*/
 }
 
-void Area_Query_Statement::execute(map< string, Set >& maps)
-{ 
-  stopwatch.start();
-
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes(maps[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways(maps[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations(maps[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas(maps[output].areas);
-  
-  nodes.clear();
-  ways.clear();
-  relations.clear();
-  areas.clear();
-  
-  set< Uint31_Index > req;
-  set< pair< Uint32_Index, Uint32_Index > > nodes_req;
+void Area_Query_Statement::get_ranges
+    (set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
+     set< Uint31_Index >& area_block_req)
+{
   Block_Backend< Uint31_Index, Area_Skeleton > area_locations_db
       (*de_osm3s_file_ids::AREAS, true);
   for (Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
@@ -76,14 +64,22 @@ void Area_Query_Statement::execute(map< string, Set >& maps)
       for (set< uint32 >::const_iterator it2(it.object().used_indices.begin());
           it2 != it.object().used_indices.end(); ++it2)
       {
-	req.insert(Uint31_Index(*it2));
+	area_block_req.insert(Uint31_Index(*it2));
 	pair< Uint32_Index, Uint32_Index > range
 	    (make_pair(Uint32_Index(*it2), Uint32_Index((*it2) + 0x100)));
 	nodes_req.insert(range);
       }
     }
   }
-  
+}
+
+void Area_Query_Statement::collect_nodes
+    (const set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
+     const set< Uint31_Index >& req,
+     vector< uint32 >* ids,
+     map< Uint32_Index, vector< Node_Skeleton > >& nodes,
+     Stopwatch& stopwatch)
+{
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
       (*de_osm3s_file_ids::AREA_BLOCKS, true);
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
@@ -109,6 +105,13 @@ void Area_Query_Statement::execute(map< string, Set >& maps)
     while ((!(nodes_it == nodes_db.range_end())) &&
         ((nodes_it.index().val() & 0xffffff00) == current_idx))
     {
+      if ((ids != 0) &&
+	  (!binary_search(ids->begin(), ids->end(), nodes_it.object().id)))
+      {
+	++nodes_it;
+	continue;
+      }
+      
       bool inside(false);
       uint32 ilat((Node::lat(nodes_it.index().val(), nodes_it.object().ll_lower)
           + 91.0)*10000000+0.5);
@@ -137,6 +140,27 @@ void Area_Query_Statement::execute(map< string, Set >& maps)
     }
     current_idx = area_it.index().val();
   }
+}
+
+void Area_Query_Statement::execute(map< string, Set >& maps)
+{ 
+  stopwatch.start();
+
+  map< Uint32_Index, vector< Node_Skeleton > >& nodes(maps[output].nodes);
+  map< Uint31_Index, vector< Way_Skeleton > >& ways(maps[output].ways);
+  map< Uint31_Index, vector< Relation_Skeleton > >& relations(maps[output].relations);
+  map< Uint31_Index, vector< Area_Skeleton > >& areas(maps[output].areas);
+  
+  nodes.clear();
+  ways.clear();
+  relations.clear();
+  areas.clear();
+  
+  set< Uint31_Index > req;
+  set< pair< Uint32_Index, Uint32_Index > > nodes_req;
+  get_ranges(nodes_req, req);
+  
+  collect_nodes(nodes_req, req, NULL, nodes, stopwatch);
 
   stopwatch.stop(Stopwatch::NO_DISK);
   stopwatch.report(get_name());

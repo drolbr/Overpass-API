@@ -100,11 +100,44 @@ uint32 Coord_Query_Statement::shifted_lat(uint32 ll_index, uint64 coord)
 {
   uint32 lat(0);
   coord |= (((uint64)ll_index)<<32);
-  for (uint32 i(0); i < 16; i+=1)
+/*  for (uint32 i(0); i < 16; ++i)
   {
     lat |= (((uint64)0x1<<(31-2*i))&(coord>>32))<<i;
     lat |= (((uint64)0x1<<(31-2*i))&coord)>>(16-i);
-  }
+  }*/
+  // manual loop unrolling
+  lat |= (((uint64)0x1<<(31-2*0))&(coord>>32))<<0;
+  lat |= (((uint64)0x1<<(31-2*0))&coord)>>(16-0);
+  lat |= (((uint64)0x1<<(31-2*1))&(coord>>32))<<1;
+  lat |= (((uint64)0x1<<(31-2*1))&coord)>>(16-1);
+  lat |= (((uint64)0x1<<(31-2*2))&(coord>>32))<<2;
+  lat |= (((uint64)0x1<<(31-2*2))&coord)>>(16-2);
+  lat |= (((uint64)0x1<<(31-2*3))&(coord>>32))<<3;
+  lat |= (((uint64)0x1<<(31-2*3))&coord)>>(16-3);
+  lat |= (((uint64)0x1<<(31-2*4))&(coord>>32))<<4;
+  lat |= (((uint64)0x1<<(31-2*4))&coord)>>(16-4);
+  lat |= (((uint64)0x1<<(31-2*5))&(coord>>32))<<5;
+  lat |= (((uint64)0x1<<(31-2*5))&coord)>>(16-5);
+  lat |= (((uint64)0x1<<(31-2*6))&(coord>>32))<<6;
+  lat |= (((uint64)0x1<<(31-2*6))&coord)>>(16-6);
+  lat |= (((uint64)0x1<<(31-2*7))&(coord>>32))<<7;
+  lat |= (((uint64)0x1<<(31-2*7))&coord)>>(16-7);
+  lat |= (((uint64)0x1<<(31-2*8))&(coord>>32))<<8;
+  lat |= (((uint64)0x1<<(31-2*8))&coord)>>(16-8);
+  lat |= (((uint64)0x1<<(31-2*9))&(coord>>32))<<9;
+  lat |= (((uint64)0x1<<(31-2*9))&coord)>>(16-9);
+  lat |= (((uint64)0x1<<(31-2*10))&(coord>>32))<<10;
+  lat |= (((uint64)0x1<<(31-2*10))&coord)>>(16-10);
+  lat |= (((uint64)0x1<<(31-2*11))&(coord>>32))<<11;
+  lat |= (((uint64)0x1<<(31-2*11))&coord)>>(16-11);
+  lat |= (((uint64)0x1<<(31-2*12))&(coord>>32))<<12;
+  lat |= (((uint64)0x1<<(31-2*12))&coord)>>(16-12);
+  lat |= (((uint64)0x1<<(31-2*13))&(coord>>32))<<13;
+  lat |= (((uint64)0x1<<(31-2*13))&coord)>>(16-13);
+  lat |= (((uint64)0x1<<(31-2*14))&(coord>>32))<<14;
+  lat |= (((uint64)0x1<<(31-2*14))&coord)>>(16-14);
+  lat |= (((uint64)0x1<<(31-2*15))&(coord>>32))<<15;
+  lat |= (((uint64)0x1<<(31-2*15))&coord)>>(16-15);
   return lat;
 }
 
@@ -112,11 +145,44 @@ int32 Coord_Query_Statement::lon_(uint32 ll_index, uint64 coord)
 {
   int32 lon(0);
   coord |= (((uint64)ll_index)<<32);
-  for (uint32 i(0); i < 16; i+=1)
+/*  for (uint32 i(0); i < 16; ++i)
   {
     lon |= (((uint64)0x1<<(30-2*i))&(coord>>32))<<(i+1);
     lon |= (((uint64)0x1<<(30-2*i))&coord)>>(15-i);
-  }
+  }*/
+  // manual loop unrolling
+  lon |= (((uint64)0x1<<(30-2*0))&(coord>>32))<<(0+1);
+  lon |= (((uint64)0x1<<(30-2*0))&coord)>>(15-0);
+  lon |= (((uint64)0x1<<(30-2*1))&(coord>>32))<<(1+1);
+  lon |= (((uint64)0x1<<(30-2*1))&coord)>>(15-1);
+  lon |= (((uint64)0x1<<(30-2*2))&(coord>>32))<<(2+1);
+  lon |= (((uint64)0x1<<(30-2*2))&coord)>>(15-2);
+  lon |= (((uint64)0x1<<(30-2*3))&(coord>>32))<<(3+1);
+  lon |= (((uint64)0x1<<(30-2*3))&coord)>>(15-3);
+  lon |= (((uint64)0x1<<(30-2*4))&(coord>>32))<<(4+1);
+  lon |= (((uint64)0x1<<(30-2*4))&coord)>>(15-4);
+  lon |= (((uint64)0x1<<(30-2*5))&(coord>>32))<<(5+1);
+  lon |= (((uint64)0x1<<(30-2*5))&coord)>>(15-5);
+  lon |= (((uint64)0x1<<(30-2*6))&(coord>>32))<<(6+1);
+  lon |= (((uint64)0x1<<(30-2*6))&coord)>>(15-6);
+  lon |= (((uint64)0x1<<(30-2*7))&(coord>>32))<<(7+1);
+  lon |= (((uint64)0x1<<(30-2*7))&coord)>>(15-7);
+  lon |= (((uint64)0x1<<(30-2*8))&(coord>>32))<<(8+1);
+  lon |= (((uint64)0x1<<(30-2*8))&coord)>>(15-8);
+  lon |= (((uint64)0x1<<(30-2*9))&(coord>>32))<<(9+1);
+  lon |= (((uint64)0x1<<(30-2*9))&coord)>>(15-9);
+  lon |= (((uint64)0x1<<(30-2*10))&(coord>>32))<<(10+1);
+  lon |= (((uint64)0x1<<(30-2*10))&coord)>>(15-10);
+  lon |= (((uint64)0x1<<(30-2*11))&(coord>>32))<<(11+1);
+  lon |= (((uint64)0x1<<(30-2*11))&coord)>>(15-11);
+  lon |= (((uint64)0x1<<(30-2*12))&(coord>>32))<<(12+1);
+  lon |= (((uint64)0x1<<(30-2*12))&coord)>>(15-12);
+  lon |= (((uint64)0x1<<(30-2*13))&(coord>>32))<<(13+1);
+  lon |= (((uint64)0x1<<(30-2*13))&coord)>>(15-13);
+  lon |= (((uint64)0x1<<(30-2*14))&(coord>>32))<<(14+1);
+  lon |= (((uint64)0x1<<(30-2*14))&coord)>>(15-14);
+  lon |= (((uint64)0x1<<(30-2*15))&(coord>>32))<<(15+1);
+  lon |= (((uint64)0x1<<(30-2*15))&coord)>>(15-15);
   return lon;
 }
 
@@ -149,8 +215,8 @@ int Coord_Query_Statement::check_area_block
   {
     uint32 last_lat(lat);
     int32 last_lon(lon);
-    lat = shifted_lat(ll_index, *it);
     lon = lon_(ll_index, *it);
+    lat = shifted_lat(ll_index, *it);
     if (last_less)
     {
       if (lon < coord_lon)

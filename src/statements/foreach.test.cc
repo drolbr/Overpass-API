@@ -14,7 +14,7 @@ int main(int argc, char* args[])
   Foreach_Statement stmt_1(1), stmt_7(7), stmt_12(12);
   Print_Statement stmt_2(2);
   Query_Statement stmt_3(3), stmt_5(5), stmt_10(10);
-  Has_Key_Value_Statement stmt_4(4), stmt_6(6), stmt_11(11);
+  Has_Kv_Statement stmt_4(4), stmt_6(6), stmt_11(11);
   Recurse_Statement stmt_8(8);
   
   map< string, Set > sets;
