@@ -19,8 +19,6 @@
 
 using namespace std;
 
-Area_Updater* Statement::area_updater(0);
-
 void Statement::eval_cstr_array(string element, map< string, string >& attributes, const char **attr)
 {
   for (unsigned int i(0); attr[i]; i += 2)

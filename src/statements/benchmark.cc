@@ -14,7 +14,7 @@ using namespace std;
 
 int main(int argc, char* args[])
 {
-  map< string, Set > sets;
+  Resource_Manager rman;
   
   cout<<"Query to create areas:\n";
   {
@@ -57,7 +57,7 @@ int main(int argc, char* args[])
       }
       stmt1->add_statement(stmt2, "");
     }
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   {
     Foreach_Statement* stmt1 = new Foreach_Statement(0);
@@ -81,7 +81,7 @@ int main(int argc, char* args[])
       }
       stmt1->add_statement(stmt2, "");
     }
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   
   cout<<"Bbox of Wuppertal:\n";
@@ -113,13 +113,13 @@ int main(int argc, char* args[])
       stmt2->set_attributes(attributes);
       stmt1->add_statement(stmt2, "");
     }
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   {
     Print_Statement* stmt1 = new Print_Statement(0);
     const char* attributes[] = { "mode", "body", 0 };
     stmt1->set_attributes(attributes);
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
 
   cout<<"POIs 1:\n";
@@ -139,13 +139,13 @@ int main(int argc, char* args[])
       stmt2->set_attributes(attributes);
       stmt1->add_statement(stmt2, "");
     }
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   {
     Print_Statement* stmt1 = new Print_Statement(0);
     const char* attributes[] = { "mode", "body", 0 };
     stmt1->set_attributes(attributes);
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   
   cout<<"POIs 2:\n";
@@ -165,13 +165,13 @@ int main(int argc, char* args[])
       stmt2->set_attributes(attributes);
       stmt1->add_statement(stmt2, "");
     }
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   {
     Print_Statement* stmt1 = new Print_Statement(0);
     const char* attributes[] = { "mode", "body", 0 };
     stmt1->set_attributes(attributes);
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   
   cout<<"POIs 3:\n";
@@ -191,13 +191,13 @@ int main(int argc, char* args[])
       stmt2->set_attributes(attributes);
       stmt1->add_statement(stmt2, "");
     }
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   {
     Print_Statement* stmt1 = new Print_Statement(0);
     const char* attributes[] = { "mode", "body", 0 };
     stmt1->set_attributes(attributes);
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
 
   cout<<"Relation extension for JOSM:\n";
@@ -229,7 +229,7 @@ int main(int argc, char* args[])
       stmt2->set_attributes(attributes);
       stmt1->add_statement(stmt2, "");
     }
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   {
     Union_Statement* stmt1 = new Union_Statement(0);
@@ -253,13 +253,13 @@ int main(int argc, char* args[])
       stmt2->set_attributes(attributes);
       stmt1->add_statement(stmt2, "");
     }
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   {
     Print_Statement* stmt1 = new Print_Statement(0);
     const char* attributes[] = { "mode", "ids_only", 0 };
     stmt1->set_attributes(attributes);
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   
   cout<<"Housenumbers in Europe (but not only at the moment):\n";
@@ -279,13 +279,13 @@ int main(int argc, char* args[])
       stmt2->set_attributes(attributes);
       stmt1->add_statement(stmt2, "");
     }
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   {
     Print_Statement* stmt1 = new Print_Statement(0);
     const char* attributes[] = { "mode", "body", 0 };
     stmt1->set_attributes(attributes);
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   {
     Union_Statement* stmt1 = new Union_Statement(0);
@@ -315,25 +315,25 @@ int main(int argc, char* args[])
       }
       stmt1->add_statement(stmt2, "");
     }
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   {
     Print_Statement* stmt1 = new Print_Statement(0);
     const char* attributes[] = { "mode", "body", 0 };
     stmt1->set_attributes(attributes);
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   {
     Recurse_Statement* stmt1 = new Recurse_Statement(0);
     const char* attributes[] = { "type", "way-node", 0 };
     stmt1->set_attributes(attributes);
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   {
     Print_Statement* stmt1 = new Print_Statement(0);
     const char* attributes[] = { "mode", "body", 0 };
     stmt1->set_attributes(attributes);
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   
   return 0;

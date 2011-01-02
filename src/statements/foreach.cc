@@ -232,11 +232,12 @@ void Foreach_Statement::forecast()
   display_state();*/
 }
 
-void Foreach_Statement::execute(map< string, Set >& maps)
+void Foreach_Statement::execute(Resource_Manager& rman)
 {
   stopwatch.start();
   
-  Set base_set(maps[input]);
+  Set base_set(rman.sets()[input]);
+  rman.push_reference(base_set);
   
   for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
       it(base_set.nodes.begin()); it != base_set.nodes.end(); ++it)
@@ -244,16 +245,16 @@ void Foreach_Statement::execute(map< string, Set >& maps)
     for (vector< Node_Skeleton >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
     {
-      maps[output].nodes.clear();
-      maps[output].ways.clear();
-      maps[output].relations.clear();
-      maps[output].areas.clear();
-      maps[output].nodes[it->first].push_back(*it2);
+      rman.sets()[output].nodes.clear();
+      rman.sets()[output].ways.clear();
+      rman.sets()[output].relations.clear();
+      rman.sets()[output].areas.clear();
+      rman.sets()[output].nodes[it->first].push_back(*it2);
       stopwatch.stop(Stopwatch::NO_DISK);
       for (vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
       {
-	(*it)->execute(maps);
+	(*it)->execute(rman);
 	stopwatch.sum((*it)->stopwatch);
       }
       stopwatch.skip();
@@ -265,16 +266,16 @@ void Foreach_Statement::execute(map< string, Set >& maps)
     for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
     it2 != it->second.end(); ++it2)
     {
-      maps[output].nodes.clear();
-      maps[output].ways.clear();
-      maps[output].relations.clear();
-      maps[output].areas.clear();
-      maps[output].ways[it->first].push_back(*it2);
+      rman.sets()[output].nodes.clear();
+      rman.sets()[output].ways.clear();
+      rman.sets()[output].relations.clear();
+      rman.sets()[output].areas.clear();
+      rman.sets()[output].ways[it->first].push_back(*it2);
       stopwatch.stop(Stopwatch::NO_DISK);
       for (vector< Statement* >::iterator it(substatements.begin());
       it != substatements.end(); ++it)
       {
-	(*it)->execute(maps);
+	(*it)->execute(rman);
 	stopwatch.sum((*it)->stopwatch);
       }
       stopwatch.skip();
@@ -286,16 +287,16 @@ void Foreach_Statement::execute(map< string, Set >& maps)
     for (vector< Relation_Skeleton >::const_iterator it2(it->second.begin());
     it2 != it->second.end(); ++it2)
     {
-      maps[output].nodes.clear();
-      maps[output].ways.clear();
-      maps[output].relations.clear();
-      maps[output].areas.clear();
-      maps[output].relations[it->first].push_back(*it2);
+      rman.sets()[output].nodes.clear();
+      rman.sets()[output].ways.clear();
+      rman.sets()[output].relations.clear();
+      rman.sets()[output].areas.clear();
+      rman.sets()[output].relations[it->first].push_back(*it2);
       stopwatch.stop(Stopwatch::NO_DISK);
       for (vector< Statement* >::iterator it(substatements.begin());
       it != substatements.end(); ++it)
       {
-	(*it)->execute(maps);
+	(*it)->execute(rman);
 	stopwatch.sum((*it)->stopwatch);
       }
       stopwatch.skip();
@@ -307,16 +308,16 @@ void Foreach_Statement::execute(map< string, Set >& maps)
     for (vector< Area_Skeleton >::const_iterator it2(it->second.begin());
     it2 != it->second.end(); ++it2)
     {
-      maps[output].nodes.clear();
-      maps[output].ways.clear();
-      maps[output].relations.clear();
-      maps[output].areas.clear();
-      maps[output].areas[it->first].push_back(*it2);
+      rman.sets()[output].nodes.clear();
+      rman.sets()[output].ways.clear();
+      rman.sets()[output].relations.clear();
+      rman.sets()[output].areas.clear();
+      rman.sets()[output].areas[it->first].push_back(*it2);
       stopwatch.stop(Stopwatch::NO_DISK);
       for (vector< Statement* >::iterator it(substatements.begin());
       it != substatements.end(); ++it)
       {
-	(*it)->execute(maps);
+	(*it)->execute(rman);
 	stopwatch.sum((*it)->stopwatch);
       }
       stopwatch.skip();
@@ -324,8 +325,10 @@ void Foreach_Statement::execute(map< string, Set >& maps)
   }
   
   if (input == output)
-    maps[output] = base_set;
+    rman.sets()[output] = base_set;
   
   stopwatch.stop(Stopwatch::NO_DISK);
   stopwatch.report(get_name());
+  rman.pop_reference();
+  rman.health_check(*this);
 }

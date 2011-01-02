@@ -67,14 +67,18 @@ void Bbox_Query_Statement::forecast()
 {
 }
 
-void Bbox_Query_Statement::execute(map< string, Set >& maps)
+void Bbox_Query_Statement::execute(Resource_Manager& rman)
 {
   stopwatch.start();
   
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes(maps[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways(maps[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations(maps[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas(maps[output].areas);
+  map< Uint32_Index, vector< Node_Skeleton > >& nodes
+      (rman.sets()[output].nodes);
+  map< Uint31_Index, vector< Way_Skeleton > >& ways
+      (rman.sets()[output].ways);
+  map< Uint31_Index, vector< Relation_Skeleton > >& relations
+      (rman.sets()[output].relations);
+  map< Uint31_Index, vector< Area_Skeleton > >& areas
+      (rman.sets()[output].areas);
   
   nodes.clear();
   ways.clear();
@@ -95,6 +99,8 @@ void Bbox_Query_Statement::execute(map< string, Set >& maps)
   delete(uint_ranges);
   
   stopwatch.stop(Stopwatch::NO_DISK);
+  uint nodes_count;
+  
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
     (*de_osm3s_file_ids::NODES, false);
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
@@ -103,14 +109,21 @@ void Bbox_Query_Statement::execute(map< string, Set >& maps)
        Default_Range_Iterator< Uint32_Index >(req.end())));
     !(it == nodes_db.range_end()); ++it)
   {
+    if (++nodes_count >= 64*1024)
+    {
+      nodes_count = 0;
+      rman.health_check(*this);
+    }
+    
     double lat(Node::lat(it.index().val(), it.object().ll_lower));
     double lon(Node::lon(it.index().val(), it.object().ll_lower));
     if ((lat >= south) && (lat <= north) &&
         (((lon >= west) && (lon <= east))
 	  || ((east < west) && ((lon >= west) || (lon <= east)))))
-      nodes[it.index()].push_back(it.object());
+      nodes[it.index()].push_back(it.object());    
   }
   stopwatch.stop(Stopwatch::NODES);
   
   stopwatch.report(get_name());
+  rman.health_check(*this);
 }

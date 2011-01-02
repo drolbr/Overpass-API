@@ -7,6 +7,7 @@
 
 #include "../core/datatypes.h"
 #include "../core/settings.h"
+#include "../dispatch/resource_manager.h"
 #include "../osm-backend/area_updater.h"
 #include "../osm-backend/stopwatch.h"
 
@@ -26,12 +27,9 @@ class Statement
     virtual string get_name() const = 0;
     virtual string get_result_name() const = 0;
     virtual void forecast() = 0;
-    virtual void execute(map< string, Set >& maps) = 0;
+    virtual void execute(Resource_Manager& rman) = 0;
     
-    virtual ~Statement()
-    {
-      delete area_updater;
-    }
+    virtual ~Statement() {}
     
     int get_line_number() const { return line_number; }
     int get_startpos() const { return startpos; }
@@ -51,13 +49,6 @@ class Statement
       Stopwatch::set_error_output(error_output);
     }
     
-    static Area_Updater* get_area_updater()
-    {
-      if (area_updater == 0)
-	area_updater = new Area_Updater();
-      return area_updater;
-    }
-    
     const static int NODE = 1;
     const static int WAY = 2;
     const static int RELATION = 3;
@@ -66,7 +57,6 @@ class Statement
   
   private:
     static Error_Output* error_output;
-    static Area_Updater* area_updater;
     
     int line_number;
     int startpos, endpos, tagendpos;

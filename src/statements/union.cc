@@ -62,24 +62,26 @@ void Union_Statement::forecast()
   display_state();*/
 }
 
-void Union_Statement::execute(map< string, Set >& maps)
+void Union_Statement::execute(Resource_Manager& rman)
 {
   stopwatch.start();
-  
-  map< Uint32_Index, vector< Node_Skeleton > > nodes;
-  map< Uint31_Index, vector< Way_Skeleton > > ways;
-  map< Uint31_Index, vector< Relation_Skeleton > > relations;
-  map< Uint31_Index, vector< Area_Skeleton > > areas;
+
+  Set base_set;
+  rman.push_reference(base_set);
+  map< Uint32_Index, vector< Node_Skeleton > >& nodes(base_set.nodes);
+  map< Uint31_Index, vector< Way_Skeleton > >& ways(base_set.ways);
+  map< Uint31_Index, vector< Relation_Skeleton > >& relations(base_set.relations);
+  map< Uint31_Index, vector< Area_Skeleton > >& areas(base_set.areas);
   
   for (vector< Statement* >::iterator it(substatements.begin());
        it != substatements.end(); ++it)
   {
     stopwatch.stop(Stopwatch::NO_DISK);
-    (*it)->execute(maps);
+    (*it)->execute(rman);
     stopwatch.skip();
     stopwatch.sum((*it)->stopwatch);
     
-    Set& summand(maps[(*it)->get_result_name()]);
+    Set& summand(rman.sets()[(*it)->get_result_name()]);
 
     for (map< Uint32_Index, vector< Node_Skeleton > >::iterator
         it(summand.nodes.begin()); it != summand.nodes.end(); ++it)
@@ -119,11 +121,10 @@ void Union_Statement::execute(map< string, Set >& maps)
     }
   }
   
-  maps[output].nodes = nodes;
-  maps[output].ways = ways;
-  maps[output].relations = relations;
-  maps[output].areas = areas;
+  rman.sets()[output] = base_set;
   
   stopwatch.stop(Stopwatch::NO_DISK);
   stopwatch.report(get_name());
+  rman.pop_reference();
+  rman.health_check(*this);
 }

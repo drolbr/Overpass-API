@@ -23,6 +23,9 @@ struct de_osm3s_file_ids
   static File_Properties* AREAS;
   static File_Properties* AREA_TAGS_LOCAL;
   static File_Properties* AREA_TAGS_GLOBAL;
+  
+  static uint64 max_allowed_space;
+  static uint32 max_allowed_time;  
 };
 
 string get_basedir();

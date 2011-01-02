@@ -19,6 +19,7 @@
 #include "../frontend/user_interface.h"
 #include "../statements/statement.h"
 #include "dispatcher.h"
+#include "resource_manager.h"
 
 using namespace std;
 
@@ -311,10 +312,10 @@ int main(int argc, char *argv[])
 	<<"\" last_rule_applied=\""<<0<<"\"/>\n"
       "\n";
 
-    map< string, Set > maps;
+    Resource_Manager rman;
     for (vector< Statement* >::const_iterator it(statement_stack.begin());
 	 it != statement_stack.end(); ++it)
-      (*it)->execute(maps);
+      (*it)->execute(rman);
   
     cout<<"\n</osm-derived>\n";
   }
@@ -325,7 +326,19 @@ int main(int argc, char *argv[])
     if (error_output)
       error_output->runtime_error(temp.str());
   }
-
+  catch(Resource_Error e)
+  {
+    ostringstream temp;
+    if (e.timed_out)
+      temp<<"Query timed out in \""<<e.stmt_name<<"\" at line "<<e.line_number
+          <<" after "<<e.runtime<<" seconds.";
+    else
+      temp<<"Query run out of memory in \""<<e.stmt_name<<"\" at line "
+          <<e.line_number<<" using about "<<e.size/(1024*1024)<<" MB of RAM.";
+    if (error_output)
+      error_output->runtime_error(temp.str());
+  }
+  
   unregister_process(shm_ptr, msg_id, error_output);
 
   return 0;

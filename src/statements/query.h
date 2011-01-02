@@ -21,7 +21,7 @@ class Query_Statement : public Statement
     virtual string get_name() const { return "query"; }
     virtual string get_result_name() const { return output; }
     virtual void forecast();
-    virtual void execute(map< string, Set >& maps);
+    virtual void execute(Resource_Manager& rman);
     virtual ~Query_Statement() {}
     
   private:
@@ -33,7 +33,8 @@ class Query_Statement : public Statement
     
     vector< uint32 >* collect_ids
         (const vector< pair< string, string > >& key_values,
-	 const File_Properties& file_prop, uint32 stopwatch_account);
+	 const File_Properties& file_prop, uint32 stopwatch_account,
+	 Resource_Manager& rman);
 };
 
 class Has_Kv_Statement : public Statement
@@ -44,7 +45,7 @@ class Has_Kv_Statement : public Statement
     virtual string get_name() const { return "has-kv"; }
     virtual string get_result_name() const { return ""; }
     virtual void forecast();
-    virtual void execute(map< string, Set >& maps) {}
+    virtual void execute(Resource_Manager& rman) {}
     virtual ~Has_Kv_Statement() {}
     
     string get_key() { return key; }

@@ -177,14 +177,14 @@ int main(int argc, char* args[])
   Error_Output* error_output(new Console_Output(false));
   Statement::set_error_output(error_output);
   
-  map< string, Set > sets;
+  Resource_Manager rman;
   
   cout<<"Query to create areas:\n";
   {
     Id_Query_Statement* stmt1 = new Id_Query_Statement(0);
     const char* attributes[] = { "type", "relation", "ref", "62478", "into", "rels", 0 };
     stmt1->set_attributes(attributes);
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   {
     Union_Statement* stmt2 = new Union_Statement(0);
@@ -202,25 +202,25 @@ int main(int argc, char* args[])
       stmt3->set_attributes(attributes);
       stmt2->add_statement(stmt3, "");
     }
-    stmt2->execute(sets);
+    stmt2->execute(rman);
   }
   {
     Make_Area_Statement* stmt1 = new Make_Area_Statement(0);
     const char* attributes[] = { "pivot", "rels", 0 };
     stmt1->set_attributes(attributes);
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   {
     Coord_Query_Statement* stmt1 = new Coord_Query_Statement(0);
     const char* attributes[] = { "lat", "51.25", "lon", "7.15", 0 };
     stmt1->set_attributes(attributes);
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   {
     Print_Statement* stmt1 = new Print_Statement(0);
     const char* attributes[] = { 0 };
     stmt1->set_attributes(attributes);
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
 
   cout<<"Query to create areas:\n";
@@ -228,7 +228,7 @@ int main(int argc, char* args[])
     Id_Query_Statement* stmt1 = new Id_Query_Statement(0);
     const char* attributes[] = { "type", "relation", "ref", "34631", "into", "rels", 0 };
     stmt1->set_attributes(attributes);
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   {
     Union_Statement* stmt2 = new Union_Statement(0);
@@ -246,13 +246,13 @@ int main(int argc, char* args[])
       stmt3->set_attributes(attributes);
       stmt2->add_statement(stmt3, "");
     }
-    stmt2->execute(sets);
+    stmt2->execute(rman);
   }
   {
     Make_Area_Statement* stmt1 = new Make_Area_Statement(0);
     const char* attributes[] = { "pivot", "rels", 0 };
     stmt1->set_attributes(attributes);
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
 
   cout<<"Query to create areas:\n";
@@ -266,7 +266,7 @@ int main(int argc, char* args[])
       stmt3->set_attributes(attributes);
       stmt2->add_statement(stmt3, "");
     }
-    stmt2->execute(sets);
+    stmt2->execute(rman);
   }
   {
     Foreach_Statement* stmt3 = new Foreach_Statement(0);
@@ -314,13 +314,13 @@ int main(int argc, char* args[])
       stmt1->set_attributes(attributes);
       stmt3->add_statement(stmt1, "");
     }*/
-    stmt3->execute(sets);
+    stmt3->execute(rman);
   }
   {
     Print_Statement* stmt1 = new Print_Statement(0);
     const char* attributes[] = { "from", "areas", 0 };
     stmt1->set_attributes(attributes);
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
   
 /*  cout<<Coord_Query_Statement::check_segment(0, 0, 0, 0, 0, 0)<<'\n';
@@ -424,9 +424,9 @@ int main(int argc, char* args[])
       attributes[3] = (const char*)lon;
       stmt1->set_attributes(attributes);
       Statement::set_error_output(0);
-      stmt1->execute(sets);
+      stmt1->execute(rman);
       
-      map< Uint31_Index, vector< Area_Skeleton > >& areas(sets["_"].areas);
+      map< Uint31_Index, vector< Area_Skeleton > >& areas(rman.sets()["_"].areas);
       bool contains_w(false);
       for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator
 	  it(areas.begin()); it != areas.end(); ++it)

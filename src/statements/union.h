@@ -18,7 +18,7 @@ class Union_Statement : public Statement
     virtual string get_name() const { return "union"; }
     virtual string get_result_name() const { return output; }
     virtual void forecast();
-    virtual void execute(map< string, Set >& maps);
+    virtual void execute(Resource_Manager& rman);
     virtual ~Union_Statement() {}
     
   private:

@@ -18,7 +18,7 @@ class Osm_Script_Statement : public Statement
     virtual string get_name() const { return "osm-script"; }
     virtual string get_result_name() const { return ""; }
     virtual void forecast();
-    virtual void execute(map< string, Set >& maps);
+    virtual void execute(Resource_Manager& rman);
     virtual ~Osm_Script_Statement() {}
     
 /*    string get_rule_name() { return name; }

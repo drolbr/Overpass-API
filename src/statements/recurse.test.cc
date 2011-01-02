@@ -14,7 +14,7 @@ int main(int argc, char* args[])
   Recurse_Statement stmt_2(2);
   Print_Statement stmt_3(3);
   
-  map< string, Set > sets;
+  Resource_Manager rman;
   
   const char* attributes[5];
   attributes[0] = "type";
@@ -24,7 +24,7 @@ int main(int argc, char* args[])
   attributes[4] = 0;
   
   stmt_1.set_attributes(attributes);
-  stmt_1.execute(sets);
+  stmt_1.execute(rman);
   
   attributes[0] = "mode";
   attributes[1] = "body";
@@ -34,14 +34,14 @@ int main(int argc, char* args[])
   
   stmt_3.set_attributes(attributes);
   cout<<"print-Statement:\n";
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   
   attributes[0] = "type";
   attributes[1] = "node-relation";
   attributes[2] = 0;
   
   stmt_2.set_attributes(attributes);
-  stmt_2.execute(sets);
+  stmt_2.execute(rman);
   
   attributes[0] = "mode";
   attributes[1] = "body";
@@ -51,14 +51,14 @@ int main(int argc, char* args[])
   
   stmt_3.set_attributes(attributes);
   cout<<"print-Statement:\n";
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   
   attributes[0] = "type";
   attributes[1] = "relation-node";
   attributes[2] = 0;
   
   stmt_2.set_attributes(attributes);
-  stmt_2.execute(sets);
+  stmt_2.execute(rman);
   
   attributes[0] = "mode";
   attributes[1] = "body";
@@ -68,14 +68,14 @@ int main(int argc, char* args[])
   
   stmt_3.set_attributes(attributes);
   cout<<"print-Statement:\n";
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   
   attributes[0] = "type";
   attributes[1] = "node-relation";
   attributes[2] = 0;
   
   stmt_2.set_attributes(attributes);
-  stmt_2.execute(sets);
+  stmt_2.execute(rman);
   
   attributes[0] = "mode";
   attributes[1] = "body";
@@ -85,7 +85,7 @@ int main(int argc, char* args[])
   
   stmt_3.set_attributes(attributes);
   cout<<"print-Statement:\n";
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   
 /*  const char* attributes[5];*/
   attributes[0] = "type";
@@ -95,7 +95,7 @@ int main(int argc, char* args[])
   attributes[4] = 0;
   
   stmt_1.set_attributes(attributes);
-  stmt_1.execute(sets);
+  stmt_1.execute(rman);
   
   attributes[0] = "mode";
   attributes[1] = "body";
@@ -105,14 +105,14 @@ int main(int argc, char* args[])
   
   stmt_3.set_attributes(attributes);
   cout<<"print-Statement:\n";
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   
   attributes[0] = "type";
   attributes[1] = "way-relation";
   attributes[2] = 0;
   
   stmt_2.set_attributes(attributes);
-  stmt_2.execute(sets);
+  stmt_2.execute(rman);
   
   attributes[0] = "mode";
   attributes[1] = "body";
@@ -122,14 +122,14 @@ int main(int argc, char* args[])
   
   stmt_3.set_attributes(attributes);
   cout<<"print-Statement:\n";
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   
   attributes[0] = "type";
   attributes[1] = "relation-way";
   attributes[2] = 0;
   
   stmt_2.set_attributes(attributes);
-  stmt_2.execute(sets);
+  stmt_2.execute(rman);
   
   attributes[0] = "mode";
   attributes[1] = "body";
@@ -139,14 +139,14 @@ int main(int argc, char* args[])
   
   stmt_3.set_attributes(attributes);
   cout<<"print-Statement:\n";
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   
   attributes[0] = "type";
   attributes[1] = "way-relation";
   attributes[2] = 0;
   
   stmt_2.set_attributes(attributes);
-  stmt_2.execute(sets);
+  stmt_2.execute(rman);
   
   attributes[0] = "mode";
   attributes[1] = "body";
@@ -156,7 +156,7 @@ int main(int argc, char* args[])
   
   stmt_3.set_attributes(attributes);
   cout<<"print-Statement:\n";
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   
 /*  const char* attributes[5];*/
   attributes[0] = "type";
@@ -166,7 +166,7 @@ int main(int argc, char* args[])
   attributes[4] = 0;
   
   stmt_1.set_attributes(attributes);
-  stmt_1.execute(sets);
+  stmt_1.execute(rman);
   
   attributes[0] = "mode";
   attributes[1] = "body";
@@ -176,14 +176,14 @@ int main(int argc, char* args[])
   
   stmt_3.set_attributes(attributes);
   cout<<"print-Statement:\n";
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   
   attributes[0] = "type";
   attributes[1] = "relation-backwards";
   attributes[2] = 0;
   
   stmt_2.set_attributes(attributes);
-  stmt_2.execute(sets);
+  stmt_2.execute(rman);
   
   attributes[0] = "mode";
   attributes[1] = "body";
@@ -193,7 +193,7 @@ int main(int argc, char* args[])
   
   stmt_3.set_attributes(attributes);
   cout<<"print-Statement:\n";
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   
 /*  const char* attributes[5];*/
   attributes[0] = "type";
@@ -203,7 +203,7 @@ int main(int argc, char* args[])
   attributes[4] = 0;
   
   stmt_1.set_attributes(attributes);
-  stmt_1.execute(sets);
+  stmt_1.execute(rman);
   
   attributes[0] = "mode";
   attributes[1] = "body";
@@ -213,14 +213,14 @@ int main(int argc, char* args[])
   
   stmt_3.set_attributes(attributes);
   cout<<"print-Statement:\n";
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   
   attributes[0] = "type";
   attributes[1] = "node-way";
   attributes[2] = 0;
   
   stmt_2.set_attributes(attributes);
-  stmt_2.execute(sets);
+  stmt_2.execute(rman);
   
   attributes[0] = "mode";
   attributes[1] = "body";
@@ -230,14 +230,14 @@ int main(int argc, char* args[])
   
   stmt_3.set_attributes(attributes);
   cout<<"print-Statement:\n";
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   
   attributes[0] = "type";
   attributes[1] = "way-node";
   attributes[2] = 0;
   
   stmt_2.set_attributes(attributes);
-  stmt_2.execute(sets);
+  stmt_2.execute(rman);
   
   attributes[0] = "mode";
   attributes[1] = "body";
@@ -247,14 +247,14 @@ int main(int argc, char* args[])
   
   stmt_3.set_attributes(attributes);
   cout<<"print-Statement:\n";
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   
   attributes[0] = "type";
   attributes[1] = "node-way";
   attributes[2] = 0;
   
   stmt_2.set_attributes(attributes);
-  stmt_2.execute(sets);
+  stmt_2.execute(rman);
   
   attributes[0] = "mode";
   attributes[1] = "body";
@@ -264,7 +264,7 @@ int main(int argc, char* args[])
   
   stmt_3.set_attributes(attributes);
   cout<<"print-Statement:\n";
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   
 /*  const char* attributes[5];*/
   attributes[0] = "type";
@@ -274,7 +274,7 @@ int main(int argc, char* args[])
   attributes[4] = 0;
     
   stmt_1.set_attributes(attributes);
-  stmt_1.execute(sets);
+  stmt_1.execute(rman);
     
   attributes[0] = "mode";
   attributes[1] = "body";
@@ -284,14 +284,14 @@ int main(int argc, char* args[])
   
   stmt_3.set_attributes(attributes);
   cout<<"print-Statement:\n";
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   
   attributes[0] = "type";
   attributes[1] = "relation-relation";
   attributes[2] = 0;
   
   stmt_2.set_attributes(attributes);
-  stmt_2.execute(sets);
+  stmt_2.execute(rman);
   
   attributes[0] = "mode";
   attributes[1] = "body";
@@ -301,14 +301,14 @@ int main(int argc, char* args[])
   
   stmt_3.set_attributes(attributes);
   cout<<"print-Statement:\n";
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   
   attributes[0] = "type";
   attributes[1] = "relation-way";
   attributes[2] = 0;
   
   stmt_2.set_attributes(attributes);
-  stmt_2.execute(sets);
+  stmt_2.execute(rman);
   
   attributes[0] = "mode";
   attributes[1] = "body";
@@ -318,14 +318,14 @@ int main(int argc, char* args[])
   
   stmt_3.set_attributes(attributes);
   cout<<"print-Statement:\n";
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   
   attributes[0] = "type";
   attributes[1] = "way-node";
   attributes[2] = 0;
   
   stmt_2.set_attributes(attributes);
-  stmt_2.execute(sets);
+  stmt_2.execute(rman);
   
   attributes[0] = "mode";
   attributes[1] = "body";
@@ -335,7 +335,7 @@ int main(int argc, char* args[])
   
   stmt_3.set_attributes(attributes);
   cout<<"print-Statement:\n";
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   
   return 0;
 }

@@ -16,7 +16,7 @@ class Recurse_Statement : public Statement
     virtual string get_name() const { return "recurse"; }
     virtual string get_result_name() const { return output; }
     virtual void forecast();
-    virtual void execute(map< string, Set >& maps);
+    virtual void execute(Resource_Manager& rman);
     virtual ~Recurse_Statement() {}
     
   private:

@@ -70,17 +70,21 @@ void Id_Query_Statement::forecast()
   display_state();*/
 }
 
-void Id_Query_Statement::execute(map< string, Set >& maps)
+void Id_Query_Statement::execute(Resource_Manager& rman)
 {
   stopwatch.start();
   
   if (ref == 0)
     return;
   
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes(maps[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways(maps[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations(maps[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas(maps[output].areas);
+  map< Uint32_Index, vector< Node_Skeleton > >& nodes
+      (rman.sets()[output].nodes);
+  map< Uint31_Index, vector< Way_Skeleton > >& ways
+      (rman.sets()[output].ways);
+  map< Uint31_Index, vector< Relation_Skeleton > >& relations
+      (rman.sets()[output].relations);
+  map< Uint31_Index, vector< Area_Skeleton > >& areas
+      (rman.sets()[output].areas);
   
   nodes.clear();
   ways.clear();
@@ -161,4 +165,5 @@ void Id_Query_Statement::execute(map< string, Set >& maps)
   }
   
   stopwatch.report(get_name());
+  rman.health_check(*this);
 }

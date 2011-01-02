@@ -73,7 +73,7 @@ File_Properties* de_osm3s_file_ids::WAYS
 File_Properties* de_osm3s_file_ids::WAY_TAGS_LOCAL
   = new OSM_File_Properties("way_tags_local", 512*1024);
 File_Properties* de_osm3s_file_ids::WAY_TAGS_GLOBAL
-= new OSM_File_Properties("way_tags_global", 2*1024*1024);
+  = new OSM_File_Properties("way_tags_global", 2*1024*1024);
 File_Properties* de_osm3s_file_ids::RELATIONS
   = new OSM_File_Properties("relations", 512*1024);
 File_Properties* de_osm3s_file_ids::RELATION_ROLES
@@ -90,6 +90,9 @@ File_Properties* de_osm3s_file_ids::AREA_TAGS_LOCAL
   = new OSM_File_Properties("area_tags_local", 256*1024);
 File_Properties* de_osm3s_file_ids::AREA_TAGS_GLOBAL
   = new OSM_File_Properties("area_tags_global", 512*1024);
+  
+uint64 de_osm3s_file_ids::max_allowed_space(512*1024*1024);
+uint32 de_osm3s_file_ids::max_allowed_time(3600*24);
 
 string get_basedir()
 {

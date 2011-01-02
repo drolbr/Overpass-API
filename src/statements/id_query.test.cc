@@ -8,15 +8,15 @@ using namespace std;
 int main(int argc, char* args[])
 {
   Id_Query_Statement stmt_1(1);
-  map< string, Set > sets;
+  Resource_Manager rman;
   
   {
     const char* attributes[] = { "type", "node", "ref", "471224123"/*"471224974"*/, 0 };
     stmt_1.set_attributes(attributes);
   }
-  stmt_1.execute(sets);
+  stmt_1.execute(rman);
   
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes(sets["_"].nodes);
+  map< Uint32_Index, vector< Node_Skeleton > >& nodes(rman.sets()["_"].nodes);
   for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator it(nodes.begin());
        it != nodes.end(); ++it)
   {
@@ -31,9 +31,9 @@ int main(int argc, char* args[])
     const char* attributes[] = { "type", "way", "ref", "8237924", 0 };
     stmt_1.set_attributes(attributes);
   }
-  stmt_1.execute(sets);
+  stmt_1.execute(rman);
   
-  map< Uint31_Index, vector< Way_Skeleton > >& ways(sets["_"].ways);
+  map< Uint31_Index, vector< Way_Skeleton > >& ways(rman.sets()["_"].ways);
   for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator it(ways.begin());
        it != ways.end(); ++it)
   {
@@ -62,9 +62,9 @@ int main(int argc, char* args[])
     const char* attributes[] = { "type", "relation", "ref", "163298", 0 };
     stmt_1.set_attributes(attributes);
   }
-  stmt_1.execute(sets);
+  stmt_1.execute(rman);
   
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations(sets["_"].relations);
+  map< Uint31_Index, vector< Relation_Skeleton > >& relations(rman.sets()["_"].relations);
   for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator it(relations.begin());
        it != relations.end(); ++it)
   {

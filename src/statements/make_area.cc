@@ -263,18 +263,22 @@ void Make_Area_Statement::add_segment_blocks
   }
 }
 
-void Make_Area_Statement::execute(map< string, Set >& maps)
+void Make_Area_Statement::execute(Resource_Manager& rman)
 {
   stopwatch.start();
   
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes(maps[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways(maps[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations(maps[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas(maps[output].areas);
+  map< Uint32_Index, vector< Node_Skeleton > >& nodes
+      (rman.sets()[output].nodes);
+  map< Uint31_Index, vector< Way_Skeleton > >& ways
+      (rman.sets()[output].ways);
+  map< Uint31_Index, vector< Relation_Skeleton > >& relations
+      (rman.sets()[output].relations);
+  map< Uint31_Index, vector< Area_Skeleton > >& areas
+      (rman.sets()[output].areas);
   
   // detect pivot element
-  map< string, Set >::const_iterator mit(maps.find(pivot));
-  if (mit == maps.end())
+  map< string, Set >::const_iterator mit(rman.sets().find(pivot));
+  if (mit == rman.sets().end())
   {
     nodes.clear();
     ways.clear();
@@ -346,8 +350,8 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   else if (pivot_type == RELATION)
     pivot_id += 3600000000u;
   
-  mit = maps.find(input);
-  if (mit == maps.end())
+  mit = rman.sets().find(input);
+  if (mit == rman.sets().end())
   {
     nodes.clear();
     ways.clear();
@@ -416,7 +420,7 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
     return;
   }
   
-  Area_Updater& area_updater(*Statement::get_area_updater());
+  Area_Updater& area_updater(rman.area_updater());
   area_updater.set_area(new_index, new_location);
   area_updater.add_blocks(area_blocks);
   stopwatch.stop(Stopwatch::NO_DISK);
@@ -427,4 +431,5 @@ void Make_Area_Statement::execute(map< string, Set >& maps)
   
   stopwatch.stop(Stopwatch::NO_DISK); 
   stopwatch.report(get_name());
+  rman.health_check(*this);
 }

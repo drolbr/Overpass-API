@@ -286,7 +286,8 @@ void quadtile
 template< class TIndex, class TObject >
 void Print_Statement::tags_quadtile
     (const map< TIndex, vector< TObject > >& items,
-     const File_Properties& file_prop, uint32 mode, uint32 stopwatch_account)
+     const File_Properties& file_prop, uint32 mode, uint32 stopwatch_account,
+     Resource_Manager& rman)
 {
   //generate set of relevant coarse indices
   set< TIndex > coarse_indices;
@@ -299,6 +300,7 @@ void Print_Statement::tags_quadtile
   
   // iterate over the result
   stopwatch.stop(Stopwatch::NO_DISK);
+  uint coarse_count(0);
   Block_Backend< Tag_Index_Local, Uint32_Index > items_db(file_prop, false);
   Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
     tag_it(items_db.range_begin
@@ -309,6 +311,12 @@ void Print_Statement::tags_quadtile
   for (typename set< TIndex >::const_iterator
       it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
   {
+    if (++coarse_count >= 1024)
+    {
+      coarse_count = 0;
+      rman.health_check(*this);
+    }
+    
     sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
     
     map< uint32, vector< pair< string, string > > > tags_by_id;
@@ -361,7 +369,8 @@ template< class TIndex, class TObject >
 void Print_Statement::tags_by_id
   (const map< TIndex, vector< TObject > >& items,
    const File_Properties& file_prop,
-   uint32 FLUSH_SIZE, uint32 mode, uint32 stopwatch_account)
+   uint32 FLUSH_SIZE, uint32 mode, uint32 stopwatch_account,
+   Resource_Manager& rman)
 {
   // order relevant elements by id
   vector< pair< const TObject*, uint32 > > items_by_id;
@@ -394,6 +403,8 @@ void Print_Statement::tags_by_id
       (file_prop, false);
   for (uint32 id_pos(0); id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
   {
+    rman.health_check(*this);
+    
     map< uint32, vector< pair< string, string > > > tags_by_id;
     uint32 lower_id_bound(items_by_id[id_pos].first->id);
     uint32 upper_id_bound(0);
@@ -420,37 +431,37 @@ void Print_Statement::tags_by_id
   stopwatch.stop(stopwatch_account);
 };
 
-void Print_Statement::execute(map< string, Set >& maps)
+void Print_Statement::execute(Resource_Manager& rman)
 {
   stopwatch.start();
-  Statement::get_area_updater()->flush(stopwatch);
+  rman.area_updater().flush(stopwatch);
   
-  map< string, Set >::const_iterator mit(maps.find(input));
-  if (mit == maps.end())
+  map< string, Set >::const_iterator mit(rman.sets().find(input));
+  if (mit == rman.sets().end())
     return;
   if (mode & PRINT_TAGS)
   {
     if (order == ORDER_BY_ID)
     {
       tags_by_id(mit->second.nodes, *de_osm3s_file_ids::NODE_TAGS_LOCAL,
-		 NODE_FLUSH_SIZE, mode, Stopwatch::NODE_TAGS_LOCAL);
+		 NODE_FLUSH_SIZE, mode, Stopwatch::NODE_TAGS_LOCAL, rman);
       tags_by_id(mit->second.ways, *de_osm3s_file_ids::WAY_TAGS_LOCAL,
-		 WAY_FLUSH_SIZE, mode, Stopwatch::WAY_TAGS_LOCAL);
+		 WAY_FLUSH_SIZE, mode, Stopwatch::WAY_TAGS_LOCAL, rman);
       tags_by_id(mit->second.relations, *de_osm3s_file_ids::RELATION_TAGS_LOCAL,
-		 RELATION_FLUSH_SIZE, mode, Stopwatch::RELATION_TAGS_LOCAL);
+		 RELATION_FLUSH_SIZE, mode, Stopwatch::RELATION_TAGS_LOCAL, rman);
       tags_by_id(mit->second.areas, *de_osm3s_file_ids::AREA_TAGS_LOCAL,
-		 AREA_FLUSH_SIZE, mode, Stopwatch::AREA_TAGS_LOCAL);
+		 AREA_FLUSH_SIZE, mode, Stopwatch::AREA_TAGS_LOCAL, rman);
     }
     else
     {
       tags_quadtile(mit->second.nodes, *de_osm3s_file_ids::NODE_TAGS_LOCAL,
-		    mode, Stopwatch::NODE_TAGS_LOCAL);
+		    mode, Stopwatch::NODE_TAGS_LOCAL, rman);
       tags_quadtile(mit->second.ways, *de_osm3s_file_ids::WAY_TAGS_LOCAL,
-		    mode, Stopwatch::WAY_TAGS_LOCAL);
+		    mode, Stopwatch::WAY_TAGS_LOCAL, rman);
       tags_quadtile(mit->second.relations, *de_osm3s_file_ids::RELATION_TAGS_LOCAL,
-		    mode, Stopwatch::RELATION_TAGS_LOCAL);
+		    mode, Stopwatch::RELATION_TAGS_LOCAL, rman);
       tags_quadtile(mit->second.areas, *de_osm3s_file_ids::AREA_TAGS_LOCAL,
-		    mode, Stopwatch::AREA_TAGS_LOCAL);
+		    mode, Stopwatch::AREA_TAGS_LOCAL, rman);
     }
   }
   else
@@ -473,4 +484,5 @@ void Print_Statement::execute(map< string, Set >& maps)
   
   stopwatch.stop(Stopwatch::NO_DISK);
   stopwatch.report(get_name());
+  rman.health_check(*this);
 }

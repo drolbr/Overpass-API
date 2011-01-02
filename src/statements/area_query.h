@@ -16,7 +16,7 @@ class Area_Query_Statement : public Statement
     virtual string get_name() const { return "area-query"; }
     virtual string get_result_name() const { return output; }
     virtual void forecast();
-    virtual void execute(map< string, Set >& maps);
+    virtual void execute(Resource_Manager& rman);
     virtual ~Area_Query_Statement() {}
         
     void get_ranges
@@ -27,7 +27,8 @@ class Area_Query_Statement : public Statement
        const set< Uint31_Index >& req,
        vector< uint32 >* ids,
        map< Uint32_Index, vector< Node_Skeleton > >& nodes,
-       Stopwatch& stopwatch);
+       Stopwatch& stopwatch,
+       Resource_Manager& rman);
 
   private:
     string output;

@@ -144,7 +144,7 @@ int main(int argc, char* args[])
   Error_Output* error_output(new Console_Output(false));
   Statement::set_error_output(error_output);
   
-  map< string, Set > sets;
+  Resource_Manager rman;
   
   {
     Union_Statement* stmt1 = new Union_Statement(0);
@@ -414,21 +414,21 @@ int main(int argc, char* args[])
       stmt2->set_attributes(attributes);
       stmt1->add_statement(stmt2, "");
     }
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
-/*  {
-    Print_Statement* stmt1 = new Print_Statement(0);
-    const char* attributes[] = { "mode", "ids_only", "from", "comp", 0 };
-    stmt1->set_attributes(attributes);
-    stmt1->execute(sets);
-  }*/
   {
     Area_Query_Statement* stmt1 = new Area_Query_Statement(0);
     const char* attributes[] = { "ref", "3600062478", 0 };
     stmt1->set_attributes(attributes);
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
-  comp_sets(sets["comp"], sets["_"]);
+  /*{
+    Print_Statement* stmt1 = new Print_Statement(0);
+    const char* attributes[] = { "mode", "ids_only", "from", "_", 0 };
+    stmt1->set_attributes(attributes);
+    stmt1->execute(rman);
+  }*/
+  comp_sets(rman.sets()["comp"], rman.sets()["_"]);
 
   {
     Query_Statement* stmt1 = new Query_Statement(0);
@@ -446,9 +446,9 @@ int main(int argc, char* args[])
       stmt2->set_attributes(attributes);
       stmt1->add_statement(stmt2, "");
     }
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
-  comp_sets(sets["comp"], sets["_"]);
+  comp_sets(rman.sets()["comp"], rman.sets()["_"]);
   
   {
     Query_Statement* stmt1 = new Query_Statement(0);
@@ -466,9 +466,9 @@ int main(int argc, char* args[])
       stmt2->set_attributes(attributes);
       stmt1->add_statement(stmt2, "");
     }
-    stmt1->execute(sets);
+    stmt1->execute(rman);
   }
-  comp_sets(sets["comp"], sets["_"]);
+  comp_sets(rman.sets()["comp"], rman.sets()["_"]);
   
   return 0;
 }

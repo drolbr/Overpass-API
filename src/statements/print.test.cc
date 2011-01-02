@@ -12,7 +12,7 @@ int main(int argc, char* args[])
   Id_Query_Statement stmt_1(1);
   Print_Statement stmt_2(2);
   
-  map< string, Set > sets, total_sets;
+  Resource_Manager rman, total_rman;
   
   cout<<"Print each item alone:\n";
   for (uint32 i(7778000/*471224000*/); i < 7779000/*471225000*/; ++i)
@@ -29,7 +29,7 @@ int main(int argc, char* args[])
     buf.str().copy((char*)attributes[3], string::npos);
     ((char*)attributes[3])[buf.str().size()] = 0;
     stmt_1.set_attributes(attributes);  
-    stmt_1.execute(sets);
+    stmt_1.execute(rman);
     
     attributes[0] = "mode";
     attributes[1] = "body";
@@ -40,10 +40,10 @@ int main(int argc, char* args[])
       attributes[3] = "quadtile";
     
     stmt_2.set_attributes(attributes);
-    stmt_2.execute(sets);
+    stmt_2.execute(rman);
     
-    if (!sets["_"].nodes.empty())
-      total_sets["_"].nodes[sets["_"].nodes.begin()->first].push_back(sets["_"].nodes.begin()->second.front());
+    if (!rman.sets()["_"].nodes.empty())
+      total_rman.sets()["_"].nodes[rman.sets()["_"].nodes.begin()->first].push_back(rman.sets()["_"].nodes.begin()->second.front());
   }
   for (uint32 i(8237000); i < 8238000; ++i)
   {
@@ -59,7 +59,7 @@ int main(int argc, char* args[])
     buf.str().copy((char*)attributes[3], string::npos);
     ((char*)attributes[3])[buf.str().size()] = 0;
     stmt_1.set_attributes(attributes);  
-    stmt_1.execute(sets);
+    stmt_1.execute(rman);
     
     attributes[0] = "mode";
     attributes[1] = "body";
@@ -70,10 +70,10 @@ int main(int argc, char* args[])
       attributes[3] = "quadtile";
     
     stmt_2.set_attributes(attributes);
-    stmt_2.execute(sets);
+    stmt_2.execute(rman);
     
-    if (!sets["_"].ways.empty())
-      total_sets["_"].ways[sets["_"].ways.begin()->first].push_back(sets["_"].ways.begin()->second.front());
+    if (!rman.sets()["_"].ways.empty())
+      total_rman.sets()["_"].ways[rman.sets()["_"].ways.begin()->first].push_back(rman.sets()["_"].ways.begin()->second.front());
   }
   for (uint32 i(163000); i < 164000; ++i)
   {
@@ -89,7 +89,7 @@ int main(int argc, char* args[])
     buf.str().copy((char*)attributes[3], string::npos);
     ((char*)attributes[3])[buf.str().size()] = 0;
     stmt_1.set_attributes(attributes);  
-    stmt_1.execute(sets);
+    stmt_1.execute(rman);
     
     attributes[0] = "mode";
     attributes[1] = "body";
@@ -100,10 +100,10 @@ int main(int argc, char* args[])
       attributes[3] = "quadtile";
     
     stmt_2.set_attributes(attributes);
-    stmt_2.execute(sets);
+    stmt_2.execute(rman);
     
-    if (!sets["_"].relations.empty())
-      total_sets["_"].relations[sets["_"].relations.begin()->first].push_back(sets["_"].relations.begin()->second.front());
+    if (!rman.sets()["_"].relations.empty())
+      total_rman.sets()["_"].relations[rman.sets()["_"].relations.begin()->first].push_back(rman.sets()["_"].relations.begin()->second.front());
   }
   cout<<"Print all items together:\n";
 
@@ -118,7 +118,7 @@ int main(int argc, char* args[])
   attributes[4] = 0;
   
   stmt_2.set_attributes(attributes);
-  stmt_2.execute(total_sets);
+  stmt_2.execute(total_rman);
   
   return 0;
 }

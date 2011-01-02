@@ -114,17 +114,21 @@ void Recurse_Statement::forecast()
   display_state();*/
 }
 
-void Recurse_Statement::execute(map< string, Set >& maps)
+void Recurse_Statement::execute(Resource_Manager& rman)
 {
   stopwatch.start();
   
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes(maps[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways(maps[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations(maps[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas(maps[output].areas);
+  map< Uint32_Index, vector< Node_Skeleton > >& nodes
+      (rman.sets()[output].nodes);
+  map< Uint31_Index, vector< Way_Skeleton > >& ways
+      (rman.sets()[output].ways);
+  map< Uint31_Index, vector< Relation_Skeleton > >& relations
+      (rman.sets()[output].relations);
+  map< Uint31_Index, vector< Area_Skeleton > >& areas
+      (rman.sets()[output].areas);
   
-  map< string, Set >::const_iterator mit(maps.find(input));
-  if (mit == maps.end())
+  map< string, Set >::const_iterator mit(rman.sets().find(input));
+  if (mit == rman.sets().end())
   {
     nodes.clear();
     ways.clear();
@@ -161,6 +165,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
       }
       stopwatch.stop(Stopwatch::RELATIONS_MAP);
     }
+    rman.health_check(*this);
     sort(ids.begin(), ids.end());
     
     nodes.clear();
@@ -193,6 +198,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
 	  ids.push_back(it2->id);
       }
     }
+    rman.health_check(*this);
     sort(ids.begin(), ids.end());
     
     nodes.clear();
@@ -225,29 +231,32 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     set< Uint31_Index > req;
     vector< uint32 > ids;
     
+    for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
+        it(mit->second.relations.begin()); it != mit->second.relations.end(); ++it)
+    {
+      for (vector< Relation_Skeleton >::const_iterator it2(it->second.begin());
+          it2 != it->second.end(); ++it2)
+      {
+	for (vector< Relation_Entry >::const_iterator it3(it2->members.begin());
+	    it3 != it2->members.end(); ++it3)
+	{
+	  if (it3->type == Relation_Entry::WAY)
+	    ids.push_back(it3->ref);
+	}
+      }
+    }
+    
+    rman.health_check(*this);
+    sort(ids.begin(), ids.end());
     {
       stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint31_Index > random(*de_osm3s_file_ids::WAYS, false);
-      for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
-	   it(mit->second.relations.begin()); it != mit->second.relations.end(); ++it)
-      {
-	for (vector< Relation_Skeleton >::const_iterator it2(it->second.begin());
-	    it2 != it->second.end(); ++it2)
-	{
-	  for (vector< Relation_Entry >::const_iterator it3(it2->members.begin());
-		      it3 != it2->members.end(); ++it3)
-	  {
-	    if (it3->type == Relation_Entry::WAY)
-	    {
-	      req.insert(random.get(it3->ref));
-	      ids.push_back(it3->ref);
-	    }
-	  }
-	}
-      }
+      for (vector< uint32 >::const_iterator it(ids.begin());
+          it != ids.end(); ++it)
+	req.insert(random.get(*it));
       stopwatch.stop(Stopwatch::WAYS_MAP);
     }
-    sort(ids.begin(), ids.end());
+    rman.health_check(*this);
     
     nodes.clear();
     ways.clear();
@@ -273,7 +282,6 @@ void Recurse_Statement::execute(map< string, Set >& maps)
     
     {
       stopwatch.stop(Stopwatch::NO_DISK);
-      Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, false);
       for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
 	   it(mit->second.relations.begin()); it != mit->second.relations.end(); ++it)
       {
@@ -284,16 +292,22 @@ void Recurse_Statement::execute(map< string, Set >& maps)
 		      it3 != it2->members.end(); ++it3)
 	  {
 	    if (it3->type == Relation_Entry::NODE)
-	    {
-	      req.insert(random.get(it3->ref));
 	      ids.push_back(it3->ref);
-	    }
 	  }
 	}
       }
+    }
+    rman.health_check(*this);
+    sort(ids.begin(), ids.end());
+    {
+      stopwatch.stop(Stopwatch::NO_DISK);
+      Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, false);
+      for (vector< uint32 >::const_iterator it(ids.begin());
+          it != ids.end(); ++it)
+        req.insert(random.get(*it));
       stopwatch.stop(Stopwatch::NODES_MAP);
     }
-    sort(ids.begin(), ids.end());
+    rman.health_check(*this);
     
     nodes.clear();
     ways.clear();
@@ -323,7 +337,44 @@ void Recurse_Statement::execute(map< string, Set >& maps)
       for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
 	   it(mit->second.ways.begin()); it != mit->second.ways.end(); ++it)
       {
-	if (it->first.val() & 0x80000000)
+	if (!(it->first.val() & 0x80000000))
+	{
+	  req.insert(it->first);
+	  for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
+	      it2 != it->second.end(); ++it2)
+	  {
+	    for (vector< uint32 >::const_iterator it3(it2->nds.begin());
+	        it3 != it2->nds.end(); ++it3)
+	      ids.push_back(*it3);
+	  }
+	}
+	else if ((it->first.val() & 0xff) == 0x10)
+	{
+	  uint32 base_idx(it->first.val() & 0x7fffff00);
+	  for (uint32 i(base_idx); i < base_idx + 0x100; ++i)
+	    req.insert(Uint32_Index(i));
+	  for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
+	      it2 != it->second.end(); ++it2)
+	  {
+	    for (vector< uint32 >::const_iterator it3(it2->nds.begin());
+	        it3 != it2->nds.end(); ++it3)
+	      ids.push_back(*it3);
+	  }
+	}
+	else if ((it->first.val() & 0xff) == 0x20)
+	{
+	  uint32 base_idx(it->first.val() & 0x7fff0000);
+	  for (uint32 i(base_idx); i < base_idx + 0x10000; ++i)
+	    req.insert(Uint32_Index(i));
+	  for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
+	      it2 != it->second.end(); ++it2)
+	  {
+	    for (vector< uint32 >::const_iterator it3(it2->nds.begin());
+	        it3 != it2->nds.end(); ++it3)
+	      ids.push_back(*it3);
+	  }
+	}
+	else
 	{
 	  for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
 	      it2 != it->second.end(); ++it2)
@@ -336,26 +387,18 @@ void Recurse_Statement::execute(map< string, Set >& maps)
 	    }
 	  }
 	}
-	else
-	{
-	  req.insert(it->first);
-	  for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
-	      it2 != it->second.end(); ++it2)
-	  {
-	    for (vector< uint32 >::const_iterator it3(it2->nds.begin());
-	        it3 != it2->nds.end(); ++it3)
-	      ids.push_back(*it3);
-	  }
-	}
       }
       stopwatch.stop(Stopwatch::NO_DISK);
       sort(ids_for_index_req.begin(), ids_for_index_req.end());
+      rman.health_check(*this);
+      
       Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, false);
       for (vector< uint32 >::const_iterator
 	  it(ids_for_index_req.begin()); it != ids_for_index_req.end(); ++it)
 	req.insert(random.get(*it));
       stopwatch.stop(Stopwatch::NODES_MAP);
     }
+    rman.health_check(*this);
     sort(ids.begin(), ids.end());
     
     nodes.clear();
@@ -401,6 +444,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
       }
       req.insert(Uint31_Index(0x80000040));
     }
+    rman.health_check(*this);
     sort(ids.begin(), ids.end());
     
     nodes.clear();
@@ -448,6 +492,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
       }
       req.insert(Uint31_Index(0x80000040));
     }
+    rman.health_check(*this);
     sort(ids.begin(), ids.end());
     
     nodes.clear();
@@ -494,6 +539,7 @@ void Recurse_Statement::execute(map< string, Set >& maps)
       }
       req.insert(Uint31_Index(0x80000040));
     }
+    rman.health_check(*this);
     sort(ids.begin(), ids.end());
     
     nodes.clear();
@@ -525,4 +571,5 @@ void Recurse_Statement::execute(map< string, Set >& maps)
 
   stopwatch.stop(Stopwatch::NO_DISK);
   stopwatch.report(get_name());
+  rman.health_check(*this);
 }

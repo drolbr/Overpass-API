@@ -13,19 +13,38 @@ void Osm_Script_Statement::set_attributes(const char **attr)
 {
   map< string, string > attributes;
   
-/*  attributes["timeout"] = "0";
-  attributes["element-limit"] = "0";
-  attributes["name"] = "";
+  attributes["timeout"] = "180";
+  attributes["element-limit"] = "536870912";
+  
+  /*attributes["name"] = "";
   attributes["replace"] = "0";
   attributes["version"] = "0";
   attributes["debug"] = "errors";*/
   
   eval_cstr_array(get_name(), attributes, attr);
   
+  int32 timeout(atoi(attributes["timeout"].c_str()));
+  if (timeout <= 0)
+  {
+    ostringstream temp;
+    temp<<"For the attribute \"timeout\" of the element \"osm-script\""
+        <<" the only allowed values are positive integers.";
+    add_static_error(temp.str());
+  }
+  de_osm3s_file_ids::max_allowed_time = timeout;
+  
+  int64 max_space(atoll(attributes["element-limit"].c_str()));
+  if (max_space <= 0)
+  {
+    ostringstream temp;
+    temp<<"For the attribute \"timeout\" of the element \"osm-script\""
+    <<" the only allowed values are positive integers.";
+    add_static_error(temp.str());
+  }
+  de_osm3s_file_ids::max_allowed_space = max_space;
+  
 /*  name = attributes["name"];
   replace = atoi(attributes["replace"].c_str());
-  timeout = atoi(attributes["timeout"].c_str());
-  elem_limit = atoi(attributes["element-limit"].c_str());
   version = atoi(attributes["version"].c_str());
   
   if (attributes["debug"] == "quiet")
@@ -80,7 +99,7 @@ void Osm_Script_Statement::forecast()
   (*it)->forecast(mysql);*/
 }
 
-void Osm_Script_Statement::execute(map< string, Set >& maps)
+void Osm_Script_Statement::execute(Resource_Manager& rman)
 {
 /*  uint max_element_count(get_element_count());
   if (element_limit > 0)
@@ -88,10 +107,11 @@ void Osm_Script_Statement::execute(map< string, Set >& maps)
   
   for (vector< Statement* >::iterator it(substatements.begin());
       it != substatements.end(); ++it)
-    (*it)->execute(maps);
+    (*it)->execute(rman);
   
   stopwatch.start();
-  Statement::get_area_updater()->flush(stopwatch);
-  stopwatch.report(get_name());
+  rman.area_updater().flush(stopwatch);
   stopwatch.stop(Stopwatch::NO_DISK);
+  stopwatch.report(get_name());
+  rman.health_check(*this);
 }

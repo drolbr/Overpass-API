@@ -17,7 +17,7 @@ int main(int argc, char* args[])
   Has_Kv_Statement stmt_4(4), stmt_6(6), stmt_11(11);
   Recurse_Statement stmt_8(8);
   
-  map< string, Set > sets;
+  Resource_Manager rman;
   
   cout<<"Print nodes:\n";
   {
@@ -29,7 +29,7 @@ int main(int argc, char* args[])
     }
     stmt_3.add_statement(&stmt_4, "");
   }
-  stmt_3.execute(sets);
+  stmt_3.execute(rman);
   {
     const char* attributes[] = { 0 };
     stmt_1.set_attributes(attributes);
@@ -39,7 +39,7 @@ int main(int argc, char* args[])
     }
     stmt_1.add_statement(&stmt_2, "");
   }
-  stmt_1.execute(sets);
+  stmt_1.execute(rman);
   
   cout<<"Print ways:\n";
   {
@@ -51,7 +51,7 @@ int main(int argc, char* args[])
     }
     stmt_5.add_statement(&stmt_6, "");
   }
-  stmt_5.execute(sets);
+  stmt_5.execute(rman);
   {
     const char* attributes[] = { 0 };
     stmt_7.set_attributes(attributes);
@@ -66,7 +66,7 @@ int main(int argc, char* args[])
     }
     stmt_7.add_statement(&stmt_2, "");
   }
-  stmt_7.execute(sets);
+  stmt_7.execute(rman);
   
   cout<<"Print relations:\n";
   {
@@ -78,7 +78,7 @@ int main(int argc, char* args[])
     }
     stmt_10.add_statement(&stmt_11, "");
   }
-  stmt_10.execute(sets);
+  stmt_10.execute(rman);
   {
     const char* attributes[] = { 0 };
     stmt_12.set_attributes(attributes);
@@ -88,7 +88,7 @@ int main(int argc, char* args[])
     }
     stmt_12.add_statement(&stmt_2, "");
   }
-  stmt_12.execute(sets);
+  stmt_12.execute(rman);
   
   return 0;
 }
