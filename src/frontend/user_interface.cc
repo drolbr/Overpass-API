@@ -176,7 +176,7 @@ string escape_xml(const string& s)
       result += "&lt;";
     else if (s[i] == '>')
       result += "&gt;";
-    else if (s[i] < 32)
+    else if ((uint8)s[i] < 32)
       result += '?';
     else
       result += s[i];
