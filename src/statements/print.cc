@@ -10,6 +10,7 @@
 #include "../backend/block_backend.h"
 #include "../backend/random_file.h"
 #include "../core/settings.h"
+#include "../frontend/user_interface.h"
 #include "print.h"
 
 using namespace std;
@@ -179,7 +180,8 @@ void print_item(uint32 ll_upper, const Node_Skeleton& skel, uint32 mode,
     cout<<">\n";
     for (vector< pair< string, string > >::const_iterator it(tags->begin());
         it != tags->end(); ++it)
-      cout<<"    <tag k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n";
+	cout<<"    <tag k=\""<<escape_xml(it->first)
+	    <<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
     cout<<"  </node>\n";
   }
 }
@@ -204,7 +206,8 @@ void print_item(uint32 ll_upper, const Way_Skeleton& skel, uint32 mode,
     {
       for (vector< pair< string, string > >::const_iterator it(tags->begin());
           it != tags->end(); ++it)
-        cout<<"    <tag k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n";
+	  cout<<"    <tag k=\""<<escape_xml(it->first)
+	      <<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
     }
     cout<<"  </way>\n";
   }
@@ -243,7 +246,8 @@ void print_item(uint32 ll_upper, const Relation_Skeleton& skel, uint32 mode,
     {
       for (vector< pair< string, string > >::const_iterator it(tags->begin());
           it != tags->end(); ++it)
-        cout<<"    <tag k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n";
+	  cout<<"    <tag k=\""<<escape_xml(it->first)
+	      <<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
     }
     cout<<"  </relation>\n";
   }
@@ -262,7 +266,8 @@ void print_item(uint32 ll_upper, const Area_Skeleton& skel, uint32 mode,
     cout<<">\n";
     for (vector< pair< string, string > >::const_iterator it(tags->begin());
         it != tags->end(); ++it)
-      cout<<"    <tag k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n";
+      cout<<"    <tag k=\""<<escape_xml(it->first)
+          <<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
     cout<<"  </area>\n";
   }
 }

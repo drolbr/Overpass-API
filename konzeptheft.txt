@@ -30,6 +30,13 @@ Priorisierung
 3. der Server soll alle Abfragen der gespiegelten Daten beantworten können, mit Aufwandsvorhersage
 4. der Server soll Regeln bearbeiten können
 5. der Server soll alle Abfragen der gespiegelten und abgeleiteten Daten beantworten können, mit Aufwandsvorhersage
+7. Optimierung, z.B. area_query
+8. Beschleunigung durch Bündelung
+9. Refaktorisierung
+10. Download-Suchmaschine
+11. PBF anbinden
+12. Refaktorisierung Linienanzeige
+13. Liniennetz-Generator
 
 *Projektstrukturplan
 

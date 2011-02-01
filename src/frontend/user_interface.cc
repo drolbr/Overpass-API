@@ -162,3 +162,24 @@ string get_xml_raw(Error_Output* error_output, uint32 max_input_size)
 
   return input;
 }
+
+string escape_xml(const string& s)
+{
+  string result;
+  for (int i(0); i < s.length(); ++i)
+  {
+    if (s[i] == '&')
+      result += "&amp;";
+    else if (s[i] == '\"')
+      result += "&quot;";
+    else if (s[i] == '<')
+      result += "&lt;";
+    else if (s[i] == '>')
+      result += "&gt;";
+    else if (s[i] < 32)
+      result += '?';
+    else
+      result += s[i];
+  }
+  return result;
+}

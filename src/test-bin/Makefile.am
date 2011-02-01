@@ -4,7 +4,7 @@ dist_testbin_SCRIPTS = apply_osc.test.sh
 
 statements_cc = ../statements/statement.cc ../statements/area_query.cc ../statements/bbox_query.cc ../statements/coord_query.cc ../statements/foreach.cc ../statements/id_query.cc ../statements/item.cc  ../statements/make_area.cc ../statements/osm_script.cc ../statements/print.cc ../statements/query.cc ../statements/recurse.cc ../statements/union.cc
 
-testenv_cc = ../osm-backend/stopwatch.cc ../dispatch/resource_manager.cc ../core/settings.cc ../frontend/console_output.cc
+testenv_cc = ../osm-backend/stopwatch.cc ../dispatch/resource_manager.cc ../core/settings.cc ../frontend/console_output.cc ../frontend/user_interface.cc ../frontend/cgi-helper.cc
 
 file_blocks_SOURCES = ../backend/file_blocks.test.cc
 block_backend_SOURCES = ../backend/block_backend.test.cc
