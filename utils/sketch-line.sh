@@ -56,8 +56,8 @@ data=<osm-script> \
  \
 <union> \
   <query type=\"relation\"> \
-    <has-kv k=\"network\" v=\"$NETWORK\"/> \
-    <has-kv k=\"ref\" v=\"$REF\"/> \
+    <has-kv k=\"network\" v=\"$NETWORK_\"/> \
+    <has-kv k=\"ref\" v=\"$REF_\"/> \
   </query> \
   <recurse type=\"relation-node\"/> \
 </union> \
@@ -82,78 +82,44 @@ if [[ $CORRESPONDENCES -gt 0 ]]; then
 {
   REQUEST_METHOD=
   /home/roland/osm-3s/build/bin/osm3s_query --quiet --no-mime <$BASEDIR/request.1 >$BASEDIR/answer.1
-  gzip <$BASEDIR/answer.1 >$BASEDIR/answer.2
-  #/home/roland/osm-3s/cgi-bin/interpreter <$BASEDIR/request.1 >$BASEDIR/answer.1
-  #RESPONSE_TYPE=`head -n 1 <$BASEDIR/answer.1`
-  #if [[ $RESPONSE_TYPE != "Content-type: application/osm3s" ]]; then
-  #{
-  #  cat <$BASEDIR/answer.1
-  #  exit 0
-  #};
-  #fi
-  #dd if=$BASEDIR/answer.1 of=$BASEDIR/answer.2 bs=1 skip=56
-  gunzip <$BASEDIR/answer.2 | ../bin/bbox-brim-query $BRIM_PARAMS >$BASEDIR/request.2
+  ../bin/bbox-brim-query $BRIM_PARAMS <$BASEDIR/answer.1 >$BASEDIR/request.2
 
   if [[ $DEBUG == "full-query" ]]; then
   {
     echo "Content-Type: text/plain; charset=utf-8"
     echo
-
     cat <$BASEDIR/request.2
-
     echo
   };
   fi
 
   REQUEST_METHOD=
   /home/roland/osm-3s/build/bin/osm3s_query --quiet --no-mime <$BASEDIR/request.2 >$BASEDIR/answer.3
-  gzip <$BASEDIR/answer.3 >$BASEDIR/answer.4
-  #/home/roland/osm-3s/cgi-bin/interpreter <$BASEDIR/request.2 >$BASEDIR/answer.3
-  #RESPONSE_TYPE=`head -n 1 <$BASEDIR/answer.3`
-  #if [[ $RESPONSE_TYPE != "Content-type: application/osm3s" ]]; then
-  #{
-  #  cat <$BASEDIR/answer.3
-  #  exit 0
-  #};
-  #fi
-  #dd if=$BASEDIR/answer.3 of=$BASEDIR/answer.4 bs=1 skip=56
 
   echo "Content-Type: image/svg+xml; charset=utf-8"
   echo
 
   if [[ $DEBUG == "full-query" ]]; then
   {
-    gunzip <$BASEDIR/answer.4
+    cat <$BASEDIR/answer.3
     echo
     echo "../bin/sketch-route-svg --ref=\"$REF_\" --network=\"$NETWORK_\" $SKETCH_PARAMS"
     exit 0;
   };
-  fi;
+  fi
 
-  gunzip <$BASEDIR/answer.4 | ../bin/sketch-route-svg --ref="$REF_" --network="$NETWORK_" $SKETCH_PARAMS
+  ../bin/sketch-route-svg --ref="$REF_" --network="$NETWORK_" $SKETCH_PARAMS <$BASEDIR/answer.3
 };
 else
 {
   REQUEST_METHOD=
   /home/roland/osm-3s/build/bin/osm3s_query --quiet --no-mime <$BASEDIR/request.1 >$BASEDIR/answer.1
-  gzip <$BASEDIR/answer.1 >$BASEDIR/answer.2
-  #/home/roland/osm-3s/cgi-bin/interpreter <$BASEDIR/request.1 >$BASEDIR/answer.1
-  #RESPONSE_TYPE=`head -n 1 <$BASEDIR/answer.1`
-  #if [[ $RESPONSE_TYPE != "Content-type: application/osm3s" ]]; then
-  #{
-  #  cat <$BASEDIR/answer.1
-  #  exit 0
-  #};
-  #fi
-  #dd if=$BASEDIR/answer.1 of=$BASEDIR/answer.2 bs=1 skip=56
 
   if [[ $DEBUG == "full-query" ]]; then
   {
     echo "Content-Type: text/plain; charset=utf-8"
     echo
-
-    gunzip <$BASEDIR/answer.2
-
+    cat <$BASEDIR/answer.1
     echo
   };
   fi;
@@ -161,6 +127,6 @@ else
   echo "Content-Type: image/svg+xml; charset=utf-8"
   echo
 
-  gunzip <$BASEDIR/answer.2 | ../bin/sketch-route-svg $SKETCH_PARAMS
+  ../bin/sketch-route-svg $SKETCH_PARAMS <$BASEDIR/answer.1
 };
 fi
