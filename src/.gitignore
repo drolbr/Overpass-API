@@ -1,0 +1,11 @@
+Makefile.in
+aclocal.m4
+autom4te.cache
+autoscan.log
+config.h.in
+configure
+configure.scan
+depcomp
+install-sh
+missing
+
