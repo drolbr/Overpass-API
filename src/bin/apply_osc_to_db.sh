@@ -44,13 +44,13 @@ collect_minute_diffs()
 
 apply_minute_diffs()
 {
-  ./apply_osc --db-dir=$DB_DIR --osc-dir=$1
+  ./update_from_dir --db-dir=$DB_DIR --osc-dir=$1
   EXITCODE=$?
   while [[ $EXITCODE -ne 0 ]];
   do
   {
     sleep 60
-    ./apply_osc --db-dir=$DB_DIR --osc-dir=$1
+    ./update_from_dir --db-dir=$DB_DIR --osc-dir=$1
     EXITCODE=$?
   };
   done
@@ -70,6 +70,43 @@ update_state()
 };
 
 echo >>$DB_DIR/apply_osc_to_db.log
+
+pushd $DB_DIR
+touch area_blocks.bin
+touch area_blocks.idx
+touch areas.bin
+touch areas.idx
+touch area_tags_global.bin
+touch area_tags_global.idx
+touch area_tags_local.bin
+touch area_tags_local.idx
+touch nodes.bin
+touch nodes.idx
+touch nodes.map
+touch node_tags_global.bin
+touch node_tags_global.idx
+touch node_tags_local.bin
+touch node_tags_local.idx
+touch relation_roles.bin
+touch relation_roles.idx
+touch relations.bin
+touch relations.idx
+touch relations.map
+touch relation_tags_global.bin
+touch relation_tags_global.idx
+touch relation_tags_local.bin
+touch relation_tags_local.idx
+touch ways.bin
+touch ways.idx
+touch ways.map
+touch way_tags_global.bin
+touch way_tags_global.idx
+touch way_tags_local.bin
+touch way_tags_local.idx
+popd
+
+update_state
+
 while [[ true ]]; do
 {
   while [[ ! -f $DB_DIR/dirty ]]; do

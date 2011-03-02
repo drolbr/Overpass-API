@@ -263,3 +263,216 @@ Zusicherung:
 - es gilt nicht is_empty (Ausnahme!)
 
 Es wird zum nächsten Block gewechselt. Durch die Zusicherung ist sichergestellt, dass sich dies so mit operator++ verträgt.
+
+---
+
+The concept and why it is safe: In general, there may be at most one write process, but an arbitrary number of read processes.
+
+The assertion for writing is that at any time, the disk is in a well defined state. The allowed to states are:
+(1) No file named "dirty" exists. Then the idx files for all files are consistent with the data files. If an idl file exists, it marks the unused blocks. Otherwise every not referenced block is defined to be unused.
+(2) A file named "dirty" exists. Then the idy files for all files are consistent with the data files and every not referenced block is defined to be unused.
+The system now writes new content into unused or extra blocks and the updates index into an idy file instead of the idx file. It will succeed in a state where idx and idx files both point consistently into (possible different blocks of) the files. Thus, a switch from (1) to (2) is immediately possible. In state (2), the dispatcher copies from the idy files to the idx files. Once it is finished, idx and idx files have equal content, and the system can switch by removing "dirty" immediately back to (1).
+
+The assertion for the interplay of reading and writing are more complex: A reading process first has the oppurtunity to make its copy of the idx files. These remain unchanged while the reading process has a reading_idx lock. Then, the reading process has the assertion that all blocks referenced from this idx remain available and unchanged until it releases its read lock. For this purpose, these blocks must not appear in an idl file. Every block that is neither registered in such an index nor the curent index shall appear in the idl file.
+
+---
+
+Transactions::Write
+
+/* Takes the write mutex of the database by writing its pid into the file
+   "writing". It waits for a second whether its pid is still present to avoid
+   race conditions. */
+void write_lock(pid_t pid) throws File_Error;
+/* Tests:
+   Call with nonexisting file: should succeed.
+   Call with empty file: should succeed.
+   Call with filled file: should throw File_Error.
+   Call concurrent with writing process: should throw File_Error.
+*/
+
+/* Retrieves the current list of empty blocks. It triggers the generation of
+   an idl file by the dispatcher, then reads this file. */
+vector< vector< uint > > collect_empty_blocks
+  (pid_t pid, string dispatcher_share_name, string idl_filename)
+    throws Dispatcher_Error, File_Error;
+/* To dispatcher: sends Dispatcher::REQUEST_IDL and its pid to the dispatcher.
+   Waits 10x10ms for response, then resends Dispatcher::REQUEST_IDL if no answer is given.
+   The expected response is the pid. */
+/* Tests:
+   Fast responding vs. slow responding dispatcher: should wait for response.
+   No dispatcher: should throw message.
+   Check dispatcher communication.
+   Empty file, file covering one or several files and containing one or several
+   blocks for each file: should reproduce exactly this list.  */
+
+/* Testen, dass neu nach idy geschrieben wird. */
+
+/* Releases the mutex without moving any index file. */
+void write_rollback(pid_t pid) throws File_Error;
+/* Tests:
+   Call with nonexisting file: should throw File_Error.
+   Call with a file: should succeed and remove the file.
+ */
+
+/* Triggers the dispatcher to copy from idy to idx. Releases the write mutex
+   afterwards. */
+void write_commit(pid_t pid, string dispatcher_share_name) throws File_Error, Dispatcher_Error;
+/* To dispatcher: sends Dispatcher::WRITE_COMMIT and its pid to the dispatcher.
+   Waits 10x10ms for response, then resends Dispatcher::WRITE_COMMIT if no answer is given.
+   The expected response is the pid. */
+/* Tests:
+   Fast responding vs. slow responding dispatcher: should wait for response.
+   No dispatcher: should throw message.
+   Check dispatcher communication.
+   Call with nonexisting file: should throw File_Error.
+   Call with a file: should succeed and remove the file.
+ */
+
+Transactions::Read
+
+/* Retrieves all index files. Registers at the dispatcher and locks during the
+   file retrieval. */
+void read_subscribe(pid_t pid, string dispatcher_share_name, string idx_share_name) throws File_Error, Dispatcher_Error;
+/* To dispatcher: sends Dispatcher::REQUEST_READ_AND_IDX and its pid.
+   Waits 10x10ms for response, then resends Dispatcher::REQUEST_READ_AND_IDX if no
+   answer is given. The expected response is the pid.
+   Then it attemps to read the given share. If that fails, reads the given idx files.
+   Afterwards sends Dispatcher::IDX_READ_DONE to dispatcher.
+   Waits 10x10ms for response, then resends Dispatcher::IDX_READ_DONE if no
+   answer is given. The expected response is the pid. */
+/* Tests:
+   Fast responding vs. slow responding dispatcher: should wait for response both times.
+   No dispatcher: should throw message.
+   Check dispatcher communication.
+   Read from empty share.
+   Read from populated share.
+   Read from usual idx files, empty and populated.
+ */
+
+/* Releases the read lock. */
+void read_quit(pid_t pid, string dispatcher_share) throws Dispatcher_Error;
+/* To dispatcher: sends Dispatcher::READ_FINISHED and its pid.
+   Waits 10x10ms for response, then resends Dispatcher::READ_FINISHED if no
+   answer is given. The expected response is the pid. */
+/* Tests:
+   Fast responding vs. slow responding dispatcher: should wait for response.
+   No dispatcher: should throw message.
+   Check dispatcher communication.
+ */
+
+/* Waits in its main loop for one of the following request. Adtionally, it
+   checks from time to if the registered readers still exist.*/
+Transactions::Dispatcher
+{
+  class Idx_Footprints
+  {
+    void set_current_footprint(vector< vector< bool > >);
+    void register(pid_t pid); 
+    void unregister(pid_t pid); 
+    vector< pid_t > registered_processes() const;
+    vector< vector< bool > > total_footprint() const;
+  };
+
+  /* Opens a shared memory for dispatcher communication. Furthermore,
+     detects whether idx or idy are valid, clears to idx if necessary,
+     and loads them into the shared memory idx_share_name. */
+  Dispatcher(string dispatcher_name, string db_dir, string idx_share_name) throws File_Error, Dispatcher_Error;
+  /* Tests:
+     Shall throw an error if one of the shares is not accessible.
+     Shall throw an error if a file in the db_dir is not accessible.
+     Shall read all idy if dirty is present, all idx files otherwise. For this
+     purpose, the content of the shared memory can be checked against the idx files.
+     Read a set of idy files when dirty is present.
+     Read a set of idx files when dirty is absent.
+  */
+
+  /* Changes the state of the process identified by its pid from reading_idx
+     to reading the files. */
+  void idx_read_done(pid_t pid);
+  /* See tests below. */
+
+  /* Unregisters the process identified by its pid from reading the files. */
+  void read_finished(pid_t pid);
+  /* See tests below. */
+
+  /* Writes the current total footprint into an idl file. It doesn't need
+     a mutex because it will include the current index anyway. The worst thing
+     possible, resulting from a race condition with an unregistering read
+     process would be some blocks that keep unnecessarily reserved. */
+  void request_idl(pid_t pid) const;
+  /* See tests below. */
+
+  /* Registers the process identified by its pid for reading the idx share. */
+  void request_read_and_idx(pid_t pid);
+  /* See tests below. */
+
+  /* Validates the idy files. Then it copies the idy files to the idx files
+     and to the idx share. Afterwards, it revalidates the idx files. */
+  void write_commit(pid_t pid);
+  /* See tests below. */
+
+  /* Checks whether all read processes still exist and removes no longer
+     existing processes from reading_idx_pids and footprints. */
+  void purge_zombies();
+  /* See tests below. */
+
+  /* If pending_commit is false, all commands will be processed. If pending
+     commit is true, request_read_and_idx is blocked. Write_commit is only
+     possible if reading_idx_pids is empty, otherwise only pending_commit will
+     be activated. */
+  void main_loop();
+  /* Tests for the mutexes:
+     write_commit with no running reading process: should return success.
+     Register a process for reading_idx; wait for response.
+     write_commit with a process in mode reading_idx: should not return.
+     Register the process for reading the files; wait for response.
+     write_commit with no running reading process: should return success.
+     Register a second and third process for reading_idx; wait for response.
+     write_commit with a process in mode reading_idx: should not return.
+     Register the third process for reading the files; wait for response.
+     Register a fourth and fifth process for reading_idx; wait for response.
+     Register the fourth then the second process for reading the files; wait for response.
+     write_commit with a process in mode reading_idx: should not return.
+     Register the fifth process for reading the files; wait for response.
+     write_commit with no running reading process: should return success.
+     Unregister all processes.
+
+     Test for the idl content:
+     Fill Dispatcher with a simple idx file, e.g. ((0 1)), ((0 1), (0 3)).
+     Request idl file.
+     Register a process for reading_idx; wait for response.
+     Request idl file.
+     Register a second process for reading_idx; wait for response.
+     Request idl file.
+     Register both processes for reading the files; wait for response.
+     Request idl file.
+     Fill Dispatcher with a simple idy file, e.g. ((0 2)), (); call write_commit.
+     Request idl file.
+     Fill Dispatcher with a simple idy file, e.g. ((0 3)), ((0 5)); call write_commit.
+     Request idl file.
+     Register a process for reading_idx; wait for response.
+     Request idl file.
+     Fill Dispatcher with a simple idy file, e.g. ((0 4)), ((0 2)); call write_commit.
+     Request idl file.
+     Unregister the third process.
+     Request idl file.
+     Unregister the first process.
+     Request idl file.
+     Unregister the second process.
+     Request idl file. Now, only the last idy file should remain.
+
+     Test for correct idl and idx generation:
+     Fill Dispatcher with idy file ((0 1), (0 2)) but 3 blocks.
+     Request idl file. Check idx files.
+     Fill Dispatcher again. Request idl file.
+     Fill Dispatcher with idy file ((0 2)) but 3 blocks.
+     Request idl file. Check idx files.
+     Fill Dispatcher with idy file ((0 1), (0 2), (0 3)) and 3 blocks.
+     Request idl file. Check idx files.
+  */
+
+  Idx_Footprints footprints;
+  vector< vector< bool > > current_footprint;
+  vector< int > reading_idx_pids;
+  bool pending_commit;
+};
