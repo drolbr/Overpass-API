@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <list>
@@ -152,7 +153,8 @@ Features extract_features(const OSMData& osm_data)
       if (node)
       {
 	if ((node->tags["highway"] == "bus_stop") ||
-	    (node->tags["railway"] == "station"))
+	    (node->tags["railway"] == "station") ||
+	    (node->tags["railway"] == "tram_stop"))
 	{
 	  pair< map< string, uint32 >::iterator, bool >
 	      itp(name_to_node.insert
@@ -263,50 +265,76 @@ namespace
     return Bbox(north, south, east, west);
   }
   
-  double vpos(double lat, double north, double m_per_pixel)
+  // Transforms (lat,lon) coordinates into coordinates on the map
+  class Coord_Transform
   {
-    return (north - lat)*(1000000.0/9.0)/m_per_pixel;
-  }
-  
-  double hpos(double lat, double lon, double west, double m_per_pixel)
-  {
-    return (lon - west)*(1000000.0/9.0)/m_per_pixel*cos(lat/90.0*acos(0));
-  }
+    public:
+      Coord_Transform
+          (double north, double south, double west, double east,
+	   double m_per_pixel, double pivot_lon)
+	  : north_(north), south_(south), west_(west), east_(east),
+	    m_per_pixel_(m_per_pixel), pivot_lon_(pivot_lon)
+      {
+	pivot_hpos_ =
+	    (pivot_lon - west)*(1000000.0/9.0)/m_per_pixel
+	    *cos((south + north)*(1/2.0/90.0*acos(0)));
+      }
+	    
+      double vpos(double lat)
+      {
+	return (north_ - lat)*(1000000.0/9.0)/m_per_pixel_;
+      }
+      
+      double hpos(double lat, double lon)
+      {
+	return (lon - pivot_lon_)*(1000000.0/9.0)/m_per_pixel_
+	*cos(lat*(1/90.0*acos(0))) + pivot_hpos_;
+      }
+      
+    private:
+      double north_, south_, west_, east_;
+      double m_per_pixel_, pivot_lon_, pivot_hpos_;
+  };
 }
 
 void sketch_features
     (const OSMData& osm_data,
      const Features& features,
-     double pivot_lon, double m_per_pixel)
+     double pivot_lon, double m_per_pixel, double stop_font_size)
 {
   ::Bbox bbox(::calc_bbox(osm_data));
   
   //expand the bounding box to avoid elements scratching the frame
   bbox.north += 0.001*m_per_pixel;
   bbox.south -= 0.001*m_per_pixel;
-  bbox.east += 0.002*m_per_pixel;
-  bbox.west -= 0.002*m_per_pixel;
+  bbox.east += 0.003*m_per_pixel;
+  bbox.west -= 0.003*m_per_pixel;
+  ::Coord_Transform coord_transform
+      (bbox.north, bbox.south, bbox.west, bbox.east,
+       m_per_pixel, pivot_lon);
   
   cout<<"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
   "<svg xmlns=\"http://www.w3.org/2000/svg\"\n"
   "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
   "     xmlns:ev=\"http://www.w3.org/2001/xml-events\"\n"
   "     version=\"1.1\" baseProfile=\"full\"\n"
-  "     width=\""<<hpos(bbox.south, bbox.east, bbox.west, m_per_pixel)<<"px\" "
-  "height=\""<<vpos(bbox.south, bbox.north, m_per_pixel)<<"px\">\n"
+  "     width=\""
+      <<coord_transform.hpos((bbox.south + bbox.north)/2.0, bbox.east)<<"px\" "
+  "height=\""<<coord_transform.vpos(bbox.south)<<"px\">\n"
   "\n";
   
   for (vector< StopFeature >::const_iterator it(features.stops.begin());
       it != features.stops.end(); ++it)
   {
     cout<<"<circle cx=\""
-        <<hpos(it->lat, it->lon, bbox.west, m_per_pixel)
+        <<coord_transform.hpos(it->lat, it->lon)
         <<"\" cy=\""
-        <<vpos(it->lat, bbox.north, m_per_pixel)
+	<<coord_transform.vpos(it->lat)
         <<"\" r=\"6\" fill=\""<<it->color<<"\"/>\n";
-	cout<<"<text x=\""<<hpos(it->lat, it->lon, bbox.west, m_per_pixel) + 6
-	    <<"\" y=\""<<vpos(it->lat, bbox.north, m_per_pixel) - 6
-	    <<"\" font-size=\"12px\">"<<it->name<<"</text>\n";
+	cout<<"<text x=\""
+	    <<coord_transform.hpos(it->lat, it->lon) + 6
+	    <<"\" y=\""<<coord_transform.vpos(it->lat) - 6
+	    <<"\" font-size=\""<<stop_font_size<<"px\">"<<it->name<<"</text>\n";
   }
   cout<<'\n';
   
@@ -321,14 +349,14 @@ void sketch_features
       vector< pair< double, double > >::const_iterator it3(it2->lat_lon.begin());
       if (it3 != it2->lat_lon.end())
       {
-	cout<<hpos(it3->first, it3->second, bbox.west, m_per_pixel)<<' '
-	    <<vpos(it3->first, bbox.north, m_per_pixel);
+	cout<<coord_transform.hpos(it3->first, it3->second)<<' '
+	    <<coord_transform.vpos(it3->first);
 	++it3;
       }
       for (; it3 != it2->lat_lon.end(); ++it3)
       {
-	cout<<", "<<hpos(it3->first, it3->second, bbox.west, m_per_pixel)<<' '
-	    <<vpos(it3->first, bbox.north, m_per_pixel);
+	cout<<", "<<coord_transform.hpos(it3->first, it3->second)
+	    <<' '<<coord_transform.vpos(it3->first);
       }
       cout<<"\"/>\n";
     }
@@ -340,12 +368,30 @@ void sketch_features
 
 int main(int argc, char *argv[])
 {
+  int argi(1);
+  double pivot_lon(-200.0), stop_font_size(12.0), scale(10.0);
+  while (argi < argc)
+  {
+    if (!strncmp("--pivot-lon=", argv[argi], 12))
+      pivot_lon = atof(((string)(argv[argi])).substr(12).c_str());
+    else if (!strncmp("--stop-font-size=", argv[argi], 17))
+      stop_font_size = atof(((string)(argv[argi])).substr(17).c_str());
+    else if (!strncmp("--scale=", argv[argi], 8))
+      scale = atoi(((string)(argv[argi])).substr(8).c_str());
+    ++argi;
+  }
+  
   // read the XML input
   const OSMData& current_data(read_osm());
   
   Features features(extract_features(current_data));
   
-  sketch_features(current_data, features, middle_lon(current_data), 10.0);
+  // choose pivot_lon automatically
+  if (pivot_lon == -200.0)
+    pivot_lon = middle_lon(current_data);
+  
+  sketch_features(current_data, features, pivot_lon, scale,
+		  stop_font_size);
 
   //sketch_unscaled_osm_data(current_data);
     

@@ -123,7 +123,6 @@ void start(const char *el, const char **attr)
   }
   else if (!strcmp(el, "member"))
   {
-    uint32 ref(0);
     pending_members[current_elem].push_back(RelMember());
     RelMember& rel_member(pending_members[current_elem].back());
     for (unsigned int i(0); attr[i]; i += 2)

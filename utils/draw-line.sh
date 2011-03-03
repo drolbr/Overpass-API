@@ -21,8 +21,12 @@ while [[ -n $BUF ]]; do
     REF=$VALUE
     REF_=`echo $VALUE | ../bin/uncgi`
   };
-  elif [[ $KEY == "pivot" && -n $VALUE ]]; then
-    SKETCH_PARAMS="$SKETCH_PARAMS --pivot=$VALUE"
+  elif [[ $KEY == "pivot-lon" && -n $VALUE ]]; then
+    SKETCH_PARAMS="$SKETCH_PARAMS --pivot-lon=$VALUE"
+  elif [[ $KEY == "scale" && -n $VALUE ]]; then
+    SKETCH_PARAMS="$SKETCH_PARAMS --scale=$VALUE"
+  elif [[ $KEY == "font-size" && -n $VALUE ]]; then
+    SKETCH_PARAMS="$SKETCH_PARAMS --stop-font-size=$VALUE"
   elif [[ $KEY == "debug" && -n $VALUE ]]; then
     DEBUG=$VALUE
   fi
@@ -79,6 +83,7 @@ else
     echo
     cat <$BASEDIR/answer.1
     echo
+    echo "../bin/draw-route-svg $SKETCH_PARAMS"
   };
   fi;
 

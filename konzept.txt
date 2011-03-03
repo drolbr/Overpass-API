@@ -476,3 +476,38 @@ Transactions::Dispatcher
   vector< int > reading_idx_pids;
   bool pending_commit;
 };
+
+---
+
+query:
+- Read all elem-ids from one-block-clauses.
+- Intersect them if applicable.
+- If there are less than THRESHOLD, locate them. (cache?)
+- Could be faster if the index is stored along with the node_id. To reduce the data amount, we could attach a shortened index to the key. Does this pay off? We need at least 24 bit of index to make meaningful predictions. This will be 150000 to 750000 indices, thus useful only for tags with more than 1.2 mio. to 5 mio. occurences. If you query for such a tag alone, you will exceed the element limit anyway.
+- Small area/bbox works like a query with few results and known locations, but intersecting isn't possible.
+
+- if known, indices are provided. World assumed otherwise.
+
+- prelocated searches are performed via local_tags, one located clause suffices.
+
+area-query/bbox-query:
+- see above
+
+recurse:
+- Indices can be translated one by one. This isn't helpful if the initial index of a way or relation takes much space.
+- Element numbers could be calculated from the idx files, assuming an uniform distribution. Once again, this profits from more precise way indices.
+
+union/intersect:
+- Indices are unified/intersected.
+- Element numbers go to proportionals of the shared indices, based on the averages of all sets. The union has at most the sum of all counts, the intersection at most the minimum of all counts.
+
+print:
+- only output.
+
+All times need to be mesured with different samples.
+
+Tasks:
+@database:
+- extend values in tags_global
+- reworked way and relation indices
+- changes for transactionality: different idx management

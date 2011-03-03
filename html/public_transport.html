@@ -106,5 +106,40 @@ The accepted format for <emph>opening_hours</emph> is as follows: Different entr
 <li><emph>Mo-Fr 09:00-12:00; Mo-Tu 15:00-18:00; Th-Fr 15:00-18:00</emph>. This service is not operational on wednesday afternoons.</li>
 </ul>
 
+<h1>Public Transport Line Map</h1>
+
+<h2>Access By network and line number</h2>
+
+<form action="api/draw-line" method="get" accept-charset="UTF-8">
+  <strong>Network</strong>: <input name="network" type="text" size="40"/><br/>
+  The value of the tag <em>network</em> of the relation(s) to consider. A working example is <em>VRR</em>
+  for the German <em>Verkehrsverbund Rhein-Ruhr</em>.<br/>
+  <strong>Line number</strong>: <input name="ref" type="text" size="40"/><br/>
+  The value of the tag <em>ref</em> of the relation(s) to consider. A working example is <em>625</em>.<br/>
+  <strong>Scale</strong>: <input name="scale" type="text" value="10.0" size="40"/><br/>
+   The scale in meter per pixel. Bigger values mean smaller maps. A useful scale for bus services is <em>10.0</em>. For train services, <em>25.0</em> or bigger may suit better.<br/>
+  <strong>Pivot meridian</strong>: <input name="pivot-lon" type="text" size="10"/><br/>
+   The used projection is Sinusoidal, and this is the central meridian for this projection. If you leave the field empty, the algorithm will detect a suitable value on its own.<br/>
+  <strong>Font size of stop names</strong>: <input name="font-size" value="12.0" type="text" size="10"/><br/>
+  The font size in pixels for the stopname in the generated SVG.<br/>
+  <input type="submit"/>
+</form>
+
+<p>You can access this service directly with an URL of the form<br/>
+http://78.46.81.38/api/draw-line?network=<em>network</em>&amp;ref=<em>ref</em>
+<p>
+
+<h3>By id(s)</h3>
+
+<p>You can access this service directly with an URL of the form<br/>
+http://78.46.81.38/api/sketch-route?<em>relation-id</em><br/>
+or<br/>
+http://78.46.81.38/api/sketch-route?<em>relation-id</em>&amp;<em>relation-id</em><br/>
+<em>Relation-id</em> means here the id(s) of the relations (one or two) to consider.
+</p>
+
+<p>A working example is<br/>
+<a href="http://78.46.81.38/api/sketch-route?34631&amp;361959">http://78.46.81.38/api/sketch-route?34631&amp;361959</a></p>
+
 </body>
 </html>
