@@ -74,16 +74,21 @@ if [[ $CORRESPONDENCES -gt 0 ]]; then
 };
 else
 {
-  REQUEST_METHOD=
-  /home/roland/osm-3s/build/bin/osm3s_query --quiet --no-mime <$BASEDIR/request.1 >$BASEDIR/answer.1
-
   if [[ $DEBUG == "full-query" ]]; then
   {
     echo "Content-Type: text/plain; charset=utf-8"
     echo
-    cat <$BASEDIR/answer.1
+
+    REQUEST_METHOD=
+    /home/roland/osm-3s/build/bin/osm3s_query --no-mime <$BASEDIR/request.1 2>&1
+
     echo
     echo "../bin/draw-route-svg $SKETCH_PARAMS"
+  };
+  else
+  {
+    REQUEST_METHOD=
+    /home/roland/osm-3s/build/bin/osm3s_query --quiet --no-mime <$BASEDIR/request.1 >$BASEDIR/answer.1
   };
   fi;
 
