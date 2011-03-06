@@ -297,6 +297,7 @@ vector< uint32 >* Query_Statement::collect_ids
         !(it2 == tags_db.range_end()); ++it2)
       new_ids->push_back(it2.object().val());
   }
+  stopwatch.add(stopwatch_account, tags_db.read_count());
   stopwatch.stop(stopwatch_account);
   sort(new_ids->begin(), new_ids->end());
   stopwatch.stop(Stopwatch::NO_DISK);
@@ -340,6 +341,7 @@ vector< uint32 >* Query_Statement::collect_ids
       }
     }
     delete(old_ids);
+    stopwatch.add(stopwatch_account, tags_db.read_count());
     stopwatch.stop(stopwatch_account);
     sort(new_ids->begin(), new_ids->end());
     stopwatch.stop(Stopwatch::NO_DISK);
@@ -455,6 +457,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	    nodes[it.index()].push_back(it.object());
 	}
       }
+      stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
       stopwatch.stop(Stopwatch::NODES);
     }
     else
@@ -475,6 +478,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	if (binary_search(ids->begin(), ids->end(), it.object().id))
 	  nodes[it.index()].push_back(it.object());
       }    
+      stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
       stopwatch.stop(Stopwatch::NODES);
     }
   }
@@ -516,6 +520,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       if (binary_search(ids->begin(), ids->end(), it.object().id))
 	ways[it.index()].push_back(it.object());
     }    
+    stopwatch.add(Stopwatch::WAYS, ways_db.read_count());
     stopwatch.stop(Stopwatch::WAYS);
   }
   else if (type == QUERY_RELATION)
@@ -549,6 +554,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       if (binary_search(ids->begin(), ids->end(), it.object().id))
 	relations[it.index()].push_back(it.object());
     }    
+    stopwatch.add(Stopwatch::RELATIONS, relations_db.read_count());
     stopwatch.stop(Stopwatch::RELATIONS);
   }
   

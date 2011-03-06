@@ -339,11 +339,20 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   }
   
   if (pivot_type == NODE)
+  {
+    stopwatch.add(Stopwatch::NODE_TAGS_LOCAL, items_db.read_count());
     stopwatch.stop(Stopwatch::NODE_TAGS_LOCAL);
+  }
   else if (pivot_type == WAY)
+  {
+    stopwatch.add(Stopwatch::WAY_TAGS_LOCAL, items_db.read_count());
     stopwatch.stop(Stopwatch::WAY_TAGS_LOCAL);
+  }
   else if (pivot_type == RELATION)
+  {
+    stopwatch.add(Stopwatch::RELATION_TAGS_LOCAL, items_db.read_count());
     stopwatch.stop(Stopwatch::RELATION_TAGS_LOCAL);
+  }
   
   if (pivot_type == WAY)
     pivot_id += 2400000000u;

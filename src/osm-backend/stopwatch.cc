@@ -35,11 +35,15 @@ void Stopwatch::stop(uint32 account)
 void Stopwatch::report(string info) const
 {
   if (error_output)
-    error_output->display_statement_stopwatch(info, stopwatches);
+    error_output->display_statement_stopwatch
+        (info, stopwatches, read_counts);
 }
 
 void Stopwatch::sum(const Stopwatch& s)
 {
   for (uint i(0); i < stopwatches.size(); ++i)
+  {
     stopwatches[i] += s.stopwatches[i];
+    read_counts[i] += s.read_counts[i];
+  }
 }

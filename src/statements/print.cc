@@ -337,6 +337,7 @@ void Print_Statement::tags_quadtile
       ++item_it;
     }
   }
+  stopwatch.add(stopwatch_account, items_db.read_count());
   stopwatch.stop(stopwatch_account);
 };
 
@@ -433,6 +434,7 @@ void Print_Statement::tags_by_id
       print_item(items_by_id[i].second, *(items_by_id[i].first), mode,
 		 &(tags_by_id[items_by_id[i].first->id]));
   }
+  stopwatch.add(stopwatch_account, items_db.read_count());
   stopwatch.stop(stopwatch_account);
 };
 

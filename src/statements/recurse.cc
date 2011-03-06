@@ -183,6 +183,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
       if (binary_search(ids.begin(), ids.end(), it.object().id))
 	relations[it.index()].push_back(it.object());
     }
+    stopwatch.add(Stopwatch::RELATIONS, relations_db.read_count());
     stopwatch.stop(Stopwatch::RELATIONS);
   }
   else if (type == RECURSE_RELATION_BACKWARDS)
@@ -224,6 +225,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
 	}
       }
     }
+    stopwatch.add(Stopwatch::RELATIONS, relations_db.read_count());
     stopwatch.stop(Stopwatch::RELATIONS);
   }
   else if (type == RECURSE_RELATION_WAY)
@@ -273,6 +275,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
       if (binary_search(ids.begin(), ids.end(), it.object().id))
 	ways[it.index()].push_back(it.object());
     }
+    stopwatch.add(Stopwatch::WAYS, ways_db.read_count());
     stopwatch.stop(Stopwatch::WAYS);
   }
   else if (type == RECURSE_RELATION_NODE)
@@ -324,6 +327,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
       if (binary_search(ids.begin(), ids.end(), it.object().id))
 	nodes[it.index()].push_back(it.object());
     }
+    stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
     stopwatch.stop(Stopwatch::NODES);
   }
   else if (type == RECURSE_WAY_NODE)
@@ -416,6 +420,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
       if (binary_search(ids.begin(), ids.end(), it.object().id))
 	nodes[it.index()].push_back(it.object());
     }
+    stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
     stopwatch.stop(Stopwatch::NODES);
   }
   else if (type == RECURSE_WAY_RELATION)
@@ -471,6 +476,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
 	}
       }
     }
+    stopwatch.add(Stopwatch::RELATIONS, relations_db.read_count());
     stopwatch.stop(Stopwatch::RELATIONS);
   }
   else if (type == RECURSE_NODE_WAY)
@@ -518,6 +524,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
 	}
       }
     }
+    stopwatch.add(Stopwatch::WAYS, ways_db.read_count());
     stopwatch.stop(Stopwatch::WAYS);
   }
   else if (type == RECURSE_NODE_RELATION)
@@ -566,6 +573,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
 	}
       }
     }
+    stopwatch.add(Stopwatch::RELATIONS, relations_db.read_count());
     stopwatch.stop(Stopwatch::RELATIONS);
   }
 

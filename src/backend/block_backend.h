@@ -684,6 +684,16 @@ struct Block_Backend
     }
   }
   
+  uint read_count() const
+  {
+    return file_blocks.read_count();
+  }
+  
+  void reset_read_count() const
+  {
+    file_blocks.reset_read_count();
+  }
+  
 private:
   File_Blocks_ file_blocks;
   Flat_Iterator* flat_end_it;

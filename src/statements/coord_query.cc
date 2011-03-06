@@ -288,6 +288,7 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
     }
   }
   
+  stopwatch.add(Stopwatch::AREA_BLOCKS, area_blocks_db.read_count());
   stopwatch.stop(Stopwatch::AREA_BLOCKS);
 
   map< Uint32_Index, vector< Node_Skeleton > >& nodes
@@ -318,6 +319,7 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
       areas[it.index()].push_back(it.object());
   }
 
+  stopwatch.add(Stopwatch::AREAS, area_locations_db.read_count());
   stopwatch.stop(Stopwatch::AREAS);
   
   stopwatch.report(get_name());

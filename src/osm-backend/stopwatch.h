@@ -7,7 +7,7 @@ using namespace std;
 
 struct Stopwatch
 {
-  Stopwatch() : stopwatches(18) {}
+  Stopwatch() : stopwatches(18), read_counts(18) {}
   
   const static int NO_DISK = 0;
   const static int NODES_MAP = 1;
@@ -30,7 +30,12 @@ struct Stopwatch
   
   void start();
   void skip();
-  void stop(uint32 account);    
+  void stop(uint32 account);
+  void add(uint32 account, uint read_count)
+  {
+    read_counts[account] += read_count;
+  }
+  
   void report(string info) const;
   void sum(const Stopwatch& s);
   
@@ -44,6 +49,7 @@ private:
   
   double stopwatch;
   vector< double > stopwatches;
+  vector< uint > read_counts;
 };
 
 #endif

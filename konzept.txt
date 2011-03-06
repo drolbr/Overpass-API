@@ -506,6 +506,13 @@ print:
 
 All times need to be mesured with different samples.
 
+---
+
+Dedicated functions with the following signature:
+uint32 join_index_of(begin, end< uint32 >)
+vector< uint32 > indices_to_upper(Range_begin, Range_end)
+...
+
 Tasks:
 @database:
 - extend values in tags_global

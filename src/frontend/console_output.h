@@ -21,7 +21,9 @@ struct Console_Output : public Error_Output
   virtual void runtime_error(const string& error);
   virtual void runtime_remark(const string& error);
   virtual void display_statement_stopwatch
-    (const string& name, const vector< double >& stopwatches);
+    (const string& name,
+     const vector< double >& stopwatches,
+     const vector< uint >& read_counts);
   
   virtual bool display_encoding_errors() { return encoding_errors; }
   virtual bool display_parse_errors() { return parse_errors; }

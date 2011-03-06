@@ -239,7 +239,9 @@ struct Error_Output
   virtual void runtime_error(const string& error) = 0;
   virtual void runtime_remark(const string& error) = 0;
   virtual void display_statement_stopwatch
-    (const string& name, const vector< double >& stopwatches) = 0;
+    (const string& name,
+     const vector< double >& stopwatches,
+     const vector< uint >& read_counts) = 0;
   
   virtual bool display_encoding_errors() = 0;
   virtual bool display_parse_errors() = 0;

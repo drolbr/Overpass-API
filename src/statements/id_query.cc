@@ -113,6 +113,7 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
       if (it.object().id == ref)
 	nodes[it.index()].push_back(it.object());
     }
+    stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
     stopwatch.stop(Stopwatch::NODES);
   }
   else if (type == WAY)
@@ -137,6 +138,7 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
       if (it.object().id == ref)
 	ways[it.index()].push_back(it.object());
     }
+    stopwatch.add(Stopwatch::WAYS, ways_db.read_count());
     stopwatch.stop(Stopwatch::WAYS);
   }
   else if (type == RELATION)
@@ -161,6 +163,7 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
       if (it.object().id == ref)
 	relations[it.index()].push_back(it.object());
     }
+    stopwatch.add(Stopwatch::RELATIONS, relations_db.read_count());
     stopwatch.stop(Stopwatch::RELATIONS);
   }
   

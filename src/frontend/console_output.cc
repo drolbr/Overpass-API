@@ -58,13 +58,19 @@ void Console_Output::runtime_remark(const string& error)
 }
   
 void Console_Output::display_statement_stopwatch
-  (const string& name, const vector< double >& stopwatches)
+    (const string& name,
+     const vector< double >& stopwatches,
+     const vector< uint >& read_counts)
 {
   if (quiet)
     return;
   cerr<<"Stopwatch "<<name;
+  vector< uint >::const_iterator rit(read_counts.begin());
   for (vector< double >::const_iterator it(stopwatches.begin());
       it != stopwatches.end(); ++it)
-    cerr<<setprecision(3)<<fixed<<'\t'<<*it;
+  {
+    cerr<<setprecision(3)<<fixed<<'\t'<<*it<<' '<<*rit;
+    ++rit;
+  }
   cerr<<'\n';
 }

@@ -427,7 +427,7 @@ private:
 public:
   File_Blocks
     (const File_Properties& file_prop, bool writeable,
-     string file_name_extension = "")
+     string file_name_extension = "") : read_count_(0)
   {
     index_file_name = file_prop.get_file_base_name()
         + file_name_extension
@@ -582,6 +582,7 @@ public:
   {
     lseek64(data_fd, (int64)(it.block_it->pos)*(block_size), SEEK_SET);
     uint32 foo(read(data_fd, buffer, block_size)); foo = 0;
+    ++read_count_;
     return buffer;
   }
   
@@ -590,6 +591,7 @@ public:
   {
     lseek64(data_fd, (int64)(it.block_it->pos)*(block_size), SEEK_SET);
     uint32 foo(read(data_fd, buffer, block_size)); foo = 0;
+    ++read_count_;
     return buffer;
   }
   
@@ -620,6 +622,16 @@ public:
   uint32 answer_size(const Range_Iterator& it) const
   {
     return (block_size - sizeof(uint32));
+  }
+  
+  uint read_count() const
+  {
+    return read_count_;
+  }
+  
+  void reset_read_count()
+  {
+    read_count_ = 0;
   }
   
   Discrete_Iterator insert_block(const Discrete_Iterator& it, void* buf, uint32 max_keysize)
@@ -691,6 +703,7 @@ public:
     string data_file_name;
     uint32 block_size;
     bool writeable;
+    mutable uint read_count_;
     
     list< File_Block_Index_Entry< TIndex > > block_index;
     vector< uint32 > void_blocks;

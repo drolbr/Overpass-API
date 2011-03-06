@@ -104,6 +104,7 @@ void Area_Query_Statement::collect_nodes
 	areas.push_back(area_it.object());
       ++area_it;
     }
+    stopwatch.add(Stopwatch::AREA_BLOCKS, area_blocks_db.read_count());
     stopwatch.stop(Stopwatch::AREA_BLOCKS);
     while ((!(nodes_it == nodes_db.range_end())) &&
         ((nodes_it.index().val() & 0xffffff00) == current_idx))
@@ -121,6 +122,7 @@ void Area_Query_Statement::collect_nodes
       int32 ilon(Node::lon(nodes_it.index().val(), nodes_it.object().ll_lower)*10000000
           + (Node::lon(nodes_it.index().val(), nodes_it.object().ll_lower) > 0
 	      ? 0.5 : -0.5));
+      stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
       stopwatch.stop(Stopwatch::NODES);
       for (vector< Area_Block >::const_iterator it(areas.begin());
           it != areas.end(); ++it)

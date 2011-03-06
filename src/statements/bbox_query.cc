@@ -122,6 +122,7 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
 	  || ((east < west) && ((lon >= west) || (lon <= east)))))
       nodes[it.index()].push_back(it.object());    
   }
+  stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
   stopwatch.stop(Stopwatch::NODES);
   
   stopwatch.report(get_name());
