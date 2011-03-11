@@ -10,14 +10,39 @@ Directories for executables, DB1, DB2, Minute-Downloads
 # > grant all on osm.* to 'osm'@'localhost' identified by 'osm';
 # > exit
 
-mkdir build
-pushd src
+---
+#!/bin/bash
+
+if [[ -z $1  ]]; then
+{
+  echo Usage: $0 Version
+  exit 0
+};
+fi
+
+git clone git://gitorious.org/~drol/osm3s/drol-osm3s
+
+pushd drol-osm3s/
+yes | rm -R .git
+
+pushd src/
 autoscan
 aclocal
 autoheader
 automake --add-missing
 autoconf
 popd
+
+popd
+
+mv drol-osm3s "osm-3s_v$1"
+tar cvf - "osm-3s_v$1/" | gzip >"../misc-www/osm-3s_v$1.tar.gz"
+rm -R "osm-3s_v$1"
+---
+
+mv drol-osm3s "osm-3s_v$1"
+tar cvf - osm-3s/ | gzip >"../misc-www/osm-3s_v$1.tar.gz"
+yes | rm -R "osm-3s_v$1"
 
 pushd build
 ../src/configure --prefix=YOUR_PATH

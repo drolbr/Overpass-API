@@ -277,6 +277,40 @@ The assertion for the interplay of reading and writing are more complex: A readi
 
 ---
 
+Automated Testing Environment:
+
+This is realized with a bash script, located in osm-3s_testing.
+A test is a line $EXEC $I $ARGS where $ARGS collect all arguments, but the first is the number of the test within $EXEC, plus a directory osm-3s_testing/expected/$EXEC_$I which contains the expected output. osm-3s_testing/input/$EXEC_$I contains the input for the test. The test is then executed by wiping the directory osm-3s_testing/run/$EXEC_$I, then copying the input there. The test is run as test-bin/$EXEC $I $ARGS. Then, the output is diffed file by file to expected. If any differences exist, it returns FAILED, otherwise "passed" and deletes run/$EXEC_$I. The standard input is copied to stdout.log, standard error to stderr.log.
+
+Directory structure:
+
+bin
+build
+cgi-bin
+html
+src
++-bin
++-cgi-bin
++-expat
++-overpass_api
+| +-core
+| +-dispatch
+| +-frontend
+| +-osm-backend
+| +-statements
++-public_transport
++-template_db
++-test-bin
++-utils
+test_data
++-overpass_api
+| +-...
++-template_db
+  +-...
+test-bin
+
+---
+
 Transactions::Write
 
 /* Takes the write mutex of the database by writing its pid into the file
