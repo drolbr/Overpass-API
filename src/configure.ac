@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.61])
-AC_INIT([OSM3S], [0.10.603], [roland.olbricht@gmx.de])
+AC_INIT([OverpassAPI], [0.6.0], [roland.olbricht@gmx.de])
 AC_CONFIG_SRCDIR([backend/types.h])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
