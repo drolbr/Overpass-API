@@ -10,8 +10,8 @@
 #include <stdlib.h>
 #include <vector>
 
-#include "../backend/block_backend.h"
-#include "../backend/random_file.h"
+#include "../../template_db/block_backend.h"
+#include "../../template_db/random_file.h"
 #include "../osm-backend/area_updater.h"
 #include "make_area.h"
 #include "print.h"

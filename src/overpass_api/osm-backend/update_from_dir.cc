@@ -9,9 +9,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../backend/random_file.h"
+#include "../../template_db/random_file.h"
 #include "../core/settings.h"
-#include "../expat/expat_justparse_interface.h"
+#include "../../expat/expat_justparse_interface.h"
 #include "node_updater.h"
 #include "relation_updater.h"
 #include "way_updater.h"

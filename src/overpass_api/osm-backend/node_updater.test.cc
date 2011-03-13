@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../backend/random_file.h"
+#include "../../template_db/random_file.h"
 #include "../core/settings.h"
 #include "../expat/expat_justparse_interface.h"
 #include "node_updater.h"

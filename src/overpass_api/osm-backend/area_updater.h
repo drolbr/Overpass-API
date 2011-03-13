@@ -7,8 +7,8 @@
 #include <set>
 #include <vector>
 
-#include "../backend/block_backend.h"
-#include "../backend/random_file.h"
+#include "../../template_db/block_backend.h"
+#include "../../template_db/random_file.h"
 #include "../core/datatypes.h"
 #include "../core/settings.h"
 #include "stopwatch.h"

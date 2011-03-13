@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <vector>
 
-#include "../backend/block_backend.h"
+#include "../../template_db/block_backend.h"
 #include "area_query.h"
 #include "coord_query.h"
 

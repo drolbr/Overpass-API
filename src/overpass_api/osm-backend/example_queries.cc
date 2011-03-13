@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../backend/random_file.h"
+#include "../../template_db/random_file.h"
 #include "../core/settings.h"
 #include "node_updater.h"
 #include "relation_updater.h"

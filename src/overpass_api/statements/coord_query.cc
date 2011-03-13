@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <vector>
 
-#include "../backend/block_backend.h"
+#include "../../template_db/block_backend.h"
 #include "coord_query.h"
 
 using namespace std;

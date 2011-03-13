@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.61])
 AC_INIT([OverpassAPI], [0.6.0], [roland.olbricht@gmx.de])
-AC_CONFIG_SRCDIR([backend/types.h])
+AC_CONFIG_SRCDIR([template_db/file_blocks.h])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 

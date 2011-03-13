@@ -21,11 +21,11 @@ relation_updater_SOURCES = ${expat_cc} ${settings_cc} ../overpass_api/osm-backen
 relation_updater_LDADD = -lexpat
 complete_updater_SOURCES = ${expat_cc} ${settings_cc} ../overpass_api/osm-backend/complete_updater.test.cc 
 complete_updater_LDADD = -lexpat
-diff_updater_SOURCES = ${expat_cc} ${settings_cc} ../osm-backend/diff_updater.test.cc
+diff_updater_SOURCES = ${expat_cc} ${settings_cc} ../overpass_api/osm-backend/diff_updater.test.cc
 diff_updater_LDADD = -lexpat
-dump_database_SOURCES = ${expat_cc} ${settings_cc} ../osm-backend/dump_database.test.cc
+dump_database_SOURCES = ${expat_cc} ${settings_cc} ../overpass_api/osm-backend/dump_database.test.cc
 dump_database_LDADD = -lexpat
-example_queries_SOURCES = ${expat_cc} ${settings_cc} ../osm-backend/example_queries.cc
+example_queries_SOURCES = ${expat_cc} ${settings_cc} ../overpass_api/osm-backend/example_queries.cc
 example_queries_LDADD = -lexpat
 
 area_query_SOURCES = ${statements_dir}/area_query.test.cc ${statements_cc} ${testenv_cc}

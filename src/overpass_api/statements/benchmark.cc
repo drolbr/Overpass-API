@@ -1,6 +1,6 @@
 #include <iostream>
 #include <sstream>
-#include "../backend/block_backend.h"
+#include "../../template_db/block_backend.h"
 #include "../core/settings.h"
 #include "bbox_query.h"
 #include "foreach.h"
