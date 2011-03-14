@@ -61,13 +61,12 @@ struct IntIndex
   
   uint32 size_of() const
   {
-    return (value-4 < sizeof(uint32) ? sizeof(uint32) : value-sizeof(uint32));
+    return (value < 24 ? 12 : value-12);
   }
   
   static uint32 size_of(void* data)
   {
-    return ((*(uint32*)data)-sizeof(uint32) < sizeof(uint32)
-      ? sizeof(uint32) : (*(uint32*)data)-sizeof(uint32));
+    return ((*(uint32*)data) < 24 ? 12 : (*(uint32*)data)-12);
   }
   
   void to_data(void* data) const
@@ -312,12 +311,12 @@ uint32 prepare_block(void* block, const list< IntIndex >& indices)
   for (list< IntIndex >::const_iterator it(indices.begin());
       it != indices.end(); ++it)
   {
-    if ((*it).val() + sizeof(uint32) > max_keysize)
-      max_keysize = (*it).val() + sizeof(uint32);
+    if ((*it).val() + 12 > max_keysize)
+      max_keysize = (*it).val() + 12;
     
-    *(uint32*)(((uint8*)block)+pos) = (*it).val() + sizeof(uint32);
+    *(uint32*)(((uint8*)block)+pos) = (*it).val() + 12;
     *(uint32*)(((uint8*)block)+pos+sizeof(uint32)) = (*it).val();
-    pos += (*it).val() + sizeof(uint32);
+    pos += (*it).val() + 12;
   }
   
   *(uint32*)block = pos;
@@ -327,7 +326,10 @@ uint32 prepare_block(void* block, const list< IntIndex >& indices)
 
 int main(int argc, char* args[])
 {
-  cout<<"** Test the behaviour for an empty file\n";
+  string test_to_execute;
+  if (argc > 1)
+    test_to_execute = args[1];
+  
   int data_fd = open64
       ((Test_File().get_file_base_name() + Test_File().get_data_suffix()).c_str(),
        O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
@@ -336,9 +338,14 @@ int main(int argc, char* args[])
       ((Test_File().get_file_base_name() + Test_File().get_index_suffix()).c_str(),
        O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   close(index_fd);
-  read_test();
+  if ((test_to_execute == "") || (test_to_execute == "1"))
+  {
+    cout<<"** Test the behaviour for an empty file\n";
+    read_test();
+  }
   
-  cout<<"** Test the behaviour for a file with one entry - part 1\n";
+  if ((test_to_execute == "") || (test_to_execute == "2"))
+    cout<<"** Test the behaviour for a file with one entry - part 1\n";
   try
   {
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
@@ -358,9 +365,11 @@ int main(int argc, char* args[])
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     cout<<"(This is unexpected)\n";
   }
-  read_test();
+  if ((test_to_execute == "") || (test_to_execute == "2"))
+    read_test();
   
-  cout<<"** Test the behaviour for a file with one entry - part 2\n";
+  if ((test_to_execute == "") || (test_to_execute == "3"))
+    cout<<"** Test the behaviour for a file with one entry - part 2\n";
   try
   {
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
@@ -379,9 +388,11 @@ int main(int argc, char* args[])
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     cout<<"(This is unexpected)\n";
   }
-  read_test();
+  if ((test_to_execute == "") || (test_to_execute == "3"))
+    read_test();
   
-  cout<<"** Test the behaviour for a file with three entries\n";
+  if ((test_to_execute == "") || (test_to_execute == "4"))
+    cout<<"** Test the behaviour for a file with three entries\n";
   try
   {
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
@@ -402,12 +413,14 @@ int main(int argc, char* args[])
   catch (File_Error e)
   {
     cout<<"File error catched: "
-	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     cout<<"(This is unexpected)\n";
   }
-  read_test();
+  if ((test_to_execute == "") || (test_to_execute == "4"))
+    read_test();
   
-  cout<<"** Test insertion everywhere\n";
+  if ((test_to_execute == "") || (test_to_execute == "5"))
+    cout<<"** Test insertion everywhere\n";
   try
   {
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
@@ -422,7 +435,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(89));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-	it(blocks.discrete_begin(indices.begin(), indices.end()));
+    it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     ++it;
     indices.clear();
@@ -432,19 +445,19 @@ int main(int argc, char* args[])
     it = blocks.insert_block(it, buf, max_keysize);
     ++it;
     ++it;
-
+    
     indices.clear();
     indices.push_back(IntIndex(63));
     max_keysize = prepare_block(buf, indices);
     it = blocks.insert_block(it, buf, max_keysize);
     ++it;
-      
+    
     indices.clear();
     indices.push_back(IntIndex(64));
     max_keysize = prepare_block(buf, indices);
     it = blocks.insert_block(it, buf, max_keysize);
     ++it;
-      
+    
     indices.clear();
     indices.push_back(IntIndex(65));
     max_keysize = prepare_block(buf, indices);
@@ -454,12 +467,14 @@ int main(int argc, char* args[])
   catch (File_Error e)
   {
     cout<<"File error catched: "
-	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     cout<<"(This is unexpected)\n";
   }
-  read_test();
+  if ((test_to_execute == "") || (test_to_execute == "5"))
+    read_test();
   
-  cout<<"** Test to replace blocks\n";
+  if ((test_to_execute == "") || (test_to_execute == "6"))
+    cout<<"** Test to replace blocks\n";
   try
   {
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
@@ -473,20 +488,22 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(90));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-	it(blocks.discrete_begin(indices.begin(), indices.end()));
+    it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     work.clear();
     work.push_back(IntIndex(7));
     void* buf = malloc(Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, work));
     it = blocks.replace_block(it, buf, max_keysize);
+    ++it;
     
     work.clear();
     work.push_back(IntIndex(51));
     work.push_back(IntIndex(52));
     max_keysize = prepare_block(buf, work);
     it = blocks.replace_block(it, buf, max_keysize);
-      
+    ++it;
+    
     work.clear();
     work.push_back(IntIndex(89));
     work.push_back(IntIndex(90));
@@ -497,12 +514,14 @@ int main(int argc, char* args[])
   catch (File_Error e)
   {
     cout<<"File error catched: "
-	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     cout<<"(This is unexpected)\n";
   }
-  read_test();
+  if ((test_to_execute == "") || (test_to_execute == "6"))
+    read_test();
   
-  cout<<"** Delete blocks in between\n";
+  if ((test_to_execute == "") || (test_to_execute == "7"))
+    cout<<"** Delete blocks in between\n";
   try
   {
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
@@ -514,7 +533,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(65));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-	it(blocks.discrete_begin(indices.begin(), indices.end()));
+    it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     it = blocks.replace_block(it, 0, 0);
     it = blocks.replace_block(it, 0, 0);
@@ -523,12 +542,14 @@ int main(int argc, char* args[])
   catch (File_Error e)
   {
     cout<<"File error catched: "
-	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     cout<<"(This is unexpected)\n";
   }
-  read_test();
+  if ((test_to_execute == "") || (test_to_execute == "7"))
+    read_test();
   
-  cout<<"** Delete blocks at the begin and the end\n";
+  if ((test_to_execute == "") || (test_to_execute == "8"))
+    cout<<"** Delete blocks at the begin and the end\n";
   try
   {
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
@@ -539,7 +560,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(90));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-	it(blocks.discrete_begin(indices.begin(), indices.end()));
+    it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     it = blocks.replace_block(it, 0, 0);
     it = blocks.replace_block(it, 0, 0);
@@ -547,12 +568,14 @@ int main(int argc, char* args[])
   catch (File_Error e)
   {
     cout<<"File error catched: "
-	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     cout<<"(This is unexpected)\n";
   }
-  read_test();
+  if ((test_to_execute == "") || (test_to_execute == "8"))
+    read_test();
   
-  cout<<"** Test insertion again\n";
+  if ((test_to_execute == "") || (test_to_execute == "9"))
+    cout<<"** Test insertion again\n";
   try
   {
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
@@ -564,7 +587,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(63));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-	it(blocks.discrete_begin(indices.begin(), indices.end()));
+    it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     ++it;
     for (unsigned int i(20); i < 30; ++i)
@@ -581,12 +604,14 @@ int main(int argc, char* args[])
   catch (File_Error e)
   {
     cout<<"File error catched: "
-	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     cout<<"(This is unexpected)\n";
   }
-  read_test();
+  if ((test_to_execute == "") || (test_to_execute == "9"))
+    read_test();
   
-  cout<<"** Delete everything\n";
+  if ((test_to_execute == "") || (test_to_execute == "10"))
+    cout<<"** Delete everything\n";
   try
   {
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
@@ -597,7 +622,7 @@ int main(int argc, char* args[])
       indices.push_back(IntIndex(i));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-	it(blocks.discrete_begin(indices.begin(), indices.end()));
+    it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     while (!(it == blocks.discrete_end()))
     {
@@ -607,12 +632,14 @@ int main(int argc, char* args[])
   catch (File_Error e)
   {
     cout<<"File error catched: "
-	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     cout<<"(This is unexpected)\n";
   }
-  read_test();
+  if ((test_to_execute == "") || (test_to_execute == "10"))
+    read_test();
   
-  cout<<"** Insert two series of segments\n";
+  if ((test_to_execute == "") || (test_to_execute == "11"))
+    cout<<"** Insert two series of segments\n";
   try
   {
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
@@ -639,12 +666,14 @@ int main(int argc, char* args[])
   catch (File_Error e)
   {
     cout<<"File error catched: "
-	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     cout<<"(This is unexpected)\n";
   }
-  read_test();
+  if ((test_to_execute == "") || (test_to_execute == "11"))
+    read_test();
   
-  cout<<"** Replace by other series of segments\n";
+  if ((test_to_execute == "") || (test_to_execute == "12"))
+    cout<<"** Replace by other series of segments\n";
   try
   {
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
@@ -659,7 +688,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(99));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-	it(blocks.discrete_begin(indices.begin(), indices.end()));
+    it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     work.clear();
     work.push_back(IntIndex(8));
@@ -710,10 +739,14 @@ int main(int argc, char* args[])
   catch (File_Error e)
   {
     cout<<"File error catched: "
-	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     cout<<"(This is unexpected)\n";
   }
-  read_test();
+  if ((test_to_execute == "") || (test_to_execute == "12"))
+    read_test();
+  
+  remove((Test_File().get_file_base_name() + Test_File().get_index_suffix()).c_str());
+  remove((Test_File().get_file_base_name() + Test_File().get_data_suffix()).c_str());
   
   return 0;
 }

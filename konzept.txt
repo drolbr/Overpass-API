@@ -558,7 +558,9 @@ for 0.6.1: (planned 2011-03-18)
 - reorganize project dirs
 - automated test environment
 
-@database: (planned 2011-04-15)
+for 0.7 (planned 2011-04-15)
+- refactor file_blocks.h: reorganize file(s)
+@database:
 - extend values in tags_global
 - reworked way and relation indices
 - changes for transactionality: different idx management
@@ -570,6 +572,8 @@ for 0.8: (planned 2011-05-13)
 - make rules possible
 
 for 0.8.1: (planned 2011-06-03)
+- refactor file_blocks.h: spin Write_Iterator off Discrete_Iterator
+- refactor file_blocks.h: write rough documentation
 - speed optimizations for areas
 - XAPI interface
 

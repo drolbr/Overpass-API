@@ -534,6 +534,8 @@ public:
       uint32 foo(write(index_fd, index_buf, index_size)); foo = 0;
       
       free(index_buf);
+      vector< uint32 >().swap(void_blocks);
+      ++foo;
     }
     
     free(buffer);
@@ -676,7 +678,7 @@ public:
     {
       lseek64(data_fd, (int64)(it.block_it->pos)*(block_size), SEEK_SET);
       uint32 foo(write(data_fd, buf, block_size)); foo = 0;
-    
+
       it.block_it->index = TIndex((uint8*)buf+(sizeof(uint32)+sizeof(uint32)));
       it.block_it->max_keysize = max_keysize;
       
