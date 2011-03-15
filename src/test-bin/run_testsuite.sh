@@ -45,16 +45,16 @@ perform_test()
   popd >/dev/null
 };
 
-I=1
-while [[ $I -le 12 ]]; do
+perform_test_loop()
 {
-  perform_test file_blocks $I
-  I=$(($I + 1))
-}; done
+  I=1
+  while [[ $I -le $2 ]]; do
+  {
+    perform_test "$1" $I "$3"
+    I=$(($I + 1))
+  }; done
+};
 
-I=1
-while [[ $I -le 13 ]]; do
-{
-  perform_test block_backend $I
-  I=$(($I + 1))
-}; done
+perform_test_loop file_blocks 12
+perform_test_loop block_backend 13
+perform_test_loop random_file 4

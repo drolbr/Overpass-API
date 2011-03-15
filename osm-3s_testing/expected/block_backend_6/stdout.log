@@ -1,6 +1,6 @@
 File error catched in part 1: 2 ./testfile.bin File_Blocks:1
 (This is the expected correct behaviour)
-** Add some empty indizes (should not appear)
+** Add some empty indices (should not appear)
 Read test
 Reading all blocks ...
 Index 0: 1000 

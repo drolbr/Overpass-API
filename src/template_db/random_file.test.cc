@@ -115,14 +115,21 @@ void read_test()
 
 int main(int argc, char* args[])
 {
-  cout<<"** Test the behaviour for an empty file\n";
+  string test_to_execute;
+  if (argc > 1)
+    test_to_execute = args[1];
+  
+  if ((test_to_execute == "") || (test_to_execute == "1"))
+    cout<<"** Test the behaviour for an empty file\n";
   int data_fd = open64
       ((Test_File().get_file_base_name() + Test_File().get_id_suffix()).c_str(),
        O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   close(data_fd);
-  read_test();
+  if ((test_to_execute == "") || (test_to_execute == "1"))
+    read_test();
   
-  cout<<"** Test the behaviour for a file with two entries - part 1\n";
+  if ((test_to_execute == "") || (test_to_execute == "2"))
+    cout<<"** Test the behaviour for a file with two entries - part 1\n";
   try
   {
     Random_File< IntIndex > blocks(Test_File(), true);
@@ -140,9 +147,11 @@ int main(int argc, char* args[])
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     cout<<"(This is unexpected)\n";
   }
-  read_test();
+  if ((test_to_execute == "") || (test_to_execute == "2"))
+    read_test();
   
-  cout<<"** Add at the end\n";
+  if ((test_to_execute == "") || (test_to_execute == "3"))
+    cout<<"** Add at the end\n";
   try
   {
     Random_File< IntIndex > blocks(Test_File(), true);
@@ -155,9 +164,11 @@ int main(int argc, char* args[])
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     cout<<"(This is unexpected)\n";
   }
-  read_test();
+  if ((test_to_execute == "") || (test_to_execute == "3"))
+    read_test();
     
-  cout<<"** Overwrite an existing block\n";
+  if ((test_to_execute == "") || (test_to_execute == "4"))
+    cout<<"** Overwrite an existing block\n";
   try
   {
     Random_File< IntIndex > blocks(Test_File(), true);
@@ -170,7 +181,10 @@ int main(int argc, char* args[])
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     cout<<"(This is unexpected)\n";
   }
-  read_test();
+  if ((test_to_execute == "") || (test_to_execute == "4"))
+    read_test();
+  
+  remove((Test_File().get_file_base_name() + Test_File().get_id_suffix()).c_str());
   
   return 0;
 }
