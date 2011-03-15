@@ -356,7 +356,12 @@ void read_test(unsigned int step)
 
 int main(int argc, char* args[])
 {
-  cout<<"** Test the behaviour for non-exsiting files\n";
+  string test_to_execute;
+  if (argc > 1)
+    test_to_execute = args[1];
+  
+  if ((test_to_execute == "") || (test_to_execute == "1"))
+    cout<<"** Test the behaviour for non-exsiting files\n";
   remove((Test_File().get_file_base_name() + Test_File().get_index_suffix()).c_str());
   remove((Test_File().get_file_base_name() + Test_File().get_data_suffix()).c_str());
   try
@@ -374,11 +379,14 @@ int main(int argc, char* args[])
   map< IntIndex, set< IntObject > > to_insert;
   set< IntObject > objects;
   
-  cout<<"** Test the behaviour for an empty db\n";
+  if ((test_to_execute == "") || (test_to_execute == "2"))
+    cout<<"** Test the behaviour for an empty db\n";
   fill_db(to_delete, to_insert, 2);
-  read_test(3);
+  if ((test_to_execute == "") || (test_to_execute == "2"))
+    read_test(2);
   
-  cout<<"** Test the behaviour for a db with one entry\n";
+  if ((test_to_execute == "") || (test_to_execute == "3"))
+    cout<<"** Test the behaviour for a db with one entry\n";
   to_delete.clear();
   to_insert.clear();
   objects.clear();
@@ -386,9 +394,11 @@ int main(int argc, char* args[])
   to_insert[42] = objects;
   
   fill_db(to_delete, to_insert, 4);
-  read_test(5);
+  if ((test_to_execute == "") || (test_to_execute == "3"))
+    read_test(3);
   
-  cout<<"** Test the behaviour for a db with multiple short indizes\n";
+  if ((test_to_execute == "") || (test_to_execute == "4"))
+    cout<<"** Test the behaviour for a db with multiple short indizes\n";
   to_delete.clear();
   to_insert.clear();
   for (unsigned int i(0); i < 100; i += 9)
@@ -399,9 +409,11 @@ int main(int argc, char* args[])
   }
   
   fill_db(to_delete, to_insert, 6);
-  read_test(7);
+  if ((test_to_execute == "") || (test_to_execute == "4"))
+    read_test(4);
   
-  cout<<"** Delete an item\n";
+  if ((test_to_execute == "") || (test_to_execute == "5"))
+    cout<<"** Delete an item\n";
   to_delete.clear();
   to_insert.clear();
   objects.clear();
@@ -409,9 +421,11 @@ int main(int argc, char* args[])
   to_delete[42] = objects;
   
   fill_db(to_delete, to_insert, 8);
-  read_test(9);
+  if ((test_to_execute == "") || (test_to_execute == "5"))
+    read_test(5);
   
-  cout<<"** Add some empty indizes (should not appear)\n";
+  if ((test_to_execute == "") || (test_to_execute == "6"))
+    cout<<"** Add some empty indices (should not appear)\n";
   to_delete.clear();
   to_insert.clear();
   for (unsigned int i(0); i < 99; i += 9)
@@ -421,9 +435,11 @@ int main(int argc, char* args[])
   }
   
   fill_db(to_delete, to_insert, 10);
-  read_test(11);
+  if ((test_to_execute == "") || (test_to_execute == "6"))
+    read_test(6);
   
-  cout<<"** Add much more items\n";
+  if ((test_to_execute == "") || (test_to_execute == "7"))
+    cout<<"** Add much more items\n";
   to_delete.clear();
   to_insert.clear();
   for (unsigned int i(0); i < 100; ++i)
@@ -435,9 +451,11 @@ int main(int argc, char* args[])
   }
   
   fill_db(to_delete, to_insert, 12);
-  read_test(13);
+  if ((test_to_execute == "") || (test_to_execute == "7"))
+    read_test(7);
   
-  cout<<"** Blow up a single index\n";
+  if ((test_to_execute == "") || (test_to_execute == "8"))
+    cout<<"** Blow up a single index\n";
   to_delete.clear();
   to_insert.clear();
   objects.clear();
@@ -446,9 +464,11 @@ int main(int argc, char* args[])
   to_insert[50] = objects;
   
   fill_db(to_delete, to_insert, 14);
-  read_test(15);
+  if ((test_to_execute == "") || (test_to_execute == "8"))
+    read_test(8);
   
-  cout<<"** Blow up an index and delete some data\n";
+  if ((test_to_execute == "") || (test_to_execute == "9"))
+    cout<<"** Blow up an index and delete some data\n";
   to_delete.clear();
   to_insert.clear();
   objects.clear();
@@ -461,9 +481,11 @@ int main(int argc, char* args[])
   to_delete[49] = objects;
   
   fill_db(to_delete, to_insert, 16);
-  read_test(17);
+  if ((test_to_execute == "") || (test_to_execute == "9"))
+    read_test(9);
   
-  cout<<"** Blow up further the same index\n";
+  if ((test_to_execute == "") || (test_to_execute == "10"))
+    cout<<"** Blow up further the same index\n";
   to_delete.clear();
   to_insert.clear();
   objects.clear();
@@ -472,9 +494,11 @@ int main(int argc, char* args[])
   to_insert[50] = objects;
   
   fill_db(to_delete, to_insert, 18);
-  read_test(19);
+  if ((test_to_execute == "") || (test_to_execute == "10"))
+    read_test(10);
   
-  cout<<"** Blow up two indices\n";
+  if ((test_to_execute == "") || (test_to_execute == "11"))
+    cout<<"** Blow up two indices\n";
   to_delete.clear();
   to_insert.clear();
   objects.clear();
@@ -487,9 +511,11 @@ int main(int argc, char* args[])
   to_insert[99] = objects;
   
   fill_db(to_delete, to_insert, 20);
-  read_test(21);
+  if ((test_to_execute == "") || (test_to_execute == "11"))
+    read_test(11);
   
-  cout<<"** Delete an entire block\n";
+  if ((test_to_execute == "") || (test_to_execute == "12"))
+    cout<<"** Delete an entire block\n";
   to_delete.clear();
   to_insert.clear();
   for (unsigned int i(55); i < 95; ++i)
@@ -503,9 +529,11 @@ int main(int argc, char* args[])
   }
   
   fill_db(to_delete, to_insert, 22);
-  read_test(23);
+  if ((test_to_execute == "") || (test_to_execute == "12"))
+    read_test(12);
   
-  cout<<"** Delete much items\n";
+  if ((test_to_execute == "") || (test_to_execute == "13"))
+    cout<<"** Delete many items\n";
   to_delete.clear();
   to_insert.clear();
   for (unsigned int i(0); i < 100; ++i)
@@ -517,7 +545,11 @@ int main(int argc, char* args[])
   }
   
   fill_db(to_delete, to_insert, 24);
-  read_test(25);
+  if ((test_to_execute == "") || (test_to_execute == "13"))
+    read_test(13);
+  
+  remove((Test_File().get_file_base_name() + Test_File().get_index_suffix()).c_str());
+  remove((Test_File().get_file_base_name() + Test_File().get_data_suffix()).c_str());
   
   return 0;
 }
