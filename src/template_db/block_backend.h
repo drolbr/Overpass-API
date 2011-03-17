@@ -922,6 +922,10 @@ private:
 	      file_it = file_blocks.insert_block(file_it, buffer, max_size);
 	      ++file_it;
 	      pos = buffer + 8 + it->first.size_of();
+	      if (it->first.size_of() + it2->size_of() + 8 > block_size)
+		throw File_Error
+		(0, data_filename,
+		 "Block_Backend: an item's size exceeds block size.");
 	    }
 	    
 	    it2->to_data(pos);
@@ -1163,6 +1167,10 @@ private:
 	      file_it = file_blocks.insert_block(file_it, dest, (*(uint32*)dest) - 4);
 	      ++file_it;
 	      pos = dest + 8 + it->first.size_of();
+	      if (it->first.size_of() + it2->size_of() + 8 > block_size)
+		throw File_Error
+		    (0, data_filename,
+		     "Block_Backend: an item's size exceeds block size.");
 	    }
 	    
 	    it2->to_data(pos);
@@ -1288,13 +1296,18 @@ private:
     {
       while (cur_insert != insert_it->second.end())
       {
-	if (pos + cur_insert->size_of() >= dest + block_size)
+	if (pos - dest + cur_insert->size_of() + TIndex::size_of(source + 8)
+	    >= block_size)
 	{
 	  *(uint32*)dest = pos - dest;
 	  *(uint32*)(dest+4) = *(uint32*)dest;
 	  file_it = file_blocks.insert_block(file_it, dest, (*(uint32*)dest) - 4);
 	  ++file_it;
 	  pos = dest + 8 + TIndex::size_of(source + 8);
+	  if (TIndex::size_of(source + 8) + cur_insert->size_of() + 8 > block_size)
+	    throw File_Error
+	    (0, data_filename,
+	     "Block_Backend: an item's size exceeds block size.");
 	}
 	
 	cur_insert->to_data(pos);

@@ -1,5 +1,5 @@
 testbindir = ${prefix}/test-bin
-testbin_PROGRAMS = file_blocks block_backend random_file node_updater way_updater relation_updater complete_updater diff_updater dump_database test_dispatcher example_queries area_query bbox_query foreach id_query make_area print query recurse union benchmark
+testbin_PROGRAMS = file_blocks block_backend random_file node_updater way_updater relation_updater generate_test_file complete_updater diff_updater dump_database test_dispatcher example_queries area_query bbox_query foreach id_query make_area print query recurse union benchmark
 dist_testbin_SCRIPTS = apply_osc.test.sh run_testsuite.sh
 
 expat_cc = ../expat/expat_justparse_interface.cc
@@ -27,6 +27,7 @@ dump_database_SOURCES = ${expat_cc} ${settings_cc} ../overpass_api/osm-backend/d
 dump_database_LDADD = -lexpat
 example_queries_SOURCES = ${expat_cc} ${settings_cc} ../overpass_api/osm-backend/example_queries.cc
 example_queries_LDADD = -lexpat
+generate_test_file_SOURCES = ../overpass_api/osm-backend/generate_test_file.cc
 
 area_query_SOURCES = ${statements_dir}/area_query.test.cc ${statements_cc} ${testenv_cc}
 area_query_LDADD = -lrt

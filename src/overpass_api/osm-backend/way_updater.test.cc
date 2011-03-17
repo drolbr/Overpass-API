@@ -14,7 +14,7 @@
 using namespace std;
 
 /**
- * Tests the library node_updater with a sample OSM file
+ * Tests the library way_updater with a sample OSM file
  */
 
 Node_Updater node_updater;
@@ -24,8 +24,8 @@ Way current_way;
 int state;
 const int IN_NODES = 1;
 const int IN_WAYS = 2;
-ofstream member_source_out((get_basedir() + "member_source.csv").c_str());
-ofstream tags_source_out((get_basedir() + "tags_source.csv").c_str());
+ofstream* member_source_out;
+ofstream* tags_source_out;
 
 uint32 osm_element_count;
 
@@ -47,7 +47,7 @@ void start(const char *el, const char **attr)
     {
       current_way.tags.push_back(make_pair(key, value));
       
-      tags_source_out<<current_way.id<<'\t'<<key<<'\t'<<value<<'\n';
+      *tags_source_out<<current_way.id<<'\t'<<key<<'\t'<<value<<'\n';
     }
   }
   else if (!strcmp(el, "nd"))
@@ -62,7 +62,7 @@ void start(const char *el, const char **attr)
       }
       current_way.nds.push_back(ref);
       
-      member_source_out<<ref<<' ';
+      *member_source_out<<ref<<' ';
     }
   }
   else if (!strcmp(el, "node"))
@@ -100,7 +100,7 @@ void start(const char *el, const char **attr)
     }
     current_way = Way(id);
     
-    member_source_out<<id<<'\t';
+    *member_source_out<<id<<'\t';
   }
 }
 
@@ -122,7 +122,7 @@ void end(const char *el)
     way_updater.set_way(current_way);
     current_way.id = 0;
     
-    member_source_out<<'\n';
+    *member_source_out<<'\n';
 
     if (osm_element_count >= 4*1024*1024)
     {
@@ -133,10 +133,24 @@ void end(const char *el)
   ++osm_element_count;
 }
 
+void cleanup_files(const File_Properties& file_properties, bool cleanup_map)
+{
+  remove((file_properties.get_file_base_name() +
+  file_properties.get_index_suffix()).c_str());
+  remove((file_properties.get_file_base_name() +
+  file_properties.get_data_suffix()).c_str());
+  if (cleanup_map)
+    remove((file_properties.get_file_base_name() +
+    file_properties.get_id_suffix()).c_str());
+}
+
 int main(int argc, char* args[])
 {
   try
   {
+    member_source_out = new ofstream((get_basedir() + "member_source.csv").c_str());
+    tags_source_out = new ofstream((get_basedir() + "tags_source.csv").c_str());
+    
     ofstream member_db_out((get_basedir() + "member_db.csv").c_str());
     ofstream tags_local_out((get_basedir() + "tags_local.csv").c_str());
     ofstream tags_global_out((get_basedir() + "tags_global.csv").c_str());
@@ -188,6 +202,14 @@ int main(int argc, char* args[])
     cerr<<"File error caught: "
 	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
+  
+  cleanup_files(*de_osm3s_file_ids::NODES, true);
+  cleanup_files(*de_osm3s_file_ids::NODE_TAGS_LOCAL, true);
+  cleanup_files(*de_osm3s_file_ids::NODE_TAGS_GLOBAL, true);
+  
+  cleanup_files(*de_osm3s_file_ids::WAYS, true);
+  cleanup_files(*de_osm3s_file_ids::WAY_TAGS_LOCAL, true);
+  cleanup_files(*de_osm3s_file_ids::WAY_TAGS_GLOBAL, true);
   
   return 0;
 }

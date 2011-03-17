@@ -75,7 +75,7 @@ File_Properties* de_osm3s_file_ids::WAY_TAGS_LOCAL
 File_Properties* de_osm3s_file_ids::WAY_TAGS_GLOBAL
   = new OSM_File_Properties("way_tags_global", 2*1024*1024);
 File_Properties* de_osm3s_file_ids::RELATIONS
-  = new OSM_File_Properties("relations", 512*1024);
+  = new OSM_File_Properties("relations", 1024*1024);
 File_Properties* de_osm3s_file_ids::RELATION_ROLES
   = new OSM_File_Properties("relation_roles", 512*1024);
 File_Properties* de_osm3s_file_ids::RELATION_TAGS_LOCAL

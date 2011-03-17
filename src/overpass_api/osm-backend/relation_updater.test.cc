@@ -8,9 +8,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "../../expat/expat_justparse_interface.h"
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
-#include "../expat/expat_justparse_interface.h"
 #include "node_updater.h"
 #include "relation_updater.h"
 #include "way_updater.h"
@@ -18,7 +18,7 @@
 using namespace std;
 
 /**
- * Tests the library node_updater with a sample OSM file
+ * Tests the library relation_updater with a sample OSM file
  */
 
 Node_Updater node_updater;
@@ -31,8 +31,8 @@ int state;
 const int IN_NODES = 1;
 const int IN_WAYS = 2;
 const int IN_RELATIONS = 3;
-ofstream member_source_out((get_basedir() + "member_source.csv").c_str());
-ofstream tags_source_out((get_basedir() + "tags_source.csv").c_str());
+ofstream* member_source_out;
+ofstream* tags_source_out;
 
 uint32 osm_element_count;
 
@@ -69,7 +69,7 @@ void start(const char *el, const char **attr)
     else if (current_relation.id > 0)
     {
       current_relation.tags.push_back(make_pair(key, value));
-      tags_source_out<<current_relation.id<<'\t'<<key<<'\t'<<value<<'\n';
+      *tags_source_out<<current_relation.id<<'\t'<<key<<'\t'<<value<<'\n';
     }
   }
   else if (!strcmp(el, "nd"))
@@ -108,10 +108,10 @@ void start(const char *el, const char **attr)
 	entry.type = Relation_Entry::WAY;
       else if (type == "relation")
 	entry.type = Relation_Entry::RELATION;
-      entry.role = relation_updater.get_role_id(role);
+      relation_updater.get_role_id(role);
       current_relation.members.push_back(entry);
       
-      member_source_out<<ref<<' '<<entry.type<<' '<<role<<' ';
+      *member_source_out<<ref<<' '<<entry.type<<' '<<role<<' ';
     }
   }
   else if (!strcmp(el, "node"))
@@ -137,7 +137,6 @@ void start(const char *el, const char **attr)
     if (state == IN_NODES)
     {
       node_updater.update();
-      show_mem_status();
       osm_element_count = 0;
       state = IN_WAYS;
     }
@@ -155,14 +154,12 @@ void start(const char *el, const char **attr)
     if (state == IN_NODES)
     {
       node_updater.update();
-      show_mem_status();
       osm_element_count = 0;
       state = IN_RELATIONS;
     }
     else if (state == IN_WAYS)
     {
       way_updater.update();
-      show_mem_status();
       osm_element_count = 0;
       state = IN_RELATIONS;
     }
@@ -175,7 +172,7 @@ void start(const char *el, const char **attr)
     }
     current_relation = Relation(id);
     
-    member_source_out<<id<<'\t';
+    *member_source_out<<id<<'\t';
   }
 }
 
@@ -189,7 +186,6 @@ void end(const char *el)
     if (osm_element_count >= 4*1024*1024)
     {
       node_updater.update(true);
-      show_mem_status();
       osm_element_count = 0;
     }
   }
@@ -201,7 +197,6 @@ void end(const char *el)
     if (osm_element_count >= 4*1024*1024)
     {
       way_updater.update();
-      show_mem_status();
       osm_element_count = 0;
     }
   }
@@ -210,27 +205,38 @@ void end(const char *el)
     relation_updater.set_relation(current_relation);
     current_relation.id = 0;
     
-    member_source_out<<'\n';
+    *member_source_out<<'\n';
     
     if (osm_element_count >= 4*1024*1024)
     {
       relation_updater.update();
-      show_mem_status();
       osm_element_count = 0;
     }
   }
   ++osm_element_count;
 }
 
+void cleanup_files(const File_Properties& file_properties, bool cleanup_map)
+{
+  remove((file_properties.get_file_base_name() +
+  file_properties.get_index_suffix()).c_str());
+  remove((file_properties.get_file_base_name() +
+  file_properties.get_data_suffix()).c_str());
+  if (cleanup_map)
+    remove((file_properties.get_file_base_name() +
+    file_properties.get_id_suffix()).c_str());
+}
+
 int main(int argc, char* args[])
 {
   try
   {
+    member_source_out = new ofstream((get_basedir() + "member_source.csv").c_str());
+    tags_source_out = new ofstream((get_basedir() + "tags_source.csv").c_str());
+    
     ofstream member_db_out((get_basedir() + "member_db.csv").c_str());
     ofstream tags_local_out((get_basedir() + "tags_local.csv").c_str());
     ofstream tags_global_out((get_basedir() + "tags_global.csv").c_str());
-    
-    show_mem_status();
     
     osm_element_count = 0;
     state = 0;
@@ -244,8 +250,6 @@ int main(int argc, char* args[])
     else if (state == IN_RELATIONS)
       relation_updater.update();
     
-    show_mem_status();
-
     // prepare check update_members - load roles
     map< uint32, string > roles;
     Block_Backend< Uint32_Index, String_Object > roles_db
@@ -295,6 +299,19 @@ int main(int argc, char* args[])
     cerr<<"File error caught: "
 	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
+  
+  cleanup_files(*de_osm3s_file_ids::NODES, true);
+  cleanup_files(*de_osm3s_file_ids::NODE_TAGS_LOCAL, true);
+  cleanup_files(*de_osm3s_file_ids::NODE_TAGS_GLOBAL, true);
+  
+  cleanup_files(*de_osm3s_file_ids::WAYS, true);
+  cleanup_files(*de_osm3s_file_ids::WAY_TAGS_LOCAL, true);
+  cleanup_files(*de_osm3s_file_ids::WAY_TAGS_GLOBAL, true);
+  
+  cleanup_files(*de_osm3s_file_ids::RELATIONS, true);
+  cleanup_files(*de_osm3s_file_ids::RELATION_ROLES, true);
+  cleanup_files(*de_osm3s_file_ids::RELATION_TAGS_LOCAL, true);
+  cleanup_files(*de_osm3s_file_ids::RELATION_TAGS_GLOBAL, true);
   
   return 0;
 }

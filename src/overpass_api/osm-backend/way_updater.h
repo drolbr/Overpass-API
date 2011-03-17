@@ -44,7 +44,7 @@ struct Way_Updater
   
   void update(bool partial = false)
   {
-    cerr<<'.'<<' '<<time(NULL)<<' ';
+    cerr<<'.';
     
     map< uint32, vector< uint32 > > to_delete;
     compute_indexes();
@@ -59,7 +59,7 @@ struct Way_Updater
     ids_to_modify.clear();
     ways_to_insert.clear();
     
-    cerr<<'W'<<' '<<time(NULL)<<' ';
+    cerr<<'W';
     
     if (!partial && (update_counter > 0))
     {
@@ -77,7 +77,7 @@ struct Way_Updater
 	merge_files(".0", ".1");
     }
     
-    cerr<<'w'<<' '<<time(NULL)<<' ';
+    cerr<<"w ";
   }
   
   void update(vector< pair< uint32, uint32 > >& moved_ways)

@@ -45,7 +45,7 @@ struct Node_Updater
   
   void update(bool partial = false)
   {
-    cerr<<'.'<<' '<<time(NULL)<<' ';
+    cerr<<'.';
     
     map< uint32, vector< uint32 > > to_delete;
     update_node_ids(to_delete);
@@ -59,7 +59,7 @@ struct Node_Updater
     ids_to_modify.clear();
     nodes_to_insert.clear();
     
-    cerr<<'N'<<' '<<time(NULL)<<' ';
+    cerr<<'N';
     
     if (!partial && (update_counter > 0))
     {
@@ -77,7 +77,7 @@ struct Node_Updater
 	merge_files(".0", ".1");
     }
     
-    cerr<<'n'<<' '<<time(NULL)<<' ';
+    cerr<<"n ";
   }
   
   void update(vector< pair< uint32, uint32 > >& moved_nodes)

@@ -56,12 +56,10 @@ struct Relation_Updater
       for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
 	it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
       {
-	cerr<<'.';
 	role_ids[it.object().val()] = it.index().val();
 	if (max_role_id <= it.index().val())
 	  max_role_id = it.index().val()+1;
       }
-      cerr<<"max_role_id on load "<<max_role_id<<'\n';
       max_written_role_id = max_role_id;
     }
     map< string, uint32 >::const_iterator it(role_ids.find(s));
@@ -74,7 +72,7 @@ struct Relation_Updater
   
   void update()
   {
-    cerr<<'.'<<' '<<time(NULL)<<' ';
+    cerr<<'.';
     
     map< uint32, vector< uint32 > > to_delete;
     compute_indexes();
@@ -90,8 +88,7 @@ struct Relation_Updater
     ids_to_modify.clear();
     rels_to_insert.clear();
     
-    cerr<<'R'<<' '<<time(NULL)<<' ';
-    cerr<<'r'<<' '<<time(NULL)<<' ';
+    cerr<<"Rr ";
   }
   
   void update(vector< pair< uint32, uint32 > >& moved_relations)
@@ -602,8 +599,6 @@ private:
 
   void flush_roles()
   {
-    cerr<<"max_role_id "<<max_role_id<<'\n'
-        <<"max_written_role_id "<<max_written_role_id<<'\n';
     map< Uint32_Index, set< String_Object > > db_to_delete;
     map< Uint32_Index, set< String_Object > > db_to_insert;
     

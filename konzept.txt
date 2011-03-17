@@ -555,11 +555,13 @@ for 0.6.1: (planned 2011-03-18)
 - clear file requirements for areas
 - introduce cgi_query and console_query --verbose
 - rewrite progress messages
-- reorganize project dirs
-- automated test environment
+= reorganize project dirs
+= automated test environment
 
 for 0.7 (planned 2011-04-15)
 - refactor file_blocks.h: reorganize file(s)
+- refactor block_backend.h: reorganize file(s)
+- refactor *_updater.h ~> .h + .cpp
 @database:
 - extend values in tags_global
 - reworked way and relation indices
