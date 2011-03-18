@@ -116,7 +116,10 @@ int main(int argc, char* args[])
     parse(stdin, start, end);
   
     node_updater.update();
-
+    
+    delete coord_source_out;
+    delete tags_source_out;
+    
     // check update_node_ids
 /*    uint32 false_count(0);
     Random_File< Uint32_Index > random(de_osm3s_file_ids::NODES, true);

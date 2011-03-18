@@ -1,6 +1,6 @@
 testbindir = ${prefix}/test-bin
 testbin_PROGRAMS = file_blocks block_backend random_file node_updater way_updater relation_updater generate_test_file complete_updater diff_updater dump_database test_dispatcher example_queries area_query bbox_query foreach id_query make_area print query recurse union benchmark
-dist_testbin_SCRIPTS = apply_osc.test.sh run_testsuite.sh
+dist_testbin_SCRIPTS = apply_osc.test.sh run_testsuite.sh run_and_compare.sh
 
 expat_cc = ../expat/expat_justparse_interface.cc
 settings_cc = ../overpass_api/core/settings.cc

@@ -8,8 +8,10 @@ perform_test()
 
   mkdir -p "run/${EXEC}_$I"
   pushd "run/${EXEC}_$I/" >/dev/null
+  rm -f *
   if [[ -s "../../input/${EXEC}_$I/stdin.log" ]]; then
   {
+    #echo "stdin.log found"
     "../../../test-bin/$1" "$I" "$ARGS" <"../../input/${EXEC}_$I/stdin.log" >stdout.log 2>stderr.log
   }; else
   {
@@ -65,16 +67,16 @@ perform_test_loop file_blocks 12
 perform_test_loop block_backend 13
 perform_test_loop random_file 4
 
-mkdir -p input/node_updater_1/
-../test-bin/generate_test_file >input/node_updater_1/stdin.log
-perform_test node_updater 1
+mkdir -p input/run_and_compare.sh_1/
+../test-bin/generate_test_file >input/run_and_compare.sh_1/stdin.log
+perform_test run_and_compare.sh 1
 
-mkdir -p input/way_updater_1/
-mv input/node_updater_1/stdin.log input/way_updater_1/stdin.log
-perform_test way_updater 1
+mkdir -p input/run_and_compare.sh_2/
+mv input/run_and_compare.sh_1/stdin.log input/run_and_compare.sh_2/stdin.log
+perform_test run_and_compare.sh 2
 
-mkdir -p input/relation_updater_1/
-mv input/way_updater_1/stdin.log input/relation_updater_1/stdin.log
-perform_test relation_updater 1
+mkdir -p input/run_and_compare.sh_3/
+mv input/run_and_compare.sh_2/stdin.log input/run_and_compare.sh_3/stdin.log
+perform_test run_and_compare.sh 3
 
-rm input/relation_updater_1/stdin.log
+rm input/run_and_compare.sh_3/stdin.log

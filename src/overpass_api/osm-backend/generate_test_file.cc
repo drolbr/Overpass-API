@@ -265,7 +265,7 @@ void create_relation_test_pattern(uint id, uint size)
 
 int main(int argc, char* args[])
 {
-  uint pattern_size = 200;
+  uint pattern_size = 2000;
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"

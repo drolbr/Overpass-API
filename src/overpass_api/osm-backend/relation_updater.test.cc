@@ -108,7 +108,7 @@ void start(const char *el, const char **attr)
 	entry.type = Relation_Entry::WAY;
       else if (type == "relation")
 	entry.type = Relation_Entry::RELATION;
-      relation_updater.get_role_id(role);
+      entry.role = relation_updater.get_role_id(role);
       current_relation.members.push_back(entry);
       
       *member_source_out<<ref<<' '<<entry.type<<' '<<role<<' ';
@@ -249,6 +249,9 @@ int main(int argc, char* args[])
       way_updater.update();
     else if (state == IN_RELATIONS)
       relation_updater.update();
+    
+    delete member_source_out;
+    delete tags_source_out;
     
     // prepare check update_members - load roles
     map< uint32, string > roles;
