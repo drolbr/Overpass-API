@@ -63,12 +63,14 @@ perform_test_loop()
   }; done
 };
 
+# Test template_db
 perform_test_loop file_blocks 12
 perform_test_loop block_backend 13
 perform_test_loop random_file 4
 
+# Test overpass_api/osm-backend
 mkdir -p input/run_and_compare.sh_1/
-../test-bin/generate_test_file >input/run_and_compare.sh_1/stdin.log
+../test-bin/generate_test_file 200 >input/run_and_compare.sh_1/stdin.log
 perform_test run_and_compare.sh 1
 
 mkdir -p input/run_and_compare.sh_2/
@@ -79,4 +81,9 @@ mkdir -p input/run_and_compare.sh_3/
 mv input/run_and_compare.sh_2/stdin.log input/run_and_compare.sh_3/stdin.log
 perform_test run_and_compare.sh 3
 
-rm input/run_and_compare.sh_3/stdin.log
+# Prepare testing the statements
+mkdir -p input/update_database/
+mv input/run_and_compare.sh_3/stdin.log input/update_database/stdin.log
+../bin/update_database --db-dir=input/update_database/ <input/update_database/stdin.log
+
+rm input/update_database/stdin.log

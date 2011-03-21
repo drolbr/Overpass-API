@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -265,7 +266,9 @@ void create_relation_test_pattern(uint id, uint size)
 
 int main(int argc, char* args[])
 {
-  uint pattern_size = 2000;
+  uint pattern_size = 2;
+  if (argc > 1)
+    pattern_size = atoi(args[1]);
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
