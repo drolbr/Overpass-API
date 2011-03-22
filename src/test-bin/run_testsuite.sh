@@ -88,4 +88,4 @@ mv input/run_and_compare.sh_3/stdin.log input/update_database/stdin.log
 
 perform_test_loop print 5 ../../input/update_database/
 
-rm input/update_database/stdin.log
+rm input/update_database/*
