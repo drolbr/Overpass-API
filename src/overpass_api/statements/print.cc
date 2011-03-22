@@ -456,8 +456,16 @@ void Print_Statement::execute(Resource_Manager& rman)
 		 WAY_FLUSH_SIZE, mode, Stopwatch::WAY_TAGS_LOCAL, rman);
       tags_by_id(mit->second.relations, *de_osm3s_file_ids::RELATION_TAGS_LOCAL,
 		 RELATION_FLUSH_SIZE, mode, Stopwatch::RELATION_TAGS_LOCAL, rman);
-      tags_by_id(mit->second.areas, *de_osm3s_file_ids::AREA_TAGS_LOCAL,
-		 AREA_FLUSH_SIZE, mode, Stopwatch::AREA_TAGS_LOCAL, rman);
+      try
+      {
+	tags_by_id(mit->second.areas, *de_osm3s_file_ids::AREA_TAGS_LOCAL,
+		   AREA_FLUSH_SIZE, mode, Stopwatch::AREA_TAGS_LOCAL, rman);
+      }
+      catch (File_Error e)
+      {
+	if (e.filename.substr(e.filename.size()-19, 19) != "area_tags_local.bin")
+	  throw e;
+      }
     }
     else
     {
@@ -467,8 +475,16 @@ void Print_Statement::execute(Resource_Manager& rman)
 		    mode, Stopwatch::WAY_TAGS_LOCAL, rman);
       tags_quadtile(mit->second.relations, *de_osm3s_file_ids::RELATION_TAGS_LOCAL,
 		    mode, Stopwatch::RELATION_TAGS_LOCAL, rman);
-      tags_quadtile(mit->second.areas, *de_osm3s_file_ids::AREA_TAGS_LOCAL,
-		    mode, Stopwatch::AREA_TAGS_LOCAL, rman);
+      try
+      {
+        tags_quadtile(mit->second.areas, *de_osm3s_file_ids::AREA_TAGS_LOCAL,
+		      mode, Stopwatch::AREA_TAGS_LOCAL, rman);
+      }
+      catch (File_Error e)
+      {
+	if (e.filename.substr(e.filename.size()-19, 19) != "area_tags_local.bin")
+	  throw e;
+      }
     }
   }
   else
@@ -478,14 +494,30 @@ void Print_Statement::execute(Resource_Manager& rman)
       by_id(mit->second.nodes, mode);
       by_id(mit->second.ways, mode);
       by_id(mit->second.relations, mode);
-      by_id(mit->second.areas, mode);
+      try
+      {
+	by_id(mit->second.areas, mode);
+      }
+      catch (File_Error e)
+      {
+	if (e.filename.substr(e.filename.size()-19, 19) != "area_tags_local.bin")
+	  throw e;
+      }
     }
     else
     {
       quadtile(mit->second.nodes, mode);
       quadtile(mit->second.ways, mode);
       quadtile(mit->second.relations, mode);
-      quadtile(mit->second.areas, mode);
+      try
+      {
+	quadtile(mit->second.areas, mode);
+      }
+      catch (File_Error e)
+      {
+	if (e.filename.substr(e.filename.size()-19, 19) != "area")
+	  throw e;
+      }
     }
   }
   

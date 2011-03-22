@@ -321,8 +321,7 @@ private:
         it != ids_to_modify.end(); ++it)
     {
       Uint31_Index index(random.get(it->first));
-      if (index.val() > 0)
-	to_delete[index.val()].push_back(it->first);
+      to_delete[index.val()].push_back(it->first);
       if ((rit != rels_to_insert.end()) && (it->first == rit->id))
       {
 	if (it->second)

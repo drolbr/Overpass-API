@@ -86,4 +86,6 @@ mkdir -p input/update_database/
 mv input/run_and_compare.sh_3/stdin.log input/update_database/stdin.log
 ../bin/update_database --db-dir=input/update_database/ <input/update_database/stdin.log
 
+perform_test_loop print 5 ../../input/update_database/
+
 rm input/update_database/stdin.log

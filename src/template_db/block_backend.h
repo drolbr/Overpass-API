@@ -919,7 +919,7 @@ private:
 	    {
 	      *(uint32*)buffer = pos - buffer;
 	      *(uint32*)(buffer+4) = *(uint32*)buffer;
-	      file_it = file_blocks.insert_block(file_it, buffer, max_size);
+	      file_it = file_blocks.insert_block(file_it, buffer, (*(uint32*)(buffer+4)) - 4);
 	      ++file_it;
 	      pos = buffer + 8 + it->first.size_of();
 	      if (it->first.size_of() + it2->size_of() + 8 > block_size)
