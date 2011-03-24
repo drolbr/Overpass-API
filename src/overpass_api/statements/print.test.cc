@@ -39,14 +39,18 @@ int main(int argc, char* args[])
   string test_to_execute = args[1];
   set_basedir(args[2]);
   
+  cout<<
+  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+  "<osm>\n";
+  
   if ((test_to_execute == "") || (test_to_execute == "1"))
   {
     try
     {
-      cout<<"Print each item alone:\n";
+      // Print each item alone:
       for (uint32 i = 10000; i <= 1000000; i += 10000)
       {
-	cout<<"Node "<<i<<":\n";
+	// Print nodes:
 	Resource_Manager rman;
 	perform_id_query(rman, "node", i);
 	{
@@ -58,7 +62,7 @@ int main(int argc, char* args[])
       }
       for (uint32 i = 1000; i <= 100000; i += 1000)
       {
-	cout<<"Way "<<i<<":\n";
+	// Print ways:
 	Resource_Manager rman;
 	perform_id_query(rman, "way", i);
 	{
@@ -70,7 +74,7 @@ int main(int argc, char* args[])
       }
       for (uint32 i = 4; i <= 400; i += 4)
       {
-	cout<<"Relation "<<i<<":\n";
+	// Print relations:
 	Resource_Manager rman;
 	perform_id_query(rman, "relation", i);
 	{
@@ -91,10 +95,10 @@ int main(int argc, char* args[])
   {
     try
     {
-      cout<<"Print skeleton:\n";
+      // Print skeletons:
       for (uint32 i = 10000; i <= 1000000; i += 10000)
       {
-	cout<<"Node "<<i<<":\n";
+	// Print nodes:
 	Resource_Manager rman;
 	perform_id_query(rman, "node", i);
 	{
@@ -106,7 +110,7 @@ int main(int argc, char* args[])
       }
       for (uint32 i = 1000; i <= 100000; i += 1000)
       {
-	cout<<"Way "<<i<<":\n";
+	// Print ways:
 	Resource_Manager rman;
 	perform_id_query(rman, "way", i);
 	{
@@ -118,7 +122,7 @@ int main(int argc, char* args[])
       }
       for (uint32 i = 4; i <= 400; i += 4)
       {
-	cout<<"Relation "<<i<<":\n";
+	// Print relations:
 	Resource_Manager rman;
 	perform_id_query(rman, "relation", i);
 	{
@@ -139,10 +143,10 @@ int main(int argc, char* args[])
   {
     try
     {
-      cout<<"Print ids_only:\n";
+      // Print ids_only:
       for (uint32 i = 10000; i <= 1000000; i += 10000)
       {
-	cout<<"Node "<<i<<":\n";
+	// Print nodes:
 	Resource_Manager rman;
 	perform_id_query(rman, "node", i);
 	{
@@ -154,7 +158,7 @@ int main(int argc, char* args[])
       }
       for (uint32 i = 1000; i <= 100000; i += 1000)
       {
-	cout<<"Way "<<i<<":\n";
+	// Print ways:
 	Resource_Manager rman;
 	perform_id_query(rman, "way", i);
 	{
@@ -166,7 +170,7 @@ int main(int argc, char* args[])
       }
       for (uint32 i = 4; i <= 400; i += 4)
       {
-	cout<<"Relation "<<i<<":\n";
+	// Print relations:
 	Resource_Manager rman;
 	perform_id_query(rman, "relation", i);
 	{
@@ -187,7 +191,7 @@ int main(int argc, char* args[])
   {
     try
     {
-      cout<<"Print all items sorted by id:\n";
+      // Print all items sorted by id:
       Resource_Manager total_rman;
       for (uint32 i = 10000; i <= 1000000; i += 10000)
       {
@@ -263,5 +267,7 @@ int main(int argc, char* args[])
       <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
   }
+  
+  cout<<"</osm>\n";
   return 0;
 }
