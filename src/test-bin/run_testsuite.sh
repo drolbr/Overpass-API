@@ -185,4 +185,9 @@ perform_test_loop query 25 "$DATA_SIZE ../../input/update_database/"
 date +%X
 perform_test_loop foreach 2 ../../input/update_database/
 
+# Test the union statement
+prepare_test_loop union 6 $DATA_SIZE
+date +%X
+perform_test_loop union 6 ../../input/update_database/
+
 #rm input/update_database/*

@@ -636,6 +636,68 @@ struct Accept_Query_25 : public Accept_All_Tags
     uint pattern_size;
 };
 
+struct Accept_Union_1 : public Accept_All_Tags
+{
+  Accept_Union_1(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return (id == 2); }
+  virtual bool admit_way(uint id) const { return (id == 11); }
+  virtual bool admit_relation(uint id) const
+  { return ((id == 2) || (id == 8) || (id == 10) || (id == 11)); }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Union_2 : public Accept_All_Tags
+{
+  Accept_Union_2(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return ((id == 1) || (id == 2)); }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Union_4 : public Accept_All_Tags
+{
+  Accept_Union_4(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return (id == 1); }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Union_5 : public Accept_All_Tags
+{
+  Accept_Union_5(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return (id == 2); }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Union_6 : public Accept_All_Tags
+{
+  Accept_Union_6(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const
+  { return ((id == 2) || (id == 8) || (id == 10) || (id == 11)); }
+  
+  private:
+    uint pattern_size;
+};
+
 vector< pair< string, string > > collect_tags(string prefix, uint id)
 {
   vector< pair< string, string > > tags;
@@ -1019,6 +1081,19 @@ int main(int argc, char* args[])
       modifier = new Accept_Query_5(pattern_size);
     else if (string(args[2]) == "query_25")
       modifier = new Accept_Query_25(pattern_size);
+    else if (string(args[2]) == "union_1")
+      modifier = new Accept_Union_1(pattern_size);
+    else if (string(args[2]) == "union_2")
+      modifier = new Accept_Union_2(pattern_size);
+    else if (string(args[2]) == "union_3")
+      // query 1 and 3 shall return the same result
+      modifier = new Accept_Union_1(pattern_size);
+    else if (string(args[2]) == "union_4")
+      modifier = new Accept_Union_4(pattern_size);
+    else if (string(args[2]) == "union_5")
+      modifier = new Accept_Union_5(pattern_size);
+    else if (string(args[2]) == "union_6")
+      modifier = new Accept_Union_6(pattern_size);
     else
       // return an empty osm file otherwise
       modifier = new Accept_Bbox_Query_5(pattern_size);
