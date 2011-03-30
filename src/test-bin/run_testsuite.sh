@@ -9,7 +9,7 @@ print_test_5()
   mkdir -p "run/${EXEC}_$I"
   pushd "run/${EXEC}_$I/" >/dev/null
   rm -f *
-  "../../../test-bin/$1" "$I" "$ARGS" 2>stderr.log | grep "^  <" | sort >stdout.log
+  "../../../test-bin/$1" "$I" $ARGS 2>stderr.log | grep "^  <" | sort >stdout.log
   FAILED=
   for FILE in `ls ../../expected/${EXEC}_$I/`; do
   {
@@ -37,10 +37,10 @@ print_test_5()
   }; done
   if [[ -n $FAILED ]]; then
   {
-    echo "Test $EXEC $I FAILED."
+    echo `date +%X` "Test $EXEC $I FAILED."
   }; else
   {
-    echo "Test $EXEC $I succeeded."
+    echo `date +%X` "Test $EXEC $I succeeded."
     rm -R *
   }; fi
   popd >/dev/null
@@ -68,7 +68,7 @@ perform_test()
   {
     if [[ ! -f $FILE ]]; then
     {
-      echo "In Test $EXEC $I: Expected file \"$FILE\" doesn't exist."
+      echo "In test $EXEC $I: Expected file \"$FILE\" doesn't exist."
       FAILED=YES
     }; fi
   }; done
@@ -76,7 +76,7 @@ perform_test()
   {
     if [[ ! -f "../../expected/${EXEC}_$I/$FILE" ]]; then
     {
-      echo "In Test $EXEC $I: Unexpected file \"$FILE\" exists."
+      echo "In test $EXEC $I: Unexpected file \"$FILE\" exists."
       FAILED=YES
     }; else
     {
@@ -90,10 +90,10 @@ perform_test()
   }; done
   if [[ -n $FAILED ]]; then
   {
-    echo "Test $EXEC $I FAILED."
+    echo `date +%X` "Test $EXEC $I FAILED."
   }; else
   {
-    echo "Test $EXEC $I succeeded."
+    echo `date +%X` "Test $EXEC $I succeeded."
     rm -R *
   }; fi
   popd >/dev/null
@@ -124,10 +124,12 @@ prepare_test_loop()
 };
 
 # The size of the test pattern. Asymptotically, the test pattern consists of
-# size^2 elements. The size must be an even number.
-DATA_SIZE=40
+# size^2 elements. The size must be divisible by ten. For a full featured test,
+# set the value to 2000.
+DATA_SIZE=2000
 
 # Test template_db
+date +%X
 perform_test_loop file_blocks 12
 perform_test_loop block_backend 13
 perform_test_loop random_file 4
@@ -135,14 +137,17 @@ perform_test_loop random_file 4
 # Test overpass_api/osm-backend
 mkdir -p input/run_and_compare.sh_1/
 ../test-bin/generate_test_file $DATA_SIZE >input/run_and_compare.sh_1/stdin.log
+date +%X
 perform_test run_and_compare.sh 1
 
 mkdir -p input/run_and_compare.sh_2/
 mv input/run_and_compare.sh_1/stdin.log input/run_and_compare.sh_2/stdin.log
+date +%X
 perform_test run_and_compare.sh 2
 
 mkdir -p input/run_and_compare.sh_3/
 mv input/run_and_compare.sh_2/stdin.log input/run_and_compare.sh_3/stdin.log
+date +%X
 perform_test run_and_compare.sh 3
 
 # Prepare testing the statements
@@ -157,11 +162,23 @@ mkdir -p expected/print_5/
 ../test-bin/generate_test_file $DATA_SIZE print_4 | grep "^  <" | sort >expected/print_5/stdout.log
 touch expected/print_5/stderr.log
 
-perform_test_loop print 4 ../../input/update_database/
-print_test_5 print 5 ../../input/update_database/
+date +%X
+perform_test_loop print 4 "$DATA_SIZE ../../input/update_database/"
+print_test_5 print 5 "$DATA_SIZE ../../input/update_database/"
 
 # Test the recurse statement
 prepare_test_loop recurse 11 $DATA_SIZE
+date +%X
 perform_test_loop recurse 11 "$DATA_SIZE ../../input/update_database/"
+
+# Test the bbox_query statement
+prepare_test_loop bbox_query 8 $DATA_SIZE
+date +%X
+perform_test_loop bbox_query 8 "$DATA_SIZE ../../input/update_database/"
+
+# Test the query statement
+prepare_test_loop query 25 $DATA_SIZE
+date +%X
+perform_test_loop query 25 "$DATA_SIZE ../../input/update_database/"
 
 #rm input/update_database/*

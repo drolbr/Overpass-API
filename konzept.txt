@@ -552,7 +552,7 @@ vector< uint32 > indices_to_lower(Range_begin, Range_end)
 Tasks:
 
 for 0.6.1: (planned 2011-03-18)
-- clear file requirements for areas
++ clear file requirements for areas
 - introduce cgi_query and console_query --verbose
 - rewrite progress messages
 = reorganize project dirs
@@ -569,6 +569,8 @@ for 0.7 (planned 2011-04-15)
 
 for 0.7.1: (planned 2011-04-22)
 - polygon-query
+- rework bbox-query: should use fewer ranges
+= remaining automated test environment
 
 for 0.8: (planned 2011-05-13)
 - make rules possible

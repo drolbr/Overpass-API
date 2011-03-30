@@ -170,7 +170,7 @@ int main(int argc, char* args[])
     state = 0;
     //reading the main document
     parse(stdin, start, end);
-  
+
     if (state == IN_NODES)
       node_updater.update();
     else if (state == IN_WAYS)

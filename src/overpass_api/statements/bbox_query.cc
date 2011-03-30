@@ -101,6 +101,11 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
   stopwatch.stop(Stopwatch::NO_DISK);
   uint nodes_count;
   
+  uint32 isouth((south + 91.0)*10000000+0.5);
+  uint32 inorth((north + 91.0)*10000000+0.5);
+  int32 iwest(west*10000000 + (west > 0 ? 0.5 : -0.5));
+  int32 ieast(east*10000000 + (east > 0 ? 0.5 : -0.5));
+  
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
     (*de_osm3s_file_ids::NODES, false);
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
@@ -115,11 +120,11 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
       rman.health_check(*this);
     }
     
-    double lat(Node::lat(it.index().val(), it.object().ll_lower));
-    double lon(Node::lon(it.index().val(), it.object().ll_lower));
-    if ((lat >= south) && (lat <= north) &&
-        (((lon >= west) && (lon <= east))
-	  || ((east < west) && ((lon >= west) || (lon <= east)))))
+    uint32 ilat(Node::ilat(it.index().val(), it.object().ll_lower));
+    int32 ilon(Node::ilon(it.index().val(), it.object().ll_lower));
+    if ((ilat >= isouth) && (ilat <= inorth) &&
+        (((ilon >= iwest) && (ilon <= ieast))
+	  || ((ieast < iwest) && ((ilon >= iwest) || (ilon <= ieast)))))
       nodes[it.index()].push_back(it.object());    
   }
   stopwatch.add(Stopwatch::NODES, nodes_db.read_count());

@@ -63,9 +63,9 @@ struct Way_Updater
     
     if (!partial && (update_counter > 0))
     {
-      if (update_counter > 64)
+      if (update_counter >= 64)
 	merge_files(".1", ".0");
-      if (update_counter > 8)
+      if (update_counter >= 8)
 	merge_files(".0", "");
       update_counter = 0;
     }

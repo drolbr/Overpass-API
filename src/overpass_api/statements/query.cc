@@ -383,6 +383,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     set< pair< Uint32_Index, Uint32_Index > > nodes_req;
     set< Uint31_Index > area_blocks_req;	
     set< Uint32_Index > obj_req;
+    set< pair< Uint32_Index, Uint32_Index > > range_req;
     if (area_restriction != 0)
     {
       stopwatch.stop(Stopwatch::NO_DISK);
@@ -399,10 +400,11 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       vector< pair< uint32, uint32 > >* ranges(bbox_restriction->calc_ranges());
       for (vector< pair< uint32, uint32 > >::const_iterator
-	  it(ranges->begin()); it != ranges->end(); ++it)
+	it(ranges->begin()); it != ranges->end(); ++it)
       {
-	for (uint32 i(it->first); i < it->second; ++i)
-	  obj_req.insert(Uint32_Index(i));
+	pair< Uint32_Index, Uint32_Index > range
+	    (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
+	range_req.insert(range);
       }
       delete(ranges);
     }
@@ -420,7 +422,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     ways.clear();
     relations.clear();
     areas.clear();
-  
+    
     stopwatch.stop(Stopwatch::NO_DISK);
     if (area_restriction != 0)
     {
@@ -433,9 +435,11 @@ void Query_Statement::execute(Resource_Manager& rman)
       uint nodes_count;
       Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
 	  (*de_osm3s_file_ids::NODES, false);
-      for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
-	  it(nodes_db.discrete_begin(obj_req.begin(), obj_req.end()));
-          !(it == nodes_db.discrete_end()); ++it)
+      for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
+          it(nodes_db.range_begin
+             (Default_Range_Iterator< Uint32_Index >(range_req.begin()),
+	      Default_Range_Iterator< Uint32_Index >(range_req.end())));
+          !(it == nodes_db.range_end()); ++it)
       {
 	if (++nodes_count >= 64*1024)
 	{

@@ -31,13 +31,19 @@ Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint32 i
 
 int main(int argc, char* args[])
 {
-  if (argc < 3)
+  if (argc < 4)
   {
-    cout<<"Usage: "<<args[0]<<" test_to_execute db_dir\n";
+    cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir\n";
     return 0;
   }
   string test_to_execute = args[1];
-  set_basedir(args[2]);
+  uint pattern_size = 0;
+  pattern_size = atoi(args[2]);
+  set_basedir(args[3]);
+  
+  uint32 node_id_upper_limit = 5*pattern_size*pattern_size;
+  uint32 way_id_upper_limit = 5*pattern_size*pattern_size;
+  uint32 relation_id_upper_limit = 1000;
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -48,7 +54,7 @@ int main(int argc, char* args[])
     try
     {
       // Print each item alone:
-      for (uint32 i = 10000; i <= 1000000; i += 10000)
+      for (uint32 i = 10000; i <= node_id_upper_limit; i += 10000)
       {
 	// Print nodes:
 	Resource_Manager rman;
@@ -60,7 +66,7 @@ int main(int argc, char* args[])
 	  stmt.execute(rman);
 	}
       }
-      for (uint32 i = 1000; i <= 100000; i += 1000)
+      for (uint32 i = 1000; i <= way_id_upper_limit; i += 1000)
       {
 	// Print ways:
 	Resource_Manager rman;
@@ -72,7 +78,7 @@ int main(int argc, char* args[])
 	  stmt.execute(rman);
 	}
       }
-      for (uint32 i = 4; i <= 400; i += 4)
+      for (uint32 i = 4; i <= relation_id_upper_limit; i += 4)
       {
 	// Print relations:
 	Resource_Manager rman;
@@ -96,7 +102,7 @@ int main(int argc, char* args[])
     try
     {
       // Print skeletons:
-      for (uint32 i = 10000; i <= 1000000; i += 10000)
+      for (uint32 i = 10000; i <= node_id_upper_limit; i += 10000)
       {
 	// Print nodes:
 	Resource_Manager rman;
@@ -108,7 +114,7 @@ int main(int argc, char* args[])
 	  stmt.execute(rman);
 	}
       }
-      for (uint32 i = 1000; i <= 100000; i += 1000)
+      for (uint32 i = 1000; i <= way_id_upper_limit; i += 1000)
       {
 	// Print ways:
 	Resource_Manager rman;
@@ -120,7 +126,7 @@ int main(int argc, char* args[])
 	  stmt.execute(rman);
 	}
       }
-      for (uint32 i = 4; i <= 400; i += 4)
+      for (uint32 i = 4; i <= relation_id_upper_limit; i += 4)
       {
 	// Print relations:
 	Resource_Manager rman;
@@ -144,7 +150,7 @@ int main(int argc, char* args[])
     try
     {
       // Print ids_only:
-      for (uint32 i = 10000; i <= 1000000; i += 10000)
+      for (uint32 i = 10000; i <= node_id_upper_limit; i += 10000)
       {
 	// Print nodes:
 	Resource_Manager rman;
@@ -156,7 +162,7 @@ int main(int argc, char* args[])
 	  stmt.execute(rman);
 	}
       }
-      for (uint32 i = 1000; i <= 100000; i += 1000)
+      for (uint32 i = 1000; i <= way_id_upper_limit; i += 1000)
       {
 	// Print ways:
 	Resource_Manager rman;
@@ -168,7 +174,7 @@ int main(int argc, char* args[])
 	  stmt.execute(rman);
 	}
       }
-      for (uint32 i = 4; i <= 400; i += 4)
+      for (uint32 i = 4; i <= relation_id_upper_limit; i += 4)
       {
 	// Print relations:
 	Resource_Manager rman;
@@ -193,21 +199,21 @@ int main(int argc, char* args[])
     {
       // Print all items sorted by id:
       Resource_Manager total_rman;
-      for (uint32 i = 10000; i <= 1000000; i += 10000)
+      for (uint32 i = 10000; i <= node_id_upper_limit; i += 10000)
       {
 	Resource_Manager rman;
 	perform_id_query(rman, "node", i);
 	if (!rman.sets()["_"].nodes.empty())
 	  total_rman.sets()["_"].nodes[rman.sets()["_"].nodes.begin()->first].push_back(rman.sets()["_"].nodes.begin()->second.front());
       }
-      for (uint32 i = 1000; i <= 100000; i += 1000)
+      for (uint32 i = 1000; i <= way_id_upper_limit; i += 1000)
       {
 	Resource_Manager rman;
 	perform_id_query(rman, "way", i);
 	if (!rman.sets()["_"].ways.empty())
 	  total_rman.sets()["_"].ways[rman.sets()["_"].ways.begin()->first].push_back(rman.sets()["_"].ways.begin()->second.front());
       }
-      for (uint32 i = 4; i <= 400; i += 4)
+      for (uint32 i = 4; i <= relation_id_upper_limit; i += 4)
       {
 	Resource_Manager rman;
 	perform_id_query(rman, "relation", i);
@@ -233,21 +239,21 @@ int main(int argc, char* args[])
     {
       cout<<"Print all items sorted by quadtile:\n";
       Resource_Manager total_rman;
-      for (uint32 i = 10000; i <= 1000000; i += 10000)
+      for (uint32 i = 10000; i <= node_id_upper_limit; i += 10000)
       {
 	Resource_Manager rman;
 	perform_id_query(rman, "node", i);
 	if (!rman.sets()["_"].nodes.empty())
 	  total_rman.sets()["_"].nodes[rman.sets()["_"].nodes.begin()->first].push_back(rman.sets()["_"].nodes.begin()->second.front());
       }
-      for (uint32 i = 1000; i <= 100000; i += 1000)
+      for (uint32 i = 1000; i <= way_id_upper_limit; i += 1000)
       {
 	Resource_Manager rman;
 	perform_id_query(rman, "way", i);
 	if (!rman.sets()["_"].ways.empty())
 	  total_rman.sets()["_"].ways[rman.sets()["_"].ways.begin()->first].push_back(rman.sets()["_"].ways.begin()->second.front());
       }
-      for (uint32 i = 4; i <= 400; i += 4)
+      for (uint32 i = 4; i <= relation_id_upper_limit; i += 4)
       {
 	Resource_Manager rman;
 	perform_id_query(rman, "relation", i);
