@@ -126,7 +126,7 @@ prepare_test_loop()
 # The size of the test pattern. Asymptotically, the test pattern consists of
 # size^2 elements. The size must be divisible by ten. For a full featured test,
 # set the value to 2000.
-DATA_SIZE=2000
+DATA_SIZE=40
 
 # Test template_db
 date +%X
@@ -180,5 +180,9 @@ perform_test_loop bbox_query 8 "$DATA_SIZE ../../input/update_database/"
 prepare_test_loop query 25 $DATA_SIZE
 date +%X
 perform_test_loop query 25 "$DATA_SIZE ../../input/update_database/"
+
+# Test the foreach statement
+date +%X
+perform_test_loop foreach 2 ../../input/update_database/
 
 #rm input/update_database/*
