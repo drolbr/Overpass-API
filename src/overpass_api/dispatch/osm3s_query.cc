@@ -30,8 +30,127 @@ vector< Statement* > statement_stack;
 vector< string > text_stack;
 Script_Parser xml_parser;
 
-void unregister_process(uint8* shm_ptr, uint32& msg_id,
-			Error_Output* error_output)
+class Dispatcher_Stub
+{
+  public:
+    //RAII: Opens the connection to the database and sets db_dir accordingly
+    Dispatcher_Stub(string db_dir_, Error_Output* error_output);
+    
+    void register_process(Error_Output* error_output);
+    void log_query(string xml_raw);
+    void set_limits(Error_Output* error_output);
+    void unregister_process(Error_Output* error_output);
+
+    ~Dispatcher_Stub();
+    
+    string get_timestamp()
+    {
+      return (shm_ptr != 0 ? (const char*)(shm_ptr+OFFSET_DB_1+4) : "unknown");
+    }
+    
+  private:
+    string db_dir;
+    uint8* shm_ptr;
+    uint32 msg_id;
+    int shm_fd;
+    uint32 pid;
+};
+
+Dispatcher_Stub::Dispatcher_Stub(string db_dir_, Error_Output* error_output) : db_dir(db_dir_), shm_ptr(0)
+{
+  pid = getpid();
+  if (db_dir_ != "")
+    return;
+  
+  shm_fd = shm_open("/osm3s", O_RDWR, S_IRWXU|S_IRWXG|S_IRWXO);
+  if (shm_fd < 0)
+  {
+    if (error_output)
+      error_output->runtime_error("Can't open shared memory /osm3s\n");
+    // throw
+  }
+  shm_ptr = (uint8*)
+      mmap(0, SHM_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, shm_fd, 0);
+  
+  db_dir = (char*)(shm_ptr + SHM_SIZE);
+}
+
+void Dispatcher_Stub::register_process(Error_Output* error_output)
+{
+  if (shm_ptr != 0)
+  {
+    *(uint32*)(shm_ptr + 4) = pid;
+    *(uint32*)(shm_ptr + 8) = ++msg_id;
+    *(uint32*)shm_ptr = REGISTER_PID;
+    
+    while ((*(uint32*)(shm_ptr + OFFSET_BACK) != pid) ||
+      (*(uint32*)(shm_ptr + OFFSET_BACK + 4) != msg_id))
+    {
+      //sleep for a second
+      struct timeval timeout;
+      timeout.tv_sec = 0;
+      timeout.tv_usec = 10000;
+      select (FD_SETSIZE, NULL, NULL, NULL, &timeout);
+      
+      *(uint32*)(shm_ptr + 8) = msg_id;
+      *(uint32*)(shm_ptr + 4) = pid;
+      *(uint32*)shm_ptr = REGISTER_PID;
+    }
+    if (*(uint32*)(shm_ptr + OFFSET_BACK + 8) == 1)
+      set_basedir(db_dir + "1/");
+    else if (*(uint32*)(shm_ptr + OFFSET_BACK + 8) == 2)
+      set_basedir(db_dir + "2/");
+    else
+    {
+      if (error_output)
+	error_output->runtime_error("Both databases are updating.");
+      return;
+    }
+    if (error_output)
+      error_output->runtime_remark("Successfully registered");
+  }
+}
+
+void Dispatcher_Stub::set_limits(Error_Output* error_output)
+{
+  if (shm_ptr != 0)
+  {
+    *(uint32*)(shm_ptr + 4) = pid;
+    *(uint32*)(shm_ptr + 8) = ++msg_id;
+    *(uint32*)(shm_ptr + 12) = 512;
+    *(uint32*)(shm_ptr + 16) = 3600;
+    *(uint32*)shm_ptr = SET_LIMITS;
+    
+    while ((*(uint32*)(shm_ptr + OFFSET_BACK) != pid) ||
+      (*(uint32*)(shm_ptr + OFFSET_BACK + 4) != msg_id))
+    {
+      //sleep for a second
+      struct timeval timeout_;
+      timeout_.tv_sec = 0;
+      timeout_.tv_usec = 10000;
+      select (FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      
+      *(uint32*)(shm_ptr + 4) = pid;
+      *(uint32*)(shm_ptr + 8) = msg_id;
+      *(uint32*)(shm_ptr + 12) = 512;
+      *(uint32*)(shm_ptr + 16) = 3600;
+      *(uint32*)shm_ptr = SET_LIMITS;
+    }
+    if (*(uint32*)(shm_ptr + OFFSET_BACK + 8) != SET_LIMITS)
+    {
+      if (error_output)
+	error_output->runtime_error("We are sorry, the server is overcrowded. "
+      "Please try again later.");
+      
+      unregister_process(error_output);
+      return;
+    }
+    if (error_output)
+      error_output->runtime_remark("Successfully set limits");
+  }
+}
+
+void Dispatcher_Stub::unregister_process(Error_Output* error_output)
 {
   uint32 pid(getpid());
   // unregister process
@@ -58,7 +177,20 @@ void unregister_process(uint8* shm_ptr, uint32& msg_id,
       error_output->runtime_remark("Successfully unregistered");
   }
 }
-  
+
+void Dispatcher_Stub::log_query(string xml_raw)
+{
+  if (shm_ptr != 0)
+  {
+    ostringstream temp;
+    temp<<db_dir<<"query_logs/"<<time(NULL)<<".txt";
+    ofstream query_log(temp.str().c_str());
+    query_log<<xml_raw;
+  }
+}
+
+Dispatcher_Stub::~Dispatcher_Stub() {}
+
 void start(const char *el, const char **attr)
 {
   Statement* statement(Statement::create_statement
@@ -133,68 +265,15 @@ int main(int argc, char *argv[])
   Statement::set_error_output(error_output);
   
   // connect to dispatcher and get database dir
-  uint8* shm_ptr(0);
-  uint32 msg_id;
-  uint32 pid(getpid());
-  if (db_dir == "")
-  {
-    int shm_fd(shm_open("/osm3s", O_RDWR, S_IRWXU|S_IRWXG|S_IRWXO));
-    if (shm_fd < 0)
-    {
-      if (error_output)
-	error_output->runtime_error("Can't open shared memory /osm3s\n");
-      return 0;
-    }
-    shm_ptr = (uint8*)
-        mmap(0, SHM_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, shm_fd, 0);
-	
-    db_dir = (char*)(shm_ptr + SHM_SIZE);
-  }
+  Dispatcher_Stub dispatcher(db_dir, error_output);
   
   // register process and choose db 1 or 2
-  if (shm_ptr != 0)
-  {
-    *(uint32*)(shm_ptr + 4) = pid;
-    *(uint32*)(shm_ptr + 8) = ++msg_id;
-    *(uint32*)shm_ptr = REGISTER_PID;
-    
-    while ((*(uint32*)(shm_ptr + OFFSET_BACK) != pid) ||
-      (*(uint32*)(shm_ptr + OFFSET_BACK + 4) != msg_id))
-    {
-      //sleep for a second
-      struct timeval timeout;
-      timeout.tv_sec = 0;
-      timeout.tv_usec = 10000;
-      select (FD_SETSIZE, NULL, NULL, NULL, &timeout);
-      
-      *(uint32*)(shm_ptr + 8) = msg_id;
-      *(uint32*)(shm_ptr + 4) = pid;
-      *(uint32*)shm_ptr = REGISTER_PID;
-    }
-    if (*(uint32*)(shm_ptr + OFFSET_BACK + 8) == 1)
-      set_basedir(db_dir + "1/");
-    else if (*(uint32*)(shm_ptr + OFFSET_BACK + 8) == 2)
-      set_basedir(db_dir + "2/");
-    else
-    {
-      if (error_output)
-	error_output->runtime_error("Both databases are updating.");
-      return 0;
-    }
-    if (error_output)
-      error_output->runtime_remark("Successfully registered");
-  }
+  dispatcher.register_process(error_output);
   
   string xml_raw(get_xml_raw(error_output));
   
   // log query
-  if (shm_ptr != 0)
-  {
-    ostringstream temp;
-    temp<<db_dir<<"query_logs/"<<time(NULL)<<".txt";
-    ofstream query_log(temp.str().c_str());
-    query_log<<xml_raw;
-  }
+  dispatcher.log_query(xml_raw);
   
   if ((error_output) && (error_output->display_encoding_errors()))
     return 0;
@@ -216,56 +295,22 @@ int main(int argc, char *argv[])
     if (error_output)
       error_output->runtime_error(temp.str());
     
-    unregister_process(shm_ptr, msg_id, error_output);
+    dispatcher.unregister_process(error_output);
     return 0;
   }
   if ((error_output) && (error_output->display_parse_errors()))
   {
-    unregister_process(shm_ptr, msg_id, error_output);
+    dispatcher.unregister_process(error_output);
     return 0;
   }
   if ((error_output) && (error_output->display_static_errors()))
   {
-    unregister_process(shm_ptr, msg_id, error_output);
+    dispatcher.unregister_process(error_output);
     return 0;
   }
   
   // set limits - short circuited until forecast gets effective
-  if (shm_ptr != 0)
-  {
-    *(uint32*)(shm_ptr + 4) = pid;
-    *(uint32*)(shm_ptr + 8) = ++msg_id;
-    *(uint32*)(shm_ptr + 12) = 512;
-    *(uint32*)(shm_ptr + 16) = 3600;
-    *(uint32*)shm_ptr = SET_LIMITS;
-    
-    while ((*(uint32*)(shm_ptr + OFFSET_BACK) != pid) ||
-      (*(uint32*)(shm_ptr + OFFSET_BACK + 4) != msg_id))
-    {
-      //sleep for a second
-      struct timeval timeout_;
-      timeout_.tv_sec = 0;
-      timeout_.tv_usec = 10000;
-      select (FD_SETSIZE, NULL, NULL, NULL, &timeout_);
-      
-      *(uint32*)(shm_ptr + 4) = pid;
-      *(uint32*)(shm_ptr + 8) = msg_id;
-      *(uint32*)(shm_ptr + 12) = 512;
-      *(uint32*)(shm_ptr + 16) = 3600;
-      *(uint32*)shm_ptr = SET_LIMITS;
-    }
-    if (*(uint32*)(shm_ptr + OFFSET_BACK + 8) != SET_LIMITS)
-    {
-      if (error_output)
-	error_output->runtime_error("We are sorry, the server is overcrowded. "
-      "Please try again later.");
-      
-      unregister_process(shm_ptr, msg_id, error_output);
-      return 0;
-    }
-    if (error_output)
-      error_output->runtime_remark("Successfully set limits");
-  }
+  dispatcher.set_limits(error_output);
   
   try
   {
@@ -308,7 +353,7 @@ int main(int argc, char *argv[])
       "attribution of each item please refer to "
       "http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\n";
     cout<<"<meta data_included_until=\""
-        <<(shm_ptr != 0 ? (const char*)(shm_ptr+OFFSET_DB_1+4) : "unknown")
+        <<dispatcher.get_timestamp()
 	<<"\" last_rule_applied=\""<<0<<"\"/>\n"
       "\n";
 
@@ -339,7 +384,7 @@ int main(int argc, char *argv[])
       error_output->runtime_error(temp.str());
   }
   
-  unregister_process(shm_ptr, msg_id, error_output);
+  dispatcher.unregister_process(error_output);
 
   return 0;
 }
