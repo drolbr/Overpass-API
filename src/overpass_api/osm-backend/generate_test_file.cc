@@ -1,5 +1,6 @@
 #include <cmath>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -636,6 +637,24 @@ struct Accept_Query_25 : public Accept_All_Tags
     uint pattern_size;
 };
 
+struct Accept_Foreach_1 : public Accept_All_Tags
+{
+  Accept_Foreach_1(uint pattern_size_)
+  {
+    way_id_offset = (2*(pattern_size_/2+1)*(pattern_size_/2-1) + pattern_size_/2);
+  }
+  
+  virtual bool admit_node(uint id) const
+  { return ((id == 1) || (id == 2) || (id == 3)); }
+  virtual bool admit_way(uint id) const
+  { return ((id % way_id_offset == 1) && (id / way_id_offset <= 3)); }
+  virtual bool admit_relation(uint id) const
+  { return ((id == 10) || (id == 21) || (id == 32)); }
+  
+  private:
+    uint way_id_offset;
+};
+
 struct Accept_Union_1 : public Accept_All_Tags
 {
   Accept_Union_1(uint pattern_size_) : pattern_size(pattern_size_) {}
@@ -749,8 +768,8 @@ void fill_bbox_with_nodes
 	continue;
       }
       cout<<"  <node id=\""<<(begin_id + i*sqrt_ + j)<<"\""
-      " lat=\""<<((north - south)/sqrt_*(0.5 + i) + south)<<"\""
-      " lon=\""<<((east - west)/sqrt_*(0.5 + j) + west)<<"\"";
+      " lat=\""<<fixed<<setprecision(7)<<((north - south)/sqrt_*(0.5 + i) + south)<<"\""
+      " lon=\""<<fixed<<setprecision(7)<<((east - west)/sqrt_*(0.5 + j) + west)<<"\"";
       vector< pair< string, string > > tags
         = collect_tags("node", begin_id + i*sqrt_ + j);
       if ((tags.empty()) || !modifier->admit_node_tags(begin_id + i*sqrt_ + j))
@@ -1085,6 +1104,17 @@ int main(int argc, char* args[])
       modifier = new Accept_Union_1(pattern_size);
     else if (string(args[2]) == "union_2")
       modifier = new Accept_Union_2(pattern_size);
+    else if (string(args[2]) == "foreach_1")
+      modifier = new Accept_Foreach_1(pattern_size);
+    else if (string(args[2]) == "foreach_2")
+      // query 1 and 2 shall both return an empty set.
+      modifier = new Accept_Foreach_1(pattern_size);
+    else if (string(args[2]) == "foreach_3")
+      // query 1 and 3 shall both return an empty set.
+      modifier = new Accept_Foreach_1(pattern_size);
+    else if (string(args[2]) == "foreach_4")
+      // query 1 and 3 shall both return an empty set.
+      modifier = new Accept_Foreach_1(pattern_size);
     else if (string(args[2]) == "union_3")
       // query 1 and 3 shall return the same result
       modifier = new Accept_Union_1(pattern_size);
@@ -1094,27 +1124,110 @@ int main(int argc, char* args[])
       modifier = new Accept_Union_5(pattern_size);
     else if (string(args[2]) == "union_6")
       modifier = new Accept_Union_6(pattern_size);
+    else if (string(args[2]) == "diff_do")
+      modifier = new Accept_All;
+    else if (string(args[2]) == "diff_compare")
+      modifier = new Accept_All;
     else
       // return an empty osm file otherwise
       modifier = new Accept_Bbox_Query_5(pattern_size);
   }
   else
     modifier = new Accept_All;
-  
-  cout<<
-  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-  "<osm>\n";
-  
-  create_node_test_pattern(51.0, 52.0, 7.0, 8.0, 0, pattern_size, modifier);
-  create_node_test_pattern(-10.0, 80.0, -15.0, 105.0, 1, pattern_size, modifier);
-  create_node_test_pattern(47.9, 48.1, -0.2, 0.2, 2, pattern_size, modifier);
-  create_node_test_pattern(30.0, 50.0, -120.0, -60.0, 3, pattern_size, modifier);
-  
-  for (uint i = 0; i < 3; ++i)
-    create_way_test_pattern(i, pattern_size, modifier);
-  
-  for (uint i = 0; i < 3; ++i)
-    create_relation_test_pattern(i, pattern_size, modifier);
-  
-  cout<<"</osm>\n";
+
+  if ((argc > 2) && (string(args[2]) == "diff_do"))
+  {
+    cout<<
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    "<osm>\n";
+    
+    cout<<
+    "  <node id=\"5\" lat=\"-10.0\" lon=\"-15.0\">\n"
+    "    <tag k=\"node_key_5\" v=\"node_value_5\"/>\n"
+    "  </node>\n";
+    
+    cout<<"<delete>\n";
+    create_node_test_pattern(-10.0, 80.0, -15.0, 105.0, 1, pattern_size, modifier);
+    cout<<"</delete>\n";
+    
+    cout<<
+    "  <way id=\"5\">\n"
+    "    <nd ref=\"15\"/>\n"
+    "    <nd ref=\"16\"/>\n"
+    "    <tag k=\"way_key_5\" v=\"way_value_5\"/>\n"
+    "  </way>\n";
+    
+    cout<<"<delete>\n";
+    create_way_test_pattern(1, pattern_size, modifier);
+    cout<<"</delete>\n";
+    
+    cout<<
+    "  <relation id=\"5\">\n"
+    "    <member type=\"node\" ref=\"15\"/>\n"
+    "    <member type=\"node\" ref=\"16\"/>\n"
+    "    <tag k=\"relation_key_5\" v=\"relation_value_5\"/>\n"
+    "  </relation>\n";
+    
+    cout<<"<delete>\n";
+    create_relation_test_pattern(1, pattern_size, modifier);
+    cout<<"</delete>\n";
+    
+    cout<<"</osm>\n";
+  }
+  else if ((argc > 2) && (string(args[2]) == "diff_compare"))
+  {
+    cout<<
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    "<osm>\n";
+    
+    create_node_test_pattern(51.0, 52.0, 7.0, 8.0, 0, pattern_size, modifier);
+    create_node_test_pattern(47.9, 48.1, -0.2, 0.2, 2, pattern_size, modifier);
+    create_node_test_pattern(30.0, 50.0, -120.0, -60.0, 3, pattern_size, modifier);
+
+    cout<<
+    "  <node id=\"5\" lat=\"-10.0000000\" lon=\"-15.0000000\">\n"
+    "    <tag k=\"node_key_5\" v=\"node_value_5\"/>\n"
+    "  </node>\n";
+    
+    create_way_test_pattern(0, pattern_size, modifier);
+    create_way_test_pattern(2, pattern_size, modifier);
+    
+    cout<<
+    "  <way id=\"5\">\n"
+    "    <nd ref=\"15\"/>\n"
+    "    <nd ref=\"16\"/>\n"
+    "    <tag k=\"way_key_5\" v=\"way_value_5\"/>\n"
+    "  </way>\n";
+    
+    create_relation_test_pattern(0, pattern_size, modifier);
+    create_relation_test_pattern(2, pattern_size, modifier);
+    
+    cout<<
+    "  <relation id=\"5\">\n"
+    "    <member type=\"node\" ref=\"15\"/>\n"
+    "    <member type=\"node\" ref=\"16\"/>\n"
+    "    <tag k=\"relation_key_5\" v=\"relation_value_5\"/>\n"
+    "  </relation>\n";
+    
+    cout<<"</osm>\n";
+  }
+  else
+  {
+    cout<<
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    "<osm>\n";
+    
+    create_node_test_pattern(51.0, 52.0, 7.0, 8.0, 0, pattern_size, modifier);
+    create_node_test_pattern(-10.0, 80.0, -15.0, 105.0, 1, pattern_size, modifier);
+    create_node_test_pattern(47.9, 48.1, -0.2, 0.2, 2, pattern_size, modifier);
+    create_node_test_pattern(30.0, 50.0, -120.0, -60.0, 3, pattern_size, modifier);
+    
+    for (uint i = 0; i < 3; ++i)
+      create_way_test_pattern(i, pattern_size, modifier);
+    
+    for (uint i = 0; i < 3; ++i)
+      create_relation_test_pattern(i, pattern_size, modifier);
+    
+    cout<<"</osm>\n";
+  }
 }

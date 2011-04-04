@@ -11,6 +11,7 @@
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
 #include "../expat/expat_justparse_interface.h"
+#include "../frontend/output.h"
 #include "node_updater.h"
 #include "relation_updater.h"
 #include "way_updater.h"
@@ -234,8 +235,7 @@ int main(int argc, char* argv[])
   }
   catch (File_Error e)
   {
-    cerr<<"File error caught: "
-	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    report_file_error(e);
   }
   
   return 0;

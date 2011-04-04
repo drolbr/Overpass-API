@@ -281,8 +281,8 @@ inline void Node::recursively_calc_ranges
   if ((south + dist == north) && (west + dist == east))
   {
     ranges.push_back
-        (make_pair(ll_upper(south, west + 0x10000),
-		   ll_upper(north + 0x10000, east + 0x10000)));
+        (make_pair(ll_upper(south, west),
+		   ll_upper(north, east) + 1));
     return;
   }
   

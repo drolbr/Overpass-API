@@ -10,7 +10,7 @@
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
-#include "../frontend/user_interface.h"
+#include "../frontend/output.h"
 #include "print.h"
 
 using namespace std;
@@ -171,8 +171,8 @@ void print_item(uint32 ll_upper, const Node_Skeleton& skel, uint32 mode,
   if (mode & PRINT_IDS)
     cout<<" id=\""<<skel.id<<'\"';
   if (mode & PRINT_COORDS)
-    cout<<" lat=\""<<setprecision(10)<<Node::lat(ll_upper, skel.ll_lower)
-        <<"\" lon=\""<<Node::lon(ll_upper, skel.ll_lower)<<'\"';
+    cout<<" lat=\""<<fixed<<setprecision(7)<<Node::lat(ll_upper, skel.ll_lower)
+        <<"\" lon=\""<<fixed<<setprecision(7)<<Node::lon(ll_upper, skel.ll_lower)<<'\"';
   if ((tags == 0) || (tags->empty()))
     cout<<"/>\n";
   else

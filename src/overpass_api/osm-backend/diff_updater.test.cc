@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -8,388 +9,289 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
+#include "../core/datatypes.h"
 #include "../core/settings.h"
-#include "../expat/expat_justparse_interface.h"
-#include "node_updater.h"
-#include "relation_updater.h"
-#include "way_updater.h"
 
 using namespace std;
 
-/**
- * Tests the library node_updater, way_updater and relation_updater
- * with a sample OSM file
- */
-
-Node_Updater node_updater;
-Node current_node;
-Way_Updater way_updater;
-Way current_way;
-Relation_Updater relation_updater;
-Relation current_relation;
-int state;
-const int IN_NODES = 1;
-const int IN_WAYS = 2;
-const int IN_RELATIONS = 3;
-uint32 csv_count;
-ofstream* node_source_out;
-ofstream* node_tags_source_out;
-ofstream* way_source_out;
-ofstream* way_tags_source_out;
-ofstream* relation_source_out;
-ofstream* relation_tags_source_out;
-
-uint32 osm_element_count;
-
-// void show_mem_status()
-// {
-//   ostringstream proc_file_name_("");
-//   proc_file_name_<<"/proc/"<<getpid()<<"/stat";
-//   ifstream stat(proc_file_name_.str().c_str());
-//   while (stat.good())
-//   {
-//     string line;
-//     getline(stat, line);
-//     cerr<<line;
-//   }
-//   cerr<<'\n';
-// }
-
-struct Ofstream_Collection
+struct Output_Sorter
 {
-  vector< ofstream* > streams;
-  string prefix;
-  string postfix;
+  vector< string > output_per_index;
+  uint32 last_index;
   
-  Ofstream_Collection(string prefix_, string postfix_)
-  : prefix(prefix_), postfix(postfix_) {}
-  
-  ofstream* get(uint32 i)
+  Output_Sorter() : last_index(0) {}
+
+  void sort_and_output_if_index_changed(uint32 index)
   {
-    while (streams.size() <= i)
+    if (index != last_index)
     {
-      ostringstream buf("");
-      buf<<streams.size();
-      streams.push_back(new ofstream((prefix + buf.str() + postfix).c_str()));
+      sort(output_per_index.begin(), output_per_index.end());
+      for (vector< string >::const_iterator it(output_per_index.begin());
+          it != output_per_index.end(); ++it)
+        cout<<*it;
+      output_per_index.clear();
+      last_index = index;
     }
-    return streams[i];
   }
   
-  ~Ofstream_Collection()
+  ~Output_Sorter()
   {
-    for (vector< ofstream* >::iterator it(streams.begin());
-	 it != streams.end(); ++it)
-    {
-      (*it)->close();
-      delete (*it);
-    }
+    sort(output_per_index.begin(), output_per_index.end());
+    for (vector< string >::const_iterator it(output_per_index.begin());
+        it != output_per_index.end(); ++it)
+      cout<<*it;
   }
 };
 
-void dump_nodes()
+struct Output_Sorter_Kv
 {
-  Ofstream_Collection node_db_out(get_basedir() + "after_node_", "_db.csv");
-  Ofstream_Collection node_tags_local_out(get_basedir() + "after_node_tags_", "_local.csv");
-  Ofstream_Collection node_tags_global_out(get_basedir() + "after_node_tags_", "_global.csv");
-    
+  vector< string > output_per_index;
+  pair< string, string > last_index;
+  
+  Output_Sorter_Kv() {}
+  
+  void sort_and_output_if_index_changed(const pair< string, string >& index)
+  {
+    if (index != last_index)
+    {
+      sort(output_per_index.begin(), output_per_index.end());
+      for (vector< string >::const_iterator it(output_per_index.begin());
+          it != output_per_index.end(); ++it)
+        cout<<*it;
+      output_per_index.clear();
+      last_index = index;
+    }
+  }
+  
+  ~Output_Sorter_Kv()
+  {
+    sort(output_per_index.begin(), output_per_index.end());
+    for (vector< string >::const_iterator it(output_per_index.begin());
+        it != output_per_index.end(); ++it)
+      cout<<*it;
+  }
+};
+
+void dump_nodes(uint32 pattern_size)
+{
+  Output_Sorter output_sorter;
+  
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
       (*de_osm3s_file_ids::NODES, false);
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
       it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
   {
-    ofstream* out(node_db_out.get(it.object().id / 5000000));
-    (*out)<<it.object().id<<'\t'<<setprecision(10)
+    output_sorter.sort_and_output_if_index_changed(it.index().val());
+    ostringstream buf;
+    buf<<it.object().id<<'\t'<<setprecision(10)
 	<<Node::lat(it.index().val(), it.object().ll_lower)<<'\t'
 	<<Node::lon(it.index().val(), it.object().ll_lower)<<'\n';
+    output_sorter.output_per_index.push_back(buf.str());
   }
-    
-    // check update_node_tags_local - compare both files for the result
-    Block_Backend< Tag_Index_Local, Uint32_Index > nodes_local_db
-	(*de_osm3s_file_ids::NODE_TAGS_LOCAL, false);
-    for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
-	 it(nodes_local_db.flat_begin());
-         !(it == nodes_local_db.flat_end()); ++it)
-    {
-      ofstream* out(node_tags_local_out.get(it.object().val() / 5000000));
-      (*out)<<it.object().val()<<'\t'
-	  <<it.index().key<<'\t'<<it.index().value<<'\n';
-    }
-    
-    // check update_node_tags_global - compare both files for the result
-    Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
-	(*de_osm3s_file_ids::NODE_TAGS_GLOBAL, false);
-    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
-	 it(nodes_global_db.flat_begin());
-         !(it == nodes_global_db.flat_end()); ++it)
-    {
-      ofstream* out(node_tags_global_out.get(it.object().val() / 5000000));
-      (*out)<<it.object().val()<<'\t'
-	  <<it.index().key<<'\t'<<it.index().value<<'\n';
-    }
 }
 
-void dump_ways()
+void dump_node_tags_local(uint32 pattern_size)
 {
-  Ofstream_Collection way_db_out(get_basedir() + "after_way_", "_db.csv");
-  Ofstream_Collection way_tags_local_out(get_basedir() + "after_way_tags_", "_local.csv");
-  Ofstream_Collection way_tags_global_out(get_basedir() + "after_way_tags_", "_global.csv");
-    
-  // check update_members - compare both files for the result
+  Output_Sorter output_sorter;
+  
+  Block_Backend< Tag_Index_Local, Uint32_Index > nodes_local_db
+      (*de_osm3s_file_ids::NODE_TAGS_LOCAL, false);
+  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
+      it(nodes_local_db.flat_begin());
+      !(it == nodes_local_db.flat_end()); ++it)
+  {
+    output_sorter.sort_and_output_if_index_changed(it.index().index);
+    ostringstream buf;
+    buf<<it.object().val()<<'\t'
+        <<it.index().key<<'\t'<<it.index().value<<'\n';
+    output_sorter.output_per_index.push_back(buf.str());
+  }
+}
+
+void dump_node_tags_global(uint32 pattern_size)
+{
+  Output_Sorter_Kv output_sorter;
+  
+  Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
+  (*de_osm3s_file_ids::NODE_TAGS_GLOBAL, false);
+  for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
+      it(nodes_global_db.flat_begin());
+      !(it == nodes_global_db.flat_end()); ++it)
+  {
+    output_sorter.sort_and_output_if_index_changed
+        (make_pair(it.index().key, it.index().value));
+    ostringstream buf;
+    buf<<it.object().val()<<'\t'
+        <<it.index().key<<'\t'<<it.index().value<<'\n';
+    output_sorter.output_per_index.push_back(buf.str());
+  }
+}
+
+void dump_ways(uint32 pattern_size)
+{
+  Output_Sorter output_sorter;
+  
   Block_Backend< Uint31_Index, Way_Skeleton > ways_db
       (*de_osm3s_file_ids::WAYS, false);
   for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
       it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
   {
-    ofstream* out(way_db_out.get(it.object().id / 1000000));
-    (*out)<<it.object().id<<'\t';
+    output_sorter.sort_and_output_if_index_changed(it.index().val());
+    ostringstream buf;
+    buf<<hex<<it.index().val()<<dec
+        <<'\t'<<it.object().id<<'\t';
     for (uint i(0); i < it.object().nds.size(); ++i)
-      (*out)<<it.object().nds[i]<<' ';
-    (*out)<<'\n';
-  }
-    
-    // check update_way_tags_local - compare both files for the result
-    Block_Backend< Tag_Index_Local, Uint32_Index > ways_local_db
-	(*de_osm3s_file_ids::WAY_TAGS_LOCAL, false);
-    for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
-	 it(ways_local_db.flat_begin());
-         !(it == ways_local_db.flat_end()); ++it)
-    {
-      ofstream* out(way_tags_local_out.get(it.object().val() / 1000000));
-      (*out)<<it.object().val()<<'\t'
-	  <<it.index().key<<'\t'<<it.index().value<<'\n';
-    }
-    
-    // check update_way_tags_global - compare both files for the result
-    Block_Backend< Tag_Index_Global, Uint32_Index > ways_global_db
-	(*de_osm3s_file_ids::WAY_TAGS_GLOBAL, false);
-    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
-	 it(ways_global_db.flat_begin());
-         !(it == ways_global_db.flat_end()); ++it)
-    {
-      ofstream* out(way_tags_global_out.get(it.object().val() / 1000000));
-      (*out)<<it.object().val()<<'\t'
-	  <<it.index().key<<'\t'<<it.index().value<<'\n';
-    }
+      buf<<it.object().nds[i]<<' ';
+    buf<<'\n';
+    output_sorter.output_per_index.push_back(buf.str());
+  } 
 }
 
-void dump_relations()
+void dump_way_tags_local(uint32 pattern_size)
 {
-  Ofstream_Collection relation_db_out(get_basedir() + "after_relation_", "_db.csv");
-  Ofstream_Collection relation_tags_local_out(get_basedir() + "after_relation_tags_", "_local.csv");
-  Ofstream_Collection relation_tags_global_out(get_basedir() + "after_relation_tags_", "_global.csv");
-    
-    // prepare check update_members - load roles
-    map< uint32, string > roles;
-    Block_Backend< Uint32_Index, String_Object > roles_db
+  Output_Sorter output_sorter;
+  
+  Block_Backend< Tag_Index_Local, Uint32_Index > ways_local_db
+      (*de_osm3s_file_ids::WAY_TAGS_LOCAL, false);
+  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
+      it(ways_local_db.flat_begin());
+      !(it == ways_local_db.flat_end()); ++it)
+  {
+    output_sorter.sort_and_output_if_index_changed(it.index().index);
+    ostringstream buf;
+    buf<<hex<<it.index().index<<dec
+        <<'\t'<<it.object().val()<<'\t'
+        <<it.index().key<<'\t'<<it.index().value<<'\n';
+    output_sorter.output_per_index.push_back(buf.str());
+  }
+}
+
+void dump_way_tags_global(uint32 pattern_size)
+{
+  Output_Sorter_Kv output_sorter;
+  
+  Block_Backend< Tag_Index_Global, Uint32_Index > ways_global_db
+      (*de_osm3s_file_ids::WAY_TAGS_GLOBAL, false);
+  for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
+      it(ways_global_db.flat_begin());
+      !(it == ways_global_db.flat_end()); ++it)
+  {
+    output_sorter.sort_and_output_if_index_changed
+        (make_pair(it.index().key, it.index().value));
+    ostringstream buf;
+    buf<<it.object().val()<<'\t'
+        <<it.index().key<<'\t'<<it.index().value<<'\n';
+    output_sorter.output_per_index.push_back(buf.str());
+  }
+}
+
+void dump_relations(uint32 pattern_size)
+{
+  Output_Sorter output_sorter;
+  
+  map< uint32, string > roles;
+  Block_Backend< Uint32_Index, String_Object > roles_db
       (*de_osm3s_file_ids::RELATION_ROLES, true);
-    for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
-        it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
-      roles[it.index().val()] = it.object().val();
-    
-    // check update_members - compare both files for the result
-    Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(*de_osm3s_file_ids::RELATIONS, false);
-    for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
-	 it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
-    {
-      ofstream* out(relation_db_out.get(it.object().id / 200000));
-      (*out)<<it.object().id<<'\t';
-      for (uint i(0); i < it.object().members.size(); ++i)
-	(*out)<<it.object().members[i].ref<<' '
-	    <<it.object().members[i].type<<' '
-	    <<roles[it.object().members[i].role]<<' ';
-      (*out)<<'\n';
-    }
-    
-    // check update_relation_tags_local - compare both files for the result
-    Block_Backend< Tag_Index_Local, Uint32_Index > relations_local_db
-	(*de_osm3s_file_ids::RELATION_TAGS_LOCAL, false);
-    for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
-	 it(relations_local_db.flat_begin());
-         !(it == relations_local_db.flat_end()); ++it)
-    {
-      ofstream* out(relation_tags_local_out.get(it.object().val() / 200000));
-      (*out)<<it.object().val()<<'\t'
-	  <<it.index().key<<'\t'<<it.index().value<<'\n';
-    }
-    
-    // check update_relation_tags_global - compare both files for the result
-    Block_Backend< Tag_Index_Global, Uint32_Index > relations_global_db
-	(*de_osm3s_file_ids::RELATION_TAGS_GLOBAL, false);
-    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
-	 it(relations_global_db.flat_begin());
-         !(it == relations_global_db.flat_end()); ++it)
-    {
-      ofstream* out(relation_tags_global_out.get(it.object().val() / 200000));
-      (*out)<<it.object().val()<<'\t'
-	  <<it.index().key<<'\t'<<it.index().value<<'\n';
-    }
+  for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
+      it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
+    roles[it.index().val()] = it.object().val();
+  
+  Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
+      (*de_osm3s_file_ids::RELATIONS, false);
+  for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
+      it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
+  {
+    output_sorter.sort_and_output_if_index_changed(it.index().val());
+    ostringstream buf;
+    buf<<hex<<it.index().val()<<dec
+        <<'\t'<<it.object().id<<'\t';
+    for (uint i(0); i < it.object().members.size(); ++i)
+      buf<<it.object().members[i].ref<<' '
+          <<it.object().members[i].type<<' '
+          <<roles[it.object().members[i].role]<<' ';
+    buf<<'\n';
+    output_sorter.output_per_index.push_back(buf.str());
+  }
+}
+
+void dump_relation_tags_local(uint32 pattern_size)
+{
+  Output_Sorter output_sorter;
+  
+  Block_Backend< Tag_Index_Local, Uint32_Index > relations_local_db
+  (*de_osm3s_file_ids::RELATION_TAGS_LOCAL, false);
+  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
+    it(relations_local_db.flat_begin());
+  !(it == relations_local_db.flat_end()); ++it)
+  {
+    output_sorter.sort_and_output_if_index_changed(it.index().index);
+    ostringstream buf;
+    buf<<hex<<it.index().index<<dec
+        <<'\t'<<it.object().val()<<'\t'
+        <<it.index().key<<'\t'<<it.index().value<<'\n';
+    output_sorter.output_per_index.push_back(buf.str());
+  }
+}
+
+void dump_relation_tags_global(uint32 pattern_size)
+{
+  Output_Sorter_Kv output_sorter;
+  
+  Block_Backend< Tag_Index_Global, Uint32_Index > relations_global_db
+  (*de_osm3s_file_ids::RELATION_TAGS_GLOBAL, false);
+  for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
+    it(relations_global_db.flat_begin());
+  !(it == relations_global_db.flat_end()); ++it)
+  {
+    output_sorter.sort_and_output_if_index_changed
+        (make_pair(it.index().key, it.index().value));
+    ostringstream buf;
+    buf<<it.object().val()<<'\t'
+        <<it.index().key<<'\t'<<it.index().value<<'\n';
+    output_sorter.output_per_index.push_back(buf.str());
+  }
 }
 
 int main(int argc, char* args[])
 {
+  // read command line arguments
+  string db_dir;
+  uint32 pattern_size = 0;
+  
+  int argpos(1);
+  while (argpos < argc)
+  {
+    if (!(strncmp(args[argpos], "--db-dir=", 9)))
+    {
+      db_dir = ((string)args[argpos]).substr(9);
+      if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
+	db_dir += '/';
+      set_basedir(db_dir);
+    }
+    else if (!(strncmp(args[argpos], "--pattern_size=", 15)))
+      pattern_size = atol(((string)args[argpos]).substr(15).c_str());
+    ++argpos;
+  }
+  
+  if (pattern_size == 0)
+  {
+    cerr<<"Pattern size must be nonzero.\n";
+    return -1;
+  }
+  
   try
   {
-    show_mem_status();
-    
-    current_node = Node(160621, 51.23, 7.05);
-    current_node.tags.push_back(make_pair("highway", "bus_stop"));
-    current_node.tags.push_back(make_pair("name", "Lienhardtplatz"));
-    node_updater.set_node(current_node);
-    
-    current_node = Node(160622, 51.23, 7.052);
-    current_node.tags.push_back(make_pair("highway", "bus_stop"));
-    current_node.tags.push_back(make_pair("name", "Lienhardtplatz 2"));
-    node_updater.set_node(current_node);
-    
-    current_node = Node(160623, 51.23, 7.053);
-    current_node.tags.push_back(make_pair("highway", "bus_stop"));
-    current_node.tags.push_back(make_pair("name", "Lienhardtplatz 3"));
-    node_updater.set_node(current_node);
-    
-    current_node = Node(160624, 51.23, 7.054);
-    current_node.tags.push_back(make_pair("highway", "bus_stop"));
-    current_node.tags.push_back(make_pair("name", "Lienhardtplatz 4"));
-    node_updater.set_node(current_node);
-    
-    current_way = Way(8237924);
-    current_way.tags.push_back(make_pair("test", "Value 1"));
-    current_way.nds.push_back(160621);
-    current_way.nds.push_back(160622);
-    current_way.nds.push_back(160623);
-    current_way.nds.push_back(160624);
-    way_updater.set_way(current_way);
-    
-    current_way = Way(8237925);
-    current_way.tags.push_back(make_pair("test", "Value 2"));
-    current_way.nds.push_back(160621);
-    current_way.nds.push_back(160622);
-    current_way.nds.push_back(160623);
-    current_way.nds.push_back(160624);
-    way_updater.set_way(current_way);
-    
-    current_way = Way(8237926);
-    current_way.tags.push_back(make_pair("test", "Value 3"));
-    current_way.nds.push_back(160621);
-    current_way.nds.push_back(160622);
-    current_way.nds.push_back(160623);
-    current_way.nds.push_back(160624);
-    way_updater.set_way(current_way);
-    
-    current_way = Way(8237927);
-    current_way.tags.push_back(make_pair("test", "Value 4"));
-    current_way.nds.push_back(160621);
-    current_way.nds.push_back(160622);
-    current_way.nds.push_back(160623);
-    current_way.nds.push_back(160624);
-    way_updater.set_way(current_way);
-    
-    current_relation = Relation(163298);
-    Relation_Entry entry;
-    entry.ref = 8237924;
-    entry.type = Relation_Entry::WAY;
-    entry.role = relation_updater.get_role_id("forward");
-    current_relation.members.push_back(entry);
-    entry.ref = 8237924;
-    entry.type = Relation_Entry::WAY;
-    entry.role = relation_updater.get_role_id("forward");
-    current_relation.members.push_back(entry);
-    entry.ref = 160621;
-    entry.type = Relation_Entry::NODE;
-    entry.role = relation_updater.get_role_id("");
-    current_relation.members.push_back(entry);
-    current_relation.tags.push_back(make_pair("type", "test_relation_1"));
-    relation_updater.set_relation(current_relation);
-      
-    current_relation = Relation(163299);
-    entry.ref = 8237924;
-    entry.type = Relation_Entry::WAY;
-    entry.role = relation_updater.get_role_id("forward");
-    current_relation.members.push_back(entry);
-    entry.ref = 8237924;
-    entry.type = Relation_Entry::WAY;
-    entry.role = relation_updater.get_role_id("backward");
-    current_relation.members.push_back(entry);
-    entry.ref = 160621;
-    entry.type = Relation_Entry::NODE;
-    entry.role = relation_updater.get_role_id("");
-    current_relation.members.push_back(entry);
-    current_relation.tags.push_back(make_pair("type", "test_relation_2"));
-    relation_updater.set_relation(current_relation);
-    
-    current_relation = Relation(163300);
-    entry.ref = 8237924;
-    entry.type = Relation_Entry::WAY;
-    entry.role = relation_updater.get_role_id("backward");
-    current_relation.members.push_back(entry);
-    entry.ref = 8237924;
-    entry.type = Relation_Entry::WAY;
-    entry.role = relation_updater.get_role_id("backward");
-    current_relation.members.push_back(entry);
-    entry.ref = 160621;
-    entry.type = Relation_Entry::NODE;
-    entry.role = relation_updater.get_role_id("");
-    current_relation.members.push_back(entry);
-    current_relation.tags.push_back(make_pair("type", "test_relation_3"));
-    relation_updater.set_relation(current_relation);
-    
-    node_updater.set_id_deleted(160621);
-    
-    current_node = Node(160623, 51.235, 7.053);
-    current_node.tags.push_back(make_pair("highway", "bus_stop"));
-    current_node.tags.push_back(make_pair("name", "Neuer Name"));
-    node_updater.set_node(current_node);
-    
-    node_updater.set_id_deleted(160624);
-    
-    current_way = Way(8237924);
-    current_way.tags.push_back(make_pair("test", "Value 1"));
-    current_way.nds.push_back(160621);
-    current_way.nds.push_back(160622);
-    current_way.nds.push_back(160623);
-    current_way.nds.push_back(160624);
-    way_updater.set_way(current_way);
-    
-    way_updater.set_id_deleted(8237925);
-    
-    current_way = Way(8237926);
-    current_way.tags.push_back(make_pair("test_2", "New Value"));
-    current_way.nds.push_back(160622);
-    current_way.nds.push_back(160623);
-    current_way.nds.push_back(160622);
-    way_updater.set_way(current_way);
-    
-    way_updater.set_id_deleted(8237927);
-    
-    current_relation = Relation(163298);
-    entry.ref = 8237924;
-    entry.type = Relation_Entry::WAY;
-    entry.role = relation_updater.get_role_id("forward");
-    current_relation.members.push_back(entry);
-    entry.ref = 8237924;
-    entry.type = Relation_Entry::WAY;
-    entry.role = relation_updater.get_role_id("forward");
-    current_relation.members.push_back(entry);
-    entry.ref = 160622;
-    entry.type = Relation_Entry::NODE;
-    entry.role = relation_updater.get_role_id("");
-    current_relation.members.push_back(entry);
-    current_relation.tags.push_back(make_pair("type", "route"));
-    relation_updater.set_relation(current_relation);
-    
-    relation_updater.set_id_deleted(163300);
-    
-    node_updater.update();
-    dump_nodes();
-    
-    way_updater.update();
-    dump_ways();
-    
-    relation_updater.update();
-    dump_relations();
-
-    show_mem_status();
+    dump_nodes(pattern_size);
+    dump_node_tags_local(pattern_size);
+    dump_node_tags_global(pattern_size);
+    dump_ways(pattern_size);
+    dump_way_tags_local(pattern_size);
+    dump_way_tags_global(pattern_size);
+    dump_relations(pattern_size);
+    dump_relation_tags_local(pattern_size);
+    dump_relation_tags_global(pattern_size);
   }
   catch (File_Error e)
   {

@@ -248,4 +248,28 @@ struct Error_Output
   virtual bool display_static_errors() = 0;
 };
 
+class Osm_Backend_Callback
+{
+  public:
+    virtual void update_started() = 0;
+    virtual void compute_indexes_finished() = 0;
+    virtual void update_ids_finished() = 0;
+    virtual void update_coords_finished() = 0;
+    virtual void prepare_delete_tags_finished() = 0;
+    virtual void tags_local_finished() = 0;
+    virtual void tags_global_finished() = 0;
+    virtual void flush_roles_finished() = 0;
+    virtual void update_finished() = 0;
+    virtual void partial_started() = 0;
+    virtual void partial_finished() = 0;
+    
+    virtual void parser_started() = 0;
+    virtual void node_elapsed(uint32 id) = 0;
+    virtual void nodes_finished() = 0;
+    virtual void way_elapsed(uint32 id) = 0;
+    virtual void ways_finished() = 0;
+    virtual void relation_elapsed(uint32 id) = 0;
+    virtual void relations_finished() = 0;
+};
+
 #endif

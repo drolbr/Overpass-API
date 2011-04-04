@@ -126,26 +126,31 @@ prepare_test_loop()
 # The size of the test pattern. Asymptotically, the test pattern consists of
 # size^2 elements. The size must be divisible by ten. For a full featured test,
 # set the value to 2000.
-DATA_SIZE=40
+DATA_SIZE=2000
 
 # Test template_db
 date +%X
 perform_test_loop file_blocks 12
+date +%X
 perform_test_loop block_backend 13
+date +%X
 perform_test_loop random_file 4
 
 # Test overpass_api/osm-backend
 mkdir -p input/run_and_compare.sh_1/
+rm -f input/run_and_compare.sh_1/*
 ../test-bin/generate_test_file $DATA_SIZE >input/run_and_compare.sh_1/stdin.log
 date +%X
 perform_test run_and_compare.sh 1
 
 mkdir -p input/run_and_compare.sh_2/
+rm -f input/run_and_compare.sh_2/*
 mv input/run_and_compare.sh_1/stdin.log input/run_and_compare.sh_2/stdin.log
 date +%X
 perform_test run_and_compare.sh 2
 
 mkdir -p input/run_and_compare.sh_3/
+rm -f input/run_and_compare.sh_3/*
 mv input/run_and_compare.sh_2/stdin.log input/run_and_compare.sh_3/stdin.log
 date +%X
 perform_test run_and_compare.sh 3
@@ -182,12 +187,38 @@ date +%X
 perform_test_loop query 25 "$DATA_SIZE ../../input/update_database/"
 
 # Test the foreach statement
+prepare_test_loop foreach 4 $DATA_SIZE
 date +%X
-perform_test_loop foreach 2 ../../input/update_database/
+perform_test_loop foreach 4 "$DATA_SIZE ../../input/update_database/"
 
 # Test the union statement
 prepare_test_loop union 6 $DATA_SIZE
 date +%X
 perform_test_loop union 6 ../../input/update_database/
 
-#rm input/update_database/*
+# Test a differential update
+date +%X
+rm -fR run/diff_updater
+mv input/update_database run/diff_updater
+date +%X
+../test-bin/generate_test_file $DATA_SIZE diff_do >run/diff_updater/do_stdin.log
+date +%X
+../bin/update_database --db-dir=run/diff_updater/ <run/diff_updater/do_stdin.log
+date +%X
+../test-bin/diff_updater --pattern_size=$DATA_SIZE --db-dir=run/diff_updater/ >run/diff_updater/diff_do.log
+date +%X
+../test-bin/generate_test_file $DATA_SIZE diff_compare >run/diff_updater/compare_stdin.log
+date +%X
+rm -f run/diff_updater/*.map run/diff_updater/*.bin run/diff_updater/*.idx
+../bin/update_database --db-dir=run/diff_updater/ <run/diff_updater/compare_stdin.log
+date +%X
+../test-bin/diff_updater --pattern_size=$DATA_SIZE --db-dir=run/diff_updater/ >run/diff_updater/diff_compare.log
+RES=`diff -q run/diff_updater/diff_compare.log run/diff_updater/diff_do.log`
+if [[ -n $RES ]]; then
+{
+  echo `date +%X` "Test diff 1 FAILED."
+}; else
+{
+  echo `date +%X` "Test diff 1 succeeded."
+  rm -R run/diff_updater
+}; fi

@@ -1,1 +1,7 @@
-2795398	.Nn 5590794	.Nn 8386190	.Nn 11181586	.Nn 13976983	.Nn .Nn 
+Reading XML file ... elapsed node 2795398. Flushing to database ...... done.
+Reading XML file ... elapsed node 5590794. Flushing to database ...... done.
+Reading XML file ... elapsed node 8386190. Flushing to database ...... done.
+Reading XML file ... elapsed node 11181586. Flushing to database ...... done.
+Reading XML file ... elapsed node 13976983. Flushing to database ...... done.
+Reading XML file ... finished reading nodes. Flushing to database ...... done.
+Reorganizing the database ... done.

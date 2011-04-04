@@ -11,6 +11,7 @@
 #include "../../expat/expat_justparse_interface.h"
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
+#include "../frontend/output.h"
 #include "node_updater.h"
 #include "relation_updater.h"
 #include "way_updater.h"
@@ -21,11 +22,11 @@ using namespace std;
  * Tests the library relation_updater with a sample OSM file
  */
 
-Node_Updater node_updater;
+Node_Updater* node_updater;
 Node current_node;
-Way_Updater way_updater;
+Way_Updater* way_updater;
 Way current_way;
-Relation_Updater relation_updater;
+Relation_Updater* relation_updater;
 Relation current_relation;
 int state;
 const int IN_NODES = 1;
@@ -33,22 +34,9 @@ const int IN_WAYS = 2;
 const int IN_RELATIONS = 3;
 ofstream* member_source_out;
 ofstream* tags_source_out;
+Osm_Backend_Callback* callback;
 
 uint32 osm_element_count;
-
-// void show_mem_status()
-// {
-//   ostringstream proc_file_name_("");
-//   proc_file_name_<<"/proc/"<<getpid()<<"/stat";
-//   ifstream stat(proc_file_name_.str().c_str());
-//   while (stat.good())
-//   {
-//     string line;
-//     getline(stat, line);
-//     cerr<<line;
-//   }
-//   cerr<<'\n';
-// }
 
 void start(const char *el, const char **attr)
 {
@@ -108,7 +96,7 @@ void start(const char *el, const char **attr)
 	entry.type = Relation_Entry::WAY;
       else if (type == "relation")
 	entry.type = Relation_Entry::RELATION;
-      entry.role = relation_updater.get_role_id(role);
+      entry.role = relation_updater->get_role_id(role);
       current_relation.members.push_back(entry);
       
       *member_source_out<<ref<<' '<<entry.type<<' '<<role<<' ';
@@ -136,7 +124,9 @@ void start(const char *el, const char **attr)
   {
     if (state == IN_NODES)
     {
-      node_updater.update();
+      callback->nodes_finished();
+      node_updater->update(callback);
+      callback->parser_started();
       osm_element_count = 0;
       state = IN_WAYS;
     }
@@ -153,13 +143,17 @@ void start(const char *el, const char **attr)
   {
     if (state == IN_NODES)
     {
-      node_updater.update();
+      callback->nodes_finished();
+      node_updater->update(callback);
+      callback->parser_started();
       osm_element_count = 0;
       state = IN_RELATIONS;
     }
     else if (state == IN_WAYS)
     {
-      way_updater.update();
+      callback->ways_finished();
+      way_updater->update(callback);
+      callback->parser_started();
       osm_element_count = 0;
       state = IN_RELATIONS;
     }
@@ -180,38 +174,44 @@ void end(const char *el)
 {
   if (!strcmp(el, "node"))
   {
-    node_updater.set_node(current_node);
-    current_node.id = 0;
+    node_updater->set_node(current_node);
 
     if (osm_element_count >= 4*1024*1024)
     {
-      node_updater.update(true);
+      callback->node_elapsed(current_node.id);
+      node_updater->update(callback, true);
+      callback->parser_started();
       osm_element_count = 0;
     }
+    current_node.id = 0;
   }
   else if (!strcmp(el, "way"))
   {
-    way_updater.set_way(current_way);
-    current_way.id = 0;
+    way_updater->set_way(current_way);
 
     if (osm_element_count >= 4*1024*1024)
     {
-      way_updater.update();
+      callback->way_elapsed(current_way.id);
+      way_updater->update(callback);
+      callback->parser_started();
       osm_element_count = 0;
     }
+    current_way.id = 0;
   }
   else if (!strcmp(el, "relation"))
   {
-    relation_updater.set_relation(current_relation);
-    current_relation.id = 0;
+    relation_updater->set_relation(current_relation);
     
     *member_source_out<<'\n';
     
     if (osm_element_count >= 4*1024*1024)
     {
-      relation_updater.update();
+      callback->relation_elapsed(current_relation.id);
+      relation_updater->update(callback);
+      callback->parser_started();
       osm_element_count = 0;
     }
+    current_relation.id = 0;
   }
   ++osm_element_count;
 }
@@ -229,6 +229,13 @@ void cleanup_files(const File_Properties& file_properties, bool cleanup_map)
 
 int main(int argc, char* args[])
 {
+  Node_Updater node_updater_;
+  node_updater = &node_updater_;
+  Way_Updater way_updater_;
+  way_updater = &way_updater_;
+  Relation_Updater relation_updater_;
+  relation_updater = &relation_updater_;
+  
   try
   {
     member_source_out = new ofstream((get_basedir() + "member_source.csv").c_str());
@@ -237,18 +244,29 @@ int main(int argc, char* args[])
     ofstream member_db_out((get_basedir() + "member_db.csv").c_str());
     ofstream tags_local_out((get_basedir() + "tags_local.csv").c_str());
     ofstream tags_global_out((get_basedir() + "tags_global.csv").c_str());
+    callback = get_verbatim_callback();
     
     osm_element_count = 0;
     state = 0;
     //reading the main document
+    callback->parser_started();
     parse(stdin, start, end);
   
     if (state == IN_NODES)
-      node_updater.update();
+    {
+      callback->nodes_finished();
+      node_updater->update(callback);
+    }
     else if (state == IN_WAYS)
-      way_updater.update();
+    {
+      callback->ways_finished();
+      way_updater->update(callback);
+    }
     else if (state == IN_RELATIONS)
-      relation_updater.update();
+    {
+      callback->relations_finished();
+      relation_updater->update(callback);
+    }
     
     delete member_source_out;
     delete tags_source_out;
@@ -299,8 +317,7 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cerr<<"File error caught: "
-	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    report_file_error(e);
   }
   
   cleanup_files(*de_osm3s_file_ids::NODES, true);

@@ -1,1 +1,17 @@
-.Nn .Nn .Nn .Nn .Nn .Nn .Ww .Ww .Ww .Ww .Ww .Ww .Ww .Ww .Ww .Rr 
+Reading XML file ... elapsed node 2795398. Flushing to database ...... done.
+Reading XML file ... elapsed node 5590794. Flushing to database ...... done.
+Reading XML file ... elapsed node 8386190. Flushing to database ...... done.
+Reading XML file ... elapsed node 11181586. Flushing to database ...... done.
+Reading XML file ... elapsed node 13976983. Flushing to database ...... done.
+Reading XML file ... finished reading nodes. Flushing to database ...... done.
+Reorganizing the database ... done.
+Reading XML file ... elapsed way 986796. Flushing to database ....... done.
+Reading XML file ... elapsed way 1973591. Flushing to database ....... done.
+Reading XML file ... elapsed way 2021186. Flushing to database ....... done.
+Reading XML file ... elapsed way 3007981. Flushing to database ....... done.
+Reading XML file ... elapsed way 3994776. Flushing to database ....... done.
+Reading XML file ... elapsed way 4042372. Flushing to database ....... done.
+Reading XML file ... elapsed way 5029167. Flushing to database ....... done.
+Reading XML file ... elapsed way 6000030. Flushing to database ....... done.
+Reading XML file ... finished reading ways. Flushing to database ....... done.
+Reading XML file ... finished reading relations. Flushing to database ........ done.
