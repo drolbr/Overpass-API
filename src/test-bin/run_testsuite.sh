@@ -1,5 +1,50 @@
 #!/bin/bash
 
+if [[ -z $1  ]]; then
+{
+  echo "Usage: $0 Testsize"
+  echo "(An appropriate value for a fast test is 40, a comprehensive value is 2000)"
+  exit 0
+};
+fi
+
+# The size of the test pattern. Asymptotically, the test pattern consists of
+# size^2 elements. The size must be divisible by ten. For a full featured test,
+# set the value to 2000.
+DATA_SIZE="$1"
+NOTIMES="$2"
+
+evaluate_test()
+{
+  DIRNAME="$1"
+
+  FAILED=
+  for FILE in `ls ../../expected/$DIRNAME/`; do
+  {
+    if [[ ! -f $FILE ]]; then
+    {
+      echo "In Test $EXEC $I: Expected file \"$FILE\" doesn't exist."
+      FAILED=YES
+    }; fi
+  }; done
+  for FILE in `ls`; do
+  {
+    if [[ ! -f "../../expected/$DIRNAME/$FILE" ]]; then
+    {
+      echo "In Test $EXEC $I: Unexpected file \"$FILE\" exists."
+      FAILED=YES
+    }; else
+    {
+      RES=`diff -q "../../expected/$DIRNAME/$FILE" "$FILE"`
+      if [[ -n $RES ]]; then
+      {
+        echo $RES
+        FAILED=YES
+      }; fi
+    }; fi
+  }; done
+};
+
 print_test_5()
 {
   EXEC="$1"
@@ -10,31 +55,36 @@ print_test_5()
   pushd "run/${EXEC}_$I/" >/dev/null
   rm -f *
   "../../../test-bin/$1" "$I" $ARGS 2>stderr.log | grep "^  <" | sort >stdout.log
-  FAILED=
-  for FILE in `ls ../../expected/${EXEC}_$I/`; do
+  evaluate_test "${EXEC}_$I"
+  if [[ -n $FAILED ]]; then
   {
-    if [[ ! -f $FILE ]]; then
-    {
-      echo "In Test $EXEC $I: Expected file \"$FILE\" doesn't exist."
-      FAILED=YES
-    }; fi
-  }; done
-  for FILE in `ls`; do
+    echo `date +%X` "Test $EXEC $I FAILED."
+  }; else
   {
-    if [[ ! -f "../../expected/${EXEC}_$I/$FILE" ]]; then
-    {
-      echo "In Test $EXEC $I: Unexpected file \"$FILE\" exists."
-      FAILED=YES
-    }; else
-    {
-      RES=`diff -q "../../expected/${EXEC}_$I/$FILE" "$FILE"`
-      if [[ -n $RES ]]; then
-      {
-        echo $RES
-        FAILED=YES
-      }; fi
-    }; fi
-  }; done
+    echo `date +%X` "Test $EXEC $I succeeded."
+    rm -R *
+  }; fi
+  popd >/dev/null
+};
+
+perform_serial_test()
+{
+  EXEC="$1"
+  I="$2"
+  ARGS="$3"
+
+  mkdir -p "run/${EXEC}_$I"
+  pushd "run/${EXEC}_$I/" >/dev/null
+  rm -f *
+  if [[ -s "../../input/${EXEC}_$I/stdin.log" ]]; then
+  {
+    #echo "stdin.log found"
+    "../../../test-bin/$1" "$I" $ARGS <"../../input/${EXEC}_$I/stdin.log" >stdout.log 2>stderr.log
+  }; else
+  {
+    "../../../test-bin/$1" "$I" $ARGS >stdout.log 2>stderr.log
+  }; fi
+  evaluate_test "${EXEC}_$I"
   if [[ -n $FAILED ]]; then
   {
     echo `date +%X` "Test $EXEC $I FAILED."
@@ -58,36 +108,12 @@ perform_test()
   if [[ -s "../../input/${EXEC}_$I/stdin.log" ]]; then
   {
     #echo "stdin.log found"
-    "../../../test-bin/$1" "$I" $ARGS <"../../input/${EXEC}_$I/stdin.log" >stdout.log 2>stderr.log
+    "../../../bin/$1" $ARGS <"../../input/${EXEC}_$I/stdin.log" >stdout.log 2>stderr.log
   }; else
   {
-    "../../../test-bin/$1" "$I" $ARGS >stdout.log 2>stderr.log
+    "../../../bin/$1" $ARGS >stdout.log 2>stderr.log
   }; fi
-  FAILED=
-  for FILE in `ls ../../expected/${EXEC}_$I/`; do
-  {
-    if [[ ! -f $FILE ]]; then
-    {
-      echo "In test $EXEC $I: Expected file \"$FILE\" doesn't exist."
-      FAILED=YES
-    }; fi
-  }; done
-  for FILE in `ls`; do
-  {
-    if [[ ! -f "../../expected/${EXEC}_$I/$FILE" ]]; then
-    {
-      echo "In test $EXEC $I: Unexpected file \"$FILE\" exists."
-      FAILED=YES
-    }; else
-    {
-      RES=`diff -q "../../expected/${EXEC}_$I/$FILE" "$FILE"`
-      if [[ -n $RES ]]; then
-      {
-        echo $RES
-        FAILED=YES
-      }; fi
-    }; fi
-  }; done
+  evaluate_test "${EXEC}_$I"
   if [[ -n $FAILED ]]; then
   {
     echo `date +%X` "Test $EXEC $I FAILED."
@@ -104,7 +130,7 @@ perform_test_loop()
   I=1
   while [[ $I -le $2 ]]; do
   {
-    perform_test "$1" $I "$3"
+    perform_serial_test "$1" $I "$3"
     I=$(($I + 1))
   }; done
 };
@@ -123,11 +149,6 @@ prepare_test_loop()
   }; done
 };
 
-# The size of the test pattern. Asymptotically, the test pattern consists of
-# size^2 elements. The size must be divisible by ten. For a full featured test,
-# set the value to 2000.
-DATA_SIZE=2000
-
 # Test template_db
 date +%X
 perform_test_loop file_blocks 12
@@ -141,19 +162,19 @@ mkdir -p input/run_and_compare.sh_1/
 rm -f input/run_and_compare.sh_1/*
 ../test-bin/generate_test_file $DATA_SIZE >input/run_and_compare.sh_1/stdin.log
 date +%X
-perform_test run_and_compare.sh 1
+perform_serial_test run_and_compare.sh 1
 
 mkdir -p input/run_and_compare.sh_2/
 rm -f input/run_and_compare.sh_2/*
 mv input/run_and_compare.sh_1/stdin.log input/run_and_compare.sh_2/stdin.log
 date +%X
-perform_test run_and_compare.sh 2
+perform_serial_test run_and_compare.sh 2
 
 mkdir -p input/run_and_compare.sh_3/
 rm -f input/run_and_compare.sh_3/*
 mv input/run_and_compare.sh_2/stdin.log input/run_and_compare.sh_3/stdin.log
 date +%X
-perform_test run_and_compare.sh 3
+perform_serial_test run_and_compare.sh 3
 
 # Prepare testing the statements
 mkdir -p input/update_database/
@@ -195,6 +216,30 @@ perform_test_loop foreach 4 "$DATA_SIZE ../../input/update_database/"
 prepare_test_loop union 6 $DATA_SIZE
 date +%X
 perform_test_loop union 6 ../../input/update_database/
+
+# Test osm3s_query
+date +%X
+perform_test osm3s_query 1
+if [[ -z $NOTIMES  ]]; then
+  perform_test osm3s_query 2 "--db-dir=../../input/update_database/ --verbose"
+fi
+perform_test osm3s_query 3 "--db-dir=../../input/update_database/"
+perform_test osm3s_query 4 "--db-dir=../../input/update_database/ --concise"
+perform_test osm3s_query 5 "--db-dir=../../input/update_database/ --quiet"
+if [[ -z $NOTIMES  ]]; then
+  perform_test osm3s_query 6 "--db-dir=../../input/update_database/ --verbose"
+fi
+perform_test osm3s_query 7 "--db-dir=../../input/update_database/"
+perform_test osm3s_query 8 "--db-dir=../../input/update_database/ --concise"
+perform_test osm3s_query 9 "--db-dir=../../input/update_database/ --quiet"
+perform_test osm3s_query 10 "--db-dir=../../input/update_database/ --verbose"
+perform_test osm3s_query 11 "--db-dir=../../input/update_database/"
+perform_test osm3s_query 12 "--db-dir=../../input/update_database/ --concise"
+perform_test osm3s_query 13 "--db-dir=../../input/update_database/ --quiet"
+perform_test osm3s_query 14 "--db-dir=../../input/update_database/ --verbose"
+perform_test osm3s_query 15 "--db-dir=../../input/update_database/"
+perform_test osm3s_query 16 "--db-dir=../../input/update_database/ --concise"
+perform_test osm3s_query 17 "--db-dir=../../input/update_database/ --quiet"
 
 # Test a differential update
 date +%X

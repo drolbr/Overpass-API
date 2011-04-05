@@ -14,6 +14,9 @@
  * Must be used with Expat compiled for UTF-8 output.
  */
 
+#ifndef ORG__OVERPASS_API__EXPAT_JUSTPARSE_INTERFACE
+#define ORG__OVERPASS_API__EXPAT_JUSTPARSE_INTERFACE
+
 #include <string>
 
 #include <string.h>
@@ -137,3 +140,5 @@ private:
 void parse(FILE* in,
 	   void (*start)(const char*, const char**),
 	   void (*end)(const char*));
+
+#endif

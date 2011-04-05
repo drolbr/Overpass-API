@@ -1,3 +1,5 @@
+#ifndef ORG__OVERPASS_API__DISPATCHER
+#define ORG__OVERPASS_API__DISPATCHER
 
 #include "../core/basic_types.h"
 
@@ -14,3 +16,5 @@ const uint32 UNREGISTER_PID = 18;
 const uint32 SERVER_STATE = 19;
 
 const uint32 QUERY_REJECTED = 32;
+
+#endif

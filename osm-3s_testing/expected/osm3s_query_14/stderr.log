@@ -1,0 +1,5 @@
+encoding remark: Please enter your query and terminate it with CTRL+D.
+encoding remark: Your input starts with a tag but not the root tag. Thus, a line with the
+datatype declaration and a line with the root tag 'osm-script' is
+added. This shifts line numbering by -2 line(s).
+line 3: static error: For the attribute "ref" of the element "id-query" the only allowed values are positive integers.

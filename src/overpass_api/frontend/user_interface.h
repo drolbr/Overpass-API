@@ -8,6 +8,8 @@
 
 using namespace std;
 
-string get_xml_raw(Error_Output* error_output, uint32 max_input_size = 1048576);
+string get_xml_cgi(Error_Output* error_output, uint32 max_input_size = 1048576);
+
+string get_xml_console(Error_Output* error_output, uint32 max_input_size = 1048576);
 
 #endif
