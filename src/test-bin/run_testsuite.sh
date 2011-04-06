@@ -146,7 +146,7 @@ prepare_test_loop()
   {
     mkdir -p expected/$1_$I/
     rm -f expected/$1_$I/*
-    ../test-bin/generate_test_file $DATA_SIZE $1_$I >expected/$1_$I/stdout.log
+    $BASEDIR/test-bin/generate_test_file $DATA_SIZE $1_$I >expected/$1_$I/stdout.log
     touch expected/$1_$I/stderr.log
     I=$(($I + 1))
   }; done
