@@ -1,5 +1,7 @@
 #!/bin/bash
 
+TEST_BIN_DIR="$(cd `dirname $0` && pwd)"
+
 compare_files()
 {
   FILE1="$1"
@@ -18,7 +20,7 @@ compare_files()
 
 node_compare_test()
 {
-  ../../../test-bin/node_updater
+  $TEST_BIN_DIR/node_updater
   compare_files coord_source.csv coord_db.csv
   rm coord_source.csv coord_db.csv
   compare_files tags_source.csv tags_local.csv
@@ -28,7 +30,7 @@ node_compare_test()
 
 way_compare_test()
 {
-  ../../../test-bin/way_updater
+  $TEST_BIN_DIR/way_updater
   compare_files member_source.csv member_db.csv
   rm member_source.csv member_db.csv
   compare_files tags_source.csv tags_local.csv
@@ -38,7 +40,7 @@ way_compare_test()
 
 relation_compare_test()
 {
-  ../../../test-bin/relation_updater
+  $TEST_BIN_DIR/relation_updater
   compare_files member_source.csv member_db.csv
   rm member_source.csv member_db.csv
   compare_files tags_source.csv tags_local.csv

@@ -1,11 +1,11 @@
 #!/bin/bash
 
-if [[ -z $2  ]]; then
+if [[ -z $1  ]]; then
 {
-  echo "Usage: $0 test_size base_directory"
+  echo "Usage: $0 test_size"
   echo
   echo "An appropriate value for a fast test is 40, a comprehensive value is 2000."
-  echo "The base_directory must be the parent of 'bin' and 'test-bin'."
+  # echo "The base_directory must be the parent of 'bin' and 'test-bin'."
   exit 0
 };
 fi
@@ -14,8 +14,8 @@ fi
 # size^2 elements. The size must be divisible by ten. For a full featured test,
 # set the value to 2000.
 DATA_SIZE="$1"
-BASEDIR="$2"
-NOTIMES="$3"
+BASEDIR="$(cd `dirname $0` && pwd)/.."
+NOTIMES="$2"
 
 evaluate_test()
 {
