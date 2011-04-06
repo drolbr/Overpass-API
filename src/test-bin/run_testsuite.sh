@@ -61,10 +61,10 @@ print_test_5()
   evaluate_test "${EXEC}_$I"
   if [[ -n $FAILED ]]; then
   {
-    echo `date +%X` "Test $EXEC $I FAILED."
+    echo `date +%T` "Test $EXEC $I FAILED."
   }; else
   {
-    echo `date +%X` "Test $EXEC $I succeeded."
+    echo `date +%T` "Test $EXEC $I succeeded."
     rm -R *
   }; fi
   popd >/dev/null
@@ -90,10 +90,10 @@ perform_serial_test()
   evaluate_test "${EXEC}_$I"
   if [[ -n $FAILED ]]; then
   {
-    echo `date +%X` "Test $EXEC $I FAILED."
+    echo `date +%T` "Test $EXEC $I FAILED."
   }; else
   {
-    echo `date +%X` "Test $EXEC $I succeeded."
+    echo `date +%T` "Test $EXEC $I succeeded."
     rm -R *
   }; fi
   popd >/dev/null
@@ -119,10 +119,10 @@ perform_test()
   evaluate_test "${EXEC}_$I"
   if [[ -n $FAILED ]]; then
   {
-    echo `date +%X` "Test $EXEC $I FAILED."
+    echo `date +%T` "Test $EXEC $I FAILED."
   }; else
   {
-    echo `date +%X` "Test $EXEC $I succeeded."
+    echo `date +%T` "Test $EXEC $I succeeded."
     rm -R *
   }; fi
   popd >/dev/null
@@ -153,30 +153,30 @@ prepare_test_loop()
 };
 
 # Test template_db
-date +%X
+date +%T
 perform_test_loop file_blocks 12
-date +%X
+date +%T
 perform_test_loop block_backend 13
-date +%X
+date +%T
 perform_test_loop random_file 4
 
 # Test overpass_api/osm-backend
 mkdir -p input/run_and_compare.sh_1/
 rm -f input/run_and_compare.sh_1/*
 $BASEDIR/test-bin/generate_test_file $DATA_SIZE >input/run_and_compare.sh_1/stdin.log
-date +%X
+date +%T
 perform_serial_test run_and_compare.sh 1
 
 mkdir -p input/run_and_compare.sh_2/
 rm -f input/run_and_compare.sh_2/*
 mv input/run_and_compare.sh_1/stdin.log input/run_and_compare.sh_2/stdin.log
-date +%X
+date +%T
 perform_serial_test run_and_compare.sh 2
 
 mkdir -p input/run_and_compare.sh_3/
 rm -f input/run_and_compare.sh_3/*
 mv input/run_and_compare.sh_2/stdin.log input/run_and_compare.sh_3/stdin.log
-date +%X
+date +%T
 perform_serial_test run_and_compare.sh 3
 
 # Prepare testing the statements
@@ -191,37 +191,37 @@ mkdir -p expected/print_5/
 $BASEDIR/test-bin/generate_test_file $DATA_SIZE print_4 | grep "^  <" | sort >expected/print_5/stdout.log
 touch expected/print_5/stderr.log
 
-date +%X
+date +%T
 perform_test_loop print 4 "$DATA_SIZE ../../input/update_database/"
 print_test_5 print 5 "$DATA_SIZE ../../input/update_database/"
 
 # Test the recurse statement
 prepare_test_loop recurse 11 $DATA_SIZE
-date +%X
+date +%T
 perform_test_loop recurse 11 "$DATA_SIZE ../../input/update_database/"
 
 # Test the bbox_query statement
 prepare_test_loop bbox_query 8 $DATA_SIZE
-date +%X
+date +%T
 perform_test_loop bbox_query 8 "$DATA_SIZE ../../input/update_database/"
 
 # Test the query statement
 prepare_test_loop query 25 $DATA_SIZE
-date +%X
+date +%T
 perform_test_loop query 25 "$DATA_SIZE ../../input/update_database/"
 
 # Test the foreach statement
 prepare_test_loop foreach 4 $DATA_SIZE
-date +%X
+date +%T
 perform_test_loop foreach 4 "$DATA_SIZE ../../input/update_database/"
 
 # Test the union statement
 prepare_test_loop union 6 $DATA_SIZE
-date +%X
+date +%T
 perform_test_loop union 6 ../../input/update_database/
 
 # Test osm3s_query
-date +%X
+date +%T
 perform_test osm3s_query 1
 if [[ -z $NOTIMES  ]]; then
   perform_test osm3s_query 2 "--db-dir=../../input/update_database/ --verbose"
@@ -245,28 +245,28 @@ perform_test osm3s_query 16 "--db-dir=../../input/update_database/ --concise"
 perform_test osm3s_query 17 "--db-dir=../../input/update_database/ --quiet"
 
 # Test a differential update
-date +%X
+date +%T
 rm -fR run/diff_updater
 mv input/update_database run/diff_updater
-date +%X
+date +%T
 $BASEDIR/test-bin/generate_test_file $DATA_SIZE diff_do >run/diff_updater/do_stdin.log
-date +%X
+date +%T
 $BASEDIR/bin/update_database --db-dir=run/diff_updater/ <run/diff_updater/do_stdin.log
-date +%X
+date +%T
 $BASEDIR/test-bin/diff_updater --pattern_size=$DATA_SIZE --db-dir=run/diff_updater/ >run/diff_updater/diff_do.log
-date +%X
+date +%T
 $BASEDIR/test-bin/generate_test_file $DATA_SIZE diff_compare >run/diff_updater/compare_stdin.log
-date +%X
+date +%T
 rm -f run/diff_updater/*.map run/diff_updater/*.bin run/diff_updater/*.idx
 $BASEDIR/bin/update_database --db-dir=run/diff_updater/ <run/diff_updater/compare_stdin.log
-date +%X
+date +%T
 $BASEDIR/test-bin/diff_updater --pattern_size=$DATA_SIZE --db-dir=run/diff_updater/ >run/diff_updater/diff_compare.log
 RES=`diff -q run/diff_updater/diff_compare.log run/diff_updater/diff_do.log`
 if [[ -n $RES ]]; then
 {
-  echo `date +%X` "Test diff 1 FAILED."
+  echo `date +%T` "Test diff 1 FAILED."
 }; else
 {
-  echo `date +%X` "Test diff 1 succeeded."
+  echo `date +%T` "Test diff 1 succeeded."
   rm -R run/diff_updater
 }; fi

@@ -1,0 +1,3 @@
+<osm-script timeout="5">
+<id-query type="node" ref="1"/><print mode="ids_only"/>
+</osm-script>
