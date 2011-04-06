@@ -41,12 +41,15 @@ Dispatcher_Stub::Dispatcher_Stub(string db_dir_, Error_Output* error_output_) : 
   if (db_dir_ != "")
     return;
   
-  shm_fd = shm_open("/osm3s", O_RDWR, S_IRWXU|S_IRWXG|S_IRWXO);
+  shm_fd = shm_open(shared_name.c_str(), O_RDWR, S_IRWXU|S_IRWXG|S_IRWXO);
   if (shm_fd < 0)
   {
     if (error_output)
-      error_output->runtime_error("Can't open shared memory /osm3s\n");
-    throw File_Error(errno, "/osm3s", "Dispatcher_Stub::Dispatcher_Stub::1");
+    {
+      error_output->runtime_error
+          ((string)"Can't open shared memory " + shared_name + '\n');
+    }
+    throw File_Error(errno, shared_name, "Dispatcher_Stub::Dispatcher_Stub::1");
   }
   shm_ptr = (uint8*)
       mmap(0, SHM_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, shm_fd, 0);

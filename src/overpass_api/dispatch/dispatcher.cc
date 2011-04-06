@@ -23,7 +23,8 @@ using namespace std;
   * concurrent queries don't overflow the server's RAM
   *
   * Dispatcher accepts the following messages from a query in the first
-  * 16 byte from the shared memory "/osm3s"; it answers in the following 8 bytes:
+  * 16 byte from the shared memory "/osm3s_v#.#.#" (see dispatcher.h::shared_name).
+  * It answers in the following 8 bytes:
   * - (REGISTER_PID, pid, msg_id, void, void): registers a new query by its pid
   *   returns (pid, database_id) where database_id is the id of the usable
   *   database
@@ -323,11 +324,11 @@ int main(int argc, char* argv[])
     ++argpos;
   }
   
-  int shm_fd(shm_open("/osm3s", O_RDWR|O_CREAT|O_TRUNC,
+  int shm_fd(shm_open(shared_name.c_str(), O_RDWR|O_CREAT|O_TRUNC,
 		      S_IRWXU|S_IRWXG|S_IRWXO));
   if (shm_fd < 0)
   {
-    cerr<<"Can't create shared memory /osm3s\n";
+    cerr<<"Can't create shared memory "<<shared_name<<'\n';
     exit(1);
   }
   int foo(ftruncate(shm_fd, SHM_SIZE));

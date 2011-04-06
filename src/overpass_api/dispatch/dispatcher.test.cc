@@ -146,10 +146,10 @@ int main(int argc, char* argv[])
     ++argpos;
   }
   
-  int shm_fd(shm_open("/osm3s", O_RDWR, S_IRWXU|S_IRWXG|S_IRWXO));
+  int shm_fd(shm_open(shared_name.c_str(), O_RDWR, S_IRWXU|S_IRWXG|S_IRWXO));
   if (shm_fd < 0)
   {
-    cerr<<"Can't open shared memory /osm3s\n";
+    cerr<<"Can't open shared memory "<<shared_name<<'\n';
     exit(1);
   }
   uint8* shm_ptr((uint8*)
