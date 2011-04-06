@@ -1,9 +1,11 @@
 #!/bin/bash
 
-if [[ -z $1  ]]; then
+if [[ -z $2  ]]; then
 {
-  echo "Usage: $0 Testsize"
-  echo "(An appropriate value for a fast test is 40, a comprehensive value is 2000)"
+  echo "Usage: $0 test_size base_directory"
+  echo
+  echo "An appropriate value for a fast test is 40, a comprehensive value is 2000."
+  echo "The base_directory must be the parent of 'bin' and 'test-bin'."
   exit 0
 };
 fi
@@ -12,7 +14,8 @@ fi
 # size^2 elements. The size must be divisible by ten. For a full featured test,
 # set the value to 2000.
 DATA_SIZE="$1"
-NOTIMES="$2"
+BASEDIR="$2"
+NOTIMES="$3"
 
 evaluate_test()
 {
@@ -54,7 +57,7 @@ print_test_5()
   mkdir -p "run/${EXEC}_$I"
   pushd "run/${EXEC}_$I/" >/dev/null
   rm -f *
-  "../../../test-bin/$1" "$I" $ARGS 2>stderr.log | grep "^  <" | sort >stdout.log
+  "$BASEDIR/test-bin/$1" "$I" $ARGS 2>stderr.log | grep "^  <" | sort >stdout.log
   evaluate_test "${EXEC}_$I"
   if [[ -n $FAILED ]]; then
   {
@@ -79,10 +82,10 @@ perform_serial_test()
   if [[ -s "../../input/${EXEC}_$I/stdin.log" ]]; then
   {
     #echo "stdin.log found"
-    "../../../test-bin/$1" "$I" $ARGS <"../../input/${EXEC}_$I/stdin.log" >stdout.log 2>stderr.log
+    "$BASEDIR/test-bin/$1" "$I" $ARGS <"../../input/${EXEC}_$I/stdin.log" >stdout.log 2>stderr.log
   }; else
   {
-    "../../../test-bin/$1" "$I" $ARGS >stdout.log 2>stderr.log
+    "$BASEDIR/test-bin/$1" "$I" $ARGS >stdout.log 2>stderr.log
   }; fi
   evaluate_test "${EXEC}_$I"
   if [[ -n $FAILED ]]; then
@@ -108,10 +111,10 @@ perform_test()
   if [[ -s "../../input/${EXEC}_$I/stdin.log" ]]; then
   {
     #echo "stdin.log found"
-    "../../../bin/$1" $ARGS <"../../input/${EXEC}_$I/stdin.log" >stdout.log 2>stderr.log
+    "$BASEDIR/bin/$1" $ARGS <"../../input/${EXEC}_$I/stdin.log" >stdout.log 2>stderr.log
   }; else
   {
-    "../../../bin/$1" $ARGS >stdout.log 2>stderr.log
+    "$BASEDIR/bin/$1" $ARGS >stdout.log 2>stderr.log
   }; fi
   evaluate_test "${EXEC}_$I"
   if [[ -n $FAILED ]]; then
@@ -160,7 +163,7 @@ perform_test_loop random_file 4
 # Test overpass_api/osm-backend
 mkdir -p input/run_and_compare.sh_1/
 rm -f input/run_and_compare.sh_1/*
-../test-bin/generate_test_file $DATA_SIZE >input/run_and_compare.sh_1/stdin.log
+$BASEDIR/test-bin/generate_test_file $DATA_SIZE >input/run_and_compare.sh_1/stdin.log
 date +%X
 perform_serial_test run_and_compare.sh 1
 
@@ -180,12 +183,12 @@ perform_serial_test run_and_compare.sh 3
 mkdir -p input/update_database/
 rm -f input/update_database/*
 mv input/run_and_compare.sh_3/stdin.log input/update_database/stdin.log
-../bin/update_database --db-dir=input/update_database/ <input/update_database/stdin.log
+$BASEDIR/bin/update_database --db-dir=input/update_database/ <input/update_database/stdin.log
 
 # Test the print and id_query statements
 prepare_test_loop print 4 $DATA_SIZE
 mkdir -p expected/print_5/
-../test-bin/generate_test_file $DATA_SIZE print_4 | grep "^  <" | sort >expected/print_5/stdout.log
+$BASEDIR/test-bin/generate_test_file $DATA_SIZE print_4 | grep "^  <" | sort >expected/print_5/stdout.log
 touch expected/print_5/stderr.log
 
 date +%X
@@ -246,18 +249,18 @@ date +%X
 rm -fR run/diff_updater
 mv input/update_database run/diff_updater
 date +%X
-../test-bin/generate_test_file $DATA_SIZE diff_do >run/diff_updater/do_stdin.log
+$BASEDIR/test-bin/generate_test_file $DATA_SIZE diff_do >run/diff_updater/do_stdin.log
 date +%X
-../bin/update_database --db-dir=run/diff_updater/ <run/diff_updater/do_stdin.log
+$BASEDIR/bin/update_database --db-dir=run/diff_updater/ <run/diff_updater/do_stdin.log
 date +%X
-../test-bin/diff_updater --pattern_size=$DATA_SIZE --db-dir=run/diff_updater/ >run/diff_updater/diff_do.log
+$BASEDIR/test-bin/diff_updater --pattern_size=$DATA_SIZE --db-dir=run/diff_updater/ >run/diff_updater/diff_do.log
 date +%X
-../test-bin/generate_test_file $DATA_SIZE diff_compare >run/diff_updater/compare_stdin.log
+$BASEDIR/test-bin/generate_test_file $DATA_SIZE diff_compare >run/diff_updater/compare_stdin.log
 date +%X
 rm -f run/diff_updater/*.map run/diff_updater/*.bin run/diff_updater/*.idx
-../bin/update_database --db-dir=run/diff_updater/ <run/diff_updater/compare_stdin.log
+$BASEDIR/bin/update_database --db-dir=run/diff_updater/ <run/diff_updater/compare_stdin.log
 date +%X
-../test-bin/diff_updater --pattern_size=$DATA_SIZE --db-dir=run/diff_updater/ >run/diff_updater/diff_compare.log
+$BASEDIR/test-bin/diff_updater --pattern_size=$DATA_SIZE --db-dir=run/diff_updater/ >run/diff_updater/diff_compare.log
 RES=`diff -q run/diff_updater/diff_compare.log run/diff_updater/diff_do.log`
 if [[ -n $RES ]]; then
 {
