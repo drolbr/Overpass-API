@@ -5,7 +5,6 @@ if [[ -z $1  ]]; then
   echo "Usage: $0 test_size"
   echo
   echo "An appropriate value for a fast test is 40, a comprehensive value is 2000."
-  # echo "The base_directory must be the parent of 'bin' and 'test-bin'."
   exit 0
 };
 fi

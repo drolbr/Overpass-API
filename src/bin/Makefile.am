@@ -1,6 +1,7 @@
-bin_PROGRAMS = osm3s_query scheduler web_query update_database update_from_dir
+bin_PROGRAMS = osm3s_query scheduler sketch_route_svg web_query update_database update_from_dir
 dist_bin_SCRIPTS = apply_osc_to_db.sh fetch_osc.sh
 
+escape_xml_cc = ../expat/escape_xml.cc
 expat_cc = ../expat/expat_justparse_interface.cc
 settings_cc = ../overpass_api/core/settings.cc
 output_cc = ../overpass_api/frontend/output.cc
@@ -23,3 +24,6 @@ web_query_SOURCES = ${expat_cc} ${settings_cc} ${web_frontend_cc} ${statements_c
 web_query_LDADD = -lexpat -lrt
 scheduler_SOURCES = ../overpass_api/dispatch/dispatcher.cc
 scheduler_LDADD = -lrt
+
+sketch_route_svg_SOURCES = ${expat_cc} ${escape_xml_cc} ../pt_diagrams/sketch-route-svg.cc
+sketch_route_svg_LDADD = -lexpat

@@ -103,12 +103,12 @@ if [[ $CORRESPONDENCES -gt 0 ]]; then
   {
     cat <$BASEDIR/answer.3
     echo
-    echo "../bin/sketch-route-svg --ref=\"$REF_\" --network=\"$NETWORK_\" $SKETCH_PARAMS"
+    echo "../bin/sketch_route_svg --ref=\"$REF_\" --network=\"$NETWORK_\" $SKETCH_PARAMS"
     exit 0;
   };
   fi
 
-  ../bin/sketch-route-svg --ref="$REF_" --network="$NETWORK_" $SKETCH_PARAMS <$BASEDIR/answer.3
+  ../bin/sketch_route_svg --ref="$REF_" --network="$NETWORK_" $SKETCH_PARAMS <$BASEDIR/answer.3
 };
 else
 {
@@ -127,6 +127,6 @@ else
   echo "Content-Type: image/svg+xml; charset=utf-8"
   echo
 
-  ../bin/sketch-route-svg $SKETCH_PARAMS <$BASEDIR/answer.1
+  ../bin/sketch_route_svg $SKETCH_PARAMS <$BASEDIR/answer.1
 };
 fi

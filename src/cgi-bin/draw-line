@@ -83,7 +83,7 @@ else
     /home/roland/osm-3s/build/bin/osm3s_query --no-mime <$BASEDIR/request.1 2>&1
 
     echo
-    echo "../bin/draw-route-svg $SKETCH_PARAMS"
+    echo "../bin/draw_route_svg $SKETCH_PARAMS"
   };
   else
   {
@@ -95,6 +95,6 @@ else
   echo "Content-Type: image/svg+xml; charset=utf-8"
   echo
 
-  ../bin/draw-route-svg $SKETCH_PARAMS <$BASEDIR/answer.1
+  ../bin/draw_route_svg $SKETCH_PARAMS <$BASEDIR/answer.1
 };
 fi

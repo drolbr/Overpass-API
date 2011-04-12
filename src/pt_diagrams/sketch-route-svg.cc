@@ -17,7 +17,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
-#include "../expat_justparse_interface.h"
+#include "../expat/expat_justparse_interface.h"
+#include "../expat/escape_xml.h"
 
 using namespace std;
 
@@ -632,12 +633,17 @@ void parse_timespans(vector< Timespan >& timespans, string data)
     
     unsigned int start_time(start_hour*60 + start_minute);
     unsigned int end_time(end_hour*60 + end_minute);
-    if ((start_time >= end_time) || (end_time > 60*24))
+    if (end_time > 60*24)
       continue;
+    unsigned int end_day_offset = 0;
+    if (start_time >= end_time)
+      end_day_offset = 1;
     
     for (unsigned int day(begin_day); day <= end_day; ++day)
+    {
       timespans.push_back(Timespan
-	  (day, start_hour, start_minute, day, end_hour, end_minute));
+	  (day, start_hour, start_minute, day + end_day_offset, end_hour, end_minute));
+    }
   }
 }
 
@@ -1802,14 +1808,14 @@ int main(int argc, char *argv[])
     for (unsigned int i(0); i < 7; ++i)
     {
       vector< Timespan > day;
-      if ((it != relations[0].opening_hours.end()) && (it->begin < i*24*60))
+/*      if ((it != relations[0].opening_hours.end()) && (it->begin < i*24*60))
       {
 	Timespan timespan(0, 0, 0, 0, 0, 0);
 	timespan.begin = 0;
 	timespan.end = it->end % (24*60);
 	day.push_back(timespan);
 	++it;
-      }
+      }*/
       while ((it != relations[0].opening_hours.end()) && (it->end <= (i+1)*24*60))
       {
 	Timespan timespan(0, 0, 0, 0, 0, 0);
@@ -1822,8 +1828,9 @@ int main(int argc, char *argv[])
       {
 	Timespan timespan(0, 0, 0, 0, 0, 0);
 	timespan.begin = it->begin % (24*60);
-	timespan.end = 24*60;
+	timespan.end = it->end % (24*60)/*24*60*/;
 	day.push_back(timespan);
+	++it;
       }
       
       if (last_day != day)
@@ -1864,7 +1871,7 @@ int main(int argc, char *argv[])
   ostringstream result("");
   ostringstream backlines("");
   
-  // count the number of line row that actually appear
+  // count the number of line rows that actually appear
   vector< int > offset_of(relations.size()+1);
   offset_of[0] = 0;
   for (unsigned int i(0); i < relations.size(); ++i)

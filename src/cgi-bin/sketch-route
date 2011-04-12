@@ -77,16 +77,16 @@ if [[ $ARG_2 == "backspace" ]]; then
   echo "Content-Type: image/svg+xml; charset=utf-8"
   echo
 
-  #gunzip </tmp/nodes_csv_result.2 | ../bin/sketch-route-svg --backspace
-  ../bin/sketch-route-svg --backspace <$BASEDIR/result
+  #gunzip </tmp/nodes_csv_result.2 | ../bin/sketch_route_svg --backspace
+  ../bin/sketch_route_svg --backspace <$BASEDIR/result
 };
 elif [[ $ARG_2 == "backtime" ]]; then
 {
   echo "Content-Type: image/svg+xml; charset=utf-8"
   echo
 
-  #gunzip </tmp/nodes_csv_result.2 | ../bin/sketch-route-svg --backtime
-  ../bin/sketch-route-svg --backtime <$BASEDIR/result
+  #gunzip </tmp/nodes_csv_result.2 | ../bin/sketch_route_svg --backtime
+  ../bin/sketch_route_svg --backtime <$BASEDIR/result
 };
 elif [[ ($ARG_2 == "debug") || ($ARG_3 == "debug") ]]; then
 {
@@ -99,7 +99,7 @@ else
   echo "Content-Type: image/svg+xml; charset=utf-8"
   echo
 
-  #gunzip </tmp/nodes_csv_result.2 | ../bin/sketch-route-svg
-  ../bin/sketch-route-svg <$BASEDIR/result
+  #gunzip </tmp/nodes_csv_result.2 | ../bin/sketch_route_svg
+  ../bin/sketch_route_svg <$BASEDIR/result
 };
 fi

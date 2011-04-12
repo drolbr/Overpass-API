@@ -553,17 +553,36 @@ Tasks:
 
 for 0.6.1: (planned 2011-03-18)
 + clear file requirements for areas
-- introduce cgi_query and console_query --verbose
++ introduce cgi_query and console_query --verbose
 + rewrite progress messages
 + repair update_moved_idxs
 = reorganize project dirs
 + rework bbox-query: should use fewer ranges
 + automated test environment
 
+Released: 2011-04-06
+
+===database changes===
+This version is binary compatible to the previous version 0.6.
+
+===interface changes===
+The log levels of osm3s_query have been reworked. I hope the default log level now contains sufficient comprehensible and only comprehensible messages. The progress information of update_database shall now be rather self-explanatory than diagnostic.
+
+===other changes===
+With the advent of a comprehensive automated testbed, a couple of bugs have been revealed and fixed:
+- The print statement doesn't throw anymore an error on absent optional parts of the database.
+- update_database can now properly apply diff files. It didn't update the indexes of ways and relations when only the underlying nodes have moved before.
+- bbox_query doesn't anymore crash on very large bounding boxes.
+- Relations that have only other relations as members have been accidently unchangeable in the previous version.
+- A possible buffer overflow in the database backend has been fixed.
+- Two other, rather arcane bugs in the database fixed.
+
 for 0.7 (planned 2011-04-15)
 - refactor file_blocks.h: reorganize file(s)
 - refactor block_backend.h: reorganize file(s)
 = refactor and test osm_backend_updater
+- automate dispatcher test
+- divide mirrored and derived database
 @database:
 - changes for transactionality: different idx management
 - reworked way and relation indices

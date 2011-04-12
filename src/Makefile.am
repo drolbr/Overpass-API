@@ -1,1 +1,1 @@
-SUBDIRS = bin test-bin
+SUBDIRS = bin cgi-bin test-bin

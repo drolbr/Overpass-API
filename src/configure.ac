@@ -23,17 +23,18 @@ AC_CHECK_HEADERS([fcntl.h locale.h stdint.h stdlib.h string.h sys/time.h unistd.
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
+AC_C_INLINE
 AC_HEADER_STDBOOL
 AC_HEADER_TIME
 AC_STRUCT_TM
 
 # Checks for library functions.
-AC_CHECK_FUNCS([clock_gettime ftruncate select])
+AC_CHECK_FUNCS([clock_gettime ftruncate select sqrt])
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_FUNC_SELECT_ARGTYPES
 AC_FUNC_STAT
 
-AC_CONFIG_FILES([Makefile bin/Makefile test-bin/Makefile])
+AC_CONFIG_FILES([Makefile bin/Makefile cgi-bin/Makefile test-bin/Makefile])
 AC_OUTPUT
