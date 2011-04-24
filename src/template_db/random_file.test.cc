@@ -44,6 +44,11 @@ struct Test_File : File_Properties
     return ID_SUFFIX;
   }
   
+  string get_shadow_suffix() const
+  {
+    return ".shadow";
+  }
+  
   uint32 get_block_size() const
   {
     return 512;

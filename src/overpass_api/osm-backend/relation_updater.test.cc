@@ -219,7 +219,7 @@ void end(const char *el)
 void cleanup_files(const File_Properties& file_properties, bool cleanup_map)
 {
   remove((file_properties.get_file_base_name() +
-  file_properties.get_index_suffix()).c_str());
+  file_properties.get_data_suffix() + file_properties.get_index_suffix()).c_str());
   remove((file_properties.get_file_base_name() +
   file_properties.get_data_suffix()).c_str());
   if (cleanup_map)

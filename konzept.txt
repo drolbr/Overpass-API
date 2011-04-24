@@ -314,7 +314,7 @@ test-bin
 Transactions::Write
 
 /* Takes the write mutex of the database by writing its pid into the file
-   "writing". It waits for a second whether its pid is still present to avoid
+   ".lock". It waits for a second whether its pid is still present to avoid
    race conditions. */
 void write_lock(pid_t pid) throws File_Error;
 /* Tests:
@@ -394,8 +394,18 @@ void read_quit(pid_t pid, string dispatcher_share) throws Dispatcher_Error;
    Check dispatcher communication.
  */
 
-/* Waits in its main loop for one of the following request. Adtionally, it
-   checks from time to if the registered readers still exist.*/
+State of the file system:
+- *.map, *.bin files for the data
+- *.idx always
+- *.lock and possibly *.idl and *.idy during a write action
+- *.idy and dirty if the *.idx files are rewritten
+
+and
+- a bidirectional shared memory.
+- a shared memory managed by dispatcher to pass the idx files (postponed).
+
+/* Waits in its main loop for one of the following requests. Adtionally, it
+   checks from time to time if the registered readers still exist.*/
 Transactions::Dispatcher
 {
   class Idx_Footprints
@@ -410,7 +420,8 @@ Transactions::Dispatcher
   /* Opens a shared memory for dispatcher communication. Furthermore,
      detects whether idx or idy are valid, clears to idx if necessary,
      and loads them into the shared memory idx_share_name. */
-  Dispatcher(string dispatcher_name, string db_dir, string idx_share_name) throws File_Error, Dispatcher_Error;
+  Dispatcher::Dispatcher(string dispatcher_name, string idx_share_name,
+    vector< File > managed_files) throws File_Error, Dispatcher_Error;
   /* Tests:
      Shall throw an error if one of the shares is not accessible.
      Shall throw an error if a file in the db_dir is not accessible.
@@ -422,18 +433,18 @@ Transactions::Dispatcher
 
   /* Changes the state of the process identified by its pid from reading_idx
      to reading the files. */
-  void idx_read_done(pid_t pid);
+  void Dispatcher::idx_read_done(pid_t pid);
   /* See tests below. */
 
   /* Unregisters the process identified by its pid from reading the files. */
-  void read_finished(pid_t pid);
+  void Dispatcher::read_finished(pid_t pid);
   /* See tests below. */
 
   /* Writes the current total footprint into an idl file. It doesn't need
      a mutex because it will include the current index anyway. The worst thing
      possible, resulting from a race condition with an unregistering read
-     process would be some blocks that keep unnecessarily reserved. */
-  void request_idl(pid_t pid) const;
+     process would be some blocks that are kept unnecessarily reserved. */
+  void Dispatcher::request_idl(pid_t pid) const;
   /* See tests below. */
 
   /* Registers the process identified by its pid for reading the idx share. */
@@ -442,12 +453,12 @@ Transactions::Dispatcher
 
   /* Validates the idy files. Then it copies the idy files to the idx files
      and to the idx share. Afterwards, it revalidates the idx files. */
-  void write_commit(pid_t pid);
+  void Dispatcher::write_commit(pid_t pid);
   /* See tests below. */
 
   /* Checks whether all read processes still exist and removes no longer
      existing processes from reading_idx_pids and footprints. */
-  void purge_zombies();
+  void Dispatcher::purge_zombies();
   /* See tests below. */
 
   /* If pending_commit is false, all commands will be processed. If pending
@@ -539,6 +550,62 @@ print:
 - only output.
 
 All times need to be mesured with different samples.
+
+---
+
+Our current concept of Random_File is incompatible to transactionality, basically because there is only one valid position in the file for each entry.
+
+Possible redesigns of Random_File:
+Things to benchmark:
+a Number of necessary disk seeks.
+b Amount of initial data to load for an index up to 4GB. Can be cached in RAM later on if it isn't too much.
+c Disk overhead for no changes.
+d Disk overhead for sparse changes, but lots of versions.
+e Implementation effort.
+
+1. Multiversion B-Tree
+a. Needs a logarithmic number of disk seeks, probably the worst of all concepts, but at least it scales acceptably.
+b. 4 byte.
+c. Saved indexes. Depens on the size of the B-tree, but at least 256KB (the largest level above the indices themselves dominates.)
+d. Every change triggers copying the underlying block, thus one block per change and version.
+e. Get the concept of B-trees in details, then re-estimate. Looks like a recursion can help, but I expect caveats.
+
+2. Multiversion Single Level Index file
+a. Needs no extra disk seeds, provided, the index is loaded at intialization into RAM.
+b. 256 KB with blocks of 64KB.
+c. 256 KB with blocks of 64KB.
+d. Every change triggers copying the underlying block, thus one block of 256KB per change and version.
+e. Similar to the approach for block backend - the results can be reused immediately there.
+
+3. Conversion into Block_Backend
+a. Needs no extra disk seeds.
+b. Derived on the same basis as 2., but threefold due to extra data.
+c. If indexes are used as keys, the file is three times bigger than the payload. If some hash of the index is used, fewer waste, but we need to reassemble each value. It then is a worse version of 2.
+d. Every change triggers copying the underlying block, thus one block per change and version.
+e. Straightforward.
+
+4. Journal of Changes with incremental change records.
+a. One disk seek for every active version, but one with loading the entire diff file.
+b. 8 bytes.
+c. No overhead.
+d. Few bytes per change.
+e. It's an interesting, but challeging task: a lot of questions on the incremental still need to be answered, and there will be anyway two completely different storage formats, the map file and the incremental files.
+
+5. Journal of Changes with total change record.
+a. Exactly two disk seeks, but one with loading the entire diff file.
+b. 8 bytes.
+c. No overhead.
+d. Few bytes per change.
+e. Similar to 4.
+
+5. Hash table of Changes with total change record.
+a. Exactly two disk seeks, but one with loading potentially more data.
+b. either 8 byte or the entire hash table.
+c. The hash table, size e.g. 256 KB.
+d. The hash table, size e.g. 256 KB.
+e. Similar to 4, but even more challenging.
+
+Decision: 3. is too inefficient. 2. has similar implementation effort (the effort can be reused later), but an acceptable storage performance. In particular, it has no overhead at read time with a preloaded index. Everything else has significant risks that the implementation gets too complex. Take approach 2. and keep it modular to improve it later if necessary.
 
 ---
 

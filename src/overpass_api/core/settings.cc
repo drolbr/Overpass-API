@@ -22,6 +22,7 @@ string base_directory("./");
 string DATA_SUFFIX(".bin");
 string INDEX_SUFFIX(".idx");
 string ID_SUFFIX(".map");
+string SHADOW_SUFFIX(".shadow");
 
 struct OSM_File_Properties : File_Properties
 {
@@ -51,6 +52,11 @@ struct OSM_File_Properties : File_Properties
   string get_id_suffix() const
   {
     return ID_SUFFIX;
+  }
+  
+  string get_shadow_suffix() const
+  {
+    return SHADOW_SUFFIX;
   }
   
   uint32 get_block_size() const

@@ -45,6 +45,11 @@ struct Test_File : File_Properties
     return "";
   }
 
+  string get_shadow_suffix() const
+  {
+    return ".shadow";
+  }
+
   uint32 get_block_size() const
   {
     return 512;
@@ -335,7 +340,8 @@ int main(int argc, char* args[])
        O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   close(data_fd);
   int index_fd = open64
-      ((Test_File().get_file_base_name() + Test_File().get_index_suffix()).c_str(),
+      ((Test_File().get_file_base_name() + Test_File().get_data_suffix()
+          + Test_File().get_index_suffix()).c_str(),
        O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   close(index_fd);
   if ((test_to_execute == "") || (test_to_execute == "1"))
@@ -745,7 +751,8 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "12"))
     read_test();
   
-  remove((Test_File().get_file_base_name() + Test_File().get_index_suffix()).c_str());
+  remove((Test_File().get_file_base_name() + Test_File().get_data_suffix()
+      + Test_File().get_index_suffix()).c_str());
   remove((Test_File().get_file_base_name() + Test_File().get_data_suffix()).c_str());
   
   return 0;
