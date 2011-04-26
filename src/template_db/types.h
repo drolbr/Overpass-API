@@ -47,6 +47,7 @@ struct File_Properties
   virtual string get_id_suffix() const = 0;
   virtual string get_shadow_suffix() const = 0;
   virtual uint32 get_block_size() const = 0;
+  virtual uint32 get_map_block_size() const = 0;
 };
 
 /** Simple RAII class to keep a file descriptor. */
