@@ -543,9 +543,10 @@ void Way_Updater::merge_files(string from, string into)
     into_db.update(db_to_delete, db_to_insert);
   }
   remove((de_osm3s_file_ids::WAYS->get_file_base_name() + from 
-  + de_osm3s_file_ids::WAYS->get_index_suffix()).c_str());
+      + de_osm3s_file_ids::WAYS->get_data_suffix()
+      + de_osm3s_file_ids::WAYS->get_index_suffix()).c_str());
   remove((de_osm3s_file_ids::WAYS->get_file_base_name() + from 
-  + de_osm3s_file_ids::WAYS->get_data_suffix()).c_str());
+      + de_osm3s_file_ids::WAYS->get_data_suffix()).c_str());
   {
     map< Tag_Index_Local, set< Uint32_Index > > db_to_delete;
     map< Tag_Index_Local, set< Uint32_Index > > db_to_insert;
@@ -572,9 +573,10 @@ void Way_Updater::merge_files(string from, string into)
     into_db.update(db_to_delete, db_to_insert);
   }
   remove((de_osm3s_file_ids::WAY_TAGS_LOCAL->get_file_base_name() + from 
-  + de_osm3s_file_ids::WAY_TAGS_LOCAL->get_index_suffix()).c_str());
+      + de_osm3s_file_ids::WAY_TAGS_LOCAL->get_data_suffix()
+      + de_osm3s_file_ids::WAY_TAGS_LOCAL->get_index_suffix()).c_str());
   remove((de_osm3s_file_ids::WAY_TAGS_LOCAL->get_file_base_name() + from 
-  + de_osm3s_file_ids::WAY_TAGS_LOCAL->get_data_suffix()).c_str());
+      + de_osm3s_file_ids::WAY_TAGS_LOCAL->get_data_suffix()).c_str());
   {
     map< Tag_Index_Global, set< Uint32_Index > > db_to_delete;
     map< Tag_Index_Global, set< Uint32_Index > > db_to_insert;
@@ -601,7 +603,8 @@ void Way_Updater::merge_files(string from, string into)
     into_db.update(db_to_delete, db_to_insert);
   }
   remove((de_osm3s_file_ids::WAY_TAGS_GLOBAL->get_file_base_name() + from 
-  + de_osm3s_file_ids::WAY_TAGS_GLOBAL->get_index_suffix()).c_str());
+      + de_osm3s_file_ids::WAY_TAGS_GLOBAL->get_data_suffix()
+      + de_osm3s_file_ids::WAY_TAGS_GLOBAL->get_index_suffix()).c_str());
   remove((de_osm3s_file_ids::WAY_TAGS_GLOBAL->get_file_base_name() + from 
-  + de_osm3s_file_ids::WAY_TAGS_GLOBAL->get_data_suffix()).c_str());
+      + de_osm3s_file_ids::WAY_TAGS_GLOBAL->get_data_suffix()).c_str());
 }

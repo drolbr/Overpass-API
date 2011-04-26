@@ -144,23 +144,17 @@ void end(const char *el)
 void cleanup_files(const File_Properties& file_properties, bool cleanup_map)
 {
   remove((file_properties.get_file_base_name() +
-  file_properties.get_data_suffix() + file_properties.get_index_suffix()).c_str());
+      file_properties.get_data_suffix() + file_properties.get_index_suffix()).c_str());
   remove((file_properties.get_file_base_name() +
-  file_properties.get_data_suffix()).c_str());
-  
-/*  remove((file_properties.get_file_base_name() + "0." +
-  file_properties.get_data_suffix() + file_properties.get_index_suffix()).c_str());
-  remove((file_properties.get_file_base_name() + "0." +
-  file_properties.get_data_suffix()).c_str());
-  
-  remove((file_properties.get_file_base_name() + "1." +
-  file_properties.get_data_suffix() + file_properties.get_index_suffix()).c_str());
-  remove((file_properties.get_file_base_name() + "1." +
-  file_properties.get_data_suffix()).c_str());*/
+      file_properties.get_data_suffix()).c_str());
   
   if (cleanup_map)
+  {
     remove((file_properties.get_file_base_name() +
-    file_properties.get_id_suffix()).c_str());
+        file_properties.get_id_suffix()).c_str());
+    remove((file_properties.get_file_base_name() +
+	file_properties.get_id_suffix() + file_properties.get_index_suffix()).c_str());
+  }
 }
 
 int main(int argc, char* args[])

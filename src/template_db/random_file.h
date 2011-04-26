@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include <limits>
 #include <map>
 #include <vector>
 
@@ -40,6 +41,8 @@ struct Random_File_Index
     vector< size_t > blocks;
     vector< size_t > void_blocks;
     size_t block_count;    
+
+    const size_t npos;    
 };
 
 template< class TVal >
@@ -57,22 +60,17 @@ public:
   TVal get(size_t pos);
   void put(size_t pos, const TVal& index);
   
-/*  void flush_cache();
-  void apply_written_cache();*/
-  
 private:
   string id_file_name;
-  string shadow_file_name;
   bool writeable;
   uint32 index_size;
-  uint64 file_size;
-  map< size_t, TVal > write_cache;
   
   Raw_File val_file;
   Random_File_Index index;
   Void_Pointer< uint8 > cache;
   size_t cache_pos, block_size;
-  void* zero;
+  
+  void move_cache_window(size_t pos);
 };
 
 /** Implementation Random_File_Index: ---------------------------------------*/
@@ -80,7 +78,8 @@ private:
 inline Random_File_Index::Random_File_Index
     (string source_index_file_name, string dest_index_file_name_,
      uint32 block_count_) :
-     dest_index_file_name(dest_index_file_name_), block_count(block_count_)
+     dest_index_file_name(dest_index_file_name_), block_count(block_count_),
+     npos(numeric_limits< size_t >::max())
 {
   vector< bool > is_referred(block_count, false);
   
@@ -101,10 +100,14 @@ inline Random_File_Index::Random_File_Index
   {
     size_t* entry = (size_t*)(index_buf.ptr+pos);
     blocks.push_back(*entry);
-    if (*entry > block_count)
-      throw File_Error(0, source_index_file_name, "Random_File: bad pos in index file");
-    else
-      is_referred[*entry] = true;
+    if (*entry != npos)
+    {
+      if (*entry > block_count)
+	throw File_Error(0, source_index_file_name,
+			 "Random_File: bad pos in index file");
+      else
+	is_referred[*entry] = true;
+    }
     pos += sizeof(size_t);
   }
   
@@ -157,152 +160,84 @@ inline Random_File< TVal >::Random_File(const File_Properties& file_prop, bool w
         + file_prop.get_index_suffix(),
 	writeable ? file_prop.get_file_base_name() + file_prop.get_id_suffix()
 	+ file_prop.get_index_suffix() : "",
-	lseek64(val_file.fd, 0, SEEK_END)/file_prop.get_map_block_size()),
-  cache(file_prop.get_map_block_size()*sizeof(size_t)), cache_pos(index.block_count),
+	lseek64(val_file.fd, 0, SEEK_END)/file_prop.get_map_block_size()/index_size),
+  cache(file_prop.get_map_block_size()*sizeof(size_t)), cache_pos(index.npos),
   block_size(file_prop.get_map_block_size())
 {
-  id_file_name = file_prop.get_file_base_name()
-      + file_prop.get_id_suffix();
-  shadow_file_name = id_file_name + file_prop.get_shadow_suffix();
+  id_file_name = file_prop.get_file_base_name() + file_prop.get_id_suffix();
   this->writeable = writeable;
-  
-  // reserve buffer for read/write actions
-  zero = calloc(index_size, 64*1024);
-  
-  // determine the data file's size
-  file_size = lseek64(val_file.fd, 0, SEEK_END);
 }
 
 template< class TVal >
 inline Random_File< TVal >::~Random_File()
 {
-/*  flush_cache();
-  apply_written_cache();*/
-  
-  free(zero);
+  move_cache_window(index.npos);  
 }
 
 template< class TVal >
 inline TVal Random_File< TVal >::get(size_t pos)
 {
-  if ((cache_pos == index.block_count) || (pos / block_size != cache_pos))
-  {
-    if (writeable)
-    {
-      if (cache_pos != index.block_count)
-      {
-        lseek64(val_file.fd, (int64)cache_pos*block_size*index_size, SEEK_SET);
-	uint32 foo(write(val_file.fd, cache.ptr, block_size*index_size)); foo = 0;
-      }
-    }
-    cache_pos = pos / block_size;
-    if (cache_pos < index.block_count)
-    {
-      lseek64(val_file.fd, (int64)cache_pos*block_size*index_size, SEEK_SET);
-      uint32 foo(read(val_file.fd, cache.ptr, block_size*index_size)); foo = 0;
-    }
-    else
-    {
-      // Reset the whole cache to zero.
-      for (uint32 i = 0; i < block_size*index_size; ++i)
-	*(cache.ptr + i) = 0;
-      if (writeable)
-      {
-	//TODO
-      }
-    }
-  }
-  
-  return TVal(((TVal*)cache.ptr) + pos % block_size);
+  move_cache_window(pos / block_size);  
+  return TVal(cache.ptr + (pos % block_size)*index_size);
 }
 
 template< class TVal >
-inline void Random_File< TVal >::put(size_t pos, const TVal& index)
+inline void Random_File< TVal >::put(size_t pos, const TVal& val)
 {
   if (!writeable)
     throw File_Error(0, id_file_name, "Random_File:2");
-
-  typename map< size_t, TVal >::iterator it = write_cache.lower_bound(pos);
-  if (it->first == pos)
-    it->second = index;
-  else
-    write_cache.insert(it, make_pair(pos, index));
+  
+  move_cache_window(pos / block_size);  
+  val.to_data(cache.ptr + (pos % block_size)*index_size);
 }
 
-// template< class TVal >
-// inline void Random_File< TVal >::flush_cache()
-// {
-//   if (!writeable)
-//     return;
-//   
-//   // open data file
-//   int data_fd = open64
-//       (shadow_file_name.c_str(),
-//        O_RDWR|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-//   if (data_fd < 0)
-//     throw File_Error(errno, id_file_name, "Random_File:3");
-//   
-//   lseek64(data_fd, 0, SEEK_SET);
-//   
-//   for (typename map< size_t, TVal >::const_iterator it = write_cache.begin();
-//       it != write_cache.end(); ++it)
-//   {
-//     *(size_t*)buffer = it->first;
-//     *(TVal*)((size_t*)buffer+1) = it->second;
-//     uint32 foo = write(data_fd, buffer, index_size + sizeof(size_t)); foo = 0;
-//   }
-//   
-//   close(data_fd);
-// }
+template< class TVal >
+inline void Random_File< TVal >::move_cache_window(size_t pos)
+{
+  // The cache already contains the needed position.
+  if ((pos == cache_pos) && (cache_pos != index.npos))
+    return;
+  
+  if ((writeable) && (cache_pos != index.npos))
+  {
+    // Find an empty position.
+    uint32 disk_pos;
+    if (index.void_blocks.empty())
+    {
+      disk_pos = index.block_count;
+      ++(index.block_count);
+    }
+    else
+    {
+      disk_pos = index.void_blocks.back();
+      index.void_blocks.pop_back();
+    }
+    
+    // Save the found position to the index.
+    if (index.blocks.size() <= cache_pos)
+      index.blocks.resize(cache_pos+1, index.npos);
+    index.blocks[cache_pos] = disk_pos;
+    
+    // Write the data at the found position.
+    lseek64(val_file.fd, (int64)disk_pos*block_size*index_size, SEEK_SET);
+    uint32 foo(write(val_file.fd, cache.ptr, block_size*index_size)); foo = 0;
+  }
 
-// template< class TVal >
-// inline void Random_File< TVal >::apply_written_cache()
-// {
-//   if (!writeable)
-//     return;
-//   
-//   // open data file
-//   int source_fd = open64
-//       (shadow_file_name.c_str(),
-//        O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-//   if (source_fd < 0)
-//     throw File_Error(errno, id_file_name, "Random_File:4");
-//   int dest_fd = open64
-//       (id_file_name.c_str(),
-//        O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-//   if (dest_fd < 0)
-//     throw File_Error(errno, id_file_name, "Random_File:5");
-//    
-//   // determine the data file's size
-//   uint64 source_file_size = lseek64(source_fd, 0, SEEK_END);
-//   lseek64(source_fd, 0, SEEK_SET);
-//   
-//   for (int64 source_pos = 0; source_pos < source_file_size;
-//       source_pos += index_size + sizeof(size_t))
-//   {
-//     uint32 foo = read(source_fd, buffer, index_size + sizeof(size_t)); foo = 0;
-//     uint64 pos = *(size_t*)buffer;
-// 
-//     if (pos*(index_size) > file_size)
-//     {
-//       lseek64(dest_fd, file_size, SEEK_SET);
-//       while (pos*(index_size) > file_size)
-//       {
-// 	uint32 foo(write(dest_fd, zero, index_size*64*1024)); foo = 0;
-// 	file_size += 64*1024*index_size;
-//       }
-//     }
-//     if (pos*(index_size) == file_size)
-//       file_size += index_size;
-//     
-//     lseek64(dest_fd, (int64)pos*(index_size), SEEK_SET);
-//     foo = write(dest_fd, (uint8*)buffer+sizeof(size_t), index_size); foo = 0;
-//   }
-//   
-//   close(source_fd);
-//   close(dest_fd);
-// 
-//   remove(shadow_file_name.c_str());
-// }
+  if (pos == index.npos)
+    return;
+  
+  if ((index.blocks.size() <= pos) || (index.blocks[pos] == index.npos))
+  {
+    // Reset the whole cache to zero.
+    for (uint32 i = 0; i < block_size*index_size; ++i)
+      *(cache.ptr + i) = 0;
+  }
+  else
+  {
+    lseek64(val_file.fd, (int64)index.blocks[pos]*block_size*index_size, SEEK_SET);
+    uint32 foo(read(val_file.fd, cache.ptr, block_size*index_size)); foo = 0;
+  }
+  cache_pos = pos;
+}
 
 #endif

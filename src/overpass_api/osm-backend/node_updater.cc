@@ -335,6 +335,7 @@ void Node_Updater::merge_files(string from, string into)
     into_db.update(db_to_delete, db_to_insert);
   }
   remove((de_osm3s_file_ids::NODES->get_file_base_name() + from 
+      + de_osm3s_file_ids::NODES->get_data_suffix()
       + de_osm3s_file_ids::NODES->get_index_suffix()).c_str());
   remove((de_osm3s_file_ids::NODES->get_file_base_name() + from 
       + de_osm3s_file_ids::NODES->get_data_suffix()).c_str());
@@ -364,6 +365,7 @@ void Node_Updater::merge_files(string from, string into)
     into_db.update(db_to_delete, db_to_insert);
   }
   remove((de_osm3s_file_ids::NODE_TAGS_LOCAL->get_file_base_name() + from 
+      + de_osm3s_file_ids::NODE_TAGS_LOCAL->get_data_suffix()
       + de_osm3s_file_ids::NODE_TAGS_LOCAL->get_index_suffix()).c_str());
   remove((de_osm3s_file_ids::NODE_TAGS_LOCAL->get_file_base_name() + from 
       + de_osm3s_file_ids::NODE_TAGS_LOCAL->get_data_suffix()).c_str());
@@ -393,6 +395,7 @@ void Node_Updater::merge_files(string from, string into)
     into_db.update(db_to_delete, db_to_insert);
   }
   remove((de_osm3s_file_ids::NODE_TAGS_GLOBAL->get_file_base_name() + from 
+      + de_osm3s_file_ids::NODE_TAGS_GLOBAL->get_data_suffix()
       + de_osm3s_file_ids::NODE_TAGS_GLOBAL->get_index_suffix()).c_str());
   remove((de_osm3s_file_ids::NODE_TAGS_GLOBAL->get_file_base_name() + from 
       + de_osm3s_file_ids::NODE_TAGS_GLOBAL->get_data_suffix()).c_str());
