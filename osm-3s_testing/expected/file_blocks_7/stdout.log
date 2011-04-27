@@ -1,5 +1,6 @@
 ** Delete blocks in between
 Read test
+Index footprint: 0001100101
 Reading all blocks ...
 Predicted size 508, real size 23 bytes, first block size 19 bytes, first index 7
 Predicted size 508, real size 26 bytes, first block size 22 bytes, first index 10

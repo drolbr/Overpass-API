@@ -1,5 +1,6 @@
 ** Test the behaviour for a file with three entries
 Read test
+Index footprint: 111
 Reading all blocks ...
 Predicted size 508, real size 25 bytes, first block size 21 bytes, first index 9
 Predicted size 508, real size 67 bytes, first block size 63 bytes, first index 51

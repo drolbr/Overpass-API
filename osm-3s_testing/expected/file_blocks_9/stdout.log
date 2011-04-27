@@ -1,5 +1,6 @@
 ** Test insertion again
 Read test
+Index footprint: 111111111111
 Reading all blocks ...
 Predicted size 508, real size 26 bytes, first block size 22 bytes, first index 10
 Predicted size 508, real size 36 bytes, first block size 32 bytes, first index 20

@@ -761,6 +761,16 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
 {
   if (buf != 0)
   {
+    if (this->index.void_blocks.empty())
+    {
+      it.block_it->pos = this->index.block_count;
+      ++(this->index.block_count);
+    }
+    else
+    {
+      it.block_it->pos = index.void_blocks.back();
+      this->index.void_blocks.pop_back();
+    }
     lseek64(data_file.fd, (int64)(it.block_it->pos)*(block_size), SEEK_SET);
     uint32 foo(write(data_file.fd, buf, block_size)); foo = 0;
     
@@ -771,7 +781,6 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
   }
   else
   {
-    index.void_blocks.push_back(it.block_it->pos);
     Discrete_Iterator return_it(it);
     ++return_it;
     if (it.block_it == it.block_begin)

@@ -1,5 +1,6 @@
 ** Test the behaviour for an empty file
 Read test
+Index footprint: 
 Reading all blocks ...
 ... all blocks read.
 Reading blocks with indices {0, 9, ..., 99} ...
