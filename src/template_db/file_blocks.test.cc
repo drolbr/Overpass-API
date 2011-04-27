@@ -59,6 +59,16 @@ struct Test_File : File_Properties
   {
     return 16;
   }
+  
+  vector< bool > get_data_footprint() const
+  {
+    return vector< bool >();
+  }
+  
+  vector< bool > get_map_footprint() const
+  {
+    return vector< bool >();
+  }  
 };
 
 //-----------------------------------------------------------------------------
@@ -205,7 +215,14 @@ void read_test()
   {
     cout<<"Read test\n";
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), false);
-  
+
+    vector< bool > footprint = get_data_index_footprint< IntIndex >(Test_File());
+    cout<<"Index footprint: ";
+    for (vector< bool >::const_iterator it(footprint.begin()); it != footprint.end();
+        ++it)
+      cout<<*it;
+    cout<<'\n';
+
     cout<<"Reading all blocks ...\n";
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
 	fit(blocks.flat_begin());

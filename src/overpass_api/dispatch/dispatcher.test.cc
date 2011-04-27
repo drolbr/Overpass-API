@@ -1,7 +1,7 @@
 #include <fstream>
 #include <iostream>
 
-#include <errno.h>
+/*#include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,12 +11,238 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../core/datatypes.h"
+#include "../core/datatypes.h"*/
 #include "dispatcher.h"
 
 using namespace std;
 
-uint32 msg_id(0);
+//-----------------------------------------------------------------------------
+
+/* We use our own test settings */
+string BASE_DIRECTORY("./");
+string ID_SUFFIX(".map");
+
+struct Test_File : File_Properties
+{
+  Test_File(string basename_) : basename(basename_) {}
+  
+  string get_basedir() const
+  {
+    return BASE_DIRECTORY;
+  }
+  
+  string get_file_base_name() const
+  {
+    return BASE_DIRECTORY + basename;
+  }
+  
+  string get_index_suffix() const
+  {
+    return ".idx";
+  }
+  
+  string get_data_suffix() const
+  {
+    return ".bin";
+  }
+  
+  string get_id_suffix() const
+  {
+    return ID_SUFFIX;
+  }
+  
+  string get_shadow_suffix() const
+  {
+    return ".shadow";
+  }
+  
+  uint32 get_block_size() const
+  {
+    return 512;
+  }
+  
+  uint32 get_map_block_size() const
+  {
+    return 16;
+  }
+  
+  vector< bool > get_data_footprint() const
+  {
+    return vector< bool >();
+  }
+  
+  vector< bool > get_map_footprint() const
+  {
+    return vector< bool >();
+  }  
+  
+  string basename;
+};
+
+//-----------------------------------------------------------------------------
+
+void create_dummy_files
+    (const File_Properties& test_file_1,
+     const File_Properties& test_file_2,
+     const File_Properties& test_file_3,
+     const File_Properties& test_file_4,
+     bool shadow)
+{
+  if (!shadow)
+  {
+    {
+      ofstream test_bin_out((test_file_1.get_file_base_name()
+          + test_file_1.get_data_suffix()).c_str());
+      test_bin_out<<"This is test file bin 1\n";
+      ofstream test_idx_out((test_file_1.get_file_base_name()
+          + test_file_1.get_data_suffix() + test_file_1.get_index_suffix()).c_str());
+      test_idx_out<<"This is test file bin idx 1\n";
+    }
+    {
+      ofstream test_bin_out((test_file_2.get_file_base_name()
+          + test_file_2.get_id_suffix()).c_str());
+      test_bin_out<<"This is test file map 2\n";
+      ofstream test_idx_out((test_file_2.get_file_base_name()
+          + test_file_2.get_id_suffix() + test_file_2.get_index_suffix()).c_str());
+      test_idx_out<<"This is test file map idx 2\n";
+    }
+    {
+      ofstream test_bin_out((test_file_3.get_file_base_name()
+          + test_file_3.get_data_suffix()).c_str());
+      test_bin_out<<"This is test file bin 3\n";
+      ofstream test_idx_out((test_file_3.get_file_base_name()
+          + test_file_3.get_data_suffix() + test_file_3.get_index_suffix()).c_str());
+      test_idx_out<<"This is test file bin idx 3\n";
+    }
+    {
+      ofstream test_bin_out((test_file_3.get_file_base_name()
+          + test_file_3.get_id_suffix()).c_str());
+      test_bin_out<<"This is test file map 3\n";
+      ofstream test_idx_out((test_file_3.get_file_base_name()
+          + test_file_3.get_id_suffix()+ test_file_3.get_index_suffix()).c_str());
+      test_idx_out<<"This is test file map idx 3\n";
+    }
+    {
+      ofstream test_bin_out((test_file_4.get_file_base_name()
+          + test_file_4.get_data_suffix()).c_str());
+      test_bin_out<<"This is test file bin 4\n";
+      ofstream test_idx_out((test_file_4.get_file_base_name()
+          + test_file_4.get_data_suffix() + test_file_4.get_index_suffix()).c_str());
+      test_idx_out<<"This is test file bin idx 4\n";
+    }
+    {
+      ofstream test_bin_out((test_file_4.get_file_base_name()
+          + test_file_4.get_id_suffix()).c_str());
+      test_bin_out<<"This is test file map 4\n";
+      ofstream test_idx_out((test_file_4.get_file_base_name()
+          + test_file_4.get_id_suffix()+ test_file_4.get_index_suffix()).c_str());
+      test_idx_out<<"This is test file map idx 4\n";
+    }
+  }
+  else
+  {
+    {
+      ofstream test_bin_out((test_file_1.get_file_base_name()
+          + test_file_1.get_data_suffix()).c_str());
+      test_bin_out<<"This is test file bin shadow 1\n";
+      ofstream test_idx_out((test_file_1.get_file_base_name()
+          + test_file_1.get_data_suffix() + test_file_1.get_index_suffix()
+	  + test_file_1.get_shadow_suffix()).c_str());
+      test_idx_out<<"This is test file bin idx shadow 1\n";
+    }
+    {
+      ofstream test_bin_out((test_file_2.get_file_base_name()
+          + test_file_2.get_id_suffix()).c_str());
+      test_bin_out<<"This is test file map shadow 2\n";
+      ofstream test_idx_out((test_file_2.get_file_base_name()
+          + test_file_2.get_id_suffix() + test_file_2.get_index_suffix()
+	  + test_file_2.get_shadow_suffix()).c_str());
+      test_idx_out<<"This is test file map idx shadow 2\n";
+    }
+    {
+      ofstream test_bin_out((test_file_3.get_file_base_name()
+          + test_file_3.get_data_suffix()).c_str());
+      test_bin_out<<"This is test file bin shadow 3\n";
+      ofstream test_idx_out((test_file_3.get_file_base_name()
+          + test_file_3.get_data_suffix() + test_file_3.get_index_suffix()
+	  + test_file_3.get_shadow_suffix()).c_str());
+      test_idx_out<<"This is test file bin idx shadow 3\n";
+    }
+    {
+      ofstream test_bin_out((test_file_3.get_file_base_name()
+          + test_file_3.get_id_suffix()).c_str());
+      test_bin_out<<"This is test file map shadow 3\n";
+      ofstream test_idx_out((test_file_3.get_file_base_name()
+          + test_file_3.get_id_suffix() + test_file_3.get_index_suffix()
+	  + test_file_3.get_shadow_suffix()).c_str());
+      test_idx_out<<"This is test file map idx shadow 3\n";
+    }
+    {
+      ofstream test_bin_out((test_file_4.get_file_base_name()
+          + test_file_4.get_data_suffix()).c_str());
+      test_bin_out<<"This is test file bin shadow 4\n";
+      ofstream test_idx_out((test_file_4.get_file_base_name()
+          + test_file_4.get_data_suffix() + test_file_4.get_index_suffix()
+	  + test_file_4.get_shadow_suffix()).c_str());
+      test_idx_out<<"This is test file bin idx shadow 4\n";
+    }
+    {
+      ofstream test_bin_out((test_file_4.get_file_base_name()
+          + test_file_4.get_id_suffix()).c_str());
+      test_bin_out<<"This is test file map shadow 4\n";
+      ofstream test_idx_out((test_file_4.get_file_base_name()
+          + test_file_4.get_id_suffix()+ test_file_4.get_index_suffix()
+	  + test_file_4.get_shadow_suffix()).c_str());
+      test_idx_out<<"This is test file map idx shadow 4\n";
+    }
+  }
+}
+
+int main(int argc, char* args[])
+{
+  string test_to_execute;
+  if (argc > 1)
+    test_to_execute = args[1];
+  
+  if ((test_to_execute == "") || (test_to_execute == "1"))
+  {
+    Test_File test_file_1("Test_File_1");
+    Test_File test_file_2("Test_File_2");
+    Test_File test_file_3("Test_File_3");
+    Test_File test_file_4("Test_File_4");
+    
+    create_dummy_files(test_file_1, test_file_2, test_file_3, test_file_4, false);
+      
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file_1);
+    file_properties.push_back(&test_file_2);
+    file_properties.push_back(&test_file_3);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			  BASE_DIRECTORY + "test-shadow", file_properties);
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "2"))
+  {
+    Test_File test_file_1("Test_File_1");
+    Test_File test_file_2("Test_File_2");
+    Test_File test_file_3("Test_File_3");
+    Test_File test_file_4("Test_File_4");
+    
+    create_dummy_files(test_file_1, test_file_2, test_file_3, test_file_4, true);
+    {
+      ofstream test_bin_out((BASE_DIRECTORY + "test-shadow").c_str());
+    }
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file_1);
+    file_properties.push_back(&test_file_2);
+    file_properties.push_back(&test_file_3);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			  "test-shadow", file_properties);
+  }
+}
+
+/*uint32 msg_id(0);
 
 void show_state(uint8* shm_ptr, const string& db_dir)
 {
@@ -203,4 +429,4 @@ int main(int argc, char* argv[])
   cerr<<" done.\n";
   
   return 0;
-}
+}*/

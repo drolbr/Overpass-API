@@ -282,6 +282,9 @@ private:
   Void_Pointer< void > buffer;
 };
  
+template< class TIndex >
+vector< bool > get_data_index_footprint(const File_Properties& file_prop);
+
 /** Implementation File_Blocks_Basic_Iterator: ------------------------------*/
 
 template< class TIndex >
@@ -780,6 +783,27 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
       it.block_it = index.blocks.erase(it.block_it);
     return return_it;
   }
+}
+
+/** Implementation non-members: ---------------------------------------------*/
+
+template< class TIndex >
+vector< bool > get_data_index_footprint(const File_Properties& file_prop)
+{
+  Raw_File val_file(file_prop.get_file_base_name() + file_prop.get_data_suffix(),
+	            O_RDONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH,
+		    "get_data_index_footprint:1");
+  uint64 block_count = lseek64(val_file.fd, 0, SEEK_END)
+      /file_prop.get_block_size();
+  File_Blocks_Index< TIndex > index
+      (file_prop.get_file_base_name() + file_prop.get_data_suffix()
+       + file_prop.get_index_suffix(), "", block_count);
+       
+  vector< bool > result(block_count, true);
+  for (typename vector< uint32 >::const_iterator
+      it(index.void_blocks.begin()); it != index.void_blocks.end(); ++it)
+    result[*it] = false;
+  return result;
 }
 
 #endif

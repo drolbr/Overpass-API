@@ -24,7 +24,7 @@ string INDEX_SUFFIX(".idx");
 string ID_SUFFIX(".map");
 string SHADOW_SUFFIX(".shadow");
 
-struct OSM_File_Properties : File_Properties
+struct OSM_File_Properties : public File_Properties
 {
   OSM_File_Properties(string file_base_name_, uint32 block_size_,
 		      uint32 map_block_size_)
@@ -70,7 +70,17 @@ struct OSM_File_Properties : File_Properties
   {
     return map_block_size;
   }
-
+  
+  vector< bool > get_data_footprint() const
+  {
+    return vector< bool >();
+  }
+  
+  vector< bool > get_map_footprint() const
+  {
+    return vector< bool >();
+  }
+  
   string file_base_name;
   uint32 block_size;
   uint32 map_block_size;

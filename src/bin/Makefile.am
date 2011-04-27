@@ -22,7 +22,7 @@ osm3s_query_SOURCES = ${expat_cc} ${settings_cc} ${console_frontend_cc} ${statem
 osm3s_query_LDADD = -lexpat -lrt
 web_query_SOURCES = ${expat_cc} ${settings_cc} ${web_frontend_cc} ${statements_cc} ${dispatcher_cc} ../overpass_api/dispatch/web_query.cc
 web_query_LDADD = -lexpat -lrt
-scheduler_SOURCES = ../overpass_api/dispatch/dispatcher.cc
+scheduler_SOURCES = ../overpass_api/dispatch/dispatcher.cc ../overpass_api/dispatch/dispatcher_run.cc
 scheduler_LDADD = -lrt
 
 sketch_route_svg_SOURCES = ${expat_cc} ${escape_xml_cc} ../pt_diagrams/sketch-route-svg.cc

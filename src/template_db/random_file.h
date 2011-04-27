@@ -73,6 +73,9 @@ private:
   void move_cache_window(size_t pos);
 };
 
+template< class TVal >
+vector< bool > get_map_index_footprint(const File_Properties& file_prop);
+
 /** Implementation Random_File_Index: ---------------------------------------*/
 
 inline Random_File_Index::Random_File_Index
@@ -238,6 +241,28 @@ inline void Random_File< TVal >::move_cache_window(size_t pos)
     uint32 foo(read(val_file.fd, cache.ptr, block_size*index_size)); foo = 0;
   }
   cache_pos = pos;
+}
+
+/** Implementation non-members: ---------------------------------------------*/
+
+template< class TVal >
+vector< bool > get_map_index_footprint(const File_Properties& file_prop)
+{
+  uint32 index_size = TVal::max_size_of();
+  Raw_File val_file(file_prop.get_file_base_name() + file_prop.get_id_suffix(),
+	            O_RDONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH,
+		    "get_map_index_footprint:1");
+  uint64 block_count = lseek64(val_file.fd, 0, SEEK_END)
+      /file_prop.get_map_block_size()/index_size;
+  Random_File_Index index
+      (file_prop.get_file_base_name() + file_prop.get_id_suffix()
+       + file_prop.get_index_suffix(), "", block_count);
+       
+  vector< bool > result(block_count, true);
+  for (vector< Random_File_Index::size_t >::const_iterator
+      it(index.void_blocks.begin()); it != index.void_blocks.end(); ++it)
+    result[*it] = false;
+  return result;
 }
 
 #endif

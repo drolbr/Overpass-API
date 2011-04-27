@@ -2,6 +2,9 @@
 #define ORG__OVERPASS_API__DISPATCHER
 
 #include "../core/basic_types.h"
+#include "../../template_db/types.h"
+
+#include <vector>
 
 using namespace std;
 
@@ -18,5 +21,23 @@ const uint32 SERVER_STATE = 19;
 const uint32 QUERY_REJECTED = 32;
 
 static const string shared_name("/osm3s_v0.6.1");
+
+class Dispatcher
+{
+  public:
+    /** Opens a shared memory for dispatcher communication. Furthermore,
+      * detects whether idx or idy are valid, clears to idx if necessary,
+      * and loads them into the shared memory idx_share_name. */
+    Dispatcher(string dispatcher_share_name,
+	       string index_share_name,
+	       string shadow_name,
+	       const vector< File_Properties* >& controlled_files);
+    
+  private:
+    vector< File_Properties* > controlled_files;
+    
+    void copy_shadows_to_mains();
+    void remove_shadows();
+};
 
 #endif

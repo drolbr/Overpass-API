@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <string>
+#include <vector>
+
 using namespace std;
 
 typedef char int8;
@@ -48,6 +51,8 @@ struct File_Properties
   virtual string get_shadow_suffix() const = 0;
   virtual uint32 get_block_size() const = 0;
   virtual uint32 get_map_block_size() const = 0;
+  virtual vector< bool > get_data_footprint() const = 0;
+  virtual vector< bool > get_map_footprint() const = 0;
 };
 
 /** Simple RAII class to keep a file descriptor. */

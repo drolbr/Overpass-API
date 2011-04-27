@@ -18,6 +18,125 @@
 
 using namespace std;
 
+bool file_exists(const string& filename)
+{
+  struct stat statbuf;
+  return (stat(filename.c_str(), &statbuf) == 0);
+}
+
+void copy_file(const string& source, const string& dest)
+{
+  ifstream in(source.c_str());
+  if (!in.good())
+    return;
+  ofstream out(dest.c_str());
+  out<<in.rdbuf();
+}
+
+Dispatcher::Dispatcher
+    (string dispatcher_share_name,
+     string index_share_name,
+     string shadow_name,
+     const vector< File_Properties* >& controlled_files_)
+    : controlled_files(controlled_files_)
+{
+  if (file_exists(shadow_name))
+  {
+    copy_shadows_to_mains();
+    remove(shadow_name.c_str());
+  }    
+  remove_shadows();
+}
+
+void Dispatcher::copy_shadows_to_mains()
+{
+  for (vector< File_Properties* >::const_iterator it(controlled_files.begin());
+      it != controlled_files.end(); ++it)
+  {
+    try
+    {
+      copy_file((*it)->get_file_base_name() + (*it)->get_data_suffix()
+                + (*it)->get_index_suffix() + (*it)->get_shadow_suffix(),
+		(*it)->get_file_base_name() + (*it)->get_data_suffix()
+		+ (*it)->get_index_suffix());
+    }
+    catch (...) {}
+    try
+    {
+      copy_file((*it)->get_file_base_name() + (*it)->get_id_suffix()
+                + (*it)->get_index_suffix() + (*it)->get_shadow_suffix(),
+		(*it)->get_file_base_name() + (*it)->get_id_suffix()
+		+ (*it)->get_index_suffix());
+    }
+    catch (...) {}
+  }
+}
+
+void Dispatcher::remove_shadows()
+{
+  for (vector< File_Properties* >::const_iterator it(controlled_files.begin());
+  it != controlled_files.end(); ++it)
+  {
+    remove(((*it)->get_file_base_name() + (*it)->get_data_suffix()
+            + (*it)->get_index_suffix() + (*it)->get_shadow_suffix()).c_str());
+    remove(((*it)->get_file_base_name() + (*it)->get_id_suffix()
+            + (*it)->get_index_suffix() + (*it)->get_shadow_suffix()).c_str());
+  }
+}
+
+class Idx_Footprints
+{
+  public:
+    typedef uint pid_t;
+    
+    void set_current_footprint(const vector< bool >& footprint);
+    void register_pid(pid_t pid); 
+    void unregister_pid(pid_t pid); 
+    vector< pid_t > registered_processes() const;
+    vector< bool > total_footprint() const;
+    
+  private:
+    vector< bool > current_footprint;
+    map< pid_t, vector< bool > > footprint_per_pid;
+};
+
+inline void Idx_Footprints::set_current_footprint(const vector< bool >& footprint)
+{
+  current_footprint = footprint;
+}
+
+inline void Idx_Footprints::register_pid(pid_t pid)
+{
+  footprint_per_pid[pid] = current_footprint;
+}
+
+inline void Idx_Footprints::unregister_pid(pid_t pid)
+{
+  footprint_per_pid.erase(pid);
+}
+
+inline vector< Idx_Footprints::pid_t > Idx_Footprints::registered_processes() const
+{
+  vector< pid_t > result;
+  for (map< pid_t, vector< bool > >::const_iterator
+      it(footprint_per_pid.begin()); it != footprint_per_pid.end(); ++it)
+    result.push_back(it->first);
+  return result;
+}
+
+inline vector< bool > Idx_Footprints::total_footprint() const
+{
+  vector< bool > result = current_footprint;
+  for (map< pid_t, vector< bool > >::const_iterator
+      it(footprint_per_pid.begin()); it != footprint_per_pid.end(); ++it)
+  {
+    // By construction, it->second.size() <= result.size()
+    for (vector< bool >::size_type i = 0; i < it->second.size(); ++i)
+      result[i] = result[i] | (it->second)[i];
+  }
+  return result;
+}
+
 /**
   * Dispatcher - manages that a query gets a usable database and that
   * concurrent queries don't overflow the server's RAM
@@ -49,7 +168,7 @@ using namespace std;
   *   backslashes
   */
 
-struct Query_Skeleton
+/*struct Query_Skeleton
 {
   uint32 used_db;
   uint32 max_ram;
@@ -375,4 +494,4 @@ int main(int argc, char* argv[])
   }
   
   return 0;
-}
+}*/
