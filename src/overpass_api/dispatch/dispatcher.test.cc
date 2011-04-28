@@ -12,6 +12,10 @@
 #include <unistd.h>
 
 #include "../core/datatypes.h"*/
+
+#include "../../template_db/block_backend.h"
+#include "../../template_db/file_blocks.h"
+#include "../../template_db/random_file.h"
 #include "dispatcher.h"
 
 using namespace std;
@@ -81,6 +85,87 @@ struct Test_File : File_Properties
 
 //-----------------------------------------------------------------------------
 
+/* Sample class for TIndex */
+struct IntIndex
+{
+  IntIndex(uint32 i) : value(i) {}
+  IntIndex(void* data) : value(*(uint32*)data) {}
+  
+  uint32 size_of() const
+  {
+    return 4;
+  }
+  
+  static uint32 size_of(void* data)
+  {
+    return 4;
+  }
+  
+  static uint32 max_size_of()
+  {
+    return 4;
+  }
+  
+  void to_data(void* data) const
+  {
+    *(uint32*)data = value;
+  }
+  
+  bool operator<(const IntIndex& index) const
+  {
+    return this->value < index.value;
+  }
+  
+  bool operator==(const IntIndex& index) const
+  {
+    return this->value == index.value;
+  }
+  
+  uint32 val() const
+  {
+    return value;
+  }
+  
+  private:
+    uint32 value;
+};
+
+struct IntObject
+{
+  IntObject(void* data) : value(*(uint32*)data) {}
+  IntObject(int i) : value(i) {}
+  
+  uint32 size_of() const
+  {
+    return 4;
+  }
+  
+  static uint32 size_of(void* data)
+  {
+    return 4;
+  }
+  
+  void to_data(void* data) const
+  {
+    *(uint32*)data = value;
+  }
+  
+  bool operator<(const IntObject& index) const
+  {
+    return this->value < index.value;
+  }
+  
+  int val() const
+  {
+    return value;
+  }
+  
+  private:
+    uint32 value;
+};
+
+//-----------------------------------------------------------------------------
+
 void create_dummy_files
     (const File_Properties& test_file_1,
      const File_Properties& test_file_2,
@@ -144,7 +229,7 @@ void create_dummy_files
     {
       ofstream test_bin_out((test_file_1.get_file_base_name()
           + test_file_1.get_data_suffix()).c_str());
-      test_bin_out<<"This is test file bin shadow 1\n";
+      test_bin_out<<"This is test file bin 1\n";
       ofstream test_idx_out((test_file_1.get_file_base_name()
           + test_file_1.get_data_suffix() + test_file_1.get_index_suffix()
 	  + test_file_1.get_shadow_suffix()).c_str());
@@ -153,7 +238,7 @@ void create_dummy_files
     {
       ofstream test_bin_out((test_file_2.get_file_base_name()
           + test_file_2.get_id_suffix()).c_str());
-      test_bin_out<<"This is test file map shadow 2\n";
+      test_bin_out<<"This is test file map 2\n";
       ofstream test_idx_out((test_file_2.get_file_base_name()
           + test_file_2.get_id_suffix() + test_file_2.get_index_suffix()
 	  + test_file_2.get_shadow_suffix()).c_str());
@@ -162,7 +247,7 @@ void create_dummy_files
     {
       ofstream test_bin_out((test_file_3.get_file_base_name()
           + test_file_3.get_data_suffix()).c_str());
-      test_bin_out<<"This is test file bin shadow 3\n";
+      test_bin_out<<"This is test file bin 3\n";
       ofstream test_idx_out((test_file_3.get_file_base_name()
           + test_file_3.get_data_suffix() + test_file_3.get_index_suffix()
 	  + test_file_3.get_shadow_suffix()).c_str());
@@ -171,7 +256,7 @@ void create_dummy_files
     {
       ofstream test_bin_out((test_file_3.get_file_base_name()
           + test_file_3.get_id_suffix()).c_str());
-      test_bin_out<<"This is test file map shadow 3\n";
+      test_bin_out<<"This is test file map 3\n";
       ofstream test_idx_out((test_file_3.get_file_base_name()
           + test_file_3.get_id_suffix() + test_file_3.get_index_suffix()
 	  + test_file_3.get_shadow_suffix()).c_str());
@@ -180,7 +265,7 @@ void create_dummy_files
     {
       ofstream test_bin_out((test_file_4.get_file_base_name()
           + test_file_4.get_data_suffix()).c_str());
-      test_bin_out<<"This is test file bin shadow 4\n";
+      test_bin_out<<"This is test file bin 4\n";
       ofstream test_idx_out((test_file_4.get_file_base_name()
           + test_file_4.get_data_suffix() + test_file_4.get_index_suffix()
 	  + test_file_4.get_shadow_suffix()).c_str());
@@ -189,12 +274,108 @@ void create_dummy_files
     {
       ofstream test_bin_out((test_file_4.get_file_base_name()
           + test_file_4.get_id_suffix()).c_str());
-      test_bin_out<<"This is test file map shadow 4\n";
+      test_bin_out<<"This is test file map 4\n";
       ofstream test_idx_out((test_file_4.get_file_base_name()
           + test_file_4.get_id_suffix()+ test_file_4.get_index_suffix()
 	  + test_file_4.get_shadow_suffix()).c_str());
       test_idx_out<<"This is test file map idx shadow 4\n";
     }
+  }
+}
+
+void map_read_test(bool use_shadow = false)
+{
+  try
+  {
+    cout<<"Read test\n";
+    vector< bool > footprint =
+        get_map_index_footprint< IntIndex >(Test_File("Test_File"), use_shadow);
+    cout<<"Index footprint: ";
+    for (vector< bool >::const_iterator it(footprint.begin());
+        it != footprint.end(); ++it)
+    cout<<*it;
+    cout<<'\n';
+    
+    Random_File< IntIndex > id_file(Test_File("Test_File"), false, use_shadow);
+    
+    cout<<id_file.get(0).val()<<'\n';
+    
+    cout<<"This block of read tests is complete.\n";
+  }
+  catch (File_Error e)
+  {
+    cout<<"File error catched: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cout<<"(This is unexpected)\n";
+  }
+}
+
+void read_loop
+    (Block_Backend< IntIndex, IntObject >& blocks,
+     Block_Backend< IntIndex, IntObject >::Flat_Iterator& it)
+{
+  if (it == blocks.flat_end())
+  {
+    cout<<"[empty]\n";
+    return;
+  }
+  IntIndex current_idx(it.index());
+  cout<<"Index "<<current_idx.val()<<": ";
+  while (!(it == blocks.flat_end()))
+  {
+    if (!(current_idx == it.index()))
+    {
+      current_idx = it.index();
+      cout<<"\nIndex "<<current_idx.val()<<": ";
+    }
+    cout<<it.object().val()<<' ';
+    ++it;
+  }
+  cout<<'\n';
+}
+
+void data_read_test()
+{
+  try
+  {
+    Block_Backend< IntIndex, IntObject >
+	db_backend(Test_File("Test_File"), false, false);
+    
+    cout<<"Read test\n";
+    vector< bool > footprint =
+        get_data_index_footprint< IntIndex >(Test_File("Test_File"));
+    cout<<"Index footprint: ";
+    for (vector< bool >::const_iterator it(footprint.begin());
+        it != footprint.end(); ++it)
+    cout<<*it;
+    cout<<'\n';
+    
+    Block_Backend< IntIndex, IntObject >::Flat_Iterator fit(db_backend.flat_begin());
+    read_loop(db_backend, fit);
+    cout<<"This block of read tests is complete.\n";
+  }
+  catch (File_Error e)
+  {
+    cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
+void put_elem(uint32 idx, uint32 val)
+{
+  map< IntIndex, set< IntObject > > to_delete;
+  map< IntIndex, set< IntObject > > to_insert;
+  to_insert[IntIndex(idx)].insert(IntObject(val));
+  try
+  {
+    Block_Backend< IntIndex, IntObject > db_backend
+        (Test_File("Test_File"), true, true);
+    db_backend.update(to_delete, to_insert);
+  }
+  catch (File_Error e)
+  {
+    cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
 
@@ -239,6 +420,184 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file_3);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			  "test-shadow", file_properties);
+  }
+
+  if ((test_to_execute == "") || (test_to_execute == "3"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			  "test-shadow", file_properties);
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "4"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			  "test-shadow", file_properties);
+    dispatcher.write_start(480);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 1);
+    }
+    map_read_test(true);
+    remove("Test_File.map");
+    remove("Test_File.map.idx.shadow");
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "5"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			  "test-shadow", file_properties);
+    dispatcher.write_start(495);
+    dispatcher.write_start(480);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 1);
+    }
+    remove("Test_File.map");
+    remove("Test_File.map.idx.shadow");
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "6"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			  "test-shadow", file_properties);
+    dispatcher.write_start(480);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 1);
+    }
+    dispatcher.write_commit();
+    map_read_test();
+    remove("Test_File.map");
+    remove("Test_File.map.idx");
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "7"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			  "test-shadow", file_properties);
+    dispatcher.write_start(480);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 1);
+    }
+    dispatcher.write_commit();
+    dispatcher.write_start(481);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 2);
+    }
+    dispatcher.write_commit();
+    map_read_test();
+    remove("Test_File.map");
+    remove("Test_File.map.idx");
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "8"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			  "test-shadow", file_properties);
+    dispatcher.write_start(480);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 1);
+    }
+    dispatcher.write_commit();
+    dispatcher.write_start(481);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 2);
+    }
+    dispatcher.write_commit();
+    dispatcher.write_start(482);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 3);
+    }
+    dispatcher.write_commit();
+    map_read_test();
+    remove("Test_File.map");
+    remove("Test_File.map.idx");
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "9"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			  "test-shadow", file_properties);
+    dispatcher.write_start(480);
+    put_elem(0, 1);
+    dispatcher.write_commit();
+    data_read_test();
+    remove("Test_File.bin");
+    remove("Test_File.bin.idx");
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "10"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			  "test-shadow", file_properties);
+    dispatcher.write_start(480);
+    put_elem(0, 1);
+    dispatcher.write_commit();
+    dispatcher.write_start(481);
+    put_elem(0, 2);
+    dispatcher.write_commit();
+    data_read_test();
+    remove("Test_File.bin");
+    remove("Test_File.bin.idx");
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "11"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			  "test-shadow", file_properties);
+    dispatcher.write_start(480);
+    put_elem(0, 1);
+    dispatcher.write_commit();
+    dispatcher.write_start(481);
+    put_elem(0, 2);
+    dispatcher.write_commit();
+    dispatcher.write_start(482);
+    put_elem(0, 3);
+    dispatcher.write_commit();
+    data_read_test();
+    remove("Test_File.bin");
+    remove("Test_File.bin.idx");
   }
 }
 

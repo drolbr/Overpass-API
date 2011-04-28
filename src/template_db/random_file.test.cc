@@ -121,7 +121,7 @@ void read_test()
       cout<<*it;
     cout<<'\n';
     
-    Random_File< IntIndex > id_file(Test_File(), false);
+    Random_File< IntIndex > id_file(Test_File(), false, false);
 
     cout<<id_file.get(0).val()<<'\n';
     cout<<id_file.get(1).val()<<'\n';
@@ -172,7 +172,7 @@ int main(int argc, char* args[])
     cout<<"** Test the behaviour for a file with two entries - part 1\n";
   try
   {
-    Random_File< IntIndex > blocks(Test_File(), true);
+    Random_File< IntIndex > blocks(Test_File(), true, false);
     
     blocks.put(2, 12);
     blocks.put(5, 15);
@@ -190,7 +190,7 @@ int main(int argc, char* args[])
     cout<<"** Add at the end\n";
   try
   {
-    Random_File< IntIndex > blocks(Test_File(), true);
+    Random_File< IntIndex > blocks(Test_File(), true, false);
     
     blocks.put(6, 16);
   }
@@ -207,7 +207,7 @@ int main(int argc, char* args[])
     cout<<"** Overwrite an existing block\n";
   try
   {
-    Random_File< IntIndex > blocks(Test_File(), true);
+    Random_File< IntIndex > blocks(Test_File(), true, false);
     
     blocks.put(2, 32);
   }
@@ -224,7 +224,7 @@ int main(int argc, char* args[])
     cout<<"** Write a second block\n";
   try
   {
-    Random_File< IntIndex > blocks(Test_File(), true);
+    Random_File< IntIndex > blocks(Test_File(), true, false);
     
     blocks.put(16, 1);
   }
@@ -241,7 +241,7 @@ int main(int argc, char* args[])
     cout<<"** Write several blocks at once.\n";
   try
   {
-    Random_File< IntIndex > blocks(Test_File(), true);
+    Random_File< IntIndex > blocks(Test_File(), true, false);
     
     blocks.put(0, 2);
     blocks.put(32, 3);
@@ -260,7 +260,7 @@ int main(int argc, char* args[])
     cout<<"** Leave a gap.\n";
   try
   {
-    Random_File< IntIndex > blocks(Test_File(), true);
+    Random_File< IntIndex > blocks(Test_File(), true, false);
     
     blocks.put(80, 5);
   }
@@ -277,7 +277,7 @@ int main(int argc, char* args[])
     cout<<"** Fill the gap.\n";
   try
   {
-    Random_File< IntIndex > blocks(Test_File(), true);
+    Random_File< IntIndex > blocks(Test_File(), true, false);
     
     blocks.put(64, 6);
   }

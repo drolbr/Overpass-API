@@ -214,7 +214,8 @@ void read_test()
   try
   {
     cout<<"Read test\n";
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), false);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (Test_File(), false, false, "");
 
     vector< bool > footprint = get_data_index_footprint< IntIndex >(Test_File());
     cout<<"Index footprint: ";
@@ -376,7 +377,8 @@ int main(int argc, char* args[])
     cout<<"** Test the behaviour for a file with one entry - part 1\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (Test_File(), true, false, "");
     list< IntIndex > indices;
     
     indices.clear();
@@ -400,7 +402,8 @@ int main(int argc, char* args[])
     cout<<"** Test the behaviour for a file with one entry - part 2\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (Test_File(), true, false, "");
     list< IntIndex > indices;
     
     indices.clear();
@@ -423,7 +426,8 @@ int main(int argc, char* args[])
     cout<<"** Test the behaviour for a file with three entries\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (Test_File(), true, false, "");
     list< IntIndex > indices;
     
     indices.clear();
@@ -451,7 +455,8 @@ int main(int argc, char* args[])
     cout<<"** Test insertion everywhere\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (Test_File(), true, false, "");
     list< IntIndex > indices;
     
     indices.clear();
@@ -505,7 +510,8 @@ int main(int argc, char* args[])
     cout<<"** Test to replace blocks\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (Test_File(), true, false, "");
     list< IntIndex > indices, work;
     
     indices.clear();
@@ -552,7 +558,8 @@ int main(int argc, char* args[])
     cout<<"** Delete blocks in between\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (Test_File(), true, false, "");
     list< IntIndex > indices;
     
     indices.clear();
@@ -580,7 +587,8 @@ int main(int argc, char* args[])
     cout<<"** Delete blocks at the begin and the end\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (Test_File(), true, false, "");
     list< IntIndex > indices;
     
     indices.clear();
@@ -606,7 +614,8 @@ int main(int argc, char* args[])
     cout<<"** Test insertion again\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (Test_File(), true, false, "");
     list< IntIndex > indices, work;
     
     indices.clear();
@@ -642,7 +651,8 @@ int main(int argc, char* args[])
     cout<<"** Delete everything\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (Test_File(), true, false, "");
     list< IntIndex > indices;
     
     indices.clear();
@@ -670,7 +680,8 @@ int main(int argc, char* args[])
     cout<<"** Insert two series of segments\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (Test_File(), true, false, "");
     list< IntIndex > indices;
     
     indices.clear();
@@ -704,7 +715,8 @@ int main(int argc, char* args[])
     cout<<"** Replace by other series of segments\n";
   try
   {
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks(Test_File(), true);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (Test_File(), true, false, "");
     list< IntIndex > indices, work;
     
     indices.clear();

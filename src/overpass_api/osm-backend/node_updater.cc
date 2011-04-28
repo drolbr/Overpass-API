@@ -92,7 +92,7 @@ void Node_Updater::update_node_ids
        .base());
   nodes_to_insert.erase(nodes_to_insert.begin(), nodes_begin);
   
-  Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, true);
+  Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, true, false);
   vector< Node >::const_iterator nit(nodes_to_insert.begin());
   for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
       it != ids_to_modify.end(); ++it)
@@ -144,7 +144,7 @@ void Node_Updater::update_coords(const map< uint32, vector< uint32 > >& to_delet
   }
   
   Block_Backend< Uint32_Index, Node_Skeleton > node_db
-      (*de_osm3s_file_ids::NODES, true);
+      (*de_osm3s_file_ids::NODES, true, false);
   node_db.update(db_to_delete, db_to_insert);
 }
 
@@ -182,7 +182,7 @@ void Node_Updater::prepare_delete_tags
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, Uint32_Index > nodes_db
-  (*de_osm3s_file_ids::NODE_TAGS_LOCAL, true);
+      (*de_osm3s_file_ids::NODE_TAGS_LOCAL, true, false);
   Tag_Index_Local current_index;
   Tag_Entry node_tag_entry;
   current_index.index = 0xffffffff;
@@ -257,7 +257,7 @@ void Node_Updater::update_node_tags_local(const vector< Tag_Entry >& tags_to_del
   }
   
   Block_Backend< Tag_Index_Local, Uint32_Index > node_db
-      (*de_osm3s_file_ids::NODE_TAGS_LOCAL, true);
+      (*de_osm3s_file_ids::NODE_TAGS_LOCAL, true, false);
   node_db.update(db_to_delete, db_to_insert);
 }
 
@@ -303,7 +303,7 @@ void Node_Updater::update_node_tags_global(const vector< Tag_Entry >& tags_to_de
   }
   
   Block_Backend< Tag_Index_Global, Uint32_Index > node_db
-      (*de_osm3s_file_ids::NODE_TAGS_GLOBAL, true);
+      (*de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, false);
   node_db.update(db_to_delete, db_to_insert);
 }
 
@@ -315,7 +315,7 @@ void Node_Updater::merge_files(string from, string into)
     
     uint32 item_count(0);
     Block_Backend< Uint32_Index, Node_Skeleton > from_db
-    (*de_osm3s_file_ids::NODES, false, from);
+        (*de_osm3s_file_ids::NODES, false, false, from);
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
         it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
     {
@@ -323,7 +323,7 @@ void Node_Updater::merge_files(string from, string into)
       if (++item_count >= 4*1024*1024)
       {
 	Block_Backend< Uint32_Index, Node_Skeleton > into_db
-	    (*de_osm3s_file_ids::NODES, true, into);
+	    (*de_osm3s_file_ids::NODES, true, false, into);
 	into_db.update(db_to_delete, db_to_insert);
 	db_to_insert.clear();
 	item_count = 0;
@@ -331,7 +331,7 @@ void Node_Updater::merge_files(string from, string into)
     }
     
     Block_Backend< Uint32_Index, Node_Skeleton > into_db
-        (*de_osm3s_file_ids::NODES, true, into);
+        (*de_osm3s_file_ids::NODES, true, false, into);
     into_db.update(db_to_delete, db_to_insert);
   }
   remove((de_osm3s_file_ids::NODES->get_file_base_name() + from 
@@ -345,7 +345,7 @@ void Node_Updater::merge_files(string from, string into)
     
     uint32 item_count(0);
     Block_Backend< Tag_Index_Local, Uint32_Index > from_db
-        (*de_osm3s_file_ids::NODE_TAGS_LOCAL, false, from);
+        (*de_osm3s_file_ids::NODE_TAGS_LOCAL, false, false, from);
     for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
         it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
     {
@@ -353,7 +353,7 @@ void Node_Updater::merge_files(string from, string into)
       if (++item_count >= 4*1024*1024)
       {
 	Block_Backend< Tag_Index_Local, Uint32_Index > into_db
-	    (*de_osm3s_file_ids::NODE_TAGS_LOCAL, true, into);
+	    (*de_osm3s_file_ids::NODE_TAGS_LOCAL, true, false, into);
 	into_db.update(db_to_delete, db_to_insert);
 	db_to_insert.clear();
 	item_count = 0;
@@ -361,7 +361,7 @@ void Node_Updater::merge_files(string from, string into)
     }
     
     Block_Backend< Tag_Index_Local, Uint32_Index > into_db
-        (*de_osm3s_file_ids::NODE_TAGS_LOCAL, true, into);
+        (*de_osm3s_file_ids::NODE_TAGS_LOCAL, true, false, into);
     into_db.update(db_to_delete, db_to_insert);
   }
   remove((de_osm3s_file_ids::NODE_TAGS_LOCAL->get_file_base_name() + from 
@@ -375,7 +375,7 @@ void Node_Updater::merge_files(string from, string into)
     
     uint32 item_count(0);
     Block_Backend< Tag_Index_Global, Uint32_Index > from_db
-        (*de_osm3s_file_ids::NODE_TAGS_GLOBAL, false, from);
+        (*de_osm3s_file_ids::NODE_TAGS_GLOBAL, false, false, from);
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
         it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
     {
@@ -383,7 +383,7 @@ void Node_Updater::merge_files(string from, string into)
       if (++item_count >= 4*1024*1024)
       {
 	Block_Backend< Tag_Index_Global, Uint32_Index > into_db
-	    (*de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, into);
+	    (*de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, false, into);
 	into_db.update(db_to_delete, db_to_insert);
 	db_to_insert.clear();
 	item_count = 0;
@@ -391,7 +391,7 @@ void Node_Updater::merge_files(string from, string into)
     }
     
     Block_Backend< Tag_Index_Global, Uint32_Index > into_db
-        (*de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, into);
+        (*de_osm3s_file_ids::NODE_TAGS_GLOBAL, true, false, into);
     into_db.update(db_to_delete, db_to_insert);
   }
   remove((de_osm3s_file_ids::NODE_TAGS_GLOBAL->get_file_base_name() + from 

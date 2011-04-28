@@ -33,12 +33,17 @@ void copy_file(const string& source, const string& dest)
   out<<in.rdbuf();
 }
 
+void touch_file(const string& filename)
+{
+  ofstream out(filename.c_str());
+}
+
 Dispatcher::Dispatcher
     (string dispatcher_share_name,
      string index_share_name,
-     string shadow_name,
+     string shadow_name_,
      const vector< File_Properties* >& controlled_files_)
-    : controlled_files(controlled_files_)
+    : controlled_files(controlled_files_), shadow_name(shadow_name_)
 {
   if (file_exists(shadow_name))
   {
@@ -46,6 +51,61 @@ Dispatcher::Dispatcher
     remove(shadow_name.c_str());
   }    
   remove_shadows();
+}
+
+void Dispatcher::write_start(pid_t pid)
+{
+  if (file_exists(shadow_name + ".lock"))
+  {
+    try
+    {
+      pid_t locked_pid;
+      ifstream lock((shadow_name + ".lock").c_str());
+      lock>>locked_pid;
+      if (locked_pid != pid)
+	return;
+    }
+    catch (...) {}
+  }
+
+  try
+  {
+    ofstream lock((shadow_name + ".lock").c_str());
+    lock<<pid;
+  }
+  catch (...) {}
+
+  bool lock_obtained = false;
+  try
+  {
+    pid_t locked_pid;
+    ifstream lock((shadow_name + ".lock").c_str());
+    lock>>locked_pid;
+    if (locked_pid == pid)
+      lock_obtained = true;
+  }
+  catch (...) {}
+  
+  if (!lock_obtained)
+    return;
+  // Now we have successfully placed the lock.
+
+  copy_mains_to_shadows();
+}
+
+void Dispatcher::write_rollback()
+{
+  remove_shadows();
+  remove((shadow_name + ".lock").c_str());
+}
+
+void Dispatcher::write_commit()
+{
+  touch_file(shadow_name);
+  copy_shadows_to_mains();
+  remove(shadow_name.c_str());
+  remove_shadows();
+  remove((shadow_name + ".lock").c_str());
 }
 
 void Dispatcher::copy_shadows_to_mains()
@@ -67,6 +127,30 @@ void Dispatcher::copy_shadows_to_mains()
                 + (*it)->get_index_suffix() + (*it)->get_shadow_suffix(),
 		(*it)->get_file_base_name() + (*it)->get_id_suffix()
 		+ (*it)->get_index_suffix());
+    }
+    catch (...) {}
+  }
+}
+
+void Dispatcher::copy_mains_to_shadows()
+{
+  for (vector< File_Properties* >::const_iterator it(controlled_files.begin());
+      it != controlled_files.end(); ++it)
+  {
+    try
+    {
+      copy_file((*it)->get_file_base_name() + (*it)->get_data_suffix()
+                + (*it)->get_index_suffix(),
+		(*it)->get_file_base_name() + (*it)->get_data_suffix()
+		+ (*it)->get_index_suffix() + (*it)->get_shadow_suffix());
+    }
+    catch (...) {}
+    try
+    {
+      copy_file((*it)->get_file_base_name() + (*it)->get_id_suffix()
+                + (*it)->get_index_suffix(),
+		(*it)->get_file_base_name() + (*it)->get_id_suffix()
+		+ (*it)->get_index_suffix() + (*it)->get_shadow_suffix());
     }
     catch (...) {}
   }

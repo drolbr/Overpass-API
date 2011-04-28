@@ -54,7 +54,7 @@ private:
 public:
   typedef uint32 size_t;
   
-  Random_File(const File_Properties& file_prop, bool writeable);  
+  Random_File(const File_Properties& file_prop, bool writeable, bool use_shadow);
   ~Random_File();
   
   TVal get(size_t pos);
@@ -74,7 +74,8 @@ private:
 };
 
 template< class TVal >
-vector< bool > get_map_index_footprint(const File_Properties& file_prop);
+vector< bool > get_map_index_footprint
+    (const File_Properties& file_prop, bool use_shadow = false);
 
 /** Implementation Random_File_Index: ---------------------------------------*/
 
@@ -153,16 +154,19 @@ inline Random_File_Index::~Random_File_Index()
 /** Implementation Random_File: ---------------------------------------------*/
 
 template< class TVal >
-inline Random_File< TVal >::Random_File(const File_Properties& file_prop, bool writeable)
+inline Random_File< TVal >::Random_File
+    (const File_Properties& file_prop, bool writeable, bool use_shadow)
 : index_size(TVal::max_size_of()),
   val_file(file_prop.get_file_base_name() + file_prop.get_id_suffix(),
 	   writeable ? O_RDWR|O_CREAT : O_RDONLY,
 	   S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH,
 	   "Random_File:1"),
   index(file_prop.get_file_base_name() + file_prop.get_id_suffix()
-        + file_prop.get_index_suffix(),
+        + file_prop.get_index_suffix()
+	+ (use_shadow ? file_prop.get_shadow_suffix() : ""),
 	writeable ? file_prop.get_file_base_name() + file_prop.get_id_suffix()
-	+ file_prop.get_index_suffix() : "",
+	+ file_prop.get_index_suffix()
+	+ (use_shadow ? file_prop.get_shadow_suffix() : "") : "",
 	lseek64(val_file.fd, 0, SEEK_END)/file_prop.get_map_block_size()/index_size),
   cache(file_prop.get_map_block_size()*sizeof(size_t)), cache_pos(index.npos),
   block_size(file_prop.get_map_block_size())
@@ -246,7 +250,8 @@ inline void Random_File< TVal >::move_cache_window(size_t pos)
 /** Implementation non-members: ---------------------------------------------*/
 
 template< class TVal >
-vector< bool > get_map_index_footprint(const File_Properties& file_prop)
+vector< bool > get_map_index_footprint
+    (const File_Properties& file_prop, bool use_shadow)
 {
   uint32 index_size = TVal::max_size_of();
   Raw_File val_file(file_prop.get_file_base_name() + file_prop.get_id_suffix(),
@@ -256,7 +261,8 @@ vector< bool > get_map_index_footprint(const File_Properties& file_prop)
       /file_prop.get_map_block_size()/index_size;
   Random_File_Index index
       (file_prop.get_file_base_name() + file_prop.get_id_suffix()
-       + file_prop.get_index_suffix(), "", block_count);
+       + file_prop.get_index_suffix()
+       + (use_shadow ? file_prop.get_shadow_suffix() : ""), "", block_count);
        
   vector< bool > result(block_count, true);
   for (vector< Random_File_Index::size_t >::const_iterator

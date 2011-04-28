@@ -196,7 +196,7 @@ int main(int argc, char* args[])
     
     // check update_members - compare both files for the result
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-	(*de_osm3s_file_ids::WAYS, false);
+	(*de_osm3s_file_ids::WAYS, false, false);
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
 	 it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
     {
@@ -208,7 +208,7 @@ int main(int argc, char* args[])
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Local, Uint32_Index > ways_local_db
-	(*de_osm3s_file_ids::WAY_TAGS_LOCAL, false);
+	(*de_osm3s_file_ids::WAY_TAGS_LOCAL, false, false);
     for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(ways_local_db.flat_begin()); !(it == ways_local_db.flat_end()); ++it)
     {
@@ -218,7 +218,7 @@ int main(int argc, char* args[])
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Global, Uint32_Index > ways_global_db
-	(*de_osm3s_file_ids::WAY_TAGS_GLOBAL, false);
+	(*de_osm3s_file_ids::WAY_TAGS_GLOBAL, false, false);
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(ways_global_db.flat_begin()); !(it == ways_global_db.flat_end()); ++it)
     {

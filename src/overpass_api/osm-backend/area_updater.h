@@ -125,7 +125,7 @@ private:
     
     // process the areas themselves
     Block_Backend< Uint31_Index, Area_Skeleton > area_locations_db
-        (*de_osm3s_file_ids::AREAS, true);
+        (*de_osm3s_file_ids::AREAS, true, false);
     for (Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
         it(area_locations_db.flat_begin());
         !(it == area_locations_db.flat_end()); ++it)
@@ -142,7 +142,7 @@ private:
     stopwatch.stop(Stopwatch::AREAS);
     
     Block_Backend< Uint31_Index, Area_Block > area_blocks_db
-        (*de_osm3s_file_ids::AREA_BLOCKS, true);
+        (*de_osm3s_file_ids::AREA_BLOCKS, true, false);
     for (Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
         it(area_blocks_db.discrete_begin(blocks_req.begin(), blocks_req.end()));
         !(it == area_blocks_db.discrete_end()); ++it)
@@ -167,7 +167,7 @@ private:
     stopwatch.stop(Stopwatch::NO_DISK);
     
     Block_Backend< Uint31_Index, Area_Skeleton > area_locations
-        (*de_osm3s_file_ids::AREAS, true);
+        (*de_osm3s_file_ids::AREAS, true, false);
     area_locations.update(locations_to_delete, locations_to_insert);
     
     stopwatch.stop(Stopwatch::AREAS);
@@ -182,7 +182,7 @@ private:
     }
     
     Block_Backend< Uint31_Index, Area_Block > area_blocks_db
-        (*de_osm3s_file_ids::AREA_BLOCKS, true);
+        (*de_osm3s_file_ids::AREA_BLOCKS, true, false);
     area_blocks_db.update(blocks_to_delete, blocks_to_insert);
   
     stopwatch.stop(Stopwatch::AREA_BLOCKS);
@@ -223,7 +223,7 @@ private:
     
     // iterate over the result
     Block_Backend< Tag_Index_Local, Uint32_Index > areas_db
-	(*de_osm3s_file_ids::AREA_TAGS_LOCAL, true);
+	(*de_osm3s_file_ids::AREA_TAGS_LOCAL, true, false);
     Tag_Index_Local current_index;
     Tag_Entry tag_entry;
     current_index.index = 0xffffffff;
@@ -291,7 +291,7 @@ private:
     
     // iterate over the result
     Block_Backend< Tag_Index_Local, Uint32_Index > areas_db
-	(*de_osm3s_file_ids::AREA_TAGS_LOCAL, true);
+	(*de_osm3s_file_ids::AREA_TAGS_LOCAL, true, false);
     Tag_Index_Local current_index;
     Tag_Entry tag_entry;
     current_index.index = 0xffffffff;
@@ -376,7 +376,7 @@ private:
     }
     
     Block_Backend< Tag_Index_Local, Uint32_Index > area_db
-	(*de_osm3s_file_ids::AREA_TAGS_LOCAL, true);
+	(*de_osm3s_file_ids::AREA_TAGS_LOCAL, true, false);
     area_db.update(db_to_delete, db_to_insert);
     
     stopwatch.stop(Stopwatch::AREA_TAGS_LOCAL);
@@ -425,7 +425,7 @@ private:
     }
 
     Block_Backend< Tag_Index_Global, Uint32_Index > area_db
-      (*de_osm3s_file_ids::AREA_TAGS_GLOBAL, true);
+      (*de_osm3s_file_ids::AREA_TAGS_GLOBAL, true, false);
     area_db.update(db_to_delete, db_to_insert);
 
     stopwatch.stop(Stopwatch::AREA_TAGS_GLOBAL);  

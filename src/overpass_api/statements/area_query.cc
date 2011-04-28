@@ -54,7 +54,7 @@ void Area_Query_Statement::get_ranges
      set< Uint31_Index >& area_block_req)
 {
   Block_Backend< Uint31_Index, Area_Skeleton > area_locations_db
-      (*de_osm3s_file_ids::AREAS, true);
+      (*de_osm3s_file_ids::AREAS, true, false);
   for (Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
       it(area_locations_db.flat_begin());
       !(it == area_locations_db.flat_end()); ++it)
@@ -82,9 +82,9 @@ void Area_Query_Statement::collect_nodes
      Resource_Manager& rman)
 {
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
-      (*de_osm3s_file_ids::AREA_BLOCKS, true);
+      (*de_osm3s_file_ids::AREA_BLOCKS, true, false);
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-      (*de_osm3s_file_ids::NODES, true);
+      (*de_osm3s_file_ids::NODES, true, false);
   Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
       area_it(area_blocks_db.discrete_begin(req.begin(), req.end()));
   Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator

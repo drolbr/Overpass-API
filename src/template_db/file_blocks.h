@@ -236,8 +236,8 @@ private:
   
 public:
   File_Blocks
-    (const File_Properties& file_prop, bool writeable,
-     string file_name_extension = "");  
+    (const File_Properties& file_prop, bool writeable, bool use_shadow,
+     string file_name_extension/* = ""*/);  
   ~File_Blocks();
   
   Flat_Iterator flat_begin();
@@ -618,7 +618,7 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
 
 template< class TIndex, class TIterator, class TRangeIterator >
 File_Blocks< TIndex, TIterator, TRangeIterator >::File_Blocks
-    (const File_Properties& file_prop, bool writeable_,
+    (const File_Properties& file_prop, bool writeable_, bool use_shadow,
      string file_name_extension) :
      block_size(file_prop.get_block_size()),
      writeable(writeable_),
@@ -630,10 +630,12 @@ File_Blocks< TIndex, TIterator, TRangeIterator >::File_Blocks
 	       "File_Blocks:1"),
      index(file_prop.get_file_base_name()
                + file_name_extension + file_prop.get_data_suffix()
-	       + file_prop.get_index_suffix(),
+	       + file_prop.get_index_suffix()
+	       + (use_shadow ? file_prop.get_shadow_suffix() : ""),
 	   writeable ? file_prop.get_file_base_name()
 	       + file_name_extension + file_prop.get_data_suffix()
-	       + file_prop.get_index_suffix() : "",
+	       + file_prop.get_index_suffix()
+	       + (use_shadow ? file_prop.get_shadow_suffix() : "") : "",
 	   lseek64(data_file.fd, 0, SEEK_END)/file_prop.get_block_size()),
      buffer(file_prop.get_block_size())
 {

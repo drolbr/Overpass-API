@@ -79,7 +79,7 @@ void dump_nodes(uint32 pattern_size)
   Output_Sorter output_sorter;
   
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-      (*de_osm3s_file_ids::NODES, false);
+      (*de_osm3s_file_ids::NODES, false, false);
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
       it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
   {
@@ -97,7 +97,7 @@ void dump_node_tags_local(uint32 pattern_size)
   Output_Sorter output_sorter;
   
   Block_Backend< Tag_Index_Local, Uint32_Index > nodes_local_db
-      (*de_osm3s_file_ids::NODE_TAGS_LOCAL, false);
+      (*de_osm3s_file_ids::NODE_TAGS_LOCAL, false, false);
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
       it(nodes_local_db.flat_begin());
       !(it == nodes_local_db.flat_end()); ++it)
@@ -115,7 +115,7 @@ void dump_node_tags_global(uint32 pattern_size)
   Output_Sorter_Kv output_sorter;
   
   Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
-  (*de_osm3s_file_ids::NODE_TAGS_GLOBAL, false);
+      (*de_osm3s_file_ids::NODE_TAGS_GLOBAL, false, false);
   for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
       it(nodes_global_db.flat_begin());
       !(it == nodes_global_db.flat_end()); ++it)
@@ -134,7 +134,7 @@ void dump_ways(uint32 pattern_size)
   Output_Sorter output_sorter;
   
   Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-      (*de_osm3s_file_ids::WAYS, false);
+      (*de_osm3s_file_ids::WAYS, false, false);
   for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
       it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
   {
@@ -154,7 +154,7 @@ void dump_way_tags_local(uint32 pattern_size)
   Output_Sorter output_sorter;
   
   Block_Backend< Tag_Index_Local, Uint32_Index > ways_local_db
-      (*de_osm3s_file_ids::WAY_TAGS_LOCAL, false);
+      (*de_osm3s_file_ids::WAY_TAGS_LOCAL, false, false);
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
       it(ways_local_db.flat_begin());
       !(it == ways_local_db.flat_end()); ++it)
@@ -173,7 +173,7 @@ void dump_way_tags_global(uint32 pattern_size)
   Output_Sorter_Kv output_sorter;
   
   Block_Backend< Tag_Index_Global, Uint32_Index > ways_global_db
-      (*de_osm3s_file_ids::WAY_TAGS_GLOBAL, false);
+      (*de_osm3s_file_ids::WAY_TAGS_GLOBAL, false, false);
   for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
       it(ways_global_db.flat_begin());
       !(it == ways_global_db.flat_end()); ++it)
@@ -193,13 +193,13 @@ void dump_relations(uint32 pattern_size)
   
   map< uint32, string > roles;
   Block_Backend< Uint32_Index, String_Object > roles_db
-      (*de_osm3s_file_ids::RELATION_ROLES, true);
+      (*de_osm3s_file_ids::RELATION_ROLES, true, false);
   for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
       it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
     roles[it.index().val()] = it.object().val();
   
   Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-      (*de_osm3s_file_ids::RELATIONS, false);
+      (*de_osm3s_file_ids::RELATIONS, false, false);
   for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
       it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
   {
@@ -221,7 +221,7 @@ void dump_relation_tags_local(uint32 pattern_size)
   Output_Sorter output_sorter;
   
   Block_Backend< Tag_Index_Local, Uint32_Index > relations_local_db
-  (*de_osm3s_file_ids::RELATION_TAGS_LOCAL, false);
+      (*de_osm3s_file_ids::RELATION_TAGS_LOCAL, false, false);
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
     it(relations_local_db.flat_begin());
   !(it == relations_local_db.flat_end()); ++it)
@@ -240,7 +240,7 @@ void dump_relation_tags_global(uint32 pattern_size)
   Output_Sorter_Kv output_sorter;
   
   Block_Backend< Tag_Index_Global, Uint32_Index > relations_global_db
-  (*de_osm3s_file_ids::RELATION_TAGS_GLOBAL, false);
+      (*de_osm3s_file_ids::RELATION_TAGS_GLOBAL, false, false);
   for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
     it(relations_global_db.flat_begin());
   !(it == relations_global_db.flat_end()); ++it)

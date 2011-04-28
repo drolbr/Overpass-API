@@ -151,7 +151,7 @@ int main(int argc, char* args[])
     
     // check update_coords - compare both files for the result
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-	(*de_osm3s_file_ids::NODES, false);
+	(*de_osm3s_file_ids::NODES, false, false);
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
 	 it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
     {
@@ -162,7 +162,7 @@ int main(int argc, char* args[])
     
     // check update_node_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Local, Uint32_Index > nodes_local_db
-	(*de_osm3s_file_ids::NODE_TAGS_LOCAL, false);
+	(*de_osm3s_file_ids::NODE_TAGS_LOCAL, false, false);
     for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(nodes_local_db.flat_begin()); !(it == nodes_local_db.flat_end()); ++it)
     {
@@ -172,7 +172,7 @@ int main(int argc, char* args[])
     
     // check update_node_tags_global - compare both files for the result
     Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
-	(*de_osm3s_file_ids::NODE_TAGS_GLOBAL, false);
+	(*de_osm3s_file_ids::NODE_TAGS_GLOBAL, false, false);
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(nodes_global_db.flat_begin()); !(it == nodes_global_db.flat_end()); ++it)
     {

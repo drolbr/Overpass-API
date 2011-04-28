@@ -598,11 +598,14 @@ private:
 template< class TIndex, class TObject >
 struct Block_Backend
 {
-  typedef Block_Backend_Flat_Iterator< TIndex, TObject, typename set< TIndex >::const_iterator >
+  typedef Block_Backend_Flat_Iterator
+      < TIndex, TObject, typename set< TIndex >::const_iterator >
       Flat_Iterator;
-  typedef Block_Backend_Discrete_Iterator< TIndex, TObject, typename set< TIndex >::const_iterator >
+  typedef Block_Backend_Discrete_Iterator
+      < TIndex, TObject, typename set< TIndex >::const_iterator >
       Discrete_Iterator;
-  typedef Block_Backend_Range_Iterator< TIndex, TObject, Default_Range_Iterator< TIndex > >
+  typedef Block_Backend_Range_Iterator
+      < TIndex, TObject, Default_Range_Iterator< TIndex > >
       Range_Iterator;
       
   typedef File_Blocks
@@ -612,8 +615,8 @@ struct Block_Backend
   
   Block_Backend
       (const File_Properties& file_prop, bool writeable,
-       string file_name_extension = "")
-    : file_blocks(file_prop, writeable, file_name_extension),
+       bool use_shadow, string file_name_extension = "")
+    : file_blocks(file_prop, writeable, use_shadow, file_name_extension),
       block_size(file_prop.get_block_size()),
       data_filename(file_prop.get_file_base_name() + file_name_extension
 	+ file_prop.get_data_suffix())

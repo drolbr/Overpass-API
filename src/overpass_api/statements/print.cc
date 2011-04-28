@@ -221,7 +221,7 @@ void print_item(uint32 ll_upper, const Relation_Skeleton& skel, uint32 mode,
   {
     // prepare check update_members - load roles
     Block_Backend< Uint32_Index, String_Object > roles_db
-        (*de_osm3s_file_ids::RELATION_ROLES, false);
+        (*de_osm3s_file_ids::RELATION_ROLES, false, false);
     for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
         it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
       roles[it.index().val()] = it.object().val();
@@ -306,7 +306,7 @@ void Print_Statement::tags_quadtile
   // iterate over the result
   stopwatch.stop(Stopwatch::NO_DISK);
   uint coarse_count(0);
-  Block_Backend< Tag_Index_Local, Uint32_Index > items_db(file_prop, false);
+  Block_Backend< Tag_Index_Local, Uint32_Index > items_db(file_prop, false, false);
   Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
     tag_it(items_db.range_begin
     (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
@@ -406,7 +406,7 @@ void Print_Statement::tags_by_id
   // iterate over the result
   stopwatch.stop(Stopwatch::NO_DISK);
   Block_Backend< Tag_Index_Local, Uint32_Index > items_db
-      (file_prop, false);
+      (file_prop, false, false);
   for (uint32 id_pos(0); id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
   {
     rman.health_check(*this);
