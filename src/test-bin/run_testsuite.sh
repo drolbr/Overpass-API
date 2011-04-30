@@ -159,7 +159,7 @@ perform_test_loop block_backend 13
 date +%T
 perform_test_loop random_file 8
 date +%T
-perform_test_loop test_dispatcher 11
+perform_test_loop test_dispatcher 18
 
 # Test overpass_api/osm-backend
 mkdir -p input/run_and_compare.sh_1/

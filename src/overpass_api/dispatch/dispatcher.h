@@ -4,6 +4,7 @@
 #include "../core/basic_types.h"
 #include "../../template_db/types.h"
 
+#include <set>
 #include <vector>
 
 using namespace std;
@@ -22,6 +23,22 @@ const uint32 QUERY_REJECTED = 32;
 
 static const string shared_name("/osm3s_v0.6.1");
 
+class Idx_Footprints
+{
+  public:
+    typedef uint pid_t;
+    
+    void set_current_footprint(const vector< bool >& footprint);
+    void register_pid(pid_t pid); 
+    void unregister_pid(pid_t pid); 
+    vector< pid_t > registered_processes() const;
+    vector< bool > total_footprint() const;
+    
+  private:
+    vector< bool > current_footprint;
+    map< pid_t, vector< bool > > footprint_per_pid;
+};
+
 class Dispatcher
 {
   public:
@@ -35,17 +52,51 @@ class Dispatcher
 	       string shadow_name,
 	       const vector< File_Properties* >& controlled_files);
 
+    /** Write operations: -------------------------------------------------- */
+	       
+    /** Allocates a write lock if possible. Returns without doing anything
+        otherwise. */
     void write_start(pid_t pid);
+    
+    /** Removes the mutex for the write process without changing any
+        index file. */
     void write_rollback();
+    
+    /** Copies the shadow files onto the main index files. A lock prevents
+        that incomplete copies after a crash may leave the database in an
+	unstable state. Removes the mutex for the write process. */
     void write_commit();
     
+    /** Read operations: --------------------------------------------------- */
+
+    /** Request the index for a read operation and registers the reading process.
+        Reading the index files should be taking a quick copy, because if any process
+	is in this state, write_commits are blocked. */
+    void request_read_and_idx(pid_t pid);
+    
+    /** Changes the registered state from reading the index to reading the
+        database. Can be safely called multiple times for the same process. */
+    void read_idx_finished(pid_t pid);
+    
+    /** Unregisteres a reading process. */
+    void read_finished(pid_t pid);
+    
+    /** Other operations: -------------------------------------------------- */
+	       
   private:
     vector< File_Properties* > controlled_files;
+    vector< Idx_Footprints > data_footprints;
+    vector< Idx_Footprints > map_footprints;
+    set< pid_t > processes_reading_idx;
     string shadow_name;
     
     void copy_shadows_to_mains();
     void copy_mains_to_shadows();
     void remove_shadows();
+    void set_current_footprints();
+    void write_index_of_empty_blocks();
 };
+
+bool file_exists(const string& filename);
 
 #endif

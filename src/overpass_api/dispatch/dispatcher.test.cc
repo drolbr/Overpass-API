@@ -22,69 +22,6 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
-/* We use our own test settings */
-string BASE_DIRECTORY("./");
-string ID_SUFFIX(".map");
-
-struct Test_File : File_Properties
-{
-  Test_File(string basename_) : basename(basename_) {}
-  
-  string get_basedir() const
-  {
-    return BASE_DIRECTORY;
-  }
-  
-  string get_file_base_name() const
-  {
-    return BASE_DIRECTORY + basename;
-  }
-  
-  string get_index_suffix() const
-  {
-    return ".idx";
-  }
-  
-  string get_data_suffix() const
-  {
-    return ".bin";
-  }
-  
-  string get_id_suffix() const
-  {
-    return ID_SUFFIX;
-  }
-  
-  string get_shadow_suffix() const
-  {
-    return ".shadow";
-  }
-  
-  uint32 get_block_size() const
-  {
-    return 512;
-  }
-  
-  uint32 get_map_block_size() const
-  {
-    return 16;
-  }
-  
-  vector< bool > get_data_footprint() const
-  {
-    return vector< bool >();
-  }
-  
-  vector< bool > get_map_footprint() const
-  {
-    return vector< bool >();
-  }  
-  
-  string basename;
-};
-
-//-----------------------------------------------------------------------------
-
 /* Sample class for TIndex */
 struct IntIndex
 {
@@ -162,6 +99,69 @@ struct IntObject
   
   private:
     uint32 value;
+};
+
+//-----------------------------------------------------------------------------
+
+/* We use our own test settings */
+string BASE_DIRECTORY("./");
+string ID_SUFFIX(".map");
+
+struct Test_File : File_Properties
+{
+  Test_File(string basename_) : basename(basename_) {}
+  
+  string get_basedir() const
+  {
+    return BASE_DIRECTORY;
+  }
+  
+  string get_file_base_name() const
+  {
+    return BASE_DIRECTORY + basename;
+  }
+  
+  string get_index_suffix() const
+  {
+    return ".idx";
+  }
+  
+  string get_data_suffix() const
+  {
+    return ".bin";
+  }
+  
+  string get_id_suffix() const
+  {
+    return ID_SUFFIX;
+  }
+  
+  string get_shadow_suffix() const
+  {
+    return ".shadow";
+  }
+  
+  uint32 get_block_size() const
+  {
+    return 512;
+  }
+  
+  uint32 get_map_block_size() const
+  {
+    return 16;
+  }
+  
+  vector< bool > get_data_footprint() const
+  {
+    return get_data_index_footprint< IntIndex >(*this);
+  }
+  
+  vector< bool > get_map_footprint() const
+  {
+    return get_map_index_footprint< IntIndex >(*this);
+  }  
+  
+  string basename;
 };
 
 //-----------------------------------------------------------------------------
@@ -594,6 +594,230 @@ int main(int argc, char* args[])
     dispatcher.write_commit();
     dispatcher.write_start(482);
     put_elem(0, 3);
+    dispatcher.write_commit();
+    data_read_test();
+    remove("Test_File.bin");
+    remove("Test_File.bin.idx");
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "12"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			  "test-shadow", file_properties);
+    dispatcher.write_start(480);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 1);
+    }
+    dispatcher.request_read_and_idx(640);
+    dispatcher.write_commit();
+    cout<<"Write lock is "
+        <<(file_exists("test-shadow.lock") ? "still set.\n" : "released.\n");
+    dispatcher.read_idx_finished(640);
+    dispatcher.write_commit();
+    cout<<"Write lock is "
+        <<(file_exists("test-shadow.lock") ? "still set.\n" : "released.\n");
+    map_read_test();
+    remove("Test_File.map");
+    remove("Test_File.map.idx");
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "13"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			  "test-shadow", file_properties);
+    dispatcher.write_start(480);
+    dispatcher.request_read_and_idx(640);
+    dispatcher.read_idx_finished(640);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 1);
+    }
+    dispatcher.read_finished(640);
+    dispatcher.write_commit();
+    dispatcher.write_start(481);
+    dispatcher.request_read_and_idx(641);
+    dispatcher.read_idx_finished(641);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 2);
+    }
+    dispatcher.read_finished(641);
+    dispatcher.write_commit();
+    dispatcher.write_start(482);
+    dispatcher.request_read_and_idx(642);
+    dispatcher.read_idx_finished(642);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 3);
+    }
+    dispatcher.read_finished(642);
+    dispatcher.write_commit();
+    map_read_test();
+    remove("Test_File.map");
+    remove("Test_File.map.idx");
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "14"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			  "test-shadow", file_properties);
+    dispatcher.write_start(480);
+    dispatcher.request_read_and_idx(640);
+    dispatcher.read_idx_finished(640);
+    put_elem(0, 1);
+    dispatcher.read_finished(640);
+    dispatcher.write_commit();
+    dispatcher.write_start(481);
+    dispatcher.request_read_and_idx(641);
+    dispatcher.read_idx_finished(641);
+    put_elem(0, 2);
+    dispatcher.read_finished(641);
+    dispatcher.write_commit();
+    dispatcher.write_start(482);
+    dispatcher.request_read_and_idx(642);
+    dispatcher.read_idx_finished(642);
+    put_elem(0, 3);
+    dispatcher.read_finished(642);
+    dispatcher.write_commit();
+    data_read_test();
+    remove("Test_File.bin");
+    remove("Test_File.bin.idx");
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "15"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			  "test-shadow", file_properties);
+    dispatcher.write_start(480);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 1);
+    }
+    dispatcher.write_commit();
+    dispatcher.request_read_and_idx(640);
+    dispatcher.read_idx_finished(640);
+    dispatcher.write_start(481);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 2);
+    }
+    dispatcher.write_commit();
+    dispatcher.write_start(482);
+    dispatcher.read_finished(640);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 3);
+    }
+    dispatcher.write_commit();
+    map_read_test();
+    remove("Test_File.map");
+    remove("Test_File.map.idx");
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "16"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			  "test-shadow", file_properties);
+    dispatcher.write_start(480);
+    put_elem(0, 1);
+    dispatcher.write_commit();
+    dispatcher.request_read_and_idx(640);
+    dispatcher.read_idx_finished(640);
+    dispatcher.write_start(481);
+    put_elem(0, 2);
+    dispatcher.write_commit();
+    dispatcher.write_start(482);
+    dispatcher.read_finished(640);
+    put_elem(0, 3);
+    dispatcher.write_commit();
+    data_read_test();
+    remove("Test_File.bin");
+    remove("Test_File.bin.idx");
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "17"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			  "test-shadow", file_properties);
+    dispatcher.write_start(480);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 1);
+    }
+    dispatcher.write_commit();
+    dispatcher.request_read_and_idx(640);
+    dispatcher.read_idx_finished(640);
+    dispatcher.write_start(481);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 2);
+    }
+    dispatcher.write_commit();
+    dispatcher.write_start(482);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 3);
+    }
+    dispatcher.write_commit();
+    dispatcher.write_start(483);
+    dispatcher.read_finished(640);
+    {
+      Random_File< IntIndex > blocks(Test_File("Test_File"), true, true);  
+      blocks.put(0, 4);
+    }
+    dispatcher.write_commit();
+    map_read_test();
+    remove("Test_File.map");
+    remove("Test_File.map.idx");
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "18"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			  "test-shadow", file_properties);
+    dispatcher.write_start(480);
+    put_elem(0, 1);
+    dispatcher.write_commit();
+    dispatcher.request_read_and_idx(640);
+    dispatcher.read_idx_finished(640);
+    dispatcher.write_start(481);
+    put_elem(0, 2);
+    dispatcher.write_commit();
+    dispatcher.write_start(482);
+    put_elem(0, 3);
+    dispatcher.write_commit();
+    dispatcher.write_start(483);
+    dispatcher.read_finished(640);
+    put_elem(0, 4);
     dispatcher.write_commit();
     data_read_test();
     remove("Test_File.bin");

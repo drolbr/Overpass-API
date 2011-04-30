@@ -35,7 +35,8 @@ struct Random_File_Index
     typedef uint32 size_t;
     
   private:
-    string dest_index_file_name;
+    string index_file_name;
+    string empty_index_file_name;
     
   public:
     vector< size_t > blocks;
@@ -80,54 +81,80 @@ vector< bool > get_map_index_footprint
 /** Implementation Random_File_Index: ---------------------------------------*/
 
 inline Random_File_Index::Random_File_Index
-    (string source_index_file_name, string dest_index_file_name_,
+    (string index_file_name_, string empty_index_file_name_,
      uint32 block_count_) :
-     dest_index_file_name(dest_index_file_name_), block_count(block_count_),
-     npos(numeric_limits< size_t >::max())
+     index_file_name(index_file_name_), empty_index_file_name(empty_index_file_name_), 
+     block_count(block_count_), npos(numeric_limits< size_t >::max())
 {
   vector< bool > is_referred(block_count, false);
+  bool writeable = (empty_index_file_name != "");
   
-  bool writeable = (dest_index_file_name != "");
-  Raw_File source_file(source_index_file_name,
-		       writeable ? O_RDONLY|O_CREAT : O_RDONLY,
-		       S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH,
-		       "Random_File:6");
-  
-  // read index file
-  uint32 index_size = lseek64(source_file.fd, 0, SEEK_END);
-  Void_Pointer< uint8 > index_buf(index_size);
-  lseek64(source_file.fd, 0, SEEK_SET);
-  uint32 foo(read(source_file.fd, index_buf.ptr, index_size)); foo = 0;
-  
-  uint32 pos = 0;
-  while (pos < index_size)
   {
-    size_t* entry = (size_t*)(index_buf.ptr+pos);
-    blocks.push_back(*entry);
-    if (*entry != npos)
+    Raw_File source_file
+        (index_file_name, writeable ? O_RDONLY|O_CREAT : O_RDONLY,
+         S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "Random_File:6");
+     
+    // read index file
+    uint32 index_size = lseek64(source_file.fd, 0, SEEK_END);
+    Void_Pointer< uint8 > index_buf(index_size);
+    lseek64(source_file.fd, 0, SEEK_SET);
+    uint32 foo(read(source_file.fd, index_buf.ptr, index_size)); foo = 0;
+    
+    uint32 pos = 0;
+    while (pos < index_size)
     {
-      if (*entry > block_count)
-	throw File_Error(0, source_index_file_name,
-			 "Random_File: bad pos in index file");
-      else
-	is_referred[*entry] = true;
+      size_t* entry = (size_t*)(index_buf.ptr+pos);
+      blocks.push_back(*entry);
+      if (*entry != npos)
+      {
+	if (*entry > block_count)
+	  throw File_Error
+	      (0, index_file_name, "Random_File: bad pos in index file");
+	else
+	  is_referred[*entry] = true;
+      }
+      pos += sizeof(size_t);
     }
-    pos += sizeof(size_t);
   }
   
-  // determine void_blocks
-  for (uint32 i(0); i < block_count; ++i)
+  if (writeable)
   {
-    if (!(is_referred[i]))
-      void_blocks.push_back(i);
+    bool empty_index_file_used = false;
+    if (empty_index_file_name != "")
+    {
+      try
+      {
+	Raw_File void_blocks_file
+	    (empty_index_file_name, O_RDONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "");
+	uint32 void_index_size = lseek64(void_blocks_file.fd, 0, SEEK_END);
+	Void_Pointer< uint8 > index_buf(void_index_size);
+	lseek64(void_blocks_file.fd, 0, SEEK_SET);
+	uint32 foo(read(void_blocks_file.fd, index_buf.ptr, void_index_size)); foo = 0;
+	for (uint32 i = 0; i < void_index_size/sizeof(uint32); ++i)
+	  void_blocks.push_back(*(uint32*)(index_buf.ptr + 4*i));
+	empty_index_file_used = true;
+      }
+      catch (File_Error e) {}
+    }
+    
+    if (!empty_index_file_used)
+    {
+      // determine void_blocks
+      for (uint32 i(0); i < block_count; ++i)
+      {
+	if (!(is_referred[i]))
+	  void_blocks.push_back(i);
+      }
+    }
   }
 }
 
 inline Random_File_Index::~Random_File_Index()
 {
-  if (dest_index_file_name == "")
+  if (empty_index_file_name == "")
     return;
 
+  // Write index file
   uint32 index_size = blocks.size()*sizeof(size_t);
   uint32 pos = 0;
  
@@ -140,7 +167,7 @@ inline Random_File_Index::~Random_File_Index()
     pos += sizeof(size_t);
   }
 
-  Raw_File dest_file(dest_index_file_name, O_RDWR|O_CREAT,
+  Raw_File dest_file(index_file_name, O_RDWR|O_CREAT,
 		     S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "Random_File:7");
 
   if (index_size < lseek64(dest_file.fd, 0, SEEK_END))
@@ -149,6 +176,21 @@ inline Random_File_Index::~Random_File_Index()
   }
   lseek64(dest_file.fd, 0, SEEK_SET);
   uint32 foo(write(dest_file.fd, index_buf.ptr, index_size)); foo = 0;
+  
+  // Write void blocks
+  Void_Pointer< uint8 > void_index_buf(void_blocks.size()*sizeof(uint32));
+  uint32* it_ptr = (uint32*)void_index_buf.ptr;
+  for (vector< size_t >::const_iterator it(void_blocks.begin());
+      it != void_blocks.end(); ++it)
+    *(it_ptr++) = *it;
+  try
+  {
+    Raw_File void_file(empty_index_file_name, O_RDWR|O_TRUNC,
+		       S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "Random_File:5");
+    foo = write(void_file.fd, void_index_buf.ptr,
+	        void_blocks.size()*sizeof(uint32)); foo = 0;
+  }
+  catch (File_Error e) {}
 }
 
 /** Implementation Random_File: ---------------------------------------------*/
@@ -165,8 +207,7 @@ inline Random_File< TVal >::Random_File
         + file_prop.get_index_suffix()
 	+ (use_shadow ? file_prop.get_shadow_suffix() : ""),
 	writeable ? file_prop.get_file_base_name() + file_prop.get_id_suffix()
-	+ file_prop.get_index_suffix()
-	+ (use_shadow ? file_prop.get_shadow_suffix() : "") : "",
+	+ file_prop.get_shadow_suffix() : "",
 	lseek64(val_file.fd, 0, SEEK_END)/file_prop.get_map_block_size()/index_size),
   cache(file_prop.get_map_block_size()*sizeof(size_t)), cache_pos(index.npos),
   block_size(file_prop.get_map_block_size())
@@ -262,7 +303,9 @@ vector< bool > get_map_index_footprint
   Random_File_Index index
       (file_prop.get_file_base_name() + file_prop.get_id_suffix()
        + file_prop.get_index_suffix()
-       + (use_shadow ? file_prop.get_shadow_suffix() : ""), "", block_count);
+       + (use_shadow ? file_prop.get_shadow_suffix() : ""),
+       file_prop.get_file_base_name() + file_prop.get_id_suffix()
+       + file_prop.get_shadow_suffix(), block_count);
        
   vector< bool > result(block_count, true);
   for (vector< Random_File_Index::size_t >::const_iterator

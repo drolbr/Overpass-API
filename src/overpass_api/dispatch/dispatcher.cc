@@ -43,7 +43,10 @@ Dispatcher::Dispatcher
      string index_share_name,
      string shadow_name_,
      const vector< File_Properties* >& controlled_files_)
-    : controlled_files(controlled_files_), shadow_name(shadow_name_)
+    : controlled_files(controlled_files_),
+      data_footprints(controlled_files_.size()),
+      map_footprints(controlled_files_.size()),
+      shadow_name(shadow_name_)
 {
   if (file_exists(shadow_name))
   {
@@ -51,6 +54,7 @@ Dispatcher::Dispatcher
     remove(shadow_name.c_str());
   }    
   remove_shadows();
+  set_current_footprints();
 }
 
 void Dispatcher::write_start(pid_t pid)
@@ -91,6 +95,7 @@ void Dispatcher::write_start(pid_t pid)
   // Now we have successfully placed the lock.
 
   copy_mains_to_shadows();
+  write_index_of_empty_blocks();
 }
 
 void Dispatcher::write_rollback()
@@ -101,11 +106,41 @@ void Dispatcher::write_rollback()
 
 void Dispatcher::write_commit()
 {
+  if (!processes_reading_idx.empty())
+    return;
+  
   touch_file(shadow_name);
   copy_shadows_to_mains();
   remove(shadow_name.c_str());
   remove_shadows();
   remove((shadow_name + ".lock").c_str());
+  set_current_footprints();
+}
+
+void Dispatcher::request_read_and_idx(pid_t pid)
+{
+  for (vector< Idx_Footprints >::iterator it(data_footprints.begin());
+      it != data_footprints.end(); ++it)
+    it->register_pid(pid);
+  for (vector< Idx_Footprints >::iterator it(map_footprints.begin());
+      it != map_footprints.end(); ++it)
+    it->register_pid(pid);
+  processes_reading_idx.insert(pid);
+}
+
+void Dispatcher::read_idx_finished(pid_t pid)
+{
+  processes_reading_idx.erase(pid);
+}
+
+void Dispatcher::read_finished(pid_t pid)
+{
+  for (vector< Idx_Footprints >::iterator it(data_footprints.begin());
+      it != data_footprints.end(); ++it)
+    it->unregister_pid(pid);
+  for (vector< Idx_Footprints >::iterator it(map_footprints.begin());
+      it != map_footprints.end(); ++it)
+    it->unregister_pid(pid);
 }
 
 void Dispatcher::copy_shadows_to_mains()
@@ -159,47 +194,103 @@ void Dispatcher::copy_mains_to_shadows()
 void Dispatcher::remove_shadows()
 {
   for (vector< File_Properties* >::const_iterator it(controlled_files.begin());
-  it != controlled_files.end(); ++it)
+      it != controlled_files.end(); ++it)
   {
     remove(((*it)->get_file_base_name() + (*it)->get_data_suffix()
             + (*it)->get_index_suffix() + (*it)->get_shadow_suffix()).c_str());
     remove(((*it)->get_file_base_name() + (*it)->get_id_suffix()
             + (*it)->get_index_suffix() + (*it)->get_shadow_suffix()).c_str());
+    remove(((*it)->get_file_base_name() + (*it)->get_data_suffix()
+            + (*it)->get_shadow_suffix()).c_str());
+    remove(((*it)->get_file_base_name() + (*it)->get_id_suffix()
+            + (*it)->get_shadow_suffix()).c_str());
   }
 }
 
-class Idx_Footprints
+void Dispatcher::set_current_footprints()
 {
-  public:
-    typedef uint pid_t;
-    
-    void set_current_footprint(const vector< bool >& footprint);
-    void register_pid(pid_t pid); 
-    void unregister_pid(pid_t pid); 
-    vector< pid_t > registered_processes() const;
-    vector< bool > total_footprint() const;
-    
-  private:
-    vector< bool > current_footprint;
-    map< pid_t, vector< bool > > footprint_per_pid;
-};
+  for (vector< File_Properties* >::size_type i = 0;
+      i < controlled_files.size(); ++i)
+  {
+    try
+    {
+      data_footprints[i].set_current_footprint
+          (controlled_files[i]->get_data_footprint());
+    }
+    catch (...) {}
+    try
+    {
+      map_footprints[i].set_current_footprint
+          (controlled_files[i]->get_map_footprint());
+    }
+    catch (...) {}
+  }
+}
 
-inline void Idx_Footprints::set_current_footprint(const vector< bool >& footprint)
+void write_to_index_empty_file(const vector< bool >& footprint, string filename)
+{
+  Void_Pointer< uint32 > buffer(footprint.size()*sizeof(uint32));  
+  uint32* pos = buffer.ptr;
+  for (uint32 i = 0; i < footprint.size(); ++i)
+  {
+    if (!footprint[i])
+    {
+      *pos = i;
+      ++pos;
+    }
+  }
+
+  Raw_File file(filename, O_RDWR|O_CREAT|O_TRUNC,
+		S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "write_to_index_empty_file:1");
+  int foo(write(file.fd, buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr))); foo = 0;
+}
+
+void Dispatcher::write_index_of_empty_blocks()
+{
+  for (vector< File_Properties* >::size_type i = 0;
+      i < controlled_files.size(); ++i)
+  {
+    if (file_exists(controlled_files[i]->get_file_base_name()
+        + controlled_files[i]->get_data_suffix()
+	+ controlled_files[i]->get_index_suffix()
+	+ controlled_files[i]->get_shadow_suffix()))
+    {
+      write_to_index_empty_file
+          (data_footprints[i].total_footprint(),
+	   controlled_files[i]->get_file_base_name()
+	   + controlled_files[i]->get_data_suffix()
+	   + controlled_files[i]->get_shadow_suffix());
+    }
+    if (file_exists(controlled_files[i]->get_file_base_name()
+        + controlled_files[i]->get_id_suffix()
+	+ controlled_files[i]->get_index_suffix()
+	+ controlled_files[i]->get_shadow_suffix()))
+    {
+      write_to_index_empty_file
+          (map_footprints[i].total_footprint(),
+	   controlled_files[i]->get_file_base_name()
+	   + controlled_files[i]->get_id_suffix()
+	   + controlled_files[i]->get_shadow_suffix());
+    }
+  }
+}
+
+void Idx_Footprints::set_current_footprint(const vector< bool >& footprint)
 {
   current_footprint = footprint;
 }
 
-inline void Idx_Footprints::register_pid(pid_t pid)
+void Idx_Footprints::register_pid(pid_t pid)
 {
   footprint_per_pid[pid] = current_footprint;
 }
 
-inline void Idx_Footprints::unregister_pid(pid_t pid)
+void Idx_Footprints::unregister_pid(pid_t pid)
 {
   footprint_per_pid.erase(pid);
 }
 
-inline vector< Idx_Footprints::pid_t > Idx_Footprints::registered_processes() const
+vector< Idx_Footprints::pid_t > Idx_Footprints::registered_processes() const
 {
   vector< pid_t > result;
   for (map< pid_t, vector< bool > >::const_iterator
@@ -208,7 +299,7 @@ inline vector< Idx_Footprints::pid_t > Idx_Footprints::registered_processes() co
   return result;
 }
 
-inline vector< bool > Idx_Footprints::total_footprint() const
+vector< bool > Idx_Footprints::total_footprint() const
 {
   vector< bool > result = current_footprint;
   for (map< pid_t, vector< bool > >::const_iterator

@@ -293,6 +293,8 @@ int main(int argc, char* args[])
   remove((Test_File().get_file_base_name() + Test_File().get_id_suffix()).c_str());
   remove((Test_File().get_file_base_name() + Test_File().get_id_suffix()
       + Test_File().get_index_suffix()).c_str());
+  remove((Test_File().get_file_base_name() + Test_File().get_id_suffix()
+      + Test_File().get_shadow_suffix()).c_str());
   
   return 0;
 }
