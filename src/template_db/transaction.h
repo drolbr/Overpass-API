@@ -12,6 +12,7 @@ class Transaction
 {
   public:
     virtual ~Transaction() {}
+    virtual File_Blocks_Index_Base* data_index(const File_Properties*) = 0;
     virtual Random_File_Index* random_index(const File_Properties*) = 0;
 };
 
@@ -58,13 +59,15 @@ inline File_Blocks_Index_Base* Nonsynced_Transaction::data_index
                     O_RDONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH,
 		    "Nonsynced_Transaction:1");
   uint64 block_count = lseek64(val_file.fd, 0, SEEK_END)
-          /fp->get_map_block_size();
-  data_files[fp] = fp->new_data_index
+          /fp->get_block_size();
+  File_Blocks_Index_Base* data_index = fp->new_data_index
     (fp->get_file_base_name() + fp->get_data_suffix() + fp->get_index_suffix()
      + (use_shadow ? fp->get_shadow_suffix() : ""),
      writeable ? fp->get_file_base_name() + fp->get_data_suffix()
      + fp->get_shadow_suffix() : "", "", block_count);
-  return data_files[fp];
+  if (data_index != 0)
+    data_files[fp] = data_index;
+  return data_index;
 }
 
 inline Random_File_Index* Nonsynced_Transaction::random_index(const File_Properties* fp)

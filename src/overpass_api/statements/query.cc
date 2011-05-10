@@ -265,7 +265,7 @@ vector< uint32 >* Query_Statement::collect_ids
  
   stopwatch.stop(Stopwatch::NO_DISK);
   Block_Backend< Tag_Index_Global, Uint32_Index > tags_db
-      (file_prop, false, false);
+      (file_prop, rman.get_transaction().data_index(&file_prop));
   
   vector< uint32 >* new_ids(new vector< uint32 >());
   set< Tag_Index_Global > tag_req;
@@ -387,7 +387,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     if (area_restriction != 0)
     {
       stopwatch.stop(Stopwatch::NO_DISK);
-      area_restriction->get_ranges(nodes_req, area_blocks_req);
+      area_restriction->get_ranges(nodes_req, area_blocks_req, rman);
       stopwatch.stop(Stopwatch::AREAS);
       for (set< pair< Uint32_Index, Uint32_Index > >::const_iterator
 	  it(nodes_req.begin()); it != nodes_req.end(); ++it)
@@ -436,7 +436,8 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       uint nodes_count;
       Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-	  (*de_osm3s_file_ids::NODES, false, false);
+	  (*de_osm3s_file_ids::NODES,
+	   rman.get_transaction().data_index(de_osm3s_file_ids::NODES));
       for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
           it(nodes_db.range_begin
              (Default_Range_Iterator< Uint32_Index >(range_req.begin()),
@@ -470,7 +471,8 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       uint nodes_count;
       Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-          (*de_osm3s_file_ids::NODES, false, false);
+          (*de_osm3s_file_ids::NODES,
+	   rman.get_transaction().data_index(de_osm3s_file_ids::NODES));
       for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
 	  it(nodes_db.discrete_begin(obj_req.begin(), obj_req.end()));
           !(it == nodes_db.discrete_end()); ++it)
@@ -514,7 +516,8 @@ void Query_Statement::execute(Resource_Manager& rman)
     stopwatch.stop(Stopwatch::NO_DISK);
     uint ways_count;
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-        (*de_osm3s_file_ids::WAYS, false, false);
+        (*de_osm3s_file_ids::WAYS,
+	 rman.get_transaction().data_index(de_osm3s_file_ids::WAYS));
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
         it(ways_db.discrete_begin(obj_req.begin(), obj_req.end()));
         !(it == ways_db.discrete_end()); ++it)
@@ -556,7 +559,8 @@ void Query_Statement::execute(Resource_Manager& rman)
     
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-        (*de_osm3s_file_ids::RELATIONS, false, false);
+        (*de_osm3s_file_ids::RELATIONS,
+	 rman.get_transaction().data_index(de_osm3s_file_ids::RELATIONS));
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
         it(relations_db.discrete_begin(obj_req.begin(), obj_req.end()));
         !(it == relations_db.discrete_end()); ++it)

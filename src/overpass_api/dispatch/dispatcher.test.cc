@@ -355,8 +355,10 @@ void data_read_test()
 {
   try
   {
+    Nonsynced_Transaction transaction(false, false);
+    Test_File tf("Test_File");
     Block_Backend< IntIndex, IntObject >
-	db_backend(Test_File("Test_File"), false, false);
+	db_backend(tf, transaction.data_index(&tf));
     
     cout<<"Read test\n";
     vector< bool > footprint =
@@ -385,8 +387,10 @@ void put_elem(uint32 idx, uint32 val)
   to_insert[IntIndex(idx)].insert(IntObject(val));
   try
   {
+    Nonsynced_Transaction transaction(true, true);
+    Test_File tf("Test_File");
     Block_Backend< IntIndex, IntObject > db_backend
-        (Test_File("Test_File"), true, true);
+        (tf, transaction.data_index(&tf));
     db_backend.update(to_delete, to_insert);
   }
   catch (File_Error e)

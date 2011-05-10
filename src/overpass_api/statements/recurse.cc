@@ -177,7 +177,8 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(*de_osm3s_file_ids::RELATIONS, false, false);
+	(*de_osm3s_file_ids::RELATIONS,
+	 rman.get_transaction().data_index(de_osm3s_file_ids::RELATIONS));
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
 	 it(relations_db.discrete_begin(req.begin(), req.end()));
 	 !(it == relations_db.discrete_end()); ++it)
@@ -211,7 +212,8 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(*de_osm3s_file_ids::RELATIONS, false, false);
+	(*de_osm3s_file_ids::RELATIONS,
+	 rman.get_transaction().data_index(de_osm3s_file_ids::RELATIONS));
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
 	 it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
     {
@@ -271,7 +273,8 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-	(*de_osm3s_file_ids::WAYS, false, false);
+	(*de_osm3s_file_ids::WAYS,
+	 rman.get_transaction().data_index(de_osm3s_file_ids::WAYS));
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
 	 it(ways_db.discrete_begin(req.begin(), req.end()));
 	 !(it == ways_db.discrete_end()); ++it)
@@ -325,7 +328,8 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-	(*de_osm3s_file_ids::NODES, false, false);
+	(*de_osm3s_file_ids::NODES,
+	 rman.get_transaction().data_index(de_osm3s_file_ids::NODES));
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
 	 it(nodes_db.discrete_begin(req.begin(), req.end()));
 	 !(it == nodes_db.discrete_end()); ++it)
@@ -420,7 +424,8 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-	(*de_osm3s_file_ids::NODES, false, false);
+	(*de_osm3s_file_ids::NODES,
+	 rman.get_transaction().data_index(de_osm3s_file_ids::NODES));
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
 	 it(nodes_db.discrete_begin(req.begin(), req.end()));
 	 !(it == nodes_db.discrete_end()); ++it)
@@ -467,7 +472,8 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(*de_osm3s_file_ids::RELATIONS, false, false);
+	(*de_osm3s_file_ids::RELATIONS,
+	 rman.get_transaction().data_index(de_osm3s_file_ids::RELATIONS));
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
 	 it(relations_db.discrete_begin(req.begin(), req.end()));
 	 !(it == relations_db.discrete_end()); ++it)
@@ -516,7 +522,8 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-	(*de_osm3s_file_ids::WAYS, false, false);
+	(*de_osm3s_file_ids::WAYS,
+	 rman.get_transaction().data_index(de_osm3s_file_ids::WAYS));
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
 	 it(ways_db.discrete_begin(req.begin(), req.end()));
 	 !(it == ways_db.discrete_end()); ++it)
@@ -564,7 +571,8 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(*de_osm3s_file_ids::RELATIONS, false, false);
+	(*de_osm3s_file_ids::RELATIONS,
+	 rman.get_transaction().data_index(de_osm3s_file_ids::RELATIONS));
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
 	 it(relations_db.discrete_begin(req.begin(), req.end()));
 	 !(it == relations_db.discrete_end()); ++it)

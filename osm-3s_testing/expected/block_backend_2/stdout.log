@@ -1,4 +1,4 @@
-File error catched in part 1: 2 ./testfile.bin File_Blocks:1
+File error catched in part 1: 2 ./testfile.bin.idx File_Blocks:2
 (This is the expected correct behaviour)
 ** Test the behaviour for an empty db
 Read test

@@ -271,7 +271,8 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   stopwatch.stop(Stopwatch::NO_DISK);
   
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
-      (*de_osm3s_file_ids::AREA_BLOCKS, true, false);
+      (*de_osm3s_file_ids::AREA_BLOCKS,
+       rman.get_transaction().data_index(de_osm3s_file_ids::AREA_BLOCKS));
   for (Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
       it(area_blocks_db.discrete_begin(req.begin(), req.end()));
       !(it == area_blocks_db.discrete_end()); ++it)
@@ -308,7 +309,8 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   stopwatch.stop(Stopwatch::NO_DISK);
   
   Block_Backend< Uint31_Index, Area_Skeleton > area_locations_db
-      (*de_osm3s_file_ids::AREAS, true, false);
+      (*de_osm3s_file_ids::AREAS,
+       rman.get_transaction().data_index(de_osm3s_file_ids::AREAS));
   for (Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
       it(area_locations_db.flat_begin());
       !(it == area_locations_db.flat_end()); ++it)

@@ -165,6 +165,7 @@ void collect_tags_framed
 }
 
 void print_item(uint32 ll_upper, const Node_Skeleton& skel, uint32 mode,
+		Resource_Manager& rman,
 		const vector< pair< string, string > >* tags = 0)
 {
   cout<<"  <node";
@@ -187,6 +188,7 @@ void print_item(uint32 ll_upper, const Node_Skeleton& skel, uint32 mode,
 }
 
 void print_item(uint32 ll_upper, const Way_Skeleton& skel, uint32 mode,
+		Resource_Manager& rman,
 		const vector< pair< string, string > >* tags = 0)
 {
   cout<<"  <way";
@@ -214,6 +216,7 @@ void print_item(uint32 ll_upper, const Way_Skeleton& skel, uint32 mode,
 }
 
 void print_item(uint32 ll_upper, const Relation_Skeleton& skel, uint32 mode,
+		Resource_Manager& rman,
 		const vector< pair< string, string > >* tags = 0)
 { 
   static map< uint32, string > roles;
@@ -221,7 +224,8 @@ void print_item(uint32 ll_upper, const Relation_Skeleton& skel, uint32 mode,
   {
     // prepare check update_members - load roles
     Block_Backend< Uint32_Index, String_Object > roles_db
-        (*de_osm3s_file_ids::RELATION_ROLES, false, false);
+        (*de_osm3s_file_ids::RELATION_ROLES,
+	 rman.get_transaction().data_index(de_osm3s_file_ids::RELATION_ROLES));
     for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
         it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
       roles[it.index().val()] = it.object().val();
@@ -254,6 +258,7 @@ void print_item(uint32 ll_upper, const Relation_Skeleton& skel, uint32 mode,
 }
 
 void print_item(uint32 ll_upper, const Area_Skeleton& skel, uint32 mode,
+		Resource_Manager& rman,
 		const vector< pair< string, string > >* tags = 0)
 {
   cout<<"  <area";
@@ -274,7 +279,8 @@ void print_item(uint32 ll_upper, const Area_Skeleton& skel, uint32 mode,
 
 template< class TIndex, class TObject >
 void quadtile
-    (const map< TIndex, vector< TObject > >& items, uint32 mode)
+    (const map< TIndex, vector< TObject > >& items, uint32 mode,
+     Resource_Manager& rman)
 {
   typename map< TIndex, vector< TObject > >::const_iterator
       item_it(items.begin());
@@ -283,7 +289,7 @@ void quadtile
   {
     for (typename vector< TObject >::const_iterator it2(item_it->second.begin());
         it2 != item_it->second.end(); ++it2)
-      print_item(item_it->first.val(), *it2, mode);
+      print_item(item_it->first.val(), *it2, mode, rman);
     ++item_it;
   }
 };
@@ -306,7 +312,8 @@ void Print_Statement::tags_quadtile
   // iterate over the result
   stopwatch.stop(Stopwatch::NO_DISK);
   uint coarse_count(0);
-  Block_Backend< Tag_Index_Local, Uint32_Index > items_db(file_prop, false, false);
+  Block_Backend< Tag_Index_Local, Uint32_Index > items_db
+      (file_prop, rman.get_transaction().data_index(&file_prop));
   Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
     tag_it(items_db.range_begin
     (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
@@ -333,7 +340,7 @@ void Print_Statement::tags_quadtile
     {
       for (typename vector< TObject >::const_iterator it2(item_it->second.begin());
           it2 != item_it->second.end(); ++it2)
-        print_item(item_it->first.val(), *it2, mode, &(tags_by_id[it2->id]));
+        print_item(item_it->first.val(), *it2, mode, rman, &(tags_by_id[it2->id]));
       ++item_it;
     }
   }
@@ -352,7 +359,8 @@ struct Skeleton_Comparator_By_Id {
 
 template< class TIndex, class TObject >
 void by_id
-  (const map< TIndex, vector< TObject > >& items, uint32 mode)
+  (const map< TIndex, vector< TObject > >& items, uint32 mode,
+   Resource_Manager& rman)
 {
   // order relevant elements by id
   vector< pair< const TObject*, uint32 > > items_by_id;
@@ -368,7 +376,7 @@ void by_id
   
   // iterate over the result
   for (uint32 i(0); i < items_by_id.size(); ++i)
-    print_item(items_by_id[i].second, *(items_by_id[i].first), mode);
+    print_item(items_by_id[i].second, *(items_by_id[i].first), mode, rman);
 };
 
 template< class TIndex, class TObject >
@@ -406,7 +414,7 @@ void Print_Statement::tags_by_id
   // iterate over the result
   stopwatch.stop(Stopwatch::NO_DISK);
   Block_Backend< Tag_Index_Local, Uint32_Index > items_db
-      (file_prop, false, false);
+      (file_prop, rman.get_transaction().data_index(&file_prop));
   for (uint32 id_pos(0); id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
   {
     rman.health_check(*this);
@@ -432,7 +440,7 @@ void Print_Statement::tags_by_id
     for (uint32 i(id_pos);
          (i < id_pos + FLUSH_SIZE) && (i < items_by_id.size()); ++i)
       print_item(items_by_id[i].second, *(items_by_id[i].first), mode,
-		 &(tags_by_id[items_by_id[i].first->id]));
+		 rman, &(tags_by_id[items_by_id[i].first->id]));
   }
   stopwatch.add(stopwatch_account, items_db.read_count());
   stopwatch.stop(stopwatch_account);
@@ -463,7 +471,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       catch (File_Error e)
       {
-	if (e.filename.substr(e.filename.size()-19, 19) != "area_tags_local.bin")
+	if (e.filename.substr(e.filename.size()-23, 23) != "area_tags_local.bin.idx")
 	  throw e;
       }
     }
@@ -482,7 +490,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       catch (File_Error e)
       {
-	if (e.filename.substr(e.filename.size()-19, 19) != "area_tags_local.bin")
+	if (e.filename.substr(e.filename.size()-23, 23) != "area_tags_local.bin.idx")
 	  throw e;
       }
     }
@@ -491,12 +499,12 @@ void Print_Statement::execute(Resource_Manager& rman)
   {
     if (order == ORDER_BY_ID)
     {
-      by_id(mit->second.nodes, mode);
-      by_id(mit->second.ways, mode);
-      by_id(mit->second.relations, mode);
+      by_id(mit->second.nodes, mode, rman);
+      by_id(mit->second.ways, mode, rman);
+      by_id(mit->second.relations, mode, rman);
       try
       {
-	by_id(mit->second.areas, mode);
+	by_id(mit->second.areas, mode, rman);
       }
       catch (File_Error e)
       {
@@ -506,12 +514,12 @@ void Print_Statement::execute(Resource_Manager& rman)
     }
     else
     {
-      quadtile(mit->second.nodes, mode);
-      quadtile(mit->second.ways, mode);
-      quadtile(mit->second.relations, mode);
+      quadtile(mit->second.nodes, mode, rman);
+      quadtile(mit->second.ways, mode, rman);
+      quadtile(mit->second.relations, mode, rman);
       try
       {
-	quadtile(mit->second.areas, mode);
+	quadtile(mit->second.areas, mode, rman);
       }
       catch (File_Error e)
       {

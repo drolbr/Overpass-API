@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "block_backend.h"
+#include "transaction.h"
 
 using namespace std;
 
@@ -192,7 +193,10 @@ void fill_db
   remove((get_file_base_name(0) + get_data_suffix(0)).c_str());*/
   try
   {
-    Block_Backend< IntIndex, IntObject > db_backend(Test_File(), true, false);
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
+    Block_Backend< IntIndex, IntObject > db_backend
+        (tf, transaction.data_index(&tf));
     db_backend.update(to_delete, to_insert);
   }
   catch (File_Error e)
@@ -279,8 +283,10 @@ void read_test(unsigned int step)
 {
   try
   {
+    Nonsynced_Transaction transaction(false, false);
+    Test_File tf;
     Block_Backend< IntIndex, IntObject >
-	db_backend(Test_File(), false, false);
+	db_backend(tf, transaction.data_index(&tf));
     
     cout<<"Read test\n";
   
@@ -400,7 +406,10 @@ int main(int argc, char* args[])
   remove((Test_File().get_file_base_name() + Test_File().get_data_suffix()).c_str());
   try
   {
-    Block_Backend< IntIndex, IntIndex > db_backend(Test_File(), false, false);
+    Nonsynced_Transaction transaction(false, false);
+    Test_File tf;
+    Block_Backend< IntIndex, IntIndex > db_backend
+        (tf, transaction.data_index(&tf));
   }
   catch (File_Error e)
   {

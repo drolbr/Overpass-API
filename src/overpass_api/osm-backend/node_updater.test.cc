@@ -9,6 +9,7 @@
 
 #include "../../expat/expat_justparse_interface.h"
 #include "../../template_db/random_file.h"
+#include "../../template_db/transaction.h"
 #include "../core/settings.h"
 #include "../frontend/output.h"
 #include "node_updater.h"
@@ -152,9 +153,12 @@ int main(int argc, char* args[])
     cout<<'('<<id_idxs.size()<<" nodes checked, "
 	<<false_count<<" are inconsistent)\n";*/
     
+    Nonsynced_Transaction transaction(false, false);
+
     // check update_coords - compare both files for the result
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-	(*de_osm3s_file_ids::NODES, false, false);
+	(*de_osm3s_file_ids::NODES,
+	 transaction.data_index(de_osm3s_file_ids::NODES));
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
 	 it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
     {
@@ -165,7 +169,8 @@ int main(int argc, char* args[])
     
     // check update_node_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Local, Uint32_Index > nodes_local_db
-	(*de_osm3s_file_ids::NODE_TAGS_LOCAL, false, false);
+	(*de_osm3s_file_ids::NODE_TAGS_LOCAL,
+	 transaction.data_index(de_osm3s_file_ids::NODE_TAGS_LOCAL));
     for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(nodes_local_db.flat_begin()); !(it == nodes_local_db.flat_end()); ++it)
     {
@@ -175,7 +180,8 @@ int main(int argc, char* args[])
     
     // check update_node_tags_global - compare both files for the result
     Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
-	(*de_osm3s_file_ids::NODE_TAGS_GLOBAL, false, false);
+	(*de_osm3s_file_ids::NODE_TAGS_GLOBAL,
+	 transaction.data_index(de_osm3s_file_ids::NODE_TAGS_GLOBAL));
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(nodes_global_db.flat_begin()); !(it == nodes_global_db.flat_end()); ++it)
     {

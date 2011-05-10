@@ -327,7 +327,8 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
     file_prop = de_osm3s_file_ids::WAY_TAGS_LOCAL;
   else if (pivot_type == RELATION)
     file_prop = de_osm3s_file_ids::RELATION_TAGS_LOCAL;
-  Block_Backend< Tag_Index_Local, Uint32_Index > items_db(*file_prop, false, false);
+  Block_Backend< Tag_Index_Local, Uint32_Index > items_db
+      (*file_prop, rman.get_transaction().data_index(file_prop));
   Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
       tag_it(items_db.range_begin
         (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),

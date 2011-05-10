@@ -161,43 +161,47 @@ int main(int argc, char* args[])
 {
   try
   {
-    Nonsynced_Transaction transaction(true, false);
-    Node_Updater node_updater_(&transaction);
-    node_updater = &node_updater_;
-    Way_Updater way_updater_(&transaction);
-    way_updater = &way_updater_;
-    
-    member_source_out = new ofstream((get_basedir() + "member_source.csv").c_str());
-    tags_source_out = new ofstream((get_basedir() + "tags_source.csv").c_str());
-    callback = get_verbatim_callback();
-    
     ofstream member_db_out((get_basedir() + "member_db.csv").c_str());
     ofstream tags_local_out((get_basedir() + "tags_local.csv").c_str());
     ofstream tags_global_out((get_basedir() + "tags_global.csv").c_str());
-    
-    osm_element_count = 0;
-    state = 0;
-    //reading the main document
-    callback->parser_started();
-    parse(stdin, start, end);
-
-    if (state == IN_NODES)
     {
-      callback->nodes_finished();
-      node_updater->update(callback);
-    }
-    else if (state == IN_WAYS)
-    {
-      callback->ways_finished();
-      way_updater->update(callback);
+      Nonsynced_Transaction transaction(true, false);
+      Node_Updater node_updater_(&transaction);
+      node_updater = &node_updater_;
+      Way_Updater way_updater_(&transaction);
+      way_updater = &way_updater_;
+      
+      member_source_out = new ofstream((get_basedir() + "member_source.csv").c_str());
+      tags_source_out = new ofstream((get_basedir() + "tags_source.csv").c_str());
+      callback = get_verbatim_callback();
+      
+      osm_element_count = 0;
+      state = 0;
+      //reading the main document
+      callback->parser_started();
+      parse(stdin, start, end);
+      
+      if (state == IN_NODES)
+      {
+	callback->nodes_finished();
+	node_updater->update(callback);
+      }
+      else if (state == IN_WAYS)
+      {
+	callback->ways_finished();
+	way_updater->update(callback);
+      }
+      
+      delete member_source_out;
+      delete tags_source_out;
     }
     
-    delete member_source_out;
-    delete tags_source_out;
+    Nonsynced_Transaction transaction(false, false);
     
     // check update_members - compare both files for the result
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-	(*de_osm3s_file_ids::WAYS, false, false);
+	(*de_osm3s_file_ids::WAYS,
+	 transaction.data_index(de_osm3s_file_ids::WAYS));
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
 	 it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
     {
@@ -209,7 +213,8 @@ int main(int argc, char* args[])
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Local, Uint32_Index > ways_local_db
-	(*de_osm3s_file_ids::WAY_TAGS_LOCAL, false, false);
+	(*de_osm3s_file_ids::WAY_TAGS_LOCAL,
+	 transaction.data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL));
     for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(ways_local_db.flat_begin()); !(it == ways_local_db.flat_end()); ++it)
     {
@@ -219,7 +224,8 @@ int main(int argc, char* args[])
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Global, Uint32_Index > ways_global_db
-	(*de_osm3s_file_ids::WAY_TAGS_GLOBAL, false, false);
+	(*de_osm3s_file_ids::WAY_TAGS_GLOBAL,
+	 transaction.data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL));
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(ways_global_db.flat_begin()); !(it == ways_global_db.flat_end()); ++it)
     {

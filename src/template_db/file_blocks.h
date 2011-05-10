@@ -215,11 +215,13 @@ struct File_Blocks_Index : public File_Blocks_Index_Base
 		      string file_name_extension,
 		      uint32 block_count);
     virtual ~File_Blocks_Index();
+    bool writeable() const { return (empty_index_file_name != ""); }
+    const string& file_name_extension() const { return file_name_extension_; }
     
   private:
     string index_file_name;
     string empty_index_file_name;
-    string file_name_extension;
+    string file_name_extension_;
     
   public:
     list< File_Block_Index_Entry< TIndex > > blocks;
@@ -238,9 +240,11 @@ private:
   File_Blocks(const File_Blocks& f) {}
   
 public:
-  File_Blocks
+/*  File_Blocks
     (const File_Properties& file_prop, bool writeable, bool use_shadow,
-     string file_name_extension/* = ""*/);  
+     string file_name_extension);  */
+  File_Blocks
+    (const File_Properties& file_prop, File_Blocks_Index_Base* index);  
   ~File_Blocks();
   
   Flat_Iterator flat_begin();
@@ -272,6 +276,7 @@ public:
   Discrete_Iterator replace_block(Discrete_Iterator it, void* buf, uint32 max_keysize);
   
 private:
+  File_Blocks_Index< TIndex >* index;
   uint32 block_size;
   bool writeable;
   mutable uint read_count_;
@@ -281,7 +286,6 @@ private:
   Range_Iterator* range_end_it;
 
   Raw_File data_file;
-  File_Blocks_Index< TIndex >* index;
   Void_Pointer< void > buffer;
 };
  
@@ -541,9 +545,9 @@ void File_Blocks_Range_Iterator< TIndex, TRangeIterator >::find_next_block()
 template< class TIndex >
 File_Blocks_Index< TIndex >::File_Blocks_Index
     (string index_file_name_, string empty_index_file_name_,
-     string file_name_extension_, uint32 block_count_) :
+     string file_name_extension, uint32 block_count_) :
      index_file_name(index_file_name_), empty_index_file_name(empty_index_file_name_),
-     file_name_extension(file_name_extension_), block_count(block_count_)
+     file_name_extension_(file_name_extension), block_count(block_count_)
 {
   vector< bool > is_referred(block_count, false);
   bool writeable = (empty_index_file_name != "");
@@ -659,27 +663,49 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
 
 /** Implementation File_Blocks: ---------------------------------------------*/
 
+// template< class TIndex, class TIterator, class TRangeIterator >
+// File_Blocks< TIndex, TIterator, TRangeIterator >::File_Blocks
+//     (const File_Properties& file_prop, bool writeable_, bool use_shadow,
+//      string file_name_extension) :
+//      block_size(file_prop.get_block_size()),
+//      writeable(writeable_),
+//      read_count_(0),
+//      data_file(file_prop.get_file_base_name()
+//                + file_name_extension + file_prop.get_data_suffix(),
+// 	       writeable ? O_RDWR|O_CREAT : O_RDONLY,
+// 	       S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH,
+// 	       "File_Blocks:1"),
+//      index(new File_Blocks_Index< TIndex >(file_prop.get_file_base_name()
+//                + file_name_extension + file_prop.get_data_suffix()
+// 	       + file_prop.get_index_suffix()
+// 	       + (use_shadow ? file_prop.get_shadow_suffix() : ""),
+// 	   writeable ? file_prop.get_file_base_name()
+// 	       + file_name_extension + file_prop.get_data_suffix()
+// 	       + file_prop.get_shadow_suffix() : "",
+// 	   file_name_extension,
+// 	   lseek64(data_file.fd, 0, SEEK_END)/file_prop.get_block_size())),
+//      buffer(file_prop.get_block_size())
+// {
+//   // prepare standard iterators
+//   flat_end_it = new Flat_Iterator(index->blocks.end(), index->blocks.end());
+//   discrete_end_it = new Discrete_Iterator(index->blocks.end());
+//   range_end_it = new Range_Iterator(index->blocks.end());
+// }
+
 template< class TIndex, class TIterator, class TRangeIterator >
 File_Blocks< TIndex, TIterator, TRangeIterator >::File_Blocks
-    (const File_Properties& file_prop, bool writeable_, bool use_shadow,
-     string file_name_extension) :
+    (const File_Properties& file_prop, File_Blocks_Index_Base* index_) : 
+/*    (const File_Properties& file_prop, bool writeable_, bool use_shadow,
+     string file_name_extension) :*/
+     index((File_Blocks_Index< TIndex >*)index_),
      block_size(file_prop.get_block_size()),
-     writeable(writeable_),
+     writeable(index->writeable()),
      read_count_(0),
      data_file(file_prop.get_file_base_name()
-               + file_name_extension + file_prop.get_data_suffix(),
+               + index->file_name_extension() + file_prop.get_data_suffix(),
 	       writeable ? O_RDWR|O_CREAT : O_RDONLY,
 	       S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH,
 	       "File_Blocks:1"),
-     index(new File_Blocks_Index< TIndex >(file_prop.get_file_base_name()
-               + file_name_extension + file_prop.get_data_suffix()
-	       + file_prop.get_index_suffix()
-	       + (use_shadow ? file_prop.get_shadow_suffix() : ""),
-	   writeable ? file_prop.get_file_base_name()
-	       + file_name_extension + file_prop.get_data_suffix()
-	       + file_prop.get_shadow_suffix() : "",
-	   file_name_extension,
-	   lseek64(data_file.fd, 0, SEEK_END)/file_prop.get_block_size())),
      buffer(file_prop.get_block_size())
 {
   // prepare standard iterators
@@ -694,7 +720,7 @@ File_Blocks< TIndex, TIterator, TRangeIterator >::~File_Blocks()
   delete flat_end_it;
   delete discrete_end_it;
   delete range_end_it;
-  delete index;
+/*  delete index;*/
 }
 
 template< class TIndex, class TIterator, class TRangeIterator >

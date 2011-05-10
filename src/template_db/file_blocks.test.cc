@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "file_blocks.h"
+#include "transaction.h"
 
 using namespace std;
 
@@ -151,8 +152,8 @@ struct Test_File : File_Properties
 //-----------------------------------------------------------------------------
 
 void read_loop
-(File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
- File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator& it)
+    (File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
+     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator& it)
 {
   while (!(it == blocks.flat_end()))
   {
@@ -228,8 +229,10 @@ void read_test()
   try
   {
     cout<<"Read test\n";
+    Nonsynced_Transaction transaction(false, false);
+    Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (Test_File(), false, false, "");
+        (tf, transaction.data_index(&tf));
 
     vector< bool > footprint = get_data_index_footprint< IntIndex >(Test_File());
     cout<<"Index footprint: ";
@@ -391,8 +394,10 @@ int main(int argc, char* args[])
     cout<<"** Test the behaviour for a file with one entry - part 1\n";
   try
   {
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (Test_File(), true, false, "");
+        (tf, transaction.data_index(&tf));
     list< IntIndex > indices;
     
     indices.clear();
@@ -416,8 +421,10 @@ int main(int argc, char* args[])
     cout<<"** Test the behaviour for a file with one entry - part 2\n";
   try
   {
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (Test_File(), true, false, "");
+        (tf, transaction.data_index(&tf));
     list< IntIndex > indices;
     
     indices.clear();
@@ -440,8 +447,10 @@ int main(int argc, char* args[])
     cout<<"** Test the behaviour for a file with three entries\n";
   try
   {
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (Test_File(), true, false, "");
+        (tf, transaction.data_index(&tf));
     list< IntIndex > indices;
     
     indices.clear();
@@ -469,8 +478,10 @@ int main(int argc, char* args[])
     cout<<"** Test insertion everywhere\n";
   try
   {
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (Test_File(), true, false, "");
+        (tf, transaction.data_index(&tf));
     list< IntIndex > indices;
     
     indices.clear();
@@ -524,8 +535,10 @@ int main(int argc, char* args[])
     cout<<"** Test to replace blocks\n";
   try
   {
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (Test_File(), true, false, "");
+        (tf, transaction.data_index(&tf));
     list< IntIndex > indices, work;
     
     indices.clear();
@@ -572,8 +585,10 @@ int main(int argc, char* args[])
     cout<<"** Delete blocks in between\n";
   try
   {
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (Test_File(), true, false, "");
+        (tf, transaction.data_index(&tf));
     list< IntIndex > indices;
     
     indices.clear();
@@ -601,8 +616,10 @@ int main(int argc, char* args[])
     cout<<"** Delete blocks at the begin and the end\n";
   try
   {
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (Test_File(), true, false, "");
+        (tf, transaction.data_index(&tf));
     list< IntIndex > indices;
     
     indices.clear();
@@ -628,8 +645,10 @@ int main(int argc, char* args[])
     cout<<"** Test insertion again\n";
   try
   {
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (Test_File(), true, false, "");
+        (tf, transaction.data_index(&tf));
     list< IntIndex > indices, work;
     
     indices.clear();
@@ -665,8 +684,10 @@ int main(int argc, char* args[])
     cout<<"** Delete everything\n";
   try
   {
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (Test_File(), true, false, "");
+        (tf, transaction.data_index(&tf));
     list< IntIndex > indices;
     
     indices.clear();
@@ -694,8 +715,10 @@ int main(int argc, char* args[])
     cout<<"** Insert two series of segments\n";
   try
   {
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (Test_File(), true, false, "");
+        (tf, transaction.data_index(&tf));
     list< IntIndex > indices;
     
     indices.clear();
@@ -729,8 +752,10 @@ int main(int argc, char* args[])
     cout<<"** Replace by other series of segments\n";
   try
   {
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (Test_File(), true, false, "");
+        (tf, transaction.data_index(&tf));
     list< IntIndex > indices, work;
     
     indices.clear();

@@ -51,7 +51,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
   ids_to_modify.clear();
   ways_to_insert.clear();
   
-  if (!partial && (update_counter > 0))
+  /*if (!partial && (update_counter > 0))
   {
     callback->partial_started();
     if (update_counter >= 64)
@@ -75,7 +75,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
       merge_files(".0", ".1");
       callback->partial_finished();
     }
-  }
+  }*/ //TODO: temporarily disabled
 }
 
 void Way_Updater::update_moved_idxs
@@ -160,7 +160,8 @@ void Way_Updater::find_affected_ways(const vector< pair< uint32, uint32 > >& mov
   req.insert(Uint31_Index(0x80000040));
   
   Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-      (*de_osm3s_file_ids::WAYS, false, false);
+      (*de_osm3s_file_ids::WAYS,
+       transaction->data_index(de_osm3s_file_ids::WAYS));
   for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
     it(ways_db.discrete_begin(req.begin(), req.end()));
   !(it == ways_db.discrete_end()); ++it)
@@ -288,7 +289,8 @@ void Way_Updater::update_members(const map< uint32, vector< uint32 > >& to_delet
   }
   
   Block_Backend< Uint31_Index, Way_Skeleton > way_db
-      (*de_osm3s_file_ids::WAYS, true, false);
+      (*de_osm3s_file_ids::WAYS,
+       transaction->data_index(de_osm3s_file_ids::WAYS));
   way_db.update(db_to_delete, db_to_insert);
 }
 
@@ -326,7 +328,8 @@ void Way_Updater::prepare_delete_tags
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, Uint32_Index > ways_db
-      (*de_osm3s_file_ids::WAY_TAGS_LOCAL, true, false);
+      (*de_osm3s_file_ids::WAY_TAGS_LOCAL,
+       transaction->data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL));
   Tag_Index_Local current_index;
   Tag_Entry tag_entry;
   current_index.index = 0xffffffff;
@@ -389,7 +392,8 @@ void Way_Updater::prepare_tags
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, Uint32_Index > ways_db
-      (*de_osm3s_file_ids::WAY_TAGS_LOCAL, true, false);
+      (*de_osm3s_file_ids::WAY_TAGS_LOCAL,
+       transaction->data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL));
   Tag_Index_Local current_index;
   Tag_Entry tag_entry;
   current_index.index = 0xffffffff;
@@ -469,7 +473,8 @@ void Way_Updater::update_way_tags_local(const vector< Tag_Entry >& tags_to_delet
   }
   
   Block_Backend< Tag_Index_Local, Uint32_Index > way_db
-      (*de_osm3s_file_ids::WAY_TAGS_LOCAL, true, false);
+      (*de_osm3s_file_ids::WAY_TAGS_LOCAL,
+       transaction->data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL));
   way_db.update(db_to_delete, db_to_insert);
 }
 
@@ -515,7 +520,8 @@ void Way_Updater::update_way_tags_global(const vector< Tag_Entry >& tags_to_dele
   }
   
   Block_Backend< Tag_Index_Global, Uint32_Index > way_db
-      (*de_osm3s_file_ids::WAY_TAGS_GLOBAL, true, false);
+      (*de_osm3s_file_ids::WAY_TAGS_GLOBAL,
+       transaction->data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL));
   way_db.update(db_to_delete, db_to_insert);
 }
 
@@ -527,7 +533,8 @@ void Way_Updater::merge_files(string from, string into)
     
     uint32 item_count(0);
     Block_Backend< Uint31_Index, Way_Skeleton > from_db
-        (*de_osm3s_file_ids::WAYS, false, false, from);
+        (*de_osm3s_file_ids::WAYS,
+	 transaction->data_index(de_osm3s_file_ids::WAYS)); //TODO: from
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
       it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
     {
@@ -535,7 +542,8 @@ void Way_Updater::merge_files(string from, string into)
       if (++item_count >= 4*1024*1024)
       {
 	Block_Backend< Uint31_Index, Way_Skeleton > into_db
-	    (*de_osm3s_file_ids::WAYS, true, false, into);
+	    (*de_osm3s_file_ids::WAYS,
+	     transaction->data_index(de_osm3s_file_ids::WAYS)); //TODO: into
 	into_db.update(db_to_delete, db_to_insert);
 	db_to_insert.clear();
 	item_count = 0;
@@ -543,7 +551,8 @@ void Way_Updater::merge_files(string from, string into)
     }
     
     Block_Backend< Uint31_Index, Way_Skeleton > into_db
-        (*de_osm3s_file_ids::WAYS, true, false, into);
+        (*de_osm3s_file_ids::WAYS,
+	 transaction->data_index(de_osm3s_file_ids::WAYS)); //TODO: into
     into_db.update(db_to_delete, db_to_insert);
   }
   remove((de_osm3s_file_ids::WAYS->get_file_base_name() + from 
@@ -557,7 +566,8 @@ void Way_Updater::merge_files(string from, string into)
     
     uint32 item_count(0);
     Block_Backend< Tag_Index_Local, Uint32_Index > from_db
-        (*de_osm3s_file_ids::WAY_TAGS_LOCAL, false, false, from);
+        (*de_osm3s_file_ids::WAY_TAGS_LOCAL,
+	 transaction->data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL)); //TODO: from
     for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
       it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
     {
@@ -565,7 +575,8 @@ void Way_Updater::merge_files(string from, string into)
       if (++item_count >= 4*1024*1024)
       {
 	Block_Backend< Tag_Index_Local, Uint32_Index > into_db
-	    (*de_osm3s_file_ids::WAY_TAGS_LOCAL, true, false, into);
+	    (*de_osm3s_file_ids::WAY_TAGS_LOCAL,
+	     transaction->data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL)); //TODO: into
 	into_db.update(db_to_delete, db_to_insert);
 	db_to_insert.clear();
 	item_count = 0;
@@ -573,7 +584,8 @@ void Way_Updater::merge_files(string from, string into)
     }
     
     Block_Backend< Tag_Index_Local, Uint32_Index > into_db
-        (*de_osm3s_file_ids::WAY_TAGS_LOCAL, true, false, into);
+        (*de_osm3s_file_ids::WAY_TAGS_LOCAL,
+	 transaction->data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL)); //TODO: into
     into_db.update(db_to_delete, db_to_insert);
   }
   remove((de_osm3s_file_ids::WAY_TAGS_LOCAL->get_file_base_name() + from 
@@ -587,7 +599,8 @@ void Way_Updater::merge_files(string from, string into)
     
     uint32 item_count(0);
     Block_Backend< Tag_Index_Global, Uint32_Index > from_db
-        (*de_osm3s_file_ids::WAY_TAGS_GLOBAL, false, false, from);
+        (*de_osm3s_file_ids::WAY_TAGS_GLOBAL,
+	 transaction->data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL)); //TODO: from
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
       it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
     {
@@ -595,7 +608,8 @@ void Way_Updater::merge_files(string from, string into)
       if (++item_count >= 4*1024*1024)
       {
 	Block_Backend< Tag_Index_Global, Uint32_Index > into_db
-	    (*de_osm3s_file_ids::WAY_TAGS_GLOBAL, true, false, into);
+	    (*de_osm3s_file_ids::WAY_TAGS_GLOBAL,
+	     transaction->data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL)); //TODO: into
 	into_db.update(db_to_delete, db_to_insert);
 	db_to_insert.clear();
 	item_count = 0;
@@ -603,7 +617,8 @@ void Way_Updater::merge_files(string from, string into)
     }
     
     Block_Backend< Tag_Index_Global, Uint32_Index > into_db
-        (*de_osm3s_file_ids::WAY_TAGS_GLOBAL, true, false, into);
+        (*de_osm3s_file_ids::WAY_TAGS_GLOBAL,
+	 transaction->data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL)); //TODO: into
     into_db.update(db_to_delete, db_to_insert);
   }
   remove((de_osm3s_file_ids::WAY_TAGS_GLOBAL->get_file_base_name() + from 

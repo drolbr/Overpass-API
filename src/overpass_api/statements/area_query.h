@@ -21,7 +21,8 @@ class Area_Query_Statement : public Statement
         
     void get_ranges
       (set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
-       set< Uint31_Index >& area_block_req);
+       set< Uint31_Index >& area_block_req,
+       Resource_Manager& rman);
     void collect_nodes
       (const set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
        const set< Uint31_Index >& req,

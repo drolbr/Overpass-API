@@ -235,58 +235,64 @@ int main(int argc, char* args[])
 {
   try
   {
-    Nonsynced_Transaction transaction(true, false);
-    Node_Updater node_updater_(&transaction);
-    node_updater = &node_updater_;
-    Way_Updater way_updater_(&transaction);
-    way_updater = &way_updater_;
-    Relation_Updater relation_updater_(&transaction);
-    relation_updater = &relation_updater_;
-    
-    member_source_out = new ofstream((get_basedir() + "member_source.csv").c_str());
-    tags_source_out = new ofstream((get_basedir() + "tags_source.csv").c_str());
-    
     ofstream member_db_out((get_basedir() + "member_db.csv").c_str());
     ofstream tags_local_out((get_basedir() + "tags_local.csv").c_str());
     ofstream tags_global_out((get_basedir() + "tags_global.csv").c_str());
-    callback = get_verbatim_callback();
+    {
+      Nonsynced_Transaction transaction(true, false);
+      Node_Updater node_updater_(&transaction);
+      node_updater = &node_updater_;
+      Way_Updater way_updater_(&transaction);
+      way_updater = &way_updater_;
+      Relation_Updater relation_updater_(&transaction);
+      relation_updater = &relation_updater_;
+      
+      member_source_out = new ofstream((get_basedir() + "member_source.csv").c_str());
+      tags_source_out = new ofstream((get_basedir() + "tags_source.csv").c_str());
+      
+      callback = get_verbatim_callback();
+      
+      osm_element_count = 0;
+      state = 0;
+      //reading the main document
+      callback->parser_started();
+      parse(stdin, start, end);
+      
+      if (state == IN_NODES)
+      {
+	callback->nodes_finished();
+	node_updater->update(callback);
+      }
+      else if (state == IN_WAYS)
+      {
+	callback->ways_finished();
+	way_updater->update(callback);
+      }
+      else if (state == IN_RELATIONS)
+      {
+	callback->relations_finished();
+	relation_updater->update(callback);
+      }
+      
+      delete member_source_out;
+      delete tags_source_out;
+    }
     
-    osm_element_count = 0;
-    state = 0;
-    //reading the main document
-    callback->parser_started();
-    parse(stdin, start, end);
-  
-    if (state == IN_NODES)
-    {
-      callback->nodes_finished();
-      node_updater->update(callback);
-    }
-    else if (state == IN_WAYS)
-    {
-      callback->ways_finished();
-      way_updater->update(callback);
-    }
-    else if (state == IN_RELATIONS)
-    {
-      callback->relations_finished();
-      relation_updater->update(callback);
-    }
-    
-    delete member_source_out;
-    delete tags_source_out;
+    Nonsynced_Transaction transaction(false, false);
     
     // prepare check update_members - load roles
     map< uint32, string > roles;
     Block_Backend< Uint32_Index, String_Object > roles_db
-      (*de_osm3s_file_ids::RELATION_ROLES, true, false);
+      (*de_osm3s_file_ids::RELATION_ROLES,
+       transaction.data_index(de_osm3s_file_ids::RELATION_ROLES));
     for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
         it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
       roles[it.index().val()] = it.object().val();
     
     // check update_members - compare both files for the result
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(*de_osm3s_file_ids::RELATIONS, false, false);
+	(*de_osm3s_file_ids::RELATIONS,
+	 transaction.data_index(de_osm3s_file_ids::RELATIONS));
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
 	 it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
     {
@@ -300,7 +306,8 @@ int main(int argc, char* args[])
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Local, Uint32_Index > relations_local_db
-	(*de_osm3s_file_ids::RELATION_TAGS_LOCAL, false, false);
+	(*de_osm3s_file_ids::RELATION_TAGS_LOCAL,
+	 transaction.data_index(de_osm3s_file_ids::RELATION_TAGS_LOCAL));
     for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(relations_local_db.flat_begin());
          !(it == relations_local_db.flat_end()); ++it)
@@ -311,7 +318,8 @@ int main(int argc, char* args[])
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Global, Uint32_Index > relations_global_db
-	(*de_osm3s_file_ids::RELATION_TAGS_GLOBAL, false, false);
+	(*de_osm3s_file_ids::RELATION_TAGS_GLOBAL,
+	 transaction.data_index(de_osm3s_file_ids::RELATION_TAGS_GLOBAL));
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(relations_global_db.flat_begin());
          !(it == relations_global_db.flat_end()); ++it)
