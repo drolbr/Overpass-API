@@ -2,6 +2,7 @@
 #define DE__OSM3S__RESOURCE_MANAGER_DEFINED
 
 #include <ctime>
+#include "../../template_db/transaction.h"
 #include "../core/datatypes.h"
 #include "../osm-backend/area_updater.h"
 
@@ -9,9 +10,10 @@ using namespace std;
 
 struct Statement;
 
-struct Resource_Manager
+class Resource_Manager
 {
-  Resource_Manager() : start_time(time(NULL)) {}
+public:
+  Resource_Manager() : transaction(false, false), start_time(time(NULL)) {}
   
   map< string, Set >& sets()
   {
@@ -28,10 +30,13 @@ struct Resource_Manager
 
   void health_check(const Statement& stmt);
   
+  Transaction& get_transaction() { return transaction; }
+  
 private:
   map< string, Set > sets_;
   vector< const Set* > set_stack;
   Area_Updater area_updater_;
+  Nonsynced_Transaction transaction;
   int start_time;
 };
 

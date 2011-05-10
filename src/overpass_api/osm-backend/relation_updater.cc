@@ -12,7 +12,8 @@
 
 using namespace std;
 
-Relation_Updater::Relation_Updater()
+Relation_Updater::Relation_Updater(Transaction* transaction_)
+: transaction(transaction_)
 {
   max_role_id = 0;
   max_written_role_id = 0;
@@ -176,8 +177,10 @@ void Relation_Updater::find_affected_relations
     }
   }
   
-  Random_File< Uint32_Index > node_random(*de_osm3s_file_ids::NODES, false, false);
-  Random_File< Uint31_Index > way_random(*de_osm3s_file_ids::WAYS, false, false);
+  Random_File< Uint32_Index > node_random
+      (*de_osm3s_file_ids::NODES, transaction->random_index(de_osm3s_file_ids::NODES));
+  Random_File< Uint31_Index > way_random
+      (*de_osm3s_file_ids::WAYS, transaction->random_index(de_osm3s_file_ids::WAYS));
   for (map< uint32, uint32 >::iterator it(used_nodes.begin());
   it != used_nodes.end(); ++it)
   it->second = node_random.get(it->first).val();
@@ -229,8 +232,10 @@ void Relation_Updater::compute_indexes()
     }
   }
   
-  Random_File< Uint32_Index > node_random(*de_osm3s_file_ids::NODES, false, false);
-  Random_File< Uint31_Index > way_random(*de_osm3s_file_ids::WAYS, false, false);
+  Random_File< Uint32_Index > node_random
+      (*de_osm3s_file_ids::NODES, transaction->random_index(de_osm3s_file_ids::NODES));
+  Random_File< Uint31_Index > way_random
+      (*de_osm3s_file_ids::WAYS, transaction->random_index(de_osm3s_file_ids::WAYS));
   for (map< uint32, uint32 >::iterator it(used_nodes.begin());
   it != used_nodes.end(); ++it)
   it->second = node_random.get(it->first).val();
@@ -268,7 +273,9 @@ void Relation_Updater::update_rel_ids
   rels_to_insert.erase(rels_to_insert.begin(), relations_begin);
 	  
   // process the relations themselves
-  Random_File< Uint31_Index > random(*de_osm3s_file_ids::RELATIONS, true, false);
+  Random_File< Uint31_Index > random
+      (*de_osm3s_file_ids::RELATIONS,
+       transaction->random_index(de_osm3s_file_ids::RELATIONS));
   vector< Relation >::const_iterator rit(rels_to_insert.begin());
   for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
   it != ids_to_modify.end(); ++it)

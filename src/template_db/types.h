@@ -53,6 +53,7 @@ struct File_Properties
   virtual uint32 get_map_block_size() const = 0;
   virtual vector< bool > get_data_footprint() const = 0;
   virtual vector< bool > get_map_footprint() const = 0;
+  virtual uint32 id_max_size_of() const = 0;
 };
 
 /** Simple RAII class to keep a file descriptor. */
@@ -77,11 +78,64 @@ struct Void_Pointer
     T* ptr;
 };
 
+template < class T >
+class Index_Smart_Pimpl
+{
+  public:
+    Index_Smart_Pimpl(string source_index_file_name,
+		      string dest_index_file_name,
+		      uint32 block_count);
+    Index_Smart_Pimpl(const Index_Smart_Pimpl&);
+    ~Index_Smart_Pimpl();
+    Index_Smart_Pimpl& operator=(const Index_Smart_Pimpl&);
+    
+    T* operator->() { return pimpl; }
+    
+  private:
+    T* pimpl;
+};
+
 inline Raw_File::Raw_File(string name, int oflag, mode_t mode, string caller_id)
 {
   fd = open64(name.c_str(), oflag, mode);
   if (fd < 0)
     throw File_Error(errno, name, caller_id);
+}
+
+template < class T >
+Index_Smart_Pimpl< T >::Index_Smart_Pimpl
+    (string source_index_file_name, string dest_index_file_name, uint32 block_count)
+    : pimpl(new T(source_index_file_name, dest_index_file_name, block_count))
+{
+  ++(pimpl->count);
+}
+
+template < class T >
+Index_Smart_Pimpl< T >::Index_Smart_Pimpl(const Index_Smart_Pimpl& isp)
+  : pimpl(isp.pimpl)
+{
+  ++(pimpl->count);
+}
+
+template < class T >
+Index_Smart_Pimpl< T >::~Index_Smart_Pimpl()
+{
+  if (--(pimpl->count) == 0)
+    delete pimpl;
+}
+
+template < class T >
+Index_Smart_Pimpl< T >& Index_Smart_Pimpl< T >::operator=(const Index_Smart_Pimpl& isp)
+{
+  if (pimpl == isp.pimpl)
+    return *this;
+  
+  if (--(pimpl->count) == 0)
+    delete pimpl;
+  pimpl = isp.pimpl;
+  ++(pimpl->count);
+  
+  return *this;
 }
 
 #endif

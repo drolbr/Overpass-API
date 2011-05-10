@@ -105,34 +105,37 @@ void cleanup_files(const File_Properties& file_properties, bool cleanup_map)
 
 int main(int argc, char* args[])
 {
-  Node_Updater node_updater_;
-  node_updater = &node_updater_;
-  
   try
   {
-    coord_source_out = new ofstream((get_basedir() + "coord_source.csv").c_str());
-    tags_source_out = new ofstream((get_basedir() + "tags_source.csv").c_str());
-    
     ofstream coord_db_out((get_basedir() + "coord_db.csv").c_str());
     ofstream tags_local_out((get_basedir() + "tags_local.csv").c_str());
     ofstream tags_global_out((get_basedir() + "tags_global.csv").c_str());
-    callback = get_verbatim_callback();
-    
-    DEBUG_nodes_count = 0;
-    DEBUG_update_count = 0;
-    DEBUG_nodes_8 = 0;
-    DEBUG_nodes_64 = 0;
-    osm_element_count = 0;
-    //reading the main document
-    callback->parser_started();
-    parse(stdin, start, end);
-  
-    callback->nodes_finished();
-    node_updater->update(callback);
-    
-    delete coord_source_out;
-    delete tags_source_out;
-    
+    {
+      Nonsynced_Transaction transaction(true, false);
+      Node_Updater node_updater_(&transaction);
+      node_updater = &node_updater_;
+      
+      coord_source_out = new ofstream((get_basedir() + "coord_source.csv").c_str());
+      tags_source_out = new ofstream((get_basedir() + "tags_source.csv").c_str());
+      
+      callback = get_verbatim_callback();
+      
+      DEBUG_nodes_count = 0;
+      DEBUG_update_count = 0;
+      DEBUG_nodes_8 = 0;
+      DEBUG_nodes_64 = 0;
+      osm_element_count = 0;
+      //reading the main document
+      callback->parser_started();
+      parse(stdin, start, end);
+      
+      callback->nodes_finished();
+      node_updater->update(callback);
+      
+      delete coord_source_out;
+      delete tags_source_out;
+    }
+      
     // check update_node_ids
 /*    uint32 false_count(0);
     Random_File< Uint32_Index > random(de_osm3s_file_ids::NODES, true);
@@ -186,8 +189,8 @@ int main(int argc, char* args[])
   }
   
   cleanup_files(*de_osm3s_file_ids::NODES, true);
-  cleanup_files(*de_osm3s_file_ids::NODE_TAGS_LOCAL, true);
-  cleanup_files(*de_osm3s_file_ids::NODE_TAGS_GLOBAL, true);
+  cleanup_files(*de_osm3s_file_ids::NODE_TAGS_LOCAL, false);
+  cleanup_files(*de_osm3s_file_ids::NODE_TAGS_GLOBAL, false);
   
   return 0;
 }

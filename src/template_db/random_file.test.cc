@@ -4,12 +4,50 @@
 #include <stdio.h>
 
 #include "random_file.h"
+#include "transaction.h"
 
 using namespace std;
 
 /**
  * Tests the library random_file
  */
+
+//-----------------------------------------------------------------------------
+
+/* Sample class for TIndex */
+struct IntIndex
+{
+  IntIndex(uint32 i) : value(i) {}
+  IntIndex(void* data) : value(*(uint32*)data) {}
+  
+  static uint32 max_size_of()
+  {
+    return 4;
+  }
+  
+  void to_data(void* data) const
+  {
+    *(uint32*)data = value;
+  }
+  
+  bool operator<(const IntIndex& index) const
+  {
+    return this->value < index.value;
+  }
+  
+  bool operator==(const IntIndex& index) const
+  {
+    return this->value == index.value;
+  }
+  
+  uint32 val() const
+  {
+    return value;
+  }
+  
+  private:
+    uint32 value;
+};
 
 //-----------------------------------------------------------------------------
 
@@ -68,43 +106,11 @@ struct Test_File : File_Properties
   {
     return vector< bool >();
   }  
-};
-
-//-----------------------------------------------------------------------------
-
-/* Sample class for TIndex */
-struct IntIndex
-{
-  IntIndex(uint32 i) : value(i) {}
-  IntIndex(void* data) : value(*(uint32*)data) {}
   
-  static uint32 max_size_of()
+  uint32 id_max_size_of() const
   {
-    return 4;
+    return IntIndex::max_size_of();
   }
-  
-  void to_data(void* data) const
-  {
-    *(uint32*)data = value;
-  }
-  
-  bool operator<(const IntIndex& index) const
-  {
-    return this->value < index.value;
-  }
-  
-  bool operator==(const IntIndex& index) const
-  {
-    return this->value == index.value;
-  }
-  
-  uint32 val() const
-  {
-    return value;
-  }
-  
-  private:
-    uint32 value;
 };
 
 //-----------------------------------------------------------------------------
@@ -120,8 +126,10 @@ void read_test()
         ++it)
       cout<<*it;
     cout<<'\n';
-    
-    Random_File< IntIndex > id_file(Test_File(), false, false);
+
+    Nonsynced_Transaction transaction(false, false);
+    Test_File tf;
+    Random_File< IntIndex > id_file(tf, transaction.random_index(&tf));
 
     cout<<id_file.get(0).val()<<'\n';
     cout<<id_file.get(1).val()<<'\n';
@@ -172,10 +180,14 @@ int main(int argc, char* args[])
     cout<<"** Test the behaviour for a file with two entries - part 1\n";
   try
   {
-    Random_File< IntIndex > blocks(Test_File(), true, false);
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
+    {
+      Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
     
-    blocks.put(2, 12);
-    blocks.put(5, 15);
+      blocks.put(2, 12);
+      blocks.put(5, 15);
+    }
   }
   catch (File_Error e)
   {
@@ -190,7 +202,9 @@ int main(int argc, char* args[])
     cout<<"** Add at the end\n";
   try
   {
-    Random_File< IntIndex > blocks(Test_File(), true, false);
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
+    Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
     
     blocks.put(6, 16);
   }
@@ -207,7 +221,9 @@ int main(int argc, char* args[])
     cout<<"** Overwrite an existing block\n";
   try
   {
-    Random_File< IntIndex > blocks(Test_File(), true, false);
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
+    Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
     
     blocks.put(2, 32);
   }
@@ -224,7 +240,9 @@ int main(int argc, char* args[])
     cout<<"** Write a second block\n";
   try
   {
-    Random_File< IntIndex > blocks(Test_File(), true, false);
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
+    Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
     
     blocks.put(16, 1);
   }
@@ -241,7 +259,9 @@ int main(int argc, char* args[])
     cout<<"** Write several blocks at once.\n";
   try
   {
-    Random_File< IntIndex > blocks(Test_File(), true, false);
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
+    Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
     
     blocks.put(0, 2);
     blocks.put(32, 3);
@@ -260,7 +280,9 @@ int main(int argc, char* args[])
     cout<<"** Leave a gap.\n";
   try
   {
-    Random_File< IntIndex > blocks(Test_File(), true, false);
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
+    Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
     
     blocks.put(80, 5);
   }
@@ -277,7 +299,9 @@ int main(int argc, char* args[])
     cout<<"** Fill the gap.\n";
   try
   {
-    Random_File< IntIndex > blocks(Test_File(), true, false);
+    Nonsynced_Transaction transaction(true, false);
+    Test_File tf;
+    Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
     
     blocks.put(64, 6);
   }

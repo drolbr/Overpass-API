@@ -97,7 +97,9 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
     Uint32_Index idx((uint32)0);
     {
       stopwatch.stop(Stopwatch::NO_DISK);
-      Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, false, false);
+      Random_File< Uint32_Index > random
+          (*de_osm3s_file_ids::NODES,
+	   rman.get_transaction().random_index(de_osm3s_file_ids::NODES));
       idx = random.get(ref);
       stopwatch.stop(Stopwatch::NODES_MAP);
     }
@@ -122,7 +124,9 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
     Uint31_Index idx((uint32)0);
     {
       stopwatch.stop(Stopwatch::NO_DISK);
-      Random_File< Uint31_Index > random(*de_osm3s_file_ids::WAYS, false, false);
+      Random_File< Uint31_Index > random
+          (*de_osm3s_file_ids::WAYS,
+	   rman.get_transaction().random_index(de_osm3s_file_ids::WAYS));
       idx = random.get(ref);
       stopwatch.stop(Stopwatch::WAYS_MAP);
     }
@@ -147,7 +151,9 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
     Uint31_Index idx((uint32)0);
     {
       stopwatch.stop(Stopwatch::NO_DISK);
-      Random_File< Uint31_Index > random(*de_osm3s_file_ids::RELATIONS, false, false);
+      Random_File< Uint31_Index > random
+          (*de_osm3s_file_ids::RELATIONS,
+	   rman.get_transaction().random_index(de_osm3s_file_ids::RELATIONS));
       idx = random.get(ref);
       stopwatch.stop(Stopwatch::RELATIONS_MAP);
     }

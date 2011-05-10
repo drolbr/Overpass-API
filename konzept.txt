@@ -524,6 +524,22 @@ Transactions::Dispatcher
 
 ---
 
+Smart pointer:
+(..) : delegate to new Pimpl(..), set counter=1
+~(..) : decrement counter, call destructor if applicable
+(&) : copy pointer, increment counter
+= : if !=, increment new one, decrement old one, call destrcutor if applicable
+
+Read_Without: Index from idx + File_Ext for all on construction, Void_Index empty, no write back. Constructor: (vec< File_Prop* >, string file_ext, bool writeable, bool shadow)
+Write_Without: Index from idx + File_Ext for all on construction, Void_Index by calculation, write back.
+Read_Transact: Index from Share on construction, Void_Index empty, no write back.
+Write_Transact: Index from Shadow on construction, Void_Index empty, write back to shadow.
+
+get_file_name_extension()
+get_index()
+
+---
+
 query:
 - Read all elem-ids from one-block-clauses.
 - Intersect them if applicable.

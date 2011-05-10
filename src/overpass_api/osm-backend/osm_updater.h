@@ -18,6 +18,7 @@ class Osm_Updater
     Osm_Updater(Osm_Backend_Callback* callback_);
     
   private:
+    Nonsynced_Transaction transaction;
     Node_Updater node_updater_;
     Way_Updater way_updater_;
     Relation_Updater relation_updater_;

@@ -15,7 +15,8 @@
 
 using namespace std;
 
-Way_Updater::Way_Updater() : update_counter(0)
+Way_Updater::Way_Updater(Transaction* transaction_)
+  : update_counter(0), transaction(transaction_)
 {
   // check whether map file exists
   string map_file_name = de_osm3s_file_ids::WAYS->get_file_base_name()
@@ -114,18 +115,19 @@ void Way_Updater::filter_affected_ways(const vector< Way >& maybe_affected_ways)
   // retrieve the indices of the referred nodes
   map< uint32, uint32 > used_nodes;
   for (vector< Way >::const_iterator wit(maybe_affected_ways.begin());
-  wit != maybe_affected_ways.end(); ++wit)
+      wit != maybe_affected_ways.end(); ++wit)
   {
     for (vector< uint32 >::const_iterator nit(wit->nds.begin());
     nit != wit->nds.end(); ++nit)
     used_nodes[*nit] = 0;
   }
-  Random_File< Uint32_Index > node_random(*de_osm3s_file_ids::NODES, false, false);
+  Random_File< Uint32_Index > node_random
+      (*de_osm3s_file_ids::NODES, transaction->random_index(de_osm3s_file_ids::NODES));
   for (map< uint32, uint32 >::iterator it(used_nodes.begin());
-  it != used_nodes.end(); ++it)
-  it->second = node_random.get(it->first).val();
+      it != used_nodes.end(); ++it)
+    it->second = node_random.get(it->first).val();
   for (vector< Way >::const_iterator wit(maybe_affected_ways.begin());
-  wit != maybe_affected_ways.end(); ++wit)
+      wit != maybe_affected_ways.end(); ++wit)
   {
     vector< uint32 > nd_idxs;
     for (vector< uint32 >::const_iterator nit(wit->nds.begin());
@@ -199,7 +201,8 @@ void Way_Updater::compute_indexes()
     nit != wit->nds.end(); ++nit)
     used_nodes[*nit] = 0;
   }
-  Random_File< Uint32_Index > node_random(*de_osm3s_file_ids::NODES, false, false);
+  Random_File< Uint32_Index > node_random
+      (*de_osm3s_file_ids::NODES, transaction->random_index(de_osm3s_file_ids::NODES));
   for (map< uint32, uint32 >::iterator it(used_nodes.begin());
   it != used_nodes.end(); ++it)
   it->second = node_random.get(it->first).val();
@@ -232,7 +235,8 @@ void Way_Updater::update_way_ids(map< uint32, vector< uint32 > >& to_delete)
   .base());
   ways_to_insert.erase(ways_to_insert.begin(), ways_begin);
   
-  Random_File< Uint31_Index > random(*de_osm3s_file_ids::WAYS, true, false);
+  Random_File< Uint31_Index > random
+      (*de_osm3s_file_ids::WAYS, transaction->random_index(de_osm3s_file_ids::WAYS));
   vector< Way >::const_iterator wit(ways_to_insert.begin());
   for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
   it != ids_to_modify.end(); ++it)

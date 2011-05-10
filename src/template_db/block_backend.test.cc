@@ -70,6 +70,12 @@ struct Test_File : File_Properties
   {
     return vector< bool >();
   }  
+  
+  uint32 id_max_size_of() const
+  {
+    throw string();
+    return 0;
+  }
 };
 
 //-----------------------------------------------------------------------------

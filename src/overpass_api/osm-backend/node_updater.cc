@@ -15,7 +15,8 @@
 
 using namespace std;
 
-Node_Updater::Node_Updater() : update_counter(0)
+Node_Updater::Node_Updater(Transaction* transaction_)
+  : update_counter(0), transaction(transaction_)
 {
   // check whether map file exists
   string map_file_name = de_osm3s_file_ids::NODES->get_file_base_name()
@@ -92,7 +93,8 @@ void Node_Updater::update_node_ids
        .base());
   nodes_to_insert.erase(nodes_to_insert.begin(), nodes_begin);
   
-  Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, true, false);
+  Random_File< Uint32_Index > random
+      (*de_osm3s_file_ids::NODES, transaction->random_index(de_osm3s_file_ids::NODES));
   vector< Node >::const_iterator nit(nodes_to_insert.begin());
   for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
       it != ids_to_modify.end(); ++it)

@@ -9,6 +9,7 @@
 
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
+#include "../../template_db/transaction.h"
 #include "../core/datatypes.h"
 #include "../core/settings.h"
 
@@ -16,7 +17,7 @@ using namespace std;
 
 struct Relation_Updater
 {
-  Relation_Updater();
+  Relation_Updater(Transaction* transaction);
   
   void set_id_deleted(uint32 id)
   {
@@ -50,6 +51,7 @@ struct Relation_Updater
 			 const vector< pair< uint32, uint32 > >& moved_ways);
   
 private:
+  Transaction* transaction;
   map< string, uint32 > role_ids;
   uint32 max_written_role_id;
   uint32 max_role_id;

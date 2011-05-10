@@ -14,6 +14,12 @@
 
 using namespace std;
 
+struct Unsupported_Error
+{
+  Unsupported_Error(const string& method_name_) : method_name(method_name_) {}
+  string method_name;
+};
+
 struct String_Object
 {
   String_Object(string s) : value(s) {}
@@ -163,6 +169,12 @@ struct Tag_Index_Local
       return false;
     return (value == a.value);
   }
+  
+  static uint32 max_size_of()
+  {
+    throw Unsupported_Error("static uint32 Tag_Index_Global::max_size_of()");
+    return 0;
+  }
 };
 
 struct Tag_Index_Global
@@ -210,6 +222,12 @@ struct Tag_Index_Global
     if (key != a.key)
       return false;
     return (value == a.value);
+  }
+  
+  static uint32 max_size_of()
+  {
+    throw Unsupported_Error("static uint32 Tag_Index_Global::max_size_of()");
+    return 0;
   }
 };
 

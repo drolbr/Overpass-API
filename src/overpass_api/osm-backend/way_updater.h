@@ -9,6 +9,7 @@
 
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
+#include "../../template_db/transaction.h"
 #include "../core/datatypes.h"
 #include "../core/settings.h"
 
@@ -16,7 +17,7 @@ using namespace std;
 
 struct Way_Updater
 {
-  Way_Updater();
+  Way_Updater(Transaction* transaction);
   
   void set_id_deleted(uint32 id)
   {
@@ -54,6 +55,7 @@ struct Way_Updater
   }
   
 private:
+  Transaction* transaction;
   vector< pair< uint32, bool > > ids_to_modify;
   vector< Way > ways_to_insert;
   static Way_Comparator_By_Id way_comparator_by_id;

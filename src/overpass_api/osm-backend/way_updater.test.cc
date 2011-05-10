@@ -159,13 +159,14 @@ void cleanup_files(const File_Properties& file_properties, bool cleanup_map)
 
 int main(int argc, char* args[])
 {
-  Node_Updater node_updater_;
-  node_updater = &node_updater_;
-  Way_Updater way_updater_;
-  way_updater = &way_updater_;
-  
   try
   {
+    Nonsynced_Transaction transaction(true, false);
+    Node_Updater node_updater_(&transaction);
+    node_updater = &node_updater_;
+    Way_Updater way_updater_(&transaction);
+    way_updater = &way_updater_;
+    
     member_source_out = new ofstream((get_basedir() + "member_source.csv").c_str());
     tags_source_out = new ofstream((get_basedir() + "tags_source.csv").c_str());
     callback = get_verbatim_callback();

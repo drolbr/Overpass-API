@@ -145,7 +145,9 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     
     {
       stopwatch.stop(Stopwatch::NO_DISK);
-      Random_File< Uint31_Index > random(*de_osm3s_file_ids::RELATIONS, false, false);
+      Random_File< Uint31_Index > random
+          (*de_osm3s_file_ids::RELATIONS,
+	   rman.get_transaction().random_index(de_osm3s_file_ids::RELATIONS));
       for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
 	   it(mit->second.relations.begin()); it != mit->second.relations.end(); ++it)
       {
@@ -252,7 +254,9 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     sort(ids.begin(), ids.end());
     {
       stopwatch.stop(Stopwatch::NO_DISK);
-      Random_File< Uint31_Index > random(*de_osm3s_file_ids::WAYS, false, false);
+      Random_File< Uint31_Index > random
+          (*de_osm3s_file_ids::WAYS,
+	   rman.get_transaction().random_index(de_osm3s_file_ids::WAYS));
       for (vector< uint32 >::const_iterator it(ids.begin());
           it != ids.end(); ++it)
 	req.insert(random.get(*it));
@@ -304,7 +308,9 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     sort(ids.begin(), ids.end());
     {
       stopwatch.stop(Stopwatch::NO_DISK);
-      Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, false, false);
+      Random_File< Uint32_Index > random
+          (*de_osm3s_file_ids::NODES,
+	   rman.get_transaction().random_index(de_osm3s_file_ids::NODES));
       for (vector< uint32 >::const_iterator it(ids.begin());
           it != ids.end(); ++it)
         req.insert(random.get(*it));
@@ -396,7 +402,9 @@ void Recurse_Statement::execute(Resource_Manager& rman)
       sort(ids_for_index_req.begin(), ids_for_index_req.end());
       rman.health_check(*this);
       
-      Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, false, false);
+      Random_File< Uint32_Index > random
+          (*de_osm3s_file_ids::NODES,
+	   rman.get_transaction().random_index(de_osm3s_file_ids::NODES));
       for (vector< uint32 >::const_iterator
 	  it(ids_for_index_req.begin()); it != ids_for_index_req.end(); ++it)
 	req.insert(random.get(*it));

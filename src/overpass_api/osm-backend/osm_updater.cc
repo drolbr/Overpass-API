@@ -375,6 +375,8 @@ void parse_relations_only(FILE* in)
 }
 
 Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_)
+  : transaction(true, false), node_updater_(&transaction),
+    way_updater_(&transaction), relation_updater_(&transaction)
 {
   state = 0;
   osm_element_count = 0;

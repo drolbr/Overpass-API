@@ -411,7 +411,9 @@ void Query_Statement::execute(Resource_Manager& rman)
     else
     {
       stopwatch.stop(Stopwatch::NO_DISK);
-      Random_File< Uint32_Index > random(*de_osm3s_file_ids::NODES, false, false);
+      Random_File< Uint32_Index > random
+          (*de_osm3s_file_ids::NODES,
+	   rman.get_transaction().random_index(de_osm3s_file_ids::NODES));
       for (vector< uint32 >::const_iterator it(ids->begin());
           it != ids->end(); ++it)
 	obj_req.insert(random.get(*it));
@@ -495,7 +497,9 @@ void Query_Statement::execute(Resource_Manager& rman)
     set< Uint31_Index > obj_req;
     {
       stopwatch.stop(Stopwatch::NO_DISK);
-      Random_File< Uint31_Index > random(*de_osm3s_file_ids::WAYS, false, false);
+      Random_File< Uint31_Index > random
+          (*de_osm3s_file_ids::WAYS,
+	   rman.get_transaction().random_index(de_osm3s_file_ids::WAYS));
       for (vector< uint32 >::const_iterator it(ids->begin());
           it != ids->end(); ++it)
         obj_req.insert(random.get(*it));
@@ -536,7 +540,9 @@ void Query_Statement::execute(Resource_Manager& rman)
     set< Uint31_Index > obj_req;
     {
       stopwatch.stop(Stopwatch::NO_DISK);
-      Random_File< Uint31_Index > random(*de_osm3s_file_ids::RELATIONS, false, false);
+      Random_File< Uint31_Index > random
+          (*de_osm3s_file_ids::RELATIONS,
+	   rman.get_transaction().random_index(de_osm3s_file_ids::RELATIONS));
       for (vector< uint32 >::const_iterator it(ids->begin());
           it != ids->end(); ++it)
       obj_req.insert(random.get(*it));
