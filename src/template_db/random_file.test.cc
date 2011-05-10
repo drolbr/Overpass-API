@@ -111,6 +111,14 @@ struct Test_File : File_Properties
   {
     return IntIndex::max_size_of();
   }
+  
+  File_Blocks_Index_Base* new_data_index
+      (string index_file_name, string empty_index_file_name,
+       string file_name_extension, uint32 block_count) const
+  {
+    throw string();
+    return 0;
+  }
 };
 
 //-----------------------------------------------------------------------------

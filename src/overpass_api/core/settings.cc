@@ -1,6 +1,8 @@
 #include "datatypes.h"
 #include "settings.h"
 
+#include "../../template_db/file_blocks.h"
+
 #include <cstdio>
 #include <fstream>
 #include <iostream>
@@ -87,6 +89,14 @@ struct OSM_File_Properties : public File_Properties
     return TVal::max_size_of();
   }
   
+  File_Blocks_Index_Base* new_data_index
+      (string index_file_name, string empty_index_file_name,
+       string file_name_extension, uint32 block_count) const
+  {
+    return new File_Blocks_Index< TVal >
+        (index_file_name, empty_index_file_name, file_name_extension, block_count);
+  }
+		  
   string file_base_name;
   uint32 block_size;
   uint32 map_block_size;

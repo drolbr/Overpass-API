@@ -13,6 +13,69 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
+/* Sample class for TIndex */
+struct IntIndex
+{
+  IntIndex(uint32 i) : value(i) {}
+  IntIndex(void* data) : value(*(uint32*)data) {}
+  
+  uint32 size_of() const
+  {
+    return (value < 24 ? 12 : value-12);
+  }
+  
+  static uint32 size_of(void* data)
+  {
+    return ((*(uint32*)data) < 24 ? 12 : (*(uint32*)data)-12);
+  }
+  
+  void to_data(void* data) const
+  {
+    *(uint32*)data = value;
+  }
+  
+  bool operator<(const IntIndex& index) const
+  {
+    return this->value < index.value;
+  }
+  
+  bool operator==(const IntIndex& index) const
+  {
+    return this->value == index.value;
+  }
+  
+  uint32 val() const
+  {
+    return value;
+  }
+  
+  private:
+    uint32 value;
+};
+
+typedef list< IntIndex >::const_iterator IntIterator;
+
+struct IntRangeIterator : list< pair< IntIndex, IntIndex > >::const_iterator
+{
+  IntRangeIterator() {}
+  
+  IntRangeIterator
+    (const list< pair< IntIndex, IntIndex > >::const_iterator it)
+    : list< pair< IntIndex, IntIndex > >::const_iterator(it) {}
+  
+  const IntIndex& lower_bound() const
+  {
+    return (*this)->first;
+  }
+  
+  const IntIndex& upper_bound() const
+  {
+    return (*this)->second;
+  }
+};
+
+//-----------------------------------------------------------------------------
+
 /* We use our own test settings */
 string BASE_DIRECTORY("./");
 string DATA_SUFFIX(".bin");
@@ -75,68 +138,13 @@ struct Test_File : File_Properties
     throw string();
     return 0;
   }
-};
-
-//-----------------------------------------------------------------------------
-
-/* Sample class for TIndex */
-struct IntIndex
-{
-  IntIndex(uint32 i) : value(i) {}
-  IntIndex(void* data) : value(*(uint32*)data) {}
   
-  uint32 size_of() const
+  File_Blocks_Index_Base* new_data_index
+      (string index_file_name, string empty_index_file_name,
+       string file_name_extension, uint32 block_count) const
   {
-    return (value < 24 ? 12 : value-12);
-  }
-  
-  static uint32 size_of(void* data)
-  {
-    return ((*(uint32*)data) < 24 ? 12 : (*(uint32*)data)-12);
-  }
-  
-  void to_data(void* data) const
-  {
-    *(uint32*)data = value;
-  }
-  
-  bool operator<(const IntIndex& index) const
-  {
-    return this->value < index.value;
-  }
-  
-  bool operator==(const IntIndex& index) const
-  {
-    return this->value == index.value;
-  }
-  
-  uint32 val() const
-  {
-    return value;
-  }
-  
-  private:
-    uint32 value;
-};
-
-typedef list< IntIndex >::const_iterator IntIterator;
-
-struct IntRangeIterator : list< pair< IntIndex, IntIndex > >::const_iterator
-{
-  IntRangeIterator() {}
-  
-  IntRangeIterator
-    (const list< pair< IntIndex, IntIndex > >::const_iterator it)
-    : list< pair< IntIndex, IntIndex > >::const_iterator(it) {}
-  
-  const IntIndex& lower_bound() const
-  {
-    return (*this)->first;
-  }
-  
-  const IntIndex& upper_bound() const
-  {
-    return (*this)->second;
+    return new File_Blocks_Index< IntIndex >
+        (index_file_name, empty_index_file_name, file_name_extension, block_count);
   }
 };
 

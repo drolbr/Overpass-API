@@ -41,6 +41,11 @@ struct File_Properties_Exception
   int32 id;
 };
 
+struct File_Blocks_Index_Base
+{
+  virtual ~File_Blocks_Index_Base() {}
+};
+
 struct File_Properties
 {
   virtual string get_basedir() const = 0;
@@ -54,6 +59,13 @@ struct File_Properties
   virtual vector< bool > get_data_footprint() const = 0;
   virtual vector< bool > get_map_footprint() const = 0;
   virtual uint32 id_max_size_of() const = 0;
+  
+  // The returned object is of type File_Blocks_Index< .. >*
+  // and goes into the ownership of the caller.
+  virtual File_Blocks_Index_Base* new_data_index
+      (string index_file_name, string empty_index_file_name,
+       string file_name_extension, uint32 block_count)
+      const = 0;
 };
 
 /** Simple RAII class to keep a file descriptor. */

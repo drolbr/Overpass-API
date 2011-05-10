@@ -14,72 +14,6 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
-/* We use our own test settings */
-string BASE_DIRECTORY("./");
-string DATA_SUFFIX(".bin");
-string INDEX_SUFFIX(".idx");
-
-struct Test_File : File_Properties
-{
-  string get_basedir() const
-  {
-    return BASE_DIRECTORY;
-  }
-  
-  string get_file_base_name() const
-  {
-    return BASE_DIRECTORY + "testfile";
-  }
-  
-  string get_index_suffix() const
-  {
-    return INDEX_SUFFIX;
-  }
-  
-  string get_data_suffix() const
-  {
-    return DATA_SUFFIX;
-  }
-  
-  string get_id_suffix() const
-  {
-    return "";
-  }
-  
-  string get_shadow_suffix() const
-  {
-    return ".shadow";
-  }
-  
-  uint32 get_block_size() const
-  {
-    return 512;
-  }
-  
-  uint32 get_map_block_size() const
-  {
-    return 16;
-  }
-  
-  vector< bool > get_data_footprint() const
-  {
-    return vector< bool >();
-  }
-  
-  vector< bool > get_map_footprint() const
-  {
-    return vector< bool >();
-  }  
-  
-  uint32 id_max_size_of() const
-  {
-    throw string();
-    return 0;
-  }
-};
-
-//-----------------------------------------------------------------------------
-
 /* Sample class for TIndex */
 struct IntIndex
 {
@@ -171,6 +105,80 @@ struct IntRangeIterator : list< pair< IntIndex, IntIndex > >::const_iterator
   {
     return (*this)->second;
   }
+};
+
+//-----------------------------------------------------------------------------
+
+/* We use our own test settings */
+string BASE_DIRECTORY("./");
+string DATA_SUFFIX(".bin");
+string INDEX_SUFFIX(".idx");
+
+struct Test_File : File_Properties
+{
+  string get_basedir() const
+  {
+    return BASE_DIRECTORY;
+  }
+  
+  string get_file_base_name() const
+  {
+    return BASE_DIRECTORY + "testfile";
+  }
+  
+  string get_index_suffix() const
+  {
+    return INDEX_SUFFIX;
+  }
+  
+  string get_data_suffix() const
+  {
+    return DATA_SUFFIX;
+  }
+  
+  string get_id_suffix() const
+  {
+    return "";
+  }
+  
+  string get_shadow_suffix() const
+  {
+    return ".shadow";
+  }
+  
+  uint32 get_block_size() const
+  {
+    return 512;
+  }
+  
+  uint32 get_map_block_size() const
+  {
+    return 16;
+  }
+  
+  vector< bool > get_data_footprint() const
+  {
+    return vector< bool >();
+  }
+  
+  vector< bool > get_map_footprint() const
+  {
+    return vector< bool >();
+  }  
+  
+  uint32 id_max_size_of() const
+  {
+    throw string();
+    return 0;
+  }
+  
+  File_Blocks_Index_Base* new_data_index
+  (string index_file_name, string empty_index_file_name,
+   string file_name_extension, uint32 block_count) const
+   {
+     return new File_Blocks_Index< IntIndex >
+     (index_file_name, empty_index_file_name, file_name_extension, block_count);
+   }
 };
 
 //-----------------------------------------------------------------------------
