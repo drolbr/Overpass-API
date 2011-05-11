@@ -13,7 +13,8 @@
 using namespace std;
 
 Relation_Updater::Relation_Updater(Transaction* transaction_)
-: transaction(transaction_)
+  : transaction(transaction_),
+    external_transaction(transaction_ != 0)
 {
   max_role_id = 0;
   max_written_role_id = 0;
@@ -33,6 +34,9 @@ uint32 Relation_Updater::get_role_id(const string& s)
   if (max_role_id == 0)
   {
     // load roles
+    if (!external_transaction)
+      transaction = new Nonsynced_Transaction(true, false, "");
+    
     Block_Backend< Uint32_Index, String_Object > roles_db
         (*de_osm3s_file_ids::RELATION_ROLES,
 	 transaction->data_index(de_osm3s_file_ids::RELATION_ROLES));
@@ -44,6 +48,9 @@ uint32 Relation_Updater::get_role_id(const string& s)
 	max_role_id = it.index().val()+1;
     }
     max_written_role_id = max_role_id;
+    
+    if (!external_transaction)
+      delete transaction;
   }
   map< string, uint32 >::const_iterator it(role_ids.find(s));
   if (it != role_ids.end())
@@ -55,6 +62,9 @@ uint32 Relation_Updater::get_role_id(const string& s)
 
 void Relation_Updater::update(Osm_Backend_Callback* callback)
 {
+  if (!external_transaction)
+    transaction = new Nonsynced_Transaction(true, false, "");
+  
   map< uint32, vector< uint32 > > to_delete;
   callback->update_started();
   compute_indexes();
@@ -77,6 +87,9 @@ void Relation_Updater::update(Osm_Backend_Callback* callback)
   
   ids_to_modify.clear();
   rels_to_insert.clear();
+  
+  if (!external_transaction)
+    delete transaction;
 }
 
 void Relation_Updater::update_moved_idxs
@@ -88,6 +101,9 @@ void Relation_Updater::update_moved_idxs
   
   if (!map_file_existed_before)
     return;
+  
+  if (!external_transaction)
+    transaction = new Nonsynced_Transaction(true, false, "");
   
   map< uint32, vector< uint32 > > to_delete;
   find_affected_relations(moved_nodes, moved_ways);
@@ -103,6 +119,9 @@ void Relation_Updater::update_moved_idxs
   
   ids_to_modify.clear();
   rels_to_insert.clear();
+  
+  if (!external_transaction)
+    delete transaction;
 }
 
 void Relation_Updater::find_affected_relations

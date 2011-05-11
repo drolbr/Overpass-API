@@ -13,7 +13,7 @@ struct Statement;
 class Resource_Manager
 {
 public:
-  Resource_Manager() : transaction(false, false), start_time(time(NULL)) {}
+  Resource_Manager() : transaction(false, false, ""), start_time(time(NULL)) {}
   
   map< string, Set >& sets()
   {

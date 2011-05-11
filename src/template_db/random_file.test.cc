@@ -135,7 +135,7 @@ void read_test()
       cout<<*it;
     cout<<'\n';
 
-    Nonsynced_Transaction transaction(false, false);
+    Nonsynced_Transaction transaction(false, false, "");
     Test_File tf;
     Random_File< IntIndex > id_file(tf, transaction.random_index(&tf));
 
@@ -188,7 +188,7 @@ int main(int argc, char* args[])
     cout<<"** Test the behaviour for a file with two entries - part 1\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false);
+    Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     {
       Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
@@ -210,7 +210,7 @@ int main(int argc, char* args[])
     cout<<"** Add at the end\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false);
+    Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
     
@@ -229,7 +229,7 @@ int main(int argc, char* args[])
     cout<<"** Overwrite an existing block\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false);
+    Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
     
@@ -248,7 +248,7 @@ int main(int argc, char* args[])
     cout<<"** Write a second block\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false);
+    Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
     
@@ -267,7 +267,7 @@ int main(int argc, char* args[])
     cout<<"** Write several blocks at once.\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false);
+    Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
     
@@ -288,7 +288,7 @@ int main(int argc, char* args[])
     cout<<"** Leave a gap.\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false);
+    Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
     
@@ -307,7 +307,7 @@ int main(int argc, char* args[])
     cout<<"** Fill the gap.\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false);
+    Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
     

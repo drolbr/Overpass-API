@@ -16,7 +16,8 @@
 using namespace std;
 
 Way_Updater::Way_Updater(Transaction* transaction_)
-  : update_counter(0), transaction(transaction_)
+  : update_counter(0), transaction(transaction_),
+    external_transaction(transaction_ != 0)
 {
   // check whether map file exists
   string map_file_name = de_osm3s_file_ids::WAYS->get_file_base_name()
@@ -30,6 +31,9 @@ Way_Updater::Way_Updater(Transaction* transaction_)
 
 void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
 {
+  if (!external_transaction)
+    transaction = new Nonsynced_Transaction(true, false, "");
+  
   map< uint32, vector< uint32 > > to_delete;
   callback->update_started();
   compute_indexes();
@@ -51,7 +55,10 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
   ids_to_modify.clear();
   ways_to_insert.clear();
   
-  /*if (!partial && (update_counter > 0))
+  if (!external_transaction)
+    delete transaction;
+  
+  if (!external_transaction && !partial && (update_counter > 0))
   {
     callback->partial_started();
     if (update_counter >= 64)
@@ -61,7 +68,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
     update_counter = 0;
     callback->partial_finished();
   }
-  else if (partial && !map_file_existed_before)
+  else if (!external_transaction && partial && !map_file_existed_before)
   {
     if (++update_counter % 8 == 0)
     {
@@ -75,7 +82,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
       merge_files(".0", ".1");
       callback->partial_finished();
     }
-  }*/ //TODO: temporarily disabled
+  }
 }
 
 void Way_Updater::update_moved_idxs
@@ -87,6 +94,9 @@ void Way_Updater::update_moved_idxs
   
   if (!map_file_existed_before)
     return;
+  
+  if (!external_transaction)
+    transaction = new Nonsynced_Transaction(true, false, "");
   
   map< uint32, vector< uint32 > > to_delete;
   callback->update_started();
@@ -108,6 +118,9 @@ void Way_Updater::update_moved_idxs
   
   ids_to_modify.clear();
   ways_to_insert.clear();
+  
+  if (!external_transaction)
+    delete transaction;
 }
 
 void Way_Updater::filter_affected_ways(const vector< Way >& maybe_affected_ways)
@@ -527,6 +540,8 @@ void Way_Updater::update_way_tags_global(const vector< Tag_Entry >& tags_to_dele
 
 void Way_Updater::merge_files(string from, string into)
 {
+  Nonsynced_Transaction from_transaction(false, false, from);
+  Nonsynced_Transaction into_transaction(true, false, into);
   {
     map< Uint31_Index, set< Way_Skeleton > > db_to_delete;
     map< Uint31_Index, set< Way_Skeleton > > db_to_insert;
@@ -534,7 +549,7 @@ void Way_Updater::merge_files(string from, string into)
     uint32 item_count(0);
     Block_Backend< Uint31_Index, Way_Skeleton > from_db
         (*de_osm3s_file_ids::WAYS,
-	 transaction->data_index(de_osm3s_file_ids::WAYS)); //TODO: from
+	 from_transaction.data_index(de_osm3s_file_ids::WAYS));
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
       it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
     {
@@ -543,7 +558,7 @@ void Way_Updater::merge_files(string from, string into)
       {
 	Block_Backend< Uint31_Index, Way_Skeleton > into_db
 	    (*de_osm3s_file_ids::WAYS,
-	     transaction->data_index(de_osm3s_file_ids::WAYS)); //TODO: into
+	     into_transaction.data_index(de_osm3s_file_ids::WAYS));
 	into_db.update(db_to_delete, db_to_insert);
 	db_to_insert.clear();
 	item_count = 0;
@@ -552,7 +567,7 @@ void Way_Updater::merge_files(string from, string into)
     
     Block_Backend< Uint31_Index, Way_Skeleton > into_db
         (*de_osm3s_file_ids::WAYS,
-	 transaction->data_index(de_osm3s_file_ids::WAYS)); //TODO: into
+	 into_transaction.data_index(de_osm3s_file_ids::WAYS));
     into_db.update(db_to_delete, db_to_insert);
   }
   remove((de_osm3s_file_ids::WAYS->get_file_base_name() + from 
@@ -567,7 +582,7 @@ void Way_Updater::merge_files(string from, string into)
     uint32 item_count(0);
     Block_Backend< Tag_Index_Local, Uint32_Index > from_db
         (*de_osm3s_file_ids::WAY_TAGS_LOCAL,
-	 transaction->data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL)); //TODO: from
+	 from_transaction.data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL));
     for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
       it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
     {
@@ -576,7 +591,7 @@ void Way_Updater::merge_files(string from, string into)
       {
 	Block_Backend< Tag_Index_Local, Uint32_Index > into_db
 	    (*de_osm3s_file_ids::WAY_TAGS_LOCAL,
-	     transaction->data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL)); //TODO: into
+	     into_transaction.data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL));
 	into_db.update(db_to_delete, db_to_insert);
 	db_to_insert.clear();
 	item_count = 0;
@@ -585,7 +600,7 @@ void Way_Updater::merge_files(string from, string into)
     
     Block_Backend< Tag_Index_Local, Uint32_Index > into_db
         (*de_osm3s_file_ids::WAY_TAGS_LOCAL,
-	 transaction->data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL)); //TODO: into
+	 into_transaction.data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL));
     into_db.update(db_to_delete, db_to_insert);
   }
   remove((de_osm3s_file_ids::WAY_TAGS_LOCAL->get_file_base_name() + from 
@@ -600,7 +615,7 @@ void Way_Updater::merge_files(string from, string into)
     uint32 item_count(0);
     Block_Backend< Tag_Index_Global, Uint32_Index > from_db
         (*de_osm3s_file_ids::WAY_TAGS_GLOBAL,
-	 transaction->data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL)); //TODO: from
+	 from_transaction.data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL));
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
       it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
     {
@@ -609,7 +624,7 @@ void Way_Updater::merge_files(string from, string into)
       {
 	Block_Backend< Tag_Index_Global, Uint32_Index > into_db
 	    (*de_osm3s_file_ids::WAY_TAGS_GLOBAL,
-	     transaction->data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL)); //TODO: into
+	     into_transaction.data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL));
 	into_db.update(db_to_delete, db_to_insert);
 	db_to_insert.clear();
 	item_count = 0;
@@ -618,7 +633,7 @@ void Way_Updater::merge_files(string from, string into)
     
     Block_Backend< Tag_Index_Global, Uint32_Index > into_db
         (*de_osm3s_file_ids::WAY_TAGS_GLOBAL,
-	 transaction->data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL)); //TODO: into
+	 into_transaction.data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL));
     into_db.update(db_to_delete, db_to_insert);
   }
   remove((de_osm3s_file_ids::WAY_TAGS_GLOBAL->get_file_base_name() + from 

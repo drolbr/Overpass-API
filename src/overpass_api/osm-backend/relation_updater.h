@@ -51,7 +51,9 @@ struct Relation_Updater
 			 const vector< pair< uint32, uint32 > >& moved_ways);
   
 private:
+  uint32 update_counter;
   Transaction* transaction;
+  bool external_transaction;
   map< string, uint32 > role_ids;
   uint32 max_written_role_id;
   uint32 max_role_id;

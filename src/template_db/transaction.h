@@ -19,7 +19,8 @@ class Transaction
 class Nonsynced_Transaction : public Transaction
 {
   public:
-    Nonsynced_Transaction(bool writeable, bool use_shadow);
+    Nonsynced_Transaction
+        (bool writeable, bool use_shadow, const string& file_name_extension);
     virtual ~Nonsynced_Transaction();
     
     File_Blocks_Index_Base* data_index(const File_Properties*);
@@ -31,11 +32,13 @@ class Nonsynced_Transaction : public Transaction
     map< const File_Properties*, Random_File_Index* >
       random_files;
     bool writeable, use_shadow;
+    string file_name_extension;
 };
 
 inline Nonsynced_Transaction::Nonsynced_Transaction
-    (bool writeable_, bool use_shadow_)
-  : writeable(writeable_), use_shadow(use_shadow_) {}
+    (bool writeable_, bool use_shadow_, const string& file_name_extension_)
+  : writeable(writeable_), use_shadow(use_shadow_),
+    file_name_extension(file_name_extension_) {}
   
 inline Nonsynced_Transaction::~Nonsynced_Transaction()
 {
@@ -55,16 +58,17 @@ inline File_Blocks_Index_Base* Nonsynced_Transaction::data_index
   if (it != data_files.end())
     return it->second;
   
-  Raw_File val_file(fp->get_file_base_name() + fp->get_data_suffix(),
-                    O_RDONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH,
-		    "Nonsynced_Transaction:1");
+  Raw_File val_file
+      (fp->get_file_base_name() + file_name_extension + fp->get_data_suffix(),
+       O_RDONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "Nonsynced_Transaction:1");
   uint64 block_count = lseek64(val_file.fd, 0, SEEK_END)
           /fp->get_block_size();
   File_Blocks_Index_Base* data_index = fp->new_data_index
-    (fp->get_file_base_name() + fp->get_data_suffix() + fp->get_index_suffix()
-     + (use_shadow ? fp->get_shadow_suffix() : ""),
-     writeable ? fp->get_file_base_name() + fp->get_data_suffix()
-     + fp->get_shadow_suffix() : "", "", block_count);
+  (fp->get_file_base_name() + file_name_extension + fp->get_data_suffix()
+     + fp->get_index_suffix() + (use_shadow ? fp->get_shadow_suffix() : ""),
+     writeable ? fp->get_file_base_name() + file_name_extension
+     + fp->get_data_suffix() + fp->get_shadow_suffix() : "",
+     file_name_extension, block_count);
   if (data_index != 0)
     data_files[fp] = data_index;
   return data_index;

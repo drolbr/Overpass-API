@@ -55,14 +55,15 @@ struct Way_Updater
   }
   
 private:
+  uint32 update_counter;
   Transaction* transaction;
+  bool external_transaction;
   vector< pair< uint32, bool > > ids_to_modify;
   vector< Way > ways_to_insert;
   static Way_Comparator_By_Id way_comparator_by_id;
   static Way_Equal_Id way_equal_id;
   static Pair_Comparator_By_Id pair_comparator_by_id;
   static Pair_Equal_Id pair_equal_id;
-  uint32 update_counter;
   bool map_file_existed_before;
   vector< pair< uint32, uint32 > > moved_ways;
   

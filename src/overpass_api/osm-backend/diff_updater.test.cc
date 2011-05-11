@@ -79,7 +79,7 @@ void dump_nodes(uint32 pattern_size)
 {
   Output_Sorter output_sorter;
   
-  Nonsynced_Transaction transaction(false, false);
+  Nonsynced_Transaction transaction(false, false, "");
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
       (*de_osm3s_file_ids::NODES,
        transaction.data_index(de_osm3s_file_ids::NODES));
@@ -99,7 +99,7 @@ void dump_node_tags_local(uint32 pattern_size)
 {
   Output_Sorter output_sorter;
   
-  Nonsynced_Transaction transaction(false, false);
+  Nonsynced_Transaction transaction(false, false, "");
   Block_Backend< Tag_Index_Local, Uint32_Index > nodes_local_db
       (*de_osm3s_file_ids::NODE_TAGS_LOCAL,
        transaction.data_index(de_osm3s_file_ids::NODE_TAGS_LOCAL));
@@ -119,7 +119,7 @@ void dump_node_tags_global(uint32 pattern_size)
 {
   Output_Sorter_Kv output_sorter;
   
-  Nonsynced_Transaction transaction(false, false);
+  Nonsynced_Transaction transaction(false, false, "");
   Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
       (*de_osm3s_file_ids::NODE_TAGS_GLOBAL,
        transaction.data_index(de_osm3s_file_ids::NODE_TAGS_GLOBAL));
@@ -140,7 +140,7 @@ void dump_ways(uint32 pattern_size)
 {
   Output_Sorter output_sorter;
   
-  Nonsynced_Transaction transaction(false, false);
+  Nonsynced_Transaction transaction(false, false, "");
   Block_Backend< Uint31_Index, Way_Skeleton > ways_db
       (*de_osm3s_file_ids::WAYS,
        transaction.data_index(de_osm3s_file_ids::WAYS));
@@ -162,7 +162,7 @@ void dump_way_tags_local(uint32 pattern_size)
 {
   Output_Sorter output_sorter;
   
-  Nonsynced_Transaction transaction(false, false);
+  Nonsynced_Transaction transaction(false, false, "");
   Block_Backend< Tag_Index_Local, Uint32_Index > ways_local_db
       (*de_osm3s_file_ids::WAY_TAGS_LOCAL,
        transaction.data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL));
@@ -183,7 +183,7 @@ void dump_way_tags_global(uint32 pattern_size)
 {
   Output_Sorter_Kv output_sorter;
   
-  Nonsynced_Transaction transaction(false, false);
+  Nonsynced_Transaction transaction(false, false, "");
   Block_Backend< Tag_Index_Global, Uint32_Index > ways_global_db
       (*de_osm3s_file_ids::WAY_TAGS_GLOBAL,
        transaction.data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL));
@@ -204,7 +204,7 @@ void dump_relations(uint32 pattern_size)
 {
   Output_Sorter output_sorter;
   
-  Nonsynced_Transaction transaction(false, false);
+  Nonsynced_Transaction transaction(false, false, "");
   map< uint32, string > roles;
   Block_Backend< Uint32_Index, String_Object > roles_db
       (*de_osm3s_file_ids::RELATION_ROLES,
@@ -236,7 +236,7 @@ void dump_relation_tags_local(uint32 pattern_size)
 {
   Output_Sorter output_sorter;
   
-  Nonsynced_Transaction transaction(false, false);
+  Nonsynced_Transaction transaction(false, false, "");
   Block_Backend< Tag_Index_Local, Uint32_Index > relations_local_db
       (*de_osm3s_file_ids::RELATION_TAGS_LOCAL,
        transaction.data_index(de_osm3s_file_ids::RELATION_TAGS_LOCAL));
@@ -257,7 +257,7 @@ void dump_relation_tags_global(uint32 pattern_size)
 {
   Output_Sorter_Kv output_sorter;
   
-  Nonsynced_Transaction transaction(false, false);
+  Nonsynced_Transaction transaction(false, false, "");
   Block_Backend< Tag_Index_Global, Uint32_Index > relations_global_db
       (*de_osm3s_file_ids::RELATION_TAGS_GLOBAL,
        transaction.data_index(de_osm3s_file_ids::RELATION_TAGS_GLOBAL));

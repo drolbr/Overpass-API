@@ -193,7 +193,7 @@ void fill_db
   remove((get_file_base_name(0) + get_data_suffix(0)).c_str());*/
   try
   {
-    Nonsynced_Transaction transaction(true, false);
+    Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     Block_Backend< IntIndex, IntObject > db_backend
         (tf, transaction.data_index(&tf));
@@ -283,7 +283,7 @@ void read_test(unsigned int step)
 {
   try
   {
-    Nonsynced_Transaction transaction(false, false);
+    Nonsynced_Transaction transaction(false, false, "");
     Test_File tf;
     Block_Backend< IntIndex, IntObject >
 	db_backend(tf, transaction.data_index(&tf));
@@ -406,7 +406,7 @@ int main(int argc, char* args[])
   remove((Test_File().get_file_base_name() + Test_File().get_data_suffix()).c_str());
   try
   {
-    Nonsynced_Transaction transaction(false, false);
+    Nonsynced_Transaction transaction(false, false, "");
     Test_File tf;
     Block_Backend< IntIndex, IntIndex > db_backend
         (tf, transaction.data_index(&tf));
