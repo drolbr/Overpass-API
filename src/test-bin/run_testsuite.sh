@@ -69,6 +69,30 @@ print_test_5()
   popd >/dev/null
 };
 
+perform_twin_test()
+{
+  EXEC="$1"
+  I="$2"
+  ARGS="$3"
+
+  mkdir -p "run/${EXEC}_$I"
+  pushd "run/${EXEC}_$I/" >/dev/null
+  rm -f *
+  "$BASEDIR/test-bin/$1" "${I}w" $ARGS >stdout.write.log 2>stderr.write.log &
+  "$BASEDIR/test-bin/$1" "${I}r" $ARGS >stdout.read.log 2>stderr.read.log
+  sleep 10
+  evaluate_test "${EXEC}_$I"
+  if [[ -n $FAILED ]]; then
+  {
+    echo `date +%T` "Test $EXEC $I FAILED."
+  }; else
+  {
+    echo `date +%T` "Test $EXEC $I succeeded."
+    rm -R *
+  }; fi
+  popd >/dev/null
+};
+
 perform_serial_test()
 {
   EXEC="$1"
@@ -156,12 +180,24 @@ dispatcher_client_server()
   mkdir -p "run/${EXEC}_server_$1"
   pushd "run/${EXEC}_server_$1/" >/dev/null
   rm -f *
-  $BASEDIR/test-bin/test_dispatcher server &
-  popd
+  $BASEDIR/test-bin/test_dispatcher server_3 &
+  popd >/dev/null
 
   date +%T
   perform_serial_test test_dispatcher $1
   sleep 5
+};
+
+dispatcher_two_clients()
+{
+  mkdir -p "run/${EXEC}_server_$1"
+  pushd "run/${EXEC}_server_$1/" >/dev/null
+  rm -f *
+  $BASEDIR/test-bin/test_dispatcher server_8 &
+  popd >/dev/null
+
+  date +%T
+  perform_twin_test test_dispatcher $1
 };
 
 # Test template_db
@@ -177,6 +213,8 @@ perform_test_loop test_dispatcher 20
 dispatcher_client_server 21
 dispatcher_client_server 22
 dispatcher_client_server 23
+dispatcher_two_clients 24
+dispatcher_two_clients 25
 
 # Test overpass_api/osm-backend
 mkdir -p input/run_and_compare.sh_1/

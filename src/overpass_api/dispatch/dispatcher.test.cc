@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 /*#include <errno.h>
 #include <fcntl.h>
@@ -356,19 +357,18 @@ void read_loop
   cout<<'\n';
 }
 
-void data_read_test(const Test_File& tf)
+void data_read_test(const Test_File& tf, Transaction& transaction)
 {
   try
   {
-    Nonsynced_Transaction transaction(false, false, "");
     Block_Backend< IntIndex, IntObject >
-	db_backend(tf, transaction.data_index(&tf));
+    db_backend(tf, transaction.data_index(&tf));
     
     cout<<"Read test\n";
     vector< bool > footprint = get_data_index_footprint< IntIndex >(tf);
     cout<<"Index footprint: ";
     for (vector< bool >::const_iterator it(footprint.begin());
-        it != footprint.end(); ++it)
+    it != footprint.end(); ++it)
     cout<<*it;
     cout<<'\n';
     
@@ -379,8 +379,14 @@ void data_read_test(const Test_File& tf)
   catch (File_Error e)
   {
     cout<<"File error catched: "
-        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
+}
+
+void data_read_test(const Test_File& tf)
+{
+  Nonsynced_Transaction transaction(false, false, "");
+  data_read_test(tf, transaction);
 }
 
 void put_elem(uint32 idx, uint32 val, const Test_File& tf)
@@ -400,6 +406,12 @@ void put_elem(uint32 idx, uint32 val, const Test_File& tf)
     cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
+}
+
+void sync_log(const string& message)
+{
+  ofstream out("sync.log", ios_base::app);
+  out<<message;
 }
 
 int main(int argc, char* args[])
@@ -958,7 +970,7 @@ int main(int argc, char* args[])
     }
   }
   
-  if (test_to_execute == "server")
+  if (test_to_execute.substr(0, 6) == "server")
   {
     Test_File test_file("Test_File");
     
@@ -974,7 +986,10 @@ int main(int argc, char* args[])
       dispatcher.write_commit();
       
       cerr<<"[server] Starting ...\n";
-      dispatcher.standby_loop(3*1000);
+      uint32 execution_time = 3;
+      istringstream sin(test_to_execute.substr(7));
+      sin>>execution_time;
+      dispatcher.standby_loop(execution_time*1000);
       cerr<<"[server] done.\n";
       return 0;
     }
@@ -1173,6 +1188,192 @@ int main(int argc, char* args[])
     {
       cout<<"File error catched: "
       <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "24r"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    try
+    {
+      {
+	//sleep for a second
+	struct timeval timeout_;
+	timeout_.tv_sec = 0;
+	timeout_.tv_usec = 1000*1000;
+	select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      }
+      
+      Dispatcher_Client dispatcher_client(shared_name);
+      test_file.set_basedir(dispatcher_client.get_db_dir());
+      
+      sync_log("Try request_read().\n");
+      dispatcher_client.request_read_and_idx();
+      sync_log("request_read() returned.\n");
+      
+      {
+	//sleep for two seconds
+	struct timeval timeout_;
+	timeout_.tv_sec = 0;
+	timeout_.tv_usec = 2*1000*1000;
+	select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      }
+      
+      sync_log("Announce read_idx_finished().\n");
+      dispatcher_client.read_idx_finished();      
+      sync_log("read_idx_finished\n");
+      dispatcher_client.read_finished();
+      //cerr<<"read_finished() done.\n"; //Timing with 24w can't be controlled.
+    }
+    catch (File_Error e)
+    {
+      cout<<"File error catched: "
+          <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "24w"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    try
+    {
+      Dispatcher_Client dispatcher_client(shared_name);
+      test_file.set_basedir(dispatcher_client.get_db_dir());
+      
+      dispatcher_client.write_start();      
+      put_elem(0, 24, test_file);
+      sync_log("write_start() done and written an element.\n");
+      
+      {
+	//sleep for two seconds
+	struct timeval timeout_;
+	timeout_.tv_sec = 0;
+	timeout_.tv_usec = 2*1000*1000;
+	select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      }
+      
+      sync_log("Try write_commit().\n");
+      dispatcher_client.write_commit();
+      sync_log("write_commit() done.\n");
+
+      data_read_test(test_file);
+      remove((dispatcher_client.get_db_dir() + "Test_File.bin").c_str());
+      remove((dispatcher_client.get_db_dir() + "Test_File.bin.idx").c_str());
+    }
+    catch (File_Error e)
+    {
+      cout<<"File error catched: "
+          <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "25r"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    try
+    {
+      {
+	//sleep for a second
+	struct timeval timeout_;
+	timeout_.tv_sec = 0;
+	timeout_.tv_usec = 1000*1000;
+	select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      }
+      
+      Dispatcher_Client dispatcher_client(shared_name);
+      test_file.set_basedir(dispatcher_client.get_db_dir());
+      
+      sync_log("Try request_read().\n");
+      dispatcher_client.request_read_and_idx();
+      sync_log("request_read() done.\n");
+      
+      Nonsynced_Transaction transaction(false, false, "");
+      transaction.data_index(&test_file);
+      
+      dispatcher_client.read_idx_finished();
+      sync_log("read_idx_finished() done.\n");
+      
+      {
+	//sleep for two seconds
+	struct timeval timeout_;
+	timeout_.tv_sec = 0;
+	timeout_.tv_usec = 2*1000*1000;
+	select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      }
+      
+      data_read_test(test_file, transaction);
+      
+      sync_log("Announce read_finished().\n");
+      dispatcher_client.read_finished();
+      sync_log("read_finished() done.\n");
+    }
+    catch (File_Error e)
+    {
+      cout<<"File error catched: "
+          <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "25w"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    try
+    {
+      Dispatcher_Client dispatcher_client(shared_name);
+      test_file.set_basedir(dispatcher_client.get_db_dir());
+      
+      dispatcher_client.write_start();      
+      put_elem(0, 25, test_file);
+      sync_log("write_start() done and written an element.\n");
+      
+      {
+	//sleep for two seconds
+	struct timeval timeout_;
+	timeout_.tv_sec = 0;
+	timeout_.tv_usec = 2*1000*1000;
+	select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      }
+      
+      sync_log("Try write_commit().\n");
+      dispatcher_client.write_commit();
+      sync_log("write_commit() done.\n");
+
+      dispatcher_client.write_start();      
+      put_elem(0, 26, test_file);
+      sync_log("write_start() done and written an element.\n");
+      
+      {
+	//sleep for two seconds
+	struct timeval timeout_;
+	timeout_.tv_sec = 0;
+	timeout_.tv_usec = 2*1000*1000;
+	select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      }
+      
+      sync_log("Try write_commit().\n");
+      dispatcher_client.write_commit();
+      sync_log("write_commit() done.\n");
+
+      data_read_test(test_file);
+      remove((dispatcher_client.get_db_dir() + "Test_File.bin").c_str());
+      remove((dispatcher_client.get_db_dir() + "Test_File.bin.idx").c_str());
+    }
+    catch (File_Error e)
+    {
+      cout<<"File error catched: "
+          <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
   }
 }

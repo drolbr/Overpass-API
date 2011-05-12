@@ -95,11 +95,11 @@ Dispatcher::Dispatcher
        PROT_READ|PROT_WRITE, MAP_SHARED, dispatcher_shm_fd, 0);
   
   // copy db_dir and shadow_name
-  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = db_dir.size();
-  memcpy((uint8*)dispatcher_shm_ptr + 3*sizeof(uint32), db_dir.data(), db_dir.size());
-  *(uint32*)(dispatcher_shm_ptr + 3*sizeof(uint32) + db_dir.size())
+  *(uint32*)(dispatcher_shm_ptr + 3*sizeof(uint32)) = db_dir.size();
+  memcpy((uint8*)dispatcher_shm_ptr + 4*sizeof(uint32), db_dir.data(), db_dir.size());
+  *(uint32*)(dispatcher_shm_ptr + 4*sizeof(uint32) + db_dir.size())
       = shadow_name.size();
-  memcpy((uint8*)dispatcher_shm_ptr + 4*sizeof(uint32) + db_dir.size(),
+  memcpy((uint8*)dispatcher_shm_ptr + 5*sizeof(uint32) + db_dir.size(),
 	 shadow_name.data(), shadow_name.size());
   
   // Set command state to zero.
@@ -354,13 +354,29 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       continue;
     }
     
+    uint32 command = *(uint32*)dispatcher_shm_ptr;
     uint32 client_pid = *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
-    if (*(uint32*)dispatcher_shm_ptr == WRITE_START)
+    if (command == WRITE_START)
       write_start(client_pid);
-    else if (*(uint32*)dispatcher_shm_ptr == WRITE_ROLLBACK)
+    else if (command == WRITE_ROLLBACK)
       write_rollback();
-    else if (*(uint32*)dispatcher_shm_ptr == WRITE_COMMIT)
+    else if (command == WRITE_COMMIT)
       write_commit();
+    else if (command == REQUEST_READ_AND_IDX)
+    {
+      request_read_and_idx(client_pid);
+      *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
+    }
+    else if (command == READ_IDX_FINISHED)
+    {
+      read_idx_finished(client_pid);
+      *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
+    }
+    else if (command == READ_FINISHED)
+    {
+      read_finished(client_pid);
+      *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
+    }
     
     // Set command state to zero.
     *(uint32*)dispatcher_shm_ptr = 0;
@@ -421,11 +437,11 @@ Dispatcher_Client::Dispatcher_Client
        PROT_READ|PROT_WRITE, MAP_SHARED, dispatcher_shm_fd, 0);
 
   // get db_dir and shadow_name
-  db_dir = string((const char *)(dispatcher_shm_ptr + 3*sizeof(uint32)),
-		  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)));
-  shadow_name = string((const char *)(dispatcher_shm_ptr + 4*sizeof(uint32)
+  db_dir = string((const char *)(dispatcher_shm_ptr + 4*sizeof(uint32)),
+		  *(uint32*)(dispatcher_shm_ptr + 3*sizeof(uint32)));
+  shadow_name = string((const char *)(dispatcher_shm_ptr + 5*sizeof(uint32)
       + db_dir.size()), *(uint32*)(dispatcher_shm_ptr + db_dir.size() +
-		       3*sizeof(uint32)));
+		       4*sizeof(uint32)));
 }
 
 Dispatcher_Client::~Dispatcher_Client()
@@ -459,6 +475,9 @@ void Dispatcher_Client::write_start()
       }
       catch (...) {}
     }
+
+    timeout_.tv_usec = 1000*1000;
+    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
   }
 }
 
@@ -490,6 +509,9 @@ void Dispatcher_Client::write_rollback()
     }
     else
       return;
+
+    timeout_.tv_usec = 1000*1000;
+    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
   }
 }
 
@@ -521,6 +543,69 @@ void Dispatcher_Client::write_commit()
     }
     else
       return;
+    
+    timeout_.tv_usec = 1000*1000;
+    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+  }
+}
+
+void Dispatcher_Client::request_read_and_idx()
+{
+  uint32 pid = getpid();
+  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+  while (true)
+  {
+    *(uint32*)dispatcher_shm_ptr = Dispatcher::REQUEST_READ_AND_IDX;
+    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
+    
+    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+      return;
+    
+    //sleep for a tenth of a second
+    struct timeval timeout_;
+    timeout_.tv_sec = 0;
+    timeout_.tv_usec = 100*1000;
+    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+  }
+}
+
+void Dispatcher_Client::read_idx_finished()
+{
+  uint32 pid = getpid();
+  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+  while (true)
+  {
+    *(uint32*)dispatcher_shm_ptr = Dispatcher::READ_IDX_FINISHED;
+    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
+    
+    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+      return;
+    
+    //sleep for a tenth of a second
+    struct timeval timeout_;
+    timeout_.tv_sec = 0;
+    timeout_.tv_usec = 100*1000;
+    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+  }
+}
+
+void Dispatcher_Client::read_finished()
+{
+  uint32 pid = getpid();
+  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+  while (true)
+  {
+    *(uint32*)dispatcher_shm_ptr = Dispatcher::READ_FINISHED;
+    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
+    
+    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+      return;
+    
+    //sleep for a tenth of a second
+    struct timeval timeout_;
+    timeout_.tv_sec = 0;
+    timeout_.tv_usec = 100*1000;
+    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
   }
 }
 

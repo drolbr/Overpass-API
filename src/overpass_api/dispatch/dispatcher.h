@@ -9,7 +9,7 @@
 
 using namespace std;
 
-const int SHM_SIZE = 2*sizeof(uint32) + 2*sizeof(uint32);//20+12+2*(256+4);
+const int SHM_SIZE = 3*sizeof(uint32) + 2*sizeof(uint32);//20+12+2*(256+4);
 const int OFFSET_BACK = 20;
 const int OFFSET_DB_1 = OFFSET_BACK+12;
 const int OFFSET_DB_2 = OFFSET_DB_1+(256+4);
@@ -93,6 +93,9 @@ class Dispatcher
     static const uint32 WRITE_START = 1;
     static const uint32 WRITE_ROLLBACK = 2;
     static const uint32 WRITE_COMMIT = 3;
+    static const uint32 REQUEST_READ_AND_IDX = 4;
+    static const uint32 READ_IDX_FINISHED = 5;
+    static const uint32 READ_FINISHED = 6;
     
   private:
     vector< File_Properties* > controlled_files;
@@ -133,6 +136,18 @@ class Dispatcher_Client
     
     /** Read operations: --------------------------------------------------- */
 
+    /** Request the index for a read operation and registers the reading process.
+    Reading the index files should be taking a quick copy, because if any process
+    is in this state, write_commits are blocked. */
+    void request_read_and_idx();
+    
+    /** Changes the registered state from reading the index to reading the
+    database. Can be safely called multiple times for the same process. */
+    void read_idx_finished();
+    
+    /** Unregisteres a reading process. */
+    void read_finished();
+    
     /** Other operations: -------------------------------------------------- */
     const string& get_db_dir() { return db_dir; }
     const string& get_shadow_name() { return shadow_name; }
