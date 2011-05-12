@@ -9,7 +9,7 @@
 
 using namespace std;
 
-const int SHM_SIZE = 20+12+2*(256+4);
+const int SHM_SIZE = 2*sizeof(uint32) + 2*sizeof(uint32);//20+12+2*(256+4);
 const int OFFSET_BACK = 20;
 const int OFFSET_DB_1 = OFFSET_BACK+12;
 const int OFFSET_DB_2 = OFFSET_DB_1+(256+4);
@@ -21,7 +21,7 @@ const uint32 SERVER_STATE = 19;
 
 const uint32 QUERY_REJECTED = 32;
 
-static const string shared_name("/osm3s_v0.6.1");
+static const string shared_name("/osm3s_build_2011-05-11");
 
 class Idx_Footprints
 {
@@ -50,7 +50,10 @@ class Dispatcher
     Dispatcher(string dispatcher_share_name,
 	       string index_share_name,
 	       string shadow_name,
+	       string db_dir,
 	       const vector< File_Properties* >& controlled_files);
+	       
+    ~Dispatcher();
 
     /** Write operations: -------------------------------------------------- */
 	       
@@ -82,19 +85,63 @@ class Dispatcher
     void read_finished(pid_t pid);
     
     /** Other operations: -------------------------------------------------- */
-	       
+    
+    /** Waits for input for the given amount of time. If milliseconds if zero,
+        it remains in standby forever. */
+    void standby_loop(uint64 milliseconds);
+    
+    static const uint32 WRITE_START = 1;
+    static const uint32 WRITE_ROLLBACK = 2;
+    static const uint32 WRITE_COMMIT = 3;
+    
   private:
     vector< File_Properties* > controlled_files;
     vector< Idx_Footprints > data_footprints;
     vector< Idx_Footprints > map_footprints;
     set< pid_t > processes_reading_idx;
-    string shadow_name;
+    string shadow_name, db_dir;
+    string dispatcher_share_name;
+    int dispatcher_shm_fd;
+    volatile uint8* dispatcher_shm_ptr;
     
     void copy_shadows_to_mains();
     void copy_mains_to_shadows();
     void remove_shadows();
     void set_current_footprints();
     void write_index_of_empty_blocks();
+};
+
+class Dispatcher_Client
+{
+  public:
+    /** Opens a shared memory for dispatcher communication.*/
+    Dispatcher_Client(string dispatcher_share_name);
+    ~Dispatcher_Client();
+
+    /** Write operations: -------------------------------------------------- */
+	       
+    /** Allocates a write lock. Waits if necessary. */
+    void write_start();
+    
+    /** Aborts an active writing operation. Results are undefined if it is
+        called outside a writing operation. */
+    void write_rollback();
+    
+    /** Commits an active writing operation. Results are undefined if it is
+        called outside a writing operation. */
+    void write_commit();
+    
+    /** Read operations: --------------------------------------------------- */
+
+    /** Other operations: -------------------------------------------------- */
+    const string& get_db_dir() { return db_dir; }
+    const string& get_shadow_name() { return shadow_name; }
+    
+  private:
+    string dispatcher_share_name;
+    int dispatcher_shm_fd;
+    volatile uint8* dispatcher_shm_ptr;
+    string db_dir, shadow_name;
 };
 
 bool file_exists(const string& filename);

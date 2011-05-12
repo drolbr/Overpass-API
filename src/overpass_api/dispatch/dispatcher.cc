@@ -38,16 +38,73 @@ void touch_file(const string& filename)
   ofstream out(filename.c_str());
 }
 
+string getcwd()
+{
+  int size = 256;
+  char* buf;
+  while (true)
+  {
+    buf = (char*)malloc(size);
+    errno = 0;
+    buf = getcwd(buf, size);
+    if (errno != ERANGE)
+      break;
+    
+    free(buf);
+    size *= 2;
+  }
+  if (errno != 0)
+  {
+    free(buf);
+    throw File_Error(errno, "wd", "Dispatcher::getcwd");
+  }
+  string result(buf);
+  free(buf);
+  if ((result != "") && (result[result.size()-1] != '/'))
+    result += '/';
+  return result;
+}
+
 Dispatcher::Dispatcher
-    (string dispatcher_share_name,
+    (string dispatcher_share_name_,
      string index_share_name,
      string shadow_name_,
+     string db_dir_,
      const vector< File_Properties* >& controlled_files_)
     : controlled_files(controlled_files_),
       data_footprints(controlled_files_.size()),
       map_footprints(controlled_files_.size()),
-      shadow_name(shadow_name_)
+      shadow_name(shadow_name_), db_dir(db_dir_),
+      dispatcher_share_name(dispatcher_share_name_)
 {
+  // get the absolute pathname of the current directory
+  if (db_dir.substr(0, 1) != "/")
+    db_dir = getcwd() + db_dir_;
+  if (shadow_name.substr(0, 1) != "/")
+    shadow_name = getcwd() + shadow_name_;
+  
+  // open dispatcher_share
+  dispatcher_shm_fd = shm_open
+      (dispatcher_share_name.c_str(), O_RDWR|O_CREAT|O_TRUNC, S_IRWXU|S_IRWXG|S_IRWXO);
+  if (dispatcher_shm_fd < 0)
+    throw File_Error
+        (errno, dispatcher_share_name, "Dispatcher_Server::1");
+  int foo = ftruncate(dispatcher_shm_fd, SHM_SIZE);
+  dispatcher_shm_ptr = (uint8*)mmap
+      (0, SHM_SIZE + db_dir.size(),
+       PROT_READ|PROT_WRITE, MAP_SHARED, dispatcher_shm_fd, 0);
+  
+  // copy db_dir and shadow_name
+  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = db_dir.size();
+  memcpy((uint8*)dispatcher_shm_ptr + 3*sizeof(uint32), db_dir.data(), db_dir.size());
+  *(uint32*)(dispatcher_shm_ptr + 3*sizeof(uint32) + db_dir.size())
+      = shadow_name.size();
+  memcpy((uint8*)dispatcher_shm_ptr + 4*sizeof(uint32) + db_dir.size(),
+	 shadow_name.data(), shadow_name.size());
+  
+  // Set command state to zero.
+  *(uint32*)dispatcher_shm_ptr = 0;
+  
   if (file_exists(shadow_name))
   {
     copy_shadows_to_mains();
@@ -55,6 +112,11 @@ Dispatcher::Dispatcher
   }    
   remove_shadows();
   set_current_footprints();
+}
+
+Dispatcher::~Dispatcher()
+{
+  shm_unlink(dispatcher_share_name.c_str());
 }
 
 void Dispatcher::write_start(pid_t pid)
@@ -275,6 +337,36 @@ void Dispatcher::write_index_of_empty_blocks()
   }
 }
 
+void Dispatcher::standby_loop(uint64 milliseconds)
+{
+  uint32 counter = 0;
+  while ((milliseconds == 0) || (counter < milliseconds/100))
+  {
+    if (*(uint32*)dispatcher_shm_ptr == 0)
+    {
+      ++counter;
+      //sleep for a tenth of a second
+      struct timeval timeout_;
+      timeout_.tv_sec = 0;
+      timeout_.tv_usec = 100*1000;
+      select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+
+      continue;
+    }
+    
+    uint32 client_pid = *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
+    if (*(uint32*)dispatcher_shm_ptr == WRITE_START)
+      write_start(client_pid);
+    else if (*(uint32*)dispatcher_shm_ptr == WRITE_ROLLBACK)
+      write_rollback();
+    else if (*(uint32*)dispatcher_shm_ptr == WRITE_COMMIT)
+      write_commit();
+    
+    // Set command state to zero.
+    *(uint32*)dispatcher_shm_ptr = 0;
+  }
+}
+
 void Idx_Footprints::set_current_footprint(const vector< bool >& footprint)
 {
   current_footprint = footprint;
@@ -310,6 +402,126 @@ vector< bool > Idx_Footprints::total_footprint() const
       result[i] = result[i] | (it->second)[i];
   }
   return result;
+}
+
+Dispatcher_Client::Dispatcher_Client
+    (string dispatcher_share_name_)
+    : dispatcher_share_name(dispatcher_share_name_)
+{
+  // open dispatcher_share
+  dispatcher_shm_fd = shm_open
+      (dispatcher_share_name.c_str(), O_RDWR, S_IRWXU|S_IRWXG|S_IRWXO);
+  if (dispatcher_shm_fd < 0)
+    throw File_Error
+        (errno, dispatcher_share_name, "Dispatcher_Client::1");
+  struct stat stat_buf;
+  fstat(dispatcher_shm_fd, &stat_buf);
+  dispatcher_shm_ptr = (uint8*)mmap
+      (0, stat_buf.st_size,
+       PROT_READ|PROT_WRITE, MAP_SHARED, dispatcher_shm_fd, 0);
+
+  // get db_dir and shadow_name
+  db_dir = string((const char *)(dispatcher_shm_ptr + 3*sizeof(uint32)),
+		  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)));
+  shadow_name = string((const char *)(dispatcher_shm_ptr + 4*sizeof(uint32)
+      + db_dir.size()), *(uint32*)(dispatcher_shm_ptr + db_dir.size() +
+		       3*sizeof(uint32)));
+}
+
+Dispatcher_Client::~Dispatcher_Client()
+{
+  shm_unlink(dispatcher_share_name.c_str());
+}
+
+void Dispatcher_Client::write_start()
+{
+  uint32 pid = getpid();
+  while (true)
+  {
+    *(uint32*)dispatcher_shm_ptr = Dispatcher::WRITE_START;
+    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
+    
+    //sleep for a tenth of a second
+    struct timeval timeout_;
+    timeout_.tv_sec = 0;
+    timeout_.tv_usec = 100*1000;
+    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+    
+    if (file_exists(shadow_name + ".lock"))
+    {
+      try
+      {
+	pid_t locked_pid;
+	ifstream lock((shadow_name + ".lock").c_str());
+	lock>>locked_pid;
+	if (locked_pid == pid)
+	  return;
+      }
+      catch (...) {}
+    }
+  }
+}
+
+void Dispatcher_Client::write_rollback()
+{
+  uint32 pid = getpid();
+  while (true)
+  {
+    *(uint32*)dispatcher_shm_ptr = Dispatcher::WRITE_ROLLBACK;
+    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
+    
+    //sleep for a tenth of a second
+    struct timeval timeout_;
+    timeout_.tv_sec = 0;
+    timeout_.tv_usec = 100*1000;
+    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+    
+    if (file_exists(shadow_name + ".lock"))
+    {
+      try
+      {
+	pid_t locked_pid;
+	ifstream lock((shadow_name + ".lock").c_str());
+	lock>>locked_pid;
+	if (locked_pid != pid)
+	  return;
+      }
+      catch (...) {}
+    }
+    else
+      return;
+  }
+}
+
+void Dispatcher_Client::write_commit()
+{
+  uint32 pid = getpid();
+  while (true)
+  {
+    *(uint32*)dispatcher_shm_ptr = Dispatcher::WRITE_COMMIT;
+    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
+    
+    //sleep for a tenth of a second
+    struct timeval timeout_;
+    timeout_.tv_sec = 0;
+    timeout_.tv_usec = 100*1000;
+    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+    
+    if (file_exists(shadow_name + ".lock"))
+    {
+      try
+      {
+	pid_t locked_pid;
+	ifstream lock((shadow_name + ".lock").c_str());
+	lock>>locked_pid;
+	if (locked_pid != pid)
+	  return;
+      }
+      catch (...) {}
+    }
+    else
+      return;
+  }
 }
 
 /**

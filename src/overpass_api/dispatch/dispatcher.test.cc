@@ -110,16 +110,21 @@ string ID_SUFFIX(".map");
 
 struct Test_File : File_Properties
 {
-  Test_File(string basename_) : basename(basename_) {}
+  Test_File(string basename_) : basename(basename_), basedir(BASE_DIRECTORY) {}
   
   string get_basedir() const
   {
-    return BASE_DIRECTORY;
+    return basedir;
+  }
+  
+  void set_basedir(const string& basedir_)
+  {
+    basedir = basedir_;
   }
   
   string get_file_base_name() const
   {
-    return BASE_DIRECTORY + basename;
+    return basedir + basename;
   }
   
   string get_index_suffix() const
@@ -175,7 +180,7 @@ struct Test_File : File_Properties
         (index_file_name, empty_index_file_name, file_name_extension, block_count);
   }
   
-  string basename;
+  string basename, basedir;
 };
 
 //-----------------------------------------------------------------------------
@@ -351,18 +356,16 @@ void read_loop
   cout<<'\n';
 }
 
-void data_read_test()
+void data_read_test(const Test_File& tf)
 {
   try
   {
     Nonsynced_Transaction transaction(false, false, "");
-    Test_File tf("Test_File");
     Block_Backend< IntIndex, IntObject >
 	db_backend(tf, transaction.data_index(&tf));
     
     cout<<"Read test\n";
-    vector< bool > footprint =
-        get_data_index_footprint< IntIndex >(Test_File("Test_File"));
+    vector< bool > footprint = get_data_index_footprint< IntIndex >(tf);
     cout<<"Index footprint: ";
     for (vector< bool >::const_iterator it(footprint.begin());
         it != footprint.end(); ++it)
@@ -380,7 +383,7 @@ void data_read_test()
   }
 }
 
-void put_elem(uint32 idx, uint32 val)
+void put_elem(uint32 idx, uint32 val, const Test_File& tf)
 {
   map< IntIndex, set< IntObject > > to_delete;
   map< IntIndex, set< IntObject > > to_insert;
@@ -388,7 +391,6 @@ void put_elem(uint32 idx, uint32 val)
   try
   {
     Nonsynced_Transaction transaction(true, true, "");
-    Test_File tf("Test_File");
     Block_Backend< IntIndex, IntObject > db_backend
         (tf, transaction.data_index(&tf));
     db_backend.update(to_delete, to_insert);
@@ -420,7 +422,8 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file_2);
     file_properties.push_back(&test_file_3);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  BASE_DIRECTORY + "test-shadow", file_properties);
+			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			  file_properties);
   }
   
   if ((test_to_execute == "") || (test_to_execute == "2"))
@@ -440,7 +443,8 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file_2);
     file_properties.push_back(&test_file_3);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  "test-shadow", file_properties);
+			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			  file_properties);
   }
 
   if ((test_to_execute == "") || (test_to_execute == "3"))
@@ -450,7 +454,8 @@ int main(int argc, char* args[])
     vector< File_Properties* > file_properties;
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  "test-shadow", file_properties);
+			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			  file_properties);
   }
   
   if ((test_to_execute == "") || (test_to_execute == "4"))
@@ -460,7 +465,8 @@ int main(int argc, char* args[])
     vector< File_Properties* > file_properties;
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  "test-shadow", file_properties);
+			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			  file_properties);
     dispatcher.write_start(480);
     {
       Nonsynced_Transaction transaction(true, true, "");
@@ -481,7 +487,8 @@ int main(int argc, char* args[])
     vector< File_Properties* > file_properties;
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  "test-shadow", file_properties);
+			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			  file_properties);
     dispatcher.write_start(495);
     dispatcher.write_start(480);
     {
@@ -502,7 +509,8 @@ int main(int argc, char* args[])
     vector< File_Properties* > file_properties;
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  "test-shadow", file_properties);
+			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			  file_properties);
     dispatcher.write_start(480);
     {
       Nonsynced_Transaction transaction(true, true, "");
@@ -524,7 +532,8 @@ int main(int argc, char* args[])
     vector< File_Properties* > file_properties;
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  "test-shadow", file_properties);
+			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			  file_properties);
     dispatcher.write_start(480);
     {
       Nonsynced_Transaction transaction(true, true, "");
@@ -555,7 +564,8 @@ int main(int argc, char* args[])
     vector< File_Properties* > file_properties;
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  "test-shadow", file_properties);
+			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			  file_properties);
     dispatcher.write_start(480);
     {
       Nonsynced_Transaction transaction(true, true, "");
@@ -595,11 +605,12 @@ int main(int argc, char* args[])
     vector< File_Properties* > file_properties;
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  "test-shadow", file_properties);
+			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			  file_properties);
     dispatcher.write_start(480);
-    put_elem(0, 1);
+    put_elem(0, 1, test_file);
     dispatcher.write_commit();
-    data_read_test();
+    data_read_test(test_file);
     remove("Test_File.bin");
     remove("Test_File.bin.idx");
   }
@@ -611,14 +622,15 @@ int main(int argc, char* args[])
     vector< File_Properties* > file_properties;
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  "test-shadow", file_properties);
+			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			  file_properties);
     dispatcher.write_start(480);
-    put_elem(0, 1);
+    put_elem(0, 1, test_file);
     dispatcher.write_commit();
     dispatcher.write_start(481);
-    put_elem(0, 2);
+    put_elem(0, 2, test_file);
     dispatcher.write_commit();
-    data_read_test();
+    data_read_test(test_file);
     remove("Test_File.bin");
     remove("Test_File.bin.idx");
   }
@@ -630,17 +642,18 @@ int main(int argc, char* args[])
     vector< File_Properties* > file_properties;
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  "test-shadow", file_properties);
+			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			  file_properties);
     dispatcher.write_start(480);
-    put_elem(0, 1);
+    put_elem(0, 1, test_file);
     dispatcher.write_commit();
     dispatcher.write_start(481);
-    put_elem(0, 2);
+    put_elem(0, 2, test_file);
     dispatcher.write_commit();
     dispatcher.write_start(482);
-    put_elem(0, 3);
+    put_elem(0, 3, test_file);
     dispatcher.write_commit();
-    data_read_test();
+    data_read_test(test_file);
     remove("Test_File.bin");
     remove("Test_File.bin.idx");
   }
@@ -652,7 +665,8 @@ int main(int argc, char* args[])
     vector< File_Properties* > file_properties;
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  "test-shadow", file_properties);
+			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			  file_properties);
     dispatcher.write_start(480);
     {
       Nonsynced_Transaction transaction(true, true, "");
@@ -681,7 +695,8 @@ int main(int argc, char* args[])
     vector< File_Properties* > file_properties;
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  "test-shadow", file_properties);
+			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			  file_properties);
     dispatcher.write_start(480);
     dispatcher.request_read_and_idx(640);
     dispatcher.read_idx_finished(640);
@@ -730,26 +745,27 @@ int main(int argc, char* args[])
     vector< File_Properties* > file_properties;
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  "test-shadow", file_properties);
+			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			  file_properties);
     dispatcher.write_start(480);
     dispatcher.request_read_and_idx(640);
     dispatcher.read_idx_finished(640);
-    put_elem(0, 1);
+    put_elem(0, 1, test_file);
     dispatcher.read_finished(640);
     dispatcher.write_commit();
     dispatcher.write_start(481);
     dispatcher.request_read_and_idx(641);
     dispatcher.read_idx_finished(641);
-    put_elem(0, 2);
+    put_elem(0, 2, test_file);
     dispatcher.read_finished(641);
     dispatcher.write_commit();
     dispatcher.write_start(482);
     dispatcher.request_read_and_idx(642);
     dispatcher.read_idx_finished(642);
-    put_elem(0, 3);
+    put_elem(0, 3, test_file);
     dispatcher.read_finished(642);
     dispatcher.write_commit();
-    data_read_test();
+    data_read_test(test_file);
     remove("Test_File.bin");
     remove("Test_File.bin.idx");
   }
@@ -761,7 +777,8 @@ int main(int argc, char* args[])
     vector< File_Properties* > file_properties;
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  "test-shadow", file_properties);
+			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			  file_properties);
     dispatcher.write_start(480);
     {
       Nonsynced_Transaction transaction(true, true, "");
@@ -804,20 +821,21 @@ int main(int argc, char* args[])
     vector< File_Properties* > file_properties;
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  "test-shadow", file_properties);
+			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			  file_properties);
     dispatcher.write_start(480);
-    put_elem(0, 1);
+    put_elem(0, 1, test_file);
     dispatcher.write_commit();
     dispatcher.request_read_and_idx(640);
     dispatcher.read_idx_finished(640);
     dispatcher.write_start(481);
-    put_elem(0, 2);
+    put_elem(0, 2, test_file);
     dispatcher.write_commit();
     dispatcher.write_start(482);
     dispatcher.read_finished(640);
-    put_elem(0, 3);
+    put_elem(0, 3, test_file);
     dispatcher.write_commit();
-    data_read_test();
+    data_read_test(test_file);
     remove("Test_File.bin");
     remove("Test_File.bin.idx");
   }
@@ -829,7 +847,8 @@ int main(int argc, char* args[])
     vector< File_Properties* > file_properties;
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  "test-shadow", file_properties);
+			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			  file_properties);
     dispatcher.write_start(480);
     {
       Nonsynced_Transaction transaction(true, true, "");
@@ -881,25 +900,280 @@ int main(int argc, char* args[])
     vector< File_Properties* > file_properties;
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  "test-shadow", file_properties);
+			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			  file_properties);
     dispatcher.write_start(480);
-    put_elem(0, 1);
+    put_elem(0, 1, test_file);
     dispatcher.write_commit();
     dispatcher.request_read_and_idx(640);
     dispatcher.read_idx_finished(640);
     dispatcher.write_start(481);
-    put_elem(0, 2);
+    put_elem(0, 2, test_file);
     dispatcher.write_commit();
     dispatcher.write_start(482);
-    put_elem(0, 3);
+    put_elem(0, 3, test_file);
     dispatcher.write_commit();
     dispatcher.write_start(483);
     dispatcher.read_finished(640);
-    put_elem(0, 4);
+    put_elem(0, 4, test_file);
     dispatcher.write_commit();
-    data_read_test();
+    data_read_test(test_file);
     remove("Test_File.bin");
     remove("Test_File.bin.idx");
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "19"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    try
+    {
+      Dispatcher dispatcher("/", "osm3s_index_share_test",
+			    BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			    file_properties);
+    }
+    catch (File_Error e)
+    {
+      cout<<"File error catched: "
+          <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "20"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    try
+    {
+      Dispatcher_Client dispatcher_client(shared_name);
+    }
+    catch (File_Error e)
+    {
+      cout<<"File error catched: "
+      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  
+  if (test_to_execute == "server")
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    try
+    {
+      Dispatcher dispatcher(shared_name, "osm3s_index_share_test",
+			    BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			    file_properties);
+      dispatcher.write_start(480);
+      put_elem(0, 1, test_file);
+      dispatcher.write_commit();
+      
+      cerr<<"[server] Starting ...\n";
+      dispatcher.standby_loop(3*1000);
+      cerr<<"[server] done.\n";
+      return 0;
+    }
+    catch (File_Error e)
+    {
+      cout<<"File error catched: "
+          <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "21"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    try
+    {
+      Dispatcher_Client dispatcher_client(shared_name);
+      test_file.set_basedir(dispatcher_client.get_db_dir());
+      
+      if (file_exists(dispatcher_client.get_shadow_name() + ".lock"))
+      {
+	cout<<"Failed before write_start().\n";
+	return 0;
+      }
+      dispatcher_client.write_start();      
+      if (!file_exists(dispatcher_client.get_shadow_name() + ".lock"))
+      {
+	cout<<"Failed after write_start().\n";
+	return 0;
+      }
+      
+      ifstream in((dispatcher_client.get_shadow_name() + ".lock").c_str());
+      pid_t read_pid;
+      in>>read_pid;
+      if (read_pid != getpid())
+      {
+	cout<<"Pid in lock doesn't match.\n";
+	return 0;
+      }
+      
+      put_elem(0, 21, test_file);
+      dispatcher_client.write_commit();
+      if (file_exists(dispatcher_client.get_shadow_name() + ".lock"))
+      {
+	cout<<"Failed after write_commit().\n";
+	return 0;
+      }
+      
+      cout<<"Writing successfully done.\n";
+      data_read_test(test_file);
+      remove((dispatcher_client.get_db_dir() + "Test_File.bin").c_str());
+      remove((dispatcher_client.get_db_dir() + "Test_File.bin.idx").c_str());
+    }
+    catch (File_Error e)
+    {
+      cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "22"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    try
+    {
+      Dispatcher_Client dispatcher_client(shared_name);
+      test_file.set_basedir(dispatcher_client.get_db_dir());
+      
+      if (file_exists(dispatcher_client.get_shadow_name() + ".lock"))
+      {
+	cout<<"Failed before write_start().\n";
+	return 0;
+      }
+      dispatcher_client.write_start();      
+      if (!file_exists(dispatcher_client.get_shadow_name() + ".lock"))
+      {
+	cout<<"Failed after write_start().\n";
+	return 0;
+      }
+      
+      ifstream in((dispatcher_client.get_shadow_name() + ".lock").c_str());
+      pid_t read_pid;
+      in>>read_pid;
+      if (read_pid != getpid())
+      {
+	cout<<"Pid in lock doesn't match.\n";
+	return 0;
+      }
+      
+      put_elem(0, 21, test_file);
+      dispatcher_client.write_rollback();
+      if (file_exists(dispatcher_client.get_shadow_name() + ".lock"))
+      {
+	cout<<"Failed after write_commit().\n";
+	return 0;
+      }
+      
+      cout<<"Writing successfully done.\n";
+      data_read_test(test_file);
+      remove((dispatcher_client.get_db_dir() + "Test_File.bin").c_str());
+      remove((dispatcher_client.get_db_dir() + "Test_File.bin.idx").c_str());
+    }
+    catch (File_Error e)
+    {
+      cout<<"File error catched: "
+      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "23"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    try
+    {
+      Dispatcher_Client dispatcher_client(shared_name);
+      test_file.set_basedir(dispatcher_client.get_db_dir());
+      
+      if (file_exists(dispatcher_client.get_shadow_name() + ".lock"))
+      {
+	cout<<"Failed before write_start().\n";
+	return 0;
+      }
+      dispatcher_client.write_start();      
+      if (!file_exists(dispatcher_client.get_shadow_name() + ".lock"))
+      {
+	cout<<"Failed after write_start().\n";
+	return 0;
+      }
+      
+      {
+	pid_t read_pid;
+	
+	ifstream in((dispatcher_client.get_shadow_name() + ".lock").c_str());
+        in>>read_pid;
+	
+	if (read_pid != getpid())
+	{
+	  cout<<"Pid in lock doesn't match.\n";
+	  return 0;
+	}
+      }
+      
+      put_elem(0, 21, test_file);
+      dispatcher_client.write_commit();
+      if (file_exists(dispatcher_client.get_shadow_name() + ".lock"))
+      {
+	cout<<"Failed after write_commit().\n";
+	return 0;
+      }
+      
+      cout<<"First writing successfully done.\n";
+
+      dispatcher_client.write_start();      
+      if (!file_exists(dispatcher_client.get_shadow_name() + ".lock"))
+      {
+	cout<<"Failed after write_start().\n";
+	return 0;
+      }
+      
+      {
+	pid_t read_pid;
+	
+	ifstream in((dispatcher_client.get_shadow_name() + ".lock").c_str());
+	in>>read_pid;
+	
+	if (read_pid != getpid())
+	{
+	  cout<<"Pid in lock doesn't match.\n";
+	  return 0;
+	}
+      }
+      
+      put_elem(0, 23, test_file);
+      dispatcher_client.write_commit();
+      if (file_exists(dispatcher_client.get_shadow_name() + ".lock"))
+      {
+	cout<<"Failed after write_commit().\n";
+	return 0;
+      }
+      
+      cout<<"Second writing successfully done.\n";
+      
+      data_read_test(test_file);
+      remove((dispatcher_client.get_db_dir() + "Test_File.bin").c_str());
+      remove((dispatcher_client.get_db_dir() + "Test_File.bin.idx").c_str());
+    }
+    catch (File_Error e)
+    {
+      cout<<"File error catched: "
+      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
   }
 }
 

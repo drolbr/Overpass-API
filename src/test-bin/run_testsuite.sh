@@ -151,6 +151,19 @@ prepare_test_loop()
   }; done
 };
 
+dispatcher_client_server()
+{
+  mkdir -p "run/${EXEC}_server_$1"
+  pushd "run/${EXEC}_server_$1/" >/dev/null
+  rm -f *
+  $BASEDIR/test-bin/test_dispatcher server &
+  popd
+
+  date +%T
+  perform_serial_test test_dispatcher $1
+  sleep 5
+};
+
 # Test template_db
 date +%T
 perform_test_loop file_blocks 12
@@ -159,7 +172,11 @@ perform_test_loop block_backend 13
 date +%T
 perform_test_loop random_file 8
 date +%T
-perform_test_loop test_dispatcher 18
+perform_test_loop test_dispatcher 20
+
+dispatcher_client_server 21
+dispatcher_client_server 22
+dispatcher_client_server 23
 
 # Test overpass_api/osm-backend
 mkdir -p input/run_and_compare.sh_1/
