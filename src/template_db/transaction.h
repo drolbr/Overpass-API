@@ -26,6 +26,8 @@ class Nonsynced_Transaction : public Transaction
     File_Blocks_Index_Base* data_index(const File_Properties*);
     Random_File_Index* random_index(const File_Properties*);
     
+    void flush();
+    
   private:
     map< const File_Properties*, File_Blocks_Index_Base* >
       data_files;
@@ -42,12 +44,19 @@ inline Nonsynced_Transaction::Nonsynced_Transaction
   
 inline Nonsynced_Transaction::~Nonsynced_Transaction()
 {
+  flush();
+}
+
+inline void Nonsynced_Transaction::flush()
+{
   for (map< const File_Properties*, File_Blocks_Index_Base* >::iterator
       it = data_files.begin(); it != data_files.end(); ++it)
     delete it->second;
+  data_files.clear();
   for (map< const File_Properties*, Random_File_Index* >::iterator
       it = random_files.begin(); it != random_files.end(); ++it)
     delete it->second;
+  random_files.clear();
 }
 
 inline File_Blocks_Index_Base* Nonsynced_Transaction::data_index

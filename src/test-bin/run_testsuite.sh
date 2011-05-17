@@ -80,7 +80,7 @@ perform_twin_test()
   rm -f *
   "$BASEDIR/test-bin/$1" "${I}w" $ARGS >stdout.write.log 2>stderr.write.log &
   "$BASEDIR/test-bin/$1" "${I}r" $ARGS >stdout.read.log 2>stderr.read.log
-  sleep 10
+  sleep 5
   evaluate_test "${EXEC}_$I"
   if [[ -n $FAILED ]]; then
   {
@@ -193,11 +193,12 @@ dispatcher_two_clients()
   mkdir -p "run/${EXEC}_server_$1"
   pushd "run/${EXEC}_server_$1/" >/dev/null
   rm -f *
-  $BASEDIR/test-bin/test_dispatcher server_8 &
+  $BASEDIR/test-bin/test_dispatcher server_10 &
   popd >/dev/null
 
   date +%T
   perform_twin_test test_dispatcher $1
+  sleep 5
 };
 
 # Test template_db
@@ -307,7 +308,9 @@ mv input/update_database run/diff_updater
 date +%T
 $BASEDIR/test-bin/generate_test_file $DATA_SIZE diff_do >run/diff_updater/do_stdin.log
 date +%T
-$BASEDIR/bin/update_database --db-dir=run/diff_updater/ <run/diff_updater/do_stdin.log
+$BASEDIR/bin/dispatcher --osm-base --db-dir=`pwd`/run/diff_updater/ &
+$BASEDIR/bin/update_database <run/diff_updater/do_stdin.log
+$BASEDIR/bin/dispatcher --terminate
 date +%T
 $BASEDIR/test-bin/diff_updater --pattern_size=$DATA_SIZE --db-dir=run/diff_updater/ >run/diff_updater/diff_do.log
 date +%T

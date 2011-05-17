@@ -11,7 +11,9 @@
 
 #include "../../expat/expat_justparse_interface.h"
 #include "../../template_db/random_file.h"
+#include "../../template_db/transaction.h"
 #include "../core/settings.h"
+#include "../dispatch/dispatcher.h"
 #include "../frontend/output.h"
 #include "node_updater.h"
 #include "osm_updater.h"
@@ -354,6 +356,8 @@ void finish_updater()
 
 void parse_file_completely(FILE* in)
 {
+  callback->parser_started();
+  
   parse(stdin, start, end);
   
   finish_updater();
@@ -374,15 +378,45 @@ void parse_relations_only(FILE* in)
   parse(in, relation_start, relation_end);
 }
 
-Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_)
-  : /*transaction(true, false, ""), */node_updater_(0),
-    way_updater_(0), relation_updater_(0)
+Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, bool transactional)
+  : transaction(true, true, ""), dispatcher_client(0),
+    node_updater_(transactional ? &transaction : 0),
+    way_updater_(transactional ? &transaction : 0),
+    relation_updater_(transactional ? &transaction : 0)
 {
+  if (transactional)
+  {
+    dispatcher_client = new Dispatcher_Client(shared_name);
+    dispatcher_client->write_start();
+    set_basedir(dispatcher_client->get_db_dir());
+    transaction.data_index(de_osm3s_file_ids::NODES);
+    transaction.random_index(de_osm3s_file_ids::NODES);
+    transaction.data_index(de_osm3s_file_ids::NODE_TAGS_LOCAL);
+    transaction.data_index(de_osm3s_file_ids::NODE_TAGS_GLOBAL);
+    transaction.data_index(de_osm3s_file_ids::WAYS);
+    transaction.random_index(de_osm3s_file_ids::WAYS);
+    transaction.data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL);
+    transaction.data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL);
+    transaction.data_index(de_osm3s_file_ids::RELATIONS);
+    transaction.random_index(de_osm3s_file_ids::RELATIONS);
+    transaction.data_index(de_osm3s_file_ids::RELATION_ROLES);
+    transaction.data_index(de_osm3s_file_ids::RELATION_TAGS_LOCAL);
+    transaction.data_index(de_osm3s_file_ids::RELATION_TAGS_GLOBAL);
+  }
   state = 0;
   osm_element_count = 0;
   node_updater = &node_updater_;
   way_updater = &way_updater_;
   relation_updater = &relation_updater_;
   callback = callback_;
-  callback->parser_started();
+}
+
+Osm_Updater::~Osm_Updater()
+{
+  if (dispatcher_client)
+  {
+    transaction.flush();
+    dispatcher_client->write_commit();
+    delete dispatcher_client;
+  }
 }

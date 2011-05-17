@@ -18,6 +18,7 @@ int main(int argc, char* argv[])
 {
   // read command line arguments
   string db_dir;
+  bool transactional = true;
   
   int argpos(1);
   while (argpos < argc)
@@ -28,13 +29,14 @@ int main(int argc, char* argv[])
       if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
 	db_dir += '/';
       set_basedir(db_dir);
+      transactional = false;
     }
     ++argpos;
   }
   
   try
   {
-    Osm_Updater osm_updater(get_verbatim_callback());
+    Osm_Updater osm_updater(get_verbatim_callback(), transactional);
     //reading the main document
     parse_file_completely(stdin);  
   }

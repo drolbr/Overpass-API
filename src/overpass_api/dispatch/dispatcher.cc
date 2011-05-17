@@ -85,14 +85,16 @@ Dispatcher::Dispatcher
   
   // open dispatcher_share
   dispatcher_shm_fd = shm_open
-      (dispatcher_share_name.c_str(), O_RDWR|O_CREAT|O_TRUNC, S_IRWXU|S_IRWXG|S_IRWXO);
+      (dispatcher_share_name.c_str(),
+       O_RDWR|O_CREAT|O_TRUNC, S_IRWXU|S_IRWXG|S_IRWXO);
   if (dispatcher_shm_fd < 0)
     throw File_Error
         (errno, dispatcher_share_name, "Dispatcher_Server::1");
-  int foo = ftruncate(dispatcher_shm_fd, SHM_SIZE);
+  int foo = ftruncate(dispatcher_shm_fd,
+		      SHM_SIZE + db_dir.size() + shadow_name.size());
   dispatcher_shm_ptr = (uint8*)mmap
-      (0, SHM_SIZE + db_dir.size(),
-       PROT_READ|PROT_WRITE, MAP_SHARED, dispatcher_shm_fd, 0);
+        (0, SHM_SIZE + db_dir.size() + shadow_name.size(),
+         PROT_READ|PROT_WRITE, MAP_SHARED, dispatcher_shm_fd, 0);
   
   // copy db_dir and shadow_name
   *(uint32*)(dispatcher_shm_ptr + 3*sizeof(uint32)) = db_dir.size();
@@ -100,7 +102,7 @@ Dispatcher::Dispatcher
   *(uint32*)(dispatcher_shm_ptr + 4*sizeof(uint32) + db_dir.size())
       = shadow_name.size();
   memcpy((uint8*)dispatcher_shm_ptr + 5*sizeof(uint32) + db_dir.size(),
-	 shadow_name.data(), shadow_name.size());
+      shadow_name.data(), shadow_name.size());
   
   // Set command state to zero.
   *(uint32*)dispatcher_shm_ptr = 0;
@@ -116,23 +118,14 @@ Dispatcher::Dispatcher
 
 Dispatcher::~Dispatcher()
 {
+  munmap((void*)dispatcher_shm_ptr, SHM_SIZE + db_dir.size() + shadow_name.size());
   shm_unlink(dispatcher_share_name.c_str());
 }
 
 void Dispatcher::write_start(pid_t pid)
 {
   if (file_exists(shadow_name + ".lock"))
-  {
-    try
-    {
-      pid_t locked_pid;
-      ifstream lock((shadow_name + ".lock").c_str());
-      lock>>locked_pid;
-      if (locked_pid != pid)
-	return;
-    }
-    catch (...) {}
-  }
+    return;
 
   try
   {
@@ -356,7 +349,16 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     
     uint32 command = *(uint32*)dispatcher_shm_ptr;
     uint32 client_pid = *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
-    if (command == WRITE_START)
+    if (command == TERMINATE)
+    {
+      // Set command state to zero.
+      *(uint32*)dispatcher_shm_ptr = 0;
+      *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) =
+          *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
+      
+      break;
+    }
+    else if (command == WRITE_START)
       write_start(client_pid);
     else if (command == WRITE_ROLLBACK)
       write_rollback();
@@ -446,7 +448,8 @@ Dispatcher_Client::Dispatcher_Client
 
 Dispatcher_Client::~Dispatcher_Client()
 {
-  shm_unlink(dispatcher_share_name.c_str());
+  munmap((void*)dispatcher_shm_ptr, SHM_SIZE + db_dir.size() + shadow_name.size());
+  close(dispatcher_shm_fd);
 }
 
 void Dispatcher_Client::write_start()
@@ -566,6 +569,9 @@ void Dispatcher_Client::request_read_and_idx()
     timeout_.tv_sec = 0;
     timeout_.tv_usec = 100*1000;
     select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+    
+    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+      return;
   }
 }
 
@@ -586,6 +592,9 @@ void Dispatcher_Client::read_idx_finished()
     timeout_.tv_sec = 0;
     timeout_.tv_usec = 100*1000;
     select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+    
+    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+      return;
   }
 }
 
@@ -606,6 +615,32 @@ void Dispatcher_Client::read_finished()
     timeout_.tv_sec = 0;
     timeout_.tv_usec = 100*1000;
     select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+    
+    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+      return;
+  }
+}
+
+void Dispatcher_Client::terminate()
+{
+  uint32 pid = getpid();
+  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+  while (true)
+  {
+    *(uint32*)dispatcher_shm_ptr = Dispatcher::TERMINATE;
+    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
+    
+    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+      return;
+    
+    //sleep for a hundreth of a second
+    struct timeval timeout_;
+    timeout_.tv_sec = 0;
+    timeout_.tv_usec = 10*1000;
+    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+    
+    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+      return;
   }
 }
 

@@ -90,12 +90,13 @@ class Dispatcher
         it remains in standby forever. */
     void standby_loop(uint64 milliseconds);
     
-    static const uint32 WRITE_START = 1;
-    static const uint32 WRITE_ROLLBACK = 2;
-    static const uint32 WRITE_COMMIT = 3;
-    static const uint32 REQUEST_READ_AND_IDX = 4;
-    static const uint32 READ_IDX_FINISHED = 5;
-    static const uint32 READ_FINISHED = 6;
+    static const uint32 TERMINATE = 1;
+    static const uint32 WRITE_START = 101;
+    static const uint32 WRITE_ROLLBACK = 102;
+    static const uint32 WRITE_COMMIT = 103;
+    static const uint32 REQUEST_READ_AND_IDX = 201;
+    static const uint32 READ_IDX_FINISHED = 202;
+    static const uint32 READ_FINISHED = 203;
     
   private:
     vector< File_Properties* > controlled_files;
@@ -149,6 +150,10 @@ class Dispatcher_Client
     void read_finished();
     
     /** Other operations: -------------------------------------------------- */
+    
+    /** Terminate another instance running in the standby_loop */
+    void terminate();
+    
     const string& get_db_dir() { return db_dir; }
     const string& get_shadow_name() { return shadow_name; }
     

@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
   
   try
   {
-    Osm_Updater osm_updater(get_verbatim_callback());
+    Osm_Updater osm_updater(get_verbatim_callback(), false);
     vector< string >::const_iterator it(source_file_names.begin());
     while (it != source_file_names.end())
     {
