@@ -471,7 +471,8 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       catch (File_Error e)
       {
-	if (e.filename.substr(e.filename.size()-23, 23) != "area_tags_local.bin.idx")
+	if ((e.filename.size() >= 19) &&
+	    (e.filename.substr(e.filename.size()-19, 19) != "area_tags_local.bin"))
 	  throw e;
       }
     }
@@ -490,7 +491,8 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       catch (File_Error e)
       {
-	if (e.filename.substr(e.filename.size()-23, 23) != "area_tags_local.bin.idx")
+	if ((e.filename.size() >= 19) &&
+	    (e.filename.substr(e.filename.size()-19, 19) != "area_tags_local.bin"))
 	  throw e;
       }
     }

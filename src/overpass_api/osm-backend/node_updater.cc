@@ -20,13 +20,13 @@ Node_Updater::Node_Updater(Transaction* transaction_)
     external_transaction(transaction_ != 0)
 {
   // check whether map file exists
-  string map_file_name = de_osm3s_file_ids::NODES->get_file_base_name()
+/*  string map_file_name = de_osm3s_file_ids::NODES->get_file_base_name()
       + de_osm3s_file_ids::NODES->get_id_suffix();  
   struct stat file_info;
   if (stat(map_file_name.c_str(), &file_info) == 0)
     map_file_existed_before = true;
   else
-    map_file_existed_before = false;
+    map_file_existed_before = false;*/
 }
 
 void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
@@ -66,7 +66,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
     update_counter = 0;
     callback->partial_finished();
   }
-  else if (!external_transaction && partial && !map_file_existed_before)
+  else if (!external_transaction && partial/* && !map_file_existed_before*/)
   {
     if (++update_counter % 8 == 0)
     {
@@ -114,7 +114,7 @@ void Node_Updater::update_node_ids
       if (it->second)
       {
 	random.put(it->first, Uint32_Index(nit->ll_upper_));
-	if ((map_file_existed_before) && (index.val() > 0) &&
+	if (/*(map_file_existed_before) && */(index.val() > 0) &&
 	  (index.val() != nit->ll_upper_))
 	  moved_nodes.push_back(make_pair(it->first, index.val()));
       }

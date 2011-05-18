@@ -63,7 +63,7 @@ private:
   static Relation_Equal_Id rel_equal_id;
   static Pair_Comparator_By_Id pair_comparator_by_id;
   static Pair_Equal_Id pair_equal_id;
-  bool map_file_existed_before;
+//   bool map_file_existed_before;
   vector< pair< uint32, uint32 > > moved_relations;
   
   void find_affected_relations(const vector< pair< uint32, uint32 > >& moved_nodes,

@@ -347,7 +347,7 @@ void finish_updater()
   {  
     way_updater->update(callback);
     relation_updater->update_moved_idxs
-    (node_updater->get_moved_nodes(), way_updater->get_moved_ways());
+        (node_updater->get_moved_nodes(), way_updater->get_moved_ways());
     state = IN_RELATIONS;
   }
   if (state == IN_RELATIONS)

@@ -622,7 +622,7 @@ struct Block_Backend
 	+ file_prop.get_data_suffix())*/
   Block_Backend
       (const File_Properties& file_prop, File_Blocks_Index_Base* index_)
-    : file_blocks(file_prop, index_),
+    : file_blocks(index_),
       block_size(file_prop.get_block_size()),
       data_filename(file_prop.get_file_base_name()
         + ((File_Blocks_Index< TIndex >*)index_)->file_name_extension()

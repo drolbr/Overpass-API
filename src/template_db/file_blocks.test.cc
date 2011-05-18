@@ -93,7 +93,12 @@ struct Test_File : File_Properties
   {
     return BASE_DIRECTORY + "testfile";
   }
-
+  
+  string get_file_name_trunk() const
+  {
+    return "testfile";
+  }
+  
   string get_index_suffix() const
   {
     return INDEX_SUFFIX;
@@ -141,11 +146,11 @@ struct Test_File : File_Properties
   }
   
   File_Blocks_Index_Base* new_data_index
-      (string index_file_name, string empty_index_file_name,
-       string file_name_extension, uint32 block_count) const
+      (bool writeable, bool use_shadow, string db_dir, string file_name_extension)
+      const
   {
     return new File_Blocks_Index< IntIndex >
-        (index_file_name, empty_index_file_name, file_name_extension, block_count);
+        (*this, writeable, use_shadow, db_dir, file_name_extension);
   }
 };
 
@@ -232,9 +237,10 @@ void read_test()
     Nonsynced_Transaction transaction(false, false, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (tf, transaction.data_index(&tf));
+        (transaction.data_index(&tf));
 
-    vector< bool > footprint = get_data_index_footprint< IntIndex >(Test_File());
+    vector< bool > footprint = get_data_index_footprint< IntIndex >
+        (Test_File(), BASE_DIRECTORY);
     cout<<"Index footprint: ";
     for (vector< bool >::const_iterator it(footprint.begin()); it != footprint.end();
         ++it)
@@ -397,7 +403,7 @@ int main(int argc, char* args[])
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (tf, transaction.data_index(&tf));
+        (transaction.data_index(&tf));
     list< IntIndex > indices;
     
     indices.clear();
@@ -424,7 +430,7 @@ int main(int argc, char* args[])
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (tf, transaction.data_index(&tf));
+        (transaction.data_index(&tf));
     list< IntIndex > indices;
     
     indices.clear();
@@ -450,7 +456,7 @@ int main(int argc, char* args[])
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (tf, transaction.data_index(&tf));
+        (transaction.data_index(&tf));
     list< IntIndex > indices;
     
     indices.clear();
@@ -481,7 +487,7 @@ int main(int argc, char* args[])
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (tf, transaction.data_index(&tf));
+        (transaction.data_index(&tf));
     list< IntIndex > indices;
     
     indices.clear();
@@ -538,7 +544,7 @@ int main(int argc, char* args[])
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (tf, transaction.data_index(&tf));
+        (transaction.data_index(&tf));
     list< IntIndex > indices, work;
     
     indices.clear();
@@ -588,7 +594,7 @@ int main(int argc, char* args[])
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (tf, transaction.data_index(&tf));
+        (transaction.data_index(&tf));
     list< IntIndex > indices;
     
     indices.clear();
@@ -619,7 +625,7 @@ int main(int argc, char* args[])
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (tf, transaction.data_index(&tf));
+        (transaction.data_index(&tf));
     list< IntIndex > indices;
     
     indices.clear();
@@ -648,7 +654,7 @@ int main(int argc, char* args[])
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (tf, transaction.data_index(&tf));
+        (transaction.data_index(&tf));
     list< IntIndex > indices, work;
     
     indices.clear();
@@ -687,7 +693,7 @@ int main(int argc, char* args[])
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (tf, transaction.data_index(&tf));
+        (transaction.data_index(&tf));
     list< IntIndex > indices;
     
     indices.clear();
@@ -718,7 +724,7 @@ int main(int argc, char* args[])
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (tf, transaction.data_index(&tf));
+        (transaction.data_index(&tf));
     list< IntIndex > indices;
     
     indices.clear();
@@ -755,7 +761,7 @@ int main(int argc, char* args[])
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
-        (tf, transaction.data_index(&tf));
+        (transaction.data_index(&tf));
     list< IntIndex > indices, work;
     
     indices.clear();
@@ -767,7 +773,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(99));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-    it(blocks.discrete_begin(indices.begin(), indices.end()));
+        it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     work.clear();
     work.push_back(IntIndex(8));

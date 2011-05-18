@@ -50,6 +50,7 @@ struct File_Properties
 {
   virtual string get_basedir() const = 0;
   virtual string get_file_base_name() const = 0;
+  virtual string get_file_name_trunk() const = 0;
   virtual string get_index_suffix() const = 0;
   virtual string get_data_suffix() const = 0;
   virtual string get_id_suffix() const = 0;
@@ -63,8 +64,7 @@ struct File_Properties
   // The returned object is of type File_Blocks_Index< .. >*
   // and goes into the ownership of the caller.
   virtual File_Blocks_Index_Base* new_data_index
-      (string index_file_name, string empty_index_file_name,
-       string file_name_extension, uint32 block_count)
+      (bool writeable, bool use_shadow, string db_dir, string file_name_extension)
       const = 0;
 };
 

@@ -64,7 +64,7 @@ private:
   static Way_Equal_Id way_equal_id;
   static Pair_Comparator_By_Id pair_comparator_by_id;
   static Pair_Equal_Id pair_equal_id;
-  bool map_file_existed_before;
+  //bool map_file_existed_before;
   vector< pair< uint32, uint32 > > moved_ways;
   
   void filter_affected_ways(const vector< Way >& maybe_affected_ways);

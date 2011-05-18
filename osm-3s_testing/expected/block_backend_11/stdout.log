@@ -1,4 +1,4 @@
-File error catched in part 1: 2 ./testfile.bin.idx File_Blocks:2
+File error catched in part 1: 2 ./testfile.bin File_Blocks:1
 (This is the expected correct behaviour)
 ** Blow up two indices
 Read test

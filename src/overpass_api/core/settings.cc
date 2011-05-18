@@ -44,6 +44,11 @@ struct OSM_File_Properties : public File_Properties
     return base_directory + file_base_name;
   }
   
+  string get_file_name_trunk() const
+  {
+    return file_base_name;
+  }
+  
   string get_index_suffix() const
   {
     return INDEX_SUFFIX;
@@ -90,11 +95,11 @@ struct OSM_File_Properties : public File_Properties
   }
   
   File_Blocks_Index_Base* new_data_index
-      (string index_file_name, string empty_index_file_name,
-       string file_name_extension, uint32 block_count) const
+      (bool writeable, bool use_shadow, string db_dir, string file_name_extension)
+      const
   {
     return new File_Blocks_Index< TVal >
-        (index_file_name, empty_index_file_name, file_name_extension, block_count);
+        (*this, writeable, use_shadow, db_dir, file_name_extension);
   }
 		  
   string file_base_name;

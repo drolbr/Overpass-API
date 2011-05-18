@@ -67,6 +67,11 @@ struct Test_File : File_Properties
     return BASE_DIRECTORY + "testfile";
   }
   
+  string get_file_name_trunk() const
+  {
+    return "testfile";
+  }
+  
   string get_index_suffix() const
   {
     return ".idx";
@@ -113,8 +118,8 @@ struct Test_File : File_Properties
   }
   
   File_Blocks_Index_Base* new_data_index
-      (string index_file_name, string empty_index_file_name,
-       string file_name_extension, uint32 block_count) const
+      (bool writeable, bool use_shadow, string db_dir, string file_name_extension)
+      const
   {
     throw string();
     return 0;

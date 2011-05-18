@@ -2,18 +2,6 @@
 #include <iostream>
 #include <sstream>
 
-/*#include <errno.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <sys/select.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include "../core/datatypes.h"*/
-
 #include "../../template_db/block_backend.h"
 #include "../../template_db/file_blocks.h"
 #include "../../template_db/random_file.h"
@@ -128,6 +116,11 @@ struct Test_File : File_Properties
     return basedir + basename;
   }
   
+  string get_file_name_trunk() const
+  {
+    return basename;
+  }
+  
   string get_index_suffix() const
   {
     return ".idx";
@@ -160,7 +153,7 @@ struct Test_File : File_Properties
   
   vector< bool > get_data_footprint() const
   {
-    return get_data_index_footprint< IntIndex >(*this);
+    return get_data_index_footprint< IntIndex >(*this, basedir);
   }
   
   vector< bool > get_map_footprint() const
@@ -174,11 +167,11 @@ struct Test_File : File_Properties
   }
   
   File_Blocks_Index_Base* new_data_index
-      (string index_file_name, string empty_index_file_name,
-       string file_name_extension, uint32 block_count) const
+      (bool writeable, bool use_shadow, string db_dir, string file_name_extension)
+      const
   {
     return new File_Blocks_Index< IntIndex >
-        (index_file_name, empty_index_file_name, file_name_extension, block_count);
+        (*this, writeable, use_shadow, db_dir, file_name_extension);
   }
   
   string basename, basedir;
@@ -365,7 +358,8 @@ void data_read_test(const Test_File& tf, Transaction& transaction)
     db_backend(tf, transaction.data_index(&tf));
     
     cout<<"Read test\n";
-    vector< bool > footprint = get_data_index_footprint< IntIndex >(tf);
+    vector< bool > footprint = get_data_index_footprint< IntIndex >
+        (tf, tf.get_basedir());
     cout<<"Index footprint: ";
     for (vector< bool >::const_iterator it(footprint.begin());
     it != footprint.end(); ++it)
@@ -961,7 +955,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     try
     {
-      Dispatcher_Client dispatcher_client(shared_name);
+      Dispatcher_Client dispatcher_client("osm3s_share_test");
     }
     catch (File_Error e)
     {
@@ -978,7 +972,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     try
     {
-      Dispatcher dispatcher(shared_name, "osm3s_index_share_test",
+      Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			    BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
 			    file_properties);
       dispatcher.write_start(480);
@@ -1008,7 +1002,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     try
     {
-      Dispatcher_Client dispatcher_client(shared_name);
+      Dispatcher_Client dispatcher_client("osm3s_share_test");
       test_file.set_basedir(dispatcher_client.get_db_dir());
       
       if (file_exists(dispatcher_client.get_shadow_name() + ".lock"))
@@ -1060,7 +1054,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     try
     {
-      Dispatcher_Client dispatcher_client(shared_name);
+      Dispatcher_Client dispatcher_client("osm3s_share_test");
       test_file.set_basedir(dispatcher_client.get_db_dir());
       
       if (file_exists(dispatcher_client.get_shadow_name() + ".lock"))
@@ -1112,7 +1106,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     try
     {
-      Dispatcher_Client dispatcher_client(shared_name);
+      Dispatcher_Client dispatcher_client("osm3s_share_test");
       test_file.set_basedir(dispatcher_client.get_db_dir());
       
       if (file_exists(dispatcher_client.get_shadow_name() + ".lock"))
@@ -1207,7 +1201,7 @@ int main(int argc, char* args[])
 	select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
       }
       
-      Dispatcher_Client dispatcher_client(shared_name);
+      Dispatcher_Client dispatcher_client("osm3s_share_test");
       test_file.set_basedir(dispatcher_client.get_db_dir());
       
       sync_log("Try request_read().\n");
@@ -1243,7 +1237,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     try
     {
-      Dispatcher_Client dispatcher_client(shared_name);
+      Dispatcher_Client dispatcher_client("osm3s_share_test");
       test_file.set_basedir(dispatcher_client.get_db_dir());
       
       dispatcher_client.write_start();      
@@ -1289,7 +1283,7 @@ int main(int argc, char* args[])
 	select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
       }
       
-      Dispatcher_Client dispatcher_client(shared_name);
+      Dispatcher_Client dispatcher_client("osm3s_share_test");
       test_file.set_basedir(dispatcher_client.get_db_dir());
       
       sync_log("Try request_read().\n");
@@ -1331,7 +1325,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     try
     {
-      Dispatcher_Client dispatcher_client(shared_name);
+      Dispatcher_Client dispatcher_client("osm3s_share_test");
       test_file.set_basedir(dispatcher_client.get_db_dir());
       
       dispatcher_client.write_start();      
@@ -1508,10 +1502,10 @@ int main(int argc, char* argv[])
     ++argpos;
   }
   
-  int shm_fd(shm_open(shared_name.c_str(), O_RDWR, S_IRWXU|S_IRWXG|S_IRWXO));
+  int shm_fd(shm_open("osm3s_share_test".c_str(), O_RDWR, S_IRWXU|S_IRWXG|S_IRWXO));
   if (shm_fd < 0)
   {
-    cerr<<"Can't open shared memory "<<shared_name<<'\n';
+    cerr<<"Can't open shared memory "<<"osm3s_share_test"<<'\n';
     exit(1);
   }
   uint8* shm_ptr((uint8*)

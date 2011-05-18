@@ -309,6 +309,7 @@ date +%T
 $BASEDIR/test-bin/generate_test_file $DATA_SIZE diff_do >run/diff_updater/do_stdin.log
 date +%T
 $BASEDIR/bin/dispatcher --osm-base --db-dir=`pwd`/run/diff_updater/ &
+sleep 1
 $BASEDIR/bin/update_database <run/diff_updater/do_stdin.log
 $BASEDIR/bin/dispatcher --terminate
 date +%T

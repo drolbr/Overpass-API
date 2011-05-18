@@ -19,14 +19,14 @@ Way_Updater::Way_Updater(Transaction* transaction_)
   : update_counter(0), transaction(transaction_),
     external_transaction(transaction_ != 0)
 {
-  // check whether map file exists
+/*  // check whether map file exists
   string map_file_name = de_osm3s_file_ids::WAYS->get_file_base_name()
       + de_osm3s_file_ids::WAYS->get_id_suffix();  
   struct stat file_info;
   if (stat(map_file_name.c_str(), &file_info) == 0)
     map_file_existed_before = true;
   else
-    map_file_existed_before = false;
+    map_file_existed_before = false;*/
 }
 
 void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
@@ -68,7 +68,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
     update_counter = 0;
     callback->partial_finished();
   }
-  else if (!external_transaction && partial && !map_file_existed_before)
+  else if (!external_transaction && partial/* && !map_file_existed_before*/)
   {
     if (++update_counter % 8 == 0)
     {
@@ -92,27 +92,20 @@ void Way_Updater::update_moved_idxs
   ids_to_modify.clear();
   ways_to_insert.clear();
   
-  if (!map_file_existed_before)
-    return;
+/*  if (!map_file_existed_before)
+    return;*/
   
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, "");
   
   map< uint32, vector< uint32 > > to_delete;
-  callback->update_started();
   find_affected_ways(moved_nodes);
-  callback->compute_indexes_finished();
   update_way_ids(to_delete);
-  callback->update_ids_finished();
   update_members(to_delete);
-  callback->update_coords_finished();
   
   vector< Tag_Entry > tags_to_delete;
   prepare_tags(tags_to_delete, to_delete);
-  callback->prepare_delete_tags_finished();
   update_way_tags_local(tags_to_delete);
-  callback->tags_local_finished();
-  callback->update_finished();
   
   //show_mem_status();
   
@@ -131,7 +124,7 @@ void Way_Updater::filter_affected_ways(const vector< Way >& maybe_affected_ways)
       wit != maybe_affected_ways.end(); ++wit)
   {
     for (vector< uint32 >::const_iterator nit(wit->nds.begin());
-    nit != wit->nds.end(); ++nit)
+        nit != wit->nds.end(); ++nit)
     used_nodes[*nit] = 0;
   }
   Random_File< Uint32_Index > node_random
@@ -144,8 +137,8 @@ void Way_Updater::filter_affected_ways(const vector< Way >& maybe_affected_ways)
   {
     vector< uint32 > nd_idxs;
     for (vector< uint32 >::const_iterator nit(wit->nds.begin());
-    nit != wit->nds.end(); ++nit)
-    nd_idxs.push_back(used_nodes[*nit]);
+        nit != wit->nds.end(); ++nit)
+      nd_idxs.push_back(used_nodes[*nit]);
     
     uint32 index(Way::calc_index(nd_idxs));
     if (wit->index != index)
@@ -157,7 +150,8 @@ void Way_Updater::filter_affected_ways(const vector< Way >& maybe_affected_ways)
   }
 }
 
-void Way_Updater::find_affected_ways(const vector< pair< uint32, uint32 > >& moved_nodes)
+void Way_Updater::find_affected_ways
+    (const vector< pair< uint32, uint32 > >& moved_nodes)
 {
   vector< Way > maybe_affected_ways;
   
@@ -263,7 +257,7 @@ void Way_Updater::update_way_ids(map< uint32, vector< uint32 > >& to_delete)
       if (it->second)
       {
 	random.put(it->first, Uint31_Index(wit->index));
-	if ((map_file_existed_before) && (index.val() > 0) &&
+	if (/*(map_file_existed_before) && */(index.val() > 0) &&
 	  (index.val() != wit->index))
 	  moved_ways.push_back(make_pair(it->first, index.val()));
       }

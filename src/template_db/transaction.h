@@ -66,18 +66,9 @@ inline File_Blocks_Index_Base* Nonsynced_Transaction::data_index
       it = data_files.find(fp);
   if (it != data_files.end())
     return it->second;
-  
-  Raw_File val_file
-      (fp->get_file_base_name() + file_name_extension + fp->get_data_suffix(),
-       O_RDONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "Nonsynced_Transaction:1");
-  uint64 block_count = lseek64(val_file.fd, 0, SEEK_END)
-          /fp->get_block_size();
+
   File_Blocks_Index_Base* data_index = fp->new_data_index
-  (fp->get_file_base_name() + file_name_extension + fp->get_data_suffix()
-     + fp->get_index_suffix() + (use_shadow ? fp->get_shadow_suffix() : ""),
-     writeable ? fp->get_file_base_name() + file_name_extension
-     + fp->get_data_suffix() + fp->get_shadow_suffix() : "",
-     file_name_extension, block_count);
+      (writeable, use_shadow, fp->get_basedir(), file_name_extension);
   if (data_index != 0)
     data_files[fp] = data_index;
   return data_index;

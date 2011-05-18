@@ -20,13 +20,13 @@ Relation_Updater::Relation_Updater(Transaction* transaction_)
   max_written_role_id = 0;
   
   // check whether map file exists
-  string map_file_name = de_osm3s_file_ids::RELATIONS->get_file_base_name()
+/*  string map_file_name = de_osm3s_file_ids::RELATIONS->get_file_base_name()
       + de_osm3s_file_ids::RELATIONS->get_id_suffix();  
   struct stat file_info;
   if (stat(map_file_name.c_str(), &file_info) == 0)
     map_file_existed_before = true;
   else
-    map_file_existed_before = false;
+    map_file_existed_before = false;*/
 }
 
 uint32 Relation_Updater::get_role_id(const string& s)
@@ -99,8 +99,8 @@ void Relation_Updater::update_moved_idxs
   ids_to_modify.clear();
   rels_to_insert.clear();
   
-  if (!map_file_existed_before)
-    return;
+/*  if (!map_file_existed_before)
+    return;*/
   
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, "");
@@ -308,7 +308,7 @@ void Relation_Updater::update_rel_ids
       if (it->second)
       {
 	random.put(it->first, Uint31_Index(rit->index));
-	if ((map_file_existed_before) && (index.val() > 0) &&
+	if (/*(map_file_existed_before) && */(index.val() > 0) &&
 	    (index.val() != rit->index))
 	  moved_relations.push_back(make_pair(it->first, index.val()));
       }
