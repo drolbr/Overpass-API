@@ -613,20 +613,11 @@ struct Block_Backend
 	  typename set< TIndex >::const_iterator,
 	  Default_Range_Iterator< TIndex > > File_Blocks_;
   
-/*  Block_Backend
-      (const File_Properties& file_prop, bool writeable,
-       bool use_shadow, string file_name_extension = "")
-    : file_blocks(file_prop, writeable, use_shadow, file_name_extension),
-      block_size(file_prop.get_block_size()),
-      data_filename(file_prop.get_file_base_name() + file_name_extension
-	+ file_prop.get_data_suffix())*/
-  Block_Backend
-      (const File_Properties& file_prop, File_Blocks_Index_Base* index_)
+  Block_Backend(File_Blocks_Index_Base* index_)
     : file_blocks(index_),
-      block_size(file_prop.get_block_size()),
-      data_filename(file_prop.get_file_base_name()
-        + ((File_Blocks_Index< TIndex >*)index_)->file_name_extension()
-	+ file_prop.get_data_suffix())
+      block_size(((File_Blocks_Index< TIndex >*)index_)->get_block_size()),
+      data_filename
+          (((File_Blocks_Index< TIndex >*)index_)->get_data_file_name())
   {
     flat_end_it = new Flat_Iterator(file_blocks, block_size, true);
     discrete_end_it = new Discrete_Iterator(file_blocks, block_size);

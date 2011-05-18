@@ -111,11 +111,6 @@ struct Test_File : File_Properties
     basedir = basedir_;
   }
   
-  string get_file_base_name() const
-  {
-    return basedir + basename;
-  }
-  
   string get_file_name_trunk() const
   {
     return basename;
@@ -148,7 +143,7 @@ struct Test_File : File_Properties
   
   uint32 get_map_block_size() const
   {
-    return 16;
+    return 16*IntIndex::max_size_of();
   }
   
   vector< bool > get_data_footprint() const
@@ -158,7 +153,7 @@ struct Test_File : File_Properties
   
   vector< bool > get_map_footprint() const
   {
-    return get_map_index_footprint< IntIndex >(*this);
+    return get_map_index_footprint(*this, basedir);
   }  
   
   uint32 id_max_size_of() const
@@ -189,50 +184,50 @@ void create_dummy_files
   if (!shadow)
   {
     {
-      ofstream test_bin_out((test_file_1.get_file_base_name()
+      ofstream test_bin_out((BASE_DIRECTORY + test_file_1.get_file_name_trunk()
           + test_file_1.get_data_suffix()).c_str());
       test_bin_out<<"This is test file bin 1\n";
-      ofstream test_idx_out((test_file_1.get_file_base_name()
+      ofstream test_idx_out((BASE_DIRECTORY + test_file_1.get_file_name_trunk()
           + test_file_1.get_data_suffix() + test_file_1.get_index_suffix()).c_str());
       test_idx_out<<"This is test file bin idx 1\n";
     }
     {
-      ofstream test_bin_out((test_file_2.get_file_base_name()
+      ofstream test_bin_out((BASE_DIRECTORY + test_file_2.get_file_name_trunk()
           + test_file_2.get_id_suffix()).c_str());
       test_bin_out<<"This is test file map 2\n";
-      ofstream test_idx_out((test_file_2.get_file_base_name()
+      ofstream test_idx_out((BASE_DIRECTORY + test_file_2.get_file_name_trunk()
           + test_file_2.get_id_suffix() + test_file_2.get_index_suffix()).c_str());
       test_idx_out<<"This is test file map idx 2\n";
     }
     {
-      ofstream test_bin_out((test_file_3.get_file_base_name()
+      ofstream test_bin_out((BASE_DIRECTORY + test_file_3.get_file_name_trunk()
           + test_file_3.get_data_suffix()).c_str());
       test_bin_out<<"This is test file bin 3\n";
-      ofstream test_idx_out((test_file_3.get_file_base_name()
+      ofstream test_idx_out((BASE_DIRECTORY + test_file_3.get_file_name_trunk()
           + test_file_3.get_data_suffix() + test_file_3.get_index_suffix()).c_str());
       test_idx_out<<"This is test file bin idx 3\n";
     }
     {
-      ofstream test_bin_out((test_file_3.get_file_base_name()
+      ofstream test_bin_out((BASE_DIRECTORY + test_file_3.get_file_name_trunk()
           + test_file_3.get_id_suffix()).c_str());
       test_bin_out<<"This is test file map 3\n";
-      ofstream test_idx_out((test_file_3.get_file_base_name()
+      ofstream test_idx_out((BASE_DIRECTORY + test_file_3.get_file_name_trunk()
           + test_file_3.get_id_suffix()+ test_file_3.get_index_suffix()).c_str());
       test_idx_out<<"This is test file map idx 3\n";
     }
     {
-      ofstream test_bin_out((test_file_4.get_file_base_name()
+      ofstream test_bin_out((BASE_DIRECTORY + test_file_4.get_file_name_trunk()
           + test_file_4.get_data_suffix()).c_str());
       test_bin_out<<"This is test file bin 4\n";
-      ofstream test_idx_out((test_file_4.get_file_base_name()
+      ofstream test_idx_out((BASE_DIRECTORY + test_file_4.get_file_name_trunk()
           + test_file_4.get_data_suffix() + test_file_4.get_index_suffix()).c_str());
       test_idx_out<<"This is test file bin idx 4\n";
     }
     {
-      ofstream test_bin_out((test_file_4.get_file_base_name()
+      ofstream test_bin_out((BASE_DIRECTORY + test_file_4.get_file_name_trunk()
           + test_file_4.get_id_suffix()).c_str());
       test_bin_out<<"This is test file map 4\n";
-      ofstream test_idx_out((test_file_4.get_file_base_name()
+      ofstream test_idx_out((BASE_DIRECTORY + test_file_4.get_file_name_trunk()
           + test_file_4.get_id_suffix()+ test_file_4.get_index_suffix()).c_str());
       test_idx_out<<"This is test file map idx 4\n";
     }
@@ -240,55 +235,55 @@ void create_dummy_files
   else
   {
     {
-      ofstream test_bin_out((test_file_1.get_file_base_name()
+      ofstream test_bin_out((BASE_DIRECTORY + test_file_1.get_file_name_trunk()
           + test_file_1.get_data_suffix()).c_str());
       test_bin_out<<"This is test file bin 1\n";
-      ofstream test_idx_out((test_file_1.get_file_base_name()
+      ofstream test_idx_out((BASE_DIRECTORY + test_file_1.get_file_name_trunk()
           + test_file_1.get_data_suffix() + test_file_1.get_index_suffix()
 	  + test_file_1.get_shadow_suffix()).c_str());
       test_idx_out<<"This is test file bin idx shadow 1\n";
     }
     {
-      ofstream test_bin_out((test_file_2.get_file_base_name()
+      ofstream test_bin_out((BASE_DIRECTORY + test_file_2.get_file_name_trunk()
           + test_file_2.get_id_suffix()).c_str());
       test_bin_out<<"This is test file map 2\n";
-      ofstream test_idx_out((test_file_2.get_file_base_name()
+      ofstream test_idx_out((BASE_DIRECTORY + test_file_2.get_file_name_trunk()
           + test_file_2.get_id_suffix() + test_file_2.get_index_suffix()
 	  + test_file_2.get_shadow_suffix()).c_str());
       test_idx_out<<"This is test file map idx shadow 2\n";
     }
     {
-      ofstream test_bin_out((test_file_3.get_file_base_name()
+      ofstream test_bin_out((BASE_DIRECTORY + test_file_3.get_file_name_trunk()
           + test_file_3.get_data_suffix()).c_str());
       test_bin_out<<"This is test file bin 3\n";
-      ofstream test_idx_out((test_file_3.get_file_base_name()
+      ofstream test_idx_out((BASE_DIRECTORY + test_file_3.get_file_name_trunk()
           + test_file_3.get_data_suffix() + test_file_3.get_index_suffix()
 	  + test_file_3.get_shadow_suffix()).c_str());
       test_idx_out<<"This is test file bin idx shadow 3\n";
     }
     {
-      ofstream test_bin_out((test_file_3.get_file_base_name()
+      ofstream test_bin_out((BASE_DIRECTORY + test_file_3.get_file_name_trunk()
           + test_file_3.get_id_suffix()).c_str());
       test_bin_out<<"This is test file map 3\n";
-      ofstream test_idx_out((test_file_3.get_file_base_name()
+      ofstream test_idx_out((BASE_DIRECTORY + test_file_3.get_file_name_trunk()
           + test_file_3.get_id_suffix() + test_file_3.get_index_suffix()
 	  + test_file_3.get_shadow_suffix()).c_str());
       test_idx_out<<"This is test file map idx shadow 3\n";
     }
     {
-      ofstream test_bin_out((test_file_4.get_file_base_name()
+      ofstream test_bin_out((BASE_DIRECTORY + test_file_4.get_file_name_trunk()
           + test_file_4.get_data_suffix()).c_str());
       test_bin_out<<"This is test file bin 4\n";
-      ofstream test_idx_out((test_file_4.get_file_base_name()
+      ofstream test_idx_out((BASE_DIRECTORY + test_file_4.get_file_name_trunk()
           + test_file_4.get_data_suffix() + test_file_4.get_index_suffix()
 	  + test_file_4.get_shadow_suffix()).c_str());
       test_idx_out<<"This is test file bin idx shadow 4\n";
     }
     {
-      ofstream test_bin_out((test_file_4.get_file_base_name()
+      ofstream test_bin_out((BASE_DIRECTORY + test_file_4.get_file_name_trunk()
           + test_file_4.get_id_suffix()).c_str());
       test_bin_out<<"This is test file map 4\n";
-      ofstream test_idx_out((test_file_4.get_file_base_name()
+      ofstream test_idx_out((BASE_DIRECTORY + test_file_4.get_file_name_trunk()
           + test_file_4.get_id_suffix()+ test_file_4.get_index_suffix()
 	  + test_file_4.get_shadow_suffix()).c_str());
       test_idx_out<<"This is test file map idx shadow 4\n";
@@ -302,7 +297,7 @@ void map_read_test(bool use_shadow = false)
   {
     cout<<"Read test\n";
     vector< bool > footprint =
-        get_map_index_footprint< IntIndex >(Test_File("Test_File"), use_shadow);
+        get_map_index_footprint(Test_File("Test_File"), BASE_DIRECTORY, use_shadow);
     cout<<"Index footprint: ";
     for (vector< bool >::const_iterator it(footprint.begin());
         it != footprint.end(); ++it)
@@ -311,8 +306,7 @@ void map_read_test(bool use_shadow = false)
 
     Nonsynced_Transaction transaction(false, use_shadow, "");
     Test_File tf("Test_File");
-    Random_File< IntIndex > id_file
-        (tf, transaction.random_index(&tf));
+    Random_File< IntIndex > id_file(transaction.random_index(&tf));
     
     cout<<id_file.get(0).val()<<'\n';
     
@@ -355,7 +349,7 @@ void data_read_test(const Test_File& tf, Transaction& transaction)
   try
   {
     Block_Backend< IntIndex, IntObject >
-    db_backend(tf, transaction.data_index(&tf));
+        db_backend(transaction.data_index(&tf));
     
     cout<<"Read test\n";
     vector< bool > footprint = get_data_index_footprint< IntIndex >
@@ -392,7 +386,7 @@ void put_elem(uint32 idx, uint32 val, const Test_File& tf)
   {
     Nonsynced_Transaction transaction(true, true, "");
     Block_Backend< IntIndex, IntObject > db_backend
-        (tf, transaction.data_index(&tf));
+        (transaction.data_index(&tf));
     db_backend.update(to_delete, to_insert);
   }
   catch (File_Error e)
@@ -477,8 +471,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
     }
     map_read_test(true);
@@ -500,8 +493,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
     }
     remove("Test_File.map");
@@ -521,8 +513,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
     }
     dispatcher.write_commit();
@@ -544,8 +535,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
     }
     dispatcher.write_commit();
@@ -553,8 +543,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 2);
     }
     dispatcher.write_commit();
@@ -576,8 +565,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
     }
     dispatcher.write_commit();
@@ -585,8 +573,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 2);
     }
     dispatcher.write_commit();
@@ -594,8 +581,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 3);
     }
     dispatcher.write_commit();
@@ -677,8 +663,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
     }
     dispatcher.request_read_and_idx(640);
@@ -709,8 +694,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
     }
     dispatcher.read_finished(640);
@@ -721,8 +705,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 2);
     }
     dispatcher.read_finished(641);
@@ -733,8 +716,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 3);
     }
     dispatcher.read_finished(642);
@@ -789,8 +771,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
     }
     dispatcher.write_commit();
@@ -800,8 +781,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 2);
     }
     dispatcher.write_commit();
@@ -810,8 +790,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 3);
     }
     dispatcher.write_commit();
@@ -859,8 +838,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
     }
     dispatcher.write_commit();
@@ -870,8 +848,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 2);
     }
     dispatcher.write_commit();
@@ -879,8 +856,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 3);
     }
     dispatcher.write_commit();
@@ -889,8 +865,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks
-        (tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 4);
     }
     dispatcher.write_commit();

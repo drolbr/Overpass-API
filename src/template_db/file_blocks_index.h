@@ -215,8 +215,8 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
 /** Implementation non-members: ---------------------------------------------*/
 
 template< class TIndex >
-vector< bool > get_data_index_footprint(const File_Properties& file_prop,
-					string db_dir)
+vector< bool > get_data_index_footprint
+    (const File_Properties& file_prop, string db_dir)
 {
   File_Blocks_Index< TIndex > index(file_prop, false, false, db_dir, "");
   

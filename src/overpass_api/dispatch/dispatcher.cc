@@ -205,17 +205,17 @@ void Dispatcher::copy_shadows_to_mains()
   {
     try
     {
-      copy_file((*it)->get_file_base_name() + (*it)->get_data_suffix()
+      copy_file(db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
                 + (*it)->get_index_suffix() + (*it)->get_shadow_suffix(),
-		(*it)->get_file_base_name() + (*it)->get_data_suffix()
+		db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
 		+ (*it)->get_index_suffix());
     }
     catch (...) {}
     try
     {
-      copy_file((*it)->get_file_base_name() + (*it)->get_id_suffix()
+      copy_file(db_dir + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
                 + (*it)->get_index_suffix() + (*it)->get_shadow_suffix(),
-		(*it)->get_file_base_name() + (*it)->get_id_suffix()
+		db_dir + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
 		+ (*it)->get_index_suffix());
     }
     catch (...) {}
@@ -229,17 +229,17 @@ void Dispatcher::copy_mains_to_shadows()
   {
     try
     {
-      copy_file((*it)->get_file_base_name() + (*it)->get_data_suffix()
+      copy_file(db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
                 + (*it)->get_index_suffix(),
-		(*it)->get_file_base_name() + (*it)->get_data_suffix()
+		db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
 		+ (*it)->get_index_suffix() + (*it)->get_shadow_suffix());
     }
     catch (...) {}
     try
     {
-      copy_file((*it)->get_file_base_name() + (*it)->get_id_suffix()
+      copy_file(db_dir + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
                 + (*it)->get_index_suffix(),
-		(*it)->get_file_base_name() + (*it)->get_id_suffix()
+		db_dir + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
 		+ (*it)->get_index_suffix() + (*it)->get_shadow_suffix());
     }
     catch (...) {}
@@ -251,13 +251,13 @@ void Dispatcher::remove_shadows()
   for (vector< File_Properties* >::const_iterator it(controlled_files.begin());
       it != controlled_files.end(); ++it)
   {
-    remove(((*it)->get_file_base_name() + (*it)->get_data_suffix()
+    remove((db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
             + (*it)->get_index_suffix() + (*it)->get_shadow_suffix()).c_str());
-    remove(((*it)->get_file_base_name() + (*it)->get_id_suffix()
+    remove((db_dir + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
             + (*it)->get_index_suffix() + (*it)->get_shadow_suffix()).c_str());
-    remove(((*it)->get_file_base_name() + (*it)->get_data_suffix()
+    remove((db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
             + (*it)->get_shadow_suffix()).c_str());
-    remove(((*it)->get_file_base_name() + (*it)->get_id_suffix()
+    remove((db_dir + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
             + (*it)->get_shadow_suffix()).c_str());
   }
 }
@@ -305,25 +305,25 @@ void Dispatcher::write_index_of_empty_blocks()
   for (vector< File_Properties* >::size_type i = 0;
       i < controlled_files.size(); ++i)
   {
-    if (file_exists(controlled_files[i]->get_file_base_name()
+    if (file_exists(db_dir + controlled_files[i]->get_file_name_trunk()
         + controlled_files[i]->get_data_suffix()
 	+ controlled_files[i]->get_index_suffix()
 	+ controlled_files[i]->get_shadow_suffix()))
     {
       write_to_index_empty_file
           (data_footprints[i].total_footprint(),
-	   controlled_files[i]->get_file_base_name()
+	   db_dir + controlled_files[i]->get_file_name_trunk()
 	   + controlled_files[i]->get_data_suffix()
 	   + controlled_files[i]->get_shadow_suffix());
     }
-    if (file_exists(controlled_files[i]->get_file_base_name()
+    if (file_exists(db_dir + controlled_files[i]->get_file_name_trunk()
         + controlled_files[i]->get_id_suffix()
 	+ controlled_files[i]->get_index_suffix()
 	+ controlled_files[i]->get_shadow_suffix()))
     {
       write_to_index_empty_file
           (map_footprints[i].total_footprint(),
-	   controlled_files[i]->get_file_base_name()
+	   db_dir + controlled_files[i]->get_file_name_trunk()
 	   + controlled_files[i]->get_id_suffix()
 	   + controlled_files[i]->get_shadow_suffix());
     }

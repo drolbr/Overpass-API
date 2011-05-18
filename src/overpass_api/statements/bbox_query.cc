@@ -107,8 +107,7 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
   int32 ieast(east*10000000 + (east > 0 ? 0.5 : -0.5));
   
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-    (*de_osm3s_file_ids::NODES,
-     rman.get_transaction().data_index(de_osm3s_file_ids::NODES));
+    (rman.get_transaction().data_index(de_osm3s_file_ids::NODES));
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
     it(nodes_db.range_begin
       (Default_Range_Iterator< Uint32_Index >(req.begin()),

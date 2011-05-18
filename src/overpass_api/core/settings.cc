@@ -32,7 +32,7 @@ struct OSM_File_Properties : public File_Properties
   OSM_File_Properties(string file_base_name_, uint32 block_size_,
 		      uint32 map_block_size_)
     : file_base_name(file_base_name_), block_size(block_size_),
-      map_block_size(map_block_size_) {}
+      map_block_size(map_block_size_ > 0 ? map_block_size_*TVal::max_size_of() : 0) {}
   
   string get_basedir() const
   {
@@ -111,38 +111,38 @@ File_Properties* de_osm3s_file_ids::NODES
   = new OSM_File_Properties< Uint32_Index >("nodes", 512*1024, 64*1024);
 File_Properties* de_osm3s_file_ids::NODE_TAGS_LOCAL
   = new OSM_File_Properties< Tag_Index_Local >
-      ("node_tags_local", 512*1024, 64*1024);
+      ("node_tags_local", 512*1024, 0);
 File_Properties* de_osm3s_file_ids::NODE_TAGS_GLOBAL
   = new OSM_File_Properties< Tag_Index_Global >
-      ("node_tags_global", 2*1024*1024, 64*1024);
+      ("node_tags_global", 2*1024*1024, 0);
 File_Properties* de_osm3s_file_ids::WAYS
   = new OSM_File_Properties< Uint31_Index >("ways", 512*1024, 64*1024);
 File_Properties* de_osm3s_file_ids::WAY_TAGS_LOCAL
   = new OSM_File_Properties< Tag_Index_Local >
-      ("way_tags_local", 512*1024, 64*1024);
+      ("way_tags_local", 512*1024, 0);
 File_Properties* de_osm3s_file_ids::WAY_TAGS_GLOBAL
   = new OSM_File_Properties< Tag_Index_Global >
-      ("way_tags_global", 2*1024*1024, 64*1024);
+      ("way_tags_global", 2*1024*1024, 0);
 File_Properties* de_osm3s_file_ids::RELATIONS
   = new OSM_File_Properties< Uint31_Index >("relations", 1024*1024, 64*1024);
 File_Properties* de_osm3s_file_ids::RELATION_ROLES
-  = new OSM_File_Properties< Uint32_Index >("relation_roles", 512*1024, 64*1024);
+  = new OSM_File_Properties< Uint32_Index >("relation_roles", 512*1024, 0);
 File_Properties* de_osm3s_file_ids::RELATION_TAGS_LOCAL
   = new OSM_File_Properties< Tag_Index_Local >
-      ("relation_tags_local", 512*1024, 64*1024);
+      ("relation_tags_local", 512*1024, 0);
 File_Properties* de_osm3s_file_ids::RELATION_TAGS_GLOBAL
   = new OSM_File_Properties< Tag_Index_Global >
-      ("relation_tags_global", 2*1024*1024, 64*1024);
+      ("relation_tags_global", 2*1024*1024, 0);
 File_Properties* de_osm3s_file_ids::AREA_BLOCKS
   = new OSM_File_Properties< Uint31_Index >("area_blocks", 512*1024, 64*1024);
 File_Properties* de_osm3s_file_ids::AREAS
   = new OSM_File_Properties< Uint31_Index >("areas", 512*1024, 64*1024);
 File_Properties* de_osm3s_file_ids::AREA_TAGS_LOCAL
   = new OSM_File_Properties< Tag_Index_Local >
-      ("area_tags_local", 256*1024, 64*1024);
+      ("area_tags_local", 256*1024, 0);
 File_Properties* de_osm3s_file_ids::AREA_TAGS_GLOBAL
   = new OSM_File_Properties< Tag_Index_Global >
-      ("area_tags_global", 512*1024, 64*1024);
+      ("area_tags_global", 512*1024, 0);
   
 uint64 de_osm3s_file_ids::max_allowed_space(512*1024*1024);
 uint32 de_osm3s_file_ids::max_allowed_time(3600*24);

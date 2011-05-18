@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
   {
     Osm_Updater osm_updater(get_verbatim_callback(), transactional);
     //reading the main document
-    parse_file_completely(stdin);  
+    parse_file_completely(stdin);
   }
   catch (File_Error e)
   {

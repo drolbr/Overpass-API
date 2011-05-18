@@ -27,6 +27,7 @@ class Nonsynced_Transaction : public Transaction
     Random_File_Index* random_index(const File_Properties*);
     
     void flush();
+    string get_db_dir() const { return ""; }
     
   private:
     map< const File_Properties*, File_Blocks_Index_Base* >
@@ -81,16 +82,8 @@ inline Random_File_Index* Nonsynced_Transaction::random_index(const File_Propert
   if (it != random_files.end())
     return it->second;
   
-  Raw_File val_file(fp->get_file_base_name() + fp->get_id_suffix(),
-                    O_RDONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH,
-		    "Nonsynced_Transaction:2");
-  uint64 block_count = lseek64(val_file.fd, 0, SEEK_END)
-          /fp->get_map_block_size()/fp->id_max_size_of();
   random_files[fp] = new Random_File_Index
-    (fp->get_file_base_name() + fp->get_id_suffix() + fp->get_index_suffix()
-     + (use_shadow ? fp->get_shadow_suffix() : ""),
-     writeable ? fp->get_file_base_name() + fp->get_id_suffix()
-     + fp->get_shadow_suffix() : "", block_count);
+      (*fp, writeable, use_shadow, fp->get_basedir());
   return random_files[fp];
 }
 

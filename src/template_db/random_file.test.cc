@@ -62,11 +62,6 @@ struct Test_File : File_Properties
     return BASE_DIRECTORY;
   }
   
-  string get_file_base_name() const
-  {
-    return BASE_DIRECTORY + "testfile";
-  }
-  
   string get_file_name_trunk() const
   {
     return "testfile";
@@ -99,7 +94,7 @@ struct Test_File : File_Properties
   
   uint32 get_map_block_size() const
   {
-    return 16;
+    return 16*IntIndex::max_size_of();
   }
   
   vector< bool > get_data_footprint() const
@@ -133,7 +128,8 @@ void read_test()
   try
   {
     cout<<"Read test\n";
-    vector< bool > footprint = get_map_index_footprint< IntIndex >(Test_File());
+    vector< bool > footprint = get_map_index_footprint
+        (Test_File(), BASE_DIRECTORY, false);
     cout<<"Index footprint: ";
     for (vector< bool >::const_iterator it(footprint.begin()); it != footprint.end();
         ++it)
@@ -142,7 +138,7 @@ void read_test()
 
     Nonsynced_Transaction transaction(false, false, "");
     Test_File tf;
-    Random_File< IntIndex > id_file(tf, transaction.random_index(&tf));
+    Random_File< IntIndex > id_file(transaction.random_index(&tf));
 
     cout<<id_file.get(0).val()<<'\n';
     cout<<id_file.get(1).val()<<'\n';
@@ -178,11 +174,11 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "1"))
     cout<<"** Test the behaviour for an empty file\n";
   int data_fd = open64
-      ((Test_File().get_file_base_name() + Test_File().get_id_suffix()).c_str(),
+      ((BASE_DIRECTORY + Test_File().get_file_name_trunk() + Test_File().get_id_suffix()).c_str(),
        O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   close(data_fd);
   int index_fd = open64
-      ((Test_File().get_file_base_name() + Test_File().get_id_suffix()
+      ((BASE_DIRECTORY + Test_File().get_file_name_trunk() + Test_File().get_id_suffix()
           + Test_File().get_index_suffix()).c_str(),
        O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   close(index_fd);
@@ -196,7 +192,7 @@ int main(int argc, char* args[])
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     {
-      Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
+      Random_File< IntIndex > blocks(transaction.random_index(&tf));
     
       blocks.put(2, 12);
       blocks.put(5, 15);
@@ -217,7 +213,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
-    Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
+    Random_File< IntIndex > blocks(transaction.random_index(&tf));
     
     blocks.put(6, 16);
   }
@@ -236,7 +232,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
-    Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
+    Random_File< IntIndex > blocks(transaction.random_index(&tf));
     
     blocks.put(2, 32);
   }
@@ -255,7 +251,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
-    Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
+    Random_File< IntIndex > blocks(transaction.random_index(&tf));
     
     blocks.put(16, 1);
   }
@@ -274,7 +270,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
-    Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
+    Random_File< IntIndex > blocks(transaction.random_index(&tf));
     
     blocks.put(0, 2);
     blocks.put(32, 3);
@@ -295,7 +291,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
-    Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
+    Random_File< IntIndex > blocks(transaction.random_index(&tf));
     
     blocks.put(80, 5);
   }
@@ -314,7 +310,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
-    Random_File< IntIndex > blocks(tf, transaction.random_index(&tf));
+    Random_File< IntIndex > blocks(transaction.random_index(&tf));
     
     blocks.put(64, 6);
   }
@@ -327,10 +323,13 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "8"))
     read_test();
   
-  remove((Test_File().get_file_base_name() + Test_File().get_id_suffix()).c_str());
-  remove((Test_File().get_file_base_name() + Test_File().get_id_suffix()
+  remove((BASE_DIRECTORY + Test_File().get_file_name_trunk()
+      + Test_File().get_id_suffix()).c_str());
+  remove((BASE_DIRECTORY + Test_File().get_file_name_trunk()
+      + Test_File().get_id_suffix()
       + Test_File().get_index_suffix()).c_str());
-  remove((Test_File().get_file_base_name() + Test_File().get_id_suffix()
+  remove((BASE_DIRECTORY + Test_File().get_file_name_trunk()
+      + Test_File().get_id_suffix()
       + Test_File().get_shadow_suffix()).c_str());
   
   return 0;

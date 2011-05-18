@@ -2,7 +2,7 @@
 #include <list>
 #include <set>
 
-#include <stdio.h>
+#include <cstdio>
 
 #include "block_backend.h"
 #include "transaction.h"
@@ -122,11 +122,6 @@ struct Test_File : File_Properties
     return BASE_DIRECTORY;
   }
   
-  string get_file_base_name() const
-  {
-    return BASE_DIRECTORY + "testfile";
-  }
-  
   string get_file_name_trunk() const
   {
     return "testfile";
@@ -194,14 +189,14 @@ void fill_db
    const map< IntIndex, set< IntObject > >& to_insert,
    unsigned int step)
 {
-/*  remove((get_file_base_name(0) + get_index_suffix(0)).c_str());
-  remove((get_file_base_name(0) + get_data_suffix(0)).c_str());*/
+/*  remove((get_file_name_trunk(0) + get_index_suffix(0)).c_str());
+  remove((get_file_name_trunk(0) + get_data_suffix(0)).c_str());*/
   try
   {
     Nonsynced_Transaction transaction(true, false, "");
     Test_File tf;
     Block_Backend< IntIndex, IntObject > db_backend
-        (tf, transaction.data_index(&tf));
+        (transaction.data_index(&tf));
     db_backend.update(to_delete, to_insert);
   }
   catch (File_Error e)
@@ -291,7 +286,7 @@ void read_test(unsigned int step)
     Nonsynced_Transaction transaction(false, false, "");
     Test_File tf;
     Block_Backend< IntIndex, IntObject >
-	db_backend(tf, transaction.data_index(&tf));
+	db_backend(transaction.data_index(&tf));
     
     cout<<"Read test\n";
   
@@ -407,14 +402,16 @@ int main(int argc, char* args[])
   
   if ((test_to_execute == "") || (test_to_execute == "1"))
     cout<<"** Test the behaviour for non-exsiting files\n";
-  remove((Test_File().get_file_base_name() + Test_File().get_index_suffix()).c_str());
-  remove((Test_File().get_file_base_name() + Test_File().get_data_suffix()).c_str());
+  remove((BASE_DIRECTORY + Test_File().get_file_name_trunk()
+      + Test_File().get_index_suffix()).c_str());
+  remove((BASE_DIRECTORY + Test_File().get_file_name_trunk()
+      + Test_File().get_data_suffix()).c_str());
   try
   {
     Nonsynced_Transaction transaction(false, false, "");
     Test_File tf;
     Block_Backend< IntIndex, IntIndex > db_backend
-        (tf, transaction.data_index(&tf));
+        (transaction.data_index(&tf));
   }
   catch (File_Error e)
   {
@@ -596,11 +593,14 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "13"))
     read_test(13);
   
-  remove((Test_File().get_file_base_name() + Test_File().get_data_suffix()
+  remove((BASE_DIRECTORY + Test_File().get_file_name_trunk()
+      + Test_File().get_data_suffix()
       + Test_File().get_index_suffix()).c_str());
-  remove((Test_File().get_file_base_name() + Test_File().get_data_suffix()
+  remove((BASE_DIRECTORY + Test_File().get_file_name_trunk()
+      + Test_File().get_data_suffix()
       + Test_File().get_shadow_suffix()).c_str());
-  remove((Test_File().get_file_base_name() + Test_File().get_data_suffix()).c_str());
+  remove((BASE_DIRECTORY + Test_File().get_file_name_trunk()
+      + Test_File().get_data_suffix()).c_str());
   
   return 0;
 }
