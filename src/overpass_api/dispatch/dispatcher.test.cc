@@ -304,7 +304,7 @@ void map_read_test(bool use_shadow = false)
     cout<<*it;
     cout<<'\n';
 
-    Nonsynced_Transaction transaction(false, use_shadow, "");
+    Nonsynced_Transaction transaction(false, use_shadow, BASE_DIRECTORY, "");
     Test_File tf("Test_File");
     Random_File< IntIndex > id_file(transaction.random_index(&tf));
     
@@ -373,18 +373,19 @@ void data_read_test(const Test_File& tf, Transaction& transaction)
 
 void data_read_test(const Test_File& tf)
 {
-  Nonsynced_Transaction transaction(false, false, "");
+  Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
   data_read_test(tf, transaction);
 }
 
-void put_elem(uint32 idx, uint32 val, const Test_File& tf)
+void put_elem(uint32 idx, uint32 val, const Test_File& tf,
+	      const string& db_dir = BASE_DIRECTORY)
 {
   map< IntIndex, set< IntObject > > to_delete;
   map< IntIndex, set< IntObject > > to_insert;
   to_insert[IntIndex(idx)].insert(IntObject(val));
   try
   {
-    Nonsynced_Transaction transaction(true, true, "");
+    Nonsynced_Transaction transaction(true, true, db_dir, "");
     Block_Backend< IntIndex, IntObject > db_backend
         (transaction.data_index(&tf));
     db_backend.update(to_delete, to_insert);
@@ -469,7 +470,7 @@ int main(int argc, char* args[])
 			  file_properties);
     dispatcher.write_start(480);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
@@ -491,7 +492,7 @@ int main(int argc, char* args[])
     dispatcher.write_start(495);
     dispatcher.write_start(480);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
@@ -511,7 +512,7 @@ int main(int argc, char* args[])
 			  file_properties);
     dispatcher.write_start(480);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
@@ -533,7 +534,7 @@ int main(int argc, char* args[])
 			  file_properties);
     dispatcher.write_start(480);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
@@ -541,7 +542,7 @@ int main(int argc, char* args[])
     dispatcher.write_commit();
     dispatcher.write_start(481);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 2);
@@ -563,7 +564,7 @@ int main(int argc, char* args[])
 			  file_properties);
     dispatcher.write_start(480);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
@@ -571,7 +572,7 @@ int main(int argc, char* args[])
     dispatcher.write_commit();
     dispatcher.write_start(481);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 2);
@@ -579,7 +580,7 @@ int main(int argc, char* args[])
     dispatcher.write_commit();
     dispatcher.write_start(482);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 3);
@@ -661,7 +662,7 @@ int main(int argc, char* args[])
 			  file_properties);
     dispatcher.write_start(480);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
@@ -692,7 +693,7 @@ int main(int argc, char* args[])
     dispatcher.request_read_and_idx(640);
     dispatcher.read_idx_finished(640);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
@@ -703,7 +704,7 @@ int main(int argc, char* args[])
     dispatcher.request_read_and_idx(641);
     dispatcher.read_idx_finished(641);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 2);
@@ -714,7 +715,7 @@ int main(int argc, char* args[])
     dispatcher.request_read_and_idx(642);
     dispatcher.read_idx_finished(642);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 3);
@@ -769,7 +770,7 @@ int main(int argc, char* args[])
 			  file_properties);
     dispatcher.write_start(480);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
@@ -779,7 +780,7 @@ int main(int argc, char* args[])
     dispatcher.read_idx_finished(640);
     dispatcher.write_start(481);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 2);
@@ -788,7 +789,7 @@ int main(int argc, char* args[])
     dispatcher.write_start(482);
     dispatcher.read_finished(640);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 3);
@@ -836,7 +837,7 @@ int main(int argc, char* args[])
 			  file_properties);
     dispatcher.write_start(480);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
@@ -846,7 +847,7 @@ int main(int argc, char* args[])
     dispatcher.read_idx_finished(640);
     dispatcher.write_start(481);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 2);
@@ -854,7 +855,7 @@ int main(int argc, char* args[])
     dispatcher.write_commit();
     dispatcher.write_start(482);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 3);
@@ -863,7 +864,7 @@ int main(int argc, char* args[])
     dispatcher.write_start(483);
     dispatcher.read_finished(640);
     {
-      Nonsynced_Transaction transaction(true, true, "");
+      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 4);
@@ -1001,7 +1002,7 @@ int main(int argc, char* args[])
 	return 0;
       }
       
-      put_elem(0, 21, test_file);
+      put_elem(0, 21, test_file, dispatcher_client.get_db_dir());
       dispatcher_client.write_commit();
       if (file_exists(dispatcher_client.get_shadow_name() + ".lock"))
       {
@@ -1010,7 +1011,9 @@ int main(int argc, char* args[])
       }
       
       cout<<"Writing successfully done.\n";
-      data_read_test(test_file);
+      Nonsynced_Transaction transaction
+          (false, false, dispatcher_client.get_db_dir(), "");
+      data_read_test(test_file, transaction);
       remove((dispatcher_client.get_db_dir() + "Test_File.bin").c_str());
       remove((dispatcher_client.get_db_dir() + "Test_File.bin.idx").c_str());
     }
@@ -1053,16 +1056,18 @@ int main(int argc, char* args[])
 	return 0;
       }
       
-      put_elem(0, 21, test_file);
+      put_elem(0, 21, test_file, dispatcher_client.get_db_dir());
       dispatcher_client.write_rollback();
       if (file_exists(dispatcher_client.get_shadow_name() + ".lock"))
       {
-	cout<<"Failed after write_commit().\n";
+	cout<<"Failed after write_rollback().\n";
 	return 0;
       }
       
       cout<<"Writing successfully done.\n";
-      data_read_test(test_file);
+      Nonsynced_Transaction transaction
+          (false, false, dispatcher_client.get_db_dir(), "");
+      data_read_test(test_file, transaction);
       remove((dispatcher_client.get_db_dir() + "Test_File.bin").c_str());
       remove((dispatcher_client.get_db_dir() + "Test_File.bin.idx").c_str());
     }
@@ -1109,7 +1114,7 @@ int main(int argc, char* args[])
 	}
       }
       
-      put_elem(0, 21, test_file);
+      put_elem(0, 21, test_file, dispatcher_client.get_db_dir());
       dispatcher_client.write_commit();
       if (file_exists(dispatcher_client.get_shadow_name() + ".lock"))
       {
@@ -1139,7 +1144,7 @@ int main(int argc, char* args[])
 	}
       }
       
-      put_elem(0, 23, test_file);
+      put_elem(0, 23, test_file, dispatcher_client.get_db_dir());
       dispatcher_client.write_commit();
       if (file_exists(dispatcher_client.get_shadow_name() + ".lock"))
       {
@@ -1149,7 +1154,9 @@ int main(int argc, char* args[])
       
       cout<<"Second writing successfully done.\n";
       
-      data_read_test(test_file);
+      Nonsynced_Transaction transaction
+          (false, false, dispatcher_client.get_db_dir(), "");
+      data_read_test(test_file, transaction);
       remove((dispatcher_client.get_db_dir() + "Test_File.bin").c_str());
       remove((dispatcher_client.get_db_dir() + "Test_File.bin.idx").c_str());
     }
@@ -1216,7 +1223,7 @@ int main(int argc, char* args[])
       test_file.set_basedir(dispatcher_client.get_db_dir());
       
       dispatcher_client.write_start();      
-      put_elem(0, 24, test_file);
+      put_elem(0, 24, test_file, dispatcher_client.get_db_dir());
       sync_log("write_start() done and written an element.\n");
       
       {
@@ -1231,7 +1238,9 @@ int main(int argc, char* args[])
       dispatcher_client.write_commit();
       sync_log("write_commit() done.\n");
 
-      data_read_test(test_file);
+      Nonsynced_Transaction transaction
+          (false, false, dispatcher_client.get_db_dir(), "");
+      data_read_test(test_file, transaction);
       remove((dispatcher_client.get_db_dir() + "Test_File.bin").c_str());
       remove((dispatcher_client.get_db_dir() + "Test_File.bin.idx").c_str());
     }
@@ -1265,7 +1274,8 @@ int main(int argc, char* args[])
       dispatcher_client.request_read_and_idx();
       sync_log("request_read() done.\n");
       
-      Nonsynced_Transaction transaction(false, false, "");
+      Nonsynced_Transaction transaction
+          (false, false, dispatcher_client.get_db_dir(), "");
       transaction.data_index(&test_file);
       
       dispatcher_client.read_idx_finished();
@@ -1304,7 +1314,7 @@ int main(int argc, char* args[])
       test_file.set_basedir(dispatcher_client.get_db_dir());
       
       dispatcher_client.write_start();      
-      put_elem(0, 25, test_file);
+      put_elem(0, 25, test_file, dispatcher_client.get_db_dir());
       sync_log("write_start() done and written an element.\n");
       
       {
@@ -1320,7 +1330,7 @@ int main(int argc, char* args[])
       sync_log("write_commit() done.\n");
 
       dispatcher_client.write_start();      
-      put_elem(0, 26, test_file);
+      put_elem(0, 26, test_file, dispatcher_client.get_db_dir());
       sync_log("write_start() done and written an element.\n");
       
       {
@@ -1335,7 +1345,9 @@ int main(int argc, char* args[])
       dispatcher_client.write_commit();
       sync_log("write_commit() done.\n");
 
-      data_read_test(test_file);
+      Nonsynced_Transaction transaction
+          (false, false, dispatcher_client.get_db_dir(), "");
+      data_read_test(test_file, transaction);
       remove((dispatcher_client.get_db_dir() + "Test_File.bin").c_str());
       remove((dispatcher_client.get_db_dir() + "Test_File.bin.idx").c_str());
     }

@@ -36,9 +36,18 @@ int main(int argc, char* argv[])
   
   try
   {
-    Osm_Updater osm_updater(get_verbatim_callback(), transactional);
-    //reading the main document
-    parse_file_completely(stdin);
+    if (transactional)
+    {
+      Osm_Updater osm_updater(get_verbatim_callback());
+      //reading the main document
+      parse_file_completely(stdin);
+    }
+    else
+    {
+      Osm_Updater osm_updater(get_verbatim_callback(), db_dir);
+      //reading the main document
+      parse_file_completely(stdin);
+    }
   }
   catch (File_Error e)
   {

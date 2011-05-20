@@ -75,11 +75,11 @@ struct Output_Sorter_Kv
   }
 };
 
-void dump_nodes(uint32 pattern_size)
+void dump_nodes(uint32 pattern_size, string db_dir)
 {
   Output_Sorter output_sorter;
   
-  Nonsynced_Transaction transaction(false, false, "");
+  Nonsynced_Transaction transaction(false, false, db_dir, "");
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
       (transaction.data_index(de_osm3s_file_ids::NODES));
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
@@ -94,11 +94,11 @@ void dump_nodes(uint32 pattern_size)
   }
 }
 
-void dump_node_tags_local(uint32 pattern_size)
+void dump_node_tags_local(uint32 pattern_size, string db_dir)
 {
   Output_Sorter output_sorter;
   
-  Nonsynced_Transaction transaction(false, false, "");
+  Nonsynced_Transaction transaction(false, false, db_dir, "");
   Block_Backend< Tag_Index_Local, Uint32_Index > nodes_local_db
       (transaction.data_index(de_osm3s_file_ids::NODE_TAGS_LOCAL));
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
@@ -113,11 +113,11 @@ void dump_node_tags_local(uint32 pattern_size)
   }
 }
 
-void dump_node_tags_global(uint32 pattern_size)
+void dump_node_tags_global(uint32 pattern_size, string db_dir)
 {
   Output_Sorter_Kv output_sorter;
   
-  Nonsynced_Transaction transaction(false, false, "");
+  Nonsynced_Transaction transaction(false, false, db_dir, "");
   Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
       (transaction.data_index(de_osm3s_file_ids::NODE_TAGS_GLOBAL));
   for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
@@ -133,11 +133,11 @@ void dump_node_tags_global(uint32 pattern_size)
   }
 }
 
-void dump_ways(uint32 pattern_size)
+void dump_ways(uint32 pattern_size, string db_dir)
 {
   Output_Sorter output_sorter;
   
-  Nonsynced_Transaction transaction(false, false, "");
+  Nonsynced_Transaction transaction(false, false, db_dir, "");
   Block_Backend< Uint31_Index, Way_Skeleton > ways_db
       (transaction.data_index(de_osm3s_file_ids::WAYS));
   for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
@@ -154,11 +154,11 @@ void dump_ways(uint32 pattern_size)
   } 
 }
 
-void dump_way_tags_local(uint32 pattern_size)
+void dump_way_tags_local(uint32 pattern_size, string db_dir)
 {
   Output_Sorter output_sorter;
   
-  Nonsynced_Transaction transaction(false, false, "");
+  Nonsynced_Transaction transaction(false, false, db_dir, "");
   Block_Backend< Tag_Index_Local, Uint32_Index > ways_local_db
       (transaction.data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL));
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
@@ -174,11 +174,11 @@ void dump_way_tags_local(uint32 pattern_size)
   }
 }
 
-void dump_way_tags_global(uint32 pattern_size)
+void dump_way_tags_global(uint32 pattern_size, string db_dir)
 {
   Output_Sorter_Kv output_sorter;
   
-  Nonsynced_Transaction transaction(false, false, "");
+  Nonsynced_Transaction transaction(false, false, db_dir, "");
   Block_Backend< Tag_Index_Global, Uint32_Index > ways_global_db
       (transaction.data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL));
   for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
@@ -194,11 +194,11 @@ void dump_way_tags_global(uint32 pattern_size)
   }
 }
 
-void dump_relations(uint32 pattern_size)
+void dump_relations(uint32 pattern_size, string db_dir)
 {
   Output_Sorter output_sorter;
   
-  Nonsynced_Transaction transaction(false, false, "");
+  Nonsynced_Transaction transaction(false, false, db_dir, "");
   map< uint32, string > roles;
   Block_Backend< Uint32_Index, String_Object > roles_db
       (transaction.data_index(de_osm3s_file_ids::RELATION_ROLES));
@@ -224,11 +224,11 @@ void dump_relations(uint32 pattern_size)
   }
 }
 
-void dump_relation_tags_local(uint32 pattern_size)
+void dump_relation_tags_local(uint32 pattern_size, string db_dir)
 {
   Output_Sorter output_sorter;
   
-  Nonsynced_Transaction transaction(false, false, "");
+  Nonsynced_Transaction transaction(false, false, db_dir, "");
   Block_Backend< Tag_Index_Local, Uint32_Index > relations_local_db
       (transaction.data_index(de_osm3s_file_ids::RELATION_TAGS_LOCAL));
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
@@ -244,11 +244,11 @@ void dump_relation_tags_local(uint32 pattern_size)
   }
 }
 
-void dump_relation_tags_global(uint32 pattern_size)
+void dump_relation_tags_global(uint32 pattern_size, string db_dir)
 {
   Output_Sorter_Kv output_sorter;
   
-  Nonsynced_Transaction transaction(false, false, "");
+  Nonsynced_Transaction transaction(false, false, db_dir, "");
   Block_Backend< Tag_Index_Global, Uint32_Index > relations_global_db
       (transaction.data_index(de_osm3s_file_ids::RELATION_TAGS_GLOBAL));
   for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
@@ -293,15 +293,15 @@ int main(int argc, char* args[])
   
   try
   {
-    dump_nodes(pattern_size);
-    dump_node_tags_local(pattern_size);
-    dump_node_tags_global(pattern_size);
-    dump_ways(pattern_size);
-    dump_way_tags_local(pattern_size);
-    dump_way_tags_global(pattern_size);
-    dump_relations(pattern_size);
-    dump_relation_tags_local(pattern_size);
-    dump_relation_tags_global(pattern_size);
+    dump_nodes(pattern_size, db_dir);
+    dump_node_tags_local(pattern_size, db_dir);
+    dump_node_tags_global(pattern_size, db_dir);
+    dump_ways(pattern_size, db_dir);
+    dump_way_tags_local(pattern_size, db_dir);
+    dump_way_tags_global(pattern_size, db_dir);
+    dump_relations(pattern_size, db_dir);
+    dump_relation_tags_local(pattern_size, db_dir);
+    dump_relation_tags_global(pattern_size, db_dir);
   }
   catch (File_Error e)
   {

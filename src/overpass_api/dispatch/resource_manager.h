@@ -13,7 +13,8 @@ struct Statement;
 class Resource_Manager
 {
 public:
-  Resource_Manager() : transaction(false, false, ""), start_time(time(NULL)) {}
+  Resource_Manager(Transaction& transaction_)
+      : transaction(&transaction_), start_time(time(NULL)) {}
   
   map< string, Set >& sets()
   {
@@ -30,13 +31,13 @@ public:
 
   void health_check(const Statement& stmt);
   
-  Transaction& get_transaction() { return transaction; }
+  Transaction& get_transaction() { return *transaction; }
   
 private:
   map< string, Set > sets_;
   vector< const Set* > set_stack;
   Area_Updater area_updater_;
-  Nonsynced_Transaction transaction;
+  Transaction* transaction;
   int start_time;
 };
 

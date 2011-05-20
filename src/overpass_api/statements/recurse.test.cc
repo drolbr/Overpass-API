@@ -49,10 +49,11 @@ int main(int argc, char* args[])
     try
     {
       // Collect the nodes of some small ways
-      Resource_Manager total_rman;
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction);
       for (uint32 i = 1; i <= pattern_size/2; ++i)
       {
-	Resource_Manager rman;
+	Resource_Manager rman(transaction);
 	perform_id_query(rman, "way", i);
 	if (!rman.sets()["_"].ways.empty())
 	  total_rman.sets()["_"].ways[rman.sets()["_"].ways.begin()->first].push_back(rman.sets()["_"].ways.begin()->second.front());
@@ -81,12 +82,13 @@ int main(int argc, char* args[])
     try
     {
       // Collect the nodes of some large ways
-      Resource_Manager total_rman;
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction);
       uint way_id_offset = 2*(pattern_size/2+1)*(pattern_size/2-1) + pattern_size/2
           + pattern_size*(pattern_size/2-1);
       perform_id_query(total_rman, "way", way_id_offset + 1);
       {
-	Resource_Manager rman;
+	Resource_Manager rman(transaction);
 	way_id_offset = pattern_size*(pattern_size/2-1);
 	perform_id_query(rman, "way", way_id_offset + 1);
 	if (!rman.sets()["_"].ways.empty())
@@ -116,7 +118,8 @@ int main(int argc, char* args[])
     try
     {
       // Recurse node-way: try a node without ways
-      Resource_Manager rman;
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager rman(transaction);
       perform_id_query(rman, "node", 1);
       {
 	Recurse_Statement stmt(2);
@@ -142,7 +145,8 @@ int main(int argc, char* args[])
     try
     {
       // Recurse node-way: try a node with a long way
-      Resource_Manager rman;
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager rman(transaction);
       perform_id_query(rman, "node", pattern_size*pattern_size + pattern_size*3/2 + 2);
       {
 	Recurse_Statement stmt(2);
@@ -168,12 +172,13 @@ int main(int argc, char* args[])
     try
     {
       // Recurse node-way: try an entire bbox of nodes (without using bbox)
-      Resource_Manager total_rman;
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction);
       for (uint i = 0; i < pattern_size/2; ++i)
       {
 	for (uint j = 1; j <= pattern_size/2; ++j)
 	{
-	  Resource_Manager rman;
+	  Resource_Manager rman(transaction);
 	  perform_id_query(rman, "node", pattern_size*i + j);
 	  if (!rman.sets()["_"].nodes.empty())
 	    total_rman.sets()["_"].nodes[rman.sets()["_"].nodes.begin()->first].push_back(rman.sets()["_"].nodes.begin()->second.front());
@@ -203,10 +208,11 @@ int main(int argc, char* args[])
     try
     {
       // Collect the nodes of some relations
-      Resource_Manager total_rman;
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction);
       perform_id_query(total_rman, "relation", 2);
       {
-	Resource_Manager rman;
+	Resource_Manager rman(transaction);
 	perform_id_query(rman, "relation", 3);
 	if (!rman.sets()["_"].relations.empty())
 	  total_rman.sets()["_"].relations[rman.sets()["_"].relations.begin()->first].push_back(rman.sets()["_"].relations.begin()->second.front());
@@ -235,7 +241,8 @@ int main(int argc, char* args[])
     try
     {
       // Recurse node-relation
-      Resource_Manager rman;
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager rman(transaction);
       perform_id_query(rman, "node", 2);
       {
 	Recurse_Statement stmt(2);
@@ -261,7 +268,8 @@ int main(int argc, char* args[])
     try
     {
       // Recurse relation-way
-      Resource_Manager total_rman;
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction);
       perform_id_query(total_rman, "relation", 8);
       {
 	Recurse_Statement stmt(2);
@@ -287,7 +295,8 @@ int main(int argc, char* args[])
     try
     {
       // Recurse way-relation
-      Resource_Manager rman;
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager rman(transaction);
       perform_id_query(rman, "way", 1);
       {
 	Recurse_Statement stmt(2);
@@ -313,7 +322,8 @@ int main(int argc, char* args[])
     try
     {
       // Recurse relation-way
-      Resource_Manager total_rman;
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction);
       perform_id_query(total_rman, "relation", 10);
       {
 	Recurse_Statement stmt(2);
@@ -339,7 +349,8 @@ int main(int argc, char* args[])
     try
     {
       // Recurse relation-way
-      Resource_Manager total_rman;
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction);
       perform_id_query(total_rman, "relation", 2);
       {
 	Recurse_Statement stmt(2);

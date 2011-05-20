@@ -240,11 +240,11 @@ int main(int argc, char* args[])
     ofstream tags_local_out((get_basedir() + "tags_local.csv").c_str());
     ofstream tags_global_out((get_basedir() + "tags_global.csv").c_str());
     {
-      Node_Updater node_updater_(0);
+      Node_Updater node_updater_("./");
       node_updater = &node_updater_;
-      Way_Updater way_updater_(0);
+      Way_Updater way_updater_("./");
       way_updater = &way_updater_;
-      Relation_Updater relation_updater_(0);
+      Relation_Updater relation_updater_("./");
       relation_updater = &relation_updater_;
       
       member_source_out = new ofstream((get_basedir() + "member_source.csv").c_str());
@@ -278,7 +278,7 @@ int main(int argc, char* args[])
       delete tags_source_out;
     }
     
-    Nonsynced_Transaction transaction(false, false, "");
+    Nonsynced_Transaction transaction(false, false, "./", "");
     
     // prepare check update_members - load roles
     map< uint32, string > roles;

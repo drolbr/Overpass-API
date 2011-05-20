@@ -717,6 +717,20 @@ struct Accept_Union_6 : public Accept_All_Tags
     uint pattern_size;
 };
 
+struct Accept_All_But_5 : public Accept_All_Tags
+{
+  Accept_All_But_5(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const
+      { return (id != 5); }
+  virtual bool admit_way(uint id) const
+      { return (id != 5); }
+  virtual bool admit_relation(uint id) const { return true; }
+  
+  private:
+    uint pattern_size;
+};
+
 vector< pair< string, string > > collect_tags(string prefix, uint id)
 {
   vector< pair< string, string > > tags;
@@ -1127,7 +1141,7 @@ int main(int argc, char* args[])
     else if (string(args[2]) == "diff_do")
       modifier = new Accept_All;
     else if (string(args[2]) == "diff_compare")
-      modifier = new Accept_All;
+      modifier = new Accept_All_But_5(pattern_size);
     else
       // return an empty osm file otherwise
       modifier = new Accept_Bbox_Query_5(pattern_size);

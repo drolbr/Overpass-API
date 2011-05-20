@@ -8,13 +8,14 @@
 
 using namespace std;
 
-void perform_bbox_print(string south, string north, string west, string east)
+void perform_bbox_print(string south, string north, string west, string east,
+			Transaction& transaction)
 {
   try
   {
     // Select a bbox from the testset that contains one quarter
     // of only one bbox.
-    Resource_Manager rman;
+    Resource_Manager rman(transaction);
     {
       Bbox_Query_Statement* stmt1 = new Bbox_Query_Statement(0);
       const char* attributes[] =
@@ -48,36 +49,38 @@ int main(int argc, char* args[])
   uint pattern_size = 0;
   pattern_size = atoi(args[2]);
   set_basedir(args[3]);
+
+  Nonsynced_Transaction transaction(false, false, args[3], "");
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
   "<osm>\n";
     
   if ((test_to_execute == "") || (test_to_execute == "1"))
-    perform_bbox_print("-10.0", "8.0", "-15.0", "9.0");
+    perform_bbox_print("-10.0", "8.0", "-15.0", "9.0", transaction);
   if ((test_to_execute == "") || (test_to_execute == "2"))
-    perform_bbox_print("-10.0", "-1.0", "-15.0", "-3.0");
+    perform_bbox_print("-10.0", "-1.0", "-15.0", "-3.0", transaction);
   if ((test_to_execute == "") || (test_to_execute == "3"))
-    perform_bbox_print("-10.0", "-1.0", "93.0", "105.0");
+    perform_bbox_print("-10.0", "-1.0", "93.0", "105.0", transaction);
   if ((test_to_execute == "") || (test_to_execute == "4"))
-    perform_bbox_print("-10.0", "-1.0", "93.0", "-3.0");
+    perform_bbox_print("-10.0", "-1.0", "93.0", "-3.0", transaction);
   if ((test_to_execute == "") || (test_to_execute == "5"))
-    perform_bbox_print("-10.0", "-1.0", "-15.0", "-15.0");
+    perform_bbox_print("-10.0", "-1.0", "-15.0", "-15.0", transaction);
   if ((test_to_execute == "") || (test_to_execute == "6"))
   {
     double lon_offset = (105.0-(-15.0))/pattern_size/2;
     ostringstream west_ss;
     west_ss<<fixed<<setprecision(7)<<(-15.0 + lon_offset);
-    perform_bbox_print("-10.0", "-1.0", west_ss.str(), west_ss.str());
+    perform_bbox_print("-10.0", "-1.0", west_ss.str(), west_ss.str(), transaction);
   }
   if ((test_to_execute == "") || (test_to_execute == "7"))
-    perform_bbox_print("-10.0", "-10.0", "-15.0", "-3.0");
+    perform_bbox_print("-10.0", "-10.0", "-15.0", "-3.0", transaction);
   if ((test_to_execute == "") || (test_to_execute == "8"))
   {
     double lat_offset = (80.0-(-10.0))/pattern_size/2;
     ostringstream south_ss;
     south_ss<<fixed<<setprecision(7)<<(-10.0 + lat_offset);
-    perform_bbox_print(south_ss.str(), south_ss.str(), "-15.0", "-3.0");
+    perform_bbox_print(south_ss.str(), south_ss.str(), "-15.0", "-3.0", transaction);
   }
   
   cout<<"</osm>\n";

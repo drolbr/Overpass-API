@@ -17,7 +17,9 @@ using namespace std;
 
 struct Node_Updater
 {
-  Node_Updater(Transaction* transaction);
+  Node_Updater(Transaction& transaction);
+  
+  Node_Updater(string db_dir);
   
   void set_id_deleted(uint32 id)
   {
@@ -61,8 +63,8 @@ private:
   static Node_Equal_Id node_equal_id;
   static Pair_Comparator_By_Id pair_comparator_by_id;
   static Pair_Equal_Id pair_equal_id;
-  //bool map_file_existed_before;
   vector< pair< uint32, uint32 > > moved_nodes;
+  string db_dir;
   
   void update_node_ids(map< uint32, vector< uint32 > >& to_delete);
   

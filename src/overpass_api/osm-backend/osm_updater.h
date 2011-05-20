@@ -17,15 +17,16 @@ class Dispatcher_Client;
 class Osm_Updater
 {
   public:
-    Osm_Updater(Osm_Backend_Callback* callback_, bool transactional);
+    Osm_Updater(Osm_Backend_Callback* callback_);
+    Osm_Updater(Osm_Backend_Callback* callback_, string db_dir);
     ~Osm_Updater();
     
   private:
-    Nonsynced_Transaction transaction;
+    Nonsynced_Transaction* transaction;
     Dispatcher_Client* dispatcher_client;
-    Node_Updater node_updater_;
-    Way_Updater way_updater_;
-    Relation_Updater relation_updater_;
+    Node_Updater* node_updater_;
+    Way_Updater* way_updater_;
+    Relation_Updater* relation_updater_;
 };
 
 void finish_updater();

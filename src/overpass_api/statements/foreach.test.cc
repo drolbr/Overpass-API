@@ -29,11 +29,12 @@ Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint32 i
 }
 
 Resource_Manager& fill_loop_set
-    (Resource_Manager& rman, string set_name, uint pattern_size)
+    (Resource_Manager& rman, string set_name, uint pattern_size,
+     Transaction& transaction)
 {
   uint way_id_offset = (2*(pattern_size/2+1)*(pattern_size/2-1) + pattern_size/2);
   
-  Resource_Manager partial_rman;
+  Resource_Manager partial_rman(transaction);
   perform_id_query(partial_rman, "node", 1);
   if (!partial_rman.sets()["_"].nodes.empty())
     rman.sets()[set_name].nodes[partial_rman.sets()["_"].nodes.begin()->first].push_back(partial_rman.sets()["_"].nodes.begin()->second.front());
@@ -85,8 +86,9 @@ int main(int argc, char* args[])
   {
     try
     {
-      Resource_Manager rman;
-      fill_loop_set(rman, "_", pattern_size);
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager rman(transaction);
+      fill_loop_set(rman, "_", pattern_size, transaction);
       {
 	Foreach_Statement stmt1(0);
 	const char* attributes[] = { 0 };
@@ -110,8 +112,9 @@ int main(int argc, char* args[])
   {
     try
     {
-      Resource_Manager rman;
-      fill_loop_set(rman, "_", pattern_size);
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager rman(transaction);
+      fill_loop_set(rman, "_", pattern_size, transaction);
       {
 	Foreach_Statement stmt1(0);
 	const char* attributes[] = { 0 };
@@ -136,8 +139,9 @@ int main(int argc, char* args[])
   {
     try
     {
-      Resource_Manager rman;
-      fill_loop_set(rman, "A", pattern_size);
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager rman(transaction);
+      fill_loop_set(rman, "A", pattern_size, transaction);
       {
 	Foreach_Statement stmt1(0);
 	const char* attributes[] = { "from", "A", "into", "B", 0 };
@@ -161,8 +165,9 @@ int main(int argc, char* args[])
   {
     try
     {
-      Resource_Manager rman;
-      fill_loop_set(rman, "A", pattern_size);
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager rman(transaction);
+      fill_loop_set(rman, "A", pattern_size, transaction);
       {
 	Foreach_Statement stmt1(0);
 	const char* attributes[] = { "from", "A", "into", "B", 0 };

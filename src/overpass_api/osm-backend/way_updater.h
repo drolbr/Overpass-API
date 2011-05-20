@@ -17,7 +17,9 @@ using namespace std;
 
 struct Way_Updater
 {
-  Way_Updater(Transaction* transaction);
+  Way_Updater(Transaction& transaction);
+  
+  Way_Updater(string db_dir);
   
   void set_id_deleted(uint32 id)
   {
@@ -64,8 +66,8 @@ private:
   static Way_Equal_Id way_equal_id;
   static Pair_Comparator_By_Id pair_comparator_by_id;
   static Pair_Equal_Id pair_equal_id;
-  //bool map_file_existed_before;
   vector< pair< uint32, uint32 > > moved_ways;
+  string db_dir;
   
   void filter_affected_ways(const vector< Way >& maybe_affected_ways);
   

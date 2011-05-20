@@ -144,7 +144,8 @@ int main(int argc, char* args[])
   Error_Output* error_output(new Console_Output(false));
   Statement::set_error_output(error_output);
   
-  Resource_Manager rman;
+  Nonsynced_Transaction transaction(false, false, "./", "");
+  Resource_Manager rman(transaction);
   
   {
     Union_Statement* stmt1 = new Union_Statement(0);

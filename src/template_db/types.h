@@ -48,7 +48,6 @@ struct File_Blocks_Index_Base
 
 struct File_Properties
 {
-  virtual string get_basedir() const = 0;
   virtual string get_file_name_trunk() const = 0;
   virtual string get_index_suffix() const = 0;
   virtual string get_data_suffix() const = 0;

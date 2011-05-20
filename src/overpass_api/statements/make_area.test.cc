@@ -177,7 +177,8 @@ int main(int argc, char* args[])
   Error_Output* error_output(new Console_Output(false));
   Statement::set_error_output(error_output);
   
-  Resource_Manager rman;
+  Nonsynced_Transaction transaction(false, false, "./", "");
+  Resource_Manager rman(transaction);
   
   cout<<"Query to create areas:\n";
   {

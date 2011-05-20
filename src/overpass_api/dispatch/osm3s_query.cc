@@ -85,7 +85,8 @@ int main(int argc, char *argv[])
 	<<"\" last_rule_applied=\""<<0<<"\"/>\n"
       "\n";
 
-    Resource_Manager rman;
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Resource_Manager rman(transaction);
     for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	 it != get_statement_stack()->end(); ++it)
       (*it)->execute(rman);

@@ -12,22 +12,17 @@
 
 using namespace std;
 
-Relation_Updater::Relation_Updater(Transaction* transaction_)
-  : transaction(transaction_),
-    external_transaction(transaction_ != 0)
-{
-  max_role_id = 0;
-  max_written_role_id = 0;
-  
-  // check whether map file exists
-/*  string map_file_name = de_osm3s_file_ids::RELATIONS->get_file_base_name()
-      + de_osm3s_file_ids::RELATIONS->get_id_suffix();  
-  struct stat file_info;
-  if (stat(map_file_name.c_str(), &file_info) == 0)
-    map_file_existed_before = true;
-  else
-    map_file_existed_before = false;*/
-}
+Relation_Updater::Relation_Updater(Transaction& transaction_)
+  : update_counter(0), transaction(&transaction_),
+    external_transaction(true),
+    max_role_id(0), max_written_role_id(0)
+{}
+
+Relation_Updater::Relation_Updater(string db_dir_)
+  : update_counter(0), transaction(0),
+    external_transaction(false), db_dir(db_dir_),
+    max_role_id(0), max_written_role_id(0)
+{}
 
 uint32 Relation_Updater::get_role_id(const string& s)
 {
@@ -35,7 +30,7 @@ uint32 Relation_Updater::get_role_id(const string& s)
   {
     // load roles
     if (!external_transaction)
-      transaction = new Nonsynced_Transaction(true, false, "");
+      transaction = new Nonsynced_Transaction(true, false, db_dir, "");
     
     Block_Backend< Uint32_Index, String_Object > roles_db
         (transaction->data_index(de_osm3s_file_ids::RELATION_ROLES));
@@ -62,7 +57,7 @@ uint32 Relation_Updater::get_role_id(const string& s)
 void Relation_Updater::update(Osm_Backend_Callback* callback)
 {
   if (!external_transaction)
-    transaction = new Nonsynced_Transaction(true, false, "");
+    transaction = new Nonsynced_Transaction(true, false, db_dir, "");
   
   map< uint32, vector< uint32 > > to_delete;
   callback->update_started();
@@ -102,7 +97,7 @@ void Relation_Updater::update_moved_idxs
     return;*/
   
   if (!external_transaction)
-    transaction = new Nonsynced_Transaction(true, false, "");
+    transaction = new Nonsynced_Transaction(true, false, db_dir, "");
   
   map< uint32, vector< uint32 > > to_delete;
   find_affected_relations(moved_nodes, moved_ways);

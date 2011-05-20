@@ -229,7 +229,7 @@ void read_test()
   try
   {
     cout<<"Read test\n";
-    Nonsynced_Transaction transaction(false, false, "");
+    Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
@@ -397,7 +397,7 @@ int main(int argc, char* args[])
     cout<<"** Test the behaviour for a file with one entry - part 1\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, "");
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
@@ -424,7 +424,7 @@ int main(int argc, char* args[])
     cout<<"** Test the behaviour for a file with one entry - part 2\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, "");
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
@@ -450,7 +450,7 @@ int main(int argc, char* args[])
     cout<<"** Test the behaviour for a file with three entries\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, "");
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
@@ -481,7 +481,7 @@ int main(int argc, char* args[])
     cout<<"** Test insertion everywhere\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, "");
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
@@ -538,7 +538,7 @@ int main(int argc, char* args[])
     cout<<"** Test to replace blocks\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, "");
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
@@ -588,7 +588,7 @@ int main(int argc, char* args[])
     cout<<"** Delete blocks in between\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, "");
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
@@ -619,7 +619,7 @@ int main(int argc, char* args[])
     cout<<"** Delete blocks at the begin and the end\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, "");
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
@@ -648,7 +648,7 @@ int main(int argc, char* args[])
     cout<<"** Test insertion again\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, "");
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
@@ -687,7 +687,7 @@ int main(int argc, char* args[])
     cout<<"** Delete everything\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, "");
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
@@ -718,7 +718,7 @@ int main(int argc, char* args[])
     cout<<"** Insert two series of segments\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, "");
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
@@ -755,7 +755,7 @@ int main(int argc, char* args[])
     cout<<"** Replace by other series of segments\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, "");
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));

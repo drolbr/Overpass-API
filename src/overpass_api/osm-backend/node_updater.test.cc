@@ -113,7 +113,7 @@ int main(int argc, char* args[])
     ofstream tags_local_out((get_basedir() + "tags_local.csv").c_str());
     ofstream tags_global_out((get_basedir() + "tags_global.csv").c_str());
     {
-      Node_Updater node_updater_(0);
+      Node_Updater node_updater_("./");
       node_updater = &node_updater_;
       
       coord_source_out = new ofstream((get_basedir() + "coord_source.csv").c_str());
@@ -153,7 +153,7 @@ int main(int argc, char* args[])
     cout<<'('<<id_idxs.size()<<" nodes checked, "
 	<<false_count<<" are inconsistent)\n";*/
     
-    Nonsynced_Transaction transaction(false, false, "");
+    Nonsynced_Transaction transaction(false, false, "./", "");
 
     // check update_coords - compare both files for the result
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db

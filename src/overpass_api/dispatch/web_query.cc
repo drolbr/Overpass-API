@@ -54,7 +54,8 @@ int main(int argc, char *argv[])
     
     error_output.write_xml_header(dispatcher.get_timestamp());
 
-    Resource_Manager rman;
+    Nonsynced_Transaction transaction(false, false, "", "");
+    Resource_Manager rman(transaction);
     for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	 it != get_statement_stack()->end(); ++it)
       (*it)->execute(rman);

@@ -15,24 +15,20 @@
 
 using namespace std;
 
-Node_Updater::Node_Updater(Transaction* transaction_)
-  : update_counter(0), transaction(transaction_),
-    external_transaction(transaction_ != 0)
-{
-  // check whether map file exists
-/*  string map_file_name = de_osm3s_file_ids::NODES->get_file_base_name()
-      + de_osm3s_file_ids::NODES->get_id_suffix();  
-  struct stat file_info;
-  if (stat(map_file_name.c_str(), &file_info) == 0)
-    map_file_existed_before = true;
-  else
-    map_file_existed_before = false;*/
-}
+Node_Updater::Node_Updater(Transaction& transaction_)
+  : update_counter(0), transaction(&transaction_),
+    external_transaction(true)
+{}
+
+Node_Updater::Node_Updater(string db_dir_)
+  : update_counter(0), transaction(0),
+    external_transaction(false), db_dir(db_dir_)
+{}
 
 void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
 {
   if (!external_transaction)
-    transaction = new Nonsynced_Transaction(true, false, "");
+    transaction = new Nonsynced_Transaction(true, false, db_dir, "");
   
   map< uint32, vector< uint32 > > to_delete;
   callback->update_started();
@@ -318,8 +314,8 @@ void Node_Updater::update_node_tags_global(const vector< Tag_Entry >& tags_to_de
 
 void Node_Updater::merge_files(string from, string into)
 {
-  Nonsynced_Transaction from_transaction(false, false, from);
-  Nonsynced_Transaction into_transaction(true, false, into);
+  Nonsynced_Transaction from_transaction(false, false, db_dir, from);
+  Nonsynced_Transaction into_transaction(true, false, db_dir, into);
   {
     map< Uint32_Index, set< Node_Skeleton > > db_to_delete;
     map< Uint32_Index, set< Node_Skeleton > > db_to_insert;

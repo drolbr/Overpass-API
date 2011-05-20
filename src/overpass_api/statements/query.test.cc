@@ -16,11 +16,12 @@ void perform_print(Resource_Manager& rman)
   stmt.execute(rman);
 }
 
-void perform_query(string type, string key, string value)
+void perform_query(string type, string key, string value, string db_dir)
 {
   try
   {
-    Resource_Manager rman;
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Resource_Manager rman(transaction);
     {
       Query_Statement stmt1(0);
       const char* attributes[] = { "type", type.c_str(), 0 };
@@ -43,11 +44,13 @@ void perform_query(string type, string key, string value)
 }
 
 void perform_query
-    (string type, string key1, string value1, string key2, string value2)
+    (string type, string key1, string value1, string key2, string value2,
+     string db_dir)
 {
   try
   {
-    Resource_Manager rman;
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Resource_Manager rman(transaction);
     {
       Query_Statement stmt1(0);
       const char* attributes[] = { "type", type.c_str(), 0 };
@@ -76,11 +79,12 @@ void perform_query
 
 void perform_query
     (string type, string key1, string value1, string key2, string value2,
-     string key3, string value3)
+     string key3, string value3, string db_dir)
 {
   try
   {
-    Resource_Manager rman;
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Resource_Manager rman(transaction);
     {
       Query_Statement stmt1(0);
       const char* attributes[] = { "type", type.c_str(), 0 };
@@ -114,11 +118,12 @@ void perform_query
 
 void perform_query_with_bbox
     (string type, string key1, string value1,
-     string south, string north, string west, string east)
+     string south, string north, string west, string east, string db_dir)
 {
   try
   {
-    Resource_Manager rman;
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Resource_Manager rman(transaction);
     {
       Query_Statement stmt1(0);
       const char* attributes[] = { "type", type.c_str(), 0 };
@@ -166,90 +171,90 @@ int main(int argc, char* args[])
   // Test queries for nodes.
   if ((test_to_execute == "") || (test_to_execute == "1"))
     // Test a key and value which appears only locally
-    perform_query("node", "node_key_11", "node_value_2");
+    perform_query("node", "node_key_11", "node_value_2", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "2"))
     // Test a key and value which appears almost everywhere
-    perform_query("node", "node_key_5", "node_value_5");
+    perform_query("node", "node_key_5", "node_value_5", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "3"))
     // Test a key only which has multiple values
-    perform_query("node", "node_key_11", "");
+    perform_query("node", "node_key_11", "", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "4"))
     // Test a key only which has only one value
-    perform_query("node", "node_key_15", "");
+    perform_query("node", "node_key_15", "", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "5"))
     // Test a key only which doesn't appear at all
-    perform_query("node", "nowhere", "");
+    perform_query("node", "nowhere", "", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "6"))
     // Test a key intersected with a small key and value pair
-    perform_query("node", "node_key_7", "", "node_key_11", "node_value_8");
+    perform_query("node", "node_key_7", "", "node_key_11", "node_value_8", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "7"))
     // Test a key intersected with a large key and value pair
-    perform_query("node", "node_key_7", "", "node_key_15", "node_value_15");
+    perform_query("node", "node_key_7", "", "node_key_15", "node_value_15", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "8"))
     // Test a bbox combined with a local key-value pair
     perform_query_with_bbox("node", "node_key_11", "node_value_2",
-			    "51.0", "51.2", "7.0", "8.0");
+			    "51.0", "51.2", "7.0", "8.0", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "9"))
     // Test a bbox combined with a global key-value pair
     perform_query_with_bbox("node", "node_key_5", "node_value_5",
-			    "-10.0", "-1.0", "-15.0", "-3.0");
+			    "-10.0", "-1.0", "-15.0", "-3.0", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "10"))
     // Test a bbox combined with a global key-value pair
     perform_query_with_bbox("node", "node_key_7", "",
-			    "-10.0", "-1.0", "-15.0", "-3.0");
+			    "-10.0", "-1.0", "-15.0", "-3.0", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "11"))
     // Test three key-values intersected
     perform_query("node", "node_key_5", "node_value_5", "node_key_7", "node_value_0",
-		  "node_key_15", "node_value_15");
+		  "node_key_15", "node_value_15", args[3]);
   
   // Test queries for ways.
   if ((test_to_execute == "") || (test_to_execute == "12"))
     // Test a key and value which appears only locally
-    perform_query("way", "way_key_11", "way_value_2");
+    perform_query("way", "way_key_11", "way_value_2", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "13"))
     // Test a key and value which appears almost everywhere
-    perform_query("way", "way_key_5", "way_value_5");
+    perform_query("way", "way_key_5", "way_value_5", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "14"))
     // Test a key only which has multiple values
-    perform_query("way", "way_key_11", "");
+    perform_query("way", "way_key_11", "", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "15"))
     // Test a key only which has only one value
-    perform_query("way", "way_key_15", "");
+    perform_query("way", "way_key_15", "", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "16"))
     // Test a key only which doesn't appear at all
-    perform_query("way", "nowhere", "");
+    perform_query("way", "nowhere", "", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "17"))
     // Test a key intersected with a small key and value pair
-    perform_query("way", "way_key_7", "", "way_key_11", "way_value_8");
+    perform_query("way", "way_key_7", "", "way_key_11", "way_value_8", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "18"))
     // Test a key intersected with a large key and value pair
-    perform_query("way", "way_key_7", "", "way_key_15", "way_value_15");
+    perform_query("way", "way_key_7", "", "way_key_15", "way_value_15", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "19"))
     // Test three key-values intersected
     perform_query("way", "way_key_5", "way_value_5", "way_key_7", "way_value_0",
-		  "way_key_15", "way_value_15");
+		  "way_key_15", "way_value_15", args[3]);
 
   // Test queries for relations.
   if ((test_to_execute == "") || (test_to_execute == "20"))
     // Test a key and value which appears only locally
-    perform_query("relation", "relation_key_11", "relation_value_2");
+    perform_query("relation", "relation_key_11", "relation_value_2", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "21"))
     // Test a key and value which appears almost everywhere
-    perform_query("relation", "relation_key_2/4", "relation_value_1");
+    perform_query("relation", "relation_key_2/4", "relation_value_1", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "22"))
     // Test a key only which has multiple values
-    perform_query("relation", "relation_key_2/4", "");
+    perform_query("relation", "relation_key_2/4", "", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "23"))
     // Test a key only which has only one value
-    perform_query("relation", "relation_key_5", "");
+    perform_query("relation", "relation_key_5", "", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "24"))
     // Test a key only which doesn't appear at all
-    perform_query("relation", "nowhere", "");
+    perform_query("relation", "nowhere", "", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "25"))
     // Test two key-values intersected. This tests also whether
     // relations with index zero appear in the results.
     perform_query("relation", "relation_key_2/4", "relation_value_0",
-		  "relation_key_5", "relation_value_5");
+		  "relation_key_5", "relation_value_5", args[3]);
 
   cout<<"</osm>\n";
   return 0;
