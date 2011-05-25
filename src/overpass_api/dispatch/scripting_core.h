@@ -1,28 +1,28 @@
 #ifndef ORG__OVERPASS_API__SCRIPTING_CORE
 #define ORG__OVERPASS_API__SCRIPTING_CORE
 
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
+#include "resource_manager.h"
+#include "../frontend/console_output.h"
+#include "../frontend/user_interface.h"
+#include "../statements/statement.h"
+#include "../../expat/expat_justparse_interface.h"
+#include "../../template_db/dispatcher.h"
 
 #include <errno.h>
 #include <fcntl.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/mman.h>
 #include <sys/select.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../../expat/expat_justparse_interface.h"
-#include "../frontend/console_output.h"
-#include "../frontend/user_interface.h"
-#include "../statements/statement.h"
-#include "dispatcher.h"
-#include "resource_manager.h"
+#include <cstdlib>
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 
 using namespace std;
 

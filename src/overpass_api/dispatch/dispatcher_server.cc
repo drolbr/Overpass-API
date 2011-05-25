@@ -1,6 +1,7 @@
-#include "dispatcher.h"
 #include "../core/settings.h"
+#include "../../template_db/dispatcher.h"
 
+#include <cstring>
 #include <iostream>
 #include <vector>
 

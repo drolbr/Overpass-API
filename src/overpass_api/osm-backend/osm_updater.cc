@@ -1,24 +1,24 @@
+#include "node_updater.h"
+#include "osm_updater.h"
+#include "relation_updater.h"
+#include "way_updater.h"
+#include "../../expat/expat_justparse_interface.h"
+#include "../../template_db/dispatcher.h"
+#include "../../template_db/random_file.h"
+#include "../../template_db/transaction.h"
+#include "../core/settings.h"
+#include "../frontend/output.h"
+
+#include <dirent.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include <cstdio>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <list>
 #include <sstream>
-
-#include <dirent.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include "../../expat/expat_justparse_interface.h"
-#include "../../template_db/random_file.h"
-#include "../../template_db/transaction.h"
-#include "../core/settings.h"
-#include "../dispatch/dispatcher.h"
-#include "../frontend/output.h"
-#include "node_updater.h"
-#include "osm_updater.h"
-#include "relation_updater.h"
-#include "way_updater.h"
 
 using namespace std;
 

@@ -1,5 +1,5 @@
-#ifndef CONSOLE_OUTPUT_DEFINED
-#define CONSOLE_OUTPUT_DEFINED
+#ifndef WEB_OUTPUT_DEFINED
+#define WEB_OUTPUT_DEFINED
 
 #include "../core/datatypes.h"
 

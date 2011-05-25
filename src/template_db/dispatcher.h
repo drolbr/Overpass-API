@@ -1,9 +1,9 @@
 #ifndef ORG__OVERPASS_API__DISPATCHER
 #define ORG__OVERPASS_API__DISPATCHER
 
-#include "../core/basic_types.h"
-#include "../../template_db/types.h"
+#include "types.h"
 
+#include <map>
 #include <set>
 #include <vector>
 

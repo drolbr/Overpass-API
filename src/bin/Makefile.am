@@ -14,15 +14,15 @@ dispatcher_cc = ../overpass_api/dispatch/scripting_core.cc ../overpass_api/dispa
 statements_dir = ../overpass_api/statements
 statements_cc = ${statements_dir}/statement.cc ${statements_dir}/area_query.cc ${statements_dir}/bbox_query.cc ${statements_dir}/coord_query.cc ${statements_dir}/foreach.cc ${statements_dir}/id_query.cc ${statements_dir}/item.cc ${statements_dir}/make_area.cc ${statements_dir}/osm_script.cc ${statements_dir}/print.cc ${statements_dir}/query.cc ${statements_dir}/recurse.cc ${statements_dir}/union.cc 
 
-update_database_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ${osm_updater_cc} ../overpass_api/dispatch/dispatcher.cc ../overpass_api/osm-backend/update_database.cc 
+update_database_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ${osm_updater_cc} ../template_db/dispatcher.cc ../overpass_api/osm-backend/update_database.cc 
 update_database_LDADD = -lexpat
-update_from_dir_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ${osm_updater_cc} ../overpass_api/dispatch/dispatcher.cc ../overpass_api/osm-backend/update_from_dir.cc
+update_from_dir_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ${osm_updater_cc} ../template_db/dispatcher.cc ../overpass_api/osm-backend/update_from_dir.cc
 update_from_dir_LDADD = -lexpat
 osm3s_query_SOURCES = ${expat_cc} ${settings_cc} ${console_frontend_cc} ${statements_cc} ${dispatcher_cc} ../overpass_api/dispatch/osm3s_query.cc
 osm3s_query_LDADD = -lexpat -lrt
 web_query_SOURCES = ${expat_cc} ${settings_cc} ${web_frontend_cc} ${statements_cc} ${dispatcher_cc} ../overpass_api/dispatch/web_query.cc
 web_query_LDADD = -lexpat -lrt
-dispatcher_SOURCES = ../overpass_api/dispatch/dispatcher.cc ../overpass_api/core/settings.cc ../overpass_api/dispatch/dispatcher_server.cc
+dispatcher_SOURCES = ../template_db/dispatcher.cc ../overpass_api/core/settings.cc ../overpass_api/dispatch/dispatcher_server.cc
 dispatcher_LDADD = -lrt
 
 sketch_route_svg_SOURCES = ${expat_cc} ${escape_xml_cc} ../pt_diagrams/sketch-route-svg.cc

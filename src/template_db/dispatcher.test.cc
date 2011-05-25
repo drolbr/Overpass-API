@@ -1,12 +1,12 @@
+#include "block_backend.h"
+#include "dispatcher.h"
+#include "file_blocks.h"
+#include "random_file.h"
+#include "transaction.h"
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
-
-#include "../../template_db/block_backend.h"
-#include "../../template_db/file_blocks.h"
-#include "../../template_db/random_file.h"
-#include "../../template_db/transaction.h"
-#include "dispatcher.h"
 
 using namespace std;
 
