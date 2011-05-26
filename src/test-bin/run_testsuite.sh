@@ -301,6 +301,11 @@ perform_test osm3s_query 15 "--db-dir=../../input/update_database/"
 perform_test osm3s_query 16 "--db-dir=../../input/update_database/ --concise"
 perform_test osm3s_query 17 "--db-dir=../../input/update_database/ --quiet"
 
+$BASEDIR/bin/dispatcher --osm-base --db-dir=input/update_database/ &
+sleep 1
+perform_test osm3s_query 18
+$BASEDIR/bin/dispatcher --terminate
+
 # Test a differential update
 date +%T
 rm -fR run/diff_updater
@@ -308,7 +313,7 @@ mv input/update_database run/diff_updater
 date +%T
 $BASEDIR/test-bin/generate_test_file $DATA_SIZE diff_do >run/diff_updater/do_stdin.log
 date +%T
-$BASEDIR/bin/dispatcher --osm-base --db-dir=`pwd`/run/diff_updater/ &
+$BASEDIR/bin/dispatcher --osm-base --db-dir=run/diff_updater/ &
 sleep 1
 $BASEDIR/bin/update_database <run/diff_updater/do_stdin.log
 $BASEDIR/bin/dispatcher --terminate

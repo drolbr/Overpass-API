@@ -58,18 +58,15 @@ int main(int argc, char *argv[])
   // connect to dispatcher and get database dir
   try
   {
-    // register process and choose db 1 or 2
-    Dispatcher_Stub dispatcher(db_dir, error_output);
-  
     string xml_raw(get_xml_console(error_output));
-  
-    // log query
-    dispatcher.log_query(xml_raw);
+    
+    // open read transaction and log this.
+    Dispatcher_Stub dispatcher(db_dir, error_output, xml_raw);
     
     if ((error_output) && (error_output->display_encoding_errors()))
       return 0;
 
-    if (!parse_and_validate(xml_raw, dispatcher, error_output))
+    if (!parse_and_validate(xml_raw, error_output))
       return 0;
     
     // set limits - short circuited until forecast gets effective
@@ -85,11 +82,9 @@ int main(int argc, char *argv[])
 	<<"\" last_rule_applied=\""<<0<<"\"/>\n"
       "\n";
 
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
     for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	 it != get_statement_stack()->end(); ++it)
-      (*it)->execute(rman);
+      (*it)->execute(dispatcher.resource_manager());
     
     cout<<"\n</osm-derived>\n";
   }

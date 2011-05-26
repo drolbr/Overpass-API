@@ -35,10 +35,9 @@ class Dispatcher_Stub
     // Opens the connection to the database, sets db_dir accordingly
     // and registers the process. error_output_ must remain valid over the
     // entire lifetime of this object.
-    Dispatcher_Stub(string db_dir_, Error_Output* error_output_);
+    Dispatcher_Stub(string db_dir_, Error_Output* error_output_, string xml_raw);
     
     void register_process();
-    void log_query(string xml_raw);
     void set_limits();
 
     ~Dispatcher_Stub();
@@ -46,6 +45,11 @@ class Dispatcher_Stub
     string get_timestamp()
     {
       return (shm_ptr != 0 ? (const char*)(shm_ptr+OFFSET_DB_1+4) : "unknown");
+    }
+    
+    Resource_Manager& resource_manager()
+    {
+      return *rman;
     }
     
   private:
@@ -56,13 +60,15 @@ class Dispatcher_Stub
     uint32 pid;
     
     Error_Output* error_output;
+    Dispatcher_Client* dispatcher_client;
+    Nonsynced_Transaction* transaction;
+    Resource_Manager* rman;
 
     void unregister_process();
 };
 
 bool parse_and_validate
-    (const string& xml_raw,
-     Dispatcher_Stub& dispatcher, Error_Output* error_output);
+    (const string& xml_raw, Error_Output* error_output);
 
 vector< Statement* >* get_statement_stack();
      

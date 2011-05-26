@@ -34,19 +34,15 @@ int main(int argc, char *argv[])
   
   try
   {
-    // Connect to dispatcher and get database dir.
-    // Register process and let choose db 1 or 2.
-    Dispatcher_Stub dispatcher("", &error_output);
-    
     string xml_raw(get_xml_cgi(&error_output));
     
-    // log query
-    dispatcher.log_query(xml_raw);
+    // open read transaction and log this.
+    Dispatcher_Stub dispatcher("", &error_output, xml_raw);
     
     if (error_output.display_encoding_errors())
       return 0;
     
-    if (!parse_and_validate(xml_raw, dispatcher, &error_output))
+    if (!parse_and_validate(xml_raw, &error_output))
       return 0;
     
     // set limits - short circuited until forecast gets effective
@@ -54,11 +50,9 @@ int main(int argc, char *argv[])
     
     error_output.write_xml_header(dispatcher.get_timestamp());
 
-    Nonsynced_Transaction transaction(false, false, "", "");
-    Resource_Manager rman(transaction);
     for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	 it != get_statement_stack()->end(); ++it)
-      (*it)->execute(rman);
+      (*it)->execute(dispatcher.resource_manager());
   
     error_output.write_xml_footer();
   }

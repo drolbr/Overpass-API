@@ -35,10 +35,43 @@ namespace
   Script_Parser xml_parser;
 }
 
-Dispatcher_Stub::Dispatcher_Stub(string db_dir_, Error_Output* error_output_) : db_dir(db_dir_), shm_ptr(0), error_output(error_output_)
+Dispatcher_Stub::Dispatcher_Stub
+    (string db_dir_, Error_Output* error_output_, string xml_raw)
+    : db_dir(db_dir_), shm_ptr(0), error_output(error_output_),
+      dispatcher_client(0), transaction(0), rman(0)
 {
+  if (db_dir == "")
+  {
+    dispatcher_client = new Dispatcher_Client(shared_name);
+    dispatcher_client->request_read_and_idx();
+    transaction = new Nonsynced_Transaction
+        (false, false, dispatcher_client->get_db_dir(), "");
+    rman = new Resource_Manager(*transaction);
+  
+    transaction->data_index(de_osm3s_file_ids::NODES);
+    transaction->random_index(de_osm3s_file_ids::NODES);
+    transaction->data_index(de_osm3s_file_ids::NODE_TAGS_LOCAL);
+    transaction->data_index(de_osm3s_file_ids::NODE_TAGS_GLOBAL);
+    transaction->data_index(de_osm3s_file_ids::WAYS);
+    transaction->random_index(de_osm3s_file_ids::WAYS);
+    transaction->data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL);
+    transaction->data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL);
+    transaction->data_index(de_osm3s_file_ids::RELATIONS);
+    transaction->random_index(de_osm3s_file_ids::RELATIONS);
+    transaction->data_index(de_osm3s_file_ids::RELATION_ROLES);
+    transaction->data_index(de_osm3s_file_ids::RELATION_TAGS_LOCAL);
+    transaction->data_index(de_osm3s_file_ids::RELATION_TAGS_GLOBAL);
+    
+    dispatcher_client->read_idx_finished();
+  }
+  else
+  {
+    transaction = new Nonsynced_Transaction(false, false, db_dir, "");
+    rman = new Resource_Manager(*transaction);
+  }
+  
   pid = getpid();
-  if (db_dir_ != "")
+/*  if (db_dir_ != "")
     return;
   
   shm_fd = shm_open(shared_name.c_str(), O_RDWR, S_IRWXU|S_IRWXG|S_IRWXO);
@@ -56,7 +89,7 @@ Dispatcher_Stub::Dispatcher_Stub(string db_dir_, Error_Output* error_output_) : 
   
   db_dir = (char*)(shm_ptr + SHM_SIZE);
   
-  register_process();
+  register_process();*/
 }
 
 void Dispatcher_Stub::register_process()
@@ -97,6 +130,8 @@ void Dispatcher_Stub::register_process()
 
 void Dispatcher_Stub::set_limits()
 {
+  return;
+  
   if (shm_ptr != 0)
   {
     *(uint32*)(shm_ptr + 4) = pid;
@@ -162,20 +197,27 @@ void Dispatcher_Stub::unregister_process()
   }
 }
 
-void Dispatcher_Stub::log_query(string xml_raw)
-{
-  if (shm_ptr != 0)
-  {
-    ostringstream temp;
-    temp<<db_dir<<"query_logs/"<<time(NULL)<<".txt";
-    ofstream query_log(temp.str().c_str());
-    query_log<<xml_raw;
-  }
-}
+// void Dispatcher_Stub::log_query(string xml_raw)
+// {
+//   if (shm_ptr != 0)
+//   {
+//     ostringstream temp;
+//     temp<<db_dir<<"query_logs/"<<time(NULL)<<".txt";
+//     ofstream query_log(temp.str().c_str());
+//     query_log<<xml_raw;
+//   }
+// }
 
 Dispatcher_Stub::~Dispatcher_Stub()
 {
-  unregister_process();  
+  if (dispatcher_client)
+  {
+    dispatcher_client->read_finished();
+    delete dispatcher_client;
+  }
+  delete transaction;
+  delete rman;
+/*  unregister_process();  */
 }
 
 void start(const char *el, const char **attr)
@@ -216,8 +258,7 @@ void end(const char *el)
 }
 
 bool parse_and_validate
-    (const string& xml_raw,
-     Dispatcher_Stub& dispatcher, Error_Output* error_output)
+    (const string& xml_raw, Error_Output* error_output)
 {
   if ((error_output) && (error_output->display_encoding_errors()))
     return false;
