@@ -25,6 +25,7 @@ string DATA_SUFFIX(".bin");
 string INDEX_SUFFIX(".idx");
 string ID_SUFFIX(".map");
 string SHADOW_SUFFIX(".shadow");
+string logfile_name("transactions.log");
 
 template < typename TVal >
 struct OSM_File_Properties : public File_Properties
@@ -169,4 +170,34 @@ void show_mem_status()
     cerr<<line;
   }
   cerr<<'\n';
+}
+
+//-----------------------------------------------------------------------------
+
+Logger::Logger(const string& db_dir)
+  : logfile_full_name(db_dir + get_logfile_name()) {}
+
+void Logger::annotated_log(const string& message)
+{
+  // Collect current time in a user-readable form.
+  time_t time_t_ = time(0);
+  struct tm* tm_ = gmtime(&time_t_);
+  char strftime_buf[21];
+  strftime_buf[0] = 0;
+  if (tm_)
+    strftime(strftime_buf, 21, "%F %H:%M:%S ", tm_);
+  
+  ofstream out(logfile_full_name.c_str(), ios_base::app);
+  out<<strftime_buf<<'['<<getpid()<<"] "<<message<<'\n';
+}
+
+void Logger::raw_log(const string& message)
+{
+  ofstream out(logfile_full_name.c_str(), ios_base::app);
+  out<<message<<'\n';
+}
+
+string get_logfile_name()
+{
+  return logfile_name;
 }

@@ -382,7 +382,10 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_)
   : dispatcher_client(0)
 {
   dispatcher_client = new Dispatcher_Client(shared_name);
+  Logger logger(dispatcher_client->get_db_dir());
+  logger.annotated_log("write_start() start");
   dispatcher_client->write_start();
+  logger.annotated_log("write_start() end");
   transaction = new Nonsynced_Transaction
       (true, true, dispatcher_client->get_db_dir(), "");
 
@@ -390,20 +393,6 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_)
   way_updater_ = new Way_Updater(*transaction);
   relation_updater_ = new Relation_Updater(*transaction);
 
-/*  transaction.data_index(de_osm3s_file_ids::NODES);
-  transaction.random_index(de_osm3s_file_ids::NODES);
-  transaction.data_index(de_osm3s_file_ids::NODE_TAGS_LOCAL);
-  transaction.data_index(de_osm3s_file_ids::NODE_TAGS_GLOBAL);
-  transaction.data_index(de_osm3s_file_ids::WAYS);
-  transaction.random_index(de_osm3s_file_ids::WAYS);
-  transaction.data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL);
-  transaction.data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL);
-  transaction.data_index(de_osm3s_file_ids::RELATIONS);
-  transaction.random_index(de_osm3s_file_ids::RELATIONS);
-  transaction.data_index(de_osm3s_file_ids::RELATION_ROLES);
-  transaction.data_index(de_osm3s_file_ids::RELATION_TAGS_LOCAL);
-  transaction.data_index(de_osm3s_file_ids::RELATION_TAGS_GLOBAL);*/
-  
   state = 0;
   osm_element_count = 0;
   node_updater = node_updater_;
@@ -436,7 +425,10 @@ Osm_Updater::~Osm_Updater()
   {
     if (transaction)
       delete transaction;
+    Logger logger(dispatcher_client->get_db_dir());
+    logger.annotated_log("write_commit() start");
     dispatcher_client->write_commit();
+    logger.annotated_log("write_commit() end");
     delete dispatcher_client;
   }
 }

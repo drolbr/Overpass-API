@@ -30,8 +30,20 @@ struct de_osm3s_file_ids
 
 string get_basedir();
 void set_basedir(string basedir);
+string get_logfile_name();
 
 void show_mem_status();
+
+class Logger
+{
+  public:
+    Logger(const string& db_dir);
+    void annotated_log(const string& message);
+    void raw_log(const string& message);
+    
+  private:
+    string logfile_full_name;
+};
 
 //-----------------------------------------------------------------------------
 

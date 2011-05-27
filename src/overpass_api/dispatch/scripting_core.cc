@@ -17,6 +17,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -43,7 +44,11 @@ Dispatcher_Stub::Dispatcher_Stub
   if (db_dir == "")
   {
     dispatcher_client = new Dispatcher_Client(shared_name);
+    Logger logger(dispatcher_client->get_db_dir());
+    logger.annotated_log("request_read_and_idx() start");
     dispatcher_client->request_read_and_idx();
+    logger.annotated_log("request_read_and_idx() end");
+    logger.annotated_log('\n' + xml_raw);
     transaction = new Nonsynced_Transaction
         (false, false, dispatcher_client->get_db_dir(), "");
     rman = new Resource_Manager(*transaction);
@@ -62,162 +67,33 @@ Dispatcher_Stub::Dispatcher_Stub
     transaction->data_index(de_osm3s_file_ids::RELATION_TAGS_LOCAL);
     transaction->data_index(de_osm3s_file_ids::RELATION_TAGS_GLOBAL);
     
+    logger.annotated_log("read_idx_finished() start");
     dispatcher_client->read_idx_finished();
+    logger.annotated_log("read_idx_finished() end");
   }
   else
   {
     transaction = new Nonsynced_Transaction(false, false, db_dir, "");
     rman = new Resource_Manager(*transaction);
   }
-  
-  pid = getpid();
-/*  if (db_dir_ != "")
-    return;
-  
-  shm_fd = shm_open(shared_name.c_str(), O_RDWR, S_IRWXU|S_IRWXG|S_IRWXO);
-  if (shm_fd < 0)
-  {
-    if (error_output)
-    {
-      error_output->runtime_error
-          ((string)"Can't open shared memory " + shared_name + '\n');
-    }
-    throw File_Error(errno, shared_name, "Dispatcher_Stub::Dispatcher_Stub::1");
-  }
-  shm_ptr = (uint8*)
-      mmap(0, SHM_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, shm_fd, 0);
-  
-  db_dir = (char*)(shm_ptr + SHM_SIZE);
-  
-  register_process();*/
-}
-
-void Dispatcher_Stub::register_process()
-{
-  if (shm_ptr != 0)
-  {
-    *(uint32*)(shm_ptr + 4) = pid;
-    *(uint32*)(shm_ptr + 8) = ++msg_id;
-    *(uint32*)shm_ptr = REGISTER_PID;
-    
-    while ((*(uint32*)(shm_ptr + OFFSET_BACK) != pid) ||
-      (*(uint32*)(shm_ptr + OFFSET_BACK + 4) != msg_id))
-    {
-      //sleep for a second
-      struct timeval timeout;
-      timeout.tv_sec = 0;
-      timeout.tv_usec = 10000;
-      select (FD_SETSIZE, NULL, NULL, NULL, &timeout);
-      
-      *(uint32*)(shm_ptr + 8) = msg_id;
-      *(uint32*)(shm_ptr + 4) = pid;
-      *(uint32*)shm_ptr = REGISTER_PID;
-    }
-    if (*(uint32*)(shm_ptr + OFFSET_BACK + 8) == 1)
-      set_basedir(db_dir + "1/");
-    else if (*(uint32*)(shm_ptr + OFFSET_BACK + 8) == 2)
-      set_basedir(db_dir + "2/");
-    else
-    {
-      if (error_output)
-	error_output->runtime_error("Both databases are updating.");
-      return;
-    }
-    if (error_output)
-      error_output->runtime_remark("Successfully registered");
-  }
 }
 
 void Dispatcher_Stub::set_limits()
 {
-  return;
-  
-  if (shm_ptr != 0)
-  {
-    *(uint32*)(shm_ptr + 4) = pid;
-    *(uint32*)(shm_ptr + 8) = ++msg_id;
-    *(uint32*)(shm_ptr + 12) = 512;
-    *(uint32*)(shm_ptr + 16) = 3600;
-    *(uint32*)shm_ptr = SET_LIMITS;
-    
-    while ((*(uint32*)(shm_ptr + OFFSET_BACK) != pid) ||
-      (*(uint32*)(shm_ptr + OFFSET_BACK + 4) != msg_id))
-    {
-      //sleep for a second
-      struct timeval timeout_;
-      timeout_.tv_sec = 0;
-      timeout_.tv_usec = 10000;
-      select (FD_SETSIZE, NULL, NULL, NULL, &timeout_);
-      
-      *(uint32*)(shm_ptr + 4) = pid;
-      *(uint32*)(shm_ptr + 8) = msg_id;
-      *(uint32*)(shm_ptr + 12) = 512;
-      *(uint32*)(shm_ptr + 16) = 3600;
-      *(uint32*)shm_ptr = SET_LIMITS;
-    }
-    if (*(uint32*)(shm_ptr + OFFSET_BACK + 8) != SET_LIMITS)
-    {
-      if (error_output)
-	error_output->runtime_error("We are sorry, the server is overcrowded. "
-      "Please try again later.");
-      
-      unregister_process();
-      return;
-    }
-    if (error_output)
-      error_output->runtime_remark("Successfully set limits");
-  }
 }
-
-void Dispatcher_Stub::unregister_process()
-{
-  uint32 pid(getpid());
-  // unregister process
-  if (shm_ptr != 0)
-  {
-    *(uint32*)(shm_ptr + 8) = ++msg_id;
-    *(uint32*)(shm_ptr + 4) = pid;
-    *(uint32*)shm_ptr = UNREGISTER_PID;
-    
-    while ((*(uint32*)(shm_ptr + OFFSET_BACK) != pid) ||
-      (*(uint32*)(shm_ptr + OFFSET_BACK + 4) != msg_id))
-    {
-      //sleep for a second
-      struct timeval timeout;
-      timeout.tv_sec = 0;
-      timeout.tv_usec = 10000;
-      select (FD_SETSIZE, NULL, NULL, NULL, &timeout);
-      
-      *(uint32*)(shm_ptr + 8) = msg_id;
-      *(uint32*)(shm_ptr + 4) = pid;
-      *(uint32*)shm_ptr = UNREGISTER_PID;
-    }
-    if (error_output)
-      error_output->runtime_remark("Successfully unregistered");
-  }
-}
-
-// void Dispatcher_Stub::log_query(string xml_raw)
-// {
-//   if (shm_ptr != 0)
-//   {
-//     ostringstream temp;
-//     temp<<db_dir<<"query_logs/"<<time(NULL)<<".txt";
-//     ofstream query_log(temp.str().c_str());
-//     query_log<<xml_raw;
-//   }
-// }
 
 Dispatcher_Stub::~Dispatcher_Stub()
 {
   if (dispatcher_client)
   {
+    Logger logger(dispatcher_client->get_db_dir() + get_logfile_name());
+    logger.annotated_log("read_finished() start");
     dispatcher_client->read_finished();
+    logger.annotated_log("read_finished() end");
     delete dispatcher_client;
   }
   delete transaction;
   delete rman;
-/*  unregister_process();  */
 }
 
 void start(const char *el, const char **attr)
