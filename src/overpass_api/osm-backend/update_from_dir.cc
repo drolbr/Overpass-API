@@ -23,7 +23,7 @@ using namespace std;
 int main(int argc, char* argv[])
 {
   // read command line arguments
-  string source_dir, db_dir;
+  string source_dir, db_dir, data_version;
   vector< string > source_file_names;
   
   int argpos(1);
@@ -42,6 +42,8 @@ int main(int argc, char* argv[])
       if ((source_dir.size() > 0) && (source_dir[source_dir.size()-1] != '/'))
 	source_dir += '/';
     }
+    if (!(strncmp(argv[argpos], "--version=", 10)))
+      data_version = ((string)argv[argpos]).substr(10);
     ++argpos;
   }
   
@@ -65,7 +67,7 @@ int main(int argc, char* argv[])
   
   try
   {
-    Osm_Updater osm_updater(get_verbatim_callback(), false);
+    Osm_Updater osm_updater(get_verbatim_callback(), data_version);
     vector< string >::const_iterator it(source_file_names.begin());
     while (it != source_file_names.end())
     {

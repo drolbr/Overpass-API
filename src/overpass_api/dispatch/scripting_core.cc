@@ -38,7 +38,7 @@ namespace
 
 Dispatcher_Stub::Dispatcher_Stub
     (string db_dir_, Error_Output* error_output_, string xml_raw)
-    : db_dir(db_dir_), shm_ptr(0), error_output(error_output_),
+    : db_dir(db_dir_), error_output(error_output_),
       dispatcher_client(0), transaction(0), rman(0)
 {
   if (db_dir == "")
@@ -67,6 +67,10 @@ Dispatcher_Stub::Dispatcher_Stub
     transaction->data_index(de_osm3s_file_ids::RELATION_TAGS_LOCAL);
     transaction->data_index(de_osm3s_file_ids::RELATION_TAGS_GLOBAL);
     
+    {
+      ifstream version((dispatcher_client->get_db_dir() + "version.txt").c_str());
+      getline(version, timestamp);
+    }
     logger.annotated_log("read_idx_finished() start");
     dispatcher_client->read_idx_finished();
     logger.annotated_log("read_idx_finished() end");
@@ -75,6 +79,10 @@ Dispatcher_Stub::Dispatcher_Stub
   {
     transaction = new Nonsynced_Transaction(false, false, db_dir, "");
     rman = new Resource_Manager(*transaction);
+    {
+      ifstream version((db_dir + "version.txt").c_str());
+      getline(version, timestamp);
+    }
   }
 }
 

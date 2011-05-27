@@ -378,7 +378,7 @@ void parse_relations_only(FILE* in)
   parse(in, relation_start, relation_end);
 }
 
-Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_)
+Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version)
   : dispatcher_client(0)
 {
   dispatcher_client = new Dispatcher_Client(shared_name);
@@ -388,6 +388,10 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_)
   logger.annotated_log("write_start() end");
   transaction = new Nonsynced_Transaction
       (true, true, dispatcher_client->get_db_dir(), "");
+  {
+    ofstream version((dispatcher_client->get_db_dir() + "version.shadow.txt").c_str());
+    version<<data_version<<'\n';
+  }
 
   node_updater_ = new Node_Updater(*transaction);
   way_updater_ = new Way_Updater(*transaction);
@@ -401,9 +405,15 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_)
   callback = callback_;
 }
 
-Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, string db_dir)
+Osm_Updater::Osm_Updater
+    (Osm_Backend_Callback* callback_, string db_dir, const string& data_version)
   : transaction(0), dispatcher_client(0)
 {
+  {
+    ofstream version((db_dir + "version.txt").c_str());
+    version<<data_version<<'\n';
+  }
+  
   node_updater_ = new Node_Updater(db_dir);
   way_updater_ = new Way_Updater(db_dir);
   relation_updater_ = new Relation_Updater(db_dir);
@@ -428,6 +438,8 @@ Osm_Updater::~Osm_Updater()
     Logger logger(dispatcher_client->get_db_dir());
     logger.annotated_log("write_commit() start");
     dispatcher_client->write_commit();
+    rename((dispatcher_client->get_db_dir() + "version.shadow.txt").c_str(),
+	   (dispatcher_client->get_db_dir() + "version.txt").c_str());
     logger.annotated_log("write_commit() end");
     delete dispatcher_client;
   }

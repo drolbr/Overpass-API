@@ -17,7 +17,7 @@ using namespace std;
 int main(int argc, char* argv[])
 {
   // read command line arguments
-  string db_dir;
+  string db_dir, data_version;
   bool transactional = true;
   
   int argpos(1);
@@ -31,6 +31,8 @@ int main(int argc, char* argv[])
       set_basedir(db_dir);
       transactional = false;
     }
+    if (!(strncmp(argv[argpos], "--version=", 10)))
+      data_version = ((string)argv[argpos]).substr(10);
     ++argpos;
   }
   
@@ -38,13 +40,13 @@ int main(int argc, char* argv[])
   {
     if (transactional)
     {
-      Osm_Updater osm_updater(get_verbatim_callback());
+      Osm_Updater osm_updater(get_verbatim_callback(), data_version);
       //reading the main document
       parse_file_completely(stdin);
     }
     else
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), db_dir);
+      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version);
       //reading the main document
       parse_file_completely(stdin);
     }

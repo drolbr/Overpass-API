@@ -17,8 +17,9 @@ class Dispatcher_Client;
 class Osm_Updater
 {
   public:
-    Osm_Updater(Osm_Backend_Callback* callback_);
-    Osm_Updater(Osm_Backend_Callback* callback_, string db_dir);
+    Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version);
+    Osm_Updater(Osm_Backend_Callback* callback_, string db_dir,
+		const string& data_version);
     ~Osm_Updater();
     
   private:

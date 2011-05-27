@@ -240,7 +240,7 @@ perform_serial_test run_and_compare.sh 3
 mkdir -p input/update_database/
 rm -f input/update_database/*
 mv input/run_and_compare.sh_3/stdin.log input/update_database/stdin.log
-$BASEDIR/bin/update_database --db-dir=input/update_database/ <input/update_database/stdin.log
+$BASEDIR/bin/update_database --db-dir=input/update_database/ --version=mock-up-init-$DATA_SIZE <input/update_database/stdin.log
 
 # Test the print and id_query statements
 prepare_test_loop print 4 $DATA_SIZE
@@ -318,7 +318,7 @@ date +%T
 $BASEDIR/bin/dispatcher --osm-base --db-dir=run/diff_updater/ &
 sleep 1
 rm -f run/diff_updater/transactions.log
-$BASEDIR/bin/update_database <run/diff_updater/do_stdin.log
+$BASEDIR/bin/update_database --version=mock-up-diff-$DATA_SIZE <run/diff_updater/do_stdin.log
 cat run/diff_updater/transactions.log
 $BASEDIR/bin/dispatcher --terminate
 date +%T

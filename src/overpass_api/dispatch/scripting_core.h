@@ -44,7 +44,7 @@ class Dispatcher_Stub
     
     string get_timestamp()
     {
-      return (shm_ptr != 0 ? (const char*)(shm_ptr+OFFSET_DB_1+4) : "unknown");
+      return timestamp;
     }
     
     Resource_Manager& resource_manager()
@@ -53,11 +53,7 @@ class Dispatcher_Stub
     }
     
   private:
-    string db_dir;
-    uint8* shm_ptr;
-    uint32 msg_id;
-    int shm_fd;
-    uint32 pid;
+    string db_dir, timestamp;
     
     Error_Output* error_output;
     Dispatcher_Client* dispatcher_client;
