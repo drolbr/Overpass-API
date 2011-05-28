@@ -19,8 +19,7 @@ using namespace std;
 
 bool file_exists(const string& filename)
 {
-  struct stat statbuf;
-  return (stat(filename.c_str(), &statbuf) == 0);
+  return (access(filename.c_str(), F_OK) == 0);
 }
 
 void copy_file(const string& source, const string& dest)

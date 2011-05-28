@@ -16,6 +16,8 @@ AC_CHECK_LIB([expat], [XML_Parse])
 AC_CHECK_LIB([rt], [time])
 
 # Checks for header files.
+AC_TYPE_MODE_T
+AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_HEADER_DIRENT
 AC_HEADER_STDC
@@ -24,17 +26,19 @@ AC_CHECK_HEADERS([fcntl.h locale.h stdint.h stdlib.h string.h sys/time.h unistd.
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_C_INLINE
+AC_C_VOLATILE
 AC_HEADER_STDBOOL
 AC_HEADER_TIME
 AC_STRUCT_TM
 
 # Checks for library functions.
-AC_CHECK_FUNCS([clock_gettime ftruncate select sqrt])
+AC_CHECK_FUNCS([clock_gettime ftruncate getcwd munmap select sqrt])
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_FUNC_SELECT_ARGTYPES
 AC_FUNC_STAT
+AC_FUNC_STRFTIME
 
 AC_CONFIG_FILES([Makefile bin/Makefile cgi-bin/Makefile test-bin/Makefile])
 AC_OUTPUT
