@@ -38,19 +38,17 @@ collect_minute_diffs()
   };
   done
   TARGET=$(($TARGET - 1))
-  [[ ! -s $REPLICATE_FILENAME.osc.gz ]]
-  COMPLETE=$?
 };
 
 apply_minute_diffs()
 {
-  ./update_from_dir --db-dir=$DB_DIR --osc-dir=$1
+  ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION
   EXITCODE=$?
   while [[ $EXITCODE -ne 0 ]];
   do
   {
     sleep 60
-    ./update_from_dir --db-dir=$DB_DIR --osc-dir=$1
+    ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION
     EXITCODE=$?
   };
   done
@@ -58,15 +56,15 @@ apply_minute_diffs()
 
 update_state()
 {
-  rm $DB_DIR/state
   echo "$TARGET" >$DB_DIR/replicate_id
   get_replicate_filename
-  grep "^timestamp" <$REPLICATE_FILENAME.state.txt >$DB_DIR/state
-  while [[ ! -f $DB_DIR/state ]]; do
+  TIMESTAMP_LINE=`grep "^timestamp" <$REPLICATE_FILENAME.state.txt`
+  while [[ -z $TIMESTAMP_LINE ]]; do
   {
     sleep 5
-    grep "^timestamp" <$REPLICATE_FILENAME.state.txt >$DB_DIR/state
+    TIMESTAMP_LINE=`grep "^timestamp" <$REPLICATE_FILENAME.state.txt`
   }; done
+  DATA_VERSION=${TIMESTAMP_LINE:10}
 };
 
 echo >>$DB_DIR/apply_osc_to_db.log
@@ -105,22 +103,18 @@ touch way_tags_local.bin
 touch way_tags_local.idx
 popd
 
-update_state
+# update_state
 
 while [[ true ]]; do
 {
-  while [[ ! -f $DB_DIR/dirty ]]; do
-  {
-    sleep 5
-  }; done
-
-  echo "`date '+%F %T'`: database is dirty" >>$DB_DIR/apply_osc_to_db.log
   echo "`date '+%F %T'`: updating from $START" >>$DB_DIR/apply_osc_to_db.log
 
   TEMP_DIR=`mktemp -d`
   collect_minute_diffs $TEMP_DIR
 
   echo "`date '+%F %T'`: updating to $TARGET" >>$DB_DIR/apply_osc_to_db.log
+
+  update_state
 
   if [[ $TARGET -gt $START ]]; then
   {
@@ -132,14 +126,6 @@ while [[ true ]]; do
   }; fi
 
   echo "`date '+%F %T'`: update complete" $TARGET >>$DB_DIR/apply_osc_to_db.log
-
-  update_state
-  if [[ $COMPLETE -eq 0 ]]; then
-  {
-    rm $DB_DIR/dirty
-  }; fi
-
-  echo "`date '+%F %T'`: database is cleared" $TARGET >>$DB_DIR/apply_osc_to_db.log
 
   rm -f $TEMP_DIR/*
   rmdir $TEMP_DIR

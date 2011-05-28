@@ -68,7 +68,7 @@ Dispatcher_Stub::Dispatcher_Stub
     transaction->data_index(de_osm3s_file_ids::RELATION_TAGS_GLOBAL);
     
     {
-      ifstream version((dispatcher_client->get_db_dir() + "version.txt").c_str());
+      ifstream version((dispatcher_client->get_db_dir() + "osm_base_version").c_str());
       getline(version, timestamp);
     }
     logger.annotated_log("read_idx_finished() start");
@@ -80,7 +80,7 @@ Dispatcher_Stub::Dispatcher_Stub
     transaction = new Nonsynced_Transaction(false, false, db_dir, "");
     rman = new Resource_Manager(*transaction);
     {
-      ifstream version((db_dir + "version.txt").c_str());
+      ifstream version((db_dir + "osm_base_version").c_str());
       getline(version, timestamp);
     }
   }
@@ -94,7 +94,7 @@ Dispatcher_Stub::~Dispatcher_Stub()
 {
   if (dispatcher_client)
   {
-    Logger logger(dispatcher_client->get_db_dir() + get_logfile_name());
+    Logger logger(dispatcher_client->get_db_dir());
     logger.annotated_log("read_finished() start");
     dispatcher_client->read_finished();
     logger.annotated_log("read_finished() end");

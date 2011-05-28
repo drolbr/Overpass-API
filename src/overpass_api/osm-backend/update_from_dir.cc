@@ -68,6 +68,8 @@ int main(int argc, char* argv[])
   try
   {
     Osm_Updater osm_updater(get_verbatim_callback(), data_version);
+    get_verbatim_callback()->parser_started();
+    
     vector< string >::const_iterator it(source_file_names.begin());
     while (it != source_file_names.end())
     {

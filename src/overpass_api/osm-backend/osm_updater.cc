@@ -383,13 +383,14 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
 {
   dispatcher_client = new Dispatcher_Client(shared_name);
   Logger logger(dispatcher_client->get_db_dir());
-  logger.annotated_log("write_start() start");
+  logger.annotated_log("write_start() start version='" + data_version + '\'');
   dispatcher_client->write_start();
   logger.annotated_log("write_start() end");
   transaction = new Nonsynced_Transaction
       (true, true, dispatcher_client->get_db_dir(), "");
   {
-    ofstream version((dispatcher_client->get_db_dir() + "version.shadow.txt").c_str());
+    ofstream version((dispatcher_client->get_db_dir()
+        + "osm_base_version.shadow").c_str());
     version<<data_version<<'\n';
   }
 
@@ -410,7 +411,7 @@ Osm_Updater::Osm_Updater
   : transaction(0), dispatcher_client(0)
 {
   {
-    ofstream version((db_dir + "version.txt").c_str());
+    ofstream version((db_dir + "osm_base_version").c_str());
     version<<data_version<<'\n';
   }
   
@@ -438,8 +439,8 @@ Osm_Updater::~Osm_Updater()
     Logger logger(dispatcher_client->get_db_dir());
     logger.annotated_log("write_commit() start");
     dispatcher_client->write_commit();
-    rename((dispatcher_client->get_db_dir() + "version.shadow.txt").c_str(),
-	   (dispatcher_client->get_db_dir() + "version.txt").c_str());
+    rename((dispatcher_client->get_db_dir() + "osm_base_version.shadow").c_str(),
+	   (dispatcher_client->get_db_dir() + "osm_base_version").c_str());
     logger.annotated_log("write_commit() end");
     delete dispatcher_client;
   }

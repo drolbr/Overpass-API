@@ -2,7 +2,7 @@
 
 if [[ -z $1  ]]; then
 {
-  echo Usage: $0 Hourly_Timestamp
+  echo Usage: $0 Replicate_id Source_dir Local_dir
   exit 0
 };
 fi
@@ -67,7 +67,6 @@ do
   REPLICATE_ID=$(($REPLICATE_ID + 1))
   fetch_minute_diff $REPLICATE_ID
   sleep 1
-  echo "fetch_osc()@"`date "+%s"`": new_replicate_diff $REPLICATE_ID $TIMESTAMP" >>$LOCAL_DIR/fetch_osc.log
-  echo " new_changefile $REPLICATE_ID $TIMESTAMP " >>/tmp/dispatcher.pipe
+  echo "fetch_osc()@"`date "+%F %T"`": new_replicate_diff $REPLICATE_ID $TIMESTAMP" >>$LOCAL_DIR/fetch_osc.log
 };
 done
