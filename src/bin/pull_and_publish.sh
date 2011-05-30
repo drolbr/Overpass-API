@@ -43,10 +43,13 @@ VERSION=
 
 EXEC_DIR=/home/olbricht/git
 #/srv/osm-3s
+DB_DIR=/home/olbricht/git
+#/opt/osm-3s
 PLANET_DIR=/home/olbricht/git
 #/home/roland/osm-planet
 REPLICATE_DIR=/home/olbricht/git
 DOWNLOAD_PLANET=http://ftp.heanet.ie/mirrors/openstreetmap.org/
+DOWNLOAD_DIFFS=http://planet.openstreetmap.org/minute-replicate/
 
 process_param()
 {
@@ -73,7 +76,6 @@ process_param()
   elif [[ "${1:0:8}" == "--fetch=" ]]; then
   {
     FETCH="yes"
-    REPLCIATE_DIR="${1:8}"
   };
   elif [[ "${1:0:10}" == "--version=" ]]; then
   {
@@ -161,14 +163,20 @@ if [[ -n $INIT ]]; then
   };
   fi
 
-  bunzip2 <$PLANET_DIR/planet-$INIT.osm.bz2 | $EXEC_DIR/v$VERSION/bin/update_database --db-dir=/opt/v$VERSION/
+  bunzip2 <$PLANET_DIR/planet-$INIT.osm.bz2 | $EXEC_DIR/v$VERSION/bin/update_database --db-dir=$DB_DIR/v$VERSION/
 };
+fi
+
+if [[ -n $FETCH ]]; then
+  $EXEC_DIR/v$VERSION/bin/fetch_osc.sh $RUN $DOWNLOAD_DIFFS $REPLICATE_DIR &
 fi
 
 if [[ -n $RUN ]]; then
 {
-  $EXEC_DIR/v$VERSION/bin/dispatcher --osm-base --db-dir=/opt/v$VERSION/ &
+  pushd $EXEC_DIR/v$VERSION/bin
+  ./dispatcher --osm-base --db-dir=$DB_DIR/v$VERSION/ &
   sleep 5
-  $EXEC_DIR/v$VERSION/bin/apply_osc_to_db.sh /opt/v$VERSION/ $REPLICATE_DIR $RUN &
+  ./apply_osc_to_db.sh $DB_DIR/v$VERSION/ $REPLICATE_DIR $RUN &
+  popd
 };
 fi

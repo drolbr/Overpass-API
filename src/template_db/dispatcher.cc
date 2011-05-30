@@ -110,6 +110,7 @@ Dispatcher::Dispatcher
     remove(shadow_name.c_str());
   }    
   remove_shadows();
+  remove((shadow_name + ".lock").c_str());
   set_current_footprints();
 }
 
@@ -267,13 +268,13 @@ void Dispatcher::set_current_footprints()
     try
     {
       data_footprints[i].set_current_footprint
-          (controlled_files[i]->get_data_footprint());
+          (controlled_files[i]->get_data_footprint(db_dir));
     }
     catch (...) {}
     try
     {
       map_footprints[i].set_current_footprint
-          (controlled_files[i]->get_map_footprint());
+          (controlled_files[i]->get_map_footprint(db_dir));
     }
     catch (...) {}
   }

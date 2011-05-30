@@ -55,8 +55,8 @@ struct File_Properties
   virtual string get_shadow_suffix() const = 0;
   virtual uint32 get_block_size() const = 0;
   virtual uint32 get_map_block_size() const = 0;
-  virtual vector< bool > get_data_footprint() const = 0;
-  virtual vector< bool > get_map_footprint() const = 0;
+  virtual vector< bool > get_data_footprint(const string& db_dir) const = 0;
+  virtual vector< bool > get_map_footprint(const string& db_dir) const = 0;
   virtual uint32 id_max_size_of() const = 0;
   
   // The returned object is of type File_Blocks_Index< .. >*

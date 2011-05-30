@@ -97,12 +97,12 @@ struct Test_File : File_Properties
     return 16*IntIndex::max_size_of();
   }
   
-  vector< bool > get_data_footprint() const
+  vector< bool > get_data_footprint(const string& db_dir) const
   {
     return vector< bool >();
   }
   
-  vector< bool > get_map_footprint() const
+  vector< bool > get_map_footprint(const string& db_dir) const
   {
     return vector< bool >();
   }  

@@ -2,6 +2,8 @@
 #include "settings.h"
 
 #include "../../template_db/file_blocks.h"
+#include "../../template_db/file_blocks_index.h"
+#include "../../template_db/random_file_index.h"
 
 #include <cstdio>
 #include <fstream>
@@ -80,14 +82,14 @@ struct OSM_File_Properties : public File_Properties
     return map_block_size;
   }
   
-  vector< bool > get_data_footprint() const
+  vector< bool > get_data_footprint(const string& db_dir) const
   {
-    return vector< bool >();
+    return get_data_index_footprint< TVal >(*this, db_dir);
   }
   
-  vector< bool > get_map_footprint() const
+  vector< bool > get_map_footprint(const string& db_dir) const
   {
-    return vector< bool >();
+    return get_map_index_footprint(*this, db_dir);
   }
   
   uint32 id_max_size_of() const

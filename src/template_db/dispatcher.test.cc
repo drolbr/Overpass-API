@@ -146,14 +146,14 @@ struct Test_File : File_Properties
     return 16*IntIndex::max_size_of();
   }
   
-  vector< bool > get_data_footprint() const
+  vector< bool > get_data_footprint(const string& db_dir) const
   {
-    return get_data_index_footprint< IntIndex >(*this, basedir);
+    return get_data_index_footprint< IntIndex >(*this, db_dir);
   }
   
-  vector< bool > get_map_footprint() const
+  vector< bool > get_map_footprint(const string& db_dir) const
   {
-    return get_map_index_footprint(*this, basedir);
+    return get_map_index_footprint(*this, db_dir);
   }  
   
   uint32 id_max_size_of() const
