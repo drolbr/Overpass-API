@@ -1,4 +1,4 @@
-bin_PROGRAMS = osm3s_query dispatcher sketch_route_svg web_query update_database update_from_dir
+bin_PROGRAMS = osm3s_query dispatcher web_query update_database update_from_dir sketch_route_svg draw_route_svg uncgi bbox_brim_query
 dist_bin_SCRIPTS = apply_osc_to_db.sh fetch_osc.sh
 
 escape_xml_cc = ../expat/escape_xml.cc
@@ -27,3 +27,9 @@ dispatcher_LDADD = -lrt
 
 sketch_route_svg_SOURCES = ${expat_cc} ${escape_xml_cc} ../pt_diagrams/sketch-route-svg.cc
 sketch_route_svg_LDADD = -lexpat
+draw_route_svg_SOURCES = ${expat_cc} ${escape_xml_cc} ../pt_diagrams/read_input.cc ../pt_diagrams/topographic.cc
+draw_route_svg_LDADD = -lexpat
+uncgi_SOURCES = ${expat_cc} ../pt_diagrams/uncgi.cc
+uncgi_LDADD = -lexpat
+bbox_brim_query_SOURCES = ${expat_cc} ../pt_diagrams/bbox-brim-query.cc
+bbox_brim_query_LDADD = -lexpat

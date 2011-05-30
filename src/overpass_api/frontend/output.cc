@@ -8,7 +8,7 @@ using namespace std;
 string escape_xml(const string& s)
 {
   string result;
-  for (int i(0); i < s.length(); ++i)
+  for (uint i(0); i < s.length(); ++i)
   {
     if (s[i] == '&')
       result += "&amp;";

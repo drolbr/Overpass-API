@@ -4,6 +4,7 @@ BUF=$QUERY_STRING\&
 
 SKETCH_PARAMS=
 BRIM_PARAMS=
+BIN_DIR=../bin
 
 while [[ -n $BUF ]]; do
 {
@@ -14,12 +15,12 @@ while [[ -n $BUF ]]; do
   if [[ $KEY == "network" && -n $VALUE ]]; then
   {
     NETWORK=$VALUE
-    NETWORK_=`echo $VALUE | ../bin/uncgi`
+    NETWORK_=`echo $VALUE | $BIN_DIR/uncgi`
   };
   elif [[ $KEY == "ref" && -n $VALUE ]]; then
   {
     REF=$VALUE
-    REF_=`echo $VALUE | ../bin/uncgi`
+    REF_=`echo $VALUE | $BIN_DIR/uncgi`
   };
   elif [[ $KEY == "width" && -n $VALUE ]]; then
     SKETCH_PARAMS="$SKETCH_PARAMS --width=$VALUE"
@@ -52,7 +53,7 @@ done
 BASEDIR=`mktemp -d`
 
 echo -e "\
-data=<osm-script> \
+<osm-script> \
  \
 <union> \
   <query type=\"relation\"> \
@@ -76,13 +77,13 @@ if [[ -z $REF ]]; then
 };    
 fi      
 
-CORRESPONDENCES=`../bin/bbox-brim-query --only-corrs $BRIM_PARAMS`
+CORRESPONDENCES=`$BIN_DIR/bbox_brim_query --only-corrs $BRIM_PARAMS`
 
 if [[ $CORRESPONDENCES -gt 0 ]]; then
 {
   REQUEST_METHOD=
-  /home/roland/osm-3s/build/bin/osm3s_query --quiet --no-mime <$BASEDIR/request.1 >$BASEDIR/answer.1
-  ../bin/bbox-brim-query $BRIM_PARAMS <$BASEDIR/answer.1 >$BASEDIR/request.2
+  $BIN_DIR/osm3s_query --quiet --no-mime <$BASEDIR/request.1 >$BASEDIR/answer.1
+  $BIN_DIR/bbox_brim_query $BRIM_PARAMS <$BASEDIR/answer.1 >$BASEDIR/request.2
 
   if [[ $DEBUG == "full-query" ]]; then
   {
@@ -94,7 +95,7 @@ if [[ $CORRESPONDENCES -gt 0 ]]; then
   fi
 
   REQUEST_METHOD=
-  /home/roland/osm-3s/build/bin/osm3s_query --quiet --no-mime <$BASEDIR/request.2 >$BASEDIR/answer.3
+  $BIN_DIR/osm3s_query --quiet --no-mime <$BASEDIR/request.2 >$BASEDIR/answer.3
 
   echo "Content-Type: image/svg+xml; charset=utf-8"
   echo
@@ -103,17 +104,17 @@ if [[ $CORRESPONDENCES -gt 0 ]]; then
   {
     cat <$BASEDIR/answer.3
     echo
-    echo "../bin/sketch_route_svg --ref=\"$REF_\" --network=\"$NETWORK_\" $SKETCH_PARAMS"
+    echo "$BIN_DIR/sketch_route_svg --ref=\"$REF_\" --network=\"$NETWORK_\" $SKETCH_PARAMS"
     exit 0;
   };
   fi
 
-  ../bin/sketch_route_svg --ref="$REF_" --network="$NETWORK_" $SKETCH_PARAMS <$BASEDIR/answer.3
+  $BIN_DIR/sketch_route_svg --ref="$REF_" --network="$NETWORK_" $SKETCH_PARAMS <$BASEDIR/answer.3
 };
 else
 {
   REQUEST_METHOD=
-  /home/roland/osm-3s/build/bin/osm3s_query --quiet --no-mime <$BASEDIR/request.1 >$BASEDIR/answer.1
+  $BIN_DIR/osm3s_query --quiet --no-mime <$BASEDIR/request.1 >$BASEDIR/answer.1
 
   if [[ $DEBUG == "full-query" ]]; then
   {
@@ -127,6 +128,6 @@ else
   echo "Content-Type: image/svg+xml; charset=utf-8"
   echo
 
-  ../bin/sketch_route_svg $SKETCH_PARAMS <$BASEDIR/answer.1
+  $BIN_DIR/sketch_route_svg $SKETCH_PARAMS <$BASEDIR/answer.1
 };
 fi

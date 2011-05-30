@@ -220,10 +220,8 @@ void Make_Area_Statement::add_segment_blocks
       
       const uint64& ll_front(it2->coors.front());
       int32 lon_front(lon_(ll_front>>32, ll_front & 0xffffffffull));
-      uint32 lat_front(shifted_lat(ll_front>>32, ll_front & 0xffffffffull));
       const uint64& ll_back(it2->coors.back());
       int32 lon_back(lon_(ll_back>>32, ll_back & 0xffffffffull));
-      uint32 lat_back(shifted_lat(ll_back>>32, ll_back & 0xffffffffull));
       if (lons.find(lon_front) == lons.end())
 	lons.insert(lon_front);
       else
@@ -290,7 +288,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
     return;
   }
   pair< uint32, uint32 > pivot_pair(detect_pivot(mit->second));
-  uint32 pivot_type(pivot_pair.first);
+  int pivot_type(pivot_pair.first);
   uint32 pivot_id(pivot_pair.second);
   
   stopwatch.stop(Stopwatch::NO_DISK);
@@ -320,7 +318,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   
   // iterate over the result
   vector< pair< string, string > > new_tags;
-  File_Properties* file_prop;
+  File_Properties* file_prop = 0;
   if (pivot_type == NODE)
     file_prop = de_osm3s_file_ids::NODE_TAGS_LOCAL;
   else if (pivot_type == WAY)

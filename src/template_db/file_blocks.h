@@ -550,8 +550,8 @@ template< class TIndex, class TIterator, class TRangeIterator >
 void* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
     (const File_Blocks_Basic_Iterator< TIndex >& it) const
 {
-  lseek64(data_file.fd, (int64)(it.block_it->pos)*(block_size), SEEK_SET);
-  uint32 foo(read(data_file.fd, buffer.ptr, block_size)); foo = 0;
+  lseek64(data_file.fd(), (int64)(it.block_it->pos)*(block_size), SEEK_SET);
+  uint32 foo(read(data_file.fd(), buffer.ptr, block_size)); foo = 0;
   ++read_count_;
   return buffer.ptr;
 }
@@ -560,8 +560,8 @@ template< class TIndex, class TIterator, class TRangeIterator >
 void* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
     (const File_Blocks_Basic_Iterator< TIndex >& it, void* buffer) const
 {
-  lseek64(data_file.fd, (int64)(it.block_it->pos)*(block_size), SEEK_SET);
-  uint32 foo(read(data_file.fd, buffer, block_size)); foo = 0;
+  lseek64(data_file.fd(), (int64)(it.block_it->pos)*(block_size), SEEK_SET);
+  uint32 foo(read(data_file.fd(), buffer, block_size)); foo = 0;
   ++read_count_;
   return buffer;
 }
@@ -607,8 +607,8 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
     this->index->void_blocks.pop_back();
   }
   
-  lseek64(data_file.fd, (int64)pos*(block_size), SEEK_SET);
-  uint32 foo(write(data_file.fd, buf, block_size)); foo = 0;
+  lseek64(data_file.fd(), (int64)pos*(block_size), SEEK_SET);
+  uint32 foo(write(data_file.fd(), buf, block_size)); foo = 0;
   
   TIndex index(((uint8*)buf)+(sizeof(uint32)+sizeof(uint32)));
   File_Block_Index_Entry< TIndex > entry(index, pos, max_keysize);
@@ -642,8 +642,8 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
       it.block_it->pos = this->index->void_blocks.back();
       this->index->void_blocks.pop_back();
     }
-    lseek64(data_file.fd, (int64)(it.block_it->pos)*(block_size), SEEK_SET);
-    uint32 foo(write(data_file.fd, buf, block_size)); foo = 0;
+    lseek64(data_file.fd(), (int64)(it.block_it->pos)*(block_size), SEEK_SET);
+    uint32 foo(write(data_file.fd(), buf, block_size)); foo = 0;
     
     it.block_it->index = TIndex((uint8*)buf+(sizeof(uint32)+sizeof(uint32)));
     it.block_it->max_keysize = max_keysize;

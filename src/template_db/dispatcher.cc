@@ -13,7 +13,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
-#include <iostream>
 
 using namespace std;
 
@@ -135,7 +134,7 @@ void Dispatcher::write_start(pid_t pid)
   bool lock_obtained = false;
   try
   {
-    pid_t locked_pid;
+    pid_t locked_pid = 0;
     ifstream lock((shadow_name + ".lock").c_str());
     lock>>locked_pid;
     if (locked_pid == pid)
@@ -295,7 +294,7 @@ void write_to_index_empty_file(const vector< bool >& footprint, string filename)
 
   Raw_File file(filename, O_RDWR|O_CREAT|O_TRUNC,
 		S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "write_to_index_empty_file:1");
-  int foo(write(file.fd, buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr))); foo = 0;
+  int foo(write(file.fd(), buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr))); foo = 0;
 }
 
 void Dispatcher::write_index_of_empty_blocks()

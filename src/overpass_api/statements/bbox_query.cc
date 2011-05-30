@@ -99,7 +99,7 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
   delete(uint_ranges);
   
   stopwatch.stop(Stopwatch::NO_DISK);
-  uint nodes_count;
+  uint nodes_count = 0;
   
   uint32 isouth((south + 91.0)*10000000+0.5);
   uint32 inorth((north + 91.0)*10000000+0.5);

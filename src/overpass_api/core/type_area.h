@@ -87,7 +87,7 @@ struct Area
   
   static void calc_vert_aligned_segments
       (vector< Aligned_Segment >& aligned_segments,
-       uint32 from_lat, uint32 from_lon, uint32 to_lat, uint32 to_lon)
+       uint32 from_lat, int32 from_lon, uint32 to_lat, int32 to_lon)
   {
     if ((from_lon & 0xfff00000) == (to_lon & 0xfff00000))
     {
@@ -101,7 +101,7 @@ struct Area
       calc_horiz_aligned_segments
           (aligned_segments, from_lat, from_lon,
            proportion(from_lon, split_lon - 1, to_lon, from_lat, to_lat), split_lon - 1);
-      for (; split_lon < (to_lon & 0xfff00000); split_lon += 0x100000)
+      for (; split_lon < (int32)(to_lon & 0xfff00000); split_lon += 0x100000)
 	calc_horiz_aligned_segments
 	    (aligned_segments,
 	     proportion(from_lon, split_lon, to_lon, from_lat, to_lat), split_lon,
@@ -118,7 +118,7 @@ struct Area
       calc_horiz_aligned_segments
           (aligned_segments, to_lat, to_lon,
            proportion(to_lon, split_lon - 1, from_lon, to_lat, from_lat), split_lon - 1);
-      for (; split_lon < (from_lon & 0xfff00000); split_lon += 0x100000)
+      for (; split_lon < (int32)(from_lon & 0xfff00000); split_lon += 0x100000)
 	calc_horiz_aligned_segments
 	    (aligned_segments,
 	     proportion(to_lon, split_lon, from_lon, to_lat, from_lat), split_lon,
@@ -254,7 +254,7 @@ struct Area_Skeleton
   Area_Skeleton(void* data)
   {
     id = *(uint32*)data;
-    for (int i(0); i < *((uint32*)data + 1); ++i)
+    for (uint i(0); i < *((uint32*)data + 1); ++i)
       used_indices.insert(*((uint32*)data + i + 2));
   }
   

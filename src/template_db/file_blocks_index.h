@@ -86,7 +86,7 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
   {
     Raw_File val_file(data_file_name, O_RDONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH,
 		      "File_Blocks:5");
-		      block_count = lseek64(val_file.fd, 0, SEEK_END)/block_size_;
+		      block_count = lseek64(val_file.fd(), 0, SEEK_END)/block_size_;
   }
   catch (File_Error e)
   {
@@ -103,10 +103,10 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
 			 S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "File_Blocks:2");
 			 
     // read index file
-    uint32 index_size(lseek64(source_file.fd, 0, SEEK_END));
+    uint32 index_size(lseek64(source_file.fd(), 0, SEEK_END));
     Void_Pointer< uint8 > index_buf(index_size);
-    lseek64(source_file.fd, 0, SEEK_SET);
-    uint32 foo(read(source_file.fd, index_buf.ptr, index_size)); foo = 0;
+    lseek64(source_file.fd(), 0, SEEK_SET);
+    uint32 foo(read(source_file.fd(), index_buf.ptr, index_size)); foo = 0;
     
     uint32 pos(0);
     while (pos < index_size)
@@ -139,10 +139,10 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
       {
 	Raw_File void_blocks_file
 	    (empty_index_file_name, O_RDONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "");
-	uint32 void_index_size = lseek64(void_blocks_file.fd, 0, SEEK_END);
+	uint32 void_index_size = lseek64(void_blocks_file.fd(), 0, SEEK_END);
 	Void_Pointer< uint8 > index_buf(void_index_size);
-	lseek64(void_blocks_file.fd, 0, SEEK_SET);
-	uint32 foo(read(void_blocks_file.fd, index_buf.ptr, void_index_size)); foo = 0;
+	lseek64(void_blocks_file.fd(), 0, SEEK_SET);
+	uint32 foo(read(void_blocks_file.fd(), index_buf.ptr, void_index_size)); foo = 0;
 	for (uint32 i = 0; i < void_index_size/sizeof(uint32); ++i)
 	  void_blocks.push_back(*(uint32*)(index_buf.ptr + 4*i));
 	empty_index_file_used = true;
@@ -189,12 +189,12 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
   Raw_File dest_file(index_file_name, O_RDWR|O_CREAT,
 		     S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "File_Blocks:3");
 
-  if (index_size < lseek64(dest_file.fd, 0, SEEK_END))
+  if (index_size < lseek64(dest_file.fd(), 0, SEEK_END))
   {
-    int foo(ftruncate64(dest_file.fd, index_size)); foo = 0;
+    int foo(ftruncate64(dest_file.fd(), index_size)); foo = 0;
   }
-  lseek64(dest_file.fd, 0, SEEK_SET);
-  uint32 foo(write(dest_file.fd, index_buf.ptr, index_size)); foo = 0;
+  lseek64(dest_file.fd(), 0, SEEK_SET);
+  uint32 foo(write(dest_file.fd(), index_buf.ptr, index_size)); foo = 0;
   
   // Write void blocks
   Void_Pointer< uint8 > void_index_buf(void_blocks.size()*sizeof(uint32));
@@ -206,7 +206,7 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
   {
     Raw_File void_file(empty_index_file_name, O_RDWR|O_TRUNC,
 		       S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "File_Blocks:4");
-    foo = write(void_file.fd, void_index_buf.ptr,
+    foo = write(void_file.fd(), void_index_buf.ptr,
 	        void_blocks.size()*sizeof(uint32)); foo = 0;
   }
   catch (File_Error e) {}

@@ -7,9 +7,7 @@ using namespace std;
 
 struct Web_Output : public Error_Output
 {
-  Web_Output(uint log_level_) : encoding_errors(false), parse_errors(false),
-  static_errors(false), log_level(log_level_), header_written(false)
-  {}
+  Web_Output(uint log_level_) : header_written(false), encoding_errors(false), parse_errors(false), static_errors(false), log_level(log_level_) {}
   
   virtual void add_encoding_error(const string& error);
   virtual void add_parse_error(const string& error, int line_number);

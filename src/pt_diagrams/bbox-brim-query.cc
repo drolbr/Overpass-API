@@ -1,13 +1,9 @@
-/*****************************************************************
- * Must be used with Expat compiled for UTF-8 output.
- */
+#include "../expat/expat_justparse_interface.h"
 
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <vector>
-
-#include <math.h>
-#include "../expat_justparse_interface.h"
 
 using namespace std;
 

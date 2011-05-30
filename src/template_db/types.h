@@ -67,13 +67,15 @@ struct File_Properties
 };
 
 /** Simple RAII class to keep a file descriptor. */
-struct Raw_File
+class Raw_File
 {
-  Raw_File(string name, int oflag, mode_t mode, string caller_id);
-  ~Raw_File() { close(fd); }
-  
   public:
-    int fd;
+    Raw_File(string name, int oflag, mode_t mode, string caller_id);
+    ~Raw_File() { close(fd_); }
+    int fd() const { return fd_; }
+  
+  private:
+    int fd_;
 };
 
 /** Simple RAII class to keep a pointer to some memory on the heap.
@@ -106,9 +108,10 @@ class Index_Smart_Pimpl
 };
 
 inline Raw_File::Raw_File(string name, int oflag, mode_t mode, string caller_id)
+  : fd_(0)
 {
-  fd = open64(name.c_str(), oflag, mode);
-  if (fd < 0)
+  fd_ = open64(name.c_str(), oflag, mode);
+  if (fd_ < 0)
     throw File_Error(errno, name, caller_id);
 }
 

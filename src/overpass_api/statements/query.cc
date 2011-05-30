@@ -238,7 +238,7 @@ void Query_Statement::forecast()
       sf_out.relation_count = key_value_counts.begin()->first;
     declare_used_time(100 + sf_out.relation_count);
   }
-/*  else if (type == QUERY_AREA)
+  else if (type == QUERY_AREA)
   {
     if (key_value_counts.empty())
     {
@@ -248,7 +248,7 @@ void Query_Statement::forecast()
     else
       sf_out.area_count = 15;
     declare_used_time(30*1000);
-  }*
+  }
   finish_statement_forecast();
     
   display_full();
@@ -433,7 +433,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     }
     else if (bbox_restriction != 0)
     {
-      uint nodes_count;
+      uint nodes_count = 0;
       Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
 	  (rman.get_transaction().data_index(de_osm3s_file_ids::NODES));
       for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
@@ -467,7 +467,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     }
     else
     {
-      uint nodes_count;
+      uint nodes_count = 0;
       Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
           (rman.get_transaction().data_index(de_osm3s_file_ids::NODES));
       for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
@@ -510,7 +510,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     areas.clear();
     
     stopwatch.stop(Stopwatch::NO_DISK);
-    uint ways_count;
+    uint ways_count = 0;
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
         (rman.get_transaction().data_index(de_osm3s_file_ids::WAYS));
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator

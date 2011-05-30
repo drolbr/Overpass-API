@@ -1,19 +1,19 @@
 #ifndef DE_OSM3S__BACKEND__RANDOM_FILE
 #define DE_OSM3S__BACKEND__RANDOM_FILE
 
+#include "random_file_index.h"
+#include "types.h"
+
 #include <sys/stat.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <unistd.h>
 
+#include <cstdio>
+#include <cstdlib>
 #include <limits>
 #include <map>
 #include <vector>
-
-#include "random_file_index.h"
-#include "types.h"
 
 using namespace std;
 
@@ -110,8 +110,8 @@ void Random_File< TVal >::move_cache_window(size_t pos)
     index->blocks[cache_pos] = disk_pos;
     
     // Write the data at the found position.
-    lseek64(val_file.fd, (int64)disk_pos*block_size, SEEK_SET);
-    uint32 foo(write(val_file.fd, cache.ptr, block_size)); foo = 0;
+    lseek64(val_file.fd(), (int64)disk_pos*block_size, SEEK_SET);
+    uint32 foo(write(val_file.fd(), cache.ptr, block_size)); foo = 0;
   }
   changed = false;
   
@@ -126,8 +126,8 @@ void Random_File< TVal >::move_cache_window(size_t pos)
   }
   else
   {
-    lseek64(val_file.fd, (int64)(index->blocks[pos])*block_size, SEEK_SET);
-    uint32 foo(read(val_file.fd, cache.ptr, block_size)); foo = 0;
+    lseek64(val_file.fd(), (int64)(index->blocks[pos])*block_size, SEEK_SET);
+    uint32 foo(read(val_file.fd(), cache.ptr, block_size)); foo = 0;
   }
   cache_pos = pos;
 }
