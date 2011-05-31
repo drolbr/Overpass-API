@@ -88,7 +88,7 @@ Dispatcher::Dispatcher
     throw File_Error
         (errno, dispatcher_share_name, "Dispatcher_Server::1");
   int foo = ftruncate(dispatcher_shm_fd,
-		      SHM_SIZE + db_dir.size() + shadow_name.size());
+		      SHM_SIZE + db_dir.size() + shadow_name.size()); foo = 0;
   dispatcher_shm_ptr = (uint8*)mmap
         (0, SHM_SIZE + db_dir.size() + shadow_name.size(),
          PROT_READ|PROT_WRITE, MAP_SHARED, dispatcher_shm_fd, 0);
@@ -452,7 +452,7 @@ Dispatcher_Client::~Dispatcher_Client()
 
 void Dispatcher_Client::write_start()
 {
-  uint32 pid = getpid();
+  pid_t pid = getpid();
   while (true)
   {
     *(uint32*)dispatcher_shm_ptr = Dispatcher::WRITE_START;
@@ -484,7 +484,7 @@ void Dispatcher_Client::write_start()
 
 void Dispatcher_Client::write_rollback()
 {
-  uint32 pid = getpid();
+  pid_t pid = getpid();
   while (true)
   {
     *(uint32*)dispatcher_shm_ptr = Dispatcher::WRITE_ROLLBACK;
@@ -518,7 +518,7 @@ void Dispatcher_Client::write_rollback()
 
 void Dispatcher_Client::write_commit()
 {
-  uint32 pid = getpid();
+  pid_t pid = getpid();
   while (true)
   {
     *(uint32*)dispatcher_shm_ptr = Dispatcher::WRITE_COMMIT;

@@ -41,21 +41,18 @@ RUN=
 FETCH=
 VERSION=
 
-EXEC_DIR=/home/olbricht/git
-#/srv/osm-3s
-DB_DIR=/home/olbricht/git
-#/opt/osm-3s
-PLANET_DIR=/home/olbricht/git
-#/home/roland/osm-planet
-REPLICATE_DIR=/home/olbricht/git
+EXEC_DIR=/srv/osm-3s
+DB_DIR=/opt/osm-3s
+PLANET_DIR=/home/roland/osm-planet
+REPLICATE_DIR=/home/roland/osm-replicate-diffs/
 DOWNLOAD_PLANET=http://ftp.heanet.ie/mirrors/openstreetmap.org/
 DOWNLOAD_DIFFS=http://planet.openstreetmap.org/minute-replicate/
 
 process_param()
 {
-  if [[ "$1" == "--publish" ]]; then
+  if [[ "${1:0:10}" == "--publish=" ]]; then
   {
-    PUBLISH="yes"
+    PUBLISH="${1:10}"
   };
   elif [[ "$1" == "--install" ]]; then
   {
@@ -124,7 +121,7 @@ fi
 
 if [[ -n $PUBLISH ]]; then
 {
-  tar cvf - --exclude=osm-3s_testing "osm-3s_v$VERSION/" | gzip >"../misc-www/osm-3s_v$VERSION.tar.gz"
+  tar cvf - --exclude=osm-3s_testing "osm-3s_v$VERSION/" | gzip >"$PUBLISH/osm-3s_v$VERSION.tar.gz"
 };
 fi
 
@@ -139,6 +136,7 @@ fi
 
 if [[ -n $TEST ]]; then
 {
+  mkdir -p "osm-3s_v$VERSION/osm-3s_testing/"
   pushd "osm-3s_v$VERSION/osm-3s_testing/"
   $TARGET_DIR/test-bin/run_testsuite.sh 2000 notimes >test.stdout.log 2>test.stderr.log
   FAILED=`grep FAILED test.stdout.log`
@@ -146,7 +144,7 @@ if [[ -n $TEST ]]; then
 
   if [[ -n $FAILED ]]; then
   {
-    cat "osm-3s_v$VERSION/osm-3s_testing/test.log"
+    cat "osm-3s_v$VERSION/osm-3s_testing/test.stdout.log"
     exit 0
   };
   fi

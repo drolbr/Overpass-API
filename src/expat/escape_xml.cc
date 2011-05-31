@@ -8,7 +8,7 @@ string escape_xml(const string& s)
 {
   string result;
   result.reserve(s.length()*2);
-  for (int i(0); i < s.length(); ++i)
+  for (string::size_type i(0); i < s.size(); ++i)
   {
     if (s[i] == '&')
       result += "&amp;";

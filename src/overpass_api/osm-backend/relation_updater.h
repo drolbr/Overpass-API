@@ -57,8 +57,8 @@ private:
   Transaction* transaction;
   bool external_transaction;
   map< string, uint32 > role_ids;
-  uint32 max_written_role_id;
   uint32 max_role_id;
+  uint32 max_written_role_id;
   vector< pair< uint32, bool > > ids_to_modify;
   vector< Relation > rels_to_insert;
   static Relation_Comparator_By_Id rel_comparator_by_id;

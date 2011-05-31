@@ -1223,12 +1223,15 @@ private:
       bool block_modified(false);
       
       file_blocks.read_block(file_it, source);
-
+      
       uint8* spos(source + 8 + TIndex::size_of(source + 8));
       uint8* pos(dest + 8 + TIndex::size_of(source + 8));
       memcpy(dest, source, spos - source);
       
       //copy everything that is not deleted yet
+      if (*(uint32*)source != *((uint32*)(source + 4)))
+	throw File_Error(0, data_filename,
+	    "Block_Backend::1: one index expected - several found.");	 
       while ((uint32)(spos - source) < *(uint32*)source)
       {
 	TObject obj(spos);
@@ -1274,12 +1277,15 @@ private:
     }
     
     file_blocks.read_block(file_it, source);
-
+    
     uint8* spos(source + 8 + TIndex::size_of(source + 8));
     uint8* pos(dest + 8 + TIndex::size_of(source + 8));
     memcpy(dest, source, spos - source);
     
     //copy everything that is not deleted yet
+    if (*(uint32*)source != *((uint32*)(source + 4)))
+      throw File_Error(0, data_filename,
+	  "Block_Backend::2: one index expected - several found.");	 
     while ((uint32)(spos - source) < *(uint32*)source)
     {
       TObject obj(spos);

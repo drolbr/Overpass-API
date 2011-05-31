@@ -20,8 +20,8 @@ Relation_Updater::Relation_Updater(Transaction& transaction_)
 
 Relation_Updater::Relation_Updater(string db_dir_)
   : update_counter(0), transaction(0),
-    external_transaction(false), db_dir(db_dir_),
-    max_role_id(0), max_written_role_id(0)
+    external_transaction(false),
+    max_role_id(0), max_written_role_id(0), db_dir(db_dir_)
 {}
 
 uint32 Relation_Updater::get_role_id(const string& s)
