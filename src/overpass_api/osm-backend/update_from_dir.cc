@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
       }
       ++it;
     }
-    finish_updater();
+    osm_updater.finish_updater();
   }
   catch (File_Error e)
   {

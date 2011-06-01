@@ -110,6 +110,7 @@ struct File_Blocks_Flat_Iterator : File_Blocks_Basic_Iterator< TIndex >
       (const File_Blocks_Flat_Iterator& a);
   bool operator==(const File_Blocks_Flat_Iterator& a) const;
   File_Blocks_Flat_Iterator& operator++();
+  bool is_out_of_range(const TIndex& index);
 };
 
 template< class TIndex, class TIterator >
@@ -232,6 +233,8 @@ public:
       (const Discrete_Iterator& it, void* buf, uint32 max_keysize);
   Discrete_Iterator replace_block(Discrete_Iterator it, void* buf, uint32 max_keysize);
   
+  const File_Blocks_Index< TIndex >& get_index() const { return *index; }
+  
 private:
   File_Blocks_Index< TIndex >* index;
   uint32 block_size;
@@ -309,6 +312,24 @@ File_Blocks_Flat_Iterator< TIndex >& File_Blocks_Flat_Iterator< TIndex >::operat
 {
   ++(this->block_it);
   return *this;
+}
+
+template< class TIndex >
+bool File_Blocks_Flat_Iterator< TIndex >::is_out_of_range(const TIndex& index)
+{
+  if (this->block_it == this->block_end)
+    return true;
+  if (index == this->block_it->index)
+    return false;
+  if (index < this->block_it->index)
+    return true;
+  typename list< File_Block_Index_Entry< TIndex > >::iterator
+      next_it(this->block_it);
+  if (++next_it == this->block_end)
+    return false;
+  if (!(index < next_it->index))
+    return true;
+  return false;
 }
 
 /** Implementation File_Blocks_Discrete_Iterator: ---------------------------*/
@@ -562,6 +583,10 @@ void* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
 {
   lseek64(data_file.fd(), (int64)(it.block_it->pos)*(block_size), SEEK_SET);
   uint32 foo(read(data_file.fd(), buffer, block_size)); foo = 0;
+  if (!(it.block_it->index ==
+        TIndex(((uint8*)buffer)+(sizeof(uint32)+sizeof(uint32)))))
+    throw File_Error(it.block_it->pos, index->get_data_file_name(),
+	             "File_Blocks: Index inconsistent");
   ++read_count_;
   return buffer;
 }

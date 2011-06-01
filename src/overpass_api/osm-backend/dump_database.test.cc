@@ -69,14 +69,14 @@ struct Ofstream_Collection
   }
 };
 
-void dump_nodes()
+void dump_nodes(Transaction& transaction)
 {
   Ofstream_Collection node_db_out(get_basedir() + "after_node_", "_db.csv");
   Ofstream_Collection node_tags_local_out(get_basedir() + "after_node_tags_", "_local.csv");
   Ofstream_Collection node_tags_global_out(get_basedir() + "after_node_tags_", "_global.csv");
     
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-      (*de_osm3s_file_ids::NODES, false);
+      (transaction.data_index(de_osm3s_file_ids::NODES));
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
       it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
   {
@@ -86,32 +86,32 @@ void dump_nodes()
 	<<Node::lon(it.index().val(), it.object().ll_lower)<<'\n';
   }
     
-    // check update_node_tags_local - compare both files for the result
-    Block_Backend< Tag_Index_Local, Uint32_Index > nodes_local_db
-	(*de_osm3s_file_ids::NODE_TAGS_LOCAL, false);
-    for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
-	 it(nodes_local_db.flat_begin());
-         !(it == nodes_local_db.flat_end()); ++it)
-    {
-      ofstream* out(node_tags_local_out.get(it.object().val() / 5000000));
-      (*out)<<it.object().val()<<'\t'
-	  <<it.index().key<<'\t'<<it.index().value<<'\n';
-    }
-    
-    // check update_node_tags_global - compare both files for the result
-    Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
-	(*de_osm3s_file_ids::NODE_TAGS_GLOBAL, false);
-    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
-	 it(nodes_global_db.flat_begin());
-         !(it == nodes_global_db.flat_end()); ++it)
-    {
-      ofstream* out(node_tags_global_out.get(it.object().val() / 5000000));
-      (*out)<<it.object().val()<<'\t'
-	  <<it.index().key<<'\t'<<it.index().value<<'\n';
-    }
+  // check update_node_tags_local - compare both files for the result
+  Block_Backend< Tag_Index_Local, Uint32_Index > nodes_local_db
+      (transaction.data_index(de_osm3s_file_ids::NODE_TAGS_LOCAL));
+  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
+      it(nodes_local_db.flat_begin());
+      !(it == nodes_local_db.flat_end()); ++it)
+  {
+    ofstream* out(node_tags_local_out.get(it.object().val() / 5000000));
+    (*out)<<it.object().val()<<'\t'
+        <<it.index().key<<'\t'<<it.index().value<<'\n';
+  }
+  
+  // check update_node_tags_global - compare both files for the result
+  Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
+      (transaction.data_index(de_osm3s_file_ids::NODE_TAGS_GLOBAL));
+  for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
+      it(nodes_global_db.flat_begin());
+      !(it == nodes_global_db.flat_end()); ++it)
+  {
+    ofstream* out(node_tags_global_out.get(it.object().val() / 5000000));
+    (*out)<<it.object().val()<<'\t'
+        <<it.index().key<<'\t'<<it.index().value<<'\n';
+  }
 }
 
-void dump_ways()
+void dump_ways(Transaction& transaction)
 {
   Ofstream_Collection way_db_out(get_basedir() + "after_way_", "_db.csv");
   Ofstream_Collection way_tags_local_out(get_basedir() + "after_way_tags_", "_local.csv");
@@ -119,7 +119,7 @@ void dump_ways()
     
   // check update_members - compare both files for the result
   Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-      (*de_osm3s_file_ids::WAYS, false);
+      (transaction.data_index(de_osm3s_file_ids::WAYS));
   for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
       it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
   {
@@ -132,7 +132,7 @@ void dump_ways()
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Local, Uint32_Index > ways_local_db
-	(*de_osm3s_file_ids::WAY_TAGS_LOCAL, false);
+	(transaction.data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL));
     for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(ways_local_db.flat_begin());
          !(it == ways_local_db.flat_end()); ++it)
@@ -144,7 +144,7 @@ void dump_ways()
     
     // check update_way_tags_global - compare both files for the result
     Block_Backend< Tag_Index_Global, Uint32_Index > ways_global_db
-	(*de_osm3s_file_ids::WAY_TAGS_GLOBAL, false);
+	(transaction.data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL));
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(ways_global_db.flat_begin());
          !(it == ways_global_db.flat_end()); ++it)
@@ -155,7 +155,7 @@ void dump_ways()
     }
 }
 
-void dump_relations()
+void dump_relations(Transaction& transaction)
 {
   Ofstream_Collection relation_db_out(get_basedir() + "after_relation_", "_db.csv");
   Ofstream_Collection relation_tags_local_out(get_basedir() + "after_relation_tags_", "_local.csv");
@@ -164,14 +164,14 @@ void dump_relations()
     // prepare check update_members - load roles
     map< uint32, string > roles;
     Block_Backend< Uint32_Index, String_Object > roles_db
-      (*de_osm3s_file_ids::RELATION_ROLES, true);
+      (transaction.data_index(de_osm3s_file_ids::RELATION_ROLES));
     for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
         it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
       roles[it.index().val()] = it.object().val();
     
     // check update_members - compare both files for the result
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(*de_osm3s_file_ids::RELATIONS, false);
+	(transaction.data_index(de_osm3s_file_ids::RELATIONS));
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
 	 it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
     {
@@ -186,7 +186,7 @@ void dump_relations()
     
     // check update_relation_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Local, Uint32_Index > relations_local_db
-	(*de_osm3s_file_ids::RELATION_TAGS_LOCAL, false);
+	(transaction.data_index(de_osm3s_file_ids::RELATION_TAGS_LOCAL));
     for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(relations_local_db.flat_begin());
          !(it == relations_local_db.flat_end()); ++it)
@@ -198,7 +198,7 @@ void dump_relations()
     
     // check update_relation_tags_global - compare both files for the result
     Block_Backend< Tag_Index_Global, Uint32_Index > relations_global_db
-	(*de_osm3s_file_ids::RELATION_TAGS_GLOBAL, false);
+	(transaction.data_index(de_osm3s_file_ids::RELATION_TAGS_GLOBAL));
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(relations_global_db.flat_begin());
          !(it == relations_global_db.flat_end()); ++it)
@@ -229,9 +229,10 @@ int main(int argc, char* argv[])
   
   try
   {
-    dump_nodes();
-    dump_ways();
-    dump_relations();
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    dump_nodes(transaction);
+    dump_ways(transaction);
+    dump_relations(transaction);
   }
   catch (File_Error e)
   {

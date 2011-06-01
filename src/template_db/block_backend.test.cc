@@ -199,11 +199,13 @@ void fill_db
         (transaction.data_index(&tf));
     db_backend.update(to_delete, to_insert);
   }
-  catch (File_Error e)
+  catch (File_Error& e)
   {
     cout<<"File error catched in part "<<step<<": "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     cout<<"(This is unexpected)\n";
+    
+    throw;
   }
 }
 
@@ -386,11 +388,13 @@ void read_test(unsigned int step)
   
     cout<<"This block of read tests is complete.\n";
   }
-  catch (File_Error e)
+  catch (File_Error& e)
   {
     cout<<"File error catched in part "<<step<<": "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is the unexpected)\n";
+    cout<<"(This is unexpected)\n";
+    
+    throw;
   }
 }
 

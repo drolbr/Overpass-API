@@ -21,6 +21,9 @@ class Osm_Updater
     Osm_Updater(Osm_Backend_Callback* callback_, string db_dir,
 		const string& data_version);
     ~Osm_Updater();
+
+    void finish_updater();
+    void parse_file_completely(FILE* in);
     
   private:
     Nonsynced_Transaction* transaction;
@@ -28,11 +31,10 @@ class Osm_Updater
     Node_Updater* node_updater_;
     Way_Updater* way_updater_;
     Relation_Updater* relation_updater_;
+    string db_dir_;
+
+    void flush();
 };
-
-void finish_updater();
-
-void parse_file_completely(FILE* in);
 
 void parse_nodes_only(FILE* in);
 void parse_ways_only(FILE* in);

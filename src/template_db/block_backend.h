@@ -299,7 +299,13 @@ private:
     this->current_idx_pos = (uint32*)((this->buffer) + this->pos);
     if (this->pos < *(uint32*)(this->buffer))
     {
-      this->pos += 4;
+      this->current_index = new TIndex((void*)(this->current_idx_pos + 1));
+      typename File_Blocks_::Flat_Iterator next_it(file_it);
+      if (file_it.is_out_of_range(*this->current_index))
+	throw File_Error(file_it.block_it->pos,
+			 file_blocks.get_index().get_data_file_name(),
+	                 "Block_Backend: index out of range.");
+	 this->pos += 4;
       this->pos += TIndex::size_of((void*)((this->buffer) + this->pos));
       return true;
     }

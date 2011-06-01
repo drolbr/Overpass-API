@@ -328,7 +328,7 @@ void end(const char *el)
   ++osm_element_count;
 }
 
-void finish_updater()
+void Osm_Updater::finish_updater()
 {
   if (state == IN_NODES)
     callback->nodes_finished();
@@ -352,9 +352,11 @@ void finish_updater()
   }
   if (state == IN_RELATIONS)
     relation_updater->update(callback);
+  
+  flush();
 }
 
-void parse_file_completely(FILE* in)
+void Osm_Updater::parse_file_completely(FILE* in)
 {
   callback->parser_started();
   
@@ -408,7 +410,7 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
 
 Osm_Updater::Osm_Updater
     (Osm_Backend_Callback* callback_, string db_dir, const string& data_version)
-  : transaction(0), dispatcher_client(0)
+  : transaction(0), dispatcher_client(0), db_dir_(db_dir)
 {
   {
     ofstream version((db_dir + "osm_base_version").c_str());
@@ -427,21 +429,44 @@ Osm_Updater::Osm_Updater
   callback = callback_;
 }
 
-Osm_Updater::~Osm_Updater()
+void Osm_Updater::flush()
 {
   delete node_updater_;
+  node_updater_ = new Node_Updater(db_dir_);
   delete way_updater_;
+  way_updater_ = new Way_Updater(db_dir_);
   delete relation_updater_;
+  relation_updater_ = new Relation_Updater(db_dir_);
+  
   if (dispatcher_client)
   {
-    if (transaction)
-      delete transaction;
+    delete transaction;
+    transaction = 0;
     Logger logger(dispatcher_client->get_db_dir());
     logger.annotated_log("write_commit() start");
     dispatcher_client->write_commit();
     rename((dispatcher_client->get_db_dir() + "osm_base_version.shadow").c_str(),
 	   (dispatcher_client->get_db_dir() + "osm_base_version").c_str());
     logger.annotated_log("write_commit() end");
+    delete dispatcher_client;
+    dispatcher_client = 0;
+  }
+}
+
+Osm_Updater::~Osm_Updater()
+{
+  delete node_updater_;
+  delete way_updater_;
+  delete relation_updater_;
+  
+  if (dispatcher_client)
+  {
+    if (transaction)
+      delete transaction;
+    Logger logger(dispatcher_client->get_db_dir());
+    logger.annotated_log("write_rollback() start");
+    dispatcher_client->write_rollback();
+    logger.annotated_log("write_rollback() end");
     delete dispatcher_client;
   }
 }

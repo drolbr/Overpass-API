@@ -1,5 +1,5 @@
 testbindir = ${prefix}/test-bin
-testbin_PROGRAMS = file_blocks block_backend random_file node_updater way_updater relation_updater generate_test_file diff_updater test_dispatcher area_query bbox_query foreach make_area print query recurse union
+testbin_PROGRAMS = file_blocks block_backend random_file node_updater way_updater relation_updater dump_database generate_test_file diff_updater test_dispatcher area_query bbox_query foreach make_area print query recurse union
 dist_testbin_SCRIPTS = apply_osc.test.sh run_testsuite.sh run_and_compare.sh
 
 expat_cc = ../expat/expat_justparse_interface.cc
@@ -24,8 +24,8 @@ relation_updater_LDADD = -lexpat
 #complete_updater_LDADD = -lexpat
 diff_updater_SOURCES = ${settings_cc} ../overpass_api/osm-backend/diff_updater.test.cc
 diff_updater_LDADD =
-#dump_database_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/osm-backend/dump_database.test.cc
-#dump_database_LDADD = -lexpat
+dump_database_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/way_updater.cc ../overpass_api/osm-backend/relation_updater.cc ../overpass_api/osm-backend/dump_database.test.cc
+dump_database_LDADD = -lexpat
 #example_queries_SOURCES = ${expat_cc} ${settings_cc} ../overpass_api/osm-backend/example_queries.cc
 #example_queries_LDADD = -lexpat
 generate_test_file_SOURCES = ../overpass_api/osm-backend/generate_test_file.cc
