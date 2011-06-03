@@ -21,7 +21,7 @@ const uint32 SERVER_STATE = 19;
 
 const uint32 QUERY_REJECTED = 32;
 
-static const string shared_name("/osm3s_build_2011-05-30");
+static const string shared_name("/osm3s_v0.6.90");
 
 class Idx_Footprints
 {
