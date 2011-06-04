@@ -125,13 +125,16 @@ void Dispatcher::write_start(pid_t pid)
   if (file_exists(shadow_name + ".lock"))
     return;
 
+  copy_mains_to_shadows();
+  write_index_of_empty_blocks();
+  
   try
   {
     ofstream lock((shadow_name + ".lock").c_str());
     lock<<pid;
   }
   catch (...) {}
-
+  
   bool lock_obtained = false;
   try
   {
@@ -146,9 +149,6 @@ void Dispatcher::write_start(pid_t pid)
   if (!lock_obtained)
     return;
   // Now we have successfully placed the lock.
-
-  copy_mains_to_shadows();
-  write_index_of_empty_blocks();
 }
 
 void Dispatcher::write_rollback()
