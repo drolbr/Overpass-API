@@ -23,11 +23,29 @@ bool file_exists(const string& filename)
 
 void copy_file(const string& source, const string& dest)
 {
-  ifstream in(source.c_str());
+  if (!file_exists(source))
+    return;
+  
+  Raw_File source_file(source, O_RDONLY,
+		       S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "Dispatcher:1");
+  uint64 size = lseek64(source_file.fd(), 0, SEEK_END);
+  lseek64(source_file.fd(), 0, SEEK_SET);
+  Raw_File dest_file(dest, O_RDWR|O_CREAT,
+		     S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "Dispatcher:2");
+  ftruncate64(dest_file.fd(), size);
+  
+  Void_Pointer< uint8 > buf(64*1024);
+  while (size > 0)
+  {
+    size = read(source_file.fd(), buf.ptr, 64*1024);
+    size = write(dest_file.fd(), buf.ptr, size);
+  }
+  
+/*  ifstream in(source.c_str());
   if (!in.good())
     return;
   ofstream out(dest.c_str());
-  out<<in.rdbuf();
+  out<<in.rdbuf();*/
 }
 
 void touch_file(const string& filename)
@@ -201,22 +219,14 @@ void Dispatcher::copy_shadows_to_mains()
   for (vector< File_Properties* >::const_iterator it(controlled_files.begin());
       it != controlled_files.end(); ++it)
   {
-    try
-    {
       copy_file(db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
                 + (*it)->get_index_suffix() + (*it)->get_shadow_suffix(),
 		db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
 		+ (*it)->get_index_suffix());
-    }
-    catch (...) {}
-    try
-    {
       copy_file(db_dir + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
                 + (*it)->get_index_suffix() + (*it)->get_shadow_suffix(),
 		db_dir + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
 		+ (*it)->get_index_suffix());
-    }
-    catch (...) {}
   }
 }
 
@@ -225,22 +235,14 @@ void Dispatcher::copy_mains_to_shadows()
   for (vector< File_Properties* >::const_iterator it(controlled_files.begin());
       it != controlled_files.end(); ++it)
   {
-    try
-    {
       copy_file(db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
                 + (*it)->get_index_suffix(),
 		db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
 		+ (*it)->get_index_suffix() + (*it)->get_shadow_suffix());
-    }
-    catch (...) {}
-    try
-    {
       copy_file(db_dir + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
                 + (*it)->get_index_suffix(),
 		db_dir + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
 		+ (*it)->get_index_suffix() + (*it)->get_shadow_suffix());
-    }
-    catch (...) {}
   }
 }
 
