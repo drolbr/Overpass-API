@@ -161,6 +161,7 @@ if [[ -n $INIT ]]; then
   };
   fi
 
+  mkdir -p "$DB_DIR/v$VERSION"
   bunzip2 <$PLANET_DIR/planet-$INIT.osm.bz2 | $EXEC_DIR/v$VERSION/bin/update_database --db-dir=$DB_DIR/v$VERSION/
 };
 fi
