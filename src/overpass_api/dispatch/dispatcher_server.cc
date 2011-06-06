@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
   
   if (!osm_base && !terminate)
   {
-    cout<<"Usage: "<<args[0]<<" (--terminate | --osm-base --db-dir=Directory)\n";
+    cout<<"Usage: "<<argv[0]<<" (--terminate | --osm-base --db-dir=Directory)\n";
     return 0;
   }
   
