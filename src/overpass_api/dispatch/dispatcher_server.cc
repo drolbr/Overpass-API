@@ -59,6 +59,12 @@ int main(int argc, char* argv[])
     files_to_manage.push_back(de_osm3s_file_ids::RELATION_TAGS_GLOBAL);
   }
   
+  if (!osm_base && !terminate)
+  {
+    cout<<"Usage: "<<args[0]<<" (--terminate | --osm-base --db-dir=Directory)\n";
+    return 0;
+  }
+  
   Dispatcher dispatcher(shared_name, "", db_dir + "shadow", db_dir,
 			files_to_manage);
   dispatcher.standby_loop(0);
