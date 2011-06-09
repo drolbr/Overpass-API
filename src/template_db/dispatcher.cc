@@ -101,7 +101,7 @@ Dispatcher::Dispatcher
   // open dispatcher_share
   dispatcher_shm_fd = shm_open
       (dispatcher_share_name.c_str(),
-       O_RDWR|O_CREAT|O_TRUNC, S_IRWXU|S_IRWXG|S_IRWXO);
+       O_RDWR|O_CREAT|O_TRUNC|O_EXCL, S_IRWXU|S_IRWXG|S_IRWXO);
   if (dispatcher_shm_fd < 0)
     throw File_Error
         (errno, dispatcher_share_name, "Dispatcher_Server::1");
