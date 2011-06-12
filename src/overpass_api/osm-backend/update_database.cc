@@ -28,7 +28,6 @@ int main(int argc, char* argv[])
       db_dir = ((string)argv[argpos]).substr(9);
       if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
 	db_dir += '/';
-      set_basedir(db_dir);
       transactional = false;
     }
     if (!(strncmp(argv[argpos], "--version=", 10)))

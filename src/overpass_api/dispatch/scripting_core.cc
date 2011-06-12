@@ -1,5 +1,6 @@
 #include "resource_manager.h"
 #include "scripting_core.h"
+#include "../core/settings.h"
 #include "../frontend/console_output.h"
 #include "../frontend/user_interface.h"
 #include "../statements/statement.h"
@@ -26,9 +27,6 @@
 
 using namespace std;
 
-// const char* LOGFILE = "/opt/osm_why_api/dispatcher.log";
-// static int output_mode(NOTHING);
-
 namespace
 {
   vector< Statement* > statement_stack;
@@ -43,7 +41,7 @@ Dispatcher_Stub::Dispatcher_Stub
 {
   if (db_dir == "")
   {
-    dispatcher_client = new Dispatcher_Client(shared_name);
+    dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
     Logger logger(dispatcher_client->get_db_dir());
     logger.annotated_log("request_read_and_idx() start");
     dispatcher_client->request_read_and_idx();
@@ -53,19 +51,19 @@ Dispatcher_Stub::Dispatcher_Stub
         (false, false, dispatcher_client->get_db_dir(), "");
     rman = new Resource_Manager(*transaction);
   
-    transaction->data_index(de_osm3s_file_ids::NODES);
-    transaction->random_index(de_osm3s_file_ids::NODES);
-    transaction->data_index(de_osm3s_file_ids::NODE_TAGS_LOCAL);
-    transaction->data_index(de_osm3s_file_ids::NODE_TAGS_GLOBAL);
-    transaction->data_index(de_osm3s_file_ids::WAYS);
-    transaction->random_index(de_osm3s_file_ids::WAYS);
-    transaction->data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL);
-    transaction->data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL);
-    transaction->data_index(de_osm3s_file_ids::RELATIONS);
-    transaction->random_index(de_osm3s_file_ids::RELATIONS);
-    transaction->data_index(de_osm3s_file_ids::RELATION_ROLES);
-    transaction->data_index(de_osm3s_file_ids::RELATION_TAGS_LOCAL);
-    transaction->data_index(de_osm3s_file_ids::RELATION_TAGS_GLOBAL);
+    transaction->data_index(osm_base_settings().NODES);
+    transaction->random_index(osm_base_settings().NODES);
+    transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL);
+    transaction->data_index(osm_base_settings().NODE_TAGS_GLOBAL);
+    transaction->data_index(osm_base_settings().WAYS);
+    transaction->random_index(osm_base_settings().WAYS);
+    transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL);
+    transaction->data_index(osm_base_settings().WAY_TAGS_GLOBAL);
+    transaction->data_index(osm_base_settings().RELATIONS);
+    transaction->random_index(osm_base_settings().RELATIONS);
+    transaction->data_index(osm_base_settings().RELATION_ROLES);
+    transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL);
+    transaction->data_index(osm_base_settings().RELATION_TAGS_GLOBAL);
     
     {
       ifstream version((dispatcher_client->get_db_dir() + "osm_base_version").c_str());

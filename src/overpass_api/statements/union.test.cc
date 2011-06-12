@@ -19,7 +19,6 @@ int main(int argc, char* args[])
     return 0;
   }
   string test_to_execute = args[1];
-  set_basedir(args[2]);
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"

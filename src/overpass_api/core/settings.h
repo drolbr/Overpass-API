@@ -7,30 +7,56 @@
 
 using namespace std;
 
-struct de_osm3s_file_ids
+struct Basic_Settings
 {
-  static File_Properties* NODES;
-  static File_Properties* NODE_TAGS_LOCAL;
-  static File_Properties* NODE_TAGS_GLOBAL;
-  static File_Properties* WAYS;
-  static File_Properties* WAY_TAGS_LOCAL;
-  static File_Properties* WAY_TAGS_GLOBAL;
-  static File_Properties* RELATIONS;
-  static File_Properties* RELATION_ROLES;
-  static File_Properties* RELATION_TAGS_LOCAL;
-  static File_Properties* RELATION_TAGS_GLOBAL;
-  static File_Properties* AREA_BLOCKS;
-  static File_Properties* AREAS;
-  static File_Properties* AREA_TAGS_LOCAL;
-  static File_Properties* AREA_TAGS_GLOBAL;
+  uint64 max_allowed_space;
+  uint32 max_allowed_time;
   
-  static uint64 max_allowed_space;
-  static uint32 max_allowed_time;  
+  string DATA_SUFFIX;
+  string INDEX_SUFFIX;
+  string ID_SUFFIX;
+  string SHADOW_SUFFIX;
+  
+  string base_directory;
+  string logfile_name;
+  string shared_name_base;
+  
+  Basic_Settings();
 };
 
-string get_basedir();
-void set_basedir(string basedir);
-string get_logfile_name();
+struct Osm_Base_Settings
+{
+  File_Properties* NODES;
+  File_Properties* NODE_TAGS_LOCAL;
+  File_Properties* NODE_TAGS_GLOBAL;
+  File_Properties* WAYS;
+  File_Properties* WAY_TAGS_LOCAL;
+  File_Properties* WAY_TAGS_GLOBAL;
+  File_Properties* RELATIONS;
+  File_Properties* RELATION_ROLES;
+  File_Properties* RELATION_TAGS_LOCAL;
+  File_Properties* RELATION_TAGS_GLOBAL;
+
+  string shared_name;
+  
+  Osm_Base_Settings();
+};
+
+struct Area_Settings
+{
+  File_Properties* AREA_BLOCKS;
+  File_Properties* AREAS;
+  File_Properties* AREA_TAGS_LOCAL;
+  File_Properties* AREA_TAGS_GLOBAL;
+  
+  string shared_name;
+  
+  Area_Settings();
+};
+
+Basic_Settings& basic_settings();
+const Osm_Base_Settings& osm_base_settings();
+const Area_Settings& area_settings();
 
 void show_mem_status();
 
@@ -44,7 +70,5 @@ class Logger
   private:
     string logfile_full_name;
 };
-
-//-----------------------------------------------------------------------------
 
 #endif

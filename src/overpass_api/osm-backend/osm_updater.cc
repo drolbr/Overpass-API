@@ -383,7 +383,7 @@ void parse_relations_only(FILE* in)
 Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version)
   : dispatcher_client(0)
 {
-  dispatcher_client = new Dispatcher_Client(shared_name);
+  dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
   Logger logger(dispatcher_client->get_db_dir());
   logger.annotated_log("write_start() start version='" + data_version + '\'');
   dispatcher_client->write_start();

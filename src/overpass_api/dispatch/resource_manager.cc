@@ -40,7 +40,7 @@ uint64 eval_set(const Set& set_)
 void Resource_Manager::health_check(const Statement& stmt)
 {
   uint32 elapsed_time(0);
-  if (de_osm3s_file_ids::max_allowed_time > 0)
+  if (basic_settings().max_allowed_time > 0)
     elapsed_time = time(NULL) - start_time;
   
   //cerr<<stmt.get_name()<<'\t';
@@ -61,7 +61,7 @@ void Resource_Manager::health_check(const Statement& stmt)
   }
   //cerr<<'\n';
 
-  if (elapsed_time > de_osm3s_file_ids::max_allowed_time)
+  if (elapsed_time > basic_settings().max_allowed_time)
   {
     Resource_Error* error = new Resource_Error();
     error->timed_out = true;
@@ -73,7 +73,7 @@ void Resource_Manager::health_check(const Statement& stmt)
     throw *error;
   }  
 
-  if (size > de_osm3s_file_ids::max_allowed_space)
+  if (size > basic_settings().max_allowed_space)
   {
     Resource_Error* error = new Resource_Error();
     error->timed_out = false;

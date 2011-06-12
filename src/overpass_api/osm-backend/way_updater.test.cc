@@ -160,19 +160,21 @@ void cleanup_files(const File_Properties& file_properties, string db_dir,
 
 int main(int argc, char* args[])
 {
+  string db_dir("./");
+  
   try
   {
-    ofstream member_db_out((get_basedir() + "member_db.csv").c_str());
-    ofstream tags_local_out((get_basedir() + "tags_local.csv").c_str());
-    ofstream tags_global_out((get_basedir() + "tags_global.csv").c_str());
+    ofstream member_db_out((db_dir + "member_db.csv").c_str());
+    ofstream tags_local_out((db_dir + "tags_local.csv").c_str());
+    ofstream tags_global_out((db_dir + "tags_global.csv").c_str());
     {
       Node_Updater node_updater_("./");
       node_updater = &node_updater_;
       Way_Updater way_updater_("./");
       way_updater = &way_updater_;
       
-      member_source_out = new ofstream((get_basedir() + "member_source.csv").c_str());
-      tags_source_out = new ofstream((get_basedir() + "tags_source.csv").c_str());
+      member_source_out = new ofstream((db_dir + "member_source.csv").c_str());
+      tags_source_out = new ofstream((db_dir + "tags_source.csv").c_str());
       callback = get_verbatim_callback();
       
       osm_element_count = 0;
@@ -200,7 +202,7 @@ int main(int argc, char* args[])
     
     // check update_members - compare both files for the result
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-	(transaction.data_index(de_osm3s_file_ids::WAYS));
+	(transaction.data_index(osm_base_settings().WAYS));
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
 	 it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
     {
@@ -212,7 +214,7 @@ int main(int argc, char* args[])
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Local, Uint32_Index > ways_local_db
-	(transaction.data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL));
+	(transaction.data_index(osm_base_settings().WAY_TAGS_LOCAL));
     for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(ways_local_db.flat_begin()); !(it == ways_local_db.flat_end()); ++it)
     {
@@ -222,7 +224,7 @@ int main(int argc, char* args[])
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Global, Uint32_Index > ways_global_db
-	(transaction.data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL));
+	(transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL));
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(ways_global_db.flat_begin()); !(it == ways_global_db.flat_end()); ++it)
     {
@@ -235,13 +237,13 @@ int main(int argc, char* args[])
     report_file_error(e);
   }
   
-  cleanup_files(*de_osm3s_file_ids::NODES, "./", true);
-  cleanup_files(*de_osm3s_file_ids::NODE_TAGS_LOCAL, "./", true);
-  cleanup_files(*de_osm3s_file_ids::NODE_TAGS_GLOBAL, "./", true);
+  cleanup_files(*osm_base_settings().NODES, "./", true);
+  cleanup_files(*osm_base_settings().NODE_TAGS_LOCAL, "./", true);
+  cleanup_files(*osm_base_settings().NODE_TAGS_GLOBAL, "./", true);
   
-  cleanup_files(*de_osm3s_file_ids::WAYS, "./", true);
-  cleanup_files(*de_osm3s_file_ids::WAY_TAGS_LOCAL, "./", true);
-  cleanup_files(*de_osm3s_file_ids::WAY_TAGS_GLOBAL, "./", true);
+  cleanup_files(*osm_base_settings().WAYS, "./", true);
+  cleanup_files(*osm_base_settings().WAY_TAGS_LOCAL, "./", true);
+  cleanup_files(*osm_base_settings().WAY_TAGS_GLOBAL, "./", true);
   
   return 0;
 }

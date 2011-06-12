@@ -146,7 +146,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     {
       stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint31_Index > random
-          (rman.get_transaction().random_index(de_osm3s_file_ids::RELATIONS));
+          (rman.get_transaction().random_index(osm_base_settings().RELATIONS));
       for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
 	   it(mit->second.relations.begin()); it != mit->second.relations.end(); ++it)
       {
@@ -176,7 +176,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(rman.get_transaction().data_index(de_osm3s_file_ids::RELATIONS));
+	(rman.get_transaction().data_index(osm_base_settings().RELATIONS));
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
 	 it(relations_db.discrete_begin(req.begin(), req.end()));
 	 !(it == relations_db.discrete_end()); ++it)
@@ -210,7 +210,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(rman.get_transaction().data_index(de_osm3s_file_ids::RELATIONS));
+	(rman.get_transaction().data_index(osm_base_settings().RELATIONS));
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
 	 it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
     {
@@ -254,7 +254,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     {
       stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint31_Index > random
-          (rman.get_transaction().random_index(de_osm3s_file_ids::WAYS));
+          (rman.get_transaction().random_index(osm_base_settings().WAYS));
       for (vector< uint32 >::const_iterator it(ids.begin());
           it != ids.end(); ++it)
 	req.insert(random.get(*it));
@@ -269,7 +269,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-	(rman.get_transaction().data_index(de_osm3s_file_ids::WAYS));
+	(rman.get_transaction().data_index(osm_base_settings().WAYS));
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
 	 it(ways_db.discrete_begin(req.begin(), req.end()));
 	 !(it == ways_db.discrete_end()); ++it)
@@ -307,7 +307,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     {
       stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint32_Index > random
-          (rman.get_transaction().random_index(de_osm3s_file_ids::NODES));
+          (rman.get_transaction().random_index(osm_base_settings().NODES));
       for (vector< uint32 >::const_iterator it(ids.begin());
           it != ids.end(); ++it)
         req.insert(random.get(*it));
@@ -322,7 +322,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-	(rman.get_transaction().data_index(de_osm3s_file_ids::NODES));
+	(rman.get_transaction().data_index(osm_base_settings().NODES));
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
 	 it(nodes_db.discrete_begin(req.begin(), req.end()));
 	 !(it == nodes_db.discrete_end()); ++it)
@@ -400,7 +400,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
       rman.health_check(*this);
       
       Random_File< Uint32_Index > random
-          (rman.get_transaction().random_index(de_osm3s_file_ids::NODES));
+          (rman.get_transaction().random_index(osm_base_settings().NODES));
       for (vector< uint32 >::const_iterator
 	  it(ids_for_index_req.begin()); it != ids_for_index_req.end(); ++it)
 	req.insert(random.get(*it));
@@ -416,7 +416,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-	(rman.get_transaction().data_index(de_osm3s_file_ids::NODES));
+	(rman.get_transaction().data_index(osm_base_settings().NODES));
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
 	 it(nodes_db.discrete_begin(req.begin(), req.end()));
 	 !(it == nodes_db.discrete_end()); ++it)
@@ -463,7 +463,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(rman.get_transaction().data_index(de_osm3s_file_ids::RELATIONS));
+	(rman.get_transaction().data_index(osm_base_settings().RELATIONS));
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
 	 it(relations_db.discrete_begin(req.begin(), req.end()));
 	 !(it == relations_db.discrete_end()); ++it)
@@ -512,7 +512,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-	(rman.get_transaction().data_index(de_osm3s_file_ids::WAYS));
+	(rman.get_transaction().data_index(osm_base_settings().WAYS));
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
 	 it(ways_db.discrete_begin(req.begin(), req.end()));
 	 !(it == ways_db.discrete_end()); ++it)
@@ -560,7 +560,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(rman.get_transaction().data_index(de_osm3s_file_ids::RELATIONS));
+	(rman.get_transaction().data_index(osm_base_settings().RELATIONS));
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
 	 it(relations_db.discrete_begin(req.begin(), req.end()));
 	 !(it == relations_db.discrete_end()); ++it)

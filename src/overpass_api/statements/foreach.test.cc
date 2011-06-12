@@ -76,7 +76,6 @@ int main(int argc, char* args[])
   string test_to_execute = args[1];
   uint pattern_size = 0;
   pattern_size = atoi(args[2]);
-  set_basedir(args[3]);
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"

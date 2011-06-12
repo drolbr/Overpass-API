@@ -320,11 +320,11 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   vector< pair< string, string > > new_tags;
   File_Properties* file_prop = 0;
   if (pivot_type == NODE)
-    file_prop = de_osm3s_file_ids::NODE_TAGS_LOCAL;
+    file_prop = osm_base_settings().NODE_TAGS_LOCAL;
   else if (pivot_type == WAY)
-    file_prop = de_osm3s_file_ids::WAY_TAGS_LOCAL;
+    file_prop = osm_base_settings().WAY_TAGS_LOCAL;
   else if (pivot_type == RELATION)
-    file_prop = de_osm3s_file_ids::RELATION_TAGS_LOCAL;
+    file_prop = osm_base_settings().RELATION_TAGS_LOCAL;
   Block_Backend< Tag_Index_Local, Uint32_Index > items_db
       (rman.get_transaction().data_index(file_prop));
   Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator

@@ -39,7 +39,6 @@ int main(int argc, char* args[])
   string test_to_execute = args[1];
   uint pattern_size = 0;
   pattern_size = atoi(args[2]);
-  set_basedir(args[3]);
   
   uint32 node_id_upper_limit = 5*pattern_size*pattern_size;
   uint32 way_id_upper_limit = 5*pattern_size*pattern_size;

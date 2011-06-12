@@ -34,7 +34,6 @@ int main(int argc, char* argv[])
       db_dir = ((string)argv[argpos]).substr(9);
       if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
 	db_dir += '/';
-      set_basedir(db_dir);
     }
     if (!(strncmp(argv[argpos], "--osc-dir=", 10)))
     {

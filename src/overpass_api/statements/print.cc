@@ -224,7 +224,7 @@ void print_item(uint32 ll_upper, const Relation_Skeleton& skel, uint32 mode,
   {
     // prepare check update_members - load roles
     Block_Backend< Uint32_Index, String_Object > roles_db
-        (rman.get_transaction().data_index(de_osm3s_file_ids::RELATION_ROLES));
+        (rman.get_transaction().data_index(osm_base_settings().RELATION_ROLES));
     for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
         it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
       roles[it.index().val()] = it.object().val();
@@ -457,15 +457,15 @@ void Print_Statement::execute(Resource_Manager& rman)
   {
     if (order == ORDER_BY_ID)
     {
-      tags_by_id(mit->second.nodes, *de_osm3s_file_ids::NODE_TAGS_LOCAL,
+      tags_by_id(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
 		 NODE_FLUSH_SIZE, mode, Stopwatch::NODE_TAGS_LOCAL, rman);
-      tags_by_id(mit->second.ways, *de_osm3s_file_ids::WAY_TAGS_LOCAL,
+      tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		 WAY_FLUSH_SIZE, mode, Stopwatch::WAY_TAGS_LOCAL, rman);
-      tags_by_id(mit->second.relations, *de_osm3s_file_ids::RELATION_TAGS_LOCAL,
+      tags_by_id(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		 RELATION_FLUSH_SIZE, mode, Stopwatch::RELATION_TAGS_LOCAL, rman);
       try
       {
-	tags_by_id(mit->second.areas, *de_osm3s_file_ids::AREA_TAGS_LOCAL,
+	tags_by_id(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
 		   AREA_FLUSH_SIZE, mode, Stopwatch::AREA_TAGS_LOCAL, rman);
       }
       catch (File_Error e)
@@ -477,15 +477,15 @@ void Print_Statement::execute(Resource_Manager& rman)
     }
     else
     {
-      tags_quadtile(mit->second.nodes, *de_osm3s_file_ids::NODE_TAGS_LOCAL,
+      tags_quadtile(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
 		    mode, Stopwatch::NODE_TAGS_LOCAL, rman);
-      tags_quadtile(mit->second.ways, *de_osm3s_file_ids::WAY_TAGS_LOCAL,
+      tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		    mode, Stopwatch::WAY_TAGS_LOCAL, rman);
-      tags_quadtile(mit->second.relations, *de_osm3s_file_ids::RELATION_TAGS_LOCAL,
+      tags_quadtile(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		    mode, Stopwatch::RELATION_TAGS_LOCAL, rman);
       try
       {
-        tags_quadtile(mit->second.areas, *de_osm3s_file_ids::AREA_TAGS_LOCAL,
+        tags_quadtile(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
 		      mode, Stopwatch::AREA_TAGS_LOCAL, rman);
       }
       catch (File_Error e)

@@ -33,7 +33,7 @@ uint32 Relation_Updater::get_role_id(const string& s)
       transaction = new Nonsynced_Transaction(true, false, db_dir, "");
     
     Block_Backend< Uint32_Index, String_Object > roles_db
-        (transaction->data_index(de_osm3s_file_ids::RELATION_ROLES));
+        (transaction->data_index(osm_base_settings().RELATION_ROLES));
     for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
       it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
     {
@@ -142,7 +142,7 @@ void Relation_Updater::find_affected_relations
   req.insert(Uint31_Index(0x80000040));
   
   Block_Backend< Uint31_Index, Relation_Skeleton > rels_db
-      (transaction->data_index(de_osm3s_file_ids::RELATIONS));
+      (transaction->data_index(osm_base_settings().RELATIONS));
   for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
     it(rels_db.discrete_begin(req.begin(), req.end()));
   !(it == rels_db.discrete_end()); ++it)
@@ -192,9 +192,9 @@ void Relation_Updater::find_affected_relations
   }
   
   Random_File< Uint32_Index > node_random
-      (transaction->random_index(de_osm3s_file_ids::NODES));
+      (transaction->random_index(osm_base_settings().NODES));
   Random_File< Uint31_Index > way_random
-      (transaction->random_index(de_osm3s_file_ids::WAYS));
+      (transaction->random_index(osm_base_settings().WAYS));
   for (map< uint32, uint32 >::iterator it(used_nodes.begin());
   it != used_nodes.end(); ++it)
   it->second = node_random.get(it->first).val();
@@ -247,9 +247,9 @@ void Relation_Updater::compute_indexes()
   }
   
   Random_File< Uint32_Index > node_random
-      (transaction->random_index(de_osm3s_file_ids::NODES));
+      (transaction->random_index(osm_base_settings().NODES));
   Random_File< Uint31_Index > way_random
-      (transaction->random_index(de_osm3s_file_ids::WAYS));
+      (transaction->random_index(osm_base_settings().WAYS));
   for (map< uint32, uint32 >::iterator it(used_nodes.begin());
   it != used_nodes.end(); ++it)
   it->second = node_random.get(it->first).val();
@@ -288,7 +288,7 @@ void Relation_Updater::update_rel_ids
 	  
   // process the relations themselves
   Random_File< Uint31_Index > random
-      (transaction->random_index(de_osm3s_file_ids::RELATIONS));
+      (transaction->random_index(osm_base_settings().RELATIONS));
   vector< Relation >::const_iterator rit(rels_to_insert.begin());
   for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
   it != ids_to_modify.end(); ++it)
@@ -338,7 +338,7 @@ void Relation_Updater::update_members(const map< uint32, vector< uint32 > >& to_
   }
   
   Block_Backend< Uint31_Index, Relation_Skeleton > rel_db
-      (transaction->data_index(de_osm3s_file_ids::RELATIONS));
+      (transaction->data_index(osm_base_settings().RELATIONS));
   rel_db.update(db_to_delete, db_to_insert);
 }
 
@@ -376,7 +376,7 @@ void Relation_Updater::prepare_delete_tags
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, Uint32_Index > rels_db
-      (transaction->data_index(de_osm3s_file_ids::RELATION_TAGS_LOCAL));
+      (transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL));
   Tag_Index_Local current_index;
   Tag_Entry tag_entry;
   current_index.index = 0xffffffff;
@@ -439,7 +439,7 @@ void Relation_Updater::prepare_tags
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, Uint32_Index > rels_db
-      (transaction->data_index(de_osm3s_file_ids::RELATION_TAGS_LOCAL));
+      (transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL));
   Tag_Index_Local current_index;
   Tag_Entry tag_entry;
   current_index.index = 0xffffffff;
@@ -519,7 +519,7 @@ void Relation_Updater::update_rel_tags_local(const vector< Tag_Entry >& tags_to_
   }
   
   Block_Backend< Tag_Index_Local, Uint32_Index > rel_db
-      (transaction->data_index(de_osm3s_file_ids::RELATION_TAGS_LOCAL));
+      (transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL));
   rel_db.update(db_to_delete, db_to_insert);
 }
 
@@ -565,7 +565,7 @@ void Relation_Updater::update_rel_tags_global(const vector< Tag_Entry >& tags_to
   }
   
   Block_Backend< Tag_Index_Global, Uint32_Index > rel_db
-      (transaction->data_index(de_osm3s_file_ids::RELATION_TAGS_GLOBAL));
+      (transaction->data_index(osm_base_settings().RELATION_TAGS_GLOBAL));
   rel_db.update(db_to_delete, db_to_insert);
 }
 
@@ -585,7 +585,7 @@ void Relation_Updater::flush_roles()
   }
   
   Block_Backend< Uint32_Index, String_Object > roles_db
-      (transaction->data_index(de_osm3s_file_ids::RELATION_ROLES));
+      (transaction->data_index(osm_base_settings().RELATION_ROLES));
   roles_db.update(db_to_delete, db_to_insert);
   max_written_role_id = max_role_id;
 }

@@ -107,17 +107,19 @@ void cleanup_files(const File_Properties& file_properties, string db_dir,
 
 int main(int argc, char* args[])
 {
+  string db_dir("./");
+  
   try
   {
-    ofstream coord_db_out((get_basedir() + "coord_db.csv").c_str());
-    ofstream tags_local_out((get_basedir() + "tags_local.csv").c_str());
-    ofstream tags_global_out((get_basedir() + "tags_global.csv").c_str());
+    ofstream coord_db_out((db_dir + "coord_db.csv").c_str());
+    ofstream tags_local_out((db_dir + "tags_local.csv").c_str());
+    ofstream tags_global_out((db_dir + "tags_global.csv").c_str());
     {
       Node_Updater node_updater_("./");
       node_updater = &node_updater_;
       
-      coord_source_out = new ofstream((get_basedir() + "coord_source.csv").c_str());
-      tags_source_out = new ofstream((get_basedir() + "tags_source.csv").c_str());
+      coord_source_out = new ofstream((db_dir + "coord_source.csv").c_str());
+      tags_source_out = new ofstream((db_dir + "tags_source.csv").c_str());
       
       callback = get_verbatim_callback();
       
@@ -157,7 +159,7 @@ int main(int argc, char* args[])
 
     // check update_coords - compare both files for the result
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-	(transaction.data_index(de_osm3s_file_ids::NODES));
+	(transaction.data_index(osm_base_settings().NODES));
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
 	 it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
     {
@@ -168,7 +170,7 @@ int main(int argc, char* args[])
     
     // check update_node_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Local, Uint32_Index > nodes_local_db
-	(transaction.data_index(de_osm3s_file_ids::NODE_TAGS_LOCAL));
+	(transaction.data_index(osm_base_settings().NODE_TAGS_LOCAL));
     for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(nodes_local_db.flat_begin()); !(it == nodes_local_db.flat_end()); ++it)
     {
@@ -178,7 +180,7 @@ int main(int argc, char* args[])
     
     // check update_node_tags_global - compare both files for the result
     Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
-	(transaction.data_index(de_osm3s_file_ids::NODE_TAGS_GLOBAL));
+	(transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL));
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(nodes_global_db.flat_begin()); !(it == nodes_global_db.flat_end()); ++it)
     {
@@ -191,9 +193,9 @@ int main(int argc, char* args[])
     report_file_error(e);
   }
   
-  cleanup_files(*de_osm3s_file_ids::NODES, "./", true);
-  cleanup_files(*de_osm3s_file_ids::NODE_TAGS_LOCAL, "./", false);
-  cleanup_files(*de_osm3s_file_ids::NODE_TAGS_GLOBAL, "./", false);
+  cleanup_files(*osm_base_settings().NODES, "./", true);
+  cleanup_files(*osm_base_settings().NODE_TAGS_LOCAL, "./", false);
+  cleanup_files(*osm_base_settings().NODE_TAGS_GLOBAL, "./", false);
   
   return 0;
 }

@@ -234,11 +234,13 @@ void cleanup_files(const File_Properties& file_properties, string db_dir,
 
 int main(int argc, char* args[])
 {
+  string db_dir("./");
+  
   try
   {
-    ofstream member_db_out((get_basedir() + "member_db.csv").c_str());
-    ofstream tags_local_out((get_basedir() + "tags_local.csv").c_str());
-    ofstream tags_global_out((get_basedir() + "tags_global.csv").c_str());
+    ofstream member_db_out((db_dir + "member_db.csv").c_str());
+    ofstream tags_local_out((db_dir + "tags_local.csv").c_str());
+    ofstream tags_global_out((db_dir + "tags_global.csv").c_str());
     {
       Node_Updater node_updater_("./");
       node_updater = &node_updater_;
@@ -247,8 +249,8 @@ int main(int argc, char* args[])
       Relation_Updater relation_updater_("./");
       relation_updater = &relation_updater_;
       
-      member_source_out = new ofstream((get_basedir() + "member_source.csv").c_str());
-      tags_source_out = new ofstream((get_basedir() + "tags_source.csv").c_str());
+      member_source_out = new ofstream((db_dir + "member_source.csv").c_str());
+      tags_source_out = new ofstream((db_dir + "tags_source.csv").c_str());
       
       callback = get_verbatim_callback();
       
@@ -283,14 +285,14 @@ int main(int argc, char* args[])
     // prepare check update_members - load roles
     map< uint32, string > roles;
     Block_Backend< Uint32_Index, String_Object > roles_db
-      (transaction.data_index(de_osm3s_file_ids::RELATION_ROLES));
+      (transaction.data_index(osm_base_settings().RELATION_ROLES));
     for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
         it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
       roles[it.index().val()] = it.object().val();
     
     // check update_members - compare both files for the result
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(transaction.data_index(de_osm3s_file_ids::RELATIONS));
+	(transaction.data_index(osm_base_settings().RELATIONS));
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
 	 it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
     {
@@ -304,7 +306,7 @@ int main(int argc, char* args[])
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Local, Uint32_Index > relations_local_db
-	(transaction.data_index(de_osm3s_file_ids::RELATION_TAGS_LOCAL));
+	(transaction.data_index(osm_base_settings().RELATION_TAGS_LOCAL));
     for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(relations_local_db.flat_begin());
          !(it == relations_local_db.flat_end()); ++it)
@@ -315,7 +317,7 @@ int main(int argc, char* args[])
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Global, Uint32_Index > relations_global_db
-	(transaction.data_index(de_osm3s_file_ids::RELATION_TAGS_GLOBAL));
+	(transaction.data_index(osm_base_settings().RELATION_TAGS_GLOBAL));
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(relations_global_db.flat_begin());
          !(it == relations_global_db.flat_end()); ++it)
@@ -329,18 +331,18 @@ int main(int argc, char* args[])
     report_file_error(e);
   }
   
-  cleanup_files(*de_osm3s_file_ids::NODES, "./", true);
-  cleanup_files(*de_osm3s_file_ids::NODE_TAGS_LOCAL, "./", true);
-  cleanup_files(*de_osm3s_file_ids::NODE_TAGS_GLOBAL, "./", true);
+  cleanup_files(*osm_base_settings().NODES, "./", true);
+  cleanup_files(*osm_base_settings().NODE_TAGS_LOCAL, "./", true);
+  cleanup_files(*osm_base_settings().NODE_TAGS_GLOBAL, "./", true);
   
-  cleanup_files(*de_osm3s_file_ids::WAYS, "./", true);
-  cleanup_files(*de_osm3s_file_ids::WAY_TAGS_LOCAL, "./", true);
-  cleanup_files(*de_osm3s_file_ids::WAY_TAGS_GLOBAL, "./", true);
+  cleanup_files(*osm_base_settings().WAYS, "./", true);
+  cleanup_files(*osm_base_settings().WAY_TAGS_LOCAL, "./", true);
+  cleanup_files(*osm_base_settings().WAY_TAGS_GLOBAL, "./", true);
   
-  cleanup_files(*de_osm3s_file_ids::RELATIONS, "./", true);
-  cleanup_files(*de_osm3s_file_ids::RELATION_ROLES, "./", true);
-  cleanup_files(*de_osm3s_file_ids::RELATION_TAGS_LOCAL, "./", true);
-  cleanup_files(*de_osm3s_file_ids::RELATION_TAGS_GLOBAL, "./", true);
+  cleanup_files(*osm_base_settings().RELATIONS, "./", true);
+  cleanup_files(*osm_base_settings().RELATION_ROLES, "./", true);
+  cleanup_files(*osm_base_settings().RELATION_TAGS_LOCAL, "./", true);
+  cleanup_files(*osm_base_settings().RELATION_TAGS_GLOBAL, "./", true);
   
   return 0;
 }

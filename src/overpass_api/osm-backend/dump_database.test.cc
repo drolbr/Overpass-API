@@ -69,14 +69,14 @@ struct Ofstream_Collection
   }
 };
 
-void dump_nodes(Transaction& transaction)
+void dump_nodes(Transaction& transaction, const string& db_dir)
 {
-  Ofstream_Collection node_db_out(get_basedir() + "after_node_", "_db.csv");
-  Ofstream_Collection node_tags_local_out(get_basedir() + "after_node_tags_", "_local.csv");
-  Ofstream_Collection node_tags_global_out(get_basedir() + "after_node_tags_", "_global.csv");
+  Ofstream_Collection node_db_out(db_dir + "after_node_", "_db.csv");
+  Ofstream_Collection node_tags_local_out(db_dir + "after_node_tags_", "_local.csv");
+  Ofstream_Collection node_tags_global_out(db_dir + "after_node_tags_", "_global.csv");
     
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-      (transaction.data_index(de_osm3s_file_ids::NODES));
+      (transaction.data_index(osm_base_settings().NODES));
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
       it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
   {
@@ -88,7 +88,7 @@ void dump_nodes(Transaction& transaction)
     
   // check update_node_tags_local - compare both files for the result
   Block_Backend< Tag_Index_Local, Uint32_Index > nodes_local_db
-      (transaction.data_index(de_osm3s_file_ids::NODE_TAGS_LOCAL));
+      (transaction.data_index(osm_base_settings().NODE_TAGS_LOCAL));
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
       it(nodes_local_db.flat_begin());
       !(it == nodes_local_db.flat_end()); ++it)
@@ -100,7 +100,7 @@ void dump_nodes(Transaction& transaction)
   
   // check update_node_tags_global - compare both files for the result
   Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
-      (transaction.data_index(de_osm3s_file_ids::NODE_TAGS_GLOBAL));
+      (transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL));
   for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
       it(nodes_global_db.flat_begin());
       !(it == nodes_global_db.flat_end()); ++it)
@@ -117,7 +117,7 @@ void check_nodes(Transaction& transaction)
   ofstream out("/dev/null");
   
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-      (transaction.data_index(de_osm3s_file_ids::NODES));
+      (transaction.data_index(osm_base_settings().NODES));
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
     it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
   {
@@ -130,7 +130,7 @@ void check_nodes(Transaction& transaction)
   
   // check update_node_tags_local - compare both files for the result
   Block_Backend< Tag_Index_Local, Uint32_Index > nodes_local_db
-      (transaction.data_index(de_osm3s_file_ids::NODE_TAGS_LOCAL));
+      (transaction.data_index(osm_base_settings().NODE_TAGS_LOCAL));
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
     it(nodes_local_db.flat_begin());
   !(it == nodes_local_db.flat_end()); ++it)
@@ -143,7 +143,7 @@ void check_nodes(Transaction& transaction)
   
   // check update_node_tags_global - compare both files for the result
   Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
-      (transaction.data_index(de_osm3s_file_ids::NODE_TAGS_GLOBAL));
+      (transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL));
   for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
     it(nodes_global_db.flat_begin());
   !(it == nodes_global_db.flat_end()); ++it)
@@ -155,15 +155,15 @@ void check_nodes(Transaction& transaction)
   }
 }
 
-void dump_ways(Transaction& transaction)
+void dump_ways(Transaction& transaction, const string& db_dir)
 {
-  Ofstream_Collection way_db_out(get_basedir() + "after_way_", "_db.csv");
-  Ofstream_Collection way_tags_local_out(get_basedir() + "after_way_tags_", "_local.csv");
-  Ofstream_Collection way_tags_global_out(get_basedir() + "after_way_tags_", "_global.csv");
+  Ofstream_Collection way_db_out(db_dir + "after_way_", "_db.csv");
+  Ofstream_Collection way_tags_local_out(db_dir + "after_way_tags_", "_local.csv");
+  Ofstream_Collection way_tags_global_out(db_dir + "after_way_tags_", "_global.csv");
     
   // check update_members - compare both files for the result
   Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-      (transaction.data_index(de_osm3s_file_ids::WAYS));
+      (transaction.data_index(osm_base_settings().WAYS));
   for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
       it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
   {
@@ -176,7 +176,7 @@ void dump_ways(Transaction& transaction)
     
   // check update_way_tags_local - compare both files for the result
   Block_Backend< Tag_Index_Local, Uint32_Index > ways_local_db
-      (transaction.data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL));
+      (transaction.data_index(osm_base_settings().WAY_TAGS_LOCAL));
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
       it(ways_local_db.flat_begin());
       !(it == ways_local_db.flat_end()); ++it)
@@ -188,7 +188,7 @@ void dump_ways(Transaction& transaction)
   
   // check update_way_tags_global - compare both files for the result
   Block_Backend< Tag_Index_Global, Uint32_Index > ways_global_db
-      (transaction.data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL));
+      (transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL));
   for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
       it(ways_global_db.flat_begin());
       !(it == ways_global_db.flat_end()); ++it)
@@ -206,7 +206,7 @@ void check_ways(Transaction& transaction)
     
   // check update_members - compare both files for the result
   Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-      (transaction.data_index(de_osm3s_file_ids::WAYS));
+      (transaction.data_index(osm_base_settings().WAYS));
   for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
       it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
   {
@@ -220,7 +220,7 @@ void check_ways(Transaction& transaction)
     
   // check update_way_tags_local - compare both files for the result
   Block_Backend< Tag_Index_Local, Uint32_Index > ways_local_db
-      (transaction.data_index(de_osm3s_file_ids::WAY_TAGS_LOCAL));
+      (transaction.data_index(osm_base_settings().WAY_TAGS_LOCAL));
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
       it(ways_local_db.flat_begin());
       !(it == ways_local_db.flat_end()); ++it)
@@ -233,7 +233,7 @@ void check_ways(Transaction& transaction)
     
   // check update_way_tags_global - compare both files for the result
   Block_Backend< Tag_Index_Global, Uint32_Index > ways_global_db
-      (transaction.data_index(de_osm3s_file_ids::WAY_TAGS_GLOBAL));
+      (transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL));
   for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
       it(ways_global_db.flat_begin());
       !(it == ways_global_db.flat_end()); ++it)
@@ -245,23 +245,23 @@ void check_ways(Transaction& transaction)
   }
 }
 
-void dump_relations(Transaction& transaction)
+void dump_relations(Transaction& transaction, const string& db_dir)
 {
-  Ofstream_Collection relation_db_out(get_basedir() + "after_relation_", "_db.csv");
-  Ofstream_Collection relation_tags_local_out(get_basedir() + "after_relation_tags_", "_local.csv");
-  Ofstream_Collection relation_tags_global_out(get_basedir() + "after_relation_tags_", "_global.csv");
+  Ofstream_Collection relation_db_out(db_dir + "after_relation_", "_db.csv");
+  Ofstream_Collection relation_tags_local_out(db_dir + "after_relation_tags_", "_local.csv");
+  Ofstream_Collection relation_tags_global_out(db_dir + "after_relation_tags_", "_global.csv");
     
     // prepare check update_members - load roles
     map< uint32, string > roles;
     Block_Backend< Uint32_Index, String_Object > roles_db
-      (transaction.data_index(de_osm3s_file_ids::RELATION_ROLES));
+      (transaction.data_index(osm_base_settings().RELATION_ROLES));
     for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
         it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
       roles[it.index().val()] = it.object().val();
     
     // check update_members - compare both files for the result
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(transaction.data_index(de_osm3s_file_ids::RELATIONS));
+	(transaction.data_index(osm_base_settings().RELATIONS));
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
 	 it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
     {
@@ -276,7 +276,7 @@ void dump_relations(Transaction& transaction)
     
     // check update_relation_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Local, Uint32_Index > relations_local_db
-	(transaction.data_index(de_osm3s_file_ids::RELATION_TAGS_LOCAL));
+	(transaction.data_index(osm_base_settings().RELATION_TAGS_LOCAL));
     for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(relations_local_db.flat_begin());
          !(it == relations_local_db.flat_end()); ++it)
@@ -288,7 +288,7 @@ void dump_relations(Transaction& transaction)
     
     // check update_relation_tags_global - compare both files for the result
     Block_Backend< Tag_Index_Global, Uint32_Index > relations_global_db
-	(transaction.data_index(de_osm3s_file_ids::RELATION_TAGS_GLOBAL));
+	(transaction.data_index(osm_base_settings().RELATION_TAGS_GLOBAL));
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
 	 it(relations_global_db.flat_begin());
          !(it == relations_global_db.flat_end()); ++it)
@@ -307,14 +307,14 @@ void check_relations(Transaction& transaction)
   // prepare check update_members - load roles
   map< uint32, string > roles;
   Block_Backend< Uint32_Index, String_Object > roles_db
-  (transaction.data_index(de_osm3s_file_ids::RELATION_ROLES));
+  (transaction.data_index(osm_base_settings().RELATION_ROLES));
   for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
     it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
     roles[it.index().val()] = it.object().val();
   
   // check update_members - compare both files for the result
   Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-  (transaction.data_index(de_osm3s_file_ids::RELATIONS));
+  (transaction.data_index(osm_base_settings().RELATIONS));
   for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
     it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
   {
@@ -330,7 +330,7 @@ void check_relations(Transaction& transaction)
   
   // check update_relation_tags_local - compare both files for the result
   Block_Backend< Tag_Index_Local, Uint32_Index > relations_local_db
-  (transaction.data_index(de_osm3s_file_ids::RELATION_TAGS_LOCAL));
+  (transaction.data_index(osm_base_settings().RELATION_TAGS_LOCAL));
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
       it(relations_local_db.flat_begin());
       !(it == relations_local_db.flat_end()); ++it)
@@ -343,7 +343,7 @@ void check_relations(Transaction& transaction)
   
   // check update_relation_tags_global - compare both files for the result
   Block_Backend< Tag_Index_Global, Uint32_Index > relations_global_db
-  (transaction.data_index(de_osm3s_file_ids::RELATION_TAGS_GLOBAL));
+  (transaction.data_index(osm_base_settings().RELATION_TAGS_GLOBAL));
   for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
     it(relations_global_db.flat_begin());
   !(it == relations_global_db.flat_end()); ++it)
@@ -369,7 +369,6 @@ int main(int argc, char* argv[])
       db_dir = ((string)argv[argpos]).substr(9);
       if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
 	db_dir += '/';
-      set_basedir(db_dir);
     }
     else if (!(strncmp(argv[argpos], "--only-check", 12)))
       dump = false;
@@ -381,9 +380,9 @@ int main(int argc, char* argv[])
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     if (dump)
     {
-      dump_nodes(transaction);
-      dump_ways(transaction);
-      dump_relations(transaction);
+      dump_nodes(transaction, db_dir);
+      dump_ways(transaction, db_dir);
+      dump_relations(transaction, db_dir);
     }
     else
     {

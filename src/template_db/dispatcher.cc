@@ -436,7 +436,8 @@ Dispatcher_Client::Dispatcher_Client
 
 Dispatcher_Client::~Dispatcher_Client()
 {
-  munmap((void*)dispatcher_shm_ptr, SHM_SIZE + db_dir.size() + shadow_name.size());
+  munmap((void*)dispatcher_shm_ptr,
+	 Dispatcher::SHM_SIZE + db_dir.size() + shadow_name.size());
   close(dispatcher_shm_fd);
 }
 
