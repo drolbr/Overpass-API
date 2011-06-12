@@ -214,8 +214,9 @@ perform_test_loop test_dispatcher 20
 dispatcher_client_server 21
 dispatcher_client_server 22
 dispatcher_client_server 23
-dispatcher_two_clients 24
+dispatcher_client_server 24
 dispatcher_two_clients 25
+dispatcher_two_clients 26
 
 # Test overpass_api/osm-backend
 mkdir -p input/run_and_compare.sh_1/

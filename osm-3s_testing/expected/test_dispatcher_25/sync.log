@@ -1,11 +1,7 @@
 write_start() done and written an element.
 Try request_read().
-request_read() done.
-read_idx_finished() done.
+request_read() returned.
 Try write_commit().
-write_commit() done.
-write_start() done and written an element.
-Announce read_finished().
-read_finished() done.
-Try write_commit().
+Announce read_idx_finished().
+read_idx_finished
 write_commit() done.
