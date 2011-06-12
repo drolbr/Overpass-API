@@ -110,8 +110,7 @@ void Node_Updater::update_node_ids
       if (it->second)
       {
 	random.put(it->first, Uint32_Index(nit->ll_upper_));
-	if (/*(map_file_existed_before) && */(index.val() > 0) &&
-	  (index.val() != nit->ll_upper_))
+	if ((index.val() > 0) && (index.val() != nit->ll_upper_))
 	  moved_nodes.push_back(make_pair(it->first, index.val()));
       }
       ++nit;

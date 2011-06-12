@@ -251,8 +251,7 @@ void Way_Updater::update_way_ids(map< uint32, vector< uint32 > >& to_delete)
       if (it->second)
       {
 	random.put(it->first, Uint31_Index(wit->index));
-	if (/*(map_file_existed_before) && */(index.val() > 0) &&
-	  (index.val() != wit->index))
+	if ((index.val() > 0) && (index.val() != wit->index))
 	  moved_ways.push_back(make_pair(it->first, index.val()));
       }
       ++wit;
