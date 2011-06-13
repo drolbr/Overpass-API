@@ -113,6 +113,7 @@ perform_serial_test()
   evaluate_test "${EXEC}_$I"
   if [[ -n $FAILED ]]; then
   {
+    ls
     echo `date +%T` "Test $EXEC $I FAILED."
   }; else
   {
