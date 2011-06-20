@@ -1,0 +1,50 @@
+=[http://www.overpass-api.de/misc/osm-3s_v0.6.90.tar.gz OSM3S v0.6.90]=
+
+Released: 2011-06-07
+
+==Database changes==
+
+This version is not binary compatible to any previous and not expected to be binary compatible to its successor. The database format will be currently reworked to fit the needs of the envisioned version 0.7.
+
+==Interface changes==
+
+From this version on, OSM3S behaves transactional: With a running dispatcher, multiple reading instances and one writing instances can work in parallel. Thus, only one database instance needs to be updated which doubles the update speed.
+
+The script <em>apply_osc_to_db</em> and the daemon-like program <em>dispatcher</em> now suffice to keep a minutely updated database.
+
+==Other changes==
+
+The introduction of transactionality made some other changes necessary:
+* The Random_File file format is nor also organized in blocks. This saves some space in case of sparse indices.
+* The logging got a new format but materially tells the same information.
+* The Scripts for <em>pt_diagrams</em> have been reworked and relocated.
+
+
+=[http://www.overpass-api.de/misc/osm-3s_v0.6.1.tar.gz OSM3S v0.6.1]=
+
+Released: 2011-04-06
+
+==Database changes==
+
+This version is binary compatible to the previous [[#OSM3S v0.6|version 0.6]].
+
+==Interface changes==
+
+The log levels of osm3s_query have been reworked. I hope the default log level now contains sufficient comprehensible and only comprehensible messages. The progress information of update_database shall now be rather self-explanatory than diagnostic.
+
+==Other changes==
+
+With the advent of a comprehensive automated testbed, a couple of bugs have been revealed and fixed:
+* The print statement doesn't throw anymore an error on absent optional parts of the database.
+* update_database can now properly apply diff files. It didn't update the indexes of ways and relations when only the underlying nodes have moved before.
+* bbox_query doesn't anymore crash on very large bounding boxes.
+* Relations that have only other relations as members have been accidently unchangeable in the previous version.
+* A possible buffer overflow in the database backend has been fixed.
+* Two other, rather arcane bugs in the database fixed.
+
+
+=[http://www.overpass-api.de/misc/osm-3s_v0.6.0.tar.gz OSM3S v0.6]=
+
+Released: 2011-03-11
+
+This was the first version mature enough to be released to the public.
