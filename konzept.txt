@@ -661,13 +661,13 @@ With the advent of a comprehensive automated testbed, a couple of bugs have been
 - Two other, rather arcane bugs in the database fixed.
 
 for 0.7 (planned 2011-04-15)
-- refactor file_blocks.h: reorganize file(s)
-- refactor block_backend.h: reorganize file(s)
+= refactor file_blocks.h: reorganize file(s)
+= refactor block_backend.h: reorganize file(s)
 = refactor and test osm_backend_updater
-- automate dispatcher test
-- divide mirrored and derived database
++ automate dispatcher test
+= divide mirrored and derived database
 @database:
-- changes for transactionality: different idx management
++ changes for transactionality: different idx management
 - reworked way and relation indices
 - extend values in tags_global
 

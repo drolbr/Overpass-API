@@ -241,9 +241,9 @@ int main(int argc, char* args[])
   cleanup_files(*osm_base_settings().NODE_TAGS_LOCAL, "./", true);
   cleanup_files(*osm_base_settings().NODE_TAGS_GLOBAL, "./", true);
   
-  cleanup_files(*osm_base_settings().WAYS, "./", true);
-  cleanup_files(*osm_base_settings().WAY_TAGS_LOCAL, "./", true);
-  cleanup_files(*osm_base_settings().WAY_TAGS_GLOBAL, "./", true);
+  //cleanup_files(*osm_base_settings().WAYS, "./", true);
+  //cleanup_files(*osm_base_settings().WAY_TAGS_LOCAL, "./", true);
+  //cleanup_files(*osm_base_settings().WAY_TAGS_GLOBAL, "./", true);
   
   return 0;
 }

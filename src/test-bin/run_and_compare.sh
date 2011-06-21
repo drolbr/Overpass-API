@@ -21,6 +21,8 @@ compare_files()
 node_compare_test()
 {
   $TEST_BIN_DIR/node_updater
+  $TEST_BIN_DIR/compare_osm_base_maps --db-dir=./
+  rm *.bin *.map *.idx
   compare_files coord_source.csv coord_db.csv
   rm coord_source.csv coord_db.csv
   compare_files tags_source.csv tags_local.csv
@@ -31,6 +33,8 @@ node_compare_test()
 way_compare_test()
 {
   $TEST_BIN_DIR/way_updater
+  $TEST_BIN_DIR/compare_osm_base_maps --db-dir=./
+  rm *.bin *.map *.idx
   compare_files member_source.csv member_db.csv
   rm member_source.csv member_db.csv
   compare_files tags_source.csv tags_local.csv
@@ -41,6 +45,8 @@ way_compare_test()
 relation_compare_test()
 {
   $TEST_BIN_DIR/relation_updater
+  $TEST_BIN_DIR/compare_osm_base_maps --db-dir=./
+  rm *.bin *.map *.idx
   compare_files member_source.csv member_db.csv
   rm member_source.csv member_db.csv
   compare_files tags_source.csv tags_local.csv

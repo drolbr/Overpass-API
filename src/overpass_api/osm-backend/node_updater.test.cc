@@ -193,9 +193,9 @@ int main(int argc, char* args[])
     report_file_error(e);
   }
   
-  cleanup_files(*osm_base_settings().NODES, "./", true);
-  cleanup_files(*osm_base_settings().NODE_TAGS_LOCAL, "./", false);
-  cleanup_files(*osm_base_settings().NODE_TAGS_GLOBAL, "./", false);
+  //cleanup_files(*osm_base_settings().NODES, "./", true);
+  //cleanup_files(*osm_base_settings().NODE_TAGS_LOCAL, "./", false);
+  //cleanup_files(*osm_base_settings().NODE_TAGS_GLOBAL, "./", false);
   
   return 0;
 }

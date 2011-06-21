@@ -15,3 +15,5 @@ Reading XML file ... elapsed way 5029167. Flushing to database ....... done.
 Reading XML file ... elapsed way 6000030. Flushing to database ....... done.
 Reading XML file ... finished reading ways. Flushing to database ....... done.
 Reading XML file ... finished reading relations. Flushing to database ........ done.
+compare_osm_base_maps: File error caught: 2 ./nodes.bin File_Blocks:1
+compare_osm_base_maps: File error caught: 2 ./ways.bin File_Blocks:1

@@ -40,12 +40,6 @@ void copy_file(const string& source, const string& dest)
     size = read(source_file.fd(), buf.ptr, 64*1024);
     size = write(dest_file.fd(), buf.ptr, size);
   }
-  
-/*  ifstream in(source.c_str());
-  if (!in.good())
-    return;
-  ofstream out(dest.c_str());
-  out<<in.rdbuf();*/
 }
 
 string getcwd()
