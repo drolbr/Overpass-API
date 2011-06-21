@@ -1,5 +1,5 @@
-#ifndef ORG__OVERPASS_API__OSM_UPDATER
-#define ORG__OVERPASS_API__OSM_UPDATER
+#ifndef DE__OSM3S___OVERPASS_API__OSM_BACKEND__OSM_UPDATER_H
+#define DE__OSM3S___OVERPASS_API__OSM_BACKEND__OSM_UPDATER_H
 
 #include <dirent.h>
 #include <stdio.h>

@@ -1,5 +1,5 @@
-#ifndef DE_OSM3S__BACKEND__WAY_UPDATER
-#define DE_OSM3S__BACKEND__WAY_UPDATER
+#ifndef DE__OSM3S___OVERPASS_API__OSM_BACKEND__WAY_UPDATER_H
+#define DE__OSM3S___OVERPASS_API__OSM_BACKEND__WAY_UPDATER_H
 
 #include <algorithm>
 #include <iostream>

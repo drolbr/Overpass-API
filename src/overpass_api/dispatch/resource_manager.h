@@ -1,5 +1,5 @@
-#ifndef DE__OSM3S__RESOURCE_MANAGER_DEFINED
-#define DE__OSM3S__RESOURCE_MANAGER_DEFINED
+#ifndef DE__OSM3S___OVERPASS_API__DISPATCH__RESOURCE_MANAGER_H
+#define DE__OSM3S___OVERPASS_API__DISPATCH__RESOURCE_MANAGER_H
 
 #include <ctime>
 #include "../../template_db/transaction.h"

@@ -1,5 +1,5 @@
-#ifndef DE_OSM3S__BACKEND__BLOCK_BACKEND
-#define DE_OSM3S__BACKEND__BLOCK_BACKEND
+#ifndef DE__OSM3S___TEMPLATE_DB__BLOCK_BACKEND_H
+#define DE__OSM3S___TEMPLATE_DB__BLOCK_BACKEND_H
 
 #include <map>
 #include <set>

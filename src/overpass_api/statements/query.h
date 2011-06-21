@@ -1,5 +1,5 @@
-#ifndef QUERY_STATEMENT_DEFINED
-#define QUERY_STATEMENT_DEFINED
+#ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__QUERY_H
+#define DE__OSM3S___OVERPASS_API__STATEMENTS__QUERY_H
 
 #include <map>
 #include <string>

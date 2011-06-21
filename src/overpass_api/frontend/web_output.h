@@ -1,5 +1,5 @@
-#ifndef WEB_OUTPUT_DEFINED
-#define WEB_OUTPUT_DEFINED
+#ifndef DE__OSM3S___OVERPASS_API__FRONTEND__WEB_OUTPUT_H
+#define DE__OSM3S___OVERPASS_API__FRONTEND__WEB_OUTPUT_H
 
 #include "../core/datatypes.h"
 

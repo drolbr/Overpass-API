@@ -1,5 +1,5 @@
-#ifndef DE_OSM3S__BACKEND__RANDOM_FILE
-#define DE_OSM3S__BACKEND__RANDOM_FILE
+#ifndef DE__OSM3S___TEMPLATE_DB__RANDOM_FILE_H
+#define DE__OSM3S___TEMPLATE_DB__RANDOM_FILE_H
 
 #include "random_file_index.h"
 #include "types.h"

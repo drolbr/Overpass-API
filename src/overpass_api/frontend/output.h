@@ -1,5 +1,5 @@
-#ifndef ORG__OVERPASS_API__FRONTEND__OUTPUT
-#define ORG__OVERPASS_API__FRONTEND__OUTPUT
+#ifndef DE__OSM3S___OVERPASS_API__FRONTEND__OUTPUT_H
+#define DE__OSM3S___OVERPASS_API__FRONTEND__OUTPUT_H
 
 #include <iostream>
 #include <string>

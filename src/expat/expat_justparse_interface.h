@@ -1,3 +1,6 @@
+#ifndef DE__OSM3S___EXPAT__EXPAT_JUSTPARSE_INTERFACE_H
+#define DE__OSM3S___EXPAT__EXPAT_JUSTPARSE_INTERFACE_H
+
 /*****************************************************************
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the license contained in the
@@ -13,9 +16,6 @@
  *
  * Must be used with Expat compiled for UTF-8 output.
  */
-
-#ifndef ORG__OVERPASS_API__EXPAT_JUSTPARSE_INTERFACE
-#define ORG__OVERPASS_API__EXPAT_JUSTPARSE_INTERFACE
 
 #include <string>
 

@@ -1,5 +1,5 @@
-#ifndef USER_INTERFACE
-#define USER_INTERFACE
+#ifndef DE__OSM3S___OVERPASS_API__FRONTEND__USER_INTERFACE_H
+#define DE__OSM3S___OVERPASS_API__FRONTEND__USER_INTERFACE_H
 
 #include <iostream>
 #include <string>

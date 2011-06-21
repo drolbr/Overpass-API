@@ -1,5 +1,5 @@
-#ifndef TYPE_RELATION_DEFINED
-#define TYPE_RELATION_DEFINED
+#ifndef DE__OSM3S___OVERPASS_API__CORE__TYPE_RELATION_H
+#define DE__OSM3S___OVERPASS_API__CORE__TYPE_RELATION_H
 
 #include <cstring>
 #include <map>

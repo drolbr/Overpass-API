@@ -1,5 +1,5 @@
-#ifndef CGI_HELPER
-#define CGI_HELPER
+#ifndef DE__OSM3S___OVERPASS_API__FRONTEND__CGI_HELPER_H
+#define DE__OSM3S___OVERPASS_API__FRONTEND__CGI_HELPER_H
 
 #include <string>
 

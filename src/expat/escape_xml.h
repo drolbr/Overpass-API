@@ -1,5 +1,5 @@
-#ifndef ORG__OVERPASS_API__ESCAPE_XML
-#define ORG__OVERPASS_API__ESCAPE_XML
+#ifndef DE__OSM3S___EXPAT__ESCAPE_XML_H
+#define DE__OSM3S___EXPAT__ESCAPE_XML_H
 
 #include <string>
 

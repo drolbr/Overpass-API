@@ -1,5 +1,5 @@
-#ifndef STOPWATCH_DEFINED
-#define STOPWATCH_DEFINED
+#ifndef DE__OSM3S___OVERPASS_API__OSM_BACKEND__STOPWATCH_H
+#define DE__OSM3S___OVERPASS_API__OSM_BACKEND__STOPWATCH_H
 
 #include "../core/datatypes.h"
 

@@ -1,5 +1,5 @@
-#ifndef DE__OSM3S__READ_INPUT
-#define DE__OSM3S__READ_INPUT
+#ifndef DE__OSM3S___PT_DIAGRAMS__READ_INPUT_H
+#define DE__OSM3S___PT_DIAGRAMS__READ_INPUT_H
 
 /*****************************************************************
  * Must be used with Expat compiled for UTF-8 output.

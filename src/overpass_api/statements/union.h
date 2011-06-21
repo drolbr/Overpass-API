@@ -1,5 +1,5 @@
-#ifndef UNION_STATEMENT_DEFINED
-#define UNION_STATEMENT_DEFINED
+#ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__UNION_H
+#define DE__OSM3S___OVERPASS_API__STATEMENTS__UNION_H
 
 #include <map>
 #include <string>

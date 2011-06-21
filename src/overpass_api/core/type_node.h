@@ -1,5 +1,5 @@
-#ifndef TYPE_NODE_DEFINED
-#define TYPE_NODE_DEFINED
+#ifndef DE__OSM3S___OVERPASS_API__CORE__TYPE_NODE_H
+#define DE__OSM3S___OVERPASS_API__CORE__TYPE_NODE_H
 
 #include <cstring>
 #include <iostream> //DEBUG

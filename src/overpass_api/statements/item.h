@@ -1,5 +1,5 @@
-#ifndef ITEM_STATEMENT_DEFINED
-#define ITEM_STATEMENT_DEFINED
+#ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__ITEM_H
+#define DE__OSM3S___OVERPASS_API__STATEMENTS__ITEM_H
 
 #include <map>
 #include <string>

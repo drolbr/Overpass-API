@@ -1,5 +1,5 @@
-#ifndef PRINT_STATEMENT_DEFINED
-#define PRINT_STATEMENT_DEFINED
+#ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__PRINT_H
+#define DE__OSM3S___OVERPASS_API__STATEMENTS__PRINT_H
 
 #include <map>
 #include <string>

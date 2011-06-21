@@ -1,5 +1,5 @@
-#ifndef DE_OSM3S__BACKEND__FILE_BLOCKS_INDEX
-#define DE_OSM3S__BACKEND__FILE_BLOCKS_INDEX
+#ifndef DE__OSM3S___TEMPLATE_DB__FILE_BLOCKS_INDEX_H
+#define DE__OSM3S___TEMPLATE_DB__FILE_BLOCKS_INDEX_H
 
 #include <sys/stat.h>
 #include <errno.h>

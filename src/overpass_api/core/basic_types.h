@@ -1,5 +1,5 @@
-#ifndef BASIC_TYPES_DEFINED
-#define BASIC_TYPES_DEFINED
+#ifndef DE__OSM3S___OVERPASS_API__CORE__BASIC_TYPES_H
+#define DE__OSM3S___OVERPASS_API__CORE__BASIC_TYPES_H
 
 #include <cstring>
 #include <map>
