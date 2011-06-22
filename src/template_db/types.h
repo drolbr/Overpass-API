@@ -1,12 +1,11 @@
 #ifndef DE__OSM3S___TEMPLATE_DB__TYPES_H
 #define DE__OSM3S___TEMPLATE_DB__TYPES_H
 
-#include <sys/stat.h>
-#include <errno.h>
 #include <fcntl.h>
-#include <stdlib.h>
 #include <unistd.h>
 
+#include <cerrno>
+#include <cstdlib>
 #include <string>
 #include <vector>
 
@@ -21,8 +20,6 @@ typedef unsigned char uint8;
 typedef unsigned short int uint16;
 typedef unsigned int uint32;
 typedef unsigned long long uint64;
-
-//-----------------------------------------------------------------------------
 
 struct File_Error
 {
@@ -69,6 +66,9 @@ struct File_Properties
 /** Simple RAII class to keep a file descriptor. */
 class Raw_File
 {
+  Raw_File(const Raw_File&);
+  Raw_File operator=(const Raw_File&);
+  
   public:
     Raw_File(string name, int oflag, mode_t mode, string caller_id);
     ~Raw_File() { close(fd_); }
@@ -78,34 +78,21 @@ class Raw_File
     int fd_;
 };
 
-/** Simple RAII class to keep a pointer to some memory on the heap.
- *  WARNING: Doesn't work properly with copy constructors. */
+/** Simple RAII class to keep a pointer to some memory on the heap. */
 template < class T >
-struct Void_Pointer
+class Void_Pointer
 {
-  Void_Pointer(int block_size) { ptr = (T*)malloc(block_size); }
-  ~Void_Pointer() { free(ptr); }
+  Void_Pointer(const Void_Pointer&);
+  Void_Pointer& operator=(const Void_Pointer&);
   
   public:
+    Void_Pointer(int block_size) { ptr = (T*)malloc(block_size); }
+    ~Void_Pointer() { free(ptr); }
+  
     T* ptr;
 };
 
-template < class T >
-class Index_Smart_Pimpl
-{
-  public:
-    Index_Smart_Pimpl(string source_index_file_name,
-		      string dest_index_file_name,
-		      uint32 block_count);
-    Index_Smart_Pimpl(const Index_Smart_Pimpl&);
-    ~Index_Smart_Pimpl();
-    Index_Smart_Pimpl& operator=(const Index_Smart_Pimpl&);
-    
-    T* operator->() { return pimpl; }
-    
-  private:
-    T* pimpl;
-};
+//-----------------------------------------------------------------------------
 
 inline Raw_File::Raw_File(string name, int oflag, mode_t mode, string caller_id)
   : fd_(0)
@@ -113,42 +100,6 @@ inline Raw_File::Raw_File(string name, int oflag, mode_t mode, string caller_id)
   fd_ = open64(name.c_str(), oflag, mode);
   if (fd_ < 0)
     throw File_Error(errno, name, caller_id);
-}
-
-template < class T >
-Index_Smart_Pimpl< T >::Index_Smart_Pimpl
-    (string source_index_file_name, string dest_index_file_name, uint32 block_count)
-    : pimpl(new T(source_index_file_name, dest_index_file_name, block_count))
-{
-  ++(pimpl->count);
-}
-
-template < class T >
-Index_Smart_Pimpl< T >::Index_Smart_Pimpl(const Index_Smart_Pimpl& isp)
-  : pimpl(isp.pimpl)
-{
-  ++(pimpl->count);
-}
-
-template < class T >
-Index_Smart_Pimpl< T >::~Index_Smart_Pimpl()
-{
-  if (--(pimpl->count) == 0)
-    delete pimpl;
-}
-
-template < class T >
-Index_Smart_Pimpl< T >& Index_Smart_Pimpl< T >::operator=(const Index_Smart_Pimpl& isp)
-{
-  if (pimpl == isp.pimpl)
-    return *this;
-  
-  if (--(pimpl->count) == 0)
-    delete pimpl;
-  pimpl = isp.pimpl;
-  ++(pimpl->count);
-  
-  return *this;
 }
 
 #endif

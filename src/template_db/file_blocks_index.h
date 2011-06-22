@@ -1,16 +1,14 @@
 #ifndef DE__OSM3S___TEMPLATE_DB__FILE_BLOCKS_INDEX_H
 #define DE__OSM3S___TEMPLATE_DB__FILE_BLOCKS_INDEX_H
 
-#include <sys/stat.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <stdlib.h>
+#include "types.h"
+
 #include <unistd.h>
 
+#include <cerrno>
+#include <cstdlib>
 #include <list>
 #include <vector>
-
-#include "types.h"
 
 /** Declarations: -----------------------------------------------------------*/
 

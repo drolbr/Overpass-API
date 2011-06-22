@@ -3,11 +3,9 @@
 
 #include "types.h"
 
-#include <sys/stat.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <unistd.h>
 
+#include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <limits>

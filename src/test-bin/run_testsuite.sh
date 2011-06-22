@@ -186,6 +186,7 @@ dispatcher_client_server()
 
   date +%T
   perform_serial_test test_dispatcher $1
+  ls "run/${EXEC}_server_$1/"
   sleep 5
 };
 
@@ -199,6 +200,7 @@ dispatcher_two_clients()
 
   date +%T
   perform_twin_test test_dispatcher $1
+  ls "run/${EXEC}_server_$1/"
   sleep 5
 };
 

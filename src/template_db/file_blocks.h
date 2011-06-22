@@ -1,73 +1,15 @@
 #ifndef DE__OSM3S___TEMPLATE_DB__FILE_BLOCKS_H
 #define DE__OSM3S___TEMPLATE_DB__FILE_BLOCKS_H
 
-#include <sys/stat.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-#include <list>
-#include <vector>
-
 #include "file_blocks_index.h"
 #include "types.h"
 
-/**
- * File_Blocks: a template to write and read database data blockwise
- *
- *
- * File_Blocks offers the following methods and fields:
- *
- * typedef File_Blocks_Iterator< TIndex, TIterator > Iterator;
- *
- * File_Blocks(int32 FILE_PROPERTIES, bool writeable);
- * ~File_Blocks();
- *
- * File_Blocks::Iterator begin();
- * File_Blocks::Iterator end();
- * File_Blocks::Iterator select_blocks(TIterator begin, TIterator end);
- *
- * void* read_block(const File_Blocks::Iterator& it);
- * int64 answer_size(const File_Blocks::Iterator& it);
- * File_Blocks::Iterator insert_block
- *     (File_Blocks::Iterator it, void* buf, uint32 max_keysize);
- * void replace_block(File_Blocks::Iterator it, void* buf, uint32 max_keysize);
- *
- *
- * where File_Blocks::Iterator offers the following methods and fields:
- *
- * bool File_Blocks::Iterator::operator== const(const File_Blocks::Iterator&);
- * File_Blocks::Iterator& operator++(File_Blocks::Iterator& it);
- *
- *
- * File_Blocks< TIndex, TIterator, TRangeIterator > requires the following methods
- * and fields of TIndex:
- *
- * TIndex(void* data);
- * uint32 size_of() const;
- * static uint32 size_of(void* data);
- * void to_data(void* data) const;
- *
- * bool operator<(const TIndex&, const TIndex&);
- *
- *
- * File_Blocks< TIndex, TIterator, TRangeIterator > requires the following methods
- * and fields of TIterator:
- *
- * bool operator==(const TIterator&, const TIterator&);
- * bool operator++(const TIterator&);
- * const TIndex& operator*(const TIterator&);
- *
- *
- * File_Blocks< TIndex, TIterator, TRangeIterator > requires the following methods
- * and fields of TRangeIterator:
- *
- * bool operator==(const TRangeIterator&, const TRangeIterator&);
- * bool operator++(const TRangeIterator&);
- * const TIndex& lower_bound(const TRangeIterator&);
- * const TIndex& upper_bound(const TRangeIterator&);
- */
+#include <unistd.h>
+
+#include <cerrno>
+#include <cstdlib>
+#include <list>
+#include <vector>
 
 /** Declarations: -----------------------------------------------------------*/
 
