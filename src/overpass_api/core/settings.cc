@@ -64,9 +64,6 @@ struct OSM_File_Properties : public File_Properties
 
 Basic_Settings::Basic_Settings()
 :
-  max_allowed_space(512*1024*1024),
-  max_allowed_time(3600*24),
-
   DATA_SUFFIX(".bin"),
   INDEX_SUFFIX(".idx"),
   ID_SUFFIX(".map"),

@@ -9,9 +9,6 @@ using namespace std;
 
 struct Basic_Settings
 {
-  uint64 max_allowed_space;
-  uint32 max_allowed_time;
-  
   string DATA_SUFFIX;
   string INDEX_SUFFIX;
   string ID_SUFFIX;

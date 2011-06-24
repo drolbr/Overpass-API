@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm-derived>
+<note>The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>
+<meta data_included_until="mock-up-init" last_rule_applied="0"/>
+
+  <way id="2310">
+    <nd ref="6310"/>
+    <nd ref="6311"/>
+    <tag k="way_key_11" v="way_value_211"/>
+    <tag k="way_key_15" v="way_value_15"/>
+    <tag k="way_key_2/4" v="way_value_0"/>
+    <tag k="way_key_5" v="way_value_5"/>
+    <tag k="way_key_7" v="way_value_0"/>
+    <tag k="way_unique" v="way_2310"/>
+  </way>
+
+</osm-derived>

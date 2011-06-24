@@ -268,11 +268,10 @@ vector< uint32 >* Query_Statement::collect_ids
       (rman.get_transaction().data_index(&file_prop));
   
   vector< uint32 >* new_ids(new vector< uint32 >());
-  set< Tag_Index_Global > tag_req;
-  set< pair< Tag_Index_Global, Tag_Index_Global > > range_req;
-  vector< pair< string, string > >::const_iterator it(key_values.begin());
+  vector< pair< string, string > >::const_iterator it = key_values.begin();
   if (it->second != "")
   {
+    set< Tag_Index_Global > tag_req;
     Tag_Index_Global idx;
     idx.key = it->first;
     idx.value = it->second;
@@ -284,6 +283,7 @@ vector< uint32 >* Query_Statement::collect_ids
   }
   else
   {
+    set< pair< Tag_Index_Global, Tag_Index_Global > > range_req;
     pair< Tag_Index_Global, Tag_Index_Global > idx_pair;
     idx_pair.first.key = it->first;
     idx_pair.first.value = "";
@@ -305,11 +305,11 @@ vector< uint32 >* Query_Statement::collect_ids
   
   for (; it != key_values.end(); ++it)
   {
-    vector< uint32 >* old_ids(new_ids);
+    vector< uint32 >* old_ids = new_ids;
     new_ids = new vector< uint32 >();
-    tag_req.clear();
     if (it->second != "")
     {
+      set< Tag_Index_Global > tag_req;
       Tag_Index_Global idx;
       idx.key = it->first;
       idx.value = it->second;
@@ -324,6 +324,7 @@ vector< uint32 >* Query_Statement::collect_ids
     }
     else
     {
+      set< pair< Tag_Index_Global, Tag_Index_Global > > range_req;
       pair< Tag_Index_Global, Tag_Index_Global > idx_pair;
       idx_pair.first.key = it->first;
       idx_pair.first.value = "";
@@ -552,12 +553,19 @@ void Query_Statement::execute(Resource_Manager& rman)
     areas.clear();
     
     stopwatch.stop(Stopwatch::NO_DISK);
+    uint relations_count = 0;
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
         (rman.get_transaction().data_index(osm_base_settings().RELATIONS));
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
         it(relations_db.discrete_begin(obj_req.begin(), obj_req.end()));
         !(it == relations_db.discrete_end()); ++it)
     {
+      if (++relations_count >= 64*1024)
+      {
+	relations_count = 0;
+	rman.health_check(*this);
+      }
+      
       if (binary_search(ids->begin(), ids->end(), it.object().id))
 	relations[it.index()].push_back(it.object());
     }    

@@ -1,0 +1,15 @@
+<osm-script timeout="1" element-limit="1073741824">
+
+<bbox-query s="51.0" n="51.1" w="7.0" e="7.1"/>
+<recurse type="node-way" into="__"/>
+<foreach from="__" into="_a">
+  <foreach from="__" into="_a">
+    <foreach from="__" into="_a">
+      <recurse type="node-way" into="__"/>
+    </foreach>
+  </foreach>
+</foreach>
+<print/>
+
+</osm-script>
+

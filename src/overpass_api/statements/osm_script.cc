@@ -31,7 +31,7 @@ void Osm_Script_Statement::set_attributes(const char **attr)
         <<" the only allowed values are positive integers.";
     add_static_error(temp.str());
   }
-  basic_settings().max_allowed_time = timeout;
+  max_allowed_time = timeout;
   
   int64 max_space(atoll(attributes["element-limit"].c_str()));
   if (max_space <= 0)
@@ -41,7 +41,7 @@ void Osm_Script_Statement::set_attributes(const char **attr)
     <<" the only allowed values are positive integers.";
     add_static_error(temp.str());
   }
-  basic_settings().max_allowed_space = max_space;
+  max_allowed_space = max_space;
   
 /*  name = attributes["name"];
   replace = atoi(attributes["replace"].c_str());
@@ -101,10 +101,7 @@ void Osm_Script_Statement::forecast()
 
 void Osm_Script_Statement::execute(Resource_Manager& rman)
 {
-/*  uint max_element_count(get_element_count());
-  if (element_limit > 0)
-    max_element_count = element_limit;*/
-  
+  rman.set_limits(max_allowed_time, max_allowed_space);
   for (vector< Statement* >::iterator it(substatements.begin());
       it != substatements.end(); ++it)
     (*it)->execute(rman);

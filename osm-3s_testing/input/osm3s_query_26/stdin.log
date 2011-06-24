@@ -1,0 +1,10 @@
+<osm-script timeout="3600" element-limit="1024">
+
+<query type="relation">
+  <has-kv k="relation_key_5"/>
+  <has-kv k="relation_key_2/4"/>
+</query>
+<print/>
+
+</osm-script>
+

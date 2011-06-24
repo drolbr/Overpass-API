@@ -1,0 +1,18 @@
+<osm-script timeout="1" element-limit="1073741824">
+
+<query type="way">
+  <has-kv k="way_key_5"/>
+</query>
+<foreach>
+  <query type="way">
+    <has-kv k="way_key_5"/>
+    <has-kv k="way_key_2/4"/>
+    <has-kv k="way_key_7"/>
+    <has-kv k="way_key_11"/>
+    <has-kv k="way_key_15"/>
+  </query>
+</foreach>
+<print/>
+
+</osm-script>
+

@@ -47,82 +47,6 @@ evaluate_test()
   }; done
 };
 
-print_test_5()
-{
-  EXEC="$1"
-  I="$2"
-  ARGS="$3"
-
-  mkdir -p "run/${EXEC}_$I"
-  pushd "run/${EXEC}_$I/" >/dev/null
-  rm -f *
-  "$BASEDIR/test-bin/$1" "$I" $ARGS 2>stderr.log | grep "^  <" | sort >stdout.log
-  evaluate_test "${EXEC}_$I"
-  if [[ -n $FAILED ]]; then
-  {
-    echo `date +%T` "Test $EXEC $I FAILED."
-  }; else
-  {
-    echo `date +%T` "Test $EXEC $I succeeded."
-    rm -R *
-  }; fi
-  popd >/dev/null
-};
-
-perform_twin_test()
-{
-  EXEC="$1"
-  I="$2"
-  ARGS="$3"
-
-  mkdir -p "run/${EXEC}_$I"
-  pushd "run/${EXEC}_$I/" >/dev/null
-  rm -f *
-  "$BASEDIR/test-bin/$1" "${I}w" $ARGS >stdout.write.log 2>stderr.write.log &
-  "$BASEDIR/test-bin/$1" "${I}r" $ARGS >stdout.read.log 2>stderr.read.log
-  sleep 5
-  evaluate_test "${EXEC}_$I"
-  if [[ -n $FAILED ]]; then
-  {
-    echo `date +%T` "Test $EXEC $I FAILED."
-  }; else
-  {
-    echo `date +%T` "Test $EXEC $I succeeded."
-    rm -R *
-  }; fi
-  popd >/dev/null
-};
-
-perform_serial_test()
-{
-  EXEC="$1"
-  I="$2"
-  ARGS="$3"
-
-  mkdir -p "run/${EXEC}_$I"
-  pushd "run/${EXEC}_$I/" >/dev/null
-  rm -f *
-  if [[ -s "../../input/${EXEC}_$I/stdin.log" ]]; then
-  {
-    #echo "stdin.log found"
-    "$BASEDIR/test-bin/$1" "$I" $ARGS <"../../input/${EXEC}_$I/stdin.log" >stdout.log 2>stderr.log
-  }; else
-  {
-    "$BASEDIR/test-bin/$1" "$I" $ARGS >stdout.log 2>stderr.log
-  }; fi
-  evaluate_test "${EXEC}_$I"
-  if [[ -n $FAILED ]]; then
-  {
-    ls
-    echo `date +%T` "Test $EXEC $I FAILED."
-  }; else
-  {
-    echo `date +%T` "Test $EXEC $I succeeded."
-    rm -R *
-  }; fi
-  popd >/dev/null
-};
-
 perform_test()
 {
   EXEC="$1"
@@ -152,134 +76,17 @@ perform_test()
   popd >/dev/null
 };
 
-perform_test_loop()
-{
-  I=1
-  while [[ $I -le $2 ]]; do
-  {
-    perform_serial_test "$1" $I "$3"
-    I=$(($I + 1))
-  }; done
-};
+# $BASEDIR/test-bin/run_testsuite_template_db.sh $1 $2
 
-prepare_test_loop()
-{
-  I=1
-  DATA_SIZE=$3
-  while [[ $I -le $2 ]]; do
-  {
-    mkdir -p expected/$1_$I/
-    rm -f expected/$1_$I/*
-    $BASEDIR/test-bin/generate_test_file $DATA_SIZE $1_$I >expected/$1_$I/stdout.log
-    touch expected/$1_$I/stderr.log
-    I=$(($I + 1))
-  }; done
-};
-
-dispatcher_client_server()
-{
-  mkdir -p "run/${EXEC}_server_$1"
-  pushd "run/${EXEC}_server_$1/" >/dev/null
-  rm -f *
-  $BASEDIR/test-bin/test_dispatcher server_3 &
-  popd >/dev/null
-
-  date +%T
-  perform_serial_test test_dispatcher $1
-  ls "run/${EXEC}_server_$1/"
-  sleep 5
-};
-
-dispatcher_two_clients()
-{
-  mkdir -p "run/${EXEC}_server_$1"
-  pushd "run/${EXEC}_server_$1/" >/dev/null
-  rm -f *
-  $BASEDIR/test-bin/test_dispatcher server_10 &
-  popd >/dev/null
-
-  date +%T
-  perform_twin_test test_dispatcher $1
-  ls "run/${EXEC}_server_$1/"
-  sleep 5
-};
-
-# Test template_db
-date +%T
-perform_test_loop file_blocks 12
-date +%T
-perform_test_loop block_backend 13
-date +%T
-perform_test_loop random_file 8
-date +%T
-perform_test_loop test_dispatcher 20
-
-dispatcher_client_server 21
-dispatcher_client_server 22
-dispatcher_client_server 23
-dispatcher_client_server 24
-dispatcher_two_clients 25
-dispatcher_two_clients 26
-
-# Test overpass_api/osm-backend
-mkdir -p input/run_and_compare.sh_1/
-rm -f input/run_and_compare.sh_1/*
-$BASEDIR/test-bin/generate_test_file $DATA_SIZE >input/run_and_compare.sh_1/stdin.log
-date +%T
-perform_serial_test run_and_compare.sh 1
-
-mkdir -p input/run_and_compare.sh_2/
-rm -f input/run_and_compare.sh_2/*
-mv input/run_and_compare.sh_1/stdin.log input/run_and_compare.sh_2/stdin.log
-date +%T
-perform_serial_test run_and_compare.sh 2
-
-mkdir -p input/run_and_compare.sh_3/
-rm -f input/run_and_compare.sh_3/*
-mv input/run_and_compare.sh_2/stdin.log input/run_and_compare.sh_3/stdin.log
-date +%T
-perform_serial_test run_and_compare.sh 3
+# $BASEDIR/test-bin/run_testsuite_osm_backend.sh $1 $2
 
 # Prepare testing the statements
 mkdir -p input/update_database/
 rm -f input/update_database/*
-mv input/run_and_compare.sh_3/stdin.log input/update_database/stdin.log
+$BASEDIR/test-bin/generate_test_file $DATA_SIZE >input/update_database/stdin.log
 $BASEDIR/bin/update_database --db-dir=input/update_database/ --version=mock-up-init <input/update_database/stdin.log
 
-# Test the print and id_query statements
-prepare_test_loop print 4 $DATA_SIZE
-mkdir -p expected/print_5/
-$BASEDIR/test-bin/generate_test_file $DATA_SIZE print_4 | grep "^  <" | sort >expected/print_5/stdout.log
-touch expected/print_5/stderr.log
-
-date +%T
-perform_test_loop print 4 "$DATA_SIZE ../../input/update_database/"
-print_test_5 print 5 "$DATA_SIZE ../../input/update_database/"
-
-# Test the recurse statement
-prepare_test_loop recurse 11 $DATA_SIZE
-date +%T
-perform_test_loop recurse 11 "$DATA_SIZE ../../input/update_database/"
-
-# Test the bbox_query statement
-prepare_test_loop bbox_query 8 $DATA_SIZE
-date +%T
-perform_test_loop bbox_query 8 "$DATA_SIZE ../../input/update_database/"
-
-# Test the query statement
-prepare_test_loop query 25 $DATA_SIZE
-date +%T
-perform_test_loop query 25 "$DATA_SIZE ../../input/update_database/"
-
-# Test the foreach statement
-prepare_test_loop foreach 4 $DATA_SIZE
-date +%T
-perform_test_loop foreach 4 "$DATA_SIZE ../../input/update_database/"
-
-# Test the union statement
-prepare_test_loop union 6 $DATA_SIZE
-date +%T
-perform_test_loop union 6 ../../input/update_database/
+# $BASEDIR/test-bin/run_unittests_statements.sh $1 $2
 
 # Test osm3s_query
 date +%T
@@ -312,6 +119,12 @@ perform_test osm3s_query 18
 cat input/update_database/transactions.log
 $BASEDIR/bin/dispatcher --terminate
 
+II=19
+while [[ $II -lt 43 ]]; do
+{
+  perform_test osm3s_query $II "--db-dir=../../input/update_database/"
+  II=$(($II + 1))
+}; done
 
 # Test a differential update - prepare needed data
 date +%T

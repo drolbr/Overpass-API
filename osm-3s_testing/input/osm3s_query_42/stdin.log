@@ -1,0 +1,8 @@
+<osm-script timeout="3600" element-limit="1073741824">
+
+<id-query type="way" ref="2"/>
+<recurse type="way-node"/>
+<print/>
+
+</osm-script>
+

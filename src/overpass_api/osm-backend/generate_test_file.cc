@@ -760,6 +760,12 @@ vector< pair< string, string > > collect_tags(string prefix, uint id)
     tags.push_back(make_pair< string, string >
         (prefix + "_key_7", buf.str()));
   }
+  if (id == 2310)
+    tags.push_back(make_pair< string, string >
+        (prefix + "_unique", prefix + "_2310"));
+  if (id < 100)
+    tags.push_back(make_pair< string, string >
+        (prefix + "_key", prefix + "_few"));
   return tags;
 }
 

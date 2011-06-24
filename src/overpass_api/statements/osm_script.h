@@ -12,7 +12,7 @@ class Osm_Script_Statement : public Statement
 {
   public:
     Osm_Script_Statement(int line_number_)
-    : Statement(line_number_)/*, timeout(0), database_id(0)*/ {}
+    : Statement(line_number_), max_allowed_time(0), max_allowed_space(0) {}
     virtual void set_attributes(const char **attr);
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "osm-script"; }
@@ -28,8 +28,9 @@ class Osm_Script_Statement : public Statement
     
   private:
     vector< Statement* > substatements;
-/*    int timeout, elem_limit;
-    string name;
+    uint32 max_allowed_time;
+    uint64 max_allowed_space;
+    /* string name;
     int replace, version;
     uint database_id;*/
 };

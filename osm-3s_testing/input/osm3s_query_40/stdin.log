@@ -1,0 +1,17 @@
+<osm-script timeout="1" element-limit="1073741824">
+
+<query type="way">
+  <has-kv k="way_key" v="way_few"/>
+</query>
+<recurse type="way-node" into="__"/>
+<foreach from="__" into="_a">
+  <foreach from="__" into="_a">
+    <foreach from="__" into="_a">
+      <recurse type="way-node" into="__"/>
+    </foreach>
+  </foreach>
+</foreach>
+<print/>
+
+</osm-script>
+

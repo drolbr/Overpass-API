@@ -14,7 +14,8 @@ class Resource_Manager
 {
 public:
   Resource_Manager(Transaction& transaction_)
-      : transaction(&transaction_), start_time(time(NULL)) {}
+      : transaction(&transaction_), start_time(time(NULL)),
+        max_allowed_time(0), max_allowed_space(0) {}
   
   map< string, Set >& sets()
   {
@@ -30,6 +31,11 @@ public:
   void pop_reference();
 
   void health_check(const Statement& stmt);
+  void set_limits(uint32 max_allowed_time_, uint64 max_allowed_space_)
+  {
+    max_allowed_time = max_allowed_time_;
+    max_allowed_space = max_allowed_space_;
+  }
   
   Transaction& get_transaction() { return *transaction; }
   
@@ -39,6 +45,8 @@ private:
   Area_Updater area_updater_;
   Transaction* transaction;
   int start_time;
+  uint32 max_allowed_time;
+  uint64 max_allowed_space;
 };
 
 struct Resource_Error

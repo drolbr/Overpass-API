@@ -321,12 +321,18 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     areas.clear();
   
     stopwatch.stop(Stopwatch::NO_DISK);
+    uint nodes_count = 0;
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
 	(rman.get_transaction().data_index(osm_base_settings().NODES));
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
 	 it(nodes_db.discrete_begin(req.begin(), req.end()));
 	 !(it == nodes_db.discrete_end()); ++it)
     {
+      if (++nodes_count >= 64*1024)
+      {
+	nodes_count = 0;
+	rman.health_check(*this);
+      }
       if (binary_search(ids.begin(), ids.end(), it.object().id))
 	nodes[it.index()].push_back(it.object());
     }
@@ -335,7 +341,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   }
   else if (type == RECURSE_WAY_NODE)
   {
-    set< Uint32_Index > req;
+    vector< Uint32_Index > req;
     vector< uint32 > ids;
     
     {
@@ -346,7 +352,8 @@ void Recurse_Statement::execute(Resource_Manager& rman)
       {
 	if (!(it->first.val() & 0x80000000))
 	{
-	  req.insert(it->first);
+	  if (req.empty() || req.back() < it->first)
+	    req.push_back(it->first);
 	  for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
 	      it2 != it->second.end(); ++it2)
 	  {
@@ -358,8 +365,11 @@ void Recurse_Statement::execute(Resource_Manager& rman)
 	else if ((it->first.val() & 0xff) == 0x10)
 	{
 	  uint32 base_idx(it->first.val() & 0x7fffff00);
-	  for (uint32 i(base_idx); i < base_idx + 0x100; ++i)
-	    req.insert(Uint32_Index(i));
+	  if (req.empty() || req.back().val() < base_idx)
+	  {
+	    for (uint32 i(base_idx); i < base_idx + 0x100; ++i)
+	      req.push_back(Uint32_Index(i));
+	  }
 	  for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
 	      it2 != it->second.end(); ++it2)
 	  {
@@ -372,7 +382,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
 	{
 	  uint32 base_idx(it->first.val() & 0x7fff0000);
 	  for (uint32 i(base_idx); i < base_idx + 0x10000; ++i)
-	    req.insert(Uint32_Index(i));
+	    req.push_back(Uint32_Index(i));
 	  for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
 	      it2 != it->second.end(); ++it2)
 	  {
@@ -395,15 +405,15 @@ void Recurse_Statement::execute(Resource_Manager& rman)
 	  }
 	}
       }
-      stopwatch.stop(Stopwatch::NO_DISK);
       sort(ids_for_index_req.begin(), ids_for_index_req.end());
+      stopwatch.stop(Stopwatch::NO_DISK);
       rman.health_check(*this);
       
       Random_File< Uint32_Index > random
           (rman.get_transaction().random_index(osm_base_settings().NODES));
       for (vector< uint32 >::const_iterator
 	  it(ids_for_index_req.begin()); it != ids_for_index_req.end(); ++it)
-	req.insert(random.get(*it));
+	req.push_back(random.get(*it));
       stopwatch.stop(Stopwatch::NODES_MAP);
     }
     rman.health_check(*this);
@@ -414,13 +424,29 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     relations.clear();
     areas.clear();
   
+    set< Uint32_Index > req_map;
+    uint elem_count = 0;
+    for (vector< Uint32_Index >::const_iterator it(req.begin()); it != req.end();
+        ++it)
+    {
+      if (++elem_count % (1024*1024) == 0)
+	rman.health_check(*this);
+      req_map.insert(*it);
+    }
+    rman.health_check(*this);
     stopwatch.stop(Stopwatch::NO_DISK);
+    uint nodes_count = 0;
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
 	(rman.get_transaction().data_index(osm_base_settings().NODES));
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
-	 it(nodes_db.discrete_begin(req.begin(), req.end()));
+	 it(nodes_db.discrete_begin(req_map.begin(), req_map.end()));
 	 !(it == nodes_db.discrete_end()); ++it)
     {
+      if (++nodes_count >= 64*1024)
+      {
+	nodes_count = 0;
+	rman.health_check(*this);
+      }
       if (binary_search(ids.begin(), ids.end(), it.object().id))
 	nodes[it.index()].push_back(it.object());
     }

@@ -1,0 +1,10 @@
+<osm-script timeout="1" element-limit="1073741824">
+
+<bbox-query s="51.0" n="52.0" w="7.0" e="8.0"/>
+<foreach>
+  <bbox-query s="51.0" n="52.0" w="7.0" e="8.0"/>
+</foreach>
+<print/>
+
+</osm-script>
+

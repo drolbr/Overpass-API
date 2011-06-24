@@ -1,0 +1,12 @@
+<osm-script timeout="3600" element-limit="1024">
+
+<query type="node">
+  <has-kv k="node_key_5"/>
+  <has-kv k="node_key_7"/>
+  <has-kv k="node_key_11"/>
+  <has-kv k="node_key_15"/>
+</query>
+<print/>
+
+</osm-script>
+

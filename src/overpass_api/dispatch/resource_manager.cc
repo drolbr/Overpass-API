@@ -1,5 +1,4 @@
 #include "resource_manager.h"
-#include "../core/settings.h"
 #include "../statements/statement.h"
 
 using namespace std;
@@ -39,29 +38,22 @@ uint64 eval_set(const Set& set_)
 
 void Resource_Manager::health_check(const Statement& stmt)
 {
-  uint32 elapsed_time(0);
-  if (basic_settings().max_allowed_time > 0)
+  uint32 elapsed_time = 0;
+  if (max_allowed_time > 0)
     elapsed_time = time(NULL) - start_time;
   
-  //cerr<<stmt.get_name()<<'\t';
-  //cerr<<elapsed_time<<'\t'<<de_osm3s_file_ids::max_allowed_time<<'\t';
-  
-  uint64 size(0);
-  for (map< string, Set >::const_iterator it(sets_.begin()); it != sets_.end();
-      ++it)
+  uint64 size = 0;
+  if (max_allowed_space > 0)
   {
-    //cerr<<it->first<<'\t';
-    size += eval_set(it->second);
+    for (map< string, Set >::const_iterator it(sets_.begin()); it != sets_.end();
+        ++it)
+      size += eval_set(it->second);
+    for (vector< const Set* >::const_iterator it(set_stack.begin());
+        it != set_stack.end(); ++it)
+      size += eval_set(**it);
   }
-  for (vector< const Set* >::const_iterator it(set_stack.begin());
-      it != set_stack.end(); ++it)
-  {
-    //cerr<<"[Stack]\t";
-    size += eval_set(**it);
-  }
-  //cerr<<'\n';
 
-  if (elapsed_time > basic_settings().max_allowed_time)
+  if (elapsed_time > max_allowed_time)
   {
     Resource_Error* error = new Resource_Error();
     error->timed_out = true;
@@ -71,9 +63,9 @@ void Resource_Manager::health_check(const Statement& stmt)
     error->runtime = elapsed_time;
     
     throw *error;
-  }  
+  }
 
-  if (size > basic_settings().max_allowed_space)
+  if (size > max_allowed_space)
   {
     Resource_Error* error = new Resource_Error();
     error->timed_out = false;

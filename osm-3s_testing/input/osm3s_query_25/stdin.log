@@ -1,0 +1,20 @@
+<osm-script timeout="1" element-limit="1073741824">
+
+<query type="relation" into="__">
+  <has-kv k="relation_key_2/4"/>
+</query>
+<foreach from="__">
+  <foreach from="__">
+    <query type="relation">
+      <has-kv k="relation_key_5"/>
+      <has-kv k="relation_key_2/4"/>
+      <has-kv k="relation_key_7"/>
+      <has-kv k="relation_key_11"/>
+      <has-kv k="relation_key_15"/>
+    </query>
+  </foreach>
+</foreach>
+<print/>
+
+</osm-script>
+

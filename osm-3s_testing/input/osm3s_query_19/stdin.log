@@ -1,0 +1,17 @@
+<osm-script timeout="1" element-limit="1073741824">
+
+<query type="node">
+  <has-kv k="node_key_5"/>
+</query>
+<foreach>
+  <query type="node">
+    <has-kv k="node_key_5"/>
+    <has-kv k="node_key_7"/>
+    <has-kv k="node_key_11"/>
+    <has-kv k="node_key_15"/>
+  </query>
+</foreach>
+<print/>
+
+</osm-script>
+
