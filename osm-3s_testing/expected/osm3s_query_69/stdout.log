@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm-derived>
+<note>The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>
+<meta data_included_until="mock-up-init" last_rule_applied="0"/>
+
+  <relation id="1"/>
+  <relation id="2"/>
+  <relation id="3"/>
+  <relation id="4"/>
+  <relation id="5"/>
+  <relation id="6"/>
+  <relation id="12"/>
+  <relation id="13"/>
+  <relation id="14"/>
+  <relation id="15"/>
+  <relation id="16"/>
+  <relation id="17"/>
+  <relation id="23"/>
+  <relation id="24"/>
+  <relation id="25"/>
+  <relation id="26"/>
+  <relation id="27"/>
+  <relation id="28"/>
+
+</osm-derived>

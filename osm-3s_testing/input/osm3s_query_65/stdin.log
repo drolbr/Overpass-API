@@ -1,0 +1,9 @@
+<osm-script timeout="3600" element-limit="1073741824">
+
+<query type="way">
+  <has-kv k="way_key" v="way_few"/>
+</query>
+<print mode="ids_only"/>
+
+</osm-script>
+

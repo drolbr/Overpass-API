@@ -734,6 +734,9 @@ struct Accept_All_But_5 : public Accept_All_Tags
 vector< pair< string, string > > collect_tags(string prefix, uint id)
 {
   vector< pair< string, string > > tags;
+  if (id < 100)
+    tags.push_back(make_pair< string, string >
+        (prefix + "_key", prefix + "_few"));
   if (id % 11 == 0)
   {
     ostringstream buf;
@@ -763,9 +766,6 @@ vector< pair< string, string > > collect_tags(string prefix, uint id)
   if (id == 2310)
     tags.push_back(make_pair< string, string >
         (prefix + "_unique", prefix + "_2310"));
-  if (id < 100)
-    tags.push_back(make_pair< string, string >
-        (prefix + "_key", prefix + "_few"));
   return tags;
 }
 

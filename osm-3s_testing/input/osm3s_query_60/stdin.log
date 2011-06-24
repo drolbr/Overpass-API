@@ -1,0 +1,16 @@
+<osm-script timeout="1" element-limit="1073741824">
+
+<bbox-query s="-10.0" n="-7.75" w="-15.0" e="-12.0"/>
+<print mode="ids_only"/>
+<foreach into="_a">
+  <foreach into="_a">
+    <foreach into="_a">
+      <foreach into="_a">
+        <print mode="ids_only"/>
+      </foreach>
+    </foreach>
+  </foreach>
+</foreach>
+
+</osm-script>
+

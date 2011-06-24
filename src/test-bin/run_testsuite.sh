@@ -76,9 +76,38 @@ perform_test()
   popd >/dev/null
 };
 
-# $BASEDIR/test-bin/run_testsuite_template_db.sh $1 $2
+perform_test_stdout_null()
+{
+  EXEC="$1"
+  I="$2"
+  ARGS="$3"
 
-# $BASEDIR/test-bin/run_testsuite_osm_backend.sh $1 $2
+  mkdir -p "run/${EXEC}_$I"
+  pushd "run/${EXEC}_$I/" >/dev/null
+  rm -f *
+  if [[ -s "../../input/${EXEC}_$I/stdin.log" ]]; then
+  {
+    #echo "stdin.log found"
+    "$BASEDIR/bin/$1" $ARGS <"../../input/${EXEC}_$I/stdin.log" >/dev/null 2>stderr.log
+  }; else
+  {
+    "$BASEDIR/bin/$1" $ARGS >/dev/null 2>stderr.log
+  }; fi
+  evaluate_test "${EXEC}_$I"
+  if [[ -n $FAILED ]]; then
+  {
+    echo `date +%T` "Test $EXEC $I FAILED."
+  }; else
+  {
+    echo `date +%T` "Test $EXEC $I succeeded."
+    rm -R *
+  }; fi
+  popd >/dev/null
+};
+
+$BASEDIR/test-bin/run_testsuite_template_db.sh $1 $2
+
+$BASEDIR/test-bin/run_testsuite_osm_backend.sh $1 $2
 
 # Prepare testing the statements
 mkdir -p input/update_database/
@@ -86,7 +115,7 @@ rm -f input/update_database/*
 $BASEDIR/test-bin/generate_test_file $DATA_SIZE >input/update_database/stdin.log
 $BASEDIR/bin/update_database --db-dir=input/update_database/ --version=mock-up-init <input/update_database/stdin.log
 
-# $BASEDIR/test-bin/run_unittests_statements.sh $1 $2
+$BASEDIR/test-bin/run_unittests_statements.sh $1 $2
 
 # Test osm3s_query
 date +%T
@@ -120,11 +149,23 @@ cat input/update_database/transactions.log
 $BASEDIR/bin/dispatcher --terminate
 
 II=19
-while [[ $II -lt 43 ]]; do
+while [[ $II -lt 58 ]]; do
 {
   perform_test osm3s_query $II "--db-dir=../../input/update_database/"
   II=$(($II + 1))
 }; done
+perform_test_stdout_null osm3s_query 58 "--db-dir=../../input/update_database/"
+perform_test_stdout_null osm3s_query 59 "--db-dir=../../input/update_database/"
+perform_test_stdout_null osm3s_query 60 "--db-dir=../../input/update_database/"
+perform_test osm3s_query 61 "--db-dir=../../input/update_database/"
+perform_test_stdout_null osm3s_query 62 "--db-dir=../../input/update_database/"
+perform_test_stdout_null osm3s_query 63 "--db-dir=../../input/update_database/"
+perform_test_stdout_null osm3s_query 64 "--db-dir=../../input/update_database/"
+perform_test osm3s_query 65 "--db-dir=../../input/update_database/"
+perform_test_stdout_null osm3s_query 66 "--db-dir=../../input/update_database/"
+perform_test_stdout_null osm3s_query 67 "--db-dir=../../input/update_database/"
+perform_test_stdout_null osm3s_query 68 "--db-dir=../../input/update_database/"
+perform_test osm3s_query 69 "--db-dir=../../input/update_database/"
 
 # Test a differential update - prepare needed data
 date +%T

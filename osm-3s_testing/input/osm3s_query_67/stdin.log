@@ -1,0 +1,21 @@
+<osm-script timeout="1" element-limit="1073741824">
+
+<union>
+  <id-query type="relation" ref="9"/>
+  <id-query type="relation" ref="20"/>
+  <id-query type="relation" ref="31"/>
+</union>
+<recurse type="relation-relation"/>
+<print mode="skeleton"/>
+<foreach into="_a">
+  <foreach into="_a">
+    <foreach into="_a">
+      <foreach into="_a">
+        <print mode="skeleton"/>
+      </foreach>
+    </foreach>
+  </foreach>
+</foreach>
+
+</osm-script>
+

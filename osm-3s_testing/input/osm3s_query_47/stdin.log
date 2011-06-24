@@ -1,0 +1,8 @@
+<osm-script timeout="3600" element-limit="280">
+
+<id-query type="relation" ref="1"/>
+<recurse type="relation-node" into="__"/>
+<print/>
+
+</osm-script>
+

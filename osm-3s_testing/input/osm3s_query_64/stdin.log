@@ -1,0 +1,18 @@
+<osm-script timeout="1" element-limit="1073741824">
+
+<query type="way">
+  <has-kv k="way_key" v="way_few"/>
+</query>
+<print mode="ids_only"/>
+<foreach into="_a">
+  <foreach into="_a">
+    <foreach into="_a">
+      <foreach into="_a">
+        <print mode="ids_only"/>
+      </foreach>
+    </foreach>
+  </foreach>
+</foreach>
+
+</osm-script>
+

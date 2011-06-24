@@ -1,0 +1,12 @@
+<osm-script timeout="3600" element-limit="1073741824">
+
+<union>
+  <id-query type="relation" ref="9"/>
+  <id-query type="relation" ref="20"/>
+  <id-query type="relation" ref="31"/>
+</union>
+<recurse type="relation-relation"/>
+<print mode="ids_only"/>
+
+</osm-script>
+

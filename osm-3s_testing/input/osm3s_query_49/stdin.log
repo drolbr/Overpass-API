@@ -1,0 +1,27 @@
+<osm-script timeout="1" element-limit="1073741824">
+
+<union>
+  <id-query type="relation" ref="6"/>
+  <id-query type="relation" ref="7"/>
+  <id-query type="relation" ref="8"/>
+  <id-query type="relation" ref="17"/>
+  <id-query type="relation" ref="18"/>
+  <id-query type="relation" ref="19"/>
+  <id-query type="relation" ref="28"/>
+  <id-query type="relation" ref="29"/>
+  <id-query type="relation" ref="30"/>
+</union>
+<recurse type="relation-way" into="__"/>
+<foreach from="__" into="_a">
+  <foreach from="__" into="_a">
+    <foreach from="__" into="_a">
+      <foreach from="__" into="_a">
+        <recurse type="relation-way" into="__"/>
+      </foreach>
+    </foreach>
+  </foreach>
+</foreach>
+<print/>
+
+</osm-script>
+

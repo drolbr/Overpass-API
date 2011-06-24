@@ -1,0 +1,7 @@
+<osm-script timeout="3600" element-limit="1073741824">
+
+<bbox-query s="-10.0" n="-7.75" w="-15.0" e="-12.0"/>
+<print mode="ids_only"/>
+
+</osm-script>
+
