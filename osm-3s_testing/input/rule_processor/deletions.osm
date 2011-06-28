@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm>
+
+<delete>
+  <node id="2001"/>
+  <node id="2002"/>
+  <node id="2003"/>
+  <node id="2004"/>
+  <node id="2005"/>
+  <node id="2006"/>
+  <node id="2007"/>
+  <node id="2008"/>
+  <node id="2009"/>
+  <node id="2010"/>
+  <node id="2011"/>
+  <node id="2012"/>
+  <node id="2013"/>
+  <node id="2014"/>
+  <node id="2015"/>
+  <node id="2016"/>
+</delete>
+
+</osm>

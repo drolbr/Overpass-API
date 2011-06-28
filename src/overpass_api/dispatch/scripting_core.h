@@ -35,7 +35,8 @@ class Dispatcher_Stub
     // Opens the connection to the database, sets db_dir accordingly
     // and registers the process. error_output_ must remain valid over the
     // entire lifetime of this object.
-    Dispatcher_Stub(string db_dir_, Error_Output* error_output_, string xml_raw);
+    Dispatcher_Stub(string db_dir_, Error_Output* error_output_, string xml_raw,
+		    int area_level = 0);
     
     void register_process();
     void set_limits();
@@ -57,7 +58,9 @@ class Dispatcher_Stub
     
     Error_Output* error_output;
     Dispatcher_Client* dispatcher_client;
+    Dispatcher_Client* area_dispatcher_client;
     Nonsynced_Transaction* transaction;
+    Nonsynced_Transaction* area_transaction;
     Resource_Manager* rman;
 
     void unregister_process();

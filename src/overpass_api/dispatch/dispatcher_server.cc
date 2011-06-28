@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
 {
   // read command line arguments
   string db_dir;
-  bool osm_base(false), terminate(false);
+  bool osm_base(false), areas(false), terminate(false);
   
   int argpos(1);
   while (argpos < argc)
@@ -24,6 +24,8 @@ int main(int argc, char* argv[])
     }
     else if (!(strncmp(argv[argpos], "--osm-base", 10)))
       osm_base = true;
+    else if (!(strncmp(argv[argpos], "--areas", 10)))
+      areas = true;
     else if (!(strncmp(argv[argpos], "--terminate", 11)))
       terminate = true;  
     ++argpos;
@@ -33,7 +35,8 @@ int main(int argc, char* argv[])
   {
     try
     {
-      Dispatcher_Client client(osm_base_settings().shared_name);
+      Dispatcher_Client client
+          (areas ? area_settings().shared_name : osm_base_settings().shared_name);
       client.terminate();
     }
     catch (File_Error e)
@@ -42,7 +45,7 @@ int main(int argc, char* argv[])
     }
     return 0;
   }
-  
+
   vector< File_Properties* > files_to_manage;
   if (osm_base)
   {
@@ -57,14 +60,23 @@ int main(int argc, char* argv[])
     files_to_manage.push_back(osm_base_settings().RELATION_TAGS_LOCAL);
     files_to_manage.push_back(osm_base_settings().RELATION_TAGS_GLOBAL);
   }
-  
-  if (!osm_base && !terminate)
+  if (areas)
   {
-    cout<<"Usage: "<<argv[0]<<" (--terminate | --osm-base --db-dir=Directory)\n";
+    files_to_manage.push_back(area_settings().AREAS);
+    files_to_manage.push_back(area_settings().AREA_BLOCKS);
+    files_to_manage.push_back(area_settings().AREA_TAGS_LOCAL);
+    files_to_manage.push_back(area_settings().AREA_TAGS_GLOBAL);
+  }
+  
+  if (!osm_base && !areas && !terminate)
+  {
+    cout<<"Usage: "<<argv[0]<<" (--terminate | (--osm-base | --areas) --db-dir=Directory)\n";
     return 0;
   }
   
-  Dispatcher dispatcher(osm_base_settings().shared_name, "",
-			db_dir + "shadow", db_dir, files_to_manage);
+  Dispatcher dispatcher
+      (areas ? area_settings().shared_name : osm_base_settings().shared_name,
+       "", db_dir + (areas ? "areas_shadow" : "osm_base_shadow"),
+       db_dir, files_to_manage);
   dispatcher.standby_loop(0);
 }

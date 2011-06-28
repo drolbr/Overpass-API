@@ -101,3 +101,43 @@ date +%T
 perform_test_loop make_area 3 "$DATA_SIZE ../../input/update_database/"
 
 rm -f input/update_database/*
+
+# Prepare testing the statements
+date +%T
+mkdir -p input/update_database/
+rm -f input/update_database/*
+$BASEDIR/test-bin/generate_test_file_areas $DATA_SIZE >input/update_database/stdin.log
+$BASEDIR/bin/update_database --db-dir=input/update_database/ --version=mock-up-init <input/update_database/stdin.log
+
+# Run the area updater in parallel to a running update
+date +%T
+$BASEDIR/bin/dispatcher --osm-base --db-dir=input/update_database/ &
+$BASEDIR/bin/dispatcher --areas --db-dir=input/update_database/ &
+sleep 1
+rm -f input/update_database/transactions.log
+$BASEDIR/bin/osm3s_query --rules <input/rule_processor/rules.osm &
+sleep 1
+$BASEDIR/bin/update_database --version=mock-up-diff <input/rule_processor/deletions.osm
+sleep 30
+mkdir -p run/rule_processor/
+rm -f run/rule_processor/*
+$BASEDIR/bin/osm3s_query --areas <input/rule_processor/check_query.osm >run/rule_processor/check_query.log
+
+$BASEDIR/bin/dispatcher --terminate
+$BASEDIR/bin/dispatcher --areas --terminate
+
+pushd "run/rule_processor/" >/dev/null
+EXEC=rule_processor
+I=1
+evaluate_test "rule_processor"
+if [[ -n $FAILED ]]; then
+{
+  echo `date +%T` "Test rule_processor 1 FAILED."
+}; else
+{
+  echo `date +%T` "Test rule_processor 1 succeeded."
+  rm -R *
+}; fi
+popd >/dev/null
+
+rm -f input/update_database/*

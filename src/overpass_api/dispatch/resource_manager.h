@@ -20,7 +20,7 @@ public:
   Resource_Manager(Transaction& transaction_, Transaction& area_transaction_,
 		   bool writeable = false)
       : transaction(&transaction_), area_transaction(&area_transaction_),
-        area_updater_(new Area_Updater(area_transaction_)),
+        area_updater_(writeable ? new Area_Updater(area_transaction_) : 0),
         start_time(time(NULL)), max_allowed_time(0), max_allowed_space(0) {}
 	
   ~Resource_Manager()

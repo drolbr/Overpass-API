@@ -32,8 +32,9 @@ int main(int argc, char *argv[])
   // read command line arguments
   string db_dir;
   uint log_level = Error_Output::ASSISTING;
+  int area_level = 0;
   
-  int argpos(1);
+  int argpos = 1;
   while (argpos < argc)
   {
     if (!(strncmp(argv[argpos], "--db-dir=", 9)))
@@ -48,6 +49,10 @@ int main(int argc, char *argv[])
       log_level = Error_Output::CONCISE;
     else if (!(strcmp(argv[argpos], "--verbose")))
       log_level = Error_Output::VERBOSE;
+    else if (!(strcmp(argv[argpos], "--rules")))
+      area_level = 2;
+    else if (!(strcmp(argv[argpos], "--areas")))
+      area_level = 1;
     ++argpos;
   }
   
@@ -60,7 +65,7 @@ int main(int argc, char *argv[])
     string xml_raw(get_xml_console(error_output));
     
     // open read transaction and log this.
-    Dispatcher_Stub dispatcher(db_dir, error_output, xml_raw);
+    Dispatcher_Stub dispatcher(db_dir, error_output, xml_raw, area_level);
     
     if ((error_output) && (error_output->display_encoding_errors()))
       return 0;

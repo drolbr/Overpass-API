@@ -1,0 +1,16 @@
+<coord-query lat="10.15" lon ="20.25"/>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+<coord-query lat="10.2" lon ="20.7"/>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+<coord-query lat="10.3" lon ="20.6"/>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+<coord-query lat="10.1" lon ="20.8"/>
+<print/>
+<id-query type="node" ref="2001"/>
+<print/>

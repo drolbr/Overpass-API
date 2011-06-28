@@ -29,7 +29,7 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-  Web_Output error_output(Error_Output::QUIET);
+  Web_Output error_output(Error_Output::ASSISTING);
   Statement::set_error_output(&error_output);
   
   try

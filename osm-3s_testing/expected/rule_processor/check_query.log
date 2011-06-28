@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm-derived>
+<note>The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>
+<meta data_included_until="mock-up-diff" last_rule_applied="0"/>
+
+  <area id="3600000001">
+    <tag k="multpoly" v="1"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <relation id="1"/>
+  <area id="3600000002">
+    <tag k="multpoly" v="2"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000003">
+    <tag k="multpoly" v="3"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000004">
+    <tag k="multpoly" v="4"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <relation id="1"/>
+  <area id="3600000003">
+    <tag k="multpoly" v="3"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000004">
+    <tag k="multpoly" v="4"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <relation id="1"/>
+  <area id="3600000002">
+    <tag k="multpoly" v="2"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000004">
+    <tag k="multpoly" v="4"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+
+</osm-derived>

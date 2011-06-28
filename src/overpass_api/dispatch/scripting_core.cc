@@ -35,9 +35,10 @@ namespace
 }
 
 Dispatcher_Stub::Dispatcher_Stub
-    (string db_dir_, Error_Output* error_output_, string xml_raw)
+    (string db_dir_, Error_Output* error_output_, string xml_raw, int area_level)
     : db_dir(db_dir_), error_output(error_output_),
-      dispatcher_client(0), transaction(0), rman(0)
+      dispatcher_client(0), area_dispatcher_client(0),
+      transaction(0), area_transaction(0), rman(0)
 {
   if (db_dir == "")
   {
@@ -49,7 +50,6 @@ Dispatcher_Stub::Dispatcher_Stub
     logger.annotated_log('\n' + xml_raw);
     transaction = new Nonsynced_Transaction
         (false, false, dispatcher_client->get_db_dir(), "");
-    rman = new Resource_Manager(*transaction);
   
     transaction->data_index(osm_base_settings().NODES);
     transaction->random_index(osm_base_settings().NODES);
@@ -72,11 +72,59 @@ Dispatcher_Stub::Dispatcher_Stub
     logger.annotated_log("read_idx_finished() start");
     dispatcher_client->read_idx_finished();
     logger.annotated_log("read_idx_finished() end");
+    
+    if (area_level > 0)
+    {
+      area_dispatcher_client = new Dispatcher_Client(area_settings().shared_name);
+      Logger logger(area_dispatcher_client->get_db_dir());
+      
+      if (area_level == 1)
+      {
+        logger.annotated_log("request_read_and_idx() area start");
+        area_dispatcher_client->request_read_and_idx();
+        logger.annotated_log("request_read_and_idx() area end");
+        logger.annotated_log('\n' + xml_raw);
+        area_transaction = new Nonsynced_Transaction
+            (false, false, area_dispatcher_client->get_db_dir(), "");
+      }
+      else if (area_level == 2)
+      {
+	logger.annotated_log("write_start() area start");
+	area_dispatcher_client->write_start();
+	logger.annotated_log("write_start() area end");
+	logger.annotated_log('\n' + xml_raw);
+	area_transaction = new Nonsynced_Transaction
+	    (true, true, area_dispatcher_client->get_db_dir(), "");
+      }
+      
+      area_transaction->data_index(area_settings().AREAS);
+      area_transaction->data_index(area_settings().AREA_BLOCKS);
+      area_transaction->data_index(area_settings().AREA_TAGS_LOCAL);
+      area_transaction->data_index(area_settings().AREA_TAGS_GLOBAL);
+
+      if (area_level == 1)
+      {
+        logger.annotated_log("read_idx_finished() area start");
+        area_dispatcher_client->read_idx_finished();
+        logger.annotated_log("read_idx_finished() area end");
+      }
+
+      rman = new Resource_Manager(*transaction, *area_transaction, area_level == 2);
+    }
+    else
+      rman = new Resource_Manager(*transaction);
   }
   else
   {
     transaction = new Nonsynced_Transaction(false, false, db_dir, "");
-    rman = new Resource_Manager(*transaction);
+    if (area_level > 0)
+    {
+      area_transaction = new Nonsynced_Transaction(area_level == 2, false, db_dir, "");
+      rman = new Resource_Manager(*transaction, *area_transaction, area_level == 2);
+    }
+    else
+      rman = new Resource_Manager(*transaction);
+    
     {
       ifstream version((db_dir + "osm_base_version").c_str());
       getline(version, timestamp);
@@ -90,6 +138,12 @@ void Dispatcher_Stub::set_limits()
 
 Dispatcher_Stub::~Dispatcher_Stub()
 {
+  bool areas_written = (rman->area_updater() != 0);
+  delete rman;
+  if (transaction)
+    delete transaction;
+  if (area_transaction)
+    delete area_transaction;
   if (dispatcher_client)
   {
     Logger logger(dispatcher_client->get_db_dir());
@@ -98,8 +152,24 @@ Dispatcher_Stub::~Dispatcher_Stub()
     logger.annotated_log("read_finished() end");
     delete dispatcher_client;
   }
-  delete transaction;
-  delete rman;
+  if (area_dispatcher_client)
+  {
+    if (areas_written)
+    {
+      Logger logger(area_dispatcher_client->get_db_dir());
+      logger.annotated_log("write_commit() area start");
+      area_dispatcher_client->write_commit();
+      logger.annotated_log("write_commit() area end");
+    }
+    else
+    {
+      Logger logger(area_dispatcher_client->get_db_dir());
+      logger.annotated_log("read_finished() area start");
+      area_dispatcher_client->read_finished();
+      logger.annotated_log("read_finished() area end");
+    }
+    delete area_dispatcher_client;
+  }
 }
 
 void start(const char *el, const char **attr)

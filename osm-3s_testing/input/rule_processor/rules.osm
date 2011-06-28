@@ -1,0 +1,26 @@
+<union>
+  <query type="way">
+    <has-kv k="triangle"/>
+  </query>
+  <query type="way">
+    <has-kv k="shapes"/>
+  </query>
+</union>
+<foreach into="way">
+  <union>
+    <recurse type="way-node" from="way"/>
+    <item set="way"/>
+  </union>
+  <make-area pivot="way"/>
+</foreach>
+
+<query type="relation">
+  <has-kv k="multpoly"/>
+</query>
+<foreach into="pivot">
+  <union>
+    <recurse type="relation-way" from="pivot"/>
+    <recurse type="way-node"/>
+  </union>
+  <make-area pivot="pivot"/>
+</foreach>
