@@ -47,28 +47,6 @@ evaluate_test()
   }; done
 };
 
-print_test_5()
-{
-  EXEC="$1"
-  I="$2"
-  ARGS="$3"
-
-  mkdir -p "run/${EXEC}_$I"
-  pushd "run/${EXEC}_$I/" >/dev/null
-  rm -f *
-  "$BASEDIR/test-bin/$1" "$I" $ARGS 2>stderr.log | grep "^  <" | sort >stdout.log
-  evaluate_test "${EXEC}_$I"
-  if [[ -n $FAILED ]]; then
-  {
-    echo `date +%T` "Test $EXEC $I FAILED."
-  }; else
-  {
-    echo `date +%T` "Test $EXEC $I succeeded."
-    rm -R *
-  }; fi
-  popd >/dev/null
-};
-
 perform_serial_test()
 {
   EXEC="$1"
@@ -108,59 +86,18 @@ perform_test_loop()
   }; done
 };
 
-prepare_test_loop()
-{
-  I=1
-  DATA_SIZE=$3
-  while [[ $I -le $2 ]]; do
-  {
-    mkdir -p expected/$1_$I/
-    rm -f expected/$1_$I/*
-    $BASEDIR/test-bin/generate_test_file $DATA_SIZE $1_$I >expected/$1_$I/stdout.log
-    touch expected/$1_$I/stderr.log
-    I=$(($I + 1))
-  }; done
-};
-
 # Prepare testing the statements
+date +%T
 mkdir -p input/update_database/
 rm -f input/update_database/*
-$BASEDIR/test-bin/generate_test_file $DATA_SIZE >input/update_database/stdin.log
+$BASEDIR/test-bin/generate_test_file_areas $DATA_SIZE >input/update_database/stdin.log
 $BASEDIR/bin/update_database --db-dir=input/update_database/ --version=mock-up-init <input/update_database/stdin.log
 
 # Test the print and id_query statements
-prepare_test_loop print 4 $DATA_SIZE
-mkdir -p expected/print_5/
-$BASEDIR/test-bin/generate_test_file $DATA_SIZE print_4 | grep "^  <" | sort >expected/print_5/stdout.log
-touch expected/print_5/stderr.log
+date +%T
+$BASEDIR/test-bin/make_area create $DATA_SIZE input/update_database/
 
 date +%T
-perform_test_loop print 4 "$DATA_SIZE ../../input/update_database/"
-print_test_5 print 5 "$DATA_SIZE ../../input/update_database/"
-
-# Test the recurse statement
-prepare_test_loop recurse 11 $DATA_SIZE
-date +%T
-perform_test_loop recurse 11 "$DATA_SIZE ../../input/update_database/"
-
-# Test the bbox_query statement
-prepare_test_loop bbox_query 8 $DATA_SIZE
-date +%T
-perform_test_loop bbox_query 8 "$DATA_SIZE ../../input/update_database/"
-
-# Test the query statement
-prepare_test_loop query 25 $DATA_SIZE
-date +%T
-perform_test_loop query 25 "$DATA_SIZE ../../input/update_database/"
-
-# Test the foreach statement
-prepare_test_loop foreach 4 $DATA_SIZE
-date +%T
-perform_test_loop foreach 4 "$DATA_SIZE ../../input/update_database/"
-
-# Test the union statement
-prepare_test_loop union 6 $DATA_SIZE
-date +%T
-perform_test_loop union 6 ../../input/update_database/
+perform_test_loop make_area 3 "$DATA_SIZE ../../input/update_database/"
 
 rm -f input/update_database/*

@@ -1,0 +1,50 @@
+  <area id="3600000001">
+    <tag k="multpoly" v="1"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+ 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 1 1 1 1 1 1 1 0 0
+ 0 0 1 1 1 1 1 1 1 0 0
+ 0 0 1 1 1 1 1 1 1 0 0
+ 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0
+  <area id="3600000002">
+    <tag k="multpoly" v="2"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000003">
+    <tag k="multpoly" v="3"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000004">
+    <tag k="multpoly" v="4"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+ 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0
+ 0 0 2 2 2 2 3 0 0
+ 0 0 2 2 2 3 2 0 0
+ 0 0 2 2 3 2 2 0 0
+ 0 0 2 3 2 2 2 0 0
+ 0 0 3 2 2 2 2 0 0
+ 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0
+  <area id="3600000003">
+    <tag k="multpoly" v="3"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000004">
+    <tag k="multpoly" v="4"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+ 2
+  <area id="3600000002">
+    <tag k="multpoly" v="2"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000004">
+    <tag k="multpoly" v="4"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+ 2
