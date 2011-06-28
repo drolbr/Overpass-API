@@ -14,435 +14,223 @@
 #include "recurse.h"
 #include "union.h"
 
+#include <iomanip>
+
 using namespace std;
+
+void evaluate_grid(double south, double north, double west, double east,
+		   double step, Resource_Manager& rman)
+{  
+  bool areas_printed = false;
+  vector< vector< uint > > area_counter;
+  for (double dlat = 0; dlat < north - south + step/2; dlat += step)
+  {
+    area_counter.push_back(vector< uint >());
+    for (double dlon = 0; dlon < east - west + step/2; dlon += step)
+    {
+      {
+	Coord_Query_Statement* stmt1 = new Coord_Query_Statement(0);
+	ostringstream v_lat, v_lon;
+	v_lat<<fixed<<setprecision(7)<<(dlat + south);
+	v_lon<<fixed<<setprecision(7)<<(dlon + west);
+	string s_lat = v_lat.str();
+	string s_lon = v_lon.str();
+	const char* attributes[] = { "lat", s_lat.c_str(), "lon", s_lon.c_str(), 0 };
+        stmt1->set_attributes(attributes);
+        stmt1->execute(rman);
+      }
+      uint area_count = 0;
+      for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator
+	  it = rman.sets()["_"].areas.begin(); it != rman.sets()["_"].areas.end(); ++it)
+	area_count += it->second.size();
+      area_counter.back().push_back(area_count);
+      if (!areas_printed && !rman.sets()["_"].areas.empty())
+      {
+	areas_printed = true;
+	
+	Print_Statement* stmt1 = new Print_Statement(0);
+	const char* attributes[] = { 0 };
+	stmt1->set_attributes(attributes);
+	stmt1->execute(rman);
+      }
+    }
+  }
+  
+  for (vector< vector< uint > >::const_reverse_iterator it = area_counter.rbegin();
+      it != area_counter.rend(); ++it)
+  {
+    for (vector< uint >::const_iterator it2 = it->begin(); it2 != it->end(); ++it2)
+      cout<<' '<<*it2;
+    cout<<'\n';
+  }
+}
 
 int main(int argc, char* args[])
 {
-  vector< Aligned_Segment > segs;
+  if (argc < 4)
+  {
+    cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir\n";
+    return 0;
+  }
+  string test_to_execute = args[1];
+  uint pattern_size = 0;
+  pattern_size = atoi(args[2]);
+  string db_dir(args[3]);
   
-  //tests for functions to calculate tile clipping
-/*  Area::calc_vert_aligned_segments
-    (segs,
-     1422000000, 71500000, 1422100000, 71510000);
-  for (vector< Aligned_Segment >::const_iterator it(segs.begin());
-      it != segs.end(); ++it)
-    cout<<Node::lat(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-        <<Node::lon(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-	<<Node::lat(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\t'
-	<<Node::lon(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\n';
-  cout<<'\n';
-  segs.clear();
-  
-  Area::calc_vert_aligned_segments
-    (segs,
-     1422000000, 71500000, 1423000000, 71510000);
-  for (vector< Aligned_Segment >::const_iterator it(segs.begin());
-      it != segs.end(); ++it)
-    cout<<Node::lat(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-        <<Node::lon(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-	<<Node::lat(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\t'
-	<<Node::lon(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\n';
-  cout<<'\n';
-  segs.clear();
-  
-  Area::calc_vert_aligned_segments
-    (segs,
-     1422000000, 71500000, 1452000000, 71510000);
-  for (vector< Aligned_Segment >::const_iterator it(segs.begin());
-      it != segs.end(); ++it)
-    cout<<Node::lat(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-        <<Node::lon(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-	<<Node::lat(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\t'
-	<<Node::lon(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\n';
-  cout<<'\n';
-  segs.clear();
-  
-  Area::calc_vert_aligned_segments
-    (segs,
-     1423000000, 71500000, 1422000000, 71510000);
-  for (vector< Aligned_Segment >::const_iterator it(segs.begin());
-      it != segs.end(); ++it)
-    cout<<Node::lat(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-        <<Node::lon(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-	<<Node::lat(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\t'
-	<<Node::lon(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\n';
-  cout<<'\n';
-  segs.clear();
-  
-  Area::calc_vert_aligned_segments
-    (segs,
-     1422000000, 71510000, 1423000000, 71500000);
-  for (vector< Aligned_Segment >::const_iterator it(segs.begin());
-      it != segs.end(); ++it)
-    cout<<Node::lat(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-        <<Node::lon(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-	<<Node::lat(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\t'
-	<<Node::lon(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\n';
-  cout<<'\n';
-  segs.clear();
-  
-  Area::calc_vert_aligned_segments
-    (segs,
-     1422000000, 71500000, 1423000000, 72500000);
-  for (vector< Aligned_Segment >::const_iterator it(segs.begin());
-      it != segs.end(); ++it)
-    cout<<Node::lat(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-        <<Node::lon(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-	<<Node::lat(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\t'
-	<<Node::lon(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\n';
-  cout<<'\n';
-  segs.clear();
-  
-  Area::calc_vert_aligned_segments
-    (segs,
-     1422000000, 72500000, 1423000000, 71500000);
-  for (vector< Aligned_Segment >::const_iterator it(segs.begin());
-      it != segs.end(); ++it)
-    cout<<Node::lat(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-        <<Node::lon(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-	<<Node::lat(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\t'
-	<<Node::lon(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\n';
-  cout<<'\n';
-  segs.clear();
-  
-  Area::calc_vert_aligned_segments
-    (segs,
-     1422000000, 71500000, 1423000000, 81500000);
-  for (vector< Aligned_Segment >::const_iterator it(segs.begin());
-      it != segs.end(); ++it)
-    cout<<Node::lat(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-        <<Node::lon(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-	<<Node::lat(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\t'
-	<<Node::lon(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\n';
-  cout<<'\n';
-  segs.clear();
-  
-  Area::calc_vert_aligned_segments
-    (segs,
-     1422000000, 81500000, 1423000000, 71500000);
-  for (vector< Aligned_Segment >::const_iterator it(segs.begin());
-      it != segs.end(); ++it)
-    cout<<Node::lat(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-        <<Node::lon(it->ll_upper_ | (it->ll_lower_a>>32), it->ll_lower_a & 0xffffffff)<<'\t'
-	<<Node::lat(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\t'
-	<<Node::lon(it->ll_upper_ | (it->ll_lower_b>>32), it->ll_lower_b & 0xffffffff)<<'\n';
-  cout<<'\n';
-  segs.clear();
-  
-  Area::calc_aligned_segments
-    (segs,
-     ((uint64)Node::ll_upper(51.2, 7.16)<<32) | Node::ll_lower(51.2, 7.16),
-     ((uint64)Node::ll_upper(51.3, 7.15)<<32) | Node::ll_lower(51.3, 7.15));
-  for (vector< Aligned_Segment >::const_iterator it(segs.begin());
-      it != segs.end(); ++it)
-    cout<<Node::lat(it->ll_upper_, 0)<<'\t'
-        <<Node::lon(it->ll_upper_, 0)<<'\t'
-	<<Node::lat(it->ll_upper_ | it->ll_lower_a>>32, it->ll_lower_a)<<'\t'
-	<<Node::lon(it->ll_upper_ | it->ll_lower_a>>32, it->ll_lower_a)<<'\t'
-	<<Node::lat(it->ll_upper_ | it->ll_lower_b>>32, it->ll_lower_b)<<'\t'
-	<<Node::lon(it->ll_upper_ | it->ll_lower_b>>32, it->ll_lower_b)<<'\n';
-  cout<<'\n';
-  segs.clear();
-  
-  Area::calc_aligned_segments
-    (segs,
-     ((uint64)Node::ll_upper(51.0, -179.0)<<32) | Node::ll_lower(51.0, -179.0),
-     ((uint64)Node::ll_upper(52.0, 179.0)<<32) | Node::ll_lower(52.0, 179.0));
-  for (vector< Aligned_Segment >::const_iterator it(segs.begin());
-      it != segs.end(); ++it)
-    cout<<Node::lat(it->ll_upper_, 0)<<'\t'
-        <<Node::lon(it->ll_upper_, 0)<<'\t'
-	<<Node::lat(it->ll_upper_ | it->ll_lower_a>>32, it->ll_lower_a)<<'\t'
-	<<Node::lon(it->ll_upper_ | it->ll_lower_a>>32, it->ll_lower_a)<<'\t'
-	<<Node::lat(it->ll_upper_ | it->ll_lower_b>>32, it->ll_lower_b)<<'\t'
-	<<Node::lon(it->ll_upper_ | it->ll_lower_b>>32, it->ll_lower_b)<<'\n';
-  cout<<'\n';
-  segs.clear();
-  
-  Area::calc_aligned_segments
-    (segs,
-     ((uint64)Node::ll_upper(51.0, 179.0)<<32) | Node::ll_lower(51.0, 179.0),
-     ((uint64)Node::ll_upper(52.0, -179.0)<<32) | Node::ll_lower(52.0, -179.0));
-  for (vector< Aligned_Segment >::const_iterator it(segs.begin());
-      it != segs.end(); ++it)
-    cout<<Node::lat(it->ll_upper_, 0)<<'\t'
-        <<Node::lon(it->ll_upper_, 0)<<'\t'
-	<<Node::lat(it->ll_upper_ | it->ll_lower_a>>32, it->ll_lower_a)<<'\t'
-	<<Node::lon(it->ll_upper_ | it->ll_lower_a>>32, it->ll_lower_a)<<'\t'
-	<<Node::lat(it->ll_upper_ | it->ll_lower_b>>32, it->ll_lower_b)<<'\t'
-	<<Node::lon(it->ll_upper_ | it->ll_lower_b>>32, it->ll_lower_b)<<'\n';
-  cout<<'\n';
-  segs.clear();*/
-  
-  Error_Output* error_output(new Console_Output(false));
+  Error_Output* error_output(new Console_Output(Error_Output::ASSISTING));
   Statement::set_error_output(error_output);
   
-  Nonsynced_Transaction transaction(false, false, "./", "");
-  Resource_Manager rman(transaction);
+  Nonsynced_Transaction transaction(false, false, db_dir, "");
+  Nonsynced_Transaction area_transaction(true, false, db_dir, "");
+  Resource_Manager rman(transaction, area_transaction, true);
   
-  cout<<"Query to create areas:\n";
+  if (test_to_execute == "create")
   {
-    Id_Query_Statement* stmt1 = new Id_Query_Statement(0);
-    const char* attributes[] = { "type", "relation", "ref", "62478", "into", "rels", 0 };
-    stmt1->set_attributes(attributes);
-    stmt1->execute(rman);
-  }
-  {
-    Union_Statement* stmt2 = new Union_Statement(0);
-    const char* attributes[] = { 0 };
-    stmt2->set_attributes(attributes);
     {
-      Recurse_Statement* stmt3 = new Recurse_Statement(0);
-      const char* attributes[] = { "type", "relation-way", "from", "rels", 0 };
-      stmt3->set_attributes(attributes);
-      stmt2->add_statement(stmt3, "");
-    }
-    {
-      Recurse_Statement* stmt3 = new Recurse_Statement(0);
-      const char* attributes[] = { "type", "way-node", 0 };
-      stmt3->set_attributes(attributes);
-      stmt2->add_statement(stmt3, "");
-    }
-    stmt2->execute(rman);
-  }
-  {
-    Make_Area_Statement* stmt1 = new Make_Area_Statement(0);
-    const char* attributes[] = { "pivot", "rels", 0 };
-    stmt1->set_attributes(attributes);
-    stmt1->execute(rman);
-  }
-  {
-    Coord_Query_Statement* stmt1 = new Coord_Query_Statement(0);
-    const char* attributes[] = { "lat", "51.25", "lon", "7.15", 0 };
-    stmt1->set_attributes(attributes);
-    stmt1->execute(rman);
-  }
-  {
-    Print_Statement* stmt1 = new Print_Statement(0);
-    const char* attributes[] = { 0 };
-    stmt1->set_attributes(attributes);
-    stmt1->execute(rman);
-  }
-
-  cout<<"Query to create areas:\n";
-  {
-    Id_Query_Statement* stmt1 = new Id_Query_Statement(0);
-    const char* attributes[] = { "type", "relation", "ref", "34631", "into", "rels", 0 };
-    stmt1->set_attributes(attributes);
-    stmt1->execute(rman);
-  }
-  {
-    Union_Statement* stmt2 = new Union_Statement(0);
-    const char* attributes[] = { 0 };
-    stmt2->set_attributes(attributes);
-    {
-      Recurse_Statement* stmt3 = new Recurse_Statement(0);
-      const char* attributes[] = { "type", "relation-way", "from", "rels", 0 };
-      stmt3->set_attributes(attributes);
-      stmt2->add_statement(stmt3, "");
-    }
-    {
-      Recurse_Statement* stmt3 = new Recurse_Statement(0);
-      const char* attributes[] = { "type", "way-node", 0 };
-      stmt3->set_attributes(attributes);
-      stmt2->add_statement(stmt3, "");
-    }
-    stmt2->execute(rman);
-  }
-  {
-    Make_Area_Statement* stmt1 = new Make_Area_Statement(0);
-    const char* attributes[] = { "pivot", "rels", 0 };
-    stmt1->set_attributes(attributes);
-    stmt1->execute(rman);
-  }
-
-  cout<<"Query to create areas:\n";
-  {
-    Query_Statement* stmt2 = new Query_Statement(0);
-    const char* attributes[] = { "type", "relation", 0 };
-    stmt2->set_attributes(attributes);
-    {
-      Has_Kv_Statement* stmt3 = new Has_Kv_Statement(0);
-      const char* attributes[] = { "k", "admin_level", 0 };
-      stmt3->set_attributes(attributes);
-      stmt2->add_statement(stmt3, "");
-    }
-    stmt2->execute(rman);
-  }
-  {
-    Foreach_Statement* stmt3 = new Foreach_Statement(0);
-    const char* attributes[] = { "into", "rels", 0 };
-    stmt3->set_attributes(attributes);
-    {
-      Union_Statement* stmt2 = new Union_Statement(0);
+      Union_Statement* stmt3 = new Union_Statement(0);
       const char* attributes[] = { 0 };
-      stmt2->set_attributes(attributes);
+      stmt3->set_attributes(attributes);
       {
-	Recurse_Statement* stmt3 = new Recurse_Statement(0);
-	const char* attributes[] = { "type", "relation-way", "from", "rels", 0 };
-	stmt3->set_attributes(attributes);
-	stmt2->add_statement(stmt3, "");
+        Query_Statement* stmt1 = new Query_Statement(0);
+        const char* attributes[] = { "type", "way", 0 };
+        stmt1->set_attributes(attributes);
+        {
+          Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0);
+          const char* attributes[] = { "k", "triangle", 0 };
+          stmt2->set_attributes(attributes);
+          stmt1->add_statement(stmt2, "");
+        }
+	stmt3->add_statement(stmt1, "");
       }
       {
-	Recurse_Statement* stmt3 = new Recurse_Statement(0);
-	const char* attributes[] = { "type", "way-node", 0 };
-	stmt3->set_attributes(attributes);
-	stmt2->add_statement(stmt3, "");
+        Query_Statement* stmt1 = new Query_Statement(0);
+        const char* attributes[] = { "type", "way", 0 };
+        stmt1->set_attributes(attributes);
+        {
+          Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0);
+          const char* attributes[] = { "k", "shapes", 0 };
+          stmt2->set_attributes(attributes);
+          stmt1->add_statement(stmt2, "");
+        }
+	stmt3->add_statement(stmt1, "");
       }
-      stmt3->add_statement(stmt2, "");
+      stmt3->execute(rman);
     }
     {
-      Union_Statement* stmt2 = new Union_Statement(0);
-      const char* attributes[] = { "into", "areas", 0 };
-      stmt2->set_attributes(attributes);
+      Foreach_Statement* stmt1 = new Foreach_Statement(0);
+      const char* attributes[] = { "into", "way", 0 };
+      stmt1->set_attributes(attributes);
       {
-	Make_Area_Statement* stmt1 = new Make_Area_Statement(0);
-	const char* attributes[] = { "pivot", "rels", 0 };
-	stmt1->set_attributes(attributes);
-	stmt2->add_statement(stmt1, "");
+        Union_Statement* stmt2 = new Union_Statement(0);
+        const char* attributes[] = { 0 };
+        stmt2->set_attributes(attributes);
+        {
+	  Recurse_Statement* stmt3 = new Recurse_Statement(0);
+          const char* attributes[] = { "type", "way-node", "from", "way", 0 };
+          stmt3->set_attributes(attributes);
+          stmt2->add_statement(stmt3, "");
+        }
+        {
+	  Item_Statement* stmt3 = new Item_Statement(0);
+          const char* attributes[] = { "set", "way", 0 };
+          stmt3->set_attributes(attributes);
+          stmt2->add_statement(stmt3, "");
+        }
+        stmt1->add_statement(stmt2, "");
       }
       {
-	Item_Statement* stmt3 = new Item_Statement(0);
-	const char* attributes[] = { "set", "areas", 0 };
-	stmt3->set_attributes(attributes);
-	stmt2->add_statement(stmt3, "");
+        Make_Area_Statement* stmt2 = new Make_Area_Statement(0);
+        const char* attributes[] = { "pivot", "way", 0 };
+        stmt2->set_attributes(attributes);
+        stmt1->add_statement(stmt2, "");
       }
-      stmt3->add_statement(stmt2, "");
-    }
-/*    {
-      Print_Statement* stmt1 = new Print_Statement(0);
-      const char* attributes[] = { "mode", "ids_only", "from", "rels", 0 };
-      stmt1->set_attributes(attributes);
-      stmt3->add_statement(stmt1, "");
-    }*/
-    stmt3->execute(rman);
-  }
-  {
-    Print_Statement* stmt1 = new Print_Statement(0);
-    const char* attributes[] = { "from", "areas", 0 };
-    stmt1->set_attributes(attributes);
-    stmt1->execute(rman);
-  }
-  
-/*  cout<<Coord_Query_Statement::check_segment(0, 0, 0, 0, 0, 0)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(1, 1, 1, 1, 1, 1)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(1, -1, 1, -1, 1, -1)<<'\n';
-  cout<<'\n';
-  
-  cout<<Coord_Query_Statement::check_segment(5, 5, 15, 5, 10, 5)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(5, -5, 15, -5, 10, -5)<<'\n';
-  cout<<'\n';
- 
-  cout<<Coord_Query_Statement::check_segment(0, 0, 0, 10, 0, 5)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(0, -5, 0, 5, 0, 0)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(0, 0, 0, 10, 5, 5)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(0, -5, 0, 5, 5, 0)<<'\n';
-  cout<<'\n';
-  
-  cout<<Coord_Query_Statement::check_segment(0, 5, 10, 15, 5, 10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(0, -15, 10, -5, 5, -10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(10, 15, 0, 5, 5, 10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(10, -5, 0, -15, 5, -10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(10, 5, 0, 15, 5, 10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(0, 15, 10, 5, 5, 10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(10, -15, 0, -5, 5, -10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(0, -5, 10, -15, 5, -10)<<'\n';
-  cout<<'\n';
-  
-  cout<<Coord_Query_Statement::check_segment(0, 5, 10, 15, 15, 10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(0, -15, 10, -5, 15, -10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(10, 15, 0, 5, 15, 10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(10, -5, 0, -15, 15, -10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(10, 5, 0, 15, 15, 10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(0, 15, 10, 5, 15, 10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(10, -15, 0, -5, 15, -10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(0, -5, 10, -15, 15, -10)<<'\n';
-  cout<<'\n';
-  
-  cout<<Coord_Query_Statement::check_segment(10, 0, 10, 0, 0, 0)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(11, 1, 11, 1, 1, 1)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(11, -1, 11, -1, 1, -1)<<'\n';
-  cout<<'\n';
-  
-  cout<<Coord_Query_Statement::check_segment(5, 5, 15, 5, 0, 5)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(5, -5, 15, -5, 0, -5)<<'\n';
-  cout<<'\n';
-  
-  cout<<Coord_Query_Statement::check_segment(10, 0, 10, 10, 0, 5)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(10, -5, 10, 5, 0, 0)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(10, 0, 10, 10, 5, 5)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(10, -5, 10, 5, 5, 0)<<'\n';
-  cout<<'\n';
-  
-  cout<<Coord_Query_Statement::check_segment(0, 5, 10, 15, 0, 10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(0, -15, 10, -5, 0, -10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(10, 15, 0, 5, 0, 10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(10, -5, 0, -15, 0, -10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(10, 5, 0, 15, 0, 10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(0, 15, 10, 5, 0, 10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(10, -15, 0, -5, 0, -10)<<'\n';
-  cout<<Coord_Query_Statement::check_segment(0, -5, 10, -15, 0, -10)<<'\n';
-  cout<<'\n';*/
-  
-/*  set< Uint31_Index > req;
-  req.insert(Uint31_Index(Node::ll_upper(51.25, 7.15) & 0xffffff00));
-  
-  Block_Backend< Uint31_Index, Area_Block > area_blocks_db
-      (*de_osm3s_file_ids::AREA_BLOCKS, false);
-  for (Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
-      it(area_blocks_db.discrete_begin(req.begin(), req.end()));
-      !(it == area_blocks_db.discrete_end()); ++it)
-  {
-    cout<<"0x"<<hex<<it.index().val()<<' '<<dec<<it.object().id<<": ";
-    for (uint i(0); i < it.object().coors.size(); ++i)
-      cout<<Coord_Query_Statement::shifted_lat(it.index().val(), it.object().coors[i])
-          <<' '<<Coord_Query_Statement::lon_(it.index().val(), it.object().coors[i])
-	  <<", ";
-    cout<<'\n';
-  }*/
-
-  for (uint j(51400); j >= 51100; j -= 5) 
-  {
-/*    if (j%100 == 95)
-      cout<<'\n';*/
-    for (uint i(6900); i <= 7500; i += 4)
-    {
-/*      if (i%100 == 0)
-	cout<<' ';*/
-      
-      ostringstream temp;
-      char lat[40];
-      temp<<((double)j/1000);
-      strcpy(lat, temp.str().c_str());
-      temp.str("");
-      char lon[40];
-      temp<<((double)i/1000);
-      strcpy(lon, temp.str().c_str());
-      
-      Coord_Query_Statement* stmt1 = new Coord_Query_Statement(0);
-      const char* attributes[] = { "lat", "51.25", "lon", "7.15", 0 };
-      attributes[1] = (const char*)lat;
-      attributes[3] = (const char*)lon;
-      stmt1->set_attributes(attributes);
-      Statement::set_error_output(0);
       stmt1->execute(rman);
-      
-      map< Uint31_Index, vector< Area_Skeleton > >& areas(rman.sets()["_"].areas);
-      bool contains_w(false);
-      for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator
-	  it(areas.begin()); it != areas.end(); ++it)
-      {
-	for (vector< Area_Skeleton >::const_iterator it2(it->second.begin());
-	    it2 != it->second.end(); ++it2)
-	  contains_w |= (it2->id == 3600062478ull);
-      }
-      if (contains_w)
-	cout<<'#';
-      else
-	cout<<'.';
     }
-    cout<<'\n';
-  }
 
+    {
+      Query_Statement* stmt1 = new Query_Statement(0);
+      const char* attributes[] = { "type", "relation", 0 };
+      stmt1->set_attributes(attributes);
+      {
+	Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0);
+	const char* attributes[] = { "k", "multpoly", 0 };
+	stmt2->set_attributes(attributes);
+	stmt1->add_statement(stmt2, "");
+      }
+      stmt1->execute(rman);
+    }
+    {
+      Foreach_Statement* stmt1 = new Foreach_Statement(0);
+      const char* attributes[] = { "into", "pivot", 0 };
+      stmt1->set_attributes(attributes);
+      {
+        Union_Statement* stmt2 = new Union_Statement(0);
+        const char* attributes[] = { 0 };
+        stmt2->set_attributes(attributes);
+        {
+	  Recurse_Statement* stmt3 = new Recurse_Statement(0);
+          const char* attributes[] = { "type", "relation-way", "from", "pivot", 0 };
+          stmt3->set_attributes(attributes);
+          stmt2->add_statement(stmt3, "");
+        }
+        {
+	  Recurse_Statement* stmt3 = new Recurse_Statement(0);
+          const char* attributes[] = { "type", "way-node", 0 };
+          stmt3->set_attributes(attributes);
+          stmt2->add_statement(stmt3, "");
+        }
+        stmt1->add_statement(stmt2, "");
+      }
+      {
+        Make_Area_Statement* stmt2 = new Make_Area_Statement(0);
+        const char* attributes[] = { "pivot", "pivot", 0 };
+        stmt2->set_attributes(attributes);
+        stmt1->add_statement(stmt2, "");
+      }
+      stmt1->execute(rman);
+    }
+  }
+  else if (test_to_execute == "1")
+  {
+    for (uint i = 0; i < 8; ++i)
+      evaluate_grid( 0.0, 10.0, 0.0 + 6.0*i, 6.0 + 6.0*i, 1.0, rman);
+    for (uint i = 0; i < 8; ++i)
+      evaluate_grid(10.0, 11.0, 0.0 + 0.6*i, 0.6 + 0.6*i, 0.1, rman);
+    for (uint i = 0; i < 8; ++i)
+      evaluate_grid(11.0, 11.1, 0.0 + 0.06*i, 0.06 + 0.06*i, 0.01, rman);
+    for (uint i = 0; i < 8; ++i)
+      evaluate_grid(11.1, 11.11, 0.0 + 0.006*i, 0.006 + 0.006*i, 0.001, rman);
+    for (uint i = 0; i < 8; ++i)
+      evaluate_grid(11.11, 11.111, 0.0 + 0.0006*i, 0.0006 + 0.0006*i, 0.0001, rman);
+    for (uint i = 0; i < 8; ++i)
+      evaluate_grid(11.111, 11.1111, 0.0 + 0.00006*i, 0.00006 + 0.00006*i, 0.00001, rman);
+    for (uint i = 0; i < 8; ++i)
+      evaluate_grid(11.1111, 11.11111, 0.0 + 0.000006*i, 0.000006 + 0.000006*i, 0.000001, rman);
+  }
+  else if (test_to_execute == "2")
+  {
+    evaluate_grid(0.0, 5.0, 50.0, 55.0, 1.0, rman);
+    evaluate_grid(0.0, 3.0, 55.0, 60.0, 1.0, rman);
+    evaluate_grid(10.0, 10.5, 10.0, 10.5, 0.1, rman);
+    evaluate_grid(10.0, 10.3, 10.5, 11.0, 0.1, rman);
+    evaluate_grid(11.0, 11.05, 10.0, 10.05, 0.01, rman);
+    evaluate_grid(11.0, 11.03, 10.05, 10.1, 0.01, rman);
+    evaluate_grid(11.1, 11.105, 10.0, 10.005, 0.001, rman);
+    evaluate_grid(11.1, 11.103, 10.005, 10.01, 0.001, rman);
+    evaluate_grid(11.11, 11.1105, 10.0, 10.0005, 0.0001, rman);
+    evaluate_grid(11.11, 11.1103, 10.0005, 10.001, 0.0001, rman);
+    evaluate_grid(11.111, 11.11105, 10.0, 10.00005, 0.00001, rman);
+    evaluate_grid(11.111, 11.11103, 10.00005, 10.0001, 0.00001, rman);
+    evaluate_grid(11.1111, 11.111105, 10.0, 10.000005, 0.000001, rman);
+    evaluate_grid(11.1111, 11.111103, 10.000005, 10.00001, 0.000001, rman);
+  }
+  else if (test_to_execute == "3")
+  {
+    evaluate_grid(10.0, 10.3, 20.0, 20.5, 0.05, rman);
+    evaluate_grid(10.0, 10.4, 20.5, 20.9, 0.05, rman);
+    evaluate_grid(10.3, 10.3, 20.6, 20.6, 0.05, rman);
+    evaluate_grid(10.1, 10.1, 20.8, 20.8, 0.05, rman);
+  }
+  
   return 0;
 }

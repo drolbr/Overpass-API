@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <cctype>
 #include <fstream>
-#include <iostream>
 #include <map>
 #include <set>
 #include <sstream>
@@ -179,26 +178,12 @@ pair< uint32, uint32 > Make_Area_Statement::create_area_blocks
 
 uint32 Make_Area_Statement::shifted_lat(uint32 ll_index, uint64 coord)
 {
-  uint32 lat(0);
-  coord |= (((uint64)ll_index)<<32);
-  for (uint32 i(0); i < 16; i+=1)
-  {
-    lat |= (((uint64)0x1<<(31-2*i))&(coord>>32))<<i;
-    lat |= (((uint64)0x1<<(31-2*i))&coord)>>(16-i);
-  }
-  return lat;
+  return Node::ilat(ll_index | (coord>>32), coord & 0xffffffff);
 }
 
 int32 Make_Area_Statement::lon_(uint32 ll_index, uint64 coord)
 {
-  int32 lon(0);
-  coord |= (((uint64)ll_index)<<32);
-  for (uint32 i(0); i < 16; i+=1)
-  {
-    lon |= (((uint64)0x1<<(30-2*i))&(coord>>32))<<(i+1);
-    lon |= (((uint64)0x1<<(30-2*i))&coord)>>(15-i);
-  }
-  return lon;
+  return Node::ilon(ll_index | (coord>>32), coord & 0xffffffff);
 }
 
 void Make_Area_Statement::add_segment_blocks
@@ -326,7 +311,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   else if (pivot_type == RELATION)
     file_prop = osm_base_settings().RELATION_TAGS_LOCAL;
   Block_Backend< Tag_Index_Local, Uint32_Index > items_db
-      (rman.get_transaction().data_index(file_prop));
+      (rman.get_transaction()->data_index(file_prop));
   Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
       tag_it(items_db.range_begin
         (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
@@ -428,12 +413,15 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
     return;
   }
   
-  Area_Updater& area_updater(rman.area_updater());
-  area_updater.set_area(new_index, new_location);
-  area_updater.add_blocks(area_blocks);
-  stopwatch.stop(Stopwatch::NO_DISK);
-  area_updater.commit(stopwatch);
-  stopwatch.stop(Stopwatch::NO_DISK);
+  if (rman.area_updater())
+  {
+    Area_Updater* area_updater(rman.area_updater());
+    area_updater->set_area(new_index, new_location);
+    area_updater->add_blocks(area_blocks);
+    stopwatch.stop(Stopwatch::NO_DISK);
+    area_updater->commit(stopwatch);
+    stopwatch.stop(Stopwatch::NO_DISK);
+  }
   
   areas[new_index].push_back(Area_Skeleton(new_location));
   

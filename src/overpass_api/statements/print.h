@@ -28,14 +28,14 @@ class Print_Statement : public Statement
     void tags_quadtile
       (const map< TIndex, vector< TObject > >& items,
        const File_Properties& file_prop, uint32 mode, uint32 stopwatch_account,
-       Resource_Manager& rman);
+       Resource_Manager& rman, Transaction& transaction);
     
     template< class TIndex, class TObject >
     void tags_by_id
       (const map< TIndex, vector< TObject > >& items,
        const File_Properties& file_prop,
        uint32 FLUSH_SIZE, uint32 mode, uint32 stopwatch_account,
-       Resource_Manager& rman);
+       Resource_Manager& rman, Transaction& transaction);
 };
 
 template< class TIndex >

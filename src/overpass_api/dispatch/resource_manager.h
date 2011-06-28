@@ -14,15 +14,28 @@ class Resource_Manager
 {
 public:
   Resource_Manager(Transaction& transaction_)
-      : transaction(&transaction_), start_time(time(NULL)),
-        max_allowed_time(0), max_allowed_space(0) {}
+      : transaction(&transaction_), area_transaction(0), area_updater_(0),
+        start_time(time(NULL)), max_allowed_time(0), max_allowed_space(0) {}
+  
+  Resource_Manager(Transaction& transaction_, Transaction& area_transaction_,
+		   bool writeable = false)
+      : transaction(&transaction_), area_transaction(&area_transaction_),
+        area_updater_(new Area_Updater(area_transaction_)),
+        start_time(time(NULL)), max_allowed_time(0), max_allowed_space(0) {}
+	
+  ~Resource_Manager()
+  {
+    if (area_updater_)
+      delete area_updater_;
+    area_updater_ = 0;
+  }
   
   map< string, Set >& sets()
   {
     return sets_;
   }
   
-  Area_Updater& area_updater()
+  Area_Updater* area_updater()
   {
     return area_updater_;
   }
@@ -37,13 +50,15 @@ public:
     max_allowed_space = max_allowed_space_;
   }
   
-  Transaction& get_transaction() { return *transaction; }
+  Transaction* get_transaction() { return transaction; }
+  Transaction* get_area_transaction() { return area_transaction; }
   
 private:
   map< string, Set > sets_;
   vector< const Set* > set_stack;
-  Area_Updater area_updater_;
   Transaction* transaction;
+  Transaction* area_transaction;
+  Area_Updater* area_updater_;
   int start_time;
   uint32 max_allowed_time;
   uint64 max_allowed_space;

@@ -28,8 +28,10 @@ class Coord_Query_Statement : public Statement
         (uint32 ll_index, const Area_Block& area_block,
 	 uint32 coord_lat, int32 coord_lon);
     
-    const static int TOGGLE = 1;
-    const static int HIT = 2;
+    // Used as bitmasks.
+    const static int HIT = 1;
+    const static int TOGGLE_EAST = 2;
+    const static int TOGGLE_WEST = 4;
     
   private:
     string output;

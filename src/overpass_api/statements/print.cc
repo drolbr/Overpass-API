@@ -165,7 +165,7 @@ void collect_tags_framed
 }
 
 void print_item(uint32 ll_upper, const Node_Skeleton& skel, uint32 mode,
-		Resource_Manager& rman,
+		Transaction& transaction,
 		const vector< pair< string, string > >* tags = 0)
 {
   cout<<"  <node";
@@ -188,7 +188,7 @@ void print_item(uint32 ll_upper, const Node_Skeleton& skel, uint32 mode,
 }
 
 void print_item(uint32 ll_upper, const Way_Skeleton& skel, uint32 mode,
-		Resource_Manager& rman,
+		Transaction& transaction,
 		const vector< pair< string, string > >* tags = 0)
 {
   cout<<"  <way";
@@ -216,7 +216,7 @@ void print_item(uint32 ll_upper, const Way_Skeleton& skel, uint32 mode,
 }
 
 void print_item(uint32 ll_upper, const Relation_Skeleton& skel, uint32 mode,
-		Resource_Manager& rman,
+		Transaction& transaction,
 		const vector< pair< string, string > >* tags = 0)
 { 
   static map< uint32, string > roles;
@@ -224,7 +224,7 @@ void print_item(uint32 ll_upper, const Relation_Skeleton& skel, uint32 mode,
   {
     // prepare check update_members - load roles
     Block_Backend< Uint32_Index, String_Object > roles_db
-        (rman.get_transaction().data_index(osm_base_settings().RELATION_ROLES));
+        (transaction.data_index(osm_base_settings().RELATION_ROLES));
     for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
         it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
       roles[it.index().val()] = it.object().val();
@@ -257,7 +257,7 @@ void print_item(uint32 ll_upper, const Relation_Skeleton& skel, uint32 mode,
 }
 
 void print_item(uint32 ll_upper, const Area_Skeleton& skel, uint32 mode,
-		Resource_Manager& rman,
+		Transaction& transaction,
 		const vector< pair< string, string > >* tags = 0)
 {
   cout<<"  <area";
@@ -279,7 +279,7 @@ void print_item(uint32 ll_upper, const Area_Skeleton& skel, uint32 mode,
 template< class TIndex, class TObject >
 void quadtile
     (const map< TIndex, vector< TObject > >& items, uint32 mode,
-     Resource_Manager& rman)
+     Transaction& transaction)
 {
   typename map< TIndex, vector< TObject > >::const_iterator
       item_it(items.begin());
@@ -288,7 +288,7 @@ void quadtile
   {
     for (typename vector< TObject >::const_iterator it2(item_it->second.begin());
         it2 != item_it->second.end(); ++it2)
-      print_item(item_it->first.val(), *it2, mode, rman);
+      print_item(item_it->first.val(), *it2, mode, transaction);
     ++item_it;
   }
 };
@@ -297,7 +297,7 @@ template< class TIndex, class TObject >
 void Print_Statement::tags_quadtile
     (const map< TIndex, vector< TObject > >& items,
      const File_Properties& file_prop, uint32 mode, uint32 stopwatch_account,
-     Resource_Manager& rman)
+     Resource_Manager& rman, Transaction& transaction)
 {
   //generate set of relevant coarse indices
   set< TIndex > coarse_indices;
@@ -312,7 +312,7 @@ void Print_Statement::tags_quadtile
   stopwatch.stop(Stopwatch::NO_DISK);
   uint coarse_count(0);
   Block_Backend< Tag_Index_Local, Uint32_Index > items_db
-      (rman.get_transaction().data_index(&file_prop));
+      (transaction.data_index(&file_prop));
   Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
     tag_it(items_db.range_begin
     (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
@@ -339,7 +339,8 @@ void Print_Statement::tags_quadtile
     {
       for (typename vector< TObject >::const_iterator it2(item_it->second.begin());
           it2 != item_it->second.end(); ++it2)
-        print_item(item_it->first.val(), *it2, mode, rman, &(tags_by_id[it2->id]));
+        print_item(item_it->first.val(), *it2, mode, transaction,
+		   &(tags_by_id[it2->id]));
       ++item_it;
     }
   }
@@ -359,7 +360,7 @@ struct Skeleton_Comparator_By_Id {
 template< class TIndex, class TObject >
 void by_id
   (const map< TIndex, vector< TObject > >& items, uint32 mode,
-   Resource_Manager& rman)
+   Transaction& transaction)
 {
   // order relevant elements by id
   vector< pair< const TObject*, uint32 > > items_by_id;
@@ -375,7 +376,7 @@ void by_id
   
   // iterate over the result
   for (uint32 i(0); i < items_by_id.size(); ++i)
-    print_item(items_by_id[i].second, *(items_by_id[i].first), mode, rman);
+    print_item(items_by_id[i].second, *(items_by_id[i].first), mode, transaction);
 };
 
 template< class TIndex, class TObject >
@@ -383,7 +384,7 @@ void Print_Statement::tags_by_id
   (const map< TIndex, vector< TObject > >& items,
    const File_Properties& file_prop,
    uint32 FLUSH_SIZE, uint32 mode, uint32 stopwatch_account,
-   Resource_Manager& rman)
+   Resource_Manager& rman, Transaction& transaction)
 {
   // order relevant elements by id
   vector< pair< const TObject*, uint32 > > items_by_id;
@@ -413,7 +414,7 @@ void Print_Statement::tags_by_id
   // iterate over the result
   stopwatch.stop(Stopwatch::NO_DISK);
   Block_Backend< Tag_Index_Local, Uint32_Index > items_db
-      (rman.get_transaction().data_index(&file_prop));
+      (transaction.data_index(&file_prop));
   for (uint32 id_pos(0); id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
   {
     rman.health_check(*this);
@@ -439,7 +440,7 @@ void Print_Statement::tags_by_id
     for (uint32 i(id_pos);
          (i < id_pos + FLUSH_SIZE) && (i < items_by_id.size()); ++i)
       print_item(items_by_id[i].second, *(items_by_id[i].first), mode,
-		 rman, &(tags_by_id[items_by_id[i].first->id]));
+		 transaction, &(tags_by_id[items_by_id[i].first->id]));
   }
   stopwatch.add(stopwatch_account, items_db.read_count());
   stopwatch.stop(stopwatch_account);
@@ -448,7 +449,8 @@ void Print_Statement::tags_by_id
 void Print_Statement::execute(Resource_Manager& rman)
 {
   stopwatch.start();
-  rman.area_updater().flush(stopwatch);
+  if (rman.area_updater())
+    rman.area_updater()->flush(&stopwatch);
   
   map< string, Set >::const_iterator mit(rman.sets().find(input));
   if (mit == rman.sets().end())
@@ -458,41 +460,37 @@ void Print_Statement::execute(Resource_Manager& rman)
     if (order == ORDER_BY_ID)
     {
       tags_by_id(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
-		 NODE_FLUSH_SIZE, mode, Stopwatch::NODE_TAGS_LOCAL, rman);
+		 NODE_FLUSH_SIZE, mode, Stopwatch::NODE_TAGS_LOCAL, rman,
+		 *rman.get_transaction());
       tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
-		 WAY_FLUSH_SIZE, mode, Stopwatch::WAY_TAGS_LOCAL, rman);
+		 WAY_FLUSH_SIZE, mode, Stopwatch::WAY_TAGS_LOCAL, rman,
+		 *rman.get_transaction());
       tags_by_id(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
-		 RELATION_FLUSH_SIZE, mode, Stopwatch::RELATION_TAGS_LOCAL, rman);
-      try
+		 RELATION_FLUSH_SIZE, mode, Stopwatch::RELATION_TAGS_LOCAL, rman,
+		 *rman.get_transaction());
+      if (rman.get_area_transaction())
       {
 	tags_by_id(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
-		   AREA_FLUSH_SIZE, mode, Stopwatch::AREA_TAGS_LOCAL, rman);
-      }
-      catch (File_Error e)
-      {
-	if ((e.filename.size() >= 19) &&
-	    (e.filename.substr(e.filename.size()-19, 19) != "area_tags_local.bin"))
-	  throw e;
+		   AREA_FLUSH_SIZE, mode, Stopwatch::AREA_TAGS_LOCAL, rman,
+		   *rman.get_area_transaction());
       }
     }
     else
     {
       tags_quadtile(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
-		    mode, Stopwatch::NODE_TAGS_LOCAL, rman);
+		    mode, Stopwatch::NODE_TAGS_LOCAL, rman,
+		    *rman.get_transaction());
       tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
-		    mode, Stopwatch::WAY_TAGS_LOCAL, rman);
+		    mode, Stopwatch::WAY_TAGS_LOCAL, rman,
+		    *rman.get_transaction());
       tags_quadtile(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
-		    mode, Stopwatch::RELATION_TAGS_LOCAL, rman);
-      try
+		    mode, Stopwatch::RELATION_TAGS_LOCAL, rman,
+		    *rman.get_transaction());
+      if (rman.get_area_transaction())
       {
         tags_quadtile(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
-		      mode, Stopwatch::AREA_TAGS_LOCAL, rman);
-      }
-      catch (File_Error e)
-      {
-	if ((e.filename.size() >= 19) &&
-	    (e.filename.substr(e.filename.size()-19, 19) != "area_tags_local.bin"))
-	  throw e;
+		      mode, Stopwatch::AREA_TAGS_LOCAL, rman,
+		      *rman.get_area_transaction());
       }
     }
   }
@@ -500,33 +498,19 @@ void Print_Statement::execute(Resource_Manager& rman)
   {
     if (order == ORDER_BY_ID)
     {
-      by_id(mit->second.nodes, mode, rman);
-      by_id(mit->second.ways, mode, rman);
-      by_id(mit->second.relations, mode, rman);
-      try
-      {
-	by_id(mit->second.areas, mode, rman);
-      }
-      catch (File_Error e)
-      {
-	if (e.filename.substr(e.filename.size()-19, 19) != "area_tags_local.bin")
-	  throw e;
-      }
+      by_id(mit->second.nodes, mode, *rman.get_transaction());
+      by_id(mit->second.ways, mode, *rman.get_transaction());
+      by_id(mit->second.relations, mode, *rman.get_transaction());
+      if (rman.get_area_transaction())
+	by_id(mit->second.areas, mode, *rman.get_area_transaction());
     }
     else
     {
-      quadtile(mit->second.nodes, mode, rman);
-      quadtile(mit->second.ways, mode, rman);
-      quadtile(mit->second.relations, mode, rman);
-      try
-      {
-	quadtile(mit->second.areas, mode, rman);
-      }
-      catch (File_Error e)
-      {
-	if (e.filename.substr(e.filename.size()-19, 19) != "area")
-	  throw e;
-      }
+      quadtile(mit->second.nodes, mode, *rman.get_transaction());
+      quadtile(mit->second.ways, mode, *rman.get_transaction());
+      quadtile(mit->second.relations, mode, *rman.get_transaction());
+      if (rman.get_area_transaction())
+	quadtile(mit->second.areas, mode, *rman.get_area_transaction());
     }
   }
   

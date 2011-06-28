@@ -55,47 +55,6 @@ void Coord_Query_Statement::forecast()
   display_state();*/
 }
 
-int Coord_Query_Statement::check_segment
-  (uint32 a_lat, int32 a_lon, uint32 b_lat, int32 b_lon,
-   uint32 coord_lat, int32 coord_lon)
-{
-  uint32 lower_lat(0);
-  if (a_lon < b_lon)
-    if (a_lat < b_lat)
-      lower_lat = ((int64)b_lat - a_lat)*
-          (coord_lon - a_lon)/(b_lon - a_lon + 1) + a_lat;
-    else
-      lower_lat = ((int64)b_lat - a_lat)*
-          (coord_lon - a_lon + 1)/(b_lon - a_lon + 1) + a_lat;
-  else
-    if (a_lat < b_lat)
-      lower_lat = ((int64)a_lat - b_lat)*
-          (coord_lon - b_lon + 1)/(a_lon - b_lon + 1) + b_lat;
-    else
-      lower_lat = ((int64)a_lat - b_lat)*
-          (coord_lon - b_lon)/(a_lon - b_lon + 1) + b_lat;
-  if (lower_lat > coord_lat)
-    return 0;
-  uint32 upper_lat(0);
-  if (a_lon < b_lon)
-    if (a_lat < b_lat)
-      upper_lat = ((int64)b_lat - a_lat)*
-          (coord_lon - a_lon + 1)/(b_lon - a_lon + 1) + a_lat;
-    else
-      upper_lat = ((int64)b_lat - a_lat)*
-          (coord_lon - a_lon)/(b_lon - a_lon + 1) + a_lat;
-  else
-    if (a_lat < b_lat)
-      upper_lat = ((int64)a_lat - b_lat)*
-          (coord_lon - b_lon)/(a_lon - b_lon + 1) + b_lat;
-    else
-      upper_lat = ((int64)a_lat - b_lat)*
-          (coord_lon - b_lon + 1)/(a_lon - b_lon + 1) + b_lat;
-  if (upper_lat >= coord_lat)
-    return HIT;
-  return TOGGLE;
-}
-
 uint32 Coord_Query_Statement::shifted_lat(uint32 ll_index, uint64 coord)
 {
   uint32 lat(0);
@@ -189,79 +148,107 @@ int32 Coord_Query_Statement::lon_(uint32 ll_index, uint64 coord)
 /*overall strategy: we count the number of intersections of a straight line from
   the coordinates to the southern end of the block. If it is odd, the coordinate
   is inside the area, if not, they are not.
-  
-  possible cases for a segment:
-  - both lons are less than the lon of the coordinate => don't count
-  - the segment is north-south and contains the coordinate => is anyway contained
-  - the coordinate is on the segment => is anyway contained
-  - both lats are equal or bigger than the lats of the coordinate => don't count
-  - one lon is less and the other one is bigger than the lon of the coordinate
-    => iff the intersection is equal or south of the coordinate's lat, then count
 */
 int Coord_Query_Statement::check_area_block
     (uint32 ll_index, const Area_Block& area_block,
      uint32 coord_lat, int32 coord_lon)
 {
+  // An area block is a chain of segments. We consider each
+  // segment individually. This falls into different cases, determined by
+  // the relative position of the intersection of the segment and a straight
+  // line from north to south through the coordinate to test.
+  // (1) If the segment intersects north of the coordinates or doesn't intersect
+  // at all, we can ignore it.
+  // (2) If the segment intersects at exactly the coordinates, the coordinates
+  // are on the boundary, hence in our definition part of the area.
+  // (3) If the segment intersects south of us, it toggles whether we are inside
+  // or outside the area
+  // (4) A special case is if one endpoint is the intersection point. We then toggle
+  // only either the western or the eastern side. We are part of the area if in the
+  // end the western or eastern side have an odd state.
+  int state = 0;
   vector< uint64 >::const_iterator it(area_block.coors.begin());
-  bool odd_segs_below(false);
-  if (it == area_block.coors.end())
-    return 0;
   uint32 lat(shifted_lat(ll_index, *it));
   int32 lon(lon_(ll_index, *it));
-  if ((coord_lon == lon) && (coord_lat == lat))
-    return HIT;
-  bool last_less(lon < coord_lon);
   while (++it != area_block.coors.end())
   {
-    uint32 last_lat(lat);
-    int32 last_lon(lon);
+    uint32 last_lat = lat;
+    int32 last_lon = lon;
     lon = lon_(ll_index, *it);
     lat = shifted_lat(ll_index, *it);
-    if (last_less)
+    
+    if (last_lon < lon)
     {
       if (lon < coord_lon)
-	continue;
-      last_less = false;
-    }
-    else
-    {
-      if (lon == coord_lon)
+	continue; // case (1)
+      else if (last_lon > coord_lon)
+	continue; // case (1)
+      else if (lon == coord_lon)
       {
-	if (last_lon == coord_lon)
-	{
-	  if ((last_lat <= coord_lat) && (lat >= coord_lat))
-	    return HIT;
-	  if ((lat <= coord_lat) && (last_lat >= coord_lat))
-	    return HIT;
-	}
-	int check(check_segment
-	    (last_lat, last_lon, lat, lon, coord_lat, coord_lon));
-	if (check == HIT)
-	  return HIT;
-      }
-      if (lon >= coord_lon)
+	if (lat < coord_lat)
+	  state ^= TOGGLE_WEST; // case (4)
+	else if (lat == coord_lat)
+	  return HIT; // case (2)
+	// else: case (1)
 	continue;
-      last_less = true;
+      }
+      else if (last_lon == coord_lon)
+      {
+	if (last_lat < coord_lat)
+	  state ^= TOGGLE_EAST; // case (4)
+	else if (last_lat == coord_lat)
+	  return HIT; // case (2)
+	// else: case (1)
+	continue;
+      }
     }
-    int check(check_segment
-        (last_lat, last_lon, lat, lon, coord_lat, coord_lon));
-    if (check == HIT)
-      return HIT;
-    if (check != 0)
-      odd_segs_below = !odd_segs_below;
+    else if (last_lon > lon)
+    {
+      if (lon > coord_lon)
+	continue; // case (1)
+      else if (last_lon < coord_lon)
+	continue; // case (1)
+      else if (lon == coord_lon)
+      {
+	if (lat < coord_lat)
+	  state ^= TOGGLE_EAST; // case (4)
+	else if (lat == coord_lat)
+	  return HIT; // case (2)
+	// else: case (1)
+	continue;
+      }
+      else if (last_lon == coord_lon)
+      {
+	if (last_lat < coord_lat)
+	  state ^= TOGGLE_WEST; // case (4)
+	else if (last_lat == coord_lat)
+	  return HIT; // case (2)
+	// else: case (1)
+	continue;
+      }
+    }
+    else // last_lon == lon should normally not happen and can be safely ignored
+      continue; // otherwise.
+    
+    uint32 intersect_lat = lat +
+        ((int64)coord_lon - lon)*((int64)last_lat - lat)/((int64)last_lon - lon);
+    if (coord_lat > intersect_lat)
+      state ^= (TOGGLE_EAST | TOGGLE_WEST); // case (3)
+    else if (coord_lat == intersect_lat)
+      return HIT; // case (2)
+    // else: case (1)
   }
-  if (odd_segs_below)
-    return TOGGLE;
-  return 0;
+  return state;
 }
 
 void Coord_Query_Statement::execute(Resource_Manager& rman)
 { 
   stopwatch.start();
-  rman.area_updater().flush(stopwatch);
+  if (rman.area_updater())
+    rman.area_updater()->flush(&stopwatch);
   
   set< Uint31_Index > req;
-  set< uint32 > areas_inside;
+  map< uint32, int > areas_inside;
   set< uint32 > areas_on_border;
   req.insert(Uint31_Index(Node::ll_upper(lat, lon) & 0xffffff00));
 
@@ -271,20 +258,21 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   stopwatch.stop(Stopwatch::NO_DISK);
   
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
-      (rman.get_transaction().data_index(area_settings().AREA_BLOCKS));
+      (rman.get_area_transaction()->data_index(area_settings().AREA_BLOCKS));
   for (Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
       it(area_blocks_db.discrete_begin(req.begin(), req.end()));
       !(it == area_blocks_db.discrete_end()); ++it)
   {
-    int check(check_area_block(it.index().val(), it.object(), ilat, ilon));
+    int check = check_area_block(it.index().val(), it.object(), ilat, ilon);
     if (check == HIT)
       areas_on_border.insert(it.object().id);
-    else if (check == TOGGLE)
+    else if (check != 0)
     {
-      if (areas_inside.find(it.object().id) != areas_inside.end())
-	areas_inside.erase(it.object().id);
+      map< uint32, int >::iterator it2 = areas_inside.find(it.object().id);
+      if (it2 != areas_inside.end())
+	it2->second ^= check;
       else
-	areas_inside.insert(it.object().id);
+	areas_inside.insert(make_pair(it.object().id, check));
     }
   }
   
@@ -308,14 +296,15 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   stopwatch.stop(Stopwatch::NO_DISK);
   
   Block_Backend< Uint31_Index, Area_Skeleton > area_locations_db
-      (rman.get_transaction().data_index(area_settings().AREAS));
+      (rman.get_area_transaction()->data_index(area_settings().AREAS));
   for (Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
       it(area_locations_db.flat_begin());
       !(it == area_locations_db.flat_end()); ++it)
   {
-    if (areas_inside.find(it.object().id) != areas_inside.end())
+    if (areas_on_border.find(it.object().id) != areas_on_border.end())
       areas[it.index()].push_back(it.object());
-    else if (areas_on_border.find(it.object().id) != areas_on_border.end())
+    else if ((areas_inside.find(it.object().id) != areas_inside.end())
+        && (areas_inside[it.object().id] != 0))
       areas[it.index()].push_back(it.object());
   }
 

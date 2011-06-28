@@ -265,7 +265,7 @@ vector< uint32 >* Query_Statement::collect_ids
  
   stopwatch.stop(Stopwatch::NO_DISK);
   Block_Backend< Tag_Index_Global, Uint32_Index > tags_db
-      (rman.get_transaction().data_index(&file_prop));
+      (rman.get_transaction()->data_index(&file_prop));
   
   vector< uint32 >* new_ids(new vector< uint32 >());
   vector< pair< string, string > >::const_iterator it = key_values.begin();
@@ -413,7 +413,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint32_Index > random
-          (rman.get_transaction().random_index(osm_base_settings().NODES));
+          (rman.get_transaction()->random_index(osm_base_settings().NODES));
       for (vector< uint32 >::const_iterator it(ids->begin());
           it != ids->end(); ++it)
 	obj_req.insert(random.get(*it));
@@ -436,7 +436,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       uint nodes_count = 0;
       Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-	  (rman.get_transaction().data_index(osm_base_settings().NODES));
+	  (rman.get_transaction()->data_index(osm_base_settings().NODES));
       for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
           it(nodes_db.range_begin
              (Default_Range_Iterator< Uint32_Index >(range_req.begin()),
@@ -470,7 +470,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       uint nodes_count = 0;
       Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-          (rman.get_transaction().data_index(osm_base_settings().NODES));
+          (rman.get_transaction()->data_index(osm_base_settings().NODES));
       for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
 	  it(nodes_db.discrete_begin(obj_req.begin(), obj_req.end()));
           !(it == nodes_db.discrete_end()); ++it)
@@ -498,7 +498,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint31_Index > random
-          (rman.get_transaction().random_index(osm_base_settings().WAYS));
+          (rman.get_transaction()->random_index(osm_base_settings().WAYS));
       for (vector< uint32 >::const_iterator it(ids->begin());
           it != ids->end(); ++it)
         obj_req.insert(random.get(*it));
@@ -513,7 +513,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     stopwatch.stop(Stopwatch::NO_DISK);
     uint ways_count = 0;
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-        (rman.get_transaction().data_index(osm_base_settings().WAYS));
+        (rman.get_transaction()->data_index(osm_base_settings().WAYS));
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
         it(ways_db.discrete_begin(obj_req.begin(), obj_req.end()));
         !(it == ways_db.discrete_end()); ++it)
@@ -540,7 +540,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint31_Index > random
-          (rman.get_transaction().random_index(osm_base_settings().RELATIONS));
+          (rman.get_transaction()->random_index(osm_base_settings().RELATIONS));
       for (vector< uint32 >::const_iterator it(ids->begin());
           it != ids->end(); ++it)
       obj_req.insert(random.get(*it));
@@ -555,7 +555,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     stopwatch.stop(Stopwatch::NO_DISK);
     uint relations_count = 0;
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-        (rman.get_transaction().data_index(osm_base_settings().RELATIONS));
+        (rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
         it(relations_db.discrete_begin(obj_req.begin(), obj_req.end()));
         !(it == relations_db.discrete_end()); ++it)

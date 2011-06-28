@@ -689,3 +689,19 @@ for 0.8.2: (planned 2011-06-17)
 
 for 0.9: (planned 2011-07-01)
 - version, user and time data
+
+---
+
+Security considerations:
+
+We consider any attack from outside that would make the server using excessive resources or executing malicious code. We expect a possible attack to fall into one of the following categories:
+(1) Sending ill formed input that makes the server execute machine code.
+(2) Sending input that is executed as script but works as malware at that level.
+(3) Sending input that causes excessive load.
+(4) Sending input to figure out server configuration data.
+
+The server is hardened against (1): Data is converted from Expat straight to C++ strings and doubles; thus there is little risk. (2) is avoided by design: the script language is intentionally not Turing complete, and it allows anyway not more than printing a subset of the mirrored OSM database.
+
+(3) is not completely addressed at the moment: An attacker may put so much queries from outside that the server runs out of memory. The individual queries are limited in size (to 512 MB of RAM), but not their total number. The other resource problem, queries that get runaway for a long time, are addressed: Every query is annotated with a timeout (180s or a user given) and terminated if it surpasses its time limit.
+
+(4) is not a concern at this state of the project: The server may give file names of the database or the containing directory which is useful to debug a server after installation.

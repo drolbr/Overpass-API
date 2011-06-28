@@ -55,7 +55,7 @@ void Area_Query_Statement::get_ranges
      Resource_Manager& rman)
 {
   Block_Backend< Uint31_Index, Area_Skeleton > area_locations_db
-      (rman.get_transaction().data_index(area_settings().AREAS));
+      (rman.get_area_transaction()->data_index(area_settings().AREAS));
   for (Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
       it(area_locations_db.flat_begin());
       !(it == area_locations_db.flat_end()); ++it)
@@ -83,9 +83,9 @@ void Area_Query_Statement::collect_nodes
      Resource_Manager& rman)
 {
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
-      (rman.get_transaction().data_index(area_settings().AREA_BLOCKS));
+      (rman.get_area_transaction()->data_index(area_settings().AREA_BLOCKS));
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-      (rman.get_transaction().data_index(osm_base_settings().NODES));
+      (rman.get_transaction()->data_index(osm_base_settings().NODES));
   Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
       area_it(area_blocks_db.discrete_begin(req.begin(), req.end()));
   Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
@@ -117,7 +117,7 @@ void Area_Query_Statement::collect_nodes
 	continue;
       }
       
-      bool inside(false);
+      int inside = 0;
       uint32 ilat((Node::lat(nodes_it.index().val(), nodes_it.object().ll_lower)
           + 91.0)*10000000+0.5);
       int32 ilon(Node::lon(nodes_it.index().val(), nodes_it.object().ll_lower)*10000000
@@ -133,11 +133,11 @@ void Area_Query_Statement::collect_nodes
 	if (check == Coord_Query_Statement::HIT)
 	{
 	  nodes[nodes_it.index()].push_back(nodes_it.object());
-	  inside = false;
+	  inside = 0;
 	  break;
 	}
-	else if (check == Coord_Query_Statement::TOGGLE)
-	  inside = !inside;
+	else if (check != 0)
+	  inside ^= check;
       }
       if (inside)
 	nodes[nodes_it.index()].push_back(nodes_it.object());

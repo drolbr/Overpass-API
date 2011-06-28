@@ -315,16 +315,16 @@ void Relation_Updater::update_members(const map< uint32, vector< uint32 > >& to_
   map< Uint31_Index, set< Relation_Skeleton > > db_to_insert;
   
   for (map< uint32, vector< uint32 > >::const_iterator
-    it(to_delete.begin()); it != to_delete.end(); ++it)
+      it(to_delete.begin()); it != to_delete.end(); ++it)
   {
     Uint31_Index idx(it->first);
     for (vector< uint32 >::const_iterator it2(it->second.begin());
-    it2 != it->second.end(); ++it2)
+        it2 != it->second.end(); ++it2)
     db_to_delete[idx].insert(Relation_Skeleton(*it2, vector< Relation_Entry >()));
   }
   vector< Relation >::const_iterator rit(rels_to_insert.begin());
   for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
-  it != ids_to_modify.end(); ++it)
+      it != ids_to_modify.end(); ++it)
   {
     if ((rit != rels_to_insert.end()) && (it->first == rit->id))
     {

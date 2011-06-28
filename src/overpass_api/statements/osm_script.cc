@@ -107,7 +107,8 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
     (*it)->execute(rman);
   
   stopwatch.start();
-  rman.area_updater().flush(stopwatch);
+  if (rman.area_updater())
+    rman.area_updater()->flush(&stopwatch);
   stopwatch.stop(Stopwatch::NO_DISK);
   stopwatch.report(get_name());
   rman.health_check(*this);
