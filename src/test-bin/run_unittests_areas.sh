@@ -121,7 +121,7 @@ $BASEDIR/bin/update_database --version=mock-up-diff <input/rule_processor/deleti
 sleep 30
 mkdir -p run/rule_processor/
 rm -f run/rule_processor/*
-$BASEDIR/bin/osm3s_query --areas <input/rule_processor/check_query.osm >run/rule_processor/check_query.log
+$BASEDIR/bin/osm3s_query <input/rule_processor/check_query.osm >run/rule_processor/check_query.log
 
 $BASEDIR/bin/dispatcher --terminate
 $BASEDIR/bin/dispatcher --areas --terminate

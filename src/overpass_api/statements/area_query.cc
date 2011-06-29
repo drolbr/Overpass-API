@@ -15,6 +15,8 @@
 
 using namespace std;
 
+bool Area_Query_Statement::is_used_ = false;
+
 void Area_Query_Statement::set_attributes(const char **attr)
 {
   map< string, string > attributes;

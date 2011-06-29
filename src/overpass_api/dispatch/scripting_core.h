@@ -26,6 +26,8 @@
 
 using namespace std;
 
+struct Exit_Error {};
+
 class Dispatcher_Stub
 {
   public:
@@ -33,7 +35,7 @@ class Dispatcher_Stub
     // and registers the process. error_output_ must remain valid over the
     // entire lifetime of this object.
     Dispatcher_Stub(string db_dir_, Error_Output* error_output_, string xml_raw,
-		    int area_level = 0);
+		    int& area_level);
     
     void register_process();
     void set_limits();

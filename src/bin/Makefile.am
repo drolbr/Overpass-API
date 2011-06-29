@@ -1,5 +1,5 @@
 bin_PROGRAMS = osm3s_query dispatcher web_query update_database update_from_dir sketch_route_svg draw_route_svg uncgi bbox_brim_query
-dist_bin_SCRIPTS = apply_osc_to_db.sh fetch_osc.sh run_osm3s_minutely.sh
+dist_bin_SCRIPTS = apply_osc_to_db.sh fetch_osc.sh run_osm3s_minutely.sh rules_loop.sh
 
 escape_xml_cc = ../expat/escape_xml.cc
 expat_cc = ../expat/expat_justparse_interface.cc

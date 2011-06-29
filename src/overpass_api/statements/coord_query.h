@@ -11,7 +11,8 @@ using namespace std;
 class Coord_Query_Statement : public Statement
 {
   public:
-    Coord_Query_Statement(int line_number_) : Statement(line_number_) {}
+    Coord_Query_Statement(int line_number_) : Statement(line_number_)
+        { is_used_ = true; }
     virtual void set_attributes(const char **attr);
     virtual string get_name() const { return "coord-query"; }
     virtual string get_result_name() const { return output; }
@@ -33,9 +34,13 @@ class Coord_Query_Statement : public Statement
     const static int TOGGLE_EAST = 2;
     const static int TOGGLE_WEST = 4;
     
+    static bool is_used() { return is_used_; }
+  
   private:
     string output;
     double lat, lon;
+    
+    static bool is_used_;
 };
 
 #endif

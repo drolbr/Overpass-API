@@ -14,6 +14,8 @@
 
 using namespace std;
 
+bool Coord_Query_Statement::is_used_ = false;
+
 void Coord_Query_Statement::set_attributes(const char **attr)
 {
   map< string, string > attributes;

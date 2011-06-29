@@ -28,6 +28,9 @@ where\n\
 --fetch=REPLICATE_DIR\n\
     Startup fetch_osc from the \$REPLICATE_ID given for run with replicate dir
     set to \$REPLICATE_DIR.\n\
+\n\
+--run-areas\n\
+    Startup the dispatcher for areas and rules_loop.\n\
 "
   exit 0
 };
@@ -40,6 +43,7 @@ INIT=
 RUN=
 FETCH=
 VERSION=
+RUN_AREAS=
 
 EXEC_DIR=/srv/osm-3s
 DB_DIR=/opt/osm-3s
@@ -78,6 +82,10 @@ process_param()
   {
     VERSION="${1:10}"
   };
+  elif [[ "$1" == "--run-areas" ]]; then
+  {
+    RUN_AREAS="yes"
+  };
   fi
 };
 
@@ -87,6 +95,8 @@ if [[ -n $3  ]]; then process_param $3; fi
 if [[ -n $4  ]]; then process_param $4; fi
 if [[ -n $5  ]]; then process_param $5; fi
 if [[ -n $6  ]]; then process_param $6; fi
+if [[ -n $7  ]]; then process_param $7; fi
+if [[ -n $8  ]]; then process_param $8; fi
 
 if [[ -z $VERSION ]]; then
 {
@@ -155,11 +165,14 @@ fi
 
 if [[ -n $INIT ]]; then
 {
-  if [[ ! -s $PLANET_DIR/planet-$INIT.osm.bz2 ]]; then
+  while [[ ! -s $PLANET_DIR/planet-$INIT.osm.bz2 ]]; do
   {
     wget -nv -O $PLANET_DIR/planet-$INIT.osm.bz2 ${DOWNLOAD_PLANET}planet-$INIT.osm.bz2
+    if [[ ! -s $PLANET_DIR/planet-$INIT.osm.bz2 ]]; then
+      sleep 300
+    fi
   };
-  fi
+  done
 
   mkdir -p "$DB_DIR/v$VERSION"
   bunzip2 <$PLANET_DIR/planet-$INIT.osm.bz2 | $EXEC_DIR/v$VERSION/bin/update_database --db-dir=$DB_DIR/v$VERSION/
@@ -176,6 +189,19 @@ if [[ -n $RUN ]]; then
   ./dispatcher --osm-base --db-dir=$DB_DIR/v$VERSION/ &
   sleep 5
   ./apply_osc_to_db.sh $DB_DIR/v$VERSION/ $REPLICATE_DIR $RUN &
+  popd
+};
+fi
+
+if [[ -n $RUN_AREAS ]]; then
+{
+  pushd $EXEC_DIR/v$VERSION/bin
+  mkdir -p $DB_DIR/v$VERSION/rules/
+  cp ../rules/areas.osm3s $DB_DIR/v$VERSION/rules/
+
+  ./dispatcher --areas --db-dir=$DB_DIR/v$VERSION/ &
+  sleep 5
+  ./rules_loop.sh $DB_DIR/v$VERSION/ &
   popd
 };
 fi

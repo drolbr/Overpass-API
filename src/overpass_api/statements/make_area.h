@@ -20,13 +20,16 @@ using namespace std;
 class Make_Area_Statement : public Statement
 {
   public:
-    Make_Area_Statement(int line_number_) : Statement(line_number_) {}
+    Make_Area_Statement(int line_number_) : Statement(line_number_)
+        { is_used_ = true; }
     virtual void set_attributes(const char **attr);
     virtual string get_name() const { return "make-area"; }
     virtual string get_result_name() const { return output; }
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     virtual ~Make_Area_Statement() {}
+    
+    static bool is_used() { return is_used_; }
     
   private:
     string input, output, pivot;
@@ -40,6 +43,8 @@ class Make_Area_Statement : public Statement
     static int32 lon_(uint32 ll_index, uint64 coord);
     static void add_segment_blocks
         (map< Uint31_Index, vector< Area_Block > >& areas, uint32 id);
+	
+    static bool is_used_;
 };
 
 #endif

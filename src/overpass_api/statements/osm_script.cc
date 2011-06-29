@@ -37,7 +37,7 @@ void Osm_Script_Statement::set_attributes(const char **attr)
   if (max_space <= 0)
   {
     ostringstream temp;
-    temp<<"For the attribute \"timeout\" of the element \"osm-script\""
+    temp<<"For the attribute \"element-limit\" of the element \"osm-script\""
     <<" the only allowed values are positive integers.";
     add_static_error(temp.str());
   }

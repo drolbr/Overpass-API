@@ -17,6 +17,8 @@
 
 using namespace std;
 
+bool Make_Area_Statement::is_used_ = false;
+
 void Make_Area_Statement::set_attributes(const char **attr)
 {
   map< string, string > attributes;

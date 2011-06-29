@@ -36,14 +36,15 @@ int main(int argc, char *argv[])
   {
     string xml_raw(get_xml_cgi(&error_output));
     
-    // open read transaction and log this.
-    Dispatcher_Stub dispatcher("", &error_output, xml_raw);
-    
     if (error_output.display_encoding_errors())
       return 0;
     
     if (!parse_and_validate(xml_raw, &error_output))
       return 0;
+    
+    // open read transaction and log this.
+    int area_level = 0;
+    Dispatcher_Stub dispatcher("", &error_output, xml_raw, area_level);
     
     // set limits - short circuited until forecast gets effective
     dispatcher.set_limits();
@@ -76,6 +77,7 @@ int main(int argc, char *argv[])
           <<e.line_number<<" using about "<<e.size/(1024*1024)<<" MB of RAM.";
     error_output.runtime_error(temp.str());
   }
+  catch(Exit_Error e) {}
 
   return 0;
 }

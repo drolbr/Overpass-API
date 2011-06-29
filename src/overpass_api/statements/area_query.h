@@ -11,7 +11,8 @@ using namespace std;
 class Area_Query_Statement : public Statement
 {
   public:
-    Area_Query_Statement(int line_number_) : Statement(line_number_) {}
+    Area_Query_Statement(int line_number_) : Statement(line_number_)
+        { is_used_ = true; }
     virtual void set_attributes(const char **attr);
     virtual string get_name() const { return "area-query"; }
     virtual string get_result_name() const { return output; }
@@ -31,9 +32,13 @@ class Area_Query_Statement : public Statement
        Stopwatch& stopwatch,
        Resource_Manager& rman);
 
+       static bool is_used() { return is_used_; }
+  
   private:
     string output;
     unsigned int area_id;
+    
+    static bool is_used_;
 };
 
 #endif

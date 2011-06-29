@@ -51,8 +51,6 @@ int main(int argc, char *argv[])
       log_level = Error_Output::VERBOSE;
     else if (!(strcmp(argv[argpos], "--rules")))
       area_level = 2;
-    else if (!(strcmp(argv[argpos], "--areas")))
-      area_level = 1;
     ++argpos;
   }
   
@@ -64,14 +62,14 @@ int main(int argc, char *argv[])
   {
     string xml_raw(get_xml_console(error_output));
     
-    // open read transaction and log this.
-    Dispatcher_Stub dispatcher(db_dir, error_output, xml_raw, area_level);
-    
     if ((error_output) && (error_output->display_encoding_errors()))
       return 0;
 
     if (!parse_and_validate(xml_raw, error_output))
       return 0;
+
+    // open read transaction and log this.
+    Dispatcher_Stub dispatcher(db_dir, error_output, xml_raw, area_level);
     
     // set limits - short circuited until forecast gets effective
     dispatcher.set_limits();
@@ -114,6 +112,7 @@ int main(int argc, char *argv[])
     if (error_output)
       error_output->runtime_error(temp.str());
   }
+  catch(Exit_Error e) {}
   
   return 0;
 }

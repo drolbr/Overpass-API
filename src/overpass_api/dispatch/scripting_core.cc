@@ -3,6 +3,9 @@
 #include "../core/settings.h"
 #include "../frontend/console_output.h"
 #include "../frontend/user_interface.h"
+#include "../statements/area_query.h"
+#include "../statements/coord_query.h"
+#include "../statements/make_area.h"
 #include "../statements/statement.h"
 #include "../../expat/expat_justparse_interface.h"
 #include "../../template_db/dispatcher.h"
@@ -35,11 +38,24 @@ namespace
 }
 
 Dispatcher_Stub::Dispatcher_Stub
-    (string db_dir_, Error_Output* error_output_, string xml_raw, int area_level)
+    (string db_dir_, Error_Output* error_output_, string xml_raw, int& area_level)
     : db_dir(db_dir_), error_output(error_output_),
       dispatcher_client(0), area_dispatcher_client(0),
       transaction(0), area_transaction(0), rman(0)
 {
+  if ((area_level < 2) && (Make_Area_Statement::is_used()))
+  {
+    if (error_output)
+    {
+      error_output->runtime_error
+          ("Specify --rules to execute a rule. make-area can only appear in rules.");
+      throw Exit_Error();
+    }
+  }
+  if ((area_level == 0) &&
+      ((Coord_Query_Statement::is_used()) || (Area_Query_Statement::is_used())))
+    area_level = 1;
+  
   if (db_dir == "")
   {
     dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
