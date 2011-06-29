@@ -86,6 +86,11 @@ Dispatcher_Stub::Dispatcher_Stub
         logger.annotated_log('\n' + xml_raw);
         area_transaction = new Nonsynced_Transaction
             (false, false, area_dispatcher_client->get_db_dir(), "");
+	{
+	  ifstream version((area_dispatcher_client->get_db_dir() +   
+	      "area_version").c_str());
+	  getline(version, area_timestamp);
+	}
       }
       else if (area_level == 2)
       {
@@ -95,6 +100,12 @@ Dispatcher_Stub::Dispatcher_Stub
 	logger.annotated_log('\n' + xml_raw);
 	area_transaction = new Nonsynced_Transaction
 	    (true, true, area_dispatcher_client->get_db_dir(), "");
+	{
+	  ofstream area_version((area_dispatcher_client->get_db_dir()
+	      + "area_version.shadow").c_str());
+	  area_version<<timestamp<<'\n';
+	  area_timestamp = timestamp;
+	}
       }
       
       area_transaction->data_index(area_settings().AREAS);
@@ -129,6 +140,17 @@ Dispatcher_Stub::Dispatcher_Stub
       ifstream version((db_dir + "osm_base_version").c_str());
       getline(version, timestamp);
     }
+    if (area_level == 1)
+    {
+      ifstream version((db_dir + "area_version").c_str());
+      getline(version, area_timestamp);
+    }
+    else if (area_level == 2)
+    {
+      ofstream area_version((db_dir + "area_version").c_str());
+      area_version<<timestamp<<'\n';
+      area_timestamp = timestamp;
+    }
   }
 }
 
@@ -159,6 +181,8 @@ Dispatcher_Stub::~Dispatcher_Stub()
       Logger logger(area_dispatcher_client->get_db_dir());
       logger.annotated_log("write_commit() area start");
       area_dispatcher_client->write_commit();
+      rename((area_dispatcher_client->get_db_dir() + "area_version.shadow").c_str(),
+	     (area_dispatcher_client->get_db_dir() + "area_version").c_str());
       logger.annotated_log("write_commit() area end");
     }
     else

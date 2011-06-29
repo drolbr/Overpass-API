@@ -26,9 +26,6 @@
 
 using namespace std;
 
-// const char* LOGFILE = "/opt/osm_why_api/dispatcher.log";
-// static int output_mode(NOTHING);
-
 class Dispatcher_Stub
 {
   public:
@@ -43,18 +40,12 @@ class Dispatcher_Stub
 
     ~Dispatcher_Stub();
     
-    string get_timestamp()
-    {
-      return timestamp;
-    }
-    
-    Resource_Manager& resource_manager()
-    {
-      return *rman;
-    }
+    string get_timestamp() { return timestamp; }
+    string get_area_timestamp() { return area_timestamp; }
+    Resource_Manager& resource_manager() { return *rman; }
     
   private:
-    string db_dir, timestamp;
+    string db_dir, timestamp, area_timestamp;
     
     Error_Output* error_output;
     Dispatcher_Client* dispatcher_client;

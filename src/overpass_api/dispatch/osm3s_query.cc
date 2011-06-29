@@ -81,10 +81,10 @@ int main(int argc, char *argv[])
       "It has there been collected by a large group of contributors. For individual "
       "attribution of each item please refer to "
       "http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\n";
-    cout<<"<meta data_included_until=\""
-        <<dispatcher.get_timestamp()
-	<<"\" last_rule_applied=\""<<0<<"\"/>\n"
-      "\n";
+    cout<<"<meta osm_base=\""<<dispatcher.get_timestamp()<<'\"';
+    if (area_level > 0)
+      cout<<" areas=\""<<dispatcher.get_area_timestamp()<<"\"";
+    cout<<"/>\n\n";
 
     for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	 it != get_statement_stack()->end(); ++it)
