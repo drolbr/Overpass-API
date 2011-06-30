@@ -223,7 +223,7 @@ void create_triangle_test_pattern_ways(uint id, uint node_ref, double scale)
 }
 
 void create_shapes_test_pattern_nodes
-    (uint id, double lat, double lon, double scale)
+    (uint id, double lat, double lon, double scale, bool restricted = false)
 {
   create_node(id, lat + 1*scale, lon + 2*scale);
   create_node(id + 1, lat + 2*scale, lon + 2*scale);
@@ -237,6 +237,9 @@ void create_shapes_test_pattern_nodes
   create_node(id + 9, lat + 2*scale, lon + 4*scale);
   create_node(id + 10, lat + 2*scale, lon + 3*scale);
   create_node(id + 11, lat + 1*scale, lon + 3*scale);
+  
+  if (restricted)
+    return;
   
   for (uint i = 0; i < 4; ++i)
   {
@@ -325,53 +328,112 @@ void create_multpolys_test_pattern_relations(uint id, uint way_ref, double scale
   tags.pop_back();
 }
 
+void create_node_grid
+    (uint id, double south, double north, double west, double east, int pattern_size)
+{
+  for (int i = 0; i <= pattern_size; ++i)
+  {
+    for (int j = 0; j <= pattern_size; ++j)
+      create_node(id + i*(pattern_size + 1) + j,
+		  south + (north-south)/pattern_size*i,
+		  west + (east-west)/pattern_size*j);
+  }
+}
+
+void create_node_grid_result
+(uint id, double south, double north, double west, double east, int pattern_size)
+{
+  create_shapes_test_pattern_nodes(1201, 11.0, 10.0, 0.01, true);
+  
+  for (int i = 0; i <= pattern_size; ++i)
+  {
+    for (int j = 0; j <= pattern_size; ++j)
+    {
+      if (i < pattern_size/5)
+	continue;
+      else if (i < pattern_size*2/5)
+      {
+	if ((j < pattern_size*2/5) || (j > pattern_size*3/5))
+	  continue;
+      }
+      else if (i <= pattern_size*3/5)
+      {
+	if ((j < pattern_size/5) || (j > pattern_size*4/5))
+	  continue;
+      }
+      else if (i <= pattern_size*4/5)
+      {
+	if ((j < pattern_size*2/5) || (j > pattern_size*3/5))
+	  continue;
+      }
+      else
+	continue;
+      
+      create_node(id + i*(pattern_size + 1) + j,
+		  south + (north-south)/pattern_size*i,
+		  west + (east-west)/pattern_size*j);
+    }
+  }
+}
+
 int main(int argc, char* args[])
 {
-  uint pattern_size = 2;
-  if (argc > 1)
+  string task;
+  uint pattern_size = 20;
+  if (argc > 2)
+  {
     pattern_size = atoi(args[1]);
+    task = args[2];
+  }
 
-  cout<<
-      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-      "<osm>\n";    
+  if (task != "result")
+  {
+    cout<<
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    "<osm>\n";    
     
-  create_triangle_test_pattern_nodes(  1,  0.0,    0.0, 1.0);
-  create_triangle_test_pattern_nodes(101, 10.0,    0.0, 0.1);
-  create_triangle_test_pattern_nodes(201, 11.0,    0.0, 0.01);
-  create_triangle_test_pattern_nodes(301, 11.1,    0.0, 0.001);
-  create_triangle_test_pattern_nodes(401, 11.11,   0.0, 0.0001);
-  create_triangle_test_pattern_nodes(501, 11.111,  0.0, 0.00001);
-  create_triangle_test_pattern_nodes(601, 11.1111, 0.0, 0.000001);
-
-  create_shapes_test_pattern_nodes(1001,  0.0,    50.0, 1.0);
-  create_shapes_test_pattern_nodes(1101, 10.0,    10.0, 0.1);
-  create_shapes_test_pattern_nodes(1201, 11.0,    10.0, 0.01);
-  create_shapes_test_pattern_nodes(1301, 11.1,    10.0, 0.001);
-  create_shapes_test_pattern_nodes(1401, 11.11,   10.0, 0.0001);
-  create_shapes_test_pattern_nodes(1501, 11.111,  10.0, 0.00001);
-  create_shapes_test_pattern_nodes(1601, 11.1111, 10.0, 0.000001);
-
-  create_multpolys_test_pattern_nodes(2001, 10.0, 20.0, 0.1);
-  
-  create_triangle_test_pattern_ways( 1,   1, 1.0);
-  create_triangle_test_pattern_ways(11, 101, 0.1);
-  create_triangle_test_pattern_ways(21, 201, 0.01);
-  create_triangle_test_pattern_ways(31, 301, 0.001);
-  create_triangle_test_pattern_ways(41, 401, 0.0001);
-  create_triangle_test_pattern_ways(51, 501, 0.00001);
-  create_triangle_test_pattern_ways(61, 601, 0.000001);
-
-  create_shapes_test_pattern_ways(101, 1001, 1.0);
-  create_shapes_test_pattern_ways(111, 1101, 0.1);
-  create_shapes_test_pattern_ways(121, 1201, 0.01);
-  create_shapes_test_pattern_ways(131, 1301, 0.001);
-  create_shapes_test_pattern_ways(141, 1401, 0.0001);
-  create_shapes_test_pattern_ways(151, 1501, 0.00001);
-  create_shapes_test_pattern_ways(161, 1601, 0.000001);
-  
-  create_multpolys_test_pattern_ways(201, 2001, 0.1);
-
-  create_multpolys_test_pattern_relations(1, 201, 0.1);
-  
-  cout<<"</osm>\n";
+    create_triangle_test_pattern_nodes(  1,  0.0,    0.0, 1.0);
+    create_triangle_test_pattern_nodes(101, 10.0,    0.0, 0.1);
+    create_triangle_test_pattern_nodes(201, 11.0,    0.0, 0.01);
+    create_triangle_test_pattern_nodes(301, 11.1,    0.0, 0.001);
+    create_triangle_test_pattern_nodes(401, 11.11,   0.0, 0.0001);
+    create_triangle_test_pattern_nodes(501, 11.111,  0.0, 0.00001);
+    create_triangle_test_pattern_nodes(601, 11.1111, 0.0, 0.000001);
+    
+    create_shapes_test_pattern_nodes(1001,  0.0,    50.0, 1.0);
+    create_shapes_test_pattern_nodes(1101, 10.0,    10.0, 0.1);
+    create_shapes_test_pattern_nodes(1201, 11.0,    10.0, 0.01);
+    create_shapes_test_pattern_nodes(1301, 11.1,    10.0, 0.001);
+    create_shapes_test_pattern_nodes(1401, 11.11,   10.0, 0.0001);
+    create_shapes_test_pattern_nodes(1501, 11.111,  10.0, 0.00001);
+    create_shapes_test_pattern_nodes(1601, 11.1111, 10.0, 0.000001);
+    
+    create_multpolys_test_pattern_nodes(2001, 10.0, 20.0, 0.1);
+    
+    create_node_grid(10001, 11.0, 11.05, 10.0, 10.05, pattern_size);
+    
+    create_triangle_test_pattern_ways( 1,   1, 1.0);
+    create_triangle_test_pattern_ways(11, 101, 0.1);
+    create_triangle_test_pattern_ways(21, 201, 0.01);
+    create_triangle_test_pattern_ways(31, 301, 0.001);
+    create_triangle_test_pattern_ways(41, 401, 0.0001);
+    create_triangle_test_pattern_ways(51, 501, 0.00001);
+    create_triangle_test_pattern_ways(61, 601, 0.000001);
+    
+    create_shapes_test_pattern_ways(101, 1001, 1.0);
+    create_shapes_test_pattern_ways(111, 1101, 0.1);
+    create_shapes_test_pattern_ways(121, 1201, 0.01);
+    create_shapes_test_pattern_ways(131, 1301, 0.001);
+    create_shapes_test_pattern_ways(141, 1401, 0.0001);
+    create_shapes_test_pattern_ways(151, 1501, 0.00001);
+    create_shapes_test_pattern_ways(161, 1601, 0.000001);
+    
+    create_multpolys_test_pattern_ways(201, 2001, 0.1);
+    
+    create_multpolys_test_pattern_relations(1, 201, 0.1);
+    
+    cout<<"</osm>\n";
+  }
+  else
+    create_node_grid_result(10001, 11.0, 11.05, 10.0, 10.05, pattern_size);
 }

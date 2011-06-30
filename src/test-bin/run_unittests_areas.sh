@@ -90,7 +90,7 @@ perform_test_loop()
 date +%T
 mkdir -p input/update_database/
 rm -f input/update_database/*
-$BASEDIR/test-bin/generate_test_file_areas $DATA_SIZE >input/update_database/stdin.log
+$BASEDIR/test-bin/generate_test_file_areas $DATA_SIZE input >input/update_database/stdin.log
 $BASEDIR/bin/update_database --db-dir=input/update_database/ --version=mock-up-init <input/update_database/stdin.log
 
 # Test the print and id_query statements
@@ -98,7 +98,10 @@ date +%T
 $BASEDIR/test-bin/make_area create $DATA_SIZE input/update_database/
 
 date +%T
-perform_test_loop make_area 3 "$DATA_SIZE ../../input/update_database/"
+mkdir -p expected/make_area_4/
+$BASEDIR/test-bin/generate_test_file_areas $DATA_SIZE result >expected/make_area_4/stdout.log
+touch expected/make_area_4/stderr.log
+perform_test_loop make_area 4 "$DATA_SIZE ../../input/update_database/"
 
 rm -f input/update_database/*
 

@@ -231,6 +231,21 @@ int main(int argc, char* args[])
     evaluate_grid(10.3, 10.3, 20.6, 20.6, 0.05, rman);
     evaluate_grid(10.1, 10.1, 20.8, 20.8, 0.05, rman);
   }
+  else if (test_to_execute == "4")
+  {
+    {
+      Area_Query_Statement* stmt1 = new Area_Query_Statement(0);
+      const char* attributes[] = { "ref", "2400000121", 0 };
+      stmt1->set_attributes(attributes);
+      stmt1->execute(rman);
+    }
+    {
+      Print_Statement* stmt1 = new Print_Statement(0);
+      const char* attributes[] = { 0 };
+      stmt1->set_attributes(attributes);
+      stmt1->execute(rman);
+    }
+  }
   
   return 0;
 }
