@@ -54,8 +54,6 @@ int main(int argc, char *argv[])
     for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	 it != get_statement_stack()->end(); ++it)
       (*it)->execute(dispatcher.resource_manager());
-  
-    error_output.write_xml_footer();
   }
   catch(File_Error e)
   {

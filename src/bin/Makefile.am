@@ -1,4 +1,4 @@
-bin_PROGRAMS = osm3s_query dispatcher web_query update_database update_from_dir sketch_route_svg draw_route_svg uncgi bbox_brim_query
+bin_PROGRAMS = osm3s_query dispatcher update_database update_from_dir sketch_route_svg draw_route_svg uncgi bbox_brim_query
 dist_bin_SCRIPTS = apply_osc_to_db.sh fetch_osc.sh run_osm3s_minutely.sh rules_loop.sh
 
 escape_xml_cc = ../expat/escape_xml.cc
@@ -20,8 +20,6 @@ update_from_dir_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ${osm_updater_
 update_from_dir_LDADD = -lexpat
 osm3s_query_SOURCES = ${expat_cc} ${settings_cc} ${console_frontend_cc} ${statements_cc} ${dispatcher_cc} ../overpass_api/dispatch/osm3s_query.cc ../overpass_api/osm-backend/area_updater.cc
 osm3s_query_LDADD = -lexpat -lrt
-web_query_SOURCES = ${expat_cc} ${settings_cc} ${web_frontend_cc} ${statements_cc} ${dispatcher_cc} ../overpass_api/dispatch/web_query.cc ../overpass_api/osm-backend/area_updater.cc
-web_query_LDADD = -lexpat -lrt
 dispatcher_SOURCES = ../template_db/dispatcher.cc ../overpass_api/core/settings.cc ../overpass_api/dispatch/dispatcher_server.cc
 dispatcher_LDADD = -lrt
 
