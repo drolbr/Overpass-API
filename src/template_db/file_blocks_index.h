@@ -82,8 +82,7 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
 {
   try
   {
-    Raw_File val_file(data_file_name, O_RDONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH,
-		      "File_Blocks:5");
+    Raw_File val_file(data_file_name, O_RDONLY, S_666, "File_Blocks:5");
 		      block_count = lseek64(val_file.fd(), 0, SEEK_END)/block_size_;
   }
   catch (File_Error e)
@@ -97,8 +96,7 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
   
   try
   {
-    Raw_File source_file(index_file_name, O_RDONLY,
-			 S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "File_Blocks:2");
+    Raw_File source_file(index_file_name, O_RDONLY, S_666, "File_Blocks:2");
 			 
     // read index file
     uint32 index_size(lseek64(source_file.fd(), 0, SEEK_END));
@@ -135,8 +133,7 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
     {
       try
       {
-	Raw_File void_blocks_file
-	    (empty_index_file_name, O_RDONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "");
+	Raw_File void_blocks_file(empty_index_file_name, O_RDONLY, S_666, "");
 	uint32 void_index_size = lseek64(void_blocks_file.fd(), 0, SEEK_END);
 	Void_Pointer< uint8 > index_buf(void_index_size);
 	lseek64(void_blocks_file.fd(), 0, SEEK_SET);
@@ -184,8 +181,7 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
     pos += sizeof(uint32);
   }
 
-  Raw_File dest_file(index_file_name, O_RDWR|O_CREAT,
-		     S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "File_Blocks:3");
+  Raw_File dest_file(index_file_name, O_RDWR|O_CREAT, S_666, "File_Blocks:3");
 
   if (index_size < lseek64(dest_file.fd(), 0, SEEK_END))
   {
@@ -202,8 +198,7 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
     *(it_ptr++) = *it;
   try
   {
-    Raw_File void_file(empty_index_file_name, O_RDWR|O_TRUNC,
-		       S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "File_Blocks:4");
+    Raw_File void_file(empty_index_file_name, O_RDWR|O_TRUNC, S_666, "File_Blocks:4");
     foo = write(void_file.fd(), void_index_buf.ptr,
 	        void_blocks.size()*sizeof(uint32)); foo = 0;
   }

@@ -49,7 +49,7 @@ Random_File< TVal >::Random_File(Random_File_Index* index_)
   : changed(false), index_size(TVal::max_size_of()),
   val_file(index_->get_map_file_name(),
 	   index_->writeable() ? O_RDWR|O_CREAT : O_RDONLY,
-	   S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "Random_File:3"),
+	   S_666, "Random_File:3"),
   index(index_),
   cache(index_->get_block_size()), cache_pos(index->npos),
   block_size(index_->get_block_size())

@@ -26,12 +26,10 @@ void copy_file(const string& source, const string& dest)
   if (!file_exists(source))
     return;
   
-  Raw_File source_file(source, O_RDONLY,
-		       S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "Dispatcher:1");
+  Raw_File source_file(source, O_RDONLY, S_666, "Dispatcher:1");
   uint64 size = lseek64(source_file.fd(), 0, SEEK_END);
   lseek64(source_file.fd(), 0, SEEK_SET);
-  Raw_File dest_file(dest, O_RDWR|O_CREAT,
-		     S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "Dispatcher:2");
+  Raw_File dest_file(dest, O_RDWR|O_CREAT, S_666, "Dispatcher:2");
   ftruncate64(dest_file.fd(), size);
   
   Void_Pointer< uint8 > buf(64*1024);
@@ -89,11 +87,11 @@ Dispatcher::Dispatcher
   
   // open dispatcher_share
   dispatcher_shm_fd = shm_open
-      (dispatcher_share_name.c_str(),
-       O_RDWR|O_CREAT|O_TRUNC|O_EXCL, S_IRWXU|S_IRWXG|S_IRWXO);
+      (dispatcher_share_name.c_str(), O_RDWR|O_CREAT|O_TRUNC|O_EXCL, S_666);
   if (dispatcher_shm_fd < 0)
     throw File_Error
         (errno, dispatcher_share_name, "Dispatcher_Server::1");
+  fchmod(dispatcher_shm_fd, S_666);
   int foo = ftruncate(dispatcher_shm_fd,
 		      SHM_SIZE + db_dir.size() + shadow_name.size()); foo = 0;
   dispatcher_shm_ptr = (uint8*)mmap
@@ -131,7 +129,7 @@ void Dispatcher::write_start(pid_t pid)
 {
   // Lock the writing lock file for the client.
   int fd_client = open64((shadow_name + ".lock").c_str(),
-		  O_RDWR|O_CREAT|O_EXCL, S_IRWXU|S_IRWXG|S_IRWXO);
+		  O_RDWR|O_CREAT|O_EXCL, S_666);
   if (fd_client < 0)
     return;
 
@@ -159,7 +157,7 @@ void Dispatcher::write_commit()
     return;
 
   int fd = open64(shadow_name.c_str(),
-		  O_RDWR|O_CREAT|O_EXCL, S_IRWXU|S_IRWXG|S_IRWXO);
+		  O_RDWR|O_CREAT|O_EXCL, S_666);
   if (fd < 0)
     return;
 
@@ -278,7 +276,7 @@ void write_to_index_empty_file(const vector< bool >& footprint, string filename)
   }
 
   Raw_File file(filename, O_RDWR|O_CREAT|O_TRUNC,
-		S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "write_to_index_empty_file:1");
+		S_666, "write_to_index_empty_file:1");
   int foo(write(file.fd(), buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr))); foo = 0;
 }
 
@@ -410,7 +408,7 @@ Dispatcher_Client::Dispatcher_Client
 {
   // open dispatcher_share
   dispatcher_shm_fd = shm_open
-      (dispatcher_share_name.c_str(), O_RDWR, S_IRWXU|S_IRWXG|S_IRWXO);
+      (dispatcher_share_name.c_str(), O_RDWR, S_666);
   if (dispatcher_shm_fd < 0)
     throw File_Error
         (errno, dispatcher_share_name, "Dispatcher_Client::1");

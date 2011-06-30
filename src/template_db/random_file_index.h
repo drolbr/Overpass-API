@@ -66,8 +66,7 @@ inline Random_File_Index::Random_File_Index
 {
   try
   {
-    Raw_File val_file(map_file_name, O_RDONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH,
-		      "Random_File:5");
+    Raw_File val_file(map_file_name, O_RDONLY, S_666, "Random_File:5");
     block_count = lseek64(val_file.fd(), 0, SEEK_END)/block_size_;
   }
   catch (File_Error e)
@@ -82,8 +81,8 @@ inline Random_File_Index::Random_File_Index
   try
   {
     Raw_File source_file
-        (index_file_name, writeable ? O_RDONLY|O_CREAT : O_RDONLY,
-         S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "Random_File:6");
+        (index_file_name, writeable ? O_RDONLY|O_CREAT : O_RDONLY, S_666,
+	 "Random_File:6");
      
     // read index file
     uint32 index_size = lseek64(source_file.fd(), 0, SEEK_END);
@@ -120,8 +119,7 @@ inline Random_File_Index::Random_File_Index
     {
       try
       {
-	Raw_File void_blocks_file
-	    (empty_index_file_name, O_RDONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "");
+	Raw_File void_blocks_file(empty_index_file_name, O_RDONLY, S_666, "");
 	uint32 void_index_size = lseek64(void_blocks_file.fd(), 0, SEEK_END);
 	Void_Pointer< uint8 > index_buf(void_index_size);
 	lseek64(void_blocks_file.fd(), 0, SEEK_SET);
@@ -163,8 +161,7 @@ inline Random_File_Index::~Random_File_Index()
     pos += sizeof(size_t);
   }
 
-  Raw_File dest_file(index_file_name, O_RDWR|O_CREAT,
-		     S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "Random_File:7");
+  Raw_File dest_file(index_file_name, O_RDWR|O_CREAT, S_666, "Random_File:7");
 
   if (index_size < lseek64(dest_file.fd(), 0, SEEK_END))
   {
@@ -181,8 +178,7 @@ inline Random_File_Index::~Random_File_Index()
     *(it_ptr++) = *it;
   try
   {
-    Raw_File void_file(empty_index_file_name, O_RDWR|O_TRUNC,
-		       S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "Random_File:5");
+    Raw_File void_file(empty_index_file_name, O_RDWR|O_TRUNC, S_666, "Random_File:5");
     foo = write(void_file.fd(), void_index_buf.ptr,
 	        void_blocks.size()*sizeof(uint32)); foo = 0;
   }

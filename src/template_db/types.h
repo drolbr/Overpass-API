@@ -21,6 +21,8 @@ typedef unsigned short int uint16;
 typedef unsigned int uint32;
 typedef unsigned long long uint64;
 
+const int S_666 = S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH;
+
 struct File_Error
 {
   File_Error(uint32 errno_, string filename_, string origin_)
@@ -100,6 +102,7 @@ inline Raw_File::Raw_File(string name, int oflag, mode_t mode, string caller_id)
   fd_ = open64(name.c_str(), oflag, mode);
   if (fd_ < 0)
     throw File_Error(errno, name, caller_id);
+  fchmod(fd_, mode);
 }
 
 #endif

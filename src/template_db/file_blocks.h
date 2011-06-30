@@ -468,7 +468,7 @@ File_Blocks< TIndex, TIterator, TRangeIterator >::File_Blocks
      read_count_(0),
      data_file(index->get_data_file_name(),
 	       writeable ? O_RDWR|O_CREAT : O_RDONLY,
-	       S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, "File_Blocks:1"),
+	       S_666, "File_Blocks:1"),
      buffer(index->get_block_size())
 {
   // prepare standard iterators
