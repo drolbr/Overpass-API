@@ -1,16 +1,48 @@
+=[http://www.overpass-api.de/misc/osm-3s_v0.6.91.tar.gz OSM3S v0.6.91]=
+
+Released: 2011-07-04
+
+
+==Database changes==
+
+This version is binary compatible to [[#OSM3S v0.6.91|OSM3S v0.6.90]].
+
+
+==Interface changes==
+
+From this version on, OSM3S is re-enabled to handle areas, i.e. allow the statements <em>area-query</em> and <em>coord-query</em>. On each call to <em>osm3s_query</em> or <em>web_query</em>, this extension is only invoked if one of those statements is contained in the input query.
+
+The areas are created by the ruleset specified as an osm script in the rules subdirectory. As a rule editing mechanism is currently not implemented, this rule is not edible over the web. To perform the area recomputation from updates, a new shell script <em>rules_loop.sh</em> has been created to run as a permanent background process.
+
+The front-end <em>web_query</em> has moved to cgi-bin and renamed <em>interpreter</em>. This goes in-hand with an essential hardening of <em>interpreter</em> to keep it safe when open to any query over the internet: long running queries will be aborted at their time-out, large queries when exceeding their memory quota.
+
+A bug in <em>query</em> had been spotted: only one <em>has-kv</em> clause with a wildcard value has been considered and all subsequent clauses have been ignored. This is now fixed.
+
+
+==Other changes==
+
+* A new script <em>pull_and_publish.sh</em> simplifies the installation and startup.
+* The programs give more often error information when called with invalid parameter values.
+* The dispatcher lock files are handled atomically.
+* The programs ignore the user's umask to reduce file permission conflicts when accessing later with the user www-data.
+
+
 =[http://www.overpass-api.de/misc/osm-3s_v0.6.90.tar.gz OSM3S v0.6.90]=
 
 Released: 2011-06-07
 
+
 ==Database changes==
 
-This version is not binary compatible to any previous and not expected to be binary compatible to its successor. The database format will be currently reworked to fit the needs of the envisioned version 0.7.
+This version is not binary compatible to any previous and not expected to be binary compatible to its successor (yet it is binary compatible to [[#OSM3S v0.6.91|its successor]]). The database format will be currently reworked to fit the needs of the envisioned version 0.7.
+
 
 ==Interface changes==
 
 From this version on, OSM3S behaves transactional: With a running dispatcher, multiple reading instances and one writing instances can work in parallel. Thus, only one database instance needs to be updated which doubles the update speed.
 
 The script <em>apply_osc_to_db</em> and the daemon-like program <em>dispatcher</em> now suffice to keep a minutely updated database.
+
 
 ==Other changes==
 
@@ -24,13 +56,16 @@ The introduction of transactionality made some other changes necessary:
 
 Released: 2011-04-06
 
+
 ==Database changes==
 
 This version is binary compatible to the previous [[#OSM3S v0.6|version 0.6]].
 
+
 ==Interface changes==
 
 The log levels of osm3s_query have been reworked. I hope the default log level now contains sufficient comprehensible and only comprehensible messages. The progress information of update_database shall now be rather self-explanatory than diagnostic.
+
 
 ==Other changes==
 

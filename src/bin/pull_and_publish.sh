@@ -86,6 +86,11 @@ process_param()
   {
     RUN_AREAS="yes"
   };
+  else
+  {
+    echo "Unknown argument: $1"
+    exit 0
+  };
   fi
 };
 
@@ -131,7 +136,7 @@ fi
 
 if [[ -n $PUBLISH ]]; then
 {
-  tar cvf - --exclude=osm-3s_testing "osm-3s_v$VERSION/" | gzip >"$PUBLISH/osm-3s_v$VERSION.tar.gz"
+  tar chvf - --exclude=osm-3s_testing "osm-3s_v$VERSION/" | gzip >"$PUBLISH/osm-3s_v$VERSION.tar.gz"
 };
 fi
 

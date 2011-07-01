@@ -193,7 +193,7 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
   // Write void blocks
   Void_Pointer< uint8 > void_index_buf(void_blocks.size()*sizeof(uint32));
   uint32* it_ptr = (uint32*)void_index_buf.ptr;
-  for (vector< size_t >::const_iterator it(void_blocks.begin());
+  for (vector< uint32 >::const_iterator it(void_blocks.begin());
       it != void_blocks.end(); ++it)
     *(it_ptr++) = *it;
   try
