@@ -293,6 +293,7 @@ class Osm_Backend_Callback
     virtual void ways_finished() = 0;
     virtual void relation_elapsed(uint32 id) = 0;
     virtual void relations_finished() = 0;
+    virtual void parser_succeeded() = 0;
 };
 
 #endif

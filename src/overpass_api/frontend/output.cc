@@ -48,6 +48,8 @@ class Verbose_Osm_Backend_Callback : public Osm_Backend_Callback
     virtual void ways_finished() { cerr<<" finished reading ways. "; }
     virtual void relation_elapsed(uint32 id) { cerr<<" elapsed relation "<<id<<". "; }
     virtual void relations_finished() { cerr<<" finished reading relations. "; }
+
+    virtual void parser_succeeded() { cerr<<"Update complete.\n"; }
 };
 
 Osm_Backend_Callback* get_verbatim_callback()
@@ -77,6 +79,8 @@ class Quiet_Osm_Backend_Callback : public Osm_Backend_Callback
     virtual void ways_finished() {}
     virtual void relation_elapsed(uint32 id) {}
     virtual void relations_finished() {}
+    
+    virtual void parser_succeeded() {}
 };
 
 Osm_Backend_Callback* get_quiet_callback()

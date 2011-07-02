@@ -354,12 +354,12 @@ void Osm_Updater::finish_updater()
     relation_updater->update(callback);
   
   flush();
+  callback->parser_succeeded();
 }
 
 void Osm_Updater::parse_file_completely(FILE* in)
 {
-  callback->parser_started();
-  
+  callback->parser_started();  
   parse(stdin, start, end);
   
   finish_updater();
