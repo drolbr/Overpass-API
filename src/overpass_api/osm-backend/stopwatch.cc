@@ -10,6 +10,8 @@ void Stopwatch::start()
 {
   for (uint i(0); i < stopwatches.size(); ++i)
     stopwatches[i] = 0;
+  for (uint i(0); i < read_counts.size(); ++i)
+    read_counts[i] = 0;
   timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);
   stopwatch = ts.tv_sec + ((double)ts.tv_nsec)/1000000000.0;

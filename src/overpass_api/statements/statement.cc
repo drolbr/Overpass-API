@@ -79,7 +79,7 @@ void Statement::display_starttag()
   //display_verbatim(get_source(startpos, tagendpos - startpos));
 }
 
-Statement::Statement* Statement::create_statement(string element, int line_number)
+Statement* Statement::create_statement(string element, int line_number)
 {
   if (element == "area-query")
     return new Area_Query_Statement(line_number);

@@ -56,9 +56,7 @@ struct Block_Backend_Basic_Iterator
 template< class TIndex, class TObject, class TIterator >
 struct Block_Backend_Flat_Iterator : Block_Backend_Basic_Iterator< TIndex, TObject >
 {
-  typedef File_Blocks
-      < TIndex, typename set< TIndex >::const_iterator,
-      Default_Range_Iterator< TIndex > > File_Blocks_;
+  typedef File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > > File_Blocks_;
   
   Block_Backend_Flat_Iterator
       (File_Blocks_& file_blocks_, uint32 block_size_, bool is_end = false);
@@ -73,8 +71,7 @@ struct Block_Backend_Flat_Iterator : Block_Backend_Basic_Iterator< TIndex, TObje
   bool operator==(const Block_Backend_Flat_Iterator& it) const;
   const Block_Backend_Flat_Iterator& operator++();
   
-  const File_Blocks< TIndex, typename set< TIndex >::const_iterator,
-      Default_Range_Iterator< TIndex > >& file_blocks;
+  const File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > >& file_blocks;
   typename File_Blocks_::Flat_Iterator file_it;
   typename File_Blocks_::Flat_Iterator file_end;
   
@@ -90,14 +87,12 @@ private:
 template< class TIndex, class TObject, class TIterator >
 struct Block_Backend_Discrete_Iterator : Block_Backend_Basic_Iterator< TIndex, TObject >
 {
-  typedef File_Blocks
-      < TIndex, typename set< TIndex >::const_iterator,
-      Default_Range_Iterator< TIndex > > File_Blocks_;
+  typedef File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > > File_Blocks_;
   
   Block_Backend_Discrete_Iterator
       (File_Blocks_& file_blocks_,
-       const typename set< TIndex >::const_iterator& index_it_,
-       const typename set< TIndex >::const_iterator& index_end_, uint32 block_size_);
+       const TIterator& index_it_,
+       const TIterator& index_end_, uint32 block_size_);
   
   Block_Backend_Discrete_Iterator
       (const File_Blocks_& file_blocks_, uint32 block_size_)
@@ -117,12 +112,11 @@ struct Block_Backend_Discrete_Iterator : Block_Backend_Basic_Iterator< TIndex, T
   bool operator==(const Block_Backend_Discrete_Iterator& it) const;
   const Block_Backend_Discrete_Iterator& operator++();
   
-  const File_Blocks< TIndex, typename set< TIndex >::const_iterator,
-      Default_Range_Iterator< TIndex > >& file_blocks;
+  const File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > >& file_blocks;
   typename File_Blocks_::Discrete_Iterator file_it;
   typename File_Blocks_::Discrete_Iterator file_end;
-  typename set< TIndex >::const_iterator index_it;
-  typename set< TIndex >::const_iterator index_end;
+  TIterator index_it;
+  TIterator index_end;
   
 private:
   bool search_next_index();
@@ -132,17 +126,14 @@ private:
 template< class TIndex, class TObject, class TIterator >
 struct Block_Backend_Range_Iterator : Block_Backend_Basic_Iterator< TIndex, TObject >
 {
-  typedef File_Blocks
-      < TIndex, typename set< TIndex >::const_iterator,
-      Default_Range_Iterator< TIndex > > File_Blocks_;
+  typedef File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > > File_Blocks_;
   
   Block_Backend_Range_Iterator
       (File_Blocks_& file_blocks_,
        const Default_Range_Iterator< TIndex >& index_it_,
        const Default_Range_Iterator< TIndex >& index_end_, uint32 block_size_);
   
-  Block_Backend_Range_Iterator
-      (const File_Blocks_& file_blocks_, uint32 block_size_)
+  Block_Backend_Range_Iterator(const File_Blocks_& file_blocks_, uint32 block_size_)
     : Block_Backend_Basic_Iterator< TIndex, TObject >(block_size_, true),
       file_blocks(file_blocks_), file_it(file_blocks_.range_end()),
       file_end(file_blocks_.range_end()), index_it(), index_end() {}
@@ -171,32 +162,21 @@ private:
   bool read_block();
 };
 
-template< class TIndex, class TObject >
+template< class TIndex, class TObject, class TIterator = typename set< TIndex >::const_iterator >
 struct Block_Backend
 {
-    typedef Block_Backend_Flat_Iterator
-        < TIndex, TObject, typename set< TIndex >::const_iterator >
-        Flat_Iterator;
-    typedef Block_Backend_Discrete_Iterator
-        < TIndex, TObject, typename set< TIndex >::const_iterator >
-        Discrete_Iterator;
-    typedef Block_Backend_Range_Iterator
-        < TIndex, TObject, Default_Range_Iterator< TIndex > >
-        Range_Iterator;
+    typedef Block_Backend_Flat_Iterator< TIndex, TObject, TIterator > Flat_Iterator;
+    typedef Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator > Discrete_Iterator;
+    typedef Block_Backend_Range_Iterator< TIndex, TObject, TIterator > Range_Iterator;
       
-    typedef File_Blocks
-          < TIndex,
-	  typename set< TIndex >::const_iterator,
-	  Default_Range_Iterator< TIndex > > File_Blocks_;
+    typedef File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > > File_Blocks_;
   
     Block_Backend(File_Blocks_Index_Base* index_);
   
     Flat_Iterator flat_begin() { return Flat_Iterator(file_blocks, block_size, false); }
     Flat_Iterator flat_end() const { return *flat_end_it; }
   
-    Discrete_Iterator discrete_begin
-        (typename set< TIndex >::const_iterator begin,
-         typename set< TIndex >::const_iterator end)
+    Discrete_Iterator discrete_begin(TIterator begin, TIterator end)
         { return Discrete_Iterator(file_blocks, begin, end, block_size); }
     Discrete_Iterator discrete_end() const { return *discrete_end_it; }
   
@@ -440,8 +420,8 @@ template< class TIndex, class TObject, class TIterator >
 Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::
     Block_Backend_Discrete_Iterator
     (File_Blocks_& file_blocks_,
-     const typename set< TIndex >::const_iterator& index_it_,
-     const typename set< TIndex >::const_iterator& index_end_, uint32 block_size_)
+     const TIterator& index_it_, const TIterator& index_end_,
+     uint32 block_size_)
     : Block_Backend_Basic_Iterator< TIndex, TObject >(block_size_, false),
       file_blocks(file_blocks_),
       file_it(file_blocks_.discrete_begin(index_it_, index_end_)),
@@ -675,8 +655,8 @@ bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::read_block()
 
 /** Implementation Block_Backend: -------------------------------------------*/
 
-template< class TIndex, class TObject >
-Block_Backend< TIndex, TObject >::Block_Backend(File_Blocks_Index_Base* index_)
+template< class TIndex, class TObject, class TIterator >
+Block_Backend< TIndex, TObject, TIterator >::Block_Backend(File_Blocks_Index_Base* index_)
   : file_blocks(index_),
     block_size(((File_Blocks_Index< TIndex >*)index_)->get_block_size()),
     data_filename
@@ -687,8 +667,8 @@ Block_Backend< TIndex, TObject >::Block_Backend(File_Blocks_Index_Base* index_)
   range_end_it = new Range_Iterator(file_blocks, block_size);
 }
 
-template< class TIndex, class TObject >
-void Block_Backend< TIndex, TObject >::update
+template< class TIndex, class TObject, class TIterator >
+void Block_Backend< TIndex, TObject, TIterator >::update
     (const map< TIndex, set< TObject > >& to_delete,
      const map< TIndex, set< TObject > >& to_insert)
 {
@@ -715,8 +695,8 @@ void Block_Backend< TIndex, TObject >::update
   }
 }
 
-template< class TIndex, class TObject >
-void Block_Backend< TIndex, TObject >::calc_split_idxs
+template< class TIndex, class TObject, class TIterator >
+void Block_Backend< TIndex, TObject, TIterator >::calc_split_idxs
     (vector< TIndex >& split,
      const vector< uint32 >& sizes,
      typename set< TIndex >::const_iterator it,
@@ -846,8 +826,8 @@ void Block_Backend< TIndex, TObject >::calc_split_idxs
   }
 }
 
-template< class TIndex, class TObject >
-void Block_Backend< TIndex, TObject >::create_from_scratch
+template< class TIndex, class TObject, class TIterator >
+void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
     (typename File_Blocks_::Discrete_Iterator& file_it,
      const map< TIndex, set< TObject > >& to_insert)
 {
@@ -962,8 +942,8 @@ void Block_Backend< TIndex, TObject >::create_from_scratch
   free(buffer);
 }
 
-template< class TIndex, class TObject >
-void Block_Backend< TIndex, TObject >::update_group
+template< class TIndex, class TObject, class TIterator >
+void Block_Backend< TIndex, TObject, TIterator >::update_group
     (typename File_Blocks_::Discrete_Iterator& file_it,
      const map< TIndex, set< TObject > >& to_delete,
      const map< TIndex, set< TObject > >& to_insert)
@@ -1216,8 +1196,8 @@ void Block_Backend< TIndex, TObject >::update_group
   free(dest);
 }
 
-template< class TIndex, class TObject >
-void Block_Backend< TIndex, TObject >::update_segments
+template< class TIndex, class TObject, class TIterator >
+void Block_Backend< TIndex, TObject, TIterator >::update_segments
       (typename File_Blocks_::Discrete_Iterator& file_it,
        const map< TIndex, set< TObject > >& to_delete,
        const map< TIndex, set< TObject > >& to_insert)

@@ -424,22 +424,16 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     relations.clear();
     areas.clear();
   
-    set< Uint32_Index > req_map;
-    uint elem_count = 0;
-    for (vector< Uint32_Index >::const_iterator it(req.begin()); it != req.end();
-        ++it)
-    {
-      if (++elem_count % (1024*1024) == 0)
-	rman.health_check(*this);
-      req_map.insert(*it);
-    }
+    rman.health_check(*this);
+    sort(req.begin(), req.end());
+    req.erase(unique(req.begin(), req.end()), req.end());
     rman.health_check(*this);
     stopwatch.stop(Stopwatch::NO_DISK);
     uint nodes_count = 0;
-    Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
+    Block_Backend< Uint32_Index, Node_Skeleton, vector< Uint32_Index >::const_iterator > nodes_db
 	(rman.get_transaction()->data_index(osm_base_settings().NODES));
-    for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
-	 it(nodes_db.discrete_begin(req_map.begin(), req_map.end()));
+    for (Block_Backend< Uint32_Index, Node_Skeleton, vector< Uint32_Index >::const_iterator >::Discrete_Iterator
+	 it(nodes_db.discrete_begin(req.begin(), req.end()));
 	 !(it == nodes_db.discrete_end()); ++it)
     {
       if (++nodes_count >= 64*1024)
@@ -449,7 +443,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
       }
       if (binary_search(ids.begin(), ids.end(), it.object().id))
 	nodes[it.index()].push_back(it.object());
-    }
+    }    
     stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
     stopwatch.stop(Stopwatch::NODES);
   }
