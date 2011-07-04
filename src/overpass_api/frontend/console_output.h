@@ -24,7 +24,11 @@ struct Console_Output : public Error_Output
     (const string& name,
      const vector< double >& stopwatches,
      const vector< uint >& read_counts);
-  
+
+  virtual void display_statement_progress
+      (uint timer, const string& name, int line_number,
+       const vector< pair< uint, uint > >& stack);
+      
   virtual bool display_encoding_errors() { return encoding_errors; }
   virtual bool display_parse_errors() { return parse_errors; }
   virtual bool display_static_errors() { return static_errors; }

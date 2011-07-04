@@ -82,7 +82,7 @@ int main(int argc, char* args[])
   
   Nonsynced_Transaction transaction(false, false, db_dir, "");
   Nonsynced_Transaction area_transaction(true, false, db_dir, "");
-  Resource_Manager rman(transaction, area_transaction, true);
+  Resource_Manager rman(transaction, 0, area_transaction, true);
   
   if (test_to_execute == "create")
   {

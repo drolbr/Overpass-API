@@ -134,7 +134,8 @@ Dispatcher_Stub::Dispatcher_Stub
         logger.annotated_log("read_idx_finished() area end");
       }
 
-      rman = new Resource_Manager(*transaction, *area_transaction, area_level == 2);
+      rman = new Resource_Manager(*transaction, area_level == 2 ? error_output : 0,
+				  *area_transaction, area_level == 2);
     }
     else
       rman = new Resource_Manager(*transaction);
@@ -145,7 +146,8 @@ Dispatcher_Stub::Dispatcher_Stub
     if (area_level > 0)
     {
       area_transaction = new Nonsynced_Transaction(area_level == 2, false, db_dir, "");
-      rman = new Resource_Manager(*transaction, *area_transaction, area_level == 2);
+      rman = new Resource_Manager(*transaction, area_level == 2 ? error_output : 0,
+				  *area_transaction, area_level == 2);
     }
     else
       rman = new Resource_Manager(*transaction);

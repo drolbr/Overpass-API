@@ -245,6 +245,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     for (vector< Node_Skeleton >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
     {
+      rman.count_loop();
       rman.sets()[output].nodes.clear();
       rman.sets()[output].ways.clear();
       rman.sets()[output].relations.clear();
@@ -266,6 +267,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
     it2 != it->second.end(); ++it2)
     {
+      rman.count_loop();
       rman.sets()[output].nodes.clear();
       rman.sets()[output].ways.clear();
       rman.sets()[output].relations.clear();
@@ -287,6 +289,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     for (vector< Relation_Skeleton >::const_iterator it2(it->second.begin());
     it2 != it->second.end(); ++it2)
     {
+      rman.count_loop();
       rman.sets()[output].nodes.clear();
       rman.sets()[output].ways.clear();
       rman.sets()[output].relations.clear();
@@ -308,6 +311,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     for (vector< Area_Skeleton >::const_iterator it2(it->second.begin());
     it2 != it->second.end(); ++it2)
     {
+      rman.count_loop();
       rman.sets()[output].nodes.clear();
       rman.sets()[output].ways.clear();
       rman.sets()[output].relations.clear();

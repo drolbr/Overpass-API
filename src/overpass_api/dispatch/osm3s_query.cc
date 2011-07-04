@@ -47,6 +47,8 @@ int main(int argc, char *argv[])
       log_level = Error_Output::QUIET;
     else if (!(strcmp(argv[argpos], "--concise")))
       log_level = Error_Output::CONCISE;
+    else if (!(strcmp(argv[argpos], "--progress")))
+      log_level = Error_Output::PROGRESS;
     else if (!(strcmp(argv[argpos], "--verbose")))
       log_level = Error_Output::VERBOSE;
     else if (!(strcmp(argv[argpos], "--rules")))

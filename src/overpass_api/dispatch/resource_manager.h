@@ -14,14 +14,17 @@ class Resource_Manager
 {
 public:
   Resource_Manager(Transaction& transaction_)
-      : transaction(&transaction_), area_transaction(0), area_updater_(0),
-        start_time(time(NULL)), max_allowed_time(0), max_allowed_space(0) {}
+      : transaction(&transaction_), error_output(0), area_transaction(0), area_updater_(0),
+        start_time(time(NULL)), last_ping_time(0),
+	max_allowed_time(0), max_allowed_space(0) {}
   
-  Resource_Manager(Transaction& transaction_, Transaction& area_transaction_,
-		   bool writeable = false)
-      : transaction(&transaction_), area_transaction(&area_transaction_),
+  Resource_Manager(Transaction& transaction_, Error_Output* error_output_,
+		   Transaction& area_transaction_, bool writeable = false)
+      : transaction(&transaction_), error_output(error_output_),
+        area_transaction(&area_transaction_),
         area_updater_(writeable ? new Area_Updater(area_transaction_) : 0),
-        start_time(time(NULL)), max_allowed_time(0), max_allowed_space(0) {}
+	start_time(time(NULL)), last_ping_time(0),
+	max_allowed_time(0), max_allowed_space(0) {}
 	
   ~Resource_Manager()
   {
@@ -42,6 +45,7 @@ public:
 
   void push_reference(const Set& set_);
   void pop_reference();
+  void count_loop();
 
   void health_check(const Statement& stmt);
   void set_limits(uint32 max_allowed_time_, uint64 max_allowed_space_)
@@ -56,10 +60,13 @@ public:
 private:
   map< string, Set > sets_;
   vector< const Set* > set_stack;
+  vector< pair< uint, uint > > stack_progress;
   Transaction* transaction;
+  Error_Output* error_output;
   Transaction* area_transaction;
   Area_Updater* area_updater_;
   int start_time;
+  int last_ping_time;
   uint32 max_allowed_time;
   uint64 max_allowed_space;
 };

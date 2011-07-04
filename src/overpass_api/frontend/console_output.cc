@@ -74,3 +74,21 @@ void Console_Output::display_statement_stopwatch
   }
   cerr<<'\n';
 }
+
+void Console_Output::display_statement_progress
+    (uint timer, const string& name, int line_number,
+     const vector< pair< uint, uint > >& stack)
+{
+  if (log_level < Error_Output::PROGRESS)
+    return;
+  cerr<<"After "<<timer/3600<<"h"<<timer/60%60<<"m"<<timer%60<<"s: "
+      <<"in \""<<name<<"\" on line "<<line_number<<".";
+  if (!stack.empty())
+  {
+    cerr<<" Stack:";
+    for (vector< pair< uint, uint > >::const_iterator it(stack.begin());
+        it != stack.end(); ++it)
+      cerr<<" "<<it->first<<" of "<<it->second;
+  }
+  cerr<<'\n';
+}
