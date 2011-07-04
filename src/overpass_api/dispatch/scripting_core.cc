@@ -63,7 +63,6 @@ Dispatcher_Stub::Dispatcher_Stub
     logger.annotated_log("request_read_and_idx() start");
     dispatcher_client->request_read_and_idx();
     logger.annotated_log("request_read_and_idx() end");
-    logger.annotated_log('\n' + xml_raw);
     transaction = new Nonsynced_Transaction
         (false, false, dispatcher_client->get_db_dir(), "");
   
@@ -88,6 +87,7 @@ Dispatcher_Stub::Dispatcher_Stub
     logger.annotated_log("read_idx_finished() start");
     dispatcher_client->read_idx_finished();
     logger.annotated_log("read_idx_finished() end");
+    logger.annotated_log('\n' + xml_raw);
     
     if (area_level > 0)
     {
@@ -99,7 +99,6 @@ Dispatcher_Stub::Dispatcher_Stub
         logger.annotated_log("request_read_and_idx() area start");
         area_dispatcher_client->request_read_and_idx();
         logger.annotated_log("request_read_and_idx() area end");
-        logger.annotated_log('\n' + xml_raw);
         area_transaction = new Nonsynced_Transaction
             (false, false, area_dispatcher_client->get_db_dir(), "");
 	{
@@ -113,7 +112,6 @@ Dispatcher_Stub::Dispatcher_Stub
 	logger.annotated_log("write_start() area start");
 	area_dispatcher_client->write_start();
 	logger.annotated_log("write_start() area end");
-	logger.annotated_log('\n' + xml_raw);
 	area_transaction = new Nonsynced_Transaction
 	    (true, true, area_dispatcher_client->get_db_dir(), "");
 	{

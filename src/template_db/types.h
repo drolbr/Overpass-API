@@ -2,6 +2,8 @@
 #define DE__OSM3S___TEMPLATE_DB__TYPES_H
 
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include <cerrno>

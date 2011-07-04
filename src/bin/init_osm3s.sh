@@ -21,4 +21,4 @@ if [[ ! -s $PLANET_FILE ]]; then
 }; fi
 
 mkdir -p "$DB_DIR/"
-bunzip2 <$PLANET_FILE | $EXEC_DIR/update_database --db-dir=$DB_DIR/
+bunzip2 <$PLANET_FILE | $EXEC_DIR/bin/update_database --db-dir=$DB_DIR/

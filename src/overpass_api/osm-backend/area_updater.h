@@ -98,10 +98,17 @@ inline void Area_Updater::commit(Stopwatch& stopwatch)
 
 inline void Area_Updater::flush(Stopwatch* stopwatch)
 {
-  if ((!ids_to_modify.empty()) ||
-      (!areas_to_insert.empty()) ||
-      (!area_blocks.empty()))
-    update(stopwatch);
+  try
+  {
+    if ((!ids_to_modify.empty()) ||
+        (!areas_to_insert.empty()) ||
+        (!area_blocks.empty()))
+      update(stopwatch);
+  }
+  catch(File_Error e)
+  {
+    cerr<<"File_Error: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
 }
 
 inline void Area_Updater::set_area
