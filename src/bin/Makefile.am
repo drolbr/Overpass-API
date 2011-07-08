@@ -12,7 +12,7 @@ osm_updater_cc = ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm
 dispatcher_cc = ../overpass_api/dispatch/scripting_core.cc ../overpass_api/dispatch/resource_manager.cc ../overpass_api/osm-backend/stopwatch.cc ../template_db/dispatcher.cc
 
 statements_dir = ../overpass_api/statements
-statements_cc = ${statements_dir}/statement.cc ${statements_dir}/area_query.cc ${statements_dir}/bbox_query.cc ${statements_dir}/coord_query.cc ${statements_dir}/foreach.cc ${statements_dir}/id_query.cc ${statements_dir}/item.cc ${statements_dir}/make_area.cc ${statements_dir}/osm_script.cc ${statements_dir}/print.cc ${statements_dir}/query.cc ${statements_dir}/recurse.cc ${statements_dir}/union.cc 
+statements_cc = ${statements_dir}/statement.cc ${statements_dir}/area_query.cc ${statements_dir}/around.cc ${statements_dir}/bbox_query.cc ${statements_dir}/coord_query.cc ${statements_dir}/foreach.cc ${statements_dir}/id_query.cc ${statements_dir}/item.cc ${statements_dir}/make_area.cc ${statements_dir}/osm_script.cc ${statements_dir}/print.cc ${statements_dir}/query.cc ${statements_dir}/recurse.cc ${statements_dir}/union.cc 
 
 update_database_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ${osm_updater_cc} ../overpass_api/osm-backend/update_database.cc 
 update_database_LDADD = -lexpat

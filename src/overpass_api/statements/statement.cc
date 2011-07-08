@@ -5,6 +5,7 @@
 
 #include "statement.h"
 #include "area_query.h"
+#include "around.h"
 #include "bbox_query.h"
 #include "coord_query.h"
 #include "foreach.h"
@@ -83,6 +84,8 @@ Statement* Statement::create_statement(string element, int line_number)
 {
   if (element == "area-query")
     return new Area_Query_Statement(line_number);
+  else if (element == "around")
+    return new Around_Statement(line_number);
   else if (element == "bbox-query")
     return new Bbox_Query_Statement(line_number);
 /*  else if (element == "conflict")

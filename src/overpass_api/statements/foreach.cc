@@ -29,6 +29,7 @@ void Foreach_Statement::add_statement(Statement* statement, string text)
   assure_no_text(text, this->get_name());
   
   if ((statement->get_name() == "area-query") ||
+       (statement->get_name() == "around") ||
        (statement->get_name() == "bbox-query") ||
        (statement->get_name() == "coord-query") ||
        (statement->get_name() == "foreach") ||

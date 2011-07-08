@@ -731,6 +731,67 @@ struct Accept_All_But_5 : public Accept_All_Tags
     uint pattern_size;
 };
 
+double great_circle_dist(double lat1, double lon1, double lat2, double lon2)
+{
+  double scalar_prod =
+  sin(lat1/90.0*acos(0))*sin(lat2/90.0*acos(0)) +
+  cos(lat1/90.0*acos(0))*sin(lon1/90.0*acos(0))*cos(lat2/90.0*acos(0))*sin(lon2/90.0*acos(0)) +
+  cos(lat1/90.0*acos(0))*cos(lon1/90.0*acos(0))*cos(lat2/90.0*acos(0))*cos(lon2/90.0*acos(0));
+  return acos(scalar_prod)*(20*1000*1000/acos(0));
+}
+
+struct Accept_Around_1 : public Data_Modifier
+{
+  Accept_Around_1(uint pattern_size_, double radius_, bool northeast_ = false)
+    : pattern_size(pattern_size_), radius(radius_), northeast(northeast_)
+  {
+    north = 48.1;
+    south = 47.9;
+    west = -0.2;
+    east = 0.2;
+    
+    lat = (north - south)/pattern_size*0.5 + south;
+    lon = (east - west)/pattern_size*0.5 + west;
+    
+    lat_ne = (north - south)/pattern_size*(-0.5 + pattern_size) + south;
+    lon_ne = (east - west)/pattern_size*(-0.5 + pattern_size) + west;
+  }
+  
+  virtual bool admit_node(uint id) const
+  {
+    if ((id > 3*pattern_size*pattern_size) || (id <= 2*pattern_size*pattern_size))
+      return false;
+    
+    int i = (id-2*pattern_size*pattern_size-1) / pattern_size;
+    int j = (id-2*pattern_size*pattern_size-1) % pattern_size;
+    double arg_lat = (north - south)/pattern_size*(0.5 + i) + south;
+    double arg_lon = (east - west)/pattern_size*(0.5 + j) + west;
+    
+    if (great_circle_dist(lat, lon, arg_lat, arg_lon) <= radius)
+      return true;
+    if (!northeast)
+      return false;
+    return (great_circle_dist(lat_ne, lon_ne, arg_lat, arg_lon) <= radius);
+  }
+  
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+
+  virtual bool admit_node_skeleton(uint id) const { return false; }
+  virtual bool admit_node_tags(uint id) const { return false; }
+  virtual bool admit_way_skeleton(uint id) const { return false; }
+  virtual bool admit_way_tags(uint id) const { return false; }
+  virtual bool admit_relation_skeleton(uint id) const { return false; }
+  virtual bool admit_relation_tags(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+    double radius;
+    bool northeast;
+    double lat, lon, lat_ne, lon_ne;
+    double north, south, west, east;
+};
+
 vector< pair< string, string > > collect_tags(string prefix, uint id)
 {
   vector< pair< string, string > > tags;
@@ -1144,6 +1205,18 @@ int main(int argc, char* args[])
       modifier = new Accept_Union_5(pattern_size);
     else if (string(args[2]) == "union_6")
       modifier = new Accept_Union_6(pattern_size);
+    else if (string(args[2]) == "around_1")
+      modifier = new Accept_Around_1(pattern_size, 20);
+    else if (string(args[2]) == "around_2")
+      modifier = new Accept_Around_1(pattern_size, 200);
+    else if (string(args[2]) == "around_3")
+      modifier = new Accept_Around_1(pattern_size, 2000);
+    else if (string(args[2]) == "around_4")
+      modifier = new Accept_Around_1(pattern_size, 200);
+    else if (string(args[2]) == "around_5")
+      modifier = new Accept_Around_1(pattern_size, 200);
+    else if (string(args[2]) == "around_6")
+      modifier = new Accept_Around_1(pattern_size, 200, true);
     else if (string(args[2]) == "diff_do")
       modifier = new Accept_All;
     else if (string(args[2]) == "diff_compare")

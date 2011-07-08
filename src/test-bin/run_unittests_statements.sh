@@ -148,6 +148,11 @@ prepare_test_loop bbox_query 8 $DATA_SIZE
 date +%T
 perform_test_loop bbox_query 8 "$DATA_SIZE ../../input/update_database/"
 
+# Test the bbox_query statement
+prepare_test_loop around 6 $DATA_SIZE
+date +%T
+perform_test_loop around 6 "$DATA_SIZE ../../input/update_database/"
+
 # Test the query statement
 prepare_test_loop query 25 $DATA_SIZE
 date +%T
