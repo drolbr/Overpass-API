@@ -320,7 +320,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
       rman.sets()[output].areas[it->first].push_back(*it2);
       stopwatch.stop(Stopwatch::NO_DISK);
       for (vector< Statement* >::iterator it(substatements.begin());
-      it != substatements.end(); ++it)
+          it != substatements.end(); ++it)
       {
 	(*it)->execute(rman);
 	stopwatch.sum((*it)->stopwatch);

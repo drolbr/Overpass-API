@@ -103,9 +103,14 @@ void Osm_Script_Statement::forecast()
 void Osm_Script_Statement::execute(Resource_Manager& rman)
 {
   rman.set_limits(max_allowed_time, max_allowed_space);
+  stopwatch.stop(Stopwatch::NO_DISK);
   for (vector< Statement* >::iterator it(substatements.begin());
       it != substatements.end(); ++it)
+  {
     (*it)->execute(rman);
+    stopwatch.sum((*it)->stopwatch);
+  }
+  stopwatch.skip();
   
   stopwatch.start();
   if (rman.area_updater())
