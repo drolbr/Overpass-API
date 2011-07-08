@@ -19,7 +19,9 @@ class Around_Statement : public Statement
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     virtual ~Around_Statement() {}
-    
+
+    string get_source_name() const { return input; }
+
     set< pair< Uint32_Index, Uint32_Index > > calc_ranges
         (const map< Uint32_Index, vector< Node_Skeleton > >& input_nodes);
     

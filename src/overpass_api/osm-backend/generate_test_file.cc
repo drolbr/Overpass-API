@@ -740,10 +740,10 @@ double great_circle_dist(double lat1, double lon1, double lat2, double lon2)
   return acos(scalar_prod)*(20*1000*1000/acos(0));
 }
 
-struct Accept_Around_1 : public Data_Modifier
+struct Accept_Around_1 : public Accept_All_Tags
 {
-  Accept_Around_1(uint pattern_size_, double radius_, bool northeast_ = false)
-    : pattern_size(pattern_size_), radius(radius_), northeast(northeast_)
+  Accept_Around_1(uint pattern_size_, double radius_, bool northeast_ = false, uint divisor_ = 0)
+    : pattern_size(pattern_size_), radius(radius_), northeast(northeast_), divisor(divisor_)
   {
     north = 48.1;
     south = 47.9;
@@ -762,6 +762,14 @@ struct Accept_Around_1 : public Data_Modifier
     if ((id > 3*pattern_size*pattern_size) || (id <= 2*pattern_size*pattern_size))
       return false;
     
+    if (divisor > 0)
+    {
+      if ((divisor == 11) && (id % 11 != 0))
+	return false;      
+      if ((divisor == 7) && (id % 21 != 7))
+	return false;
+    }
+    
     int i = (id-2*pattern_size*pattern_size-1) / pattern_size;
     int j = (id-2*pattern_size*pattern_size-1) % pattern_size;
     double arg_lat = (north - south)/pattern_size*(0.5 + i) + south;
@@ -776,18 +784,12 @@ struct Accept_Around_1 : public Data_Modifier
   
   virtual bool admit_way(uint id) const { return false; }
   virtual bool admit_relation(uint id) const { return false; }
-
-  virtual bool admit_node_skeleton(uint id) const { return false; }
-  virtual bool admit_node_tags(uint id) const { return false; }
-  virtual bool admit_way_skeleton(uint id) const { return false; }
-  virtual bool admit_way_tags(uint id) const { return false; }
-  virtual bool admit_relation_skeleton(uint id) const { return false; }
-  virtual bool admit_relation_tags(uint id) const { return false; }
   
   private:
     uint pattern_size;
     double radius;
     bool northeast;
+    uint divisor;
     double lat, lon, lat_ne, lon_ne;
     double north, south, west, east;
 };
@@ -1181,6 +1183,10 @@ int main(int argc, char* args[])
       modifier = new Accept_Query_5(pattern_size);
     else if (string(args[2]) == "query_25")
       modifier = new Accept_Query_25(pattern_size);
+    else if (string(args[2]) == "query_26")
+      modifier = new Accept_Around_1(pattern_size, 200, false, 11);
+    else if (string(args[2]) == "query_26")
+      modifier = new Accept_Around_1(pattern_size, 200, false, 7);
     else if (string(args[2]) == "union_1")
       modifier = new Accept_Union_1(pattern_size);
     else if (string(args[2]) == "union_2")

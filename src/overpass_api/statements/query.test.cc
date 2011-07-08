@@ -2,7 +2,9 @@
 #include <sstream>
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
+#include "around.h"
 #include "bbox_query.h"
+#include "id_query.h"
 #include "query.h"
 #include "print.h"
 
@@ -113,6 +115,56 @@ void perform_query
   {
     cerr<<"File error caught: "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
+void perform_query_with_around
+    (string type, string key1, string value1, string db_dir, uint pattern_size)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Resource_Manager rman(transaction);
+    {
+      ostringstream buf;
+      buf<<(2*pattern_size*pattern_size + 1);
+      char* buf_str = new char[40];
+      strncpy(buf_str, buf.str().c_str(), 40);
+      
+      Id_Query_Statement* stmt1 = new Id_Query_Statement(0);
+      const char* attributes[] = { "type", type.c_str(), "ref", buf_str, 0 };
+      stmt1->set_attributes(attributes);
+      stmt1->execute(rman);
+      
+      delete[] buf_str;
+    }
+    {
+      Query_Statement stmt1(0);
+      const char* attributes[] = { "type", type.c_str(), 0 };
+      stmt1.set_attributes(attributes);
+      
+      Has_Kv_Statement stmt2(0);
+      const char* attributes_k[] = { "k", key1.c_str(), 0 };
+      const char* attributes_kv[] = { "k", key1.c_str(), "v", value1.c_str(), 0 };
+      if (value1 != "")
+        stmt2.set_attributes(attributes_kv);
+      else
+	stmt2.set_attributes(attributes_k);
+      stmt1.add_statement(&stmt2, "");
+      
+      Around_Statement stmt3(0);
+      const char* attributes_around[] = { "radius", "200", 0 };
+      stmt3.set_attributes(attributes_around);
+      stmt1.add_statement(&stmt3, "");
+      
+      stmt1.execute(rman);
+    }
+    perform_print(rman);
+  }
+  catch (File_Error e)
+  {
+    cerr<<"File error caught: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
 
@@ -255,6 +307,13 @@ int main(int argc, char* args[])
     perform_query("relation", "relation_key_2/4", "relation_value_0",
 		  "relation_key_5", "relation_value_5", args[3]);
 
+  if ((test_to_execute == "") || (test_to_execute == "26"))
+    // Test a bbox combined with a local key-value pair
+    perform_query_with_around("node", "node_key_11", "", args[3], pattern_size);
+  if ((test_to_execute == "") || (test_to_execute == "27"))
+    // Test a bbox combined with a global key-value pair
+    perform_query_with_around("node", "node_key_7", "node_value_1", args[3], pattern_size);
+		  
   cout<<"</osm>\n";
   return 0;
 }

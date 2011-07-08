@@ -1,12 +1,14 @@
-#include <algorithm>
-#include <sstream>
-
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
 #include "area_query.h"
 #include "bbox_query.h"
 #include "query.h"
+
+#include <algorithm>
+#include <sstream>
+
+#include <iostream>
 
 using namespace std;
 
@@ -59,6 +61,7 @@ void Query_Statement::add_statement(Statement* statement, string text)
     return;
   }
   Area_Query_Statement* area(dynamic_cast<Area_Query_Statement*>(statement));
+  Around_Statement* around(dynamic_cast<Around_Statement*>(statement));
   Bbox_Query_Statement* bbox(dynamic_cast<Bbox_Query_Statement*>(statement));
   if (area != 0)
   {
@@ -69,15 +72,35 @@ void Query_Statement::add_statement(Statement* statement, string text)
       add_static_error(temp.str());
       return;
     }
-    if ((area_restriction != 0) || (bbox_restriction != 0))
+    if ((area_restriction != 0) || (around_restriction != 0) || (bbox_restriction != 0))
     {
       ostringstream temp;
-      temp<<"A query statement may contain at most one area-query or bbox-query "
+      temp<<"A query statement may contain at most one area-query or around-query or bbox-query "
 	  <<"as substatement.";
       add_static_error(temp.str());
       return;
     }
     area_restriction = area;
+    return;
+  }
+  else if (around != 0)
+  {
+    if (type != QUERY_NODE)
+    {
+      ostringstream temp;
+      temp<<"An around as substatement is only allowed for queries of type \"node\".";
+      add_static_error(temp.str());
+      return;
+    }
+    if ((area_restriction != 0) || (around_restriction != 0) || (bbox_restriction != 0))
+    {
+      ostringstream temp;
+      temp<<"A query statement may contain at most one area-query or around-query or bbox-query "
+	  <<"as substatement.";
+      add_static_error(temp.str());
+      return;
+    }
+    around_restriction = around;
     return;
   }
   else if (bbox != 0)
@@ -89,10 +112,10 @@ void Query_Statement::add_statement(Statement* statement, string text)
       add_static_error(temp.str());
       return;
     }
-    if ((area_restriction != 0) || (bbox_restriction != 0))
+    if ((area_restriction != 0) || (around_restriction != 0) || (bbox_restriction != 0))
     {
       ostringstream temp;
-      temp<<"A query statement may contain at most one area-query or bbox-query "
+      temp<<"A query statement may contain at most one area-query or around-query or bbox-query "
 	  <<"as substatement.";
       add_static_error(temp.str());
       return;
@@ -397,6 +420,18 @@ void Query_Statement::execute(Resource_Manager& rman)
 	  obj_req.insert(Uint32_Index(i));
       }
     }
+    else if (around_restriction != 0)
+    {
+      set< pair< Uint32_Index, Uint32_Index > > ranges
+          (around_restriction->calc_ranges
+	      (rman.sets()[around_restriction->get_source_name()].nodes));
+      for (set< pair< Uint32_Index, Uint32_Index > >::const_iterator
+	it(ranges.begin()); it != ranges.end(); ++it)
+      {
+	pair< Uint32_Index, Uint32_Index > range(make_pair(it->first, it->second));
+	range_req.insert(range);
+      }
+    }
     else if (bbox_restriction != 0)
     {
       vector< pair< uint32, uint32 > >* ranges(bbox_restriction->calc_ranges());
@@ -431,6 +466,34 @@ void Query_Statement::execute(Resource_Manager& rman)
       area_restriction->collect_nodes
           (nodes_req, area_blocks_req, ids, nodes, stopwatch, rman);
       stopwatch.stop(Stopwatch::NO_DISK);
+    }
+    else if (around_restriction != 0)
+    {
+      uint nodes_count = 0;
+      Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
+	  (rman.get_transaction()->data_index(osm_base_settings().NODES));
+      for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
+          it(nodes_db.range_begin
+             (Default_Range_Iterator< Uint32_Index >(range_req.begin()),
+	      Default_Range_Iterator< Uint32_Index >(range_req.end())));
+          !(it == nodes_db.range_end()); ++it)
+      {
+	if (++nodes_count >= 64*1024)
+	{
+	  nodes_count = 0;
+	  rman.health_check(*this);
+	}
+	
+	if (binary_search(ids->begin(), ids->end(), it.object().id))
+	{
+	  double lat(Node::lat(it.index().val(), it.object().ll_lower));
+	  double lon(Node::lon(it.index().val(), it.object().ll_lower));
+	  if (around_restriction->is_inside(lat, lon))
+            nodes[it.index()].push_back(it.object());
+	}
+      }
+      stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
+      stopwatch.stop(Stopwatch::NODES);
     }
     else if (bbox_restriction != 0)
     {

@@ -36,7 +36,7 @@ void perform_around_print(uint pattern_size, string radius, Transaction& transac
     }
     {
       Print_Statement* stmt1 = new Print_Statement(0);
-      const char* attributes[] = { "order", "id", "mode", "ids_only", 0 };
+      const char* attributes[] = { "order", "id", 0 };
       stmt1->set_attributes(attributes);
       stmt1->execute(rman);
     }
@@ -94,7 +94,7 @@ int main(int argc, char* args[])
     }
     {
       Print_Statement* stmt1 = new Print_Statement(0);
-      const char* attributes[] = { "order", "id", "mode", "ids_only", 0 };
+      const char* attributes[] = { "order", "id", 0 };
       stmt1->set_attributes(attributes);
       stmt1->execute(rman);
     }
@@ -123,7 +123,7 @@ int main(int argc, char* args[])
     }
     {
       Print_Statement* stmt1 = new Print_Statement(0);
-      const char* attributes[] = { "order", "id", "from", "foo", "mode", "ids_only", 0 };
+      const char* attributes[] = { "order", "id", "from", "foo", 0 };
       stmt1->set_attributes(attributes);
       stmt1->execute(rman);
     }
@@ -168,7 +168,7 @@ int main(int argc, char* args[])
     }
     {
       Print_Statement* stmt1 = new Print_Statement(0);
-      const char* attributes[] = { "order", "id", "mode", "ids_only", 0 };
+      const char* attributes[] = { "order", "id", 0 };
       stmt1->set_attributes(attributes);
       stmt1->execute(rman);
     }
