@@ -129,15 +129,19 @@ Dispatcher::~Dispatcher()
 void Dispatcher::write_start(pid_t pid)
 {
   // Lock the writing lock file for the client.
-  int fd_client = open64((shadow_name + ".lock").c_str(),
-		  O_RDWR|O_CREAT|O_EXCL, S_666);
-  if (fd_client < 0)
+  try
+  {
+    Raw_File shadow_file(shadow_name + ".lock", O_RDWR|O_CREAT|O_EXCL, S_666, "write_start:1");
+    
+    copy_mains_to_shadows();
+    write_index_of_empty_blocks();
+  }
+  catch (File_Error e)
+  {
+    cerr<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     return;
+  }
 
-  copy_mains_to_shadows();
-  write_index_of_empty_blocks();
-  
-  close(fd_client);
   try
   {
     ofstream lock((shadow_name + ".lock").c_str());
@@ -157,12 +161,18 @@ void Dispatcher::write_commit()
   if (!processes_reading_idx.empty())
     return;
 
-  int fd = open64(shadow_name.c_str(),
-		  O_RDWR|O_CREAT|O_EXCL, S_666);
-  if (fd < 0)
+  try
+  {
+    Raw_File shadow_file(shadow_name, O_RDWR|O_CREAT|O_EXCL, S_666, "write_commit:1");
+    
+    copy_shadows_to_mains();
+  }
+  catch (File_Error e)
+  {
+    cerr<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     return;
-
-  copy_shadows_to_mains();
+  }
+  
   remove(shadow_name.c_str());
   remove_shadows();
   remove((shadow_name + ".lock").c_str());

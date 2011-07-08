@@ -411,20 +411,28 @@ int main(int argc, char* args[])
   
   if ((test_to_execute == "") || (test_to_execute == "1"))
   {
-    Test_File test_file_1("Test_File_1");
-    Test_File test_file_2("Test_File_2");
-    Test_File test_file_3("Test_File_3");
-    Test_File test_file_4("Test_File_4");
+    try
+    {
+      Test_File test_file_1("Test_File_1");
+      Test_File test_file_2("Test_File_2");
+      Test_File test_file_3("Test_File_3");
+      Test_File test_file_4("Test_File_4");
     
-    create_dummy_files(test_file_1, test_file_2, test_file_3, test_file_4, false);
+      create_dummy_files(test_file_1, test_file_2, test_file_3, test_file_4, false);
       
-    vector< File_Properties* > file_properties;
-    file_properties.push_back(&test_file_1);
-    file_properties.push_back(&test_file_2);
-    file_properties.push_back(&test_file_3);
-    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			  file_properties);
+      vector< File_Properties* > file_properties;
+      file_properties.push_back(&test_file_1);
+      file_properties.push_back(&test_file_2);
+      file_properties.push_back(&test_file_3);
+      Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+			    BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
+			    file_properties);
+    }
+    catch (File_Error e)
+    {
+      cout<<"File error catched: "
+      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
   }
   
   if ((test_to_execute == "") || (test_to_execute == "2"))
