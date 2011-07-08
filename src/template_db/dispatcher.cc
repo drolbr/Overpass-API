@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
+#include <iostream>
 
 using namespace std;
 
@@ -30,7 +31,7 @@ void copy_file(const string& source, const string& dest)
   uint64 size = lseek64(source_file.fd(), 0, SEEK_END);
   lseek64(source_file.fd(), 0, SEEK_SET);
   Raw_File dest_file(dest, O_RDWR|O_CREAT, S_666, "Dispatcher:2");
-  ftruncate64(dest_file.fd(), size);
+  int foo = ftruncate64(dest_file.fd(), size); foo = 0;
   
   Void_Pointer< uint8 > buf(64*1024);
   while (size > 0)
@@ -327,37 +328,51 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       continue;
     }
     
-    uint32 command = *(uint32*)dispatcher_shm_ptr;
-    uint32 client_pid = *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
-    if (command == TERMINATE)
+    try
     {
-      // Set command state to zero.
-      *(uint32*)dispatcher_shm_ptr = 0;
-      *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) =
-          *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
+      uint32 command = *(uint32*)dispatcher_shm_ptr;
+      uint32 client_pid = *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
+      if (command == TERMINATE)
+      {
+	// Set command state to zero.
+	*(uint32*)dispatcher_shm_ptr = 0;
+	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) =
+	    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
       
-      break;
+        break;
+      }
+      else if (command == WRITE_START)
+	write_start(client_pid);
+      else if (command == WRITE_ROLLBACK)
+	write_rollback();
+      else if (command == WRITE_COMMIT)
+	write_commit();
+      else if (command == REQUEST_READ_AND_IDX)
+      {
+	request_read_and_idx(client_pid);
+	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
+      }
+      else if (command == READ_IDX_FINISHED)
+      {
+	read_idx_finished(client_pid);
+	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
+      }
+      else if (command == READ_FINISHED)
+      {
+	read_finished(client_pid);
+	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
+      }
     }
-    else if (command == WRITE_START)
-      write_start(client_pid);
-    else if (command == WRITE_ROLLBACK)
-      write_rollback();
-    else if (command == WRITE_COMMIT)
-      write_commit();
-    else if (command == REQUEST_READ_AND_IDX)
+    catch (File_Error e)
     {
-      request_read_and_idx(client_pid);
-      *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
-    }
-    else if (command == READ_IDX_FINISHED)
-    {
-      read_idx_finished(client_pid);
-      *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
-    }
-    else if (command == READ_FINISHED)
-    {
-      read_finished(client_pid);
-      *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
+      cerr<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      
+      counter += 30;
+      //sleep for three seconds
+      struct timeval timeout_;
+      timeout_.tv_sec = 3;
+      timeout_.tv_usec = 0;
+      select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
     }
     
     // Set command state to zero.

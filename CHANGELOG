@@ -1,11 +1,11 @@
 =[http://www.overpass-api.de/misc/osm-3s_v0.6.91.tar.gz OSM3S v0.6.91]=
 
-Released: 2011-07-04
+Released: 2011-07-05
 
 
 ==Database changes==
 
-This version is binary compatible to [[#OSM3S v0.6.91|OSM3S v0.6.90]].
+This version is binary compatible to [[#OSM3S v0.6.90|OSM3S v0.6.90]].
 
 
 ==Interface changes==

@@ -11,10 +11,10 @@ DB_DIR=$1
 
 while [[ true ]]; do
 {
-  echo "`date '+%F %T'`: updating started" >>$DB_DIR/rules_loop.log
+  echo "`date '+%F %T'`: update started" >>$DB_DIR/rules_loop.log
 
-  ./osm3s_query --concise --rules <$DB_DIR/rules/areas.osm3s
+  ./osm3s_query --progress --rules <$DB_DIR/rules/areas.osm3s
 
-  echo "`date '+%F %T'`: updating finished" >>$DB_DIR/rules_loop.log
+  echo "`date '+%F %T'`: update finished" >>$DB_DIR/rules_loop.log
 
 }; done
