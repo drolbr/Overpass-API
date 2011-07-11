@@ -111,15 +111,15 @@ int main(int argc, char *argv[])
   {
     cout<<"<union>\n"
         <<"  <query type=\"node\">\n"
-	<<"    <around=\"stops\" radius=\""<<brim<<"\"/>\n"
+	<<"    <around from=\"stops\" radius=\""<<brim<<"\"/>\n"
 	<<"    <has-kv k=\"railway\"/>\n"
 	<<"  </query>\n"
 	<<"  <query type=\"node\">\n"
-	<<"    <around=\"stops\" radius=\""<<brim<<"\"/>\n"
+	<<"    <around from=\"stops\" radius=\""<<brim<<"\"/>\n"
 	<<"    <has-kv k=\"highway\"/>\n"
 	<<"  </query>\n"
 	<<"  <query type=\"node\">\n"
-	<<"    <around=\"stops\" radius=\""<<brim<<"\"/>\n"
+	<<"    <around from=\"stops\" radius=\""<<brim<<"\"/>\n"
 	<<"    <has-kv k=\"public_transport\"/>\n"
 	<<"  </query>\n"
 	<<"</union>\n"
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
         it != display_classes.end(); ++it)
     {
       cout<<"  <query type=\"node\">\n"
-      <<"    <around=\"stops\" radius=\""<<brim<<"\"/>\n"
+      <<"    <around from=\"stops\" radius=\""<<brim<<"\"/>\n"
       <<"    <has-kv k=\""<<it->key<<"\" v=\""<<it->value<<"\"/>\n"
       <<"  </query>\n";
     }
