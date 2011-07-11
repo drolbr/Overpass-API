@@ -7,25 +7,9 @@
 
 using namespace std;
 
-const double PI = acos(0)*2;
-
 double brim;
 
-string frame_template()
-{
-  return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-    "<svg xmlns=\"http://www.w3.org/2000/svg\"\n"
-    "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
-    "     xmlns:ev=\"http://www.w3.org/2001/xml-events\"\n"
-    "     version=\"1.1\" baseProfile=\"full\"\n"
-    "     width=\"$width;px\" height=\"$height;px\">\n"
-    "\n"
-    "<headline/>\n"
-    "\n"
-    "<stops-diagram/>\n"
-    "\n"
-    "</svg>\n";
-}
+const double PI = acos(0)*2;
 
 struct Display_Class
 {
@@ -38,56 +22,6 @@ struct Display_Class
 };
 
 vector< Display_Class > display_classes;
-
-void start(const char *el, const char **attr)
-{
-  if (!strcmp(el, "node"))
-  {
-    double lat(100.0), lon(0.0);
-    for (unsigned int i(0); attr[i]; i += 2)
-    {
-      if (!strcmp(attr[i], "lat"))
-	lat = atof(attr[i+1]);
-      else if (!strcmp(attr[i], "lon"))
-	lon = atof(attr[i+1]);
-    }
-    cout<<"  <query type=\"node\">\n"
-	<<"    <bbox-query "
-	<<"n=\""<<setprecision(14)<<lat + brim<<"\" s=\""<<setprecision(14)<<lat - brim<<"\" "
-	<<"w=\""<<setprecision(14)<<lon - brim/cos(lat/180.0*PI)<<"\" e=\""<<setprecision(14)<<lon + brim/cos(lat/180.0*PI)<<"\"/>\n"
-	<<"    <has-kv k=\"railway\"/>\n"
-	<<"  </query>\n"
-	<<"  <query type=\"node\">\n"
-	<<"    <bbox-query "
-	<<"n=\""<<setprecision(14)<<lat + brim<<"\" s=\""<<setprecision(14)<<lat - brim<<"\" "
-	<<"w=\""<<setprecision(14)<<lon - brim/cos(lat/180.0*PI)<<"\" e=\""<<setprecision(14)<<lon + brim/cos(lat/180.0*PI)<<"\"/>\n"
-	<<"    <has-kv k=\"highway\"/>\n"
-	<<"  </query>\n"
-	<<"  <query type=\"node\">\n"
-	<<"    <bbox-query "
-	<<"n=\""<<setprecision(14)<<lat + brim<<"\" s=\""<<setprecision(14)<<lat - brim<<"\" "
-	<<"w=\""<<setprecision(14)<<lon - brim/cos(lat/180.0*PI)<<"\" e=\""<<setprecision(14)<<lon + brim/cos(lat/180.0*PI)<<"\"/>\n"
-	<<"    <has-kv k=\"public_transport\"/>\n"
-	<<"  </query>\n";
-    for (vector< Display_Class >::const_iterator it(display_classes.begin());
-        it != display_classes.end(); ++it)
-    {
-      double limit(it->limit);
-      if (limit < 0)
-	limit = brim;
-      cout<<"  <query type=\"node\">\n"
-	  <<"    <bbox-query "
-	  <<"n=\""<<setprecision(14)<<lat + limit<<"\" s=\""<<setprecision(14)<<lat - limit<<"\" "
-	  <<"w=\""<<setprecision(14)<<lon - limit/cos(lat/180.0*PI)<<"\" e=\""<<setprecision(14)<<lon + limit/cos(lat/180.0*PI)<<"\"/>\n"
-	  <<"    <has-kv k=\""<<it->key<<"\" v=\""<<it->value<<"\"/>\n"
-	  <<"  </query>\n";
-    }
-  }
-}
-
-void end(const char *el)
-{
-}
 
 void options_start(const char *el, const char **attr)
 {
@@ -125,6 +59,7 @@ void options_end(const char *el)
 int main(int argc, char *argv[])
 {
   bool display_only_corrs(false);
+  string network, ref;
   
   brim = 0.0;
   
@@ -147,34 +82,65 @@ int main(int argc, char *argv[])
   {
     if (!strncmp("--size=", argv[argi], 7))
       brim = atof(((string)(argv[argi])).substr(7).c_str());
-    if (!strncmp("--only-corrs", argv[argi], 12))
-      display_only_corrs = true;
+    if (!strncmp("--network=", argv[argi], 10))
+      network = string(argv[argi]).substr(10);
+    if (!strncmp("--ref=", argv[argi], 6))
+      ref = string(argv[argi]).substr(6);
     ++argi;
   }
   
-  if (display_only_corrs)
-  {
-    cout<<brim<<'\n';
-    return 0;
-  }
-  brim = brim/1000.0/40000.0*360.0;
-  
   cout<<"<osm-script>\n"
       <<"\n"
-      <<"<union>\n";
-  
-  // read the XML input
-  parse(stdin, start, end);
-  
-  cout<<"</union>\n"
-      <<"<print mode=\"body\"/>\n"
-      <<"<union>\n"
-      //<<"  <item/>\n"
-      <<"  <recurse type=\"node-relation\"/>\n"
-      <<"</union>\n"
-      <<"<print mode=\"body\"/>\n"
-      <<"\n"
-      <<"</osm-script>\n";
+      <<"<query type=\"relation\">\n"
+      <<"  <has-kv k=\"network\" v=\""<<network<<"\"/>\n"
+      <<"  <has-kv k=\"ref\" v=\""<<ref<<"\"/>\n"
+      <<"</query>\n"
+      <<"<recurse type=\"relation-node\" into=\"stops\"/>\n";
+      
+  if (brim == 0.0)
+  {
+    cout<<"<union>\n"
+        <<"  <item/>\n"
+	<<"  <item set=\"stops\"/>\n"
+	<<"</union>\n"
+	<<"<print/>\n"
+	<<"\n"
+	<<"</osm-script>\n";
+  }
+  else
+  {
+    cout<<"<union>\n"
+        <<"  <query type=\"node\">\n"
+	<<"    <around=\"stops\" radius=\""<<brim<<"\"/>\n"
+	<<"    <has-kv k=\"railway\"/>\n"
+	<<"  </query>\n"
+	<<"  <query type=\"node\">\n"
+	<<"    <around=\"stops\" radius=\""<<brim<<"\"/>\n"
+	<<"    <has-kv k=\"highway\"/>\n"
+	<<"  </query>\n"
+	<<"  <query type=\"node\">\n"
+	<<"    <around=\"stops\" radius=\""<<brim<<"\"/>\n"
+	<<"    <has-kv k=\"public_transport\"/>\n"
+	<<"  </query>\n"
+	<<"</union>\n"
+	<<"<union>\n"
+	<<"  <item/>\n"
+	<<"  <recurse type=\"node-relation\"/>\n";
+	
+    for (vector< Display_Class >::const_iterator it(display_classes.begin());
+        it != display_classes.end(); ++it)
+    {
+      cout<<"  <query type=\"node\">\n"
+      <<"    <around=\"stops\" radius=\""<<brim<<"\"/>\n"
+      <<"    <has-kv k=\""<<it->key<<"\" v=\""<<it->value<<"\"/>\n"
+      <<"  </query>\n";
+    }
+    
+    cout<<"</union>\n"
+        <<"<print/>\n"
+        <<"\n"
+        <<"</osm-script>\n";
+  }
   
   return 0;
 }

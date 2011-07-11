@@ -52,21 +52,6 @@ done
 
 BASEDIR=`mktemp -d`
 
-echo -e "\
-<osm-script> \
- \
-<union> \
-  <query type=\"relation\"> \
-    <has-kv k=\"network\" v=\"$NETWORK_\"/> \
-    <has-kv k=\"ref\" v=\"$REF_\"/> \
-  </query> \
-  <recurse type=\"relation-node\"/> \
-</union> \
-<print mode=\"body\"/> \
- \
-</osm-script>
-" >$BASEDIR/request.1
-
 if [[ -z $REF ]]; then
 {                     
   echo "Content-Type: text/plain; charset=utf-8"
@@ -77,57 +62,37 @@ if [[ -z $REF ]]; then
 };    
 fi      
 
-CORRESPONDENCES=`$BIN_DIR/bbox_brim_query --only-corrs $BRIM_PARAMS`
-
-if [[ $CORRESPONDENCES -gt 0 ]]; then
+if [[ $DEBUG == "yes" ]]; then
 {
-  REQUEST_METHOD=
-  $BIN_DIR/osm3s_query --quiet --no-mime <$BASEDIR/request.1 >$BASEDIR/answer.1
-  $BIN_DIR/bbox_brim_query $BRIM_PARAMS <$BASEDIR/answer.1 >$BASEDIR/request.2
-
-  if [[ $DEBUG == "full-query" ]]; then
-  {
-    echo "Content-Type: text/plain; charset=utf-8"
-    echo
-    cat <$BASEDIR/request.2
-    echo
-  };
-  fi
-
-  REQUEST_METHOD=
-  $BIN_DIR/osm3s_query --quiet --no-mime <$BASEDIR/request.2 >$BASEDIR/answer.3
-
-  echo "Content-Type: image/svg+xml; charset=utf-8"
+  echo "Content-Type: text/plain; charset=utf-8"
   echo
-
-  if [[ $DEBUG == "full-query" ]]; then
-  {
-    cat <$BASEDIR/answer.3
-    echo
-    echo "$BIN_DIR/sketch_route_svg --ref=\"$REF_\" --network=\"$NETWORK_\" $SKETCH_PARAMS"
-    exit 0;
-  };
-  fi
-
-  $BIN_DIR/sketch_route_svg --ref="$REF_" --network="$NETWORK_" $SKETCH_PARAMS <$BASEDIR/answer.3
-};
-else
-{
-  REQUEST_METHOD=
-  $BIN_DIR/osm3s_query --quiet --no-mime <$BASEDIR/request.1 >$BASEDIR/answer.1
-
-  if [[ $DEBUG == "full-query" ]]; then
-  {
-    echo "Content-Type: text/plain; charset=utf-8"
-    echo
-    cat <$BASEDIR/answer.1
-    echo
-  };
-  fi;
-
-  echo "Content-Type: image/svg+xml; charset=utf-8"
+  echo $BIN_DIR/bbox_brim_query --network="$NETWORK_" --ref="$REF_" $BRIM_PARAMS ">"$BASEDIR/request.1
   echo
-
-  $BIN_DIR/sketch_route_svg $SKETCH_PARAMS <$BASEDIR/answer.1
 };
 fi
+
+$BIN_DIR/bbox_brim_query --network="$NETWORK_" --ref="$REF_" $BRIM_PARAMS >$BASEDIR/request.1
+
+REQUEST_METHOD=
+
+if [[ $DEBUG == "yes" ]]; then
+{
+  cat <$BASEDIR/request.1
+  echo
+  echo $BIN_DIR/osm3s_query --verbose "<"$BASEDIR/request.1 ">"$BASEDIR/answer.1
+  echo
+  $BIN_DIR/osm3s_query --verbose <$BASEDIR/request.1 >$BASEDIR/answer.1 2>$BASEDIR/log.1
+  echo
+  cat <$BASEDIR/log.1
+  cat <$BASEDIR/answer.1
+  echo $BIN_DIR/sketch_route_svg --network="$NETWORK_" --ref="$REF_" $SKETCH_PARAMS <$BASEDIR/answer.1
+  echo
+};
+else
+  $BIN_DIR/osm3s_query --quiet <$BASEDIR/request.1 >$BASEDIR/answer.1
+fi;
+
+echo "Content-Type: image/svg+xml; charset=utf-8"
+echo
+
+$BIN_DIR/sketch_route_svg --network="$NETWORK_" --ref="$REF_" $SKETCH_PARAMS <$BASEDIR/answer.1
