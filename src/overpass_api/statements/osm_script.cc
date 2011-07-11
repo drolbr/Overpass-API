@@ -103,6 +103,7 @@ void Osm_Script_Statement::forecast()
 void Osm_Script_Statement::execute(Resource_Manager& rman)
 {
   rman.set_limits(max_allowed_time, max_allowed_space);
+  stopwatch.start();
   stopwatch.stop(Stopwatch::NO_DISK);
   for (vector< Statement* >::iterator it(substatements.begin());
       it != substatements.end(); ++it)
@@ -112,10 +113,8 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
   }
   stopwatch.skip();
   
-  stopwatch.start();
   if (rman.area_updater())
     rman.area_updater()->flush(&stopwatch);
-  stopwatch.stop(Stopwatch::NO_DISK);
   stopwatch.report(get_name());
   rman.health_check(*this);
 }
