@@ -3,12 +3,13 @@
 #include <set>
 #include <vector>
 
-#include <cstdio>
 #include <sys/stat.h>
+#include <cstdio>
 
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
 #include "../core/datatypes.h"
+//#include "../core/index_computations.h"
 #include "../core/settings.h"
 #include "way_updater.h"
 
@@ -197,25 +198,25 @@ void Way_Updater::compute_indexes()
   // retrieve the indices of the referred nodes
   map< uint32, uint32 > used_nodes;
   for (vector< Way >::const_iterator wit(ways_to_insert.begin());
-  wit != ways_to_insert.end(); ++wit)
+      wit != ways_to_insert.end(); ++wit)
   {
     for (vector< uint32 >::const_iterator nit(wit->nds.begin());
-    nit != wit->nds.end(); ++nit)
-    used_nodes[*nit] = 0;
+        nit != wit->nds.end(); ++nit)
+      used_nodes[*nit] = 0;
   }
   Random_File< Uint32_Index > node_random
       (transaction->random_index(osm_base_settings().NODES));
   for (map< uint32, uint32 >::iterator it(used_nodes.begin());
-  it != used_nodes.end(); ++it)
-  it->second = node_random.get(it->first).val();
+      it != used_nodes.end(); ++it)
+    it->second = node_random.get(it->first).val();
   vector< Way >::iterator wwit(ways_to_insert.begin());
   for (vector< Way >::iterator wit(ways_to_insert.begin());
-  wit != ways_to_insert.end(); ++wit)
+      wit != ways_to_insert.end(); ++wit)
   {
     vector< uint32 > nd_idxs;
     for (vector< uint32 >::const_iterator nit(wit->nds.begin());
-    nit != wit->nds.end(); ++nit)
-    nd_idxs.push_back(used_nodes[*nit]);
+        nit != wit->nds.end(); ++nit)
+      nd_idxs.push_back(used_nodes[*nit]);
     
     wit->index = Way::calc_index(nd_idxs);
   }
