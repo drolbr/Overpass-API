@@ -1,12 +1,13 @@
 #ifndef DE__OSM3S___OVERPASS_API__CORE__TYPE_RELATION_H
 #define DE__OSM3S___OVERPASS_API__CORE__TYPE_RELATION_H
 
+#include "basic_types.h"
+#include "index_computations.h"
+
 #include <cstring>
 #include <map>
 #include <set>
 #include <vector>
-
-#include "basic_types.h"
 
 using namespace std;
 
@@ -40,36 +41,7 @@ struct Relation
   
   static uint32 calc_index(const vector< uint32 >& memb_idxs)
   {
-    if (memb_idxs.empty())
-      return 0;
-    
-    uint32 bitmask(0), value(memb_idxs[0]);
-    for (uint i(1); i < memb_idxs.size(); ++i)
-    {
-      bitmask |= (value ^ memb_idxs[i]);
-      if (memb_idxs[i] & 0x80000000)
-      {
-	if ((memb_idxs[i] & 0xff) == 0x10)
-	  bitmask |= 0xff;
-	else if ((memb_idxs[i] & 0xff) == 0x20)
-	  bitmask |= 0xffff;
-	else if ((memb_idxs[i] & 0xff) == 0x30)
-	  bitmask |= 0xffffff;
-	else
-	  bitmask |= 0xffffffff;
-      }
-    }
-    bitmask = bitmask & 0x7fffffff;
-    if (bitmask & 0xff000000)
-      value = 0x80000040;
-    else if (bitmask & 0xffff0000)
-      value = (value & 0xff000000) | 0x80000030;
-    else if (bitmask & 0xffffff00)
-      value = (value & 0xffff0000) | 0x80000020;
-    else if (bitmask)
-      value = (value & 0xffffff00) | 0x80000010;
-    
-    return value;
+    return ::calc_index(memb_idxs);
   }
 };
 

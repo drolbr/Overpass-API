@@ -152,15 +152,16 @@ void Way_Updater::find_affected_ways
   vector< Way > maybe_affected_ways;
   
   set< Uint31_Index > req;
-  for (vector< pair< uint32, uint32 > >::const_iterator
-    it(moved_nodes.begin()); it != moved_nodes.end(); ++it)
   {
-    req.insert(Uint31_Index(it->second));
-    req.insert(Uint31_Index((it->second & 0x7fffff00) | 0x80000010));
-    req.insert(Uint31_Index((it->second & 0x7fff0000) | 0x80000020));
-    req.insert(Uint31_Index((it->second & 0x7f000000) | 0x80000030));
+    vector< uint32 > moved_node_idxs;
+    for (vector< pair< uint32, uint32 > >::const_iterator
+        it(moved_nodes.begin()); it != moved_nodes.end(); ++it)
+      moved_node_idxs.push_back(it->second);
+    vector< uint32 > affected_way_idxs = calc_parents(moved_node_idxs);
+    for (vector< uint32 >::const_iterator it = affected_way_idxs.begin();
+        it != affected_way_idxs.end(); ++it)
+      req.insert(Uint31_Index(*it));
   }
-  req.insert(Uint31_Index(0x80000040));
   
   Block_Backend< Uint31_Index, Way_Skeleton > ways_db
       (transaction->data_index(osm_base_settings().WAYS));

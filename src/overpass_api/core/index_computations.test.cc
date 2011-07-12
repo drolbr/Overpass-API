@@ -84,87 +84,87 @@ int main(int argc, char* args[])
     cout<<"\nTest calc_index with 1 entry:\n";
 
     for (uint32 lat = 0; lat <= 0x100000; lat += 0x10000)
-      cout<<hex<<calc_index(vector< uint32 >(1, ll_upper(lat, 0)))<<' ';
+      cout<<hex<<calc_index(vector< uint32 >(1, ll_upper(lat, 0) ^ 0x40000000))<<' ';
     cout<<'\n';
     for (uint32 lat = 0; lat <= 0x1000000; lat += 0x100000)
-      cout<<hex<<calc_index(vector< uint32 >(1, ll_upper(lat, 0)))<<' ';
+      cout<<hex<<calc_index(vector< uint32 >(1, ll_upper(lat, 0) ^ 0x40000000))<<' ';
     cout<<'\n';
     for (uint32 lat = 0; lat <= 0x10000000; lat += 0x1000000)
-      cout<<hex<<calc_index(vector< uint32 >(1, ll_upper(lat, 0)))<<' ';
+      cout<<hex<<calc_index(vector< uint32 >(1, ll_upper(lat, 0) ^ 0x40000000))<<' ';
     cout<<'\n';
     for (uint32 lat = 0; lat < 0x80000000; lat += 0x10000000)
-      cout<<hex<<calc_index(vector< uint32 >(1, ll_upper(lat, 0)))<<' ';
+      cout<<hex<<calc_index(vector< uint32 >(1, ll_upper(lat, 0) ^ 0x40000000))<<' ';
     cout<<'\n';
   
     for (int32 lon = 0; lon <= 0x100000; lon += 0x10000)
-      cout<<hex<<calc_index(vector< uint32 >(1, ll_upper(0, lon)))<<' ';
+      cout<<hex<<calc_index(vector< uint32 >(1, ll_upper(0, lon) ^ 0x40000000))<<' ';
     cout<<'\n';
     for (int32 lon = 0; lon <= 0x1000000; lon += 0x100000)
-      cout<<hex<<calc_index(vector< uint32 >(1, ll_upper(0, lon)))<<' ';
+      cout<<hex<<calc_index(vector< uint32 >(1, ll_upper(0, lon) ^ 0x40000000))<<' ';
     cout<<'\n';
     for (int32 lon = 0; lon <= 0x10000000; lon += 0x1000000)
-      cout<<hex<<calc_index(vector< uint32 >(1, ll_upper(0, lon)))<<' ';
+      cout<<hex<<calc_index(vector< uint32 >(1, ll_upper(0, lon) ^ 0x40000000))<<' ';
     cout<<'\n';
     for (int32 lon = 0x90000000; lon > (int32)0x80000000; lon += 0x10000000)
-      cout<<hex<<calc_index(vector< uint32 >(1, ll_upper(0, lon)))<<' ';
+      cout<<hex<<calc_index(vector< uint32 >(1, ll_upper(0, lon) ^ 0x40000000))<<' ';
     cout<<'\n';
     
     cout<<"\nTest calc_index with 2 entries:\n";
     
     for (uint32 lat = 0; lat <= 0x100000; lat += 0x10000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(lat, 0));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
       cout<<hex<<calc_index(idxs)<<' ';
     }
     cout<<'\n';
     for (uint32 lat = 0; lat <= 0x1000000; lat += 0x100000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(lat, 0));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
       cout<<hex<<calc_index(idxs)<<' ';
     }
     cout<<'\n';
     for (uint32 lat = 0; lat <= 0x10000000; lat += 0x1000000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(lat, 0));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
       cout<<hex<<calc_index(idxs)<<' ';
     }
     cout<<'\n';
     for (uint32 lat = 0; lat < 0x80000000; lat += 0x10000000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(lat, 0));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
       cout<<hex<<calc_index(idxs)<<' ';
     }
     cout<<'\n';
     
     for (int32 lon = 0; lon <= 0x100000; lon += 0x10000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(0, lon));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
       cout<<hex<<calc_index(idxs)<<' ';
     }
     cout<<'\n';
     for (int32 lon = 0; lon <= 0x1000000; lon += 0x100000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(0, lon));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
       cout<<hex<<calc_index(idxs)<<' ';
     }
     cout<<'\n';
     for (int32 lon = 0; lon <= 0x10000000; lon += 0x1000000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(0, lon));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
       cout<<hex<<calc_index(idxs)<<' ';
     }
     cout<<'\n';
     for (int32 lon = 0x90000000; lon > (int32)0x80000000; lon += 0x10000000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(0, lon));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
       cout<<hex<<calc_index(idxs)<<' ';
     }
     cout<<'\n';
@@ -173,58 +173,58 @@ int main(int argc, char* args[])
     
     for (uint32 lat = 0; lat <= 0x100000; lat += 0x10000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(lat, 0));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
       cout<<hex<<calc_index(vector< uint32 >(1, calc_index(idxs)))<<' ';
     }
     cout<<'\n';
     for (uint32 lat = 0; lat <= 0x1000000; lat += 0x100000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(lat, 0));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
       cout<<hex<<calc_index(vector< uint32 >(1, calc_index(idxs)))<<' ';
     }
     cout<<'\n';
     for (uint32 lat = 0; lat <= 0x10000000; lat += 0x1000000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(lat, 0));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
       cout<<hex<<calc_index(vector< uint32 >(1, calc_index(idxs)))<<' ';
     }
     cout<<'\n';
     for (uint32 lat = 0; lat < 0x80000000; lat += 0x10000000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(lat, 0));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
       cout<<hex<<calc_index(vector< uint32 >(1, calc_index(idxs)))<<' ';
     }
     cout<<'\n';
     
     for (int32 lon = 0; lon <= 0x100000; lon += 0x10000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(0, lon));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
       cout<<hex<<calc_index(vector< uint32 >(1, calc_index(idxs)))<<' ';
     }
     cout<<'\n';
     for (int32 lon = 0; lon <= 0x1000000; lon += 0x100000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(0, lon));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
       cout<<hex<<calc_index(vector< uint32 >(1, calc_index(idxs)))<<' ';
     }
     cout<<'\n';
     for (int32 lon = 0; lon <= 0x10000000; lon += 0x1000000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(0, lon));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
       cout<<hex<<calc_index(vector< uint32 >(1, calc_index(idxs)))<<' ';
     }
     cout<<'\n';
     for (int32 lon = 0x90000000; lon > (int32)0x80000000; lon += 0x10000000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(0, lon));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
       cout<<hex<<calc_index(vector< uint32 >(1, calc_index(idxs)))<<' ';
     }
     cout<<'\n';
@@ -233,32 +233,32 @@ int main(int argc, char* args[])
     
     for (uint32 lat = 0; lat <= 0x100000; lat += 0x10000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(lat, 0));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
       idxs[1] = calc_index(idxs);
       cout<<hex<<calc_index(idxs)<<' ';
     }
     cout<<'\n';
     for (uint32 lat = 0; lat <= 0x1000000; lat += 0x100000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(lat, 0));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
       idxs[1] = calc_index(idxs);
       cout<<hex<<calc_index(idxs)<<' ';
     }
     cout<<'\n';
     for (uint32 lat = 0; lat <= 0x10000000; lat += 0x1000000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(lat, 0));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
       idxs[1] = calc_index(idxs);
       cout<<hex<<calc_index(idxs)<<' ';
     }
     cout<<'\n';
     for (uint32 lat = 0; lat < 0x80000000; lat += 0x10000000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(lat, 0));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
       idxs[1] = calc_index(idxs);
       cout<<hex<<calc_index(idxs)<<' ';
     }
@@ -266,32 +266,32 @@ int main(int argc, char* args[])
     
     for (int32 lon = 0; lon <= 0x100000; lon += 0x10000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(0, lon));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
       idxs[1] = calc_index(idxs);
       cout<<hex<<calc_index(idxs)<<' ';
     }
     cout<<'\n';
     for (int32 lon = 0; lon <= 0x1000000; lon += 0x100000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(0, lon));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
       idxs[1] = calc_index(idxs);
       cout<<hex<<calc_index(idxs)<<' ';
     }
     cout<<'\n';
     for (int32 lon = 0; lon <= 0x10000000; lon += 0x1000000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(0, lon));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
       idxs[1] = calc_index(idxs);
       cout<<hex<<calc_index(idxs)<<' ';
     }
     cout<<'\n';
     for (int32 lon = 0x90000000; lon > (int32)0x80000000; lon += 0x10000000)
     {
-      vector< uint32 > idxs(1, 0);
-      idxs.push_back(ll_upper(0, lon));
+      vector< uint32 > idxs(1, 0x40000000);
+      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
       idxs[1] = calc_index(idxs);
       cout<<hex<<calc_index(idxs)<<' ';
     }
@@ -310,50 +310,50 @@ int main(int argc, char* args[])
       cout<<'\n';
     }
     {
-      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0x848400));
+      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0x40848400));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
     }
     {
-      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0x80848401));
+      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0xc0848401));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
     }
     {
-      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0x80848402));
+      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0xc0848402));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
     }
     {
-      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0x80848404));
+      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0xc0848404));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
     }
     // Disabled due to their size.    
 /*    {
-      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0x80848008));
+      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0xc0848008));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
     }
     {
-      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0x80840010));
+      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0xc0840010));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
     }
     {
-      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0x80800020));
+      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0xc0800020));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
     }
     {
-      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0x80000040));
+      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0xc0000040));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
@@ -372,25 +372,25 @@ int main(int argc, char* args[])
       cout<<'\n';
     }
     {
-      vector< uint32 > result = calc_children(vector< uint32 >(1, 0x848400));
+      vector< uint32 > result = calc_children(vector< uint32 >(1, 0x40848400));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
     }
     {
-      vector< uint32 > result = calc_children(vector< uint32 >(1, 0x80848401));
+      vector< uint32 > result = calc_children(vector< uint32 >(1, 0xc0848401));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
     }
     {
-      vector< uint32 > result = calc_children(vector< uint32 >(1, 0x80848402));
+      vector< uint32 > result = calc_children(vector< uint32 >(1, 0xc0848402));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
     }
     {
-      vector< uint32 > result = calc_children(vector< uint32 >(1, 0x80848404));
+      vector< uint32 > result = calc_children(vector< uint32 >(1, 0xc0848404));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
@@ -403,7 +403,7 @@ int main(int argc, char* args[])
         
     for (uint32 lat = 0; lat <= 0x100000; lat += 0x10000)
     {
-      vector< uint32 > result = calc_parents(vector< uint32 >(1, ll_upper(lat, 0)));
+      vector< uint32 > result = calc_parents(vector< uint32 >(1, ll_upper(lat, 0) ^ 0x40000000));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
@@ -411,7 +411,7 @@ int main(int argc, char* args[])
     cout<<'\n';
     for (uint32 lat = 0; lat <= 0x1000000; lat += 0x100000)
     {
-      vector< uint32 > result = calc_parents(vector< uint32 >(1, ll_upper(lat, 0)));
+      vector< uint32 > result = calc_parents(vector< uint32 >(1, ll_upper(lat, 0) ^ 0x40000000));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
@@ -419,7 +419,7 @@ int main(int argc, char* args[])
     cout<<'\n';
     for (uint32 lat = 0; lat <= 0x10000000; lat += 0x1000000)
     {
-      vector< uint32 > result = calc_parents(vector< uint32 >(1, ll_upper(lat, 0)));
+      vector< uint32 > result = calc_parents(vector< uint32 >(1, ll_upper(lat, 0) ^ 0x40000000));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
@@ -427,7 +427,7 @@ int main(int argc, char* args[])
     cout<<'\n';
     for (uint32 lat = 0; lat < 0x80000000; lat += 0x10000000)
     {
-      vector< uint32 > result = calc_parents(vector< uint32 >(1, ll_upper(lat, 0)));
+      vector< uint32 > result = calc_parents(vector< uint32 >(1, ll_upper(lat, 0) ^ 0x40000000));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
@@ -436,7 +436,7 @@ int main(int argc, char* args[])
     
     for (int32 lon = 0; lon <= 0x100000; lon += 0x10000)
     {
-      vector< uint32 > result = calc_parents(vector< uint32 >(1, ll_upper(0, lon)));
+      vector< uint32 > result = calc_parents(vector< uint32 >(1, ll_upper(0, lon) ^ 0x40000000));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
@@ -444,7 +444,7 @@ int main(int argc, char* args[])
     cout<<'\n';
     for (int32 lon = 0; lon <= 0x1000000; lon += 0x100000)
     {
-      vector< uint32 > result = calc_parents(vector< uint32 >(1, ll_upper(0, lon)));
+      vector< uint32 > result = calc_parents(vector< uint32 >(1, ll_upper(0, lon) ^ 0x40000000));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
@@ -452,7 +452,7 @@ int main(int argc, char* args[])
     cout<<'\n';
     for (int32 lon = 0; lon <= 0x10000000; lon += 0x1000000)
     {
-      vector< uint32 > result = calc_parents(vector< uint32 >(1, ll_upper(0, lon)));
+      vector< uint32 > result = calc_parents(vector< uint32 >(1, ll_upper(0, lon) ^ 0x40000000));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
@@ -460,7 +460,7 @@ int main(int argc, char* args[])
     cout<<'\n';
     for (int32 lon = 0x90000000; lon > (int32)0x80000000; lon += 0x10000000)
     {
-      vector< uint32 > result = calc_parents(vector< uint32 >(1, ll_upper(0, lon)));
+      vector< uint32 > result = calc_parents(vector< uint32 >(1, ll_upper(0, lon) ^ 0x40000000));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';

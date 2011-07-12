@@ -1,59 +1,46 @@
 #ifndef DE__OSM3S___OVERPASS_API__CORE__TYPE_NODE_H
 #define DE__OSM3S___OVERPASS_API__CORE__TYPE_NODE_H
 
+#include "basic_types.h"
+#include "index_computations.h"
+
 #include <cstring>
-#include <iostream> //DEBUG
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
-
-#include "basic_types.h"
 
 using namespace std;
 
 struct Node
 {
   uint32 id;
-  uint32 ll_upper_;
+  uint32 ll_upper;
   uint32 ll_lower_;
   vector< pair< string, string > > tags;
   
   Node() {}
   
   Node(uint32 id_, double lat, double lon)
-  : id(id_), ll_upper_(ll_upper(lat, lon)), ll_lower_(ll_lower(lat, lon))
+      : id(id_), ll_upper(ll_upper_(lat, lon)), ll_lower_(ll_lower(lat, lon))
   {}
   
-  Node(uint32 id_, uint32 ll_upper__, uint32 ll_lower__)
-  : id(id_), ll_upper_(ll_upper__), ll_lower_(ll_lower__)
+  Node(uint32 id_, uint32 ll_upper_, uint32 ll_lower__)
+      : id(id_), ll_upper(ll_upper_), ll_lower_(ll_lower__)
   {}
   
-  static uint32 ll_upper(double lat, double lon)
+  static uint32 ll_upper_(double lat, double lon)
   {
     uint32 result(0), ilat((lat + 91.0)*10000000+0.5);
     int32 ilon(lon*10000000 + (lon > 0 ? 0.5 : -0.5));
-    
-    for (uint32 i(0); i < 16; ++i)
-    {
-      result |= ((0x1<<(i+16))&ilat)>>(15-i);
-      result |= ((0x1<<(i+16))&(uint32)ilon)>>(16-i);
-    }
-    
-    return result;
+
+    uint32 temp = ::ll_upper(ilat, ilon);
+    return (temp ^ 0x40000000);
   }
   
-  static uint32 ll_upper(uint32 ilat, int32 ilon)
+  static uint32 ll_upper_(uint32 ilat, int32 ilon)
   {
-    uint32 result(0);
-    
-    for (uint32 i(0); i < 16; ++i)
-    {
-      result |= ((0x1<<(i+16))&ilat)>>(15-i);
-      result |= ((0x1<<(i+16))&(uint32)ilon)>>(16-i);
-    }
-    
-    return result;
+    return (::ll_upper(ilat, ilon) ^ 0x40000000);
   }
   
   static uint32 ll_lower(double lat, double lon)
@@ -118,6 +105,7 @@ struct Node
       result |= ((0x1<<(30-2*i))&ll_upper)<<(i+1);
       result |= ((0x1<<(30-2*i))&ll_lower)>>(15-i);
     }
+    result ^= 0x80000000;
     
     return ((double)result)/10000000;
   }
@@ -131,34 +119,13 @@ struct Node
       result |= ((0x1<<(30-2*i))&ll_upper)<<(i+1);
       result |= ((0x1<<(30-2*i))&ll_lower)>>(15-i);
     }
+    result ^= 0x80000000;
     
     return result;
   }
 
   static vector< pair< uint32, uint32 > >* calc_ranges
     (double south, double north, double west, double east);
-//   {
-//     vector< pair< uint32, uint32 > >* ranges;
-//     if (west <= east)
-//       ranges = new vector< pair< uint32, uint32 > >();
-//     else
-//     {
-//       ranges = calc_ranges(south, north, west, 180.0);
-//       west = -180.0;
-//     }
-//     for (int i(0); 65536.0/10000000.0*(i-1) < north - south; ++i)
-//     {
-//       for (int j(0); 65536.0/10000000.0*(j-1) < east - west; ++j)
-//       {
-// 	pair< uint32, uint32 > range;
-// 	range.first = Node::ll_upper
-// 	(south + 65536.0/10000000.0*i, west + 65536.0/10000000.0*j);
-// 	range.second = range.first + 1;
-// 	ranges->push_back(range);
-//       }
-//     }
-//     return ranges;
-//   }
 
   static void recursively_calc_ranges
       (uint32 south, uint32 north, int32 west, int32 east,
@@ -281,8 +248,8 @@ inline void Node::recursively_calc_ranges
   if ((south + dist == north) && (west + dist == east))
   {
     ranges.push_back
-        (make_pair(ll_upper(south, west),
-		   ll_upper(north, east) + 1));
+        (make_pair(ll_upper_(south, west),
+		   ll_upper_(north, east) + 1));
     return;
   }
   

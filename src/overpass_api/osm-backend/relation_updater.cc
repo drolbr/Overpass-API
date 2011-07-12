@@ -123,23 +123,26 @@ void Relation_Updater::find_affected_relations
  const vector< pair< uint32, uint32 > >& moved_ways)
 {
   set< Uint31_Index > req;
-  for (vector< pair< uint32, uint32 > >::const_iterator
-    it(moved_nodes.begin()); it != moved_nodes.end(); ++it)
   {
-    req.insert(Uint31_Index(it->second));
-    req.insert(Uint31_Index((it->second & 0x7fffff00) | 0x80000010));
-    req.insert(Uint31_Index((it->second & 0x7fff0000) | 0x80000020));
-    req.insert(Uint31_Index((it->second & 0x7f000000) | 0x80000030));
+    vector< uint32 > moved_members_idxs;
+    for (vector< pair< uint32, uint32 > >::const_iterator
+        it(moved_nodes.begin()); it != moved_nodes.end(); ++it)
+      moved_members_idxs.push_back(it->second);
+    vector< uint32 > affected_relation_idxs = calc_parents(moved_members_idxs);
+    for (vector< uint32 >::const_iterator it = affected_relation_idxs.begin();
+        it != affected_relation_idxs.end(); ++it)
+      req.insert(Uint31_Index(*it));
   }
-  for (vector< pair< uint32, uint32 > >::const_iterator
-    it(moved_ways.begin()); it != moved_ways.end(); ++it)
   {
-    req.insert(Uint31_Index(it->second));
-    req.insert(Uint31_Index((it->second & 0x7fffff00) | 0x80000010));
-    req.insert(Uint31_Index((it->second & 0x7fff0000) | 0x80000020));
-    req.insert(Uint31_Index((it->second & 0x7f000000) | 0x80000030));
+    vector< uint32 > moved_members_idxs;
+    for (vector< pair< uint32, uint32 > >::const_iterator
+        it(moved_ways.begin()); it != moved_ways.end(); ++it)
+      moved_members_idxs.push_back(it->second);
+    vector< uint32 > affected_relation_idxs = calc_parents(moved_members_idxs);
+    for (vector< uint32 >::const_iterator it = affected_relation_idxs.begin();
+        it != affected_relation_idxs.end(); ++it)
+      req.insert(Uint31_Index(*it));
   }
-  req.insert(Uint31_Index(0x80000040));
   
   Block_Backend< Uint31_Index, Relation_Skeleton > rels_db
       (transaction->data_index(osm_base_settings().RELATIONS));

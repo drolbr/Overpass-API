@@ -1,3 +1,6 @@
+#ifndef DE__OSM3S___OVERPASS_API__CORE__INDEX_COMPUTATIONS_H
+#define DE__OSM3S___OVERPASS_API__CORE__INDEX_COMPUTATIONS_H
+
 #include <algorithm>
 #include <vector>
 
@@ -94,7 +97,7 @@ inline uint32 calc_index(const vector< uint32 >& node_idxs)
   vector< uint32 >::const_iterator it = node_idxs.begin();
   uint32 lat_min = *it & 0x2aaaaaaa;
   uint32 lat_max = lat_min;
-  uint32 lon_min = (*it & 0x55555555) ^ 0x40000000;
+  uint32 lon_min = *it & 0x55555555;
   uint32 lon_max = lon_min;
   
   if (*it & 0x80000000)
@@ -225,7 +228,7 @@ inline uint32 calc_index(const vector< uint32 >& node_idxs)
     else
     {
       uint32 lat = *it & 0x2aaaaaaa;
-      uint32 lon = (*it & 0x55555555) ^ 0x40000000;
+      uint32 lon = *it & 0x55555555;
       
       if (lat < lat_min)
         lat_min = lat;
@@ -354,7 +357,7 @@ inline vector< uint32 > calc_node_children(const vector< uint32 >& way_rel_idxs)
       for (uint32 i = lat; i <= lat_u; ++i)
       {
 	for (uint32 j = lon; j <= lon_u; ++j)
-	  result.push_back(ll_upper(i<<16, j<<16) ^ 0x40000000);
+	  result.push_back(ll_upper(i<<16, j<<16));
       }
     }
     else
@@ -476,7 +479,7 @@ inline vector< uint32 > calc_children(const vector< uint32 >& way_rel_idxs)
       for (int32 i = lat; i <= lat_u; ++i)
       {
 	for (int32 j = lon; j <= lon_u; ++j)
-	  result.push_back(ll_upper(i<<16, j<<16) ^ 0x40000000);
+	  result.push_back(ll_upper(i<<16, j<<16));
       }
     }
     else
@@ -499,7 +502,7 @@ inline vector< uint32 > calc_parents(const vector< uint32 >& node_idxs)
     result.push_back(*it);
     
     uint32 lat = upper_ilat(*it & 0x2aaaaaa8) & 0xfffe;
-    uint32 lon = upper_ilon((*it & 0x55555554) ^ 0x40000000) & 0xfffe;
+    uint32 lon = upper_ilon(*it & 0x55555554) & 0xfffe;
     result.push_back(ll_upper((lat - 2)<<16, (lon - 2)<<16) | 0x80000001);
     result.push_back(ll_upper(lat<<16, (lon - 2)<<16) | 0x80000001);
     result.push_back(ll_upper((lat - 2)<<16, lon<<16) | 0x80000001);
@@ -553,3 +556,5 @@ inline vector< uint32 > calc_parents(const vector< uint32 >& node_idxs)
   
   return result;
 }
+
+#endif

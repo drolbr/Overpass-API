@@ -120,7 +120,7 @@ pair< uint32, uint32 > Make_Area_Statement::create_area_blocks
 {
   vector< Node > nodes;
   for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
-    it(pivot.nodes.begin()); it != pivot.nodes.end(); ++it)
+      it(pivot.nodes.begin()); it != pivot.nodes.end(); ++it)
   {
     for (vector< Node_Skeleton >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
@@ -144,34 +144,34 @@ pair< uint32, uint32 > Make_Area_Statement::create_area_blocks
 	Node* node(binary_search_for_id(nodes, *it3));
 	if (node == 0)
 	  return make_pair< uint32, uint32 >(*it3, it2->id);
-	if ((node->ll_upper_ & 0xffffff00) != cur_idx)
+	if ((node->ll_upper & 0xffffff00) != cur_idx)
 	{
 	  if (cur_idx != 0)
 	  {
-	    areas[cur_idx].push_back(Area_Block(id, cur_polyline));
+	    if (cur_polyline.size() > 1)
+	      areas[cur_idx].push_back(Area_Block(id, cur_polyline));
 	    
 	    vector< Aligned_Segment > aligned_segments;
 	    Area::calc_aligned_segments
 	        (aligned_segments, cur_polyline.back(),
-		 ((uint64)node->ll_upper_<<32) | node->ll_lower_);
+		 ((uint64)node->ll_upper<<32) | node->ll_lower_);
 	    cur_polyline.clear();
 	    for (vector< Aligned_Segment >::const_iterator
-	        it(aligned_segments.begin()); it != aligned_segments.end();
-	        ++it)
+	        it(aligned_segments.begin()); it != aligned_segments.end(); ++it)
 	    {
-	      cur_polyline.push_back(((uint64)it->ll_upper_<<32)
+	      cur_polyline.push_back((((uint64)it->ll_upper_ ^ 0x40000000)<<32)
 	        | it->ll_lower_a);
-	      cur_polyline.push_back(((uint64)it->ll_upper_<<32)
+	      cur_polyline.push_back((((uint64)it->ll_upper_ ^ 0x40000000)<<32)
 	        | it->ll_lower_b);
-	      areas[it->ll_upper_].push_back(Area_Block(id, cur_polyline));
+	      areas[it->ll_upper_ ^ 0x40000000].push_back(Area_Block(id, cur_polyline));
 	      cur_polyline.clear();
 	    }
 	  }
-	  cur_idx = (node->ll_upper_ & 0xffffff00);
+	  cur_idx = (node->ll_upper & 0xffffff00);
 	}
-	cur_polyline.push_back(((uint64)node->ll_upper_<<32) | node->ll_lower_);
+	cur_polyline.push_back(((uint64)node->ll_upper<<32) | node->ll_lower_);
       }
-      if (cur_idx != 0)
+      if ((cur_idx != 0) && (cur_polyline.size() > 1))
         areas[cur_idx].push_back(Area_Block(id, cur_polyline));
     }
   }
@@ -227,7 +227,7 @@ void Make_Area_Statement::add_segment_blocks
     // calc lat
     uint32 lat(shifted_lat(it->first.val(), 0) + 16*65536);
     int32 lon(lon_(it->first.val(), 0));
-    uint32 northern_ll_upper(Node::ll_upper(lat, lon));
+    uint32 northern_ll_upper(Node::ll_upper_(lat, lon));
     // insert lons
     vector< Area_Block >& northern_block(area_blocks[northern_ll_upper]);
     for (set< int32 >::const_iterator it2(lons.begin()); it2 != lons.end(); ++it2)
@@ -237,9 +237,9 @@ void Make_Area_Statement::add_segment_blocks
       int32 to(*it2);
       vector< uint64 > coors;
       coors.push_back
-          ((((uint64)Node::ll_upper(lat, from))<<32) | Node::ll_lower(lat, from));
+          ((((uint64)Node::ll_upper_(lat, from))<<32) | Node::ll_lower(lat, from));
       coors.push_back
-          ((((uint64)Node::ll_upper(lat, to))<<32) | Node::ll_lower(lat, to));
+          ((((uint64)Node::ll_upper_(lat, to))<<32) | Node::ll_lower(lat, to));
       Area_Block new_block(id, coors);
       northern_block.push_back(new_block);
     }
@@ -392,9 +392,9 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
     
     return;
   }
-  
+
   add_segment_blocks(area_blocks, pivot_id);
-  
+
   set< uint32 > used_indices;
   for (map< Uint31_Index, vector< Area_Block > >::const_iterator
       it(area_blocks.begin()); it != area_blocks.end(); ++it)

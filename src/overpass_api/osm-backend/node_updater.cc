@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <iostream>
 #include <map>
 #include <set>
 #include <vector>
@@ -109,8 +108,8 @@ void Node_Updater::update_node_ids
     {
       if (it->second)
       {
-	random.put(it->first, Uint32_Index(nit->ll_upper_));
-	if ((index.val() > 0) && (index.val() != nit->ll_upper_))
+	random.put(it->first, Uint32_Index(nit->ll_upper));
+	if ((index.val() > 0) && (index.val() != nit->ll_upper))
 	  moved_nodes.push_back(make_pair(it->first, index.val()));
       }
       ++nit;
@@ -140,7 +139,7 @@ void Node_Updater::update_coords(const map< uint32, vector< uint32 > >& to_delet
     {
       if (it->second)
       {
-	Uint32_Index idx(nit->ll_upper_);
+	Uint32_Index idx(nit->ll_upper);
 	db_to_insert[idx].insert(Node_Skeleton(*nit));
       }
       ++nit;
@@ -245,7 +244,7 @@ void Node_Updater::update_node_tags_local(const vector< Tag_Entry >& tags_to_del
       if (it->second)
       {
 	Tag_Index_Local index;
-	index.index = nit->ll_upper_ & 0xffffff00;
+	index.index = nit->ll_upper & 0xffffff00;
 	
 	for (vector< pair< string, string > >::const_iterator it2(nit->tags.begin());
 	    it2 != nit->tags.end(); ++it2)

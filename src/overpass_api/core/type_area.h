@@ -22,8 +22,8 @@ struct Area
       (uint32 from_lat, int32 from_lon, uint32 to_lat, int32 to_lon)
   {
     Aligned_Segment result;
-    uint32 a_ll_upper(Node::ll_upper(from_lat, from_lon));
-    uint32 b_ll_upper(Node::ll_upper(to_lat, to_lon));
+    uint32 a_ll_upper(Node::ll_upper_(from_lat, from_lon));
+    uint32 b_ll_upper(Node::ll_upper_(to_lat, to_lon));
     result.ll_upper_ = a_ll_upper & 0xffffff00;
     result.ll_lower_a = (uint64)Node::ll_lower(from_lat, from_lon) |
         (((uint64)a_ll_upper & 0xff)<<32);
@@ -92,7 +92,7 @@ struct Area
     if ((from_lon & 0xfff00000) == (to_lon & 0xfff00000))
     {
       calc_horiz_aligned_segments
-      (aligned_segments, from_lat, from_lon, to_lat, to_lon);
+          (aligned_segments, from_lat, from_lon, to_lat, to_lon);
       return;
     }
     else if (from_lon < to_lon)

@@ -2,7 +2,6 @@
 #define DE__OSM3S___OVERPASS_API__OSM_BACKEND__NODE_UPDATER_H
 
 #include <algorithm>
-#include <iostream>
 #include <map>
 #include <set>
 #include <vector>
@@ -34,7 +33,7 @@ struct Node_Updater
     
     Node node;
     node.id = id;
-    node.ll_upper_ = Node::ll_upper(lat, lon);
+    node.ll_upper = Node::ll_upper_(lat, lon);
     node.ll_lower_ = Node::ll_lower(lat, lon);
     node.tags = tags;
     nodes_to_insert.push_back(node);

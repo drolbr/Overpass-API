@@ -1,12 +1,13 @@
 #ifndef DE__OSM3S___OVERPASS_API__CORE__TYPE_WAY_H
 #define DE__OSM3S___OVERPASS_API__CORE__TYPE_WAY_H
 
+#include "basic_types.h"
+#include "index_computations.h"
+
 #include <cstring>
 #include <map>
 #include <set>
 #include <vector>
-
-#include "basic_types.h"
 
 using namespace std;
 
@@ -28,22 +29,7 @@ struct Way
   
   static uint32 calc_index(const vector< uint32 >& nd_idxs)
   {
-    if (nd_idxs.empty())
-      return 0;
-    
-    uint32 bitmask(0), value(nd_idxs[0]);
-    for (uint i(1); i < nd_idxs.size(); ++i)
-      bitmask |= (value ^ nd_idxs[i]);
-    if (bitmask & 0xff000000)
-      value = 0x80000040;
-    else if (bitmask & 0xffff0000)
-      value = (value & 0xff000000) | 0x80000030;
-    else if (bitmask & 0xffffff00)
-      value = (value & 0xffff0000) | 0x80000020;
-    else if (bitmask)
-      value = (value & 0xffffff00) | 0x80000010;
-    
-    return value;
+    return ::calc_index(nd_idxs);
   }
 };
 

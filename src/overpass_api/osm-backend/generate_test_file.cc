@@ -647,9 +647,9 @@ struct Accept_Foreach_1 : public Accept_All_Tags
   virtual bool admit_node(uint id) const
   { return ((id == 1) || (id == 2) || (id == 3)); }
   virtual bool admit_way(uint id) const
-  { return ((id % way_id_offset == 1) && (id / way_id_offset <= 3)); }
+  { return ((id % way_id_offset == 1) && (id / way_id_offset <= 3) && (id != 1)); }
   virtual bool admit_relation(uint id) const
-  { return ((id == 10) || (id == 21) || (id == 32)); }
+  { return (/*(id == 10) || */(id == 21) || (id == 32)); }
   
   private:
     uint way_id_offset;

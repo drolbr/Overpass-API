@@ -231,49 +231,85 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   }
   else if (type == RECURSE_RELATION_WAY)
   {
-    set< Uint31_Index > req;
-    vector< uint32 > ids;
-    
-    for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
-        it(mit->second.relations.begin()); it != mit->second.relations.end(); ++it)
+    vector< Uint31_Index > req;
+    vector< uint32 > ids;    
     {
-      for (vector< Relation_Skeleton >::const_iterator it2(it->second.begin());
-          it2 != it->second.end(); ++it2)
+      vector< uint32 > map_ids;
+      vector< uint32 > parents;
+      
+      for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
+	   it(mit->second.relations.begin()); it != mit->second.relations.end(); ++it)
       {
-	for (vector< Relation_Entry >::const_iterator it3(it2->members.begin());
-	    it3 != it2->members.end(); ++it3)
+	if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xf) == 0))
 	{
-	  if (it3->type == Relation_Entry::WAY)
-	    ids.push_back(it3->ref);
+	  // Treat ways with really large indices: get the way indexes from ways.map.
+	  for (vector< Relation_Skeleton >::const_iterator it2(it->second.begin());
+	      it2 != it->second.end(); ++it2)
+	  {
+	    for (vector< Relation_Entry >::const_iterator it3(it2->members.begin());
+		      it3 != it2->members.end(); ++it3)
+	    {
+	      if (it3->type == Relation_Entry::WAY)
+	        map_ids.push_back(it3->ref);
+	    }
+	  }
+	}
+	else
+	  parents.push_back(it->first.val());
+
+	for (vector< Relation_Skeleton >::const_iterator it2(it->second.begin());
+	    it2 != it->second.end(); ++it2)
+	{
+	  for (vector< Relation_Entry >::const_iterator it3(it2->members.begin());
+	      it3 != it2->members.end(); ++it3)
+	  {
+	    if (it3->type == Relation_Entry::WAY)
+	      ids.push_back(it3->ref);
+	  }
 	}
       }
-    }
-    
-    rman.health_check(*this);
-    sort(ids.begin(), ids.end());
-    {
+      vector< uint32 > children = calc_children(parents);
+      req.reserve(children.size());
+      for (vector< uint32 >::const_iterator it = children.begin(); it != children.end(); ++it)
+	req.push_back(Uint31_Index(*it));
+      
+      sort(map_ids.begin(), map_ids.end());
+
       stopwatch.stop(Stopwatch::NO_DISK);
+      rman.health_check(*this);
+      
       Random_File< Uint31_Index > random
           (rman.get_transaction()->random_index(osm_base_settings().WAYS));
-      for (vector< uint32 >::const_iterator it(ids.begin());
-          it != ids.end(); ++it)
-	req.insert(random.get(*it));
+      for (vector< uint32 >::const_iterator
+	  it(map_ids.begin()); it != map_ids.end(); ++it)
+	req.push_back(random.get(*it));
       stopwatch.stop(Stopwatch::WAYS_MAP);
     }
     rman.health_check(*this);
+    sort(ids.begin(), ids.end());
     
     nodes.clear();
     ways.clear();
     relations.clear();
     areas.clear();
   
-    stopwatch.stop(Stopwatch::NO_DISK);
-    Block_Backend< Uint31_Index, Way_Skeleton > ways_db
+    rman.health_check(*this);
+    sort(req.begin(), req.end());
+    req.erase(unique(req.begin(), req.end()), req.end());
+    rman.health_check(*this);
+    stopwatch.stop(Stopwatch::NO_DISK);    
+    uint ways_count = 0;
+    Block_Backend< Uint31_Index, Way_Skeleton, vector< Uint31_Index >::const_iterator > ways_db
 	(rman.get_transaction()->data_index(osm_base_settings().WAYS));
-    for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
+    for (Block_Backend< Uint31_Index, Way_Skeleton, vector< Uint31_Index >::const_iterator >::Discrete_Iterator
 	 it(ways_db.discrete_begin(req.begin(), req.end()));
 	 !(it == ways_db.discrete_end()); ++it)
     {
+      if (++ways_count >= 64*1024)
+      {
+	ways_count = 0;
+	rman.health_check(*this);
+      }
       if (binary_search(ids.begin(), ids.end(), it.object().id))
 	ways[it.index()].push_back(it.object());
     }
@@ -282,49 +318,77 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   }
   else if (type == RECURSE_RELATION_NODE)
   {
-    set< Uint32_Index > req;
-    vector< uint32 > ids;
-    
+    vector< Uint32_Index > req;
+    vector< uint32 > ids;    
     {
-      stopwatch.stop(Stopwatch::NO_DISK);
+      vector< uint32 > map_ids;
+      vector< uint32 > parents;
+      
       for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
 	   it(mit->second.relations.begin()); it != mit->second.relations.end(); ++it)
       {
+	if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xf) == 0))
+	{
+	  // Treat ways with really large indices: get the node indexes from nodes.map.
+	  for (vector< Relation_Skeleton >::const_iterator it2(it->second.begin());
+	      it2 != it->second.end(); ++it2)
+	  {
+	    for (vector< Relation_Entry >::const_iterator it3(it2->members.begin());
+		      it3 != it2->members.end(); ++it3)
+	    {
+	      if (it3->type == Relation_Entry::NODE)
+	        map_ids.push_back(it3->ref);
+	    }
+	  }
+	}
+	else
+	  parents.push_back(it->first.val());
+
 	for (vector< Relation_Skeleton >::const_iterator it2(it->second.begin());
 	    it2 != it->second.end(); ++it2)
 	{
 	  for (vector< Relation_Entry >::const_iterator it3(it2->members.begin());
-		      it3 != it2->members.end(); ++it3)
+	      it3 != it2->members.end(); ++it3)
 	  {
 	    if (it3->type == Relation_Entry::NODE)
 	      ids.push_back(it3->ref);
 	  }
 	}
       }
-    }
-    rman.health_check(*this);
-    sort(ids.begin(), ids.end());
-    {
+      vector< uint32 > children = calc_node_children(parents);
+      req.reserve(children.size());
+      for (vector< uint32 >::const_iterator it = children.begin(); it != children.end(); ++it)
+	req.push_back(Uint32_Index(*it));
+      
+      sort(map_ids.begin(), map_ids.end());
+
       stopwatch.stop(Stopwatch::NO_DISK);
+      rman.health_check(*this);
+      
       Random_File< Uint32_Index > random
           (rman.get_transaction()->random_index(osm_base_settings().NODES));
-      for (vector< uint32 >::const_iterator it(ids.begin());
-          it != ids.end(); ++it)
-        req.insert(random.get(*it));
+      for (vector< uint32 >::const_iterator
+	  it(map_ids.begin()); it != map_ids.end(); ++it)
+	req.push_back(random.get(*it));
       stopwatch.stop(Stopwatch::NODES_MAP);
     }
     rman.health_check(*this);
+    sort(ids.begin(), ids.end());
     
     nodes.clear();
     ways.clear();
     relations.clear();
     areas.clear();
   
+    rman.health_check(*this);
+    sort(req.begin(), req.end());
+    req.erase(unique(req.begin(), req.end()), req.end());
+    rman.health_check(*this);
     stopwatch.stop(Stopwatch::NO_DISK);
     uint nodes_count = 0;
-    Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
+    Block_Backend< Uint32_Index, Node_Skeleton, vector< Uint32_Index >::const_iterator > nodes_db
 	(rman.get_transaction()->data_index(osm_base_settings().NODES));
-    for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
+    for (Block_Backend< Uint32_Index, Node_Skeleton, vector< Uint32_Index >::const_iterator >::Discrete_Iterator
 	 it(nodes_db.discrete_begin(req.begin(), req.end()));
 	 !(it == nodes_db.discrete_end()); ++it)
     {
@@ -335,84 +399,57 @@ void Recurse_Statement::execute(Resource_Manager& rman)
       }
       if (binary_search(ids.begin(), ids.end(), it.object().id))
 	nodes[it.index()].push_back(it.object());
-    }
+    }    
     stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
     stopwatch.stop(Stopwatch::NODES);
   }
   else if (type == RECURSE_WAY_NODE)
   {
     vector< Uint32_Index > req;
-    vector< uint32 > ids;
-    
+    vector< uint32 > ids;    
     {
-      vector< uint32 > ids_for_index_req;
+      vector< uint32 > map_ids;
+      vector< uint32 > parents;
       
       for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
 	   it(mit->second.ways.begin()); it != mit->second.ways.end(); ++it)
       {
-	if (!(it->first.val() & 0x80000000))
+	if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xf) == 0))
 	{
-	  if (req.empty() || req.back() < it->first)
-	    req.push_back(it->first);
+	  // Treat ways with really large indices: get the node indexes from nodes.map.
 	  for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
 	      it2 != it->second.end(); ++it2)
 	  {
 	    for (vector< uint32 >::const_iterator it3(it2->nds.begin());
 	        it3 != it2->nds.end(); ++it3)
-	      ids.push_back(*it3);
-	  }
-	}
-	else if ((it->first.val() & 0xff) == 0x10)
-	{
-	  uint32 base_idx(it->first.val() & 0x7fffff00);
-	  if (req.empty() || req.back().val() < base_idx)
-	  {
-	    for (uint32 i(base_idx); i < base_idx + 0x100; ++i)
-	      req.push_back(Uint32_Index(i));
-	  }
-	  for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
-	      it2 != it->second.end(); ++it2)
-	  {
-	    for (vector< uint32 >::const_iterator it3(it2->nds.begin());
-	        it3 != it2->nds.end(); ++it3)
-	      ids.push_back(*it3);
-	  }
-	}
-	else if ((it->first.val() & 0xff) == 0x20)
-	{
-	  uint32 base_idx(it->first.val() & 0x7fff0000);
-	  for (uint32 i(base_idx); i < base_idx + 0x10000; ++i)
-	    req.push_back(Uint32_Index(i));
-	  for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
-	      it2 != it->second.end(); ++it2)
-	  {
-	    for (vector< uint32 >::const_iterator it3(it2->nds.begin());
-	        it3 != it2->nds.end(); ++it3)
-	      ids.push_back(*it3);
+	      map_ids.push_back(*it3);
 	  }
 	}
 	else
+	  parents.push_back(it->first.val());
+
+	for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
+	    it2 != it->second.end(); ++it2)
 	{
-	  for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
-	      it2 != it->second.end(); ++it2)
-	  {
-	    for (vector< uint32 >::const_iterator it3(it2->nds.begin());
-	        it3 != it2->nds.end(); ++it3)
-	    {
-	      ids.push_back(*it3);
-	      ids_for_index_req.push_back(*it3);
-	    }
-	  }
+	  for (vector< uint32 >::const_iterator it3(it2->nds.begin());
+	      it3 != it2->nds.end(); ++it3)
+	    ids.push_back(*it3);
 	}
       }
-      sort(ids_for_index_req.begin(), ids_for_index_req.end());
+      vector< uint32 > children = calc_node_children(parents);
+      req.reserve(children.size());
+      for (vector< uint32 >::const_iterator it = children.begin(); it != children.end(); ++it)
+	req.push_back(Uint32_Index(*it));
+      
+      sort(map_ids.begin(), map_ids.end());
+
       stopwatch.stop(Stopwatch::NO_DISK);
       rman.health_check(*this);
       
       Random_File< Uint32_Index > random
           (rman.get_transaction()->random_index(osm_base_settings().NODES));
       for (vector< uint32 >::const_iterator
-	  it(ids_for_index_req.begin()); it != ids_for_index_req.end(); ++it)
+	  it(map_ids.begin()); it != map_ids.end(); ++it)
 	req.push_back(random.get(*it));
       stopwatch.stop(Stopwatch::NODES_MAP);
     }
@@ -450,31 +487,24 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   else if (type == RECURSE_WAY_RELATION)
   {
     set< Uint31_Index > req;
+    vector< uint32 > children;
     vector< uint32 > ids;
     
     {
       for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
 	   it(mit->second.ways.begin()); it != mit->second.ways.end(); ++it)
       {
-	if ((it->first.val() & 0x80000000) == 0)
-	  req.insert(Uint31_Index(it->first.val()));
-	if (((it->first.val() & 0x80000000) == 0) ||
-	    ((it->first.val() & 0xf0) <= 0x10))
-	  req.insert(Uint31_Index((it->first.val() & 0x7fffff00) | 0x80000010));
-	if (((it->first.val() & 0x80000000) == 0) ||
-	    ((it->first.val() & 0xf0) <= 0x20))
-	  req.insert(Uint31_Index((it->first.val() & 0x7fff0000) | 0x80000020));
-	if (((it->first.val() & 0x80000000) == 0) ||
-	    ((it->first.val() & 0xf0) <= 0x30))
-	  req.insert(Uint31_Index((it->first.val() & 0x7f000000) | 0x80000030));
+	children.push_back(it->first.val());
 	for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
 	    it2 != it->second.end(); ++it2)
 	  ids.push_back(it2->id);
       }
-      req.insert(Uint31_Index(0x80000040));
     }
     rman.health_check(*this);
     sort(ids.begin(), ids.end());
+    vector< uint32 > parents = calc_parents(children);
+    for (vector< uint32 >::const_iterator it = parents.begin(); it != parents.end(); ++it)
+      req.insert(Uint31_Index(*it));
     
     nodes.clear();
     ways.clear();
@@ -506,24 +536,24 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   else if (type == RECURSE_NODE_WAY)
   {
     set< Uint31_Index > req;
+    vector< uint32 > children;
     vector< uint32 > ids;
     
     {
       for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
 	   it(mit->second.nodes.begin()); it != mit->second.nodes.end(); ++it)
       {
-	req.insert(Uint31_Index(it->first.val()));
-	req.insert(Uint31_Index((it->first.val() & 0x7fffff00) | 0x80000010));
-	req.insert(Uint31_Index((it->first.val() & 0x7fff0000) | 0x80000020));
-	req.insert(Uint31_Index((it->first.val() & 0x7f000000) | 0x80000030));
+	children.push_back(it->first.val());
 	for (vector< Node_Skeleton >::const_iterator it2(it->second.begin());
 	    it2 != it->second.end(); ++it2)
 	  ids.push_back(it2->id);
       }
-      req.insert(Uint31_Index(0x80000040));
     }
     rman.health_check(*this);
     sort(ids.begin(), ids.end());
+    vector< uint32 > parents = calc_parents(children);
+    for (vector< uint32 >::const_iterator it = parents.begin(); it != parents.end(); ++it)
+      req.insert(Uint31_Index(*it));
     
     nodes.clear();
     ways.clear();
@@ -554,24 +584,24 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   else if (type == RECURSE_NODE_RELATION)
   {
     set< Uint31_Index > req;
+    vector< uint32 > children;
     vector< uint32 > ids;
     
     {
       for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
 	   it(mit->second.nodes.begin()); it != mit->second.nodes.end(); ++it)
       {
-	req.insert(Uint31_Index(it->first.val()));
-	req.insert(Uint31_Index((it->first.val() & 0x7fffff00) | 0x80000010));
-	req.insert(Uint31_Index((it->first.val() & 0x7fff0000) | 0x80000020));
-	req.insert(Uint31_Index((it->first.val() & 0x7f000000) | 0x80000030));
+	children.push_back(it->first.val());
 	for (vector< Node_Skeleton >::const_iterator it2(it->second.begin());
 	    it2 != it->second.end(); ++it2)
 	  ids.push_back(it2->id);
       }
-      req.insert(Uint31_Index(0x80000040));
     }
     rman.health_check(*this);
     sort(ids.begin(), ids.end());
+    vector< uint32 > parents = calc_parents(children);
+    for (vector< uint32 >::const_iterator it = parents.begin(); it != parents.end(); ++it)
+      req.insert(Uint31_Index(*it));
     
     nodes.clear();
     ways.clear();

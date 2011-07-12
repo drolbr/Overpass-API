@@ -44,18 +44,18 @@ Resource_Manager& fill_loop_set
   perform_id_query(partial_rman, "node", 3);
   if (!partial_rman.sets()["_"].nodes.empty())
     rman.sets()[set_name].nodes[partial_rman.sets()["_"].nodes.begin()->first].push_back(partial_rman.sets()["_"].nodes.begin()->second.front());
-  perform_id_query(partial_rman, "way", 1);
+/*  perform_id_query(partial_rman, "way", 1);
   if (!partial_rman.sets()["_"].ways.empty())
-    rman.sets()[set_name].ways[partial_rman.sets()["_"].ways.begin()->first].push_back(partial_rman.sets()["_"].ways.begin()->second.front());
+    rman.sets()[set_name].ways[partial_rman.sets()["_"].ways.begin()->first].push_back(partial_rman.sets()["_"].ways.begin()->second.front());*/
   perform_id_query(partial_rman, "way", way_id_offset + 1);
   if (!partial_rman.sets()["_"].ways.empty())
     rman.sets()[set_name].ways[partial_rman.sets()["_"].ways.begin()->first].push_back(partial_rman.sets()["_"].ways.begin()->second.front());
   perform_id_query(partial_rman, "way", 2*way_id_offset + 1);
   if (!partial_rman.sets()["_"].ways.empty())
     rman.sets()[set_name].ways[partial_rman.sets()["_"].ways.begin()->first].push_back(partial_rman.sets()["_"].ways.begin()->second.front());
-  perform_id_query(partial_rman, "relation", 10);
+/*  perform_id_query(partial_rman, "relation", 10);
   if (!partial_rman.sets()["_"].relations.empty())
-    rman.sets()[set_name].relations[partial_rman.sets()["_"].relations.begin()->first].push_back(partial_rman.sets()["_"].relations.begin()->second.front());
+    rman.sets()[set_name].relations[partial_rman.sets()["_"].relations.begin()->first].push_back(partial_rman.sets()["_"].relations.begin()->second.front());*/
   perform_id_query(partial_rman, "relation", 21);
   if (!partial_rman.sets()["_"].relations.empty())
     rman.sets()[set_name].relations[partial_rman.sets()["_"].relations.begin()->first].push_back(partial_rman.sets()["_"].relations.begin()->second.front());

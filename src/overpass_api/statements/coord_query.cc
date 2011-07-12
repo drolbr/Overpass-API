@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <vector>
 
+#include <iomanip>
+
 #include "../../template_db/block_backend.h"
 #include "coord_query.h"
 
@@ -144,6 +146,8 @@ int32 Coord_Query_Statement::lon_(uint32 ll_index, uint64 coord)
   lon |= (((uint64)0x1<<(30-2*14))&coord)>>(15-14);
   lon |= (((uint64)0x1<<(30-2*15))&(coord>>32))<<(15+1);
   lon |= (((uint64)0x1<<(30-2*15))&coord)>>(15-15);
+  
+  lon ^= 0x80000000;
   return lon;
 }
 
@@ -170,8 +174,8 @@ int Coord_Query_Statement::check_area_block
   // end the western or eastern side have an odd state.
   int state = 0;
   vector< uint64 >::const_iterator it(area_block.coors.begin());
-  uint32 lat(shifted_lat(ll_index, *it));
-  int32 lon(lon_(ll_index, *it));
+  uint32 lat = shifted_lat(ll_index, *it);
+  int32 lon = lon_(ll_index, *it);
   while (++it != area_block.coors.end())
   {
     uint32 last_lat = lat;
@@ -252,13 +256,13 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   set< Uint31_Index > req;
   map< uint32, int > areas_inside;
   set< uint32 > areas_on_border;
-  req.insert(Uint31_Index(Node::ll_upper(lat, lon) & 0xffffff00));
+  req.insert(Uint31_Index(Node::ll_upper_(lat, lon) & 0xffffff00));
 
   uint32 ilat((lat + 91.0)*10000000+0.5);
   int32 ilon(lon*10000000 + (lon > 0 ? 0.5 : -0.5));
   
   stopwatch.stop(Stopwatch::NO_DISK);
-  
+
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
       (rman.get_area_transaction()->data_index(area_settings().AREA_BLOCKS));
   for (Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
