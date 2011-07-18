@@ -70,7 +70,7 @@ fi
 # dd if=/tmp/nodes_csv_result.1 of=/tmp/nodes_csv_result.2 bs=1 skip=56
 
 REQUEST_METHOD=
-/home/roland/osm-3s/build/bin/osm3s_query --quiet --no-mime <$BASEDIR/req >$BASEDIR/result
+../bin/osm3s_query --quiet --no-mime <$BASEDIR/req >$BASEDIR/result
 
 if [[ $ARG_2 == "backspace" ]]; then
 {
