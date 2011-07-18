@@ -159,11 +159,11 @@ pair< uint32, uint32 > Make_Area_Statement::create_area_blocks
 	    for (vector< Aligned_Segment >::const_iterator
 	        it(aligned_segments.begin()); it != aligned_segments.end(); ++it)
 	    {
-	      cur_polyline.push_back((((uint64)it->ll_upper_ ^ 0x40000000)<<32)
+	      cur_polyline.push_back((((uint64)it->ll_upper_)<<32)
 	        | it->ll_lower_a);
-	      cur_polyline.push_back((((uint64)it->ll_upper_ ^ 0x40000000)<<32)
+	      cur_polyline.push_back((((uint64)it->ll_upper_)<<32)
 	        | it->ll_lower_b);
-	      areas[it->ll_upper_ ^ 0x40000000].push_back(Area_Block(id, cur_polyline));
+	      areas[it->ll_upper_].push_back(Area_Block(id, cur_polyline));
 	      cur_polyline.clear();
 	    }
 	  }
@@ -394,7 +394,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   }
 
   add_segment_blocks(area_blocks, pivot_id);
-
+  
   set< uint32 > used_indices;
   for (map< Uint31_Index, vector< Area_Block > >::const_iterator
       it(area_blocks.begin()); it != area_blocks.end(); ++it)

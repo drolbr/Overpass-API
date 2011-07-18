@@ -6,6 +6,10 @@
 #include <set>
 #include <vector>
 
+#include <iomanip>
+#include <iostream>
+#include "type_node.h"
+
 #include "basic_types.h"
 
 using namespace std;
@@ -158,6 +162,8 @@ struct Area
       to_lon |= (((uint64)0x1<<(30-2*i))&(to>>32))<<(i+1);
       to_lon |= (((uint64)0x1<<(30-2*i))&to)>>(15-i);
     }
+    from_lon ^= 0x80000000;
+    to_lon ^= 0x80000000;
     
     if ((from_lon < -900000000) && (to_lon > 900000000))
     {
