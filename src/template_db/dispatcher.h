@@ -159,6 +159,9 @@ class Dispatcher_Client
     /** Let another instance running in the standby_loop output its status. */
     void output_status();
     
+    /** Let another instance running in the standby_loop output its status. */
+    void purge(uint32 pid);
+    
     const string& get_db_dir() { return db_dir; }
     const string& get_shadow_name() { return shadow_name; }
     

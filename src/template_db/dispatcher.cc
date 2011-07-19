@@ -203,6 +203,7 @@ void Dispatcher::read_finished(pid_t pid)
   for (vector< Idx_Footprints >::iterator it(map_footprints.begin());
       it != map_footprints.end(); ++it)
     it->unregister_pid(pid);
+  processes_reading_idx.erase(pid);
 }
 
 void Dispatcher::copy_shadows_to_mains()
@@ -352,7 +353,13 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         break;
       }
       else if (command == OUTPUT_STATUS)
+      {
 	output_status();
+	// Set command state to zero.
+	*(uint32*)dispatcher_shm_ptr = 0;
+	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) =
+	    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
+      }
       else if (command == WRITE_START)
 	write_start(client_pid);
       else if (command == WRITE_ROLLBACK)
@@ -610,7 +617,7 @@ void Dispatcher_Client::request_read_and_idx()
     //sleep for a tenth of a second
     struct timeval timeout_;
     timeout_.tv_sec = 0;
-    timeout_.tv_usec = 100*1000;
+    timeout_.tv_usec = 10*1000;
     select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
     
     if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
@@ -633,7 +640,7 @@ void Dispatcher_Client::read_idx_finished()
     //sleep for a tenth of a second
     struct timeval timeout_;
     timeout_.tv_sec = 0;
-    timeout_.tv_usec = 100*1000;
+    timeout_.tv_usec = 10*1000;
     select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
     
     if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
@@ -656,7 +663,29 @@ void Dispatcher_Client::read_finished()
     //sleep for a tenth of a second
     struct timeval timeout_;
     timeout_.tv_sec = 0;
-    timeout_.tv_usec = 100*1000;
+    timeout_.tv_usec = 10*1000;
+    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+    
+    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+      return;
+  }
+}
+
+void Dispatcher_Client::purge(uint32 pid)
+{
+  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+  while (true)
+  {
+    *(uint32*)dispatcher_shm_ptr = Dispatcher::READ_FINISHED;
+    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
+    
+    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+      return;
+    
+    //sleep for a tenth of a second
+    struct timeval timeout_;
+    timeout_.tv_sec = 0;
+    timeout_.tv_usec = 10*1000;
     select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
     
     if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
