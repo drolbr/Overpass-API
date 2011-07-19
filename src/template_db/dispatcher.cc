@@ -351,6 +351,8 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       
         break;
       }
+      else if (command == OUTPUT_STATUS)
+	output_status();
       else if (command == WRITE_START)
 	write_start(client_pid);
       else if (command == WRITE_ROLLBACK)
@@ -388,6 +390,41 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     // Set command state to zero.
     *(uint32*)dispatcher_shm_ptr = 0;
   }
+}
+
+void Dispatcher::output_status()
+{
+  try
+  {
+    ofstream status((shadow_name + ".status").c_str());
+    for (set< pid_t >::const_iterator it = processes_reading_idx.begin();
+        it != processes_reading_idx.end(); ++it)
+      status<<REQUEST_READ_AND_IDX<<' '<<*it<<'\n';
+    set< pid_t > collected_pids;
+    for (vector< Idx_Footprints >::iterator it(data_footprints.begin());
+        it != data_footprints.end(); ++it)
+    {
+      vector< Idx_Footprints::pid_t > registered_processes = it->registered_processes();
+      for (vector< Idx_Footprints::pid_t >::const_iterator it = registered_processes.begin();
+          it != registered_processes.end(); ++it)
+	collected_pids.insert(*it);
+    }
+    for (vector< Idx_Footprints >::iterator it(map_footprints.begin());
+        it != map_footprints.end(); ++it)
+    {
+      vector< Idx_Footprints::pid_t > registered_processes = it->registered_processes();
+      for (vector< Idx_Footprints::pid_t >::const_iterator it = registered_processes.begin();
+          it != registered_processes.end(); ++it)
+	collected_pids.insert(*it);
+    }
+    for (set< pid_t >::const_iterator it = collected_pids.begin();
+    it != collected_pids.end(); ++it)
+    {
+      if (processes_reading_idx.find(*it) == processes_reading_idx.end())
+	status<<READ_IDX_FINISHED<<' '<<*it<<'\n';
+    }
+  }
+  catch (...) {}
 }
 
 void Idx_Footprints::set_current_footprint(const vector< bool >& footprint)
@@ -634,6 +671,29 @@ void Dispatcher_Client::terminate()
   while (true)
   {
     *(uint32*)dispatcher_shm_ptr = Dispatcher::TERMINATE;
+    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
+    
+    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+      return;
+    
+    //sleep for a hundreth of a second
+    struct timeval timeout_;
+    timeout_.tv_sec = 0;
+    timeout_.tv_usec = 10*1000;
+    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+    
+    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+      return;
+  }
+}
+
+void Dispatcher_Client::output_status()
+{
+  uint32 pid = getpid();
+  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+  while (true)
+  {
+    *(uint32*)dispatcher_shm_ptr = Dispatcher::OUTPUT_STATUS;
     *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
     
     if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)

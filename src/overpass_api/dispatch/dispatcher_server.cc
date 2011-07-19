@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
 {
   // read command line arguments
   string db_dir;
-  bool osm_base(false), areas(false), terminate(false);
+  bool osm_base(false), areas(false), terminate(false), status(false);
   
   int argpos(1);
   while (argpos < argc)
@@ -28,6 +28,8 @@ int main(int argc, char* argv[])
       areas = true;
     else if (!(strncmp(argv[argpos], "--terminate", 11)))
       terminate = true;  
+    else if (!(strncmp(argv[argpos], "--status", 8)))
+      status = true;
     ++argpos;
   }
   
@@ -38,6 +40,21 @@ int main(int argc, char* argv[])
       Dispatcher_Client client
           (areas ? area_settings().shared_name : osm_base_settings().shared_name);
       client.terminate();
+    }
+    catch (File_Error e)
+    {
+      cout<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+    return 0;
+  }
+
+  if (status)
+  {
+    try
+    {
+      Dispatcher_Client client
+          (areas ? area_settings().shared_name : osm_base_settings().shared_name);
+      client.output_status();
     }
     catch (File_Error e)
     {

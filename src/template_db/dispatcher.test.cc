@@ -685,6 +685,7 @@ int main(int argc, char* args[])
       blocks.put(0, 1);
     }
     dispatcher.request_read_and_idx(640);
+    dispatcher.output_status();
     dispatcher.write_commit();
     cout<<"Write lock is "
         <<(file_exists("test-shadow.lock") ? "still set.\n" : "released.\n");
@@ -709,6 +710,7 @@ int main(int argc, char* args[])
     dispatcher.write_start(480);
     dispatcher.request_read_and_idx(640);
     dispatcher.read_idx_finished(640);
+    dispatcher.output_status();
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
@@ -758,6 +760,7 @@ int main(int argc, char* args[])
     dispatcher.read_idx_finished(640);
     put_elem(0, 1, test_file);
     dispatcher.read_finished(640);
+    dispatcher.output_status();
     dispatcher.write_commit();
     dispatcher.write_start(481);
     dispatcher.request_read_and_idx(641);

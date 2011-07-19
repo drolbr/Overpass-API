@@ -78,7 +78,7 @@ class Dispatcher
         database. Can be safely called multiple times for the same process. */
     void read_idx_finished(pid_t pid);
     
-    /** Unregisteres a reading process. */
+    /** Unregisters a reading process. */
     void read_finished(pid_t pid);
     
     /** Other operations: -------------------------------------------------- */
@@ -86,8 +86,13 @@ class Dispatcher
     /** Waits for input for the given amount of time. If milliseconds if zero,
         it remains in standby forever. */
     void standby_loop(uint64 milliseconds);
+
+    /** Outputs the status of the processes registered with the dispatcher
+        into shadow_name.status. */
+    void output_status();
     
     static const uint32 TERMINATE = 1;
+    static const uint32 OUTPUT_STATUS = 2;
     static const uint32 WRITE_START = 101;
     static const uint32 WRITE_ROLLBACK = 102;
     static const uint32 WRITE_COMMIT = 103;
@@ -148,8 +153,11 @@ class Dispatcher_Client
     
     /** Other operations: -------------------------------------------------- */
     
-    /** Terminate another instance running in the standby_loop */
+    /** Terminate another instance running in the standby_loop. */
     void terminate();
+
+    /** Let another instance running in the standby_loop output its status. */
+    void output_status();
     
     const string& get_db_dir() { return db_dir; }
     const string& get_shadow_name() { return shadow_name; }
