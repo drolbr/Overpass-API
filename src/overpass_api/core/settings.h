@@ -35,6 +35,7 @@ struct Osm_Base_Settings
   File_Properties* RELATION_TAGS_GLOBAL;
 
   string shared_name;
+  uint max_num_processes;
   
   Osm_Base_Settings();
 };
@@ -47,6 +48,7 @@ struct Area_Settings
   File_Properties* AREA_TAGS_GLOBAL;
   
   string shared_name;
+  uint max_num_processes;
   
   Area_Settings();
 };

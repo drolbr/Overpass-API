@@ -73,12 +73,14 @@ Dispatcher::Dispatcher
      string index_share_name,
      string shadow_name_,
      string db_dir_,
+     uint max_num_reading_processes_,
      const vector< File_Properties* >& controlled_files_)
     : controlled_files(controlled_files_),
       data_footprints(controlled_files_.size()),
       map_footprints(controlled_files_.size()),
       shadow_name(shadow_name_), db_dir(db_dir_),
-      dispatcher_share_name(dispatcher_share_name_)
+      dispatcher_share_name(dispatcher_share_name_),
+      max_num_reading_processes(max_num_reading_processes_)
 {
   // get the absolute pathname of the current directory
   if (db_dir.substr(0, 1) != "/")
@@ -196,6 +198,7 @@ void Dispatcher::request_read_and_idx(pid_t pid)
       it != map_footprints.end(); ++it)
     it->register_pid(pid);
   processes_reading_idx.insert(pid);
+  processes_reading.insert(pid);
 }
 
 void Dispatcher::read_idx_finished(pid_t pid)
@@ -212,6 +215,7 @@ void Dispatcher::read_finished(pid_t pid)
       it != map_footprints.end(); ++it)
     it->unregister_pid(pid);
   processes_reading_idx.erase(pid);
+  processes_reading.erase(pid);
 }
 
 void Dispatcher::copy_shadows_to_mains()
@@ -374,6 +378,8 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	write_commit();
       else if (command == REQUEST_READ_AND_IDX)
       {
+	if (processes_reading.size() >= max_num_reading_processes)
+	  continue;
 	request_read_and_idx(client_pid);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
@@ -612,7 +618,8 @@ void Dispatcher_Client::request_read_and_idx()
 {
   uint32 pid = getpid();
   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
-  while (true)
+  uint counter = 0;
+  while (++counter <= 300)
   {
     *(uint32*)dispatcher_shm_ptr = Dispatcher::REQUEST_READ_AND_IDX;
     *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
@@ -629,13 +636,15 @@ void Dispatcher_Client::request_read_and_idx()
     if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
       return;
   }
+  throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::request_read_and_idx::timeout");
 }
 
 void Dispatcher_Client::read_idx_finished()
 {
   uint32 pid = getpid();
   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
-  while (true)
+  uint counter = 0;
+  while (++counter <= 300)
   {
     *(uint32*)dispatcher_shm_ptr = Dispatcher::READ_IDX_FINISHED;
     *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
@@ -652,13 +661,15 @@ void Dispatcher_Client::read_idx_finished()
     if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
       return;
   }
+  throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::read_idx_finished::timeout");
 }
 
 void Dispatcher_Client::read_finished()
 {
   uint32 pid = getpid();
   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
-  while (true)
+  uint counter = 0;
+  while (++counter <= 300)
   {
     *(uint32*)dispatcher_shm_ptr = Dispatcher::READ_FINISHED;
     *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
@@ -675,6 +686,7 @@ void Dispatcher_Client::read_finished()
     if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
       return;
   }
+  throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::read_finished::timeout");
 }
 
 void Dispatcher_Client::purge(uint32 pid)

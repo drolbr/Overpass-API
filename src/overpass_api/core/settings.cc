@@ -104,7 +104,8 @@ Osm_Base_Settings::Osm_Base_Settings()
   RELATION_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
       ("relation_tags_global", 2*1024*1024, 0)),
       
-  shared_name(basic_settings().shared_name_base + "_osm_base")
+  shared_name(basic_settings().shared_name_base + "_osm_base"),
+  max_num_processes(5)
 {}
 
 const Osm_Base_Settings& osm_base_settings()
@@ -125,7 +126,8 @@ Area_Settings::Area_Settings()
   AREA_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
       ("area_tags_global", 512*1024, 0)),
       
-  shared_name(basic_settings().shared_name_base + "_areas")
+  shared_name(basic_settings().shared_name_base + "_areas"),
+  max_num_processes(5)
 {}
 
 const Area_Settings& area_settings()

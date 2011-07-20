@@ -48,6 +48,7 @@ class Dispatcher
 	       string index_share_name,
 	       string shadow_name,
 	       string db_dir,
+	       uint max_num_reading_processes,
 	       const vector< File_Properties* >& controlled_files);
 	       
     ~Dispatcher();
@@ -105,9 +106,11 @@ class Dispatcher
     vector< Idx_Footprints > data_footprints;
     vector< Idx_Footprints > map_footprints;
     set< pid_t > processes_reading_idx;
+    set< pid_t > processes_reading;
     string shadow_name, db_dir;
     string dispatcher_share_name;
     int dispatcher_shm_fd;
+    uint max_num_reading_processes;
     volatile uint8* dispatcher_shm_ptr;
     
     void copy_shadows_to_mains();

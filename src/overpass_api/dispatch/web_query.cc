@@ -58,11 +58,12 @@ int main(int argc, char *argv[])
   catch(File_Error e)
   {
     ostringstream temp;
-    if (e.origin != "Dispatcher_Stub::Dispatcher_Stub::1")
-    {
+    if (e.origin.substr(e.origin.size()-9) == "::timeout")
+      temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin
+          <<". Probably the server is overcrowded.\n";
+    else
       temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin;
-      error_output.runtime_error(temp.str());
-    }
+    error_output.runtime_error(temp.str());
   }
   catch(Resource_Error e)
   {

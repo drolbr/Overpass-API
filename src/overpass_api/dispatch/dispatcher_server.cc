@@ -113,8 +113,9 @@ int main(int argc, char* argv[])
   {
     Dispatcher dispatcher
         (areas ? area_settings().shared_name : osm_base_settings().shared_name,
-         "", db_dir + (areas ? "areas_shadow" : "osm_base_shadow"),
-         db_dir, files_to_manage);
+         "", db_dir + (areas ? "areas_shadow" : "osm_base_shadow"), db_dir,
+	 areas ? area_settings().max_num_processes : osm_base_settings().max_num_processes,
+	 files_to_manage);
     dispatcher.standby_loop(0);
   }
   catch (File_Error e)
