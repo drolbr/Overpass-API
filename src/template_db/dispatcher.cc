@@ -138,6 +138,14 @@ void Dispatcher::write_start(pid_t pid)
   }
   catch (File_Error e)
   {
+    if ((e.error_number == EEXIST) && (e.filename == (shadow_name + ".lock")))
+    {
+      pid_t locked_pid;
+      ifstream lock((shadow_name + ".lock").c_str());
+      lock>>locked_pid;
+      if (locked_pid == pid)
+	return;
+    }
     cerr<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     return;
   }
@@ -343,10 +351,10 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     {
       uint32 command = *(uint32*)dispatcher_shm_ptr;
       uint32 client_pid = *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
+      // Set command state to zero.
+      *(uint32*)dispatcher_shm_ptr = 0;
       if (command == TERMINATE)
       {
-	// Set command state to zero.
-	*(uint32*)dispatcher_shm_ptr = 0;
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) =
 	    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
       
@@ -355,8 +363,6 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       else if (command == OUTPUT_STATUS)
       {
 	output_status();
-	// Set command state to zero.
-	*(uint32*)dispatcher_shm_ptr = 0;
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) =
 	    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
       }
@@ -392,10 +398,10 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       timeout_.tv_sec = 3;
       timeout_.tv_usec = 0;
       select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+  
+      // Set command state to zero.
+      *(uint32*)dispatcher_shm_ptr = 0;
     }
-    
-    // Set command state to zero.
-    *(uint32*)dispatcher_shm_ptr = 0;
   }
 }
 
