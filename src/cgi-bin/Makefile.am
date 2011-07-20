@@ -1,6 +1,6 @@
 cgibindir = ${prefix}/cgi-bin
 cgibin_PROGRAMS = interpreter
-dist_cgibin_SCRIPTS = draw-line sketch-line sketch-options sketch-route
+dist_cgibin_SCRIPTS = draw-line sketch-line sketch-options sketch-route xapi
 
 escape_xml_cc = ../expat/escape_xml.cc
 expat_cc = ../expat/expat_justparse_interface.cc
