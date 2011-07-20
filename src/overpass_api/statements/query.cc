@@ -63,6 +63,7 @@ void Query_Statement::add_statement(Statement* statement, string text)
   Area_Query_Statement* area(dynamic_cast<Area_Query_Statement*>(statement));
   Around_Statement* around(dynamic_cast<Around_Statement*>(statement));
   Bbox_Query_Statement* bbox(dynamic_cast<Bbox_Query_Statement*>(statement));
+  Item_Statement* item(dynamic_cast<Item_Statement*>(statement));
   if (area != 0)
   {
     if (type != QUERY_NODE)
@@ -121,6 +122,26 @@ void Query_Statement::add_statement(Statement* statement, string text)
       return;
     }
     bbox_restriction = bbox;
+    return;
+  }
+  else if (item != 0)
+  {
+    if ((type != QUERY_WAY) && (type != QUERY_RELATION))
+    {
+      ostringstream temp;
+      temp<<"A bbox-query as substatement is only allowed for queries of type \"way\" "
+            "or \"relation\".";
+      add_static_error(temp.str());
+      return;
+    }
+    if (item_restriction != 0)
+    {
+      ostringstream temp;
+      temp<<"A query statement may contain at most one item as substatement.";
+      add_static_error(temp.str());
+      return;
+    }
+    item_restriction = item;
     return;
   }
   else
@@ -556,42 +577,63 @@ void Query_Statement::execute(Resource_Manager& rman)
     vector< uint32 >* ids(collect_ids
         (key_values, *osm_base_settings().WAY_TAGS_GLOBAL,
 	 Stopwatch::WAY_TAGS_GLOBAL, rman));
-	 
-    set< Uint31_Index > obj_req;
+
+    if (item_restriction)
     {
-      stopwatch.stop(Stopwatch::NO_DISK);
-      Random_File< Uint31_Index > random
-          (rman.get_transaction()->random_index(osm_base_settings().WAYS));
-      for (vector< uint32 >::const_iterator it(ids->begin());
-          it != ids->end(); ++it)
-        obj_req.insert(random.get(*it));
-      stopwatch.stop(Stopwatch::WAYS_MAP);
-    }
-    
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-    
-    stopwatch.stop(Stopwatch::NO_DISK);
-    uint ways_count = 0;
-    Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-        (rman.get_transaction()->data_index(osm_base_settings().WAYS));
-    for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
-        it(ways_db.discrete_begin(obj_req.begin(), obj_req.end()));
-        !(it == ways_db.discrete_end()); ++it)
-    {
-      if (++ways_count >= 64*1024)
-      {
-	ways_count = 0;
-	rman.health_check(*this);
-      }
+      map< Uint31_Index, vector< Way_Skeleton > >& from
+          (rman.sets()[item_restriction->get_result_name()].ways);
+      map< Uint31_Index, vector< Way_Skeleton > > into;
       
-      if (binary_search(ids->begin(), ids->end(), it.object().id))
-	ways[it.index()].push_back(it.object());
-    }    
-    stopwatch.add(Stopwatch::WAYS, ways_db.read_count());
-    stopwatch.stop(Stopwatch::WAYS);
+      for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator iit = from.begin();
+          iit != from.end(); ++iit)
+      {
+	for (vector< Way_Skeleton >::const_iterator cit = iit->second.begin();
+	    cit != iit->second.end(); ++cit)
+	{
+	  if (binary_search(ids->begin(), ids->end(), cit->id))
+	    into[iit->first].push_back(*cit);
+	}
+      }
+      into.swap(rman.sets()[output].ways);
+    }
+    else
+    {
+      set< Uint31_Index > obj_req;
+      {
+        stopwatch.stop(Stopwatch::NO_DISK);
+        Random_File< Uint31_Index > random
+            (rman.get_transaction()->random_index(osm_base_settings().WAYS));
+        for (vector< uint32 >::const_iterator it(ids->begin());
+            it != ids->end(); ++it)
+          obj_req.insert(random.get(*it));
+        stopwatch.stop(Stopwatch::WAYS_MAP);
+      }
+    
+      nodes.clear();
+      ways.clear();
+      relations.clear();
+      areas.clear();
+      
+      stopwatch.stop(Stopwatch::NO_DISK);
+      uint ways_count = 0;
+      Block_Backend< Uint31_Index, Way_Skeleton > ways_db
+          (rman.get_transaction()->data_index(osm_base_settings().WAYS));
+      for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
+          it(ways_db.discrete_begin(obj_req.begin(), obj_req.end()));
+          !(it == ways_db.discrete_end()); ++it)
+      {
+	if (++ways_count >= 64*1024)
+	{
+	  ways_count = 0;
+	  rman.health_check(*this);
+	}
+	
+        if (binary_search(ids->begin(), ids->end(), it.object().id))
+	  ways[it.index()].push_back(it.object());
+      }    
+      stopwatch.add(Stopwatch::WAYS, ways_db.read_count());
+      stopwatch.stop(Stopwatch::WAYS);
+    }
   }
   else if (type == QUERY_RELATION)
   {
@@ -599,41 +641,62 @@ void Query_Statement::execute(Resource_Manager& rman)
         (key_values, *osm_base_settings().RELATION_TAGS_GLOBAL,
 	 Stopwatch::RELATION_TAGS_GLOBAL, rman));
     
-    set< Uint31_Index > obj_req;
+    if (item_restriction)
     {
-      stopwatch.stop(Stopwatch::NO_DISK);
-      Random_File< Uint31_Index > random
-          (rman.get_transaction()->random_index(osm_base_settings().RELATIONS));
-      for (vector< uint32 >::const_iterator it(ids->begin());
-          it != ids->end(); ++it)
-      obj_req.insert(random.get(*it));
-      stopwatch.stop(Stopwatch::RELATIONS_MAP);
-    }
-    
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-    
-    stopwatch.stop(Stopwatch::NO_DISK);
-    uint relations_count = 0;
-    Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-        (rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
-    for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
-        it(relations_db.discrete_begin(obj_req.begin(), obj_req.end()));
-        !(it == relations_db.discrete_end()); ++it)
-    {
-      if (++relations_count >= 64*1024)
-      {
-	relations_count = 0;
-	rman.health_check(*this);
-      }
+      map< Uint31_Index, vector< Relation_Skeleton > >& from
+          (rman.sets()[item_restriction->get_result_name()].relations);
+      map< Uint31_Index, vector< Relation_Skeleton > > into;
       
-      if (binary_search(ids->begin(), ids->end(), it.object().id))
-	relations[it.index()].push_back(it.object());
-    }    
-    stopwatch.add(Stopwatch::RELATIONS, relations_db.read_count());
-    stopwatch.stop(Stopwatch::RELATIONS);
+      for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator iit = from.begin();
+          iit != from.end(); ++iit)
+      {
+	for (vector< Relation_Skeleton >::const_iterator cit = iit->second.begin();
+	    cit != iit->second.end(); ++cit)
+	{
+	  if (binary_search(ids->begin(), ids->end(), cit->id))
+	    into[iit->first].push_back(*cit);
+	}
+      }
+      into.swap(rman.sets()[output].relations);
+    }
+    else
+    {
+      set< Uint31_Index > obj_req;
+      {
+        stopwatch.stop(Stopwatch::NO_DISK);
+        Random_File< Uint31_Index > random
+            (rman.get_transaction()->random_index(osm_base_settings().RELATIONS));
+        for (vector< uint32 >::const_iterator it(ids->begin());
+            it != ids->end(); ++it)
+        obj_req.insert(random.get(*it));
+        stopwatch.stop(Stopwatch::RELATIONS_MAP);
+      }
+    
+      nodes.clear();
+      ways.clear();
+      relations.clear();
+      areas.clear();
+      
+      stopwatch.stop(Stopwatch::NO_DISK);
+      uint relations_count = 0;
+      Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
+          (rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
+      for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
+          it(relations_db.discrete_begin(obj_req.begin(), obj_req.end()));
+          !(it == relations_db.discrete_end()); ++it)
+      {
+	if (++relations_count >= 64*1024)
+	{
+	  relations_count = 0;
+	  rman.health_check(*this);
+	}
+	
+	if (binary_search(ids->begin(), ids->end(), it.object().id))
+	  relations[it.index()].push_back(it.object());
+      }    
+      stopwatch.add(Stopwatch::RELATIONS, relations_db.read_count());
+      stopwatch.stop(Stopwatch::RELATIONS);
+    }
   }
   
   stopwatch.report(get_name());  

@@ -10,10 +10,10 @@
 
 using namespace std;
 
-void perform_print(Resource_Manager& rman)
+void perform_print(Resource_Manager& rman, string from = "_")
 {
   Print_Statement stmt(0);
-  const char* attributes[] = { "order", "id", 0 };
+  const char* attributes[] = { "order", "id", "from", from.c_str(), 0 };
   stmt.set_attributes(attributes);
   stmt.execute(rman);
 }
@@ -71,6 +71,43 @@ void perform_query
       stmt1.execute(rman);
     }
     perform_print(rman);
+    if (type == "node")
+      return;
+    {
+      Query_Statement stmt1(0);
+      const char* attributes[] = { "type", type.c_str(), "into", "a", 0 };
+      stmt1.set_attributes(attributes);
+      
+      Has_Kv_Statement stmt2(0);
+      const char* attributes_kv1[] = { "k", key1.c_str(), "v", value1.c_str(), 0 };
+      stmt2.set_attributes(attributes_kv1);
+      stmt1.add_statement(&stmt2, "");
+      
+      stmt1.execute(rman);
+    }
+    {
+      Query_Statement stmt1(0);
+      const char* attributes[] = { "type", type.c_str(), "into", "b", 0 };
+      stmt1.set_attributes(attributes);
+      
+      Item_Statement stmt2(0);
+      const char* attributes_kv1[] = { "from", "a", 0 };
+      stmt2.set_attributes(attributes_kv1);
+      stmt1.add_statement(&stmt2, "");
+      
+      Has_Kv_Statement stmt3(0);
+      const char* attributes_kv2[] = { "k", key2.c_str(), "v", value2.c_str(), 0 };
+      stmt3.set_attributes(attributes_kv2);
+      stmt1.add_statement(&stmt3, "");
+      
+      stmt1.execute(rman);
+    }
+    if ((rman.sets()["_"].ways != rman.sets()["b"].ways) ||
+        (rman.sets()["_"].relations != rman.sets()["b"].relations))
+    {
+      cout<<"Sets \"_\" and \"b\" differ:\n";
+      perform_print(rman, "b");
+    }
   }
   catch (File_Error e)
   {
