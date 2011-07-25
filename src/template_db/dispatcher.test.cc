@@ -1026,7 +1026,7 @@ int main(int argc, char* args[])
 	    <<shadow_name<<" already exists.\n";
 	return 0;
       }
-      dispatcher_client.write_start();      
+      dispatcher_client.write_start();
       if (!file_exists(dispatcher_client.get_shadow_name() + ".lock"))
       {
 	cout<<"Failed after write_start().\n";

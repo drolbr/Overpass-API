@@ -118,6 +118,7 @@ class Dispatcher
     void remove_shadows();
     void set_current_footprints();
     void write_index_of_empty_blocks();
+    void check_and_purge();
 };
 
 class Dispatcher_Client

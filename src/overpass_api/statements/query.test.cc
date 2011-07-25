@@ -91,7 +91,7 @@ void perform_query
       stmt1.set_attributes(attributes);
       
       Item_Statement stmt2(0);
-      const char* attributes_kv1[] = { "from", "a", 0 };
+      const char* attributes_kv1[] = { "set", "a", 0 };
       stmt2.set_attributes(attributes_kv1);
       stmt1.add_statement(&stmt2, "");
       

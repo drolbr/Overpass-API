@@ -594,7 +594,10 @@ void Query_Statement::execute(Resource_Manager& rman)
 	    into[iit->first].push_back(*cit);
 	}
       }
+      rman.sets()[output].nodes.clear();
       into.swap(rman.sets()[output].ways);
+      rman.sets()[output].relations.clear();
+      rman.sets()[output].areas.clear();
     }
     else
     {
@@ -657,7 +660,10 @@ void Query_Statement::execute(Resource_Manager& rman)
 	    into[iit->first].push_back(*cit);
 	}
       }
+      rman.sets()[output].nodes.clear();
+      rman.sets()[output].ways.clear();
       into.swap(rman.sets()[output].relations);
+      rman.sets()[output].areas.clear();
     }
     else
     {

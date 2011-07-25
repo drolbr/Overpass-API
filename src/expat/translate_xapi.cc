@@ -48,8 +48,233 @@ InputAnalizer::InputAnalizer(const string& input_) : bbox_found(false)
       key_value.back().first = input.substr(0, input.find('='));
       input = input.substr(input.find('=')+1);
       key_value.back().second = input.substr(0, input.find(']'));
+      if (key_value.back().second == "*")
+	key_value.back().second="";
       input = input.substr(input.find(']')+1);
     }
+  }
+}
+
+void process_nodes(string input, bool is_star = false)
+{
+  InputAnalizer analizer(input);
+  if (analizer.key_value.size() == 0)
+  {
+    if (analizer.bbox_found)
+      cout<<"  <bbox-query s=\""<<analizer.south<<"\" n=\""<<analizer.north<<"\" w=\""
+          <<analizer.west<<"\" e=\""<<analizer.east<<"\"/>\n";
+    if (!is_star)
+      cout<<"<print/>\n";
+  }
+  else if (analizer.key_value.size() == 1)
+  {
+    string key = analizer.key_value.front().first;
+    string buf = analizer.key_value.front().second;
+    analizer.key_value.clear();
+    while (buf.find('|') != string::npos)
+    {
+      analizer.key_value.push_back(make_pair(key, buf.substr(0, buf.find('|'))));
+      buf = buf.substr(buf.find('|') + 1);
+    }
+    analizer.key_value.push_back(make_pair(key, buf));
+    cout<<"<union>\n";
+    for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
+        it != analizer.key_value.end(); ++it)
+    {
+      cout<<"  <query type=\"node\">\n";
+      if (analizer.bbox_found)
+	cout<<"    <bbox-query s=\""<<analizer.south<<"\" n=\""<<analizer.north<<"\" w=\""
+	    <<analizer.west<<"\" e=\""<<analizer.east<<"\"/>\n";
+      cout<<"    <has-kv k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n"
+      "  </query>\n";
+    }
+    cout<<"</union>\n";
+    if (!is_star)
+      cout<<"<print/>\n";
+  }
+  else
+  {
+    cout<<"<query type=\"node\">\n";
+    if (analizer.bbox_found)
+      cout<<"  <bbox-query s=\""<<analizer.south<<"\" n=\""<<analizer.north<<"\" w=\""
+          <<analizer.west<<"\" e=\""<<analizer.east<<"\"/>\n";
+    for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
+        it != analizer.key_value.end(); ++it)
+    {
+      if (it->second == "*")
+	cout<<"  <has-kv k=\""<<it->first<<"\"/>\n";
+      else
+	cout<<"  <has-kv k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n";
+    }
+    cout<<"</query>";
+    if (!is_star)
+      cout<<"<print/>\n";
+  }
+}
+
+void process_ways(string input, bool is_star = false)
+{
+  InputAnalizer analizer(input);
+  if (analizer.key_value.size() == 0)
+  {
+    if (is_star)
+    {
+      if (analizer.bbox_found)
+	cout<<"<union>\n"
+	      "  <item/>\n"
+	      "  <recurse type=\"node-way\"/>\n"
+	      "  <recurse type=\"way-node\"/>\n"
+	      "</union>\n"
+	      "<print/>\n";
+    }
+    else
+    {
+      if (analizer.bbox_found)
+        cout<<"<bbox-query s=\""<<analizer.south<<"\" n=\""<<analizer.north<<"\" w=\""
+            <<analizer.west<<"\" e=\""<<analizer.east<<"\"/>\n"
+              "<recurse type=\"node-way\"/>\n"
+	      "<union>\n"
+	      "  <item/>\n"
+	      "  <recurse type=\"way-node\"/>\n"
+	      "</union>\n"
+	      "<print/>\n";
+    }
+  }
+  else if (analizer.key_value.size() == 1)
+  {
+    string key = analizer.key_value.front().first;
+    string buf = analizer.key_value.front().second;
+    analizer.key_value.clear();
+    while (buf.find('|') != string::npos)
+    {
+      analizer.key_value.push_back(make_pair(key, buf.substr(0, buf.find('|'))));
+      buf = buf.substr(buf.find('|') + 1);
+    }
+    analizer.key_value.push_back(make_pair(key, buf));
+    
+    if (analizer.bbox_found)
+      cout<<"<bbox-query s=\""<<analizer.south<<"\" n=\""<<analizer.north<<"\" w=\""
+          <<analizer.west<<"\" e=\""<<analizer.east<<"\" into=\"locals\"/>\n"
+            "<recurse type=\"node-way\" from=\"locals\" into=\"locals\"/>\n";	  
+    cout<<"<union into=\"way_result\">\n";
+    for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
+        it != analizer.key_value.end(); ++it)
+    {
+      cout<<"  <query type=\"way\" into=\"way_result\">\n";
+      if (analizer.bbox_found)
+	cout<<"    <item set=\"locals\"/>\n";
+      cout<<"    <has-kv k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n"
+            "  </query>\n";
+    }
+    cout<<"</union>\n"
+          "<union>\n";
+    if (is_star)
+      cout<<"  <item/>\n";
+    cout<<"  <item set=\"way_result\"/>\n"
+	  "  <recurse type=\"way-node\" from=\"way_result\"/>\n"
+	  "</union>\n"
+	  "<print/>\n";
+  }
+  else
+  {
+    if (analizer.bbox_found)
+      cout<<"<bbox-query s=\""<<analizer.south<<"\" n=\""<<analizer.north<<"\" w=\""
+          <<analizer.west<<"\" e=\""<<analizer.east<<"\" into=\"locals\"/>\n"
+            "<recurse type=\"node-way\" from=\"locals\" into=\"locals\"/>\n";	  
+    cout<<"<query type=\"way\" into=\"way_result\">\n";
+    if (analizer.bbox_found)
+      cout<<"  <item set=\"locals\"/>\n";
+    for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
+        it != analizer.key_value.end(); ++it)
+    {
+      if (it->second == "*")
+	cout<<"  <has-kv k=\""<<it->first<<"\"/>\n";
+      else
+	cout<<"  <has-kv k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n";
+    }
+    cout<<"</query>\n"
+          "<union>\n";
+    if (is_star)
+      cout<<"  <item/>\n";
+    cout<<"  <item set=\"way_result\"/>\n"
+	  "  <recurse type=\"way-node\" from=\"way_result\"/>\n"
+	  "</union>\n"
+	  "<print/>\n";
+  }
+}
+
+void process_relations(string input)
+{
+  InputAnalizer analizer(input);
+  if (analizer.key_value.size() == 0)
+  {
+    if (analizer.bbox_found)
+      cout<<"  <bbox-query s=\""<<analizer.south<<"\" n=\""<<analizer.north<<"\" w=\""
+          <<analizer.west<<"\" e=\""<<analizer.east<<"\"/>\n";
+    cout<<"<recurse type=\"node-relation\" into=\"rels\"/>\n"
+          "<recurse type=\"node-way\"/>\n"
+          "<union>\n"
+          "  <item set=\"rels\"/>\n"
+          "  <recurse type=\"way-relation\"/>\n"
+          "</union>\n"
+          "<print/>\n";
+  }
+  else if (analizer.key_value.size() == 1)
+  {
+    string key = analizer.key_value.front().first;
+    string buf = analizer.key_value.front().second;
+    analizer.key_value.clear();
+    while (buf.find('|') != string::npos)
+    {
+      analizer.key_value.push_back(make_pair(key, buf.substr(0, buf.find('|'))));
+      buf = buf.substr(buf.find('|') + 1);
+    }
+    analizer.key_value.push_back(make_pair(key, buf));
+    
+    if (analizer.bbox_found)
+      cout<<"<bbox-query s=\""<<analizer.south<<"\" n=\""<<analizer.north<<"\" w=\""
+          <<analizer.west<<"\" e=\""<<analizer.east<<"\"/>\n"
+            "<recurse type=\"node-relation\" into=\"rels\"/>\n"
+            "<recurse type=\"node-way\"/>\n"
+            "<union into=\"locals\">\n"
+            "  <item set=\"rels\"/>\n"
+            "  <recurse type=\"way-relation\"/>\n"
+            "</union>\n";	  
+    cout<<"<union>\n";
+    for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
+    it != analizer.key_value.end(); ++it)
+    {
+      cout<<"  <query type=\"relation\">\n";
+      if (analizer.bbox_found)
+	cout<<"  <item set=\"locals\"/>\n";
+      cout<<"    <has-kv k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n"
+            "  </query>\n";
+    }
+    cout<<"</union>\n<print/>\n";
+  }
+  else
+  {
+    if (analizer.bbox_found)
+      cout<<"<bbox-query s=\""<<analizer.south<<"\" n=\""<<analizer.north<<"\" w=\""
+          <<analizer.west<<"\" e=\""<<analizer.east<<"\"/>\n"
+            "<recurse type=\"node-relation\" into=\"rels\"/>\n"
+            "<recurse type=\"node-way\"/>\n"
+            "<union>\n"
+            "  <item set=\"rels\"/>\n"
+            "  <recurse type=\"way-relation\"/>\n"
+            "</union>\n";	  
+    cout<<"<query type=\"relation\">\n";
+    if (analizer.bbox_found)
+      cout<<"  <item/>\n";
+    for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
+        it != analizer.key_value.end(); ++it)
+    {
+      if (it->second == "*")
+	cout<<"  <has-kv k=\""<<it->first<<"\"/>\n";
+      else
+	cout<<"  <has-kv k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n";
+    }
+    cout<<"</query>\n<print/>\n";
   }
 }
 
@@ -62,50 +287,9 @@ int main(int argc, char* argv[])
   
   if (input.substr(0, 4) == "node")
   {
-    input = input.substr(4);
     try
     {
-      InputAnalizer analizer(input);
-      if (analizer.key_value.size() == 1)
-      {
-	string key = analizer.key_value.front().first;
-	string buf = analizer.key_value.front().second;
-	analizer.key_value.clear();
-	while (buf.find('|') != string::npos)
-	{
-	  analizer.key_value.push_back(make_pair(key, buf.substr(0, buf.find('|'))));
-	  buf = buf.substr(buf.find('|') + 1);
-	}
-	analizer.key_value.push_back(make_pair(key, buf));
-	cout<<"<union>\n";
-	for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
-	    it != analizer.key_value.end(); ++it)
-	{
-	  cout<<"  <query type=\"node\">\n";
-	  if (analizer.bbox_found)
-	    cout<<"    <bbox-query s=\""<<analizer.south<<"\" n=\""<<analizer.north<<"\" w=\""
-	        <<analizer.west<<"\" e=\""<<analizer.east<<"\"/>\n";
-	  cout<<"    <has-kv k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n"
-	        "  </query>\n";
-	}
-	cout<<"</union>\n<print/>\n";
-      }
-      else
-      {
-	cout<<"<query type=\"node\">\n";
-	if (analizer.bbox_found)
-	  cout<<"  <bbox-query s=\""<<analizer.south<<"\" n=\""<<analizer.north<<"\" w=\""
-	      <<analizer.west<<"\" e=\""<<analizer.east<<"\"/>\n";
-	for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
-	    it != analizer.key_value.end(); ++it)
-	{
-	  if (it->second == "*")
-	    cout<<"  <has-kv k=\""<<it->first<<"\"/>\n";
-	  else
-	    cout<<"  <has-kv k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n";
-	}
-	cout<<"</query>\n<print/>\n";
-      }
+      process_nodes(input.substr(4));
     }
     catch (string& s)
     {
@@ -114,46 +298,58 @@ int main(int argc, char* argv[])
   }
   else if (input.substr(0, 3) == "way")
   {
-    cout<<"<query type=\"way\"/> (not yet implemented)\n";
-    return 1;
-  }
-  else if (input.substr(0, 8) == "relation")
-  {
-    cout<<"<query type=\"relation\"/> (not yet implemented)\n";
-    return 1;
-  }
-  else if (input.substr(0, 1) == "*")
-  {
-    input = input.substr(1);
     try
     {
-      InputAnalizer analizer(input);
-      if (analizer.key_value.size() > 0)
-      {
-	cout<<"<query type=\"all\"/> (not yet implemented)\n";
-	return 1;
-      }
-      else
-      {
-	if (!analizer.bbox_found)
-	{
-	  cout<<"Please specify a bounding box\n";
-	  return 1;
-	}
-	cout<<"<union>\n"
-              "  <bbox-query s=\""<<analizer.south<<"\" n=\""<<analizer.north<<"\" w=\""
-	    <<analizer.west<<"\" e=\""<<analizer.east<<"\"/>\n"
-	      "  <recurse type=\"node-relation\" into=\"rels\"/>\n"
-	      "  <recurse type=\"node-way\"/>\n"
-	      "  <recurse type=\"way-relation\"/>\n"
-	      "</union>\n"
-	      "<print/>\n";
-      }
+      process_ways(input.substr(3));
     }
     catch (string& s)
     {
       return 1;
     }
+  }
+  else if (input.substr(0, 8) == "relation")
+  {
+    try
+    {
+      process_relations(input.substr(8));
+    }
+    catch (string& s)
+    {
+      return 1;
+    }
+  }
+  else if (input.substr(0, 1) == "*")
+  {
+    try
+    {
+      process_nodes(input.substr(1), true);
+      process_ways(input.substr(1), true);
+      process_relations(input.substr(1));
+    }
+    catch (string& s)
+    {
+      return 1;
+    }
+  }
+  else if (input.substr(0, 9) == "map?bbox=")
+  {
+    string south, north, east, west;
+    input = input.substr(9);
+    west = input.substr(0, input.find(','));
+    input = input.substr(input.find(',')+1);
+    south = input.substr(0, input.find(','));
+    input = input.substr(input.find(',')+1);
+    east = input.substr(0, input.find(','));
+    input = input.substr(input.find(',')+1);
+    north = input;
+    cout<<"<union>\n"
+          "  <bbox-query s=\""<<south<<"\" n=\""<<north<<"\" w=\""
+            <<west<<"\" e=\""<<east<<"\"/>\n"
+          "  <recurse type=\"node-relation\" into=\"rels\"/>\n"
+          "  <recurse type=\"node-way\"/>\n"
+          "  <recurse type=\"way-relation\"/>\n"
+          "</union>\n"
+          "<print/>\n";
   }
   else
   {

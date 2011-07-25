@@ -14,6 +14,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 
@@ -371,7 +372,10 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
       }
       else if (command == WRITE_START)
+      {
+	check_and_purge();
 	write_start(client_pid);
+      }
       else if (command == WRITE_ROLLBACK)
 	write_rollback();
       else if (command == WRITE_COMMIT)
@@ -379,7 +383,10 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       else if (command == REQUEST_READ_AND_IDX)
       {
 	if (processes_reading.size() >= max_num_reading_processes)
+	{
+	  check_and_purge();
 	  continue;
+	}
 	request_read_and_idx(client_pid);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
@@ -481,6 +488,36 @@ vector< bool > Idx_Footprints::total_footprint() const
       result[i] = result[i] | (it->second)[i];
   }
   return result;
+}
+
+void Dispatcher::check_and_purge()
+{
+  set< pid_t > collected_pids;
+  for (vector< Idx_Footprints >::iterator it(data_footprints.begin());
+      it != data_footprints.end(); ++it)
+  {
+    vector< Idx_Footprints::pid_t > registered_processes = it->registered_processes();
+    for (vector< Idx_Footprints::pid_t >::const_iterator it = registered_processes.begin();
+        it != registered_processes.end(); ++it)
+      collected_pids.insert(*it);
+  }
+  for (vector< Idx_Footprints >::iterator it(map_footprints.begin());
+      it != map_footprints.end(); ++it)
+  {
+    vector< Idx_Footprints::pid_t > registered_processes = it->registered_processes();
+    for (vector< Idx_Footprints::pid_t >::const_iterator it = registered_processes.begin();
+        it != registered_processes.end(); ++it)
+      collected_pids.insert(*it);
+  }
+  
+  for (set< pid_t >::const_iterator it = collected_pids.begin();
+      it != collected_pids.end(); ++it)
+  {
+    ostringstream file_name("");
+    file_name<<"/proc/"<<*it<<"/stat";
+    if (!file_exists(file_name.str()))
+      read_finished(*it);
+  }
 }
 
 Dispatcher_Client::Dispatcher_Client
