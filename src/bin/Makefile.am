@@ -23,7 +23,7 @@ osm3s_query_LDADD = -lexpat -lrt
 dispatcher_SOURCES = ../template_db/dispatcher.cc ../overpass_api/core/settings.cc ../overpass_api/dispatch/dispatcher_server.cc
 dispatcher_LDADD = -lrt
 
-sketch_route_svg_SOURCES = ${expat_cc} ${escape_xml_cc} ../pt_diagrams/sketch-route-svg.cc
+sketch_route_svg_SOURCES = ${expat_cc} ${escape_xml_cc} ../pt_diagrams/sketch-route-svg.cc ../pt_diagrams/processed_input.cc
 sketch_route_svg_LDADD = -lexpat
 draw_route_svg_SOURCES = ${expat_cc} ${escape_xml_cc} ../pt_diagrams/read_input.cc ../pt_diagrams/topographic.cc
 draw_route_svg_LDADD = -lexpat

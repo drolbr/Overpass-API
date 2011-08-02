@@ -510,7 +510,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	  double lat(Node::lat(it.index().val(), it.object().ll_lower));
 	  double lon(Node::lon(it.index().val(), it.object().ll_lower));
 	  if (around_restriction->is_inside(lat, lon))
-            nodes[it.index()].push_back(it.object());
+	    nodes[it.index()].push_back(it.object());
 	}
       }
       stopwatch.add(Stopwatch::NODES, nodes_db.read_count());

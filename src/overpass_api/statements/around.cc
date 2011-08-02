@@ -18,6 +18,8 @@ double great_circle_dist(double lat1, double lon1, double lat2, double lon2)
       sin(lat1/90.0*acos(0))*sin(lat2/90.0*acos(0)) +
       cos(lat1/90.0*acos(0))*sin(lon1/90.0*acos(0))*cos(lat2/90.0*acos(0))*sin(lon2/90.0*acos(0)) +
       cos(lat1/90.0*acos(0))*cos(lon1/90.0*acos(0))*cos(lat2/90.0*acos(0))*cos(lon2/90.0*acos(0));
+  if (scalar_prod > 1)
+    scalar_prod = 1;
   return acos(scalar_prod)*(20*1000*1000/acos(0));
 }
 
