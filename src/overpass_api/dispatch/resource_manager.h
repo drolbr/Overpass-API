@@ -66,7 +66,7 @@ private:
   Transaction* area_transaction;
   Area_Updater* area_updater_;
   int start_time;
-  int last_ping_time;
+  uint32 last_ping_time;
   uint32 max_allowed_time;
   uint64 max_allowed_space;
 };
