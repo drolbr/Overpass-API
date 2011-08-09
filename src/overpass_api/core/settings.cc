@@ -138,6 +138,26 @@ const Area_Settings& area_settings()
 
 //-----------------------------------------------------------------------------
 
+Meta_Settings::Meta_Settings()
+:
+  USER_DATA(new OSM_File_Properties< Uint32_Index >
+      ("user_data", 512*1024, 0)),
+  NODES_META(new OSM_File_Properties< Uint31_Index >
+      ("nodes_meta", 512*1024, 0)),
+  WAYS_META(new OSM_File_Properties< Uint31_Index >
+      ("ways_meta", 512*1024, 0)),
+  RELATIONS_META(new OSM_File_Properties< Uint31_Index >
+      ("relations_meta", 512*1024, 0))
+{}
+
+const Meta_Settings& meta_settings()
+{
+  static Meta_Settings obj;
+  return obj;
+}
+
+//-----------------------------------------------------------------------------
+
 void show_mem_status()
 {
   ostringstream proc_file_name_("");

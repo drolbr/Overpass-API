@@ -33,7 +33,7 @@ struct Osm_Base_Settings
   File_Properties* RELATION_ROLES;
   File_Properties* RELATION_TAGS_LOCAL;
   File_Properties* RELATION_TAGS_GLOBAL;
-
+  
   string shared_name;
   uint max_num_processes;
   
@@ -53,9 +53,20 @@ struct Area_Settings
   Area_Settings();
 };
 
+struct Meta_Settings
+{
+  File_Properties* USER_DATA;
+  File_Properties* NODES_META;
+  File_Properties* WAYS_META;
+  File_Properties* RELATIONS_META;
+  
+  Meta_Settings();
+};
+
 Basic_Settings& basic_settings();
 const Osm_Base_Settings& osm_base_settings();
 const Area_Settings& area_settings();
+const Meta_Settings& meta_settings();
 
 void show_mem_status();
 

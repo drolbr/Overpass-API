@@ -301,4 +301,109 @@ class Osm_Backend_Callback
     virtual void parser_succeeded() = 0;
 };
 
+struct User_Data
+{
+  uint32 id;
+  string name;
+  
+  User_Data() : id(0) {}
+  
+  User_Data(void* data)
+  {
+    id = *(uint32*)data;
+    name = string(((int8*)data + 6), *(uint16*)((int8*)data + 4));
+  }
+  
+  uint32 size_of() const
+  {
+    return 6 + name.length();
+  }
+  
+  static uint32 size_of(void* data)
+  {
+    return 6 + *(uint16*)((int8*)data + 4);
+  }
+  
+  void to_data(void* data) const
+  {
+    *(uint32*)data = id;
+    *(uint16*)((int8*)data + 4) = name.length();
+    memcpy(((int8*)data + 6), name.data(), name.length());
+  }
+  
+  bool operator<(const User_Data& a) const
+  {
+    return (id < a.id);
+  }
+  
+  bool operator==(const User_Data& a) const
+  {
+    return (id == a.id);
+  }
+};
+
+struct OSM_Element_Metadata
+{
+  OSM_Element_Metadata() : user_id(0) {}
+  
+  uint32 version;
+  uint64 timestamp;
+  uint32 changeset;
+  uint32 user_id;
+  string user_name;
+};
+
+
+struct OSM_Element_Metadata_Skeleton
+{
+  uint32 ref;
+  uint32 version;
+  uint64 timestamp;
+  uint32 changeset;
+  uint32 user_id;
+  
+  OSM_Element_Metadata_Skeleton() : ref(0), version(0), timestamp(0), changeset(0), user_id(0) {}
+  
+  OSM_Element_Metadata_Skeleton(uint32 ref_)
+    : ref(ref_), version(0), timestamp(0), changeset(0), user_id(0) {}
+  
+  OSM_Element_Metadata_Skeleton(void* data)
+  {
+    ref = *(uint32*)data;
+    version = *(uint32*)((int8*)data + 4);
+    timestamp = (*(uint64*)((int8*)data + 8) & 0xffffffffffull);
+    changeset = *(uint32*)((int8*)data + 13);
+    user_id = *(uint32*)((int8*)data + 17);
+  }
+  
+  uint32 size_of() const
+  {
+    return 21;
+  }
+  
+  static uint32 size_of(void* data)
+  {
+    return 21;
+  }
+  
+  void to_data(void* data) const
+  {
+    *(uint32*)data = ref;
+    *(uint32*)((int8*)data + 4) = version;
+    *(uint64*)((int8*)data + 8) = timestamp;
+    *(uint32*)((int8*)data + 13) = changeset;
+    *(uint32*)((int8*)data + 17) = user_id;
+  }
+  
+  bool operator<(const OSM_Element_Metadata_Skeleton& a) const
+  {
+    return (ref < a.ref);
+  }
+  
+  bool operator==(const OSM_Element_Metadata_Skeleton& a) const
+  {
+    return (ref == a.ref);
+  }
+};
+
 #endif

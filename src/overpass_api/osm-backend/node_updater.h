@@ -27,7 +27,8 @@ struct Node_Updater
   
   void set_node
       (uint32 id, uint32 lat, uint32 lon,
-       const vector< pair< string, string > >& tags)
+       const vector< pair< string, string > >& tags,
+       const OSM_Element_Metadata* meta = 0)
   {
     ids_to_modify.push_back(make_pair(id, true));
     
@@ -37,12 +38,34 @@ struct Node_Updater
     node.ll_lower_ = Node::ll_lower(lat, lon);
     node.tags = tags;
     nodes_to_insert.push_back(node);
+    if (meta)
+    {
+      user_by_id[meta->user_id] = meta->user_name;
+      OSM_Element_Metadata_Skeleton meta_skel;
+      meta_skel.ref= node.id;
+      meta_skel.version = meta->version;
+      meta_skel.changeset = meta->changeset;
+      meta_skel.timestamp = meta->timestamp;
+      meta_skel.user_id = meta->user_id;
+      nodes_meta_to_insert.push_back(make_pair(meta_skel, node.ll_upper));
+    }
   }
   
-  void set_node(const Node& node)
+  void set_node(const Node& node, const OSM_Element_Metadata* meta = 0)
   {
     ids_to_modify.push_back(make_pair(node.id, true));
     nodes_to_insert.push_back(node);
+    if (meta)
+    {
+      user_by_id[meta->user_id] = meta->user_name;
+      OSM_Element_Metadata_Skeleton meta_skel;
+      meta_skel.ref= node.id;
+      meta_skel.version = meta->version;
+      meta_skel.changeset = meta->changeset;
+      meta_skel.timestamp = meta->timestamp;
+      meta_skel.user_id = meta->user_id;
+      nodes_meta_to_insert.push_back(make_pair(meta_skel, node.ll_upper));
+    }
   }
   
   void update(Osm_Backend_Callback* callback, bool partial = false);
@@ -64,6 +87,9 @@ private:
   static Pair_Equal_Id pair_equal_id;
   vector< pair< uint32, uint32 > > moved_nodes;
   string db_dir;
+
+  vector< pair< OSM_Element_Metadata_Skeleton, uint32 > > nodes_meta_to_insert;
+  map< uint32, string > user_by_id;
   
   void update_node_ids(map< uint32, vector< uint32 > >& to_delete);
   

@@ -41,6 +41,7 @@ namespace
   const int IN_RELATIONS = 3;
   int modify_mode = 0;
   const int DELETE = 1;
+  OSM_Element_Metadata* meta;
   
   uint32 osm_element_count;
   Osm_Backend_Callback* callback;
@@ -113,17 +114,37 @@ namespace
   {
     if (state == 0)
       state = IN_NODES;
+    if (meta)
+      *meta = OSM_Element_Metadata();
     
     unsigned int id(0);
     double lat(100.0), lon(200.0);
     for (unsigned int i(0); attr[i]; i += 2)
     {
       if (!strcmp(attr[i], "id"))
-	id = atoi(attr[i+1]);
+	id = atoll(attr[i+1]);
       if (!strcmp(attr[i], "lat"))
 	lat = atof(attr[i+1]);
       if (!strcmp(attr[i], "lon"))
 	lon = atof(attr[i+1]);
+      if (meta && (!strcmp(attr[i], "version")))
+	meta->version = atoi(attr[i+1]);
+      if (meta && (!strcmp(attr[i], "timestamp")))
+      {
+	meta->timestamp = 0;
+	meta->timestamp |= (atoll(attr[i+1])<<26); //year
+	meta->timestamp |= (atoi(attr[i+1]+5)<<22); //month
+	meta->timestamp |= (atoi(attr[i+1]+8)<<17); //day
+	meta->timestamp |= (atoi(attr[i+1]+11)<<12); //hour
+	meta->timestamp |= (atoi(attr[i+1]+14)<<6); //minute
+	meta->timestamp |= atoi(attr[i+1]+17); //second
+      }
+      if (meta && (!strcmp(attr[i], "changeset")))
+	meta->changeset = atoi(attr[i+1]);
+      if (meta && (!strcmp(attr[i], "user")))
+	meta->user_name = attr[i+1];
+      if (meta && (!strcmp(attr[i], "uid")))
+	meta->user_id = atoi(attr[i+1]);
     }
     current_node = Node(id, lat, lon);
   }
@@ -134,7 +155,7 @@ namespace
     if (modify_mode == DELETE)
       node_updater->set_id_deleted(current_node.id);
     else
-      node_updater->set_node(current_node);
+      node_updater->set_node(current_node, meta);
     if (osm_element_count >= 4*1024*1024)
     {
       callback->node_elapsed(current_node.id);
@@ -406,6 +427,7 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
   way_updater = way_updater_;
   relation_updater = relation_updater_;
   callback = callback_;
+  meta = new OSM_Element_Metadata();
 }
 
 Osm_Updater::Osm_Updater
@@ -427,6 +449,7 @@ Osm_Updater::Osm_Updater
   way_updater = way_updater_;
   relation_updater = relation_updater_;
   callback = callback_;
+  meta = new OSM_Element_Metadata();
 }
 
 void Osm_Updater::flush()

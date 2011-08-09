@@ -20,6 +20,8 @@ const unsigned int PRINT_COORDS = 2;
 const unsigned int PRINT_NDS = 4;
 const unsigned int PRINT_MEMBERS = 8;
 const unsigned int PRINT_TAGS = 16;
+const unsigned int PRINT_VERSION = 32;
+const unsigned int PRINT_META = 64;
 
 const unsigned int ORDER_BY_ID = 1;
 const unsigned int ORDER_BY_QUADTILE = 2;
@@ -49,12 +51,14 @@ void Print_Statement::set_attributes(const char **attr)
     mode = PRINT_IDS|PRINT_COORDS|PRINT_NDS|PRINT_MEMBERS;
   else if (attributes["mode"] == "body")
     mode = PRINT_IDS|PRINT_COORDS|PRINT_NDS|PRINT_MEMBERS|PRINT_TAGS;
+  else if (attributes["mode"] == "meta")
+    mode = PRINT_IDS|PRINT_COORDS|PRINT_NDS|PRINT_MEMBERS|PRINT_TAGS|PRINT_VERSION|PRINT_META;
   else
   {
     mode = 0;
     ostringstream temp;
     temp<<"For the attribute \"mode\" of the element \"print\""
-	<<" the only allowed values are \"ids_only\", \"skeleton\" or \"body\".";
+	<<" the only allowed values are \"ids_only\", \"skeleton\", \"body\", or \"meta\".";
     add_static_error(temp.str());
   }
   if (attributes["order"] == "id")
@@ -125,6 +129,16 @@ void generate_ids_by_coarse
   }
 }
 
+template< class TIndex, class TObject >
+void generate_index_query
+  (set< TIndex >& indices,
+   const map< TIndex, vector< TObject > >& items)
+{
+  for (typename map< TIndex, vector< TObject > >::const_iterator
+      it(items.begin()); it != items.end(); ++it)
+    indices.insert(it->first);
+}
+
 void collect_tags
   (map< uint32, vector< pair< string, string > > >& tags_by_id,
    const Block_Backend< Tag_Index_Local, Uint32_Index >& items_db,
@@ -164,9 +178,42 @@ void collect_tags_framed
   }
 }
 
+void print_meta(const OSM_Element_Metadata_Skeleton& meta,
+		const map< uint32, string >& users)
+{
+  uint32 year = (meta.timestamp)>>26;
+  uint32 month = ((meta.timestamp)>>22) & 0xf;
+  uint32 day = ((meta.timestamp)>>17) & 0x1f;
+  uint32 hour = ((meta.timestamp)>>12) & 0x1f;
+  uint32 minute = ((meta.timestamp)>>6) & 0x3f;
+  uint32 second = meta.timestamp & 0x3f;
+  string timestamp("    -  -  T  :  :  Z");
+  timestamp[0] = (year / 1000) % 10 + '0';
+  timestamp[1] = (year / 100) % 10 + '0';
+  timestamp[2] = (year / 10) % 10 + '0';
+  timestamp[3] = year % 10 + '0';
+  timestamp[5] = (month / 10) % 10 + '0';
+  timestamp[6] = month % 10 + '0';
+  timestamp[8] = (day / 10) % 10 + '0';
+  timestamp[9] = day % 10 + '0';
+  timestamp[11] = (hour / 10) % 10 + '0';
+  timestamp[12] = hour % 10 + '0';
+  timestamp[14] = (minute / 10) % 10 + '0';
+  timestamp[15] = minute % 10 + '0';
+  timestamp[17] = (second / 10) % 10 + '0';
+  timestamp[18] = second % 10 + '0';
+  cout<<" version=\""<<meta.version<<"\" timestamp=\""<<timestamp
+      <<"\" changeset=\""<<meta.changeset<<"\" uid=\""<<meta.user_id<<"\"";
+  map< uint32, string >::const_iterator it = users.find(meta.user_id);
+  if (it != users.end())
+    cout<<" user=\""<<it->second<<"\"";
+}
+
 void print_item(uint32 ll_upper, const Node_Skeleton& skel, uint32 mode,
 		Transaction& transaction,
-		const vector< pair< string, string > >* tags = 0)
+		const vector< pair< string, string > >* tags = 0,
+		const OSM_Element_Metadata_Skeleton* meta = 0,
+		const map< uint32, string >* users = 0)
 {
   cout<<"  <node";
   if (mode & PRINT_IDS)
@@ -178,6 +225,8 @@ void print_item(uint32 ll_upper, const Node_Skeleton& skel, uint32 mode,
     cout<<"/>\n";
   else
   {
+    if (meta)
+      print_meta(*meta, *users);
     cout<<">\n";
     for (vector< pair< string, string > >::const_iterator it(tags->begin());
         it != tags->end(); ++it)
@@ -189,7 +238,9 @@ void print_item(uint32 ll_upper, const Node_Skeleton& skel, uint32 mode,
 
 void print_item(uint32 ll_upper, const Way_Skeleton& skel, uint32 mode,
 		Transaction& transaction,
-		const vector< pair< string, string > >* tags = 0)
+		const vector< pair< string, string > >* tags = 0,
+		const OSM_Element_Metadata_Skeleton* meta = 0,
+		const map< uint32, string >* users = 0)
 {
   cout<<"  <way";
   if (mode & PRINT_IDS)
@@ -217,7 +268,9 @@ void print_item(uint32 ll_upper, const Way_Skeleton& skel, uint32 mode,
 
 void print_item(uint32 ll_upper, const Relation_Skeleton& skel, uint32 mode,
 		Transaction& transaction,
-		const vector< pair< string, string > >* tags = 0)
+		const vector< pair< string, string > >* tags = 0,
+		const OSM_Element_Metadata_Skeleton* meta = 0,
+		const map< uint32, string >* users = 0)
 { 
   static map< uint32, string > roles;
   if (roles.empty())
@@ -258,7 +311,9 @@ void print_item(uint32 ll_upper, const Relation_Skeleton& skel, uint32 mode,
 
 void print_item(uint32 ll_upper, const Area_Skeleton& skel, uint32 mode,
 		Transaction& transaction,
-		const vector< pair< string, string > >* tags = 0)
+		const vector< pair< string, string > >* tags = 0,
+		const OSM_Element_Metadata_Skeleton* meta = 0,
+		const map< uint32, string >* users = 0)
 {
   cout<<"  <area";
   if (mode & PRINT_IDS)
@@ -294,10 +349,107 @@ void quadtile
 };
 
 template< class TIndex, class TObject >
+struct Meta_Printer
+{
+  public:
+    Meta_Printer(const map< TIndex, vector< TObject > >& items,
+        Transaction& transaction, const File_Properties* meta_file_prop = 0)
+      : meta_db(0), db_it(0), current_index(0)
+    {
+      if (!meta_file_prop)
+	return;
+      
+      generate_index_query(used_indices, items);
+      meta_db = new Block_Backend< TIndex, OSM_Element_Metadata_Skeleton >
+          (transaction.data_index(meta_file_prop));
+	  
+      reset();
+      
+      Block_Backend< Uint32_Index, User_Data > user_db
+          (transaction.data_index(meta_settings().USER_DATA));
+      for (Block_Backend< Uint32_Index, User_Data >::Flat_Iterator it = user_db.flat_begin();
+          !(it == user_db.flat_end()); ++it)
+	users_[it.object().id] = it.object().name;
+    }
+    
+    void reset()
+    {
+      if (!meta_db)
+	return;
+
+      if (db_it)
+	delete db_it;
+      if (current_index)
+      {
+	delete current_index;
+        current_index = 0;
+      }
+      
+      db_it = new typename Block_Backend< TIndex, OSM_Element_Metadata_Skeleton >
+          ::Discrete_Iterator(meta_db->discrete_begin(used_indices.begin(), used_indices.end()));
+	  
+      if (!(*db_it == meta_db->discrete_end()))
+	current_index = new TIndex(db_it->index());
+      while (!(*db_it == meta_db->discrete_end()) && (*current_index == db_it->index()))
+      {
+	current_objects.insert(db_it->object());
+	++(*db_it);
+      }      
+    }
+    
+    const OSM_Element_Metadata_Skeleton* get(const TIndex& index, uint32 ref)
+    {
+      if (!meta_db)
+	return 0;
+      
+      if ((current_index) && (*current_index < index))
+      {
+	while (!(*db_it == meta_db->discrete_end()) && (db_it->index() < index))
+	  ++(*db_it);
+	if (!(*db_it == meta_db->discrete_end()))
+	  *current_index = db_it->index();
+	while (!(*db_it == meta_db->discrete_end()) && (*current_index == db_it->index()))
+	{
+	  current_objects.insert(db_it->object());
+	  ++(*db_it);
+	}
+      }
+      
+      set< OSM_Element_Metadata_Skeleton >::iterator it
+          = current_objects.find(OSM_Element_Metadata_Skeleton(ref));
+      if (it != current_objects.end())
+	return &*it;
+      else
+	return 0;
+    }
+    
+    const map< uint32, string >& users() const { return users_; }
+    
+    ~Meta_Printer()
+    {
+      if (meta_db)
+      {
+	delete db_it;
+	delete meta_db;
+      }
+    }
+  
+  private:
+    set< TIndex > used_indices;
+    Block_Backend< TIndex, OSM_Element_Metadata_Skeleton >* meta_db;
+    typename Block_Backend< TIndex, OSM_Element_Metadata_Skeleton >::Discrete_Iterator*
+      db_it;
+    TIndex* current_index;
+    set< OSM_Element_Metadata_Skeleton > current_objects;
+    map< uint32, string > users_;
+};
+
+template< class TIndex, class TObject >
 void Print_Statement::tags_quadtile
     (const map< TIndex, vector< TObject > >& items,
      const File_Properties& file_prop, uint32 mode, uint32 stopwatch_account,
-     Resource_Manager& rman, Transaction& transaction)
+     Resource_Manager& rman, Transaction& transaction,
+     const File_Properties* meta_file_prop)
 {
   //generate set of relevant coarse indices
   set< TIndex > coarse_indices;
@@ -307,6 +459,9 @@ void Print_Statement::tags_quadtile
   //formulate range query
   set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
   formulate_range_query(range_set, coarse_indices);
+  
+  // formulate meta query if meta data shall be printed
+  Meta_Printer< TIndex, TObject > meta_printer(items, transaction, meta_file_prop);
   
   // iterate over the result
   stopwatch.stop(Stopwatch::NO_DISK);
@@ -339,8 +494,8 @@ void Print_Statement::tags_quadtile
     {
       for (typename vector< TObject >::const_iterator it2(item_it->second.begin());
           it2 != item_it->second.end(); ++it2)
-        print_item(item_it->first.val(), *it2, mode, transaction,
-		   &(tags_by_id[it2->id]));
+        print_item(item_it->first.val(), *it2, mode, transaction, &(tags_by_id[it2->id]),
+		   meta_printer.get(item_it->first, it2->id), &(meta_printer.users()));
       ++item_it;
     }
   }
@@ -380,11 +535,34 @@ void by_id
 };
 
 template< class TIndex, class TObject >
+void collect_metadata(set< OSM_Element_Metadata_Skeleton >& metadata,
+		      const map< TIndex, vector< TObject > >& items,
+		      uint32 lower_id_bound, uint32 upper_id_bound,
+		      Meta_Printer< TIndex, TObject>& meta_printer)
+{
+  for (typename map< TIndex, vector< TObject > >::const_iterator
+      it(items.begin()); it != items.end(); ++it)
+  {
+    for (typename vector< TObject >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+    {
+      if ((it2->id >= lower_id_bound) && (it2->id < upper_id_bound))
+      {
+	const OSM_Element_Metadata_Skeleton* meta = meta_printer.get(it->first, it2->id);
+	if (meta)
+	  metadata.insert(*meta);
+      }
+    }
+  }
+}
+
+template< class TIndex, class TObject >
 void Print_Statement::tags_by_id
   (const map< TIndex, vector< TObject > >& items,
    const File_Properties& file_prop,
    uint32 FLUSH_SIZE, uint32 mode, uint32 stopwatch_account,
-   Resource_Manager& rman, Transaction& transaction)
+   Resource_Manager& rman, Transaction& transaction,
+   const File_Properties* meta_file_prop)
 {
   // order relevant elements by id
   vector< pair< const TObject*, uint32 > > items_by_id;
@@ -411,6 +589,9 @@ void Print_Statement::tags_by_id
       it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
     sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
   
+  // formulate meta query if meta data shall be printed
+  Meta_Printer< TIndex, TObject > meta_printer(items, transaction, meta_file_prop);
+  
   // iterate over the result
   stopwatch.stop(Stopwatch::NO_DISK);
   Block_Backend< Tag_Index_Local, Uint32_Index > items_db
@@ -436,11 +617,21 @@ void Print_Statement::tags_by_id
       collect_tags_framed(tags_by_id, items_db, tag_it, ids_by_coarse, it->val(),
 			  lower_id_bound, upper_id_bound);
     
+    // collect metadata if required
+    set< OSM_Element_Metadata_Skeleton > metadata;
+    collect_metadata(metadata, items, lower_id_bound, upper_id_bound, meta_printer);
+    meta_printer.reset();
+
     // print the result
     for (uint32 i(id_pos);
          (i < id_pos + FLUSH_SIZE) && (i < items_by_id.size()); ++i)
+    {
+      set< OSM_Element_Metadata_Skeleton >::const_iterator meta_it
+          = metadata.find(OSM_Element_Metadata_Skeleton(items_by_id[i].first->id));
       print_item(items_by_id[i].second, *(items_by_id[i].first), mode,
-		 transaction, &(tags_by_id[items_by_id[i].first->id]));
+		 transaction, &(tags_by_id[items_by_id[i].first->id]),
+		 meta_it != metadata.end() ? &*meta_it : 0, &(meta_printer.users()));
+    }
   }
   stopwatch.add(stopwatch_account, items_db.read_count());
   stopwatch.stop(stopwatch_account);
@@ -461,7 +652,8 @@ void Print_Statement::execute(Resource_Manager& rman)
     {
       tags_by_id(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
 		 NODE_FLUSH_SIZE, mode, Stopwatch::NODE_TAGS_LOCAL, rman,
-		 *rman.get_transaction());
+		 *rman.get_transaction(),
+		 (mode & PRINT_META) ? meta_settings().NODES_META : 0);
       tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		 WAY_FLUSH_SIZE, mode, Stopwatch::WAY_TAGS_LOCAL, rman,
 		 *rman.get_transaction());
@@ -479,7 +671,8 @@ void Print_Statement::execute(Resource_Manager& rman)
     {
       tags_quadtile(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
 		    mode, Stopwatch::NODE_TAGS_LOCAL, rman,
-		    *rman.get_transaction());
+		    *rman.get_transaction(),
+		    (mode & PRINT_META) ? meta_settings().NODES_META : 0);
       tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		    mode, Stopwatch::WAY_TAGS_LOCAL, rman,
 		    *rman.get_transaction());
