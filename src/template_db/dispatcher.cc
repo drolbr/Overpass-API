@@ -29,16 +29,15 @@ void copy_file(const string& source, const string& dest)
     return;
   
   Raw_File source_file(source, O_RDONLY, S_666, "Dispatcher:1");
-  uint64 size = lseek64(source_file.fd(), 0, SEEK_END);
-  lseek64(source_file.fd(), 0, SEEK_SET);
-  Raw_File dest_file(dest, O_RDWR|O_CREAT, S_666, "Dispatcher:2");
-  int foo = ftruncate64(dest_file.fd(), size); foo = 0;
+  uint64 size = source_file.size("Dispatcher:2");
+  Raw_File dest_file(dest, O_RDWR|O_CREAT, S_666, "Dispatcher:3");
+  dest_file.resize(size, "Dispatcher:4");
   
   Void_Pointer< uint8 > buf(64*1024);
   while (size > 0)
   {
     size = read(source_file.fd(), buf.ptr, 64*1024);
-    size = write(dest_file.fd(), buf.ptr, size);
+    dest_file.write(buf.ptr, size, "Dispatcher:5");
   }
 }
 
@@ -302,7 +301,7 @@ void write_to_index_empty_file(const vector< bool >& footprint, string filename)
 
   Raw_File file(filename, O_RDWR|O_CREAT|O_TRUNC,
 		S_666, "write_to_index_empty_file:1");
-  int foo(write(file.fd(), buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr))); foo = 0;
+  file.write((uint8*)buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr), "Dispatcher:6");
 }
 
 void Dispatcher::write_index_of_empty_blocks()

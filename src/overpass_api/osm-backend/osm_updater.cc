@@ -178,12 +178,34 @@ namespace
       osm_element_count = 0;
       state = IN_WAYS;
     }
+    else if (state == 0)
+      state = IN_WAYS;
+    if (meta)
+      *meta = OSM_Element_Metadata();
     
     unsigned int id(0);
     for (unsigned int i(0); attr[i]; i += 2)
     {
       if (!strcmp(attr[i], "id"))
 	id = atoi(attr[i+1]);
+      if (meta && (!strcmp(attr[i], "version")))
+	meta->version = atoi(attr[i+1]);
+      if (meta && (!strcmp(attr[i], "timestamp")))
+      {
+	meta->timestamp = 0;
+	meta->timestamp |= (atoll(attr[i+1])<<26); //year
+	meta->timestamp |= (atoi(attr[i+1]+5)<<22); //month
+	meta->timestamp |= (atoi(attr[i+1]+8)<<17); //day
+	meta->timestamp |= (atoi(attr[i+1]+11)<<12); //hour
+	meta->timestamp |= (atoi(attr[i+1]+14)<<6); //minute
+	meta->timestamp |= atoi(attr[i+1]+17); //second
+      }
+      if (meta && (!strcmp(attr[i], "changeset")))
+	meta->changeset = atoi(attr[i+1]);
+      if (meta && (!strcmp(attr[i], "user")))
+	meta->user_name = attr[i+1];
+      if (meta && (!strcmp(attr[i], "uid")))
+	meta->user_id = atoi(attr[i+1]);
     }
     current_way = Way(id);
   }
@@ -194,7 +216,7 @@ namespace
     if (modify_mode == DELETE)
       way_updater->set_id_deleted(current_way.id);
     else
-      way_updater->set_way(current_way);
+      way_updater->set_way(current_way, meta);
     if (osm_element_count >= 4*1024*1024)
     {
       callback->way_elapsed(current_way.id);
@@ -211,7 +233,7 @@ namespace
     if (modify_mode == DELETE)
       relation_updater->set_id_deleted(current_relation.id);
     else
-      relation_updater->set_relation(current_relation);
+      relation_updater->set_relation(current_relation, meta);
     if (osm_element_count >= 4*1024*1024)
     {
       callback->relation_elapsed(current_relation.id);
@@ -245,12 +267,34 @@ namespace
       osm_element_count = 0;
       state = IN_RELATIONS;
     }
+    else if (state == 0)
+      state = IN_WAYS;
+    if (meta)
+      *meta = OSM_Element_Metadata();
     
     unsigned int id(0);
     for (unsigned int i(0); attr[i]; i += 2)
     {
       if (!strcmp(attr[i], "id"))
 	id = atoi(attr[i+1]);
+      if (meta && (!strcmp(attr[i], "version")))
+	meta->version = atoi(attr[i+1]);
+      if (meta && (!strcmp(attr[i], "timestamp")))
+      {
+	meta->timestamp = 0;
+	meta->timestamp |= (atoll(attr[i+1])<<26); //year
+	meta->timestamp |= (atoi(attr[i+1]+5)<<22); //month
+	meta->timestamp |= (atoi(attr[i+1]+8)<<17); //day
+	meta->timestamp |= (atoi(attr[i+1]+11)<<12); //hour
+	meta->timestamp |= (atoi(attr[i+1]+14)<<6); //minute
+	meta->timestamp |= atoi(attr[i+1]+17); //second
+      }
+      if (meta && (!strcmp(attr[i], "changeset")))
+	meta->changeset = atoi(attr[i+1]);
+      if (meta && (!strcmp(attr[i], "user")))
+	meta->user_name = attr[i+1];
+      if (meta && (!strcmp(attr[i], "uid")))
+	meta->user_id = atoi(attr[i+1]);
     }
     current_relation = Relation(id);
   }
@@ -401,8 +445,9 @@ void parse_relations_only(FILE* in)
   parse(in, relation_start, relation_end);
 }
 
-Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version)
-  : dispatcher_client(0)
+Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version,
+			 bool meta_)
+  : dispatcher_client(0), meta(meta_)
 {
   dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
   Logger logger(dispatcher_client->get_db_dir());
@@ -417,9 +462,9 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
     version<<data_version<<'\n';
   }
 
-  node_updater_ = new Node_Updater(*transaction);
-  way_updater_ = new Way_Updater(*transaction);
-  relation_updater_ = new Relation_Updater(*transaction);
+  node_updater_ = new Node_Updater(*transaction, meta);
+  way_updater_ = new Way_Updater(*transaction, meta);
+  relation_updater_ = new Relation_Updater(*transaction, meta);
 
   state = 0;
   osm_element_count = 0;
@@ -427,21 +472,22 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
   way_updater = way_updater_;
   relation_updater = relation_updater_;
   callback = callback_;
-  meta = new OSM_Element_Metadata();
+  if (meta)
+    ::meta = new OSM_Element_Metadata();
 }
 
 Osm_Updater::Osm_Updater
-    (Osm_Backend_Callback* callback_, string db_dir, const string& data_version)
-  : transaction(0), dispatcher_client(0), db_dir_(db_dir)
+    (Osm_Backend_Callback* callback_, string db_dir, const string& data_version, bool meta_)
+  : transaction(0), dispatcher_client(0), db_dir_(db_dir), meta(meta_)
 {
   {
     ofstream version((db_dir + "osm_base_version").c_str());
     version<<data_version<<'\n';
   }
   
-  node_updater_ = new Node_Updater(db_dir);
-  way_updater_ = new Way_Updater(db_dir);
-  relation_updater_ = new Relation_Updater(db_dir);
+  node_updater_ = new Node_Updater(db_dir, meta);
+  way_updater_ = new Way_Updater(db_dir, meta);
+  relation_updater_ = new Relation_Updater(db_dir, meta);
   
   state = 0;
   osm_element_count = 0;
@@ -449,17 +495,18 @@ Osm_Updater::Osm_Updater
   way_updater = way_updater_;
   relation_updater = relation_updater_;
   callback = callback_;
-  meta = new OSM_Element_Metadata();
+  if (meta)
+    ::meta = new OSM_Element_Metadata();
 }
 
 void Osm_Updater::flush()
 {
   delete node_updater_;
-  node_updater_ = new Node_Updater(db_dir_);
+  node_updater_ = new Node_Updater(db_dir_, meta);
   delete way_updater_;
-  way_updater_ = new Way_Updater(db_dir_);
+  way_updater_ = new Way_Updater(db_dir_, meta);
   delete relation_updater_;
-  relation_updater_ = new Relation_Updater(db_dir_);
+  relation_updater_ = new Relation_Updater(db_dir_, meta);
   
   if (dispatcher_client)
   {

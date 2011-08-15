@@ -249,6 +249,8 @@ void print_item(uint32 ll_upper, const Way_Skeleton& skel, uint32 mode,
     cout<<"/>\n";
   else
   {
+    if (meta)
+      print_meta(*meta, *users);
     cout<<">\n";
     if (mode & PRINT_NDS)
     {
@@ -290,6 +292,8 @@ void print_item(uint32 ll_upper, const Relation_Skeleton& skel, uint32 mode,
     cout<<"/>\n";
   else
   {
+    if (meta)
+      print_meta(*meta, *users);
     cout<<">\n";
     if (mode & PRINT_MEMBERS)
     {
@@ -656,10 +660,12 @@ void Print_Statement::execute(Resource_Manager& rman)
 		 (mode & PRINT_META) ? meta_settings().NODES_META : 0);
       tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		 WAY_FLUSH_SIZE, mode, Stopwatch::WAY_TAGS_LOCAL, rman,
-		 *rman.get_transaction());
+		 *rman.get_transaction(),
+		 (mode & PRINT_META) ? meta_settings().WAYS_META : 0);
       tags_by_id(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		 RELATION_FLUSH_SIZE, mode, Stopwatch::RELATION_TAGS_LOCAL, rman,
-		 *rman.get_transaction());
+		 *rman.get_transaction(),
+		 (mode & PRINT_META) ? meta_settings().RELATIONS_META : 0);
       if (rman.get_area_transaction())
       {
 	tags_by_id(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
@@ -675,10 +681,12 @@ void Print_Statement::execute(Resource_Manager& rman)
 		    (mode & PRINT_META) ? meta_settings().NODES_META : 0);
       tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		    mode, Stopwatch::WAY_TAGS_LOCAL, rman,
-		    *rman.get_transaction());
+		    *rman.get_transaction(),
+		    (mode & PRINT_META) ? meta_settings().WAYS_META : 0);
       tags_quadtile(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		    mode, Stopwatch::RELATION_TAGS_LOCAL, rman,
-		    *rman.get_transaction());
+		    *rman.get_transaction(),
+		    (mode & PRINT_META) ? meta_settings().RELATIONS_META : 0);
       if (rman.get_area_transaction())
       {
         tags_quadtile(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,

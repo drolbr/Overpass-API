@@ -8,20 +8,21 @@
 #include "../../template_db/random_file.h"
 #include "../core/datatypes.h"
 #include "../core/settings.h"
+#include "meta_updater.h"
 #include "relation_updater.h"
 
 using namespace std;
 
-Relation_Updater::Relation_Updater(Transaction& transaction_)
+Relation_Updater::Relation_Updater(Transaction& transaction_, bool meta_)
   : update_counter(0), transaction(&transaction_),
     external_transaction(true),
-    max_role_id(0), max_written_role_id(0)
+    max_role_id(0), max_written_role_id(0), meta(meta_)
 {}
 
-Relation_Updater::Relation_Updater(string db_dir_)
+Relation_Updater::Relation_Updater(string db_dir_, bool meta_)
   : update_counter(0), transaction(0),
     external_transaction(false),
-    max_role_id(0), max_written_role_id(0), db_dir(db_dir_)
+    max_role_id(0), max_written_role_id(0), db_dir(db_dir_), meta(meta_)
 {}
 
 uint32 Relation_Updater::get_role_id(const string& s)
@@ -77,6 +78,12 @@ void Relation_Updater::update(Osm_Backend_Callback* callback)
   callback->tags_global_finished();
   flush_roles();
   callback->flush_roles_finished();
+  if (meta)
+  {
+    process_meta_data(*transaction->data_index(meta_settings().RELATIONS_META),
+		      rels_meta_to_insert, ids_to_modify, to_delete);
+    process_user_data(*transaction, user_by_id);
+  }
   callback->update_finished();
   
   ids_to_modify.clear();
@@ -86,12 +93,21 @@ void Relation_Updater::update(Osm_Backend_Callback* callback)
     delete transaction;
 }
 
+void collect_new_indexes
+    (const vector< Relation >& rels_to_insert, map< uint32, uint32 >& new_index_by_id)
+{
+  for (vector< Relation >::const_iterator it = rels_to_insert.begin();
+      it != rels_to_insert.end(); ++it)
+    new_index_by_id[it->id] = it->index;
+}
+
 void Relation_Updater::update_moved_idxs
     (const vector< pair< uint32, uint32 > >& moved_nodes,
      const vector< pair< uint32, uint32 > >& moved_ways)
 {
   ids_to_modify.clear();
   rels_to_insert.clear();
+  rels_meta_to_insert.clear();
   
 /*  if (!map_file_existed_before)
     return;*/
@@ -102,17 +118,28 @@ void Relation_Updater::update_moved_idxs
   map< uint32, vector< uint32 > > to_delete;
   find_affected_relations(moved_nodes, moved_ways);
   update_rel_ids(to_delete);
+  if (meta)
+  {
+    map< uint32, uint32 > new_index_by_id;
+    collect_new_indexes(rels_to_insert, new_index_by_id);
+    collect_old_meta_data(*transaction->data_index(meta_settings().RELATIONS_META), to_delete,
+		          new_index_by_id, rels_meta_to_insert);
+  }
   update_members(to_delete);
   
   vector< Tag_Entry > tags_to_delete;
   prepare_tags(tags_to_delete, to_delete);
   update_rel_tags_local(tags_to_delete);
   flush_roles();
+  if (meta)
+    process_meta_data(*transaction->data_index(meta_settings().RELATIONS_META),
+		      rels_meta_to_insert, ids_to_modify, to_delete);
   
   //show_mem_status();
   
   ids_to_modify.clear();
   rels_to_insert.clear();
+  rels_meta_to_insert.clear();
   
   if (!external_transaction)
     delete transaction;
@@ -233,6 +260,22 @@ void Relation_Updater::find_affected_relations
 
 void Relation_Updater::compute_indexes()
 {
+  static Meta_Comparator_By_Id meta_comparator_by_id;
+  static Meta_Equal_Id meta_equal_id;
+  
+  // process the ways itself
+  // keep always the most recent (last) element of all equal elements
+  stable_sort(rels_to_insert.begin(), rels_to_insert.end(), rel_comparator_by_id);
+  vector< Relation >::iterator rels_begin
+      (unique(rels_to_insert.rbegin(), rels_to_insert.rend(), rel_equal_id).base());
+  rels_to_insert.erase(rels_to_insert.begin(), rels_begin);
+  // keep always the most recent (last) element of all equal elements
+  stable_sort
+      (rels_meta_to_insert.begin(), rels_meta_to_insert.end(), meta_comparator_by_id);
+  vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::iterator meta_begin
+      (unique(rels_meta_to_insert.rbegin(), rels_meta_to_insert.rend(), meta_equal_id).base());
+  rels_meta_to_insert.erase(rels_meta_to_insert.begin(), meta_begin);
+  
   // retrieve the indices of the referred nodes and ways
   map< uint32, uint32 > used_nodes;
   map< uint32, uint32 > used_ways;
@@ -272,6 +315,18 @@ void Relation_Updater::compute_indexes()
 	member_idxs.push_back(used_ways[nit->ref]);
     }
     rit->index = Relation::calc_index(member_idxs);
+  }
+  vector< Relation >::const_iterator rit(rels_to_insert.begin());
+  for (vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::iterator
+      mit(rels_meta_to_insert.begin()); mit != rels_meta_to_insert.end(); ++mit)
+  {
+    while ((rit != rels_to_insert.end()) && (rit->id < mit->first.ref))
+      ++rit;
+    if (rit == rels_to_insert.end())
+      break;
+    
+    if (rit->id == mit->first.ref)
+      mit->second = rit->index;
   }
 }
 

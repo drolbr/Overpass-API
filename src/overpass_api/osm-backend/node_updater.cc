@@ -10,115 +10,20 @@
 #include "../../template_db/random_file.h"
 #include "../core/datatypes.h"
 #include "../core/settings.h"
+#include "meta_updater.h"
 #include "node_updater.h"
 
 using namespace std;
 
-Node_Updater::Node_Updater(Transaction& transaction_)
+Node_Updater::Node_Updater(Transaction& transaction_, bool meta_)
   : update_counter(0), transaction(&transaction_),
-    external_transaction(true)
+    external_transaction(true), meta(meta_)
 {}
 
-Node_Updater::Node_Updater(string db_dir_)
+Node_Updater::Node_Updater(string db_dir_, bool meta_)
   : update_counter(0), transaction(0),
-    external_transaction(false), db_dir(db_dir_)
+    external_transaction(false), db_dir(db_dir_), meta(meta_)
 {}
-
-struct Meta_Comparator_By_Id {
-  bool operator()
-    (const pair< OSM_Element_Metadata_Skeleton, uint32 >& a,
-     const pair< OSM_Element_Metadata_Skeleton, uint32 >& b)
-  {
-    return (a.first.ref < b.first.ref);
-  }
-};
-
-struct Meta_Equal_Id {
-  bool operator()
-    (const pair< OSM_Element_Metadata_Skeleton, uint32 >& a,
-     const pair< OSM_Element_Metadata_Skeleton, uint32 >& b)
-  {
-    return (a.first.ref == b.first.ref);
-  }
-};
-
-void process_meta_data
-  (Transaction& transaction,
-   vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >& nodes_meta_to_insert,
-   const vector< pair< uint32, bool > >& ids_to_modify,
-   const map< uint32, vector< uint32 > >& to_delete)
-{
-  static Meta_Comparator_By_Id meta_comparator_by_id;
-  static Meta_Equal_Id meta_equal_id;
-  
-  map< Uint31_Index, set< OSM_Element_Metadata_Skeleton > > db_to_delete;
-  map< Uint31_Index, set< OSM_Element_Metadata_Skeleton > > db_to_insert;
-  
-  // fill db_to_delete
-  for (map< uint32, vector< uint32 > >::const_iterator
-      it(to_delete.begin()); it != to_delete.end(); ++it)
-  {
-    Uint31_Index idx(it->first);
-    for (vector< uint32 >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-      db_to_delete[idx].insert(OSM_Element_Metadata_Skeleton(*it2));
-  }
-
-  // keep always the most recent (last) element of all equal elements
-  stable_sort
-      (nodes_meta_to_insert.begin(), nodes_meta_to_insert.end(), meta_comparator_by_id);
-  vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::iterator nodes_begin
-      (unique(nodes_meta_to_insert.rbegin(), nodes_meta_to_insert.rend(), meta_equal_id)
-       .base());
-  nodes_meta_to_insert.erase(nodes_meta_to_insert.begin(), nodes_begin);
-  
-  // fill insert
-  vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::const_iterator
-      nit = nodes_meta_to_insert.begin();
-  for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
-      it != ids_to_modify.end(); ++it)
-  {
-    if ((nit != nodes_meta_to_insert.end()) && (it->first == nit->first.ref))
-    {
-      if (it->second)
-	db_to_insert[Uint31_Index(nit->second)].insert(nit->first);
-      ++nit;
-    }
-  }
-  
-  nodes_meta_to_insert.clear();
-  
-  Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton > user_db
-      (transaction.data_index(meta_settings().NODES_META));
-  user_db.update(db_to_delete, db_to_insert);
-}
-
-void process_user_data(Transaction& transaction, map< uint32, string >& user_by_id)
-{
-  map< Uint32_Index, set< User_Data > > db_to_delete;
-  map< Uint32_Index, set< User_Data > > db_to_insert;
-  
-  for (map< uint32, string >::const_iterator it = user_by_id.begin();
-      it != user_by_id.end(); ++it)
-  {
-    User_Data user_data;
-    user_data.id = it->first;
-    db_to_delete[Uint32_Index(it->first & 0xffffff00)].insert(user_data);
-  }
-  for (map< uint32, string >::const_iterator it = user_by_id.begin();
-      it != user_by_id.end(); ++it)
-  {
-    User_Data user_data;
-    user_data.id = it->first;
-    user_data.name = it->second;
-    db_to_insert[Uint32_Index(it->first & 0xffffff00)].insert(user_data);
-  }
-  user_by_id.clear();
-  
-  Block_Backend< Uint32_Index, User_Data > user_db
-      (transaction.data_index(meta_settings().USER_DATA));
-  user_db.update(db_to_delete, db_to_insert);
-}
 
 void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
 {
@@ -139,8 +44,12 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
   callback->tags_local_finished();
   update_node_tags_global(tags_to_delete);
   callback->tags_global_finished();
-  process_meta_data(*transaction, nodes_meta_to_insert, ids_to_modify, to_delete);
-  process_user_data(*transaction, user_by_id);
+  if (meta)
+  {
+    process_meta_data(*transaction->data_index(meta_settings().NODES_META),
+	 	      nodes_meta_to_insert, ids_to_modify, to_delete);
+    process_user_data(*transaction, user_by_id);
+  }
   callback->update_finished();
   
   ids_to_modify.clear();
@@ -183,8 +92,7 @@ void Node_Updater::update_node_ids
   stable_sort
       (ids_to_modify.begin(), ids_to_modify.end(), pair_comparator_by_id);
   vector< pair< uint32, bool > >::iterator modi_begin
-      (unique(ids_to_modify.rbegin(), ids_to_modify.rend(), pair_equal_id)
-  .base());
+      (unique(ids_to_modify.rbegin(), ids_to_modify.rend(), pair_equal_id).base());
   ids_to_modify.erase(ids_to_modify.begin(), modi_begin);
   stable_sort
       (nodes_to_insert.begin(), nodes_to_insert.end(), node_comparator_by_id);
@@ -412,100 +320,15 @@ void Node_Updater::merge_files(string from, string into)
 {
   Nonsynced_Transaction from_transaction(false, false, db_dir, from);
   Nonsynced_Transaction into_transaction(true, false, db_dir, into);
+  merge_file< Uint32_Index, Node_Skeleton >
+      (from_transaction, into_transaction, from, *osm_base_settings().NODES);
+  merge_file< Tag_Index_Local, Uint32_Index >
+      (from_transaction, into_transaction, from, *osm_base_settings().NODE_TAGS_LOCAL);
+  merge_file< Tag_Index_Global, Uint32_Index >
+      (from_transaction, into_transaction, from, *osm_base_settings().NODE_TAGS_GLOBAL);
+  if (meta)
   {
-    map< Uint32_Index, set< Node_Skeleton > > db_to_delete;
-    map< Uint32_Index, set< Node_Skeleton > > db_to_insert;
-    
-    uint32 item_count(0);
-    Block_Backend< Uint32_Index, Node_Skeleton > from_db
-        (from_transaction.data_index(osm_base_settings().NODES));
-    for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
-        it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
-    {
-      db_to_insert[it.index()].insert(it.object());
-      if (++item_count >= 4*1024*1024)
-      {
-	Block_Backend< Uint32_Index, Node_Skeleton > into_db
-	    (into_transaction.data_index(osm_base_settings().NODES));
-	into_db.update(db_to_delete, db_to_insert);
-	db_to_insert.clear();
-	item_count = 0;
-      }
-    }
-    
-    Block_Backend< Uint32_Index, Node_Skeleton > into_db
-        (into_transaction.data_index(osm_base_settings().NODES));
-    into_db.update(db_to_delete, db_to_insert);
+    merge_file< Uint31_Index, OSM_Element_Metadata_Skeleton >
+        (from_transaction, into_transaction, from, *meta_settings().NODES_META);
   }
-  remove((from_transaction.get_db_dir()
-      + osm_base_settings().NODES->get_file_name_trunk() + from 
-      + osm_base_settings().NODES->get_data_suffix()
-      + osm_base_settings().NODES->get_index_suffix()).c_str());
-  remove((from_transaction.get_db_dir()
-      + osm_base_settings().NODES->get_file_name_trunk() + from 
-      + osm_base_settings().NODES->get_data_suffix()).c_str());
-  {
-    map< Tag_Index_Local, set< Uint32_Index > > db_to_delete;
-    map< Tag_Index_Local, set< Uint32_Index > > db_to_insert;
-    
-    uint32 item_count(0);
-    Block_Backend< Tag_Index_Local, Uint32_Index > from_db
-        (from_transaction.data_index(osm_base_settings().NODE_TAGS_LOCAL));
-    for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
-        it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
-    {
-      db_to_insert[it.index()].insert(it.object());
-      if (++item_count >= 4*1024*1024)
-      {
-	Block_Backend< Tag_Index_Local, Uint32_Index > into_db
-	    (into_transaction.data_index(osm_base_settings().NODE_TAGS_LOCAL));
-	into_db.update(db_to_delete, db_to_insert);
-	db_to_insert.clear();
-	item_count = 0;
-      }
-    }
-    
-    Block_Backend< Tag_Index_Local, Uint32_Index > into_db
-        (into_transaction.data_index(osm_base_settings().NODE_TAGS_LOCAL));
-    into_db.update(db_to_delete, db_to_insert);
-  }
-  remove((from_transaction.get_db_dir()
-      + osm_base_settings().NODE_TAGS_LOCAL->get_file_name_trunk() + from 
-      + osm_base_settings().NODE_TAGS_LOCAL->get_data_suffix()
-      + osm_base_settings().NODE_TAGS_LOCAL->get_index_suffix()).c_str());
-  remove((from_transaction.get_db_dir()
-      + osm_base_settings().NODE_TAGS_LOCAL->get_file_name_trunk() + from 
-      + osm_base_settings().NODE_TAGS_LOCAL->get_data_suffix()).c_str());
-  {
-    map< Tag_Index_Global, set< Uint32_Index > > db_to_delete;
-    map< Tag_Index_Global, set< Uint32_Index > > db_to_insert;
-    
-    uint32 item_count(0);
-    Block_Backend< Tag_Index_Global, Uint32_Index > from_db
-        (from_transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL));
-    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
-        it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
-    {
-      db_to_insert[it.index()].insert(it.object());
-      if (++item_count >= 4*1024*1024)
-      {
-	Block_Backend< Tag_Index_Global, Uint32_Index > into_db
-	    (into_transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL));
-	into_db.update(db_to_delete, db_to_insert);
-	db_to_insert.clear();
-	item_count = 0;
-      }
-    }
-    
-    Block_Backend< Tag_Index_Global, Uint32_Index > into_db
-        (into_transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL));
-    into_db.update(db_to_delete, db_to_insert);
-  }
-  remove((from_transaction.get_db_dir()
-      + osm_base_settings().NODE_TAGS_GLOBAL->get_file_name_trunk() + from 
-      + osm_base_settings().NODE_TAGS_GLOBAL->get_data_suffix()
-      + osm_base_settings().NODE_TAGS_GLOBAL->get_index_suffix()).c_str());
-  remove((from_transaction.get_db_dir()
-      + osm_base_settings().NODE_TAGS_GLOBAL->get_file_name_trunk() + from 
-      + osm_base_settings().NODE_TAGS_GLOBAL->get_data_suffix()).c_str());
 }

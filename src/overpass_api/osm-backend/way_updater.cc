@@ -9,20 +9,20 @@
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
 #include "../core/datatypes.h"
-//#include "../core/index_computations.h"
 #include "../core/settings.h"
+#include "meta_updater.h"
 #include "way_updater.h"
 
 using namespace std;
 
-Way_Updater::Way_Updater(Transaction& transaction_)
+Way_Updater::Way_Updater(Transaction& transaction_, bool meta_)
   : update_counter(0), transaction(&transaction_),
-    external_transaction(true)
+    external_transaction(true), meta(meta_)
 {}
 
-Way_Updater::Way_Updater(string db_dir_)
+Way_Updater::Way_Updater(string db_dir_, bool meta_)
   : update_counter(0), transaction(0),
-    external_transaction(false), db_dir(db_dir_)
+    external_transaction(false), db_dir(db_dir_), meta(meta_)
 {}
 
 void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
@@ -46,6 +46,12 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
   callback->tags_local_finished();
   update_way_tags_global(tags_to_delete);
   callback->tags_global_finished();
+  if (meta)
+  {
+    process_meta_data(*transaction->data_index(meta_settings().WAYS_META),
+		      ways_meta_to_insert, ids_to_modify, to_delete);
+    process_user_data(*transaction, user_by_id);
+  }
   callback->update_finished();
   
   ids_to_modify.clear();
@@ -81,12 +87,21 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
   }
 }
 
+void collect_new_indexes
+    (const vector< Way >& ways_to_insert, map< uint32, uint32 >& new_index_by_id)
+{
+  for (vector< Way >::const_iterator it = ways_to_insert.begin();
+      it != ways_to_insert.end(); ++it)
+    new_index_by_id[it->id] = it->index;
+}
+
 void Way_Updater::update_moved_idxs
     (Osm_Backend_Callback* callback, 
      const vector< pair< uint32, uint32 > >& moved_nodes)
 {
   ids_to_modify.clear();
   ways_to_insert.clear();
+  ways_meta_to_insert.clear();
   
 /*  if (!map_file_existed_before)
     return;*/
@@ -97,22 +112,36 @@ void Way_Updater::update_moved_idxs
   map< uint32, vector< uint32 > > to_delete;
   find_affected_ways(moved_nodes);
   update_way_ids(to_delete);
+  if (meta)
+  {
+    map< uint32, uint32 > new_index_by_id;
+    collect_new_indexes(ways_to_insert, new_index_by_id);
+    collect_old_meta_data(*transaction->data_index(meta_settings().WAYS_META), to_delete,
+		          new_index_by_id, ways_meta_to_insert);
+  }
   update_members(to_delete);
   
   vector< Tag_Entry > tags_to_delete;
   prepare_tags(tags_to_delete, to_delete);
   update_way_tags_local(tags_to_delete);
+  if (meta)
+    process_meta_data(*transaction->data_index(meta_settings().WAYS_META), ways_meta_to_insert,
+		      ids_to_modify, to_delete);
   
   //show_mem_status();
   
   ids_to_modify.clear();
   ways_to_insert.clear();
+  ways_meta_to_insert.clear();
   
   if (!external_transaction)
     delete transaction;
 }
 
-void Way_Updater::filter_affected_ways(const vector< Way >& maybe_affected_ways)
+void filter_affected_ways(Transaction& transaction, 
+			  vector< pair< uint32, bool > >& ids_to_modify,
+			  vector< Way >& ways_to_insert,
+			  const vector< Way >& maybe_affected_ways)
 {
   // retrieve the indices of the referred nodes
   map< uint32, uint32 > used_nodes;
@@ -121,10 +150,10 @@ void Way_Updater::filter_affected_ways(const vector< Way >& maybe_affected_ways)
   {
     for (vector< uint32 >::const_iterator nit(wit->nds.begin());
         nit != wit->nds.end(); ++nit)
-    used_nodes[*nit] = 0;
+      used_nodes[*nit] = 0;
   }
   Random_File< Uint32_Index > node_random
-      (transaction->random_index(osm_base_settings().NODES));
+      (transaction.random_index(osm_base_settings().NODES));
   for (map< uint32, uint32 >::iterator it(used_nodes.begin());
       it != used_nodes.end(); ++it)
     it->second = node_random.get(it->first).val();
@@ -166,13 +195,13 @@ void Way_Updater::find_affected_ways
   Block_Backend< Uint31_Index, Way_Skeleton > ways_db
       (transaction->data_index(osm_base_settings().WAYS));
   for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
-    it(ways_db.discrete_begin(req.begin(), req.end()));
-  !(it == ways_db.discrete_end()); ++it)
+      it(ways_db.discrete_begin(req.begin(), req.end()));
+      !(it == ways_db.discrete_end()); ++it)
   {
     const Way_Skeleton& way(it.object());
     bool is_affected(false);
     for (vector< uint32 >::const_iterator it3(way.nds.begin());
-    it3 != way.nds.end(); ++it3)
+        it3 != way.nds.end(); ++it3)
     {
       if (binary_search(moved_nodes.begin(), moved_nodes.end(),
 	make_pair(*it3, 0), pair_comparator_by_id))
@@ -185,17 +214,33 @@ void Way_Updater::find_affected_ways
       maybe_affected_ways.push_back(Way(way.id, it.index().val(), way.nds));
     if (maybe_affected_ways.size() >= 512*1024)
     {
-      filter_affected_ways(maybe_affected_ways);
+      filter_affected_ways(*transaction, ids_to_modify, ways_to_insert, maybe_affected_ways);
       maybe_affected_ways.clear();
     }
   }
   
-  filter_affected_ways(maybe_affected_ways);
+  filter_affected_ways(*transaction, ids_to_modify, ways_to_insert, maybe_affected_ways);
   maybe_affected_ways.clear();
 }
 
 void Way_Updater::compute_indexes()
 {
+  static Meta_Comparator_By_Id meta_comparator_by_id;
+  static Meta_Equal_Id meta_equal_id;
+  
+  // process the ways itself
+  // keep always the most recent (last) element of all equal elements
+  stable_sort(ways_to_insert.begin(), ways_to_insert.end(), way_comparator_by_id);
+  vector< Way >::iterator ways_begin
+      (unique(ways_to_insert.rbegin(), ways_to_insert.rend(), way_equal_id).base());
+  ways_to_insert.erase(ways_to_insert.begin(), ways_begin);
+  // keep always the most recent (last) element of all equal elements
+  stable_sort
+      (ways_meta_to_insert.begin(), ways_meta_to_insert.end(), meta_comparator_by_id);
+  vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::iterator meta_begin
+      (unique(ways_meta_to_insert.rbegin(), ways_meta_to_insert.rend(), meta_equal_id).base());
+  ways_meta_to_insert.erase(ways_meta_to_insert.begin(), meta_begin);
+  
   // retrieve the indices of the referred nodes
   map< uint32, uint32 > used_nodes;
   for (vector< Way >::const_iterator wit(ways_to_insert.begin());
@@ -210,7 +255,6 @@ void Way_Updater::compute_indexes()
   for (map< uint32, uint32 >::iterator it(used_nodes.begin());
       it != used_nodes.end(); ++it)
     it->second = node_random.get(it->first).val();
-  vector< Way >::iterator wwit(ways_to_insert.begin());
   for (vector< Way >::iterator wit(ways_to_insert.begin());
       wit != ways_to_insert.end(); ++wit)
   {
@@ -220,6 +264,18 @@ void Way_Updater::compute_indexes()
       nd_idxs.push_back(used_nodes[*nit]);
     
     wit->index = Way::calc_index(nd_idxs);
+  }
+  vector< Way >::const_iterator wit(ways_to_insert.begin());
+  for (vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::iterator
+      mit(ways_meta_to_insert.begin()); mit != ways_meta_to_insert.end(); ++mit)
+  {
+    while ((wit != ways_to_insert.end()) && (wit->id < mit->first.ref))
+      ++wit;
+    if (wit == ways_to_insert.end())
+      break;
+    
+    if (wit->id == mit->first.ref)
+      mit->second = wit->index;
   }
 }
 
@@ -234,9 +290,8 @@ void Way_Updater::update_way_ids(map< uint32, vector< uint32 > >& to_delete)
 	      .base());
   ids_to_modify.erase(ids_to_modify.begin(), modi_begin);
   stable_sort(ways_to_insert.begin(), ways_to_insert.end(), way_comparator_by_id);
-  vector< Way >::iterator ways_begin
-  (unique(ways_to_insert.rbegin(), ways_to_insert.rend(), way_equal_id)
-  .base());
+      vector< Way >::iterator ways_begin
+      (unique(ways_to_insert.rbegin(), ways_to_insert.rend(), way_equal_id).base());
   ways_to_insert.erase(ways_to_insert.begin(), ways_begin);
   
   Random_File< Uint31_Index > random
@@ -272,8 +327,8 @@ void Way_Updater::update_members(const map< uint32, vector< uint32 > >& to_delet
   {
     Uint31_Index idx(it->first);
     for (vector< uint32 >::const_iterator it2(it->second.begin());
-    it2 != it->second.end(); ++it2)
-    db_to_delete[idx].insert(Way_Skeleton(*it2, vector< uint32 >()));
+        it2 != it->second.end(); ++it2)
+      db_to_delete[idx].insert(Way_Skeleton(*it2, vector< uint32 >()));
   }
   vector< Way >::const_iterator wit(ways_to_insert.begin());
   for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
@@ -526,100 +581,15 @@ void Way_Updater::merge_files(string from, string into)
 {
   Nonsynced_Transaction from_transaction(false, false, db_dir, from);
   Nonsynced_Transaction into_transaction(true, false, db_dir, into);
+  merge_file< Uint31_Index, Way_Skeleton >
+      (from_transaction, into_transaction, from, *osm_base_settings().WAYS);
+  merge_file< Tag_Index_Local, Uint32_Index >
+      (from_transaction, into_transaction, from, *osm_base_settings().WAY_TAGS_LOCAL);
+  merge_file< Tag_Index_Global, Uint32_Index >
+      (from_transaction, into_transaction, from, *osm_base_settings().WAY_TAGS_GLOBAL);
+  if (meta)
   {
-    map< Uint31_Index, set< Way_Skeleton > > db_to_delete;
-    map< Uint31_Index, set< Way_Skeleton > > db_to_insert;
-    
-    uint32 item_count(0);
-    Block_Backend< Uint31_Index, Way_Skeleton > from_db
-        (from_transaction.data_index(osm_base_settings().WAYS));
-    for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
-      it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
-    {
-      db_to_insert[it.index()].insert(it.object());
-      if (++item_count >= 4*1024*1024)
-      {
-	Block_Backend< Uint31_Index, Way_Skeleton > into_db
-	    (into_transaction.data_index(osm_base_settings().WAYS));
-	into_db.update(db_to_delete, db_to_insert);
-	db_to_insert.clear();
-	item_count = 0;
-      }
-    }
-    
-    Block_Backend< Uint31_Index, Way_Skeleton > into_db
-        (into_transaction.data_index(osm_base_settings().WAYS));
-    into_db.update(db_to_delete, db_to_insert);
+    merge_file< Uint31_Index, OSM_Element_Metadata_Skeleton >
+        (from_transaction, into_transaction, from, *meta_settings().WAYS_META);
   }
-  remove((from_transaction.get_db_dir()
-      + osm_base_settings().WAYS->get_file_name_trunk() + from 
-      + osm_base_settings().WAYS->get_data_suffix()
-      + osm_base_settings().WAYS->get_index_suffix()).c_str());
-  remove((from_transaction.get_db_dir()
-      + osm_base_settings().WAYS->get_file_name_trunk() + from 
-      + osm_base_settings().WAYS->get_data_suffix()).c_str());
-  {
-    map< Tag_Index_Local, set< Uint32_Index > > db_to_delete;
-    map< Tag_Index_Local, set< Uint32_Index > > db_to_insert;
-    
-    uint32 item_count(0);
-    Block_Backend< Tag_Index_Local, Uint32_Index > from_db
-        (from_transaction.data_index(osm_base_settings().WAY_TAGS_LOCAL));
-    for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
-      it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
-    {
-      db_to_insert[it.index()].insert(it.object());
-      if (++item_count >= 4*1024*1024)
-      {
-	Block_Backend< Tag_Index_Local, Uint32_Index > into_db
-	    (into_transaction.data_index(osm_base_settings().WAY_TAGS_LOCAL));
-	into_db.update(db_to_delete, db_to_insert);
-	db_to_insert.clear();
-	item_count = 0;
-      }
-    }
-    
-    Block_Backend< Tag_Index_Local, Uint32_Index > into_db
-        (into_transaction.data_index(osm_base_settings().WAY_TAGS_LOCAL));
-    into_db.update(db_to_delete, db_to_insert);
-  }
-  remove((from_transaction.get_db_dir()
-      + osm_base_settings().WAY_TAGS_LOCAL->get_file_name_trunk() + from 
-      + osm_base_settings().WAY_TAGS_LOCAL->get_data_suffix()
-      + osm_base_settings().WAY_TAGS_LOCAL->get_index_suffix()).c_str());
-  remove((from_transaction.get_db_dir()
-      + osm_base_settings().WAY_TAGS_LOCAL->get_file_name_trunk() + from 
-      + osm_base_settings().WAY_TAGS_LOCAL->get_data_suffix()).c_str());
-  {
-    map< Tag_Index_Global, set< Uint32_Index > > db_to_delete;
-    map< Tag_Index_Global, set< Uint32_Index > > db_to_insert;
-    
-    uint32 item_count(0);
-    Block_Backend< Tag_Index_Global, Uint32_Index > from_db
-        (from_transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL));
-    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
-      it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
-    {
-      db_to_insert[it.index()].insert(it.object());
-      if (++item_count >= 4*1024*1024)
-      {
-	Block_Backend< Tag_Index_Global, Uint32_Index > into_db
-	    (into_transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL));
-	into_db.update(db_to_delete, db_to_insert);
-	db_to_insert.clear();
-	item_count = 0;
-      }
-    }
-    
-    Block_Backend< Tag_Index_Global, Uint32_Index > into_db
-        (into_transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL));
-    into_db.update(db_to_delete, db_to_insert);
-  }
-  remove((from_transaction.get_db_dir()
-      + osm_base_settings().WAY_TAGS_GLOBAL->get_file_name_trunk() + from 
-      + osm_base_settings().WAY_TAGS_GLOBAL->get_data_suffix()
-      + osm_base_settings().WAY_TAGS_GLOBAL->get_index_suffix()).c_str());
-  remove((from_transaction.get_db_dir()
-      + osm_base_settings().WAY_TAGS_GLOBAL->get_file_name_trunk() + from 
-      + osm_base_settings().WAY_TAGS_GLOBAL->get_data_suffix()).c_str());
 }

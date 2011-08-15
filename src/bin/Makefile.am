@@ -8,7 +8,7 @@ output_cc = ../overpass_api/frontend/output.cc
 frontend_cc = ../overpass_api/frontend/user_interface.cc ../overpass_api/frontend/cgi-helper.cc ../overpass_api/frontend/output.cc
 console_frontend_cc = ${frontend_cc} ../overpass_api/frontend/console_output.cc
 web_frontend_cc = ${frontend_cc} ../overpass_api/frontend/web_output.cc
-osm_updater_cc = ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/way_updater.cc ../overpass_api/osm-backend/relation_updater.cc ../overpass_api/osm-backend/osm_updater.cc ../template_db/dispatcher.cc
+osm_updater_cc = ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/way_updater.cc ../overpass_api/osm-backend/relation_updater.cc ../overpass_api/osm-backend/osm_updater.cc ../template_db/dispatcher.cc
 dispatcher_cc = ../overpass_api/dispatch/scripting_core.cc ../overpass_api/dispatch/resource_manager.cc ../overpass_api/osm-backend/stopwatch.cc ../template_db/dispatcher.cc
 
 statements_dir = ../overpass_api/statements

@@ -17,9 +17,9 @@ class Dispatcher_Client;
 class Osm_Updater
 {
   public:
-    Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version);
+    Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version, bool meta);
     Osm_Updater(Osm_Backend_Callback* callback_, string db_dir,
-		const string& data_version);
+		const string& data_version, bool meta);
     ~Osm_Updater();
 
     void finish_updater();
@@ -32,6 +32,7 @@ class Osm_Updater
     Way_Updater* way_updater_;
     Relation_Updater* relation_updater_;
     string db_dir_;
+    bool meta;
 
     void flush();
 };

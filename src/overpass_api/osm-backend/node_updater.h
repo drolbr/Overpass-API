@@ -16,9 +16,9 @@ using namespace std;
 
 struct Node_Updater
 {
-  Node_Updater(Transaction& transaction);
+  Node_Updater(Transaction& transaction, bool meta);
   
-  Node_Updater(string db_dir);
+  Node_Updater(string db_dir, bool meta);
   
   void set_id_deleted(uint32 id)
   {
@@ -88,6 +88,7 @@ private:
   vector< pair< uint32, uint32 > > moved_nodes;
   string db_dir;
 
+  bool meta;
   vector< pair< OSM_Element_Metadata_Skeleton, uint32 > > nodes_meta_to_insert;
   map< uint32, string > user_by_id;
   

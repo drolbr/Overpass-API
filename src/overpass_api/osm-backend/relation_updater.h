@@ -17,9 +17,9 @@ using namespace std;
 
 struct Relation_Updater
 {
-  Relation_Updater(Transaction& transaction);
+  Relation_Updater(Transaction& transaction, bool meta);
   
-  Relation_Updater(string db_dir);
+  Relation_Updater(string db_dir, bool meta);
   
   void set_id_deleted(uint32 id)
   {
@@ -28,7 +28,8 @@ struct Relation_Updater
   
   void set_relation
       (uint32 id, uint32 lat, uint32 lon, const vector< pair< string, string > >& tags,
-       const vector< Relation_Entry >& members)
+       const vector< Relation_Entry >& members,
+       const OSM_Element_Metadata* meta = 0)
   {
     ids_to_modify.push_back(make_pair(id, true));
     
@@ -37,12 +38,35 @@ struct Relation_Updater
     rel.members = members;
     rel.tags = tags;
     rels_to_insert.push_back(rel);
+    if (meta)
+    {
+      user_by_id[meta->user_id] = meta->user_name;
+      OSM_Element_Metadata_Skeleton meta_skel;
+      meta_skel.ref= rel.id;
+      meta_skel.version = meta->version;
+      meta_skel.changeset = meta->changeset;
+      meta_skel.timestamp = meta->timestamp;
+      meta_skel.user_id = meta->user_id;
+      rels_meta_to_insert.push_back(make_pair(meta_skel, 0));
+    }
   }
   
-  void set_relation(const Relation& rel)
+  void set_relation(const Relation& rel,
+		    const OSM_Element_Metadata* meta = 0)
   {
     ids_to_modify.push_back(make_pair(rel.id, true));
     rels_to_insert.push_back(rel);
+    if (meta)
+    {
+      user_by_id[meta->user_id] = meta->user_name;
+      OSM_Element_Metadata_Skeleton meta_skel;
+      meta_skel.ref= rel.id;
+      meta_skel.version = meta->version;
+      meta_skel.changeset = meta->changeset;
+      meta_skel.timestamp = meta->timestamp;
+      meta_skel.user_id = meta->user_id;
+      rels_meta_to_insert.push_back(make_pair(meta_skel, 0));
+    }
   }
   
   uint32 get_role_id(const string& s);
@@ -67,6 +91,10 @@ private:
   static Pair_Equal_Id pair_equal_id;
   vector< pair< uint32, uint32 > > moved_relations;
   string db_dir;
+
+  bool meta;
+  vector< pair< OSM_Element_Metadata_Skeleton, uint32 > > rels_meta_to_insert;
+  map< uint32, string > user_by_id;
   
   void find_affected_relations(const vector< pair< uint32, uint32 > >& moved_nodes,
 			       const vector< pair< uint32, uint32 > >& moved_ways);

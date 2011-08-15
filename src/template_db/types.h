@@ -77,9 +77,15 @@ class Raw_File
     Raw_File(string name, int oflag, mode_t mode, string caller_id);
     ~Raw_File() { close(fd_); }
     int fd() const { return fd_; }
-  
+    uint64 size(string caller_id) const;
+    void resize(uint64 size, string caller_id) const;
+    void read(uint8* buf, uint64 size, string caller_id) const;
+    void write(uint8* buf, uint64 size, string caller_id) const;
+    void seek(uint64 pos, string caller_id) const;
+    
   private:
     int fd_;
+    string name;
 };
 
 /** Simple RAII class to keep a pointer to some memory on the heap. */
@@ -98,13 +104,50 @@ class Void_Pointer
 
 //-----------------------------------------------------------------------------
 
-inline Raw_File::Raw_File(string name, int oflag, mode_t mode, string caller_id)
-  : fd_(0)
+inline Raw_File::Raw_File(string name_, int oflag, mode_t mode, string caller_id)
+  : fd_(0), name(name_)
 {
   fd_ = open64(name.c_str(), oflag, mode);
   if (fd_ < 0)
     throw File_Error(errno, name, caller_id);
   fchmod(fd_, mode);
+}
+
+inline uint64 Raw_File::size(string caller_id) const
+{
+  uint64 size = lseek64(fd_, 0, SEEK_END);
+  uint64 foo = lseek64(fd_, 0, SEEK_SET);
+  if (foo != 0)
+    throw File_Error(errno, name, caller_id);
+  return size;
+}
+
+inline void Raw_File::resize(uint64 size, string caller_id) const
+{
+  uint64 foo = ftruncate64(fd_, size);
+  if (foo != 0)
+    throw File_Error(errno, name, caller_id);
+}
+
+inline void Raw_File::read(uint8* buf, uint64 size, string caller_id) const
+{
+  uint64 foo = ::read(fd_, buf, size);
+  if (foo != size)
+    throw File_Error(errno, name, caller_id);
+}
+
+inline void Raw_File::write(uint8* buf, uint64 size, string caller_id) const
+{
+  uint64 foo = ::write(fd_, buf, size);
+  if (foo != size)
+    throw File_Error(errno, name, caller_id);
+}
+
+inline void Raw_File::seek(uint64 pos, string caller_id) const
+{
+  uint64 foo = lseek64(fd_, pos, SEEK_SET);
+  if (foo != pos)
+    throw File_Error(errno, name, caller_id);
 }
 
 #endif

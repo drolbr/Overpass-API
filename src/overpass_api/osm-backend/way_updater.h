@@ -17,9 +17,9 @@ using namespace std;
 
 struct Way_Updater
 {
-  Way_Updater(Transaction& transaction);
+  Way_Updater(Transaction& transaction, bool meta);
   
-  Way_Updater(string db_dir);
+  Way_Updater(string db_dir, bool meta);
   
   void set_id_deleted(uint32 id)
   {
@@ -28,7 +28,8 @@ struct Way_Updater
   
   void set_way
       (uint32 id, uint32 lat, uint32 lon, const vector< pair< string, string > >& tags,
-       const vector< uint32 > nds)
+       const vector< uint32 > nds,
+       const OSM_Element_Metadata* meta = 0)
   {
     ids_to_modify.push_back(make_pair(id, true));
     
@@ -37,12 +38,35 @@ struct Way_Updater
     way.nds = nds;
     way.tags = tags;
     ways_to_insert.push_back(way);
+    if (meta)
+    {
+      user_by_id[meta->user_id] = meta->user_name;
+      OSM_Element_Metadata_Skeleton meta_skel;
+      meta_skel.ref= way.id;
+      meta_skel.version = meta->version;
+      meta_skel.changeset = meta->changeset;
+      meta_skel.timestamp = meta->timestamp;
+      meta_skel.user_id = meta->user_id;
+      ways_meta_to_insert.push_back(make_pair(meta_skel, 0));
+    }
   }
   
-  void set_way(const Way& way)
+  void set_way(const Way& way,
+	       const OSM_Element_Metadata* meta = 0)
   {
     ids_to_modify.push_back(make_pair(way.id, true));
     ways_to_insert.push_back(way);
+    if (meta)
+    {
+      user_by_id[meta->user_id] = meta->user_name;
+      OSM_Element_Metadata_Skeleton meta_skel;
+      meta_skel.ref= way.id;
+      meta_skel.version = meta->version;
+      meta_skel.changeset = meta->changeset;
+      meta_skel.timestamp = meta->timestamp;
+      meta_skel.user_id = meta->user_id;
+      ways_meta_to_insert.push_back(make_pair(meta_skel, 0));
+    }
   }
   
   void update(Osm_Backend_Callback* callback, bool partial = false);
@@ -69,7 +93,9 @@ private:
   vector< pair< uint32, uint32 > > moved_ways;
   string db_dir;
   
-  void filter_affected_ways(const vector< Way >& maybe_affected_ways);
+  bool meta;
+  vector< pair< OSM_Element_Metadata_Skeleton, uint32 > > ways_meta_to_insert;
+  map< uint32, string > user_by_id;
   
   void find_affected_ways(const vector< pair< uint32, uint32 > >& moved_nodes);
   

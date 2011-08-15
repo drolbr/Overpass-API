@@ -11,6 +11,9 @@
 #include <list>
 #include <vector>
 
+// #include <iomanip> //Debug
+// #include <iostream> //Debug
+
 /** Declarations: -----------------------------------------------------------*/
 
 using namespace std;
@@ -471,6 +474,8 @@ File_Blocks< TIndex, TIterator, TRangeIterator >::File_Blocks
 	       S_666, "File_Blocks:1"),
      buffer(index->get_block_size())
 {
+  // cerr<<"  "<<index->get_data_file_name()<<'\n'; //Debug
+  
   // prepare standard iterators
   flat_end_it = new Flat_Iterator(index->blocks.end(), index->blocks.end());
   discrete_end_it = new Discrete_Iterator(index->blocks.end());
@@ -483,6 +488,8 @@ File_Blocks< TIndex, TIterator, TRangeIterator >::~File_Blocks()
   delete flat_end_it;
   delete discrete_end_it;
   delete range_end_it;
+
+  // cerr<<"~ "<<index->get_data_file_name()<<'\n'; //Debug
 }
 
 template< class TIndex, class TIterator, class TRangeIterator >
@@ -513,8 +520,8 @@ template< class TIndex, class TIterator, class TRangeIterator >
 void* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
     (const File_Blocks_Basic_Iterator< TIndex >& it) const
 {
-  lseek64(data_file.fd(), (int64)(it.block_it->pos)*(block_size), SEEK_SET);
-  uint32 foo(read(data_file.fd(), buffer.ptr, block_size)); foo = 0;
+  data_file.seek((int64)(it.block_it->pos)*(block_size), "File_Blocks:2");
+  data_file.read((uint8*)buffer.ptr, block_size, "File_Blocks:3");
   ++read_count_;
   return buffer.ptr;
 }
@@ -523,8 +530,8 @@ template< class TIndex, class TIterator, class TRangeIterator >
 void* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
     (const File_Blocks_Basic_Iterator< TIndex >& it, void* buffer) const
 {
-  lseek64(data_file.fd(), (int64)(it.block_it->pos)*(block_size), SEEK_SET);
-  uint32 foo(read(data_file.fd(), buffer, block_size)); foo = 0;
+  data_file.seek((int64)(it.block_it->pos)*(block_size), "File_Blocks:4");
+  data_file.read((uint8*)buffer, block_size, "File_Blocks:5");
   if (!(it.block_it->index ==
         TIndex(((uint8*)buffer)+(sizeof(uint32)+sizeof(uint32)))))
     throw File_Error(it.block_it->pos, index->get_data_file_name(),
@@ -574,8 +581,14 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
     this->index->void_blocks.pop_back();
   }
   
-  lseek64(data_file.fd(), (int64)pos*(block_size), SEEK_SET);
-  uint32 foo(write(data_file.fd(), buf, block_size)); foo = 0;
+  // cerr<<dec<<pos<<"\t0x"; //Debug
+  // for (uint i = 0; i < TIndex::size_of(((uint8*)buf)+(sizeof(uint32)+sizeof(uint32))); ++i)
+  //   cerr<<' '<<hex<<setw(2)<<setfill('0')
+  //       <<int(*(((uint8*)buf)+(sizeof(uint32)+sizeof(uint32))+i)); // Debug
+  // cerr<<'\n';
+  
+  data_file.seek(((int64)pos)*block_size, "File_Blocks:6");
+  data_file.write((uint8*)buf, block_size, "File_Blocks:7");
   
   TIndex index(((uint8*)buf)+(sizeof(uint32)+sizeof(uint32)));
   File_Block_Index_Entry< TIndex > entry(index, pos, max_keysize);
@@ -609,8 +622,8 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
       it.block_it->pos = this->index->void_blocks.back();
       this->index->void_blocks.pop_back();
     }
-    lseek64(data_file.fd(), (int64)(it.block_it->pos)*(block_size), SEEK_SET);
-    uint32 foo(write(data_file.fd(), buf, block_size)); foo = 0;
+    data_file.seek(((int64)it.block_it->pos)*block_size, "File_Blocks:8");
+    data_file.write((uint8*)buf, block_size, "File_Blocks:9");
     
     it.block_it->index = TIndex((uint8*)buf+(sizeof(uint32)+sizeof(uint32)));
     it.block_it->max_keysize = max_keysize;

@@ -69,6 +69,7 @@ int main(int argc, char* argv[])
   // read command line arguments
   string source_dir, db_dir, data_version;
   vector< string > source_file_names;
+  bool meta;
   
   int argpos(1);
   while (argpos < argc)
@@ -79,14 +80,16 @@ int main(int argc, char* argv[])
       if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
 	db_dir += '/';
     }
-    if (!(strncmp(argv[argpos], "--osc-dir=", 10)))
+    else if (!(strncmp(argv[argpos], "--osc-dir=", 10)))
     {
       source_dir = ((string)argv[argpos]).substr(10);
       if ((source_dir.size() > 0) && (source_dir[source_dir.size()-1] != '/'))
 	source_dir += '/';
     }
-    if (!(strncmp(argv[argpos], "--version=", 10)))
+    else if (!(strncmp(argv[argpos], "--version=", 10)))
       data_version = ((string)argv[argpos]).substr(10);
+    else if (!(strncmp(argv[argpos], "--meta", 6)))
+      meta = true;
     ++argpos;
   }
   
@@ -112,7 +115,7 @@ int main(int argc, char* argv[])
   {
     if (db_dir == "")
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), data_version);
+      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta);
       get_verbatim_callback()->parser_started();
       
       process_source_files< Node_Caller >(source_dir, source_file_names);
@@ -123,7 +126,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version);
+      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta);
       get_verbatim_callback()->parser_started();
       
       process_source_files< Node_Caller >(source_dir, source_file_names);
