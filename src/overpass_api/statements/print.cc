@@ -221,12 +221,12 @@ void print_item(uint32 ll_upper, const Node_Skeleton& skel, uint32 mode,
   if (mode & PRINT_COORDS)
     cout<<" lat=\""<<fixed<<setprecision(7)<<Node::lat(ll_upper, skel.ll_lower)
         <<"\" lon=\""<<fixed<<setprecision(7)<<Node::lon(ll_upper, skel.ll_lower)<<'\"';
+  if (meta)
+    print_meta(*meta, *users);
   if ((tags == 0) || (tags->empty()))
     cout<<"/>\n";
   else
   {
-    if (meta)
-      print_meta(*meta, *users);
     cout<<">\n";
     for (vector< pair< string, string > >::const_iterator it(tags->begin());
         it != tags->end(); ++it)
@@ -245,12 +245,12 @@ void print_item(uint32 ll_upper, const Way_Skeleton& skel, uint32 mode,
   cout<<"  <way";
   if (mode & PRINT_IDS)
     cout<<" id=\""<<skel.id<<'\"';
+  if (meta)
+    print_meta(*meta, *users);
   if (((tags == 0) || (tags->empty())) && ((mode & PRINT_NDS) == 0))
     cout<<"/>\n";
   else
   {
-    if (meta)
-      print_meta(*meta, *users);
     cout<<">\n";
     if (mode & PRINT_NDS)
     {
@@ -288,12 +288,12 @@ void print_item(uint32 ll_upper, const Relation_Skeleton& skel, uint32 mode,
   cout<<"  <relation";
   if (mode & PRINT_IDS)
     cout<<" id=\""<<skel.id<<'\"';
+  if (meta)
+    print_meta(*meta, *users);
   if (((tags == 0) || (tags->empty())) && ((mode & PRINT_NDS) == 0))
     cout<<"/>\n";
   else
   {
-    if (meta)
-      print_meta(*meta, *users);
     cout<<">\n";
     if (mode & PRINT_MEMBERS)
     {
@@ -398,7 +398,7 @@ struct Meta_Printer
       {
 	current_objects.insert(db_it->object());
 	++(*db_it);
-      }      
+      }
     }
     
     const OSM_Element_Metadata_Skeleton* get(const TIndex& index, uint32 ref)

@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
 {
   // read command line arguments
   string db_dir;
-  bool osm_base(false), areas(false), terminate(false), status(false);
+  bool osm_base(false), areas(false), meta(false), terminate(false), status(false);
   uint32 purge_id = 0;
   
   int argpos(1);
@@ -25,8 +25,10 @@ int main(int argc, char* argv[])
     }
     else if (!(strncmp(argv[argpos], "--osm-base", 10)))
       osm_base = true;
-    else if (!(strncmp(argv[argpos], "--areas", 10)))
+    else if (!(strncmp(argv[argpos], "--areas", 7)))
       areas = true;
+    else if (!(strncmp(argv[argpos], "--meta", 6)))
+      meta = true;
     else if (!(strncmp(argv[argpos], "--terminate", 11)))
       terminate = true;  
     else if (!(strncmp(argv[argpos], "--status", 8)))
@@ -102,10 +104,17 @@ int main(int argc, char* argv[])
     files_to_manage.push_back(area_settings().AREA_TAGS_LOCAL);
     files_to_manage.push_back(area_settings().AREA_TAGS_GLOBAL);
   }
+  if (meta)
+  {
+    files_to_manage.push_back(meta_settings().NODES_META);
+    files_to_manage.push_back(meta_settings().WAYS_META);
+    files_to_manage.push_back(meta_settings().RELATIONS_META);
+    files_to_manage.push_back(meta_settings().USER_DATA);
+  }
   
   if (!osm_base && !areas && !terminate)
   {
-    cout<<"Usage: "<<argv[0]<<" (--terminate | (--osm-base | --areas) --db-dir=Directory)\n";
+    cout<<"Usage: "<<argv[0]<<" (--terminate | (--osm-base | --areas | --meta) --db-dir=Directory)\n";
     return 0;
   }
   

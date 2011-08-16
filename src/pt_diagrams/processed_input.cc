@@ -726,7 +726,11 @@ void start(const char *el, const char **attr)
       is_stop = true;
     if ((key == "public_transport") && (value == "stop_position"))
       is_stop = true;
+    if ((key == "amenity") && (value == "ferry_terminal"))
+      is_stop = true;
     if ((key == "route") && (value == "bus"))
+      is_route = true;
+    if ((key == "route") && (value == "trolleybus"))
       is_route = true;
     if ((key == "route") && (value == "tram"))
       is_route = true;
@@ -735,6 +739,10 @@ void start(const char *el, const char **attr)
     if ((key == "route") && (value == "subway"))
       is_route = true;
     if ((key == "route") && (value == "rail"))
+      is_route = true;
+    if ((key == "route") && (value == "train"))
+      is_route = true;
+    if ((key == "route") && (value == "ferry"))
       is_route = true;
     if (key == "operates_Mo_Fr")
     {
