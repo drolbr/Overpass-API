@@ -63,9 +63,18 @@ void calc_ranges
       !(user_it == user_db.discrete_end()); ++user_it)
   {
     if ((user_it.object().val() & 0x80000000) == 0)
+    {
       node_req.insert(make_pair(Uint32_Index(user_it.object().val()),
 			        Uint32_Index(user_it.object().val() + 0x100)));
-    // TODO
+      other_req.insert(make_pair(Uint31_Index(user_it.object().val()),
+			         Uint31_Index(user_it.object().val() + 0x100)));
+    }
+    else if ((user_it.object().val() & 0xff) == 0)
+      other_req.insert(make_pair(Uint31_Index(user_it.object().val()),
+			         Uint31_Index(user_it.object().val() + 0x100)));
+    else      
+      other_req.insert(make_pair(Uint31_Index(user_it.object().val()),
+			         Uint31_Index(user_it.object().val() + 1)));
   }
 }
 
@@ -126,6 +135,64 @@ void User_Statement::execute(Resource_Manager& rman)
     
     stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
     stopwatch.stop(Stopwatch::NODES);
+  }
+  
+  uint ways_count = 0;
+  
+  {
+    Meta_Collector< Uint31_Index, Way_Skeleton > meta_collector
+        (other_req, *rman.get_transaction(), meta_settings().WAYS_META);
+    Block_Backend< Uint31_Index, Way_Skeleton > ways_db
+        (rman.get_transaction()->data_index(osm_base_settings().WAYS));
+    for (Block_Backend< Uint31_Index, Way_Skeleton >::Range_Iterator
+        it(ways_db.range_begin
+        (Default_Range_Iterator< Uint31_Index >(other_req.begin()),
+	 Default_Range_Iterator< Uint31_Index >(other_req.end())));
+        !(it == ways_db.range_end()); ++it)
+    {
+      if (++ways_count >= 64*1024)
+      {
+        ways_count = 0;
+        rman.health_check(*this);
+      }
+    
+      const OSM_Element_Metadata_Skeleton* meta_skel
+          = meta_collector.get(it.index(), it.object().id);
+      if ((meta_skel) && (meta_skel->user_id == user_id))
+        ways[it.index()].push_back(it.object());
+    }
+    
+    stopwatch.add(Stopwatch::WAYS, ways_db.read_count());
+    stopwatch.stop(Stopwatch::WAYS);
+  }
+  
+  uint relations_count = 0;
+  
+  {
+    Meta_Collector< Uint31_Index, Relation_Skeleton > meta_collector
+        (other_req, *rman.get_transaction(), meta_settings().RELATIONS_META);
+    Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
+        (rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
+    for (Block_Backend< Uint31_Index, Relation_Skeleton >::Range_Iterator
+        it(relations_db.range_begin
+        (Default_Range_Iterator< Uint31_Index >(other_req.begin()),
+	 Default_Range_Iterator< Uint31_Index >(other_req.end())));
+        !(it == relations_db.range_end()); ++it)
+    {
+      if (++relations_count >= 64*1024)
+      {
+        relations_count = 0;
+        rman.health_check(*this);
+      }
+    
+      const OSM_Element_Metadata_Skeleton* meta_skel
+          = meta_collector.get(it.index(), it.object().id);
+      if ((meta_skel) && (meta_skel->user_id == user_id))
+        relations[it.index()].push_back(it.object());
+    }
+    
+    stopwatch.add(Stopwatch::RELATIONS, relations_db.read_count());
+    stopwatch.stop(Stopwatch::RELATIONS);
   }
   
   stopwatch.report(get_name());
