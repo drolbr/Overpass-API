@@ -39,7 +39,8 @@ void Foreach_Statement::add_statement(Statement* statement, string text)
        (statement->get_name() == "print") ||
        (statement->get_name() == "query") ||
        (statement->get_name() == "recurse") ||
-       (statement->get_name() == "union")/* ||
+       (statement->get_name() == "union") ||
+       (statement->get_name() == "user")/* ||
        (statement->get_name() == "conflict") ||
        (statement->get_name() == "report") ||
        (statement->get_name() == "detect-odd-nodes")*/)

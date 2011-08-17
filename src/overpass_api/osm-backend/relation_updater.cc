@@ -80,9 +80,11 @@ void Relation_Updater::update(Osm_Backend_Callback* callback)
   callback->flush_roles_finished();
   if (meta)
   {
+    map< uint32, vector< uint32 > > idxs_by_id;
+    create_idxs_by_id(rels_meta_to_insert, idxs_by_id);
     process_meta_data(*transaction->data_index(meta_settings().RELATIONS_META),
 		      rels_meta_to_insert, ids_to_modify, to_delete);
-    process_user_data(*transaction, user_by_id);
+    process_user_data(*transaction, user_by_id, idxs_by_id);
   }
   callback->update_finished();
   
@@ -108,6 +110,7 @@ void Relation_Updater::update_moved_idxs
   ids_to_modify.clear();
   rels_to_insert.clear();
   rels_meta_to_insert.clear();
+  user_by_id.clear();
   
 /*  if (!map_file_existed_before)
     return;*/
@@ -132,14 +135,20 @@ void Relation_Updater::update_moved_idxs
   update_rel_tags_local(tags_to_delete);
   flush_roles();
   if (meta)
+  {
+    map< uint32, vector< uint32 > > idxs_by_id;
+    create_idxs_by_id(rels_meta_to_insert, idxs_by_id);
     process_meta_data(*transaction->data_index(meta_settings().RELATIONS_META),
 		      rels_meta_to_insert, ids_to_modify, to_delete);
+    process_user_data(*transaction, user_by_id, idxs_by_id);
+  }
   
   //show_mem_status();
   
   ids_to_modify.clear();
   rels_to_insert.clear();
   rels_meta_to_insert.clear();
+  user_by_id.clear();
   
   if (!external_transaction)
     delete transaction;

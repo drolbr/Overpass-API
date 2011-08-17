@@ -46,9 +46,11 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
   callback->tags_global_finished();
   if (meta)
   {
+    map< uint32, vector< uint32 > > idxs_by_id;
+    create_idxs_by_id(nodes_meta_to_insert, idxs_by_id);
     process_meta_data(*transaction->data_index(meta_settings().NODES_META),
-	 	      nodes_meta_to_insert, ids_to_modify, to_delete);
-    process_user_data(*transaction, user_by_id);
+		      nodes_meta_to_insert, ids_to_modify, to_delete);
+    process_user_data(*transaction, user_by_id, idxs_by_id);
   }
   callback->update_finished();
   

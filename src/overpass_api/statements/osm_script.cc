@@ -79,12 +79,13 @@ void Osm_Script_Statement::add_statement(Statement* statement, string text)
       (statement->get_name() == "coord-query") ||
       (statement->get_name() == "foreach") ||
       (statement->get_name() == "id-query") ||
-      (statement->get_name() == "make-area") ||
       (statement->get_name() == "print") ||
       (statement->get_name() == "query") ||
       (statement->get_name() == "recurse") ||
       (statement->get_name() == "union") ||
-      (statement->get_name() == "area-query") /*||
+      (statement->get_name() == "area-query") ||
+      (statement->get_name() == "make-area") ||
+      (statement->get_name() == "user") /*||
     (statement->get_name() == "conflict") ||
     (statement->get_name() == "report") ||
     (statement->get_name() == "detect-odd-nodes")*/)

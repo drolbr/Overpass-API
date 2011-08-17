@@ -65,31 +65,74 @@ void process_meta_data
   user_db.update(db_to_delete, db_to_insert);
 }
 
-void process_user_data(Transaction& transaction, map< uint32, string >& user_by_id)
+void create_idxs_by_id
+    (const vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >& meta_to_insert,
+     map< uint32, vector< uint32 > >& idxs_by_user_id)
 {
-  map< Uint32_Index, set< User_Data > > db_to_delete;
-  map< Uint32_Index, set< User_Data > > db_to_insert;
-  
-  for (map< uint32, string >::const_iterator it = user_by_id.begin();
-      it != user_by_id.end(); ++it)
+  for (vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::const_iterator
+      it = meta_to_insert.begin(); it != meta_to_insert.end(); ++it)
   {
-    User_Data user_data;
-    user_data.id = it->first;
-    db_to_delete[Uint32_Index(it->first & 0xffffff00)].insert(user_data);
+    uint32 compressed_idx = (it->second & 0xffffff00);
+    if ((compressed_idx & 0x80000000) && ((it->second & 0x3) == 0))
+      compressed_idx = it->second;
+    idxs_by_user_id[it->first.user_id].push_back(compressed_idx);
   }
-  for (map< uint32, string >::const_iterator it = user_by_id.begin();
-      it != user_by_id.end(); ++it)
-  {
-    User_Data user_data;
-    user_data.id = it->first;
-    user_data.name = it->second;
-    db_to_insert[Uint32_Index(it->first & 0xffffff00)].insert(user_data);
-  }
-  user_by_id.clear();
+}
   
-  Block_Backend< Uint32_Index, User_Data > user_db
-      (transaction.data_index(meta_settings().USER_DATA));
-  user_db.update(db_to_delete, db_to_insert);
+void process_user_data(Transaction& transaction, map< uint32, string >& user_by_id,
+		       map< uint32, vector< uint32 > >& idxs_by_user_id)
+{
+  {
+    map< Uint32_Index, set< User_Data > > db_to_delete;
+    map< Uint32_Index, set< User_Data > > db_to_insert;
+  
+    for (map< uint32, string >::const_iterator it = user_by_id.begin();
+        it != user_by_id.end(); ++it)
+    {
+      User_Data user_data;
+      user_data.id = it->first;
+      db_to_delete[Uint32_Index(it->first & 0xffffff00)].insert(user_data);
+    }
+    for (map< uint32, string >::const_iterator it = user_by_id.begin();
+        it != user_by_id.end(); ++it)
+    {
+      User_Data user_data;
+      user_data.id = it->first;
+      user_data.name = it->second;
+      db_to_insert[Uint32_Index(it->first & 0xffffff00)].insert(user_data);
+    }
+    user_by_id.clear();
+  
+    Block_Backend< Uint32_Index, User_Data > user_db
+        (transaction.data_index(meta_settings().USER_DATA));
+    user_db.update(db_to_delete, db_to_insert);
+  }
+  {
+    map< Uint32_Index, set< Uint31_Index > > db_to_delete;
+    map< Uint32_Index, set< Uint31_Index > > db_to_insert;
+  
+    for (map< uint32, vector< uint32 > >::const_iterator it = idxs_by_user_id.begin();
+        it != idxs_by_user_id.end(); ++it)
+    {
+      set< Uint31_Index >& ins = db_to_delete[it->first];
+      for (vector< uint32 >::const_iterator it2 = it->second.begin();
+          it2 != it->second.end(); ++it2)
+	ins.insert(Uint31_Index(*it2));
+    }
+    for (map< uint32, vector< uint32 > >::const_iterator it = idxs_by_user_id.begin();
+        it != idxs_by_user_id.end(); ++it)
+    {
+      set< Uint31_Index >& ins = db_to_insert[it->first];
+      for (vector< uint32 >::const_iterator it2 = it->second.begin();
+          it2 != it->second.end(); ++it2)
+	ins.insert(Uint31_Index(*it2));
+    }
+    user_by_id.clear();
+  
+    Block_Backend< Uint32_Index, Uint31_Index > user_db
+        (transaction.data_index(meta_settings().USER_INDICES));
+    user_db.update(db_to_delete, db_to_insert);
+  }
 }
 
 void collect_old_meta_data

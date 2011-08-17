@@ -56,6 +56,7 @@ struct Area_Settings
 struct Meta_Settings
 {
   File_Properties* USER_DATA;
+  File_Properties* USER_INDICES;
   File_Properties* NODES_META;
   File_Properties* WAYS_META;
   File_Properties* RELATIONS_META;

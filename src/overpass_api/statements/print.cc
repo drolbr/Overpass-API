@@ -11,6 +11,7 @@
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
 #include "../frontend/output.h"
+#include "meta_collector.h"
 #include "print.h"
 
 using namespace std;
@@ -127,16 +128,6 @@ void generate_ids_by_coarse
         it2 != it->second.end(); ++it2)
       ids_by_coarse[it->first.val() & 0x7fffff00].push_back(it2->id);
   }
-}
-
-template< class TIndex, class TObject >
-void generate_index_query
-  (set< TIndex >& indices,
-   const map< TIndex, vector< TObject > >& items)
-{
-  for (typename map< TIndex, vector< TObject > >::const_iterator
-      it(items.begin()); it != items.end(); ++it)
-    indices.insert(it->first);
 }
 
 void collect_tags
@@ -353,102 +344,6 @@ void quadtile
 };
 
 template< class TIndex, class TObject >
-struct Meta_Printer
-{
-  public:
-    Meta_Printer(const map< TIndex, vector< TObject > >& items,
-        Transaction& transaction, const File_Properties* meta_file_prop = 0)
-      : meta_db(0), db_it(0), current_index(0)
-    {
-      if (!meta_file_prop)
-	return;
-      
-      generate_index_query(used_indices, items);
-      meta_db = new Block_Backend< TIndex, OSM_Element_Metadata_Skeleton >
-          (transaction.data_index(meta_file_prop));
-	  
-      reset();
-      
-      Block_Backend< Uint32_Index, User_Data > user_db
-          (transaction.data_index(meta_settings().USER_DATA));
-      for (Block_Backend< Uint32_Index, User_Data >::Flat_Iterator it = user_db.flat_begin();
-          !(it == user_db.flat_end()); ++it)
-	users_[it.object().id] = it.object().name;
-    }
-    
-    void reset()
-    {
-      if (!meta_db)
-	return;
-
-      if (db_it)
-	delete db_it;
-      if (current_index)
-      {
-	delete current_index;
-        current_index = 0;
-      }
-      
-      db_it = new typename Block_Backend< TIndex, OSM_Element_Metadata_Skeleton >
-          ::Discrete_Iterator(meta_db->discrete_begin(used_indices.begin(), used_indices.end()));
-	  
-      if (!(*db_it == meta_db->discrete_end()))
-	current_index = new TIndex(db_it->index());
-      while (!(*db_it == meta_db->discrete_end()) && (*current_index == db_it->index()))
-      {
-	current_objects.insert(db_it->object());
-	++(*db_it);
-      }
-    }
-    
-    const OSM_Element_Metadata_Skeleton* get(const TIndex& index, uint32 ref)
-    {
-      if (!meta_db)
-	return 0;
-      
-      if ((current_index) && (*current_index < index))
-      {
-	while (!(*db_it == meta_db->discrete_end()) && (db_it->index() < index))
-	  ++(*db_it);
-	if (!(*db_it == meta_db->discrete_end()))
-	  *current_index = db_it->index();
-	while (!(*db_it == meta_db->discrete_end()) && (*current_index == db_it->index()))
-	{
-	  current_objects.insert(db_it->object());
-	  ++(*db_it);
-	}
-      }
-      
-      set< OSM_Element_Metadata_Skeleton >::iterator it
-          = current_objects.find(OSM_Element_Metadata_Skeleton(ref));
-      if (it != current_objects.end())
-	return &*it;
-      else
-	return 0;
-    }
-    
-    const map< uint32, string >& users() const { return users_; }
-    
-    ~Meta_Printer()
-    {
-      if (meta_db)
-      {
-	delete db_it;
-	delete meta_db;
-      }
-    }
-  
-  private:
-    set< TIndex > used_indices;
-    Block_Backend< TIndex, OSM_Element_Metadata_Skeleton >* meta_db;
-    typename Block_Backend< TIndex, OSM_Element_Metadata_Skeleton >::Discrete_Iterator*
-      db_it;
-    TIndex* current_index;
-    set< OSM_Element_Metadata_Skeleton > current_objects;
-    map< uint32, string > users_;
-};
-
-template< class TIndex, class TObject >
 void Print_Statement::tags_quadtile
     (const map< TIndex, vector< TObject > >& items,
      const File_Properties& file_prop, uint32 mode, uint32 stopwatch_account,
@@ -465,7 +360,7 @@ void Print_Statement::tags_quadtile
   formulate_range_query(range_set, coarse_indices);
   
   // formulate meta query if meta data shall be printed
-  Meta_Printer< TIndex, TObject > meta_printer(items, transaction, meta_file_prop);
+  Meta_Collector< TIndex, TObject > meta_printer(items, transaction, meta_file_prop);
   
   // iterate over the result
   stopwatch.stop(Stopwatch::NO_DISK);
@@ -542,7 +437,7 @@ template< class TIndex, class TObject >
 void collect_metadata(set< OSM_Element_Metadata_Skeleton >& metadata,
 		      const map< TIndex, vector< TObject > >& items,
 		      uint32 lower_id_bound, uint32 upper_id_bound,
-		      Meta_Printer< TIndex, TObject>& meta_printer)
+		      Meta_Collector< TIndex, TObject>& meta_printer)
 {
   for (typename map< TIndex, vector< TObject > >::const_iterator
       it(items.begin()); it != items.end(); ++it)
@@ -594,7 +489,7 @@ void Print_Statement::tags_by_id
     sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
   
   // formulate meta query if meta data shall be printed
-  Meta_Printer< TIndex, TObject > meta_printer(items, transaction, meta_file_prop);
+  Meta_Collector< TIndex, TObject > meta_printer(items, transaction, meta_file_prop);
   
   // iterate over the result
   stopwatch.stop(Stopwatch::NO_DISK);

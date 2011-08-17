@@ -110,6 +110,7 @@ int main(int argc, char* argv[])
     files_to_manage.push_back(meta_settings().WAYS_META);
     files_to_manage.push_back(meta_settings().RELATIONS_META);
     files_to_manage.push_back(meta_settings().USER_DATA);
+    files_to_manage.push_back(meta_settings().USER_INDICES);
   }
   
   if (!osm_base && !areas && !terminate)

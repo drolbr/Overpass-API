@@ -48,9 +48,11 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
   callback->tags_global_finished();
   if (meta)
   {
+    map< uint32, vector< uint32 > > idxs_by_id;
+    create_idxs_by_id(ways_meta_to_insert, idxs_by_id);
     process_meta_data(*transaction->data_index(meta_settings().WAYS_META),
 		      ways_meta_to_insert, ids_to_modify, to_delete);
-    process_user_data(*transaction, user_by_id);
+    process_user_data(*transaction, user_by_id, idxs_by_id);
   }
   callback->update_finished();
   
@@ -102,6 +104,7 @@ void Way_Updater::update_moved_idxs
   ids_to_modify.clear();
   ways_to_insert.clear();
   ways_meta_to_insert.clear();
+  user_by_id.clear();
   
 /*  if (!map_file_existed_before)
     return;*/
@@ -125,14 +128,20 @@ void Way_Updater::update_moved_idxs
   prepare_tags(tags_to_delete, to_delete);
   update_way_tags_local(tags_to_delete);
   if (meta)
+  {
+    map< uint32, vector< uint32 > > idxs_by_id;
+    create_idxs_by_id(ways_meta_to_insert, idxs_by_id);
     process_meta_data(*transaction->data_index(meta_settings().WAYS_META), ways_meta_to_insert,
 		      ids_to_modify, to_delete);
+    process_user_data(*transaction, user_by_id, idxs_by_id);
+  }
   
   //show_mem_status();
   
   ids_to_modify.clear();
   ways_to_insert.clear();
   ways_meta_to_insert.clear();
+  user_by_id.clear();
   
   if (!external_transaction)
     delete transaction;

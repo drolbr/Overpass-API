@@ -17,6 +17,7 @@
 #include "query.h"
 #include "recurse.h"
 #include "union.h"
+#include "user.h"
 
 using namespace std;
 
@@ -116,6 +117,8 @@ Statement* Statement::create_statement(string element, int line_number)
     return new Report_Statement();*/
   else if (element == "union")
     return new Union_Statement(line_number);
+  else if (element == "user")
+    return new User_Statement(line_number);
   
   ostringstream temp;
   temp<<"Unknown tag \""<<element<<"\" in line "<<line_number<<'.';

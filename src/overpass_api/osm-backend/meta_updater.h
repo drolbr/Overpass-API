@@ -21,7 +21,12 @@ void process_meta_data
    const vector< pair< uint32, bool > >& ids_to_modify,
    const map< uint32, vector< uint32 > >& to_delete);
 
-void process_user_data(Transaction& transaction, map< uint32, string >& user_by_id);
+void create_idxs_by_id
+    (const vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >& meta_to_insert,
+     map< uint32, vector< uint32 > >& idxs_by_user_id);
+   
+void process_user_data(Transaction& transaction, map< uint32, string >& user_by_id,
+   map< uint32, vector< uint32 > >& idxs_by_user_id);
 
 void collect_old_meta_data
   (File_Blocks_Index_Base& file_blocks_index,

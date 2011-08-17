@@ -71,7 +71,7 @@ Basic_Settings::Basic_Settings()
 
   base_directory("./"),
   logfile_name("transactions.log"),
-  shared_name_base("/osm3s_v0.6.92")
+  shared_name_base("/osm3s_v0.6.93")
 {}
 
 Basic_Settings& basic_settings()
@@ -142,6 +142,8 @@ Meta_Settings::Meta_Settings()
 :
   USER_DATA(new OSM_File_Properties< Uint32_Index >
       ("user_data", 512*1024, 0)),
+  USER_INDICES(new OSM_File_Properties< Uint32_Index >
+      ("user_indices", 512*1024, 0)),
   NODES_META(new OSM_File_Properties< Uint31_Index >
       ("nodes_meta", 512*1024, 0)),
   WAYS_META(new OSM_File_Properties< Uint31_Index >
