@@ -20,6 +20,12 @@ class User_Statement : public Statement
     virtual void execute(Resource_Manager& rman);
     virtual ~User_Statement() {}
 
+    void calc_ranges
+        (set< pair< Uint32_Index, Uint32_Index > >& node_req,
+         set< pair< Uint31_Index, Uint31_Index > >& other_req,
+         Transaction& transaction);
+    uint32 get_id() const { return user_id; }
+ 
   private:
     string input, output;
     uint32 user_id;

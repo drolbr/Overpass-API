@@ -78,6 +78,17 @@ void calc_ranges
   }
 }
 
+void User_Statement::calc_ranges
+    (set< pair< Uint32_Index, Uint32_Index > >& node_req,
+     set< pair< Uint31_Index, Uint31_Index > >& other_req,
+     Transaction& transaction)
+{
+  if (user_name != "")
+    user_id = get_user_id(user_name, transaction);  
+
+  ::calc_ranges(node_req, other_req, user_id, transaction);
+}
+
 void User_Statement::forecast()
 {
 }
@@ -100,12 +111,9 @@ void User_Statement::execute(Resource_Manager& rman)
   relations.clear();
   areas.clear();
 
-  if (user_name != "")
-    user_id = get_user_id(user_name, *rman.get_transaction());
-	
   set< pair< Uint32_Index, Uint32_Index > > node_req;
   set< pair< Uint31_Index, Uint31_Index > > other_req;
-  calc_ranges(node_req, other_req, user_id, *rman.get_transaction());
+  calc_ranges(node_req, other_req, *rman.get_transaction());
   
   stopwatch.stop(Stopwatch::NO_DISK);
   uint nodes_count = 0;
