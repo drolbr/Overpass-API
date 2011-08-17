@@ -11,6 +11,7 @@ DB_DIR=$1
 REPLICATE_DIR=$2
 START=$3
 TARGET=$(($START + 1))
+META=$4
 
 get_replicate_filename()
 {
@@ -42,13 +43,13 @@ collect_minute_diffs()
 
 apply_minute_diffs()
 {
-  ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION
+  ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META
   EXITCODE=$?
   while [[ $EXITCODE -ne 0 ]];
   do
   {
     sleep 60
-    ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION
+    ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META
     EXITCODE=$?
   };
   done

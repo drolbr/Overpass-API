@@ -31,6 +31,9 @@ where\n\
 \n\
 --run-areas\n\
     Startup the dispatcher for areas and rules_loop.\n\
+\n\
+--meta\n\
+    Also process OSM meta data.\n\
 "
   exit 0
 };
@@ -44,6 +47,7 @@ RUN=
 FETCH=
 VERSION=
 RUN_AREAS=
+META=
 
 EXEC_DIR=/srv/osm-3s
 DB_DIR=/opt/osm-3s
@@ -85,6 +89,10 @@ process_param()
   elif [[ "$1" == "--run-areas" ]]; then
   {
     RUN_AREAS="yes"
+  };
+  elif [[ "$1" == "--meta" ]]; then
+  {
+    META="--meta"
   };
   else
   {
@@ -180,7 +188,7 @@ if [[ -n $INIT ]]; then
   done
 
   mkdir -p "$DB_DIR/v$VERSION"
-  bunzip2 <$PLANET_DIR/planet-$INIT.osm.bz2 | $EXEC_DIR/v$VERSION/bin/update_database --db-dir=$DB_DIR/v$VERSION/
+  bunzip2 <$PLANET_DIR/planet-$INIT.osm.bz2 | $EXEC_DIR/v$VERSION/bin/update_database --db-dir=$DB_DIR/v$VERSION/ $META
 };
 fi
 
@@ -191,9 +199,9 @@ fi
 if [[ -n $RUN ]]; then
 {
   pushd $EXEC_DIR/v$VERSION/bin
-  ./dispatcher --osm-base --db-dir=$DB_DIR/v$VERSION/ &
+  ./dispatcher --osm-base $META --db-dir=$DB_DIR/v$VERSION/ &
   sleep 5
-  ./apply_osc_to_db.sh $DB_DIR/v$VERSION/ $REPLICATE_DIR $RUN &
+  ./apply_osc_to_db.sh $DB_DIR/v$VERSION/ $REPLICATE_DIR $RUN $META &
   popd
 };
 fi
