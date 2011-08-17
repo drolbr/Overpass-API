@@ -27,3 +27,5 @@ $BASEDIR/test-bin/run_testsuite_osm3s_query.sh $1 $2
 $BASEDIR/test-bin/run_testsuite_diff_updater.sh $1 $2
 
 $BASEDIR/test-bin/run_unittests_areas.sh $1 $2
+
+$BASEDIR/test-bin/run_unittests_meta.sh $1 $2
