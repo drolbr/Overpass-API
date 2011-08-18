@@ -20,6 +20,7 @@ void User_Statement::set_attributes(const char **attr)
   attributes["into"] = "_";
   attributes["uid"] = "";
   attributes["name"] = "";
+  attributes["type"] = "";
   
   eval_cstr_array(get_name(), attributes, attr);
   
@@ -33,6 +34,7 @@ void User_Statement::set_attributes(const char **attr)
     temp<<"Exactly one of the two attributes \"name\" and \"uid\" must be set.";
     add_static_error(temp.str());
   }
+  result_type = attributes["type"];
 }
 
 uint32 get_user_id(const string& user_name, Transaction& transaction)
@@ -118,6 +120,7 @@ void User_Statement::execute(Resource_Manager& rman)
   stopwatch.stop(Stopwatch::NO_DISK);
   uint nodes_count = 0;
   
+  if ((result_type == "") || (result_type == "node"))
   {
     Meta_Collector< Uint32_Index, Node_Skeleton > meta_collector
         (node_req, *rman.get_transaction(), meta_settings().NODES_META);
@@ -147,6 +150,7 @@ void User_Statement::execute(Resource_Manager& rman)
   
   uint ways_count = 0;
   
+  if ((result_type == "") || (result_type == "way"))
   {
     Meta_Collector< Uint31_Index, Way_Skeleton > meta_collector
         (other_req, *rman.get_transaction(), meta_settings().WAYS_META);
@@ -176,6 +180,7 @@ void User_Statement::execute(Resource_Manager& rman)
   
   uint relations_count = 0;
   
+  if ((result_type == "") || (result_type == "relation"))
   {
     Meta_Collector< Uint31_Index, Relation_Skeleton > meta_collector
         (other_req, *rman.get_transaction(), meta_settings().RELATIONS_META);

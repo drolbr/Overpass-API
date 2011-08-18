@@ -30,6 +30,7 @@ class User_Statement : public Statement
     string input, output;
     uint32 user_id;
     string user_name;
+    string result_type;
 };
 
 #endif

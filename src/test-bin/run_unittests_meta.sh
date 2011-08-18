@@ -24,6 +24,7 @@ rm -fR run/meta/*
 $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE >run/meta/stdin.log
 $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE diff >run/meta/diff.log
 $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE after >run/meta/after.log
+$BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE after "timestamp=2004-01-01T00:00:00Z" tags >run/meta/newer.log
 echo "\
 <osm-script timeout=\"86400\">\
 \
@@ -111,6 +112,28 @@ echo "\
 </osm-script>
 " >run/meta/query.xml
 
+echo "\
+<osm-script timeout=\"86400\">\
+\
+<query type=\"node\">\
+  <newer than=\"2004-01-01T00:00:00Z\"/>
+  <has-kv k=\"foo\" v=\"bar\"/>\
+</query>\
+<print mode=\"meta\"/>\
+<query type=\"way\">\
+  <newer than=\"2004-01-01T00:00:00Z\"/>
+  <has-kv k=\"foo\" v=\"bar\"/>\
+</query>\
+<print mode=\"meta\"/>\
+<query type=\"relation\">\
+  <newer than=\"2004-01-01T00:00:00Z\"/>
+  <has-kv k=\"foo\" v=\"bar\"/>\
+</query>\
+<print mode=\"meta\"/>\
+\
+</osm-script>
+" >run/meta/newer_query.xml  
+
 user_test()
 {
   $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE $1 uid=$2 >run/meta/user_$1_$2.log
@@ -191,12 +214,15 @@ user_test after 113
 date +%T
 user_test after 1013
 date +%T
+$BASEDIR/bin/osm3s_query --db-dir=run/meta/ --concise <run/meta/newer_query.xml >run/meta/db_newer.log
+date +%T
 
 echo
 
 # compare both outcomes
 RES=$RES`diff -q run/meta/stdin.log run/meta/initial.log`
 RES=$RES`diff -q run/meta/after.log run/meta/db_after.log`
+RES=$RES`diff -q run/meta/newer.log run/meta/db_newer.log`
 if [[ -n $RES || -s run/meta/diff_stderr.log ]]; then
 {
   echo `date +%T` "Test diff 1 FAILED."

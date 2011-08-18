@@ -78,11 +78,12 @@ void Query_Statement::add_statement(Statement* statement, string text)
       add_static_error(temp.str());
       return;
     }
-    if ((area_restriction != 0) || (around_restriction != 0) || (bbox_restriction != 0))
+    if ((area_restriction != 0) || (around_restriction != 0) || (bbox_restriction != 0) ||
+        (item_restriction != 0))
     {
       ostringstream temp;
-      temp<<"A query statement may contain at most one area-query or around-query or bbox-query "
-	  <<"as substatement.";
+      temp<<"A query statement may contain at most one area-query, around-query, bbox-query, "
+	  <<"or item as substatement.";
       add_static_error(temp.str());
       return;
     }
@@ -98,11 +99,12 @@ void Query_Statement::add_statement(Statement* statement, string text)
       add_static_error(temp.str());
       return;
     }
-    if ((area_restriction != 0) || (around_restriction != 0) || (bbox_restriction != 0))
+    if ((area_restriction != 0) || (around_restriction != 0) || (bbox_restriction != 0) ||
+        (item_restriction != 0))
     {
       ostringstream temp;
-      temp<<"A query statement may contain at most one area-query or around-query or bbox-query "
-	  <<"as substatement.";
+      temp<<"A query statement may contain at most one area-query, around-query, bbox-query, "
+	  <<"or item as substatement.";
       add_static_error(temp.str());
       return;
     }
@@ -118,11 +120,12 @@ void Query_Statement::add_statement(Statement* statement, string text)
       add_static_error(temp.str());
       return;
     }
-    if ((area_restriction != 0) || (around_restriction != 0) || (bbox_restriction != 0))
+    if ((area_restriction != 0) || (around_restriction != 0) || (bbox_restriction != 0) ||
+        (item_restriction != 0))
     {
       ostringstream temp;
-      temp<<"A query statement may contain at most one area-query or around-query or bbox-query "
-	  <<"as substatement.";
+      temp<<"A query statement may contain at most one area-query, around-query, bbox-query, "
+	  <<"or item as substatement.";
       add_static_error(temp.str());
       return;
     }
@@ -131,11 +134,12 @@ void Query_Statement::add_statement(Statement* statement, string text)
   }
   else if (item != 0)
   {
-    if ((type != QUERY_WAY) && (type != QUERY_RELATION))
+    if ((area_restriction != 0) || (around_restriction != 0) || (bbox_restriction != 0) ||
+        (item_restriction != 0))
     {
       ostringstream temp;
-      temp<<"A bbox-query as substatement is only allowed for queries of type \"way\" "
-            "or \"relation\".";
+      temp<<"A query statement may contain at most one area-query, around-query, bbox-query, "
+	  <<"or item as substatement.";
       add_static_error(temp.str());
       return;
     }
@@ -626,6 +630,36 @@ void Query_Statement::execute(Resource_Manager& rman)
       stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
       stopwatch.stop(Stopwatch::NODES);
     }
+    else if (item_restriction)
+    {
+      map< Uint32_Index, vector< Node_Skeleton > >& from
+          (rman.sets()[item_restriction->get_result_name()].nodes);
+      map< Uint32_Index, vector< Node_Skeleton > > into;
+      
+      for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator iit = from.begin();
+          iit != from.end(); ++iit)
+      {
+	for (vector< Node_Skeleton >::const_iterator cit = iit->second.begin();
+	    cit != iit->second.end(); ++cit)
+	{
+	  if ((binary_search(ids->begin(), ids->end(), cit->id)) || (ids->empty()))
+	  {
+	    if (user_restriction)
+	    {
+              const OSM_Element_Metadata_Skeleton* meta_skel
+                  = meta_collector->get(iit->first, cit->id);
+              if (!((meta_skel) && (meta_skel->user_id == user_restriction->get_id())))
+                continue;
+	    }
+	    into[iit->first].push_back(*cit);
+	  }
+	}
+      }
+      into.swap(rman.sets()[output].nodes);
+      rman.sets()[output].ways.clear();
+      rman.sets()[output].relations.clear();
+      rman.sets()[output].areas.clear();
+    }
     else
     {
       uint nodes_count = 0;
@@ -707,7 +741,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	for (vector< Way_Skeleton >::const_iterator cit = iit->second.begin();
 	    cit != iit->second.end(); ++cit)
 	{
-	  if (binary_search(ids->begin(), ids->end(), cit->id))
+	  if ((binary_search(ids->begin(), ids->end(), cit->id)) || (ids->empty()))
 	  {
 	    if (user_restriction)
 	    {
@@ -823,7 +857,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	for (vector< Relation_Skeleton >::const_iterator cit = iit->second.begin();
 	    cit != iit->second.end(); ++cit)
 	{
-	  if (binary_search(ids->begin(), ids->end(), cit->id))
+	  if ((binary_search(ids->begin(), ids->end(), cit->id)) || (ids->empty()))
 	  {
 	    if (user_restriction)
 	    {

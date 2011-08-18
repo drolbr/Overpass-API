@@ -23,14 +23,15 @@ struct V : public vector< T >
 struct Print_Control
 {
   Print_Control() : uid(0), tags_allowed_only(false) {}
-  Print_Control(uint uid_, bool tags_allowed_only_)
-    : uid(uid_), tags_allowed_only(tags_allowed_only_) {}
+  Print_Control(uint uid_, const string& timestamp_, bool tags_allowed_only_)
+    : uid(uid_), timestamp(timestamp_), tags_allowed_only(tags_allowed_only_) {}
   
   void meta_data(uint id, int variant) const;
   bool print_allowed(uint id, int variant) const;
   
   private:
     uint uid;
+    string timestamp;
     bool tags_allowed_only;
 };
 
@@ -50,6 +51,16 @@ bool Print_Control::print_allowed(uint id, int variant) const
 {
   if (tags_allowed_only && (id % 7 != 0))
     return false;
+  
+  if (timestamp != "")
+  {
+    ostringstream buf;
+    buf<<"20"<<setw(2)<<setfill('0')<<(variant % 10)
+      <<"-01-01T"<<setw(2)<<setfill('0')<<((id / 3600) % 24)
+      <<":"<<setw(2)<<setfill('0')<<((id / 60) % 60)
+      <<":"<<setw(2)<<setfill('0')<<(id % 60)<<"Z";
+    return (buf.str() >= timestamp);
+  }
   
   if (uid == 0)
     return true;
@@ -193,6 +204,7 @@ int main(int argc, char* args[])
 {
   uint pattern_size = 2;
   uint uid = 0;
+  string timestamp;
   bool tags_allowed_only = false;
   if (argc > 1)
     pattern_size = atoi(args[1]);
@@ -208,6 +220,8 @@ int main(int argc, char* args[])
   {
     if (string(args[3]).substr(0, 4) == "uid=")
       uid = atoll(args[3] + 4);
+    else if (string(args[3]).substr(0, 10) == "timestamp=")
+      timestamp = string(args[3] + 10);
   }
   if (argc > 4)
   {
@@ -215,7 +229,7 @@ int main(int argc, char* args[])
       tags_allowed_only = true;
   }
   
-  Print_Control print_control(uid, tags_allowed_only);
+  Print_Control print_control(uid, timestamp, tags_allowed_only);
 
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
