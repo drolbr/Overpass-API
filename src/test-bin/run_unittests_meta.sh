@@ -114,6 +114,7 @@ echo "\
 user_test()
 {
   $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE $1 uid=$2 >run/meta/user_$1_$2.log
+  $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE $1 uid=$2 tags >run/meta/user_tags_$1_$2.log
   echo "\
 <osm-script timeout=\"86400\">\
 \
@@ -131,11 +132,35 @@ user_test()
 </osm-script>
 " >run/meta/name_query_$2.xml  
 
+  echo "\
+<osm-script timeout=\"86400\">\
+\
+<query type=\"node\">\
+  <user name=\"User_$2\"/>\
+  <has-kv k=\"foo\" v=\"bar\"/>\
+</query>\
+<print mode=\"meta\"/>\
+<query type=\"way\">\
+  <user name=\"User_$2\"/>\
+  <has-kv k=\"foo\" v=\"bar\"/>\
+</query>\
+<print mode=\"meta\"/>\
+<query type=\"relation\">\
+  <user name=\"User_$2\"/>\
+  <has-kv k=\"foo\" v=\"bar\"/>\
+</query>\
+<print mode=\"meta\"/>\
+\
+</osm-script>
+" >run/meta/tags_query_$2.xml  
+
   $BASEDIR/bin/osm3s_query --db-dir=run/meta/ --concise <run/meta/uid_query_$2.xml >run/meta/uid_$1_$2.log
   $BASEDIR/bin/osm3s_query --db-dir=run/meta/ --concise <run/meta/name_query_$2.xml >run/meta/name_$1_$2.log
+  $BASEDIR/bin/osm3s_query --db-dir=run/meta/ --concise <run/meta/tags_query_$2.xml >run/meta/tags_$1_$2.log
 
   RES=$RES`diff -q run/meta/user_$1_$2.log run/meta/uid_$1_$2.log`
   RES=$RES`diff -q run/meta/user_$1_$2.log run/meta/name_$1_$2.log`
+  RES=$RES`diff -q run/meta/user_tags_$1_$2.log run/meta/tags_$1_$2.log`
 };
 
 RES=

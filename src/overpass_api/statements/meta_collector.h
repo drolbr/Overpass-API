@@ -17,7 +17,8 @@ struct Meta_Collector
 {
   public:
     Meta_Collector(const map< TIndex, vector< TObject > >& items,
-        Transaction& transaction, const File_Properties* meta_file_prop = 0);
+        Transaction& transaction, const File_Properties* meta_file_prop = 0,
+	bool user_data = true);
     Meta_Collector(const set< pair< TIndex, TIndex > >& used_ranges,
         Transaction& transaction, const File_Properties* meta_file_prop = 0);
     
@@ -62,7 +63,7 @@ void generate_index_query
 template< class TIndex, class TObject >
 Meta_Collector< TIndex, TObject >::Meta_Collector
     (const map< TIndex, vector< TObject > >& items,
-     Transaction& transaction, const File_Properties* meta_file_prop)
+     Transaction& transaction, const File_Properties* meta_file_prop, bool user_data)
   : meta_db(0), db_it(0), range_it(0), current_index(0)
 {
   if (!meta_file_prop)
@@ -73,12 +74,15 @@ Meta_Collector< TIndex, TObject >::Meta_Collector
       (transaction.data_index(meta_file_prop));
 	  
   reset();
-      
-  Block_Backend< Uint32_Index, User_Data > user_db
-      (transaction.data_index(meta_settings().USER_DATA));
-  for (Block_Backend< Uint32_Index, User_Data >::Flat_Iterator it = user_db.flat_begin();
-      !(it == user_db.flat_end()); ++it)
-    users_[it.object().id] = it.object().name;
+  
+  if (user_data)
+  {
+    Block_Backend< Uint32_Index, User_Data > user_db
+        (transaction.data_index(meta_settings().USER_DATA));
+    for (Block_Backend< Uint32_Index, User_Data >::Flat_Iterator it = user_db.flat_begin();
+        !(it == user_db.flat_end()); ++it)
+      users_[it.object().id] = it.object().name;
+  }
 }
     
 template< class TIndex, class TObject >

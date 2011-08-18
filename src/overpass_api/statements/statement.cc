@@ -12,6 +12,7 @@
 #include "id_query.h"
 #include "item.h"
 #include "make_area.h"
+#include "newer.h"
 #include "osm_script.h"
 #include "print.h"
 #include "query.h"
@@ -105,6 +106,8 @@ Statement* Statement::create_statement(string element, int line_number)
     return new Item_Statement(line_number);
   else if (element == "make-area")
     return new Make_Area_Statement(line_number);
+  else if (element == "newer")
+    return new Newer_Statement(line_number);
   else if (element == "osm-script")
     return new Osm_Script_Statement(line_number);
   else if (element == "print")

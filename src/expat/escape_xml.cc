@@ -19,7 +19,12 @@ string escape_xml(const string& s)
     else if (s[i] == '>')
       result += "&gt;";
     else if ((unsigned char)s[i] < 32)
-      result += '?';
+    {
+      if ((s[i] == '\n') || (s[i] == '\t') || (s[i] == '\r'))
+	result += s[i];
+      else
+        result += '?';
+    }
     else
       result += s[i];
   }

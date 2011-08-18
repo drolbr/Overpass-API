@@ -6,7 +6,7 @@ expat_cc = ../expat/expat_justparse_interface.cc
 settings_cc = ../overpass_api/core/settings.cc
 output_cc = ../overpass_api/frontend/output.cc
 statements_dir = ../overpass_api/statements
-statements_cc = ${statements_dir}/statement.cc ${statements_dir}/area_query.cc ../overpass_api/osm-backend/area_updater.cc ${statements_dir}/around.cc ${statements_dir}/bbox_query.cc ${statements_dir}/coord_query.cc ${statements_dir}/foreach.cc ${statements_dir}/id_query.cc ${statements_dir}/item.cc ${statements_dir}/make_area.cc ${statements_dir}/osm_script.cc ${statements_dir}/print.cc ${statements_dir}/query.cc ${statements_dir}/recurse.cc ${statements_dir}/union.cc ${statements_dir}/user.cc
+statements_cc = ${statements_dir}/statement.cc ${statements_dir}/area_query.cc ../overpass_api/osm-backend/area_updater.cc ${statements_dir}/around.cc ${statements_dir}/bbox_query.cc ${statements_dir}/coord_query.cc ${statements_dir}/foreach.cc ${statements_dir}/id_query.cc ${statements_dir}/item.cc ${statements_dir}/make_area.cc ${statements_dir}/newer.cc ${statements_dir}/osm_script.cc ${statements_dir}/print.cc ${statements_dir}/query.cc ${statements_dir}/recurse.cc ${statements_dir}/union.cc ${statements_dir}/user.cc
 
 testenv_cc = ${settings_cc} ../overpass_api/osm-backend/stopwatch.cc ../overpass_api/dispatch/resource_manager.cc ../overpass_api/frontend/console_output.cc ../overpass_api/frontend/user_interface.cc ../overpass_api/frontend/output.cc ../overpass_api/frontend/cgi-helper.cc
 

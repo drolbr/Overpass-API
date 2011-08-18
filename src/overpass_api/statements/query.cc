@@ -4,6 +4,7 @@
 #include "area_query.h"
 #include "bbox_query.h"
 #include "meta_collector.h"
+#include "newer.h"
 #include "query.h"
 #include "user.h"
 
@@ -66,6 +67,7 @@ void Query_Statement::add_statement(Statement* statement, string text)
   Around_Statement* around(dynamic_cast<Around_Statement*>(statement));
   Bbox_Query_Statement* bbox(dynamic_cast<Bbox_Query_Statement*>(statement));
   Item_Statement* item(dynamic_cast<Item_Statement*>(statement));
+  Newer_Statement* newer(dynamic_cast<Newer_Statement*>(statement));
   User_Statement* user(dynamic_cast<User_Statement*>(statement));
   if (area != 0)
   {
@@ -157,6 +159,18 @@ void Query_Statement::add_statement(Statement* statement, string text)
       return;
     }
     user_restriction = user;
+    return;
+  }
+  else if (newer != 0)
+  {
+    if (newer_restriction != 0)
+    {
+      ostringstream temp;
+      temp<<"A query statement may contain at most one newer statement as substatement.";
+      add_static_error(temp.str());
+      return;
+    }
+    newer_restriction = newer;
     return;
   }
   else
@@ -645,6 +659,25 @@ void Query_Statement::execute(Resource_Manager& rman)
     
     if (user_restriction)
       delete meta_collector;
+    if (newer_restriction)
+    {
+      Meta_Collector< Uint32_Index, Node_Skeleton > meta_collector
+          (nodes, *rman.get_transaction(), meta_settings().NODES_META, false);
+      for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = nodes.begin();
+          it != nodes.end(); ++it)
+      {
+	vector< Node_Skeleton > accepted;
+	for (vector< Node_Skeleton >::const_iterator it2 = it->second.begin();
+	    it2 != it->second.end(); ++it2)
+	{
+	  const OSM_Element_Metadata_Skeleton* meta_skel
+	      = meta_collector.get(it->first, it2->id);
+	  if ((meta_skel) && (meta_skel->timestamp >= newer_restriction->get_timestamp()))
+	    accepted.push_back(*it2);
+	}
+	it->second.swap(accepted);
+      }
+    }
   }
   else if (type == QUERY_WAY)
   {
@@ -742,6 +775,25 @@ void Query_Statement::execute(Resource_Manager& rman)
     
     if (user_restriction)
       delete meta_collector;
+    if (newer_restriction)
+    {
+      Meta_Collector< Uint31_Index, Way_Skeleton > meta_collector
+          (ways, *rman.get_transaction(), meta_settings().WAYS_META, false);
+      for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin();
+          it != ways.end(); ++it)
+      {
+	vector< Way_Skeleton > accepted;
+	for (vector< Way_Skeleton >::const_iterator it2 = it->second.begin();
+	    it2 != it->second.end(); ++it2)
+	{
+	  const OSM_Element_Metadata_Skeleton* meta_skel
+	      = meta_collector.get(it->first, it2->id);
+	  if ((meta_skel) && (meta_skel->timestamp >= newer_restriction->get_timestamp()))
+	    accepted.push_back(*it2);
+	}
+	it->second.swap(accepted);
+      }
+    }
   }
   else if (type == QUERY_RELATION)
   {
@@ -839,6 +891,25 @@ void Query_Statement::execute(Resource_Manager& rman)
     
     if (user_restriction)
       delete meta_collector;
+    if (newer_restriction)
+    {
+      Meta_Collector< Uint31_Index, Relation_Skeleton > meta_collector
+          (relations, *rman.get_transaction(), meta_settings().RELATIONS_META, false);
+      for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = relations.begin();
+          it != relations.end(); ++it)
+      {
+	vector< Relation_Skeleton > accepted;
+	for (vector< Relation_Skeleton >::const_iterator it2 = it->second.begin();
+	    it2 != it->second.end(); ++it2)
+	{
+	  const OSM_Element_Metadata_Skeleton* meta_skel
+	      = meta_collector.get(it->first, it2->id);
+	  if ((meta_skel) && (meta_skel->timestamp >= newer_restriction->get_timestamp()))
+	    accepted.push_back(*it2);
+	}
+	it->second.swap(accepted);
+      }
+    }
   }
   
   stopwatch.report(get_name());  

@@ -22,14 +22,16 @@ struct V : public vector< T >
 
 struct Print_Control
 {
-  Print_Control() : uid(0) {}
-  Print_Control(uint uid_) : uid(uid_) {}
+  Print_Control() : uid(0), tags_allowed_only(false) {}
+  Print_Control(uint uid_, bool tags_allowed_only_)
+    : uid(uid_), tags_allowed_only(tags_allowed_only_) {}
   
   void meta_data(uint id, int variant) const;
   bool print_allowed(uint id, int variant) const;
   
   private:
     uint uid;
+    bool tags_allowed_only;
 };
 
 void Print_Control::meta_data(uint id, int variant) const
@@ -46,6 +48,9 @@ void Print_Control::meta_data(uint id, int variant) const
 
 bool Print_Control::print_allowed(uint id, int variant) const
 {
+  if (tags_allowed_only && (id % 7 != 0))
+    return false;
+  
   if (uid == 0)
     return true;
 
@@ -68,7 +73,12 @@ void fill_bbox_with_nodes
               " lat=\""<<fixed<<setprecision(7)<<((north - south)/sqrt_*(0.5 + i) + south)<<"\""
               " lon=\""<<fixed<<setprecision(7)<<((east - west)/sqrt_*(0.5 + j) + west)<<"\"";
         print_control.meta_data(begin_id + i*sqrt_ + j, after_altered ? 4 : 1);
-        cout<<"/>\n";
+	if ((begin_id + i*sqrt_ + j) % 7 == 0)
+	  cout<<">\n"
+	        "    <tag k=\"foo\" v=\"bar\"/>\n"
+		"  </node>\n";
+	else
+          cout<<"/>\n";
       }
     }
   }
@@ -94,6 +104,8 @@ void create_way
     for (uint ref = start_node_ref; (int)ref >= (int)end_node_ref; ref -= stepping)
       cout<<"    <nd ref=\""<<ref<<"\"/>\n";
   }
+  if (id % 7 == 0)
+    cout<<"    <tag k=\"foo\" v=\"bar\"/>\n";
   cout<<"  </way>\n";
 }
 
@@ -116,6 +128,8 @@ void create_relation
           "\" ref=\""<<refs[i]<<
           "\" role=\""<<roles[(refs[i] + types[i]) % 4]<<"\"/>\n";
   }
+  if (id % 7 == 0)
+    cout<<"    <tag k=\"foo\" v=\"bar\"/>\n";
   cout<<"  </relation>\n";
 }
 
@@ -179,6 +193,7 @@ int main(int argc, char* args[])
 {
   uint pattern_size = 2;
   uint uid = 0;
+  bool tags_allowed_only = false;
   if (argc > 1)
     pattern_size = atoi(args[1]);
   enum { before, diff, after } pattern = before;
@@ -194,8 +209,13 @@ int main(int argc, char* args[])
     if (string(args[3]).substr(0, 4) == "uid=")
       uid = atoll(args[3] + 4);
   }
+  if (argc > 4)
+  {
+    if (string(args[4]) == "tags")
+      tags_allowed_only = true;
+  }
   
-  Print_Control print_control(uid);
+  Print_Control print_control(uid, tags_allowed_only);
 
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
