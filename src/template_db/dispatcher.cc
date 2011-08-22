@@ -198,12 +198,17 @@ void Dispatcher::request_read_and_idx(pid_t pid)
       it != map_footprints.end(); ++it)
     it->register_pid(pid);
   processes_reading_idx.insert(pid);
-  processes_reading.insert(pid);
+  processes_reading[pid] = time(NULL);
 }
 
 void Dispatcher::read_idx_finished(pid_t pid)
 {
   processes_reading_idx.erase(pid);
+}
+
+void Dispatcher::prolongate(pid_t pid)
+{
+  processes_reading[pid] = time(NULL);
 }
 
 void Dispatcher::read_finished(pid_t pid)
@@ -509,9 +514,13 @@ void Dispatcher::check_and_purge()
       collected_pids.insert(*it);
   }
   
+  uint32 current_time = time(NULL);
   for (set< pid_t >::const_iterator it = collected_pids.begin();
       it != collected_pids.end(); ++it)
   {
+    map< pid_t, uint32 >::const_iterator alive_it = processes_reading.find(*it);
+    if ((alive_it != processes_reading.end()) && (alive_it->second + 180 > current_time))
+      continue;
     ostringstream file_name("");
     file_name<<"/proc/"<<*it<<"/stat";
     if (!file_exists(file_name.str()))
@@ -745,6 +754,15 @@ void Dispatcher_Client::purge(uint32 pid)
     if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
       return;
   }
+}
+
+void Dispatcher_Client::ping()
+{
+  uint32 pid = getpid();
+  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+
+  *(uint32*)dispatcher_shm_ptr = Dispatcher::PING;
+  *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
 }
 
 void Dispatcher_Client::terminate()

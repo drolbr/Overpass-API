@@ -64,14 +64,21 @@ void Resource_Manager::health_check(const Statement& stmt)
   if (max_allowed_time > 0)
     elapsed_time = time(NULL) - start_time;
   
-  if (elapsed_time >= last_ping_time + 60)
+  if (elapsed_time >= last_report_time + 5)
   {
-    if (error_output)
+    if (watchdog)
+      watchdog->ping();
+    last_ping_time += 5;
+
+    if (elapsed_time >= last_report_time + 60)
     {
-      error_output->display_statement_progress
-          (elapsed_time, stmt.get_name(), stmt.get_line_number(), stack_progress);
+      if (error_output)
+      {
+        error_output->display_statement_progress
+            (elapsed_time, stmt.get_name(), stmt.get_line_number(), stack_progress);
+      }
+      last_report_time += 60;
     }
-    last_ping_time += 60;
   }
   
   uint64 size = 0;

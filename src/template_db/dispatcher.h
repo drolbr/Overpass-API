@@ -37,8 +37,9 @@ class Dispatcher
     
     static const uint32 REGISTER_PID = 16;
     static const uint32 SET_LIMITS = 17;
-    static const uint32 UNREGISTER_PID = 18;
-    static const uint32 SERVER_STATE = 19;
+    static const uint32 PING = 18;
+    static const uint32 UNREGISTER_PID = 19;
+    static const uint32 SERVER_STATE = 20;
     static const uint32 QUERY_REJECTED = 32;
     
     /** Opens a shared memory for dispatcher communication. Furthermore,
@@ -79,6 +80,9 @@ class Dispatcher
         database. Can be safely called multiple times for the same process. */
     void read_idx_finished(pid_t pid);
     
+    /** Refreshes the timeout for a reading process. */
+    void prolongate(pid_t pid);
+    
     /** Unregisters a reading process. */
     void read_finished(pid_t pid);
     
@@ -106,7 +110,7 @@ class Dispatcher
     vector< Idx_Footprints > data_footprints;
     vector< Idx_Footprints > map_footprints;
     set< pid_t > processes_reading_idx;
-    set< pid_t > processes_reading;
+    map< pid_t, uint32 > processes_reading;
     string shadow_name, db_dir;
     string dispatcher_share_name;
     int dispatcher_shm_fd;
@@ -163,8 +167,11 @@ class Dispatcher_Client
     /** Let another instance running in the standby_loop output its status. */
     void output_status();
     
-    /** Let another instance running in the standby_loop output its status. */
+    /** Purge another instance. */
     void purge(uint32 pid);
+    
+    /** Called regularly to tell the dispatcher that this process is still alive */
+    void ping();
     
     const string& get_db_dir() { return db_dir; }
     const string& get_shadow_name() { return shadow_name; }

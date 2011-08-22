@@ -174,6 +174,14 @@ void Dispatcher_Stub::set_limits()
 {
 }
 
+void Dispatcher_Stub::ping() const
+{
+  if (dispatcher_client)
+    dispatcher_client->ping();
+  if (area_dispatcher_client)
+    area_dispatcher_client->ping();
+}
+
 Dispatcher_Stub::~Dispatcher_Stub()
 {
   bool areas_written = (rman->area_updater() != 0);

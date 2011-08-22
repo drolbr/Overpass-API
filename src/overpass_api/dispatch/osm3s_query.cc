@@ -91,6 +91,8 @@ int main(int argc, char *argv[])
       (*it)->execute(dispatcher.resource_manager());
     
     cout<<"\n</osm-derived>\n";
+
+    return 0;
   }
   catch(File_Error e)
   {
@@ -101,6 +103,8 @@ int main(int argc, char *argv[])
       if (error_output)
         error_output->runtime_error(temp.str());
     }
+    
+    return 1;
   }
   catch(Resource_Error e)
   {
@@ -113,8 +117,11 @@ int main(int argc, char *argv[])
           <<e.line_number<<" using about "<<e.size/(1024*1024)<<" MB of RAM.";
     if (error_output)
       error_output->runtime_error(temp.str());
+    
+    return 2;
   }
-  catch(Exit_Error e) {}
-  
-  return 0;
+  catch(Exit_Error e)
+  {
+    return 3;
+  }
 }

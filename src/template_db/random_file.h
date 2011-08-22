@@ -108,8 +108,8 @@ void Random_File< TVal >::move_cache_window(size_t pos)
     index->blocks[cache_pos] = disk_pos;
     
     // Write the data at the found position.
-    lseek64(val_file.fd(), (int64)disk_pos*block_size, SEEK_SET);
-    uint32 foo(write(val_file.fd(), cache.ptr, block_size)); foo = 0;
+    val_file.seek((int64)disk_pos*block_size, "Random_File:21");
+    val_file.write(cache.ptr, block_size, "Random_File:22");
   }
   changed = false;
   
@@ -124,8 +124,8 @@ void Random_File< TVal >::move_cache_window(size_t pos)
   }
   else
   {
-    lseek64(val_file.fd(), (int64)(index->blocks[pos])*block_size, SEEK_SET);
-    uint32 foo(read(val_file.fd(), cache.ptr, block_size)); foo = 0;
+    val_file.seek((int64)(index->blocks[pos])*block_size, "Random_File:23");
+    val_file.read(cache.ptr, block_size, "Random_File:24");
   }
   cache_pos = pos;
 }

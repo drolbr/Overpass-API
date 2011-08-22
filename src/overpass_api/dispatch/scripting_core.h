@@ -28,17 +28,18 @@ using namespace std;
 
 struct Exit_Error {};
 
-class Dispatcher_Stub
+class Dispatcher_Stub : public Watchdog_Callback
 {
   public:
     // Opens the connection to the database, sets db_dir accordingly
     // and registers the process. error_output_ must remain valid over the
     // entire lifetime of this object.
     Dispatcher_Stub(string db_dir_, Error_Output* error_output_, string xml_raw,
-		    int& area_level);
-    
-    void register_process();
+		    int& area_level);    
     void set_limits();
+    
+    // Called once per minute from the resource manager
+    virtual void ping() const;
 
     ~Dispatcher_Stub();
     
@@ -55,8 +56,6 @@ class Dispatcher_Stub
     Nonsynced_Transaction* transaction;
     Nonsynced_Transaction* area_transaction;
     Resource_Manager* rman;
-
-    void unregister_process();
 };
 
 bool parse_and_validate
