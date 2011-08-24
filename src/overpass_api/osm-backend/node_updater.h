@@ -104,7 +104,7 @@ private:
   
   void update_node_tags_global(const vector< Tag_Entry >& tags_to_delete);
   
-  void merge_files(string from, string into);
+  void merge_files(const vector< string >& froms, string into);
 };
 
 #endif

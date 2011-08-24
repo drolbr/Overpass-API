@@ -52,29 +52,95 @@ struct Meta_Equal_Id {
    }
 };
 
+void rename_referred_file(const string& db_dir, const string& from, const string& to,
+			  const File_Properties& file_prop);
+			   
+class Transaction_Collection
+{
+  public:
+    Transaction_Collection(bool writeable, bool use_shadow,
+			   const string& db_dir, const vector< string >& file_name_extensions);
+    ~Transaction_Collection();
+    
+    void remove_referred_files(const File_Properties& file_prop);
+    
+    vector< string > file_name_extensions;
+    vector< Transaction* > transactions;
+};
+
 template < typename TIndex, typename TObject >
-void merge_file
-    (Transaction& from_transaction, Transaction& into_transaction,
-     string from, const File_Properties& file_prop)
+class Block_Backend_Collection
+{
+  public:
+    Block_Backend_Collection
+        (Transaction_Collection& transactions, const File_Properties& file_prop);
+    ~Block_Backend_Collection();
+    
+    vector< Block_Backend< TIndex, TObject >* > dbs;
+};
+
+template < typename TIndex, typename TObject >
+Block_Backend_Collection< TIndex, TObject >::Block_Backend_Collection
+    (Transaction_Collection& transactions, const File_Properties& file_prop)
+{
+  for (vector< Transaction* >::const_iterator it = transactions.transactions.begin();
+      it != transactions.transactions.end(); ++it)
+    dbs.push_back(new Block_Backend< TIndex, TObject >((*it)->data_index(&file_prop)));  
+}
+
+template < typename TIndex, typename TObject >
+Block_Backend_Collection< TIndex, TObject >::~Block_Backend_Collection()
+{
+  for (typename vector< Block_Backend< TIndex, TObject >* >::const_iterator
+      it = dbs.begin(); it != dbs.end(); ++it)
+    delete(*it);
+}
+
+template < typename TIndex, typename TObject >
+void merge_files
+    (Transaction_Collection& from_transaction, Transaction& into_transaction,
+     const File_Properties& file_prop)
 {
   {
     map< TIndex, set< TObject > > db_to_delete;
     map< TIndex, set< TObject > > db_to_insert;
     
-    uint32 item_count(0);
-    Block_Backend< TIndex, TObject > from_db
-        (from_transaction.data_index(&file_prop));
-    for (typename Block_Backend< TIndex, TObject >::Flat_Iterator
-      it(from_db.flat_begin()); !(it == from_db.flat_end()); ++it)
+    uint32 item_count = 0;
+    Block_Backend_Collection< TIndex, TObject > from_dbs(from_transaction, file_prop);
+    vector< pair< typename Block_Backend< TIndex, TObject >::Flat_Iterator,
+        typename Block_Backend< TIndex, TObject >::Flat_Iterator > > from_its;
+    set< TIndex > current_idxs;
+    for (typename vector< Block_Backend< TIndex, TObject >* >::const_iterator
+        it = from_dbs.dbs.begin(); it != from_dbs.dbs.end(); ++it)
     {
-      db_to_insert[it.index()].insert(it.object());
-      if (++item_count >= 4*1024*1024)
+      from_its.push_back(make_pair((*it)->flat_begin(), (*it)->flat_end()));
+      if (!(from_its.back().first == from_its.back().second))
+        current_idxs.insert(from_its.back().first.index());
+    }
+    while (!current_idxs.empty())
+    {
+      TIndex current_idx = *current_idxs.begin();
+      current_idxs.erase(current_idxs.begin());
+      for (typename vector< pair< typename Block_Backend< TIndex, TObject >::Flat_Iterator,
+	      typename Block_Backend< TIndex, TObject >::Flat_Iterator > >::iterator
+	  it = from_its.begin(); it != from_its.end(); ++it)
       {
-	Block_Backend< TIndex, TObject > into_db
-	    (into_transaction.data_index(&file_prop));
-	into_db.update(db_to_delete, db_to_insert);
-	db_to_insert.clear();
-	item_count = 0;
+	while (!(it->first == it->second) && (it->first.index() == current_idx))
+	{
+	  db_to_insert[it->first.index()].insert(it->first.object());
+	  ++(it->first);
+
+	  if (++item_count > 4*1024*1024)
+	  {
+	    Block_Backend< TIndex, TObject > into_db
+	        (into_transaction.data_index(&file_prop));
+	    into_db.update(db_to_delete, db_to_insert);
+	    db_to_insert.clear();
+	    item_count = 0;
+	  }
+	}
+	if (!(it->first == it->second))
+	  current_idxs.insert(it->first.index());
       }
     }
     
@@ -82,13 +148,7 @@ void merge_file
         (into_transaction.data_index(&file_prop));
     into_db.update(db_to_delete, db_to_insert);
   }
-  remove((from_transaction.get_db_dir()
-      + file_prop.get_file_name_trunk() + from 
-      + file_prop.get_data_suffix()
-      + file_prop.get_index_suffix()).c_str());
-  remove((from_transaction.get_db_dir()
-      + file_prop.get_file_name_trunk() + from 
-      + file_prop.get_data_suffix()).c_str());
+  from_transaction.remove_referred_files(file_prop);
 }
 
 #endif

@@ -175,3 +175,54 @@ void collect_old_meta_data
     ++meta_it;
   }
 }
+
+Transaction_Collection::Transaction_Collection
+    (bool writeable, bool use_shadow,
+     const string& db_dir, const vector< string >& file_name_extensions_)
+     : file_name_extensions(file_name_extensions_)
+{
+  for (vector< string >::const_iterator it = file_name_extensions.begin();
+      it != file_name_extensions.end(); ++it)
+    transactions.push_back(new Nonsynced_Transaction(writeable, use_shadow, db_dir, *it));
+}
+
+Transaction_Collection::~Transaction_Collection()
+{
+  for (vector< Transaction* >::const_iterator it = transactions.begin();
+      it != transactions.end(); ++it)
+    delete(*it);
+}
+
+void Transaction_Collection::remove_referred_files(const File_Properties& file_prop)
+{
+  for (vector< string >::const_iterator it = file_name_extensions.begin();
+      it != file_name_extensions.end(); ++it)
+  {
+    remove((transactions.front()->get_db_dir()
+           + file_prop.get_file_name_trunk() + *it
+           + file_prop.get_data_suffix()
+           + file_prop.get_index_suffix()).c_str());
+    remove((transactions.front()->get_db_dir()
+           + file_prop.get_file_name_trunk() + *it
+           + file_prop.get_data_suffix()).c_str());
+  }
+}
+
+void rename_referred_file(const string& db_dir, const string& from, const string& to,
+			  const File_Properties& file_prop)
+{
+  rename((db_dir
+      + file_prop.get_file_name_trunk() + from
+      + file_prop.get_data_suffix()
+      + file_prop.get_index_suffix()).c_str(),
+	 (db_dir
+      + file_prop.get_file_name_trunk() + to
+      + file_prop.get_data_suffix()
+      + file_prop.get_index_suffix()).c_str());
+  rename((db_dir
+      + file_prop.get_file_name_trunk() + from
+      + file_prop.get_data_suffix()).c_str(),
+	 (db_dir
+      + file_prop.get_file_name_trunk() + to
+      + file_prop.get_data_suffix()).c_str());
+}

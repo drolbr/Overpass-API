@@ -528,6 +528,8 @@ Osm_Updater::~Osm_Updater()
   delete node_updater_;
   delete way_updater_;
   delete relation_updater_;
+  if (::meta)
+    delete ::meta;
   
   if (dispatcher_client)
   {

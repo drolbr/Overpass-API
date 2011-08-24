@@ -65,25 +65,74 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
   if (!external_transaction && !partial && (update_counter > 0))
   {
     callback->partial_started();
+
+    vector< string > froms;
+    for (int i = 0; i < update_counter % 8; ++i)
+    {
+      string from(".0a");
+      from[2] += i;
+      froms.push_back(from);
+    }
+    merge_files(froms, "");
+    
     if (update_counter >= 64)
-      merge_files(".1", ".0");
+      merge_files(vector< string >(1, ".1"), ".0");
     if (update_counter >= 8)
-      merge_files(".0", "");
+    {
+      vector< string > froms;
+      for (int i = 0; i < update_counter/8 % 8; ++i)
+      {
+	string from(".1a");
+	from[2] += i;
+	froms.push_back(from);
+      }
+      merge_files(froms, ".0");
+      
+      merge_files(vector< string >(1, ".0"), "");
+    }
     update_counter = 0;
     callback->partial_finished();
   }
   else if (!external_transaction && partial/* && !map_file_existed_before*/)
   {
-    if (++update_counter % 8 == 0)
+    string to(".0a");
+    to[2] += (update_counter % 8);
+    rename_referred_file(db_dir, "", to, *osm_base_settings().WAYS);
+    rename_referred_file(db_dir, "", to, *osm_base_settings().WAY_TAGS_LOCAL);
+    rename_referred_file(db_dir, "", to, *osm_base_settings().WAY_TAGS_GLOBAL);
+    if (meta)
+      rename_referred_file(db_dir, "", to, *meta_settings().WAYS_META);
+    
+    ++update_counter;
+    if (update_counter % 8 == 0)
     {
       callback->partial_started();
-      merge_files("", ".0");
+      
+      string to(".1a");
+      to[2] += (update_counter/8 % 8);
+      
+      vector< string > froms;
+      for (int i = 0; i < 8; ++i)
+      {
+	string from(".0a");
+	from[2] += i;
+	froms.push_back(from);
+      }
+      merge_files(froms, to);
       callback->partial_finished();
     }
     if (update_counter % 64 == 0)
     {
       callback->partial_started();
-      merge_files(".0", ".1");
+      
+      vector< string > froms;
+      for (int i = 0; i < 8; ++i)
+      {
+	string from(".1a");
+	from[2] += i;
+	froms.push_back(from);
+      }
+      merge_files(froms, ".1");
       callback->partial_finished();
     }
   }
@@ -586,19 +635,19 @@ void Way_Updater::update_way_tags_global(const vector< Tag_Entry >& tags_to_dele
   way_db.update(db_to_delete, db_to_insert);
 }
 
-void Way_Updater::merge_files(string from, string into)
+void Way_Updater::merge_files(const vector< string >& froms, string into)
 {
-  Nonsynced_Transaction from_transaction(false, false, db_dir, from);
+  Transaction_Collection from_transactions(false, false, db_dir, froms);
   Nonsynced_Transaction into_transaction(true, false, db_dir, into);
-  merge_file< Uint31_Index, Way_Skeleton >
-      (from_transaction, into_transaction, from, *osm_base_settings().WAYS);
-  merge_file< Tag_Index_Local, Uint32_Index >
-      (from_transaction, into_transaction, from, *osm_base_settings().WAY_TAGS_LOCAL);
-  merge_file< Tag_Index_Global, Uint32_Index >
-      (from_transaction, into_transaction, from, *osm_base_settings().WAY_TAGS_GLOBAL);
+  ::merge_files< Uint31_Index, Way_Skeleton >
+  (from_transactions, into_transaction, *osm_base_settings().WAYS);
+  ::merge_files< Tag_Index_Local, Uint32_Index >
+  (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_LOCAL);
+  ::merge_files< Tag_Index_Global, Uint32_Index >
+  (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
   if (meta)
   {
-    merge_file< Uint31_Index, OSM_Element_Metadata_Skeleton >
-        (from_transaction, into_transaction, from, *meta_settings().WAYS_META);
+    ::merge_files< Uint31_Index, OSM_Element_Metadata_Skeleton >
+        (from_transactions, into_transaction, *meta_settings().WAYS_META);
   }
 }

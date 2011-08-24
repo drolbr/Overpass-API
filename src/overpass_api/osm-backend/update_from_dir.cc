@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
   // read command line arguments
   string source_dir, db_dir, data_version;
   vector< string > source_file_names;
-  bool meta;
+  bool meta = false;
   
   int argpos(1);
   while (argpos < argc)
