@@ -41,6 +41,7 @@ void Print_Statement::set_attributes(const char **attr)
   attributes["from"] = "_";
   attributes["mode"] = "body";
   attributes["order"] = "id";
+  attributes["limit"] = "";
   
   eval_cstr_array(get_name(), attributes, attr);
   
@@ -74,6 +75,8 @@ void Print_Statement::set_attributes(const char **attr)
         <<" the only allowed values are \"id\" or \"quadtile\".";
     add_static_error(temp.str());
   }
+  if (attributes["limit"] != "")
+    limit = atoll(attributes["limit"].c_str());
 }
 
 void Print_Statement::forecast()
@@ -329,7 +332,7 @@ void print_item(uint32 ll_upper, const Area_Skeleton& skel, uint32 mode,
 template< class TIndex, class TObject >
 void quadtile
     (const map< TIndex, vector< TObject > >& items, uint32 mode,
-     Transaction& transaction)
+     Transaction& transaction, uint32 limit, uint32& element_count)
 {
   typename map< TIndex, vector< TObject > >::const_iterator
       item_it(items.begin());
@@ -338,7 +341,11 @@ void quadtile
   {
     for (typename vector< TObject >::const_iterator it2(item_it->second.begin());
         it2 != item_it->second.end(); ++it2)
+    {
+      if (++element_count > limit)
+	return;
       print_item(item_it->first.val(), *it2, mode, transaction);
+    }
     ++item_it;
   }
 };
@@ -348,7 +355,7 @@ void Print_Statement::tags_quadtile
     (const map< TIndex, vector< TObject > >& items,
      const File_Properties& file_prop, uint32 mode, uint32 stopwatch_account,
      Resource_Manager& rman, Transaction& transaction,
-     const File_Properties* meta_file_prop)
+     const File_Properties* meta_file_prop, uint32& element_count)
 {
   //generate set of relevant coarse indices
   set< TIndex > coarse_indices;
@@ -364,7 +371,7 @@ void Print_Statement::tags_quadtile
   
   // iterate over the result
   stopwatch.stop(Stopwatch::NO_DISK);
-  uint coarse_count(0);
+  uint coarse_count = 0;
   Block_Backend< Tag_Index_Local, Uint32_Index > items_db
       (transaction.data_index(&file_prop));
   Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
@@ -393,8 +400,12 @@ void Print_Statement::tags_quadtile
     {
       for (typename vector< TObject >::const_iterator it2(item_it->second.begin());
           it2 != item_it->second.end(); ++it2)
-        print_item(item_it->first.val(), *it2, mode, transaction, &(tags_by_id[it2->id]),
+      {
+	if (++element_count > limit)
+	  return;
+	print_item(item_it->first.val(), *it2, mode, transaction, &(tags_by_id[it2->id]),
 		   meta_printer.get(item_it->first, it2->id), &(meta_printer.users()));
+      }
       ++item_it;
     }
   }
@@ -414,7 +425,7 @@ struct Skeleton_Comparator_By_Id {
 template< class TIndex, class TObject >
 void by_id
   (const map< TIndex, vector< TObject > >& items, uint32 mode,
-   Transaction& transaction)
+   Transaction& transaction, uint32 limit, uint32& element_count)
 {
   // order relevant elements by id
   vector< pair< const TObject*, uint32 > > items_by_id;
@@ -430,7 +441,11 @@ void by_id
   
   // iterate over the result
   for (uint32 i(0); i < items_by_id.size(); ++i)
+  {
+    if (++element_count > limit)
+      return;
     print_item(items_by_id[i].second, *(items_by_id[i].first), mode, transaction);
+  }
 };
 
 template< class TIndex, class TObject >
@@ -461,7 +476,7 @@ void Print_Statement::tags_by_id
    const File_Properties& file_prop,
    uint32 FLUSH_SIZE, uint32 mode, uint32 stopwatch_account,
    Resource_Manager& rman, Transaction& transaction,
-   const File_Properties* meta_file_prop)
+   const File_Properties* meta_file_prop, uint32& element_count)
 {
   // order relevant elements by id
   vector< pair< const TObject*, uint32 > > items_by_id;
@@ -527,6 +542,8 @@ void Print_Statement::tags_by_id
     {
       set< OSM_Element_Metadata_Skeleton >::const_iterator meta_it
           = metadata.find(OSM_Element_Metadata_Skeleton(items_by_id[i].first->id));
+      if (++element_count > limit)
+	return;
       print_item(items_by_id[i].second, *(items_by_id[i].first), mode,
 		 transaction, &(tags_by_id[items_by_id[i].first->id]),
 		 meta_it != metadata.end() ? &*meta_it : 0, &(meta_printer.users()));
@@ -543,6 +560,7 @@ void Print_Statement::execute(Resource_Manager& rman)
     rman.area_updater()->flush(&stopwatch);
   
   map< string, Set >::const_iterator mit(rman.sets().find(input));
+  uint32 element_count;
   if (mit == rman.sets().end())
     return;
   if (mode & PRINT_TAGS)
@@ -552,20 +570,20 @@ void Print_Statement::execute(Resource_Manager& rman)
       tags_by_id(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
 		 NODE_FLUSH_SIZE, mode, Stopwatch::NODE_TAGS_LOCAL, rman,
 		 *rman.get_transaction(),
-		 (mode & PRINT_META) ? meta_settings().NODES_META : 0);
+		 (mode & PRINT_META) ? meta_settings().NODES_META : 0, element_count);
       tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		 WAY_FLUSH_SIZE, mode, Stopwatch::WAY_TAGS_LOCAL, rman,
 		 *rman.get_transaction(),
-		 (mode & PRINT_META) ? meta_settings().WAYS_META : 0);
+		 (mode & PRINT_META) ? meta_settings().WAYS_META : 0, element_count);
       tags_by_id(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		 RELATION_FLUSH_SIZE, mode, Stopwatch::RELATION_TAGS_LOCAL, rman,
 		 *rman.get_transaction(),
-		 (mode & PRINT_META) ? meta_settings().RELATIONS_META : 0);
+		 (mode & PRINT_META) ? meta_settings().RELATIONS_META : 0, element_count);
       if (rman.get_area_transaction())
       {
 	tags_by_id(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
 		   AREA_FLUSH_SIZE, mode, Stopwatch::AREA_TAGS_LOCAL, rman,
-		   *rman.get_area_transaction());
+		   *rman.get_area_transaction(), 0, element_count);
       }
     }
     else
@@ -573,20 +591,20 @@ void Print_Statement::execute(Resource_Manager& rman)
       tags_quadtile(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
 		    mode, Stopwatch::NODE_TAGS_LOCAL, rman,
 		    *rman.get_transaction(),
-		    (mode & PRINT_META) ? meta_settings().NODES_META : 0);
+		    (mode & PRINT_META) ? meta_settings().NODES_META : 0, element_count);
       tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		    mode, Stopwatch::WAY_TAGS_LOCAL, rman,
 		    *rman.get_transaction(),
-		    (mode & PRINT_META) ? meta_settings().WAYS_META : 0);
+		    (mode & PRINT_META) ? meta_settings().WAYS_META : 0, element_count);
       tags_quadtile(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		    mode, Stopwatch::RELATION_TAGS_LOCAL, rman,
 		    *rman.get_transaction(),
-		    (mode & PRINT_META) ? meta_settings().RELATIONS_META : 0);
+		    (mode & PRINT_META) ? meta_settings().RELATIONS_META : 0, element_count);
       if (rman.get_area_transaction())
       {
         tags_quadtile(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
 		      mode, Stopwatch::AREA_TAGS_LOCAL, rman,
-		      *rman.get_area_transaction());
+		      *rman.get_area_transaction(), 0, element_count);
       }
     }
   }
@@ -594,19 +612,19 @@ void Print_Statement::execute(Resource_Manager& rman)
   {
     if (order == ORDER_BY_ID)
     {
-      by_id(mit->second.nodes, mode, *rman.get_transaction());
-      by_id(mit->second.ways, mode, *rman.get_transaction());
-      by_id(mit->second.relations, mode, *rman.get_transaction());
+      by_id(mit->second.nodes, mode, *rman.get_transaction(), limit, element_count);
+      by_id(mit->second.ways, mode, *rman.get_transaction(), limit, element_count);
+      by_id(mit->second.relations, mode, *rman.get_transaction(), limit, element_count);
       if (rman.get_area_transaction())
-	by_id(mit->second.areas, mode, *rman.get_area_transaction());
+	by_id(mit->second.areas, mode, *rman.get_area_transaction(), limit, element_count);
     }
     else
     {
-      quadtile(mit->second.nodes, mode, *rman.get_transaction());
-      quadtile(mit->second.ways, mode, *rman.get_transaction());
-      quadtile(mit->second.relations, mode, *rman.get_transaction());
+      quadtile(mit->second.nodes, mode, *rman.get_transaction(), limit, element_count);
+      quadtile(mit->second.ways, mode, *rman.get_transaction(), limit, element_count);
+      quadtile(mit->second.relations, mode, *rman.get_transaction(), limit, element_count);
       if (rman.get_area_transaction())
-	quadtile(mit->second.areas, mode, *rman.get_area_transaction());
+	quadtile(mit->second.areas, mode, *rman.get_area_transaction(), limit, element_count);
     }
   }
   

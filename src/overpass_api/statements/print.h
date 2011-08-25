@@ -11,7 +11,8 @@ using namespace std;
 class Print_Statement : public Statement
 {
   public:
-    Print_Statement(int line_number_) : Statement(line_number_) {}
+    Print_Statement(int line_number_) : Statement(line_number_),
+        limit(numeric_limits< unsigned int >::max()) {}
     virtual void set_attributes(const char **attr);
     virtual string get_name() const { return "print"; }
     virtual string get_result_name() const { return ""; }
@@ -23,13 +24,14 @@ class Print_Statement : public Statement
     string input;
     unsigned int mode;
     unsigned int order;
+    unsigned int limit;
 
     template< class TIndex, class TObject >
     void tags_quadtile
       (const map< TIndex, vector< TObject > >& items,
        const File_Properties& file_prop, uint32 mode, uint32 stopwatch_account,
        Resource_Manager& rman, Transaction& transaction,
-       const File_Properties* meta_file_prop = 0);
+       const File_Properties* meta_file_prop = 0, uint32& element_count = 0);
     
     template< class TIndex, class TObject >
     void tags_by_id
@@ -37,7 +39,7 @@ class Print_Statement : public Statement
        const File_Properties& file_prop,
        uint32 FLUSH_SIZE, uint32 mode, uint32 stopwatch_account,
        Resource_Manager& rman, Transaction& transaction,
-       const File_Properties* meta_file_prop = 0);
+       const File_Properties* meta_file_prop = 0, uint32& element_count = 0);
 };
 
 template< class TIndex >

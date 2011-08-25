@@ -443,14 +443,8 @@ void Query_Statement::execute(Resource_Manager& rman)
   map< Uint31_Index, vector< Area_Skeleton > >& areas
       (rman.sets()[output].areas);
   
-  if (key_values.empty())
+  if (key_values.empty() && (!item_restriction))
     return;
-  
-  set< Tag_Index_Global > tag_req;
-  Tag_Index_Global idx;
-  idx.key = key_values.begin()->first;
-  idx.value = key_values.begin()->second;
-  tag_req.insert(idx);
   
   if (type == QUERY_NODE)
   {
@@ -519,7 +513,8 @@ void Query_Statement::execute(Resource_Manager& rman)
       stopwatch.stop(Stopwatch::NODES_MAP);
     }
     
-    nodes.clear();
+    if (!item_restriction)
+      nodes.clear();
     ways.clear();
     relations.clear();
     areas.clear();
