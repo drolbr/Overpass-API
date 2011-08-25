@@ -560,7 +560,7 @@ void Print_Statement::execute(Resource_Manager& rman)
     rman.area_updater()->flush(&stopwatch);
   
   map< string, Set >::const_iterator mit(rman.sets().find(input));
-  uint32 element_count;
+  uint32 element_count = 0;
   if (mit == rman.sets().end())
     return;
   if (mode & PRINT_TAGS)
