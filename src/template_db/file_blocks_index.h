@@ -82,8 +82,8 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
 {
   try
   {
-    Raw_File val_file(data_file_name, O_RDONLY, S_666, "File_Blocks:5");
-		      block_count = val_file.size("File_Blocks:6")/block_size_;
+    Raw_File val_file(data_file_name, O_RDONLY, S_666, "File_Blocks_Index::File_Blocks_Index::1");
+    block_count = val_file.size("File_Blocks_Index::File_Blocks_Index::2")/block_size_;
   }
   catch (File_Error e)
   {
@@ -96,12 +96,13 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
   
   try
   {
-    Raw_File source_file(index_file_name, O_RDONLY, S_666, "File_Blocks:2");
+    Raw_File source_file(index_file_name, O_RDONLY, S_666,
+			 "File_Blocks_Index::File_Blocks_Index::3");
 			 
     // read index file
-    uint32 index_size = source_file.size("File_Blocks:7");
+    uint32 index_size = source_file.size("File_Blocks_Index::File_Blocks_Index::4");
     Void_Pointer< uint8 > index_buf(index_size);
-    source_file.read(index_buf.ptr, index_size, "File_Blocks:8");
+    source_file.read(index_buf.ptr, index_size, "File_Blocks_Index::File_Blocks_Index::5");
     
     uint32 pos(0);
     while (pos < index_size)
@@ -113,7 +114,7 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
 	  *(uint32*)(index_buf.ptr + (pos + TIndex::size_of(index_buf.ptr+pos) + 4)));
       blocks.push_back(entry);
       if (entry.pos > block_count)
-	throw File_Error(0, index_file_name, "File_Blocks: bad pos in index file");
+	throw File_Error(0, index_file_name, "File_Blocks_Index: bad pos in index file");
       else
 	is_referred[entry.pos] = true;
       pos += TIndex::size_of(index_buf.ptr+pos) + 2*sizeof(uint32);
@@ -133,9 +134,10 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
       try
       {
 	Raw_File void_blocks_file(empty_index_file_name, O_RDONLY, S_666, "");
-	uint32 void_index_size = void_blocks_file.size("File_Blocks:9");
+	uint32 void_index_size = void_blocks_file.size("File_Blocks_Index::File_Blocks_Index::6");
 	Void_Pointer< uint8 > index_buf(void_index_size);
-	void_blocks_file.read(index_buf.ptr, void_index_size, "File_Blocks:10");
+	void_blocks_file.read(index_buf.ptr, void_index_size,
+			      "File_Blocks_Index::File_Blocks_Index::7");
 	for (uint32 i = 0; i < void_index_size/sizeof(uint32); ++i)
 	  void_blocks.push_back(*(uint32*)(index_buf.ptr + 4*i));
 	empty_index_file_used = true;
@@ -179,11 +181,12 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
     pos += sizeof(uint32);
   }
 
-  Raw_File dest_file(index_file_name, O_RDWR|O_CREAT, S_666, "File_Blocks:3");
+  Raw_File dest_file(index_file_name, O_RDWR|O_CREAT, S_666,
+		     "File_Blocks_Index::~File_Blocks_Index::1");
 
-  if (index_size < dest_file.size("File_Blocks:11"))
-    dest_file.resize(index_size, "File_Blocks:12");
-  dest_file.write(index_buf.ptr, index_size, "File_Blocks:13");
+  if (index_size < dest_file.size("File_Blocks_Index::~File_Blocks_Index::2"))
+    dest_file.resize(index_size, "File_Blocks_Index::~File_Blocks_Index::3");
+  dest_file.write(index_buf.ptr, index_size, "File_Blocks_Index::~File_Blocks_Index::4");
   
   // Write void blocks
   Void_Pointer< uint8 > void_index_buf(void_blocks.size()*sizeof(uint32));
@@ -193,8 +196,10 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
     *(it_ptr++) = *it;
   try
   {
-    Raw_File void_file(empty_index_file_name, O_RDWR|O_TRUNC, S_666, "File_Blocks:4");
-    void_file.write(void_index_buf.ptr, void_blocks.size()*sizeof(uint32), "File_Blocks:14");
+    Raw_File void_file(empty_index_file_name, O_RDWR|O_TRUNC, S_666,
+		       "File_Blocks_Index::~File_Blocks_Index::5");
+    void_file.write(void_index_buf.ptr, void_blocks.size()*sizeof(uint32),
+		    "File_Blocks_Index::~File_Blocks_Index::6");
   }
   catch (File_Error e) {}
 }

@@ -110,7 +110,12 @@ inline Raw_File::Raw_File(string name_, int oflag, mode_t mode, string caller_id
   fd_ = open64(name.c_str(), oflag, mode);
   if (fd_ < 0)
     throw File_Error(errno, name, caller_id);
-  fchmod(fd_, mode);
+  if (mode & O_CREAT)
+  {
+    int ret = fchmod(fd_, mode);
+    if (ret < 0)
+      throw File_Error(errno, name, caller_id + "::fchmod");
+  }
 }
 
 inline uint64 Raw_File::size(string caller_id) const

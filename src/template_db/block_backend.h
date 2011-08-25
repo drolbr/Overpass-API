@@ -25,7 +25,11 @@ struct Default_Range_Iterator : set< pair< TIndex, TIndex > >::const_iterator
 template< class TIndex, class TObject >
 struct Index_Collection
 {
-  Index_Collection() {}
+  Index_Collection(uint8* source_begin_, uint8* source_end_,
+		   const typename map< TIndex, set< TObject > >::const_iterator& delete_it_,
+		   const typename map< TIndex, set< TObject > >::const_iterator& insert_it_)
+      : source_begin(source_begin_), source_end(source_end_),
+        delete_it(delete_it_), insert_it(insert_it_) {}
   
   uint8* source_begin;
   uint8* source_end;
@@ -347,6 +351,7 @@ const Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >& Block_Backend_F
     return *this;
   this->~Block_Backend_Flat_Iterator();
   new (this) Block_Backend_Flat_Iterator(it);
+  return *this;
 }
 
 template< class TIndex, class TObject, class TIterator >
@@ -963,12 +968,8 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
   uint8* source_end(source + *(uint32*)source);
   while (pos < source_end)
   {
-    Index_Collection< TIndex, TObject > index_value;
-    index_value.delete_it = to_delete.end();
-    index_value.insert_it = to_insert.end();
-    index_value.source_begin = pos;
-    index_value.source_end = source + *(uint32*)pos;
-    index_values.insert(make_pair(TIndex(pos + 4), index_value));
+    index_values.insert(make_pair(TIndex(pos + 4), Index_Collection< TIndex, TObject >
+        (pos, source + *(uint32*)pos, to_delete.end(), to_insert.end())));
     pos = source + *(uint32*)pos;
   }
   typename map< TIndex, set< TObject > >::const_iterator
@@ -984,11 +985,8 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
         ic_it(index_values.find(it->first));
     if (ic_it == index_values.end())
     {
-      Index_Collection< TIndex, TObject > index_value;
-      index_value.source_begin = 0;
-      index_value.delete_it = it;
-      index_value.insert_it = to_insert.end();
-      index_values.insert(make_pair(it->first, index_value));
+      index_values.insert(make_pair(it->first,
+	  Index_Collection< TIndex, TObject >(0, 0, it, to_insert.end())));
     }
     else
       ic_it->second.delete_it = it;
@@ -1007,11 +1005,8 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
         ic_it(index_values.find(it->first));
     if (ic_it == index_values.end())
     {
-      Index_Collection< TIndex, TObject > index_value;
-      index_value.source_begin = 0;
-      index_value.delete_it = to_delete.end();
-      index_value.insert_it = it;
-      index_values.insert(make_pair(it->first, index_value));
+      index_values.insert(make_pair(it->first,
+	  Index_Collection< TIndex, TObject >(0, 0, to_delete.end(), it)));
     }
     else
       ic_it->second.insert_it = it;

@@ -471,7 +471,7 @@ File_Blocks< TIndex, TIterator, TRangeIterator >::File_Blocks
      read_count_(0),
      data_file(index->get_data_file_name(),
 	       writeable ? O_RDWR|O_CREAT : O_RDONLY,
-	       S_666, "File_Blocks:1"),
+	       S_666, "File_Blocks::File_Blocks::1"),
      buffer(index->get_block_size())
 {
   // cerr<<"  "<<index->get_data_file_name()<<'\n'; //Debug
@@ -520,8 +520,8 @@ template< class TIndex, class TIterator, class TRangeIterator >
 void* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
     (const File_Blocks_Basic_Iterator< TIndex >& it) const
 {
-  data_file.seek((int64)(it.block_it->pos)*(block_size), "File_Blocks:2");
-  data_file.read((uint8*)buffer.ptr, block_size, "File_Blocks:3");
+  data_file.seek((int64)(it.block_it->pos)*(block_size), "File_Blocks::read_block::1");
+  data_file.read((uint8*)buffer.ptr, block_size, "File_Blocks::read_block::2");
   ++read_count_;
   return buffer.ptr;
 }
@@ -530,12 +530,12 @@ template< class TIndex, class TIterator, class TRangeIterator >
 void* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
     (const File_Blocks_Basic_Iterator< TIndex >& it, void* buffer) const
 {
-  data_file.seek((int64)(it.block_it->pos)*(block_size), "File_Blocks:4");
-  data_file.read((uint8*)buffer, block_size, "File_Blocks:5");
+  data_file.seek((int64)(it.block_it->pos)*(block_size), "File_Blocks::read_block::3");
+  data_file.read((uint8*)buffer, block_size, "File_Blocks::read_block::4");
   if (!(it.block_it->index ==
         TIndex(((uint8*)buffer)+(sizeof(uint32)+sizeof(uint32)))))
     throw File_Error(it.block_it->pos, index->get_data_file_name(),
-	             "File_Blocks: Index inconsistent");
+		     "File_Blocks::read_block: Index inconsistent");
   ++read_count_;
   return buffer;
 }
@@ -587,8 +587,8 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
   //       <<int(*(((uint8*)buf)+(sizeof(uint32)+sizeof(uint32))+i)); // Debug
   // cerr<<'\n';
   
-  data_file.seek(((int64)pos)*block_size, "File_Blocks:6");
-  data_file.write((uint8*)buf, block_size, "File_Blocks:7");
+  data_file.seek(((int64)pos)*block_size, "File_Blocks::insert_block::1");
+  data_file.write((uint8*)buf, block_size, "File_Blocks::insert_block::2");
   
   TIndex index(((uint8*)buf)+(sizeof(uint32)+sizeof(uint32)));
   File_Block_Index_Entry< TIndex > entry(index, pos, max_keysize);
@@ -622,8 +622,8 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
       it.block_it->pos = this->index->void_blocks.back();
       this->index->void_blocks.pop_back();
     }
-    data_file.seek(((int64)it.block_it->pos)*block_size, "File_Blocks:8");
-    data_file.write((uint8*)buf, block_size, "File_Blocks:9");
+    data_file.seek(((int64)it.block_it->pos)*block_size, "File_Blocks::replace_block::1");
+    data_file.write((uint8*)buf, block_size, "File_Blocks::replace_block::2");
     
     it.block_it->index = TIndex((uint8*)buf+(sizeof(uint32)+sizeof(uint32)));
     it.block_it->max_keysize = max_keysize;
