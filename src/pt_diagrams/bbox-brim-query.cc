@@ -58,7 +58,6 @@ void options_end(const char *el)
 
 int main(int argc, char *argv[])
 {
-  bool display_only_corrs(false);
   string network, ref;
   
   brim = 0.0;

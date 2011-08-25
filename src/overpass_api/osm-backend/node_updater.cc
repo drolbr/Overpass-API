@@ -65,7 +65,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
     callback->partial_started();
 
     vector< string > froms;
-    for (int i = 0; i < update_counter % 8; ++i)
+    for (uint i = 0; i < update_counter % 8; ++i)
     {
       string from(".0a");
       from[2] += i;
@@ -78,7 +78,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
     if (update_counter >= 8)
     {
       vector< string > froms;
-      for (int i = 0; i < update_counter/8 % 8; ++i)
+      for (uint i = 0; i < update_counter/8 % 8; ++i)
       {
 	string from(".1a");
 	from[2] += i;
@@ -110,7 +110,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
       to[2] += (update_counter/8 % 8);
       
       vector< string > froms;
-      for (int i = 0; i < 8; ++i)
+      for (uint i = 0; i < 8; ++i)
       {
 	string from(".0a");
 	from[2] += i;
@@ -124,7 +124,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
       callback->partial_started();
       
       vector< string > froms;
-      for (int i = 0; i < 8; ++i)
+      for (uint i = 0; i < 8; ++i)
       {
 	string from(".1a");
 	from[2] += i;

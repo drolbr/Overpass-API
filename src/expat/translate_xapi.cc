@@ -187,7 +187,7 @@ void process_ways(string input, bool is_star = false)
       if (analizer.bbox_found)
       {
 	cout<<"<recurse type=\"node-way\" into=\"ways\"/>\n"
-	      "<union>\n";
+	      "<union>\n"
 	      "  <query type=\"way\" from=\"ways\">\n"
 	      "    <item/>\n";
         print_meta(analizer, "    ");
@@ -205,7 +205,7 @@ void process_ways(string input, bool is_star = false)
         cout<<"<bbox-query s=\""<<analizer.south<<"\" n=\""<<analizer.north<<"\" w=\""
             <<analizer.west<<"\" e=\""<<analizer.east<<"\"/>\n"
               "<recurse type=\"node-way\"/>\n"
-	      "<union>\n";
+	      "<union>\n"
 	      "  <query type=\"way\">\n"
 	      "    <item/>\n";
         print_meta(analizer, "    ");
@@ -296,7 +296,7 @@ void process_relations(string input)
 	    "  <query type=\"relation\"/>\n"
             "    <item set=\"rels\"/>\n";
       print_meta(analizer, "    ");
-      cout<<"  </query>\n";
+      cout<<"  </query>\n"
             "  <recurse type=\"way-relation\"/>\n"
             "</union>\n";
     }
