@@ -144,12 +144,18 @@ fi
 
 if [[ -n $PUBLISH ]]; then
 {
+  echo "SUBDIRS = bin cgi-bin" >"osm-3s_v$VERSION/src/Makefile.am"
   tar chvf - --exclude=osm-3s_testing "osm-3s_v$VERSION/" | gzip >"$PUBLISH/osm-3s_v$VERSION.tar.gz"
+  echo "SUBDIRS = bin cgi-bin test-bin" >"osm-3s_v$VERSION/src/Makefile.am"
 };
 fi
 
 if [[ -n $INSTALL ]]; then
 {
+  if [[ -z $TEST ]]; then
+  {
+    echo "SUBDIRS = bin cgi-bin" >"osm-3s_v$VERSION/src/Makefile.am"
+  }; fi
   pushd "osm-3s_v$VERSION/build/"
   ../src/configure --prefix="$TARGET_DIR/"
   make CXXFLAGS=-O3 install

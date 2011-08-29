@@ -46,7 +46,10 @@ InputAnalizer::InputAnalizer(const string& input_) : bbox_found(false), meta_fou
       input = input.substr(input.find(']')+1);
     }
     else if (input.substr(0, 7) == "[@meta]")
+    {
       meta_found = true;
+      input = input.substr(7);
+    }
     else if (input.substr(0, 7) == "[@user=")
     {
       input = input.substr(7);

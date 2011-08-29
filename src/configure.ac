@@ -44,3 +44,4 @@ AC_FUNC_STRFTIME
 
 AC_CONFIG_FILES([Makefile bin/Makefile cgi-bin/Makefile test-bin/Makefile])
 AC_OUTPUT
+AC_SYS_LARGEFILE
