@@ -96,7 +96,7 @@ void print_meta(const InputAnalizer& analizer, string prefix, string type)
   else if (analizer.uid != "")
     cout<<prefix<<"<user type=\""<<type<<"\" uid=\""<<analizer.uid<<"\"/>\n";
   if (analizer.newer != "")
-    cout<<prefix<<"<query type=\""<<type<<"\"\n"
+    cout<<prefix<<"<query type=\""<<type<<"\">\n"
                   "  <item/>\n"
 		  "  <newer than=\""<<analizer.newer<<"\"/>\n"
 		  "</query>\n";
@@ -188,8 +188,8 @@ void process_ways(string input, bool is_star = false)
       {
 	cout<<"<recurse type=\"node-way\" into=\"ways\"/>\n"
 	      "<union>\n"
-	      "  <query type=\"way\" from=\"ways\">\n"
-	      "    <item/>\n";
+	      "  <query type=\"way\">\n"
+	      "    <item set=\"ways\"/>\n";
         print_meta(analizer, "    ");
 	cout<<"  </query>\n"
 	      "  <recurse type=\"way-node\"/>\n"
@@ -293,7 +293,7 @@ void process_relations(string input)
             "<recurse type=\"node-relation\" into=\"rels\"/>\n"
             "<recurse type=\"node-way\"/>\n"
             "<union>\n"
-	    "  <query type=\"relation\"/>\n"
+	    "  <query type=\"relation\">\n"
             "    <item set=\"rels\"/>\n";
       print_meta(analizer, "    ");
       cout<<"  </query>\n"
