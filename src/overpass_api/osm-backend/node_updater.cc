@@ -65,7 +65,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
     callback->partial_started();
 
     vector< string > froms;
-    for (uint i = 0; i < update_counter % 8; ++i)
+    for (uint i = 0; i < update_counter % 16; ++i)
     {
       string from(".0a");
       from[2] += i;
@@ -73,20 +73,20 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
     }
     merge_files(froms, "");
     
-    if (update_counter >= 64)
-      merge_files(vector< string >(1, ".1"), ".0");
-    if (update_counter >= 8)
+    if (update_counter >= 256)
+      merge_files(vector< string >(1, ".2"), ".1");
+    if (update_counter >= 16)
     {
       vector< string > froms;
-      for (uint i = 0; i < update_counter/8 % 8; ++i)
+      for (uint i = 0; i < update_counter/16 % 16; ++i)
       {
 	string from(".1a");
 	from[2] += i;
 	froms.push_back(from);
       }
-      merge_files(froms, ".0");
+      merge_files(froms, ".1");
       
-      merge_files(vector< string >(1, ".0"), "");
+      merge_files(vector< string >(1, ".1"), "");
     }
     update_counter = 0;
     callback->partial_finished();
@@ -94,7 +94,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
   else if (!external_transaction && partial/* && !map_file_existed_before*/)
   {
     string to(".0a");
-    to[2] += (update_counter % 8);
+    to[2] += update_counter % 16;
     rename_referred_file(db_dir, "", to, *osm_base_settings().NODES);
     rename_referred_file(db_dir, "", to, *osm_base_settings().NODE_TAGS_LOCAL);
     rename_referred_file(db_dir, "", to, *osm_base_settings().NODE_TAGS_GLOBAL);
@@ -102,15 +102,15 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
       rename_referred_file(db_dir, "", to, *meta_settings().NODES_META);
     
     ++update_counter;
-    if (update_counter % 8 == 0)
+    if (update_counter % 16 == 0)
     {
       callback->partial_started();
       
       string to(".1a");
-      to[2] += (update_counter/8 % 8);
+      to[2] += (update_counter/16-1) % 16;
       
       vector< string > froms;
-      for (uint i = 0; i < 8; ++i)
+      for (uint i = 0; i < 16; ++i)
       {
 	string from(".0a");
 	from[2] += i;
@@ -119,18 +119,18 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
       merge_files(froms, to);
       callback->partial_finished();
     }
-    if (update_counter % 64 == 0)
+    if (update_counter % 256 == 0)
     {
       callback->partial_started();
       
       vector< string > froms;
-      for (uint i = 0; i < 8; ++i)
+      for (uint i = 0; i < 16; ++i)
       {
 	string from(".1a");
 	from[2] += i;
 	froms.push_back(from);
       }
-      merge_files(froms, ".1");
+      merge_files(froms, ".2");
       callback->partial_finished();
     }
   }
