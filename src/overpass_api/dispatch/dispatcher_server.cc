@@ -118,6 +118,17 @@ int main(int argc, char* argv[])
     cout<<"Usage: "<<argv[0]<<" (--terminate | (--osm-base | --areas | --meta) --db-dir=Directory)\n";
     return 0;
   }
+
+  {
+    Logger log(db_dir);
+    log.annotated_log("Dispachter just started.");
+  }
+  int chmod_res = chmod((db_dir + basic_settings().logfile_name).c_str(), S_666);
+  if (chmod_res)
+  {
+    Logger log(db_dir);
+    log.annotated_log("Warning: chmod for logfile failed.");
+  }
   
   try
   {
