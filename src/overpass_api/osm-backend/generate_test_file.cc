@@ -1185,7 +1185,7 @@ int main(int argc, char* args[])
       modifier = new Accept_Query_25(pattern_size);
     else if (string(args[2]) == "query_26")
       modifier = new Accept_Around_1(pattern_size, 200, false, 11);
-    else if (string(args[2]) == "query_26")
+    else if (string(args[2]) == "query_27")
       modifier = new Accept_Around_1(pattern_size, 200, false, 7);
     else if (string(args[2]) == "union_1")
       modifier = new Accept_Union_1(pattern_size);

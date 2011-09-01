@@ -157,7 +157,7 @@ void Web_Output::write_xml_header
   cout<<
   "Content-type: application/osm3s\n\n";
   cout<<
-  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm-derived>\n"
+  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm version=\"0.6\" generator=\"Overpass API\">\n"
   "<note>The data included in this document is from www.openstreetmap.org. "
   "It has there been collected by a large group of contributors. For individual "
   "attribution of each item please refer to "
@@ -171,7 +171,7 @@ void Web_Output::write_xml_header
 void Web_Output::write_footer()
 {
   if (header_written == xml)
-    cout<<"\n</osm-derived>\n";
+    cout<<"\n</osm>\n";
   else if (header_written == html)
     cout<<"\n</body>\n</html>\n";
   header_written = final;

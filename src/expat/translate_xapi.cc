@@ -124,13 +124,16 @@ void process_nodes(string input, bool is_star = false)
           <<analizer.west<<"\" e=\""<<analizer.east<<"\"/>\n"
 	    "<query type=\"node\"> \n"
 	    "  <item/>\n";
-      print_meta(analizer, "  ");
+      print_meta(analizer, "    ");
       cout<<"</query>\n";
+      if (!is_star)
+	print_print(analizer);
     }
     else
-      print_meta(analizer, "    ", "node");
-    if (!is_star)
+    {
+      print_meta(analizer, "  ", "node");
       print_print(analizer);
+    }
   }
   else if (analizer.key_value.size() == 1)
   {
@@ -216,6 +219,8 @@ void process_ways(string input, bool is_star = false)
 	      "  <recurse type=\"way-node\"/>\n"
 	      "</union>\n";
       }
+      else
+	print_meta(analizer, "    ", "way");
     }
     print_print(analizer);
   }

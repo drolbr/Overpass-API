@@ -76,7 +76,8 @@ int main(int argc, char *argv[])
     // set limits - short circuited until forecast gets effective
     dispatcher.set_limits();
   
-    cout<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm-derived>\n"
+    cout<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+      "<osm version=\"0.6\" generator=\"Overpass API\">\n"
       "<note>The data included in this document is from www.openstreetmap.org. "
       "It has there been collected by a large group of contributors. For individual "
       "attribution of each item please refer to "
@@ -90,7 +91,7 @@ int main(int argc, char *argv[])
 	 it != get_statement_stack()->end(); ++it)
       (*it)->execute(dispatcher.resource_manager());
     
-    cout<<"\n</osm-derived>\n";
+    cout<<"\n</osm>\n";
 
     return 0;
   }

@@ -5,5 +5,5 @@ Reading XML file ... elapsed node 11181522. Flushing to database ...... done.
 Reading XML file ... elapsed node 13976919. Flushing to database ...... done.
 Reading XML file ... finished reading nodes. Flushing to database ...... done.
 Reorganizing the database ... done.
-compare_osm_base_maps: File error caught: 2 ./ways.bin File_Blocks:1
-compare_osm_base_maps: File error caught: 2 ./relations.bin File_Blocks:1
+compare_osm_base_maps: File error caught: 2 ./ways.bin File_Blocks::File_Blocks::1
+compare_osm_base_maps: File error caught: 2 ./relations.bin File_Blocks::File_Blocks::1

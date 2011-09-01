@@ -233,7 +233,7 @@ int main(int argc, char* args[])
 
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-  "<osm-derived>\n"
+  "<osm version=\"0.6\" generator=\"Overpass API\">\n"
   "<note>The data included in this document is from www.openstreetmap.org. It has there been "
   "collected by a large group of contributors. For individual attribution of each item please "
   "refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\n"
@@ -307,5 +307,5 @@ int main(int argc, char* args[])
     create_relation_test_pattern(5, pattern_size, print_control, true, false);
   }
   
-  cout<<"\n</osm-derived>\n";
+  cout<<"\n</osm>\n";
 }
