@@ -200,7 +200,7 @@ void print_meta(const OSM_Element_Metadata_Skeleton& meta,
       <<"\" changeset=\""<<meta.changeset<<"\" uid=\""<<meta.user_id<<"\"";
   map< uint32, string >::const_iterator it = users.find(meta.user_id);
   if (it != users.end())
-    cout<<" user=\""<<it->second<<"\"";
+    cout<<" user=\""<<escape_xml(it->second)<<"\"";
 }
 
 void print_item(uint32 ll_upper, const Node_Skeleton& skel, uint32 mode,
