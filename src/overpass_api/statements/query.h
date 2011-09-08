@@ -14,6 +14,15 @@
 
 using namespace std;
 
+class Query_Constraint
+{
+  public:
+    virtual void filter(Resource_Manager& rman, Set& into) = 0;
+    virtual ~Query_Constraint() {}
+};
+
+//-----------------------------------------------------------------------------
+
 class Query_Statement : public Statement
 {
   public:
@@ -21,13 +30,13 @@ class Query_Statement : public Statement
       : Statement(line_number_),
         area_restriction(0), around_restriction(0), bbox_restriction(0), item_restriction(0),
 	newer_restriction(0), user_restriction(0) {}
+    virtual ~Query_Statement();
     virtual void set_attributes(const char **attr);
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "query"; }
     virtual string get_result_name() const { return output; }
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
-    virtual ~Query_Statement() {}
     
   private:
     string output;
@@ -39,6 +48,8 @@ class Query_Statement : public Statement
     Item_Statement* item_restriction;
     Newer_Statement* newer_restriction;
     User_Statement* user_restriction;
+    
+    vector< Query_Constraint* > constraints;
     
     vector< uint32 >* collect_ids
         (const vector< pair< string, string > >& key_values,

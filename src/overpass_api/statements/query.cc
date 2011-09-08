@@ -17,10 +17,64 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
+class Item_Constraint : public Query_Constraint
+{
+  public:
+    Item_Constraint(Item_Statement& item_) : item(&item_) {}
+    void filter(Resource_Manager& rman, Set& into);
+    virtual ~Item_Constraint() {}
+    
+  private:
+    Item_Statement* item;
+};
+
+template< typename TIndex, typename TObject >
+void filter_map
+    (map< TIndex, vector< TObject > >& modify,
+     const map< TIndex, vector< TObject > >& read)
+{
+  for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
+      it != modify.end(); ++it)
+  {
+    sort(it->second.begin(), it->second.end());
+    typename map< TIndex, vector< TObject > >::const_iterator
+        from_it = read.find(it->first);
+    if (from_it == read.end())
+    {
+      it->second.clear();
+      continue;
+    }
+    vector< TObject > local_into;
+    for (typename vector< TObject >::const_iterator iit = from_it->second.begin();
+        iit != from_it->second.end(); ++iit)
+    {
+      if (binary_search(it->second.begin(), it->second.end(), *iit))
+	local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }
+}
+
+void Item_Constraint::filter(Resource_Manager& rman, Set& into)
+{
+  filter_map(into.nodes, rman.sets()[item->get_result_name()].nodes);
+  filter_map(into.ways, rman.sets()[item->get_result_name()].ways);
+  filter_map(into.relations, rman.sets()[item->get_result_name()].relations);
+}
+
+//-----------------------------------------------------------------------------
+
 const unsigned int QUERY_NODE = 1;
 const unsigned int QUERY_WAY = 2;
 const unsigned int QUERY_RELATION = 3;
 // const unsigned int QUERY_AREA = 4;
+
+Query_Statement::~Query_Statement()
+{
+  for (vector< Query_Constraint* >::iterator it = constraints.begin();
+      it != constraints.end(); ++it)
+    delete *it;
+}
 
 void Query_Statement::set_attributes(const char **attr)
 {
@@ -136,22 +190,9 @@ void Query_Statement::add_statement(Statement* statement, string text)
   {
     if ((area_restriction != 0) || (around_restriction != 0) || (bbox_restriction != 0) ||
         (item_restriction != 0))
-    {
-      ostringstream temp;
-      temp<<"A query statement may contain at most one area-query, around-query, bbox-query, "
-	  <<"or item as substatement.";
-      add_static_error(temp.str());
-      return;
-    }
-    if (item_restriction != 0)
-    {
-      ostringstream temp;
-      temp<<"A query statement may contain at most one item as substatement.";
-      add_static_error(temp.str());
-      return;
-    }
-    item_restriction = item;
-    return;
+      constraints.push_back(new Item_Constraint(*item));
+    else
+      item_restriction = item;
   }
   else if (user != 0)
   {
@@ -940,7 +981,11 @@ void Query_Statement::execute(Resource_Manager& rman)
       }
     }
   }
-  
+
+  for (vector< Query_Constraint* >::iterator it = constraints.begin();
+      it != constraints.end(); ++it)
+    (*it)->filter(rman, rman.sets()[output]);
+
   stopwatch.report(get_name());  
   rman.health_check(*this);
 }
