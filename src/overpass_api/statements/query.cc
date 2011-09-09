@@ -29,7 +29,7 @@ class Item_Constraint : public Query_Constraint
 };
 
 template< typename TIndex, typename TObject >
-void filter_map
+void item_filter_map
     (map< TIndex, vector< TObject > >& modify,
      const map< TIndex, vector< TObject > >& read)
 {
@@ -57,9 +57,54 @@ void filter_map
 
 void Item_Constraint::filter(Resource_Manager& rman, Set& into)
 {
-  filter_map(into.nodes, rman.sets()[item->get_result_name()].nodes);
-  filter_map(into.ways, rman.sets()[item->get_result_name()].ways);
-  filter_map(into.relations, rman.sets()[item->get_result_name()].relations);
+  item_filter_map(into.nodes, rman.sets()[item->get_result_name()].nodes);
+  item_filter_map(into.ways, rman.sets()[item->get_result_name()].ways);
+  item_filter_map(into.relations, rman.sets()[item->get_result_name()].relations);
+}
+
+//-----------------------------------------------------------------------------
+
+class Newer_Constraint : public Query_Constraint
+{
+  public:
+    Newer_Constraint(Newer_Statement& newer) : timestamp(newer.get_timestamp()) {}
+    void filter(Resource_Manager& rman, Set& into);
+    virtual ~Newer_Constraint() {}
+    
+  private:
+    uint64 timestamp;
+};
+
+template< typename TIndex, typename TObject >
+void newer_filter_map
+    (map< TIndex, vector< TObject > >& modify,
+     Resource_Manager& rman, uint64 timestamp, File_Properties* file_properties)
+{
+  if (modify.empty())
+    return;
+  Meta_Collector< TIndex, TObject > meta_collector
+      (modify, *rman.get_transaction(), file_properties, false);
+  for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
+      it != modify.end(); ++it)
+  {
+    vector< TObject > local_into;
+    for (typename vector< TObject >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      const OSM_Element_Metadata_Skeleton* meta_skel
+	  = meta_collector.get(it->first, iit->id);
+      if ((meta_skel) && (meta_skel->timestamp >= timestamp))
+	local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }
+}
+
+void Newer_Constraint::filter(Resource_Manager& rman, Set& into)
+{
+  newer_filter_map(into.nodes, rman, timestamp, meta_settings().NODES_META);
+  newer_filter_map(into.ways, rman, timestamp, meta_settings().WAYS_META);
+  newer_filter_map(into.relations, rman, timestamp, meta_settings().RELATIONS_META);
 }
 
 //-----------------------------------------------------------------------------
@@ -207,17 +252,7 @@ void Query_Statement::add_statement(Statement* statement, string text)
     return;
   }
   else if (newer != 0)
-  {
-    if (newer_restriction != 0)
-    {
-      ostringstream temp;
-      temp<<"A query statement may contain at most one newer statement as substatement.";
-      add_static_error(temp.str());
-      return;
-    }
-    newer_restriction = newer;
-    return;
-  }
+    constraints.push_back(new Newer_Constraint(*newer));
   else
     substatement_error(get_name(), statement);
 }
@@ -729,25 +764,6 @@ void Query_Statement::execute(Resource_Manager& rman)
     
     if (user_restriction)
       delete meta_collector;
-    if (newer_restriction)
-    {
-      Meta_Collector< Uint32_Index, Node_Skeleton > meta_collector
-          (nodes, *rman.get_transaction(), meta_settings().NODES_META, false);
-      for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = nodes.begin();
-          it != nodes.end(); ++it)
-      {
-	vector< Node_Skeleton > accepted;
-	for (vector< Node_Skeleton >::const_iterator it2 = it->second.begin();
-	    it2 != it->second.end(); ++it2)
-	{
-	  const OSM_Element_Metadata_Skeleton* meta_skel
-	      = meta_collector.get(it->first, it2->id);
-	  if ((meta_skel) && (meta_skel->timestamp >= newer_restriction->get_timestamp()))
-	    accepted.push_back(*it2);
-	}
-	it->second.swap(accepted);
-      }
-    }
   }
   else if (type == QUERY_WAY)
   {
@@ -845,25 +861,6 @@ void Query_Statement::execute(Resource_Manager& rman)
     
     if (user_restriction)
       delete meta_collector;
-    if (newer_restriction)
-    {
-      Meta_Collector< Uint31_Index, Way_Skeleton > meta_collector
-          (ways, *rman.get_transaction(), meta_settings().WAYS_META, false);
-      for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin();
-          it != ways.end(); ++it)
-      {
-	vector< Way_Skeleton > accepted;
-	for (vector< Way_Skeleton >::const_iterator it2 = it->second.begin();
-	    it2 != it->second.end(); ++it2)
-	{
-	  const OSM_Element_Metadata_Skeleton* meta_skel
-	      = meta_collector.get(it->first, it2->id);
-	  if ((meta_skel) && (meta_skel->timestamp >= newer_restriction->get_timestamp()))
-	    accepted.push_back(*it2);
-	}
-	it->second.swap(accepted);
-      }
-    }
   }
   else if (type == QUERY_RELATION)
   {
@@ -961,25 +958,6 @@ void Query_Statement::execute(Resource_Manager& rman)
     
     if (user_restriction)
       delete meta_collector;
-    if (newer_restriction)
-    {
-      Meta_Collector< Uint31_Index, Relation_Skeleton > meta_collector
-          (relations, *rman.get_transaction(), meta_settings().RELATIONS_META, false);
-      for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = relations.begin();
-          it != relations.end(); ++it)
-      {
-	vector< Relation_Skeleton > accepted;
-	for (vector< Relation_Skeleton >::const_iterator it2 = it->second.begin();
-	    it2 != it->second.end(); ++it2)
-	{
-	  const OSM_Element_Metadata_Skeleton* meta_skel
-	      = meta_collector.get(it->first, it2->id);
-	  if ((meta_skel) && (meta_skel->timestamp >= newer_restriction->get_timestamp()))
-	    accepted.push_back(*it2);
-	}
-	it->second.swap(accepted);
-      }
-    }
   }
 
   for (vector< Query_Constraint* >::iterator it = constraints.begin();
