@@ -65,11 +65,11 @@ int main(int argc, char* args[])
   "<osm>\n";
     
   if ((test_to_execute == "") || (test_to_execute == "1"))
-    perform_around_print(pattern_size, "20", transaction);
+    perform_around_print(pattern_size, "20.01", transaction);
   if ((test_to_execute == "") || (test_to_execute == "2"))
-    perform_around_print(pattern_size, "200", transaction);
+    perform_around_print(pattern_size, "200.1", transaction);
   if ((test_to_execute == "") || (test_to_execute == "3"))
-    perform_around_print(pattern_size, "2000", transaction);
+    perform_around_print(pattern_size, "2001", transaction);
   if ((test_to_execute == "") || (test_to_execute == "4"))
   {
     Resource_Manager rman(transaction);
@@ -88,7 +88,7 @@ int main(int argc, char* args[])
     }
     {
       Around_Statement* stmt1 = new Around_Statement(0);
-      const char* attributes[] = { "radius", "200", "from", "foo", 0 };
+      const char* attributes[] = { "radius", "200.1", "from", "foo", 0 };
       stmt1->set_attributes(attributes);
       stmt1->execute(rman);
     }
@@ -117,7 +117,7 @@ int main(int argc, char* args[])
     }
     {
       Around_Statement* stmt1 = new Around_Statement(0);
-      const char* attributes[] = { "radius", "200", "into", "foo", 0 };
+      const char* attributes[] = { "radius", "200.1", "into", "foo", 0 };
       stmt1->set_attributes(attributes);
       stmt1->execute(rman);
     }
@@ -162,7 +162,7 @@ int main(int argc, char* args[])
     }
     {
       Around_Statement* stmt1 = new Around_Statement(0);
-      const char* attributes[] = { "radius", "200", 0 };
+      const char* attributes[] = { "radius", "200.1", 0 };
       stmt1->set_attributes(attributes);
       stmt1->execute(rman);
     }

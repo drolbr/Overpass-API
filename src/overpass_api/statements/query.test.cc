@@ -190,7 +190,7 @@ void perform_query_with_around
       stmt1.add_statement(&stmt2, "");
       
       Around_Statement stmt3(0);
-      const char* attributes_around[] = { "radius", "200", 0 };
+      const char* attributes_around[] = { "radius", "200.1", 0 };
       stmt3.set_attributes(attributes_around);
       stmt1.add_statement(&stmt3, "");
       

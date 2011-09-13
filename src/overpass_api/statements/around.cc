@@ -60,19 +60,24 @@ set< pair< Uint32_Index, Uint32_Index > > Around_Statement::calc_ranges
       double lon = Node::lon(iit->first.val(), nit->ll_lower);
       double south = lat - radius*(360.0/(40000.0*1000.0));
       double north = lat + radius*(360.0/(40000.0*1000.0));
-      double west = lon - radius*(360.0/(40000.0*1000.0))/cos(lat/90.0*acos(0));
-      double east = lon + radius*(360.0/(40000.0*1000.0))/cos(lat/90.0*acos(0));
-      
-      lat_lons.push_back(make_pair(lat, lon));
+      double scale_lat = lat > 0.0 ? north : south;
+      if (abs(scale_lat) >= 89.9)
+	scale_lat = 89.9;
+      double west = lon - radius*(360.0/(40000.0*1000.0))/cos(scale_lat/90.0*acos(0));
+      double east = lon + radius*(360.0/(40000.0*1000.0))/cos(scale_lat/90.0*acos(0));
       
       vector< pair< uint32, uint32 > >* uint_ranges
-      (Node::calc_ranges(south, north, west, east));
+          (Node::calc_ranges(south, north, west, east));
       for (vector< pair< uint32, uint32 > >::const_iterator
 	it(uint_ranges->begin()); it != uint_ranges->end(); ++it)
       {
 	pair< Uint32_Index, Uint32_Index > range
-	(make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
+	    (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
 	req.insert(range);
+	
+	for (uint32 idx = Uint32_Index(it->first).val();
+	    idx < Uint32_Index(it->second).val(); ++idx)
+	  lat_lons[idx].push_back(make_pair(lat, lon));
       }
       delete(uint_ranges);
     }
@@ -86,8 +91,12 @@ void Around_Statement::forecast()
 
 bool Around_Statement::is_inside(double lat, double lon) const
 {
-  for (vector< pair< double, double > >::const_iterator cit = lat_lons.begin();
-      cit != lat_lons.end(); ++cit)
+  map< Uint32_Index, vector< pair< double, double > > >::const_iterator mit
+      = lat_lons.find(Node::ll_upper_(lat, lon));
+  if (mit == lat_lons.end())
+    return false;
+  for (vector< pair< double, double > >::const_iterator cit = mit->second.begin();
+      cit != mit->second.end(); ++cit)
   {
     if (great_circle_dist(cit->first, cit->second, lat, lon) <= radius)
       return true;

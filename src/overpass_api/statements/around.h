@@ -30,7 +30,7 @@ class Around_Statement : public Statement
   private:
     string input, output;
     double radius;
-    vector< pair< double, double > > lat_lons;
+    map< Uint32_Index, vector< pair< double, double > > > lat_lons;
 };
 
 #endif

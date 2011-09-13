@@ -737,6 +737,8 @@ double great_circle_dist(double lat1, double lon1, double lat2, double lon2)
   sin(lat1/90.0*acos(0))*sin(lat2/90.0*acos(0)) +
   cos(lat1/90.0*acos(0))*sin(lon1/90.0*acos(0))*cos(lat2/90.0*acos(0))*sin(lon2/90.0*acos(0)) +
   cos(lat1/90.0*acos(0))*cos(lon1/90.0*acos(0))*cos(lat2/90.0*acos(0))*cos(lon2/90.0*acos(0));
+  if (scalar_prod > 1)
+    scalar_prod = 1;
   return acos(scalar_prod)*(20*1000*1000/acos(0));
 }
 
@@ -1184,9 +1186,9 @@ int main(int argc, char* args[])
     else if (string(args[2]) == "query_25")
       modifier = new Accept_Query_25(pattern_size);
     else if (string(args[2]) == "query_26")
-      modifier = new Accept_Around_1(pattern_size, 200, false, 11);
+      modifier = new Accept_Around_1(pattern_size, 200.1, false, 11);
     else if (string(args[2]) == "query_27")
-      modifier = new Accept_Around_1(pattern_size, 200, false, 7);
+      modifier = new Accept_Around_1(pattern_size, 200.1, false, 7);
     else if (string(args[2]) == "union_1")
       modifier = new Accept_Union_1(pattern_size);
     else if (string(args[2]) == "union_2")
@@ -1212,17 +1214,17 @@ int main(int argc, char* args[])
     else if (string(args[2]) == "union_6")
       modifier = new Accept_Union_6(pattern_size);
     else if (string(args[2]) == "around_1")
-      modifier = new Accept_Around_1(pattern_size, 20);
+      modifier = new Accept_Around_1(pattern_size, 20.01);
     else if (string(args[2]) == "around_2")
-      modifier = new Accept_Around_1(pattern_size, 200);
+      modifier = new Accept_Around_1(pattern_size, 200.1);
     else if (string(args[2]) == "around_3")
-      modifier = new Accept_Around_1(pattern_size, 2000);
+      modifier = new Accept_Around_1(pattern_size, 2001);
     else if (string(args[2]) == "around_4")
-      modifier = new Accept_Around_1(pattern_size, 200);
+      modifier = new Accept_Around_1(pattern_size, 200.1);
     else if (string(args[2]) == "around_5")
-      modifier = new Accept_Around_1(pattern_size, 200);
+      modifier = new Accept_Around_1(pattern_size, 200.1);
     else if (string(args[2]) == "around_6")
-      modifier = new Accept_Around_1(pattern_size, 200, true);
+      modifier = new Accept_Around_1(pattern_size, 200.1, true);
     else if (string(args[2]) == "diff_do")
       modifier = new Accept_All;
     else if (string(args[2]) == "diff_compare")
