@@ -11,9 +11,6 @@
 #include <list>
 #include <vector>
 
-// #include <iomanip> //Debug
-// #include <iostream> //Debug
-
 /** Declarations: -----------------------------------------------------------*/
 
 using namespace std;
@@ -202,7 +199,7 @@ int File_Blocks_Basic_Iterator< TIndex >::block_type() const
   if ((block_it == block_end) || (is_empty))
     return File_Block_Index_Entry< TIndex >::EMPTY;
   typename list< File_Block_Index_Entry< TIndex > >::const_iterator
-  it(block_it);
+      it(block_it);
   if (block_it == block_begin)
   {
     if (++it == block_end)
@@ -371,7 +368,10 @@ void File_Blocks_Discrete_Iterator< TIndex, TIterator >::find_next_block()
   if (next_block == this->block_end)
   {
     if (this->block_type() == File_Block_Index_Entry< TIndex >::LAST_SEGMENT)
+    {
       ++(this->block_it);
+      this->is_empty = true;
+    }
     index_upper = index_end;
     return;
   }

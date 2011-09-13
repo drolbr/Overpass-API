@@ -635,16 +635,82 @@ void Way_Updater::update_way_tags_global(const vector< Tag_Entry >& tags_to_dele
   way_db.update(db_to_delete, db_to_insert);
 }
 
+template < typename TIndex, typename TObject >
+void merge_files_
+    (Transaction_Collection& from_transaction, Transaction& into_transaction,
+     const File_Properties& file_prop)
+{
+  {
+    map< TIndex, set< TObject > > db_to_delete;
+    map< TIndex, set< TObject > > db_to_insert;
+    
+    uint32 item_count = 0;
+    Block_Backend_Collection< TIndex, TObject > from_dbs(from_transaction, file_prop);
+    vector< pair< typename Block_Backend< TIndex, TObject >::Flat_Iterator,
+        typename Block_Backend< TIndex, TObject >::Flat_Iterator > > from_its;
+    set< TIndex > current_idxs;
+    for (typename vector< Block_Backend< TIndex, TObject >* >::const_iterator
+        it = from_dbs.dbs.begin(); it != from_dbs.dbs.end(); ++it)
+    {
+      from_its.push_back(make_pair((*it)->flat_begin(), (*it)->flat_end()));
+      if (!(from_its.back().first == from_its.back().second))
+        current_idxs.insert(from_its.back().first.index());
+    }
+    while (!current_idxs.empty())
+    {
+      TIndex current_idx = *current_idxs.begin();
+/*      cout<<hex<<current_idx.val();*/
+      current_idxs.erase(current_idxs.begin());
+      for (typename vector< pair< typename Block_Backend< TIndex, TObject >::Flat_Iterator,
+	      typename Block_Backend< TIndex, TObject >::Flat_Iterator > >::iterator
+	  it = from_its.begin(); it != from_its.end(); ++it)
+      {
+	while (!(it->first == it->second) && (it->first.index() == current_idx))
+	{
+	  db_to_insert[it->first.index()].insert(it->first.object());
+/*	  cout<<' '<<dec<<it->first.object().id;*/
+	  ++(it->first);
+
+	  if (++item_count > 4*1024*1024)
+	  {
+/*	    cout<<"Calling update ...\n";*/
+	    Block_Backend< TIndex, TObject > into_db
+	        (into_transaction.data_index(&file_prop));
+	    into_db.update(db_to_delete, db_to_insert);
+	    db_to_insert.clear();
+	    item_count = 0;
+	  }
+	}
+	if (!(it->first == it->second))
+	  current_idxs.insert(it->first.index());
+      }
+/*      cout<<'\n';*/
+    }
+    
+/*    cout<<"Calling last update ...\n";*/
+    Block_Backend< TIndex, TObject > into_db
+        (into_transaction.data_index(&file_prop));
+    into_db.update(db_to_delete, db_to_insert);
+/*    for (typename Block_Backend< TIndex, TObject >::Flat_Iterator flat_it = into_db.flat_begin();
+        !(flat_it == into_db.flat_end()); ++flat_it)
+      cout<<hex<<flat_it.index().val()<<' '<<dec<<flat_it.object().id<<'\n';*/
+  }
+  from_transaction.remove_referred_files(file_prop);
+}
+
 void Way_Updater::merge_files(const vector< string >& froms, string into)
 {
   Transaction_Collection from_transactions(false, false, db_dir, froms);
   Nonsynced_Transaction into_transaction(true, false, db_dir, into);
-  ::merge_files< Uint31_Index, Way_Skeleton >
-  (from_transactions, into_transaction, *osm_base_settings().WAYS);
+/*  for (vector< string >::const_iterator it = froms.begin(); it != froms.end(); ++it)
+    cout<<*it<<'\n';*/
+  ::merge_files_< Uint31_Index, Way_Skeleton >
+      (from_transactions, into_transaction, *osm_base_settings().WAYS);
+/*  cout<<'\n';*/
   ::merge_files< Tag_Index_Local, Uint32_Index >
-  (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_LOCAL);
+      (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_LOCAL);
   ::merge_files< Tag_Index_Global, Uint32_Index >
-  (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
+      (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
   if (meta)
   {
     ::merge_files< Uint31_Index, OSM_Element_Metadata_Skeleton >

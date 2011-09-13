@@ -679,10 +679,10 @@ void Block_Backend< TIndex, TObject, TIterator >::update
 {
   relevant_idxs.clear();
   for (typename map< TIndex, set< TObject > >::const_iterator
-    it(to_delete.begin()); it != to_delete.end(); ++it)
+      it(to_delete.begin()); it != to_delete.end(); ++it)
     relevant_idxs.insert(it->first);
   for (typename map< TIndex, set< TObject > >::const_iterator
-    it(to_insert.begin()); it != to_insert.end(); ++it)
+      it(to_insert.begin()); it != to_insert.end(); ++it)
     relevant_idxs.insert(it->first);
   
   typename File_Blocks_::Discrete_Iterator
@@ -691,12 +691,41 @@ void Block_Backend< TIndex, TObject, TIterator >::update
    
   while (!(file_it == file_blocks.discrete_end()))
   {
+/*    cout<<"lower: ";
+    if (!(file_it.lower_bound() == relevant_idxs.end()))
+    {
+      Void_Pointer< uint8 > foo(file_it.lower_bound()->size_of());
+      file_it.lower_bound()->to_data(foo.ptr);
+      for (int i = 0; i < file_it.lower_bound()->size_of(); ++i)
+	cout<<hex<<(uint)(foo.ptr[i])<<' ';
+    }
+    else
+      cout<<"(end) ";
+    cout<<"upper: ";
+    if (!(file_it.upper_bound() == relevant_idxs.end()))
+    {
+      Void_Pointer< uint8 > foo(file_it.upper_bound()->size_of());
+      file_it.upper_bound()->to_data(foo.ptr);
+      for (int i = 0; i < file_it.upper_bound()->size_of(); ++i)
+	cout<<hex<<(uint)(foo.ptr[i])<<' ';
+    }
+    else
+      cout<<"(end) ";*/
     if (file_it.block_type() == File_Block_Index_Entry< TIndex >::EMPTY)
+    {
+/*      cout<<"A\n";*/
       create_from_scratch(file_it, to_insert);
+    }
     else if (file_it.block_type() == File_Block_Index_Entry< TIndex >::GROUP)
+    {
+/*      cout<<"B\n";*/
       update_group(file_it, to_delete, to_insert);
+    }
     else //if (file_it.block_type() == File_Block_Index_Entry< TIndex >::SEGMENT)
-    update_segments(file_it, to_delete, to_insert);
+    {
+/*      cout<<"C\n";*/
+      update_segments(file_it, to_delete, to_insert);
+    }
   }
 }
 
@@ -843,10 +872,10 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
   
   // compute the distribution over different blocks
   for (typename set< TIndex >::const_iterator fit(file_it.lower_bound());
-  fit != file_it.upper_bound(); ++fit)
+      fit != file_it.upper_bound(); ++fit)
   {
     typename map< TIndex, set< TObject > >::const_iterator
-    it(to_insert.find(*fit));
+        it(to_insert.find(*fit));
     
     uint32 current_size(4);
     if ((it == to_insert.end()) || (it->second.empty()))
@@ -856,8 +885,8 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
       // only add nonempty indices
       current_size += it->first.size_of();
       for (typename set< TObject >::const_iterator it2(it->second.begin());
-      it2 != it->second.end(); ++it2)
-      current_size += it2->size_of();
+          it2 != it->second.end(); ++it2)
+        current_size += it2->size_of();
     }
     
     sizes[it->first] += current_size;
@@ -871,7 +900,7 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
   uint32 max_size(0);
   typename set< TIndex >::const_iterator upper_bound(file_it.upper_bound());
   for (typename set< TIndex >::const_iterator fit(file_it.lower_bound());
-  fit != upper_bound; ++fit)
+      fit != upper_bound; ++fit)
   {
     typename map< TIndex, set< TObject > >::const_iterator
         it(to_insert.find(*fit));
@@ -879,6 +908,10 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
     if ((split_it != split.end()) && (it->first == *split_it))
     {
       *(uint32*)buffer = pos - buffer;
+/*      cout<<"D ";
+      for (int i = 8; i < TIndex::size_of(buffer+8) + 8; ++i)
+	cout<<hex<<(uint)(buffer[i])<<' ';
+      cout<<'\n';*/
       file_it = file_blocks.insert_block(file_it, buffer, max_size);
       ++file_it;
       ++split_it;
@@ -918,6 +951,10 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
 	  {
 	    *(uint32*)buffer = pos - buffer;
 	    *(uint32*)(buffer+4) = *(uint32*)buffer;
+/*	    cout<<"E ";
+	    for (int i = 8; i < TIndex::size_of(buffer+8) + 8; ++i)
+	      cout<<hex<<(uint)(buffer[i])<<' ';
+	    cout<<'\n';*/
 	    file_it = file_blocks.insert_block(file_it, buffer, (*(uint32*)(buffer+4)) - 4);
 	    ++file_it;
 	    pos = buffer + 8 + it->first.size_of();
@@ -939,7 +976,34 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
   if (pos > buffer + 4)
   {
     *(uint32*)buffer = pos - buffer;
+/*    cout<<"F ";
+    for (int i = 8; i < TIndex::size_of(buffer+8) + 8; ++i)
+      cout<<hex<<(uint)(buffer[i])<<' ';*/
+    
     file_it = file_blocks.insert_block(file_it, buffer, max_size);
+    
+/*    cout<<file_it.block_type()<<" lower: ";
+    if (!(file_it.lower_bound() == relevant_idxs.end()))
+    {
+      Void_Pointer< uint8 > foo(file_it.lower_bound()->size_of());
+      file_it.lower_bound()->to_data(foo.ptr);
+      for (int i = 0; i < file_it.lower_bound()->size_of(); ++i)
+	cout<<hex<<(uint)(foo.ptr[i])<<' ';
+    }
+    else
+      cout<<"(end) ";
+    cout<<"upper: ";
+    if (!(file_it.upper_bound() == relevant_idxs.end()))
+    {
+      Void_Pointer< uint8 > foo(file_it.upper_bound()->size_of());
+      file_it.upper_bound()->to_data(foo.ptr);
+      for (int i = 0; i < file_it.upper_bound()->size_of(); ++i)
+	cout<<hex<<(uint)(foo.ptr[i])<<' ';
+    }
+    else
+      cout<<"(end) ";
+    cout<<'\n';*/
+    
     ++file_it;
   }
   ++file_it;
