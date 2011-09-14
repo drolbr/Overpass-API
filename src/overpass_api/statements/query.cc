@@ -109,6 +109,52 @@ void Newer_Constraint::filter(Resource_Manager& rman, Set& into)
 
 //-----------------------------------------------------------------------------
 
+class User_Constraint : public Query_Constraint
+{
+  public:
+    User_Constraint(User_Statement& user_) : user(&user_) {}
+    void filter(Resource_Manager& rman, Set& into);
+    virtual ~User_Constraint() {}
+    
+  private:
+    User_Statement* user;
+};
+
+template< typename TIndex, typename TObject >
+void user_filter_map
+    (map< TIndex, vector< TObject > >& modify,
+     Resource_Manager& rman, uint32 user_id, File_Properties* file_properties)
+{
+  if (modify.empty())
+    return;
+  Meta_Collector< TIndex, TObject > meta_collector
+      (modify, *rman.get_transaction(), file_properties, false);
+  for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
+      it != modify.end(); ++it)
+  {
+    vector< TObject > local_into;
+    for (typename vector< TObject >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      const OSM_Element_Metadata_Skeleton* meta_skel
+	  = meta_collector.get(it->first, iit->id);
+      if ((meta_skel) && (meta_skel->user_id == user_id))
+	local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }
+}
+
+void User_Constraint::filter(Resource_Manager& rman, Set& into)
+{
+  uint32 user_id = user->get_id(*rman.get_transaction());
+  user_filter_map(into.nodes, rman, user_id, meta_settings().NODES_META);
+  user_filter_map(into.ways, rman, user_id, meta_settings().WAYS_META);
+  user_filter_map(into.relations, rman, user_id, meta_settings().RELATIONS_META);
+}
+
+//-----------------------------------------------------------------------------
+
 const unsigned int QUERY_NODE = 1;
 const unsigned int QUERY_WAY = 2;
 const unsigned int QUERY_RELATION = 3;
@@ -240,17 +286,7 @@ void Query_Statement::add_statement(Statement* statement, string text)
       item_restriction = item;
   }
   else if (user != 0)
-  {
-    if (user_restriction != 0)
-    {
-      ostringstream temp;
-      temp<<"A query statement may contain at most one user statement as substatement.";
-      add_static_error(temp.str());
-      return;
-    }
-    user_restriction = user;
-    return;
-  }
+    constraints.push_back(new User_Constraint(*user));
   else if (newer != 0)
     constraints.push_back(new Newer_Constraint(*newer));
   else
@@ -508,35 +544,17 @@ vector< uint32 >* Query_Statement::collect_ids
 
 void Query_Statement::execute(Resource_Manager& rman)
 {
-  stopwatch.start();
-  
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes
-      (rman.sets()[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways
-      (rman.sets()[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations
-      (rman.sets()[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas
-      (rman.sets()[output].areas);
-  
   if (key_values.empty() && (!item_restriction))
     return;
+
+  stopwatch.start();
+  Set into;
   
   if (type == QUERY_NODE)
   {
     vector< uint32 >* ids(collect_ids
         (key_values, *osm_base_settings().NODE_TAGS_GLOBAL,
          Stopwatch::NODE_TAGS_GLOBAL, rman));
-
-    set< pair< Uint32_Index, Uint32_Index > > user_node_req;
-    set< pair< Uint31_Index, Uint31_Index > > user_other_req;
-    Meta_Collector< Uint32_Index, Node_Skeleton >* meta_collector = 0;
-    if (user_restriction)
-    {
-      user_restriction->calc_ranges(user_node_req, user_other_req, *rman.get_transaction());
-      meta_collector = new Meta_Collector< Uint32_Index, Node_Skeleton >
-          (user_node_req, *rman.get_transaction(), meta_settings().NODES_META);
-    }
 
     set< pair< Uint32_Index, Uint32_Index > > nodes_req;
     set< Uint31_Index > area_blocks_req;	
@@ -589,36 +607,11 @@ void Query_Statement::execute(Resource_Manager& rman)
       stopwatch.stop(Stopwatch::NODES_MAP);
     }
     
-    if (!item_restriction)
-      nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-    
     stopwatch.stop(Stopwatch::NO_DISK);
     if (area_restriction != 0)
     {
       area_restriction->collect_nodes
-          (nodes_req, area_blocks_req, ids, nodes, stopwatch, rman);
-	  
-      if (user_restriction)
-      {
-        for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = nodes.begin();
-            it != nodes.end(); ++it)
-        {
-	  vector< Node_Skeleton > accepted;
-	  for (vector< Node_Skeleton >::const_iterator it2 = it->second.begin();
-	      it2 != it->second.end(); ++it2)
-	  {
-	    const OSM_Element_Metadata_Skeleton* meta_skel
-	        = meta_collector->get(it->first, it2->id);
-	    if ((meta_skel) && (meta_skel->user_id == user_restriction->get_id()))
-	      accepted.push_back(*it2);
-	  }
-	  it->second.swap(accepted);
-	}
-      }
-      
+          (nodes_req, area_blocks_req, ids, into.nodes, stopwatch, rman);
       stopwatch.stop(Stopwatch::NO_DISK);
     }
     else if (around_restriction != 0)
@@ -643,16 +636,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	  double lat(Node::lat(it.index().val(), it.object().ll_lower));
 	  double lon(Node::lon(it.index().val(), it.object().ll_lower));
 	  if (around_restriction->is_inside(lat, lon))
-	  {
-	    if (user_restriction)
-	    {
-	      const OSM_Element_Metadata_Skeleton* meta_skel
-	          = meta_collector->get(it.index(), it.object().id);
-	      if (!((meta_skel) && (meta_skel->user_id == user_restriction->get_id())))
-		continue;
-	    }
-	    nodes[it.index()].push_back(it.object());
-	  }
+	    into.nodes[it.index()].push_back(it.object());
 	}
       }
       stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
@@ -686,16 +670,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	       ((bbox_restriction->get_east() < bbox_restriction->get_west()) &&
 	        ((lon >= bbox_restriction->get_west()) ||
 		 (lon <= bbox_restriction->get_east())))))
-	  {
-	    if (user_restriction)
-	    {
-	      const OSM_Element_Metadata_Skeleton* meta_skel
-	          = meta_collector->get(it.index(), it.object().id);
-	      if (!((meta_skel) && (meta_skel->user_id == user_restriction->get_id())))
-		continue;
-	    }
-	    nodes[it.index()].push_back(it.object());
-	  }
+	    into.nodes[it.index()].push_back(it.object());
 	}
       }
       stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
@@ -705,7 +680,6 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       map< Uint32_Index, vector< Node_Skeleton > >& from
           (rman.sets()[item_restriction->get_result_name()].nodes);
-      map< Uint32_Index, vector< Node_Skeleton > > into;
       
       for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator iit = from.begin();
           iit != from.end(); ++iit)
@@ -714,22 +688,9 @@ void Query_Statement::execute(Resource_Manager& rman)
 	    cit != iit->second.end(); ++cit)
 	{
 	  if ((binary_search(ids->begin(), ids->end(), cit->id)) || (ids->empty()))
-	  {
-	    if (user_restriction)
-	    {
-              const OSM_Element_Metadata_Skeleton* meta_skel
-                  = meta_collector->get(iit->first, cit->id);
-              if (!((meta_skel) && (meta_skel->user_id == user_restriction->get_id())))
-                continue;
-	    }
-	    into[iit->first].push_back(*cit);
-	  }
+	    into.nodes[iit->first].push_back(*cit);
 	}
       }
-      into.swap(rman.sets()[output].nodes);
-      rman.sets()[output].ways.clear();
-      rman.sets()[output].relations.clear();
-      rman.sets()[output].areas.clear();
     }
     else
     {
@@ -747,23 +708,11 @@ void Query_Statement::execute(Resource_Manager& rman)
 	}
 	
 	if (binary_search(ids->begin(), ids->end(), it.object().id))
-	{
-	  if (user_restriction)
-	  {
-	    const OSM_Element_Metadata_Skeleton* meta_skel
-	        = meta_collector->get(it.index(), it.object().id);
-	    if (!((meta_skel) && (meta_skel->user_id == user_restriction->get_id())))
-	      continue;
-	  }
-	  nodes[it.index()].push_back(it.object());
-	}
+	  into.nodes[it.index()].push_back(it.object());
       }    
       stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
       stopwatch.stop(Stopwatch::NODES);
     }
-    
-    if (user_restriction)
-      delete meta_collector;
   }
   else if (type == QUERY_WAY)
   {
@@ -771,21 +720,10 @@ void Query_Statement::execute(Resource_Manager& rman)
         (key_values, *osm_base_settings().WAY_TAGS_GLOBAL,
 	 Stopwatch::WAY_TAGS_GLOBAL, rman));
 
-    set< pair< Uint32_Index, Uint32_Index > > user_node_req;
-    set< pair< Uint31_Index, Uint31_Index > > user_other_req;
-    Meta_Collector< Uint31_Index, Way_Skeleton >* meta_collector = 0;
-    if (user_restriction)
-    {
-      user_restriction->calc_ranges(user_node_req, user_other_req, *rman.get_transaction());
-      meta_collector = new Meta_Collector< Uint31_Index, Way_Skeleton >
-          (user_other_req, *rman.get_transaction(), meta_settings().WAYS_META);
-    }
-
     if (item_restriction)
     {
       map< Uint31_Index, vector< Way_Skeleton > >& from
           (rman.sets()[item_restriction->get_result_name()].ways);
-      map< Uint31_Index, vector< Way_Skeleton > > into;
       
       for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator iit = from.begin();
           iit != from.end(); ++iit)
@@ -794,22 +732,9 @@ void Query_Statement::execute(Resource_Manager& rman)
 	    cit != iit->second.end(); ++cit)
 	{
 	  if ((binary_search(ids->begin(), ids->end(), cit->id)) || (ids->empty()))
-	  {
-	    if (user_restriction)
-	    {
-              const OSM_Element_Metadata_Skeleton* meta_skel
-                  = meta_collector->get(iit->first, cit->id);
-              if (!((meta_skel) && (meta_skel->user_id == user_restriction->get_id())))
-                continue;
-	    }
-	    into[iit->first].push_back(*cit);
-	  }
+	    into.ways[iit->first].push_back(*cit);
 	}
       }
-      rman.sets()[output].nodes.clear();
-      into.swap(rman.sets()[output].ways);
-      rman.sets()[output].relations.clear();
-      rman.sets()[output].areas.clear();
     }
     else
     {
@@ -823,11 +748,6 @@ void Query_Statement::execute(Resource_Manager& rman)
           obj_req.insert(random.get(*it));
         stopwatch.stop(Stopwatch::WAYS_MAP);
       }
-    
-      nodes.clear();
-      ways.clear();
-      relations.clear();
-      areas.clear();
       
       stopwatch.stop(Stopwatch::NO_DISK);
       uint ways_count = 0;
@@ -844,23 +764,11 @@ void Query_Statement::execute(Resource_Manager& rman)
 	}
 	
         if (binary_search(ids->begin(), ids->end(), it.object().id))
-	{
-	  if (user_restriction)
-	  {
-	    const OSM_Element_Metadata_Skeleton* meta_skel
-	        = meta_collector->get(it.index(), it.object().id);
-	    if (!((meta_skel) && (meta_skel->user_id == user_restriction->get_id())))
-	      continue;
-	  }
-	  ways[it.index()].push_back(it.object());
-	}
+	  into.ways[it.index()].push_back(it.object());
       }    
       stopwatch.add(Stopwatch::WAYS, ways_db.read_count());
       stopwatch.stop(Stopwatch::WAYS);
     }
-    
-    if (user_restriction)
-      delete meta_collector;
   }
   else if (type == QUERY_RELATION)
   {
@@ -868,21 +776,10 @@ void Query_Statement::execute(Resource_Manager& rman)
         (key_values, *osm_base_settings().RELATION_TAGS_GLOBAL,
 	 Stopwatch::RELATION_TAGS_GLOBAL, rman));
     
-    set< pair< Uint32_Index, Uint32_Index > > user_node_req;
-    set< pair< Uint31_Index, Uint31_Index > > user_other_req;
-    Meta_Collector< Uint31_Index, Relation_Skeleton >* meta_collector = 0;
-    if (user_restriction)
-    {
-      user_restriction->calc_ranges(user_node_req, user_other_req, *rman.get_transaction());
-      meta_collector = new Meta_Collector< Uint31_Index, Relation_Skeleton >
-          (user_other_req, *rman.get_transaction(), meta_settings().RELATIONS_META);
-    }
-
     if (item_restriction)
     {
       map< Uint31_Index, vector< Relation_Skeleton > >& from
           (rman.sets()[item_restriction->get_result_name()].relations);
-      map< Uint31_Index, vector< Relation_Skeleton > > into;
       
       for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator iit = from.begin();
           iit != from.end(); ++iit)
@@ -891,22 +788,9 @@ void Query_Statement::execute(Resource_Manager& rman)
 	    cit != iit->second.end(); ++cit)
 	{
 	  if ((binary_search(ids->begin(), ids->end(), cit->id)) || (ids->empty()))
-	  {
-	    if (user_restriction)
-	    {
-              const OSM_Element_Metadata_Skeleton* meta_skel
-                  = meta_collector->get(iit->first, cit->id);
-              if (!((meta_skel) && (meta_skel->user_id == user_restriction->get_id())))
-                continue;
-	    }
-	    into[iit->first].push_back(*cit);
-	  }
+	    into.relations[iit->first].push_back(*cit);
 	}
       }
-      rman.sets()[output].nodes.clear();
-      rman.sets()[output].ways.clear();
-      into.swap(rman.sets()[output].relations);
-      rman.sets()[output].areas.clear();
     }
     else
     {
@@ -921,11 +805,6 @@ void Query_Statement::execute(Resource_Manager& rman)
         stopwatch.stop(Stopwatch::RELATIONS_MAP);
       }
     
-      nodes.clear();
-      ways.clear();
-      relations.clear();
-      areas.clear();
-      
       stopwatch.stop(Stopwatch::NO_DISK);
       uint relations_count = 0;
       Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
@@ -941,29 +820,22 @@ void Query_Statement::execute(Resource_Manager& rman)
 	}
 	
 	if (binary_search(ids->begin(), ids->end(), it.object().id))
-	{
-	  if (user_restriction)
-	  {
-	    const OSM_Element_Metadata_Skeleton* meta_skel
-	        = meta_collector->get(it.index(), it.object().id);
-	    if (!((meta_skel) && (meta_skel->user_id == user_restriction->get_id())))
-	      continue;
-	  }
-	  relations[it.index()].push_back(it.object());
-	}
+	  into.relations[it.index()].push_back(it.object());
       }    
       stopwatch.add(Stopwatch::RELATIONS, relations_db.read_count());
       stopwatch.stop(Stopwatch::RELATIONS);
     }
-    
-    if (user_restriction)
-      delete meta_collector;
   }
-
+  
   for (vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end(); ++it)
-    (*it)->filter(rman, rman.sets()[output]);
-
+    (*it)->filter(rman, into);
+  
+  into.nodes.swap(rman.sets()[output].nodes);
+  into.ways.swap(rman.sets()[output].ways);
+  into.relations.swap(rman.sets()[output].relations);
+  rman.sets()[output].areas.clear();
+  
   stopwatch.report(get_name());  
   rman.health_check(*this);
 }

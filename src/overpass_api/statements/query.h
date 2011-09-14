@@ -28,8 +28,7 @@ class Query_Statement : public Statement
   public:
     Query_Statement(int line_number_)
       : Statement(line_number_),
-        area_restriction(0), around_restriction(0), bbox_restriction(0), item_restriction(0),
-	user_restriction(0) {}
+        area_restriction(0), around_restriction(0), bbox_restriction(0), item_restriction(0) {}
     virtual ~Query_Statement();
     virtual void set_attributes(const char **attr);
     virtual void add_statement(Statement* statement, string text);
@@ -46,7 +45,6 @@ class Query_Statement : public Statement
     Around_Statement* around_restriction;
     Bbox_Query_Statement* bbox_restriction;
     Item_Statement* item_restriction;
-    User_Statement* user_restriction;
     
     vector< Query_Constraint* > constraints;
     

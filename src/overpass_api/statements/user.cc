@@ -50,6 +50,14 @@ uint32 get_user_id(const string& user_name, Transaction& transaction)
   return 0;
 }
 
+uint32 User_Statement::get_id(Transaction& transaction)
+{
+  if (user_name != "")
+    user_id = get_user_id(user_name, transaction);  
+  
+  return user_id;
+}
+
 void calc_ranges
   (set< pair< Uint32_Index, Uint32_Index > >& node_req,
    set< pair< Uint31_Index, Uint31_Index > >& other_req,

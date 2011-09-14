@@ -24,8 +24,13 @@ class User_Statement : public Statement
         (set< pair< Uint32_Index, Uint32_Index > >& node_req,
          set< pair< Uint31_Index, Uint31_Index > >& other_req,
          Transaction& transaction);
+	 
+    // Reads the user id from the database.
+    uint32 get_id(Transaction& transaction);
+    
+    // Works only if get_id(Transaction&) has been called before.
     uint32 get_id() const { return user_id; }
- 
+    
   private:
     string input, output;
     uint32 user_id;

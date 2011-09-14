@@ -226,6 +226,7 @@ RES=$RES`diff -q run/meta/newer.log run/meta/db_newer.log`
 if [[ -n $RES || -s run/meta/diff_stderr.log ]]; then
 {
   echo `date +%T` "Test diff 1 FAILED."
+  echo $RES
 }; else
 {
   echo `date +%T` "Test diff 1 succeeded."
