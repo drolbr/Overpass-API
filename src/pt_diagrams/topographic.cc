@@ -119,9 +119,19 @@ struct StopFeature
   : name(name_), color(color_), lat(lat_), lon(lon_) {}
 };
 
+struct NodeFeature
+{
+  NodeFeature(const double& lat_, const double& lon_, int shift_)
+  : lat(lat_), lon(lon_), shift(shift_) {}
+  
+  double lat;
+  double lon;
+  int shift;
+};
+
 struct PolySegmentFeature
 {
-  vector< pair< double, double > > lat_lon;
+  vector< NodeFeature > lat_lon;
   string color;
   
   PolySegmentFeature(string color_) : color(color_) {}
@@ -175,6 +185,28 @@ Features extract_features(const OSMData& osm_data)
       }
     }
   }
+
+  map< Way*, map< string, pair< int, bool > > > colors_per_way;
+  for (map< uint32, Relation* >::const_iterator it(osm_data.relations.begin());
+      it != osm_data.relations.end(); ++it)
+  {
+    Node* last_node(NULL);
+    RouteFeature route_feature;
+    string color(it->second->tags["color"]);
+    if (color == "")
+      color = default_color(it->second->tags["ref"]);
+    for (vector< pair< OSMElement*, string > >::const_iterator
+        it2(it->second->members.begin()); it2 != it->second->members.end(); ++it2)
+    {
+      Way* way(dynamic_cast< Way* >(it2->first));
+      if (way)
+      {
+	int pos = colors_per_way[way].size();
+	if (colors_per_way[way].find(color) == colors_per_way[way].end())
+	  colors_per_way[way].insert(make_pair(color, make_pair(pos, it2->second != "backward")));
+      }
+    }
+  }
   
   for (map< uint32, Relation* >::const_iterator it(osm_data.relations.begin());
       it != osm_data.relations.end(); ++it)
@@ -200,14 +232,18 @@ Features extract_features(const OSMData& osm_data)
 	    route_feature.push_back(PolySegmentFeature(color));
 	    poly_segment = &route_feature.back();
 	    poly_segment->lat_lon.push_back
-	        (make_pair(way->nds.back()->lat, way->nds.back()->lon));
+	        (NodeFeature(way->nds.back()->lat, way->nds.back()->lon,
+			     (colors_per_way[way][color].second ? -1 : 1)*
+			     ((int)colors_per_way[way].size() - 1 - 2*colors_per_way[way][color].first)));
 	  }
 	  vector< Node* >::const_reverse_iterator it3(way->nds.rbegin());
 	  if (it3 != way->nds.rend())
 	    ++it3;
 	  for (; it3 != way->nds.rend(); ++it3)
 	    poly_segment->lat_lon.push_back
-                (make_pair((*it3)->lat, (*it3)->lon));
+                (NodeFeature((*it3)->lat, (*it3)->lon,
+			     (colors_per_way[way][color].second ? -1 : 1)*
+			     ((int)colors_per_way[way].size() - 1 - 2*colors_per_way[way][color].first)));
 	  last_node = way->nds.front();
 	}
 	else
@@ -219,14 +255,18 @@ Features extract_features(const OSMData& osm_data)
 	    route_feature.push_back(PolySegmentFeature(color));
 	    poly_segment = &route_feature.back();
 	    poly_segment->lat_lon.push_back
-	        (make_pair(way->nds.front()->lat, way->nds.front()->lon));
+	        (NodeFeature(way->nds.front()->lat, way->nds.front()->lon,
+			     (colors_per_way[way][color].second ? 1 : -1)*
+			     ((int)colors_per_way[way].size() - 1 - 2*colors_per_way[way][color].first)));
 	  }
 	  vector< Node* >::const_iterator it3(way->nds.begin());
 	  if (it3 != way->nds.end())
 	    ++it3;
 	  for (; it3 != way->nds.end(); ++it3)
 	    poly_segment->lat_lon.push_back
-                (make_pair((*it3)->lat, (*it3)->lon));
+	    (NodeFeature((*it3)->lat, (*it3)->lon,
+			 (colors_per_way[way][color].second ? 1 : -1)*
+			 ((int)colors_per_way[way].size() - 1 - 2*colors_per_way[way][color].first)));
 	  last_node = way->nds.back();
 	}
       }
@@ -297,6 +337,81 @@ namespace
   };
 }
 
+struct Vec_2_Dim
+{
+  Vec_2_Dim(double x_, double y_) : x(x_), y(y_) {}
+  
+  double x;
+  double y;
+  
+  double length() const
+  {
+    return sqrt(x*x + y*y);
+  }
+};
+
+Vec_2_Dim operator*(double scal, const Vec_2_Dim& v)
+{
+  return Vec_2_Dim(scal*v.x, scal*v.y);
+}
+
+Vec_2_Dim operator+(const Vec_2_Dim& v, const Vec_2_Dim& w)
+{
+  return Vec_2_Dim(v.x + w.x, v.y + w.y);
+}
+
+Vec_2_Dim turn_left(const Vec_2_Dim& v)
+{
+  return Vec_2_Dim(v.y, -v.x);
+}
+
+string shifted(double before_x, double before_y, double x, double y,
+	       double after_x, double after_y, int shift)
+{
+  const double LINE_DIST = 2.0;
+  
+  Vec_2_Dim in_vec(x - before_x, y - before_y);
+  in_vec = (1.0/in_vec.length())*in_vec;
+  Vec_2_Dim left_vec(turn_left(in_vec));
+  left_vec = (1.0/left_vec.length())*left_vec;
+  Vec_2_Dim out_vec(after_x - x, after_y - y);
+  out_vec = (1.0/out_vec.length())*out_vec;
+  Vec_2_Dim draw_vec(turn_left(in_vec + out_vec));
+  if (draw_vec.x*left_vec.x + draw_vec.y*left_vec.y == 0.0)
+  {
+    ostringstream out;
+    out<<x<<' '<<y;
+    return out.str();
+  }
+  left_vec = (1.0/left_vec.length())*left_vec;
+  draw_vec = (LINE_DIST/(draw_vec.x*left_vec.x + draw_vec.y*left_vec.y))*draw_vec;
+  if (in_vec.x*out_vec.x + in_vec.y*out_vec.y < 0.0)
+  {
+    if ((shift <= 0 && (left_vec.x*out_vec.x + left_vec.y*out_vec.y > 0.0)) ||
+        (shift >= 0 && (left_vec.x*out_vec.x + left_vec.y*out_vec.y < 0.0)))
+    {
+      Vec_2_Dim left_out_vec(turn_left(out_vec));
+      left_out_vec = (1.0/left_out_vec.length())*left_out_vec;
+      draw_vec = (1.0/draw_vec.length())*draw_vec;
+    
+      ostringstream out;
+      out<<x + LINE_DIST*left_vec.x*shift<<' '<<y + LINE_DIST*left_vec.y*shift<<", ";
+      out<<x + LINE_DIST*draw_vec.x*shift<<' '<<y + LINE_DIST*draw_vec.y*shift<<", ";
+      out<<x + LINE_DIST*left_out_vec.x*shift<<' '<<y + LINE_DIST*left_out_vec.y*shift;
+      return out.str();
+    }
+  }
+  draw_vec = (LINE_DIST/(draw_vec.x*left_vec.x + draw_vec.y*left_vec.y))*draw_vec;
+  
+  ostringstream out;
+  //out<<x<<' '<<y<<", ";
+  //out<<x + 10.0*	draw_vec.x<<' '<<y + 10.0*draw_vec.y<<", ";
+  //out<<x + 5.0*shift<<' '<<y<<", ";
+  out<<x + draw_vec.x*shift<<' '<<y + draw_vec.y*shift<<", ";
+  //out<<x<<' '<<y;
+  return out.str();
+}
+
 void sketch_features
     (const OSMData& osm_data,
      const Features& features,
@@ -346,17 +461,24 @@ void sketch_features
     {
       cout<<"<polyline fill=\"none\" stroke=\""<<it2->color
           <<"\" stroke-width=\"3px\" points=\"";
-      vector< pair< double, double > >::const_iterator it3(it2->lat_lon.begin());
-      if (it3 != it2->lat_lon.end())
+      vector< double > x_s;
+      vector< double > y_s;
+      vector< int > shifts;
+      for (vector< NodeFeature >::const_iterator it3(it2->lat_lon.begin());
+          it3 != it2->lat_lon.end(); ++it3)
       {
-	cout<<coord_transform.hpos(it3->first, it3->second)<<' '
-	    <<coord_transform.vpos(it3->first);
-	++it3;
+	x_s.push_back(coord_transform.hpos(it3->lat, it3->lon));
+	y_s.push_back(coord_transform.vpos(it3->lat));
+	shifts.push_back(it3->shift);
       }
-      for (; it3 != it2->lat_lon.end(); ++it3)
+      
+      if (x_s.size() >= 2)
       {
-	cout<<", "<<coord_transform.hpos(it3->first, it3->second)
-	    <<' '<<coord_transform.vpos(it3->first);
+	unsigned int line_size = x_s.size();
+	cout<<x_s[0]<<' '<<y_s[0];	
+	for (unsigned int i = 0; i < line_size; ++i)
+	  cout<<", "<<shifted(x_s[i-1], y_s[i-1], x_s[i], y_s[i], x_s[i+1], y_s[i+1], shifts[i]);	
+	cout<<", "<<x_s[line_size-1]<<' '<<y_s[line_size-1];	
       }
       cout<<"\"/>\n";
     }
