@@ -190,7 +190,6 @@ Features extract_features(const OSMData& osm_data)
   for (map< uint32, Relation* >::const_iterator it(osm_data.relations.begin());
       it != osm_data.relations.end(); ++it)
   {
-    Node* last_node(NULL);
     RouteFeature route_feature;
     string color(it->second->tags["color"]);
     if (color == "")
@@ -233,7 +232,7 @@ Features extract_features(const OSMData& osm_data)
 	    poly_segment = &route_feature.back();
 	    poly_segment->lat_lon.push_back
 	        (NodeFeature(way->nds.back()->lat, way->nds.back()->lon,
-			     (colors_per_way[way][color].second ? -1 : 1)*
+			     (0/*colors_per_way[way][color].second ? -1 : 1*/)*
 			     ((int)colors_per_way[way].size() - 1 - 2*colors_per_way[way][color].first)));
 	  }
 	  vector< Node* >::const_reverse_iterator it3(way->nds.rbegin());
@@ -242,7 +241,7 @@ Features extract_features(const OSMData& osm_data)
 	  for (; it3 != way->nds.rend(); ++it3)
 	    poly_segment->lat_lon.push_back
                 (NodeFeature((*it3)->lat, (*it3)->lon,
-			     (colors_per_way[way][color].second ? -1 : 1)*
+			     (/*colors_per_way[way][color].second ?*/ -1 /*: 1*/)*
 			     ((int)colors_per_way[way].size() - 1 - 2*colors_per_way[way][color].first)));
 	  last_node = way->nds.front();
 	}
@@ -256,7 +255,7 @@ Features extract_features(const OSMData& osm_data)
 	    poly_segment = &route_feature.back();
 	    poly_segment->lat_lon.push_back
 	        (NodeFeature(way->nds.front()->lat, way->nds.front()->lon,
-			     (colors_per_way[way][color].second ? 1 : -1)*
+ 			     (0/*colors_per_way[way][color].second ? 1 : -1*/)*
 			     ((int)colors_per_way[way].size() - 1 - 2*colors_per_way[way][color].first)));
 	  }
 	  vector< Node* >::const_iterator it3(way->nds.begin());
@@ -265,7 +264,7 @@ Features extract_features(const OSMData& osm_data)
 	  for (; it3 != way->nds.end(); ++it3)
 	    poly_segment->lat_lon.push_back
 	    (NodeFeature((*it3)->lat, (*it3)->lon,
-			 (colors_per_way[way][color].second ? 1 : -1)*
+/*			 (colors_per_way[way][color].second ? 1 : -1)**/
 			 ((int)colors_per_way[way].size() - 1 - 2*colors_per_way[way][color].first)));
 	  last_node = way->nds.back();
 	}
@@ -370,21 +369,23 @@ string shifted(double before_x, double before_y, double x, double y,
 {
   const double LINE_DIST = 2.0;
   
+  bool invalid = false;
   Vec_2_Dim in_vec(x - before_x, y - before_y);
   in_vec = (1.0/in_vec.length())*in_vec;
+  invalid |= (in_vec.length() < 0.1);
   Vec_2_Dim left_vec(turn_left(in_vec));
   left_vec = (1.0/left_vec.length())*left_vec;
   Vec_2_Dim out_vec(after_x - x, after_y - y);
+  invalid |= (out_vec.length() < 0.1);
   out_vec = (1.0/out_vec.length())*out_vec;
   Vec_2_Dim draw_vec(turn_left(in_vec + out_vec));
-  if (draw_vec.x*left_vec.x + draw_vec.y*left_vec.y == 0.0)
+  invalid |= (draw_vec.length() < 0.1);
+  if (invalid)
   {
     ostringstream out;
     out<<x<<' '<<y;
     return out.str();
   }
-  left_vec = (1.0/left_vec.length())*left_vec;
-  draw_vec = (LINE_DIST/(draw_vec.x*left_vec.x + draw_vec.y*left_vec.y))*draw_vec;
   if (in_vec.x*out_vec.x + in_vec.y*out_vec.y < 0.0)
   {
     if ((shift <= 0 && (left_vec.x*out_vec.x + left_vec.y*out_vec.y > 0.0)) ||
@@ -398,6 +399,7 @@ string shifted(double before_x, double before_y, double x, double y,
       out<<x + LINE_DIST*left_vec.x*shift<<' '<<y + LINE_DIST*left_vec.y*shift<<", ";
       out<<x + LINE_DIST*draw_vec.x*shift<<' '<<y + LINE_DIST*draw_vec.y*shift<<", ";
       out<<x + LINE_DIST*left_out_vec.x*shift<<' '<<y + LINE_DIST*left_out_vec.y*shift;
+      //out<<x<<' '<<y;
       return out.str();
     }
   }
@@ -405,9 +407,9 @@ string shifted(double before_x, double before_y, double x, double y,
   
   ostringstream out;
   //out<<x<<' '<<y<<", ";
-  //out<<x + 10.0*	draw_vec.x<<' '<<y + 10.0*draw_vec.y<<", ";
-  //out<<x + 5.0*shift<<' '<<y<<", ";
-  out<<x + draw_vec.x*shift<<' '<<y + draw_vec.y*shift<<", ";
+  //out<<x + 10.0*draw_vec.x<<' '<<y + 10.0*draw_vec.y<<", ";
+  //out<<x + 10.0*draw_vec.x*shift<<' '<<y + 10.0*draw_vec.y*shift<<", ";
+  out<<x + draw_vec.x*shift<<' '<<y + draw_vec.y*shift;//<<", ";
   //out<<x<<' '<<y;
   return out.str();
 }
@@ -476,7 +478,7 @@ void sketch_features
       {
 	unsigned int line_size = x_s.size();
 	cout<<x_s[0]<<' '<<y_s[0];	
-	for (unsigned int i = 0; i < line_size; ++i)
+	for (unsigned int i = 1; i < line_size; ++i)
 	  cout<<", "<<shifted(x_s[i-1], y_s[i-1], x_s[i], y_s[i], x_s[i+1], y_s[i+1], shifts[i]);	
 	cout<<", "<<x_s[line_size-1]<<' '<<y_s[line_size-1];	
       }
