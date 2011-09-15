@@ -52,6 +52,12 @@ class Query_Statement : public Statement
         (const vector< pair< string, string > >& key_values,
 	 const File_Properties& file_prop, uint32 stopwatch_account,
 	 Resource_Manager& rman);
+	 
+    template < typename TIndex, typename TObject >
+    void get_elements_by_id_from_db
+        (map< TIndex, vector< TObject > >& elements,
+	 const vector< uint32 >& ids, const set< pair< TIndex, TIndex > >& range_req,
+         Resource_Manager& rman, File_Properties& file_prop);
 };
 
 class Has_Kv_Statement : public Statement
