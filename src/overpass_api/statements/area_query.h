@@ -24,6 +24,7 @@ class Area_Query_Statement : public Statement
       (set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
        set< Uint31_Index >& area_block_req,
        Resource_Manager& rman);
+       
     void collect_nodes
       (const set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
        const set< Uint31_Index >& req,
@@ -31,8 +32,13 @@ class Area_Query_Statement : public Statement
        map< Uint32_Index, vector< Node_Skeleton > >& nodes,
        Stopwatch& stopwatch,
        Resource_Manager& rman);
+       
+    void collect_nodes
+      (map< Uint32_Index, vector< Node_Skeleton > >& nodes,
+       const set< Uint31_Index >& req,
+       Resource_Manager& rman);
 
-       static bool is_used() { return is_used_; }
+    static bool is_used() { return is_used_; }
   
   private:
     string output;

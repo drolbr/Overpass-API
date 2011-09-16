@@ -150,6 +150,70 @@ void Area_Query_Statement::collect_nodes
   }
 }
 
+void Area_Query_Statement::collect_nodes
+    (map< Uint32_Index, vector< Node_Skeleton > >& nodes,
+     const set< Uint31_Index >& req,
+     Resource_Manager& rman)
+{
+  Block_Backend< Uint31_Index, Area_Block > area_blocks_db
+      (rman.get_area_transaction()->data_index(area_settings().AREA_BLOCKS));
+  Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
+      area_it(area_blocks_db.discrete_begin(req.begin(), req.end()));
+
+  map< Uint32_Index, vector< Node_Skeleton > >::iterator nodes_it = nodes.begin();
+  
+  uint32 current_idx(0);
+  if (!(area_it == area_blocks_db.discrete_end()))
+    current_idx = area_it.index().val();
+  while (!(area_it == area_blocks_db.discrete_end()))
+  {
+    rman.health_check(*this);
+    
+    vector< Area_Block > areas;
+    while ((!(area_it == area_blocks_db.discrete_end())) &&
+        (area_it.index().val() == current_idx))
+    {
+      if (area_it.object().id == area_id)
+	areas.push_back(area_it.object());
+      ++area_it;
+    }
+    
+    while (nodes_it != nodes.end() &&
+        (nodes_it->first.val() & 0xffffff00) == current_idx)
+    {
+      vector< Node_Skeleton > into;
+      for (vector< Node_Skeleton >::const_iterator iit = nodes_it->second.begin();
+          iit != nodes_it->second.end(); ++iit)
+      {
+        int inside = 0;
+        uint32 ilat((Node::lat(nodes_it->first.val(), iit->ll_lower)
+            + 91.0)*10000000+0.5);
+        int32 ilon(Node::lon(nodes_it->first.val(), iit->ll_lower)*10000000
+            + (Node::lon(nodes_it->first.val(), iit->ll_lower) > 0 ? 0.5 : -0.5));
+        for (vector< Area_Block >::const_iterator it(areas.begin());
+            it != areas.end(); ++it)
+        {
+	  int check(Coord_Query_Statement::check_area_block(current_idx, *it, ilat, ilon));
+	  if (check == Coord_Query_Statement::HIT)
+	  {
+	    into.push_back(*iit);
+	    inside = 0;
+	    break;
+	  }
+	  else if (check != 0)
+	    inside ^= check;
+        }
+        if (inside)
+	  into.push_back(*iit);
+      }
+      nodes_it->second.swap(into);
+      
+      ++nodes_it;
+    }
+    current_idx = area_it.index().val();
+  }
+}
+
 void Area_Query_Statement::execute(Resource_Manager& rman)
 { 
   stopwatch.start();

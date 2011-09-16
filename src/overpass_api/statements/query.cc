@@ -202,6 +202,8 @@ class Around_Constraint : public Query_Constraint
 
 void Around_Constraint::filter(Resource_Manager& rman, Set& into)
 {
+  around->calc_ranges(rman.sets()[around->get_source_name()].nodes);
+  
   for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = into.nodes.begin();
       it != into.nodes.end(); ++it)
   {
@@ -216,6 +218,27 @@ void Around_Constraint::filter(Resource_Manager& rman, Set& into)
     }
     it->second.swap(local_into);
   }
+}
+
+//-----------------------------------------------------------------------------
+
+class Area_Constraint : public Query_Constraint
+{
+  public:
+    Area_Constraint(Area_Query_Statement& area_) : area(&area_) {}
+    void filter(Resource_Manager& rman, Set& into);
+    virtual ~Area_Constraint() {}
+    
+  private:
+    Area_Query_Statement* area;
+};
+
+void Area_Constraint::filter(Resource_Manager& rman, Set& into)
+{
+  set< Uint31_Index > area_blocks_req;
+  set< pair< Uint32_Index, Uint32_Index > > range_req;
+  area->get_ranges(range_req, area_blocks_req, rman);
+  area->collect_nodes(into.nodes, area_blocks_req, rman);
 }
 
 //-----------------------------------------------------------------------------
@@ -288,17 +311,8 @@ void Query_Statement::add_statement(Statement* statement, string text)
       add_static_error(temp.str());
       return;
     }
-    if ((area_restriction != 0) || (around_restriction != 0) || (bbox_restriction != 0) ||
-        (item_restriction != 0))
-    {
-      ostringstream temp;
-      temp<<"A query statement may contain at most one area-query, around-query, bbox-query, "
-	  <<"or item as substatement.";
-      add_static_error(temp.str());
-      return;
-    }
     area_restriction = area;
-    return;
+    constraints.push_back(new Area_Constraint(*area));
   }
   else if (around != 0)
   {
@@ -326,7 +340,7 @@ void Query_Statement::add_statement(Statement* statement, string text)
   }
   else if (item != 0)
   {
-    if ((area_restriction != 0) || (item_restriction != 0))
+    if (item_restriction != 0)
       constraints.push_back(new Item_Constraint(*item));
     else
       item_restriction = item;
@@ -499,21 +513,11 @@ void Query_Statement::execute(Resource_Manager& rman)
         (key_values, *osm_base_settings().NODE_TAGS_GLOBAL,
          Stopwatch::NODE_TAGS_GLOBAL, rman));
 
-    set< pair< Uint32_Index, Uint32_Index > > nodes_req;
-    set< Uint31_Index > area_blocks_req;	
-    set< Uint32_Index > obj_req;
+    set< Uint31_Index > area_blocks_req;
     set< pair< Uint32_Index, Uint32_Index > > range_req;
     if (area_restriction != 0)
     {
-      stopwatch.stop(Stopwatch::NO_DISK);
-      area_restriction->get_ranges(nodes_req, area_blocks_req, rman);
-      stopwatch.stop(Stopwatch::AREAS);
-      for (set< pair< Uint32_Index, Uint32_Index > >::const_iterator
-	  it(nodes_req.begin()); it != nodes_req.end(); ++it)
-      {
-	for (uint32 i(it->first.val()); i < it->second.val(); ++i)
-	  obj_req.insert(Uint32_Index(i));
-      }
+      area_restriction->get_ranges(range_req, area_blocks_req, rman);
       answer_state = ranges_collected;
     }
     else if (around_restriction != 0)
@@ -543,15 +547,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       answer_state = ranges_collected;
     }
     
-    stopwatch.stop(Stopwatch::NO_DISK);
-    if (area_restriction != 0)
-    {
-      area_restriction->collect_nodes
-          (nodes_req, area_blocks_req, ids, into.nodes, stopwatch, rman);
-      stopwatch.stop(Stopwatch::NO_DISK);
-      answer_state = data_collected;
-    }
-    else if (item_restriction)
+    if (item_restriction)
     {
       map< Uint32_Index, vector< Node_Skeleton > >& from
           (rman.sets()[item_restriction->get_result_name()].nodes);
