@@ -155,6 +155,71 @@ void User_Constraint::filter(Resource_Manager& rman, Set& into)
 
 //-----------------------------------------------------------------------------
 
+class Bbox_Constraint : public Query_Constraint
+{
+  public:
+    Bbox_Constraint(Bbox_Query_Statement& bbox_) : bbox(&bbox_) {}
+    void filter(Resource_Manager& rman, Set& into);
+    virtual ~Bbox_Constraint() {}
+    
+  private:
+    Bbox_Query_Statement* bbox;
+};
+
+void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
+{
+  for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = into.nodes.begin();
+      it != into.nodes.end(); ++it)
+  {
+    vector< Node_Skeleton > local_into;
+    for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      double lat(Node::lat(it->first.val(), iit->ll_lower));
+      double lon(Node::lon(it->first.val(), iit->ll_lower));
+      if ((lat >= bbox->get_south()) && (lat <= bbox->get_north()) &&
+	  (((lon >= bbox->get_west()) && (lon <= bbox->get_east())) ||
+	  ((bbox->get_east() < bbox->get_west()) && ((lon >= bbox->get_west()) ||
+	  (lon <= bbox->get_east())))))
+	local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }
+}
+
+//-----------------------------------------------------------------------------
+
+class Around_Constraint : public Query_Constraint
+{
+  public:
+    Around_Constraint(Around_Statement& around_) : around(&around_) {}
+    void filter(Resource_Manager& rman, Set& into);
+    virtual ~Around_Constraint() {}
+    
+  private:
+    Around_Statement* around;
+};
+
+void Around_Constraint::filter(Resource_Manager& rman, Set& into)
+{
+  for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = into.nodes.begin();
+      it != into.nodes.end(); ++it)
+  {
+    vector< Node_Skeleton > local_into;
+    for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      double lat(Node::lat(it->first.val(), iit->ll_lower));
+      double lon(Node::lon(it->first.val(), iit->ll_lower));
+      if (around->is_inside(lat, lon))
+	local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }
+}
+
+//-----------------------------------------------------------------------------
+
 const unsigned int QUERY_NODE = 1;
 const unsigned int QUERY_WAY = 2;
 const unsigned int QUERY_RELATION = 3;
@@ -244,17 +309,8 @@ void Query_Statement::add_statement(Statement* statement, string text)
       add_static_error(temp.str());
       return;
     }
-    if ((area_restriction != 0) || (around_restriction != 0) || (bbox_restriction != 0) ||
-        (item_restriction != 0))
-    {
-      ostringstream temp;
-      temp<<"A query statement may contain at most one area-query, around-query, bbox-query, "
-	  <<"or item as substatement.";
-      add_static_error(temp.str());
-      return;
-    }
     around_restriction = around;
-    return;
+    constraints.push_back(new Around_Constraint(*around));
   }
   else if (bbox != 0)
   {
@@ -265,22 +321,12 @@ void Query_Statement::add_statement(Statement* statement, string text)
       add_static_error(temp.str());
       return;
     }
-    if ((area_restriction != 0) || (around_restriction != 0) || (bbox_restriction != 0) ||
-        (item_restriction != 0))
-    {
-      ostringstream temp;
-      temp<<"A query statement may contain at most one area-query, around-query, bbox-query, "
-	  <<"or item as substatement.";
-      add_static_error(temp.str());
-      return;
-    }
     bbox_restriction = bbox;
-    return;
+    constraints.push_back(new Bbox_Constraint(*bbox));
   }
   else if (item != 0)
   {
-    if ((area_restriction != 0) || (around_restriction != 0) || (bbox_restriction != 0) ||
-        (item_restriction != 0))
+    if ((area_restriction != 0) || (item_restriction != 0))
       constraints.push_back(new Item_Constraint(*item));
     else
       item_restriction = item;
@@ -295,153 +341,6 @@ void Query_Statement::add_statement(Statement* statement, string text)
 
 void Query_Statement::forecast()
 {
-/*  Set_Forecast& sf_out(declare_write_set(output));
-    
-  if (type == QUERY_NODE)
-  {
-    map< uint, pair< string, string > > key_value_counts;
-    for (vector< pair< string, string > >::const_iterator it(key_values.begin());
-	 it != key_values.end(); ++it)
-    {
-      uint count(node_kv_to_count_query(it->first, it->second));
-      key_value_counts.insert
-	  (make_pair< uint, pair< string, string > >(count, *it));
-    }
-    uint i(0);
-    bool reordered(false);
-    for (map< uint, pair< string, string > >::const_iterator it(key_value_counts.begin());
-	 it != key_value_counts.end(); ++it)
-    {
-      reordered |= (it->second != key_values[i]);
-      key_values[i++] = it->second;
-    }
-    if (reordered)
-    {
-      ostringstream temp;
-      temp<<"The clauses of this query have been reordered to improve performance:<br/>\n";
-      for (map< uint32, pair< string, string > >::const_iterator it(key_value_counts.begin()); ; )
-      {
-	temp<<"Has_Kv \""<<it->second.first<<"\" \""<<it->second.second<<"\": "<<it->first
-	    <<" results expected.";
-	if (++it != key_value_counts.end())
-	  temp<<"<br/>\n";
-	else
-	  break;
-      }
-      add_sanity_remark(temp.str());
-    }
-    
-    if (key_value_counts.empty())
-    {
-      sf_out.node_count = 400*1000*1000;
-      add_sanity_error("A query with empty conditions is not allowed.");
-    }
-    else
-      sf_out.node_count = key_value_counts.begin()->first;
-    declare_used_time(24000 + sf_out.node_count);
-  }
-  else if (type == QUERY_WAY)
-  {
-    map< uint, pair< string, string > > key_value_counts;
-    for (vector< pair< string, string > >::const_iterator it(key_values.begin());
-	 it != key_values.end(); ++it)
-    {
-      uint count(way_kv_to_count_query(it->first, it->second));
-      key_value_counts.insert
-	  (make_pair< uint, pair< string, string > >(count, *it));
-    }
-    uint i(0);
-    bool reordered(false);
-    for (map< uint, pair< string, string > >::const_iterator it(key_value_counts.begin());
-	 it != key_value_counts.end(); ++it)
-    {
-      reordered |= (it->second != key_values[i]);
-      key_values[i++] = it->second;
-    }
-    if (reordered)
-    {
-      ostringstream temp;
-      temp<<"The clauses of this query have been reordered to improve performance:<br/>\n";
-      for (map< uint32, pair< string, string > >::const_iterator it(key_value_counts.begin()); ; )
-      {
-	temp<<"Has_Kv \""<<it->second.first<<"\" \""<<it->second.second<<"\": "<<it->first
-	    <<" results expected.";
-	if (++it != key_value_counts.end())
-	  temp<<"<br/>\n";
-	else
-	  break;
-      }
-      add_sanity_remark(temp.str());
-    }
-    
-    if (key_value_counts.empty())
-    {
-      sf_out.way_count = 30*1000*1000;
-      add_sanity_error("A query with empty conditions is not allowed.");
-    }
-    else
-      sf_out.way_count = key_value_counts.begin()->first;
-    
-    declare_used_time(90000 + sf_out.way_count);
-  }
-  else if (type == QUERY_RELATION)
-  {
-    map< uint, pair< string, string > > key_value_counts;
-    for (vector< pair< string, string > >::const_iterator it(key_values.begin());
-	 it != key_values.end(); ++it)
-    {
-      uint count(relation_kv_to_count_query(it->first, it->second));
-      key_value_counts.insert
-	  (make_pair< uint, pair< string, string > >(count, *it));
-    }
-    uint i(0);
-    bool reordered(false);
-    for (map< uint, pair< string, string > >::const_iterator it(key_value_counts.begin());
-	 it != key_value_counts.end(); ++it)
-    {
-      reordered |= (it->second != key_values[i]);
-      key_values[i++] = it->second;
-    }
-    if (reordered)
-    {
-      ostringstream temp;
-      temp<<"The clauses of this query have been reordered to improve performance:<br/>\n";
-      for (map< uint32, pair< string, string > >::const_iterator it(key_value_counts.begin()); ; )
-      {
-	temp<<"Has_Kv \""<<it->second.first<<"\" \""<<it->second.second<<"\": "<<it->first
-	    <<" results expected.";
-	if (++it != key_value_counts.end())
-	  temp<<"<br/>\n";
-	else
-	  break;
-      }
-      add_sanity_remark(temp.str());
-    }
-    
-    if (key_value_counts.empty())
-    {
-      sf_out.relation_count = 100*1000;
-      add_sanity_error("A query with empty conditions is not allowed.");
-    }
-    else
-      sf_out.relation_count = key_value_counts.begin()->first;
-    declare_used_time(100 + sf_out.relation_count);
-  }
-  else if (type == QUERY_AREA)
-  {
-    if (key_value_counts.empty())
-    {
-      sf_out.area_count = 100*1000;
-      add_sanity_error("A query with empty conditions is not allowed.");
-    }
-    else
-      sf_out.area_count = 15;
-    declare_used_time(30*1000);
-  }
-  finish_statement_forecast();
-    
-  display_full();
-  display_state();*/
 }
 
 vector< uint32 >* Query_Statement::collect_ids
@@ -568,13 +467,31 @@ void Query_Statement::get_elements_by_id_from_db
   }    
 }
 
+template < typename TIndex >
+set< pair< TIndex, TIndex > > Query_Statement::get_ranges_by_id_from_db
+    (const vector< uint32 >& ids,
+     Resource_Manager& rman, File_Properties& file_prop)
+{
+  set< pair< TIndex, TIndex > > range_req;
+  {
+    Random_File< TIndex > random
+        (rman.get_transaction()->random_index(&file_prop));
+    for (vector< uint32 >::const_iterator it(ids.begin()); it != ids.end(); ++it)
+      range_req.insert(make_pair(random.get(*it), TIndex(random.get(*it).val()+1)));
+  }
+  return range_req;
+}
+
 void Query_Statement::execute(Resource_Manager& rman)
 {
   if (key_values.empty() && (!item_restriction))
     return;
 
-  stopwatch.start();
+  enum { nothing, /*ids_collected,*/ ranges_collected, data_collected } answer_state
+      = nothing;
   Set into;
+  
+  stopwatch.start();
   
   if (type == QUERY_NODE)
   {
@@ -597,6 +514,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	for (uint32 i(it->first.val()); i < it->second.val(); ++i)
 	  obj_req.insert(Uint32_Index(i));
       }
+      answer_state = ranges_collected;
     }
     else if (around_restriction != 0)
     {
@@ -609,6 +527,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	pair< Uint32_Index, Uint32_Index > range(make_pair(it->first, it->second));
 	range_req.insert(range);
       }
+      answer_state = ranges_collected;
     }
     else if (bbox_restriction != 0)
     {
@@ -621,14 +540,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	range_req.insert(range);
       }
       delete(ranges);
-    }
-    else
-    {
-      Random_File< Uint32_Index > random
-          (rman.get_transaction()->random_index(osm_base_settings().NODES));
-      for (vector< uint32 >::const_iterator it(ids->begin());
-          it != ids->end(); ++it)
-        range_req.insert(make_pair(random.get(*it), Uint32_Index(random.get(*it).val()+1)));
+      answer_state = ranges_collected;
     }
     
     stopwatch.stop(Stopwatch::NO_DISK);
@@ -637,68 +549,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       area_restriction->collect_nodes
           (nodes_req, area_blocks_req, ids, into.nodes, stopwatch, rman);
       stopwatch.stop(Stopwatch::NO_DISK);
-    }
-    else if (around_restriction != 0)
-    {
-      uint nodes_count = 0;
-      Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-	  (rman.get_transaction()->data_index(osm_base_settings().NODES));
-      for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
-          it(nodes_db.range_begin
-             (Default_Range_Iterator< Uint32_Index >(range_req.begin()),
-	      Default_Range_Iterator< Uint32_Index >(range_req.end())));
-          !(it == nodes_db.range_end()); ++it)
-      {
-	if (++nodes_count >= 64*1024)
-	{
-	  nodes_count = 0;
-	  rman.health_check(*this);
-	}
-	
-	if (binary_search(ids->begin(), ids->end(), it.object().id))
-	{
-	  double lat(Node::lat(it.index().val(), it.object().ll_lower));
-	  double lon(Node::lon(it.index().val(), it.object().ll_lower));
-	  if (around_restriction->is_inside(lat, lon))
-	    into.nodes[it.index()].push_back(it.object());
-	}
-      }
-      stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
-      stopwatch.stop(Stopwatch::NODES);
-    }
-    else if (bbox_restriction != 0)
-    {
-      uint nodes_count = 0;
-      Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-	  (rman.get_transaction()->data_index(osm_base_settings().NODES));
-      for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
-          it(nodes_db.range_begin
-             (Default_Range_Iterator< Uint32_Index >(range_req.begin()),
-	      Default_Range_Iterator< Uint32_Index >(range_req.end())));
-          !(it == nodes_db.range_end()); ++it)
-      {
-	if (++nodes_count >= 64*1024)
-	{
-	  nodes_count = 0;
-	  rman.health_check(*this);
-	}
-	
-	if (binary_search(ids->begin(), ids->end(), it.object().id))
-	{
-	  double lat(Node::lat(it.index().val(), it.object().ll_lower));
-	  double lon(Node::lon(it.index().val(), it.object().ll_lower));
-	  if ((lat >= bbox_restriction->get_south()) &&
-	      (lat <= bbox_restriction->get_north()) &&
-	      (((lon >= bbox_restriction->get_west()) &&
-	       (lon <= bbox_restriction->get_east())) ||
-	       ((bbox_restriction->get_east() < bbox_restriction->get_west()) &&
-	        ((lon >= bbox_restriction->get_west()) ||
-		 (lon <= bbox_restriction->get_east())))))
-	    into.nodes[it.index()].push_back(it.object());
-	}
-      }
-      stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
-      stopwatch.stop(Stopwatch::NODES);
+      answer_state = data_collected;
     }
     else if (item_restriction)
     {
@@ -715,18 +566,22 @@ void Query_Statement::execute(Resource_Manager& rman)
 	    into.nodes[iit->first].push_back(*cit);
 	}
       }
+      answer_state = data_collected;
     }
-    else
-    {
+    
+    if (answer_state < ranges_collected)
+      range_req = get_ranges_by_id_from_db< Uint32_Index >
+          (*ids, rman, *osm_base_settings().NODES);
+    if (answer_state < data_collected)
       get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
           (into.nodes, *ids, range_req, rman, *osm_base_settings().NODES);
-    }
   }
   else if (type == QUERY_WAY)
   {
     vector< uint32 >* ids(collect_ids
         (key_values, *osm_base_settings().WAY_TAGS_GLOBAL,
 	 Stopwatch::WAY_TAGS_GLOBAL, rman));
+    set< pair< Uint31_Index, Uint31_Index > > range_req;
 
     if (item_restriction)
     {
@@ -743,27 +598,22 @@ void Query_Statement::execute(Resource_Manager& rman)
 	    into.ways[iit->first].push_back(*cit);
 	}
       }
+      answer_state = data_collected;
     }
-    else
-    {
-      set< pair< Uint31_Index, Uint31_Index > > range_req;
-      {
-        Random_File< Uint31_Index > random
-            (rman.get_transaction()->random_index(osm_base_settings().WAYS));
-        for (vector< uint32 >::const_iterator it(ids->begin());
-            it != ids->end(); ++it)
-          range_req.insert(make_pair(random.get(*it), Uint31_Index(random.get(*it).val()+1)));
-      }
-      
+    
+    if (answer_state < ranges_collected)
+      range_req = get_ranges_by_id_from_db< Uint31_Index >
+          (*ids, rman, *osm_base_settings().WAYS);
+    if (answer_state < data_collected)
       get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
           (into.ways, *ids, range_req, rman, *osm_base_settings().WAYS);
-    }
   }
   else if (type == QUERY_RELATION)
   {
     vector< uint32 >* ids(collect_ids
         (key_values, *osm_base_settings().RELATION_TAGS_GLOBAL,
 	 Stopwatch::RELATION_TAGS_GLOBAL, rman));
+    set< pair< Uint31_Index, Uint31_Index > > range_req;
     
     if (item_restriction)
     {
@@ -780,21 +630,15 @@ void Query_Statement::execute(Resource_Manager& rman)
 	    into.relations[iit->first].push_back(*cit);
 	}
       }
+      answer_state = data_collected;
     }
-    else
-    {
-      set< pair< Uint31_Index, Uint31_Index > > range_req;
-      {
-        Random_File< Uint31_Index > random
-            (rman.get_transaction()->random_index(osm_base_settings().RELATIONS));
-        for (vector< uint32 >::const_iterator it(ids->begin());
-            it != ids->end(); ++it)
-          range_req.insert(make_pair(random.get(*it), Uint31_Index(random.get(*it).val()+1)));
-      }
     
+    if (answer_state < ranges_collected)
+      range_req = get_ranges_by_id_from_db< Uint31_Index >
+          (*ids, rman, *osm_base_settings().RELATIONS);
+    if (answer_state < data_collected)
       get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
           (into.relations, *ids, range_req, rman, *osm_base_settings().RELATIONS);
-    }
   }
   
   for (vector< Query_Constraint* >::iterator it = constraints.begin();
