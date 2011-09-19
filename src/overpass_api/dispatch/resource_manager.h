@@ -25,11 +25,12 @@ public:
 	max_allowed_time(0), max_allowed_space(0) {}
   
   Resource_Manager(Transaction& transaction_, Error_Output* error_output_,
-		   Transaction& area_transaction_, bool writeable = false)
+		   Transaction& area_transaction_, Watchdog_Callback* watchdog_,
+		   bool writeable = false)
       : transaction(&transaction_), error_output(error_output_),
         area_transaction(&area_transaction_),
         area_updater_(writeable ? new Area_Updater(area_transaction_) : 0),
-	watchdog(0), start_time(time(NULL)), last_ping_time(0), last_report_time(0),
+	watchdog(watchdog_), start_time(time(NULL)), last_ping_time(0), last_report_time(0),
 	max_allowed_time(0), max_allowed_space(0) {}
 	
   ~Resource_Manager()

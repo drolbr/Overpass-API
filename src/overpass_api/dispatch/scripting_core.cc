@@ -135,10 +135,10 @@ Dispatcher_Stub::Dispatcher_Stub
       }
 
       rman = new Resource_Manager(*transaction, area_level == 2 ? error_output : 0,
-				  *area_transaction, area_level == 2);
+				  *area_transaction, this, area_level == 2);
     }
     else
-      rman = new Resource_Manager(*transaction);
+      rman = new Resource_Manager(*transaction, this);
   }
   else
   {
@@ -147,10 +147,10 @@ Dispatcher_Stub::Dispatcher_Stub
     {
       area_transaction = new Nonsynced_Transaction(area_level == 2, false, db_dir, "");
       rman = new Resource_Manager(*transaction, area_level == 2 ? error_output : 0,
-				  *area_transaction, area_level == 2);
+				  *area_transaction, this, area_level == 2);
     }
     else
-      rman = new Resource_Manager(*transaction);
+      rman = new Resource_Manager(*transaction, this);
     
     {
       ifstream version((db_dir + "osm_base_version").c_str());
