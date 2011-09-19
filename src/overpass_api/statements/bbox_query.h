@@ -19,7 +19,9 @@ class Bbox_Query_Statement : public Statement
     virtual string get_result_name() const { return output; }
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
-    virtual ~Bbox_Query_Statement() {}
+    virtual ~Bbox_Query_Statement();
+    
+    virtual Query_Constraint* get_query_constraint();
     
     vector< pair< uint32, uint32 > >* calc_ranges()
     {
@@ -35,6 +37,7 @@ class Bbox_Query_Statement : public Statement
     string output;
     unsigned int type;
     double south, north, west, east;
+    vector< Query_Constraint* > constraints;
 };
 
 #endif

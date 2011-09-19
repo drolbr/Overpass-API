@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "query.h"
 #include "statement.h"
 
 using namespace std;
@@ -18,10 +19,13 @@ class Item_Statement : public Statement
     virtual string get_result_name() const { return output; }
     virtual void forecast();
     virtual void execute(Resource_Manager& rman) {}
-    virtual ~Item_Statement() {}
+    virtual ~Item_Statement();
+    
+    virtual Query_Constraint* get_query_constraint();
     
   private:
     string output;
+    vector< Query_Constraint* > constraints;
 };
 
 #endif

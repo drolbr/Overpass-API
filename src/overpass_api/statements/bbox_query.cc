@@ -11,10 +11,68 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
+class Bbox_Constraint : public Query_Constraint
+{
+  public:
+    Bbox_Constraint(Bbox_Query_Statement& bbox_) : bbox(&bbox_) {}
+    bool get_ranges_nodes
+        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
+    void filter(Resource_Manager& rman, Set& into);
+    virtual ~Bbox_Constraint() {}
+    
+  private:
+    Bbox_Query_Statement* bbox;
+};
+
+bool Bbox_Constraint::get_ranges_nodes(Resource_Manager& rman,
+				       set< pair< Uint32_Index, Uint32_Index > >& ranges)
+{
+  vector< pair< uint32, uint32 > >* int_ranges(bbox->calc_ranges());
+  for (vector< pair< uint32, uint32 > >::const_iterator
+    it(int_ranges->begin()); it != int_ranges->end(); ++it)
+  {
+    pair< Uint32_Index, Uint32_Index > range
+        (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
+    ranges.insert(range);
+  }
+  delete(int_ranges);
+  return true;
+}
+
+void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
+{
+  for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = into.nodes.begin();
+      it != into.nodes.end(); ++it)
+  {
+    vector< Node_Skeleton > local_into;
+    for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      double lat(Node::lat(it->first.val(), iit->ll_lower));
+      double lon(Node::lon(it->first.val(), iit->ll_lower));
+      if ((lat >= bbox->get_south()) && (lat <= bbox->get_north()) &&
+	  (((lon >= bbox->get_west()) && (lon <= bbox->get_east())) ||
+	  ((bbox->get_east() < bbox->get_west()) && ((lon >= bbox->get_west()) ||
+	  (lon <= bbox->get_east())))))
+	local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }
+}
+
+//-----------------------------------------------------------------------------
+
 const unsigned int QUERY_NODE = 1;
 const unsigned int QUERY_WAY = 2;
 const unsigned int QUERY_RELATION = 3;
 // const unsigned int QUERY_AREA = 4;
+
+Bbox_Query_Statement::~Bbox_Query_Statement()
+{
+  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+      it != constraints.end(); ++it)
+    delete *it;
+}
 
 void Bbox_Query_Statement::set_attributes(const char **attr)
 {
@@ -132,4 +190,10 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
   
   stopwatch.report(get_name());
   rman.health_check(*this);
+}
+
+Query_Constraint* Bbox_Query_Statement::get_query_constraint()
+{
+  constraints.push_back(new Bbox_Constraint(*this));
+  return constraints.back();
 }

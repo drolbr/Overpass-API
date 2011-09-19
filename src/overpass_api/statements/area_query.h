@@ -18,8 +18,10 @@ class Area_Query_Statement : public Statement
     virtual string get_result_name() const { return output; }
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
-    virtual ~Area_Query_Statement() {}
+    virtual ~Area_Query_Statement();
         
+    virtual Query_Constraint* get_query_constraint();
+    
     void get_ranges
       (set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
        set< Uint31_Index >& area_block_req,
@@ -42,9 +44,9 @@ class Area_Query_Statement : public Statement
   
   private:
     string output;
-    unsigned int area_id;
-    
+    unsigned int area_id;    
     static bool is_used_;
+    vector< Query_Constraint* > constraints;
 };
 
 #endif

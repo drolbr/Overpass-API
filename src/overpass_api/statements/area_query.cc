@@ -15,7 +15,45 @@
 
 using namespace std;
 
+class Area_Constraint : public Query_Constraint
+{
+  public:
+    Area_Constraint(Area_Query_Statement& area_) : area(&area_) {}
+    bool get_ranges_nodes
+        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
+    void filter(Resource_Manager& rman, Set& into);
+    virtual ~Area_Constraint() {}
+    
+  private:
+    Area_Query_Statement* area;
+    set< Uint31_Index > area_blocks_req;
+};
+
+bool Area_Constraint::get_ranges_nodes(Resource_Manager& rman,
+				       set< pair< Uint32_Index, Uint32_Index > >& ranges)
+{
+  area->get_ranges(ranges, area_blocks_req, rman);
+  return true;
+}
+
+void Area_Constraint::filter(Resource_Manager& rman, Set& into)
+{
+  set< pair< Uint32_Index, Uint32_Index > > range_req;
+  if (area_blocks_req.empty())
+    area->get_ranges(range_req, area_blocks_req, rman);
+  area->collect_nodes(into.nodes, area_blocks_req, rman);
+}
+
+//-----------------------------------------------------------------------------
+
 bool Area_Query_Statement::is_used_ = false;
+
+Area_Query_Statement::~Area_Query_Statement()
+{
+  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+      it != constraints.end(); ++it)
+    delete *it;
+}
 
 void Area_Query_Statement::set_attributes(const char **attr)
 {
@@ -241,4 +279,10 @@ void Area_Query_Statement::execute(Resource_Manager& rman)
   stopwatch.stop(Stopwatch::NO_DISK);
   stopwatch.report(get_name());
   rman.health_check(*this);
+}
+
+Query_Constraint* Area_Query_Statement::get_query_constraint()
+{
+  constraints.push_back(new Area_Constraint(*this));
+  return constraints.back();
 }

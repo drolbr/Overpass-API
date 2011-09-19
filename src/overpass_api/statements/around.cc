@@ -12,6 +12,55 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
+class Around_Constraint : public Query_Constraint
+{
+  public:
+    Around_Constraint(Around_Statement& around_) : around(&around_) {}
+    bool get_ranges_nodes
+        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
+    void filter(Resource_Manager& rman, Set& into);
+    virtual ~Around_Constraint() {}
+    
+  private:
+    Around_Statement* around;
+};
+
+bool Around_Constraint::get_ranges_nodes(Resource_Manager& rman,
+				         set< pair< Uint32_Index, Uint32_Index > >& ranges)
+{
+  ranges = around->calc_ranges(rman.sets()[around->get_source_name()].nodes);
+  return true;
+}
+
+void Around_Constraint::filter(Resource_Manager& rman, Set& into)
+{
+  around->calc_ranges(rman.sets()[around->get_source_name()].nodes);
+  
+  for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = into.nodes.begin();
+      it != into.nodes.end(); ++it)
+  {
+    vector< Node_Skeleton > local_into;
+    for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      double lat(Node::lat(it->first.val(), iit->ll_lower));
+      double lon(Node::lon(it->first.val(), iit->ll_lower));
+      if (around->is_inside(lat, lon))
+	local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }
+}
+
+//-----------------------------------------------------------------------------
+
+Around_Statement::~Around_Statement()
+{
+  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+      it != constraints.end(); ++it)
+    delete *it;
+}
+
 double great_circle_dist(double lat1, double lon1, double lat2, double lon2)
 {
   double scalar_prod =
@@ -154,4 +203,10 @@ void Around_Statement::execute(Resource_Manager& rman)
   
   stopwatch.report(get_name());
   rman.health_check(*this);
+}
+
+Query_Constraint* Around_Statement::get_query_constraint()
+{
+  constraints.push_back(new Around_Constraint(*this));
+  return constraints.back();
 }

@@ -14,22 +14,16 @@
 
 using namespace std;
 
-class Query_Constraint
-{
-  public:
-    virtual void filter(Resource_Manager& rman, Set& into) = 0;
-    virtual ~Query_Constraint() {}
-};
-
-//-----------------------------------------------------------------------------
+const unsigned int QUERY_NODE = 1;
+const unsigned int QUERY_WAY = 2;
+const unsigned int QUERY_RELATION = 3;
+// const unsigned int QUERY_AREA = 4;
 
 class Query_Statement : public Statement
 {
   public:
-    Query_Statement(int line_number_)
-      : Statement(line_number_),
-        area_restriction(0), around_restriction(0), bbox_restriction(0), item_restriction(0) {}
-    virtual ~Query_Statement();
+    Query_Statement(int line_number_) : Statement(line_number_) {}
+    virtual ~Query_Statement() {}
     virtual void set_attributes(const char **attr);
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "query"; }
@@ -40,15 +34,10 @@ class Query_Statement : public Statement
   private:
     string output;
     unsigned int type;
-    vector< pair< string, string > > key_values;
-    Area_Query_Statement* area_restriction;
-    Around_Statement* around_restriction;
-    Bbox_Query_Statement* bbox_restriction;
-    Item_Statement* item_restriction;
-    
+    vector< pair< string, string > > key_values;    
     vector< Query_Constraint* > constraints;
     
-    vector< uint32 >* collect_ids
+    vector< uint32 > collect_ids
         (const vector< pair< string, string > >& key_values,
 	 const File_Properties& file_prop, uint32 stopwatch_account,
 	 Resource_Manager& rman);

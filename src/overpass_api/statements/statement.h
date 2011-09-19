@@ -13,6 +13,18 @@
 
 using namespace std;
 
+class Query_Constraint
+{
+  public:
+    virtual bool collect(Resource_Manager& rman, Set& into,
+			 int type, const vector< uint32 >& ids) { return false; }
+    virtual bool get_ranges_nodes
+        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+      { return false; }
+    virtual void filter(Resource_Manager& rman, Set& into) = 0;
+    virtual ~Query_Constraint() {}
+};
+
 /**
  * The base class for all statements
  */
@@ -28,6 +40,10 @@ class Statement
     virtual string get_result_name() const = 0;
     virtual void forecast() = 0;
     virtual void execute(Resource_Manager& rman) = 0;
+
+    // May return 0. The ownership of the Query_Constraint remains at the called
+    // object.
+    virtual Query_Constraint* get_query_constraint() { return 0; }
     
     virtual ~Statement() {}
     

@@ -18,8 +18,10 @@ class User_Statement : public Statement
     virtual string get_result_name() const { return output; }
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
-    virtual ~User_Statement() {}
+    virtual ~User_Statement();
 
+    virtual Query_Constraint* get_query_constraint();
+    
     void calc_ranges
         (set< pair< Uint32_Index, Uint32_Index > >& node_req,
          set< pair< Uint31_Index, Uint31_Index > >& other_req,
@@ -36,6 +38,7 @@ class User_Statement : public Statement
     uint32 user_id;
     string user_name;
     string result_type;
+    vector< Query_Constraint* > constraints;
 };
 
 #endif

@@ -18,12 +18,15 @@ class Newer_Statement : public Statement
     virtual string get_result_name() const { return ""; }
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
-    virtual ~Newer_Statement() {}
+    virtual ~Newer_Statement();
 
+    virtual Query_Constraint* get_query_constraint();
+    
     uint64 get_timestamp() const { return than_timestamp; }
 
   private:
     uint64 than_timestamp;
+    vector< Query_Constraint* > constraints;
 };
 
 #endif
