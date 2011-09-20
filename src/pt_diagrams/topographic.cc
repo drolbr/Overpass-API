@@ -145,9 +145,21 @@ struct Features
   vector< StopFeature > stops;
 };
 
+double great_circle_dist(double lat1, double lon1, double lat2, double lon2)
+{
+  double scalar_prod =
+      sin(lat1/90.0*acos(0))*sin(lat2/90.0*acos(0)) +
+      cos(lat1/90.0*acos(0))*sin(lon1/90.0*acos(0))*cos(lat2/90.0*acos(0))*sin(lon2/90.0*acos(0)) +
+      cos(lat1/90.0*acos(0))*cos(lon1/90.0*acos(0))*cos(lat2/90.0*acos(0))*cos(lon2/90.0*acos(0));
+  if (scalar_prod > 1)
+    scalar_prod = 1;
+  return acos(scalar_prod)*(20*1000*1000/acos(0));
+}
+
 Features extract_features(const OSMData& osm_data)
 {
   Features features;
+  
   map< string, uint32 > name_to_node;
   
   for (map< uint32, Relation* >::const_iterator it(osm_data.relations.begin());
@@ -272,7 +284,166 @@ Features extract_features(const OSMData& osm_data)
     }
     features.routes.push_back(route_feature);
   }
-  
+
+// //   RouteFeature route_feature;
+// //   for (map< uint32, Way* >::const_iterator it(osm_data.ways.begin());
+// //       it != osm_data.ways.end(); ++it)
+// //   {
+// //     if (it->second->nds.size() < 2)
+// //       continue;
+// //     PolySegmentFeature poly_segment("#ff0000");    
+// //     for (vector< Node* >::const_iterator it2 = it->second->nds.begin();
+// //         it2 != it->second->nds.end(); ++it2)
+// //       poly_segment.lat_lon.push_back(NodeFeature((*it2)->lat, (*it2)->lon, 0));
+// //     route_feature.push_back(poly_segment);
+// //   }
+// //   features.routes.push_back(route_feature);
+// 
+//   map< Node*, uint > node_count;
+//   for (map< uint32, Way* >::const_iterator it(osm_data.ways.begin());
+//       it != osm_data.ways.end(); ++it)
+//   {
+//     if (it->second->nds.size() < 2)
+//       continue;
+//     vector< Node* >::const_iterator it2 = it->second->nds.begin();
+//     ++node_count[*it2];
+//     vector< Node* >::const_iterator it2_end = it->second->nds.end();
+//     --it2_end;
+//     ++node_count[*it2_end];
+//     for (++it2; it2 != it2_end; ++it2)
+//       node_count[*it2] += 2;
+//   }
+// //   for (map< Node*, uint >::const_iterator it = node_count.begin(); it != node_count.end(); ++it)
+// //   {
+// //     if (it->second != 2)
+// //       features.stops.push_back(StopFeature("", "#000000", it->first->lat, it->first->lon));
+// //   }
+// 
+//   set< pair< double, double > > lat_lon;
+//   for (map< Node*, uint >::const_iterator it = node_count.begin(); it != node_count.end(); ++it)
+//   {
+//     if (it->second != 2)
+//       lat_lon.insert(make_pair(it->first->lat, it->first->lon));
+//   }
+//   while (true)
+//   {
+//     double min_dist = 40.0*1000*1000;
+//     pair< double, double > min_a, min_b;
+//     for (set< pair< double, double > >::const_iterator it1 = lat_lon.begin();
+//         it1 != lat_lon.end(); ++it1)
+//     {
+//       set< pair< double, double > >::const_iterator it2 = it1;
+//       ++it2;
+//       for (; it2 != lat_lon.end(); ++it2)
+//       {
+// 	if (great_circle_dist(it1->first, it1->second, it2->first, it2->second) < min_dist)
+// 	{
+// 	  min_dist = great_circle_dist(it1->first, it1->second, it2->first, it2->second);
+// 	  min_a = *it1;
+// 	  min_b = *it2;
+// 	}
+//       }
+//     }
+//     cerr<<'.';
+//     if (min_dist >= 50)
+//       break;
+//     lat_lon.erase(min_a);
+//     lat_lon.erase(min_b);
+//     lat_lon.insert(make_pair((min_a.first + min_b.first)/2.0, (min_a.second + min_b.second)/2.0));
+//   }
+//   cerr<<'\n';
+//   for (set< pair< double, double > >::const_iterator it = lat_lon.begin();
+//       it != lat_lon.end(); ++it)
+//   {
+//     features.stops.push_back(StopFeature("", "#000000", it->first, it->second));
+//   }
+// 
+//   map< Node*, set< pair< double, double > >::const_iterator > lat_lon_per_node;
+//   for (map< Node*, uint >::const_iterator it = node_count.begin(); it != node_count.end(); ++it)
+//   {
+//     if (it->second != 2)
+//       lat_lon_per_node.insert(make_pair(it->first, lat_lon.end()));
+//   }
+//   for (map< Node*, set< pair< double, double > >::const_iterator >::iterator
+//       it = lat_lon_per_node.begin(); it != lat_lon_per_node.end(); ++it)
+//   {
+//     double min_dist = 40.0*1000*1000;
+//     for (set< pair< double, double > >::const_iterator it2 = lat_lon.begin();
+//         it2 != lat_lon.end(); ++it2)
+//     {
+//       if (great_circle_dist(it->first->lat, it->first->lon, it2->first, it2->second) < min_dist)
+//       {
+// 	min_dist = great_circle_dist(it->first->lat, it->first->lon, it2->first, it2->second);
+// 	it->second = it2;
+//       }
+//     }
+//   }
+//     
+//   map< Way*, pair< pair< double, double >, pair< double, double > > > start_end;
+//   for (map< uint32, Way* >::const_iterator it(osm_data.ways.begin());
+//       it != osm_data.ways.end(); ++it)
+//   {
+//     if (it->second->nds.size() < 2)
+//       continue;
+//     vector< Node* >::const_iterator it2 = it->second->nds.begin();
+//     if (lat_lon_per_node.find(*it2) != lat_lon_per_node.end())
+//       start_end[it->second].first =
+//           make_pair(lat_lon_per_node[*it2]->first, lat_lon_per_node[*it2]->second);
+//     else
+//       start_end[it->second].first = make_pair((*it2)->lat, (*it2)->lon);
+//     vector< Node* >::const_iterator it2_end = it->second->nds.end();
+//     --it2_end;
+//     if (lat_lon_per_node.find(*it2_end) != lat_lon_per_node.end())
+//       start_end[it->second].second =
+//           make_pair(lat_lon_per_node[*it2_end]->first, lat_lon_per_node[*it2_end]->second);
+//     else
+//       start_end[it->second].second = make_pair((*it2_end)->lat, (*it2_end)->lon);
+//     if (start_end[it->second].first == start_end[it->second].second)
+//     {
+//       bool trivial = true;
+//       for (++it2; it2 != it2_end; ++it2)
+// 	trivial &= (great_circle_dist((*it2)->lat, (*it2)->lon,
+// 	    start_end[it->second].first.first, start_end[it->second].first.second) < 50.0);
+//       if (trivial)
+// 	start_end.erase(it->second);
+//     }
+//   }
+//   
+//   map< pair< pair< double, double >, pair< double, double > >, vector< Way* > > reverse_start_end;
+//   for (map< Way*, pair< pair< double, double >, pair< double, double > > >::const_iterator
+//       it = start_end.begin(); it != start_end.end(); ++it)
+//     reverse_start_end[it->second].push_back(it->first);
+//   
+//   map< Way*, vector< pair< double, double > > > joined_ways;
+//   for (map< pair< pair< double, double >, pair< double, double > >, vector< Way* > >::const_iterator
+//       it = reverse_start_end.begin(); it != reverse_start_end.end(); ++it)
+//   {
+//     for (vector< Way* >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+//     {
+//       ...
+//     }
+//   }
+//   
+//   RouteFeature route_feature;
+//   for (map< uint32, Way* >::const_iterator it(osm_data.ways.begin());
+//       it != osm_data.ways.end(); ++it)
+//   {
+//     if (start_end.find(it->second) == start_end.end())
+//       continue;
+//     PolySegmentFeature poly_segment("#ff0000");
+//     vector< Node* >::const_iterator it2 = it->second->nds.begin();
+//     poly_segment.lat_lon.push_back(
+//         NodeFeature(start_end[it->second].first.first, start_end[it->second].first.second, 0));
+//     vector< Node* >::const_iterator it2_end = it->second->nds.end();
+//     --it2_end;
+//     for (++it2; it2 != it2_end; ++it2)
+//       poly_segment.lat_lon.push_back(NodeFeature((*it2)->lat, (*it2)->lon, 0));
+//     poly_segment.lat_lon.push_back(
+//         NodeFeature(start_end[it->second].second.first, start_end[it->second].second.second, 0));
+//     route_feature.push_back(poly_segment);
+//   }
+//   features.routes.push_back(route_feature);
+
   return features;
 }
 
@@ -501,7 +672,7 @@ int main(int argc, char *argv[])
     else if (!strncmp("--stop-font-size=", argv[argi], 17))
       stop_font_size = atof(((string)(argv[argi])).substr(17).c_str());
     else if (!strncmp("--scale=", argv[argi], 8))
-      scale = atoi(((string)(argv[argi])).substr(8).c_str());
+      scale = atof(((string)(argv[argi])).substr(8).c_str());
     ++argi;
   }
   
