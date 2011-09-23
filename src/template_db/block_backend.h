@@ -54,7 +54,7 @@ struct Block_Backend_Basic_Iterator
   TIndex* current_index;
   TObject* current_object;
   
-  uint8* buffer;
+  Void_Pointer< uint8 > buffer;
 };
 
 template< class TIndex, class TObject, class TIterator >
@@ -176,7 +176,8 @@ struct Block_Backend
     typedef File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > > File_Blocks_;
   
     Block_Backend(File_Blocks_Index_Base* index_);
-  
+    ~Block_Backend();
+    
     Flat_Iterator flat_begin() { return Flat_Iterator(file_blocks, block_size, false); }
     Flat_Iterator flat_end() const { return *flat_end_it; }
   
@@ -233,26 +234,20 @@ template< class TIndex, class TObject >
 Block_Backend_Basic_Iterator< TIndex, TObject >::
     Block_Backend_Basic_Iterator(uint32 block_size_, bool is_end)
 : block_size(block_size_), pos(0), current_idx_pos(0), current_index(0),
-  current_object(0), buffer(0)
+  current_object(0), buffer(block_size)
 {
   if (is_end)
     return;
-  
-  buffer = (uint8*)malloc(block_size);
 }
   
 template< class TIndex, class TObject >
 Block_Backend_Basic_Iterator< TIndex, TObject >::
     Block_Backend_Basic_Iterator(const Block_Backend_Basic_Iterator& it)
 : block_size(it.block_size), pos(it.pos),
-  current_idx_pos(0), current_index(0), current_object(0), buffer(0)
+  current_idx_pos(0), current_index(0), current_object(0), buffer(block_size)
 {
-  if (it.buffer != 0)
-  {
-    buffer = (uint8*)malloc(block_size);
-    memcpy(buffer, it.buffer, block_size);
-    current_idx_pos = (uint32*)(buffer + ((uint8*)it.current_idx_pos - it.buffer));
-  }
+  memcpy(buffer.ptr, it.buffer.ptr, block_size);
+  current_idx_pos = (uint32*)(buffer.ptr + ((uint8*)it.current_idx_pos - it.buffer.ptr));
 }
 
 template< class TIndex, class TObject >
@@ -268,14 +263,12 @@ Block_Backend_Basic_Iterator< TIndex, TObject >::~Block_Backend_Basic_Iterator()
     delete current_object;
     current_object = 0;
   }
-  if (buffer != 0)
-    free(buffer);
 }
 
 template< class TIndex, class TObject >
 bool Block_Backend_Basic_Iterator< TIndex, TObject >::advance()
 {
-  pos += TObject::size_of((void*)(buffer + pos));
+  pos += TObject::size_of((void*)(buffer.ptr + pos));
   
   // invalidate cached object
   if (current_object != 0)
@@ -310,7 +303,7 @@ template< class TIndex, class TObject >
 const TObject& Block_Backend_Basic_Iterator< TIndex, TObject >::object()
 {
   if (current_object == 0)
-    current_object = new TObject((void*)(buffer + pos));
+    current_object = new TObject((void*)(buffer.ptr + pos));
   return *current_object;
 }
 
@@ -385,9 +378,11 @@ template< class TIndex, class TObject, class TIterator >
 bool Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >::search_next_index()
 {
   // search for the next suitable index
-  this->current_idx_pos = (uint32*)((this->buffer) + this->pos);
-  if (this->pos < *(uint32*)(this->buffer))
+  this->current_idx_pos = (uint32*)((this->buffer.ptr) + this->pos);
+  if (this->pos < *(uint32*)(this->buffer.ptr))
   {
+    if (this->current_index)
+      delete this->current_index;
     this->current_index = new TIndex((void*)(this->current_idx_pos + 1));
     typename File_Blocks_::Flat_Iterator next_it(file_it);
     if (file_it.is_out_of_range(*this->current_index))
@@ -395,7 +390,7 @@ bool Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >::search_next_inde
 		file_blocks.get_index().get_data_file_name(),
 	        "Block_Backend: index out of range.");
     this->pos += 4;
-    this->pos += TIndex::size_of((void*)((this->buffer) + this->pos));
+    this->pos += TIndex::size_of((void*)((this->buffer.ptr) + this->pos));
     return true;
   }
     
@@ -414,7 +409,7 @@ bool Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >::read_block()
     return true;
   }
   this->pos = 4;
-  file_blocks.read_block(file_it, this->buffer);
+  file_blocks.read_block(file_it, this->buffer.ptr);
   
   return false;
 }
@@ -489,12 +484,14 @@ template< class TIndex, class TObject, class TIterator >
 bool Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::search_next_index()
 {
   // search for the next suitable index
-  this->current_idx_pos = (uint32*)((this->buffer) + this->pos);
-  while (this->pos < *(uint32*)(this->buffer))
+  this->current_idx_pos = (uint32*)((this->buffer.ptr) + this->pos);
+  while (this->pos < *(uint32*)(this->buffer.ptr))
   {
     this->pos += 4;
     
-    this->current_index = new TIndex((void*)((this->buffer) + this->pos));
+    if (this->current_index)
+      delete this->current_index;
+    this->current_index = new TIndex((void*)((this->buffer.ptr) + this->pos));
     while ((index_it != index_end) && (*index_it < *(this->current_index)))
       ++index_it;
     if (index_it == index_end)
@@ -507,14 +504,14 @@ bool Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::search_next_
     if (*index_it == *(this->current_index))
     {
       // we have reached the next valid index
-      this->pos += TIndex::size_of((void*)((this->buffer) + this->pos));
+      this->pos += TIndex::size_of((void*)((this->buffer.ptr) + this->pos));
       return true;
     }
     delete this->current_index;
     this->current_index = 0;
     
     this->pos = *(this->current_idx_pos);
-    this->current_idx_pos = (uint32*)((this->buffer) + this->pos);
+    this->current_idx_pos = (uint32*)((this->buffer.ptr) + this->pos);
   }
   
   return false;
@@ -536,7 +533,7 @@ bool Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::read_block()
     return true;
   }
   this->pos = 4;
-  file_blocks.read_block(file_it, this->buffer);
+  file_blocks.read_block(file_it, this->buffer.ptr);
   
   return false;
 }
@@ -609,12 +606,14 @@ template< class TIndex, class TObject, class TIterator >
 bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::search_next_index()
 {
   // search for the next suitable index
-  this->current_idx_pos = (uint32*)((this->buffer) + this->pos);
-  while (this->pos < *(uint32*)(this->buffer))
+  this->current_idx_pos = (uint32*)((this->buffer.ptr) + this->pos);
+  while (this->pos < *(uint32*)(this->buffer.ptr))
   {
     this->pos += 4;
     
-    this->current_index = new TIndex((void*)((this->buffer) + this->pos));
+    if (this->current_index)
+      delete this->current_index;
+    this->current_index = new TIndex((void*)((this->buffer.ptr) + this->pos));
     while ((index_it != index_end) &&
       (!(*(this->current_index) < index_it.upper_bound())))
       ++(index_it);
@@ -628,14 +627,14 @@ bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::search_next_ind
     if (!(*(this->current_index) < index_it.lower_bound()))
     {
       // we have reached the next valid index
-      this->pos += TIndex::size_of((void*)((this->buffer) + this->pos));
+      this->pos += TIndex::size_of((void*)((this->buffer.ptr) + this->pos));
       return true;
     }
     delete this->current_index;
     this->current_index = 0;
     
     this->pos = *(this->current_idx_pos);
-    this->current_idx_pos = (uint32*)((this->buffer) + this->pos);
+    this->current_idx_pos = (uint32*)((this->buffer.ptr) + this->pos);
   }
   
   return false;
@@ -653,7 +652,7 @@ bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::read_block()
     return true;
   }
   this->pos = 4;
-  file_blocks.read_block(file_it, this->buffer);
+  file_blocks.read_block(file_it, this->buffer.ptr);
   
   return false;
 }
@@ -670,6 +669,14 @@ Block_Backend< TIndex, TObject, TIterator >::Block_Backend(File_Blocks_Index_Bas
   flat_end_it = new Flat_Iterator(file_blocks, block_size, true);
   discrete_end_it = new Discrete_Iterator(file_blocks, block_size);
   range_end_it = new Range_Iterator(file_blocks, block_size);
+}
+
+template< class TIndex, class TObject, class TIterator >
+Block_Backend< TIndex, TObject, TIterator >::~Block_Backend()
+{
+  delete flat_end_it;
+  delete discrete_end_it;
+  delete range_end_it;
 }
 
 template< class TIndex, class TObject, class TIterator >
@@ -839,7 +846,7 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
   map< TIndex, uint32 > sizes;
   vector< TIndex > split;
   vector< uint32 > vsizes;
-  uint8* buffer = (uint8*)malloc(block_size);
+  Void_Pointer< uint8 > buffer(block_size);
   
   // compute the distribution over different blocks
   for (typename set< TIndex >::const_iterator fit(file_it.lower_bound());
@@ -867,7 +874,7 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
   
   // really write data
   typename vector< TIndex >::const_iterator split_it(split.begin());
-  uint8* pos(buffer + 4);
+  uint8* pos(buffer.ptr + 4);
   uint32 max_size(0);
   typename set< TIndex >::const_iterator upper_bound(file_it.upper_bound());
   for (typename set< TIndex >::const_iterator fit(file_it.lower_bound());
@@ -878,11 +885,11 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
      
     if ((split_it != split.end()) && (it->first == *split_it))
     {
-      *(uint32*)buffer = pos - buffer;
-      file_it = file_blocks.insert_block(file_it, buffer, max_size);
+      *(uint32*)buffer.ptr = pos - buffer.ptr;
+      file_it = file_blocks.insert_block(file_it, buffer.ptr, max_size);
       ++file_it;
       ++split_it;
-      pos = buffer + 4;
+      pos = buffer.ptr + 4;
       max_size = 0;
     }
     
@@ -902,7 +909,7 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
 	it2->to_data(pos);
 	pos = pos + it2->size_of();
       }
-      *(uint32*)current_pos = pos - buffer;
+      *(uint32*)current_pos = pos - buffer.ptr;
     }
     else
     {
@@ -914,13 +921,13 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
 	for (typename set< TObject >::const_iterator
 	  it2(it->second.begin()); it2 != it->second.end(); ++it2)
 	{
-	  if (pos - buffer + it2->size_of() > block_size)
+	  if (pos - buffer.ptr + it2->size_of() > block_size)
 	  {
-	    *(uint32*)buffer = pos - buffer;
-	    *(uint32*)(buffer+4) = *(uint32*)buffer;
-	    file_it = file_blocks.insert_block(file_it, buffer, (*(uint32*)(buffer+4)) - 4);
+	    *(uint32*)buffer.ptr = pos - buffer.ptr;
+	    *(uint32*)(buffer.ptr+4) = *(uint32*)buffer.ptr;
+	    file_it = file_blocks.insert_block(file_it, buffer.ptr, (*(uint32*)(buffer.ptr+4)) - 4);
 	    ++file_it;
-	    pos = buffer + 8 + it->first.size_of();
+	    pos = buffer.ptr + 8 + it->first.size_of();
 	    if (it->first.size_of() + it2->size_of() + 8 > block_size)
 	      throw File_Error
 	       (0, data_filename,
@@ -932,19 +939,17 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
 	}
       }
        
-      *(uint32*)(buffer+4) = pos - buffer;
-      max_size = (*(uint32*)(buffer + 4)) - 4;
+      *(uint32*)(buffer.ptr+4) = pos - buffer.ptr;
+      max_size = (*(uint32*)(buffer.ptr + 4)) - 4;
     }
   }
-  if (pos > buffer + 4)
+  if (pos > buffer.ptr + 4)
   {
-    *(uint32*)buffer = pos - buffer;
-    file_it = file_blocks.insert_block(file_it, buffer, max_size);
+    *(uint32*)buffer.ptr = pos - buffer.ptr;
+    file_it = file_blocks.insert_block(file_it, buffer.ptr, max_size);
     ++file_it;
   }
   ++file_it;
-  
-  free(buffer);
 }
 
 template< class TIndex, class TObject, class TIterator >
@@ -957,20 +962,20 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
   map< TIndex, uint32 > sizes;
   vector< TIndex > split;
   vector< uint32 > vsizes;
-  uint8* source = (uint8*)malloc(block_size);
-  uint8* dest = (uint8*)malloc(block_size);
+  Void_Pointer< uint8 > source(block_size);
+  Void_Pointer< uint8 > dest(block_size);
   
-  file_blocks.read_block(file_it, source);
+  file_blocks.read_block(file_it, source.ptr);
   
   // prepare a unified iterator over all indices, from file, to_delete
   // and to_insert
-  uint8* pos(source + 4);
-  uint8* source_end(source + *(uint32*)source);
+  uint8* pos(source.ptr + 4);
+  uint8* source_end(source.ptr + *(uint32*)source.ptr);
   while (pos < source_end)
   {
     index_values.insert(make_pair(TIndex(pos + 4), Index_Collection< TIndex, TObject >
-        (pos, source + *(uint32*)pos, to_delete.end(), to_insert.end())));
-    pos = source + *(uint32*)pos;
+        (pos, source.ptr + *(uint32*)pos, to_delete.end(), to_insert.end())));
+    pos = source.ptr + *(uint32*)pos;
   }
   typename map< TIndex, set< TObject > >::const_iterator
       to_delete_begin(to_delete.lower_bound(*(file_it.lower_bound())));
@@ -1058,7 +1063,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
     
   // really write data
   typename vector< TIndex >::const_iterator split_it(split.begin());
-  pos = (dest + 4);
+  pos = (dest.ptr + 4);
   uint32 max_size(0);
   for (typename map< TIndex, Index_Collection< TIndex, TObject > >::const_iterator
     it(index_values.begin()); it != index_values.end(); ++it);
@@ -1070,11 +1075,11 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
     
     if ((split_it != split.end()) && (it->first == *split_it))
     {
-      *(uint32*)dest = pos - dest;
-      file_it = file_blocks.insert_block(file_it, dest, max_size);
+      *(uint32*)dest.ptr = pos - dest.ptr;
+      file_it = file_blocks.insert_block(file_it, dest.ptr, max_size);
       ++file_it;
       ++split_it;
-      pos = dest + 4;
+      pos = dest.ptr + 4;
       max_size = 0;
     }
     
@@ -1118,7 +1123,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
 	  pos = pos + it2->size_of();
 	}
       }
-      *(uint32*)current_pos = pos - dest;
+      *(uint32*)current_pos = pos - dest.ptr;
     }
     else
     {
@@ -1150,13 +1155,13 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
 	  it2(it->second.insert_it->second.begin());
 	it2 != it->second.insert_it->second.end(); ++it2)
 	{
-	  if (pos - dest + it2->size_of() > block_size)
+	  if (pos - dest.ptr + it2->size_of() > block_size)
 	  {
-	    *(uint32*)dest = pos - dest;
-	    *(uint32*)(dest+4) = *(uint32*)dest;
-	    file_it = file_blocks.insert_block(file_it, dest, (*(uint32*)dest) - 4);
+	    *(uint32*)dest.ptr = pos - dest.ptr;
+	    *(uint32*)(dest.ptr+4) = *(uint32*)dest.ptr;
+	    file_it = file_blocks.insert_block(file_it, dest.ptr, (*(uint32*)dest.ptr) - 4);
 	    ++file_it;
-	    pos = dest + 8 + it->first.size_of();
+	    pos = dest.ptr + 8 + it->first.size_of();
 	    if (it->first.size_of() + it2->size_of() + 8 > block_size)
 	      throw File_Error
 		    (0, data_filename,
@@ -1168,27 +1173,24 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
 	}
       }
       
-      if ((uint32)(pos - dest) == it->first.size_of() + 8)
+      if ((uint32)(pos - dest.ptr) == it->first.size_of() + 8)
 	// the block is in fact empty
-	pos = dest + 4;
+	pos = dest.ptr + 4;
       
-      *(uint32*)(dest+4) = pos - dest;
-      max_size = (*(uint32*)(dest + 4)) - 4;
+      *(uint32*)(dest.ptr+4) = pos - dest.ptr;
+      max_size = (*(uint32*)(dest.ptr + 4)) - 4;
     }
   }
   
-  if (pos > dest + 4)
+  if (pos > dest.ptr + 4)
   {
-    *(uint32*)dest = pos - dest;
-    file_it = file_blocks.replace_block(file_it, dest, max_size);
+    *(uint32*)dest.ptr = pos - dest.ptr;
+    file_it = file_blocks.replace_block(file_it, dest.ptr, max_size);
     ++file_it;
     
   }
   else
     file_it = file_blocks.replace_block(file_it, 0, 0);
-  
-  free(source);
-  free(dest);
 }
 
 template< class TIndex, class TObject, class TIterator >
@@ -1197,8 +1199,8 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
        const map< TIndex, set< TObject > >& to_delete,
        const map< TIndex, set< TObject > >& to_insert)
 {
-  uint8* source = (uint8*)malloc(block_size);
-  uint8* dest = (uint8*)malloc(block_size);
+  Void_Pointer< uint8 > source(block_size);
+  Void_Pointer< uint8 > dest(block_size);
   typename map< TIndex, set< TObject > >::const_iterator
       delete_it(to_delete.find(*(file_it.lower_bound())));
   typename map< TIndex, set< TObject > >::const_iterator
@@ -1212,17 +1214,17 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
   {
     bool block_modified(false);
     
-    file_blocks.read_block(file_it, source);
+    file_blocks.read_block(file_it, source.ptr);
     
-    uint8* spos(source + 8 + TIndex::size_of(source + 8));
-    uint8* pos(dest + 8 + TIndex::size_of(source + 8));
-    memcpy(dest, source, spos - source);
+    uint8* spos(source.ptr + 8 + TIndex::size_of(source.ptr + 8));
+    uint8* pos(dest.ptr + 8 + TIndex::size_of(source.ptr + 8));
+    memcpy(dest.ptr, source.ptr, spos - source.ptr);
     
     //copy everything that is not deleted yet
-    if (*(uint32*)source != *((uint32*)(source + 4)))
+    if (*(uint32*)source.ptr != *((uint32*)(source.ptr + 4)))
       throw File_Error(0, data_filename,
 	    "Block_Backend::1: one index expected - several found.");	 
-    while ((uint32)(spos - source) < *(uint32*)source)
+    while ((uint32)(spos - source.ptr) < *(uint32*)source.ptr)
     {
       TObject obj(spos);
       if ((delete_it == to_delete.end()) ||
@@ -1247,7 +1249,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
     if (insert_it != to_insert.end())
     {
       while ((cur_insert != insert_it->second.end())
-	&& (pos + cur_insert->size_of() < dest + block_size))
+	&& (pos + cur_insert->size_of() < dest.ptr + block_size))
       {
 	cur_insert->to_data(pos);
 	pos = pos + cur_insert->size_of();
@@ -1255,28 +1257,28 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
       }
     }
     
-    if (pos > dest + 8 + TIndex::size_of(source + 8))
+    if (pos > dest.ptr + 8 + TIndex::size_of(source.ptr + 8))
     {
-      *(uint32*)dest = pos - dest;
-      *(uint32*)(dest+4) = *(uint32*)dest;
-      file_it = file_blocks.replace_block(file_it, dest, (*(uint32*)dest) - 4);
+      *(uint32*)dest.ptr = pos - dest.ptr;
+      *(uint32*)(dest.ptr+4) = *(uint32*)dest.ptr;
+      file_it = file_blocks.replace_block(file_it, dest.ptr, (*(uint32*)dest.ptr) - 4);
       ++file_it;
     }
     else
       file_it = file_blocks.replace_block(file_it, 0, 0);
   }
   
-  file_blocks.read_block(file_it, source);
+  file_blocks.read_block(file_it, source.ptr);
   
-  uint8* spos(source + 8 + TIndex::size_of(source + 8));
-  uint8* pos(dest + 8 + TIndex::size_of(source + 8));
-  memcpy(dest, source, spos - source);
+  uint8* spos(source.ptr + 8 + TIndex::size_of(source.ptr + 8));
+  uint8* pos(dest.ptr + 8 + TIndex::size_of(source.ptr + 8));
+  memcpy(dest.ptr, source.ptr, spos - source.ptr);
   
   //copy everything that is not deleted yet
-  if (*(uint32*)source != *((uint32*)(source + 4)))
+  if (*(uint32*)source.ptr != *((uint32*)(source.ptr + 4)))
       throw File_Error(0, data_filename,
 	  "Block_Backend::2: one index expected - several found.");	 
-  while ((uint32)(spos - source) < *(uint32*)source)
+  while ((uint32)(spos - source.ptr) < *(uint32*)source.ptr)
   {
     TObject obj(spos);
     if ((delete_it == to_delete.end()) ||
@@ -1293,15 +1295,15 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
   {
     while (cur_insert != insert_it->second.end())
     {
-      if (pos - dest + cur_insert->size_of() + TIndex::size_of(source + 8)
+      if (pos - dest.ptr + cur_insert->size_of() + TIndex::size_of(source.ptr + 8)
 	>= block_size)
       {
-	*(uint32*)dest = pos - dest;
-	*(uint32*)(dest+4) = *(uint32*)dest;
-	file_it = file_blocks.insert_block(file_it, dest, (*(uint32*)dest) - 4);
+	*(uint32*)dest.ptr = pos - dest.ptr;
+	*(uint32*)(dest.ptr+4) = *(uint32*)dest.ptr;
+	file_it = file_blocks.insert_block(file_it, dest.ptr, (*(uint32*)dest.ptr) - 4);
 	++file_it;
-	pos = dest + 8 + TIndex::size_of(source + 8);
-	if (TIndex::size_of(source + 8) + cur_insert->size_of() + 8 > block_size)
+	pos = dest.ptr + 8 + TIndex::size_of(source.ptr + 8);
+	if (TIndex::size_of(source.ptr + 8) + cur_insert->size_of() + 8 > block_size)
 	  throw File_Error
 	  (0, data_filename,
 	   "Block_Backend: an item's size exceeds block size.");
@@ -1313,19 +1315,16 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
     }
   }
   
-  if (pos > dest + 8 + TIndex::size_of(source + 8))
+  if (pos > dest.ptr + 8 + TIndex::size_of(source.ptr + 8))
   {
-    *(uint32*)dest = pos - dest;
-    *(uint32*)(dest+4) = *(uint32*)dest;
-    file_it = file_blocks.replace_block(file_it, dest, (*(uint32*)dest) - 4);
+    *(uint32*)dest.ptr = pos - dest.ptr;
+    *(uint32*)(dest.ptr+4) = *(uint32*)dest.ptr;
+    file_it = file_blocks.replace_block(file_it, dest.ptr, (*(uint32*)dest.ptr) - 4);
     ++file_it;
     
   }
   else
     file_it = file_blocks.replace_block(file_it, 0, 0);
-  
-  free(source);
-  free(dest);
 }
 
 #endif
