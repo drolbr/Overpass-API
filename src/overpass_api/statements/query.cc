@@ -259,11 +259,14 @@ void Query_Statement::execute(Resource_Manager& rman)
         (key_values, *osm_base_settings().NODE_TAGS_GLOBAL,
          Stopwatch::NODE_TAGS_GLOBAL, rman));
 
-    for (vector< Query_Constraint* >::iterator it = constraints.begin();
-        it != constraints.end() && answer_state < data_collected; ++it)
+    if (!ids.empty() || key_values.empty())
     {
-      if ((*it)->collect(rman, into, type, ids))
-	answer_state = data_collected;
+      for (vector< Query_Constraint* >::iterator it = constraints.begin();
+          it != constraints.end() && answer_state < data_collected; ++it)
+      {
+        if ((*it)->collect(rman, into, type, ids))
+	  answer_state = data_collected;
+      }
     }
   
     set< pair< Uint32_Index, Uint32_Index > > range_req;
@@ -286,12 +289,15 @@ void Query_Statement::execute(Resource_Manager& rman)
     vector< uint32 > ids(collect_ids
         (key_values, *osm_base_settings().WAY_TAGS_GLOBAL,
 	 Stopwatch::WAY_TAGS_GLOBAL, rman));
-	 
-    for (vector< Query_Constraint* >::iterator it = constraints.begin();
-        it != constraints.end() && answer_state < data_collected; ++it)
+
+    if (!ids.empty() || key_values.empty())
     {
-      if ((*it)->collect(rman, into, type, ids))
-	answer_state = data_collected;
+      for (vector< Query_Constraint* >::iterator it = constraints.begin();
+          it != constraints.end() && answer_state < data_collected; ++it)
+      {
+        if ((*it)->collect(rman, into, type, ids))
+	  answer_state = data_collected;
+      }
     }
   
     set< pair< Uint31_Index, Uint31_Index > > range_req;
@@ -309,11 +315,14 @@ void Query_Statement::execute(Resource_Manager& rman)
         (key_values, *osm_base_settings().RELATION_TAGS_GLOBAL,
 	 Stopwatch::RELATION_TAGS_GLOBAL, rman));
 	 
-    for (vector< Query_Constraint* >::iterator it = constraints.begin();
-        it != constraints.end() && answer_state < data_collected; ++it)
+    if (!ids.empty() || key_values.empty())
     {
-      if ((*it)->collect(rman, into, type, ids))
-	answer_state = data_collected;
+      for (vector< Query_Constraint* >::iterator it = constraints.begin();
+          it != constraints.end() && answer_state < data_collected; ++it)
+      {
+        if ((*it)->collect(rman, into, type, ids))
+	  answer_state = data_collected;
+      }
     }
   
     set< pair< Uint31_Index, Uint31_Index > > range_req;
