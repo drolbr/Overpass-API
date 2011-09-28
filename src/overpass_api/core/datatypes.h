@@ -106,6 +106,25 @@ T* binary_search_for_id(vector< T >& vect, uint32 id)
   return 0;
 }
 
+template < class T >
+T* binary_ptr_search_for_id(vector< T* >& vect, uint32 id)
+{
+  uint32 lower(0);
+  uint32 upper(vect.size());
+  
+  while (upper > lower)
+  {
+    uint32 pos((upper + lower)/2);
+    if (id < vect[pos]->id)
+      upper = pos;
+    else if (vect[pos]->id == id)
+      return vect[pos];
+    else
+      lower = pos + 1;
+  }
+  return 0;
+}
+
 struct Tag_Entry
 {
   uint32 index;

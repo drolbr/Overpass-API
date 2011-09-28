@@ -46,16 +46,16 @@ struct Relation
 };
 
 struct Relation_Comparator_By_Id {
-  bool operator() (const Relation& a, const Relation& b)
+  bool operator() (const Relation* a, const Relation* b)
   {
-    return (a.id < b.id);
+    return (a->id < b->id);
   }
 };
 
 struct Relation_Equal_Id {
-  bool operator() (const Relation& a, const Relation& b)
+  bool operator() (const Relation* a, const Relation* b)
   {
-    return (a.id == b.id);
+    return (a->id == b->id);
   }
 };
 

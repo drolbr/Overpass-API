@@ -55,16 +55,37 @@ uint32 Relation_Updater::get_role_id(const string& s)
   return (max_role_id - 1);
 }
 
+namespace
+{
+  Relation_Comparator_By_Id rel_comparator_by_id;
+  Relation_Equal_Id rel_equal_id;
+}
+
+vector< Relation* > sort_rels_to_insert(vector< Relation >& rels_to_insert)
+{
+  vector< Relation* > rels_ptr;
+  for (vector< Relation >::iterator it = rels_to_insert.begin();
+      it != rels_to_insert.end(); ++it)
+    rels_ptr.push_back(&*it);
+  // process the ways itself
+  // keep always the most recent (last) element of all equal elements
+  stable_sort(rels_ptr.begin(), rels_ptr.end(), rel_comparator_by_id);
+  vector< Relation* >::iterator rels_begin
+      (unique(rels_ptr.rbegin(), rels_ptr.rend(), rel_equal_id).base());
+  rels_ptr.erase(rels_ptr.begin(), rels_begin);
+}
+
 void Relation_Updater::update(Osm_Backend_Callback* callback)
 {
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
   
-  map< uint32, vector< uint32 > > to_delete;
   callback->update_started();
-  compute_indexes();
+  map< uint32, vector< uint32 > > to_delete;
+  vector< Relation* > rels_ptr = sort_rels_to_insert(rels_to_insert);
+  compute_indexes(rels_ptr);
   callback->compute_indexes_finished();
-  update_rel_ids(to_delete);
+  update_rel_ids(rels_ptr, to_delete);
   callback->update_ids_finished();
   update_members(to_delete);
   callback->update_coords_finished();
@@ -72,9 +93,9 @@ void Relation_Updater::update(Osm_Backend_Callback* callback)
   vector< Tag_Entry > tags_to_delete;
   prepare_delete_tags(tags_to_delete, to_delete);
   callback->prepare_delete_tags_finished();
-  update_rel_tags_local(tags_to_delete);
+  update_rel_tags_local(rels_ptr, tags_to_delete);
   callback->tags_local_finished();
-  update_rel_tags_global(tags_to_delete);
+  update_rel_tags_global(rels_ptr, tags_to_delete);
   callback->tags_global_finished();
   flush_roles();
   callback->flush_roles_finished();
@@ -120,7 +141,8 @@ void Relation_Updater::update_moved_idxs
   
   map< uint32, vector< uint32 > > to_delete;
   find_affected_relations(moved_nodes, moved_ways);
-  update_rel_ids(to_delete);
+  vector< Relation* > rels_ptr = sort_rels_to_insert(rels_to_insert);
+  update_rel_ids(rels_ptr, to_delete);
   if (meta)
   {
     map< uint32, uint32 > new_index_by_id;
@@ -131,8 +153,8 @@ void Relation_Updater::update_moved_idxs
   update_members(to_delete);
   
   vector< Tag_Entry > tags_to_delete;
-  prepare_tags(tags_to_delete, to_delete);
-  update_rel_tags_local(tags_to_delete);
+  prepare_tags(rels_ptr, tags_to_delete, to_delete);
+  update_rel_tags_local(rels_ptr, tags_to_delete);
   flush_roles();
   if (meta)
   {
@@ -155,8 +177,8 @@ void Relation_Updater::update_moved_idxs
 }
 
 void Relation_Updater::find_affected_relations
-(const vector< pair< uint32, uint32 > >& moved_nodes,
- const vector< pair< uint32, uint32 > >& moved_ways)
+    (const vector< pair< uint32, uint32 > >& moved_nodes,
+     const vector< pair< uint32, uint32 > >& moved_ways)
 {
   set< Uint31_Index > req;
   {
@@ -183,8 +205,8 @@ void Relation_Updater::find_affected_relations
   Block_Backend< Uint31_Index, Relation_Skeleton > rels_db
       (transaction->data_index(osm_base_settings().RELATIONS));
   for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
-    it(rels_db.discrete_begin(req.begin(), req.end()));
-  !(it == rels_db.discrete_end()); ++it)
+      it(rels_db.discrete_begin(req.begin(), req.end()));
+      !(it == rels_db.discrete_end()); ++it)
   {
     const Relation_Skeleton& relation(it.object());
     bool is_affected(false);
@@ -218,10 +240,10 @@ void Relation_Updater::find_affected_relations
   map< uint32, uint32 > used_nodes;
   map< uint32, uint32 > used_ways;
   for (vector< Relation >::const_iterator wit(rels_to_insert.begin());
-  wit != rels_to_insert.end(); ++wit)
+      wit != rels_to_insert.end(); ++wit)
   {
     for (vector< Relation_Entry >::const_iterator nit(wit->members.begin());
-    nit != wit->members.end(); ++nit)
+        nit != wit->members.end(); ++nit)
     {
       if (nit->type == Relation_Entry::NODE)
 	used_nodes[nit->ref] = 0;
@@ -235,18 +257,18 @@ void Relation_Updater::find_affected_relations
   Random_File< Uint31_Index > way_random
       (transaction->random_index(osm_base_settings().WAYS));
   for (map< uint32, uint32 >::iterator it(used_nodes.begin());
-  it != used_nodes.end(); ++it)
-  it->second = node_random.get(it->first).val();
+      it != used_nodes.end(); ++it)
+    it->second = node_random.get(it->first).val();
   for (map< uint32, uint32 >::iterator it(used_ways.begin());
-  it != used_ways.end(); ++it)
-  it->second = way_random.get(it->first).val();
+      it != used_ways.end(); ++it)
+    it->second = way_random.get(it->first).val();
   vector< Relation >::iterator writ(rels_to_insert.begin());
   for (vector< Relation >::iterator rit(rels_to_insert.begin());
-  rit != rels_to_insert.end(); ++rit)
+      rit != rels_to_insert.end(); ++rit)
   {
     vector< uint32 > member_idxs;
     for (vector< Relation_Entry >::const_iterator nit(rit->members.begin());
-    nit != rit->members.end(); ++nit)
+        nit != rit->members.end(); ++nit)
     {
       if (nit->type == Relation_Entry::NODE)
 	member_idxs.push_back(used_nodes[nit->ref]);
@@ -267,17 +289,11 @@ void Relation_Updater::find_affected_relations
   rels_to_insert.erase(writ, rels_to_insert.end());
 }
 
-void Relation_Updater::compute_indexes()
+void Relation_Updater::compute_indexes(vector< Relation* >& rels_ptr)
 {
   static Meta_Comparator_By_Id meta_comparator_by_id;
   static Meta_Equal_Id meta_equal_id;
   
-  // process the ways itself
-  // keep always the most recent (last) element of all equal elements
-  stable_sort(rels_to_insert.begin(), rels_to_insert.end(), rel_comparator_by_id);
-  vector< Relation >::iterator rels_begin
-      (unique(rels_to_insert.rbegin(), rels_to_insert.rend(), rel_equal_id).base());
-  rels_to_insert.erase(rels_to_insert.begin(), rels_begin);
   // keep always the most recent (last) element of all equal elements
   stable_sort
       (rels_meta_to_insert.begin(), rels_meta_to_insert.end(), meta_comparator_by_id);
@@ -288,11 +304,11 @@ void Relation_Updater::compute_indexes()
   // retrieve the indices of the referred nodes and ways
   map< uint32, uint32 > used_nodes;
   map< uint32, uint32 > used_ways;
-  for (vector< Relation >::const_iterator wit(rels_to_insert.begin());
-  wit != rels_to_insert.end(); ++wit)
+  for (vector< Relation* >::iterator wit(rels_ptr.begin());
+      wit != rels_ptr.end(); ++wit)
   {
-    for (vector< Relation_Entry >::const_iterator nit(wit->members.begin());
-    nit != wit->members.end(); ++nit)
+    for (vector< Relation_Entry >::const_iterator nit((*wit)->members.begin());
+        nit != (*wit)->members.end(); ++nit)
     {
       if (nit->type == Relation_Entry::NODE)
 	used_nodes[nit->ref] = 0;
@@ -306,41 +322,41 @@ void Relation_Updater::compute_indexes()
   Random_File< Uint31_Index > way_random
       (transaction->random_index(osm_base_settings().WAYS));
   for (map< uint32, uint32 >::iterator it(used_nodes.begin());
-  it != used_nodes.end(); ++it)
-  it->second = node_random.get(it->first).val();
+      it != used_nodes.end(); ++it)
+    it->second = node_random.get(it->first).val();
   for (map< uint32, uint32 >::iterator it(used_ways.begin());
-  it != used_ways.end(); ++it)
-  it->second = way_random.get(it->first).val();
-  for (vector< Relation >::iterator rit(rels_to_insert.begin());
-  rit != rels_to_insert.end(); ++rit)
+      it != used_ways.end(); ++it)
+    it->second = way_random.get(it->first).val();
+  for (vector< Relation* >::iterator rit(rels_ptr.begin());
+      rit != rels_ptr.end(); ++rit)
   {
     vector< uint32 > member_idxs;
-    for (vector< Relation_Entry >::const_iterator nit(rit->members.begin());
-    nit != rit->members.end(); ++nit)
+    for (vector< Relation_Entry >::iterator nit((*rit)->members.begin());
+        nit != (*rit)->members.end(); ++nit)
     {
       if (nit->type == Relation_Entry::NODE)
 	member_idxs.push_back(used_nodes[nit->ref]);
       else if (nit->type == Relation_Entry::WAY)
 	member_idxs.push_back(used_ways[nit->ref]);
     }
-    rit->index = Relation::calc_index(member_idxs);
+    (*rit)->index = Relation::calc_index(member_idxs);
   }
-  vector< Relation >::const_iterator rit(rels_to_insert.begin());
+  vector< Relation* >::const_iterator rit(rels_ptr.begin());
   for (vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::iterator
       mit(rels_meta_to_insert.begin()); mit != rels_meta_to_insert.end(); ++mit)
   {
-    while ((rit != rels_to_insert.end()) && (rit->id < mit->first.ref))
+    while ((rit != rels_ptr.end()) && ((*rit)->id < mit->first.ref))
       ++rit;
-    if (rit == rels_to_insert.end())
+    if (rit == rels_ptr.end())
       break;
     
-    if (rit->id == mit->first.ref)
-      mit->second = rit->index;
+    if ((*rit)->id == mit->first.ref)
+      mit->second = (*rit)->index;
   }
 }
 
 void Relation_Updater::update_rel_ids
-    (map< uint32, vector< uint32 > >& to_delete)
+    (vector< Relation* >& rels_ptr, map< uint32, vector< uint32 > >& to_delete)
 {
   // keep always the most recent (last) element of all equal elements
   stable_sort(ids_to_modify.begin(), ids_to_modify.end(), pair_comparator_by_id);
@@ -348,27 +364,23 @@ void Relation_Updater::update_rel_ids
       (unique(ids_to_modify.rbegin(), ids_to_modify.rend(), pair_equal_id)
       .base());
   ids_to_modify.erase(ids_to_modify.begin(), modi_begin);
-  stable_sort(rels_to_insert.begin(), rels_to_insert.end(), rel_comparator_by_id);
-  vector< Relation >::iterator relations_begin
-      (unique(rels_to_insert.rbegin(), rels_to_insert.rend(), rel_equal_id).base());
-  rels_to_insert.erase(rels_to_insert.begin(), relations_begin);
 	  
   // process the relations themselves
   Random_File< Uint31_Index > random
       (transaction->random_index(osm_base_settings().RELATIONS));
-  vector< Relation >::const_iterator rit(rels_to_insert.begin());
+  vector< Relation* >::const_iterator rit(rels_ptr.begin());
   for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
   it != ids_to_modify.end(); ++it)
   {
     Uint31_Index index(random.get(it->first));
     to_delete[index.val()].push_back(it->first);
-    if ((rit != rels_to_insert.end()) && (it->first == rit->id))
+    if ((rit != rels_ptr.end()) && (it->first == (*rit)->id))
     {
       if (it->second)
       {
-	random.put(it->first, Uint31_Index(rit->index));
+	random.put(it->first, Uint31_Index((*rit)->index));
 	if (/*(map_file_existed_before) && */(index.val() > 0) &&
-	    (index.val() != rit->index))
+	    (index.val() != (*rit)->index))
 	  moved_relations.push_back(make_pair(it->first, index.val()));
       }
       ++rit;
@@ -398,6 +410,10 @@ void Relation_Updater::update_members(const map< uint32, vector< uint32 > >& to_
       if (it->second)
       {
 	Uint31_Index idx(rit->index);
+	set< Relation_Skeleton >::iterator sit
+	    = db_to_insert[idx].find(Relation_Skeleton(*rit));
+	if (sit != db_to_insert[idx].end())
+	  db_to_insert[idx].erase(sit);
 	db_to_insert[idx].insert(Relation_Skeleton(*rit));
       }
       ++rit;
@@ -410,8 +426,8 @@ void Relation_Updater::update_members(const map< uint32, vector< uint32 > >& to_
 }
 
 void Relation_Updater::prepare_delete_tags
-(vector< Tag_Entry >& tags_to_delete,
- const map< uint32, vector< uint32 > >& to_delete)
+    (vector< Tag_Entry >& tags_to_delete,
+     const map< uint32, vector< uint32 > >& to_delete)
 {
   // make indices appropriately coarse
   map< uint32, set< uint32 > > to_delete_coarse;
@@ -473,8 +489,9 @@ void Relation_Updater::prepare_delete_tags
 }
 
 void Relation_Updater::prepare_tags
-(vector< Tag_Entry >& tags_to_delete,
- const map< uint32, vector< uint32 > >& to_delete)
+    (vector< Relation* >& rels_ptr,
+     vector< Tag_Entry >& tags_to_delete,
+     const map< uint32, vector< uint32 > >& to_delete)
 {
   // make indices appropriately coarse
   map< uint32, set< uint32 > > to_delete_coarse;
@@ -503,7 +520,7 @@ void Relation_Updater::prepare_tags
     upper.value = "";
     range_set.insert(make_pair(lower, upper));
   }
-  
+
   // iterate over the result
   Block_Backend< Tag_Index_Local, Uint32_Index > rels_db
       (transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL));
@@ -530,7 +547,7 @@ void Relation_Updater::prepare_tags
     set< uint32 >& handle(to_delete_coarse[it.index().index]);
     if (handle.find(it.object().val()) != handle.end())
     {
-      Relation* relation(binary_search_for_id(rels_to_insert, it.object().val()));
+      Relation* relation(binary_ptr_search_for_id(rels_ptr, it.object().val()));
       if (relation != 0)
 	relation->tags.push_back(make_pair(it.index().key, it.index().value));
       tag_entry.ids.push_back(it.object().val());
@@ -540,13 +557,14 @@ void Relation_Updater::prepare_tags
     tags_to_delete.push_back(tag_entry);
 }
 
-void Relation_Updater::update_rel_tags_local(const vector< Tag_Entry >& tags_to_delete)
+void Relation_Updater::update_rel_tags_local
+    (vector< Relation* >& rels_ptr, const vector< Tag_Entry >& tags_to_delete)
 {
   map< Tag_Index_Local, set< Uint32_Index > > db_to_delete;
   map< Tag_Index_Local, set< Uint32_Index > > db_to_insert;
   
   for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
-  it != tags_to_delete.end(); ++it)
+      it != tags_to_delete.end(); ++it)
   {
     Tag_Index_Local index;
     index.index = it->index;
@@ -561,23 +579,23 @@ void Relation_Updater::update_rel_tags_local(const vector< Tag_Entry >& tags_to_
     db_to_delete[index] = rel_ids;
   }
   
-  vector< Relation >::const_iterator rit(rels_to_insert.begin());
+  vector< Relation* >::const_iterator rit = rels_ptr.begin();
   for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
-  it != ids_to_modify.end(); ++it)
+      it != ids_to_modify.end(); ++it)
   {
-    if ((rit != rels_to_insert.end()) && (it->first == rit->id))
+    if ((rit != rels_ptr.end()) && (it->first == (*rit)->id))
     {
       if (it->second)
       {
 	Tag_Index_Local index;
-	index.index = rit->index & 0xffffff00;
+	index.index = (*rit)->index & 0xffffff00;
 	
 	for (vector< pair< string, string > >::const_iterator
-	  it2(rit->tags.begin()); it2 != rit->tags.end(); ++it2)
+	  it2((*rit)->tags.begin()); it2 != (*rit)->tags.end(); ++it2)
 	{
 	  index.key = it2->first;
 	  index.value = it2->second;
-	  db_to_insert[index].insert(rit->id);
+	  db_to_insert[index].insert(it->first);
 	  db_to_delete[index];
 	}
       }
@@ -590,13 +608,14 @@ void Relation_Updater::update_rel_tags_local(const vector< Tag_Entry >& tags_to_
   rel_db.update(db_to_delete, db_to_insert);
 }
 
-void Relation_Updater::update_rel_tags_global(const vector< Tag_Entry >& tags_to_delete)
+void Relation_Updater::update_rel_tags_global
+    (vector< Relation* >& rels_ptr, const vector< Tag_Entry >& tags_to_delete)
 {
   map< Tag_Index_Global, set< Uint32_Index > > db_to_delete;
   map< Tag_Index_Global, set< Uint32_Index > > db_to_insert;
   
   for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
-  it != tags_to_delete.end(); ++it)
+      it != tags_to_delete.end(); ++it)
   {
     Tag_Index_Global index;
     index.key = it->key;
@@ -608,22 +627,22 @@ void Relation_Updater::update_rel_tags_global(const vector< Tag_Entry >& tags_to
     db_to_delete[index].insert(*it2);
   }
   
-  vector< Relation >::const_iterator rit(rels_to_insert.begin());
+  vector< Relation* >::const_iterator rit = rels_ptr.begin();
   for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
-  it != ids_to_modify.end(); ++it)
+      it != ids_to_modify.end(); ++it)
   {
-    if ((rit != rels_to_insert.end()) && (it->first == rit->id))
+    if ((rit != rels_ptr.end()) && (it->first == (*rit)->id))
     {
       if (it->second)
       {
 	Tag_Index_Global index;
 	
 	for (vector< pair< string, string > >::const_iterator
-	  it2(rit->tags.begin()); it2 != rit->tags.end(); ++it2)
+	  it2((*rit)->tags.begin()); it2 != (*rit)->tags.end(); ++it2)
 	{
 	  index.key = it2->first;
 	  index.value = it2->second;
-	  db_to_insert[index].insert(rit->id);
+	  db_to_insert[index].insert(it->first);
 	  db_to_delete[index];
 	}
       }

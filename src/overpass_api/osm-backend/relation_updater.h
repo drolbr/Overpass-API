@@ -85,8 +85,6 @@ private:
   uint32 max_written_role_id;
   vector< pair< uint32, bool > > ids_to_modify;
   vector< Relation > rels_to_insert;
-  static Relation_Comparator_By_Id rel_comparator_by_id;
-  static Relation_Equal_Id rel_equal_id;
   static Pair_Comparator_By_Id pair_comparator_by_id;
   static Pair_Equal_Id pair_equal_id;
   vector< pair< uint32, uint32 > > moved_relations;
@@ -99,9 +97,9 @@ private:
   void find_affected_relations(const vector< pair< uint32, uint32 > >& moved_nodes,
 			       const vector< pair< uint32, uint32 > >& moved_ways);
   
-  void compute_indexes();
+  void compute_indexes(vector< Relation* >& rels_ptr);
   
-  void update_rel_ids(map< uint32, vector< uint32 > >& to_delete);
+  void update_rel_ids(vector< Relation* >& rels_ptr, map< uint32, vector< uint32 > >& to_delete);
   
   void update_members(const map< uint32, vector< uint32 > >& to_delete);
   
@@ -110,12 +108,15 @@ private:
        const map< uint32, vector< uint32 > >& to_delete);
        
   void prepare_tags
-      (vector< Tag_Entry >& tags_to_delete,
+      (vector< Relation* >& rels_ptr,
+       vector< Tag_Entry >& tags_to_delete,
        const map< uint32, vector< uint32 > >& to_delete);
        
-  void update_rel_tags_local(const vector< Tag_Entry >& tags_to_delete);
+  void update_rel_tags_local(vector< Relation* >& rels_ptr,
+			     const vector< Tag_Entry >& tags_to_delete);
   
-  void update_rel_tags_global(const vector< Tag_Entry >& tags_to_delete);
+  void update_rel_tags_global(vector< Relation* >& rels_ptr,
+			      const vector< Tag_Entry >& tags_to_delete);
 
   void flush_roles();
 };
