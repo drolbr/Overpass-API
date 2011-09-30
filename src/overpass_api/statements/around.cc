@@ -16,8 +16,8 @@ class Around_Constraint : public Query_Constraint
 {
   public:
     Around_Constraint(Around_Statement& around_) : around(&around_) {}
-    bool get_ranges_nodes
-        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
+    bool get_ranges
+        (Resource_Manager& rman, int type, set< pair< Uint32_Index, Uint32_Index > >& ranges);
     void filter(Resource_Manager& rman, Set& into);
     virtual ~Around_Constraint() {}
     
@@ -25,11 +25,16 @@ class Around_Constraint : public Query_Constraint
     Around_Statement* around;
 };
 
-bool Around_Constraint::get_ranges_nodes(Resource_Manager& rman,
+bool Around_Constraint::get_ranges(Resource_Manager& rman, int type,
 				         set< pair< Uint32_Index, Uint32_Index > >& ranges)
 {
-  ranges = around->calc_ranges(rman.sets()[around->get_source_name()].nodes);
-  return true;
+  if (type == Statement::NODE)
+  {
+    ranges = around->calc_ranges(rman.sets()[around->get_source_name()].nodes);
+    return true;
+  }
+  else
+    return false;
 }
 
 void Around_Constraint::filter(Resource_Manager& rman, Set& into)

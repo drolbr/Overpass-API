@@ -259,21 +259,21 @@ void Query_Statement::execute(Resource_Manager& rman)
         (key_values, *osm_base_settings().NODE_TAGS_GLOBAL,
          Stopwatch::NODE_TAGS_GLOBAL, rman));
 
-    if (!ids.empty() || key_values.empty())
+    if (ids.empty() && !key_values.empty())
+      answer_state = data_collected;
+    
+    for (vector< Query_Constraint* >::iterator it = constraints.begin();
+        it != constraints.end() && answer_state < data_collected; ++it)
     {
-      for (vector< Query_Constraint* >::iterator it = constraints.begin();
-          it != constraints.end() && answer_state < data_collected; ++it)
-      {
-        if ((*it)->collect(rman, into, type, ids))
-	  answer_state = data_collected;
-      }
+      if ((*it)->collect(rman, into, type, ids))
+        answer_state = data_collected;
     }
   
     set< pair< Uint32_Index, Uint32_Index > > range_req;
     for (vector< Query_Constraint* >::iterator it = constraints.begin();
         it != constraints.end() && answer_state < ranges_collected; ++it)
     {
-      if ((*it)->get_ranges_nodes(rman, range_req))
+      if ((*it)->get_ranges(rman, Statement::NODE, range_req))
 	answer_state = ranges_collected;
     }
   
@@ -290,14 +290,14 @@ void Query_Statement::execute(Resource_Manager& rman)
         (key_values, *osm_base_settings().WAY_TAGS_GLOBAL,
 	 Stopwatch::WAY_TAGS_GLOBAL, rman));
 
-    if (!ids.empty() || key_values.empty())
+    if (ids.empty() && !key_values.empty())
+      answer_state = data_collected;
+    
+    for (vector< Query_Constraint* >::iterator it = constraints.begin();
+        it != constraints.end() && answer_state < data_collected; ++it)
     {
-      for (vector< Query_Constraint* >::iterator it = constraints.begin();
-          it != constraints.end() && answer_state < data_collected; ++it)
-      {
-        if ((*it)->collect(rman, into, type, ids))
-	  answer_state = data_collected;
-      }
+      if ((*it)->collect(rman, into, type, ids))
+        answer_state = data_collected;
     }
   
     set< pair< Uint31_Index, Uint31_Index > > range_req;
@@ -315,14 +315,14 @@ void Query_Statement::execute(Resource_Manager& rman)
         (key_values, *osm_base_settings().RELATION_TAGS_GLOBAL,
 	 Stopwatch::RELATION_TAGS_GLOBAL, rman));
 	 
-    if (!ids.empty() || key_values.empty())
+    if (ids.empty() && !key_values.empty())
+      answer_state = data_collected;
+    
+    for (vector< Query_Constraint* >::iterator it = constraints.begin();
+        it != constraints.end() && answer_state < data_collected; ++it)
     {
-      for (vector< Query_Constraint* >::iterator it = constraints.begin();
-          it != constraints.end() && answer_state < data_collected; ++it)
-      {
-        if ((*it)->collect(rman, into, type, ids))
-	  answer_state = data_collected;
-      }
+      if ((*it)->collect(rman, into, type, ids))
+        answer_state = data_collected;
     }
   
     set< pair< Uint31_Index, Uint31_Index > > range_req;

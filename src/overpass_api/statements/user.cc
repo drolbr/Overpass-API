@@ -17,7 +17,7 @@ class User_Constraint : public Query_Constraint
 {
   public:
     User_Constraint(User_Statement& user_) : user(&user_) {}
-    bool get_ranges_nodes(Resource_Manager& rman,
+    bool get_ranges(Resource_Manager& rman, int type,
 			  set< pair< Uint32_Index, Uint32_Index > >& ranges);
     void filter(Resource_Manager& rman, Set& into);
     virtual ~User_Constraint() {}
@@ -143,12 +143,17 @@ void calc_ranges
   }
 }
 
-bool User_Constraint::get_ranges_nodes(Resource_Manager& rman,
+bool User_Constraint::get_ranges(Resource_Manager& rman, int type,
 				       set< pair< Uint32_Index, Uint32_Index > >& ranges)
 {
-  set< pair< Uint31_Index, Uint31_Index > > nonnodes;
-  calc_ranges(ranges, nonnodes, user->get_id(*rman.get_transaction()), *rman.get_transaction());
-  return true;
+  if (type == Statement::NODE)
+  {
+    set< pair< Uint31_Index, Uint31_Index > > nonnodes;
+    calc_ranges(ranges, nonnodes, user->get_id(*rman.get_transaction()), *rman.get_transaction());
+    return true;
+  }
+  else
+    return false;
 }
 
 void User_Statement::calc_ranges

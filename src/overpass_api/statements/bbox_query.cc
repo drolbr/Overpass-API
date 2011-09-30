@@ -15,8 +15,8 @@ class Bbox_Constraint : public Query_Constraint
 {
   public:
     Bbox_Constraint(Bbox_Query_Statement& bbox_) : bbox(&bbox_) {}
-    bool get_ranges_nodes
-        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
+    bool get_ranges
+        (Resource_Manager& rman, int type, set< pair< Uint32_Index, Uint32_Index > >& ranges);
     void filter(Resource_Manager& rman, Set& into);
     virtual ~Bbox_Constraint() {}
     
@@ -24,19 +24,24 @@ class Bbox_Constraint : public Query_Constraint
     Bbox_Query_Statement* bbox;
 };
 
-bool Bbox_Constraint::get_ranges_nodes(Resource_Manager& rman,
+bool Bbox_Constraint::get_ranges(Resource_Manager& rman, int type,
 				       set< pair< Uint32_Index, Uint32_Index > >& ranges)
 {
-  vector< pair< uint32, uint32 > >* int_ranges(bbox->calc_ranges());
-  for (vector< pair< uint32, uint32 > >::const_iterator
-    it(int_ranges->begin()); it != int_ranges->end(); ++it)
+  if (type == Statement::NODE)
   {
-    pair< Uint32_Index, Uint32_Index > range
-        (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
-    ranges.insert(range);
+    vector< pair< uint32, uint32 > >* int_ranges(bbox->calc_ranges());
+    for (vector< pair< uint32, uint32 > >::const_iterator
+        it(int_ranges->begin()); it != int_ranges->end(); ++it)
+    {
+      pair< Uint32_Index, Uint32_Index > range
+          (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
+      ranges.insert(range);
+    }
+    delete(int_ranges);
+    return true;
   }
-  delete(int_ranges);
-  return true;
+  else
+    return false;
 }
 
 void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
