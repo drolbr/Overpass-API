@@ -1264,8 +1264,8 @@ int main(int argc, char* args[])
     
     cout<<
     "  <relation id=\"5\">\n"
-    "    <member type=\"node\" ref=\"15\"/>\n"
-    "    <member type=\"node\" ref=\"16\"/>\n"
+    "    <member type=\"node\" ref=\"15\" role=\"three\"/>\n"
+    "    <member type=\"node\" ref=\"16\" role=\"zero\"/>\n"
     "    <tag k=\"relation_key_5\" v=\"relation_value_5\"/>\n"
     "  </relation>\n";
     
@@ -1305,8 +1305,8 @@ int main(int argc, char* args[])
     
     cout<<
     "  <relation id=\"5\">\n"
-    "    <member type=\"node\" ref=\"15\"/>\n"
-    "    <member type=\"node\" ref=\"16\"/>\n"
+    "    <member type=\"node\" ref=\"15\" role=\"three\"/>\n"
+    "    <member type=\"node\" ref=\"16\" role=\"zero\"/>\n"
     "    <tag k=\"relation_key_5\" v=\"relation_value_5\"/>\n"
     "  </relation>\n";
     
