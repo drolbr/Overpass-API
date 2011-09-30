@@ -545,7 +545,7 @@ void Way_Updater::update_way_tags_local(const vector< Tag_Entry >& tags_to_delet
   map< Tag_Index_Local, set< Uint32_Index > > db_to_insert;
   
   for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
-  it != tags_to_delete.end(); ++it)
+      it != tags_to_delete.end(); ++it)
   {
     Tag_Index_Local index;
     index.index = it->index;
@@ -554,7 +554,7 @@ void Way_Updater::update_way_tags_local(const vector< Tag_Entry >& tags_to_delet
     
     set< Uint32_Index > way_ids;
     for (vector< uint32 >::const_iterator it2(it->ids.begin());
-    it2 != it->ids.end(); ++it2)
+        it2 != it->ids.end(); ++it2)
     way_ids.insert(*it2);
     
     db_to_delete[index] = way_ids;
@@ -562,7 +562,7 @@ void Way_Updater::update_way_tags_local(const vector< Tag_Entry >& tags_to_delet
   
   vector< Way >::const_iterator wit(ways_to_insert.begin());
   for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
-  it != ids_to_modify.end(); ++it)
+      it != ids_to_modify.end(); ++it)
   {
     if ((wit != ways_to_insert.end()) && (it->first == wit->id))
     {
@@ -595,7 +595,7 @@ void Way_Updater::update_way_tags_global(const vector< Tag_Entry >& tags_to_dele
   map< Tag_Index_Global, set< Uint32_Index > > db_to_insert;
   
   for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
-  it != tags_to_delete.end(); ++it)
+      it != tags_to_delete.end(); ++it)
   {
     Tag_Index_Global index;
     index.key = it->key;
@@ -609,7 +609,7 @@ void Way_Updater::update_way_tags_global(const vector< Tag_Entry >& tags_to_dele
   
   vector< Way >::const_iterator wit(ways_to_insert.begin());
   for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
-  it != ids_to_modify.end(); ++it)
+      it != ids_to_modify.end(); ++it)
   {
     if ((wit != ways_to_insert.end()) && (it->first == wit->id))
     {
@@ -618,7 +618,7 @@ void Way_Updater::update_way_tags_global(const vector< Tag_Entry >& tags_to_dele
 	Tag_Index_Global index;
 	
 	for (vector< pair< string, string > >::const_iterator
-	  it2(wit->tags.begin()); it2 != wit->tags.end(); ++it2)
+	    it2(wit->tags.begin()); it2 != wit->tags.end(); ++it2)
 	{
 	  index.key = it2->first;
 	  index.value = it2->second;

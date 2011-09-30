@@ -101,7 +101,8 @@ private:
   
   void update_rel_ids(vector< Relation* >& rels_ptr, map< uint32, vector< uint32 > >& to_delete);
   
-  void update_members(const map< uint32, vector< uint32 > >& to_delete);
+  void update_members(vector< Relation* >& rels_ptr,
+		      const map< uint32, vector< uint32 > >& to_delete);
   
   void prepare_delete_tags
       (vector< Tag_Entry >& tags_to_delete,

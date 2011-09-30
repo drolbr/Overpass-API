@@ -73,6 +73,8 @@ vector< Relation* > sort_rels_to_insert(vector< Relation >& rels_to_insert)
   vector< Relation* >::iterator rels_begin
       (unique(rels_ptr.rbegin(), rels_ptr.rend(), rel_equal_id).base());
   rels_ptr.erase(rels_ptr.begin(), rels_begin);
+  
+  return rels_ptr;
 }
 
 void Relation_Updater::update(Osm_Backend_Callback* callback)
@@ -87,7 +89,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback)
   callback->compute_indexes_finished();
   update_rel_ids(rels_ptr, to_delete);
   callback->update_ids_finished();
-  update_members(to_delete);
+  update_members(rels_ptr, to_delete);
   callback->update_coords_finished();
   
   vector< Tag_Entry > tags_to_delete;
@@ -117,11 +119,11 @@ void Relation_Updater::update(Osm_Backend_Callback* callback)
 }
 
 void collect_new_indexes
-    (const vector< Relation >& rels_to_insert, map< uint32, uint32 >& new_index_by_id)
+    (const vector< Relation* >& rels_ptr, map< uint32, uint32 >& new_index_by_id)
 {
-  for (vector< Relation >::const_iterator it = rels_to_insert.begin();
-      it != rels_to_insert.end(); ++it)
-    new_index_by_id[it->id] = it->index;
+  for (vector< Relation* >::const_iterator it = rels_ptr.begin();
+      it != rels_ptr.end(); ++it)
+    new_index_by_id[(*it)->id] = (*it)->index;
 }
 
 void Relation_Updater::update_moved_idxs
@@ -146,11 +148,11 @@ void Relation_Updater::update_moved_idxs
   if (meta)
   {
     map< uint32, uint32 > new_index_by_id;
-    collect_new_indexes(rels_to_insert, new_index_by_id);
+    collect_new_indexes(rels_ptr, new_index_by_id);
     collect_old_meta_data(*transaction->data_index(meta_settings().RELATIONS_META), to_delete,
 		          new_index_by_id, rels_meta_to_insert);
   }
-  update_members(to_delete);
+  update_members(rels_ptr, to_delete);
   
   vector< Tag_Entry > tags_to_delete;
   prepare_tags(rels_ptr, tags_to_delete, to_delete);
@@ -211,7 +213,7 @@ void Relation_Updater::find_affected_relations
     const Relation_Skeleton& relation(it.object());
     bool is_affected(false);
     for (vector< Relation_Entry >::const_iterator it3(relation.members.begin());
-    it3 != relation.members.end(); ++it3)
+        it3 != relation.members.end(); ++it3)
     {
       if (it3->type == Relation_Entry::NODE)
       {
@@ -388,7 +390,8 @@ void Relation_Updater::update_rel_ids
   }
 }
 
-void Relation_Updater::update_members(const map< uint32, vector< uint32 > >& to_delete)
+void Relation_Updater::update_members(vector< Relation* >& rels_ptr,
+				      const map< uint32, vector< uint32 > >& to_delete)
 {
   map< Uint31_Index, set< Relation_Skeleton > > db_to_delete;
   map< Uint31_Index, set< Relation_Skeleton > > db_to_insert;
@@ -401,20 +404,20 @@ void Relation_Updater::update_members(const map< uint32, vector< uint32 > >& to_
         it2 != it->second.end(); ++it2)
     db_to_delete[idx].insert(Relation_Skeleton(*it2, vector< Relation_Entry >()));
   }
-  vector< Relation >::const_iterator rit(rels_to_insert.begin());
+  vector< Relation* >::const_iterator rit(rels_ptr.begin());
   for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
       it != ids_to_modify.end(); ++it)
   {
-    if ((rit != rels_to_insert.end()) && (it->first == rit->id))
+    if ((rit != rels_ptr.end()) && (it->first == (*rit)->id))
     {
       if (it->second)
       {
-	Uint31_Index idx(rit->index);
+	Uint31_Index idx((*rit)->index);
 	set< Relation_Skeleton >::iterator sit
-	    = db_to_insert[idx].find(Relation_Skeleton(*rit));
+	    = db_to_insert[idx].find(Relation_Skeleton(**rit));
 	if (sit != db_to_insert[idx].end())
 	  db_to_insert[idx].erase(sit);
-	db_to_insert[idx].insert(Relation_Skeleton(*rit));
+	db_to_insert[idx].insert(Relation_Skeleton(**rit));
       }
       ++rit;
     }

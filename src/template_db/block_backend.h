@@ -179,17 +179,17 @@ struct Block_Backend
     ~Block_Backend();
     
     Flat_Iterator flat_begin() { return Flat_Iterator(file_blocks, block_size, false); }
-    Flat_Iterator flat_end() const { return *flat_end_it; }
+    const Flat_Iterator& flat_end() const { return *flat_end_it; }
   
     Discrete_Iterator discrete_begin(TIterator begin, TIterator end)
         { return Discrete_Iterator(file_blocks, begin, end, block_size); }
-    Discrete_Iterator discrete_end() const { return *discrete_end_it; }
+    const Discrete_Iterator& discrete_end() const { return *discrete_end_it; }
   
     Range_Iterator range_begin
         (Default_Range_Iterator< TIndex > begin,
          Default_Range_Iterator< TIndex > end)
         { return Range_Iterator(file_blocks, begin, end, block_size); }
-    Range_Iterator range_end() const { return *range_end_it; }
+    const Range_Iterator& range_end() const { return *range_end_it; }
   
     void update
         (const map< TIndex, set< TObject > >& to_delete,
