@@ -226,3 +226,65 @@ void rename_referred_file(const string& db_dir, const string& from, const string
       + file_prop.get_file_name_trunk() + to
       + file_prop.get_data_suffix()).c_str());
 }
+
+void prepare_delete_tags
+    (File_Blocks_Index_Base& tags_local, vector< Tag_Entry >& tags_to_delete,
+     const map< uint32, vector< uint32 > >& to_delete)
+{
+  // make indices appropriately coarse
+  map< uint32, set< uint32 > > to_delete_coarse;
+  for (map< uint32, vector< uint32 > >::const_iterator
+    it(to_delete.begin()); it != to_delete.end(); ++it)
+  {
+    set< uint32 >& handle(to_delete_coarse[it->first & 0xffffff00]);
+    for (vector< uint32 >::const_iterator it2(it->second.begin());
+    it2 != it->second.end(); ++it2)
+    {
+      handle.insert(*it2);
+    }
+  }
+  
+  // formulate range query
+  set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
+  for (map< uint32, set< uint32 > >::const_iterator
+    it(to_delete_coarse.begin()); it != to_delete_coarse.end(); ++it)
+  {
+    Tag_Index_Local lower, upper;
+    lower.index = it->first;
+    lower.key = "";
+    lower.value = "";
+    upper.index = it->first + 1;
+    upper.key = "";
+    upper.value = "";
+    range_set.insert(make_pair(lower, upper));
+  }
+  
+  // iterate over the result
+  Block_Backend< Tag_Index_Local, Uint32_Index > rels_db(&tags_local);
+  Tag_Index_Local current_index;
+  Tag_Entry tag_entry;
+  current_index.index = 0xffffffff;
+  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
+    it(rels_db.range_begin
+    (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+     Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+     !(it == rels_db.range_end()); ++it)
+  {
+    if (!(current_index == it.index()))
+    {
+      if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
+	tags_to_delete.push_back(tag_entry);
+      current_index = it.index();
+      tag_entry.index = it.index().index;
+      tag_entry.key = it.index().key;
+      tag_entry.value = it.index().value;
+      tag_entry.ids.clear();
+    }
+    
+    set< uint32 >& handle(to_delete_coarse[it.index().index]);
+    if (handle.find(it.object().val()) != handle.end())
+      tag_entry.ids.push_back(it.object().val());
+  }
+  if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
+    tags_to_delete.push_back(tag_entry);
+}

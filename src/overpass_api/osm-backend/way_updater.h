@@ -86,8 +86,6 @@ private:
   bool external_transaction;
   vector< pair< uint32, bool > > ids_to_modify;
   vector< Way > ways_to_insert;
-  static Way_Comparator_By_Id way_comparator_by_id;
-  static Way_Equal_Id way_equal_id;
   static Pair_Comparator_By_Id pair_comparator_by_id;
   static Pair_Equal_Id pair_equal_id;
   vector< pair< uint32, uint32 > > moved_ways;
@@ -99,23 +97,12 @@ private:
   
   void find_affected_ways(const vector< pair< uint32, uint32 > >& moved_nodes);
   
-  void compute_indexes();
+  void compute_indexes(vector< Way* >& ways_ptr);
 
-  void update_way_ids(map< uint32, vector< uint32 > >& to_delete);
+  void update_way_ids(const vector< Way* >& ways_ptr, map< uint32, vector< uint32 > >& to_delete);
   
-  void update_members(const map< uint32, vector< uint32 > >& to_delete);
-  
-  void prepare_delete_tags
-      (vector< Tag_Entry >& tags_to_delete,
-       const map< uint32, vector< uint32 > >& to_delete);
-       
-  void prepare_tags
-      (vector< Tag_Entry >& tags_to_delete,
-       const map< uint32, vector< uint32 > >& to_delete);
-  
-  void update_way_tags_local(const vector< Tag_Entry >& tags_to_delete);
-  
-  void update_way_tags_global(const vector< Tag_Entry >& tags_to_delete);
+  void update_members
+      (const vector< Way* >& ways_ptr, const map< uint32, vector< uint32 > >& to_delete);
   
   void merge_files(const vector< string >& froms, string into);
 };

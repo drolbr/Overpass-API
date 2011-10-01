@@ -25,6 +25,12 @@ Way_Updater::Way_Updater(string db_dir_, bool meta_)
     external_transaction(false), db_dir(db_dir_), meta(meta_)
 {}
 
+namespace
+{
+  Way_Comparator_By_Id way_comparator_by_id;
+  Way_Equal_Id way_equal_id;
+}
+
 void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
 {
   if (!external_transaction)
@@ -32,19 +38,24 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
   
   map< uint32, vector< uint32 > > to_delete;
   callback->update_started();
-  compute_indexes();
+  vector< Way* > ways_ptr = sort_elems_to_insert
+      (ways_to_insert, way_comparator_by_id, way_equal_id);
+  compute_indexes(ways_ptr);
   callback->compute_indexes_finished();
-  update_way_ids(to_delete);
+  update_way_ids(ways_ptr, to_delete);
   callback->update_ids_finished();
-  update_members(to_delete);
+  update_members(ways_ptr, to_delete);
   callback->update_coords_finished();
   
   vector< Tag_Entry > tags_to_delete;
-  prepare_delete_tags(tags_to_delete, to_delete);
+  prepare_delete_tags(*transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
+		      tags_to_delete, to_delete);
   callback->prepare_delete_tags_finished();
-  update_way_tags_local(tags_to_delete);
+  update_tags_local(*transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
+		    ways_ptr, ids_to_modify, tags_to_delete);
   callback->tags_local_finished();
-  update_way_tags_global(tags_to_delete);
+  update_tags_global(*transaction->data_index(osm_base_settings().WAY_TAGS_GLOBAL),
+		     ways_ptr, ids_to_modify, tags_to_delete);
   callback->tags_global_finished();
   if (meta)
   {
@@ -138,14 +149,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
   }
 }
 
-void collect_new_indexes
-    (const vector< Way >& ways_to_insert, map< uint32, uint32 >& new_index_by_id)
-{
-  for (vector< Way >::const_iterator it = ways_to_insert.begin();
-      it != ways_to_insert.end(); ++it)
-    new_index_by_id[it->id] = it->index;
-}
-
 void Way_Updater::update_moved_idxs
     (Osm_Backend_Callback* callback, 
      const vector< pair< uint32, uint32 > >& moved_nodes)
@@ -163,19 +166,23 @@ void Way_Updater::update_moved_idxs
   
   map< uint32, vector< uint32 > > to_delete;
   find_affected_ways(moved_nodes);
-  update_way_ids(to_delete);
+  vector< Way* > ways_ptr = sort_elems_to_insert
+      (ways_to_insert, way_comparator_by_id, way_equal_id);
+  update_way_ids(ways_ptr, to_delete);
   if (meta)
   {
     map< uint32, uint32 > new_index_by_id;
-    collect_new_indexes(ways_to_insert, new_index_by_id);
+    collect_new_indexes(ways_ptr, new_index_by_id);
     collect_old_meta_data(*transaction->data_index(meta_settings().WAYS_META), to_delete,
 		          new_index_by_id, ways_meta_to_insert);
   }
-  update_members(to_delete);
+  update_members(ways_ptr, to_delete);
   
   vector< Tag_Entry > tags_to_delete;
-  prepare_tags(tags_to_delete, to_delete);
-  update_way_tags_local(tags_to_delete);
+  prepare_tags(*transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
+	       ways_ptr, tags_to_delete, to_delete);
+  update_tags_local(*transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
+		    ways_ptr, ids_to_modify, tags_to_delete);
   if (meta)
   {
     map< uint32, vector< uint32 > > idxs_by_id;
@@ -281,17 +288,11 @@ void Way_Updater::find_affected_ways
   maybe_affected_ways.clear();
 }
 
-void Way_Updater::compute_indexes()
+void Way_Updater::compute_indexes(vector< Way* >& ways_ptr)
 {
   static Meta_Comparator_By_Id meta_comparator_by_id;
   static Meta_Equal_Id meta_equal_id;
   
-  // process the ways itself
-  // keep always the most recent (last) element of all equal elements
-  stable_sort(ways_to_insert.begin(), ways_to_insert.end(), way_comparator_by_id);
-  vector< Way >::iterator ways_begin
-      (unique(ways_to_insert.rbegin(), ways_to_insert.rend(), way_equal_id).base());
-  ways_to_insert.erase(ways_to_insert.begin(), ways_begin);
   // keep always the most recent (last) element of all equal elements
   stable_sort
       (ways_meta_to_insert.begin(), ways_meta_to_insert.end(), meta_comparator_by_id);
@@ -301,11 +302,11 @@ void Way_Updater::compute_indexes()
   
   // retrieve the indices of the referred nodes
   map< uint32, uint32 > used_nodes;
-  for (vector< Way >::const_iterator wit(ways_to_insert.begin());
-      wit != ways_to_insert.end(); ++wit)
+  for (vector< Way* >::const_iterator wit = ways_ptr.begin();
+      wit != ways_ptr.end(); ++wit)
   {
-    for (vector< uint32 >::const_iterator nit(wit->nds.begin());
-        nit != wit->nds.end(); ++nit)
+    for (vector< uint32 >::const_iterator nit = (*wit)->nds.begin();
+        nit != (*wit)->nds.end(); ++nit)
       used_nodes[*nit] = 0;
   }
   Random_File< Uint32_Index > node_random
@@ -313,31 +314,31 @@ void Way_Updater::compute_indexes()
   for (map< uint32, uint32 >::iterator it(used_nodes.begin());
       it != used_nodes.end(); ++it)
     it->second = node_random.get(it->first).val();
-  for (vector< Way >::iterator wit(ways_to_insert.begin());
-      wit != ways_to_insert.end(); ++wit)
+  for (vector< Way* >::iterator wit = ways_ptr.begin(); wit != ways_ptr.end(); ++wit)
   {
     vector< uint32 > nd_idxs;
-    for (vector< uint32 >::const_iterator nit(wit->nds.begin());
-        nit != wit->nds.end(); ++nit)
+    for (vector< uint32 >::const_iterator nit = (*wit)->nds.begin();
+        nit != (*wit)->nds.end(); ++nit)
       nd_idxs.push_back(used_nodes[*nit]);
     
-    wit->index = Way::calc_index(nd_idxs);
+    (*wit)->index = Way::calc_index(nd_idxs);
   }
-  vector< Way >::const_iterator wit(ways_to_insert.begin());
+  vector< Way* >::const_iterator wit = ways_ptr.begin();
   for (vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::iterator
       mit(ways_meta_to_insert.begin()); mit != ways_meta_to_insert.end(); ++mit)
   {
-    while ((wit != ways_to_insert.end()) && (wit->id < mit->first.ref))
+    while ((wit != ways_ptr.end()) && ((*wit)->id < mit->first.ref))
       ++wit;
-    if (wit == ways_to_insert.end())
+    if (wit == ways_ptr.end())
       break;
     
-    if (wit->id == mit->first.ref)
-      mit->second = wit->index;
+    if ((*wit)->id == mit->first.ref)
+      mit->second = (*wit)->index;
   }
 }
 
-void Way_Updater::update_way_ids(map< uint32, vector< uint32 > >& to_delete)
+void Way_Updater::update_way_ids
+    (const vector< Way* >& ways_ptr, map< uint32, vector< uint32 > >& to_delete)
 {
   // process the ways itself
   // keep always the most recent (last) element of all equal elements
@@ -347,26 +348,22 @@ void Way_Updater::update_way_ids(map< uint32, vector< uint32 > >& to_delete)
 	      (unique(ids_to_modify.rbegin(), ids_to_modify.rend(), pair_equal_id)
 	      .base());
   ids_to_modify.erase(ids_to_modify.begin(), modi_begin);
-  stable_sort(ways_to_insert.begin(), ways_to_insert.end(), way_comparator_by_id);
-      vector< Way >::iterator ways_begin
-      (unique(ways_to_insert.rbegin(), ways_to_insert.rend(), way_equal_id).base());
-  ways_to_insert.erase(ways_to_insert.begin(), ways_begin);
   
   Random_File< Uint31_Index > random
       (transaction->random_index(osm_base_settings().WAYS));
-  vector< Way >::const_iterator wit(ways_to_insert.begin());
+  vector< Way* >::const_iterator wit = ways_ptr.begin();
   for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
   it != ids_to_modify.end(); ++it)
   {
     Uint31_Index index(random.get(it->first));
     if (index.val() > 0)
       to_delete[index.val()].push_back(it->first);
-    if ((wit != ways_to_insert.end()) && (it->first == wit->id))
+    if ((wit != ways_ptr.end()) && (it->first == (*wit)->id))
     {
       if (it->second)
       {
-	random.put(it->first, Uint31_Index(wit->index));
-	if ((index.val() > 0) && (index.val() != wit->index))
+	random.put(it->first, Uint31_Index((*wit)->index));
+	if ((index.val() > 0) && (index.val() != (*wit)->index))
 	  moved_ways.push_back(make_pair(it->first, index.val()));
       }
       ++wit;
@@ -375,29 +372,30 @@ void Way_Updater::update_way_ids(map< uint32, vector< uint32 > >& to_delete)
   sort(moved_ways.begin(), moved_ways.end());
 }
 
-void Way_Updater::update_members(const map< uint32, vector< uint32 > >& to_delete)
+void Way_Updater::update_members
+    (const vector< Way* >& ways_ptr, const map< uint32, vector< uint32 > >& to_delete)
 {
   map< Uint31_Index, set< Way_Skeleton > > db_to_delete;
   map< Uint31_Index, set< Way_Skeleton > > db_to_insert;
   
   for (map< uint32, vector< uint32 > >::const_iterator
-    it(to_delete.begin()); it != to_delete.end(); ++it)
+      it(to_delete.begin()); it != to_delete.end(); ++it)
   {
     Uint31_Index idx(it->first);
     for (vector< uint32 >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
       db_to_delete[idx].insert(Way_Skeleton(*it2, vector< uint32 >()));
   }
-  vector< Way >::const_iterator wit(ways_to_insert.begin());
+  vector< Way* >::const_iterator wit = ways_ptr.begin();
   for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
-  it != ids_to_modify.end(); ++it)
+      it != ids_to_modify.end(); ++it)
   {
-    if ((wit != ways_to_insert.end()) && (it->first == wit->id))
+    if ((wit != ways_ptr.end()) && (it->first == (*wit)->id))
     {
       if (it->second)
       {
-	Uint31_Index idx(wit->index);
-	db_to_insert[idx].insert(Way_Skeleton(*wit));
+	Uint31_Index idx = (*wit)->index;
+	db_to_insert[idx].insert(Way_Skeleton(**wit));
       }
       ++wit;
     }
@@ -405,233 +403,6 @@ void Way_Updater::update_members(const map< uint32, vector< uint32 > >& to_delet
   
   Block_Backend< Uint31_Index, Way_Skeleton > way_db
       (transaction->data_index(osm_base_settings().WAYS));
-  way_db.update(db_to_delete, db_to_insert);
-}
-
-void Way_Updater::prepare_delete_tags
-(vector< Tag_Entry >& tags_to_delete,
- const map< uint32, vector< uint32 > >& to_delete)
-{
-  // make indices appropriately coarse
-  map< uint32, set< uint32 > > to_delete_coarse;
-  for (map< uint32, vector< uint32 > >::const_iterator
-    it(to_delete.begin()); it != to_delete.end(); ++it)
-  {
-    set< uint32 >& handle(to_delete_coarse[it->first & 0xffffff00]);
-    for (vector< uint32 >::const_iterator it2(it->second.begin());
-    it2 != it->second.end(); ++it2)
-    {
-      handle.insert(*it2);
-    }
-  }
-  
-  // formulate range query
-  set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  for (map< uint32, set< uint32 > >::const_iterator
-    it(to_delete_coarse.begin()); it != to_delete_coarse.end(); ++it)
-  {
-    Tag_Index_Local lower, upper;
-    lower.index = it->first;
-    lower.key = "";
-    lower.value = "";
-    upper.index = it->first + 1;
-    upper.key = "";
-    upper.value = "";
-    range_set.insert(make_pair(lower, upper));
-  }
-  
-  // iterate over the result
-  Block_Backend< Tag_Index_Local, Uint32_Index > ways_db
-      (transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL));
-  Tag_Index_Local current_index;
-  Tag_Entry tag_entry;
-  current_index.index = 0xffffffff;
-  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
-    it(ways_db.range_begin
-    (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-     Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-     !(it == ways_db.range_end()); ++it)
-  {
-    if (!(current_index == it.index()))
-    {
-      if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
-	tags_to_delete.push_back(tag_entry);
-      current_index = it.index();
-      tag_entry.index = it.index().index;
-      tag_entry.key = it.index().key;
-      tag_entry.value = it.index().value;
-      tag_entry.ids.clear();
-    }
-    
-    set< uint32 >& handle(to_delete_coarse[it.index().index]);
-    if (handle.find(it.object().val()) != handle.end())
-      tag_entry.ids.push_back(it.object().val());
-  }
-  if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
-    tags_to_delete.push_back(tag_entry);
-}
-
-void Way_Updater::prepare_tags
- (vector< Tag_Entry >& tags_to_delete,
-  const map< uint32, vector< uint32 > >& to_delete)
-{
-  // make indices appropriately coarse
-  map< uint32, set< uint32 > > to_delete_coarse;
-  for (map< uint32, vector< uint32 > >::const_iterator
-    it(to_delete.begin()); it != to_delete.end(); ++it)
-  {
-    set< uint32 >& handle(to_delete_coarse[it->first & 0xffffff00]);
-    for (vector< uint32 >::const_iterator it2(it->second.begin());
-    it2 != it->second.end(); ++it2)
-    {
-      handle.insert(*it2);
-    }
-  }
-  
-  // formulate range query
-  set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  for (map< uint32, set< uint32 > >::const_iterator
-    it(to_delete_coarse.begin()); it != to_delete_coarse.end(); ++it)
-  {
-    Tag_Index_Local lower, upper;
-    lower.index = it->first;
-    lower.key = "";
-    lower.value = "";
-    upper.index = it->first + 1;
-    upper.key = "";
-    upper.value = "";
-    range_set.insert(make_pair(lower, upper));
-  }
-  
-  // iterate over the result
-  Block_Backend< Tag_Index_Local, Uint32_Index > ways_db
-      (transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL));
-  Tag_Index_Local current_index;
-  Tag_Entry tag_entry;
-  current_index.index = 0xffffffff;
-  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
-    it(ways_db.range_begin
-    (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-     Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-     !(it == ways_db.range_end()); ++it)
-  {
-    if (!(current_index == it.index()))
-    {
-      if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
-	tags_to_delete.push_back(tag_entry);
-      current_index = it.index();
-      tag_entry.index = it.index().index;
-      tag_entry.key = it.index().key;
-      tag_entry.value = it.index().value;
-      tag_entry.ids.clear();
-    }
-    
-    set< uint32 >& handle(to_delete_coarse[it.index().index]);
-    if (handle.find(it.object().val()) != handle.end())
-    {
-      Way* way(binary_search_for_id(ways_to_insert, it.object().val()));
-      if (way != 0)
-	way->tags.push_back(make_pair(it.index().key, it.index().value));
-      tag_entry.ids.push_back(it.object().val());
-    }
-  }
-  if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
-    tags_to_delete.push_back(tag_entry);
-}
-
-void Way_Updater::update_way_tags_local(const vector< Tag_Entry >& tags_to_delete)
-{
-  map< Tag_Index_Local, set< Uint32_Index > > db_to_delete;
-  map< Tag_Index_Local, set< Uint32_Index > > db_to_insert;
-  
-  for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
-      it != tags_to_delete.end(); ++it)
-  {
-    Tag_Index_Local index;
-    index.index = it->index;
-    index.key = it->key;
-    index.value = it->value;
-    
-    set< Uint32_Index > way_ids;
-    for (vector< uint32 >::const_iterator it2(it->ids.begin());
-        it2 != it->ids.end(); ++it2)
-    way_ids.insert(*it2);
-    
-    db_to_delete[index] = way_ids;
-  }
-  
-  vector< Way >::const_iterator wit(ways_to_insert.begin());
-  for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
-      it != ids_to_modify.end(); ++it)
-  {
-    if ((wit != ways_to_insert.end()) && (it->first == wit->id))
-    {
-      if (it->second)
-      {
-	Tag_Index_Local index;
-	index.index = wit->index & 0xffffff00;
-	
-	for (vector< pair< string, string > >::const_iterator
-	  it2(wit->tags.begin()); it2 != wit->tags.end(); ++it2)
-	{
-	  index.key = it2->first;
-	  index.value = it2->second;
-	  db_to_insert[index].insert(wit->id);
-	  db_to_delete[index];
-	}
-      }
-      ++wit;
-    }
-  }
-  
-  Block_Backend< Tag_Index_Local, Uint32_Index > way_db
-      (transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL));
-  way_db.update(db_to_delete, db_to_insert);
-}
-
-void Way_Updater::update_way_tags_global(const vector< Tag_Entry >& tags_to_delete)
-{
-  map< Tag_Index_Global, set< Uint32_Index > > db_to_delete;
-  map< Tag_Index_Global, set< Uint32_Index > > db_to_insert;
-  
-  for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
-      it != tags_to_delete.end(); ++it)
-  {
-    Tag_Index_Global index;
-    index.key = it->key;
-    index.value = it->value;
-    
-    set< Uint32_Index > way_ids;
-    for (vector< uint32 >::const_iterator it2(it->ids.begin());
-    it2 != it->ids.end(); ++it2)
-    db_to_delete[index].insert(*it2);
-  }
-  
-  vector< Way >::const_iterator wit(ways_to_insert.begin());
-  for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
-      it != ids_to_modify.end(); ++it)
-  {
-    if ((wit != ways_to_insert.end()) && (it->first == wit->id))
-    {
-      if (it->second)
-      {
-	Tag_Index_Global index;
-	
-	for (vector< pair< string, string > >::const_iterator
-	    it2(wit->tags.begin()); it2 != wit->tags.end(); ++it2)
-	{
-	  index.key = it2->first;
-	  index.value = it2->second;
-	  db_to_insert[index].insert(wit->id);
-	  db_to_delete[index];
-	}
-      }
-      ++wit;
-    }
-  }
-  
-  Block_Backend< Tag_Index_Global, Uint32_Index > way_db
-      (transaction->data_index(osm_base_settings().WAY_TAGS_GLOBAL));
   way_db.update(db_to_delete, db_to_insert);
 }
 

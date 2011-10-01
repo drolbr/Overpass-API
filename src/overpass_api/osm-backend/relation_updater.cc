@@ -61,22 +61,6 @@ namespace
   Relation_Equal_Id rel_equal_id;
 }
 
-vector< Relation* > sort_rels_to_insert(vector< Relation >& rels_to_insert)
-{
-  vector< Relation* > rels_ptr;
-  for (vector< Relation >::iterator it = rels_to_insert.begin();
-      it != rels_to_insert.end(); ++it)
-    rels_ptr.push_back(&*it);
-  // process the ways itself
-  // keep always the most recent (last) element of all equal elements
-  stable_sort(rels_ptr.begin(), rels_ptr.end(), rel_comparator_by_id);
-  vector< Relation* >::iterator rels_begin
-      (unique(rels_ptr.rbegin(), rels_ptr.rend(), rel_equal_id).base());
-  rels_ptr.erase(rels_ptr.begin(), rels_begin);
-  
-  return rels_ptr;
-}
-
 void Relation_Updater::update(Osm_Backend_Callback* callback)
 {
   if (!external_transaction)
@@ -84,7 +68,8 @@ void Relation_Updater::update(Osm_Backend_Callback* callback)
   
   callback->update_started();
   map< uint32, vector< uint32 > > to_delete;
-  vector< Relation* > rels_ptr = sort_rels_to_insert(rels_to_insert);
+  vector< Relation* > rels_ptr = sort_elems_to_insert
+      (rels_to_insert, rel_comparator_by_id, rel_equal_id);
   compute_indexes(rels_ptr);
   callback->compute_indexes_finished();
   update_rel_ids(rels_ptr, to_delete);
@@ -93,11 +78,14 @@ void Relation_Updater::update(Osm_Backend_Callback* callback)
   callback->update_coords_finished();
   
   vector< Tag_Entry > tags_to_delete;
-  prepare_delete_tags(tags_to_delete, to_delete);
+  prepare_delete_tags(*transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL),
+		      tags_to_delete, to_delete);
   callback->prepare_delete_tags_finished();
-  update_rel_tags_local(rels_ptr, tags_to_delete);
+  update_tags_local(*transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL),
+		    rels_ptr, ids_to_modify, tags_to_delete);
   callback->tags_local_finished();
-  update_rel_tags_global(rels_ptr, tags_to_delete);
+  update_tags_global(*transaction->data_index(osm_base_settings().RELATION_TAGS_GLOBAL),
+		     rels_ptr, ids_to_modify, tags_to_delete);
   callback->tags_global_finished();
   flush_roles();
   callback->flush_roles_finished();
@@ -118,14 +106,6 @@ void Relation_Updater::update(Osm_Backend_Callback* callback)
     delete transaction;
 }
 
-void collect_new_indexes
-    (const vector< Relation* >& rels_ptr, map< uint32, uint32 >& new_index_by_id)
-{
-  for (vector< Relation* >::const_iterator it = rels_ptr.begin();
-      it != rels_ptr.end(); ++it)
-    new_index_by_id[(*it)->id] = (*it)->index;
-}
-
 void Relation_Updater::update_moved_idxs
     (const vector< pair< uint32, uint32 > >& moved_nodes,
      const vector< pair< uint32, uint32 > >& moved_ways)
@@ -143,7 +123,8 @@ void Relation_Updater::update_moved_idxs
   
   map< uint32, vector< uint32 > > to_delete;
   find_affected_relations(moved_nodes, moved_ways);
-  vector< Relation* > rels_ptr = sort_rels_to_insert(rels_to_insert);
+  vector< Relation* > rels_ptr = sort_elems_to_insert
+      (rels_to_insert, rel_comparator_by_id, rel_equal_id);
   update_rel_ids(rels_ptr, to_delete);
   if (meta)
   {
@@ -155,8 +136,10 @@ void Relation_Updater::update_moved_idxs
   update_members(rels_ptr, to_delete);
   
   vector< Tag_Entry > tags_to_delete;
-  prepare_tags(rels_ptr, tags_to_delete, to_delete);
-  update_rel_tags_local(rels_ptr, tags_to_delete);
+  prepare_tags(*transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL),
+	       rels_ptr, tags_to_delete, to_delete);
+  update_tags_local(*transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL),
+		    rels_ptr, ids_to_modify, tags_to_delete);
   flush_roles();
   if (meta)
   {
@@ -425,236 +408,6 @@ void Relation_Updater::update_members(vector< Relation* >& rels_ptr,
   
   Block_Backend< Uint31_Index, Relation_Skeleton > rel_db
       (transaction->data_index(osm_base_settings().RELATIONS));
-  rel_db.update(db_to_delete, db_to_insert);
-}
-
-void Relation_Updater::prepare_delete_tags
-    (vector< Tag_Entry >& tags_to_delete,
-     const map< uint32, vector< uint32 > >& to_delete)
-{
-  // make indices appropriately coarse
-  map< uint32, set< uint32 > > to_delete_coarse;
-  for (map< uint32, vector< uint32 > >::const_iterator
-    it(to_delete.begin()); it != to_delete.end(); ++it)
-  {
-    set< uint32 >& handle(to_delete_coarse[it->first & 0xffffff00]);
-    for (vector< uint32 >::const_iterator it2(it->second.begin());
-    it2 != it->second.end(); ++it2)
-    {
-      handle.insert(*it2);
-    }
-  }
-  
-  // formulate range query
-  set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  for (map< uint32, set< uint32 > >::const_iterator
-    it(to_delete_coarse.begin()); it != to_delete_coarse.end(); ++it)
-  {
-    Tag_Index_Local lower, upper;
-    lower.index = it->first;
-    lower.key = "";
-    lower.value = "";
-    upper.index = it->first + 1;
-    upper.key = "";
-    upper.value = "";
-    range_set.insert(make_pair(lower, upper));
-  }
-  
-  // iterate over the result
-  Block_Backend< Tag_Index_Local, Uint32_Index > rels_db
-      (transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL));
-  Tag_Index_Local current_index;
-  Tag_Entry tag_entry;
-  current_index.index = 0xffffffff;
-  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
-    it(rels_db.range_begin
-    (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-     Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-     !(it == rels_db.range_end()); ++it)
-  {
-    if (!(current_index == it.index()))
-    {
-      if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
-	tags_to_delete.push_back(tag_entry);
-      current_index = it.index();
-      tag_entry.index = it.index().index;
-      tag_entry.key = it.index().key;
-      tag_entry.value = it.index().value;
-      tag_entry.ids.clear();
-    }
-    
-    set< uint32 >& handle(to_delete_coarse[it.index().index]);
-    if (handle.find(it.object().val()) != handle.end())
-      tag_entry.ids.push_back(it.object().val());
-  }
-  if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
-    tags_to_delete.push_back(tag_entry);
-}
-
-void Relation_Updater::prepare_tags
-    (vector< Relation* >& rels_ptr,
-     vector< Tag_Entry >& tags_to_delete,
-     const map< uint32, vector< uint32 > >& to_delete)
-{
-  // make indices appropriately coarse
-  map< uint32, set< uint32 > > to_delete_coarse;
-  for (map< uint32, vector< uint32 > >::const_iterator
-    it(to_delete.begin()); it != to_delete.end(); ++it)
-  {
-    set< uint32 >& handle(to_delete_coarse[it->first & 0xffffff00]);
-    for (vector< uint32 >::const_iterator it2(it->second.begin());
-    it2 != it->second.end(); ++it2)
-    {
-      handle.insert(*it2);
-    }
-  }
-  
-  // formulate range query
-  set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  for (map< uint32, set< uint32 > >::const_iterator
-    it(to_delete_coarse.begin()); it != to_delete_coarse.end(); ++it)
-  {
-    Tag_Index_Local lower, upper;
-    lower.index = it->first;
-    lower.key = "";
-    lower.value = "";
-    upper.index = it->first + 1;
-    upper.key = "";
-    upper.value = "";
-    range_set.insert(make_pair(lower, upper));
-  }
-
-  // iterate over the result
-  Block_Backend< Tag_Index_Local, Uint32_Index > rels_db
-      (transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL));
-  Tag_Index_Local current_index;
-  Tag_Entry tag_entry;
-  current_index.index = 0xffffffff;
-  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
-    it(rels_db.range_begin
-    (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-     Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-     !(it == rels_db.range_end()); ++it)
-  {
-    if (!(current_index == it.index()))
-    {
-      if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
-	tags_to_delete.push_back(tag_entry);
-      current_index = it.index();
-      tag_entry.index = it.index().index;
-      tag_entry.key = it.index().key;
-      tag_entry.value = it.index().value;
-      tag_entry.ids.clear();
-    }
-    
-    set< uint32 >& handle(to_delete_coarse[it.index().index]);
-    if (handle.find(it.object().val()) != handle.end())
-    {
-      Relation* relation(binary_ptr_search_for_id(rels_ptr, it.object().val()));
-      if (relation != 0)
-	relation->tags.push_back(make_pair(it.index().key, it.index().value));
-      tag_entry.ids.push_back(it.object().val());
-    }
-  }
-  if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
-    tags_to_delete.push_back(tag_entry);
-}
-
-void Relation_Updater::update_rel_tags_local
-    (vector< Relation* >& rels_ptr, const vector< Tag_Entry >& tags_to_delete)
-{
-  map< Tag_Index_Local, set< Uint32_Index > > db_to_delete;
-  map< Tag_Index_Local, set< Uint32_Index > > db_to_insert;
-  
-  for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
-      it != tags_to_delete.end(); ++it)
-  {
-    Tag_Index_Local index;
-    index.index = it->index;
-    index.key = it->key;
-    index.value = it->value;
-    
-    set< Uint32_Index > rel_ids;
-    for (vector< uint32 >::const_iterator it2(it->ids.begin());
-    it2 != it->ids.end(); ++it2)
-    rel_ids.insert(*it2);
-    
-    db_to_delete[index] = rel_ids;
-  }
-  
-  vector< Relation* >::const_iterator rit = rels_ptr.begin();
-  for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
-      it != ids_to_modify.end(); ++it)
-  {
-    if ((rit != rels_ptr.end()) && (it->first == (*rit)->id))
-    {
-      if (it->second)
-      {
-	Tag_Index_Local index;
-	index.index = (*rit)->index & 0xffffff00;
-	
-	for (vector< pair< string, string > >::const_iterator
-	  it2((*rit)->tags.begin()); it2 != (*rit)->tags.end(); ++it2)
-	{
-	  index.key = it2->first;
-	  index.value = it2->second;
-	  db_to_insert[index].insert(it->first);
-	  db_to_delete[index];
-	}
-      }
-      ++rit;
-    }
-  }
-  
-  Block_Backend< Tag_Index_Local, Uint32_Index > rel_db
-      (transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL));
-  rel_db.update(db_to_delete, db_to_insert);
-}
-
-void Relation_Updater::update_rel_tags_global
-    (vector< Relation* >& rels_ptr, const vector< Tag_Entry >& tags_to_delete)
-{
-  map< Tag_Index_Global, set< Uint32_Index > > db_to_delete;
-  map< Tag_Index_Global, set< Uint32_Index > > db_to_insert;
-  
-  for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
-      it != tags_to_delete.end(); ++it)
-  {
-    Tag_Index_Global index;
-    index.key = it->key;
-    index.value = it->value;
-    
-    set< Uint32_Index > rel_ids;
-    for (vector< uint32 >::const_iterator it2(it->ids.begin());
-    it2 != it->ids.end(); ++it2)
-    db_to_delete[index].insert(*it2);
-  }
-  
-  vector< Relation* >::const_iterator rit = rels_ptr.begin();
-  for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
-      it != ids_to_modify.end(); ++it)
-  {
-    if ((rit != rels_ptr.end()) && (it->first == (*rit)->id))
-    {
-      if (it->second)
-      {
-	Tag_Index_Global index;
-	
-	for (vector< pair< string, string > >::const_iterator
-	  it2((*rit)->tags.begin()); it2 != (*rit)->tags.end(); ++it2)
-	{
-	  index.key = it2->first;
-	  index.value = it2->second;
-	  db_to_insert[index].insert(it->first);
-	  db_to_delete[index];
-	}
-      }
-      ++rit;
-    }
-  }
-  
-  Block_Backend< Tag_Index_Global, Uint32_Index > rel_db
-      (transaction->data_index(osm_base_settings().RELATION_TAGS_GLOBAL));
   rel_db.update(db_to_delete, db_to_insert);
 }
 

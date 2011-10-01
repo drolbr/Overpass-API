@@ -34,16 +34,16 @@ struct Way
 };
 
 struct Way_Comparator_By_Id {
-  bool operator() (const Way& a, const Way& b)
+  bool operator() (const Way* a, const Way* b)
   {
-    return (a.id < b.id);
+    return (a->id < b->id);
   }
 };
 
 struct Way_Equal_Id {
-  bool operator() (const Way& a, const Way& b)
+  bool operator() (const Way* a, const Way* b)
   {
-    return (a.id == b.id);
+    return (a->id == b->id);
   }
 };
 

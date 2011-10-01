@@ -197,7 +197,7 @@ int main(int argc, char* args[])
       delete member_source_out;
       delete tags_source_out;
     }
-    
+
     Nonsynced_Transaction transaction(false, false, "./", "");
     
     // check update_members - compare both files for the result
