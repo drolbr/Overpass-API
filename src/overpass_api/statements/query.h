@@ -5,12 +5,6 @@
 #include <string>
 #include <vector>
 #include "statement.h"
-#include "area_query.h"
-#include "around.h"
-#include "bbox_query.h"
-#include "item.h"
-#include "newer.h"
-#include "user.h"
 
 using namespace std;
 

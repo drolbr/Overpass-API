@@ -1,9 +1,11 @@
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
-#include "area_query.h"
-#include "bbox_query.h"
 #include "meta_collector.h"
+#include "area_query.h"
+#include "around.h"
+#include "bbox_query.h"
+#include "item.h"
 #include "newer.h"
 #include "query.h"
 #include "user.h"
@@ -245,6 +247,33 @@ set< pair< TIndex, TIndex > > Query_Statement::get_ranges_by_id_from_db
   return range_req;
 }
 
+template< typename TIndex, typename TObject >
+void clear_empty_indices
+    (map< TIndex, vector< TObject > >& modify)
+{
+  for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
+      it != modify.end();)
+  {
+    if (!it->second.empty())
+    {
+      ++it;
+      continue;
+    }
+    typename map< TIndex, vector< TObject > >::iterator next_it = it;
+    if (++next_it == modify.end())
+    {
+      modify.erase(it);
+      break;
+    }
+    else
+    {
+      TIndex idx = next_it->first;
+      modify.erase(it);
+      it = modify.find(idx);
+    }
+  }
+}
+
 void Query_Statement::execute(Resource_Manager& rman)
 {
   enum { nothing, /*ids_collected,*/ ranges_collected, data_collected } answer_state
@@ -273,7 +302,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     for (vector< Query_Constraint* >::iterator it = constraints.begin();
         it != constraints.end() && answer_state < ranges_collected; ++it)
     {
-      if ((*it)->get_ranges(rman, Statement::NODE, range_req))
+      if ((*it)->get_ranges(rman, range_req))
 	answer_state = ranges_collected;
     }
   
@@ -301,6 +330,12 @@ void Query_Statement::execute(Resource_Manager& rman)
     }
   
     set< pair< Uint31_Index, Uint31_Index > > range_req;
+    for (vector< Query_Constraint* >::iterator it = constraints.begin();
+        it != constraints.end() && answer_state < ranges_collected; ++it)
+    {
+      if ((*it)->get_ranges(rman, range_req))
+	answer_state = ranges_collected;
+    }
     
     if (answer_state < ranges_collected)
       range_req = get_ranges_by_id_from_db< Uint31_Index >
@@ -326,6 +361,12 @@ void Query_Statement::execute(Resource_Manager& rman)
     }
   
     set< pair< Uint31_Index, Uint31_Index > > range_req;
+    for (vector< Query_Constraint* >::iterator it = constraints.begin();
+        it != constraints.end() && answer_state < ranges_collected; ++it)
+    {
+      if ((*it)->get_ranges(rman, range_req))
+	answer_state = ranges_collected;
+    }
     
     if (answer_state < ranges_collected)
       range_req = get_ranges_by_id_from_db< Uint31_Index >
@@ -338,6 +379,10 @@ void Query_Statement::execute(Resource_Manager& rman)
   for (vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end(); ++it)
     (*it)->filter(rman, into);
+
+  clear_empty_indices(into.nodes);
+  clear_empty_indices(into.ways);
+  clear_empty_indices(into.relations);
   
   into.nodes.swap(rman.sets()[output].nodes);
   into.ways.swap(rman.sets()[output].ways);

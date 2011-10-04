@@ -20,7 +20,7 @@ class Area_Constraint : public Query_Constraint
   public:
     Area_Constraint(Area_Query_Statement& area_) : area(&area_) {}
     bool get_ranges
-        (Resource_Manager& rman, int type, set< pair< Uint32_Index, Uint32_Index > >& ranges);
+        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
     void filter(Resource_Manager& rman, Set& into);
     virtual ~Area_Constraint() {}
     
@@ -29,16 +29,11 @@ class Area_Constraint : public Query_Constraint
     set< Uint31_Index > area_blocks_req;
 };
 
-bool Area_Constraint::get_ranges(Resource_Manager& rman, int type,
-				       set< pair< Uint32_Index, Uint32_Index > >& ranges)
+bool Area_Constraint::get_ranges
+    (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
 {
-  if (type == Statement::NODE)
-  {
-    area->get_ranges(ranges, area_blocks_req, rman);
-    return true;
-  }
-  else
-    return false;
+  area->get_ranges(ranges, area_blocks_req, rman);
+  return true;
 }
 
 void Area_Constraint::filter(Resource_Manager& rman, Set& into)

@@ -19,8 +19,10 @@ class Query_Constraint
     virtual bool collect(Resource_Manager& rman, Set& into,
 			 int type, const vector< uint32 >& ids) { return false; }
     virtual bool get_ranges
-        (Resource_Manager& rman, int type,
-	 set< pair< Uint32_Index, Uint32_Index > >& ranges)
+        (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
+      { return false; }
+    virtual bool get_ranges
+        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
       { return false; }
     virtual void filter(Resource_Manager& rman, Set& into) = 0;
     virtual ~Query_Constraint() {}

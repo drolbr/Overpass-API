@@ -5,17 +5,44 @@
 #include "around.h"
 #include "bbox_query.h"
 #include "id_query.h"
+#include "item.h"
 #include "query.h"
 #include "print.h"
 
 using namespace std;
 
+template < class TStatement >
+class SProxy
+{
+  public:
+    SProxy() : stmt_(0) {}
+    
+    SProxy& operator()(const string& s)
+    {
+      attributes.push_back(s);
+      return *this;
+    }
+    
+    TStatement& stmt()
+    {
+      c_attributes.clear();
+      for (vector< string >::const_iterator it = attributes.begin();
+          it != attributes.end(); ++it)
+	c_attributes.push_back(it->c_str());
+      c_attributes.push_back(0);
+      stmt_.set_attributes(&c_attributes[0]);
+      return stmt_;
+    }
+    
+  private:
+    TStatement stmt_;
+    vector< string > attributes;
+    vector< const char* > c_attributes;
+};
+
 void perform_print(Resource_Manager& rman, string from = "_")
 {
-  Print_Statement stmt(0);
-  const char* attributes[] = { "order", "id", "from", from.c_str(), 0 };
-  stmt.set_attributes(attributes);
-  stmt.execute(rman);
+  SProxy< Print_Statement >()("order")("id")("from")(from).stmt().execute(rman);
 }
 
 void perform_query(string type, string key, string value, string db_dir)
@@ -25,18 +52,34 @@ void perform_query(string type, string key, string value, string db_dir)
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     Resource_Manager rman(transaction);
     {
-      Query_Statement stmt1(0);
-      const char* attributes[] = { "type", type.c_str(), 0 };
-      stmt1.set_attributes(attributes);
-      
-      Has_Kv_Statement stmt2(0);
-      const char* attributes_kv[] = { "k", key.c_str(), "v", value.c_str(), 0 };
-      stmt2.set_attributes(attributes_kv);
-      stmt1.add_statement(&stmt2, "");
-      
-      stmt1.execute(rman);
+      SProxy< Query_Statement > stmt1;
+      stmt1("type")(type);
+      SProxy< Has_Kv_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("k")(key)("v")(value).stmt(), "");
+      stmt1.stmt().execute(rman);
     }
     perform_print(rman);
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type")(type)("into")("a");
+      SProxy< Has_Kv_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("k")(key)("v")(value).stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type")(type)("into")("b");
+      SProxy< Item_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("set")("a").stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    if ((rman.sets()["_"].nodes != rman.sets()["b"].nodes) ||
+        (rman.sets()["_"].ways != rman.sets()["b"].ways) ||
+        (rman.sets()["_"].relations != rman.sets()["b"].relations))
+    {
+      cout<<"Sets \"_\" and \"b\" differ:\n";
+      perform_print(rman, "b");
+    }
   }
   catch (File_Error e)
   {
@@ -54,59 +97,60 @@ void perform_query
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     Resource_Manager rman(transaction);
     {
-      Query_Statement stmt1(0);
-      const char* attributes[] = { "type", type.c_str(), 0 };
-      stmt1.set_attributes(attributes);
-      
-      Has_Kv_Statement stmt2(0);
-      const char* attributes_kv1[] = { "k", key1.c_str(), "v", value1.c_str(), 0 };
-      stmt2.set_attributes(attributes_kv1);
-      stmt1.add_statement(&stmt2, "");
-      
-      Has_Kv_Statement stmt3(0);
-      const char* attributes_kv2[] = { "k", key2.c_str(), "v", value2.c_str(), 0 };
-      stmt3.set_attributes(attributes_kv2);
-      stmt1.add_statement(&stmt3, "");
-      
-      stmt1.execute(rman);
+      SProxy< Query_Statement > stmt1;
+      stmt1("type")(type);
+      SProxy< Has_Kv_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("k")(key1)("v")(value1).stmt(), "");
+      SProxy< Has_Kv_Statement > stmt3;
+      stmt1.stmt().add_statement(&stmt3("k")(key2)("v")(value2).stmt(), "");      
+      stmt1.stmt().execute(rman);
     }
     perform_print(rman);
-    if (type == "node")
-      return;
     {
-      Query_Statement stmt1(0);
-      const char* attributes[] = { "type", type.c_str(), "into", "a", 0 };
-      stmt1.set_attributes(attributes);
-      
-      Has_Kv_Statement stmt2(0);
-      const char* attributes_kv1[] = { "k", key1.c_str(), "v", value1.c_str(), 0 };
-      stmt2.set_attributes(attributes_kv1);
-      stmt1.add_statement(&stmt2, "");
-      
-      stmt1.execute(rman);
+      SProxy< Query_Statement > stmt1;
+      stmt1("type")(type)("into")("a");
+      SProxy< Has_Kv_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("k")(key1)("v")(value1).stmt(), "");
+      stmt1.stmt().execute(rman);
     }
     {
-      Query_Statement stmt1(0);
-      const char* attributes[] = { "type", type.c_str(), "into", "b", 0 };
-      stmt1.set_attributes(attributes);
-      
-      Item_Statement stmt2(0);
-      const char* attributes_kv1[] = { "set", "a", 0 };
-      stmt2.set_attributes(attributes_kv1);
-      stmt1.add_statement(&stmt2, "");
-      
-      Has_Kv_Statement stmt3(0);
-      const char* attributes_kv2[] = { "k", key2.c_str(), "v", value2.c_str(), 0 };
-      stmt3.set_attributes(attributes_kv2);
-      stmt1.add_statement(&stmt3, "");
-      
-      stmt1.execute(rman);
+      SProxy< Query_Statement > stmt1;
+      stmt1("type")(type)("into")("b");
+      SProxy< Item_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("set")("a").stmt(), "");
+      SProxy< Has_Kv_Statement > stmt3;
+      stmt1.stmt().add_statement(&stmt3("k")(key2)("v")(value2).stmt(), "");      
+      stmt1.stmt().execute(rman);
     }
-    if ((rman.sets()["_"].ways != rman.sets()["b"].ways) ||
+    if ((rman.sets()["_"].nodes != rman.sets()["b"].nodes) ||
+        (rman.sets()["_"].ways != rman.sets()["b"].ways) ||
         (rman.sets()["_"].relations != rman.sets()["b"].relations))
     {
       cout<<"Sets \"_\" and \"b\" differ:\n";
       perform_print(rman, "b");
+    }
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type")(type)("into")("c");
+      SProxy< Has_Kv_Statement > stmt3;
+      stmt1.stmt().add_statement(&stmt3("k")(key2)("v")(value2).stmt(), "");      
+      stmt1.stmt().execute(rman);
+    }
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type")(type)("into")("d");
+      SProxy< Item_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("set")("a").stmt(), "");
+      SProxy< Item_Statement > stmt3;
+      stmt1.stmt().add_statement(&stmt3("set")("c").stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    if ((rman.sets()["_"].nodes != rman.sets()["d"].nodes) ||
+        (rman.sets()["_"].ways != rman.sets()["d"].ways) ||
+        (rman.sets()["_"].relations != rman.sets()["d"].relations))
+    {
+      cout<<"Sets \"_\" and \"d\" differ:\n";
+      perform_print(rman, "d");
     }
   }
   catch (File_Error e)
@@ -125,28 +169,49 @@ void perform_query
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     Resource_Manager rman(transaction);
     {
-      Query_Statement stmt1(0);
-      const char* attributes[] = { "type", type.c_str(), 0 };
-      stmt1.set_attributes(attributes);
-      
-      Has_Kv_Statement stmt2(0);
-      const char* attributes_kv1[] = { "k", key1.c_str(), "v", value1.c_str(), 0 };
-      stmt2.set_attributes(attributes_kv1);
-      stmt1.add_statement(&stmt2, "");
-      
-      Has_Kv_Statement stmt3(0);
-      const char* attributes_kv2[] = { "k", key2.c_str(), "v", value2.c_str(), 0 };
-      stmt3.set_attributes(attributes_kv2);
-      stmt1.add_statement(&stmt3, "");
-      
-      Has_Kv_Statement stmt4(0);
-      const char* attributes_kv3[] = { "k", key3.c_str(), "v", value3.c_str(), 0 };
-      stmt4.set_attributes(attributes_kv3);
-      stmt1.add_statement(&stmt4, "");
-      
-      stmt1.execute(rman);
+      SProxy< Query_Statement > stmt1;
+      stmt1("type")(type);
+      SProxy< Has_Kv_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("k")(key1)("v")(value1).stmt(), "");
+      SProxy< Has_Kv_Statement > stmt3;
+      stmt1.stmt().add_statement(&stmt3("k")(key2)("v")(value2).stmt(), "");
+      SProxy< Has_Kv_Statement > stmt4;
+      stmt1.stmt().add_statement(&stmt4("k")(key3)("v")(value3).stmt(), "");
+      stmt1.stmt().execute(rman);
     }
     perform_print(rman);
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type")(type)("into")("a");
+      SProxy< Has_Kv_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("k")(key1)("v")(value1).stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type")(type)("into")("b");
+      SProxy< Has_Kv_Statement > stmt3;
+      stmt1.stmt().add_statement(&stmt3("k")(key2)("v")(value2).stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type")(type)("into")("c");
+      SProxy< Item_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("set")("a").stmt(), "");
+      SProxy< Item_Statement > stmt3;
+      stmt1.stmt().add_statement(&stmt3("set")("b").stmt(), "");
+      SProxy< Has_Kv_Statement > stmt4;
+      stmt1.stmt().add_statement(&stmt4("k")(key3)("v")(value3).stmt(), "");      
+      stmt1.stmt().execute(rman);
+    }
+    if ((rman.sets()["_"].nodes != rman.sets()["c"].nodes) ||
+        (rman.sets()["_"].ways != rman.sets()["c"].ways) ||
+        (rman.sets()["_"].relations != rman.sets()["c"].relations))
+    {
+      cout<<"Sets \"_\" and \"c\" differ:\n";
+      perform_print(rman, "c");
+    }
   }
   catch (File_Error e)
   {
@@ -165,38 +230,53 @@ void perform_query_with_around
     {
       ostringstream buf;
       buf<<(2*pattern_size*pattern_size + 1);
-      char* buf_str = new char[40];
-      strncpy(buf_str, buf.str().c_str(), 40);
-      
-      Id_Query_Statement* stmt1 = new Id_Query_Statement(0);
-      const char* attributes[] = { "type", type.c_str(), "ref", buf_str, 0 };
-      stmt1->set_attributes(attributes);
-      stmt1->execute(rman);
-      
-      delete[] buf_str;
+      SProxy< Id_Query_Statement >()("type")(type)("ref")(buf.str()).stmt().execute(rman);
     }
     {
-      Query_Statement stmt1(0);
-      const char* attributes[] = { "type", type.c_str(), 0 };
-      stmt1.set_attributes(attributes);
-      
-      Has_Kv_Statement stmt2(0);
-      const char* attributes_k[] = { "k", key1.c_str(), 0 };
-      const char* attributes_kv[] = { "k", key1.c_str(), "v", value1.c_str(), 0 };
+      SProxy< Query_Statement > stmt1;
+      stmt1("type")(type);
+      SProxy< Has_Kv_Statement > stmt2;
       if (value1 != "")
-        stmt2.set_attributes(attributes_kv);
+        stmt1.stmt().add_statement(&stmt2("k")(key1)("v")(value1).stmt(), "");
       else
-	stmt2.set_attributes(attributes_k);
-      stmt1.add_statement(&stmt2, "");
-      
-      Around_Statement stmt3(0);
-      const char* attributes_around[] = { "radius", "200.1", 0 };
-      stmt3.set_attributes(attributes_around);
-      stmt1.add_statement(&stmt3, "");
-      
-      stmt1.execute(rman);
+	stmt1.stmt().add_statement(&stmt2("k")(key1).stmt(), "");
+      SProxy< Around_Statement > stmt3;
+      stmt1.stmt().add_statement(&stmt3("radius")("200.1").stmt(), "");      
+      stmt1.stmt().execute(rman);
     }
     perform_print(rman);
+    {
+      ostringstream buf;
+      buf<<(2*pattern_size*pattern_size + 1);
+      SProxy< Id_Query_Statement >()("type")(type)("ref")(buf.str())("into")("a")
+          (buf.str()).stmt().execute(rman);
+    }
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type")(type)("into")("b");
+      SProxy< Has_Kv_Statement > stmt2;
+      if (value1 != "")
+        stmt1.stmt().add_statement(&stmt2("k")(key1)("v")(value1).stmt(), "");
+      else
+	stmt1.stmt().add_statement(&stmt2("k")(key1).stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type")(type)("into")("c");
+      SProxy< Item_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("set")("b").stmt(), "");
+      SProxy< Around_Statement > stmt3;
+      stmt1.stmt().add_statement(&stmt3("radius")("200.1")("from")("a").stmt(), "");      
+      stmt1.stmt().execute(rman);
+    }
+    if ((rman.sets()["_"].nodes != rman.sets()["c"].nodes) ||
+        (rman.sets()["_"].ways != rman.sets()["c"].ways) ||
+        (rman.sets()["_"].relations != rman.sets()["c"].relations))
+    {
+      cout<<"Sets \"_\" and \"c\" differ:\n";
+      perform_print(rman, "c");
+    }
   }
   catch (File_Error e)
   {
@@ -214,25 +294,38 @@ void perform_query_with_bbox
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     Resource_Manager rman(transaction);
     {
-      Query_Statement stmt1(0);
-      const char* attributes[] = { "type", type.c_str(), 0 };
-      stmt1.set_attributes(attributes);
-      
-      Has_Kv_Statement stmt2(0);
-      const char* attributes_kv[] = { "k", key1.c_str(), "v", value1.c_str(), 0 };
-      stmt2.set_attributes(attributes_kv);
-      stmt1.add_statement(&stmt2, "");
-      
-      Bbox_Query_Statement stmt3(0);
-      const char* attributes_bbox[] =
-          { "n", north.c_str(), "s", south.c_str(),
-	    "e", east.c_str(), "w", west.c_str(), 0 };
-      stmt3.set_attributes(attributes_bbox);
-      stmt1.add_statement(&stmt3, "");
-      
-      stmt1.execute(rman);
+      SProxy< Query_Statement > stmt1;
+      stmt1("type")(type);
+      SProxy< Has_Kv_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("k")(key1)("v")(value1).stmt(), "");
+      SProxy< Bbox_Query_Statement > stmt3;
+      stmt1.stmt().add_statement(&stmt3("n")(north)("s")(south)("e")(east)("w")(west).stmt(), "");
+      stmt1.stmt().execute(rman);
     }
     perform_print(rman);
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type")(type)("into")("a");
+      SProxy< Has_Kv_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("k")(key1)("v")(value1).stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type")(type)("into")("b");
+      SProxy< Item_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("set")("a").stmt(), "");
+      SProxy< Bbox_Query_Statement > stmt3;
+      stmt1.stmt().add_statement(&stmt3("n")(north)("s")(south)("e")(east)("w")(west).stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    if ((rman.sets()["_"].nodes != rman.sets()["b"].nodes) ||
+      (rman.sets()["_"].ways != rman.sets()["b"].ways) ||
+      (rman.sets()["_"].relations != rman.sets()["b"].relations))
+    {
+      cout<<"Sets \"_\" and \"b\" differ:\n";
+      perform_print(rman, "b");
+    }
   }
   catch (File_Error e)
   {
@@ -294,7 +387,7 @@ int main(int argc, char* args[])
     // Test three key-values intersected
     perform_query("node", "node_key_5", "node_value_5", "node_key_7", "node_value_0",
 		  "node_key_15", "node_value_15", args[3]);
-  
+		  
   // Test queries for ways.
   if ((test_to_execute == "") || (test_to_execute == "12"))
     // Test a key and value which appears only locally
@@ -345,10 +438,10 @@ int main(int argc, char* args[])
 		  "relation_key_5", "relation_value_5", args[3]);
 
   if ((test_to_execute == "") || (test_to_execute == "26"))
-    // Test a bbox combined with a local key-value pair
+    // Test an around combined with a local key-value pair
     perform_query_with_around("node", "node_key_11", "", args[3], pattern_size);
   if ((test_to_execute == "") || (test_to_execute == "27"))
-    // Test a bbox combined with a global key-value pair
+    // Test an around combined with a global key-value pair
     perform_query_with_around("node", "node_key_7", "node_value_1", args[3], pattern_size);
 		  
   cout<<"</osm>\n";

@@ -3,6 +3,7 @@
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
 #include "../frontend/console_output.h"
+#include "area_query.h"
 #include "bbox_query.h"
 #include "coord_query.h"
 #include "foreach.h"
