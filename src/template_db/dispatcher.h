@@ -183,6 +183,4 @@ class Dispatcher_Client
     string db_dir, shadow_name;
 };
 
-bool file_exists(const string& filename);
-
 #endif

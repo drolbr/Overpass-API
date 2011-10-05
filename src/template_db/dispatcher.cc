@@ -18,11 +18,6 @@
 
 using namespace std;
 
-bool file_exists(const string& filename)
-{
-  return (access(filename.c_str(), F_OK) == 0);
-}
-
 void copy_file(const string& source, const string& dest)
 {
   if (!file_exists(source))
@@ -383,7 +378,10 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       else if (command == WRITE_ROLLBACK)
 	write_rollback();
       else if (command == WRITE_COMMIT)
+      {
+	check_and_purge();
 	write_commit();
+      }
       else if (command == REQUEST_READ_AND_IDX)
       {
 	if (processes_reading.size() >= max_num_reading_processes)

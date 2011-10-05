@@ -79,6 +79,7 @@ private:
   uint32 update_counter;
   Transaction* transaction;
   bool external_transaction;
+  bool partial_possible;
   vector< pair< uint32, bool > > ids_to_modify;
   vector< Node > nodes_to_insert;
   static Node_Comparator_By_Id node_comparator_by_id;

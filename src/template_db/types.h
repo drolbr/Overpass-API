@@ -102,6 +102,11 @@ class Void_Pointer
     T* ptr;
 };
 
+inline bool file_exists(const string& filename)
+{
+  return (access(filename.c_str(), F_OK) == 0);
+}
+
 //-----------------------------------------------------------------------------
 
 inline Raw_File::Raw_File(string name_, int oflag, mode_t mode, string caller_id)

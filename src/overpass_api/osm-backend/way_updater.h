@@ -84,6 +84,7 @@ private:
   uint32 update_counter;
   Transaction* transaction;
   bool external_transaction;
+  bool partial_possible;
   vector< pair< uint32, bool > > ids_to_modify;
   vector< Way > ways_to_insert;
   static Pair_Comparator_By_Id pair_comparator_by_id;

@@ -17,13 +17,19 @@ using namespace std;
 
 Node_Updater::Node_Updater(Transaction& transaction_, bool meta_)
   : update_counter(0), transaction(&transaction_),
-    external_transaction(true), meta(meta_)
+    external_transaction(true), partial_possible(false), meta(meta_)
 {}
 
 Node_Updater::Node_Updater(string db_dir_, bool meta_)
   : update_counter(0), transaction(0),
-    external_transaction(false), db_dir(db_dir_), meta(meta_)
-{}
+    external_transaction(false), partial_possible(true), db_dir(db_dir_), meta(meta_)
+{
+  partial_possible = !file_exists
+      (db_dir + 
+       osm_base_settings().NODES->get_file_name_trunk() +
+       osm_base_settings().NODES->get_data_suffix() +
+       osm_base_settings().NODES->get_index_suffix());
+}
 
 void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
 {
@@ -60,7 +66,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
   if (!external_transaction)
     delete transaction;
   
-  if (!external_transaction && !partial && (update_counter > 0))
+  if (partial_possible && !partial && (update_counter > 0))
   {
     callback->partial_started();
 
@@ -91,7 +97,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
     update_counter = 0;
     callback->partial_finished();
   }
-  else if (!external_transaction && partial/* && !map_file_existed_before*/)
+  else if (partial_possible && partial)
   {
     string to(".0a");
     to[2] += update_counter % 16;
