@@ -249,7 +249,7 @@ void perform_query_with_around
       ostringstream buf;
       buf<<(2*pattern_size*pattern_size + 1);
       SProxy< Id_Query_Statement >()("type")(type)("ref")(buf.str())("into")("a")
-          (buf.str()).stmt().execute(rman);
+          .stmt().execute(rman);
     }
     {
       SProxy< Query_Statement > stmt1;
