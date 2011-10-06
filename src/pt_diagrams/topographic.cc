@@ -121,23 +121,38 @@ struct StopFeature
 
 struct NodeFeature
 {
-  NodeFeature(const double& lat_, const double& lon_, int shift_)
-  : lat(lat_), lon(lon_), shift(shift_) {}
+  NodeFeature(const double& lat_, const double& lon_)
+  : lat(lat_), lon(lon_) {}
   
   double lat;
   double lon;
-  int shift;
 };
+
+bool operator<(const NodeFeature& a, const NodeFeature& b)
+{
+  if (a.lat != b.lat)
+    return (a.lat < b.lat);
+  return (a.lon < b.lon);
+}
+
+bool operator==(const NodeFeature& a, const NodeFeature& b)
+{
+  return (a.lat == b.lat && a.lon == b.lon);
+}
 
 struct PolySegmentFeature
 {
   vector< NodeFeature > lat_lon;
-  string color;
+  int shift;
   
-  PolySegmentFeature(string color_) : color(color_) {}
+  PolySegmentFeature(int shift_) : shift(shift_) {}
 };
 
-typedef vector< PolySegmentFeature > RouteFeature;
+struct RouteFeature
+{
+  vector< PolySegmentFeature > polysegs;
+  string color;
+};
 
 struct Features
 {
@@ -305,6 +320,29 @@ double transform_lon(const double& lat, const double& lon, const double& pivot_l
   return (lon - pivot_lon)*cos(lat/180.0*acos(0));
 }
 
+pair< double, double > center_of_polygon(Way& way)
+{
+  if (way.nds.empty())
+    return make_pair(0.0, 0.0);
+  vector< Node* >::const_iterator it = way.nds.begin();
+  double max_lat = (*it)->lat;
+  double min_lat = (*it)->lat;
+  double max_lon = (*it)->lon;
+  double min_lon = (*it)->lon;
+  for (++it; it != way.nds.end(); ++it)
+  {
+    if ((*it)->lat > max_lat)
+      max_lat = (*it)->lat;
+    if ((*it)->lat < min_lat)
+      min_lat = (*it)->lat;
+    if ((*it)->lon > max_lon)
+      max_lon = (*it)->lon;
+    if ((*it)->lon < min_lon)
+      min_lon = (*it)->lon;
+  }
+  return make_pair((min_lat + max_lat)/2.0, (min_lon + max_lon)/2.0);
+}
+
 Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
 {
   Features features;
@@ -313,295 +351,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
       it != osm_data.nodes.end(); ++it)
     it->second->lon = transform_lon(it->second->lat, it->second->lon, pivot_lon);
   
-//   map< string, uint32 > name_to_node;
-//   
-//   for (map< uint32, Relation* >::const_iterator it(osm_data.relations.begin());
-//       it != osm_data.relations.end(); ++it)
-//   {
-//     string color(it->second->tags["color"]);
-//     if (color == "")
-//       color = default_color(it->second->tags["ref"]);
-//     for (vector< pair< OSMElement*, string > >::const_iterator
-//         it2(it->second->members.begin()); it2 != it->second->members.end(); ++it2)
-//     {
-//       Node* node(dynamic_cast< Node* >(it2->first));
-//       if (node)
-//       {
-// 	if ((node->tags["highway"] == "bus_stop") ||
-// 	    (node->tags["railway"] == "station") ||
-// 	    (node->tags["railway"] == "tram_stop"))
-// 	{
-// 	  pair< map< string, uint32 >::iterator, bool >
-// 	      itp(name_to_node.insert
-// 	          (make_pair(node->tags["name"], features.stops.size())));
-// 	  if (itp.second)
-// 	  {
-// 	    features.stops.push_back(StopFeature
-// 	      (node->tags["name"], color, node->lat, node->lon));
-// 	  }
-// 	  else
-// 	  {
-// 	    double avg_lat((node->lat + features.stops[itp.first->second].lat)/2);
-// 	    double avg_lon((node->lon + features.stops[itp.first->second].lon)/2);
-// 	    features.stops[itp.first->second].lat = avg_lat;
-// 	    features.stops[itp.first->second].lon = avg_lon;
-// 	  }
-// 	}
-//       }
-//     }
-//   }
-// 
-//   map< Way*, map< string, pair< int, bool > > > colors_per_way;
-//   for (map< uint32, Relation* >::const_iterator it(osm_data.relations.begin());
-//       it != osm_data.relations.end(); ++it)
-//   {
-//     RouteFeature route_feature;
-//     string color(it->second->tags["color"]);
-//     if (color == "")
-//       color = default_color(it->second->tags["ref"]);
-//     for (vector< pair< OSMElement*, string > >::const_iterator
-//         it2(it->second->members.begin()); it2 != it->second->members.end(); ++it2)
-//     {
-//       Way* way(dynamic_cast< Way* >(it2->first));
-//       if (way)
-//       {
-// 	int pos = colors_per_way[way].size();
-// 	if (colors_per_way[way].find(color) == colors_per_way[way].end())
-// 	  colors_per_way[way].insert(make_pair(color, make_pair(pos, it2->second != "backward")));
-//       }
-//     }
-//   }
-//   
-//   for (map< uint32, Relation* >::const_iterator it(osm_data.relations.begin());
-//       it != osm_data.relations.end(); ++it)
-//   {
-//     Node* last_node(NULL);
-//     RouteFeature route_feature;
-//     string color(it->second->tags["color"]);
-//     if (color == "")
-//       color = default_color(it->second->tags["ref"]);
-//     for (vector< pair< OSMElement*, string > >::const_iterator
-//         it2(it->second->members.begin()); it2 != it->second->members.end(); ++it2)
-//     {
-//       Way* way(dynamic_cast< Way* >(it2->first));
-//       if (way)
-//       {
-// 	PolySegmentFeature* poly_segment(NULL);
-// 	if (it2->second == "backward")
-// 	{
-// 	  if (way->nds.back() == last_node)
-// 	    poly_segment = &route_feature.back();
-// 	  else
-// 	  {
-// 	    route_feature.push_back(PolySegmentFeature(color));
-// 	    poly_segment = &route_feature.back();
-// 	    poly_segment->lat_lon.push_back
-// 	        (NodeFeature(way->nds.back()->lat, way->nds.back()->lon,
-// 			     (0/*colors_per_way[way][color].second ? -1 : 1*/)*
-// 			     ((int)colors_per_way[way].size() - 1 - 2*colors_per_way[way][color].first)));
-// 	  }
-// 	  vector< Node* >::const_reverse_iterator it3(way->nds.rbegin());
-// 	  if (it3 != way->nds.rend())
-// 	    ++it3;
-// 	  for (; it3 != way->nds.rend(); ++it3)
-// 	    poly_segment->lat_lon.push_back
-//                 (NodeFeature((*it3)->lat, (*it3)->lon,
-// 			     (/*colors_per_way[way][color].second ?*/ -1 /*: 1*/)*
-// 			     ((int)colors_per_way[way].size() - 1 - 2*colors_per_way[way][color].first)));
-// 	  last_node = way->nds.front();
-// 	}
-// 	else
-// 	{
-// 	  if (way->nds.front() == last_node)
-// 	    poly_segment = &route_feature.back();
-// 	  else
-// 	  {
-// 	    route_feature.push_back(PolySegmentFeature(color));
-// 	    poly_segment = &route_feature.back();
-// 	    poly_segment->lat_lon.push_back
-// 	        (NodeFeature(way->nds.front()->lat, way->nds.front()->lon,
-//  			     (0/*colors_per_way[way][color].second ? 1 : -1*/)*
-// 			     ((int)colors_per_way[way].size() - 1 - 2*colors_per_way[way][color].first)));
-// 	  }
-// 	  vector< Node* >::const_iterator it3(way->nds.begin());
-// 	  if (it3 != way->nds.end())
-// 	    ++it3;
-// 	  for (; it3 != way->nds.end(); ++it3)
-// 	    poly_segment->lat_lon.push_back
-// 	    (NodeFeature((*it3)->lat, (*it3)->lon,
-// /*			 (colors_per_way[way][color].second ? 1 : -1)**/
-// 			 ((int)colors_per_way[way].size() - 1 - 2*colors_per_way[way][color].first)));
-// 	  last_node = way->nds.back();
-// 	}
-//       }
-//     }
-//     features.routes.push_back(route_feature);
-//   }
-
-//   RouteFeature route_feature;
-//   for (map< uint32, Way* >::const_iterator it(osm_data.ways.begin());
-//       it != osm_data.ways.end(); ++it)
-//   {
-//     if (it->second->nds.size() < 2)
-//       continue;
-//     PolySegmentFeature poly_segment("#ff0000");    
-//     for (vector< Node* >::const_iterator it2 = it->second->nds.begin();
-//         it2 != it->second->nds.end(); ++it2)
-//       poly_segment.lat_lon.push_back(NodeFeature((*it2)->lat, (*it2)->lon, 0));
-//     route_feature.push_back(poly_segment);
-//   }
-//   features.routes.push_back(route_feature);
-
-// ----------------------------------------------------------------------------
-
-//   map< Node*, uint > node_count;
-//   for (map< uint32, Way* >::const_iterator it(osm_data.ways.begin());
-//       it != osm_data.ways.end(); ++it)
-//   {
-//     if (it->second->nds.size() < 2)
-//       continue;
-//     vector< Node* >::const_iterator it2 = it->second->nds.begin();
-//     ++node_count[*it2];
-//     vector< Node* >::const_iterator it2_end = it->second->nds.end();
-//     --it2_end;
-//     ++node_count[*it2_end];
-//     for (++it2; it2 != it2_end; ++it2)
-//       node_count[*it2] += 2;
-//   }
-// //   for (map< Node*, uint >::const_iterator it = node_count.begin(); it != node_count.end(); ++it)
-// //   {
-// //     if (it->second != 2)
-// //       features.stops.push_back(StopFeature("", "#000000", it->first->lat, it->first->lon));
-// //   }
-// 
-//   set< pair< double, double > > lat_lon;
-//   for (map< Node*, uint >::const_iterator it = node_count.begin(); it != node_count.end(); ++it)
-//   {
-//     if (it->second != 2)
-//       lat_lon.insert(make_pair(it->first->lat, it->first->lon));
-//   }
-//   while (true)
-//   {
-//     double min_dist = 40.0*1000*1000;
-//     pair< double, double > min_a, min_b;
-//     for (set< pair< double, double > >::const_iterator it1 = lat_lon.begin();
-//         it1 != lat_lon.end(); ++it1)
-//     {
-//       set< pair< double, double > >::const_iterator it2 = it1;
-//       ++it2;
-//       for (; it2 != lat_lon.end(); ++it2)
-//       {
-// 	if (great_circle_dist(it1->first, it1->second, it2->first, it2->second) < min_dist)
-// 	{
-// 	  min_dist = great_circle_dist(it1->first, it1->second, it2->first, it2->second);
-// 	  min_a = *it1;
-// 	  min_b = *it2;
-// 	}
-//       }
-//     }
-//     cerr<<'.';
-//     if (min_dist >= 50)
-//       break;
-//     lat_lon.erase(min_a);
-//     lat_lon.erase(min_b);
-//     lat_lon.insert(make_pair((min_a.first + min_b.first)/2.0, (min_a.second + min_b.second)/2.0));
-//   }
-//   cerr<<'\n';
-//   for (set< pair< double, double > >::const_iterator it = lat_lon.begin();
-//       it != lat_lon.end(); ++it)
-//   {
-//     features.stops.push_back(StopFeature("", "#000000", it->first, it->second));
-//   }
-// 
-//   map< Node*, set< pair< double, double > >::const_iterator > lat_lon_per_node;
-//   for (map< Node*, uint >::const_iterator it = node_count.begin(); it != node_count.end(); ++it)
-//   {
-//     if (it->second != 2)
-//       lat_lon_per_node.insert(make_pair(it->first, lat_lon.end()));
-//   }
-//   for (map< Node*, set< pair< double, double > >::const_iterator >::iterator
-//       it = lat_lon_per_node.begin(); it != lat_lon_per_node.end(); ++it)
-//   {
-//     double min_dist = 40.0*1000*1000;
-//     for (set< pair< double, double > >::const_iterator it2 = lat_lon.begin();
-//         it2 != lat_lon.end(); ++it2)
-//     {
-//       if (great_circle_dist(it->first->lat, it->first->lon, it2->first, it2->second) < min_dist)
-//       {
-// 	min_dist = great_circle_dist(it->first->lat, it->first->lon, it2->first, it2->second);
-// 	it->second = it2;
-//       }
-//     }
-//   }
-//     
-//   map< Way*, pair< pair< double, double >, pair< double, double > > > start_end;
-//   for (map< uint32, Way* >::const_iterator it(osm_data.ways.begin());
-//       it != osm_data.ways.end(); ++it)
-//   {
-//     if (it->second->nds.size() < 2)
-//       continue;
-//     vector< Node* >::const_iterator it2 = it->second->nds.begin();
-//     if (lat_lon_per_node.find(*it2) != lat_lon_per_node.end())
-//       start_end[it->second].first =
-//           make_pair(lat_lon_per_node[*it2]->first, lat_lon_per_node[*it2]->second);
-//     else
-//       start_end[it->second].first = make_pair((*it2)->lat, (*it2)->lon);
-//     vector< Node* >::const_iterator it2_end = it->second->nds.end();
-//     --it2_end;
-//     if (lat_lon_per_node.find(*it2_end) != lat_lon_per_node.end())
-//       start_end[it->second].second =
-//           make_pair(lat_lon_per_node[*it2_end]->first, lat_lon_per_node[*it2_end]->second);
-//     else
-//       start_end[it->second].second = make_pair((*it2_end)->lat, (*it2_end)->lon);
-//     if (start_end[it->second].first == start_end[it->second].second)
-//     {
-//       bool trivial = true;
-//       for (++it2; it2 != it2_end; ++it2)
-// 	trivial &= (great_circle_dist((*it2)->lat, (*it2)->lon,
-// 	    start_end[it->second].first.first, start_end[it->second].first.second) < 50.0);
-//       if (trivial)
-// 	start_end.erase(it->second);
-//     }
-//   }
-//   
-//   map< pair< pair< double, double >, pair< double, double > >, vector< Way* > > reverse_start_end;
-//   for (map< Way*, pair< pair< double, double >, pair< double, double > > >::const_iterator
-//       it = start_end.begin(); it != start_end.end(); ++it)
-//     reverse_start_end[it->second].push_back(it->first);
-//   
-// /*  map< Way*, vector< pair< double, double > > > joined_ways;
-//   for (map< pair< pair< double, double >, pair< double, double > >, vector< Way* > >::const_iterator
-//       it = reverse_start_end.begin(); it != reverse_start_end.end(); ++it)
-//   {
-//     for (vector< Way* >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-//     {
-//       ...
-//     }
-//   }*/
-//   
-//   RouteFeature route_feature;
-//   for (map< uint32, Way* >::const_iterator it(osm_data.ways.begin());
-//       it != osm_data.ways.end(); ++it)
-//   {
-//     if (start_end.find(it->second) == start_end.end())
-//       continue;
-//     PolySegmentFeature poly_segment("#ff0000");
-//     vector< Node* >::const_iterator it2 = it->second->nds.begin();
-//     poly_segment.lat_lon.push_back(
-//         NodeFeature(start_end[it->second].first.first, start_end[it->second].first.second, 0));
-//     vector< Node* >::const_iterator it2_end = it->second->nds.end();
-//     --it2_end;
-//     for (++it2; it2 != it2_end; ++it2)
-//       poly_segment.lat_lon.push_back(NodeFeature((*it2)->lat, (*it2)->lon, 0));
-//     poly_segment.lat_lon.push_back(
-//         NodeFeature(start_end[it->second].second.first, start_end[it->second].second.second, 0));
-//     route_feature.push_back(poly_segment);
-//   }
-//   features.routes.push_back(route_feature);
-
-// ----------------------------------------------------------------------------
-
-const double deg_threshold = threshold/40000000*360.0;
+  const double deg_threshold = threshold/40000000*360.0;
   
   // Debug output
 //   for (map< uint32, Way* >::const_iterator it = osm_data.ways.begin();
@@ -770,7 +520,6 @@ const double deg_threshold = threshold/40000000*360.0;
     features.stops.push_back(StopFeature(buf.str(), "#777700", it->second.lat, it->second.lon));
   }*/
 
-  // TODO
   map< Placed_Segment, set< Way* > > segments;
   for (map< uint32, Way* >::const_iterator it(osm_data.ways.begin());
       it != osm_data.ways.end(); ++it)
@@ -976,7 +725,7 @@ const double deg_threshold = threshold/40000000*360.0;
   }
 
   // Debug output
-  RouteFeature route_feature;
+  map< string, RouteFeature > routes_per_color;
   for (map< Placed_Way, set< string > >::const_iterator it = colors_per_placed_way.begin();
       it != colors_per_placed_way.end(); ++it)
   {
@@ -984,16 +733,44 @@ const double deg_threshold = threshold/40000000*360.0;
     for (set< string >::const_iterator it2 = it->second.begin();
         it2 != it->second.end(); ++it2)
     {
-      PolySegmentFeature poly_segment(*it2);
+      PolySegmentFeature poly_segment(i);
       for (vector< Placed_Node >::const_iterator it3 = it->first.nds.begin();
           it3 != it->first.nds.end(); ++it3)
-        poly_segment.lat_lon.push_back(NodeFeature(it3->lat, it3->lon, i));
-      route_feature.push_back(poly_segment);
+        poly_segment.lat_lon.push_back(NodeFeature(it3->lat, it3->lon));
+      routes_per_color[*it2].polysegs.push_back(poly_segment);
+      routes_per_color[*it2].color = *it2;
       i += 2;
     }
   }
-  features.routes.push_back(route_feature);
-
+  
+  for (map< string, RouteFeature >::const_iterator it = routes_per_color.begin();
+      it != routes_per_color.end(); ++it)
+    features.routes.push_back(it->second);
+  
+  // --------------------------------------------------------------------------
+  
+  for (map< uint32, Relation* >::const_iterator it(osm_data.relations.begin());
+      it != osm_data.relations.end(); ++it)
+  {
+    string color(it->second->tags["color"]);
+    if (color == "")
+      color = default_color(it->second->tags["ref"]);
+    for (vector< pair< OSMElement*, string > >::const_iterator
+        it2(it->second->members.begin()); it2 != it->second->members.end(); ++it2)
+    {
+      Node* node(dynamic_cast< Node* >(it2->first));
+      if (node)
+	features.stops.push_back(StopFeature(node->tags["name"], color, node->lat, node->lon));
+      Way* way(dynamic_cast< Way* >(it2->first));
+      if (way != 0 && it2->second == "platform")
+      {
+	pair< double, double > position = center_of_polygon(*way);
+	features.stops.push_back(StopFeature(way->tags["name"], color,
+					     position.first, position.second));
+      }
+    }
+  }
+  
   return features;
 }
 
@@ -1135,6 +912,70 @@ string shifted(double before_x, double before_y, double x, double y,
   return out.str();
 }
 
+void place_default_point(const Vec_2_Dim& p0, const Vec_2_Dim& p1, int shift,
+			 double line_dist, ostream& out)
+{
+  Vec_2_Dim v = p1 + (-1.0)*p0;
+  Vec_2_Dim v_norm = (1.0/v.length())*v;
+  Vec_2_Dim target = p0 + shift*line_dist*turn_left(v_norm);
+  if (2*abs(shift) < v.length())
+    target = target + abs(shift)*line_dist*v_norm;
+  else
+    target = target + 0.5*v;
+  out<<target.x<<' '<<target.y;
+}
+
+string shifted(double before_x, double before_y, double x, double y,
+	       double after_x, double after_y, int shift_before, int shift_after)
+{
+  const double LINE_DIST = 2.0;
+  
+  if (shift_before*shift_after >= 0)
+  {
+    Vec_2_Dim in_vec(x - before_x, y - before_y);
+    in_vec = (1.0/in_vec.length())*in_vec;
+    Vec_2_Dim left_vec(turn_left(in_vec));
+    Vec_2_Dim out_vec(after_x - x, after_y - y);
+    out_vec = (1.0/out_vec.length())*out_vec;
+    
+    if ((out_vec.x*left_vec.x + out_vec.y*left_vec.y)*shift_before < 0.0)
+    {
+      Vec_2_Dim draw_vec(turn_left(in_vec + out_vec));
+      draw_vec = (1.0/draw_vec.length())*draw_vec;
+      Vec_2_Dim left_out_vec(turn_left(out_vec));
+      
+      ostringstream out;
+      out<<x + LINE_DIST*left_vec.x*shift_before<<' '
+         <<y + LINE_DIST*left_vec.y*shift_before<<", ";
+      out<<x + LINE_DIST*draw_vec.x*0.5*(shift_before + shift_after)<<' '
+         <<y + LINE_DIST*draw_vec.y*0.5*(shift_before + shift_after)<<", ";
+      out<<x + LINE_DIST*left_out_vec.x*shift_after<<' '
+         <<y + LINE_DIST*left_out_vec.y*shift_after;
+      return out.str();
+    }
+    else
+    {
+      ostringstream out;
+      place_default_point(Vec_2_Dim(x, y), Vec_2_Dim(before_x, before_y),
+			  -shift_before, LINE_DIST, out);
+      out<<", ";
+      place_default_point(Vec_2_Dim(x, y), Vec_2_Dim(after_x, after_y),
+			  shift_after, LINE_DIST, out);
+      return out.str();
+    }
+  }
+  else
+  {
+    ostringstream out;
+    place_default_point(Vec_2_Dim(x, y), Vec_2_Dim(before_x, before_y),
+			-shift_before, LINE_DIST, out);
+    out<<", ";
+    place_default_point(Vec_2_Dim(x, y), Vec_2_Dim(after_x, after_y),
+			shift_after, LINE_DIST, out);
+    return out.str();
+  }
+}
+
 void sketch_features
     (const OSMData& osm_data,
      const Features& features,
@@ -1189,29 +1030,93 @@ void sketch_features
   for (vector< RouteFeature >::const_iterator it(features.routes.begin());
       it != features.routes.end(); ++it)
   {
-    for (vector< PolySegmentFeature >::const_iterator it2(it->begin());
-        it2 != it->end(); ++it2)
+    map< NodeFeature, vector< const PolySegmentFeature* > > polys_per_node;
+    for (vector< PolySegmentFeature >::const_iterator it2(it->polysegs.begin());
+        it2 != it->polysegs.end(); ++it2)
     {
-      cout<<"<polyline fill=\"none\" stroke=\""<<it2->color
+      if (it2->lat_lon.size() < 2)
+	continue;
+      polys_per_node[it2->lat_lon.front()].push_back(&*it2);
+      polys_per_node[it2->lat_lon.back()].push_back(&*it2);
+    }
+    
+    for (vector< PolySegmentFeature >::const_iterator it2(it->polysegs.begin());
+        it2 != it->polysegs.end(); ++it2)
+    {
+      if (it2->lat_lon.size() < 2)
+	continue;
+      
+      cout<<"<polyline fill=\"none\" stroke=\""<<it->color
           <<"\" stroke-width=\"3px\" points=\"";
+	  
+      // Prepare coordinates to enable forward looking.
       vector< double > x_s;
       vector< double > y_s;
       vector< int > shifts;
+      bool display_front = true;
+      bool display_back = true;
+      if (polys_per_node[it2->lat_lon.front()].size() == 2)
+      {
+	display_front = false;
+	const PolySegmentFeature* other_polyseg = polys_per_node[it2->lat_lon.front()][0];
+	if (other_polyseg == &*it2)
+	  other_polyseg = polys_per_node[it2->lat_lon.front()][1];
+	double lat, lon;
+	if (other_polyseg->lat_lon.front() == it2->lat_lon.front())
+	{
+	  lat = other_polyseg->lat_lon[1].lat;
+	  lon = other_polyseg->lat_lon[1].lon;
+	  shifts.push_back(-other_polyseg->shift);
+	}
+	else
+	{
+	  lat = other_polyseg->lat_lon[other_polyseg->lat_lon.size()-2].lat;
+	  lon = other_polyseg->lat_lon[other_polyseg->lat_lon.size()-2].lon;
+	  shifts.push_back(other_polyseg->shift);
+	}
+	x_s.push_back(coord_transform.hpos(lat, lon));
+	y_s.push_back(coord_transform.vpos(lat));
+      }
       for (vector< NodeFeature >::const_iterator it3(it2->lat_lon.begin());
           it3 != it2->lat_lon.end(); ++it3)
       {
 	x_s.push_back(coord_transform.hpos(it3->lat, it3->lon));
 	y_s.push_back(coord_transform.vpos(it3->lat));
-	shifts.push_back(it3->shift);
+	shifts.push_back(it2->shift);
+      }
+      if (polys_per_node[it2->lat_lon.back()].size() == 2)
+      {
+	display_back = false;
+	const PolySegmentFeature* other_polyseg = polys_per_node[it2->lat_lon.back()][0];
+	if (other_polyseg == &*it2)
+	  other_polyseg = polys_per_node[it2->lat_lon.back()][1];
+	double lat, lon;
+	if (other_polyseg->lat_lon.front() == it2->lat_lon.back())
+	{
+	  lat = other_polyseg->lat_lon[1].lat;
+	  lon = other_polyseg->lat_lon[1].lon;
+	  shifts.back() = other_polyseg->shift;
+	}
+	else
+	{
+	  lat = other_polyseg->lat_lon[other_polyseg->lat_lon.size()-2].lat;
+	  lon = other_polyseg->lat_lon[other_polyseg->lat_lon.size()-2].lon;
+	  shifts.back() = -other_polyseg->shift;
+	}
+	x_s.push_back(coord_transform.hpos(lat, lon));
+	y_s.push_back(coord_transform.vpos(lat));
       }
       
       if (x_s.size() >= 2)
       {
 	unsigned int line_size = x_s.size();
-	cout<<x_s[0]<<' '<<y_s[0];	
+	if (display_front)
+	  cout<<x_s[0]<<' '<<y_s[0];
 	for (unsigned int i = 1; i < line_size-1; ++i)
-	  cout<<", "<<shifted(x_s[i-1], y_s[i-1], x_s[i], y_s[i], x_s[i+1], y_s[i+1], shifts[i]);	
-	cout<<", "<<x_s[line_size-1]<<' '<<y_s[line_size-1];	
+	  cout<<", "<<shifted(x_s[i-1], y_s[i-1], x_s[i], y_s[i], x_s[i+1], y_s[i+1],
+			      shifts[i-1], shifts[i]);
+	if (display_back)
+	  cout<<", "<<x_s[line_size-1]<<' '<<y_s[line_size-1];	
       }
       cout<<"\"/>\n";
     }
@@ -1236,7 +1141,8 @@ void restrict_to_bbox(Features& features, double north, double south, double wes
   for (vector< RouteFeature >::iterator it = features.routes.begin();
       it != features.routes.end(); ++it)
   {
-    for (vector< PolySegmentFeature >::iterator it2 = it->begin(); it2 != it->end(); ++it2)
+    for (vector< PolySegmentFeature >::iterator it2 = it->polysegs.begin();
+        it2 != it->polysegs.end(); ++it2)
     {
       vector< NodeFeature > lat_lon;
       for (vector< NodeFeature >::const_iterator it3 = it2->lat_lon.begin();
