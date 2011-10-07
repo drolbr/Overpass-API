@@ -115,6 +115,7 @@ class Dispatcher
     string dispatcher_share_name;
     int dispatcher_shm_fd;
     uint max_num_reading_processes;
+    uint purge_timeout;
     volatile uint8* dispatcher_shm_ptr;
     
     void copy_shadows_to_mains();

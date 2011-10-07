@@ -75,13 +75,20 @@ Dispatcher::Dispatcher
       map_footprints(controlled_files_.size()),
       shadow_name(shadow_name_), db_dir(db_dir_),
       dispatcher_share_name(dispatcher_share_name_),
-      max_num_reading_processes(max_num_reading_processes_)
+      max_num_reading_processes(max_num_reading_processes_),
+      purge_timeout(180)
 {
   // get the absolute pathname of the current directory
   if (db_dir.substr(0, 1) != "/")
     db_dir = getcwd() + db_dir_;
   if (shadow_name.substr(0, 1) != "/")
     shadow_name = getcwd() + shadow_name_;
+
+  // set down the purge timeout if the /proc filesystem is available
+  ostringstream file_name;
+  file_name<<"/proc/"<<getpid()<<"/stat";
+  if (file_exists(file_name.str()))
+    purge_timeout = 5;
   
   // open dispatcher_share
   dispatcher_shm_fd = shm_open
@@ -517,7 +524,7 @@ void Dispatcher::check_and_purge()
       it != collected_pids.end(); ++it)
   {
     map< pid_t, uint32 >::const_iterator alive_it = processes_reading.find(*it);
-    if ((alive_it != processes_reading.end()) && (alive_it->second + 180 > current_time))
+    if ((alive_it != processes_reading.end()) && (alive_it->second + purge_timeout > current_time))
       continue;
     ostringstream file_name("");
     file_name<<"/proc/"<<*it<<"/stat";
