@@ -60,9 +60,19 @@ Dispatcher_Stub::Dispatcher_Stub
   {
     dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
     Logger logger(dispatcher_client->get_db_dir());
-    logger.annotated_log("request_read_and_idx() start");
-    dispatcher_client->request_read_and_idx();
-    logger.annotated_log("request_read_and_idx() end");
+    try
+    {
+      logger.annotated_log("request_read_and_idx() start");
+      dispatcher_client->request_read_and_idx();
+      logger.annotated_log("request_read_and_idx() end");
+    }
+    catch (const File_Error& e)
+    {
+      ostringstream out;
+      out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
+      logger.annotated_log(out.str());
+      throw;
+    }
     transaction = new Nonsynced_Transaction
         (false, false, dispatcher_client->get_db_dir(), "");
   
@@ -84,10 +94,20 @@ Dispatcher_Stub::Dispatcher_Stub
       ifstream version((dispatcher_client->get_db_dir() + "osm_base_version").c_str());
       getline(version, timestamp);
     }
-    logger.annotated_log("read_idx_finished() start");
-    dispatcher_client->read_idx_finished();
-    logger.annotated_log("read_idx_finished() end");
-    logger.annotated_log('\n' + xml_raw);
+    try
+    {
+      logger.annotated_log("read_idx_finished() start");
+      dispatcher_client->read_idx_finished();
+      logger.annotated_log("read_idx_finished() end");
+      logger.annotated_log('\n' + xml_raw);
+    }
+    catch (const File_Error& e)
+    {
+      ostringstream out;
+      out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
+      logger.annotated_log(out.str());
+      throw;
+    }
     
     if (area_level > 0)
     {
@@ -96,10 +116,20 @@ Dispatcher_Stub::Dispatcher_Stub
       
       if (area_level == 1)
       {
-        logger.annotated_log("request_read_and_idx() area start");
-        area_dispatcher_client->request_read_and_idx();
-        logger.annotated_log("request_read_and_idx() area end");
-        area_transaction = new Nonsynced_Transaction
+	try
+	{
+          logger.annotated_log("request_read_and_idx() area start");
+          area_dispatcher_client->request_read_and_idx();
+          logger.annotated_log("request_read_and_idx() area end");
+        }
+	catch (const File_Error& e)
+	{
+	  ostringstream out;
+	  out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
+	  logger.annotated_log(out.str());
+	  throw;
+	}
+	area_transaction = new Nonsynced_Transaction
             (false, false, area_dispatcher_client->get_db_dir(), "");
 	{
 	  ifstream version((area_dispatcher_client->get_db_dir() +   
@@ -109,9 +139,19 @@ Dispatcher_Stub::Dispatcher_Stub
       }
       else if (area_level == 2)
       {
-	logger.annotated_log("write_start() area start");
-	area_dispatcher_client->write_start();
-	logger.annotated_log("write_start() area end");
+	try
+	{
+	  logger.annotated_log("write_start() area start");
+	  area_dispatcher_client->write_start();
+	  logger.annotated_log("write_start() area end");
+	}
+	catch (const File_Error& e)
+	{
+	  ostringstream out;
+	  out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
+	  logger.annotated_log(out.str());
+	  throw;
+	}
 	area_transaction = new Nonsynced_Transaction
 	    (true, true, area_dispatcher_client->get_db_dir(), "");
 	{
@@ -129,9 +169,19 @@ Dispatcher_Stub::Dispatcher_Stub
 
       if (area_level == 1)
       {
-        logger.annotated_log("read_idx_finished() area start");
-        area_dispatcher_client->read_idx_finished();
-        logger.annotated_log("read_idx_finished() area end");
+	try
+	{
+          logger.annotated_log("read_idx_finished() area start");
+          area_dispatcher_client->read_idx_finished();
+          logger.annotated_log("read_idx_finished() area end");
+	}
+	catch (const File_Error& e)
+	{
+	  ostringstream out;
+	  out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
+	  logger.annotated_log(out.str());
+	  throw;
+	}
       }
 
       rman = new Resource_Manager(*transaction, area_level == 2 ? error_output : 0,

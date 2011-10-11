@@ -105,7 +105,7 @@ Osm_Base_Settings::Osm_Base_Settings()
       ("relation_tags_global", 2*1024*1024, 0)),
       
   shared_name(basic_settings().shared_name_base + "_osm_base"),
-  max_num_processes(5)
+  max_num_processes(20)
 {}
 
 const Osm_Base_Settings& osm_base_settings()
