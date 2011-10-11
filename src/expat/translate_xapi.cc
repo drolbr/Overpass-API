@@ -194,6 +194,7 @@ void process_ways(string input, bool is_star = false)
       {
 	cout<<"<recurse type=\"node-way\" into=\"ways\"/>\n"
 	      "<union>\n"
+	      "  <item/>\n"
 	      "  <query type=\"way\">\n"
 	      "    <item set=\"ways\"/>\n";
         print_meta(analizer, "    ");
