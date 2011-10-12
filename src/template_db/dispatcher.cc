@@ -348,6 +348,8 @@ void Dispatcher::standby_loop(uint64 milliseconds)
   {
     if (*(uint32*)dispatcher_shm_ptr == 0)
     {
+      int dispatcher_shm_meta_fd = shm_open
+          ((dispatcher_share_name + ".lock").c_str(), O_RDONLY, S_666);
       ++counter;
       //sleep for a tenth of a second
       struct timeval timeout_;
@@ -355,6 +357,12 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       timeout_.tv_usec = 100*1000;
       select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
 
+      if ((dispatcher_shm_meta_fd >= 0) && (*(uint32*)dispatcher_shm_ptr == 0))
+      {
+	// Something ugly has happened. It is better to remove the lock to avoid a deadlock.
+	close(dispatcher_shm_meta_fd);
+	shm_unlink((dispatcher_share_name + ".lock").c_str());
+      }
       continue;
     }
     
