@@ -364,6 +364,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       uint32 client_pid = *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
       // Set command state to zero.
       *(uint32*)dispatcher_shm_ptr = 0;
+      shm_unlink((dispatcher_share_name + ".lock").c_str());
       if (command == TERMINATE)
       {
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) =
@@ -569,6 +570,19 @@ void Dispatcher_Client::write_start()
   pid_t pid = getpid();
   while (true)
   {
+    // Obtain lock. Will be released by the dispatcher.
+    int dispatcher_shm_fd = shm_open
+        ((dispatcher_share_name + ".lock").c_str(), O_RDWR|O_CREAT|O_TRUNC|O_EXCL, S_666);
+    if (dispatcher_shm_fd < 0)
+    {
+      // Lock is already used by another process. Sleep for a tenth of a second.
+      struct timeval timeout_;
+      timeout_.tv_sec = 0;
+      timeout_.tv_usec = 100*1000;
+      select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      continue;
+    }
+    
     *(uint32*)dispatcher_shm_ptr = Dispatcher::WRITE_START;
     *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
     
@@ -601,6 +615,19 @@ void Dispatcher_Client::write_rollback()
   pid_t pid = getpid();
   while (true)
   {
+    // Obtain lock. Will be released by the dispatcher.
+    int dispatcher_shm_fd = shm_open
+        ((dispatcher_share_name + ".lock").c_str(), O_RDWR|O_CREAT|O_TRUNC|O_EXCL, S_666);
+    if (dispatcher_shm_fd < 0)
+    {
+      // Lock is already used by another process. Sleep for a tenth of a second.
+      struct timeval timeout_;
+      timeout_.tv_sec = 0;
+      timeout_.tv_usec = 100*1000;
+      select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      continue;
+    }
+    
     *(uint32*)dispatcher_shm_ptr = Dispatcher::WRITE_ROLLBACK;
     *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
     
@@ -635,6 +662,19 @@ void Dispatcher_Client::write_commit()
   pid_t pid = getpid();
   while (true)
   {
+    // Obtain lock. Will be released by the dispatcher.
+    int dispatcher_shm_fd = shm_open
+        ((dispatcher_share_name + ".lock").c_str(), O_RDWR|O_CREAT|O_TRUNC|O_EXCL, S_666);
+    if (dispatcher_shm_fd < 0)
+    {
+      // Lock is already used by another process. Sleep for a tenth of a second.
+      struct timeval timeout_;
+      timeout_.tv_sec = 0;
+      timeout_.tv_usec = 100*1000;
+      select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      continue;
+    }
+    
     *(uint32*)dispatcher_shm_ptr = Dispatcher::WRITE_COMMIT;
     *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
     
@@ -671,6 +711,19 @@ void Dispatcher_Client::request_read_and_idx()
   uint counter = 0;
   while (++counter <= 300)
   {
+    // Obtain lock. Will be released by the dispatcher.
+    int dispatcher_shm_fd = shm_open
+        ((dispatcher_share_name + ".lock").c_str(), O_RDWR|O_CREAT|O_TRUNC|O_EXCL, S_666);
+    if (dispatcher_shm_fd < 0)
+    {
+      // Lock is already used by another process. Sleep for a tenth of a second.
+      struct timeval timeout_;
+      timeout_.tv_sec = 0;
+      timeout_.tv_usec = 10*1000;
+      select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      continue;
+    }
+    
     *(uint32*)dispatcher_shm_ptr = Dispatcher::REQUEST_READ_AND_IDX;
     *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
     
@@ -696,6 +749,19 @@ void Dispatcher_Client::read_idx_finished()
   uint counter = 0;
   while (++counter <= 300)
   {
+    // Obtain lock. Will be released by the dispatcher.
+    int dispatcher_shm_fd = shm_open
+        ((dispatcher_share_name + ".lock").c_str(), O_RDWR|O_CREAT|O_TRUNC|O_EXCL, S_666);
+    if (dispatcher_shm_fd < 0)
+    {
+      // Lock is already used by another process. Sleep for a tenth of a second.
+      struct timeval timeout_;
+      timeout_.tv_sec = 0;
+      timeout_.tv_usec = 100*1000;
+      select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      continue;
+    }
+    
     *(uint32*)dispatcher_shm_ptr = Dispatcher::READ_IDX_FINISHED;
     *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
     
@@ -721,6 +787,19 @@ void Dispatcher_Client::read_finished()
   uint counter = 0;
   while (++counter <= 300)
   {
+    // Obtain lock. Will be released by the dispatcher.
+    int dispatcher_shm_fd = shm_open
+        ((dispatcher_share_name + ".lock").c_str(), O_RDWR|O_CREAT|O_TRUNC|O_EXCL, S_666);
+    if (dispatcher_shm_fd < 0)
+    {
+      // Lock is already used by another process. Sleep for a tenth of a second.
+      struct timeval timeout_;
+      timeout_.tv_sec = 0;
+      timeout_.tv_usec = 100*1000;
+      select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      continue;
+    }
+    
     *(uint32*)dispatcher_shm_ptr = Dispatcher::READ_FINISHED;
     *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
     
@@ -744,6 +823,19 @@ void Dispatcher_Client::purge(uint32 pid)
   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
   while (true)
   {
+    // Obtain lock. Will be released by the dispatcher.
+    int dispatcher_shm_fd = shm_open
+        ((dispatcher_share_name + ".lock").c_str(), O_RDWR|O_CREAT|O_TRUNC|O_EXCL, S_666);
+    if (dispatcher_shm_fd < 0)
+    {
+      // Lock is already used by another process. Sleep for a tenth of a second.
+      struct timeval timeout_;
+      timeout_.tv_sec = 0;
+      timeout_.tv_usec = 100*1000;
+      select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      continue;
+    }
+    
     *(uint32*)dispatcher_shm_ptr = Dispatcher::READ_FINISHED;
     *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
     
@@ -776,6 +868,19 @@ void Dispatcher_Client::terminate()
   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
   while (true)
   {
+    // Obtain lock. Will be released by the dispatcher.
+    int dispatcher_shm_fd = shm_open
+        ((dispatcher_share_name + ".lock").c_str(), O_RDWR|O_CREAT|O_TRUNC|O_EXCL, S_666);
+    if (dispatcher_shm_fd < 0)
+    {
+      // Lock is already used by another process. Sleep for a tenth of a second.
+      struct timeval timeout_;
+      timeout_.tv_sec = 0;
+      timeout_.tv_usec = 100*1000;
+      select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      continue;
+    }
+    
     *(uint32*)dispatcher_shm_ptr = Dispatcher::TERMINATE;
     *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
     
