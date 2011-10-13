@@ -64,7 +64,7 @@ void Resource_Manager::health_check(const Statement& stmt)
   if (max_allowed_time > 0)
     elapsed_time = time(NULL) - start_time;
   
-  if (elapsed_time >= last_report_time + 5)
+  if (elapsed_time >= last_ping_time + 5)
   {
     if (watchdog)
       watchdog->ping();
