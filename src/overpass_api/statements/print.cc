@@ -294,7 +294,7 @@ void print_item(uint32 ll_upper, const Relation_Skeleton& skel, uint32 mode,
       for (uint i(0); i < skel.members.size(); ++i)
 	cout<<"    <member type=\""<<MEMBER_TYPE[skel.members[i].type]
 	    <<"\" ref=\""<<skel.members[i].ref
-	    <<"\" role=\""<<roles[skel.members[i].role]<<"\"/>\n";
+	    <<"\" role=\""<<escape_xml(roles[skel.members[i].role])<<"\"/>\n";
     }
     if ((tags != 0) && (!tags->empty()))
     {
