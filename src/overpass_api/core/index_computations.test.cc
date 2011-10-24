@@ -458,15 +458,143 @@ int main(int argc, char* args[])
       cout<<'\n';
     }
     cout<<'\n';
-    for (int32 lon = 0x90000000; lon > (int32)0x80000000; lon += 0x10000000)
+    for (uint32 lon = 0; (uint32)lon < (uint32)0x80000000; lon += 0x10000000)
     {
-      vector< uint32 > result = calc_parents(vector< uint32 >(1, ll_upper(0, lon) ^ 0x40000000));
+      cout<<hex<<lon<<' ';
+      vector< uint32 > result = calc_parents(vector< uint32 >
+          (1, ll_upper(0, (int32)lon) ^ 0x40000000));
+      for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
+	cout<<hex<<*it<<' ';
+      cout<<'\n';
+    }
+    for (uint32 lon = 0x80000000; (uint32)lon != (uint32)0; lon += 0x10000000)
+    {
+      cout<<hex<<lon<<' ';
+      vector< uint32 > result = calc_parents(vector< uint32 >
+      (1, ll_upper(0, (int32)lon) ^ 0x40000000));
       for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
 	cout<<hex<<*it<<' ';
       cout<<'\n';
     }
     cout<<'\n';
   }    
-
+  
+  if ((test_to_execute == "7") || (test_to_execute == ""))
+  {
+    cout<<"\nTest calc_parents(ranges):\n";
+    
+    for (uint32 lat = 0; lat <= 0x100000; lat += 0x10000)
+    {
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair(ll_upper(lat, 0) ^ 0x40000000, (ll_upper(lat, 0) ^ 0x40000000) + 1));
+      set< pair< Uint31_Index, Uint31_Index > > result = calc_parents(input);
+      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+          it != result.end(); ++it)
+	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+      cout<<'\n';
+    }
+    cout<<'\n';
+    for (uint32 lat = 0; lat <= 0x1000000; lat += 0x100000)
+    {
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair(ll_upper(lat, 0) ^ 0x40000000, (ll_upper(lat, 0) ^ 0x40000000) + 1));
+      set< pair< Uint31_Index, Uint31_Index > > result = calc_parents(input);
+      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+          it != result.end(); ++it)
+	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+      cout<<'\n';
+    }
+    cout<<'\n';
+    for (uint32 lat = 0; lat <= 0x10000000; lat += 0x1000000)
+    {
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair(ll_upper(lat, 0) ^ 0x40000000, (ll_upper(lat, 0) ^ 0x40000000) + 1));
+      set< pair< Uint31_Index, Uint31_Index > > result = calc_parents(input);
+      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+          it != result.end(); ++it)
+	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+      cout<<'\n';
+    }
+    cout<<'\n';
+    for (uint32 lat = 0; lat < 0x80000000; lat += 0x10000000)
+    {
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair(ll_upper(lat, 0) ^ 0x40000000, (ll_upper(lat, 0) ^ 0x40000000) + 1));
+      set< pair< Uint31_Index, Uint31_Index > > result = calc_parents(input);
+      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+          it != result.end(); ++it)
+	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+      cout<<'\n';
+    }
+    cout<<'\n';
+    
+    for (int32 lon = 0; lon <= 0x100000; lon += 0x10000)
+    {
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair(ll_upper(0, lon) ^ 0x40000000, (ll_upper(0, lon) ^ 0x40000000) + 1));
+      set< pair< Uint31_Index, Uint31_Index > > result = calc_parents(input);
+      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+          it != result.end(); ++it)
+	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+      cout<<'\n';
+    }
+    cout<<'\n';
+    for (int32 lon = 0; lon <= 0x1000000; lon += 0x100000)
+    {
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair(ll_upper(0, lon) ^ 0x40000000, (ll_upper(0, lon) ^ 0x40000000) + 1));
+      set< pair< Uint31_Index, Uint31_Index > > result = calc_parents(input);
+      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+          it != result.end(); ++it)
+	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+      cout<<'\n';
+    }
+    cout<<'\n';
+    for (int32 lon = 0; lon <= 0x10000000; lon += 0x1000000)
+    {
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair(ll_upper(0, lon) ^ 0x40000000, (ll_upper(0, lon) ^ 0x40000000) + 1));
+      set< pair< Uint31_Index, Uint31_Index > > result = calc_parents(input);
+      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+          it != result.end(); ++it)
+	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+      cout<<'\n';
+    }
+    cout<<'\n';
+    for (uint32 lon = 0; (uint32)lon < (uint32)0x80000000; lon += 0x10000000)
+    {
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0, lon) ^ 0x40000000, (ll_upper(0, (int32)lon) ^ 0x40000000) + 1));
+      set< pair< Uint31_Index, Uint31_Index > > result = calc_parents(input);
+      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+          it != result.end(); ++it)
+	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+      cout<<'\n';
+    }
+    for (uint32 lon = 0x80000000; (uint32)lon != (uint32)0; lon += 0x10000000)
+    {
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0, lon) ^ 0x40000000, (ll_upper(0, (int32)lon) ^ 0x40000000) + 1));
+      set< pair< Uint31_Index, Uint31_Index > > result = calc_parents(input);
+      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+          it != result.end(); ++it)
+	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+      cout<<'\n';
+    }
+    cout<<'\n';
+    
+    {
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      for (
+      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+          it != result.end(); ++it)
+	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+      cout<<'\n';
+    }
+    cout<<'\n';
+  }    
+  
   return 0;
 }
