@@ -6,6 +6,90 @@
 
 using namespace std;
 
+void cout_ranges(const set< pair< Uint31_Index, Uint31_Index > >& result)
+{
+  cout<<"0x__80: ";
+  for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+      it != result.end(); ++it)
+  {
+    if ((it->first.val() & 0x80000000) && (it->first.val() & 0xff) == 0x80)
+      cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+  }
+  cout<<'\n';
+  
+  cout<<"0x__40: ";
+  for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+      it != result.end(); ++it)
+  {
+    if ((it->first.val() & 0x80000000) && (it->first.val() & 0x7f) == 0x40)
+      cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+  }
+  cout<<'\n';
+  
+  cout<<"0x__20: ";
+  for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+      it != result.end(); ++it)
+  {
+    if ((it->first.val() & 0x80000000) && (it->first.val() & 0x3f) == 0x20)
+      cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+  }
+  cout<<'\n';
+  
+  cout<<"0x__10: ";
+  for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+      it != result.end(); ++it)
+  {
+    if ((it->first.val() & 0x80000000) && (it->first.val() & 0x1f) == 0x10)
+      cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+  }
+  cout<<'\n';
+  
+  cout<<"0x___8: ";
+  for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+      it != result.end(); ++it)
+  {
+    if ((it->first.val() & 0x80000000) && (it->first.val() & 0xf) == 0x8)
+      cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+  }
+  cout<<'\n';
+  
+  cout<<"0x___4: ";
+  for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+      it != result.end(); ++it)
+  {
+    if ((it->first.val() & 0x80000000) && (it->first.val() & 0x7) == 0x4)
+      cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+  }
+  cout<<'\n';
+  
+  cout<<"0x___2: ";
+  for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+      it != result.end(); ++it)
+  {
+    if ((it->first.val() & 0x80000000) && (it->first.val() & 0x3) == 0x2)
+      cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+  }
+  cout<<'\n';
+  
+  cout<<"0x___1: ";
+  for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+      it != result.end(); ++it)
+  {
+    if ((it->first.val() & 0x80000000) && (it->first.val() & 0x1))
+      cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+  }
+  cout<<'\n';
+  
+  cout<<"plain: ";
+  for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
+      it != result.end(); ++it)
+  {
+    if (!(it->first.val() & 0x80000000))
+      cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
+  }
+  cout<<"\n\n";
+}
+
 int main(int argc, char* args[])
 {
   if (argc < 2)
@@ -483,115 +567,223 @@ int main(int argc, char* args[])
   {
     cout<<"\nTest calc_parents(ranges):\n";
     
-    for (uint32 lat = 0; lat <= 0x100000; lat += 0x10000)
+    for (uint32 lat = 0x40000000; lat <= 0x40100000; lat += 0x10000)
     {
       set< pair< Uint32_Index, Uint32_Index > > input;
       input.insert(make_pair(ll_upper(lat, 0) ^ 0x40000000, (ll_upper(lat, 0) ^ 0x40000000) + 1));
-      set< pair< Uint31_Index, Uint31_Index > > result = calc_parents(input);
-      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-          it != result.end(); ++it)
-	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
-      cout<<'\n';
+      cout_ranges(calc_parents(input));
     }
     cout<<'\n';
-    for (uint32 lat = 0; lat <= 0x1000000; lat += 0x100000)
+    for (uint32 lat = 0x40000000; lat <= 0x41000000; lat += 0x100000)
     {
       set< pair< Uint32_Index, Uint32_Index > > input;
       input.insert(make_pair(ll_upper(lat, 0) ^ 0x40000000, (ll_upper(lat, 0) ^ 0x40000000) + 1));
-      set< pair< Uint31_Index, Uint31_Index > > result = calc_parents(input);
-      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-          it != result.end(); ++it)
-	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
-      cout<<'\n';
+      cout_ranges(calc_parents(input));
     }
     cout<<'\n';
-    for (uint32 lat = 0; lat <= 0x10000000; lat += 0x1000000)
+    for (uint32 lat = 0x40000000; lat <= 0x50000000; lat += 0x1000000)
     {
       set< pair< Uint32_Index, Uint32_Index > > input;
       input.insert(make_pair(ll_upper(lat, 0) ^ 0x40000000, (ll_upper(lat, 0) ^ 0x40000000) + 1));
-      set< pair< Uint31_Index, Uint31_Index > > result = calc_parents(input);
-      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-          it != result.end(); ++it)
-	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
-      cout<<'\n';
+      cout_ranges(calc_parents(input));
     }
     cout<<'\n';
-    for (uint32 lat = 0; lat < 0x80000000; lat += 0x10000000)
+    for (uint32 lat = 0x40000000; lat < 0x80000000; lat += 0x10000000)
     {
       set< pair< Uint32_Index, Uint32_Index > > input;
       input.insert(make_pair(ll_upper(lat, 0) ^ 0x40000000, (ll_upper(lat, 0) ^ 0x40000000) + 1));
-      set< pair< Uint31_Index, Uint31_Index > > result = calc_parents(input);
-      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-          it != result.end(); ++it)
-	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
-      cout<<'\n';
+      cout_ranges(calc_parents(input));
     }
     cout<<'\n';
     
     for (int32 lon = 0; lon <= 0x100000; lon += 0x10000)
     {
       set< pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(make_pair(ll_upper(0, lon) ^ 0x40000000, (ll_upper(0, lon) ^ 0x40000000) + 1));
-      set< pair< Uint31_Index, Uint31_Index > > result = calc_parents(input);
-      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-          it != result.end(); ++it)
-	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
-      cout<<'\n';
+      input.insert(make_pair(ll_upper(0x40000000, lon) ^ 0x40000000,
+			     (ll_upper(0x40000000, lon) ^ 0x40000000) + 1));
+      cout_ranges(calc_parents(input));
     }
     cout<<'\n';
     for (int32 lon = 0; lon <= 0x1000000; lon += 0x100000)
     {
       set< pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(make_pair(ll_upper(0, lon) ^ 0x40000000, (ll_upper(0, lon) ^ 0x40000000) + 1));
-      set< pair< Uint31_Index, Uint31_Index > > result = calc_parents(input);
-      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-          it != result.end(); ++it)
-	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
-      cout<<'\n';
+      input.insert(make_pair(ll_upper(0x40000000, lon) ^ 0x40000000,
+			     (ll_upper(0x40000000, lon) ^ 0x40000000) + 1));
+      cout_ranges(calc_parents(input));
     }
     cout<<'\n';
     for (int32 lon = 0; lon <= 0x10000000; lon += 0x1000000)
     {
       set< pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(make_pair(ll_upper(0, lon) ^ 0x40000000, (ll_upper(0, lon) ^ 0x40000000) + 1));
-      set< pair< Uint31_Index, Uint31_Index > > result = calc_parents(input);
-      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-          it != result.end(); ++it)
-	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
-      cout<<'\n';
+      input.insert(make_pair(ll_upper(0x40000000, lon) ^ 0x40000000,
+			     (ll_upper(0x40000000, lon) ^ 0x40000000) + 1));
+      cout_ranges(calc_parents(input));
     }
     cout<<'\n';
     for (uint32 lon = 0; (uint32)lon < (uint32)0x80000000; lon += 0x10000000)
     {
       set< pair< Uint32_Index, Uint32_Index > > input;
       input.insert(make_pair
-          (ll_upper(0, lon) ^ 0x40000000, (ll_upper(0, (int32)lon) ^ 0x40000000) + 1));
-      set< pair< Uint31_Index, Uint31_Index > > result = calc_parents(input);
-      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-          it != result.end(); ++it)
-	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
-      cout<<'\n';
+          (ll_upper(0x40000000, lon) ^ 0x40000000,
+	   (ll_upper(0x40000000, (int32)lon) ^ 0x40000000) + 1));
+      cout_ranges(calc_parents(input));
     }
     for (uint32 lon = 0x80000000; (uint32)lon != (uint32)0; lon += 0x10000000)
     {
       set< pair< Uint32_Index, Uint32_Index > > input;
       input.insert(make_pair
-          (ll_upper(0, lon) ^ 0x40000000, (ll_upper(0, (int32)lon) ^ 0x40000000) + 1));
-      set< pair< Uint31_Index, Uint31_Index > > result = calc_parents(input);
-      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-          it != result.end(); ++it)
-	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
-      cout<<'\n';
+          (ll_upper(0x40000000, lon) ^ 0x40000000,
+	   (ll_upper(0x40000000, (int32)lon) ^ 0x40000000) + 1));
+      cout_ranges(calc_parents(input));
+    }
+    cout<<'\n';    
+    {
+      cout<<"Size 1\n";
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0x40010000, 0) ^ 0x40000000, (ll_upper(0x40010000, 0) ^ 0x40000000) + 1));      
+      cout_ranges(calc_parents(input));
     }
     cout<<'\n';
-    
     {
+      cout<<"Size 2\n";
       set< pair< Uint32_Index, Uint32_Index > > input;
-      for (
-      for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-          it != result.end(); ++it)
-	cout<<hex<<it->first.val()<<' '<<it->second.val()<<' ';
-      cout<<'\n';
+      input.insert(make_pair
+          (ll_upper(0x40020000, 0) ^ 0x40000000, (ll_upper(0x40030000, 0x10000) ^ 0x40000000) + 1));      
+      cout_ranges(calc_parents(input));
+    }
+    cout<<'\n';
+    {
+      cout<<"Size 3\n";
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0x40040000, 0) ^ 0x40000000, (ll_upper(0x40070000, 0x30000) ^ 0x40000000) + 1));      
+      cout_ranges(calc_parents(input));
+    }
+    cout<<'\n';
+    {
+      cout<<"Size 4\n";
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0x40080000, 0) ^ 0x40000000, (ll_upper(0x400f0000, 0x70000) ^ 0x40000000) + 1));      
+      cout_ranges(calc_parents(input));
+    }
+    cout<<'\n';
+    {
+      cout<<"Size 5\n";
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0x40100000, 0) ^ 0x40000000, (ll_upper(0x401f0000, 0xf0000) ^ 0x40000000) + 1));      
+      cout_ranges(calc_parents(input));
+    }
+    cout<<'\n';
+    {
+      cout<<"Size 6\n";
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0x40200000, 0) ^ 0x40000000, (ll_upper(0x403f0000, 0x1f0000) ^ 0x40000000) + 1));      
+      cout_ranges(calc_parents(input));
+    }
+    cout<<'\n';
+    {
+      cout<<"Size 7\n";
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0x40400000, 0) ^ 0x40000000, (ll_upper(0x407f0000, 0x3f0000) ^ 0x40000000) + 1));      
+      cout_ranges(calc_parents(input));
+    }
+    cout<<'\n';
+    {
+      cout<<"Size 8\n";
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0x40800000, 0) ^ 0x40000000, (ll_upper(0x40ff0000, 0x7f0000) ^ 0x40000000) + 1));      
+      cout_ranges(calc_parents(input));
+    }
+    cout<<'\n';
+    {
+      cout<<"Size 9\n";
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0x41000000, 0) ^ 0x40000000, (ll_upper(0x41ff0000, 0xff0000) ^ 0x40000000) + 1));      
+      cout_ranges(calc_parents(input));
+    }
+    cout<<'\n';
+    {
+      cout<<"Size 10\n";
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0x42000000, 0) ^ 0x40000000, (ll_upper(0x43ff0000, 0x1ff0000) ^ 0x40000000) + 1));      
+      cout_ranges(calc_parents(input));
+    }
+    cout<<'\n';
+    {
+      cout<<"Size 11\n";
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0x44000000, 0) ^ 0x40000000, (ll_upper(0x47ff0000, 0x3ff0000) ^ 0x40000000) + 1));      
+      cout_ranges(calc_parents(input));
+    }
+    cout<<'\n';
+    {
+      cout<<"Size 12\n";
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0x48000000, 0) ^ 0x40000000, (ll_upper(0x4fff0000, 0x7ff0000) ^ 0x40000000) + 1));      
+      cout_ranges(calc_parents(input));
+    }
+    cout<<'\n';
+    {
+      cout<<"Size 13\n";
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0x50000000, 0) ^ 0x40000000, (ll_upper(0x5fff0000, 0xfff0000) ^ 0x40000000) + 1));      
+      cout_ranges(calc_parents(input));
+    }
+    cout<<'\n';
+    {
+      cout<<"Two Size 1\n";
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0x3fff0000, 0x7fff0000) ^ 0x40000000,
+	   (ll_upper(0x40000000, 0) ^ 0x40000000) + 1));      
+      cout_ranges(calc_parents(input));
+    }
+    cout<<'\n';
+    {
+      cout<<"Size 1 + Size 2\n";
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0x3fff0000, 0x7fff0000) ^ 0x40000000,
+	   (ll_upper(0x40010000, 0x10000) ^ 0x40000000) + 1));      
+      cout_ranges(calc_parents(input));
+    }
+    cout<<'\n';
+    {
+      cout<<"Size 1 + Size 2 + Size 1\n";
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0x3fff0000, 0x7fff0000) ^ 0x40000000,
+	   (ll_upper(0x40000000, 0x20000) ^ 0x40000000) + 1));      
+      cout_ranges(calc_parents(input));
+    }
+    cout<<'\n';
+    {
+      cout<<"Size 3 + Size 2 + Size 1\n";
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0x3ffc0000, 0x7ffc0000) ^ 0x40000000,
+	   (ll_upper(0x40000000, 0x20000) ^ 0x40000000) + 1));      
+      cout_ranges(calc_parents(input));
+    }
+    cout<<'\n';
+    {
+      cout<<"Size 4 + Size 2 + Size 1\n";
+      set< pair< Uint32_Index, Uint32_Index > > input;
+      input.insert(make_pair
+          (ll_upper(0x3ff80000, 0x7ff80000) ^ 0x40000000,
+	   (ll_upper(0x40000000, 0x20000) ^ 0x40000000) + 1));      
+      cout_ranges(calc_parents(input));
     }
     cout<<'\n';
   }    

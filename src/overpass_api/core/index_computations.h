@@ -563,118 +563,130 @@ inline vector< uint32 > calc_parents(const vector< uint32 >& node_idxs)
 
 inline pair< Uint31_Index, Uint31_Index > make_interval(uint32 idx)
 {
-  return make_pair(Uint31_Index(idx), Uint31_Index(idx + 1)); 
+  return make_pair(Uint31_Index(idx), Uint31_Index((idx + 1) & 0x7fffffff)); 
+}
+
+inline void blur_index(uint32 distance, uint32 bitmask, uint32 lower_idx, uint32 upper_idx,
+		       vector< pair< Uint31_Index, Uint31_Index > >& result)
+{
+  uint32 source_bitmask = 0x10000 - distance;
+  uint32 min_lat = upper_ilat(lower_idx) & source_bitmask;
+  uint32 min_lon = upper_ilon(lower_idx) & source_bitmask;
+  uint32 max_lat = upper_ilat(upper_idx) & source_bitmask;
+  uint32 max_lon = upper_ilon(upper_idx) & source_bitmask;
+  for (uint32 lat = min_lat - distance; lat <= max_lat; lat += distance)
+    result.push_back(make_interval(ll_upper(lat<<16, (min_lon - distance)<<16) | bitmask));
+  for (uint32 lon = min_lon; lon <= max_lon; lon += distance)
+    result.push_back(make_interval(ll_upper((min_lat - distance)<<16, lon<<16) | bitmask));
+  result.push_back(make_interval(ll_upper(max_lat<<16, max_lon<<16) | bitmask));
+}
+
+inline void add_decomp_range(const pair< Uint32_Index, Uint32_Index >& range,
+			     vector< pair< Uint32_Index, Uint32_Index > >& node_decomp)
+{
+  uint32 lower = range.first.val();
+  while (lower < range.second.val())
+  {
+    uint32 upper = 0;
+    if ((lower & 0x3) != 0 || lower + 4 > range.second.val())
+      upper =  lower + 1;
+    else if ((lower & 0xf) != 0 || lower + 0x10 > range.second.val())
+      upper =  lower + 4;
+    else if ((lower & 0x3f) != 0 || lower + 0x40 > range.second.val())
+      upper =  lower + 0x10;
+    else if ((lower & 0xff) != 0 || lower + 0x100 > range.second.val())
+      upper =  lower + 0x40;
+    else if ((lower & 0x3ff) != 0 || lower + 0x400 > range.second.val())
+      upper =  lower + 0x100;
+    else if ((lower & 0xfff) != 0 || lower + 0x1000 > range.second.val())
+      upper =  lower + 0x400;
+    else if ((lower & 0x3fff) != 0 || lower + 0x4000 > range.second.val())
+      upper =  lower + 0x1000;
+    else if ((lower & 0xffff) != 0 || lower + 0x10000 > range.second.val())
+      upper =  lower + 0x4000;
+    else if ((lower & 0x3ffff) != 0 || lower + 0x40000 > range.second.val())
+      upper =  lower + 0x10000;
+    else if ((lower & 0xfffff) != 0 || lower + 0x100000 > range.second.val())
+      upper =  lower + 0x40000;
+    else if ((lower & 0x3fffff) != 0 || lower + 0x400000 > range.second.val())
+      upper =  lower + 0x100000;
+    else if ((lower & 0xffffff) != 0 || lower + 0x1000000 > range.second.val())
+      upper =  lower + 0x400000;
+    else if ((lower & 0x3ffffff) != 0 || lower + 0x4000000 > range.second.val())
+      upper =  lower + 0x1000000;
+    else if ((lower & 0xfffffff) != 0 || lower + 0x10000000 > range.second.val())
+      upper =  lower + 0x4000000;
+    else if ((lower & 0x3fffffff) != 0 || lower + 0x40000000 > range.second.val())
+      upper =  lower + 0x10000000;
+    else
+      upper =  lower + 0x40000000;
+    node_decomp.push_back(make_pair(lower, upper));
+    lower = upper;
+  }
 }
 
 inline set< pair< Uint31_Index, Uint31_Index > > calc_parents
     (const set< pair< Uint32_Index, Uint32_Index > >& node_idxs)
 {
+  vector< pair< Uint32_Index, Uint32_Index > > node_decomp;
+  for (set< pair< Uint32_Index, Uint32_Index > >::const_iterator
+      it = node_idxs.begin(); it != node_idxs.end(); ++it)
+    add_decomp_range(*it, node_decomp);
+  
   vector< pair< Uint31_Index, Uint31_Index > > result;
   result.push_back(make_pair(0x80000080, 0x80000081));
   
-  for (set< pair< Uint32_Index, Uint32_Index > >::const_iterator
-      it = node_idxs.begin(); it != node_idxs.end(); ++it)
+  for (vector< pair< Uint32_Index, Uint32_Index > >::const_iterator
+      it = node_decomp.begin(); it != node_decomp.end(); ++it)
   {
     result.push_back(make_pair(it->first.val(), it->second.val()));
+    
+    uint32 lower_idx = it->first.val() & 0x7ffffffc;
+    uint32 upper_idx = (it->second.val() - 1) & 0x7ffffffc;
+    blur_index(2, 0x80000001, lower_idx, upper_idx, result);
 
-    uint32 lat = upper_ilat(it->first.val() & 0x2aaaaaa8) & 0xfffe;
-    uint32 lon = upper_ilon(it->first.val() & 0x55555554) & 0xfffe;
-    uint32 max_lat = upper_ilat(it->second.val() & 0x2aaaaaa8) & 0xfffe;
-    uint32 max_lon = upper_ilon(it->second.val() & 0x55555554) & 0xfffe;
-    result.push_back(make_pair(ll_upper((lat - 2)<<16, (lon - 2)<<16) | 0x80000001,
-			       (ll_upper(max_lat<<16, max_lon<<16) | 0x80000001) + 1));
-  }
-
-  for (set< pair< Uint32_Index, Uint32_Index > >::const_iterator
-      it = node_idxs.begin(); it != node_idxs.end(); ++it)
-  {
-    uint32 lower_idx = it->first.val() & 0x7fffffc0;
-    uint32 upper_idx = it->second.val() & 0x7fffffc0;
-    for (uint32 idx = lower_idx; idx <= upper_idx; ++idx)
-    {
-      uint32 lat = upper_ilat(idx);
-      uint32 lon = upper_ilon(idx);
-      result.push_back(make_interval(ll_upper((lat - 8)<<16, (lon - 8)<<16) | 0x80000002));
-      result.push_back(make_interval(ll_upper(lat<<16, (lon - 8)<<16) | 0x80000002));
-      result.push_back(make_interval(ll_upper((lat - 8)<<16, lon<<16) | 0x80000002));
-      result.push_back(make_interval(ll_upper(lat<<16, lon<<16) | 0x80000002));
-    }
-
+    lower_idx = it->first.val() & 0x7fffffc0;
+    upper_idx = (it->second.val() - 1) & 0x7fffffc0;
+    blur_index(8, 0x80000002, lower_idx, upper_idx, result);
+    
     lower_idx = it->first.val() & 0x7ffffc00;
-    upper_idx = it->second.val() & 0x7ffffc00;
-    for (uint32 idx = lower_idx; idx <= upper_idx; ++idx)
-    {
-      uint32 lat = upper_ilat(idx);
-      uint32 lon = upper_ilon(idx);
-      result.push_back(make_interval(ll_upper((lat - 0x20)<<16, (lon - 0x20)<<16) | 0x80000004));
-      result.push_back(make_interval(ll_upper(lat<<16, (lon - 0x20)<<16) | 0x80000004));
-      result.push_back(make_interval(ll_upper((lat - 0x20)<<16, lon<<16) | 0x80000004));
-      result.push_back(make_interval(ll_upper(lat<<16, lon<<16) | 0x80000004));
-    }
-
+    upper_idx = (it->second.val() - 1) & 0x7ffffc00;
+    blur_index(0x20, 0x80000004, lower_idx, upper_idx, result);
+    
     lower_idx = it->first.val() & 0x7fffc000;
-    upper_idx = it->second.val() & 0x7fffc000;
-    for (uint32 idx = lower_idx; idx <= upper_idx; ++idx)
-    {
-      uint32 lat = upper_ilat(idx);
-      uint32 lon = upper_ilon(idx);
-      result.push_back(make_interval(ll_upper((lat - 0x80)<<16, (lon - 0x80)<<16) | 0x80000008));
-      result.push_back(make_interval(ll_upper(lat<<16, (lon - 0x80)<<16) | 0x80000008));
-      result.push_back(make_interval(ll_upper((lat - 0x80)<<16, lon<<16) | 0x80000008));
-      result.push_back(make_interval(ll_upper(lat<<16, lon<<16) | 0x80000008));
-    }
-
+    upper_idx = (it->second.val() - 1) & 0x7fffc000;
+    blur_index(0x80, 0x80000008, lower_idx, upper_idx, result);
+    
     lower_idx = it->first.val() & 0x7ffc0000;
-    upper_idx = it->second.val() & 0x7ffc0000;
-    for (uint32 idx = lower_idx; idx <= upper_idx; ++idx)
-    {
-      uint32 lat = upper_ilat(idx);
-      uint32 lon = upper_ilon(idx);
-      result.push_back(make_interval(ll_upper((lat - 0x200)<<16, (lon - 0x200)<<16) | 0x80000010));
-      result.push_back(make_interval(ll_upper(lat<<16, (lon - 0x200)<<16) | 0x80000010));
-      result.push_back(make_interval(ll_upper((lat - 0x200)<<16, lon<<16) | 0x80000010));
-      result.push_back(make_interval(ll_upper(lat<<16, lon<<16) | 0x80000010));
-    }
-
+    upper_idx = (it->second.val() - 1) & 0x7ffc0000;
+    blur_index(0x200, 0x80000010, lower_idx, upper_idx, result);
+    
     lower_idx = it->first.val() & 0x7fc00000;
-    upper_idx = it->second.val() & 0x7fc00000;
-    for (uint32 idx = lower_idx; idx <= upper_idx; ++idx)
-    {
-      uint32 lat = upper_ilat(idx);
-      uint32 lon = upper_ilon(idx);
-      result.push_back(make_interval(ll_upper((lat - 0x800)<<16, (lon - 0x800)<<16) | 0x80000020));
-      result.push_back(make_interval(ll_upper(lat<<16, (lon - 0x800)<<16) | 0x80000020));
-      result.push_back(make_interval(ll_upper((lat - 0x800)<<16, lon<<16) | 0x80000020));
-      result.push_back(make_interval(ll_upper(lat<<16, lon<<16) | 0x80000020));
-    }
-
+    upper_idx = (it->second.val() - 1) & 0x7fc00000;
+    blur_index(0x800, 0x80000020, lower_idx, upper_idx, result);
+    
     lower_idx = it->first.val() & 0x7c000000;
-    upper_idx = it->second.val() & 0x7c000000;
-    for (uint32 idx = lower_idx; idx <= upper_idx; ++idx)
-    {
-      uint32 lat = upper_ilat(idx);
-      uint32 lon = upper_ilon(idx);
-      result.push_back(make_interval(ll_upper((lat - 0x2000)<<16, (lon - 0x2000)<<16) | 0x80000040));
-      result.push_back(make_interval(ll_upper(lat<<16, (lon - 0x2000)<<16) | 0x80000040));
-      result.push_back(make_interval(ll_upper((lat - 0x2000)<<16, lon<<16) | 0x80000040));
-      result.push_back(make_interval(ll_upper(lat<<16, lon<<16) | 0x80000040));
-    }
+    upper_idx = (it->second.val() - 1) & 0x7c000000;
+    blur_index(0x2000, 0x80000040, lower_idx, upper_idx, result);
   }
 
   sort(result.begin(), result.end());
   
   set< pair< Uint31_Index, Uint31_Index > > result_set;
   Uint31_Index last_first = result[0].first;
+  Uint31_Index last_second = result[0].second;
   for (vector< pair< Uint31_Index, Uint31_Index > >::size_type i = 1;
       i < result.size(); ++i)
   {
-    if (result[i-1].second < result[i].first)
+    if (last_second < result[i].first)
     {
-      result_set.insert(make_pair(last_first, result[i-1].second));
+      result_set.insert(make_pair(last_first, last_second));
       last_first = result[i].first;
     }
+    if (last_second < result[i].second)
+      last_second = result[i].second;
   }
-  result_set.insert(make_pair(last_first, result[result.size()-1].second));
+  result_set.insert(make_pair(last_first, last_second));
     
   return result_set;
 }
