@@ -637,6 +637,64 @@ struct Accept_Query_25 : public Accept_All_Tags
     uint pattern_size;
 };
 
+struct Accept_Query_28 : public Accept_All_Tags
+{
+  Accept_Query_28(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const
+  {
+    if (id % 5 != 0)
+      return false;
+    if (id / (2*(pattern_size/2+1)*(pattern_size/2-1) + pattern_size/2) != 1)
+      return false;
+    uint remainder = id % (2*(pattern_size/2+1)*(pattern_size/2-1) + pattern_size/2);
+    if (remainder <= pattern_size/2*(pattern_size/4-1))
+      return false;
+    if (remainder <= pattern_size/2*(pattern_size/2-1))
+      return true;
+    if (remainder <= (pattern_size/2-1)*(pattern_size/4-1) + pattern_size/2*(pattern_size/2-1))
+      return false;
+    if (remainder <= 2*pattern_size/2*(pattern_size/2-1))
+      return true;
+    if (remainder > pattern_size/2*(pattern_size/2-1)*2 + pattern_size/2*2-2)
+      return true;
+    return false;
+  }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_29 : public Accept_All_Tags
+{
+  Accept_Query_29(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const
+  {
+    if (id % 5 != 0)
+      return false;
+    if (id / (2*(pattern_size/2+1)*(pattern_size/2-1) + pattern_size/2) != 1)
+      return false;
+    uint remainder = id % (2*(pattern_size/2+1)*(pattern_size/2-1) + pattern_size/2);
+    if (remainder <= 2*pattern_size/2*(pattern_size/2-1) + pattern_size/4-1)
+      return false;
+    if (remainder <= 2*pattern_size/2*(pattern_size/2-1) + pattern_size/2-1)
+      return true;
+    if (remainder <= 2*pattern_size/2*(pattern_size/2-1) + pattern_size/2-1 + pattern_size/4-1)
+      return false;
+    if (remainder <= pattern_size/2*(pattern_size/2-1)*2 + pattern_size/2*2-2)
+      return true;
+    return false;
+  }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
 struct Accept_Foreach_1 : public Accept_All_Tags
 {
   Accept_Foreach_1(uint pattern_size_)
@@ -1189,6 +1247,10 @@ int main(int argc, char* args[])
       modifier = new Accept_Around_1(pattern_size, 200.1, false, 11);
     else if (string(args[2]) == "query_27")
       modifier = new Accept_Around_1(pattern_size, 200.1, false, 7);
+    else if (string(args[2]) == "query_28")
+      modifier = new Accept_Query_28(pattern_size);
+    else if (string(args[2]) == "query_29")
+      modifier = new Accept_Query_29(pattern_size);
     else if (string(args[2]) == "union_1")
       modifier = new Accept_Union_1(pattern_size);
     else if (string(args[2]) == "union_2")

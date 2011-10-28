@@ -114,30 +114,115 @@ void Recurse_Statement::forecast()
   display_state();*/
 }
 
+template < class TIndex, class TObject, class TContainer >
+void collect_items(const Statement& stmt, Resource_Manager& rman,
+		   File_Properties& file_properties,
+		   const TContainer& req, vector< uint32 > ids,
+		   map< TIndex, vector< TObject > >& result)
+{
+  uint32 count = 0;
+  Block_Backend< TIndex, TObject, typename TContainer::const_iterator > db
+      (rman.get_transaction()->data_index(&file_properties));
+  for (typename Block_Backend< TIndex, TObject, typename TContainer
+      ::const_iterator >::Discrete_Iterator
+      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+  {
+    if (++count >= 64*1024)
+    {
+      count = 0;
+      rman.health_check(stmt);
+    }
+    if (binary_search(ids.begin(), ids.end(), it.object().id))
+      result[it.index()].push_back(it.object());
+  }
+}
+
+void collect_nodes
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_begin,
+     map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_end,
+     map< Uint32_Index, vector< Node_Skeleton > >& result)
+{
+  // collect indexes
+  vector< Uint32_Index > req;
+  {
+    vector< uint32 > map_ids;
+    vector< uint32 > parents;
+    
+    for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
+        it(ways_begin); it != ways_end; ++it)
+    {
+      if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xf) == 0))
+      {
+	// Treat ways with really large indices: get the node indexes from nodes.map.
+	for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
+	    it2 != it->second.end(); ++it2)
+	{
+	  for (vector< uint32 >::const_iterator it3(it2->nds.begin());
+	      it3 != it2->nds.end(); ++it3)
+	    map_ids.push_back(*it3);
+	}
+      }
+      else
+	parents.push_back(it->first.val());
+    }
+    
+    sort(map_ids.begin(), map_ids.end());
+    rman.health_check(stmt);
+    
+    req = calc_node_children(parents);
+    
+    Random_File< Uint32_Index > random
+        (rman.get_transaction()->random_index(osm_base_settings().NODES));
+    for (vector< uint32 >::const_iterator
+        it(map_ids.begin()); it != map_ids.end(); ++it)
+      req.push_back(random.get(*it));
+  }    
+  rman.health_check(stmt);
+  sort(req.begin(), req.end());
+  req.erase(unique(req.begin(), req.end()), req.end());
+  rman.health_check(stmt);  
+  
+  // collect ids
+  vector< uint32 > ids;
+  for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
+      it(ways_begin); it != ways_end; ++it)
+  {
+    for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+    {
+      for (vector< uint32 >::const_iterator it3(it2->nds.begin());
+	  it3 != it2->nds.end(); ++it3)
+	ids.push_back(*it3);
+    }
+  }
+  rman.health_check(stmt);
+  sort(ids.begin(), ids.end());
+    
+  collect_items(stmt, rman, *osm_base_settings().NODES, req, ids, result);
+  //stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
+}
+
 void Recurse_Statement::execute(Resource_Manager& rman)
 {
-  stopwatch.start();
-  
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes
-      (rman.sets()[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways
-      (rman.sets()[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations
-      (rman.sets()[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas
-      (rman.sets()[output].areas);
+  stopwatch.start();  
   
   map< string, Set >::const_iterator mit(rman.sets().find(input));
   if (mit == rman.sets().end())
   {
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
+    rman.sets()[output].nodes.clear();
+    rman.sets()[output].ways.clear();
+    rman.sets()[output].relations.clear();
+    rman.sets()[output].areas.clear();
     
     return;
   }
-  
+
+  Set into;
+  map< Uint32_Index, vector< Node_Skeleton > >& nodes(into.nodes);
+  map< Uint31_Index, vector< Way_Skeleton > >& ways(into.ways);
+  map< Uint31_Index, vector< Relation_Skeleton > >& relations(into.relations);
+
   if (type == RECURSE_RELATION_RELATION)
   {
     set< Uint31_Index > req;
@@ -169,22 +254,9 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     rman.health_check(*this);
     sort(ids.begin(), ids.end());
     
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-  
     stopwatch.stop(Stopwatch::NO_DISK);
-    Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
-    for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
-	 it(relations_db.discrete_begin(req.begin(), req.end()));
-	 !(it == relations_db.discrete_end()); ++it)
-    {
-      if (binary_search(ids.begin(), ids.end(), it.object().id))
-	relations[it.index()].push_back(it.object());
-    }
-    stopwatch.add(Stopwatch::RELATIONS, relations_db.read_count());
+    collect_items(*this, rman, *osm_base_settings().RELATIONS, req, ids, relations);
+    //stopwatch.add(Stopwatch::RELATIONS, relations_db.read_count());
     stopwatch.stop(Stopwatch::RELATIONS);
   }
   else if (type == RECURSE_RELATION_BACKWARDS)
@@ -203,11 +275,6 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     rman.health_check(*this);
     sort(ids.begin(), ids.end());
     
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-  
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
 	(rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
@@ -288,32 +355,14 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     rman.health_check(*this);
     sort(ids.begin(), ids.end());
     
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-  
     rman.health_check(*this);
     sort(req.begin(), req.end());
     req.erase(unique(req.begin(), req.end()), req.end());
     rman.health_check(*this);
-    stopwatch.stop(Stopwatch::NO_DISK);    
-    uint ways_count = 0;
-    Block_Backend< Uint31_Index, Way_Skeleton, vector< Uint31_Index >::const_iterator > ways_db
-	(rman.get_transaction()->data_index(osm_base_settings().WAYS));
-    for (Block_Backend< Uint31_Index, Way_Skeleton, vector< Uint31_Index >::const_iterator >::Discrete_Iterator
-	 it(ways_db.discrete_begin(req.begin(), req.end()));
-	 !(it == ways_db.discrete_end()); ++it)
-    {
-      if (++ways_count >= 64*1024)
-      {
-	ways_count = 0;
-	rman.health_check(*this);
-      }
-      if (binary_search(ids.begin(), ids.end(), it.object().id))
-	ways[it.index()].push_back(it.object());
-    }
-    stopwatch.add(Stopwatch::WAYS, ways_db.read_count());
+    stopwatch.stop(Stopwatch::NO_DISK);
+    
+    collect_items(*this, rman, *osm_base_settings().WAYS, req, ids, ways);
+    //stopwatch.add(Stopwatch::WAYS, ways_db.read_count());
     stopwatch.stop(Stopwatch::WAYS);
   }
   else if (type == RECURSE_RELATION_NODE)
@@ -355,15 +404,13 @@ void Recurse_Statement::execute(Resource_Manager& rman)
 	  }
 	}
       }
-      vector< uint32 > children = calc_node_children(parents);
-      req.reserve(children.size());
-      for (vector< uint32 >::const_iterator it = children.begin(); it != children.end(); ++it)
-	req.push_back(Uint32_Index(*it));
       
       sort(map_ids.begin(), map_ids.end());
 
       stopwatch.stop(Stopwatch::NO_DISK);
       rman.health_check(*this);
+      
+      req = calc_node_children(parents);
       
       Random_File< Uint32_Index > random
           (rman.get_transaction()->random_index(osm_base_settings().NODES));
@@ -375,115 +422,18 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     rman.health_check(*this);
     sort(ids.begin(), ids.end());
     
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-  
     rman.health_check(*this);
     sort(req.begin(), req.end());
     req.erase(unique(req.begin(), req.end()), req.end());
     rman.health_check(*this);
     stopwatch.stop(Stopwatch::NO_DISK);
-    uint nodes_count = 0;
-    Block_Backend< Uint32_Index, Node_Skeleton, vector< Uint32_Index >::const_iterator > nodes_db
-	(rman.get_transaction()->data_index(osm_base_settings().NODES));
-    for (Block_Backend< Uint32_Index, Node_Skeleton, vector< Uint32_Index >::const_iterator >::Discrete_Iterator
-	 it(nodes_db.discrete_begin(req.begin(), req.end()));
-	 !(it == nodes_db.discrete_end()); ++it)
-    {
-      if (++nodes_count >= 64*1024)
-      {
-	nodes_count = 0;
-	rman.health_check(*this);
-      }
-      if (binary_search(ids.begin(), ids.end(), it.object().id))
-	nodes[it.index()].push_back(it.object());
-    }    
-    stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
+    
+    collect_items(*this, rman, *osm_base_settings().NODES, req, ids, nodes);
+    //stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
     stopwatch.stop(Stopwatch::NODES);
   }
   else if (type == RECURSE_WAY_NODE)
-  {
-    vector< Uint32_Index > req;
-    vector< uint32 > ids;    
-    {
-      vector< uint32 > map_ids;
-      vector< uint32 > parents;
-      
-      for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
-	   it(mit->second.ways.begin()); it != mit->second.ways.end(); ++it)
-      {
-	if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xf) == 0))
-	{
-	  // Treat ways with really large indices: get the node indexes from nodes.map.
-	  for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
-	      it2 != it->second.end(); ++it2)
-	  {
-	    for (vector< uint32 >::const_iterator it3(it2->nds.begin());
-	        it3 != it2->nds.end(); ++it3)
-	      map_ids.push_back(*it3);
-	  }
-	}
-	else
-	  parents.push_back(it->first.val());
-
-	for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
-	    it2 != it->second.end(); ++it2)
-	{
-	  for (vector< uint32 >::const_iterator it3(it2->nds.begin());
-	      it3 != it2->nds.end(); ++it3)
-	    ids.push_back(*it3);
-	}
-      }
-      vector< uint32 > children = calc_node_children(parents);
-      req.reserve(children.size());
-      for (vector< uint32 >::const_iterator it = children.begin(); it != children.end(); ++it)
-	req.push_back(Uint32_Index(*it));
-      
-      sort(map_ids.begin(), map_ids.end());
-
-      stopwatch.stop(Stopwatch::NO_DISK);
-      rman.health_check(*this);
-      
-      Random_File< Uint32_Index > random
-          (rman.get_transaction()->random_index(osm_base_settings().NODES));
-      for (vector< uint32 >::const_iterator
-	  it(map_ids.begin()); it != map_ids.end(); ++it)
-	req.push_back(random.get(*it));
-      stopwatch.stop(Stopwatch::NODES_MAP);
-    }
-    rman.health_check(*this);
-    sort(ids.begin(), ids.end());
-    
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-  
-    rman.health_check(*this);
-    sort(req.begin(), req.end());
-    req.erase(unique(req.begin(), req.end()), req.end());
-    rman.health_check(*this);
-    stopwatch.stop(Stopwatch::NO_DISK);
-    uint nodes_count = 0;
-    Block_Backend< Uint32_Index, Node_Skeleton, vector< Uint32_Index >::const_iterator > nodes_db
-	(rman.get_transaction()->data_index(osm_base_settings().NODES));
-    for (Block_Backend< Uint32_Index, Node_Skeleton, vector< Uint32_Index >::const_iterator >::Discrete_Iterator
-	 it(nodes_db.discrete_begin(req.begin(), req.end()));
-	 !(it == nodes_db.discrete_end()); ++it)
-    {
-      if (++nodes_count >= 64*1024)
-      {
-	nodes_count = 0;
-	rman.health_check(*this);
-      }
-      if (binary_search(ids.begin(), ids.end(), it.object().id))
-	nodes[it.index()].push_back(it.object());
-    }    
-    stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
-    stopwatch.stop(Stopwatch::NODES);
-  }
+    collect_nodes(*this, rman, mit->second.ways.begin(), mit->second.ways.end(), nodes);
   else if (type == RECURSE_WAY_RELATION)
   {
     set< Uint31_Index > req;
@@ -506,11 +456,6 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     for (vector< uint32 >::const_iterator it = parents.begin(); it != parents.end(); ++it)
       req.insert(Uint31_Index(*it));
     
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-  
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
 	(rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
@@ -555,11 +500,6 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     for (vector< uint32 >::const_iterator it = parents.begin(); it != parents.end(); ++it)
       req.insert(Uint31_Index(*it));
     
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-  
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
 	(rman.get_transaction()->data_index(osm_base_settings().WAYS));
@@ -603,11 +543,6 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     for (vector< uint32 >::const_iterator it = parents.begin(); it != parents.end(); ++it)
       req.insert(Uint31_Index(*it));
     
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-  
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
 	(rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
@@ -631,6 +566,11 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     stopwatch.stop(Stopwatch::RELATIONS);
   }
 
+  into.nodes.swap(rman.sets()[output].nodes);
+  into.ways.swap(rman.sets()[output].ways);
+  into.relations.swap(rman.sets()[output].relations);
+  rman.sets()[output].areas.clear();
+  
   stopwatch.stop(Stopwatch::NO_DISK);
   stopwatch.report(get_name());
   rman.health_check(*this);

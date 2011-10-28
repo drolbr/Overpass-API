@@ -24,4 +24,10 @@ class Recurse_Statement : public Statement
     unsigned int type;
 };
 
+void collect_nodes
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_begin,
+     map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_end,
+     map< Uint32_Index, vector< Node_Skeleton > >& result);
+
 #endif

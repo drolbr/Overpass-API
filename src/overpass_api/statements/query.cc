@@ -13,8 +13,6 @@
 #include <algorithm>
 #include <sstream>
 
-#include <iostream>
-
 using namespace std;
 
 //-----------------------------------------------------------------------------
@@ -90,10 +88,10 @@ void Query_Statement::add_statement(Statement* statement, string text)
   }
   else if (bbox != 0)
   {
-    if (type != QUERY_NODE)
+    if (type != QUERY_NODE && type != QUERY_WAY)
     {
       ostringstream temp;
-      temp<<"A bbox-query as substatement is only allowed for queries of type \"node\".";
+      temp<<"A bbox-query as substatement is only allowed for queries of type \"node\" or \"way\".";
       add_static_error(temp.str());
       return;
     }
@@ -379,7 +377,11 @@ void Query_Statement::execute(Resource_Manager& rman)
   for (vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end(); ++it)
     (*it)->filter(rman, into);
-
+  
+  for (vector< Query_Constraint* >::iterator it = constraints.begin();
+      it != constraints.end(); ++it)
+    (*it)->filter(*this, rman, into);
+  
   clear_empty_indices(into.nodes);
   clear_empty_indices(into.ways);
   clear_empty_indices(into.relations);

@@ -443,7 +443,16 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "27"))
     // Test an around combined with a global key-value pair
     perform_query_with_around("node", "node_key_7", "node_value_1", args[3], pattern_size);
-		  
+
+  if ((test_to_execute == "") || (test_to_execute == "28"))
+    // Test a bbox combined with a global key-value pair, yielding diagonal ways.
+    perform_query_with_bbox("way", "way_key_5", "way_value_5",
+			    "12.5", "35.0", "-15.0", "45.0", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "29"))
+    // Test a bbox combined with a global key-value pair, yielding horizontal and vertical ways.
+    perform_query_with_bbox("way", "way_key_5", "way_value_5",
+			    "57.5", "80.0", "75.0", "105.0", args[3]);
+
   cout<<"</osm>\n";
   return 0;
 }

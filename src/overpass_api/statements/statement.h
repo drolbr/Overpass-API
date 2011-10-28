@@ -24,7 +24,14 @@ class Query_Constraint
     virtual bool get_ranges
         (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
       { return false; }
-    virtual void filter(Resource_Manager& rman, Set& into) = 0;
+      
+    // Cheap filter. No health_check in between needed and should be called first.
+    virtual void filter(Resource_Manager& rman, Set& into) {}
+
+    // Expensive filter. Health_check may be neede in between. These are called last
+    // to minimize the number of elements that need to be processed.
+    virtual void filter(const Statement& query, Resource_Manager& rman, Set& into) {}
+    
     virtual ~Query_Constraint() {}
 };
 

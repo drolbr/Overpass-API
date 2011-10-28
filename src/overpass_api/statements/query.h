@@ -8,9 +8,9 @@
 
 using namespace std;
 
-const unsigned int QUERY_NODE = 1;
-const unsigned int QUERY_WAY = 2;
-const unsigned int QUERY_RELATION = 3;
+const int QUERY_NODE = 1;
+const int QUERY_WAY = 2;
+const int QUERY_RELATION = 3;
 // const unsigned int QUERY_AREA = 4;
 
 class Query_Statement : public Statement
@@ -27,7 +27,7 @@ class Query_Statement : public Statement
     
   private:
     string output;
-    unsigned int type;
+    int type;
     vector< pair< string, string > > key_values;    
     vector< Query_Constraint* > constraints;
     

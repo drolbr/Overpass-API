@@ -388,33 +388,33 @@ int main(int argc, char* args[])
     
     {
       vector< uint32 > idxs(2, 0x3f3f3f3f);
-      vector< uint32 > result = calc_node_children(idxs);
-      for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
-	cout<<hex<<*it<<' ';
+      vector< Uint32_Index > result = calc_node_children(idxs);
+      for (vector< Uint32_Index >::const_iterator it = result.begin(); it != result.end(); ++it)
+	cout<<hex<<it->val()<<' ';
       cout<<'\n';
     }
     {
-      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0x40848400));
-      for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
-	cout<<hex<<*it<<' ';
+      vector< Uint32_Index > result = calc_node_children(vector< uint32 >(1, 0x40848400));
+      for (vector< Uint32_Index >::const_iterator it = result.begin(); it != result.end(); ++it)
+	cout<<hex<<it->val()<<' ';
       cout<<'\n';
     }
     {
-      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0xc0848401));
-      for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
-	cout<<hex<<*it<<' ';
+      vector< Uint32_Index > result = calc_node_children(vector< uint32 >(1, 0xc0848401));
+      for (vector< Uint32_Index >::const_iterator it = result.begin(); it != result.end(); ++it)
+	cout<<hex<<it->val()<<' ';
       cout<<'\n';
     }
     {
-      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0xc0848402));
-      for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
-	cout<<hex<<*it<<' ';
+      vector< Uint32_Index > result = calc_node_children(vector< uint32 >(1, 0xc0848402));
+      for (vector< Uint32_Index >::const_iterator it = result.begin(); it != result.end(); ++it)
+	cout<<hex<<it->val()<<' ';
       cout<<'\n';
     }
     {
-      vector< uint32 > result = calc_node_children(vector< uint32 >(1, 0xc0848404));
-      for (vector< uint32 >::const_iterator it = result.begin(); it != result.end(); ++it)
-	cout<<hex<<*it<<' ';
+      vector< Uint32_Index > result = calc_node_children(vector< uint32 >(1, 0xc0848404));
+      for (vector< Uint32_Index >::const_iterator it = result.begin(); it != result.end(); ++it)
+	cout<<hex<<it->val()<<' ';
       cout<<'\n';
     }
     // Disabled due to their size.    
