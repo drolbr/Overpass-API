@@ -16,7 +16,7 @@ inline uint32 upper_ilat(uint32 quadtile);
 inline uint32 upper_ilon(uint32 quadtile);
 inline uint32 calc_index(const vector< uint32 >& node_idxs);
 inline vector< Uint32_Index > calc_node_children(const vector< uint32 >& way_rel_idxs);
-inline vector< uint32 > calc_children(const vector< uint32 >& way_rel_idxs);
+inline vector< Uint31_Index > calc_children(const vector< uint32 >& way_rel_idxs);
 inline vector< uint32 > calc_parents(const vector< uint32 >& node_idxs);
 inline set< pair< Uint31_Index, Uint31_Index > > calc_parents
     (const set< pair< Uint31_Index, Uint31_Index > >& total_idxs);
@@ -291,7 +291,7 @@ inline vector< Uint32_Index > calc_node_children(const vector< uint32 >& way_rel
 {
   vector< Uint32_Index > result;
 
-  vector< pair< uint32 ,uint32 > > ranges;
+  vector< pair< uint32, uint32 > > ranges;
   
   for (vector< uint32 >::const_iterator it = way_rel_idxs.begin();
       it != way_rel_idxs.end(); ++it)
@@ -384,9 +384,9 @@ inline vector< Uint32_Index > calc_node_children(const vector< uint32 >& way_rel
   return result;
 }
 
-inline vector< uint32 > calc_children(const vector< uint32 >& way_rel_idxs)
+inline vector< Uint31_Index > calc_children(const vector< uint32 >& way_rel_idxs)
 {
-  vector< uint32 > result;
+  vector< Uint31_Index > result;
   
   for (vector< uint32 >::const_iterator it = way_rel_idxs.begin();
       it != way_rel_idxs.end(); ++it)
@@ -501,7 +501,7 @@ inline vector< uint32 > calc_children(const vector< uint32 >& way_rel_idxs)
       result.push_back(*it);
   }
   
-  sort(result.begin(), result.end(), Uint31_Compare());
+  sort(result.begin(), result.end());
   result.erase(unique(result.begin(), result.end()), result.end());
   return result;
 }
