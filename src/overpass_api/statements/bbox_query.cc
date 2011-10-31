@@ -153,22 +153,45 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
     set< pair< Uint31_Index, Uint31_Index > > ranges;
     get_ranges(rman, ranges);
 
-    set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it = ranges.begin();
-    map< Uint31_Index, vector< Way_Skeleton > >::iterator it = into.ways.begin();
-    for (; it != into.ways.end() && ranges_it != ranges.end(); )
+    // pre-filter ways
     {
-      if (!(it->first < ranges_it->second))
-	++ranges_it;
-      else if (!(it->first < ranges_it->first))
-	++it;
-      else
+      set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it = ranges.begin();
+      map< Uint31_Index, vector< Way_Skeleton > >::iterator it = into.ways.begin();
+      for (; it != into.ways.end() && ranges_it != ranges.end(); )
       {
-	it->second.clear();
-	++it;
+        if (!(it->first < ranges_it->second))
+	  ++ranges_it;
+        else if (!(it->first < ranges_it->first))
+	  ++it;
+        else
+        {
+	  it->second.clear();
+	  ++it;
+        }
       }
+      for (; it != into.ways.end(); ++it)
+        it->second.clear();
     }
-    for (; it != into.ways.end(); ++it)
-      it->second.clear();
+
+    // pre-filter relations
+    {
+      set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it = ranges.begin();
+      map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = into.relations.begin();
+      for (; it != into.relations.end() && ranges_it != ranges.end(); )
+      {
+        if (!(it->first < ranges_it->second))
+	  ++ranges_it;
+        else if (!(it->first < ranges_it->first))
+	  ++it;
+        else
+        {
+	  it->second.clear();
+	  ++it;
+        }
+      }
+      for (; it != into.relations.end(); ++it)
+        it->second.clear();
+    }
   }
   ranges_used = false;
 }
