@@ -14,6 +14,8 @@ void Id_Query_Statement::set_attributes(const char **attr)
   attributes["into"] = "_";
   attributes["type"] = "";
   attributes["ref"] = "";
+  attributes["lower"] = "";
+  attributes["upper"] = "";
   
   Statement::eval_cstr_array(get_name(), attributes, attr);
   
@@ -35,12 +37,22 @@ void Id_Query_Statement::set_attributes(const char **attr)
   }
   
   ref = (unsigned int)atol(attributes["ref"].c_str());
-  if (ref == 0)
+  lower = (unsigned int)atol(attributes["lower"].c_str());
+  upper = (unsigned int)atol(attributes["upper"].c_str());
+  if (ref <= 0)
   {
-    ostringstream temp;
-    temp<<"For the attribute \"ref\" of the element \"id-query\""
-	<<" the only allowed values are positive integers.";
-    add_static_error(temp.str());
+    if (lower == 0 || upper == 0)
+    {
+      ostringstream temp;
+      temp<<"For the attribute \"ref\" of the element \"id-query\""
+	  <<" the only allowed values are positive integers.";
+      add_static_error(temp.str());
+    }
+  }
+  else
+  {
+    lower = ref;
+    upper = ref;
   }
 }
 
@@ -74,9 +86,6 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
 {
   stopwatch.start();
   
-  if (ref == 0)
-    return;
-  
   map< Uint32_Index, vector< Node_Skeleton > >& nodes
       (rman.sets()[output].nodes);
   map< Uint31_Index, vector< Way_Skeleton > >& ways
@@ -90,20 +99,18 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
   ways.clear();
   relations.clear();
   areas.clear();
-  
+
   if (type == NODE)
   {
     set< Uint32_Index > req;
-    Uint32_Index idx((uint32)0);
     {
       stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint32_Index > random
           (rman.get_transaction()->random_index(osm_base_settings().NODES));
-      idx = random.get(ref);
+      for (uint32 i = lower; i <= upper; ++i)    
+        req.insert(random.get(i));
       stopwatch.stop(Stopwatch::NODES_MAP);
-    }
-    req.insert(idx);
-    
+    }    
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
 	(rman.get_transaction()->data_index(osm_base_settings().NODES));
@@ -111,7 +118,7 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
 	 it(nodes_db.discrete_begin(req.begin(), req.end()));
 	 !(it == nodes_db.discrete_end()); ++it)
     {
-      if (it.object().id == ref)
+      if (it.object().id >= lower && it.object().id <= upper)
 	nodes[it.index()].push_back(it.object());
     }
     stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
@@ -120,16 +127,14 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
   else if (type == WAY)
   {
     set< Uint31_Index > req;
-    Uint31_Index idx((uint32)0);
     {
       stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint31_Index > random
           (rman.get_transaction()->random_index(osm_base_settings().WAYS));
-      idx = random.get(ref);
+      for (uint32 i = lower; i <= upper; ++i)    
+        req.insert(random.get(i));
       stopwatch.stop(Stopwatch::WAYS_MAP);
     }
-    req.insert(idx);
-
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
 	(rman.get_transaction()->data_index(osm_base_settings().WAYS));
@@ -137,7 +142,7 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
 	 it(ways_db.discrete_begin(req.begin(), req.end()));
 	 !(it == ways_db.discrete_end()); ++it)
     {
-      if (it.object().id == ref)
+      if (it.object().id >= lower && it.object().id <= upper)
 	ways[it.index()].push_back(it.object());
     }
     stopwatch.add(Stopwatch::WAYS, ways_db.read_count());
@@ -146,16 +151,14 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
   else if (type == RELATION)
   {
     set< Uint31_Index > req;
-    Uint31_Index idx((uint32)0);
     {
       stopwatch.stop(Stopwatch::NO_DISK);
       Random_File< Uint31_Index > random
           (rman.get_transaction()->random_index(osm_base_settings().RELATIONS));
-      idx = random.get(ref);
+      for (uint32 i = lower; i <= upper; ++i)    
+        req.insert(random.get(i));
       stopwatch.stop(Stopwatch::RELATIONS_MAP);
     }
-    req.insert(idx);
-
     stopwatch.stop(Stopwatch::NO_DISK);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
 	(rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
@@ -163,7 +166,7 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
 	 it(relations_db.discrete_begin(req.begin(), req.end()));
 	 !(it == relations_db.discrete_end()); ++it)
     {
-      if (it.object().id == ref)
+      if (it.object().id >= lower && it.object().id <= upper)
 	relations[it.index()].push_back(it.object());
     }
     stopwatch.add(Stopwatch::RELATIONS, relations_db.read_count());

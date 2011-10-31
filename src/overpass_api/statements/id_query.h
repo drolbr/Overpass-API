@@ -22,7 +22,7 @@ class Id_Query_Statement : public Statement
   private:
     string output;
     int type;
-    unsigned int ref;
+    unsigned int ref, lower, upper;
 };
 
 #endif
