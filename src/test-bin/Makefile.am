@@ -1,5 +1,5 @@
 testbindir = ${prefix}/test-bin
-testbin_PROGRAMS = file_blocks around block_backend random_file node_updater way_updater relation_updater dump_database compare_osm_base_maps generate_test_file diff_updater test_dispatcher area_query bbox_query foreach make_area print query recurse union generate_test_file_areas generate_test_file_meta index_computations
+testbin_PROGRAMS = file_blocks around block_backend random_file node_updater way_updater relation_updater dump_database compare_osm_base_maps generate_test_file diff_updater test_dispatcher area_query bbox_query foreach make_area print query recurse union generate_test_file_areas generate_test_file_meta index_computations consistency_check
 dist_testbin_SCRIPTS = apply_osc.test.sh run_testsuite.sh run_testsuite_template_db.sh run_testsuite_osm_backend.sh run_unittests_statements.sh run_testsuite_osm3s_query.sh run_testsuite_diff_updater.sh run_unittests_areas.sh run_unittests_meta.sh run_and_compare.sh
 
 expat_cc = ../expat/expat_justparse_interface.cc
@@ -28,6 +28,9 @@ compare_osm_base_maps_SOURCES = ${settings_cc} ../overpass_api/osm-backend/compa
 compare_osm_base_maps_LDADD =
 dump_database_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/way_updater.cc ../overpass_api/osm-backend/relation_updater.cc ../overpass_api/osm-backend/dump_database.test.cc
 dump_database_LDADD = -lexpat
+consistency_check_SOURCES = ../overpass_api/dispatch/consistency_check.cc ${statements_cc} ${testenv_cc} ../overpass_api/dispatch/scripting_core.cc ../template_db/dispatcher.cc
+# consistency_check_SOURCES = ../overpass_api/dispatch/consistency_check.cc ${statements_cc} ../overpass_api/core/settings.cc ../overpass_api/frontend/console_output.cc ../overpass_api/dispatch/scripting_core.cc ../template_db/dispatcher.cc
+consistency_check_LDADD = -lexpat -lrt
 #example_queries_SOURCES = ${expat_cc} ${settings_cc} ../overpass_api/osm-backend/example_queries.cc
 #example_queries_LDADD = -lexpat
 generate_test_file_SOURCES = ../overpass_api/osm-backend/generate_test_file.cc
