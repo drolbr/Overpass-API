@@ -153,6 +153,8 @@ const OSM_Element_Metadata_Skeleton* Meta_Collector< TIndex, TObject >::get
   
   if ((current_index) && (*current_index < index))
   {
+    current_objects.clear();
+    
     if (db_it)
     {
       while (!(*db_it == meta_db->discrete_end()) && (db_it->index() < index))
