@@ -35,13 +35,14 @@ namespace
   vector< Statement* > statement_stack;
   vector< string > text_stack;
   Script_Parser xml_parser;
+  bool uses_meta_data;
 }
 
 Dispatcher_Stub::Dispatcher_Stub
     (string db_dir_, Error_Output* error_output_, string xml_raw, int& area_level)
     : db_dir(db_dir_), error_output(error_output_),
       dispatcher_client(0), area_dispatcher_client(0),
-      transaction(0), area_transaction(0), rman(0)
+      transaction(0), area_transaction(0), rman(0), meta(get_uses_meta_data())
 {
   if ((area_level < 2) && (Make_Area_Statement::is_used()))
   {
@@ -89,6 +90,15 @@ Dispatcher_Stub::Dispatcher_Stub
     transaction->data_index(osm_base_settings().RELATION_ROLES);
     transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL);
     transaction->data_index(osm_base_settings().RELATION_TAGS_GLOBAL);
+    
+    if (meta)
+    {
+      transaction->data_index(meta_settings().NODES_META);
+      transaction->data_index(meta_settings().WAYS_META);
+      transaction->data_index(meta_settings().RELATIONS_META);
+      transaction->data_index(meta_settings().USER_DATA);
+      transaction->data_index(meta_settings().USER_INDICES);
+    }
     
     {
       ifstream version((dispatcher_client->get_db_dir() + "osm_base_version").c_str());
@@ -347,4 +357,9 @@ bool parse_and_validate
 vector< Statement* >* get_statement_stack()
 {
   return &statement_stack;
+}
+
+bool get_uses_meta_data()
+{
+  return true;
 }

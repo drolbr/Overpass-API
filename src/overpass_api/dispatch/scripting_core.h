@@ -56,11 +56,14 @@ class Dispatcher_Stub : public Watchdog_Callback
     Nonsynced_Transaction* transaction;
     Nonsynced_Transaction* area_transaction;
     Resource_Manager* rman;
+    bool meta;
 };
 
 bool parse_and_validate
     (const string& xml_raw, Error_Output* error_output);
 
 vector< Statement* >* get_statement_stack();
-     
+
+bool get_uses_meta_data();
+
 #endif
