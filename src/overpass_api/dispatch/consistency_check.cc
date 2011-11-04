@@ -190,6 +190,7 @@ int main(int argc, char *argv[])
       {
         if (++count >= 1000*1000)
         {
+	  dispatcher.ping();
           count = 0;
           cout<<"Processed 1000000 nodes.\n";
         }
@@ -210,7 +211,8 @@ int main(int argc, char *argv[])
       {
         if (++count >= 100*1000)
         {
-          count = 0;
+	  dispatcher.ping();
+	  count = 0;
           cout<<"Processed 100000 ways.\n";
         }
         if (!meta_collector.get(it.index(), it.object().id))
@@ -230,7 +232,8 @@ int main(int argc, char *argv[])
       {
         if (++count >= 100*1000)
         {
-          count = 0;
+	  dispatcher.ping();
+	  count = 0;
           cout<<"Processed 100000 relations.\n";
         }
         if (!meta_collector.get(it.index(), it.object().id))
