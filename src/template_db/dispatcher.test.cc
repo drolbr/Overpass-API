@@ -534,7 +534,7 @@ int main(int argc, char* args[])
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
     }
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     map_read_test();
     remove("Test_File.map");
     remove("Test_File.map.idx");
@@ -556,7 +556,7 @@ int main(int argc, char* args[])
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
     }
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.write_start(481);
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
@@ -564,7 +564,7 @@ int main(int argc, char* args[])
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 2);
     }
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     map_read_test();
     remove("Test_File.map");
     remove("Test_File.map.idx");
@@ -586,7 +586,7 @@ int main(int argc, char* args[])
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
     }
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.write_start(481);
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
@@ -594,7 +594,7 @@ int main(int argc, char* args[])
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 2);
     }
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.write_start(482);
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
@@ -602,7 +602,7 @@ int main(int argc, char* args[])
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 3);
     }
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     map_read_test();
     remove("Test_File.map");
     remove("Test_File.map.idx");
@@ -619,7 +619,7 @@ int main(int argc, char* args[])
 			  5, file_properties);
     dispatcher.write_start(480);
     put_elem(0, 1, test_file);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     data_read_test(test_file);
     remove("Test_File.bin");
     remove("Test_File.bin.idx");
@@ -636,10 +636,10 @@ int main(int argc, char* args[])
 			  5, file_properties);
     dispatcher.write_start(480);
     put_elem(0, 1, test_file);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.write_start(481);
     put_elem(0, 2, test_file);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     data_read_test(test_file);
     remove("Test_File.bin");
     remove("Test_File.bin.idx");
@@ -656,13 +656,13 @@ int main(int argc, char* args[])
 			  5, file_properties);
     dispatcher.write_start(480);
     put_elem(0, 1, test_file);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.write_start(481);
     put_elem(0, 2, test_file);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.write_start(482);
     put_elem(0, 3, test_file);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     data_read_test(test_file);
     remove("Test_File.bin");
     remove("Test_File.bin.idx");
@@ -686,11 +686,11 @@ int main(int argc, char* args[])
     }
     dispatcher.request_read_and_idx(640);
     dispatcher.output_status();
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     cout<<"Write lock is "
         <<(file_exists("test-shadow.lock") ? "still set.\n" : "released.\n");
     dispatcher.read_idx_finished(640);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     cout<<"Write lock is "
         <<(file_exists("test-shadow.lock") ? "still set.\n" : "released.\n");
     map_read_test();
@@ -718,7 +718,7 @@ int main(int argc, char* args[])
       blocks.put(0, 1);
     }
     dispatcher.read_finished(640);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.write_start(481);
     dispatcher.request_read_and_idx(641);
     dispatcher.read_idx_finished(641);
@@ -729,7 +729,7 @@ int main(int argc, char* args[])
       blocks.put(0, 2);
     }
     dispatcher.read_finished(641);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.write_start(482);
     dispatcher.request_read_and_idx(642);
     dispatcher.read_idx_finished(642);
@@ -740,7 +740,7 @@ int main(int argc, char* args[])
       blocks.put(0, 3);
     }
     dispatcher.read_finished(642);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     map_read_test();
     remove("Test_File.map");
     remove("Test_File.map.idx");
@@ -761,19 +761,19 @@ int main(int argc, char* args[])
     put_elem(0, 1, test_file);
     dispatcher.read_finished(640);
     dispatcher.output_status();
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.write_start(481);
     dispatcher.request_read_and_idx(641);
     dispatcher.read_idx_finished(641);
     put_elem(0, 2, test_file);
     dispatcher.read_finished(641);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.write_start(482);
     dispatcher.request_read_and_idx(642);
     dispatcher.read_idx_finished(642);
     put_elem(0, 3, test_file);
     dispatcher.read_finished(642);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     data_read_test(test_file);
     remove("Test_File.bin");
     remove("Test_File.bin.idx");
@@ -795,7 +795,7 @@ int main(int argc, char* args[])
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
     }
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.request_read_and_idx(640);
     dispatcher.read_idx_finished(640);
     dispatcher.write_start(481);
@@ -805,7 +805,7 @@ int main(int argc, char* args[])
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 2);
     }
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.write_start(482);
     dispatcher.read_finished(640);
     {
@@ -814,7 +814,7 @@ int main(int argc, char* args[])
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 3);
     }
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     map_read_test();
     remove("Test_File.map");
     remove("Test_File.map.idx");
@@ -831,16 +831,16 @@ int main(int argc, char* args[])
 			  5, file_properties);
     dispatcher.write_start(480);
     put_elem(0, 1, test_file);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.request_read_and_idx(640);
     dispatcher.read_idx_finished(640);
     dispatcher.write_start(481);
     put_elem(0, 2, test_file);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.write_start(482);
     dispatcher.read_finished(640);
     put_elem(0, 3, test_file);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     data_read_test(test_file);
     remove("Test_File.bin");
     remove("Test_File.bin.idx");
@@ -862,7 +862,7 @@ int main(int argc, char* args[])
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
     }
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.request_read_and_idx(640);
     dispatcher.read_idx_finished(640);
     dispatcher.write_start(481);
@@ -872,7 +872,7 @@ int main(int argc, char* args[])
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 2);
     }
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.write_start(482);
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
@@ -880,7 +880,7 @@ int main(int argc, char* args[])
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 3);
     }
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.write_start(483);
     dispatcher.read_finished(640);
     {
@@ -889,7 +889,7 @@ int main(int argc, char* args[])
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 4);
     }
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     map_read_test();
     remove("Test_File.map");
     remove("Test_File.map.idx");
@@ -906,19 +906,19 @@ int main(int argc, char* args[])
 			  5, file_properties);
     dispatcher.write_start(480);
     put_elem(0, 1, test_file);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.request_read_and_idx(640);
     dispatcher.read_idx_finished(640);
     dispatcher.write_start(481);
     put_elem(0, 2, test_file);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.write_start(482);
     put_elem(0, 3, test_file);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     dispatcher.write_start(483);
     dispatcher.read_finished(640);
     put_elem(0, 4, test_file);
-    dispatcher.write_commit();
+    dispatcher.write_commit(0);
     data_read_test(test_file);
     remove("Test_File.bin");
     remove("Test_File.bin.idx");
@@ -973,7 +973,7 @@ int main(int argc, char* args[])
 			    5, file_properties);
       dispatcher.write_start(480);
       put_elem(0, 1, test_file);
-      dispatcher.write_commit();
+      dispatcher.write_commit(0);
       
       cerr<<"[server] Starting ...\n";
       uint32 execution_time = 3;

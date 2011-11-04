@@ -3,9 +3,86 @@
 
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 using namespace std;
+
+struct Default_Dispatcher_Logger : public Dispatcher_Logger
+{
+  Default_Dispatcher_Logger(Logger& logger_) : logger(&logger_) {}
+  
+  virtual void write_start(pid_t pid, const vector< pid_t >& registered);
+  virtual void write_rollback(pid_t pid);
+  virtual void write_commit(pid_t pid);
+  virtual void request_read_and_idx(pid_t pid);
+  virtual void read_idx_finished(pid_t pid);
+  virtual void prolongate(pid_t pid);
+  virtual void read_finished(pid_t pid);
+  virtual void purge(pid_t pid);
+  
+  private:
+    Logger* logger;
+};
+
+void Default_Dispatcher_Logger::write_start(pid_t pid, const vector< pid_t >& registered)
+{
+  ostringstream out;
+  out<<"write_start of process "<<pid<<". Considered as reading:";
+  for (vector< pid_t >::const_iterator it = registered.begin(); it != registered.end(); ++it)
+    out<<' '<<*it;
+  out<<'.';
+  logger->annotated_log(out.str());
+}
+
+void Default_Dispatcher_Logger::write_rollback(pid_t pid)
+{
+  ostringstream out;
+  out<<"write_rollback of process "<<pid<<'.';
+  logger->annotated_log(out.str());
+}
+
+void Default_Dispatcher_Logger::write_commit(pid_t pid)
+{
+  ostringstream out;
+  out<<"write_commit of process "<<pid<<'.';
+  logger->annotated_log(out.str());
+}
+
+void Default_Dispatcher_Logger::request_read_and_idx(pid_t pid)
+{
+  ostringstream out;
+  out<<"request_read_and_idx of process "<<pid<<'.';
+  logger->annotated_log(out.str());
+}
+
+void Default_Dispatcher_Logger::read_idx_finished(pid_t pid)
+{
+  ostringstream out;
+  out<<"read_idx_finished "<<pid<<'.';
+  logger->annotated_log(out.str());
+}
+
+void Default_Dispatcher_Logger::prolongate(pid_t pid)
+{
+  ostringstream out;
+  out<<"prolongate of process "<<pid<<'.';
+  logger->annotated_log(out.str());
+}
+
+void Default_Dispatcher_Logger::read_finished(pid_t pid)
+{
+  ostringstream out;
+  out<<"read_finished of process "<<pid<<'.';
+  logger->annotated_log(out.str());
+}
+
+void Default_Dispatcher_Logger::purge(pid_t pid)
+{
+  ostringstream out;
+  out<<"purge of process "<<pid<<'.';
+  logger->annotated_log(out.str());
+}
 
 int main(int argc, char* argv[])
 {
@@ -121,7 +198,7 @@ int main(int argc, char* argv[])
 
   {
     Logger log(db_dir);
-    log.annotated_log("Dispachter just started.");
+    log.annotated_log("Dispatcher just started.");
   }
   int chmod_res = chmod((db_dir + basic_settings().logfile_name).c_str(), S_666);
   if (chmod_res)
@@ -132,11 +209,13 @@ int main(int argc, char* argv[])
   
   try
   {
+    Logger logger(db_dir);
+    Default_Dispatcher_Logger disp_logger(logger);
     Dispatcher dispatcher
         (areas ? area_settings().shared_name : osm_base_settings().shared_name,
          "", db_dir + (areas ? "areas_shadow" : "osm_base_shadow"), db_dir,
 	 areas ? area_settings().max_num_processes : osm_base_settings().max_num_processes,
-	 files_to_manage);
+	 files_to_manage, &disp_logger);
     dispatcher.standby_loop(0);
   }
   catch (File_Error e)

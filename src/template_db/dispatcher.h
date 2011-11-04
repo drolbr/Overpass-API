@@ -25,10 +25,25 @@ class Idx_Footprints
     map< pid_t, vector< bool > > footprint_per_pid;
 };
 
+/** Is called to log all operations of the dispatcher */
+struct Dispatcher_Logger
+{
+  typedef uint pid_t;
+  
+  virtual void write_start(pid_t pid, const vector< pid_t >& registered) = 0;
+  virtual void write_rollback(pid_t pid) = 0;
+  virtual void write_commit(pid_t pid) = 0;
+  virtual void request_read_and_idx(pid_t pid) = 0;
+  virtual void read_idx_finished(pid_t pid) = 0;
+  virtual void prolongate(pid_t pid) = 0;
+  virtual void read_finished(pid_t pid) = 0;
+  virtual void purge(pid_t pid) = 0;
+};
+
 class Dispatcher
 {
   public:
-    typedef uint32 pid_t;
+    typedef uint pid_t;
     
     static const int SHM_SIZE = 3*sizeof(uint32) + 2*sizeof(uint32);//20+12+2*(256+4);
     static const int OFFSET_BACK = 20;
@@ -39,7 +54,6 @@ class Dispatcher
     static const uint32 SET_LIMITS = 17;
     static const uint32 PING = 18;
     static const uint32 UNREGISTER_PID = 19;
-    static const uint32 SERVER_STATE = 20;
     static const uint32 QUERY_REJECTED = 32;
     
     /** Opens a shared memory for dispatcher communication. Furthermore,
@@ -50,7 +64,8 @@ class Dispatcher
 	       string shadow_name,
 	       string db_dir,
 	       uint max_num_reading_processes,
-	       const vector< File_Properties* >& controlled_files);
+	       const vector< File_Properties* >& controlled_files,
+	       Dispatcher_Logger* logger = 0);
 	       
     ~Dispatcher();
 
@@ -62,12 +77,12 @@ class Dispatcher
     
     /** Removes the mutex for the write process without changing any
         index file. */
-    void write_rollback();
+    void write_rollback(pid_t pid);
     
     /** Copies the shadow files onto the main index files. A lock prevents
         that incomplete copies after a crash may leave the database in an
 	unstable state. Removes the mutex for the write process. */
-    void write_commit();
+    void write_commit(pid_t pid);
     
     /** Read operations: --------------------------------------------------- */
 
@@ -117,12 +132,13 @@ class Dispatcher
     uint max_num_reading_processes;
     uint purge_timeout;
     volatile uint8* dispatcher_shm_ptr;
+    Dispatcher_Logger* logger;
     
     void copy_shadows_to_mains();
     void copy_mains_to_shadows();
     void remove_shadows();
     void set_current_footprints();
-    void write_index_of_empty_blocks();
+    vector< pid_t > write_index_of_empty_blocks();
     void check_and_purge();
 };
 

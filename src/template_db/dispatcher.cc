@@ -69,14 +69,16 @@ Dispatcher::Dispatcher
      string shadow_name_,
      string db_dir_,
      uint max_num_reading_processes_,
-     const vector< File_Properties* >& controlled_files_)
+     const vector< File_Properties* >& controlled_files_,
+     Dispatcher_Logger* logger_)
     : controlled_files(controlled_files_),
       data_footprints(controlled_files_.size()),
       map_footprints(controlled_files_.size()),
       shadow_name(shadow_name_), db_dir(db_dir_),
       dispatcher_share_name(dispatcher_share_name_),
       max_num_reading_processes(max_num_reading_processes_),
-      purge_timeout(180)
+      purge_timeout(180),
+      logger(logger_)
 {
   // get the absolute pathname of the current directory
   if (db_dir.substr(0, 1) != "/")
@@ -136,9 +138,11 @@ void Dispatcher::write_start(pid_t pid)
   try
   {
     Raw_File shadow_file(shadow_name + ".lock", O_RDWR|O_CREAT|O_EXCL, S_666, "write_start:1");
-    
+ 
     copy_mains_to_shadows();
-    write_index_of_empty_blocks();
+    vector< pid_t > registered = write_index_of_empty_blocks();
+    if (logger)
+      logger->write_start(pid, registered);
   }
   catch (File_Error e)
   {
@@ -162,17 +166,21 @@ void Dispatcher::write_start(pid_t pid)
   catch (...) {}
 }
 
-void Dispatcher::write_rollback()
+void Dispatcher::write_rollback(pid_t pid)
 {
+  if (logger)
+    logger->write_rollback(pid);
   remove_shadows();
   remove((shadow_name + ".lock").c_str());
 }
 
-void Dispatcher::write_commit()
+void Dispatcher::write_commit(pid_t pid)
 {
   if (!processes_reading_idx.empty())
     return;
 
+  if (logger)
+    logger->write_commit(pid);
   try
   {
     Raw_File shadow_file(shadow_name, O_RDWR|O_CREAT|O_EXCL, S_666, "write_commit:1");
@@ -193,6 +201,8 @@ void Dispatcher::write_commit()
 
 void Dispatcher::request_read_and_idx(pid_t pid)
 {
+  if (logger)
+    logger->request_read_and_idx(pid);
   for (vector< Idx_Footprints >::iterator it(data_footprints.begin());
       it != data_footprints.end(); ++it)
     it->register_pid(pid);
@@ -205,16 +215,22 @@ void Dispatcher::request_read_and_idx(pid_t pid)
 
 void Dispatcher::read_idx_finished(pid_t pid)
 {
+  if (logger)
+    logger->read_idx_finished(pid);
   processes_reading_idx.erase(pid);
 }
 
 void Dispatcher::prolongate(pid_t pid)
 {
+  if (logger)
+    logger->prolongate(pid);
   processes_reading[pid] = time(NULL);
 }
 
 void Dispatcher::read_finished(pid_t pid)
 {
+  if (logger)
+    logger->read_finished(pid);
   for (vector< Idx_Footprints >::iterator it(data_footprints.begin());
       it != data_footprints.end(); ++it)
     it->unregister_pid(pid);
@@ -311,8 +327,26 @@ void write_to_index_empty_file(const vector< bool >& footprint, string filename)
   file.write((uint8*)buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr), "Dispatcher:6");
 }
 
-void Dispatcher::write_index_of_empty_blocks()
+vector< Dispatcher::pid_t > Dispatcher::write_index_of_empty_blocks()
 {
+  set< pid_t > registered;
+  for (vector< Idx_Footprints >::iterator it(data_footprints.begin());
+  it != data_footprints.end(); ++it)
+  {
+    vector< Idx_Footprints::pid_t > registered_processes = it->registered_processes();
+    for (vector< Idx_Footprints::pid_t >::const_iterator it = registered_processes.begin();
+        it != registered_processes.end(); ++it)
+      registered.insert(*it);
+  }
+  for (vector< Idx_Footprints >::iterator it(map_footprints.begin());
+  it != map_footprints.end(); ++it)
+  {
+    vector< Idx_Footprints::pid_t > registered_processes = it->registered_processes();
+    for (vector< Idx_Footprints::pid_t >::const_iterator it = registered_processes.begin();
+        it != registered_processes.end(); ++it)
+      registered.insert(*it);
+  }
+  
   for (vector< File_Properties* >::size_type i = 0;
       i < controlled_files.size(); ++i)
   {
@@ -339,6 +373,10 @@ void Dispatcher::write_index_of_empty_blocks()
 	   + controlled_files[i]->get_shadow_suffix());
     }
   }
+  
+  vector< pid_t > registered_v;
+  registered_v.assign(registered.begin(), registered.end());
+  return registered_v;
 }
 
 void Dispatcher::standby_loop(uint64 milliseconds)
@@ -383,11 +421,11 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	write_start(client_pid);
       }
       else if (command == WRITE_ROLLBACK)
-	write_rollback();
+	write_rollback(client_pid);
       else if (command == WRITE_COMMIT)
       {
 	check_and_purge();
-	write_commit();
+	write_commit(client_pid);
       }
       else if (command == REQUEST_READ_AND_IDX)
       {
@@ -455,7 +493,7 @@ void Dispatcher::output_status()
 	collected_pids.insert(*it);
     }
     for (set< pid_t >::const_iterator it = collected_pids.begin();
-    it != collected_pids.end(); ++it)
+        it != collected_pids.end(); ++it)
     {
       if (processes_reading_idx.find(*it) == processes_reading_idx.end())
 	status<<READ_IDX_FINISHED<<' '<<*it<<'\n';
@@ -531,7 +569,11 @@ void Dispatcher::check_and_purge()
     ostringstream file_name("");
     file_name<<"/proc/"<<*it<<"/stat";
     if (!file_exists(file_name.str()))
+    {
+      if (logger)
+	logger->purge(*it);
       read_finished(*it);
+    }
   }
 }
 
