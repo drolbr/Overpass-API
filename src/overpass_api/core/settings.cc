@@ -7,10 +7,10 @@
 
 #include <cstdio>
 #include <fstream>
-#include <iostream>
 #include <map>
 #include <sstream>
 #include <string>
+#include <vector>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -34,7 +34,8 @@ struct OSM_File_Properties : public File_Properties
   
   vector< bool > get_data_footprint(const string& db_dir) const
   {
-    return get_data_index_footprint< TVal >(*this, db_dir);
+    vector< bool > temp = get_data_index_footprint< TVal >(*this, db_dir);
+    return temp;
   }
   
   vector< bool > get_map_footprint(const string& db_dir) const

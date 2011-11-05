@@ -202,8 +202,16 @@ int main(int argc, char *argv[])
 
     {
       uint32 count = 0;
+      File_Properties* props = meta_settings().WAYS_META;
+      File_Blocks_Index_Base* index_base = rman.get_transaction()->data_index(props);
+      cout<<"ways_meta address "<<index_base<<'\n';
+      File_Blocks_Index< Uint31_Index >* index = (File_Blocks_Index< Uint31_Index >*)index_base;
+      cout<<"ways_meta";
+      for (int i = 0; i < (int)index->void_blocks.size(); ++i)
+	cout<<' '<<index->void_blocks[i];
+      cout<<'\n';
       Flat_Meta_Collector< Uint31_Index > meta_collector
-          (*rman.get_transaction(), meta_settings().WAYS_META);
+          (*rman.get_transaction(), props);
       Block_Backend< Uint31_Index, Way_Skeleton > db
           (rman.get_transaction()->data_index(osm_base_settings().WAYS));
       for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator

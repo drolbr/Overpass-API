@@ -321,7 +321,7 @@ void write_to_index_empty_file(const vector< bool >& footprint, string filename)
       ++pos;
     }
   }
-
+  
   Raw_File file(filename, O_RDWR|O_CREAT|O_TRUNC,
 		S_666, "write_to_index_empty_file:1");
   file.write((uint8*)buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr), "Dispatcher:6");
@@ -331,7 +331,7 @@ vector< Dispatcher::pid_t > Dispatcher::write_index_of_empty_blocks()
 {
   set< pid_t > registered;
   for (vector< Idx_Footprints >::iterator it(data_footprints.begin());
-  it != data_footprints.end(); ++it)
+      it != data_footprints.end(); ++it)
   {
     vector< Idx_Footprints::pid_t > registered_processes = it->registered_processes();
     for (vector< Idx_Footprints::pid_t >::const_iterator it = registered_processes.begin();
@@ -339,7 +339,7 @@ vector< Dispatcher::pid_t > Dispatcher::write_index_of_empty_blocks()
       registered.insert(*it);
   }
   for (vector< Idx_Footprints >::iterator it(map_footprints.begin());
-  it != map_footprints.end(); ++it)
+      it != map_footprints.end(); ++it)
   {
     vector< Idx_Footprints::pid_t > registered_processes = it->registered_processes();
     for (vector< Idx_Footprints::pid_t >::const_iterator it = registered_processes.begin();
