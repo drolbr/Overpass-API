@@ -1,11 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [[ -z $1  ]]; then
 {
   echo -e "\n\
 Usage: $0\n\
     --run=REPLICATE_ID --db-dir=DB_DIR --replicate-dir=REPLICATE_DIR\n\
-    --minute-url=MINUTE_URL\n\
+    --minute-url=MINUTE_URL [--meta] \n\
 where\n\
 \n\
 --run=REPLICATE_ID\n\
@@ -23,6 +23,12 @@ where\n\
     Specify the URL to download the minute diffs from. The usual URL is\n\
     http://planet.openstreetmap.org/minute-replicate/\n\
 \n\
+--meta=yes, --meta=no\n\
+    Keep or keep not meta data in the database.\n\
+\n\
+--areas=yes, --areas=no\n\
+    Create or create not derived area data.\n\
+\n\
 "
   exit 0
 };
@@ -32,6 +38,15 @@ RUN=
 DB_DIR=
 REPLICATE_DIR=
 DOWNLOAD_DIFFS=
+META=
+NOMETA=
+
+EXEC_DIR="`dirname $0`/"
+if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
+{
+  EXEC_DIR="`pwd`/$EXEC_DIR"
+};
+fi
 
 process_param()
 {
@@ -51,6 +66,18 @@ process_param()
   {
     DOWNLOAD_DIFFS="${1:13}"
   };
+  elif [[ "$1" == "--meta=yes" ]]; then
+  {
+    META="--meta"
+  };
+  elif [[ "$1" == "--meta=no" ]]; then
+  {
+    NOMETA="yes"
+  };
+  elif [[ "${1:0:8}" == "--areas=" ]]; then
+  {
+    AREAS="${1:8}"
+  };
   fi
 };
 
@@ -58,36 +85,55 @@ if [[ -n $1  ]]; then process_param $1; fi
 if [[ -n $2  ]]; then process_param $2; fi
 if [[ -n $3  ]]; then process_param $3; fi
 if [[ -n $4  ]]; then process_param $4; fi
+if [[ -n $5  ]]; then process_param $5; fi
+if [[ -n $6  ]]; then process_param $6; fi
+if [[ -n $7  ]]; then process_param $7; fi
+if [[ -n $8  ]]; then process_param $8; fi
 
 if [[ -z $RUN ]]; then
 {
   echo "Error: first_diff must be nonempty."
   exit 0
-};
-fi
+}; fi
 
 if [[ -z $DB_DIR ]]; then
 {
   echo "Error: database_dir must be nonempty."
   exit 0
-};
-fi
+}; fi
 
 if [[ -z $REPLICATE_DIR ]]; then
 {
   echo "Error: replicate_dir must be nonempty."
   exit 0
-};
-fi
+}; fi
 
-if [[ -z $REPLICATE_DIR ]]; then
+if [[ -z $DOWNLOAD_DIFFS ]]; then
 {
   echo "Error: You need to provide an URL to download the minute diffs from."
   exit 0
-};
-fi
+}; fi
+
+if [[ -z $META || -z $NOMETA ]]; then
+{
+  echo "Error: Please choose if you want meta data or not."
+  exit 0
+}; fi
+
+if [[ -z $AREAS ]]; then
+{
+  echo "Error: Please choose if you want areas or not."
+  exit 0
+}; fi
+
+pushd "$EXEC_DIR"
 
 ./fetch_osc.sh $RUN $DOWNLOAD_DIFFS $REPLICATE_DIR &
-./dispatcher --osm-base --db-dir=$DB_DIR/ &
+./dispatcher --osm-base $META --db-dir=$DB_DIR/ &
+if [[ $AREAS == "yes" ]]; then
+{
+  ./dispatcher --areas --db-dir=$DB_DIR/ &
+};fi
 sleep 5
-./apply_osc_to_db.sh $DB_DIR/ $REPLICATE_DIR $RUN &
+./apply_osc_to_db.sh $DB_DIR/ $REPLICATE_DIR $RUN $META &
+./cleanup_xapi_tmp.sh &

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [[ -z $1  ]]; then
 {
@@ -17,6 +17,24 @@ if [[ ! -d $LOCAL_DIR ]];
 };
 fi
 
+# $1 - remote source
+# $2 - local destination
+fetch_file()
+{
+  wget -nv -O "$2" "$1"
+};
+
+retry_fetch_file()
+{
+  if [[ ! -s "$2" ]]; then {
+    fetch_file "$1" "$2"
+  }; fi
+  until [[ -s "$2" ]]; do {
+    sleep 60
+    fetch_file "$1" "$2"
+  }; done
+};
+
 fetch_minute_diff()
 {
   printf -v TDIGIT3 %03u $(($1 % 1000))
@@ -25,43 +43,18 @@ fetch_minute_diff()
   ARG=$(($ARG / 1000))
   printf -v TDIGIT1 %03u $ARG
   
-  if [[ ! -d $LOCAL_DIR/$TDIGIT1 ]];
-  then {
-    mkdir $LOCAL_DIR/$TDIGIT1
-  };
-  fi
-  if [[ ! -d $LOCAL_DIR/$TDIGIT1/$TDIGIT2 ]];
-  then {
-    mkdir $LOCAL_DIR/$TDIGIT1/$TDIGIT2
-  };
-  fi
-  if [[ ! -s $LOCAL_DIR/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz ]];
-  then {
-    wget -nv -O $LOCAL_DIR/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz $SOURCE_DIR/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz
-  };
-  fi
-  until [[ -s $LOCAL_DIR/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz ]];
-  do {
-    sleep 60
-    wget -nv -O $LOCAL_DIR/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz $SOURCE_DIR/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz
-  };
-  done
-  if [[ ! -s $LOCAL_DIR/$TDIGIT1/$TDIGIT2/$TDIGIT3.state.txt ]];
-  then {
-    wget -nv -O $LOCAL_DIR/$TDIGIT1/$TDIGIT2/$TDIGIT3.state.txt $SOURCE_DIR/$TDIGIT1/$TDIGIT2/$TDIGIT3.state.txt
-  };
-  fi
-  until [[ -s $LOCAL_DIR/$TDIGIT1/$TDIGIT2/$TDIGIT3.state.txt ]];
-  do {
-    sleep 60
-    wget -nv -O $LOCAL_DIR/$TDIGIT1/$TDIGIT2/$TDIGIT3.state.txt $SOURCE_DIR/$TDIGIT1/$TDIGIT2/$TDIGIT3.state.txt
-  };
-  done
+  LOCAL_PATH="$LOCAL_DIR/$TDIGIT1/$TDIGIT2"
+  REMOTE_PATH="$SOURCE_DIR/$TDIGIT1/$TDIGIT2"
+  mkdir -p "$LOCAL_DIR/$TDIGIT1/$TDIGIT2"
+
+  retry_fetch_file "$REMOTE_PATH/$TDIGIT3.osc.gz" "$LOCAL_PATH/$TDIGIT3.osc.gz"
+  retry_fetch_file "$REMOTE_PATH/$TDIGIT3.state.txt" "$LOCAL_PATH/$TDIGIT3.state.txt"
+
   TIMESTAMP_LINE=`grep timestamp $LOCAL_DIR/$TDIGIT1/$TDIGIT2/$TDIGIT3.state.txt`
   TIMESTAMP=${TIMESTAMP_LINE:10}
 };
 
-while [[ 0 -eq 0 ]];
+while [[ true ]];
 do
 {
   REPLICATE_ID=$(($REPLICATE_ID + 1))

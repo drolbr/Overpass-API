@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [[ -z $3  ]]; then
 {
@@ -7,11 +7,18 @@ if [[ -z $3  ]]; then
 };
 fi
 
-DB_DIR=$1
-REPLICATE_DIR=$2
+DB_DIR="$1"
+REPLICATE_DIR="$2"
 START=$3
 TARGET=$(($START + 1))
 META=$4
+
+EXEC_DIR="`dirname $0`/"
+if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
+{
+  EXEC_DIR="`pwd`/$EXEC_DIR"
+};
+fi
 
 get_replicate_filename()
 {
@@ -57,7 +64,6 @@ apply_minute_diffs()
 
 update_state()
 {
-  echo "$TARGET" >$DB_DIR/replicate_id
   get_replicate_filename
   TIMESTAMP_LINE=`grep "^timestamp" <$REPLICATE_FILENAME.state.txt`
   while [[ -z $TIMESTAMP_LINE ]]; do
@@ -71,6 +77,8 @@ update_state()
 echo >>$DB_DIR/apply_osc_to_db.log
 
 # update_state
+
+pushd "$EXEC_DIR"
 
 while [[ true ]]; do
 {
@@ -86,6 +94,7 @@ while [[ true ]]; do
   if [[ $TARGET -gt $START ]]; then
   {
     apply_minute_diffs $TEMP_DIR
+    echo "$TARGET" >$DB_DIR/replicate_id
   };
   else
   {

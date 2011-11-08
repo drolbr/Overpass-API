@@ -11,6 +11,12 @@
 #include <string>
 #include <vector>
 
+#ifdef NATIVE_LARGE_FILES
+#define ftruncate64 ftruncate
+#define lseek64 lseek
+#define open64 open
+#endif
+
 using namespace std;
 
 typedef char int8;

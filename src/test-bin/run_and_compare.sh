@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 TEST_BIN_DIR="$(cd `dirname $0` && pwd)"
 

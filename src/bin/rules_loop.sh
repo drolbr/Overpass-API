@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [[ -z $1  ]]; then
 {
@@ -8,6 +8,15 @@ if [[ -z $1  ]]; then
 fi
 
 DB_DIR=$1
+
+EXEC_DIR="`dirname $0`/"
+if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
+{
+  EXEC_DIR="`pwd`/$EXEC_DIR"
+};
+fi
+
+pushd "$EXEC_DIR"
 
 while [[ true ]]; do
 {

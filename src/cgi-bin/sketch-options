@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 BUF=$QUERY_STRING\&
 
@@ -10,21 +10,27 @@ ACTION=
 STYLE=
 DATA=
 
-while [[ -n $BUF ]]; do
+EXEC_DIR="`dirname $0`/"
+if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
 {
-  KEY=`echo $BUF | awk '{ print substr($0,0,match($0,"=")); }'`
-  BUF=`echo $BUF | awk '{ print substr($0,match($0,"=")+1); }'`
-  VALUE=`echo $BUF | awk '{ print substr($0,0,match($0,"\&")); }'`
-  BUF=`echo $BUF | awk '{ print substr($0,match($0,"\&")+1); }'`
-  if [[ $KEY == "action" ]]; then
-    ACTION=$VALUE
-  elif [[ $KEY == "style" ]]; then
-    STYLE=$VALUE
-  elif [[ $KEY == "data" ]]; then
-    DATA=$VALUE
-  fi
+  EXEC_DIR="`pwd`/$EXEC_DIR"
 };
-done
+fi
+
+pushd "$EXEC_DIR"
+
+IFS=$'&'
+for KEY_VAL in $QUERY_STRING; do
+{
+  if [[ ${KEY_VAL:0:7} == "action=" ]]; then
+    ACTION="${KEY_VAL:7}"
+  elif [[ ${KEY_VAL:0:6} == "style=" ]]; then
+    STYLE="${KEY_VAL:6}"
+  elif [[ ${KEY_VAL:0:5} == "data=" ]]; then
+    DATA="${KEY_VAL:5}"
+  fi
+}; done
+unset IFS
 
 echo "Content-Type: text/html; charset=utf-8\n"
 echo

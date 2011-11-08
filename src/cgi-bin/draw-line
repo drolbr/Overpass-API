@@ -1,40 +1,45 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 BUF=$QUERY_STRING\&
 
 SKETCH_PARAMS=
 BRIM_PARAMS=
-BIN_DIR=../bin
 
-while [[ -n $BUF ]]; do
+EXEC_DIR="`dirname $0`/"
+if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
 {
-  KEY=`echo $BUF | awk '{ print substr($0,0,match($0,"=")); }'`
-  BUF=`echo $BUF | awk '{ print substr($0,match($0,"=")+1); }'`
-  VALUE=`echo $BUF | awk '{ print substr($0,0,match($0,"\&")); }'`
-  BUF=`echo $BUF | awk '{ print substr($0,match($0,"\&")+1); }'`
-  if [[ $KEY == "network" && -n $VALUE ]]; then
-  {
-    NETWORK=$VALUE
-    NETWORK_=`echo $VALUE | $BIN_DIR/uncgi`
-  };
-  elif [[ $KEY == "ref" && -n $VALUE ]]; then
-  {
-    REF=$VALUE
-    REF_=`echo $VALUE | $BIN_DIR/uncgi`
-  };
-  elif [[ $KEY == "pivot-lon" && -n $VALUE ]]; then
-    SKETCH_PARAMS="$SKETCH_PARAMS --pivot-lon=$VALUE"
-  elif [[ $KEY == "scale" && -n $VALUE ]]; then
-    SKETCH_PARAMS="$SKETCH_PARAMS --scale=$VALUE"
-  elif [[ $KEY == "font-size" && -n $VALUE ]]; then
-    SKETCH_PARAMS="$SKETCH_PARAMS --stop-font-size=$VALUE"
-  elif [[ $KEY == "debug" && -n $VALUE ]]; then
-    DEBUG=$VALUE
-  fi
+  EXEC_DIR="`pwd`/$EXEC_DIR"
 };
-done
+fi
 
-BASEDIR=`mktemp -d`
+BIN_DIR="$EXEC_DIR/../bin"
+
+IFS=$'&'
+for KEY_VAL in $QUERY_STRING; do
+{
+  if [[ ${KEY_VAL:0:8} == "network=" ]]; then
+  {
+    NETWORK="${KEY_VAL:8}"
+    NETWORK_=`echo "${KEY_VAL:0:8}" | $BIN_DIR/uncgi`
+  };
+  elif [[ ${KEY_VAL:0:4} == "ref=" ]]; then
+  {
+    REF="${KEY_VAL:4}"
+    REF_=`echo "${KEY_VAL:0:8}" | $BIN_DIR/uncgi`
+  };
+  elif [[ ${KEY_VAL:0:10} == "pivot-lon=" ]]; then
+    SKETCH_PARAMS="$SKETCH_PARAMS --pivot-lon=${KEY_VAL:10}"
+  elif [[ ${KEY_VAL:0:6} == "scale=" ]]; then
+    SKETCH_PARAMS="$SKETCH_PARAMS --scale=${KEY_VAL:6}"
+  elif [[ ${KEY_VAL:0:10} == "font-size=" ]]; then
+    SKETCH_PARAMS="$SKETCH_PARAMS --stop-font-size=${KEY_VAL:10}"
+  elif [[ ${KEY_VAL:0:6} == "debug=" ]]; then
+    DEBUG="${KEY_VAL:6}"
+  fi
+}; done
+unset IFS
+
+BASEDIR=`mktemp -d /tmp/osm3s_draw_line_XXXXXX`
 
 echo -e "\
 <osm-script> \

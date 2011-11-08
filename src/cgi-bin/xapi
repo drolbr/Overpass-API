@@ -1,6 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-BIN_DIR=../bin
+EXEC_DIR="`dirname $0`/"
+if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
+{
+  EXEC_DIR="`pwd`/$EXEC_DIR"
+};
+fi
+
+BIN_DIR="$EXEC_DIR/../bin"
+
 BUF="`echo "$QUERY_STRING" | $BIN_DIR/uncgi`"
 if [[ "${BUF:0:5}" == "debug" ]]; then
 {

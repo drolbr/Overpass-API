@@ -1,56 +1,61 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-BUF=$QUERY_STRING\&
+BUF="$QUERY_STRING&"
 
 SKETCH_PARAMS=
 BRIM_PARAMS=
-BIN_DIR=../bin
 
-while [[ -n $BUF ]]; do
+EXEC_DIR="`dirname $0`/"
+if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
 {
-  KEY=`echo $BUF | awk '{ print substr($0,0,match($0,"=")); }'`
-  BUF=`echo $BUF | awk '{ print substr($0,match($0,"=")+1); }'`
-  VALUE=`echo $BUF | awk '{ print substr($0,0,match($0,"\&")); }'`
-  BUF=`echo $BUF | awk '{ print substr($0,match($0,"\&")+1); }'`
-  if [[ $KEY == "network" && -n $VALUE ]]; then
-  {
-    NETWORK=$VALUE
-    NETWORK_=`echo $VALUE | $BIN_DIR/uncgi`
-  };
-  elif [[ $KEY == "ref" && -n $VALUE ]]; then
-  {
-    REF=$VALUE
-    REF_=`echo $VALUE | $BIN_DIR/uncgi`
-  };
-  elif [[ $KEY == "width" && -n $VALUE ]]; then
-    SKETCH_PARAMS="$SKETCH_PARAMS --width=$VALUE"
-  elif [[ $KEY == "height" && -n $VALUE ]]; then
-    SKETCH_PARAMS="$SKETCH_PARAMS --height=$VALUE"
-  elif [[ $KEY == "font-size" && -n $VALUE ]]; then
-    SKETCH_PARAMS="$SKETCH_PARAMS --stop-font-size=$VALUE"
-  elif [[ $KEY == "force-rows" && -n $VALUE ]]; then
-    SKETCH_PARAMS="$SKETCH_PARAMS --rows=$VALUE"
-  elif [[ $KEY == "style" && -n $VALUE ]]; then
-  {
-    SKETCH_PARAMS="$SKETCH_PARAMS --options=/opt/osm_why_api/options/sketch-line.$VALUE"
-    BRIM_PARAMS="$BRIM_PARAMS --options=/opt/osm_why_api/options/sketch-line.$VALUE"
-  };
-  elif [[ $KEY == "correspondences" && -n $VALUE ]]; then
-  {
-    SKETCH_PARAMS="$SKETCH_PARAMS --walk-limit=$VALUE"
-    BRIM_PARAMS="$BRIM_PARAMS --size=$VALUE"
-  };
-  elif [[ $KEY == "max-cors-per-line" && -n $VALUE ]]; then
-    SKETCH_PARAMS="$SKETCH_PARAMS --max-correspondences-per-line=$VALUE"
-  elif [[ $KEY == "max-cors-below" && -n $VALUE ]]; then
-    SKETCH_PARAMS="$SKETCH_PARAMS --max-correspondences-below=$VALUE"
-  elif [[ $KEY == "debug" && -n $VALUE ]]; then
-    DEBUG=$VALUE
-  fi
+  EXEC_DIR="`pwd`/$EXEC_DIR"
 };
-done
+fi
 
-BASEDIR=`mktemp -d`
+BIN_DIR="$EXEC_DIR/../bin"
+
+IFS=$'&'
+for KEY_VAL in $QUERY_STRING; do
+{
+  if [[ ${KEY_VAL:0:8} == "network=" ]]; then
+  {
+    NETWORK="${KEY_VAL:8}"
+    NETWORK_=`echo "${KEY_VAL:0:8}" | $BIN_DIR/uncgi`
+  };
+  elif [[ ${KEY_VAL:0:4} == "ref=" ]]; then
+  {
+    REF="${KEY_VAL:4}"
+    REF_=`echo "${KEY_VAL:0:8}" | $BIN_DIR/uncgi`
+  };
+  elif [[ ${KEY_VAL:0:6} == "width=" ]]; then
+    SKETCH_PARAMS="$SKETCH_PARAMS --width=${KEY_VAL:6}"
+  elif [[ ${KEY_VAL:0:7} == "height=" ]]; then
+    SKETCH_PARAMS="$SKETCH_PARAMS --height=${KEY_VAL:7}"
+  elif [[ ${KEY_VAL:0:10} == "font-size=" ]]; then
+    SKETCH_PARAMS="$SKETCH_PARAMS --stop-font-size=${KEY_VAL:10}"
+  elif [[ ${KEY_VAL:0:11} == "force-rows=" ]]; then
+    SKETCH_PARAMS="$SKETCH_PARAMS --rows=${KEY_VAL:11}"
+  elif [[ ${KEY_VAL:0:6} == "style=" ]]; then
+  {
+    SKETCH_PARAMS="$SKETCH_PARAMS --options=/opt/osm_why_api/options/sketch-line.${KEY_VAL:6}"
+    BRIM_PARAMS="$BRIM_PARAMS --options=/opt/osm_why_api/options/sketch-line.${KEY_VAL:6}"
+  };
+  elif [[ ${KEY_VAL:0:16} == "correspondences=" ]]; then
+  {
+    SKETCH_PARAMS="$SKETCH_PARAMS --walk-limit=${KEY_VAL:16}"
+    BRIM_PARAMS="$BRIM_PARAMS --size=${KEY_VAL:16}"
+  };
+  elif [[ ${KEY_VAL:0:18} == "max-cors-per-line=" ]]; then
+    SKETCH_PARAMS="$SKETCH_PARAMS --max-correspondences-per-line=${KEY_VAL:18}"
+  elif [[ ${KEY_VAL:0:15} == "max-cors-below=" ]]; then
+    SKETCH_PARAMS="$SKETCH_PARAMS --max-correspondences-below=${KEY_VAL:15}"
+  elif [[ ${KEY_VAL:0:6} == "debug=" ]]; then
+    DEBUG="${KEY_VAL:6}"
+  fi
+}; done
+unset IFS
+
+BASEDIR=`mktemp -d /tmp/osm3s_sketch_line_XXXXXX`
 
 if [[ -z $REF ]]; then
 {                     

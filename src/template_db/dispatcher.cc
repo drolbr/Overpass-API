@@ -77,7 +77,7 @@ Dispatcher::Dispatcher
       shadow_name(shadow_name_), db_dir(db_dir_),
       dispatcher_share_name(dispatcher_share_name_),
       max_num_reading_processes(max_num_reading_processes_),
-      purge_timeout(180),
+      purge_timeout(900),
       logger(logger_)
 {
   // get the absolute pathname of the current directory
