@@ -453,6 +453,15 @@ int main(int argc, char* args[])
     perform_query_with_bbox("way", "way_key_5", "way_value_5",
 			    "57.5", "80.0", "75.0", "105.0", args[3]);
 
+  if ((test_to_execute == "") || (test_to_execute == "30"))
+    // Test a bbox combined with a global key-value pair, yielding diagonal ways.
+    perform_query_with_bbox("relation", "relation_key_2/4", "",
+			    "12.5", "35.0", "-15.0", "45.0", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "31"))
+    // Test a bbox combined with a global key-value pair, yielding horizontal and vertical ways.
+    perform_query_with_bbox("relation", "relation_key_2/4", "",
+			    "57.5", "80.0", "75.0", "105.0", args[3]);
+
   cout<<"</osm>\n";
   return 0;
 }

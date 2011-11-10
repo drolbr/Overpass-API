@@ -695,6 +695,40 @@ struct Accept_Query_29 : public Accept_All_Tags
     uint pattern_size;
 };
 
+struct Accept_Query_30 : public Accept_All_Tags
+{
+  Accept_Query_30(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const
+  {
+    if (id == 18)
+      return true;
+    return (id == 22 && pattern_size <= 360);
+  }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_31 : public Accept_All_Tags
+{
+  Accept_Query_31(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const
+  {
+    if (id == 14)
+      return true;
+    return (id == 22 && pattern_size <= 200);
+  }
+  
+  private:
+    uint pattern_size;
+};
+
 struct Accept_Foreach_1 : public Accept_All_Tags
 {
   Accept_Foreach_1(uint pattern_size_)
@@ -1251,6 +1285,10 @@ int main(int argc, char* args[])
       modifier = new Accept_Query_28(pattern_size);
     else if (string(args[2]) == "query_29")
       modifier = new Accept_Query_29(pattern_size);
+    else if (string(args[2]) == "query_30")
+      modifier = new Accept_Query_30(pattern_size);
+    else if (string(args[2]) == "query_31")
+      modifier = new Accept_Query_31(pattern_size);
     else if (string(args[2]) == "union_1")
       modifier = new Accept_Union_1(pattern_size);
     else if (string(args[2]) == "union_2")

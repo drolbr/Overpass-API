@@ -86,18 +86,7 @@ void Query_Statement::add_statement(Statement* statement, string text)
     }
     constraints.push_back(statement->get_query_constraint());
   }
-  else if (bbox != 0)
-  {
-    if (type != QUERY_NODE && type != QUERY_WAY)
-    {
-      ostringstream temp;
-      temp<<"A bbox-query as substatement is only allowed for queries of type \"node\" or \"way\".";
-      add_static_error(temp.str());
-      return;
-    }
-    constraints.push_back(statement->get_query_constraint());
-  }
-  else if ((item != 0) || (user != 0) || (newer != 0))
+  else if ((bbox != 0) || (item != 0) || (user != 0) || (newer != 0))
     constraints.push_back(statement->get_query_constraint());
   else
     substatement_error(get_name(), statement);
