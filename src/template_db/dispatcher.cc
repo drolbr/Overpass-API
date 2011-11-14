@@ -68,7 +68,7 @@ Dispatcher::Dispatcher
      string index_share_name,
      string shadow_name_,
      string db_dir_,
-     uint max_num_reading_processes_,
+     uint max_num_reading_processes_, uint purge_timeout_,
      const vector< File_Properties* >& controlled_files_,
      Dispatcher_Logger* logger_)
     : controlled_files(controlled_files_),
@@ -77,7 +77,7 @@ Dispatcher::Dispatcher
       shadow_name(shadow_name_), db_dir(db_dir_),
       dispatcher_share_name(dispatcher_share_name_),
       max_num_reading_processes(max_num_reading_processes_),
-      purge_timeout(900),
+      purge_timeout(purge_timeout_),
       logger(logger_)
 {
   // get the absolute pathname of the current directory

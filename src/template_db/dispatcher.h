@@ -63,7 +63,7 @@ class Dispatcher
 	       string index_share_name,
 	       string shadow_name,
 	       string db_dir,
-	       uint max_num_reading_processes,
+	       uint max_num_reading_processes, uint purge_timeout,
 	       const vector< File_Properties* >& controlled_files,
 	       Dispatcher_Logger* logger = 0);
 	       

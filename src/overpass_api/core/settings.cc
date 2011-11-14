@@ -106,7 +106,8 @@ Osm_Base_Settings::Osm_Base_Settings()
       ("relation_tags_global", 2*1024*1024, 0)),
       
   shared_name(basic_settings().shared_name_base + "_osm_base"),
-  max_num_processes(20)
+  max_num_processes(20),
+  purge_timeout(900)
 {}
 
 const Osm_Base_Settings& osm_base_settings()
@@ -128,7 +129,8 @@ Area_Settings::Area_Settings()
       ("area_tags_global", 512*1024, 0)),
       
   shared_name(basic_settings().shared_name_base + "_areas"),
-  max_num_processes(5)
+  max_num_processes(5),
+  purge_timeout(900)
 {}
 
 const Area_Settings& area_settings()
