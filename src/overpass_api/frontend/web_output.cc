@@ -155,7 +155,7 @@ void Web_Output::write_xml_header
   header_written = xml;
   
   cout<<
-  "Content-type: application/osm3s\n\n";
+  "Content-type: application/osm3s+xml\n\n";
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm version=\"0.6\" generator=\"Overpass API\">\n"
   "<note>The data included in this document is from www.openstreetmap.org. "
