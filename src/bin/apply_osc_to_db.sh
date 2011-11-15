@@ -84,7 +84,7 @@ while [[ true ]]; do
 {
   echo "`date '+%F %T'`: updating from $START" >>$DB_DIR/apply_osc_to_db.log
 
-  TEMP_DIR=`mktemp -d`
+  TEMP_DIR=`mktemp -d /tmp/osm-3s_update_XXXXXX`
   collect_minute_diffs $TEMP_DIR
 
   echo "`date '+%F %T'`: updating to $TARGET" >>$DB_DIR/apply_osc_to_db.log
