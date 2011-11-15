@@ -1,24 +1,36 @@
 #!/usr/bin/env bash
 
-if [[ -z $3  ]]; then
+if [[ -z $4  ]]; then
 {
-  echo Usage: $0 database_dir replicate_dir start_id
+  echo "Usage: $0 database_dir replicate_dir start_id --meta=(yes|no)"
   exit 0
-};
-fi
+}; fi
 
 DB_DIR="$1"
 REPLICATE_DIR="$2"
 START=$3
 TARGET=$(($START + 1))
-META=$4
+META=
+
+if [[ $4 == "--meta=yes" || $4 == "--meta" ]]; then
+{
+  META="--meta"
+}
+elif [[ $4 == "--meta=no" ]]; then
+{
+  META=
+}
+else
+{
+  echo "You must specify --meta=yes or --meta=no"
+  exit 0
+}; fi
 
 EXEC_DIR="`dirname $0`/"
 if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
 {
   EXEC_DIR="`pwd`/$EXEC_DIR"
-};
-fi
+}; fi
 
 get_replicate_filename()
 {
