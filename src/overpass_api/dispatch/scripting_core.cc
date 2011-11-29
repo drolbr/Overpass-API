@@ -308,7 +308,7 @@ void end(const char *el)
     }
     
     statement_stack.pop_back();
-    if ((statement_stack.back()) && (statement))
+    if (statement_stack.back() && statement)
       statement_stack.back()->add_statement(statement, text_stack.back());
     text_stack.pop_back();
   }
@@ -319,7 +319,7 @@ void end(const char *el)
 bool parse_and_validate
     (const string& xml_raw, Error_Output* error_output)
 {
-  if ((error_output) && (error_output->display_encoding_errors()))
+  if (error_output && error_output->display_encoding_errors())
     return false;
   
   try

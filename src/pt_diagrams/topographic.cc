@@ -1,6 +1,11 @@
+#include "read_input.h"
+#include "test_output.h"
+#include "../../src/expat/expat_justparse_interface.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <list>
@@ -9,9 +14,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include "read_input.h"
-#include "test_output.h"
 
 using namespace std;
 
@@ -399,10 +401,12 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
 {
   Features features;
 
+  // Convert lons into relative lons w.r.t. to their real distance to the pivot_lon
   for (map< uint32, Node* >::iterator it = osm_data.nodes.begin();
       it != osm_data.nodes.end(); ++it)
     it->second->lon = transform_lon(it->second->lat, it->second->lon, pivot_lon);
-  
+
+  // Detect stops and attach them to ways.
   map< Way*, vector< Way_Position > > stops_per_way;
   for (map< uint32, Relation* >::const_iterator it(osm_data.relations.begin());
       it != osm_data.relations.end(); ++it)
@@ -432,7 +436,9 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
       way_pos.color = stop_feature.color;
       way_pos.name = stop_feature.name;
       stops_per_way[way_pos.way].push_back(way_pos);
-/*      stop_feature.lat = (1.0 - way_pos.pos) * way_pos.way->nds[way_pos.segment_idx]->lat
+      
+/*      // Debug code
+      stop_feature.lat = (1.0 - way_pos.pos) * way_pos.way->nds[way_pos.segment_idx]->lat
           + way_pos.pos * way_pos.way->nds[way_pos.segment_idx+1]->lat;
       stop_feature.lon = (1.0 - way_pos.pos) * way_pos.way->nds[way_pos.segment_idx]->lon
           + way_pos.pos * way_pos.way->nds[way_pos.segment_idx+1]->lon;
@@ -444,7 +450,9 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
     sort(it->second.begin(), it->second.end());
     
   // --------------------------------------------------------------------------
-  
+
+  // Coarse nodes
+
   const double deg_threshold = threshold/40000000*360.0;
   
   // Debug output
@@ -1196,7 +1204,7 @@ string shifted(double x, double y, double after_x, double after_y, int shift, bo
 }
 
 void sketch_features
-    (const OSMData& osm_data,
+    (ostream& out, const OSMData& osm_data,
      const Features& features,
      double pivot_lon, double m_per_pixel, double stop_font_size,
      double south = 100.0, double north = 100.0, double west = 200.0, double east = 200.0)
@@ -1211,17 +1219,20 @@ void sketch_features
     bbox.east = east;
     bbox.west = west;
   }
+  else
+  {
+    bbox.north += 0.001*m_per_pixel;
+    bbox.south -= 0.001*m_per_pixel;
+    bbox.east += 0.003*m_per_pixel;
+    bbox.west -= 0.003*m_per_pixel;
+  }
   
   // expand the bounding box to avoid elements scratching the frame
-  bbox.north += 0.001*m_per_pixel;
-  bbox.south -= 0.001*m_per_pixel;
-  bbox.east += 0.003*m_per_pixel;
-  bbox.west -= 0.003*m_per_pixel;
   ::Coord_Transform coord_transform
       (bbox.north, bbox.south, bbox.west, bbox.east,
        m_per_pixel, pivot_lon);
   
-  cout<<"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+  out<<"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
   "<svg xmlns=\"http://www.w3.org/2000/svg\"\n"
   "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
   "     xmlns:ev=\"http://www.w3.org/2001/xml-events\"\n"
@@ -1234,17 +1245,17 @@ void sketch_features
   for (vector< StopFeature >::const_iterator it(features.stops.begin());
       it != features.stops.end(); ++it)
   {
-    cout<<"<circle cx=\""
+    out<<"<circle cx=\""
         <<coord_transform.hpos(it->lat, it->lon)
         <<"\" cy=\""
 	<<coord_transform.vpos(it->lat)
         <<"\" r=\"6\" fill=\""<<it->color<<"\"/>\n";
-	cout<<"<text x=\""
+	out<<"<text x=\""
 	    <<coord_transform.hpos(it->lat, it->lon) + 6
 	    <<"\" y=\""<<coord_transform.vpos(it->lat) - 6
 	    <<"\" font-size=\""<<stop_font_size<<"px\">"<<it->name<<"</text>\n";
   }
-  cout<<'\n';
+  out<<'\n';
   
   for (vector< RouteFeature >::const_iterator it(features.routes.begin());
       it != features.routes.end(); ++it)
@@ -1265,7 +1276,7 @@ void sketch_features
       if (it2->lat_lon.size() < 2)
 	continue;
       
-      cout<<"<polyline fill=\"none\" stroke=\""<<it->color
+      out<<"<polyline fill=\"none\" stroke=\""<<it->color
           <<"\" stroke-width=\"3px\" points=\"";
 	  
       // Prepare coordinates to enable forward looking.
@@ -1330,20 +1341,20 @@ void sketch_features
       {
 	unsigned int line_size = x_s.size();
 	if (display_front)
-	  cout<<shifted(x_s[0], y_s[0], x_s[1], y_s[1], shifts[0], true);
+	  out<<shifted(x_s[0], y_s[0], x_s[1], y_s[1], shifts[0], true);
 	for (unsigned int i = 1; i < line_size-1; ++i)
-	  cout<<", "<<shifted(x_s[i-1], y_s[i-1], x_s[i], y_s[i], x_s[i+1], y_s[i+1],
+	  out<<", "<<shifted(x_s[i-1], y_s[i-1], x_s[i], y_s[i], x_s[i+1], y_s[i+1],
 			      shifts[i-1], shifts[i]);
 	if (display_back)
-	  cout<<", "<<shifted(x_s[line_size-1], y_s[line_size-1],
+	  out<<", "<<shifted(x_s[line_size-1], y_s[line_size-1],
 			      x_s[line_size-2], y_s[line_size-2], -shifts[line_size-1], false);	
       }
-      cout<<"\"/>\n";
+      out<<"\"/>\n";
     }
-    cout<<'\n';
+    out<<'\n';
   }
   
-  cout<<"</svg>\n";
+  out<<"</svg>\n";
 }
 
 void restrict_to_bbox(Features& features, double north, double south, double west, double east)
@@ -1376,6 +1387,49 @@ void restrict_to_bbox(Features& features, double north, double south, double wes
   }
 }
 
+struct Map_Configuration
+{
+  double north, south, east, west;
+  string name;
+  vector< Map_Configuration >::size_type parent;
+};
+
+vector< Map_Configuration > config_data;
+vector< vector< Map_Configuration >::size_type > config_data_stack;
+
+void lokotree_start(const char *el, const char **attr)
+{
+  if (!strcmp(el, "map"))
+  {
+    Map_Configuration config;
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "s"))
+	config.south = atof(attr[i+1]);
+      else if (!strcmp(attr[i], "n"))
+	config.north = atof(attr[i+1]);
+      else if (!strcmp(attr[i], "e"))
+	config.east = atof(attr[i+1]);
+      else if (!strcmp(attr[i], "w"))
+	config.west = atof(attr[i+1]);
+      else if (!strcmp(attr[i], "zoom"))
+	config.name = attr[i+1];
+    }
+    if (config_data_stack.empty())
+      config.parent = config_data.size();
+    else
+      config.parent = config_data_stack.back();
+    config_data_stack.push_back(config_data.size());
+    config_data.push_back(config);
+  }
+}
+
+void lokotree_end(const char *el)
+{
+  if (!strcmp(el, "map"))
+    config_data_stack.pop_back();
+}
+
 int main(int argc, char *argv[])
 {
   int argi(1);
@@ -1399,6 +1453,11 @@ int main(int argc, char *argv[])
       east = atof(((string)(argv[argi])).substr(7).c_str());
     else if (!strncmp("--threshold=", argv[argi], 12))
       threshold = atof(((string)(argv[argi])).substr(12).c_str());
+    else if (!strncmp("--config=", argv[argi], 9))
+    {
+      FILE* config_file(fopen(((string)(argv[argi])).substr(9).c_str(), "r"));
+      parse(config_file, lokotree_start, lokotree_end);
+    }
     ++argi;
   }
   
@@ -1408,21 +1467,54 @@ int main(int argc, char *argv[])
   // choose pivot_lon automatically
   if (pivot_lon == -200.0)
     pivot_lon = middle_lon(current_data);
+
+  Features features(extract_features
+      (const_cast< OSMData& >(current_data), pivot_lon, threshold));
   
-  Features features(extract_features(const_cast< OSMData& >(current_data), pivot_lon, threshold));
-  
-  if (north != 100.0 && south != 100.0 && east != 200.0 && west != 200.0)
+  if (!config_data.empty())
+  {
+    int i = 0;
+    for (vector< Map_Configuration >::const_iterator it = config_data.begin();
+        it != config_data.end(); ++it)
+    {
+      Features local_features = features;
+
+      double lat_scale = ((it->north - it->south)/360.0*40*1000*1000)/600.0;
+      double lon_scale = (
+          (transform_lon((it->north + it->south)/2.0, it->east, pivot_lon) - 
+	   transform_lon((it->north + it->south)/2.0, it->west, pivot_lon))
+	   /360.0*40*1000*1000)/600.0;
+      scale = max(lat_scale, lon_scale);
+      
+      restrict_to_bbox(local_features, it->north, it->south,
+		       transform_lon((it->north + it->south)/2.0, it->west, pivot_lon),
+		       transform_lon((it->north + it->south)/2.0, it->east, pivot_lon));
+      ostringstream file_name;
+      file_name<<i++<<".svg";
+      ofstream out(file_name.str().c_str());
+      sketch_features(out, current_data, local_features, 0.0, scale,
+		      stop_font_size, it->south, it->north,
+		      transform_lon((it->north + it->south)/2.0, it->west, pivot_lon),
+		      transform_lon((it->north + it->south)/2.0, it->east, pivot_lon));
+
+      cout<<it->parent<<","<<(- transform_lon
+              ((it->north + it->south)/2.0, it->west, pivot_lon))*(1000000.0/9.0)/scale
+          <<","<<0<<","<<it->north<<","<<pivot_lon<<","<<scale
+          <<",\""<<it->name<<"\"\n";
+    }
+  }
+  else if (north != 100.0 && south != 100.0 && east != 200.0 && west != 200.0)
   {
     restrict_to_bbox(features, north, south,
 		     transform_lon((north + south)/2.0, west, pivot_lon),
 		     transform_lon((north + south)/2.0, east, pivot_lon));
-    sketch_features(current_data, features, 0.0, scale,
+    sketch_features(cout, current_data, features, 0.0, scale,
 		    stop_font_size, south, north,
 		    transform_lon((north + south)/2.0, west, pivot_lon),
 		    transform_lon((north + south)/2.0, east, pivot_lon));
   }
-  else  
-    sketch_features(current_data, features, 0.0, scale,
+  else
+    sketch_features(cout, current_data, features, 0.0, scale,
 		    stop_font_size);
 
   //sketch_unscaled_osm_data(current_data);
