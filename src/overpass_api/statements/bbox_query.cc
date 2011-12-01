@@ -404,6 +404,13 @@ void Bbox_Query_Statement::set_attributes(const char **attr)
     <<" the only allowed values are floats between -90.0 and 90.0.";
     add_static_error(temp.str());
   }
+  if (north < south)
+  {
+    ostringstream temp;
+    temp<<"The value of attribute \"n\" of the element \"bbox-query\""
+    <<" must always be greater or equal than the value of attribute \"s\".";
+    add_static_error(temp.str());
+  }
   west = atof(attributes["w"].c_str());
   if ((west < -180.0) || (west > 180.0) || (attributes["w"] == ""))
   {
