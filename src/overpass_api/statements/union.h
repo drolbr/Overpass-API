@@ -12,8 +12,7 @@ using namespace std;
 class Union_Statement : public Statement
 {
   public:
-    Union_Statement(int line_number_) : Statement(line_number_) {}
-    virtual void set_attributes(const char **attr);
+    Union_Statement(int line_number_, const map< string, string >& input_attributes);
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "union"; }
     virtual string get_result_name() const { return output; }

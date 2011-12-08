@@ -22,17 +22,18 @@
 
 using namespace std;
 
-void Statement::eval_cstr_array(string element, map< string, string >& attributes, const char **attr)
+void Statement::eval_attributes_array(string element, map< string, string >& attributes,
+				      const map< string, string >& input)
 {
-  for (unsigned int i(0); attr[i]; i += 2)
+  for (map< string, string >::const_iterator it = input.begin(); it != input.end(); ++it)
   {
-    map< string, string >::iterator it(attributes.find(attr[i]));
-    if (it != attributes.end())
-      it->second = attr[i+1];
+    map< string, string >::iterator ait(attributes.find(it->first));
+    if (ait != attributes.end())
+      ait->second = it->second;
     else
     {
       ostringstream temp;
-      temp<<"Unknown attribute \""<<attr[i]<<"\" in element \""<<element<<"\".";
+      temp<<"Unknown attribute \""<<it->first<<"\" in element \""<<element<<"\".";
       add_static_error(temp.str());
     }
   }
@@ -82,46 +83,47 @@ void Statement::display_starttag()
   //display_verbatim(get_source(startpos, tagendpos - startpos));
 }
 
-Statement* Statement::create_statement(string element, int line_number)
+Statement* Statement::create_statement(string element, int line_number,
+				       const map< string, string >& attributes)
 {
   if (element == "area-query")
-    return new Area_Query_Statement(line_number);
+    return new Area_Query_Statement(line_number, attributes);
   else if (element == "around")
-    return new Around_Statement(line_number);
+    return new Around_Statement(line_number, attributes);
   else if (element == "bbox-query")
-    return new Bbox_Query_Statement(line_number);
+    return new Bbox_Query_Statement(line_number, attributes);
 /*  else if (element == "conflict")
     return new Conflict_Statement(line_number);*/
   else if (element == "coord-query")
-    return new Coord_Query_Statement(line_number);
+    return new Coord_Query_Statement(line_number, attributes);
 /*  else if (element == "detect-odd-nodes")
     return new Detect_Odd_Nodes_Statement();*/
   else if (element == "foreach")
-    return new Foreach_Statement(line_number);
+    return new Foreach_Statement(line_number, attributes);
   else if (element == "has-kv")
-    return new Has_Kv_Statement(line_number);
+    return new Has_Kv_Statement(line_number, attributes);
   else if (element == "id-query")
-    return new Id_Query_Statement(line_number);
+    return new Id_Query_Statement(line_number, attributes);
   else if (element == "item")
-    return new Item_Statement(line_number);
+    return new Item_Statement(line_number, attributes);
   else if (element == "make-area")
-    return new Make_Area_Statement(line_number);
+    return new Make_Area_Statement(line_number, attributes);
   else if (element == "newer")
-    return new Newer_Statement(line_number);
+    return new Newer_Statement(line_number, attributes);
   else if (element == "osm-script")
-    return new Osm_Script_Statement(line_number);
+    return new Osm_Script_Statement(line_number, attributes);
   else if (element == "print")
-    return new Print_Statement(line_number);
+    return new Print_Statement(line_number, attributes);
   else if (element == "query")
-    return new Query_Statement(line_number);
+    return new Query_Statement(line_number, attributes);
   else if (element == "recurse")
-    return new Recurse_Statement(line_number);
+    return new Recurse_Statement(line_number, attributes);
 /*  else if (element == "report")
     return new Report_Statement();*/
   else if (element == "union")
-    return new Union_Statement(line_number);
+    return new Union_Statement(line_number, attributes);
   else if (element == "user")
-    return new User_Statement(line_number);
+    return new User_Statement(line_number, attributes);
   
   ostringstream temp;
   temp<<"Unknown tag \""<<element<<"\" in line "<<line_number<<'.';
@@ -149,4 +151,12 @@ void Statement::runtime_remark(string error)
 {
   if (error_output)
     error_output->runtime_remark(error);
+}
+
+map< string, string > convert_c_pairs(const char** attr)
+{
+  map< string, string > result;
+  for (int i = 0; attr[i]; i+=2)
+    result[attr[i]] = attr[i+1];
+  return result;
 }

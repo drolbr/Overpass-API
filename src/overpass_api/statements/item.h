@@ -13,8 +13,7 @@ using namespace std;
 class Item_Statement : public Statement
 {
   public:
-    Item_Statement(int line_number_) : Statement(line_number_) {}
-    virtual void set_attributes(const char **attr);
+    Item_Statement(int line_number_, const map< string, string >& attributes);
     virtual string get_name() const { return "item"; }
     virtual string get_result_name() const { return output; }
     virtual void forecast();

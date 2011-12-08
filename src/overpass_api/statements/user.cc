@@ -61,14 +61,9 @@ void User_Constraint::filter(Resource_Manager& rman, Set& into)
 
 //-----------------------------------------------------------------------------
 
-User_Statement::~User_Statement()
-{
-  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
-      it != constraints.end(); ++it)
-    delete *it;
-}
-
-void User_Statement::set_attributes(const char **attr)
+User_Statement::User_Statement
+    (int line_number_, const map< string, string >& input_attributes)
+    : Statement(line_number_)
 {
   map< string, string > attributes;
   
@@ -77,7 +72,7 @@ void User_Statement::set_attributes(const char **attr)
   attributes["name"] = "";
   attributes["type"] = "";
   
-  eval_cstr_array(get_name(), attributes, attr);
+  eval_attributes_array(get_name(), attributes, input_attributes);
   
   output = attributes["into"];
   user_name = attributes["name"];
@@ -90,6 +85,13 @@ void User_Statement::set_attributes(const char **attr)
     add_static_error(temp.str());
   }
   result_type = attributes["type"];
+}
+
+User_Statement::~User_Statement()
+{
+  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+      it != constraints.end(); ++it)
+    delete *it;
 }
 
 uint32 get_user_id(const string& user_name, Transaction& transaction)

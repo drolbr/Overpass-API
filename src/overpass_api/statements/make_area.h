@@ -20,9 +20,7 @@ using namespace std;
 class Make_Area_Statement : public Statement
 {
   public:
-    Make_Area_Statement(int line_number_) : Statement(line_number_)
-        { is_used_ = true; }
-    virtual void set_attributes(const char **attr);
+    Make_Area_Statement(int line_number_, const map< string, string >& attributes);
     virtual string get_name() const { return "make-area"; }
     virtual string get_result_name() const { return output; }
     virtual void forecast();

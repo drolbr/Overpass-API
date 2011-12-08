@@ -11,9 +11,7 @@ using namespace std;
 class Area_Query_Statement : public Statement
 {
   public:
-    Area_Query_Statement(int line_number_) : Statement(line_number_)
-        { is_used_ = true; }
-    virtual void set_attributes(const char **attr);
+    Area_Query_Statement(int line_number_, const map< string, string >& attributes);
     virtual string get_name() const { return "area-query"; }
     virtual string get_result_name() const { return output; }
     virtual void forecast();

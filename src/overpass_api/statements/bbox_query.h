@@ -11,10 +11,7 @@ using namespace std;
 class Bbox_Query_Statement : public Statement
 {
   public:
-    Bbox_Query_Statement(int line_number_)
-      : Statement(line_number_)/*, area_restriction(0),
-        bbox_restriction(0)*/ {}
-    virtual void set_attributes(const char **attr);
+    Bbox_Query_Statement(int line_number_, const map< string, string >& attributes);
     virtual string get_name() const { return "bbox-query"; }
     virtual string get_result_name() const { return output; }
     virtual void forecast();

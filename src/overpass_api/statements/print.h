@@ -11,9 +11,7 @@ using namespace std;
 class Print_Statement : public Statement
 {
   public:
-    Print_Statement(int line_number_) : Statement(line_number_),
-        limit(numeric_limits< unsigned int >::max()) {}
-    virtual void set_attributes(const char **attr);
+    Print_Statement(int line_number_, const map< string, string >& attributes);
     virtual string get_name() const { return "print"; }
     virtual string get_result_name() const { return ""; }
     virtual void forecast();

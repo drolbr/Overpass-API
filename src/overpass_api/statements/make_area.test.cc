@@ -30,14 +30,13 @@ void evaluate_grid(double south, double north, double west, double east,
     for (double dlon = 0; dlon < east - west + step/2; dlon += step)
     {
       {
-	Coord_Query_Statement* stmt1 = new Coord_Query_Statement(0);
 	ostringstream v_lat, v_lon;
 	v_lat<<fixed<<setprecision(7)<<(dlat + south);
 	v_lon<<fixed<<setprecision(7)<<(dlon + west);
 	string s_lat = v_lat.str();
 	string s_lon = v_lon.str();
 	const char* attributes[] = { "lat", s_lat.c_str(), "lon", s_lon.c_str(), 0 };
-        stmt1->set_attributes(attributes);
+	Coord_Query_Statement* stmt1 = new Coord_Query_Statement(0, convert_c_pairs(attributes));
         stmt1->execute(rman);
       }
       uint area_count = 0;
@@ -49,9 +48,8 @@ void evaluate_grid(double south, double north, double west, double east,
       {
 	areas_printed = true;
 	
-	Print_Statement* stmt1 = new Print_Statement(0);
 	const char* attributes[] = { 0 };
-	stmt1->set_attributes(attributes);
+	Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes));
 	stmt1->execute(rman);
       }
     }
@@ -88,29 +86,24 @@ int main(int argc, char* args[])
   if (test_to_execute == "create")
   {
     {
-      Union_Statement* stmt3 = new Union_Statement(0);
       const char* attributes[] = { 0 };
-      stmt3->set_attributes(attributes);
+      Union_Statement* stmt3 = new Union_Statement(0, convert_c_pairs(attributes));
       {
-        Query_Statement* stmt1 = new Query_Statement(0);
-        const char* attributes[] = { "type", "way", 0 };
-        stmt1->set_attributes(attributes);
+	const char* attributes[] = { "type", "way", 0 };
+	Query_Statement* stmt1 = new Query_Statement(0, convert_c_pairs(attributes));
         {
-          Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0);
-          const char* attributes[] = { "k", "triangle", 0 };
-          stmt2->set_attributes(attributes);
+	  const char* attributes[] = { "k", "triangle", 0 };
+	  Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0, convert_c_pairs(attributes));
           stmt1->add_statement(stmt2, "");
         }
 	stmt3->add_statement(stmt1, "");
       }
       {
-        Query_Statement* stmt1 = new Query_Statement(0);
-        const char* attributes[] = { "type", "way", 0 };
-        stmt1->set_attributes(attributes);
+	const char* attributes[] = { "type", "way", 0 };
+	Query_Statement* stmt1 = new Query_Statement(0, convert_c_pairs(attributes));
         {
-          Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0);
-          const char* attributes[] = { "k", "shapes", 0 };
-          stmt2->set_attributes(attributes);
+	  const char* attributes[] = { "k", "shapes", 0 };
+	  Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0, convert_c_pairs(attributes));
           stmt1->add_statement(stmt2, "");
         }
 	stmt3->add_statement(stmt1, "");
@@ -118,74 +111,62 @@ int main(int argc, char* args[])
       stmt3->execute(rman);
     }
     {
-      Foreach_Statement* stmt1 = new Foreach_Statement(0);
       const char* attributes[] = { "into", "way", 0 };
-      stmt1->set_attributes(attributes);
+      Foreach_Statement* stmt1 = new Foreach_Statement(0, convert_c_pairs(attributes));
       {
-        Union_Statement* stmt2 = new Union_Statement(0);
-        const char* attributes[] = { 0 };
-        stmt2->set_attributes(attributes);
+	const char* attributes[] = { 0 };
+	Union_Statement* stmt2 = new Union_Statement(0, convert_c_pairs(attributes));
         {
-	  Recurse_Statement* stmt3 = new Recurse_Statement(0);
-          const char* attributes[] = { "type", "way-node", "from", "way", 0 };
-          stmt3->set_attributes(attributes);
+	  const char* attributes[] = { "type", "way-node", "from", "way", 0 };
+	  Recurse_Statement* stmt3 = new Recurse_Statement(0, convert_c_pairs(attributes));
           stmt2->add_statement(stmt3, "");
         }
         {
-	  Item_Statement* stmt3 = new Item_Statement(0);
-          const char* attributes[] = { "set", "way", 0 };
-          stmt3->set_attributes(attributes);
+	  const char* attributes[] = { "set", "way", 0 };
+	  Item_Statement* stmt3 = new Item_Statement(0, convert_c_pairs(attributes));
           stmt2->add_statement(stmt3, "");
         }
         stmt1->add_statement(stmt2, "");
       }
       {
-        Make_Area_Statement* stmt2 = new Make_Area_Statement(0);
-        const char* attributes[] = { "pivot", "way", 0 };
-        stmt2->set_attributes(attributes);
+	const char* attributes[] = { "pivot", "way", 0 };
+	Make_Area_Statement* stmt2 = new Make_Area_Statement(0, convert_c_pairs(attributes));
         stmt1->add_statement(stmt2, "");
       }
       stmt1->execute(rman);
     }
 
     {
-      Query_Statement* stmt1 = new Query_Statement(0);
       const char* attributes[] = { "type", "relation", 0 };
-      stmt1->set_attributes(attributes);
+      Query_Statement* stmt1 = new Query_Statement(0, convert_c_pairs(attributes));
       {
-	Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0);
 	const char* attributes[] = { "k", "multpoly", 0 };
-	stmt2->set_attributes(attributes);
+	Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0, convert_c_pairs(attributes));
 	stmt1->add_statement(stmt2, "");
       }
       stmt1->execute(rman);
     }
     {
-      Foreach_Statement* stmt1 = new Foreach_Statement(0);
       const char* attributes[] = { "into", "pivot", 0 };
-      stmt1->set_attributes(attributes);
+      Foreach_Statement* stmt1 = new Foreach_Statement(0, convert_c_pairs(attributes));
       {
-        Union_Statement* stmt2 = new Union_Statement(0);
-        const char* attributes[] = { 0 };
-        stmt2->set_attributes(attributes);
+	const char* attributes[] = { 0 };
+	Union_Statement* stmt2 = new Union_Statement(0, convert_c_pairs(attributes));
         {
-	  Recurse_Statement* stmt3 = new Recurse_Statement(0);
-          const char* attributes[] = { "type", "relation-way", "from", "pivot", 0 };
-          stmt3->set_attributes(attributes);
+	  const char* attributes[] = { "type", "relation-way", "from", "pivot", 0 };
+	  Recurse_Statement* stmt3 = new Recurse_Statement(0, convert_c_pairs(attributes));
           stmt2->add_statement(stmt3, "");
         }
         {
-	  Recurse_Statement* stmt3 = new Recurse_Statement(0);
-          const char* attributes[] = { "type", "way-node", 0 };
-          stmt3->set_attributes(attributes);
+	  const char* attributes[] = { "type", "way-node", 0 };
+	  Recurse_Statement* stmt3 = new Recurse_Statement(0, convert_c_pairs(attributes));
           stmt2->add_statement(stmt3, "");
         }
         stmt1->add_statement(stmt2, "");
       }
       {
-        Make_Area_Statement* stmt2 = new Make_Area_Statement(0);
-        const char* attributes[] = { "pivot", "pivot", 0 };
-        stmt2->set_attributes(attributes);
+	const char* attributes[] = { "pivot", "pivot", 0 };
+	Make_Area_Statement* stmt2 = new Make_Area_Statement(0, convert_c_pairs(attributes));
         stmt1->add_statement(stmt2, "");
       }
       stmt1->execute(rman);
@@ -235,15 +216,13 @@ int main(int argc, char* args[])
   else if (test_to_execute == "4")
   {
     {
-      Area_Query_Statement* stmt1 = new Area_Query_Statement(0);
       const char* attributes[] = { "ref", "2400000121", 0 };
-      stmt1->set_attributes(attributes);
+      Area_Query_Statement* stmt1 = new Area_Query_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
     }
     {
-      Print_Statement* stmt1 = new Print_Statement(0);
       const char* attributes[] = { 0 };
-      stmt1->set_attributes(attributes);
+      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
     }
   }

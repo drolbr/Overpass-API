@@ -34,7 +34,9 @@ const unsigned int AREA_FLUSH_SIZE = 64*1024;
 
 const char* MEMBER_TYPE[] = { 0, "node", "way", "relation" };
 
-void Print_Statement::set_attributes(const char **attr)
+Print_Statement::Print_Statement
+    (int line_number_, const map< string, string >& input_attributes)
+    : Statement(line_number_), limit(numeric_limits< unsigned int >::max())
 {
   map< string, string > attributes;
   
@@ -43,7 +45,7 @@ void Print_Statement::set_attributes(const char **attr)
   attributes["order"] = "id";
   attributes["limit"] = "";
   
-  eval_cstr_array(get_name(), attributes, attr);
+  eval_attributes_array(get_name(), attributes, input_attributes);
   
   input = attributes["from"];
   

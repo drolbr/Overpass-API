@@ -54,6 +54,30 @@ void Around_Constraint::filter(Resource_Manager& rman, Set& into)
 
 //-----------------------------------------------------------------------------
 
+Around_Statement::Around_Statement
+    (int line_number_, const map< string, string >& input_attributes)
+    : Statement(line_number_)
+{
+  map< string, string > attributes;
+  
+  attributes["from"] = "_";
+  attributes["into"] = "_";
+  attributes["radius"] = "";
+  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+  
+  input = attributes["from"];
+  output = attributes["into"];
+  radius = atof(attributes["radius"].c_str());
+  if ((radius < 0.0) || (attributes["radius"] == ""))
+  {
+    ostringstream temp;
+    temp<<"For the attribute \"radius\" of the element \"around\""
+    <<" the only allowed values are nonnegative floats.";
+    add_static_error(temp.str());
+  }
+}
+
 Around_Statement::~Around_Statement()
 {
   for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
@@ -70,28 +94,6 @@ double great_circle_dist(double lat1, double lon1, double lat2, double lon2)
   if (scalar_prod > 1)
     scalar_prod = 1;
   return acos(scalar_prod)*(20*1000*1000/acos(0));
-}
-
-void Around_Statement::set_attributes(const char **attr)
-{
-  map< string, string > attributes;
-  
-  attributes["from"] = "_";
-  attributes["into"] = "_";
-  attributes["radius"] = "";
-  
-  eval_cstr_array(get_name(), attributes, attr);
-  
-  input = attributes["from"];
-  output = attributes["into"];
-  radius = atof(attributes["radius"].c_str());
-  if ((radius < 0.0) || (attributes["radius"] == ""))
-  {
-    ostringstream temp;
-    temp<<"For the attribute \"radius\" of the element \"around\""
-        <<" the only allowed values are nonnegative floats.";
-    add_static_error(temp.str());
-  }
 }
 
 set< pair< Uint32_Index, Uint32_Index > > Around_Statement::calc_ranges

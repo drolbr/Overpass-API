@@ -9,6 +9,7 @@ DOWNLOAD_DIFFS="http://planet.openstreetmap.org/minute-replicate/"
 META="--meta"
 AREAS="yes"
 
+./fetch_osc.sh `cat "$DB_DIR/replicate_id"` "$DOWNLOAD_DIFFS" "$REPLICATE_DIR" &
 pushd $EXEC_DIR/bin
 ./dispatcher --osm-base $META --db-dir="$DB_DIR" &>nohup.out &
 if [[ -n $AREAS ]]; then

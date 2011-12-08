@@ -19,15 +19,19 @@ using namespace std;
 
 bool Make_Area_Statement::is_used_ = false;
 
-void Make_Area_Statement::set_attributes(const char **attr)
-{
+Make_Area_Statement::Make_Area_Statement
+    (int line_number_, const map< string, string >& input_attributes)
+    : Statement(line_number_)
+{ 
+  is_used_ = true;
+  
   map< string, string > attributes;
   
   attributes["from"] = "_";
   attributes["into"] = "_";
   attributes["pivot"] = "";
   
-  eval_cstr_array(get_name(), attributes, attr);
+  eval_attributes_array(get_name(), attributes, input_attributes);
   
   input = attributes["from"];
   output = attributes["into"];

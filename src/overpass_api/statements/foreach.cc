@@ -11,14 +11,16 @@
 
 using namespace std;
 
-void Foreach_Statement::set_attributes(const char **attr)
+Foreach_Statement::Foreach_Statement
+    (int line_number_, const map< string, string >& input_attributes)
+    : Statement(line_number_)
 {
   map< string, string > attributes;
   
   attributes["from"] = "_";
   attributes["into"] = "_";
   
-  eval_cstr_array(get_name(), attributes, attr);
+  eval_attributes_array(get_name(), attributes, input_attributes);
   
   input = attributes["from"];
   output = attributes["into"];

@@ -10,13 +10,15 @@
 
 using namespace std;
 
-void Union_Statement::set_attributes(const char **attr)
+Union_Statement::Union_Statement
+    (int line_number_, const map< string, string >& input_attributes)
+    : Statement(line_number_)
 {
   map< string, string > attributes;
   
   attributes["into"] = "_";
   
-  eval_cstr_array(get_name(), attributes, attr);
+  eval_attributes_array(get_name(), attributes, input_attributes);
   
   output = attributes["into"];
 }

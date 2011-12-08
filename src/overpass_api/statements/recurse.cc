@@ -21,7 +21,9 @@ const unsigned int RECURSE_WAY_RELATION = 6;
 const unsigned int RECURSE_NODE_RELATION = 7;
 const unsigned int RECURSE_NODE_WAY = 8;
 
-void Recurse_Statement::set_attributes(const char **attr)
+Recurse_Statement::Recurse_Statement
+    (int line_number_, const map< string, string >& input_attributes)
+    : Statement(line_number_)
 {
   map< string, string > attributes;
   
@@ -29,7 +31,7 @@ void Recurse_Statement::set_attributes(const char **attr)
   attributes["into"] = "_";
   attributes["type"] = "";
   
-  eval_cstr_array(get_name(), attributes, attr);
+  eval_attributes_array(get_name(), attributes, input_attributes);
   
   input = attributes["from"];
   output = attributes["into"];

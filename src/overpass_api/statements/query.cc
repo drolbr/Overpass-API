@@ -17,14 +17,16 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
-void Query_Statement::set_attributes(const char **attr)
+Query_Statement::Query_Statement
+    (int line_number_, const map< string, string >& input_attributes)
+    : Statement(line_number_)
 {
   map< string, string > attributes;
   
   attributes["into"] = "_";
   attributes["type"] = "";
   
-  eval_cstr_array(get_name(), attributes, attr);
+  eval_attributes_array(get_name(), attributes, input_attributes);
   
   output = attributes["into"];
   if (attributes["type"] == "node")
@@ -386,14 +388,15 @@ void Query_Statement::execute(Resource_Manager& rman)
 
 //-----------------------------------------------------------------------------
 
-void Has_Kv_Statement::set_attributes(const char **attr)
+Has_Kv_Statement::Has_Kv_Statement
+    (int line_number_, const map< string, string >& input_attributes) : Statement(line_number_)
 {
   map< string, string > attributes;
   
   attributes["k"] = "";
   attributes["v"] = "";
   
-  eval_cstr_array(get_name(), attributes, attr);
+  eval_attributes_array(get_name(), attributes, input_attributes);
   
   key = attributes["k"];
   value = attributes["v"];

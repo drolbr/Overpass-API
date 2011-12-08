@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
   // read command line arguments
   string db_dir;
   uint log_level = Error_Output::ASSISTING;
+  Debug_Level debug_level = parser_execute;
   int area_level = 0;
   
   int argpos = 1;
@@ -53,6 +54,12 @@ int main(int argc, char *argv[])
       log_level = Error_Output::VERBOSE;
     else if (!(strcmp(argv[argpos], "--rules")))
       area_level = 2;
+    else if (!(strcmp(argv[argpos], "--dump-xml")))
+      debug_level = parser_dump_xml;
+    else if (!(strcmp(argv[argpos], "--dump-pretty-map-ql")))
+      debug_level = parser_dump_pretty_map_ql;
+    else if (!(strcmp(argv[argpos], "--dump-compact-map-ql")))
+      debug_level = parser_dump_compact_map_ql;
     ++argpos;
   }
   
@@ -67,7 +74,9 @@ int main(int argc, char *argv[])
     if ((error_output) && (error_output->display_encoding_errors()))
       return 0;
 
-    if (!parse_and_validate(xml_raw, error_output))
+    if (!parse_and_validate(xml_raw, error_output, debug_level))
+      return 0;
+    if (debug_level != parser_execute)
       return 0;
 
     // open read transaction and log this.

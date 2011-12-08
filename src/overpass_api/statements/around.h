@@ -12,8 +12,7 @@ using namespace std;
 class Around_Statement : public Statement
 {
   public:
-    Around_Statement(int line_number_) : Statement(line_number_) {}
-    virtual void set_attributes(const char **attr);
+    Around_Statement(int line_number_, const map< string, string >& attributes);
     virtual string get_name() const { return "around"; }
     virtual string get_result_name() const { return output; }
     virtual void forecast();

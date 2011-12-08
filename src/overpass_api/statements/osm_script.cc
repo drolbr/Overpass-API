@@ -9,7 +9,9 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
-void Osm_Script_Statement::set_attributes(const char **attr)
+Osm_Script_Statement::Osm_Script_Statement
+    (int line_number_, const map< string, string >& input_attributes)
+    : Statement(line_number_), max_allowed_time(0), max_allowed_space(0)
 {
   map< string, string > attributes;
   
@@ -21,7 +23,7 @@ void Osm_Script_Statement::set_attributes(const char **attr)
   attributes["version"] = "0";
   attributes["debug"] = "errors";*/
   
-  eval_cstr_array(get_name(), attributes, attr);
+  eval_attributes_array(get_name(), attributes, input_attributes);
   
   int32 timeout(atoi(attributes["timeout"].c_str()));
   if (timeout <= 0)

@@ -11,9 +11,7 @@ using namespace std;
 class Osm_Script_Statement : public Statement
 {
   public:
-    Osm_Script_Statement(int line_number_)
-    : Statement(line_number_), max_allowed_time(0), max_allowed_space(0) {}
-    virtual void set_attributes(const char **attr);
+    Osm_Script_Statement(int line_number_, const map< string, string >& input_attributes);
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "osm-script"; }
     virtual string get_result_name() const { return ""; }

@@ -68,7 +68,7 @@ namespace
       input = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
       + input.substr(pos);
     }
-    else if (input.substr(pos, 2) != "<?")
+    else if (input.substr(pos, 1) == "<" && input.substr(pos, 2) != "<?")
       // add a header line, the root tag 'osm-script' and remove trailing whitespace
     {
       ostringstream temp;

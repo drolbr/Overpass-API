@@ -1,3 +1,5 @@
+#include "map_ql_input.h"
+
 #include <cctype>
 #include <fstream>
 #include <iostream>
@@ -379,6 +381,13 @@ inline void Tokenizer< In >::get(string& s)
     grow_buffer(pos + 1);
     while (buffer.size() > pos && isdigit(buffer[pos]))
       grow_buffer((++pos) + 1);
+    if (buffer.size() > pos && buffer[pos] == '.')
+    {
+      grow_buffer((++pos) + 1);
+      while (buffer.size() > pos && isdigit(buffer[pos]))
+	grow_buffer((++pos) + 1);
+    }
+    
     s = buffer.substr(0, pos);
     for (uint i = 0; i < pos; ++i)
       line_cols.pop();
@@ -453,28 +462,6 @@ inline pair< uint, uint > Tokenizer< In >::line_col()
 
 //-----------------------------------------------------------------------------
 
-class Tokenizer_Wrapper
-{
-  public:
-    Tokenizer_Wrapper(istream& in_);
-    ~Tokenizer_Wrapper();
-    
-    const string& operator*() const { return head; }
-    void operator++();
-    bool good() { return in->good(); }
-    const pair< uint, uint >& line_col() const { return line_col_; }
-    
-  private:
-    Tokenizer_Wrapper(const Tokenizer_Wrapper&);
-    void operator=(const Tokenizer_Wrapper&);
-    
-    string head;
-    Comment_Replacer< istream >* incr;
-    Whitespace_Compressor< Comment_Replacer< istream > >* inwsc;
-    Tokenizer< Whitespace_Compressor< Comment_Replacer< istream > > >* in;
-    pair< uint, uint > line_col_;
-};
-
 Tokenizer_Wrapper::Tokenizer_Wrapper(istream& in_)
 {
   incr = new Comment_Replacer< istream >(in_);
@@ -482,6 +469,11 @@ Tokenizer_Wrapper::Tokenizer_Wrapper(istream& in_)
   in = new Tokenizer< Whitespace_Compressor< Comment_Replacer< istream > > >(*inwsc);
   line_col_ = in->line_col();
   in->get(head);
+}
+
+bool Tokenizer_Wrapper::good()
+{
+  return in->good();
 }
 
 void Tokenizer_Wrapper::operator++()
@@ -495,215 +487,4 @@ Tokenizer_Wrapper::~Tokenizer_Wrapper()
   delete in;
   delete inwsc;
   delete incr;
-}
-
-//-----------------------------------------------------------------------------
-
-void parse_setup(Tokenizer_Wrapper& token)
-{
-  while (token.good() && *token != "]")
-  {
-    cout<<"setup token: "<<*token<<'\n';
-    ++token;
-  }
-  cout<<"setup token: "<<*token<<'\n';
-  if (token.good())
-    ++token;
-  cout<<"setup token done.\n";
-}
-
-void parse_statement(Tokenizer_Wrapper& token);
-
-void parse_union(Tokenizer_Wrapper& token)
-{
-  while (token.good() && *token != ")")
-  {
-    cout<<"union token: "<<*token<<'\n';
-    ++token;
-    parse_statement(token);
-  }
-  cout<<"union token: "<<*token<<'\n';
-  if (token.good())
-    ++token;
-
-  string into = "_";
-  if (token.good() && *token == "->")
-  {
-    ++token;
-    if (token.good() && *token == ".")
-      ++token;
-    else
-      cout<<"Error (line "<<token.line_col().first<<", column "<<token.line_col().second<<"): "
-      "Variable expected\n";    
-    if (token.good())
-    {
-      into = *token;
-      ++token;
-    }
-  }
-  cout<<"union into "<<into<<" done.\n";
-}
-
-void parse_foreach(Tokenizer_Wrapper& token)
-{
-  string from = "_";
-  if (token.good() && *token == ".")
-  {
-    ++token;
-    if (token.good())
-    {
-      from = *token;
-      ++token;
-    }
-  }
-  
-  string into = "_";
-  if (token.good() && *token == "->")
-  {
-    ++token;
-    if (token.good() && *token == ".")
-      ++token;
-    else
-      cout<<"Error (line "<<token.line_col().first<<", column "<<token.line_col().second<<"): "
-      "Variable expected\n";    
-    if (token.good())
-    {
-      into = *token;
-      ++token;
-    }
-  }
-  
-  while (token.good() && *token != ")")
-  {
-    cout<<"foreach token: "<<*token<<'\n';
-    ++token;
-    parse_statement(token);
-  }
-  cout<<"foreach token: "<<*token<<'\n';
-  if (token.good())
-    ++token;
-  cout<<"foreach from "<<from<<" into "<<into<<" done.\n";
-}
-
-void parse_output(const string& from, Tokenizer_Wrapper& token)
-{
-  while (token.good() && *token != "}")
-  {
-    cout<<"output token: "<<*token<<'\n';
-    ++token;
-  }
-  cout<<"output token: "<<*token<<'\n';
-  if (token.good())
-    ++token;
-  cout<<"output token done.\n";
-}
-
-void parse_query(const string& type, const string& from, Tokenizer_Wrapper& token)
-{
-  while (token.good() && *token == "[")
-  {
-    while (token.good() && *token != "]")
-    {
-      cout<<"query token: "<<*token<<'\n';
-      ++token;
-    }
-    cout<<"query token: ] (condition complete)"<<'\n';
-    if (token.good())
-      ++token;
-  }
-  string into = "_";
-  if (token.good() && *token == "->")
-  {
-    ++token;
-    if (token.good() && *token == ".")
-      ++token;
-    else
-      cout<<"Error (line "<<token.line_col().first<<", column "<<token.line_col().second<<"): "
-      "Variable expected\n";    
-    if (token.good())
-    {
-      into = *token;
-      ++token;
-    }
-  }
-  cout<<"query into "<<into<<'\n';
-  cout<<"query token done.\n";
-}
-
-void parse_statement(Tokenizer_Wrapper& token)
-{
-  if (!token.good())
-    return;
-  
-  if (*token == "(")
-  {
-    parse_union(token);
-    return;
-  }
-  else if (*token == "foreach")
-  {
-    parse_foreach(token);
-    return;
-  }
-
-  string type = "";
-  if (*token != "{" && *token != ".")
-  {
-    type = *token;
-    if (type != "node" && type != "way" && type != "rel" && type != "relation" && type != "all")
-      cout<<"Error (line "<<token.line_col().first<<", column "<<token.line_col().second<<"): "
-          "Unknown type \""<<type<<"\"\n";
-    ++token;
-  }
-    
-  string from = "";
-  if (token.good() && *token == ".")
-  {
-    ++token;
-    if (token.good())
-    {
-      from = *token;
-      ++token;
-    }
-  }
-
-  if (token.good() && type == "" && *token == "{")
-    parse_output(from, token);
-  else
-    parse_query(type, from, token);
-  
-  cout<<"statement done.\n";
-}
-
-int main(int argc, char* args[])
-{
-  Tokenizer_Wrapper token(cin);
-
-  while (token.good() && *token == "[")
-    parse_setup(token);
-      
-  while (token.good())
-    parse_statement(token);
-  
-  //   char buf;
-//   pair< uint, uint > line_col = inwsc.line_col();
-//   inwsc.get(buf);
-//   while (in.good())
-//   {
-//     cout<<line_col.first<<", "<<line_col.second<<": "<<buf<<'\n';
-//     line_col = inwsc.line_col();
-//     inwsc.get(buf);
-//   }
-
-/*  string buf;
-  pair< uint, uint > line_col = in.line_col();
-  in.get(buf);
-  while (in.good())
-  {
-    cout<<line_col.first<<", "<<line_col.second<<": "<<buf<<'\n';
-    line_col = in.line_col();
-    in.get(buf);
-  }*/
-  
-  return 0;
 }

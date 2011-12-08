@@ -12,8 +12,7 @@ using namespace std;
 class User_Statement : public Statement
 {
   public:
-    User_Statement(int line_number_) : Statement(line_number_) {}
-    virtual void set_attributes(const char **attr);
+    User_Statement(int line_number_, const map< string, string >& input_attributes);
     virtual string get_name() const { return "user"; }
     virtual string get_result_name() const { return output; }
     virtual void forecast();

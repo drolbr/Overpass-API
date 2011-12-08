@@ -21,23 +21,20 @@ void perform_around_print(uint pattern_size, string radius, Transaction& transac
       char* buf_str = new char[40];
       strncpy(buf_str, buf.str().c_str(), 40);
       
-      Id_Query_Statement* stmt1 = new Id_Query_Statement(0);
       const char* attributes[] = { "type", "node", "ref", buf_str, 0 };
-      stmt1->set_attributes(attributes);
+      Id_Query_Statement* stmt1 = new Id_Query_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
       
       delete[] buf_str;
     }
     {
-      Around_Statement* stmt1 = new Around_Statement(0);
       const char* attributes[] = { "radius", radius.c_str(), 0 };
-      stmt1->set_attributes(attributes);
+      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
     }
     {
-      Print_Statement* stmt1 = new Print_Statement(0);
       const char* attributes[] = { "order", "id", 0 };
-      stmt1->set_attributes(attributes);
+      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
     }
   }
@@ -79,23 +76,20 @@ int main(int argc, char* args[])
       char* buf_str = new char[40];
       strncpy(buf_str, buf.str().c_str(), 40);
       
-      Id_Query_Statement* stmt1 = new Id_Query_Statement(0);
       const char* attributes[] = { "type", "node", "into", "foo", "ref", buf_str, 0 };
-      stmt1->set_attributes(attributes);
+      Id_Query_Statement* stmt1 = new Id_Query_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
       
       delete[] buf_str;
     }
     {
-      Around_Statement* stmt1 = new Around_Statement(0);
       const char* attributes[] = { "radius", "200.1", "from", "foo", 0 };
-      stmt1->set_attributes(attributes);
+      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
     }
     {
-      Print_Statement* stmt1 = new Print_Statement(0);
       const char* attributes[] = { "order", "id", 0 };
-      stmt1->set_attributes(attributes);
+      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
     }
   }
@@ -108,23 +102,20 @@ int main(int argc, char* args[])
       char* buf_str = new char[40];
       strncpy(buf_str, buf.str().c_str(), 40);
       
-      Id_Query_Statement* stmt1 = new Id_Query_Statement(0);
       const char* attributes[] = { "type", "node", "ref", buf_str, 0 };
-      stmt1->set_attributes(attributes);
+      Id_Query_Statement* stmt1 = new Id_Query_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
       
       delete[] buf_str;
     }
     {
-      Around_Statement* stmt1 = new Around_Statement(0);
       const char* attributes[] = { "radius", "200.1", "into", "foo", 0 };
-      stmt1->set_attributes(attributes);
+      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
     }
     {
-      Print_Statement* stmt1 = new Print_Statement(0);
       const char* attributes[] = { "order", "id", "from", "foo", 0 };
-      stmt1->set_attributes(attributes);
+      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
     }
   }
@@ -140,19 +131,16 @@ int main(int argc, char* args[])
       strncpy(buf_str_1, buf1.str().c_str(), 40);
       strncpy(buf_str_2, buf2.str().c_str(), 40);
       
-      Union_Statement* stmt1 = new Union_Statement(0);
       const char* attributes[] = { 0 };
-      stmt1->set_attributes(attributes);
+      Union_Statement* stmt1 = new Union_Statement(0, convert_c_pairs(attributes));
       {
-	Id_Query_Statement* stmt2 = new Id_Query_Statement(0);
 	const char* attributes[] = { "type", "node", "ref", buf_str_1, 0 };
-	stmt2->set_attributes(attributes);
+	Id_Query_Statement* stmt2 = new Id_Query_Statement(0, convert_c_pairs(attributes));
 	stmt1->add_statement(stmt2, "");
       }
       {
-	Id_Query_Statement* stmt2 = new Id_Query_Statement(0);
 	const char* attributes[] = { "type", "node", "ref", buf_str_2, 0 };
-	stmt2->set_attributes(attributes);
+	Id_Query_Statement* stmt2 = new Id_Query_Statement(0, convert_c_pairs(attributes));
 	stmt1->add_statement(stmt2, "");
       }
       stmt1->execute(rman);
@@ -161,15 +149,13 @@ int main(int argc, char* args[])
       delete[] buf_str_2;
     }
     {
-      Around_Statement* stmt1 = new Around_Statement(0);
       const char* attributes[] = { "radius", "200.1", 0 };
-      stmt1->set_attributes(attributes);
+      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
     }
     {
-      Print_Statement* stmt1 = new Print_Statement(0);
       const char* attributes[] = { "order", "id", 0 };
-      stmt1->set_attributes(attributes);
+      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
     }
   }

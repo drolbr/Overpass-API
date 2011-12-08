@@ -2,6 +2,7 @@
 #include "scripting_core.h"
 #include "../core/settings.h"
 #include "../frontend/console_output.h"
+#include "../frontend/map_ql_parser.h"
 #include "../frontend/user_interface.h"
 #include "../statements/area_query.h"
 #include "../statements/coord_query.h"
@@ -282,13 +283,8 @@ Dispatcher_Stub::~Dispatcher_Stub()
 void start(const char *el, const char **attr)
 {
   Statement* statement(Statement::create_statement
-      (el, xml_parser.current_line_number()));
-  if (statement)
-  {
-/*    statement->set_startpos(get_tag_start());
-    statement->set_tagendpos(get_tag_end());*/
-    statement->set_attributes(attr);
-  }
+      (el, xml_parser.current_line_number(), convert_c_pairs(attr)));
+      
   statement_stack.push_back(statement);
   text_stack.push_back(xml_parser.get_parsed_text());
   xml_parser.reset_parsed_text();
@@ -317,30 +313,49 @@ void end(const char *el)
 }
 
 bool parse_and_validate
-    (const string& xml_raw, Error_Output* error_output)
+    (const string& xml_raw, Error_Output* error_output, Debug_Level debug_level)
 {
   if (error_output && error_output->display_encoding_errors())
     return false;
   
-  try
+  unsigned int pos(0);
+  while (pos < xml_raw.size() && isspace(xml_raw[pos]))
+    ++pos;
+  
+  if (pos < xml_raw.size() && xml_raw[pos] == '<')
   {
-    xml_parser.parse(xml_raw, start, end);
-  }
-  catch(Parse_Error parse_error)
-  {
-    if (error_output)
-      error_output->add_parse_error(parse_error.message,
-				    xml_parser.current_line_number());
-  }
-  catch(File_Error e)
-  {
-    ostringstream temp;
-    temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin;
-    if (error_output)
-      error_output->runtime_error(temp.str());
+    try
+    {
+      xml_parser.parse(xml_raw, start, end);
+    }
+    catch(Parse_Error parse_error)
+    {
+      if (error_output)
+        error_output->add_parse_error(parse_error.message,
+				      xml_parser.current_line_number());
+    }
+    catch(File_Error e)
+    {
+      ostringstream temp;
+      temp<<"open: "<<e.error_number<<' '<<e.filename<<' '<<e.origin;
+      if (error_output)
+        error_output->runtime_error(temp.str());
     
-    return false;
+      return false;
+    }
   }
+  else
+  {
+    if (debug_level == parser_execute)
+      parse_and_validate_map_ql(xml_raw, error_output);
+    else if (debug_level == parser_dump_xml)
+      parse_and_dump_xml_from_map_ql(xml_raw, error_output);
+    else if (debug_level == parser_dump_compact_map_ql)
+      parse_and_dump_compact_from_map_ql(xml_raw, error_output);
+    else if (debug_level == parser_dump_pretty_map_ql)
+      parse_and_dump_pretty_from_map_ql(xml_raw, error_output);
+  }
+  
   if ((error_output) && (error_output->display_parse_errors()))
   {
     return false;

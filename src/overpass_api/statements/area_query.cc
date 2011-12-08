@@ -48,22 +48,19 @@ void Area_Constraint::filter(Resource_Manager& rman, Set& into)
 
 bool Area_Query_Statement::is_used_ = false;
 
-Area_Query_Statement::~Area_Query_Statement()
+Area_Query_Statement::Area_Query_Statement
+    (int line_number_, const map< string, string >& input_attributes)
+    : Statement(line_number_)
 {
-  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
-      it != constraints.end(); ++it)
-    delete *it;
-}
+  is_used_ = true;
 
-void Area_Query_Statement::set_attributes(const char **attr)
-{
   map< string, string > attributes;
   long long submitted_id;
   
   attributes["into"] = "_";
   attributes["ref"] = "";
   
-  eval_cstr_array(get_name(), attributes, attr);
+  eval_attributes_array(get_name(), attributes, input_attributes);
   
   output = attributes["into"];
   submitted_id = atoll(attributes["ref"].c_str());
@@ -71,10 +68,17 @@ void Area_Query_Statement::set_attributes(const char **attr)
   {
     ostringstream temp;
     temp<<"For the attribute \"ref\" of the element \"area-query\""
-	<<" the only allowed values are positive integers.";
+    <<" the only allowed values are positive integers.";
     add_static_error(temp.str());
   }
   area_id = submitted_id;
+}
+
+Area_Query_Statement::~Area_Query_Statement()
+{
+  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+      it != constraints.end(); ++it)
+    delete *it;
 }
 
 void Area_Query_Statement::forecast()

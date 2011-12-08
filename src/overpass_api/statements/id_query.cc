@@ -7,7 +7,9 @@
 
 using namespace std;
 
-void Id_Query_Statement::set_attributes(const char **attr)
+Id_Query_Statement::Id_Query_Statement
+    (int line_number_, const map< string, string >& input_attributes)
+    : Statement(line_number_)
 {
   map< string, string > attributes;
   
@@ -17,7 +19,7 @@ void Id_Query_Statement::set_attributes(const char **attr)
   attributes["lower"] = "";
   attributes["upper"] = "";
   
-  Statement::eval_cstr_array(get_name(), attributes, attr);
+  Statement::eval_attributes_array(get_name(), attributes, input_attributes);
   
   output = attributes["into"];
   

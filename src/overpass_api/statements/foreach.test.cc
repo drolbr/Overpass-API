@@ -21,8 +21,7 @@ Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint32 i
   attributes[3] = id_.c_str();
   attributes[4] = 0;
   
-  Id_Query_Statement stmt(1);
-  stmt.set_attributes(attributes);  
+  Id_Query_Statement stmt(1, convert_c_pairs(attributes));
   stmt.execute(rman);
   
   return rman;
@@ -89,13 +88,11 @@ int main(int argc, char* args[])
       Resource_Manager rman(transaction);
       fill_loop_set(rman, "_", pattern_size, transaction);
       {
-	Foreach_Statement stmt1(0);
 	const char* attributes[] = { 0 };
-	stmt1.set_attributes(attributes);
+	Foreach_Statement stmt1(0, convert_c_pairs(attributes));
 	
-	Print_Statement stmt2(0);
 	const char* attributes_print[] = { 0 };
-	stmt2.set_attributes(attributes_print);
+	Print_Statement stmt2(0, convert_c_pairs(attributes_print));
 	stmt1.add_statement(&stmt2, "");
 	
 	stmt1.execute(rman);
@@ -115,16 +112,13 @@ int main(int argc, char* args[])
       Resource_Manager rman(transaction);
       fill_loop_set(rman, "_", pattern_size, transaction);
       {
-	Foreach_Statement stmt1(0);
 	const char* attributes[] = { 0 };
-	stmt1.set_attributes(attributes);
-	
+	Foreach_Statement stmt1(0, convert_c_pairs(attributes));
 	stmt1.execute(rman);
       }
       {
-	Print_Statement stmt(0);
 	const char* attributes_print[] = { 0 };
-	stmt.set_attributes(attributes_print);
+	Print_Statement stmt(0, convert_c_pairs(attributes_print));
 	stmt.execute(rman);
       }
     }
@@ -142,13 +136,11 @@ int main(int argc, char* args[])
       Resource_Manager rman(transaction);
       fill_loop_set(rman, "A", pattern_size, transaction);
       {
-	Foreach_Statement stmt1(0);
 	const char* attributes[] = { "from", "A", "into", "B", 0 };
-	stmt1.set_attributes(attributes);
+	Foreach_Statement stmt1(0, convert_c_pairs(attributes));
 	
-	Print_Statement stmt2(0);
 	const char* attributes_print[] = { "from", "B", 0 };
-	stmt2.set_attributes(attributes_print);
+	Print_Statement stmt2(0, convert_c_pairs(attributes_print));
 	stmt1.add_statement(&stmt2, "");
 	
 	stmt1.execute(rman);
@@ -168,16 +160,13 @@ int main(int argc, char* args[])
       Resource_Manager rman(transaction);
       fill_loop_set(rman, "A", pattern_size, transaction);
       {
-	Foreach_Statement stmt1(0);
 	const char* attributes[] = { "from", "A", "into", "B", 0 };
-	stmt1.set_attributes(attributes);
-	
+	Foreach_Statement stmt1(0, convert_c_pairs(attributes));
 	stmt1.execute(rman);
       }
       {
-	Print_Statement stmt(0);
-	const char* attributes_print[] = { "from", "A", 0 };
-	stmt.set_attributes(attributes_print);
+	const char* attributes[] = { "from", "A", 0 };
+	Print_Statement stmt(0, convert_c_pairs(attributes));
 	stmt.execute(rman);
       }
     }

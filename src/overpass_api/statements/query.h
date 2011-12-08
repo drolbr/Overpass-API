@@ -16,9 +16,8 @@ const int QUERY_RELATION = 3;
 class Query_Statement : public Statement
 {
   public:
-    Query_Statement(int line_number_) : Statement(line_number_) {}
+    Query_Statement(int line_number_, const map< string, string >& input_attributes);
     virtual ~Query_Statement() {}
-    virtual void set_attributes(const char **attr);
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "query"; }
     virtual string get_result_name() const { return output; }
@@ -51,8 +50,7 @@ class Query_Statement : public Statement
 class Has_Kv_Statement : public Statement
 {
   public:
-    Has_Kv_Statement(int line_number_) : Statement(line_number_) {}
-    virtual void set_attributes(const char **attr);
+    Has_Kv_Statement(int line_number_, const map< string, string >& input_attributes);
     virtual string get_name() const { return "has-kv"; }
     virtual string get_result_name() const { return ""; }
     virtual void forecast();

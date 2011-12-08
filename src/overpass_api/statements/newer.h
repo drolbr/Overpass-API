@@ -12,8 +12,7 @@ using namespace std;
 class Newer_Statement : public Statement
 {
   public:
-    Newer_Statement(int line_number_) : Statement(line_number_) {}
-    virtual void set_attributes(const char **attr);
+    Newer_Statement(int line_number_, const map< string, string >& input_attributes);
     virtual string get_name() const { return "newer"; }
     virtual string get_result_name() const { return ""; }
     virtual void forecast();

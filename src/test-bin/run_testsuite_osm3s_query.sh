@@ -148,6 +148,7 @@ while [[ $II -lt 58 ]]; do
   perform_test osm3s_query $II "--db-dir=../../input/update_database/"
   II=$(($II + 1))
 }; done
+
 perform_test_stdout_null osm3s_query 58 "--db-dir=../../input/update_database/"
 perform_test_stdout_null osm3s_query 59 "--db-dir=../../input/update_database/"
 perform_test_stdout_null osm3s_query 60 "--db-dir=../../input/update_database/"

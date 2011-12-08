@@ -18,15 +18,19 @@ using namespace std;
 
 bool Coord_Query_Statement::is_used_ = false;
 
-void Coord_Query_Statement::set_attributes(const char **attr)
+Coord_Query_Statement::Coord_Query_Statement
+    (int line_number_, const map< string, string >& input_attributes)
+    : Statement(line_number_)
 {
+  is_used_ = true;
+
   map< string, string > attributes;
   
   attributes["into"] = "_";
   attributes["lat"] = "";
   attributes["lon"] = "";
   
-  eval_cstr_array(get_name(), attributes, attr);
+  eval_attributes_array(get_name(), attributes, input_attributes);
   
   output = attributes["into"];
   lat = atof(attributes["lat"].c_str());
@@ -34,7 +38,7 @@ void Coord_Query_Statement::set_attributes(const char **attr)
   {
     ostringstream temp;
     temp<<"For the attribute \"lat\" of the element \"coord-query\""
-	<<" the only allowed values are floats between -90.0 and 90.0.";
+    <<" the only allowed values are floats between -90.0 and 90.0.";
     add_static_error(temp.str());
   }
   lon = atof(attributes["lon"].c_str());
@@ -42,7 +46,7 @@ void Coord_Query_Statement::set_attributes(const char **attr)
   {
     ostringstream temp;
     temp<<"For the attribute \"lon\" of the element \"coord-query\""
-	<<" the only allowed values are floats between -180.0 and 180.0.";
+    <<" the only allowed values are floats between -180.0 and 180.0.";
     add_static_error(temp.str());
   }
 }

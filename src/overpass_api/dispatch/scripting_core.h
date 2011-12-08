@@ -59,9 +59,13 @@ class Dispatcher_Stub : public Watchdog_Callback
     bool meta;
 };
 
+typedef enum
+    { parser_execute, parser_dump_xml, parser_dump_pretty_map_ql, parser_dump_compact_map_ql }
+    Debug_Level;
+    
 bool parse_and_validate
-    (const string& xml_raw, Error_Output* error_output);
-
+    (const string& xml_raw, Error_Output* error_output, Debug_Level debug_type);
+    
 vector< Statement* >* get_statement_stack();
 
 bool get_uses_meta_data();

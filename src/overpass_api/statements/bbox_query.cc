@@ -368,14 +368,9 @@ const unsigned int QUERY_WAY = 2;
 const unsigned int QUERY_RELATION = 3;
 // const unsigned int QUERY_AREA = 4;
 
-Bbox_Query_Statement::~Bbox_Query_Statement()
-{
-  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
-      it != constraints.end(); ++it)
-    delete *it;
-}
-
-void Bbox_Query_Statement::set_attributes(const char **attr)
+Bbox_Query_Statement::Bbox_Query_Statement
+    (int line_number_, const map< string, string >& input_attributes)
+    : Statement(line_number_)
 {
   map< string, string > attributes;
   
@@ -385,7 +380,7 @@ void Bbox_Query_Statement::set_attributes(const char **attr)
   attributes["w"] = "";
   attributes["e"] = "";
   
-  eval_cstr_array(get_name(), attributes, attr);
+  eval_attributes_array(get_name(), attributes, input_attributes);
   
   output = attributes["into"];
   south = atof(attributes["s"].c_str());
@@ -427,6 +422,13 @@ void Bbox_Query_Statement::set_attributes(const char **attr)
     <<" the only allowed values are floats between -180.0 and 180.0.";
     add_static_error(temp.str());
   }
+}
+
+Bbox_Query_Statement::~Bbox_Query_Statement()
+{
+  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+      it != constraints.end(); ++it)
+    delete *it;
 }
 
 void Bbox_Query_Statement::forecast()

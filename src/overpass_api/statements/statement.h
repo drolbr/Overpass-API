@@ -43,7 +43,6 @@ class Statement
   public:
     Statement(int line_number_) : line_number(line_number_) {}
     
-    virtual void set_attributes(const char **attr) = 0;
     virtual void add_statement(Statement* statement, string text);
     virtual void add_final_text(string text);
     virtual string get_name() const = 0;
@@ -68,7 +67,8 @@ class Statement
     void display_full();
     void display_starttag();
         
-    static Statement* create_statement(string element, int line_number);
+    static Statement* create_statement(string element, int line_number,
+				       const map< string, string >& attributes);
     static void set_error_output(Error_Output* error_output_)
     {
       error_output = error_output_;
@@ -88,8 +88,9 @@ class Statement
     int startpos, endpos, tagendpos;
         
   protected:
-    void eval_cstr_array
-        (string element, map< string, string >& attributes, const char **attr);
+    void eval_attributes_array
+        (string element, map< string, string >& attributes,
+	 const map< string, string >& input);
     void assure_no_text(string text, string name);
     void substatement_error(string parent, Statement* child);
     
@@ -98,5 +99,7 @@ class Statement
 
     void runtime_remark(string error);
 };
+
+map< string, string > convert_c_pairs(const char** attr);
 
 #endif

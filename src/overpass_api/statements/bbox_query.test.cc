@@ -17,17 +17,15 @@ void perform_bbox_print(string south, string north, string west, string east,
     // of only one bbox.
     Resource_Manager rman(transaction);
     {
-      Bbox_Query_Statement* stmt1 = new Bbox_Query_Statement(0);
       const char* attributes[] =
-      { "s", south.c_str(), "n", north.c_str(),
-      "w", west.c_str(), "e", east.c_str(), 0 };
-      stmt1->set_attributes(attributes);
+          { "s", south.c_str(), "n", north.c_str(),
+            "w", west.c_str(), "e", east.c_str(), 0 };
+      Bbox_Query_Statement* stmt1 = new Bbox_Query_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
     }
     {
-      Print_Statement* stmt1 = new Print_Statement(0);
       const char* attributes[] = { "mode", "body", "order", "id", 0 };
-      stmt1->set_attributes(attributes);
+      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
     }
   }

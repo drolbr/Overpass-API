@@ -58,20 +58,15 @@ void Newer_Constraint::filter(Resource_Manager& rman, Set& into)
 
 //-----------------------------------------------------------------------------
 
-Newer_Statement::~Newer_Statement()
-{
-  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
-      it != constraints.end(); ++it)
-    delete *it;
-}
-
-void Newer_Statement::set_attributes(const char **attr)
+Newer_Statement::Newer_Statement
+    (int line_number_, const map< string, string >& input_attributes)
+    : Statement(line_number_)
 {
   map< string, string > attributes;
   
   attributes["than"] = "";
   
-  eval_cstr_array(get_name(), attributes, attr);
+  eval_attributes_array(get_name(), attributes, input_attributes);
   
   string timestamp = attributes["than"];
   
@@ -89,6 +84,13 @@ void Newer_Statement::set_attributes(const char **attr)
     temp<<"The attribute than must contain a timestamp exactly in the form yyyy-mm-ddThh:mm:ssZ.";
     add_static_error(temp.str());
   }
+}
+
+Newer_Statement::~Newer_Statement()
+{
+  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+      it != constraints.end(); ++it)
+    delete *it;
 }
 
 void Newer_Statement::forecast() {}

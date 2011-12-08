@@ -12,8 +12,7 @@ using namespace std;
 class Foreach_Statement : public Statement
 {
   public:
-    Foreach_Statement(int line_number_) : Statement(line_number_) {}
-    virtual void set_attributes(const char **attr);
+    Foreach_Statement(int line_number_, const map< string, string >& attributes);
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "foreach"; }
     virtual string get_result_name() const { return ""; }

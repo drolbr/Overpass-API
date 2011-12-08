@@ -80,22 +80,23 @@ void Item_Constraint::filter(Resource_Manager& rman, Set& into)
 
 //-----------------------------------------------------------------------------
 
-Item_Statement::~Item_Statement()
-{
-  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
-      it != constraints.end(); ++it)
-    delete *it;
-}
-
-void Item_Statement::set_attributes(const char **attr)
+Item_Statement::Item_Statement(int line_number_, const map< string, string >& input_attributes)
+    : Statement(line_number_)
 {
   map< string, string > attributes;
   
   attributes["set"] = "_";
   
-  eval_cstr_array(get_name(), attributes, attr);
+  eval_attributes_array(get_name(), attributes, input_attributes);
   
   output = attributes["set"];
+}
+
+Item_Statement::~Item_Statement()
+{
+  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+      it != constraints.end(); ++it)
+    delete *it;
 }
 
 void Item_Statement::forecast()

@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     if (error_output.display_encoding_errors())
       return 0;
     
-    if (!parse_and_validate(xml_raw, &error_output))
+    if (!parse_and_validate(xml_raw, &error_output, parser_execute))
       return 0;
     
     // open read transaction and log this.
