@@ -24,6 +24,8 @@ $BASEDIR/test-bin/run_unittests_statements.sh $DATA_SIZE $2
 
 $BASEDIR/test-bin/run_testsuite_osm3s_query.sh $DATA_SIZE $2
 
+$BASEDIR/test-bin/run_testsuite_map_ql.sh $DATA_SIZE $2
+
 $BASEDIR/test-bin/run_testsuite_diff_updater.sh $DATA_SIZE $2
 
 $BASEDIR/test-bin/run_unittests_areas.sh $DATA_SIZE $2
