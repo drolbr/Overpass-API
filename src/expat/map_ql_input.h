@@ -24,7 +24,7 @@ class Tokenizer_Wrapper
     
     const string& operator*() const { return head; }
     void operator++();
-    bool good();
+    bool good() { return good_; }
     const pair< uint, uint >& line_col() const { return line_col_; }
     
   private:
@@ -32,6 +32,7 @@ class Tokenizer_Wrapper
     void operator=(const Tokenizer_Wrapper&);
     
     string head;
+    bool good_;
     Comment_Replacer< istream >* incr;
     Whitespace_Compressor< Comment_Replacer< istream > >* inwsc;
     Tokenizer< Whitespace_Compressor< Comment_Replacer< istream > > >* in;

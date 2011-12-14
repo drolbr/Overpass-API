@@ -1,0 +1,3 @@
+<osm-script>
+  <bbox-query e="2" into="out" n="15" s="-30.0" w="-1.0"/>
+</osm-script>

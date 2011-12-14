@@ -1,0 +1,2 @@
+foreach.in->.out(node(w),{xml;})
+

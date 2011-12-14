@@ -1,0 +1,3 @@
+<osm-script>
+  <recurse from="in" into="out" type="way-node"/>
+</osm-script>

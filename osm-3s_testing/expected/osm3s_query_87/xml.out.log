@@ -1,0 +1,3 @@
+<osm-script>
+  <user into="_" name="A user name @&lt;&gt;" type="node" uid=""/>
+</osm-script>

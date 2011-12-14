@@ -15,47 +15,137 @@
 
 using namespace std;
 
-pair< string, string > parse_setup(Tokenizer_Wrapper& token, Error_Output* error_output)
+//-----------------------------------------------------------------------------
+
+string get_text_token(Tokenizer_Wrapper& token, Error_Output* error_output,
+		      string type_of_token)
 {
-  ++token;
-
-  if (*token == "]")
-  {
-    if (error_output)
-      error_output->add_parse_error("Keyword expected", token.line_col().first);
-    return make_pair< string, string >("", "");
-  }
-  pair< string, string > result = make_pair(*token, "");
-  ++token;
+  string result = "";
   
-  if (*token != ":")
+  if (!token.good() || (*token).size() == 0)
+    ;
+  else if ((*token)[0] == '"' || (*token)[0] == '\'')
   {
-    if (error_output)
-      error_output->add_parse_error("':' expected", token.line_col().first);
-    return make_pair< string, string >("", "");
+    string::size_type start = 0;
+    string::size_type pos = (*token).find('\\');
+    while (pos != string::npos)
+    {
+      result += (*token).substr(start + 1, pos - start - 1);
+      start = pos;
+      pos = (*token).find('\\', start + 1);
+    }
+    result += (*token).substr(start + 1, (*token).size() - start - 2);
   }
-  ++token;
-
-  if (*token == "]")
-  {
-    if (error_output)
-      error_output->add_parse_error("Value expected", token.line_col().first);
-    return make_pair< string, string >("", "");
-  }
-  result.second = *token;
-  ++token;
-
-  while (*token != "]")
-  {
-    if (error_output)
-      error_output->add_parse_error("']' expected", token.line_col().first);
-    return make_pair< string, string >("", "");
+  else if (isalpha((*token)[0]) || isdigit((*token)[0]) || (*token)[0] == '_')
+    result = *token;
+  else if ((*token)[0] == '-' && (*token).size() > 1 && isdigit((*token)[1]))
+    result = *token;
+  
+  if (result != "")
     ++token;
+  else
+  {
+    if (error_output)
+      error_output->add_parse_error(type_of_token + " expected - '" + *token + "' found.", token.line_col().first);
   }
-  ++token;
   
   return result;
 }
+
+void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
+		       string target_1, bool after = true)
+{
+  if (*token != target_1)
+  {
+    if (error_output)
+      error_output->add_parse_error(string("'") + target_1 + "' expected - '"
+          + *token + "' found.", token.line_col().first);
+    ++token;
+  }
+  while (token.good() && *token != target_1)
+    ++token;
+  if (!token.good())
+  {
+    if (error_output)
+      error_output->add_parse_error("Unexpected end of input.", token.line_col().first);
+  }
+  else if (after)
+    ++token;
+}
+
+void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
+		       string target_1, string target_2, bool after = true)
+{
+  if (*token != target_1 && *token != target_2)
+  {
+    if (error_output)
+      error_output->add_parse_error
+          (string("'") + target_1 + "' or '" + target_2 + "' expected - '"
+	      + *token + "' found.", token.line_col().first);
+    ++token;
+  }
+  while (token.good() && *token != target_1 && *token != target_2)
+    ++token;
+  if (!token.good())
+  {
+    if (error_output)
+      error_output->add_parse_error("Unexpected end of input.", token.line_col().first);
+  }
+  else if (after)
+    ++token;
+}
+
+//-----------------------------------------------------------------------------
+
+template< class TStatement >
+TStatement* parse_statement(Tokenizer_Wrapper& token, Error_Output* error_output);
+
+string probe_into(Tokenizer_Wrapper& token, Error_Output* error_output)
+{
+  string into = "_";
+  if (token.good() && *token == "->")
+  {
+    ++token;
+    clear_until_after(token, error_output, ".");
+    if (token.good())
+      into = get_text_token(token, error_output, "Variable");
+  }
+  return into;
+}
+
+string probe_from(Tokenizer_Wrapper& token, Error_Output* error_output)
+{
+  string from = "_";
+  if (token.good() && *token == ".")
+  {
+    ++token;
+    if (token.good())
+      from = get_text_token(token, error_output, "Variable");
+  }
+  return from;
+}
+
+template< class TStatement >
+vector< TStatement* > collect_substatements(Tokenizer_Wrapper& token, Error_Output* error_output)
+{
+  vector< TStatement* > substatements;
+  clear_until_after(token, error_output, "(");
+  while (token.good() && *token != ")")
+  {
+    TStatement* substatement = parse_statement< TStatement >(token, error_output);
+    if (substatement)
+      substatements.push_back(substatement);
+    clear_until_after(token, error_output, ",", ")", false);
+    if (*token == ",")
+      ++token;
+  }
+  if (token.good())
+    ++token;
+  
+  return substatements;
+}
+
+//-----------------------------------------------------------------------------
 
 template< class TStatement >
 TStatement* create_union_statement(string into, uint line_nr)
@@ -63,51 +153,6 @@ TStatement* create_union_statement(string into, uint line_nr)
   map< string, string > attr;
   attr["into"] = into;
   return TStatement::create_statement("union", line_nr, attr);
-}
-
-template< class TStatement >
-TStatement* parse_statement(Tokenizer_Wrapper& token, Error_Output* error_output);
-
-template< class TStatement >
-TStatement* parse_union(Tokenizer_Wrapper& token, Error_Output* error_output)
-{
-  vector< TStatement* > substatements;
-  pair< uint, uint > line_col = token.line_col();
-  
-  ++token;
-  while (token.good() && *token != ")")
-  {
-    ++token;
-    TStatement* substatement = parse_statement< TStatement >(token, error_output);
-    if (substatement)
-      substatements.push_back(substatement);
-  }
-  if (token.good())
-    ++token;
-
-  string into = "_";
-  if (token.good() && *token == "->")
-  {
-    ++token;
-    if (token.good() && *token == ".")
-      ++token;
-    else
-    {
-      if (error_output)
-        error_output->add_parse_error("Variable expected", token.line_col().first);
-    }
-    if (token.good())
-    {
-      into = *token;
-      ++token;
-    }
-  }
-  
-  TStatement* statement = create_union_statement< TStatement >(into, line_col.first);
-  for (typename vector< TStatement* >::const_iterator it = substatements.begin();
-      it != substatements.end(); ++it)
-    statement->add_statement(*it, "");
-  return statement;
 }
 
 template< class TStatement >
@@ -120,60 +165,6 @@ TStatement* create_foreach_statement(string from, string into, uint line_nr)
 }
 
 template< class TStatement >
-TStatement* parse_foreach(Tokenizer_Wrapper& token, Error_Output* error_output)
-{
-  string from = "_";
-  ++token;
-  if (token.good() && *token == ".")
-  {
-    ++token;
-    if (token.good())
-    {
-      from = *token;
-      ++token;
-    }
-  }
-  
-  string into = "_";
-  if (token.good() && *token == "->")
-  {
-    ++token;
-    if (token.good() && *token == ".")
-      ++token;
-    else
-    {
-      if (error_output)
-	error_output->add_parse_error("Variable expected", token.line_col().first);
-    }
-    if (token.good())
-    {
-      into = *token;
-      ++token;
-    }
-  }
-  
-  vector< TStatement* > substatements;
-  pair< uint, uint > line_col = token.line_col();
-  
-  ++token;
-  while (token.good() && *token != ")")
-  {
-    ++token;
-    TStatement* substatement = parse_statement< TStatement >(token, error_output);
-    if (substatement)
-      substatements.push_back(substatement);
-  }
-  if (token.good())
-    ++token;
-
-  TStatement* statement = create_foreach_statement< TStatement >(from, into, line_col.first);
-  for (typename vector< TStatement* >::const_iterator it = substatements.begin();
-      it != substatements.end(); ++it)
-    statement->add_statement(*it, "");
-  return statement;
-}
-
-template< class TStatement >
 TStatement* create_print_statement(string from, string mode, string order, string limit,
 				  uint line_nr)
 {
@@ -183,76 +174,6 @@ TStatement* create_print_statement(string from, string mode, string order, strin
   attr["order"] = order;
   attr["limit"] = limit;
   return TStatement::create_statement("print", line_nr, attr);
-}
-
-template< class TStatement >
-TStatement* parse_output(const string& from, Tokenizer_Wrapper& token, Error_Output* error_output)
-{
-  TStatement* statement = 0;
-  ++token;
-  while (token.good() && *token != "}")
-  {
-    if (*token == "xml")
-    {
-      ++token;
-      string mode = "body";
-      string order = "id";
-      string limit = "";
-      while (token.good() && *token != ";")
-      {
-	if (*token == "ids")
-	  mode = "ids_only";
-	else if (*token == "skel")
-	  mode = "skeleton";
-	else if (*token == "body")
-	  mode = "body";
-	else if (*token == "meta")
-	  mode = "meta";
-	else if (*token == "quirks")
-	  mode = "quirks";
-	else if (*token == "qt")
-	  order = "quadtile";
-	else if (*token == "asc")
-	  order = "id";
-	else if (isdigit((*token)[0]))
-	  limit = *token;
-	else
-	{
-	  if (error_output)
-	    error_output->add_parse_error
-	        (string("Invalid parameter for print: \"") + *token + "\"", token.line_col().first);
-	}
-	++token;
-      }
-      
-      if (statement == 0)
-      {
-	statement = create_print_statement< TStatement >
-	    (from == "" ? "_" : from, mode, order, limit, token.line_col().first);
-      }
-      else
-      {
-	if (error_output)
-	  error_output->add_parse_error("Garbage after first output statement found.",
-					token.line_col().first);
-      }
-    }
-    else if (*token == "make-area")
-    {
-    }
-    else
-    {
-      if (error_output)
-	error_output->add_parse_error
-	    (string("Unknown output type \"") + *token + "\"", token.line_col().first);
-    }
-    ++token;
-  }
-  
-  if (token.good())
-    ++token;
-  
-  return statement;
 }
 
 template< class TStatement >
@@ -344,6 +265,124 @@ TStatement* create_newer_statement(string than, uint line_nr)
   return TStatement::create_statement("newer", line_nr, attr);
 }
 
+//-----------------------------------------------------------------------------
+
+pair< string, string > parse_setup(Tokenizer_Wrapper& token, Error_Output* error_output)
+{
+  ++token;
+  pair< string, string > result = make_pair
+      (get_text_token(token, error_output, "Keyword"), "");  
+  clear_until_after(token, error_output, ":", "]");
+  result.second = get_text_token(token, error_output, "Value");
+  clear_until_after(token, error_output, "]");
+  return result;
+}
+
+template< class TStatement >
+TStatement* parse_union(Tokenizer_Wrapper& token, Error_Output* error_output)
+{
+  pair< uint, uint > line_col = token.line_col();
+  ++token;
+  
+  vector< TStatement* > substatements =
+      collect_substatements< TStatement >(token, error_output);
+  string into = probe_into(token, error_output);
+  
+  TStatement* statement = create_union_statement< TStatement >(into, line_col.first);
+  for (typename vector< TStatement* >::const_iterator it = substatements.begin();
+      it != substatements.end(); ++it)
+    statement->add_statement(*it, "");
+  return statement;
+}
+
+template< class TStatement >
+TStatement* parse_foreach(Tokenizer_Wrapper& token, Error_Output* error_output)
+{
+  pair< uint, uint > line_col = token.line_col();
+  ++token;
+  
+  string from = probe_from(token, error_output);
+  string into = probe_into(token, error_output);
+  vector< TStatement* > substatements =
+      collect_substatements< TStatement >(token, error_output);
+
+  TStatement* statement = create_foreach_statement< TStatement >(from, into, line_col.first);
+  for (typename vector< TStatement* >::const_iterator it = substatements.begin();
+      it != substatements.end(); ++it)
+    statement->add_statement(*it, "");
+  return statement;
+}
+
+template< class TStatement >
+TStatement* parse_output(const string& from, Tokenizer_Wrapper& token, Error_Output* error_output)
+{
+  TStatement* statement = 0;
+  ++token;
+  while (token.good() && *token != "}")
+  {
+    if (*token == "xml")
+    {
+      ++token;
+      string mode = "body";
+      string order = "id";
+      string limit = "";
+      while (token.good() && *token != ";")
+      {
+	if (*token == "ids")
+	  mode = "ids_only";
+	else if (*token == "skel")
+	  mode = "skeleton";
+	else if (*token == "body")
+	  mode = "body";
+	else if (*token == "meta")
+	  mode = "meta";
+	else if (*token == "quirks")
+	  mode = "quirks";
+	else if (*token == "qt")
+	  order = "quadtile";
+	else if (*token == "asc")
+	  order = "id";
+	else if (isdigit((*token)[0]))
+	  limit = *token;
+	else
+	{
+	  if (error_output)
+	    error_output->add_parse_error
+	        (string("Invalid parameter for print: \"") + *token + "\"", token.line_col().first);
+	}
+	++token;
+      }
+      
+      if (statement == 0)
+      {
+	statement = create_print_statement< TStatement >
+	    (from == "" ? "_" : from, mode, order, limit, token.line_col().first);
+      }
+      else
+      {
+	if (error_output)
+	  error_output->add_parse_error("Garbage after first output statement found.",
+					token.line_col().first);
+      }
+    }
+    else if (*token == "make-area")
+    {
+    }
+    else
+    {
+      if (error_output)
+	error_output->add_parse_error
+	    (string("Unknown output type \"") + *token + "\"", token.line_col().first);
+    }
+    ++token;
+  }
+  
+  if (token.good())
+    ++token;
+  
+  return statement;
+}
+
 string determine_recurse_type(string flag, string type, Error_Output* error_output,
 			      const pair< uint, uint >& line_col)
 {
@@ -386,7 +425,7 @@ string determine_recurse_type(string flag, string type, Error_Output* error_outp
     if (type == "node" || type == "way")
     {
       if (error_output)
-	error_output->add_parse_error("A recursion from type 'bn' produces relations.",
+	error_output->add_parse_error("A recursion from type 'bw' produces relations.",
 				      line_col.first);
     }
     else if (type == "relation")
@@ -397,7 +436,7 @@ string determine_recurse_type(string flag, string type, Error_Output* error_outp
     if (type == "node" || type == "way")
     {
       if (error_output)
-	error_output->add_parse_error("A recursion from type 'bn' produces relations.",
+	error_output->add_parse_error("A recursion from type 'br' produces relations.",
 				      line_col.first);
     }
     else if (type == "relation")
@@ -407,335 +446,217 @@ string determine_recurse_type(string flag, string type, Error_Output* error_outp
   return recurse_type;
 }
 
-template< class TStatement >
-TStatement* assemble_around_statement
-    (const vector< string >& tokens, Error_Output* error_output,
-     string into, const pair< uint, uint >& line_col)
+struct Statement_Text
 {
-  if (tokens.size() < 4)
-  {
-    if (error_output)
-      error_output->add_parse_error("around needs a floating point number as radius.",
-      line_col.first);
-    
-    return 0;
-  }
-  else
-  {
-    string around_from = "_";
-    uint radius_pos = 3;
-    if (tokens[2] == ".")
-    {
-      around_from = tokens[3];
-      if (tokens.size() < 6 || tokens[4] != ":")
-      {
-	if (error_output)
-	  error_output->add_parse_error("':' expected.", line_col.first);
-      }
-      else
-	radius_pos = 5;
-    }
-    else if (tokens[2] != ":")
-    {
-      if (error_output)
-	error_output->add_parse_error("':' or '.' expected.", line_col.first);
-    }
+  Statement_Text(string statement_ = "",
+		 pair< uint, uint > line_col_ = make_pair< uint, uint >(0, 0))
+    : statement(statement_), line_col(line_col_) {}
+  
+  string statement;
+  pair< uint, uint > line_col;
+  vector< string > attributes;
+};
+
+template< class TStatement >
+TStatement* create_query_substatement
+    (Tokenizer_Wrapper& token, Error_Output* error_output,
+     const Statement_Text& clause, string type, string from, string into)
+{
+  if (clause.statement == "has-kv")
+    return create_has_kv_statement< TStatement >
+        (clause.attributes[0], clause.attributes[1], clause.line_col.first);
+  else if (clause.statement == "around")
     return create_around_statement< TStatement >
-        (tokens[radius_pos],
-         around_from, into, line_col.first);
-  }
+        (clause.attributes[1], clause.attributes[0], into, clause.line_col.first);
+  else if (clause.statement == "user")
+    return create_user_statement< TStatement >
+        (type, clause.attributes[0], "", into, clause.line_col.first);
+  else if (clause.statement == "uid")
+    return create_user_statement< TStatement >
+        (type, "", clause.attributes[0], into, clause.line_col.first);
+  else if (clause.statement == "newer")
+    return create_newer_statement< TStatement >
+        (clause.attributes[0], clause.line_col.first);
+  else if (clause.statement == "recurse")
+    return create_recurse_statement< TStatement >
+        (determine_recurse_type(clause.attributes[0], type, error_output, clause.line_col),
+	 clause.attributes[1], into, clause.line_col.first);
+  else if (clause.statement == "id-query")
+    return create_id_query_statement< TStatement >
+        (type, clause.attributes[0], into, clause.line_col.first);
+  else if (clause.statement == "bbox-query")
+    return create_bbox_statement< TStatement >
+        (clause.attributes[0], clause.attributes[2], clause.attributes[1], clause.attributes[3],
+	 into, clause.line_col.first);
+  return 0;
 }
 
 template< class TStatement >
 TStatement* parse_query(const string& type, const string& from, Tokenizer_Wrapper& token,
 		 Error_Output* error_output)
 {
-  vector< vector< string > > substatement_str;
-  pair< uint, uint > line_col = token.line_col();
+  pair< uint, uint > query_line_col = token.line_col();
+  
+  vector< Statement_Text > clauses;
   while (token.good() && (*token == "[" || *token == "("))
   {
-    vector< string > cur_substmt_str;
-    
-    while (token.good() && *token != "]" && *token != ")")
+    if (*token == "[")
     {
-      cur_substmt_str.push_back(*token);
       ++token;
-    }
-    
-    if (*token == "]" && cur_substmt_str.front() == "(")
-    {
-      if (error_output)
-	error_output->add_parse_error("'(' closed by ']'", token.line_col().first);
-    }
-    else if (*token == ")" && cur_substmt_str.front() == "[")
-    {
-      if (error_output)
-	error_output->add_parse_error("'[' closed by ')'", token.line_col().first);
+      Statement_Text clause("has-kv", token.line_col());
+      clause.attributes.push_back(get_text_token(token, error_output, "Key"));
+      clear_until_after(token, error_output, "=", "]", false);
+      if (*token == "]")
+      {
+	clause.attributes.push_back("");
+	++token;
+      }
+      else
+      {
+	++token;
+	clause.attributes.push_back(get_text_token(token, error_output, "Value"));
+	clear_until_after(token, error_output, "]");
+      }
+      clauses.push_back(clause);
     }
     else
-      substatement_str.push_back(cur_substmt_str);
-    
-    if (token.good())
+    {
       ++token;
+      if (!token.good())
+      {
+	if (error_output)
+	  error_output->add_parse_error("':' or '.' expected.", token.line_col().first);
+	break;
+      }
+      
+      if (*token == "around")
+      {
+	Statement_Text clause("around", token.line_col());
+	++token;
+	clause.attributes.push_back(probe_from(token, error_output));
+	clear_until_after(token, error_output, ":");
+	clause.attributes.push_back(get_text_token(token, error_output, "Floating point number"));
+	clear_until_after(token, error_output, ")");
+	clauses.push_back(clause);
+      }
+      else if (*token == "user")
+      {
+	Statement_Text clause("user", token.line_col());
+	++token;
+	clear_until_after(token, error_output, ":");
+	clause.attributes.push_back(get_text_token(token, error_output, "User name"));
+	clear_until_after(token, error_output, ")");
+	clauses.push_back(clause);
+      }
+      else if (*token == "uid")
+      {
+	Statement_Text clause("uid", token.line_col());
+	++token;
+	clear_until_after(token, error_output, ":");
+	clause.attributes.push_back(get_text_token(token, error_output, "Positive integer"));
+	clear_until_after(token, error_output, ")");
+	clauses.push_back(clause);
+      }
+      else if (*token == "newer")
+      {
+	Statement_Text clause("newer", token.line_col());
+	++token;
+	clear_until_after(token, error_output, ":");
+	clause.attributes.push_back(get_text_token(token, error_output, "\"YYYY-MM-DDThh:mm:ssZ\""));
+	clear_until_after(token, error_output, ")");
+	clauses.push_back(clause);
+      }
+      else if (*token == "r" || *token == "w"
+	    || *token == "bn" || *token == "bw" || *token == "br")
+      {
+	Statement_Text clause("recurse", token.line_col());
+	clause.attributes.push_back(get_text_token(token, error_output, "Recurse type"));
+	clause.attributes.push_back(probe_from(token, error_output));
+	clear_until_after(token, error_output, ")");
+	clauses.push_back(clause);
+      }
+      else if (isdigit((*token)[0]) || 
+	       ((*token)[0] == '-' && (*token).size() > 1 && isdigit((*token)[1])))
+      {
+	string first_number = get_text_token(token, error_output, "Number");
+	clear_until_after(token, error_output, ",", ")", false);
+	if (*token == ")")
+	{
+	  Statement_Text clause("id-query", token.line_col());
+	  clause.attributes.push_back(first_number);
+	  clear_until_after(token, error_output, ")");
+	  clauses.push_back(clause);
+	}
+	else
+	{
+	  Statement_Text clause("bbox-query", token.line_col());
+	  clause.attributes.push_back(first_number);
+	  clear_until_after(token, error_output, ",");
+	  clause.attributes.push_back(get_text_token(token, error_output, "Number"));
+	  clear_until_after(token, error_output, ",");
+	  clause.attributes.push_back(get_text_token(token, error_output, "Number"));
+	  clear_until_after(token, error_output, ",");
+	  clause.attributes.push_back(get_text_token(token, error_output, "Number"));
+	  clear_until_after(token, error_output, ")");
+	  clauses.push_back(clause);
+	}
+      }
+      else
+      {
+	if (error_output)
+	  error_output->add_parse_error("Unknown query clause", token.line_col().first);
+	clear_until_after(token, error_output, ")");
+      }
+    }
   }
   
-  string into = "_";
-  if (token.good() && *token == "->")
-  {
-    ++token;
-    if (token.good() && *token == ".")
-      ++token;
-    else
-    {
-      if (error_output)
-	error_output->add_parse_error("Variable expected", token.line_col().first);
-    }
-    if (token.good())
-    {
-      into = *token;
-      ++token;
-    }
-  }
+  string into = probe_into(token, error_output);
   
   TStatement* statement = 0;
-  
-  if (substatement_str.size() == 0)
+  if (clauses.size() == 0)
   {
     if (from == "")
     {
       if (error_output)
-        error_output->add_parse_error("An empty query is not allowed", token.line_col().first);
+	error_output->add_parse_error("An empty query is not allowed", token.line_col().first);
     }
     else
-      statement = create_item_statement< TStatement >(from, line_col.first);
+      statement = create_item_statement< TStatement >(from, query_line_col.first);
   }
-  else if (substatement_str.size() == 1 && from == "")
+  else if (clauses.size() == 1 && from == "")
   {
-    if (substatement_str[0][0] == "[")
+    if (clauses.front().statement == "has-kv")
     {
-      TStatement* substatement = 0;
-      
-      if (substatement_str[0].size() == 2)
-      {
-	substatement = create_has_kv_statement< TStatement >
-	    (substatement_str[0][1], "", line_col.first);
-      }
-      else
-      {
-	if (substatement_str[0][2] != "=")
-	{
-	  if (error_output)
-	    error_output->add_parse_error("'=' or ']' expected.", line_col.first);
-	}
-	substatement = create_has_kv_statement< TStatement >
-	    (substatement_str[0][1], substatement_str[0][3], line_col.first);
-      }
-      
-      statement = create_query_statement< TStatement >(type, into, line_col.first);
+      statement = create_query_statement< TStatement >(type, into, query_line_col.first);
+      TStatement* substatement = create_query_substatement< TStatement >
+          (token, error_output, clauses.front(), type, from, into);
       if (substatement)
 	statement->add_statement(substatement, "");
     }
-    else if (substatement_str[0][1] == "around")
-    {
-      statement = assemble_around_statement< TStatement >
-          (substatement_str[0], error_output, into, line_col);
-    }
-    else if (substatement_str[0][1] == "user")
-    {
-      if (substatement_str[0].size() != 4 || substatement_str[0][2] != ":")
-      {
-	if (error_output)
-	  error_output->add_parse_error("A user clause has the form '(user:_string_)'",
-					line_col.first);
-      }
-      else
-        statement = create_user_statement< TStatement >
-            (type == "rel" ? "relation" : type, substatement_str[0][3], "", into, line_col.first);
-    }
-    else if (substatement_str[0][1] == "uid")
-    {
-      if (substatement_str[0].size() != 4 || substatement_str[0][2] != ":")
-      {
-	if (error_output)
-	  error_output->add_parse_error("A uid clause has the form '(uid:_int_)'",
-					line_col.first);
-      }
-      else
-	statement = create_user_statement< TStatement >
-            (type == "rel" ? "relation" : type, "", substatement_str[0][3], into, line_col.first);
-    }
-    else if (substatement_str[0][1] == "newer")
-    {
-      if (substatement_str[0].size() != 4 || substatement_str[0][2] != ":")
-      {
-	if (error_output)
-	  error_output->add_parse_error
-	      ("A newer clause has the form '(newer:\"YYYY-MM-DDThh:mm:ssZ\")'", line_col.first);
-      }
-      else
-      {
-	string than = substatement_str[0][3].substr(1, substatement_str[0][3].size()-2);
-	statement = create_newer_statement< TStatement >(than, line_col.first);
-      }
-    }
-    else if (substatement_str[0][1] == "r" || substatement_str[0][1] == "w"
-      || substatement_str[0][1] == "bn" || substatement_str[0][1] == "bw"
-      || substatement_str[0][1] == "br")
-    {
-      string recurse_from = "_";
-      if (substatement_str[0].size() == 4 && substatement_str[0][2] == ".")
-	recurse_from = substatement_str[0][3];
-      else if (substatement_str[0].size() != 2)
-      {
-	if (error_output)
-	  error_output->add_parse_error("Unknown tokens behind recurse", line_col.first);
-      }
-      
-      string recurse_type = determine_recurse_type
-          (substatement_str[0][1], type, error_output, line_col);
-      statement = create_recurse_statement< TStatement >
-          (recurse_type, recurse_from, into, line_col.first);
-    }
-    else if (substatement_str[0].size() == 2 && isdigit(substatement_str[0][1][0]))
-    {
-      statement = create_id_query_statement< TStatement >
-          (type, substatement_str[0][1], into, line_col.first);      
-    }
-    else if (substatement_str[0].size() == 8 && isdigit(substatement_str[0][1][0])
-      && substatement_str[0][2] == "," && isdigit(substatement_str[0][3][0])
-      && substatement_str[0][4] == "," && isdigit(substatement_str[0][5][0])
-      && substatement_str[0][6] == "," && isdigit(substatement_str[0][7][0]))
-    {
-      statement = create_bbox_statement< TStatement >
-          (substatement_str[0][1],
-	   substatement_str[0][5],
-	   substatement_str[0][3],
-	   substatement_str[0][7],
-	   into, line_col.first);
-    }
     else
     {
-      if (error_output)
-	error_output->add_parse_error("Unknown query clause", line_col.first);
+      statement = create_query_substatement< TStatement >
+          (token, error_output, clauses.front(), type, from, into);
     }
   }
-  else if (substatement_str.size() == 1)
-    statement = create_item_statement< TStatement >(from, line_col.first);
   else
   {
-    statement = create_query_statement< TStatement >(type, into, line_col.first);
+    statement = create_query_statement< TStatement >(type, into, query_line_col.first);
     if (!statement)
       return 0;
     
     if (from != "")
     {
-      TStatement* substatement = create_item_statement< TStatement >(from, line_col.first);
+      TStatement* substatement = create_item_statement< TStatement >(from, query_line_col.first);
       if (substatement)
 	statement->add_statement(substatement, "");
     }
     
-    for (vector< vector< string > >::const_iterator it = substatement_str.begin();
-        it != substatement_str.end(); ++it)
+    for (vector< Statement_Text >::const_iterator it = clauses.begin();
+        it != clauses.end(); ++it)
     {
-      TStatement* substatement = 0;
-      if ((*it)[0] == "[")
-      {
-	if ((*it).size() == 2)
-	{
-	  substatement = create_has_kv_statement< TStatement >
-	      ((*it)[1], "", line_col.first);
-	}
-	else
-	{
-	  if ((*it)[2] != "=")
-	  {
-	    if (error_output)
-	      error_output->add_parse_error("'=' or ']' expected.", line_col.first);
-	  }
-	  substatement = create_has_kv_statement< TStatement >
-	      ((*it)[1], (*it)[3], line_col.first);
-	}
-      }
-      else if ((*it)[1] == "around")
-      {
-	substatement = assemble_around_statement< TStatement >
-	    (substatement_str[0], error_output, into, line_col);
-      }
-      else if ((*it)[1] == "user")
-      {
-	if ((*it).size() != 4 || (*it)[2] != ":")
-	{
-	  if (error_output)
-	    error_output->add_parse_error("A user clause has the form '(user:_string_)'",
-	    line_col.first);
-	}
-	else
-	  statement = create_user_statement< TStatement >
-	      (type == "rel" ? "relation" : type, (*it)[3], "", into, line_col.first);
-      }
-      else if ((*it)[1] == "uid")
-      {
-	if ((*it).size() != 4 || (*it)[2] != ":")
-	{
-	  if (error_output)
-	    error_output->add_parse_error("A uid clause has the form '(uid:_int_)'",
-	    line_col.first);
-	}
-	else
-	  statement = create_user_statement< TStatement >
-	      (type == "rel" ? "relation" : type, "", (*it)[3], into, line_col.first);
-      }
-      else if ((*it)[1] == "newer")
-      {
-	if ((*it).size() != 4 || (*it)[2] != ":")
-	{
-	  if (error_output)
-	    error_output->add_parse_error
-	        ("A newer clause has the form '(newer:YYYY-MM-DDThh:mm:ssZ)'", line_col.first);
-	}
-	else
-	{
-	  string than = (*it)[3].substr(1, (*it)[3].size()-2);
-	  statement = create_newer_statement< TStatement >(than, line_col.first);
-	}
-      }
-      else if ((*it)[1] == "r" || (*it)[1] == "w"
-	  || (*it)[1] == "bn" || (*it)[1] == "bw"
-	  || (*it)[1] == "br")
-      {
-	string recurse_from = "_";
-	if ((*it).size() == 4 && (*it)[2] == ".")
-	  recurse_from = (*it)[3];
-	else if ((*it).size() != 2)
-	{
-	  if (error_output)
-	    error_output->add_parse_error("Unknown tokens behind recurse", line_col.first);
-	}
-	
-	string recurse_type = determine_recurse_type
-	    ((*it)[1], type, error_output, line_col);
-	substatement = create_recurse_statement< TStatement >
-	    (recurse_type, recurse_from, into, line_col.first);
-      }
-      else if ((*it).size() == 2 && isdigit((*it)[1][0]))
-      {
-        substatement = create_id_query_statement< TStatement >
-            (type, (*it)[1], into, line_col.first);      
-      }
-      else if ((*it).size() == 8 && isdigit((*it)[1][0])
-	  && (*it)[2] == "," && isdigit((*it)[3][0])
-	  && (*it)[4] == "," && isdigit((*it)[5][0])
-	  && (*it)[6] == "," && isdigit((*it)[7][0]))
-      {
-	substatement = create_bbox_statement< TStatement >
-	    ((*it)[1], (*it)[5], (*it)[3], (*it)[7], "_", line_col.first);
-      }
-      else
-      {
-	if (error_output)
-	  error_output->add_parse_error("Unknown query clause", line_col.first);
-      }
-      
+      TStatement* substatement = create_query_substatement< TStatement >
+          (token, error_output, *it, type, from, "_");
       if (substatement)
 	statement->add_statement(substatement, "");
     }

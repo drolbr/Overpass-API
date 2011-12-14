@@ -1,0 +1,3 @@
+<osm-script element-limit="1048576" timeout="3600">
+  <union into="_"/>
+</osm-script>

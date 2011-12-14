@@ -1,0 +1,3 @@
+<osm-script>
+  <print from="in" limit="496" mode="ids_only" order="quadtile"/>
+</osm-script>

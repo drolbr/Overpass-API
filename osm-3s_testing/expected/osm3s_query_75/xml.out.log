@@ -1,0 +1,3 @@
+<osm-script>
+  <print from="_" limit="" mode="quirks" order="id"/>
+</osm-script>

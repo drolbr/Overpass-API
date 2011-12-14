@@ -1,0 +1,3 @@
+<osm-script>
+  <print from="_" limit="" mode="meta" order="id"/>
+</osm-script>

@@ -1,0 +1,3 @@
+<osm-script>
+  <bbox-query e="10.0" into="_" n="55.0" s="50.0" w="5.0"/>
+</osm-script>

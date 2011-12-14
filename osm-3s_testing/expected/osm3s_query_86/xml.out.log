@@ -1,0 +1,6 @@
+<osm-script>
+  <query into="_" type="node">
+    <item set="wrong"/>
+    <around from="in" into="_" radius="100"/>
+  </query>
+</osm-script>

@@ -1,0 +1,3 @@
+<osm-script>
+  <foreach from="_" into="_"/>
+</osm-script>

@@ -1,0 +1,3 @@
+<osm-script>
+  <around from="in" into="out" radius="100"/>
+</osm-script>

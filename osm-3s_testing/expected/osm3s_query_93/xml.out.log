@@ -1,0 +1,3 @@
+<osm-script>
+  <recurse from="_" into="_" type="relation-node"/>
+</osm-script>

@@ -375,24 +375,30 @@ inline void Tokenizer< In >::get(string& s)
     buffer = buffer.substr(pos);
     clear_space();
   }
-  else if (isdigit(buffer[0]))
+  else if (isdigit(buffer[0]) || buffer[0] == '-')
   {
     uint pos = 1;
     grow_buffer(pos + 1);
-    while (buffer.size() > pos && isdigit(buffer[pos]))
-      grow_buffer((++pos) + 1);
-    if (buffer.size() > pos && buffer[pos] == '.')
+    if (isdigit(buffer[0]) ||
+        (buffer.size() > pos && (isdigit(buffer[pos]) || buffer[pos] == '.')))
     {
-      grow_buffer((++pos) + 1);
       while (buffer.size() > pos && isdigit(buffer[pos]))
-	grow_buffer((++pos) + 1);
-    }
+        grow_buffer((++pos) + 1);
+      if (buffer.size() > pos && buffer[pos] == '.')
+      {
+        grow_buffer((++pos) + 1);
+        while (buffer.size() > pos && isdigit(buffer[pos]))
+	  grow_buffer((++pos) + 1);
+      }
     
-    s = buffer.substr(0, pos);
-    for (uint i = 0; i < pos; ++i)
-      line_cols.pop();
-    buffer = buffer.substr(pos);
-    clear_space();
+      s = buffer.substr(0, pos);
+      for (uint i = 0; i < pos; ++i)
+        line_cols.pop();
+      buffer = buffer.substr(pos);
+      clear_space();
+    }
+    else
+      probe(s, "->");
   }
   else if (buffer[0] == '\'')
   {
@@ -430,8 +436,6 @@ inline void Tokenizer< In >::get(string& s)
     buffer = buffer.substr(pos+1);
     clear_space();
   }
-  else if (buffer[0] == '-')
-    probe(s, "->");
   else if (buffer[0] == ':')
     probe(s, "::");
   else if (buffer[0] == '=')
@@ -468,17 +472,14 @@ Tokenizer_Wrapper::Tokenizer_Wrapper(istream& in_)
   inwsc = new Whitespace_Compressor< Comment_Replacer< istream > >(*incr);
   in = new Tokenizer< Whitespace_Compressor< Comment_Replacer< istream > > >(*inwsc);
   line_col_ = in->line_col();
+  good_ = in->good();
   in->get(head);
-}
-
-bool Tokenizer_Wrapper::good()
-{
-  return in->good();
 }
 
 void Tokenizer_Wrapper::operator++()
 {
   line_col_ = in->line_col();
+  good_ = in->good();
   in->get(head);
 }
 
