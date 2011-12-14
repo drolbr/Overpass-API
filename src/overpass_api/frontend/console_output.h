@@ -26,7 +26,7 @@ struct Console_Output : public Error_Output
      const vector< uint >& read_counts);
 
   virtual void display_statement_progress
-      (uint timer, const string& name, int line_number,
+      (uint timer, const string& name, int progress, int line_number,
        const vector< pair< uint, uint > >& stack);
       
   virtual bool display_encoding_errors() { return encoding_errors; }

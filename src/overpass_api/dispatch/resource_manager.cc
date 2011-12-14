@@ -1,6 +1,8 @@
 #include "resource_manager.h"
 #include "../statements/statement.h"
 
+#include <sstream>
+
 using namespace std;
 
 uint count_set(const Set& set_)
@@ -70,14 +72,15 @@ void Resource_Manager::health_check(const Statement& stmt)
       watchdog->ping();
     last_ping_time += 5;
 
-    if (elapsed_time >= last_report_time + 60)
+    if (elapsed_time >= last_report_time + 15)
     {
       if (error_output)
       {
         error_output->display_statement_progress
-            (elapsed_time, stmt.get_name(), stmt.get_line_number(), stack_progress);
+            (elapsed_time, stmt.get_name(), stmt.get_progress(), stmt.get_line_number(),
+	     stack_progress);
       }
-      last_report_time += 60;
+      last_report_time += 15;
     }
   }
   
@@ -94,6 +97,13 @@ void Resource_Manager::health_check(const Statement& stmt)
 
   if (elapsed_time > max_allowed_time)
   {
+    if (error_output)
+    {
+      error_output->display_statement_progress
+          (elapsed_time, stmt.get_name(), stmt.get_progress(), stmt.get_line_number(),
+           stack_progress);
+    }
+    
     Resource_Error* error = new Resource_Error();
     error->timed_out = true;
     error->stmt_name = stmt.get_name();
@@ -101,17 +111,36 @@ void Resource_Manager::health_check(const Statement& stmt)
     error->size = size;
     error->runtime = elapsed_time;
     
+    Logger logger(transaction->get_db_dir());
+    ostringstream out;
+    out<<"Timeout: runtime "<<error->runtime<<" seconds, size "<<error->size<<" bytes, "
+        "in line "<<error->line_number<<", statement "<<error->stmt_name;
+    logger.annotated_log(out.str());
+    
     throw *error;
   }
 
   if (size > max_allowed_space)
   {
+    if (error_output)
+    {
+      error_output->display_statement_progress
+          (elapsed_time, stmt.get_name(), stmt.get_progress(), stmt.get_line_number(),
+           stack_progress);
+    }
+    
     Resource_Error* error = new Resource_Error();
     error->timed_out = false;
     error->stmt_name = stmt.get_name();
     error->line_number = stmt.get_line_number();
     error->size = size;
     error->runtime = elapsed_time;
+    
+    Logger logger(transaction->get_db_dir());
+    ostringstream out;
+    out<<"Oversized: runtime "<<error->runtime<<" seconds, size "<<error->size<<" bytes, "
+        "in line "<<error->line_number<<", statement "<<error->stmt_name;
+    logger.annotated_log(out.str());
     
     throw *error;
   }  

@@ -270,6 +270,8 @@ void Query_Statement::execute(Resource_Manager& rman)
   Set into;
   
   stopwatch.start();
+  set_progress(1);
+  rman.health_check(*this);
   
   if (type == QUERY_NODE)
   {
@@ -286,7 +288,10 @@ void Query_Statement::execute(Resource_Manager& rman)
       if ((*it)->collect(rman, into, type, ids))
         answer_state = data_collected;
     }
-  
+
+    set_progress(2);
+    rman.health_check(*this);
+
     set< pair< Uint32_Index, Uint32_Index > > range_req;
     for (vector< Query_Constraint* >::iterator it = constraints.begin();
         it != constraints.end() && answer_state < ranges_collected; ++it)
@@ -295,6 +300,9 @@ void Query_Statement::execute(Resource_Manager& rman)
 	answer_state = ranges_collected;
     }
   
+    set_progress(3);
+    rman.health_check(*this);
+    
     if (answer_state < ranges_collected)
       range_req = get_ranges_by_id_from_db< Uint32_Index >
           (ids, rman, *osm_base_settings().NODES);
@@ -318,6 +326,9 @@ void Query_Statement::execute(Resource_Manager& rman)
         answer_state = data_collected;
     }
   
+    set_progress(2);
+    rman.health_check(*this);
+    
     set< pair< Uint31_Index, Uint31_Index > > range_req;
     for (vector< Query_Constraint* >::iterator it = constraints.begin();
         it != constraints.end() && answer_state < ranges_collected; ++it)
@@ -325,6 +336,9 @@ void Query_Statement::execute(Resource_Manager& rman)
       if ((*it)->get_ranges(rman, range_req))
 	answer_state = ranges_collected;
     }
+    
+    set_progress(3);
+    rman.health_check(*this);
     
     if (answer_state < ranges_collected)
       range_req = get_ranges_by_id_from_db< Uint31_Index >
@@ -349,6 +363,9 @@ void Query_Statement::execute(Resource_Manager& rman)
         answer_state = data_collected;
     }
   
+    set_progress(2);
+    rman.health_check(*this);
+    
     set< pair< Uint31_Index, Uint31_Index > > range_req;
     for (vector< Query_Constraint* >::iterator it = constraints.begin();
         it != constraints.end() && answer_state < ranges_collected; ++it)
@@ -356,6 +373,9 @@ void Query_Statement::execute(Resource_Manager& rman)
       if ((*it)->get_ranges(rman, range_req))
 	answer_state = ranges_collected;
     }
+    
+    set_progress(3);
+    rman.health_check(*this);
     
     if (answer_state < ranges_collected)
       range_req = get_ranges_by_id_from_db< Uint31_Index >
@@ -365,13 +385,22 @@ void Query_Statement::execute(Resource_Manager& rman)
           (into.relations, ids, range_req, rman, *osm_base_settings().RELATIONS);
   }
   
+  set_progress(4);
+  rman.health_check(*this);
+  
   for (vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end(); ++it)
     (*it)->filter(rman, into);
   
+  set_progress(5);
+  rman.health_check(*this);
+  
   for (vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end(); ++it)
     (*it)->filter(*this, rman, into);
+  
+  set_progress(6);
+  rman.health_check(*this);
   
   clear_empty_indices(into.nodes);
   clear_empty_indices(into.ways);

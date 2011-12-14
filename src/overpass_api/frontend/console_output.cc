@@ -76,13 +76,13 @@ void Console_Output::display_statement_stopwatch
 }
 
 void Console_Output::display_statement_progress
-    (uint timer, const string& name, int line_number,
+    (uint timer, const string& name, int progress, int line_number,
      const vector< pair< uint, uint > >& stack)
 {
   if (log_level < Error_Output::PROGRESS)
     return;
   cerr<<"After "<<timer/3600<<"h"<<timer/60%60<<"m"<<timer%60<<"s: "
-      <<"in \""<<name<<"\" on line "<<line_number<<".";
+      <<"in \""<<name<<"\", part "<<progress<<", on line "<<line_number<<".";
   if (!stack.empty())
   {
     cerr<<" Stack:";

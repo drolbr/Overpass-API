@@ -41,7 +41,7 @@ class Query_Constraint
 class Statement
 {
   public:
-    Statement(int line_number_) : line_number(line_number_) {}
+    Statement(int line_number_) : line_number(line_number_), progress(0) {}
     
     virtual void add_statement(Statement* statement, string text);
     virtual void add_final_text(string text);
@@ -55,7 +55,8 @@ class Statement
     virtual Query_Constraint* get_query_constraint() { return 0; }
     
     virtual ~Statement() {}
-    
+
+    int get_progress() const { return progress; }
     int get_line_number() const { return line_number; }
     int get_startpos() const { return startpos; }
     void set_startpos(int pos) { startpos = pos; }
@@ -86,6 +87,7 @@ class Statement
     
     int line_number;
     int startpos, endpos, tagendpos;
+    int progress;
         
   protected:
     void eval_attributes_array
@@ -98,6 +100,8 @@ class Statement
     void add_static_remark(string remark);
 
     void runtime_remark(string error);
+
+    void set_progress(int progress_) { progress = progress_; }
 };
 
 map< string, string > convert_c_pairs(const char** attr);
