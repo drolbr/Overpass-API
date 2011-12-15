@@ -70,7 +70,7 @@ void Resource_Manager::health_check(const Statement& stmt)
   {
     if (watchdog)
       watchdog->ping();
-    last_ping_time += 5;
+    last_ping_time = elapsed_time;
 
     if (elapsed_time >= last_report_time + 15)
     {
@@ -80,7 +80,7 @@ void Resource_Manager::health_check(const Statement& stmt)
             (elapsed_time, stmt.get_name(), stmt.get_progress(), stmt.get_line_number(),
 	     stack_progress);
       }
-      last_report_time += 15;
+      last_report_time = elapsed_time;
     }
   }
   

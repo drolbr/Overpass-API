@@ -198,7 +198,7 @@ Dispatcher_Stub::Dispatcher_Stub
 				  *area_transaction, this, area_level == 2);
     }
     else
-      rman = new Resource_Manager(*transaction, this);
+      rman = new Resource_Manager(*transaction, this, error_output);
   }
   else
   {

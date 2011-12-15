@@ -35,10 +35,24 @@ void collect_nodes
      map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
      map< Uint32_Index, vector< Node_Skeleton > >& result);
      
+void collect_nodes
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
+     map< Uint32_Index, vector< Node_Skeleton > >& result,
+     const set< pair< Uint32_Index, Uint32_Index > >& node_ranges);
+     
 void collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
      map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
      map< Uint31_Index, vector< Way_Skeleton > >& result);
+
+void collect_ways
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
+     map< Uint31_Index, vector< Way_Skeleton > >& result,
+     const set< pair< Uint31_Index, Uint31_Index > >& way_ranges);
 
 #endif

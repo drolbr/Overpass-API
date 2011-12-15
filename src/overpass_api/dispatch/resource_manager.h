@@ -18,8 +18,10 @@ struct Watchdog_Callback
 class Resource_Manager
 {
 public:
-  Resource_Manager(Transaction& transaction_, Watchdog_Callback* watchdog_ = 0)
-      : transaction(&transaction_), error_output(0), area_transaction(0), area_updater_(0),
+  Resource_Manager(Transaction& transaction_, Watchdog_Callback* watchdog_ = 0,
+		   Error_Output* error_output_ = 0)
+      : transaction(&transaction_), error_output(error_output_),
+        area_transaction(0), area_updater_(0),
         watchdog(watchdog_),
 	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
 	max_allowed_time(0), max_allowed_space(0) {}

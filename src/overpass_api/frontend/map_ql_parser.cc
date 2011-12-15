@@ -449,7 +449,7 @@ string determine_recurse_type(string flag, string type, Error_Output* error_outp
 struct Statement_Text
 {
   Statement_Text(string statement_ = "",
-		 pair< uint, uint > line_col_ = make_pair< uint, uint >(0, 0))
+		 pair< uint, uint > line_col_ = make_pair(0, 0))
     : statement(statement_), line_col(line_col_) {}
   
   string statement;

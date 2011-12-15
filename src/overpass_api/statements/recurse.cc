@@ -91,6 +91,29 @@ void collect_items(const Statement& stmt, Resource_Manager& rman,
   }
 }
 
+template < class TIndex, class TObject, class TContainer >
+void collect_items_range(const Statement& stmt, Resource_Manager& rman,
+		   File_Properties& file_properties,
+		   const TContainer& req, vector< uint32 > ids,
+		   map< TIndex, vector< TObject > >& result)
+{
+  uint32 count = 0;
+  Block_Backend< TIndex, TObject, typename TContainer::const_iterator > db
+      (rman.get_transaction()->data_index(&file_properties));
+  for (typename Block_Backend< TIndex, TObject, typename TContainer
+      ::const_iterator >::Range_Iterator
+      it(db.range_begin(req.begin(), req.end())); !(it == db.range_end()); ++it)
+  {
+    if (++count >= 64*1024)
+    {
+      count = 0;
+      rman.health_check(stmt);
+    }
+    if (binary_search(ids.begin(), ids.end(), it.object().id))
+      result[it.index()].push_back(it.object());
+  }
+}
+
 vector< Uint31_Index > collect_way_req
     (const Statement& stmt, Resource_Manager& rman,
      const vector< uint32 >& map_ids, vector< uint32 > parents)
@@ -196,6 +219,26 @@ void collect_ways
   //stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
 }
 
+void collect_ways
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
+     map< Uint31_Index, vector< Way_Skeleton > >& result,
+     const set< pair< Uint31_Index, Uint31_Index > >& way_ranges)
+{
+  // collect ids
+  vector< uint32 > ids;    
+  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
+      it(rels_begin); it != rels_end; ++it)
+    extract_ids(it->second, ids, Relation_Entry::WAY);
+  
+  rman.health_check(stmt);
+  sort(ids.begin(), ids.end());
+  
+  collect_items_range(stmt, rman, *osm_base_settings().WAYS, way_ranges, ids, result);
+  //stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
+}
+
 void collect_nodes
     (const Statement& stmt, Resource_Manager& rman,
      map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
@@ -232,6 +275,26 @@ void collect_nodes
   sort(ids.begin(), ids.end());
   
   collect_items(stmt, rman, *osm_base_settings().NODES, req, ids, result);
+  //stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
+}
+
+void collect_nodes
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
+     map< Uint32_Index, vector< Node_Skeleton > >& result,
+     const set< pair< Uint32_Index, Uint32_Index > >& node_ranges)
+{
+  // collect ids
+  vector< uint32 > ids;    
+  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
+      it(rels_begin); it != rels_end; ++it)
+    extract_ids(it->second, ids, Relation_Entry::NODE);
+
+  rman.health_check(stmt);
+  sort(ids.begin(), ids.end());
+  
+  collect_items_range(stmt, rman, *osm_base_settings().NODES, node_ranges, ids, result);
   //stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
 }
 
