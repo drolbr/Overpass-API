@@ -1,0 +1,4 @@
+foreach(
+  node(w),
+  { xml body; }
+)

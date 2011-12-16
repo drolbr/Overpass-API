@@ -1,0 +1,3 @@
+foreach(
+  node(w)
+)

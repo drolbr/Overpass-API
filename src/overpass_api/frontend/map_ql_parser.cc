@@ -775,7 +775,7 @@ void parse_and_dump_pretty_from_map_ql
   generic_parse_and_validate_map_ql< Statement_Dump >(xml_raw, error_output, stmt_seq);
   for (vector< Statement_Dump* >::const_iterator it = stmt_seq.begin();
       it != stmt_seq.end(); ++it)
-    cout<<(*it)->dump_compact_map_ql();
+    cout<<(*it)->dump_pretty_map_ql();
   for (vector< Statement_Dump* >::iterator it = stmt_seq.begin();
       it != stmt_seq.end(); ++it)
     delete *it;

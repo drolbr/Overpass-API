@@ -19,6 +19,24 @@ void Statement_Dump::add_statement(Statement_Dump* statement, string text)
   substatements.push_back(statement);
 }
 
+string indent(const string& subresult)
+{
+  string result;
+
+  string::size_type pos = 0;
+  string::size_type next = subresult.find('\n', pos);
+  while (next != string::npos)
+  {
+    result += "  " + subresult.substr(pos, next-pos) + '\n';
+    pos = next + 1;
+    next = subresult.find('\n', pos);
+  }
+  if (subresult.substr(pos) != "")
+    result += "  " + subresult.substr(pos);
+  
+  return result;
+}
+
 string Statement_Dump::dump_xml() const
 {
   string result;
@@ -42,7 +60,8 @@ string Statement_Dump::dump_xml() const
     for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
     {
-      string subresult = (*it)->dump_xml();
+      result += indent((*it)->dump_xml());
+/*      string subresult = (*it)->dump_xml();
       string::size_type pos = 0;
       string::size_type next = subresult.find('\n', pos);
       while (next != string::npos)
@@ -50,7 +69,7 @@ string Statement_Dump::dump_xml() const
 	result += string("  ") + subresult.substr(pos, next-pos) + '\n';
 	pos = next + 1;
 	next = subresult.find('\n', pos);
-      }
+      }*/
     }
     
     result += string("</") + name + ">\n";
@@ -59,13 +78,7 @@ string Statement_Dump::dump_xml() const
   return result;
 }
 
-string Statement_Dump::dump_pretty_map_ql() const
-{
-  string result;
-  return result;
-}
-
-string dump_print_map_ql(const map< string, string >& attributes)
+string dump_print_map_ql(const map< string, string >& attributes, bool pretty = false)
 {
   string result;
   
@@ -75,7 +88,7 @@ string dump_print_map_ql(const map< string, string >& attributes)
     if (it->first == "from" && it->second != "_")
       result += "." + it->second;
   }
-  result += "{xml";
+  result += (pretty ? "{ xml" : "{xml");
   for (map< string, string >::const_iterator it = attributes.begin();
       it != attributes.end(); ++it)
   {
@@ -108,7 +121,7 @@ string dump_print_map_ql(const map< string, string >& attributes)
     if (it->first == "limit" && it->second != "")
       result += " \"" + it->second + "\"";
   }
-  result += ";}";
+  result += (pretty ? "; }" : ";}");
   
   return result;
 }
@@ -300,7 +313,7 @@ string Statement_Dump::dump_compact_map_ql() const
       result += "->." + attributes.find("into")->second;
   }
   else if (name == "print")
-    return dump_print_map_ql(attributes);
+    return dump_print_map_ql(attributes, false);
   else if (name == "bbox-query" || name == "around" || name == "id_query")
   {
     result += "node";
@@ -341,9 +354,154 @@ string Statement_Dump::dump_compact_map_ql() const
       result += "->." + attributes.find("into")->second;
   }
   else
-  {
     result += "(" + name + ":)";
+  return result;
+}
+
+string Statement_Dump::dump_pretty_map_ql() const
+{
+  string result;
+  if (name == "osm-script")
+  {
+    for (map< string, string >::const_iterator it = attributes.begin();
+        it != attributes.end(); ++it)
+    {
+      if (it->first == "timeout")
+	result += "[timeout:" + it->second + "]\n";
+      else if (it->first == "element-limit")
+	result += "[maxsize:" + it->second + "]\n";
+    }
+    if (result != "")
+      result += "\n";
+    for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
+        it != substatements.end(); ++it)
+      result += (*it)->dump_pretty_map_ql() + "\n";
   }
+  else if (name == "union")
+  {
+    result += name + "(";
+    
+    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    if (it == substatements.end())
+      return result + ")";
+    
+    result += "\n" + indent((*it)->dump_pretty_map_ql());
+    for (++it; it != substatements.end(); ++it)
+      result += ",\n" + indent((*it)->dump_pretty_map_ql());
+    result += "\n)";
+    
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+  }
+  else if (name == "item")
+  {
+    if (attributes.find("set") != attributes.end())
+      result += "." + attributes.find("set")->second;
+  }
+  else if (name == "foreach")
+  {
+    result += name;
+    
+    if (attributes.find("from") != attributes.end() && attributes.find("from")->second != "_")
+      result += "." + attributes.find("from")->second;
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+    
+    result += "(";
+    
+    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    if (it == substatements.end())
+      return result + ")";
+    
+    result += "\n" + indent((*it)->dump_pretty_map_ql());
+    for (++it; it != substatements.end(); ++it)
+      result += ",\n" + indent((*it)->dump_pretty_map_ql());
+    result += "\n)";
+  }
+  else if (name == "query")
+  {
+    if (attributes.find("type") != attributes.end())
+      result += attributes.find("type")->second;
+
+    uint proper_substatement_count = 0;
+    for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
+        it != substatements.end(); ++it)
+    {
+      if ((*it)->name == "item" && (*it)->attributes.find("set") != (*it)->attributes.end())
+	result += "." + (*it)->attributes.find("set")->second;
+      else
+	++proper_substatement_count;
+    }
+
+    if (proper_substatement_count > 1)
+    {
+      for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
+          it != substatements.end(); ++it)
+      {
+	if ((*it)->name != "item")
+	  result += "\n  " + dump_subquery_map_ql((*it)->name, (*it)->attributes);
+      }
+    }
+    else
+    {
+      for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
+          it != substatements.end(); ++it)
+      {
+	if ((*it)->name != "item")
+	  result += dump_subquery_map_ql((*it)->name, (*it)->attributes);
+      }
+    }
+    
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+    {
+      if (proper_substatement_count > 1)
+	result += "\n";
+      result += "->." + attributes.find("into")->second;
+    }
+  }
+  else if (name == "print")
+    return dump_print_map_ql(attributes, true);
+  else if (name == "bbox-query" || name == "around" || name == "id_query")
+  {
+    result += "node";
+    result += dump_subquery_map_ql(name, attributes);
+    
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+  }
+  else if (name == "id-query" || name == "user" || name == "newer")
+  {
+    if (attributes.find("type") == attributes.end())
+      result += "all";
+    else
+      result += attributes.find("type")->second;
+    
+    result += dump_subquery_map_ql(name, attributes);
+    
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+  }
+  else if (name == "recurse")
+  {
+    if (attributes.find("type") != attributes.end())
+    {
+      string rel_type = attributes.find("type")->second;
+      if (rel_type == "way-node" || rel_type == "relation-node")
+	result += "node";
+      else if (rel_type == "relation-way" || rel_type == "node-way")
+	result += "way";
+      else if (rel_type == "relation-relation" || rel_type == "relation-backwards"
+	  || rel_type == "node-relation" || rel_type == "way-relation")
+	result += "rel";
+    }
+    
+    result += dump_subquery_map_ql(name, attributes);
+    
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+  }
+  else
+    result += "(" + name + ":)";
   return result;
 }
 

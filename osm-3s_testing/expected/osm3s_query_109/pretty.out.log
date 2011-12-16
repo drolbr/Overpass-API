@@ -1,0 +1,4 @@
+union(
+  .in,
+  node(w)
+)->.out
