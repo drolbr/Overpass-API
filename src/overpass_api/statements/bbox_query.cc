@@ -293,7 +293,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     
     // Retrieve all ways referred by the relations.
     set< pair< Uint31_Index, Uint31_Index > > way_ranges;
-    get_ranges(rman, node_ranges);
+    get_ranges(rman, way_ranges);
     
     map< Uint31_Index, vector< Way_Skeleton > > way_members;
     collect_ways(query, rman, into.relations.begin(), into.relations.end(), way_members,
