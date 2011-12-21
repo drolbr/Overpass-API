@@ -492,6 +492,10 @@ void Dispatcher::output_status()
           it != registered_processes.end(); ++it)
 	collected_pids.insert(*it);
     }
+    for (map< pid_t, uint32 >::const_iterator it = processes_reading.begin();
+        it != processes_reading.end(); ++it)
+      collected_pids.insert(it->first);
+    
     for (set< pid_t >::const_iterator it = collected_pids.begin();
         it != collected_pids.end(); ++it)
     {
@@ -558,6 +562,9 @@ void Dispatcher::check_and_purge()
         it != registered_processes.end(); ++it)
       collected_pids.insert(*it);
   }
+  for (map< pid_t, uint32 >::const_iterator it = processes_reading.begin();
+      it != processes_reading.end(); ++it)
+    collected_pids.insert(it->first);
   
   uint32 current_time = time(NULL);
   for (set< pid_t >::const_iterator it = collected_pids.begin();
