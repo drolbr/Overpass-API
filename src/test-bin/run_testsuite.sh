@@ -36,3 +36,5 @@ if [[ $DATA_SIZE -gt 800 ]]; then
 }; fi
 
 $BASEDIR/test-bin/run_unittests_meta.sh $DATA_SIZE $2
+
+$BASEDIR/test-bin/run_testsuite_translate_xapi.sh $DATA_SIZE $2
