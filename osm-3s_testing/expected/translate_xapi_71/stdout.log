@@ -1,0 +1,18 @@
+<query type="node">
+  <has-kv k="key" v="value"/>
+  <newer than="2011-01-01T02:02:02Z"/>
+</query>
+<union>
+  <item/>
+  <query type="way">
+    <has-kv k="key" v="value"/>
+    <newer than="2011-01-01T02:02:02Z"/>
+  </query>
+  <recurse type="way-node"/>
+</union>
+<print/>
+<query type="relation">
+  <has-kv k="key" v="value"/>
+  <newer than="2011-01-01T02:02:02Z"/>
+</query>
+<print/>

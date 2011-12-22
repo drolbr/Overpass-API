@@ -1,0 +1,4 @@
+<query type="relation">
+  <has-kv k="key" v=""/>
+</query>
+<print/>

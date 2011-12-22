@@ -1,0 +1,5 @@
+<query type="relation">
+  <has-kv k="key" v="value"/>
+  <newer than="2011-01-01T02:02:02Z"/>
+</query>
+<print/>

@@ -1,0 +1,6 @@
+<query type="relation">
+  <bbox-query s="51.0" n="52.0" w="7.0" e="8.0"/>
+  <has-kv k="key1" v="value1"/>
+  <has-kv k="key2" v="value2"/>
+</query>
+<print/>

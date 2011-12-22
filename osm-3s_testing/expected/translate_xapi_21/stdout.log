@@ -1,0 +1,7 @@
+<union>
+  <query type="way">
+    <has-kv k="key" v=""/>
+  </query>
+  <recurse type="way-node"/>
+</union>
+<print/>

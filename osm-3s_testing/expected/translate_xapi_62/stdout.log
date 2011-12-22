@@ -1,0 +1,39 @@
+<union>
+  <query type="node">
+    <has-kv k="key" v="value1"/>
+  </query>
+  <query type="node">
+    <has-kv k="key" v="value2"/>
+  </query>
+  <query type="node">
+    <has-kv k="key" v="value3"/>
+  </query>
+</union>
+<union>
+  <item/>
+  <union>
+    <query type="way">
+      <has-kv k="key" v="value1"/>
+    </query>
+    <query type="way">
+      <has-kv k="key" v="value2"/>
+    </query>
+    <query type="way">
+      <has-kv k="key" v="value3"/>
+    </query>
+  </union>
+  <recurse type="way-node"/>
+</union>
+<print/>
+<union>
+  <query type="relation">
+    <has-kv k="key" v="value1"/>
+  </query>
+  <query type="relation">
+    <has-kv k="key" v="value2"/>
+  </query>
+  <query type="relation">
+    <has-kv k="key" v="value3"/>
+  </query>
+</union>
+<print/>

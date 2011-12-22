@@ -1,0 +1,11 @@
+<osm-script timeout="300">
+
+<union>
+  <query type="way">
+    <has-kv k="key" v="value"/>
+  </query>
+  <recurse type="way-node"/>
+</union>
+<print/>
+
+</osm-script>

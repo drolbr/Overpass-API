@@ -1,0 +1,5 @@
+<query type="relation">
+  <has-kv k="key" v="value"/>
+  <user name="Username"/>
+</query>
+<print/>

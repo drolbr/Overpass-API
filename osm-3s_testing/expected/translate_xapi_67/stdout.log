@@ -1,0 +1,15 @@
+<query type="node">
+  <has-kv k="key" v="value"/>
+</query>
+<union>
+  <item/>
+  <query type="way">
+    <has-kv k="key" v="value"/>
+  </query>
+  <recurse type="way-node"/>
+</union>
+<print mode="meta"/>
+<query type="relation">
+  <has-kv k="key" v="value"/>
+</query>
+<print mode="meta"/>

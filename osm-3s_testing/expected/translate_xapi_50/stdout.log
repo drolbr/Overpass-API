@@ -1,0 +1,15 @@
+<union>
+  <query type="relation">
+    <has-kv k="key" v="value1"/>
+    <user uid="496"/>
+  </query>
+  <query type="relation">
+    <has-kv k="key" v="value2"/>
+    <user uid="496"/>
+  </query>
+  <query type="relation">
+    <has-kv k="key" v="value3"/>
+    <user uid="496"/>
+  </query>
+</union>
+<print/>
