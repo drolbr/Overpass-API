@@ -299,11 +299,20 @@ void Dispatcher::set_current_footprints()
       data_footprints[i].set_current_footprint
           (controlled_files[i]->get_data_footprint(db_dir));
     }
+    catch (File_Error e)
+    {
+      cerr<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
     catch (...) {}
+    
     try
     {
       map_footprints[i].set_current_footprint
           (controlled_files[i]->get_map_footprint(db_dir));
+    }
+    catch (File_Error e)
+    {
+      cerr<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     catch (...) {}
   }
