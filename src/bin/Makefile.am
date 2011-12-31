@@ -1,4 +1,4 @@
-bin_PROGRAMS = osm3s_query dispatcher update_database update_from_dir sketch_route_svg draw_route_svg uncgi escape_xml bbox_brim_query translate_xapi
+bin_PROGRAMS = osm3s_query dispatcher update_database update_from_dir sketch_route_svg draw_route_svg tocgi uncgi escape_xml bbox_brim_query translate_xapi
 dist_bin_SCRIPTS = apply_osc_to_db.sh cleanup_xapi_tmp.sh fetch_osc.sh run_osm3s_minutely.sh rules_loop.sh
 
 escape_xml_cc = ../expat/escape_xml.cc
@@ -12,7 +12,7 @@ osm_updater_cc = ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm
 dispatcher_cc = ../overpass_api/dispatch/scripting_core.cc ../overpass_api/frontend/map_ql_parser.cc ../overpass_api/statements/statement_dump.cc ../expat/map_ql_input.cc ../overpass_api/dispatch/resource_manager.cc ../overpass_api/osm-backend/stopwatch.cc ../template_db/dispatcher.cc
 
 statements_dir = ../overpass_api/statements
-statements_cc = ${statements_dir}/statement.cc ${statements_dir}/area_query.cc ${statements_dir}/around.cc ${statements_dir}/bbox_query.cc ${statements_dir}/coord_query.cc ${statements_dir}/foreach.cc ${statements_dir}/id_query.cc ${statements_dir}/item.cc ${statements_dir}/make_area.cc ${statements_dir}/newer.cc ${statements_dir}/osm_script.cc ${statements_dir}/print.cc ${statements_dir}/query.cc ${statements_dir}/recurse.cc ${statements_dir}/union.cc ${statements_dir}/user.cc
+statements_cc = ${statements_dir}/statement.cc ${statements_dir}/area_query.cc ${statements_dir}/around.cc ${statements_dir}/bbox_query.cc ${statements_dir}/coord_query.cc ${statements_dir}/foreach.cc ${statements_dir}/id_query.cc ${statements_dir}/item.cc ${statements_dir}/make_area.cc ${statements_dir}/newer.cc ${statements_dir}/osm_script.cc ${statements_dir}/print.cc ${statements_dir}/query.cc ${statements_dir}/recurse.cc ${statements_dir}/union.cc ${statements_dir}/user.cc ../overpass_api/frontend/print_target.cc
 
 update_database_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ${osm_updater_cc} ../overpass_api/osm-backend/update_database.cc 
 update_database_LDADD = -lexpat
@@ -29,6 +29,8 @@ draw_route_svg_SOURCES = ${expat_cc} ${escape_xml_cc} ../pt_diagrams/read_input.
 draw_route_svg_LDADD = -lexpat
 uncgi_SOURCES = ${expat_cc} ../pt_diagrams/uncgi.cc
 uncgi_LDADD = -lexpat
+tocgi_SOURCES = ../pt_diagrams/tocgi.cc
+tocgi_LDADD = 
 escape_xml_SOURCES = ../expat/escape_xml.cc ../expat/escape_xml_main.cc
 bbox_brim_query_SOURCES = ${expat_cc} ../pt_diagrams/bbox-brim-query.cc
 bbox_brim_query_LDADD = -lexpat

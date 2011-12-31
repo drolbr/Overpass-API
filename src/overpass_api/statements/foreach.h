@@ -20,6 +20,8 @@ class Foreach_Statement : public Statement
     virtual void execute(Resource_Manager& rman);
     virtual ~Foreach_Statement() {}
     
+    virtual void set_output_handle(Output_Handle* output);
+    
   private:
     string input, output;
     vector< Statement* > substatements;

@@ -73,12 +73,12 @@ int main(int argc, char *argv[])
     
     if ((error_output) && (error_output->display_encoding_errors()))
       return 0;
-
+    
     if (!parse_and_validate(xml_raw, error_output, debug_level))
       return 0;
     if (debug_level != parser_execute)
       return 0;
-
+    
     // open read transaction and log this.
     Dispatcher_Stub dispatcher(db_dir, error_output, xml_raw, area_level);
     

@@ -269,6 +269,8 @@ string Statement_Dump::dump_compact_map_ql() const
   {
     if (attributes.find("set") != attributes.end())
       result += "." + attributes.find("set")->second;
+    else
+      result += "._";
   }
   else if (name == "foreach")
   {
@@ -298,8 +300,13 @@ string Statement_Dump::dump_compact_map_ql() const
     for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
     {
-      if ((*it)->name == "item" && (*it)->attributes.find("set") != (*it)->attributes.end())
-	result += "." + (*it)->attributes.find("set")->second;
+      if ((*it)->name == "item")
+      {
+	if ((*it)->attributes.find("set") != (*it)->attributes.end())
+	  result += "." + (*it)->attributes.find("set")->second;
+	else
+	  result += "._";
+      }
     }
 
     for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
@@ -397,6 +404,8 @@ string Statement_Dump::dump_pretty_map_ql() const
   {
     if (attributes.find("set") != attributes.end())
       result += "." + attributes.find("set")->second;
+    else
+      result += "._";
   }
   else if (name == "foreach")
   {
@@ -427,8 +436,13 @@ string Statement_Dump::dump_pretty_map_ql() const
     for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
     {
-      if ((*it)->name == "item" && (*it)->attributes.find("set") != (*it)->attributes.end())
-	result += "." + (*it)->attributes.find("set")->second;
+      if ((*it)->name == "item")
+      {
+	if ((*it)->attributes.find("set") != (*it)->attributes.end())
+	  result += "." + (*it)->attributes.find("set")->second;
+	else
+	  result += "._";
+      }
       else
 	++proper_substatement_count;
     }

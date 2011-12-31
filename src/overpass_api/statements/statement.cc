@@ -135,6 +135,16 @@ Statement* Statement::create_statement(string element, int line_number,
 
 Error_Output* Statement::error_output = 0;
 
+void Statement::set_output_handle(Output_Handle* output)
+{
+  output_handle = output;
+}
+
+Output_Handle* Statement::get_output_handle()
+{
+  return output_handle;
+}
+
 void Statement::add_static_error(string error)
 {
   if (error_output)
@@ -147,7 +157,7 @@ void Statement::add_static_remark(string remark)
     error_output->add_static_remark(remark, line_number);
 }
 
-void Statement::runtime_remark(string error)
+void Statement::runtime_remark(string error) const
 {
   if (error_output)
     error_output->runtime_remark(error);

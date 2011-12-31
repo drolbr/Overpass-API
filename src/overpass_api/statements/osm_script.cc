@@ -96,6 +96,15 @@ void Osm_Script_Statement::add_statement(Statement* statement, string text)
     substatement_error(get_name(), statement);
 }
 
+void Osm_Script_Statement::set_output_handle(Output_Handle* output)
+{
+  Statement::set_output_handle(output);
+  
+  for (vector< Statement* >::iterator it = substatements.begin();
+      it != substatements.end(); ++it)
+    (*it)->set_output_handle(output);
+}
+
 void Osm_Script_Statement::forecast()
 {
 /*  for (vector< Statement* >::iterator it(substatements.begin());
@@ -120,4 +129,10 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
     rman.area_updater()->flush(&stopwatch);
   stopwatch.report(get_name());
   rman.health_check(*this);
+}
+
+Osm_Script_Statement::~Osm_Script_Statement()
+{
+  if (get_output_handle())
+    delete get_output_handle();
 }

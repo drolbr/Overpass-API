@@ -22,6 +22,8 @@ class Statement_Dump
     string dump_pretty_map_ql() const;
     string dump_compact_map_ql() const;
     
+    void add_final_text(string text) {}
+    
     static Statement_Dump* create_statement(string element, int line_number,
 				       const map< string, string >& attributes);
   private:

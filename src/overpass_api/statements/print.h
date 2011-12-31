@@ -8,6 +8,42 @@
 
 using namespace std;
 
+class Print_Target
+{
+  public:
+    Print_Target(uint32 mode_, Transaction& transaction);
+    
+    virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0) const = 0;
+    virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0) const = 0;
+    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0) const = 0;
+    virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0) const = 0;
+
+    static const unsigned int PRINT_IDS = 1;
+    static const unsigned int PRINT_COORDS = 2;
+    static const unsigned int PRINT_NDS = 4;
+    static const unsigned int PRINT_MEMBERS = 8;
+    static const unsigned int PRINT_TAGS = 16;
+    static const unsigned int PRINT_VERSION = 32;
+    static const unsigned int PRINT_META = 64;
+			    
+  protected:
+    uint32 mode;
+    map< uint32, string > roles;
+};
+
+
 class Print_Statement : public Statement
 {
   public:
@@ -27,7 +63,7 @@ class Print_Statement : public Statement
     template< class TIndex, class TObject >
     void tags_quadtile
       (const map< TIndex, vector< TObject > >& items,
-       const File_Properties& file_prop, uint32 mode, uint32 stopwatch_account,
+       const File_Properties& file_prop, const Print_Target& target, uint32 stopwatch_account,
        Resource_Manager& rman, Transaction& transaction,
        const File_Properties* meta_file_prop = 0, uint32& element_count = 0);
     
@@ -35,7 +71,7 @@ class Print_Statement : public Statement
     void tags_by_id
       (const map< TIndex, vector< TObject > >& items,
        const File_Properties& file_prop,
-       uint32 FLUSH_SIZE, uint32 mode, uint32 stopwatch_account,
+       uint32 FLUSH_SIZE, const Print_Target& target, uint32 stopwatch_account,
        Resource_Manager& rman, Transaction& transaction,
        const File_Properties* meta_file_prop = 0, uint32& element_count = 0);
 };

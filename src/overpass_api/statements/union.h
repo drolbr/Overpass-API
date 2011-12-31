@@ -19,7 +19,9 @@ class Union_Statement : public Statement
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     virtual ~Union_Statement() {}
-    
+
+    virtual void set_output_handle(Output_Handle* output);
+
   private:
     string output;
     vector< Statement* > substatements;

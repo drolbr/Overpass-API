@@ -8,6 +8,7 @@
 #include "../statements/coord_query.h"
 #include "../statements/make_area.h"
 #include "../statements/statement.h"
+#include "../statements/statement_dump.h"
 #include "../../expat/expat_justparse_interface.h"
 #include "../../template_db/dispatcher.h"
 #include "../../template_db/types.h"
@@ -32,10 +33,19 @@ using namespace std;
 
 namespace
 {
-  vector< Statement* > statement_stack;
+  vector< Statement* > statement_stack_;
+  vector< Statement_Dump* > statement_dump_stack_;
   vector< string > text_stack;
   Script_Parser xml_parser;
-  bool uses_meta_data;
+  
+  template< class TStatement >
+  vector< TStatement* >& statement_stack();
+  
+  template< >
+  vector< Statement* >& statement_stack< Statement >() { return statement_stack_; }
+  
+  template< >
+  vector< Statement_Dump* >& statement_stack< Statement_Dump >() { return statement_dump_stack_; }
 }
 
 Dispatcher_Stub::Dispatcher_Stub
@@ -280,21 +290,23 @@ Dispatcher_Stub::~Dispatcher_Stub()
   }
 }
 
+template< class TStatement >
 void start(const char *el, const char **attr)
 {
-  Statement* statement(Statement::create_statement
+  TStatement* statement(TStatement::create_statement
       (el, xml_parser.current_line_number(), convert_c_pairs(attr)));
       
-  statement_stack.push_back(statement);
+  statement_stack< TStatement >().push_back(statement);
   text_stack.push_back(xml_parser.get_parsed_text());
   xml_parser.reset_parsed_text();
 }
 
+template< class TStatement >
 void end(const char *el)
 {
-  if (statement_stack.size() > 1)
+  if (statement_stack< TStatement >().size() > 1)
   {
-    Statement* statement(statement_stack.back());
+    TStatement* statement(statement_stack< TStatement >().back());
     
     if (statement)
     {
@@ -303,13 +315,14 @@ void end(const char *el)
 /*      statement->set_endpos(get_tag_end());*/
     }
     
-    statement_stack.pop_back();
-    if (statement_stack.back() && statement)
-      statement_stack.back()->add_statement(statement, text_stack.back());
+    statement_stack< TStatement >().pop_back();
+    if (statement_stack< TStatement >().back() && statement)
+      statement_stack< TStatement >().back()->add_statement(statement, text_stack.back());
     text_stack.pop_back();
   }
-  else if ((statement_stack.size() == 1) && (statement_stack.front()))
-    statement_stack.front()->add_final_text(xml_parser.get_parsed_text());
+  else if ((statement_stack< TStatement >().size() == 1) &&
+      (statement_stack< TStatement >().front()))
+    statement_stack< TStatement >().front()->add_final_text(xml_parser.get_parsed_text());
 }
 
 bool parse_and_validate
@@ -326,7 +339,28 @@ bool parse_and_validate
   {
     try
     {
-      xml_parser.parse(xml_raw, start, end);
+      if (debug_level == parser_dump_xml || debug_level == parser_dump_compact_map_ql
+	  || debug_level == parser_dump_pretty_map_ql)
+      {
+	xml_parser.parse(xml_raw, start< Statement_Dump >, end< Statement_Dump >);
+      
+        for (vector< Statement_Dump* >::const_iterator it =
+	    statement_stack< Statement_Dump >().begin();
+            it != statement_stack< Statement_Dump >().end(); ++it)
+	{
+	  if (debug_level == parser_dump_xml)
+            cout<<(*it)->dump_xml();
+	  else if (debug_level == parser_dump_compact_map_ql)
+	    cout<<(*it)->dump_compact_map_ql();
+	  else if (debug_level == parser_dump_pretty_map_ql)
+	    cout<<(*it)->dump_pretty_map_ql();
+	}
+        for (vector< Statement_Dump* >::iterator it = statement_stack< Statement_Dump >().begin();
+            it != statement_stack< Statement_Dump >().end(); ++it)
+          delete *it;
+      }
+      else
+        xml_parser.parse(xml_raw, start< Statement >, end< Statement >);
     }
     catch(Parse_Error parse_error)
     {
@@ -370,7 +404,7 @@ bool parse_and_validate
 
 vector< Statement* >* get_statement_stack()
 {
-  return &statement_stack;
+  return &statement_stack_;
 }
 
 bool get_uses_meta_data()

@@ -17,9 +17,11 @@ class Osm_Script_Statement : public Statement
     virtual string get_result_name() const { return ""; }
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
-    virtual ~Osm_Script_Statement() {}
+    virtual ~Osm_Script_Statement();
     
-/*    string get_rule_name() { return name; }
+    virtual void set_output_handle(Output_Handle* output);
+    
+    /*    string get_rule_name() { return name; }
     int get_rule_replace() { return replace; }
     int get_rule_version() { return version; }
     void set_database_id(uint database_id_) { database_id = database_id_; }*/

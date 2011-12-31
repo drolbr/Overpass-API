@@ -33,6 +33,15 @@ void Union_Statement::add_statement(Statement* statement, string text)
     substatement_error(get_name(), statement);
 }
 
+void Union_Statement::set_output_handle(Output_Handle* output)
+{
+  Statement::set_output_handle(output);
+  
+  for (vector< Statement* >::iterator it = substatements.begin();
+      it != substatements.end(); ++it)
+    (*it)->set_output_handle(output);
+}
+
 void Union_Statement::forecast()
 {
 /*  int node_count(0);

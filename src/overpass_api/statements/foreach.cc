@@ -51,6 +51,15 @@ void Foreach_Statement::add_statement(Statement* statement, string text)
     substatement_error(get_name(), statement);
 }
 
+void Foreach_Statement::set_output_handle(Output_Handle* output)
+{
+  Statement::set_output_handle(output);
+  
+  for (vector< Statement* >::iterator it = substatements.begin();
+      it != substatements.end(); ++it)
+    (*it)->set_output_handle(output);
+}
+
 void Foreach_Statement::forecast()
 {
 /*  Set_Forecast sf_in(declare_read_set(input));

@@ -35,13 +35,15 @@ class Query_Constraint
     virtual ~Query_Constraint() {}
 };
 
+class Output_Handle;
+
 /**
  * The base class for all statements
  */
 class Statement
 {
   public:
-    Statement(int line_number_) : line_number(line_number_), progress(0) {}
+    Statement(int line_number_) : line_number(line_number_), progress(0), output_handle(0) {}
     
     virtual void add_statement(Statement* statement, string text);
     virtual void add_final_text(string text);
@@ -75,7 +77,12 @@ class Statement
       error_output = error_output_;
       Stopwatch::set_error_output(error_output);
     }
-    
+
+    void runtime_remark(string error) const;
+
+    virtual void set_output_handle(Output_Handle* output);
+    virtual Output_Handle* get_output_handle();
+
     const static int NODE = 1;
     const static int WAY = 2;
     const static int RELATION = 3;
@@ -88,7 +95,8 @@ class Statement
     int line_number;
     int startpos, endpos, tagendpos;
     int progress;
-        
+    Output_Handle* output_handle;
+    
   protected:
     void eval_attributes_array
         (string element, map< string, string >& attributes,
@@ -98,8 +106,6 @@ class Statement
     
     void add_static_error(string error);
     void add_static_remark(string remark);
-
-    void runtime_remark(string error);
 
     void set_progress(int progress_) { progress = progress_; }
 };
