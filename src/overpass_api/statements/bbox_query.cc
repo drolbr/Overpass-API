@@ -220,6 +220,13 @@ bool matches_bbox(const Bbox_Query_Statement& bbox, const Way_Skeleton& way,
   {
     const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
         binary_search_for_pair_id(nodes_by_id, *nit);
+    if (!second_nd)
+    {
+      ostringstream out;
+      out<<"Node "<<*nit<<" not found in the database. This is a serious fault of the database.";
+      bbox.runtime_remark(out.str());
+      return true;
+    }
     double second_lat(Node::lat(second_nd->first.val(), second_nd->second->ll_lower));
     double second_lon(Node::lon(second_nd->first.val(), second_nd->second->ll_lower));
     
