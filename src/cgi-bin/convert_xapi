@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+
+EXEC_DIR="`dirname $0`/"
+if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
+{
+  EXEC_DIR="`pwd`/$EXEC_DIR"
+};
+fi
+
+BIN_DIR="$EXEC_DIR/../bin"
+
+OUTPUT_TYPE="xml"
+BUF="`echo "$QUERY_STRING" | $BIN_DIR/uncgi`"
+if [[ "${BUF:0:5}" == "debug" ]]; then
+{
+  DEBUG=yes
+  echo "Content-Type: text/plain; charset=utf-8"
+  echo
+  BUF="${BUF:6}"
+  echo "[$BUF]"
+};
+elif [[ "${BUF:0:3}" == "xml" ]]; then
+{
+  OTUPUT_TYPE="xml"
+  BUF="${BUF:4}"
+};
+elif [[ "${BUF:0:5}" == "mapql" ]]; then
+{
+  OTUPUT_TYPE="mapql"
+  BUF="${BUF:6}"
+};
+elif [[ "${BUF:0:7}" == "compact" ]]; then
+{
+  OTUPUT_TYPE="compact"
+  BUF="${BUF:8}"
+};
+fi
+
+# No mkdir - directory should be created and made world-writeable
+# by the maintainer to allow periodic cleanups.
+REQUEST_FILE=`mktemp /tmp/translate_xapi/XXXXXX`
+$BIN_DIR/translate_xapi "${BUF}" >$REQUEST_FILE
+EXITCODE=$?
+if [[ $EXITCODE -ne 0 ]]; then
+{
+  echo "Content-Type: text/plain; charset=utf-8"
+  echo
+  echo "Error in [$BUF]:"
+  cat <$REQUEST_FILE
+};
+else
+{
+  if [[ $DEBUG == "yes" ]]; then
+  {
+    cat <$REQUEST_FILE
+    echo
+  };
+  fi
+  REQUEST_METHOD=
+  echo "Content-Type: text/plain; charset=utf-8"
+  echo
+  if [[ $OUTPUT_TYPE == "xml" ]]; then
+  {
+    echo "Your query in pretty XML:"
+    echo
+    ../bin/osm3s_query --dump-xml <$REQUEST_FILE
+  };
+  elif [[ $OUTPUT_TYPE == "mapql" ]]; then
+  {
+    echo "Your query in pretty MapQL:"
+    echo
+    ../bin/osm3s_query --dump-pretty-map-ql <$REQUEST_FILE
+  };
+  elif [[ $OUTPUT_TYPE == "compact" ]]; then
+  {
+    echo "Your query in compact MapQL:"
+    echo
+    ../bin/osm3s_query --dump-compact-map-ql <$REQUEST_FILE
+    echo
+  };
+  fi
+};
+fi
+
+rm $REQUEST_FILE
