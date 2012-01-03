@@ -12,10 +12,63 @@
 
 using namespace std;
 
+class Print_Target_Xml : public Print_Target
+{
+  public:
+    Print_Target_Xml(uint32 mode, Transaction& transaction)
+        : Print_Target(mode, transaction) {}
+    
+    virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0) const;
+    virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0) const;
+    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0) const;
+    virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0) const;
+};
+
+class Print_Target_Json : public Print_Target
+{
+  public:
+    Print_Target_Json(uint32 mode, Transaction& transaction, bool first_target = true)
+        : Print_Target(mode, transaction), first_elem(first_target) {}
+    
+    virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0) const;
+    virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0) const;
+    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0) const;
+    virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0) const;
+			    
+  private:
+    mutable bool first_elem;
+};
+
+//-----------------------------------------------------------------------------
+
 const char* MEMBER_TYPE[] = { 0, "node", "way", "relation" };
 
-void print_meta(const OSM_Element_Metadata_Skeleton& meta,
-		const map< uint32, string >& users)
+void print_meta_xml(const OSM_Element_Metadata_Skeleton& meta,
+		    const map< uint32, string >& users)
 {
   uint32 year = (meta.timestamp)>>26;
   uint32 month = ((meta.timestamp)>>22) & 0xf;
@@ -57,7 +110,7 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Node_Skeleton& skel,
     cout<<" lat=\""<<fixed<<setprecision(7)<<Node::lat(ll_upper, skel.ll_lower)
         <<"\" lon=\""<<fixed<<setprecision(7)<<Node::lon(ll_upper, skel.ll_lower)<<'\"';
   if (meta)
-    print_meta(*meta, *users);
+    print_meta_xml(*meta, *users);
   if ((tags == 0) || (tags->empty()))
     cout<<"/>\n";
   else
@@ -80,7 +133,7 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Way_Skeleton& skel,
   if (mode & PRINT_IDS)
     cout<<" id=\""<<skel.id<<'\"';
   if (meta)
-    print_meta(*meta, *users);
+    print_meta_xml(*meta, *users);
   if (((tags == 0) || (tags->empty())) && ((mode & PRINT_NDS) == 0))
     cout<<"/>\n";
   else
@@ -111,7 +164,7 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Relation_Skeleton& skel
   if (mode & PRINT_IDS)
     cout<<" id=\""<<skel.id<<'\"';
   if (meta)
-    print_meta(*meta, *users);
+    print_meta_xml(*meta, *users);
   if (((tags == 0) || (tags->empty())) && ((mode & PRINT_NDS) == 0))
     cout<<"/>\n";
   else
@@ -157,4 +210,225 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Area_Skeleton& skel,
           <<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
     cout<<"  </area>\n";
   }
+}
+
+//-----------------------------------------------------------------------------
+
+void print_meta_json(const OSM_Element_Metadata_Skeleton& meta,
+		const map< uint32, string >& users)
+{
+  uint32 year = (meta.timestamp)>>26;
+  uint32 month = ((meta.timestamp)>>22) & 0xf;
+  uint32 day = ((meta.timestamp)>>17) & 0x1f;
+  uint32 hour = ((meta.timestamp)>>12) & 0x1f;
+  uint32 minute = ((meta.timestamp)>>6) & 0x3f;
+  uint32 second = meta.timestamp & 0x3f;
+  string timestamp("    -  -  T  :  :  Z");
+  timestamp[0] = (year / 1000) % 10 + '0';
+  timestamp[1] = (year / 100) % 10 + '0';
+  timestamp[2] = (year / 10) % 10 + '0';
+  timestamp[3] = year % 10 + '0';
+  timestamp[5] = (month / 10) % 10 + '0';
+  timestamp[6] = month % 10 + '0';
+  timestamp[8] = (day / 10) % 10 + '0';
+  timestamp[9] = day % 10 + '0';
+  timestamp[11] = (hour / 10) % 10 + '0';
+  timestamp[12] = hour % 10 + '0';
+  timestamp[14] = (minute / 10) % 10 + '0';
+  timestamp[15] = minute % 10 + '0';
+  timestamp[17] = (second / 10) % 10 + '0';
+  timestamp[18] = second % 10 + '0';
+  cout<<",\n  \"timestamp\": \""<<timestamp<<"\""
+        ",\n  \"version\": "<<meta.version<<
+	",\n  \"changeset\": "<<meta.changeset;
+  map< uint32, string >::const_iterator it = users.find(meta.user_id);
+  if (it != users.end())
+    cout<<",\n  \"user\": \""<<escape_xml(it->second)<<"\"";
+  cout<<",\n  \"uid\": "<<meta.user_id;
+}
+
+void Print_Target_Json::print_item(uint32 ll_upper, const Node_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton* meta,
+		const map< uint32, string >* users) const
+{
+  if (first_elem)
+    first_elem = false;
+  else
+    cout<<",\n";
+    
+  cout<<"{\n"
+        "  \"type\": \"node\"";
+  if (mode & PRINT_IDS)
+    cout<<",\n  \"id\": "<<skel.id;
+  if (mode & PRINT_COORDS)
+    cout<<",\n  \"lat\": "<<fixed<<setprecision(7)<<Node::lat(ll_upper, skel.ll_lower)
+        <<",\n  \"lon\": "<<fixed<<setprecision(7)<<Node::lon(ll_upper, skel.ll_lower);
+  if (meta)
+    print_meta_json(*meta, *users);
+  
+  if (tags != 0 && !tags->empty())
+  {
+    vector< pair< string, string > >::const_iterator it = tags->begin();
+    cout<<",\n  \"tags\": ["
+           "\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
+    for (++it; it != tags->end(); ++it)
+      cout<<",\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
+    cout<<"\n  ]";
+  }
+  
+  cout<<"\n}";
+}
+
+void Print_Target_Json::print_item(uint32 ll_upper, const Way_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton* meta,
+		const map< uint32, string >* users) const
+{
+  if (first_elem)
+    first_elem = false;
+  else
+    cout<<",\n";
+  
+  cout<<"{\n"
+        "  \"type\": \"way\"";
+  if (mode & PRINT_IDS)
+    cout<<",\n  \"id\": "<<skel.id;
+  if (meta)
+    print_meta_json(*meta, *users);
+  
+  if ((mode & PRINT_NDS) != 0 && !skel.nds.empty())
+  {
+    vector< uint32 >::const_iterator it = skel.nds.begin();
+    cout<<",\n  \"nodes\": ["
+           "\n    "<<*it;
+    for (++it; it != skel.nds.end(); ++it)
+      cout<<",\n    "<<*it;
+    cout<<"\n  ]";
+  }
+  
+  if (tags != 0 && !tags->empty())
+  {
+    vector< pair< string, string > >::const_iterator it = tags->begin();
+    cout<<",\n  \"tags\": ["
+           "\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
+    for (++it; it != tags->end(); ++it)
+      cout<<",\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
+    cout<<"\n  ]";
+  }
+  
+  cout<<"\n}\n";
+}
+
+void Print_Target_Json::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton* meta,
+		const map< uint32, string >* users) const
+{ 
+  if (first_elem)
+    first_elem = false;
+  else
+    cout<<",\n";
+  
+  cout<<"{\n"
+        "  \"type\": \"relation\"";
+  if (mode & PRINT_IDS)
+    cout<<",\n  \"id\": "<<skel.id;
+  if (meta)
+    print_meta_json(*meta, *users);
+  
+  if ((mode & PRINT_MEMBERS) != 0 && !skel.members.empty())
+  {
+    vector< Relation_Entry >::const_iterator it = skel.members.begin();
+    map< uint32, string >::const_iterator rit = roles.find(it->role);
+    cout<<",\n  \"members\": ["
+           "\n    {"
+	   "\n      \"type\": \""<<MEMBER_TYPE[it->type]<<
+	   "\",\n      \"ref\": "<<it->ref<<
+	   ",\n      \"role\": \""<<escape_xml(rit != roles.end() ? rit->second : "???")<<
+	   "\"\n    }";
+    for (++it; it != skel.members.end(); ++it)
+    {
+      map< uint32, string >::const_iterator rit = roles.find(it->role);
+      cout<<",\n    {"
+            "\n      \"type\": \""<<MEMBER_TYPE[it->type]<<
+            "\",\n      \"ref\": "<<it->ref<<
+            ",\n      \"role\": \""<<escape_xml(rit != roles.end() ? rit->second : "???")<<
+            "\"\n    }";
+    }
+    cout<<"\n  ]";
+  }
+  
+  if (tags != 0 && !tags->empty())
+  {
+    vector< pair< string, string > >::const_iterator it = tags->begin();
+    cout<<",\n  \"tags\": ["
+           "\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
+    for (++it; it != tags->end(); ++it)
+      cout<<",\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
+    cout<<"\n  ]";
+  }
+  
+  cout<<"\n}\n";
+}
+
+void Print_Target_Json::print_item(uint32 ll_upper, const Area_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton* meta,
+		const map< uint32, string >* users) const
+{
+  if (first_elem)
+    first_elem = false;
+  else
+    cout<<",\n";
+  
+  cout<<"{\n"
+        "  \"type\": \"area\"";
+  if (mode & PRINT_IDS)
+    cout<<",\n  \"id\": "<<skel.id;
+  
+  if (tags != 0 && !tags->empty())
+  {
+    vector< pair< string, string > >::const_iterator it = tags->begin();
+    cout<<",\n  \"tags\": ["
+           "\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
+    for (++it; it != tags->end(); ++it)
+      cout<<",\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
+    cout<<"\n  ]";
+  }
+  
+  cout<<"\n}\n";
+}
+
+//-----------------------------------------------------------------------------
+
+Print_Target& Output_Handle::get_print_target(uint32 current_mode, Transaction& transaction)
+{
+  bool first_target = true;
+  
+  if (current_mode != mode)
+  {
+    mode = current_mode;
+    if (print_target)
+    {
+      delete print_target;
+      print_target = 0;
+      first_target = false;
+    }
+  }
+  
+  if (print_target == 0)
+  {
+    if (type == "xml")
+      print_target = new Print_Target_Xml(mode, transaction);
+    else if (type == "json")
+      print_target = new Print_Target_Json(mode, transaction, first_target);
+  }
+  
+  return *print_target;
+}
+
+Output_Handle::~Output_Handle()
+{
+  delete print_target;
 }

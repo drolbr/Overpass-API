@@ -21,6 +21,8 @@ class Osm_Script_Statement : public Statement
     
     virtual void set_output_handle(Output_Handle* output);
     
+    string get_type() const { return type; }
+    
     /*    string get_rule_name() { return name; }
     int get_rule_replace() { return replace; }
     int get_rule_version() { return version; }
@@ -30,6 +32,7 @@ class Osm_Script_Statement : public Statement
     vector< Statement* > substatements;
     uint32 max_allowed_time;
     uint64 max_allowed_space;
+    string type;
     /* string name;
     int replace, version;
     uint database_id;*/

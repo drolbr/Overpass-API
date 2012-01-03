@@ -420,7 +420,12 @@ void Print_Statement::execute(Resource_Manager& rman)
   if (mit == rman.sets().end())
     return;
   
-  Print_Target_Xml target(mode, *rman.get_transaction());
+  if (!get_output_handle())
+  {
+    own_output_handle = true;
+    set_output_handle(new Output_Handle("xml"));
+  }
+  Print_Target& target = get_output_handle()->get_print_target(mode, *rman.get_transaction());
   if (mode & PRINT_TAGS)
   {
     if (order == ORDER_BY_ID)
@@ -489,4 +494,10 @@ void Print_Statement::execute(Resource_Manager& rman)
   stopwatch.stop(Stopwatch::NO_DISK);
   stopwatch.report(get_name());
   rman.health_check(*this);
+}
+
+Print_Statement::~Print_Statement()
+{
+  if (own_output_handle)
+    delete get_output_handle();
 }

@@ -158,8 +158,7 @@ string get_xml_cgi(Error_Output* error_output, uint32 max_input_size)
     if (cgi_error)
     {
       if (error_output)
-	error_output->add_encoding_error("Your input can neither be interpreted verbatim nor does it contain the string \"data=\".");
-      return "";
+	error_output->add_encoding_remark("Your input neither starts with '<' nor does it contain the string \"data=\". It will be interpreted as MapQL");
     }    
   }
   else

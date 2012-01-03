@@ -3,6 +3,7 @@
 #include "../expat/expat_justparse_interface.h"
 #include "../frontend/web_output.h"
 #include "../frontend/user_interface.h"
+#include "../statements/osm_script.h"
 #include "../statements/statement.h"
 #include "../../template_db/dispatcher.h"
 
@@ -49,7 +50,17 @@ int main(int argc, char *argv[])
     // set limits - short circuited until forecast gets effective
     dispatcher.set_limits();
     
-    error_output.write_xml_header(dispatcher.get_timestamp());
+    Osm_Script_Statement* osm_script = 0;
+    if (!get_statement_stack()->empty())
+      osm_script = dynamic_cast< Osm_Script_Statement* >(get_statement_stack()->front());
+    if (!osm_script || osm_script->get_type() == "xml")
+      error_output.write_xml_header
+          (dispatcher.get_timestamp(),
+	   area_level > 0 ? dispatcher.get_area_timestamp() : "");
+    else
+      error_output.write_json_header
+          (dispatcher.get_timestamp(),
+	   area_level > 0 ? dispatcher.get_area_timestamp() : "");
 
     for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	 it != get_statement_stack()->end(); ++it)

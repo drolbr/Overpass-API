@@ -720,6 +720,8 @@ void generic_parse_and_validate_map_ql
     pair< string, string > kv = parse_setup(token, error_output);
     if (kv.first == "maxsize")
       kv.first = "element-limit";
+    if (kv.first == "out")
+      kv.first = "output";
     attr.insert(kv);
   }
   

@@ -148,14 +148,15 @@ void Web_Output::write_html_header
 }
 
 void Web_Output::write_xml_header
-    (const string& timestamp, const string& area_timestamp)
+    (const string& timestamp, const string& area_timestamp, bool write_mime)
 {
   if (header_written != not_yet)
     return;    
   header_written = xml;
   
-  cout<<
-  "Content-type: application/osm3s+xml\n\n";
+  if (write_mime)
+    cout<<"Content-type: application/osm3s+xml\n\n";
+  
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm version=\"0.6\" generator=\"Overpass API\">\n"
   "<note>The data included in this document is from www.openstreetmap.org. "
@@ -168,12 +169,39 @@ void Web_Output::write_xml_header
   cout<<"/>\n\n";
 }
 
+void Web_Output::write_json_header
+    (const string& timestamp, const string& area_timestamp, bool write_mime)
+{
+  if (header_written != not_yet)
+    return;    
+  header_written = json;
+  
+  if (write_mime)
+    cout<<"Content-type: application/json\n\n";
+  
+  cout<<"{\n"
+        "  \"version\": 0.6,\n"
+        "  \"generator\": \"Overpass API\",\n"
+        "  \"osm3s\": {\n"
+	"    \"timestamp_osm_base\": \""<<timestamp<<"\",\n";
+  if (area_timestamp != "")
+    cout<<"    \"timestamp_areas_base\": \""<<area_timestamp<<"\",\n";
+  cout<<"    \"copyright\": \"The data included in this document is from www.openstreetmap.org.\n"
+	"      It has there been collected by a large group of contributors. For individual\n"
+	"      attribution of each item please refer to\n"
+	"      http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\"\n"
+        "  },\n"
+        "  \"elements\": [\n\n";
+}
+
 void Web_Output::write_footer()
 {
   if (header_written == xml)
     cout<<"\n</osm>\n";
   else if (header_written == html)
     cout<<"\n</body>\n</html>\n";
+  else if (header_written == json)
+    cout<<"\n\n  ]\n}\n";
   header_written = final;
 }
 

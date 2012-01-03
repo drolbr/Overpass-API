@@ -38,11 +38,13 @@ struct Web_Output : public Error_Output
   void write_html_header
       (const string& timestamp = "", const string& area_timestamp = "");
   void write_xml_header
-      (const string& timestamp = "", const string& area_timestamp = "");
+      (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
+  void write_json_header
+      (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
   void write_footer();
   
 private:
-  enum { not_yet, xml, html, final } header_written;
+  enum { not_yet, xml, html, json, final } header_written;
   bool encoding_errors;
   bool parse_errors;
   bool static_errors;

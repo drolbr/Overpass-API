@@ -2,6 +2,8 @@
 #include "../../template_db/dispatcher.h"
 #include "../frontend/console_output.h"
 #include "../frontend/user_interface.h"
+#include "../frontend/web_output.h"
+#include "../statements/osm_script.h"
 #include "../statements/statement.h"
 #include "resource_manager.h"
 #include "scripting_core.h"
@@ -85,22 +87,36 @@ int main(int argc, char *argv[])
     // set limits - short circuited until forecast gets effective
     dispatcher.set_limits();
   
-    cout<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-      "<osm version=\"0.6\" generator=\"Overpass API\">\n"
-      "<note>The data included in this document is from www.openstreetmap.org. "
-      "It has there been collected by a large group of contributors. For individual "
-      "attribution of each item please refer to "
-      "http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\n";
-    cout<<"<meta osm_base=\""<<dispatcher.get_timestamp()<<'\"';
-    if (area_level > 0)
-      cout<<" areas=\""<<dispatcher.get_area_timestamp()<<"\"";
-    cout<<"/>\n\n";
+    Web_Output web_output(Error_Output::QUIET);
+    Osm_Script_Statement* osm_script = 0;
+    if (!get_statement_stack()->empty())
+      osm_script = dynamic_cast< Osm_Script_Statement* >(get_statement_stack()->front());
+    if (!osm_script || osm_script->get_type() == "xml")
+      web_output.write_xml_header
+          (dispatcher.get_timestamp(),
+	   area_level > 0 ? dispatcher.get_area_timestamp() : "", false);
+    else
+      web_output.write_json_header
+          (dispatcher.get_timestamp(),
+	   area_level > 0 ? dispatcher.get_area_timestamp() : "", false);
+    
+//     cout<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+//       "<osm version=\"0.6\" generator=\"Overpass API\">\n"
+//       "<note>The data included in this document is from www.openstreetmap.org. "
+//       "It has there been collected by a large group of contributors. For individual "
+//       "attribution of each item please refer to "
+//       "http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\n";
+//     cout<<"<meta osm_base=\""<<dispatcher.get_timestamp()<<'\"';
+//     if (area_level > 0)
+//       cout<<" areas=\""<<dispatcher.get_area_timestamp()<<"\"";
+//     cout<<"/>\n\n";
 
     for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	 it != get_statement_stack()->end(); ++it)
       (*it)->execute(dispatcher.resource_manager());
     
-    cout<<"\n</osm>\n";
+    web_output.write_footer();
+//     cout<<"\n</osm>\n";
 
     return 0;
   }

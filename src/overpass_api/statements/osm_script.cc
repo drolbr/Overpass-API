@@ -2,6 +2,7 @@
 #include <sstream>
 
 #include "../core/settings.h"
+#include "../frontend/print_target.h"
 #include "osm_script.h"
 // #include "area_query.h"
 
@@ -11,12 +12,13 @@ using namespace std;
 
 Osm_Script_Statement::Osm_Script_Statement
     (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_), max_allowed_time(0), max_allowed_space(0)
+    : Statement(line_number_), max_allowed_time(0), max_allowed_space(0), type("xml")
 {
   map< string, string > attributes;
   
   attributes["timeout"] = "180";
   attributes["element-limit"] = "536870912";
+  attributes["output"] = "xml";
   
   /*attributes["name"] = "";
   attributes["replace"] = "0";
@@ -40,11 +42,21 @@ Osm_Script_Statement::Osm_Script_Statement
   {
     ostringstream temp;
     temp<<"For the attribute \"element-limit\" of the element \"osm-script\""
-    <<" the only allowed values are positive integers.";
+        <<" the only allowed values are positive integers.";
     add_static_error(temp.str());
   }
   max_allowed_space = max_space;
-  
+
+  if (attributes["output"] == "xml" || attributes["output"] == "json")
+    type = attributes["output"];
+  else
+  {
+    ostringstream temp;
+    temp<<"For the attribute \"output\" of the element \"osm-script\""
+        <<" the only allowed values are \"xml\" or \"json\".";
+    add_static_error(temp.str());
+  }
+    
 /*  name = attributes["name"];
   replace = atoi(attributes["replace"].c_str());
   version = atoi(attributes["version"].c_str());
@@ -115,6 +127,8 @@ void Osm_Script_Statement::forecast()
 void Osm_Script_Statement::execute(Resource_Manager& rman)
 {
   rman.set_limits(max_allowed_time, max_allowed_space);
+  set_output_handle(new Output_Handle(type));
+  
   stopwatch.start();
   stopwatch.stop(Stopwatch::NO_DISK);
   for (vector< Statement* >::iterator it(substatements.begin());

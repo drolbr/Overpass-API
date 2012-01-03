@@ -52,13 +52,14 @@ class Print_Statement : public Statement
     virtual string get_result_name() const { return ""; }
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
-    virtual ~Print_Statement() {}
+    virtual ~Print_Statement();
     
   private:
     string input;
     unsigned int mode;
     unsigned int order;
     unsigned int limit;
+    bool own_output_handle;
 
     template< class TIndex, class TObject >
     void tags_quadtile
