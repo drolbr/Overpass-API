@@ -45,7 +45,69 @@ echo -e "\
 <?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
 <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n\
 	\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n\
-<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n\
+<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n"
+if [[ $OUTPUT_TYPE == "openlayers" ]]; then
+{
+echo -e "\
+<head>\n\
+  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"></meta>\n\
+  <title>OSM3S on Mapnik via Open Layers</title>\n\
+  <script src=\"http://openlayers.org/api/OpenLayers.js\"></script>\n\
+  <script src=\"http://openstreetmap.org/openlayers/OpenStreetMap.js\"></script>\n\
+  <script type=\"text/javascript\">\n\
+      var lat=34.070;\n\
+      var lon=-118.73;\n\
+      var zoom=15;\n\
+      var map;\n\
+\n\
+      function init(){\n\
+          map = new OpenLayers.Map (\"map\", {\n\
+          controls:[\n\
+              new OpenLayers.Control.Navigation(),\n\
+              new OpenLayers.Control.PanZoomBar(),\n\
+              new OpenLayers.Control.LayerSwitcher(),\n\
+              new OpenLayers.Control.Attribution()],\n\
+              maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),\n\
+              maxResolution: 156543.0399,\n\
+              numZoomLevels: 19,\n\
+              units: 'm',\n\
+              projection: new OpenLayers.Projection(\"EPSG:900913\"),\n\
+              displayProjection: new OpenLayers.Projection(\"EPSG:4326\")\n\
+          } );\n\
+\n\
+          layerMapnik = new OpenLayers.Layer.OSM.Mapnik(\"Mapnik\");\n\
+          map.addLayer(layerMapnik);\n\
+          layerTilesAtHome = new OpenLayers.Layer.OSM.Osmarender(\"Osmarender\");\n\
+          map.addLayer(layerTilesAtHome);\n\
+          layerCycleMap = new OpenLayers.Layer.OSM.CycleMap(\"CycleMap\");\n\
+          map.addLayer(layerCycleMap);\n\
+\n\
+          var lonLat = new OpenLayers.LonLat(lon, lat).transform(new\n\ OpenLayers.Projection(\"EPSG:4326\"), new OpenLayers.Projection(\"EPSG:900913\"));\n\
+\n\
+          map.setCenter (lonLat, zoom);\n\
+\n\
+          //Initialise the vector layer using OpenLayers.Format.OSM\n\
+          var layer = new OpenLayers.Layer.Vector(\"Polygon\", {\n\
+              strategies: [new OpenLayers.Strategy.Fixed()],\n\
+              protocol: new OpenLayers.Protocol.HTTP({\n\
+                  url: \"interpreter?data=`echo "$DATA" | ../bin/osm3s_query --dump-compact-map-ql --concise | ../bin/tocgi `\",\n\
+                  format: new OpenLayers.Format.OSM()\n\
+              }),\n\
+              projection: new OpenLayers.Projection(\"EPSG:4326\")\n\
+          });\n\
+\n\
+          map.addLayers([layer]);\n\
+\n\
+      }\n\
+  </script>\n\
+</head>\n\
+<body onload=\"init()\">\n\
+  <div id=\"map\" class=\"smallmap\"></div>\n\
+  </div>"
+};
+else
+{
+  echo -e "\
 <head>\n\
   <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"></meta>\n\
   <title>OSM3S Converted Query</title>\n\
@@ -55,26 +117,28 @@ echo -e "\
 <h1>Overpass API Converted Query</h1>\n\
 "
 
-if [[ $OUTPUT_TYPE == "xml" ]]; then
-{
-  echo "<p>Your query in pretty XML:</p>"
-  echo "<pre>"
-  echo "$DATA" | ../bin/osm3s_query --dump-xml --concise | ../bin/escape_xml
-  echo "</pre>"
-};
-elif [[ $OUTPUT_TYPE == "mapql" ]]; then
-{
-  echo "<p>Your query in pretty XML:</p>"
-  echo "<pre>"
-  echo "$DATA" | ../bin/osm3s_query --dump-pretty-map-ql --concise | ../bin/escape_xml
-  echo "</pre>"
-};
-elif [[ $OUTPUT_TYPE == "compact" ]]; then
-{
-  echo "<p>Your query in compact MapQL:</p>"
-  echo "<a href=\"interpreter?data=`echo "$DATA" | ../bin/osm3s_query --dump-compact-map-ql --concise | ../bin/tocgi `\"><pre>"
-  echo "$DATA" | ../bin/osm3s_query --dump-compact-map-ql --concise | ../bin/escape_xml 
-  echo "</pre></a>"
+  if [[ $OUTPUT_TYPE == "xml" ]]; then
+  {
+    echo "<p>Your query in pretty XML:</p>"
+    echo "<pre>"
+    echo "$DATA" | ../bin/osm3s_query --dump-xml --concise | ../bin/escape_xml
+    echo "</pre>"
+  };
+  elif [[ $OUTPUT_TYPE == "mapql" ]]; then
+  {
+    echo "<p>Your query in pretty XML:</p>"
+    echo "<pre>"
+    echo "$DATA" | ../bin/osm3s_query --dump-pretty-map-ql --concise | ../bin/escape_xml
+    echo "</pre>"
+  };
+  elif [[ $OUTPUT_TYPE == "compact" ]]; then
+  {
+    echo "<p>Your query in compact MapQL:</p>"
+    echo "<a href=\"interpreter?data=`echo "$DATA" | ../bin/osm3s_query --dump-compact-map-ql --concise | ../bin/tocgi `\"><pre>"
+    echo "$DATA" | ../bin/osm3s_query --dump-compact-map-ql --concise | ../bin/escape_xml 
+    echo "</pre></a>"
+  };
+  fi
 };
 fi
 
