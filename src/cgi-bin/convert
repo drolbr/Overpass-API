@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+
+EXEC_DIR="`dirname $0`/"
+if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
+{
+  EXEC_DIR="`pwd`/$EXEC_DIR"
+};
+fi
+
+BIN_DIR="$EXEC_DIR/../bin"
+DEBUG=
+DATA=
+TARGET=
+
+IFS=$'&'
+for KEY_VAL in $QUERY_STRING; do
+{
+  if [[ ${KEY_VAL:0:7} == "target=" ]]; then
+  {
+    OUTPUT_TYPE="${KEY_VAL:7}"
+  };
+  elif [[ ${KEY_VAL:0:5} == "data=" ]]; then
+  {
+    DATA=`echo "${KEY_VAL:5}" | $BIN_DIR/uncgi`
+  };
+  elif [[ ${KEY_VAL:0:6} == "debug=" ]]; then
+    DEBUG="${KEY_VAL:6}"
+  fi
+}; done
+unset IFS
+
+if [[ -n $DEBUG ]]; then
+{
+  DEBUG=yes
+  echo "Content-Type: text/plain; charset=utf-8"
+  echo
+  echo "[$DATA]"
+};
+fi
+
+REQUEST_METHOD=
+echo "Content-Type: text/html; charset=utf-8"
+echo
+echo -e "\
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
+<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n\
+	\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n\
+<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n\
+<head>\n\
+  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"></meta>\n\
+  <title>OSM3S Converted Query</title>\n\
+</head>\n\
+<body>\n\
+\n\
+<h1>Overpass API Converted Query</h1>\n\
+"
+
+if [[ $OUTPUT_TYPE == "xml" ]]; then
+{
+  echo "<p>Your query in pretty XML:</p>"
+  echo "<pre>"
+  echo "$DATA" | ../bin/osm3s_query --dump-xml --concise | ../bin/escape_xml
+  echo "</pre>"
+};
+elif [[ $OUTPUT_TYPE == "mapql" ]]; then
+{
+  echo "<p>Your query in pretty XML:</p>"
+  echo "<pre>"
+  echo "$DATA" | ../bin/osm3s_query --dump-pretty-map-ql --concise | ../bin/escape_xml
+  echo "</pre>"
+};
+elif [[ $OUTPUT_TYPE == "compact" ]]; then
+{
+  echo "<p>Your query in compact MapQL:</p>"
+  echo "<a href=\"interpreter?data=`echo "$DATA" | ../bin/osm3s_query --dump-compact-map-ql --concise | ../bin/tocgi `\"><pre>"
+  echo "$DATA" | ../bin/osm3s_query --dump-compact-map-ql --concise | ../bin/escape_xml 
+  echo "</pre></a>"
+};
+fi
+
+echo -e "\n\
+</body>\n\
+</html>\n\
+\n"
