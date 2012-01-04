@@ -41,23 +41,19 @@ fi
 REQUEST_METHOD=
 echo "Content-Type: text/html; charset=utf-8"
 echo
-echo -e "\
-<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
-<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n\
-	\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n\
-<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n"
 if [[ $OUTPUT_TYPE == "openlayers" ]]; then
 {
 echo -e "\
+<html>\n\
 <head>\n\
   <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"></meta>\n\
   <title>OSM3S on Mapnik via Open Layers</title>\n\
   <script src=\"http://openlayers.org/api/OpenLayers.js\"></script>\n\
   <script src=\"http://openstreetmap.org/openlayers/OpenStreetMap.js\"></script>\n\
   <script type=\"text/javascript\">\n\
-      var lat=34.070;\n\
-      var lon=-118.73;\n\
-      var zoom=15;\n\
+      var lat=50.722;\n\
+      var lon=7.092;\n\
+      var zoom=6;\n\
       var map;\n\
 \n\
       function init(){\n\
@@ -82,7 +78,7 @@ echo -e "\
           layerCycleMap = new OpenLayers.Layer.OSM.CycleMap(\"CycleMap\");\n\
           map.addLayer(layerCycleMap);\n\
 \n\
-          var lonLat = new OpenLayers.LonLat(lon, lat).transform(new\n\ OpenLayers.Projection(\"EPSG:4326\"), new OpenLayers.Projection(\"EPSG:900913\"));\n\
+          var lonLat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection(\"EPSG:4326\"), new OpenLayers.Projection(\"EPSG:900913\"));\n\
 \n\
           map.setCenter (lonLat, zoom);\n\
 \n\
@@ -102,12 +98,15 @@ echo -e "\
   </script>\n\
 </head>\n\
 <body onload=\"init()\">\n\
-  <div id=\"map\" class=\"smallmap\"></div>\n\
-  </div>"
+  <div id=\"map\" class=\"smallmap\"></div>"
 };
 else
 {
   echo -e "\
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
+<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n\
+	\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n\
+<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n\
 <head>\n\
   <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"></meta>\n\
   <title>OSM3S Converted Query</title>\n\
