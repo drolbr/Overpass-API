@@ -288,6 +288,8 @@ struct Error_Output
   virtual bool display_parse_errors() = 0;
   virtual bool display_static_errors() = 0;
   
+  virtual void add_padding(const string& padding) = 0;
+  
   static const uint QUIET = 1;
   static const uint CONCISE = 2;
   static const uint PROGRESS = 3;

@@ -34,6 +34,8 @@ struct Web_Output : public Error_Output
   virtual bool display_parse_errors() { return parse_errors; }
   virtual bool display_static_errors() { return static_errors; }
   
+  virtual void add_padding(const string& padding_) { padding = padding_; }
+  
   void enforce_header();
   void write_html_header
       (const string& timestamp = "", const string& area_timestamp = "");
@@ -49,6 +51,7 @@ private:
   bool parse_errors;
   bool static_errors;
   uint log_level;
+  string padding;
   
   void display_remark(const string& text);
   void display_error(const string& text);

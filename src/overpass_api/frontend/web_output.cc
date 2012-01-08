@@ -178,7 +178,10 @@ void Web_Output::write_json_header
   
   if (write_mime)
     cout<<"Content-type: application/json\n\n";
-  
+
+  if (padding != "")
+    cout<<padding<<"(";
+    
   cout<<"{\n"
         "  \"version\": 0.6,\n"
         "  \"generator\": \"Overpass API\",\n"
@@ -201,7 +204,7 @@ void Web_Output::write_footer()
   else if (header_written == html)
     cout<<"\n</body>\n</html>\n";
   else if (header_written == json)
-    cout<<"\n\n  ]\n}\n";
+    cout<<"\n\n  ]\n}"<<(padding != "" ? ");\n" : "\n");
   header_written = final;
 }
 

@@ -50,7 +50,7 @@ string cgi_post_to_text()
   return raw;
 }
 
-string decode_cgi_to_plain(const string& raw, int& error)
+string decode_cgi_to_plain(const string& raw, int& error, string& jsonp)
 {
   error = 0;
   string result;
@@ -86,6 +86,16 @@ string decode_cgi_to_plain(const string& raw, int& error)
       pos = raw.size();
     else
       result += raw[pos++];
+  }
+  
+  pos = raw.find("jsonp=");
+  if (pos != string::npos)
+  {
+    string::size_type endpos = raw.find('&', pos);
+    if (endpos == string::npos)
+      jsonp = raw.substr(pos + 6);
+    else
+      jsonp = raw.substr(pos + 6, endpos - pos - 6);
   }
   
   return result;

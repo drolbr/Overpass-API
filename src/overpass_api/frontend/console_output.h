@@ -33,6 +33,8 @@ struct Console_Output : public Error_Output
   virtual bool display_parse_errors() { return parse_errors; }
   virtual bool display_static_errors() { return static_errors; }
   
+  virtual void add_padding(const string& padding_) {}
+  
 private:
   bool encoding_errors;
   bool parse_errors;

@@ -9,6 +9,6 @@ string cgi_get_to_text();
 
 string cgi_post_to_text();
 
-string decode_cgi_to_plain(const string& raw, int& error);
+string decode_cgi_to_plain(const string& raw, int& error, string& jsonp);
 
 #endif

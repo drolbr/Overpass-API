@@ -152,14 +152,17 @@ string get_xml_cgi(Error_Output* error_output, uint32 max_input_size)
     if (error_output)
       error_output->add_encoding_remark("The server now removes the CGI character escaping.");
     int cgi_error(0);
-    input = decode_cgi_to_plain(input, cgi_error);
+    string jsonp;
+    input = decode_cgi_to_plain(input, cgi_error, jsonp);
     
     // no 'data=' found
     if (cgi_error)
     {
       if (error_output)
 	error_output->add_encoding_remark("Your input neither starts with '<' nor does it contain the string \"data=\". It will be interpreted as MapQL");
-    }    
+    }
+    else if (jsonp != "")
+      error_output->add_padding(jsonp);
   }
   else
   {
