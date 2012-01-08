@@ -1,4 +1,4 @@
 foreach(
   node(w),
-  { xml body; }
+  { out body; }
 )

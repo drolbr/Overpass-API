@@ -320,7 +320,7 @@ TStatement* parse_output(const string& from, Tokenizer_Wrapper& token, Error_Out
   ++token;
   while (token.good() && *token != "}")
   {
-    if (*token == "xml")
+    if (*token == "out")
     {
       ++token;
       string mode = "body";

@@ -1,1 +1,1 @@
-foreach(node(w),{xml body;})
+foreach(node(w),{out body;})

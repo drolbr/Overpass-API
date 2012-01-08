@@ -1,2 +1,2 @@
-foreach.in->.out(node(w),{xml;})
+foreach.in->.out(node(w),{out;})
 

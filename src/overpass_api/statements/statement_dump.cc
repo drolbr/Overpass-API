@@ -88,7 +88,7 @@ string dump_print_map_ql(const map< string, string >& attributes, bool pretty = 
     if (it->first == "from" && it->second != "_")
       result += "." + it->second;
   }
-  result += (pretty ? "{ xml" : "{xml");
+  result += (pretty ? "{ out" : "{out");
   for (map< string, string >::const_iterator it = attributes.begin();
       it != attributes.end(); ++it)
   {

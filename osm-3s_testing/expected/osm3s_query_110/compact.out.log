@@ -1,1 +1,1 @@
-foreach.in->.out(node(w),{xml body;})
+foreach.in->.out(node(w),{out body;})

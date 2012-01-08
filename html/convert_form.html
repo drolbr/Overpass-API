@@ -27,9 +27,9 @@
 
 <p>A simple example is</p>
 <pre>node[name=&quot;Gielgen&quot;]
-{ xml meta; }</pre>
+{ out meta; }</pre>
 
-<p>The action is <em>{ xml meta; }</em>. The general form of an action is <em>.&lt;input variable&gt;{ xml &lt;modifiers&gt;; }</em>. The input variable can be ommited; then it defaults to <em>_</em>. Allowed modifiers are</p>
+<p>The action is <em>{ out meta; }</em>. The general form of an action is <em>.&lt;input variable&gt;{ out &lt;modifiers&gt;; }</em>. The input variable can be ommited; then it defaults to <em>_</em>. Allowed modifiers are</p>
 <ul>
 <li><em>ids</em>: Print only the id of each element.</li>
 <li><em>skel</em>: Print ids, coordinates and memberships.</li>
@@ -47,12 +47,12 @@
 
 <p>The following clauses are possible:</p>
 <ul>
-<li><em>bbox</em>: written as <em>(</em>south<em>,</em>west<em>,</em>north<em>,</em>east<em>)</em>. An example is <pre>node[highway=bus_stop](50.6,6.8,50.9,7.2){xml;}</pre>.</li>
-<li><em>id</em>: written as <em>(</em>ref<em>)</em>, where <em>ref</em> is the id of the referred element. An example is <pre>rel(62478){xml;}</pre></li>
-<li><em>has-kv</em>: written as <em>[&quot;</em>key<em>&quot;=&quot;</em>value<em>&quot;]</em> or <em>[&quot;</em>key<em>&quot;]</em>. The former selects all elements where the key has the given value, the latter selects all elements where the key has any nonempty value. The quotations marks can be omitted if the entire string contains only alphanumeric characters. Example: <pre>way[name="Adelheidisstraße"]{xml;}</pre>.</li>
-<li><em>recurse</em>: written as <em>(w.</em>input set<em>)</em>, <em>(r.</em>input set<em>)</em>, <em>(bn.</em>input set<em>)</em>, <em>(bw.</em>input set<em>)</em>, or <em>(br.</em>input set<em>)</em>. Determines the origin from with the given type of elements should be derived. The input set including the leading dot can be omitted. It then default to <em>_</em>. Examples are <pre>way[name="Adelheidisstraße"]node(w){xml;}</pre> and <pre>way[name="Adelheidisstraße"]->.foo node(w.foo){xml;}</pre>.</li>
-<li><em>around</em>: written as <em>(around.</em>input set<em>:</em>radius<em>)</em>. The around statement currently is only compatible to output of type node, and I even haven't decided on the semantics for the other cases. The input set including the leading dot can be omitted. It then default to <em>_</em>. An example is <pre>node[name=&quot;Lichtscheid&quot;]node(around:1000)[highway=bus_stop]{xml;}</pre>.</li>
-<li><em>user/uid</em>: written as <em>(user:&quot;</em>name<em>&quot;)</em> resp. <em>(uid:</em>id<em>)</em>. Selects all elements last touched by the given user. The user can be selected by her user name (use <em>user</em>) or user id (use <em>uid</em>). Examples are <pre>way(user:"Roland Olbricht"){xml;}</pre> or <pre>way(uid:65282){xml;}</pre>.</li>
+<li><em>bbox</em>: written as <em>(</em>south<em>,</em>west<em>,</em>north<em>,</em>east<em>)</em>. An example is <pre>node[highway=bus_stop](50.6,6.8,50.9,7.2){out;}</pre>.</li>
+<li><em>id</em>: written as <em>(</em>ref<em>)</em>, where <em>ref</em> is the id of the referred element. An example is <pre>rel(62478){out;}</pre></li>
+<li><em>has-kv</em>: written as <em>[&quot;</em>key<em>&quot;=&quot;</em>value<em>&quot;]</em> or <em>[&quot;</em>key<em>&quot;]</em>. The former selects all elements where the key has the given value, the latter selects all elements where the key has any nonempty value. The quotations marks can be omitted if the entire string contains only alphanumeric characters. Example: <pre>way[name="Adelheidisstraße"]{out;}</pre>.</li>
+<li><em>recurse</em>: written as <em>(w.</em>input set<em>)</em>, <em>(r.</em>input set<em>)</em>, <em>(bn.</em>input set<em>)</em>, <em>(bw.</em>input set<em>)</em>, or <em>(br.</em>input set<em>)</em>. Determines the origin from with the given type of elements should be derived. The input set including the leading dot can be omitted. It then default to <em>_</em>. Examples are <pre>way[name="Adelheidisstraße"]node(w){out;}</pre> and <pre>way[name="Adelheidisstraße"]->.foo node(w.foo){out;}</pre>.</li>
+<li><em>around</em>: written as <em>(around.</em>input set<em>:</em>radius<em>)</em>. The around statement currently is only compatible to output of type node, and I even haven't decided on the semantics for the other cases. The input set including the leading dot can be omitted. It then default to <em>_</em>. An example is <pre>node[name=&quot;Lichtscheid&quot;]node(around:1000)[highway=bus_stop]{out;}</pre>.</li>
+<li><em>user/uid</em>: written as <em>(user:&quot;</em>name<em>&quot;)</em> resp. <em>(uid:</em>id<em>)</em>. Selects all elements last touched by the given user. The user can be selected by her user name (use <em>user</em>) or user id (use <em>uid</em>). Examples are <pre>way(user:"Roland Olbricht"){out;}</pre> or <pre>way(uid:65282){out;}</pre>.</li>
 <li><em>newer</em>: similar to <em>user</em>.</li>
 </ul>
 
