@@ -1289,6 +1289,16 @@ int main(int argc, char* args[])
       modifier = new Accept_Query_30(pattern_size);
     else if (string(args[2]) == "query_31")
       modifier = new Accept_Query_31(pattern_size);
+    else if (string(args[2]) == "query_32")
+      modifier = new Accept_Query_1(pattern_size);
+    else if (string(args[2]) == "query_33")
+      modifier = new Accept_Query_1(pattern_size);
+    else if (string(args[2]) == "query_34")
+      modifier = new Accept_Query_25(pattern_size);
+    else if (string(args[2]) == "query_35")
+      modifier = new Accept_Query_25(pattern_size);
+    else if (string(args[2]) == "query_36")
+      modifier = new Accept_Query_17(pattern_size);
     else if (string(args[2]) == "union_1")
       modifier = new Accept_Union_1(pattern_size);
     else if (string(args[2]) == "union_2")

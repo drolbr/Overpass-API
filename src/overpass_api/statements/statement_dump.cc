@@ -519,7 +519,7 @@ string Statement_Dump::dump_pretty_map_ql() const
   return result;
 }
 
-Statement_Dump* Statement_Dump::create_statement
+Statement_Dump* Statement_Dump::Factory::create_statement
     (string element, int line_number, const map< string, string >& attributes)
 {
   return new Statement_Dump(element, attributes);

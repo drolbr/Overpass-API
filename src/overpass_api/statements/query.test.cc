@@ -222,6 +222,36 @@ void perform_query
   }
 }
 
+void perform_regex_query
+    (string type, string key, string value, string key2, string regex2,
+     string key3, string regex3, string db_dir)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Resource_Manager rman(transaction);
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", type);
+      SProxy< Has_Kv_Statement > stmt2;
+      if (key != "")
+        stmt1.stmt().add_statement(&stmt2("k", key)("v", value).stmt(), "");
+      SProxy< Has_Kv_Statement > stmt3;
+      stmt1.stmt().add_statement(&stmt3("k", key2)("regv", regex2).stmt(), "");
+      SProxy< Has_Kv_Statement > stmt4;
+      if (key3 != "")
+	stmt1.stmt().add_statement(&stmt4("k", key3)("regv", regex3).stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    perform_print(rman);
+  }
+  catch (File_Error e)
+  {
+    cerr<<"File error caught: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
 void perform_query_with_around
     (string type, string key1, string value1, string db_dir, uint pattern_size)
 {
@@ -463,6 +493,26 @@ int main(int argc, char* args[])
     // Test a bbox combined with a global key-value pair, yielding horizontal and vertical ways.
     perform_query_with_bbox("relation", "relation_key_2/4", "",
 			    "57.5", "80.0", "75.0", "105.0", args[3]);
+
+  if ((test_to_execute == "") || (test_to_execute == "32"))
+    // Test regular expressions: A simple string
+    perform_regex_query("node", "", "", "node_key_11", "^node_value_2$", "", "", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "33"))
+    // Test regular expressions: An extended regular expression
+    perform_regex_query("node", "", "", "node_key_11", "^node_.?alue_2$", "", "", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "34"))
+    // Test regular expressions: Two regular expressions
+    perform_regex_query("relation", "", "",
+			"relation_key_2/4", "^relation_.*_0$",
+			"relation_key_5", "^relation_.*_5$", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "35"))
+    // Test regular expressions: A regular expression and a key-value pair
+    perform_regex_query("relation",
+			"relation_key_2/4", "relation_value_0",
+			"relation_key_5", "^relation_.*_5$", "", "", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "36"))
+    // Test regular expressions: A regular expression and a key only
+    perform_regex_query("way", "way_key_7", "", "way_key_11", "^way_.*_8$", "", "", args[3]);
 
   cout<<"</osm>\n";
   return 0;

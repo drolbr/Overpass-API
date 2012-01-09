@@ -290,10 +290,23 @@ Dispatcher_Stub::~Dispatcher_Stub()
   }
 }
 
+Statement::Factory* stmt_factory_global = 0;
+Statement_Dump::Factory* stmt_dump_factory_global = 0;
+
+Statement::Factory* get_factory(Statement::Factory*)
+{
+  return stmt_factory_global;
+}
+
+Statement_Dump::Factory* get_factory(Statement_Dump::Factory*)
+{
+  return stmt_dump_factory_global;
+}
+
 template< class TStatement >
 void start(const char *el, const char **attr)
 {
-  TStatement* statement(TStatement::create_statement
+  TStatement* statement(get_factory((typename TStatement::Factory*)(0))->create_statement
       (el, xml_parser.current_line_number(), convert_c_pairs(attr)));
       
   statement_stack< TStatement >().push_back(statement);
@@ -326,7 +339,8 @@ void end(const char *el)
 }
 
 bool parse_and_validate
-    (const string& xml_raw, Error_Output* error_output, Debug_Level debug_level)
+    (Statement::Factory& stmt_factory,
+     const string& xml_raw, Error_Output* error_output, Debug_Level debug_level)
 {
   if (error_output && error_output->display_encoding_errors())
     return false;
@@ -342,6 +356,8 @@ bool parse_and_validate
       if (debug_level == parser_dump_xml || debug_level == parser_dump_compact_map_ql
 	  || debug_level == parser_dump_pretty_map_ql)
       {
+	Statement_Dump::Factory stmt_dump_factory;
+	stmt_dump_factory_global = &stmt_dump_factory;
 	xml_parser.parse(xml_raw, start< Statement_Dump >, end< Statement_Dump >);
       
         for (vector< Statement_Dump* >::const_iterator it =
@@ -360,7 +376,11 @@ bool parse_and_validate
           delete *it;
       }
       else
+      {
+	stmt_factory_global = &stmt_factory;
         xml_parser.parse(xml_raw, start< Statement >, end< Statement >);
+	stmt_factory_global = 0;
+      }
     }
     catch(Parse_Error parse_error)
     {
@@ -381,7 +401,7 @@ bool parse_and_validate
   else
   {
     if (debug_level == parser_execute)
-      parse_and_validate_map_ql(xml_raw, error_output);
+      parse_and_validate_map_ql(stmt_factory, xml_raw, error_output);
     else if (debug_level == parser_dump_xml)
       parse_and_dump_xml_from_map_ql(xml_raw, error_output);
     else if (debug_level == parser_dump_compact_map_ql)

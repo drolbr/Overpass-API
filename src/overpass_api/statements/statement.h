@@ -43,6 +43,18 @@ class Output_Handle;
 class Statement
 {
   public:
+    struct Factory
+    {
+      Factory() : error_output_(error_output) {}
+      ~Factory();
+      
+      Statement* create_statement(string element, int line_number,
+				  const map< string, string >& attributes);
+      
+      vector< Statement* > created_statements;
+      Error_Output* error_output_;
+    };
+    
     Statement(int line_number_) : line_number(line_number_), progress(0), output_handle(0) {}
     
     virtual void add_statement(Statement* statement, string text);
@@ -70,8 +82,6 @@ class Statement
     void display_full();
     void display_starttag();
         
-    static Statement* create_statement(string element, int line_number,
-				       const map< string, string >& attributes);
     static void set_error_output(Error_Output* error_output_)
     {
       error_output = error_output_;

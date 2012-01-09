@@ -13,6 +13,12 @@ using namespace std;
 class Statement_Dump
 {
   public:
+    struct Factory
+    {
+      Statement_Dump* create_statement(string element, int line_number,
+				       const map< string, string >& attributes);
+    };
+    
     Statement_Dump(string name_, const map< string, string >& attributes_)
         : name(name_), attributes(attributes_) {}
     ~Statement_Dump();
@@ -23,9 +29,7 @@ class Statement_Dump
     string dump_compact_map_ql() const;
     
     void add_final_text(string text) {}
-    
-    static Statement_Dump* create_statement(string element, int line_number,
-				       const map< string, string >& attributes);
+
   private:
     string name;
     map< string, string > attributes;

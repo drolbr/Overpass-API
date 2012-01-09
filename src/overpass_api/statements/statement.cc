@@ -83,54 +83,68 @@ void Statement::display_starttag()
   //display_verbatim(get_source(startpos, tagendpos - startpos));
 }
 
-Statement* Statement::create_statement(string element, int line_number,
-				       const map< string, string >& attributes)
+Statement::Factory::~Factory()
 {
+  for (vector< Statement* >::const_iterator it = created_statements.begin();
+      it != created_statements.end(); ++it)
+    delete *it;
+}
+
+Statement* Statement::Factory::create_statement
+    (string element, int line_number, const map< string, string >& attributes)
+{
+  Statement* statement = 0;
+  
   if (element == "area-query")
-    return new Area_Query_Statement(line_number, attributes);
+    statement = new Area_Query_Statement(line_number, attributes);
   else if (element == "around")
-    return new Around_Statement(line_number, attributes);
+    statement = new Around_Statement(line_number, attributes);
   else if (element == "bbox-query")
-    return new Bbox_Query_Statement(line_number, attributes);
+    statement = new Bbox_Query_Statement(line_number, attributes);
 /*  else if (element == "conflict")
-    return new Conflict_Statement(line_number);*/
+    statement = new Conflict_Statement(line_number);*/
   else if (element == "coord-query")
-    return new Coord_Query_Statement(line_number, attributes);
+    statement = new Coord_Query_Statement(line_number, attributes);
 /*  else if (element == "detect-odd-nodes")
-    return new Detect_Odd_Nodes_Statement();*/
+    statement = new Detect_Odd_Nodes_Statement();*/
   else if (element == "foreach")
-    return new Foreach_Statement(line_number, attributes);
+    statement = new Foreach_Statement(line_number, attributes);
   else if (element == "has-kv")
-    return new Has_Kv_Statement(line_number, attributes);
+    statement = new Has_Kv_Statement(line_number, attributes);
   else if (element == "id-query")
-    return new Id_Query_Statement(line_number, attributes);
+    statement = new Id_Query_Statement(line_number, attributes);
   else if (element == "item")
-    return new Item_Statement(line_number, attributes);
+    statement = new Item_Statement(line_number, attributes);
   else if (element == "make-area")
-    return new Make_Area_Statement(line_number, attributes);
+    statement = new Make_Area_Statement(line_number, attributes);
   else if (element == "newer")
-    return new Newer_Statement(line_number, attributes);
+    statement = new Newer_Statement(line_number, attributes);
   else if (element == "osm-script")
-    return new Osm_Script_Statement(line_number, attributes);
+    statement = new Osm_Script_Statement(line_number, attributes);
   else if (element == "print")
-    return new Print_Statement(line_number, attributes);
+    statement = new Print_Statement(line_number, attributes);
   else if (element == "query")
-    return new Query_Statement(line_number, attributes);
+    statement = new Query_Statement(line_number, attributes);
   else if (element == "recurse")
-    return new Recurse_Statement(line_number, attributes);
+    statement = new Recurse_Statement(line_number, attributes);
 /*  else if (element == "report")
-    return new Report_Statement();*/
+    statement = new Report_Statement();*/
   else if (element == "union")
-    return new Union_Statement(line_number, attributes);
+    statement = new Union_Statement(line_number, attributes);
   else if (element == "user")
-    return new User_Statement(line_number, attributes);
+    statement = new User_Statement(line_number, attributes);
   
-  ostringstream temp;
-  temp<<"Unknown tag \""<<element<<"\" in line "<<line_number<<'.';
-  if (error_output)
-    error_output->add_static_error(temp.str(), line_number);
+  if (statement)
+    created_statements.push_back(statement);
+  else
+  {
+    ostringstream temp;
+    temp<<"Unknown tag \""<<element<<"\" in line "<<line_number<<'.';
+    if (error_output_)
+      error_output_->add_static_error(temp.str(), line_number);
+  }
   
-  return 0;
+  return statement;
 }
 
 Error_Output* Statement::error_output = 0;

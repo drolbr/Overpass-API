@@ -13,6 +13,8 @@ const int QUERY_WAY = 2;
 const int QUERY_RELATION = 3;
 // const unsigned int QUERY_AREA = 4;
 
+class Regular_Expression;
+
 class Query_Statement : public Statement
 {
   public:
@@ -27,12 +29,13 @@ class Query_Statement : public Statement
   private:
     string output;
     int type;
+    vector< string > keys;    
     vector< pair< string, string > > key_values;    
+    vector< pair< string, Regular_Expression* > > key_regexes;    
     vector< Query_Constraint* > constraints;
     
     vector< uint32 > collect_ids
-        (const vector< pair< string, string > >& key_values,
-	 const File_Properties& file_prop, uint32 stopwatch_account,
+        (const File_Properties& file_prop, uint32 stopwatch_account,
 	 Resource_Manager& rman);
 	 
     template < typename TIndex, typename TObject >
@@ -55,13 +58,15 @@ class Has_Kv_Statement : public Statement
     virtual string get_result_name() const { return ""; }
     virtual void forecast();
     virtual void execute(Resource_Manager& rman) {}
-    virtual ~Has_Kv_Statement() {}
+    virtual ~Has_Kv_Statement();
     
     string get_key() { return key; }
     string get_value() { return value; }
+    Regular_Expression* get_regex() { return regex; }
     
   private:
     string key, value;
+    Regular_Expression* regex;
 };
 
 #endif

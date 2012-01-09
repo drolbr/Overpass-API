@@ -10,10 +10,42 @@
 #include "query.h"
 #include "user.h"
 
+#include "sys/types.h"
+#include "regex.h"
+
 #include <algorithm>
 #include <sstream>
 
 using namespace std;
+
+//-----------------------------------------------------------------------------
+
+class Regular_Expression
+{
+  public:
+    Regular_Expression(const string& regex);
+    ~Regular_Expression();
+    
+    bool matches(const string& line);
+    
+  private:
+    regex_t preg;
+};
+
+Regular_Expression::Regular_Expression(const string& regex)
+{
+  regcomp(&preg, regex.c_str(), REG_EXTENDED|REG_NOSUB);
+}
+
+Regular_Expression::~Regular_Expression()
+{
+  regfree(&preg);
+}
+
+bool Regular_Expression::matches(const string& line)
+{
+  return (regexec(&preg, line.c_str(), 0, 0, 0) == 0);
+}
 
 //-----------------------------------------------------------------------------
 
@@ -56,8 +88,14 @@ void Query_Statement::add_statement(Statement* statement, string text)
   Has_Kv_Statement* has_kv(dynamic_cast<Has_Kv_Statement*>(statement));
   if (has_kv)
   {
-    key_values.push_back(make_pair< string, string >
-	(has_kv->get_key(), has_kv->get_value()));
+    if (has_kv->get_value() != "")
+      key_values.push_back(make_pair< string, string >
+	  (has_kv->get_key(), has_kv->get_value()));
+    else if (has_kv->get_regex())
+      key_regexes.push_back(make_pair< string, Regular_Expression* >
+          (has_kv->get_key(), has_kv->get_regex()));
+    else
+      keys.push_back(has_kv->get_key());
     return;
   }
   Area_Query_Statement* area(dynamic_cast<Area_Query_Statement*>(statement));
@@ -98,82 +136,93 @@ void Query_Statement::forecast()
 {
 }
 
+set< Tag_Index_Global > get_kv_req(const string& key, const string& value)
+{
+  set< Tag_Index_Global > result;
+  Tag_Index_Global idx;
+  idx.key = key;
+  idx.value = value;
+  result.insert(idx);
+  return result;
+}
+
+set< pair< Tag_Index_Global, Tag_Index_Global > > get_k_req(const string& key)
+{
+  set< pair< Tag_Index_Global, Tag_Index_Global > > result;
+  pair< Tag_Index_Global, Tag_Index_Global > idx_pair;
+  idx_pair.first.key = key;
+  idx_pair.first.value = "";
+  idx_pair.second.key = key + (char)0;
+  idx_pair.second.value = "";
+  result.insert(idx_pair);
+  return result;
+}
+
 vector< uint32 > Query_Statement::collect_ids
-  (const vector< pair< string, string > >& key_values,
-   const File_Properties& file_prop, uint32 stopwatch_account,
+  (const File_Properties& file_prop, uint32 stopwatch_account,
    Resource_Manager& rman)
 {
-  if (key_values.empty())
+  if (key_values.empty() && keys.empty() && key_regexes.empty())
     return vector< uint32 >();
  
-  stopwatch.stop(Stopwatch::NO_DISK);
   Block_Backend< Tag_Index_Global, Uint32_Index > tags_db
       (rman.get_transaction()->data_index(&file_prop));
   
   vector< uint32 > new_ids;
-  vector< pair< string, string > >::const_iterator it = key_values.begin();
-  if (it->second != "")
+  vector< pair< string, string > >::const_iterator kvit = key_values.begin();
+
+  if (kvit != key_values.end())
   {
-    set< Tag_Index_Global > tag_req;
-    Tag_Index_Global idx;
-    idx.key = it->first;
-    idx.value = it->second;
-    tag_req.insert(idx);
+    set< Tag_Index_Global > tag_req = get_kv_req(kvit->first, kvit->second);
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Discrete_Iterator
         it2(tags_db.discrete_begin(tag_req.begin(), tag_req.end()));
         !(it2 == tags_db.discrete_end()); ++it2)
       new_ids.push_back(it2.object().val());
+
+    sort(new_ids.begin(), new_ids.end());
+    rman.health_check(*this);
+    ++kvit;
   }
-  else
+  
+  for (; kvit != key_values.end(); ++kvit)
   {
-    set< pair< Tag_Index_Global, Tag_Index_Global > > range_req;
-    pair< Tag_Index_Global, Tag_Index_Global > idx_pair;
-    idx_pair.first.key = it->first;
-    idx_pair.first.value = "";
-    idx_pair.second.key = it->first + (char)0;
-    idx_pair.second.value = "";
-    range_req.insert(idx_pair);
+    vector< uint32 > old_ids;
+    old_ids.swap(new_ids);
+
+    set< Tag_Index_Global > tag_req = get_kv_req(kvit->first, kvit->second);
+    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Discrete_Iterator
+        it2(tags_db.discrete_begin(tag_req.begin(), tag_req.end()));
+        !(it2 == tags_db.discrete_end()); ++it2)
+    {
+      if (binary_search(old_ids.begin(), old_ids.end(), it2.object().val()))
+	new_ids.push_back(it2.object().val());
+    }
+    sort(new_ids.begin(), new_ids.end());    
+    rman.health_check(*this);
+  }
+
+  vector< string >::const_iterator kit = keys.begin();
+  if (key_values.empty() && kit != keys.end())
+  {
+    set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
         it2(tags_db.range_begin
           (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
 	   Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
         !(it2 == tags_db.range_end()); ++it2)
       new_ids.push_back(it2.object().val());
+
+    sort(new_ids.begin(), new_ids.end());
+    rman.health_check(*this);
+    ++kit;
   }
-  stopwatch.add(stopwatch_account, tags_db.read_count());
-  stopwatch.stop(stopwatch_account);
-  sort(new_ids.begin(), new_ids.end());
-  stopwatch.stop(Stopwatch::NO_DISK);
-  ++it;
   
-  for (; it != key_values.end(); ++it)
+  for (; kit != keys.end(); ++kit)
   {
     vector< uint32 > old_ids;
     old_ids.swap(new_ids);
-    if (it->second != "")
     {
-      set< Tag_Index_Global > tag_req;
-      Tag_Index_Global idx;
-      idx.key = it->first;
-      idx.value = it->second;
-      tag_req.insert(idx);
-      for (Block_Backend< Tag_Index_Global, Uint32_Index >::Discrete_Iterator
-          it2(tags_db.discrete_begin(tag_req.begin(), tag_req.end()));
-          !(it2 == tags_db.discrete_end()); ++it2)
-      {
-        if (binary_search(old_ids.begin(), old_ids.end(), it2.object().val()))
-	  new_ids.push_back(it2.object().val());
-      }
-    }
-    else
-    {
-      set< pair< Tag_Index_Global, Tag_Index_Global > > range_req;
-      pair< Tag_Index_Global, Tag_Index_Global > idx_pair;
-      idx_pair.first.key = it->first;
-      idx_pair.first.value = "";
-      idx_pair.second.key = it->first + (char)0;
-      idx_pair.second.value = "";
-      range_req.insert(idx_pair);
+      set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
       for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
 	  it2(tags_db.range_begin
 	  (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
@@ -184,14 +233,50 @@ vector< uint32 > Query_Statement::collect_ids
 	  new_ids.push_back(it2.object().val());
       }
     }
-    stopwatch.add(stopwatch_account, tags_db.read_count());
-    stopwatch.stop(stopwatch_account);
-    sort(new_ids.begin(), new_ids.end());
-    stopwatch.stop(Stopwatch::NO_DISK);
-    
+    sort(new_ids.begin(), new_ids.end());    
     rman.health_check(*this);
   }
+
+  vector< pair< string, Regular_Expression* > >::const_iterator krit = key_regexes.begin();
+  if (key_values.empty() && keys.empty() && krit != key_regexes.end())
+  {
+    set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
+    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
+        it2(tags_db.range_begin
+          (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
+	   Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
+        !(it2 == tags_db.range_end()); ++it2)
+    {
+      if (krit->second->matches(it2.index().value))
+        new_ids.push_back(it2.object().val());
+    }
+
+    sort(new_ids.begin(), new_ids.end());
+    rman.health_check(*this);
+    ++krit;
+  }
   
+  for (; krit != key_regexes.end(); ++krit)
+  {
+    vector< uint32 > old_ids;
+    old_ids.swap(new_ids);
+    {
+      set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
+      for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
+	  it2(tags_db.range_begin
+	  (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
+	   Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
+	  !(it2 == tags_db.range_end()); ++it2)
+      {
+	if (binary_search(old_ids.begin(), old_ids.end(), it2.object().val())
+	    && krit->second->matches(it2.index().value))
+	  new_ids.push_back(it2.object().val());
+      }
+    }
+    sort(new_ids.begin(), new_ids.end());    
+    rman.health_check(*this);
+  }
+
   return new_ids;
 }
 
@@ -276,8 +361,7 @@ void Query_Statement::execute(Resource_Manager& rman)
   if (type == QUERY_NODE)
   {
     vector< uint32 > ids(collect_ids
-        (key_values, *osm_base_settings().NODE_TAGS_GLOBAL,
-         Stopwatch::NODE_TAGS_GLOBAL, rman));
+        (*osm_base_settings().NODE_TAGS_GLOBAL, Stopwatch::NODE_TAGS_GLOBAL, rman));
 
     if (ids.empty() && !key_values.empty())
       answer_state = data_collected;
@@ -313,8 +397,7 @@ void Query_Statement::execute(Resource_Manager& rman)
   else if (type == QUERY_WAY)
   {
     vector< uint32 > ids(collect_ids
-        (key_values, *osm_base_settings().WAY_TAGS_GLOBAL,
-	 Stopwatch::WAY_TAGS_GLOBAL, rman));
+        (*osm_base_settings().WAY_TAGS_GLOBAL, Stopwatch::WAY_TAGS_GLOBAL, rman));
 
     if (ids.empty() && !key_values.empty())
       answer_state = data_collected;
@@ -350,8 +433,7 @@ void Query_Statement::execute(Resource_Manager& rman)
   else if (type == QUERY_RELATION)
   {
     vector< uint32 > ids(collect_ids
-        (key_values, *osm_base_settings().RELATION_TAGS_GLOBAL,
-	 Stopwatch::RELATION_TAGS_GLOBAL, rman));
+        (*osm_base_settings().RELATION_TAGS_GLOBAL, Stopwatch::RELATION_TAGS_GLOBAL, rman));
 	 
     if (ids.empty() && !key_values.empty())
       answer_state = data_collected;
@@ -418,12 +500,14 @@ void Query_Statement::execute(Resource_Manager& rman)
 //-----------------------------------------------------------------------------
 
 Has_Kv_Statement::Has_Kv_Statement
-    (int line_number_, const map< string, string >& input_attributes) : Statement(line_number_)
+    (int line_number_, const map< string, string >& input_attributes)
+    : Statement(line_number_), regex(0)
 {
   map< string, string > attributes;
   
   attributes["k"] = "";
   attributes["v"] = "";
+  attributes["regv"] = "";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
@@ -436,6 +520,24 @@ Has_Kv_Statement::Has_Kv_Statement
 	<<" the only allowed values are non-empty strings.";
     add_static_error(temp.str());
   }
+  if (attributes["regv"] != "")
+  {
+    if (value != "")
+    {
+      ostringstream temp("");
+      temp<<"In the element \"has-kv\" only one of the attributes \"v\" and \"regv\""
+            " can be nonempty.";
+      add_static_error(temp.str());
+    }
+    
+    regex = new Regular_Expression(attributes["regv"]);
+  }
+}
+
+Has_Kv_Statement::~Has_Kv_Statement()
+{
+  if (regex)
+    delete regex;
 }
 
 void Has_Kv_Statement::forecast()
