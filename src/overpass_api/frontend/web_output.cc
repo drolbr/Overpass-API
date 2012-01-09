@@ -189,10 +189,10 @@ void Web_Output::write_json_header
 	"    \"timestamp_osm_base\": \""<<timestamp<<"\",\n";
   if (area_timestamp != "")
     cout<<"    \"timestamp_areas_base\": \""<<area_timestamp<<"\",\n";
-  cout<<"    \"copyright\": \"The data included in this document is from www.openstreetmap.org.\n"
-	"      It has there been collected by a large group of contributors. For individual\n"
-	"      attribution of each item please refer to\n"
-	"      http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\"\n"
+  cout<<"    \"copyright\": \"The data included in this document is from www.openstreetmap.org."
+	" It has there been collected by a large group of contributors. For individual"
+	" attribution of each item please refer to"
+	" http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\""
         "  },\n"
         "  \"elements\": [\n\n";
 }

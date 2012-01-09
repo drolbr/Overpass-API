@@ -270,11 +270,11 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Node_Skeleton& skel,
   if (tags != 0 && !tags->empty())
   {
     vector< pair< string, string > >::const_iterator it = tags->begin();
-    cout<<",\n  \"tags\": ["
+    cout<<",\n  \"tags\": {"
            "\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
     for (++it; it != tags->end(); ++it)
       cout<<",\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
-    cout<<"\n  ]";
+    cout<<"\n  }";
   }
   
   cout<<"\n}";
@@ -310,11 +310,11 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Way_Skeleton& skel,
   if (tags != 0 && !tags->empty())
   {
     vector< pair< string, string > >::const_iterator it = tags->begin();
-    cout<<",\n  \"tags\": ["
+    cout<<",\n  \"tags\": {"
            "\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
     for (++it; it != tags->end(); ++it)
       cout<<",\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
-    cout<<"\n  ]";
+    cout<<"\n  }";
   }
   
   cout<<"\n}\n";
@@ -362,11 +362,11 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Relation_Skeleton& ske
   if (tags != 0 && !tags->empty())
   {
     vector< pair< string, string > >::const_iterator it = tags->begin();
-    cout<<",\n  \"tags\": ["
+    cout<<",\n  \"tags\": {"
            "\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
     for (++it; it != tags->end(); ++it)
       cout<<",\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
-    cout<<"\n  ]";
+    cout<<"\n  }";
   }
   
   cout<<"\n}\n";
@@ -390,11 +390,11 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Area_Skeleton& skel,
   if (tags != 0 && !tags->empty())
   {
     vector< pair< string, string > >::const_iterator it = tags->begin();
-    cout<<",\n  \"tags\": ["
+    cout<<",\n  \"tags\": {"
            "\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
     for (++it; it != tags->end(); ++it)
       cout<<",\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
-    cout<<"\n  ]";
+    cout<<"\n  }";
   }
   
   cout<<"\n}\n";
