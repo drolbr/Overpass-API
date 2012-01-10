@@ -1,0 +1,5 @@
+<osm-script>
+  <query into="_" type="node">
+    <has-kv k="key" regv="value"/>
+  </query>
+</osm-script>

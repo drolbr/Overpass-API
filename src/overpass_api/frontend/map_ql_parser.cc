@@ -52,6 +52,17 @@ string get_text_token(Tokenizer_Wrapper& token, Error_Output* error_output,
   return result;
 }
 
+void process_after(Tokenizer_Wrapper& token, Error_Output* error_output, bool after)
+{
+  if (!token.good())
+  {
+    if (error_output)
+      error_output->add_parse_error("Unexpected end of input.", token.line_col().first);
+  }
+  else if (after)
+    ++token;
+}
+
 void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
 		       string target_1, bool after = true)
 {
@@ -64,13 +75,7 @@ void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
   }
   while (token.good() && *token != target_1)
     ++token;
-  if (!token.good())
-  {
-    if (error_output)
-      error_output->add_parse_error("Unexpected end of input.", token.line_col().first);
-  }
-  else if (after)
-    ++token;
+  process_after(token, error_output, after);
 }
 
 void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
@@ -86,13 +91,23 @@ void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
   }
   while (token.good() && *token != target_1 && *token != target_2)
     ++token;
-  if (!token.good())
+  process_after(token, error_output, after);
+}
+
+void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
+		       string target_1, string target_2, string target_3, bool after = true)
+{
+  if (*token != target_1 && *token != target_2 && *token != target_3)
   {
     if (error_output)
-      error_output->add_parse_error("Unexpected end of input.", token.line_col().first);
-  }
-  else if (after)
+      error_output->add_parse_error
+      (string("'") + target_1 + "', '" + target_2 + "', or '" + target_3 + "'  expected - '"
+	      + *token + "' found.", token.line_col().first);
     ++token;
+  }
+  while (token.good() && *token != target_1 && *token != target_2 && *token != target_3)
+    ++token;
+  process_after(token, error_output, after);
 }
 
 //-----------------------------------------------------------------------------
@@ -193,11 +208,11 @@ TStatement* create_query_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_has_kv_statement(typename TStatement::Factory& stmt_factory,
-				    string key, string value, uint line_nr)
+				    string key, string value, bool regex, uint line_nr)
 {
   map< string, string > attr;
   attr["k"] = key;
-  attr["v"] = value;
+  attr[regex ? "regv" : "v"] = value;
   return stmt_factory.create_statement("has-kv", line_nr, attr);
 }
 
@@ -483,7 +498,10 @@ TStatement* create_query_substatement
 {
   if (clause.statement == "has-kv")
     return create_has_kv_statement< TStatement >
-        (stmt_factory, clause.attributes[0], clause.attributes[1], clause.line_col.first);
+        (stmt_factory, clause.attributes[0], clause.attributes[1], false, clause.line_col.first);
+  else if (clause.statement == "has-kv_regex")
+    return create_has_kv_statement< TStatement >
+        (stmt_factory, clause.attributes[0], clause.attributes[1], true, clause.line_col.first);
   else if (clause.statement == "around")
     return create_around_statement< TStatement >
         (stmt_factory, clause.attributes[1], clause.attributes[0], into, clause.line_col.first);
@@ -525,21 +543,34 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
     if (*token == "[")
     {
       ++token;
-      Statement_Text clause("has-kv", token.line_col());
-      clause.attributes.push_back(get_text_token(token, error_output, "Key"));
-      clear_until_after(token, error_output, "=", "]", false);
+      string key = get_text_token(token, error_output, "Key");
+      clear_until_after(token, error_output, ":", "=", "]", false);
       if (*token == "]")
       {
+	Statement_Text clause("has-kv", token.line_col());
+	clause.attributes.push_back(key);
 	clause.attributes.push_back("");
 	++token;
+	clauses.push_back(clause);
+      }
+      else if (*token == "=")
+      {
+	++token;
+	Statement_Text clause("has-kv", token.line_col());
+	clause.attributes.push_back(key);
+	clause.attributes.push_back(get_text_token(token, error_output, "Value"));
+	clear_until_after(token, error_output, "]");
+	clauses.push_back(clause);
       }
       else
       {
 	++token;
+	Statement_Text clause("has-kv_regex", token.line_col());
+	clause.attributes.push_back(key);
 	clause.attributes.push_back(get_text_token(token, error_output, "Value"));
 	clear_until_after(token, error_output, "]");
+	clauses.push_back(clause);
       }
-      clauses.push_back(clause);
     }
     else
     {
@@ -647,7 +678,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
   }
   else if (clauses.size() == 1 && from == "")
   {
-    if (clauses.front().statement == "has-kv")
+    if (clauses.front().statement == "has-kv" || clauses.front().statement == "has-kv_regex")
     {
       statement = create_query_statement< TStatement >
           (stmt_factory, type, into, query_line_col.first);
