@@ -83,12 +83,19 @@ echo -e "\
           map.setCenter (lonLat, zoom);\n\
 \n\
           //Initialise the vector layer using OpenLayers.Format.OSM\n\
+          var styleMap = new OpenLayers.StyleMap({\n\
+              strokeColor: \"blue\",\n\
+              strokeWidth: 10,\n\
+              pointRadius: 20,\n\
+              fillColor: \"blue\"\n\
+          });\n\
           var layer = new OpenLayers.Layer.Vector(\"Polygon\", {\n\
               strategies: [new OpenLayers.Strategy.Fixed()],\n\
               protocol: new OpenLayers.Protocol.HTTP({\n\
                   url: \"interpreter?data=`echo "$DATA" | ../bin/osm3s_query --dump-compact-map-ql --concise | ../bin/tocgi `\",\n\
                   format: new OpenLayers.Format.OSM()\n\
               }),\n\
+              styleMap: styleMap,\n\
               projection: new OpenLayers.Projection(\"EPSG:4326\")\n\
           });\n\
 \n\
