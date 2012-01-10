@@ -10,6 +10,7 @@
 using namespace std;
 
 string escape_xml(const string& s);
+string escape_cstr(const string& s);
 
 Osm_Backend_Callback* get_verbatim_callback();
 Osm_Backend_Callback* get_quiet_callback();

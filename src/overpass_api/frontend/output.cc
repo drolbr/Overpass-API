@@ -26,6 +26,30 @@ string escape_xml(const string& s)
   return result;
 }
 
+string escape_cstr(const string& s)
+{
+  string result;
+  result.reserve(s.length()*2);
+  for (string::size_type i(0); i < s.size(); ++i)
+  {
+    if (s[i] == '\"')
+      result += "\\\"";
+    else if (s[i] == '\\')
+      result += "\\\\";
+    else if (s[i] == '\n')
+      result += "\\n";
+    else if (s[i] == '\t')
+      result += "\\t";
+    else if (s[i] == '\r')
+      result += "\\r";
+    else if ((unsigned char)s[i] < 32)
+      result += '?';
+    else
+      result += s[i];
+  }
+  return result;
+}
+
 class Verbose_Osm_Backend_Callback : public Osm_Backend_Callback
 {
   public:

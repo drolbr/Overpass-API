@@ -243,7 +243,7 @@ void print_meta_json(const OSM_Element_Metadata_Skeleton& meta,
 	",\n  \"changeset\": "<<meta.changeset;
   map< uint32, string >::const_iterator it = users.find(meta.user_id);
   if (it != users.end())
-    cout<<",\n  \"user\": \""<<escape_xml(it->second)<<"\"";
+    cout<<",\n  \"user\": \""<<escape_cstr(it->second)<<"\"";
   cout<<",\n  \"uid\": "<<meta.user_id;
 }
 
@@ -271,9 +271,9 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Node_Skeleton& skel,
   {
     vector< pair< string, string > >::const_iterator it = tags->begin();
     cout<<",\n  \"tags\": {"
-           "\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
+           "\n    \""<<escape_cstr(it->first)<<"\": \""<<escape_cstr(it->second)<<"\"";
     for (++it; it != tags->end(); ++it)
-      cout<<",\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
+      cout<<",\n    \""<<escape_cstr(it->first)<<"\": \""<<escape_cstr(it->second)<<"\"";
     cout<<"\n  }";
   }
   
@@ -311,9 +311,9 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Way_Skeleton& skel,
   {
     vector< pair< string, string > >::const_iterator it = tags->begin();
     cout<<",\n  \"tags\": {"
-           "\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
+           "\n    \""<<escape_cstr(it->first)<<"\": \""<<escape_cstr(it->second)<<"\"";
     for (++it; it != tags->end(); ++it)
-      cout<<",\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
+      cout<<",\n    \""<<escape_cstr(it->first)<<"\": \""<<escape_cstr(it->second)<<"\"";
     cout<<"\n  }";
   }
   
@@ -345,7 +345,7 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Relation_Skeleton& ske
            "\n    {"
 	   "\n      \"type\": \""<<MEMBER_TYPE[it->type]<<
 	   "\",\n      \"ref\": "<<it->ref<<
-	   ",\n      \"role\": \""<<escape_xml(rit != roles.end() ? rit->second : "???")<<
+	   ",\n      \"role\": \""<<escape_cstr(rit != roles.end() ? rit->second : "???")<<
 	   "\"\n    }";
     for (++it; it != skel.members.end(); ++it)
     {
@@ -353,7 +353,7 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Relation_Skeleton& ske
       cout<<",\n    {"
             "\n      \"type\": \""<<MEMBER_TYPE[it->type]<<
             "\",\n      \"ref\": "<<it->ref<<
-            ",\n      \"role\": \""<<escape_xml(rit != roles.end() ? rit->second : "???")<<
+            ",\n      \"role\": \""<<escape_cstr(rit != roles.end() ? rit->second : "???")<<
             "\"\n    }";
     }
     cout<<"\n  ]";
@@ -363,9 +363,9 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Relation_Skeleton& ske
   {
     vector< pair< string, string > >::const_iterator it = tags->begin();
     cout<<",\n  \"tags\": {"
-           "\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
+           "\n    \""<<escape_cstr(it->first)<<"\": \""<<escape_cstr(it->second)<<"\"";
     for (++it; it != tags->end(); ++it)
-      cout<<",\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
+      cout<<",\n    \""<<escape_cstr(it->first)<<"\": \""<<escape_cstr(it->second)<<"\"";
     cout<<"\n  }";
   }
   
@@ -391,9 +391,9 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Area_Skeleton& skel,
   {
     vector< pair< string, string > >::const_iterator it = tags->begin();
     cout<<",\n  \"tags\": {"
-           "\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
+           "\n    \""<<escape_cstr(it->first)<<"\": \""<<escape_cstr(it->second)<<"\"";
     for (++it; it != tags->end(); ++it)
-      cout<<",\n    \""<<escape_xml(it->first)<<"\": \""<<escape_xml(it->second)<<"\"";
+      cout<<",\n    \""<<escape_cstr(it->first)<<"\": \""<<escape_cstr(it->second)<<"\"";
     cout<<"\n  }";
   }
   
