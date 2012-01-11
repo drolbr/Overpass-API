@@ -18,6 +18,8 @@ class Bbox_Query_Statement : public Statement
     virtual void execute(Resource_Manager& rman);
     virtual ~Bbox_Query_Statement();
     
+    static Generic_Statement_Maker< Bbox_Query_Statement > statement_maker;
+    
     virtual Query_Constraint* get_query_constraint();
     
     vector< pair< uint32, uint32 > >* calc_ranges()

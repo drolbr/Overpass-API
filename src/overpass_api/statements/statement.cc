@@ -4,23 +4,14 @@
 #include <string>
 
 #include "statement.h"
-#include "area_query.h"
-#include "around.h"
-#include "bbox_query.h"
-#include "coord_query.h"
-#include "foreach.h"
-#include "id_query.h"
-#include "item.h"
-#include "make_area.h"
-#include "newer.h"
-#include "osm_script.h"
-#include "print.h"
-#include "query.h"
-#include "recurse.h"
-#include "union.h"
-#include "user.h"
 
 using namespace std;
+
+map< string, Statement::Statement_Maker* >& Statement::maker_by_name()
+{
+  static map< string, Statement::Statement_Maker* > makers;
+  return makers;
+}
 
 void Statement::eval_attributes_array(string element, map< string, string >& attributes,
 				      const map< string, string >& input)
@@ -94,45 +85,12 @@ Statement* Statement::Factory::create_statement
     (string element, int line_number, const map< string, string >& attributes)
 {
   Statement* statement = 0;
+
+  map< string, Statement::Statement_Maker* >::iterator maker_it =
+      Statement::maker_by_name().find(element);
   
-  if (element == "area-query")
-    statement = new Area_Query_Statement(line_number, attributes);
-  else if (element == "around")
-    statement = new Around_Statement(line_number, attributes);
-  else if (element == "bbox-query")
-    statement = new Bbox_Query_Statement(line_number, attributes);
-/*  else if (element == "conflict")
-    statement = new Conflict_Statement(line_number);*/
-  else if (element == "coord-query")
-    statement = new Coord_Query_Statement(line_number, attributes);
-/*  else if (element == "detect-odd-nodes")
-    statement = new Detect_Odd_Nodes_Statement();*/
-  else if (element == "foreach")
-    statement = new Foreach_Statement(line_number, attributes);
-  else if (element == "has-kv")
-    statement = new Has_Kv_Statement(line_number, attributes);
-  else if (element == "id-query")
-    statement = new Id_Query_Statement(line_number, attributes);
-  else if (element == "item")
-    statement = new Item_Statement(line_number, attributes);
-  else if (element == "make-area")
-    statement = new Make_Area_Statement(line_number, attributes);
-  else if (element == "newer")
-    statement = new Newer_Statement(line_number, attributes);
-  else if (element == "osm-script")
-    statement = new Osm_Script_Statement(line_number, attributes);
-  else if (element == "print")
-    statement = new Print_Statement(line_number, attributes);
-  else if (element == "query")
-    statement = new Query_Statement(line_number, attributes);
-  else if (element == "recurse")
-    statement = new Recurse_Statement(line_number, attributes);
-/*  else if (element == "report")
-    statement = new Report_Statement();*/
-  else if (element == "union")
-    statement = new Union_Statement(line_number, attributes);
-  else if (element == "user")
-    statement = new User_Statement(line_number, attributes);
+  if (maker_it != Statement::maker_by_name().end())
+    statement = maker_it->second->create_statement(line_number, attributes);
   
   if (statement)
     created_statements.push_back(statement);
@@ -148,16 +106,6 @@ Statement* Statement::Factory::create_statement
 }
 
 Error_Output* Statement::error_output = 0;
-
-void Statement::set_output_handle(Output_Handle* output)
-{
-  output_handle = output;
-}
-
-Output_Handle* Statement::get_output_handle()
-{
-  return output_handle;
-}
 
 void Statement::add_static_error(string error)
 {

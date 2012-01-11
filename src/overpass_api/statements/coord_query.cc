@@ -18,6 +18,8 @@ using namespace std;
 
 bool Coord_Query_Statement::is_used_ = false;
 
+Generic_Statement_Maker< Coord_Query_Statement > Coord_Query_Statement::statement_maker("coord-query");
+
 Coord_Query_Statement::Coord_Query_Statement
     (int line_number_, const map< string, string >& input_attributes)
     : Statement(line_number_)

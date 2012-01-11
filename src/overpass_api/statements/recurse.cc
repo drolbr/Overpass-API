@@ -21,6 +21,8 @@ const unsigned int RECURSE_WAY_RELATION = 6;
 const unsigned int RECURSE_NODE_RELATION = 7;
 const unsigned int RECURSE_NODE_WAY = 8;
 
+Generic_Statement_Maker< Recurse_Statement > Recurse_Statement::statement_maker("recurse");
+
 Recurse_Statement::Recurse_Statement
     (int line_number_, const map< string, string >& input_attributes)
     : Statement(line_number_)

@@ -17,7 +17,9 @@ class Coord_Query_Statement : public Statement
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     virtual ~Coord_Query_Statement() {}
-        
+    
+    static Generic_Statement_Maker< Coord_Query_Statement > statement_maker;
+    
     static int check_segment
         (uint32 a_lat, int32 a_lon, uint32 b_lat, int32 b_lon,
          uint32 coord_lat, int32 coord_lon);

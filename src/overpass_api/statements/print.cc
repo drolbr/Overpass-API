@@ -17,17 +17,6 @@
 
 using namespace std;
 
-const unsigned int PRINT_IDS = 1;
-const unsigned int PRINT_COORDS = 2;
-const unsigned int PRINT_NDS = 4;
-const unsigned int PRINT_MEMBERS = 8;
-const unsigned int PRINT_TAGS = 16;
-const unsigned int PRINT_VERSION = 32;
-const unsigned int PRINT_META = 64;
-
-const unsigned int ORDER_BY_ID = 1;
-const unsigned int ORDER_BY_QUADTILE = 2;
-
 const unsigned int NODE_FLUSH_SIZE = 1024*1024;
 const unsigned int WAY_FLUSH_SIZE = 512*1024;
 const unsigned int RELATION_FLUSH_SIZE = 512*1024;
@@ -44,10 +33,13 @@ Print_Target::Print_Target(uint32 mode_, Transaction& transaction) : mode(mode_)
     roles[it.index().val()] = it.object().val();
 }
 
+Generic_Statement_Maker< Print_Statement > Print_Statement::statement_maker("print");
 
 Print_Statement::Print_Statement
     (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_), limit(numeric_limits< unsigned int >::max())
+    : Statement(line_number_),
+      mode(0), order(order_by_id), limit(numeric_limits< unsigned int >::max()),
+      output_handle(0)
 {
   map< string, string > attributes;
   
@@ -61,13 +53,18 @@ Print_Statement::Print_Statement
   input = attributes["from"];
   
   if (attributes["mode"] == "ids_only")
-    mode = PRINT_IDS;
+    mode = Print_Target::PRINT_IDS;
   else if (attributes["mode"] == "skeleton")
-    mode = PRINT_IDS|PRINT_COORDS|PRINT_NDS|PRINT_MEMBERS;
+    mode = Print_Target::PRINT_IDS
+        |Print_Target::PRINT_COORDS|Print_Target::PRINT_NDS|Print_Target::PRINT_MEMBERS;
   else if (attributes["mode"] == "body")
-    mode = PRINT_IDS|PRINT_COORDS|PRINT_NDS|PRINT_MEMBERS|PRINT_TAGS;
+    mode = Print_Target::PRINT_IDS
+        |Print_Target::PRINT_COORDS|Print_Target::PRINT_NDS|Print_Target::PRINT_MEMBERS
+	|Print_Target::PRINT_TAGS;
   else if (attributes["mode"] == "meta")
-    mode = PRINT_IDS|PRINT_COORDS|PRINT_NDS|PRINT_MEMBERS|PRINT_TAGS|PRINT_VERSION|PRINT_META;
+    mode = Print_Target::PRINT_IDS
+        |Print_Target::PRINT_COORDS|Print_Target::PRINT_NDS|Print_Target::PRINT_MEMBERS
+	|Print_Target::PRINT_TAGS|Print_Target::PRINT_VERSION|Print_Target::PRINT_META;
   else
   {
     mode = 0;
@@ -77,12 +74,11 @@ Print_Statement::Print_Statement
     add_static_error(temp.str());
   }
   if (attributes["order"] == "id")
-    order = ORDER_BY_ID;
+    order = order_by_id;
   else if (attributes["order"] == "quadtile")
-    order = ORDER_BY_QUADTILE;
+    order = order_by_quadtile;
   else
   {
-    order = 0;
     ostringstream temp;
     temp<<"For the attribute \"order\" of the element \"print\""
         <<" the only allowed values are \"id\" or \"quadtile\".";
@@ -92,43 +88,9 @@ Print_Statement::Print_Statement
     limit = atoll(attributes["limit"].c_str());
 }
 
-void Print_Statement::forecast()
-{
-/*  const Set_Forecast& sf_in(declare_read_set(input));
-    
-  if (mode == PRINT_IDS_ONLY)
-    declare_used_time(1 + sf_in.node_count/100 + sf_in.way_count/100 + sf_in.relation_count/100
-	+ sf_in.area_count/20);
-  else if (mode == PRINT_SKELETON)
-    declare_used_time(1 + sf_in.node_count/50 + sf_in.way_count/5 + sf_in.relation_count/5
-	+ sf_in.area_count/5);
-  else if (mode == PRINT_BODY)
-    declare_used_time(10 + sf_in.node_count + sf_in.way_count + sf_in.relation_count
-	+ sf_in.area_count);
-  finish_statement_forecast();
-    
-  display_full();
-  display_state();*/
-}
 
-template< class TIndex >
-void formulate_range_query
-  (set< pair< Tag_Index_Local, Tag_Index_Local > >& range_set,
-   const set< TIndex >& coarse_indices)
-{
-  for (typename set< TIndex >::const_iterator
-    it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
-  {
-    Tag_Index_Local lower, upper;
-    lower.index = it->val();
-    lower.key = "";
-    lower.value = "";
-    upper.index = it->val() + 1;
-    upper.key = "";
-    upper.value = "";
-    range_set.insert(make_pair(lower, upper));
-  }
-}
+void Print_Statement::forecast() {}
+
 
 template< class TIndex, class TObject >
 void generate_ids_by_coarse
@@ -145,6 +107,7 @@ void generate_ids_by_coarse
       ids_by_coarse[it->first.val() & 0x7fffff00].push_back(it2->id);
   }
 }
+
 
 void collect_tags
   (map< uint32, vector< pair< string, string > > >& tags_by_id,
@@ -163,6 +126,7 @@ void collect_tags
     ++tag_it;
   }
 }
+
 
 void collect_tags_framed
   (map< uint32, vector< pair< string, string > > >& tags_by_id,
@@ -185,6 +149,7 @@ void collect_tags_framed
   }
 }
 
+
 template< class TIndex, class TObject >
 void quadtile
     (const map< TIndex, vector< TObject > >& items, const Print_Target& target,
@@ -205,6 +170,7 @@ void quadtile
     ++item_it;
   }
 }
+
 
 template< class TIndex, class TObject >
 void Print_Statement::tags_quadtile
@@ -267,7 +233,8 @@ void Print_Statement::tags_quadtile
   }
   stopwatch.add(stopwatch_account, items_db.read_count());
   stopwatch.stop(stopwatch_account);
-};
+}
+
 
 template< class TComp >
 struct Skeleton_Comparator_By_Id {
@@ -302,7 +269,8 @@ void by_id
       return;
     target.print_item(items_by_id[i].second, *(items_by_id[i].first));
   }
-};
+}
+
 
 template< class TIndex, class TObject >
 void collect_metadata(set< OSM_Element_Metadata_Skeleton >& metadata,
@@ -407,7 +375,8 @@ void Print_Statement::tags_by_id
   }
   stopwatch.add(stopwatch_account, items_db.read_count());
   stopwatch.stop(stopwatch_account);
-};
+}
+
 
 void Print_Statement::execute(Resource_Manager& rman)
 {
@@ -419,75 +388,82 @@ void Print_Statement::execute(Resource_Manager& rman)
   uint32 element_count = 0;
   if (mit == rman.sets().end())
     return;
-  
-  if (!get_output_handle())
+
+  Output_Handle output_handle("xml");
+  Print_Target* target = 0;
+  if (this->output_handle)
+    target = &this->output_handle->get_print_target(mode, *rman.get_transaction());
+  else
+    target = &output_handle.get_print_target(mode, *rman.get_transaction());
+
+  if (mode & Print_Target::PRINT_TAGS)
   {
-    own_output_handle = true;
-    set_output_handle(new Output_Handle("xml"));
-  }
-  Print_Target& target = get_output_handle()->get_print_target(mode, *rman.get_transaction());
-  if (mode & PRINT_TAGS)
-  {
-    if (order == ORDER_BY_ID)
+    if (order == order_by_id)
     {
       tags_by_id(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
-		 NODE_FLUSH_SIZE, target, Stopwatch::NODE_TAGS_LOCAL, rman,
+		 NODE_FLUSH_SIZE, *target, Stopwatch::NODE_TAGS_LOCAL, rman,
 		 *rman.get_transaction(),
-		 (mode & PRINT_META) ? meta_settings().NODES_META : 0, element_count);
+		 (mode & Print_Target::PRINT_META) ?
+		     meta_settings().NODES_META : 0, element_count);
       tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
-		 WAY_FLUSH_SIZE, target, Stopwatch::WAY_TAGS_LOCAL, rman,
+		 WAY_FLUSH_SIZE, *target, Stopwatch::WAY_TAGS_LOCAL, rman,
 		 *rman.get_transaction(),
-		 (mode & PRINT_META) ? meta_settings().WAYS_META : 0, element_count);
+		 (mode & Print_Target::PRINT_META) ?
+		     meta_settings().WAYS_META : 0, element_count);
       tags_by_id(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
-		 RELATION_FLUSH_SIZE, target, Stopwatch::RELATION_TAGS_LOCAL, rman,
+		 RELATION_FLUSH_SIZE, *target, Stopwatch::RELATION_TAGS_LOCAL, rman,
 		 *rman.get_transaction(),
-		 (mode & PRINT_META) ? meta_settings().RELATIONS_META : 0, element_count);
+		 (mode & Print_Target::PRINT_META) ?
+		     meta_settings().RELATIONS_META : 0, element_count);
       if (rman.get_area_transaction())
       {
 	tags_by_id(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
-		   AREA_FLUSH_SIZE, target, Stopwatch::AREA_TAGS_LOCAL, rman,
+		   AREA_FLUSH_SIZE, *target, Stopwatch::AREA_TAGS_LOCAL, rman,
 		   *rman.get_area_transaction(), 0, element_count);
       }
     }
     else
     {
       tags_quadtile(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
-		    target, Stopwatch::NODE_TAGS_LOCAL, rman,
+		    *target, Stopwatch::NODE_TAGS_LOCAL, rman,
 		    *rman.get_transaction(),
-		    (mode & PRINT_META) ? meta_settings().NODES_META : 0, element_count);
+		    (mode & Print_Target::PRINT_META) ?
+		        meta_settings().NODES_META : 0, element_count);
       tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
-		    target, Stopwatch::WAY_TAGS_LOCAL, rman,
+		    *target, Stopwatch::WAY_TAGS_LOCAL, rman,
 		    *rman.get_transaction(),
-		    (mode & PRINT_META) ? meta_settings().WAYS_META : 0, element_count);
+		    (mode & Print_Target::PRINT_META) ?
+		        meta_settings().WAYS_META : 0, element_count);
       tags_quadtile(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
-		    target, Stopwatch::RELATION_TAGS_LOCAL, rman,
+		    *target, Stopwatch::RELATION_TAGS_LOCAL, rman,
 		    *rman.get_transaction(),
-		    (mode & PRINT_META) ? meta_settings().RELATIONS_META : 0, element_count);
+		    (mode & Print_Target::PRINT_META) ?
+		        meta_settings().RELATIONS_META : 0, element_count);
       if (rman.get_area_transaction())
       {
         tags_quadtile(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
-		      target, Stopwatch::AREA_TAGS_LOCAL, rman,
+		      *target, Stopwatch::AREA_TAGS_LOCAL, rman,
 		      *rman.get_area_transaction(), 0, element_count);
       }
     }
   }
   else
   {
-    if (order == ORDER_BY_ID)
+    if (order == order_by_id)
     {
-      by_id(mit->second.nodes, target, *rman.get_transaction(), limit, element_count);
-      by_id(mit->second.ways, target, *rman.get_transaction(), limit, element_count);
-      by_id(mit->second.relations, target, *rman.get_transaction(), limit, element_count);
+      by_id(mit->second.nodes, *target, *rman.get_transaction(), limit, element_count);
+      by_id(mit->second.ways, *target, *rman.get_transaction(), limit, element_count);
+      by_id(mit->second.relations, *target, *rman.get_transaction(), limit, element_count);
       if (rman.get_area_transaction())
-	by_id(mit->second.areas, target, *rman.get_area_transaction(), limit, element_count);
+	by_id(mit->second.areas, *target, *rman.get_area_transaction(), limit, element_count);
     }
     else
     {
-      quadtile(mit->second.nodes, target, *rman.get_transaction(), limit, element_count);
-      quadtile(mit->second.ways, target, *rman.get_transaction(), limit, element_count);
-      quadtile(mit->second.relations, target, *rman.get_transaction(), limit, element_count);
+      quadtile(mit->second.nodes, *target, *rman.get_transaction(), limit, element_count);
+      quadtile(mit->second.ways, *target, *rman.get_transaction(), limit, element_count);
+      quadtile(mit->second.relations, *target, *rman.get_transaction(), limit, element_count);
       if (rman.get_area_transaction())
-	quadtile(mit->second.areas, target, *rman.get_area_transaction(), limit, element_count);
+	quadtile(mit->second.areas, *target, *rman.get_area_transaction(), limit, element_count);
     }
   }
   
@@ -496,8 +472,5 @@ void Print_Statement::execute(Resource_Manager& rman)
   rman.health_check(*this);
 }
 
-Print_Statement::~Print_Statement()
-{
-  if (own_output_handle)
-    delete get_output_handle();
-}
+
+Print_Statement::~Print_Statement() {}

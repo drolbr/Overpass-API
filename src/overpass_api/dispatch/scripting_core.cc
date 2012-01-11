@@ -7,6 +7,7 @@
 #include "../statements/area_query.h"
 #include "../statements/coord_query.h"
 #include "../statements/make_area.h"
+#include "../statements/osm_script.h"
 #include "../statements/statement.h"
 #include "../statements/statement_dump.h"
 #include "../../expat/expat_justparse_interface.h"
@@ -379,6 +380,10 @@ bool parse_and_validate
       {
 	stmt_factory_global = &stmt_factory;
         xml_parser.parse(xml_raw, start< Statement >, end< Statement >);
+	Osm_Script_Statement* root =
+	    dynamic_cast< Osm_Script_Statement* >(get_statement_stack()->front());
+	if (root)
+	  root->set_factory(&stmt_factory);
 	stmt_factory_global = 0;
       }
     }
@@ -401,7 +406,13 @@ bool parse_and_validate
   else
   {
     if (debug_level == parser_execute)
+    {
       parse_and_validate_map_ql(stmt_factory, xml_raw, error_output);
+      Osm_Script_Statement* root =
+          dynamic_cast< Osm_Script_Statement* >(get_statement_stack()->front());
+      if (root)
+	root->set_factory(&stmt_factory);
+    }
     else if (debug_level == parser_dump_xml)
       parse_and_dump_xml_from_map_ql(xml_raw, error_output);
     else if (debug_level == parser_dump_compact_map_ql)

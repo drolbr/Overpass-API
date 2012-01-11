@@ -20,7 +20,7 @@ class Foreach_Statement : public Statement
     virtual void execute(Resource_Manager& rman);
     virtual ~Foreach_Statement() {}
     
-    virtual void set_output_handle(Output_Handle* output);
+    static Generic_Statement_Maker< Foreach_Statement > statement_maker;
     
   private:
     string input, output;

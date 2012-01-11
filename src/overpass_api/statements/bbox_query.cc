@@ -394,6 +394,8 @@ const unsigned int QUERY_WAY = 2;
 const unsigned int QUERY_RELATION = 3;
 // const unsigned int QUERY_AREA = 4;
 
+Generic_Statement_Maker< Bbox_Query_Statement > Bbox_Query_Statement::statement_maker("bbox-query");
+
 Bbox_Query_Statement::Bbox_Query_Statement
     (int line_number_, const map< string, string >& input_attributes)
     : Statement(line_number_)

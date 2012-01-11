@@ -18,6 +18,8 @@ class Id_Query_Statement : public Statement
     virtual void execute(Resource_Manager& rman);
     virtual ~Id_Query_Statement() {}
     
+    static Generic_Statement_Maker< Id_Query_Statement > statement_maker;
+    
   private:
     string output;
     int type;

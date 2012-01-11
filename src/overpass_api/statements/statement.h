@@ -35,8 +35,6 @@ class Query_Constraint
     virtual ~Query_Constraint() {}
 };
 
-class Output_Handle;
-
 /**
  * The base class for all statements
  */
@@ -55,7 +53,17 @@ class Statement
       Error_Output* error_output_;
     };
     
-    Statement(int line_number_) : line_number(line_number_), progress(0), output_handle(0) {}
+    class Statement_Maker
+    {
+      public:
+	virtual Statement* create_statement
+	    (int line_number, const map< string, string >& attributes) = 0;
+	virtual ~Statement_Maker() {}
+    };
+    
+    static map< string, Statement_Maker* >& maker_by_name();
+    
+    Statement(int line_number_) : line_number(line_number_), progress(0) {}
     
     virtual void add_statement(Statement* statement, string text);
     virtual void add_final_text(string text);
@@ -90,9 +98,6 @@ class Statement
 
     void runtime_remark(string error) const;
 
-    virtual void set_output_handle(Output_Handle* output);
-    virtual Output_Handle* get_output_handle();
-
     const static int NODE = 1;
     const static int WAY = 2;
     const static int RELATION = 3;
@@ -105,7 +110,6 @@ class Statement
     int line_number;
     int startpos, endpos, tagendpos;
     int progress;
-    Output_Handle* output_handle;
     
   protected:
     void eval_attributes_array
@@ -120,6 +124,20 @@ class Statement
     void set_progress(int progress_) { progress = progress_; }
 };
 
+
 map< string, string > convert_c_pairs(const char** attr);
+
+
+template< class TStatement >
+class Generic_Statement_Maker : public Statement::Statement_Maker
+{
+  public:
+    virtual Statement* create_statement
+    (int line_number, const map< string, string >& attributes)
+    { return new TStatement(line_number, attributes); }
+    
+    Generic_Statement_Maker(const string& name) { Statement::maker_by_name()[name] = this; }
+    virtual ~Generic_Statement_Maker() {}
+};
 
 #endif

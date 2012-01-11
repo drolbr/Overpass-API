@@ -48,6 +48,8 @@ void Area_Constraint::filter(Resource_Manager& rman, Set& into)
 
 bool Area_Query_Statement::is_used_ = false;
 
+Generic_Statement_Maker< Area_Query_Statement > Area_Query_Statement::statement_maker("area");
+
 Area_Query_Statement::Area_Query_Statement
     (int line_number_, const map< string, string >& input_attributes)
     : Statement(line_number_)

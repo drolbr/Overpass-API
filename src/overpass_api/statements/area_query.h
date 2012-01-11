@@ -17,7 +17,9 @@ class Area_Query_Statement : public Statement
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     virtual ~Area_Query_Statement();
-        
+    
+    static Generic_Statement_Maker< Area_Query_Statement > statement_maker;
+    
     virtual Query_Constraint* get_query_constraint();
     
     void get_ranges

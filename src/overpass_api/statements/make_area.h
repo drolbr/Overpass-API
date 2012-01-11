@@ -27,6 +27,8 @@ class Make_Area_Statement : public Statement
     virtual void execute(Resource_Manager& rman);
     virtual ~Make_Area_Statement() {}
     
+    static Generic_Statement_Maker< Make_Area_Statement > statement_maker;
+    
     static bool is_used() { return is_used_; }
     
   private:

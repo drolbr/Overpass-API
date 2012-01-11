@@ -18,7 +18,9 @@ class Newer_Statement : public Statement
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     virtual ~Newer_Statement();
-
+    
+    static Generic_Statement_Maker< Newer_Statement > statement_maker;
+    
     virtual Query_Constraint* get_query_constraint();
     
     uint64 get_timestamp() const { return than_timestamp; }

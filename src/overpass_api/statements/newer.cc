@@ -58,6 +58,8 @@ void Newer_Constraint::filter(Resource_Manager& rman, Set& into)
 
 //-----------------------------------------------------------------------------
 
+Generic_Statement_Maker< Newer_Statement > Newer_Statement::statement_maker("newer");
+
 Newer_Statement::Newer_Statement
     (int line_number_, const map< string, string >& input_attributes)
     : Statement(line_number_)

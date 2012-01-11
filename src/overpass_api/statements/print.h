@@ -44,6 +44,8 @@ class Print_Target
 };
 
 
+class Output_Handle;
+
 class Print_Statement : public Statement
 {
   public:
@@ -53,13 +55,17 @@ class Print_Statement : public Statement
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     virtual ~Print_Statement();
+
+    static Generic_Statement_Maker< Print_Statement > statement_maker;
+    
+    void set_output_handle(Output_Handle* output_handle_) { output_handle = output_handle_; }
     
   private:
     string input;
     unsigned int mode;
-    unsigned int order;
+    enum { order_by_id, order_by_quadtile } order;
     unsigned int limit;
-    bool own_output_handle;
+    Output_Handle* output_handle;
 
     template< class TIndex, class TObject >
     void tags_quadtile
@@ -77,9 +83,25 @@ class Print_Statement : public Statement
        const File_Properties* meta_file_prop = 0, uint32& element_count = 0);
 };
 
+//-----------------------------------------------------------------------------
+
 template< class TIndex >
 void formulate_range_query
     (set< pair< Tag_Index_Local, Tag_Index_Local > >& range_set,
-     const set< TIndex >& coarse_indices);
+     const set< TIndex >& coarse_indices)
+{
+  for (typename set< TIndex >::const_iterator
+    it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
+  {
+    Tag_Index_Local lower, upper;
+    lower.index = it->val();
+    lower.key = "";
+    lower.value = "";
+    upper.index = it->val() + 1;
+    upper.key = "";
+    upper.value = "";
+    range_set.insert(make_pair(lower, upper));
+  }
+}
 
 #endif

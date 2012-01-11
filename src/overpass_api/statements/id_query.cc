@@ -7,6 +7,8 @@
 
 using namespace std;
 
+Generic_Statement_Maker< Id_Query_Statement > Id_Query_Statement::statement_maker("id-query");
+
 Id_Query_Statement::Id_Query_Statement
     (int line_number_, const map< string, string >& input_attributes)
     : Statement(line_number_)

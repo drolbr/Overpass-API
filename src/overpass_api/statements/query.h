@@ -26,6 +26,8 @@ class Query_Statement : public Statement
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     
+    static Generic_Statement_Maker< Query_Statement > statement_maker;
+    
   private:
     string output;
     int type;
@@ -59,6 +61,8 @@ class Has_Kv_Statement : public Statement
     virtual void forecast();
     virtual void execute(Resource_Manager& rman) {}
     virtual ~Has_Kv_Statement();
+    
+    static Generic_Statement_Maker< Has_Kv_Statement > statement_maker;
     
     string get_key() { return key; }
     string get_value() { return value; }

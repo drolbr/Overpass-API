@@ -54,6 +54,8 @@ void Around_Constraint::filter(Resource_Manager& rman, Set& into)
 
 //-----------------------------------------------------------------------------
 
+Generic_Statement_Maker< Around_Statement > Around_Statement::statement_maker("around");
+
 Around_Statement::Around_Statement
     (int line_number_, const map< string, string >& input_attributes)
     : Statement(line_number_)

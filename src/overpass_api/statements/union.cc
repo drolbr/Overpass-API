@@ -10,6 +10,8 @@
 
 using namespace std;
 
+Generic_Statement_Maker< Union_Statement > Union_Statement::statement_maker("union");
+
 Union_Statement::Union_Statement
     (int line_number_, const map< string, string >& input_attributes)
     : Statement(line_number_)
@@ -33,44 +35,8 @@ void Union_Statement::add_statement(Statement* statement, string text)
     substatement_error(get_name(), statement);
 }
 
-void Union_Statement::set_output_handle(Output_Handle* output)
-{
-  Statement::set_output_handle(output);
-  
-  for (vector< Statement* >::iterator it = substatements.begin();
-      it != substatements.end(); ++it)
-    (*it)->set_output_handle(output);
-}
-
 void Union_Statement::forecast()
 {
-/*  int node_count(0);
-  int way_count(0);
-  int relation_count(0);
-  int area_count(0);
-  
-  for (vector< Statement* >::iterator it(substatements.begin());
-       it != substatements.end(); ++it)
-  {
-    (*it)->forecast(mysql);
-    const Set_Forecast& sf_in(declare_read_set((*it)->get_result_name()));
-    node_count += sf_in.node_count;
-    way_count += sf_in.way_count;
-    relation_count += sf_in.relation_count;
-    area_count += sf_in.area_count;
-  }
-  
-  Set_Forecast& sf_out(declare_write_set(output));
-  
-  sf_out.node_count = node_count;
-  sf_out.way_count = way_count;
-  sf_out.relation_count = relation_count;
-  sf_out.area_count = area_count;
-  declare_used_time(0);
-  finish_statement_forecast();
-    
-  display_full();
-  display_state();*/
 }
 
 void Union_Statement::execute(Resource_Manager& rman)

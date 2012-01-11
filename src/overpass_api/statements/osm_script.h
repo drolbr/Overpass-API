@@ -8,6 +8,8 @@
 
 using namespace std;
 
+class Output_Handle;
+
 class Osm_Script_Statement : public Statement
 {
   public:
@@ -19,9 +21,10 @@ class Osm_Script_Statement : public Statement
     virtual void execute(Resource_Manager& rman);
     virtual ~Osm_Script_Statement();
     
-    virtual void set_output_handle(Output_Handle* output);
+    static Generic_Statement_Maker< Osm_Script_Statement > statement_maker;
     
-    string get_type() const { return type; }
+    const string& get_type() const { return type; }
+    void set_factory(Statement::Factory* factory_) { factory = factory_; }
     
     /*    string get_rule_name() { return name; }
     int get_rule_replace() { return replace; }
@@ -33,6 +36,8 @@ class Osm_Script_Statement : public Statement
     uint32 max_allowed_time;
     uint64 max_allowed_space;
     string type;
+    Output_Handle* output_handle;
+    Statement::Factory* factory;
     /* string name;
     int replace, version;
     uint database_id;*/

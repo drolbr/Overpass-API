@@ -18,6 +18,8 @@ class Recurse_Statement : public Statement
     virtual void execute(Resource_Manager& rman);
     virtual ~Recurse_Statement() {}
     
+    static Generic_Statement_Maker< Recurse_Statement > statement_maker;
+    
   private:
     string input, output;
     unsigned int type;

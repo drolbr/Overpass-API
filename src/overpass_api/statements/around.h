@@ -18,7 +18,9 @@ class Around_Statement : public Statement
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     virtual ~Around_Statement();
-
+    
+    static Generic_Statement_Maker< Around_Statement > statement_maker;
+    
     virtual Query_Constraint* get_query_constraint();
     
     string get_source_name() const { return input; }

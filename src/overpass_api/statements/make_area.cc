@@ -19,6 +19,8 @@ using namespace std;
 
 bool Make_Area_Statement::is_used_ = false;
 
+Generic_Statement_Maker< Make_Area_Statement > Make_Area_Statement::statement_maker("make-area");
+
 Make_Area_Statement::Make_Area_Statement
     (int line_number_, const map< string, string >& input_attributes)
     : Statement(line_number_)

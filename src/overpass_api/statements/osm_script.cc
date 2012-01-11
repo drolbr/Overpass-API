@@ -4,15 +4,19 @@
 #include "../core/settings.h"
 #include "../frontend/print_target.h"
 #include "osm_script.h"
+#include "print.h"
 // #include "area_query.h"
 
 using namespace std;
 
 //-----------------------------------------------------------------------------
 
+Generic_Statement_Maker< Osm_Script_Statement > Osm_Script_Statement::statement_maker("osm-script");
+
 Osm_Script_Statement::Osm_Script_Statement
     (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_), max_allowed_time(0), max_allowed_space(0), type("xml")
+    : Statement(line_number_), max_allowed_time(0), max_allowed_space(0), type("xml"),
+      factory(0)
 {
   map< string, string > attributes;
   
@@ -88,33 +92,7 @@ void Osm_Script_Statement::add_statement(Statement* statement, string text)
 {
   assure_no_text(text, this->get_name());
   
-  if ((statement->get_name() == "around") ||
-      (statement->get_name() == "bbox-query") ||
-      (statement->get_name() == "coord-query") ||
-      (statement->get_name() == "foreach") ||
-      (statement->get_name() == "id-query") ||
-      (statement->get_name() == "print") ||
-      (statement->get_name() == "query") ||
-      (statement->get_name() == "recurse") ||
-      (statement->get_name() == "union") ||
-      (statement->get_name() == "area-query") ||
-      (statement->get_name() == "make-area") ||
-      (statement->get_name() == "user") /*||
-    (statement->get_name() == "conflict") ||
-    (statement->get_name() == "report") ||
-    (statement->get_name() == "detect-odd-nodes")*/)
-    substatements.push_back(statement);
-  else
-    substatement_error(get_name(), statement);
-}
-
-void Osm_Script_Statement::set_output_handle(Output_Handle* output)
-{
-  Statement::set_output_handle(output);
-  
-  for (vector< Statement* >::iterator it = substatements.begin();
-      it != substatements.end(); ++it)
-    (*it)->set_output_handle(output);
+  substatements.push_back(statement);
 }
 
 void Osm_Script_Statement::forecast()
@@ -127,7 +105,18 @@ void Osm_Script_Statement::forecast()
 void Osm_Script_Statement::execute(Resource_Manager& rman)
 {
   rman.set_limits(max_allowed_time, max_allowed_space);
-  set_output_handle(new Output_Handle(type));
+
+  if (factory)
+  {
+    output_handle = new Output_Handle(type);
+    for (vector< Statement* >::iterator it = factory->created_statements.begin();
+        it != factory->created_statements.end(); ++it)
+    {
+      Print_Statement* print = dynamic_cast< Print_Statement* >(*it);
+      if (print)
+	print->set_output_handle(output_handle);
+    }
+  }
   
   stopwatch.start();
   stopwatch.stop(Stopwatch::NO_DISK);
@@ -147,6 +136,6 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
 
 Osm_Script_Statement::~Osm_Script_Statement()
 {
-  if (get_output_handle())
-    delete get_output_handle();
+  if (output_handle)
+    delete output_handle;
 }

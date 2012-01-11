@@ -61,6 +61,8 @@ void User_Constraint::filter(Resource_Manager& rman, Set& into)
 
 //-----------------------------------------------------------------------------
 
+Generic_Statement_Maker< User_Statement > User_Statement::statement_maker("user");
+
 User_Statement::User_Statement
     (int line_number_, const map< string, string >& input_attributes)
     : Statement(line_number_)

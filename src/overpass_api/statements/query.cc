@@ -49,6 +49,8 @@ bool Regular_Expression::matches(const string& line)
 
 //-----------------------------------------------------------------------------
 
+Generic_Statement_Maker< Query_Statement > Query_Statement::statement_maker("query");
+
 Query_Statement::Query_Statement
     (int line_number_, const map< string, string >& input_attributes)
     : Statement(line_number_)
@@ -498,6 +500,8 @@ void Query_Statement::execute(Resource_Manager& rman)
 }
 
 //-----------------------------------------------------------------------------
+
+Generic_Statement_Maker< Has_Kv_Statement > Has_Kv_Statement::statement_maker("has-kv");
 
 Has_Kv_Statement::Has_Kv_Statement
     (int line_number_, const map< string, string >& input_attributes)

@@ -20,6 +20,8 @@ class Item_Statement : public Statement
     virtual void execute(Resource_Manager& rman) {}
     virtual ~Item_Statement();
     
+    static Generic_Statement_Maker< Item_Statement > statement_maker;
+    
     virtual Query_Constraint* get_query_constraint();
     
   private:

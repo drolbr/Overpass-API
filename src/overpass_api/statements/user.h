@@ -18,7 +18,9 @@ class User_Statement : public Statement
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     virtual ~User_Statement();
-
+    
+    static Generic_Statement_Maker< User_Statement > statement_maker;
+    
     virtual Query_Constraint* get_query_constraint();
     
     void calc_ranges
