@@ -729,6 +729,67 @@ struct Accept_Query_31 : public Accept_All_Tags
     uint pattern_size;
 };
 
+struct Accept_Query_37 : public Accept_All_Tags
+{
+  Accept_Query_37(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const
+  {
+    return (id == 2*(2*(pattern_size/2+1)*(pattern_size/2-1) + pattern_size/2) - pattern_size + 1
+        || id == 2*(2*(pattern_size/2+1)*(pattern_size/2-1) + pattern_size/2) - 1);
+  }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_38 : public Accept_All_Tags
+{
+  Accept_Query_38(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const
+  {
+    return (id == 2*(2*(pattern_size/2+1)*(pattern_size/2-1) + pattern_size/2));
+  }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_39 : public Accept_All_Tags
+{
+  Accept_Query_39(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const
+  { 
+    return ((id >= 12 && id <= 15) || id == 17 || id == 19 || id == 21 || id == 22);
+  }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_40 : public Accept_All_Tags
+{
+  Accept_Query_40(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const
+  { 
+    return (id == 18 || id == 22);
+  }
+  
+  private:
+    uint pattern_size;
+};
+
 struct Accept_Foreach_1 : public Accept_All_Tags
 {
   Accept_Foreach_1(uint pattern_size_)
@@ -1299,6 +1360,14 @@ int main(int argc, char* args[])
       modifier = new Accept_Query_25(pattern_size);
     else if (string(args[2]) == "query_36")
       modifier = new Accept_Query_17(pattern_size);
+    else if (string(args[2]) == "query_37")
+      modifier = new Accept_Query_37(pattern_size);
+    else if (string(args[2]) == "query_38")
+      modifier = new Accept_Query_38(pattern_size);
+    else if (string(args[2]) == "query_39")
+      modifier = new Accept_Query_39(pattern_size);
+    else if (string(args[2]) == "query_40")
+      modifier = new Accept_Query_40(pattern_size);
     else if (string(args[2]) == "union_1")
       modifier = new Accept_Union_1(pattern_size);
     else if (string(args[2]) == "union_2")

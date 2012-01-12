@@ -163,7 +163,3 @@ int main(int argc, char* args[])
   cout<<"</osm>\n";
   return 0;
 }
-
-// Test cases are:
-// - bbox with positive lon, with negative lon, both, lon wrap
-//   ew line, ns line, point

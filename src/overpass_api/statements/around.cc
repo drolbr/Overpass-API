@@ -328,7 +328,9 @@ set< pair< Uint32_Index, Uint32_Index > > Around_Statement::calc_ranges
     (const map< Uint32_Index, vector< Node_Skeleton > >& input_nodes)
 {
   set< pair< Uint32_Index, Uint32_Index > > req;
-  lat_lons.clear();
+  radius_lat_lons.clear();
+  simple_lat_lons.clear();
+  
   for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator iit(input_nodes.begin());
       iit != input_nodes.end(); ++iit)
   {
@@ -345,6 +347,8 @@ set< pair< Uint32_Index, Uint32_Index > > Around_Statement::calc_ranges
       double west = lon - radius*(360.0/(40000.0*1000.0))/cos(scale_lat/90.0*acos(0));
       double east = lon + radius*(360.0/(40000.0*1000.0))/cos(scale_lat/90.0*acos(0));
       
+      simple_lat_lons.push_back(make_pair(lat, lon));
+      
       vector< pair< uint32, uint32 > >* uint_ranges
           (Node::calc_ranges(south, north, west, east));
       for (vector< pair< uint32, uint32 > >::const_iterator
@@ -356,7 +360,7 @@ set< pair< Uint32_Index, Uint32_Index > > Around_Statement::calc_ranges
 	
 	for (uint32 idx = Uint32_Index(it->first).val();
 	    idx < Uint32_Index(it->second).val(); ++idx)
-	  lat_lons[idx].push_back(make_pair(lat, lon));
+	  radius_lat_lons[idx].push_back(make_pair(lat, lon));
       }
       delete(uint_ranges);
     }
@@ -371,8 +375,8 @@ void Around_Statement::forecast()
 bool Around_Statement::is_inside(double lat, double lon) const
 {
   map< Uint32_Index, vector< pair< double, double > > >::const_iterator mit
-      = lat_lons.find(Node::ll_upper_(lat, lon));
-  if (mit == lat_lons.end())
+      = radius_lat_lons.find(Node::ll_upper_(lat, lon));
+  if (mit == radius_lat_lons.end())
     return false;
   for (vector< pair< double, double > >::const_iterator cit = mit->second.begin();
       cit != mit->second.end(); ++cit)
@@ -386,23 +390,16 @@ bool Around_Statement::is_inside(double lat, double lon) const
 bool Around_Statement::is_inside
     (double first_lat, double first_lon, double second_lat, double second_lon) const
 {
-  for (map< Uint32_Index, vector< pair< double, double > > >::const_iterator mit = lat_lons.begin();
-      mit != lat_lons.end(); ++mit)
+  for (vector< pair< double, double > >::const_iterator cit = simple_lat_lons.begin();
+      cit != simple_lat_lons.end(); ++cit)
   {
-    for (vector< pair< double, double > >::const_iterator cit = mit->second.begin();
-        cit != mit->second.end(); ++cit)
+    if (great_circle_line_dist(first_lat, first_lon, second_lat, second_lon,
+                               cit->first, cit->second) <= radius)
     {
-      if (great_circle_dist(cit->first, cit->second, first_lat, first_lon) <= radius ||
-	  great_circle_dist(cit->first, cit->second, second_lat, second_lon) <= radius)
-	return true;
-      if (great_circle_line_dist(first_lat, first_lon, second_lat, second_lon,
-	                         cit->first, cit->second) <= radius)
-      {
-	double gcdist = great_circle_dist(first_lat, first_lon, second_lat, second_lon);
-	double limit = sqrt(gcdist*gcdist + radius*radius);
-	return (great_circle_dist(cit->first, cit->second, first_lat, first_lon) <= limit &&
-	        great_circle_dist(cit->first, cit->second, second_lat, second_lon) <= limit);
-      }
+      double gcdist = great_circle_dist(first_lat, first_lon, second_lat, second_lon);
+      double limit = sqrt(gcdist*gcdist + radius*radius);
+      return (great_circle_dist(cit->first, cit->second, first_lat, first_lon) <= limit &&
+          great_circle_dist(cit->first, cit->second, second_lat, second_lon) <= limit);
     }
   }
   return false;
@@ -426,6 +423,27 @@ bool Around_Statement::is_inside
   }
   double first_lat(Node::lat(first_nd->first.val(), first_nd->second->ll_lower));
   double first_lon(Node::lon(first_nd->first.val(), first_nd->second->ll_lower));
+  
+  // Pre-check if node is inside
+  if (is_inside(first_lat, first_lon))
+    return true;
+  for (vector< uint32 >::const_iterator it = nit; it != way.nds.end(); ++it)
+  {
+    const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
+        binary_search_for_pair_id(nodes_by_id, *it);
+    if (!second_nd)
+    {
+      ostringstream out;
+      out<<"Node "<<*nit<<" not found in the database. This is a serious fault of the database.";
+      this->runtime_remark(out.str());
+      return true;
+    }
+    double second_lat(Node::lat(second_nd->first.val(), second_nd->second->ll_lower));
+    double second_lon(Node::lon(second_nd->first.val(), second_nd->second->ll_lower));
+    if (is_inside(second_lat, second_lon))
+      return true;
+  }
+  
   for (++nit; nit != way.nds.end(); ++nit)
   {
     const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
