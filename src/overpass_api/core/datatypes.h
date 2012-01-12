@@ -196,6 +196,27 @@ struct Tag_Index_Local
   }
 };
 
+
+template< class TIndex >
+void formulate_range_query
+    (set< pair< Tag_Index_Local, Tag_Index_Local > >& range_set,
+     const set< TIndex >& coarse_indices)
+{
+  for (typename set< TIndex >::const_iterator
+    it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
+  {
+    Tag_Index_Local lower, upper;
+    lower.index = it->val();
+    lower.key = "";
+    lower.value = "";
+    upper.index = it->val() + 1;
+    upper.key = "";
+    upper.value = "";
+    range_set.insert(make_pair(lower, upper));
+  }
+}
+
+
 struct Tag_Index_Global
 {
   string key;
@@ -426,5 +447,27 @@ struct OSM_Element_Metadata_Skeleton
     return (ref == a.ref);
   }
 };
+
+
+template< class TIndex, class TObject >
+const pair< TIndex, const TObject* >* binary_search_for_pair_id
+(const vector< pair< TIndex, const TObject* > >& vect, uint32 id)
+{
+  uint32 lower(0);
+  uint32 upper(vect.size());
+  
+  while (upper > lower)
+  {
+    uint32 pos((upper + lower)/2);
+    if (id < vect[pos].second->id)
+      upper = pos;
+    else if (vect[pos].second->id == id)
+      return &(vect[pos]);
+    else
+      lower = pos + 1;
+  }
+  return 0;
+}
+
 
 #endif

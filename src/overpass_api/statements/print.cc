@@ -1,3 +1,7 @@
+#include "../frontend/print_target.h"
+#include "meta_collector.h"
+#include "print.h"
+
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
@@ -6,14 +10,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include "../../template_db/block_backend.h"
-#include "../../template_db/random_file.h"
-#include "../core/settings.h"
-#include "../frontend/output.h"
-#include "../frontend/print_target.h"
-#include "meta_collector.h"
-#include "print.h"
 
 using namespace std;
 
@@ -33,7 +29,9 @@ Print_Target::Print_Target(uint32 mode_, Transaction& transaction) : mode(mode_)
     roles[it.index().val()] = it.object().val();
 }
 
+
 Generic_Statement_Maker< Print_Statement > Print_Statement::statement_maker("print");
+
 
 Print_Statement::Print_Statement
     (int line_number_, const map< string, string >& input_attributes)
@@ -245,6 +243,7 @@ struct Skeleton_Comparator_By_Id {
   }
 };
 
+
 template< class TIndex, class TObject >
 void by_id
   (const map< TIndex, vector< TObject > >& items, const Print_Target& target,
@@ -293,6 +292,7 @@ void collect_metadata(set< OSM_Element_Metadata_Skeleton >& metadata,
     }
   }
 }
+
 
 template< class TIndex, class TObject >
 void Print_Statement::tags_by_id

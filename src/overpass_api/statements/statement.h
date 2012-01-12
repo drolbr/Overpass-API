@@ -28,7 +28,7 @@ class Query_Constraint
     // Cheap filter. No health_check in between needed and should be called first.
     virtual void filter(Resource_Manager& rman, Set& into) {}
 
-    // Expensive filter. Health_check may be neede in between. These are called last
+    // Expensive filter. Health_check may be needed in between. These are called last
     // to minimize the number of elements that need to be processed.
     virtual void filter(const Statement& query, Resource_Manager& rman, Set& into) {}
     

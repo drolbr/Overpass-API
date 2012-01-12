@@ -29,7 +29,11 @@ class Around_Statement : public Statement
         (const map< Uint32_Index, vector< Node_Skeleton > >& input_nodes);
     
     bool is_inside(double lat, double lon) const;
-
+    bool is_inside(double first_lat, double first_lon, double second_lat, double second_lon) const;
+    bool is_inside(const Way_Skeleton& way,
+		   const vector< pair< Uint32_Index, const Node_Skeleton* > >& way_members_by_id)
+		   const;
+    
   private:
     string input, output;
     double radius;

@@ -54,44 +54,6 @@ bool Bbox_Constraint::get_ranges
   return true;
 }
 
-struct Order_By_Node_Id
-{
-  bool operator() (const pair< Uint32_Index, const Node_Skeleton* >& a,
-		   const pair< Uint32_Index, const Node_Skeleton* >& b)
-  {
-    return (a.second->id < b.second->id);
-  }
-};
-
-struct Order_By_Way_Id
-{
-  bool operator() (const pair< Uint31_Index, const Way_Skeleton* >& a,
-		   const pair< Uint31_Index, const Way_Skeleton* >& b)
-  {
-    return (a.second->id < b.second->id);
-  }
-};
-
-template< class TIndex, class TObject >
-const pair< TIndex, const TObject* >* binary_search_for_pair_id
-    (const vector< pair< TIndex, const TObject* > >& vect, uint32 id)
-{
-  uint32 lower(0);
-  uint32 upper(vect.size());
-  
-  while (upper > lower)
-  {
-    uint32 pos((upper + lower)/2);
-    if (id < vect[pos].second->id)
-      upper = pos;
-    else if (vect[pos].second->id == id)
-      return &(vect[pos]);
-    else
-      lower = pos + 1;
-  }
-  return 0;
-}
-
 inline bool segment_intersects_bbox
     (double first_lat, double first_lon, double second_lat, double second_lon,
      double south, double north, double west, double east)

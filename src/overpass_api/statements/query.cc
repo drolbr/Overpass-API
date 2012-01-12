@@ -4,11 +4,7 @@
 #include "meta_collector.h"
 #include "area_query.h"
 #include "around.h"
-#include "bbox_query.h"
-#include "item.h"
-#include "newer.h"
 #include "query.h"
-#include "user.h"
 
 #include "sys/types.h"
 #include "regex.h"
@@ -100,12 +96,10 @@ void Query_Statement::add_statement(Statement* statement, string text)
       keys.push_back(has_kv->get_key());
     return;
   }
+  
+  Query_Constraint* constraint = statement->get_query_constraint();
   Area_Query_Statement* area(dynamic_cast<Area_Query_Statement*>(statement));
-  Around_Statement* around(dynamic_cast<Around_Statement*>(statement));
-  Bbox_Query_Statement* bbox(dynamic_cast<Bbox_Query_Statement*>(statement));
-  Item_Statement* item(dynamic_cast<Item_Statement*>(statement));
-  Newer_Statement* newer(dynamic_cast<Newer_Statement*>(statement));
-  User_Statement* user(dynamic_cast<User_Statement*>(statement));
+/*  Around_Statement* around(dynamic_cast<Around_Statement*>(statement));*/
   if (area != 0)
   {
     if (type != QUERY_NODE)
@@ -115,9 +109,9 @@ void Query_Statement::add_statement(Statement* statement, string text)
       add_static_error(temp.str());
       return;
     }
-    constraints.push_back(statement->get_query_constraint());
+    constraints.push_back(constraint);
   }
-  else if (around != 0)
+/*  else if (around != 0)
   {
     if (type != QUERY_NODE)
     {
@@ -126,10 +120,10 @@ void Query_Statement::add_statement(Statement* statement, string text)
       add_static_error(temp.str());
       return;
     }
-    constraints.push_back(statement->get_query_constraint());
-  }
-  else if ((bbox != 0) || (item != 0) || (user != 0) || (newer != 0))
-    constraints.push_back(statement->get_query_constraint());
+    constraints.push_back(constraint);
+  }*/
+  else if (constraint)
+    constraints.push_back(constraint);
   else
     substatement_error(get_name(), statement);
 }

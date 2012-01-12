@@ -678,7 +678,9 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
   }
   else if (clauses.size() == 1 && from == "")
   {
-    if (clauses.front().statement == "has-kv" || clauses.front().statement == "has-kv_regex")
+    if (clauses.front().statement == "has-kv" || clauses.front().statement == "has-kv_regex"
+       || (clauses.front().statement == "around" && type != "node")
+       || (clauses.front().statement == "bbox-query" && type != "node"))
     {
       statement = create_query_statement< TStatement >
           (stmt_factory, type, into, query_line_col.first);

@@ -57,4 +57,24 @@ void collect_ways
      map< Uint31_Index, vector< Way_Skeleton > >& result,
      const set< pair< Uint31_Index, Uint31_Index > >& way_ranges);
 
+     
+struct Order_By_Node_Id
+{
+  bool operator() (const pair< Uint32_Index, const Node_Skeleton* >& a,
+		   const pair< Uint32_Index, const Node_Skeleton* >& b)
+  {
+    return (a.second->id < b.second->id);
+  }
+};
+
+struct Order_By_Way_Id
+{
+  bool operator() (const pair< Uint31_Index, const Way_Skeleton* >& a,
+		   const pair< Uint31_Index, const Way_Skeleton* >& b)
+  {
+    return (a.second->id < b.second->id);
+  }
+};
+
+
 #endif
