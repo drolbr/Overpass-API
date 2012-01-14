@@ -192,7 +192,7 @@ void Web_Output::write_json_header
   cout<<"    \"copyright\": \"The data included in this document is from www.openstreetmap.org."
 	" It has there been collected by a large group of contributors. For individual"
 	" attribution of each item please refer to"
-	" http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\""
+	" http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history\""
         "  },\n"
         "  \"elements\": [\n\n";
 }
