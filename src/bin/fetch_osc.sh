@@ -28,10 +28,18 @@ retry_fetch_file()
 {
   if [[ ! -s "$2" ]]; then {
     fetch_file "$1" "$2"
+    gunzip -t <"$2"
+    if [[ $? -ne 0 ]]; then {
+      rm "$2"
+    }; fi
   }; fi
   until [[ -s "$2" ]]; do {
     sleep 60
     fetch_file "$1" "$2"
+    gunzip -t <"$2"
+    if [[ $? -ne 0 ]]; then {
+      rm "$2"
+    }; fi
   }; done
 };
 
