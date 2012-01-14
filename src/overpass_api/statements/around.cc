@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <fstream>
 #include <sstream>
 #include <vector>
 
@@ -121,7 +122,7 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
 {
   {
     //Process ways
-  
+
     // Retrieve all nodes referred by the ways.
     map< Uint32_Index, vector< Node_Skeleton > > way_members;
     collect_nodes(query, rman, into.ways.begin(), into.ways.end(), way_members);
