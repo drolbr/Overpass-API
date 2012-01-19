@@ -544,7 +544,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
     {
       ++token;
       string key = get_text_token(token, error_output, "Key");
-      clear_until_after(token, error_output, ":", "=", "]", false);
+      clear_until_after(token, error_output, "~", "=", "]", false);
       if (*token == "]")
       {
 	Statement_Text clause("has-kv", token.line_col());
