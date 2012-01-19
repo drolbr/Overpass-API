@@ -22,9 +22,9 @@ class Bbox_Query_Statement : public Statement
     
     virtual Query_Constraint* get_query_constraint();
     
-    vector< pair< uint32, uint32 > >* calc_ranges()
+    vector< pair< uint32, uint32 > > calc_ranges()
     {
-      return Node::calc_ranges(south, north, west, east);
+      return ::calc_ranges(south, north, west, east);
     }
     
     double get_south() const { return south; }

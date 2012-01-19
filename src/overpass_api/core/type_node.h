@@ -38,11 +38,6 @@ struct Node
     return (temp ^ 0x40000000);
   }
   
-  static uint32 ll_upper_(uint32 ilat, int32 ilon)
-  {
-    return (::ll_upper(ilat, ilon) ^ 0x40000000);
-  }
-  
   static uint32 ll_lower(double lat, double lon)
   {
     uint32 result(0), ilat((lat + 91.0)*10000000+0.5);
@@ -123,13 +118,6 @@ struct Node
     
     return result;
   }
-
-  static vector< pair< uint32, uint32 > >* calc_ranges
-    (double south, double north, double west, double east);
-
-  static void recursively_calc_ranges
-      (uint32 south, uint32 north, int32 west, int32 east,
-       uint32 bitlevel, vector< pair< uint32, uint32 > >& ranges);
 };
 
 struct Node_Comparator_By_Id {
@@ -191,121 +179,5 @@ struct Node_Skeleton
     return this->id == a.id;
   }
 };
-
-// Calculates the ranges touched by the given bbox.
-// This function implicitly depends on the chosen coordinate encoding.
-inline vector< pair< uint32, uint32 > >* Node::calc_ranges
-    (double south, double north, double west, double east)
-{
-  vector< pair< uint32, uint32 > >* ranges;
-  ranges = new vector< pair< uint32, uint32 > >();
-
-  uint32 isouth((south + 91.0)*10000000+0.5);
-  uint32 inorth((north + 91.0)*10000000+0.5);
-  int32 iwest(west*10000000 + (west > 0 ? 0.5 : -0.5));
-  int32 ieast(east*10000000 + (east > 0 ? 0.5 : -0.5));
-  
-  if (west <= east)
-  {
-    if ((west < 0) && (east >= 0))
-    {
-      Node::recursively_calc_ranges
-          (isouth & 0xffff0000, inorth & 0xffff0000,
-	   0, ieast & 0xffff0000, 1, *ranges);
-      Node::recursively_calc_ranges
-          (isouth & 0xffff0000, inorth & 0xffff0000,
-	   iwest & 0xffff0000, 0xffff0000, 1, *ranges);
-    }
-    else
-      Node::recursively_calc_ranges
-          (isouth & 0xffff0000, inorth & 0xffff0000,
-	   iwest & 0xffff0000, ieast & 0xffff0000, 1, *ranges);
-  }
-  else
-  {
-    Node::recursively_calc_ranges
-        (isouth & 0xffff0000, inorth & 0xffff0000,
-	 iwest & 0xffff0000, int32(180.0*10000000 + 0.5) & 0xffff0000, 1, *ranges);
-    Node::recursively_calc_ranges
-        (isouth & 0xffff0000, inorth & 0xffff0000,
-	 int32(-180.0*10000000 - 0.5) & 0xffff0000, ieast & 0xffff0000, 1, *ranges);
-  }
-  return ranges;
-}
-
-// Adds recursively the ranges based on the given products of
-// closed intervals.
-// The expected assertion for the recursion is that the indices are equal
-// on the first bitlevel bits. Also, indexes must have the last 16 bit set to zero.
-inline void Node::recursively_calc_ranges
-    (uint32 south, uint32 north, int32 west, int32 east,
-     uint32 bitlevel, vector< pair< uint32, uint32 > >& ranges)
-{
-  int32 dist = ((0xffff0000u>>bitlevel)&0xffff0000);
-  
-  // If the difference is exactly dist, the indices fill the whole square
-  // and we can add this square to the ranges.
-  if ((south + dist == north) && (west + dist == east))
-  {
-    ranges.push_back
-        (make_pair(ll_upper_(south, west),
-		   ll_upper_(north, east) + 1));
-    return;
-  }
-  
-  // Shift dist to obtain a proper recursion.
-  dist = ((dist>>1)&0xffff0000);
-  
-  if ((north | dist) != (south | dist))
-  {
-    // We need to split between northern and southern part.
-    if ((east | dist) != (west | dist))
-    {
-      // We also need to split between western and eastern part.
-      Node::recursively_calc_ranges
-          (south, south | dist, west, west | dist,
-	   bitlevel + 1, ranges);
-      Node::recursively_calc_ranges
-          (south, south | dist, (west | dist) + 0x10000, east,
-	   bitlevel + 1, ranges);
-      Node::recursively_calc_ranges
-          ((south | dist) + 0x10000, north, west, west | dist,
-	   bitlevel + 1, ranges);
-      Node::recursively_calc_ranges
-          ((south | dist) + 0x10000, north, (west | dist) + 0x10000, east,
-	   bitlevel + 1, ranges);
-    }
-    else
-    {
-      // We don't need to split because east and west lie in the
-      // same half of the current square.
-      Node::recursively_calc_ranges
-          (south, south | dist,  west, east,
-	   bitlevel + 1, ranges);
-      Node::recursively_calc_ranges
-          ((south | dist) + 0x10000, north, west, east,
-	   bitlevel + 1, ranges);
-    }
-  }
-  else
-  {
-    // We don't need to split because north and south lie in the
-    // same half of the current square.
-    if ((east | dist) != (west | dist))
-    {
-      // We only need to split between western and eastern part.
-      Node::recursively_calc_ranges
-          (south, north, west, west | dist,
-	   bitlevel + 1, ranges);
-      Node::recursively_calc_ranges
-          (south, north, (west | dist) + 0x10000, east,
-	   bitlevel + 1, ranges);
-    }
-    else
-      // We need no split at all.
-      Node::recursively_calc_ranges
-          (south, north, west, east, bitlevel + 1, ranges);
-  }
-}
 
 #endif

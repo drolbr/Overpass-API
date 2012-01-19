@@ -254,11 +254,11 @@ void perform_regex_query
 }
 
 void perform_query_with_around
-    (string type, string key1, string value1, string db_dir, uint pattern_size,
+    (string id_type, string type, string key1, string value1, string db_dir, uint pattern_size,
      bool big_radius = false)
 {
   string radius = "200.1";
-  if (type == "way")
+  if (id_type == "node" && type == "way")
   {
     ostringstream out;
     if (big_radius)
@@ -267,13 +267,31 @@ void perform_query_with_around
       out<<(120.0/pattern_size)/360.0*40*1000*1000*cos(-10.0/90.0*acos(0))*0.1;
     radius = out.str();
   }
-  else if (type == "relation")
+  else if (id_type == "node" && type == "relation")
   {
     ostringstream out;
     if (big_radius)
       out<<(120.0/pattern_size)/360.0*40*1000*1000*cos(-10.0/90.0*acos(0))*0.9;
     else
       out<<(120.0/pattern_size)/360.0*40*1000*1000*cos(-10.0/90.0*acos(0))*1.2;
+    radius = out.str();
+  }
+  else if (id_type == "way")
+  {
+    ostringstream out;
+    if (type == "node")
+      out<<(120.0/pattern_size)/360.0*40*1000*1000*1.1;
+    else
+      out<<1;
+    radius = out.str();
+  }
+  else if (id_type == "relation")
+  {
+    ostringstream out;
+    if (type == "node")
+      out<<(120.0/pattern_size)/360.0*40*1000*1000*1.1;
+    else
+      out<<1;
     radius = out.str();
   }
   
@@ -283,20 +301,34 @@ void perform_query_with_around
     Resource_Manager rman(transaction);
     {
       ostringstream buf;
-      if (type == "node")
+      if (id_type == "node" && type == "node")
         buf<<(2*pattern_size*pattern_size + 1);
-      else if (type == "relation")
+      else if (id_type == "node" && type == "relation")
       {
 	if (big_radius)
 	  buf<<(pattern_size*pattern_size + pattern_size*3/2 + 1);
 	else
 	  buf<<(pattern_size*pattern_size + 2);
       }
+      else if (id_type == "way")
+      {
+	if (type == "node")
+	  buf<<(pattern_size*pattern_size/2 + pattern_size/2 - 2 + 1);
+	else
+	  buf<<(2*(pattern_size*pattern_size/2 + pattern_size/2 - 2) - pattern_size + 1);
+      }
+      else if (id_type == "relation")
+      {
+	if (type == "node")
+	  buf<<16;
+	else
+	  buf<<17;
+      }
       else if (big_radius)
 	buf<<(pattern_size*pattern_size + 2*pattern_size);
       else
 	buf<<(pattern_size*pattern_size + pattern_size - 1);
-      SProxy< Id_Query_Statement >()("type", "node")("ref", buf.str()).stmt().execute(rman);
+      SProxy< Id_Query_Statement >()("type", id_type)("ref", buf.str()).stmt().execute(rman);
     }
     {
       SProxy< Query_Statement > stmt1;
@@ -315,13 +347,13 @@ void perform_query_with_around
       return;
     {
       ostringstream buf;
-      if (type == "node")
+      if (id_type == "node" && type == "node")
 	buf<<(2*pattern_size*pattern_size + 1);
-      else if (big_radius)
+      else if (id_type == "node" && big_radius)
 	buf<<(pattern_size*pattern_size + 2*pattern_size);
       else
 	buf<<(pattern_size*pattern_size + pattern_size - 1);
-      SProxy< Id_Query_Statement >()("type", "node")("ref", buf.str())("into", "a")
+      SProxy< Id_Query_Statement >()("type", id_type)("ref", buf.str())("into", "a")
           .stmt().execute(rman);
     }
     {
@@ -512,10 +544,10 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "26"))
     // Test an around combined with a local key-value pair
-    perform_query_with_around("node", "node_key_11", "", args[3], pattern_size);
+    perform_query_with_around("node", "node", "node_key_11", "", args[3], pattern_size);
   if ((test_to_execute == "") || (test_to_execute == "27"))
     // Test an around combined with a global key-value pair
-    perform_query_with_around("node", "node_key_7", "node_value_1", args[3], pattern_size);
+    perform_query_with_around("node", "node", "node_key_7", "node_value_1", args[3], pattern_size);
 
   if ((test_to_execute == "") || (test_to_execute == "28"))
     // Test a bbox combined with a global key-value pair, yielding diagonal ways.
@@ -557,18 +589,32 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "37"))
     // Test an around collecting ways from nodes
-    perform_query_with_around("way", "", "", args[3], pattern_size);
+    perform_query_with_around("node", "way", "", "", args[3], pattern_size);
   if ((test_to_execute == "") || (test_to_execute == "38"))
     // Test an around collecting ways from nodes
-    perform_query_with_around("way", "", "", args[3], pattern_size, true);
+    perform_query_with_around("node", "way", "", "", args[3], pattern_size, true);
 
   if ((test_to_execute == "") || (test_to_execute == "39"))
     // Test an around collecting relations from nodes based on node membership
-    perform_query_with_around("relation", "", "", args[3], pattern_size);
+    perform_query_with_around("node", "relation", "", "", args[3], pattern_size);
   if ((test_to_execute == "") || (test_to_execute == "40"))
     // Test an around collecting relations from nodes based on way membership
-    perform_query_with_around("relation", "", "", args[3], pattern_size, true);
+    perform_query_with_around("node", "relation", "", "", args[3], pattern_size, true);
 
+  if ((test_to_execute == "") || (test_to_execute == "41"))
+    // Test an around collecting relations from nodes based on node membership
+    perform_query_with_around("way", "node", "", "", args[3], pattern_size);
+  if ((test_to_execute == "") || (test_to_execute == "42"))
+    // Test an around collecting relations from nodes based on way membership
+    perform_query_with_around("way", "way", "", "", args[3], pattern_size);
+  
+  if ((test_to_execute == "") || (test_to_execute == "43"))
+    // Test an around collecting relations from nodes based on node membership
+    perform_query_with_around("relation", "node", "", "", args[3], pattern_size);
+  if ((test_to_execute == "") || (test_to_execute == "44"))
+    // Test an around collecting relations from nodes based on way membership
+    perform_query_with_around("relation", "way", "", "", args[3], pattern_size);
+  
   cout<<"</osm>\n";
   return 0;
 }

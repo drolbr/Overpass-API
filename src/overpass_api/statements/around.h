@@ -26,8 +26,10 @@ class Around_Statement : public Statement
     string get_source_name() const { return input; }
 
     set< pair< Uint32_Index, Uint32_Index > > calc_ranges
-        (const map< Uint32_Index, vector< Node_Skeleton > >& input_nodes);
-    
+        (const Set& input_nodes, Resource_Manager& rman) const;
+
+    void calc_lat_lons(const Set& input_nodes, Statement& query, Resource_Manager& rman);
+
     bool is_inside(double lat, double lon) const;
     bool is_inside(double first_lat, double first_lon, double second_lat, double second_lon) const;
     bool is_inside(const Way_Skeleton& way,
@@ -39,6 +41,7 @@ class Around_Statement : public Statement
     double radius;
     map< Uint32_Index, vector< pair< double, double > > > radius_lat_lons;
     vector< pair< double, double > > simple_lat_lons;
+    vector< pair< pair< double, double >, pair< double, double > > > simple_segments;
     vector< Query_Constraint* > constraints;
 };
 

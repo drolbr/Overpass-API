@@ -33,15 +33,14 @@ bool Bbox_Constraint::get_ranges
 {
   ranges_used = true;
   
-  vector< pair< uint32, uint32 > >* int_ranges(bbox->calc_ranges());
+  vector< pair< uint32, uint32 > > int_ranges = bbox->calc_ranges();
   for (vector< pair< uint32, uint32 > >::const_iterator
-      it(int_ranges->begin()); it != int_ranges->end(); ++it)
+      it(int_ranges.begin()); it != int_ranges.end(); ++it)
   {
     pair< Uint32_Index, Uint32_Index > range
         (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
     ranges.insert(range);
   }
-  delete(int_ranges);
   return true;
 }
 
@@ -443,18 +442,17 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
   relations.clear();
   areas.clear();
 
-  vector< pair< uint32, uint32 > >* uint_ranges
-    (Node::calc_ranges(south, north, west, east));
+  vector< pair< uint32, uint32 > > uint_ranges
+    (::calc_ranges(south, north, west, east));
     
   set< pair< Uint32_Index, Uint32_Index > > req;
   for (vector< pair< uint32, uint32 > >::const_iterator
-      it(uint_ranges->begin()); it != uint_ranges->end(); ++it)
+      it(uint_ranges.begin()); it != uint_ranges.end(); ++it)
   {
     pair< Uint32_Index, Uint32_Index > range
       (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
     req.insert(range);
   }
-  delete(uint_ranges);
   
   stopwatch.stop(Stopwatch::NO_DISK);
   uint nodes_count = 0;
