@@ -34,6 +34,8 @@ class Query_Statement : public Statement
     vector< string > keys;    
     vector< pair< string, string > > key_values;    
     vector< pair< string, Regular_Expression* > > key_regexes;    
+    vector< pair< string, string > > key_nvalues;    
+    vector< pair< string, Regular_Expression* > > key_nregexes;    
     vector< Query_Constraint* > constraints;
     
     vector< uint32 > collect_ids
@@ -64,13 +66,15 @@ class Has_Kv_Statement : public Statement
     
     static Generic_Statement_Maker< Has_Kv_Statement > statement_maker;
     
-    string get_key() { return key; }
-    string get_value() { return value; }
+    string get_key() const { return key; }
+    string get_value() const { return value; }
     Regular_Expression* get_regex() { return regex; }
+    bool get_straight() const { return straight; }
     
   private:
     string key, value;
     Regular_Expression* regex;
+    bool straight;
 };
 
 #endif

@@ -87,11 +87,23 @@ void Query_Statement::add_statement(Statement* statement, string text)
   if (has_kv)
   {
     if (has_kv->get_value() != "")
-      key_values.push_back(make_pair< string, string >
-	  (has_kv->get_key(), has_kv->get_value()));
+    {
+      if (has_kv->get_straight())
+        key_values.push_back(make_pair< string, string >
+	    (has_kv->get_key(), has_kv->get_value()));
+      else
+        key_nvalues.push_back(make_pair< string, string >
+	    (has_kv->get_key(), has_kv->get_value()));
+    }
     else if (has_kv->get_regex())
-      key_regexes.push_back(make_pair< string, Regular_Expression* >
-          (has_kv->get_key(), has_kv->get_regex()));
+    {
+      if (has_kv->get_straight())
+	key_regexes.push_back(make_pair< string, Regular_Expression* >
+            (has_kv->get_key(), has_kv->get_regex()));
+      else
+	key_nregexes.push_back(make_pair< string, Regular_Expression* >
+            (has_kv->get_key(), has_kv->get_regex()));
+    }
     else
       keys.push_back(has_kv->get_key());
     return;
@@ -158,12 +170,14 @@ vector< uint32 > Query_Statement::collect_ids
   (const File_Properties& file_prop, uint32 stopwatch_account,
    Resource_Manager& rman)
 {
-  if (key_values.empty() && keys.empty() && key_regexes.empty())
+  if (key_values.empty() && key_nvalues.empty()
+      && keys.empty() && key_regexes.empty() && key_nregexes.empty())
     return vector< uint32 >();
  
   Block_Backend< Tag_Index_Global, Uint32_Index > tags_db
       (rman.get_transaction()->data_index(&file_prop));
   
+  // Handle simple Key-Value pairs
   vector< uint32 > new_ids;
   vector< pair< string, string > >::const_iterator kvit = key_values.begin();
 
@@ -197,8 +211,50 @@ vector< uint32 > Query_Statement::collect_ids
     rman.health_check(*this);
   }
 
+  // Handle Key-Non-Value pairs
+  vector< pair< string, string > >::const_iterator knvit = key_nvalues.begin();
+  if (key_values.empty() && knvit != key_nvalues.end())
+  {
+    set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knvit->first);
+    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
+        it2(tags_db.range_begin
+          (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
+	   Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
+        !(it2 == tags_db.range_end()); ++it2)
+    {
+      if (it2.index().value != knvit->second)
+        new_ids.push_back(it2.object().val());
+    }
+
+    sort(new_ids.begin(), new_ids.end());
+    rman.health_check(*this);
+    ++knvit;
+  }
+  
+  for (; knvit != key_nvalues.end(); ++knvit)
+  {
+    vector< uint32 > old_ids;
+    old_ids.swap(new_ids);
+    {
+      set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knvit->first);
+      for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
+	  it2(tags_db.range_begin
+	  (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
+	   Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
+	  !(it2 == tags_db.range_end()); ++it2)
+      {
+	if (binary_search(old_ids.begin(), old_ids.end(), it2.object().val())
+	    && it2.index().value != knvit->second)
+	  new_ids.push_back(it2.object().val());
+      }
+    }
+    sort(new_ids.begin(), new_ids.end());    
+    rman.health_check(*this);
+  }
+
+  // Handle simple Keys Only
   vector< string >::const_iterator kit = keys.begin();
-  if (key_values.empty() && kit != keys.end())
+  if (key_values.empty() && key_nvalues.empty() && kit != keys.end())
   {
     set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
@@ -233,8 +289,9 @@ vector< uint32 > Query_Statement::collect_ids
     rman.health_check(*this);
   }
 
+  // Handle Key-Regular-Expression-Value pairs
   vector< pair< string, Regular_Expression* > >::const_iterator krit = key_regexes.begin();
-  if (key_values.empty() && keys.empty() && krit != key_regexes.end())
+  if (key_values.empty() && key_nvalues.empty() && keys.empty() && krit != key_regexes.end())
   {
     set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
@@ -266,6 +323,48 @@ vector< uint32 > Query_Statement::collect_ids
       {
 	if (binary_search(old_ids.begin(), old_ids.end(), it2.object().val())
 	    && krit->second->matches(it2.index().value))
+	  new_ids.push_back(it2.object().val());
+      }
+    }
+    sort(new_ids.begin(), new_ids.end());    
+    rman.health_check(*this);
+  }
+
+  // Handle Key-Regular-Expression-Non-Value pairs
+  vector< pair< string, Regular_Expression* > >::const_iterator knrit = key_nregexes.begin();
+  if (key_values.empty() && key_nvalues.empty() && keys.empty()
+      && key_regexes.empty() && knrit != key_nregexes.end())
+  {
+    set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knrit->first);
+    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
+        it2(tags_db.range_begin
+          (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
+	   Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
+        !(it2 == tags_db.range_end()); ++it2)
+    {
+      if (!knrit->second->matches(it2.index().value))
+        new_ids.push_back(it2.object().val());
+    }
+
+    sort(new_ids.begin(), new_ids.end());
+    rman.health_check(*this);
+    ++knrit;
+  }
+  
+  for (; knrit != key_nregexes.end(); ++knrit)
+  {
+    vector< uint32 > old_ids;
+    old_ids.swap(new_ids);
+    {
+      set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knrit->first);
+      for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
+	  it2(tags_db.range_begin
+	  (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
+	   Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
+	  !(it2 == tags_db.range_end()); ++it2)
+      {
+	if (binary_search(old_ids.begin(), old_ids.end(), it2.object().val())
+	    && !knrit->second->matches(it2.index().value))
 	  new_ids.push_back(it2.object().val());
       }
     }
@@ -499,18 +598,20 @@ Generic_Statement_Maker< Has_Kv_Statement > Has_Kv_Statement::statement_maker("h
 
 Has_Kv_Statement::Has_Kv_Statement
     (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_), regex(0)
+    : Statement(line_number_), regex(0), straight(true)
 {
   map< string, string > attributes;
   
   attributes["k"] = "";
   attributes["v"] = "";
   attributes["regv"] = "";
+  attributes["modv"] = "";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
   key = attributes["k"];
   value = attributes["v"];
+  
   if (key == "")
   {
     ostringstream temp("");
@@ -518,6 +619,7 @@ Has_Kv_Statement::Has_Kv_Statement
 	<<" the only allowed values are non-empty strings.";
     add_static_error(temp.str());
   }
+  
   if (attributes["regv"] != "")
   {
     if (value != "")
@@ -529,6 +631,18 @@ Has_Kv_Statement::Has_Kv_Statement
     }
     
     regex = new Regular_Expression(attributes["regv"]);
+  }
+  
+  if (attributes["modv"] == "" || attributes["modv"] == "not")
+  {
+    if (attributes["modv"] == "not")
+      straight = false;
+  }
+  else
+  {
+    ostringstream temp("");
+    temp<<"In the element \"has-kv\" the attribute \"modv\" can only be empty or set to \"not\".";
+    add_static_error(temp.str());
   }
 }
 

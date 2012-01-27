@@ -874,6 +874,42 @@ struct Accept_Query_44 : public Accept_All_Tags
     uint pattern_size;
 };
 
+struct Accept_Query_45 : public Accept_All_Tags
+{
+  Accept_Query_45(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return (id % 7 == 0 && id % 21 != 14); }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_46 : public Accept_All_Tags
+{
+  Accept_Query_46(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return (id < 100 && id % 7 == 0 && id % 21 != 0); }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_47 : public Accept_All_Tags
+{
+  Accept_Query_47(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return (id % 21 == 7); }
+  
+  private:
+    uint pattern_size;
+};
+
 struct Accept_Foreach_1 : public Accept_All_Tags
 {
   Accept_Foreach_1(uint pattern_size_)
@@ -1460,6 +1496,18 @@ int main(int argc, char* args[])
       modifier = new Accept_Query_43(pattern_size);
     else if (string(args[2]) == "query_44")
       modifier = new Accept_Query_44(pattern_size);
+    else if (string(args[2]) == "query_45")
+      modifier = new Accept_Query_45(pattern_size);
+    else if (string(args[2]) == "query_46")
+      modifier = new Accept_Query_46(pattern_size);
+    else if (string(args[2]) == "query_47")
+      modifier = new Accept_Query_47(pattern_size);
+    else if (string(args[2]) == "query_48")
+      modifier = new Accept_Query_45(pattern_size);
+    else if (string(args[2]) == "query_49")
+      modifier = new Accept_Query_46(pattern_size);
+    else if (string(args[2]) == "query_50")
+      modifier = new Accept_Query_47(pattern_size);
     else if (string(args[2]) == "union_1")
       modifier = new Accept_Union_1(pattern_size);
     else if (string(args[2]) == "union_2")

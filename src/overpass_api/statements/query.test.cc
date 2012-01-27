@@ -224,8 +224,10 @@ void perform_query
 }
 
 void perform_regex_query
-    (string type, string key, string value, string key2, string regex2,
-     string key3, string regex3, string db_dir)
+    (string type, string key, string value, string key2, string regex2, bool straight2,
+     string key3, string regex3, bool straight3, 
+     string key4, string value4, bool straight4, 
+     string key5, string value5, bool straight5, string db_dir)
 {
   try
   {
@@ -238,10 +240,21 @@ void perform_regex_query
       if (key != "")
         stmt1.stmt().add_statement(&stmt2("k", key)("v", value).stmt(), "");
       SProxy< Has_Kv_Statement > stmt3;
-      stmt1.stmt().add_statement(&stmt3("k", key2)("regv", regex2).stmt(), "");
+      if (key2 != "")
+	stmt1.stmt().add_statement
+	    (&stmt3("k", key2)("regv", regex2)("modv", straight2 ? "" : "not").stmt(), "");
       SProxy< Has_Kv_Statement > stmt4;
       if (key3 != "")
-	stmt1.stmt().add_statement(&stmt4("k", key3)("regv", regex3).stmt(), "");
+	stmt1.stmt().add_statement
+	    (&stmt4("k", key3)("regv", regex3)("modv", straight3 ? "" : "not").stmt(), "");
+      SProxy< Has_Kv_Statement > stmt5;
+      if (key4 != "")
+	stmt1.stmt().add_statement
+	    (&stmt5("k", key4)("v", value4)("modv", straight4 ? "" : "not").stmt(), "");
+      SProxy< Has_Kv_Statement > stmt6;
+      if (key5 != "")
+	stmt1.stmt().add_statement
+	    (&stmt6("k", key5)("v", value5)("modv", straight5 ? "" : "not").stmt(), "");
       stmt1.stmt().execute(rman);
     }
     perform_print(rman);
@@ -569,23 +582,30 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "32"))
     // Test regular expressions: A simple string
-    perform_regex_query("node", "", "", "node_key_11", "^node_value_2$", "", "", args[3]);
+    perform_regex_query("node", "", "",
+			"node_key_11", "^node_value_2$", true,
+			"", "", true, "", "", true, "", "", true, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "33"))
     // Test regular expressions: An extended regular expression
-    perform_regex_query("node", "", "", "node_key_11", "^node_.?alue_2$", "", "", args[3]);
+    perform_regex_query("node", "", "",
+			"node_key_11", "^node_.?alue_2$", true,
+			"", "", true, "", "", true, "", "", true, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "34"))
     // Test regular expressions: Two regular expressions
     perform_regex_query("relation", "", "",
-			"relation_key_2/4", "^relation_.*_0$",
-			"relation_key_5", "^relation_.*_5$", args[3]);
+			"relation_key_2/4", "^relation_.*_0$", true,
+			"relation_key_5", "^relation_.*_5$", true,
+			"", "", true, "", "", true, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "35"))
     // Test regular expressions: A regular expression and a key-value pair
     perform_regex_query("relation",
 			"relation_key_2/4", "relation_value_0",
-			"relation_key_5", "^relation_.*_5$", "", "", args[3]);
+			"relation_key_5", "^relation_.*_5$", true,
+			"", "", true, "", "", true, "", "", true, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "36"))
     // Test regular expressions: A regular expression and a key only
-    perform_regex_query("way", "way_key_7", "", "way_key_11", "^way_.*_8$", "", "", args[3]);
+    perform_regex_query("way", "way_key_7", "", "way_key_11", "^way_.*_8$", true,
+			"", "", true, "", "", true, "", "", true, args[3]);
 
   if ((test_to_execute == "") || (test_to_execute == "37"))
     // Test an around collecting ways from nodes
@@ -614,6 +634,39 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "44"))
     // Test an around collecting relations from nodes based on way membership
     perform_query_with_around("relation", "way", "", "", args[3], pattern_size);
+
+  if ((test_to_execute == "") || (test_to_execute == "45"))
+    // Test a simple has-k-not-v
+    perform_regex_query("relation", "", "", "", "", true, "", "", true,
+			"relation_key_7", "relation_value_2", false,
+			"", "", true, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "46"))
+    // Test a simple has-k-not-v guarded by another has-kv
+    perform_regex_query("node", "node_key", "node_few",
+			"", "", true, "", "", true,
+			"node_key_7", "node_value_0", false,
+			"", "", true, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "47"))
+    // Test two has-k-not-v
+    perform_regex_query("relation", "", "", "", "", true, "", "", true,
+			"relation_key_7", "relation_value_0", false,
+			"relation_key_7", "relation_value_2", false, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "48"))
+    // Test a simple has-k-not-reg-v
+    perform_regex_query("relation", "", "",
+			"relation_key_7", "^relation_value_2$", false,
+			"", "", true, "", "", true, "", "", true, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "49"))
+    // Test a simple has-k-not-reg-v guarded by another has-kv
+    perform_regex_query("node", "node_key", "node_few",
+			"node_key_7", "^node_value_0$", false,
+			"", "", true, "", "", true, "", "", true, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "50"))
+    // Test two has-k-not-reg-v
+    perform_regex_query("relation", "", "",
+			"relation_key_7", "^relation_value_0$", false,
+			"relation_key_7", "^relation_value_2$", false,
+			"", "", true, "", "", true, args[3]);
   
   cout<<"</osm>\n";
   return 0;
