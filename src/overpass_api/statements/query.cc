@@ -3,7 +3,6 @@
 #include "../core/settings.h"
 #include "meta_collector.h"
 #include "area_query.h"
-#include "around.h"
 #include "query.h"
 
 #include "sys/types.h"
