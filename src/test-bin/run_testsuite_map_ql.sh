@@ -84,7 +84,7 @@ $BASEDIR/bin/update_database --db-dir=input/update_database/ --version=mock-up-i
 # Test osm3s_query
 date +%T
 II=70
-while [[ $II -lt 121 ]]; do
+while [[ $II -lt 123 ]]; do
 {
   perform_test_map_ql $II
   II=$(($II + 1))

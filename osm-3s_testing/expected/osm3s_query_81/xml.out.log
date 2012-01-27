@@ -1,5 +1,5 @@
 <osm-script>
   <query into="out" type="node">
-    <has-kv k="key" v="value"/>
+    <has-kv k="key" modv="" v="value"/>
   </query>
 </osm-script>

@@ -1,6 +1,6 @@
 <osm-script>
   <query into="_" type="node">
-    <has-kv k="key" v="value"/>
+    <has-kv k="key" modv="" v="value"/>
     <bbox-query e="10.0" into="_" n="55.0" s="50.0" w="5.0"/>
     <id-query into="_" ref="496" type="node"/>
     <recurse from="_" into="_" type="way-node"/>

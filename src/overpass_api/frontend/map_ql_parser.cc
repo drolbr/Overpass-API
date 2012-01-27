@@ -110,6 +110,45 @@ void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
   process_after(token, error_output, after);
 }
 
+void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
+		       string target_1, string target_2, string target_3, string target_4,
+		       bool after = true)
+{
+  if (*token != target_1 && *token != target_2 && *token != target_3 && *token != target_4)
+  {
+    if (error_output)
+      error_output->add_parse_error
+          (string("'") + target_1 + "', '" + target_2 + "', '" + target_3 + "', or '"
+              + target_4 + "'  expected - '"
+	      + *token + "' found.", token.line_col().first);
+    ++token;
+  }
+  while (token.good() && *token != target_1 && *token != target_2 && *token != target_3
+      && *token != target_4)
+    ++token;
+  process_after(token, error_output, after);
+}
+
+void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
+		       string target_1, string target_2, string target_3, string target_4,
+		       string target_5, bool after = true)
+{
+  if (*token != target_1 && *token != target_2 && *token != target_3
+      && *token != target_4 && *token != target_5)
+  {
+    if (error_output)
+      error_output->add_parse_error
+          (string("'") + target_1 + "', '" + target_2 + "', '" + target_3+ "', '" + target_4
+	      + "', or '" + target_5 + "'  expected - '"
+	      + *token + "' found.", token.line_col().first);
+    ++token;
+  }
+  while (token.good() && *token != target_1 && *token != target_2 && *token != target_3
+      && *token != target_4 && *token != target_5)
+    ++token;
+  process_after(token, error_output, after);
+}
+
 //-----------------------------------------------------------------------------
 
 template< class TStatement >
@@ -208,11 +247,13 @@ TStatement* create_query_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_has_kv_statement(typename TStatement::Factory& stmt_factory,
-				    string key, string value, bool regex, uint line_nr)
+				    string key, string value, bool regex, bool straight,
+				    uint line_nr)
 {
   map< string, string > attr;
   attr["k"] = key;
   attr[regex ? "regv" : "v"] = value;
+  attr["modv"] = (straight ? "" : "not");
   return stmt_factory.create_statement("has-kv", line_nr, attr);
 }
 
@@ -498,10 +539,12 @@ TStatement* create_query_substatement
 {
   if (clause.statement == "has-kv")
     return create_has_kv_statement< TStatement >
-        (stmt_factory, clause.attributes[0], clause.attributes[1], false, clause.line_col.first);
+        (stmt_factory, clause.attributes[0], clause.attributes[1], false,
+	 (clause.attributes[2] == ""), clause.line_col.first);
   else if (clause.statement == "has-kv_regex")
     return create_has_kv_statement< TStatement >
-        (stmt_factory, clause.attributes[0], clause.attributes[1], true, clause.line_col.first);
+        (stmt_factory, clause.attributes[0], clause.attributes[1], true,
+	 (clause.attributes[2] == ""), clause.line_col.first);
   else if (clause.statement == "around")
     return create_around_statement< TStatement >
         (stmt_factory, clause.attributes[1], clause.attributes[0], into, clause.line_col.first);
@@ -544,30 +587,43 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
     {
       ++token;
       string key = get_text_token(token, error_output, "Key");
-      clear_until_after(token, error_output, "~", "=", "]", false);
+      clear_until_after(token, error_output, "!", "~", "=", "!=", "]", false);
+      
+      bool straight = true;
+      if (*token == "!")
+      {
+	straight = false;
+	++token;
+	clear_until_after(token, error_output, "~", "=", "]", false);
+      }
+      
       if (*token == "]")
       {
 	Statement_Text clause("has-kv", token.line_col());
 	clause.attributes.push_back(key);
 	clause.attributes.push_back("");
+	clause.attributes.push_back(straight ? "" : "!");
 	++token;
 	clauses.push_back(clause);
       }
-      else if (*token == "=")
+      else if (*token == "=" || *token == "!=")
       {
+	straight = (*token == "=");
 	++token;
 	Statement_Text clause("has-kv", token.line_col());
 	clause.attributes.push_back(key);
 	clause.attributes.push_back(get_text_token(token, error_output, "Value"));
+	clause.attributes.push_back(straight ? "" : "!");
 	clear_until_after(token, error_output, "]");
 	clauses.push_back(clause);
       }
-      else
+      else //if (*token == "~")
       {
 	++token;
 	Statement_Text clause("has-kv_regex", token.line_col());
 	clause.attributes.push_back(key);
 	clause.attributes.push_back(get_text_token(token, error_output, "Value"));
+	clause.attributes.push_back(straight ? "" : "!");
 	clear_until_after(token, error_output, "]");
 	clauses.push_back(clause);
       }
