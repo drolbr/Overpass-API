@@ -2,7 +2,6 @@
 #define MAP_QL_PARSER
 
 #include "../../expat/map_ql_input.h"
-#include "map_ql_parser.h"
 
 #include <cctype>
 #include <fstream>
