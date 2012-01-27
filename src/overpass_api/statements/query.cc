@@ -111,7 +111,6 @@ void Query_Statement::add_statement(Statement* statement, string text)
   
   Query_Constraint* constraint = statement->get_query_constraint();
   Area_Query_Statement* area(dynamic_cast<Area_Query_Statement*>(statement));
-/*  Around_Statement* around(dynamic_cast<Around_Statement*>(statement));*/
   if (area != 0)
   {
     if (type != QUERY_NODE)
@@ -123,17 +122,6 @@ void Query_Statement::add_statement(Statement* statement, string text)
     }
     constraints.push_back(constraint);
   }
-/*  else if (around != 0)
-  {
-    if (type != QUERY_NODE)
-    {
-      ostringstream temp;
-      temp<<"An around as substatement is only allowed for queries of type \"node\".";
-      add_static_error(temp.str());
-      return;
-    }
-    constraints.push_back(constraint);
-  }*/
   else if (constraint)
     constraints.push_back(constraint);
   else
