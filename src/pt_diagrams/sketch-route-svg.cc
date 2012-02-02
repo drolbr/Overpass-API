@@ -370,6 +370,7 @@ unsigned int max_correspondences_below(0);
 map< string, string > name_shortcuts;
 map< string, string > translations;
 bool doubleread_rel;
+int debug_level = 0;
 
 void options_start(const char *el, const char **attr)
 {
@@ -526,6 +527,8 @@ int main(int argc, char *argv[])
       doubleread_rel = true;
     else if (!strcmp("--backtime", argv[argi]))
       doubleread_rel = true;
+    else if (!strncmp("--debug=", argv[argi], 8))
+      debug_level = atoi(((string)(argv[argi])).substr(8).c_str());
     ++argi;
   }
   
@@ -533,7 +536,7 @@ int main(int argc, char *argv[])
   vector< Relation > relations;
   Stoplist stoplist = make_stoplist(walk_limit_for_changes, doubleread_rel,
 				    display_classes, pivot_ref, pivot_network,
-				    relations, have_valid_operation_times);
+				    relations, have_valid_operation_times, debug_level);
   Relation relation = relations.front();
 
   // bailout if no relation is found
@@ -562,29 +565,43 @@ int main(int argc, char *argv[])
   // trim the horizontal itinerary lines
   vector< int > first_stop_idx(relations.size());
   vector< int > last_stop_idx(relations.size());
-  for (unsigned int i(0); i < relations.size(); ++i)
+  if (debug_level < 2)
   {
-    if (relations[i].direction == 0)
-      continue;
+    for (unsigned int i(0); i < relations.size(); ++i)
+    {
+      if (relations[i].direction == 0)
+        continue;
     
-    first_stop_idx[i] = 0;
-    last_stop_idx[i] = stoplist.stops.size()-1;
-    for (list< Stop >::const_iterator it(stoplist.stops.begin());
-        it != stoplist.stops.end(); ++it)
-    {
-      if (it->used_by[i] != 0)
-	break;
-      ++first_stop_idx[i];
-    }
-    for (list< Stop >::const_reverse_iterator it(stoplist.stops.rbegin());
-        it != stoplist.stops.rend(); ++it)
-    {
-      if (it->used_by[i] != 0)
-	break;
-      --last_stop_idx[i];
+      first_stop_idx[i] = 0;
+      last_stop_idx[i] = stoplist.stops.size()-1;
+      for (list< Stop >::const_iterator it(stoplist.stops.begin());
+          it != stoplist.stops.end(); ++it)
+      {
+	if (it->used_by[i] != 0)
+	  break;
+	++first_stop_idx[i];
+      }
+      for (list< Stop >::const_reverse_iterator it(stoplist.stops.rbegin());
+          it != stoplist.stops.rend(); ++it)
+      {
+	if (it->used_by[i] != 0)
+	  break;
+	--last_stop_idx[i];
+      }
     }
   }
-  
+  else
+  {
+    for (unsigned int i(0); i < relations.size(); ++i)
+    {
+      if (relations[i].direction == 0)
+	continue;
+      
+      first_stop_idx[i] = 0;
+      last_stop_idx[i] = stoplist.stops.size()-1;
+    }
+  }
+    
   //desactivated, for debugging purposes only
 /*  for (unsigned int i(0); i < relations.size(); ++i)
     cerr<<relations[i].direction<<' ';
@@ -607,49 +624,52 @@ int main(int argc, char *argv[])
   // unify itinerary lines with similar begin
   vector< int > left_join_to(relations.size(), -1);
   vector< int > right_join_to(relations.size(), -1);
-  for (unsigned int i(0); i < relations.size(); ++i)
+  if (debug_level < 1)
   {
-    for (unsigned int j(0); j < i; ++j)
+    for (unsigned int i(0); i < relations.size(); ++i)
     {
-      int ijsimilar(0);
-      for (list< Stop >::const_iterator it(stoplist.stops.begin());
-          it != stoplist.stops.end(); ++it)
+      for (unsigned int j(0); j < i; ++j)
       {
-	if (it->used_by[i] != it->used_by[j])
-	  break;
-	if (ijsimilar > last_stop_idx[j])
-	  break;
-	++ijsimilar;
-      }
-      if (ijsimilar > last_stop_idx[i])
-	relations[i].direction = 0;
-      else if (ijsimilar > first_stop_idx[i])
-      {
-	first_stop_idx[i] = ijsimilar;
-	left_join_to[i] = j;
+	int ijsimilar(0);
+	for (list< Stop >::const_iterator it(stoplist.stops.begin());
+	    it != stoplist.stops.end(); ++it)
+	{
+	  if (it->used_by[i] != it->used_by[j])
+	    break;
+	  if (ijsimilar > last_stop_idx[j])
+	    break;
+	  ++ijsimilar;
+	}
+	if (ijsimilar > last_stop_idx[i])
+	  relations[i].direction = 0;
+	else if (ijsimilar > first_stop_idx[i])
+	{
+	  first_stop_idx[i] = ijsimilar;
+	  left_join_to[i] = j;
+	}
       }
     }
-  }
-  for (unsigned int i(0); i < relations.size(); ++i)
-  {
-    for (unsigned int j(0); j < i; ++j)
+    for (unsigned int i(0); i < relations.size(); ++i)
     {
-      int ijsimilar(stoplist.stops.size()-1);
-      for (list< Stop >::const_reverse_iterator it(stoplist.stops.rbegin());
-      it != stoplist.stops.rend(); ++it)
+      for (unsigned int j(0); j < i; ++j)
       {
-	if (it->used_by[i] != it->used_by[j])
-	  break;
-	if (ijsimilar < first_stop_idx[j])
-	  break;
-	--ijsimilar;
-      }
-      if (ijsimilar < first_stop_idx[i])
-	relations[i].direction = 0;
-      else if (ijsimilar < last_stop_idx[i])
-      {
-	last_stop_idx[i] = ijsimilar;
-	right_join_to[i] = j;
+	int ijsimilar(stoplist.stops.size()-1);
+	for (list< Stop >::const_reverse_iterator it(stoplist.stops.rbegin());
+	    it != stoplist.stops.rend(); ++it)
+	{
+	  if (it->used_by[i] != it->used_by[j])
+	    break;
+	  if (ijsimilar < first_stop_idx[j])
+	    break;
+	  --ijsimilar;
+	}
+	if (ijsimilar < first_stop_idx[i])
+	  relations[i].direction = 0;
+	else if (ijsimilar < last_stop_idx[i])
+	{
+	  last_stop_idx[i] = ijsimilar;
+	  right_join_to[i] = j;
+	}
       }
     }
   }

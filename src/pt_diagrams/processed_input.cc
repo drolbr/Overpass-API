@@ -882,7 +882,8 @@ Stoplist make_stoplist(double walk_limit_for_changes, bool doubleread_rel,
 		       string pivot_ref_,
 		       string pivot_network_,
 		       vector< Relation >& relations_,
-		       bool& have_valid_operation_times)
+		       bool& have_valid_operation_times,
+		       int debug_level)
 {
   relations = &relations_;
   display_classes = &display_classes_;
@@ -978,32 +979,35 @@ Stoplist make_stoplist(double walk_limit_for_changes, bool doubleread_rel,
   
   // unify one-directional relations as good as possible
   multimap< double, pair< int, int > > possible_pairs;
-  for (unsigned int i(0); i < relations->size(); ++i)
+  if (debug_level < 10)
   {
-    if (relations_[i].direction != Relation::FORWARD)
-      continue;
-    for (unsigned int j(0); j < relations->size(); ++j)
+    for (unsigned int i(0); i < relations->size(); ++i)
     {
-      int common(0), total(0);
-      if (relations_[j].direction != Relation::BACKWARD)
+      if (relations_[i].direction != Relation::FORWARD)
 	continue;
-      for (list< Stop >::const_iterator it(stoplist.stops.begin());
-          it != stoplist.stops.end(); ++it)
+      for (unsigned int j(0); j < relations->size(); ++j)
       {
-	if (it->used_by[i] == Stop::FORWARD)
+	int common(0), total(0);
+	if (relations_[j].direction != Relation::BACKWARD)
+	  continue;
+	for (list< Stop >::const_iterator it(stoplist.stops.begin());
+	    it != stoplist.stops.end(); ++it)
 	{
-	  ++total;
-	  if (it->used_by[j] == Stop::BACKWARD)
-	    ++common;
+	  if (it->used_by[i] == Stop::FORWARD)
+	  {
+	    ++total;
+	    if (it->used_by[j] == Stop::BACKWARD)
+	      ++common;
+	  }
+	  else if (it->used_by[j] == Stop::BACKWARD)
+	    ++total;
 	}
-	else if (it->used_by[j] == Stop::BACKWARD)
-	  ++total;
+	possible_pairs.insert(make_pair
+	    ((double)common/(double)total, make_pair(i, j)));
       }
-      possible_pairs.insert(make_pair
-          ((double)common/(double)total, make_pair(i, j)));
     }
   }
-  
+    
   for (multimap< double, pair< int, int > >::const_reverse_iterator
        it(possible_pairs.rbegin()); it != possible_pairs.rend(); ++it)
   {

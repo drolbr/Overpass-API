@@ -166,6 +166,7 @@ Stoplist make_stoplist(double walk_limit_for_changes, bool doubleread_rel,
 		       string pivot_ref_,
 		       string pivot_network_,
 		       vector< Relation >& relations,
-		       bool& have_valid_operation_times);
+		       bool& have_valid_operation_times,
+		       int debug_level);
 
 #endif

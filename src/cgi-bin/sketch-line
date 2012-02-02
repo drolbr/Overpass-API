@@ -50,7 +50,10 @@ for KEY_VAL in $QUERY_STRING; do
   elif [[ ${KEY_VAL:0:15} == "max-cors-below=" ]]; then
     SKETCH_PARAMS="$SKETCH_PARAMS --max-correspondences-below=${KEY_VAL:15}"
   elif [[ ${KEY_VAL:0:6} == "debug=" ]]; then
+  {
+    SKETCH_PARAMS="$SKETCH_PARAMS --debug=${KEY_VAL:6}"
     DEBUG="${KEY_VAL:6}"
+  };
   fi
 }; done
 unset IFS
