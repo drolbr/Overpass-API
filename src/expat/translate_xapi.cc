@@ -368,11 +368,12 @@ int main(int argc, char* argv[])
     cout<<"<union>\n"
           "  <bbox-query s=\""<<south<<"\" n=\""<<north<<"\" w=\""
             <<west<<"\" e=\""<<east<<"\"/>\n"
-          "  <recurse type=\"node-relation\" into=\"rels\"/>\n"
+          "  <recurse type=\"node-relation\" into=\"foo\"/>\n"
           "  <recurse type=\"node-way\"/>\n"
-          "  <recurse type=\"way-relation\"/>\n"
+	  "  <recurse type=\"way-node\" into=\"foo\"/>\n"
+	  "  <recurse type=\"way-relation\"/>\n"
           "</union>\n"
-          "<print/>\n";
+          "<print mode=\"meta\"/>\n";
   }
   else
   {
