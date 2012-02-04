@@ -11,7 +11,7 @@ using namespace std;
 const int QUERY_NODE = 1;
 const int QUERY_WAY = 2;
 const int QUERY_RELATION = 3;
-// const unsigned int QUERY_AREA = 4;
+// const int QUERY_AREA = 4;
 
 class Regular_Expression;
 
@@ -39,8 +39,7 @@ class Query_Statement : public Statement
     vector< Query_Constraint* > constraints;
     
     vector< uint32 > collect_ids
-        (const File_Properties& file_prop, uint32 stopwatch_account,
-	 Resource_Manager& rman);
+        (const File_Properties& file_prop, Resource_Manager& rman);
 	 
     template < typename TIndex, typename TObject >
     void get_elements_by_id_from_db

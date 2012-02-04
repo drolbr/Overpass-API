@@ -9,6 +9,7 @@
 #include "item.h"
 #include "query.h"
 #include "print.h"
+#include "recurse.h"
 
 using namespace std;
 
@@ -452,6 +453,83 @@ void perform_query_with_bbox
   }
 }
 
+template< class T >
+string to_string(T d)
+{
+  ostringstream out;
+  out<<d;
+  return out.str();
+}
+
+void perform_query_with_recurse
+    (string query_type, string recurse_type, string key1, string value1,
+     double south, double north, double west, double east, bool double_recurse,
+     int pattern_size, string db_dir)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Resource_Manager rman(transaction);
+    {
+      SProxy< Id_Query_Statement > stmt1;
+      if (recurse_type == "way-node")
+        stmt1("type", "way")("ref", to_string((pattern_size-1)*pattern_size/2)).stmt().execute(rman);
+      else if (recurse_type == "relation-node")
+	stmt1("type", "relation")("ref", "11").stmt().execute(rman);
+      else if (recurse_type == "relation-way")
+	stmt1("type", "relation")("ref", "6").stmt().execute(rman);
+      else if (recurse_type == "relation-relation")
+	stmt1("type", "relation")("ref", "9").stmt().execute(rman);
+    }
+    if (double_recurse)
+    {
+      SProxy< Id_Query_Statement > stmt1;
+      if (recurse_type == "way-node")
+	stmt1("type", "way")("ref", to_string((pattern_size-1)*pattern_size/2 - 1))("into", "elem2")
+          .stmt().execute(rman);
+      else if (recurse_type == "relation-node")
+	stmt1("type", "relation")("ref", "1")("into", "elem2")
+          .stmt().execute(rman);
+      else if (recurse_type == "relation-way")
+	stmt1("type", "relation")("ref", "6")("into", "elem2")
+          .stmt().execute(rman);
+      else if (recurse_type == "relation-relation")
+	stmt1("type", "relation")("ref", "10")("into", "elem2").stmt().execute(rman);
+    }
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", query_type);
+      
+      SProxy< Recurse_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("type", recurse_type).stmt(), "");
+
+      SProxy< Has_Kv_Statement > stmt3;
+      if (key1 != "")
+	stmt1.stmt().add_statement(&stmt3("k", key1)("v", value1).stmt(), "");
+
+      SProxy< Bbox_Query_Statement > stmt4;
+      if (south <= 90.0 && north <= 90.0)
+      {
+	stmt1.stmt().add_statement
+	    (&stmt4("n", to_string(north))("s", to_string(south))
+	           ("w", to_string(west))("e", to_string(east)).stmt(), "");
+      }
+
+      SProxy< Recurse_Statement > stmt5;
+      if (double_recurse)
+        stmt1.stmt().add_statement(&stmt5("type", recurse_type)("from", "elem2").stmt(), "");
+
+      stmt1.stmt().execute(rman);
+    }
+    perform_print(rman);
+  }
+  catch (File_Error e)
+  {
+    cerr<<"File error caught: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
 int main(int argc, char* args[])
 {
   if (argc < 4)
@@ -667,6 +745,88 @@ int main(int argc, char* args[])
 			"relation_key_7", "^relation_value_0$", false,
 			"relation_key_7", "^relation_value_2$", false,
 			"", "", true, "", "", true, args[3]);
+
+  // Test recurse of type way-node as subquery
+  if ((test_to_execute == "") || (test_to_execute == "51"))
+    perform_query_with_recurse("node", "way-node", "", "", 100.0, 100.0, 0.0, 0.0, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "52"))
+    perform_query_with_recurse("node", "way-node", "node_key_5", "node_value_5",
+			       100.0, 100.0, 0.0, 0.0, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "53"))
+    perform_query_with_recurse("node", "way-node", "", "", 51.5, 52.0, 7.5, 8.0, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "54"))
+    perform_query_with_recurse("node", "way-node", "node_key_5", "node_value_5",
+			       51.5, 52.0, 7.5, 8.0, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "55"))
+    perform_query_with_recurse("node", "way-node", "", "", 100.0, 100.0, 0.0, 0.0, true,
+			       pattern_size, args[3]);
+  
+  // Test recurse of type relation-node as subquery
+  if ((test_to_execute == "") || (test_to_execute == "56"))
+    perform_query_with_recurse("node", "relation-node", "", "", 100.0, 100.0, 0.0, 0.0, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "57"))
+    perform_query_with_recurse("node", "relation-node", "node_key_5", "node_value_5",
+			       100.0, 100.0, 0.0, 0.0, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "58"))
+    perform_query_with_recurse("node", "relation-node", "", "", 51.5, 52.0, 7.5, 8.0, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "59"))
+    perform_query_with_recurse("node", "relation-node", "node_key_5", "node_value_5",
+			       51.5, 52.0, 7.5, 8.0, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "60"))
+    perform_query_with_recurse("node", "relation-node", "", "", 100.0, 100.0, 0.0, 0.0, true,
+			       pattern_size, args[3]);
+  
+  // Test recurse of type relation-way as subquery
+  if ((test_to_execute == "") || (test_to_execute == "61"))
+    perform_query_with_recurse("way", "relation-way", "", "", 100.0, 100.0, 0.0, 0.0, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "62"))
+    perform_query_with_recurse("way", "relation-way", "way_key_2/4", "way_value_1",
+			       100.0, 100.0, 0.0, 0.0, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "63"))
+    perform_query_with_recurse("way", "relation-way", "", "",
+			       51.0, 51.0 + 2.0/pattern_size, 7.0, 7.5, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "64"))
+    perform_query_with_recurse("way", "relation-way", "way_key_2/4", "way_value_1",
+			       51.0, 51.0 + 2.0/pattern_size, 7.0, 7.5, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "65"))
+    perform_query_with_recurse("way", "relation-way", "", "", 100.0, 100.0, 0.0, 0.0, true,
+			       pattern_size, args[3]);
+  
+  // Test recurse of type relation-relation as subquery
+  if ((test_to_execute == "") || (test_to_execute == "66"))
+    perform_query_with_recurse("relation", "relation-relation", "", "",
+			       100.0, 100.0, 0.0, 0.0, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "67"))
+    perform_query_with_recurse("relation", "relation-relation",
+			       "relation_key_2/4", "relation_value_0",
+			       100.0, 100.0, 0.0, 0.0, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "68"))
+    perform_query_with_recurse("relation", "relation-relation", "", "",
+			       51.75, 52.0, 7.0, 8.0, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "69"))
+    perform_query_with_recurse("relation", "relation-relation",
+			       "relation_key_2/4", "relation_value_0",
+			       51.75, 52.0, 7.0, 8.0, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "70"))
+    perform_query_with_recurse("relation", "relation-relation", "", "",
+			       100.0, 100.0, 0.0, 0.0, true,
+			       pattern_size, args[3]);
   
   cout<<"</osm>\n";
   return 0;

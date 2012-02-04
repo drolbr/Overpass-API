@@ -23,52 +23,7 @@ const unsigned int RECURSE_NODE_WAY = 8;
 
 Generic_Statement_Maker< Recurse_Statement > Recurse_Statement::statement_maker("recurse");
 
-Recurse_Statement::Recurse_Statement
-    (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_)
-{
-  map< string, string > attributes;
-  
-  attributes["from"] = "_";
-  attributes["into"] = "_";
-  attributes["type"] = "";
-  
-  eval_attributes_array(get_name(), attributes, input_attributes);
-  
-  input = attributes["from"];
-  output = attributes["into"];
-  
-  if (attributes["type"] == "relation-relation")
-    type = RECURSE_RELATION_RELATION;
-  else if (attributes["type"] == "relation-backwards")
-    type = RECURSE_RELATION_BACKWARDS;
-  else if (attributes["type"] == "relation-way")
-    type = RECURSE_RELATION_WAY;
-  else if (attributes["type"] == "relation-node")
-    type = RECURSE_RELATION_NODE;
-  else if (attributes["type"] == "way-node")
-    type = RECURSE_WAY_NODE;
-  else if (attributes["type"] == "way-relation")
-    type = RECURSE_WAY_RELATION;
-  else if (attributes["type"] == "node-relation")
-    type = RECURSE_NODE_RELATION;
-  else if (attributes["type"] == "node-way")
-    type = RECURSE_NODE_WAY;
-  else
-  {
-    type = 0;
-    ostringstream temp;
-    temp<<"For the attribute \"type\" of the element \"recurse\""
-	<<" the only allowed values are \"relation-relation\", \"relation-backwards\","
-	<<"\"relation-way\", \"relation-node\", \"way-node\", \"way-relation\","
-	<<"\"node-relation\" or \"node-way\".";
-    add_static_error(temp.str());
-  }
-}
-
-void Recurse_Statement::forecast()
-{
-}
+//-----------------------------------------------------------------------------
 
 template < class TIndex, class TObject, class TContainer >
 void collect_items(const Statement& stmt, Resource_Manager& rman,
@@ -116,9 +71,29 @@ void collect_items_range(const Statement& stmt, Resource_Manager& rman,
   }
 }
 
+vector< Uint31_Index > collect_relation_req
+    (const Statement& stmt, Resource_Manager& rman,
+     const vector< uint32 >& map_ids)
+{
+  vector< Uint31_Index > req;
+  
+  Random_File< Uint31_Index > random
+      (rman.get_transaction()->random_index(osm_base_settings().RELATIONS));
+  for (vector< uint32 >::const_iterator
+      it(map_ids.begin()); it != map_ids.end(); ++it)
+    req.push_back(random.get(*it));
+  
+  rman.health_check(stmt);
+  sort(req.begin(), req.end());
+  req.erase(unique(req.begin(), req.end()), req.end());
+  rman.health_check(stmt);
+  
+  return req;
+}
+
 vector< Uint31_Index > collect_way_req
     (const Statement& stmt, Resource_Manager& rman,
-     const vector< uint32 >& map_ids, vector< uint32 > parents)
+     const vector< uint32 >& map_ids, const vector< uint32 >& parents)
 {
   vector< Uint31_Index > req = calc_children(parents);
   
@@ -138,7 +113,7 @@ vector< Uint31_Index > collect_way_req
 
 vector< Uint32_Index > collect_node_req
     (const Statement& stmt, Resource_Manager& rman,
-     const vector< uint32 >& map_ids, vector< uint32 > parents)
+     const vector< uint32 >& map_ids, const vector< uint32 >& parents)
 {
   vector< Uint32_Index > req = calc_node_children(parents);
   
@@ -182,43 +157,190 @@ void extract_ids(const vector< Way_Skeleton >& ways, vector< uint32 >& ids)
   }
 }
 
+vector< Uint31_Index > collect_indices_31
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end)
+{
+  vector< uint32 > map_ids;
+  vector< uint32 > parents;
+    
+  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
+      it = rels_begin; it != rels_end; ++it)
+  {
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xf) == 0))
+      // Treat relations with really large indices: get the node indexes from nodes.map.
+      extract_ids(it->second, map_ids, Relation_Entry::WAY);
+    else
+      parents.push_back(it->first.val());      
+  }    
+  sort(map_ids.begin(), map_ids.end());
+  rman.health_check(stmt);
+    
+  return collect_way_req(stmt, rman, map_ids, parents);
+}
+
+vector< Uint31_Index > collect_indices_31_rels
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end)
+{
+  vector< uint32 > map_ids;
+    
+  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
+      it = rels_begin; it != rels_end; ++it)
+    // Treat relations with really large indices: get the node indexes from nodes.map.
+    extract_ids(it->second, map_ids, Relation_Entry::RELATION);
+
+  sort(map_ids.begin(), map_ids.end());
+  rman.health_check(stmt);
+    
+  return collect_relation_req(stmt, rman, map_ids);
+}
+
+vector< Uint32_Index > collect_indices_32
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end)
+{
+  vector< uint32 > map_ids;
+  vector< uint32 > parents;
+  
+  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
+    it = rels_begin; it != rels_end; ++it)
+  {
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xf) == 0))
+      // Treat relations with really large indices: get the node indexes from nodes.map.
+      extract_ids(it->second, map_ids, Relation_Entry::NODE);
+    else
+      parents.push_back(it->first.val());      
+  }    
+  sort(map_ids.begin(), map_ids.end());
+  rman.health_check(stmt);
+  
+  return collect_node_req(stmt, rman, map_ids, parents);
+}
+
+vector< Uint32_Index > collect_indices_from_way
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_begin,
+     map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_end)
+{
+  vector< uint32 > map_ids;
+  vector< uint32 > parents;
+  
+  for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
+    it(ways_begin); it != ways_end; ++it)
+  {
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xf) == 0))
+      // Treat ways with really large indices: get the node indexes from nodes.map.
+      extract_ids(it->second, map_ids);
+    else
+      parents.push_back(it->first.val());
+  }
+  sort(map_ids.begin(), map_ids.end());
+  rman.health_check(stmt);
+  
+  return collect_node_req(stmt, rman, map_ids, parents);
+}
+
+vector< uint32 > collect_ids
+    (const Statement& stmt, Resource_Manager& rman, uint32 type,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end)
+{
+  vector< uint32 > ids;    
+  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
+      it(rels_begin); it != rels_end; ++it)
+    extract_ids(it->second, ids, type);
+  
+  rman.health_check(stmt);
+  sort(ids.begin(), ids.end());
+  
+  return ids;
+}
+
+vector< uint32 > collect_ids
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_begin,
+     map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_end)
+{
+  vector< uint32 > ids;
+  for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
+      it(ways_begin); it != ways_end; ++it)
+    extract_ids(it->second, ids);
+  
+  rman.health_check(stmt);
+  sort(ids.begin(), ids.end());
+  
+  return ids;
+}
+
+void collect_relations
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
+     map< Uint31_Index, vector< Relation_Skeleton > >& result)
+{
+  vector< Uint31_Index > req = collect_indices_31_rels(stmt, rman, rels_begin, rels_end);  
+  vector< uint32 > ids = collect_ids(stmt, rman, Relation_Entry::RELATION, rels_begin, rels_end);  
+  collect_items(stmt, rman, *osm_base_settings().RELATIONS, req, ids, result);
+}
+
+void collect_relations
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
+     map< Uint31_Index, vector< Relation_Skeleton > >& result,
+     const set< pair< Uint31_Index, Uint31_Index > >& relation_ranges)
+{
+  vector< uint32 > ids = collect_ids(stmt, rman, Relation_Entry::RELATION, rels_begin, rels_end);  
+  collect_items_range(stmt, rman, *osm_base_settings().RELATIONS, relation_ranges, ids, result);
+}
+
+void collect_relations
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
+     map< Uint31_Index, vector< Relation_Skeleton > >& result,
+     const vector< uint32 >& ids)
+{
+  vector< Uint31_Index > req = collect_indices_31_rels(stmt, rman, rels_begin, rels_end);  
+  vector< uint32 > children_ids = collect_ids(stmt, rman, Relation_Entry::RELATION,
+					      rels_begin, rels_end);
+  vector< uint32 > intersect_ids(ids.size());
+  intersect_ids.erase(set_intersection
+      (ids.begin(), ids.end(), children_ids.begin(), children_ids.end(), intersect_ids.begin()),
+      intersect_ids.end());
+  collect_items(stmt, rman, *osm_base_settings().RELATIONS, req, ids, result);
+}
+
+void collect_relations
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
+     map< Uint31_Index, vector< Relation_Skeleton > >& result,
+     const vector< uint32 >& ids,
+     const set< pair< Uint31_Index, Uint31_Index > >& relation_ranges)
+{
+  vector< uint32 > children_ids = collect_ids(stmt, rman, Relation_Entry::RELATION,
+					      rels_begin, rels_end);
+  vector< uint32 > intersect_ids(ids.size());
+  intersect_ids.erase(set_intersection
+      (ids.begin(), ids.end(), children_ids.begin(), children_ids.end(), intersect_ids.begin()),
+      intersect_ids.end());
+  collect_items_range(stmt, rman, *osm_base_settings().RELATIONS, relation_ranges, ids, result);
+}
+
 void collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
      map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
      map< Uint31_Index, vector< Way_Skeleton > >& result)
 {
-  vector< Uint31_Index > req;
-  {
-    vector< uint32 > map_ids;
-    vector< uint32 > parents;
-    
-    for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
-        it(rels_begin); it != rels_end; ++it)
-    {
-      if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xf) == 0))
-	// Treat relations with really large indices: get the node indexes from nodes.map.
-	extract_ids(it->second, map_ids, Relation_Entry::WAY);
-      else
-	parents.push_back(it->first.val());      
-    }    
-    sort(map_ids.begin(), map_ids.end());
-    rman.health_check(stmt);
-    
-    req = collect_way_req(stmt, rman, map_ids, parents);
-  }
-
-  // collect ids
-  vector< uint32 > ids;    
-  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
-      it(rels_begin); it != rels_end; ++it)
-    extract_ids(it->second, ids, Relation_Entry::WAY);
-  
-  rman.health_check(stmt);
-  sort(ids.begin(), ids.end());
-  
+  vector< Uint31_Index > req = collect_indices_31(stmt, rman, rels_begin, rels_end);
+  vector< uint32 > ids = collect_ids(stmt, rman, Relation_Entry::WAY, rels_begin, rels_end);
   collect_items(stmt, rman, *osm_base_settings().WAYS, req, ids, result);
-  //stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
 }
 
 void collect_ways
@@ -228,56 +350,40 @@ void collect_ways
      map< Uint31_Index, vector< Way_Skeleton > >& result,
      const set< pair< Uint31_Index, Uint31_Index > >& way_ranges)
 {
-  // collect ids
-  vector< uint32 > ids;    
-  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
-      it(rels_begin); it != rels_end; ++it)
-    extract_ids(it->second, ids, Relation_Entry::WAY);
-  
-  rman.health_check(stmt);
-  sort(ids.begin(), ids.end());
-  
+  vector< uint32 > ids = collect_ids(stmt, rman, Relation_Entry::WAY, rels_begin, rels_end);
   collect_items_range(stmt, rman, *osm_base_settings().WAYS, way_ranges, ids, result);
-  //stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
 }
 
-void collect_nodes
+void collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
      map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
-     map< Uint32_Index, vector< Node_Skeleton > >& result)
+     map< Uint31_Index, vector< Way_Skeleton > >& result,
+     const vector< uint32 >& ids)
 {
-  vector< Uint32_Index > req;
-  {
-    vector< uint32 > map_ids;
-    vector< uint32 > parents;
-    
-    for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
-        it(rels_begin); it != rels_end; ++it)
-    {
-      if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xf) == 0))
-	// Treat relations with really large indices: get the node indexes from nodes.map.
-	extract_ids(it->second, map_ids, Relation_Entry::NODE);
-      else
-	parents.push_back(it->first.val());      
-    }    
-    sort(map_ids.begin(), map_ids.end());
-    rman.health_check(stmt);
-    
-    req = collect_node_req(stmt, rman, map_ids, parents);
-  }
+  vector< Uint31_Index > req = collect_indices_31(stmt, rman, rels_begin, rels_end);
+  vector< uint32 > children_ids = collect_ids(stmt, rman, Relation_Entry::WAY, rels_begin, rels_end);
+  vector< uint32 > intersect_ids(ids.size());
+  intersect_ids.erase(set_intersection
+      (ids.begin(), ids.end(), children_ids.begin(), children_ids.end(), intersect_ids.begin()),
+      intersect_ids.end());
+  collect_items(stmt, rman, *osm_base_settings().WAYS, req, intersect_ids, result);
+}
 
-  // collect ids
-  vector< uint32 > ids;    
-  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
-      it(rels_begin); it != rels_end; ++it)
-    extract_ids(it->second, ids, Relation_Entry::NODE);
-
-  rman.health_check(stmt);
-  sort(ids.begin(), ids.end());
-  
-  collect_items(stmt, rman, *osm_base_settings().NODES, req, ids, result);
-  //stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
+void collect_ways
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
+     map< Uint31_Index, vector< Way_Skeleton > >& result,
+     const vector< uint32 >& ids,
+     const set< pair< Uint31_Index, Uint31_Index > >& way_ranges)
+{
+  vector< uint32 > children_ids = collect_ids(stmt, rman, Relation_Entry::WAY, rels_begin, rels_end);
+  vector< uint32 > intersect_ids(ids.size());
+  intersect_ids.erase(set_intersection
+      (ids.begin(), ids.end(), children_ids.begin(), children_ids.end(), intersect_ids.begin()),
+      intersect_ids.end());
+  collect_items_range(stmt, rman, *osm_base_settings().WAYS, way_ranges, intersect_ids, result);
 }
 
 void collect_nodes
@@ -287,17 +393,64 @@ void collect_nodes
      map< Uint32_Index, vector< Node_Skeleton > >& result,
      const set< pair< Uint32_Index, Uint32_Index > >& node_ranges)
 {
-  // collect ids
-  vector< uint32 > ids;    
-  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
-      it(rels_begin); it != rels_end; ++it)
-    extract_ids(it->second, ids, Relation_Entry::NODE);
-
-  rman.health_check(stmt);
-  sort(ids.begin(), ids.end());
-  
+  vector< uint32 > ids = collect_ids(stmt, rman, Relation_Entry::NODE, rels_begin, rels_end);
   collect_items_range(stmt, rman, *osm_base_settings().NODES, node_ranges, ids, result);
-  //stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
+}
+
+void collect_nodes
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
+     map< Uint32_Index, vector< Node_Skeleton > >& result)
+{
+  vector< Uint32_Index > req = collect_indices_32(stmt, rman, rels_begin, rels_end);
+  vector< uint32 > ids = collect_ids(stmt, rman, Relation_Entry::NODE, rels_begin, rels_end);
+  collect_items(stmt, rman, *osm_base_settings().NODES, req, ids, result);
+}
+
+void collect_nodes
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
+     map< Uint32_Index, vector< Node_Skeleton > >& result,
+     const vector< uint32 >& ids,
+     const set< pair< Uint32_Index, Uint32_Index > >& node_ranges)
+{
+  vector< uint32 > children_ids = collect_ids
+      (stmt, rman, Relation_Entry::NODE, rels_begin, rels_end);
+  vector< uint32 > intersect_ids(ids.size());
+  intersect_ids.erase(set_intersection
+      (ids.begin(), ids.end(), children_ids.begin(), children_ids.end(), intersect_ids.begin()),
+      intersect_ids.end());
+  collect_items_range(stmt, rman, *osm_base_settings().NODES, node_ranges, intersect_ids, result);
+}
+
+void collect_nodes
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
+     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
+     map< Uint32_Index, vector< Node_Skeleton > >& result,
+     const vector< uint32 >& ids)
+{
+  vector< Uint32_Index > req = collect_indices_32(stmt, rman, rels_begin, rels_end);
+  vector< uint32 > children_ids = collect_ids
+      (stmt, rman, Relation_Entry::NODE, rels_begin, rels_end);
+  vector< uint32 > intersect_ids(ids.size());
+  intersect_ids.erase(set_intersection
+      (ids.begin(), ids.end(), children_ids.begin(), children_ids.end(), intersect_ids.begin()),
+      intersect_ids.end());
+  collect_items(stmt, rman, *osm_base_settings().NODES, req, intersect_ids, result);
+}
+
+void collect_nodes
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_begin,
+     map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_end,
+     map< Uint32_Index, vector< Node_Skeleton > >& result,
+     const set< pair< Uint32_Index, Uint32_Index > >& node_ranges)
+{
+  vector< uint32 > ids = collect_ids(stmt, rman, ways_begin, ways_end);
+  collect_items_range(stmt, rman, *osm_base_settings().NODES, node_ranges, ids, result);
 }
 
 void collect_nodes
@@ -306,39 +459,288 @@ void collect_nodes
      map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_end,
      map< Uint32_Index, vector< Node_Skeleton > >& result)
 {
-  // collect indexes
-  vector< Uint32_Index > req;
-  {
-    vector< uint32 > map_ids;
-    vector< uint32 > parents;
-    
-    for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
-        it(ways_begin); it != ways_end; ++it)
-    {
-      if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xf) == 0))
-	// Treat ways with really large indices: get the node indexes from nodes.map.
-	extract_ids(it->second, map_ids);
-      else
-	parents.push_back(it->first.val());
-    }
-    
-    sort(map_ids.begin(), map_ids.end());
-    rman.health_check(stmt);
-    
-    req = collect_node_req(stmt, rman, map_ids, parents);
-  }    
-  
-  // collect ids
-  vector< uint32 > ids;
-  for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
-      it(ways_begin); it != ways_end; ++it)
-    extract_ids(it->second, ids);
-
-  rman.health_check(stmt);
-  sort(ids.begin(), ids.end());
-    
+  vector< Uint32_Index > req = collect_indices_from_way(stmt, rman, ways_begin, ways_end);
+  vector< uint32 > ids = collect_ids(stmt, rman, ways_begin, ways_end);
   collect_items(stmt, rman, *osm_base_settings().NODES, req, ids, result);
-  //stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
+}
+
+void collect_nodes
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_begin,
+     map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_end,
+     map< Uint32_Index, vector< Node_Skeleton > >& result,
+     const vector< uint32 >& ids,
+     const set< pair< Uint32_Index, Uint32_Index > >& node_ranges)
+{
+  vector< uint32 > children_ids = collect_ids(stmt, rman, ways_begin, ways_end);
+  vector< uint32 > intersect_ids(ids.size());
+  intersect_ids.erase(set_intersection
+      (ids.begin(), ids.end(), children_ids.begin(), children_ids.end(), intersect_ids.begin()),
+      intersect_ids.end());
+  collect_items_range(stmt, rman, *osm_base_settings().NODES, node_ranges, intersect_ids, result);
+}
+
+void collect_nodes
+    (const Statement& stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_begin,
+     map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_end,
+     map< Uint32_Index, vector< Node_Skeleton > >& result,
+     const vector< uint32 >& ids)
+{
+  vector< Uint32_Index > req = collect_indices_from_way(stmt, rman, ways_begin, ways_end);
+  vector< uint32 > children_ids = collect_ids(stmt, rman, ways_begin, ways_end);
+  vector< uint32 > intersect_ids(ids.size());
+  intersect_ids.erase(set_intersection
+      (ids.begin(), ids.end(), children_ids.begin(), children_ids.end(), intersect_ids.begin()),
+      intersect_ids.end());
+  collect_items(stmt, rman, *osm_base_settings().NODES, req, intersect_ids, result);
+}
+
+//-----------------------------------------------------------------------------
+
+class Recurse_Constraint : public Query_Constraint
+{
+  public:
+    Recurse_Constraint(Recurse_Statement& stmt_) : stmt(&stmt_) {}
+    bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
+		  const set< pair< Uint32_Index, Uint32_Index > >& ranges,
+		  const vector< uint32 >& ids);
+    bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
+		  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
+		  int type, const vector< uint32 >& ids);
+    void filter(Resource_Manager& rman, Set& into);
+    virtual ~Recurse_Constraint() {}
+    
+  private:
+    Recurse_Statement* stmt;
+};
+
+bool Recurse_Constraint::get_data
+    (const Statement& query, Resource_Manager& rman, Set& into,
+     const set< pair< Uint32_Index, Uint32_Index > >& ranges,
+     const vector< uint32 >& ids)
+{
+  map< string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
+  if (mit == rman.sets().end())
+    return true;
+  
+  if (stmt->get_type() == RECURSE_RELATION_NODE)
+  {
+    if (ranges.empty())
+    {
+      if (ids.empty())
+        collect_nodes(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
+		      into.nodes);
+      else
+        collect_nodes(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
+		      into.nodes, ids);
+    }
+    else
+    {
+      if (ids.empty())
+	collect_nodes(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
+		      into.nodes, ranges);
+      else
+	collect_nodes(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
+		      into.nodes, ids, ranges);
+    }
+  }
+  else if (stmt->get_type() == RECURSE_WAY_NODE)
+  {
+    if (ranges.empty())
+    {
+      if (ids.empty())
+	collect_nodes(query, rman, mit->second.ways.begin(), mit->second.ways.end(),
+		      into.nodes);
+      else
+	collect_nodes(query, rman, mit->second.ways.begin(), mit->second.ways.end(),
+		      into.nodes, ids);
+    }
+    else
+    {
+      if (ids.empty())
+	collect_nodes(query, rman, mit->second.ways.begin(), mit->second.ways.end(),
+		      into.nodes, ranges);
+      else
+	collect_nodes(query, rman, mit->second.ways.begin(), mit->second.ways.end(),
+		      into.nodes, ids, ranges);
+    }
+  }
+  return true;
+}
+
+bool Recurse_Constraint::get_data
+    (const Statement& query, Resource_Manager& rman, Set& into,
+     const set< pair< Uint31_Index, Uint31_Index > >& ranges,
+     int type, const vector< uint32 >& ids)
+{
+  map< string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
+  if (mit == rman.sets().end())
+    return true;
+  
+  if (stmt->get_type() == RECURSE_RELATION_WAY)
+  {
+    if (ranges.empty())
+    {
+      if (ids.empty())
+	collect_ways(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
+		     into.ways);
+      else
+	collect_ways(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
+		     into.ways, ids);
+    }
+    else
+    {
+      if (ids.empty())
+	collect_ways(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
+		     into.ways, ranges);
+      else
+	collect_ways(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
+		     into.ways, ids, ranges);
+    }
+  }
+  else if (stmt->get_type() == RECURSE_RELATION_RELATION)
+  {
+    if (ranges.empty())
+    {
+      if (ids.empty())
+	collect_relations(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
+			  into.relations);
+      else
+	collect_relations(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
+			  into.relations, ids);
+    }
+    else
+    {
+      if (ids.empty())
+	collect_relations(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
+			  into.relations, ranges);
+      else
+	collect_relations(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
+			  into.relations, ids, ranges);
+    }
+  }
+  else if (stmt->get_type() == RECURSE_NODE_WAY)
+    ;
+    
+  return true;
+}
+
+void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
+{
+  map< string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
+  if (mit == rman.sets().end())
+  {
+    into.nodes.clear();
+    into.ways.clear();
+    into.relations.clear();
+    return;
+  }
+  
+  vector< uint32 > ids;
+  if (stmt->get_type() == RECURSE_WAY_NODE)
+    ids = collect_ids(*stmt, rman, mit->second.ways.begin(), mit->second.ways.end());
+  else if (stmt->get_type() == RECURSE_RELATION_NODE)
+    ids = collect_ids(*stmt, rman, Relation_Entry::NODE,
+		      mit->second.relations.begin(), mit->second.relations.end());
+  
+  for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = into.nodes.begin();
+      it != into.nodes.end(); ++it)
+  {
+    vector< Node_Skeleton > local_into;
+    for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      if (binary_search(ids.begin(), ids.end(), iit->id))
+	local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }  
+  
+  ids.clear();
+  if (stmt->get_type() == RECURSE_RELATION_WAY)
+    ids = collect_ids(*stmt, rman, Relation_Entry::WAY,
+		      mit->second.relations.begin(), mit->second.relations.end());
+  
+  for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = into.ways.begin();
+      it != into.ways.end(); ++it)
+  {
+    vector< Way_Skeleton > local_into;
+    for (vector< Way_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      if (binary_search(ids.begin(), ids.end(), iit->id))
+	local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }  
+  
+  ids.clear();
+  if (stmt->get_type() == RECURSE_RELATION_RELATION)
+    ids = collect_ids(*stmt, rman, Relation_Entry::RELATION,
+		      mit->second.relations.begin(), mit->second.relations.end());
+
+  for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = into.relations.begin();
+      it != into.relations.end(); ++it)
+  {
+    vector< Relation_Skeleton > local_into;
+    for (vector< Relation_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      if (binary_search(ids.begin(), ids.end(), iit->id))
+	local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }
+}
+
+//-----------------------------------------------------------------------------
+
+Recurse_Statement::Recurse_Statement
+    (int line_number_, const map< string, string >& input_attributes)
+    : Statement(line_number_)
+{
+  map< string, string > attributes;
+  
+  attributes["from"] = "_";
+  attributes["into"] = "_";
+  attributes["type"] = "";
+  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+  
+  input = attributes["from"];
+  output = attributes["into"];
+  
+  if (attributes["type"] == "relation-relation")
+    type = RECURSE_RELATION_RELATION;
+  else if (attributes["type"] == "relation-backwards")
+    type = RECURSE_RELATION_BACKWARDS;
+  else if (attributes["type"] == "relation-way")
+    type = RECURSE_RELATION_WAY;
+  else if (attributes["type"] == "relation-node")
+    type = RECURSE_RELATION_NODE;
+  else if (attributes["type"] == "way-node")
+    type = RECURSE_WAY_NODE;
+  else if (attributes["type"] == "way-relation")
+    type = RECURSE_WAY_RELATION;
+  else if (attributes["type"] == "node-relation")
+    type = RECURSE_NODE_RELATION;
+  else if (attributes["type"] == "node-way")
+    type = RECURSE_NODE_WAY;
+  else
+  {
+    type = 0;
+    ostringstream temp;
+    temp<<"For the attribute \"type\" of the element \"recurse\""
+	<<" the only allowed values are \"relation-relation\", \"relation-backwards\","
+	<<"\"relation-way\", \"relation-node\", \"way-node\", \"way-relation\","
+	<<"\"node-relation\" or \"node-way\".";
+    add_static_error(temp.str());
+  }
+}
+
+void Recurse_Statement::forecast()
+{
 }
 
 void Recurse_Statement::execute(Resource_Manager& rman)
@@ -362,41 +764,8 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   map< Uint31_Index, vector< Relation_Skeleton > >& relations(into.relations);
 
   if (type == RECURSE_RELATION_RELATION)
-  {
-    set< Uint31_Index > req;
-    vector< uint32 > ids;
-    
-    {
-      stopwatch.stop(Stopwatch::NO_DISK);
-      Random_File< Uint31_Index > random
-          (rman.get_transaction()->random_index(osm_base_settings().RELATIONS));
-      for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
-	   it(mit->second.relations.begin()); it != mit->second.relations.end(); ++it)
-      {
-	for (vector< Relation_Skeleton >::const_iterator it2(it->second.begin());
-	    it2 != it->second.end(); ++it2)
-	{
-	  for (vector< Relation_Entry >::const_iterator it3(it2->members.begin());
-		      it3 != it2->members.end(); ++it3)
-	  {
-	    if (it3->type == Relation_Entry::RELATION)
-	    {
-	      req.insert(random.get(it3->ref));
-	      ids.push_back(it3->ref);
-	    }
-	  }
-	}
-      }
-      stopwatch.stop(Stopwatch::RELATIONS_MAP);
-    }
-    rman.health_check(*this);
-    sort(ids.begin(), ids.end());
-    
-    stopwatch.stop(Stopwatch::NO_DISK);
-    collect_items(*this, rman, *osm_base_settings().RELATIONS, req, ids, relations);
-    //stopwatch.add(Stopwatch::RELATIONS, relations_db.read_count());
-    stopwatch.stop(Stopwatch::RELATIONS);
-  }
+    collect_relations(*this, rman, mit->second.relations.begin(), mit->second.relations.end(),
+		      relations);
   else if (type == RECURSE_RELATION_BACKWARDS)
   {
     vector< uint32 > ids;
@@ -580,4 +949,17 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   stopwatch.stop(Stopwatch::NO_DISK);
   stopwatch.report(get_name());
   rman.health_check(*this);
+}
+
+Recurse_Statement::~Recurse_Statement()
+{
+  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+      it != constraints.end(); ++it)
+    delete *it;
+}
+
+Query_Constraint* Recurse_Statement::get_query_constraint()
+{
+  constraints.push_back(new Recurse_Constraint(*this));
+  return constraints.back();
 }

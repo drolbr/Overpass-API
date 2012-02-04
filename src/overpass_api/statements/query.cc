@@ -154,8 +154,7 @@ set< pair< Tag_Index_Global, Tag_Index_Global > > get_k_req(const string& key)
 }
 
 vector< uint32 > Query_Statement::collect_ids
-  (const File_Properties& file_prop, uint32 stopwatch_account,
-   Resource_Manager& rman)
+  (const File_Properties& file_prop, Resource_Manager& rman)
 {
   if (key_values.empty() && key_nvalues.empty()
       && keys.empty() && key_regexes.empty() && key_nregexes.empty())
@@ -439,13 +438,20 @@ void Query_Statement::execute(Resource_Manager& rman)
   stopwatch.start();
   set_progress(1);
   rman.health_check(*this);
-  
-  if (type == QUERY_NODE)
-  {
-    vector< uint32 > ids(collect_ids
-        (*osm_base_settings().NODE_TAGS_GLOBAL, Stopwatch::NODE_TAGS_GLOBAL, rman));
 
-    if (ids.empty() && !key_values.empty())
+  {
+    File_Properties* file_prop = 0;
+    if (type == QUERY_NODE)
+      file_prop = osm_base_settings().NODE_TAGS_GLOBAL;
+    else if (type == QUERY_WAY)
+      file_prop = osm_base_settings().WAY_TAGS_GLOBAL;
+    else if (type == QUERY_RELATION)
+      file_prop = osm_base_settings().RELATION_TAGS_GLOBAL;
+    
+    vector< uint32 > ids = collect_ids(*file_prop, rman);
+
+    if (ids.empty() && (!keys.empty() || !key_values.empty() || !key_regexes.empty()
+        || !key_nvalues.empty() || !key_nregexes.empty()))
       answer_state = data_collected;
     
     for (vector< Query_Constraint* >::iterator it = constraints.begin();
@@ -458,112 +464,97 @@ void Query_Statement::execute(Resource_Manager& rman)
     set_progress(2);
     rman.health_check(*this);
 
-    set< pair< Uint32_Index, Uint32_Index > > range_req;
-    for (vector< Query_Constraint* >::iterator it = constraints.begin();
-        it != constraints.end() && answer_state < ranges_collected; ++it)
+    set< pair< Uint32_Index, Uint32_Index > > range_req_32;
+    set< pair< Uint31_Index, Uint31_Index > > range_req_31;
+    
+    if (type == QUERY_NODE)
     {
-      if ((*it)->get_ranges(rman, range_req))
-	answer_state = ranges_collected;
+      for (vector< Query_Constraint* >::iterator it = constraints.begin();
+          it != constraints.end() && answer_state < ranges_collected; ++it)
+      {
+        if ((*it)->get_ranges(rman, range_req_32))
+	  answer_state = ranges_collected;
+      }
     }
-  
+    else if (type == QUERY_WAY || type == QUERY_RELATION)
+    {
+      for (vector< Query_Constraint* >::iterator it = constraints.begin();
+          it != constraints.end() && answer_state < ranges_collected; ++it)
+      {
+	if ((*it)->get_ranges(rman, range_req_31))
+	  answer_state = ranges_collected;
+      }
+    }
+    
     set_progress(3);
     rman.health_check(*this);
-    
-    if (answer_state < ranges_collected)
-      range_req = get_ranges_by_id_from_db< Uint32_Index >
-          (ids, rman, *osm_base_settings().NODES);
-    if (answer_state < data_collected)
-      get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
-          (into.nodes, ids, range_req, rman, *osm_base_settings().NODES);
-  }
-  else if (type == QUERY_WAY)
-  {
-    vector< uint32 > ids(collect_ids
-        (*osm_base_settings().WAY_TAGS_GLOBAL, Stopwatch::WAY_TAGS_GLOBAL, rman));
 
-    if (ids.empty() && !key_values.empty())
-      answer_state = data_collected;
-    
-    for (vector< Query_Constraint* >::iterator it = constraints.begin();
-        it != constraints.end() && answer_state < data_collected; ++it)
+    if (type == QUERY_NODE)
     {
-      if ((*it)->collect(rman, into, type, ids))
-        answer_state = data_collected;
+      for (vector< Query_Constraint* >::iterator it = constraints.begin();
+          it != constraints.end() && answer_state < data_collected; ++it)
+      {
+	if ((*it)->get_data(*this, rman, into, range_req_32, ids))
+	  answer_state = data_collected;
+      }
     }
-  
-    set_progress(2);
-    rman.health_check(*this);
-    
-    set< pair< Uint31_Index, Uint31_Index > > range_req;
-    for (vector< Query_Constraint* >::iterator it = constraints.begin();
-        it != constraints.end() && answer_state < ranges_collected; ++it)
+    else if (type == QUERY_WAY || type == QUERY_RELATION)
     {
-      if ((*it)->get_ranges(rman, range_req))
-	answer_state = ranges_collected;
+      for (vector< Query_Constraint* >::iterator it = constraints.begin();
+          it != constraints.end() && answer_state < data_collected; ++it)
+      {
+	if ((*it)->get_data(*this, rman, into, range_req_31, type, ids))
+	  answer_state = data_collected;
+      }
     }
     
-    set_progress(3);
+    set_progress(4);
     rman.health_check(*this);
     
-    if (answer_state < ranges_collected)
-      range_req = get_ranges_by_id_from_db< Uint31_Index >
-          (ids, rman, *osm_base_settings().WAYS);
-    if (answer_state < data_collected)
-      get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
-          (into.ways, ids, range_req, rman, *osm_base_settings().WAYS);
-  }
-  else if (type == QUERY_RELATION)
-  {
-    vector< uint32 > ids(collect_ids
-        (*osm_base_settings().RELATION_TAGS_GLOBAL, Stopwatch::RELATION_TAGS_GLOBAL, rman));
-	 
-    if (ids.empty() && !key_values.empty())
-      answer_state = data_collected;
-    
-    for (vector< Query_Constraint* >::iterator it = constraints.begin();
-        it != constraints.end() && answer_state < data_collected; ++it)
+    if (type == QUERY_NODE)
     {
-      if ((*it)->collect(rman, into, type, ids))
-        answer_state = data_collected;
+      if (answer_state < ranges_collected)
+        range_req_32 = get_ranges_by_id_from_db< Uint32_Index >
+            (ids, rman, *osm_base_settings().NODES);
+      if (answer_state < data_collected)
+        get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
+            (into.nodes, ids, range_req_32, rman, *osm_base_settings().NODES);
     }
-  
-    set_progress(2);
-    rman.health_check(*this);
-    
-    set< pair< Uint31_Index, Uint31_Index > > range_req;
-    for (vector< Query_Constraint* >::iterator it = constraints.begin();
-        it != constraints.end() && answer_state < ranges_collected; ++it)
+    else if (type == QUERY_WAY)
     {
-      if ((*it)->get_ranges(rman, range_req))
-	answer_state = ranges_collected;
+      if (answer_state < ranges_collected)
+	range_req_31 = get_ranges_by_id_from_db< Uint31_Index >
+	    (ids, rman, *osm_base_settings().WAYS);
+      if (answer_state < data_collected)
+	get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
+	    (into.ways, ids, range_req_31, rman, *osm_base_settings().WAYS);
     }
-    
-    set_progress(3);
-    rman.health_check(*this);
-    
-    if (answer_state < ranges_collected)
-      range_req = get_ranges_by_id_from_db< Uint31_Index >
-          (ids, rman, *osm_base_settings().RELATIONS);
-    if (answer_state < data_collected)
-      get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
-          (into.relations, ids, range_req, rman, *osm_base_settings().RELATIONS);
+    else if (type == QUERY_RELATION)
+    {
+      if (answer_state < ranges_collected)
+	range_req_31 = get_ranges_by_id_from_db< Uint31_Index >
+	    (ids, rman, *osm_base_settings().RELATIONS);
+      if (answer_state < data_collected)
+	get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
+	    (into.relations, ids, range_req_31, rman, *osm_base_settings().RELATIONS);
+    }
   }
   
-  set_progress(4);
+  set_progress(5);
   rman.health_check(*this);
-  
+
   for (vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end(); ++it)
     (*it)->filter(rman, into);
   
-  set_progress(5);
+  set_progress(6);
   rman.health_check(*this);
   
   for (vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end(); ++it)
     (*it)->filter(*this, rman, into);
-  
-  set_progress(6);
+    
+  set_progress(7);
   rman.health_check(*this);
   
   clear_empty_indices(into.nodes);

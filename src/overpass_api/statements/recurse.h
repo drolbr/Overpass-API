@@ -1,10 +1,12 @@
 #ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__RECURSE_H
 #define DE__OSM3S___OVERPASS_API__STATEMENTS__RECURSE_H
 
+#include "query.h"
+#include "statement.h"
+
 #include <map>
 #include <string>
 #include <vector>
-#include "statement.h"
 
 using namespace std;
 
@@ -16,13 +18,18 @@ class Recurse_Statement : public Statement
     virtual string get_result_name() const { return output; }
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
-    virtual ~Recurse_Statement() {}
+    virtual ~Recurse_Statement();
     
     static Generic_Statement_Maker< Recurse_Statement > statement_maker;
+
+    virtual Query_Constraint* get_query_constraint();
+    unsigned int get_type() const { return type; }
+    string get_input() const { return input; }
     
   private:
     string input, output;
     unsigned int type;
+    vector< Query_Constraint* > constraints;
 };
 
 void collect_nodes
