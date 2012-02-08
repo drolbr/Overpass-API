@@ -551,6 +551,51 @@ void perform_query_with_recurse
   }
 }
 
+void perform_query_with_id_query
+    (string query_type, string key1, string value1,
+     double south, double north, double west, double east, bool double_id_query,
+     int pattern_size, string db_dir)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Resource_Manager rman(transaction);
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", query_type);
+      
+      SProxy< Id_Query_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2
+          ("type", query_type)("lower", "1")("upper", "10").stmt(), "");
+
+      SProxy< Has_Kv_Statement > stmt3;
+      if (key1 != "")
+	stmt1.stmt().add_statement(&stmt3("k", key1)("v", value1).stmt(), "");
+
+      SProxy< Bbox_Query_Statement > stmt4;
+      if (south <= 90.0 && north <= 90.0)
+      {
+	stmt1.stmt().add_statement
+	    (&stmt4("n", to_string(north))("s", to_string(south))
+	           ("w", to_string(west))("e", to_string(east)).stmt(), "");
+      }
+
+      SProxy< Id_Query_Statement > stmt5;
+      if (double_id_query)
+	stmt1.stmt().add_statement(&stmt5
+	    ("type", query_type)("lower", "9")("upper", "12").stmt(), "");
+
+      stmt1.stmt().execute(rman);
+    }
+    perform_print(rman);
+  }
+  catch (File_Error e)
+  {
+    cerr<<"File error caught: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
 int main(int argc, char* args[])
 {
   if (argc < 4)
@@ -938,7 +983,67 @@ int main(int argc, char* args[])
     perform_query_with_recurse("relation", "relation-backwards", "", "",
 			       100.0, 100.0, 0.0, 0.0, true,
 			       pattern_size, args[3]);
-
+			       
+  // Test id-query type node as subquery
+  if ((test_to_execute == "") || (test_to_execute == "91"))
+    perform_query_with_id_query("node", "", "", 100.0, 100.0, 0.0, 0.0, false,
+			        pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "92"))
+    perform_query_with_id_query("node", "node_key_5", "node_value_5",
+			        100.0, 100.0, 0.0, 0.0, false,
+			        pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "93"))
+    perform_query_with_id_query("node", "", "",
+				51.0, 51.5, 7.0, 7.0 + 5.0/pattern_size, false,
+			        pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "94"))
+    perform_query_with_id_query("node", "node_key_5", "node_value_5",
+				51.0, 51.5, 7.0, 7.0 + 5.0/pattern_size, false,
+			        pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "95"))
+    perform_query_with_id_query("node", "", "", 100.0, 100.0, 0.0, 0.0, true,
+			        pattern_size, args[3]);
+			       
+  // Test id-query type way as subquery
+  if ((test_to_execute == "") || (test_to_execute == "96"))
+    perform_query_with_id_query("way", "", "", 100.0, 100.0, 0.0, 0.0, false,
+			        pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "97"))
+    perform_query_with_id_query("way", "way_key_5", "way_value_5",
+			        100.0, 100.0, 0.0, 0.0, false,
+			        pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "98"))
+    perform_query_with_id_query("way", "", "",
+				51.0, 51.5, 7.0, 7.0 + 5.0/pattern_size, false,
+			        pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "99"))
+    perform_query_with_id_query("way", "way_key_5", "way_value_5",
+				51.0, 51.5, 7.0, 7.0 + 5.0/pattern_size, false,
+			        pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "100"))
+    perform_query_with_id_query("way", "", "", 100.0, 100.0, 0.0, 0.0, true,
+			        pattern_size, args[3]);
+			       
+  // Test id-query type relation as subquery
+  if ((test_to_execute == "") || (test_to_execute == "101"))
+    perform_query_with_id_query("relation", "", "", 100.0, 100.0, 0.0, 0.0, false,
+			        pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "102"))
+    perform_query_with_id_query("relation", "relation_key_5", "relation_value_5",
+			        100.0, 100.0, 0.0, 0.0, false,
+			        pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "103"))
+    perform_query_with_id_query("relation", "", "",
+				51.0, 51.5, 7.0, 7.0 + 6.0/pattern_size, false,
+			        pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "104"))
+    perform_query_with_id_query("relation", "relation_key_5", "relation_value_5",
+				51.0, 51.5, 7.0, 7.0 + 6.0/pattern_size, false,
+			        pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "105"))
+    perform_query_with_id_query("relation", "", "", 100.0, 100.0, 0.0, 0.0, true,
+			        pattern_size, args[3]);
+  
   cout<<"</osm>\n";
   return 0;
 }

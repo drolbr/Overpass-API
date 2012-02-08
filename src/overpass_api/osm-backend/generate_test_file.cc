@@ -1523,6 +1523,186 @@ struct Accept_Query_90 : public Accept_All_Tags
     uint pattern_size;
 };
 
+struct Accept_Query_91 : public Accept_All_Tags
+{
+  Accept_Query_91(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return (id <= 10); }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_92 : public Accept_All_Tags
+{
+  Accept_Query_92(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return (id == 5 || id == 10); }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_93 : public Accept_All_Tags
+{
+  Accept_Query_93(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return (id <= 5); }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_94 : public Accept_All_Tags
+{
+  Accept_Query_94(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return (id == 5); }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_95 : public Accept_All_Tags
+{
+  Accept_Query_95(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return (id == 9 || id == 10); }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_96 : public Accept_All_Tags
+{
+  Accept_Query_96(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return (id <= 10); }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_97 : public Accept_All_Tags
+{
+  Accept_Query_97(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return (id == 5 || id == 10); }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_98 : public Accept_All_Tags
+{
+  Accept_Query_98(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return (id <= 5); }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_99 : public Accept_All_Tags
+{
+  Accept_Query_99(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return (id == 5); }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_100 : public Accept_All_Tags
+{
+  Accept_Query_100(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return (id == 9 || id == 10); }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_101 : public Accept_All_Tags
+{
+  Accept_Query_101(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return (id <= 10); }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_102 : public Accept_All_Tags
+{
+  Accept_Query_102(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return (id == 5 || id == 10); }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_103 : public Accept_All_Tags
+{
+  Accept_Query_103(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return (id <= 10 && id != 5 && id != 9); }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_104 : public Accept_All_Tags
+{
+  Accept_Query_104(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return (id == 10); }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_105 : public Accept_All_Tags
+{
+  Accept_Query_105(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return (id == 9 || id == 10); }
+  
+  private:
+    uint pattern_size;
+};
+
 struct Accept_Foreach_1 : public Accept_All_Tags
 {
   Accept_Foreach_1(uint pattern_size_)
@@ -2201,6 +2381,36 @@ int main(int argc, char* args[])
       modifier = new Accept_Query_89(pattern_size);
     else if (string(args[2]) == "query_90")
       modifier = new Accept_Query_90(pattern_size);
+    else if (string(args[2]) == "query_91")
+      modifier = new Accept_Query_91(pattern_size);
+    else if (string(args[2]) == "query_92")
+      modifier = new Accept_Query_92(pattern_size);
+    else if (string(args[2]) == "query_93")
+      modifier = new Accept_Query_93(pattern_size);
+    else if (string(args[2]) == "query_94")
+      modifier = new Accept_Query_94(pattern_size);
+    else if (string(args[2]) == "query_95")
+      modifier = new Accept_Query_95(pattern_size);
+    else if (string(args[2]) == "query_96")
+      modifier = new Accept_Query_96(pattern_size);
+    else if (string(args[2]) == "query_97")
+      modifier = new Accept_Query_97(pattern_size);
+    else if (string(args[2]) == "query_98")
+      modifier = new Accept_Query_98(pattern_size);
+    else if (string(args[2]) == "query_99")
+      modifier = new Accept_Query_99(pattern_size);
+    else if (string(args[2]) == "query_100")
+      modifier = new Accept_Query_100(pattern_size);
+    else if (string(args[2]) == "query_101")
+      modifier = new Accept_Query_101(pattern_size);
+    else if (string(args[2]) == "query_102")
+      modifier = new Accept_Query_102(pattern_size);
+    else if (string(args[2]) == "query_103")
+      modifier = new Accept_Query_103(pattern_size);
+    else if (string(args[2]) == "query_104")
+      modifier = new Accept_Query_104(pattern_size);
+    else if (string(args[2]) == "query_105")
+      modifier = new Accept_Query_105(pattern_size);
     else if (string(args[2]) == "union_1")
       modifier = new Accept_Union_1(pattern_size);
     else if (string(args[2]) == "union_2")

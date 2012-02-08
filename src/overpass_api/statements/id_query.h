@@ -16,14 +16,20 @@ class Id_Query_Statement : public Statement
     virtual string get_result_name() const { return output; }
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
-    virtual ~Id_Query_Statement() {}
+    virtual ~Id_Query_Statement();
     
     static Generic_Statement_Maker< Id_Query_Statement > statement_maker;
+
+    virtual Query_Constraint* get_query_constraint();
+    unsigned int get_lower() const { return lower; }
+    unsigned int get_upper() const { return upper; }
+    int get_type() const { return type; }
     
   private:
     string output;
     int type;
     unsigned int ref, lower, upper;
+    vector< Query_Constraint* > constraints;
 };
 
 #endif

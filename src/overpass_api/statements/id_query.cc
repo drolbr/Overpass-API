@@ -9,6 +9,154 @@ using namespace std;
 
 Generic_Statement_Maker< Id_Query_Statement > Id_Query_Statement::statement_maker("id-query");
 
+template< class TIndex, class TObject >
+void collect_elems(Resource_Manager& rman, const File_Properties& prop,
+		   uint32 lower, uint32 upper,
+		   map< TIndex, vector< TObject > >& elems)
+{
+  set< TIndex > req;
+  {
+    Random_File< TIndex > random(rman.get_transaction()->random_index(&prop));
+    for (uint32 i = lower; i <= upper; ++i)
+      req.insert(random.get(i));
+  }    
+  Block_Backend< TIndex, TObject > elems_db(rman.get_transaction()->data_index(&prop));
+  for (typename Block_Backend< TIndex, TObject >::Discrete_Iterator
+      it(elems_db.discrete_begin(req.begin(), req.end()));
+      !(it == elems_db.discrete_end()); ++it)
+  {
+    if (it.object().id >= lower && it.object().id <= upper)
+      elems[it.index()].push_back(it.object());
+  }
+}
+
+template< class TIndex, class TObject >
+void collect_elems(Resource_Manager& rman, const File_Properties& prop,
+		   uint32 lower, uint32 upper, const vector< uint32 >& ids,
+		   map< TIndex, vector< TObject > >& elems)
+{
+  set< TIndex > req;
+  {
+    Random_File< TIndex > random(rman.get_transaction()->random_index(&prop));
+    for (uint32 i = lower; i <= upper; ++i)
+    {
+      if (binary_search(ids.begin(), ids.end(), i))
+        req.insert(random.get(i));
+    }
+  }    
+  Block_Backend< TIndex, TObject > elems_db(rman.get_transaction()->data_index(&prop));
+  for (typename Block_Backend< TIndex, TObject >::Discrete_Iterator
+      it(elems_db.discrete_begin(req.begin(), req.end()));
+      !(it == elems_db.discrete_end()); ++it)
+  {
+    if (it.object().id >= lower && it.object().id <= upper
+        && binary_search(ids.begin(), ids.end(), it.object().id))
+      elems[it.index()].push_back(it.object());
+  }
+}
+
+template< class TIndex, class TObject >
+void filter_elems(uint32 lower, uint32 upper,
+		  map< TIndex, vector< TObject > >& elems)
+{
+  for (typename map< TIndex, vector< TObject > >::iterator it = elems.begin();
+      it != elems.end(); ++it)
+  {
+    vector< TObject > local_into;
+    for (typename vector< TObject >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      if (iit->id >= lower && iit->id <= upper)
+	local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }
+}
+
+//-----------------------------------------------------------------------------
+
+class Id_Query_Constraint : public Query_Constraint
+{
+  public:
+    Id_Query_Constraint(Id_Query_Statement& stmt_) : stmt(&stmt_) {}
+    bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
+		  const set< pair< Uint32_Index, Uint32_Index > >& ranges,
+		  const vector< uint32 >& ids);
+    bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
+		  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
+		  int type, const vector< uint32 >& ids);
+    void filter(Resource_Manager& rman, Set& into);
+    virtual ~Id_Query_Constraint() {}
+    
+  private:
+    Id_Query_Statement* stmt;
+};
+
+bool Id_Query_Constraint::get_data
+    (const Statement& query, Resource_Manager& rman, Set& into,
+     const set< pair< Uint32_Index, Uint32_Index > >& ranges,
+     const vector< uint32 >& ids)
+{
+  if (stmt->get_type() == Statement::NODE)
+  {
+    if (ids.empty())
+      collect_elems(rman, *osm_base_settings().NODES, stmt->get_lower(), stmt->get_upper(),
+		    into.nodes);
+    else
+      collect_elems(rman, *osm_base_settings().NODES, stmt->get_lower(), stmt->get_upper(),
+		    ids, into.nodes);
+  }
+		    
+  return true;
+}
+
+bool Id_Query_Constraint::get_data
+    (const Statement& query, Resource_Manager& rman, Set& into,
+     const set< pair< Uint31_Index, Uint31_Index > >& ranges,
+     int type, const vector< uint32 >& ids)
+{
+  if (stmt->get_type() == Statement::WAY)
+  {
+    if (ids.empty())
+      collect_elems(rman, *osm_base_settings().WAYS, stmt->get_lower(), stmt->get_upper(),
+		    into.ways);
+    else
+      collect_elems(rman, *osm_base_settings().WAYS, stmt->get_lower(), stmt->get_upper(),
+		    ids, into.ways);
+  }
+  else if (stmt->get_type() == Statement::RELATION)
+  {
+    if (ids.empty())
+      collect_elems(rman, *osm_base_settings().RELATIONS, stmt->get_lower(), stmt->get_upper(),
+		    into.relations);
+    else
+      collect_elems(rman, *osm_base_settings().RELATIONS, stmt->get_lower(), stmt->get_upper(),
+		    ids, into.relations);
+  }
+
+  return true;
+}
+
+void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into)
+{
+  if (stmt->get_type() == Statement::NODE)
+    filter_elems(stmt->get_lower(), stmt->get_upper(), into.nodes);
+  else
+    into.nodes.clear();
+
+  if (stmt->get_type() == Statement::WAY)
+    filter_elems(stmt->get_lower(), stmt->get_upper(), into.ways);
+  else
+    into.ways.clear();
+  
+  if (stmt->get_type() == Statement::RELATION)
+    filter_elems(stmt->get_lower(), stmt->get_upper(), into.relations);
+  else
+    into.relations.clear();
+}
+
+//-----------------------------------------------------------------------------
+
 Id_Query_Statement::Id_Query_Statement
     (int line_number_, const map< string, string >& input_attributes)
     : Statement(line_number_)
@@ -62,34 +210,10 @@ Id_Query_Statement::Id_Query_Statement
 
 void Id_Query_Statement::forecast()
 {
-/*  Set_Forecast& sf_out(declare_write_set(output));
-  
-  if (type == NODE)
-  {
-    sf_out.node_count = 1;
-    declare_used_time(400);
-  }
-  else if (type == WAY)
-  {
-    sf_out.way_count = 1;
-    declare_used_time(300);
-  }
-  if (type == RELATION)
-  {
-    sf_out.relation_count = 1;
-    declare_used_time(200);
-  }
-    
-  finish_statement_forecast();
-    
-  display_full();
-  display_state();*/
 }
 
 void Id_Query_Statement::execute(Resource_Manager& rman)
 {
-  stopwatch.start();
-  
   map< Uint32_Index, vector< Node_Skeleton > >& nodes
       (rman.sets()[output].nodes);
   map< Uint31_Index, vector< Way_Skeleton > >& ways
@@ -105,78 +229,24 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
   areas.clear();
 
   if (type == NODE)
-  {
-    set< Uint32_Index > req;
-    {
-      stopwatch.stop(Stopwatch::NO_DISK);
-      Random_File< Uint32_Index > random
-          (rman.get_transaction()->random_index(osm_base_settings().NODES));
-      for (uint32 i = lower; i <= upper; ++i)    
-        req.insert(random.get(i));
-      stopwatch.stop(Stopwatch::NODES_MAP);
-    }    
-    stopwatch.stop(Stopwatch::NO_DISK);
-    Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-	(rman.get_transaction()->data_index(osm_base_settings().NODES));
-    for (Block_Backend< Uint32_Index, Node_Skeleton >::Discrete_Iterator
-	 it(nodes_db.discrete_begin(req.begin(), req.end()));
-	 !(it == nodes_db.discrete_end()); ++it)
-    {
-      if (it.object().id >= lower && it.object().id <= upper)
-	nodes[it.index()].push_back(it.object());
-    }
-    stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
-    stopwatch.stop(Stopwatch::NODES);
-  }
+    collect_elems(rman, *osm_base_settings().NODES, lower, upper, nodes);
   else if (type == WAY)
-  {
-    set< Uint31_Index > req;
-    {
-      stopwatch.stop(Stopwatch::NO_DISK);
-      Random_File< Uint31_Index > random
-          (rman.get_transaction()->random_index(osm_base_settings().WAYS));
-      for (uint32 i = lower; i <= upper; ++i)    
-        req.insert(random.get(i));
-      stopwatch.stop(Stopwatch::WAYS_MAP);
-    }
-    stopwatch.stop(Stopwatch::NO_DISK);
-    Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-	(rman.get_transaction()->data_index(osm_base_settings().WAYS));
-    for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
-	 it(ways_db.discrete_begin(req.begin(), req.end()));
-	 !(it == ways_db.discrete_end()); ++it)
-    {
-      if (it.object().id >= lower && it.object().id <= upper)
-	ways[it.index()].push_back(it.object());
-    }
-    stopwatch.add(Stopwatch::WAYS, ways_db.read_count());
-    stopwatch.stop(Stopwatch::WAYS);
-  }
+    collect_elems(rman, *osm_base_settings().WAYS, lower, upper, ways);
   else if (type == RELATION)
-  {
-    set< Uint31_Index > req;
-    {
-      stopwatch.stop(Stopwatch::NO_DISK);
-      Random_File< Uint31_Index > random
-          (rman.get_transaction()->random_index(osm_base_settings().RELATIONS));
-      for (uint32 i = lower; i <= upper; ++i)    
-        req.insert(random.get(i));
-      stopwatch.stop(Stopwatch::RELATIONS_MAP);
-    }
-    stopwatch.stop(Stopwatch::NO_DISK);
-    Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
-    for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
-	 it(relations_db.discrete_begin(req.begin(), req.end()));
-	 !(it == relations_db.discrete_end()); ++it)
-    {
-      if (it.object().id >= lower && it.object().id <= upper)
-	relations[it.index()].push_back(it.object());
-    }
-    stopwatch.add(Stopwatch::RELATIONS, relations_db.read_count());
-    stopwatch.stop(Stopwatch::RELATIONS);
-  }
-  
-  stopwatch.report(get_name());
+    collect_elems(rman, *osm_base_settings().RELATIONS, lower, upper, relations);
+
   rman.health_check(*this);
+}
+
+Id_Query_Statement::~Id_Query_Statement()
+{
+  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+      it != constraints.end(); ++it)
+    delete *it;
+}
+
+Query_Constraint* Id_Query_Statement::get_query_constraint()
+{
+  constraints.push_back(new Id_Query_Constraint(*this));
+  return constraints.back();
 }

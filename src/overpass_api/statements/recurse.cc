@@ -48,49 +48,6 @@ void collect_items(const Statement& stmt, Resource_Manager& rman,
   }
 }
 
-// template < class TContainer >
-// void collect_items_rels(const Statement& stmt, Resource_Manager& rman,
-// 		        File_Properties& file_properties,
-// 		        const TContainer& req, vector< uint32 > ids,
-// 		        map< TIndex, vector< TObject > >& result)
-// {
-//   uint32 count = 0;
-//   
-//   Block_Backend< Uint31_Index, Relation_Skeleton, typename TContainer::const_iterator >
-//       relations_db(rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
-//   for (typename Block_Backend< TIndex, TObject, typename TContainer
-//       ::const_iterator >::Discrete_Iterator
-//       it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
-//   {
-//     const Relation_Skeleton& relation(it.object());
-//     for (vector< Relation_Entry >::const_iterator it3(relation.members.begin());
-//         it3 != relation.members.end(); ++it3)
-//     {
-//       if ((it3->type == Relation_Entry::RELATION) &&
-// 	(binary_search(ids.begin(), ids.end(), it3->ref)))
-//       {
-// 	relations[it.index()].push_back(relation);
-// 	break;
-//       }
-//     }
-//   }
-//   
-//   Block_Backend< TIndex, TObject, typename TContainer::const_iterator > db
-//       (rman.get_transaction()->data_index(&file_properties));
-//   for (typename Block_Backend< TIndex, TObject, typename TContainer
-//       ::const_iterator >::Discrete_Iterator
-//       it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
-//   {
-//     if (++count >= 64*1024)
-//     {
-//       count = 0;
-//       rman.health_check(stmt);
-//     }
-//     if (binary_search(ids.begin(), ids.end(), it.object().id))
-//       result[it.index()].push_back(it.object());
-//   }
-// }
-
 template < class TIndex, class TObject, class TContainer >
 void collect_items_range(const Statement& stmt, Resource_Manager& rman,
 		   File_Properties& file_properties,
