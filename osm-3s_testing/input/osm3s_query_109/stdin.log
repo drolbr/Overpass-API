@@ -1,2 +1,2 @@
-union(.in,node(w))->.out
+(.in;node(w);)->.out;
 

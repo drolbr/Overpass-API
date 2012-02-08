@@ -1,1 +1,1 @@
-union(._,node(w))->.out
+(._;node(w);)->.out;

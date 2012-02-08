@@ -1,2 +1,2 @@
-node[key=value]->.out
+node[key=value]->.out;
 

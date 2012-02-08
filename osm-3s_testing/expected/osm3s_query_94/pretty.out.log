@@ -1,1 +1,1 @@
-node(w.in)->.out
+node(w.in)->.out;

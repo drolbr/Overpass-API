@@ -1,4 +1,4 @@
 foreach.in->.out(
-  node(w),
-  { out body; }
-)
+  node(w);
+  out body;
+);

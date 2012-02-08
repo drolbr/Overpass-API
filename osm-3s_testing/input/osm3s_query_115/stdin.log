@@ -1,4 +1,4 @@
 [timeout:180]
-[maxsize:1024]
-union()
+[maxsize:1024];
+();
 

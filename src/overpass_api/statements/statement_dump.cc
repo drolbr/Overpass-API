@@ -86,9 +86,9 @@ string dump_print_map_ql(const map< string, string >& attributes, bool pretty = 
       it != attributes.end(); ++it)
   {
     if (it->first == "from" && it->second != "_")
-      result += "." + it->second;
+      result += "." + it->second + " ";
   }
-  result += (pretty ? "{ out" : "{out");
+  result += "out";
   for (map< string, string >::const_iterator it = attributes.begin();
       it != attributes.end(); ++it)
   {
@@ -121,7 +121,6 @@ string dump_print_map_ql(const map< string, string >& attributes, bool pretty = 
     if (it->first == "limit" && it->second != "")
       result += " \"" + it->second + "\"";
   }
-  result += (pretty ? "; }" : ";}");
   
   return result;
 }
@@ -249,21 +248,23 @@ string Statement_Dump::dump_compact_map_ql() const
       else if (it->first == "element-limit")
 	result += "[maxsize:" + it->second + "]";
     }
+    if (!attributes.empty())
+      result += ";";
     for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
       result += (*it)->dump_compact_map_ql();
   }
   else if (name == "union")
   {
-    result += name + "(";
+    result += "(";
     
     vector< Statement_Dump* >::const_iterator it = substatements.begin();
     if (it == substatements.end())
-      return result + ")";
+      return result + ");";
     
     result += (*it)->dump_compact_map_ql();
     for (++it; it != substatements.end(); ++it)
-      result += "," + (*it)->dump_compact_map_ql();
+      result += (*it)->dump_compact_map_ql();
     result += ")";
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
@@ -289,11 +290,11 @@ string Statement_Dump::dump_compact_map_ql() const
     
     vector< Statement_Dump* >::const_iterator it = substatements.begin();
     if (it == substatements.end())
-      return result + ")";
+      return result + ");";
     
     result += (*it)->dump_compact_map_ql();
     for (++it; it != substatements.end(); ++it)
-      result += "," + (*it)->dump_compact_map_ql();
+      result += (*it)->dump_compact_map_ql();
     result += ")";
   }
   else if (name == "query")
@@ -324,7 +325,7 @@ string Statement_Dump::dump_compact_map_ql() const
       result += "->." + attributes.find("into")->second;
   }
   else if (name == "print")
-    return dump_print_map_ql(attributes, false);
+    return dump_print_map_ql(attributes, false) + ";";
   else if (name == "bbox-query" || name == "around" || name == "id_query")
   {
     result += "node";
@@ -366,6 +367,9 @@ string Statement_Dump::dump_compact_map_ql() const
   }
   else
     result += "(" + name + ":)";
+  
+  if (name != "osm-script")
+    result += ";";
   return result;
 }
 
@@ -383,22 +387,22 @@ string Statement_Dump::dump_pretty_map_ql() const
 	result += "[maxsize:" + it->second + "]\n";
     }
     if (result != "")
-      result += "\n";
+      result += ";\n";
     for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
       result += (*it)->dump_pretty_map_ql() + "\n";
   }
   else if (name == "union")
   {
-    result += name + "(";
+    result += "(";
     
     vector< Statement_Dump* >::const_iterator it = substatements.begin();
     if (it == substatements.end())
-      return result + ")";
+      return result + ");";
     
     result += "\n" + indent((*it)->dump_pretty_map_ql());
     for (++it; it != substatements.end(); ++it)
-      result += ",\n" + indent((*it)->dump_pretty_map_ql());
+      result += "\n" + indent((*it)->dump_pretty_map_ql());
     result += "\n)";
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
@@ -424,11 +428,11 @@ string Statement_Dump::dump_pretty_map_ql() const
     
     vector< Statement_Dump* >::const_iterator it = substatements.begin();
     if (it == substatements.end())
-      return result + ")";
+      return result + ");";
     
     result += "\n" + indent((*it)->dump_pretty_map_ql());
     for (++it; it != substatements.end(); ++it)
-      result += ",\n" + indent((*it)->dump_pretty_map_ql());
+      result += "\n" + indent((*it)->dump_pretty_map_ql());
     result += "\n)";
   }
   else if (name == "query")
@@ -478,7 +482,7 @@ string Statement_Dump::dump_pretty_map_ql() const
     }
   }
   else if (name == "print")
-    return dump_print_map_ql(attributes, true);
+    return dump_print_map_ql(attributes, true) + ";";
   else if (name == "bbox-query" || name == "around" || name == "id_query")
   {
     result += "node";
@@ -520,6 +524,9 @@ string Statement_Dump::dump_pretty_map_ql() const
   }
   else
     result += "(" + name + ":)";
+  
+  if (name != "osm-script")
+    result += ";";
   return result;
 }
 

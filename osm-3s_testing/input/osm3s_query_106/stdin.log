@@ -1,2 +1,2 @@
-union(node(w))
+(node(w););
 

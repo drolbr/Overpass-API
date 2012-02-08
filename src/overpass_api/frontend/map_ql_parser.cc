@@ -191,8 +191,8 @@ vector< TStatement* > collect_substatements(typename TStatement::Factory& stmt_f
     TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output);
     if (substatement)
       substatements.push_back(substatement);
-    clear_until_after(token, error_output, ",", ")", false);
-    if (*token == ",")
+    clear_until_after(token, error_output, ";", ")", false);
+    if (*token == ";")
       ++token;
   }
   if (token.good())
@@ -353,7 +353,6 @@ TStatement* parse_union(typename TStatement::Factory& stmt_factory,
 			Tokenizer_Wrapper& token, Error_Output* error_output)
 {
   pair< uint, uint > line_col = token.line_col();
-  ++token;
   
   vector< TStatement* > substatements =
       collect_substatements< TStatement >(stmt_factory, token, error_output);
@@ -391,68 +390,51 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
 			 const string& from, Tokenizer_Wrapper& token, Error_Output* error_output)
 {
   TStatement* statement = 0;
-  ++token;
-  while (token.good() && *token != "}")
+  if (*token == "out")
   {
-    if (*token == "out")
+    ++token;
+    string mode = "body";
+    string order = "id";
+    string limit = "";
+    while (token.good() && *token != ";")
     {
-      ++token;
-      string mode = "body";
-      string order = "id";
-      string limit = "";
-      while (token.good() && *token != ";")
-      {
-	if (*token == "ids")
-	  mode = "ids_only";
-	else if (*token == "skel")
-	  mode = "skeleton";
-	else if (*token == "body")
-	  mode = "body";
-	else if (*token == "meta")
-	  mode = "meta";
-	else if (*token == "quirks")
-	  mode = "quirks";
-	else if (*token == "qt")
-	  order = "quadtile";
-	else if (*token == "asc")
-	  order = "id";
-	else if (isdigit((*token)[0]))
-	  limit = *token;
-	else
-	{
-	  if (error_output)
-	    error_output->add_parse_error
-	        (string("Invalid parameter for print: \"") + *token + "\"", token.line_col().first);
-	}
-	++token;
-      }
-      
-      if (statement == 0)
-      {
-	statement = create_print_statement< TStatement >
-	    (stmt_factory, from == "" ? "_" : from, mode, order, limit, token.line_col().first);
-      }
+      if (*token == "ids")
+	mode = "ids_only";
+      else if (*token == "skel")
+	mode = "skeleton";
+      else if (*token == "body")
+	mode = "body";
+      else if (*token == "meta")
+	mode = "meta";
+      else if (*token == "quirks")
+	mode = "quirks";
+      else if (*token == "qt")
+	order = "quadtile";
+      else if (*token == "asc")
+	order = "id";
+      else if (isdigit((*token)[0]))
+	limit = *token;
       else
       {
 	if (error_output)
-	  error_output->add_parse_error("Garbage after first output statement found.",
-					token.line_col().first);
+	  error_output->add_parse_error
+	      (string("Invalid parameter for print: \"") + *token + "\"", token.line_col().first);
       }
+      ++token;
     }
-    else if (*token == "make-area")
+    
+    if (statement == 0)
     {
+      statement = create_print_statement< TStatement >
+          (stmt_factory, from == "" ? "_" : from, mode, order, limit, token.line_col().first);
     }
     else
     {
       if (error_output)
-	error_output->add_parse_error
-	    (string("Unknown output type \"") + *token + "\"", token.line_col().first);
+	error_output->add_parse_error("Garbage after output statement found.",
+				      token.line_col().first);
     }
-    ++token;
   }
-  
-  if (token.good())
-    ++token;
   
   return statement;
 }
@@ -785,13 +767,13 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory,
   if (!token.good())
     return 0;
   
-  if (*token == "union")
+  if (*token == "(")
     return parse_union< TStatement >(stmt_factory, token, error_output);
   else if (*token == "foreach")
     return parse_foreach< TStatement >(stmt_factory, token, error_output);
 
   string type = "";
-  if (*token != "{" && *token != ".")
+  if (*token != "out" && *token != ".")
   {
     type = *token;
     if (type == "rel")
@@ -815,7 +797,7 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory,
     }
   }
 
-  if (token.good() && type == "" && *token == "{")
+  if (token.good() && *token == "out")
     return parse_output< TStatement >(stmt_factory, from, token, error_output);
   else
     return parse_query< TStatement >(stmt_factory, type, from, token, error_output);
@@ -842,12 +824,18 @@ void generic_parse_and_validate_map_ql
   
   TStatement* base_statement = stmt_factory.create_statement
       ("osm-script", token.line_col().first, attr);
+      
+  if (!attr.empty())
+    clear_until_after(token, error_output, ";");
   
   while (token.good())
   {
     TStatement* statement = parse_statement< TStatement >(stmt_factory, token, error_output);
     if (statement)
+    {
       base_statement->add_statement(statement, "");
+      clear_until_after(token, error_output, ";");
+    }
   }
   
   stmt_seq.push_back(base_statement);

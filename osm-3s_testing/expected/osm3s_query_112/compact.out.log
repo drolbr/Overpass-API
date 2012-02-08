@@ -1,1 +1,1 @@
-foreach(node(w))
+foreach(node(w););
