@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION=0.6.95
+VERSION=0.6.96
 
 EXEC_DIR="/srv/osm-3s/v$VERSION/"
 DB_DIR="/opt/osm-3s/v$VERSION/"
