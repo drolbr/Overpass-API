@@ -34,7 +34,7 @@ retry_fetch_file()
     }; fi
   }; fi
   until [[ -s "$2" ]]; do {
-    sleep 60
+    sleep 15
     fetch_file "$1" "$2"
     gunzip -t <"$2"
     if [[ $? -ne 0 ]]; then {

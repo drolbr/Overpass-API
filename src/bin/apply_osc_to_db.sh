@@ -9,7 +9,6 @@ if [[ -z $4  ]]; then
 DB_DIR="$1"
 REPLICATE_DIR="$2"
 START=$3
-TARGET=$(($START + 1))
 META=
 
 if [[ $4 == "--meta=yes" || $4 == "--meta" ]]; then
@@ -45,6 +44,7 @@ get_replicate_filename()
 collect_minute_diffs()
 {
   TEMP_DIR=$1
+  TARGET=$(($START + 1))
 
   get_replicate_filename
 
@@ -99,25 +99,24 @@ while [[ true ]]; do
   TEMP_DIR=`mktemp -d /tmp/osm-3s_update_XXXXXX`
   collect_minute_diffs $TEMP_DIR
 
-  echo "`date '+%F %T'`: updating to $TARGET" >>$DB_DIR/apply_osc_to_db.log
-
-  update_state
-
   if [[ $TARGET -gt $START ]]; then
   {
+    echo "`date '+%F %T'`: updating to $TARGET" >>$DB_DIR/apply_osc_to_db.log
+
+    update_state
+
     apply_minute_diffs $TEMP_DIR
     echo "$TARGET" >$DB_DIR/replicate_id
+
+    echo "`date '+%F %T'`: update complete" $TARGET >>$DB_DIR/apply_osc_to_db.log
   };
   else
   {
-    sleep 30
+    sleep 5
   }; fi
-
-  echo "`date '+%F %T'`: update complete" $TARGET >>$DB_DIR/apply_osc_to_db.log
 
   rm -f $TEMP_DIR/*
   rmdir $TEMP_DIR
 
   START=$TARGET
-  TARGET=$(($START + 1))
 }; done
