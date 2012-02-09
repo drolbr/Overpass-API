@@ -1336,7 +1336,7 @@ struct Accept_Query_78 : public Accept_All_Tags
   virtual bool admit_way(uint id) const { return false; }
   virtual bool admit_relation(uint id) const
   {
-    return (id == 4 || id == 11);
+    return (id == 4 || (id == 11 && pattern_size*pattern_size < 32768));
   }
   
   private:
@@ -1366,7 +1366,7 @@ struct Accept_Query_80 : public Accept_All_Tags
   virtual bool admit_way(uint id) const { return false; }
   virtual bool admit_relation(uint id) const
   {
-    return (id == 4 || id == 11);
+    return (id == 4 || (id == 11 && pattern_size*pattern_size < 32768));
   }
   
   private:

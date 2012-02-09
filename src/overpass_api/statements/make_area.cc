@@ -178,7 +178,7 @@ pair< uint32, uint32 > Make_Area_Statement::create_area_blocks
 	cur_polyline.push_back(((uint64)node->ll_upper<<32) | node->ll_lower_);
       }
       if ((cur_idx != 0) && (cur_polyline.size() > 1))
-        areas[cur_idx].push_back(Area_Block(id, cur_polyline));
+	areas[cur_idx].push_back(Area_Block(id, cur_polyline));
     }
   }
   return make_pair< uint32, uint32 >(0, 0);
@@ -233,7 +233,7 @@ void Make_Area_Statement::add_segment_blocks
     // calc lat
     uint32 lat(shifted_lat(it->first.val(), 0) + 16*65536);
     int32 lon(lon_(it->first.val(), 0));
-    uint32 northern_ll_upper(Node::ll_upper_(lat, lon));
+    uint32 northern_ll_upper(::ll_upper(lat, lon) ^ 0x40000000);
     // insert lons
     vector< Area_Block >& northern_block(area_blocks[northern_ll_upper]);
     for (set< int32 >::const_iterator it2(lons.begin()); it2 != lons.end(); ++it2)
@@ -243,9 +243,9 @@ void Make_Area_Statement::add_segment_blocks
       int32 to(*it2);
       vector< uint64 > coors;
       coors.push_back
-          ((((uint64)Node::ll_upper_(lat, from))<<32) | Node::ll_lower(lat, from));
+          ((((uint64)(::ll_upper(lat, from) ^ 0x40000000))<<32) | Node::ll_lower(lat, from));
       coors.push_back
-          ((((uint64)Node::ll_upper_(lat, to))<<32) | Node::ll_lower(lat, to));
+          ((((uint64)(::ll_upper(lat, to) ^ 0x40000000))<<32) | Node::ll_lower(lat, to));
       Area_Block new_block(id, coors);
       northern_block.push_back(new_block);
     }
@@ -405,6 +405,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   for (map< Uint31_Index, vector< Area_Block > >::const_iterator
       it(area_blocks.begin()); it != area_blocks.end(); ++it)
     used_indices.insert(it->first.val());
+  
   Area_Location new_location(pivot_id, used_indices);
   new_location.tags = new_tags;
   Uint31_Index new_index(new_location.calc_index());

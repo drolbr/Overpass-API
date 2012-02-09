@@ -85,14 +85,6 @@ Area_Query_Statement::~Area_Query_Statement()
 
 void Area_Query_Statement::forecast()
 {
-/*  Set_Forecast& sf_out(declare_write_set(output));
-    
-  sf_out.area_count = 10;
-  declare_used_time(10);
-  finish_statement_forecast();
-    
-  display_full();
-  display_state();*/
 }
 
 void Area_Query_Statement::get_ranges
@@ -258,6 +250,21 @@ void Area_Query_Statement::collect_nodes
   }
 }
 
+void collect_nodes_from_req
+    (const set< pair< Uint32_Index, Uint32_Index > >& req,
+     map< Uint32_Index, vector< Node_Skeleton > >& nodes,
+     Resource_Manager& rman)
+{
+  Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
+      (rman.get_transaction()->data_index(osm_base_settings().NODES));
+  for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
+      it(nodes_db.range_begin
+      (Default_Range_Iterator< Uint32_Index >(req.begin()),
+       Default_Range_Iterator< Uint32_Index >(req.end())));
+      !(it == nodes_db.range_end()); ++it)
+    nodes[it.index()].push_back(it.object());    
+}
+
 void Area_Query_Statement::execute(Resource_Manager& rman)
 { 
   stopwatch.start();
@@ -277,11 +284,13 @@ void Area_Query_Statement::execute(Resource_Manager& rman)
   areas.clear();
   
   set< Uint31_Index > req;
+  
   set< pair< Uint32_Index, Uint32_Index > > nodes_req;
   get_ranges(nodes_req, req, rman);
+  collect_nodes_from_req(nodes_req, nodes, rman);
   
-  collect_nodes(nodes_req, req, NULL, nodes, stopwatch, rman);
-
+  collect_nodes(nodes, req, rman);
+  
   stopwatch.stop(Stopwatch::NO_DISK);
   stopwatch.report(get_name());
   rman.health_check(*this);

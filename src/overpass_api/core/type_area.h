@@ -26,8 +26,8 @@ struct Area
       (uint32 from_lat, int32 from_lon, uint32 to_lat, int32 to_lon)
   {
     Aligned_Segment result;
-    uint32 a_ll_upper(Node::ll_upper_(from_lat, from_lon));
-    uint32 b_ll_upper(Node::ll_upper_(to_lat, to_lon));
+    uint32 a_ll_upper(::ll_upper(from_lat, from_lon) ^ 0x40000000);
+    uint32 b_ll_upper(::ll_upper(to_lat, to_lon) ^ 0x40000000);
     result.ll_upper_ = a_ll_upper & 0xffffff00;
     result.ll_lower_a = (uint64)Node::ll_lower(from_lat, from_lon) |
         (((uint64)a_ll_upper & 0xff)<<32);
@@ -139,31 +139,10 @@ struct Area
       (vector< Aligned_Segment >& aligned_segments,
        uint64 from, uint64 to)
   {
-    uint32 from_lat(0), to_lat(0);
-    int32 from_lon(0), to_lon(0);
-    
-    for (uint32 i(0); i < 16; i+=1)
-    {
-      from_lat |= (((uint64)0x1<<(31-2*i))&(from>>32))<<i;
-      from_lat |= (((uint64)0x1<<(31-2*i))&from)>>(16-i);
-    }
-    for (uint32 i(0); i < 16; i+=1)
-    {
-      to_lat |= (((uint64)0x1<<(31-2*i))&(to>>32))<<i;
-      to_lat |= (((uint64)0x1<<(31-2*i))&to)>>(16-i);
-    }
-    for (uint32 i(0); i < 16; i+=1)
-    {
-      from_lon |= (((uint64)0x1<<(30-2*i))&(from>>32))<<(i+1);
-      from_lon |= (((uint64)0x1<<(30-2*i))&from)>>(15-i);
-    }
-    for (uint32 i(0); i < 16; i+=1)
-    {
-      to_lon |= (((uint64)0x1<<(30-2*i))&(to>>32))<<(i+1);
-      to_lon |= (((uint64)0x1<<(30-2*i))&to)>>(15-i);
-    }
-    from_lon ^= 0x80000000;
-    to_lon ^= 0x80000000;
+    uint32 from_lat = Node::ilat(from>>32, from&0xffffffff);
+    uint32 to_lat = Node::ilat(to>>32, to&0xffffffff);
+    int32 from_lon = Node::ilon(from>>32, from&0xffffffff);
+    int32 to_lon = Node::ilon(to>>32, to&0xffffffff);
     
     if ((from_lon < -900000000) && (to_lon > 900000000))
     {
