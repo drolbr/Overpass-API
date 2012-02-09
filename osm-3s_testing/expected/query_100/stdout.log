@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm>
+  <way id="9">
+    <nd ref="609"/>
+    <nd ref="610"/>
+    <tag k="way_key" v="way_few"/>
+    <tag k="way_key_2/4" v="way_value_1"/>
+  </way>
+  <way id="10">
+    <nd ref="610"/>
+    <nd ref="611"/>
+    <tag k="way_key" v="way_few"/>
+    <tag k="way_key_2/4" v="way_value_0"/>
+    <tag k="way_key_5" v="way_value_5"/>
+  </way>
+</osm>

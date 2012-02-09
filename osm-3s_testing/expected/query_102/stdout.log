@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm>
+  <relation id="5">
+    <member type="node" ref="90000" role="zero"/>
+    <tag k="relation_key" v="relation_few"/>
+    <tag k="relation_key_2/4" v="relation_value_1"/>
+    <tag k="relation_key_5" v="relation_value_5"/>
+  </relation>
+  <relation id="10">
+    <member type="relation" ref="1" role="three"/>
+    <member type="node" ref="1" role="one"/>
+    <member type="way" ref="1" role="two"/>
+    <member type="node" ref="2" role="two"/>
+    <member type="way" ref="2" role="three"/>
+    <member type="node" ref="602" role="two"/>
+    <member type="way" ref="89701" role="two"/>
+    <member type="node" ref="601" role="one"/>
+    <member type="way" ref="90301" role="two"/>
+    <member type="node" ref="1" role="one"/>
+    <member type="relation" ref="2" role="zero"/>
+    <tag k="relation_key" v="relation_few"/>
+    <tag k="relation_key_2/4" v="relation_value_0"/>
+    <tag k="relation_key_5" v="relation_value_5"/>
+  </relation>
+</osm>
