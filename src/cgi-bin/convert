@@ -11,6 +11,9 @@ BIN_DIR="$EXEC_DIR/../bin"
 DEBUG=
 DATA=
 TARGET=
+ZOOM="6"
+LAT="50.722"
+LON="7.092"
 
 IFS=$'&'
 for KEY_VAL in $QUERY_STRING; do
@@ -25,6 +28,12 @@ for KEY_VAL in $QUERY_STRING; do
   };
   elif [[ ${KEY_VAL:0:6} == "debug=" ]]; then
     DEBUG="${KEY_VAL:6}"
+  elif [[ ${KEY_VAL:0:5} == "zoom=" ]]; then
+    ZOOM="${KEY_VAL:5}"
+  elif [[ ${KEY_VAL:0:4} == "lat=" ]]; then
+    LAT="${KEY_VAL:4}"
+  elif [[ ${KEY_VAL:0:4} == "lon=" ]]; then
+    LON="${KEY_VAL:4}"
   fi
 }; done
 unset IFS
@@ -51,9 +60,9 @@ echo -e "\
   <script src=\"http://openlayers.org/api/OpenLayers.js\"></script>\n\
   <script src=\"http://openstreetmap.org/openlayers/OpenStreetMap.js\"></script>\n\
   <script type=\"text/javascript\">\n\
-      var lat=50.722;\n\
-      var lon=7.092;\n\
-      var zoom=6;\n\
+      var lat=$LAT;\n\
+      var lon=$LON;\n\
+      var zoom=$ZOOM;\n\
       var map;\n\
 \n\
       function init(){\n\
