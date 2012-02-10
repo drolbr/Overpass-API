@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+# $1 - remote source
+# $2 - local destination
+fetch_file()
+{
+  wget -nv -O "$2" "$1"
+};
+
+EXEC_DIR="`dirname $0`/"
+if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
+{
+  EXEC_DIR="`pwd`/$EXEC_DIR"
+};
+fi
+
+BIN_DIR="$EXEC_DIR/../bin"
+BASE_URL="http://overpass.osm.rambler.ru/cgi"
+
+echo "Content-Type: text/html; charset=utf-8"
+echo
+echo -e "\
+<html>\n\
+<head>\n\
+  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"></meta>\n\
+  <title>Server status</title>\n\
+</head>\n\
+<body>\n\
+  <h1>Outside view on the server</h1>\n\
+  <h2>Empty, simple request</h2>\n\
+<pre>\n"
+
+fetch_file "$BASE_URL/interpreter?data=<print/>" "/tmp/ping.xml"
+$BIN_DIR/escape_xml <"/tmp/ping.xml"
+
+echo -e "</pre>\
+  <h2>Meta request</h2>\n\
+<pre>\n"
+
+fetch_file "$BASE_URL/interpreter?data=<query type='way'><has-kv k='name' v='Lipkenskothen'/></query><print mode='meta'/><recurse type='way-node'/><print mode='meta'/>" "/tmp/ping.xml"
+$BIN_DIR/escape_xml <"/tmp/ping.xml"
+
+echo -e "</pre>\
+  <h2>Area request</h2>\n\
+<pre>\n"
+
+fetch_file "$BASE_URL/interpreter?data=<coord-query lat='51.25' lon='7.15'/><print mode='ids_only'/>" "/tmp/ping.xml"
+$BIN_DIR/escape_xml <"/tmp/ping.xml"
+
+echo -e "</pre>\
+</body>\n\
+</html>\n"
