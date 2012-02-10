@@ -28,17 +28,21 @@ retry_fetch_file()
 {
   if [[ ! -s "$2" ]]; then {
     fetch_file "$1" "$2"
-    gunzip -t <"$2"
-    if [[ $? -ne 0 ]]; then {
-      rm "$2"
+    if [[ "$3" == "gzip" ]]; then {
+      gunzip -t <"$2"
+      if [[ $? -ne 0 ]]; then {
+        rm "$2"
+      }; fi
     }; fi
   }; fi
   until [[ -s "$2" ]]; do {
     sleep 15
     fetch_file "$1" "$2"
-    gunzip -t <"$2"
-    if [[ $? -ne 0 ]]; then {
-      rm "$2"
+    if [[ "$3" == "gzip" ]]; then {
+      gunzip -t <"$2"
+      if [[ $? -ne 0 ]]; then {
+        rm "$2"
+      }; fi
     }; fi
   }; done
 };
@@ -55,8 +59,8 @@ fetch_minute_diff()
   REMOTE_PATH="$SOURCE_DIR/$TDIGIT1/$TDIGIT2"
   mkdir -p "$LOCAL_DIR/$TDIGIT1/$TDIGIT2"
 
-  retry_fetch_file "$REMOTE_PATH/$TDIGIT3.osc.gz" "$LOCAL_PATH/$TDIGIT3.osc.gz"
-  retry_fetch_file "$REMOTE_PATH/$TDIGIT3.state.txt" "$LOCAL_PATH/$TDIGIT3.state.txt"
+  retry_fetch_file "$REMOTE_PATH/$TDIGIT3.osc.gz" "$LOCAL_PATH/$TDIGIT3.osc.gz" "gzip"
+  retry_fetch_file "$REMOTE_PATH/$TDIGIT3.state.txt" "$LOCAL_PATH/$TDIGIT3.state.txt" "text"
 
   TIMESTAMP_LINE=`grep timestamp $LOCAL_DIR/$TDIGIT1/$TDIGIT2/$TDIGIT3.state.txt`
   TIMESTAMP=${TIMESTAMP_LINE:10}
