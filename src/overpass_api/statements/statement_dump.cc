@@ -119,7 +119,7 @@ string dump_print_map_ql(const map< string, string >& attributes, bool pretty = 
       it != attributes.end(); ++it)
   {
     if (it->first == "limit" && it->second != "")
-      result += " \"" + it->second + "\"";
+      result += " " + it->second + "";
   }
   
   return result;
@@ -247,6 +247,8 @@ string Statement_Dump::dump_compact_map_ql() const
 	result += "[timeout:" + it->second + "]";
       else if (it->first == "element-limit")
 	result += "[maxsize:" + it->second + "]";
+      else if (it->first == "output")
+	result += "[out:" + it->second + "]\n";
     }
     if (!attributes.empty())
       result += ";";
@@ -385,6 +387,8 @@ string Statement_Dump::dump_pretty_map_ql() const
 	result += "[timeout:" + it->second + "]\n";
       else if (it->first == "element-limit")
 	result += "[maxsize:" + it->second + "]\n";
+      else if (it->first == "output")
+	result += "[out:" + it->second + "]\n";
     }
     if (result != "")
       result += ";\n";
