@@ -67,6 +67,31 @@ namespace
   vector< Statement_Dump* >& statement_stack< Statement_Dump >() { return statement_dump_stack_; }
 }
 
+string de_escape(string input)
+{
+  string result;
+  string::size_type pos = 0;
+  while (pos < input.length())
+  {
+    if (input[pos] != '\\')
+      result += input[pos];
+    else
+    {
+      ++pos;
+      if (pos >= input.length())
+	break;
+      if (input[pos] == 'n')
+	result += '\n';
+      else if (input[pos] == 't')
+	result += '\t';
+      else
+	result += input[pos];
+    }
+    ++pos;
+  }
+  return result;
+}
+
 Dispatcher_Stub::Dispatcher_Stub
     (string db_dir_, Error_Output* error_output_, string xml_raw, int& area_level)
     : db_dir(db_dir_), error_output(error_output_),
@@ -132,6 +157,7 @@ Dispatcher_Stub::Dispatcher_Stub
     {
       ifstream version((dispatcher_client->get_db_dir() + "osm_base_version").c_str());
       getline(version, timestamp);
+      timestamp = de_escape(timestamp);
     }
     try
     {
@@ -174,6 +200,7 @@ Dispatcher_Stub::Dispatcher_Stub
 	  ifstream version((area_dispatcher_client->get_db_dir() +   
 	      "area_version").c_str());
 	  getline(version, area_timestamp);
+	  area_timestamp = de_escape(area_timestamp);
 	}
       }
       else if (area_level == 2)
@@ -197,7 +224,7 @@ Dispatcher_Stub::Dispatcher_Stub
 	  ofstream area_version((area_dispatcher_client->get_db_dir()
 	      + "area_version.shadow").c_str());
 	  area_version<<timestamp<<'\n';
-	  area_timestamp = timestamp;
+	  area_timestamp = de_escape(timestamp);
 	}
       }
       
@@ -244,17 +271,19 @@ Dispatcher_Stub::Dispatcher_Stub
     {
       ifstream version((db_dir + "osm_base_version").c_str());
       getline(version, timestamp);
+      timestamp = de_escape(timestamp);
     }
     if (area_level == 1)
     {
       ifstream version((db_dir + "area_version").c_str());
       getline(version, area_timestamp);
+      timestamp = de_escape(timestamp);
     }
     else if (area_level == 2)
     {
       ofstream area_version((db_dir + "area_version").c_str());
       area_version<<timestamp<<'\n';
-      area_timestamp = timestamp;
+      area_timestamp = de_escape(timestamp);
     }
   }
 }
