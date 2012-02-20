@@ -21,6 +21,7 @@
 #include "../frontend/console_output.h"
 #include "../frontend/user_interface.h"
 #include "../frontend/web_output.h"
+#include "../osm-backend/clone_database.h"
 #include "../statements/osm_script.h"
 #include "../statements/statement.h"
 #include "resource_manager.h"
@@ -44,13 +45,11 @@
 
 using namespace std;
 
-// const char* LOGFILE = "/opt/osm_why_api/dispatcher.log";
-// static int output_mode(NOTHING);
-
 int main(int argc, char *argv[])
-{ 
+{  
   // read command line arguments
-  string db_dir;
+  string db_dir = "";
+  string clone_db_dir = "";
   uint log_level = Error_Output::ASSISTING;
   Debug_Level debug_level = parser_execute;
   int area_level = 0;
@@ -80,11 +79,26 @@ int main(int argc, char *argv[])
       debug_level = parser_dump_pretty_map_ql;
     else if (!(strcmp(argv[argpos], "--dump-compact-map-ql")))
       debug_level = parser_dump_compact_map_ql;
+    else if (!(strncmp(argv[argpos], "--clone=", 8)))
+    {
+      clone_db_dir = ((string)argv[argpos]).substr(8);
+      if ((clone_db_dir.size() > 0) && (clone_db_dir[clone_db_dir.size()-1] != '/'))
+	clone_db_dir += '/';
+    }
     ++argpos;
   }
   
   Error_Output* error_output(new Console_Output(log_level));
   Statement::set_error_output(error_output);
+  
+  if (clone_db_dir != "")
+  {
+    // open read transaction and log this.
+    Dispatcher_Stub dispatcher(db_dir, error_output, "-- clone database --", area_level);
+    
+    clone_database(*dispatcher.resource_manager().get_transaction(), clone_db_dir);
+    return 0;
+  }
   
   // connect to dispatcher and get database dir
   try
@@ -105,8 +119,8 @@ int main(int argc, char *argv[])
     
     // set limits - short circuited until forecast gets effective
     dispatcher.set_limits();
-  
-    Web_Output web_output(Error_Output::QUIET);
+ 
+    Web_Output web_output(log_level);
     Osm_Script_Statement* osm_script = 0;
     if (!get_statement_stack()->empty())
       osm_script = dynamic_cast< Osm_Script_Statement* >(get_statement_stack()->front());
@@ -119,28 +133,17 @@ int main(int argc, char *argv[])
           (dispatcher.get_timestamp(),
 	   area_level > 0 ? dispatcher.get_area_timestamp() : "", false);
     
-//     cout<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-//       "<osm version=\"0.6\" generator=\"Overpass API\">\n"
-//       "<note>The data included in this document is from www.openstreetmap.org. "
-//       "It has there been collected by a large group of contributors. For individual "
-//       "attribution of each item please refer to "
-//       "http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\n";
-//     cout<<"<meta osm_base=\""<<dispatcher.get_timestamp()<<'\"';
-//     if (area_level > 0)
-//       cout<<" areas=\""<<dispatcher.get_area_timestamp()<<"\"";
-//     cout<<"/>\n\n";
-
     for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	 it != get_statement_stack()->end(); ++it)
       (*it)->execute(dispatcher.resource_manager());
     
     web_output.write_footer();
-//     cout<<"\n</osm>\n";
 
     return 0;
   }
   catch(File_Error e)
   {
+    cout<<"C\n";
     ostringstream temp;
     if (e.origin != "Dispatcher_Stub::Dispatcher_Stub::1")
     {
