@@ -91,18 +91,18 @@ int main(int argc, char *argv[])
   Error_Output* error_output(new Console_Output(log_level));
   Statement::set_error_output(error_output);
   
-  if (clone_db_dir != "")
-  {
-    // open read transaction and log this.
-    Dispatcher_Stub dispatcher(db_dir, error_output, "-- clone database --", area_level);
-    
-    clone_database(*dispatcher.resource_manager().get_transaction(), clone_db_dir);
-    return 0;
-  }
-  
   // connect to dispatcher and get database dir
   try
   {
+    if (clone_db_dir != "")
+    {
+      // open read transaction and log this.
+      Dispatcher_Stub dispatcher(db_dir, error_output, "-- clone database --", area_level);
+      
+      clone_database(*dispatcher.resource_manager().get_transaction(), clone_db_dir);
+      return 0;
+    }
+    
     string xml_raw(get_xml_console(error_output));
     
     if ((error_output) && (error_output->display_encoding_errors()))

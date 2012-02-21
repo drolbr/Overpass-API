@@ -25,6 +25,15 @@
 
 using namespace std;
 
+void zero_out_tails(void* buf, uint32 block_size)
+{
+  uint32 net_size = *(uint32*)buf;
+  if (block_size - net_size >= 4)
+    *(uint32*)(((uint8*)buf) + net_size) = 0;
+  for (uint i = (net_size+3)/4*4; i < block_size; i += 4)
+    *(uint32*)(((uint8*)buf) + i) = 0;
+}
+
 template< class TIndex >
 void clone_bin_file(const File_Properties& file_prop, Transaction& transaction, string dest_db_dir)
 {
@@ -50,6 +59,7 @@ void clone_bin_file(const File_Properties& file_prop, Transaction& transaction, 
     while (!(src_it == src_file.flat_end()))
     {
       void* buf = src_file.read_block(src_it);
+      zero_out_tails(buf, file_prop.get_block_size());
       dest_file.insert_block(dest_it, buf, src_it.block_it->max_keysize);
       ++src_it;
       dest_it = dest_file.discrete_end();
