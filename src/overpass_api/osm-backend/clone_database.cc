@@ -124,4 +124,6 @@ void clone_database(Transaction& transaction, string dest_db_dir)
   clone_bin_file< Uint31_Index >(*meta_settings().NODES_META, transaction, dest_db_dir);
   clone_bin_file< Uint31_Index >(*meta_settings().WAYS_META, transaction, dest_db_dir);
   clone_bin_file< Uint31_Index >(*meta_settings().RELATIONS_META, transaction, dest_db_dir);
+  clone_bin_file< Uint32_Index >(*meta_settings().USER_DATA, transaction, dest_db_dir);
+  clone_bin_file< Uint32_Index >(*meta_settings().USER_INDICES, transaction, dest_db_dir);
 }
