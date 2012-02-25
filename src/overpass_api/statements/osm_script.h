@@ -43,7 +43,11 @@ class Osm_Script_Statement : public Statement
     
     const string& get_type() const { return type; }
     void set_factory(Statement::Factory* factory_) { factory = factory_; }
-    
+
+    string adapt_url(const string& url) const;
+    string get_output() const;
+    uint32 get_written_elements_count() const;
+
     /*    string get_rule_name() { return name; }
     int get_rule_replace() { return replace; }
     int get_rule_version() { return version; }

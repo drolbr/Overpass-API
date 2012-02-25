@@ -39,19 +39,19 @@ class Print_Target_Xml : public Print_Target
     virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton* meta = 0,
-			    const map< uint32, string >* users = 0) const;
+			    const map< uint32, string >* users = 0);
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton* meta = 0,
-			    const map< uint32, string >* users = 0) const;
+			    const map< uint32, string >* users = 0);
     virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton* meta = 0,
-			    const map< uint32, string >* users = 0) const;
+			    const map< uint32, string >* users = 0);
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton* meta = 0,
-			    const map< uint32, string >* users = 0) const;
+			    const map< uint32, string >* users = 0);
 };
 
 class Print_Target_Json : public Print_Target
@@ -63,19 +63,19 @@ class Print_Target_Json : public Print_Target
     virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton* meta = 0,
-			    const map< uint32, string >* users = 0) const;
+			    const map< uint32, string >* users = 0);
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton* meta = 0,
-			    const map< uint32, string >* users = 0) const;
+			    const map< uint32, string >* users = 0);
     virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton* meta = 0,
-			    const map< uint32, string >* users = 0) const;
+			    const map< uint32, string >* users = 0);
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton* meta = 0,
-			    const map< uint32, string >* users = 0) const;
+			    const map< uint32, string >* users = 0);
 			    
   private:
     mutable bool first_elem;
@@ -85,24 +85,35 @@ class Print_Target_Custom : public Print_Target
 {
   public:
     Print_Target_Custom(uint32 mode, Transaction& transaction, bool first_target = true)
-        : Print_Target(mode, transaction) {}
+        : Print_Target(mode, transaction), written_elements_count(0), first_id(0) {}
     
     virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton* meta = 0,
-			    const map< uint32, string >* users = 0) const;
+			    const map< uint32, string >* users = 0);
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton* meta = 0,
-			    const map< uint32, string >* users = 0) const;
+			    const map< uint32, string >* users = 0);
     virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton* meta = 0,
-			    const map< uint32, string >* users = 0) const;
+			    const map< uint32, string >* users = 0);
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton* meta = 0,
-			    const map< uint32, string >* users = 0) const;
+			    const map< uint32, string >* users = 0);
+			    
+    string get_output() const { return output; }
+    uint32 get_written_elements_count() const { return written_elements_count; }
+    string get_first_type() const { return first_type; }
+    uint32 get_first_id() const { return first_id; }
+    
+  private:
+    string output;
+    uint32 written_elements_count;
+    string first_type;
+    uint32 first_id;
 };
 
 //-----------------------------------------------------------------------------
@@ -143,7 +154,7 @@ void print_meta_xml(const OSM_Element_Metadata_Skeleton& meta,
 void Print_Target_Xml::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton* meta,
-		const map< uint32, string >* users) const
+		const map< uint32, string >* users)
 {
   cout<<"  <node";
   if (mode & PRINT_IDS)
@@ -169,7 +180,7 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 void Print_Target_Xml::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton* meta,
-		const map< uint32, string >* users) const
+		const map< uint32, string >* users)
 {
   cout<<"  <way";
   if (mode & PRINT_IDS)
@@ -200,7 +211,7 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 void Print_Target_Xml::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton* meta,
-		const map< uint32, string >* users) const
+		const map< uint32, string >* users)
 { 
   cout<<"  <relation";
   if (mode & PRINT_IDS)
@@ -236,7 +247,7 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Relation_Skeleton& skel
 void Print_Target_Xml::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton* meta,
-		const map< uint32, string >* users) const
+		const map< uint32, string >* users)
 {
   cout<<"  <area";
   if (mode & PRINT_IDS)
@@ -292,7 +303,7 @@ void print_meta_json(const OSM_Element_Metadata_Skeleton& meta,
 void Print_Target_Json::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton* meta,
-		const map< uint32, string >* users) const
+		const map< uint32, string >* users)
 {
   if (first_elem)
     first_elem = false;
@@ -325,7 +336,7 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 void Print_Target_Json::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton* meta,
-		const map< uint32, string >* users) const
+		const map< uint32, string >* users)
 {
   if (first_elem)
     first_elem = false;
@@ -365,7 +376,7 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 void Print_Target_Json::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton* meta,
-		const map< uint32, string >* users) const
+		const map< uint32, string >* users)
 { 
   if (first_elem)
     first_elem = false;
@@ -417,7 +428,7 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Relation_Skeleton& ske
 void Print_Target_Json::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton* meta,
-		const map< uint32, string >* users) const
+		const map< uint32, string >* users)
 {
   if (first_elem)
     first_elem = false;
@@ -444,20 +455,33 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 
 //-----------------------------------------------------------------------------
 
-string process_template(const string& raw_template, uint32 id)
+string process_template(const string& raw_template, uint32 id, string type = "{{{type}}}")
 {
   ostringstream result;
   string::size_type old_pos = 0;
   string::size_type new_pos = 0;
   
-  new_pos = raw_template.find("{{{id}}}", old_pos);
+  new_pos = raw_template.find("{{{", old_pos);
   while (new_pos != string::npos)
   {
     result<<raw_template.substr(old_pos, new_pos - old_pos);
-    result<<id;
     
-    old_pos = new_pos + 8;
-    new_pos = raw_template.find("{{{id}}}", old_pos);
+    if (raw_template.substr(new_pos + 3, 5) == "id}}}")
+    {
+      result<<id;
+      old_pos = new_pos + 8;
+    }
+    else if (raw_template.substr(new_pos + 3, 7) == "type}}}")
+    {
+      result<<type;
+      old_pos = new_pos + 10;
+    }
+    else
+    {
+      result<<"{{{";
+      old_pos = new_pos + 3;
+    }
+    new_pos = raw_template.find("{{{", old_pos);
   }
   result<<raw_template.substr(old_pos);
   
@@ -467,9 +491,16 @@ string process_template(const string& raw_template, uint32 id)
 void Print_Target_Custom::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton* meta,
-		const map< uint32, string >* users) const
+		const map< uint32, string >* users)
 {
-  cout<<process_template("\n"
+  if (written_elements_count == 0)
+  {
+    first_type = "node";
+    first_id = skel.id;
+  }
+  ++written_elements_count;
+  
+  output += process_template("\n"
   "<p>Node id = {{{id}}},<br/>\n"
   "<a href=\"http://www.openstreetmap.org/browse/node/{{{id}}}\">Browse on osm.org</a></p>\n"
   "", skel.id);
@@ -478,9 +509,16 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 void Print_Target_Custom::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton* meta,
-		const map< uint32, string >* users) const
+		const map< uint32, string >* users)
 {
-  cout<<process_template("\n"
+  if (written_elements_count == 0)
+  {
+    first_type = "way";
+    first_id = skel.id;
+  }
+  ++written_elements_count;
+  
+  output += process_template("\n"
   "<p>Way id = {{{id}}},<br/>\n"
   "<a href=\"http://www.openstreetmap.org/browse/way/{{{id}}}\">Browse on osm.org</a></p>\n"
   "", skel.id);
@@ -489,9 +527,16 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 void Print_Target_Custom::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton* meta,
-		const map< uint32, string >* users) const
+		const map< uint32, string >* users)
 { 
-  cout<<process_template("\n"
+  if (written_elements_count == 0)
+  {
+    first_type = "relation";
+    first_id = skel.id;
+  }
+  ++written_elements_count;
+  
+  output += process_template("\n"
   "<p>Relation id = {{{id}}},<br/>\n"
   "<a href=\"http://www.openstreetmap.org/browse/relation/{{{id}}}\">Browse on osm.org</a></p>\n"
   "", skel.id);
@@ -500,7 +545,7 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Relation_Skeleton& s
 void Print_Target_Custom::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton* meta,
-		const map< uint32, string >* users) const
+		const map< uint32, string >* users)
 {
 }
 
@@ -515,6 +560,18 @@ Print_Target& Output_Handle::get_print_target(uint32 current_mode, Transaction& 
     mode = current_mode;
     if (print_target)
     {
+      if (dynamic_cast< Print_Target_Custom* >(print_target))
+      {
+	output +=
+	    dynamic_cast< Print_Target_Custom* >(print_target)->get_output();
+	uint32 partly_elements_count =
+	    dynamic_cast< Print_Target_Custom* >(print_target)->get_written_elements_count();
+	if (written_elements_count == 0 && partly_elements_count > 0)
+	{
+	  first_type = dynamic_cast< Print_Target_Custom* >(print_target)->get_first_type();
+	  first_id = dynamic_cast< Print_Target_Custom* >(print_target)->get_first_id();
+	}
+      }
       delete print_target;
       print_target = 0;
       first_target = false;
@@ -532,6 +589,34 @@ Print_Target& Output_Handle::get_print_target(uint32 current_mode, Transaction& 
   }
   
   return *print_target;
+}
+
+string Output_Handle::adapt_url(const string& url) const
+{
+  if (written_elements_count == 0)
+    return process_template(url,
+			    dynamic_cast< Print_Target_Custom* >(print_target)->get_first_id(),
+			    dynamic_cast< Print_Target_Custom* >(print_target)->get_first_type());
+  else
+    return process_template(url, first_id, first_type);
+}
+
+string Output_Handle::get_output() const
+{
+  if (print_target && dynamic_cast< Print_Target_Custom* >(print_target))
+    return output
+        + dynamic_cast< Print_Target_Custom* >(print_target)->get_output();
+  else
+    return output;
+}
+
+uint32 Output_Handle::get_written_elements_count() const
+{
+  if (print_target && dynamic_cast< Print_Target_Custom* >(print_target))
+    return written_elements_count
+        + dynamic_cast< Print_Target_Custom* >(print_target)->get_written_elements_count();
+  else
+    return written_elements_count;
 }
 
 Output_Handle::~Output_Handle()

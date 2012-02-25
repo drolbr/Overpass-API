@@ -152,6 +152,27 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
   rman.health_check(*this);
 }
 
+string Osm_Script_Statement::adapt_url(const string& url) const
+{
+  if (output_handle)
+    return output_handle->adapt_url(url);
+  return 0;
+}
+
+string Osm_Script_Statement::get_output() const
+{
+  if (output_handle)
+    return output_handle->get_output();
+  return 0;
+}
+
+uint32 Osm_Script_Statement::get_written_elements_count() const
+{
+  if (output_handle)
+    return output_handle->get_written_elements_count();
+  return 0;
+}
+
 Osm_Script_Statement::~Osm_Script_Statement()
 {
   if (output_handle)

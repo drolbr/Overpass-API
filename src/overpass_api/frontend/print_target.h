@@ -26,15 +26,24 @@ using namespace std;
 class Output_Handle
 {
   public:
-    Output_Handle(string type_) : type(type_), mode(0), print_target(0) {}
+    Output_Handle(string type_)
+      : type(type_), mode(0), print_target(0), written_elements_count(0), first_id(0) {}
     ~Output_Handle();
     
     Print_Target& get_print_target(uint32 mode, Transaction& transaction);
+    
+    string adapt_url(const string& url) const;
+    string get_output() const;
+    uint32 get_written_elements_count() const;
     
   private:
     string type;
     uint32 mode;
     Print_Target* print_target;
+    string output;
+    uint32 written_elements_count;
+    string first_type;
+    uint32 first_id;
 };
 
 #endif

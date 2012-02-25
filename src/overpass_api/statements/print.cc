@@ -168,7 +168,7 @@ void collect_tags_framed
 
 template< class TIndex, class TObject >
 void quadtile
-    (const map< TIndex, vector< TObject > >& items, const Print_Target& target,
+    (const map< TIndex, vector< TObject > >& items, Print_Target& target,
      Transaction& transaction, uint32 limit, uint32& element_count)
 {
   typename map< TIndex, vector< TObject > >::const_iterator
@@ -191,7 +191,7 @@ void quadtile
 template< class TIndex, class TObject >
 void Print_Statement::tags_quadtile
     (const map< TIndex, vector< TObject > >& items,
-     const File_Properties& file_prop, const Print_Target& target, uint32 stopwatch_account,
+     const File_Properties& file_prop, Print_Target& target, uint32 stopwatch_account,
      Resource_Manager& rman, Transaction& transaction,
      const File_Properties* meta_file_prop, uint32& element_count)
 {
@@ -264,7 +264,7 @@ struct Skeleton_Comparator_By_Id {
 
 template< class TIndex, class TObject >
 void by_id
-  (const map< TIndex, vector< TObject > >& items, const Print_Target& target,
+  (const map< TIndex, vector< TObject > >& items, Print_Target& target,
    Transaction& transaction, uint32 limit, uint32& element_count)
 {
   // order relevant elements by id
@@ -316,7 +316,7 @@ template< class TIndex, class TObject >
 void Print_Statement::tags_by_id
   (const map< TIndex, vector< TObject > >& items,
    const File_Properties& file_prop,
-   uint32 FLUSH_SIZE, const Print_Target& target, uint32 stopwatch_account,
+   uint32 FLUSH_SIZE, Print_Target& target, uint32 stopwatch_account,
    Resource_Manager& rman, Transaction& transaction,
    const File_Properties* meta_file_prop, uint32& element_count)
 {
