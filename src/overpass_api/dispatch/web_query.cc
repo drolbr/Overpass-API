@@ -78,9 +78,7 @@ int main(int argc, char *argv[])
           (dispatcher.get_timestamp(),
 	   area_level > 0 ? dispatcher.get_area_timestamp() : "");
     else
-      error_output.write_html_header
-          (dispatcher.get_timestamp(),
-	   area_level > 0 ? dispatcher.get_area_timestamp() : "");
+      ;
 
     for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	 it != get_statement_stack()->end(); ++it)
