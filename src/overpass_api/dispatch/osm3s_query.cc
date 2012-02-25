@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
       }
       else if (count == 1)
       {
-	cout<<"HTTP/1.1 302 Found\n";
+	cout<<"Status: 302 Moved\n";
 	cout<<"Location: "
 	    <<osm_script->adapt_url("http://www.openstreetmap.org/browse/{{{type}}}/{{{id}}}")
 	    <<"\n\n";
