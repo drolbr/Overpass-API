@@ -81,6 +81,30 @@ class Print_Target_Json : public Print_Target
     mutable bool first_elem;
 };
 
+class Print_Target_Custom : public Print_Target
+{
+  public:
+    Print_Target_Custom(uint32 mode, Transaction& transaction, bool first_target = true)
+        : Print_Target(mode, transaction) {}
+    
+    virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0) const;
+    virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0) const;
+    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0) const;
+    virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0) const;
+};
+
 //-----------------------------------------------------------------------------
 
 const char* MEMBER_TYPE[] = { 0, "node", "way", "relation" };
@@ -420,6 +444,68 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 
 //-----------------------------------------------------------------------------
 
+string process_template(const string& raw_template, uint32 id)
+{
+  ostringstream result;
+  string::size_type old_pos = 0;
+  string::size_type new_pos = 0;
+  
+  new_pos = raw_template.find("{{{id}}}", old_pos);
+  while (new_pos != string::npos)
+  {
+    result<<raw_template.substr(old_pos, new_pos - old_pos);
+    result<<id;
+    
+    old_pos = new_pos + 8;
+    new_pos = raw_template.find("{{{id}}}", old_pos);
+  }
+  result<<raw_template.substr(old_pos);
+  
+  return result.str();
+}
+
+void Print_Target_Custom::print_item(uint32 ll_upper, const Node_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton* meta,
+		const map< uint32, string >* users) const
+{
+  cout<<process_template("\n"
+  "<p>Node id = {{{id}}},<br/>\n"
+  "<a href=\"http://www.openstreetmap.org/browse/node/{{{id}}}\">Browse on osm.org</a></p>\n"
+  "", skel.id);
+}
+
+void Print_Target_Custom::print_item(uint32 ll_upper, const Way_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton* meta,
+		const map< uint32, string >* users) const
+{
+  cout<<process_template("\n"
+  "<p>Way id = {{{id}}},<br/>\n"
+  "<a href=\"http://www.openstreetmap.org/browse/way/{{{id}}}\">Browse on osm.org</a></p>\n"
+  "", skel.id);
+}
+
+void Print_Target_Custom::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton* meta,
+		const map< uint32, string >* users) const
+{ 
+  cout<<process_template("\n"
+  "<p>Relation id = {{{id}}},<br/>\n"
+  "<a href=\"http://www.openstreetmap.org/browse/relation/{{{id}}}\">Browse on osm.org</a></p>\n"
+  "", skel.id);
+}
+
+void Print_Target_Custom::print_item(uint32 ll_upper, const Area_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton* meta,
+		const map< uint32, string >* users) const
+{
+}
+
+//-----------------------------------------------------------------------------
+
 Print_Target& Output_Handle::get_print_target(uint32 current_mode, Transaction& transaction)
 {
   bool first_target = true;
@@ -441,6 +527,8 @@ Print_Target& Output_Handle::get_print_target(uint32 current_mode, Transaction& 
       print_target = new Print_Target_Xml(mode, transaction);
     else if (type == "json")
       print_target = new Print_Target_Json(mode, transaction, first_target);
+    else if (type == "custom")
+      print_target = new Print_Target_Custom(mode, transaction, first_target);
   }
   
   return *print_target;

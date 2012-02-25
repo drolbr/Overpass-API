@@ -73,8 +73,12 @@ int main(int argc, char *argv[])
       error_output.write_xml_header
           (dispatcher.get_timestamp(),
 	   area_level > 0 ? dispatcher.get_area_timestamp() : "");
-    else
+    else if (osm_script->get_type() == "json")
       error_output.write_json_header
+          (dispatcher.get_timestamp(),
+	   area_level > 0 ? dispatcher.get_area_timestamp() : "");
+    else
+      error_output.write_html_header
           (dispatcher.get_timestamp(),
 	   area_level > 0 ? dispatcher.get_area_timestamp() : "");
 

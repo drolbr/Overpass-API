@@ -69,7 +69,7 @@ Osm_Script_Statement::Osm_Script_Statement
   }
   max_allowed_space = max_space;
 
-  if (attributes["output"] == "xml" || attributes["output"] == "json")
+  if (attributes["output"] == "xml" || attributes["output"] == "json" || attributes["output"] == "custom")
     type = attributes["output"];
   else
   {
