@@ -50,7 +50,9 @@ int main(int argc, char *argv[])
   
   try
   {
-    string xml_raw(get_xml_cgi(&error_output));
+    string url = "http://www.openstreetmap.org/browse/{{{type}}}/{{{id}}}";
+    bool redirect = true;
+    string xml_raw(get_xml_cgi(&error_output, 1048576, url, redirect));
     
     if (error_output.display_encoding_errors())
       return 0;
@@ -95,11 +97,11 @@ int main(int argc, char *argv[])
 	cout<<"<p>No results found.</p>\n";
 	error_output.write_footer();
       }
-      else if (count == 1)
+      else if (count == 1 && redirect)
       {
 	cout<<"Status: 302 Moved\n";
 	cout<<"Location: "
-	    <<osm_script->adapt_url("http://www.openstreetmap.org/browse/{{{type}}}/{{{id}}}")
+	    <<osm_script->adapt_url(url)
 	    <<"\n\n";
       }
       else

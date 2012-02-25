@@ -173,7 +173,6 @@ int main(int argc, char *argv[])
   }
   catch(File_Error e)
   {
-    cout<<"C\n";
     ostringstream temp;
     if (e.origin != "Dispatcher_Stub::Dispatcher_Stub::1")
     {

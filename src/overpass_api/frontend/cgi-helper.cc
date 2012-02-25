@@ -68,7 +68,9 @@ string cgi_post_to_text()
   return raw;
 }
 
-string decode_cgi_to_plain(const string& raw, int& error, string& jsonp)
+string decode_cgi_to_plain(const string& raw, int& error,
+			   string& jsonp,
+			   string& url, bool& redirect)
 {
   error = 0;
   string result;
@@ -116,5 +118,27 @@ string decode_cgi_to_plain(const string& raw, int& error, string& jsonp)
       jsonp = raw.substr(pos + 6, endpos - pos - 6);
   }
   
+  pos = raw.find("url=");
+  if (pos != string::npos)
+  {
+    string::size_type endpos = raw.find('&', pos);
+    if (endpos == string::npos)
+      url = raw.substr(pos + 4);
+    else
+      url = raw.substr(pos + 4, endpos - pos - 4);
+  }
+  
+  pos = raw.find("redirect=");
+  if (pos != string::npos)
+  {
+    string::size_type endpos = raw.find('&', pos);
+    string redirect_s;
+    if (endpos == string::npos)
+      redirect_s = raw.substr(pos + 9);
+    else
+      redirect_s = raw.substr(pos + 9, endpos - pos - 9);
+    redirect = !(redirect_s == "no");
+  }
+
   return result;
 }
