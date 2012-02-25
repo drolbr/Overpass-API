@@ -1,6 +1,6 @@
 cgibindir = ${prefix}/cgi-bin
 cgibin_PROGRAMS = interpreter position_flag show_position
-dist_cgibin_SCRIPTS = convert convert_xapi draw-line sketch-line sketch-options sketch-route xapi
+dist_cgibin_SCRIPTS = convert convert_xapi draw-line sketch-line sketch-options sketch-route xapi xapi_meta
 
 escape_xml_cc = ../expat/escape_xml.cc
 expat_cc = ../expat/expat_justparse_interface.cc

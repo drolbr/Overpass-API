@@ -24,7 +24,7 @@ using namespace std;
 
 struct InputAnalizer
 {
-  InputAnalizer(const string& input);
+  InputAnalizer(const string& input, bool force_meta = false);
   
   string south, north, east, west;
   bool bbox_found;
@@ -36,7 +36,8 @@ struct InputAnalizer
   bool meta_found;
 };
 
-InputAnalizer::InputAnalizer(const string& input_) : bbox_found(false), meta_found(false)
+InputAnalizer::InputAnalizer(const string& input_, bool force_meta)
+    : bbox_found(false), meta_found(force_meta)
 {
   string input = input_;
   while (!input.empty())
@@ -157,9 +158,9 @@ void print_print(const InputAnalizer& analizer)
     cout<<"<print/>\n";
 }
 
-void process_nodes(string input, bool is_star = false)
+void process_nodes(string input, bool is_star = false, bool force_meta = false)
 {
-  InputAnalizer analizer(input);
+  InputAnalizer analizer(input, force_meta);
   if (analizer.timeout != "")
     cout<<"<osm-script timeout=\""<<analizer.timeout<<"\">\n\n";
   if (analizer.key_value.size() == 1
@@ -211,9 +212,9 @@ void process_nodes(string input, bool is_star = false)
   }
 }
 
-void process_ways(string input, bool is_star = false)
+void process_ways(string input, bool is_star = false, bool force_meta = false)
 {
-  InputAnalizer analizer(input);
+  InputAnalizer analizer(input, force_meta);
   if (!is_star && analizer.timeout != "")
     cout<<"<osm-script timeout=\""<<analizer.timeout<<"\">\n\n";
   cout<<"<union>\n";
@@ -268,9 +269,9 @@ void process_ways(string input, bool is_star = false)
     cout<<"\n</osm-script>\n";
 }
 
-void process_relations(string input, bool is_star = false)
+void process_relations(string input, bool is_star = false, bool force_meta = false)
 {
-  InputAnalizer analizer(input);
+  InputAnalizer analizer(input, force_meta);
   if (!is_star && analizer.timeout != "")
     cout<<"<osm-script timeout=\""<<analizer.timeout<<"\">\n\n";
   if (analizer.key_value.size() == 1
@@ -324,13 +325,21 @@ int main(int argc, char* argv[])
   if (argc < 2)
     return 1;
   
-  string input(argv[1]);
+  string input;
+  bool force_meta = false;
+  if (argc == 2)
+    input = argv[1];
+  else if (argc == 3 && string(argv[1]) == string("--force-meta"))
+  {
+    force_meta = true;
+    input = argv[2];
+  }
   
   if (input.substr(0, 4) == "node")
   {
     try
     {
-      process_nodes(input.substr(4));
+      process_nodes(input.substr(4), false, force_meta);
     }
     catch (string& s)
     {
@@ -341,7 +350,7 @@ int main(int argc, char* argv[])
   {
     try
     {
-      process_ways(input.substr(3));
+      process_ways(input.substr(3), false, force_meta);
     }
     catch (string& s)
     {
@@ -352,7 +361,7 @@ int main(int argc, char* argv[])
   {
     try
     {
-      process_relations(input.substr(8));
+      process_relations(input.substr(8), false, force_meta);
     }
     catch (string& s)
     {
@@ -363,9 +372,9 @@ int main(int argc, char* argv[])
   {
     try
     {
-      process_nodes(input.substr(1), true);
-      process_ways(input.substr(1), true);
-      process_relations(input.substr(1), true);
+      process_nodes(input.substr(1), true, force_meta);
+      process_ways(input.substr(1), true, force_meta);
+      process_relations(input.substr(1), true, force_meta);
     }
     catch (string& s)
     {
