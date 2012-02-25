@@ -84,10 +84,6 @@ int main(int argc, char *argv[])
 	 it != get_statement_stack()->end(); ++it)
       (*it)->execute(dispatcher.resource_manager());
 
-      for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
-	 it != get_statement_stack()->end(); ++it)
-      (*it)->execute(dispatcher.resource_manager());
-    
     if (osm_script && osm_script->get_type() == "custom")
     {
       uint32 count = osm_script->get_written_elements_count();
@@ -101,7 +97,7 @@ int main(int argc, char *argv[])
       }
       else if (count == 1)
       {
-	cout<<"HTTP/1.1 302 Found\n";
+	cout<<"Status: 302 Moved\n";
 	cout<<"Location: "
 	    <<osm_script->adapt_url("http://www.openstreetmap.org/browse/{{{type}}}/{{{id}}}")
 	    <<"\n\n";
