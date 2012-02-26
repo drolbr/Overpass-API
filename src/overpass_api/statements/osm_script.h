@@ -47,6 +47,15 @@ class Osm_Script_Statement : public Statement
     string adapt_url(const string& url) const;
     string get_output() const;
     uint32 get_written_elements_count() const;
+    
+    void set_template_names(const string& node_template_name_,
+			    const string& way_template_name_,
+			    const string& relation_template_name_)
+    {
+      node_template_name = node_template_name_;
+      way_template_name = way_template_name_;
+      relation_template_name = relation_template_name_;
+    }
 
     /*    string get_rule_name() { return name; }
     int get_rule_replace() { return replace; }
@@ -60,6 +69,9 @@ class Osm_Script_Statement : public Statement
     string type;
     Output_Handle* output_handle;
     Statement::Factory* factory;
+    string node_template_name;
+    string way_template_name;
+    string relation_template_name;
 };
 
 #endif

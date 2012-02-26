@@ -27,7 +27,9 @@
 using namespace std;
 
 string get_xml_cgi(Error_Output* error_output, uint32 max_input_size,
-		   string& url, bool& redirect);
+		   string& url, bool& redirect,
+		   string& node_template_name, string& way_template_name,
+		   string& relation_template_name);
 
 string get_xml_console(Error_Output* error_output, uint32 max_input_size = 1048576);
 

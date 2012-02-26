@@ -35,7 +35,9 @@ Generic_Statement_Maker< Osm_Script_Statement > Osm_Script_Statement::statement_
 Osm_Script_Statement::Osm_Script_Statement
     (int line_number_, const map< string, string >& input_attributes)
     : Statement(line_number_), max_allowed_time(0), max_allowed_space(0), type("xml"),
-      factory(0)
+      factory(0),
+      node_template_name("default.node"), way_template_name("default.way"),
+      relation_template_name("default.relation")
 {
   map< string, string > attributes;
   
@@ -129,6 +131,9 @@ string load_template(const string& name, Transaction& transaction)
     getline(in, buf);
     result += buf + '\n';
   }
+  
+  if (result == "")
+    result = "\n<p>Template not found.</p>\n";
   
   return result;
 }
