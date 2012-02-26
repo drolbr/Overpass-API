@@ -1,0 +1,2 @@
+<p>Way id = {{{id}}},<br/>
+<a href="http://www.openstreetmap.org/browse/way/{{{id}}}">Browse on osm.org</a></p>

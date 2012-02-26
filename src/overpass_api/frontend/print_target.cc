@@ -84,8 +84,12 @@ class Print_Target_Json : public Print_Target
 class Print_Target_Custom : public Print_Target
 {
   public:
-    Print_Target_Custom(uint32 mode, Transaction& transaction, bool first_target = true)
-        : Print_Target(mode, transaction), written_elements_count(0), first_id(0) {}
+    Print_Target_Custom(uint32 mode, Transaction& transaction, bool first_target,
+			const string& node_template_, const string& way_template_,
+			const string& relation_template_)
+        : Print_Target(mode, transaction), written_elements_count(0), first_id(0),
+	node_template(node_template_), way_template(way_template_),
+	relation_template(relation_template_) {}
     
     virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
@@ -114,6 +118,9 @@ class Print_Target_Custom : public Print_Target
     uint32 written_elements_count;
     string first_type;
     uint32 first_id;
+    string node_template;
+    string way_template;
+    string relation_template;
 };
 
 //-----------------------------------------------------------------------------
@@ -500,10 +507,7 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Node_Skeleton& skel,
   }
   ++written_elements_count;
   
-  output += process_template("\n"
-  "<p>Node id = {{{id}}},<br/>\n"
-  "<a href=\"http://www.openstreetmap.org/browse/node/{{{id}}}\">Browse on osm.org</a></p>\n"
-  "", skel.id);
+  output += process_template(node_template, skel.id);
 }
 
 void Print_Target_Custom::print_item(uint32 ll_upper, const Way_Skeleton& skel,
@@ -518,10 +522,7 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Way_Skeleton& skel,
   }
   ++written_elements_count;
   
-  output += process_template("\n"
-  "<p>Way id = {{{id}}},<br/>\n"
-  "<a href=\"http://www.openstreetmap.org/browse/way/{{{id}}}\">Browse on osm.org</a></p>\n"
-  "", skel.id);
+  output += process_template(way_template, skel.id);
 }
 
 void Print_Target_Custom::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
@@ -536,10 +537,7 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Relation_Skeleton& s
   }
   ++written_elements_count;
   
-  output += process_template("\n"
-  "<p>Relation id = {{{id}}},<br/>\n"
-  "<a href=\"http://www.openstreetmap.org/browse/relation/{{{id}}}\">Browse on osm.org</a></p>\n"
-  "", skel.id);
+  output += process_template(relation_template, skel.id);
 }
 
 void Print_Target_Custom::print_item(uint32 ll_upper, const Area_Skeleton& skel,
@@ -585,7 +583,8 @@ Print_Target& Output_Handle::get_print_target(uint32 current_mode, Transaction& 
     else if (type == "json")
       print_target = new Print_Target_Json(mode, transaction, first_target);
     else if (type == "custom")
-      print_target = new Print_Target_Custom(mode, transaction, first_target);
+      print_target = new Print_Target_Custom(mode, transaction, first_target,
+					     node_template, way_template, relation_template);
   }
   
   return *print_target;

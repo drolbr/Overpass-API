@@ -60,9 +60,6 @@ class Osm_Script_Statement : public Statement
     string type;
     Output_Handle* output_handle;
     Statement::Factory* factory;
-    /* string name;
-    int replace, version;
-    uint database_id;*/
 };
 
 #endif

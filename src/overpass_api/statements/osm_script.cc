@@ -16,6 +16,7 @@
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <fstream>
 #include <iostream>
 #include <sstream>
 
@@ -115,9 +116,21 @@ void Osm_Script_Statement::add_statement(Statement* statement, string text)
 
 void Osm_Script_Statement::forecast()
 {
-/*  for (vector< Statement* >::iterator it(substatements.begin());
-  it != substatements.end(); ++it)
-  (*it)->forecast(mysql);*/
+}
+
+string load_template(const string& name, Transaction& transaction)
+{
+  string result;
+  
+  ifstream in((transaction.get_db_dir() + "/templates/" + name).c_str());
+  while (in.good())
+  {
+    string buf;
+    getline(in, buf);
+    result += buf + '\n';
+  }
+  
+  return result;
 }
 
 void Osm_Script_Statement::execute(Resource_Manager& rman)
@@ -127,6 +140,13 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
   if (factory)
   {
     output_handle = new Output_Handle(type);
+    if (type == "custom")
+    {
+      output_handle->set_templates
+          (load_template("default.node", *rman.get_transaction()),
+	   load_template("default.way", *rman.get_transaction()),
+	   load_template("default.relation", *rman.get_transaction()));
+    }
     for (vector< Statement* >::iterator it = factory->created_statements.begin();
         it != factory->created_statements.end(); ++it)
     {

@@ -31,6 +31,13 @@ class Output_Handle
     ~Output_Handle();
     
     Print_Target& get_print_target(uint32 mode, Transaction& transaction);
+    void set_templates(const string& node_template_, const string& way_template_,
+		       const string& relation_template_)
+    {
+      node_template = node_template_;
+      way_template = way_template_;
+      relation_template = relation_template_;
+    }
     
     string adapt_url(const string& url) const;
     string get_output() const;
@@ -44,6 +51,9 @@ class Output_Handle
     uint32 written_elements_count;
     string first_type;
     uint32 first_id;
+    string node_template;
+    string way_template;
+    string relation_template;
 };
 
 #endif
