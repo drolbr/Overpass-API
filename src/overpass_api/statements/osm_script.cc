@@ -148,9 +148,9 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
     if (type == "custom")
     {
       output_handle->set_templates
-          (load_template("default.node", *rman.get_transaction()),
-	   load_template("default.way", *rman.get_transaction()),
-	   load_template("default.relation", *rman.get_transaction()));
+          (load_template(node_template_name, *rman.get_transaction()),
+	   load_template(way_template_name, *rman.get_transaction()),
+	   load_template(relation_template_name, *rman.get_transaction()));
     }
     for (vector< Statement* >::iterator it = factory->created_statements.begin();
         it != factory->created_statements.end(); ++it)
