@@ -610,12 +610,17 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
       {
 	straight = (*token == "=");
 	++token;
-	Statement_Text clause("has-kv", token.line_col());
-	clause.attributes.push_back(key);
-	clause.attributes.push_back(get_text_token(token, error_output, "Value"));
-	clause.attributes.push_back(straight ? "" : "!");
-	clear_until_after(token, error_output, "]");
-	clauses.push_back(clause);
+	if (token.good() && *token == "]")
+	  ++token;
+	else
+	{
+	  Statement_Text clause("has-kv", token.line_col());
+	  clause.attributes.push_back(key);
+	  clause.attributes.push_back(get_text_token(token, error_output, "Value"));
+	  clause.attributes.push_back(straight ? "" : "!");
+	  clear_until_after(token, error_output, "]");
+	  clauses.push_back(clause);
+	}
       }
       else //if (*token == "~")
       {
