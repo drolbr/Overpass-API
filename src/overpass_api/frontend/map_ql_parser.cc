@@ -39,9 +39,10 @@ string get_text_token(Tokenizer_Wrapper& token, Error_Output* error_output,
 		      string type_of_token)
 {
   string result = "";
+  bool result_valid = true;
   
   if (!token.good() || (*token).size() == 0)
-    ;
+    result_valid = false;
   else if ((*token)[0] == '"' || (*token)[0] == '\'')
   {
     string::size_type start = 0;
@@ -58,8 +59,10 @@ string get_text_token(Tokenizer_Wrapper& token, Error_Output* error_output,
     result = *token;
   else if ((*token)[0] == '-' && (*token).size() > 1 && isdigit((*token)[1]))
     result = *token;
+  else
+    result_valid = false;
   
-  if (result != "")
+  if (result_valid)
     ++token;
   else
   {
@@ -617,9 +620,12 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	  Statement_Text clause("has-kv", token.line_col());
 	  clause.attributes.push_back(key);
 	  clause.attributes.push_back(get_text_token(token, error_output, "Value"));
-	  clause.attributes.push_back(straight ? "" : "!");
+	  if (clause.attributes.back() != "")
+	  {
+	    clause.attributes.push_back(straight ? "" : "!");
+	    clauses.push_back(clause);
+	  }
 	  clear_until_after(token, error_output, "]");
-	  clauses.push_back(clause);
 	}
       }
       else //if (*token == "~")

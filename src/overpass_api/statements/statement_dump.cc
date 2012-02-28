@@ -266,7 +266,7 @@ string Statement_Dump::dump_compact_map_ql() const
       else if (it->first == "element-limit")
 	result += "[maxsize:" + it->second + "]";
       else if (it->first == "output")
-	result += "[out:" + it->second + "]\n";
+	result += "[out:" + it->second + "]";
     }
     if (!attributes.empty())
       result += ";";
