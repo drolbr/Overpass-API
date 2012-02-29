@@ -551,7 +551,6 @@ int main(int argc, char *argv[])
   Stoplist stoplist = make_stoplist(walk_limit_for_changes, doubleread_rel,
 				    display_classes, pivot_ref, pivot_network,
 				    relations, have_valid_operation_times, debug_level);
-  Relation relation = relations.front();
 
   // bailout if no relation is found
   if (relations.size() == 0)
@@ -562,6 +561,8 @@ int main(int argc, char *argv[])
     (Replacer< string >("<stops-diagram/>", "<text x=\"100\" y=\"100\">No relation found</text>").apply(frame_template()))));
     return 0;
   }
+  
+  Relation relation = relations.front();
   
   //desactivated, for debugging purposes only
 /*  for (unsigned int i(0); i < relations.size(); ++i)

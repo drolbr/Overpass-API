@@ -85,8 +85,6 @@ fi
 REQUEST_METHOD=
 ../bin/osm3s_query --quiet --no-mime <$BASEDIR/req >$BASEDIR/result
 
-pushd "$EXEC_DIR"
-
 if [[ $ARG_2 == "backspace" ]]; then
 {
   echo "Content-Type: image/svg+xml; charset=utf-8"
