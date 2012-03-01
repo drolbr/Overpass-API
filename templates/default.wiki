@@ -2,19 +2,19 @@
 
 {{node:
 <p>Node <strong>{{{id}}}</strong>, {{coords: Lat: {{{lat}}}, Lat: {{{lon}}},}}<br/>
-{{tags:{{{key}}}={{{value}}}
+{{tags:{{{key}}} = {{{value}}},<br/>
 }}
 <a href="http://www.openstreetmap.org/browse/node/{{{id}}}">Browse on openstreetmap.org</a></p>
 }}
 {{way:
 <p>Way <strong>{{{id}}}</strong>,<br/>
-{{tags:{{{key}}}={{{value}}}
+{{tags:{{{key}}} = {{{value}}},<br/>
 }}
 <a href="http://www.openstreetmap.org/browse/way/{{{id}}}">Browse on openstreetmap.org</a></p>
 }}
 {{relation:
 <p>Relation <strong>{{{id}}}</strong>,<br/>
-{{tags:{{{key}}}={{{value}}}
+{{tags:{{{key}}} = {{{value}}},<br/>
 }}
 <a href="http://www.openstreetmap.org/browse/relation/{{{id}}}">Browse on openstreetmap.org</a></p>
 }}
