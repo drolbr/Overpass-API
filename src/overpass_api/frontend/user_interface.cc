@@ -105,8 +105,7 @@ namespace
 }
 
 string get_xml_cgi(Error_Output* error_output, uint32 max_input_size, string& url, bool& redirect,
-		   string& node_template_name, string& way_template_name,
-		   string& relation_template_name)
+		   string& template_name)
 {
   int line_number(1);
   // If there is nonempty input from GET method, use GET
@@ -173,8 +172,7 @@ string get_xml_cgi(Error_Output* error_output, uint32 max_input_size, string& ur
       error_output->add_encoding_remark("The server now removes the CGI character escaping.");
     int cgi_error(0);
     string jsonp;
-    input = decode_cgi_to_plain(input, cgi_error, jsonp, url, redirect,
-				node_template_name, way_template_name, relation_template_name);
+    input = decode_cgi_to_plain(input, cgi_error, jsonp, url, redirect, template_name);
     
     // no 'data=' found
     if (cgi_error)

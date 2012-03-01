@@ -69,11 +69,7 @@ string cgi_post_to_text()
 }
 
 string decode_cgi_to_plain(const string& raw, int& error,
-			   string& jsonp,
-			   string& url, bool& redirect,
-			   string& node_template_name,
-			   string& way_template_name,
-			   string& relation_template_name)
+			   string& jsonp, string& url, bool& redirect, string& template_name)
 {
   error = 0;
   string result;
@@ -131,34 +127,14 @@ string decode_cgi_to_plain(const string& raw, int& error,
       url = raw.substr(pos + 4, endpos - pos - 4);
   }
   
-  pos = raw.find("node_template=");
+  pos = raw.find("template=");
   if (pos != string::npos)
   {
     string::size_type endpos = raw.find('&', pos);
     if (endpos == string::npos)
-      node_template_name = raw.substr(pos + 14);
+      template_name = raw.substr(pos + 14);
     else
-      node_template_name = raw.substr(pos + 14, endpos - pos - 14);
-  }
-  
-  pos = raw.find("way_template=");
-  if (pos != string::npos)
-  {
-    string::size_type endpos = raw.find('&', pos);
-    if (endpos == string::npos)
-      way_template_name = raw.substr(pos + 13);
-    else
-      way_template_name = raw.substr(pos + 13, endpos - pos - 13);
-  }
-  
-  pos = raw.find("relation_template=");
-  if (pos != string::npos)
-  {
-    string::size_type endpos = raw.find('&', pos);
-    if (endpos == string::npos)
-      relation_template_name = raw.substr(pos + 18);
-    else
-      relation_template_name = raw.substr(pos + 18, endpos - pos - 18);
+      template_name = raw.substr(pos + 14, endpos - pos - 14);
   }
   
   pos = raw.find("redirect=");

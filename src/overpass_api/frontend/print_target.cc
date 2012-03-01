@@ -462,35 +462,132 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 
 //-----------------------------------------------------------------------------
 
-string process_template(const string& raw_template, uint32 id, string type = "{{{type}}}")
+string::size_type find_block_end(string data, string::size_type pos)
+{
+  if (pos == string::npos || data.substr(pos, 2) != "{{")
+    return pos;
+  
+  string::size_type curly_brace_count = 2;
+  if (data.substr(pos, 3) == "{{{")
+    curly_brace_count = 3;
+  pos += curly_brace_count;
+  
+  while (pos < data.size())
+  {
+    if (data[pos] == '{' && data.substr(pos, 2) == "{{")
+      pos = find_block_end(data, pos);
+    else if ((data[pos] == '}') && curly_brace_count == 2 && data.substr(pos, 2) == "}}")
+      return pos+2;
+    else if ((data[pos] == '}') && curly_brace_count == 3 && data.substr(pos, 3) == "}}}")
+      return pos+3;
+    else
+      ++pos;
+  }
+  
+  return string::npos;
+}
+
+string process_tags(const string& raw_template, const string& key, const string& value)
 {
   ostringstream result;
   string::size_type old_pos = 0;
   string::size_type new_pos = 0;
   
-  new_pos = raw_template.find("{{{", old_pos);
+  new_pos = raw_template.find("{{", old_pos);
   while (new_pos != string::npos)
   {
     result<<raw_template.substr(old_pos, new_pos - old_pos);
-    
-    if (raw_template.substr(new_pos + 3, 5) == "id}}}")
+    old_pos = find_block_end(raw_template, new_pos);
+    if (old_pos == string::npos)
     {
-      result<<id;
-      old_pos = new_pos + 8;
+      result<<raw_template.substr(new_pos);
+      return result.str();
     }
-    else if (raw_template.substr(new_pos + 3, 7) == "type}}}")
+    else if (raw_template.substr(new_pos, 9) == "{{{key}}}")
+      result<<key;
+    else if (raw_template.substr(new_pos, 11) == "{{{value}}}")
+      result<<value;
+    else
+      result<<raw_template.substr(new_pos, old_pos - new_pos);
+    new_pos = raw_template.find("{{", old_pos);
+  }
+  result<<raw_template.substr(old_pos, new_pos - old_pos);
+  
+  return result.str();
+}
+
+string process_coords(const string& raw_template, double lat, double lon)
+{
+  ostringstream result;
+  string::size_type old_pos = 0;
+  string::size_type new_pos = 0;
+  
+  new_pos = raw_template.find("{{", old_pos);
+  while (new_pos != string::npos)
+  {
+    result<<raw_template.substr(old_pos, new_pos - old_pos);
+    old_pos = find_block_end(raw_template, new_pos);
+    if (old_pos == string::npos)
     {
+      result<<raw_template.substr(new_pos);
+      return result.str();
+    }
+    else if (raw_template.substr(new_pos, 9) == "{{{lat}}}")
+      result<<fixed<<setprecision(7)<<lat;
+    else if (raw_template.substr(new_pos, 9) == "{{{lon}}}")
+      result<<fixed<<setprecision(7)<<lon;
+    else
+      result<<raw_template.substr(new_pos, old_pos - new_pos);
+    new_pos = raw_template.find("{{", old_pos);
+  }
+  result<<raw_template.substr(old_pos, new_pos - old_pos);
+  
+  return result.str();
+}
+
+string process_template(const string& raw_template, uint32 id, string type,
+			double lat, double lon,
+			const vector< pair< string, string > >* tags)
+{
+  ostringstream result;
+  string::size_type old_pos = 0;
+  string::size_type new_pos = 0;
+  
+  new_pos = raw_template.find("{{", old_pos);
+  while (new_pos != string::npos)
+  {
+    result<<raw_template.substr(old_pos, new_pos - old_pos);
+    old_pos = find_block_end(raw_template, new_pos);
+    if (old_pos == string::npos)
+    {
+      result<<raw_template.substr(new_pos);
+      return result.str();
+    }
+    else if (raw_template.substr(new_pos, 8) == "{{{id}}}")
+      result<<id;
+    else if (raw_template.substr(new_pos, 10) == "{{{type}}}")
       result<<type;
-      old_pos = new_pos + 10;
+    else if (raw_template.substr(new_pos, 9) == "{{coords:")
+    {
+      if (lat < 100.0)
+	result<<process_coords(raw_template.substr(new_pos + 9, old_pos - new_pos - 11),
+			       lat, lon);
+    }
+    else if (raw_template.substr(new_pos, 7) == "{{tags:")
+    {
+      if (tags != 0 && !tags->empty())
+      {
+	for (vector< pair< string, string > >::const_iterator it = tags->begin();
+	    it != tags->end(); ++it)
+	  result<<process_tags(raw_template.substr(new_pos + 7, old_pos - new_pos - 9),
+			       it->first, it->second);
+      }
     }
     else
-    {
-      result<<"{{{";
-      old_pos = new_pos + 3;
-    }
-    new_pos = raw_template.find("{{{", old_pos);
+      result<<raw_template.substr(new_pos, old_pos - new_pos);
+    new_pos = raw_template.find("{{", old_pos);
   }
-  result<<raw_template.substr(old_pos);
+  result<<raw_template.substr(old_pos, new_pos - old_pos);
   
   return result.str();
 }
@@ -507,7 +604,14 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Node_Skeleton& skel,
   }
   ++written_elements_count;
   
-  output += process_template(node_template, skel.id);
+  double lat = 100.0;
+  double lon = 200.0;
+  if (mode & PRINT_COORDS)
+  {
+    lat = Node::lat(ll_upper, skel.ll_lower);
+    lon = Node::lon(ll_upper, skel.ll_lower);
+  }
+  output += process_template(node_template, skel.id, "node", lat, lon, tags);
 }
 
 void Print_Target_Custom::print_item(uint32 ll_upper, const Way_Skeleton& skel,
@@ -522,7 +626,7 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Way_Skeleton& skel,
   }
   ++written_elements_count;
   
-  output += process_template(way_template, skel.id);
+  output += process_template(way_template, skel.id, "way", 100.0, 200.0, tags);
 }
 
 void Print_Target_Custom::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
@@ -537,7 +641,7 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Relation_Skeleton& s
   }
   ++written_elements_count;
   
-  output += process_template(relation_template, skel.id);
+  output += process_template(relation_template, skel.id, "relation", 100.0, 200.0, tags);
 }
 
 void Print_Target_Custom::print_item(uint32 ll_upper, const Area_Skeleton& skel,
@@ -595,9 +699,10 @@ string Output_Handle::adapt_url(const string& url) const
   if (written_elements_count == 0)
     return process_template(url,
 			    dynamic_cast< Print_Target_Custom* >(print_target)->get_first_id(),
-			    dynamic_cast< Print_Target_Custom* >(print_target)->get_first_type());
+			    dynamic_cast< Print_Target_Custom* >(print_target)->get_first_type(),
+			    100.0, 200.0, 0);
   else
-    return process_template(url, first_id, first_type);
+    return process_template(url, first_id, first_type, 100.0, 200.0, 0);
 }
 
 string Output_Handle::get_output() const

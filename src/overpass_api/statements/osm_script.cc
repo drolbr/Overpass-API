@@ -35,9 +35,7 @@ Generic_Statement_Maker< Osm_Script_Statement > Osm_Script_Statement::statement_
 Osm_Script_Statement::Osm_Script_Statement
     (int line_number_, const map< string, string >& input_attributes)
     : Statement(line_number_), max_allowed_time(0), max_allowed_space(0), type("xml"),
-      factory(0),
-      node_template_name("default.node"), way_template_name("default.way"),
-      relation_template_name("default.relation")
+      factory(0), template_name("default.wiki")
 {
   map< string, string > attributes;
   
@@ -120,22 +118,97 @@ void Osm_Script_Statement::forecast()
 {
 }
 
-string load_template(const string& name, Transaction& transaction)
+void set_output_templates
+    (Output_Handle& output, string& header, const string& name, Transaction& transaction)
 {
-  string result;
+  string data;
   
   ifstream in((transaction.get_db_dir() + "/templates/" + name).c_str());
   while (in.good())
   {
     string buf;
     getline(in, buf);
-    result += buf + '\n';
+    data += buf + '\n';
   }
   
-  if (result == "")
-    result = "\n<p>Template not found.</p>\n";
+  if (data == "")
+    data = "\n<p>Template not found.</p>\n";
+
+  string node_template = "\n<p>No {{node:..}} found in template.</p>\n";
+  string way_template = "\n<p>No {{way:..}} found in template.</p>\n";
+  string relation_template = "\n<p>No {{relation:..}} found in template.</p>\n";
   
-  return result;
+  bool header_written = false;
+  string::size_type pos = 0;
+  while (pos < data.size())
+  {
+    if (data[pos] == '{')
+    {
+      if (data.substr(pos, 7) == "{{node:")
+      {
+	string::size_type end_pos = find_block_end(data, pos);
+	
+	if (!header_written)
+	{
+	  header = data.substr(0, pos);
+	  header_written = true;
+	}
+	
+	if (end_pos != string::npos)
+	{
+	  node_template = data.substr(pos + 7, end_pos - pos - 9);
+	  pos = end_pos;
+	}
+	else
+	  pos = data.size();
+      }
+      else if (data.substr(pos, 6) == "{{way:")
+      {
+	string::size_type end_pos = find_block_end(data, pos);
+
+	if (!header_written)
+	{
+	  header = data.substr(0, pos);
+	  header_written = true;
+	}
+	
+	if (end_pos != string::npos)
+	{
+	  way_template = data.substr(pos + 6, end_pos - pos - 8);
+	  pos = end_pos;
+	}
+	else
+	  pos = data.size();
+      }
+      else if (data.substr(pos, 11) == "{{relation:")
+      {
+	string::size_type end_pos = find_block_end(data, pos);
+	
+	if (!header_written)
+	{
+	  header = data.substr(0, pos);
+	  header_written = true;
+	}
+	
+	if (end_pos != string::npos)
+	{
+	  relation_template = data.substr(pos + 11, end_pos - pos - 13);
+	  pos = end_pos;
+	}
+	else
+	  pos = data.size();
+      }
+      else
+	++pos;
+    }
+    else
+      ++pos;
+  }
+  
+  if (!header_written)
+    header = data.substr(0, pos);
+  
+  output.set_templates(node_template, way_template, relation_template);
 }
 
 void Osm_Script_Statement::execute(Resource_Manager& rman)
@@ -146,12 +219,7 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
   {
     output_handle = new Output_Handle(type);
     if (type == "custom")
-    {
-      output_handle->set_templates
-          (load_template(node_template_name, *rman.get_transaction()),
-	   load_template(way_template_name, *rman.get_transaction()),
-	   load_template(relation_template_name, *rman.get_transaction()));
-    }
+      set_output_templates(*output_handle, header, template_name, *rman.get_transaction());
     for (vector< Statement* >::iterator it = factory->created_statements.begin();
         it != factory->created_statements.end(); ++it)
     {
@@ -184,11 +252,41 @@ string Osm_Script_Statement::adapt_url(const string& url) const
   return 0;
 }
 
-string Osm_Script_Statement::get_output() const
+string process_template(const string& raw_template, uint32 count)
+{
+  ostringstream result;
+  string::size_type old_pos = 0;
+  string::size_type new_pos = 0;
+  
+  new_pos = raw_template.find("{{{", old_pos);
+  while (new_pos != string::npos)
+  {
+    result<<raw_template.substr(old_pos, new_pos - old_pos);
+    
+    if (raw_template.substr(new_pos + 3, 8) == "count}}}")
+    {
+      result<<count;
+      old_pos = new_pos + 11;
+    }
+    else
+    {
+      result<<"{{{";
+      old_pos = new_pos + 3;
+    }
+    new_pos = raw_template.find("{{{", old_pos);
+  }
+  result<<raw_template.substr(old_pos);
+  
+  return result.str();
+}
+
+void Osm_Script_Statement::write_output() const
 {
   if (output_handle)
-    return output_handle->get_output();
-  return 0;
+  {
+    cout<<process_template(header, output_handle->get_written_elements_count());
+    cout<<'\n'<<output_handle->get_output();
+  }
 }
 
 uint32 Osm_Script_Statement::get_written_elements_count() const

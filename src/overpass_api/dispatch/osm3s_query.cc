@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
         web_output.write_html_header
             (dispatcher.get_timestamp(),
 	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
-        cout<<'\n'<<osm_script->get_output();
+        osm_script->write_output();
 	web_output.write_footer();
       }
     }

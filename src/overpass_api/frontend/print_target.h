@@ -21,6 +21,8 @@
 
 #include "../statements/print.h"
 
+#include <string>
+
 using namespace std;
 
 class Output_Handle
@@ -55,5 +57,7 @@ class Output_Handle
     string way_template;
     string relation_template;
 };
+
+string::size_type find_block_end(string data, string::size_type pos);
 
 #endif

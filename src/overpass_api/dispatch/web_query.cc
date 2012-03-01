@@ -51,12 +51,9 @@ int main(int argc, char *argv[])
   try
   {
     string url = "http://www.openstreetmap.org/browse/{{{type}}}/{{{id}}}";
-    string node_template_name = "default.node";
-    string way_template_name = "default.way";
-    string relation_template_name = "default.relation";
+    string template_name = "default.wiki";
     bool redirect = true;
-    string xml_raw(get_xml_cgi(&error_output, 1048576, url, redirect,
-			       node_template_name, way_template_name, relation_template_name));
+    string xml_raw(get_xml_cgi(&error_output, 1048576, url, redirect, template_name));
     
     if (error_output.display_encoding_errors())
       return 0;
@@ -84,13 +81,7 @@ int main(int argc, char *argv[])
           (dispatcher.get_timestamp(),
 	   area_level > 0 ? dispatcher.get_area_timestamp() : "");
     else
-    {
-      for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
-	   it != get_statement_stack()->end(); ++it)
-        if (dynamic_cast< Osm_Script_Statement* >(*it))
-	  dynamic_cast< Osm_Script_Statement* >(*it)->set_template_names
-	      (node_template_name, way_template_name, relation_template_name);
-    }
+      osm_script->set_template_name(template_name);
 
     for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	 it != get_statement_stack()->end(); ++it)
@@ -99,7 +90,7 @@ int main(int argc, char *argv[])
     if (osm_script && osm_script->get_type() == "custom")
     {
       uint32 count = osm_script->get_written_elements_count();
-      if (count == 0)
+      if (count == 0 && redirect)
       {
         error_output.write_html_header
             (dispatcher.get_timestamp(),
@@ -119,8 +110,7 @@ int main(int argc, char *argv[])
         error_output.write_html_header
             (dispatcher.get_timestamp(),
 	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
-	cout<<"\n<h1>"<<count<<" results found.</h1>\n";
-        cout<<'\n'<<osm_script->get_output();
+	osm_script->write_output();
 	error_output.write_footer();
       }
     }
