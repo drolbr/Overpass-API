@@ -99,8 +99,6 @@ echo -e "\
 \n\
           layerMapnik = new OpenLayers.Layer.OSM.Mapnik(\"Mapnik\");\n\
           map.addLayer(layerMapnik);\n\
-          layerTilesAtHome = new OpenLayers.Layer.OSM.Osmarender(\"Osmarender\");\n\
-          map.addLayer(layerTilesAtHome);\n\
           layerCycleMap = new OpenLayers.Layer.OSM.CycleMap(\"CycleMap\");\n\
           map.addLayer(layerCycleMap);\n\
 \n\
