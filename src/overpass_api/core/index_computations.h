@@ -34,6 +34,7 @@ inline uint32 ll_upper_(uint32 ilat, int32 ilon);
 inline uint32 upper_ilat(uint32 quadtile);
 inline uint32 upper_ilon(uint32 quadtile);
 inline uint32 calc_index(const vector< uint32 >& node_idxs);
+inline pair< Uint32_Index, Uint32_Index > calc_bbox_bounds(Uint31_Index way_rel_idx);
 inline vector< Uint32_Index > calc_node_children(const vector< uint32 >& way_rel_idxs);
 inline vector< Uint31_Index > calc_children(const vector< uint32 >& way_rel_idxs);
 inline vector< uint32 > calc_parents(const vector< uint32 >& node_idxs);
@@ -316,6 +317,70 @@ inline uint32 calc_index(const vector< uint32 >& node_idxs)
     return (((lon_min | lat_min) & 0xfc000000) | 0x80000040);
 
   return 0x80000080;
+}
+
+inline pair< Uint32_Index, Uint32_Index > calc_bbox_bounds(Uint31_Index way_rel_idx)
+{
+  if (way_rel_idx.val() & 0x80000000)
+  {
+    uint32 lat = 0;
+    uint32 lon = 0;      
+    uint32 offset = 0;
+    
+    if (way_rel_idx.val() & 0x00000001)
+    {
+      lat = upper_ilat(way_rel_idx.val() & 0x2aaaaaa8);
+      lon = upper_ilon(way_rel_idx.val() & 0x55555554);
+      offset = 2;
+    }
+    else if (way_rel_idx.val() & 0x00000002)
+    {
+      lat = upper_ilat(way_rel_idx.val() & 0x2aaaaa80);
+      lon = upper_ilon(way_rel_idx.val() & 0x55555540);
+      offset = 8;
+    }
+    else if (way_rel_idx.val() & 0x00000004)
+    {
+      lat = upper_ilat(way_rel_idx.val() & 0x2aaaa800);
+      lon = upper_ilon(way_rel_idx.val() & 0x55555400);
+      offset = 0x20;
+    }
+    else if (way_rel_idx.val() & 0x00000008)
+    {
+      lat = upper_ilat(way_rel_idx.val() & 0x2aaa8000);
+      lon = upper_ilon(way_rel_idx.val() & 0x55554000);
+      offset = 0x80;
+    }
+    else if (way_rel_idx.val() & 0x00000010)
+    {
+      lat = upper_ilat(way_rel_idx.val() & 0x2aa80000);
+      lon = upper_ilon(way_rel_idx.val() & 0x55540000);
+      offset = 0x200;
+    }
+    else if (way_rel_idx.val() & 0x00000020)
+    {
+      lat = upper_ilat(way_rel_idx.val() & 0x2a800000);
+      lon = upper_ilon(way_rel_idx.val() & 0x55400000);
+      offset = 0x800;
+    }
+    else if (way_rel_idx.val() & 0x00000040)
+    {
+      lat = upper_ilat(way_rel_idx.val() & 0x28000000);
+      lon = upper_ilon(way_rel_idx.val() & 0x54000000);
+      offset = 0x2000;
+    }
+    else // way_rel_idx.val() == 0x80000080
+    {
+      lat = 0;
+      lon = 0;
+      offset = 0x8000;
+    }
+
+    return make_pair(ll_upper(lat<<16, lon<<16),
+		      ll_upper((lat+2*offset-1)<<16, (lon+2*offset-1)<<16)+1);
+  }
+  else
+    return make_pair(way_rel_idx.val(), way_rel_idx.val() + 1);
 }
 
 inline vector< Uint32_Index > calc_node_children(const vector< uint32 >& way_rel_idxs)
