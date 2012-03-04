@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
 {
   // read command line arguments
   string db_dir;
-  bool osm_base(false), areas(false), meta(false), terminate(false), status(false);
+  bool osm_base(false), areas(false), meta(false), terminate(false), status(false), show_dir(false);
   uint32 purge_id = 0;
   
   int argpos(1);
@@ -128,6 +128,8 @@ int main(int argc, char* argv[])
       terminate = true;  
     else if (!(strncmp(argv[argpos], "--status", 8)))
       status = true;
+    else if (!(strncmp(argv[argpos], "--show-dir", 10)))
+      show_dir = true;
     else if (!(strncmp(argv[argpos], "--purge=", 8)))
       purge_id = atoll(((string)argv[argpos]).substr(8).c_str());
     ++argpos;
@@ -162,7 +164,22 @@ int main(int argc, char* argv[])
     }
     return 0;
   }
-
+  
+  if (show_dir)
+  {
+    try
+    {
+      Dispatcher_Client client
+          (areas ? area_settings().shared_name : osm_base_settings().shared_name);
+      cout<<client.get_db_dir();
+    }
+    catch (File_Error e)
+    {
+      cout<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+    return 0;
+  }
+  
   if (purge_id > 0)
   {
     try
