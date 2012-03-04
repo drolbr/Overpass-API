@@ -132,9 +132,9 @@ string decode_cgi_to_plain(const string& raw, int& error,
   {
     string::size_type endpos = raw.find('&', pos);
     if (endpos == string::npos)
-      template_name = raw.substr(pos + 14);
+      template_name = raw.substr(pos + 9);
     else
-      template_name = raw.substr(pos + 14, endpos - pos - 14);
+      template_name = raw.substr(pos + 9, endpos - pos - 9);
   }
   
   pos = raw.find("redirect=");

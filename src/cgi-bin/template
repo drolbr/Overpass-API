@@ -77,7 +77,7 @@ if [[ $ACTION == "show" ]]; then
 <h1>Template &quot;$NAME&quot;</h1>\n\
 <pre>\n\
 "
-../bin/escape_xml <"$DB_DIR/$NAME"
+../bin/escape_xml <"$DB_DIR/templates/$NAME"
 echo -e "\
 </pre>\n\
 </body>\n\
