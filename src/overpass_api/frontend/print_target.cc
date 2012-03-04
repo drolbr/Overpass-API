@@ -632,6 +632,10 @@ string process_coords(const string& raw_template,
       result<<fixed<<setprecision(7)<<north;
     else if (raw_template.substr(new_pos, 10) == "{{{east}}}")
       result<<fixed<<setprecision(7)<<east;
+    else if (raw_template.substr(new_pos, 9) == "{{{lat}}}")
+      result<<fixed<<setprecision(7)<<(south + north)/2.0;
+    else if (raw_template.substr(new_pos, 9) == "{{{lon}}}")
+      result<<fixed<<setprecision(7)<<(east + west)/2.0;
     else
       result<<raw_template.substr(new_pos, old_pos - new_pos);
     new_pos = raw_template.find("{{", old_pos);
