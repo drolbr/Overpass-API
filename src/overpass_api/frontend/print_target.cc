@@ -636,6 +636,8 @@ string process_coords(const string& raw_template,
       result<<fixed<<setprecision(7)<<(south + north)/2.0;
     else if (raw_template.substr(new_pos, 9) == "{{{lon}}}")
       result<<fixed<<setprecision(7)<<(east + west)/2.0;
+    else if (raw_template.substr(new_pos, 10) == "{{{zoom}}}")
+      result<<15;
     else
       result<<raw_template.substr(new_pos, old_pos - new_pos);
     new_pos = raw_template.find("{{", old_pos);
@@ -723,8 +725,8 @@ struct Box_Coords
     pair< Uint32_Index, Uint32_Index > bbox_bounds = calc_bbox_bounds(ll_upper);
     south = Node::lat(bbox_bounds.first.val(), 0);
     west = Node::lon(bbox_bounds.first.val(), 0);
-    north = Node::lat(bbox_bounds.second.val(), 0xffffffffu);
-    east = Node::lon(bbox_bounds.second.val(), 0xffffffffu);
+    north = Node::lat(bbox_bounds.second.val() - 1, 0xffffffffu);
+    east = Node::lon(bbox_bounds.second.val() - 1, 0xffffffffu);
   }
   
   double south, north, west, east;
