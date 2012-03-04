@@ -608,7 +608,7 @@ string process_coords(const string& raw_template, double lat, double lon)
 }
 
 string process_coords(const string& raw_template,
-		      double south, double west, double north, double east)
+		      double south, double west, double north, double east, uint zoom)
 {
   ostringstream result;
   string::size_type old_pos = 0;
@@ -637,7 +637,7 @@ string process_coords(const string& raw_template,
     else if (raw_template.substr(new_pos, 9) == "{{{lon}}}")
       result<<fixed<<setprecision(7)<<(east + west)/2.0;
     else if (raw_template.substr(new_pos, 10) == "{{{zoom}}}")
-      result<<15;
+      result<<zoom;
     else
       result<<raw_template.substr(new_pos, old_pos - new_pos);
     new_pos = raw_template.find("{{", old_pos);
@@ -648,7 +648,7 @@ string process_coords(const string& raw_template,
 }
 
 string process_template(const string& raw_template, uint32 id, string type,
-			double south, double west, double north, double east,
+			double south, double west, double north, double east, uint zoom,
 			const vector< pair< string, string > >* tags,
 			const vector< uint32 >* nds,
 			const vector< Relation_Entry >* members,
@@ -682,7 +682,7 @@ string process_template(const string& raw_template, uint32 id, string type,
     {
       if (south < 100.0 && north < 100.0)
 	result<<process_coords(raw_template.substr(new_pos + 7, old_pos - new_pos - 9),
-			       south, west, north, east);
+			       south, west, north, east, zoom);
     }
     else if (raw_template.substr(new_pos, 7) == "{{tags:")
     {
@@ -732,6 +732,31 @@ struct Box_Coords
   double south, north, west, east;
 };
 
+uint detect_zoom(Uint31_Index ll_upper)
+{
+  if (0x80000000 & ll_upper.val())
+  {
+    if (ll_upper.val() & 0x1)
+      return 14;
+    else if (ll_upper.val() & 0x2)
+      return 12;
+    else if (ll_upper.val() & 0x4)
+      return 10;
+    else if (ll_upper.val() & 0x8)
+      return 8;
+    else if (ll_upper.val() & 0x10)
+      return 6;
+    else if (ll_upper.val() & 0x20)
+      return 4;
+    else if (ll_upper.val() & 0x40)
+      return 2;
+    else
+      return 1;
+  }
+  else
+    return 15;
+}
+
 void Print_Target_Custom::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton* meta,
@@ -751,7 +776,7 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Node_Skeleton& skel,
     lat = Node::lat(ll_upper, skel.ll_lower);
     lon = Node::lon(ll_upper, skel.ll_lower);
   }
-  output += process_template(node_template, skel.id, "node", lat, lon, 100.0, 0, tags, 0, 0, 0);
+  output += process_template(node_template, skel.id, "node", lat, lon, 100.0, 0, 17, tags, 0, 0, 0);
 }
 
 void Print_Target_Custom::print_item(uint32 ll_upper, const Way_Skeleton& skel,
@@ -770,10 +795,11 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Way_Skeleton& skel,
   if (mode & PRINT_COORDS)
     output += process_template(way_template, skel.id, "way",
 			       coords.south, coords.west, coords.north, coords.east,
+			       detect_zoom(ll_upper),
 			       tags, &skel.nds, 0, 0);
   else
     output += process_template(way_template, skel.id, "way",
-			       100.0, 200.0, 0, 0, tags, &skel.nds, 0, 0);
+			       100.0, 200.0, 0, 0, 17, tags, &skel.nds, 0, 0);
 }
 
 void Print_Target_Custom::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
@@ -792,10 +818,11 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Relation_Skeleton& s
   if (mode & PRINT_COORDS)
     output += process_template(relation_template, skel.id, "relation",
 			       coords.south, coords.west, coords.north, coords.east,
+			       detect_zoom(ll_upper),
 			       tags, 0, &skel.members, &roles);
   else
     output += process_template(relation_template, skel.id, "relation",
-			       100.0, 200.0, 0, 0, tags, 0, &skel.members, &roles);
+			       100.0, 200.0, 0, 0, 17, tags, 0, &skel.members, &roles);
 }
 
 void Print_Target_Custom::print_item(uint32 ll_upper, const Area_Skeleton& skel,
@@ -854,9 +881,9 @@ string Output_Handle::adapt_url(const string& url) const
     return process_template(url,
 			    dynamic_cast< Print_Target_Custom* >(print_target)->get_first_id(),
 			    dynamic_cast< Print_Target_Custom* >(print_target)->get_first_type(),
-			    100.0, 200.0, 0, 0, 0, 0, 0, 0);
+			    100.0, 200.0, 0, 0, 17, 0, 0, 0, 0);
   else
-    return process_template(url, first_id, first_type, 100.0, 200.0, 0, 0, 0, 0, 0, 0);
+    return process_template(url, first_id, first_type, 100.0, 200.0, 0, 17, 0, 0, 0, 0, 0);
 }
 
 string Output_Handle::get_output() const
