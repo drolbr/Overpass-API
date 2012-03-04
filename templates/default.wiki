@@ -1,20 +1,98 @@
+  <script src="http://openlayers.org/api/OpenLayers.js"></script>
+  <script src="http://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
+  <script type="text/javascript">
+
+      function display_map(div_id, query_url, lat, lon, zoom) {
+
+          map = new OpenLayers.Map(div_id, {
+          controls:[
+              new OpenLayers.Control.Navigation(),
+              new OpenLayers.Control.PanZoomBar(),
+              new OpenLayers.Control.LayerSwitcher(),
+              new OpenLayers.Control.Attribution()],
+              maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
+              maxResolution: 156543.0399,
+              numZoomLevels: 19,
+              units: 'm',
+              projection: new OpenLayers.Projection("EPSG:900913"),
+              displayProjection: new OpenLayers.Projection("EPSG:4326")
+          } );
+
+          layerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
+          map.addLayer(layerMapnik);
+
+          var lonLat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+          map.setCenter (lonLat, zoom);
+
+          //Initialise the vector layer using OpenLayers.Format.OSM
+          var styleMap = new OpenLayers.StyleMap({
+              strokeColor: "blue",
+              strokeWidth: 10,
+              pointRadius: 20,
+              fillColor: "blue"
+          });
+          var layer = new OpenLayers.Layer.Vector("Polygon", {
+              strategies: [new OpenLayers.Strategy.Fixed()],
+              protocol: new OpenLayers.Protocol.HTTP({
+                  url: query_url,
+                  format: new OpenLayers.Format.OSM()
+              }),
+              styleMap: styleMap,
+              projection: new OpenLayers.Projection("EPSG:4326")
+          });
+
+          map.addLayers([layer]);
+
+          return map;
+      }
+
+      var maps = new Array();
+
+      function init(){
+
+          var map_hooks = document.forms;
+          for (var i in map_hooks)
+          {
+              if (map_hooks[i].getAttribute("class") == "map_descriptor")
+                  maps.push(display_map
+                      (map_hooks[i].getAttribute("action"),
+                       map_hooks[i].url.value,
+                       map_hooks[i].lat.value, map_hooks[i].lon.value,
+                       map_hooks[i].zoom.value));
+          }
+
+      }
+  </script>
+
 <h1>{{{count}}} results found</h1>
 
 {{node:
-<p>Node <strong>{{{id}}}</strong>,{{coords: Lat: {{{lat}}}, Lon: {{{lon}}},}}<br/>
+<div style="min-height:300px;">
+<div id="map_node_{{{id}}}" style="width:300px;height:300px;float:right;">&nbsp;</div>
+
+<form class="map_descriptor" action="map_node_{{{id}}}">
+  <input type="hidden" name="url" value="api/interpreter?data=node%28{{{id}}}%29%3Bout+skel%3B"/>
+{{coords:  <input type="hidden" name="lat" value="{{{lat}}}"/>
+  <input type="hidden" name="lon" value="{{{lon}}}"/>
+}}  <input type="hidden" name="zoom" value="17"/>
+</form>
+
+<p>Node <strong>{{{id}}}</strong>,{{coords: lat: {{{lat}}}, lon: {{{lon}}},}}<br/>
 {{tags:{{{key}}} = {{{value}}}<br/>
 }}
 <a href="http://www.openstreetmap.org/browse/node/{{{id}}}">Browse on openstreetmap.org</a></p>
+</div>
 }}
 {{way:
-<p>Way <strong>{{{id}}}</strong>,{{bbox: bounding box south {{{south}}}, west {{{west}}}, north {{{north}}}, east {{{east}}},}}<br/>
+<p>Way <strong>{{{id}}}</strong>,{{bbox: bounding box south: {{{south}}}, west: {{{west}}}, north: {{{north}}}, east: {{{east}}},}}<br/>
 {{tags:{{{key}}} = {{{value}}}<br/>
-}}{{members: {{{ref}}}, }}
+}}{{members: {{{ref}}}, }}<br/>
 <a href="http://www.openstreetmap.org/browse/way/{{{id}}}">Browse on openstreetmap.org</a></p>
 }}
 {{relation:
-<p>Relation <strong>{{{id}}}</strong>,{{bbox: bounding box south {{{south}}}, west {{{west}}}, north {{{north}}}, east {{{east}}},}}<br/>
+<p>Relation <strong>{{{id}}}</strong>,{{bbox: bounding box south: {{{south}}}, west: {{{west}}}, north: {{{north}}}, east: {{{east}}},}}<br/>
 {{tags:{{{key}}} = {{{value}}}<br/>
-}}{{members: {{{type}}} {{{ref}}} {{{role}}}, }}
+}}{{members: {{{type}}} {{{ref}}} {{{role}}}, }}<br/>
 <a href="http://www.openstreetmap.org/browse/relation/{{{id}}}">Browse on openstreetmap.org</a></p>
 }}

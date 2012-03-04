@@ -35,7 +35,7 @@ Generic_Statement_Maker< Osm_Script_Statement > Osm_Script_Statement::statement_
 Osm_Script_Statement::Osm_Script_Statement
     (int line_number_, const map< string, string >& input_attributes)
     : Statement(line_number_), max_allowed_time(0), max_allowed_space(0), type("xml"),
-      factory(0), template_name("default.wiki")
+      factory(0), template_name("default.wiki"), template_contains_js_(false)
 {
   map< string, string > attributes;
   
@@ -118,7 +118,7 @@ void Osm_Script_Statement::forecast()
 {
 }
 
-void set_output_templates
+bool set_output_templates
     (Output_Handle& output, string& header, const string& name, Transaction& transaction)
 {
   string data;
@@ -130,7 +130,9 @@ void set_output_templates
     getline(in, buf);
     data += buf + '\n';
   }
-  
+
+  bool template_contains_js = (data.find("<script") != string::npos);
+
   if (data == "")
     data = "\n<p>Template not found.</p>\n";
 
@@ -209,6 +211,8 @@ void set_output_templates
     header = data.substr(0, pos);
   
   output.set_templates(node_template, way_template, relation_template);
+  
+  return template_contains_js;
 }
 
 void Osm_Script_Statement::execute(Resource_Manager& rman)
@@ -219,7 +223,8 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
   {
     output_handle = new Output_Handle(type);
     if (type == "custom")
-      set_output_templates(*output_handle, header, template_name, *rman.get_transaction());
+      template_contains_js_ =
+          set_output_templates(*output_handle, header, template_name, *rman.get_transaction());
     for (vector< Statement* >::iterator it = factory->created_statements.begin();
         it != factory->created_statements.end(); ++it)
     {

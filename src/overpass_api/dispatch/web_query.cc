@@ -109,7 +109,8 @@ int main(int argc, char *argv[])
       {
         error_output.write_html_header
             (dispatcher.get_timestamp(),
-	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
+	     area_level > 0 ? dispatcher.get_area_timestamp() : "", true,
+	     osm_script->template_contains_js());
 	osm_script->write_output();
 	error_output.write_footer();
       }

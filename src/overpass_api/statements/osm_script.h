@@ -48,6 +48,7 @@ class Osm_Script_Statement : public Statement
     uint32 get_written_elements_count() const;
     
     void set_template_name(const string& template_name_) { template_name = template_name_; }
+    bool template_contains_js() const { return template_contains_js_; }
     void write_output() const;
     
     /*    string get_rule_name() { return name; }
@@ -64,6 +65,7 @@ class Osm_Script_Statement : public Statement
     Statement::Factory* factory;
     string template_name;
     string header;
+    bool template_contains_js_;
 };
 
 #endif

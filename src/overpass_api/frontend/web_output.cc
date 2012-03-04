@@ -134,14 +134,14 @@ void Web_Output::enforce_header()
 }
 
 void Web_Output::write_html_header
-    (const string& timestamp, const string& area_timestamp)
+    (const string& timestamp, const string& area_timestamp, bool write_mime, bool write_js_init)
 {
   if (header_written != not_yet)
     return;    
   header_written = html;
   
-  cout<<
-  "Content-Type: text/html; charset=utf-8\n\n";
+  if (write_mime)
+    cout<<"Content-Type: text/html; charset=utf-8\n\n";
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
   "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
@@ -150,8 +150,9 @@ void Web_Output::write_html_header
   "<head>\n"
   "  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
   "  <title>OSM3S Response</title>\n"
-  "</head>\n"
-  "<body>\n\n"
+  "</head>\n";
+  cout<<(write_js_init ? "<body onload=\"init()\">\n\n" : "<body>\n\n");
+  cout<<
   "<p>The data included in this document is from www.openstreetmap.org. "
   "It has there been collected by a large group of contributors. For individual "
   "attribution of each item please refer to "
