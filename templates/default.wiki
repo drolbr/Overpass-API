@@ -92,18 +92,18 @@
   <input type="hidden" name="url" value="interpreter?data=%28way%28{{{id}}}%29%3Bnode%28w%29%29%3Bout+skel%3B"/>
 {{bbox:  <input type="hidden" name="lat" value="{{{lat}}}"/>
   <input type="hidden" name="lon" value="{{{lon}}}"/>
-  <input type="hidden" name="zoom" value="17"/>
+  <input type="hidden" name="zoom" value="15"/>
 }}</form>
 
 <p>Way <strong>{{{id}}}</strong>,{{bbox: bounding box south: {{{south}}}, west: {{{west}}}, north: {{{north}}}, east: {{{east}}},}}<br/>
 {{tags:{{{key}}} = {{{value}}}<br/>
 }}{{members: {{{ref}}}, }}<br/>
 <a href="http://www.openstreetmap.org/browse/way/{{{id}}}">Browse on openstreetmap.org</a></p>
+</div>
 }}
 {{relation:
 <p>Relation <strong>{{{id}}}</strong>,{{bbox: bounding box south: {{{south}}}, west: {{{west}}}, north: {{{north}}}, east: {{{east}}},}}<br/>
 {{tags:{{{key}}} = {{{value}}}<br/>
 }}{{members: {{{type}}} <strong>{{{ref}}}</strong> {{{role}}}, }}<br/>
 <a href="http://www.openstreetmap.org/browse/relation/{{{id}}}">Browse on openstreetmap.org</a></p>
-</div>
 }}
