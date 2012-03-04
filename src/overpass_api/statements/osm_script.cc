@@ -130,6 +130,13 @@ bool set_output_templates
     getline(in, buf);
     data += buf + '\n';
   }
+  
+  if (data.find("<includeonly>") != string::npos)
+  {
+    string::size_type start = data.find("<includeonly>") + 13;
+    string::size_type end = data.find("</includeonly>");
+    data = data.substr(start, end - start);
+  }
 
   bool template_contains_js = (data.find("<script") != string::npos);
 

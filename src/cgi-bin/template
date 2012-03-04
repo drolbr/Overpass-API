@@ -100,7 +100,7 @@ elif [[ $ACTION == "fetch" ]]; then
 <h1>Template &quot;$NAME&quot;</h1>\n\
 <pre>\n\
 "
-  wget -O "$DB_DIR/$NAME" "http://wiki.openstreetmap.org/wiki/$NAME"
+  wget -O "$DB_DIR/templates/$NAME" "http://wiki.openstreetmap.org/w/index.php?action=raw&title=$NAME"
   echo -e "\
 </pre>\n\
 </body>\n\
