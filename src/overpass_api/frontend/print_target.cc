@@ -828,24 +828,22 @@ uint detect_zoom(Uint31_Index ll_upper)
   if (0x80000000 & ll_upper.val())
   {
     if (ll_upper.val() & 0x1)
-      return 14;
+      return 13;
     else if (ll_upper.val() & 0x2)
-      return 12;
+      return 11;
     else if (ll_upper.val() & 0x4)
-      return 10;
+      return 9;
     else if (ll_upper.val() & 0x8)
-      return 8;
+      return 7;
     else if (ll_upper.val() & 0x10)
-      return 6;
+      return 5;
     else if (ll_upper.val() & 0x20)
-      return 4;
-    else if (ll_upper.val() & 0x40)
-      return 2;
+      return 3;
     else
       return 1;
   }
   else
-    return 15;
+    return 14;
 }
 
 void Print_Target_Custom::print_item(uint32 ll_upper, const Node_Skeleton& skel,
