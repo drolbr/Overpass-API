@@ -505,6 +505,8 @@ string process_members(const string& raw_template, uint32 ref)
     }
     else if (raw_template.substr(new_pos, 9) == "{{{ref}}}")
       result<<ref;
+    else if (raw_template.substr(new_pos, 8) == "{{first:")
+      ;
     else
       result<<raw_template.substr(new_pos, old_pos - new_pos);
     new_pos = raw_template.find("{{", old_pos);
@@ -540,6 +542,8 @@ string process_members(const string& raw_template, const Relation_Entry& entry,
       map< uint32, string >::const_iterator rit = roles.find(entry.role);
       result<<escape_xml(rit != roles.end() ? rit->second : "???");
     }
+    else if (raw_template.substr(new_pos, 8) == "{{first:")
+      ;
     else
       result<<raw_template.substr(new_pos, old_pos - new_pos);
     new_pos = raw_template.find("{{", old_pos);
@@ -569,6 +573,8 @@ string process_tags(const string& raw_template, const string& key, const string&
       result<<key;
     else if (raw_template.substr(new_pos, 11) == "{{{value}}}")
       result<<value;
+    else if (raw_template.substr(new_pos, 8) == "{{first:")
+      ;
     else
       result<<raw_template.substr(new_pos, old_pos - new_pos);
     new_pos = raw_template.find("{{", old_pos);
@@ -638,6 +644,54 @@ string process_coords(const string& raw_template,
       result<<fixed<<setprecision(7)<<(east + west)/2.0;
     else if (raw_template.substr(new_pos, 10) == "{{{zoom}}}")
       result<<zoom;
+    else if (raw_template.substr(new_pos, 7) == "{{none:")
+      ;
+    else
+      result<<raw_template.substr(new_pos, old_pos - new_pos);
+    new_pos = raw_template.find("{{", old_pos);
+  }
+  result<<raw_template.substr(old_pos, new_pos - old_pos);
+  
+  return result.str();
+}
+
+string extract_first(const string& raw_template)
+{
+  string::size_type old_pos = 0;
+  string::size_type new_pos = 0;
+  
+  new_pos = raw_template.find("{{", old_pos);
+  while (new_pos != string::npos)
+  {
+    old_pos = find_block_end(raw_template, new_pos);
+    if (old_pos == string::npos)
+      return "";
+    else if (raw_template.substr(new_pos, 8) == "{{first:")
+      return raw_template.substr(new_pos + 8, old_pos - new_pos - 10);
+    new_pos = raw_template.find("{{", old_pos);
+  }
+  
+  return "";
+}
+
+string antiprocess_coords(const string& raw_template)
+{
+  ostringstream result;
+  string::size_type old_pos = 0;
+  string::size_type new_pos = 0;
+  
+  new_pos = raw_template.find("{{", old_pos);
+  while (new_pos != string::npos)
+  {
+    result<<raw_template.substr(old_pos, new_pos - old_pos);
+    old_pos = find_block_end(raw_template, new_pos);
+    if (old_pos == string::npos)
+    {
+      result<<raw_template.substr(new_pos);
+      return result.str();
+    }
+    else if (raw_template.substr(new_pos, 7) == "{{none:")
+      return raw_template.substr(new_pos + 7, old_pos - new_pos - 9);
     else
       result<<raw_template.substr(new_pos, old_pos - new_pos);
     new_pos = raw_template.find("{{", old_pos);
@@ -683,13 +737,23 @@ string process_template(const string& raw_template, uint32 id, string type,
       if (south < 100.0 && north < 100.0)
 	result<<process_coords(raw_template.substr(new_pos + 7, old_pos - new_pos - 9),
 			       south, west, north, east, zoom);
+      else if (south == 200.0)
+	result<<antiprocess_coords(raw_template.substr(new_pos + 7, old_pos - new_pos - 9));
     }
     else if (raw_template.substr(new_pos, 7) == "{{tags:")
     {
       if (tags != 0 && !tags->empty())
       {
-	for (vector< pair< string, string > >::const_iterator it = tags->begin();
-	    it != tags->end(); ++it)
+	vector< pair< string, string > >::const_iterator it = tags->begin();
+	
+	string first = extract_first(raw_template.substr(new_pos + 7, old_pos - new_pos - 9));
+	if (first != "" && it != tags->end())
+	{
+	  result<<process_tags(first, escape_xml(it->first), escape_xml(it->second));
+	  ++it;
+	}
+	
+	for (; it != tags->end(); ++it)
 	  result<<process_tags(raw_template.substr(new_pos + 7, old_pos - new_pos - 9),
 			       escape_xml(it->first), escape_xml(it->second));
       }
@@ -698,13 +762,30 @@ string process_template(const string& raw_template, uint32 id, string type,
     {
       if (nds != 0 && !nds->empty())
       {
-	for (vector< uint32 >::const_iterator it = nds->begin(); it != nds->end(); ++it)
+	vector< uint32 >::const_iterator it = nds->begin();
+	
+	string first = extract_first(raw_template.substr(new_pos + 10, old_pos - new_pos - 12));
+	if (first != "" && it != nds->end())
+	{
+	  result<<process_members(first, *it);
+	  ++it;
+	}
+	
+	for (; it != nds->end(); ++it)
 	  result<<process_members(raw_template.substr(new_pos + 10, old_pos - new_pos - 12), *it);
       }
       else if (members != 0 && !members->empty())
       {
-	for (vector< Relation_Entry >::const_iterator it = members->begin();
-	    it != members->end(); ++it)
+	vector< Relation_Entry >::const_iterator it = members->begin();
+	
+	string first = extract_first(raw_template.substr(new_pos + 10, old_pos - new_pos - 12));
+	if (first != "" && it != members->end())
+	{
+	  result<<process_members(first, *it, *roles);
+	  ++it;
+	}
+	
+	for (; it != members->end(); ++it)
 	  result<<process_members(raw_template.substr(new_pos + 10, old_pos - new_pos - 12),
 				  *it, *roles);
       }
@@ -723,10 +804,20 @@ struct Box_Coords
   Box_Coords(Uint31_Index ll_upper)
   {
     pair< Uint32_Index, Uint32_Index > bbox_bounds = calc_bbox_bounds(ll_upper);
-    south = Node::lat(bbox_bounds.first.val(), 0);
-    west = Node::lon(bbox_bounds.first.val(), 0);
-    north = Node::lat(bbox_bounds.second.val() - 1, 0xffffffffu);
-    east = Node::lon(bbox_bounds.second.val() - 1, 0xffffffffu);
+    if (bbox_bounds.second.val() == 1)
+    {
+      south = 200.0;
+      west = 200.0;
+      north = 0;
+      east = 0;
+    }
+    else
+    {
+      south = Node::lat(bbox_bounds.first.val(), 0);
+      west = Node::lon(bbox_bounds.first.val(), 0);
+      north = Node::lat(bbox_bounds.second.val() - 1, 0xffffffffu);
+      east = Node::lon(bbox_bounds.second.val() - 1, 0xffffffffu);
+    }
   }
   
   double south, north, west, east;
