@@ -861,7 +861,7 @@ Print_Target& Output_Handle::get_print_target(uint32 current_mode, Transaction& 
     }
   }
   
-  if (print_target == 0)
+  if (!print_target)
   {
     if (type == "xml")
       print_target = new Print_Target_Xml(mode, transaction);
@@ -877,7 +877,7 @@ Print_Target& Output_Handle::get_print_target(uint32 current_mode, Transaction& 
 
 string Output_Handle::adapt_url(const string& url) const
 {
-  if (written_elements_count == 0)
+  if (print_target && written_elements_count == 0)
     return process_template(url,
 			    dynamic_cast< Print_Target_Custom* >(print_target)->get_first_id(),
 			    dynamic_cast< Print_Target_Custom* >(print_target)->get_first_type(),
@@ -906,5 +906,6 @@ uint32 Output_Handle::get_written_elements_count() const
 
 Output_Handle::~Output_Handle()
 {
-  delete print_target;
+  if (print_target)
+    delete print_target;
 }

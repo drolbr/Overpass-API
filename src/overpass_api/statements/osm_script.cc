@@ -35,7 +35,7 @@ Generic_Statement_Maker< Osm_Script_Statement > Osm_Script_Statement::statement_
 Osm_Script_Statement::Osm_Script_Statement
     (int line_number_, const map< string, string >& input_attributes)
     : Statement(line_number_), max_allowed_time(0), max_allowed_space(0), type("xml"),
-      factory(0), template_name("default.wiki"), template_contains_js_(false)
+      output_handle(0), factory(0), template_name("default.wiki"), template_contains_js_(false)
 {
   map< string, string > attributes;
   
