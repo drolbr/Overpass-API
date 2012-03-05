@@ -69,14 +69,14 @@
 
 {{node:
 <div style="min-height:300px;">
-<div id="map_node_{{{id}}}" style="width:300px;height:300px;float:right;">&nbsp;</div>
-
+<div id="map_node_{{{id}}}" style="width:300px;height:300px;float:right;">
 <form class="map_descriptor" action="map_node_{{{id}}}">
   <input type="hidden" name="url" value="interpreter?data=node%28{{{id}}}%29%3Bout+skel%3B"/>
 {{coords:  <input type="hidden" name="lat" value="{{{lat}}}"/>
   <input type="hidden" name="lon" value="{{{lon}}}"/>
   <input type="hidden" name="zoom" value="17"/>
 }}</form>
+</div>
 
 <p>Node <strong>{{{id}}}</strong>,{{coords: lat: {{{lat}}}, lon: {{{lon}}},}}<br/>
 {{tags:{{{key}}} = {{{value}}}<br/>
@@ -86,8 +86,7 @@
 }}
 {{way:
 <div style="min-height:300px;">
-<div id="map_way_{{{id}}}" style="width:300px;height:300px;float:right;">&nbsp;</div>
-
+<div id="map_way_{{{id}}}" style="width:300px;height:300px;float:right;">
 <form class="map_descriptor" action="map_way_{{{id}}}">
   <input type="hidden" name="url" value="interpreter?data=%28way%28{{{id}}}%29%3Bnode%28w%29%29%3Bout+skel%3B"/>
 {{bbox:  <input type="hidden" name="lat" value="{{{lat}}}"/>
@@ -97,6 +96,7 @@
   <input type="hidden" name="lon" value="-45.0"/>
   <input type="hidden" name="zoom" value="18"/>}}
 }}</form>
+</div>
 
 <p>Way <strong>{{{id}}}</strong>,{{bbox:{{none: no geographic reference}} bounding box south: {{{south}}}, west: {{{west}}}, north: {{{north}}}, east: {{{east}}},}}<br/>
 {{tags:{{{key}}} = {{{value}}}<br/>
@@ -106,8 +106,7 @@
 }}
 {{relation:
 <div style="min-height:300px;">
-<div id="map_relation_{{{id}}}" style="width:300px;height:300px;float:right;">&nbsp;</div>
-
+<div id="map_relation_{{{id}}}" style="width:300px;height:300px;float:right;">
 <form class="map_descriptor" action="map_relation_{{{id}}}">
   <input type="hidden" name="url" value="interpreter?data=%28relation%28{{{id}}}%29%3Bnode%28r%29%2D%3E%2Ex%3Bway%28r%29%3Bnode%28w%29%3B%29%3Bout+skel%3B"/>
 {{bbox:  <input type="hidden" name="lat" value="{{{lat}}}"/>
@@ -117,6 +116,7 @@
   <input type="hidden" name="lon" value="-45.0"/>
   <input type="hidden" name="zoom" value="18"/>}}
 }}</form>
+</div>
 
 <p>Relation <strong>{{{id}}}</strong>,{{bbox:{{none: no geographic reference}} bounding box south: {{{south}}}, west: {{{west}}}, north: {{{north}}}, east: {{{east}}},}}<br/>
 {{tags:{{{key}}} = {{{value}}}<br/>
