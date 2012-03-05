@@ -1,0 +1,20 @@
+<h1>{{{count}}} results found</h1>
+
+{{node:
+<p>Node <strong>{{{id}}}</strong>,{{coords: lat: {{{lat}}}, lon: {{{lon}}},}}<br/>
+{{tags:{{{key}}} = {{{value}}}<br/>
+}}
+<a href="http://www.openstreetmap.org/browse/node/{{{id}}}">Browse on openstreetmap.org</a></p>
+}}
+{{way:
+<p>Way <strong>{{{id}}}</strong>,{{bbox:{{none: no geographic reference}} bounding box south: {{{south}}}, west: {{{west}}}, north: {{{north}}}, east: {{{east}}},}}<br/>
+{{tags:{{{key}}} = {{{value}}}<br/>
+}}{{members:{{first: members: {{{ref}}}}}, {{{ref}}}}}<br/>
+<a href="http://www.openstreetmap.org/browse/way/{{{id}}}">Browse on openstreetmap.org</a></p>
+}}
+{{relation:
+<p>Relation <strong>{{{id}}}</strong>,{{bbox:{{none: no geographic reference}} bounding box south: {{{south}}}, west: {{{west}}}, north: {{{north}}}, east: {{{east}}},}}<br/>
+{{tags:{{{key}}} = {{{value}}}<br/>
+}}{{members:{{first: members: {{{type}}} <strong>{{{ref}}}</strong> &quot;{{{role}}}&quot;}}, {{{type}}} <strong>{{{ref}}}</strong> &quot;{{{role}}}&quot;}}<br/>
+<a href="http://www.openstreetmap.org/browse/relation/{{{id}}}">Browse on openstreetmap.org</a></p>
+}}
