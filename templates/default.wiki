@@ -98,7 +98,7 @@
   <input type="hidden" name="zoom" value="18"/>}}
 }}</form>
 
-<p>Way <strong>{{{id}}}</strong>,{{bbox:{{none:}} bounding box south: {{{south}}}, west: {{{west}}}, north: {{{north}}}, east: {{{east}}},}}<br/>
+<p>Way <strong>{{{id}}}</strong>,{{bbox:{{none: no geographic reference}} bounding box south: {{{south}}}, west: {{{west}}}, north: {{{north}}}, east: {{{east}}},}}<br/>
 {{tags:{{{key}}} = {{{value}}}<br/>
 }}{{members:{{first: members: {{{ref}}}}}, {{{ref}}}}}<br/>
 <a href="http://www.openstreetmap.org/browse/way/{{{id}}}">Browse on openstreetmap.org</a></p>
@@ -120,7 +120,7 @@
 
 <p>Relation <strong>{{{id}}}</strong>,{{bbox:{{none:}} bounding box south: {{{south}}}, west: {{{west}}}, north: {{{north}}}, east: {{{east}}},}}<br/>
 {{tags:{{{key}}} = {{{value}}}<br/>
-}}{{members:{{first: members: {{{type}}} <strong>{{{ref}}}</strong> {{{role}}}}}, {{{type}}} <strong>{{{ref}}}</strong> &quot;{{{role}}}&quot;}}<br/>
+}}{{members:{{first: members: {{{type}}} <strong>{{{ref}}}</strong> &quot;{{{role}}}&quot;}}, {{{type}}} <strong>{{{ref}}}</strong> &quot;{{{role}}}&quot;}}<br/>
 <a href="http://www.openstreetmap.org/browse/relation/{{{id}}}">Browse on openstreetmap.org</a></p>
 </div>
 }}
