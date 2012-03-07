@@ -2,6 +2,13 @@
   <script src="http://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
   <script type="text/javascript">
 
+      function make_remove_closure(id) {
+          var elem = document.getElementById(id);
+          return function(evt) {
+              elem.parentElement.removeChild(elem);
+          };
+      }
+
       function display_map(div_id, query_url, lat, lon, zoom) {
 
           map = new OpenLayers.Map(div_id, {
@@ -42,6 +49,9 @@
               projection: new OpenLayers.Projection("EPSG:4326")
           });
 
+          layer.events.register("featuresadded", layer,
+              make_remove_closure(div_id + "_progressbar"));
+
           map.addLayers([layer]);
 
           return map;
@@ -70,6 +80,7 @@
 {{node:
 <div style="min-height:300px;">
 <div id="map_node_{{{id}}}" style="width:300px;height:300px;float:right;">
+<div id="map_node_{{{id}}}_progressbar">Loading data ...</div>
 <form class="map_descriptor" action="map_node_{{{id}}}">
   <input type="hidden" name="url" value="interpreter?data=node%28{{{id}}}%29%3Bout+skel%3B"/>
 {{coords:  <input type="hidden" name="lat" value="{{{lat}}}"/>
@@ -87,6 +98,7 @@
 {{way:
 <div style="min-height:300px;">
 <div id="map_way_{{{id}}}" style="width:300px;height:300px;float:right;">
+<div id="map_way_{{{id}}}_progressbar">Loading data ...</div>
 <form class="map_descriptor" action="map_way_{{{id}}}">
   <input type="hidden" name="url" value="interpreter?data=%28way%28{{{id}}}%29%3Bnode%28w%29%29%3Bout+skel%3B"/>
 {{bbox:  <input type="hidden" name="lat" value="{{{lat}}}"/>
@@ -107,6 +119,7 @@
 {{relation:
 <div style="min-height:300px;">
 <div id="map_relation_{{{id}}}" style="width:300px;height:300px;float:right;">
+<div id="map_relation_{{{id}}}_progressbar">Loading data ...</div>
 <form class="map_descriptor" action="map_relation_{{{id}}}">
   <input type="hidden" name="url" value="interpreter?data=%28relation%28{{{id}}}%29%3Bnode%28r%29%2D%3E%2Ex%3Bway%28r%29%3Bnode%28w%29%3B%29%3Bout+skel%3B"/>
 {{bbox:  <input type="hidden" name="lat" value="{{{lat}}}"/>
