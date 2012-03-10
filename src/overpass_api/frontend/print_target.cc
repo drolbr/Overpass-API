@@ -377,7 +377,7 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Way_Skeleton& skel,
     cout<<"\n  }";
   }
   
-  cout<<"\n}\n";
+  cout<<"\n}";
 }
 
 void Print_Target_Json::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
@@ -429,7 +429,7 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Relation_Skeleton& ske
     cout<<"\n  }";
   }
   
-  cout<<"\n}\n";
+  cout<<"\n}";
 }
 
 void Print_Target_Json::print_item(uint32 ll_upper, const Area_Skeleton& skel,
@@ -516,7 +516,7 @@ string process_members(const string& raw_template, uint32 ref)
   return result.str();
 }
 
-string process_members(const string& raw_template, const Relation_Entry& entry,
+string process_members(const string& raw_template, uint32 id, const Relation_Entry& entry,
 		       const map< uint32, string >& roles)
 {
   ostringstream result;
@@ -533,6 +533,8 @@ string process_members(const string& raw_template, const Relation_Entry& entry,
       result<<raw_template.substr(new_pos);
       return result.str();
     }
+    else if (raw_template.substr(new_pos, 8) == "{{{id}}}")
+      result<<id;
     else if (raw_template.substr(new_pos, 9) == "{{{ref}}}")
       result<<entry.ref;
     else if (raw_template.substr(new_pos, 10) == "{{{type}}}")
@@ -553,7 +555,7 @@ string process_members(const string& raw_template, const Relation_Entry& entry,
   return result.str();
 }
 
-string process_tags(const string& raw_template, const string& key, const string& value)
+string process_tags(const string& raw_template, uint32 id, const string& key, const string& value)
 {
   ostringstream result;
   string::size_type old_pos = 0;
@@ -569,6 +571,8 @@ string process_tags(const string& raw_template, const string& key, const string&
       result<<raw_template.substr(new_pos);
       return result.str();
     }
+    else if (raw_template.substr(new_pos, 8) == "{{{id}}}")
+      result<<id;
     else if (raw_template.substr(new_pos, 9) == "{{{key}}}")
       result<<key;
     else if (raw_template.substr(new_pos, 11) == "{{{value}}}")
@@ -584,7 +588,7 @@ string process_tags(const string& raw_template, const string& key, const string&
   return result.str();
 }
 
-string process_coords(const string& raw_template, double lat, double lon)
+string process_coords(const string& raw_template, uint32 id, double lat, double lon)
 {
   ostringstream result;
   string::size_type old_pos = 0;
@@ -600,6 +604,8 @@ string process_coords(const string& raw_template, double lat, double lon)
       result<<raw_template.substr(new_pos);
       return result.str();
     }
+    else if (raw_template.substr(new_pos, 8) == "{{{id}}}")
+      result<<id;
     else if (raw_template.substr(new_pos, 9) == "{{{lat}}}")
       result<<fixed<<setprecision(7)<<lat;
     else if (raw_template.substr(new_pos, 9) == "{{{lon}}}")
@@ -613,7 +619,7 @@ string process_coords(const string& raw_template, double lat, double lon)
   return result.str();
 }
 
-string process_coords(const string& raw_template,
+string process_coords(const string& raw_template, uint32 id,
 		      double south, double west, double north, double east, uint zoom)
 {
   ostringstream result;
@@ -630,6 +636,8 @@ string process_coords(const string& raw_template,
       result<<raw_template.substr(new_pos);
       return result.str();
     }
+    else if (raw_template.substr(new_pos, 8) == "{{{id}}}")
+      result<<id;
     else if (raw_template.substr(new_pos, 11) == "{{{south}}}")
       result<<fixed<<setprecision(7)<<south;
     else if (raw_template.substr(new_pos, 10) == "{{{west}}}")
@@ -729,13 +737,13 @@ string process_template(const string& raw_template, uint32 id, string type,
     else if (raw_template.substr(new_pos, 9) == "{{coords:")
     {
       if (south < 100.0)
-	result<<process_coords(raw_template.substr(new_pos + 9, old_pos - new_pos - 11),
+	result<<process_coords(raw_template.substr(new_pos + 9, old_pos - new_pos - 11), id,
 			       south, west);
     }
     else if (raw_template.substr(new_pos, 7) == "{{bbox:")
     {
       if (south < 100.0 && north < 100.0)
-	result<<process_coords(raw_template.substr(new_pos + 7, old_pos - new_pos - 9),
+	result<<process_coords(raw_template.substr(new_pos + 7, old_pos - new_pos - 9), id,
 			       south, west, north, east, zoom);
       else if (south == 200.0)
 	result<<antiprocess_coords(raw_template.substr(new_pos + 7, old_pos - new_pos - 9));
@@ -749,12 +757,12 @@ string process_template(const string& raw_template, uint32 id, string type,
 	string first = extract_first(raw_template.substr(new_pos + 7, old_pos - new_pos - 9));
 	if (first != "" && it != tags->end())
 	{
-	  result<<process_tags(first, escape_xml(it->first), escape_xml(it->second));
+	  result<<process_tags(first, id, escape_xml(it->first), escape_xml(it->second));
 	  ++it;
 	}
 	
 	for (; it != tags->end(); ++it)
-	  result<<process_tags(raw_template.substr(new_pos + 7, old_pos - new_pos - 9),
+	  result<<process_tags(raw_template.substr(new_pos + 7, old_pos - new_pos - 9), id,
 			       escape_xml(it->first), escape_xml(it->second));
       }
     }
@@ -781,12 +789,12 @@ string process_template(const string& raw_template, uint32 id, string type,
 	string first = extract_first(raw_template.substr(new_pos + 10, old_pos - new_pos - 12));
 	if (first != "" && it != members->end())
 	{
-	  result<<process_members(first, *it, *roles);
+	  result<<process_members(first, id, *it, *roles);
 	  ++it;
 	}
 	
 	for (; it != members->end(); ++it)
-	  result<<process_members(raw_template.substr(new_pos + 10, old_pos - new_pos - 12),
+	  result<<process_members(raw_template.substr(new_pos + 10, old_pos - new_pos - 12), id,
 				  *it, *roles);
       }
     }
@@ -794,13 +802,15 @@ string process_template(const string& raw_template, uint32 id, string type,
       result<<raw_template.substr(new_pos, old_pos - new_pos);
     new_pos = raw_template.find("{{", old_pos);
   }
-  result<<raw_template.substr(old_pos, new_pos - old_pos);
+  result<<raw_template.substr(old_pos);
   
   return result.str();
 }
 
 struct Box_Coords
 {
+  Box_Coords() : south(100.0), west(200.0), north(0), east(0) {}
+  
   Box_Coords(Uint31_Index ll_upper)
   {
     pair< Uint32_Index, Uint32_Index > bbox_bounds = calc_bbox_bounds(ll_upper);
@@ -820,7 +830,7 @@ struct Box_Coords
     }
   }
   
-  double south, north, west, east;
+  double south, west, north, east;
 };
 
 uint detect_zoom(Uint31_Index ll_upper)
@@ -880,15 +890,14 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Way_Skeleton& skel,
   }
   ++written_elements_count;
   
-  Box_Coords coords(ll_upper);
+  Box_Coords coords;
   if (mode & PRINT_COORDS)
-    output += process_template(way_template, skel.id, "way",
-			       coords.south, coords.west, coords.north, coords.east,
-			       detect_zoom(ll_upper),
-			       tags, &skel.nds, 0, 0);
-  else
-    output += process_template(way_template, skel.id, "way",
-			       100.0, 200.0, 0, 0, 17, tags, &skel.nds, 0, 0);
+    coords = Box_Coords(ll_upper);
+  
+  output += process_template(way_template, skel.id, "way",
+			     coords.south, coords.west, coords.north, coords.east,
+			     detect_zoom(ll_upper),
+			     tags, mode & PRINT_NDS ? &skel.nds : 0, 0, 0);
 }
 
 void Print_Target_Custom::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
@@ -903,15 +912,14 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Relation_Skeleton& s
   }
   ++written_elements_count;
   
-  Box_Coords coords(ll_upper);
+  Box_Coords coords;
   if (mode & PRINT_COORDS)
-    output += process_template(relation_template, skel.id, "relation",
-			       coords.south, coords.west, coords.north, coords.east,
-			       detect_zoom(ll_upper),
-			       tags, 0, &skel.members, &roles);
-  else
-    output += process_template(relation_template, skel.id, "relation",
-			       100.0, 200.0, 0, 0, 17, tags, 0, &skel.members, &roles);
+    coords = Box_Coords(ll_upper);
+
+  output += process_template(relation_template, skel.id, "relation",
+			     coords.south, coords.west, coords.north, coords.east,
+			     detect_zoom(ll_upper),
+			     tags, 0, mode & PRINT_MEMBERS ? &skel.members : 0, &roles);
 }
 
 void Print_Target_Custom::print_item(uint32 ll_upper, const Area_Skeleton& skel,

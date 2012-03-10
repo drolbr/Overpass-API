@@ -146,7 +146,7 @@ void Web_Output::write_html_header
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
   "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
   "    \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
-  "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">"
+  "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n"
   "<head>\n"
   "  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
   "  <title>OSM3S Response</title>\n"
@@ -211,7 +211,7 @@ void Web_Output::write_json_header
   cout<<"    \"copyright\": \"The data included in this document is from www.openstreetmap.org."
 	" It has there been collected by a large group of contributors. For individual"
 	" attribution of each item please refer to"
-	" http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history\""
+	" http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history\"\n"
         "  },\n"
         "  \"elements\": [\n\n";
 }

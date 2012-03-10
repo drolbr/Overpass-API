@@ -1,6 +1,6 @@
 testbindir = ${prefix}/test-bin
-testbin_PROGRAMS = file_blocks around block_backend random_file node_updater way_updater relation_updater dump_database compare_osm_base_maps generate_test_file diff_updater test_dispatcher area_query bbox_query foreach make_area print query recurse union generate_test_file_areas generate_test_file_meta index_computations consistency_check
-dist_testbin_SCRIPTS = apply_osc.test.sh run_testsuite.sh run_testsuite_template_db.sh run_testsuite_osm_backend.sh run_unittests_statements.sh run_testsuite_osm3s_query.sh run_testsuite_map_ql.sh run_testsuite_translate_xapi.sh run_testsuite_diff_updater.sh run_unittests_areas.sh run_unittests_meta.sh run_and_compare.sh
+testbin_PROGRAMS = file_blocks around block_backend random_file node_updater way_updater relation_updater dump_database compare_osm_base_maps generate_test_file diff_updater test_dispatcher area_query bbox_query foreach make_area print query recurse union generate_test_file_areas generate_test_file_meta generate_test_file_interpreter index_computations consistency_check
+dist_testbin_SCRIPTS = apply_osc.test.sh run_testsuite.sh run_testsuite_template_db.sh run_testsuite_osm_backend.sh run_unittests_statements.sh run_testsuite_osm3s_query.sh run_testsuite_map_ql.sh run_testsuite_interpreter.sh run_testsuite_translate_xapi.sh run_testsuite_diff_updater.sh run_unittests_areas.sh run_unittests_meta.sh run_and_compare.sh
 
 expat_cc = ../expat/expat_justparse_interface.cc
 settings_cc = ../overpass_api/core/settings.cc
@@ -35,6 +35,7 @@ consistency_check_LDADD = -lexpat -lrt
 #example_queries_LDADD = -lexpat
 generate_test_file_SOURCES = ../overpass_api/osm-backend/generate_test_file.cc
 generate_test_file_areas_SOURCES = ../overpass_api/osm-backend/generate_test_file_areas.cc
+generate_test_file_interpreter_SOURCES = ../overpass_api/osm-backend/generate_test_file_interpreter.cc
 generate_test_file_meta_SOURCES = ../overpass_api/osm-backend/generate_test_file_meta.cc
 index_computations_SOURCES = ../overpass_api/core/index_computations.test.cc
 index_computations_LDADD =

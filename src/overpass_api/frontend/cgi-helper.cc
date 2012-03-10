@@ -68,13 +68,45 @@ string cgi_post_to_text()
   return raw;
 }
 
+string replace_cgi(const string& raw)
+{
+  string result;
+  string::size_type pos = 0;
+  
+  while (pos < raw.size())
+  {
+    if (raw[pos] == '%')
+    {
+      if (pos >= raw.size()+2)
+	return (result + raw.substr(0, pos));
+      char a(hex_digit(raw[pos+1])), b(hex_digit(raw[pos+2]));
+      if ((a < 16) && (b < 16))
+      {
+	result += (char)(a*16 + b);
+	pos += 3;
+      }
+      else
+	result += raw[pos++];
+    }
+    else if (raw[pos] == '+')
+    {
+      result += ' ';
+      ++pos;
+    }
+    else
+      result += raw[pos++];
+  }
+  
+  return result;
+}
+
 string decode_cgi_to_plain(const string& raw, int& error,
 			   string& jsonp, string& url, bool& redirect, string& template_name)
 {
   error = 0;
   string result;
-  string::size_type pos(raw.find("data="));
-  if ((pos >= raw.size()) || (pos == string::npos))
+  string::size_type pos = raw.find("data=");
+/*  if ((pos >= raw.size()) || (pos == string::npos))
   {
     error = 1;
     return "";
@@ -105,6 +137,22 @@ string decode_cgi_to_plain(const string& raw, int& error,
       pos = raw.size();
     else
       result += raw[pos++];
+  }*/
+  
+  if (pos != string::npos)
+  {
+    string::size_type endpos = raw.find('&', pos);
+    if (endpos == string::npos)
+      endpos = raw.size();
+    while (endpos > 0 && isspace(raw[endpos-1]))
+      --endpos;
+    
+    result = replace_cgi(raw.substr(pos + 5, endpos - pos - 5));
+  }
+  else
+  {
+    error = 1;
+    return "";
   }
   
   pos = raw.find("jsonp=");
@@ -112,9 +160,11 @@ string decode_cgi_to_plain(const string& raw, int& error,
   {
     string::size_type endpos = raw.find('&', pos);
     if (endpos == string::npos)
-      jsonp = raw.substr(pos + 6);
-    else
-      jsonp = raw.substr(pos + 6, endpos - pos - 6);
+      endpos = raw.size();
+    while (endpos > 0 && isspace(raw[endpos-1]))
+      --endpos;
+    
+    jsonp = replace_cgi(raw.substr(pos + 6, endpos - pos - 6));
   }
   
   pos = raw.find("url=");
@@ -122,9 +172,11 @@ string decode_cgi_to_plain(const string& raw, int& error,
   {
     string::size_type endpos = raw.find('&', pos);
     if (endpos == string::npos)
-      url = raw.substr(pos + 4);
-    else
-      url = raw.substr(pos + 4, endpos - pos - 4);
+      endpos = raw.size();
+    while (endpos > 0 && isspace(raw[endpos-1]))
+      --endpos;
+    
+    url = replace_cgi(raw.substr(pos + 4, endpos - pos - 4));
   }
   
   pos = raw.find("template=");
@@ -132,21 +184,23 @@ string decode_cgi_to_plain(const string& raw, int& error,
   {
     string::size_type endpos = raw.find('&', pos);
     if (endpos == string::npos)
-      template_name = raw.substr(pos + 9);
-    else
-      template_name = raw.substr(pos + 9, endpos - pos - 9);
+      endpos = raw.size();
+    while (endpos > 0 && isspace(raw[endpos-1]))
+      --endpos;
+    
+    template_name = replace_cgi(raw.substr(pos + 9, endpos - pos - 9));
   }
   
   pos = raw.find("redirect=");
   if (pos != string::npos)
   {
     string::size_type endpos = raw.find('&', pos);
-    string redirect_s;
     if (endpos == string::npos)
-      redirect_s = raw.substr(pos + 9);
-    else
-      redirect_s = raw.substr(pos + 9, endpos - pos - 9);
-    redirect = !(redirect_s == "no");
+      endpos = raw.size();
+    while (endpos > 0 && isspace(raw[endpos-1]))
+      --endpos;
+    
+    redirect = !(raw.substr(pos + 9, endpos - pos - 9) == "no");
   }
 
   return result;
