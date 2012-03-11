@@ -211,8 +211,8 @@ while [[ $II -lt 47 ]]; do
   II=$(($II + 1))
 }; done
 
-echo "data=[out:json];(node(1);way(1);rel(1););out meta;" >input/interpreter_45/stdin.log
-echo "data=[out:custom];(node(1);way(1);rel(1););out meta;" >input/interpreter_46/stdin.log
+echo "data=[out:json];(node(7);way(1);rel(1););out meta;" >input/interpreter_45/stdin.log
+echo "data=[out:custom];(node(7);way(1);rel(1););out meta;" >input/interpreter_46/stdin.log
 
 II=45
 while [[ $II -lt 47 ]]; do
