@@ -138,9 +138,9 @@ TARGET_DIR=$EXEC_DIR/v$VERSION
 
 if [[ -n $PUBLISH || -n $INSTALL ]]; then
 {
-  git clone git://gitorious.org/~drol/osm3s/drol-osm3s
+  git clone git://github.com/drolbr/Overpass-API.git
 
-  pushd drol-osm3s/
+  pushd Overpass-API/
   yes | rm -R .git
 
   pushd src/
@@ -155,7 +155,7 @@ if [[ -n $PUBLISH || -n $INSTALL ]]; then
   popd
 
   rm -fR "osm-3s_v$VERSION"
-  mv drol-osm3s "osm-3s_v$VERSION"
+  mv Overpass-API "osm-3s_v$VERSION"
 };
 fi
 

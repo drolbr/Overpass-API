@@ -34,7 +34,7 @@ AC_HEADER_TIME
 AC_STRUCT_TM
 
 # Checks for library functions.
-AC_CHECK_FUNCS([clock_gettime ftruncate getcwd munmap select sqrt])
+AC_CHECK_FUNCS([clock_gettime ftruncate getcwd munmap regcomp select sqrt])
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_MALLOC
 AC_FUNC_MMAP
