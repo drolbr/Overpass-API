@@ -34,5 +34,5 @@ tocgi_LDADD =
 escape_xml_SOURCES = ../expat/escape_xml.cc ../expat/escape_xml_main.cc
 bbox_brim_query_SOURCES = ${expat_cc} ../pt_diagrams/bbox-brim-query.cc
 bbox_brim_query_LDADD = -lexpat
-translate_xapi_SOURCES = ../expat/translate_xapi.cc
+translate_xapi_SOURCES = ../expat/translate_xapi.cc ../expat/escape_xml.cc
 translate_xapi_LDADD = 

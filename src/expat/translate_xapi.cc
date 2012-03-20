@@ -16,6 +16,8 @@
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "escape_xml.h"
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -123,31 +125,31 @@ InputAnalizer::InputAnalizer(const string& input_, bool force_meta)
 void print_meta(const InputAnalizer& analizer, string prefix)
 {
   if (analizer.user != "")
-    cout<<prefix<<"<user name=\""<<analizer.user<<"\"/>\n";
+    cout<<prefix<<"<user name=\""<<escape_xml(analizer.user)<<"\"/>\n";
   if (analizer.uid != "")
-    cout<<prefix<<"<user uid=\""<<analizer.uid<<"\"/>\n";
+    cout<<prefix<<"<user uid=\""<<escape_xml(analizer.uid)<<"\"/>\n";
   if (analizer.newer != "")
-    cout<<prefix<<"<newer than=\""<<analizer.newer<<"\"/>\n";
+    cout<<prefix<<"<newer than=\""<<escape_xml(analizer.newer)<<"\"/>\n";
 }
 
 void print_meta(const InputAnalizer& analizer, string prefix, string type)
 {
   if (analizer.user != "")
-    cout<<prefix<<"<user type=\""<<type<<"\" name=\""<<analizer.user<<"\"/>\n";
+    cout<<prefix<<"<user type=\""<<escape_xml(type)<<"\" name=\""<<escape_xml(analizer.user)<<"\"/>\n";
   else if (analizer.uid != "")
-    cout<<prefix<<"<user type=\""<<type<<"\" uid=\""<<analizer.uid<<"\"/>\n";
+    cout<<prefix<<"<user type=\""<<escape_xml(type)<<"\" uid=\""<<escape_xml(analizer.uid)<<"\"/>\n";
   if (analizer.newer != "")
-    cout<<prefix<<"<query type=\""<<type<<"\">\n"
+    cout<<prefix<<"<query type=\""<<escape_xml(type)<<"\">\n"
                   "  <item/>\n"
-		  "  <newer than=\""<<analizer.newer<<"\"/>\n"
+		  "  <newer than=\""<<escape_xml(analizer.newer)<<"\"/>\n"
 		  "</query>\n";
 }
 
 void print_bbox(const InputAnalizer& analizer, string prefix)
 {
   cout<<prefix<<
-      "<bbox-query s=\""<<analizer.south<<"\" n=\""<<analizer.north<<"\" w=\""
-      <<analizer.west<<"\" e=\""<<analizer.east<<"\"/>\n";
+      "<bbox-query s=\""<<escape_xml(analizer.south)<<"\" n=\""<<escape_xml(analizer.north)
+      <<"\" w=\""<<escape_xml(analizer.west)<<"\" e=\""<<escape_xml(analizer.east)<<"\"/>\n";
 }
 
 void print_print(const InputAnalizer& analizer)
@@ -162,7 +164,7 @@ void process_nodes(string input, bool is_star = false, bool force_meta = false)
 {
   InputAnalizer analizer(input, force_meta);
   if (analizer.timeout != "")
-    cout<<"<osm-script timeout=\""<<analizer.timeout<<"\">\n\n";
+    cout<<"<osm-script timeout=\""<<escape_xml(analizer.timeout)<<"\">\n\n";
   if (analizer.key_value.size() == 1
       && analizer.key_value.front().second.find('|') != string::npos)
   {
@@ -182,7 +184,7 @@ void process_nodes(string input, bool is_star = false, bool force_meta = false)
       cout<<"  <query type=\"node\">\n";
       if (analizer.bbox_found)
 	print_bbox(analizer, "    ");
-      cout<<"    <has-kv k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n";
+      cout<<"    <has-kv k=\""<<escape_xml(it->first)<<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
       print_meta(analizer, "    ");
       cout<<"  </query>\n";
     }
@@ -197,9 +199,9 @@ void process_nodes(string input, bool is_star = false, bool force_meta = false)
         it != analizer.key_value.end(); ++it)
     {
       if (it->second == "*")
-	cout<<"  <has-kv k=\""<<it->first<<"\"/>\n";
+	cout<<"  <has-kv k=\""<<escape_xml(it->first)<<"\"/>\n";
       else
-	cout<<"  <has-kv k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n";
+	cout<<"  <has-kv k=\""<<escape_xml(it->first)<<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
     }
     print_meta(analizer, "  ");
     cout<<"</query>\n";
@@ -216,7 +218,7 @@ void process_ways(string input, bool is_star = false, bool force_meta = false)
 {
   InputAnalizer analizer(input, force_meta);
   if (!is_star && analizer.timeout != "")
-    cout<<"<osm-script timeout=\""<<analizer.timeout<<"\">\n\n";
+    cout<<"<osm-script timeout=\""<<escape_xml(analizer.timeout)<<"\">\n\n";
   cout<<"<union>\n";
   if (is_star)
     cout<<"  <item/>\n";
@@ -240,7 +242,7 @@ void process_ways(string input, bool is_star = false, bool force_meta = false)
       cout<<"    <query type=\"way\">\n";
       if (analizer.bbox_found)
 	print_bbox(analizer, "      ");
-      cout<<"      <has-kv k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n";
+      cout<<"      <has-kv k=\""<<escape_xml(it->first)<<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
       print_meta(analizer, "      ");
       cout<<"    </query>\n";
     }
@@ -255,9 +257,9 @@ void process_ways(string input, bool is_star = false, bool force_meta = false)
         it != analizer.key_value.end(); ++it)
     {
       if (it->second == "*")
-	cout<<"    <has-kv k=\""<<it->first<<"\"/>\n";
+	cout<<"    <has-kv k=\""<<escape_xml(it->first)<<"\"/>\n";
       else
-	cout<<"    <has-kv k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n";
+	cout<<"    <has-kv k=\""<<escape_xml(it->first)<<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
     }
     print_meta(analizer, "    ");
     cout<<"  </query>\n";
@@ -273,7 +275,7 @@ void process_relations(string input, bool is_star = false, bool force_meta = fal
 {
   InputAnalizer analizer(input, force_meta);
   if (!is_star && analizer.timeout != "")
-    cout<<"<osm-script timeout=\""<<analizer.timeout<<"\">\n\n";
+    cout<<"<osm-script timeout=\""<<escape_xml(analizer.timeout)<<"\">\n\n";
   if (analizer.key_value.size() == 1
       && analizer.key_value.front().second.find('|') != string::npos)
   {
@@ -293,7 +295,7 @@ void process_relations(string input, bool is_star = false, bool force_meta = fal
       cout<<"  <query type=\"relation\">\n";
       if (analizer.bbox_found)
 	print_bbox(analizer, "    ");
-      cout<<"    <has-kv k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n";
+      cout<<"    <has-kv k=\""<<escape_xml(it->first)<<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
       print_meta(analizer, "    ");
       cout<<"  </query>\n";
     }
@@ -308,9 +310,9 @@ void process_relations(string input, bool is_star = false, bool force_meta = fal
         it != analizer.key_value.end(); ++it)
     {
       if (it->second == "*")
-	cout<<"  <has-kv k=\""<<it->first<<"\"/>\n";
+	cout<<"  <has-kv k=\""<<escape_xml(it->first)<<"\"/>\n";
       else
-	cout<<"  <has-kv k=\""<<it->first<<"\" v=\""<<it->second<<"\"/>\n";
+	cout<<"  <has-kv k=\""<<escape_xml(it->first)<<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
     }
     print_meta(analizer, "  ");
     cout<<"</query>\n";
@@ -393,8 +395,8 @@ int main(int argc, char* argv[])
     input = input.substr(input.find(',')+1);
     north = input;
     cout<<"<union>\n"
-          "  <bbox-query s=\""<<south<<"\" n=\""<<north<<"\" w=\""
-            <<west<<"\" e=\""<<east<<"\"/>\n"
+          "  <bbox-query s=\""<<escape_xml(south)<<"\" n=\""<<escape_xml(north)<<"\" w=\""
+            <<escape_xml(west)<<"\" e=\""<<escape_xml(east)<<"\"/>\n"
           "  <recurse type=\"node-relation\" into=\"foo\"/>\n"
           "  <recurse type=\"node-way\"/>\n"
 	  "  <recurse type=\"way-node\" into=\"foo\"/>\n"
