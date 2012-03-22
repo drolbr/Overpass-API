@@ -16,10 +16,11 @@
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <string>
-#include <stdlib.h>
-#include <string.h>
+#include <vector>
 #include "cgi-helper.h"
 
 using namespace std;
@@ -203,5 +204,43 @@ string decode_cgi_to_plain(const string& raw, int& error,
     redirect = !(raw.substr(pos + 9, endpos - pos - 9) == "no");
   }
 
+  pos = raw.find("bbox=");
+  if (pos != string::npos)
+  {
+    string::size_type endpos = raw.find('&', pos);
+    if (endpos == string::npos)
+      endpos = raw.size();
+    while (endpos > 0 && isspace(raw[endpos-1]))
+      --endpos;
+    
+    string lonlat = replace_cgi(raw.substr(pos + 5, endpos - pos - 5));
+    cerr<<lonlat<<'\n';
+    
+    vector< string > coords;
+    pos = 0;
+    string::size_type newpos = lonlat.find(",");
+    while (newpos != string::npos)
+    {
+      coords.push_back(lonlat.substr(pos, newpos - pos));
+      cerr<<coords.back()<<'\n';
+      pos = newpos + 1;
+      newpos = lonlat.find(",", pos);
+    }
+    coords.push_back(lonlat.substr(pos));
+
+    if (coords.size() == 4)
+    {
+      string latlon = coords[1] + "," + coords[0] + "," + coords[3] + "," + coords[2];
+      cerr<<latlon<<'\n';
+      
+      pos = result.find("(bbox)");
+      while (pos != string::npos)
+      {
+        result = result.substr(0, pos) + "(" + latlon + ")" + result.substr(pos + 6);
+        pos = result.find("(bbox)");
+      }
+    }
+  }
+  
   return result;
 }
