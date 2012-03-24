@@ -1,0 +1,262 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+       "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Output Formats</title>
+</head>
+<body style="font-family:sans-serif">
+
+<a href="index.html">Overpass API</a> &gt;
+
+<h1>Output formats</h1>
+
+<p>There are three different output formats available from Overpass API, and each of these output formats is available in different levels of details for the included data. While the level of detail is controlled with the parameters used for the respective <a href="http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide#Control_output_format">out</a> or <a href="http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide#Control_output_format">print</a> statement, we discuss here the available output formats:
+
+<ul>
+<li><a href="#xml">OSM XML</a>: The standard interchange format for OSM data.</li>
+<li><a href="#json">OSM JSON</a>: A more lightweight variant, looking like JavaScript source code, i.e. JSON.</li>
+<li><a href="#custom">Custom output and Redirects</a>: Output based on a user supplied template, including the possibility to redirect.</li>
+</ul>
+
+<p>Note that regardless of the chosen output type, the server may return an HTML document in case of a malformed input.</p>
+
+<a name="xml"><h2>OSM XML</h2></a>
+
+<p>The format generally follows the <a href="http://wiki.openstreetmap.org/wiki/XML">description in the wiki</a>. It doesn't contain a <em>bounds</em> tag, and it may contain certain additional tags. Anyway, in all cases <a href="http://www.w3.org/TR/REC-xml/">well-formed XML</a> is returned.</p>
+
+<p>A response (<a href="api/interpreter?data=out;">an example</a>) from Overpass API has always the following header and footer:</p>
+<pre>
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;osm version=&quot;0.6&quot; generator=&quot;Overpass API&quot;&gt;
+&lt;note&gt;The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history &lt;/note&gt;
+&lt;meta osm_base=&quot;<em>date</em>&quot;/&gt;
+
+...
+
+&lt;/osm&gt;
+</pre>
+
+<a name="xml.date"></a>
+<p>The meta tags contains in the attribute <em>osm_base</em> the entry <em>date</em> with a timestamp of the data. That means that all edits that have been uploaded before this date are included. The format is always <em>YYYY</em>-<em>MM</em>-<em>DD</em>T<em>hh</em>:<em>mm</em>:<em>ss</em>Z, where YYYY is a four digit year, MM is a two digit month, DD is a two digit day of month. <em>hh</em>:<em>mm</em>:<em>ss</em> is the time with two digits hours, minutes and seconds.</p>
+
+<p>If the query involves area data processing, a second timestamp in the same format is included in the attribute <em>areas</em>:</p>
+<pre>
+&lt;meta osm_base=&quot;<em>date</em>&quot; areas=&quot;<em>date</em>&quot;/&gt;
+</pre>
+<p>This date is the date of the latest edit that has been considered in the most recent batch run of the area generation. <!-- More on the areas page --></p>
+
+<p>Please note also the <em>note</em> tag. This always tells a copyright reminder and can be ignored when parsing the data for other purposes. By contrast, if you find an <em>error</em> tag, something seriously has gone wrong, most likely an internal server error. I suggest to handle this similar to a network outage and additionally to propagate the error message back to the user to make bug reports possible.</p>
+
+<p>The XML data itself, i.e. the tags <em>node</em>, <em>way</em> and <em>relation</em> are returned exactly <a href="http://wiki.openstreetmap.org/wiki/XML">as from the main server</a>.</p>
+
+<p>If you request areas, you will get for each area an <em>area</em> tag with an attribute <em>id</em>. The tag contains as subtags all the tags that are set on the area or inherited by the area from the object it has been generated from.</p>
+
+<a name="json"><h2>OSM JSON</h2></a>
+
+<p>Unfortunately, there are several slightly different syntaxes for OSM data in JSON. For that reason, we describe the syntax used by Overpass API en detail here. On the lowest level, it is <a href="http://www.json.org/">well-formed JSON</a>. In particular, the following characters are escaped:</p>
+<table>
+<tr><th>Character</th><th>Escaped as literally</th></tr>
+<tr><td><em>&quot;</em> (quotation mark)</td><td>\&quot;</td></tr>
+<tr><td><em>\</em> (backslash)</td><td>\\</td></tr>
+<tr><td><em>\n</em> (newline)</td><td>\n</td></tr>
+<tr><td><em>\t</em> (tabulator)</td><td>\t</td></tr>
+<tr><td><em>\r</em> (line feed)</td><td>\r</td></tr>
+</table>
+<p>Any other character with ASCII value between 0 and 31 is replaced for safety reasons by a question mark. In principle, this can't happen, because these characters are disallowed in the main database.</p>
+
+<p>To get a response in format JSON, start the request with a <em>[json:out]</em> directive, for example:</p>
+<pre>
+<a href="api/interpreter?data=[json:out];out;">/api/interpreter?data=<strong>[json:out];</strong>out;</a>
+</pre>
+
+<p>A response (an example</a>) from Overpass API has always the following header and footer:</p>
+<pre>
+{
+  &quot;version&quot;: 0.6,
+  &quot;generator&quot;: &quot;Overpass API&quot;,
+  &quot;osm3s&quot;: {
+    &quot;timestamp_osm_base&quot;: &quot;<em>date</em>&quot;,
+    &quot;copyright&quot;: &quot;The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history&quot;
+  },
+  &quot;elements&quot;: [
+
+  ...
+
+  ]
+}
+</pre>
+<p>The payload is contained between the brackets after <em>elements</em>. Each element is contained in a pair of curly braces, and two elements are separate by a comma. The <em>date</em> is constructed in the same way as for the <a href="#xml.data">XML format</a>.</p>
+
+<p>We discuss the <em>node</em> representation (and <a href="#json.way">further down</a> the representations of 
+<em>way</em>s and <em>relation</em>s) by examples:</p>
+
+<p>An example with the spatial data only:</p>
+<pre>
+{
+  &quot;type&quot;: &quot;node&quot;,
+  &quot;id&quot;: 1,
+  &quot;lat&quot;: 2.0,
+  &quot;lon&quot;: -3.0
+}
+</pre>
+
+<p>The same example, also with meta data:</p>
+<pre>
+{
+  &quot;type&quot;: &quot;node&quot;,
+  &quot;id&quot;: 1,
+  &quot;lat&quot;: 2.0,
+  &quot;lon&quot;: -3.0,
+  &quot;timestamp&quot;: &quot;2010-01-01T00:00:00Z&quot;,
+  &quot;version&quot;: 4,
+  &quot;changeset&quot;: 5,
+  &quot;user&quot;: &quot;somebody&quot;,
+  &quot;uid&quot;: 6
+}
+</pre>
+
+<p>And again the same example, this time with some tags:</p>
+<pre>
+{
+  &quot;type&quot;: &quot;node&quot;,
+  &quot;id&quot;: 1,
+  &quot;lat&quot;: 2.0,
+  &quot;lon&quot;: -3.0,
+  &quot;tags&quot;: {
+    &quot;highway&quot;: &quot;bus_stop&quot;,
+    &quot;name&quot;: &quot;Main Street&quot;
+  }
+}
+</pre>
+
+<p>The key-value-pairs <em>type:node</em> and <em>id</em> are always present. The key-value-pairs <em>lat</em>, <em>lon</em>, <em>timestamp</em>, <em>version</em>, <em>changeset</em>, <em>user</em>, and <em>uid</em> are present or not depedend on the chosen degree of verbosity and are always printed in this order. <em>id</em>, <em>lat</em>, <em>lon</em>, and <em>uid</em> are numbers, the rest are strings. Then, a key <em>tags</em> may follow if the node has tags and you have chosen to print tags, with a key-value-pair for each tag, and both are always strings, regardless whether their content could be read as a number or not.</p>
+
+<a name="json.way"></a>
+<p>Ways follow a similar pattern: They consists of the key-value-pairs <em>type:way</em>, <em>id</em>, <em>timestamp</em>, <em>version</em>, <em>changeset</em>, <em>user</em>, and <em>uid</em>, depending on the chosen degree of verbosity. Then, a key <em>nodes</em> follows with an ordered list as value, containg the ids of the nodes that belong to the way. The last maybe contained key is <em>tags</em> with a map as value as above.</p>
+
+<p>An example:</p>
+<pre>
+{
+  &quot;type&quot;: &quot;way&quot;,
+  &quot;id&quot;: 1,
+  &quot;nodes&quot;: [
+    10,
+    11,
+    12
+  ],
+  &quot;tags&quot;: {
+    &quot;highway&quot;: &quot;tertiary&quot;,
+    &quot;name&quot;: &quot;Main Street&quot;,
+  }
+}
+</pre>
+
+<p>Relations also follow a similar pattern: They consists of the key-value-pairs <em>type:relation</em>, <em>id</em>, <em>timestamp</em>, <em>version</em>, <em>changeset</em>, <em>user</em>, and <em>uid</em>, depending on the chosen degree of verbosity. Then, a key <em>members</em> follows with an ordered list as value, containg an entry for each member. A member is always a map with keys <em>type</em>, <em>ref</em>, and <em>role</em>. The last maybe contained key is <em>tags</em> with a map as value as above.</p>
+
+<p>An example:</p>
+<pre>
+{
+  &quot;type&quot;: &quot;relation&quot;,
+  &quot;id&quot;: 1,
+  &quot;members&quot;: [
+    {
+      &quot;type&quot;: &quot;relation&quot;,
+      &quot;ref&quot;: 1745069,
+      &quot;role&quot;: &quot;&quot;
+    },
+    {
+      &quot;type&quot;: &quot;relation&quot;,
+      &quot;ref&quot;: 172789,
+      &quot;role&quot;: &quot;&quot;
+    }
+  ],
+  &quot;tags&quot;: {
+    &quot;from&quot;: &quot;Konrad-Adenauer-Platz&quot;,
+    &quot;name&quot;: &quot;VRS 636&quot;,
+    &quot;network&quot;: &quot;VRS&quot;,
+    &quot;operator&quot;: &quot;SWB&quot;,
+    &quot;ref&quot;: &quot;636&quot;,
+    &quot;route&quot;: &quot;bus&quot;,
+    &quot;to&quot;: &quot;Gielgen&quot;,
+    &quot;type&quot;: &quot;route_master&quot;,
+    &quot;via&quot;: &quot;Ramersdorf&quot;
+  }
+}
+</pre>
+
+<a name="custom"><h2>Custom output and Redirects</h2></a>
+
+<p>The custom output allows to convert a search for an object into an object id or to show a search result page. This is a rather advanced usage of Overpass API. Thus, we explain it from the simple use case to the complex use case.</p>
+
+<p>The simplest variant is the redirect with potential disambiguation page. We give two examples:</p>
+<ul>
+<li><a href="api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%22A%20555%22%5D%5B%22network%22%3D%22BAB%22%5D%3Bout%3B">/api/interpreter?data=<strong>[out:custom];</strong>rel[ref=&quot;A 555&quot;][network=BAB];out;</a> (at the moment without disambiguation page).</li>
+<li><a href="api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%2263%22%5D%5B%22network%22%3D%22VRS%22%5D%3Bout%3B">/api/interpreter?data=<strong>[out:custom];</strong>rel[ref=63][network=VRS];out;</a> (with disambiguation page).</li>
+</ul>
+<p>In the first example, no disambiguation is necessary because the search criteria describe an unique object. In the second example, three objects exist and do so for good reason. Thus, a disambiguation page is necessary and therefore displayed.</p>
+
+<p>If you want always a disambiguation page, you can add the directive <em>redirect=no</em> to the end. This forces a disambiguation page to be displayed:</p>
+<ul>
+<li><a href="api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%22A%20555%22%5D%5B%22network%22%3D%22BAB%22%5D%3Bout%3B&amp;redirect=no">/api/interpreter?data=[out:custom];rel[ref=&quot;A 555&quot;][network=BAB];out;<strong>&amp;redirect=no</strong></a> (at the moment without disambiguation page).</li>
+</ul>
+
+<p>You can of course also change the destination URL. Add <em>url=</em>something to the end. For example, we replace the element view on the main database by a full map view in the above query:</p>
+<ul>
+<li><a href="api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%22A%20555%22%5D%5B%22network%22%3D%22BAB%22%5D%3Bout%3B&amp;url=http://www.openstreetmap.org/?{{{type}}}={{{id}}}">/api/interpreter?data=[out:custom];rel[ref=&quot;A 555&quot;][network=BAB];out;<strong>&amp;url=http://www.openstreetmap.org/?{{{type}}}={{{id}}}</strong></a> (at the moment without disambiguation page).</li>
+</ul>
+<p>Note that the URL usually depends on the id and the type of the found results. To customize this, you can add the placeholders <em>{{{type}}}</em> and <em>{{{id}}}</em> anywhere in the URL; these will be replaced by the proper type (<em>node</em>, <em>way</em> or <em>relation</em>) and the id of the found object.</p>
+
+<p>You can also change the template that is used for the disambiguation page. There are two standard templates offered:</p>
+<ul>
+<li><em>default.wiki</em> adds a map for each object and thus may doom the browser if a large number of objects is found.</li>
+<li><em>base.wiki</em> gives only basic information for each object without any JavaScript.</li>
+</ul>
+<p>By default, <em>default.wiki</em> is used as template. To select another template, for example the just introduced <em>base.wiki</em>, use the <em>template=</em>something directive. Please compare:</p>
+<ul>
+<li><a href="api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%2263%22%5D%5B%22network%22%3D%22VRS%22%5D%3Bout%3B&amp;template=default.wiki">/api/interpreter?data=<strong>[out:custom];</strong>rel[ref=63][network=VRS];out;<strong>&amp;template=default.wiki</strong></a> (same as without template parameter).</li>
+<li><a href="api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%2263%22%5D%5B%22network%22%3D%22VRS%22%5D%3Bout%3B&amp;template=base.wiki">/api/interpreter?data=<strong>[out:custom];</strong>rel[ref=63][network=VRS];out;<strong>&amp;template=base.wiki</strong></a> (use the basic layout instead).</li>
+</ul>
+<p>Technically, the template is taken from the subdirectory <em>templates</em> of the database directory of the server. For the public instances, there exist also a mechanism to upload a completetly custom template from the wiki to this directory. The upload mechanism is explained on <a href="http://wiki.openstreetmap.org/Overpass_API/Permanent_ID">the Wiki employment page</a>. The syntax of the template page is explained in the following:</p>
+
+<p>We first list <em>base.wiki</em> and then explain it in detail:</p>
+<pre>
+&lt;h1&gt;{{{count}}} results found&lt;/h1&gt;
+
+{{node:
+&lt;p&gt;Node &lt;strong&gt;{{{id}}}&lt;/strong&gt;,{{coords: lat: {{{lat}}}, lon: {{{lon}}},}}&lt;br/&gt;
+{{tags:{{{key}}} = {{{value}}}&lt;br/&gt;
+}}
+&lt;a href=&quot;http://www.openstreetmap.org/browse/node/{{{id}}}&quot;&gt;Browse on openstreetmap.org&lt;/a&gt;&lt;/p&gt;
+}}
+{{way:
+&lt;p&gt;Way &lt;strong&gt;{{{id}}}&lt;/strong&gt;,{{bbox:{{none: no geographic reference}} bounding box south: {{{south}}}, west: {{{west}}}, north: {{{north}}}, east: {{{east}}},}}&lt;br/&gt;
+{{tags:{{{key}}} = {{{value}}}&lt;br/&gt;
+}}{{members:{{first: members: {{{ref}}}}}, {{{ref}}}}}&lt;br/&gt;
+&lt;a href=&quot;http://www.openstreetmap.org/browse/way/{{{id}}}&quot;&gt;Browse on openstreetmap.org&lt;/a&gt;&lt;/p&gt;
+}}
+{{relation:
+&lt;p&gt;Relation &lt;strong&gt;{{{id}}}&lt;/strong&gt;,{{bbox:{{none: no geographic reference}} bounding box south: {{{south}}}, west: {{{west}}}, north: {{{north}}}, east: {{{east}}},}}&lt;br/&gt;
+{{tags:{{{key}}} = {{{value}}}&lt;br/&gt;
+}}{{members:{{first: members: {{{type}}} &lt;strong&gt;{{{ref}}}&lt;/strong&gt; &amp;quot;{{{role}}}&amp;quot;}}, {{{type}}} &lt;strong&gt;{{{ref}}}&lt;/strong&gt; &amp;quot;{{{role}}}&amp;quot;}}&lt;br/&gt;
+&lt;a href=&quot;http://www.openstreetmap.org/browse/relation/{{{id}}}&quot;&gt;Browse on openstreetmap.org&lt;/a&gt;&lt;/p&gt;
+}}
+</pre>
+
+<p>The entire template will be processed into the body of the returned HTML document.</p>
+
+<p>The content of the block <em>{{node:</em>...<em>}}</em>, i.e. exactly the text after <em>{{node:</em> and before the corresponding closing <em>}}</em> is repeated once for every node in the search results. Similarly, each block <em>{{way:</em>...<em>}}</em> and each block <em>{{relation:</em>...<em>}}</em> is repeated once for every way respectively relation in the search results.</em>
+
+<p>Within a node block, the placeholder <em>{{{id}}}</em> is replaced by the id of the found node. If coordinates are allowed by the chosen level of detail, the block <em>{{coords:</em>...<em>}}</em> is inserted. Otherwise, it is omitted. Inside the block <em>{{coords:</em>...<em>}}</em>, the placeholders <em>{{{lat}}}</em> and <em>{{{lon}}}</em> are replaced by the latitude and longitude.</p>
+
+<p>In the same fashion, the block <em>{{tags:</em>...<em>}}</em> is repeated once for every tag of the node. Inside the block <em>{{tags:</em>...<em>}}</em>, the placeholders <em>{{{key}}}</em> and <em>{{{value}}}</em> are replaced by the key and value of the tag.</p>
+
+<p>The way and relation blocks have slightly different sub-blocks: Instaed of the coordinate block, a block <em>{{bbox:</em>...<em>}}</em> is present. There, the placeholders <em>{{{south}}}</em> and <em>{{{north}}}</em> are replaced by the latitudes from the bounding box, and <em>{{{west}}}</em> and <em>{{{east}}}</em> are replaced by the longitudes of the bounding box. Note that the bounding box is really coarse - it is derived from a database-internal bounding box, not from the coordinates of the actual elements.</p>
+
+<p>After the block <em>{{tags:</em>...<em>}}</em>, which is inserted in the same fashion as into nodes, a block <em>{{members:</em>...<em>}}</em> follows once for each member of the way resp. relation. There, the placeholder <em>{{{ref}}}</em> is replaced by the id of the referenced object. For a relation, also the <em>{{{type}}}</em> and <em>{{{role}}}</em> placeholders are replaced with the corresponding data of the objects.</p>
+
+<p>The blocks <em>{{bbox:</em>...<em>}}</em> and <em>{{members:</em>...<em>}}</em> also accept two special, optional sub blocks: If a block <em>{{none:</em>...<em>}}</em> is present, then this block is printed if the corresponding element doesn't have a bounding box or doesn't have any members. If a block <em>{{first:</em>...<em>}}</em> is present, this block is printed for the first element instead of a copy of the surrouding <em>{{members:</em>...<em>}}</em> block.</p>
+
+<p>In the global file, the placeholder <em>{{{count}}}</em> is replaced by the found number of objects.</p>
+
+</body>
+</html>
