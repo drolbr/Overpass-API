@@ -5,10 +5,54 @@
   <script src="http://openlayers.org/api/OpenLayers.js"></script>
   <script src="http://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
   <script type="text/javascript">
-      var lat=50.722;
-      var lon=7.092;
-      var zoom=14;
+      var lat = 50.727;
+      var lon = 7.092;
+      var zoom = 15;
+      var data_url = "api/interpreter?data=node[amenity=school](bbox);out;(way[amenity=school](bbox);node(w););out;";
+      var zoom_data_limit = 13;
       var map;
+
+      var zoom_valid = true;
+
+      function setStatusText(text)
+      {
+          var div = document.getElementById("statusline").firstChild;
+          div.deleteData(0, div.nodeValue.length);
+          div.appendData(text);
+      }
+
+      function make_features_added_closure() {
+          return function(evt) {
+              if (zoom_valid)
+                  setStatusText("");
+          };
+      }
+
+      ZoomLimitedBBOXStrategy = OpenLayers.Class(OpenLayers.Strategy.BBOX, {
+
+          ratio: 1.1,
+
+          update: function(options) {
+              var mapBounds = this.getMapBounds();
+              if (this.layer && this.layer.map && this.layer.map.getZoom() < zoom_data_limit) {
+                  setStatusText("Please zoom in to view data.");
+                  zoom_valid = false;
+
+                  this.bounds = null;
+              }
+              else if (mapBounds !== null && ((options && options.force) ||
+                                         this.invalidBounds(mapBounds))) {
+                  setStatusText("Loading data ...");
+                  zoom_valid = true;
+
+                  this.calculateBounds(mapBounds);
+                  this.resolution = this.layer.map.getResolution();
+                  this.triggerRead(options);
+              }
+          },
+
+          CLASS_NAME: "ZoomLimitedBBOXStrategy"
+      });
 
       function init(){
           map = new OpenLayers.Map ("map", {
@@ -42,21 +86,23 @@
               fillColor: "blue"
           });
           var layer = new OpenLayers.Layer.Vector("Polygon", {
-              strategies: [new OpenLayers.Strategy.BBOX()],
+              strategies: [new ZoomLimitedBBOXStrategy()],
               protocol: new OpenLayers.Protocol.HTTP({
-                  url: "api/interpreter?data=node[amenity=school](bbox);out;(way[amenity=school](bbox);node(w););out;",
+                  url: data_url,
                   format: new OpenLayers.Format.OSM()
               }),
               styleMap: styleMap,
               projection: new OpenLayers.Projection("EPSG:4326")
           });
 
-          map.addLayers([layer]);
+          layer.events.register("featuresadded", layer, make_features_added_closure());
 
+          map.addLayers([layer]);
       }
   </script>
 </head>
 <body onload="init()">
+  <div id="statusline" style="font-size:24pt; font-weight:bold; font-family:sans-serif">No status set yet.</div>
   <div id="map" class="smallmap"></div>
 
 </body>

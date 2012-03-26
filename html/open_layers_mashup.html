@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+       "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>OpenLayers Mashup</title>
+</head>
+<body style="font-family:sans-serif">
+
+<a href="index.html">Overpass API</a> &gt;
+
+<h1>Open Layers mashup</h1>
+
+<p>We demonstrate here how to build a custom POI map with <a href="http://www.openlayers.org/">OpenLayers</a> as framework and <em>Overpass API</em> as backend. This is the simplest possible way to get a custom POI map: you only need to serve the assembled JavaScript file from your server. The JavaScript logic is fetched from <a href="http://www.openlayers.org/">OpenLayers</a>, the background map is fetched from <a href="http://www.openstreetmap.org/">OpenStreetMap</a>, and the data is fetched from <a href="index.html">Overpass API</a>.</p>
+
+<p>In a step-by-step explanation, we start first with a simple map of <a href="#fixed">some fixed point POIs</a>. Then we go forward to <a href="#bbox">a map of generic POIs</a> like all schools. Finally, we explain <a href="#multilayer">how to show</a> multiple different kinds of objects in one map. All the examples are derived from the OpenLayers example in the <a href="http://wiki.openstreetmap.org/wiki/OpenLayers">OSM Wiki</a>.</p>
+
+<p>OpenLayers is chosen for no particular reason. <a href="http://leaflet.cloudmade.com/">Leaflet</a> would be another suitable possible JavaScript framework, and there are <a href="http://ubahnverleih.de/osm/tourist/">working examples</a> with Leaflet.</p>
+
+<a name="fixed"><h2>One or few POIs</h2></a>
+
+<p><a href="open_layers_fixed.html">An example</a>: the bus stop next to my home.</p>
+
+<p>While most of the example is uninteresting boiler plate code, there are two interesting sections in the source code of this example:</p>
+
+<pre>
+  ...
+  &lt;script type=&quot;text/javascript&quot;&gt;
+      var lat = <strong>50.7421</strong>;
+      var lon = <strong>7.0624</strong>;
+      var zoom = <strong>18</strong>;
+      var data_url = <strong>&quot;http://overpass-api.de/api/interpreter?data=node[name=%22Im Tannenbusch%22][highway=bus_stop];out+skel;&quot;</strong>;
+      var map;
+  ...
+</pre>
+<p>Here, the defining properties of this map are chosen. <em>lat</em> and <em>lon</em> set the point where the map is located at the beginning. <em>zoom</em> is the initial zoom. And finally, <em>data_url</em> chooses which data to highlight, in this case the bus stop with name &quot;Im Tannenbusch&quot;.</p>
+
+<p>The query language for <em>data_url</em> is Overpass QL which is introduced in the <a href="http://wiki.openstreetmap.org/Overpass_API/Language_Guide">language guide</a>. The <em>%22</em> is just an escaping for a quotation mark (&quot;). It is used to avoid confusing the JavaScript engine of the browser. If you want suggestions for the latitude and longitude or just to test whether your query works, you can run the search with slight modifications:<br/>
+<a href="http://overpass-api.de/api/interpreter?data=[out:custom];node[name=%22Im Tannenbusch%22][highway=bus_stop];out;&amp;redirect=no">http://overpass-api.de/api/interpreter?data=<strong>[out:custom];</strong>node[name=&quot;Im Tannenbusch&quot;][highway=bus_stop];out;<strong>&amp;redirect=no</strong></a><br/>
+This shows exactly the results that will be found by the query and therefore get marked on the map.</p>
+
+<pre>
+          ...
+          var styleMap = new OpenLayers.StyleMap({
+              strokeColor: <strong>&quot;blue&quot;</strong>,
+              strokeWidth: <strong>6</strong>,
+              pointRadius: <strong>10</strong>,
+              fillColor: <strong>&quot;blue&quot;</strong>
+          });
+          ...
+</pre>
+<p>The second block controls the appearance of the markers on the map. We display currently only points, thus only the properties <em>pointRadius</em> and <em>fillColor</em> are relevant to us. <em>pointRadius</em> gives the radius of the point marker, <em>fillColor</em> its color. You can also display icons instead of vector graphics on the map, but because we are concerned with the backend here, we restrict the presentation to vector features.</p>
+
+<a name="bbox"><h2>Generic POIs</h2></a>
+
+<p><a href="open_layers_bbox.html">An example</a>: all schools around the world.</p>
+
+<p>In this example, we use not a few and locally concentrated features like above, but a basically indefinite number of results from potentially all over the world. To illustrate this, the example shows all schools.</p>
+
+<p>Although the example has a more elaborate source code than the preceeding example, the map is controlled by a similar section like the map above:</p>
+<pre>
+  ...
+  &lt;script type=&quot;text/javascript&quot;&gt;
+      var lat = <strong>50.727</strong>;
+      var lon = <strong>7.092</strong>;
+      var zoom = <strong>15</strong>;
+      var data_url = &quot;api/interpreter?data=node[amenity=school](bbox);out;(way[amenity=school](bbox);node(w););out;&quot;;
+      var zoom_data_limit = <strong>13</strong>;
+      var map;
+  ...
+</pre>
+<p>The query has one new element: The condition <em>bbox</em>. This is replaced by the bounding box that OpenLayers calculates to be relevant when performing a query. You can use this feature one or more times. You could also not use this features, but then the bounding box computation doesn't make sense and you could better use <a href="#fixed">a map with fixed POIs</a>.</p>
+
+<p>The second new element is <em>zoom_data_limit</em>: this is the highest zoom level where OpenLayers should still attempt to load data from the backend. In general, loading data for the whole world will both be inacceptably slow and overload the browser, therefore you can and are strongly encouraged to limit the zoom level. 13 works fine for schools in Germany. If you have significant denser data, a higher number for the limit would be better. If you have sparser data, a lower number would offer the user more oversight on smaller zoom levels.</p>
+
+<a name="multilayer"><h2>Multiple types of POIs</h2></a>
+
+<p><a href="open_layers_multilayer.html">An example</a>: all schools, all universities and all kindergartens.</p>
+
+<p>To show that you can mark multiple features at once, this example contains multiple layers. For this reason, the source code no longer contains the line <em>data_url</em>, but rather the following lines:</p>
+<pre>
+          ...
+          map.addLayers([
+              make_layer(<strong>&quot;api/interpreter?data=node[amenity=kindergarten](bbox);out;(way[amenity=kindergarten](bbox);node(w););out;&quot;</strong>, <strong>&quot;green&quot;</strong>),
+              make_layer(<strong>&quot;api/interpreter?data=node[amenity=school](bbox);out;(way[amenity=school](bbox);node(w););out;&quot;</strong>, <strong>&quot;blue&quot;</strong>),
+              make_layer(<strong>&quot;api/interpreter?data=node[amenity=university](bbox);out;(way[amenity=university](bbox);node(w););out;&quot;</strong>, <strong>&quot;orange&quot;</strong>)
+          ]);
+          ...
+</pre>
+<p>Each of these lines adds another layer to the map. The fist layer contains all kindergartens and shows its objects in green, the second layer all schools and shows its objects as before in blue, and the third layer shows all universities in orange. You can of coarse use any query and any color for any number of layers.</p>
+
+</body>
+</html>
