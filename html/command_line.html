@@ -22,7 +22,7 @@
 <pre>wget <strong>-O target.osm</strong> &quot;http://overpass-api.de/api/interpreter?data=node[name=\&quot;Gielgen\&quot;];out;&quot;</pre>
 
 <p>For longer queries, it could be helpful to have the query in a separate file. That is also possible:</p>
-<pre>echo &quot;data=node[name=\&quot;Gielgen\&quot;];out;&quot; <strong>&gt;query.osm</strong></pre>
+<pre>echo &quot;data=node[name=\&quot;Gielgen\&quot;];out;&quot; <strong>&gt;query.osm</strong>
 wget -O target.osm <strong>--post-file=query.osm</strong> &quot;http://overpass-api.de/api/interpreter&quot;</pre>
 
 </body>
