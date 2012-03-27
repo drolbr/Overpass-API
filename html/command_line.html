@@ -10,7 +10,20 @@
 
 <h1>Command line</h1>
 
-<p>...</p>
+<p>To download data (by hand or in a script) from Overpass API, you can use for example the well-known program <em>wget</em>. Alternatives are for example <em>curl</em> or, in case of FreeBSD, <em>fetch</em>. We assume here that you plan to use it in a script or other non-interactive way, because otherwise the <a href="query_form.html">query form</a> might be a more convenient alternative.</p>
+
+<p>The possible formats of the downloaded file are described on the <a href="output_formats.html">output formats</a> page.</p>
+
+<p>For short queries, the usage is very simple: Just write the query in the command line:</p>
+<pre>wget &quot;http://overpass-api.de/api/interpreter?data=node[name=\&quot;Gielgen\&quot;];out;&quot;</pre>
+<p>Please note that we need to escape the quotation mark (&quot;). Because we have enclosed the URL in quotation marks, we must escape only two more characters: the dollar ($) sign should get (\$) and the backslash (\) should be doubled (\\).</p>
+
+<p>In most cases it would be helpful to store the results with a meaningful filename. Use <em>-O</em> for that purpose:</p>
+<pre>wget <strong>-O target.osm</strong> &quot;http://overpass-api.de/api/interpreter?data=node[name=\&quot;Gielgen\&quot;];out;&quot;</pre>
+
+<p>For longer queries, it could be helpful to have the query in a separate file. That is also possible:</p>
+<pre>echo &quot;data=node[name=\&quot;Gielgen\&quot;];out;&quot; <strong>&gt;query.osm</strong></pre>
+wget -O target.osm <strong>--post-file=query.osm</strong> &quot;http://overpass-api.de/api/interpreter&quot;</pre>
 
 </body>
 </html>
