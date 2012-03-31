@@ -1,16 +1,17 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-       "http://www.w3.org/TR/html4/loose.dtd">
-<html>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>Command line</title>
+<title>Quick installation guide</title>
 </head>
 <body style="font-family:sans-serif">
 
-<a href="index.html">Overpass API</a> &gt;
+<p><a href="index.html">Overpass API</a> &gt;</p>
 
 <h1>Quick installation guide</h1>
 
-<p>We give here an installation guide for installing and starting the most common components. For other components, see the <a href="detailed_installation.html">detailed installation guide</a>. There is also <a href="http://wiki.openstreetmap.org/wiki/OSM3S/install">an installation guide on the wiki</a> which covers more errors that have ever been occured during installation and startup.</p>
+<p>We give here an installation guide for installing and starting the most common components. For other components, see the <a href="full_installation.html">detailed installation guide</a>. There is also <a href="http://wiki.openstreetmap.org/wiki/OSM3S/install">an installation guide on the wiki</a> which covers most errors that have ever been occured during installation and startup.</p>
 
 <p>We do cover here various base systems, in particular at least Ubuntu Linux and FreeBSD.</p>
 
@@ -23,7 +24,10 @@
 <pre>sudo apt-get install wget g++ make expat libexpat1-dev</pre>
 
 <p><a href="#install">Install the Overpass API software</a>:</p>
-<pre>../src/configure --prefix=&quot;`pwd`/../&quot;
+<pre>wget http://overpass-api.de/misc/osm-3s_v0.6.97.tar.gz
+gunzip &lt;osm-3s_v0.6.97.tar.gz | tar xvf -
+cd osm-3s_v0.6.97/build/
+../src/configure --prefix=&quot;`pwd`/../&quot;
 make CXXFLAGS=&quot;-O3&quot; install</pre>
 
 <p><a href="#startup">Import a planet file and configure minutely updates:</a></p>
@@ -31,7 +35,7 @@ make CXXFLAGS=&quot;-O3&quot; install</pre>
 ../src/bin/init_osm3s.sh planet.osm.bz2 &quot;../db/&quot; &quot;../&quot; --meta</pre>
 
 
-<a name="required"><h2>Requirements</h2></a>
+<h2><a name="required">Requirements</a></h2>
 
 <p>With a POSIX confirming operating system (this includes all kinds of Linux as well as FreeBSD, OpenBSD and several others), you have already fulfilled most base requirements.</p>
 
@@ -39,29 +43,33 @@ make CXXFLAGS=&quot;-O3&quot; install</pre>
 
 <p>To automatically download diffs files, you need a command line downloading tools. I suggest <em>wget</em>. If it is not already installed, you can get it on e.g. Ubuntu with:</p>
 <pre>sudo apt-get install wget</pre>
-<p>If you want to use another program instead of wget, you can find an explanation in <a href="detailed_installation.html">the detailed installation guide</a>.</p>
+<p>If you want to use another program instead of wget, you can find an explanation in <a href="full_installation.html">the detailed installation guide</a>.</p>
 
 <p>To compile the software, you need a C++ compiler and <em>make</em>. I suggest <em>the GCC collection</em>. If it is not already installed, you can get it on e.g. Ubuntu with:</p>
 <pre>sudo apt-get install g++ make</pre>
 
 <p>To compile the software, you also need the <em>expat</em> library. If it is not already installed, you can get it on e.g. Ubuntu with:</p>
 <pre>sudo apt-get install expat libexpat1-dev</pre>
-<p>You can also include expat from sources. Please have a look in <a href="detailed_installation.html">the detailed installation guide</a>.</p>
-nohup make LDFLAGS=&quot;-static -L/home/roland/expat-2.0.1/lib/&quot; install
+<p>You can also include expat from sources. Please have a look in <a href="full_installation.html">the detailed installation guide</a>.</p>
 
 
-<a name="install"><h2>Software Installation</h2></a>
+<h2><a name="install">Software Installation</a></h2>
+
+<p>First, you need to download <a href="http://overpass-api.de/misc/osm-3s_v0.6.97.tar.gz">the tarball of the latest version</a>:</p>
+<pre>wget http://overpass-api.de/misc/osm-3s_v0.6.97.tar.gz
+gunzip &lt;osm-3s_v0.6.97.tar.gz | tar xvf -
+cd osm-3s_v0.6.97/build/</pre>
 
 <p>You need to choose a directory where you put the executable files. You can later move them to a different directory. But the default choice of the installation program <em>automake</em>, /usr/bin, requires root permissions, although no root permissions are really necessary to run the program. I suggest the parent directory of the source code directory: this can be reached with &quot;`pwd`/../&quot;. To configure this output directory and detect necessary adaptions of your system, run in the <em>build</em> subdirectory:</p>
 <pre>../src/configure --prefix=&quot;`pwd`/../&quot;</pre>
 
 <p>Generate the executables:</p>
 <pre>make CXXFLAGS=&quot;-O3&quot; install</pre>
-<p>Other system than Linux may require here some extra parameters. For example, FreeBSD needs <em>-DNATIVE_LARGE_FILES</em>, because it doesn't have a separate <em>open64</em> function:
+<p>Other system than Linux may require here some extra parameters. For example, FreeBSD needs <em>-DNATIVE_LARGE_FILES</em>, because it doesn't have a separate <em>open64</em> function:</p>
 <pre>make CXXFLAGS=&quot;-O3&quot; <strong>CPPFLAGS=&quot;-DNATIVE_LARGE_FILES&quot;</strong> install</pre>
 
 
-<a name="startup"><h2>Startup</h2></a>
+<h2><a name="startup">Startup</a></h2>
 
 <p>The standard use case is to set up the database with the whole planet data and including meta data. If you haven't downloaded an <a href="http://wiki.openstreetmap.org/wiki/Planet.osm">OSM XML planet file</a> yet, you can fetch one for example with:</p>
 <pre>wget -O planet.osm.bz2 &quot;http://ftp.heanet.ie/mirrors/openstreetmap.org/planet-latest.osm.bz2&quot;</pre>
@@ -72,21 +80,19 @@ nohup make LDFLAGS=&quot;-static -L/home/roland/expat-2.0.1/lib/&quot; install
 <pre>../src/bin/init_osm3s.sh planet.osm.bz2 &quot;../db/&quot; &quot;../&quot; --meta</pre>
 <p>or</p>
 <pre>nohup ../src/bin/init_osm3s.sh planet.osm.bz2 &quot;../db/&quot; &quot;../&quot; --meta &amp;</pre>
-<p>You may need to adapt the parameter: The first parameter <em>planet.osm.bz2</em> is the osm file to process, the second parameter <em>&quot;../db/&quot;</em> is the directory where the database should go to, and the third parameter <em>&quot;../&quot;</em> is the base directory of the executables, i.e. there must exist <em>update_database</em> in the subdirectory <em>bin</em> of the location where the third parameter points to.</p>
+<p>You may need to adapt the parameters: The first parameter <em>planet.osm.bz2</em> is the osm file to process, the second parameter <em>&quot;../db/&quot;</em> is the directory where the database should go to, and the third parameter <em>&quot;../&quot;</em> is the base directory of the executables, i.e. there must exist <em>update_database</em> in the subdirectory <em>bin</em> of the location where the third parameter points to.</p>
 
-<!--<p>The standard use case is to set up the database with the whole planet data and including meta data. This is the most time-consuming part and will take up to 48 hours:</p>
-<pre>wget -O planet.osm.bz2
-mkdir &quot;`pwd`/../db/&quot;
-bunzip2 &lt;planet.osm.bz2 | ../bin/update_database --db-dir=&quot;`pwd`/../db/&quot; --meta</pre>
-<p>You may need to replace <em>&quot;`pwd`/../db/&quot;</em> by the directory where you want your database be written to and to replace <em>../bin/</em> by the <em>bin</em> subdirectory of the directory where you have installed the executables to.</p>
+<p>When this command is done, it writes <em>Update complete.</em> to the console (or to the file <em>nohup.out</em> if you have used <em>nohup</em>). At this point, the database can be used.</p>
 
-<p>You can also use any other osm file. If you want to save hard disk space and reduce the startup and update time, you can omit meta data by omitting the <em>--meta</em> parameter.</p>
+<p>But maybe you want also minutely updates. In this case, run the commands:</p>
+<pre>nohup ../bin/dispatcher --osm-base --meta --db-dir=&quot;../db/&quot; &amp;</pre>
+<pre>nohup ../bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/minute-replicate/&quot; &quot;../minute-diffs/&quot; &amp;</pre>
+<pre>nohup ../bin/apply_osc_to_db.sh &quot;../db/&quot; &quot;../minute-diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
+<p>These commands don't make sense without <em>nohup</em>, because the programs become daemons and never terminate. Once again, you need to replace parameters: you always need to replace <em>id</em> by the replicate id to start from. Search on <a href="http://planet.openstreetmap.org/minute-replicate/">http://planet.openstreetmap.org/minute-replicate/</a> with your browser for the last replication diff that has been created before the planet creation date.</p>
 
-<p>The command is complete if it writes <em>Update complete.</em> to the console.</p>-->
+<p>The other parameters need only to be adapted if you have chosen a different directory in a previous step: <em>&quot;../db/&quot;</em> is the directory of the database, <em>&quot;http://planet.openstreetmap.org/minute-replicate/&quot;</em> is the replicate diff's remote source, and <em>&quot;../minute-diffs/&quot;</em> is the directory where the minute diffs are stored until they have been applied.</p>
 
-<p>When this command is done, it writes <em>Update complete.</em> to the console (or to the file <em>nohup.out</em> if you have used <em>nohup</em>). At this point you could use the database </p>
-
-<p>Minute updates ...</p>
+<p>Congratulations! Now you have a database mirror that can serve the entire world and is always only a few minutes behind the OSM main database.</p>
 
 </body>
 </html>

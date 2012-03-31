@@ -1,17 +1,17 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-       "http://www.w3.org/TR/html4/loose.dtd">
-<html>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title>Output Formats</title>
 </head>
 <body style="font-family:sans-serif">
 
-<a href="index.html">Overpass API</a> &gt;
+<p><a href="index.html">Overpass API</a> &gt;</p>
 
 <h1>Output formats</h1>
 
-<p>There are three different output formats available from Overpass API, and each of these output formats is available in different levels of details for the included data. While the level of detail is controlled with the parameters used for the respective <a href="http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide#Control_output_format">out</a> or <a href="http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide#Control_output_format">print</a> statement, we discuss here the available output formats:
-
+<p>There are three different output formats available from Overpass API, and each of these output formats is available in different levels of details for the included data. While the level of detail is controlled with the parameters used for the respective <a href="http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide#Control_output_format">out</a> or <a href="http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide#Control_output_format">print</a> statement, we discuss here the available output formats:</p>
 <ul>
 <li><a href="#xml">OSM XML</a>: The standard interchange format for OSM data.</li>
 <li><a href="#json">OSM JSON</a>: A more lightweight variant, looking like JavaScript source code, i.e. JSON.</li>
@@ -20,7 +20,7 @@
 
 <p>Note that regardless of the chosen output type, the server may return an HTML document in case of a malformed input.</p>
 
-<a name="xml"><h2>OSM XML</h2></a>
+<h2><a name="xml">OSM XML</a></h2>
 
 <p>The format generally follows the <a href="http://wiki.openstreetmap.org/wiki/XML">description in the wiki</a>. It doesn't contain a <em>bounds</em> tag, and it may contain certain additional tags. Anyway, in all cases <a href="http://www.w3.org/TR/REC-xml/">well-formed XML</a> is returned.</p>
 
@@ -36,8 +36,7 @@
 &lt;/osm&gt;
 </pre>
 
-<a name="xml.date"></a>
-<p>The meta tags contains in the attribute <em>osm_base</em> the entry <em>date</em> with a timestamp of the data. That means that all edits that have been uploaded before this date are included. The format is always <em>YYYY</em>-<em>MM</em>-<em>DD</em>T<em>hh</em>:<em>mm</em>:<em>ss</em>Z, where YYYY is a four digit year, MM is a two digit month, DD is a two digit day of month. <em>hh</em>:<em>mm</em>:<em>ss</em> is the time with two digits hours, minutes and seconds.</p>
+<p><a name="xml.date"></a>The meta tags contains in the attribute <em>osm_base</em> the entry <em>date</em> with a timestamp of the data. That means that all edits that have been uploaded before this date are included. The format is always <em>YYYY</em>-<em>MM</em>-<em>DD</em>T<em>hh</em>:<em>mm</em>:<em>ss</em>Z, where YYYY is a four digit year, MM is a two digit month, DD is a two digit day of month. <em>hh</em>:<em>mm</em>:<em>ss</em> is the time with two digits hours, minutes and seconds.</p>
 
 <p>If the query involves area data processing, a second timestamp in the same format is included in the attribute <em>areas</em>:</p>
 <pre>
@@ -51,7 +50,7 @@
 
 <p>If you request areas, you will get for each area an <em>area</em> tag with an attribute <em>id</em>. The tag contains as subtags all the tags that are set on the area or inherited by the area from the object it has been generated from.</p>
 
-<a name="json"><h2>OSM JSON</h2></a>
+<h2><a name="json">OSM JSON</a></h2>
 
 <p>Unfortunately, there are several slightly different syntaxes for OSM data in JSON. For that reason, we describe the syntax used by Overpass API en detail here. On the lowest level, it is <a href="http://www.json.org/">well-formed JSON</a>. In particular, the following characters are escaped:</p>
 <table>
@@ -69,7 +68,7 @@
 <a href="api/interpreter?data=[json:out];out;">/api/interpreter?data=<strong>[json:out];</strong>out;</a>
 </pre>
 
-<p>A response (an example</a>) from Overpass API has always the following header and footer:</p>
+<p>A response (<a href="api/interpreter?data=[json:out];out;">an example</a>) from Overpass API has always the following header and footer:</p>
 <pre>
 {
   &quot;version&quot;: 0.6,
@@ -131,8 +130,7 @@
 
 <p>The key-value-pairs <em>type:node</em> and <em>id</em> are always present. The key-value-pairs <em>lat</em>, <em>lon</em>, <em>timestamp</em>, <em>version</em>, <em>changeset</em>, <em>user</em>, and <em>uid</em> are present or not depedend on the chosen degree of verbosity and are always printed in this order. <em>id</em>, <em>lat</em>, <em>lon</em>, and <em>uid</em> are numbers, the rest are strings. Then, a key <em>tags</em> may follow if the node has tags and you have chosen to print tags, with a key-value-pair for each tag, and both are always strings, regardless whether their content could be read as a number or not.</p>
 
-<a name="json.way"></a>
-<p>Ways follow a similar pattern: They consists of the key-value-pairs <em>type:way</em>, <em>id</em>, <em>timestamp</em>, <em>version</em>, <em>changeset</em>, <em>user</em>, and <em>uid</em>, depending on the chosen degree of verbosity. Then, a key <em>nodes</em> follows with an ordered list as value, containg the ids of the nodes that belong to the way. The last maybe contained key is <em>tags</em> with a map as value as above.</p>
+<p><a name="json.way"></a>Ways follow a similar pattern: They consists of the key-value-pairs <em>type:way</em>, <em>id</em>, <em>timestamp</em>, <em>version</em>, <em>changeset</em>, <em>user</em>, and <em>uid</em>, depending on the chosen degree of verbosity. Then, a key <em>nodes</em> follows with an ordered list as value, containg the ids of the nodes that belong to the way. The last maybe contained key is <em>tags</em> with a map as value as above.</p>
 
 <p>An example:</p>
 <pre>
@@ -184,7 +182,7 @@
 }
 </pre>
 
-<a name="custom"><h2>Custom output and Redirects</h2></a>
+<h2><a name="custom">Custom output and Redirects</a></h2>
 
 <p>The custom output allows to convert a search for an object into an object id or to show a search result page. This is a rather advanced usage of Overpass API. Thus, we explain it from the simple use case to the complex use case.</p>
 
@@ -244,7 +242,7 @@
 
 <p>The entire template will be processed into the body of the returned HTML document.</p>
 
-<p>The content of the block <em>{{node:</em>...<em>}}</em>, i.e. exactly the text after <em>{{node:</em> and before the corresponding closing <em>}}</em> is repeated once for every node in the search results. Similarly, each block <em>{{way:</em>...<em>}}</em> and each block <em>{{relation:</em>...<em>}}</em> is repeated once for every way respectively relation in the search results.</em>
+<p>The content of the block <em>{{node:</em>...<em>}}</em>, i.e. exactly the text after <em>{{node:</em> and before the corresponding closing <em>}}</em> is repeated once for every node in the search results. Similarly, each block <em>{{way:</em>...<em>}}</em> and each block <em>{{relation:</em>...<em>}}</em> is repeated once for every way respectively relation in the search results.</p>
 
 <p>Within a node block, the placeholder <em>{{{id}}}</em> is replaced by the id of the found node. If coordinates are allowed by the chosen level of detail, the block <em>{{coords:</em>...<em>}}</em> is inserted. Otherwise, it is omitted. Inside the block <em>{{coords:</em>...<em>}}</em>, the placeholders <em>{{{lat}}}</em> and <em>{{{lon}}}</em> are replaced by the latitude and longitude.</p>
 

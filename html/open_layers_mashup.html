@@ -1,12 +1,13 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-       "http://www.w3.org/TR/html4/loose.dtd">
-<html>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title>OpenLayers Mashup</title>
 </head>
 <body style="font-family:sans-serif">
 
-<a href="index.html">Overpass API</a> &gt;
+<p><a href="index.html">Overpass API</a> &gt;</p>
 
 <h1>Open Layers mashup</h1>
 
@@ -16,7 +17,7 @@
 
 <p>OpenLayers is chosen for no particular reason. <a href="http://leaflet.cloudmade.com/">Leaflet</a> would be another suitable possible JavaScript framework, and there are <a href="http://ubahnverleih.de/osm/tourist/">working examples</a> with Leaflet.</p>
 
-<a name="fixed"><h2>One or few POIs</h2></a>
+<h2><a name="fixed">One or few POIs</a></h2>
 
 <p><a href="open_layers_fixed.html">An example</a>: the bus stop next to my home.</p>
 
@@ -50,7 +51,7 @@ This shows exactly the results that will be found by the query and therefore get
 </pre>
 <p>The second block controls the appearance of the markers on the map. We display currently only points, thus only the properties <em>pointRadius</em> and <em>fillColor</em> are relevant to us. <em>pointRadius</em> gives the radius of the point marker, <em>fillColor</em> its color. You can also display icons instead of vector graphics on the map, but because we are concerned with the backend here, we restrict the presentation to vector features.</p>
 
-<a name="bbox"><h2>Generic POIs</h2></a>
+<h2><a name="bbox">Generic POIs</a></h2>
 
 <p><a href="open_layers_bbox.html">An example</a>: all schools around the world.</p>
 
@@ -72,7 +73,7 @@ This shows exactly the results that will be found by the query and therefore get
 
 <p>The second new element is <em>zoom_data_limit</em>: this is the highest zoom level where OpenLayers should still attempt to load data from the backend. In general, loading data for the whole world will both be inacceptably slow and overload the browser, therefore you can and are strongly encouraged to limit the zoom level. 13 works fine for schools in Germany. If you have significant denser data, a higher number for the limit would be better. If you have sparser data, a lower number would offer the user more oversight on smaller zoom levels.</p>
 
-<a name="multilayer"><h2>Multiple types of POIs</h2></a>
+<h2><a name="multilayer">Multiple types of POIs</a></h2>
 
 <p><a href="open_layers_multilayer.html">An example</a>: all schools, all universities and all kindergartens.</p>
 
