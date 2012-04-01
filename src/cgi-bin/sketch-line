@@ -44,29 +44,29 @@ for KEY_VAL in $QUERY_STRING; do
     REF="${KEY_VAL:4}"
     REF_=`echo "${KEY_VAL:4}" | $BIN_DIR/uncgi`
   };
-  elif [[ ${KEY_VAL:0:6} == "width=" ]]; then
+  elif [[ ${KEY_VAL:0:6} == "width=" && -n "${KEY_VAL:6}" ]]; then
     SKETCH_PARAMS="$SKETCH_PARAMS --width=${KEY_VAL:6}"
-  elif [[ ${KEY_VAL:0:7} == "height=" ]]; then
+  elif [[ ${KEY_VAL:0:7} == "height=" && -n "${KEY_VAL:7}" ]]; then
     SKETCH_PARAMS="$SKETCH_PARAMS --height=${KEY_VAL:7}"
-  elif [[ ${KEY_VAL:0:10} == "font-size=" ]]; then
+  elif [[ ${KEY_VAL:0:10} == "font-size=" && -n "${KEY_VAL:10}" ]]; then
     SKETCH_PARAMS="$SKETCH_PARAMS --stop-font-size=${KEY_VAL:10}"
-  elif [[ ${KEY_VAL:0:11} == "force-rows=" ]]; then
+  elif [[ ${KEY_VAL:0:11} == "force-rows=" && -n "${KEY_VAL:11}" ]]; then
     SKETCH_PARAMS="$SKETCH_PARAMS --rows=${KEY_VAL:11}"
-  elif [[ ${KEY_VAL:0:6} == "style=" ]]; then
+  elif [[ ${KEY_VAL:0:6} == "style=" && -n "${KEY_VAL:6}" ]]; then
   {
     SKETCH_PARAMS="$SKETCH_PARAMS --options=/opt/osm_why_api/options/sketch-line.${KEY_VAL:6}"
     BRIM_PARAMS="$BRIM_PARAMS --options=/opt/osm_why_api/options/sketch-line.${KEY_VAL:6}"
   };
-  elif [[ ${KEY_VAL:0:16} == "correspondences=" ]]; then
+  elif [[ ${KEY_VAL:0:16} == "correspondences=" && -n "${KEY_VAL:16}" ]]; then
   {
     SKETCH_PARAMS="$SKETCH_PARAMS --walk-limit=${KEY_VAL:16}"
     BRIM_PARAMS="$BRIM_PARAMS --size=${KEY_VAL:16}"
   };
-  elif [[ ${KEY_VAL:0:18} == "max-cors-per-line=" ]]; then
+  elif [[ ${KEY_VAL:0:18} == "max-cors-per-line=" && -n "${KEY_VAL:18}" ]]; then
     SKETCH_PARAMS="$SKETCH_PARAMS --max-correspondences-per-line=${KEY_VAL:18}"
-  elif [[ ${KEY_VAL:0:15} == "max-cors-below=" ]]; then
+  elif [[ ${KEY_VAL:0:15} == "max-cors-below=" && -n "${KEY_VAL:15}" ]]; then
     SKETCH_PARAMS="$SKETCH_PARAMS --max-correspondences-below=${KEY_VAL:15}"
-  elif [[ ${KEY_VAL:0:6} == "debug=" ]]; then
+  elif [[ ${KEY_VAL:0:6} == "debug=" && -n "${KEY_VAL:6}" ]]; then
   {
     SKETCH_PARAMS="$SKETCH_PARAMS --debug=${KEY_VAL:6}"
     DEBUG="${KEY_VAL:6}"
@@ -91,7 +91,7 @@ if [[ $DEBUG == "yes" ]]; then
 {
   echo "Content-Type: text/plain; charset=utf-8"
   echo
-  echo $BIN_DIR/bbox_brim_query --network="$NETWORK_" --ref="$REF_" $BRIM_PARAMS ">"$BASEDIR/request.1
+  echo $BIN_DIR/bbox_brim_query --network=\"$NETWORK_\" --ref=\"$REF_\" $BRIM_PARAMS ">"$BASEDIR/request.1
   echo
 };
 fi
