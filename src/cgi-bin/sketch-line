@@ -110,7 +110,7 @@ if [[ $DEBUG == "yes" ]]; then
   echo
   cat <$BASEDIR/log.1
   cat <$BASEDIR/answer.1
-  echo $BIN_DIR/sketch_route_svg --network="$NETWORK_" --ref="$REF_" $SKETCH_PARAMS <$BASEDIR/answer.1
+  echo $BIN_DIR/sketch_route_svg --network=\"$NETWORK_\" --ref=\"$REF_\" $SKETCH_PARAMS <$BASEDIR/answer.1
   echo
 };
 else

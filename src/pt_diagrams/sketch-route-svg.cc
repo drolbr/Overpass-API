@@ -546,6 +546,10 @@ int main(int argc, char *argv[])
     ++argi;
   }
   
+  // Default rather to a unattractive value than crash
+  if (max_correspondences_per_line <= 0)
+    max_correspondences_per_line = 1;
+  
   bool have_valid_operation_times = false;
   vector< Relation > relations;
   Stoplist stoplist = make_stoplist(walk_limit_for_changes, doubleread_rel,
