@@ -59,6 +59,11 @@
     <changefreq>monthly</changefreq>
   </url>
   <url>
+    <loc>http://overpass-api.de/technical_overview.html</loc>
+    <lastmod>2012-03-31</lastmod>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
     <loc>http://overpass-api.de/no_frills.html</loc>
     <lastmod>2012-03-31</lastmod>
     <changefreq>monthly</changefreq>

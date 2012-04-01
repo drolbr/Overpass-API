@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Technical Overview</title>
+</head>
+<body style="font-family:sans-serif">
+
+<p><a href="index.html">Overpass API</a> &gt;</p>
+
+<h1>Technical Overview</h1>
+
+<p>We give an overview which components constitute their existence in files, which processes and by which logging messages their state could be controlled. The most important component is the <a href="#core">core</a>. It is subdivided into the <a href="#backend">backend</a>, the <a href="#frontend">frontend</a>, and the <a href="#dispatcher">dispatcher</a>. Then we discuss the additional modules: the <a href="#meta">meta data component</a>, the <a href="#xapi">XAPI compatibility layer</a> and the <a href="#areas">area generator</a>.</p>
+
+
+<h2><a name="core">Core server</a></h2>
+
+<h3><a name="backend">Backend</a></h3>
+
+<p>The backend is responsible for populating the database and keeping it up to date. The backend doesn't depend on the other components. However, if the tools are called without a running <em>dispatcher</em>, they explicitly need to know the location of the database directory with a parameter <em>--db-dir</em>.</p>
+
+<p>The first task is to fetch data and diff files from the OSM main API (or possibly another source) and to store it locally. It is the administrators task to initially download start data, because a download of 30 GB or more should not be triggered without user intervention.</p>
+
+<p>By contrast, the much smaller diffs (typically some 100 KB per minute) are downloaded by the process <em>fetch_osc.sh</em> and stored to the directory for minute diffs. It replicates the structure of the source, it makes subdirectories 000 to 999 each of which contains again contains subdirectories 000 to 999 which again contain files 000.osc.gz to 999.osc.gz and 000.state.txt to 999.state.txt. The files are not needed once their content has been patched into the database, but are nonetheless permanently stored. If a file hasn't been downloaded successfully by <em>fetch_osc.sh</em>, it is automatically redownloaded. <em>fetch_osc.sh</em> logs its activities into <em>fetch_osc.log</em> in the minute replicate diffs file.</p>
+
+<p><a name="database_content">The second task is to actually make out of the initial OSM XML file a database. This is done by <em>update_database</em>. It reads a single OSM XML file and writes in the database directory the files</a></p>
+<ul>
+<li>nodes.bin, nodes.bin.idx, nodes.map, nodes.map.idx</li>
+<li>node_tags_local.bin, node_tags_local.bin.idx</li>
+<li>node_tags_global.bin, node_tags_global.bin.idx</li>
+<li>ways.bin, ways.bin.idx, ways.map, ways.map.idx</li>
+<li>way_tags_local.bin, way_tags_local.bin.idx</li>
+<li>way_tags_global.bin, way_tags_global.bin.idx</li>
+<li>relations.bin, relations.bin.idx, relations.map, relations.map.idx</li>
+<li>relation_roles.bin, relation_roles.bin.idx</li>
+<li>relation_tags_local.bin, relation_tags_local.bin.idx</li>
+<li>relation_tags_global.bin, relation_tags_global.bin.idx</li>
+</ul>
+<p>The additional files in this directory come from the various extensions. No direct logging is performed. The progress can only be read off the console output, usually the content of the file <em>nohup.out</em>. Once the process has completed its job, it writes <em>Update complete.</em> and terminates.</p>
+
+<p>The third task is to update the database with the minutely diff files. For this purpose, the daemon <em>apply_osc_to_db.sh</em> run permanently and starts <em>update_from_dir</em> when one or more diffs are to be processed. Before <em>update_from_dir</em> is started, <em>apply_osc_to_db.sh</em> decompresses all diff files in a temporary directory that is deleted after <em>update_from_dir</em> has completed. It changes the same files in the database like <em>update_database</em>. It logs its current state into <em>apply_osc_to_db.log</em> and it writes the current replicate id in the file <em>replicate_id</em> and the timestamp of the currently processed OSM main data version into the file <em>osm_base_version</em>.</p>
+
+
+<h3><a name="dispatcher">Dispatcher</a></h3>
+
+<p>The dispatcher coordinates backend and frontend. Thus, there is no data associated with the dispatcher, but several overhead files, the process <em>dispatcher</em>, and the logfile <em>transactions.log</em>.</p>
+
+<p>Dispatcher organizes its communication with the backend and frontend by two different means: files ending in <em>.lock</em> are managed by the dispatcher and contain a pid. Having these as physical files ensures that after a crash the data suffices to recover correctly. The second way of communication is shared memory, in particular the shared memory file <em>/osm3s_v0.6.97_osm_base</em> (In Linux, you can access this file via <em>/dev/shm/osm3s_v0.6.97_osm_base</em>). Dispatcher announces in this directory the database location, and the frontend and backend can report their status here and request locks.</p>
+
+<p>The other overhead files are a file ending in <em>.shadow</em> for <a href="#database_content">each file in the database</a> ending in <em>.bin</em>, <em>.map</em>, or <em>.idx</em>. These files enable transactionality: all index information for the writing process is kept in the various <em>.shadow</em> files, and the plain <em>.idx</em> files are at the same time valid and used for all processes that request a read lock during the write operation. If the system crashes, one could simply discard the <em>.shadow</em> files, and the remaining database is still consistent with the original <em>.idx</em> files.</p>
+
+<p>As the coordination of multiple processes is a troublesome task, the log file <em>transactions.log</em> is very verbose. Every message starts with the date in UTC and the PID of the process which has omitted this message.</p>
+
+<p>The dispatcher itself tells all the messages it has accepted. In particular these are:</p>
+<ul>
+<li><em>write_start</em> and <em>write_commit</em> from the backend</li>
+<li><em>request_read_and_idx</em>, <em>read_idx_finished</em>, <em>read_finished</em>, and <em>prolongate</em> from the frontend</li>
+</ul>
+<p>In addition, the dispatcher logs its own activities with <em>purge</em> and <em>Dispatcher just started</em>. <em>purge</em> is the terminal part of a watchdog: If a process doesn't callback for a too long time with a <em>prolongate</em>, the dispatcher assumes it has been aborted or got runaway and releases the remaining read locks for this process.</p>
+
+<p>The processes themselves log for each message their attempt to emit the message, when they have been satisfied with the outcome of the message (usually obtained their lock) or when they have timed out while waiting for a response.</p>
+
+
+<h3><a name="frontend">Frontend</a></h3>
+
+<p>The frontend usually runs in parallel to the backend and the dispatcher. However, if no updates take place, the frontend could be used on a filled database also without the backend and the dispatcher. The frontend uses one process <em>interpreter</em> or <em>osm-3s_query</em> for each query; the process terminates when the query is complete or has been aborted. It accesses in the <a href="#database_content">database directory</a> all files but the logfile <em>transactions.log</em> read-only.</p>
+
+<p>The difference between <em>interpreter</em> and <em>osm-3s_query</em> is that <em>interpreter</em> is designed for CGI access. Thus it needs and accepts no parameters on the command line, it starts its output always with a MIME type or HTTP headers, and all error messages are implemented as HTML output. On the other hand<em>osm-3s_query</em> can be adapted with various command line parameters and produces simple text error messages, no MIME or HTTP headers.</p>
+
+<p>Beyond the <a href="#dispatcher">communication with the dispatcher</a>, the frontend logs the requested query, just as the user has entered it, again with date and the PID of the request, into the file <em>transactions.log</em>.</p>
+
+
+<h2><a name="meta">Meta Data Component</a></h2>
+
+<p>The meta data component is included at both source code level and source data level. Thus, it changes the behaviour of almost all <a href="#core">core</a> components.</p>
+
+<p>In particular, <em>update_database</em>, <em>apply_osc_to_db.sh</em>, <em>dispatcher</em>, <em>interpreter</em>, and <em>osm3s_query</em> now care for the following additional files in the same way they do for the other files in the database directory:</p>
+<ul>
+<li>nodes_meta.bin, nodes_meta.bin.idx</li>
+<li>ways_meta.bin, ways_meta.bin.idx</li>
+<li>relations_meta.bin, relations_meta.bin.idx</li>
+<li>user_data.bin, user_data.bin.idx</li>
+<li>user_indices.bin, user_indices.bin.idx</li>
+</ul>
+
+<p>For each of this tools, this behaviour is triggered by adding a <em>--meta</em> parameter to the startup call.</p>
+
+<p>The only functional difference is that the features depeding on meta data like <em>out meta;</em> are only operational with this extension. The essential non-functional difference is that everything now runs two to three times slower.</p>
+
+
+<h2><a name="xapi">XAPI compatibility layer</a></h2>
+
+<p>The XAPI compatibility layer is completely separated from the <a href="#core">core</a>. It consists of two components: for each query, a process <em>xapi</em> is started; it then calls the program <em>translate_xapi</em> to transform the query into an Overpass XML query. The transformed query is saved in a temporary file into the directory <em>/tmp/translate_xapi</em>. Then <em>xapi</em> invokes <em>osm3s_query</em> with the translated query.</p>
+
+<p>The second component is the permanetly running helper process <em>cleanup_xapi.sh</em>. This process creates the directory <em>/tmp/translate_xapi</em> and cares for the orphaned temporaries that result from aborted queries.</p>
+
+<p>The XAPI compatibility layer doesn't read or write directly any files beside the temporary files. It also doesn't directly log something. An XAPI query can only be reconstructed indirectly from the translated query in <em>transactions.log</em>.</p>
+
+
+<h2><a name="areas">Area Generator</a></h2>
+
+<p>The area generator consists of an additional permanent process <em>rules_loop.sh</em>, an additional log file <em>rules_loop.log</em> and additional files in the database directory.</p>
+
+<p>The additional permanent process <em>rules_loop.sh</em> runs in an infinite loop a batch processing of all potential areas by the process <em>osm3s_query</em>. According to the concept of transactionality, the newly created areas become visible all at once at the end of each batch run of <em>osm3s_query</em>. The areas are contained in the following files in the database directory:</p>
+<ul>
+<li>areas.bin, areas.bin.idx</li>
+<li>area_blocks.bin, area_blocks.bin.idx</li>
+<li>area_tags_global.bin, area_tags_global.bin.idx</li>
+<li>area_tags_local.bin, area_tags_local.bin.idx</li>
+</ul>
+<p>Additionally, the file <em>area_version</em> alsways contains the timestamp of the data as a reading process would currently get it. All the data is visible to the frontend and is used when a user requests data derived from area data.</p>
+
+<p>The log file <em>rules_loop.log</em> contains information about the beginning and end of each batch run.</p>
+
+
+</body>
+</html>
