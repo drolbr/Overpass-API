@@ -23,11 +23,11 @@
 #include <signal.h>
 #include <sys/mman.h>
 #include <sys/select.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -81,6 +81,20 @@ string getcwd()
   return result;
 }
 
+void millisleep(uint32 milliseconds)
+{
+  struct timeval timeout_;
+  timeout_.tv_sec = milliseconds/1000;
+  timeout_.tv_usec = milliseconds*1000;
+  select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+}
+
+struct sockaddr_un
+{
+  unsigned short sun_family;
+  char sun_path[255];
+};
+
 Dispatcher::Dispatcher
     (string dispatcher_share_name_,
      string index_share_name,
@@ -103,19 +117,36 @@ Dispatcher::Dispatcher
     db_dir = getcwd() + db_dir_;
   if (shadow_name.substr(0, 1) != "/")
     shadow_name = getcwd() + shadow_name_;
-
-  // set down the purge timeout if the /proc filesystem is available
-  ostringstream file_name;
-  file_name<<"/proc/"<<getpid()<<"/stat";
-  if (file_exists(file_name.str()))
-    purge_timeout = 5;
+  
+  // initialize the socket for the server
+  string socket_name = db_dir + dispatcher_share_name;
+  socket_descriptor = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (socket_descriptor == -1)
+    throw File_Error
+        (errno, socket_name, "Dispatcher_Server::2");  
+  if (fcntl(socket_descriptor, F_SETFL, O_RDWR|O_NONBLOCK) == -1)
+    throw File_Error
+        (errno, socket_name, "Dispatcher_Server::3");  
+  struct sockaddr_un local;
+  local.sun_family = AF_UNIX;
+  strcpy(local.sun_path, socket_name.c_str());
+  if (bind(socket_descriptor, (struct sockaddr*)&local,
+      sizeof(local.sun_family) + strlen(local.sun_path)) == -1)
+    throw File_Error
+        (errno, socket_name, "Dispatcher_Server::4");
+  if (listen(socket_descriptor, max_num_reading_processes) == -1)
+    throw File_Error
+        (errno, socket_name, "Dispatcher_Server::5");
   
   // open dispatcher_share
   dispatcher_shm_fd = shm_open
       (dispatcher_share_name.c_str(), O_RDWR|O_CREAT|O_TRUNC|O_EXCL, S_666);
   if (dispatcher_shm_fd < 0)
+  {
+    remove(socket_name.c_str());
     throw File_Error
         (errno, dispatcher_share_name, "Dispatcher_Server::1");
+  }
   fchmod(dispatcher_shm_fd, S_666);
   int foo = ftruncate(dispatcher_shm_fd,
 		      SHM_SIZE + db_dir.size() + shadow_name.size()); foo = 0;
@@ -146,8 +177,10 @@ Dispatcher::Dispatcher
 
 Dispatcher::~Dispatcher()
 {
+  close(socket_descriptor);
   munmap((void*)dispatcher_shm_ptr, SHM_SIZE + db_dir.size() + shadow_name.size());
   shm_unlink(dispatcher_share_name.c_str());
+  remove((db_dir + dispatcher_share_name).c_str());
 }
 
 void Dispatcher::write_start(pid_t pid)
@@ -190,6 +223,12 @@ void Dispatcher::write_rollback(pid_t pid)
     logger->write_rollback(pid);
   remove_shadows();
   remove((shadow_name + ".lock").c_str());
+  
+/*  if (connection_per_pid.find(pid) != connection_per_pid.end())
+  {
+    close(connection_per_pid[pid]);
+    connection_per_pid.erase(pid);
+  }*/
 }
 
 void Dispatcher::write_commit(pid_t pid)
@@ -215,6 +254,12 @@ void Dispatcher::write_commit(pid_t pid)
   remove_shadows();
   remove((shadow_name + ".lock").c_str());
   set_current_footprints();
+
+/*  if (connection_per_pid.find(pid) != connection_per_pid.end())
+  {
+    close(connection_per_pid[pid]);
+    connection_per_pid.erase(pid);
+  }*/
 }
 
 void Dispatcher::request_read_and_idx(pid_t pid)
@@ -257,6 +302,12 @@ void Dispatcher::read_finished(pid_t pid)
     it->unregister_pid(pid);
   processes_reading_idx.erase(pid);
   processes_reading.erase(pid);
+  if (connection_per_pid.find(pid) != connection_per_pid.end())
+  {
+    close(connection_per_pid[pid]);
+    connection_per_pid.erase(pid);
+  }
+  disconnected.erase(pid);
 }
 
 void Dispatcher::copy_shadows_to_mains()
@@ -411,36 +462,111 @@ void Dispatcher::standby_loop(uint64 milliseconds)
   uint32 counter = 0;
   while ((milliseconds == 0) || (counter < milliseconds/100))
   {
-    if (*(uint32*)dispatcher_shm_ptr == 0)
+    struct sockaddr_un sockaddr_un_dummy;
+    uint sockaddr_un_dummy_size = sizeof(sockaddr_un_dummy);
+    int socket_fd = accept(socket_descriptor, (sockaddr*)&sockaddr_un_dummy,
+			   (socklen_t*)&sockaddr_un_dummy_size);
+    if (socket_fd == -1)
     {
-      ++counter;
-      //sleep for a tenth of a second
-      struct timeval timeout_;
-      timeout_.tv_sec = 0;
-      timeout_.tv_usec = 100*1000;
-      select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      if (errno != EAGAIN && errno != EWOULDBLOCK)
+	throw File_Error
+	    (errno, "(socket)", "Dispatcher_Server::6");
+    }
+    else
+    {
+      if (fcntl(socket_fd, F_SETFL, O_RDWR|O_NONBLOCK) == -1)
+	throw File_Error
+	    (errno, "(socket)", "Dispatcher_Server::7");  
+      started_connections.push_back(socket_fd);
+    }
 
-      continue;
+    // associate to a new connection the pid of the sender
+    for (vector< int >::iterator it = started_connections.begin();
+        it != started_connections.end(); ++it)
+    {
+      pid_t pid;
+      int bytes_read = recv(*it, &pid, sizeof(pid_t), 0);
+      if (bytes_read == -1)
+	;
+      else
+      {
+	if (bytes_read != 0)
+	  connection_per_pid[pid] = *it;
+	else
+	  close(*it);
+	
+	*it = started_connections.back();
+	started_connections.pop_back();
+	break;
+      }
     }
     
+    uint32 command = 0;
+    uint32 client_pid = 0;
+    
+    // poll all open connections
+    for (map< pid_t, int >::const_iterator it = connection_per_pid.begin();
+        it != connection_per_pid.end(); ++it)
+    {
+      uint32 message = 0;
+      int bytes_read = recv(it->second, &message, sizeof(uint32), 0);
+      if (bytes_read == -1)
+	;
+      else if (bytes_read == 0)
+      {
+	client_pid = it->first;
+	if (processes_reading.find(it->first) != processes_reading.end())
+	  command = Dispatcher::READ_FINISHED;
+	else
+	  command = Dispatcher::HANGUP;
+	break;
+      }
+      else
+      {
+	command = message;
+	client_pid = it->first;
+	break;
+      }
+    }
+    
+    if (*(uint32*)dispatcher_shm_ptr == 0 && command == 0)
+    {
+      ++counter;
+      millisleep(100);
+      continue;
+    }
+
     try
     {
-      uint32 command = *(uint32*)dispatcher_shm_ptr;
-      uint32 client_pid = *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
+      if (command == 0)
+      {
+        command = *(uint32*)dispatcher_shm_ptr;
+        client_pid = *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
+      }
       // Set command state to zero.
       *(uint32*)dispatcher_shm_ptr = 0;
       if (command == TERMINATE)
       {
-	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) =
-	    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
+	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       
-        break;
+	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
+	{
+	  close(connection_per_pid[client_pid]);
+	  connection_per_pid.erase(client_pid);
+	}
+	
+	break;
       }
       else if (command == OUTPUT_STATUS)
       {
 	output_status();
-	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) =
-	    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
+	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
+	
+	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
+	{
+	  close(connection_per_pid[client_pid]);
+	  connection_per_pid.erase(client_pid);
+	}
       }
       else if (command == WRITE_START)
       {
@@ -453,6 +579,14 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       {
 	check_and_purge();
 	write_commit(client_pid);
+      }
+      else if (command == HANGUP)
+      {
+	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
+	{
+	  close(connection_per_pid[client_pid]);
+	  connection_per_pid.erase(client_pid);
+	}
       }
       else if (command == REQUEST_READ_AND_IDX)
       {
@@ -482,11 +616,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       cerr<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
       
       counter += 30;
-      //sleep for three seconds
-      struct timeval timeout_;
-      timeout_.tv_sec = 3;
-      timeout_.tv_usec = 0;
-      select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      millisleep(3000);
   
       // Set command state to zero.
       *(uint32*)dispatcher_shm_ptr = 0;
@@ -499,6 +629,9 @@ void Dispatcher::output_status()
   try
   {
     ofstream status((shadow_name + ".status").c_str());
+    
+    status<<started_connections.size()<<' '<<connection_per_pid.size()<<'\n';
+    
     for (set< pid_t >::const_iterator it = processes_reading_idx.begin();
         it != processes_reading_idx.end(); ++it)
       status<<REQUEST_READ_AND_IDX<<' '<<*it<<'\n';
@@ -600,9 +733,9 @@ void Dispatcher::check_and_purge()
     map< pid_t, uint32 >::const_iterator alive_it = processes_reading.find(*it);
     if ((alive_it != processes_reading.end()) && (alive_it->second + purge_timeout > current_time))
       continue;
-    ostringstream file_name("");
-    file_name<<"/proc/"<<*it<<"/stat";
-    if (!file_exists(file_name.str()))
+    if (disconnected.find(*it) != disconnected.end()
+        || alive_it == processes_reading.end()
+	|| alive_it->second + purge_timeout > current_time)
     {
       if (logger)
 	logger->purge(*it);
@@ -633,28 +766,57 @@ Dispatcher_Client::Dispatcher_Client
   shadow_name = string((const char *)(dispatcher_shm_ptr + 5*sizeof(uint32)
       + db_dir.size()), *(uint32*)(dispatcher_shm_ptr + db_dir.size() +
 		       4*sizeof(uint32)));
+
+  // initialize the socket for the client
+  string socket_name = db_dir + dispatcher_share_name_;
+  socket_descriptor = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (socket_descriptor == -1)
+    throw File_Error
+        (errno, socket_name, "Dispatcher_Client::2");  
+  struct sockaddr_un local;
+  local.sun_family = AF_UNIX;
+  strcpy(local.sun_path, socket_name.c_str());
+  if (connect(socket_descriptor, (struct sockaddr*)&local,
+      sizeof(local.sun_family) + strlen(local.sun_path)) == -1)
+    throw File_Error
+        (errno, socket_name, "Dispatcher_Client::3");
+  
+  pid_t pid = getpid();
+  if (send(socket_descriptor, &pid, sizeof(pid_t), 0) == -1)
+    throw File_Error(errno, dispatcher_share_name, "Dispatcher_Client::4");
 }
 
 Dispatcher_Client::~Dispatcher_Client()
 {
+  close(socket_descriptor);
   munmap((void*)dispatcher_shm_ptr,
 	 Dispatcher::SHM_SIZE + db_dir.size() + shadow_name.size());
   close(dispatcher_shm_fd);
 }
 
+void Dispatcher_Client::send_message(uint32 message, string source_pos)
+{
+  if (send(socket_descriptor, &message, sizeof(uint32), 0) == -1)
+    throw File_Error(errno, dispatcher_share_name, source_pos);
+}
+
+bool Dispatcher_Client::ack_arrived()
+{
+  uint32 pid = getpid();
+  if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+    return true;
+  millisleep(50);  
+  return (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid);
+}
+
 void Dispatcher_Client::write_start()
 {
   pid_t pid = getpid();
+  
   while (true)
   {
-    *(uint32*)dispatcher_shm_ptr = Dispatcher::WRITE_START;
-    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
-    
-    //sleep for a tenth of a second
-    struct timeval timeout_;
-    timeout_.tv_sec = 0;
-    timeout_.tv_usec = 100*1000;
-    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+    send_message(Dispatcher::WRITE_START, "Dispatcher_Client::write_start::socket");
+    millisleep(100);
     
     if (file_exists(shadow_name + ".lock"))
     {
@@ -668,25 +830,18 @@ void Dispatcher_Client::write_start()
       }
       catch (...) {}
     }
-
-    timeout_.tv_usec = 1000*1000;
-    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+    millisleep(1000);
   }
 }
 
 void Dispatcher_Client::write_rollback()
 {
   pid_t pid = getpid();
+  
   while (true)
   {
-    *(uint32*)dispatcher_shm_ptr = Dispatcher::WRITE_ROLLBACK;
-    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
-    
-    //sleep for a tenth of a second
-    struct timeval timeout_;
-    timeout_.tv_sec = 0;
-    timeout_.tv_usec = 100*1000;
-    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+    send_message(Dispatcher::WRITE_ROLLBACK, "Dispatcher_Client::write_rollback::socket");
+    millisleep(100);
     
     if (file_exists(shadow_name + ".lock"))
     {
@@ -702,25 +857,19 @@ void Dispatcher_Client::write_rollback()
     }
     else
       return;
-
-    timeout_.tv_usec = 1000*1000;
-    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+    
+    millisleep(1000);
   }
 }
 
 void Dispatcher_Client::write_commit()
 {
   pid_t pid = getpid();
+  
   while (true)
   {
-    *(uint32*)dispatcher_shm_ptr = Dispatcher::WRITE_COMMIT;
-    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
-    
-    //sleep for a tenth of a second
-    struct timeval timeout_;
-    timeout_.tv_sec = 0;
-    timeout_.tv_usec = 100*1000;
-    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+    send_message(Dispatcher::WRITE_COMMIT, "Dispatcher_Client::write_commit::socket");
+    millisleep(100);
     
     if (file_exists(shadow_name + ".lock"))
     {
@@ -737,31 +886,21 @@ void Dispatcher_Client::write_commit()
     else
       return;
     
-    timeout_.tv_usec = 1000*1000;
-    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+    millisleep(1000);
   }
 }
 
 void Dispatcher_Client::request_read_and_idx()
 {
-  uint32 pid = getpid();
   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+  
   uint counter = 0;
   while (++counter <= 300)
   {
-    *(uint32*)dispatcher_shm_ptr = Dispatcher::REQUEST_READ_AND_IDX;
-    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
+    send_message(Dispatcher::REQUEST_READ_AND_IDX,
+		 "Dispatcher_Client::request_read_and_idx::socket");
     
-    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
-      return;
-    
-    //sleep for a tenth of a second
-    struct timeval timeout_;
-    timeout_.tv_sec = 0;
-    timeout_.tv_usec = 10*1000;
-    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
-    
-    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+    if (ack_arrived())
       return;
   }
   throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::request_read_and_idx::timeout");
@@ -769,24 +908,14 @@ void Dispatcher_Client::request_read_and_idx()
 
 void Dispatcher_Client::read_idx_finished()
 {
-  uint32 pid = getpid();
   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+		     
   uint counter = 0;
   while (++counter <= 300)
   {
-    *(uint32*)dispatcher_shm_ptr = Dispatcher::READ_IDX_FINISHED;
-    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
+    send_message(Dispatcher::READ_IDX_FINISHED, "Dispatcher_Client::read_idx_finished::socket");
     
-    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
-      return;
-    
-    //sleep for a tenth of a second
-    struct timeval timeout_;
-    timeout_.tv_sec = 0;
-    timeout_.tv_usec = 10*1000;
-    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
-    
-    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+    if (ack_arrived())
       return;
   }
   throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::read_idx_finished::timeout");
@@ -794,24 +923,14 @@ void Dispatcher_Client::read_idx_finished()
 
 void Dispatcher_Client::read_finished()
 {
-  uint32 pid = getpid();
   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+  
   uint counter = 0;
   while (++counter <= 300)
   {
-    *(uint32*)dispatcher_shm_ptr = Dispatcher::READ_FINISHED;
-    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
+    send_message(Dispatcher::READ_FINISHED, "Dispatcher_Client::read_finished::socket");
     
-    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
-      return;
-    
-    //sleep for a tenth of a second
-    struct timeval timeout_;
-    timeout_.tv_sec = 0;
-    timeout_.tv_usec = 10*1000;
-    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
-    
-    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+    if (ack_arrived())
       return;
   }
   throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::read_finished::timeout");
@@ -820,76 +939,43 @@ void Dispatcher_Client::read_finished()
 void Dispatcher_Client::purge(uint32 pid)
 {
   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+		     
   while (true)
   {
-    *(uint32*)dispatcher_shm_ptr = Dispatcher::READ_FINISHED;
-    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
+    send_message(Dispatcher::READ_FINISHED, "Dispatcher_Client::purge::socket");
     
-    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
-      return;
-    
-    //sleep for a tenth of a second
-    struct timeval timeout_;
-    timeout_.tv_sec = 0;
-    timeout_.tv_usec = 10*1000;
-    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
-    
-    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+    if (ack_arrived())
       return;
   }
 }
 
 void Dispatcher_Client::ping()
 {
-  uint32 pid = getpid();
-  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
-
-  *(uint32*)dispatcher_shm_ptr = Dispatcher::PING;
-  *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
+  send_message(Dispatcher::PING, "Dispatcher_Client::ping::socket");
 }
 
 void Dispatcher_Client::terminate()
 {
-  uint32 pid = getpid();
   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+		     
   while (true)
   {
-    *(uint32*)dispatcher_shm_ptr = Dispatcher::TERMINATE;
-    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
+    send_message(Dispatcher::TERMINATE, "Dispatcher_Client::terminate::socket");
     
-    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
-      return;
-    
-    //sleep for a hundreth of a second
-    struct timeval timeout_;
-    timeout_.tv_sec = 0;
-    timeout_.tv_usec = 10*1000;
-    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
-    
-    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+    if (ack_arrived())
       return;
   }
 }
 
 void Dispatcher_Client::output_status()
 {
-  uint32 pid = getpid();
   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+		     
   while (true)
   {
-    *(uint32*)dispatcher_shm_ptr = Dispatcher::OUTPUT_STATUS;
-    *(uint32*)(dispatcher_shm_ptr + sizeof(uint32)) = pid;
+    send_message(Dispatcher::OUTPUT_STATUS, "Dispatcher_Client::output_status::socket");
     
-    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
-      return;
-    
-    //sleep for a hundreth of a second
-    struct timeval timeout_;
-    timeout_.tv_sec = 0;
-    timeout_.tv_usec = 10*1000;
-    select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
-    
-    if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+    if (ack_arrived())
       return;
   }
 }

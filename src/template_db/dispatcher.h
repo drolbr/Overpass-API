@@ -131,6 +131,7 @@ class Dispatcher
     
     static const uint32 TERMINATE = 1;
     static const uint32 OUTPUT_STATUS = 2;
+    static const uint32 HANGUP = 3;
     static const uint32 WRITE_START = 101;
     static const uint32 WRITE_ROLLBACK = 102;
     static const uint32 WRITE_COMMIT = 103;
@@ -151,6 +152,10 @@ class Dispatcher
     uint purge_timeout;
     volatile uint8* dispatcher_shm_ptr;
     Dispatcher_Logger* logger;
+    int socket_descriptor;
+    vector< int > started_connections;
+    map< pid_t, int > connection_per_pid;
+    set< pid_t > disconnected;
     
     void copy_shadows_to_mains();
     void copy_mains_to_shadows();
@@ -216,6 +221,10 @@ class Dispatcher_Client
     int dispatcher_shm_fd;
     volatile uint8* dispatcher_shm_ptr;
     string db_dir, shadow_name;
+    int socket_descriptor;
+    
+    bool ack_arrived();
+    void send_message(uint32 message, string source_pos);
 };
 
 #endif
