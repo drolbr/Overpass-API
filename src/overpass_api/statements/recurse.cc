@@ -77,7 +77,8 @@ void collect_items_range(const Statement& stmt, Resource_Manager& rman,
       (rman.get_transaction()->data_index(&file_properties));
   for (typename Block_Backend< TIndex, TObject, typename TContainer
       ::const_iterator >::Range_Iterator
-      it(db.range_begin(req.begin(), req.end())); !(it == db.range_end()); ++it)
+      it(db.range_begin(req.begin(), req.end()));
+	   !(it == db.range_end()); ++it)
   {
     if (++count >= 64*1024)
     {
@@ -129,21 +130,118 @@ vector< Uint31_Index > collect_way_req
   return req;
 }
 
-vector< Uint32_Index > collect_node_req
+inline set< pair< Uint32_Index, Uint32_Index > > calc_node_children_ranges
+    (const vector< uint32 >& way_rel_idxs)
+{
+  set< pair< Uint32_Index, Uint32_Index > > result;
+
+  vector< pair< uint32, uint32 > > ranges;
+  
+  for (vector< uint32 >::const_iterator it = way_rel_idxs.begin();
+      it != way_rel_idxs.end(); ++it)
+  {
+    if (*it & 0x80000000)
+    {
+      uint32 lat = 0;
+      uint32 lon = 0;      
+      uint32 lat_u = 0;
+      uint32 lon_u = 0;
+      uint32 offset = 0;
+      
+      if (*it & 0x00000001)
+      {
+	lat = upper_ilat(*it & 0x2aaaaaa8);
+	lon = upper_ilon(*it & 0x55555554);
+	offset = 2;
+      }
+      else if (*it & 0x00000002)
+      {
+	lat = upper_ilat(*it & 0x2aaaaa80);
+	lon = upper_ilon(*it & 0x55555540);
+	offset = 8;
+      }
+      else if (*it & 0x00000004)
+      {
+	lat = upper_ilat(*it & 0x2aaaa800);
+	lon = upper_ilon(*it & 0x55555400);
+	offset = 0x20;
+      }
+      else if (*it & 0x00000008)
+      {
+	lat = upper_ilat(*it & 0x2aaa8000);
+	lon = upper_ilon(*it & 0x55554000);
+	offset = 0x80;
+      }
+      else if (*it & 0x00000010)
+      {
+	lat = upper_ilat(*it & 0x2aa80000);
+	lon = upper_ilon(*it & 0x55540000);
+	offset = 0x200;
+      }
+      else if (*it & 0x00000020)
+      {
+	lat = upper_ilat(*it & 0x2a800000);
+	lon = upper_ilon(*it & 0x55400000);
+	offset = 0x800;
+      }
+      else if (*it & 0x00000040)
+      {
+	lat = upper_ilat(*it & 0x28000000);
+	lon = upper_ilon(*it & 0x54000000);
+	offset = 0x2000;
+      }
+      else // *it == 0x80000080
+      {
+	lat = 0;
+	lon = 0;
+	offset = 0x8000;
+      }
+
+      ranges.push_back(make_pair(ll_upper(lat<<16, lon<<16),
+				 ll_upper((lat+offset-1)<<16, (lon+offset-1)<<16)+1));
+      ranges.push_back(make_pair(ll_upper(lat<<16, (lon+offset)<<16),
+				 ll_upper((lat+offset-1)<<16, (lon+2*offset-1)<<16)+1));
+      ranges.push_back(make_pair(ll_upper((lat+offset)<<16, lon<<16),
+				 ll_upper((lat+2*offset-1)<<16, (lon+offset-1)<<16)+1));
+      ranges.push_back(make_pair(ll_upper((lat+offset)<<16, (lon+offset)<<16),
+				 ll_upper((lat+2*offset-1)<<16, (lon+2*offset-1)<<16)+1));
+      for (uint32 i = lat; i <= lat_u; ++i)
+      {
+	for (uint32 j = lon; j <= lon_u; ++j)
+	  result.insert(make_pair(ll_upper(i<<16, j<<16), ll_upper(i<<16, j<<16)+1));
+      }
+    }
+    else
+      ranges.push_back(make_pair(*it, (*it) + 1));
+  }
+  sort(ranges.begin(), ranges.end());
+  uint32 pos = 0;
+  for (vector< pair< uint32, uint32 > >::const_iterator it = ranges.begin();
+      it != ranges.end(); ++it)
+  {
+    if (pos < it->first)
+      pos = it->first;
+    result.insert(make_pair(pos, it->second));
+    pos = it->second;
+  }
+  return result;
+}
+
+set< pair< Uint32_Index, Uint32_Index > > collect_node_req
     (const Statement& stmt, Resource_Manager& rman,
      const vector< uint32 >& map_ids, const vector< uint32 >& parents)
 {
-  vector< Uint32_Index > req = calc_node_children(parents);
+  set< pair< Uint32_Index, Uint32_Index > > req = calc_node_children_ranges(parents);
   
   Random_File< Uint32_Index > random
       (rman.get_transaction()->random_index(osm_base_settings().NODES));
   for (vector< uint32 >::const_iterator
       it(map_ids.begin()); it != map_ids.end(); ++it)
-    req.push_back(random.get(*it));
+  {
+    Uint32_Index idx = random.get(*it);
+    req.insert(make_pair(idx, idx.val() + 1));
+  }
   
-  rman.health_check(stmt);
-  sort(req.begin(), req.end());
-  req.erase(unique(req.begin(), req.end()), req.end());
   rman.health_check(stmt);
   
   return req;
@@ -280,7 +378,7 @@ vector< Uint31_Index > collect_indices_31_rels
   return collect_relation_req(stmt, rman, map_ids);
 }
 
-vector< Uint32_Index > collect_indices_32
+set< pair< Uint32_Index, Uint32_Index > > collect_indices_32
     (const Statement& stmt, Resource_Manager& rman,
      map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
      map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end)
@@ -303,7 +401,7 @@ vector< Uint32_Index > collect_indices_32
   return collect_node_req(stmt, rman, map_ids, parents);
 }
 
-vector< Uint32_Index > collect_indices_from_way
+set< pair< Uint32_Index, Uint32_Index > > collect_indices_from_way
     (const Statement& stmt, Resource_Manager& rman,
      map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_begin,
      map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_end)
@@ -314,13 +412,45 @@ vector< Uint32_Index > collect_indices_from_way
   for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
     it(ways_begin); it != ways_end; ++it)
   {
-    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xf) == 0))
+/*    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xf) == 0))
       // Treat ways with really large indices: get the node indexes from nodes.map.
       extract_ids(it->second, map_ids);
+    else
+      parents.push_back(it->first.val());*/
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xfc) != 0))
+    {
+      // Treat ways with really large indices: get the node indexes from the segement indexes
+      for (vector< Way_Skeleton >::const_iterator it2 = it->second.begin();
+          it2 != it->second.end(); ++it2)
+      {
+	bool large_indices = false;
+	for (vector< Uint31_Index >::const_iterator it3 = it2->segment_idxs.begin();
+	    it3 != it2->segment_idxs.end(); ++it3)
+	{
+	  if ((it3->val() & 0x80000000) && ((it3->val() & 0xf) == 0))
+	  {
+	    //Treat ways with really large indices: get the node indexes from nodes.map.
+	    large_indices = true;
+	    break;
+	  }
+	}
+	
+	if (large_indices)
+	  extract_ids(it->second, map_ids);
+	else
+	{
+	  for (vector< Uint31_Index >::const_iterator it3 = it2->segment_idxs.begin();
+	      it3 != it2->segment_idxs.end(); ++it3)
+	    parents.push_back(it3->val());
+	}
+      }
+    }
     else
       parents.push_back(it->first.val());
   }
   sort(map_ids.begin(), map_ids.end());
+  sort(parents.begin(), parents.end());
+  parents.erase(unique(parents.begin(), parents.end()), parents.end());
   rman.health_check(stmt);
   
   return collect_node_req(stmt, rman, map_ids, parents);
@@ -613,9 +743,10 @@ void collect_nodes
      map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
      map< Uint32_Index, vector< Node_Skeleton > >& result)
 {
-  vector< Uint32_Index > req = collect_indices_32(stmt, rman, rels_begin, rels_end);
+  set< pair< Uint32_Index, Uint32_Index > > req =
+      collect_indices_32(stmt, rman, rels_begin, rels_end);
   vector< uint32 > ids = collect_ids(stmt, rman, Relation_Entry::NODE, rels_begin, rels_end);
-  collect_items(stmt, rman, *osm_base_settings().NODES, req, ids, result);
+  collect_items_range(stmt, rman, *osm_base_settings().NODES, req, ids, result);
 }
 
 void collect_nodes
@@ -642,14 +773,15 @@ void collect_nodes
      map< Uint32_Index, vector< Node_Skeleton > >& result,
      const vector< uint32 >& ids)
 {
-  vector< Uint32_Index > req = collect_indices_32(stmt, rman, rels_begin, rels_end);
+  set< pair< Uint32_Index, Uint32_Index > > req =
+      collect_indices_32(stmt, rman, rels_begin, rels_end);
   vector< uint32 > children_ids = collect_ids
       (stmt, rman, Relation_Entry::NODE, rels_begin, rels_end);
   vector< uint32 > intersect_ids(ids.size());
   intersect_ids.erase(set_intersection
       (ids.begin(), ids.end(), children_ids.begin(), children_ids.end(), intersect_ids.begin()),
       intersect_ids.end());
-  collect_items(stmt, rman, *osm_base_settings().NODES, req, intersect_ids, result);
+  collect_items_range(stmt, rman, *osm_base_settings().NODES, req, intersect_ids, result);
 }
 
 void collect_nodes
@@ -669,9 +801,10 @@ void collect_nodes
      map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_end,
      map< Uint32_Index, vector< Node_Skeleton > >& result)
 {
-  vector< Uint32_Index > req = collect_indices_from_way(stmt, rman, ways_begin, ways_end);
+  set< pair< Uint32_Index, Uint32_Index > > req =
+      collect_indices_from_way(stmt, rman, ways_begin, ways_end);
   vector< uint32 > ids = collect_ids(stmt, rman, ways_begin, ways_end);
-  collect_items(stmt, rman, *osm_base_settings().NODES, req, ids, result);
+  collect_items_range(stmt, rman, *osm_base_settings().NODES, req, ids, result);
 }
 
 void collect_nodes
@@ -697,13 +830,14 @@ void collect_nodes
      map< Uint32_Index, vector< Node_Skeleton > >& result,
      const vector< uint32 >& ids)
 {
-  vector< Uint32_Index > req = collect_indices_from_way(stmt, rman, ways_begin, ways_end);
+  set< pair< Uint32_Index, Uint32_Index > > req =
+      collect_indices_from_way(stmt, rman, ways_begin, ways_end);
   vector< uint32 > children_ids = collect_ids(stmt, rman, ways_begin, ways_end);
   vector< uint32 > intersect_ids(ids.size());
   intersect_ids.erase(set_intersection
       (ids.begin(), ids.end(), children_ids.begin(), children_ids.end(), intersect_ids.begin()),
       intersect_ids.end());
-  collect_items(stmt, rman, *osm_base_settings().NODES, req, intersect_ids, result);
+  collect_items_range(stmt, rman, *osm_base_settings().NODES, req, intersect_ids, result);
 }
 
 //-----------------------------------------------------------------------------

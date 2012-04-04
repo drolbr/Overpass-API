@@ -227,6 +227,24 @@ void Way_Updater::update_moved_idxs
     delete transaction;
 }
 
+vector< Uint31_Index > calc_segment_idxs(const vector< uint32 >& nd_idxs)
+{
+  vector< Uint31_Index > result;
+  vector< uint32 > segment_nd_idxs(2, 0);
+  for (vector< uint32 >::size_type i = 1; i < nd_idxs.size(); ++i)
+  {
+    segment_nd_idxs[0] = nd_idxs[i-1];
+    segment_nd_idxs[1] = nd_idxs[i];
+    Uint31_Index segment_index = Way::calc_index(segment_nd_idxs);
+    if ((segment_index.val() & 0x80000000) != 0)
+      result.push_back(segment_index);
+  }
+  sort(result.begin(), result.end());
+  result.erase(unique(result.begin(), result.end()), result.end());
+  
+  return result;
+}
+
 void filter_affected_ways(Transaction& transaction, 
 			  vector< pair< uint32, bool > >& ids_to_modify,
 			  vector< Way >& ways_to_insert,
@@ -255,11 +273,17 @@ void filter_affected_ways(Transaction& transaction,
       nd_idxs.push_back(used_nodes[*nit]);
     
     uint32 index(Way::calc_index(nd_idxs));
-    if (wit->index != index)
+
+    vector< Uint31_Index > segment_idxs;
+    if ((index & 0x80000000) != 0 && (index & 0xfc) != 0)
+      segment_idxs = calc_segment_idxs(nd_idxs);
+    
+    if (wit->index != index || wit->segment_idxs != segment_idxs)
     {
       ids_to_modify.push_back(make_pair(wit->id, true));
       ways_to_insert.push_back(*wit);
       ways_to_insert.back().index = index;
+      ways_to_insert.back().segment_idxs = segment_idxs;
     }
   }
 }
@@ -338,6 +362,7 @@ void Way_Updater::compute_indexes(vector< Way* >& ways_ptr)
   for (map< uint32, uint32 >::iterator it(used_nodes.begin());
       it != used_nodes.end(); ++it)
     it->second = node_random.get(it->first).val();
+
   for (vector< Way* >::iterator wit = ways_ptr.begin(); wit != ways_ptr.end(); ++wit)
   {
     vector< uint32 > nd_idxs;
@@ -346,6 +371,8 @@ void Way_Updater::compute_indexes(vector< Way* >& ways_ptr)
       nd_idxs.push_back(used_nodes[*nit]);
     
     (*wit)->index = Way::calc_index(nd_idxs);
+    if (((*wit)->index & 0x80000000) != 0 && ((*wit)->index & 0xfc) != 0)
+      (*wit)->segment_idxs = calc_segment_idxs(nd_idxs);
   }
   vector< Way* >::const_iterator wit = ways_ptr.begin();
   for (vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::iterator
@@ -408,7 +435,7 @@ void Way_Updater::update_members
     Uint31_Index idx(it->first);
     for (vector< uint32 >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
-      db_to_delete[idx].insert(Way_Skeleton(*it2, vector< uint32 >()));
+      db_to_delete[idx].insert(Way_Skeleton(*it2, vector< uint32 >(), vector< Uint31_Index >()));
   }
   vector< Way* >::const_iterator wit = ways_ptr.begin();
   for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());

@@ -34,6 +34,7 @@ struct Way
   uint32 id;
   uint32 index;
   vector< uint32 > nds;
+  vector< Uint31_Index > segment_idxs;
   vector< pair< string, string > > tags;
   
   Way() : id(0), index(0) {}
@@ -69,6 +70,7 @@ struct Way_Skeleton
 {
   uint32 id;
   vector< uint32 > nds;
+  vector< Uint31_Index > segment_idxs;
   
   Way_Skeleton() {}
   
@@ -77,31 +79,39 @@ struct Way_Skeleton
     id = *(uint32*)data;
     nds.resize(*((uint16*)data + 2));
     for (int i(0); i < *((uint16*)data + 2); ++i)
-      nds[i] = *(uint32*)((uint16*)data + 3 + 2*i);
+      nds[i] = *(uint32*)((uint16*)data + 4 + 2*i);
+    uint16* start_ptr = (uint16*)data + 4 + 2*nds.size();
+    segment_idxs.resize(*((uint16*)data + 3), 0u);
+    for (int i(0); i < *((uint16*)data + 3); ++i)
+      segment_idxs[i] = *(Uint31_Index*)(start_ptr + 2*i);
   }
   
   Way_Skeleton(const Way& way)
-  : id(way.id), nds(way.nds) {}
+  : id(way.id), nds(way.nds), segment_idxs(way.segment_idxs) {}
   
-  Way_Skeleton(uint32 id_, const vector< uint32 >& nds_)
-  : id(id_), nds(nds_) {}
+  Way_Skeleton(uint32 id_, const vector< uint32 >& nds_, const vector< Uint31_Index >& segment_idxs_)
+  : id(id_), nds(nds_), segment_idxs(segment_idxs_) {}
   
   uint32 size_of() const
   {
-    return 6 + 4*nds.size();
+    return 8 + 4*nds.size() + 4*segment_idxs.size();
   }
   
   static uint32 size_of(void* data)
   {
-    return (6 + 4 * *((uint16*)data + 2));
+    return (8 + 4 * *((uint16*)data + 2) + 4 * *((uint16*)data + 3));
   }
   
   void to_data(void* data) const
   {
     *(uint32*)data = id;
     *((uint16*)data + 2) = nds.size();
+    *((uint16*)data + 3) = segment_idxs.size();
     for (uint i(0); i < nds.size(); ++i)
-      *(uint32*)((uint16*)data + 3 + 2*i) = nds[i];
+      *(uint32*)((uint16*)data + 4 + 2*i) = nds[i];
+    uint16* start_ptr = (uint16*)data + 4 + 2*nds.size();
+    for (uint i(0); i < segment_idxs.size(); ++i)
+      *(Uint31_Index*)(start_ptr + 2*i) = segment_idxs[i];
   }
   
   bool operator<(const Way_Skeleton& a) const

@@ -150,7 +150,9 @@ void Meta_Collector< TIndex, TObject >::reset()
   else
   {
     range_it = new typename Block_Backend< TIndex, OSM_Element_Metadata_Skeleton >
-        ::Range_Iterator(meta_db->range_begin(used_ranges.begin(), used_ranges.end()));
+        ::Range_Iterator(meta_db->range_begin(
+	    Default_Range_Iterator< TIndex >(used_ranges.begin()),
+	    Default_Range_Iterator< TIndex >(used_ranges.end())));
 	
     if (!(*range_it == meta_db->range_end()))
       current_index = new TIndex(range_it->index());
