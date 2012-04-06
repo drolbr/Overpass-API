@@ -350,7 +350,7 @@ vector< Uint31_Index > collect_indices_31
   {
     if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xfc) != 0))
     {
-      // Treat ways with really large indices: get the node indexes from the segement indexes
+      // Treat relations with really large indices: get the ways indexes explicitly
       for (vector< Relation_Skeleton >::const_iterator it2 = it->second.begin();
           it2 != it->second.end(); ++it2)
       {
