@@ -45,7 +45,9 @@ if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
 pushd "$EXEC_DIR"
 
 mkdir -p "$ABS_CLONE_DIR"
-rm -f "$ABS_CLONE_DIR"/*
+rm -f "$ABS_CLONE_DIR"/*.bin
+rm -f "$ABS_CLONE_DIR"/*.map
+rm -f "$ABS_CLONE_DIR"/*.idx
 cp "$DB_DIR/replicate_id" "$ABS_CLONE_DIR/replicate_id"
 ./osm3s_query --clone="$ABS_CLONE_DIR"
 
