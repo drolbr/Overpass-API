@@ -46,6 +46,8 @@ struct Relation
   uint32 id;
   uint32 index;
   vector< Relation_Entry > members;
+  vector< Uint31_Index > node_idxs;
+  vector< Uint31_Index > way_idxs;
   vector< pair< string, string > > tags;
   
   Relation() {}
@@ -81,6 +83,8 @@ struct Relation_Skeleton
 {
   uint32 id;
   vector< Relation_Entry > members;
+  vector< Uint31_Index > node_idxs;
+  vector< Uint31_Index > way_idxs;
   
   Relation_Skeleton() {}
   
@@ -88,40 +92,58 @@ struct Relation_Skeleton
   {
     id = *(uint32*)data;
     members.resize(*((uint32*)data + 1));
+    node_idxs.resize(*((uint32*)data + 2), 0u);
+    way_idxs.resize(*((uint32*)data + 3), 0u);
     for (uint i(0); i < *((uint32*)data + 1); ++i)
     {
-      members[i].ref = *((uint32*)data + 2 + 2*i);
-      members[i].role = *((uint32*)data + 3 + 2*i) & 0xffffff;
-      members[i].type = *((uint8*)data + 15 + 8*i);
+      members[i].ref = *((uint32*)data + 4 + 2*i);
+      members[i].role = *((uint32*)data + 5 + 2*i) & 0xffffff;
+      members[i].type = *((uint8*)data + 23 + 8*i);
     }
+    uint32* start_ptr = (uint32*)data + 4 + 2*members.size();
+    for (uint i = 0; i < node_idxs.size(); ++i)
+      node_idxs[i] = *(start_ptr + i);
+    start_ptr = (uint32*)data + 4 + 2*members.size() + node_idxs.size();
+    for (uint i = 0; i < way_idxs.size(); ++i)
+      way_idxs[i] = *(start_ptr + i);
   }
   
   Relation_Skeleton(const Relation& rel)
-  : id(rel.id), members(rel.members) {}
+      : id(rel.id), members(rel.members), node_idxs(rel.node_idxs), way_idxs(rel.way_idxs) {}
   
-  Relation_Skeleton(uint32 id_, const vector< Relation_Entry >& members_)
-  : id(id_), members(members_) {}
+  Relation_Skeleton(uint32 id_, const vector< Relation_Entry >& members_,
+		    const vector< Uint31_Index >& node_idxs_,
+		    const vector< Uint31_Index >& way_idxs_)
+      : id(id_), members(members_), node_idxs(node_idxs_), way_idxs(way_idxs_) {}
   
   uint32 size_of() const
   {
-    return 8 + 8*members.size();
+    return 16 + 8*members.size() + 4*node_idxs.size() + 4*way_idxs.size();
   }
   
   static uint32 size_of(void* data)
   {
-    return (8 + 8 * *((uint32*)data + 1));
+    return (16 + 8 * *((uint32*)data + 1) + 4* *((uint32*)data + 2) + 4* *((uint32*)data + 3));
   }
   
   void to_data(void* data) const
   {
     *(uint32*)data = id;
     *((uint32*)data + 1) = members.size();
-    for (uint i(0); i < members.size(); ++i)
+    *((uint32*)data + 2) = node_idxs.size();
+    *((uint32*)data + 3) = way_idxs.size();
+    for (uint i = 0; i < members.size(); ++i)
     {
-      *((uint32*)data + 2 + 2*i) = members[i].ref;
-      *((uint32*)data + 3 + 2*i) = members[i].role & 0xffffff;
-      *((uint8*)data + 15 + 8*i) = members[i].type;
+      *((uint32*)data + 4 + 2*i) = members[i].ref;
+      *((uint32*)data + 5 + 2*i) = members[i].role & 0xffffff;
+      *((uint8*)data + 23 + 8*i) = members[i].type;
     }
+    Uint31_Index* start_ptr = (Uint31_Index*)data + 4 + 2*members.size();
+    for (uint i = 0; i < node_idxs.size(); ++i)
+      *(start_ptr + i) = node_idxs[i];
+    start_ptr = (Uint31_Index*)data + 4 + 2*members.size() + node_idxs.size();
+    for (uint i = 0; i < way_idxs.size(); ++i)
+      *(start_ptr + i) = way_idxs[i];
   }
   
   bool operator<(const Relation_Skeleton& a) const

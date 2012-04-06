@@ -348,11 +348,19 @@ vector< Uint31_Index > collect_indices_31
   for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
       it = rels_begin; it != rels_end; ++it)
   {
-    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xf) == 0))
-      // Treat relations with really large indices: get the node indexes from nodes.map.
-      extract_ids(it->second, map_ids, Relation_Entry::WAY);
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xfc) != 0))
+    {
+      // Treat ways with really large indices: get the node indexes from the segement indexes
+      for (vector< Relation_Skeleton >::const_iterator it2 = it->second.begin();
+          it2 != it->second.end(); ++it2)
+      {
+	for (vector< Uint31_Index >::const_iterator it3 = it2->way_idxs.begin();
+	    it3 != it2->way_idxs.end(); ++it3)
+	  parents.push_back(it3->val());
+      }
+    }
     else
-      parents.push_back(it->first.val());      
+      parents.push_back(it->first.val());
   }    
   sort(map_ids.begin(), map_ids.end());
   rman.health_check(stmt);
@@ -389,11 +397,36 @@ set< pair< Uint32_Index, Uint32_Index > > collect_indices_32
   for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
     it = rels_begin; it != rels_end; ++it)
   {
-    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xf) == 0))
-      // Treat relations with really large indices: get the node indexes from nodes.map.
-      extract_ids(it->second, map_ids, Relation_Entry::NODE);
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xfc) != 0))
+    {
+      // Treat ways with really large indices: get the node indexes from the segement indexes
+      for (vector< Relation_Skeleton >::const_iterator it2 = it->second.begin();
+          it2 != it->second.end(); ++it2)
+      {
+	bool large_indices = false;
+	for (vector< Uint31_Index >::const_iterator it3 = it2->node_idxs.begin();
+	    it3 != it2->node_idxs.end(); ++it3)
+	{
+	  if ((it3->val() & 0x80000000) && ((it3->val() & 0xf) == 0))
+	  {
+	    //Treat relations with really large indices: get the node indexes from nodes.map.
+	    large_indices = true;
+	    break;
+	  }
+	}
+	
+	if (large_indices)
+	  extract_ids(it->second, map_ids, Relation_Entry::NODE);
+	else
+	{
+	  for (vector< Uint31_Index >::const_iterator it3 = it2->node_idxs.begin();
+	      it3 != it2->node_idxs.end(); ++it3)
+	    parents.push_back(it3->val());
+	}
+      }
+    }
     else
-      parents.push_back(it->first.val());      
+      parents.push_back(it->first.val());
   }    
   sort(map_ids.begin(), map_ids.end());
   rman.health_check(stmt);
@@ -412,11 +445,6 @@ set< pair< Uint32_Index, Uint32_Index > > collect_indices_from_way
   for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
     it(ways_begin); it != ways_end; ++it)
   {
-/*    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xf) == 0))
-      // Treat ways with really large indices: get the node indexes from nodes.map.
-      extract_ids(it->second, map_ids);
-    else
-      parents.push_back(it->first.val());*/
     if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xfc) != 0))
     {
       // Treat ways with really large indices: get the node indexes from the segement indexes

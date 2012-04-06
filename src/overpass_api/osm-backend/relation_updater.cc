@@ -179,6 +179,28 @@ void Relation_Updater::update_moved_idxs
     delete transaction;
 }
 
+vector< Uint31_Index > calc_node_idxs(const vector< uint32 >& node_idxs)
+{
+  vector< Uint31_Index > result;
+  for (vector< uint32 >::size_type i = 0; i < node_idxs.size(); ++i)
+    result.push_back((node_idxs[i] & 0x7fffff00) | 0x80000002);
+  sort(result.begin(), result.end());
+  result.erase(unique(result.begin(), result.end()), result.end());
+  
+  return result;
+}
+
+vector< Uint31_Index > calc_way_idxs(const vector< uint32 >& way_idxs)
+{
+  vector< Uint31_Index > result;
+  for (vector< uint32 >::size_type i = 0; i < way_idxs.size(); ++i)
+    result.push_back(way_idxs[i]);
+  sort(result.begin(), result.end());
+  result.erase(unique(result.begin(), result.end()), result.end());
+  
+  return result;
+}
+
 void Relation_Updater::find_affected_relations
     (const vector< pair< uint32, uint32 > >& moved_nodes,
      const vector< pair< uint32, uint32 > >& moved_ways)
@@ -270,22 +292,38 @@ void Relation_Updater::find_affected_relations
       rit != rels_to_insert.end(); ++rit)
   {
     vector< uint32 > member_idxs;
-    for (vector< Relation_Entry >::const_iterator nit(rit->members.begin());
+    vector< uint32 > node_idxs;
+    vector< uint32 > way_idxs;
+    for (vector< Relation_Entry >::iterator nit(rit->members.begin());
         nit != rit->members.end(); ++nit)
     {
       if (nit->type == Relation_Entry::NODE)
+      {
 	member_idxs.push_back(used_nodes[nit->ref]);
+	node_idxs.push_back(used_nodes[nit->ref]);
+      }
       else if (nit->type == Relation_Entry::WAY)
+      {
 	member_idxs.push_back(used_ways[nit->ref]);
+	way_idxs.push_back(used_ways[nit->ref]);
+      }
     }
     
-    uint32 index(Relation::calc_index(member_idxs));
-    if (rit != writ)
-      *writ = *rit;
-    if (writ->index != index)
+    uint32 index = Relation::calc_index(member_idxs);
+    vector< Uint31_Index > node_idxs_;
+    vector< Uint31_Index > way_idxs_;
+    if ((index & 0x80000000) != 0 && (index & 0xfc) != 0)
     {
-      ids_to_modify.push_back(make_pair(writ->id, true));
+      node_idxs_ = calc_node_idxs(node_idxs);
+      way_idxs_ = calc_way_idxs(way_idxs);
+    }    
+    if (rit->index != index || rit->node_idxs != node_idxs_ || rit->way_idxs != way_idxs_)
+    {
+      ids_to_modify.push_back(make_pair(rit->id, true));
+      *writ = *rit;
       writ->index = index;
+      writ->node_idxs = node_idxs_;
+      writ->way_idxs = way_idxs_;
       ++writ;
     }
   }
@@ -334,15 +372,28 @@ void Relation_Updater::compute_indexes(vector< Relation* >& rels_ptr)
       rit != rels_ptr.end(); ++rit)
   {
     vector< uint32 > member_idxs;
+    vector< uint32 > node_idxs;
+    vector< uint32 > way_idxs;
     for (vector< Relation_Entry >::iterator nit((*rit)->members.begin());
         nit != (*rit)->members.end(); ++nit)
     {
       if (nit->type == Relation_Entry::NODE)
+      {
 	member_idxs.push_back(used_nodes[nit->ref]);
+	node_idxs.push_back(used_nodes[nit->ref]);
+      }
       else if (nit->type == Relation_Entry::WAY)
+      {
 	member_idxs.push_back(used_ways[nit->ref]);
+	way_idxs.push_back(used_ways[nit->ref]);
+      }
     }
     (*rit)->index = Relation::calc_index(member_idxs);
+    if (((*rit)->index & 0x80000000) != 0 && ((*rit)->index & 0xfc) != 0)
+    {
+      (*rit)->node_idxs = calc_node_idxs(node_idxs);
+      (*rit)->way_idxs = calc_way_idxs(way_idxs);
+    }
   }
   vector< Relation* >::const_iterator rit(rels_ptr.begin());
   for (vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::iterator
@@ -403,7 +454,8 @@ void Relation_Updater::update_members(vector< Relation* >& rels_ptr,
     Uint31_Index idx(it->first);
     for (vector< uint32 >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
-    db_to_delete[idx].insert(Relation_Skeleton(*it2, vector< Relation_Entry >()));
+    db_to_delete[idx].insert(Relation_Skeleton(*it2, vector< Relation_Entry >(),
+					       vector< Uint31_Index >(), vector< Uint31_Index >()));
   }
   vector< Relation* >::const_iterator rit(rels_ptr.begin());
   for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
