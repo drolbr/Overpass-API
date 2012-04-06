@@ -17,37 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 
-if [[ -z $2  ]]; then
-{
-  echo "Usage: $0 database_dir clone_dir"
-  exit 0
-}; fi
+CLONE_DIR="/home/roland/osm-3s/html/clone"
 
-DB_DIR="$1"
-if [[ ! ${DB_DIR:0:1} == "/" ]]; then
-{
-  DB_DIR="`pwd`/$DB_DIR"
-}; fi
+echo "Content-Type: text/plain; charset=utf-8"
+echo
+echo "http://overpass-api.de/clone/"
 
-CLONE_DIR="$2"
-ABS_CLONE_DIR="$2"
-if [[ ! ${ABS_CLONE_DIR:0:1} == "/" ]]; then
-{
-  ABS_CLONE_DIR="`pwd`/$ABS_CLONE_DIR"
-}; fi
-
-EXEC_DIR="`dirname $0`/"
-if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
-{
-  EXEC_DIR="`pwd`/$EXEC_DIR"
-}; fi
-
-pushd "$EXEC_DIR"
-
-mkdir -p "$ABS_CLONE_DIR"
-rm -f "$ABS_CLONE_DIR"/*
-cp "$DB_DIR/replicate_id" "$ABS_CLONE_DIR/replicate_id"
-./osm3s_query --clone="$ABS_CLONE_DIR"
-
-popd
-
+touch "$CLONE_DIR/trigger"
+chmod 666 "$CLONE_DIR/trigger"
