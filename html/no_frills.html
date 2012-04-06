@@ -33,6 +33,9 @@ make CXXFLAGS=&quot;-O3&quot; install</pre>
 <p><a href="#startup">Import a planet file and configure minutely updates:</a></p>
 <pre>wget -O planet.osm.bz2 &quot;http://ftp.heanet.ie/mirrors/openstreetmap.org/planet-latest.osm.bz2&quot;
 ../src/bin/init_osm3s.sh planet.osm.bz2 &quot;../db/&quot; &quot;../&quot; --meta</pre>
+<pre>nohup ../bin/dispatcher --osm-base --meta --db-dir=&quot;../db/&quot; &amp;
+nohup ../bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/minute-replicate/&quot; &quot;../minute-diffs/&quot; &amp;
+nohup ../bin/apply_osc_to_db.sh &quot;../db/&quot; &quot;../minute-diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
 
 
 <h2><a name="required">Requirements</a></h2>

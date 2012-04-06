@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+# Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
+#
+# This file is part of Overpass_API.
+#
+# Overpass_API is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Overpass_API is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+
+BASE_DIR="/home/roland/osm-3s/html/"
+
+echo "Content-Type: application/xml; charset=utf-8"
+echo
+echo -e "\
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
+<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\"\n\
+  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n\
+  xsi:schemaLocation=\"http://www.sitemaps.org/schemas/sitemap/0.9\n\
+      http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd\">\n\
+\n\
+  <url>\n\
+    <loc>http://overpass-api.de/</loc>\n\
+    <lastmod>`date -r $BASE_DIR/index.html +%F`</lastmod>\n\
+    <changefreq>monthly</changefreq>\n\
+  </url>"
+
+for I in "$BASE_DIR"/*.html; do
+{
+  if [[ $I != "$BASE_DIR"/index.html && $I != "$BASE_DIR"/google271f53434c229fc4.html ]]; then
+  {
+    echo -e "\
+\n\
+  <url>\n\
+    <loc>http://overpass-api.de/`basename $I`</loc>\n\
+    <lastmod>`date -r $I +%F`</lastmod>\n\
+    <changefreq>monthly</changefreq>\n\
+  </url>"
+
+  }; fi
+}; done
+
+echo -e "\n\
+</urlset>\n\
+"

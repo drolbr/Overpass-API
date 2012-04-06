@@ -1,2 +1,2 @@
 User-agent: *
-Sitemap: http://overpass-api.de/sitemap.xml
+Sitemap: http://overpass-api.de/api/sitemap
