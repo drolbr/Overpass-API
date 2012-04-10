@@ -1,0 +1,152 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
+  <title>OSM3S on Mapnik via Open Layers</title>
+  <script src="http://openlayers.org/api/OpenLayers.js"></script>
+  <script src="http://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
+  <script type="text/javascript">
+      var lat = 53.86;
+      var lon = 8.44;
+      var zoom = 18;
+      /*var data_url = "http://overpass-api.de/api/interpreter?data=node[name=%22Im Tannenbusch%22][highway=bus_stop];out+skel;";*/
+      var data_url = "http://overpass-api.de/api/interpreter?data=(rel[ref=18][network=VRS];way(r);node(w););out+skel;";
+      var map;
+
+      function setStatusText(text)
+      {
+          var div = document.getElementById("statusline").firstChild;
+          div.deleteData(0, div.nodeValue.length);
+          div.appendData(text);
+      }
+
+      DetectBoundsOSMFormat = OpenLayers.Class(OpenLayers.Format.OSM, {
+
+          min_lat: 180.0,
+          max_lat: -180.0,
+          min_lon: 90.0,
+          max_lon: -90.0,
+          zoom: 0,
+
+          getNodes: function(doc)
+          {
+            var node_list = doc.getElementsByTagName("node");
+            var nodes = {};
+            for (var i = 0; i < node_list.length; i++)
+            {
+              var node = node_list[i];
+              var id = node.getAttribute("id");
+              nodes[id] = {
+                'lat': node.getAttribute("lat"),
+                'lon': node.getAttribute("lon"),
+                'node': node
+              };
+
+              if (nodes[id].lat < this.min_lat)
+                this.min_lat = nodes[id].lat;
+              if (nodes[id].lat > this.max_lat)
+                this.max_lat = nodes[id].lat;
+              if (nodes[id].lon < this.min_lon)
+                this.min_lon = nodes[id].lon;
+              if (nodes[id].lon > this.max_lon)
+                this.max_lon = nodes[id].lon;
+            }
+
+            if (this.min_lat == 180.0)
+            {
+                this.min_lat = 0;
+                this.max_lat = 0;
+            }
+            if (this.min_lon == 90.0)
+            {
+                this.min_lon = 0;
+                this.max_lon = 0;
+            }
+
+            return nodes;
+          },          
+
+          CLASS_NAME: "DetectBoundsOSMFormat"
+      });
+
+      var osm_format = new DetectBoundsOSMFormat();
+
+      function make_features_added_closure() {
+          return function(evt) {
+
+              var lonLat = new OpenLayers.LonLat(
+                  (Number(osm_format.min_lon) + Number(osm_format.max_lon))/2.0,
+                  (Number(osm_format.min_lat) + Number(osm_format.max_lat))/2.0)
+                  .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+              var southwest = new OpenLayers.LonLat(
+                  Number(osm_format.min_lon), Number(osm_format.min_lat))
+                  .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+              var northeast = new OpenLayers.LonLat(
+                  Number(osm_format.max_lon), Number(osm_format.max_lat))
+                  .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+            map.setCenter(lonLat);
+
+            var extent = map.getExtent();
+            extent.extend(southwest);
+            extent.extend(northeast);
+            map.zoomToExtent(extent);
+
+            alert(map.getExtent().getWidth() + " " + map.getExtent().getHeight());
+
+          };
+      }
+
+      function init(){
+          map = new OpenLayers.Map ("map", {
+          controls:[
+              new OpenLayers.Control.Navigation(),
+              new OpenLayers.Control.PanZoomBar(),
+              new OpenLayers.Control.LayerSwitcher(),
+              new OpenLayers.Control.Attribution()],
+              maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
+              maxResolution: 156543.0399,
+              numZoomLevels: 19,
+              units: 'm',
+              projection: new OpenLayers.Projection("EPSG:900913"),
+              displayProjection: new OpenLayers.Projection("EPSG:4326")
+          } );
+
+          layerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
+          map.addLayer(layerMapnik);
+          layerCycleMap = new OpenLayers.Layer.OSM.CycleMap("CycleMap");
+          map.addLayer(layerCycleMap);
+
+          var lonLat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+          //Initialise the vector layer using OpenLayers.Format.OSM
+          var styleMap = new OpenLayers.StyleMap({
+              strokeColor: "blue",
+              strokeWidth: 6,
+              pointRadius: 10,
+              fillColor: "blue"
+          });
+          var layer = new OpenLayers.Layer.Vector("Polygon", {
+              strategies: [new OpenLayers.Strategy.Fixed()],
+              protocol: new OpenLayers.Protocol.HTTP({
+                  url: data_url,
+                  format: osm_format//new OpenLayers.Format.OSM()
+              }),
+              styleMap: styleMap,
+              projection: new OpenLayers.Projection("EPSG:4326")
+          });
+
+          map.setCenter(lonLat, zoom);
+
+          layer.events.register("featuresadded", layer, make_features_added_closure(map, layer));
+
+          map.addLayers([layer]);
+      }
+  </script>
+</head>
+<body onload="init()">
+  <div id="map" class="smallmap"></div>
+
+</body>
+</html>

@@ -108,9 +108,9 @@
           map.setCenter (lonLat, zoom);
 
           map.addLayers([
-              make_layer("api/interpreter?data=node[amenity=kindergarten](bbox);out;(way[amenity=kindergarten](bbox);node(w););out;", "green"),
-              make_layer("api/interpreter?data=node[amenity=school](bbox);out;(way[amenity=school](bbox);node(w););out;", "blue"),
-              make_layer("api/interpreter?data=node[amenity=university](bbox);out;(way[amenity=university](bbox);node(w););out;", "orange")
+              make_layer("api/interpreter?data=node[amenity=kindergarten](bbox);out;(way[amenity=kindergarten](bbox);node(w););out+skel;", "green"),
+              make_layer("api/interpreter?data=node[amenity=school](bbox);out;(way[amenity=school](bbox);node(w););out+skel;", "blue"),
+              make_layer("api/interpreter?data=node[amenity=university](bbox);out;(way[amenity=university](bbox);node(w););out+skel;", "orange")
           ]);
       }
   </script>

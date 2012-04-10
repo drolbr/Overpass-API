@@ -77,10 +77,94 @@ echo -e "\
   <script src=\"http://openlayers.org/api/OpenLayers.js\"></script>\n\
   <script src=\"http://openstreetmap.org/openlayers/OpenStreetMap.js\"></script>\n\
   <script type=\"text/javascript\">\n\
-      var lat=$LAT;\n\
-      var lon=$LON;\n\
-      var zoom=$ZOOM;\n\
+      var lat = 53.86;\n\
+      var lon = 8.44;\n\
+      var zoom = 18;\n\
+      var data_url = \"/api/interpreter?data=`echo "$DATA" | ../bin/osm3s_query --dump-compact-map-ql --concise | ../bin/tocgi `\";\n\
       var map;\n\
+\n\
+      function setStatusText(text)\n\
+      {\n\
+          var div = document.getElementById(\"statusline\").firstChild;\n\
+          div.deleteData(0, div.nodeValue.length);\n\
+          div.appendData(text);\n\
+      }\n\
+\n\
+      DetectBoundsOSMFormat = OpenLayers.Class(OpenLayers.Format.OSM, {\n\
+\n\
+          min_lat: 180.0,\n\
+          max_lat: -180.0,\n\
+          min_lon: 90.0,\n\
+          max_lon: -90.0,\n\
+          zoom: 0,\n\
+\n\
+          getNodes: function(doc)\n\
+          {\n\
+            var node_list = doc.getElementsByTagName(\"node\");\n\
+            var nodes = {};\n\
+            for (var i = 0; i < node_list.length; i++)\n\
+            {\n\
+              var node = node_list[i];\n\
+              var id = node.getAttribute(\"id\");\n\
+              nodes[id] = {\n\
+                'lat': node.getAttribute(\"lat\"),\n\
+                'lon': node.getAttribute(\"lon\"),\n\
+                'node': node\n\
+              };\n\
+\n\
+              if (nodes[id].lat < this.min_lat)\n\
+                this.min_lat = nodes[id].lat;\n\
+              if (nodes[id].lat > this.max_lat)\n\
+                this.max_lat = nodes[id].lat;\n\
+              if (nodes[id].lon < this.min_lon)\n\
+                this.min_lon = nodes[id].lon;\n\
+              if (nodes[id].lon > this.max_lon)\n\
+                this.max_lon = nodes[id].lon;\n\
+            }\n\
+\n\
+            if (this.min_lat == 180.0)\n\
+            {\n\
+                this.min_lat = 0;\n\
+                this.max_lat = 0;\n\
+            }\n\
+            if (this.min_lon == 90.0)\n\
+            {\n\
+                this.min_lon = 0;\n\
+                this.max_lon = 0;\n\
+            }\n\
+\n\
+            return nodes;\n\
+          },          \n\
+\n\
+          CLASS_NAME: \"DetectBoundsOSMFormat\"\n\
+      });\n\
+\n\
+      var osm_format = new DetectBoundsOSMFormat();\n\
+\n\
+      function make_features_added_closure() {\n\
+          return function(evt) {\n\
+\n\
+              var lonLat = new OpenLayers.LonLat(\n\
+                  (Number(osm_format.min_lon) + Number(osm_format.max_lon))/2.0,\n\
+                  (Number(osm_format.min_lat) + Number(osm_format.max_lat))/2.0)\n\
+                  .transform(new OpenLayers.Projection(\"EPSG:4326\"), new OpenLayers.Projection(\"EPSG:900913\"));\n\
+\n\
+              var southwest = new OpenLayers.LonLat(\n\
+                  Number(osm_format.min_lon), Number(osm_format.min_lat))\n\
+                  .transform(new OpenLayers.Projection(\"EPSG:4326\"), new OpenLayers.Projection(\"EPSG:900913\"));\n\
+\n\
+              var northeast = new OpenLayers.LonLat(\n\
+                  Number(osm_format.max_lon), Number(osm_format.max_lat))\n\
+                  .transform(new OpenLayers.Projection(\"EPSG:4326\"), new OpenLayers.Projection(\"EPSG:900913\"));\n\
+\n\
+            map.setCenter(lonLat);\n\
+\n\
+            var extent = map.getExtent();\n\
+            extent.extend(southwest);\n\
+            extent.extend(northeast);\n\
+            map.zoomToExtent(extent);\n\
+          };\n\
+      }\n\
 \n\
       function init(){\n\
           map = new OpenLayers.Map (\"map\", {\n\
@@ -104,27 +188,28 @@ echo -e "\
 \n\
           var lonLat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection(\"EPSG:4326\"), new OpenLayers.Projection(\"EPSG:900913\"));\n\
 \n\
-          map.setCenter (lonLat, zoom);\n\
-\n\
           //Initialise the vector layer using OpenLayers.Format.OSM\n\
           var styleMap = new OpenLayers.StyleMap({\n\
               strokeColor: \"blue\",\n\
-              strokeWidth: 10,\n\
-              pointRadius: 20,\n\
+              strokeWidth: 6,\n\
+              pointRadius: 10,\n\
               fillColor: \"blue\"\n\
           });\n\
           var layer = new OpenLayers.Layer.Vector(\"Polygon\", {\n\
               strategies: [new OpenLayers.Strategy.Fixed()],\n\
               protocol: new OpenLayers.Protocol.HTTP({\n\
-                  url: \"interpreter?data=`echo "$DATA" | ../bin/osm3s_query --dump-compact-map-ql --concise | ../bin/tocgi `\",\n\
-                  format: new OpenLayers.Format.OSM()\n\
+                  url: data_url,\n\
+                  format: osm_format//new OpenLayers.Format.OSM()\n\
               }),\n\
               styleMap: styleMap,\n\
               projection: new OpenLayers.Projection(\"EPSG:4326\")\n\
           });\n\
 \n\
-          map.addLayers([layer]);\n\
+          map.setCenter(lonLat, zoom);\n\
 \n\
+          layer.events.register(\"featuresadded\", layer, make_features_added_closure(map, layer));\n\
+\n\
+          map.addLayers([layer]);\n\
       }\n\
   </script>\n\
 </head>\n\
