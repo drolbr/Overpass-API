@@ -78,7 +78,11 @@ void Union_Statement::execute(Resource_Manager& rman)
     
     Set& summand(rman.sets()[(*it)->get_result_name()]);
 
-    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator
+    indexed_set_union(nodes, summand.nodes);
+    indexed_set_union(ways, summand.ways);
+    indexed_set_union(relations, summand.relations);
+    indexed_set_union(areas, summand.areas);
+/*    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator
         it(summand.nodes.begin()); it != summand.nodes.end(); ++it)
     {
       sort(it->second.begin(), it->second.end());
@@ -113,7 +117,7 @@ void Union_Statement::execute(Resource_Manager& rman)
       areas[it->first].clear();
       set_union(it->second.begin(), it->second.end(), other.begin(), other.end(),
 		back_inserter(areas[it->first]));
-    }
+    }*/
   }
   
   rman.sets()[output] = base_set;

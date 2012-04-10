@@ -27,6 +27,7 @@
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
 #include "recurse.h"
+#include "union.h"
 
 using namespace std;
 
@@ -38,6 +39,10 @@ const unsigned int RECURSE_WAY_NODE = 5;
 const unsigned int RECURSE_WAY_RELATION = 6;
 const unsigned int RECURSE_NODE_RELATION = 7;
 const unsigned int RECURSE_NODE_WAY = 8;
+const unsigned int RECURSE_DOWN = 9;
+const unsigned int RECURSE_DOWN_REL = 10;
+const unsigned int RECURSE_UP = 11;
+const unsigned int RECURSE_UP_REL = 12;
 
 Generic_Statement_Maker< Recurse_Statement > Recurse_Statement::statement_maker("recurse");
 
@@ -1175,12 +1180,20 @@ Recurse_Statement::Recurse_Statement
     type = RECURSE_RELATION_NODE;
   else if (attributes["type"] == "way-node")
     type = RECURSE_WAY_NODE;
+  else if (attributes["type"] == "down")
+    type = RECURSE_DOWN;
+  else if (attributes["type"] == "down-rel")
+    type = RECURSE_DOWN_REL;
   else if (attributes["type"] == "way-relation")
     type = RECURSE_WAY_RELATION;
   else if (attributes["type"] == "node-relation")
     type = RECURSE_NODE_RELATION;
   else if (attributes["type"] == "node-way")
     type = RECURSE_NODE_WAY;
+  else if (attributes["type"] == "up")
+    type = RECURSE_UP;
+  else if (attributes["type"] == "up-rel")
+    type = RECURSE_UP_REL;
   else
   {
     type = 0;
@@ -1188,13 +1201,22 @@ Recurse_Statement::Recurse_Statement
     temp<<"For the attribute \"type\" of the element \"recurse\""
 	<<" the only allowed values are \"relation-relation\", \"relation-backwards\","
 	<<"\"relation-way\", \"relation-node\", \"way-node\", \"way-relation\","
-	<<"\"node-relation\" or \"node-way\".";
+	<<"\"node-relation\", \"node-way\", \"down\", \"down-rel\", \"up\", or \"up-rel\".";
     add_static_error(temp.str());
   }
 }
 
 void Recurse_Statement::forecast()
 {
+}
+
+uint count_relations(const map< Uint31_Index, vector< Relation_Skeleton > >& relations)
+{
+  uint result = 0;
+  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator it = relations.begin();
+      it != relations.end(); ++it)
+    result += it->second.size();
+  return result;
 }
 
 void Recurse_Statement::execute(Resource_Manager& rman)
@@ -1213,28 +1235,64 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   }
 
   Set into;
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes(into.nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways(into.ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations(into.relations);
 
   if (type == RECURSE_RELATION_RELATION)
     collect_relations(*this, rman, mit->second.relations.begin(), mit->second.relations.end(),
-		      relations);
+		      into.relations);
   else if (type == RECURSE_RELATION_BACKWARDS)
-    collect_relations(*this, rman, mit->second.relations, relations);
+    collect_relations(*this, rman, mit->second.relations, into.relations);
   else if (type == RECURSE_RELATION_WAY)
-    collect_ways(*this, rman, mit->second.relations.begin(), mit->second.relations.end(), ways);
+    collect_ways(*this, rman, mit->second.relations.begin(), mit->second.relations.end(),
+		 into.ways);
   else if (type == RECURSE_RELATION_NODE)
-    collect_nodes(*this, rman, mit->second.relations.begin(), mit->second.relations.end(), nodes);
+    collect_nodes(*this, rman, mit->second.relations.begin(), mit->second.relations.end(),
+		  into.nodes);
   else if (type == RECURSE_WAY_NODE)
-    collect_nodes(*this, rman, mit->second.ways.begin(), mit->second.ways.end(), nodes);
+    collect_nodes(*this, rman, mit->second.ways.begin(), mit->second.ways.end(), into.nodes);
+  else if (type == RECURSE_DOWN)
+  {
+    map< Uint32_Index, vector< Node_Skeleton > > rel_nodes;
+    collect_nodes(*this, rman, mit->second.relations.begin(), mit->second.relations.end(),
+		  rel_nodes);
+    collect_ways(*this, rman, mit->second.relations.begin(), mit->second.relations.end(),
+		 into.ways);
+    collect_nodes(*this, rman, into.ways.begin(), into.ways.end(), into.nodes);
+    indexed_set_union(into.nodes, rel_nodes);
+  }
+  else if (type == RECURSE_DOWN_REL)
+  {
+    map< Uint31_Index, vector< Relation_Skeleton > > source_rels = mit->second.relations;
+    uint old_rel_count = count_relations(source_rels);
+    while (true)
+    {
+      collect_relations(*this, rman, source_rels.begin(), source_rels.end(), into.relations);
+      indexed_set_union(into.relations, source_rels);
+      uint new_rel_count = count_relations(into.relations);
+      if (new_rel_count == old_rel_count)
+	break;
+      old_rel_count = new_rel_count;
+      source_rels.swap(into.relations);
+    }
+    
+    map< Uint32_Index, vector< Node_Skeleton > > rel_nodes;
+    collect_nodes(*this, rman, into.relations.begin(), into.relations.end(), rel_nodes);
+    collect_ways(*this, rman, into.relations.begin(), into.relations.end(), into.ways);
+    collect_nodes(*this, rman, into.ways.begin(), into.ways.end(), into.nodes);
+    indexed_set_union(into.nodes, rel_nodes);
+  }
   else if (type == RECURSE_WAY_RELATION)
-    collect_relations(*this, rman, mit->second.ways, Relation_Entry::WAY, relations);
+    collect_relations(*this, rman, mit->second.ways, Relation_Entry::WAY, into.relations);
   else if (type == RECURSE_NODE_WAY)
-    collect_ways(*this, rman, mit->second.nodes, ways);
+    collect_ways(*this, rman, mit->second.nodes, into.ways);
   else if (type == RECURSE_NODE_RELATION)
-    collect_relations(*this, rman, mit->second.nodes, Relation_Entry::NODE, relations);
-
+    collect_relations(*this, rman, mit->second.nodes, Relation_Entry::NODE, into.relations);
+  else if (type == RECURSE_UP)
+  {
+  }
+  else if (type == RECURSE_UP_REL)
+  {
+  }
+  
   into.nodes.swap(rman.sets()[output].nodes);
   into.ways.swap(rman.sets()[output].ways);
   into.relations.swap(rman.sets()[output].relations);
