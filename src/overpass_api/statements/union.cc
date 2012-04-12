@@ -82,42 +82,6 @@ void Union_Statement::execute(Resource_Manager& rman)
     indexed_set_union(ways, summand.ways);
     indexed_set_union(relations, summand.relations);
     indexed_set_union(areas, summand.areas);
-/*    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator
-        it(summand.nodes.begin()); it != summand.nodes.end(); ++it)
-    {
-      sort(it->second.begin(), it->second.end());
-      vector< Node_Skeleton > other(nodes[it->first]);
-      nodes[it->first].clear();
-      set_union(it->second.begin(), it->second.end(), other.begin(), other.end(),
-	    back_inserter(nodes[it->first]));
-    }
-    for (map< Uint31_Index, vector< Way_Skeleton > >::iterator
-        it(summand.ways.begin()); it != summand.ways.end(); ++it)
-    {
-      sort(it->second.begin(), it->second.end());
-      vector< Way_Skeleton > other(ways[it->first]);
-      ways[it->first].clear();
-      set_union(it->second.begin(), it->second.end(), other.begin(), other.end(),
-	    back_inserter(ways[it->first]));
-    }
-    for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator
-        it(summand.relations.begin()); it != summand.relations.end(); ++it)
-    {
-      sort(it->second.begin(), it->second.end());
-      vector< Relation_Skeleton > other(relations[it->first]);
-      relations[it->first].clear();
-      set_union(it->second.begin(), it->second.end(), other.begin(), other.end(),
-	    back_inserter(relations[it->first]));
-    }
-    for (map< Uint31_Index, vector< Area_Skeleton > >::iterator
-      it(summand.areas.begin()); it != summand.areas.end(); ++it)
-    {
-      sort(it->second.begin(), it->second.end());
-      vector< Area_Skeleton > other(areas[it->first]);
-      areas[it->first].clear();
-      set_union(it->second.begin(), it->second.end(), other.begin(), other.end(),
-		back_inserter(areas[it->first]));
-    }*/
   }
   
   rman.sets()[output] = base_set;

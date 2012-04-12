@@ -886,11 +886,105 @@ class Recurse_Constraint : public Query_Constraint
 		  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
 		  int type, const vector< uint32 >& ids);
     void filter(Resource_Manager& rman, Set& into);
+    void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~Recurse_Constraint() {}
     
   private:
     Recurse_Statement* stmt;
 };
+
+template< class TSourceObject >
+void collect_nodes(const Statement& query, Resource_Manager& rman,
+		   const map< Uint31_Index, vector< TSourceObject > >& rels,
+		   const set< pair< Uint32_Index, Uint32_Index > >& ranges,
+		   const vector< uint32 >& ids,
+		   map< Uint32_Index, vector< Node_Skeleton > >& nodes)
+{
+  if (ranges.empty())
+  {
+    if (ids.empty())
+      collect_nodes(query, rman, rels.begin(), rels.end(), nodes);
+    else
+      collect_nodes(query, rman, rels.begin(), rels.end(), nodes, ids);
+  }
+  else
+  {
+    if (ids.empty())
+      collect_nodes(query, rman, rels.begin(), rels.end(), nodes, ranges);
+    else
+      collect_nodes(query, rman, rels.begin(), rels.end(), nodes, ids, ranges);
+  }
+}
+
+void collect_ways(const Statement& query, Resource_Manager& rman,
+		  const map< Uint31_Index, vector< Relation_Skeleton > >& rels,
+		  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
+		  const vector< uint32 >& ids,
+		  map< Uint31_Index, vector< Way_Skeleton > >& ways)
+{
+  if (ranges.empty())
+  {
+    if (ids.empty())
+      collect_ways(query, rman, rels.begin(), rels.end(), ways);
+    else
+      collect_ways(query, rman, rels.begin(), rels.end(), ways, ids);
+  }
+  else
+  {
+    if (ids.empty())
+      collect_ways(query, rman, rels.begin(), rels.end(), ways, ranges);
+    else
+      collect_ways(query, rman, rels.begin(), rels.end(), ways, ids, ranges);
+  }
+}
+
+void collect_relations(const Statement& query, Resource_Manager& rman,
+		  const map< Uint31_Index, vector< Relation_Skeleton > >& rels,
+		  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
+		  const vector< uint32 >& ids,
+		  map< Uint31_Index, vector< Relation_Skeleton > >& relations)
+{
+  if (ranges.empty())
+  {
+    if (ids.empty())
+      collect_relations(query, rman, rels.begin(), rels.end(), relations);
+    else
+      collect_relations(query, rman, rels.begin(), rels.end(), relations, ids);
+  }
+  else
+  {
+    if (ids.empty())
+      collect_relations(query, rman, rels.begin(), rels.end(), relations, ranges);
+    else
+      collect_relations(query, rman, rels.begin(), rels.end(), relations, ids, ranges);
+  }
+}
+
+uint count_relations(const map< Uint31_Index, vector< Relation_Skeleton > >& relations)
+{
+  uint result = 0;
+  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator it = relations.begin();
+      it != relations.end(); ++it)
+    result += it->second.size();
+  return result;
+}
+
+void relations_loop(const Statement& query, Resource_Manager& rman,
+		    map< Uint31_Index, vector< Relation_Skeleton > > source,
+		    map< Uint31_Index, vector< Relation_Skeleton > >& result)
+{
+  uint old_rel_count = count_relations(source);
+  while (true)
+  {
+    collect_relations(query, rman, source.begin(), source.end(), result);
+    indexed_set_union(result, source);
+    uint new_rel_count = count_relations(result);
+    if (new_rel_count == old_rel_count)
+      return;
+    old_rel_count = new_rel_count;
+    source.swap(result);
+  }
+}
 
 bool Recurse_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
@@ -902,48 +996,48 @@ bool Recurse_Constraint::get_data
     return true;
   
   if (stmt->get_type() == RECURSE_RELATION_NODE)
-  {
-    if (ranges.empty())
-    {
-      if (ids.empty())
-        collect_nodes(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
-		      into.nodes);
-      else
-        collect_nodes(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
-		      into.nodes, ids);
-    }
-    else
-    {
-      if (ids.empty())
-	collect_nodes(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
-		      into.nodes, ranges);
-      else
-	collect_nodes(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
-		      into.nodes, ids, ranges);
-    }
-  }
+    collect_nodes(query, rman, mit->second.relations, ranges, ids, into.nodes);
   else if (stmt->get_type() == RECURSE_WAY_NODE)
+    collect_nodes(query, rman, mit->second.ways, ranges, ids, into.nodes);
+  else if (stmt->get_type() == RECURSE_DOWN)
   {
-    if (ranges.empty())
-    {
-      if (ids.empty())
-	collect_nodes(query, rman, mit->second.ways.begin(), mit->second.ways.end(),
-		      into.nodes);
-      else
-	collect_nodes(query, rman, mit->second.ways.begin(), mit->second.ways.end(),
-		      into.nodes, ids);
-    }
-    else
-    {
-      if (ids.empty())
-	collect_nodes(query, rman, mit->second.ways.begin(), mit->second.ways.end(),
-		      into.nodes, ranges);
-      else
-	collect_nodes(query, rman, mit->second.ways.begin(), mit->second.ways.end(),
-		      into.nodes, ids, ranges);
-    }
+    map< Uint32_Index, vector< Node_Skeleton > > rel_nodes;
+    map< Uint31_Index, vector< Way_Skeleton > > rel_ways;
+    collect_nodes(query, rman, mit->second.relations, ranges, ids, rel_nodes);
+    collect_ways(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
+		 rel_ways);
+    collect_nodes(query, rman, rel_ways, ranges, ids, into.nodes);
+    indexed_set_union(into.nodes, rel_nodes);
+  }
+  else if (stmt->get_type() == RECURSE_DOWN_REL)
+  {
+    map< Uint31_Index, vector< Relation_Skeleton > > rel_rels;
+    relations_loop(query, rman, mit->second.relations, rel_rels);
+    map< Uint32_Index, vector< Node_Skeleton > > rel_nodes;
+    map< Uint31_Index, vector< Way_Skeleton > > rel_ways;
+    collect_nodes(query, rman, rel_rels, ranges, ids, rel_nodes);
+    collect_ways(query, rman, rel_rels.begin(), rel_rels.end(), rel_ways);
+    collect_nodes(query, rman, rel_ways, ranges, ids, into.nodes);
+    indexed_set_union(into.nodes, rel_nodes);
   }
   return true;
+}
+
+template< class TIndex, class TObject >
+void filter_by_id(const vector< uint32 >& ids, map< TIndex, vector< TObject > >& result)
+{
+  for (typename map< TIndex, vector< TObject > >::iterator it = result.begin();
+      it != result.end(); ++it)
+  {
+    vector< TObject > local_into;
+    for (typename vector< TObject >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      if (binary_search(ids.begin(), ids.end(), iit->id))
+	local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }
 }
 
 bool Recurse_Constraint::get_data
@@ -956,45 +1050,26 @@ bool Recurse_Constraint::get_data
     return true;
   
   if (stmt->get_type() == RECURSE_RELATION_WAY)
-  {
-    if (ranges.empty())
-    {
-      if (ids.empty())
-	collect_ways(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
-		     into.ways);
-      else
-	collect_ways(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
-		     into.ways, ids);
-    }
-    else
-    {
-      if (ids.empty())
-	collect_ways(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
-		     into.ways, ranges);
-      else
-	collect_ways(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
-		     into.ways, ids, ranges);
-    }
-  }
+    collect_ways(query, rman, mit->second.relations, ranges, ids, into.ways);
   else if (stmt->get_type() == RECURSE_RELATION_RELATION)
+    collect_relations(query, rman, mit->second.relations, ranges, ids, into.relations);
+  else if (stmt->get_type() == RECURSE_DOWN)
   {
-    if (ranges.empty())
-    {
-      if (ids.empty())
-	collect_relations(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
-			  into.relations);
-      else
-	collect_relations(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
-			  into.relations, ids);
-    }
+    if (type != QUERY_WAY)
+      return true;
+    collect_ways(query, rman, mit->second.relations, ranges, ids, into.ways);
+  }
+  else if (stmt->get_type() == RECURSE_DOWN_REL)
+  {
+    map< Uint31_Index, vector< Relation_Skeleton > > rel_rels;
+    relations_loop(query, rman, mit->second.relations, rel_rels);
+    if (type == QUERY_WAY)
+      collect_ways(query, rman, rel_rels, ranges, ids, into.ways);
     else
     {
-      if (ids.empty())
-	collect_relations(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
-			  into.relations, ranges);
-      else
-	collect_relations(query, rman, mit->second.relations.begin(), mit->second.relations.end(),
-			  into.relations, ids, ranges);
+      if (!ids.empty())
+	filter_by_id(ids, rel_rels);
+      into.relations.swap(rel_rels);
     }
   }
   else if (stmt->get_type() == RECURSE_NODE_WAY)
@@ -1039,6 +1114,9 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
     return;
   }
   
+  if (stmt->get_type() == RECURSE_DOWN || stmt->get_type() == RECURSE_DOWN_REL)
+    return;
+  
   vector< uint32 > ids;
   if (stmt->get_type() == RECURSE_WAY_NODE)
     ids = collect_ids(*stmt, rman, mit->second.ways.begin(), mit->second.ways.end());
@@ -1046,36 +1124,13 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
     ids = collect_ids(*stmt, rman, Relation_Entry::NODE,
 		      mit->second.relations.begin(), mit->second.relations.end());
   
-  for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = into.nodes.begin();
-      it != into.nodes.end(); ++it)
-  {
-    vector< Node_Skeleton > local_into;
-    for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-        iit != it->second.end(); ++iit)
-    {
-      if (binary_search(ids.begin(), ids.end(), iit->id))
-	local_into.push_back(*iit);
-    }
-    it->second.swap(local_into);
-  }  
+  filter_by_id(ids, into.nodes);
   
   if (stmt->get_type() == RECURSE_RELATION_WAY)
   {
     vector< uint32 > ids = collect_ids(*stmt, rman, Relation_Entry::WAY,
 	mit->second.relations.begin(), mit->second.relations.end());
-  
-    for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = into.ways.begin();
-        it != into.ways.end(); ++it)
-    {
-      vector< Way_Skeleton > local_into;
-      for (vector< Way_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-      {
-	if (binary_search(ids.begin(), ids.end(), iit->id))
-	  local_into.push_back(*iit);
-      }
-      it->second.swap(local_into);
-    }
+    filter_by_id(ids, into.ways);
   }
   else if (stmt->get_type() == RECURSE_NODE_WAY)
   {
@@ -1102,19 +1157,7 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
   {
     vector< uint32 > ids = collect_ids(*stmt, rman, Relation_Entry::RELATION,
 	mit->second.relations.begin(), mit->second.relations.end());
-
-    for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = into.relations.begin();
-        it != into.relations.end(); ++it)
-    {
-      vector< Relation_Skeleton > local_into;
-      for (vector< Relation_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-      {
-        if (binary_search(ids.begin(), ids.end(), iit->id))
-  	  local_into.push_back(*iit);
-      }
-      it->second.swap(local_into);
-    }
+    filter_by_id(ids, into.relations);
   }
   else if (stmt->get_type() == RECURSE_NODE_RELATION
       || stmt->get_type() == RECURSE_WAY_RELATION
@@ -1151,6 +1194,66 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
   }
   else
     into.relations.clear();
+}
+
+void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
+{
+  map< string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
+  
+  if (stmt->get_type() != RECURSE_DOWN && stmt->get_type() != RECURSE_DOWN_REL)
+    return;
+  
+  vector< uint32 > ids;
+  if (stmt->get_type() == RECURSE_DOWN)
+  {
+    vector< uint32 > rel_ids
+        = collect_ids(*stmt, rman, Relation_Entry::NODE,
+		      mit->second.relations.begin(), mit->second.relations.end());;
+    map< Uint31_Index, vector< Way_Skeleton > > intermediate_ways;
+    collect_ways(query, rman, mit->second.relations, set< pair< Uint31_Index, Uint31_Index > >(),
+		 ids, intermediate_ways);
+    vector< uint32 > way_ids
+        = collect_ids(*stmt, rman, intermediate_ways.begin(), intermediate_ways.end());
+    set_union(way_ids.begin(), way_ids.end(), rel_ids.begin(), rel_ids.end(), back_inserter(ids));
+  
+    filter_by_id(ids, into.nodes);
+
+    ids = collect_ids(*stmt, rman, Relation_Entry::WAY,
+	mit->second.relations.begin(), mit->second.relations.end());
+    filter_by_id(ids, into.ways);
+    
+    into.relations.clear();
+  }
+  else if (stmt->get_type() == RECURSE_DOWN_REL)
+  {
+    map< Uint31_Index, vector< Relation_Skeleton > > rel_rels;
+    relations_loop(query, rman, mit->second.relations, rel_rels);
+    vector< uint32 > rel_ids
+        = collect_ids(*stmt, rman, Relation_Entry::NODE, rel_rels.begin(), rel_rels.end());
+    map< Uint31_Index, vector< Way_Skeleton > > intermediate_ways;
+    collect_ways(query, rman, rel_rels, set< pair< Uint31_Index, Uint31_Index > >(),
+		 ids, intermediate_ways);
+    vector< uint32 > way_ids
+        = collect_ids(*stmt, rman, intermediate_ways.begin(), intermediate_ways.end());
+    set_union(way_ids.begin(), way_ids.end(), rel_ids.begin(), rel_ids.end(), back_inserter(ids));
+  
+    filter_by_id(ids, into.nodes);
+
+    ids = collect_ids(*stmt, rman, Relation_Entry::WAY,
+		      rel_rels.begin(), rel_rels.end());
+    filter_by_id(ids, into.ways);
+
+    ids.clear();
+    for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = rel_rels.begin();
+        it != rel_rels.end(); ++it)
+    {
+      for (vector< Relation_Skeleton >::const_iterator iit = it->second.begin();
+          iit != it->second.end(); ++iit)
+	ids.push_back(iit->id);
+    }
+    sort(ids.begin(), ids.end());
+    filter_by_id(ids, into.relations);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -1210,15 +1313,6 @@ void Recurse_Statement::forecast()
 {
 }
 
-uint count_relations(const map< Uint31_Index, vector< Relation_Skeleton > >& relations)
-{
-  uint result = 0;
-  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator it = relations.begin();
-      it != relations.end(); ++it)
-    result += it->second.size();
-  return result;
-}
-
 void Recurse_Statement::execute(Resource_Manager& rman)
 {
   stopwatch.start();  
@@ -1261,19 +1355,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   }
   else if (type == RECURSE_DOWN_REL)
   {
-    map< Uint31_Index, vector< Relation_Skeleton > > source_rels = mit->second.relations;
-    uint old_rel_count = count_relations(source_rels);
-    while (true)
-    {
-      collect_relations(*this, rman, source_rels.begin(), source_rels.end(), into.relations);
-      indexed_set_union(into.relations, source_rels);
-      uint new_rel_count = count_relations(into.relations);
-      if (new_rel_count == old_rel_count)
-	break;
-      old_rel_count = new_rel_count;
-      source_rels.swap(into.relations);
-    }
-    
+    relations_loop(*this, rman, mit->second.relations, into.relations);    
     map< Uint32_Index, vector< Node_Skeleton > > rel_nodes;
     collect_nodes(*this, rman, into.relations.begin(), into.relations.end(), rel_nodes);
     collect_ways(*this, rman, into.relations.begin(), into.relations.end(), into.ways);

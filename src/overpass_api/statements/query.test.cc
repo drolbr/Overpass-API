@@ -508,6 +508,10 @@ void perform_query_with_recurse
 	stmt1("type", "way")("ref", "1").stmt().execute(rman);
       else if (recurse_type == "relation-backwards")
 	stmt1("type", "relation")("ref", "1").stmt().execute(rman);
+      else if (recurse_type == "down")
+	stmt1("type", "relation")("ref", "10").stmt().execute(rman);
+      else if (recurse_type == "down-rel")
+	stmt1("type", "relation")("ref", "9").stmt().execute(rman);
     }
     if (double_recurse)
     {
@@ -1061,6 +1065,28 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "105"))
     perform_query_with_id_query("relation", "", "", 100.0, 100.0, 0.0, 0.0, true,
 			        pattern_size, args[3]);
+  
+  // Test recurse of type relation-node as subquery
+  if ((test_to_execute == "") || (test_to_execute == "106"))
+    perform_query_with_recurse("node", "down", "", "", 100.0, 100.0, 0.0, 0.0, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "107"))
+    perform_query_with_recurse("way", "down", "", "", 100.0, 100.0, 0.0, 0.0, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "108"))
+    perform_query_with_recurse("relation", "down", "", "", 100.0, 100.0, 0.0, 0.0, false,
+			       pattern_size, args[3]);
+  
+  // Test recurse of type relation-node as subquery
+  if ((test_to_execute == "") || (test_to_execute == "109"))
+    perform_query_with_recurse("node", "down-rel", "", "", 100.0, 100.0, 0.0, 0.0, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "110"))
+    perform_query_with_recurse("way", "down-rel", "", "", 100.0, 100.0, 0.0, 0.0, false,
+			       pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "111"))
+    perform_query_with_recurse("relation", "down-rel", "", "", 100.0, 100.0, 0.0, 0.0, false,
+			       pattern_size, args[3]);
   
   cout<<"</osm>\n";
   return 0;

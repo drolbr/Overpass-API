@@ -1811,6 +1811,104 @@ struct Accept_Query_105 : public Accept_All_Tags
     uint pattern_size;
 };
 
+struct Accept_Query_106 : public Accept_All_Tags
+{
+  Accept_Query_106(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const
+  {
+    return (id == 1 || id == 2
+    || id == pattern_size + 1 || id == pattern_size + 2 || id == pattern_size + 3
+    || id == 2*pattern_size + 4 || id == 3*pattern_size + 4);
+  }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_107 : public Accept_All_Tags
+{
+  Accept_Query_107(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const
+  {
+    return (id == 1 || id == 2
+    || id == pattern_size*pattern_size/4 - pattern_size/2 + 1
+    || id == pattern_size*pattern_size/4 + pattern_size/2 + 1);
+  }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_108 : public Accept_All_Tags
+{
+  Accept_Query_108(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_109 : public Accept_All_Tags
+{
+  Accept_Query_109(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const
+  {
+    return (id == 1 || id == 2 || id == pattern_size
+    || id == pattern_size + 1 || id == pattern_size + 2 || id == pattern_size + 3
+    || id == 2*pattern_size + 4 || id == 3*pattern_size + 4
+    || id == pattern_size*pattern_size/4
+    || id == pattern_size*pattern_size - pattern_size
+    || id == pattern_size*pattern_size);
+  }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_110 : public Accept_All_Tags
+{
+  Accept_Query_110(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const
+  {
+    return (id == 1 || id == 2
+    || id == pattern_size*pattern_size/4 - pattern_size/2 + 1
+    || id == pattern_size*pattern_size/4 + pattern_size/2 + 1);
+  }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_111 : public Accept_All_Tags
+{
+  Accept_Query_111(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const
+  {
+    return ((id >= 1 && id <= 6) || id == 9);
+  }
+  
+  private:
+    uint pattern_size;
+};
+
 struct Accept_Foreach_1 : public Accept_All_Tags
 {
   Accept_Foreach_1(uint pattern_size_)
@@ -2527,6 +2625,18 @@ int main(int argc, char* args[])
       modifier = new Accept_Query_104(pattern_size);
     else if (string(args[2]) == "query_105")
       modifier = new Accept_Query_105(pattern_size);
+    else if (string(args[2]) == "query_106")
+      modifier = new Accept_Query_106(pattern_size);
+    else if (string(args[2]) == "query_107")
+      modifier = new Accept_Query_107(pattern_size);
+    else if (string(args[2]) == "query_108")
+      modifier = new Accept_Query_108(pattern_size);
+    else if (string(args[2]) == "query_109")
+      modifier = new Accept_Query_109(pattern_size);
+    else if (string(args[2]) == "query_110")
+      modifier = new Accept_Query_110(pattern_size);
+    else if (string(args[2]) == "query_111")
+      modifier = new Accept_Query_111(pattern_size);
     else if (string(args[2]) == "union_1")
       modifier = new Accept_Union_1(pattern_size);
     else if (string(args[2]) == "union_2")
