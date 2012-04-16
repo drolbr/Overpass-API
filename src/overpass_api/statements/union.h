@@ -56,6 +56,7 @@ void indexed_set_union(map< TIndex, vector< TObject > >& result,
     sort(it->second.begin(), it->second.end());
     vector< TObject > other;
     other.swap(result[it->first]);
+    sort(other.begin(), other.end());
     set_union(it->second.begin(), it->second.end(), other.begin(), other.end(),
 	      back_inserter(result[it->first]));
   }

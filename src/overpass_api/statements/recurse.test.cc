@@ -465,6 +465,131 @@ int main(int argc, char* args[])
       <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
   }
+  if ((test_to_execute == "") || (test_to_execute == "16"))
+  {
+    try
+    {
+      // Recurse relation-way
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction);
+      perform_id_query(total_rman, "node", pattern_size + 2);
+      {
+	const char* attributes[] = { "type", "up", 0 };
+	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	stmt.execute(total_rman);
+      }
+      {
+	const char* attributes[] = { 0 };
+	Print_Statement stmt(3, convert_c_pairs(attributes));
+	stmt.execute(total_rman);
+      }
+    }
+    catch (File_Error e)
+    {
+      cerr<<"File error caught: "
+      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  if ((test_to_execute == "") || (test_to_execute == "17"))
+  {
+    try
+    {
+      // Recurse relation-way
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction);
+      perform_id_query(total_rman, "way", 1);
+      {
+	const char* attributes[] = { "type", "up", 0 };
+	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	stmt.execute(total_rman);
+      }
+      {
+	const char* attributes[] = { 0 };
+	Print_Statement stmt(3, convert_c_pairs(attributes));
+	stmt.execute(total_rman);
+      }
+    }
+    catch (File_Error e)
+    {
+      cerr<<"File error caught: "
+      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  if ((test_to_execute == "") || (test_to_execute == "18"))
+  {
+    try
+    {
+      // Recurse relation-way
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction);
+      perform_id_query(total_rman, "node", 2);
+      {
+	const char* attributes[] = { "type", "up-rel", 0 };
+	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	stmt.execute(total_rman);
+      }
+      {
+	const char* attributes[] = { 0 };
+	Print_Statement stmt(3, convert_c_pairs(attributes));
+	stmt.execute(total_rman);
+      }
+    }
+    catch (File_Error e)
+    {
+      cerr<<"File error caught: "
+      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  if ((test_to_execute == "") || (test_to_execute == "19"))
+  {
+    try
+    {
+      // Recurse relation-way
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction);
+      perform_id_query(total_rman, "way", 2);
+      {
+	const char* attributes[] = { "type", "up-rel", 0 };
+	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	stmt.execute(total_rman);
+      }
+      {
+	const char* attributes[] = { 0 };
+	Print_Statement stmt(3, convert_c_pairs(attributes));
+	stmt.execute(total_rman);
+      }
+    }
+    catch (File_Error e)
+    {
+      cerr<<"File error caught: "
+      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  if ((test_to_execute == "") || (test_to_execute == "20"))
+  {
+    try
+    {
+      // Recurse relation-way
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction);
+      perform_id_query(total_rman, "relation", 1);
+      {
+	const char* attributes[] = { "type", "up-rel", 0 };
+	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	stmt.execute(total_rman);
+      }
+      {
+	const char* attributes[] = { 0 };
+	Print_Statement stmt(3, convert_c_pairs(attributes));
+	stmt.execute(total_rman);
+      }
+    }
+    catch (File_Error e)
+    {
+      cerr<<"File error caught: "
+      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
   
   cout<<"</osm>\n";
   return 0;

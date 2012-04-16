@@ -986,6 +986,24 @@ void relations_loop(const Statement& query, Resource_Manager& rman,
   }
 }
 
+void relations_up_loop(const Statement& query, Resource_Manager& rman,
+		    map< Uint31_Index, vector< Relation_Skeleton > > source,
+		    map< Uint31_Index, vector< Relation_Skeleton > >& result)
+{
+  uint old_rel_count = count_relations(source);
+  while (true)
+  {
+    result.clear();
+    collect_relations(query, rman, source, result);
+    indexed_set_union(result, source);
+    uint new_rel_count = count_relations(result);
+    if (new_rel_count == old_rel_count)
+      return;
+    old_rel_count = new_rel_count;
+    source.swap(result);
+  }
+}
+
 bool Recurse_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
      const set< pair< Uint32_Index, Uint32_Index > >& ranges,
@@ -1370,9 +1388,32 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     collect_relations(*this, rman, mit->second.nodes, Relation_Entry::NODE, into.relations);
   else if (type == RECURSE_UP)
   {
+    map< Uint31_Index, vector< Way_Skeleton > > rel_ways = mit->second.ways;
+    collect_ways(*this, rman, mit->second.nodes, into.ways);
+    
+    indexed_set_union(rel_ways, into.ways);
+    collect_relations(*this, rman, rel_ways, Relation_Entry::WAY, into.relations);
+    
+    map< Uint31_Index, vector< Relation_Skeleton > > node_rels;
+    collect_relations(*this, rman, mit->second.nodes, Relation_Entry::NODE, node_rels);
+    indexed_set_union(into.relations, node_rels);
   }
   else if (type == RECURSE_UP_REL)
   {
+    map< Uint31_Index, vector< Way_Skeleton > > rel_ways = mit->second.ways;
+    collect_ways(*this, rman, mit->second.nodes, into.ways);
+    
+    map< Uint31_Index, vector< Relation_Skeleton > > rel_rels = mit->second.relations;
+    map< Uint31_Index, vector< Relation_Skeleton > > way_rels;
+    indexed_set_union(rel_ways, into.ways);
+    collect_relations(*this, rman, rel_ways, Relation_Entry::WAY, way_rels);
+    indexed_set_union(rel_rels, way_rels);
+    
+    map< Uint31_Index, vector< Relation_Skeleton > > node_rels;
+    collect_relations(*this, rman, mit->second.nodes, Relation_Entry::NODE, node_rels);
+    indexed_set_union(rel_rels, node_rels);
+
+    relations_up_loop(*this, rman, rel_rels, into.relations);    
   }
   
   into.nodes.swap(rman.sets()[output].nodes);
