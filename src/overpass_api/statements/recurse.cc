@@ -1118,6 +1118,73 @@ bool Recurse_Constraint::get_data
     else
       collect_relations(query, rman, mit->second.relations, into.relations, ids);
   }
+  else if (stmt->get_type() == RECURSE_UP)
+  {
+    if (type == QUERY_WAY)
+    {
+      if (ids.empty())
+	collect_ways(query, rman, mit->second.nodes, into.ways);
+      else
+	collect_ways(query, rman, mit->second.nodes, into.ways, ids);
+    }
+    else
+    {
+      map< Uint31_Index, vector< Way_Skeleton > > rel_ways = mit->second.ways;
+      map< Uint31_Index, vector< Way_Skeleton > > node_ways;
+      collect_ways(query, rman, mit->second.nodes, node_ways);    
+      indexed_set_union(rel_ways, node_ways);
+      for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator it = rel_ways.begin(); it != rel_ways.end(); ++it)
+	for (vector< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+	  cout<<it2->id<<' ';
+      cout<<'\n';
+      if (ids.empty())
+	collect_relations(query, rman, rel_ways, Relation_Entry::WAY, into.relations);
+      else
+	collect_relations(query, rman, rel_ways, Relation_Entry::WAY, into.relations, ids);
+      for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator it = into.relations.begin(); it != into.relations.end(); ++it)
+	for (vector< Relation_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+	  cout<<it2->id<<' ';
+      cout<<'\n';
+      
+      map< Uint31_Index, vector< Relation_Skeleton > > node_rels;
+      if (ids.empty())
+	collect_relations(query, rman, mit->second.nodes, Relation_Entry::NODE, node_rels);
+      else
+	collect_relations(query, rman, mit->second.nodes, Relation_Entry::NODE, node_rels, ids);
+      indexed_set_union(into.relations, node_rels);
+    }
+  }
+  else if (stmt->get_type() == RECURSE_UP_REL)
+  {
+    if (type == QUERY_WAY)
+    {
+      if (ids.empty())
+	collect_ways(query, rman, mit->second.nodes, into.ways);
+      else
+	collect_ways(query, rman, mit->second.nodes, into.ways, ids);
+    }
+    else
+    {
+      map< Uint31_Index, vector< Way_Skeleton > > rel_ways = mit->second.ways;
+      map< Uint31_Index, vector< Way_Skeleton > > node_ways;
+      collect_ways(query, rman, mit->second.nodes, node_ways);    
+      indexed_set_union(rel_ways, node_ways);
+      map< Uint31_Index, vector< Relation_Skeleton > > way_rels;
+      collect_relations(query, rman, rel_ways, Relation_Entry::WAY, way_rels);
+    
+      map< Uint31_Index, vector< Relation_Skeleton > > rel_rels = mit->second.relations;
+      indexed_set_union(rel_rels, way_rels);
+    
+      map< Uint31_Index, vector< Relation_Skeleton > > node_rels;
+      collect_relations(query, rman, mit->second.nodes, Relation_Entry::NODE, node_rels);
+      indexed_set_union(rel_rels, node_rels);
+    
+      relations_up_loop(query, rman, rel_rels, into.relations);
+
+      if (!ids.empty())
+	filter_by_id(ids, into.relations);
+    }
+  }
   return true;
 }
 
@@ -1150,7 +1217,8 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
 	mit->second.relations.begin(), mit->second.relations.end());
     filter_by_id(ids, into.ways);
   }
-  else if (stmt->get_type() == RECURSE_NODE_WAY)
+  else if (stmt->get_type() == RECURSE_NODE_WAY || stmt->get_type() == RECURSE_UP
+      || stmt->get_type() == RECURSE_UP_REL)
   {
     vector< uint32 > ids = extract_children_ids(mit->second.nodes);
 
@@ -1170,6 +1238,9 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
   else
     into.ways.clear();
     
+  if (stmt->get_type() == RECURSE_UP || stmt->get_type() == RECURSE_UP_REL)
+    return;
+  
   ids.clear();
   if (stmt->get_type() == RECURSE_RELATION_RELATION)
   {
@@ -1212,6 +1283,22 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
   }
   else
     into.relations.clear();
+}
+
+template< class TIndex, class TObject >
+vector< uint32 > collect_elems_ids(const map< TIndex, vector< TObject > >& elems)
+{
+  vector< uint32 > ids;
+  for (typename map< TIndex, vector< TObject > >::const_iterator it = elems.begin();
+      it != elems.end(); ++it)
+  {
+    for (typename vector< TObject >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      ids.push_back(iit->id);
+  }
+  sort(ids.begin(), ids.end());
+  
+  return ids;
 }
 
 void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
@@ -1261,15 +1348,51 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
 		      rel_rels.begin(), rel_rels.end());
     filter_by_id(ids, into.ways);
 
-    ids.clear();
-    for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = rel_rels.begin();
-        it != rel_rels.end(); ++it)
+    filter_by_id(collect_elems_ids(rel_rels), into.relations);
+  }
+  else if (stmt->get_type() == RECURSE_UP && !into.relations.empty())
+  {
+    map< Uint31_Index, vector< Way_Skeleton > > rel_ways = mit->second.ways;
+    map< Uint31_Index, vector< Way_Skeleton > > node_ways;
+    collect_ways(query, rman, mit->second.nodes, node_ways);    
+    indexed_set_union(rel_ways, node_ways);
+    
+    vector< uint32 > node_ids = extract_children_ids(mit->second.nodes);
+    vector< uint32 > way_ids = extract_children_ids(rel_ways);
+    
+    for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = into.relations.begin();
+        it != into.relations.end(); ++it)
     {
+      vector< Relation_Skeleton > local_into;
       for (vector< Relation_Skeleton >::const_iterator iit = it->second.begin();
           iit != it->second.end(); ++iit)
-	ids.push_back(iit->id);
+      {
+	if (has_a_child_with_id(*iit, node_ids, Relation_Entry::NODE)
+	    || has_a_child_with_id(*iit, way_ids, Relation_Entry::WAY))
+  	  local_into.push_back(*iit);
+      }
+      it->second.swap(local_into);
     }
-    sort(ids.begin(), ids.end());
+  }
+  else if (stmt->get_type() == RECURSE_UP_REL && !into.relations.empty())
+  {
+    map< Uint31_Index, vector< Way_Skeleton > > rel_ways = mit->second.ways;
+    map< Uint31_Index, vector< Way_Skeleton > > node_ways;
+    collect_ways(query, rman, mit->second.nodes, node_ways);    
+    indexed_set_union(rel_ways, node_ways);
+    map< Uint31_Index, vector< Relation_Skeleton > > way_rels;
+    collect_relations(query, rman, rel_ways, Relation_Entry::WAY, way_rels);
+    
+    map< Uint31_Index, vector< Relation_Skeleton > > rel_rels = mit->second.relations;
+    indexed_set_union(rel_rels, way_rels);
+    
+    map< Uint31_Index, vector< Relation_Skeleton > > node_rels;
+    collect_relations(query, rman, mit->second.nodes, Relation_Entry::NODE, node_rels);
+    indexed_set_union(rel_rels, node_rels);
+    
+    relations_up_loop(query, rman, rel_rels, rel_rels);
+
+    ids = extract_children_ids(rel_rels);
     filter_by_id(ids, into.relations);
   }
 }
