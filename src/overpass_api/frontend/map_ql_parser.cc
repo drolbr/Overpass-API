@@ -519,6 +519,14 @@ string determine_recurse_type(string flag, string type, Error_Output* error_outp
     else if (type == "relation")
       recurse_type = "relation-backwards";
   }
+  else if (flag == ">")
+    recurse_type = "down";
+  else if (flag == ">>")
+    recurse_type = "down-rel";
+  else if (flag == "<")
+    recurse_type = "up";
+  else if (flag == "<<")
+    recurse_type = "up-rel";
   
   return recurse_type;
 }
@@ -561,10 +569,12 @@ TStatement* create_query_substatement
     return create_newer_statement< TStatement >
         (stmt_factory, clause.attributes[0], clause.line_col.first);
   else if (clause.statement == "recurse")
+  {
     return create_recurse_statement< TStatement >
         (stmt_factory,
 	 determine_recurse_type(clause.attributes[0], type, error_output, clause.line_col),
 	 clause.attributes[1], into, clause.line_col.first);
+  }
   else if (clause.statement == "id-query")
     return create_id_query_statement< TStatement >
         (stmt_factory, type, clause.attributes[0], into, clause.line_col.first);
@@ -695,6 +705,15 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	clear_until_after(token, error_output, ")");
 	clauses.push_back(clause);
       }
+      else if (*token == ">" || *token == ">>" || *token == "<" || *token == "<<")
+      {
+	Statement_Text clause("recurse", token.line_col());
+	clause.attributes.push_back(*token);
+	++token;
+	clause.attributes.push_back(probe_from(token, error_output));
+	clear_until_after(token, error_output, ")");
+	clauses.push_back(clause);
+      }
       else if (isdigit((*token)[0]) || 
 	       ((*token)[0] == '-' && (*token).size() > 1 && isdigit((*token)[1])))
       {
@@ -747,7 +766,10 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
   {
     if (clauses.front().statement == "has-kv" || clauses.front().statement == "has-kv_regex"
        || (clauses.front().statement == "around" && type != "node")
-       || (clauses.front().statement == "bbox-query" && type != "node"))
+       || (clauses.front().statement == "bbox-query" && type != "node")
+       || (clauses.front().statement == "recurse" &&
+           (clauses.front().attributes[0] == "<" || clauses.front().attributes[0] == "<<"
+	   || clauses.front().attributes[0] == ">" || clauses.front().attributes[0] == ">>")))
     {
       statement = create_query_statement< TStatement >
           (stmt_factory, type, into, query_line_col.first);

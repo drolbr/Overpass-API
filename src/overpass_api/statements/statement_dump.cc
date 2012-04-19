@@ -213,6 +213,14 @@ string dump_subquery_map_ql(const string& name, const map< string, string >& att
 	result += "bw";
       else if (type == "relation-backwards")
 	result += "br";
+      else if (type == "down")
+	result += ">";
+      else if (type == "down-rel")
+	result += ">>";
+      else if (type == "up")
+	result += "<";
+      else if (type == "up-rel")
+	result += "<<";
     }
     if (attributes.find("from") != attributes.end() && attributes.find("from")->second != "_")
       result += "." + attributes.find("from")->second;

@@ -464,6 +464,10 @@ inline void Tokenizer< In >::get(string& s)
     probe(s, "||");
   else if (buffer[0] == '&')
     probe(s, "&&");
+  else if (buffer[0] == '<')
+    probe(s, "<<");
+  else if (buffer[0] == '>')
+    probe(s, ">>");
   else
   {
     s = buffer.substr(0, 1);
