@@ -1,0 +1,5 @@
+<osm-script>
+  <query into="_" type="node">
+    <recurse from="_" into="_" type="up-rel"/>
+  </query>
+</osm-script>

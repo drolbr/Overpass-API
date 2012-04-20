@@ -1,0 +1,4 @@
+<osm-script>
+  <item set="_"/>
+  <recurse from="_" into="_" type="up"/>
+</osm-script>

@@ -328,7 +328,7 @@ TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
 				     string type, string from, string into, uint line_nr)
 {
   map< string, string > attr;
-  attr["from"] = from;
+  attr["from"] = (from == "" ? "_" : from);
   attr["into"] = into;
   attr["type"] = type;
   return stmt_factory.create_statement("recurse", line_nr, attr);
@@ -587,6 +587,27 @@ TStatement* create_query_substatement
 }
 
 template< class TStatement >
+TStatement* parse_full_recurse(typename TStatement::Factory& stmt_factory,
+    Tokenizer_Wrapper& token, const string& from, Error_Output* error_output)
+{
+  string type = *token;
+  uint line_col = token.line_col().first;
+  ++token;
+  string into = probe_into(token, error_output);
+  
+  if (type == ">")
+    return create_recurse_statement< TStatement >(stmt_factory, "down", from, into, line_col);
+  else if (type == ">>")
+    return create_recurse_statement< TStatement >(stmt_factory, "down-rel", from, into, line_col);
+  else if (type == "<")
+    return create_recurse_statement< TStatement >(stmt_factory, "up", from, into, line_col);
+  else if (type == "<<")
+    return create_recurse_statement< TStatement >(stmt_factory, "up-rel", from, into, line_col);
+  else
+    return 0;
+}
+
+template< class TStatement >
 TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 			const string& type, const string& from, Tokenizer_Wrapper& token,
 		 Error_Output* error_output)
@@ -823,20 +844,6 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory,
   else if (*token == "foreach")
     return parse_foreach< TStatement >(stmt_factory, token, error_output);
 
-  string type = "";
-  if (*token != "out" && *token != ".")
-  {
-    type = *token;
-    if (type == "rel")
-      type = "relation";
-    else if (type != "node" && type != "way" && type != "relation" && type != "all")
-    {
-      if (error_output)
-	error_output->add_parse_error("Unknown type \"" + type + "\"", token.line_col().first);
-    }
-    ++token;
-  }
-    
   string from = "";
   if (token.good() && *token == ".")
   {
@@ -850,8 +857,33 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory,
 
   if (token.good() && *token == "out")
     return parse_output< TStatement >(stmt_factory, from, token, error_output);
-  else
-    return parse_query< TStatement >(stmt_factory, type, from, token, error_output);
+  if (token.good() && (*token == "<" || *token == "<<" || *token == ">" || *token == ">>"))
+    return parse_full_recurse< TStatement >(stmt_factory, token, from, error_output);
+  
+  string type = "";
+  if (*token != "out" && from == "")
+  {
+    type = *token;
+    if (type == "rel")
+      type = "relation";
+    else if (type != "node" && type != "way" && type != "relation" && type != "all")
+    {
+      if (error_output)
+	error_output->add_parse_error("Unknown type \"" + type + "\"", token.line_col().first);
+    }
+    ++token;
+  }
+  if (token.good() && *token == ".")
+  {
+    ++token;
+    if (token.good())
+    {
+      from = *token;
+      ++token;
+    }
+  }
+  
+  return parse_query< TStatement >(stmt_factory, type, from, token, error_output);
 }
 
 template< class TStatement >

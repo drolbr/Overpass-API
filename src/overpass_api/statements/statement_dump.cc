@@ -380,15 +380,21 @@ string Statement_Dump::dump_compact_map_ql() const
     {
       string rel_type = attributes.find("type")->second;
       if (rel_type == "way-node" || rel_type == "relation-node")
-	result += "node";
+	result += "node" + dump_subquery_map_ql(name, attributes);
       else if (rel_type == "relation-way" || rel_type == "node-way")
-	result += "way";
+	result += "way" + dump_subquery_map_ql(name, attributes);
       else if (rel_type == "relation-relation" || rel_type == "relation-backwards"
 	  || rel_type == "node-relation" || rel_type == "way-relation")
-	result += "rel";
+	result += "rel" + dump_subquery_map_ql(name, attributes);
+      else if (rel_type == "down")
+	result += ">";
+      else if (rel_type == "down-rel")
+	result += ">>";
+      else if (rel_type == "up")
+	result += "<";
+      else if (rel_type == "up-rel")
+	result += "<<";
     }
-    
-    result += dump_subquery_map_ql(name, attributes);
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
@@ -539,15 +545,21 @@ string Statement_Dump::dump_pretty_map_ql() const
     {
       string rel_type = attributes.find("type")->second;
       if (rel_type == "way-node" || rel_type == "relation-node")
-	result += "node";
+	result += "node" + dump_subquery_map_ql(name, attributes);
       else if (rel_type == "relation-way" || rel_type == "node-way")
-	result += "way";
+	result += "way" + dump_subquery_map_ql(name, attributes);
       else if (rel_type == "relation-relation" || rel_type == "relation-backwards"
 	  || rel_type == "node-relation" || rel_type == "way-relation")
-	result += "rel";
+	result += "rel" + dump_subquery_map_ql(name, attributes);
+      else if (rel_type == "down")
+	result += ">";
+      else if (rel_type == "down-rel")
+	result += ">>";
+      else if (rel_type == "up")
+	result += "<";
+      else if (rel_type == "up-rel")
+	result += "<<";
     }
-    
-    result += dump_subquery_map_ql(name, attributes);
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
