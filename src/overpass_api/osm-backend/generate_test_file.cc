@@ -1992,6 +1992,51 @@ struct Accept_Query_111 : public Accept_All_Tags
     uint pattern_size;
 };
 
+struct Accept_Query_113 : public Accept_All_Tags
+{
+  Accept_Query_113(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const
+  {
+    return (id == pattern_size*pattern_size/4 - pattern_size/2 + 1);
+  }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_114 : public Accept_All_Tags
+{
+  Accept_Query_114(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const
+  {
+    return (id == 2 || (id >= 6 && id <= 8) || id == 10 || id == 11);
+  }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_117 : public Accept_All_Tags
+{
+  Accept_Query_117(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const
+  {
+    return (id == 2 || (id >= 6 && id <= 11));
+  }
+  
+  private:
+    uint pattern_size;
+};
+
 struct Accept_Foreach_1 : public Accept_All_Tags
 {
   Accept_Foreach_1(uint pattern_size_)
@@ -2730,6 +2775,21 @@ int main(int argc, char* args[])
       modifier = new Accept_Query_110(pattern_size);
     else if (string(args[2]) == "query_111")
       modifier = new Accept_Query_111(pattern_size);
+    else if (string(args[2]) == "query_112")
+      // query 112 and query 5 shall both return an empty set.
+      modifier = new Accept_Query_5(pattern_size);
+    else if (string(args[2]) == "query_113")
+      modifier = new Accept_Query_113(pattern_size);
+    else if (string(args[2]) == "query_114")
+      modifier = new Accept_Query_114(pattern_size);
+    else if (string(args[2]) == "query_115")
+      // query 115 and query 5 shall both return an empty set.
+      modifier = new Accept_Query_5(pattern_size);
+    else if (string(args[2]) == "query_116")
+      // query 116 and 113 shall return the same result
+      modifier = new Accept_Query_113(pattern_size);
+    else if (string(args[2]) == "query_117")
+      modifier = new Accept_Query_117(pattern_size);
     else if (string(args[2]) == "union_1")
       modifier = new Accept_Union_1(pattern_size);
     else if (string(args[2]) == "union_2")
