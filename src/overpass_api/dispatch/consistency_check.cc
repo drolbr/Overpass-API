@@ -190,12 +190,10 @@ int main(int argc, char *argv[])
   try
   {
     // open read transaction and log this.
-    Dispatcher_Stub dispatcher(db_dir, error_output, "-- consistency check --\n", area_level);
+    Dispatcher_Stub dispatcher(db_dir, error_output, "-- consistency check --\n", area_level,
+			       24*60*60, 1024*1024*1024);
     Resource_Manager& rman = dispatcher.resource_manager();
     
-    // set limits - short circuited until forecast gets effective
-    dispatcher.set_limits();
-
     // perform check
     {
       uint32 count = 0;

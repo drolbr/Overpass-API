@@ -33,7 +33,7 @@ struct Default_Dispatcher_Logger : public Dispatcher_Logger
   virtual void write_start(pid_t pid, const vector< pid_t >& registered);
   virtual void write_rollback(pid_t pid);
   virtual void write_commit(pid_t pid);
-  virtual void request_read_and_idx(pid_t pid);
+  virtual void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space);
   virtual void read_idx_finished(pid_t pid);
   virtual void prolongate(pid_t pid);
   virtual void read_finished(pid_t pid);
@@ -67,10 +67,12 @@ void Default_Dispatcher_Logger::write_commit(pid_t pid)
   logger->annotated_log(out.str());
 }
 
-void Default_Dispatcher_Logger::request_read_and_idx(pid_t pid)
+void Default_Dispatcher_Logger::request_read_and_idx
+    (pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space)
 {
   ostringstream out;
-  out<<"request_read_and_idx of process "<<pid<<'.';
+  out<<"request_read_and_idx of process "<<pid<<" timeout "<<max_allowed_time
+      <<" space "<<max_allowed_space<<'.';
   logger->annotated_log(out.str());
 }
 
@@ -251,6 +253,7 @@ int main(int argc, char* argv[])
          "", db_dir + (areas ? "areas_shadow" : "osm_base_shadow"), db_dir,
 	 areas ? area_settings().max_num_processes : osm_base_settings().max_num_processes,
 	 areas ? area_settings().purge_timeout : osm_base_settings().purge_timeout,
+	 areas ? area_settings().total_available_space : osm_base_settings().total_available_space,
 	 files_to_manage, &disp_logger);
     dispatcher.standby_loop(0);
   }

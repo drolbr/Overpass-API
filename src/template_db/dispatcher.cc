@@ -101,6 +101,7 @@ Dispatcher::Dispatcher
      string shadow_name_,
      string db_dir_,
      uint max_num_reading_processes_, uint purge_timeout_,
+     uint64 total_available_space_,
      const vector< File_Properties* >& controlled_files_,
      Dispatcher_Logger* logger_)
     : controlled_files(controlled_files_),
@@ -110,6 +111,7 @@ Dispatcher::Dispatcher
       dispatcher_share_name(dispatcher_share_name_),
       max_num_reading_processes(max_num_reading_processes_),
       purge_timeout(purge_timeout_),
+      total_available_space(total_available_space_),
       logger(logger_)
 {
   // get the absolute pathname of the current directory
@@ -262,10 +264,10 @@ void Dispatcher::write_commit(pid_t pid)
   }*/
 }
 
-void Dispatcher::request_read_and_idx(pid_t pid)
+void Dispatcher::request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space)
 {
   if (logger)
-    logger->request_read_and_idx(pid);
+    logger->request_read_and_idx(pid, max_allowed_time, max_allowed_space);
   for (vector< Idx_Footprints >::iterator it(data_footprints.begin());
       it != data_footprints.end(); ++it)
     it->register_pid(pid);
@@ -273,7 +275,7 @@ void Dispatcher::request_read_and_idx(pid_t pid)
       it != map_footprints.end(); ++it)
     it->register_pid(pid);
   processes_reading_idx.insert(pid);
-  processes_reading[pid] = time(NULL);
+  processes_reading[pid] = make_pair(time(NULL), max_allowed_space);
 }
 
 void Dispatcher::read_idx_finished(pid_t pid)
@@ -287,7 +289,7 @@ void Dispatcher::prolongate(pid_t pid)
 {
   if (logger)
     logger->prolongate(pid);
-  processes_reading[pid] = time(NULL);
+  processes_reading[pid].first = time(NULL);
 }
 
 void Dispatcher::read_finished(pid_t pid)
@@ -595,7 +597,33 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	  check_and_purge();
 	  continue;
 	}
-	request_read_and_idx(client_pid);
+	
+	uint32 max_allowed_time;
+	int bytes_read = -1;
+	int counter = 0;
+	while (bytes_read == -1 && ++counter <= 100)
+	{
+	  bytes_read = recv(connection_per_pid[client_pid], &max_allowed_time, sizeof(uint32), 0);
+	  millisleep(1);
+	}
+	if (bytes_read == -1)
+	  continue;
+	
+	uint64 max_allowed_space;
+	bytes_read = -1;
+	counter = 0;
+	while (bytes_read == -1 && ++counter <= 100)
+	{
+	  bytes_read = recv(connection_per_pid[client_pid], &max_allowed_space, sizeof(uint64), 0);
+	  millisleep(1);
+	}
+	if (bytes_read == -1)
+	  continue;
+	
+	if (max_allowed_space > (total_available_space - total_claimed_space())/2)
+	  continue;
+	
+	request_read_and_idx(client_pid, max_allowed_time, max_allowed_space);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == READ_IDX_FINISHED)
@@ -630,11 +658,15 @@ void Dispatcher::output_status()
   {
     ofstream status((shadow_name + ".status").c_str());
     
-    status<<started_connections.size()<<' '<<connection_per_pid.size()<<'\n';
+    status<<started_connections.size()<<' '<<connection_per_pid.size()
+        <<' '<<total_available_space<<' '<<total_claimed_space()<<'\n';
     
     for (set< pid_t >::const_iterator it = processes_reading_idx.begin();
         it != processes_reading_idx.end(); ++it)
-      status<<REQUEST_READ_AND_IDX<<' '<<*it<<'\n';
+    {
+      status<<REQUEST_READ_AND_IDX<<' '<<*it
+	  <<' '<<processes_reading[*it].second<<'\n';
+    }
     set< pid_t > collected_pids;
     for (vector< Idx_Footprints >::iterator it(data_footprints.begin());
         it != data_footprints.end(); ++it)
@@ -652,7 +684,7 @@ void Dispatcher::output_status()
           it != registered_processes.end(); ++it)
 	collected_pids.insert(*it);
     }
-    for (map< pid_t, uint32 >::const_iterator it = processes_reading.begin();
+    for (map< pid_t, pair< uint32, uint64 > >::const_iterator it = processes_reading.begin();
         it != processes_reading.end(); ++it)
       collected_pids.insert(it->first);
     
@@ -660,7 +692,8 @@ void Dispatcher::output_status()
         it != collected_pids.end(); ++it)
     {
       if (processes_reading_idx.find(*it) == processes_reading_idx.end())
-	status<<READ_IDX_FINISHED<<' '<<*it<<'\n';
+	status<<READ_IDX_FINISHED<<' '<<*it
+	    <<' '<<processes_reading[*it].second<<'\n';
     }
   }
   catch (...) {}
@@ -703,6 +736,16 @@ vector< bool > Idx_Footprints::total_footprint() const
   return result;
 }
 
+uint64 Dispatcher::total_claimed_space() const
+{
+  uint64 result = 0;
+  for (map< pid_t, pair< uint32, uint64 > >::const_iterator it = processes_reading.begin();
+      it != processes_reading.end(); ++it)
+    result += it->second.second;
+  
+  return result;
+}
+
 void Dispatcher::check_and_purge()
 {
   set< pid_t > collected_pids;
@@ -722,7 +765,7 @@ void Dispatcher::check_and_purge()
         it != registered_processes.end(); ++it)
       collected_pids.insert(*it);
   }
-  for (map< pid_t, uint32 >::const_iterator it = processes_reading.begin();
+  for (map< pid_t, pair< uint32, uint64 > >::const_iterator it = processes_reading.begin();
       it != processes_reading.end(); ++it)
     collected_pids.insert(it->first);
   
@@ -730,12 +773,13 @@ void Dispatcher::check_and_purge()
   for (set< pid_t >::const_iterator it = collected_pids.begin();
       it != collected_pids.end(); ++it)
   {
-    map< pid_t, uint32 >::const_iterator alive_it = processes_reading.find(*it);
-    if ((alive_it != processes_reading.end()) && (alive_it->second + purge_timeout > current_time))
+    map< pid_t, pair< uint32, uint64 > >::const_iterator alive_it = processes_reading.find(*it);
+    if ((alive_it != processes_reading.end()) &&
+        (alive_it->second.first + purge_timeout > current_time))
       continue;
     if (disconnected.find(*it) != disconnected.end()
         || alive_it == processes_reading.end()
-	|| alive_it->second + purge_timeout > current_time)
+	|| alive_it->second.first + purge_timeout > current_time)
     {
       if (logger)
 	logger->purge(*it);
@@ -794,9 +838,10 @@ Dispatcher_Client::~Dispatcher_Client()
   close(dispatcher_shm_fd);
 }
 
-void Dispatcher_Client::send_message(uint32 message, string source_pos)
+template< class TObject >
+void Dispatcher_Client::send_message(TObject message, string source_pos)
 {
-  if (send(socket_descriptor, &message, sizeof(uint32), 0) == -1)
+  if (send(socket_descriptor, &message, sizeof(TObject), 0) == -1)
     throw File_Error(errno, dispatcher_share_name, source_pos);
 }
 
@@ -890,7 +935,7 @@ void Dispatcher_Client::write_commit()
   }
 }
 
-void Dispatcher_Client::request_read_and_idx()
+void Dispatcher_Client::request_read_and_idx(uint32 max_allowed_time, uint64 max_allowed_space)
 {
   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
   
@@ -898,7 +943,9 @@ void Dispatcher_Client::request_read_and_idx()
   while (++counter <= 300)
   {
     send_message(Dispatcher::REQUEST_READ_AND_IDX,
-		 "Dispatcher_Client::request_read_and_idx::socket");
+		 "Dispatcher_Client::request_read_and_idx::socket::1");
+    send_message(max_allowed_time, "Dispatcher_Client::request_read_and_idx::socket::2");
+    send_message(max_allowed_space, "Dispatcher_Client::request_read_and_idx::socket::3");
     
     if (ack_arrived())
       return;

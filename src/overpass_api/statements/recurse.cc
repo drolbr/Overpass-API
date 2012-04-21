@@ -48,10 +48,116 @@ Generic_Statement_Maker< Recurse_Statement > Recurse_Statement::statement_maker(
 
 //-----------------------------------------------------------------------------
 
-template < class TIndex, class TObject, class TContainer >
-void collect_items(const Statement& stmt, Resource_Manager& rman,
+template < class TObject, class TPredicateA, class TPredicateB >
+class And_Predicate
+{
+  public:
+    And_Predicate(const TPredicateA& predicate_a_, const TPredicateB& predicate_b_)
+    : predicate_a(predicate_a_), predicate_b(predicate_b_) {}
+    bool match(const TObject& obj) const
+    {
+      return (predicate_a.match(obj) && predicate_b.match(obj));
+    }
+    
+  private:
+    TPredicateA predicate_a;
+    TPredicateB predicate_b;
+};
+
+template < class TObject, class TPredicateA, class TPredicateB >
+class Or_Predicate
+{
+  public:
+    Or_Predicate(const TPredicateA& predicate_a_, const TPredicateB& predicate_b_)
+    : predicate_a(predicate_a_), predicate_b(predicate_b_) {}
+    bool match(const TObject& obj) const
+    {
+      return (predicate_a.match(obj) || predicate_b.match(obj));
+    }
+    
+  private:
+    TPredicateA predicate_a;
+    TPredicateB predicate_b;
+};
+
+//-----------------------------------------------------------------------------
+
+template < class TObject >
+class Id_Predicate
+{
+  public:
+    Id_Predicate(const vector< uint32 >& ids_) : ids(ids_) {}
+    bool match(const TObject& obj) const
+    {
+      return binary_search(ids.begin(), ids.end(), obj.id);
+    }
+    
+  private:
+    const vector< uint32 >& ids;
+};
+
+//-----------------------------------------------------------------------------
+
+bool has_a_child_with_id
+    (const Relation_Skeleton& relation, const vector< uint32 >& ids, uint32 type)
+{
+  for (vector< Relation_Entry >::const_iterator it3(relation.members.begin());
+      it3 != relation.members.end(); ++it3)
+  {
+    if ((it3->type == type) &&
+        (binary_search(ids.begin(), ids.end(), it3->ref)))
+      return true;
+  }
+  return false;
+}
+
+bool has_a_child_with_id
+    (const Way_Skeleton& way, const vector< uint32 >& ids)
+{
+  for (vector< uint32 >::const_iterator it3(way.nds.begin());
+      it3 != way.nds.end(); ++it3)
+  {
+    if (binary_search(ids.begin(), ids.end(), *it3))
+      return true;
+  }
+  return false;
+}
+
+class Get_Parent_Rels_Predicate
+{
+public:
+  Get_Parent_Rels_Predicate(const vector< uint32 >& ids_, uint32 child_type_)
+    : ids(ids_), child_type(child_type_) {}
+  bool match(const Relation_Skeleton& obj) const
+  {
+    return has_a_child_with_id(obj, ids, child_type);
+  }
+  
+private:
+  const vector< uint32 >& ids;
+  uint32 child_type;
+};
+
+class Get_Parent_Ways_Predicate
+{
+public:
+  Get_Parent_Ways_Predicate(const vector< uint32 >& ids_)
+    : ids(ids_) {}
+  bool match(const Way_Skeleton& obj) const
+  {
+    return has_a_child_with_id(obj, ids);
+  }
+  
+private:
+  const vector< uint32 >& ids;
+};
+
+//-----------------------------------------------------------------------------
+
+template < class TIndex, class TObject, class TContainer, class TPredicate >
+void collect_items_discrete(const Statement& stmt, Resource_Manager& rman,
 		   File_Properties& file_properties,
-		   const TContainer& req, vector< uint32 > ids,
+		   const TContainer& req, const TPredicate& predicate,
 		   map< TIndex, vector< TObject > >& result)
 {
   uint32 count = 0;
@@ -66,15 +172,15 @@ void collect_items(const Statement& stmt, Resource_Manager& rman,
       count = 0;
       rman.health_check(stmt);
     }
-    if (binary_search(ids.begin(), ids.end(), it.object().id))
+    if (predicate.match(it.object()))
       result[it.index()].push_back(it.object());
   }
 }
 
-template < class TIndex, class TObject, class TContainer >
+template < class TIndex, class TObject, class TContainer, class TPredicate >
 void collect_items_range(const Statement& stmt, Resource_Manager& rman,
 		   File_Properties& file_properties,
-		   const TContainer& req, vector< uint32 > ids,
+		   const TContainer& req, const TPredicate& predicate,
 		   map< TIndex, vector< TObject > >& result)
 {
   uint32 count = 0;
@@ -90,10 +196,50 @@ void collect_items_range(const Statement& stmt, Resource_Manager& rman,
       count = 0;
       rman.health_check(stmt);
     }
-    if (binary_search(ids.begin(), ids.end(), it.object().id))
+    if (predicate.match(it.object()))
       result[it.index()].push_back(it.object());
   }
 }
+
+template < class TIndex, class TObject, class TPredicate >
+void collect_items_flat(const Statement& stmt, Resource_Manager& rman,
+		   File_Properties& file_properties, const TPredicate& predicate,
+		   map< TIndex, vector< TObject > >& result)
+{
+  uint32 count = 0;
+  Block_Backend< TIndex, TObject > db
+      (rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
+  for (typename Block_Backend< TIndex, TObject >::Flat_Iterator
+      it(db.flat_begin()); !(it == db.flat_end()); ++it)
+  {
+    if (++count >= 64*1024)
+    {
+      count = 0;
+      rman.health_check(stmt);
+    }
+    if (predicate.match(it.object()))
+      result[it.index()].push_back(it.object());
+  }
+}
+
+template < class TIndex, class TObject, class TPredicate >
+void filter_items(const TPredicate& predicate, map< TIndex, vector< TObject > >& data)
+{
+  for (typename map< TIndex, vector< TObject > >::iterator it = data.begin();
+      it != data.end(); ++it)
+  {
+    vector< TObject > local_into;
+    for (typename vector< TObject >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      if (predicate.match(*iit))
+	local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }
+}
+
+//-----------------------------------------------------------------------------
 
 vector< Uint31_Index > collect_relation_req
     (const Statement& stmt, Resource_Manager& rman,
@@ -276,31 +422,6 @@ void extract_ids(const vector< Way_Skeleton >& ways, vector< uint32 >& ids)
         it3 != it2->nds.end(); ++it3)
       ids.push_back(*it3);
   }
-}
-
-bool has_a_child_with_id
-    (const Relation_Skeleton& relation, vector< uint32 >& ids, uint32 type)
-{
-  for (vector< Relation_Entry >::const_iterator it3(relation.members.begin());
-      it3 != relation.members.end(); ++it3)
-  {
-    if ((it3->type == type) &&
-        (binary_search(ids.begin(), ids.end(), it3->ref)))
-      return true;
-  }
-  return false;
-}
-
-bool has_a_child_with_id
-    (const Way_Skeleton& way, vector< uint32 >& ids)
-{
-  for (vector< uint32 >::const_iterator it3(way.nds.begin());
-      it3 != way.nds.end(); ++it3)
-  {
-    if (binary_search(ids.begin(), ids.end(), *it3))
-      return true;
-  }
-  return false;
 }
 
 template< class TIndex, class TObject >
@@ -529,7 +650,7 @@ void collect_relations
 {
   vector< Uint31_Index > req = collect_indices_31_rels(stmt, rman, rels_begin, rels_end);  
   vector< uint32 > ids = collect_ids(stmt, rman, Relation_Entry::RELATION, rels_begin, rels_end);  
-  collect_items(stmt, rman, *osm_base_settings().RELATIONS, req, ids, result);
+  collect_items_discrete(stmt, rman, *osm_base_settings().RELATIONS, req, Id_Predicate< Relation_Skeleton >(ids), result);
 }
 
 void collect_relations
@@ -540,7 +661,7 @@ void collect_relations
      const set< pair< Uint31_Index, Uint31_Index > >& relation_ranges)
 {
   vector< uint32 > ids = collect_ids(stmt, rman, Relation_Entry::RELATION, rels_begin, rels_end);  
-  collect_items_range(stmt, rman, *osm_base_settings().RELATIONS, relation_ranges, ids, result);
+  collect_items_range(stmt, rman, *osm_base_settings().RELATIONS, relation_ranges, Id_Predicate< Relation_Skeleton >(ids), result);
 }
 
 void collect_relations
@@ -557,7 +678,7 @@ void collect_relations
   intersect_ids.erase(set_intersection
       (ids.begin(), ids.end(), children_ids.begin(), children_ids.end(), intersect_ids.begin()),
       intersect_ids.end());
-  collect_items(stmt, rman, *osm_base_settings().RELATIONS, req, ids, result);
+  collect_items_discrete(stmt, rman, *osm_base_settings().RELATIONS, req, Id_Predicate< Relation_Skeleton >(ids), result);
 }
 
 void collect_relations
@@ -574,7 +695,7 @@ void collect_relations
   intersect_ids.erase(set_intersection
       (ids.begin(), ids.end(), children_ids.begin(), children_ids.end(), intersect_ids.begin()),
       intersect_ids.end());
-  collect_items_range(stmt, rman, *osm_base_settings().RELATIONS, relation_ranges, ids, result);
+  collect_items_range(stmt, rman, *osm_base_settings().RELATIONS, relation_ranges, Id_Predicate< Relation_Skeleton >(ids), result);
 }
 
 template< class TSourceIndex, class TSourceObject >
@@ -587,16 +708,9 @@ void collect_relations
   rman.health_check(stmt);
   set< Uint31_Index > req = extract_parent_indices(sources);
   rman.health_check(stmt);
-  
-  Block_Backend< Uint31_Index, Relation_Skeleton > targets_db
-      (rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
-  for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
-      it(targets_db.discrete_begin(req.begin(), req.end()));
-      !(it == targets_db.discrete_end()); ++it)
-  {
-    if (has_a_child_with_id(it.object(), ids, source_type))
-      result[it.index()].push_back(it.object());
-  }
+
+  collect_items_discrete(stmt, rman, *osm_base_settings().RELATIONS, req,
+			 Get_Parent_Rels_Predicate(ids, source_type), result);
 }
 
 template< class TSourceIndex, class TSourceObject >
@@ -611,16 +725,11 @@ void collect_relations
   set< Uint31_Index > req = extract_parent_indices(sources);
   rman.health_check(stmt);
   
-  Block_Backend< Uint31_Index, Relation_Skeleton > targets_db
-      (rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
-  for (Block_Backend< Uint31_Index, Relation_Skeleton >::Discrete_Iterator
-      it(targets_db.discrete_begin(req.begin(), req.end()));
-      !(it == targets_db.discrete_end()); ++it)
-  {
-    if (binary_search(ids.begin(), ids.end(), it.object().id)
-        && has_a_child_with_id(it.object(), children_ids, source_type))
-      result[it.index()].push_back(it.object());
-  }
+  collect_items_discrete(stmt, rman, *osm_base_settings().RELATIONS, req,
+      And_Predicate< Relation_Skeleton,
+	  Id_Predicate< Relation_Skeleton >, Get_Parent_Rels_Predicate >
+	  (Id_Predicate< Relation_Skeleton >(ids),
+          Get_Parent_Rels_Predicate(children_ids, source_type)), result);
 }
 
 void collect_relations
@@ -631,14 +740,8 @@ void collect_relations
   vector< uint32 > ids = extract_children_ids(sources);    
   rman.health_check(stmt);
   
-  Block_Backend< Uint31_Index, Relation_Skeleton > targets_db
-      (rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
-  for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
-      it(targets_db.flat_begin()); !(it == targets_db.flat_end()); ++it)
-  {
-    if (has_a_child_with_id(it.object(), ids, Relation_Entry::RELATION))
-      result[it.index()].push_back(it.object());
-  }
+  collect_items_flat(stmt, rman, *osm_base_settings().RELATIONS,
+      Get_Parent_Rels_Predicate(ids, Relation_Entry::RELATION), result);
 }
 
 void collect_relations
@@ -650,15 +753,12 @@ void collect_relations
   vector< uint32 > children_ids = extract_children_ids(sources);    
   rman.health_check(stmt);
   
-  Block_Backend< Uint31_Index, Relation_Skeleton > targets_db
-      (rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
-  for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
-      it(targets_db.flat_begin()); !(it == targets_db.flat_end()); ++it)
-  {
-    if (binary_search(ids.begin(), ids.end(), it.object().id)
-        && has_a_child_with_id(it.object(), children_ids, Relation_Entry::RELATION))
-      result[it.index()].push_back(it.object());
-  }
+  collect_items_flat(stmt, rman, *osm_base_settings().RELATIONS,
+      And_Predicate< Relation_Skeleton,
+	  Id_Predicate< Relation_Skeleton >, Get_Parent_Rels_Predicate >
+	  (Id_Predicate< Relation_Skeleton >(ids),
+          Get_Parent_Rels_Predicate(children_ids, Relation_Entry::RELATION)),
+      result);
 }
 
 void collect_ways
@@ -669,7 +769,7 @@ void collect_ways
 {
   vector< Uint31_Index > req = collect_indices_31(stmt, rman, rels_begin, rels_end);
   vector< uint32 > ids = collect_ids(stmt, rman, Relation_Entry::WAY, rels_begin, rels_end);
-  collect_items(stmt, rman, *osm_base_settings().WAYS, req, ids, result);
+  collect_items_discrete(stmt, rman, *osm_base_settings().WAYS, req, Id_Predicate< Way_Skeleton >(ids), result);
 }
 
 void collect_ways
@@ -680,7 +780,7 @@ void collect_ways
      const set< pair< Uint31_Index, Uint31_Index > >& way_ranges)
 {
   vector< uint32 > ids = collect_ids(stmt, rman, Relation_Entry::WAY, rels_begin, rels_end);
-  collect_items_range(stmt, rman, *osm_base_settings().WAYS, way_ranges, ids, result);
+  collect_items_range(stmt, rman, *osm_base_settings().WAYS, way_ranges, Id_Predicate< Way_Skeleton >(ids), result);
 }
 
 void collect_ways
@@ -696,7 +796,7 @@ void collect_ways
   intersect_ids.erase(set_intersection
       (ids.begin(), ids.end(), children_ids.begin(), children_ids.end(), intersect_ids.begin()),
       intersect_ids.end());
-  collect_items(stmt, rman, *osm_base_settings().WAYS, req, intersect_ids, result);
+  collect_items_discrete(stmt, rman, *osm_base_settings().WAYS, req, Id_Predicate< Way_Skeleton >(intersect_ids), result);
 }
 
 void collect_ways
@@ -712,7 +812,7 @@ void collect_ways
   intersect_ids.erase(set_intersection
       (ids.begin(), ids.end(), children_ids.begin(), children_ids.end(), intersect_ids.begin()),
       intersect_ids.end());
-  collect_items_range(stmt, rman, *osm_base_settings().WAYS, way_ranges, intersect_ids, result);
+  collect_items_range(stmt, rman, *osm_base_settings().WAYS, way_ranges, Id_Predicate< Way_Skeleton >(intersect_ids), result);
 }
 
 void collect_ways
@@ -725,15 +825,8 @@ void collect_ways
   set< Uint31_Index > req = extract_parent_indices(nodes);
   rman.health_check(stmt);
   
-  Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-      (rman.get_transaction()->data_index(osm_base_settings().WAYS));
-  for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
-      it(ways_db.discrete_begin(req.begin(), req.end()));
-      !(it == ways_db.discrete_end()); ++it)
-  {
-    if (has_a_child_with_id(it.object(), ids))
-      result[it.index()].push_back(it.object());
-  }
+  collect_items_discrete(stmt, rman, *osm_base_settings().WAYS, req,
+      Get_Parent_Ways_Predicate(ids), result);
 }
 
 void collect_ways
@@ -747,16 +840,10 @@ void collect_ways
   set< Uint31_Index > req = extract_parent_indices(nodes);
   rman.health_check(stmt);
   
-  Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-      (rman.get_transaction()->data_index(osm_base_settings().WAYS));
-  for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
-      it(ways_db.discrete_begin(req.begin(), req.end()));
-      !(it == ways_db.discrete_end()); ++it)
-  {
-    if (binary_search(ids.begin(), ids.end(), it.object().id)
-        && has_a_child_with_id(it.object(), children_ids))
-      result[it.index()].push_back(it.object());
-  }
+  collect_items_discrete(stmt, rman, *osm_base_settings().WAYS, req,
+      And_Predicate< Way_Skeleton,
+	  Id_Predicate< Way_Skeleton >, Get_Parent_Ways_Predicate >
+	  (Id_Predicate< Way_Skeleton >(ids), Get_Parent_Ways_Predicate(children_ids)), result);
 }
 
 void collect_nodes
@@ -767,7 +854,7 @@ void collect_nodes
      const set< pair< Uint32_Index, Uint32_Index > >& node_ranges)
 {
   vector< uint32 > ids = collect_ids(stmt, rman, Relation_Entry::NODE, rels_begin, rels_end);
-  collect_items_range(stmt, rman, *osm_base_settings().NODES, node_ranges, ids, result);
+  collect_items_range(stmt, rman, *osm_base_settings().NODES, node_ranges, Id_Predicate< Node_Skeleton >(ids), result);
 }
 
 void collect_nodes
@@ -779,7 +866,7 @@ void collect_nodes
   set< pair< Uint32_Index, Uint32_Index > > req =
       collect_indices_32(stmt, rman, rels_begin, rels_end);
   vector< uint32 > ids = collect_ids(stmt, rman, Relation_Entry::NODE, rels_begin, rels_end);
-  collect_items_range(stmt, rman, *osm_base_settings().NODES, req, ids, result);
+  collect_items_range(stmt, rman, *osm_base_settings().NODES, req, Id_Predicate< Node_Skeleton >(ids), result);
 }
 
 void collect_nodes
@@ -796,7 +883,7 @@ void collect_nodes
   intersect_ids.erase(set_intersection
       (ids.begin(), ids.end(), children_ids.begin(), children_ids.end(), intersect_ids.begin()),
       intersect_ids.end());
-  collect_items_range(stmt, rman, *osm_base_settings().NODES, node_ranges, intersect_ids, result);
+  collect_items_range(stmt, rman, *osm_base_settings().NODES, node_ranges, Id_Predicate< Node_Skeleton >(intersect_ids), result);
 }
 
 void collect_nodes
@@ -814,7 +901,7 @@ void collect_nodes
   intersect_ids.erase(set_intersection
       (ids.begin(), ids.end(), children_ids.begin(), children_ids.end(), intersect_ids.begin()),
       intersect_ids.end());
-  collect_items_range(stmt, rman, *osm_base_settings().NODES, req, intersect_ids, result);
+  collect_items_range(stmt, rman, *osm_base_settings().NODES, req, Id_Predicate< Node_Skeleton >(intersect_ids), result);
 }
 
 void collect_nodes
@@ -825,7 +912,7 @@ void collect_nodes
      const set< pair< Uint32_Index, Uint32_Index > >& node_ranges)
 {
   vector< uint32 > ids = collect_ids(stmt, rman, ways_begin, ways_end);
-  collect_items_range(stmt, rman, *osm_base_settings().NODES, node_ranges, ids, result);
+  collect_items_range(stmt, rman, *osm_base_settings().NODES, node_ranges, Id_Predicate< Node_Skeleton >(ids), result);
 }
 
 void collect_nodes
@@ -837,7 +924,7 @@ void collect_nodes
   set< pair< Uint32_Index, Uint32_Index > > req =
       collect_indices_from_way(stmt, rman, ways_begin, ways_end);
   vector< uint32 > ids = collect_ids(stmt, rman, ways_begin, ways_end);
-  collect_items_range(stmt, rman, *osm_base_settings().NODES, req, ids, result);
+  collect_items_range(stmt, rman, *osm_base_settings().NODES, req, Id_Predicate< Node_Skeleton >(ids), result);
 }
 
 void collect_nodes
@@ -853,7 +940,7 @@ void collect_nodes
   intersect_ids.erase(set_intersection
       (ids.begin(), ids.end(), children_ids.begin(), children_ids.end(), intersect_ids.begin()),
       intersect_ids.end());
-  collect_items_range(stmt, rman, *osm_base_settings().NODES, node_ranges, intersect_ids, result);
+  collect_items_range(stmt, rman, *osm_base_settings().NODES, node_ranges, Id_Predicate< Node_Skeleton >(intersect_ids), result);
 }
 
 void collect_nodes
@@ -870,28 +957,8 @@ void collect_nodes
   intersect_ids.erase(set_intersection
       (ids.begin(), ids.end(), children_ids.begin(), children_ids.end(), intersect_ids.begin()),
       intersect_ids.end());
-  collect_items_range(stmt, rman, *osm_base_settings().NODES, req, intersect_ids, result);
+  collect_items_range(stmt, rman, *osm_base_settings().NODES, req, Id_Predicate< Node_Skeleton >(intersect_ids), result);
 }
-
-//-----------------------------------------------------------------------------
-
-class Recurse_Constraint : public Query_Constraint
-{
-  public:
-    Recurse_Constraint(Recurse_Statement& stmt_) : stmt(&stmt_) {}
-    bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-		  const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-		  const vector< uint32 >& ids);
-    bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-		  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-		  int type, const vector< uint32 >& ids);
-    void filter(Resource_Manager& rman, Set& into);
-    void filter(const Statement& query, Resource_Manager& rman, Set& into);
-    virtual ~Recurse_Constraint() {}
-    
-  private:
-    Recurse_Statement* stmt;
-};
 
 template< class TSourceObject >
 void collect_nodes(const Statement& query, Resource_Manager& rman,
@@ -1004,6 +1071,59 @@ void relations_up_loop(const Statement& query, Resource_Manager& rman,
   }
 }
 
+template< class TIndex, class TObject >
+void filter_by_id(const vector< uint32 >& ids, map< TIndex, vector< TObject > >& result)
+{
+  for (typename map< TIndex, vector< TObject > >::iterator it = result.begin();
+      it != result.end(); ++it)
+  {
+    vector< TObject > local_into;
+    for (typename vector< TObject >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      if (binary_search(ids.begin(), ids.end(), iit->id))
+	local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }
+}
+
+template< class TIndex, class TObject >
+vector< uint32 > collect_elems_ids(const map< TIndex, vector< TObject > >& elems)
+{
+  vector< uint32 > ids;
+  for (typename map< TIndex, vector< TObject > >::const_iterator it = elems.begin();
+      it != elems.end(); ++it)
+  {
+    for (typename vector< TObject >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      ids.push_back(iit->id);
+  }
+  sort(ids.begin(), ids.end());
+  
+  return ids;
+}
+
+//-----------------------------------------------------------------------------
+
+class Recurse_Constraint : public Query_Constraint
+{
+  public:
+    Recurse_Constraint(Recurse_Statement& stmt_) : stmt(&stmt_) {}
+    bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
+		  const set< pair< Uint32_Index, Uint32_Index > >& ranges,
+		  const vector< uint32 >& ids);
+    bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
+		  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
+		  int type, const vector< uint32 >& ids);
+    void filter(Resource_Manager& rman, Set& into);
+    void filter(const Statement& query, Resource_Manager& rman, Set& into);
+    virtual ~Recurse_Constraint() {}
+    
+  private:
+    Recurse_Statement* stmt;
+};
+
 bool Recurse_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
      const set< pair< Uint32_Index, Uint32_Index > >& ranges,
@@ -1039,23 +1159,6 @@ bool Recurse_Constraint::get_data
     indexed_set_union(into.nodes, rel_nodes);
   }
   return true;
-}
-
-template< class TIndex, class TObject >
-void filter_by_id(const vector< uint32 >& ids, map< TIndex, vector< TObject > >& result)
-{
-  for (typename map< TIndex, vector< TObject > >::iterator it = result.begin();
-      it != result.end(); ++it)
-  {
-    vector< TObject > local_into;
-    for (typename vector< TObject >::const_iterator iit = it->second.begin();
-        iit != it->second.end(); ++iit)
-    {
-      if (binary_search(ids.begin(), ids.end(), iit->id))
-	local_into.push_back(*iit);
-    }
-    it->second.swap(local_into);
-  }
 }
 
 bool Recurse_Constraint::get_data
@@ -1133,18 +1236,10 @@ bool Recurse_Constraint::get_data
       map< Uint31_Index, vector< Way_Skeleton > > node_ways;
       collect_ways(query, rman, mit->second.nodes, node_ways);    
       indexed_set_union(rel_ways, node_ways);
-      for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator it = rel_ways.begin(); it != rel_ways.end(); ++it)
-	for (vector< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-	  cout<<it2->id<<' ';
-      cout<<'\n';
       if (ids.empty())
 	collect_relations(query, rman, rel_ways, Relation_Entry::WAY, into.relations);
       else
 	collect_relations(query, rman, rel_ways, Relation_Entry::WAY, into.relations, ids);
-      for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator it = into.relations.begin(); it != into.relations.end(); ++it)
-	for (vector< Relation_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-	  cout<<it2->id<<' ';
-      cout<<'\n';
       
       map< Uint31_Index, vector< Relation_Skeleton > > node_rels;
       if (ids.empty())
@@ -1221,19 +1316,7 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
       || stmt->get_type() == RECURSE_UP_REL)
   {
     vector< uint32 > ids = extract_children_ids(mit->second.nodes);
-
-    for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = into.ways.begin();
-        it != into.ways.end(); ++it)
-    {
-      vector< Way_Skeleton > local_into;
-      for (vector< Way_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-      {
-	if (has_a_child_with_id(*iit, ids))
-	  local_into.push_back(*iit);
-      }
-      it->second.swap(local_into);
-    }
+    filter_items(Get_Parent_Ways_Predicate(ids), into.ways);
   }
   else
     into.ways.clear();
@@ -1268,7 +1351,8 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
     else if (stmt->get_type() == RECURSE_RELATION_BACKWARDS)
       ids = extract_children_ids(mit->second.relations);
     
-    for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = into.relations.begin();
+    filter_items(Get_Parent_Rels_Predicate(ids, source_type), into.relations);
+/*    for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = into.relations.begin();
         it != into.relations.end(); ++it)
     {
       vector< Relation_Skeleton > local_into;
@@ -1279,26 +1363,10 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
   	  local_into.push_back(*iit);
       }
       it->second.swap(local_into);
-    }
+    }*/
   }
   else
     into.relations.clear();
-}
-
-template< class TIndex, class TObject >
-vector< uint32 > collect_elems_ids(const map< TIndex, vector< TObject > >& elems)
-{
-  vector< uint32 > ids;
-  for (typename map< TIndex, vector< TObject > >::const_iterator it = elems.begin();
-      it != elems.end(); ++it)
-  {
-    for (typename vector< TObject >::const_iterator iit = it->second.begin();
-        iit != it->second.end(); ++iit)
-      ids.push_back(iit->id);
-  }
-  sort(ids.begin(), ids.end());
-  
-  return ids;
 }
 
 void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)

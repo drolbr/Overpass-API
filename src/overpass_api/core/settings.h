@@ -55,6 +55,7 @@ struct Osm_Base_Settings
   string shared_name;
   uint max_num_processes;
   uint purge_timeout;
+  uint64 total_available_space;
   
   Osm_Base_Settings();
 };
@@ -69,6 +70,7 @@ struct Area_Settings
   string shared_name;
   uint max_num_processes;
   uint purge_timeout;
+  uint64 total_available_space;
   
   Area_Settings();
 };

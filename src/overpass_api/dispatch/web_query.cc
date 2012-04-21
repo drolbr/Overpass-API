@@ -62,16 +62,29 @@ int main(int argc, char *argv[])
     if (!parse_and_validate(stmt_factory, xml_raw, &error_output, parser_execute))
       return 0;
     
-    // open read transaction and log this.
-    int area_level = 0;
-    Dispatcher_Stub dispatcher("", &error_output, xml_raw, area_level);
-    
-    // set limits - short circuited until forecast gets effective
-    dispatcher.set_limits();
-    
     Osm_Script_Statement* osm_script = 0;
     if (!get_statement_stack()->empty())
       osm_script = dynamic_cast< Osm_Script_Statement* >(get_statement_stack()->front());
+    
+    uint32 max_allowed_time = 0;
+    uint64 max_allowed_space = 0;
+    if (osm_script)
+    {
+      max_allowed_time = osm_script->get_max_allowed_time();
+      max_allowed_space = osm_script->get_max_allowed_space();
+    }
+    else
+    {
+      Osm_Script_Statement temp(0, map< string, string >());
+      max_allowed_time = temp.get_max_allowed_time();
+      max_allowed_space = temp.get_max_allowed_space();
+    }
+    
+    // open read transaction and log this.
+    int area_level = 0;
+    Dispatcher_Stub dispatcher("", &error_output, xml_raw, area_level,
+			       max_allowed_time, max_allowed_space);
+    
     if (!osm_script || osm_script->get_type() == "xml")
       error_output.write_xml_header
           (dispatcher.get_timestamp(),

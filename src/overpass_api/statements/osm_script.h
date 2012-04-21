@@ -50,11 +50,9 @@ class Osm_Script_Statement : public Statement
     void set_template_name(const string& template_name_) { template_name = template_name_; }
     bool template_contains_js() const { return template_contains_js_; }
     void write_output() const;
-    
-    /*    string get_rule_name() { return name; }
-    int get_rule_replace() { return replace; }
-    int get_rule_version() { return version; }
-    void set_database_id(uint database_id_) { database_id = database_id_; }*/
+
+    uint32 get_max_allowed_time() const { return max_allowed_time; }
+    uint64 get_max_allowed_space() const { return max_allowed_space; }
     
   private:
     vector< Statement* > substatements;

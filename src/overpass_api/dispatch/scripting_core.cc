@@ -93,7 +93,8 @@ string de_escape(string input)
 }
 
 Dispatcher_Stub::Dispatcher_Stub
-    (string db_dir_, Error_Output* error_output_, string xml_raw, int& area_level)
+    (string db_dir_, Error_Output* error_output_, string xml_raw, int& area_level,
+     uint32 max_allowed_time, uint64 max_allowed_space)
     : db_dir(db_dir_), error_output(error_output_),
       dispatcher_client(0), area_dispatcher_client(0),
       transaction(0), area_transaction(0), rman(0), meta(get_uses_meta_data())
@@ -118,7 +119,7 @@ Dispatcher_Stub::Dispatcher_Stub
     try
     {
       logger.annotated_log("request_read_and_idx() start");
-      dispatcher_client->request_read_and_idx();
+      dispatcher_client->request_read_and_idx(max_allowed_time, max_allowed_space);
       logger.annotated_log("request_read_and_idx() end");
     }
     catch (const File_Error& e)
@@ -184,7 +185,7 @@ Dispatcher_Stub::Dispatcher_Stub
 	try
 	{
           logger.annotated_log("request_read_and_idx() area start");
-          area_dispatcher_client->request_read_and_idx();
+	  area_dispatcher_client->request_read_and_idx(max_allowed_time, max_allowed_space);
           logger.annotated_log("request_read_and_idx() area end");
         }
 	catch (const File_Error& e)
@@ -286,10 +287,6 @@ Dispatcher_Stub::Dispatcher_Stub
       area_timestamp = de_escape(timestamp);
     }
   }
-}
-
-void Dispatcher_Stub::set_limits()
-{
 }
 
 void Dispatcher_Stub::ping() const

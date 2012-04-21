@@ -97,7 +97,8 @@ int main(int argc, char *argv[])
     if (clone_db_dir != "")
     {
       // open read transaction and log this.
-      Dispatcher_Stub dispatcher(db_dir, error_output, "-- clone database --", area_level);
+      Dispatcher_Stub dispatcher(db_dir, error_output, "-- clone database --", area_level,
+				 24*60*60, 1024*1024*1024);
       
       clone_database(*dispatcher.resource_manager().get_transaction(), clone_db_dir);
       return 0;
@@ -113,17 +114,30 @@ int main(int argc, char *argv[])
       return 0;
     if (debug_level != parser_execute)
       return 0;
-    
-    // open read transaction and log this.
-    Dispatcher_Stub dispatcher(db_dir, error_output, xml_raw, area_level);
-    
-    // set limits - short circuited until forecast gets effective
-    dispatcher.set_limits();
- 
-    Web_Output web_output(log_level);
+
     Osm_Script_Statement* osm_script = 0;
     if (!get_statement_stack()->empty())
       osm_script = dynamic_cast< Osm_Script_Statement* >(get_statement_stack()->front());
+    
+    uint32 max_allowed_time = 0;
+    uint64 max_allowed_space = 0;
+    if (osm_script)
+    {
+      max_allowed_time = osm_script->get_max_allowed_time();
+      max_allowed_space = osm_script->get_max_allowed_space();
+    }
+    else
+    {
+      Osm_Script_Statement temp(0, map< string, string >());
+      max_allowed_time = temp.get_max_allowed_time();
+      max_allowed_space = temp.get_max_allowed_space();
+    }
+    
+    // open read transaction and log this.
+    Dispatcher_Stub dispatcher(db_dir, error_output, xml_raw, area_level,
+			       max_allowed_time, max_allowed_space);
+ 
+    Web_Output web_output(log_level);
     if (!osm_script || osm_script->get_type() == "xml")
       web_output.write_xml_header
           (dispatcher.get_timestamp(),

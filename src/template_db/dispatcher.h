@@ -51,7 +51,8 @@ struct Dispatcher_Logger
   virtual void write_start(pid_t pid, const vector< pid_t >& registered) = 0;
   virtual void write_rollback(pid_t pid) = 0;
   virtual void write_commit(pid_t pid) = 0;
-  virtual void request_read_and_idx(pid_t pid) = 0;
+  virtual void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space)
+      = 0;
   virtual void read_idx_finished(pid_t pid) = 0;
   virtual void prolongate(pid_t pid) = 0;
   virtual void read_finished(pid_t pid) = 0;
@@ -82,6 +83,7 @@ class Dispatcher
 	       string shadow_name,
 	       string db_dir,
 	       uint max_num_reading_processes, uint purge_timeout,
+	       uint64 total_available_space,
 	       const vector< File_Properties* >& controlled_files,
 	       Dispatcher_Logger* logger = 0);
 	       
@@ -107,7 +109,7 @@ class Dispatcher
     /** Request the index for a read operation and registers the reading process.
         Reading the index files should be taking a quick copy, because if any process
 	is in this state, write_commits are blocked. */
-    void request_read_and_idx(pid_t pid);
+    void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space);
     
     /** Changes the registered state from reading the index to reading the
         database. Can be safely called multiple times for the same process. */
@@ -144,12 +146,13 @@ class Dispatcher
     vector< Idx_Footprints > data_footprints;
     vector< Idx_Footprints > map_footprints;
     set< pid_t > processes_reading_idx;
-    map< pid_t, uint32 > processes_reading;
+    map< pid_t, pair< uint32, uint64 > > processes_reading;
     string shadow_name, db_dir;
     string dispatcher_share_name;
     int dispatcher_shm_fd;
     uint max_num_reading_processes;
     uint purge_timeout;
+    uint64 total_available_space;
     volatile uint8* dispatcher_shm_ptr;
     Dispatcher_Logger* logger;
     int socket_descriptor;
@@ -163,6 +166,7 @@ class Dispatcher
     void set_current_footprints();
     vector< pid_t > write_index_of_empty_blocks();
     void check_and_purge();
+    uint64 total_claimed_space() const;
 };
 
 class Dispatcher_Client
@@ -190,7 +194,7 @@ class Dispatcher_Client
     /** Request the index for a read operation and registers the reading process.
     Reading the index files should be taking a quick copy, because if any process
     is in this state, write_commits are blocked. */
-    void request_read_and_idx();
+    void request_read_and_idx(uint32 max_allowed_time, uint64 max_allowed_space);
     
     /** Changes the registered state from reading the index to reading the
     database. Can be safely called multiple times for the same process. */
@@ -224,7 +228,9 @@ class Dispatcher_Client
     int socket_descriptor;
     
     bool ack_arrived();
-    void send_message(uint32 message, string source_pos);
+    
+    template< class TObject >
+    void send_message(TObject message, string source_pos);
 };
 
 #endif
