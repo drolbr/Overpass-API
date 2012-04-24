@@ -267,13 +267,14 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     //Process ways
   
     // Retrieve all nodes referred by the ways.
-    map< Uint32_Index, vector< Node_Skeleton > > way_members;
-    collect_nodes(query, rman, into.ways.begin(), into.ways.end(), way_members);
+    map< Uint32_Index, vector< Node_Skeleton > > way_members_
+        = way_members(query, rman, into.ways);
+    //collect_nodes(query, rman, into.ways.begin(), into.ways.end(), way_members);
   
     // Order node ids by id.
     vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id;
-    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = way_members.begin();
-        it != way_members.end(); ++it)
+    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = way_members_.begin();
+        it != way_members_.end(); ++it)
     {
       for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
           iit != it->second.end(); ++iit)
@@ -302,9 +303,10 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     set< pair< Uint32_Index, Uint32_Index > > node_ranges;
     get_ranges(rman, node_ranges);
     
-    map< Uint32_Index, vector< Node_Skeleton > > node_members;
-    collect_nodes(query, rman, into.relations.begin(), into.relations.end(), node_members,
-		  node_ranges);
+    map< Uint32_Index, vector< Node_Skeleton > > node_members
+        = relation_node_members(query, rman, into.relations, &node_ranges);
+    //collect_nodes(query, rman, into.relations.begin(), into.relations.end(), node_members,
+    //		  node_ranges);
   
     // Order node ids by id.
     vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id;
@@ -322,14 +324,14 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     set< pair< Uint31_Index, Uint31_Index > > way_ranges;
     get_ranges(rman, way_ranges);
     
-    map< Uint31_Index, vector< Way_Skeleton > > way_members;
-    collect_ways(query, rman, into.relations.begin(), into.relations.end(), way_members,
+    map< Uint31_Index, vector< Way_Skeleton > > way_members_;
+    collect_ways(query, rman, into.relations.begin(), into.relations.end(), way_members_,
 		 way_ranges);
     
     // Order way ids by id.
     vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id;
-    for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = way_members.begin();
-        it != way_members.end(); ++it)
+    for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = way_members_.begin();
+        it != way_members_.end(); ++it)
     {
       for (vector< Way_Skeleton >::const_iterator iit = it->second.begin();
           iit != it->second.end(); ++iit)
@@ -339,8 +341,9 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_way_id);
     
     // Retrieve all nodes referred by the ways.
-    map< Uint32_Index, vector< Node_Skeleton > > way_nds;
-    collect_nodes(query, rman, way_members.begin(), way_members.end(), way_nds);
+    map< Uint32_Index, vector< Node_Skeleton > > way_nds
+        = way_members(query, rman, way_members_);
+    //collect_nodes(query, rman, way_members_.begin(), way_members_.end(), way_nds);
     
     // Order node ids by id.
     vector< pair< Uint32_Index, const Node_Skeleton* > > way_nds_by_id;

@@ -419,10 +419,12 @@ void Around_Constraint::filter(Resource_Manager& rman, Set& into)
 struct Way_Member_Collection
 {
   Way_Member_Collection(const map< Uint31_Index, vector< Way_Skeleton > >& ways,
-			const Statement& query, Resource_Manager& rman) : query_(query)
+			const Statement& query, Resource_Manager& rman)
+      : query_(query),
+        node_members(way_members(query, rman, ways))
   {
     // Retrieve all nodes referred by the ways.
-    collect_nodes(query, rman, ways.begin(), ways.end(), node_members);
+    // collect_nodes(query, rman, ways.begin(), ways.end(), node_members);
    
     // Order node ids by id.
     for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = node_members.begin();
@@ -461,13 +463,15 @@ struct Relation_Member_Collection
   Relation_Member_Collection(const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
 			     const Statement& query, Resource_Manager& rman,
 			     set< pair< Uint32_Index, Uint32_Index > >* node_ranges,
-			     set< pair< Uint31_Index, Uint31_Index > >* way_ranges) : query_(query)
+			     set< pair< Uint31_Index, Uint31_Index > >* way_ranges)
+      : query_(query),
+        node_members(relation_node_members(query, rman, relations, node_ranges))
   {
     // Retrieve all nodes referred by the ways.    
-    if (node_ranges)
+/*    if (node_ranges)
       collect_nodes(query, rman, relations.begin(), relations.end(), node_members, *node_ranges);
     else
-      collect_nodes(query, rman, relations.begin(), relations.end(), node_members);
+      collect_nodes(query, rman, relations.begin(), relations.end(), node_members);*/
     
     // Order node ids by id.
     for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = node_members.begin();
