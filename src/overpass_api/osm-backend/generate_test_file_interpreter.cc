@@ -325,7 +325,8 @@ int main(int argc, char* args[])
       cout<<
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: Unknown type \"foo\" </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: An empty query is not allowed </p>\n"
-      "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: Unknown type \";\" </p>\n";
+      "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: Unknown type \";\" </p>\n"
+      "<p><strong style=\"color:#FF0000\">Error</strong>: line 2: parse error: An empty query is not allowed </p>\n";
     else if (string(args[2]) == "interpreter_6")
       cout<<
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 2: parse error: Unknown type \"foo\" </p>\n"
