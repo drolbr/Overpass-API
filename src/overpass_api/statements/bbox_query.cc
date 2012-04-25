@@ -22,6 +22,7 @@
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
+#include "../data/collect_members.h"
 #include "bbox_query.h"
 #include "recurse.h"
 
@@ -324,9 +325,10 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     set< pair< Uint31_Index, Uint31_Index > > way_ranges;
     get_ranges(rman, way_ranges);
     
-    map< Uint31_Index, vector< Way_Skeleton > > way_members_;
-    collect_ways(query, rman, into.relations.begin(), into.relations.end(), way_members_,
-		 way_ranges);
+    map< Uint31_Index, vector< Way_Skeleton > > way_members_
+        = relation_way_members(query, rman, into.relations, &way_ranges);
+/*    collect_ways(query, rman, into.relations.begin(), into.relations.end(), way_members_,
+		 way_ranges);*/
     
     // Order way ids by id.
     vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id;

@@ -49,33 +49,7 @@ class Recurse_Statement : public Statement
     unsigned int type;
     vector< Query_Constraint* > constraints;
 };
-
-map< Uint32_Index, vector< Node_Skeleton > > relation_node_members
-    (const Statement& stmt, Resource_Manager& rman,
-     const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
-     const set< pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
-     const vector< uint32 >* node_ids = 0);
- 
-map< Uint32_Index, vector< Node_Skeleton > > way_members
-    (const Statement& stmt, Resource_Manager& rman,
-     const map< Uint31_Index, vector< Way_Skeleton > >& ways,
-     const set< pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
-     const vector< uint32 >* node_ids = 0);
- 
-void collect_ways
-    (const Statement& stmt, Resource_Manager& rman,
-     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
-     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
-     map< Uint31_Index, vector< Way_Skeleton > >& result);
-
-void collect_ways
-    (const Statement& stmt, Resource_Manager& rman,
-     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_begin,
-     map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator rels_end,
-     map< Uint31_Index, vector< Way_Skeleton > >& result,
-     const set< pair< Uint31_Index, Uint31_Index > >& way_ranges);
-
-     
+      
 struct Order_By_Node_Id
 {
   bool operator() (const pair< Uint32_Index, const Node_Skeleton* >& a,

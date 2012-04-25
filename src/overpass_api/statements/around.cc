@@ -19,6 +19,7 @@
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
+#include "../data/collect_members.h"
 #include "around.h"
 #include "recurse.h"
 
@@ -465,6 +466,7 @@ struct Relation_Member_Collection
 			     set< pair< Uint32_Index, Uint32_Index > >* node_ranges,
 			     set< pair< Uint31_Index, Uint31_Index > >* way_ranges)
       : query_(query),
+	way_members(relation_way_members(query, rman, relations, way_ranges)),
         node_members(relation_node_members(query, rman, relations, node_ranges))
   {
     // Retrieve all nodes referred by the ways.    
@@ -485,10 +487,10 @@ struct Relation_Member_Collection
     sort(node_members_by_id.begin(), node_members_by_id.end(), order_by_node_id);
     
     // Retrieve all ways referred by the relations.
-    if (way_ranges)
+/*    if (way_ranges)
       collect_ways(query, rman, relations.begin(), relations.end(), way_members, *way_ranges);
     else
-      collect_ways(query, rman, relations.begin(), relations.end(), way_members);
+      collect_ways(query, rman, relations.begin(), relations.end(), way_members);*/
     
     // Order way ids by id.
     for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = way_members.begin();
