@@ -191,9 +191,11 @@ echo -e "\
           //Initialise the vector layer using OpenLayers.Format.OSM\n\
           var styleMap = new OpenLayers.StyleMap({\n\
               strokeColor: \"blue\",\n\
+              strokeOpacity: 0.5,\n\
               strokeWidth: 6,\n\
               pointRadius: 10,\n\
-              fillColor: \"blue\"\n\
+              fillColor: \"blue\",\n\
+              fillOpacity: 0.25\n\
           });\n\
           var layer = new OpenLayers.Layer.Vector(\"Polygon\", {\n\
               strategies: [new OpenLayers.Strategy.Fixed()],\n\
