@@ -21,8 +21,25 @@ EXEC_DIR="`pwd`/../"
 CLONE_DIR="$1"
 REMOTE_DIR=
 DONE=
+META=
 
-FILES_TO_HANDLE="nodes.bin nodes.map node_tags_local.bin node_tags_global.bin ways.bin ways.map way_tags_local.bin way_tags_global.bin relations.bin relations.map relation_roles.bin relation_tags_local.bin relation_tags_global.bin nodes_meta.bin ways_meta.bin relations_meta.bin user_data.bin user_indices.bin"
+if [[ $1 == "--meta=yes" ]]; then
+{
+  META="yes"
+};
+elif [[ $1 == "--meta=no" ]]; then
+{
+  META="no"
+};
+else
+{
+  echo "Usage: $0 --meta=(yes|no)"
+  exit 0
+}; fi
+
+FILES_BASE="nodes.bin nodes.map node_tags_local.bin node_tags_global.bin ways.bin ways.map way_tags_local.bin way_tags_global.bin relations.bin relations.map relation_roles.bin relation_tags_local.bin relation_tags_global.bin"
+
+FILES_META="nodes_meta.bin ways_meta.bin relations_meta.bin user_data.bin user_indices.bin"
 
 # $1 - remote source
 # $2 - local destination
@@ -68,32 +85,18 @@ sleep 30
 
 retry_fetch_file "$REMOTE_DIR/replicate_id" "$CLONE_DIR/replicate_id"
 
-for I in $FILES_TO_HANDLE; do
+for I in $FILES_BASE; do
 {
   download_file $I
 }; done
 
-# download_file nodes.bin
-# download_file nodes.map
-# download_file node_tags_local.bin
-# download_file node_tags_global.bin
-# 
-# download_file ways.bin
-# download_file ways.map
-# download_file way_tags_local.bin
-# download_file way_tags_global.bin
-# 
-# download_file relations.bin
-# download_file relations.map
-# download_file relation_roles.bin
-# download_file relation_tags_local.bin
-# download_file relation_tags_global.bin
-# 
-# download_file nodes_meta.bin
-# download_file ways_meta.bin
-# download_file relations_meta.bin
-# download_file user_data.bin
-# download_file user_indices.bin
+if [[ $META == "yes" ]]; then
+{
+  for I in $FILES_META; do
+  {
+    download_file $I
+  }; done
+}; fi
 
 echo "Waiting for all files to be uncompressed "
 DONE=
@@ -102,10 +105,18 @@ while [[ $DONE != "yes" ]]; do
   DONE="yes"
   echo -n "."
 
-  for I in $FILES_TO_HANDLE; do
+  for I in $FILES_BASE; do
   {
     check_gz $I
   }; done
+
+  if [[ $META == "yes" ]]; then
+  {
+    for I in $FILES_META; do
+    {
+      check_gz $I
+    }; done
+  }; fi
 
   sleep 1
 }; done
