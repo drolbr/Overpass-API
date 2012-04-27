@@ -58,11 +58,14 @@ class Query_Statement : public Statement
     
     vector< uint32 > collect_ids
         (const File_Properties& file_prop, Resource_Manager& rman);
+    vector< uint32 > collect_non_ids
+        (const File_Properties& file_prop, Resource_Manager& rman);
 	 
     template < typename TIndex, typename TObject >
     void get_elements_by_id_from_db
         (map< TIndex, vector< TObject > >& elements,
-	 const vector< uint32 >& ids, const set< pair< TIndex, TIndex > >& range_req,
+	 const vector< uint32 >& ids, bool invert_ids,
+	 const set< pair< TIndex, TIndex > >& range_req,
          Resource_Manager& rman, File_Properties& file_prop);
 	 
     template < typename TIndex >

@@ -31,7 +31,7 @@ class And_Predicate
 {
   public:
     And_Predicate(const TPredicateA& predicate_a_, const TPredicateB& predicate_b_)
-    : predicate_a(predicate_a_), predicate_b(predicate_b_) {}
+        : predicate_a(predicate_a_), predicate_b(predicate_b_) {}
     bool match(const TObject& obj) const
     {
       return (predicate_a.match(obj) && predicate_b.match(obj));
@@ -47,7 +47,7 @@ class Or_Predicate
 {
   public:
     Or_Predicate(const TPredicateA& predicate_a_, const TPredicateB& predicate_b_)
-    : predicate_a(predicate_a_), predicate_b(predicate_b_) {}
+        : predicate_a(predicate_a_), predicate_b(predicate_b_) {}
     bool match(const TObject& obj) const
     {
       return (predicate_a.match(obj) || predicate_b.match(obj));
@@ -56,6 +56,29 @@ class Or_Predicate
   private:
     TPredicateA predicate_a;
     TPredicateB predicate_b;
+};
+
+template < class TObject, class TPredicateA >
+class Not_Predicate
+{
+  public:
+    Not_Predicate(const TPredicateA& predicate_a_)
+        : predicate_a(predicate_a_) {}
+    bool match(const TObject& obj) const
+    {
+      return (!predicate_a.match(obj));
+    }
+    
+  private:
+    TPredicateA predicate_a;
+};
+
+template < class TObject >
+class Trivial_Predicate
+{
+  public:
+    Trivial_Predicate() {}
+    bool match(const TObject& obj) const { return true; }
 };
 
 //-----------------------------------------------------------------------------
