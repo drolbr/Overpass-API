@@ -81,9 +81,11 @@
           //Initialise the vector layer using OpenLayers.Format.OSM
           var styleMap = new OpenLayers.StyleMap({
               strokeColor: "blue",
-              strokeWidth: 10,
-              pointRadius: 20,
-              fillColor: "blue"
+              strokeOpacity: 0.5,
+              strokeWidth: 6,
+              pointRadius: 10,
+              fillColor: "blue",
+              fillOpacity: 0.25
           });
           var layer = new OpenLayers.Layer.Vector("Polygon", {
               strategies: [new ZoomLimitedBBOXStrategy()],

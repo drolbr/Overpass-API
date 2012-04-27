@@ -36,16 +36,18 @@
 <p>Here, the defining properties of this map are chosen. <em>lat</em> and <em>lon</em> set the point where the map is located at the beginning. <em>zoom</em> is the initial zoom. And finally, <em>data_url</em> chooses which data to highlight, in this case the bus stop with name &quot;Im Tannenbusch&quot;.</p>
 
 <p>The query language for <em>data_url</em> is Overpass QL which is introduced in the <a href="http://wiki.openstreetmap.org/Overpass_API/Language_Guide">language guide</a>. The <em>%22</em> is just an escaping for a quotation mark (&quot;). It is used to avoid confusing the JavaScript engine of the browser. If you want suggestions for the latitude and longitude or just to test whether your query works, you can run the search with slight modifications:<br/>
-<a href="http://overpass-api.de/api/interpreter?data=[out:custom];node[name=%22Im Tannenbusch%22][highway=bus_stop];out;&amp;redirect=no">http://overpass-api.de/api/interpreter?data=<strong>[out:custom];</strong>node[name=&quot;Im Tannenbusch&quot;][highway=bus_stop];out;<strong>&amp;redirect=no</strong></a><br/>
+<a href="http://overpass-api.de/api/interpreter?data=[out:custom];node[name=%22Im Tannenbusch%22][highway=bus_stop];out+skel;&amp;redirect=no">http://overpass-api.de/api/interpreter?data=<strong>[out:custom];</strong>node[name=&quot;Im Tannenbusch&quot;][highway=bus_stop];out skel;<strong>&amp;redirect=no</strong></a><br/>
 This shows exactly the results that will be found by the query and therefore get marked on the map.</p>
 
 <pre>
           ...
           var styleMap = new OpenLayers.StyleMap({
               strokeColor: <strong>&quot;blue&quot;</strong>,
+              strokeOpacity: <strong>0.5</strong>,
               strokeWidth: <strong>6</strong>,
               pointRadius: <strong>10</strong>,
-              fillColor: <strong>&quot;blue&quot;</strong>
+              fillColor: <strong>&quot;blue&quot;</strong>,
+              fillOpacity: <strong>0.25</strong>
           });
           ...
 </pre>
@@ -64,7 +66,7 @@ This shows exactly the results that will be found by the query and therefore get
       var lat = <strong>50.727</strong>;
       var lon = <strong>7.092</strong>;
       var zoom = <strong>15</strong>;
-      var data_url = &quot;api/interpreter?data=node[amenity=school](bbox);out;(way[amenity=school](bbox);node(w););out;&quot;;
+      var data_url = <strong>&quot;api/interpreter?data=node[amenity=school](bbox);out;(way[amenity=school](bbox);node(w););out;&quot;</strong>;
       var zoom_data_limit = <strong>13</strong>;
       var map;
   ...
@@ -87,7 +89,7 @@ This shows exactly the results that will be found by the query and therefore get
           ]);
           ...
 </pre>
-<p>Each of these lines adds another layer to the map. The fist layer contains all kindergartens and shows its objects in green, the second layer all schools and shows its objects as before in blue, and the third layer shows all universities in orange. You can of coarse use any query and any color for any number of layers.</p>
+<p>Each of these lines adds another layer to the map. The first layer contains all kindergartens and shows its objects in green, the second layer all schools and shows its objects as before in blue, and the third layer shows all universities in orange. You can of coarse use any query and any color for any number of layers.</p>
 
 </body>
 </html>

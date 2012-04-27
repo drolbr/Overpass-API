@@ -64,9 +64,11 @@
 
           var styleMap = new OpenLayers.StyleMap({
               strokeColor: color,
-              strokeWidth: 10,
-              pointRadius: 20,
-              fillColor: color
+              strokeOpacity: 0.5,
+              strokeWidth: 6,
+              pointRadius: 10,
+              fillColor: color,
+              fillOpacity: 0.25
           });
           var layer = new OpenLayers.Layer.Vector(color, {
               strategies: [new ZoomLimitedBBOXStrategy()],
