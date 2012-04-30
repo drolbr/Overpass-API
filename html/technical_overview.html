@@ -39,25 +39,25 @@
 </ul>
 <p>The additional files in this directory come from the various extensions. No direct logging is performed. The progress can only be read off the console output, usually the content of the file <em>nohup.out</em>. Once the process has completed its job, it writes <em>Update complete.</em> and terminates.</p>
 
-<p>The third task is to update the database with the minutely diff files. For this purpose, the daemon <em>apply_osc_to_db.sh</em> run permanently and starts <em>update_from_dir</em> when one or more diffs are to be processed. Before <em>update_from_dir</em> is started, <em>apply_osc_to_db.sh</em> decompresses all diff files in a temporary directory that is deleted after <em>update_from_dir</em> has completed. It changes the same files in the database like <em>update_database</em>. It logs its current state into <em>apply_osc_to_db.log</em> and it writes the current replicate id in the file <em>replicate_id</em> and the timestamp of the currently processed OSM main data version into the file <em>osm_base_version</em>.</p>
+<p>The third task is to update the database with the minutely diff files. For this purpose, the daemon <em>apply_osc_to_db.sh</em> runs permanently and starts <em>update_from_dir</em> when one or more diffs are to be processed. Before <em>update_from_dir</em> is started, <em>apply_osc_to_db.sh</em> decompresses all diff files in a temporary directory that is deleted after <em>update_from_dir</em> has completed. It changes the same files in the database like <em>update_database</em>. It logs its current state into <em>apply_osc_to_db.log</em> and it writes the current replicate id in the file <em>replicate_id</em> and the timestamp of the currently processed OSM main data version into the file <em>osm_base_version</em>.</p>
 
 
 <h3><a name="dispatcher">Dispatcher</a></h3>
 
 <p>The dispatcher coordinates backend and frontend. Thus, there is no data associated with the dispatcher, but several overhead files, the process <em>dispatcher</em>, and the logfile <em>transactions.log</em>.</p>
 
-<p>Dispatcher organizes its communication with the backend and frontend by two different means: files ending in <em>.lock</em> are managed by the dispatcher and contain a pid. Having these as physical files ensures that after a crash the data suffices to recover correctly. The second way of communication is shared memory, in particular the shared memory file <em>/osm3s_v0.6.97_osm_base</em> (In Linux, you can access this file via <em>/dev/shm/osm3s_v0.6.97_osm_base</em>). Dispatcher announces in this directory the database location, and the frontend and backend can report their status here and request locks.</p>
+<p>Dispatcher organizes its communication with the backend and frontend by three different means: Files ending in <em>.lock</em> are managed by the dispatcher and contain a pid. Having these as physical files ensures that after a crash the data suffices to recover correctly. The second way of communication is shared memory, in particular the shared memory file <em>/osm3s_v0.6.98_osm_base</em> (In Linux, you can access this file via <em>/dev/shm/osm3s_v0.6.98_osm_base</em>). Dispatcher announces in this directory the database location, and the frontend and backend can report their status here and request locks. The third way of communication is the Unix domain socket <em>osm3s_v0.6.98_osm_base</em> in the database directory. Each reading or writing process holds during its whole lifetime a permanent connection as a client to the dispatcher acting as server. Thus, if a process is killed, the dispatcher can notice this because the connection is suddenly lost.</p>
 
 <p>The other overhead files are a file ending in <em>.shadow</em> for <a href="#database_content">each file in the database</a> ending in <em>.bin</em>, <em>.map</em>, or <em>.idx</em>. These files enable transactionality: all index information for the writing process is kept in the various <em>.shadow</em> files, and the plain <em>.idx</em> files are at the same time valid and used for all processes that request a read lock during the write operation. If the system crashes, one could simply discard the <em>.shadow</em> files, and the remaining database is still consistent with the original <em>.idx</em> files.</p>
 
-<p>As the coordination of multiple processes is a troublesome task, the log file <em>transactions.log</em> is very verbose. Every message starts with the date in UTC and the PID of the process which has omitted this message.</p>
+<p>As the coordination of multiple processes is a troublesome task, the log file <em>transactions.log</em> is very verbose. Every message starts with the date in UTC and the PID of the process which has emitted this message.</p>
 
 <p>The dispatcher itself tells all the messages it has accepted. In particular these are:</p>
 <ul>
 <li><em>write_start</em> and <em>write_commit</em> from the backend</li>
 <li><em>request_read_and_idx</em>, <em>read_idx_finished</em>, <em>read_finished</em>, and <em>prolongate</em> from the frontend</li>
 </ul>
-<p>In addition, the dispatcher logs its own activities with <em>purge</em> and <em>Dispatcher just started</em>. <em>purge</em> is the terminal part of a watchdog: If a process doesn't callback for a too long time with a <em>prolongate</em>, the dispatcher assumes it has been aborted or got runaway and releases the remaining read locks for this process.</p>
+<p>In addition, the dispatcher logs its own activities with <em>purge</em> and <em>Dispatcher just started</em>. <em>purge</em> is the terminal part of a watchdog: If a process doesn't callback for a too long time with a <em>prolongate</em> or the socket connection has been lost, the dispatcher assumes it has been aborted or got runaway and releases the remaining read locks for this process.</p>
 
 <p>The processes themselves log for each message their attempt to emit the message, when they have been satisfied with the outcome of the message (usually obtained their lock) or when they have timed out while waiting for a response.</p>
 
@@ -66,7 +66,7 @@
 
 <p>The frontend usually runs in parallel to the backend and the dispatcher. However, if no updates take place, the frontend could be used on a filled database also without the backend and the dispatcher. The frontend uses one process <em>interpreter</em> or <em>osm-3s_query</em> for each query; the process terminates when the query is complete or has been aborted. It accesses in the <a href="#database_content">database directory</a> all files but the logfile <em>transactions.log</em> read-only.</p>
 
-<p>The difference between <em>interpreter</em> and <em>osm-3s_query</em> is that <em>interpreter</em> is designed for CGI access. Thus it needs and accepts no parameters on the command line, it starts its output always with a MIME type or HTTP headers, and all error messages are implemented as HTML output. On the other hand<em>osm-3s_query</em> can be adapted with various command line parameters and produces simple text error messages, no MIME or HTTP headers.</p>
+<p>The difference between <em>interpreter</em> and <em>osm-3s_query</em> is that <em>interpreter</em> is designed for CGI access. Thus it needs and accepts no parameters on the command line, it starts its output always with a MIME type or HTTP headers, and all error messages are implemented as HTML output. On the other hand, <em>osm-3s_query</em> can be adapted with various command line parameters and produces simple text error messages, no MIME or HTTP headers.</p>
 
 <p>Beyond the <a href="#dispatcher">communication with the dispatcher</a>, the frontend logs the requested query, just as the user has entered it, again with date and the PID of the request, into the file <em>transactions.log</em>.</p>
 
@@ -84,7 +84,7 @@
 <li>user_indices.bin, user_indices.bin.idx</li>
 </ul>
 
-<p>For each of this tools, this behaviour is triggered by adding a <em>--meta</em> parameter to the startup call.</p>
+<p>For each of these programs, this behaviour is triggered by adding a <em>--meta</em> parameter to the startup call.</p>
 
 <p>The only functional difference is that the features depeding on meta data like <em>out meta;</em> are only operational with this extension. The essential non-functional difference is that everything now runs two to three times slower.</p>
 

@@ -20,22 +20,41 @@
 EXEC_DIR="`pwd`/../"
 CLONE_DIR="$1"
 REMOTE_DIR=
+SOURCE=
 DONE=
 META=
 
-if [[ $1 == "--meta=yes" ]]; then
+if [[ -z $1 ]]; then
 {
-  META="yes"
-};
-elif [[ $1 == "--meta=no" ]]; then
-{
-  META="no"
-};
-else
-{
-  echo "Usage: $0 --meta=(yes|no)"
+  echo "Usage: $0 --db-dir=database_dir --source=http://overpass-api.de/api/ --meta=(yes|no)"
   exit 0
 }; fi
+
+process_param()
+{
+  if [[ "${1:0:9}" == "--db-dir=" ]]; then
+  {
+    CLONE_DIR="${1:9}"
+  };
+  elif [[ "${1:0:9}" == "--source=" ]]; then
+  {
+    SOURCE="${1:9}"
+  };
+  elif [[ "${1:0:7}" == "--meta=" ]]; then
+  {
+    META="${1:7}"
+  };
+  else
+  {
+    echo "Unknown argument: $1"
+    exit 0
+  };
+  fi
+};
+
+if [[ -n $1  ]]; then process_param $1; fi
+if [[ -n $2  ]]; then process_param $2; fi
+if [[ -n $3  ]]; then process_param $3; fi
 
 FILES_BASE="nodes.bin nodes.map node_tags_local.bin node_tags_global.bin ways.bin ways.map way_tags_local.bin way_tags_global.bin relations.bin relations.map relation_roles.bin relation_tags_local.bin relation_tags_global.bin"
 
@@ -77,7 +96,7 @@ check_gz()
   }; fi
 }
 
-fetch_file "http://overpass-api.de/api/trigger_clone" "$CLONE_DIR/base-url"
+fetch_file "$SOURCE/trigger_clone" "$CLONE_DIR/base-url"
 
 REMOTE_DIR=`cat <"$CLONE_DIR/base-url"`
 echo "Triggered generation of a recent clone"
