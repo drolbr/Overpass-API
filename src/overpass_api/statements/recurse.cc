@@ -739,7 +739,9 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     map< Uint32_Index, vector< Node_Skeleton > > rel_nodes
         = relation_node_members(*this, rman, mit->second.relations);
     into.ways = relation_way_members(*this, rman, mit->second.relations);
-    into.nodes = way_members(*this, rman, into.ways);
+    map< Uint31_Index, vector< Way_Skeleton > > source_ways = mit->second.ways;
+    indexed_set_union(source_ways, into.ways);
+    into.nodes = way_members(*this, rman, source_ways);
     indexed_set_union(into.nodes, rel_nodes);
   }
   else if (type == RECURSE_DOWN_REL)
@@ -748,7 +750,9 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     map< Uint32_Index, vector< Node_Skeleton > > rel_nodes
         = relation_node_members(*this, rman, into.relations);
     into.ways = relation_way_members(*this, rman, into.relations);
-    into.nodes = way_members(*this, rman, into.ways);
+    map< Uint31_Index, vector< Way_Skeleton > > source_ways = mit->second.ways;
+    indexed_set_union(source_ways, into.ways);
+    into.nodes = way_members(*this, rman, source_ways);
     indexed_set_union(into.nodes, rel_nodes);
   }
   else if (type == RECURSE_WAY_RELATION)

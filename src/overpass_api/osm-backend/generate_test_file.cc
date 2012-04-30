@@ -427,6 +427,21 @@ struct Accept_Recurse_20 : public Accept_All_Tags
     uint pattern_size;
 };
 
+struct Accept_Recurse_21 : public Accept_All_Tags
+{
+  Accept_Recurse_21(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const
+  {
+    return (id == pattern_size + 1 || id == pattern_size + 2);
+  }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
 struct Accept_Bbox_Query_1 : public Accept_All_Tags
 {
   Accept_Bbox_Query_1(uint pattern_size_) : pattern_size(pattern_size_) {}
@@ -2534,6 +2549,10 @@ int main(int argc, char* args[])
       modifier = new Accept_Recurse_19(pattern_size);
     else if (string(args[2]) == "recurse_20")
       modifier = new Accept_Recurse_20(pattern_size);
+    else if (string(args[2]) == "recurse_21")
+      modifier = new Accept_Recurse_21(pattern_size);
+    else if (string(args[2]) == "recurse_22")
+      modifier = new Accept_Recurse_21(pattern_size); //recurse_21 and recurse_22 are equal
     else if (string(args[2]) == "bbox_query_1")
       modifier = new Accept_Bbox_Query_1(pattern_size);
     else if (string(args[2]) == "bbox_query_2")

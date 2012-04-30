@@ -84,6 +84,6 @@ while [[ true ]]; do
   {
     rm -f "$CLONE_DIR/trigger"
     sleep 28800
-  }
+  }; done
 
 }; done

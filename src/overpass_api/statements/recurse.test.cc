@@ -394,7 +394,7 @@ int main(int argc, char* args[])
   {
     try
     {
-      // Recurse relation-way
+      // Recurse down
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction);
       perform_id_query(total_rman, "relation", 6);
@@ -419,7 +419,7 @@ int main(int argc, char* args[])
   {
     try
     {
-      // Recurse relation-way
+      // Recurse down-rel with a recursive relation
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction);
       perform_id_query(total_rman, "relation", 9);
@@ -444,7 +444,7 @@ int main(int argc, char* args[])
   {
     try
     {
-      // Recurse relation-way
+      // Recurse down-rel with a mixed relation
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction);
       perform_id_query(total_rman, "relation", 10);
@@ -469,7 +469,7 @@ int main(int argc, char* args[])
   {
     try
     {
-      // Recurse relation-way
+      // Recurse up
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction);
       perform_id_query(total_rman, "node", pattern_size + 2);
@@ -494,7 +494,7 @@ int main(int argc, char* args[])
   {
     try
     {
-      // Recurse relation-way
+      // Recurse up
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction);
       perform_id_query(total_rman, "way", 1);
@@ -519,7 +519,7 @@ int main(int argc, char* args[])
   {
     try
     {
-      // Recurse relation-way
+      // Recurse up-rel with a node
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction);
       perform_id_query(total_rman, "node", 2);
@@ -544,7 +544,7 @@ int main(int argc, char* args[])
   {
     try
     {
-      // Recurse relation-way
+      // Recurse up-rel with a way
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction);
       perform_id_query(total_rman, "way", 2);
@@ -569,12 +569,62 @@ int main(int argc, char* args[])
   {
     try
     {
-      // Recurse relation-way
+      // Recurse up-rel with a relation
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction);
       perform_id_query(total_rman, "relation", 1);
       {
 	const char* attributes[] = { "type", "up-rel", 0 };
+	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	stmt.execute(total_rman);
+      }
+      {
+	const char* attributes[] = { 0 };
+	Print_Statement stmt(3, convert_c_pairs(attributes));
+	stmt.execute(total_rman);
+      }
+    }
+    catch (File_Error e)
+    {
+      cerr<<"File error caught: "
+      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  if ((test_to_execute == "") || (test_to_execute == "21"))
+  {
+    try
+    {
+      // Recurse down with a way
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction);
+      perform_id_query(total_rman, "way", 1);
+      {
+	const char* attributes[] = { "type", "down", 0 };
+	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	stmt.execute(total_rman);
+      }
+      {
+	const char* attributes[] = { 0 };
+	Print_Statement stmt(3, convert_c_pairs(attributes));
+	stmt.execute(total_rman);
+      }
+    }
+    catch (File_Error e)
+    {
+      cerr<<"File error caught: "
+      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  if ((test_to_execute == "") || (test_to_execute == "22"))
+  {
+    try
+    {
+      // Recurse down-rel with a way
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction);
+      perform_id_query(total_rman, "way", 1);
+      {
+	const char* attributes[] = { "type", "down-rel", 0 };
 	Recurse_Statement stmt(2, convert_c_pairs(attributes));
 	stmt.execute(total_rman);
       }

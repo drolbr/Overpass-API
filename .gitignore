@@ -1,4 +1,4 @@
-bin/
-cgi-bin/
-test-bin/
+/bin/
+/cgi-bin/
+/test-bin/
 
