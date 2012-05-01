@@ -541,12 +541,30 @@ void Query_Statement::execute(Resource_Manager& rman)
     }
   }
   
+//   cout<<"*** 5\n";
+//   for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator it = into.ways.begin(); it != into.ways.end(); ++it)
+//   {
+//     cout<<hex<<it->first.val();
+//     for (vector< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+//       cout<<' '<<dec<<it2->id;
+//     cout<<'\n';
+//   }
+  
   set_progress(5);
   rman.health_check(*this);
 
   for (vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end(); ++it)
     (*it)->filter(rman, into);
+  
+//   cout<<"*** 6\n";
+//   for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator it = into.ways.begin(); it != into.ways.end(); ++it)
+//   {
+//     cout<<hex<<it->first.val();
+//     for (vector< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+//       cout<<' '<<dec<<it2->id;
+//     cout<<'\n';
+//   }
   
   set_progress(6);
   rman.health_check(*this);
@@ -555,6 +573,15 @@ void Query_Statement::execute(Resource_Manager& rman)
       it != constraints.end(); ++it)
     (*it)->filter(*this, rman, into);
     
+//   cout<<"*** 7\n";
+//   for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator it = into.ways.begin(); it != into.ways.end(); ++it)
+//   {
+//     cout<<hex<<it->first.val();
+//     for (vector< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+//       cout<<' '<<dec<<it2->id;
+//     cout<<'\n';
+//   }
+  
   set_progress(7);
   rman.health_check(*this);
   
