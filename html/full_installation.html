@@ -82,6 +82,7 @@
 <p>The following steps are only needed if you want minutely updates. In this case, run the following commands:</p>
 
 <pre>nohup ../bin/dispatcher --osm-base --meta --db-dir=&quot;../db/&quot; &amp;</pre>
+<pre>chmod 666 &quot;../db/osm3s_v0.6.98_osm_base&quot;</pre>
 <p>(without <em>--meta</em> if you have not processed meta data)</p>
 <p>The dispatcher has been successfully started if you find a line &quot;<em>Dispatcher just started.</em>&quot; with correct date (in UTC) in the file <em>transactions.log</em> in the database directory.</p>
 
@@ -151,6 +152,7 @@ chmod 755 /path/to/osm-3s_v0.6.98/db</pre>
 
 <p>The next step is to start a second dispatcher that coordinates read and write operations for the areas related files in the database:</p>
 <pre>nohup ../bin/dispatcher --areas --db-dir=&quot;../db/&quot; &amp;</pre>
+<pre>chmod 666 &quot;../db/osm3s_v0.6.98_areas&quot;</pre>
 <p>The dispatcher has been successfully started if you find a line &quot;<em>Dispatcher just started.</em>&quot; with correct date (in UTC) in the file <em>transactions.log</em> in the database directory.</p>
 
 <p>The third step then is to start the rule batch processor as a daemon:</p>

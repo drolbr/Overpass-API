@@ -38,6 +38,7 @@ make CXXFLAGS=&quot;-O3&quot; install</pre>
 
 <p><a href="#minute_updates">Activate minutely updates</a>:</p>
 <pre>nohup ../bin/dispatcher --osm-base --meta --db-dir=&quot;../db/&quot; &amp;
+chmod 666 &quot;../db/osm3s_v0.6.98_osm_base&quot;
 nohup ../bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/minute-replicate/&quot; &quot;../minute-diffs/&quot; &amp;
 nohup ../bin/apply_osc_to_db.sh &quot;../db/&quot; &quot;../minute-diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
 
@@ -109,6 +110,7 @@ cd osm-3s_v0.6.98/build/</pre>
 
 <p>But maybe you also want minutely updates. In this case, run the commands:</p>
 <pre>nohup ../bin/dispatcher --osm-base --meta --db-dir=&quot;../db/&quot; &amp;</pre>
+<pre>chmod 666 &quot;../db/osm3s_v0.6.98_osm_base&quot;</pre>
 <pre>nohup ../bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/minute-replicate/&quot; &quot;../minute-diffs/&quot; &amp;</pre>
 <pre>nohup ../bin/apply_osc_to_db.sh &quot;../db/&quot; &quot;../minute-diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
 <p>These commands don't make sense without <em>nohup</em>, because the programs become daemons and never terminate. Once again, you need to replace parameters: you always need to replace <em>id</em> by the replicate id to start from. Search on <a href="http://planet.openstreetmap.org/minute-replicate/">http://planet.openstreetmap.org/minute-replicate/</a> with your browser for the last replication diff that has been created before the planet creation date.</p>
