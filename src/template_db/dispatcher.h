@@ -55,6 +55,7 @@ struct Dispatcher_Logger
       = 0;
   virtual void read_idx_finished(pid_t pid) = 0;
   virtual void prolongate(pid_t pid) = 0;
+  virtual void idle_counter(uint32 idle_count) = 0;
   virtual void read_finished(pid_t pid) = 0;
   virtual void purge(pid_t pid) = 0;
 };
@@ -134,12 +135,14 @@ class Dispatcher
     static const uint32 TERMINATE = 1;
     static const uint32 OUTPUT_STATUS = 2;
     static const uint32 HANGUP = 3;
+    static const uint32 PURGE = 4;
     static const uint32 WRITE_START = 101;
     static const uint32 WRITE_ROLLBACK = 102;
     static const uint32 WRITE_COMMIT = 103;
     static const uint32 REQUEST_READ_AND_IDX = 201;
     static const uint32 READ_IDX_FINISHED = 202;
     static const uint32 READ_FINISHED = 203;
+    static const uint32 READ_ABORTED = 204;
     
   private:
     vector< File_Properties* > controlled_files;

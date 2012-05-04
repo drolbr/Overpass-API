@@ -36,6 +36,7 @@ struct Default_Dispatcher_Logger : public Dispatcher_Logger
   virtual void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space);
   virtual void read_idx_finished(pid_t pid);
   virtual void prolongate(pid_t pid);
+  virtual void idle_counter(uint32 idle_count);
   virtual void read_finished(pid_t pid);
   virtual void purge(pid_t pid);
   
@@ -87,6 +88,13 @@ void Default_Dispatcher_Logger::prolongate(pid_t pid)
 {
   ostringstream out;
   out<<"prolongate of process "<<pid<<'.';
+  logger->annotated_log(out.str());
+}
+
+void Default_Dispatcher_Logger::idle_counter(uint32 idle_count)
+{
+  ostringstream out;
+  out<<"waited idle for "<<idle_count<<" cycles.";
   logger->annotated_log(out.str());
 }
 

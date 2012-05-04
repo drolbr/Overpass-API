@@ -95,6 +95,19 @@ struct sockaddr_un
   char sun_path[255];
 };
 
+
+struct Socket_Response
+{
+  Socket_Response(int socket_descriptor_) : socket_descriptor(socket_descriptor_), message(0) {}
+  void set_message(uint32 message_) { message = message_; }
+  ~Socket_Response() { send(socket_descriptor, &message, sizeof(uint32), 0); }
+  
+private:
+  int socket_descriptor;  
+  uint32 message;
+};
+
+
 Dispatcher::Dispatcher
     (string dispatcher_share_name_,
      string index_share_name,
@@ -125,7 +138,7 @@ Dispatcher::Dispatcher
   socket_descriptor = socket(AF_UNIX, SOCK_STREAM, 0);
   if (socket_descriptor == -1)
     throw File_Error
-        (errno, socket_name, "Dispatcher_Server::2");  
+        (errno, socket_name, "Dispatcher_Server::2");
   if (fcntl(socket_descriptor, F_SETFL, O_RDWR|O_NONBLOCK) == -1)
     throw File_Error
         (errno, socket_name, "Dispatcher_Server::3");  
@@ -136,6 +149,9 @@ Dispatcher::Dispatcher
       sizeof(local.sun_family) + strlen(local.sun_path)) == -1)
     throw File_Error
         (errno, socket_name, "Dispatcher_Server::4");
+  if (chmod(socket_name.c_str(), S_666) == -1)
+    throw File_Error
+        (errno, socket_name, "Dispatcher_Server::8");
   if (listen(socket_descriptor, max_num_reading_processes) == -1)
     throw File_Error
         (errno, socket_name, "Dispatcher_Server::5");
@@ -304,11 +320,6 @@ void Dispatcher::read_finished(pid_t pid)
     it->unregister_pid(pid);
   processes_reading_idx.erase(pid);
   processes_reading.erase(pid);
-  if (connection_per_pid.find(pid) != connection_per_pid.end())
-  {
-    close(connection_per_pid[pid]);
-    connection_per_pid.erase(pid);
-  }
   disconnected.erase(pid);
 }
 
@@ -462,6 +473,7 @@ vector< Dispatcher::pid_t > Dispatcher::write_index_of_empty_blocks()
 void Dispatcher::standby_loop(uint64 milliseconds)
 {
   uint32 counter = 0;
+  uint32 idle_counter = 0;
   while ((milliseconds == 0) || (counter < milliseconds/100))
   {
     struct sockaddr_un sockaddr_un_dummy;
@@ -518,7 +530,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       {
 	client_pid = it->first;
 	if (processes_reading.find(it->first) != processes_reading.end())
-	  command = Dispatcher::READ_FINISHED;
+	  command = Dispatcher::READ_ABORTED;
 	else
 	  command = Dispatcher::HANGUP;
 	break;
@@ -534,8 +546,16 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     if (*(uint32*)dispatcher_shm_ptr == 0 && command == 0)
     {
       ++counter;
+      ++idle_counter;
       millisleep(100);
       continue;
+    }
+    
+    if (idle_counter > 0)
+    {
+      if (logger)
+	logger->idle_counter(idle_counter);
+      idle_counter = 0;
     }
 
     try
@@ -553,6 +573,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       
 	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
 	{
+	  send(connection_per_pid[client_pid], &command, sizeof(uint32), 0);
 	  close(connection_per_pid[client_pid]);
 	  connection_per_pid.erase(client_pid);
 	}
@@ -566,6 +587,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	
 	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
 	{
+	  send(connection_per_pid[client_pid], &command, sizeof(uint32), 0);
 	  close(connection_per_pid[client_pid]);
 	  connection_per_pid.erase(client_pid);
 	}
@@ -590,8 +612,19 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	  connection_per_pid.erase(client_pid);
 	}
       }
+      else if (command == READ_ABORTED)
+      {
+	read_finished(client_pid);
+        if (connection_per_pid.find(client_pid) != connection_per_pid.end())
+        {
+          close(connection_per_pid[client_pid]);
+          connection_per_pid.erase(client_pid);
+        }
+      }
       else if (command == REQUEST_READ_AND_IDX)
       {
+	Socket_Response response(connection_per_pid[client_pid]);
+	
 	if (processes_reading.size() >= max_num_reading_processes)
 	{
 	  check_and_purge();
@@ -624,16 +657,51 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	  continue;
 	
 	request_read_and_idx(client_pid, max_allowed_time, max_allowed_space);
+	response.set_message(command);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == READ_IDX_FINISHED)
       {
 	read_idx_finished(client_pid);
+        if (connection_per_pid.find(client_pid) != connection_per_pid.end())
+	  send(connection_per_pid[client_pid], &command, sizeof(uint32), 0);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == READ_FINISHED)
       {
 	read_finished(client_pid);
+        if (connection_per_pid.find(client_pid) != connection_per_pid.end())
+        {
+	  send(connection_per_pid[client_pid], &command, sizeof(uint32), 0);
+          close(connection_per_pid[client_pid]);
+          connection_per_pid.erase(client_pid);
+        }
+	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
+      }
+      else if (command == PURGE)
+      {
+	Socket_Response response(connection_per_pid[client_pid]);
+
+	uint32 target_pid = 0;
+	int bytes_read = -1;
+	int counter = 0;
+	while (bytes_read == -1 && ++counter <= 100)
+	{
+	  bytes_read = recv(connection_per_pid[client_pid], &target_pid, sizeof(uint32), 0);
+	  millisleep(1);
+	}
+	if (bytes_read == -1)
+	  continue;
+
+	read_finished(target_pid);
+        if (connection_per_pid.find(target_pid) != connection_per_pid.end())
+        {
+	  send(connection_per_pid[target_pid], &command, sizeof(uint32), 0);
+          close(connection_per_pid[target_pid]);
+          connection_per_pid.erase(target_pid);
+        }
+        
+	response.set_message(command);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == PING)
@@ -847,6 +915,10 @@ void Dispatcher_Client::send_message(TObject message, string source_pos)
 
 bool Dispatcher_Client::ack_arrived()
 {
+  uint32 answer = 0;
+  if (recv(socket_descriptor, &answer, sizeof(uint32), 0) == sizeof(uint32))
+    return (answer != 0);
+  
   uint32 pid = getpid();
   if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
     return true;
@@ -989,7 +1061,8 @@ void Dispatcher_Client::purge(uint32 pid)
 		     
   while (true)
   {
-    send_message(Dispatcher::READ_FINISHED, "Dispatcher_Client::purge::socket");
+    send_message(Dispatcher::PURGE, "Dispatcher_Client::purge::socket::1");
+    send_message(pid, "Dispatcher_Client::purge::socket::2");
     
     if (ack_arrived())
       return;
