@@ -98,18 +98,6 @@ struct sockaddr_un
 };
 
 
-// struct Socket_Response
-// {
-//   Socket_Response(int socket_descriptor_) : socket_descriptor(socket_descriptor_), message(0) {}
-//   void set_message(uint32 message_) { message = message_; }
-//   ~Socket_Response() { send(socket_descriptor, &message, sizeof(uint32), 0); }
-//   
-// private:
-//   int socket_descriptor;  
-//   uint32 message;
-// };
-
-
 /* Represents the connection to a client that is blocking after it has send a command until
  * it gets an answer about the command execution state. This class ensures that the software cannot
  * fail due to a broken pipe. */
@@ -197,7 +185,7 @@ void Blocking_Client_Socket::set_result(uint32 result)
     state = disconnected;
     return;
   }
-//   send(socket_descriptor, &result, sizeof(uint32), 0);
+  send(socket_descriptor, &result, sizeof(uint32), 0);
   state = waiting;
 }
 
@@ -266,7 +254,7 @@ Dispatcher::Dispatcher
   }
   fchmod(dispatcher_shm_fd, S_666);
   int foo = ftruncate(dispatcher_shm_fd,
-		      SHM_SIZE + db_dir.size() + shadow_name.size()); foo = 0;
+		      SHM_SIZE + db_dir.size() + shadow_name.size()); foo = foo;
   dispatcher_shm_ptr = (uint8*)mmap
         (0, SHM_SIZE + db_dir.size() + shadow_name.size(),
          PROT_READ|PROT_WRITE, MAP_SHARED, dispatcher_shm_fd, 0);
@@ -571,6 +559,8 @@ vector< Dispatcher::pid_t > Dispatcher::write_index_of_empty_blocks()
 
 void Dispatcher::standby_loop(uint64 milliseconds)
 {
+  signal(SIGPIPE, SIG_IGN);
+  
   uint32 counter = 0;
   uint32 idle_counter = 0;
   while ((milliseconds == 0) || (counter < milliseconds/100))
@@ -755,11 +745,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       }
       else if (command == READ_FINISHED)
       {
-	read_finished(client_pid);
-	
-// 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
-// 	millisleep(10000);
-	
+	read_finished(client_pid);	
 	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
 	{
 	  connection_per_pid[client_pid]->set_result(command);
@@ -1001,14 +987,14 @@ void Dispatcher_Client::send_message(TObject message, string source_pos)
 bool Dispatcher_Client::ack_arrived()
 {
   uint32 answer = 0;
-//   int bytes_read = recv(socket_descriptor, &answer, sizeof(uint32), 0);
-//   while (bytes_read == -1)
-//   {
-//     millisleep(50);
-//     bytes_read = recv(socket_descriptor, &answer, sizeof(uint32), 0);
-//   }
-//   if (bytes_read == 4)
-//     return (answer != 0);
+  int bytes_read = recv(socket_descriptor, &answer, sizeof(uint32), 0);
+  while (bytes_read == -1)
+  {
+    millisleep(50);
+    bytes_read = recv(socket_descriptor, &answer, sizeof(uint32), 0);
+  }
+  if (bytes_read == 4)
+    return (answer != 0);
   
   uint32 pid = getpid();
   if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
