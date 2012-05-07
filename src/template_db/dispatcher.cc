@@ -28,6 +28,8 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include <deque>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -96,16 +98,113 @@ struct sockaddr_un
 };
 
 
-struct Socket_Response
+// struct Socket_Response
+// {
+//   Socket_Response(int socket_descriptor_) : socket_descriptor(socket_descriptor_), message(0) {}
+//   void set_message(uint32 message_) { message = message_; }
+//   ~Socket_Response() { send(socket_descriptor, &message, sizeof(uint32), 0); }
+//   
+// private:
+//   int socket_descriptor;  
+//   uint32 message;
+// };
+
+
+/* Represents the connection to a client that is blocking after it has send a command until
+ * it gets an answer about the command execution state. This class ensures that the software cannot
+ * fail due to a broken pipe. */
+struct Blocking_Client_Socket
 {
-  Socket_Response(int socket_descriptor_) : socket_descriptor(socket_descriptor_), message(0) {}
-  void set_message(uint32 message_) { message = message_; }
-  ~Socket_Response() { send(socket_descriptor, &message, sizeof(uint32), 0); }
-  
+  Blocking_Client_Socket(int socket_descriptor_);
+  uint32 get_command();
+  vector< uint32 > get_arguments(int num_arguments);
+  void set_result(uint32 result);
+  ~Blocking_Client_Socket();
 private:
-  int socket_descriptor;  
-  uint32 message;
+  int socket_descriptor;
+  enum { waiting, processing_command, disconnected } state;
+  uint32 last_command;
 };
+
+Blocking_Client_Socket::Blocking_Client_Socket
+  (int socket_descriptor_) : socket_descriptor(socket_descriptor_), state(waiting) {}
+
+uint32 Blocking_Client_Socket::get_command()
+{
+  if (state == disconnected)
+    return Dispatcher::HANGUP;
+  else if (state == processing_command)
+    return last_command;
+  
+  int bytes_read = recv(socket_descriptor, &last_command, sizeof(uint32), 0);
+  if (bytes_read == -1)
+    return 0;
+  else if (bytes_read == 0)
+  {
+    state = disconnected;
+    return Dispatcher::HANGUP;
+  }
+  else
+  {
+    state = processing_command;
+    return last_command;
+  }
+}
+
+vector< uint32 > Blocking_Client_Socket::get_arguments(int num_arguments)
+{
+  vector< uint32 > result;
+  if (state == disconnected || state == waiting)
+    return result;
+  
+  for (int i = 0; i < num_arguments; ++i)
+  {
+    // Wait for each argument up to 0.1 seconds
+    result.push_back(0);
+    int bytes_read = recv(socket_descriptor, &result.back(), sizeof(uint32), 0);
+    uint counter = 0;
+    while (bytes_read == -1 && counter <= 100)
+    {
+      bytes_read = recv(socket_descriptor, &result.back(), sizeof(uint32), 0);
+      millisleep(1);
+      ++counter;
+    }
+    if (bytes_read == 0)
+    {
+      state = disconnected;
+      result.clear();
+      break;
+    }
+    if (bytes_read == -1)
+      break;
+  }
+  return result;
+}
+
+void Blocking_Client_Socket::set_result(uint32 result)
+{
+  if (state == disconnected || state == waiting)
+    return;
+  
+  // remove any pending data. The connection should be clear at the end of the command.
+  uint32 dummy;
+  int bytes_read = recv(socket_descriptor, &dummy, sizeof(uint32), 0);
+  while (bytes_read > 0)
+    bytes_read = recv(socket_descriptor, &dummy, sizeof(uint32), 0);
+  
+  if (bytes_read == 0)
+  {
+    state = disconnected;
+    return;
+  }
+//   send(socket_descriptor, &result, sizeof(uint32), 0);
+  state = waiting;
+}
+
+Blocking_Client_Socket::~Blocking_Client_Socket()
+{
+  close(socket_descriptor);
+}
 
 
 Dispatcher::Dispatcher
@@ -505,7 +604,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       else
       {
 	if (bytes_read != 0)
-	  connection_per_pid[pid] = *it;
+	  connection_per_pid[pid] = new Blocking_Client_Socket(*it);
 	else
 	  close(*it);
 	
@@ -519,29 +618,20 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     uint32 client_pid = 0;
     
     // poll all open connections
-    for (map< pid_t, int >::const_iterator it = connection_per_pid.begin();
+    for (map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.begin();
         it != connection_per_pid.end(); ++it)
     {
-      uint32 message = 0;
-      int bytes_read = recv(it->second, &message, sizeof(uint32), 0);
-      if (bytes_read == -1)
-	;
-      else if (bytes_read == 0)
+      command = it->second->get_command();
+      if (command != 0)
       {
-	client_pid = it->first;
-	if (processes_reading.find(it->first) != processes_reading.end())
-	  command = Dispatcher::READ_ABORTED;
-	else
-	  command = Dispatcher::HANGUP;
-	break;
-      }
-      else
-      {
-	command = message;
 	client_pid = it->first;
 	break;
       }
     }
+    if (command == Dispatcher::HANGUP
+        && processes_reading.find(client_pid) != processes_reading.end())
+      command = Dispatcher::READ_ABORTED;
+
     
     if (*(uint32*)dispatcher_shm_ptr == 0 && command == 0)
     {
@@ -563,6 +653,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       if (command == 0)
       {
         command = *(uint32*)dispatcher_shm_ptr;
+        *(uint32*)dispatcher_shm_ptr = 0;
         client_pid = *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
       }
       // Set command state to zero.
@@ -573,8 +664,8 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       
 	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
 	{
-	  send(connection_per_pid[client_pid], &command, sizeof(uint32), 0);
-	  close(connection_per_pid[client_pid]);
+	  connection_per_pid[client_pid]->set_result(command);
+	  delete connection_per_pid[client_pid];
 	  connection_per_pid.erase(client_pid);
 	}
 	
@@ -587,8 +678,8 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	
 	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
 	{
-	  send(connection_per_pid[client_pid], &command, sizeof(uint32), 0);
-	  close(connection_per_pid[client_pid]);
+	  connection_per_pid[client_pid]->set_result(command);
+	  delete connection_per_pid[client_pid];
 	  connection_per_pid.erase(client_pid);
 	}
       }
@@ -596,116 +687,110 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       {
 	check_and_purge();
 	write_start(client_pid);
+	connection_per_pid[client_pid]->set_result(0);
       }
       else if (command == WRITE_ROLLBACK)
+      {
 	write_rollback(client_pid);
+	connection_per_pid[client_pid]->set_result(0);
+      }
       else if (command == WRITE_COMMIT)
       {
 	check_and_purge();
 	write_commit(client_pid);
+	connection_per_pid[client_pid]->set_result(0);
       }
       else if (command == HANGUP)
       {
 	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
 	{
-	  close(connection_per_pid[client_pid]);
+	  delete connection_per_pid[client_pid];
 	  connection_per_pid.erase(client_pid);
 	}
       }
       else if (command == READ_ABORTED)
       {
 	read_finished(client_pid);
-        if (connection_per_pid.find(client_pid) != connection_per_pid.end())
-        {
-          close(connection_per_pid[client_pid]);
-          connection_per_pid.erase(client_pid);
-        }
+	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
+	{
+	  delete connection_per_pid[client_pid];
+	  connection_per_pid.erase(client_pid);
+	}
       }
       else if (command == REQUEST_READ_AND_IDX)
       {
-	Socket_Response response(connection_per_pid[client_pid]);
-	
 	if (processes_reading.size() >= max_num_reading_processes)
 	{
 	  check_and_purge();
+	  connection_per_pid[client_pid]->set_result(0);
 	  continue;
 	}
 	
-	uint32 max_allowed_time;
-	int bytes_read = -1;
-	int counter = 0;
-	while (bytes_read == -1 && ++counter <= 100)
+	vector< uint32 > arguments = connection_per_pid[client_pid]->get_arguments(3);
+	if (arguments.size() < 3)
 	{
-	  bytes_read = recv(connection_per_pid[client_pid], &max_allowed_time, sizeof(uint32), 0);
-	  millisleep(1);
-	}
-	if (bytes_read == -1)
+	  connection_per_pid[client_pid]->set_result(0);
 	  continue;
+	}
 	
-	uint64 max_allowed_space;
-	bytes_read = -1;
-	counter = 0;
-	while (bytes_read == -1 && ++counter <= 100)
-	{
-	  bytes_read = recv(connection_per_pid[client_pid], &max_allowed_space, sizeof(uint64), 0);
-	  millisleep(1);
-	}
-	if (bytes_read == -1)
-	  continue;
+	uint32 max_allowed_time = arguments[0];
+	uint64 max_allowed_space = (((uint64)arguments[2])<<32 | arguments[1]);
 	
 	if (max_allowed_space > (total_available_space - total_claimed_space())/2)
+	{
+	  connection_per_pid[client_pid]->set_result(0);
 	  continue;
+	}
 	
 	request_read_and_idx(client_pid, max_allowed_time, max_allowed_space);
-	response.set_message(command);
+	connection_per_pid[client_pid]->set_result(command);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == READ_IDX_FINISHED)
       {
 	read_idx_finished(client_pid);
         if (connection_per_pid.find(client_pid) != connection_per_pid.end())
-	  send(connection_per_pid[client_pid], &command, sizeof(uint32), 0);
+	  connection_per_pid[client_pid]->set_result(command);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == READ_FINISHED)
       {
 	read_finished(client_pid);
-        if (connection_per_pid.find(client_pid) != connection_per_pid.end())
-        {
-	  send(connection_per_pid[client_pid], &command, sizeof(uint32), 0);
-          close(connection_per_pid[client_pid]);
-          connection_per_pid.erase(client_pid);
-        }
+	
+// 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
+// 	millisleep(10000);
+	
+	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
+	{
+	  connection_per_pid[client_pid]->set_result(command);
+	  delete connection_per_pid[client_pid];
+	  connection_per_pid.erase(client_pid);
+	}
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == PURGE)
       {
-	Socket_Response response(connection_per_pid[client_pid]);
-
-	uint32 target_pid = 0;
-	int bytes_read = -1;
-	int counter = 0;
-	while (bytes_read == -1 && ++counter <= 100)
-	{
-	  bytes_read = recv(connection_per_pid[client_pid], &target_pid, sizeof(uint32), 0);
-	  millisleep(1);
-	}
-	if (bytes_read == -1)
+	vector< uint32 > arguments = connection_per_pid[client_pid]->get_arguments(1);
+	if (arguments.size() < 1)
 	  continue;
+	uint32 target_pid = arguments[0];
 
 	read_finished(target_pid);
         if (connection_per_pid.find(target_pid) != connection_per_pid.end())
         {
-	  send(connection_per_pid[target_pid], &command, sizeof(uint32), 0);
-          close(connection_per_pid[target_pid]);
+	  connection_per_pid[target_pid]->set_result(READ_FINISHED);
+	  delete connection_per_pid[target_pid];
           connection_per_pid.erase(target_pid);
         }
         
-	response.set_message(command);
+	connection_per_pid[client_pid]->set_result(command);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == PING)
+      {
 	prolongate(client_pid);
+	connection_per_pid[client_pid]->set_result(0);
+      }
     }
     catch (File_Error e)
     {
@@ -916,8 +1001,14 @@ void Dispatcher_Client::send_message(TObject message, string source_pos)
 bool Dispatcher_Client::ack_arrived()
 {
   uint32 answer = 0;
-  if (recv(socket_descriptor, &answer, sizeof(uint32), 0) == sizeof(uint32))
-    return (answer != 0);
+//   int bytes_read = recv(socket_descriptor, &answer, sizeof(uint32), 0);
+//   while (bytes_read == -1)
+//   {
+//     millisleep(50);
+//     bytes_read = recv(socket_descriptor, &answer, sizeof(uint32), 0);
+//   }
+//   if (bytes_read == 4)
+//     return (answer != 0);
   
   uint32 pid = getpid();
   if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)

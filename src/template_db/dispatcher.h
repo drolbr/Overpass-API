@@ -60,6 +60,8 @@ struct Dispatcher_Logger
   virtual void purge(pid_t pid) = 0;
 };
 
+class Blocking_Client_Socket;
+
 class Dispatcher
 {
   public:
@@ -160,7 +162,7 @@ class Dispatcher
     Dispatcher_Logger* logger;
     int socket_descriptor;
     vector< int > started_connections;
-    map< pid_t, int > connection_per_pid;
+    map< pid_t, Blocking_Client_Socket* > connection_per_pid;
     set< pid_t > disconnected;
     
     void copy_shadows_to_mains();
