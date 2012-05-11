@@ -6,12 +6,14 @@ AC_INIT([OverpassAPI], [0.6.0], [roland.olbricht@gmx.de])
 AC_CONFIG_SRCDIR([template_db/file_blocks.h])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+LT_INIT
 
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
+AC_PROG_RANLIB
 
 # Checks for libraries.
 AC_CHECK_LIB([expat], [XML_Parse])
@@ -42,6 +44,6 @@ AC_FUNC_SELECT_ARGTYPES
 AC_FUNC_STAT
 AC_FUNC_STRFTIME
 
-AC_CONFIG_FILES([Makefile bin/Makefile cgi-bin/Makefile test-bin/Makefile])
+AC_CONFIG_FILES([Makefile bin/Makefile cgi-bin/Makefile lib/Makefile test-bin/Makefile])
 AC_OUTPUT
 AC_SYS_LARGEFILE
