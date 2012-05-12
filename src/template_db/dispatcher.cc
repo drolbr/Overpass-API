@@ -106,7 +106,8 @@ struct Blocking_Client_Socket
   Blocking_Client_Socket(int socket_descriptor_);
   uint32 get_command();
   vector< uint32 > get_arguments(int num_arguments);
-  void set_result(uint32 result);
+  void clear_state();
+  void send_result(uint32 result);
   ~Blocking_Client_Socket();
 private:
   int socket_descriptor;
@@ -169,7 +170,7 @@ vector< uint32 > Blocking_Client_Socket::get_arguments(int num_arguments)
   return result;
 }
 
-void Blocking_Client_Socket::set_result(uint32 result)
+void Blocking_Client_Socket::clear_state()
 {
   if (state == disconnected || state == waiting)
     return;
@@ -185,6 +186,19 @@ void Blocking_Client_Socket::set_result(uint32 result)
     state = disconnected;
     return;
   }
+  state = waiting;
+}
+
+void Blocking_Client_Socket::send_result(uint32 result)
+{
+  if (state == disconnected || state == waiting)
+    return;
+  
+  clear_state();
+
+  if (state == disconnected)
+    return;
+  
   send(socket_descriptor, &result, sizeof(uint32), 0);
   state = waiting;
 }
@@ -202,6 +216,7 @@ Dispatcher::Dispatcher
      string db_dir_,
      uint max_num_reading_processes_, uint purge_timeout_,
      uint64 total_available_space_,
+     uint64 total_available_time_units_,
      const vector< File_Properties* >& controlled_files_,
      Dispatcher_Logger* logger_)
     : controlled_files(controlled_files_),
@@ -212,8 +227,11 @@ Dispatcher::Dispatcher
       max_num_reading_processes(max_num_reading_processes_),
       purge_timeout(purge_timeout_),
       total_available_space(total_available_space_),
+      total_available_time_units(total_available_time_units_),
       logger(logger_)
 {
+  signal(SIGPIPE, SIG_IGN);
+  
   // get the absolute pathname of the current directory
   if (db_dir.substr(0, 1) != "/")
     db_dir = getcwd() + db_dir_;
@@ -328,12 +346,6 @@ void Dispatcher::write_rollback(pid_t pid)
     logger->write_rollback(pid);
   remove_shadows();
   remove((shadow_name + ".lock").c_str());
-  
-/*  if (connection_per_pid.find(pid) != connection_per_pid.end())
-  {
-    close(connection_per_pid[pid]);
-    connection_per_pid.erase(pid);
-  }*/
 }
 
 void Dispatcher::write_commit(pid_t pid)
@@ -359,12 +371,6 @@ void Dispatcher::write_commit(pid_t pid)
   remove_shadows();
   remove((shadow_name + ".lock").c_str());
   set_current_footprints();
-
-/*  if (connection_per_pid.find(pid) != connection_per_pid.end())
-  {
-    close(connection_per_pid[pid]);
-    connection_per_pid.erase(pid);
-  }*/
 }
 
 void Dispatcher::request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space)
@@ -378,7 +384,7 @@ void Dispatcher::request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64
       it != map_footprints.end(); ++it)
     it->register_pid(pid);
   processes_reading_idx.insert(pid);
-  processes_reading[pid] = make_pair(time(NULL), max_allowed_space);
+  processes_reading[pid] = Reader_Entry(time(NULL), max_allowed_space, max_allowed_time);
 }
 
 void Dispatcher::read_idx_finished(pid_t pid)
@@ -392,7 +398,7 @@ void Dispatcher::prolongate(pid_t pid)
 {
   if (logger)
     logger->prolongate(pid);
-  processes_reading[pid].first = time(NULL);
+  processes_reading[pid].ping_time = time(NULL);
 }
 
 void Dispatcher::read_finished(pid_t pid)
@@ -559,8 +565,6 @@ vector< Dispatcher::pid_t > Dispatcher::write_index_of_empty_blocks()
 
 void Dispatcher::standby_loop(uint64 milliseconds)
 {
-  signal(SIGPIPE, SIG_IGN);
-  
   uint32 counter = 0;
   uint32 idle_counter = 0;
   while ((milliseconds == 0) || (counter < milliseconds/100))
@@ -654,7 +658,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       
 	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
 	{
-	  connection_per_pid[client_pid]->set_result(command);
+	  connection_per_pid[client_pid]->send_result(command);
 	  delete connection_per_pid[client_pid];
 	  connection_per_pid.erase(client_pid);
 	}
@@ -668,7 +672,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	
 	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
 	{
-	  connection_per_pid[client_pid]->set_result(command);
+	  connection_per_pid[client_pid]->send_result(command);
 	  delete connection_per_pid[client_pid];
 	  connection_per_pid.erase(client_pid);
 	}
@@ -677,18 +681,18 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       {
 	check_and_purge();
 	write_start(client_pid);
-	connection_per_pid[client_pid]->set_result(0);
+	connection_per_pid[client_pid]->clear_state();
       }
       else if (command == WRITE_ROLLBACK)
       {
 	write_rollback(client_pid);
-	connection_per_pid[client_pid]->set_result(0);
+	connection_per_pid[client_pid]->clear_state();
       }
       else if (command == WRITE_COMMIT)
       {
 	check_and_purge();
 	write_commit(client_pid);
-	connection_per_pid[client_pid]->set_result(0);
+	connection_per_pid[client_pid]->clear_state();
       }
       else if (command == HANGUP)
       {
@@ -712,14 +716,14 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	if (processes_reading.size() >= max_num_reading_processes)
 	{
 	  check_and_purge();
-	  connection_per_pid[client_pid]->set_result(0);
+	  connection_per_pid[client_pid]->send_result(0);
 	  continue;
 	}
 	
 	vector< uint32 > arguments = connection_per_pid[client_pid]->get_arguments(3);
 	if (arguments.size() < 3)
 	{
-	  connection_per_pid[client_pid]->set_result(0);
+	  connection_per_pid[client_pid]->send_result(0);
 	  continue;
 	}
 	
@@ -728,19 +732,25 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	
 	if (max_allowed_space > (total_available_space - total_claimed_space())/2)
 	{
-	  connection_per_pid[client_pid]->set_result(0);
+	  connection_per_pid[client_pid]->send_result(0);
+	  continue;
+	}
+	
+	if (max_allowed_time > (total_available_time_units - total_claimed_time_units())/2)
+	{
+	  connection_per_pid[client_pid]->send_result(0);
 	  continue;
 	}
 	
 	request_read_and_idx(client_pid, max_allowed_time, max_allowed_space);
-	connection_per_pid[client_pid]->set_result(command);
+	connection_per_pid[client_pid]->send_result(command);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == READ_IDX_FINISHED)
       {
 	read_idx_finished(client_pid);
         if (connection_per_pid.find(client_pid) != connection_per_pid.end())
-	  connection_per_pid[client_pid]->set_result(command);
+	  connection_per_pid[client_pid]->send_result(command);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == READ_FINISHED)
@@ -748,7 +758,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	read_finished(client_pid);	
 	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
 	{
-	  connection_per_pid[client_pid]->set_result(command);
+	  connection_per_pid[client_pid]->send_result(command);
 	  delete connection_per_pid[client_pid];
 	  connection_per_pid.erase(client_pid);
 	}
@@ -764,18 +774,18 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	read_finished(target_pid);
         if (connection_per_pid.find(target_pid) != connection_per_pid.end())
         {
-	  connection_per_pid[target_pid]->set_result(READ_FINISHED);
+	  connection_per_pid[target_pid]->send_result(READ_FINISHED);
 	  delete connection_per_pid[target_pid];
           connection_per_pid.erase(target_pid);
         }
         
-	connection_per_pid[client_pid]->set_result(command);
+	connection_per_pid[client_pid]->send_result(command);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == PING)
       {
 	prolongate(client_pid);
-	connection_per_pid[client_pid]->set_result(0);
+	connection_per_pid[client_pid]->send_result(0);
       }
     }
     catch (File_Error e)
@@ -798,13 +808,15 @@ void Dispatcher::output_status()
     ofstream status((shadow_name + ".status").c_str());
     
     status<<started_connections.size()<<' '<<connection_per_pid.size()
-        <<' '<<total_available_space<<' '<<total_claimed_space()<<'\n';
+        <<' '<<total_available_space<<' '<<total_claimed_space()
+	<<' '<<total_available_time_units<<' '<<total_claimed_time_units()<<'\n';
     
     for (set< pid_t >::const_iterator it = processes_reading_idx.begin();
         it != processes_reading_idx.end(); ++it)
     {
       status<<REQUEST_READ_AND_IDX<<' '<<*it
-	  <<' '<<processes_reading[*it].second<<'\n';
+	  <<' '<<processes_reading[*it].max_space
+	  <<' '<<processes_reading[*it].max_time<<'\n';
     }
     set< pid_t > collected_pids;
     for (vector< Idx_Footprints >::iterator it(data_footprints.begin());
@@ -823,7 +835,7 @@ void Dispatcher::output_status()
           it != registered_processes.end(); ++it)
 	collected_pids.insert(*it);
     }
-    for (map< pid_t, pair< uint32, uint64 > >::const_iterator it = processes_reading.begin();
+    for (map< pid_t, Reader_Entry >::const_iterator it = processes_reading.begin();
         it != processes_reading.end(); ++it)
       collected_pids.insert(it->first);
     
@@ -832,7 +844,8 @@ void Dispatcher::output_status()
     {
       if (processes_reading_idx.find(*it) == processes_reading_idx.end())
 	status<<READ_IDX_FINISHED<<' '<<*it
-	    <<' '<<processes_reading[*it].second<<'\n';
+	  <<' '<<processes_reading[*it].max_space
+	  <<' '<<processes_reading[*it].max_time<<'\n';
     }
   }
   catch (...) {}
@@ -878,9 +891,19 @@ vector< bool > Idx_Footprints::total_footprint() const
 uint64 Dispatcher::total_claimed_space() const
 {
   uint64 result = 0;
-  for (map< pid_t, pair< uint32, uint64 > >::const_iterator it = processes_reading.begin();
+  for (map< pid_t, Reader_Entry >::const_iterator it = processes_reading.begin();
       it != processes_reading.end(); ++it)
-    result += it->second.second;
+    result += it->second.max_space;
+  
+  return result;
+}
+
+uint64 Dispatcher::total_claimed_time_units() const
+{
+  uint64 result = 0;
+  for (map< pid_t, Reader_Entry >::const_iterator it = processes_reading.begin();
+      it != processes_reading.end(); ++it)
+    result += it->second.max_time;
   
   return result;
 }
@@ -904,7 +927,7 @@ void Dispatcher::check_and_purge()
         it != registered_processes.end(); ++it)
       collected_pids.insert(*it);
   }
-  for (map< pid_t, pair< uint32, uint64 > >::const_iterator it = processes_reading.begin();
+  for (map< pid_t, Reader_Entry >::const_iterator it = processes_reading.begin();
       it != processes_reading.end(); ++it)
     collected_pids.insert(it->first);
   
@@ -912,13 +935,13 @@ void Dispatcher::check_and_purge()
   for (set< pid_t >::const_iterator it = collected_pids.begin();
       it != collected_pids.end(); ++it)
   {
-    map< pid_t, pair< uint32, uint64 > >::const_iterator alive_it = processes_reading.find(*it);
+    map< pid_t, Reader_Entry >::const_iterator alive_it = processes_reading.find(*it);
     if ((alive_it != processes_reading.end()) &&
-        (alive_it->second.first + purge_timeout > current_time))
+        (alive_it->second.ping_time + purge_timeout > current_time))
       continue;
     if (disconnected.find(*it) != disconnected.end()
         || alive_it == processes_reading.end()
-	|| alive_it->second.first + purge_timeout > current_time)
+	|| alive_it->second.ping_time + purge_timeout > current_time)
     {
       if (logger)
 	logger->purge(*it);
@@ -931,6 +954,8 @@ Dispatcher_Client::Dispatcher_Client
     (string dispatcher_share_name_)
     : dispatcher_share_name(dispatcher_share_name_)
 {
+  signal(SIGPIPE, SIG_IGN);
+  
   // open dispatcher_share
   dispatcher_shm_fd = shm_open
       (dispatcher_share_name.c_str(), O_RDWR, S_666);

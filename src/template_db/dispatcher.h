@@ -62,6 +62,17 @@ struct Dispatcher_Logger
 
 class Blocking_Client_Socket;
 
+struct Reader_Entry
+{
+  Reader_Entry(uint32 ping_time_, uint64 max_space_, uint32 max_time_)
+    : ping_time(ping_time_), max_space(max_space_), max_time(max_time_) {}
+  Reader_Entry() : ping_time(0), max_space(0), max_time(0) {}
+  
+  uint32 ping_time;
+  uint64 max_space;
+  uint32 max_time;
+};
+
 class Dispatcher
 {
   public:
@@ -87,6 +98,7 @@ class Dispatcher
 	       string db_dir,
 	       uint max_num_reading_processes, uint purge_timeout,
 	       uint64 total_available_space,
+	       uint64 total_available_time_units,
 	       const vector< File_Properties* >& controlled_files,
 	       Dispatcher_Logger* logger = 0);
 	       
@@ -151,13 +163,14 @@ class Dispatcher
     vector< Idx_Footprints > data_footprints;
     vector< Idx_Footprints > map_footprints;
     set< pid_t > processes_reading_idx;
-    map< pid_t, pair< uint32, uint64 > > processes_reading;
+    map< pid_t, Reader_Entry > processes_reading;
     string shadow_name, db_dir;
     string dispatcher_share_name;
     int dispatcher_shm_fd;
     uint max_num_reading_processes;
     uint purge_timeout;
     uint64 total_available_space;
+    uint64 total_available_time_units;
     volatile uint8* dispatcher_shm_ptr;
     Dispatcher_Logger* logger;
     int socket_descriptor;
@@ -172,6 +185,7 @@ class Dispatcher
     vector< pid_t > write_index_of_empty_blocks();
     void check_and_purge();
     uint64 total_claimed_space() const;
+    uint64 total_claimed_time_units() const;
 };
 
 class Dispatcher_Client

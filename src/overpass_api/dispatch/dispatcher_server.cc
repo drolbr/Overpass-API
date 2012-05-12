@@ -262,6 +262,7 @@ int main(int argc, char* argv[])
 	 areas ? area_settings().max_num_processes : osm_base_settings().max_num_processes,
 	 areas ? area_settings().purge_timeout : osm_base_settings().purge_timeout,
 	 areas ? area_settings().total_available_space : osm_base_settings().total_available_space,
+	 areas ? area_settings().total_available_time_units : osm_base_settings().total_available_time_units,
 	 files_to_manage, &disp_logger);
     dispatcher.standby_loop(0);
   }

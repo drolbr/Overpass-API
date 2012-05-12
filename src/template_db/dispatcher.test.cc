@@ -444,7 +444,7 @@ int main(int argc, char* args[])
       file_properties.push_back(&test_file_3);
       Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			    BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			    5, 180, 1024*1024*1024, file_properties);
+			    5, 180, 1024*1024*1024, 1024*1024, file_properties);
     }
     catch (File_Error e)
     {
@@ -471,7 +471,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file_3);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			  5, 180, 1024*1024*1024, file_properties);
+			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
   }
 
   if ((test_to_execute == "") || (test_to_execute == "3"))
@@ -482,7 +482,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			  5, 180, 1024*1024*1024, file_properties);
+			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
   }
   
   if ((test_to_execute == "") || (test_to_execute == "4"))
@@ -493,7 +493,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			  5, 180, 1024*1024*1024, file_properties);
+			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
@@ -514,7 +514,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			  5, 180, 1024*1024*1024, file_properties);
+			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(495);
     dispatcher.write_start(480);
     try
@@ -544,7 +544,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			  5, 180, 1024*1024*1024, file_properties);
+			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
@@ -566,7 +566,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			  5, 180, 1024*1024*1024, file_properties);
+			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
@@ -596,7 +596,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			  5, 180, 1024*1024*1024, file_properties);
+			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
@@ -634,7 +634,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			  5, 180, 1024*1024*1024, file_properties);
+			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     put_elem(0, 1, test_file);
     dispatcher.write_commit(0);
@@ -651,7 +651,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			  5, 180, 1024*1024*1024, file_properties);
+			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     put_elem(0, 1, test_file);
     dispatcher.write_commit(0);
@@ -671,7 +671,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			  5, 180, 1024*1024*1024, file_properties);
+			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     put_elem(0, 1, test_file);
     dispatcher.write_commit(0);
@@ -694,7 +694,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			  5, 180, 1024*1024*1024, file_properties);
+			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
@@ -724,7 +724,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			  5, 180, 1024*1024*1024, file_properties);
+			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     dispatcher.request_read_and_idx(640, 180, 512*1024*1024);
     dispatcher.read_idx_finished(640);
@@ -772,7 +772,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			  5, 180, 1024*1024*1024, file_properties);
+			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     dispatcher.request_read_and_idx(640, 180, 512*1024*1024);
     dispatcher.read_idx_finished(640);
@@ -805,7 +805,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			  5, 180, 1024*1024*1024, file_properties);
+			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
@@ -846,7 +846,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			  5, 180, 1024*1024*1024, file_properties);
+			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     put_elem(0, 1, test_file);
     dispatcher.write_commit(0);
@@ -872,7 +872,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			  5, 180, 1024*1024*1024, file_properties);
+			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
@@ -921,7 +921,7 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			  5, 180, 1024*1024*1024, file_properties);
+			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     put_elem(0, 1, test_file);
     dispatcher.write_commit(0);
@@ -952,7 +952,7 @@ int main(int argc, char* args[])
     {
       Dispatcher dispatcher("/", "osm3s_index_share_test",
 			    BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			    5, 180, 1024*1024*1024, file_properties);
+			    5, 180, 1024*1024*1024,  1024*1024, file_properties);
     }
     catch (File_Error e)
     {
@@ -988,7 +988,7 @@ int main(int argc, char* args[])
     {
       Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			    BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			    5, 180, 1024*1024*1024, file_properties);
+			    5, 180, 1024*1024*1024,  1024*1024, file_properties);
       dispatcher.write_start(480);
       put_elem(0, 1, test_file);
       dispatcher.write_commit(0);
@@ -1017,7 +1017,7 @@ int main(int argc, char* args[])
     {
       Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			    BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			    5, 180, 1024*1024*1024, file_properties);
+			    5, 180, 1024*1024*1024,  1024*1024, file_properties);
     }
     catch (File_Error e)
     {

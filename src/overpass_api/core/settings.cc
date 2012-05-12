@@ -126,7 +126,8 @@ Osm_Base_Settings::Osm_Base_Settings()
   shared_name(basic_settings().shared_name_base + "_osm_base"),
   max_num_processes(20),
   purge_timeout(900),
-  total_available_space(4ll*1024*1024*1024)
+  total_available_space(4ll*1024*1024*1024),
+  total_available_time_units(256*1024)
 {}
 
 const Osm_Base_Settings& osm_base_settings()
@@ -150,7 +151,8 @@ Area_Settings::Area_Settings()
   shared_name(basic_settings().shared_name_base + "_areas"),
   max_num_processes(5),
   purge_timeout(900),
-  total_available_space(4ll*1024*1024*1024)
+  total_available_space(4ll*1024*1024*1024),
+  total_available_time_units(256*1024)
 {}
 
 const Area_Settings& area_settings()
