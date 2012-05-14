@@ -783,10 +783,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == PING)
-      {
 	prolongate(client_pid);
-	connection_per_pid[client_pid]->send_result(0);
-      }
     }
     catch (File_Error e)
     {
