@@ -228,7 +228,8 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
 
   if (factory)
   {
-    output_handle = new Output_Handle(type);
+    if (!output_handle)
+      output_handle = new Output_Handle(type);
     if (type == "custom")
       template_contains_js_ =
           set_output_templates(*output_handle, header, template_name, *rman.get_transaction());

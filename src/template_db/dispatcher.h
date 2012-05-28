@@ -27,6 +27,7 @@
 
 using namespace std;
 
+
 class Idx_Footprints
 {
   public:
@@ -42,6 +43,7 @@ class Idx_Footprints
     vector< bool > current_footprint;
     map< pid_t, vector< bool > > footprint_per_pid;
 };
+
 
 /** Is called to log all operations of the dispatcher */
 struct Dispatcher_Logger
@@ -60,7 +62,9 @@ struct Dispatcher_Logger
   virtual void purge(pid_t pid) = 0;
 };
 
+
 class Blocking_Client_Socket;
+
 
 struct Reader_Entry
 {
@@ -72,6 +76,7 @@ struct Reader_Entry
   uint64 max_space;
   uint32 max_time;
 };
+
 
 class Dispatcher
 {
@@ -188,6 +193,7 @@ class Dispatcher
     uint64 total_claimed_time_units() const;
 };
 
+
 class Dispatcher_Client
 {
   public:
@@ -251,5 +257,9 @@ class Dispatcher_Client
     template< class TObject >
     void send_message(TObject message, string source_pos);
 };
+
+
+void millisleep(uint32 milliseconds);
+
 
 #endif

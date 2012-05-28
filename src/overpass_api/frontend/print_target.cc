@@ -952,9 +952,14 @@ Print_Target& Output_Handle::get_print_target(uint32 current_mode, Transaction& 
 	  first_id = dynamic_cast< Print_Target_Custom* >(print_target)->get_first_id();
 	}
       }
-      delete print_target;
-      print_target = 0;
-      first_target = false;
+      if (dynamic_cast< Print_Target_Custom* >(print_target)
+	  || dynamic_cast< Print_Target_Xml* >(print_target)
+	  || dynamic_cast< Print_Target_Json* >(print_target))
+      {
+        delete print_target;
+        print_target = 0;
+        first_target = false;
+      }
     }
   }
   

@@ -40,7 +40,13 @@ class Output_Handle
       way_template = way_template_;
       relation_template = relation_template_;
     }
-    
+
+    // Output_Handle takes ownership of the provided Print_Target
+    void set_print_target(Print_Target* print_target_)
+    {
+      print_target = print_target_;
+    }
+
     string adapt_url(const string& url) const;
     string get_output() const;
     uint32 get_written_elements_count() const;

@@ -42,7 +42,11 @@ class Osm_Script_Statement : public Statement
     static Generic_Statement_Maker< Osm_Script_Statement > statement_maker;
     
     const string& get_type() const { return type; }
-    void set_factory(Statement::Factory* factory_) { factory = factory_; }
+    void set_factory(Statement::Factory* factory_, Output_Handle* output_handle_ = 0)
+    {
+      factory = factory_;
+      output_handle = output_handle_;
+    }
 
     string adapt_url(const string& url) const;
     uint32 get_written_elements_count() const;
