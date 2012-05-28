@@ -1,0 +1,122 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
+  <title>OSM3S on Mapnik via Open Layers</title>
+  <script src="http://openlayers.org/api/OpenLayers.js"></script>
+  <script src="http://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
+  <script type="text/javascript">
+      var lat = 50.727;
+      var lon = 7.092;
+      var zoom = 15;
+      var data_url = "api/interpreter?data=node[amenity=school](bbox);out;(way[amenity=school](bbox);node(w););out+skel;";
+      var zoom_data_limit = 13;
+      var map;
+
+      var zoom_valid = true;
+
+      function setStatusText(text)
+      {
+          var div = document.getElementById("statusline").firstChild;
+          div.deleteData(0, div.nodeValue.length);
+          div.appendData(text);
+      }
+
+      function make_features_added_closure() {
+          return function(evt) {
+              if (zoom_valid)
+                  setStatusText("");
+          };
+      }
+
+      OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {                
+	defaultHandlerOptions: {
+	  'single': true,
+	  'double': false,
+	  'pixelTolerance': 0,
+	  'stopSingle': false,
+	  'stopDouble': false
+	},
+	
+	initialize: function(options) {
+	  this.handlerOptions = OpenLayers.Util.extend(
+	    {}, this.defaultHandlerOptions
+	  );
+	  OpenLayers.Control.prototype.initialize.apply(
+	    this, arguments
+	  ); 
+	  this.handler = new OpenLayers.Handler.Click(
+	    this, {
+	      'click': this.trigger
+	    }, this.handlerOptions
+	  );
+	}, 
+	
+	trigger: function(evt) {
+	  var lonlat = map.getLonLatFromPixel(evt.xy)
+	      .transform(new OpenLayers.Projection("EPSG:900913"),
+		         new OpenLayers.Projection("EPSG:4326"));
+	      
+	  var popup = new OpenLayers.Popup("location_info",
+                   new OpenLayers.LonLat(lonlat.lon, lonlat.lat)
+		       .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913")),
+		   null,
+                   "Loading ...",
+	           true);
+	  
+	  popup.contentSize = new OpenLayers.Size(400, 400);
+	  popup.closeOnMove = true;
+	  map.addPopup(popup);
+	  
+	  var request = OpenLayers.Request.GET({
+              url: "http://overpass-api.de/api/interpreter?data="
+	          + "[out:custom];(node(bbox);<;);out;"
+		  + "&redirect=no&template=ids.popup&bbox="
+		  + (lonlat.lon - 0.0005) + "," + (lonlat.lat - 0.0005) + ","
+		  + (lonlat.lon + 0.0005) + "," + (lonlat.lat + 0.0005),
+	      async: false
+          });
+	  
+	  map.removePopup(popup);
+	  popup.contentHTML = request.responseText;
+	  map.addPopup(popup);
+	}
+	
+      });
+      
+      function init(){
+          map = new OpenLayers.Map ("map", {
+          controls:[
+              new OpenLayers.Control.Navigation(),
+              new OpenLayers.Control.PanZoomBar(),
+              new OpenLayers.Control.LayerSwitcher(),
+              new OpenLayers.Control.Attribution()],
+              maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
+              maxResolution: 156543.0399,
+              numZoomLevels: 19,
+              units: 'm',
+              projection: new OpenLayers.Projection("EPSG:900913"),
+              displayProjection: new OpenLayers.Projection("EPSG:4326")
+          } );
+
+          layerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
+          map.addLayer(layerMapnik);
+          layerCycleMap = new OpenLayers.Layer.OSM.CycleMap("CycleMap");
+          map.addLayer(layerCycleMap);
+
+          var lonLat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+          map.setCenter (lonLat, zoom);
+
+	  var click = new OpenLayers.Control.Click();
+          map.addControl(click);
+          click.activate();
+      }
+  </script>
+</head>
+<body onload="init()">
+  <div id="map" class="smallmap"></div>
+
+</body>
+</html>
+
+
