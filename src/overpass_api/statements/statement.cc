@@ -67,8 +67,6 @@ void Statement::substatement_error(string parent, Statement* child)
   ostringstream temp;
   temp<<"Element \""<<child->get_name()<<"\" cannot be subelement of element \""<<parent<<"\".";
   add_static_error(temp.str());
-  
-  delete child;
 }
 
 void Statement::add_statement(Statement* statement, string text)
