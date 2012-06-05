@@ -1034,11 +1034,10 @@ void Dispatcher_Client::write_start()
 {
   pid_t pid = getpid();
   
+  send_message(Dispatcher::WRITE_START, "Dispatcher_Client::write_start::socket");
+
   while (true)
   {
-    send_message(Dispatcher::WRITE_START, "Dispatcher_Client::write_start::socket");
-    millisleep(100);
-    
     if (file_exists(shadow_name + ".lock"))
     {
       try
@@ -1059,11 +1058,10 @@ void Dispatcher_Client::write_rollback()
 {
   pid_t pid = getpid();
   
+  send_message(Dispatcher::WRITE_ROLLBACK, "Dispatcher_Client::write_rollback::socket");
+
   while (true)
   {
-    send_message(Dispatcher::WRITE_ROLLBACK, "Dispatcher_Client::write_rollback::socket");
-    millisleep(100);
-    
     if (file_exists(shadow_name + ".lock"))
     {
       try
@@ -1087,11 +1085,11 @@ void Dispatcher_Client::write_commit()
 {
   pid_t pid = getpid();
   
+  send_message(Dispatcher::WRITE_COMMIT, "Dispatcher_Client::write_commit::socket");  
+  millisleep(500);
+
   while (true)
   {
-    send_message(Dispatcher::WRITE_COMMIT, "Dispatcher_Client::write_commit::socket");
-    millisleep(100);
-    
     if (file_exists(shadow_name + ".lock"))
     {
       try
@@ -1107,7 +1105,8 @@ void Dispatcher_Client::write_commit()
     else
       return;
     
-    millisleep(1000);
+    send_message(Dispatcher::WRITE_COMMIT, "Dispatcher_Client::write_commit::socket");
+    millisleep(500);
   }
 }
 
