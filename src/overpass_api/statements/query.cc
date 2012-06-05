@@ -540,7 +540,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	    (into.relations, ids, invert_ids, range_req_31, rman, *osm_base_settings().RELATIONS);
     }
   }
-  
+
   set_progress(5);
   rman.health_check(*this);
 

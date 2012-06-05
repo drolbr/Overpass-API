@@ -19,8 +19,8 @@ using std::map;
 class Print_Target_C : public Print_Target
 {
   public:
-    Print_Target_C(Transaction& transaction, vector< Node >& nodes_)
-        : Print_Target(31, transaction), nodes(nodes_) {}
+    Print_Target_C(Transaction& transaction, vector< Node >& nodes_, vector< Way >& ways_)
+        : Print_Target(31, transaction), nodes(nodes_), ways(ways_) {}
     
     virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
@@ -29,7 +29,7 @@ class Print_Target_C : public Print_Target
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton* meta = 0,
-			    const map< uint32, string >* users = 0) {}
+			    const map< uint32, string >* users = 0);
     virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton* meta = 0,
@@ -40,24 +40,57 @@ class Print_Target_C : public Print_Target
 			    const map< uint32, string >* users = 0) {}
 			    
     vector< Node >& nodes;
+    vector< Way >& ways;
 };
 
 
-struct Handle_Data
+struct Id_Coord
 {
-  Handle_Data() {}
+  Id_Coord(uint32 id_, double lat_, double lon_) : id(id_), lat(lat_), lon(lon_) {}
   
+  bool operator<(const Id_Coord& a) const
+  {
+    return (id < a.id);
+  }
+  
+  uint32 id;
+  double lat;
+  double lon;
+};
+
+
+Coord make_coord(double lat, double lon)
+{
+  Coord result;
+  result.lat = lat;
+  result.lon = lon;
+  return result;
+}
+
+
+struct Real_Handle
+{
+  Real_Handle() {}
+  
+  vector< const char* > c_tags;
+
   vector< Node > nodes;
   vector< Node >::const_iterator nodes_it;
   Overpass_C_Node c_node;
-  vector< const char* > c_tags;
+
+  set< Id_Coord > id_coords;
+  
+  vector< Way > ways;
+  vector< Way >::const_iterator ways_it;
+  vector< Coord > coords;
+  Overpass_C_Way c_way;
 };
 
 
-map< Overpass_C_Handle*, Handle_Data >& handle_map()
+int& handle_count()
 {
-  static map< Overpass_C_Handle*, Handle_Data > static_map;
-  return static_map;
+  static int handle_count = 0;
+  return handle_count;
 }
 
 
@@ -104,31 +137,19 @@ private:
 void alloc_overpass_handle(Overpass_C_Handle** handle)
 {
   cerr<<'A';
-  *handle = new Overpass_C_Handle();
+  *handle = reinterpret_cast< Overpass_C_Handle* >(new Real_Handle());
+  ++handle_count();
 
-  (*handle)->num_nodes = 0;
-  (*handle)->nodes = 0;
-  (*handle)->num_ways = 0;
-  (*handle)->ways = 0;
-  (*handle)->num_relations = 0;
-  (*handle)->relations = 0;
-
-  handle_map()[*handle];
-  
-  //cerr<<'W';
   Dispatcher_Stub_Semaphore semaphore;
   if (dispatcher_stub() == 0)
   {
     if (semaphore.has_lock())
     {
-      //cerr<<'T';
       try
       {
 	int area_level = 0;
-	//cerr<<'U';
 	dispatcher_stub() = new Dispatcher_Stub
 	    ("", 0, "--- liboverpass ---", area_level, 3600, 1024*1024*1024);
-	//cerr<<'V';
       }
       catch(File_Error e)
       {
@@ -138,10 +159,9 @@ void alloc_overpass_handle(Overpass_C_Handle** handle)
 	      <<". Probably the server is overcrowded.\n";
 	else
 	  temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin;
-	//cerr<<temp.str()<<'\n';
 	
-	handle_map().erase(*handle);
-	delete *handle;
+        --handle_count();
+	delete reinterpret_cast< Real_Handle* >(*handle);
       }
       catch(Resource_Error e)
       {
@@ -152,99 +172,23 @@ void alloc_overpass_handle(Overpass_C_Handle** handle)
 	else
 	  temp<<"Query run out of memory in \""<<e.stmt_name<<"\" at line "
 	      <<e.line_number<<" using about "<<e.size/(1024*1024)<<" MB of RAM.";
-	//cerr<<temp.str()<<'\n';
 	
-	handle_map().erase(*handle);
-	delete *handle;
+        --handle_count();
+	delete reinterpret_cast< Real_Handle* >(*handle);
       }
       catch(Exit_Error e)
       {
-	handle_map().erase(*handle);
-	delete *handle;
+        --handle_count();
+	delete reinterpret_cast< Real_Handle* >(*handle);
       }
     }
     else
     {
-      //cerr<<'X';
       while (dispatcher_stub() == 0)
-      {
 	millisleep(100);
-        //cerr<<'Y';
-      }
     }
-    //cerr<<'Z';
   }
   cerr<<'B';
-}
-
-
-void free_overpass_c_tags(uint32 num_tags, char** tags)
-{
-  if (num_tags > 0)
-  {
-    for (uint32 i = 0; i < 2*num_tags; ++i)
-      free(tags[i]);
-  }
-  free(tags);
-}
-
-
-void free_overpass_c_node(Overpass_C_Node& node)
-{
-  free_overpass_c_tags(node.num_tags, node.tags);
-}
-
-
-void free_overpass_c_way(Overpass_C_Way& way)
-{
-  if (way.num_nodes > 0)
-    free(way.nodes);
-  free_overpass_c_tags(way.num_tags, way.tags);
-}
-
-
-void free_overpass_c_relation(Overpass_C_Relation& relation)
-{
-  free_overpass_c_tags(relation.num_tags, relation.tags);
-}
-
-
-void clear_overpass_handle(Overpass_C_Handle* handle)
-{
-  if (handle)
-  {
-    for (int i = 0; i < handle->num_nodes; ++i)
-      free_overpass_c_node(handle->nodes[i]);
-    if (handle->num_nodes > 0)
-      free(handle->nodes);
-    handle->num_nodes = 0;
-    
-    for (int i = 0; i < handle->num_ways; ++i)
-      free_overpass_c_way(handle->ways[i]);
-    if (handle->num_ways > 0)
-      free(handle->ways);
-    handle->num_ways = 0;
-
-    for (int i = 0; i < handle->num_relations; ++i)
-      free_overpass_c_relation(handle->relations[i]);
-    if (handle->num_relations > 0)
-      free(handle->relations);
-    handle->num_relations = 0;
-  }
-}
-
-
-char** create_tags(uint32 num_tags, const vector< pair< string, string > >& tags)
-{
-  char** c_tags = (char**) malloc(2 * num_tags * sizeof(char*));
-  for (uint32 i = 0; i < tags.size(); ++i)
-  {
-    c_tags[2*i] = (char*) malloc((tags[i].first.size() + 1) * sizeof(char));
-    strncpy(c_tags[2*i], tags[i].first.c_str(), tags[i].first.size() + 1);
-    c_tags[2*i+1] = (char*) malloc((tags[i].second.size() + 1) * sizeof(char));
-    strncpy(c_tags[2*i+1], tags[i].second.c_str(), tags[i].second.size() + 1);
-  }
-  return c_tags;
 }
 
 
@@ -258,74 +202,78 @@ void Print_Target_C::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 }
 
 
+void Print_Target_C::print_item(uint32 ll_upper, const Way_Skeleton& skel,
+    const vector< pair< string, string > >* tags,
+    const OSM_Element_Metadata_Skeleton* meta,
+    const map< uint32, string >* users)
+{
+  ways.push_back(Way(skel.id, ll_upper, skel.nds));
+  ways.back().tags = *tags;
+}
+
+
 void overpass_bbox(Overpass_C_Handle* handle,
-		   double south, double west, double north, double east)
+		   double south, double west, double north, double east,
+		   char* condition)
 {
   cerr<<'C';
-  handle_map()[handle].nodes.clear();
+  Real_Handle& handle_data = *reinterpret_cast< Real_Handle* >(handle);
+  handle_data.nodes.clear();
+  handle_data.ways.clear();
+  handle_data.id_coords.clear();
   
   ostringstream out;
-  out<</*"(way("<<south<<","<<west<<","<<north<<","<<east<<");>;"*/
-      "node("<<south<<","<<west<<","<<north<<","<<east<<");"/*");"*/"out qt;";
+  out<<"(way("<<south<<","<<west<<","<<north<<","<<east<<")"<<condition<<";>;"
+      "node("<<south<<","<<west<<","<<north<<","<<east<<")"<<condition<<";);out qt;";
   cout<<out.str()<<'\n';
   
-  cerr<<'G';
 //   Web_Output error_output(Error_Output::ASSISTING);
   Statement::set_error_output(0/*&error_output*/);
 
   Statement::Factory stmt_factory;
   Output_Handle output_handle("---");
+  
+  static int parser_lock = 0;
+  while (parser_lock > 0)
+    millisleep(100);
+  ++parser_lock;
   get_statement_stack()->clear();
   if (!parse_and_validate(stmt_factory, out.str(), 0/*&error_output*/, parser_execute))
   {
+    --parser_lock;
     cout<<"parser error\n";
+    cerr<<'E';
     return;
   }
   vector< Statement* > statement_stack;
   statement_stack.swap(*get_statement_stack());
+  --parser_lock;
+  cerr<<'a';
+  Resource_Manager rman(*dispatcher_stub()->resource_manager().get_transaction(), 0, 0); 
+  cerr<<'b';
   
-  cerr<<'H';
   Osm_Script_Statement* osm_script = 0;
-  cerr<<'K';
   if (!statement_stack.empty())
     osm_script = dynamic_cast< Osm_Script_Statement* >(statement_stack.front());
-  cerr<<'L';
+  cerr<<'c';
   if (osm_script)
   {
-    cerr<<'M';
+    cerr<<'d';
     osm_script->set_factory(&stmt_factory, &output_handle);
-    cerr<<'N';
-    Resource_Manager* r = &dispatcher_stub()->resource_manager();
-    cerr<<r<<'S';
-    Transaction* t =  r->get_transaction();
-    cerr<<'Q';
-    vector< Node >& nodes = handle_map()[handle].nodes;
-    cerr<<'R';
-    Print_Target_C* p = new Print_Target_C
-        (*t/**dispatcher_stub()->resource_manager().get_transaction()*/,
-	 nodes/*handle_map()[handle].nodes*/);
-    cerr<<'P';
-    output_handle.set_print_target(p/*new Print_Target_C
-        (*dispatcher_stub()->resource_manager().get_transaction(),
-	 handle_map()[handle].nodes)*/);
-    cerr<<'O';
+    cerr<<'g';
+    output_handle.set_print_target(new Print_Target_C
+        (*rman.get_transaction(), handle_data.nodes, handle_data.ways));
+    cerr<<'h';
   }
     
-  cerr<<'I';
+  cerr<<'e';
   for (vector< Statement* >::const_iterator it(statement_stack.begin());
       it != statement_stack.end(); ++it)
-    (*it)->execute(dispatcher_stub()->resource_manager());
+    (*it)->execute(rman);
 
-//   vector< Overpass_C_Node >& nodes
-//       = (dynamic_cast< Print_Target_C* >
-//       (&output_handle.get_print_target(0, *handle_map()[handle]->resource_manager().get_transaction())))->nodes;
-//   handle->num_nodes = nodes.size();
-//   handle->nodes = (Overpass_C_Node*) malloc(nodes.size() * sizeof(Overpass_C_Node));
-//   for (uint32 i = 0; i < nodes.size(); ++i)
-//     handle->nodes[i] = nodes[i];
-    
-  cerr<<'J';
-  handle_map()[handle].nodes_it = handle_map()[handle].nodes.begin();
+  cerr<<'f';
+  handle_data.nodes_it = handle_data.nodes.begin();
+  handle_data.ways_it = handle_data.ways.begin();
   
   if (osm_script)
     osm_script->set_factory(0, 0);
@@ -339,52 +287,92 @@ void overpass_bbox(Overpass_C_Handle* handle,
 // 2 if next element is a way
 int has_next_overpass_handle(Overpass_C_Handle* handle)
 {
-  map< Overpass_C_Handle*, Handle_Data >::const_iterator it = handle_map().find(handle);
-  if (it == handle_map().end())
-    return 0;
-  if (it->second.nodes_it != it->second.nodes.end())
+  Real_Handle& handle_data = *reinterpret_cast< Real_Handle* >(handle);
+  if (handle_data.nodes_it != handle_data.nodes.end())
     return 1;
-  return 0;
+  else if (handle_data.ways_it != handle_data.ways.end())
+    return 2;
+  else
+    return 0;
 }
 
 
 // The library keeps ownership of the pointer
 Overpass_C_Node* next_node_overpass_handle(Overpass_C_Handle* handle)
 {
-  map< Overpass_C_Handle*, Handle_Data >::iterator it = handle_map().find(handle);
-  if (it == handle_map().end() || it->second.nodes_it == it->second.nodes.end())
-    return 0;
+  Real_Handle& handle_data = *reinterpret_cast< Real_Handle* >(handle);
   
-  it->second.c_node.id = it->second.nodes_it->id;
-  it->second.c_node.lat = Node::lat(it->second.nodes_it->ll_upper, it->second.nodes_it->ll_lower_);
-  it->second.c_node.lon = Node::lon(it->second.nodes_it->ll_upper, it->second.nodes_it->ll_lower_);
-  it->second.c_node.num_tags = it->second.nodes_it->tags.size();
-  if (it->second.c_node.num_tags > 0)
+  handle_data.c_node.id = handle_data.nodes_it->id;
+  handle_data.c_node.lat = Node::lat(handle_data.nodes_it->ll_upper, handle_data.nodes_it->ll_lower_);
+  handle_data.c_node.lon = Node::lon(handle_data.nodes_it->ll_upper, handle_data.nodes_it->ll_lower_);
+  handle_data.c_node.num_tags = handle_data.nodes_it->tags.size();
+  if (handle_data.c_node.num_tags > 0)
   {
-    it->second.c_tags.resize(2*it->second.c_node.num_tags);
-    for (uint i = 0; i < it->second.nodes_it->tags.size(); ++i)
+    handle_data.c_tags.resize(2*handle_data.c_node.num_tags);
+    for (uint i = 0; i < handle_data.nodes_it->tags.size(); ++i)
     {
-      it->second.c_tags[2*i] = it->second.nodes_it->tags[i].first.c_str();
-      it->second.c_tags[2*i+1] = it->second.nodes_it->tags[i].second.c_str();
+      handle_data.c_tags[2*i] = handle_data.nodes_it->tags[i].first.c_str();
+      handle_data.c_tags[2*i+1] = handle_data.nodes_it->tags[i].second.c_str();
     }
-    it->second.c_node.tags = (char**) &it->second.c_tags[0];
+    handle_data.c_node.tags = (char**) &handle_data.c_tags[0];
   }
   
-  ++it->second.nodes_it;
-  return &(it->second.c_node);
+  ++handle_data.nodes_it;
+  return &(handle_data.c_node);
+}
+
+
+// The library keeps ownership of the pointer
+Overpass_C_Way* next_way_overpass_handle(Overpass_C_Handle* handle)
+{
+  Real_Handle& handle_data = *reinterpret_cast< Real_Handle* >(handle);
+  
+  handle_data.c_way.id = handle_data.ways_it->id;
+  
+  handle_data.coords.clear();
+  if (handle_data.id_coords.empty())
+  {
+    for (vector< Node >::const_iterator it = handle_data.nodes.begin(); it != handle_data.nodes.end(); ++it)
+      handle_data.id_coords.insert(Id_Coord(it->id,
+	  Node::lat(it->ll_upper, it->ll_lower_), Node::lon(it->ll_upper, it->ll_lower_)));
+  }
+  for (vector< uint32 >::const_iterator it = handle_data.ways_it->nds.begin();
+       it != handle_data.ways_it->nds.end(); ++it)
+  {
+    set< Id_Coord >::const_iterator cit = handle_data.id_coords.find(Id_Coord(*it, 0, 0));
+    if (cit != handle_data.id_coords.end())
+      handle_data.coords.push_back(make_coord(cit->lat, cit->lon));
+  }
+  handle_data.c_way.num_coords = handle_data.coords.size();
+  if (handle_data.c_way.num_coords > 0)
+    handle_data.c_way.coords = &handle_data.coords[0];
+  
+  handle_data.c_way.num_tags = handle_data.ways_it->tags.size();
+  if (handle_data.c_way.num_tags > 0)
+  {
+    handle_data.c_tags.resize(2*handle_data.c_way.num_tags);
+    for (uint i = 0; i < handle_data.ways_it->tags.size(); ++i)
+    {
+      handle_data.c_tags[2*i] = handle_data.ways_it->tags[i].first.c_str();
+      handle_data.c_tags[2*i+1] = handle_data.ways_it->tags[i].second.c_str();
+    }
+    handle_data.c_way.tags = (char**) &handle_data.c_tags[0];
+  }
+  
+  ++handle_data.ways_it;
+  return &(handle_data.c_way);
 }
 
 
 void free_overpass_handle(Overpass_C_Handle* handle)
 {
-//   if (handle)
-//     clear_overpass_handle(handle);
-
-  cerr<<'E';
-  handle_map().erase(handle);
-  delete handle;
-  if (handle_map().empty())
-    delete dispatcher_stub();
-  dispatcher_stub() = 0;
   cerr<<'F';
+  delete reinterpret_cast< Real_Handle* >(handle);
+  if (--handle_count() == 0)
+  {
+    cerr<<'z';
+    delete dispatcher_stub();
+    dispatcher_stub() = 0;
+  }
+  cerr<<'G';
 }
