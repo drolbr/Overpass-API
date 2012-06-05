@@ -681,18 +681,18 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       {
 	check_and_purge();
 	write_start(client_pid);
-	connection_per_pid[client_pid]->clear_state();
+	connection_per_pid[client_pid]->send_result(command);
       }
       else if (command == WRITE_ROLLBACK)
       {
 	write_rollback(client_pid);
-	connection_per_pid[client_pid]->clear_state();
+	connection_per_pid[client_pid]->send_result(command);
       }
       else if (command == WRITE_COMMIT)
       {
 	check_and_purge();
 	write_commit(client_pid);
-	connection_per_pid[client_pid]->clear_state();
+	connection_per_pid[client_pid]->send_result(command);
       }
       else if (command == HANGUP)
       {
@@ -1038,7 +1038,7 @@ void Dispatcher_Client::write_start()
 
   while (true)
   {
-    if (file_exists(shadow_name + ".lock"))
+    if (ack_arrived() && file_exists(shadow_name + ".lock"))
     {
       try
       {
@@ -1050,7 +1050,7 @@ void Dispatcher_Client::write_start()
       }
       catch (...) {}
     }
-    millisleep(1000);
+    millisleep(500);
   }
 }
 
@@ -1062,22 +1062,25 @@ void Dispatcher_Client::write_rollback()
 
   while (true)
   {
-    if (file_exists(shadow_name + ".lock"))
+    if (ack_arrived())
     {
-      try
+      if (file_exists(shadow_name + ".lock"))
       {
-	pid_t locked_pid;
-	ifstream lock((shadow_name + ".lock").c_str());
-	lock>>locked_pid;
-	if (locked_pid != pid)
-	  return;
+        try
+        {
+	  pid_t locked_pid;
+	  ifstream lock((shadow_name + ".lock").c_str());
+	  lock>>locked_pid;
+	  if (locked_pid != pid)
+	    return;
+        }
+        catch (...) {}
       }
-      catch (...) {}
+      else
+        return;
     }
-    else
-      return;
     
-    millisleep(1000);
+    millisleep(500);
   }
 }
 
@@ -1090,20 +1093,23 @@ void Dispatcher_Client::write_commit()
 
   while (true)
   {
-    if (file_exists(shadow_name + ".lock"))
+    if (ack_arrived())
     {
-      try
+      if (file_exists(shadow_name + ".lock"))
       {
-	pid_t locked_pid;
-	ifstream lock((shadow_name + ".lock").c_str());
-	lock>>locked_pid;
-	if (locked_pid != pid)
-	  return;
+        try
+        {
+	  pid_t locked_pid;
+	  ifstream lock((shadow_name + ".lock").c_str());
+	  lock>>locked_pid;
+	  if (locked_pid != pid)
+	    return;
+        }
+        catch (...) {}
       }
-      catch (...) {}
+      else
+        return;
     }
-    else
-      return;
     
     send_message(Dispatcher::WRITE_COMMIT, "Dispatcher_Client::write_commit::socket");
     millisleep(500);
