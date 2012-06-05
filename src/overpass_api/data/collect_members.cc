@@ -397,7 +397,7 @@ map< Uint31_Index, vector< Relation_Skeleton > > relation_relation_members
     (const Statement& stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Relation_Skeleton > >& parents,
      const set< pair< Uint31_Index, Uint31_Index > >* children_ranges,
-     const vector< uint32 >* children_ids)
+     const vector< uint32 >* children_ids, bool invert_ids)
 {
   vector< uint32 > intersect_ids;
   if (children_ids)
@@ -405,9 +405,16 @@ map< Uint31_Index, vector< Relation_Skeleton > > relation_relation_members
     vector< uint32 > children_ids_ = relation_member_ids
         (stmt, rman, Relation_Entry::RELATION, parents);
     intersect_ids.resize(children_ids->size());
-    intersect_ids.erase(set_intersection
-        (children_ids->begin(), children_ids->end(), children_ids_.begin(), children_ids_.end(),
-	intersect_ids.begin()), intersect_ids.end());
+    if (!invert_ids)
+      intersect_ids.erase(set_intersection
+          (children_ids->begin(), children_ids->end(),
+	   children_ids_.begin(), children_ids_.end(),
+	  intersect_ids.begin()), intersect_ids.end());
+    else
+      intersect_ids.erase(set_difference
+          (children_ids_.begin(), children_ids_.end(),
+	   children_ids->begin(), children_ids->end(),
+	  intersect_ids.begin()), intersect_ids.end());
   }
   else
     intersect_ids
@@ -431,7 +438,7 @@ map< Uint31_Index, vector< Way_Skeleton > > relation_way_members
     (const Statement& stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
      const set< pair< Uint31_Index, Uint31_Index > >* way_ranges,
-     const vector< uint32 >* way_ids)
+     const vector< uint32 >* way_ids, bool invert_ids)
 {
   vector< uint32 > intersect_ids;
   if (way_ids)
@@ -439,6 +446,7 @@ map< Uint31_Index, vector< Way_Skeleton > > relation_way_members
     vector< uint32 > children_ids = relation_member_ids
         (stmt, rman, Relation_Entry::WAY, relations);
     intersect_ids.resize(way_ids->size());
+    if (!invert_ids)
     intersect_ids.erase(set_intersection
         (way_ids->begin(), way_ids->end(), children_ids.begin(), children_ids.end(),
 	intersect_ids.begin()), intersect_ids.end());
@@ -465,7 +473,7 @@ map< Uint32_Index, vector< Node_Skeleton > > relation_node_members
     (const Statement& stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
      const set< pair< Uint32_Index, Uint32_Index > >* node_ranges,
-     const vector< uint32 >* node_ids)
+     const vector< uint32 >* node_ids, bool invert_ids)
 {
   vector< uint32 > intersect_ids;
   if (node_ids)
@@ -473,9 +481,15 @@ map< Uint32_Index, vector< Node_Skeleton > > relation_node_members
     vector< uint32 > children_ids = relation_member_ids
         (stmt, rman, Relation_Entry::NODE, relations);
     intersect_ids.resize(node_ids->size());
-    intersect_ids.erase(set_intersection
-        (node_ids->begin(), node_ids->end(), children_ids.begin(), children_ids.end(),
-	intersect_ids.begin()), intersect_ids.end());
+    if (!invert_ids)
+      intersect_ids.erase(set_intersection
+          (node_ids->begin(), node_ids->end(), children_ids.begin(), children_ids.end(),
+	  intersect_ids.begin()), intersect_ids.end());
+    else
+      intersect_ids.erase(set_intersection
+          (children_ids.begin(), children_ids.end(),
+	   node_ids->begin(), node_ids->end(),
+	  intersect_ids.begin()), intersect_ids.end());
   }
   else
     intersect_ids
@@ -499,7 +513,7 @@ map< Uint32_Index, vector< Node_Skeleton > > way_members
     (const Statement& stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Way_Skeleton > >& ways,
      const set< pair< Uint32_Index, Uint32_Index > >* node_ranges,
-     const vector< uint32 >* node_ids)
+     const vector< uint32 >* node_ids, bool invert_ids)
 {  
   vector< uint32 > intersect_ids;
   
@@ -507,9 +521,15 @@ map< Uint32_Index, vector< Node_Skeleton > > way_members
   {
     vector< uint32 > children_ids = way_nd_ids(stmt, rman, ways);
     intersect_ids.resize(node_ids->size());
-    intersect_ids.erase(set_intersection
-        (node_ids->begin(), node_ids->end(), children_ids.begin(), children_ids.end(),
-         intersect_ids.begin()), intersect_ids.end());
+    if (!invert_ids)
+      intersect_ids.erase(set_intersection
+          (node_ids->begin(), node_ids->end(), children_ids.begin(), children_ids.end(),
+           intersect_ids.begin()), intersect_ids.end());
+    else
+      intersect_ids.erase(set_difference
+          (children_ids.begin(), children_ids.end(),
+	   node_ids->begin(), node_ids->end(),
+           intersect_ids.begin()), intersect_ids.end());
   }
   else
     intersect_ids = way_nd_ids(stmt, rman, ways);

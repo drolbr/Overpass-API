@@ -458,7 +458,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     for (vector< Query_Constraint* >::iterator it = constraints.begin();
         it != constraints.end() && answer_state < data_collected; ++it)
     {
-      if ((*it)->collect(rman, into, type, ids))
+      if ((*it)->collect(rman, into, type, ids, invert_ids))
         answer_state = data_collected;
     }
 
@@ -495,7 +495,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       for (vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && answer_state < data_collected; ++it)
       {
-	if ((*it)->get_data(*this, rman, into, range_req_32, ids))
+	if ((*it)->get_data(*this, rman, into, range_req_32, ids, invert_ids))
 	  answer_state = data_collected;
       }
     }
@@ -504,7 +504,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       for (vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && answer_state < data_collected; ++it)
       {
-	if ((*it)->get_data(*this, rman, into, range_req_31, type, ids))
+	if ((*it)->get_data(*this, rman, into, range_req_31, type, ids, invert_ids))
 	  answer_state = data_collected;
       }
     }

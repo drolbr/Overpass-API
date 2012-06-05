@@ -24,7 +24,8 @@ class Item_Constraint : public Query_Constraint
 {
   public:
     Item_Constraint(Item_Statement& item_) : item(&item_) {}
-    bool collect(Resource_Manager& rman, Set& into, int type, const vector< uint32 >& ids);
+    bool collect(Resource_Manager& rman, Set& into, int type,
+		 const vector< uint32 >& ids, bool invert_ids);
     void filter(Resource_Manager& rman, Set& into);
     virtual ~Item_Constraint() {}
     
@@ -35,30 +36,51 @@ class Item_Constraint : public Query_Constraint
 template< typename TIndex, typename TObject >
 void collect_elements(const map< TIndex, vector< TObject > >& from,
 		      map< TIndex, vector< TObject > >& into,
-		      const vector< uint32 >& ids)
+		      const vector< uint32 >& ids, bool invert_ids)
 {
   into.clear();
   for (typename map< TIndex, vector< TObject > >::const_iterator iit = from.begin();
       iit != from.end(); ++iit)
   {
-    for (typename vector< TObject >::const_iterator cit = iit->second.begin();
-        cit != iit->second.end(); ++cit)
+    if (ids.empty())
     {
-      if ((binary_search(ids.begin(), ids.end(), cit->id)) || (ids.empty()))
+      for (typename vector< TObject >::const_iterator cit = iit->second.begin();
+          cit != iit->second.end(); ++cit)
 	into[iit->first].push_back(*cit);
+    }
+    else if (!invert_ids)
+    {
+      for (typename vector< TObject >::const_iterator cit = iit->second.begin();
+          cit != iit->second.end(); ++cit)
+      {
+        if (binary_search(ids.begin(), ids.end(), cit->id))
+	  into[iit->first].push_back(*cit);
+      }
+    }
+    else
+    {
+      for (typename vector< TObject >::const_iterator cit = iit->second.begin();
+          cit != iit->second.end(); ++cit)
+      {
+        if (!binary_search(ids.begin(), ids.end(), cit->id))
+	  into[iit->first].push_back(*cit);
+      }
     }
   }
 }
 
 bool Item_Constraint::collect(Resource_Manager& rman, Set& into,
-			      int type, const vector< uint32 >& ids)
+			      int type, const vector< uint32 >& ids, bool invert_ids)
 {
   if (type == QUERY_NODE)
-    collect_elements(rman.sets()[item->get_result_name()].nodes, into.nodes, ids);
+    collect_elements(rman.sets()[item->get_result_name()].nodes, into.nodes,
+		     ids, invert_ids);
   if (type == QUERY_WAY)
-    collect_elements(rman.sets()[item->get_result_name()].ways, into.ways, ids);
+    collect_elements(rman.sets()[item->get_result_name()].ways, into.ways,
+		     ids, invert_ids);
   if (type == QUERY_RELATION)
-    collect_elements(rman.sets()[item->get_result_name()].relations, into.relations, ids);
+    collect_elements(rman.sets()[item->get_result_name()].relations, into.relations,
+		     ids, invert_ids);
   return true;
 }
 

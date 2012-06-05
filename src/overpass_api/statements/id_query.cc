@@ -50,7 +50,8 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
 
 template< class TIndex, class TObject >
 void collect_elems(Resource_Manager& rman, const File_Properties& prop,
-		   uint32 lower, uint32 upper, const vector< uint32 >& ids,
+		   uint32 lower, uint32 upper,
+		   const vector< uint32 >& ids, bool invert_ids,
 		   map< TIndex, vector< TObject > >& elems)
 {
   set< TIndex > req;
@@ -58,7 +59,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
     Random_File< TIndex > random(rman.get_transaction()->random_index(&prop));
     for (uint32 i = lower; i <= upper; ++i)
     {
-      if (binary_search(ids.begin(), ids.end(), i))
+      if (binary_search(ids.begin(), ids.end(), i) ^ invert_ids)
         req.insert(random.get(i));
     }
   }    
@@ -68,7 +69,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
       !(it == elems_db.discrete_end()); ++it)
   {
     if (it.object().id >= lower && it.object().id <= upper
-        && binary_search(ids.begin(), ids.end(), it.object().id))
+        && (binary_search(ids.begin(), ids.end(), it.object().id) ^ invert_ids))
       elems[it.index()].push_back(it.object());
   }
 }
@@ -99,10 +100,10 @@ class Id_Query_Constraint : public Query_Constraint
     Id_Query_Constraint(Id_Query_Statement& stmt_) : stmt(&stmt_) {}
     bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
 		  const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-		  const vector< uint32 >& ids);
+		  const vector< uint32 >& ids, bool invert_ids);
     bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
 		  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-		  int type, const vector< uint32 >& ids);
+		  int type, const vector< uint32 >& ids, bool invert_ids);
     void filter(Resource_Manager& rman, Set& into);
     virtual ~Id_Query_Constraint() {}
     
@@ -113,7 +114,7 @@ class Id_Query_Constraint : public Query_Constraint
 bool Id_Query_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
      const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-     const vector< uint32 >& ids)
+     const vector< uint32 >& ids, bool invert_ids)
 {
   if (stmt->get_type() == Statement::NODE)
   {
@@ -122,7 +123,7 @@ bool Id_Query_Constraint::get_data
 		    into.nodes);
     else
       collect_elems(rman, *osm_base_settings().NODES, stmt->get_lower(), stmt->get_upper(),
-		    ids, into.nodes);
+		    ids, invert_ids, into.nodes);
   }
 		    
   return true;
@@ -131,7 +132,7 @@ bool Id_Query_Constraint::get_data
 bool Id_Query_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
      const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-     int type, const vector< uint32 >& ids)
+     int type, const vector< uint32 >& ids, bool invert_ids)
 {
   if (stmt->get_type() == Statement::WAY)
   {
@@ -140,7 +141,7 @@ bool Id_Query_Constraint::get_data
 		    into.ways);
     else
       collect_elems(rman, *osm_base_settings().WAYS, stmt->get_lower(), stmt->get_upper(),
-		    ids, into.ways);
+		    ids, invert_ids, into.ways);
   }
   else if (stmt->get_type() == Statement::RELATION)
   {
@@ -149,7 +150,7 @@ bool Id_Query_Constraint::get_data
 		    into.relations);
     else
       collect_elems(rman, *osm_base_settings().RELATIONS, stmt->get_lower(), stmt->get_upper(),
-		    ids, into.relations);
+		    ids, invert_ids, into.relations);
   }
 
   return true;

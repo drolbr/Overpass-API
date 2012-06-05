@@ -109,18 +109,27 @@ void collect_relations
     (const Statement& stmt, Resource_Manager& rman,
      const map< TSourceIndex, vector< TSourceObject > >& sources, uint32 source_type,
      map< Uint31_Index, vector< Relation_Skeleton > >& result,
-     const vector< uint32 >& ids)
+     const vector< uint32 >& ids, bool invert_ids)
 {
   vector< uint32 > children_ids = extract_children_ids(sources);    
   rman.health_check(stmt);
   set< Uint31_Index > req = extract_parent_indices(sources);
   rman.health_check(stmt);
-  
-  collect_items_discrete(stmt, rman, *osm_base_settings().RELATIONS, req,
-      And_Predicate< Relation_Skeleton,
-	  Id_Predicate< Relation_Skeleton >, Get_Parent_Rels_Predicate >
-	  (Id_Predicate< Relation_Skeleton >(ids),
-          Get_Parent_Rels_Predicate(children_ids, source_type)), result);
+
+  if (!invert_ids)
+    collect_items_discrete(stmt, rman, *osm_base_settings().RELATIONS, req,
+        And_Predicate< Relation_Skeleton,
+	    Id_Predicate< Relation_Skeleton >, Get_Parent_Rels_Predicate >
+	    (Id_Predicate< Relation_Skeleton >(ids),
+            Get_Parent_Rels_Predicate(children_ids, source_type)), result);
+  else
+    collect_items_discrete(stmt, rman, *osm_base_settings().RELATIONS, req,
+        And_Predicate< Relation_Skeleton,
+	    Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >,
+	    Get_Parent_Rels_Predicate >
+	    (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
+	      (Id_Predicate< Relation_Skeleton >(ids)),
+            Get_Parent_Rels_Predicate(children_ids, source_type)), result);
 }
 
 void collect_relations
@@ -139,17 +148,27 @@ void collect_relations
     (const Statement& stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Relation_Skeleton > >& sources,
      map< Uint31_Index, vector< Relation_Skeleton > >& result,
-     const vector< uint32 >& ids)
+     const vector< uint32 >& ids, bool invert_ids)
 {
   vector< uint32 > children_ids = extract_children_ids(sources);    
   rman.health_check(stmt);
   
-  collect_items_flat(stmt, rman, *osm_base_settings().RELATIONS,
-      And_Predicate< Relation_Skeleton,
-	  Id_Predicate< Relation_Skeleton >, Get_Parent_Rels_Predicate >
-	  (Id_Predicate< Relation_Skeleton >(ids),
-          Get_Parent_Rels_Predicate(children_ids, Relation_Entry::RELATION)),
-      result);
+  if (!invert_ids)
+    collect_items_flat(stmt, rman, *osm_base_settings().RELATIONS,
+        And_Predicate< Relation_Skeleton,
+	    Id_Predicate< Relation_Skeleton >, Get_Parent_Rels_Predicate >
+	    (Id_Predicate< Relation_Skeleton >(ids),
+            Get_Parent_Rels_Predicate(children_ids, Relation_Entry::RELATION)),
+        result);
+  else
+    collect_items_flat(stmt, rman, *osm_base_settings().RELATIONS,
+        And_Predicate< Relation_Skeleton,
+	    Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >,
+	    Get_Parent_Rels_Predicate >
+	    (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
+	      (Id_Predicate< Relation_Skeleton >(ids)),
+            Get_Parent_Rels_Predicate(children_ids, Relation_Entry::RELATION)),
+        result);
 }
 
 void collect_ways
@@ -170,104 +189,129 @@ void collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      const map< Uint32_Index, vector< Node_Skeleton > >& nodes,
      map< Uint31_Index, vector< Way_Skeleton > >& result,
-     const vector< uint32 >& ids)
+     const vector< uint32 >& ids, bool invert_ids)
 {
   vector< uint32 > children_ids = extract_children_ids(nodes);    
   rman.health_check(stmt);
   set< Uint31_Index > req = extract_parent_indices(nodes);
   rman.health_check(stmt);
   
-  collect_items_discrete(stmt, rman, *osm_base_settings().WAYS, req,
-      And_Predicate< Way_Skeleton,
-	  Id_Predicate< Way_Skeleton >, Get_Parent_Ways_Predicate >
-	  (Id_Predicate< Way_Skeleton >(ids), Get_Parent_Ways_Predicate(children_ids)), result);
+  if (!invert_ids)
+    collect_items_discrete(stmt, rman, *osm_base_settings().WAYS, req,
+        And_Predicate< Way_Skeleton,
+	    Id_Predicate< Way_Skeleton >, Get_Parent_Ways_Predicate >
+	    (Id_Predicate< Way_Skeleton >(ids), Get_Parent_Ways_Predicate(children_ids)), result);
+  else
+    collect_items_discrete(stmt, rman, *osm_base_settings().WAYS, req,
+        And_Predicate< Way_Skeleton,
+	    Not_Predicate< Way_Skeleton, Id_Predicate< Way_Skeleton > >,
+	    Get_Parent_Ways_Predicate >
+	    (Not_Predicate< Way_Skeleton, Id_Predicate< Way_Skeleton > >
+	      (Id_Predicate< Way_Skeleton >(ids)),
+	     Get_Parent_Ways_Predicate(children_ids)), result);
 }
 
 void collect_nodes(const Statement& query, Resource_Manager& rman,
 		   const map< Uint31_Index, vector< Relation_Skeleton > >& rels,
 		   const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-		   const vector< uint32 >& ids,
+		   const vector< uint32 >& ids, bool invert_ids,
 		   map< Uint32_Index, vector< Node_Skeleton > >& nodes)
 {
   if (ranges.empty())
   {
     if (ids.empty())
       nodes = relation_node_members(query, rman, rels);
-    else
+    else if (!invert_ids)
       nodes = relation_node_members(query, rman, rels, 0, &ids);
+    else
+      nodes = relation_node_members(query, rman, rels, 0, &ids, invert_ids);
   }
   else
   {
     if (ids.empty())
       nodes = relation_node_members(query, rman, rels, &ranges);
-    else
+    else if (!invert_ids)
       nodes = relation_node_members(query, rman, rels, &ranges, &ids);
+    else
+      nodes = relation_node_members(query, rman, rels, &ranges, &ids, invert_ids);
   }
 }
 
 void collect_nodes(const Statement& query, Resource_Manager& rman,
 		   const map< Uint31_Index, vector< Way_Skeleton > >& rels,
 		   const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-		   const vector< uint32 >& ids,
+		   const vector< uint32 >& ids, bool invert_ids,
 		   map< Uint32_Index, vector< Node_Skeleton > >& nodes)
 {
   if (ranges.empty())
   {
     if (ids.empty())
       nodes = way_members(query, rman, rels);
-    else
+    else if (!invert_ids)
       nodes = way_members(query, rman, rels, 0, &ids);
+    else
+      nodes = way_members(query, rman, rels, 0, &ids, invert_ids);
   }
   else
   {
     if (ids.empty())
       nodes = way_members(query, rman, rels, &ranges);
-    else
+    else if (!invert_ids)
       nodes = way_members(query, rman, rels, &ranges, &ids);
+    else
+      nodes = way_members(query, rman, rels, 0, &ids, invert_ids);
   }
 }
 
 void collect_ways(const Statement& query, Resource_Manager& rman,
 		  const map< Uint31_Index, vector< Relation_Skeleton > >& rels,
 		  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-		  const vector< uint32 >& ids,
+		  const vector< uint32 >& ids, bool invert_ids,
 		  map< Uint31_Index, vector< Way_Skeleton > >& ways)
 {
   if (ranges.empty())
   {
     if (ids.empty())
       ways = relation_way_members(query, rman, rels);
-    else
+    else if (!invert_ids)
       ways = relation_way_members(query, rman, rels, 0, &ids);
+    else
+      ways = relation_way_members(query, rman, rels, 0, &ids, invert_ids);
   }
   else
   {
     if (ids.empty())
       ways = relation_way_members(query, rman, rels, &ranges);
-    else
+    else if (!invert_ids)
       ways = relation_way_members(query, rman, rels, &ranges, &ids);
+    else
+      ways = relation_way_members(query, rman, rels, &ranges, &ids, invert_ids);
   }
 }
 
 void collect_relations(const Statement& query, Resource_Manager& rman,
 		  const map< Uint31_Index, vector< Relation_Skeleton > >& rels,
 		  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-		  const vector< uint32 >& ids,
+		  const vector< uint32 >& ids, bool invert_ids,
 		  map< Uint31_Index, vector< Relation_Skeleton > >& relations)
 {
   if (ranges.empty())
   {
     if (ids.empty())
       relations = relation_relation_members(query, rman, rels);
-    else
+    else if (!invert_ids)
       relations = relation_relation_members(query, rman, rels, 0, &ids);
+    else
+      relations = relation_relation_members(query, rman, rels, 0, &ids, invert_ids);
   }
   else
   {
     if (ids.empty())
       relations = relation_relation_members(query, rman, rels, &ranges);
-    else
+    else if (!invert_ids)
       relations = relation_relation_members(query, rman, rels, &ranges, &ids);
+    else
+      relations = relation_relation_members(query, rman, rels, &ranges, &ids, invert_ids);
   }
 }
 
@@ -323,10 +367,10 @@ class Recurse_Constraint : public Query_Constraint
     Recurse_Constraint(Recurse_Statement& stmt_) : stmt(&stmt_) {}
     bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
 		  const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-		  const vector< uint32 >& ids);
+		  const vector< uint32 >& ids, bool invert_ids);
     bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
 		  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-		  int type, const vector< uint32 >& ids);
+		  int type, const vector< uint32 >& ids, bool invert_ids);
     void filter(Resource_Manager& rman, Set& into);
     void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~Recurse_Constraint() {}
@@ -338,23 +382,23 @@ class Recurse_Constraint : public Query_Constraint
 bool Recurse_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
      const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-     const vector< uint32 >& ids)
+     const vector< uint32 >& ids, bool invert_ids)
 {
   map< string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
   if (mit == rman.sets().end())
     return true;
   
   if (stmt->get_type() == RECURSE_RELATION_NODE)
-    collect_nodes(query, rman, mit->second.relations, ranges, ids, into.nodes);
+    collect_nodes(query, rman, mit->second.relations, ranges, ids, invert_ids, into.nodes);
   else if (stmt->get_type() == RECURSE_WAY_NODE)
-    collect_nodes(query, rman, mit->second.ways, ranges, ids, into.nodes);
+    collect_nodes(query, rman, mit->second.ways, ranges, ids, invert_ids, into.nodes);
   else if (stmt->get_type() == RECURSE_DOWN)
   {
     map< Uint32_Index, vector< Node_Skeleton > > rel_nodes;
     map< Uint31_Index, vector< Way_Skeleton > > rel_ways;
-    collect_nodes(query, rman, mit->second.relations, ranges, ids, rel_nodes);
+    collect_nodes(query, rman, mit->second.relations, ranges, ids, invert_ids, rel_nodes);
     rel_ways = relation_way_members(query, rman, mit->second.relations);
-    collect_nodes(query, rman, rel_ways, ranges, ids, into.nodes);
+    collect_nodes(query, rman, rel_ways, ranges, ids, invert_ids, into.nodes);
     indexed_set_union(into.nodes, rel_nodes);
   }
   else if (stmt->get_type() == RECURSE_DOWN_REL)
@@ -363,9 +407,9 @@ bool Recurse_Constraint::get_data
     relations_loop(query, rman, mit->second.relations, rel_rels);
     map< Uint32_Index, vector< Node_Skeleton > > rel_nodes;
     map< Uint31_Index, vector< Way_Skeleton > > rel_ways;
-    collect_nodes(query, rman, rel_rels, ranges, ids, rel_nodes);
+    collect_nodes(query, rman, rel_rels, ranges, ids, invert_ids, rel_nodes);
     rel_ways = relation_way_members(query, rman, rel_rels);
-    collect_nodes(query, rman, rel_ways, ranges, ids, into.nodes);
+    collect_nodes(query, rman, rel_ways, ranges, ids, invert_ids, into.nodes);
     indexed_set_union(into.nodes, rel_nodes);
   }
   return true;
@@ -374,32 +418,41 @@ bool Recurse_Constraint::get_data
 bool Recurse_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
      const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-     int type, const vector< uint32 >& ids)
+     int type, const vector< uint32 >& ids, bool invert_ids)
 {
   map< string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
   if (mit == rman.sets().end())
     return true;
   
   if (stmt->get_type() == RECURSE_RELATION_WAY)
-    collect_ways(query, rman, mit->second.relations, ranges, ids, into.ways);
+    collect_ways(query, rman, mit->second.relations, ranges, ids, invert_ids, into.ways);
   else if (stmt->get_type() == RECURSE_RELATION_RELATION)
-    collect_relations(query, rman, mit->second.relations, ranges, ids, into.relations);
+    collect_relations(query, rman, mit->second.relations, ranges,
+		      ids, invert_ids, into.relations);
   else if (stmt->get_type() == RECURSE_DOWN)
   {
     if (type != QUERY_WAY)
       return true;
-    collect_ways(query, rman, mit->second.relations, ranges, ids, into.ways);
+    collect_ways(query, rman, mit->second.relations, ranges, ids, invert_ids, into.ways);
   }
   else if (stmt->get_type() == RECURSE_DOWN_REL)
   {
     map< Uint31_Index, vector< Relation_Skeleton > > rel_rels;
     relations_loop(query, rman, mit->second.relations, rel_rels);
     if (type == QUERY_WAY)
-      collect_ways(query, rman, rel_rels, ranges, ids, into.ways);
+      collect_ways(query, rman, rel_rels, ranges, ids, invert_ids, into.ways);
     else
     {
       if (!ids.empty())
-	filter_items(Id_Predicate< Relation_Skeleton >(ids), rel_rels);
+      {
+	if (!invert_ids)
+	  filter_items
+	      (Id_Predicate< Relation_Skeleton >(ids), rel_rels);
+	else
+	  filter_items
+	      (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
+	        (Id_Predicate< Relation_Skeleton >(ids)), rel_rels);
+      }
       into.relations.swap(rel_rels);
     }
   }
@@ -408,28 +461,30 @@ bool Recurse_Constraint::get_data
     if (ids.empty())
       collect_ways(query, rman, mit->second.nodes, into.ways);
     else
-      collect_ways(query, rman, mit->second.nodes, into.ways, ids);
+      collect_ways(query, rman, mit->second.nodes, into.ways, ids, invert_ids);
   }
   else if (stmt->get_type() == RECURSE_NODE_RELATION)
   {
     if (ids.empty())
       collect_relations(query, rman, mit->second.nodes, Relation_Entry::NODE, into.relations);
     else
-      collect_relations(query, rman, mit->second.nodes, Relation_Entry::NODE, into.relations, ids);
+      collect_relations(query, rman, mit->second.nodes, Relation_Entry::NODE, into.relations, ids, invert_ids);
   }
   else if (stmt->get_type() == RECURSE_WAY_RELATION)
   {
     if (ids.empty())
       collect_relations(query, rman, mit->second.ways, Relation_Entry::WAY, into.relations);
     else
-      collect_relations(query, rman, mit->second.ways, Relation_Entry::WAY, into.relations, ids);
+      collect_relations(query, rman, mit->second.ways, Relation_Entry::WAY,
+			into.relations, ids, invert_ids);
   }
   else if (stmt->get_type() == RECURSE_RELATION_BACKWARDS)
   {
     if (ids.empty())
       collect_relations(query, rman, mit->second.relations, into.relations);
     else
-      collect_relations(query, rman, mit->second.relations, into.relations, ids);
+      collect_relations(query, rman, mit->second.relations, into.relations,
+			ids, invert_ids);
   }
   else if (stmt->get_type() == RECURSE_UP)
   {
@@ -438,7 +493,8 @@ bool Recurse_Constraint::get_data
       if (ids.empty())
 	collect_ways(query, rman, mit->second.nodes, into.ways);
       else
-	collect_ways(query, rman, mit->second.nodes, into.ways, ids);
+	collect_ways(query, rman, mit->second.nodes, into.ways,
+		     ids, invert_ids);
     }
     else
     {
@@ -449,13 +505,15 @@ bool Recurse_Constraint::get_data
       if (ids.empty())
 	collect_relations(query, rman, rel_ways, Relation_Entry::WAY, into.relations);
       else
-	collect_relations(query, rman, rel_ways, Relation_Entry::WAY, into.relations, ids);
+	collect_relations(query, rman, rel_ways, Relation_Entry::WAY, into.relations,
+			  ids, invert_ids);
       
       map< Uint31_Index, vector< Relation_Skeleton > > node_rels;
       if (ids.empty())
 	collect_relations(query, rman, mit->second.nodes, Relation_Entry::NODE, node_rels);
       else
-	collect_relations(query, rman, mit->second.nodes, Relation_Entry::NODE, node_rels, ids);
+	collect_relations(query, rman, mit->second.nodes, Relation_Entry::NODE, node_rels,
+			  ids, invert_ids);
       indexed_set_union(into.relations, node_rels);
     }
   }
@@ -466,7 +524,7 @@ bool Recurse_Constraint::get_data
       if (ids.empty())
 	collect_ways(query, rman, mit->second.nodes, into.ways);
       else
-	collect_ways(query, rman, mit->second.nodes, into.ways, ids);
+	collect_ways(query, rman, mit->second.nodes, into.ways, ids, invert_ids);
     }
     else
     {
@@ -487,7 +545,14 @@ bool Recurse_Constraint::get_data
       relations_up_loop(query, rman, rel_rels, into.relations);
 
       if (!ids.empty())
-	filter_items(Id_Predicate< Relation_Skeleton >(ids), into.relations);
+      {
+	if (!invert_ids)
+	  filter_items(Id_Predicate< Relation_Skeleton >(ids), into.relations);
+	else
+	  filter_items
+	      (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
+	        (Id_Predicate< Relation_Skeleton >(ids)), into.relations);
+      }
     }
   }
   return true;
@@ -580,7 +645,7 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
         = relation_member_ids(*stmt, rman, Relation_Entry::NODE, mit->second.relations);
     map< Uint31_Index, vector< Way_Skeleton > > intermediate_ways;
     collect_ways(query, rman, mit->second.relations, set< pair< Uint31_Index, Uint31_Index > >(),
-		 ids, intermediate_ways);
+		 ids, false, intermediate_ways);
     vector< uint32 > way_ids
         = way_nd_ids(*stmt, rman, intermediate_ways);
     set_union(way_ids.begin(), way_ids.end(), rel_ids.begin(), rel_ids.end(), back_inserter(ids));
@@ -600,7 +665,7 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
         = relation_member_ids(*stmt, rman, Relation_Entry::NODE, rel_rels);
     map< Uint31_Index, vector< Way_Skeleton > > intermediate_ways;
     collect_ways(query, rman, rel_rels, set< pair< Uint31_Index, Uint31_Index > >(),
-		 ids, intermediate_ways);
+		 ids, false, intermediate_ways);
     vector< uint32 > way_ids
         = way_nd_ids(*stmt, rman, intermediate_ways);
     set_union(way_ids.begin(), way_ids.end(), rel_ids.begin(), rel_ids.end(), back_inserter(ids));

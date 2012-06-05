@@ -35,7 +35,7 @@ class Query_Constraint
 {
   public:
     virtual bool collect(Resource_Manager& rman, Set& into,
-			 int type, const vector< uint32 >& ids) { return false; }
+			 int type, const vector< uint32 >& ids, bool invert_ids) { return false; }
 			 
     virtual bool get_ranges
         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
@@ -46,11 +46,11 @@ class Query_Constraint
       
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
 			  const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-			  const vector< uint32 >& ids)
+			  const vector< uint32 >& ids, bool invert_ids)
       { return false; }
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
 			  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-			  int type, const vector< uint32 >& ids)
+			  int type, const vector< uint32 >& ids, bool invert_ids)
       { return false; }
     
     // Cheap filter. No health_check in between needed and should be called first.
