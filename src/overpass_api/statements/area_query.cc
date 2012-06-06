@@ -37,6 +37,9 @@ class Area_Constraint : public Query_Constraint
 {
   public:
     Area_Constraint(Area_Query_Statement& area_) : area(&area_) {}
+
+    bool delivers_data() { return true; }
+    
     bool get_ranges
         (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
     void filter(Resource_Manager& rman, Set& into);

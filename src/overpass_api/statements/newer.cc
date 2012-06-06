@@ -35,6 +35,9 @@ class Newer_Constraint : public Query_Constraint
 {
   public:
     Newer_Constraint(Newer_Statement& newer) : timestamp(newer.get_timestamp()) {}
+
+    bool delivers_data() { return false; }
+    
     void filter(Resource_Manager& rman, Set& into);
     virtual ~Newer_Constraint() {}
     

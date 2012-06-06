@@ -57,7 +57,7 @@ class Query_Statement : public Statement
     vector< Query_Constraint* > constraints;
     
     vector< uint32 > collect_ids
-        (const File_Properties& file_prop, Resource_Manager& rman);
+        (const File_Properties& file_prop, Resource_Manager& rman, bool check_keys_late);
     vector< uint32 > collect_non_ids
         (const File_Properties& file_prop, Resource_Manager& rman);
 	 
@@ -67,7 +67,13 @@ class Query_Statement : public Statement
 	 const vector< uint32 >& ids, bool invert_ids,
 	 const set< pair< TIndex, TIndex > >& range_req,
          Resource_Manager& rman, File_Properties& file_prop);
-	 
+
+    template< class TIndex, class TObject >
+    void filter_by_tags
+        (map< TIndex, vector< TObject > >& items,
+         const File_Properties& file_prop, Resource_Manager& rman,
+	 Transaction& transaction);
+
     template < typename TIndex >
     set< pair< TIndex, TIndex > > get_ranges_by_id_from_db
         (const vector< uint32 >& ids,

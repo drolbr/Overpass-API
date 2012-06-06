@@ -33,6 +33,8 @@ using namespace std;
 class Bbox_Constraint : public Query_Constraint
 {
   public:
+    bool delivers_data();
+    
     Bbox_Constraint(Bbox_Query_Statement& bbox_) : bbox(&bbox_) {}
     bool get_ranges
         (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
@@ -45,6 +47,17 @@ class Bbox_Constraint : public Query_Constraint
   private:
     Bbox_Query_Statement* bbox;
 };
+
+
+bool Bbox_Constraint::delivers_data()
+{
+  if (!bbox)
+    return false;
+  
+  return ((bbox->get_north() - bbox->get_south())*(bbox->get_east() - bbox->get_west())
+      < 1.0);
+}
+
 
 bool Bbox_Constraint::get_ranges
     (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)

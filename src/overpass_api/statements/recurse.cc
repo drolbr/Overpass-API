@@ -365,6 +365,9 @@ class Recurse_Constraint : public Query_Constraint
 {
   public:
     Recurse_Constraint(Recurse_Statement& stmt_) : stmt(&stmt_) {}
+
+    bool delivers_data() { return true; }
+    
     bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
 		  const set< pair< Uint32_Index, Uint32_Index > >& ranges,
 		  const vector< uint32 >& ids, bool invert_ids);

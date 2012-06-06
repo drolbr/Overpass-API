@@ -277,6 +277,9 @@ class Around_Constraint : public Query_Constraint
 {
   public:
     Around_Constraint(Around_Statement& around_) : around(&around_), ranges_used(false) {}
+    
+    bool delivers_data() { return true; }
+    
     bool get_ranges
         (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges

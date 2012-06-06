@@ -235,6 +235,23 @@ void formulate_range_query
 }
 
 
+template< class TIndex, class TObject >
+void generate_ids_by_coarse
+  (set< TIndex >& coarse_indices,
+   map< uint32, vector< uint32 > >& ids_by_coarse,
+   const map< TIndex, vector< TObject > >& items)
+{
+  for (typename map< TIndex, vector< TObject > >::const_iterator
+    it(items.begin()); it != items.end(); ++it)
+  {
+    coarse_indices.insert(TIndex(it->first.val() & 0x7fffff00));
+    for (typename vector< TObject >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      ids_by_coarse[it->first.val() & 0x7fffff00].push_back(it2->id);
+  }
+}
+
+
 struct Tag_Index_Global
 {
   string key;

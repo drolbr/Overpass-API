@@ -173,7 +173,8 @@ set< pair< Tag_Index_Global, Tag_Index_Global > > get_k_req(const string& key)
 }
 
 vector< uint32 > Query_Statement::collect_ids
-  (const File_Properties& file_prop, Resource_Manager& rman)
+  (const File_Properties& file_prop, Resource_Manager& rman,
+   bool check_keys_late)
 {
   if (key_values.empty() && keys.empty() && key_regexes.empty())
     return vector< uint32 >();
@@ -216,45 +217,48 @@ vector< uint32 > Query_Statement::collect_ids
   }
 
   // Handle simple Keys Only
-  vector< string >::const_iterator kit = keys.begin();
-  if (key_values.empty() && kit != keys.end())
+  if (!check_keys_late)
   {
-    set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
-    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
-        it2(tags_db.range_begin
-          (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
-	   Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
-        !(it2 == tags_db.range_end()); ++it2)
-      new_ids.push_back(it2.object().val());
-
-    sort(new_ids.begin(), new_ids.end());
-    rman.health_check(*this);
-    ++kit;
-  }
-  
-  for (; kit != keys.end(); ++kit)
-  {
-    vector< uint32 > old_ids;
-    old_ids.swap(new_ids);
+    vector< string >::const_iterator kit = keys.begin();
+    if (key_values.empty() && kit != keys.end())
     {
       set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
       for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
-	  it2(tags_db.range_begin
-	  (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
+          it2(tags_db.range_begin
+            (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
 	   Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
-	  !(it2 == tags_db.range_end()); ++it2)
-      {
-	if (binary_search(old_ids.begin(), old_ids.end(), it2.object().val()))
-	  new_ids.push_back(it2.object().val());
-      }
+          !(it2 == tags_db.range_end()); ++it2)
+        new_ids.push_back(it2.object().val());
+
+      sort(new_ids.begin(), new_ids.end());
+      rman.health_check(*this);
+      ++kit;
     }
-    sort(new_ids.begin(), new_ids.end());    
-    rman.health_check(*this);
+    
+    for (; kit != keys.end(); ++kit)
+    {
+      vector< uint32 > old_ids;
+      old_ids.swap(new_ids);
+      {
+        set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
+        for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
+	    it2(tags_db.range_begin
+	      (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
+	    Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
+	    !(it2 == tags_db.range_end()); ++it2)
+        {
+	  if (binary_search(old_ids.begin(), old_ids.end(), it2.object().val()))
+	    new_ids.push_back(it2.object().val());
+        }
+      }
+      sort(new_ids.begin(), new_ids.end());    
+      rman.health_check(*this);
+    }
   }
 
   // Handle Key-Regular-Expression-Value pairs
   vector< pair< string, Regular_Expression* > >::const_iterator krit = key_regexes.begin();
-  if (key_values.empty() && keys.empty() && krit != key_regexes.end())
+  if (key_values.empty() && (keys.empty() || check_keys_late) && krit != key_regexes.end())
   {
     set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
     for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
@@ -413,6 +417,234 @@ void clear_empty_indices
   }
 }
 
+
+void filter_ids_by_tags
+  (map< uint32, vector< uint32 > >& ids_by_coarse,
+   const vector< string >& keys,
+   const Block_Backend< Tag_Index_Local, Uint32_Index >& items_db,
+   Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator& tag_it,
+   uint32 coarse_index)
+{
+  coarse_index = coarse_index & 0x7fffff00;
+  
+  vector< uint32 > old_ids, new_ids;
+  new_ids = ids_by_coarse[coarse_index];
+  string last_key;
+  
+  bool relevant = false;
+  vector< string >::const_iterator key_it = keys.begin();
+//   cerr<<"before ";
+//   for (vector< uint32 >::const_iterator it = new_ids.begin(); it != new_ids.end(); ++it)
+//     cerr<<*it<<'\n';
+//   cerr<<'\n';
+  
+//   cerr<<"inside ";
+  while ((!(tag_it == items_db.range_end())) &&
+      (((tag_it.index().index) & 0xffffff00) == coarse_index))
+  {
+    if (tag_it.index().key != last_key)
+    {   
+      if (relevant)
+        ++key_it;
+      if (key_it == keys.end())
+	break;
+      
+      last_key = tag_it.index().key;
+//       cerr<<"+++ "<<last_key<<' '<<*key_it<<'\n';
+      if (last_key >= *key_it)
+      {
+	if (last_key > *key_it)
+          // There are keys missing for all objects with this index. Drop all.
+	  break;
+        relevant = true;
+      }
+      if (relevant)
+      {
+	old_ids.clear();
+        old_ids.swap(new_ids);
+        sort(old_ids.begin(), old_ids.end());
+      }
+//       cerr<<"*** "<<last_key<<' '<<relevant<<'\n';
+    }
+    
+    if (relevant)
+    {
+      cerr<<tag_it.object().val();
+      if (binary_search(old_ids.begin(), old_ids.end(), tag_it.object().val()))
+//       {
+        new_ids.push_back(tag_it.object().val());
+// 	cerr<<' '<<new_ids.size();
+//       }
+//       cerr<<'\n';
+    }
+
+    ++tag_it;
+  }
+  while ((!(tag_it == items_db.range_end())) &&
+      (((tag_it.index().index) & 0xffffff00) == coarse_index))
+    ++tag_it;
+  
+  if (key_it != keys.end())
+    // There are keys missing for all objects with this index. Drop all.
+    new_ids.clear();
+  
+//   cerr<<' '<<new_ids.size();
+//   cerr<<'\n';
+  
+  sort(new_ids.begin(), new_ids.end());
+  
+//   cerr<<"after ";
+//   for (vector< uint32 >::const_iterator it = new_ids.begin(); it != new_ids.end(); ++it)
+//     cerr<<*it<<' ';
+//   cerr<<'\n';
+  
+  new_ids.swap(ids_by_coarse[coarse_index]);  
+
+  coarse_index = coarse_index | 0x80000000;  
+  old_ids.clear();
+  last_key = "";
+  
+  relevant = false;
+  key_it = keys.begin();
+//   cerr<<"before ";
+//   for (vector< uint32 >::const_iterator it = new_ids.begin(); it != new_ids.end(); ++it)
+//     cerr<<*it<<'\n';
+//   cerr<<'\n';
+  
+//   cerr<<"inside ";
+  while ((!(tag_it == items_db.range_end())) &&
+      (((tag_it.index().index) & 0xffffff00) == coarse_index))
+  {
+    if (tag_it.index().key != last_key)
+    {   
+      if (relevant)
+        ++key_it;
+      if (key_it == keys.end())
+	break;
+      
+      last_key = tag_it.index().key;
+//       cerr<<"+++ "<<last_key<<' '<<*key_it<<'\n';
+      if (last_key >= *key_it)
+      {
+	if (last_key > *key_it)
+          // There are keys missing for all objects with this index. Drop all.
+	  break;
+        relevant = true;
+      }
+      if (relevant)
+      {
+	old_ids.clear();
+        old_ids.swap(new_ids);
+        sort(old_ids.begin(), old_ids.end());
+      }
+//       cerr<<"*** "<<last_key<<' '<<relevant<<'\n';
+    }
+    
+    if (relevant)
+    {
+//       cerr<<tag_it.object().val();
+      if (binary_search(old_ids.begin(), old_ids.end(), tag_it.object().val()))
+//       {
+        new_ids.push_back(tag_it.object().val());
+// 	cerr<<' '<<new_ids.size();
+//       }
+//       cerr<<'\n';
+    }
+
+    ++tag_it;
+  }
+  while ((!(tag_it == items_db.range_end())) &&
+      (((tag_it.index().index) & 0xffffff00) == coarse_index))
+    ++tag_it;
+  
+  if (key_it != keys.end())
+    // There are keys missing for all objects with this index. Drop all.
+    new_ids.clear();
+  
+//   cerr<<' '<<new_ids.size();
+//   cerr<<'\n';
+  
+  sort(new_ids.begin(), new_ids.end());
+  
+//   cerr<<"after ";
+//   for (vector< uint32 >::const_iterator it = new_ids.begin(); it != new_ids.end(); ++it)
+//     cerr<<*it<<' ';
+//   cerr<<'\n';
+  
+  coarse_index = coarse_index & 0x7fffff00;  
+
+  old_ids.clear();
+  old_ids.swap(ids_by_coarse[coarse_index]);
+  set_union(old_ids.begin(), old_ids.end(), new_ids.begin(), new_ids.end(),
+      back_inserter(ids_by_coarse[coarse_index]));
+
+//   cerr<<"after union ";
+//   for (vector< uint32 >::const_iterator it = ids_by_coarse[coarse_index].begin(); it != ids_by_coarse[coarse_index].end(); ++it)
+//     cerr<<*it<<' ';
+//   cerr<<'\n';  
+}
+
+
+template< class TIndex, class TObject >
+void Query_Statement::filter_by_tags
+    (map< TIndex, vector< TObject > >& items,
+     const File_Properties& file_prop, Resource_Manager& rman, Transaction& transaction)
+{
+  if (keys.empty())
+    return;
+  sort(keys.begin(), keys.end());
+  
+  //generate set of relevant coarse indices
+  set< TIndex > coarse_indices;
+  map< uint32, vector< uint32 > > ids_by_coarse;
+  generate_ids_by_coarse(coarse_indices, ids_by_coarse, items);
+  
+  //formulate range query
+  set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
+  formulate_range_query(range_set, coarse_indices);
+  
+  // iterate over the result
+  map< TIndex, vector< TObject > > result;
+  uint coarse_count = 0;
+  Block_Backend< Tag_Index_Local, Uint32_Index > items_db
+      (transaction.data_index(&file_prop));
+  Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
+    tag_it(items_db.range_begin
+    (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+     Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+  typename map< TIndex, vector< TObject > >::const_iterator
+      item_it(items.begin());
+  for (typename set< TIndex >::const_iterator
+      it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
+  {
+    if (++coarse_count >= 1024)
+    {
+      coarse_count = 0;
+      rman.health_check(*this);
+    }
+    
+    sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
+    
+    filter_ids_by_tags(ids_by_coarse, keys, items_db, tag_it, it->val());
+    
+    while ((item_it != items.end()) &&
+        ((item_it->first.val() & 0x7fffff00) == it->val()))
+    {
+      for (typename vector< TObject >::const_iterator eit = item_it->second.begin();
+	   eit != item_it->second.end(); ++eit)
+      {
+        if (binary_search(ids_by_coarse[it->val()].begin(),
+            ids_by_coarse[it->val()].end(), eit->id))
+	  result[item_it->first.val()].push_back(*eit);
+      }
+      ++item_it;
+    }
+  }
+  
+  items.swap(result);
+}
+
+
 void Query_Statement::execute(Resource_Manager& rman)
 {
   enum { nothing, /*ids_collected,*/ ranges_collected, data_collected } answer_state
@@ -423,6 +655,11 @@ void Query_Statement::execute(Resource_Manager& rman)
   set_progress(1);
   rman.health_check(*this);
 
+  bool check_keys_late = false;
+  for (vector< Query_Constraint* >::iterator it = constraints.begin();
+      it != constraints.end() && answer_state < data_collected; ++it)
+    check_keys_late |= (*it)->delivers_data();
+  
   {
     File_Properties* file_prop = 0;
     if (type == QUERY_NODE)
@@ -431,12 +668,13 @@ void Query_Statement::execute(Resource_Manager& rman)
       file_prop = osm_base_settings().WAY_TAGS_GLOBAL;
     else if (type == QUERY_RELATION)
       file_prop = osm_base_settings().RELATION_TAGS_GLOBAL;
-    
+
     vector< uint32 > ids;
     bool invert_ids = false;
-    if (!keys.empty() || !key_values.empty() || !key_regexes.empty())
+    if ((!keys.empty() && !check_keys_late)
+        || !key_values.empty() || !key_regexes.empty())
     {
-      collect_ids(*file_prop, rman).swap(ids);
+      collect_ids(*file_prop, rman, check_keys_late).swap(ids);
       if (!key_nvalues.empty() || !key_nregexes.empty())
       {
 	vector< uint32 > non_ids = collect_non_ids(*file_prop, rman);
@@ -551,11 +789,24 @@ void Query_Statement::execute(Resource_Manager& rman)
   set_progress(6);
   rman.health_check(*this);
   
+  if (check_keys_late)
+  {
+    filter_by_tags(into.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
+		   rman, *rman.get_transaction());
+    filter_by_tags(into.ways, *osm_base_settings().WAY_TAGS_LOCAL,
+		   rman, *rman.get_transaction());
+    filter_by_tags(into.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
+		   rman, *rman.get_transaction());
+  }
+  
+  set_progress(7);
+  rman.health_check(*this);
+  
   for (vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end(); ++it)
     (*it)->filter(*this, rman, into);
     
-  set_progress(7);
+  set_progress(8);
   rman.health_check(*this);
   
   clear_empty_indices(into.nodes);

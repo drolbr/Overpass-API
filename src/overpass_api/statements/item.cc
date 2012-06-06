@@ -24,6 +24,9 @@ class Item_Constraint : public Query_Constraint
 {
   public:
     Item_Constraint(Item_Statement& item_) : item(&item_) {}
+
+    bool delivers_data() { return true; }
+    
     bool collect(Resource_Manager& rman, Set& into, int type,
 		 const vector< uint32 >& ids, bool invert_ids);
     void filter(Resource_Manager& rman, Set& into);

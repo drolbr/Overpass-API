@@ -34,6 +34,8 @@ using namespace std;
 class Query_Constraint
 {
   public:
+    virtual bool delivers_data() = 0;
+    
     virtual bool collect(Resource_Manager& rman, Set& into,
 			 int type, const vector< uint32 >& ids, bool invert_ids) { return false; }
 			 
