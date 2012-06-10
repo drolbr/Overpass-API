@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.61])
-AC_INIT([OverpassAPI], [0.6.0], [roland.olbricht@gmx.de])
+AC_INIT([OverpassAPI], [0.6.98], [roland.olbricht@gmx.de])
 AC_CONFIG_SRCDIR([template_db/file_blocks.h])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
@@ -23,6 +23,7 @@ AC_CHECK_LIB([rt], [time])
 # Checks for header files.
 AC_TYPE_MODE_T
 AC_TYPE_PID_T
+AC_TYPE_SIGNAL
 AC_TYPE_SIZE_T
 AC_HEADER_DIRENT
 AC_HEADER_STDC
