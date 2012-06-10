@@ -37,6 +37,8 @@
 
 using namespace std;
 
+typedef unsigned int uint;
+
 typedef char int8;
 typedef short int int16;
 typedef int int32;

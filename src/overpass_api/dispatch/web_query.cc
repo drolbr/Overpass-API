@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
       {
         error_output.write_html_header
             (dispatcher.get_timestamp(),
-	     area_level > 0 ? dispatcher.get_area_timestamp() : "", true,
+	     area_level > 0 ? dispatcher.get_area_timestamp() : "", 200,
 	     osm_script->template_contains_js());
 	osm_script->write_output();
 	error_output.write_footer();
@@ -135,8 +135,11 @@ int main(int argc, char *argv[])
   {
     ostringstream temp;
     if (e.origin.substr(e.origin.size()-9) == "::timeout")
+    {
+      error_output.write_html_header("", "", 501, false);
       temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin
           <<". Probably the server is overcrowded.\n";
+    }
     else
       temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin;
     error_output.runtime_error(temp.str());

@@ -134,14 +134,18 @@ void Web_Output::enforce_header()
 }
 
 void Web_Output::write_html_header
-    (const string& timestamp, const string& area_timestamp, bool write_mime, bool write_js_init)
+    (const string& timestamp, const string& area_timestamp, uint write_mime, bool write_js_init)
 {
   if (header_written != not_yet)
     return;    
   header_written = html;
   
-  if (write_mime)
-    cout<<"Content-Type: text/html; charset=utf-8\n\n";
+  if (write_mime > 0)
+  {
+    if (write_mime != 200)
+      cout<<"Status: "<<write_mime<<"\n";
+    cout<<"Content-type: text/html; charset=utf-8\n\n";
+  }
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
   "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"

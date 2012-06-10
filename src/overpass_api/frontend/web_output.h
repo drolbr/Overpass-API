@@ -56,7 +56,7 @@ struct Web_Output : public Error_Output
   
   void enforce_header();
   void write_html_header
-      (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true,
+      (const string& timestamp = "", const string& area_timestamp = "", uint write_mime = 200,
        bool write_js_init = false);
   void write_xml_header
       (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);

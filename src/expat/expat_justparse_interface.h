@@ -42,6 +42,8 @@
 
 using namespace std;
 
+typedef unsigned int uint;
+
 struct Parse_Error
 {
   Parse_Error(string s) : message(s) {}

@@ -39,6 +39,8 @@
 
 using namespace std;
 
+typedef unsigned int uint;
+
 void (*working_start)(const char*, const char**);
 void (*working_end)(const char*);
 
