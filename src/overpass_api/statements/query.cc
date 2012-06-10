@@ -433,12 +433,7 @@ void filter_ids_by_tags
   
   bool relevant = false;
   vector< string >::const_iterator key_it = keys.begin();
-//   cerr<<"before ";
-//   for (vector< uint32 >::const_iterator it = new_ids.begin(); it != new_ids.end(); ++it)
-//     cerr<<*it<<'\n';
-//   cerr<<'\n';
-  
-//   cerr<<"inside ";
+
   while ((!(tag_it == items_db.range_end())) &&
       (((tag_it.index().index) & 0xffffff00) == coarse_index))
   {
@@ -450,8 +445,8 @@ void filter_ids_by_tags
 	break;
       
       last_key = tag_it.index().key;
-//       cerr<<"+++ "<<last_key<<' '<<*key_it<<'\n';
-      if (last_key >= *key_it)
+      relevant = (last_key >= *key_it);
+      if (relevant)
       {
 	if (last_key > *key_it)
           // There are keys missing for all objects with this index. Drop all.
@@ -464,18 +459,12 @@ void filter_ids_by_tags
         old_ids.swap(new_ids);
         sort(old_ids.begin(), old_ids.end());
       }
-//       cerr<<"*** "<<last_key<<' '<<relevant<<'\n';
     }
     
     if (relevant)
     {
-      cerr<<tag_it.object().val();
       if (binary_search(old_ids.begin(), old_ids.end(), tag_it.object().val()))
-//       {
         new_ids.push_back(tag_it.object().val());
-// 	cerr<<' '<<new_ids.size();
-//       }
-//       cerr<<'\n';
     }
 
     ++tag_it;
@@ -483,20 +472,12 @@ void filter_ids_by_tags
   while ((!(tag_it == items_db.range_end())) &&
       (((tag_it.index().index) & 0xffffff00) == coarse_index))
     ++tag_it;
-  
+
   if (key_it != keys.end())
     // There are keys missing for all objects with this index. Drop all.
     new_ids.clear();
   
-//   cerr<<' '<<new_ids.size();
-//   cerr<<'\n';
-  
   sort(new_ids.begin(), new_ids.end());
-  
-//   cerr<<"after ";
-//   for (vector< uint32 >::const_iterator it = new_ids.begin(); it != new_ids.end(); ++it)
-//     cerr<<*it<<' ';
-//   cerr<<'\n';
   
   new_ids.swap(ids_by_coarse[coarse_index]);  
 
@@ -506,12 +487,7 @@ void filter_ids_by_tags
   
   relevant = false;
   key_it = keys.begin();
-//   cerr<<"before ";
-//   for (vector< uint32 >::const_iterator it = new_ids.begin(); it != new_ids.end(); ++it)
-//     cerr<<*it<<'\n';
-//   cerr<<'\n';
   
-//   cerr<<"inside ";
   while ((!(tag_it == items_db.range_end())) &&
       (((tag_it.index().index) & 0xffffff00) == coarse_index))
   {
@@ -523,8 +499,8 @@ void filter_ids_by_tags
 	break;
       
       last_key = tag_it.index().key;
-//       cerr<<"+++ "<<last_key<<' '<<*key_it<<'\n';
-      if (last_key >= *key_it)
+      relevant = (last_key >= *key_it);
+      if (relevant)
       {
 	if (last_key > *key_it)
           // There are keys missing for all objects with this index. Drop all.
@@ -537,18 +513,12 @@ void filter_ids_by_tags
         old_ids.swap(new_ids);
         sort(old_ids.begin(), old_ids.end());
       }
-//       cerr<<"*** "<<last_key<<' '<<relevant<<'\n';
     }
     
     if (relevant)
     {
-//       cerr<<tag_it.object().val();
       if (binary_search(old_ids.begin(), old_ids.end(), tag_it.object().val()))
-//       {
         new_ids.push_back(tag_it.object().val());
-// 	cerr<<' '<<new_ids.size();
-//       }
-//       cerr<<'\n';
     }
 
     ++tag_it;
@@ -561,15 +531,7 @@ void filter_ids_by_tags
     // There are keys missing for all objects with this index. Drop all.
     new_ids.clear();
   
-//   cerr<<' '<<new_ids.size();
-//   cerr<<'\n';
-  
   sort(new_ids.begin(), new_ids.end());
-  
-//   cerr<<"after ";
-//   for (vector< uint32 >::const_iterator it = new_ids.begin(); it != new_ids.end(); ++it)
-//     cerr<<*it<<' ';
-//   cerr<<'\n';
   
   coarse_index = coarse_index & 0x7fffff00;  
 
@@ -577,11 +539,6 @@ void filter_ids_by_tags
   old_ids.swap(ids_by_coarse[coarse_index]);
   set_union(old_ids.begin(), old_ids.end(), new_ids.begin(), new_ids.end(),
       back_inserter(ids_by_coarse[coarse_index]));
-
-//   cerr<<"after union ";
-//   for (vector< uint32 >::const_iterator it = ids_by_coarse[coarse_index].begin(); it != ids_by_coarse[coarse_index].end(); ++it)
-//     cerr<<*it<<' ';
-//   cerr<<'\n';  
 }
 
 
