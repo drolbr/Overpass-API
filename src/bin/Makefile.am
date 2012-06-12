@@ -19,9 +19,9 @@ update_database_LDADD = -lexpat
 update_from_dir_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ${osm_updater_cc} ../overpass_api/osm-backend/update_from_dir.cc
 update_from_dir_LDADD = -lexpat
 osm3s_query_SOURCES = ${expat_cc} ${settings_cc} ${console_frontend_cc} ${statements_cc} ${dispatcher_cc} ../overpass_api/dispatch/osm3s_query.cc ../overpass_api/osm-backend/area_updater.cc ../overpass_api/osm-backend/clone_database.cc ../overpass_api/frontend/web_output.cc
-osm3s_query_LDADD = -lexpat -lrt
+osm3s_query_LDADD = -lexpat
 dispatcher_SOURCES = ../template_db/dispatcher.cc ../overpass_api/core/settings.cc ../overpass_api/dispatch/dispatcher_server.cc
-dispatcher_LDADD = -lrt
+dispatcher_LDADD = 
 
 sketch_route_svg_SOURCES = ${expat_cc} ${escape_xml_cc} ../pt_diagrams/sketch-route-svg.cc ../pt_diagrams/processed_input.cc
 sketch_route_svg_LDADD = -lexpat
