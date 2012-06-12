@@ -63,12 +63,12 @@
 </table>
 <p>Any other character with ASCII value between 0 and 31 is replaced for safety reasons by a question mark. In principle, this can't happen, because these characters are disallowed in the main database.</p>
 
-<p>To get a response in format JSON, start the request with a <em>[json:out]</em> directive, for example:</p>
+<p>To get a response in format JSON, start the request with a <em>[out:json]</em> directive, for example:</p>
 <pre>
-<a href="api/interpreter?data=[json:out];out;">/api/interpreter?data=<strong>[json:out];</strong>out;</a>
+<a href="api/interpreter?data=[out:json];out;">/api/interpreter?data=<strong>[out:json];</strong>out;</a>
 </pre>
 
-<p>A response (<a href="api/interpreter?data=[json:out];out;">an example</a>) from Overpass API has always the following header and footer:</p>
+<p>A response (<a href="api/interpreter?data=[out:json];out;">an example</a>) from Overpass API has always the following header and footer:</p>
 <pre>
 {
   &quot;version&quot;: 0.6,
