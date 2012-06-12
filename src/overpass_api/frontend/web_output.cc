@@ -143,7 +143,12 @@ void Web_Output::write_html_header
   if (write_mime > 0)
   {
     if (write_mime != 200)
-      cout<<"Status: "<<write_mime<<"\n";
+    {
+      if (write_mime == 504)
+        cout<<"Status: "<<write_mime<<" Gateway Timeout\n";
+      else
+        cout<<"Status: "<<write_mime<<"\n";
+    }
     cout<<"Content-type: text/html; charset=utf-8\n\n";
   }
   cout<<

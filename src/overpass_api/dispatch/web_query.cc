@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
     ostringstream temp;
     if (e.origin.substr(e.origin.size()-9) == "::timeout")
     {
-      error_output.write_html_header("", "", 501, false);
+      error_output.write_html_header("", "", 504, false);
       temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin
           <<". Probably the server is overcrowded.\n";
     }
