@@ -177,11 +177,11 @@ double way_meta_south(unsigned int pattern_size)
   if (pattern_size > 440)
     return 9.99752956;
   else if (pattern_size > 120)
-    return 9.99097604;
+    return 9.9909760;
   else if (pattern_size > 60)
     return 10.0040832;
   else
-    return 9.97786876;
+    return 9.9778688;
 }
 
 double way_meta_north(unsigned int pattern_size)
@@ -189,11 +189,11 @@ double way_meta_north(unsigned int pattern_size)
   if (pattern_size > 440)
     return 10.00408306;
   else if (pattern_size > 120)
-    return 10.01719034;
+    return 10.0171903;
   else if (pattern_size > 60)
     return 10.0302975;
   else
-    return 10.08272626;
+    return 10.0827263;
 }
 
 double way_meta_west(unsigned int pattern_size)
@@ -226,11 +226,11 @@ double relation_meta_south(unsigned int pattern_size)
   if (pattern_size > 440)
     return 9.99752956;
   else if (pattern_size > 120)
-    return 9.99097604;
+    return 9.9909760;
   else if (pattern_size > 60)
     return 10.0040832;
   else
-    return 9.97786876;
+    return 9.9778688;
 }
 
 double relation_meta_north(unsigned int pattern_size)
@@ -238,11 +238,11 @@ double relation_meta_north(unsigned int pattern_size)
   if (pattern_size > 440)
     return 10.00408306;
   else if (pattern_size > 120)
-    return 10.01719034;
+    return 10.0171903;
   else if (pattern_size > 60)
     return 10.0302975;
   else
-    return 10.08272626;
+    return 10.0827263;
 }
 
 double relation_meta_west(unsigned int pattern_size)
@@ -299,7 +299,7 @@ int main(int argc, char* args[])
       || string(args[2]) == "interpreter_9" || string(args[2]) == "interpreter_10")
   {
     cout<<
-    "Content-Type: text/html; charset=utf-8\n"
+    "Content-type: text/html; charset=utf-8\n"
     "\n"
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
@@ -582,7 +582,7 @@ int main(int argc, char* args[])
     || string(args[2]) == "interpreter_36" || string(args[2]) == "interpreter_37")
   {
     cout<<
-    "Content-Type: text/html; charset=utf-8\n"
+    "Content-type: text/html; charset=utf-8\n"
     "\n"
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
@@ -867,7 +867,7 @@ int main(int argc, char* args[])
     || string(args[2]) == "interpreter_44")
   {
     cout<<
-    "Content-Type: text/html; charset=utf-8\n"
+    "Content-type: text/html; charset=utf-8\n"
     "\n"
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
@@ -1007,7 +1007,7 @@ int main(int argc, char* args[])
   else if (string(args[2]) == "interpreter_46")
   {
     cout<<
-    "Content-Type: text/html; charset=utf-8\n"
+    "Content-type: text/html; charset=utf-8\n"
     "\n"
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
