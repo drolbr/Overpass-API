@@ -567,6 +567,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 {
   uint32 counter = 0;
   uint32 idle_counter = 0;
+  uint32 last_pid = 0;
   while ((milliseconds == 0) || (counter < milliseconds/100))
   {
     struct sockaddr_un sockaddr_un_dummy;
@@ -611,8 +612,9 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     uint32 command = 0;
     uint32 client_pid = 0;
     
-    // poll all open connections
-    for (map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.begin();
+    // poll all open connections round robin
+    for (map< pid_t, Blocking_Client_Socket* >::const_iterator
+        it = connection_per_pid.upper_bound(last_pid);
         it != connection_per_pid.end(); ++it)
     {
       command = it->second->get_command();
@@ -622,6 +624,22 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	break;
       }
     }
+    if (command == 0)
+    {
+      for (map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.begin();
+          it != connection_per_pid.upper_bound(last_pid); ++it)
+      {
+        command = it->second->get_command();
+        if (command != 0)
+        {
+	  client_pid = it->first;
+	  break;
+        }
+      }
+    }
+    if (command != 0)
+      last_pid = client_pid;
+    
     if (command == Dispatcher::HANGUP
         && processes_reading.find(client_pid) != processes_reading.end())
       command = Dispatcher::READ_ABORTED;
@@ -631,7 +649,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     {
       ++counter;
       ++idle_counter;
-      millisleep(100);
+      millisleep(idle_counter < 10 ? idle_counter*10 : 100);
       continue;
     }
     
@@ -1130,6 +1148,8 @@ void Dispatcher_Client::request_read_and_idx(uint32 max_allowed_time, uint64 max
     
     if (ack_arrived())
       return;
+    
+    millisleep(200);
   }
   throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::request_read_and_idx::timeout");
 }
