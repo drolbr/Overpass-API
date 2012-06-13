@@ -138,7 +138,6 @@ void Area_Query_Statement::collect_nodes
      const set< Uint31_Index >& req,
      vector< uint32 >* ids,
      map< Uint32_Index, vector< Node_Skeleton > >& nodes,
-     Stopwatch& stopwatch,
      Resource_Manager& rman)
 {
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
@@ -164,8 +163,6 @@ void Area_Query_Statement::collect_nodes
 	areas.push_back(area_it.object());
       ++area_it;
     }
-    stopwatch.add(Stopwatch::AREA_BLOCKS, area_blocks_db.read_count());
-    stopwatch.stop(Stopwatch::AREA_BLOCKS);
     while ((!(nodes_it == nodes_db.range_end())) &&
         ((nodes_it.index().val() & 0xffffff00) == current_idx))
     {
@@ -182,8 +179,6 @@ void Area_Query_Statement::collect_nodes
       int32 ilon(Node::lon(nodes_it.index().val(), nodes_it.object().ll_lower)*10000000
           + (Node::lon(nodes_it.index().val(), nodes_it.object().ll_lower) > 0
 	      ? 0.5 : -0.5));
-      stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
-      stopwatch.stop(Stopwatch::NODES);
       for (vector< Area_Block >::const_iterator it(areas.begin());
           it != areas.end(); ++it)
       {
@@ -200,7 +195,6 @@ void Area_Query_Statement::collect_nodes
       }
       if (inside)
 	nodes[nodes_it.index()].push_back(nodes_it.object());
-      stopwatch.stop(Stopwatch::NO_DISK);
       ++nodes_it;
     }
     current_idx = area_it.index().val();
@@ -288,8 +282,6 @@ void collect_nodes_from_req
 
 void Area_Query_Statement::execute(Resource_Manager& rman)
 { 
-  stopwatch.start();
-
   map< Uint32_Index, vector< Node_Skeleton > >& nodes
       (rman.sets()[output].nodes);
   map< Uint31_Index, vector< Way_Skeleton > >& ways
@@ -312,8 +304,6 @@ void Area_Query_Statement::execute(Resource_Manager& rman)
   
   collect_nodes(nodes, req, rman);
   
-  stopwatch.stop(Stopwatch::NO_DISK);
-  stopwatch.report(get_name());
   rman.health_check(*this);
 }
 

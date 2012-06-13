@@ -484,8 +484,6 @@ void Bbox_Query_Statement::forecast()
 
 void Bbox_Query_Statement::execute(Resource_Manager& rman)
 {
-  stopwatch.start();
-  
   map< Uint32_Index, vector< Node_Skeleton > >& nodes
       (rman.sets()[output].nodes);
   map< Uint31_Index, vector< Way_Skeleton > >& ways
@@ -512,7 +510,6 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
     req.insert(range);
   }
   
-  stopwatch.stop(Stopwatch::NO_DISK);
   uint nodes_count = 0;
   
   uint32 isouth((south + 91.0)*10000000+0.5);
@@ -541,10 +538,7 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
 	  || ((ieast < iwest) && ((ilon >= iwest) || (ilon <= ieast)))))
       nodes[it.index()].push_back(it.object());    
   }
-  stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
-  stopwatch.stop(Stopwatch::NODES);
   
-  stopwatch.report(get_name());
   rman.health_check(*this);
 }
 

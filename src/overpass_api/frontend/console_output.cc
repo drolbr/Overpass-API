@@ -75,24 +75,6 @@ void Console_Output::runtime_remark(const string& error)
     cerr<<"runtime remark: "<<error<<'\n';
 }
 
-void Console_Output::display_statement_stopwatch
-    (const string& name,
-     const vector< double >& stopwatches,
-     const vector< uint >& read_counts)
-{
-  if (log_level != Error_Output::VERBOSE)
-    return;
-  cerr<<"Stopwatch "<<name;
-  vector< uint >::const_iterator rit(read_counts.begin());
-  for (vector< double >::const_iterator it(stopwatches.begin());
-      it != stopwatches.end(); ++it)
-  {
-    cerr<<setprecision(3)<<fixed<<'\t'<<*it<<' '<<*rit;
-    ++rit;
-  }
-  cerr<<'\n';
-}
-
 void Console_Output::display_statement_progress
     (uint timer, const string& name, int progress, int line_number,
      const vector< pair< uint, uint > >& stack)

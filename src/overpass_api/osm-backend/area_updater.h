@@ -30,7 +30,6 @@
 #include "../../template_db/transaction.h"
 #include "../core/datatypes.h"
 #include "../core/settings.h"
-#include "stopwatch.h"
 
 using namespace std;
 
@@ -64,8 +63,8 @@ struct Area_Updater
        const set< uint32 >& used_indices);
   void set_area(const Uint31_Index& index, const Area_Location& area);
   void add_blocks(const map< Uint31_Index, vector< Area_Block > >& area_blocks_);
-  void commit(Stopwatch& stopwatch);  
-  void flush(Stopwatch* stopwatch = 0);
+  void commit();  
+  void flush();
   
 private:
   uint32 update_counter;
@@ -81,47 +80,41 @@ private:
   static Pair_Comparator_By_Id pair_comparator_by_id;
   static Pair_Equal_Id pair_equal_id;
   
-  void update(Stopwatch* stopwatch);
+  void update();
   void update_area_ids
       (map< Uint31_Index, set< Area_Skeleton > >& locations_to_delete,
-       map< Uint31_Index, set< Area_Block > >& blocks_to_delete,
-       Stopwatch* stopwatch);  
+       map< Uint31_Index, set< Area_Block > >& blocks_to_delete);  
   void update_members
       (const map< Uint31_Index, set< Area_Skeleton > >& locations_to_delete,
-       const map< Uint31_Index, set< Area_Block > >& blocks_to_delete,
-       Stopwatch* stopwatch);
+       const map< Uint31_Index, set< Area_Block > >& blocks_to_delete);
   void prepare_delete_tags
       (vector< Tag_Entry >& tags_to_delete,
-       const map< Uint31_Index, set< Area_Skeleton > >& to_delete,
-       Stopwatch* stopwatch);
+       const map< Uint31_Index, set< Area_Skeleton > >& to_delete);
   void prepare_tags
       (vector< Tag_Entry >& tags_to_delete,
-       const map< uint32, vector< uint32 > >& to_delete,
-       Stopwatch* stopwatch);
+       const map< uint32, vector< uint32 > >& to_delete);
   void update_area_tags_local
-      (const vector< Tag_Entry >& tags_to_delete,
-       Stopwatch* stopwatch);
+      (const vector< Tag_Entry >& tags_to_delete);
   void update_area_tags_global
-      (const vector< Tag_Entry >& tags_to_delete,
-       Stopwatch* stopwatch);
+      (const vector< Tag_Entry >& tags_to_delete);
 };
 
 /** Implementation (inline functions): --------------------------------------*/
 
-inline void Area_Updater::commit(Stopwatch& stopwatch)
+inline void Area_Updater::commit()
 {
   if (total_area_blocks_count > 64*1024)
-    update(&stopwatch);
+    update();
 }
 
-inline void Area_Updater::flush(Stopwatch* stopwatch)
+inline void Area_Updater::flush()
 {
   try
   {
     if ((!ids_to_modify.empty()) ||
         (!areas_to_insert.empty()) ||
         (!area_blocks.empty()))
-      update(stopwatch);
+      update();
   }
   catch(File_Error e)
   {

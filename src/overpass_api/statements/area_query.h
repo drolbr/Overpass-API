@@ -50,7 +50,6 @@ class Area_Query_Statement : public Statement
        const set< Uint31_Index >& req,
        vector< uint32 >* ids,
        map< Uint32_Index, vector< Node_Skeleton > >& nodes,
-       Stopwatch& stopwatch,
        Resource_Manager& rman);
        
     void collect_nodes

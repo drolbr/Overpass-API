@@ -777,8 +777,6 @@ void Recurse_Statement::forecast()
 
 void Recurse_Statement::execute(Resource_Manager& rman)
 {
-  stopwatch.start();  
-  
   map< string, Set >::const_iterator mit(rman.sets().find(input));
   if (mit == rman.sets().end())
   {
@@ -864,8 +862,6 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   into.relations.swap(rman.sets()[output].relations);
   rman.sets()[output].areas.clear();
   
-  stopwatch.stop(Stopwatch::NO_DISK);
-  stopwatch.report(get_name());
   rman.health_check(*this);
 }
 

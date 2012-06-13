@@ -242,19 +242,12 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
     }
   }
   
-  stopwatch.start();
-  stopwatch.stop(Stopwatch::NO_DISK);
   for (vector< Statement* >::iterator it(substatements.begin());
       it != substatements.end(); ++it)
-  {
     (*it)->execute(rman);
-    stopwatch.sum((*it)->stopwatch);
-  }
-  stopwatch.skip();
   
   if (rman.area_updater())
-    rman.area_updater()->flush(&stopwatch);
-  stopwatch.report(get_name());
+    rman.area_updater()->flush();
   rman.health_check(*this);
 }
 

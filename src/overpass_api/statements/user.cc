@@ -201,8 +201,6 @@ void User_Statement::forecast()
 
 void User_Statement::execute(Resource_Manager& rman)
 {
-  stopwatch.start();
-  
   map< Uint32_Index, vector< Node_Skeleton > >& nodes
       (rman.sets()[output].nodes);
   map< Uint31_Index, vector< Way_Skeleton > >& ways
@@ -221,7 +219,6 @@ void User_Statement::execute(Resource_Manager& rman)
   set< pair< Uint31_Index, Uint31_Index > > other_req;
   calc_ranges(node_req, other_req, *rman.get_transaction());
   
-  stopwatch.stop(Stopwatch::NO_DISK);
   uint nodes_count = 0;
   
   if ((result_type == "") || (result_type == "node"))
@@ -247,9 +244,6 @@ void User_Statement::execute(Resource_Manager& rman)
       if ((meta_skel) && (meta_skel->user_id == user_id))
         nodes[it.index()].push_back(it.object());
     }
-    
-    stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
-    stopwatch.stop(Stopwatch::NODES);
   }
   
   uint ways_count = 0;
@@ -277,9 +271,6 @@ void User_Statement::execute(Resource_Manager& rman)
       if ((meta_skel) && (meta_skel->user_id == user_id))
         ways[it.index()].push_back(it.object());
     }
-    
-    stopwatch.add(Stopwatch::WAYS, ways_db.read_count());
-    stopwatch.stop(Stopwatch::WAYS);
   }
   
   uint relations_count = 0;
@@ -307,12 +298,8 @@ void User_Statement::execute(Resource_Manager& rman)
       if ((meta_skel) && (meta_skel->user_id == user_id))
         relations[it.index()].push_back(it.object());
     }
-    
-    stopwatch.add(Stopwatch::RELATIONS, relations_db.read_count());
-    stopwatch.stop(Stopwatch::RELATIONS);
   }
   
-  stopwatch.report(get_name());
   rman.health_check(*this);
 }
 

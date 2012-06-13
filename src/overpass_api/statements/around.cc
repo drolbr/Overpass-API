@@ -1052,8 +1052,6 @@ bool Around_Statement::is_inside
 
 void Around_Statement::execute(Resource_Manager& rman)
 {
-  stopwatch.start();
-
   set< pair< Uint32_Index, Uint32_Index > > req = calc_ranges(rman.sets()[input], rman);  
   calc_lat_lons(rman.sets()[input], *this, rman);
 
@@ -1071,7 +1069,6 @@ void Around_Statement::execute(Resource_Manager& rman)
   relations.clear();
   areas.clear();
 
-  stopwatch.stop(Stopwatch::NO_DISK);
   uint nodes_count = 0;
   
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
@@ -1093,10 +1090,7 @@ void Around_Statement::execute(Resource_Manager& rman)
     if (is_inside(lat, lon))
       nodes[it.index()].push_back(it.object());
   }
-  stopwatch.add(Stopwatch::NODES, nodes_db.read_count());
-  stopwatch.stop(Stopwatch::NODES);
-  
-  stopwatch.report(get_name());
+
   rman.health_check(*this);
 }
 

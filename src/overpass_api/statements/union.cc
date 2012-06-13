@@ -59,8 +59,6 @@ void Union_Statement::forecast()
 
 void Union_Statement::execute(Resource_Manager& rman)
 {
-  stopwatch.start();
-
   Set base_set;
   rman.push_reference(base_set);
   map< Uint32_Index, vector< Node_Skeleton > >& nodes(base_set.nodes);
@@ -71,10 +69,7 @@ void Union_Statement::execute(Resource_Manager& rman)
   for (vector< Statement* >::iterator it(substatements.begin());
        it != substatements.end(); ++it)
   {
-    stopwatch.stop(Stopwatch::NO_DISK);
     (*it)->execute(rman);
-    stopwatch.skip();
-    stopwatch.sum((*it)->stopwatch);
     
     Set& summand(rman.sets()[(*it)->get_result_name()]);
 
@@ -86,8 +81,6 @@ void Union_Statement::execute(Resource_Manager& rman)
   
   rman.sets()[output] = base_set;
   
-  stopwatch.stop(Stopwatch::NO_DISK);
-  stopwatch.report(get_name());
   rman.pop_reference();
   rman.health_check(*this);
 }

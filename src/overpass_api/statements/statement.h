@@ -27,7 +27,6 @@
 #include "../core/settings.h"
 #include "../dispatch/resource_manager.h"
 #include "../osm-backend/area_updater.h"
-#include "../osm-backend/stopwatch.h"
 
 using namespace std;
 
@@ -123,7 +122,6 @@ class Statement
     static void set_error_output(Error_Output* error_output_)
     {
       error_output = error_output_;
-      Stopwatch::set_error_output(error_output);
     }
 
     void runtime_remark(string error) const;
@@ -132,8 +130,6 @@ class Statement
     const static int WAY = 2;
     const static int RELATION = 3;
     
-    Stopwatch stopwatch;
-  
   private:
     static Error_Output* error_output;
     

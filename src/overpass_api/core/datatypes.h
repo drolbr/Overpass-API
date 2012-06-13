@@ -331,10 +331,6 @@ struct Error_Output
   
   virtual void runtime_error(const string& error) = 0;
   virtual void runtime_remark(const string& error) = 0;
-  virtual void display_statement_stopwatch
-    (const string& name,
-     const vector< double >& stopwatches,
-     const vector< uint >& read_counts) = 0;
   
   virtual void display_statement_progress
     (uint timer, const string& name, int progress, int line_number,

@@ -59,8 +59,6 @@ void Foreach_Statement::forecast()
 
 void Foreach_Statement::execute(Resource_Manager& rman)
 {
-  stopwatch.start();
-  
   Set base_set(rman.sets()[input]);
   rman.push_reference(base_set);
   
@@ -76,14 +74,9 @@ void Foreach_Statement::execute(Resource_Manager& rman)
       rman.sets()[output].relations.clear();
       rman.sets()[output].areas.clear();
       rman.sets()[output].nodes[it->first].push_back(*it2);
-      stopwatch.stop(Stopwatch::NO_DISK);
       for (vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
-      {
 	(*it)->execute(rman);
-	stopwatch.sum((*it)->stopwatch);
-      }
-      stopwatch.skip();
     }
   }
   for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
@@ -98,14 +91,9 @@ void Foreach_Statement::execute(Resource_Manager& rman)
       rman.sets()[output].relations.clear();
       rman.sets()[output].areas.clear();
       rman.sets()[output].ways[it->first].push_back(*it2);
-      stopwatch.stop(Stopwatch::NO_DISK);
       for (vector< Statement* >::iterator it(substatements.begin());
-      it != substatements.end(); ++it)
-      {
+          it != substatements.end(); ++it)
 	(*it)->execute(rman);
-	stopwatch.sum((*it)->stopwatch);
-      }
-      stopwatch.skip();
     }
   }
   for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
@@ -120,14 +108,9 @@ void Foreach_Statement::execute(Resource_Manager& rman)
       rman.sets()[output].relations.clear();
       rman.sets()[output].areas.clear();
       rman.sets()[output].relations[it->first].push_back(*it2);
-      stopwatch.stop(Stopwatch::NO_DISK);
       for (vector< Statement* >::iterator it(substatements.begin());
-      it != substatements.end(); ++it)
-      {
+          it != substatements.end(); ++it)
 	(*it)->execute(rman);
-	stopwatch.sum((*it)->stopwatch);
-      }
-      stopwatch.skip();
     }
   }
   for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator
@@ -142,22 +125,15 @@ void Foreach_Statement::execute(Resource_Manager& rman)
       rman.sets()[output].relations.clear();
       rman.sets()[output].areas.clear();
       rman.sets()[output].areas[it->first].push_back(*it2);
-      stopwatch.stop(Stopwatch::NO_DISK);
       for (vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
-      {
 	(*it)->execute(rman);
-	stopwatch.sum((*it)->stopwatch);
-      }
-      stopwatch.skip();
     }
   }
   
   if (input == output)
     rman.sets()[output] = base_set;
   
-  stopwatch.stop(Stopwatch::NO_DISK);
-  stopwatch.report(get_name());
   rman.pop_reference();
   rman.health_check(*this);
 }

@@ -88,7 +88,7 @@ class Print_Statement : public Statement
     template< class TIndex, class TObject >
     void tags_quadtile
       (const map< TIndex, vector< TObject > >& items,
-       const File_Properties& file_prop, Print_Target& target, uint32 stopwatch_account,
+       const File_Properties& file_prop, Print_Target& target,
        Resource_Manager& rman, Transaction& transaction,
        const File_Properties* meta_file_prop = 0, uint32& element_count = 0);
     
@@ -96,7 +96,7 @@ class Print_Statement : public Statement
     void tags_by_id
       (const map< TIndex, vector< TObject > >& items,
        const File_Properties& file_prop,
-       uint32 FLUSH_SIZE, Print_Target& target, uint32 stopwatch_account,
+       uint32 FLUSH_SIZE, Print_Target& target,
        Resource_Manager& rman, Transaction& transaction,
        const File_Properties* meta_file_prop = 0, uint32& element_count = 0);
 };

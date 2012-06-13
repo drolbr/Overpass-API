@@ -273,9 +273,8 @@ int Coord_Query_Statement::check_area_block
 
 void Coord_Query_Statement::execute(Resource_Manager& rman)
 { 
-  stopwatch.start();
   if (rman.area_updater())
-    rman.area_updater()->flush(&stopwatch);
+    rman.area_updater()->flush();
   
   set< Uint31_Index > req;
   map< uint32, int > areas_inside;
@@ -285,8 +284,6 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   uint32 ilat((lat + 91.0)*10000000+0.5);
   int32 ilon(lon*10000000 + (lon > 0 ? 0.5 : -0.5));
   
-  stopwatch.stop(Stopwatch::NO_DISK);
-
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
       (rman.get_area_transaction()->data_index(area_settings().AREA_BLOCKS));
   for (Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
@@ -306,9 +303,6 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
     }
   }
   
-  stopwatch.add(Stopwatch::AREA_BLOCKS, area_blocks_db.read_count());
-  stopwatch.stop(Stopwatch::AREA_BLOCKS);
-
   map< Uint32_Index, vector< Node_Skeleton > >& nodes
       (rman.sets()[output].nodes);
   map< Uint31_Index, vector< Way_Skeleton > >& ways
@@ -323,8 +317,6 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   relations.clear();
   areas.clear();
 
-  stopwatch.stop(Stopwatch::NO_DISK);
-  
   Block_Backend< Uint31_Index, Area_Skeleton > area_locations_db
       (rman.get_area_transaction()->data_index(area_settings().AREAS));
   for (Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
@@ -338,9 +330,5 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
       areas[it.index()].push_back(it.object());
   }
 
-  stopwatch.add(Stopwatch::AREAS, area_locations_db.read_count());
-  stopwatch.stop(Stopwatch::AREAS);
-  
-  stopwatch.report(get_name());
   rman.health_check(*this);
 }

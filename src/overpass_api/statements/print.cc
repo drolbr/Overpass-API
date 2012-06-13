@@ -174,7 +174,7 @@ void quadtile
 template< class TIndex, class TObject >
 void Print_Statement::tags_quadtile
     (const map< TIndex, vector< TObject > >& items,
-     const File_Properties& file_prop, Print_Target& target, uint32 stopwatch_account,
+     const File_Properties& file_prop, Print_Target& target,
      Resource_Manager& rman, Transaction& transaction,
      const File_Properties* meta_file_prop, uint32& element_count)
 {
@@ -191,7 +191,6 @@ void Print_Statement::tags_quadtile
   Meta_Collector< TIndex, TObject > meta_printer(items, transaction, meta_file_prop);
   
   // iterate over the result
-  stopwatch.stop(Stopwatch::NO_DISK);
   uint coarse_count = 0;
   Block_Backend< Tag_Index_Local, Uint32_Index > items_db
       (transaction.data_index(&file_prop));
@@ -230,8 +229,6 @@ void Print_Statement::tags_quadtile
       ++item_it;
     }
   }
-  stopwatch.add(stopwatch_account, items_db.read_count());
-  stopwatch.stop(stopwatch_account);
 }
 
 
@@ -299,7 +296,7 @@ template< class TIndex, class TObject >
 void Print_Statement::tags_by_id
   (const map< TIndex, vector< TObject > >& items,
    const File_Properties& file_prop,
-   uint32 FLUSH_SIZE, Print_Target& target, uint32 stopwatch_account,
+   uint32 FLUSH_SIZE, Print_Target& target,
    Resource_Manager& rman, Transaction& transaction,
    const File_Properties* meta_file_prop, uint32& element_count)
 {
@@ -332,7 +329,6 @@ void Print_Statement::tags_by_id
   Meta_Collector< TIndex, TObject > meta_printer(items, transaction, meta_file_prop);
   
   // iterate over the result
-  stopwatch.stop(Stopwatch::NO_DISK);
   Block_Backend< Tag_Index_Local, Uint32_Index > items_db
       (transaction.data_index(&file_prop));
   for (uint32 id_pos(0); id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
@@ -374,16 +370,13 @@ void Print_Statement::tags_by_id
 		 meta_it != metadata.end() ? &*meta_it : 0, &(meta_printer.users()));
     }
   }
-  stopwatch.add(stopwatch_account, items_db.read_count());
-  stopwatch.stop(stopwatch_account);
 }
 
 
 void Print_Statement::execute(Resource_Manager& rman)
 {
-  stopwatch.start();
   if (rman.area_updater())
-    rman.area_updater()->flush(&stopwatch);
+    rman.area_updater()->flush();
   
   map< string, Set >::const_iterator mit(rman.sets().find(input));
   uint32 element_count = 0;
@@ -402,49 +395,45 @@ void Print_Statement::execute(Resource_Manager& rman)
     if (order == order_by_id)
     {
       tags_by_id(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
-		 NODE_FLUSH_SIZE, *target, Stopwatch::NODE_TAGS_LOCAL, rman,
+		 NODE_FLUSH_SIZE, *target, rman,
 		 *rman.get_transaction(),
 		 (mode & Print_Target::PRINT_META) ?
 		     meta_settings().NODES_META : 0, element_count);
       tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
-		 WAY_FLUSH_SIZE, *target, Stopwatch::WAY_TAGS_LOCAL, rman,
+		 WAY_FLUSH_SIZE, *target, rman,
 		 *rman.get_transaction(),
 		 (mode & Print_Target::PRINT_META) ?
 		     meta_settings().WAYS_META : 0, element_count);
       tags_by_id(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
-		 RELATION_FLUSH_SIZE, *target, Stopwatch::RELATION_TAGS_LOCAL, rman,
+		 RELATION_FLUSH_SIZE, *target, rman,
 		 *rman.get_transaction(),
 		 (mode & Print_Target::PRINT_META) ?
 		     meta_settings().RELATIONS_META : 0, element_count);
       if (rman.get_area_transaction())
       {
 	tags_by_id(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
-		   AREA_FLUSH_SIZE, *target, Stopwatch::AREA_TAGS_LOCAL, rman,
+		   AREA_FLUSH_SIZE, *target, rman,
 		   *rman.get_area_transaction(), 0, element_count);
       }
     }
     else
     {
       tags_quadtile(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
-		    *target, Stopwatch::NODE_TAGS_LOCAL, rman,
-		    *rman.get_transaction(),
+		    *target, rman, *rman.get_transaction(),
 		    (mode & Print_Target::PRINT_META) ?
 		        meta_settings().NODES_META : 0, element_count);
       tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
-		    *target, Stopwatch::WAY_TAGS_LOCAL, rman,
-		    *rman.get_transaction(),
+		    *target, rman, *rman.get_transaction(),
 		    (mode & Print_Target::PRINT_META) ?
 		        meta_settings().WAYS_META : 0, element_count);
       tags_quadtile(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
-		    *target, Stopwatch::RELATION_TAGS_LOCAL, rman,
-		    *rman.get_transaction(),
+		    *target, rman, *rman.get_transaction(),
 		    (mode & Print_Target::PRINT_META) ?
 		        meta_settings().RELATIONS_META : 0, element_count);
       if (rman.get_area_transaction())
       {
         tags_quadtile(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
-		      *target, Stopwatch::AREA_TAGS_LOCAL, rman,
-		      *rman.get_area_transaction(), 0, element_count);
+		      *target, rman, *rman.get_area_transaction(), 0, element_count);
       }
     }
   }
@@ -468,8 +457,6 @@ void Print_Statement::execute(Resource_Manager& rman)
     }
   }
   
-  stopwatch.stop(Stopwatch::NO_DISK);
-  stopwatch.report(get_name());
   rman.health_check(*this);
 }
 

@@ -108,25 +108,6 @@ void Web_Output::runtime_remark(const string& error)
   }
 }
 
-void Web_Output::display_statement_stopwatch
-    (const string& name,
-     const vector< double >& stopwatches,
-     const vector< uint >& read_counts)
-{
-  if (log_level != Error_Output::VERBOSE)
-    return;
-  ostringstream out;
-  out<<"Stopwatch "<<name;
-  vector< uint >::const_iterator rit(read_counts.begin());
-  for (vector< double >::const_iterator it(stopwatches.begin());
-      it != stopwatches.end(); ++it)
-  {
-    out<<setprecision(3)<<fixed<<'\t'<<*it<<' '<<*rit;
-    ++rit;
-  }
-  display_remark(out.str());
-}
-
 void Web_Output::enforce_header()
 {
   if (header_written == not_yet)

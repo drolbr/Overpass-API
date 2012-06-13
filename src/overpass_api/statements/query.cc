@@ -608,7 +608,6 @@ void Query_Statement::execute(Resource_Manager& rman)
       = nothing;
   Set into;
   
-  stopwatch.start();
   set_progress(1);
   rman.health_check(*this);
 
@@ -775,7 +774,6 @@ void Query_Statement::execute(Resource_Manager& rman)
   into.relations.swap(rman.sets()[output].relations);
   rman.sets()[output].areas.clear();
   
-  stopwatch.report(get_name());  
   rman.health_check(*this);
 }
 

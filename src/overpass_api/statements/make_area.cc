@@ -274,8 +274,6 @@ void Make_Area_Statement::add_segment_blocks
 
 void Make_Area_Statement::execute(Resource_Manager& rman)
 {
-  stopwatch.start();
-  
   map< Uint32_Index, vector< Node_Skeleton > >& nodes
       (rman.sets()[output].nodes);
   map< Uint31_Index, vector< Way_Skeleton > >& ways
@@ -293,8 +291,6 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
     ways.clear();
     relations.clear();
     areas.clear();
-    stopwatch.stop(Stopwatch::NO_DISK);
-    stopwatch.report(get_name());
     
     return;
   }
@@ -302,15 +298,12 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   int pivot_type(pivot_pair.first);
   uint32 pivot_id(pivot_pair.second);
   
-  stopwatch.stop(Stopwatch::NO_DISK);
-  
   if (pivot_type == 0)
   {
     nodes.clear();
     ways.clear();
     relations.clear();
     areas.clear();
-    stopwatch.report(get_name());
     
     return;
   }
@@ -348,22 +341,6 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
       new_tags.push_back(make_pair(tag_it.index().key, tag_it.index().value));
   }
   
-  if (pivot_type == NODE)
-  {
-    stopwatch.add(Stopwatch::NODE_TAGS_LOCAL, items_db.read_count());
-    stopwatch.stop(Stopwatch::NODE_TAGS_LOCAL);
-  }
-  else if (pivot_type == WAY)
-  {
-    stopwatch.add(Stopwatch::WAY_TAGS_LOCAL, items_db.read_count());
-    stopwatch.stop(Stopwatch::WAY_TAGS_LOCAL);
-  }
-  else if (pivot_type == RELATION)
-  {
-    stopwatch.add(Stopwatch::RELATION_TAGS_LOCAL, items_db.read_count());
-    stopwatch.stop(Stopwatch::RELATION_TAGS_LOCAL);
-  }
-  
   if (pivot_type == WAY)
     pivot_id += 2400000000u;
   else if (pivot_type == RELATION)
@@ -376,8 +353,6 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
     ways.clear();
     relations.clear();
     areas.clear();
-    stopwatch.stop(Stopwatch::NO_DISK);
-    stopwatch.report(get_name());
     
     return;
   }
@@ -411,8 +386,6 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
     ways.clear();
     relations.clear();
     areas.clear();
-    stopwatch.stop(Stopwatch::NO_DISK);
-    stopwatch.report(get_name());
     
     return;
   }
@@ -434,25 +407,17 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   areas.clear();
 
   if (new_index.val() == 0)
-  {
-    stopwatch.stop(Stopwatch::NO_DISK); 
-    stopwatch.report(get_name());
     return;
-  }
   
   if (rman.area_updater())
   {
     Area_Updater* area_updater(rman.area_updater());
     area_updater->set_area(new_index, new_location);
     area_updater->add_blocks(area_blocks);
-    stopwatch.stop(Stopwatch::NO_DISK);
-    area_updater->commit(stopwatch);
-    stopwatch.stop(Stopwatch::NO_DISK);
+    area_updater->commit();
   }
   
   areas[new_index].push_back(Area_Skeleton(new_location));
   
-  stopwatch.stop(Stopwatch::NO_DISK); 
-  stopwatch.report(get_name());
   rman.health_check(*this);
 }
