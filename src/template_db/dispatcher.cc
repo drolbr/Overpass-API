@@ -228,7 +228,8 @@ Dispatcher::Dispatcher
       purge_timeout(purge_timeout_),
       total_available_space(total_available_space_),
       total_available_time_units(total_available_time_units_),
-      logger(logger_)
+      logger(logger_),
+      pending_commit(false)
 {
   signal(SIGPIPE, SIG_IGN);
   
@@ -351,7 +352,11 @@ void Dispatcher::write_rollback(pid_t pid)
 void Dispatcher::write_commit(pid_t pid)
 {
   if (!processes_reading_idx.empty())
+  {
+    pending_commit = true;
     return;
+  }
+  pending_commit = false;
 
   if (logger)
     logger->write_commit(pid);
@@ -738,6 +743,12 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	  continue;
 	}
 	
+	if (pending_commit)
+	{
+	  connection_per_pid[client_pid]->send_result(0);
+	  continue;
+	}
+	
 	vector< uint32 > arguments = connection_per_pid[client_pid]->get_arguments(3);
 	if (arguments.size() < 3)
 	{
@@ -1107,7 +1118,7 @@ void Dispatcher_Client::write_commit()
   pid_t pid = getpid();
   
   send_message(Dispatcher::WRITE_COMMIT, "Dispatcher_Client::write_commit::socket");  
-  millisleep(500);
+  millisleep(200);
 
   while (true)
   {
@@ -1130,7 +1141,7 @@ void Dispatcher_Client::write_commit()
     }
     
     send_message(Dispatcher::WRITE_COMMIT, "Dispatcher_Client::write_commit::socket");
-    millisleep(500);
+    millisleep(200);
   }
 }
 

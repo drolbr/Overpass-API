@@ -182,6 +182,7 @@ class Dispatcher
     vector< int > started_connections;
     map< pid_t, Blocking_Client_Socket* > connection_per_pid;
     set< pid_t > disconnected;
+    bool pending_commit;
     
     void copy_shadows_to_mains();
     void copy_mains_to_shadows();
