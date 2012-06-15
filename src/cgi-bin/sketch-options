@@ -26,6 +26,7 @@ SKETCH_PARAMS=
 ACTION=
 STYLE=
 DATA=
+STYLE_DIR=/opt/pt_diagrams/
 
 EXEC_DIR="`dirname $0`/"
 if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
@@ -66,8 +67,8 @@ if [[ $ACTION == "edit" ]]; then
 
 <form action=\"sketch-options\" method=\"get\" accept-charset=\"UTF-8\">
   <textarea name=\"data\" rows=\"10\" cols=\"80\">"
-  if [[ -r /opt/osm_why_api/options/sketch-line.$STYLE ]]; then
-    ../bin/escape_xml </opt/osm_why_api/options/sketch-line.$STYLE
+  if [[ -r $STYLE_DIR/sketch-line.$STYLE ]]; then
+    ../bin/escape_xml <$STYLE_DIR/sketch-line.$STYLE
   fi
   echo -e "\
 </textarea>
@@ -136,7 +137,7 @@ The necessary footer.
 };
 elif [[ $ACTION == "commit" ]]; then
 {
-  echo $DATA | ../bin/uncgi >/opt/osm_why_api/options/sketch-line.$STYLE
+  echo $DATA | ../bin/uncgi >$STYLE_DIR/sketch-line.$STYLE
   
   echo -e "
 <?xml version=\"1.0\" encoding=\"UTF-8\"?>\

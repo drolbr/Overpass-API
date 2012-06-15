@@ -21,6 +21,7 @@ BUF="$QUERY_STRING&"
 
 SKETCH_PARAMS=
 BRIM_PARAMS=
+STYLE_DIR=/opt/pt_diagrams/
 
 EXEC_DIR="`dirname $0`/"
 if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
@@ -54,8 +55,8 @@ for KEY_VAL in $QUERY_STRING; do
     SKETCH_PARAMS="$SKETCH_PARAMS --rows=${KEY_VAL:11}"
   elif [[ ${KEY_VAL:0:6} == "style=" && -n "${KEY_VAL:6}" ]]; then
   {
-    SKETCH_PARAMS="$SKETCH_PARAMS --options=/opt/osm_why_api/options/sketch-line.${KEY_VAL:6}"
-    BRIM_PARAMS="$BRIM_PARAMS --options=/opt/osm_why_api/options/sketch-line.${KEY_VAL:6}"
+    SKETCH_PARAMS="$SKETCH_PARAMS --options=$STYLE_DIR/sketch-line.${KEY_VAL:6}"
+    BRIM_PARAMS="$BRIM_PARAMS --options=$STYLE_DIR/sketch-line.${KEY_VAL:6}"
   };
   elif [[ ${KEY_VAL:0:16} == "correspondences=" && -n "${KEY_VAL:16}" ]]; then
   {
