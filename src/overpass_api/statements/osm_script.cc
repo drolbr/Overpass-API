@@ -70,13 +70,14 @@ Osm_Script_Statement::Osm_Script_Statement
   }
   max_allowed_space = max_space;
 
-  if (attributes["output"] == "xml" || attributes["output"] == "json" || attributes["output"] == "custom")
+  if (attributes["output"] == "xml" || attributes["output"] == "json" || attributes["output"] == "custom"
+      || attributes["output"] == "popup")
     type = attributes["output"];
   else
   {
     ostringstream temp;
     temp<<"For the attribute \"output\" of the element \"osm-script\""
-        <<" the only allowed values are \"xml\" or \"json\".";
+        <<" the only allowed values are \"xml\", \"json\", \"custom\", or \"popup\".";
     add_static_error(temp.str());
   }
     
@@ -290,7 +291,8 @@ void Osm_Script_Statement::write_output() const
 {
   if (output_handle)
   {
-    cout<<process_template(header, output_handle->get_written_elements_count());
+    if (output_handle->get_written_elements_count() > 0)
+      cout<<process_template(header, output_handle->get_written_elements_count());
     cout<<'\n'<<output_handle->get_output();
   }
 }

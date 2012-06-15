@@ -123,6 +123,70 @@ class Print_Target_Custom : public Print_Target
     string relation_template;
 };
 
+
+class Element_Collector
+{
+  public:
+    Element_Collector(const string& key_, const string& value_,
+		   const string& title_key_, const string& title_);
+    
+    bool consider(uint32 ll_upper, const Node_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0);
+    bool consider(uint32 ll_upper, const Way_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0);
+    bool consider(uint32 ll_upper, const Relation_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0);
+    bool consider(uint32 ll_upper, const Area_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0);
+  
+    string get_output() const { return output; }
+    
+  private:
+    string key;
+    string value;
+    string title_key;
+    string title;
+    
+    string output;
+};
+
+
+class Print_Target_Popup : public Print_Target
+{
+  public:
+    Print_Target_Popup(uint32 mode, Transaction& transaction);
+    
+    virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0);
+    virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0);
+    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0);
+    virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const map< uint32, string >* users = 0);
+			    
+    string get_output() const;
+    
+  private:
+    vector< Element_Collector > collector;
+};
+
 //-----------------------------------------------------------------------------
 
 const char* MEMBER_TYPE[] = { 0, "node", "way", "relation" };
@@ -931,6 +995,183 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 
 //-----------------------------------------------------------------------------
 
+Element_Collector::Element_Collector(const string& key_, const string& value_,
+		   const string& title_key_, const string& title_)
+    : key(key_), value(value_), title_key(title_key_), title(title_)
+{
+  output = "\n<h2>" + title + "</h2>\n\n";
+}
+
+bool Element_Collector::consider(uint32 ll_upper, const Node_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton* meta,
+		const map< uint32, string >* users)
+{
+  // Check tag criterion
+  if (!tags)
+    return false;
+  bool key_value_matches = false;
+  for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
+  {
+    if (it->first == key)
+      key_value_matches = (it->second == value || value == "");
+  }
+  if (!key_value_matches)
+    return false;
+  
+  // Add a section for the element
+  output += "<p>";
+  for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
+  {
+    if (it->first == title_key)
+      output += "<strong>" + it->second + "</strong><br/>\n";
+  }
+
+  for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
+    output += it->first + ": " + it->second + "<br/>\n";
+  output += "</p>\n\n";
+
+  return true;
+}
+
+bool Element_Collector::consider(uint32 ll_upper, const Way_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton* meta,
+		const map< uint32, string >* users)
+{
+  // Check tag criterion
+  if (!tags)
+    return false;
+  bool key_value_matches = false;
+  for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
+  {
+    if (it->first == key)
+      key_value_matches = (it->second == value || value == "");
+  }
+  if (!key_value_matches)
+    return false;
+  
+  // Add a section for the element
+  output += "<p>";
+  for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
+  {
+    if (it->first == title_key)
+      output += "<strong>" + it->second + "</strong>\n";
+  }
+
+  for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
+    output += it->first + ": " + it->second + "<br/>\n";
+  output += "</p>\n\n";
+
+  return true;
+}
+
+bool Element_Collector::consider(uint32 ll_upper, const Relation_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton* meta,
+		const map< uint32, string >* users)
+{ 
+  // Check tag criterion
+  if (!tags)
+    return false;
+  bool key_value_matches = false;
+  for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
+  {
+    if (it->first == key)
+      key_value_matches = (it->second == value || it->second == "");
+  }
+  if (!key_value_matches)
+    return false;
+  
+  // Add a section for the element
+  output += "<p>";
+  for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
+  {
+    if (it->first == title_key)
+      output += "<strong>" + it->second + "</strong>\n";
+  }
+
+  for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
+    output += it->first + ": " + it->second + "<br/>\n";
+  output += "</p>\n\n";
+
+  return true;
+}
+
+bool Element_Collector::consider(uint32 ll_upper, const Area_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton* meta,
+		const map< uint32, string >* users)
+{
+  return true;
+}
+
+//-----------------------------------------------------------------------------
+
+Print_Target_Popup::Print_Target_Popup(uint32 mode, Transaction& transaction)
+        : Print_Target(mode, transaction)
+{
+  collector.push_back(Element_Collector("name", "", "name", "POIs"));
+}
+
+void Print_Target_Popup::print_item(uint32 ll_upper, const Node_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton* meta,
+		const map< uint32, string >* users)
+{
+  for (vector< Element_Collector >::iterator it = collector.begin(); it != collector.end(); ++it)
+  {
+    if (it->consider(ll_upper, skel, tags, meta, users))
+      break;
+  }
+}
+
+void Print_Target_Popup::print_item(uint32 ll_upper, const Way_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton* meta,
+		const map< uint32, string >* users)
+{
+  for (vector< Element_Collector >::iterator it = collector.begin(); it != collector.end(); ++it)
+  {
+    if (it->consider(ll_upper, skel, tags, meta, users))
+      break;
+  }
+}
+
+void Print_Target_Popup::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton* meta,
+		const map< uint32, string >* users)
+{ 
+  for (vector< Element_Collector >::iterator it = collector.begin(); it != collector.end(); ++it)
+  {
+    if (it->consider(ll_upper, skel, tags, meta, users))
+      break;
+  }
+}
+
+void Print_Target_Popup::print_item(uint32 ll_upper, const Area_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton* meta,
+		const map< uint32, string >* users)
+{
+  for (vector< Element_Collector >::iterator it = collector.begin(); it != collector.end(); ++it)
+  {
+    if (it->consider(ll_upper, skel, tags, meta, users))
+      break;
+  }
+}
+
+string Print_Target_Popup::get_output() const
+{
+  string result;
+  for (vector< Element_Collector >::const_iterator it = collector.begin(); it != collector.end(); ++it)
+    result += it->get_output();
+  return result;
+}
+
+//-----------------------------------------------------------------------------
+
 Print_Target& Output_Handle::get_print_target(uint32 current_mode, Transaction& transaction)
 {
   bool first_target = true;
@@ -972,6 +1213,8 @@ Print_Target& Output_Handle::get_print_target(uint32 current_mode, Transaction& 
     else if (type == "custom")
       print_target = new Print_Target_Custom(mode, transaction, first_target,
 					     node_template, way_template, relation_template);
+    else if (type == "popup")
+      print_target = new Print_Target_Popup(mode, transaction);
   }
   
   return *print_target;
@@ -993,6 +1236,9 @@ string Output_Handle::get_output() const
   if (print_target && dynamic_cast< Print_Target_Custom* >(print_target))
     return output
         + dynamic_cast< Print_Target_Custom* >(print_target)->get_output();
+  else if (print_target && dynamic_cast< Print_Target_Popup* >(print_target))
+    return output
+        + dynamic_cast< Print_Target_Popup* >(print_target)->get_output();
   else
     return output;
 }
