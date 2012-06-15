@@ -69,7 +69,7 @@
 	  
 	  var request = OpenLayers.Request.GET({
               url: "http://overpass-api.de/api/interpreter?data="
-	          + "[out:custom];(node(bbox);<;);out;"
+	          + "[out:popup];(node(bbox);<;);out;"
 		  + "&redirect=no&template=ids.popup&bbox="
 		  + (lonlat.lon - 0.0005) + "," + (lonlat.lat - 0.0005) + ","
 		  + (lonlat.lon + 0.0005) + "," + (lonlat.lat + 0.0005),
