@@ -150,6 +150,8 @@ class Element_Collector
     string get_output() const { return output; }
     
   private:
+    bool check_tag_criterion(const vector< pair< string, string > >* tags) const;
+
     string key;
     string value;
     string title_key;
@@ -1002,29 +1004,42 @@ Element_Collector::Element_Collector(const string& key_, const string& value_,
   output = "\n<h2>" + title + "</h2>\n\n";
 }
 
+bool Element_Collector::check_tag_criterion(const vector< pair< string, string > >* tags) const
+{
+  if (!tags)
+    return false;
+  for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
+  {
+    if (it->first == key && (it->second == value || value == ""))
+      return true;
+  }
+  return false;
+}
+
 bool Element_Collector::consider(uint32 ll_upper, const Node_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton* meta,
 		const map< uint32, string >* users)
 {
-  // Check tag criterion
-  if (!tags)
-    return false;
-  bool key_value_matches = false;
-  for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
-  {
-    if (it->first == key)
-      key_value_matches = (it->second == value || value == "");
-  }
-  if (!key_value_matches)
+  if (!check_tag_criterion(tags))
     return false;
   
   // Add a section for the element
   output += "<p>";
+  bool title_key_found = false;
   for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
   {
     if (it->first == title_key)
+    {
       output += "<strong>" + it->second + "</strong><br/>\n";
+      title_key_found = true;
+    }
+  }
+  if (!title_key_found)
+  {
+    ostringstream out;
+    out<<skel.id;
+    output += "<strong>Node " + out.str() + "</strong><br/>\n";
   }
 
   for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
@@ -1039,24 +1054,25 @@ bool Element_Collector::consider(uint32 ll_upper, const Way_Skeleton& skel,
 		const OSM_Element_Metadata_Skeleton* meta,
 		const map< uint32, string >* users)
 {
-  // Check tag criterion
-  if (!tags)
-    return false;
-  bool key_value_matches = false;
-  for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
-  {
-    if (it->first == key)
-      key_value_matches = (it->second == value || value == "");
-  }
-  if (!key_value_matches)
+  if (!check_tag_criterion(tags))
     return false;
   
   // Add a section for the element
   output += "<p>";
+  bool title_key_found = false;
   for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
   {
     if (it->first == title_key)
-      output += "<strong>" + it->second + "</strong>\n";
+    {
+      output += "<strong>" + it->second + "</strong><br/>\n";
+      title_key_found = true;
+    }
+  }
+  if (!title_key_found)
+  {
+    ostringstream out;
+    out<<skel.id;
+    output += "<strong>Way " + out.str() + "</strong><br/>\n";
   }
 
   for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
@@ -1071,24 +1087,25 @@ bool Element_Collector::consider(uint32 ll_upper, const Relation_Skeleton& skel,
 		const OSM_Element_Metadata_Skeleton* meta,
 		const map< uint32, string >* users)
 { 
-  // Check tag criterion
-  if (!tags)
-    return false;
-  bool key_value_matches = false;
-  for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
-  {
-    if (it->first == key)
-      key_value_matches = (it->second == value || it->second == "");
-  }
-  if (!key_value_matches)
+  if (!check_tag_criterion(tags))
     return false;
   
   // Add a section for the element
   output += "<p>";
+  bool title_key_found = false;
   for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
   {
     if (it->first == title_key)
-      output += "<strong>" + it->second + "</strong>\n";
+    {
+      output += "<strong>" + it->second + "</strong><br/>\n";
+      title_key_found = true;
+    }
+  }
+  if (!title_key_found)
+  {
+    ostringstream out;
+    out<<skel.id;
+    output += "<strong>Relation " + out.str() + "</strong><br/>\n";
   }
 
   for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
@@ -1111,7 +1128,9 @@ bool Element_Collector::consider(uint32 ll_upper, const Area_Skeleton& skel,
 Print_Target_Popup::Print_Target_Popup(uint32 mode, Transaction& transaction)
         : Print_Target(mode, transaction)
 {
+  collector.push_back(Element_Collector("highway", "", "name", "Streets"));
   collector.push_back(Element_Collector("name", "", "name", "POIs"));
+  collector.push_back(Element_Collector("route", "", "ref", "Public Transport"));
 }
 
 void Print_Target_Popup::print_item(uint32 ll_upper, const Node_Skeleton& skel,
