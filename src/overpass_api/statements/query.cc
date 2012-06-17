@@ -429,6 +429,7 @@ void filter_ids_by_tags
   
   vector< uint32 > old_ids, new_ids;
   new_ids = ids_by_coarse[coarse_index];
+
   string last_key;
   
   bool relevant = false;
@@ -473,14 +474,16 @@ void filter_ids_by_tags
       (((tag_it.index().index) & 0xffffff00) == coarse_index))
     ++tag_it;
 
+  if (relevant && key_it != keys.end())
+    ++key_it;
   if (key_it != keys.end())
     // There are keys missing for all objects with this index. Drop all.
     new_ids.clear();
   
   sort(new_ids.begin(), new_ids.end());
   
-  new_ids.swap(ids_by_coarse[coarse_index]);  
-
+  new_ids.swap(ids_by_coarse[coarse_index]);
+  
   coarse_index = coarse_index | 0x80000000;  
   old_ids.clear();
   last_key = "";
@@ -526,13 +529,15 @@ void filter_ids_by_tags
   while ((!(tag_it == items_db.range_end())) &&
       (((tag_it.index().index) & 0xffffff00) == coarse_index))
     ++tag_it;
-  
+
+  if (relevant && key_it != keys.end())
+    ++key_it;
   if (key_it != keys.end())
     // There are keys missing for all objects with this index. Drop all.
     new_ids.clear();
   
   sort(new_ids.begin(), new_ids.end());
-  
+
   coarse_index = coarse_index & 0x7fffff00;  
 
   old_ids.clear();
