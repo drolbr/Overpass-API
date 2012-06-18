@@ -319,7 +319,6 @@ Dispatcher_Stub::~Dispatcher_Stub()
       ostringstream out;
       out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
       logger.annotated_log(out.str());
-      throw;
     }
     delete dispatcher_client;
   }
@@ -341,7 +340,6 @@ Dispatcher_Stub::~Dispatcher_Stub()
         ostringstream out;
         out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
         logger.annotated_log(out.str());
-        throw;
       }
     }
     else
@@ -358,7 +356,6 @@ Dispatcher_Stub::~Dispatcher_Stub()
         ostringstream out;
         out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
         logger.annotated_log(out.str());
-        throw;
       }
     }
     delete area_dispatcher_client;
