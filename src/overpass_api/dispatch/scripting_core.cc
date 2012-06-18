@@ -308,9 +308,19 @@ Dispatcher_Stub::~Dispatcher_Stub()
   if (dispatcher_client)
   {
     Logger logger(dispatcher_client->get_db_dir());
-    logger.annotated_log("read_finished() start");
-    dispatcher_client->read_finished();
-    logger.annotated_log("read_finished() end");
+    try
+    {
+      logger.annotated_log("read_finished() start");
+      dispatcher_client->read_finished();
+      logger.annotated_log("read_finished() end");
+    }
+    catch (const File_Error& e)
+    {
+      ostringstream out;
+      out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
+      logger.annotated_log(out.str());
+      throw;
+    }
     delete dispatcher_client;
   }
   if (area_dispatcher_client)
@@ -318,18 +328,38 @@ Dispatcher_Stub::~Dispatcher_Stub()
     if (areas_written)
     {
       Logger logger(area_dispatcher_client->get_db_dir());
-      logger.annotated_log("write_commit() area start");
-      area_dispatcher_client->write_commit();
-      rename((area_dispatcher_client->get_db_dir() + "area_version.shadow").c_str(),
-	     (area_dispatcher_client->get_db_dir() + "area_version").c_str());
-      logger.annotated_log("write_commit() area end");
+      try
+      {
+        logger.annotated_log("write_commit() area start");
+        area_dispatcher_client->write_commit();
+        rename((area_dispatcher_client->get_db_dir() + "area_version.shadow").c_str(),
+	       (area_dispatcher_client->get_db_dir() + "area_version").c_str());
+        logger.annotated_log("write_commit() area end");
+      }
+      catch (const File_Error& e)
+      {
+        ostringstream out;
+        out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
+        logger.annotated_log(out.str());
+        throw;
+      }
     }
     else
     {
       Logger logger(area_dispatcher_client->get_db_dir());
-      logger.annotated_log("read_finished() area start");
-      area_dispatcher_client->read_finished();
-      logger.annotated_log("read_finished() area end");
+      try
+      {
+        logger.annotated_log("read_finished() area start");
+        area_dispatcher_client->read_finished();
+        logger.annotated_log("read_finished() area end");
+      }
+      catch (const File_Error& e)
+      {
+        ostringstream out;
+        out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
+        logger.annotated_log(out.str());
+        throw;
+      }
     }
     delete area_dispatcher_client;
   }
