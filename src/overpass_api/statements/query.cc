@@ -419,131 +419,85 @@ void clear_empty_indices
 
 
 void filter_ids_by_tags
+  (const vector< string >& keys,
+   const Block_Backend< Tag_Index_Local, Uint32_Index >& items_db,
+   Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator& tag_it,
+   uint32 coarse_index,
+   vector< uint32 >& new_ids)
+{
+  vector< uint32 > old_ids;
+  string last_key;  
+  bool relevant = false;
+  vector< string >::const_iterator key_it = keys.begin();
+  
+  while ((!(tag_it == items_db.range_end())) &&
+      (((tag_it.index().index) & 0xffffff00) == coarse_index))
+  {
+    if (tag_it.index().key != last_key)
+    {   
+      if (relevant)
+        ++key_it;
+      if (key_it == keys.end())
+	break;
+      
+      last_key = tag_it.index().key;
+      relevant = (last_key >= *key_it);
+      if (relevant)
+      {
+	if (last_key > *key_it)
+          // There are keys missing for all objects with this index. Drop all.
+	  break;
+        relevant = true;
+      }
+      if (relevant)
+      {
+	old_ids.clear();
+        old_ids.swap(new_ids);
+        sort(old_ids.begin(), old_ids.end());
+      }
+    }
+    
+    if (relevant)
+    {
+      if (binary_search(old_ids.begin(), old_ids.end(), tag_it.object().val()))
+        new_ids.push_back(tag_it.object().val());
+    }
+
+    ++tag_it;
+  }
+  while ((!(tag_it == items_db.range_end())) &&
+      (((tag_it.index().index) & 0xffffff00) == coarse_index))
+    ++tag_it;
+
+  if (relevant && key_it != keys.end())
+    ++key_it;
+  if (key_it != keys.end())
+    // There are keys missing for all objects with this index. Drop all.
+    new_ids.clear();
+  
+  sort(new_ids.begin(), new_ids.end());
+}
+
+void filter_ids_by_tags
   (map< uint32, vector< uint32 > >& ids_by_coarse,
    const vector< string >& keys,
    const Block_Backend< Tag_Index_Local, Uint32_Index >& items_db,
    Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator& tag_it,
    uint32 coarse_index)
 {
-  coarse_index = coarse_index & 0x7fffff00;
-  
-  vector< uint32 > old_ids, new_ids;
-  new_ids = ids_by_coarse[coarse_index];
+  vector< uint32 > new_ids;
+  new_ids = ids_by_coarse[coarse_index & 0x7fffff00];
 
-  string last_key;
+  filter_ids_by_tags(keys, items_db, tag_it, coarse_index & 0x7fffff00, new_ids);
   
-  bool relevant = false;
-  vector< string >::const_iterator key_it = keys.begin();
-
-  while ((!(tag_it == items_db.range_end())) &&
-      (((tag_it.index().index) & 0xffffff00) == coarse_index))
-  {
-    if (tag_it.index().key != last_key)
-    {   
-      if (relevant)
-        ++key_it;
-      if (key_it == keys.end())
-	break;
-      
-      last_key = tag_it.index().key;
-      relevant = (last_key >= *key_it);
-      if (relevant)
-      {
-	if (last_key > *key_it)
-          // There are keys missing for all objects with this index. Drop all.
-	  break;
-        relevant = true;
-      }
-      if (relevant)
-      {
-	old_ids.clear();
-        old_ids.swap(new_ids);
-        sort(old_ids.begin(), old_ids.end());
-      }
-    }
+  new_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
     
-    if (relevant)
-    {
-      if (binary_search(old_ids.begin(), old_ids.end(), tag_it.object().val()))
-        new_ids.push_back(tag_it.object().val());
-    }
-
-    ++tag_it;
-  }
-  while ((!(tag_it == items_db.range_end())) &&
-      (((tag_it.index().index) & 0xffffff00) == coarse_index))
-    ++tag_it;
-
-  if (relevant && key_it != keys.end())
-    ++key_it;
-  if (key_it != keys.end())
-    // There are keys missing for all objects with this index. Drop all.
-    new_ids.clear();
+  filter_ids_by_tags(keys, items_db, tag_it, coarse_index | 0x80000000, new_ids);
   
-  sort(new_ids.begin(), new_ids.end());
-  
-  new_ids.swap(ids_by_coarse[coarse_index]);
-  
-  coarse_index = coarse_index | 0x80000000;  
-  old_ids.clear();
-  last_key = "";
-  
-  relevant = false;
-  key_it = keys.begin();
-  
-  while ((!(tag_it == items_db.range_end())) &&
-      (((tag_it.index().index) & 0xffffff00) == coarse_index))
-  {
-    if (tag_it.index().key != last_key)
-    {   
-      if (relevant)
-        ++key_it;
-      if (key_it == keys.end())
-	break;
-      
-      last_key = tag_it.index().key;
-      relevant = (last_key >= *key_it);
-      if (relevant)
-      {
-	if (last_key > *key_it)
-          // There are keys missing for all objects with this index. Drop all.
-	  break;
-        relevant = true;
-      }
-      if (relevant)
-      {
-	old_ids.clear();
-        old_ids.swap(new_ids);
-        sort(old_ids.begin(), old_ids.end());
-      }
-    }
-    
-    if (relevant)
-    {
-      if (binary_search(old_ids.begin(), old_ids.end(), tag_it.object().val()))
-        new_ids.push_back(tag_it.object().val());
-    }
-
-    ++tag_it;
-  }
-  while ((!(tag_it == items_db.range_end())) &&
-      (((tag_it.index().index) & 0xffffff00) == coarse_index))
-    ++tag_it;
-
-  if (relevant && key_it != keys.end())
-    ++key_it;
-  if (key_it != keys.end())
-    // There are keys missing for all objects with this index. Drop all.
-    new_ids.clear();
-  
-  sort(new_ids.begin(), new_ids.end());
-
-  coarse_index = coarse_index & 0x7fffff00;  
-
-  old_ids.clear();
-  old_ids.swap(ids_by_coarse[coarse_index]);
+  vector< uint32 > old_ids;
+  old_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
   set_union(old_ids.begin(), old_ids.end(), new_ids.begin(), new_ids.end(),
-      back_inserter(ids_by_coarse[coarse_index]));
+      back_inserter(ids_by_coarse[coarse_index & 0x7fffff00]));
 }
 
 
@@ -555,6 +509,7 @@ void Query_Statement::filter_by_tags
   if (keys.empty())
     return;
   sort(keys.begin(), keys.end());
+  keys.erase(unique(keys.begin(), keys.end()), keys.end());
   
   //generate set of relevant coarse indices
   set< TIndex > coarse_indices;
@@ -620,7 +575,7 @@ void Query_Statement::execute(Resource_Manager& rman)
   for (vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end() && answer_state < data_collected; ++it)
     check_keys_late |= (*it)->delivers_data();
-  
+
   {
     File_Properties* file_prop = 0;
     if (type == QUERY_NODE)

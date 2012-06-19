@@ -171,9 +171,9 @@ date +%T
 perform_test_loop around 6 "$DATA_SIZE ../../input/update_database/"
 
 # Test the query statement
-prepare_test_loop query 117 $DATA_SIZE
+prepare_test_loop query 124 $DATA_SIZE
 date +%T
-perform_test_loop query 117 "$DATA_SIZE ../../input/update_database/"
+perform_test_loop query 124 "$DATA_SIZE ../../input/update_database/"
 
 # Test the foreach statement
 prepare_test_loop foreach 4 $DATA_SIZE

@@ -472,6 +472,7 @@ void perform_query_with_bbox
   }
 }
 
+
 template< class T >
 string to_string(T d)
 {
@@ -479,6 +480,43 @@ string to_string(T d)
   out<<d;
   return out.str();
 }
+
+
+void perform_multi_query_with_bbox
+    (string type, string key1, string key2, string value2,
+     bool regex2, bool straight2,
+     double south, double north, double west, double east, string db_dir)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Resource_Manager rman(transaction);
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", type);
+      SProxy< Has_Kv_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("k", key1).stmt(), "");
+      SProxy< Has_Kv_Statement > stmt4;
+      if (regex2)
+        stmt1.stmt().add_statement(&stmt4("k", key2)("regv", value2)
+	    ("modv", straight2 ? "" : "not").stmt(), "");
+      else
+        stmt1.stmt().add_statement(&stmt4("k", key2)("v", value2)
+	    ("modv", straight2 ? "" : "not").stmt(), "");
+      SProxy< Bbox_Query_Statement > stmt3;
+      stmt1.stmt().add_statement(&stmt3("n", to_string(north))("s", to_string(south))
+          ("e", to_string(east))("w", to_string(west)).stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    perform_print(rman);
+  }
+  catch (File_Error e)
+  {
+    cerr<<"File error caught: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
 
 void perform_query_with_recurse
     (string query_type, string recurse_type, string key1, string value1,
@@ -1119,7 +1157,30 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "117"))
     perform_query_with_recurse("relation", "up-rel", "", "", 100.0, 100.0, 0.0, 0.0, false,
 			       pattern_size, args[3]);
-  
+    
+  // Test combination of keys-only with several other elements
+  if ((test_to_execute == "") || (test_to_execute == "118"))
+    perform_multi_query_with_bbox("node", "node_key_5", "node_key_7", "", false, true,
+				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "119"))
+    perform_multi_query_with_bbox("node", "node_key_7", "node_key_7", "", false, true,
+				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "120"))
+    perform_multi_query_with_bbox("node", "node_key_7", "node_key_5", "", false, true,
+				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "121"))
+    perform_multi_query_with_bbox("node", "node_key_7", "node_key_5", ".", true, true,
+				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "122"))
+    perform_multi_query_with_bbox("node", "node_key_7", "node_key_7", "node_value_0", false, false,
+				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "123"))
+    perform_multi_query_with_bbox("node", "node_key_7", "node_key_7", "node_value_0", true, false,
+				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "124"))
+    perform_multi_query_with_bbox("node", "node_key_7", "node_key_11", "node_value", true, false,
+				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
+    
   cout<<"</osm>\n";
   return 0;
 }
