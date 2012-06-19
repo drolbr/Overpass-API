@@ -35,7 +35,7 @@ if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
 };
 fi
 
-pushd "$EXEC_DIR"
+pushd "$EXEC_DIR" >/dev/null
 
 IFS=$'&'
 for KEY_VAL in $QUERY_STRING; do
