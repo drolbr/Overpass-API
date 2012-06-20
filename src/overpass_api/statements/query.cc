@@ -20,46 +20,15 @@
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
 #include "../data/abstract_processing.h"
+#include "../data/regular_expression.h"
 #include "meta_collector.h"
 #include "area_query.h"
 #include "query.h"
-
-#include "sys/types.h"
-#include "regex.h"
 
 #include <algorithm>
 #include <sstream>
 
 using namespace std;
-
-//-----------------------------------------------------------------------------
-
-class Regular_Expression
-{
-  public:
-    Regular_Expression(const string& regex);
-    ~Regular_Expression();
-    
-    bool matches(const string& line);
-    
-  private:
-    regex_t preg;
-};
-
-Regular_Expression::Regular_Expression(const string& regex)
-{
-  regcomp(&preg, regex.c_str(), REG_EXTENDED|REG_NOSUB);
-}
-
-Regular_Expression::~Regular_Expression()
-{
-  regfree(&preg);
-}
-
-bool Regular_Expression::matches(const string& line)
-{
-  return (regexec(&preg, line.c_str(), 0, 0, 0) == 0);
-}
 
 //-----------------------------------------------------------------------------
 

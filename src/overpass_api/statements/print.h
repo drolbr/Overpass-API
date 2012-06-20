@@ -30,6 +30,7 @@ class Print_Target
 {
   public:
     Print_Target(uint32 mode_, Transaction& transaction);
+    virtual ~Print_Target() {}
     
     virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
