@@ -234,6 +234,8 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
     if (type == "custom")
       template_contains_js_ =
           set_output_templates(*output_handle, header, template_name, *rman.get_transaction());
+    else if (type == "popup")
+      output_handle->set_categories(categories);
     for (vector< Statement* >::iterator it = factory->created_statements.begin();
         it != factory->created_statements.end(); ++it)
     {

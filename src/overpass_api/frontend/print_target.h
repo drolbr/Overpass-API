@@ -19,6 +19,7 @@
 #ifndef PRINT_TARGET
 #define PRINT_TARGET
 
+#include "../statements/osm_script.h"
 #include "../statements/print.h"
 
 #include <string>
@@ -50,7 +51,9 @@ class Output_Handle
     string adapt_url(const string& url) const;
     string get_output() const;
     uint32 get_written_elements_count() const;
-    
+
+    void set_categories(const vector< Category_Filter >& categories_) { categories = categories_; }
+
   private:
     string type;
     uint32 mode;
@@ -62,6 +65,7 @@ class Output_Handle
     string node_template;
     string way_template;
     string relation_template;
+    vector< Category_Filter > categories;
 };
 
 string::size_type find_block_end(string data, string::size_type pos);

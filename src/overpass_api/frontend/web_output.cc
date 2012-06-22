@@ -115,7 +115,8 @@ void Web_Output::enforce_header()
 }
 
 void Web_Output::write_html_header
-    (const string& timestamp, const string& area_timestamp, uint write_mime, bool write_js_init)
+    (const string& timestamp, const string& area_timestamp, uint write_mime, bool write_js_init,
+     bool write_remarks)
 {
   if (header_written != not_yet)
     return;    
@@ -142,17 +143,20 @@ void Web_Output::write_html_header
   "  <title>OSM3S Response</title>\n"
   "</head>\n";
   cout<<(write_js_init ? "<body onload=\"init()\">\n\n" : "<body>\n\n");
-  cout<<
-  "<p>The data included in this document is from www.openstreetmap.org. "
-  "It has there been collected by a large group of contributors. For individual "
-  "attribution of each item please refer to "
-  "http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </p>\n";
-  if (timestamp != "")
+  if (write_remarks)
   {
-    cout<<"<p>Data included until: "<<timestamp;
-    if (area_timestamp != "")
-      cout<<"<br/>Areas based on data until: "<<area_timestamp;
-    cout<<"</p>\n";
+    cout<<
+    "<p>The data included in this document is from www.openstreetmap.org. "
+    "It has there been collected by a large group of contributors. For individual "
+    "attribution of each item please refer to "
+    "http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </p>\n";
+    if (timestamp != "")
+    {
+      cout<<"<p>Data included until: "<<timestamp;
+      if (area_timestamp != "")
+        cout<<"<br/>Areas based on data until: "<<area_timestamp;
+      cout<<"</p>\n";
+    }
   }
 }
 

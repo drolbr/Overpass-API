@@ -28,6 +28,22 @@ using namespace std;
 
 class Output_Handle;
 
+
+struct Tag_Filter
+{
+  string key;
+  string value;
+  bool straight;  
+};
+
+struct Category_Filter
+{
+  string title;
+  string title_key;
+  vector< vector< Tag_Filter > > filter_disjunction;
+};
+
+
 class Osm_Script_Statement : public Statement
 {
   public:
@@ -55,6 +71,8 @@ class Osm_Script_Statement : public Statement
     bool template_contains_js() const { return template_contains_js_; }
     void write_output() const;
 
+    void set_categories(const vector< Category_Filter >& categories_) { categories = categories_; }
+    
     uint32 get_max_allowed_time() const { return max_allowed_time; }
     uint64 get_max_allowed_space() const { return max_allowed_space; }
     
@@ -68,6 +86,7 @@ class Osm_Script_Statement : public Statement
     string template_name;
     string header;
     bool template_contains_js_;
+    vector< Category_Filter > categories;
 };
 
 #endif

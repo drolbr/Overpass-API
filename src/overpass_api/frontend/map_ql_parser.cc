@@ -19,6 +19,7 @@
 #include "../../expat/map_ql_input.h"
 #include "../core/datatypes.h"
 #include "../dispatch/scripting_core.h"
+#include "../statements/osm_script.h"
 #include "../statements/statement.h"
 #include "../statements/statement_dump.h"
 #include "map_ql_parser.h"
@@ -358,14 +359,81 @@ TStatement* create_newer_statement(typename TStatement::Factory& stmt_factory,
 
 //-----------------------------------------------------------------------------
 
-pair< string, string > parse_setup(Tokenizer_Wrapper& token, Error_Output* error_output)
+pair< string, string > parse_setup(Tokenizer_Wrapper& token, Error_Output* error_output,
+      vector< Category_Filter >& categories)
 {
   ++token;
   pair< string, string > result = make_pair
       (get_text_token(token, error_output, "Keyword"), "");  
   clear_until_after(token, error_output, ":", "]");
   result.second = get_text_token(token, error_output, "Value");
-  clear_until_after(token, error_output, "]");
+  if (result.second == "popup")
+  {
+    clear_until_after(token, error_output, "(", "]", false);
+    while (*token == "(")
+    {
+      ++token;
+      
+      Category_Filter category;
+      
+      category.title = get_text_token(token, error_output, "title");
+      clear_until_after(token, error_output, ";", ")", true);
+
+      while (*token == "[")
+      {	
+	vector< Tag_Filter > filter_conjunction;
+	
+        while (*token == "[")
+	{
+	  ++token;
+	  
+	  Tag_Filter filter;
+          filter.key = get_text_token(token, error_output, "Key");
+	  filter.value = ".";
+          filter.straight = true;
+	
+          clear_until_after(token, error_output, "!", "~", "=", "!=", "]", false);
+      
+          if (*token == "!")
+          {
+	    filter.straight = false;
+	    ++token;
+	    clear_until_after(token, error_output, "~", "=", "]", false);
+          }
+      
+          if (*token == "=" || *token == "!=")
+          {
+	    filter.straight = (*token == "=");
+	    ++token;
+	    filter.value = "^" + get_text_token(token, error_output, "Value") + "$";
+          }
+          else if (*token == "~")
+          {
+	    ++token;
+	    filter.value = get_text_token(token, error_output, "Value");
+          }
+	  clear_until_after(token, error_output, "]");
+	  
+	  filter_conjunction.push_back(filter);
+	}
+        
+        clear_until_after(token, error_output, ";", true);
+	
+	category.filter_disjunction.push_back(filter_conjunction);
+      }
+      if (*token != ")")
+      {
+	category.title_key = get_text_token(token, error_output, "title key");
+        clear_until_after(token, error_output, ";", true);
+      }
+      clear_until_after(token, error_output, ")", true);
+      
+      categories.push_back(category);
+    }
+    clear_until_after(token, error_output, "]", true);
+  }
+  else
+    clear_until_after(token, error_output, "]");
   return result;
 }
 
@@ -894,10 +962,11 @@ void generic_parse_and_validate_map_ql
   istringstream in(xml_raw);
   Tokenizer_Wrapper token(in);
 
+  vector< Category_Filter > categories;
   map< string, string > attr;
   while (token.good() && *token == "[")
   {
-    pair< string, string > kv = parse_setup(token, error_output);
+    pair< string, string > kv = parse_setup(token, error_output, categories);
     if (kv.first == "maxsize")
       kv.first = "element-limit";
     if (kv.first == "out")
@@ -907,6 +976,8 @@ void generic_parse_and_validate_map_ql
   
   TStatement* base_statement = stmt_factory.create_statement
       ("osm-script", token.line_col().first, attr);
+  if (!categories.empty())
+    ((Osm_Script_Statement*)base_statement)->set_categories(categories);
       
   if (!attr.empty())
     clear_until_after(token, error_output, ";");
