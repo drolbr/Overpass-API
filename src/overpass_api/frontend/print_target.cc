@@ -1064,6 +1064,19 @@ template< typename TSkel >
 void Element_Collector::print(const TSkel& skel,
 		const vector< pair< string, string > >* tags)
 {
+  // Search for a weblink
+  string link;
+  for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
+  {
+    if (it->second.find("www.") != string::npos)
+      link = "http://" + it->second;
+  }
+  for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
+  {
+    if (it->second.find("http://") != string::npos)
+      link = it->second;
+  }
+  
   // Add a section for the element
   output += "<p>";
   bool title_key_found = false;
@@ -1071,15 +1084,23 @@ void Element_Collector::print(const TSkel& skel,
   {
     if (it->first == title_key)
     {
+      if (link != "")
+	output += "<a href=\"" + link + "\" target=\"_blank\">";
       output += "<strong>" + it->second + "</strong><br/>\n";
+      if (link != "")
+	output += "</a>";
       title_key_found = true;
     }
   }
   if (!title_key_found)
   {
+    if (link != "")
+      output += "<a href=\"" + link + "\" target=\"_blank\">";
     ostringstream out;
     out<<skel.id;
     output += "<strong>" + elem_type< TSkel >() + " " + out.str() + "</strong><br/>\n";
+    if (link != "")
+      output += "</a>";
   }
 
   for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)

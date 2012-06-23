@@ -11,7 +11,7 @@
       var zoom = 6;
       var map;
 
-      function init(){
+      function init() {
           map = new OpenLayers.Map ("map", {
           controls:[
               new OpenLayers.Control.Navigation(),
@@ -35,8 +35,17 @@
           map.setCenter (lonLat, zoom);
 
           map.addLayers([
-              make_layer("http://overpass-api.de/api/interpreter?data=node[amenity=school](bbox);out;(way[amenity=school](bbox);node(w););out+skel;", "blue")
-          ]);          
+              make_layer("http://overpass-api.de/api/interpreter?data=node[amenity~\"^cafe$|^restaurant$|^fast_food$|^pub$\"](bbox)->.a;(node.a[website];node.a[url];);out+skel;way[amenity~\"^cafe$|^restaurant$|^fast_food$|^pub$\"](bbox)->.a;(way.a[website];way.a[url];);(._;>;);out+skel;", "blue")
+          ]);
+          
+	  var click = new OpenLayers.Control.Click(
+	      "http://overpass-api.de/api/popup?data="
+	          + "[out:popup(\"Restaurants\";[amenity~\"^cafe$|^restaurant$|^fast_food$|^pub$\"];\"name\";)];"
+	          + "(node(bbox);way(bbox););(._;<;);out;"
+		  + "&redirect=no&template=ids.popup", 0.0003, map);
+		  
+          map.addControl(click);
+          click.activate();
       }
   </script>
 </head>
