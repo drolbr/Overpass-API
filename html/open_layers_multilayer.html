@@ -35,9 +35,9 @@
           map.setCenter (lonLat, zoom);
 
           map.addLayers([
-              make_layer("http://overpass-api.de/api/interpreter?data=node[amenity=kindergarten](bbox);out;(way[amenity=kindergarten](bbox);node(w););out+skel;", "green"),
-              make_layer("http://overpass-api.de/api/interpreter?data=node[amenity=school](bbox);out;(way[amenity=school](bbox);node(w););out+skel;", "blue"),
-              make_layer("http://overpass-api.de/api/interpreter?data=node[amenity=university](bbox);out;(way[amenity=university](bbox);node(w););out+skel;", "orange")
+              make_layer("http://overpass-api.de/api/interpreter?data=node[amenity=kindergarten](bbox);out+skel;(way[amenity=kindergarten](bbox);node(w););out+skel;", "green"),
+              make_layer("http://overpass-api.de/api/interpreter?data=node[amenity=school](bbox);out+skel;(way[amenity=school](bbox);node(w););out+skel;", "blue"),
+              make_layer("http://overpass-api.de/api/interpreter?data=node[amenity=university](bbox);out+skel;(way[amenity=university](bbox);node(w););out+skel;", "orange")
           ]);
           
 	  var click = new OpenLayers.Control.Click(
