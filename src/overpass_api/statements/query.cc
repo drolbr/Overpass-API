@@ -406,20 +406,19 @@ void filter_ids_by_tags
     {   
       if (relevant)
         ++key_it;
+      relevant = false;
+      
       if (key_it == keys.end())
 	break;
       
       last_key = tag_it.index().key;
-      relevant = (last_key >= *key_it);
-      if (relevant)
+      if (last_key >= *key_it)
       {
 	if (last_key > *key_it)
           // There are keys missing for all objects with this index. Drop all.
 	  break;
-        relevant = true;
-      }
-      if (relevant)
-      {
+
+	relevant = true;
 	old_ids.clear();
         old_ids.swap(new_ids);
         sort(old_ids.begin(), old_ids.end());
@@ -447,6 +446,7 @@ void filter_ids_by_tags
   sort(new_ids.begin(), new_ids.end());
 }
 
+
 void filter_ids_by_tags
   (map< uint32, vector< uint32 > >& ids_by_coarse,
    const vector< string >& keys,
@@ -454,15 +454,14 @@ void filter_ids_by_tags
    Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator& tag_it,
    uint32 coarse_index)
 {
-  vector< uint32 > new_ids;
-  new_ids = ids_by_coarse[coarse_index & 0x7fffff00];
-
-  filter_ids_by_tags(keys, items_db, tag_it, coarse_index & 0x7fffff00, new_ids);
+  vector< uint32 > new_ids = ids_by_coarse[coarse_index & 0x7fffff00];
   
+  filter_ids_by_tags(keys, items_db, tag_it, coarse_index & 0x7fffff00, new_ids);
+
   new_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
     
   filter_ids_by_tags(keys, items_db, tag_it, coarse_index | 0x80000000, new_ids);
-  
+
   vector< uint32 > old_ids;
   old_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
   set_union(old_ids.begin(), old_ids.end(), new_ids.begin(), new_ids.end(),
