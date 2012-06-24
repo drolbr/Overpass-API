@@ -131,6 +131,10 @@ prepare_test_loop()
   DATA_SIZE=$3
   while [[ $I -le $2 ]]; do
   {
+    if [[ $1 == "query" && $I -eq 42 ]]; then
+    {
+      I=43
+    }; fi
     mkdir -p expected/$1_$I/
     rm -f expected/$1_$I/*
     $BASEDIR/test-bin/generate_test_file $DATA_SIZE $1_$I >expected/$1_$I/stdout.log
