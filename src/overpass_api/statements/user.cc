@@ -127,7 +127,7 @@ uint32 get_user_id(const string& user_name, Transaction& transaction)
     if (user_it.object().name == user_name)
       return user_it.object().id;
   }
-  return 0;
+  return numeric_limits< uint32 >::max();
 }
 
 uint32 User_Statement::get_id(Transaction& transaction)
