@@ -33,7 +33,7 @@ struct V : public vector< T >
   V(const T& t) : vector< T >(1, t) {}
   V& operator()(const T& t)
   {
-    push_back(t);
+    this->push_back(t);
     return *this;
   }
 };
