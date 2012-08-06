@@ -120,7 +120,7 @@
           CLASS_NAME: "ZoomLimitedBBOXStrategy"
       });
 
-      function make_layer(data_url, color) {
+      function make_large_layer(data_url, color, zoom) {
 
           var styleMap = new OpenLayers.StyleMap({
               strokeColor: color,
@@ -131,7 +131,7 @@
               fillOpacity: 0.25
           });
           var layer = new OpenLayers.Layer.Vector(color, {
-              strategies: [new ZoomLimitedBBOXStrategy(13)],
+              strategies: [new ZoomLimitedBBOXStrategy(11)],
               protocol: new OpenLayers.Protocol.HTTP({
                   url: data_url,
                   format: new OpenLayers.Format.OSM()
@@ -143,5 +143,9 @@
           layer.events.register("featuresadded", layer, make_features_added_closure());
 
           return layer;
+      }
+
+      function make_layer(data_url, color) {
+	  return make_large_layer(data_url, color, 13);
       }
       
