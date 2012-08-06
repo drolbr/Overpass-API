@@ -1,0 +1,61 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
+  <title>OSM3S on Mapnik via Open Layers</title>
+  <script src="http://openlayers.org/api/OpenLayers.js"></script>
+  <script src="http://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
+  <script src="http://overpass-api.de/overpass.js"></script>
+  <script type="text/javascript">
+      var lat = 51.0;
+      var lon = 10.5;
+      var zoom = 6;
+      var map;
+
+      function init(){
+          map = new OpenLayers.Map ("map", {
+          controls:[
+              new OpenLayers.Control.Navigation(),
+              new OpenLayers.Control.PanZoomBar(),
+              new OpenLayers.Control.LayerSwitcher(),
+              new OpenLayers.Control.Attribution()],
+              maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
+              maxResolution: 156543.0399,
+              numZoomLevels: 19,
+              units: 'm',
+              projection: new OpenLayers.Projection("EPSG:900913"),
+              displayProjection: new OpenLayers.Projection("EPSG:4326")
+          } );
+
+          layerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
+          map.addLayer(layerMapnik);
+
+          var lonLat = new OpenLayers.LonLat(lon, lat)
+              .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+          map.setCenter (lonLat, zoom);
+
+          map.addLayers([
+              make_layer("http://overpass-api.de/api/interpreter?data=rel[route~\"bus|trolleybus\"](bbox);(way(r)(bbox);>;);out+skel;", "red"),
+              make_layer("http://overpass-api.de/api/interpreter?data=rel[route~\"ferry|railway|train|tram|subway|light_rail|monorail\"](bbox);(way(r)(bbox);>;);out+skel;", "blue"),
+              make_layer("http://overpass-api.de/api/interpreter?data=(node[highway~\"bus_stop|tram_stop\"](bbox);node[railway~\"halt|station|tram_stop\"](bbox););out+skel;", "black")
+          ]);
+          
+	  var click = new OpenLayers.Control.Click(
+	      "http://overpass-api.de/api/popup?data="
+	          + "[out:popup(\"Stops\";[name][highway~\"bus_stop|tram_stop\"];[name][railway~\"halt|station|tram_stop\"];\"name\";)(\"Lines\";[route~\"bus|ferry|railway|train|tram|trolleybus|subway|light_rail|monorail\"];\"ref\";)];"
+	          + "(node(bbox);way(bbox););(._;<;);out;"
+		  + "&redirect=no&template=ids.popup", 0.0005, map);
+		  
+          map.addControl(click);
+          click.activate();
+      }
+  </script>
+</head>
+<body onload="init()">
+  <div id="statusline" style="font-size:24pt; font-weight:bold; font-family:sans-serif">No status set yet.</div>
+  <div id="map" class="smallmap"></div>
+
+</body>
+</html>
+
+

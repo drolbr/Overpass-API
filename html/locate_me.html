@@ -1,0 +1,385 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
+  <title>Stadtplan am aktuellen Ort</title>
+  <script src="http://openlayers.org/api/OpenLayers.js"></script>
+  <script src="http://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
+  <script src="http://overpass-api.de/overpass.js"></script>
+  <script type="text/javascript">
+      var lat = 53.86;
+      var lon = 8.44;
+      var zoom = 18;
+      var data_url = "http://overpass-api.de/api/interpreter?data=%28relation%5B%22name%22%3D%22$LOCATION%22%5D%3B%3E%3B%29%3Bout%20skel%3B";
+      var map;
+      
+      var layerBoundaries = null;
+      
+      var customLayers = new Array();
+      
+      ZoomOutOSMFormat = OpenLayers.Class(OpenLayers.Format.OSM, {
+
+          getNodes: function(doc)
+          {
+            var node_list = doc.getElementsByTagName("node");
+            var nodes = {};
+            for (var i = 0; i < node_list.length; i++)
+            {
+              var node = node_list[i];
+              var id = node.getAttribute("id");
+              nodes[id] = {
+                'lat': node.getAttribute("lat"),
+                'lon': node.getAttribute("lon"),
+                'node': node
+              };
+            }
+
+            if (node_list.length == 0)
+              map.zoomOut();
+
+            return nodes;
+          },
+
+          CLASS_NAME: "ZoomOutOSMFormat"
+      });
+
+      function make_auto_zoom_layer(data_url, color, zoom) {
+
+          var styleMap = new OpenLayers.StyleMap({
+              strokeColor: color,
+              strokeOpacity: 0.5,
+              strokeWidth: 6,
+              pointRadius: 10,
+              fillColor: color,
+              fillOpacity: 0.25
+          });
+          var layer = new OpenLayers.Layer.Vector(color, {
+              strategies: [new ZoomLimitedBBOXStrategy(zoom)],
+              protocol: new OpenLayers.Protocol.HTTP({
+                  url: data_url,
+                  format: new ZoomOutOSMFormat()
+              }),
+              styleMap: styleMap,
+              projection: new OpenLayers.Projection("EPSG:4326")
+          });
+
+          layer.events.register("featuresadded", layer, make_features_added_closure());
+
+          return layer;
+      }
+
+      DetectBoundsOSMFormat = OpenLayers.Class(OpenLayers.Format.OSM, {
+
+          min_lat: 180.0,
+          max_lat: -180.0,
+          min_lon: 90.0,
+          max_lon: -90.0,
+          zoom: 0,
+
+          getNodes: function(doc)
+          {
+            var node_list = doc.getElementsByTagName("node");
+            var nodes = {};
+            for (var i = 0; i < node_list.length; i++)
+            {
+              var node = node_list[i];
+              var id = node.getAttribute("id");
+              nodes[id] = {
+                'lat': node.getAttribute("lat"),
+                'lon': node.getAttribute("lon"),
+                'node': node
+              };
+
+              if (nodes[id].lat < this.min_lat)
+                this.min_lat = nodes[id].lat;
+              if (nodes[id].lat > this.max_lat)
+                this.max_lat = nodes[id].lat;
+              if (nodes[id].lon < this.min_lon)
+                this.min_lon = nodes[id].lon;
+              if (nodes[id].lon > this.max_lon)
+                this.max_lon = nodes[id].lon;
+            }
+
+            if (this.min_lat == 180.0)
+            {
+                this.min_lat = 0;
+                this.max_lat = 0;
+            }
+            if (this.min_lon == 90.0)
+            {
+                this.min_lon = 0;
+                this.max_lon = 0;
+            }
+
+            return nodes;
+          },          
+
+          CLASS_NAME: "DetectBoundsOSMFormat"
+      });
+
+      var osm_format = new DetectBoundsOSMFormat();
+
+      function make_bbox_detect_closure() {
+          return function(evt) {
+
+              var lonLat = new OpenLayers.LonLat(
+                  (Number(osm_format.min_lon) + Number(osm_format.max_lon))/2.0,
+                  (Number(osm_format.min_lat) + Number(osm_format.max_lat))/2.0)
+                  .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+              var southwest = new OpenLayers.LonLat(
+                  Number(osm_format.min_lon), Number(osm_format.min_lat))
+                  .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+              var northeast = new OpenLayers.LonLat(
+                  Number(osm_format.max_lon), Number(osm_format.max_lat))
+                  .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+            map.setCenter(lonLat);
+
+            var extent = map.getExtent();
+            extent.extend(southwest);
+            extent.extend(northeast);
+            map.zoomToExtent(extent);
+          };
+      }
+
+     function showMap(position) {
+         //alert(position.coords.latitude + " " + position.coords.longitude); 
+         var lonLat = new OpenLayers.LonLat(position.coords.longitude, position.coords.latitude).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+         var markers = new OpenLayers.Layer.Markers("Geolocation position");
+         map.addLayer(markers);
+         map.setCenter(lonLat, 16);
+         markers.addMarker(new OpenLayers.Marker(lonLat));
+     }
+
+     function init(){
+
+  // Try W3C Geolocation
+  if(navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+      // success
+      alert(position.coords.latitude + " " + position.coords.longitude);
+    }, function(position_error) {
+      // failure
+      alert(position_error.message);
+    }, {
+      // options
+      enableHighAccuracy: true
+    });
+  } else {
+    alert("The W3C Geolocation API isn't availble.");
+  }
+          map = new OpenLayers.Map ("map", {
+          controls:[
+              new OpenLayers.Control.Navigation(),
+              new OpenLayers.Control.LayerSwitcher(),
+              new OpenLayers.Control.Attribution()],
+              maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
+              maxResolution: 156543.0399,
+              numZoomLevels: 19,
+              units: 'm',
+              projection: new OpenLayers.Projection("EPSG:900913"),
+              displayProjection: new OpenLayers.Projection("EPSG:4326")
+          } );
+
+          layerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
+          map.addLayer(layerMapnik);
+          layerCycleMap = new OpenLayers.Layer.OSM.CycleMap("CycleMap");
+          map.addLayer(layerCycleMap);
+
+          var lonLat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+          //Initialise the vector layer using OpenLayers.Format.OSM
+          var styleMap = new OpenLayers.StyleMap({
+              strokeColor: "blue",
+              strokeOpacity: 0.5,
+              strokeWidth: 6,
+              pointRadius: 10,
+              fillColor: "blue",
+              fillOpacity: 0.25
+          });
+
+          map.setCenter(lonLat, zoom);
+          navigator.geolocation.getCurrentPosition(showMap);
+      }
+
+      
+      function zShow(target) {
+          document.getElementById("map").style.zIndex = "-1";
+          document.getElementById("menu_1").style.zIndex = "-1";
+          document.getElementById("menu_2_service").style.zIndex = "-1";
+          document.getElementById("menu_2_shopping").style.zIndex = "-1";
+          document.getElementById("menu_2_food").style.zIndex = "-1";
+          document.getElementById("menu_3_atm").style.zIndex = "-1";
+
+          document.getElementById(target).style.zIndex = "1";
+      }
+      
+      function hideCustomLayers() {
+          for (var i = 0; i < customLayers.length; ++i)
+              map.removeLayer(customLayers[i]);//customLayers[i].display(false);
+          customLayers = new Array();
+      }
+      
+      function showBoundaries() {
+          hideCustomLayers();
+      }
+      
+      function showCustomLayer(query)
+      {
+          hideCustomLayers();
+          var layer = make_auto_zoom_layer("http://overpass-api.de/api/interpreter?data=" + query + "out+skel;", "blue", 11);
+          map.addLayers([layer]);
+          customLayers.push(layer);
+          layer.display(true);
+      }
+      
+      function showQueryLayer(conjunctions)
+      {
+          var query = "(";
+          for (var i = 0; i < conjunctions.length; i++)
+            query = query + "way" + conjunctions[i] + "(bbox);>;node" + conjunctions[i] + "(bbox);";
+          query = query + ");";
+          showCustomLayer(query);
+      }
+      
+      function showWC() {
+          showQueryLayer(["[amenity=toilets]"]);
+      }
+      
+      function showWLAN() {
+          showQueryLayer(["[wifi=yes]"]);
+      }
+      
+      function showATM() {
+          showQueryLayer(["[amenity=atm]", "[atm=yes]"]);
+      }
+      
+      function showSparkasse() {
+          showQueryLayer(["[amenity=atm][name~\"[sS]parkasse\"]", "[atm=yes][name~\"[sS]parkasse\"]"]);
+      }
+      
+      function showPostbank() {
+          showQueryLayer(["[amenity=atm][name~\"Deutsche Bank\"]", "[atm=yes][name~\"Deutsche Bank\"]", "[amenity=atm][name~\"Commerzbank\"]", "[atm=yes][name~\"Commerzbank\"]"]);
+      }
+      
+      function showVolksbank() {
+          showQueryLayer(["[amenity=atm]", "[atm=yes]"]);
+      }
+      
+      function showSparda() {
+          showQueryLayer(["[amenity=atm]", "[atm=yes]"]);
+      }
+      
+      function showGasstation() {
+          showQueryLayer(["[amenity=fuel]"]);
+      }
+      
+      function showFoodsource() {
+          showQueryLayer(["[shop=supermarket]", "[shop=convenience]"]);
+      }
+      
+      function showChemist() {
+          showQueryLayer(["[shop=chemist]"]);
+      }
+      
+      function showPharmacy() {
+          showQueryLayer(["[amenity=pharmacy]"]);
+      }
+      
+      function showKiosk() {
+          showQueryLayer(["[shop=kiosk]", "[shop=newsagent]"]);
+      }
+      
+      function showBookstore() {
+          showQueryLayer(["[shop=books]"]);
+      }
+      
+      function showFlowers() {
+          showQueryLayer(["[shop=florist]"]);
+      }
+      
+      function showBaker() {
+          showQueryLayer(["[shop=bakery]"]);
+      }
+      
+      function showCafe() {
+          showQueryLayer(["[amenity=cafe]"]);
+      }
+      
+      function showIceCafe() {
+          showQueryLayer(["[cuisine=ice_cream]"]);
+      }
+      
+      function showRestaurant() {
+          showQueryLayer(["[amenity=restaurant]"]);
+      }
+      
+      function showPub() {
+          showQueryLayer(["[amenity=pub]"]);
+      }
+      
+      function showFastfood() {
+          showQueryLayer(["[amenity=fast_food]"]);
+      }
+      
+  </script>
+</head>
+<body onload="init()">
+  <div id="title" style="min-height:10%; font-family:sans-serif; font-size:48pt"><strong>Eigener Standort</strong></div>
+
+  <div id="menu" style="min-height:10%; font-family:sans-serif; font-size:48pt; position:absolute; top:90%; text-align:center"><a href="#" onclick="zShow(&quot;map&quot;);map.zoomIn();">[+]</a> - <a href="#" onclick="zShow(&quot;map&quot;);hideCustomLayers();map.zoomOut();">[-]</a> - --O - <a href="#" onclick="zShow(&quot;menu_1&quot;)">POI</a></div>
+
+  <div id="map" class="smallmap" style="zoom:200%; -moz-transform:scale(2.0); -moz-transform-origin:0 0; -webkit-transform:scale(2.0); -webkit-transform-origin:0 0; position:relative; top:0%; height:40%; width:50%; z-index:1"></div>
+  
+  <div id="menu_1" style="font-size:48pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white">
+    <a href="#" onclick="zShow(&quot;menu_2_service&quot;)">Service</a><br/><br/>
+    <a href="#" onclick="zShow(&quot;menu_2_shopping&quot;)">Einkaufen</a><br/><br/>
+    <a href="#" onclick="zShow(&quot;menu_2_food&quot;)">Essen</a>
+  </div>
+
+  <div id="menu_2_service" style="font-size:48pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white">
+    <a href="#" onclick="zShow(&quot;map&quot;);showWC()">WC</a><br/><br/>
+    <a href="#" onclick="zShow(&quot;map&quot;);showWLAN()">WLAN</a><br/><br/>
+    <a href="#" onclick="zShow(&quot;menu_3_atm&quot;)">Geldautomat</a><br/><br/>
+    <a href="#" onclick="zShow(&quot;map&quot;);showATM()">Briefkasten</a><br/><br/>
+    <a href="#" onclick="zShow(&quot;map&quot;);showGasstation()">Tankstelle</a>
+  </div>
+
+  <div id="menu_2_shopping" style="font-size:48pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white">
+    <a href="#" onclick="zShow(&quot;map&quot;);showFoodsource()">Lebensmittel</a><br/>
+    <a href="#" onclick="zShow(&quot;map&quot;);showChemist()" style="position:relative; top:24pt">Drogerie</a><br/>
+    <a href="#" onclick="zShow(&quot;map&quot;);showPharmacy()" style="position:relative; top:48pt">Apotheke</a><br/>
+    <a href="#" onclick="zShow(&quot;map&quot;);showKiosk()" style="position:relative; top:72pt">Zeitschriften</a><br/>
+    <a href="#" onclick="zShow(&quot;map&quot;);showBookstore()" style="position:relative; top:96pt">Bücher</a><br/>
+    <a href="#" onclick="zShow(&quot;map&quot;);showFlowers()" style="position:relative; top:120pt">Blumen</a>
+  </div>
+
+  <div id="menu_2_food" style="font-size:48pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white">
+    <a href="#" onclick="zShow(&quot;map&quot;);showBaker()">Bäcker</a><br/>
+    <a href="#" onclick="zShow(&quot;map&quot;);showCafe()">Café</a><br/>
+    <a href="#" onclick="zShow(&quot;map&quot;);showIceCafe()">Eiscafé</a><br/>
+    <a href="#" onclick="zShow(&quot;map&quot;);showRestaurant()">Restaurant</a><br/>
+    <a href="#" onclick="zShow(&quot;map&quot;);showPub()">Kneipe</a><br/>
+    <a href="#" onclick="zShow(&quot;map&quot;);showFastfood()">Fast Food</a>
+  </div>
+
+  <div id="menu_3_atm" style="font-size:48pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white">
+    <a href="#" onclick="zShow(&quot;map&quot;);showATM()">alle</a><br/><br/>
+    <a href="#" onclick="zShow(&quot;map&quot;);showSparkasse()">Sparkasse</a><br/><br/>
+    <a href="#" onclick="zShow(&quot;map&quot;);showPostbank()">Cash Group</a><br/><br/>
+    <a href="#" onclick="zShow(&quot;map&quot;);showVolksbank()">Volksbank</a><br/><br/>
+    <a href="#" onclick="zShow(&quot;map&quot;);showSparda()">Cash Pool</a>
+  </div>
+
+  <!--
+    Sparkasse
+    Suche
+    Erläuterung
+    Knöpfe größer, andere Beschriftung (POI)?
+    Symbole als Marker
+    GPS-Lokalisierung
+  -->
+  
+</body>
+</html>
