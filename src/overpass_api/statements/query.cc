@@ -223,47 +223,48 @@ vector< uint32 > Query_Statement::collect_ids
       sort(new_ids.begin(), new_ids.end());    
       rman.health_check(*this);
     }
-  }
 
-  // Handle Key-Regular-Expression-Value pairs
-  vector< pair< string, Regular_Expression* > >::const_iterator krit = key_regexes.begin();
-  if (key_values.empty() && (keys.empty() || check_keys_late) && krit != key_regexes.end())
-  {
-    set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
-    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
-        it2(tags_db.range_begin
-          (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
-	   Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
-        !(it2 == tags_db.range_end()); ++it2)
-    {
-      if (krit->second->matches(it2.index().value))
-        new_ids.push_back(it2.object().val());
-    }
-
-    sort(new_ids.begin(), new_ids.end());
-    rman.health_check(*this);
-    ++krit;
-  }
-  
-  for (; krit != key_regexes.end(); ++krit)
-  {
-    vector< uint32 > old_ids;
-    old_ids.swap(new_ids);
+    // Handle Key-Regular-Expression-Value pairs
+    vector< pair< string, Regular_Expression* > >::const_iterator krit = key_regexes.begin();
+    if (key_values.empty() && (keys.empty() || check_keys_late) && krit != key_regexes.end())
     {
       set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
       for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
-	  it2(tags_db.range_begin
-	  (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
-	   Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
-	  !(it2 == tags_db.range_end()); ++it2)
+          it2(tags_db.range_begin
+            (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
+	     Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
+          !(it2 == tags_db.range_end()); ++it2)
       {
-	if (binary_search(old_ids.begin(), old_ids.end(), it2.object().val())
-	    && krit->second->matches(it2.index().value))
-	  new_ids.push_back(it2.object().val());
+        if (krit->second->matches(it2.index().value))
+          new_ids.push_back(it2.object().val());
       }
+
+      sort(new_ids.begin(), new_ids.end());
+      rman.health_check(*this);
+      ++krit;
     }
-    sort(new_ids.begin(), new_ids.end());    
-    rman.health_check(*this);
+  
+    for (; krit != key_regexes.end(); ++krit)
+    {
+      vector< uint32 > old_ids;
+      old_ids.swap(new_ids);
+      {
+        set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
+        for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
+	    it2(tags_db.range_begin
+	    (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
+	     Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
+	    !(it2 == tags_db.range_end()); ++it2)
+        {
+	  if (binary_search(old_ids.begin(), old_ids.end(), it2.object().val())
+	      && krit->second->matches(it2.index().value))
+	    new_ids.push_back(it2.object().val());
+        }
+      }
+      sort(new_ids.begin(), new_ids.end());    
+      rman.health_check(*this);
+    }
+
   }
 
   return new_ids;
@@ -388,22 +389,25 @@ void clear_empty_indices
 
 
 void filter_ids_by_tags
-  (const vector< string >& keys,
+  (const map< string, vector< Regular_Expression* > >& keys,
    const Block_Backend< Tag_Index_Local, Uint32_Index >& items_db,
    Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator& tag_it,
    uint32 coarse_index,
    vector< uint32 >& new_ids)
 {
   vector< uint32 > old_ids;
-  string last_key;  
+  string last_key, last_value;  
   bool relevant = false;
-  vector< string >::const_iterator key_it = keys.begin();
+  bool valid = false;
+  map< string, vector< Regular_Expression* > >::const_iterator key_it = keys.begin();
   
   while ((!(tag_it == items_db.range_end())) &&
       (((tag_it.index().index) & 0xffffff00) == coarse_index))
   {
     if (tag_it.index().key != last_key)
-    {   
+    {
+      last_value = "";
+      
       if (relevant)
         ++key_it;
       relevant = false;
@@ -412,9 +416,9 @@ void filter_ids_by_tags
 	break;
       
       last_key = tag_it.index().key;
-      if (last_key >= *key_it)
+      if (last_key >= key_it->first)
       {
-	if (last_key > *key_it)
+	if (last_key > key_it->first)
           // There are keys missing for all objects with this index. Drop all.
 	  break;
 
@@ -427,7 +431,16 @@ void filter_ids_by_tags
     
     if (relevant)
     {
-      if (binary_search(old_ids.begin(), old_ids.end(), tag_it.object().val()))
+      if (tag_it.index().value != last_value)
+      {
+	valid = true;
+	for (vector< Regular_Expression* >::const_iterator rit = key_it->second.begin();
+	    rit != key_it->second.end(); ++rit)
+	  valid &= (*rit)->matches(tag_it.index().value);
+	last_value = tag_it.index().value;
+      }
+      
+      if (valid && binary_search(old_ids.begin(), old_ids.end(), tag_it.object().val()))
         new_ids.push_back(tag_it.object().val());
     }
 
@@ -449,7 +462,7 @@ void filter_ids_by_tags
 
 void filter_ids_by_tags
   (map< uint32, vector< uint32 > >& ids_by_coarse,
-   const vector< string >& keys,
+   const map< string, vector< Regular_Expression* > >& keys,
    const Block_Backend< Tag_Index_Local, Uint32_Index >& items_db,
    Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator& tag_it,
    uint32 coarse_index)
@@ -474,10 +487,13 @@ void Query_Statement::filter_by_tags
     (map< TIndex, vector< TObject > >& items,
      const File_Properties& file_prop, Resource_Manager& rman, Transaction& transaction)
 {
-  if (keys.empty())
-    return;
-  sort(keys.begin(), keys.end());
-  keys.erase(unique(keys.begin(), keys.end()), keys.end());
+  map< string, vector< Regular_Expression* > > key_union;
+  for (vector< string >::const_iterator it = keys.begin(); it != keys.end();
+      ++it)
+    key_union[*it];
+  for (vector< pair< string, Regular_Expression* > >::const_iterator
+      it = key_regexes.begin(); it != key_regexes.end(); ++it)
+    key_union[it->first].push_back(it->second);
   
   //generate set of relevant coarse indices
   set< TIndex > coarse_indices;
@@ -510,7 +526,7 @@ void Query_Statement::filter_by_tags
     
     sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
     
-    filter_ids_by_tags(ids_by_coarse, keys, items_db, tag_it, it->val());
+    filter_ids_by_tags(ids_by_coarse, key_union, items_db, tag_it, it->val());
     
     while ((item_it != items.end()) &&
         ((item_it->first.val() & 0x7fffff00) == it->val()))
@@ -556,7 +572,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     vector< uint32 > ids;
     bool invert_ids = false;
     if ((!keys.empty() && !check_keys_late)
-        || !key_values.empty() || !key_regexes.empty())
+        || !key_values.empty() || (!key_regexes.empty() && !check_keys_late))
     {
       collect_ids(*file_prop, rman, check_keys_late).swap(ids);
       if (!key_nvalues.empty() || !key_nregexes.empty())

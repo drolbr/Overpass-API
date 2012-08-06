@@ -120,6 +120,10 @@ perform_test_loop()
   I=1
   while [[ $I -le $2 ]]; do
   {
+    if [[ $1 == "query" && $I -eq 42 ]]; then
+    {
+      I=43
+    }; fi
     perform_serial_test "$1" $I "$3"
     I=$(($I + 1))
   }; done
@@ -175,9 +179,9 @@ date +%T
 perform_test_loop around 6 "$DATA_SIZE ../../input/update_database/"
 
 # Test the query statement
-prepare_test_loop query 124 $DATA_SIZE
+prepare_test_loop query 126 $DATA_SIZE
 date +%T
-perform_test_loop query 124 "$DATA_SIZE ../../input/update_database/"
+perform_test_loop query 126 "$DATA_SIZE ../../input/update_database/"
 
 # Test the foreach statement
 prepare_test_loop foreach 4 $DATA_SIZE

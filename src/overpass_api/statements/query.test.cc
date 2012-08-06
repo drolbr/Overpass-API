@@ -483,8 +483,8 @@ string to_string(T d)
 
 
 void perform_multi_query_with_bbox
-    (string type, string key1, string key2, string value2,
-     bool regex2, bool straight2,
+    (string type, string key1, string value1, string key2, string value2,
+     int regex, bool straight2,
      double south, double north, double west, double east, string db_dir)
 {
   try
@@ -495,9 +495,17 @@ void perform_multi_query_with_bbox
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
       SProxy< Has_Kv_Statement > stmt2;
-      stmt1.stmt().add_statement(&stmt2("k", key1).stmt(), "");
+      if (value1 == "")
+        stmt1.stmt().add_statement(&stmt2("k", key1).stmt(), "");
+      else
+      {
+        if (regex & 0x1)
+          stmt1.stmt().add_statement(&stmt2("k", key2)("regv", value1).stmt(), "");
+        else
+          stmt1.stmt().add_statement(&stmt2("k", key2)("v", value1).stmt(), "");
+      }
       SProxy< Has_Kv_Statement > stmt4;
-      if (regex2)
+      if (regex & 0x2)
         stmt1.stmt().add_statement(&stmt4("k", key2)("regv", value2)
 	    ("modv", straight2 ? "" : "not").stmt(), "");
       else
@@ -1160,25 +1168,31 @@ int main(int argc, char* args[])
     
   // Test combination of keys-only with several other elements
   if ((test_to_execute == "") || (test_to_execute == "118"))
-    perform_multi_query_with_bbox("node", "node_key_5", "node_key_7", "", false, true,
+    perform_multi_query_with_bbox("node", "node_key_5", "", "node_key_7", "", 0, true,
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "119"))
-    perform_multi_query_with_bbox("node", "node_key_7", "node_key_7", "", false, true,
+    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_7", "", 0, true,
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "120"))
-    perform_multi_query_with_bbox("node", "node_key_7", "node_key_5", "", false, true,
+    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_5", "", 0, true,
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "121"))
-    perform_multi_query_with_bbox("node", "node_key_7", "node_key_5", ".", true, true,
+    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_5", ".", 2, true,
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "122"))
-    perform_multi_query_with_bbox("node", "node_key_7", "node_key_7", "node_value_0", false, false,
+    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_7", "node_value_0", 0, false,
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "123"))
-    perform_multi_query_with_bbox("node", "node_key_7", "node_key_7", "node_value_0", true, false,
+    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_7", "node_value_0", 2, false,
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "124"))
-    perform_multi_query_with_bbox("node", "node_key_7", "node_key_11", "node_value", true, false,
+    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_11", "node_value", 2, false,
+				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "125"))
+    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_7", "value_0", 2, true,
+				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "126"))
+    perform_multi_query_with_bbox("node", "node_key_7", "node_....._0", "node_key_7", "value_", 3, true,
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
     
   cout<<"</osm>\n";
