@@ -152,6 +152,86 @@
          markers.addMarker(new OpenLayers.Marker(lonLat));
      }
 
+     
+      function zShow(target) {
+          document.getElementById("map").style.zIndex = "-1";
+          document.getElementById("menu_1").style.zIndex = "-1";
+          document.getElementById("menu_search").style.zIndex = "-1";
+          document.getElementById("element_details").style.zIndex = "-1";
+          document.getElementById("menu_2_service").style.zIndex = "-1";
+          document.getElementById("menu_2_shopping").style.zIndex = "-1";
+          document.getElementById("menu_2_food").style.zIndex = "-1";
+          document.getElementById("menu_3_atm").style.zIndex = "-1";
+
+          document.getElementById(target).style.zIndex = "1";
+      }
+      
+     
+     Click = OpenLayers.Class(OpenLayers.Control, {
+	
+        genericUrl: "",
+	tolerance: 0.0,
+	map: "",
+      
+	defaultHandlerOptions: {
+	  'single': true,
+	  'double': false,
+	  'pixelTolerance': 0,
+	  'stopSingle': false,
+	  'stopDouble': false
+	},
+	
+	initialize: function(url, tolerance, map) {
+	  this.genericUrl = url;
+	  this.tolerance = tolerance;
+	  this.map = map;
+	
+	  this.handlerOptions = OpenLayers.Util.extend(
+	    {}, this.defaultHandlerOptions
+	  );
+	  OpenLayers.Control.prototype.initialize.apply(
+	    this, arguments
+	  ); 
+	  this.handler = new OpenLayers.Handler.Click(
+	    this, {
+	      'click': this.trigger
+	    }, this.handlerOptions
+	  );
+	}, 
+	
+	trigger: function(evt) {
+	  var lonlat = map.getLonLatFromPixel(evt.xy)
+	      .transform(new OpenLayers.Projection("EPSG:900913"),
+		         new OpenLayers.Projection("EPSG:4326"));
+		    
+	  zShow("element_details");
+ 	  document.getElementById("element_details").src = "http://overpass-api.de/api/interpreter?data=[out:custom];node(50.7,7.1,50.75,7.15);out 1;";
+	      
+	  /*var popup = new OpenLayers.Popup("location_info",
+                   new OpenLayers.LonLat(lonlat.lon, lonlat.lat)
+		       .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913")),
+		   null,
+                   "Loading ...",
+	           true);
+	  
+	  popup.contentSize = new OpenLayers.Size(400, 400);
+	  popup.closeOnMove = true;
+	  map.addPopup(popup);
+	  
+	  var request = OpenLayers.Request.GET({
+	      url: this.genericUrl + "&bbox="
+	          + (lonlat.lon - this.tolerance) + "," + (lonlat.lat - this.tolerance) + ","
+	          + (lonlat.lon + this.tolerance) + "," + (lonlat.lat + this.tolerance),
+	      async: false
+          });
+	  
+	  map.removePopup(popup);
+	  popup.contentHTML = request.responseText;
+	  map.addPopup(popup);*/
+	}
+	
+      });
+
      function init(){
 
   // Try W3C Geolocation
@@ -201,19 +281,12 @@
 
           map.setCenter(lonLat, zoom);
           navigator.geolocation.getCurrentPosition(showMap);
+          
+          var click = new Click("", 0.0003, map);
+          map.addControl(click);
+          click.activate();
       }
 
-      
-      function zShow(target) {
-          document.getElementById("map").style.zIndex = "-1";
-          document.getElementById("menu_1").style.zIndex = "-1";
-          document.getElementById("menu_2_service").style.zIndex = "-1";
-          document.getElementById("menu_2_shopping").style.zIndex = "-1";
-          document.getElementById("menu_2_food").style.zIndex = "-1";
-          document.getElementById("menu_3_atm").style.zIndex = "-1";
-
-          document.getElementById(target).style.zIndex = "1";
-      }
       
       function hideCustomLayers() {
           for (var i = 0; i < customLayers.length; ++i)
@@ -242,6 +315,11 @@
           query = query + ");";
           showCustomLayer(query);
       }
+
+      function showNameQueryLayer(query_value)
+      {
+          showCustomLayer("(node[name~\"" + query_value + "\"](bbox);way[name~\"" + query_value + "\"](bbox);>;rel[name~\"" + query_value + "\"](bbox);>;);");
+      }
       
       function showWC() {
           showQueryLayer(["[amenity=toilets]"]);
@@ -260,15 +338,15 @@
       }
       
       function showPostbank() {
-          showQueryLayer(["[amenity=atm][name~\"Deutsche Bank\"]", "[atm=yes][name~\"Deutsche Bank\"]", "[amenity=atm][name~\"Commerzbank\"]", "[atm=yes][name~\"Commerzbank\"]"]);
+          showQueryLayer(["[amenity=atm][name~\"Deutsche Bank\"]", "[atm=yes][name~\"Deutsche Bank\"]", "[amenity=atm][name~\"Commerzbank\"]", "[atm=yes][name~\"Commerzbank\"]", "[amenity=atm][name~\"Postbank\"]", "[atm=yes][name~\"Postbank\"]"]);
       }
       
       function showVolksbank() {
-          showQueryLayer(["[amenity=atm]", "[atm=yes]"]);
+          showQueryLayer(["[amenity=atm][name~'[vV]olksbank']", "[atm=yes][name~'[vV]olksbank']", "[amenity=atm][name~'Kölner Bank']", "[atm=yes][name~'Kölner Bank']"]);
       }
       
       function showSparda() {
-          showQueryLayer(["[amenity=atm]", "[atm=yes]"]);
+          showQueryLayer(["[amenity=atm][name~'Sparda']", "[atm=yes][name~'Sparda']", "[amenity=atm][name~'Targo']", "[atm=yes][name~'Targo']", "[amenity=atm][name~'Santander']", "[atm=yes][name~'Santander']", "[amenity=atm][name~'BB ?Bank']", "[atm=yes][name~'BB ?Bank']", "[amenity=atm][name~'National-Bank']", "[atm=yes][name~'National-Bank']"]);
       }
       
       function showGasstation() {
@@ -328,7 +406,7 @@
 <body onload="init()">
   <div id="title" style="min-height:10%; font-family:sans-serif; font-size:48pt"><strong>Eigener Standort</strong></div>
 
-  <div id="menu" style="min-height:10%; font-family:sans-serif; font-size:48pt; position:absolute; top:90%; text-align:center"><a href="#" onclick="zShow(&quot;map&quot;);map.zoomIn();">[+]</a> - <a href="#" onclick="zShow(&quot;map&quot;);hideCustomLayers();map.zoomOut();">[-]</a> - --O - <a href="#" onclick="zShow(&quot;menu_1&quot;)">POI</a></div>
+  <div id="menu" style="min-height:10%; font-family:sans-serif; font-size:48pt; position:absolute; top:90%; text-align:center"><a href="#" onclick="zShow(&quot;map&quot;);map.zoomIn();">[+]</a> - <a href="#" onclick="zShow(&quot;map&quot;);hideCustomLayers();map.zoomOut();">[-]</a> - <a href="#" onclick="zShow(&quot;menu_search&quot;)">--O</a> - <a href="#" onclick="zShow(&quot;menu_1&quot;)">POI</a></div>
 
   <div id="map" class="smallmap" style="zoom:200%; -moz-transform:scale(2.0); -moz-transform-origin:0 0; -webkit-transform:scale(2.0); -webkit-transform-origin:0 0; position:relative; top:0%; height:40%; width:50%; z-index:1"></div>
   
@@ -337,6 +415,17 @@
     <a href="#" onclick="zShow(&quot;menu_2_shopping&quot;)">Einkaufen</a><br/><br/>
     <a href="#" onclick="zShow(&quot;menu_2_food&quot;)">Essen</a>
   </div>
+
+  <div id="menu_search" style="font-size:48pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white">
+    <form action="" accept-charset="UTF-8">
+      <input type="text" id="input_search"/>
+      <input type="button" value="Suchen" onclick="zShow(&quot;map&quot;);showNameQueryLayer(document.getElementById(&quot;input_search&quot;).value)"/>
+    </form>
+  </div>
+  
+  <iframe id="element_details" style="font-size:24pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white" src="http://overpass-api.de/api/interpreter?data=[out:custom];out;">
+    &nbsp;
+  </iframe>
 
   <div id="menu_2_service" style="font-size:48pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white">
     <a href="#" onclick="zShow(&quot;map&quot;);showWC()">WC</a><br/><br/>
@@ -373,12 +462,11 @@
   </div>
 
   <!--
-    Sparkasse
-    Suche
-    Erläuterung
+    Erläuterung-Popup
     Knöpfe größer, andere Beschriftung (POI)?
     Symbole als Marker
     GPS-Lokalisierung
+    OpenLayers-Panning
   -->
   
 </body>
