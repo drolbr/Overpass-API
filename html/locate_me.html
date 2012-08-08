@@ -9,8 +9,8 @@
       var lat = 53.86;
       var lon = 8.44;
       var zoom = 18;
-      var data_url = "http://overpass-api.de/api/interpreter?data=%28relation%5B%22name%22%3D%22$LOCATION%22%5D%3B%3E%3B%29%3Bout%20skel%3B";
       var map;
+      var current_query = "";
       
       var layerBoundaries = null;
       
@@ -204,30 +204,41 @@
 	      .transform(new OpenLayers.Projection("EPSG:900913"),
 		         new OpenLayers.Projection("EPSG:4326"));
 		    
+          alert(lonlat.lat + " " + lonlat.lon);
 	  zShow("element_details");
- 	  document.getElementById("element_details").src = "http://overpass-api.de/api/interpreter?data=[out:custom];node(50.7,7.1,50.75,7.15);out 1;";
-	      
-	  /*var popup = new OpenLayers.Popup("location_info",
-                   new OpenLayers.LonLat(lonlat.lon, lonlat.lat)
-		       .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913")),
-		   null,
-                   "Loading ...",
-	           true);
-	  
-	  popup.contentSize = new OpenLayers.Size(400, 400);
-	  popup.closeOnMove = true;
-	  map.addPopup(popup);
-	  
-	  var request = OpenLayers.Request.GET({
-	      url: this.genericUrl + "&bbox="
-	          + (lonlat.lon - this.tolerance) + "," + (lonlat.lat - this.tolerance) + ","
-	          + (lonlat.lon + this.tolerance) + "," + (lonlat.lat + this.tolerance),
-	      async: false
+ 	  /*document.getElementById("element_details").src = this.genericUrl + current_query + "out;" + "&bbox="
+              + (lonlat.lon - this.tolerance * map.resolution) + "," + (lonlat.lat - this.tolerance * map.resolution) + ","
+              + (lonlat.lon + this.tolerance * map.resolution) + "," + (lonlat.lat + this.tolerance * map.resolution);
+*/
+          var request = OpenLayers.Request.GET({
+              url: this.genericUrl + current_query + "out;&bbox="
+                  + (lonlat.lon - this.tolerance) + "," + (lonlat.lat - this.tolerance) + ","
+                  + (lonlat.lon + this.tolerance) + "," + (lonlat.lat + this.tolerance),
+              async: false
           });
-	  
-	  map.removePopup(popup);
-	  popup.contentHTML = request.responseText;
-	  map.addPopup(popup);*/
+
+          alert(request.responseText);
+          var result = JSON.parse(request.responseText);
+          var target_div = document.getElementById("element_details");
+          while (target_div.hasChildNodes())
+            target_div.removeChild(target_div.firstChild);
+          for (var i = 0; i < result.elements.length; i++)
+          {
+            if (result.elements[i].tags && result.elements[i].tags.name)
+            {
+              alert(result.elements[i].tags.name);
+              var newElem = document.createElement("strong");
+              newElem.appendChild(document.createTextNode(result.elements[i].tags.name));
+              target_div.appendChild(newElem);
+              target_div.appendChild(document.createElement("br"));
+              for (var key in result.elements[i].tags)
+              {
+                target_div.appendChild(document.createTextNode(key + " = " + result.elements[i].tags[key]));
+                target_div.appendChild(document.createElement("br"));
+              }
+              target_div.appendChild(document.createElement("br"));
+            }
+          }
 	}
 	
       });
@@ -282,7 +293,7 @@
           map.setCenter(lonLat, zoom);
           navigator.geolocation.getCurrentPosition(showMap);
           
-          var click = new Click("", 0.0003, map);
+          var click = new Click("http://overpass-api.de/api/interpreter?data=[out:json];", 0.001, map);
           map.addControl(click);
           click.activate();
       }
@@ -314,6 +325,7 @@
             query = query + "way" + conjunctions[i] + "(bbox);>;node" + conjunctions[i] + "(bbox);";
           query = query + ");";
           showCustomLayer(query);
+          current_query = query;
       }
 
       function showNameQueryLayer(query_value)
@@ -408,24 +420,28 @@
 
   <div id="menu" style="min-height:10%; font-family:sans-serif; font-size:48pt; position:absolute; top:90%; text-align:center"><a href="#" onclick="zShow(&quot;map&quot;);map.zoomIn();">[+]</a> - <a href="#" onclick="zShow(&quot;map&quot;);hideCustomLayers();map.zoomOut();">[-]</a> - <a href="#" onclick="zShow(&quot;menu_search&quot;)">--O</a> - <a href="#" onclick="zShow(&quot;menu_1&quot;)">POI</a></div>
 
-  <div id="map" class="smallmap" style="zoom:200%; -moz-transform:scale(2.0); -moz-transform-origin:0 0; -webkit-transform:scale(2.0); -webkit-transform-origin:0 0; position:relative; top:0%; height:40%; width:50%; z-index:1"></div>
+<!--  <div id="map" class="smallmap" style="position:absolute; zoom:200%; -moz-transform:scale(2.0); -webkit-transform:scale(2.0); top:30%; left:25%; height:40%; width:50%; z-index:1"></div> -->
+  <div id="map" class="smallmap" style="position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:1"></div>
   
-  <div id="menu_1" style="font-size:48pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white">
+  <div id="menu_1" style="font-size:48pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; background-color:white">
     <a href="#" onclick="zShow(&quot;menu_2_service&quot;)">Service</a><br/><br/>
     <a href="#" onclick="zShow(&quot;menu_2_shopping&quot;)">Einkaufen</a><br/><br/>
     <a href="#" onclick="zShow(&quot;menu_2_food&quot;)">Essen</a>
   </div>
 
-  <div id="menu_search" style="font-size:48pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white">
+  <div id="menu_search" style="font-size:48pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; background-color:white">
     <form action="" accept-charset="UTF-8">
       <input type="text" id="input_search"/>
       <input type="button" value="Suchen" onclick="zShow(&quot;map&quot;);showNameQueryLayer(document.getElementById(&quot;input_search&quot;).value)"/>
     </form>
   </div>
   
-  <iframe id="element_details" style="font-size:24pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white" src="http://overpass-api.de/api/interpreter?data=[out:custom];out;">
+  <div id="element_details" style="font-size:24pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; overflow:scroll; background-color:white">
     &nbsp;
-  </iframe>
+  </div>
+<!--  <iframe id="element_details" style="font-size:24pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white" src="http://overpass-api.de/api/interpreter?data=[out:custom];out;">
+    &nbsp;
+  </iframe> -->
 
   <div id="menu_2_service" style="font-size:48pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white">
     <a href="#" onclick="zShow(&quot;map&quot;);showWC()">WC</a><br/><br/>
@@ -462,11 +478,13 @@
   </div>
 
   <!--
-    Erläuterung-Popup
+    Karte wieder anzeigen
+    Attribution versetzen
     Knöpfe größer, andere Beschriftung (POI)?
     Symbole als Marker
     GPS-Lokalisierung
     OpenLayers-Panning
+    editierbar
   -->
   
 </body>
