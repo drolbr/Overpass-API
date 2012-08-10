@@ -1,6 +1,7 @@
 <html>
 <head>
-  <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"/>
+  <meta name="HandheldFriendly" content="true"/>
   <title>Stadtplan am aktuellen Ort</title>
   <script src="http://openlayers.org/api/OpenLayers.js"></script>
   <script src="http://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
@@ -15,6 +16,14 @@
       var layerBoundaries = null;
       
       var customLayers = new Array();
+
+      function set_status_text(status_text)
+      {
+        var target_div = document.getElementById("status_text");
+        while (target_div.hasChildNodes())
+          target_div.removeChild(target_div.firstChild);
+        target_div.appendChild(document.createTextNode(status_text));
+      }
       
       ZoomOutOSMFormat = OpenLayers.Class(OpenLayers.Format.OSM, {
 
@@ -144,7 +153,7 @@
       }
 
      function showMap(position) {
-         //alert(position.coords.latitude + " " + position.coords.longitude); 
+         set_status_text("Landkarte um " + position.coords.latitude + "° Nord, " + position.coords.longitude + "° Ost"); 
          var lonLat = new OpenLayers.LonLat(position.coords.longitude, position.coords.latitude).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
          var markers = new OpenLayers.Layer.Markers("Geolocation position");
          map.addLayer(markers);
@@ -204,12 +213,9 @@
 	      .transform(new OpenLayers.Projection("EPSG:900913"),
 		         new OpenLayers.Projection("EPSG:4326"));
 		    
-          alert(lonlat.lat + " " + lonlat.lon);
+          set_status_text("Details bei " + lonlat.lat + "° Nord, " + lonlat.lon + "° Ost");
 	  zShow("element_details");
- 	  /*document.getElementById("element_details").src = this.genericUrl + current_query + "out;" + "&bbox="
-              + (lonlat.lon - this.tolerance * map.resolution) + "," + (lonlat.lat - this.tolerance * map.resolution) + ","
-              + (lonlat.lon + this.tolerance * map.resolution) + "," + (lonlat.lat + this.tolerance * map.resolution);
-*/
+
           var request = OpenLayers.Request.GET({
               url: this.genericUrl + current_query + "out;&bbox="
                   + (lonlat.lon - this.tolerance) + "," + (lonlat.lat - this.tolerance) + ","
@@ -217,20 +223,30 @@
               async: false
           });
 
-          alert(request.responseText);
           var result = JSON.parse(request.responseText);
           var target_div = document.getElementById("element_details");
           while (target_div.hasChildNodes())
             target_div.removeChild(target_div.firstChild);
+
+          var newElem = document.createElement("a");
+          newElem.appendChild(document.createTextNode("zurück zur Karte"));
+          newElem.href = "#";
+          newElem.setAttribute("onclick", "zShow(\"map\")");
+          target_div.appendChild(newElem);
+          target_div.appendChild(document.createElement("br"));
+          target_div.appendChild(document.createElement("br"));
+
           for (var i = 0; i < result.elements.length; i++)
           {
-            if (result.elements[i].tags && result.elements[i].tags.name)
+            if (result.elements[i].tags)
             {
-              alert(result.elements[i].tags.name);
-              var newElem = document.createElement("strong");
-              newElem.appendChild(document.createTextNode(result.elements[i].tags.name));
-              target_div.appendChild(newElem);
-              target_div.appendChild(document.createElement("br"));
+              if (result.elements[i].tags.name)
+              {
+                var newElem = document.createElement("strong");
+                newElem.appendChild(document.createTextNode(result.elements[i].tags.name));
+                target_div.appendChild(newElem);
+                target_div.appendChild(document.createElement("br"));
+              }
               for (var key in result.elements[i].tags)
               {
                 target_div.appendChild(document.createTextNode(key + " = " + result.elements[i].tags[key]));
@@ -249,7 +265,6 @@
   if(navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function(position) {
       // success
-      alert(position.coords.latitude + " " + position.coords.longitude);
     }, function(position_error) {
       // failure
       alert(position_error.message);
@@ -325,12 +340,18 @@
             query = query + "way" + conjunctions[i] + "(bbox);>;node" + conjunctions[i] + "(bbox);";
           query = query + ");";
           showCustomLayer(query);
-          current_query = query;
+
+          current_query = "(";
+          for (var i = 0; i < conjunctions.length; i++)
+            current_query = current_query + "way" + conjunctions[i] + "(bbox);node" + conjunctions[i] + "(bbox);";
+          current_query = current_query + ");";
       }
 
       function showNameQueryLayer(query_value)
       {
+          set_status_text("Suche nach " + query_value);
           showCustomLayer("(node[name~\"" + query_value + "\"](bbox);way[name~\"" + query_value + "\"](bbox);>;rel[name~\"" + query_value + "\"](bbox);>;);");
+          current_query = "(node[name~\"" + query_value + "\"](bbox);way[name~\"" + query_value + "\"](bbox);rel[name~\"" + query_value + "\"](bbox););";
       }
       
       function showWC() {
@@ -361,6 +382,10 @@
           showQueryLayer(["[amenity=atm][name~'Sparda']", "[atm=yes][name~'Sparda']", "[amenity=atm][name~'Targo']", "[atm=yes][name~'Targo']", "[amenity=atm][name~'Santander']", "[atm=yes][name~'Santander']", "[amenity=atm][name~'BB ?Bank']", "[atm=yes][name~'BB ?Bank']", "[amenity=atm][name~'National-Bank']", "[atm=yes][name~'National-Bank']"]);
       }
       
+      function showPostbox() {
+          showQueryLayer(["[amenity=post_box]"]);
+      }
+
       function showGasstation() {
           showQueryLayer(["[amenity=fuel]"]);
       }
@@ -416,42 +441,38 @@
   </script>
 </head>
 <body onload="init()">
-  <div id="title" style="min-height:10%; font-family:sans-serif; font-size:48pt"><strong>Eigener Standort</strong></div>
+  <div id="status_text" style="min-height:10%; font-family:sans-serif; font-size:16pt"><strong>Eigener Standort</strong></div>
 
-  <div id="menu" style="min-height:10%; font-family:sans-serif; font-size:48pt; position:absolute; top:90%; text-align:center"><a href="#" onclick="zShow(&quot;map&quot;);map.zoomIn();">[+]</a> - <a href="#" onclick="zShow(&quot;map&quot;);hideCustomLayers();map.zoomOut();">[-]</a> - <a href="#" onclick="zShow(&quot;menu_search&quot;)">--O</a> - <a href="#" onclick="zShow(&quot;menu_1&quot;)">POI</a></div>
+  <div id="menu" style="min-height:10%; font-family:sans-serif; font-size:16pt; position:absolute; top:90%; text-align:center"><a href="#" onclick="zShow(&quot;map&quot;);map.zoomIn();">[+]</a> - <a href="#" onclick="zShow(&quot;map&quot;);hideCustomLayers();map.zoomOut();">[-]</a> - <a href="#" onclick="zShow(&quot;menu_search&quot;)">--O</a> - <a href="#" onclick="zShow(&quot;menu_1&quot;)">POI</a></div>
 
-<!--  <div id="map" class="smallmap" style="position:absolute; zoom:200%; -moz-transform:scale(2.0); -webkit-transform:scale(2.0); top:30%; left:25%; height:40%; width:50%; z-index:1"></div> -->
   <div id="map" class="smallmap" style="position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:1"></div>
   
-  <div id="menu_1" style="font-size:48pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; background-color:white">
+  <div id="menu_1" style="font-size:16pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; background-color:white">
     <a href="#" onclick="zShow(&quot;menu_2_service&quot;)">Service</a><br/><br/>
     <a href="#" onclick="zShow(&quot;menu_2_shopping&quot;)">Einkaufen</a><br/><br/>
     <a href="#" onclick="zShow(&quot;menu_2_food&quot;)">Essen</a>
   </div>
 
-  <div id="menu_search" style="font-size:48pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; background-color:white">
-    <form action="" accept-charset="UTF-8">
+  <div id="menu_search" style="font-size:16pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; background-color:white">
+    <form action="#" accept-charset="UTF-8" onsubmit="zShow(&quot;map&quot;);showNameQueryLayer(document.getElementById(&quot;input_search&quot;).value); return false">
       <input type="text" id="input_search"/>
-      <input type="button" value="Suchen" onclick="zShow(&quot;map&quot;);showNameQueryLayer(document.getElementById(&quot;input_search&quot;).value)"/>
+      <input type="submit" value="Suchen"/>
     </form>
   </div>
   
-  <div id="element_details" style="font-size:24pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; overflow:scroll; background-color:white">
+  <div id="element_details" style="font-size:16pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; overflow:scroll; background-color:white">
     &nbsp;
   </div>
-<!--  <iframe id="element_details" style="font-size:24pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white" src="http://overpass-api.de/api/interpreter?data=[out:custom];out;">
-    &nbsp;
-  </iframe> -->
 
-  <div id="menu_2_service" style="font-size:48pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; background-color:white">
+  <div id="menu_2_service" style="font-size:16pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white">
     <a href="#" onclick="zShow(&quot;map&quot;);showWC()">WC</a><br/><br/>
     <a href="#" onclick="zShow(&quot;map&quot;);showWLAN()">WLAN</a><br/><br/>
     <a href="#" onclick="zShow(&quot;menu_3_atm&quot;)">Geldautomat</a><br/><br/>
-    <a href="#" onclick="zShow(&quot;map&quot;);showATM()">Briefkasten</a><br/><br/>
+    <a href="#" onclick="zShow(&quot;map&quot;);showPostbox()">Briefkasten</a><br/><br/>
     <a href="#" onclick="zShow(&quot;map&quot;);showGasstation()">Tankstelle</a>
   </div>
 
-  <div id="menu_2_shopping" style="font-size:48pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; background-color:white">
+  <div id="menu_2_shopping" style="font-size:16pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white">
     <a href="#" onclick="zShow(&quot;map&quot;);showFoodsource()">Lebensmittel</a><br/>
     <a href="#" onclick="zShow(&quot;map&quot;);showChemist()" style="position:relative; top:24pt">Drogerie</a><br/>
     <a href="#" onclick="zShow(&quot;map&quot;);showPharmacy()" style="position:relative; top:48pt">Apotheke</a><br/>
@@ -460,7 +481,7 @@
     <a href="#" onclick="zShow(&quot;map&quot;);showFlowers()" style="position:relative; top:120pt">Blumen</a>
   </div>
 
-  <div id="menu_2_food" style="font-size:48pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; background-color:white">
+  <div id="menu_2_food" style="font-size:16pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white">
     <a href="#" onclick="zShow(&quot;map&quot;);showBaker()">Bäcker</a><br/>
     <a href="#" onclick="zShow(&quot;map&quot;);showCafe()">Café</a><br/>
     <a href="#" onclick="zShow(&quot;map&quot;);showIceCafe()">Eiscafé</a><br/>
@@ -469,7 +490,7 @@
     <a href="#" onclick="zShow(&quot;map&quot;);showFastfood()">Fast Food</a>
   </div>
 
-  <div id="menu_3_atm" style="font-size:48pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; background-color:white">
+  <div id="menu_3_atm" style="font-size:16pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white">
     <a href="#" onclick="zShow(&quot;map&quot;);showATM()">alle</a><br/><br/>
     <a href="#" onclick="zShow(&quot;map&quot;);showSparkasse()">Sparkasse</a><br/><br/>
     <a href="#" onclick="zShow(&quot;map&quot;);showPostbank()">Cash Group</a><br/><br/>
@@ -478,12 +499,14 @@
   </div>
 
   <!--
-    Karte wieder anzeigen
-    Attribution versetzen
     Knöpfe größer, andere Beschriftung (POI)?
+    Felder nur on demand
+    Standort verschieben
+    Position Attribution
+    Status im Titel
+    Hamming-Abstand
     Symbole als Marker
     GPS-Lokalisierung
-    OpenLayers-Panning
     editierbar
   -->
   
