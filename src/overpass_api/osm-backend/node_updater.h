@@ -32,6 +32,71 @@
 
 using namespace std;
 
+struct Update_Node_Logger
+{
+public:
+  void insertion(const Node& node)
+  {
+    map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator it = insert.find(node.id);
+    if (it == insert.end())
+      insert.insert(make_pair(node.id, make_pair< Node, OSM_Element_Metadata* >(node, 0)));
+    else
+      it->second.first = node;
+  }
+  
+  void insertion(uint32 id, const OSM_Element_Metadata& meta)
+  {
+    if (insert[id].second)
+      delete insert[id].second;
+    insert[id].second = new OSM_Element_Metadata(meta);
+  }
+  
+  void deletion(const Uint32_Index& index, const Node_Skeleton& skel)
+  {
+    map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator it = erase.find(skel.id);
+    if (it == erase.end())
+    {
+      erase.insert(make_pair(skel.id, make_pair< Node, OSM_Element_Metadata* >
+          (Node(skel.id, index.val(), skel.ll_lower), 0)));
+    }
+    else
+      it->second.first = Node(skel.id, index.val(), skel.ll_lower);
+  }
+  
+  void deletion(const Tag_Index_Local& index, const Uint32_Index& ref)
+  {
+    map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator it = erase.find(ref.val());
+    if (it != erase.end())
+      it->second.first.tags.push_back(make_pair(index.key, index.value));
+  }
+  
+  void deletion(const Uint31_Index& index, const OSM_Element_Metadata_Skeleton& meta_skel)
+  {
+    map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator it = erase.find(meta_skel.ref);
+    if (it != erase.end())
+    {
+      if (it->second.second)
+        delete it->second.second;
+      OSM_Element_Metadata* meta = new OSM_Element_Metadata();
+      meta->version = meta_skel.version;
+      meta->timestamp = meta_skel.timestamp;
+      meta->changeset = meta_skel.changeset;
+      meta->user_id = meta_skel.user_id;
+      it->second.second = meta;
+    }
+  }
+  
+  void flush();
+  
+  ~Update_Node_Logger();
+  
+private:
+  map< uint32, pair< Node, OSM_Element_Metadata* > > insert;
+  map< uint32, pair< Node, OSM_Element_Metadata* > > keep;
+  map< uint32, pair< Node, OSM_Element_Metadata* > > erase;
+};
+
+
 struct Node_Updater
 {
   Node_Updater(Transaction& transaction, bool meta);
@@ -60,7 +125,7 @@ struct Node_Updater
     {
       user_by_id[meta->user_id] = meta->user_name;
       OSM_Element_Metadata_Skeleton meta_skel;
-      meta_skel.ref= node.id;
+      meta_skel.ref = node.id;
       meta_skel.version = meta->version;
       meta_skel.changeset = meta->changeset;
       meta_skel.timestamp = meta->timestamp;
@@ -77,7 +142,7 @@ struct Node_Updater
     {
       user_by_id[meta->user_id] = meta->user_name;
       OSM_Element_Metadata_Skeleton meta_skel;
-      meta_skel.ref= node.id;
+      meta_skel.ref = node.id;
       meta_skel.version = meta->version;
       meta_skel.changeset = meta->changeset;
       meta_skel.timestamp = meta->timestamp;
@@ -86,7 +151,8 @@ struct Node_Updater
     }
   }
   
-  void update(Osm_Backend_Callback* callback, bool partial = false);
+  void update(Osm_Backend_Callback* callback, bool partial,
+			  Update_Node_Logger* update_logger);
   
   const vector< pair< uint32, uint32 > >& get_moved_nodes() const
   {
@@ -113,13 +179,15 @@ private:
   
   void update_node_ids(map< uint32, vector< uint32 > >& to_delete);
   
-  void update_coords(const map< uint32, vector< uint32 > >& to_delete);
+  void update_coords(const map< uint32, vector< uint32 > >& to_delete,
+		     Update_Node_Logger* update_logger);
   
   void prepare_delete_tags
       (vector< Tag_Entry >& tags_to_delete,
        const map< uint32, vector< uint32 > >& to_delete);
        
-  void update_node_tags_local(const vector< Tag_Entry >& tags_to_delete);
+  void update_node_tags_local(const vector< Tag_Entry >& tags_to_delete,
+		     Update_Node_Logger* update_logger);
   
   void update_node_tags_global(const vector< Tag_Entry >& tags_to_delete);
   

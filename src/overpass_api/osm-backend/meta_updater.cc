@@ -36,13 +36,12 @@ void process_meta_data
   (File_Blocks_Index_Base& file_blocks_index,
    vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >& meta_to_insert,
    const vector< pair< uint32, bool > >& ids_to_modify,
-   const map< uint32, vector< uint32 > >& to_delete)
+   const map< uint32, vector< uint32 > >& to_delete,
+   map< Uint31_Index, set< OSM_Element_Metadata_Skeleton > >& db_to_delete,
+   map< Uint31_Index, set< OSM_Element_Metadata_Skeleton > >& db_to_insert)
 {
   static Meta_Comparator_By_Id meta_comparator_by_id;
   static Meta_Equal_Id meta_equal_id;
-  
-  map< Uint31_Index, set< OSM_Element_Metadata_Skeleton > > db_to_delete;
-  map< Uint31_Index, set< OSM_Element_Metadata_Skeleton > > db_to_insert;
   
   // fill db_to_delete
   for (map< uint32, vector< uint32 > >::const_iterator
@@ -77,10 +76,6 @@ void process_meta_data
   }
   
   meta_to_insert.clear();
-  
-  Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton > user_db
-      (&file_blocks_index);
-  user_db.update(db_to_delete, db_to_insert);
 }
 
 void create_idxs_by_id

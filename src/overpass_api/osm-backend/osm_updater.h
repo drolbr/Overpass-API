@@ -47,6 +47,7 @@ class Osm_Updater
     Nonsynced_Transaction* transaction;
     Dispatcher_Client* dispatcher_client;
     Node_Updater* node_updater_;
+    Update_Node_Logger* update_node_logger_;
     Way_Updater* way_updater_;
     Relation_Updater* relation_updater_;
     string db_dir_;

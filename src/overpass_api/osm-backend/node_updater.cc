@@ -33,6 +33,73 @@
 
 using namespace std;
 
+
+void Update_Node_Logger::flush()
+{
+  cout<<"Insert:\n";
+  for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator it = insert.begin();
+      it != insert.end(); ++it)
+  {
+    cout<<it->second.first.id<<'\t'
+        <<Node::lat(it->second.first.ll_upper, it->second.first.ll_lower_)<<'\t'
+        <<Node::lon(it->second.first.ll_upper, it->second.first.ll_lower_)<<'\t'
+        <<it->second.first.tags.size();
+    if (it->second.second)
+      cout<<'\t'<<it->second.second->version<<'\t'<<it->second.second->user_id;
+    cout<<'\n';
+  }
+  cout<<'\n';
+  cout<<"Keep:\n";
+  for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator it = keep.begin();
+      it != keep.end(); ++it)
+  {
+    cout<<it->second.first.id<<'\t'
+        <<Node::lat(it->second.first.ll_upper, it->second.first.ll_lower_)<<'\t'
+        <<Node::lon(it->second.first.ll_upper, it->second.first.ll_lower_)<<'\t'
+        <<it->second.first.tags.size();
+    if (it->second.second)
+      cout<<'\t'<<it->second.second->version<<'\t'<<it->second.second->user_id;
+    cout<<'\n';
+  }
+  cout<<'\n';
+  cout<<"Delete:\n";
+  for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator it = erase.begin();
+      it != erase.end(); ++it)
+  {
+    cout<<it->second.first.id<<'\t'
+        <<Node::lat(it->second.first.ll_upper, it->second.first.ll_lower_)<<'\t'
+        <<Node::lon(it->second.first.ll_upper, it->second.first.ll_lower_)<<'\t'
+        <<it->second.first.tags.size();
+    if (it->second.second)
+      cout<<'\t'<<it->second.second->version<<'\t'<<it->second.second->user_id;
+    cout<<'\n';
+  }
+  cout<<'\n';
+}
+  
+Update_Node_Logger::~Update_Node_Logger()
+{
+  for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator it = insert.begin();
+      it != insert.end(); ++it)
+  {
+    if (it->second.second)
+      delete it->second.second;
+  }
+  for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator it = keep.begin();
+      it != keep.end(); ++it)
+  {
+    if (it->second.second)
+      delete it->second.second;
+  }
+  for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator it = erase.begin();
+      it != erase.end(); ++it)
+  {
+    if (it->second.second)
+      delete it->second.second;
+  }
+}
+
+
 Node_Updater::Node_Updater(Transaction& transaction_, bool meta_)
   : update_counter(0), transaction(&transaction_),
     external_transaction(true), partial_possible(false), meta(meta_)
@@ -49,8 +116,26 @@ Node_Updater::Node_Updater(string db_dir_, bool meta_)
        osm_base_settings().NODES->get_index_suffix());
 }
 
-void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
+void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
+			  Update_Node_Logger* update_logger)
 {
+  for (vector< Node >::const_iterator it = nodes_to_insert.begin(); it != nodes_to_insert.end(); ++it)
+    update_logger->insertion(*it);
+  if (meta)
+  {
+    for (vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::const_iterator
+        it = nodes_meta_to_insert.begin(); it != nodes_meta_to_insert.end(); ++it)
+    {
+      OSM_Element_Metadata meta;
+      meta.version = it->first.version;
+      meta.timestamp = it->first.timestamp;
+      meta.changeset = it->first.changeset;
+      meta.user_id = it->first.user_id;
+      meta.user_name = user_by_id[it->first.user_id];
+      update_logger->insertion(it->first.ref, meta);
+    }
+  }
+  
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
   
@@ -58,13 +143,13 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
   callback->update_started();
   update_node_ids(to_delete);
   callback->update_ids_finished();
-  update_coords(to_delete);
+  update_coords(to_delete, update_logger);
   callback->update_coords_finished();
   
   vector< Tag_Entry > tags_to_delete;
   prepare_delete_tags(tags_to_delete, to_delete);
   callback->prepare_delete_tags_finished();
-  update_node_tags_local(tags_to_delete);
+  update_node_tags_local(tags_to_delete, update_logger);
   callback->tags_local_finished();
   update_node_tags_global(tags_to_delete);
   callback->tags_global_finished();
@@ -73,7 +158,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
     map< uint32, vector< uint32 > > idxs_by_id;
     create_idxs_by_id(nodes_meta_to_insert, idxs_by_id);
     process_meta_data(*transaction->data_index(meta_settings().NODES_META),
-		      nodes_meta_to_insert, ids_to_modify, to_delete);
+		      nodes_meta_to_insert, ids_to_modify, to_delete, update_logger);
     process_user_data(*transaction, user_by_id, idxs_by_id);
   }
   callback->update_finished();
@@ -199,7 +284,8 @@ void Node_Updater::update_node_ids
   sort(moved_nodes.begin(), moved_nodes.end());
 }
 
-void Node_Updater::update_coords(const map< uint32, vector< uint32 > >& to_delete)
+void Node_Updater::update_coords(const map< uint32, vector< uint32 > >& to_delete,
+				 Update_Node_Logger* update_logger)
 {
   map< Uint32_Index, set< Node_Skeleton > > db_to_delete;
   map< Uint32_Index, set< Node_Skeleton > > db_to_insert;
@@ -229,7 +315,10 @@ void Node_Updater::update_coords(const map< uint32, vector< uint32 > >& to_delet
   
   Block_Backend< Uint32_Index, Node_Skeleton > node_db
       (transaction->data_index(osm_base_settings().NODES));
-  node_db.update(db_to_delete, db_to_insert);
+  if (update_logger)
+    node_db.update(db_to_delete, db_to_insert, *update_logger);
+  else
+    node_db.update(db_to_delete, db_to_insert);
 }
 
 void Node_Updater::prepare_delete_tags
@@ -244,9 +333,7 @@ void Node_Updater::prepare_delete_tags
     set< uint32 >& handle(to_delete_coarse[it->first & 0xffffff00]);
     for (vector< uint32 >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
-    {
       handle.insert(*it2);
-    }
   }
   
   // formulate range query
@@ -295,7 +382,8 @@ void Node_Updater::prepare_delete_tags
     tags_to_delete.push_back(node_tag_entry);
 }
 
-void Node_Updater::update_node_tags_local(const vector< Tag_Entry >& tags_to_delete)
+void Node_Updater::update_node_tags_local(const vector< Tag_Entry >& tags_to_delete,
+					  Update_Node_Logger* update_logger)
 {
   map< Tag_Index_Local, set< Uint32_Index > > db_to_delete;
   map< Tag_Index_Local, set< Uint32_Index > > db_to_insert;
@@ -342,7 +430,10 @@ void Node_Updater::update_node_tags_local(const vector< Tag_Entry >& tags_to_del
   
   Block_Backend< Tag_Index_Local, Uint32_Index > node_db
       (transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL));
-  node_db.update(db_to_delete, db_to_insert);
+  if (update_logger)
+    node_db.update(db_to_delete, db_to_insert, *update_logger);
+  else
+    node_db.update(db_to_delete, db_to_insert);
 }
 
 void Node_Updater::update_node_tags_global(const vector< Tag_Entry >& tags_to_delete)
