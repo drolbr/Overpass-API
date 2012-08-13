@@ -33,6 +33,73 @@
 
 using namespace std;
 
+
+struct Update_Relation_Logger
+{
+public:
+  void insertion(const Relation& relation)
+  {
+    map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator it = insert.find(relation.id);
+    if (it == insert.end())
+      insert.insert(make_pair(relation.id, make_pair< Relation, OSM_Element_Metadata* >(relation, 0)));
+    else
+      it->second.first = relation;
+  }
+  
+  void insertion(uint32 id, const OSM_Element_Metadata& meta)
+  {
+    if (insert[id].second)
+      delete insert[id].second;
+    insert[id].second = new OSM_Element_Metadata(meta);
+  }
+  
+  void deletion(const Uint32_Index& index, const Relation_Skeleton& skel)
+  {
+    map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator it = erase.find(skel.id);
+    if (it == erase.end())
+    {
+      it = erase.insert(make_pair(skel.id, make_pair< Relation, OSM_Element_Metadata* >
+          (Relation(skel.id), 0))).first;
+    }
+    else
+      it->second.first = Relation(skel.id);
+    it->second.first.members = skel.members;
+  }
+  
+  void deletion(const Tag_Index_Local& index, const Uint32_Index& ref)
+  {
+    map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator it = erase.find(ref.val());
+    if (it != erase.end())
+      it->second.first.tags.push_back(make_pair(index.key, index.value));
+  }
+  
+  void deletion(const Uint31_Index& index, const OSM_Element_Metadata_Skeleton& meta_skel)
+  {
+    map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator it = erase.find(meta_skel.ref);
+    if (it != erase.end())
+    {
+      if (it->second.second)
+        delete it->second.second;
+      OSM_Element_Metadata* meta = new OSM_Element_Metadata();
+      meta->version = meta_skel.version;
+      meta->timestamp = meta_skel.timestamp;
+      meta->changeset = meta_skel.changeset;
+      meta->user_id = meta_skel.user_id;
+      it->second.second = meta;
+    }
+  }
+  
+  void flush();
+  
+  ~Update_Relation_Logger();
+  
+private:
+  map< uint32, pair< Relation, OSM_Element_Metadata* > > insert;
+  map< uint32, pair< Relation, OSM_Element_Metadata* > > keep;
+  map< uint32, pair< Relation, OSM_Element_Metadata* > > erase;
+};
+
+
 struct Relation_Updater
 {
   Relation_Updater(Transaction& transaction, bool meta);
@@ -89,7 +156,7 @@ struct Relation_Updater
   
   uint32 get_role_id(const string& s);
   
-  void update(Osm_Backend_Callback* callback);
+  void update(Osm_Backend_Callback* callback, Update_Relation_Logger* update_logger);
   
   void update_moved_idxs(const vector< pair< uint32, uint32 > >& moved_nodes,
 			 const vector< pair< uint32, uint32 > >& moved_ways);
@@ -120,7 +187,8 @@ private:
   void update_rel_ids(vector< Relation* >& rels_ptr, map< uint32, vector< uint32 > >& to_delete);
   
   void update_members(vector< Relation* >& rels_ptr,
-		      const map< uint32, vector< uint32 > >& to_delete);
+		      const map< uint32, vector< uint32 > >& to_delete,
+		      Update_Relation_Logger* update_logger);
   
   void flush_roles();
 };

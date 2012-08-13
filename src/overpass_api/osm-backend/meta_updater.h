@@ -53,11 +53,12 @@ void prepare_tags
      vector< Tag_Entry >& tags_to_delete,
      const map< uint32, vector< uint32 > >& to_delete);
 
-template < class TObject >
+template < class TObject, class Update_Logger >
 void update_tags_local
     (File_Blocks_Index_Base& tags_local, vector< TObject* >& elems_ptr,
      const vector< pair< uint32, bool > >& ids_to_modify,
-     const vector< Tag_Entry >& tags_to_delete);
+     const vector< Tag_Entry >& tags_to_delete,
+     Update_Logger* update_logger);
 
 template < class TObject >
 void update_tags_global
@@ -344,11 +345,12 @@ void prepare_tags
     tags_to_delete.push_back(tag_entry);
 }
 
-template < class TObject >
+template < class TObject, class Update_Logger >
 void update_tags_local
     (File_Blocks_Index_Base& tags_local, vector< TObject* >& elems_ptr,
      const vector< pair< uint32, bool > >& ids_to_modify,
-     const vector< Tag_Entry >& tags_to_delete)
+     const vector< Tag_Entry >& tags_to_delete,
+     Update_Logger* update_logger)
 {
   map< Tag_Index_Local, set< Uint32_Index > > db_to_delete;
   map< Tag_Index_Local, set< Uint32_Index > > db_to_insert;
@@ -394,7 +396,10 @@ void update_tags_local
   }
   
   Block_Backend< Tag_Index_Local, Uint32_Index > elem_db(&tags_local);
-  elem_db.update(db_to_delete, db_to_insert);
+  if (update_logger)
+    elem_db.update(db_to_delete, db_to_insert, *update_logger);
+  else
+    elem_db.update(db_to_delete, db_to_insert);
 }
 
 template < class TObject >

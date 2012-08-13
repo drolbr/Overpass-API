@@ -33,6 +33,77 @@
 
 using namespace std;
 
+
+void Update_Way_Logger::flush()
+{
+  cout<<"Insert:\n";
+  for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator it = insert.begin();
+      it != insert.end(); ++it)
+  {
+    cout<<it->second.first.id;
+    for (vector< uint32 >::const_iterator it2 = it->second.first.nds.begin();
+	 it2 != it->second.first.nds.end(); ++it2)
+      cout<<'\t'<<*it2;
+    cout<<"\t\t"<<it->second.first.tags.size();
+    if (it->second.second)
+      cout<<'\t'<<it->second.second->version<<'\t'<<it->second.second->user_id;
+    cout<<'\n';
+  }
+  cout<<'\n';
+  cout<<"Keep:\n";
+  for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator it = keep.begin();
+      it != keep.end(); ++it)
+  {
+    cout<<it->second.first.id;
+    for (vector< uint32 >::const_iterator it2 = it->second.first.nds.begin();
+	 it2 != it->second.first.nds.end(); ++it2)
+      cout<<'\t'<<*it2;
+    cout<<"\t\t"<<it->second.first.tags.size();
+    if (it->second.second)
+      cout<<'\t'<<it->second.second->version<<'\t'<<it->second.second->user_id;
+    cout<<'\n';
+  }
+  cout<<'\n';
+  cout<<"Delete:\n";
+  for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator it = erase.begin();
+      it != erase.end(); ++it)
+  {
+    cout<<it->second.first.id;
+    for (vector< uint32 >::const_iterator it2 = it->second.first.nds.begin();
+	 it2 != it->second.first.nds.end(); ++it2)
+      cout<<'\t'<<*it2;
+    cout<<"\t\t"<<it->second.first.tags.size();
+    if (it->second.second)
+      cout<<'\t'<<it->second.second->version<<'\t'<<it->second.second->user_id;
+    cout<<'\n';
+  }
+  cout<<'\n';
+}
+
+
+Update_Way_Logger::~Update_Way_Logger()
+{
+  for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator it = insert.begin();
+      it != insert.end(); ++it)
+  {
+    if (it->second.second)
+      delete it->second.second;
+  }
+  for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator it = keep.begin();
+      it != keep.end(); ++it)
+  {
+    if (it->second.second)
+      delete it->second.second;
+  }
+  for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator it = erase.begin();
+      it != erase.end(); ++it)
+  {
+    if (it->second.second)
+      delete it->second.second;
+  }
+}
+
+
 Way_Updater::Way_Updater(Transaction& transaction_, bool meta_)
   : update_counter(0), transaction(&transaction_),
     external_transaction(true), partial_possible(false), meta(meta_)
@@ -55,8 +126,26 @@ namespace
   Way_Equal_Id way_equal_id;
 }
 
-void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
+void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
+	      Update_Way_Logger* update_logger)
 {
+  for (vector< Way >::const_iterator it = ways_to_insert.begin(); it != ways_to_insert.end(); ++it)
+    update_logger->insertion(*it);
+  if (meta)
+  {
+    for (vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::const_iterator
+        it = ways_meta_to_insert.begin(); it != ways_meta_to_insert.end(); ++it)
+    {
+      OSM_Element_Metadata meta;
+      meta.version = it->first.version;
+      meta.timestamp = it->first.timestamp;
+      meta.changeset = it->first.changeset;
+      meta.user_id = it->first.user_id;
+      meta.user_name = user_by_id[it->first.user_id];
+      update_logger->insertion(it->first.ref, meta);
+    }
+  }
+  
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
   
@@ -68,7 +157,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
   callback->compute_indexes_finished();
   update_way_ids(ways_ptr, to_delete);
   callback->update_ids_finished();
-  update_members(ways_ptr, to_delete);
+  update_members(ways_ptr, to_delete, update_logger);
   callback->update_coords_finished();
   
   vector< Tag_Entry > tags_to_delete;
@@ -76,7 +165,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
 		      tags_to_delete, to_delete);
   callback->prepare_delete_tags_finished();
   update_tags_local(*transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
-		    ways_ptr, ids_to_modify, tags_to_delete);
+		    ways_ptr, ids_to_modify, tags_to_delete, update_logger);
   callback->tags_local_finished();
   update_tags_global(*transaction->data_index(osm_base_settings().WAY_TAGS_GLOBAL),
 		     ways_ptr, ids_to_modify, tags_to_delete);
@@ -86,7 +175,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial)
     map< uint32, vector< uint32 > > idxs_by_id;
     create_idxs_by_id(ways_meta_to_insert, idxs_by_id);
     process_meta_data(*transaction->data_index(meta_settings().WAYS_META),
-		      ways_meta_to_insert, ids_to_modify, to_delete);
+		      ways_meta_to_insert, ids_to_modify, to_delete, update_logger);
     process_user_data(*transaction, user_by_id, idxs_by_id);
   }
   callback->update_finished();
@@ -200,13 +289,13 @@ void Way_Updater::update_moved_idxs
     collect_old_meta_data(*transaction->data_index(meta_settings().WAYS_META), to_delete,
 		          new_index_by_id, ways_meta_to_insert);
   }
-  update_members(ways_ptr, to_delete);
+  update_members(ways_ptr, to_delete, 0);
   
   vector< Tag_Entry > tags_to_delete;
   prepare_tags(*transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
 	       ways_ptr, tags_to_delete, to_delete);
   update_tags_local(*transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
-		    ways_ptr, ids_to_modify, tags_to_delete);
+		    ways_ptr, ids_to_modify, tags_to_delete, (Update_Way_Logger*)0);
   if (meta)
   {
     map< uint32, vector< uint32 > > idxs_by_id;
@@ -424,7 +513,8 @@ void Way_Updater::update_way_ids
 }
 
 void Way_Updater::update_members
-    (const vector< Way* >& ways_ptr, const map< uint32, vector< uint32 > >& to_delete)
+    (const vector< Way* >& ways_ptr, const map< uint32, vector< uint32 > >& to_delete,
+       Update_Way_Logger* update_logger)
 {
   map< Uint31_Index, set< Way_Skeleton > > db_to_delete;
   map< Uint31_Index, set< Way_Skeleton > > db_to_insert;
@@ -454,7 +544,10 @@ void Way_Updater::update_members
   
   Block_Backend< Uint31_Index, Way_Skeleton > way_db
       (transaction->data_index(osm_base_settings().WAYS));
-  way_db.update(db_to_delete, db_to_insert);
+  if (update_logger)
+    way_db.update(db_to_delete, db_to_insert, *update_logger);
+  else
+    way_db.update(db_to_delete, db_to_insert);
 }
 
 void Way_Updater::merge_files(const vector< string >& froms, string into)

@@ -31,6 +31,77 @@
 
 using namespace std;
 
+
+void Update_Relation_Logger::flush()
+{
+  cout<<"Insert:\n";
+  for (map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator it = insert.begin();
+      it != insert.end(); ++it)
+  {
+    cout<<it->second.first.id;
+    for (vector< Relation_Entry >::const_iterator it2 = it->second.first.members.begin();
+ 	 it2 != it->second.first.members.end(); ++it2)
+      cout<<'\t'<<it2->type<<' '<<it2->ref<<' '<<it2->role;
+    cout<<"\t\t"<<it->second.first.tags.size();
+    if (it->second.second)
+      cout<<'\t'<<it->second.second->version<<'\t'<<it->second.second->user_id;
+    cout<<'\n';
+  }
+  cout<<'\n';
+  cout<<"Keep:\n";
+  for (map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator it = keep.begin();
+      it != keep.end(); ++it)
+  {
+    cout<<it->second.first.id;
+    for (vector< Relation_Entry >::const_iterator it2 = it->second.first.members.begin();
+ 	 it2 != it->second.first.members.end(); ++it2)
+      cout<<'\t'<<it2->type<<' '<<it2->ref<<' '<<it2->role;
+    cout<<"\t\t"<<it->second.first.tags.size();
+    if (it->second.second)
+      cout<<'\t'<<it->second.second->version<<'\t'<<it->second.second->user_id;
+    cout<<'\n';
+  }
+  cout<<'\n';
+  cout<<"Delete:\n";
+  for (map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator it = erase.begin();
+      it != erase.end(); ++it)
+  {
+    cout<<it->second.first.id;
+    for (vector< Relation_Entry >::const_iterator it2 = it->second.first.members.begin();
+ 	 it2 != it->second.first.members.end(); ++it2)
+      cout<<'\t'<<it2->type<<' '<<it2->ref<<' '<<it2->role;
+    cout<<"\t\t"<<it->second.first.tags.size();
+    if (it->second.second)
+      cout<<'\t'<<it->second.second->version<<'\t'<<it->second.second->user_id;
+    cout<<'\n';
+  }
+  cout<<'\n';
+}
+
+
+Update_Relation_Logger::~Update_Relation_Logger()
+{
+  for (map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator it = insert.begin();
+      it != insert.end(); ++it)
+  {
+    if (it->second.second)
+      delete it->second.second;
+  }
+  for (map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator it = keep.begin();
+      it != keep.end(); ++it)
+  {
+    if (it->second.second)
+      delete it->second.second;
+  }
+  for (map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator it = erase.begin();
+      it != erase.end(); ++it)
+  {
+    if (it->second.second)
+      delete it->second.second;
+  }
+}
+
+
 Relation_Updater::Relation_Updater(Transaction& transaction_, bool meta_)
   : update_counter(0), transaction(&transaction_),
     external_transaction(true),
@@ -79,8 +150,25 @@ namespace
   Relation_Equal_Id rel_equal_id;
 }
 
-void Relation_Updater::update(Osm_Backend_Callback* callback)
+void Relation_Updater::update(Osm_Backend_Callback* callback, Update_Relation_Logger* update_logger)
 {
+  for (vector< Relation >::const_iterator it = rels_to_insert.begin(); it != rels_to_insert.end(); ++it)
+    update_logger->insertion(*it);
+  if (meta)
+  {
+    for (vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::const_iterator
+        it = rels_meta_to_insert.begin(); it != rels_meta_to_insert.end(); ++it)
+    {
+      OSM_Element_Metadata meta;
+      meta.version = it->first.version;
+      meta.timestamp = it->first.timestamp;
+      meta.changeset = it->first.changeset;
+      meta.user_id = it->first.user_id;
+      meta.user_name = user_by_id[it->first.user_id];
+      update_logger->insertion(it->first.ref, meta);
+    }
+  }
+  
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
   
@@ -92,7 +180,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback)
   callback->compute_indexes_finished();
   update_rel_ids(rels_ptr, to_delete);
   callback->update_ids_finished();
-  update_members(rels_ptr, to_delete);
+  update_members(rels_ptr, to_delete, update_logger);
   callback->update_coords_finished();
   
   vector< Tag_Entry > tags_to_delete;
@@ -100,7 +188,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback)
 		      tags_to_delete, to_delete);
   callback->prepare_delete_tags_finished();
   update_tags_local(*transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL),
-		    rels_ptr, ids_to_modify, tags_to_delete);
+		    rels_ptr, ids_to_modify, tags_to_delete, update_logger);
   callback->tags_local_finished();
   update_tags_global(*transaction->data_index(osm_base_settings().RELATION_TAGS_GLOBAL),
 		     rels_ptr, ids_to_modify, tags_to_delete);
@@ -112,7 +200,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback)
     map< uint32, vector< uint32 > > idxs_by_id;
     create_idxs_by_id(rels_meta_to_insert, idxs_by_id);
     process_meta_data(*transaction->data_index(meta_settings().RELATIONS_META),
-		      rels_meta_to_insert, ids_to_modify, to_delete);
+		      rels_meta_to_insert, ids_to_modify, to_delete, update_logger);
     process_user_data(*transaction, user_by_id, idxs_by_id);
   }
   callback->update_finished();
@@ -151,13 +239,13 @@ void Relation_Updater::update_moved_idxs
     collect_old_meta_data(*transaction->data_index(meta_settings().RELATIONS_META), to_delete,
 		          new_index_by_id, rels_meta_to_insert);
   }
-  update_members(rels_ptr, to_delete);
+  update_members(rels_ptr, to_delete, 0);
   
   vector< Tag_Entry > tags_to_delete;
   prepare_tags(*transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL),
 	       rels_ptr, tags_to_delete, to_delete);
   update_tags_local(*transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL),
-		    rels_ptr, ids_to_modify, tags_to_delete);
+		    rels_ptr, ids_to_modify, tags_to_delete, (Update_Relation_Logger*)0);
   flush_roles();
   if (meta)
   {
@@ -443,7 +531,8 @@ void Relation_Updater::update_rel_ids
 }
 
 void Relation_Updater::update_members(vector< Relation* >& rels_ptr,
-				      const map< uint32, vector< uint32 > >& to_delete)
+				      const map< uint32, vector< uint32 > >& to_delete,
+				      Update_Relation_Logger* update_logger)
 {
   map< Uint31_Index, set< Relation_Skeleton > > db_to_delete;
   map< Uint31_Index, set< Relation_Skeleton > > db_to_insert;
@@ -478,7 +567,10 @@ void Relation_Updater::update_members(vector< Relation* >& rels_ptr,
   
   Block_Backend< Uint31_Index, Relation_Skeleton > rel_db
       (transaction->data_index(osm_base_settings().RELATIONS));
-  rel_db.update(db_to_delete, db_to_insert);
+  if (update_logger)
+    rel_db.update(db_to_delete, db_to_insert, *update_logger);
+  else
+    rel_db.update(db_to_delete, db_to_insert);
 }
 
 void Relation_Updater::flush_roles()

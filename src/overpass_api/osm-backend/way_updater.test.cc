@@ -150,7 +150,7 @@ void end(const char *el)
     if (osm_element_count >= 4*1024*1024)
     {
       callback->way_elapsed(current_way.id);
-      way_updater->update(callback, true);
+      way_updater->update(callback, true, 0);
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -209,7 +209,7 @@ int main(int argc, char* args[])
       else if (state == IN_WAYS)
       {
 	callback->ways_finished();
-	way_updater->update(callback);
+	way_updater->update(callback, false, 0);
       }
       
       delete member_source_out;

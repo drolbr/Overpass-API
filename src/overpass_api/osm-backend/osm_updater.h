@@ -49,7 +49,9 @@ class Osm_Updater
     Node_Updater* node_updater_;
     Update_Node_Logger* update_node_logger_;
     Way_Updater* way_updater_;
+    Update_Way_Logger* update_way_logger_;
     Relation_Updater* relation_updater_;
+    Update_Relation_Logger* update_relation_logger_;
     string db_dir_;
     bool meta;
 

@@ -51,8 +51,10 @@ namespace
   Update_Node_Logger* update_node_logger;
   Node current_node;
   Way_Updater* way_updater;
+  Update_Way_Logger* update_way_logger;
   Way current_way;
   Relation_Updater* relation_updater;
+  Update_Relation_Logger* update_relation_logger;
   Relation current_relation;
   int state;
   const int IN_NODES = 1;
@@ -239,7 +241,7 @@ namespace
     if (osm_element_count >= 4*1024*1024)
     {
       callback->way_elapsed(current_way.id);
-      way_updater->update(callback, true);
+      way_updater->update(callback, true, update_way_logger);
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -256,7 +258,7 @@ namespace
     if (osm_element_count >= 4*1024*1024)
     {
       callback->relation_elapsed(current_relation.id);
-      relation_updater->update(callback);
+      relation_updater->update(callback, update_relation_logger);
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -279,7 +281,7 @@ namespace
     else if (state == IN_WAYS)
     {
       callback->ways_finished();
-      way_updater->update(callback);
+      way_updater->update(callback, false, update_way_logger);
       relation_updater->update_moved_idxs
       (node_updater->get_moved_nodes(), way_updater->get_moved_ways());
       callback->parser_started();
@@ -429,13 +431,13 @@ void Osm_Updater::finish_updater()
   }
   if (state == IN_WAYS)
   {  
-    way_updater->update(callback);
+    way_updater->update(callback, false, update_way_logger);
     relation_updater->update_moved_idxs
         (node_updater->get_moved_nodes(), way_updater->get_moved_ways());
     state = IN_RELATIONS;
   }
   if (state == IN_RELATIONS)
-    relation_updater->update(callback);
+    relation_updater->update(callback, update_relation_logger);
   
   flush();
   callback->parser_succeeded();
@@ -484,14 +486,18 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
   node_updater_ = new Node_Updater(*transaction, meta);
   update_node_logger_ = new Update_Node_Logger();
   way_updater_ = new Way_Updater(*transaction, meta);
+  update_way_logger_ = new Update_Way_Logger();
   relation_updater_ = new Relation_Updater(*transaction, meta);
+  update_relation_logger_ = new Update_Relation_Logger();
 
   state = 0;
   osm_element_count = 0;
   node_updater = node_updater_;
   update_node_logger = update_node_logger_;
   way_updater = way_updater_;
+  update_way_logger = update_way_logger_;
   relation_updater = relation_updater_;
+  update_relation_logger = update_relation_logger_;
   callback = callback_;
   if (meta)
     ::meta = new OSM_Element_Metadata();
@@ -509,14 +515,18 @@ Osm_Updater::Osm_Updater
   node_updater_ = new Node_Updater(db_dir, meta);
   update_node_logger_ = new Update_Node_Logger();
   way_updater_ = new Way_Updater(db_dir, meta);
+  update_way_logger_ = new Update_Way_Logger();
   relation_updater_ = new Relation_Updater(db_dir, meta);
+  update_relation_logger_ = new Update_Relation_Logger();
   
   state = 0;
   osm_element_count = 0;
   node_updater = node_updater_;
   update_node_logger = update_node_logger_;
   way_updater = way_updater_;
+  update_way_logger = update_way_logger_;
   relation_updater = relation_updater_;
+  update_relation_logger = update_relation_logger_;
   callback = callback_;
   if (meta)
     ::meta = new OSM_Element_Metadata();
@@ -524,7 +534,9 @@ Osm_Updater::Osm_Updater
 
 void Osm_Updater::flush()
 {
-  //update_node_logger_->flush();
+  //update_node_logger_->flush();  
+  //update_way_logger_->flush();
+  update_relation_logger->flush();
   
   delete node_updater_;
   node_updater_ = new Node_Updater(db_dir_, meta);
@@ -553,7 +565,9 @@ Osm_Updater::~Osm_Updater()
   delete node_updater_;
   delete update_node_logger_;
   delete way_updater_;
+  delete update_way_logger_;
   delete relation_updater_;
+  delete update_relation_logger_;
   if (::meta)
     delete ::meta;
   
