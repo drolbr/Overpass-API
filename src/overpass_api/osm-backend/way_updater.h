@@ -44,6 +44,10 @@ public:
       insert.insert(make_pair(way.id, make_pair< Way, OSM_Element_Metadata* >(way, 0)));
     else
       it->second.first = way;
+    
+    it = keep.find(way.id);
+    if (it != keep.end())
+      keep.erase(it);
   }
   
   void insertion(uint32 id, const OSM_Element_Metadata& meta)
@@ -68,7 +72,11 @@ public:
   
   void keeping(const Uint31_Index& index, const Way_Skeleton& skel)
   {
-    map< uint32, pair< Way, OSM_Element_Metadata* > >::iterator it = keep.find(skel.id);
+    map< uint32, pair< Way, OSM_Element_Metadata* > >::iterator it = erase.find(skel.id);
+    if (it != erase.end())
+      return;
+    
+    it = keep.find(skel.id);
     if (it == keep.end())
     {
       it = keep.insert(make_pair(skel.id, make_pair< Way, OSM_Element_Metadata* >
