@@ -214,21 +214,19 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Update_Relation_Lo
 
 void Relation_Updater::update_moved_idxs
     (const vector< pair< uint32, uint32 > >& moved_nodes,
-     const vector< pair< uint32, uint32 > >& moved_ways)
+     const vector< pair< uint32, uint32 > >& moved_ways,
+     Update_Relation_Logger* update_logger)
 {
   ids_to_modify.clear();
   rels_to_insert.clear();
   rels_meta_to_insert.clear();
   user_by_id.clear();
   
-/*  if (!map_file_existed_before)
-    return;*/
-  
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
   
   map< uint32, vector< uint32 > > to_delete;
-  find_affected_relations(moved_nodes, moved_ways);
+  find_affected_relations(moved_nodes, moved_ways, update_logger);
   vector< Relation* > rels_ptr = sort_elems_to_insert
       (rels_to_insert, rel_comparator_by_id, rel_equal_id);
   update_rel_ids(rels_ptr, to_delete);
@@ -245,18 +243,16 @@ void Relation_Updater::update_moved_idxs
   prepare_tags(*transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL),
 	       rels_ptr, tags_to_delete, to_delete);
   update_tags_local(*transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL),
-		    rels_ptr, ids_to_modify, tags_to_delete, (Update_Relation_Logger*)0);
+		    rels_ptr, ids_to_modify, tags_to_delete, update_logger);
   flush_roles();
   if (meta)
   {
     map< uint32, vector< uint32 > > idxs_by_id;
     create_idxs_by_id(rels_meta_to_insert, idxs_by_id);
     process_meta_data(*transaction->data_index(meta_settings().RELATIONS_META),
-		      rels_meta_to_insert, ids_to_modify, to_delete);
+		      rels_meta_to_insert, ids_to_modify, to_delete, update_logger);
     process_user_data(*transaction, user_by_id, idxs_by_id);
   }
-  
-  //show_mem_status();
   
   ids_to_modify.clear();
   rels_to_insert.clear();
@@ -291,7 +287,8 @@ vector< Uint31_Index > calc_way_idxs(const vector< uint32 >& way_idxs)
 
 void Relation_Updater::find_affected_relations
     (const vector< pair< uint32, uint32 > >& moved_nodes,
-     const vector< pair< uint32, uint32 > >& moved_ways)
+     const vector< pair< uint32, uint32 > >& moved_ways,
+     Update_Relation_Logger* update_logger)
 {
   set< Uint31_Index > req;
   {
@@ -331,6 +328,8 @@ void Relation_Updater::find_affected_relations
 	if (binary_search(moved_nodes.begin(), moved_nodes.end(),
 	  make_pair(it3->ref, 0), pair_comparator_by_id))
 	{
+	  if (update_logger)
+	    update_logger->keeping(it.index(), relation);
 	  is_affected = true;
 	  break;
 	}
@@ -340,6 +339,8 @@ void Relation_Updater::find_affected_relations
 	if (binary_search(moved_ways.begin(), moved_ways.end(),
 	  make_pair(it3->ref, 0), pair_comparator_by_id))
 	{
+	  if (update_logger)
+	    update_logger->keeping(it.index(), relation);
 	  is_affected = true;
 	  break;
 	}

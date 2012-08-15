@@ -194,7 +194,7 @@ namespace
     {
       callback->nodes_finished();
       node_updater->update(callback, false, update_node_logger);
-      way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes());
+      way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
       callback->parser_started();
       osm_element_count = 0;
       state = IN_WAYS;
@@ -273,7 +273,7 @@ namespace
       callback->nodes_finished();
       node_updater->update(callback, false, update_node_logger);
       relation_updater->update_moved_idxs
-          (node_updater->get_moved_nodes(), way_updater->get_moved_ways());
+          (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
       callback->parser_started();
       osm_element_count = 0;
       state = IN_RELATIONS;
@@ -283,7 +283,7 @@ namespace
       callback->ways_finished();
       way_updater->update(callback, false, update_way_logger);
       relation_updater->update_moved_idxs
-      (node_updater->get_moved_nodes(), way_updater->get_moved_ways());
+      (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
       callback->parser_started();
       osm_element_count = 0;
       state = IN_RELATIONS;
@@ -426,14 +426,14 @@ void Osm_Updater::finish_updater()
   if (state == IN_NODES)
   {
     node_updater->update(callback, false, update_node_logger);
-    way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes());
+    way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
     state = IN_WAYS;
   }
   if (state == IN_WAYS)
   {  
     way_updater->update(callback, false, update_way_logger);
     relation_updater->update_moved_idxs
-        (node_updater->get_moved_nodes(), way_updater->get_moved_ways());
+        (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
     state = IN_RELATIONS;
   }
   if (state == IN_RELATIONS)
@@ -536,7 +536,7 @@ void Osm_Updater::flush()
 {
   //update_node_logger_->flush();  
   //update_way_logger_->flush();
-  update_relation_logger->flush();
+  //update_relation_logger->flush();
   
   delete node_updater_;
   node_updater_ = new Node_Updater(db_dir_, meta);

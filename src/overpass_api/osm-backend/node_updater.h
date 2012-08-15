@@ -177,7 +177,7 @@ private:
   vector< pair< OSM_Element_Metadata_Skeleton, uint32 > > nodes_meta_to_insert;
   map< uint32, string > user_by_id;
   
-  void update_node_ids(map< uint32, vector< uint32 > >& to_delete);
+  void update_node_ids(map< uint32, vector< uint32 > >& to_delete, bool record_minuscule_moves);
   
   void update_coords(const map< uint32, vector< uint32 > >& to_delete,
 		     Update_Node_Logger* update_logger);

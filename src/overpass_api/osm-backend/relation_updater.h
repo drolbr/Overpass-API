@@ -53,7 +53,7 @@ public:
     insert[id].second = new OSM_Element_Metadata(meta);
   }
   
-  void deletion(const Uint32_Index& index, const Relation_Skeleton& skel)
+  void deletion(const Uint31_Index& index, const Relation_Skeleton& skel)
   {
     map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator it = erase.find(skel.id);
     if (it == erase.end())
@@ -66,10 +66,26 @@ public:
     it->second.first.members = skel.members;
   }
   
+  void keeping(const Uint31_Index& index, const Relation_Skeleton& skel)
+  {
+    map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator it = keep.find(skel.id);
+    if (it == keep.end())
+    {
+      it = keep.insert(make_pair(skel.id, make_pair< Relation, OSM_Element_Metadata* >
+          (Relation(skel.id), 0))).first;
+    }
+    else
+      it->second.first = Relation(skel.id);
+    it->second.first.members = skel.members;
+  }
+  
   void deletion(const Tag_Index_Local& index, const Uint32_Index& ref)
   {
     map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator it = erase.find(ref.val());
     if (it != erase.end())
+      it->second.first.tags.push_back(make_pair(index.key, index.value));
+    it = keep.find(ref.val());
+    if (it != keep.end())
       it->second.first.tags.push_back(make_pair(index.key, index.value));
   }
   
@@ -77,6 +93,18 @@ public:
   {
     map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator it = erase.find(meta_skel.ref);
     if (it != erase.end())
+    {
+      if (it->second.second)
+        delete it->second.second;
+      OSM_Element_Metadata* meta = new OSM_Element_Metadata();
+      meta->version = meta_skel.version;
+      meta->timestamp = meta_skel.timestamp;
+      meta->changeset = meta_skel.changeset;
+      meta->user_id = meta_skel.user_id;
+      it->second.second = meta;
+    }
+    it = keep.find(meta_skel.ref);
+    if (it != keep.end())
     {
       if (it->second.second)
         delete it->second.second;
@@ -159,7 +187,8 @@ struct Relation_Updater
   void update(Osm_Backend_Callback* callback, Update_Relation_Logger* update_logger);
   
   void update_moved_idxs(const vector< pair< uint32, uint32 > >& moved_nodes,
-			 const vector< pair< uint32, uint32 > >& moved_ways);
+			 const vector< pair< uint32, uint32 > >& moved_ways,
+			 Update_Relation_Logger* update_logger);
   
 private:
   uint32 update_counter;
@@ -180,7 +209,8 @@ private:
   map< uint32, string > user_by_id;
   
   void find_affected_relations(const vector< pair< uint32, uint32 > >& moved_nodes,
-			       const vector< pair< uint32, uint32 > >& moved_ways);
+			       const vector< pair< uint32, uint32 > >& moved_ways,
+			       Update_Relation_Logger* update_logger);
   
   void compute_indexes(vector< Relation* >& rels_ptr);
   

@@ -155,7 +155,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
       (ways_to_insert, way_comparator_by_id, way_equal_id);
   compute_indexes(ways_ptr);
   callback->compute_indexes_finished();
-  update_way_ids(ways_ptr, to_delete);
+  update_way_ids(ways_ptr, to_delete, (update_logger != 0));
   callback->update_ids_finished();
   update_members(ways_ptr, to_delete, update_logger);
   callback->update_coords_finished();
@@ -263,8 +263,8 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
 }
 
 void Way_Updater::update_moved_idxs
-    (Osm_Backend_Callback* callback, 
-     const vector< pair< uint32, uint32 > >& moved_nodes)
+    (Osm_Backend_Callback* callback, const vector< pair< uint32, uint32 > >& moved_nodes,
+     Update_Way_Logger* update_logger)
 {
   ids_to_modify.clear();
   ways_to_insert.clear();
@@ -278,10 +278,10 @@ void Way_Updater::update_moved_idxs
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
   
   map< uint32, vector< uint32 > > to_delete;
-  find_affected_ways(moved_nodes);
+  find_affected_ways(moved_nodes, update_logger);
   vector< Way* > ways_ptr = sort_elems_to_insert
       (ways_to_insert, way_comparator_by_id, way_equal_id);
-  update_way_ids(ways_ptr, to_delete);
+  update_way_ids(ways_ptr, to_delete, (update_logger != 0));
   if (meta)
   {
     map< uint32, uint32 > new_index_by_id;
@@ -295,13 +295,13 @@ void Way_Updater::update_moved_idxs
   prepare_tags(*transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
 	       ways_ptr, tags_to_delete, to_delete);
   update_tags_local(*transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
-		    ways_ptr, ids_to_modify, tags_to_delete, (Update_Way_Logger*)0);
+		    ways_ptr, ids_to_modify, tags_to_delete, update_logger);
   if (meta)
   {
     map< uint32, vector< uint32 > > idxs_by_id;
     create_idxs_by_id(ways_meta_to_insert, idxs_by_id);
     process_meta_data(*transaction->data_index(meta_settings().WAYS_META), ways_meta_to_insert,
-		      ids_to_modify, to_delete);
+		      ids_to_modify, to_delete, update_logger);
     process_user_data(*transaction, user_by_id, idxs_by_id);
   }
   
@@ -378,7 +378,8 @@ void filter_affected_ways(Transaction& transaction,
 }
 
 void Way_Updater::find_affected_ways
-    (const vector< pair< uint32, uint32 > >& moved_nodes)
+    (const vector< pair< uint32, uint32 > >& moved_nodes,
+       Update_Way_Logger* update_logger)
 {
   vector< Way > maybe_affected_ways;
   
@@ -408,6 +409,8 @@ void Way_Updater::find_affected_ways
       if (binary_search(moved_nodes.begin(), moved_nodes.end(),
 	make_pair(*it3, 0), pair_comparator_by_id))
       {
+	if (update_logger)
+	  update_logger->keeping(it.index(), way);
 	is_affected = true;
 	break;
       }
@@ -478,7 +481,7 @@ void Way_Updater::compute_indexes(vector< Way* >& ways_ptr)
 }
 
 void Way_Updater::update_way_ids
-    (const vector< Way* >& ways_ptr, map< uint32, vector< uint32 > >& to_delete)
+    (const vector< Way* >& ways_ptr, map< uint32, vector< uint32 > >& to_delete, bool record_minuscule_moves)
 {
   // process the ways itself
   // keep always the most recent (last) element of all equal elements
@@ -503,7 +506,7 @@ void Way_Updater::update_way_ids
       if (it->second)
       {
 	random.put(it->first, Uint31_Index((*wit)->index));
-	if ((index.val() > 0) && (index.val() != (*wit)->index))
+	if ((index.val() > 0) && (index.val() != (*wit)->index || record_minuscule_moves))
 	  moved_ways.push_back(make_pair(it->first, index.val()));
       }
       ++wit;

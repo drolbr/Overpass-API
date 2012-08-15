@@ -141,7 +141,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
   
   map< uint32, vector< uint32 > > to_delete;
   callback->update_started();
-  update_node_ids(to_delete);
+  update_node_ids(to_delete, (update_logger != 0));
   callback->update_ids_finished();
   update_coords(to_delete, update_logger);
   callback->update_coords_finished();
@@ -246,7 +246,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
 }
 
 void Node_Updater::update_node_ids
-    (map< uint32, vector< uint32 > >& to_delete)
+    (map< uint32, vector< uint32 > >& to_delete, bool record_minuscule_moves)
 {
   // keep always the most recent (last) element of all equal elements
   stable_sort
@@ -275,7 +275,8 @@ void Node_Updater::update_node_ids
       if (it->second)
       {
 	random.put(it->first, Uint32_Index(nit->ll_upper));
-	if ((index.val() > 0) && (index.val() != nit->ll_upper))
+	if ((index.val() > 0) &&
+	    (index.val() != nit->ll_upper || record_minuscule_moves))
 	  moved_nodes.push_back(make_pair(it->first, index.val()));
       }
       ++nit;
