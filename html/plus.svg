@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:ev="http://www.w3.org/2001/xml-events"
+     version="1.1" baseProfile="full"
+     width="60px" height="60px">
+
+<polyline fill="White" stroke="none" points="5 25, 25 25, 25 5, 35 5, 35 25, 55 25, 55 35, 35 35, 35 55, 25 55, 25 35, 5 35"/>
+
+</svg>

@@ -443,7 +443,12 @@
 <body onload="init()">
   <div id="status_text" style="min-height:10%; font-family:sans-serif; font-size:16pt"><strong>Eigener Standort</strong></div>
 
-  <div id="menu" style="min-height:10%; font-family:sans-serif; font-size:16pt; position:absolute; top:90%; text-align:center"><a href="#" onclick="zShow(&quot;map&quot;);map.zoomIn();">[+]</a> - <a href="#" onclick="zShow(&quot;map&quot;);hideCustomLayers();map.zoomOut();">[-]</a> - <a href="#" onclick="zShow(&quot;menu_search&quot;)">--O</a> - <a href="#" onclick="zShow(&quot;menu_1&quot;)">POI</a></div>
+  <div id="menu" style="height:10%; width:100%; font-family:sans-serif; font-size:16pt; position:absolute; top:90%; text-align:center">
+    <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;map&quot;);map.zoomIn()"><img src="plus.png" alt="zoom in" height="100%"/></a></div>
+    <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;map&quot;);map.zoomOut()"><img src="minus.png" alt="zoom out" height="100%"/></a></div>
+    <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;menu_search&quot;)"><img src="search.png" alt="search" height="100%"/></a></div>
+    <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;menu_1&quot;)"><img src="find.png" alt="find" height="100%"/></a></div>
+  </div>
 
   <div id="map" class="smallmap" style="position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:1"></div>
   
@@ -502,9 +507,8 @@
     Knöpfe größer, andere Beschriftung (POI)?
     Felder nur on demand
     Standort verschieben
-    Standort auf POI
     Position Attribution
-    Status im Titel, Ort im Titel
+    Status im Titel
     Hamming-Abstand
     Symbole als Marker
     GPS-Lokalisierung

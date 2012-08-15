@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:ev="http://www.w3.org/2001/xml-events"
+     version="1.1" baseProfile="full"
+     width="60px" height="60px">
+
+<circle fill="none" stroke="white" stroke-width="5" cx="40" cy="20" r="15"/>
+<polyline fill="none" stroke="white" stroke-width="10" points="5 55, 30 30"/>
+
+</svg>
