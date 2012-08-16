@@ -164,13 +164,9 @@
      
       function zShow(target) {
           document.getElementById("map").style.zIndex = "-1";
-          document.getElementById("menu_1").style.zIndex = "-1";
           document.getElementById("menu_search").style.zIndex = "-1";
           document.getElementById("element_details").style.zIndex = "-1";
-          document.getElementById("menu_2_service").style.zIndex = "-1";
-          document.getElementById("menu_2_shopping").style.zIndex = "-1";
-          document.getElementById("menu_2_food").style.zIndex = "-1";
-          document.getElementById("menu_3_atm").style.zIndex = "-1";
+          document.getElementById("menu_text").style.zIndex = "-1";
 
           document.getElementById(target).style.zIndex = "1";
       }
@@ -354,88 +350,105 @@
           current_query = "(node[name~\"" + query_value + "\"](bbox);way[name~\"" + query_value + "\"](bbox);rel[name~\"" + query_value + "\"](bbox););";
       }
       
-      function showWC() {
-          showQueryLayer(["[amenity=toilets]"]);
-      }
-      
-      function showWLAN() {
-          showQueryLayer(["[wifi=yes]"]);
-      }
-      
-      function showATM() {
-          showQueryLayer(["[amenity=atm]", "[atm=yes]"]);
-      }
-      
-      function showSparkasse() {
-          showQueryLayer(["[amenity=atm][name~\"[sS]parkasse\"]", "[atm=yes][name~\"[sS]parkasse\"]"]);
-      }
-      
-      function showPostbank() {
-          showQueryLayer(["[amenity=atm][name~\"Deutsche Bank\"]", "[atm=yes][name~\"Deutsche Bank\"]", "[amenity=atm][name~\"Commerzbank\"]", "[atm=yes][name~\"Commerzbank\"]", "[amenity=atm][name~\"Postbank\"]", "[atm=yes][name~\"Postbank\"]"]);
-      }
-      
-      function showVolksbank() {
-          showQueryLayer(["[amenity=atm][name~'[vV]olksbank']", "[atm=yes][name~'[vV]olksbank']", "[amenity=atm][name~'Kölner Bank']", "[atm=yes][name~'Kölner Bank']"]);
-      }
-      
-      function showSparda() {
-          showQueryLayer(["[amenity=atm][name~'Sparda']", "[atm=yes][name~'Sparda']", "[amenity=atm][name~'Targo']", "[atm=yes][name~'Targo']", "[amenity=atm][name~'Santander']", "[atm=yes][name~'Santander']", "[amenity=atm][name~'BB ?Bank']", "[atm=yes][name~'BB ?Bank']", "[amenity=atm][name~'National-Bank']", "[atm=yes][name~'National-Bank']"]);
-      }
-      
-      function showPostbox() {
-          showQueryLayer(["[amenity=post_box]"]);
+      var queryLayers = {
+          "ATM": ["[amenity=atm]", "[atm=yes]"],
+          "Sparkasse": ["[amenity=atm][name~\"[sS]parkasse\"]", "[atm=yes][name~\"[sS]parkasse\"]"],
+          "Postbank": ["[amenity=atm][name~\"Deutsche Bank\"]", "[atm=yes][name~\"Deutsche Bank\"]", "[amenity=atm][name~\"Commerzbank\"]", "[atm=yes][name~\"Commerzbank\"]", "[amenity=atm][name~\"Postbank\"]", "[atm=yes][name~\"Postbank\"]"],
+          "Volksbank": ["[amenity=atm][name~'[vV]olksbank']", "[atm=yes][name~'[vV]olksbank']", "[amenity=atm][name~'Raiffeisenbank']", "[atm=yes][name~'Raiffeisenbank']", "[amenity=atm][name~'Kölner Bank']", "[atm=yes][name~'Kölner Bank']"],
+          "Sparda": ["[amenity=atm][name~'Sparda']", "[atm=yes][name~'Sparda']", "[amenity=atm][name~'Targo']", "[atm=yes][name~'Targo']", "[amenity=atm][name~'Santander']", "[atm=yes][name~'Santander']", "[amenity=atm][name~'BB ?Bank']", "[atm=yes][name~'BB ?Bank']", "[amenity=atm][name~'National-Bank']", "[atm=yes][name~'National-Bank']"],
+
+          "Postbox": ["[amenity=post_box]"],
+          "Gasstation": ["[amenity=fuel]"],
+          "WC": ["[amenity=toilets]"],
+          "WLAN": ["[wifi=yes]"],
+
+          "Foodsource": ["[shop=supermarket]", "[shop=convenience]"],
+          "Chemist": ["[shop=chemist]"],
+          "Pharmacy": ["[amenity=pharmacy]"],
+          "Kiosk": ["[shop=kiosk]", "[shop=newsagent]"],
+          "Bookstore": ["[shop=books]"],
+          "Flowers": ["[shop=florist]"],
+
+          "Baker": ["[shop=bakery]"],
+          "Cafe": ["[amenity=cafe]"],
+          "IceCafe": ["[cuisine=ice_cream]"],
+          "Restaurant": ["[amenity=restaurant]"],
+          "Pub": ["[amenity=pub]"],
+          "Fastfood": ["[amenity=fast_food]"]
+      };
+
+      function addPOILayerChoice(layer_id, desc) {
+          var target_div = document.getElementById("menu_text");
+          var newElem = document.createElement("a");
+          newElem.appendChild(document.createTextNode(desc));
+          newElem.href = "#";
+          newElem.setAttribute("onclick", "clearChoiceMenu();zShow(\"map\");showQueryLayer(queryLayers[\"" + layer_id + "\"])");
+          target_div.appendChild(newElem);
+          target_div.appendChild(document.createElement("br"));
+          target_div.appendChild(document.createElement("br"));
       }
 
-      function showGasstation() {
-          showQueryLayer(["[amenity=fuel]"]);
+      function addPOIFolder(folder_id, desc) {
+          var target_div = document.getElementById("menu_text");
+          var newElem = document.createElement("a");
+          newElem.appendChild(document.createTextNode(desc));
+          newElem.href = "#";
+          newElem.setAttribute("onclick", "prepare" + folder_id + "Menu();zShow(\"menu_text\")");
+          target_div.appendChild(newElem);
+          target_div.appendChild(document.createElement("br"));
+          target_div.appendChild(document.createElement("br"));
+      }
+
+      function clearChoiceMenu()
+      {
+          var target_div = document.getElementById("menu_text");
+          while (target_div.hasChildNodes())
+            target_div.removeChild(target_div.firstChild);
+      }
+
+      function prepareStartMenu() {
+          clearChoiceMenu();
+          addPOIFolder("Service", "Service");
+          addPOIFolder("Shopping", "Einkaufen");
+          addPOIFolder("Food", "Essen");
       }
       
-      function showFoodsource() {
-          showQueryLayer(["[shop=supermarket]", "[shop=convenience]"]);
+      function prepareServiceMenu() {
+          clearChoiceMenu();
+          addPOIFolder("ATM", "Geldautomat");
+          addPOILayerChoice("Postbox", "Briefkasten");
+          addPOILayerChoice("Gasstation", "Tankstelle");
+          addPOILayerChoice("WC", "WC");
+          addPOILayerChoice("WLAN", "WLAN");
       }
       
-      function showChemist() {
-          showQueryLayer(["[shop=chemist]"]);
+      function prepareATMMenu() {
+          clearChoiceMenu();
+          addPOILayerChoice("ATM", "alle");
+          addPOILayerChoice("Sparkasse", "Sparkasse");
+          addPOILayerChoice("Postbank", "Cash Group");
+          addPOILayerChoice("Volksbank", "Volksbank");
+          addPOILayerChoice("Sparda", "Cash Pool");
       }
       
-      function showPharmacy() {
-          showQueryLayer(["[amenity=pharmacy]"]);
+      function prepareShoppingMenu() {
+          clearChoiceMenu();
+          addPOILayerChoice("Foodsource", "Lebensmittel");
+          addPOILayerChoice("Chemist", "Drogerie");
+          addPOILayerChoice("Pharmacy", "Apotheke");
+          addPOILayerChoice("Kiosk", "Zeitschriften");
+          addPOILayerChoice("Bookstore", "Bücher");
+          addPOILayerChoice("Flowers", "Blumen");
       }
       
-      function showKiosk() {
-          showQueryLayer(["[shop=kiosk]", "[shop=newsagent]"]);
-      }
-      
-      function showBookstore() {
-          showQueryLayer(["[shop=books]"]);
-      }
-      
-      function showFlowers() {
-          showQueryLayer(["[shop=florist]"]);
-      }
-      
-      function showBaker() {
-          showQueryLayer(["[shop=bakery]"]);
-      }
-      
-      function showCafe() {
-          showQueryLayer(["[amenity=cafe]"]);
-      }
-      
-      function showIceCafe() {
-          showQueryLayer(["[cuisine=ice_cream]"]);
-      }
-      
-      function showRestaurant() {
-          showQueryLayer(["[amenity=restaurant]"]);
-      }
-      
-      function showPub() {
-          showQueryLayer(["[amenity=pub]"]);
-      }
-      
-      function showFastfood() {
-          showQueryLayer(["[amenity=fast_food]"]);
+      function prepareFoodMenu() {
+          clearChoiceMenu();
+          addPOILayerChoice("Baker", "Bäcker");
+          addPOILayerChoice("Cafe", "Café");
+          addPOILayerChoice("IceCafe", "Eisdiele");
+          addPOILayerChoice("Restaurant", "Restaurant");
+          addPOILayerChoice("Pub", "Kneipe");
+          addPOILayerChoice("Fastfood", "Fastfood");
       }
       
   </script>
@@ -443,21 +456,15 @@
 <body onload="init()">
   <div id="status_text" style="min-height:10%; font-family:sans-serif; font-size:16pt"><strong>Eigener Standort</strong></div>
 
-  <div id="menu" style="height:10%; width:100%; font-family:sans-serif; font-size:16pt; position:absolute; top:90%; text-align:center">
+  <div id="menu" style="height:10%; width:100%; font-family:sans-serif; font-size:16pt; position:absolute; top:90%; left:0%; text-align:center">
     <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;map&quot;);map.zoomIn()"><img src="plus.png" alt="zoom in" height="100%"/></a></div>
     <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;map&quot;);map.zoomOut()"><img src="minus.png" alt="zoom out" height="100%"/></a></div>
     <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;menu_search&quot;)"><img src="search.png" alt="search" height="100%"/></a></div>
-    <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;menu_1&quot;)"><img src="find.png" alt="find" height="100%"/></a></div>
+    <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;menu_text&quot;);prepareStartMenu()"><img src="find.png" alt="find" height="100%"/></a></div>
   </div>
 
   <div id="map" class="smallmap" style="position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:1"></div>
   
-  <div id="menu_1" style="font-size:16pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; background-color:white">
-    <a href="#" onclick="zShow(&quot;menu_2_service&quot;)">Service</a><br/><br/>
-    <a href="#" onclick="zShow(&quot;menu_2_shopping&quot;)">Einkaufen</a><br/><br/>
-    <a href="#" onclick="zShow(&quot;menu_2_food&quot;)">Essen</a>
-  </div>
-
   <div id="menu_search" style="font-size:16pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; background-color:white">
     <form action="#" accept-charset="UTF-8" onsubmit="zShow(&quot;map&quot;);showNameQueryLayer(document.getElementById(&quot;input_search&quot;).value); return false">
       <input type="text" id="input_search"/>
@@ -469,43 +476,9 @@
     &nbsp;
   </div>
 
-  <div id="menu_2_service" style="font-size:16pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white">
-    <a href="#" onclick="zShow(&quot;map&quot;);showWC()">WC</a><br/><br/>
-    <a href="#" onclick="zShow(&quot;map&quot;);showWLAN()">WLAN</a><br/><br/>
-    <a href="#" onclick="zShow(&quot;menu_3_atm&quot;)">Geldautomat</a><br/><br/>
-    <a href="#" onclick="zShow(&quot;map&quot;);showPostbox()">Briefkasten</a><br/><br/>
-    <a href="#" onclick="zShow(&quot;map&quot;);showGasstation()">Tankstelle</a>
-  </div>
-
-  <div id="menu_2_shopping" style="font-size:16pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white">
-    <a href="#" onclick="zShow(&quot;map&quot;);showFoodsource()">Lebensmittel</a><br/>
-    <a href="#" onclick="zShow(&quot;map&quot;);showChemist()" style="position:relative; top:24pt">Drogerie</a><br/>
-    <a href="#" onclick="zShow(&quot;map&quot;);showPharmacy()" style="position:relative; top:48pt">Apotheke</a><br/>
-    <a href="#" onclick="zShow(&quot;map&quot;);showKiosk()" style="position:relative; top:72pt">Zeitschriften</a><br/>
-    <a href="#" onclick="zShow(&quot;map&quot;);showBookstore()" style="position:relative; top:96pt">Bücher</a><br/>
-    <a href="#" onclick="zShow(&quot;map&quot;);showFlowers()" style="position:relative; top:120pt">Blumen</a>
-  </div>
-
-  <div id="menu_2_food" style="font-size:16pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white">
-    <a href="#" onclick="zShow(&quot;map&quot;);showBaker()">Bäcker</a><br/>
-    <a href="#" onclick="zShow(&quot;map&quot;);showCafe()">Café</a><br/>
-    <a href="#" onclick="zShow(&quot;map&quot;);showIceCafe()">Eiscafé</a><br/>
-    <a href="#" onclick="zShow(&quot;map&quot;);showRestaurant()">Restaurant</a><br/>
-    <a href="#" onclick="zShow(&quot;map&quot;);showPub()">Kneipe</a><br/>
-    <a href="#" onclick="zShow(&quot;map&quot;);showFastfood()">Fast Food</a>
-  </div>
-
-  <div id="menu_3_atm" style="font-size:16pt; position:absolute; top:10%; height:80%; width:100%; z-index:-1; background-color:white">
-    <a href="#" onclick="zShow(&quot;map&quot;);showATM()">alle</a><br/><br/>
-    <a href="#" onclick="zShow(&quot;map&quot;);showSparkasse()">Sparkasse</a><br/><br/>
-    <a href="#" onclick="zShow(&quot;map&quot;);showPostbank()">Cash Group</a><br/><br/>
-    <a href="#" onclick="zShow(&quot;map&quot;);showVolksbank()">Volksbank</a><br/><br/>
-    <a href="#" onclick="zShow(&quot;map&quot;);showSparda()">Cash Pool</a>
-  </div>
+  <div id="menu_text" style="font-size:16pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; background-color:white"/>
 
   <!--
-    Knöpfe größer, andere Beschriftung (POI)?
-    Felder nur on demand
     Standort verschieben
     Position Attribution
     Status im Titel
