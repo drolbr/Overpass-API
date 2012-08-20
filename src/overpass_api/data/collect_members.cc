@@ -37,9 +37,7 @@ void filter_for_member_ids(const vector< Relation_Skeleton >& relations, vector<
   }
 }
 
-vector< uint32 > way_nd_ids
-    (const Statement& stmt, Resource_Manager& rman,
-     const map< Uint31_Index, vector< Way_Skeleton > >& ways)
+vector< uint32 > way_nd_ids(const map< Uint31_Index, vector< Way_Skeleton > >& ways)
 {
   vector< uint32 > ids;
   for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
@@ -54,7 +52,6 @@ vector< uint32 > way_nd_ids
     }
   }
   
-  rman.health_check(stmt);
   sort(ids.begin(), ids.end());
   
   return ids;
@@ -203,7 +200,7 @@ vector< Uint31_Index > collect_way_req
 }
 
 set< pair< Uint32_Index, Uint32_Index > > collect_node_req
-    (const Statement& stmt, Resource_Manager& rman,
+    (const Statement* stmt, Resource_Manager& rman,
      const vector< uint32 >& map_ids, const vector< uint32 >& parents)
 {
   set< pair< Uint32_Index, Uint32_Index > > req = calc_node_children_ranges(parents);
@@ -217,7 +214,8 @@ set< pair< Uint32_Index, Uint32_Index > > collect_node_req
     req.insert(make_pair(idx, idx.val() + 1));
   }
   
-  rman.health_check(stmt);
+  if (stmt)
+    rman.health_check(*stmt);
   
   return req;
 }
@@ -317,11 +315,11 @@ set< pair< Uint32_Index, Uint32_Index > > relation_node_member_indices
   sort(map_ids.begin(), map_ids.end());
   rman.health_check(stmt);
   
-  return collect_node_req(stmt, rman, map_ids, parents);
+  return collect_node_req(&stmt, rman, map_ids, parents);
 }
 
 set< pair< Uint32_Index, Uint32_Index > > way_nd_indices
-    (const Statement& stmt, Resource_Manager& rman,
+    (const Statement* stmt, Resource_Manager& rman,
      map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_begin,
      map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_end)
 {
@@ -373,7 +371,8 @@ set< pair< Uint32_Index, Uint32_Index > > way_nd_indices
   sort(map_ids.begin(), map_ids.end());
   sort(parents.begin(), parents.end());
   parents.erase(unique(parents.begin(), parents.end()), parents.end());
-  rman.health_check(stmt);
+  if (stmt)
+    rman.health_check(*stmt);
   
   return collect_node_req(stmt, rman, map_ids, parents);
 }
@@ -422,7 +421,7 @@ map< Uint31_Index, vector< Relation_Skeleton > > relation_relation_members
     
   map< Uint31_Index, vector< Relation_Skeleton > > result;
   if (children_ranges)
-    collect_items_range(stmt, rman, *osm_base_settings().RELATIONS, *children_ranges,
+    collect_items_range(&stmt, rman, *osm_base_settings().RELATIONS, *children_ranges,
 			Id_Predicate< Relation_Skeleton >(intersect_ids), result);
   else
   {    
@@ -457,7 +456,7 @@ map< Uint31_Index, vector< Way_Skeleton > > relation_way_members
     
   map< Uint31_Index, vector< Way_Skeleton > > result;
   if (way_ranges)
-    collect_items_range(stmt, rman, *osm_base_settings().WAYS, *way_ranges,
+    collect_items_range(&stmt, rman, *osm_base_settings().WAYS, *way_ranges,
 			Id_Predicate< Way_Skeleton >(intersect_ids), result);
   else
   {    
@@ -497,20 +496,20 @@ map< Uint32_Index, vector< Node_Skeleton > > relation_node_members
     
   map< Uint32_Index, vector< Node_Skeleton > > result;
   if (node_ranges)
-    collect_items_range(stmt, rman, *osm_base_settings().NODES, *node_ranges,
+    collect_items_range(&stmt, rman, *osm_base_settings().NODES, *node_ranges,
 			Id_Predicate< Node_Skeleton >(intersect_ids), result);
   else
   {    
     set< pair< Uint32_Index, Uint32_Index > > req =
         relation_node_member_indices(stmt, rman, relations.begin(), relations.end());
-    collect_items_range(stmt, rman, *osm_base_settings().NODES, req,
+    collect_items_range(&stmt, rman, *osm_base_settings().NODES, req,
 			Id_Predicate< Node_Skeleton >(intersect_ids), result);
   }
   return result;
 }
  
 map< Uint32_Index, vector< Node_Skeleton > > way_members
-    (const Statement& stmt, Resource_Manager& rman,
+    (const Statement* stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Way_Skeleton > >& ways,
      const set< pair< Uint32_Index, Uint32_Index > >* node_ranges,
      const vector< uint32 >* node_ids, bool invert_ids)
@@ -519,7 +518,9 @@ map< Uint32_Index, vector< Node_Skeleton > > way_members
   
   if (node_ids)
   {
-    vector< uint32 > children_ids = way_nd_ids(stmt, rman, ways);
+    vector< uint32 > children_ids = way_nd_ids(ways);
+    if (stmt)
+      rman.health_check(*stmt);
     intersect_ids.resize(node_ids->size());
     if (!invert_ids)
       intersect_ids.erase(set_intersection
@@ -532,7 +533,11 @@ map< Uint32_Index, vector< Node_Skeleton > > way_members
            intersect_ids.begin()), intersect_ids.end());
   }
   else
-    intersect_ids = way_nd_ids(stmt, rman, ways);
+  {
+    intersect_ids = way_nd_ids(ways);
+    if (stmt)
+      rman.health_check(*stmt);
+  }
   
   map< Uint32_Index, vector< Node_Skeleton > > result;
   if (node_ranges)

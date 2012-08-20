@@ -25,6 +25,8 @@
 #include "../../template_db/random_file.h"
 #include "../../template_db/transaction.h"
 #include "../core/settings.h"
+#include "../data/collect_members.h"
+#include "../dispatch/resource_manager.h"
 #include "../frontend/output.h"
 
 #include <dirent.h>
@@ -414,6 +416,49 @@ void end(const char *el)
   ++osm_element_count;
 }
 
+
+void collect_kept_members(Transaction& transaction,
+			  Update_Node_Logger& update_node_logger,
+			  Update_Way_Logger& update_way_logger)
+{
+  Resource_Manager rman(transaction);
+  map< Uint31_Index, vector< Way_Skeleton > > ways;
+  vector< uint32 > node_ids;
+  
+  for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator
+      it = update_way_logger.insert_begin(); it != update_way_logger.insert_end(); ++it)
+    ways[it->second.first.index].push_back(it->second.first);
+  for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator
+      it = update_way_logger.keep_begin(); it != update_way_logger.keep_end(); ++it)
+    ways[it->second.first.index].push_back(it->second.first);
+  for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator
+      it = update_way_logger.erase_begin(); it != update_way_logger.erase_end(); ++it)
+    ways[it->second.first.index].push_back(it->second.first);
+    
+  for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator
+      it = update_node_logger.insert_begin(); it != update_node_logger.insert_end(); ++it)
+    node_ids.push_back(it->second.first.id);
+  for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator
+      it = update_node_logger.keep_begin(); it != update_node_logger.keep_end(); ++it)
+    node_ids.push_back(it->second.first.id);
+  for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator
+      it = update_node_logger.erase_begin(); it != update_node_logger.erase_end(); ++it)
+    node_ids.push_back(it->second.first.id);
+  
+  map< Uint32_Index, vector< Node_Skeleton > > kept_nodes =
+      way_members(0, rman, ways, 0, &node_ids, true);
+
+  //cout<<"Kept nodes:\n";
+  for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator it = kept_nodes.begin();
+       it != kept_nodes.end(); ++it)
+  {
+    for (vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      ;//cout<<it2->id<<'\n';
+  } 
+  //cout<<'\n';
+}
+
+
 void Osm_Updater::finish_updater()
 {
   if (state == IN_NODES)
@@ -534,6 +579,9 @@ Osm_Updater::Osm_Updater
 
 void Osm_Updater::flush()
 {
+  if (transaction)
+    collect_kept_members(*transaction, *update_node_logger, *update_way_logger);
+  
   //update_node_logger_->flush();  
   //update_way_logger_->flush();
   //update_relation_logger->flush();

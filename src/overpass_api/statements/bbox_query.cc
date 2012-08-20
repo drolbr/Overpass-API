@@ -275,7 +275,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   
     // Retrieve all nodes referred by the ways.
     map< Uint32_Index, vector< Node_Skeleton > > way_members_
-        = way_members(query, rman, into.ways);
+        = way_members(&query, rman, into.ways);
     //collect_nodes(query, rman, into.ways.begin(), into.ways.end(), way_members);
   
     // Order node ids by id.
@@ -350,7 +350,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     
     // Retrieve all nodes referred by the ways.
     map< Uint32_Index, vector< Node_Skeleton > > way_nds
-        = way_members(query, rman, way_members_);
+        = way_members(&query, rman, way_members_);
     //collect_nodes(query, rman, way_members_.begin(), way_members_.end(), way_nds);
     
     // Order node ids by id.

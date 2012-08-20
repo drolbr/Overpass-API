@@ -88,6 +88,19 @@ public:
   
   void flush();
   
+  map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator insert_begin() const
+  { return insert.begin(); }
+  map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator insert_end() const
+  { return insert.end(); }
+  map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator keep_begin() const
+  { return keep.begin(); }
+  map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator keep_end() const
+  { return keep.end(); }
+  map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator erase_begin() const
+  { return erase.begin(); }
+  map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator erase_end() const
+  { return erase.end(); }
+
   ~Update_Node_Logger();
   
 private:

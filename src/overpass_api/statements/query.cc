@@ -330,13 +330,13 @@ void Query_Statement::get_elements_by_id_from_db
      Resource_Manager& rman, File_Properties& file_prop)
 {
   if (ids.empty())
-    collect_items_range(*this, rman, file_prop, range_req,
+    collect_items_range(this, rman, file_prop, range_req,
 			Trivial_Predicate< TObject >(), elements);
   else if (!invert_ids)
-    collect_items_range(*this, rman, file_prop, range_req,
+    collect_items_range(this, rman, file_prop, range_req,
 		        Id_Predicate< TObject >(ids), elements);
   else if (!range_req.empty())
-    collect_items_range(*this, rman, file_prop, range_req,
+    collect_items_range(this, rman, file_prop, range_req,
 			Not_Predicate< TObject, Id_Predicate< TObject > >
 			(Id_Predicate< TObject >(ids)), elements);
   else

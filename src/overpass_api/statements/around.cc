@@ -425,7 +425,7 @@ struct Way_Member_Collection
   Way_Member_Collection(const map< Uint31_Index, vector< Way_Skeleton > >& ways,
 			const Statement& query, Resource_Manager& rman)
       : query_(query),
-        node_members(way_members(query, rman, ways))
+        node_members(way_members(&query, rman, ways))
   {
     // Retrieve all nodes referred by the ways.
     // collect_nodes(query, rman, ways.begin(), ways.end(), node_members);

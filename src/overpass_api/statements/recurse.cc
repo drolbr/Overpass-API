@@ -246,20 +246,20 @@ void collect_nodes(const Statement& query, Resource_Manager& rman,
   if (ranges.empty())
   {
     if (ids.empty())
-      nodes = way_members(query, rman, rels);
+      nodes = way_members(&query, rman, rels);
     else if (!invert_ids)
-      nodes = way_members(query, rman, rels, 0, &ids);
+      nodes = way_members(&query, rman, rels, 0, &ids);
     else
-      nodes = way_members(query, rman, rels, 0, &ids, invert_ids);
+      nodes = way_members(&query, rman, rels, 0, &ids, invert_ids);
   }
   else
   {
     if (ids.empty())
-      nodes = way_members(query, rman, rels, &ranges);
+      nodes = way_members(&query, rman, rels, &ranges);
     else if (!invert_ids)
-      nodes = way_members(query, rman, rels, &ranges, &ids);
+      nodes = way_members(&query, rman, rels, &ranges, &ids);
     else
-      nodes = way_members(query, rman, rels, 0, &ids, invert_ids);
+      nodes = way_members(&query, rman, rels, 0, &ids, invert_ids);
   }
 }
 
@@ -577,7 +577,10 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
   
   vector< uint32 > ids;
   if (stmt->get_type() == RECURSE_WAY_NODE)
-    ids = way_nd_ids(*stmt, rman, mit->second.ways);
+  {
+    ids = way_nd_ids(mit->second.ways);
+    rman.health_check(*stmt);
+  }
   else if (stmt->get_type() == RECURSE_RELATION_NODE)
     ids = relation_member_ids(*stmt, rman, Relation_Entry::NODE, mit->second.relations);
   
@@ -649,8 +652,8 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
     map< Uint31_Index, vector< Way_Skeleton > > intermediate_ways;
     collect_ways(query, rman, mit->second.relations, set< pair< Uint31_Index, Uint31_Index > >(),
 		 ids, false, intermediate_ways);
-    vector< uint32 > way_ids
-        = way_nd_ids(*stmt, rman, intermediate_ways);
+    vector< uint32 > way_ids = way_nd_ids(intermediate_ways);
+    rman.health_check(*stmt);
     set_union(way_ids.begin(), way_ids.end(), rel_ids.begin(), rel_ids.end(), back_inserter(ids));
   
     filter_items(Id_Predicate< Node_Skeleton >(ids), into.nodes);
@@ -669,8 +672,8 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
     map< Uint31_Index, vector< Way_Skeleton > > intermediate_ways;
     collect_ways(query, rman, rel_rels, set< pair< Uint31_Index, Uint31_Index > >(),
 		 ids, false, intermediate_ways);
-    vector< uint32 > way_ids
-        = way_nd_ids(*stmt, rman, intermediate_ways);
+    vector< uint32 > way_ids = way_nd_ids(intermediate_ways);
+    rman.health_check(*stmt);
     set_union(way_ids.begin(), way_ids.end(), rel_ids.begin(), rel_ids.end(), back_inserter(ids));
   
     filter_items(Id_Predicate< Node_Skeleton >(ids), into.nodes);
@@ -799,7 +802,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   else if (type == RECURSE_RELATION_NODE)
     into.nodes = relation_node_members(*this, rman, mit->second.relations);
   else if (type == RECURSE_WAY_NODE)
-    into.nodes = way_members(*this, rman, mit->second.ways);
+    into.nodes = way_members(this, rman, mit->second.ways);
   else if (type == RECURSE_DOWN)
   {
     map< Uint32_Index, vector< Node_Skeleton > > rel_nodes
@@ -807,7 +810,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     into.ways = relation_way_members(*this, rman, mit->second.relations);
     map< Uint31_Index, vector< Way_Skeleton > > source_ways = mit->second.ways;
     indexed_set_union(source_ways, into.ways);
-    into.nodes = way_members(*this, rman, source_ways);
+    into.nodes = way_members(this, rman, source_ways);
     indexed_set_union(into.nodes, rel_nodes);
   }
   else if (type == RECURSE_DOWN_REL)
@@ -818,7 +821,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     into.ways = relation_way_members(*this, rman, into.relations);
     map< Uint31_Index, vector< Way_Skeleton > > source_ways = mit->second.ways;
     indexed_set_union(source_ways, into.ways);
-    into.nodes = way_members(*this, rman, source_ways);
+    into.nodes = way_members(this, rman, source_ways);
     indexed_set_union(into.nodes, rel_nodes);
   }
   else if (type == RECURSE_WAY_RELATION)

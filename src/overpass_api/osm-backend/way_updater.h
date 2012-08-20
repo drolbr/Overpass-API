@@ -67,7 +67,9 @@ public:
     }
     else
       it->second.first = Way(skel.id);
+    it->second.first.index = index.val();
     it->second.first.nds = skel.nds;
+    it->second.first.segment_idxs = skel.segment_idxs;
   }
   
   void keeping(const Uint31_Index& index, const Way_Skeleton& skel)
@@ -84,7 +86,9 @@ public:
     }
     else
       it->second.first = Way(skel.id);
+    it->second.first.index = index.val();
     it->second.first.nds = skel.nds;
+    it->second.first.segment_idxs = skel.segment_idxs;
   }
   
   void deletion(const Tag_Index_Local& index, const Uint32_Index& ref)
@@ -124,6 +128,19 @@ public:
       it->second.second = meta;
     }
   }
+  
+  map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator insert_begin() const
+  { return insert.begin(); }
+  map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator insert_end() const
+  { return insert.end(); }
+  map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator keep_begin() const
+  { return keep.begin(); }
+  map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator keep_end() const
+  { return keep.end(); }
+  map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator erase_begin() const
+  { return erase.begin(); }
+  map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator erase_end() const
+  { return erase.end(); }
   
   void flush();
   
