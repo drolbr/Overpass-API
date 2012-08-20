@@ -322,20 +322,37 @@ void Node_Updater::update_coords(const map< uint32, vector< uint32 > >& to_delet
     node_db.update(db_to_delete, db_to_insert);
 }
 
+
+map< uint32, set< uint32 > > collect_coarse(const map< uint32, vector< uint32 > >& elems_by_idx)
+{
+  map< uint32, set< uint32 > > coarse;
+  for (map< uint32, vector< uint32 > >::const_iterator
+      it(elems_by_idx.begin()); it != elems_by_idx.end(); ++it)
+  {
+    set< uint32 >& handle(coarse[it->first & 0xffffff00]);
+    for (vector< uint32 >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      handle.insert(*it2);
+  }
+  return coarse;
+}
+
+
 void Node_Updater::prepare_delete_tags
       (vector< Tag_Entry >& tags_to_delete,
        const map< uint32, vector< uint32 > >& to_delete)
 {
   // make indices appropriately coarse
-  map< uint32, set< uint32 > > to_delete_coarse;
-  for (map< uint32, vector< uint32 > >::const_iterator
-      it(to_delete.begin()); it != to_delete.end(); ++it)
-  {
-    set< uint32 >& handle(to_delete_coarse[it->first & 0xffffff00]);
-    for (vector< uint32 >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-      handle.insert(*it2);
-  }
+  map< uint32, set< uint32 > > to_delete_coarse
+    = collect_coarse(elems_by_idx);
+//   for (map< uint32, vector< uint32 > >::const_iterator
+//       it(to_delete.begin()); it != to_delete.end(); ++it)
+//   {
+//     set< uint32 >& handle(to_delete_coarse[it->first & 0xffffff00]);
+//     for (vector< uint32 >::const_iterator it2(it->second.begin());
+//         it2 != it->second.end(); ++it2)
+//       handle.insert(*it2);
+//   }
   
   // formulate range query
   set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
