@@ -323,6 +323,7 @@ void Node_Updater::update_coords(const map< uint32, vector< uint32 > >& to_delet
 }
 
 
+// make indices appropriately coarse
 map< uint32, set< uint32 > > collect_coarse(const map< uint32, vector< uint32 > >& elems_by_idx)
 {
   map< uint32, set< uint32 > > coarse;
@@ -338,26 +339,12 @@ map< uint32, set< uint32 > > collect_coarse(const map< uint32, vector< uint32 > 
 }
 
 
-void Node_Updater::prepare_delete_tags
-      (vector< Tag_Entry >& tags_to_delete,
-       const map< uint32, vector< uint32 > >& to_delete)
+// formulate range query
+set< pair< Tag_Index_Local, Tag_Index_Local > > make_range_set(const map< uint32, set< uint32 > >& coarse)
 {
-  // make indices appropriately coarse
-  map< uint32, set< uint32 > > to_delete_coarse
-    = collect_coarse(elems_by_idx);
-//   for (map< uint32, vector< uint32 > >::const_iterator
-//       it(to_delete.begin()); it != to_delete.end(); ++it)
-//   {
-//     set< uint32 >& handle(to_delete_coarse[it->first & 0xffffff00]);
-//     for (vector< uint32 >::const_iterator it2(it->second.begin());
-//         it2 != it->second.end(); ++it2)
-//       handle.insert(*it2);
-//   }
-  
-  // formulate range query
   set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
   for (map< uint32, set< uint32 > >::const_iterator
-      it(to_delete_coarse.begin()); it != to_delete_coarse.end(); ++it)
+      it(coarse.begin()); it != coarse.end(); ++it)
   {
     Tag_Index_Local lower, upper;
     lower.index = it->first;
@@ -368,6 +355,16 @@ void Node_Updater::prepare_delete_tags
     upper.value = "";
     range_set.insert(make_pair(lower, upper));
   }
+  return range_set;
+}
+
+
+void Node_Updater::prepare_delete_tags
+      (vector< Tag_Entry >& tags_to_delete,
+       const map< uint32, vector< uint32 > >& to_delete)
+{
+  map< uint32, set< uint32 > > to_delete_coarse = collect_coarse(to_delete);  
+  set< pair< Tag_Index_Local, Tag_Index_Local > > range_set = make_range_set(to_delete_coarse);
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, Uint32_Index > nodes_db
@@ -399,6 +396,7 @@ void Node_Updater::prepare_delete_tags
   if ((current_index.index != 0xffffffff) && (!node_tag_entry.ids.empty()))
     tags_to_delete.push_back(node_tag_entry);
 }
+
 
 void Node_Updater::update_node_tags_local(const vector< Tag_Entry >& tags_to_delete,
 					  Update_Node_Logger* update_logger)

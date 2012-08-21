@@ -63,6 +63,18 @@ public:
       it->second.first = Node(skel.id, index.val(), skel.ll_lower);
   }
   
+  void keeping(const Uint32_Index& index, const Node_Skeleton& skel)
+  {
+    map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator it = keep.find(skel.id);
+    if (it == keep.end())
+    {
+      keep.insert(make_pair(skel.id, make_pair< Node, OSM_Element_Metadata* >
+          (Node(skel.id, index.val(), skel.ll_lower), 0)));
+    }
+    else
+      it->second.first = Node(skel.id, index.val(), skel.ll_lower);
+  }
+  
   void deletion(const Tag_Index_Local& index, const Uint32_Index& ref)
   {
     map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator it = erase.find(ref.val());
@@ -70,10 +82,33 @@ public:
       it->second.first.tags.push_back(make_pair(index.key, index.value));
   }
   
+  void keeping(const Tag_Index_Local& index, const Uint32_Index& ref)
+  {
+    map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator it = keep.find(ref.val());
+    if (it != keep.end())
+      it->second.first.tags.push_back(make_pair(index.key, index.value));
+  }
+  
   void deletion(const Uint31_Index& index, const OSM_Element_Metadata_Skeleton& meta_skel)
   {
     map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator it = erase.find(meta_skel.ref);
     if (it != erase.end())
+    {
+      if (it->second.second)
+        delete it->second.second;
+      OSM_Element_Metadata* meta = new OSM_Element_Metadata();
+      meta->version = meta_skel.version;
+      meta->timestamp = meta_skel.timestamp;
+      meta->changeset = meta_skel.changeset;
+      meta->user_id = meta_skel.user_id;
+      it->second.second = meta;
+    }
+  }
+  
+  void keeping(const Uint31_Index& index, const OSM_Element_Metadata_Skeleton& meta_skel)
+  {
+    map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator it = keep.find(meta_skel.ref);
+    if (it != keep.end())
     {
       if (it->second.second)
         delete it->second.second;
@@ -206,5 +241,13 @@ private:
   
   void merge_files(const vector< string >& froms, string into);
 };
+
+
+// make indices appropriately coarse
+map< uint32, set< uint32 > > collect_coarse(const map< uint32, vector< uint32 > >& elems_by_idx);
+
+// formulate range query
+set< pair< Tag_Index_Local, Tag_Index_Local > > make_range_set(const map< uint32, set< uint32 > >& coarse);
+
 
 #endif

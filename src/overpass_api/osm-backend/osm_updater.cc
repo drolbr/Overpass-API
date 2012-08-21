@@ -448,14 +448,36 @@ void collect_kept_members(Transaction& transaction,
   map< Uint32_Index, vector< Node_Skeleton > > kept_nodes =
       way_members(0, rman, ways, 0, &node_ids, true);
 
-  //cout<<"Kept nodes:\n";
+  map< uint32, vector< uint32 > > elems_by_idx;
+  set< Uint31_Index > meta_idx_set;
   for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator it = kept_nodes.begin();
        it != kept_nodes.end(); ++it)
   {
+    meta_idx_set.insert(Uint31_Index(it->first.val()));
     for (vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      ;//cout<<it2->id<<'\n';
-  } 
-  //cout<<'\n';
+    {
+      update_node_logger.keeping(it->first, *it2);
+      elems_by_idx[it->first.val()].push_back(it2->id);
+    }
+  }
+  
+  set< pair< Tag_Index_Local, Tag_Index_Local > > tag_range_set
+      = make_range_set(collect_coarse(elems_by_idx));  
+  Block_Backend< Tag_Index_Local, Uint32_Index > nodes_db
+      (transaction.data_index(osm_base_settings().NODE_TAGS_LOCAL));
+  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
+      it(nodes_db.range_begin
+         (Default_Range_Iterator< Tag_Index_Local >(tag_range_set.begin()),
+          Default_Range_Iterator< Tag_Index_Local >(tag_range_set.end())));
+      !(it == nodes_db.range_end()); ++it)
+    update_node_logger.keeping(it.index(), it.object());
+  
+  Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton > meta_db
+      (transaction.data_index(meta_settings().NODES_META));
+  for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton >::Discrete_Iterator
+      it(meta_db.discrete_begin(meta_idx_set.begin(), meta_idx_set.end()));
+      !(it == meta_db.discrete_end()); ++it)  
+    update_node_logger.keeping(it.index(), it.object());
 }
 
 
@@ -582,7 +604,7 @@ void Osm_Updater::flush()
   if (transaction)
     collect_kept_members(*transaction, *update_node_logger, *update_way_logger);
   
-  //update_node_logger_->flush();  
+  update_node_logger_->flush();  
   //update_way_logger_->flush();
   //update_relation_logger->flush();
   
