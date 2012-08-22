@@ -121,8 +121,6 @@ public:
     }
   }
   
-  void flush();
-  
   map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator insert_begin() const
   { return insert.begin(); }
   map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator insert_end() const

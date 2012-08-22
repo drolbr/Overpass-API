@@ -38,6 +38,8 @@ int main(int argc, char* argv[])
   string db_dir, data_version;
   bool transactional = true;
   bool meta = false;
+  bool produce_augmented_diffs = false;
+  bool abort = false;
   
   int argpos(1);
   while (argpos < argc)
@@ -53,20 +55,34 @@ int main(int argc, char* argv[])
       data_version = ((string)argv[argpos]).substr(10);
     else if (!(strncmp(argv[argpos], "--meta", 6)))
       meta = true;
+    else if (!(strncmp(argv[argpos], "--produce-diff", 6)))
+      produce_augmented_diffs = true;
+    else
+    {
+      cerr<<"Unkown argument: "<<argv[argpos]<<'\n';
+      abort = true;
+    }
     ++argpos;
   }
+  if (!transactional && produce_augmented_diffs)
+  {
+    cerr<<"Augmented diffs can only be produced with running dispatcher.\n";
+    abort = true;
+  }
+  if (abort)
+    return 0;
   
   try
   {
     if (transactional)
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta);
+      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta, produce_augmented_diffs);
       //reading the main document
       osm_updater.parse_file_completely(stdin);
     }
     else
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta);
+      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta, produce_augmented_diffs);
       //reading the main document
       osm_updater.parse_file_completely(stdin);
     }

@@ -34,49 +34,6 @@
 using namespace std;
 
 
-void Update_Node_Logger::flush()
-{
-  cout<<"Insert:\n";
-  for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator it = insert.begin();
-      it != insert.end(); ++it)
-  {
-    cout<<it->second.first.id<<'\t'
-        <<Node::lat(it->second.first.ll_upper, it->second.first.ll_lower_)<<'\t'
-        <<Node::lon(it->second.first.ll_upper, it->second.first.ll_lower_)<<'\t'
-        <<it->second.first.tags.size();
-    if (it->second.second)
-      cout<<'\t'<<it->second.second->version<<'\t'<<it->second.second->user_id;
-    cout<<'\n';
-  }
-  cout<<'\n';
-  cout<<"Keep:\n";
-  for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator it = keep.begin();
-      it != keep.end(); ++it)
-  {
-    cout<<it->second.first.id<<'\t'
-        <<Node::lat(it->second.first.ll_upper, it->second.first.ll_lower_)<<'\t'
-        <<Node::lon(it->second.first.ll_upper, it->second.first.ll_lower_)<<'\t'
-        <<it->second.first.tags.size();
-    if (it->second.second)
-      cout<<'\t'<<it->second.second->version<<'\t'<<it->second.second->user_id;
-    cout<<'\n';
-  }
-  cout<<'\n';
-  cout<<"Delete:\n";
-  for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator it = erase.begin();
-      it != erase.end(); ++it)
-  {
-    cout<<it->second.first.id<<'\t'
-        <<Node::lat(it->second.first.ll_upper, it->second.first.ll_lower_)<<'\t'
-        <<Node::lon(it->second.first.ll_upper, it->second.first.ll_lower_)<<'\t'
-        <<it->second.first.tags.size();
-    if (it->second.second)
-      cout<<'\t'<<it->second.second->version<<'\t'<<it->second.second->user_id;
-    cout<<'\n';
-  }
-  cout<<'\n';
-}
-  
 Update_Node_Logger::~Update_Node_Logger()
 {
   for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator it = insert.begin();
@@ -119,20 +76,23 @@ Node_Updater::Node_Updater(string db_dir_, bool meta_)
 void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
 			  Update_Node_Logger* update_logger)
 {
-  for (vector< Node >::const_iterator it = nodes_to_insert.begin(); it != nodes_to_insert.end(); ++it)
-    update_logger->insertion(*it);
-  if (meta)
+  if (update_logger)
   {
-    for (vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::const_iterator
-        it = nodes_meta_to_insert.begin(); it != nodes_meta_to_insert.end(); ++it)
+    for (vector< Node >::const_iterator it = nodes_to_insert.begin(); it != nodes_to_insert.end(); ++it)
+      update_logger->insertion(*it);
+    if (meta)
     {
-      OSM_Element_Metadata meta;
-      meta.version = it->first.version;
-      meta.timestamp = it->first.timestamp;
-      meta.changeset = it->first.changeset;
-      meta.user_id = it->first.user_id;
-      meta.user_name = user_by_id[it->first.user_id];
-      update_logger->insertion(it->first.ref, meta);
+      for (vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::const_iterator
+          it = nodes_meta_to_insert.begin(); it != nodes_meta_to_insert.end(); ++it)
+      {
+        OSM_Element_Metadata meta;
+        meta.version = it->first.version;
+        meta.timestamp = it->first.timestamp;
+        meta.changeset = it->first.changeset;
+        meta.user_id = it->first.user_id;
+        meta.user_name = user_by_id[it->first.user_id];
+        update_logger->insertion(it->first.ref, meta);
+      }
     }
   }
   

@@ -285,7 +285,7 @@ namespace
       callback->ways_finished();
       way_updater->update(callback, false, update_way_logger);
       relation_updater->update_moved_idxs
-      (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
+          (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
       callback->parser_started();
       osm_element_count = 0;
       state = IN_RELATIONS;
@@ -630,17 +630,59 @@ void print_meta(OSM_Element_Metadata* meta)
 }
 
 
-void print_tags(const vector< pair< string, string > >& tags, string type)
+void print_tags(const vector< pair< string, string > >& tags)
 {
-  if (tags.empty())
+  for (vector< pair< string, string > >::const_iterator tit = tags.begin(); tit != tags.end(); ++tit)
+    cout<<"    <tag k=\""<<tit->first<<"\" v=\""<<tit->second<<"\"/>\n";
+}
+
+
+void print_node(const Node& node, OSM_Element_Metadata* meta)
+{
+  cout<<
+  "  <node id=\""<<node.id<<"\" "
+  "lat=\""<<Node::lat(node.ll_upper, node.ll_lower_)<<"\" "
+  "lon=\""<<Node::lon(node.ll_upper, node.ll_lower_)<<"\"";
+  print_meta(meta);
+  if (node.tags.empty())
     cout<<"/>\n";
   else
   {
     cout<<">\n";
-    for (vector< pair< string, string > >::const_iterator tit = tags.begin(); tit != tags.end(); ++tit)
-      cout<<"      <tag k=\""<<tit->first<<"\" v=\""<<tit->second<<"\"/>\n";
-    cout<<"    </"<<type<<">\n";
+    print_tags(node.tags);
+    cout<<"  </node>\n";
   }
+}
+
+
+void print_way(const Way& way, OSM_Element_Metadata* meta)
+{
+  cout<<"  <way id=\""<<way.id<<"\"";
+  print_meta(meta);
+  cout<<"/>\n";
+  for (vector< uint32 >::const_iterator it = way.nds.begin(); it != way.nds.end(); ++it)
+    cout<<"    <nd ref=\""<<*it<<"\"/>\n";
+  print_tags(way.tags);
+  cout<<"  </way>\n";
+}
+
+
+const char* MEMBER_TYPE[] = { 0, "node", "way", "relation" };
+
+void print_relation(const Relation& relation, OSM_Element_Metadata* meta,
+		    const vector< string >& relation_roles)
+{
+  cout<<"  <relation id=\""<<relation.id<<"\"";
+  print_meta(meta);
+  cout<<"/>\n";
+  for (vector< Relation_Entry >::const_iterator it = relation.members.begin();
+       it != relation.members.end(); ++it)
+    cout<<"    <member "
+          "type=\""<<MEMBER_TYPE[it->type]<<"\" "
+	  "ref=\""<<it->ref<<"\" "
+	  "role=\""<<relation_roles[it->role]<<"\"/>\n";
+  print_tags(relation.tags);
+  cout<<"  </relation>\n";
 }
 
 
@@ -648,47 +690,66 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 			  Update_Way_Logger& update_way_logger,
 			  Update_Relation_Logger& update_relation_logger)
 {
-  cout<<"  <delete>\n";
+  cout<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+        "<osm version=\"0.6\" generator=\"Overpass API\">\n\n";
+
+  cout<<"<delete>\n";
   for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator
       it = update_node_logger.erase_begin(); it != update_node_logger.erase_end(); ++it)
-  {
-    const Node& node = it->second.first;
-    cout<<
-    "    <node id=\""<<node.id<<"\" "
-    "lat=\""<<Node::lat(node.ll_upper, node.ll_lower_)<<"\" "
-    "lon=\""<<Node::lon(node.ll_upper, node.ll_lower_)<<"\"";
-    print_meta(it->second.second);
-    print_tags(node.tags, "node");
-  }  
-  cout<<"  </delete>\n";
+    print_node(it->second.first, it->second.second);
+  cout<<"</delete>\n";
   
-  cout<<"  <keep>\n";
+  cout<<"<keep>\n";
   for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator
       it = update_node_logger.keep_begin(); it != update_node_logger.keep_end(); ++it)
-  {
-    const Node& node = it->second.first;
-    cout<<
-    "    <node id=\""<<node.id<<"\" "
-    "lat=\""<<Node::lat(node.ll_upper, node.ll_lower_)<<"\" "
-    "lon=\""<<Node::lon(node.ll_upper, node.ll_lower_)<<"\"";
-    print_meta(it->second.second);
-    print_tags(node.tags, "node");
-  }  
-  cout<<"  </keep>\n";
+    print_node(it->second.first, it->second.second);
+  cout<<"</keep>\n";
   
-  cout<<"  <insert>\n";
+  cout<<"<insert>\n";
   for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator
       it = update_node_logger.insert_begin(); it != update_node_logger.insert_end(); ++it)
-  {
-    const Node& node = it->second.first;
-    cout<<
-    "    <node id=\""<<node.id<<"\" "
-    "lat=\""<<Node::lat(node.ll_upper, node.ll_lower_)<<"\" "
-    "lon=\""<<Node::lon(node.ll_upper, node.ll_lower_)<<"\"";
-    print_meta(it->second.second);
-    print_tags(node.tags, "node");
-  }  
-  cout<<"  </insert>\n";
+    print_node(it->second.first, it->second.second);
+  cout<<"</insert>\n";
+
+  cout<<"<delete>\n";
+  for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator
+      it = update_way_logger.erase_begin(); it != update_way_logger.erase_end(); ++it)
+    print_way(it->second.first, it->second.second);
+  cout<<"</delete>\n";
+  
+  cout<<"<keep>\n";
+  for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator
+      it = update_way_logger.keep_begin(); it != update_way_logger.keep_end(); ++it)
+    print_way(it->second.first, it->second.second);
+  cout<<"</keep>\n";
+  
+  cout<<"<insert>\n";
+  for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator
+      it = update_way_logger.insert_begin(); it != update_way_logger.insert_end(); ++it)
+    print_way(it->second.first, it->second.second);
+  cout<<"</insert>\n";
+
+  vector< string > relation_roles = relation_updater->get_roles();
+  
+  cout<<"<delete>\n";
+  for (map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator
+      it = update_relation_logger.erase_begin(); it != update_relation_logger.erase_end(); ++it)
+    print_relation(it->second.first, it->second.second, relation_roles);
+  cout<<"</delete>\n";
+  
+  cout<<"<keep>\n";
+  for (map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator
+      it = update_relation_logger.keep_begin(); it != update_relation_logger.keep_end(); ++it)
+    print_relation(it->second.first, it->second.second, relation_roles);
+  cout<<"</keep>\n";
+  
+  cout<<"<insert>\n";
+  for (map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator
+      it = update_relation_logger.insert_begin(); it != update_relation_logger.insert_end(); ++it)
+    print_relation(it->second.first, it->second.second, relation_roles);
+  cout<<"</insert>\n";
+  
+  cout<<"\n</osm>\n";
 }
 
 
@@ -745,7 +806,7 @@ void parse_relations_only(FILE* in)
 }
 
 Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version,
-			 bool meta_)
+			 bool meta_, bool produce_augmented_diffs)
   : dispatcher_client(0), meta(meta_)
 {
   dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
@@ -762,11 +823,11 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
   }
 
   node_updater_ = new Node_Updater(*transaction, meta);
-  update_node_logger_ = new Update_Node_Logger();
+  update_node_logger_ = (produce_augmented_diffs ? new Update_Node_Logger() : 0);
   way_updater_ = new Way_Updater(*transaction, meta);
-  update_way_logger_ = new Update_Way_Logger();
+  update_way_logger_ = (produce_augmented_diffs ? new Update_Way_Logger() : 0);
   relation_updater_ = new Relation_Updater(*transaction, meta);
-  update_relation_logger_ = new Update_Relation_Logger();
+  update_relation_logger_ = (produce_augmented_diffs ? new Update_Relation_Logger() : 0);
 
   state = 0;
   osm_element_count = 0;
@@ -782,7 +843,8 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
 }
 
 Osm_Updater::Osm_Updater
-    (Osm_Backend_Callback* callback_, string db_dir, const string& data_version, bool meta_)
+    (Osm_Backend_Callback* callback_, string db_dir, const string& data_version,
+     bool meta_, bool produce_augmented_diffs)
   : transaction(0), dispatcher_client(0), db_dir_(db_dir), meta(meta_)
 {
   {
@@ -791,11 +853,11 @@ Osm_Updater::Osm_Updater
   }
   
   node_updater_ = new Node_Updater(db_dir, meta);
-  update_node_logger_ = new Update_Node_Logger();
+  update_node_logger_ = (produce_augmented_diffs ? new Update_Node_Logger() : 0);
   way_updater_ = new Way_Updater(db_dir, meta);
-  update_way_logger_ = new Update_Way_Logger();
+  update_way_logger_ = (produce_augmented_diffs ? new Update_Way_Logger() : 0);
   relation_updater_ = new Relation_Updater(db_dir, meta);
-  update_relation_logger_ = new Update_Relation_Logger();
+  update_relation_logger_ = (produce_augmented_diffs ? new Update_Relation_Logger() : 0);
   
   state = 0;
   osm_element_count = 0;
@@ -812,7 +874,7 @@ Osm_Updater::Osm_Updater
 
 void Osm_Updater::flush()
 {
-  if (transaction)
+  if (transaction && update_node_logger && update_way_logger && update_relation_logger)
   {
     collect_kept_members(*transaction, *update_node_logger, *update_way_logger);
     complete_user_data(*transaction, *update_node_logger, *update_way_logger, *update_relation_logger);

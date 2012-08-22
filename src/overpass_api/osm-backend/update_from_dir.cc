@@ -88,6 +88,8 @@ int main(int argc, char* argv[])
   string source_dir, db_dir, data_version;
   vector< string > source_file_names;
   bool meta = false;
+  bool produce_augmented_diffs = false;
+  bool abort = false;
   
   int argpos(1);
   while (argpos < argc)
@@ -108,8 +110,22 @@ int main(int argc, char* argv[])
       data_version = ((string)argv[argpos]).substr(10);
     else if (!(strncmp(argv[argpos], "--meta", 6)))
       meta = true;
+    else if (!(strncmp(argv[argpos], "--produce-diff", 6)))
+      produce_augmented_diffs = true;
+    else
+    {
+      cerr<<"Unkown argument: "<<argv[argpos]<<'\n';
+      abort = true;
+    }
     ++argpos;
   }
+  if (db_dir == "" && produce_augmented_diffs)
+  {
+    cerr<<"Augmented diffs can only be produced with running dispatcher.\n";
+    abort = true;
+  }
+  if (abort)
+    return 0;
   
   // read file names from source directory
   DIR *dp;
@@ -133,7 +149,7 @@ int main(int argc, char* argv[])
   {
     if (db_dir == "")
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta);
+      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta, produce_augmented_diffs);
       get_verbatim_callback()->parser_started();
       
       process_source_files< Node_Caller >(source_dir, source_file_names);
@@ -144,7 +160,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta);
+      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta, produce_augmented_diffs);
       get_verbatim_callback()->parser_started();
       
       process_source_files< Node_Caller >(source_dir, source_file_names);

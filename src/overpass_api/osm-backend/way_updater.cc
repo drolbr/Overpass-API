@@ -34,53 +34,6 @@
 using namespace std;
 
 
-void Update_Way_Logger::flush()
-{
-  cout<<"Insert:\n";
-  for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator it = insert.begin();
-      it != insert.end(); ++it)
-  {
-    cout<<it->second.first.id;
-    for (vector< uint32 >::const_iterator it2 = it->second.first.nds.begin();
-	 it2 != it->second.first.nds.end(); ++it2)
-      cout<<'\t'<<*it2;
-    cout<<"\t\t"<<it->second.first.tags.size();
-    if (it->second.second)
-      cout<<'\t'<<it->second.second->version<<'\t'<<it->second.second->user_id;
-    cout<<'\n';
-  }
-  cout<<'\n';
-  cout<<"Keep:\n";
-  for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator it = keep.begin();
-      it != keep.end(); ++it)
-  {
-    cout<<it->second.first.id;
-    for (vector< uint32 >::const_iterator it2 = it->second.first.nds.begin();
-	 it2 != it->second.first.nds.end(); ++it2)
-      cout<<'\t'<<*it2;
-    cout<<"\t\t"<<it->second.first.tags.size();
-    if (it->second.second)
-      cout<<'\t'<<it->second.second->version<<'\t'<<it->second.second->user_id;
-    cout<<'\n';
-  }
-  cout<<'\n';
-  cout<<"Delete:\n";
-  for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator it = erase.begin();
-      it != erase.end(); ++it)
-  {
-    cout<<it->second.first.id;
-    for (vector< uint32 >::const_iterator it2 = it->second.first.nds.begin();
-	 it2 != it->second.first.nds.end(); ++it2)
-      cout<<'\t'<<*it2;
-    cout<<"\t\t"<<it->second.first.tags.size();
-    if (it->second.second)
-      cout<<'\t'<<it->second.second->version<<'\t'<<it->second.second->user_id;
-    cout<<'\n';
-  }
-  cout<<'\n';
-}
-
-
 Update_Way_Logger::~Update_Way_Logger()
 {
   for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator it = insert.begin();
@@ -129,20 +82,23 @@ namespace
 void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
 	      Update_Way_Logger* update_logger)
 {
-  for (vector< Way >::const_iterator it = ways_to_insert.begin(); it != ways_to_insert.end(); ++it)
-    update_logger->insertion(*it);
-  if (meta)
+  if (update_logger)
   {
-    for (vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::const_iterator
-        it = ways_meta_to_insert.begin(); it != ways_meta_to_insert.end(); ++it)
+    for (vector< Way >::const_iterator it = ways_to_insert.begin(); it != ways_to_insert.end(); ++it)
+      update_logger->insertion(*it);
+    if (meta)
     {
-      OSM_Element_Metadata meta;
-      meta.version = it->first.version;
-      meta.timestamp = it->first.timestamp;
-      meta.changeset = it->first.changeset;
-      meta.user_id = it->first.user_id;
-      meta.user_name = user_by_id[it->first.user_id];
-      update_logger->insertion(it->first.ref, meta);
+      for (vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::const_iterator
+          it = ways_meta_to_insert.begin(); it != ways_meta_to_insert.end(); ++it)
+      {
+        OSM_Element_Metadata meta;
+        meta.version = it->first.version;
+        meta.timestamp = it->first.timestamp;
+        meta.changeset = it->first.changeset;
+        meta.user_id = it->first.user_id;
+        meta.user_name = user_by_id[it->first.user_id];
+        update_logger->insertion(it->first.ref, meta);
+      }
     }
   }
   

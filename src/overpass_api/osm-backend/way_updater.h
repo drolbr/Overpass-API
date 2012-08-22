@@ -155,8 +155,6 @@ public:
   map< uint32, pair< Way, OSM_Element_Metadata* > >::iterator erase_end()
   { return erase.end(); }
 
-  void flush();
-  
   ~Update_Way_Logger();
   
 private:

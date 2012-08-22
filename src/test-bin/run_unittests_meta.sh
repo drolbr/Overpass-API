@@ -289,7 +289,7 @@ date +%T
 $BASEDIR/bin/dispatcher --osm-base --meta --db-dir=run/meta_2/ &
 sleep 1
 date +%T
-$BASEDIR/bin/update_database --version=mock-up-init --meta <run/meta_2/diff.log
+$BASEDIR/bin/update_database --version=mock-up-init --meta --produce-diffs <run/meta_2/diff.log >run/meta_2/augmented_diff.log
 date +%T
 $BASEDIR/bin/osm3s_query --db-dir=run/meta_2/ --concise <run/meta_2/query.xml >run/meta_2/db_after.log
 date +%T
@@ -310,6 +310,7 @@ echo
 RES=$RES`diff -q run/meta_2/stdin.log run/meta_2/initial.log`
 RES=$RES`diff -q run/meta_2/after.log run/meta_2/db_after.log`
 RES=$RES`diff -q run/meta_2/newer.log run/meta_2/db_newer.log`
+RES=$RES`diff -q run/meta_2/augmented_diff.log run/meta_2/initial.log`
 if [[ -n $RES || -s run/meta_2/diff_stderr.log ]]; then
 {
   echo `date +%T` "Test diff 2 FAILED."

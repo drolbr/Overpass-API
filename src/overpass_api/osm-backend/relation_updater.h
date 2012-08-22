@@ -125,8 +125,6 @@ public:
     }
   }
   
-  void flush();
-  
   map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator insert_begin() const
   { return insert.begin(); }
   map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator insert_end() const
@@ -217,6 +215,7 @@ struct Relation_Updater
   }
   
   uint32 get_role_id(const string& s);
+  vector< string > get_roles() const;
   
   void update(Osm_Backend_Callback* callback, Update_Relation_Logger* update_logger);
   

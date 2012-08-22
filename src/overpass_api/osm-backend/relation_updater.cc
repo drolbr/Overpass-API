@@ -32,53 +32,6 @@
 using namespace std;
 
 
-void Update_Relation_Logger::flush()
-{
-  cout<<"Insert:\n";
-  for (map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator it = insert.begin();
-      it != insert.end(); ++it)
-  {
-    cout<<it->second.first.id;
-    for (vector< Relation_Entry >::const_iterator it2 = it->second.first.members.begin();
- 	 it2 != it->second.first.members.end(); ++it2)
-      cout<<'\t'<<it2->type<<' '<<it2->ref<<' '<<it2->role;
-    cout<<"\t\t"<<it->second.first.tags.size();
-    if (it->second.second)
-      cout<<'\t'<<it->second.second->version<<'\t'<<it->second.second->user_id;
-    cout<<'\n';
-  }
-  cout<<'\n';
-  cout<<"Keep:\n";
-  for (map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator it = keep.begin();
-      it != keep.end(); ++it)
-  {
-    cout<<it->second.first.id;
-    for (vector< Relation_Entry >::const_iterator it2 = it->second.first.members.begin();
- 	 it2 != it->second.first.members.end(); ++it2)
-      cout<<'\t'<<it2->type<<' '<<it2->ref<<' '<<it2->role;
-    cout<<"\t\t"<<it->second.first.tags.size();
-    if (it->second.second)
-      cout<<'\t'<<it->second.second->version<<'\t'<<it->second.second->user_id;
-    cout<<'\n';
-  }
-  cout<<'\n';
-  cout<<"Delete:\n";
-  for (map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator it = erase.begin();
-      it != erase.end(); ++it)
-  {
-    cout<<it->second.first.id;
-    for (vector< Relation_Entry >::const_iterator it2 = it->second.first.members.begin();
- 	 it2 != it->second.first.members.end(); ++it2)
-      cout<<'\t'<<it2->type<<' '<<it2->ref<<' '<<it2->role;
-    cout<<"\t\t"<<it->second.first.tags.size();
-    if (it->second.second)
-      cout<<'\t'<<it->second.second->version<<'\t'<<it->second.second->user_id;
-    cout<<'\n';
-  }
-  cout<<'\n';
-}
-
-
 Update_Relation_Logger::~Update_Relation_Logger()
 {
   for (map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator it = insert.begin();
@@ -152,20 +105,23 @@ namespace
 
 void Relation_Updater::update(Osm_Backend_Callback* callback, Update_Relation_Logger* update_logger)
 {
-  for (vector< Relation >::const_iterator it = rels_to_insert.begin(); it != rels_to_insert.end(); ++it)
-    update_logger->insertion(*it);
-  if (meta)
+  if (update_logger)
   {
-    for (vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::const_iterator
-        it = rels_meta_to_insert.begin(); it != rels_meta_to_insert.end(); ++it)
+    for (vector< Relation >::const_iterator it = rels_to_insert.begin(); it != rels_to_insert.end(); ++it)
+      update_logger->insertion(*it);
+    if (meta)
     {
-      OSM_Element_Metadata meta;
-      meta.version = it->first.version;
-      meta.timestamp = it->first.timestamp;
-      meta.changeset = it->first.changeset;
-      meta.user_id = it->first.user_id;
-      meta.user_name = user_by_id[it->first.user_id];
-      update_logger->insertion(it->first.ref, meta);
+      for (vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >::const_iterator
+          it = rels_meta_to_insert.begin(); it != rels_meta_to_insert.end(); ++it)
+      {
+        OSM_Element_Metadata meta;
+        meta.version = it->first.version;
+        meta.timestamp = it->first.timestamp;
+        meta.changeset = it->first.changeset;
+        meta.user_id = it->first.user_id;
+        meta.user_name = user_by_id[it->first.user_id];
+        update_logger->insertion(it->first.ref, meta);
+      }
     }
   }
   
@@ -580,7 +536,7 @@ void Relation_Updater::flush_roles()
   map< Uint32_Index, set< String_Object > > db_to_insert;
   
   for (map< string, uint32 >::const_iterator it(role_ids.begin());
-  it != role_ids.end(); ++it)
+      it != role_ids.end(); ++it)
   {
     if (it->second >= max_written_role_id)
       db_to_insert[Uint32_Index(it->second)].insert
@@ -593,4 +549,13 @@ void Relation_Updater::flush_roles()
       (transaction->data_index(osm_base_settings().RELATION_ROLES));
   roles_db.update(db_to_delete, db_to_insert);
   max_written_role_id = max_role_id;
+}
+
+vector< string > Relation_Updater::get_roles() const
+{
+  vector< string > roles(max_role_id);
+  for (map< string, uint32 >::const_iterator it(role_ids.begin());
+      it != role_ids.end(); ++it)
+    roles[it->second] = it->first;
+  return roles;
 }
