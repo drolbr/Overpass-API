@@ -136,6 +136,19 @@ public:
   map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator erase_end() const
   { return erase.end(); }
 
+  map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator insert_begin()
+  { return insert.begin(); }
+  map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator insert_end()
+  { return insert.end(); }
+  map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator keep_begin()
+  { return keep.begin(); }
+  map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator keep_end()
+  { return keep.end(); }
+  map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator erase_begin()
+  { return erase.begin(); }
+  map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator erase_end()
+  { return erase.end(); }
+
   ~Update_Node_Logger();
   
 private:

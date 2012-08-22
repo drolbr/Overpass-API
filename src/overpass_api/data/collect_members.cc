@@ -53,6 +53,7 @@ vector< uint32 > way_nd_ids(const map< Uint31_Index, vector< Way_Skeleton > >& w
   }
   
   sort(ids.begin(), ids.end());
+  ids.erase(unique(ids.begin(), ids.end()), ids.end());
   
   return ids;
 }
@@ -521,7 +522,13 @@ map< Uint32_Index, vector< Node_Skeleton > > way_members
     vector< uint32 > children_ids = way_nd_ids(ways);
     if (stmt)
       rman.health_check(*stmt);
-    intersect_ids.resize(node_ids->size());
+    intersect_ids.resize(children_ids.size());
+    cout<<"children_ids:\n";
+    for (vector< uint32 >::const_iterator it = children_ids.begin(); it != children_ids.end(); ++it)
+      cout<<*it<<'\n';
+    cout<<"node_ids:\n";
+    for (vector< uint32 >::const_iterator it = node_ids->begin(); it != node_ids->end(); ++it)
+      cout<<*it<<'\n';
     if (!invert_ids)
       intersect_ids.erase(set_intersection
           (node_ids->begin(), node_ids->end(), children_ids.begin(), children_ids.end(),
@@ -538,7 +545,11 @@ map< Uint32_Index, vector< Node_Skeleton > > way_members
     if (stmt)
       rman.health_check(*stmt);
   }
-  
+
+  cout<<"intersect_ids:\n";
+  for (vector< uint32 >::const_iterator it = intersect_ids.begin(); it != intersect_ids.end(); ++it)
+    cout<<*it<<'\n';
+
   map< Uint32_Index, vector< Node_Skeleton > > result;
   if (node_ranges)
     collect_items_range(stmt, rman, *osm_base_settings().NODES, *node_ranges,

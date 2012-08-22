@@ -127,6 +127,32 @@ public:
   
   void flush();
   
+  map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator insert_begin() const
+  { return insert.begin(); }
+  map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator insert_end() const
+  { return insert.end(); }
+  map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator keep_begin() const
+  { return keep.begin(); }
+  map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator keep_end() const
+  { return keep.end(); }
+  map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator erase_begin() const
+  { return erase.begin(); }
+  map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator erase_end() const
+  { return erase.end(); }
+
+  map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator insert_begin()
+  { return insert.begin(); }
+  map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator insert_end()
+  { return insert.end(); }
+  map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator keep_begin()
+  { return keep.begin(); }
+  map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator keep_end()
+  { return keep.end(); }
+  map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator erase_begin()
+  { return erase.begin(); }
+  map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator erase_end()
+  { return erase.end(); }
+
   ~Update_Relation_Logger();
   
 private:

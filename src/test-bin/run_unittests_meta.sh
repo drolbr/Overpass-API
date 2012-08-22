@@ -33,16 +33,67 @@ DATA_SIZE="$1"
 BASEDIR="$(cd `dirname $0` && pwd)/.."
 NOTIMES="$2"
 
-# Prepare testing the statements
-date +%T
-mkdir -p run/meta
-rm -fR run/meta/*
 
-$BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE >run/meta/stdin.log
-$BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE diff >run/meta/diff.log
-$BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE after >run/meta/after.log
-$BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE after "timestamp=2004-01-01T00:00:00Z" tags >run/meta/newer.log
-echo "\
+user_test()
+{
+  $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE $1 uid=$2 >run/$3/user_$1_$2.log
+  $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE $1 uid=$2 tags >run/$3/user_tags_$1_$2.log
+  echo "\
+<osm-script timeout=\"86400\">\
+\
+<user uid=\"$2\"/>\
+<print mode=\"meta\"/>\
+\
+</osm-script>
+" >run/$3/uid_query_$2.xml  
+  echo "\
+<osm-script timeout=\"86400\">\
+\
+<user name=\"User_$2\"/>\
+<print mode=\"meta\"/>\
+\
+</osm-script>
+" >run/$3/name_query_$2.xml  
+
+  echo "\
+<osm-script timeout=\"86400\">\
+\
+<query type=\"node\">\
+  <user name=\"User_$2\"/>\
+  <has-kv k=\"foo\" v=\"bar\"/>\
+</query>\
+<print mode=\"meta\"/>\
+<query type=\"way\">\
+  <user name=\"User_$2\"/>\
+  <has-kv k=\"foo\" v=\"bar\"/>\
+</query>\
+<print mode=\"meta\"/>\
+<query type=\"relation\">\
+  <user name=\"User_$2\"/>\
+  <has-kv k=\"foo\" v=\"bar\"/>\
+</query>\
+<print mode=\"meta\"/>\
+\
+</osm-script>
+" >run/$3/tags_query_$2.xml  
+
+  $BASEDIR/bin/osm3s_query --db-dir=run/$3/ --concise <run/$3/uid_query_$2.xml >run/$3/uid_$1_$2.log
+  $BASEDIR/bin/osm3s_query --db-dir=run/$3/ --concise <run/$3/name_query_$2.xml >run/$3/name_$1_$2.log
+  $BASEDIR/bin/osm3s_query --db-dir=run/$3/ --concise <run/$3/tags_query_$2.xml >run/$3/tags_$1_$2.log
+
+  RES=$RES`diff -q run/$3/user_$1_$2.log run/$3/uid_$1_$2.log`
+  RES=$RES`diff -q run/$3/user_$1_$2.log run/$3/name_$1_$2.log`
+  RES=$RES`diff -q run/$3/user_tags_$1_$2.log run/$3/tags_$1_$2.log`
+};
+
+
+prepare_test()
+{
+  $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE >run/$1/stdin.log
+  $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE diff >run/$1/diff.log
+  $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE after >run/$1/after.log
+  $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE after "timestamp=2004-01-01T00:00:00Z" tags >run/$1/newer.log
+  echo "\
 <osm-script timeout=\"86400\">\
 \
 <bbox-query s=\"10.0\" n=\"12.0\" w=\"1.0\" e=\"2.0\"/>\
@@ -127,9 +178,9 @@ echo "\
 <print mode=\"meta\"/>\
 \
 </osm-script>
-" >run/meta/query.xml
+" >run/$1/query.xml
 
-echo "\
+  echo "\
 <osm-script timeout=\"86400\">\
 \
 <query type=\"node\">\
@@ -149,103 +200,122 @@ echo "\
 <print mode=\"meta\"/>\
 \
 </osm-script>
-" >run/meta/newer_query.xml  
-
-user_test()
-{
-  $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE $1 uid=$2 >run/meta/user_$1_$2.log
-  $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE $1 uid=$2 tags >run/meta/user_tags_$1_$2.log
-  echo "\
-<osm-script timeout=\"86400\">\
-\
-<user uid=\"$2\"/>\
-<print mode=\"meta\"/>\
-\
-</osm-script>
-" >run/meta/uid_query_$2.xml  
-  echo "\
-<osm-script timeout=\"86400\">\
-\
-<user name=\"User_$2\"/>\
-<print mode=\"meta\"/>\
-\
-</osm-script>
-" >run/meta/name_query_$2.xml  
-
-  echo "\
-<osm-script timeout=\"86400\">\
-\
-<query type=\"node\">\
-  <user name=\"User_$2\"/>\
-  <has-kv k=\"foo\" v=\"bar\"/>\
-</query>\
-<print mode=\"meta\"/>\
-<query type=\"way\">\
-  <user name=\"User_$2\"/>\
-  <has-kv k=\"foo\" v=\"bar\"/>\
-</query>\
-<print mode=\"meta\"/>\
-<query type=\"relation\">\
-  <user name=\"User_$2\"/>\
-  <has-kv k=\"foo\" v=\"bar\"/>\
-</query>\
-<print mode=\"meta\"/>\
-\
-</osm-script>
-" >run/meta/tags_query_$2.xml  
-
-  $BASEDIR/bin/osm3s_query --db-dir=run/meta/ --concise <run/meta/uid_query_$2.xml >run/meta/uid_$1_$2.log
-  $BASEDIR/bin/osm3s_query --db-dir=run/meta/ --concise <run/meta/name_query_$2.xml >run/meta/name_$1_$2.log
-  $BASEDIR/bin/osm3s_query --db-dir=run/meta/ --concise <run/meta/tags_query_$2.xml >run/meta/tags_$1_$2.log
-
-  RES=$RES`diff -q run/meta/user_$1_$2.log run/meta/uid_$1_$2.log`
-  RES=$RES`diff -q run/meta/user_$1_$2.log run/meta/name_$1_$2.log`
-  RES=$RES`diff -q run/meta/user_tags_$1_$2.log run/meta/tags_$1_$2.log`
+" >run/$1/newer_query.xml
 };
+
+
+# Test 1
+# Prepare testing the statements
+date +%T
+mkdir -p run/meta_1
+rm -fR run/meta_1/*
+
+prepare_test meta_1
 
 RES=
 
 # Perform the tests
 date +%T
-$BASEDIR/bin/update_database --db-dir=run/meta/ --version=mock-up-init --meta <run/meta/stdin.log
+$BASEDIR/bin/update_database --db-dir=run/meta_1/ --version=mock-up-init --meta <run/meta_1/stdin.log
 date +%T
-$BASEDIR/bin/osm3s_query --db-dir=run/meta/ --concise <run/meta/query.xml >run/meta/initial.log
+$BASEDIR/bin/osm3s_query --db-dir=run/meta_1/ --concise <run/meta_1/query.xml >run/meta_1/initial.log
 date +%T
-user_test before 13
+user_test before 13 meta_1
 date +%T
-user_test before 113
+user_test before 113 meta_1
 date +%T
-user_test before 1013
+user_test before 1013 meta_1
 date +%T
 
 echo
 
 date +%T
-$BASEDIR/bin/update_database --db-dir=run/meta/ --version=mock-up-init --meta <run/meta/diff.log
+$BASEDIR/bin/update_database --db-dir=run/meta_1/ --version=mock-up-init --meta <run/meta_1/diff.log
 date +%T
-$BASEDIR/bin/osm3s_query --db-dir=run/meta/ --concise <run/meta/query.xml >run/meta/db_after.log
+$BASEDIR/bin/osm3s_query --db-dir=run/meta_1/ --concise <run/meta_1/query.xml >run/meta_1/db_after.log
 date +%T
-user_test after 13
+user_test after 13 meta_1
 date +%T
-user_test after 113
+user_test after 113 meta_1
 date +%T
-user_test after 1013
+user_test after 1013 meta_1
 date +%T
-$BASEDIR/bin/osm3s_query --db-dir=run/meta/ --concise <run/meta/newer_query.xml >run/meta/db_newer.log
+$BASEDIR/bin/osm3s_query --db-dir=run/meta_1/ --concise <run/meta_1/newer_query.xml >run/meta_1/db_newer.log
 date +%T
 
 echo
 
 # compare both outcomes
-RES=$RES`diff -q run/meta/stdin.log run/meta/initial.log`
-RES=$RES`diff -q run/meta/after.log run/meta/db_after.log`
-RES=$RES`diff -q run/meta/newer.log run/meta/db_newer.log`
-if [[ -n $RES || -s run/meta/diff_stderr.log ]]; then
+RES=$RES`diff -q run/meta_1/stdin.log run/meta_1/initial.log`
+RES=$RES`diff -q run/meta_1/after.log run/meta_1/db_after.log`
+RES=$RES`diff -q run/meta_1/newer.log run/meta_1/db_newer.log`
+if [[ -n $RES || -s run/meta_1/diff_stderr.log ]]; then
 {
   echo `date +%T` "Test diff 1 FAILED."
   echo $RES
 }; else
 {
   echo `date +%T` "Test diff 1 succeeded."
-  rm -R run/meta
+  rm -R run/meta_1
+}; fi
+
+
+# Test 2
+# Prepare testing the statements
+date +%T
+mkdir -p run/meta_2
+rm -fR run/meta_2/*
+
+prepare_test meta_2
+
+RES=
+
+# Perform the tests
+date +%T
+$BASEDIR/bin/update_database --db-dir=run/meta_2/ --version=mock-up-init --meta <run/meta_2/stdin.log
+date +%T
+$BASEDIR/bin/osm3s_query --db-dir=run/meta_2/ --concise <run/meta_2/query.xml >run/meta_2/initial.log
+date +%T
+user_test before 13 meta_2
+date +%T
+user_test before 113 meta_2
+date +%T
+user_test before 1013 meta_2
+date +%T
+
+echo
+
+date +%T
+$BASEDIR/bin/dispatcher --osm-base --meta --db-dir=run/meta_2/ &
+sleep 1
+date +%T
+$BASEDIR/bin/update_database --version=mock-up-init --meta <run/meta_2/diff.log
+date +%T
+$BASEDIR/bin/osm3s_query --db-dir=run/meta_2/ --concise <run/meta_2/query.xml >run/meta_2/db_after.log
+date +%T
+user_test after 13 meta_2
+date +%T
+user_test after 113 meta_2
+date +%T
+user_test after 1013 meta_2
+date +%T
+$BASEDIR/bin/osm3s_query --db-dir=run/meta_2/ --concise <run/meta_2/newer_query.xml >run/meta_2/db_newer.log
+date +%T
+$BASEDIR/bin/dispatcher --osm-base --meta --terminate
+date +%T
+
+echo
+
+# compare both outcomes
+RES=$RES`diff -q run/meta_2/stdin.log run/meta_2/initial.log`
+RES=$RES`diff -q run/meta_2/after.log run/meta_2/db_after.log`
+RES=$RES`diff -q run/meta_2/newer.log run/meta_2/db_newer.log`
+if [[ -n $RES || -s run/meta_2/diff_stderr.log ]]; then
+{
+  echo `date +%T` "Test diff 2 FAILED."
+  echo $RES
+}; else
+{
+  echo `date +%T` "Test diff 2 succeeded."
+  rm -R run/meta_2
 }; fi
