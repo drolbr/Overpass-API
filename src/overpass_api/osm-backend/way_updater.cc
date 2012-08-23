@@ -293,7 +293,8 @@ vector< Uint31_Index > calc_segment_idxs(const vector< uint32 >& nd_idxs)
 void filter_affected_ways(Transaction& transaction, 
 			  vector< pair< uint32, bool > >& ids_to_modify,
 			  vector< Way >& ways_to_insert,
-			  const vector< Way >& maybe_affected_ways)
+			  const vector< Way >& maybe_affected_ways,
+			  bool keep_all)
 {
   // retrieve the indices of the referred nodes
   map< uint32, uint32 > used_nodes;
@@ -323,7 +324,7 @@ void filter_affected_ways(Transaction& transaction,
     if ((index & 0x80000000) != 0 && (index & 0xfc) != 0)
       segment_idxs = calc_segment_idxs(nd_idxs);
     
-    if (wit->index != index || wit->segment_idxs != segment_idxs)
+    if (wit->index != index || wit->segment_idxs != segment_idxs || keep_all)
     {
       ids_to_modify.push_back(make_pair(wit->id, true));
       ways_to_insert.push_back(*wit);
@@ -375,12 +376,14 @@ void Way_Updater::find_affected_ways
       maybe_affected_ways.push_back(Way(way.id, it.index().val(), way.nds));
     if (maybe_affected_ways.size() >= 512*1024)
     {
-      filter_affected_ways(*transaction, ids_to_modify, ways_to_insert, maybe_affected_ways);
+      filter_affected_ways(*transaction, ids_to_modify, ways_to_insert, maybe_affected_ways,
+			   (update_logger != 0));
       maybe_affected_ways.clear();
     }
   }
   
-  filter_affected_ways(*transaction, ids_to_modify, ways_to_insert, maybe_affected_ways);
+  filter_affected_ways(*transaction, ids_to_modify, ways_to_insert, maybe_affected_ways,
+			   (update_logger != 0));
   maybe_affected_ways.clear();
 }
 

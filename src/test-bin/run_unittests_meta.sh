@@ -115,22 +115,7 @@ prepare_test()
 <bbox-query s=\"10.0\" n=\"12.0\" w=\"9.0\" e=\"10.0\"/>\
 <print mode=\"meta\"/>\
 \
-<bbox-query s=\"10.0\" n=\"12.0\" w=\"1.0\" e=\"2.0\"/>\
-<recurse type=\"node-way\"/>\
-<print mode=\"meta\"/>\
-<bbox-query s=\"10.0\" n=\"12.0\" w=\"2.0\" e=\"3.0\"/>\
-<recurse type=\"node-way\"/>\
-<print mode=\"meta\"/>\
-<bbox-query s=\"10.0\" n=\"12.0\" w=\"3.0\" e=\"4.0\"/>\
-<recurse type=\"node-way\"/>\
-<print mode=\"meta\"/>\
-<bbox-query s=\"10.0\" n=\"12.0\" w=\"4.0\" e=\"5.0\"/>\
-<recurse type=\"node-way\"/>\
-<print mode=\"meta\"/>\
-<bbox-query s=\"10.0\" n=\"12.0\" w=\"5.0\" e=\"6.0\"/>\
-<recurse type=\"node-way\"/>\
-<print mode=\"meta\"/>\
-<bbox-query s=\"10.0\" n=\"12.0\" w=\"6.0\" e=\"7.0\"/>\
+<bbox-query s=\"10.0\" n=\"12.0\" w=\"1.0\" e=\"7.0\"/>\
 <recurse type=\"node-way\"/>\
 <print mode=\"meta\"/>\
 \
@@ -267,6 +252,7 @@ mkdir -p run/meta_2
 rm -fR run/meta_2/*
 
 prepare_test meta_2
+$BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE augmented >run/meta_2/target_augmented.log
 
 RES=
 
@@ -310,7 +296,7 @@ echo
 RES=$RES`diff -q run/meta_2/stdin.log run/meta_2/initial.log`
 RES=$RES`diff -q run/meta_2/after.log run/meta_2/db_after.log`
 RES=$RES`diff -q run/meta_2/newer.log run/meta_2/db_newer.log`
-RES=$RES`diff -q run/meta_2/augmented_diff.log run/meta_2/initial.log`
+RES=$RES`diff -q run/meta_2/target_augmented.log run/meta_2/augmented_diff.log`
 if [[ -n $RES || -s run/meta_2/diff_stderr.log ]]; then
 {
   echo `date +%T` "Test diff 2 FAILED."

@@ -226,13 +226,15 @@ int main(int argc, char* args[])
   bool tags_allowed_only = false;
   if (argc > 1)
     pattern_size = atoi(args[1]);
-  enum { before, diff, after } pattern = before;
+  enum { before, diff, after, augmented } pattern = before;
   if (argc > 2)
   {
     if (string(args[2]) == "diff")
       pattern = diff;
     else if (string(args[2]) == "after")
       pattern = after;
+    else if (string(args[2]) == "augmented")
+      pattern = augmented;
   }
   if (argc > 3)
   {
@@ -271,6 +273,9 @@ int main(int argc, char* args[])
     
     for (uint i = 0; i < 6; ++i)
       create_way_test_pattern(i, pattern_size, print_control);
+    
+    create_way(pattern_size*pattern_size*6,
+	       1, pattern_size*pattern_size*2 + 1, pattern_size*pattern_size*2, print_control);
     
     for (uint i = 0; i < 6; ++i)
       create_relation_test_pattern(i, pattern_size, print_control);
@@ -317,12 +322,66 @@ int main(int argc, char* args[])
     create_way_test_pattern(2, pattern_size, print_control);
     create_way_test_pattern(4, pattern_size, print_control, true, false);
     create_way_test_pattern(5, pattern_size, print_control);
-    
+
+    create_way(pattern_size*pattern_size*6,
+	       1, pattern_size*pattern_size*2 + 1, pattern_size*pattern_size*2, print_control);
+        
     create_relation_test_pattern(0, pattern_size, print_control);
     create_relation_test_pattern(1, pattern_size, print_control, false, true);
     create_relation_test_pattern(2, pattern_size, print_control);
     create_relation_test_pattern(4, pattern_size, print_control);
     create_relation_test_pattern(5, pattern_size, print_control, true, false);
+  }
+  else if (pattern == augmented)
+  {
+    cout<<"<delete>\n";
+    create_node_test_pattern(10.0, 11.0, 2.0, 3.0, 1, pattern_size, print_control);
+    create_node_test_pattern(10.0, 11.0, 3.0, 4.0, 2, pattern_size, print_control);
+    create_node_test_pattern(10.0, 11.0, 4.0, 5.0, 3, pattern_size, print_control);
+    create_node_test_pattern(10.0, 11.0, 5.0, 6.0, 4, pattern_size, print_control);
+    create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 5, pattern_size, print_control);
+    create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 6, pattern_size, print_control);
+    create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 7, pattern_size, print_control);
+    create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 8, pattern_size, print_control);
+    cout<<"</delete>\n";
+    cout<<"<keep>\n";
+    cout<<"</keep>\n";
+    cout<<"<insert>\n";
+    create_node_test_pattern(10.0, 11.0, 2.0, 3.0, 1, pattern_size, print_control, true);
+    create_node_test_pattern(11.0, 12.0, 3.0, 4.0, 2, pattern_size, print_control);
+    create_node_test_pattern(10.0, 11.0, 5.0, 6.0, 4, pattern_size, print_control);
+    create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 5, pattern_size, print_control);
+    cout<<"</insert>\n";
+
+    cout<<"<delete>\n";
+    create_way_test_pattern(1, pattern_size, print_control);
+    create_way_test_pattern(3, pattern_size, print_control);
+    create_way_test_pattern(4, pattern_size, print_control);
+    cout<<"</delete>\n";
+    cout<<"<keep>\n";
+    create_way_test_pattern(2, pattern_size, print_control);
+    create_way_test_pattern(5, pattern_size, print_control);
+    create_way(pattern_size*pattern_size*6,
+	       1, pattern_size*pattern_size*2 + 1, pattern_size*pattern_size*2, print_control);
+    cout<<"</keep>\n";
+    cout<<"<insert>\n";
+    create_way_test_pattern(1, pattern_size, print_control, false, true);
+    create_way_test_pattern(4, pattern_size, print_control, true, false);
+    cout<<"</insert>\n";
+    
+    cout<<"<delete>\n";
+    create_relation_test_pattern(1, pattern_size, print_control);
+    create_relation_test_pattern(3, pattern_size, print_control);
+    create_relation_test_pattern(5, pattern_size, print_control);
+    cout<<"</delete>\n";
+    cout<<"<keep>\n";
+    create_relation_test_pattern(2, pattern_size, print_control);
+    create_relation_test_pattern(4, pattern_size, print_control);
+    cout<<"</keep>\n";
+    cout<<"<insert>\n";
+    create_relation_test_pattern(1, pattern_size, print_control, false, true);
+    create_relation_test_pattern(5, pattern_size, print_control, true, false);
+    cout<<"</insert>\n";
   }
   
   cout<<"\n</osm>\n";

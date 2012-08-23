@@ -621,9 +621,31 @@ void print_meta(OSM_Element_Metadata* meta)
 {
   if (!meta)
     return;
+
+  uint32 year = (meta->timestamp)>>26;
+  uint32 month = ((meta->timestamp)>>22) & 0xf;
+  uint32 day = ((meta->timestamp)>>17) & 0x1f;
+  uint32 hour = ((meta->timestamp)>>12) & 0x1f;
+  uint32 minute = ((meta->timestamp)>>6) & 0x3f;
+  uint32 second = meta->timestamp & 0x3f;
+  string timestamp("    -  -  T  :  :  Z");
+  timestamp[0] = (year / 1000) % 10 + '0';
+  timestamp[1] = (year / 100) % 10 + '0';
+  timestamp[2] = (year / 10) % 10 + '0';
+  timestamp[3] = year % 10 + '0';
+  timestamp[5] = (month / 10) % 10 + '0';
+  timestamp[6] = month % 10 + '0';
+  timestamp[8] = (day / 10) % 10 + '0';
+  timestamp[9] = day % 10 + '0';
+  timestamp[11] = (hour / 10) % 10 + '0';
+  timestamp[12] = hour % 10 + '0';
+  timestamp[14] = (minute / 10) % 10 + '0';
+  timestamp[15] = minute % 10 + '0';
+  timestamp[17] = (second / 10) % 10 + '0';
+  timestamp[18] = second % 10 + '0';
   
   cout<<" version=\""<<meta->version<<"\""
-        " timestamp=\""<<meta->timestamp<<"\""
+        " timestamp=\""<<timestamp<<"\""
         " changeset=\""<<meta->changeset<<"\""
         " uid=\""<<meta->user_id<<"\""
         " user=\""<<meta->user_name<<"\"";
@@ -641,8 +663,8 @@ void print_node(const Node& node, OSM_Element_Metadata* meta)
 {
   cout<<
   "  <node id=\""<<node.id<<"\" "
-  "lat=\""<<Node::lat(node.ll_upper, node.ll_lower_)<<"\" "
-  "lon=\""<<Node::lon(node.ll_upper, node.ll_lower_)<<"\"";
+  "lat=\""<<fixed<<setprecision(7)<<Node::lat(node.ll_upper, node.ll_lower_)<<"\" "
+  "lon=\""<<fixed<<setprecision(7)<<Node::lon(node.ll_upper, node.ll_lower_)<<"\"";
   print_meta(meta);
   if (node.tags.empty())
     cout<<"/>\n";
@@ -659,7 +681,7 @@ void print_way(const Way& way, OSM_Element_Metadata* meta)
 {
   cout<<"  <way id=\""<<way.id<<"\"";
   print_meta(meta);
-  cout<<"/>\n";
+  cout<<">\n";
   for (vector< uint32 >::const_iterator it = way.nds.begin(); it != way.nds.end(); ++it)
     cout<<"    <nd ref=\""<<*it<<"\"/>\n";
   print_tags(way.tags);
@@ -674,7 +696,7 @@ void print_relation(const Relation& relation, OSM_Element_Metadata* meta,
 {
   cout<<"  <relation id=\""<<relation.id<<"\"";
   print_meta(meta);
-  cout<<"/>\n";
+  cout<<">\n";
   for (vector< Relation_Entry >::const_iterator it = relation.members.begin();
        it != relation.members.end(); ++it)
     cout<<"    <member "

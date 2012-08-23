@@ -362,7 +362,7 @@ void Relation_Updater::find_affected_relations
       node_idxs_ = calc_node_idxs(node_idxs);
       way_idxs_ = calc_way_idxs(way_idxs);
     }    
-    if (rit->index != index || rit->node_idxs != node_idxs_ || rit->way_idxs != way_idxs_)
+    if (rit->index != index || rit->node_idxs != node_idxs_ || rit->way_idxs != way_idxs_ || update_logger)
     {
       ids_to_modify.push_back(make_pair(rit->id, true));
       *writ = *rit;
