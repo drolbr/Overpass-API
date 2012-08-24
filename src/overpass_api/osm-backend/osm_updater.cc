@@ -69,6 +69,7 @@ namespace
   uint32 osm_element_count;
   Osm_Backend_Callback* callback;
 
+  string data_version;
   
   inline void tag_start(const char **attr)
   {
@@ -712,8 +713,14 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 			  Update_Way_Logger& update_way_logger,
 			  Update_Relation_Logger& update_relation_logger)
 {
-  cout<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-        "<osm version=\"0.6\" generator=\"Overpass API\">\n\n";
+  cout<<
+  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+  "<osm version=\"0.6\" generator=\"Overpass API\">\n"
+  "<note>The data included in this document is from www.openstreetmap.org. It has there been "
+  "collected by a large group of contributors. For individual attribution of each item please "
+  "refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\n"
+  "<meta osm_base=\""<<data_version<<"\"/>\n\n";
+
 
   cout<<"<delete>\n";
   for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator
@@ -827,13 +834,13 @@ void parse_relations_only(FILE* in)
   parse(in, relation_start, relation_end);
 }
 
-Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version,
+Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version_,
 			 bool meta_, bool produce_augmented_diffs)
   : dispatcher_client(0), meta(meta_)
 {
   dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
   Logger logger(dispatcher_client->get_db_dir());
-  logger.annotated_log("write_start() start version='" + data_version + '\'');
+  logger.annotated_log("write_start() start version='" + data_version_ + '\'');
   dispatcher_client->write_start();
   logger.annotated_log("write_start() end");
   transaction = new Nonsynced_Transaction
@@ -841,7 +848,7 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
   {
     ofstream version((dispatcher_client->get_db_dir()
         + "osm_base_version.shadow").c_str());
-    version<<data_version<<'\n';
+    version<<data_version_<<'\n';
   }
 
   node_updater_ = new Node_Updater(*transaction, meta);
@@ -850,6 +857,8 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
   update_way_logger_ = (produce_augmented_diffs ? new Update_Way_Logger() : 0);
   relation_updater_ = new Relation_Updater(*transaction, meta);
   update_relation_logger_ = (produce_augmented_diffs ? new Update_Relation_Logger() : 0);
+  
+  data_version = data_version_;
 
   state = 0;
   osm_element_count = 0;
@@ -865,13 +874,13 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
 }
 
 Osm_Updater::Osm_Updater
-    (Osm_Backend_Callback* callback_, string db_dir, const string& data_version,
+    (Osm_Backend_Callback* callback_, string db_dir, const string& data_version_,
      bool meta_, bool produce_augmented_diffs)
   : transaction(0), dispatcher_client(0), db_dir_(db_dir), meta(meta_)
 {
   {
     ofstream version((db_dir + "osm_base_version").c_str());
-    version<<data_version<<'\n';
+    version<<data_version_<<'\n';
   }
   
   node_updater_ = new Node_Updater(db_dir, meta);
@@ -880,7 +889,9 @@ Osm_Updater::Osm_Updater
   update_way_logger_ = (produce_augmented_diffs ? new Update_Way_Logger() : 0);
   relation_updater_ = new Relation_Updater(db_dir, meta);
   update_relation_logger_ = (produce_augmented_diffs ? new Update_Relation_Logger() : 0);
-  
+
+  data_version = data_version_;
+
   state = 0;
   osm_element_count = 0;
   node_updater = node_updater_;

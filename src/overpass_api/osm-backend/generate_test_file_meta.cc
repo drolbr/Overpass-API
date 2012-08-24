@@ -86,6 +86,23 @@ bool Print_Control::print_allowed(uint id, int variant) const
   return (uid == ((id/100 + variant) % 9990 + 10));
 }
 
+
+void create_node(uint id, double lat, double lon,
+		 const Print_Control& print_control, bool after_altered = false)
+{
+  cout<<"  <node id=\""<<id<<"\""
+        " lat=\""<<fixed<<setprecision(7)<<lat<<"\""
+        " lon=\""<<fixed<<setprecision(7)<<lon<<"\"";
+  print_control.meta_data(id, after_altered ? 4 : 1);
+  if (id % 7 == 0)
+    cout<<">\n"
+          "    <tag k=\"foo\" v=\"bar\"/>\n"
+	  "  </node>\n";
+  else
+    cout<<"/>\n";
+}
+
+
 void fill_bbox_with_nodes
     (double south, double north, double west, double east,
      uint begin_id, uint end_id, const Print_Control& print_control,
@@ -97,18 +114,10 @@ void fill_bbox_with_nodes
     for (int j = 0; j < sqrt_; ++j)
     {
       if (print_control.print_allowed(begin_id + i*sqrt_ + j, after_altered ? 4 : 1))
-      {
-        cout<<"  <node id=\""<<(begin_id + i*sqrt_ + j)<<"\""
-              " lat=\""<<fixed<<setprecision(7)<<((north - south)/sqrt_*(0.5 + i) + south)<<"\""
-              " lon=\""<<fixed<<setprecision(7)<<((east - west)/sqrt_*(0.5 + j) + west)<<"\"";
-        print_control.meta_data(begin_id + i*sqrt_ + j, after_altered ? 4 : 1);
-	if ((begin_id + i*sqrt_ + j) % 7 == 0)
-	  cout<<">\n"
-	        "    <tag k=\"foo\" v=\"bar\"/>\n"
-		"  </node>\n";
-	else
-          cout<<"/>\n";
-      }
+	create_node(begin_id + i*sqrt_ + j,
+		    (north - south)/sqrt_*(0.5 + i) + south,
+		    (east - west)/sqrt_*(0.5 + j) + west,
+		    print_control, after_altered);
     }
   }
 }
@@ -345,6 +354,7 @@ int main(int argc, char* args[])
     create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 8, pattern_size, print_control);
     cout<<"</delete>\n";
     cout<<"<keep>\n";
+    create_node(1, 10.0 + 0.5/pattern_size, 1.0 + 0.5/pattern_size, print_control);
     cout<<"</keep>\n";
     cout<<"<insert>\n";
     create_node_test_pattern(10.0, 11.0, 2.0, 3.0, 1, pattern_size, print_control, true);
