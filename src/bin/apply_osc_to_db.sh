@@ -19,7 +19,7 @@
 
 if [[ -z $4  ]]; then
 {
-  echo "Usage: $0 database_dir replicate_dir start_id --meta=(yes|no)"
+  echo "Usage: $0 database_dir replicate_dir start_id --meta=(yes|no) --augmented_diffs=(yes|no)"
   exit 0
 }; fi
 
@@ -42,40 +42,76 @@ else
   exit 0
 }; fi
 
+if [[ $5 == "--augmented_diffs=yes" || $5 == "--meta" ]]; then
+{
+  PRODUCE_DIFF="yes"
+}
+elif [[ $5 == "--augmented_diffs=no" ]]; then
+{
+  PRODUCE_DIFF=
+}
+else
+{
+  echo "You must specify --augmented_diffs=yes or --augmented_diffs=no"
+  exit 0
+}; fi
+
 EXEC_DIR="`dirname $0`/"
 if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
 {
   EXEC_DIR="`pwd`/$EXEC_DIR"
 }; fi
 
+
 get_replicate_filename()
 {
-  printf -v TDIGIT3 %03u $(($TARGET % 1000))
-  ARG=$(($TARGET / 1000))
+  printf -v TDIGIT3 %03u $(($1 % 1000))
+  ARG=$(($1 / 1000))
   printf -v TDIGIT2 %03u $(($ARG % 1000))
   ARG=$(($ARG / 1000))
   printf -v TDIGIT1 %03u $ARG
-  REPLICATE_FILENAME=$REPLICATE_DIR/$TDIGIT1/$TDIGIT2/$TDIGIT3
+  REPLICATE_TRUNK_DIR=$TDIGIT1/$TDIGIT2/
+  REPLICATE_FILENAME=$TDIGIT1/$TDIGIT2/$TDIGIT3
 };
+
 
 collect_minute_diffs()
 {
   TEMP_DIR=$1
   TARGET=$(($START + 1))
 
-  get_replicate_filename
+  get_replicate_filename $TARGET
 
-  while [[ ( -s $REPLICATE_FILENAME.state.txt ) && ( $(($START + 720)) -ge $(($TARGET)) ) ]];
+  while [[ ( -s $REPLICATE_DIR/$REPLICATE_FILENAME.state.txt ) && ( $(($START + 60)) -ge $(($TARGET)) ) ]];
   do
   {
     printf -v TARGET_FILE %09u $TARGET
-    gunzip <$REPLICATE_FILENAME.osc.gz >$TEMP_DIR/$TARGET_FILE.osc
+    gunzip <$REPLICATE_DIR/$REPLICATE_FILENAME.osc.gz >$TEMP_DIR/$TARGET_FILE.osc
     TARGET=$(($TARGET + 1))
-    get_replicate_filename
+    get_replicate_filename $TARGET
   };
   done
   TARGET=$(($TARGET - 1))
 };
+
+
+apply_minute_diffs_augmented()
+{
+  get_replicate_filename $DIFF_COUNT
+  mkdir -p $DB_DIR/augmented_diffs/$REPLICATE_TRUNK_DIR
+  ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --produce-diff | gzip >$DB_DIR/augmented_diffs/$REPLICATE_FILENAME.osc.gz
+  EXITCODE=$?
+  while [[ $EXITCODE -ne 0 ]];
+  do
+  {
+    sleep 60
+    ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --produce-diff | gzip >$DB_DIR/augmented_diffs/$REPLICATE_FILENAME.osc.gz
+    EXITCODE=$?
+  };
+  done
+  DIFF_COUNT=$(($DIFF_COUNT + 1))
+};
+
 
 apply_minute_diffs()
 {
@@ -89,21 +125,27 @@ apply_minute_diffs()
     EXITCODE=$?
   };
   done
+  DIFF_COUNT=$(($DIFF_COUNT + 1))
 };
+
 
 update_state()
 {
-  get_replicate_filename
-  TIMESTAMP_LINE=`grep "^timestamp" <$REPLICATE_FILENAME.state.txt`
+  get_replicate_filename $TARGET
+  TIMESTAMP_LINE=`grep "^timestamp" <$REPLICATE_DIR/$REPLICATE_FILENAME.state.txt`
   while [[ -z $TIMESTAMP_LINE ]]; do
   {
     sleep 5
-    TIMESTAMP_LINE=`grep "^timestamp" <$REPLICATE_FILENAME.state.txt`
+    TIMESTAMP_LINE=`grep "^timestamp" <$REPLICATE_DIR/$REPLICATE_FILENAME.state.txt`
   }; done
   DATA_VERSION=${TIMESTAMP_LINE:10}
 };
 
+
 echo >>$DB_DIR/apply_osc_to_db.log
+
+mkdir -p $DB_DIR/augmented_diffs/
+DIFF_COUNT=0
 
 # update_state
 
@@ -111,6 +153,11 @@ pushd "$EXEC_DIR"
 
 while [[ true ]]; do
 {
+  if [[ $START == "auto" ]]; then
+  {
+    START=`cat $DB_DIR/replicate_id`
+  }; fi
+
   echo "`date '+%F %T'`: updating from $START" >>$DB_DIR/apply_osc_to_db.log
 
   TEMP_DIR=`mktemp -d /tmp/osm-3s_update_XXXXXX`
@@ -122,7 +169,14 @@ while [[ true ]]; do
 
     update_state
 
-    apply_minute_diffs $TEMP_DIR
+    if [[ $PRODUCE_DIFF == "yes" ]]; then
+    {
+      apply_minute_diffs_augmented $TEMP_DIR
+    };
+    else
+    {
+      apply_minute_diffs $TEMP_DIR
+    }; fi
     echo "$TARGET" >$DB_DIR/replicate_id
 
     echo "`date '+%F %T'`: update complete" $TARGET >>$DB_DIR/apply_osc_to_db.log

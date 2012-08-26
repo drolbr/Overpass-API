@@ -215,7 +215,7 @@ struct Relation_Updater
   }
   
   uint32 get_role_id(const string& s);
-  vector< string > get_roles() const;
+  vector< string > get_roles();
   
   void update(Osm_Backend_Callback* callback, Update_Relation_Logger* update_logger);
   
@@ -254,6 +254,7 @@ private:
 		      Update_Relation_Logger* update_logger);
   
   void flush_roles();
+  void load_roles();
 };
 
 #endif

@@ -67,28 +67,32 @@ Relation_Updater::Relation_Updater(string db_dir_, bool meta_)
     max_role_id(0), max_written_role_id(0), db_dir(db_dir_), meta(meta_)
 {}
 
+
+void Relation_Updater::load_roles()
+{
+  if (!external_transaction)
+    transaction = new Nonsynced_Transaction(true, false, db_dir, "");
+    
+  Block_Backend< Uint32_Index, String_Object > roles_db
+      (transaction->data_index(osm_base_settings().RELATION_ROLES));
+  for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
+      it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
+  {
+    role_ids[it.object().val()] = it.index().val();
+    if (max_role_id <= it.index().val())
+      max_role_id = it.index().val()+1;
+  }
+  max_written_role_id = max_role_id;
+    
+  if (!external_transaction)
+    delete transaction;
+}
+
+
 uint32 Relation_Updater::get_role_id(const string& s)
 {
   if (max_role_id == 0)
-  {
-    // load roles
-    if (!external_transaction)
-      transaction = new Nonsynced_Transaction(true, false, db_dir, "");
-    
-    Block_Backend< Uint32_Index, String_Object > roles_db
-        (transaction->data_index(osm_base_settings().RELATION_ROLES));
-    for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
-      it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
-    {
-      role_ids[it.object().val()] = it.index().val();
-      if (max_role_id <= it.index().val())
-	max_role_id = it.index().val()+1;
-    }
-    max_written_role_id = max_role_id;
-    
-    if (!external_transaction)
-      delete transaction;
-  }
+    load_roles();
   map< string, uint32 >::const_iterator it(role_ids.find(s));
   if (it != role_ids.end())
     return it->second;
@@ -551,8 +555,11 @@ void Relation_Updater::flush_roles()
   max_written_role_id = max_role_id;
 }
 
-vector< string > Relation_Updater::get_roles() const
+vector< string > Relation_Updater::get_roles()
 {
+  if (max_role_id == 0)
+    load_roles();
+  
   vector< string > roles(max_role_id);
   for (map< string, uint32 >::const_iterator it(role_ids.begin());
       it != role_ids.end(); ++it)

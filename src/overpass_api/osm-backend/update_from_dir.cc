@@ -119,13 +119,13 @@ int main(int argc, char* argv[])
     }
     ++argpos;
   }
-  if (db_dir == "" && produce_augmented_diffs)
+  if (db_dir != "" && produce_augmented_diffs)
   {
     cerr<<"Augmented diffs can only be produced with running dispatcher.\n";
     abort = true;
   }
   if (abort)
-    return 0;
+    return -1;
   
   // read file names from source directory
   DIR *dp;
