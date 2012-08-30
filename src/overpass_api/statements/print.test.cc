@@ -25,8 +25,6 @@
 
 using namespace std;
 
-typedef unsigned int uint32;
-
 Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint32 id)
 {
   ostringstream buf("");

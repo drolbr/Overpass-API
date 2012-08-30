@@ -28,7 +28,7 @@
 #include <time.h>
 
 #include "cgi-helper.h"
-#include "../expat/expat_justparse_interface.h"
+#include "../../expat/expat_justparse_interface.h"
 #include "user_interface.h"
 
 using namespace std;

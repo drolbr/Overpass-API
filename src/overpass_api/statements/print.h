@@ -91,7 +91,7 @@ class Print_Statement : public Statement
       (const map< TIndex, vector< TObject > >& items,
        const File_Properties& file_prop, Print_Target& target,
        Resource_Manager& rman, Transaction& transaction,
-       const File_Properties* meta_file_prop = 0, uint32& element_count = 0);
+       const File_Properties* meta_file_prop, uint32& element_count);
     
     template< class TIndex, class TObject >
     void tags_by_id
@@ -99,7 +99,7 @@ class Print_Statement : public Statement
        const File_Properties& file_prop,
        uint32 FLUSH_SIZE, Print_Target& target,
        Resource_Manager& rman, Transaction& transaction,
-       const File_Properties* meta_file_prop = 0, uint32& element_count = 0);
+       const File_Properties* meta_file_prop, uint32& element_count);
 };
 
 #endif

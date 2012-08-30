@@ -27,8 +27,6 @@
 
 using namespace std;
 
-typedef unsigned int uint;
-
 //-----------------------------------------------------------------------------
 
 template< class In >

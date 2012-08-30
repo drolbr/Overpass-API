@@ -16,12 +16,12 @@
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "clone_database.h"
 #include "../core/datatypes.h"
 #include "../core/settings.h"
-#include "../template_db/block_backend.h"
-#include "../template_db/file_blocks.h"
-#include "../template_db/random_file.h"
-#include "clone_database.h"
+#include "../../template_db/block_backend.h"
+#include "../../template_db/file_blocks.h"
+#include "../../template_db/random_file.h"
 
 using namespace std;
 

@@ -18,6 +18,8 @@
 * This file is derived from code shipped with the project Expat.
 */
 
+#include "expat_justparse_interface.h"
+
 #include <string>
 
 #include <string.h>
@@ -38,8 +40,6 @@
 #define BUFFSIZE        8192
 
 using namespace std;
-
-typedef unsigned int uint;
 
 void (*working_start)(const char*, const char**);
 void (*working_end)(const char*);

@@ -26,7 +26,7 @@
 
 using namespace std;
 
-struct Statement;
+class Statement;
 
 struct Watchdog_Callback
 {

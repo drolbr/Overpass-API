@@ -18,11 +18,11 @@
 
 #include "resource_manager.h"
 #include "scripting_core.h"
-#include "../expat/expat_justparse_interface.h"
 #include "../frontend/web_output.h"
 #include "../frontend/user_interface.h"
 #include "../statements/osm_script.h"
 #include "../statements/statement.h"
+#include "../../expat/expat_justparse_interface.h"
 #include "../../template_db/dispatcher.h"
 
 #include <errno.h>

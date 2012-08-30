@@ -26,9 +26,6 @@
 
 using namespace std;
 
-typedef int int32;
-typedef unsigned int uint32;
-
 inline uint32 ll_upper(uint32 ilat, int32 ilon);
 inline uint32 ll_upper_(uint32 ilat, int32 ilon);
 inline uint32 upper_ilat(uint32 quadtile);
