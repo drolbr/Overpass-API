@@ -162,7 +162,7 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
 	++ranges_it;
       else if (!(it->first < ranges_it->first))
       {
-	if ((it->first.val() & 0x80000000) == 0 || (it->first.val() & 0xfc) == 0)
+	if ((it->first.val() & 0x80000000) == 0 || (it->first.val() & 0x3) != 0)
 	  ++it;
 	else
 	{

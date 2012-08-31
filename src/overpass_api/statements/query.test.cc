@@ -482,6 +482,15 @@ string to_string(T d)
 }
 
 
+template< >
+string to_string< double >(double d)
+{
+  ostringstream out;
+  out<<setprecision(14)<<d;
+  return out.str();
+}
+
+
 void perform_multi_query_with_bbox
     (string type, string key1, string value1, string key2, string value2,
      int regex, bool straight2,

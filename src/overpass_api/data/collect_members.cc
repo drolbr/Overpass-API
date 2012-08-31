@@ -251,7 +251,7 @@ vector< Uint31_Index > relation_way_member_indices
   for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
       it = rels_begin; it != rels_end; ++it)
   {
-    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xfc) != 0))
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
     {
       // Treat relations with really large indices: get the ways indexes explicitly
       for (vector< Relation_Skeleton >::const_iterator it2 = it->second.begin();
@@ -282,7 +282,7 @@ set< pair< Uint32_Index, Uint32_Index > > relation_node_member_indices
   for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
     it = rels_begin; it != rels_end; ++it)
   {
-    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xfc) != 0))
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
     {
       // Treat ways with really large indices: get the node indexes from the segement indexes
       for (vector< Relation_Skeleton >::const_iterator it2 = it->second.begin();
@@ -330,9 +330,9 @@ set< pair< Uint32_Index, Uint32_Index > > way_nd_indices
   for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
     it(ways_begin); it != ways_end; ++it)
   {
-    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0xfc) != 0))
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
     {
-      // Treat ways with really large indices: get the node indexes from the segement indexes
+      // Treat ways with really large indices: get the node indexes from the segment indexes
       for (vector< Way_Skeleton >::const_iterator it2 = it->second.begin();
           it2 != it->second.end(); ++it2)
       {
@@ -350,13 +350,9 @@ set< pair< Uint32_Index, Uint32_Index > > way_nd_indices
 	
 	if (large_indices)
 	{
-	  for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
-	      it2 != it->second.end(); ++it2)
-	  {
-	    for (vector< uint32 >::const_iterator it3(it2->nds.begin());
-	        it3 != it2->nds.end(); ++it3)
-	      map_ids.push_back(*it3);
-	  }
+	  for (vector< uint32 >::const_iterator it3(it2->nds.begin());
+	      it3 != it2->nds.end(); ++it3)
+	    map_ids.push_back(*it3);
 	}
 	else
 	{
