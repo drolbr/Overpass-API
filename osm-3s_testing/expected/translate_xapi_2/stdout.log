@@ -1,12 +1,4 @@
-<union>
-  <query type="node">
-    <has-kv k="key" v="value1"/>
-  </query>
-  <query type="node">
-    <has-kv k="key" v="value2"/>
-  </query>
-  <query type="node">
-    <has-kv k="key" v="value3"/>
-  </query>
-</union>
+<query type="node">
+  <has-kv k="key" regv="^(value1|value2|value3)$"/>
+</query>
 <print/>

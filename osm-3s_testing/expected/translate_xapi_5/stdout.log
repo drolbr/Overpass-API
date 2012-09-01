@@ -1,11 +1,5 @@
-<union>
-  <query type="node">
-    <bbox-query s="51.0" n="52.0" w="7.0" e="8.0"/>
-    <has-kv k="key" v="value1"/>
-  </query>
-  <query type="node">
-    <bbox-query s="51.0" n="52.0" w="7.0" e="8.0"/>
-    <has-kv k="key" v="value2"/>
-  </query>
-</union>
+<query type="node">
+  <bbox-query s="51.0" n="52.0" w="7.0" e="8.0"/>
+  <has-kv k="key" regv="^(value1|value2)$"/>
+</query>
 <print/>

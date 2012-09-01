@@ -165,47 +165,23 @@ void process_nodes(string input, bool is_star = false, bool force_meta = false)
   InputAnalizer analizer(input, force_meta);
   if (analizer.timeout != "")
     cout<<"<osm-script timeout=\""<<escape_xml(analizer.timeout)<<"\">\n\n";
-  if (analizer.key_value.size() == 1
-      && analizer.key_value.front().second.find('|') != string::npos)
+  
+  cout<<"<query type=\"node\">\n";
+  if (analizer.bbox_found)
+    print_bbox(analizer, "  ");
+  for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
+      it != analizer.key_value.end(); ++it)
   {
-    string key = analizer.key_value.front().first;
-    string buf = analizer.key_value.front().second;
-    analizer.key_value.clear();
-    while (buf.find('|') != string::npos)
-    {
-      analizer.key_value.push_back(make_pair(key, buf.substr(0, buf.find('|'))));
-      buf = buf.substr(buf.find('|') + 1);
-    }
-    analizer.key_value.push_back(make_pair(key, buf));
-    cout<<"<union>\n";
-    for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
-        it != analizer.key_value.end(); ++it)
-    {
-      cout<<"  <query type=\"node\">\n";
-      if (analizer.bbox_found)
-	print_bbox(analizer, "    ");
-      cout<<"    <has-kv k=\""<<escape_xml(it->first)<<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
-      print_meta(analizer, "    ");
-      cout<<"  </query>\n";
-    }
-    cout<<"</union>\n";
+    if (it->second == "*")
+      cout<<"  <has-kv k=\""<<escape_xml(it->first)<<"\"/>\n";
+    else if (it->second.find('|') != string::npos)
+      cout<<"  <has-kv k=\""<<escape_xml(it->first)<<"\" regv=\"^("<<escape_xml(it->second)<<")$\"/>\n";
+    else
+      cout<<"  <has-kv k=\""<<escape_xml(it->first)<<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
   }
-  else
-  {
-    cout<<"<query type=\"node\">\n";
-    if (analizer.bbox_found)
-      print_bbox(analizer, "  ");
-    for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
-        it != analizer.key_value.end(); ++it)
-    {
-      if (it->second == "*")
-	cout<<"  <has-kv k=\""<<escape_xml(it->first)<<"\"/>\n";
-      else
-	cout<<"  <has-kv k=\""<<escape_xml(it->first)<<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
-    }
-    print_meta(analizer, "  ");
-    cout<<"</query>\n";
-  }
+  print_meta(analizer, "  ");
+  cout<<"</query>\n";
+    
   if (!is_star)
   {
     print_print(analizer);
@@ -222,48 +198,23 @@ void process_ways(string input, bool is_star = false, bool force_meta = false)
   cout<<"<union>\n";
   if (is_star)
     cout<<"  <item/>\n";
-  if (analizer.key_value.size() == 1
-      && analizer.key_value.front().second.find('|') != string::npos)
+  
+  cout<<"  <query type=\"way\">\n";
+  if (analizer.bbox_found)
+    print_bbox(analizer, "    ");
+  for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
+      it != analizer.key_value.end(); ++it)
   {
-    string key = analizer.key_value.front().first;
-    string buf = analizer.key_value.front().second;
-    analizer.key_value.clear();
-    while (buf.find('|') != string::npos)
-    {
-      analizer.key_value.push_back(make_pair(key, buf.substr(0, buf.find('|'))));
-      buf = buf.substr(buf.find('|') + 1);
-    }
-    analizer.key_value.push_back(make_pair(key, buf));
-    
-    cout<<"  <union>\n";
-    for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
-        it != analizer.key_value.end(); ++it)
-    {
-      cout<<"    <query type=\"way\">\n";
-      if (analizer.bbox_found)
-	print_bbox(analizer, "      ");
-      cout<<"      <has-kv k=\""<<escape_xml(it->first)<<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
-      print_meta(analizer, "      ");
-      cout<<"    </query>\n";
-    }
-    cout<<"  </union>\n";
+    if (it->second == "*")
+      cout<<"    <has-kv k=\""<<escape_xml(it->first)<<"\"/>\n";
+    else if (it->second.find('|') != string::npos)
+      cout<<"    <has-kv k=\""<<escape_xml(it->first)<<"\" regv=\"^("<<escape_xml(it->second)<<")$\"/>\n";
+    else
+      cout<<"    <has-kv k=\""<<escape_xml(it->first)<<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
   }
-  else
-  {
-    cout<<"  <query type=\"way\">\n";
-    if (analizer.bbox_found)
-      print_bbox(analizer, "    ");
-    for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
-        it != analizer.key_value.end(); ++it)
-    {
-      if (it->second == "*")
-	cout<<"    <has-kv k=\""<<escape_xml(it->first)<<"\"/>\n";
-      else
-	cout<<"    <has-kv k=\""<<escape_xml(it->first)<<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
-    }
-    print_meta(analizer, "    ");
-    cout<<"  </query>\n";
-  }
+  print_meta(analizer, "    ");
+  cout<<"  </query>\n";
+
   cout<<"  <recurse type=\"way-node\"/>\n"
         "</union>\n";
   print_print(analizer);
@@ -276,47 +227,23 @@ void process_relations(string input, bool is_star = false, bool force_meta = fal
   InputAnalizer analizer(input, force_meta);
   if (!is_star && analizer.timeout != "")
     cout<<"<osm-script timeout=\""<<escape_xml(analizer.timeout)<<"\">\n\n";
-  if (analizer.key_value.size() == 1
-      && analizer.key_value.front().second.find('|') != string::npos)
+  
+  cout<<"<query type=\"relation\">\n";
+  if (analizer.bbox_found)
+    print_bbox(analizer, "  ");
+  for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
+      it != analizer.key_value.end(); ++it)
   {
-    string key = analizer.key_value.front().first;
-    string buf = analizer.key_value.front().second;
-    analizer.key_value.clear();
-    while (buf.find('|') != string::npos)
-    {
-      analizer.key_value.push_back(make_pair(key, buf.substr(0, buf.find('|'))));
-      buf = buf.substr(buf.find('|') + 1);
-    }
-    analizer.key_value.push_back(make_pair(key, buf));
-    cout<<"<union>\n";
-    for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
-        it != analizer.key_value.end(); ++it)
-    {
-      cout<<"  <query type=\"relation\">\n";
-      if (analizer.bbox_found)
-	print_bbox(analizer, "    ");
-      cout<<"    <has-kv k=\""<<escape_xml(it->first)<<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
-      print_meta(analizer, "    ");
-      cout<<"  </query>\n";
-    }
-    cout<<"</union>\n";
+    if (it->second == "*")
+      cout<<"  <has-kv k=\""<<escape_xml(it->first)<<"\"/>\n";
+    else if (it->second.find('|') != string::npos)
+      cout<<"  <has-kv k=\""<<escape_xml(it->first)<<"\" regv=\"^("<<escape_xml(it->second)<<")$\"/>\n";
+    else
+      cout<<"  <has-kv k=\""<<escape_xml(it->first)<<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
   }
-  else
-  {
-    cout<<"<query type=\"relation\">\n";
-    if (analizer.bbox_found)
-      print_bbox(analizer, "  ");
-    for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
-        it != analizer.key_value.end(); ++it)
-    {
-      if (it->second == "*")
-	cout<<"  <has-kv k=\""<<escape_xml(it->first)<<"\"/>\n";
-      else
-	cout<<"  <has-kv k=\""<<escape_xml(it->first)<<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
-    }
-    print_meta(analizer, "  ");
-    cout<<"</query>\n";
-  }
+  print_meta(analizer, "  ");
+  cout<<"</query>\n";
+    
   print_print(analizer);
   if (analizer.timeout != "")
     cout<<"\n</osm-script>\n";

@@ -1,18 +1,8 @@
 <union>
-  <union>
-    <query type="way">
-      <has-kv k="key" v="value1"/>
-      <newer than="2011-01-01T02:02:02Z"/>
-    </query>
-    <query type="way">
-      <has-kv k="key" v="value2"/>
-      <newer than="2011-01-01T02:02:02Z"/>
-    </query>
-    <query type="way">
-      <has-kv k="key" v="value3"/>
-      <newer than="2011-01-01T02:02:02Z"/>
-    </query>
-  </union>
+  <query type="way">
+    <has-kv k="key" regv="^(value1|value2|value3)$"/>
+    <newer than="2011-01-01T02:02:02Z"/>
+  </query>
   <recurse type="way-node"/>
 </union>
 <print/>
