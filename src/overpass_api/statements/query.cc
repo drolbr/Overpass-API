@@ -759,7 +759,14 @@ Has_Kv_Statement::Has_Kv_Statement
       add_static_error(temp.str());
     }
     
-    regex = new Regular_Expression(attributes["regv"]);
+    try
+    {
+      regex = new Regular_Expression(attributes["regv"]);
+    }
+    catch (Regular_Expression_Error e)
+    {
+      add_static_error("Invalid regular expression: \"" + attributes["regv"] + "\"");
+    }
   }
   
   if (attributes["modv"] == "" || attributes["modv"] == "not")

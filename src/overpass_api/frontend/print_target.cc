@@ -1026,7 +1026,14 @@ Element_Collector::Element_Collector(const string& title_key_, const string& tit
 
 Element_Collector& Element_Collector::add_constraint(const string& key, const string& value, bool straight)
 {
-  constraints.push_back(new Element_Collector_Condition(key, value, straight));
+  try
+  {
+    constraints.push_back(new Element_Collector_Condition(key, value, straight));
+  }
+  catch (Regular_Expression_Error e)
+  {
+    //TODO: report the error
+  }
   return *this;
 }
 

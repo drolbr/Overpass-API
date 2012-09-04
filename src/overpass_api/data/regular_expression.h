@@ -28,10 +28,25 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
+
+struct Regular_Expression_Error
+{
+  public:
+    Regular_Expression_Error(int errno_) : error_no(errno_) {}
+    int error_no;
+};
+
+
 class Regular_Expression
 {
   public:
-    Regular_Expression(const string& regex) { regcomp(&preg, regex.c_str(), REG_EXTENDED|REG_NOSUB); }
+    Regular_Expression(const string& regex)
+    {
+      int error_no = regcomp(&preg, regex.c_str(), REG_EXTENDED|REG_NOSUB);
+      if (error_no != 0)
+	throw Regular_Expression_Error(error_no);
+    }
+    
     ~Regular_Expression() { regfree(&preg); }
     
     bool matches(const string& line) const
