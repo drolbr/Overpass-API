@@ -649,14 +649,14 @@ void print_meta(OSM_Element_Metadata* meta)
         " timestamp=\""<<timestamp<<"\""
         " changeset=\""<<meta->changeset<<"\""
         " uid=\""<<meta->user_id<<"\""
-        " user=\""<<meta->user_name<<"\"";
+        " user=\""<<escape_xml(meta->user_name)<<"\"";
 }
 
 
 void print_tags(const vector< pair< string, string > >& tags)
 {
   for (vector< pair< string, string > >::const_iterator tit = tags.begin(); tit != tags.end(); ++tit)
-    cout<<"    <tag k=\""<<tit->first<<"\" v=\""<<tit->second<<"\"/>\n";
+    cout<<"    <tag k=\""<<escape_xml(tit->first)<<"\" v=\""<<escape_xml(tit->second)<<"\"/>\n";
 }
 
 
@@ -703,7 +703,7 @@ void print_relation(const Relation& relation, OSM_Element_Metadata* meta,
     cout<<"    <member "
           "type=\""<<MEMBER_TYPE[it->type]<<"\" "
 	  "ref=\""<<it->ref<<"\" "
-	  "role=\""<<relation_roles[it->role]<<"\"/>\n";
+	  "role=\""<<escape_xml(relation_roles[it->role])<<"\"/>\n";
   print_tags(relation.tags);
   cout<<"  </relation>\n";
 }
