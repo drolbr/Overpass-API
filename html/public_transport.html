@@ -19,6 +19,8 @@
   for the German <em>Verkehrsverbund Rhein-Ruhr</em>.<br/>
   <strong>Line number</strong>: <input name="ref" type="text" size="40"/><br/>
   The value of the tag <em>ref</em> of the relation(s) to consider. A working example is <em>625</em>.<br/>
+  <strong>Operator</strong>: <input name="operator" type="text" size="40"/><br/>
+  Usually, you can leave this field empty. Only if the combination of Network and Line Number is not unique, you can use this to make your query more precise.<br/>
   <input type="submit"/>
 </form>
 
@@ -35,6 +37,8 @@ http://78.46.81.38/api/sketch-line?network=<em>network</em>&amp;ref=<em>ref</em>
   The value of the tag <em>network</em> of the relation(s) to consider. A working example is <em>VRR</em> for the German <em>Verkehrsverbund Rhein-Ruhr</em>.<br/>
   <strong>Line number</strong>: <input name="ref" type="text" size="40"/><br/>
   The value of the tag <em>ref</em> of the relation(s) to consider. A working example is <em>625</em>.<br/>
+  <strong>Operator</strong>: <input name="operator" type="text" size="40"/><br/>
+  Usually, you can leave this field empty. Only if the combination of Network and Line Number is not unique, you can use this to make your query more precise.<br/>
   <strong>Correspondences</strong>: <input name="correspondences" type="text" size="10"/><br/>
   A nonempty value in this field enables the display of correspondences. This slows down the response
   times but gives more information. The value is interpreted as maximum acceptable distance in meters

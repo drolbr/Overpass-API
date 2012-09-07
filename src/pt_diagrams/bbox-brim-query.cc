@@ -76,7 +76,7 @@ void options_end(const char *el)
 
 int main(int argc, char *argv[])
 {
-  string network, ref;
+  string network, ref, operator_;
   
   brim = 0.0;
   
@@ -103,6 +103,8 @@ int main(int argc, char *argv[])
       network = string(argv[argi]).substr(10);
     if (!strncmp("--ref=", argv[argi], 6))
       ref = string(argv[argi]).substr(6);
+    if (!strncmp("--operator=", argv[argi], 11))
+      operator_ = string(argv[argi]).substr(11);
     ++argi;
   }
   
@@ -110,8 +112,10 @@ int main(int argc, char *argv[])
       <<"\n"
       <<"<query type=\"relation\">\n"
       <<"  <has-kv k=\"network\" v=\""<<network<<"\"/>\n"
-      <<"  <has-kv k=\"ref\" v=\""<<ref<<"\"/>\n"
-      <<"</query>\n"
+      <<"  <has-kv k=\"ref\" v=\""<<ref<<"\"/>\n";
+  if (operator_ != "")
+    cout<<"  <has-kv k=\"operator\" v=\""<<operator_<<"\"/>\n";
+  cout<<"</query>\n"
       <<"<recurse type=\"relation-node\" into=\"stops\"/>\n";
       
   if (brim == 0.0)

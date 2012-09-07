@@ -33,6 +33,12 @@ fi
 BIN_DIR="$EXEC_DIR/../bin"
 
 IFS=$'&'
+NETWORK=
+NETWORK_=
+REF=
+REF_=
+OPERATOR=
+OPERATOR_=
 for KEY_VAL in $QUERY_STRING; do
 {
   if [[ ${KEY_VAL:0:8} == "network=" ]]; then
@@ -44,6 +50,11 @@ for KEY_VAL in $QUERY_STRING; do
   {
     REF="${KEY_VAL:4}"
     REF_=`echo "${KEY_VAL:4}" | $BIN_DIR/uncgi`
+  };
+  elif [[ ${KEY_VAL:0:9} == "operator=" ]]; then
+  {
+    OPERATOR="${KEY_VAL:9}"
+    OPERATOR_=`echo "${KEY_VAL:9}" | $BIN_DIR/uncgi`
   };
   elif [[ ${KEY_VAL:0:6} == "width=" && -n "${KEY_VAL:6}" ]]; then
     SKETCH_PARAMS="$SKETCH_PARAMS --width=${KEY_VAL:6}"
@@ -92,12 +103,12 @@ if [[ $DEBUG == "yes" ]]; then
 {
   echo "Content-Type: text/plain; charset=utf-8"
   echo
-  echo $BIN_DIR/bbox_brim_query --network=\"$NETWORK_\" --ref=\"$REF_\" $BRIM_PARAMS ">"$BASEDIR/request.1
+  echo $BIN_DIR/bbox_brim_query --network=\"$NETWORK_\" --ref=\"$REF_\" --operator=\"$OPERATOR_\" $BRIM_PARAMS ">"$BASEDIR/request.1
   echo
 };
 fi
 
-$BIN_DIR/bbox_brim_query --network="$NETWORK_" --ref="$REF_" $BRIM_PARAMS >$BASEDIR/request.1
+$BIN_DIR/bbox_brim_query --network="$NETWORK_" --ref="$REF_" --operator="$OPERATOR_" $BRIM_PARAMS >$BASEDIR/request.1
 
 REQUEST_METHOD=
 
