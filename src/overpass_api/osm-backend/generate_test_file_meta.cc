@@ -263,9 +263,8 @@ int main(int argc, char* args[])
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
   "<osm version=\"0.6\" generator=\"Overpass API\">\n"
-  "<note>The data included in this document is from www.openstreetmap.org. It has there been "
-  "collected by a large group of contributors. For individual attribution of each item please "
-  "refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\n"
+  "<note>The data included in this document is from www.openstreetmap.org. "
+  "The data is made available under ODbL.</note>\n"
   "<meta osm_base=\"mock-up-init\"/>\n\n";
 
   if (pattern == before)

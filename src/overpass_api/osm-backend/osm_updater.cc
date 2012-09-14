@@ -709,76 +709,274 @@ void print_relation(const Relation& relation, OSM_Element_Metadata* meta,
 }
 
 
+typedef enum { none, erase, keep, insert } Diff_State;
+
+
+Diff_State change_diff_state(Diff_State state, Diff_State target)
+{
+  if (state != target)
+  {
+    if (state == erase)
+      cout<<"</erase>\n";
+    else if (state == keep)
+      cout<<"</keep>\n";
+    else if (state == insert)
+      cout<<"</insert>\n";
+    
+    if (target == erase)
+      cout<<"<erase>\n";
+    else if (target == keep)
+      cout<<"<keep>\n";
+    else if (target == insert)
+      cout<<"<insert>\n";
+  }
+  return target;
+}
+
+
 void print_augmented_diff(Update_Node_Logger& update_node_logger,
 			  Update_Way_Logger& update_way_logger,
 			  Update_Relation_Logger& update_relation_logger)
 {
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-  "<osm version=\"0.6\" generator=\"Overpass API\">\n"
-  "<note>The data included in this document is from www.openstreetmap.org. It has there been "
-  "collected by a large group of contributors. For individual attribution of each item please "
-  "refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\n"
+  "<osmAugmentedDiff version=\"0.6\" generator=\"Overpass API\">\n"
+  "<note>The data included in this document is from www.openstreetmap.org. "
+  "The data is made available under ODbL.</note>\n"
   "<meta osm_base=\""<<data_version<<"\"/>\n\n";
 
+  Diff_State state = none;
 
-  cout<<"<delete>\n";
-  for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator
-      it = update_node_logger.erase_begin(); it != update_node_logger.erase_end(); ++it)
-    print_node(it->second.first, it->second.second);
-  cout<<"</delete>\n";
-  
-  cout<<"<keep>\n";
-  for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator
-      it = update_node_logger.keep_begin(); it != update_node_logger.keep_end(); ++it)
-    print_node(it->second.first, it->second.second);
-  cout<<"</keep>\n";
-  
-  cout<<"<insert>\n";
-  for (map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator
-      it = update_node_logger.insert_begin(); it != update_node_logger.insert_end(); ++it)
-    print_node(it->second.first, it->second.second);
-  cout<<"</insert>\n";
+  {
+    map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator
+        erase_it = update_node_logger.erase_begin();
+    map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator
+        keep_it = update_node_logger.keep_begin();
+    map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator
+        insert_it = update_node_logger.insert_begin();
+	
+    while (true)
+    {
+      if (erase_it != update_node_logger.erase_end())
+      {
+	if (keep_it != update_node_logger.keep_end() && keep_it->first < erase_it->first)
+	{
+	  if (insert_it != update_node_logger.insert_end() && insert_it->first < keep_it->first)
+	  {
+	    state = change_diff_state(state, insert);
+	    print_node(insert_it->second.first, insert_it->second.second);
+	    ++insert_it;
+	  }
+	  else
+	  {
+	    state = change_diff_state(state, keep);
+	    print_node(keep_it->second.first, keep_it->second.second);
+	    ++keep_it;
+	  }
+	}
+	else
+	{
+	  if (insert_it != update_node_logger.insert_end() && insert_it->first < erase_it->first)
+	  {
+	    state = change_diff_state(state, insert);
+	    print_node(insert_it->second.first, insert_it->second.second);
+	    ++insert_it;
+	  }
+	  else
+	  {
+	    state = change_diff_state(state, erase);
+	    print_node(erase_it->second.first, erase_it->second.second);
+	    ++erase_it;
+	  }
+	}
+      }
+      else
+      {
+	if (keep_it != update_node_logger.keep_end())
+	{
+	  if (insert_it != update_node_logger.insert_end() && insert_it->first < keep_it->first)
+	  {
+	    state = change_diff_state(state, insert);
+	    print_node(insert_it->second.first, insert_it->second.second);
+	    ++insert_it;
+	  }
+	  else
+	  {
+	    state = change_diff_state(state, keep);
+	    print_node(keep_it->second.first, keep_it->second.second);
+	    ++keep_it;
+	  }
+	}
+	else
+	{
+	  if (insert_it != update_node_logger.insert_end())
+	  {
+	    state = change_diff_state(state, insert);
+	    print_node(insert_it->second.first, insert_it->second.second);
+	    ++insert_it;
+	  }
+	  else
+	    break;
+	}
+      }
+    }
+  }
 
-  cout<<"<delete>\n";
-  for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator
-      it = update_way_logger.erase_begin(); it != update_way_logger.erase_end(); ++it)
-    print_way(it->second.first, it->second.second);
-  cout<<"</delete>\n";
-  
-  cout<<"<keep>\n";
-  for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator
-      it = update_way_logger.keep_begin(); it != update_way_logger.keep_end(); ++it)
-    print_way(it->second.first, it->second.second);
-  cout<<"</keep>\n";
-  
-  cout<<"<insert>\n";
-  for (map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator
-      it = update_way_logger.insert_begin(); it != update_way_logger.insert_end(); ++it)
-    print_way(it->second.first, it->second.second);
-  cout<<"</insert>\n";
+  {
+    map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator
+        erase_it = update_way_logger.erase_begin();
+    map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator
+        keep_it = update_way_logger.keep_begin();
+    map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator
+        insert_it = update_way_logger.insert_begin();
+	
+    while (true)
+    {
+      if (erase_it != update_way_logger.erase_end())
+      {
+	if (keep_it != update_way_logger.keep_end() && keep_it->first < erase_it->first)
+	{
+	  if (insert_it != update_way_logger.insert_end() && insert_it->first < keep_it->first)
+	  {
+	    state = change_diff_state(state, insert);
+	    print_way(insert_it->second.first, insert_it->second.second);
+	    ++insert_it;
+	  }
+	  else
+	  {
+	    state = change_diff_state(state, keep);
+	    print_way(keep_it->second.first, keep_it->second.second);
+	    ++keep_it;
+	  }
+	}
+	else
+	{
+	  if (insert_it != update_way_logger.insert_end() && insert_it->first < erase_it->first)
+	  {
+	    state = change_diff_state(state, insert);
+	    print_way(insert_it->second.first, insert_it->second.second);
+	    ++insert_it;
+	  }
+	  else
+	  {
+	    state = change_diff_state(state, erase);
+	    print_way(erase_it->second.first, erase_it->second.second);
+	    ++erase_it;
+	  }
+	}
+      }
+      else
+      {
+	if (keep_it != update_way_logger.keep_end())
+	{
+	  if (insert_it != update_way_logger.insert_end() && insert_it->first < keep_it->first)
+	  {
+	    state = change_diff_state(state, insert);
+	    print_way(insert_it->second.first, insert_it->second.second);
+	    ++insert_it;
+	  }
+	  else
+	  {
+	    state = change_diff_state(state, keep);
+	    print_way(keep_it->second.first, keep_it->second.second);
+	    ++keep_it;
+	  }
+	}
+	else
+	{
+	  if (insert_it != update_way_logger.insert_end())
+	  {
+	    state = change_diff_state(state, insert);
+	    print_way(insert_it->second.first, insert_it->second.second);
+	    ++insert_it;
+	  }
+	  else
+	    break;
+	}
+      }
+    }
+  }
 
   vector< string > relation_roles = relation_updater->get_roles();
   
-  cout<<"<delete>\n";
-  for (map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator
-      it = update_relation_logger.erase_begin(); it != update_relation_logger.erase_end(); ++it)
-    print_relation(it->second.first, it->second.second, relation_roles);
-  cout<<"</delete>\n";
+  {
+    map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator
+        erase_it = update_relation_logger.erase_begin();
+    map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator
+        keep_it = update_relation_logger.keep_begin();
+    map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator
+        insert_it = update_relation_logger.insert_begin();
+	
+    while (true)
+    {
+      if (erase_it != update_relation_logger.erase_end())
+      {
+	if (keep_it != update_relation_logger.keep_end() && keep_it->first < erase_it->first)
+	{
+	  if (insert_it != update_relation_logger.insert_end() && insert_it->first < keep_it->first)
+	  {
+	    state = change_diff_state(state, insert);
+	    print_relation(insert_it->second.first, insert_it->second.second, relation_roles);
+	    ++insert_it;
+	  }
+	  else
+	  {
+	    state = change_diff_state(state, keep);
+	    print_relation(keep_it->second.first, keep_it->second.second, relation_roles);
+	    ++keep_it;
+	  }
+	}
+	else
+	{
+	  if (insert_it != update_relation_logger.insert_end() && insert_it->first < erase_it->first)
+	  {
+	    state = change_diff_state(state, insert);
+	    print_relation(insert_it->second.first, insert_it->second.second, relation_roles);
+	    ++insert_it;
+	  }
+	  else
+	  {
+	    state = change_diff_state(state, erase);
+	    print_relation(erase_it->second.first, erase_it->second.second, relation_roles);
+	    ++erase_it;
+	  }
+	}
+      }
+      else
+      {
+	if (keep_it != update_relation_logger.keep_end())
+	{
+	  if (insert_it != update_relation_logger.insert_end() && insert_it->first < keep_it->first)
+	  {
+	    state = change_diff_state(state, insert);
+	    print_relation(insert_it->second.first, insert_it->second.second, relation_roles);
+	    ++insert_it;
+	  }
+	  else
+	  {
+	    state = change_diff_state(state, keep);
+	    print_relation(keep_it->second.first, keep_it->second.second, relation_roles);
+	    ++keep_it;
+	  }
+	}
+	else
+	{
+	  if (insert_it != update_relation_logger.insert_end())
+	  {
+	    state = change_diff_state(state, insert);
+	    print_relation(insert_it->second.first, insert_it->second.second, relation_roles);
+	    ++insert_it;
+	  }
+	  else
+	    break;
+	}
+      }
+    }
+  }
   
-  cout<<"<keep>\n";
-  for (map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator
-      it = update_relation_logger.keep_begin(); it != update_relation_logger.keep_end(); ++it)
-    print_relation(it->second.first, it->second.second, relation_roles);
-  cout<<"</keep>\n";
-  
-  cout<<"<insert>\n";
-  for (map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator
-      it = update_relation_logger.insert_begin(); it != update_relation_logger.insert_end(); ++it)
-    print_relation(it->second.first, it->second.second, relation_roles);
-  cout<<"</insert>\n";
-  
-  cout<<"\n</osm>\n";
+  change_diff_state(state, none);
+
+  cout<<"\n</osmAugmentedDiff>\n";
 }
 
 

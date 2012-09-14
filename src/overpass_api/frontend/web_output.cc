@@ -147,9 +147,7 @@ void Web_Output::write_html_header
   {
     cout<<
     "<p>The data included in this document is from www.openstreetmap.org. "
-    "It has there been collected by a large group of contributors. For individual "
-    "attribution of each item please refer to "
-    "http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </p>\n";
+    "The data is made available under ODbL.</p>\n";
     if (timestamp != "")
     {
       cout<<"<p>Data included until: "<<timestamp;
@@ -173,9 +171,7 @@ void Web_Output::write_xml_header
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm version=\"0.6\" generator=\"Overpass API\">\n"
   "<note>The data included in this document is from www.openstreetmap.org. "
-  "It has there been collected by a large group of contributors. For individual "
-  "attribution of each item please refer to "
-  "http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\n";
+  "The data is made available under ODbL.</note>\n";
   cout<<"<meta osm_base=\""<<timestamp<<'\"';
   if (area_timestamp != "")
     cout<<" areas=\""<<area_timestamp<<"\"";
@@ -203,9 +199,7 @@ void Web_Output::write_json_header
   if (area_timestamp != "")
     cout<<"    \"timestamp_areas_base\": \""<<area_timestamp<<"\",\n";
   cout<<"    \"copyright\": \"The data included in this document is from www.openstreetmap.org."
-	" It has there been collected by a large group of contributors. For individual"
-	" attribution of each item please refer to"
-	" http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history\"\n"
+	" The data is made available under ODbL.\"\n"
         "  },\n"
         "  \"elements\": [\n\n";
 }
