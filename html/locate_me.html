@@ -153,7 +153,7 @@
       }
 
      function showMap(position) {
-         set_status_text("Landkarte um " + position.coords.latitude + "° Nord, " + position.coords.longitude + "° Ost"); 
+         set_status_text("Landkarte"/* um " + position.coords.latitude + "° Nord, " + position.coords.longitude + "° Ost"*/); 
          var lonLat = new OpenLayers.LonLat(position.coords.longitude, position.coords.latitude).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
          var markers = new OpenLayers.Layer.Markers("Geolocation position");
          map.addLayer(markers);
@@ -202,20 +202,23 @@
 	      'click': this.trigger
 	    }, this.handlerOptions
 	  );
+	  this.handler.pixelTolerance = 100;
 	}, 
 	
 	trigger: function(evt) {
 	  var lonlat = map.getLonLatFromPixel(evt.xy)
 	      .transform(new OpenLayers.Projection("EPSG:900913"),
 		         new OpenLayers.Projection("EPSG:4326"));
-		    
-          set_status_text("Details bei " + lonlat.lat + "° Nord, " + lonlat.lon + "° Ost");
+		         
+          set_status_text("Details"/* bei " + lonlat.lat + "° Nord, " + lonlat.lon + "° Ost"*/);
 	  zShow("element_details");
+	  
+	  var rel_tolerance = this.tolerance * map.getScale();
 
           var request = OpenLayers.Request.GET({
               url: this.genericUrl + current_query + "out;&bbox="
-                  + (lonlat.lon - this.tolerance) + "," + (lonlat.lat - this.tolerance) + ","
-                  + (lonlat.lon + this.tolerance) + "," + (lonlat.lat + this.tolerance),
+                  + (lonlat.lon - rel_tolerance) + "," + (lonlat.lat - rel_tolerance) + ","
+                  + (lonlat.lon + rel_tolerance) + "," + (lonlat.lat + rel_tolerance),
               async: false
           });
 
@@ -223,6 +226,7 @@
           var target_div = document.getElementById("element_details");
           while (target_div.hasChildNodes())
             target_div.removeChild(target_div.firstChild);
+          target_div.style.overflow = "hidden";
 
           var newElem = document.createElement("a");
           newElem.appendChild(document.createTextNode("zurück zur Karte"));
@@ -251,6 +255,8 @@
               target_div.appendChild(document.createElement("br"));
             }
           }
+          
+          target_div.style.overflow = "scroll";
 	}
 	
       });
@@ -304,7 +310,7 @@
           map.setCenter(lonLat, zoom);
           navigator.geolocation.getCurrentPosition(showMap);
           
-          var click = new Click("http://overpass-api.de/api/interpreter?data=[out:json];", 0.001, map);
+          var click = new Click("http://overpass-api.de/api/interpreter?data=[out:json];", 0.0000001, map);
           map.addControl(click);
           click.activate();
       }
@@ -329,8 +335,9 @@
           layer.display(true);
       }
       
-      function showQueryLayer(conjunctions)
+      function showQueryLayer(conjunctions, desc)
       {
+          set_status_text("Suche nach " + desc);
           var query = "(";
           for (var i = 0; i < conjunctions.length; i++)
             query = query + "way" + conjunctions[i] + "(bbox);>;node" + conjunctions[i] + "(bbox);";
@@ -382,7 +389,7 @@
           var newElem = document.createElement("a");
           newElem.appendChild(document.createTextNode(desc));
           newElem.href = "#";
-          newElem.setAttribute("onclick", "clearChoiceMenu();zShow(\"map\");showQueryLayer(queryLayers[\"" + layer_id + "\"])");
+          newElem.setAttribute("onclick", "clearChoiceMenu();zShow(\"map\");showQueryLayer(queryLayers[\"" + layer_id + "\"], \"" + desc + "\")");
           target_div.appendChild(newElem);
           target_div.appendChild(document.createElement("br"));
           target_div.appendChild(document.createElement("br"));
@@ -399,9 +406,33 @@
           target_div.appendChild(document.createElement("br"));
       }
 
+      function populateSearchForm() {
+          var target_div = document.getElementById("menu_search");
+          
+          var form = document.createElement("form");
+          form.action = "#";
+          form.acceptCharset = "UTF-8";
+          form.setAttribute("onsubmit", "zShow(\"map\");showNameQueryLayer(document.getElementById(\"input_search\").value); clearChoiceMenu();return false");
+          
+          var input = document.createElement("input");
+          input.type = "text";
+          input.id = "input_search";
+          form.appendChild(input);
+          
+          input = document.createElement("input");
+          input.type = "submit";
+          input.value = "Suchen";
+          form.appendChild(input);
+          
+          target_div.appendChild(form);
+      }
+
       function clearChoiceMenu()
       {
           var target_div = document.getElementById("menu_text");
+          while (target_div.hasChildNodes())
+            target_div.removeChild(target_div.firstChild);
+          target_div = document.getElementById("menu_search");
           while (target_div.hasChildNodes())
             target_div.removeChild(target_div.firstChild);
       }
@@ -454,22 +485,19 @@
   </script>
 </head>
 <body onload="init()">
-  <div id="status_text" style="min-height:10%; font-family:sans-serif; font-size:16pt"><strong>Eigener Standort</strong></div>
+  <div id="status_text" style="min-height:10%; font-family:sans-serif; font-size:16pt"><strong>Landkarte</strong></div>
 
   <div id="menu" style="height:10%; width:100%; font-family:sans-serif; font-size:16pt; position:absolute; top:90%; left:0%; text-align:center">
     <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;map&quot;);map.zoomIn()"><img src="plus.png" alt="zoom in" height="100%"/></a></div>
     <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;map&quot;);map.zoomOut()"><img src="minus.png" alt="zoom out" height="100%"/></a></div>
-    <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;menu_search&quot;)"><img src="search.png" alt="search" height="100%"/></a></div>
+    <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;menu_search&quot;);populateSearchForm()"><img src="search.png" alt="search" height="100%"/></a></div>
     <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;menu_text&quot;);prepareStartMenu()"><img src="find.png" alt="find" height="100%"/></a></div>
   </div>
 
   <div id="map" class="smallmap" style="position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:1"></div>
   
   <div id="menu_search" style="font-size:16pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; background-color:white">
-    <form action="#" accept-charset="UTF-8" onsubmit="zShow(&quot;map&quot;);showNameQueryLayer(document.getElementById(&quot;input_search&quot;).value); return false">
-      <input type="text" id="input_search"/>
-      <input type="submit" value="Suchen"/>
-    </form>
+    &nbsp;
   </div>
   
   <div id="element_details" style="font-size:16pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; overflow:scroll; background-color:white">
@@ -484,7 +512,6 @@
     Status im Titel
     Hamming-Abstand
     Symbole als Marker
-    GPS-Lokalisierung
     editierbar
   -->
   
