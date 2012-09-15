@@ -42,7 +42,7 @@ else
   exit 0
 }; fi
 
-if [[ $5 == "--augmented_diffs=yes" || $5 == "--meta" ]]; then
+if [[ $5 == "--augmented_diffs=yes" || $5 == "--augmented_diffs" ]]; then
 {
   PRODUCE_DIFF="yes"
 }
