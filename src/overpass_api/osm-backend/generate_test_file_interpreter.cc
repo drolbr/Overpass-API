@@ -306,7 +306,8 @@ int main(int argc, char* args[])
     "\n"
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<osm version=\"0.6\" generator=\"Overpass API\">\n"
-    "<note>The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>\n"
+    "<note>The data included in this document is from www.openstreetmap.org. "
+    "The data is made available under ODbL.</note>\n"
     "<meta osm_base=\"mock-up-init\"/>\n"
     "\n"
     "\n"
@@ -329,7 +330,8 @@ int main(int argc, char* args[])
     "</head>\n"
     "<body>\n"
     "\n"
-    "<p>The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </p>\n";
+    "<p>The data included in this document is from www.openstreetmap.org. "
+    "The data is made available under ODbL.</p>\n";
     if (string(args[2]) == "interpreter_3")
       cout<<
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: Unknown type \"foo\" </p>\n"
@@ -395,7 +397,8 @@ int main(int argc, char* args[])
     "  \"generator\": \"Overpass API\",\n"
     "  \"osm3s\": {\n"
     "    \"timestamp_osm_base\": \"mock-up-init\",\n"
-    "    \"copyright\": \"The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history\"\n"
+    "    \"copyright\": \"The data included in this document is from www.openstreetmap.org. "
+    "The data is made available under ODbL.\"\n"
     "  },\n"
     "  \"elements\": [\n"
     "\n";
@@ -616,7 +619,8 @@ int main(int argc, char* args[])
       cout<<"<body onload=\"init()\">\n";
     cout<<
     "\n"
-    "<p>The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </p>\n"
+    "<p>The data included in this document is from www.openstreetmap.org. "
+    "The data is made available under ODbL.</p>\n"
     "<p>Data included until: mock-up-init</p>\n";
     if (string(args[2]) == "interpreter_24")
       cout<<"<p>No results found.</p>\n";
@@ -897,7 +901,8 @@ int main(int argc, char* args[])
     "</head>\n"
     "<body>\n"
     "\n"
-    "<p>The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </p>\n"
+    "<p>The data included in this document is from www.openstreetmap.org. "
+    "The data is made available under ODbL.</p>\n"
     "<p>Data included until: mock-up-init</p>\n";
     if (string(args[2]) == "interpreter_42")
       cout<<"<h1>1 results found</h1>\n";
@@ -966,7 +971,8 @@ int main(int argc, char* args[])
     "  \"generator\": \"Overpass API\",\n"
     "  \"osm3s\": {\n"
     "    \"timestamp_osm_base\": \"mock-up-init\",\n"
-    "    \"copyright\": \"The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history\"\n"
+    "    \"copyright\": \"The data included in this document is from www.openstreetmap.org. "
+    "The data is made available under ODbL.\"\n"
     "  },\n"
     "  \"elements\": [\n"
     "\n"
@@ -1037,7 +1043,8 @@ int main(int argc, char* args[])
     "</head>\n"
     "<body onload=\"init()\">\n"
     "\n"
-    "<p>The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </p>\n"
+    "<p>The data included in this document is from www.openstreetmap.org. "
+    "The data is made available under ODbL.</p>\n"
     "<p>Data included until: mock-up-init</p>\n"
     "  <script src=\"http://openlayers.org/api/OpenLayers.js\"></script>\n"
     "  <script src=\"http://openstreetmap.org/openlayers/OpenStreetMap.js\"></script>\n"
