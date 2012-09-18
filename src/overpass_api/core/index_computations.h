@@ -912,4 +912,77 @@ inline void recursively_calc_ranges
   }
 }
 
+
+/*---------------------------------------------------------------------------*/
+
+
+inline uint32 ll_upper_(double lat, double lon)
+{
+  uint32 temp = ll_upper
+      ((uint32)((lat + 91.0)*10000000+0.5), (int32)(lon*10000000 + (lon > 0 ? 0.5 : -0.5)));
+  return (temp ^ 0x40000000);
+}
+  
+
+inline uint32 ll_lower(uint32 ilat, int32 ilon)
+{
+  uint32 result(0);
+  
+  for (uint32 i(0); i < 16; ++i)
+  {
+    result |= ((0x1<<i)&ilat)<<(i+1);
+    result |= ((0x1<<i)&(uint32)ilon)<<i;
+  }
+  
+  return result;
+}
+
+
+inline uint32 ll_lower(double lat, double lon)
+{
+  return ll_lower((uint32)((lat + 91.0)*10000000+0.5), (int32)(lon*10000000 + (lon > 0 ? 0.5 : -0.5)));
+}
+
+
+inline uint32 ilat(uint32 ll_upper, uint32 ll_lower)
+{
+  uint32 result(0);
+    
+  for (uint32 i(0); i < 16; i+=1)
+  {
+    result |= ((0x1<<(31-2*i))&ll_upper)<<i;
+    result |= ((0x1<<(31-2*i))&ll_lower)>>(16-i);
+  }
+ 
+  return result;
+}
+
+
+inline double lat(uint32 ll_upper, uint32 ll_lower)
+{
+  return ((double)ilat(ll_upper, ll_lower))/10000000 - 91.0;
+}
+
+
+inline int32 ilon(uint32 ll_upper, uint32 ll_lower)
+{
+  int32 result(0);
+  
+  for (uint32 i(0); i < 16; i+=1)
+  {
+    result |= ((0x1<<(30-2*i))&ll_upper)<<(i+1);
+    result |= ((0x1<<(30-2*i))&ll_lower)>>(15-i);
+  }
+  result ^= 0x80000000;
+    
+  return result;
+}
+
+
+inline double lon(uint32 ll_upper, uint32 ll_lower)
+{
+  return ((double)ilon(ll_upper, ll_lower))/10000000;
+}
+
+
 #endif

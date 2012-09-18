@@ -176,8 +176,8 @@ struct Node_Updater
     
     Node node;
     node.id = id;
-    node.ll_upper = Node::ll_upper_(lat, lon);
-    node.ll_lower_ = Node::ll_lower(lat, lon);
+    node.ll_upper = ::ll_upper_(lat, lon);
+    node.ll_lower_ = ::ll_lower(lat, lon);
     node.tags = tags;
     nodes_to_insert.push_back(node);
     if (meta)

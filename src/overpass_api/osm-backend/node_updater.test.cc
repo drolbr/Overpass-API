@@ -182,8 +182,8 @@ int main(int argc, char* args[])
 	 it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
     {
       coord_db_out<<it.object().id<<'\t'<<fixed<<setprecision(7)
-	  <<Node::lat(it.index().val(), it.object().ll_lower)<<'\t'
-	  <<Node::lon(it.index().val(), it.object().ll_lower)<<'\n';
+	  <<::lat(it.index().val(), it.object().ll_lower)<<'\t'
+	  <<::lon(it.index().val(), it.object().ll_lower)<<'\n';
     }
     
     // check update_node_tags_local - compare both files for the result

@@ -252,8 +252,8 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Node_Skeleton& skel,
   if (mode & PRINT_IDS)
     cout<<" id=\""<<skel.id<<'\"';
   if (mode & PRINT_COORDS)
-    cout<<" lat=\""<<fixed<<setprecision(7)<<Node::lat(ll_upper, skel.ll_lower)
-        <<"\" lon=\""<<fixed<<setprecision(7)<<Node::lon(ll_upper, skel.ll_lower)<<'\"';
+    cout<<" lat=\""<<fixed<<setprecision(7)<<::lat(ll_upper, skel.ll_lower)
+        <<"\" lon=\""<<fixed<<setprecision(7)<<::lon(ll_upper, skel.ll_lower)<<'\"';
   if (meta)
     print_meta_xml(*meta, *users);
   if ((tags == 0) || (tags->empty()))
@@ -407,8 +407,8 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Node_Skeleton& skel,
   if (mode & PRINT_IDS)
     cout<<",\n  \"id\": "<<skel.id;
   if (mode & PRINT_COORDS)
-    cout<<",\n  \"lat\": "<<fixed<<setprecision(7)<<Node::lat(ll_upper, skel.ll_lower)
-        <<",\n  \"lon\": "<<fixed<<setprecision(7)<<Node::lon(ll_upper, skel.ll_lower);
+    cout<<",\n  \"lat\": "<<fixed<<setprecision(7)<<::lat(ll_upper, skel.ll_lower)
+        <<",\n  \"lon\": "<<fixed<<setprecision(7)<<::lon(ll_upper, skel.ll_lower);
   if (meta)
     print_meta_json(*meta, *users);
   
@@ -908,10 +908,10 @@ struct Box_Coords
     }
     else
     {
-      south = Node::lat(bbox_bounds.first.val(), 0);
-      west = Node::lon(bbox_bounds.first.val(), 0);
-      north = Node::lat(bbox_bounds.second.val() - 1, 0xffffffffu);
-      east = Node::lon(bbox_bounds.second.val() - 1, 0xffffffffu);
+      south = ::lat(bbox_bounds.first.val(), 0);
+      west = ::lon(bbox_bounds.first.val(), 0);
+      north = ::lat(bbox_bounds.second.val() - 1, 0xffffffffu);
+      east = ::lon(bbox_bounds.second.val() - 1, 0xffffffffu);
     }
   }
   
@@ -957,8 +957,8 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Node_Skeleton& skel,
   double lon = 200.0;
   if (mode & PRINT_COORDS)
   {
-    lat = Node::lat(ll_upper, skel.ll_lower);
-    lon = Node::lon(ll_upper, skel.ll_lower);
+    lat = ::lat(ll_upper, skel.ll_lower);
+    lon = ::lon(ll_upper, skel.ll_lower);
   }
   output += process_template(node_template, skel.id, "node", lat, lon, 100.0, 0, 17, tags, 0, 0, 0);
 }

@@ -82,8 +82,8 @@ void dump_nodes(Transaction& transaction, const string& db_dir)
   {
     ofstream* out(node_db_out.get(it.object().id / 5000000));
     (*out)<<it.object().id<<'\t'<<setprecision(10)
-	<<Node::lat(it.index().val(), it.object().ll_lower)<<'\t'
-	<<Node::lon(it.index().val(), it.object().ll_lower)<<'\n';
+	<<::lat(it.index().val(), it.object().ll_lower)<<'\t'
+	<<::lon(it.index().val(), it.object().ll_lower)<<'\n';
   }
     
   // check update_node_tags_local - compare both files for the result
@@ -122,8 +122,8 @@ void check_nodes(Transaction& transaction)
     it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
   {
     out<<it.object().id<<'\t'<<setprecision(10)
-        <<Node::lat(it.index().val(), it.object().ll_lower)<<'\t'
-        <<Node::lon(it.index().val(), it.object().ll_lower)<<'\n';
+        <<::lat(it.index().val(), it.object().ll_lower)<<'\t'
+        <<::lon(it.index().val(), it.object().ll_lower)<<'\n';
     if (++element_count % 1000000 == 0)
       cerr<<it.object().id<<' ';
   }

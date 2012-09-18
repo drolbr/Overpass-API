@@ -32,8 +32,8 @@ using namespace std;
 
 void draw_item(vector< string >& visual, uint32 index, const Node_Skeleton& node, char c)
 {
-  uint i(Node::lat(index, node.ll_lower) * 2000 - 102315);
-  uint j(Node::lon(index, node.ll_lower) * 2500 - 17495);
+  uint i(::lat(index, node.ll_lower) * 2000 - 102315);
+  uint j(::lon(index, node.ll_lower) * 2500 - 17495);
   if ((visual[i][j] != '.') && (visual[i][j] != c))
     visual[i][j] = '#';
   else
@@ -67,16 +67,16 @@ void comp_sets(Set& s1, Set& s2)
 	else if (itn1->id < itn2->id)
 	{
           cout<<"a\t"<<itn1->id<<'\t'
-              <<Node::lat(it1->first.val(), itn1->ll_lower)<<'\t'
-	      <<Node::lon(it1->first.val(), itn1->ll_lower)<<'\n';
+              <<::lat(it1->first.val(), itn1->ll_lower)<<'\t'
+	      <<::lon(it1->first.val(), itn1->ll_lower)<<'\n';
 	  draw_item(visual, it1->first.val(), *itn1, 'a');
 	  ++itn1;
 	}
 	else
 	{
           cout<<"b\t"<<itn2->id<<'\t'
-              <<Node::lat(it2->first.val(), itn2->ll_lower)<<'\t'
-	      <<Node::lon(it2->first.val(), itn2->ll_lower)<<'\n';
+              <<::lat(it2->first.val(), itn2->ll_lower)<<'\t'
+	      <<::lon(it2->first.val(), itn2->ll_lower)<<'\n';
 	  draw_item(visual, it2->first.val(), *itn2, 'b');
 	  ++itn2;
 	}
@@ -84,16 +84,16 @@ void comp_sets(Set& s1, Set& s2)
       while (itn1 != it1->second.end())
       {
         cout<<"a\t"<<itn1->id<<'\t'
-            <<Node::lat(it1->first.val(), itn1->ll_lower)<<'\t'
-	    <<Node::lon(it1->first.val(), itn1->ll_lower)<<'\n';
+            <<::lat(it1->first.val(), itn1->ll_lower)<<'\t'
+	    <<::lon(it1->first.val(), itn1->ll_lower)<<'\n';
 	draw_item(visual, it1->first.val(), *itn1, 'a');
 	++itn1;
       }
       while (itn2 != it2->second.end())
       {
         cout<<"b\t"<<itn2->id<<'\t'
-            <<Node::lat(it2->first.val(), itn2->ll_lower)<<'\t'
-	    <<Node::lon(it2->first.val(), itn2->ll_lower)<<'\n';
+            <<::lat(it2->first.val(), itn2->ll_lower)<<'\t'
+	    <<::lon(it2->first.val(), itn2->ll_lower)<<'\n';
 	draw_item(visual, it2->first.val(), *itn2, 'b');
 	++itn2;
       }
@@ -107,8 +107,8 @@ void comp_sets(Set& s1, Set& s2)
           it != it1->second.end(); ++it)
       {
         cout<<"a\t"<<it->id<<'\t'
-            <<Node::lat(it1->first.val(), it->ll_lower)<<'\t'
-	    <<Node::lon(it1->first.val(), it->ll_lower)<<'\n';
+            <<::lat(it1->first.val(), it->ll_lower)<<'\t'
+	    <<::lon(it1->first.val(), it->ll_lower)<<'\n';
 	draw_item(visual, it1->first.val(), *it, 'a');
       }
       ++it1;
@@ -119,8 +119,8 @@ void comp_sets(Set& s1, Set& s2)
           it != it2->second.end(); ++it)
       {
         cout<<"b\t"<<it->id<<'\t'
-            <<Node::lat(it2->first.val(), it->ll_lower)<<'\t'
-            <<Node::lon(it2->first.val(), it->ll_lower)<<'\n';
+            <<::lat(it2->first.val(), it->ll_lower)<<'\t'
+            <<::lon(it2->first.val(), it->ll_lower)<<'\n';
 	draw_item(visual, it2->first.val(), *it, 'b');
       }
       ++it2;
@@ -132,8 +132,8 @@ void comp_sets(Set& s1, Set& s2)
         it != it1->second.end(); ++it)
     {
       cout<<"a\t"<<it->id<<'\t'
-          <<Node::lat(it1->first.val(), it->ll_lower)<<'\t'
-	  <<Node::lon(it1->first.val(), it->ll_lower)<<'\n';
+          <<::lat(it1->first.val(), it->ll_lower)<<'\t'
+	  <<::lon(it1->first.val(), it->ll_lower)<<'\n';
       draw_item(visual, it1->first.val(), *it, 'a');
     }
     ++it1;
@@ -144,8 +144,8 @@ void comp_sets(Set& s1, Set& s2)
         it != it2->second.end(); ++it)
     {
       cout<<"b\t"<<it->id<<'\t'
-          <<Node::lat(it2->first.val(), it->ll_lower)<<'\t'
-	  <<Node::lon(it2->first.val(), it->ll_lower)<<'\n';
+          <<::lat(it2->first.val(), it->ll_lower)<<'\t'
+	  <<::lon(it2->first.val(), it->ll_lower)<<'\n';
       draw_item(visual, it2->first.val(), *it, 'b');
     }
     ++it2;

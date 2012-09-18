@@ -642,16 +642,16 @@ int main(int argc, char* args[])
     {
       set< pair< Uint32_Index, Uint32_Index > > input;
       input.insert(make_pair
-          (ll_upper(0x40000000, lon) ^ 0x40000000,
-	   (ll_upper(0x40000000, (int32)lon) ^ 0x40000000) + 1));
+          (ll_upper(0x40000000ul, (int32)lon) ^ 0x40000000,
+	   (ll_upper(0x40000000ul, (int32)lon) ^ 0x40000000) + 1));
       cout_ranges(calc_parents(input));
     }
     for (uint32 lon = 0x80000000; (uint32)lon != (uint32)0; lon += 0x10000000)
     {
       set< pair< Uint32_Index, Uint32_Index > > input;
       input.insert(make_pair
-          (ll_upper(0x40000000, lon) ^ 0x40000000,
-	   (ll_upper(0x40000000, (int32)lon) ^ 0x40000000) + 1));
+          (ll_upper(0x40000000ul, (int32)lon) ^ 0x40000000,
+	   (ll_upper(0x40000000ul, (int32)lon) ^ 0x40000000) + 1));
       cout_ranges(calc_parents(input));
     }
     cout<<'\n';    

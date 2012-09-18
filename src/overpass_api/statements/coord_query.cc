@@ -279,7 +279,7 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   set< Uint31_Index > req;
   map< uint32, int > areas_inside;
   set< uint32 > areas_on_border;
-  req.insert(Uint31_Index(Node::ll_upper_(lat, lon) & 0xffffff00));
+  req.insert(Uint31_Index(::ll_upper_(lat, lon) & 0xffffff00));
 
   uint32 ilat((lat + 91.0)*10000000+0.5);
   int32 ilon(lon*10000000 + (lon > 0 ? 0.5 : -0.5));

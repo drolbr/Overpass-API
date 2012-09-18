@@ -136,8 +136,8 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
     for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
-      double lat(Node::lat(it->first.val(), iit->ll_lower));
-      double lon(Node::lon(it->first.val(), iit->ll_lower));
+      double lat(::lat(it->first.val(), iit->ll_lower));
+      double lon(::lon(it->first.val(), iit->ll_lower));
       if ((lat >= bbox->get_south()) && (lat <= bbox->get_north()) &&
 	  (((lon >= bbox->get_west()) && (lon <= bbox->get_east())) ||
 	  ((bbox->get_east() < bbox->get_west()) && ((lon >= bbox->get_west()) ||
@@ -241,8 +241,8 @@ bool matches_bbox(const Bbox_Query_Statement& bbox, const Way_Skeleton& way,
     bbox.runtime_remark(out.str());
     return true;
   }
-  double first_lat(Node::lat(first_nd->first.val(), first_nd->second->ll_lower));
-  double first_lon(Node::lon(first_nd->first.val(), first_nd->second->ll_lower));
+  double first_lat(::lat(first_nd->first.val(), first_nd->second->ll_lower));
+  double first_lon(::lon(first_nd->first.val(), first_nd->second->ll_lower));
   for (++nit; nit != way.nds.end(); ++nit)
   {
     const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
@@ -254,8 +254,8 @@ bool matches_bbox(const Bbox_Query_Statement& bbox, const Way_Skeleton& way,
       bbox.runtime_remark(out.str());
       return true;
     }
-    double second_lat(Node::lat(second_nd->first.val(), second_nd->second->ll_lower));
-    double second_lon(Node::lon(second_nd->first.val(), second_nd->second->ll_lower));
+    double second_lat(::lat(second_nd->first.val(), second_nd->second->ll_lower));
+    double second_lon(::lon(second_nd->first.val(), second_nd->second->ll_lower));
     
     if (segment_intersects_bbox
         (first_lat, first_lon, second_lat, second_lon,
@@ -380,8 +380,8 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 	        binary_search_for_pair_id(node_members_by_id, nit->ref);
 	    if (!second_nd)
 	      continue;
-	    double lat(Node::lat(second_nd->first.val(), second_nd->second->ll_lower));
-	    double lon(Node::lon(second_nd->first.val(), second_nd->second->ll_lower));
+	    double lat(::lat(second_nd->first.val(), second_nd->second->ll_lower));
+	    double lon(::lon(second_nd->first.val(), second_nd->second->ll_lower));
 	  
 	    if ((lat >= bbox->get_south()) && (lat <= bbox->get_north()) &&
 	        (((lon >= bbox->get_west()) && (lon <= bbox->get_east())) ||
@@ -531,8 +531,8 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
       rman.health_check(*this);
     }
     
-    uint32 ilat(Node::ilat(it.index().val(), it.object().ll_lower));
-    int32 ilon(Node::ilon(it.index().val(), it.object().ll_lower));
+    uint32 ilat(::ilat(it.index().val(), it.object().ll_lower));
+    int32 ilon(::ilon(it.index().val(), it.object().ll_lower));
     if ((ilat >= isouth) && (ilat <= inorth) &&
         (((ilon >= iwest) && (ilon <= ieast))
 	  || ((ieast < iwest) && ((ilon >= iwest) || (ilon <= ieast)))))

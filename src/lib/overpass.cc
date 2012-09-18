@@ -321,8 +321,8 @@ Overpass_C_Node* next_node_overpass_handle(Overpass_C_Handle* handle)
   Real_Handle& handle_data = *reinterpret_cast< Real_Handle* >(handle);
   
   handle_data.c_node.id = handle_data.nodes_it->id;
-  handle_data.c_node.lat = Node::lat(handle_data.nodes_it->ll_upper, handle_data.nodes_it->ll_lower_);
-  handle_data.c_node.lon = Node::lon(handle_data.nodes_it->ll_upper, handle_data.nodes_it->ll_lower_);
+  handle_data.c_node.lat = ::lat(handle_data.nodes_it->ll_upper, handle_data.nodes_it->ll_lower_);
+  handle_data.c_node.lon = ::lon(handle_data.nodes_it->ll_upper, handle_data.nodes_it->ll_lower_);
   handle_data.c_node.num_tags = handle_data.nodes_it->tags.size();
   if (handle_data.c_node.num_tags > 0)
   {
@@ -352,7 +352,7 @@ Overpass_C_Way* next_way_overpass_handle(Overpass_C_Handle* handle)
   {
     for (vector< Node >::const_iterator it = handle_data.nodes.begin(); it != handle_data.nodes.end(); ++it)
       handle_data.id_coords.insert(Id_Coord(it->id,
-	  Node::lat(it->ll_upper, it->ll_lower_), Node::lon(it->ll_upper, it->ll_lower_)));
+	  ::lat(it->ll_upper, it->ll_lower_), ::lon(it->ll_upper, it->ll_lower_)));
   }
   for (vector< uint32 >::const_iterator it = handle_data.ways_it->nds.begin();
        it != handle_data.ways_it->nds.end(); ++it)

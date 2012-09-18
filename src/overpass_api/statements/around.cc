@@ -164,11 +164,11 @@ set< pair< Uint32_Index, Uint32_Index > > expand
   for (set< pair< Uint32_Index, Uint32_Index > >::const_iterator it = blockwise_idxs.begin();
       it != blockwise_idxs.end(); ++it)
   {
-    double south = Node::lat(it->first.val(), 0) - radius*(90.0/10/1000/1000);
-    double north = Node::lat(dec(it->second).val(), 0xffffffff) + radius*(90.0/10/1000/1000);
+    double south = ::lat(it->first.val(), 0) - radius*(90.0/10/1000/1000);
+    double north = ::lat(dec(it->second).val(), 0xffffffff) + radius*(90.0/10/1000/1000);
     double lon_factor = cos((-north < south ? north : south)*(acos(0)/90.0));
-    double west = Node::lon(it->first.val(), 0) - radius*(90.0/10/1000/1000)/lon_factor;
-    double east = Node::lon(dec(it->second).val(), 0xffffffff)
+    double west = ::lon(it->first.val(), 0) - radius*(90.0/10/1000/1000)/lon_factor;
+    double east = ::lon(dec(it->second).val(), 0xffffffff)
         + radius*(90.0/10/1000/1000)/lon_factor;
     
     result = set_union_(result, calc_ranges_(south, north, west, east));
@@ -543,8 +543,8 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
     for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
-      double lat(Node::lat(it->first.val(), iit->ll_lower));
-      double lon(Node::lon(it->first.val(), iit->ll_lower));
+      double lat(::lat(it->first.val(), iit->ll_lower));
+      double lon(::lon(it->first.val(), iit->ll_lower));
       if (around->is_inside(lat, lon))
 	local_into.push_back(*iit);
     }
@@ -600,8 +600,8 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
 	        relation_members.get_node_by_id(nit->ref);
 	    if (!second_nd)
 	      continue;
-	    double lat(Node::lat(second_nd->first.val(), second_nd->second->ll_lower));
-	    double lon(Node::lon(second_nd->first.val(), second_nd->second->ll_lower));
+	    double lat(::lat(second_nd->first.val(), second_nd->second->ll_lower));
+	    double lon(::lon(second_nd->first.val(), second_nd->second->ll_lower));
 	  
 	    if (around->is_inside(lat, lon))
 	    {
@@ -774,8 +774,8 @@ void add_node(Uint32_Index idx, const Node_Skeleton& node, double radius,
 	      map< Uint32_Index, vector< pair< double, double > > >& radius_lat_lons,
 	      vector< pair< double, double > >& simple_lat_lons)
 {
-  double lat = Node::lat(idx.val(), node.ll_lower);
-  double lon = Node::lon(idx.val(), node.ll_lower);
+  double lat = ::lat(idx.val(), node.ll_lower);
+  double lon = ::lon(idx.val(), node.ll_lower);
   double south = lat - radius*(360.0/(40000.0*1000.0));
   double north = lat + radius*(360.0/(40000.0*1000.0));
   double scale_lat = lat > 0.0 ? north : south;
@@ -818,8 +818,8 @@ void add_way(Uint31_Index idx, const Way_Skeleton& way, double radius,
   if (!first_nd)
     return;
   
-  double first_lat(Node::lat(first_nd->first.val(), first_nd->second->ll_lower));
-  double first_lon(Node::lon(first_nd->first.val(), first_nd->second->ll_lower));
+  double first_lat(::lat(first_nd->first.val(), first_nd->second->ll_lower));
+  double first_lon(::lon(first_nd->first.val(), first_nd->second->ll_lower));
   
   for (; nit != way.nds.end(); ++nit)
   {
@@ -829,8 +829,8 @@ void add_way(Uint31_Index idx, const Way_Skeleton& way, double radius,
     if (!second_nd)
       continue;
     
-    double second_lat(Node::lat(second_nd->first.val(), second_nd->second->ll_lower));
-    double second_lon(Node::lon(second_nd->first.val(), second_nd->second->ll_lower));
+    double second_lat(::lat(second_nd->first.val(), second_nd->second->ll_lower));
+    double second_lon(::lon(second_nd->first.val(), second_nd->second->ll_lower));
     
     simple_segments.push_back(make_pair(make_pair(first_lat, first_lon),
 					make_pair(second_lat, second_lon)));
@@ -930,7 +930,7 @@ void Around_Statement::forecast()
 bool Around_Statement::is_inside(double lat, double lon) const
 {
   map< Uint32_Index, vector< pair< double, double > > >::const_iterator mit
-      = radius_lat_lons.find(Node::ll_upper_(lat, lon));
+      = radius_lat_lons.find(::ll_upper_(lat, lon));
   if (mit != radius_lat_lons.end())
   {
     for (vector< pair< double, double > >::const_iterator cit = mit->second.begin();
@@ -1003,8 +1003,8 @@ bool Around_Statement::is_inside
     this->runtime_remark(out.str());
     return true;
   }
-  double first_lat(Node::lat(first_nd->first.val(), first_nd->second->ll_lower));
-  double first_lon(Node::lon(first_nd->first.val(), first_nd->second->ll_lower));
+  double first_lat(::lat(first_nd->first.val(), first_nd->second->ll_lower));
+  double first_lon(::lon(first_nd->first.val(), first_nd->second->ll_lower));
   
   // Pre-check if node is inside
   if (is_inside(first_lat, first_lon))
@@ -1020,8 +1020,8 @@ bool Around_Statement::is_inside
       this->runtime_remark(out.str());
       return true;
     }
-    double second_lat(Node::lat(second_nd->first.val(), second_nd->second->ll_lower));
-    double second_lon(Node::lon(second_nd->first.val(), second_nd->second->ll_lower));
+    double second_lat(::lat(second_nd->first.val(), second_nd->second->ll_lower));
+    double second_lon(::lon(second_nd->first.val(), second_nd->second->ll_lower));
 
     if (is_inside(second_lat, second_lon))
       return true;
@@ -1038,8 +1038,8 @@ bool Around_Statement::is_inside
       this->runtime_remark(out.str());
       return true;
     }
-    double second_lat(Node::lat(second_nd->first.val(), second_nd->second->ll_lower));
-    double second_lon(Node::lon(second_nd->first.val(), second_nd->second->ll_lower));
+    double second_lat(::lat(second_nd->first.val(), second_nd->second->ll_lower));
+    double second_lon(::lon(second_nd->first.val(), second_nd->second->ll_lower));
     
     if (is_inside(first_lat, first_lon, second_lat, second_lon))
       return true;
@@ -1085,8 +1085,8 @@ void Around_Statement::execute(Resource_Manager& rman)
       rman.health_check(*this);
     }
     
-    double lat(Node::lat(it.index().val(), it.object().ll_lower));
-    double lon(Node::lon(it.index().val(), it.object().ll_lower));
+    double lat(::lat(it.index().val(), it.object().ll_lower));
+    double lon(::lon(it.index().val(), it.object().ll_lower));
     if (is_inside(lat, lon))
       nodes[it.index()].push_back(it.object());
   }

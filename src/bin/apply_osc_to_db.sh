@@ -19,11 +19,17 @@
 
 if [[ -z $4  ]]; then
 {
-  echo "Usage: $0 database_dir replicate_dir start_id --meta=(yes|no) --augmented_diffs=(yes|no)"
+  echo "Usage: $0 replicate_dir start_id --meta=(yes|no) --augmented_diffs=(yes|no)"
   exit 0
 }; fi
 
-DB_DIR="$1"
+EXEC_DIR="`dirname $0`/"
+if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
+{
+  EXEC_DIR="`pwd`/$EXEC_DIR"
+}; fi
+
+DB_DIR=`$EXEC_DIR/dispatcher --show-dir`
 REPLICATE_DIR="$2"
 START=$3
 META=
@@ -54,12 +60,6 @@ else
 {
   echo "You must specify --augmented_diffs=yes or --augmented_diffs=no"
   exit 0
-}; fi
-
-EXEC_DIR="`dirname $0`/"
-if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
-{
-  EXEC_DIR="`pwd`/$EXEC_DIR"
 }; fi
 
 

@@ -664,8 +664,8 @@ void print_node(const Node& node, OSM_Element_Metadata* meta)
 {
   cout<<
   "  <node id=\""<<node.id<<"\" "
-  "lat=\""<<fixed<<setprecision(7)<<Node::lat(node.ll_upper, node.ll_lower_)<<"\" "
-  "lon=\""<<fixed<<setprecision(7)<<Node::lon(node.ll_upper, node.ll_lower_)<<"\"";
+  "lat=\""<<fixed<<setprecision(7)<<::lat(node.ll_upper, node.ll_lower_)<<"\" "
+  "lon=\""<<fixed<<setprecision(7)<<::lon(node.ll_upper, node.ll_lower_)<<"\"";
   print_meta(meta);
   if (node.tags.empty())
     cout<<"/>\n";

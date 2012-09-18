@@ -106,8 +106,8 @@ void dump_nodes(uint32 pattern_size, string db_dir)
     output_sorter.sort_and_output_if_index_changed(it.index().val());
     ostringstream buf;
     buf<<it.object().id<<'\t'<<setprecision(10)
-	<<Node::lat(it.index().val(), it.object().ll_lower)<<'\t'
-	<<Node::lon(it.index().val(), it.object().ll_lower)<<'\n';
+	<<::lat(it.index().val(), it.object().ll_lower)<<'\t'
+	<<::lon(it.index().val(), it.object().ll_lower)<<'\n';
     output_sorter.output_per_index.push_back(buf.str());
   }
 }

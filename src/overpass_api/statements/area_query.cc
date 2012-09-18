@@ -174,10 +174,10 @@ void Area_Query_Statement::collect_nodes
       }
       
       int inside = 0;
-      uint32 ilat((Node::lat(nodes_it.index().val(), nodes_it.object().ll_lower)
+      uint32 ilat((::lat(nodes_it.index().val(), nodes_it.object().ll_lower)
           + 91.0)*10000000+0.5);
-      int32 ilon(Node::lon(nodes_it.index().val(), nodes_it.object().ll_lower)*10000000
-          + (Node::lon(nodes_it.index().val(), nodes_it.object().ll_lower) > 0
+      int32 ilon(::lon(nodes_it.index().val(), nodes_it.object().ll_lower)*10000000
+          + (::lon(nodes_it.index().val(), nodes_it.object().ll_lower) > 0
 	      ? 0.5 : -0.5));
       for (vector< Area_Block >::const_iterator it(areas.begin());
           it != areas.end(); ++it)
@@ -237,10 +237,10 @@ void Area_Query_Statement::collect_nodes
           iit != nodes_it->second.end(); ++iit)
       {
         int inside = 0;
-        uint32 ilat((Node::lat(nodes_it->first.val(), iit->ll_lower)
+        uint32 ilat((::lat(nodes_it->first.val(), iit->ll_lower)
             + 91.0)*10000000+0.5);
-        int32 ilon(Node::lon(nodes_it->first.val(), iit->ll_lower)*10000000
-            + (Node::lon(nodes_it->first.val(), iit->ll_lower) > 0 ? 0.5 : -0.5));
+        int32 ilon(::lon(nodes_it->first.val(), iit->ll_lower)*10000000
+            + (::lon(nodes_it->first.val(), iit->ll_lower) > 0 ? 0.5 : -0.5));
         for (vector< Area_Block >::const_iterator it(areas.begin());
             it != areas.end(); ++it)
         {

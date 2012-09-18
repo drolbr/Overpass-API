@@ -47,9 +47,9 @@ struct Area
     uint32 a_ll_upper(::ll_upper(from_lat, from_lon) ^ 0x40000000);
     uint32 b_ll_upper(::ll_upper(to_lat, to_lon) ^ 0x40000000);
     result.ll_upper_ = a_ll_upper & 0xffffff00;
-    result.ll_lower_a = (uint64)Node::ll_lower(from_lat, from_lon) |
+    result.ll_lower_a = (uint64)::ll_lower(from_lat, from_lon) |
         (((uint64)a_ll_upper & 0xff)<<32);
-    result.ll_lower_b = (uint64)Node::ll_lower(to_lat, to_lon) |
+    result.ll_lower_b = (uint64)::ll_lower(to_lat, to_lon) |
         (((uint64)b_ll_upper & 0xff)<<32);
     
     return result;
@@ -157,10 +157,10 @@ struct Area
       (vector< Aligned_Segment >& aligned_segments,
        uint64 from, uint64 to)
   {
-    uint32 from_lat = Node::ilat(from>>32, from&0xffffffff);
-    uint32 to_lat = Node::ilat(to>>32, to&0xffffffff);
-    int32 from_lon = Node::ilon(from>>32, from&0xffffffff);
-    int32 to_lon = Node::ilon(to>>32, to&0xffffffff);
+    uint32 from_lat = ::ilat(from>>32, from&0xffffffff);
+    uint32 to_lat = ::ilat(to>>32, to&0xffffffff);
+    int32 from_lon = ::ilon(from>>32, from&0xffffffff);
+    int32 to_lon = ::ilon(to>>32, to&0xffffffff);
     
     if ((from_lon < -900000000) && (to_lon > 900000000))
     {

@@ -204,12 +204,12 @@ pair< uint32, uint32 > Make_Area_Statement::create_area_blocks
 
 uint32 Make_Area_Statement::shifted_lat(uint32 ll_index, uint64 coord)
 {
-  return Node::ilat(ll_index | (coord>>32), coord & 0xffffffff);
+  return ::ilat(ll_index | (coord>>32), coord & 0xffffffff);
 }
 
 int32 Make_Area_Statement::lon_(uint32 ll_index, uint64 coord)
 {
-  return Node::ilon(ll_index | (coord>>32), coord & 0xffffffff);
+  return ::ilon(ll_index | (coord>>32), coord & 0xffffffff);
 }
 
 void Make_Area_Statement::add_segment_blocks
@@ -261,9 +261,9 @@ void Make_Area_Statement::add_segment_blocks
       int32 to(*it2);
       vector< uint64 > coors;
       coors.push_back
-          ((((uint64)(::ll_upper(lat, from) ^ 0x40000000))<<32) | Node::ll_lower(lat, from));
+          ((((uint64)(::ll_upper(lat, from) ^ 0x40000000))<<32) | ::ll_lower(lat, from));
       coors.push_back
-          ((((uint64)(::ll_upper(lat, to) ^ 0x40000000))<<32) | Node::ll_lower(lat, to));
+          ((((uint64)(::ll_upper(lat, to) ^ 0x40000000))<<32) | ::ll_lower(lat, to));
       Area_Block new_block(id, coors);
       northern_block.push_back(new_block);
     }
