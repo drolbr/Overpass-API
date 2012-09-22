@@ -37,12 +37,12 @@ for KEY_VAL in $QUERY_STRING; do
   if [[ ${KEY_VAL:0:8} == "network=" ]]; then
   {
     NETWORK="${KEY_VAL:8}"
-    NETWORK_=`echo "${KEY_VAL:0:8}" | $BIN_DIR/uncgi`
+    NETWORK_=`echo "${KEY_VAL:8}" | $BIN_DIR/uncgi`
   };
   elif [[ ${KEY_VAL:0:4} == "ref=" ]]; then
   {
     REF="${KEY_VAL:4}"
-    REF_=`echo "${KEY_VAL:0:8}" | $BIN_DIR/uncgi`
+    REF_=`echo "${KEY_VAL:4}" | $BIN_DIR/uncgi`
   };
   elif [[ ${KEY_VAL:0:10} == "pivot-lon=" ]]; then
     SKETCH_PARAMS="$SKETCH_PARAMS --pivot-lon=${KEY_VAL:10}"
