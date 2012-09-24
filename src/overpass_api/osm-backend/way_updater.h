@@ -39,7 +39,7 @@ struct Update_Way_Logger
 public:
   void insertion(const Way& way)
   {
-    map< uint32, pair< Way, OSM_Element_Metadata* > >::iterator it = insert.find(way.id);
+    map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator it = insert.find(way.id);
     if (it == insert.end())
       insert.insert(make_pair(way.id, make_pair< Way, OSM_Element_Metadata* >(way, 0)));
     else
@@ -50,7 +50,7 @@ public:
       keep.erase(it);
   }
   
-  void insertion(uint32 id, const OSM_Element_Metadata& meta)
+  void insertion(Way::Id_Type id, const OSM_Element_Metadata& meta)
   {
     if (insert[id].second)
       delete insert[id].second;
@@ -59,14 +59,14 @@ public:
   
   void deletion(const Uint31_Index& index, const Way_Skeleton& skel)
   {
-    map< uint32, pair< Way, OSM_Element_Metadata* > >::iterator it = erase.find(skel.id);
+    map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator it = erase.find(skel.id);
     if (it == erase.end())
     {
       it = erase.insert(make_pair(skel.id, make_pair< Way, OSM_Element_Metadata* >
-          (Way(skel.id), 0))).first;
+          (Way(skel.id.val()), 0))).first;
     }
     else
-      it->second.first = Way(skel.id);
+      it->second.first = Way(skel.id.val());
     it->second.first.index = index.val();
     it->second.first.nds = skel.nds;
     it->second.first.segment_idxs = skel.segment_idxs;
@@ -74,7 +74,7 @@ public:
   
   void keeping(const Uint31_Index& index, const Way_Skeleton& skel)
   {
-    map< uint32, pair< Way, OSM_Element_Metadata* > >::iterator it = erase.find(skel.id);
+    map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator it = erase.find(skel.id);
     if (it != erase.end())
       return;
     
@@ -82,10 +82,10 @@ public:
     if (it == keep.end())
     {
       it = keep.insert(make_pair(skel.id, make_pair< Way, OSM_Element_Metadata* >
-          (Way(skel.id), 0))).first;
+          (Way(skel.id.val()), 0))).first;
     }
     else
-      it->second.first = Way(skel.id);
+      it->second.first = Way(skel.id.val());
     it->second.first.index = index.val();
     it->second.first.nds = skel.nds;
     it->second.first.segment_idxs = skel.segment_idxs;
@@ -93,7 +93,7 @@ public:
   
   void deletion(const Tag_Index_Local& index, const Uint32_Index& ref)
   {
-    map< uint32, pair< Way, OSM_Element_Metadata* > >::iterator it = erase.find(ref.val());
+    map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator it = erase.find(ref.val());
     if (it != erase.end())
       it->second.first.tags.push_back(make_pair(index.key, index.value));
     it = keep.find(ref.val());
@@ -101,9 +101,10 @@ public:
       it->second.first.tags.push_back(make_pair(index.key, index.value));
   }
   
-  void deletion(const Uint31_Index& index, const OSM_Element_Metadata_Skeleton& meta_skel)
+  void deletion(const Uint31_Index& index,
+		const OSM_Element_Metadata_Skeleton< Way::Id_Type >& meta_skel)
   {
-    map< uint32, pair< Way, OSM_Element_Metadata* > >::iterator it = erase.find(meta_skel.ref);
+    map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator it = erase.find(meta_skel.ref);
     if (it != erase.end())
     {
       if (it->second.second)
@@ -129,38 +130,38 @@ public:
     }
   }
   
-  map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator insert_begin() const
+  map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator insert_begin() const
   { return insert.begin(); }
-  map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator insert_end() const
+  map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator insert_end() const
   { return insert.end(); }
-  map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator keep_begin() const
+  map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator keep_begin() const
   { return keep.begin(); }
-  map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator keep_end() const
+  map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator keep_end() const
   { return keep.end(); }
-  map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator erase_begin() const
+  map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator erase_begin() const
   { return erase.begin(); }
-  map< uint32, pair< Way, OSM_Element_Metadata* > >::const_iterator erase_end() const
+  map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator erase_end() const
   { return erase.end(); }
   
-  map< uint32, pair< Way, OSM_Element_Metadata* > >::iterator insert_begin()
+  map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator insert_begin()
   { return insert.begin(); }
-  map< uint32, pair< Way, OSM_Element_Metadata* > >::iterator insert_end()
+  map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator insert_end()
   { return insert.end(); }
-  map< uint32, pair< Way, OSM_Element_Metadata* > >::iterator keep_begin()
+  map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator keep_begin()
   { return keep.begin(); }
-  map< uint32, pair< Way, OSM_Element_Metadata* > >::iterator keep_end()
+  map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator keep_end()
   { return keep.end(); }
-  map< uint32, pair< Way, OSM_Element_Metadata* > >::iterator erase_begin()
+  map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator erase_begin()
   { return erase.begin(); }
-  map< uint32, pair< Way, OSM_Element_Metadata* > >::iterator erase_end()
+  map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator erase_end()
   { return erase.end(); }
 
   ~Update_Way_Logger();
   
 private:
-  map< uint32, pair< Way, OSM_Element_Metadata* > > insert;
-  map< uint32, pair< Way, OSM_Element_Metadata* > > keep;
-  map< uint32, pair< Way, OSM_Element_Metadata* > > erase;
+  map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > > insert;
+  map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > > keep;
+  map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > > erase;
 };
 
 
@@ -170,14 +171,14 @@ struct Way_Updater
   
   Way_Updater(string db_dir, bool meta);
   
-  void set_id_deleted(uint32 id)
+  void set_id_deleted(Way::Id_Type id)
   {
     ids_to_modify.push_back(make_pair(id, false));
   }
   
   void set_way
       (uint32 id, uint32 lat, uint32 lon, const vector< pair< string, string > >& tags,
-       const vector< uint32 > nds,
+       const vector< Node::Id_Type > nds,
        const OSM_Element_Metadata* meta = 0)
   {
     ids_to_modify.push_back(make_pair(id, true));
@@ -190,7 +191,7 @@ struct Way_Updater
     if (meta)
     {
       user_by_id[meta->user_id] = meta->user_name;
-      OSM_Element_Metadata_Skeleton meta_skel;
+      OSM_Element_Metadata_Skeleton< Way::Id_Type > meta_skel;
       meta_skel.ref= way.id;
       meta_skel.version = meta->version;
       meta_skel.changeset = meta->changeset;
@@ -208,7 +209,7 @@ struct Way_Updater
     if (meta)
     {
       user_by_id[meta->user_id] = meta->user_name;
-      OSM_Element_Metadata_Skeleton meta_skel;
+      OSM_Element_Metadata_Skeleton< Way::Id_Type > meta_skel;
       meta_skel.ref= way.id;
       meta_skel.version = meta->version;
       meta_skel.changeset = meta->changeset;
@@ -222,10 +223,10 @@ struct Way_Updater
 	      Update_Way_Logger* update_logger);
   
   void update_moved_idxs
-      (Osm_Backend_Callback* callback, const vector< pair< uint32, uint32 > >& moved_nodes,
+      (Osm_Backend_Callback* callback, const vector< pair< Node::Id_Type, Uint32_Index > >& moved_nodes,
        Update_Way_Logger* update_logger);
   
-  const vector< pair< uint32, uint32 > >& get_moved_ways() const
+  const vector< pair< Way::Id_Type, Uint31_Index > >& get_moved_ways() const
   {
     return moved_ways;
   }
@@ -235,27 +236,25 @@ private:
   Transaction* transaction;
   bool external_transaction;
   bool partial_possible;
-  vector< pair< uint32, bool > > ids_to_modify;
+  vector< pair< Way::Id_Type, bool > > ids_to_modify;
   vector< Way > ways_to_insert;
-  static Pair_Comparator_By_Id pair_comparator_by_id;
-  static Pair_Equal_Id pair_equal_id;
-  vector< pair< uint32, uint32 > > moved_ways;
+  vector< pair< Way::Id_Type, Uint31_Index > > moved_ways;
   string db_dir;
   
   bool meta;
-  vector< pair< OSM_Element_Metadata_Skeleton, uint32 > > ways_meta_to_insert;
+  vector< pair< OSM_Element_Metadata_Skeleton< Way::Id_Type >, uint32 > > ways_meta_to_insert;
   map< uint32, string > user_by_id;
   
-  void find_affected_ways(const vector< pair< uint32, uint32 > >& moved_nodes,
+  void find_affected_ways(const vector< pair< Node::Id_Type, Uint32_Index > >& moved_nodes,
        Update_Way_Logger* update_logger);
   
   void compute_indexes(vector< Way* >& ways_ptr);
 
-  void update_way_ids(const vector< Way* >& ways_ptr, map< uint32, vector< uint32 > >& to_delete,
+  void update_way_ids(const vector< Way* >& ways_ptr, map< uint32, vector< Way::Id_Type > >& to_delete,
 		      bool record_minuscule_moves);
   
   void update_members
-      (const vector< Way* >& ways_ptr, const map< uint32, vector< uint32 > >& to_delete,
+      (const vector< Way* >& ways_ptr, const map< uint32, vector< Way::Id_Type > >& to_delete,
        Update_Way_Logger* update_logger);
   
   void merge_files(const vector< string >& froms, string into);

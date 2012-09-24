@@ -33,80 +33,123 @@
 
 using namespace std;
 
+
+template< typename Id_Type >  
+struct Meta_Comparator_By_Id {
+  bool operator()
+  (const pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 >& a,
+   const pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 >& b)
+   {
+     return (a.first.ref < b.first.ref);
+   }
+};
+
+
+template< typename Id_Type >
+struct Meta_Equal_Id {
+  bool operator()
+  (const pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 >& a,
+   const pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 >& b)
+   {
+     return (a.first.ref == b.first.ref);
+   }
+};
+
+
 template < class TObject, class TCompFunc, class TEqualFunc >
 vector< TObject* > sort_elems_to_insert
     (vector< TObject >& elems_to_insert,
      TCompFunc& elem_comparator_by_id,
      TEqualFunc& elem_equal_id);
 
+    
 template < class TObject >
 void collect_new_indexes
     (const vector< TObject* >& elems_ptr, map< uint32, uint32 >& new_index_by_id);
+
     
-void prepare_delete_tags
-    (File_Blocks_Index_Base& tags_local, vector< Tag_Entry >& tags_to_delete,
-     const map< uint32, vector< uint32 > >& to_delete);
-
-template < class TObject >
-void prepare_tags
-    (File_Blocks_Index_Base& tags_local, vector< TObject* >& elems_ptr,
-     vector< Tag_Entry >& tags_to_delete,
-     const map< uint32, vector< uint32 > >& to_delete);
-
-template < class TObject, class Update_Logger >
-void update_tags_local
-    (File_Blocks_Index_Base& tags_local, vector< TObject* >& elems_ptr,
-     const vector< pair< uint32, bool > >& ids_to_modify,
-     const vector< Tag_Entry >& tags_to_delete,
-     Update_Logger* update_logger);
-
-template < class TObject >
-void update_tags_global
-    (File_Blocks_Index_Base& tags_global, vector< TObject* >& elems_ptr,
-     const vector< pair< uint32, bool > >& ids_to_modify,
-     const vector< Tag_Entry >& tags_to_delete);
-       
+template< class Id_Type >
 void process_meta_data
   (File_Blocks_Index_Base& file_blocks_index,
-   vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >& meta_to_insert,
-   const vector< pair< uint32, bool > >& ids_to_modify,
-   const map< uint32, vector< uint32 > >& to_delete,
-   map< Uint31_Index, set< OSM_Element_Metadata_Skeleton > >& db_to_delete,
-   map< Uint31_Index, set< OSM_Element_Metadata_Skeleton > >& db_to_insert);
-
-inline void process_meta_data
-  (File_Blocks_Index_Base& file_blocks_index,
-   vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >& meta_to_insert,
-   const vector< pair< uint32, bool > >& ids_to_modify,
-   const map< uint32, vector< uint32 > >& to_delete)
+   vector< pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 > >& meta_to_insert,
+   const vector< pair< Id_Type, bool > >& ids_to_modify,
+   const map< uint32, vector< Id_Type > >& to_delete,
+   map< Uint31_Index, set< OSM_Element_Metadata_Skeleton< Id_Type > > >& db_to_delete,
+   map< Uint31_Index, set< OSM_Element_Metadata_Skeleton< Id_Type > > >& db_to_insert)
 {
-  map< Uint31_Index, set< OSM_Element_Metadata_Skeleton > > db_to_delete;
-  map< Uint31_Index, set< OSM_Element_Metadata_Skeleton > > db_to_insert;
+  static Meta_Comparator_By_Id< Id_Type > meta_comparator_by_id;
+  static Meta_Equal_Id< Id_Type > meta_equal_id;
+  
+  // fill db_to_delete
+  for (typename map< uint32, vector< Id_Type > >::const_iterator
+      it(to_delete.begin()); it != to_delete.end(); ++it)
+  {
+    Uint31_Index idx(it->first);
+    for (typename vector< Id_Type >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      db_to_delete[idx].insert(OSM_Element_Metadata_Skeleton< Id_Type >(*it2));
+  }
+
+  // keep always the most recent (last) element of all equal elements
+  stable_sort
+      (meta_to_insert.begin(), meta_to_insert.end(), meta_comparator_by_id);
+  typename vector< pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 > >::iterator nodes_begin
+      (unique(meta_to_insert.rbegin(), meta_to_insert.rend(), meta_equal_id)
+       .base());
+  meta_to_insert.erase(meta_to_insert.begin(), nodes_begin);
+  
+  // fill insert
+  typename vector< pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 > >::const_iterator
+      nit = meta_to_insert.begin();
+  for (typename vector< pair< Id_Type, bool > >::const_iterator it(ids_to_modify.begin());
+      it != ids_to_modify.end(); ++it)
+  {
+    if ((nit != meta_to_insert.end()) && (it->first == nit->first.ref))
+    {
+      if (it->second)
+	db_to_insert[Uint31_Index(nit->second)].insert(nit->first);
+      ++nit;
+    }
+  }
+  
+  meta_to_insert.clear();
+}
+
+  
+template< class Id_Type >
+void process_meta_data
+  (File_Blocks_Index_Base& file_blocks_index,
+   vector< pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 > >& meta_to_insert,
+   const vector< pair< Id_Type, bool > >& ids_to_modify,
+   const map< uint32, vector< Id_Type > >& to_delete)
+{
+  map< Uint31_Index, set< OSM_Element_Metadata_Skeleton< Id_Type > > > db_to_delete;
+  map< Uint31_Index, set< OSM_Element_Metadata_Skeleton< Id_Type > > > db_to_insert;
 
   process_meta_data(file_blocks_index, meta_to_insert, ids_to_modify,
 		    to_delete, db_to_delete, db_to_insert);
   
-  Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton > user_db
+  Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Id_Type > > user_db
       (&file_blocks_index);
-  user_db.update(db_to_delete, db_to_insert);  
+  user_db.update(db_to_delete, db_to_insert);
 }
 
 
-template< class Update_Logger >
+template< class Update_Logger, class Id_Type >
 void process_meta_data
   (File_Blocks_Index_Base& file_blocks_index,
-   vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >& meta_to_insert,
-   const vector< pair< uint32, bool > >& ids_to_modify,
-   const map< uint32, vector< uint32 > >& to_delete,
+   vector< pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 > >& meta_to_insert,
+   const vector< pair< Id_Type, bool > >& ids_to_modify,
+   const map< uint32, vector< Id_Type > >& to_delete,
    Update_Logger* update_logger)
 {
-  map< Uint31_Index, set< OSM_Element_Metadata_Skeleton > > db_to_delete;
-  map< Uint31_Index, set< OSM_Element_Metadata_Skeleton > > db_to_insert;
+  map< Uint31_Index, set< OSM_Element_Metadata_Skeleton< Id_Type > > > db_to_delete;
+  map< Uint31_Index, set< OSM_Element_Metadata_Skeleton< Id_Type > > > db_to_insert;
 
   process_meta_data(file_blocks_index, meta_to_insert, ids_to_modify,
 		    to_delete, db_to_delete, db_to_insert);
   
-  Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton > user_db
+  Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Id_Type > > user_db
       (&file_blocks_index);
   if (update_logger)
     user_db.update(db_to_delete, db_to_insert, *update_logger);
@@ -115,36 +158,68 @@ void process_meta_data
 }
 
 
+template< typename Id_Type >
 void create_idxs_by_id
-    (const vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >& meta_to_insert,
-     map< uint32, vector< uint32 > >& idxs_by_user_id);
+    (const vector< pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 > >& meta_to_insert,
+     map< uint32, vector< uint32 > >& idxs_by_user_id)
+{
+  for (typename vector< pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 > >::const_iterator
+      it = meta_to_insert.begin(); it != meta_to_insert.end(); ++it)
+  {
+    uint32 compressed_idx = (it->second & 0xffffff00);
+    if ((compressed_idx & 0x80000000) && ((it->second & 0x3) == 0))
+      compressed_idx = it->second;
+    idxs_by_user_id[it->first.user_id].push_back(compressed_idx);
+  }
+}
+
    
 void process_user_data(Transaction& transaction, map< uint32, string >& user_by_id,
    map< uint32, vector< uint32 > >& idxs_by_user_id);
 
+
+template< typename Id_Type >
 void collect_old_meta_data
   (File_Blocks_Index_Base& file_blocks_index,
-   const map< uint32, vector< uint32 > >& to_delete,
-   map< uint32, uint32 >& new_index_by_id,
-   vector< pair< OSM_Element_Metadata_Skeleton, uint32 > >& meta_to_insert);
+   const map< uint32, vector< Id_Type > >& to_delete,
+   map< Id_Type, uint32 >& new_index_by_id,
+   vector< pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 > >& meta_to_insert)
+{
+  map< Uint31_Index, vector< Id_Type > > to_delete_meta;
+  for (typename map< uint32, vector< Id_Type > >::const_iterator
+      it(to_delete.begin()); it != to_delete.end(); ++it)
+    to_delete_meta[Uint31_Index(it->first)] = it->second;
+  
+  set< Uint31_Index > user_idxs;
+  for (typename map< uint32, vector< Id_Type > >::const_iterator
+      it(to_delete.begin()); it != to_delete.end(); ++it)
+    user_idxs.insert(Uint31_Index(it->first));
+  
+  // collect meta_data on its old position
+  typename map< Uint31_Index, vector< Id_Type > >::const_iterator del_it = to_delete_meta.begin();
+  
+  Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Id_Type > >
+      meta_db(&file_blocks_index);
+  typename Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Id_Type > >::Discrete_Iterator
+      meta_it(meta_db.discrete_begin(user_idxs.begin(), user_idxs.end()));
+  while (!(meta_it == meta_db.discrete_end()))
+  {
+    while ((del_it != to_delete_meta.end()) && (del_it->first < meta_it.index().val()))
+      ++del_it;
+    if (del_it == to_delete_meta.end())
+      break;
+    
+    bool found = false;
+    for (typename vector< Id_Type >::const_iterator it = del_it->second.begin();
+        it != del_it->second.end(); ++it)
+      found |= (meta_it.object().ref == *it);
+    
+    if (found)
+      meta_to_insert.push_back(make_pair(meta_it.object(), new_index_by_id[meta_it.object().ref]));
+    ++meta_it;
+  }
+}
 
-struct Meta_Comparator_By_Id {
-  bool operator()
-  (const pair< OSM_Element_Metadata_Skeleton, uint32 >& a,
-   const pair< OSM_Element_Metadata_Skeleton, uint32 >& b)
-   {
-     return (a.first.ref < b.first.ref);
-   }
-};
-
-struct Meta_Equal_Id {
-  bool operator()
-  (const pair< OSM_Element_Metadata_Skeleton, uint32 >& a,
-   const pair< OSM_Element_Metadata_Skeleton, uint32 >& b)
-   {
-     return (a.first.ref == b.first.ref);
-   }
-};
 
 void rename_referred_file(const string& db_dir, const string& from, const string& to,
 			  const File_Properties& file_prop);
@@ -267,188 +342,13 @@ vector< TObject* > sort_elems_to_insert
   return elems_ptr;
 }
 
-template < class TObject >
+template< class TObject >
 void collect_new_indexes
-    (const vector< TObject* >& elems_ptr, map< uint32, uint32 >& new_index_by_id)
+    (const vector< TObject* >& elems_ptr, map< typename TObject::Id_Type, uint32 >& new_index_by_id)
 {
   for (typename vector< TObject* >::const_iterator it = elems_ptr.begin();
       it != elems_ptr.end(); ++it)
     new_index_by_id[(*it)->id] = (*it)->index;
-}
-
-template < class TObject >
-void prepare_tags
-    (File_Blocks_Index_Base& tags_local, vector< TObject* >& elems_ptr,
-     vector< Tag_Entry >& tags_to_delete,
-     const map< uint32, vector< uint32 > >& to_delete)
-{
-  // make indices appropriately coarse
-  map< uint32, set< uint32 > > to_delete_coarse;
-  for (map< uint32, vector< uint32 > >::const_iterator
-    it(to_delete.begin()); it != to_delete.end(); ++it)
-  {
-    set< uint32 >& handle(to_delete_coarse[it->first & 0xffffff00]);
-    for (vector< uint32 >::const_iterator it2(it->second.begin());
-    it2 != it->second.end(); ++it2)
-    {
-      handle.insert(*it2);
-    }
-  }
-  
-  // formulate range query
-  set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  for (map< uint32, set< uint32 > >::const_iterator
-    it(to_delete_coarse.begin()); it != to_delete_coarse.end(); ++it)
-  {
-    Tag_Index_Local lower, upper;
-    lower.index = it->first;
-    lower.key = "";
-    lower.value = "";
-    upper.index = it->first + 1;
-    upper.key = "";
-    upper.value = "";
-    range_set.insert(make_pair(lower, upper));
-  }
-
-  // iterate over the result
-  Block_Backend< Tag_Index_Local, Uint32_Index > elems_db(&tags_local);
-  Tag_Index_Local current_index;
-  Tag_Entry tag_entry;
-  current_index.index = 0xffffffff;
-  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
-    it(elems_db.range_begin
-    (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-     Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-     !(it == elems_db.range_end()); ++it)
-  {
-    if (!(current_index == it.index()))
-    {
-      if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
-	tags_to_delete.push_back(tag_entry);
-      current_index = it.index();
-      tag_entry.index = it.index().index;
-      tag_entry.key = it.index().key;
-      tag_entry.value = it.index().value;
-      tag_entry.ids.clear();
-    }
-    
-    set< uint32 >& handle(to_delete_coarse[it.index().index]);
-    if (handle.find(it.object().val()) != handle.end())
-    {
-      TObject* elem(binary_ptr_search_for_id(elems_ptr, it.object().val()));
-      if (elem != 0)
-	elem->tags.push_back(make_pair(it.index().key, it.index().value));
-      tag_entry.ids.push_back(it.object().val());
-    }
-  }
-  if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
-    tags_to_delete.push_back(tag_entry);
-}
-
-template < class TObject, class Update_Logger >
-void update_tags_local
-    (File_Blocks_Index_Base& tags_local, vector< TObject* >& elems_ptr,
-     const vector< pair< uint32, bool > >& ids_to_modify,
-     const vector< Tag_Entry >& tags_to_delete,
-     Update_Logger* update_logger)
-{
-  map< Tag_Index_Local, set< Uint32_Index > > db_to_delete;
-  map< Tag_Index_Local, set< Uint32_Index > > db_to_insert;
-  
-  for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
-      it != tags_to_delete.end(); ++it)
-  {
-    Tag_Index_Local index;
-    index.index = it->index;
-    index.key = it->key;
-    index.value = it->value;
-    
-    set< Uint32_Index > elem_ids;
-    for (vector< uint32 >::const_iterator it2(it->ids.begin());
-        it2 != it->ids.end(); ++it2)
-      elem_ids.insert(*it2);
-    
-    db_to_delete[index] = elem_ids;
-  }
-  
-  typename vector< TObject* >::const_iterator rit = elems_ptr.begin();
-  for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
-      it != ids_to_modify.end(); ++it)
-  {
-    if ((rit != elems_ptr.end()) && (it->first == (*rit)->id))
-    {
-      if (it->second)
-      {
-	Tag_Index_Local index;
-	index.index = (*rit)->index & 0xffffff00;
-	
-	for (vector< pair< string, string > >::const_iterator
-	  it2((*rit)->tags.begin()); it2 != (*rit)->tags.end(); ++it2)
-	{
-	  index.key = it2->first;
-	  index.value = it2->second;
-	  db_to_insert[index].insert(it->first);
-	  db_to_delete[index];
-	}
-      }
-      ++rit;
-    }
-  }
-  
-  Block_Backend< Tag_Index_Local, Uint32_Index > elem_db(&tags_local);
-  if (update_logger)
-    elem_db.update(db_to_delete, db_to_insert, *update_logger);
-  else
-    elem_db.update(db_to_delete, db_to_insert);
-}
-
-template < class TObject >
-void update_tags_global
-    (File_Blocks_Index_Base& tags_global, vector< TObject* >& elems_ptr,
-     const vector< pair< uint32, bool > >& ids_to_modify,
-     const vector< Tag_Entry >& tags_to_delete)
-{
-  map< Tag_Index_Global, set< Uint32_Index > > db_to_delete;
-  map< Tag_Index_Global, set< Uint32_Index > > db_to_insert;
-  
-  for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
-      it != tags_to_delete.end(); ++it)
-  {
-    Tag_Index_Global index;
-    index.key = it->key;
-    index.value = it->value;
-    
-    set< Uint32_Index > elem_ids;
-    for (vector< uint32 >::const_iterator it2(it->ids.begin());
-    it2 != it->ids.end(); ++it2)
-    db_to_delete[index].insert(*it2);
-  }
-  
-  typename vector< TObject* >::const_iterator rit = elems_ptr.begin();
-  for (vector< pair< uint32, bool > >::const_iterator it(ids_to_modify.begin());
-      it != ids_to_modify.end(); ++it)
-  {
-    if ((rit != elems_ptr.end()) && (it->first == (*rit)->id))
-    {
-      if (it->second)
-      {
-	Tag_Index_Global index;
-	
-	for (vector< pair< string, string > >::const_iterator
-	  it2((*rit)->tags.begin()); it2 != (*rit)->tags.end(); ++it2)
-	{
-	  index.key = it2->first;
-	  index.value = it2->second;
-	  db_to_insert[index].insert(it->first);
-	  db_to_delete[index];
-	}
-      }
-      ++rit;
-    }
-  }
-  
-  Block_Backend< Tag_Index_Global, Uint32_Index > elem_db(&tags_global);
-  elem_db.update(db_to_delete, db_to_insert);
 }
 
 #endif

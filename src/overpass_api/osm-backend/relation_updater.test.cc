@@ -68,19 +68,19 @@ void start(const char *el, const char **attr)
       if (!strcmp(attr[i], "v"))
 	value = attr[i+1];
     }
-    if (current_node.id > 0)
+    if (current_node.id.val() > 0)
       current_node.tags.push_back(make_pair(key, value));
-    else if (current_way.id > 0)
+    else if (current_way.id.val() > 0)
       current_way.tags.push_back(make_pair(key, value));
-    else if (current_relation.id > 0)
+    else if (current_relation.id.val() > 0)
     {
       current_relation.tags.push_back(make_pair(key, value));
-      *tags_source_out<<current_relation.id<<'\t'<<key<<'\t'<<value<<'\n';
+      *tags_source_out<<current_relation.id.val()<<'\t'<<key<<'\t'<<value<<'\n';
     }
   }
   else if (!strcmp(el, "nd"))
   {
-    if (current_way.id > 0)
+    if (current_way.id.val() > 0)
     {
       unsigned int ref(0);
       for (unsigned int i(0); attr[i]; i += 2)
@@ -93,7 +93,7 @@ void start(const char *el, const char **attr)
   }
   else if (!strcmp(el, "member"))
   {
-    if (current_relation.id > 0)
+    if (current_relation.id.val() > 0)
     {
       unsigned int ref(0);
       string type, role;
@@ -201,7 +201,7 @@ void end(const char *el)
       callback->parser_started();
       osm_element_count = 0;
     }
-    current_node.id = 0;
+    current_node.id = 0u;
   }
   else if (!strcmp(el, "way"))
   {
@@ -214,7 +214,7 @@ void end(const char *el)
       callback->parser_started();
       osm_element_count = 0;
     }
-    current_way.id = 0;
+    current_way.id = 0u;
   }
   else if (!strcmp(el, "relation"))
   {
@@ -229,7 +229,7 @@ void end(const char *el)
       callback->parser_started();
       osm_element_count = 0;
     }
-    current_relation.id = 0;
+    current_relation.id = 0u;
   }
   ++osm_element_count;
 }
@@ -314,9 +314,9 @@ int main(int argc, char* args[])
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
 	 it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
     {
-      member_db_out<<it.object().id<<'\t';
+      member_db_out<<it.object().id.val()<<'\t';
       for (uint i(0); i < it.object().members.size(); ++i)
-	member_db_out<<it.object().members[i].ref<<' '
+	member_db_out<<it.object().members[i].ref.val()<<' '
 	    <<it.object().members[i].type<<' '
 	    <<roles[it.object().members[i].role]<<' ';
       member_db_out<<'\n';

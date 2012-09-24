@@ -28,21 +28,21 @@
 
 struct Node
 {
-  typedef uint32 Id_Type;
+  typedef Uint32_Index Id_Type;
   
   Id_Type id;
-  uint32 ll_upper;
+  uint32 index;
   uint32 ll_lower_;
-  std::vector< pair< std::string, std::string > > tags;
+  std::vector< std::pair< std::string, std::string > > tags;
   
-  Node() {}
+  Node() : id(0u) {}
   
   Node(uint32 id_, double lat, double lon)
-      : id(id_), ll_upper(ll_upper_(lat, lon)), ll_lower_(ll_lower(lat, lon))
+      : id(id_), index(ll_upper_(lat, lon)), ll_lower_(ll_lower(lat, lon))
   {}
   
   Node(uint32 id_, uint32 ll_upper_, uint32 ll_lower__)
-      : id(id_), ll_upper(ll_upper_), ll_lower_(ll_lower__)
+      : id(id_), index(ll_upper_), ll_lower_(ll_lower__)
   {}  
 };
 
@@ -50,31 +50,40 @@ struct Node
 struct Node_Comparator_By_Id {
   bool operator() (const Node& a, const Node& b)
   {
-    return (a.id < b.id);
+    return (a.id.val() < b.id.val());
   }
+
+  bool operator() (const Node* a, const Node* b)
+  {
+    return (a->id.val() < b->id.val());
+  }  
 };
 
 
 struct Node_Equal_Id {
   bool operator() (const Node& a, const Node& b)
   {
-    return (a.id == b.id);
+    return (a.id.val() == b.id.val());
   }
+
+  bool operator() (const Node* a, const Node* b)
+  {
+    return (a->id.val() == b->id.val());
+  }  
 };
 
 
 struct Node_Skeleton
 {
+  typedef Node::Id_Type Id_Type;
+
   Node::Id_Type id;
   uint32 ll_lower;
   
-  Node_Skeleton() {}
+  Node_Skeleton() : id(0u) {}
   
   Node_Skeleton(void* data)
-  {
-    id = *(uint32*)data;
-    ll_lower = *(uint32*)((uint8*)data+4);
-  }
+    : id(*(uint32*)data), ll_lower(*(uint32*)((uint8*)data+4)) {}
   
   Node_Skeleton(const Node& node)
   : id(node.id), ll_lower(node.ll_lower_) {}
@@ -94,18 +103,18 @@ struct Node_Skeleton
   
   void to_data(void* data) const
   {
-    *(uint32*)data = id;
+    *(uint32*)data = id.val();
     *(uint32*)((uint8*)data+4) = ll_lower;
   }
   
   bool operator<(const Node_Skeleton& a) const
   {
-    return this->id < a.id;
+    return this->id.val() < a.id.val();
   }
   
   bool operator==(const Node_Skeleton& a) const
   {
-    return this->id == a.id;
+    return this->id.val() == a.id.val();
   }
 };
 

@@ -136,7 +136,7 @@ void Area_Query_Statement::get_ranges
 void Area_Query_Statement::collect_nodes
     (const set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
      const set< Uint31_Index >& req,
-     vector< uint32 >* ids,
+     vector< Node::Id_Type >* ids,
      map< Uint32_Index, vector< Node_Skeleton > >& nodes,
      Resource_Manager& rman)
 {

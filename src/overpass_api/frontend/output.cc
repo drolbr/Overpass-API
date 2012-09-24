@@ -84,11 +84,11 @@ class Verbose_Osm_Backend_Callback : public Osm_Backend_Callback
     virtual void partial_finished() { cerr<<" done.\n"; }
     
     virtual void parser_started() { cerr<<"Reading XML file ..."; }
-    virtual void node_elapsed(uint32 id) { cerr<<" elapsed node "<<id<<". "; }
+    virtual void node_elapsed(Node::Id_Type id) { cerr<<" elapsed node "<<id.val()<<". "; }
     virtual void nodes_finished() { cerr<<" finished reading nodes. "; }
-    virtual void way_elapsed(uint32 id) { cerr<<" elapsed way "<<id<<". "; }
+    virtual void way_elapsed(Way::Id_Type id) { cerr<<" elapsed way "<<id.val()<<". "; }
     virtual void ways_finished() { cerr<<" finished reading ways. "; }
-    virtual void relation_elapsed(uint32 id) { cerr<<" elapsed relation "<<id<<". "; }
+    virtual void relation_elapsed(Relation::Id_Type id) { cerr<<" elapsed relation "<<id.val()<<". "; }
     virtual void relations_finished() { cerr<<" finished reading relations. "; }
 
     virtual void parser_succeeded() { cerr<<"Update complete.\n"; }
@@ -115,11 +115,11 @@ class Quiet_Osm_Backend_Callback : public Osm_Backend_Callback
     virtual void partial_finished() {}
     
     virtual void parser_started() {}
-    virtual void node_elapsed(uint32 id) {}
+    virtual void node_elapsed(Node::Id_Type id) {}
     virtual void nodes_finished() {}
-    virtual void way_elapsed(uint32 id) {}
+    virtual void way_elapsed(Way::Id_Type id) {}
     virtual void ways_finished() {}
-    virtual void relation_elapsed(uint32 id) {}
+    virtual void relation_elapsed(Relation::Id_Type id) {}
     virtual void relations_finished() {}
     
     virtual void parser_succeeded() {}

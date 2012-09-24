@@ -61,7 +61,7 @@ void newer_filter_map
     for (typename vector< TObject >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
-      const OSM_Element_Metadata_Skeleton* meta_skel
+      const OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >* meta_skel
 	  = meta_collector.get(it->first, iit->id);
       if ((meta_skel) && (meta_skel->timestamp >= timestamp))
 	local_into.push_back(*iit);

@@ -37,14 +37,14 @@ struct Update_Node_Logger
 public:
   void insertion(const Node& node)
   {
-    map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator it = insert.find(node.id);
+    map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator it = insert.find(node.id);
     if (it == insert.end())
       insert.insert(make_pair(node.id, make_pair< Node, OSM_Element_Metadata* >(node, 0)));
     else
       it->second.first = node;
   }
   
-  void insertion(uint32 id, const OSM_Element_Metadata& meta)
+  void insertion(Node::Id_Type id, const OSM_Element_Metadata& meta)
   {
     if (insert[id].second)
       delete insert[id].second;
@@ -53,45 +53,46 @@ public:
   
   void deletion(const Uint32_Index& index, const Node_Skeleton& skel)
   {
-    map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator it = erase.find(skel.id);
+    map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator it = erase.find(skel.id);
     if (it == erase.end())
     {
       erase.insert(make_pair(skel.id, make_pair< Node, OSM_Element_Metadata* >
-          (Node(skel.id, index.val(), skel.ll_lower), 0)));
+          (Node(skel.id.val(), index.val(), skel.ll_lower), 0)));
     }
     else
-      it->second.first = Node(skel.id, index.val(), skel.ll_lower);
+      it->second.first = Node(skel.id.val(), index.val(), skel.ll_lower);
   }
   
   void keeping(const Uint32_Index& index, const Node_Skeleton& skel)
   {
-    map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator it = keep.find(skel.id);
+    map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator it = keep.find(skel.id);
     if (it == keep.end())
     {
       keep.insert(make_pair(skel.id, make_pair< Node, OSM_Element_Metadata* >
-          (Node(skel.id, index.val(), skel.ll_lower), 0)));
+          (Node(skel.id.val(), index.val(), skel.ll_lower), 0)));
     }
     else
-      it->second.first = Node(skel.id, index.val(), skel.ll_lower);
+      it->second.first = Node(skel.id.val(), index.val(), skel.ll_lower);
   }
   
   void deletion(const Tag_Index_Local& index, const Uint32_Index& ref)
   {
-    map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator it = erase.find(ref.val());
+    map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator it = erase.find(ref.val());
     if (it != erase.end())
       it->second.first.tags.push_back(make_pair(index.key, index.value));
   }
   
   void keeping(const Tag_Index_Local& index, const Uint32_Index& ref)
   {
-    map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator it = keep.find(ref.val());
+    map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator it = keep.find(ref.val());
     if (it != keep.end())
       it->second.first.tags.push_back(make_pair(index.key, index.value));
   }
   
-  void deletion(const Uint31_Index& index, const OSM_Element_Metadata_Skeleton& meta_skel)
+  void deletion(const Uint31_Index& index,
+		const OSM_Element_Metadata_Skeleton< Node::Id_Type >& meta_skel)
   {
-    map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator it = erase.find(meta_skel.ref);
+    map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator it = erase.find(meta_skel.ref);
     if (it != erase.end())
     {
       if (it->second.second)
@@ -105,9 +106,10 @@ public:
     }
   }
   
-  void keeping(const Uint31_Index& index, const OSM_Element_Metadata_Skeleton& meta_skel)
+  void keeping(const Uint31_Index& index,
+	       const OSM_Element_Metadata_Skeleton< Node::Id_Type >& meta_skel)
   {
-    map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator it = keep.find(meta_skel.ref);
+    map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator it = keep.find(meta_skel.ref);
     if (it != keep.end())
     {
       if (it->second.second)
@@ -121,38 +123,38 @@ public:
     }
   }
   
-  map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator insert_begin() const
+  map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator insert_begin() const
   { return insert.begin(); }
-  map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator insert_end() const
+  map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator insert_end() const
   { return insert.end(); }
-  map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator keep_begin() const
+  map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator keep_begin() const
   { return keep.begin(); }
-  map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator keep_end() const
+  map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator keep_end() const
   { return keep.end(); }
-  map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator erase_begin() const
+  map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator erase_begin() const
   { return erase.begin(); }
-  map< uint32, pair< Node, OSM_Element_Metadata* > >::const_iterator erase_end() const
+  map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator erase_end() const
   { return erase.end(); }
 
-  map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator insert_begin()
+  map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator insert_begin()
   { return insert.begin(); }
-  map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator insert_end()
+  map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator insert_end()
   { return insert.end(); }
-  map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator keep_begin()
+  map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator keep_begin()
   { return keep.begin(); }
-  map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator keep_end()
+  map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator keep_end()
   { return keep.end(); }
-  map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator erase_begin()
+  map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator erase_begin()
   { return erase.begin(); }
-  map< uint32, pair< Node, OSM_Element_Metadata* > >::iterator erase_end()
+  map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator erase_end()
   { return erase.end(); }
 
   ~Update_Node_Logger();
   
 private:
-  map< uint32, pair< Node, OSM_Element_Metadata* > > insert;
-  map< uint32, pair< Node, OSM_Element_Metadata* > > keep;
-  map< uint32, pair< Node, OSM_Element_Metadata* > > erase;
+  map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > > insert;
+  map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > > keep;
+  map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > > erase;
 };
 
 
@@ -162,7 +164,7 @@ struct Node_Updater
   
   Node_Updater(string db_dir, bool meta);
   
-  void set_id_deleted(uint32 id)
+  void set_id_deleted(Node::Id_Type id)
   {
     ids_to_modify.push_back(make_pair(id, false));
   }
@@ -176,20 +178,20 @@ struct Node_Updater
     
     Node node;
     node.id = id;
-    node.ll_upper = ::ll_upper_(lat, lon);
+    node.index = ::ll_upper_(lat, lon);
     node.ll_lower_ = ::ll_lower(lat, lon);
     node.tags = tags;
     nodes_to_insert.push_back(node);
     if (meta)
     {
       user_by_id[meta->user_id] = meta->user_name;
-      OSM_Element_Metadata_Skeleton meta_skel;
+      OSM_Element_Metadata_Skeleton< Node::Id_Type > meta_skel;
       meta_skel.ref = node.id;
       meta_skel.version = meta->version;
       meta_skel.changeset = meta->changeset;
       meta_skel.timestamp = meta->timestamp;
       meta_skel.user_id = meta->user_id;
-      nodes_meta_to_insert.push_back(make_pair(meta_skel, node.ll_upper));
+      nodes_meta_to_insert.push_back(make_pair(meta_skel, node.index));
     }
   }
   
@@ -200,20 +202,20 @@ struct Node_Updater
     if (meta)
     {
       user_by_id[meta->user_id] = meta->user_name;
-      OSM_Element_Metadata_Skeleton meta_skel;
+      OSM_Element_Metadata_Skeleton< Node::Id_Type > meta_skel;
       meta_skel.ref = node.id;
       meta_skel.version = meta->version;
       meta_skel.changeset = meta->changeset;
       meta_skel.timestamp = meta->timestamp;
       meta_skel.user_id = meta->user_id;
-      nodes_meta_to_insert.push_back(make_pair(meta_skel, node.ll_upper));
+      nodes_meta_to_insert.push_back(make_pair(meta_skel, node.index));
     }
   }
   
   void update(Osm_Backend_Callback* callback, bool partial,
 			  Update_Node_Logger* update_logger);
   
-  const vector< pair< uint32, uint32 > >& get_moved_nodes() const
+  const vector< pair< Node::Id_Type, Uint32_Index > >& get_moved_nodes() const
   {
     return moved_nodes;
   }
@@ -223,42 +225,33 @@ private:
   Transaction* transaction;
   bool external_transaction;
   bool partial_possible;
-  vector< pair< uint32, bool > > ids_to_modify;
+  vector< pair< Node::Id_Type, bool > > ids_to_modify;
   vector< Node > nodes_to_insert;
   static Node_Comparator_By_Id node_comparator_by_id;
   static Node_Equal_Id node_equal_id;
-  static Pair_Comparator_By_Id pair_comparator_by_id;
-  static Pair_Equal_Id pair_equal_id;
-  vector< pair< uint32, uint32 > > moved_nodes;
+  vector< pair< Node::Id_Type, Uint32_Index > > moved_nodes;
   string db_dir;
 
   bool meta;
-  vector< pair< OSM_Element_Metadata_Skeleton, uint32 > > nodes_meta_to_insert;
+  vector< pair< OSM_Element_Metadata_Skeleton< Node::Id_Type >, uint32 > > nodes_meta_to_insert;
   map< uint32, string > user_by_id;
   
-  void update_node_ids(map< uint32, vector< uint32 > >& to_delete, bool record_minuscule_moves);
+  void update_node_ids(map< uint32, vector< Node::Id_Type > >& to_delete, bool record_minuscule_moves);
   
-  void update_coords(const map< uint32, vector< uint32 > >& to_delete,
+  void update_coords(const map< uint32, vector< Node::Id_Type > >& to_delete,
 		     Update_Node_Logger* update_logger);
-  
-  void prepare_delete_tags
-      (vector< Tag_Entry >& tags_to_delete,
-       const map< uint32, vector< uint32 > >& to_delete);
-       
-  void update_node_tags_local(const vector< Tag_Entry >& tags_to_delete,
-		     Update_Node_Logger* update_logger);
-  
-  void update_node_tags_global(const vector< Tag_Entry >& tags_to_delete);
   
   void merge_files(const vector< string >& froms, string into);
 };
 
 
 // make indices appropriately coarse
-map< uint32, set< uint32 > > collect_coarse(const map< uint32, vector< uint32 > >& elems_by_idx);
+map< uint32, set< Node::Id_Type > > collect_coarse
+    (const map< uint32, vector< Node::Id_Type > >& elems_by_idx);
 
 // formulate range query
-set< pair< Tag_Index_Local, Tag_Index_Local > > make_range_set(const map< uint32, set< uint32 > >& coarse);
+set< pair< Tag_Index_Local, Tag_Index_Local > > make_range_set
+    (const map< uint32, set< Node::Id_Type > >& coarse);
 
 
 #endif

@@ -63,7 +63,7 @@ void user_filter_map
     for (typename vector< TObject >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
-      const OSM_Element_Metadata_Skeleton* meta_skel
+      const OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >* meta_skel
 	  = meta_collector.get(it->first, iit->id);
       if ((meta_skel) && (meta_skel->user_id == user_id))
 	local_into.push_back(*iit);
@@ -239,7 +239,7 @@ void User_Statement::execute(Resource_Manager& rman)
         rman.health_check(*this);
       }
     
-      const OSM_Element_Metadata_Skeleton* meta_skel
+      const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta_skel
           = meta_collector.get(it.index(), it.object().id);
       if ((meta_skel) && (meta_skel->user_id == user_id))
         nodes[it.index()].push_back(it.object());
@@ -266,7 +266,7 @@ void User_Statement::execute(Resource_Manager& rman)
         rman.health_check(*this);
       }
     
-      const OSM_Element_Metadata_Skeleton* meta_skel
+      const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta_skel
           = meta_collector.get(it.index(), it.object().id);
       if ((meta_skel) && (meta_skel->user_id == user_id))
         ways[it.index()].push_back(it.object());
@@ -293,7 +293,7 @@ void User_Statement::execute(Resource_Manager& rman)
         rman.health_check(*this);
       }
     
-      const OSM_Element_Metadata_Skeleton* meta_skel
+      const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta_skel
           = meta_collector.get(it.index(), it.object().id);
       if ((meta_skel) && (meta_skel->user_id == user_id))
         relations[it.index()].push_back(it.object());

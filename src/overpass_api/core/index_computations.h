@@ -22,28 +22,28 @@
 #include "basic_types.h"
 
 #include <algorithm>
+#include <set>
 #include <vector>
 
-using namespace std;
 
 inline uint32 ll_upper(uint32 ilat, int32 ilon);
 inline uint32 ll_upper_(uint32 ilat, int32 ilon);
 inline uint32 upper_ilat(uint32 quadtile);
 inline uint32 upper_ilon(uint32 quadtile);
-inline uint32 calc_index(const vector< uint32 >& node_idxs);
-inline pair< Uint32_Index, Uint32_Index > calc_bbox_bounds(Uint31_Index way_rel_idx);
-inline vector< Uint32_Index > calc_node_children(const vector< uint32 >& way_rel_idxs);
-inline vector< Uint31_Index > calc_children(const vector< uint32 >& way_rel_idxs);
-inline vector< uint32 > calc_parents(const vector< uint32 >& node_idxs);
-inline set< pair< Uint31_Index, Uint31_Index > > calc_parents
-    (const set< pair< Uint31_Index, Uint31_Index > >& total_idxs);
+inline uint32 calc_index(const std::vector< uint32 >& node_idxs);
+inline std::pair< Uint32_Index, Uint32_Index > calc_bbox_bounds(Uint31_Index way_rel_idx);
+inline std::vector< Uint32_Index > calc_node_children(const std::vector< uint32 >& way_rel_idxs);
+inline std::vector< Uint31_Index > calc_children(const std::vector< uint32 >& way_rel_idxs);
+inline std::vector< uint32 > calc_parents(const std::vector< uint32 >& node_idxs);
+inline std::set< std::pair< Uint31_Index, Uint31_Index > > calc_parents
+    (const std::set< std::pair< Uint31_Index, Uint31_Index > >& total_idxs);
 
-inline vector< pair< uint32, uint32 > > calc_ranges
+inline std::vector< std::pair< uint32, uint32 > > calc_ranges
     (double south, double north, double west, double east);
     
 inline void recursively_calc_ranges
     (uint32 south, uint32 north, int32 west, int32 east,
-     uint32 bitlevel, vector< pair< uint32, uint32 > >& ranges);
+     uint32 bitlevel, std::vector< std::pair< uint32, uint32 > >& ranges);
      
 /** ------------------------------------------------------------------------ */
 
@@ -120,14 +120,14 @@ inline uint32 upper_ilon(uint32 quadtile)
   return result;
 }
 
-inline uint32 calc_index(const vector< uint32 >& node_idxs)
+inline uint32 calc_index(const std::vector< uint32 >& node_idxs)
 {
   if (node_idxs.empty())
     return 0;
   
   // Calculate the bounding box of the appearing indices.
   
-  vector< uint32 >::const_iterator it = node_idxs.begin();
+  std::vector< uint32 >::const_iterator it = node_idxs.begin();
   uint32 lat_min = *it & 0x2aaaaaaa;
   uint32 lat_max = lat_min;
   uint32 lon_min = *it & 0x55555555;
@@ -316,7 +316,7 @@ inline uint32 calc_index(const vector< uint32 >& node_idxs)
   return 0x80000080;
 }
 
-inline pair< Uint32_Index, Uint32_Index > calc_bbox_bounds(Uint31_Index way_rel_idx)
+inline std::pair< Uint32_Index, Uint32_Index > calc_bbox_bounds(Uint31_Index way_rel_idx)
 {
   if (way_rel_idx.val() & 0x80000000)
   {
@@ -373,20 +373,20 @@ inline pair< Uint32_Index, Uint32_Index > calc_bbox_bounds(Uint31_Index way_rel_
       offset = 0x8000;
     }
 
-    return make_pair(ll_upper(lat<<16, lon<<16),
+    return std::make_pair(ll_upper(lat<<16, lon<<16),
 		      ll_upper((lat+2*offset-1)<<16, (lon+2*offset-1)<<16)+1);
   }
   else
-    return make_pair(way_rel_idx.val(), way_rel_idx.val() + 1);
+    return std::make_pair(way_rel_idx.val(), way_rel_idx.val() + 1);
 }
 
-inline vector< Uint32_Index > calc_node_children(const vector< uint32 >& way_rel_idxs)
+inline std::vector< Uint32_Index > calc_node_children(const std::vector< uint32 >& way_rel_idxs)
 {
-  vector< Uint32_Index > result;
+  std::vector< Uint32_Index > result;
 
-  vector< pair< uint32, uint32 > > ranges;
+  std::vector< std::pair< uint32, uint32 > > ranges;
   
-  for (vector< uint32 >::const_iterator it = way_rel_idxs.begin();
+  for (std::vector< uint32 >::const_iterator it = way_rel_idxs.begin();
       it != way_rel_idxs.end(); ++it)
   {
     if (*it & 0x80000000)
@@ -446,13 +446,13 @@ inline vector< Uint32_Index > calc_node_children(const vector< uint32 >& way_rel
 	offset = 0x8000;
       }
 
-      ranges.push_back(make_pair(ll_upper(lat<<16, lon<<16),
+      ranges.push_back(std::make_pair(ll_upper(lat<<16, lon<<16),
 				 ll_upper((lat+offset-1)<<16, (lon+offset-1)<<16)+1));
-      ranges.push_back(make_pair(ll_upper(lat<<16, (lon+offset)<<16),
+      ranges.push_back(std::make_pair(ll_upper(lat<<16, (lon+offset)<<16),
 				 ll_upper((lat+offset-1)<<16, (lon+2*offset-1)<<16)+1));
-      ranges.push_back(make_pair(ll_upper((lat+offset)<<16, lon<<16),
+      ranges.push_back(std::make_pair(ll_upper((lat+offset)<<16, lon<<16),
 				 ll_upper((lat+2*offset-1)<<16, (lon+offset-1)<<16)+1));
-      ranges.push_back(make_pair(ll_upper((lat+offset)<<16, (lon+offset)<<16),
+      ranges.push_back(std::make_pair(ll_upper((lat+offset)<<16, (lon+offset)<<16),
 				 ll_upper((lat+2*offset-1)<<16, (lon+2*offset-1)<<16)+1));
       for (uint32 i = lat; i <= lat_u; ++i)
       {
@@ -461,12 +461,12 @@ inline vector< Uint32_Index > calc_node_children(const vector< uint32 >& way_rel
       }
     }
     else
-      ranges.push_back(make_pair(*it, (*it) + 1));
+      ranges.push_back(std::make_pair(*it, (*it) + 1));
   }
 
   sort(ranges.begin(), ranges.end());
   uint32 pos = 0;
-  for (vector< pair< uint32, uint32 > >::const_iterator it = ranges.begin();
+  for (std::vector< std::pair< uint32, uint32 > >::const_iterator it = ranges.begin();
       it != ranges.end(); ++it)
   {
     if (pos < it->first)
@@ -477,11 +477,11 @@ inline vector< Uint32_Index > calc_node_children(const vector< uint32 >& way_rel
   return result;
 }
 
-inline vector< Uint31_Index > calc_children(const vector< uint32 >& way_rel_idxs)
+inline std::vector< Uint31_Index > calc_children(const std::vector< uint32 >& way_rel_idxs)
 {
-  vector< Uint31_Index > result;
+  std::vector< Uint31_Index > result;
   
-  for (vector< uint32 >::const_iterator it = way_rel_idxs.begin();
+  for (std::vector< uint32 >::const_iterator it = way_rel_idxs.begin();
       it != way_rel_idxs.end(); ++it)
   {
     if (*it & 0x80000000)
@@ -599,12 +599,12 @@ inline vector< Uint31_Index > calc_children(const vector< uint32 >& way_rel_idxs
   return result;
 }
 
-inline vector< uint32 > calc_parents(const vector< uint32 >& node_idxs)
+inline std::vector< uint32 > calc_parents(const std::vector< uint32 >& node_idxs)
 {
-  vector< uint32 > result;
+  std::vector< uint32 > result;
   result.push_back(0x80000080);
   
-  for (vector< uint32 >::const_iterator it = node_idxs.begin();
+  for (std::vector< uint32 >::const_iterator it = node_idxs.begin();
   it != node_idxs.end(); ++it)
   {
     result.push_back(*it);
@@ -665,13 +665,13 @@ inline vector< uint32 > calc_parents(const vector< uint32 >& node_idxs)
   return result;
 }
 
-inline pair< Uint31_Index, Uint31_Index > make_interval(uint32 idx)
+inline std::pair< Uint31_Index, Uint31_Index > make_interval(uint32 idx)
 {
-  return make_pair(Uint31_Index(idx), Uint31_Index((idx + 1) & 0x7fffffff)); 
+  return std::make_pair(Uint31_Index(idx), Uint31_Index((idx + 1) & 0x7fffffff)); 
 }
 
 inline void blur_index(uint32 distance, uint32 bitmask, uint32 lower_idx, uint32 upper_idx,
-		       vector< pair< Uint31_Index, Uint31_Index > >& result)
+		       std::vector< std::pair< Uint31_Index, Uint31_Index > >& result)
 {
   uint32 source_bitmask = 0x10000 - distance;
   uint32 min_lat = upper_ilat(lower_idx) & source_bitmask;
@@ -685,8 +685,8 @@ inline void blur_index(uint32 distance, uint32 bitmask, uint32 lower_idx, uint32
   result.push_back(make_interval(ll_upper(max_lat<<16, max_lon<<16) | bitmask));
 }
 
-inline void add_decomp_range(const pair< Uint32_Index, Uint32_Index >& range,
-			     vector< pair< Uint32_Index, Uint32_Index > >& node_decomp)
+inline void add_decomp_range(const std::pair< Uint32_Index, Uint32_Index >& range,
+			     std::vector< std::pair< Uint32_Index, Uint32_Index > >& node_decomp)
 {
   uint32 lower = range.first.val();
   while (lower < range.second.val())
@@ -724,26 +724,26 @@ inline void add_decomp_range(const pair< Uint32_Index, Uint32_Index >& range,
       upper =  lower + 0x10000000;
     else
       upper =  lower + 0x40000000;
-    node_decomp.push_back(make_pair(lower, upper));
+    node_decomp.push_back(std::make_pair(lower, upper));
     lower = upper;
   }
 }
 
-inline set< pair< Uint31_Index, Uint31_Index > > calc_parents
-    (const set< pair< Uint32_Index, Uint32_Index > >& node_idxs)
+inline std::set< std::pair< Uint31_Index, Uint31_Index > > calc_parents
+    (const std::set< std::pair< Uint32_Index, Uint32_Index > >& node_idxs)
 {
-  vector< pair< Uint32_Index, Uint32_Index > > node_decomp;
-  for (set< pair< Uint32_Index, Uint32_Index > >::const_iterator
+  std::vector< std::pair< Uint32_Index, Uint32_Index > > node_decomp;
+  for (std::set< std::pair< Uint32_Index, Uint32_Index > >::const_iterator
       it = node_idxs.begin(); it != node_idxs.end(); ++it)
     add_decomp_range(*it, node_decomp);
   
-  vector< pair< Uint31_Index, Uint31_Index > > result;
-  result.push_back(make_pair(0x80000080, 0x80000081));
+  std::vector< std::pair< Uint31_Index, Uint31_Index > > result;
+  result.push_back(std::make_pair(0x80000080, 0x80000081));
   
-  for (vector< pair< Uint32_Index, Uint32_Index > >::const_iterator
+  for (std::vector< std::pair< Uint32_Index, Uint32_Index > >::const_iterator
       it = node_decomp.begin(); it != node_decomp.end(); ++it)
   {
-    result.push_back(make_pair(it->first.val(), it->second.val()));
+    result.push_back(std::make_pair(it->first.val(), it->second.val()));
     
     uint32 lower_idx = it->first.val() & 0x7ffffffc;
     uint32 upper_idx = (it->second.val() - 1) & 0x7ffffffc;
@@ -776,21 +776,21 @@ inline set< pair< Uint31_Index, Uint31_Index > > calc_parents
 
   sort(result.begin(), result.end());
   
-  set< pair< Uint31_Index, Uint31_Index > > result_set;
+  std::set< std::pair< Uint31_Index, Uint31_Index > > result_set;
   Uint31_Index last_first = result[0].first;
   Uint31_Index last_second = result[0].second;
-  for (vector< pair< Uint31_Index, Uint31_Index > >::size_type i = 1;
+  for (std::vector< std::pair< Uint31_Index, Uint31_Index > >::size_type i = 1;
       i < result.size(); ++i)
   {
     if (last_second < result[i].first)
     {
-      result_set.insert(make_pair(last_first, last_second));
+      result_set.insert(std::make_pair(last_first, last_second));
       last_first = result[i].first;
     }
     if (last_second < result[i].second)
       last_second = result[i].second;
   }
-  result_set.insert(make_pair(last_first, last_second));
+  result_set.insert(std::make_pair(last_first, last_second));
     
   return result_set;
 }
@@ -799,10 +799,10 @@ inline set< pair< Uint31_Index, Uint31_Index > > calc_parents
 
 // Calculates the ranges touched by the given bbox.
 // This function implicitly depends on the chosen coordinate encoding.
-inline vector< pair< uint32, uint32 > > calc_ranges
+inline std::vector< std::pair< uint32, uint32 > > calc_ranges
     (double south, double north, double west, double east)
 {
-  vector< pair< uint32, uint32 > > ranges;
+  std::vector< std::pair< uint32, uint32 > > ranges;
 
   uint32 isouth((south + 91.0)*10000000+0.5);
   uint32 inorth((north + 91.0)*10000000+0.5);
@@ -843,7 +843,7 @@ inline vector< pair< uint32, uint32 > > calc_ranges
 // on the first bitlevel bits. Also, indexes must have the last 16 bit set to zero.
 inline void recursively_calc_ranges
     (uint32 south, uint32 north, int32 west, int32 east,
-     uint32 bitlevel, vector< pair< uint32, uint32 > >& ranges)
+     uint32 bitlevel, std::vector< std::pair< uint32, uint32 > >& ranges)
 {
   int32 dist = ((0xffff0000u>>bitlevel)&0xffff0000);
   
@@ -852,7 +852,7 @@ inline void recursively_calc_ranges
   if ((south + dist == north) && (west + dist == east))
   {
     ranges.push_back
-        (make_pair(ll_upper_(south, west),
+        (std::make_pair(ll_upper_(south, west),
 		   ll_upper_(north, east) + 1));
     return;
   }

@@ -52,7 +52,7 @@ void start(const char *el, const char **attr)
 {
   if (!strcmp(el, "tag"))
   {
-    if (current_node.id > 0)
+    if (current_node.id.val() > 0)
     {
       string key(""), value("");
       for (unsigned int i(0); attr[i]; i += 2)
@@ -64,7 +64,7 @@ void start(const char *el, const char **attr)
       }
       current_node.tags.push_back(make_pair(key, value));
       
-      *tags_source_out<<current_node.id<<'\t'<<key<<'\t'<<value<<'\n';
+      *tags_source_out<<current_node.id.val()<<'\t'<<key<<'\t'<<value<<'\n';
     }
   }
   else if (!strcmp(el, "node"))
@@ -101,7 +101,7 @@ void end(const char *el)
       osm_element_count = 0;
     }
     
-    current_node.id = 0;
+    current_node.id = 0u;
   }
   ++osm_element_count;
 }
@@ -181,7 +181,7 @@ int main(int argc, char* args[])
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
 	 it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
     {
-      coord_db_out<<it.object().id<<'\t'<<fixed<<setprecision(7)
+      coord_db_out<<it.object().id.val()<<'\t'<<fixed<<setprecision(7)
 	  <<::lat(it.index().val(), it.object().ll_lower)<<'\t'
 	  <<::lon(it.index().val(), it.object().ll_lower)<<'\n';
     }

@@ -105,7 +105,7 @@ void dump_nodes(uint32 pattern_size, string db_dir)
   {
     output_sorter.sort_and_output_if_index_changed(it.index().val());
     ostringstream buf;
-    buf<<it.object().id<<'\t'<<setprecision(10)
+    buf<<it.object().id.val()<<'\t'<<setprecision(10)
 	<<::lat(it.index().val(), it.object().ll_lower)<<'\t'
 	<<::lon(it.index().val(), it.object().ll_lower)<<'\n';
     output_sorter.output_per_index.push_back(buf.str());
@@ -164,9 +164,9 @@ void dump_ways(uint32 pattern_size, string db_dir)
     output_sorter.sort_and_output_if_index_changed(it.index().val());
     ostringstream buf;
     buf<<hex<<it.index().val()<<dec
-        <<'\t'<<it.object().id<<'\t';
+        <<'\t'<<it.object().id.val()<<'\t';
     for (uint i(0); i < it.object().nds.size(); ++i)
-      buf<<it.object().nds[i]<<' ';
+      buf<<it.object().nds[i].val()<<' ';
     buf<<'\n';
     output_sorter.output_per_index.push_back(buf.str());
   } 
@@ -232,9 +232,9 @@ void dump_relations(uint32 pattern_size, string db_dir)
     output_sorter.sort_and_output_if_index_changed(it.index().val());
     ostringstream buf;
     buf<<hex<<it.index().val()<<dec
-        <<'\t'<<it.object().id<<'\t';
+        <<'\t'<<it.object().id.val()<<'\t';
     for (uint i(0); i < it.object().members.size(); ++i)
-      buf<<it.object().members[i].ref<<' '
+      buf<<it.object().members[i].ref.val()<<' '
           <<it.object().members[i].type<<' '
           <<roles[it.object().members[i].role]<<' ';
     buf<<'\n';

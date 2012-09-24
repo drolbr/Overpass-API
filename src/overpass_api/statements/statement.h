@@ -36,7 +36,7 @@ class Query_Constraint
     virtual bool delivers_data() = 0;
     
     virtual bool collect(Resource_Manager& rman, Set& into,
-			 int type, const vector< uint32 >& ids, bool invert_ids) { return false; }
+			 int type, const vector< Uint32_Index >& ids, bool invert_ids) { return false; }
 			 
     virtual bool get_ranges
         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
@@ -47,11 +47,11 @@ class Query_Constraint
       
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
 			  const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-			  const vector< uint32 >& ids, bool invert_ids)
+			  const vector< Node::Id_Type >& ids, bool invert_ids)
       { return false; }
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
 			  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-			  int type, const vector< uint32 >& ids, bool invert_ids)
+			  int type, const vector< Uint32_Index >& ids, bool invert_ids)
       { return false; }
     
     // Cheap filter. No health_check in between needed and should be called first.

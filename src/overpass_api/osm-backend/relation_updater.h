@@ -39,7 +39,7 @@ struct Update_Relation_Logger
 public:
   void insertion(const Relation& relation)
   {
-    map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator it = insert.find(relation.id);
+    map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator it = insert.find(relation.id);
     if (it == insert.end())
       insert.insert(make_pair(relation.id, make_pair< Relation, OSM_Element_Metadata* >(relation, 0)));
     else
@@ -50,7 +50,7 @@ public:
       keep.erase(it);
   }
   
-  void insertion(uint32 id, const OSM_Element_Metadata& meta)
+  void insertion(Relation::Id_Type id, const OSM_Element_Metadata& meta)
   {
     if (insert[id].second)
       delete insert[id].second;
@@ -59,20 +59,20 @@ public:
   
   void deletion(const Uint31_Index& index, const Relation_Skeleton& skel)
   {
-    map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator it = erase.find(skel.id);
+    map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator it = erase.find(skel.id);
     if (it == erase.end())
     {
       it = erase.insert(make_pair(skel.id, make_pair< Relation, OSM_Element_Metadata* >
-          (Relation(skel.id), 0))).first;
+          (Relation(skel.id.val()), 0))).first;
     }
     else
-      it->second.first = Relation(skel.id);
+      it->second.first = Relation(skel.id.val());
     it->second.first.members = skel.members;
   }
   
   void keeping(const Uint31_Index& index, const Relation_Skeleton& skel)
   {
-    map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator it = erase.find(skel.id);
+    map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator it = erase.find(skel.id);
     if (it != erase.end())
       return;
     
@@ -80,16 +80,16 @@ public:
     if (it == keep.end())
     {
       it = keep.insert(make_pair(skel.id, make_pair< Relation, OSM_Element_Metadata* >
-          (Relation(skel.id), 0))).first;
+          (Relation(skel.id.val()), 0))).first;
     }
     else
-      it->second.first = Relation(skel.id);
+      it->second.first = Relation(skel.id.val());
     it->second.first.members = skel.members;
   }
   
   void deletion(const Tag_Index_Local& index, const Uint32_Index& ref)
   {
-    map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator it = erase.find(ref.val());
+    map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator it = erase.find(ref.val());
     if (it != erase.end())
       it->second.first.tags.push_back(make_pair(index.key, index.value));
     it = keep.find(ref.val());
@@ -97,9 +97,10 @@ public:
       it->second.first.tags.push_back(make_pair(index.key, index.value));
   }
   
-  void deletion(const Uint31_Index& index, const OSM_Element_Metadata_Skeleton& meta_skel)
+  void deletion(const Uint31_Index& index,
+		const OSM_Element_Metadata_Skeleton< Relation::Id_Type >& meta_skel)
   {
-    map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator it = erase.find(meta_skel.ref);
+    map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator it = erase.find(meta_skel.ref);
     if (it != erase.end())
     {
       if (it->second.second)
@@ -125,38 +126,38 @@ public:
     }
   }
   
-  map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator insert_begin() const
+  map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator insert_begin() const
   { return insert.begin(); }
-  map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator insert_end() const
+  map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator insert_end() const
   { return insert.end(); }
-  map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator keep_begin() const
+  map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator keep_begin() const
   { return keep.begin(); }
-  map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator keep_end() const
+  map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator keep_end() const
   { return keep.end(); }
-  map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator erase_begin() const
+  map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator erase_begin() const
   { return erase.begin(); }
-  map< uint32, pair< Relation, OSM_Element_Metadata* > >::const_iterator erase_end() const
+  map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator erase_end() const
   { return erase.end(); }
 
-  map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator insert_begin()
+  map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator insert_begin()
   { return insert.begin(); }
-  map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator insert_end()
+  map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator insert_end()
   { return insert.end(); }
-  map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator keep_begin()
+  map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator keep_begin()
   { return keep.begin(); }
-  map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator keep_end()
+  map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator keep_end()
   { return keep.end(); }
-  map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator erase_begin()
+  map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator erase_begin()
   { return erase.begin(); }
-  map< uint32, pair< Relation, OSM_Element_Metadata* > >::iterator erase_end()
+  map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator erase_end()
   { return erase.end(); }
 
   ~Update_Relation_Logger();
   
 private:
-  map< uint32, pair< Relation, OSM_Element_Metadata* > > insert;
-  map< uint32, pair< Relation, OSM_Element_Metadata* > > keep;
-  map< uint32, pair< Relation, OSM_Element_Metadata* > > erase;
+  map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > > insert;
+  map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > > keep;
+  map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > > erase;
 };
 
 
@@ -166,7 +167,7 @@ struct Relation_Updater
   
   Relation_Updater(string db_dir, bool meta);
   
-  void set_id_deleted(uint32 id)
+  void set_id_deleted(Relation::Id_Type id)
   {
     ids_to_modify.push_back(make_pair(id, false));
   }
@@ -186,7 +187,7 @@ struct Relation_Updater
     if (meta)
     {
       user_by_id[meta->user_id] = meta->user_name;
-      OSM_Element_Metadata_Skeleton meta_skel;
+      OSM_Element_Metadata_Skeleton< Relation::Id_Type > meta_skel;
       meta_skel.ref= rel.id;
       meta_skel.version = meta->version;
       meta_skel.changeset = meta->changeset;
@@ -204,7 +205,7 @@ struct Relation_Updater
     if (meta)
     {
       user_by_id[meta->user_id] = meta->user_name;
-      OSM_Element_Metadata_Skeleton meta_skel;
+      OSM_Element_Metadata_Skeleton< Relation::Id_Type > meta_skel;
       meta_skel.ref= rel.id;
       meta_skel.version = meta->version;
       meta_skel.changeset = meta->changeset;
@@ -219,8 +220,8 @@ struct Relation_Updater
   
   void update(Osm_Backend_Callback* callback, Update_Relation_Logger* update_logger);
   
-  void update_moved_idxs(const vector< pair< uint32, uint32 > >& moved_nodes,
-			 const vector< pair< uint32, uint32 > >& moved_ways,
+  void update_moved_idxs(const vector< pair< Node::Id_Type, Uint32_Index > >& moved_nodes,
+			 const vector< pair< Way::Id_Type, Uint31_Index > >& moved_ways,
 			 Update_Relation_Logger* update_logger);
   
 private:
@@ -230,27 +231,25 @@ private:
   map< string, uint32 > role_ids;
   uint32 max_role_id;
   uint32 max_written_role_id;
-  vector< pair< uint32, bool > > ids_to_modify;
+  vector< pair< Relation::Id_Type, bool > > ids_to_modify;
   vector< Relation > rels_to_insert;
-  static Pair_Comparator_By_Id pair_comparator_by_id;
-  static Pair_Equal_Id pair_equal_id;
-  vector< pair< uint32, uint32 > > moved_relations;
+  vector< pair< Relation::Id_Type, uint32 > > moved_relations;
   string db_dir;
 
   bool meta;
-  vector< pair< OSM_Element_Metadata_Skeleton, uint32 > > rels_meta_to_insert;
+  vector< pair< OSM_Element_Metadata_Skeleton< Relation::Id_Type >, uint32 > > rels_meta_to_insert;
   map< uint32, string > user_by_id;
   
-  void find_affected_relations(const vector< pair< uint32, uint32 > >& moved_nodes,
-			       const vector< pair< uint32, uint32 > >& moved_ways,
+  void find_affected_relations(const vector< pair< Node::Id_Type, Uint32_Index > >& moved_nodes,
+			       const vector< pair< Way::Id_Type, Uint31_Index > >& moved_ways,
 			       Update_Relation_Logger* update_logger);
   
   void compute_indexes(vector< Relation* >& rels_ptr);
   
-  void update_rel_ids(vector< Relation* >& rels_ptr, map< uint32, vector< uint32 > >& to_delete);
+  void update_rel_ids(vector< Relation* >& rels_ptr, map< uint32, vector< Relation::Id_Type > >& to_delete);
   
   void update_members(vector< Relation* >& rels_ptr,
-		      const map< uint32, vector< uint32 > >& to_delete,
+		      const map< uint32, vector< Relation::Id_Type > >& to_delete,
 		      Update_Relation_Logger* update_logger);
   
   void flush_roles();

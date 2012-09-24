@@ -34,19 +34,19 @@ class Print_Target
     
     virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
-			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0) = 0;
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
-			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0) = 0;
     virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
-			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0) = 0;
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
-			    const OSM_Element_Metadata_Skeleton* meta = 0,
+			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0) = 0;
 
     static const unsigned int PRINT_IDS = 1;

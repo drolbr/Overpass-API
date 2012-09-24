@@ -41,7 +41,8 @@ struct Meta_Collector
         Transaction& transaction, const File_Properties* meta_file_prop = 0);
     
     void reset();
-    const OSM_Element_Metadata_Skeleton* get(const TIndex& index, uint32 ref);    
+    const OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >* get
+        (const TIndex& index, typename TObject::Id_Type ref);    
     const map< uint32, string >& users() const { return users_; }
     
     ~Meta_Collector()
@@ -56,13 +57,13 @@ struct Meta_Collector
   private:
     set< TIndex > used_indices;
     set< pair< TIndex, TIndex > > used_ranges;
-    Block_Backend< TIndex, OSM_Element_Metadata_Skeleton >* meta_db;
-    typename Block_Backend< TIndex, OSM_Element_Metadata_Skeleton >::Discrete_Iterator*
-      db_it;
-    typename Block_Backend< TIndex, OSM_Element_Metadata_Skeleton >::Range_Iterator*
-      range_it;
+    Block_Backend< TIndex, OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > >* meta_db;
+    typename Block_Backend< TIndex, OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > >
+        ::Discrete_Iterator* db_it;
+    typename Block_Backend< TIndex, OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > >
+        ::Range_Iterator* range_it;
     TIndex* current_index;
-    set< OSM_Element_Metadata_Skeleton > current_objects;
+    set< OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > > current_objects;
     map< uint32, string > users_;
 };
 
@@ -88,7 +89,7 @@ Meta_Collector< TIndex, TObject >::Meta_Collector
     return;
   
   generate_index_query(used_indices, items);
-  meta_db = new Block_Backend< TIndex, OSM_Element_Metadata_Skeleton >
+  meta_db = new Block_Backend< TIndex, OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > >
       (transaction.data_index(meta_file_prop));
 	  
   reset();
@@ -112,7 +113,7 @@ Meta_Collector< TIndex, TObject >::Meta_Collector
   if (!meta_file_prop)
     return;
   
-  meta_db = new Block_Backend< TIndex, OSM_Element_Metadata_Skeleton >
+  meta_db = new Block_Backend< TIndex, OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > >
       (transaction.data_index(meta_file_prop));
       
   reset();
@@ -136,7 +137,7 @@ void Meta_Collector< TIndex, TObject >::reset()
   
   if (used_ranges.empty())
   {
-    db_it = new typename Block_Backend< TIndex, OSM_Element_Metadata_Skeleton >
+    db_it = new typename Block_Backend< TIndex, OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > >
         ::Discrete_Iterator(meta_db->discrete_begin(used_indices.begin(), used_indices.end()));
 	
     if (!(*db_it == meta_db->discrete_end()))
@@ -149,7 +150,7 @@ void Meta_Collector< TIndex, TObject >::reset()
   }
   else
   {
-    range_it = new typename Block_Backend< TIndex, OSM_Element_Metadata_Skeleton >
+    range_it = new typename Block_Backend< TIndex, OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > >
         ::Range_Iterator(meta_db->range_begin(
 	    Default_Range_Iterator< TIndex >(used_ranges.begin()),
 	    Default_Range_Iterator< TIndex >(used_ranges.end())));
@@ -165,8 +166,8 @@ void Meta_Collector< TIndex, TObject >::reset()
 }
 
 template< class TIndex, class TObject >
-const OSM_Element_Metadata_Skeleton* Meta_Collector< TIndex, TObject >::get
-    (const TIndex& index, uint32 ref)
+const OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >* Meta_Collector< TIndex, TObject >::get
+    (const TIndex& index, typename TObject::Id_Type ref)
 {
   if (!meta_db)
     return 0;
@@ -201,8 +202,8 @@ const OSM_Element_Metadata_Skeleton* Meta_Collector< TIndex, TObject >::get
     }
   }
   
-  set< OSM_Element_Metadata_Skeleton >::iterator it
-      = current_objects.find(OSM_Element_Metadata_Skeleton(ref));
+  typename set< OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > >::iterator it
+      = current_objects.find(OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >(ref));
   if (it != current_objects.end())
     return &*it;
   else

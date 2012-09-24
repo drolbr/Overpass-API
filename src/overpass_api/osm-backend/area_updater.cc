@@ -68,7 +68,7 @@ void Area_Updater::update()
   update_area_ids(locations_to_delete, blocks_to_delete);
   update_members(locations_to_delete, blocks_to_delete);
   
-  vector< Tag_Entry > tags_to_delete;
+  vector< Tag_Entry< uint32 > > tags_to_delete;
   prepare_delete_tags(tags_to_delete, locations_to_delete);
   update_area_tags_local(tags_to_delete);
   update_area_tags_global(tags_to_delete);
@@ -143,15 +143,15 @@ void Area_Updater::update_members
 }
 
 void Area_Updater::prepare_delete_tags
-    (vector< Tag_Entry >& tags_to_delete,
+    (vector< Tag_Entry< uint32 > >& tags_to_delete,
      const map< Uint31_Index, set< Area_Skeleton > >& to_delete)
 {
   // make indices appropriately coarse
-  map< uint32, set< uint32 > > to_delete_coarse;
+  map< uint32, set< Area::Id_Type > > to_delete_coarse;
   for (map< Uint31_Index, set< Area_Skeleton > >::const_iterator
       it(to_delete.begin()); it != to_delete.end(); ++it)
   {
-    set< uint32 >& handle(to_delete_coarse[it->first.val() & 0xffffff00]);
+    set< Area::Id_Type >& handle(to_delete_coarse[it->first.val() & 0xffffff00]);
     for (set< Area_Skeleton >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
       handle.insert(it2->id);
@@ -159,7 +159,7 @@ void Area_Updater::prepare_delete_tags
   
   // formulate range query
   set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  for (map< uint32, set< uint32 > >::const_iterator
+  for (map< uint32, set< Area::Id_Type > >::const_iterator
       it(to_delete_coarse.begin()); it != to_delete_coarse.end(); ++it)
   {
     Tag_Index_Local lower, upper;
@@ -176,7 +176,7 @@ void Area_Updater::prepare_delete_tags
   Block_Backend< Tag_Index_Local, Uint32_Index > areas_db
       (transaction->data_index(area_settings().AREA_TAGS_LOCAL));
   Tag_Index_Local current_index;
-  Tag_Entry tag_entry;
+  Tag_Entry< uint32 > tag_entry;
   current_index.index = 0xffffffff;
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
       it(areas_db.range_begin
@@ -195,7 +195,7 @@ void Area_Updater::prepare_delete_tags
       tag_entry.ids.clear();
     }
     
-    set< uint32 >& handle(to_delete_coarse[it.index().index]);
+    set< Area::Id_Type >& handle(to_delete_coarse[it.index().index]);
     if (handle.find(it.object().val()) != handle.end())
       tag_entry.ids.push_back(it.object().val());
   }
@@ -223,7 +223,7 @@ Area_Location* binary_search_for_id
 }
 
 void Area_Updater::prepare_tags
-    (vector< Tag_Entry >& tags_to_delete,
+    (vector< Tag_Entry< uint32 > >& tags_to_delete,
        const map< uint32, vector< uint32 > >& to_delete)
 {
   // make indices appropriately coarse
@@ -256,7 +256,7 @@ void Area_Updater::prepare_tags
   Block_Backend< Tag_Index_Local, Uint32_Index > areas_db
       (transaction->data_index(area_settings().AREA_TAGS_LOCAL));
   Tag_Index_Local current_index;
-  Tag_Entry tag_entry;
+  Tag_Entry< uint32 > tag_entry;
   current_index.index = 0xffffffff;
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
       it(areas_db.range_begin
@@ -289,12 +289,12 @@ void Area_Updater::prepare_tags
 }
 
 void Area_Updater::update_area_tags_local
-    (const vector< Tag_Entry >& tags_to_delete)
+    (const vector< Tag_Entry< uint32 > >& tags_to_delete)
 {
   map< Tag_Index_Local, set< Uint32_Index > > db_to_delete;
   map< Tag_Index_Local, set< Uint32_Index > > db_to_insert;
   
-  for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
+  for (vector< Tag_Entry< uint32 > >::const_iterator it(tags_to_delete.begin());
       it != tags_to_delete.end(); ++it)
   {
     Tag_Index_Local index;
@@ -312,7 +312,7 @@ void Area_Updater::update_area_tags_local
   
   vector< pair< Area_Location, Uint31_Index > >::const_iterator
       rit(areas_to_insert.begin());
-  for (set< uint32 >::const_iterator it(ids_to_modify.begin());
+  for (set< Area::Id_Type >::const_iterator it(ids_to_modify.begin());
       it != ids_to_modify.end(); ++it)
   {
     if ((rit != areas_to_insert.end()) && (*it == rit->first.id))
@@ -338,12 +338,12 @@ void Area_Updater::update_area_tags_local
 }
 
 void Area_Updater::update_area_tags_global
-    (const vector< Tag_Entry >& tags_to_delete)
+    (const vector< Tag_Entry< uint32 > >& tags_to_delete)
 {
   map< Tag_Index_Global, set< Uint32_Index > > db_to_delete;
   map< Tag_Index_Global, set< Uint32_Index > > db_to_insert;
   
-  for (vector< Tag_Entry >::const_iterator it(tags_to_delete.begin());
+  for (vector< Tag_Entry< uint32 > >::const_iterator it(tags_to_delete.begin());
       it != tags_to_delete.end(); ++it)
   {
     Tag_Index_Global index;
@@ -357,7 +357,7 @@ void Area_Updater::update_area_tags_global
   
   vector< pair< Area_Location, Uint31_Index > >::const_iterator
       rit(areas_to_insert.begin());
-  for (set< uint32 >::const_iterator it(ids_to_modify.begin());
+  for (set< Area::Id_Type >::const_iterator it(ids_to_modify.begin());
       it != ids_to_modify.end(); ++it)
   {
     if ((rit != areas_to_insert.end()) && (*it == rit->first.id))

@@ -277,8 +277,8 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
     rman.area_updater()->flush();
   
   set< Uint31_Index > req;
-  map< uint32, int > areas_inside;
-  set< uint32 > areas_on_border;
+  map< Area::Id_Type, int > areas_inside;
+  set< Area::Id_Type > areas_on_border;
   req.insert(Uint31_Index(::ll_upper_(lat, lon) & 0xffffff00));
 
   uint32 ilat((lat + 91.0)*10000000+0.5);
@@ -295,7 +295,7 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
       areas_on_border.insert(it.object().id);
     else if (check != 0)
     {
-      map< uint32, int >::iterator it2 = areas_inside.find(it.object().id);
+      map< Area::Id_Type, int >::iterator it2 = areas_inside.find(it.object().id);
       if (it2 != areas_inside.end())
 	it2->second ^= check;
       else

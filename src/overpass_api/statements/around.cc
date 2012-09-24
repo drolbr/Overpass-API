@@ -427,9 +427,6 @@ struct Way_Member_Collection
       : query_(query),
         node_members(way_members(&query, rman, ways))
   {
-    // Retrieve all nodes referred by the ways.
-    // collect_nodes(query, rman, ways.begin(), ways.end(), node_members);
-   
     // Order node ids by id.
     for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = node_members.begin();
         it != node_members.end(); ++it)
@@ -442,14 +439,14 @@ struct Way_Member_Collection
     sort(node_members_by_id.begin(), node_members_by_id.end(), order_by_node_id);
   }
   
-  const pair< Uint32_Index, const Node_Skeleton* >* get_node_by_id(uint32 id) const
+  const pair< Uint32_Index, const Node_Skeleton* >* get_node_by_id(Node::Id_Type id) const
   {
     const pair< Uint32_Index, const Node_Skeleton* >* node =
         binary_search_for_pair_id(node_members_by_id, id);
     if (!node)
     {
       ostringstream out;
-      out<<"Node "<<id<<" not found in the database. This is a serious fault of the database.";
+      out<<"Node "<<id.val()<<" not found in the database. This is a serious fault of the database.";
       query_.runtime_remark(out.str());
     }
     
@@ -507,7 +504,7 @@ struct Relation_Member_Collection
     sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_way_id);
   }
   
-  const pair< Uint32_Index, const Node_Skeleton* >* get_node_by_id(uint32 id) const
+  const pair< Uint32_Index, const Node_Skeleton* >* get_node_by_id(Uint32_Index id) const
   {
     const pair< Uint32_Index, const Node_Skeleton* >* node =
         binary_search_for_pair_id(node_members_by_id, id);
@@ -515,7 +512,7 @@ struct Relation_Member_Collection
     return node;
   }
 
-  const pair< Uint31_Index, const Way_Skeleton* >* get_way_by_id(uint32 id) const
+  const pair< Uint31_Index, const Way_Skeleton* >* get_way_by_id(Uint32_Index id) const
   {
     const pair< Uint31_Index, const Way_Skeleton* >* way =
         binary_search_for_pair_id(way_members_by_id, id);
@@ -805,7 +802,7 @@ void add_way(Uint31_Index idx, const Way_Skeleton& way, double radius,
 	     const Way_Member_Collection& way_members,
 	     vector< pair< pair< double, double >, pair< double, double > > >& simple_segments)
 {
-  vector< uint32 >::const_iterator nit = way.nds.begin();
+  vector< Node::Id_Type >::const_iterator nit = way.nds.begin();
   if (nit == way.nds.end())
     return;
   
@@ -991,7 +988,7 @@ bool Around_Statement::is_inside
     (const Way_Skeleton& way,
      const vector< pair< Uint32_Index, const Node_Skeleton* > >& nodes_by_id) const
 {
-  vector< uint32 >::const_iterator nit = way.nds.begin();
+  vector< Node::Id_Type >::const_iterator nit = way.nds.begin();
   if (nit == way.nds.end())
     return false;
   const pair< Uint32_Index, const Node_Skeleton* >* first_nd =
@@ -999,7 +996,7 @@ bool Around_Statement::is_inside
   if (!first_nd)
   {
     ostringstream out;
-    out<<"Node "<<*nit<<" not found in the database. This is a serious fault of the database.";
+    out<<"Node "<<nit->val()<<" not found in the database. This is a serious fault of the database.";
     this->runtime_remark(out.str());
     return true;
   }
@@ -1009,14 +1006,14 @@ bool Around_Statement::is_inside
   // Pre-check if node is inside
   if (is_inside(first_lat, first_lon))
     return true;
-  for (vector< uint32 >::const_iterator it = nit; it != way.nds.end(); ++it)
+  for (vector< Node::Id_Type >::const_iterator it = nit; it != way.nds.end(); ++it)
   {
     const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
         binary_search_for_pair_id(nodes_by_id, *it);
     if (!second_nd)
     {
       ostringstream out;
-      out<<"Node "<<*nit<<" not found in the database. This is a serious fault of the database.";
+      out<<"Node "<<nit->val()<<" not found in the database. This is a serious fault of the database.";
       this->runtime_remark(out.str());
       return true;
     }
@@ -1034,7 +1031,7 @@ bool Around_Statement::is_inside
     if (!second_nd)
     {
       ostringstream out;
-      out<<"Node "<<*nit<<" not found in the database. This is a serious fault of the database.";
+      out<<"Node "<<nit->val()<<" not found in the database. This is a serious fault of the database.";
       this->runtime_remark(out.str());
       return true;
     }

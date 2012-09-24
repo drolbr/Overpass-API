@@ -87,20 +87,21 @@ template < class TObject >
 class Id_Predicate
 {
   public:
-    Id_Predicate(const vector< uint32 >& ids_) : ids(ids_) {}
+    Id_Predicate(const vector< typename TObject::Id_Type >& ids_)
+      : ids(ids_) {}
     bool match(const TObject& obj) const
     {
       return binary_search(ids.begin(), ids.end(), obj.id);
     }
     
   private:
-    const vector< uint32 >& ids;
+    const vector< typename TObject::Id_Type >& ids;
 };
 
 //-----------------------------------------------------------------------------
 
 inline bool has_a_child_with_id
-    (const Relation_Skeleton& relation, const vector< uint32 >& ids, uint32 type)
+    (const Relation_Skeleton& relation, const vector< Uint32_Index >& ids, uint32 type)
 {
   for (vector< Relation_Entry >::const_iterator it3(relation.members.begin());
       it3 != relation.members.end(); ++it3)
@@ -113,9 +114,9 @@ inline bool has_a_child_with_id
 }
 
 inline bool has_a_child_with_id
-    (const Way_Skeleton& way, const vector< uint32 >& ids)
+    (const Way_Skeleton& way, const vector< Node::Id_Type >& ids)
 {
-  for (vector< uint32 >::const_iterator it3(way.nds.begin());
+  for (vector< Node::Id_Type >::const_iterator it3(way.nds.begin());
       it3 != way.nds.end(); ++it3)
   {
     if (binary_search(ids.begin(), ids.end(), *it3))
@@ -127,7 +128,7 @@ inline bool has_a_child_with_id
 class Get_Parent_Rels_Predicate
 {
 public:
-  Get_Parent_Rels_Predicate(const vector< uint32 >& ids_, uint32 child_type_)
+  Get_Parent_Rels_Predicate(const vector< Uint32_Index >& ids_, uint32 child_type_)
     : ids(ids_), child_type(child_type_) {}
   bool match(const Relation_Skeleton& obj) const
   {
@@ -135,14 +136,14 @@ public:
   }
   
 private:
-  const vector< uint32 >& ids;
+  const vector< Uint32_Index >& ids;
   uint32 child_type;
 };
 
 class Get_Parent_Ways_Predicate
 {
 public:
-  Get_Parent_Ways_Predicate(const vector< uint32 >& ids_)
+  Get_Parent_Ways_Predicate(const vector< Node::Id_Type >& ids_)
     : ids(ids_) {}
   bool match(const Way_Skeleton& obj) const
   {
@@ -150,7 +151,7 @@ public:
   }
   
 private:
-  const vector< uint32 >& ids;
+  const vector< Node::Id_Type >& ids;
 };
 
 //-----------------------------------------------------------------------------
@@ -243,9 +244,9 @@ void filter_items(const TPredicate& predicate, map< TIndex, vector< TObject > >&
 }
 
 template< class TIndex, class TObject >
-vector< uint32 > filter_for_ids(const map< TIndex, vector< TObject > >& elems)
+vector< typename TObject::Id_Type > filter_for_ids(const map< TIndex, vector< TObject > >& elems)
 {
-  vector< uint32 > ids;
+  vector< typename TObject::Id_Type > ids;
   for (typename map< TIndex, vector< TObject > >::const_iterator it = elems.begin();
   it != elems.end(); ++it)
   {

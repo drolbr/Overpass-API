@@ -56,15 +56,18 @@ class Query_Statement : public Statement
     vector< pair< string, Regular_Expression* > > key_nregexes;    
     vector< Query_Constraint* > constraints;
     
-    vector< uint32 > collect_ids
+    template< class Id_Type >
+    vector< Id_Type > collect_ids
         (const File_Properties& file_prop, Resource_Manager& rman, bool check_keys_late);
-    vector< uint32 > collect_non_ids
+	
+    template< class Id_Type >
+    vector< Id_Type > collect_non_ids
         (const File_Properties& file_prop, Resource_Manager& rman);
 	 
     template < typename TIndex, typename TObject >
     void get_elements_by_id_from_db
         (map< TIndex, vector< TObject > >& elements,
-	 const vector< uint32 >& ids, bool invert_ids,
+	 const vector< typename TObject::Id_Type >& ids, bool invert_ids,
 	 const set< pair< TIndex, TIndex > >& range_req,
          Resource_Manager& rman, File_Properties& file_prop);
 
@@ -74,9 +77,9 @@ class Query_Statement : public Statement
          const File_Properties& file_prop, Resource_Manager& rman,
 	 Transaction& transaction);
 
-    template < typename TIndex >
+    template < typename TIndex, typename Id_Type >
     set< pair< TIndex, TIndex > > get_ranges_by_id_from_db
-        (const vector< uint32 >& ids,
+        (const vector< Id_Type >& ids,
          Resource_Manager& rman, File_Properties& file_prop);
 };
 

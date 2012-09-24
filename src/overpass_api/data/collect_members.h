@@ -35,31 +35,31 @@ map< Uint31_Index, vector< Relation_Skeleton > > relation_relation_members
     (const Statement& stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Relation_Skeleton > >& parents,
      const set< pair< Uint31_Index, Uint31_Index > >* children_ranges = 0,
-     const vector< uint32 >* children_ids = 0, bool invert_ids = false);
+     const vector< Relation::Id_Type >* children_ids = 0, bool invert_ids = false);
 
 map< Uint31_Index, vector< Way_Skeleton > > relation_way_members
     (const Statement& stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
      const set< pair< Uint31_Index, Uint31_Index > >* way_ranges = 0,
-     const vector< uint32 >* way_ids = 0, bool invert_ids = false);
+     const vector< Way::Id_Type >* way_ids = 0, bool invert_ids = false);
 
 map< Uint32_Index, vector< Node_Skeleton > > relation_node_members
     (const Statement& stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
      const set< pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
-     const vector< uint32 >* node_ids = 0, bool invert_ids = false);
+     const vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false);
  
 map< Uint32_Index, vector< Node_Skeleton > > way_members
     (const Statement* stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Way_Skeleton > >& ways,
      const set< pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
-     const vector< uint32 >* node_ids = 0, bool invert_ids = false);
+     const vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false);
 
      
-vector< uint32 > relation_member_ids
+vector< Uint32_Index > relation_member_ids
     (const Statement& stmt, Resource_Manager& rman, uint32 type,
      const map< Uint31_Index, vector< Relation_Skeleton > >& rels);
 
-vector< uint32 > way_nd_ids(const map< Uint31_Index, vector< Way_Skeleton > >& ways);
+vector< Node::Id_Type > way_nd_ids(const map< Uint31_Index, vector< Way_Skeleton > >& ways);
 
 #endif

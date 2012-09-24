@@ -108,42 +108,44 @@ Print_Statement::Print_Statement
 void Print_Statement::forecast() {}
 
 
+template< class Id_Type >
 void collect_tags
-  (map< uint32, vector< pair< string, string > > >& tags_by_id,
+  (map< Id_Type, vector< pair< string, string > > >& tags_by_id,
    const Block_Backend< Tag_Index_Local, Uint32_Index >& items_db,
-   Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator& tag_it,
-   map< uint32, vector< uint32 > >& ids_by_coarse,
+   typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
+   map< uint32, vector< Id_Type > >& ids_by_coarse,
    uint32 coarse_index)
 {
   while ((!(tag_it == items_db.range_end())) &&
       (((tag_it.index().index) & 0x7fffff00) == coarse_index))
   {
     if (binary_search(ids_by_coarse[coarse_index].begin(),
-        ids_by_coarse[coarse_index].end(), tag_it.object().val()))
-      tags_by_id[tag_it.object().val()].push_back
+        ids_by_coarse[coarse_index].end(), tag_it.object()))
+      tags_by_id[tag_it.object()].push_back
           (make_pair(tag_it.index().key, tag_it.index().value));
     ++tag_it;
   }
 }
 
 
+template< class Id_Type >
 void collect_tags_framed
-  (map< uint32, vector< pair< string, string > > >& tags_by_id,
+  (map< Id_Type, vector< pair< string, string > > >& tags_by_id,
    const Block_Backend< Tag_Index_Local, Uint32_Index >& items_db,
-   Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator& tag_it,
-   map< uint32, vector< uint32 > >& ids_by_coarse,
+   typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
+   map< uint32, vector< Id_Type > >& ids_by_coarse,
    uint32 coarse_index,
-   uint32 lower_id_bound, uint32 upper_id_bound)
+   Id_Type lower_id_bound, Id_Type upper_id_bound)
 {
   while ((!(tag_it == items_db.range_end())) &&
       (((tag_it.index().index) & 0x7fffff00) == coarse_index))
   {
-    if ((tag_it.object().val() >= lower_id_bound) &&
-      (tag_it.object().val() < upper_id_bound) &&
+    if (!(tag_it.object() < lower_id_bound) &&
+      (tag_it.object() < upper_id_bound) &&
       (binary_search(ids_by_coarse[coarse_index].begin(),
-	ids_by_coarse[coarse_index].end(), tag_it.object().val())))
-      tags_by_id[tag_it.object().val()].push_back
-      (make_pair(tag_it.index().key, tag_it.index().value));
+	ids_by_coarse[coarse_index].end(), tag_it.object())))
+      tags_by_id[tag_it.object()].push_back
+          (make_pair(tag_it.index().key, tag_it.index().value));
     ++tag_it;
   }
 }
@@ -180,7 +182,7 @@ void Print_Statement::tags_quadtile
 {
   //generate set of relevant coarse indices
   set< TIndex > coarse_indices;
-  map< uint32, vector< uint32 > > ids_by_coarse;
+  map< uint32, vector< typename TObject::Id_Type > > ids_by_coarse;
   generate_ids_by_coarse(coarse_indices, ids_by_coarse, items);
   
   //formulate range query
@@ -211,7 +213,7 @@ void Print_Statement::tags_quadtile
     
     sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
     
-    map< uint32, vector< pair< string, string > > > tags_by_id;
+    map< typename TObject::Id_Type, vector< pair< string, string > > > tags_by_id;
     collect_tags(tags_by_id, items_db, tag_it, ids_by_coarse, it->val());
     
     // print the result
@@ -223,7 +225,7 @@ void Print_Statement::tags_quadtile
       {
 	if (++element_count > limit)
 	  return;
-	target.print_item(item_it->first.val(), *it2, &(tags_by_id[it2->id]),
+	target.print_item(item_it->first.val(), *it2, &(tags_by_id[it2->id.val()]),
 		   meta_printer.get(item_it->first, it2->id), &(meta_printer.users()));
       }
       ++item_it;
@@ -270,9 +272,9 @@ void by_id
 
 
 template< class TIndex, class TObject >
-void collect_metadata(set< OSM_Element_Metadata_Skeleton >& metadata,
+void collect_metadata(set< OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > >& metadata,
 		      const map< TIndex, vector< TObject > >& items,
-		      uint32 lower_id_bound, uint32 upper_id_bound,
+		      typename TObject::Id_Type lower_id_bound, typename TObject::Id_Type upper_id_bound,
 		      Meta_Collector< TIndex, TObject>& meta_printer)
 {
   for (typename map< TIndex, vector< TObject > >::const_iterator
@@ -281,9 +283,10 @@ void collect_metadata(set< OSM_Element_Metadata_Skeleton >& metadata,
     for (typename vector< TObject >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
     {
-      if ((it2->id >= lower_id_bound) && (it2->id < upper_id_bound))
+      if (!(it2->id < lower_id_bound) && (it2->id < upper_id_bound))
       {
-	const OSM_Element_Metadata_Skeleton* meta = meta_printer.get(it->first, it2->id);
+	const OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >* meta
+	    = meta_printer.get(it->first, it2->id);
 	if (meta)
 	  metadata.insert(*meta);
       }
@@ -314,7 +317,7 @@ void Print_Statement::tags_by_id
   
   //generate set of relevant coarse indices
   set< TIndex > coarse_indices;
-  map< uint32, vector< uint32 > > ids_by_coarse;
+  map< uint32, vector< typename TObject::Id_Type > > ids_by_coarse;
   generate_ids_by_coarse(coarse_indices, ids_by_coarse, items);
   
   //formulate range query
@@ -331,19 +334,22 @@ void Print_Statement::tags_by_id
   // iterate over the result
   Block_Backend< Tag_Index_Local, Uint32_Index > items_db
       (transaction.data_index(&file_prop));
-  for (uint32 id_pos(0); id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
+  for (typename TObject::Id_Type id_pos(0u); id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
   {
     rman.health_check(*this);
     
-    map< uint32, vector< pair< string, string > > > tags_by_id;
-    uint32 lower_id_bound(items_by_id[id_pos].first->id);
-    uint32 upper_id_bound(0);
+    map< typename TObject::Id_Type, vector< pair< string, string > > > tags_by_id;
+    typename TObject::Id_Type lower_id_bound(items_by_id[id_pos.val()].first->id);
+    typename TObject::Id_Type upper_id_bound(0u);
     if (id_pos + FLUSH_SIZE < items_by_id.size())
-      upper_id_bound = items_by_id[id_pos + FLUSH_SIZE].first->id;
+      upper_id_bound = items_by_id[(id_pos + FLUSH_SIZE).val()].first->id;
     else
-      upper_id_bound = items_by_id[items_by_id.size()-1].first->id + 1;
+    {
+      upper_id_bound = items_by_id[items_by_id.size()-1].first->id;
+      ++upper_id_bound;
+    }
     
-    Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
+    typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
         tag_it(items_db.range_begin
         (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
          Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
@@ -353,20 +359,21 @@ void Print_Statement::tags_by_id
 			  lower_id_bound, upper_id_bound);
     
     // collect metadata if required
-    set< OSM_Element_Metadata_Skeleton > metadata;
+    set< OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > > metadata;
     collect_metadata(metadata, items, lower_id_bound, upper_id_bound, meta_printer);
     meta_printer.reset();
 
     // print the result
-    for (uint32 i(id_pos);
+    for (typename TObject::Id_Type i(id_pos);
          (i < id_pos + FLUSH_SIZE) && (i < items_by_id.size()); ++i)
     {
-      set< OSM_Element_Metadata_Skeleton >::const_iterator meta_it
-          = metadata.find(OSM_Element_Metadata_Skeleton(items_by_id[i].first->id));
+      typename set< OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > >::const_iterator meta_it
+          = metadata.find(OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >
+              (items_by_id[i.val()].first->id));
       if (++element_count > limit)
 	return;
-      target.print_item(items_by_id[i].second, *(items_by_id[i].first),
-		 &(tags_by_id[items_by_id[i].first->id]),
+      target.print_item(items_by_id[i.val()].second, *(items_by_id[i.val()].first),
+		 &(tags_by_id[items_by_id[i.val()].first->id.val()]),
 		 meta_it != metadata.end() ? &*meta_it : 0, &(meta_printer.users()));
     }
   }

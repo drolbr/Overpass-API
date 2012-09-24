@@ -74,7 +74,7 @@ void dump_nodes(string db_dir)
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
       it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
   {
-    id_to_idx.push_back(make_pair(it.object().id, it.index()));
+    id_to_idx.push_back(make_pair(it.object().id.val(), it.index()));
     if (id_to_idx.size() > 16*1024*1024)
       clear_nodes_to_map(id_to_idx, transaction);
   }
@@ -120,7 +120,7 @@ void dump_ways(string db_dir)
   for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
       it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
   {
-    id_to_idx.push_back(make_pair(it.object().id, it.index()));
+    id_to_idx.push_back(make_pair(it.object().id.val(), it.index()));
     if (id_to_idx.size() > 16*1024*1024)
       clear_ways_to_map(id_to_idx, transaction);
   }
@@ -166,7 +166,7 @@ void dump_relations(string db_dir)
   for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
       it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
   {
-    id_to_idx.push_back(make_pair(it.object().id, it.index()));
+    id_to_idx.push_back(make_pair(it.object().id.val(), it.index()));
     if (id_to_idx.size() > 16*1024*1024)
       clear_relations_to_map(id_to_idx, transaction);
   }

@@ -73,12 +73,10 @@ private:
   string db_dir;
   map< Uint31_Index, vector< Area_Block > > area_blocks;
   unsigned int total_area_blocks_count;
-  set< uint32 > ids_to_modify;
+  set< Area::Id_Type > ids_to_modify;
   vector< pair< Area_Location, Uint31_Index > > areas_to_insert;
   static Area_Pair_Comparator_By_Id area_comparator_by_id;
   static Area_Pair_Equal_Id area_equal_id;
-  static Pair_Comparator_By_Id pair_comparator_by_id;
-  static Pair_Equal_Id pair_equal_id;
   
   void update();
   void update_area_ids
@@ -88,15 +86,15 @@ private:
       (const map< Uint31_Index, set< Area_Skeleton > >& locations_to_delete,
        const map< Uint31_Index, set< Area_Block > >& blocks_to_delete);
   void prepare_delete_tags
-      (vector< Tag_Entry >& tags_to_delete,
+      (vector< Tag_Entry< uint32 > >& tags_to_delete,
        const map< Uint31_Index, set< Area_Skeleton > >& to_delete);
   void prepare_tags
-      (vector< Tag_Entry >& tags_to_delete,
+      (vector< Tag_Entry< uint32 > >& tags_to_delete,
        const map< uint32, vector< uint32 > >& to_delete);
   void update_area_tags_local
-      (const vector< Tag_Entry >& tags_to_delete);
+      (const vector< Tag_Entry< uint32 > >& tags_to_delete);
   void update_area_tags_global
-      (const vector< Tag_Entry >& tags_to_delete);
+      (const vector< Tag_Entry< uint32 > >& tags_to_delete);
 };
 
 /** Implementation (inline functions): --------------------------------------*/

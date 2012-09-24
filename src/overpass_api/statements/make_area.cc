@@ -72,12 +72,13 @@ void Make_Area_Statement::forecast()
   display_state();*/
 }
 
-pair< uint32, uint32 > Make_Area_Statement::detect_pivot(const Set& pivot)
+pair< uint32, Uint32_Index > Make_Area_Statement::detect_pivot(const Set& pivot)
 {
-  uint32 pivot_id(0), pivot_type(0);
+  uint32 pivot_type(0);
+  Uint32_Index pivot_id(0u);
   map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
       nit(pivot.nodes.begin());
-  while ((pivot_id == 0) && (nit != pivot.nodes.end()))
+  while ((pivot_id.val() == 0) && (nit != pivot.nodes.end()))
   {
     if (nit->second.size() > 0)
     {
@@ -88,7 +89,7 @@ pair< uint32, uint32 > Make_Area_Statement::detect_pivot(const Set& pivot)
   }
   map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
       wit(pivot.ways.begin());
-  while ((pivot_id == 0) && (wit != pivot.ways.end()))
+  while ((pivot_id.val() == 0) && (wit != pivot.ways.end()))
   {
     if (wit->second.size() > 0)
     {
@@ -99,7 +100,7 @@ pair< uint32, uint32 > Make_Area_Statement::detect_pivot(const Set& pivot)
   }
   map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
       rit(pivot.relations.begin());
-  while ((pivot_id == 0) && (rit != pivot.relations.end()))
+  while ((pivot_id.val() == 0) && (rit != pivot.relations.end()))
   {
     if (rit->second.size() > 0)
     {
@@ -109,12 +110,12 @@ pair< uint32, uint32 > Make_Area_Statement::detect_pivot(const Set& pivot)
     ++rit;
   }
   
-  return make_pair< uint32, uint32 >(pivot_type, pivot_id);
+  return make_pair< uint32, Uint32_Index >(pivot_type, pivot_id);
 }
 
-uint32 Make_Area_Statement::check_node_parity(const Set& pivot)
+Node::Id_Type Make_Area_Statement::check_node_parity(const Set& pivot)
 {
-  set< uint32 > node_parity_control;
+  set< Node::Id_Type > node_parity_control;
   for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
     it(pivot.ways.begin()); it != pivot.ways.end(); ++it)
   {
@@ -123,7 +124,7 @@ uint32 Make_Area_Statement::check_node_parity(const Set& pivot)
     {
       if (it2->nds.size() < 2)
 	continue;
-      pair< set< uint32 >::iterator, bool > npp(node_parity_control.insert
+      pair< set< Node::Id_Type >::iterator, bool > npp(node_parity_control.insert
           (it2->nds.front()));
       if (!npp.second)
 	node_parity_control.erase(npp.first);
@@ -135,10 +136,10 @@ uint32 Make_Area_Statement::check_node_parity(const Set& pivot)
   }
   if (node_parity_control.size() > 0)
     return *(node_parity_control.begin());
-  return 0;
+  return 0u;
 }
 
-pair< uint32, uint32 > Make_Area_Statement::create_area_blocks
+pair< Uint32_Index, Uint32_Index > Make_Area_Statement::create_area_blocks
     (map< Uint31_Index, vector< Area_Block > >& areas,
      uint32 id, const Set& pivot)
 {
@@ -148,7 +149,7 @@ pair< uint32, uint32 > Make_Area_Statement::create_area_blocks
   {
     for (vector< Node_Skeleton >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
-      nodes.push_back(Node(it2->id, it->first.val(), it2->ll_lower));
+      nodes.push_back(Node(it2->id.val(), it->first.val(), it2->ll_lower));
   }
   sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
   
@@ -162,13 +163,13 @@ pair< uint32, uint32 > Make_Area_Statement::create_area_blocks
 	continue;
       uint32 cur_idx(0);
       vector< uint64 > cur_polyline;
-      for (vector< uint32 >::const_iterator it3(it2->nds.begin());
+      for (vector< Node::Id_Type >::const_iterator it3(it2->nds.begin());
           it3 != it2->nds.end(); ++it3)
       {
 	Node* node(binary_search_for_id(nodes, *it3));
 	if (node == 0)
-	  return make_pair< uint32, uint32 >(*it3, it2->id);
-	if ((node->ll_upper & 0xffffff00) != cur_idx)
+	  return make_pair(*it3, it2->id);
+	if ((node->index & 0xffffff00) != cur_idx)
 	{
 	  if (cur_idx != 0)
 	  {
@@ -178,7 +179,7 @@ pair< uint32, uint32 > Make_Area_Statement::create_area_blocks
 	    vector< Aligned_Segment > aligned_segments;
 	    Area::calc_aligned_segments
 	        (aligned_segments, cur_polyline.back(),
-		 ((uint64)node->ll_upper<<32) | node->ll_lower_);
+		 ((uint64)node->index<<32) | node->ll_lower_);
 	    cur_polyline.clear();
 	    for (vector< Aligned_Segment >::const_iterator
 	        it(aligned_segments.begin()); it != aligned_segments.end(); ++it)
@@ -191,9 +192,9 @@ pair< uint32, uint32 > Make_Area_Statement::create_area_blocks
 	      cur_polyline.clear();
 	    }
 	  }
-	  cur_idx = (node->ll_upper & 0xffffff00);
+	  cur_idx = (node->index & 0xffffff00);
 	}
-	cur_polyline.push_back(((uint64)node->ll_upper<<32) | node->ll_lower_);
+	cur_polyline.push_back(((uint64)node->index<<32) | node->ll_lower_);
       }
       if ((cur_idx != 0) && (cur_polyline.size() > 1))
 	areas[cur_idx].push_back(Area_Block(id, cur_polyline));
@@ -294,9 +295,9 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
     
     return;
   }
-  pair< uint32, uint32 > pivot_pair(detect_pivot(mit->second));
+  pair< uint32, Uint32_Index > pivot_pair(detect_pivot(mit->second));
   int pivot_type(pivot_pair.first);
-  uint32 pivot_id(pivot_pair.second);
+  uint32 pivot_id(pivot_pair.second.val());
   
   if (pivot_type == 0)
   {
@@ -358,29 +359,29 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   }
   
   // check node parity
-  uint32 odd_id(check_node_parity(mit->second));
-  if (odd_id != 0)
+  Node::Id_Type odd_id(check_node_parity(mit->second));
+  if (!(odd_id == Node::Id_Type(0u)))
   {
     ostringstream temp;
-    temp<<"make-area: Node "<<odd_id
+    temp<<"make-area: Node "<<odd_id.val()
         <<" is contained in an odd number of ways.\n";
     runtime_remark(temp.str());
   }
   
   // create area blocks
   map< Uint31_Index, vector< Area_Block > > area_blocks;
-  pair< uint32, uint32 > odd_pair
+  pair< Node::Id_Type, Way::Id_Type > odd_pair
     (create_area_blocks(area_blocks, pivot_id, mit->second));
-  if (odd_pair.first != 0)
+  if (!(odd_pair.first == Node::Id_Type(0u)))
   {
     ostringstream temp;
-    temp<<"make-area: Node "<<odd_pair.first
-        <<" referred by way "<<odd_pair.second
+    temp<<"make-area: Node "<<odd_pair.first.val()
+        <<" referred by way "<<odd_pair.second.val()
         <<" is not contained in set \""<<input<<"\".\n";
     runtime_remark(temp.str());
   }
   
-  if ((odd_id != 0) || (odd_pair.first != 0))
+  if (!(odd_id == Node::Id_Type(0u)) || !(odd_pair.first == Node::Id_Type(0u)))
   {
     nodes.clear();
     ways.clear();

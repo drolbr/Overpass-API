@@ -31,9 +31,9 @@ using namespace std;
 
 struct Relation_Entry
 {
-  Relation_Entry() : ref(0), type(0), role(0) {}
+  Relation_Entry() : ref(0u), type(0), role(0) {}
   
-  uint32 ref;
+  Uint32_Index ref;
   uint32 type;
   uint32 role;
   const static uint32 NODE = 1;
@@ -43,18 +43,18 @@ struct Relation_Entry
 
 struct Relation
 {
-  uint32 id;
+  typedef Uint32_Index Id_Type;
+
+  Id_Type id;
   uint32 index;
   vector< Relation_Entry > members;
   vector< Uint31_Index > node_idxs;
   vector< Uint31_Index > way_idxs;
   vector< pair< string, string > > tags;
   
-  Relation() {}
+  Relation() : id(0u) {}
   
-  Relation(uint32 id_)
-  : id(id_)
-  {}
+  Relation(uint32 id_) : id(id_) {}
   
   Relation(uint32 id_, uint32 index_, const vector< Relation_Entry >& members_)
   : id(id_), index(index_), members(members_) {}
@@ -81,16 +81,17 @@ struct Relation_Equal_Id {
 
 struct Relation_Skeleton
 {
-  uint32 id;
+  typedef Relation::Id_Type Id_Type;
+
+  Id_Type id;
   vector< Relation_Entry > members;
   vector< Uint31_Index > node_idxs;
   vector< Uint31_Index > way_idxs;
   
-  Relation_Skeleton() {}
+  Relation_Skeleton() : id(0u) {}
   
-  Relation_Skeleton(void* data)
+  Relation_Skeleton(void* data) : id(*(uint32*)data)
   {
-    id = *(uint32*)data;
     members.resize(*((uint32*)data + 1));
     node_idxs.resize(*((uint32*)data + 2), 0u);
     way_idxs.resize(*((uint32*)data + 3), 0u);
@@ -128,13 +129,13 @@ struct Relation_Skeleton
   
   void to_data(void* data) const
   {
-    *(uint32*)data = id;
+    *(uint32*)data = id.val();
     *((uint32*)data + 1) = members.size();
     *((uint32*)data + 2) = node_idxs.size();
     *((uint32*)data + 3) = way_idxs.size();
     for (uint i = 0; i < members.size(); ++i)
     {
-      *((uint32*)data + 4 + 2*i) = members[i].ref;
+      *((uint32*)data + 4 + 2*i) = members[i].ref.val();
       *((uint32*)data + 5 + 2*i) = members[i].role & 0xffffff;
       *((uint8*)data + 23 + 8*i) = members[i].type;
     }

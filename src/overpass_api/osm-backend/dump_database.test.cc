@@ -80,8 +80,8 @@ void dump_nodes(Transaction& transaction, const string& db_dir)
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
       it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
   {
-    ofstream* out(node_db_out.get(it.object().id / 5000000));
-    (*out)<<it.object().id<<'\t'<<setprecision(10)
+    ofstream* out(node_db_out.get(it.object().id.val() / 5000000));
+    (*out)<<it.object().id.val()<<'\t'<<setprecision(10)
 	<<::lat(it.index().val(), it.object().ll_lower)<<'\t'
 	<<::lon(it.index().val(), it.object().ll_lower)<<'\n';
   }
@@ -121,11 +121,11 @@ void check_nodes(Transaction& transaction)
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
     it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
   {
-    out<<it.object().id<<'\t'<<setprecision(10)
+    out<<it.object().id.val()<<'\t'<<setprecision(10)
         <<::lat(it.index().val(), it.object().ll_lower)<<'\t'
         <<::lon(it.index().val(), it.object().ll_lower)<<'\n';
     if (++element_count % 1000000 == 0)
-      cerr<<it.object().id<<' ';
+      cerr<<it.object().id.val()<<' ';
   }
   
   // check update_node_tags_local - compare both files for the result
@@ -167,10 +167,10 @@ void dump_ways(Transaction& transaction, const string& db_dir)
   for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
       it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
   {
-    ofstream* out(way_db_out.get(it.object().id / 1000000));
-    (*out)<<it.object().id<<'\t';
+    ofstream* out(way_db_out.get(it.object().id.val() / 1000000));
+    (*out)<<it.object().id.val()<<'\t';
     for (uint i(0); i < it.object().nds.size(); ++i)
-      (*out)<<it.object().nds[i]<<' ';
+      (*out)<<it.object().nds[i].val()<<' ';
     (*out)<<'\n';
   }
     
@@ -210,12 +210,12 @@ void check_ways(Transaction& transaction)
   for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
       it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
   {
-    out<<it.object().id<<'\t';
+    out<<it.object().id.val()<<'\t';
     for (uint i(0); i < it.object().nds.size(); ++i)
-      out<<it.object().nds[i]<<' ';
+      out<<it.object().nds[i].val()<<' ';
     out<<'\n';
     if (++element_count % 1000000 == 0)
-      cerr<<it.object().id<<' ';
+      cerr<<it.object().id.val()<<' ';
   }
     
   // check update_way_tags_local - compare both files for the result
@@ -265,10 +265,10 @@ void dump_relations(Transaction& transaction, const string& db_dir)
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
 	 it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
     {
-      ofstream* out(relation_db_out.get(it.object().id / 200000));
-      (*out)<<it.object().id<<'\t';
+      ofstream* out(relation_db_out.get(it.object().id.val() / 200000));
+      (*out)<<it.object().id.val()<<'\t';
       for (uint i(0); i < it.object().members.size(); ++i)
-	(*out)<<it.object().members[i].ref<<' '
+	(*out)<<it.object().members[i].ref.val()<<' '
 	    <<it.object().members[i].type<<' '
 	    <<roles[it.object().members[i].role]<<' ';
       (*out)<<'\n';
@@ -318,14 +318,14 @@ void check_relations(Transaction& transaction)
   for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
     it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
   {
-    out<<it.object().id<<'\t';
+    out<<it.object().id.val()<<'\t';
     for (uint i(0); i < it.object().members.size(); ++i)
-      out<<it.object().members[i].ref<<' '
+      out<<it.object().members[i].ref.val()<<' '
           <<it.object().members[i].type<<' '
           <<roles[it.object().members[i].role]<<' ';
     out<<'\n';
     if (++element_count % 1000000 == 0)
-      cerr<<it.object().id<<' ';
+      cerr<<it.object().id.val()<<' ';
   }
   
   // check update_relation_tags_local - compare both files for the result

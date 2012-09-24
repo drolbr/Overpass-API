@@ -141,18 +141,19 @@ set< pair< Tag_Index_Global, Tag_Index_Global > > get_k_req(const string& key)
   return result;
 }
 
-vector< uint32 > Query_Statement::collect_ids
+template< class Id_Type >
+vector< Id_Type > Query_Statement::collect_ids
   (const File_Properties& file_prop, Resource_Manager& rman,
    bool check_keys_late)
 {
   if (key_values.empty() && keys.empty() && key_regexes.empty())
-    return vector< uint32 >();
+    return vector< Id_Type >();
  
   Block_Backend< Tag_Index_Global, Uint32_Index > tags_db
       (rman.get_transaction()->data_index(&file_prop));
   
   // Handle simple Key-Value pairs
-  vector< uint32 > new_ids;
+  vector< Id_Type > new_ids;
   vector< pair< string, string > >::const_iterator kvit = key_values.begin();
 
   if (kvit != key_values.end())
@@ -170,16 +171,16 @@ vector< uint32 > Query_Statement::collect_ids
   
   for (; kvit != key_values.end(); ++kvit)
   {
-    vector< uint32 > old_ids;
+    vector< Id_Type > old_ids;
     old_ids.swap(new_ids);
 
     set< Tag_Index_Global > tag_req = get_kv_req(kvit->first, kvit->second);
-    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Discrete_Iterator
+    for (typename Block_Backend< Tag_Index_Global, Id_Type >::Discrete_Iterator
         it2(tags_db.discrete_begin(tag_req.begin(), tag_req.end()));
         !(it2 == tags_db.discrete_end()); ++it2)
     {
-      if (binary_search(old_ids.begin(), old_ids.end(), it2.object().val()))
-	new_ids.push_back(it2.object().val());
+      if (binary_search(old_ids.begin(), old_ids.end(), it2.object()))
+	new_ids.push_back(it2.object());
     }
     sort(new_ids.begin(), new_ids.end());    
     rman.health_check(*this);
@@ -206,18 +207,18 @@ vector< uint32 > Query_Statement::collect_ids
     
     for (; kit != keys.end(); ++kit)
     {
-      vector< uint32 > old_ids;
+      vector< Id_Type > old_ids;
       old_ids.swap(new_ids);
       {
         set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
-        for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
+        for (typename Block_Backend< Tag_Index_Global, Id_Type >::Range_Iterator
 	    it2(tags_db.range_begin
 	      (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
 	    Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
 	    !(it2 == tags_db.range_end()); ++it2)
         {
-	  if (binary_search(old_ids.begin(), old_ids.end(), it2.object().val()))
-	    new_ids.push_back(it2.object().val());
+	  if (binary_search(old_ids.begin(), old_ids.end(), it2.object()))
+	    new_ids.push_back(it2.object());
         }
       }
       sort(new_ids.begin(), new_ids.end());    
@@ -246,19 +247,19 @@ vector< uint32 > Query_Statement::collect_ids
   
     for (; krit != key_regexes.end(); ++krit)
     {
-      vector< uint32 > old_ids;
+      vector< Id_Type > old_ids;
       old_ids.swap(new_ids);
       {
         set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
-        for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
+        for (typename Block_Backend< Tag_Index_Global, Id_Type >::Range_Iterator
 	    it2(tags_db.range_begin
 	    (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
 	     Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
 	    !(it2 == tags_db.range_end()); ++it2)
         {
-	  if (binary_search(old_ids.begin(), old_ids.end(), it2.object().val())
+	  if (binary_search(old_ids.begin(), old_ids.end(), it2.object())
 	      && krit->second->matches(it2.index().value))
-	    new_ids.push_back(it2.object().val());
+	    new_ids.push_back(it2.object());
         }
       }
       sort(new_ids.begin(), new_ids.end());    
@@ -270,16 +271,17 @@ vector< uint32 > Query_Statement::collect_ids
   return new_ids;
 }
 
-vector< uint32 > Query_Statement::collect_non_ids
+template< class Id_Type >
+vector< Id_Type > Query_Statement::collect_non_ids
   (const File_Properties& file_prop, Resource_Manager& rman)
 {
   if (key_nvalues.empty() && key_nregexes.empty())
-    return vector< uint32 >();
+    return vector< Id_Type >();
  
   Block_Backend< Tag_Index_Global, Uint32_Index > tags_db
       (rman.get_transaction()->data_index(&file_prop));
   
-  vector< uint32 > new_ids;
+  vector< Id_Type > new_ids;
 
   // Handle Key-Non-Value pairs
   for (vector< pair< string, string > >::const_iterator knvit = key_nvalues.begin();
@@ -326,7 +328,8 @@ vector< uint32 > Query_Statement::collect_non_ids
 template < typename TIndex, typename TObject >
 void Query_Statement::get_elements_by_id_from_db
     (map< TIndex, vector< TObject > >& elements,
-     const vector< uint32 >& ids, bool invert_ids, const set< pair< TIndex, TIndex > >& range_req,
+     const vector< typename TObject::Id_Type >& ids, bool invert_ids,
+     const set< pair< TIndex, TIndex > >& range_req,
      Resource_Manager& rman, File_Properties& file_prop)
 {
   if (ids.empty())
@@ -345,17 +348,17 @@ void Query_Statement::get_elements_by_id_from_db
 			(Id_Predicate< TObject >(ids)), elements);
 }
 
-template < typename TIndex >
+template < typename TIndex, typename Id_Type >
 set< pair< TIndex, TIndex > > Query_Statement::get_ranges_by_id_from_db
-    (const vector< uint32 >& ids,
+    (const vector< Id_Type >& ids,
      Resource_Manager& rman, File_Properties& file_prop)
 {
   set< pair< TIndex, TIndex > > range_req;
   {
     Random_File< TIndex > random
         (rman.get_transaction()->random_index(&file_prop));
-    for (vector< uint32 >::const_iterator it(ids.begin()); it != ids.end(); ++it)
-      range_req.insert(make_pair(random.get(*it), TIndex(random.get(*it).val()+1)));
+    for (typename vector< Id_Type >::const_iterator it(ids.begin()); it != ids.end(); ++it)
+      range_req.insert(make_pair(random.get(it->val()), TIndex(random.get(it->val()).val()+1)));
   }
   return range_req;
 }
@@ -388,14 +391,15 @@ void clear_empty_indices
 }
 
 
+template< typename Id_Type >
 void filter_ids_by_tags
   (const map< string, vector< Regular_Expression* > >& keys,
    const Block_Backend< Tag_Index_Local, Uint32_Index >& items_db,
    Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator& tag_it,
    uint32 coarse_index,
-   vector< uint32 >& new_ids)
+   vector< Id_Type >& new_ids)
 {
-  vector< uint32 > old_ids;
+  vector< Id_Type > old_ids;
   string last_key, last_value;  
   bool relevant = false;
   bool valid = false;
@@ -440,8 +444,8 @@ void filter_ids_by_tags
 	last_value = tag_it.index().value;
       }
       
-      if (valid && binary_search(old_ids.begin(), old_ids.end(), tag_it.object().val()))
-        new_ids.push_back(tag_it.object().val());
+      if (valid && binary_search(old_ids.begin(), old_ids.end(), tag_it.object()))
+        new_ids.push_back(tag_it.object());
     }
 
     ++tag_it;
@@ -460,14 +464,15 @@ void filter_ids_by_tags
 }
 
 
+template< typename Id_Type >
 void filter_ids_by_tags
-  (map< uint32, vector< uint32 > >& ids_by_coarse,
+  (map< uint32, vector< Id_Type > >& ids_by_coarse,
    const map< string, vector< Regular_Expression* > >& keys,
    const Block_Backend< Tag_Index_Local, Uint32_Index >& items_db,
    Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator& tag_it,
    uint32 coarse_index)
 {
-  vector< uint32 > new_ids = ids_by_coarse[coarse_index & 0x7fffff00];
+  vector< Id_Type > new_ids = ids_by_coarse[coarse_index & 0x7fffff00];
   
   filter_ids_by_tags(keys, items_db, tag_it, coarse_index & 0x7fffff00, new_ids);
 
@@ -475,7 +480,7 @@ void filter_ids_by_tags
     
   filter_ids_by_tags(keys, items_db, tag_it, coarse_index | 0x80000000, new_ids);
 
-  vector< uint32 > old_ids;
+  vector< Id_Type > old_ids;
   old_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
   set_union(old_ids.begin(), old_ids.end(), new_ids.begin(), new_ids.end(),
       back_inserter(ids_by_coarse[coarse_index & 0x7fffff00]));
@@ -497,7 +502,7 @@ void Query_Statement::filter_by_tags
   
   //generate set of relevant coarse indices
   set< TIndex > coarse_indices;
-  map< uint32, vector< uint32 > > ids_by_coarse;
+  map< uint32, vector< typename TObject::Id_Type > > ids_by_coarse;
   generate_ids_by_coarse(coarse_indices, ids_by_coarse, items);
   
   //formulate range query
@@ -561,44 +566,80 @@ void Query_Statement::execute(Resource_Manager& rman)
     check_keys_late |= (*it)->delivers_data();
 
   {
-    File_Properties* file_prop = 0;
-    if (type == QUERY_NODE)
-      file_prop = osm_base_settings().NODE_TAGS_GLOBAL;
-    else if (type == QUERY_WAY)
-      file_prop = osm_base_settings().WAY_TAGS_GLOBAL;
-    else if (type == QUERY_RELATION)
-      file_prop = osm_base_settings().RELATION_TAGS_GLOBAL;
-
-    vector< uint32 > ids;
+    vector< Node::Id_Type > node_ids;
+    vector< Uint32_Index > ids;
     bool invert_ids = false;
-    if ((!keys.empty() && !check_keys_late)
-        || !key_values.empty() || (!key_regexes.empty() && !check_keys_late))
+
+    if (type == QUERY_NODE)
     {
-      collect_ids(*file_prop, rman, check_keys_late).swap(ids);
-      if (!key_nvalues.empty() || !key_nregexes.empty())
+      if ((!keys.empty() && !check_keys_late)
+          || !key_values.empty() || (!key_regexes.empty() && !check_keys_late))
       {
-	vector< uint32 > non_ids = collect_non_ids(*file_prop, rman);
-	vector< uint32 > diff_ids(ids.size());
-	diff_ids.erase
-	    (set_difference(ids.begin(), ids.end(), non_ids.begin(), non_ids.end(),
+        collect_ids< Node::Id_Type >(*osm_base_settings().NODE_TAGS_GLOBAL, rman, check_keys_late)
+	    .swap(node_ids);
+        if (!key_nvalues.empty() || !key_nregexes.empty())
+        {
+	  vector< Node::Id_Type > non_ids
+	      = collect_non_ids< Node::Id_Type >(*osm_base_settings().NODE_TAGS_GLOBAL, rman);
+	  vector< Node::Id_Type > diff_ids(node_ids.size(), Node::Id_Type(0u));
+	  diff_ids.erase
+	      (set_difference(node_ids.begin(), node_ids.end(), non_ids.begin(), non_ids.end(),
 			    diff_ids.begin()), diff_ids.end());
-	ids.swap(diff_ids);
+	  node_ids.swap(diff_ids);
+        }
+        if (node_ids.empty())
+	  answer_state = data_collected;
       }
-      if (ids.empty())
-	answer_state = data_collected;
-    }
-    else if (!key_nvalues.empty() || !key_nregexes.empty())
-    {
-      invert_ids = true;
-      collect_non_ids(*file_prop, rman).swap(ids);
-    }
+      else if (!key_nvalues.empty() || !key_nregexes.empty())
+      {
+        invert_ids = true;
+        collect_non_ids< Node::Id_Type >(*osm_base_settings().NODE_TAGS_GLOBAL, rman).swap(node_ids);
+      }
     
-    for (vector< Query_Constraint* >::iterator it = constraints.begin();
-        it != constraints.end() && answer_state < data_collected; ++it)
-    {
-      if ((*it)->collect(rman, into, type, ids, invert_ids))
-        answer_state = data_collected;
+      for (vector< Query_Constraint* >::iterator it = constraints.begin();
+          it != constraints.end() && answer_state < data_collected; ++it)
+      {
+        if ((*it)->collect(rman, into, type, node_ids, invert_ids))
+          answer_state = data_collected;
+      }
     }
+    else
+    {
+      File_Properties* file_prop = 0;
+      if (type == QUERY_WAY)
+        file_prop = osm_base_settings().WAY_TAGS_GLOBAL;
+      else if (type == QUERY_RELATION)
+        file_prop = osm_base_settings().RELATION_TAGS_GLOBAL;
+
+      if ((!keys.empty() && !check_keys_late)
+          || !key_values.empty() || (!key_regexes.empty() && !check_keys_late))
+      {
+        collect_ids< Uint32_Index >(*file_prop, rman, check_keys_late).swap(ids);
+        if (!key_nvalues.empty() || !key_nregexes.empty())
+        {
+	  vector< Uint32_Index > non_ids = collect_non_ids< Uint32_Index >(*file_prop, rman);
+	  vector< Uint32_Index > diff_ids(ids.size(), Uint32_Index(0u));
+	  diff_ids.erase
+	      (set_difference(ids.begin(), ids.end(), non_ids.begin(), non_ids.end(),
+			    diff_ids.begin()), diff_ids.end());
+	  ids.swap(diff_ids);
+        }
+        if (ids.empty())
+	  answer_state = data_collected;
+      }
+      else if (!key_nvalues.empty() || !key_nregexes.empty())
+      {
+        invert_ids = true;
+        collect_non_ids< Uint32_Index >(*file_prop, rman).swap(ids);
+      }
+    
+      for (vector< Query_Constraint* >::iterator it = constraints.begin();
+          it != constraints.end() && answer_state < data_collected; ++it)
+      {
+        if ((*it)->collect(rman, into, type, ids, invert_ids))
+          answer_state = data_collected;
+      }
+    }   
 
     set_progress(2);
     rman.health_check(*this);
@@ -633,7 +674,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       for (vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && answer_state < data_collected; ++it)
       {
-	if ((*it)->get_data(*this, rman, into, range_req_32, ids, invert_ids))
+	if ((*it)->get_data(*this, rman, into, range_req_32, node_ids, invert_ids))
 	  answer_state = data_collected;
       }
     }
@@ -654,10 +695,10 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       if (answer_state < ranges_collected && !invert_ids)
         range_req_32 = get_ranges_by_id_from_db< Uint32_Index >
-            (ids, rman, *osm_base_settings().NODES);
+            (node_ids, rman, *osm_base_settings().NODES);
       if (answer_state < data_collected)
         get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
-            (into.nodes, ids, invert_ids, range_req_32, rman, *osm_base_settings().NODES);
+            (into.nodes, node_ids, invert_ids, range_req_32, rman, *osm_base_settings().NODES);
     }
     else if (type == QUERY_WAY)
     {

@@ -28,15 +28,9 @@
 #include "type_node.h"
 #include "type_way.h"
 #include "type_relation.h"
+#include "type_tags.h"
 #include "type_area.h"
 
-using namespace std;
-
-struct Unsupported_Error
-{
-  Unsupported_Error(const string& method_name_) : method_name(method_name_) {}
-  string method_name;
-};
 
 struct String_Object
 {
@@ -81,32 +75,27 @@ struct String_Object
     string value;
 };
 
+
+template< typename First, typename Second >
 struct Pair_Comparator_By_Id {
-  bool operator() (const pair< uint32, bool >& a, const pair< uint32, bool >& b)
-  {
-    return (a.first < b.first);
-  }
-
-  bool operator() (const pair< uint32, uint32 >& a, const pair< uint32, uint32 >& b)
+  bool operator() (const pair< First, Second >& a, const pair< First, Second >& b)
   {
     return (a.first < b.first);
   }
 };
 
+
+template< typename First, typename Second >
 struct Pair_Equal_Id {
-  bool operator() (const pair< uint32, bool >& a, const pair< uint32, bool >& b)
-  {
-    return (a.first == b.first);
-  }
-  
-  bool operator() (const pair< uint32, uint32 >& a, const pair< uint32, uint32 >& b)
+  bool operator() (const pair< First, Second >& a, const pair< First, Second >& b)
   {
     return (a.first == b.first);
   }
 };
+
 
 template < class T >
-T* binary_search_for_id(vector< T >& vect, uint32 id)
+T* binary_search_for_id(vector< T >& vect, typename T::Id_Type id)
 {
   uint32 lower(0);
   uint32 upper(vect.size());
@@ -124,8 +113,9 @@ T* binary_search_for_id(vector< T >& vect, uint32 id)
   return 0;
 }
 
-template < class T >
-T* binary_ptr_search_for_id(vector< T* >& vect, uint32 id)
+
+template < class TObject >
+TObject* binary_ptr_search_for_id(vector< TObject* >& vect, typename TObject::Id_Type id)
 {
   uint32 lower(0);
   uint32 upper(vect.size());
@@ -143,168 +133,6 @@ T* binary_ptr_search_for_id(vector< T* >& vect, uint32 id)
   return 0;
 }
 
-struct Tag_Entry
-{
-  uint32 index;
-  string key;
-  string value;
-  vector< uint32 > ids;
-};
-
-struct Tag_Index_Local
-{
-  uint32 index;
-  string key;
-  string value;
-  
-  Tag_Index_Local() {}
-  
-  Tag_Index_Local(void* data)
-  {
-    index = (*((uint32*)data + 1))<<8;
-    key = string(((int8*)data + 7), *(uint16*)data);
-    value = string(((int8*)data + 7 + key.length()),
-		   *((uint16*)data + 1));
-  }
-  
-  uint32 size_of() const
-  {
-    return 7 + key.length() + value.length();
-  }
-  
-  static uint32 size_of(void* data)
-  {
-    return (*((uint16*)data) + *((uint16*)data + 1) + 7);
-  }
-  
-  void to_data(void* data) const
-  {
-    *(uint16*)data = key.length();
-    *((uint16*)data + 1) = value.length();
-    *((uint32*)data + 1) = index>>8;
-    memcpy(((uint8*)data + 7), key.data(), key.length());
-    memcpy(((uint8*)data + 7 + key.length()), value.data(),
-	   value.length());
-  }
-  
-  bool operator<(const Tag_Index_Local& a) const
-  {
-    if ((index & 0x7fffffff) != (a.index & 0x7fffffff))
-      return ((index & 0x7fffffff) < (a.index & 0x7fffffff));
-    if (index != a.index)
-      return (index < a.index);
-    if (key != a.key)
-      return (key < a.key);
-    return (value < a.value);
-  }
-  
-  bool operator==(const Tag_Index_Local& a) const
-  {
-    if (index != a.index)
-      return false;
-    if (key != a.key)
-      return false;
-    return (value == a.value);
-  }
-  
-  static uint32 max_size_of()
-  {
-    throw Unsupported_Error("static uint32 Tag_Index_Global::max_size_of()");
-    return 0;
-  }
-};
-
-
-template< class TIndex >
-void formulate_range_query
-    (set< pair< Tag_Index_Local, Tag_Index_Local > >& range_set,
-     const set< TIndex >& coarse_indices)
-{
-  for (typename set< TIndex >::const_iterator
-    it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
-  {
-    Tag_Index_Local lower, upper;
-    lower.index = it->val();
-    lower.key = "";
-    lower.value = "";
-    upper.index = it->val() + 1;
-    upper.key = "";
-    upper.value = "";
-    range_set.insert(make_pair(lower, upper));
-  }
-}
-
-
-template< class TIndex, class TObject >
-void generate_ids_by_coarse
-  (set< TIndex >& coarse_indices,
-   map< uint32, vector< uint32 > >& ids_by_coarse,
-   const map< TIndex, vector< TObject > >& items)
-{
-  for (typename map< TIndex, vector< TObject > >::const_iterator
-    it(items.begin()); it != items.end(); ++it)
-  {
-    coarse_indices.insert(TIndex(it->first.val() & 0x7fffff00));
-    for (typename vector< TObject >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-      ids_by_coarse[it->first.val() & 0x7fffff00].push_back(it2->id);
-  }
-}
-
-
-struct Tag_Index_Global
-{
-  string key;
-  string value;
-  
-  Tag_Index_Global() {}
-  
-  Tag_Index_Global(void* data)
-  {
-    key = string(((int8*)data + 4), *(uint16*)data);
-    value = string(((int8*)data + 4 + key.length()),
-		   *((uint16*)data + 1));
-  }
-  
-  uint32 size_of() const
-  {
-    return 4 + key.length() + value.length();
-  }
-  
-  static uint32 size_of(void* data)
-  {
-    return (*((uint16*)data) + *((uint16*)data + 1) + 4);
-  }
-  
-  void to_data(void* data) const
-  {
-    *(uint16*)data = key.length();
-    *((uint16*)data + 1) = value.length();
-    memcpy(((uint8*)data + 4), key.data(), key.length());
-    memcpy(((uint8*)data + 4 + key.length()), value.data(),
-	   value.length());
-  }
-  
-  bool operator<(const Tag_Index_Global& a) const
-  {
-    if (key != a.key)
-      return (key < a.key);
-    return (value < a.value);
-  }
-  
-  bool operator==(const Tag_Index_Global& a) const
-  {
-    if (key != a.key)
-      return false;
-    return (value == a.value);
-  }
-  
-  static uint32 max_size_of()
-  {
-    throw Unsupported_Error("static uint32 Tag_Index_Global::max_size_of()");
-    return 0;
-  }
-};
 
 /**
   * A dataset that is referred in the scripts by a variable.
@@ -316,6 +144,7 @@ struct Set
   map< Uint31_Index, vector< Relation_Skeleton > > relations;
   map< Uint31_Index, vector< Area_Skeleton > > areas;
 };
+
 
 struct Error_Output
 {
@@ -349,6 +178,7 @@ struct Error_Output
   static const uint VERBOSE = 5;
 };
 
+
 class Osm_Backend_Callback
 {
   public:
@@ -365,14 +195,15 @@ class Osm_Backend_Callback
     virtual void partial_finished() = 0;
     
     virtual void parser_started() = 0;
-    virtual void node_elapsed(uint32 id) = 0;
+    virtual void node_elapsed(Node::Id_Type id) = 0;
     virtual void nodes_finished() = 0;
-    virtual void way_elapsed(uint32 id) = 0;
+    virtual void way_elapsed(Way::Id_Type id) = 0;
     virtual void ways_finished() = 0;
-    virtual void relation_elapsed(uint32 id) = 0;
+    virtual void relation_elapsed(Relation::Id_Type id) = 0;
     virtual void relations_finished() = 0;
     virtual void parser_succeeded() = 0;
 };
+
 
 struct User_Data
 {
@@ -415,6 +246,7 @@ struct User_Data
   }
 };
 
+
 struct OSM_Element_Metadata
 {
   OSM_Element_Metadata() : user_id(0) {}
@@ -427,22 +259,23 @@ struct OSM_Element_Metadata
 };
 
 
+template< class Id_Type >
 struct OSM_Element_Metadata_Skeleton
 {
-  uint32 ref;
+  Id_Type ref;
   uint32 version;
   uint64 timestamp;
   uint32 changeset;
   uint32 user_id;
   
-  OSM_Element_Metadata_Skeleton() : ref(0), version(0), timestamp(0), changeset(0), user_id(0) {}
+  OSM_Element_Metadata_Skeleton() : ref(0u), version(0), timestamp(0), changeset(0), user_id(0) {}
   
-  OSM_Element_Metadata_Skeleton(uint32 ref_)
+  OSM_Element_Metadata_Skeleton(Id_Type ref_)
     : ref(ref_), version(0), timestamp(0), changeset(0), user_id(0) {}
   
   OSM_Element_Metadata_Skeleton(void* data)
+    : ref(*(uint32*)data)
   {
-    ref = *(uint32*)data;
     version = *(uint32*)((int8*)data + 4);
     timestamp = (*(uint64*)((int8*)data + 8) & 0xffffffffffull);
     changeset = *(uint32*)((int8*)data + 13);
@@ -461,7 +294,7 @@ struct OSM_Element_Metadata_Skeleton
   
   void to_data(void* data) const
   {
-    *(uint32*)data = ref;
+    *(uint32*)data = ref.val();
     *(uint32*)((int8*)data + 4) = version;
     *(uint64*)((int8*)data + 8) = timestamp;
     *(uint32*)((int8*)data + 13) = changeset;
@@ -482,7 +315,7 @@ struct OSM_Element_Metadata_Skeleton
 
 template< class TIndex, class TObject >
 const pair< TIndex, const TObject* >* binary_search_for_pair_id
-(const vector< pair< TIndex, const TObject* > >& vect, uint32 id)
+    (const vector< pair< TIndex, const TObject* > >& vect, typename TObject::Id_Type id)
 {
   uint32 lower(0);
   uint32 upper(vect.size());

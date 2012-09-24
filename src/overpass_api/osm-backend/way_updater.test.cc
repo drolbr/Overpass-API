@@ -61,18 +61,18 @@ void start(const char *el, const char **attr)
       if (!strcmp(attr[i], "v"))
 	value = attr[i+1];
     }
-    if (current_node.id > 0)
+    if (current_node.id.val() > 0)
       current_node.tags.push_back(make_pair(key, value));
-    else if (current_way.id > 0)
+    else if (current_way.id.val() > 0)
     {
       current_way.tags.push_back(make_pair(key, value));
       
-      *tags_source_out<<current_way.id<<'\t'<<key<<'\t'<<value<<'\n';
+      *tags_source_out<<current_way.id.val()<<'\t'<<key<<'\t'<<value<<'\n';
     }
   }
   else if (!strcmp(el, "nd"))
   {
-    if (current_way.id > 0)
+    if (current_way.id.val() > 0)
     {
       unsigned int ref(0);
       for (unsigned int i(0); attr[i]; i += 2)
@@ -139,7 +139,7 @@ void end(const char *el)
       callback->parser_started();
       osm_element_count = 0;
     }
-    current_node.id = 0;
+    current_node.id = 0u;
   }
   else if (!strcmp(el, "way"))
   {
@@ -154,7 +154,7 @@ void end(const char *el)
       callback->parser_started();
       osm_element_count = 0;
     }
-    current_way.id = 0;
+    current_way.id = 0u;
   }
   ++osm_element_count;
 }
@@ -224,9 +224,9 @@ int main(int argc, char* args[])
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
 	 it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
     {
-      member_db_out<<it.object().id<<'\t';
+      member_db_out<<it.object().id.val()<<'\t';
       for (uint i(0); i < it.object().nds.size(); ++i)
-	member_db_out<<it.object().nds[i]<<' ';
+	member_db_out<<it.object().nds[i].val()<<' ';
       member_db_out<<'\n';
     }
     

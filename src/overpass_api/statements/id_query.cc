@@ -43,24 +43,24 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
       it(elems_db.discrete_begin(req.begin(), req.end()));
       !(it == elems_db.discrete_end()); ++it)
   {
-    if (it.object().id >= lower && it.object().id <= upper)
+    if (it.object().id.val() >= lower && it.object().id.val() <= upper)
       elems[it.index()].push_back(it.object());
   }
 }
 
 template< class TIndex, class TObject >
 void collect_elems(Resource_Manager& rman, const File_Properties& prop,
-		   uint32 lower, uint32 upper,
-		   const vector< uint32 >& ids, bool invert_ids,
+		   typename TObject::Id_Type lower, typename TObject::Id_Type upper,
+		   const vector< typename TObject::Id_Type >& ids, bool invert_ids,
 		   map< TIndex, vector< TObject > >& elems)
 {
   set< TIndex > req;
   {
     Random_File< TIndex > random(rman.get_transaction()->random_index(&prop));
-    for (uint32 i = lower; i <= upper; ++i)
+    for (typename TObject::Id_Type i = lower; !(upper < i); ++i)
     {
       if (binary_search(ids.begin(), ids.end(), i) ^ invert_ids)
-        req.insert(random.get(i));
+        req.insert(random.get(i.val()));
     }
   }    
   Block_Backend< TIndex, TObject > elems_db(rman.get_transaction()->data_index(&prop));
@@ -68,7 +68,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
       it(elems_db.discrete_begin(req.begin(), req.end()));
       !(it == elems_db.discrete_end()); ++it)
   {
-    if (it.object().id >= lower && it.object().id <= upper
+    if (!(it.object().id < lower) && !(upper < it.object().id)
         && (binary_search(ids.begin(), ids.end(), it.object().id) ^ invert_ids))
       elems[it.index()].push_back(it.object());
   }
@@ -85,7 +85,7 @@ void filter_elems(uint32 lower, uint32 upper,
     for (typename vector< TObject >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
-      if (iit->id >= lower && iit->id <= upper)
+      if (iit->id.val() >= lower && iit->id.val() <= upper)
 	local_into.push_back(*iit);
     }
     it->second.swap(local_into);
@@ -103,10 +103,10 @@ class Id_Query_Constraint : public Query_Constraint
     
     bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
 		  const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-		  const vector< uint32 >& ids, bool invert_ids);
+		  const vector< Node_Skeleton::Id_Type >& ids, bool invert_ids);
     bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
 		  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-		  int type, const vector< uint32 >& ids, bool invert_ids);
+		  int type, const vector< Uint32_Index >& ids, bool invert_ids);
     void filter(Resource_Manager& rman, Set& into);
     virtual ~Id_Query_Constraint() {}
     
@@ -117,7 +117,7 @@ class Id_Query_Constraint : public Query_Constraint
 bool Id_Query_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
      const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-     const vector< uint32 >& ids, bool invert_ids)
+     const vector< Node_Skeleton::Id_Type >& ids, bool invert_ids)
 {
   if (stmt->get_type() == Statement::NODE)
   {
@@ -135,7 +135,7 @@ bool Id_Query_Constraint::get_data
 bool Id_Query_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
      const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-     int type, const vector< uint32 >& ids, bool invert_ids)
+     int type, const vector< Uint32_Index >& ids, bool invert_ids)
 {
   if (stmt->get_type() == Statement::WAY)
   {

@@ -66,7 +66,7 @@ void comp_sets(Set& s1, Set& s2)
 	}
 	else if (itn1->id < itn2->id)
 	{
-          cout<<"a\t"<<itn1->id<<'\t'
+          cout<<"a\t"<<itn1->id.val()<<'\t'
               <<::lat(it1->first.val(), itn1->ll_lower)<<'\t'
 	      <<::lon(it1->first.val(), itn1->ll_lower)<<'\n';
 	  draw_item(visual, it1->first.val(), *itn1, 'a');
@@ -74,7 +74,7 @@ void comp_sets(Set& s1, Set& s2)
 	}
 	else
 	{
-          cout<<"b\t"<<itn2->id<<'\t'
+          cout<<"b\t"<<itn2->id.val()<<'\t'
               <<::lat(it2->first.val(), itn2->ll_lower)<<'\t'
 	      <<::lon(it2->first.val(), itn2->ll_lower)<<'\n';
 	  draw_item(visual, it2->first.val(), *itn2, 'b');
@@ -83,7 +83,7 @@ void comp_sets(Set& s1, Set& s2)
       }
       while (itn1 != it1->second.end())
       {
-        cout<<"a\t"<<itn1->id<<'\t'
+        cout<<"a\t"<<itn1->id.val()<<'\t'
             <<::lat(it1->first.val(), itn1->ll_lower)<<'\t'
 	    <<::lon(it1->first.val(), itn1->ll_lower)<<'\n';
 	draw_item(visual, it1->first.val(), *itn1, 'a');
@@ -91,7 +91,7 @@ void comp_sets(Set& s1, Set& s2)
       }
       while (itn2 != it2->second.end())
       {
-        cout<<"b\t"<<itn2->id<<'\t'
+        cout<<"b\t"<<itn2->id.val()<<'\t'
             <<::lat(it2->first.val(), itn2->ll_lower)<<'\t'
 	    <<::lon(it2->first.val(), itn2->ll_lower)<<'\n';
 	draw_item(visual, it2->first.val(), *itn2, 'b');
@@ -106,7 +106,7 @@ void comp_sets(Set& s1, Set& s2)
       for (vector< Node_Skeleton >::const_iterator it(it1->second.begin());
           it != it1->second.end(); ++it)
       {
-        cout<<"a\t"<<it->id<<'\t'
+        cout<<"a\t"<<it->id.val()<<'\t'
             <<::lat(it1->first.val(), it->ll_lower)<<'\t'
 	    <<::lon(it1->first.val(), it->ll_lower)<<'\n';
 	draw_item(visual, it1->first.val(), *it, 'a');
@@ -118,7 +118,7 @@ void comp_sets(Set& s1, Set& s2)
       for (vector< Node_Skeleton >::const_iterator it(it2->second.begin());
           it != it2->second.end(); ++it)
       {
-        cout<<"b\t"<<it->id<<'\t'
+        cout<<"b\t"<<it->id.val()<<'\t'
             <<::lat(it2->first.val(), it->ll_lower)<<'\t'
             <<::lon(it2->first.val(), it->ll_lower)<<'\n';
 	draw_item(visual, it2->first.val(), *it, 'b');
@@ -131,7 +131,7 @@ void comp_sets(Set& s1, Set& s2)
     for (vector< Node_Skeleton >::const_iterator it(it1->second.begin());
         it != it1->second.end(); ++it)
     {
-      cout<<"a\t"<<it->id<<'\t'
+      cout<<"a\t"<<it->id.val()<<'\t'
           <<::lat(it1->first.val(), it->ll_lower)<<'\t'
 	  <<::lon(it1->first.val(), it->ll_lower)<<'\n';
       draw_item(visual, it1->first.val(), *it, 'a');
@@ -143,7 +143,7 @@ void comp_sets(Set& s1, Set& s2)
     for (vector< Node_Skeleton >::const_iterator it(it2->second.begin());
         it != it2->second.end(); ++it)
     {
-      cout<<"b\t"<<it->id<<'\t'
+      cout<<"b\t"<<it->id.val()<<'\t'
           <<::lat(it2->first.val(), it->ll_lower)<<'\t'
 	  <<::lon(it2->first.val(), it->ll_lower)<<'\n';
       draw_item(visual, it2->first.val(), *it, 'b');

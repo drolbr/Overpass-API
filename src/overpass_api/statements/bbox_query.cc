@@ -229,7 +229,7 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
 bool matches_bbox(const Bbox_Query_Statement& bbox, const Way_Skeleton& way,
 		  const vector< pair< Uint32_Index, const Node_Skeleton* > >& nodes_by_id)
 {
-  vector< uint32 >::const_iterator nit = way.nds.begin();
+  vector< Node::Id_Type >::const_iterator nit = way.nds.begin();
   if (nit == way.nds.end())
     return false;
   const pair< Uint32_Index, const Node_Skeleton* >* first_nd =
@@ -237,7 +237,7 @@ bool matches_bbox(const Bbox_Query_Statement& bbox, const Way_Skeleton& way,
   if (!first_nd)
   {
     ostringstream out;
-    out<<"Node "<<*nit<<" not found in the database. This is a serious fault of the database.";
+    out<<"Node "<<nit->val()<<" not found in the database. This is a serious fault of the database.";
     bbox.runtime_remark(out.str());
     return true;
   }
@@ -250,7 +250,7 @@ bool matches_bbox(const Bbox_Query_Statement& bbox, const Way_Skeleton& way,
     if (!second_nd)
     {
       ostringstream out;
-      out<<"Node "<<*nit<<" not found in the database. This is a serious fault of the database.";
+      out<<"Node "<<nit->val()<<" not found in the database. This is a serious fault of the database.";
       bbox.runtime_remark(out.str());
       return true;
     }

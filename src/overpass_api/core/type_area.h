@@ -40,6 +40,8 @@ struct Aligned_Segment
 
 struct Area
 {
+  typedef Uint32_Index Id_Type;
+  
   static Aligned_Segment segment_from_ll_quad
       (uint32 from_lat, int32 from_lon, uint32 to_lat, int32 to_lon)
   {
@@ -249,12 +251,14 @@ struct Area_Location
 
 struct Area_Skeleton
 {
-  uint32 id;
+  typedef Area::Id_Type Id_Type;
+  
+  Id_Type id;
   set< uint32 > used_indices;
   
-  Area_Skeleton() {}
+  Area_Skeleton() : id(0u) {}
   
-  Area_Skeleton(void* data)
+  Area_Skeleton(void* data) : id(0u)
   {
     id = *(uint32*)data;
     for (uint i(0); i < *((uint32*)data + 1); ++i)
@@ -276,7 +280,7 @@ struct Area_Skeleton
   
   void to_data(void* data) const
   {
-    *(uint32*)data = id;
+    *(uint32*)data = id.val();
     *((uint32*)data + 1) = used_indices.size();
     uint i(2);
     for (set< uint32 >::const_iterator it(used_indices.begin());

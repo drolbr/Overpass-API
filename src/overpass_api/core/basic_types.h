@@ -19,12 +19,6 @@
 #ifndef DE__OSM3S___OVERPASS_API__CORE__BASIC_TYPES_H
 #define DE__OSM3S___OVERPASS_API__CORE__BASIC_TYPES_H
 
-#include <cstring>
-#include <map>
-#include <set>
-#include <vector>
-
-using namespace std;
 
 typedef unsigned int uint;
 
@@ -71,6 +65,24 @@ struct Uint32_Index
   bool operator==(const Uint32_Index& index) const
   {
     return this->value == index.value;
+  }
+  
+  Uint32_Index operator++()
+  {
+    ++value;
+    return this;
+  }
+  
+  Uint32_Index operator+=(Uint32_Index offset)
+  {
+    value += offset.val();
+    return this;
+  }
+  
+  Uint32_Index operator+(Uint32_Index offset) const
+  {
+    Uint32_Index temp(*this);
+    return (temp += offset);
   }
   
   uint32 val() const
