@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+# Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
+#
+# This file is part of PT_Diagrams.
+#
+# PT_Diagrams is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# PT_Diagrams is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with PT_Diagrams.  If not, see <http://www.gnu.org/licenses/>.
+
+BUF="$QUERY_STRING&"
+
+ID=
+
+IFS=$'&'
+for KEY_VAL in $QUERY_STRING; do
+{
+  if [[ ${KEY_VAL:0:3} == "id=" ]]; then
+    ID="${KEY_VAL:3}"
+  fi
+}; done
+unset IFS
+
+echo "Content-Type: text/html; charset=utf-8"
+echo
+
+cat </var/www/augmented_diffs.html | awk "{ i=index(\$0,\"\$ID\"); if (i==0) { print \$0; } else { print substr(\$0,1,i-1) \"$ID\" substr(\$0,i+3); }; }"

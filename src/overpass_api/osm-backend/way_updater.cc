@@ -83,26 +83,6 @@ namespace
 void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
 	      Update_Way_Logger* update_logger)
 {
-  if (update_logger)
-  {
-    for (vector< Way >::const_iterator it = ways_to_insert.begin(); it != ways_to_insert.end(); ++it)
-      update_logger->insertion(*it);
-    if (meta)
-    {
-      for (vector< pair< OSM_Element_Metadata_Skeleton< Way::Id_Type >, uint32 > >::const_iterator
-          it = ways_meta_to_insert.begin(); it != ways_meta_to_insert.end(); ++it)
-      {
-        OSM_Element_Metadata meta;
-        meta.version = it->first.version;
-        meta.timestamp = it->first.timestamp;
-        meta.changeset = it->first.changeset;
-        meta.user_id = it->first.user_id;
-        meta.user_name = user_by_id[it->first.user_id];
-        update_logger->insertion(it->first.ref, meta);
-      }
-    }
-  }
-  
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
   
@@ -112,10 +92,26 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
       (ways_to_insert, way_comparator_by_id, way_equal_id);
   compute_indexes(ways_ptr);
   callback->compute_indexes_finished();
+  
   update_way_ids(ways_ptr, to_delete, (update_logger != 0));
   callback->update_ids_finished();
   update_members(ways_ptr, to_delete, update_logger);
   callback->update_coords_finished();
+  
+  if (update_logger && meta)
+  {
+    for (vector< pair< OSM_Element_Metadata_Skeleton< Way::Id_Type >, uint32 > >::const_iterator
+        it = ways_meta_to_insert.begin(); it != ways_meta_to_insert.end(); ++it)
+    {
+      OSM_Element_Metadata meta;
+      meta.version = it->first.version;
+      meta.timestamp = it->first.timestamp;
+      meta.changeset = it->first.changeset;
+      meta.user_id = it->first.user_id;
+      meta.user_name = user_by_id[it->first.user_id];
+      update_logger->insertion(it->first.ref, meta);
+    }
+  }  
   
   vector< Tag_Entry< Way::Id_Type > > tags_to_delete;
   prepare_delete_tags(*transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
@@ -506,6 +502,8 @@ void Way_Updater::update_members
       {
 	Uint31_Index idx = (*wit)->index;
 	db_to_insert[idx].insert(Way_Skeleton(**wit));
+	if (update_logger)
+          update_logger->insertion(**wit);
       }
       ++wit;
     }

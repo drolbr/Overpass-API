@@ -8,8 +8,8 @@
   <script type="text/javascript">
       var lat = 50.7421;
       var lon = 7.0624;
-      var zoom = 18;
-      var data_url = "http://overpass-api.de/test.osc";
+      var zoom = 6;
+      var data_url = "http://overpass-api.de/api/augmented_diff?id=$ID";
       var map;
 
 /**  
@@ -55,23 +55,27 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
             doc = OpenLayers.Format.XML.prototype.read.apply(this, [doc]);
         }
 
-        var eraseNodes = this.getEraseNodes(doc);
-        var nodes = this.getNodes(doc);
-        var eraseWays = this.getEraseWays(doc);
-        var ways = this.getWays(doc);
+        var erasedNodes = {};
+        var keptNodes = {};
+        var nodes = {};
+        this.parseNodes(doc, erasedNodes, keptNodes, nodes);
+        var erasedWays = {};
+        var keptWays = {};
+        var insertedWays = {};
+        this.parseWays(doc, erasedWays, keptWays, insertedWays);
 
-        // Add all ways that refer to a changed node to eraseWays
-        for (var way_id in ways) {
-            if (!eraseWays[ways[i].id]) {
-                for (var j = 0; j < ways[i].nodes.length; j++) {
-                    if (eraseNodes[ways[i].nodes[j]]) {
-                        eraseWays[ways[i].id] = ways[i];
-                        break;
-                    }
-                }
-            }
+        for (var node in keptNodes)
+        {
+            erasedNodes[node] = keptNodes[node];
+            nodes[node] = keptNodes[node];
         }
 
+        for (var way_id in keptWays)
+        {
+            erasedWays[way_id] = keptWays[way_id];
+            insertedWays[way_id] = keptWays[way_id];
+        }
+        
         var deleteStyle = {
               strokeColor: "red",
               strokeOpacity: 0.5,
@@ -91,60 +95,46 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
           };
         
         // Geoms will contain at least ways.length entries.
-        var feat_list = new Array(ways.length);
+        var feat_list = [];
         
-        for (var i = 0; i < ways.length; i++) {
-            // We know the minimal of this one ahead of time. (Could be -1
-            // due to areas/polygons)
-            var point_list = new Array(ways[i].nodes.length);
-            
-            for (var j = 0; j < ways[i].nodes.length; j++) {
-               var node = nodes[ways[i].nodes[j]];
-               
-               var point = new OpenLayers.Geometry.Point(node.lon, node.lat);
-               
-               // Since OSM is topological, we stash the node ID internally. 
-               point.osm_id = parseInt(ways[i].nodes[j]);
-               point_list[j] = point;
-               
-               // We don't display nodes if they're used inside other 
-               // elements.
-               node.used = true; 
-            }
-            
-            var geometry = new OpenLayers.Geometry.LineString(point_list);
-            if (this.internalProjection && this.externalProjection) {
-                geometry.transform(this.externalProjection, 
-                    this.internalProjection);
-            }
-            
-            var feat = new OpenLayers.Feature.Vector(geometry,
-                ways[i].tags);
-            feat.osm_id = parseInt(ways[i].id);
-            feat.fid = "way." + feat.osm_id;
+        for (var way_id in erasedWays) {
+            var feat = this.makeWayFeature(erasedWays[way_id], erasedNodes);
+            feat.style = deleteStyle;
+            feat_list.push(feat);
+        } 
+        for (var way_id in insertedWays) {
+            var feat = this.makeWayFeature(insertedWays[way_id], nodes);
             feat.style = insertStyle;
-            feat_list[i] = feat;
+            feat_list.push(feat);
         } 
         
-        for (var node_id in nodes) {
-            var node = nodes[node_id];
+        for (var node_id in erasedNodes) {
+            var node = erasedNodes[node_id];
             if (!node.used) {
-                var tags = null;
-                
                 var feat = new OpenLayers.Feature.Vector(
-                    new OpenLayers.Geometry.Point(node['lon'], node['lat']),
-                    tags);
+                    new OpenLayers.Geometry.Point(node['lon'], node['lat']), null);
                 if (this.internalProjection && this.externalProjection) {
                     feat.geometry.transform(this.externalProjection, 
                         this.internalProjection);
                 }        
                 feat.osm_id = parseInt(node_id); 
-                feat.fid = "node." + feat.osm_id;
                 feat.style = deleteStyle;
                 feat_list.push(feat);
             }   
-            // Memory cleanup
-            node.node = null;
+        }        
+        for (var node_id in nodes) {
+            var node = nodes[node_id];
+            if (!node.used) {
+                var feat = new OpenLayers.Feature.Vector(
+                    new OpenLayers.Geometry.Point(node['lon'], node['lat']), null);
+                if (this.internalProjection && this.externalProjection) {
+                    feat.geometry.transform(this.externalProjection, 
+                        this.internalProjection);
+                }        
+                feat.osm_id = parseInt(node_id); 
+                feat.style = insertStyle;
+                feat_list.push(feat);
+            }   
         }        
         return feat_list;
     },
@@ -156,33 +146,24 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
      * Parameters:
      * doc - {DOMElement} node to parse tags from
      */
-    getEraseNodes: function(doc) {
+    parseNodes: function(doc, erasedNodes, keptNodes, insertedNodes) {
         var node_list = doc.getElementsByTagName("node");
-        var nodes = {};
         for (var i = 0; i < node_list.length; i++) {
             var node = node_list[i];
             var id = node.getAttribute("id");
-            nodes[id] = {
+            var nodeObj = {
                 'lat': node.getAttribute("lat"),
                 'lon': node.getAttribute("lon"),
                 'node': node
             };
+            if (node.parentNode.tagName == "erase") {
+              erasedNodes[id] = nodeObj;
+            } else if (node.parentNode.tagName == "keep") {
+              keptNodes[id] = nodeObj;
+            } else if (node.parentNode.tagName == "insert") {
+              insertedNodes[id] = nodeObj;
+            }
         }
-        return nodes;
-    },
-    getNodes: function(doc) {
-        var node_list = doc.getElementsByTagName("node");
-        var nodes = {};
-        for (var i = 0; i < node_list.length; i++) {
-            var node = node_list[i];
-            var id = node.getAttribute("id");
-            nodes[id] = {
-                'lat': node.getAttribute("lat"),
-                'lon': node.getAttribute("lon"),
-                'node': node
-            };
-        }
-        return nodes;
     },
 
     /**
@@ -192,9 +173,8 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
      * Parameters:
      * doc - {DOMElement} node to parse tags from
      */
-    getEraseWays: function(doc) {
+    parseWays: function(doc, erasedWays, keptWays, insertedWays) {
         var way_list = doc.getElementsByTagName("way");
-        var return_ways = {};
         for (var i = 0; i < way_list.length; i++) {
             var way = way_list[i];
             var way_object = {
@@ -208,32 +188,52 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
             for (var j = 0; j < node_list.length; j++) {
                 way_object.nodes[j] = node_list[j].getAttribute("ref");
             }  
-            return_ways[way_object.id] = way_object;
+            if (way.parentNode.tagName == "erase") {
+              erasedWays[way_object.id] = way_object;
+            } else if (way.parentNode.tagName == "keep") {
+              keptWays[way_object.id] = way_object;
+            } else if (way.parentNode.tagName == "insert") {
+              insertedWays[way_object.id] = way_object;
+            }
         }
-        return return_ways; 
-        
     },  
-    getWays: function(doc) {
-        var way_list = doc.getElementsByTagName("way");
-        var return_ways = {};
-        for (var i = 0; i < way_list.length; i++) {
-            var way = way_list[i];
-            var way_object = {
-              id: way.getAttribute("id")
-            };
+
+    makeWayFeature: function(way, nodes) {
+        var point_list = new Array(way.nodes.length);
             
-            var node_list = way.getElementsByTagName("nd");
-            
-            way_object.nodes = new Array(node_list.length);
-            
-            for (var j = 0; j < node_list.length; j++) {
-                way_object.nodes[j] = node_list[j].getAttribute("ref");
-            }  
-            return_ways[way_object.id] = way_object;
+        var missingNodes = "";
+        for (var j = 0; j < way.nodes.length; j++) {
+            var node = nodes[way.nodes[j]];
+
+            if (!node) {
+              missingNodes += way.nodes[j] + "\n";
+              continue;
+            }
+               
+            var point = new OpenLayers.Geometry.Point(node.lon, node.lat);
+               
+            // Since OSM is topological, we stash the node ID internally. 
+            point.osm_id = parseInt(way.nodes[j]);
+            point_list[j] = point;
+               
+            // We don't display nodes if they're used inside other 
+            // elements.
+            node.used = true; 
         }
-        return return_ways; 
-        
-    },  
+        if (missingNodes != "")
+          alert("Way " + way.id + " lacks nodes\n" + missingNodes);
+            
+        var geometry = new OpenLayers.Geometry.LineString(point_list);
+        if (this.internalProjection && this.externalProjection) {
+            geometry.transform(this.externalProjection, 
+                this.internalProjection);
+        }
+            
+        var feat = new OpenLayers.Feature.Vector(geometry, way.tags);
+        feat.osm_id = parseInt(way.id);
+
+        return feat;
+    },
     
     /**
      * APIMethod: write 

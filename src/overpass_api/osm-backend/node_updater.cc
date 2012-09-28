@@ -77,26 +77,6 @@ Node_Updater::Node_Updater(string db_dir_, bool meta_)
 void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
 			  Update_Node_Logger* update_logger)
 {
-  if (update_logger)
-  {
-    for (vector< Node >::const_iterator it = nodes_to_insert.begin(); it != nodes_to_insert.end(); ++it)
-      update_logger->insertion(*it);
-    if (meta)
-    {
-      for (vector< pair< OSM_Element_Metadata_Skeleton< Node::Id_Type >, uint32 > >::const_iterator
-          it = nodes_meta_to_insert.begin(); it != nodes_meta_to_insert.end(); ++it)
-      {
-        OSM_Element_Metadata meta;
-        meta.version = it->first.version;
-        meta.timestamp = it->first.timestamp;
-        meta.changeset = it->first.changeset;
-        meta.user_id = it->first.user_id;
-        meta.user_name = user_by_id[it->first.user_id];
-        update_logger->insertion(it->first.ref, meta);
-      }
-    }
-  }
-  
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
   
@@ -106,6 +86,21 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
   callback->update_ids_finished();
   update_coords(to_delete, update_logger);
   callback->update_coords_finished();
+  
+  if (update_logger && meta)
+  {
+    for (vector< pair< OSM_Element_Metadata_Skeleton< Node::Id_Type >, uint32 > >::const_iterator
+        it = nodes_meta_to_insert.begin(); it != nodes_meta_to_insert.end(); ++it)
+    {
+      OSM_Element_Metadata meta;
+      meta.version = it->first.version;
+      meta.timestamp = it->first.timestamp;
+      meta.changeset = it->first.changeset;
+      meta.user_id = it->first.user_id;
+      meta.user_name = user_by_id[it->first.user_id];
+      update_logger->insertion(it->first.ref, meta);
+    }
+  }
   
   Node_Comparator_By_Id node_comparator_by_id;
   Node_Equal_Id node_equal_id;
@@ -281,6 +276,8 @@ void Node_Updater::update_coords(const map< uint32, vector< Node::Id_Type > >& t
       {
 	Uint32_Index idx(nit->index);
 	db_to_insert[idx].insert(Node_Skeleton(*nit));
+	if (update_logger)
+          update_logger->insertion(*nit);	  
       }
       ++nit;
     }

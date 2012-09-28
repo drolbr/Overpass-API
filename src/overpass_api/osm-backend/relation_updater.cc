@@ -110,26 +110,6 @@ namespace
 
 void Relation_Updater::update(Osm_Backend_Callback* callback, Update_Relation_Logger* update_logger)
 {
-  if (update_logger)
-  {
-    for (vector< Relation >::const_iterator it = rels_to_insert.begin(); it != rels_to_insert.end(); ++it)
-      update_logger->insertion(*it);
-    if (meta)
-    {
-      for (vector< pair< OSM_Element_Metadata_Skeleton< Relation::Id_Type >, uint32 > >::const_iterator
-          it = rels_meta_to_insert.begin(); it != rels_meta_to_insert.end(); ++it)
-      {
-        OSM_Element_Metadata meta;
-        meta.version = it->first.version;
-        meta.timestamp = it->first.timestamp;
-        meta.changeset = it->first.changeset;
-        meta.user_id = it->first.user_id;
-        meta.user_name = user_by_id[it->first.user_id];
-        update_logger->insertion(it->first.ref, meta);
-      }
-    }
-  }
-  
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
   
@@ -139,10 +119,26 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Update_Relation_Lo
       (rels_to_insert, rel_comparator_by_id, rel_equal_id);
   compute_indexes(rels_ptr);
   callback->compute_indexes_finished();
+  
   update_rel_ids(rels_ptr, to_delete);
   callback->update_ids_finished();
   update_members(rels_ptr, to_delete, update_logger);
   callback->update_coords_finished();
+  
+  if (update_logger && meta)
+  {
+    for (vector< pair< OSM_Element_Metadata_Skeleton< Relation::Id_Type >, uint32 > >::const_iterator
+        it = rels_meta_to_insert.begin(); it != rels_meta_to_insert.end(); ++it)
+    {
+      OSM_Element_Metadata meta;
+      meta.version = it->first.version;
+      meta.timestamp = it->first.timestamp;
+      meta.changeset = it->first.changeset;
+      meta.user_id = it->first.user_id;
+      meta.user_name = user_by_id[it->first.user_id];
+      update_logger->insertion(it->first.ref, meta);
+    }
+  }
   
   vector< Tag_Entry< Relation::Id_Type > > tags_to_delete;
   prepare_delete_tags(*transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL),
@@ -527,6 +523,8 @@ void Relation_Updater::update_members(vector< Relation* >& rels_ptr,
 	if (sit != db_to_insert[idx].end())
 	  db_to_insert[idx].erase(sit);
 	db_to_insert[idx].insert(Relation_Skeleton(**rit));
+	if (update_logger)
+          update_logger->insertion(**rit);	  
       }
       ++rit;
     }

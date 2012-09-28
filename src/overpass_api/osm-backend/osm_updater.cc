@@ -465,6 +465,30 @@ void collect_kept_members(Transaction& transaction,
     }
   }
   
+  // DEBUG begin
+//   node_ids.clear();
+//   for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator
+//       it = update_node_logger.insert_begin(); it != update_node_logger.insert_end(); ++it)
+//     node_ids.push_back(it->second.first.id);
+//   for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator
+//       it = update_node_logger.keep_begin(); it != update_node_logger.keep_end(); ++it)
+//     node_ids.push_back(it->second.first.id);
+//   for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator
+//       it = update_node_logger.erase_begin(); it != update_node_logger.erase_end(); ++it)
+//     node_ids.push_back(it->second.first.id);
+//   
+//   for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator
+//       it = update_way_logger.insert_begin(); it != update_way_logger.insert_end(); ++it)
+//   {
+//     for (vector< Node::Id_Type >::const_iterator it2 = it->second.first.nds.begin();
+// 	 it2 != it->second.first.nds.end(); ++it2)
+//     {
+//       if (!binary_search(node_ids.begin(), node_ids.end(), *it2))
+// 	cerr<<it->second.id<<'\t'<<*it2<<'\n';
+//     }
+//   }
+  // DEBUG end
+  
   set< pair< Tag_Index_Local, Tag_Index_Local > > tag_range_set
       = make_range_set(collect_coarse(elems_by_idx));  
   Block_Backend< Tag_Index_Local, Uint32_Index > nodes_db
