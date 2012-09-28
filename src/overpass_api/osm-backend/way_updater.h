@@ -70,12 +70,20 @@ public:
     it->second.first.index = index.val();
     it->second.first.nds = skel.nds;
     it->second.first.segment_idxs = skel.segment_idxs;
+
+    it = keep.find(skel.id);
+    if (it != keep.end())
+      keep.erase(it);
   }
   
   void keeping(const Uint31_Index& index, const Way_Skeleton& skel)
   {
     map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator it = erase.find(skel.id);
     if (it != erase.end())
+      return;
+    
+    it = insert.find(skel.id);
+    if (it != insert.end())
       return;
     
     it = keep.find(skel.id);

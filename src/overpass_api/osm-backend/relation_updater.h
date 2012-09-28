@@ -68,12 +68,20 @@ public:
     else
       it->second.first = Relation(skel.id.val());
     it->second.first.members = skel.members;
+
+    it = keep.find(skel.id);
+    if (it != keep.end())
+      keep.erase(it);
   }
   
   void keeping(const Uint31_Index& index, const Relation_Skeleton& skel)
   {
     map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator it = erase.find(skel.id);
     if (it != erase.end())
+      return;
+    
+    it = insert.find(skel.id);
+    if (it != insert.end())
       return;
     
     it = keep.find(skel.id);
