@@ -18,5 +18,18 @@
 </p>
 </form>
 
+<h1>Overpass API Convert Form</h1>
+
+<form action="api/convert" method="get" accept-charset="UTF-8">
+<p>
+<textarea name="data" rows="25" cols="80"></textarea>
+<input type="radio" name="target" value="xml">to pretty XML
+<input type="radio" name="target" value="mapql">to pretty Overpass QL
+<input type="radio" name="target" value="compact">to compact Overpass QL
+<input type="radio" name="target" value="openlayers">to OpenLayers overlay
+<input type="submit" value="Convert"/>
+</p>
+</form>
+
 </body>
 </html>

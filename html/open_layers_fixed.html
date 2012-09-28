@@ -4,26 +4,13 @@
   <title>OSM3S on Mapnik via Open Layers</title>
   <script src="http://openlayers.org/api/OpenLayers.js"></script>
   <script src="http://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
+  <script src="http://overpass-api.de/overpass.js"></script>
   <script type="text/javascript">
       var lat = 50.7421;
       var lon = 7.0624;
       var zoom = 18;
       var data_url = "http://overpass-api.de/api/interpreter?data=node[name=%22Im Tannenbusch%22][highway=bus_stop];out+skel;";
       var map;
-
-      function setStatusText(text)
-      {
-          var div = document.getElementById("statusline").firstChild;
-          div.deleteData(0, div.nodeValue.length);
-          div.appendData(text);
-      }
-
-      function make_features_added_closure() {
-          return function(evt) {
-              if (zoom_valid)
-                  setStatusText("");
-          };
-      }
 
       function init(){
           map = new OpenLayers.Map ("map", {
