@@ -1,0 +1,300 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
+  <title>OSM3S on Mapnik via Open Layers</title>
+  <script src="http://openlayers.org/api/OpenLayers.js"></script>
+  <script src="http://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
+  <script src="http://overpass-api.de/overpass.js"></script>
+  <script type="text/javascript">
+      var lat = 50.7421;
+      var lon = 7.0624;
+      var zoom = 18;
+      var data_url = "http://overpass-api.de/test.osc";
+      var map;
+
+/**  
+ * Class: AugmentedDiffsFormat
+ *
+ * Inherits from:
+ *  - <OpenLayers.Format.XML>
+ */
+AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
+    
+    /**
+     * Constructor: AugmentedDiffsFormat
+     * Create a new parser for OSM.
+     *
+     * Parameters:
+     * options - {Object} An optional object whose properties will be set on
+     *     this instance.
+     */
+    initialize: function(options) {
+    
+        var layer_defaults = {};
+        layer_defaults = OpenLayers.Util.extend(layer_defaults, options);
+        
+        // OSM coordinates are always in longlat WGS84
+        this.externalProjection = new OpenLayers.Projection("EPSG:4326");
+        
+        OpenLayers.Format.XML.prototype.initialize.apply(this, [layer_defaults]);
+    },
+    
+    /**
+     * APIMethod: read
+     * Return a list of features from a OSM doc
+     *     
+     * Parameters:
+     * doc - {Element} 
+     *
+     * Returns:
+     * Array({<OpenLayers.Feature.Vector>})
+     */
+    read: function(doc) {
+    
+        if (typeof doc == "string") { 
+            doc = OpenLayers.Format.XML.prototype.read.apply(this, [doc]);
+        }
+
+        var eraseNodes = this.getEraseNodes(doc);
+        var nodes = this.getNodes(doc);
+        var eraseWays = this.getEraseWays(doc);
+        var ways = this.getWays(doc);
+
+        // Add all ways that refer to a changed node to eraseWays
+        for (var way_id in ways) {
+            if (!eraseWays[ways[i].id]) {
+                for (var j = 0; j < ways[i].nodes.length; j++) {
+                    if (eraseNodes[ways[i].nodes[j]]) {
+                        eraseWays[ways[i].id] = ways[i];
+                        break;
+                    }
+                }
+            }
+        }
+
+        var deleteStyle = {
+              strokeColor: "red",
+              strokeOpacity: 0.5,
+              strokeWidth: 6,
+              pointRadius: 10,
+              fillColor: "red",
+              fillOpacity: 0.25
+          };
+        
+        var insertStyle = {
+              strokeColor: "green",
+              strokeOpacity: 0.5,
+              strokeWidth: 6,
+              pointRadius: 10,
+              fillColor: "green",
+              fillOpacity: 0.25
+          };
+        
+        // Geoms will contain at least ways.length entries.
+        var feat_list = new Array(ways.length);
+        
+        for (var i = 0; i < ways.length; i++) {
+            // We know the minimal of this one ahead of time. (Could be -1
+            // due to areas/polygons)
+            var point_list = new Array(ways[i].nodes.length);
+            
+            for (var j = 0; j < ways[i].nodes.length; j++) {
+               var node = nodes[ways[i].nodes[j]];
+               
+               var point = new OpenLayers.Geometry.Point(node.lon, node.lat);
+               
+               // Since OSM is topological, we stash the node ID internally. 
+               point.osm_id = parseInt(ways[i].nodes[j]);
+               point_list[j] = point;
+               
+               // We don't display nodes if they're used inside other 
+               // elements.
+               node.used = true; 
+            }
+            
+            var geometry = new OpenLayers.Geometry.LineString(point_list);
+            if (this.internalProjection && this.externalProjection) {
+                geometry.transform(this.externalProjection, 
+                    this.internalProjection);
+            }
+            
+            var feat = new OpenLayers.Feature.Vector(geometry,
+                ways[i].tags);
+            feat.osm_id = parseInt(ways[i].id);
+            feat.fid = "way." + feat.osm_id;
+            feat.style = insertStyle;
+            feat_list[i] = feat;
+        } 
+        
+        for (var node_id in nodes) {
+            var node = nodes[node_id];
+            if (!node.used) {
+                var tags = null;
+                
+                var feat = new OpenLayers.Feature.Vector(
+                    new OpenLayers.Geometry.Point(node['lon'], node['lat']),
+                    tags);
+                if (this.internalProjection && this.externalProjection) {
+                    feat.geometry.transform(this.externalProjection, 
+                        this.internalProjection);
+                }        
+                feat.osm_id = parseInt(node_id); 
+                feat.fid = "node." + feat.osm_id;
+                feat.style = deleteStyle;
+                feat_list.push(feat);
+            }   
+            // Memory cleanup
+            node.node = null;
+        }        
+        return feat_list;
+    },
+
+    /**
+     * Method: getNodes
+     * Return the node items from a doc.  
+     *
+     * Parameters:
+     * doc - {DOMElement} node to parse tags from
+     */
+    getEraseNodes: function(doc) {
+        var node_list = doc.getElementsByTagName("node");
+        var nodes = {};
+        for (var i = 0; i < node_list.length; i++) {
+            var node = node_list[i];
+            var id = node.getAttribute("id");
+            nodes[id] = {
+                'lat': node.getAttribute("lat"),
+                'lon': node.getAttribute("lon"),
+                'node': node
+            };
+        }
+        return nodes;
+    },
+    getNodes: function(doc) {
+        var node_list = doc.getElementsByTagName("node");
+        var nodes = {};
+        for (var i = 0; i < node_list.length; i++) {
+            var node = node_list[i];
+            var id = node.getAttribute("id");
+            nodes[id] = {
+                'lat': node.getAttribute("lat"),
+                'lon': node.getAttribute("lon"),
+                'node': node
+            };
+        }
+        return nodes;
+    },
+
+    /**
+     * Method: getWays
+     * Return the way items from a doc.  
+     *
+     * Parameters:
+     * doc - {DOMElement} node to parse tags from
+     */
+    getEraseWays: function(doc) {
+        var way_list = doc.getElementsByTagName("way");
+        var return_ways = {};
+        for (var i = 0; i < way_list.length; i++) {
+            var way = way_list[i];
+            var way_object = {
+              id: way.getAttribute("id")
+            };
+            
+            var node_list = way.getElementsByTagName("nd");
+            
+            way_object.nodes = new Array(node_list.length);
+            
+            for (var j = 0; j < node_list.length; j++) {
+                way_object.nodes[j] = node_list[j].getAttribute("ref");
+            }  
+            return_ways[way_object.id] = way_object;
+        }
+        return return_ways; 
+        
+    },  
+    getWays: function(doc) {
+        var way_list = doc.getElementsByTagName("way");
+        var return_ways = {};
+        for (var i = 0; i < way_list.length; i++) {
+            var way = way_list[i];
+            var way_object = {
+              id: way.getAttribute("id")
+            };
+            
+            var node_list = way.getElementsByTagName("nd");
+            
+            way_object.nodes = new Array(node_list.length);
+            
+            for (var j = 0; j < node_list.length; j++) {
+                way_object.nodes[j] = node_list[j].getAttribute("ref");
+            }  
+            return_ways[way_object.id] = way_object;
+        }
+        return return_ways; 
+        
+    },  
+    
+    /**
+     * APIMethod: write 
+     */
+    write: function(features) { 
+        return "";
+    },
+
+    CLASS_NAME: "AugmentedDiffsFormat" 
+});     
+
+
+      function init(){
+          map = new OpenLayers.Map ("map", {
+          controls:[
+              new OpenLayers.Control.Navigation(),
+              new OpenLayers.Control.PanZoomBar(),
+              new OpenLayers.Control.LayerSwitcher(),
+              new OpenLayers.Control.Attribution()],
+              maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
+              maxResolution: 156543.0399,
+              numZoomLevels: 19,
+              units: 'm',
+              projection: new OpenLayers.Projection("EPSG:900913"),
+              displayProjection: new OpenLayers.Projection("EPSG:4326")
+          } );
+
+          layerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
+          map.addLayer(layerMapnik);
+          layerCycleMap = new OpenLayers.Layer.OSM.CycleMap("CycleMap");
+          map.addLayer(layerCycleMap);
+
+          var lonLat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+          map.setCenter (lonLat, zoom);
+
+          //Initialise the vector layer using AugmentedDiffsFormat
+          var styleMap = new OpenLayers.StyleMap({
+              strokeColor: "blue",
+              strokeOpacity: 0.5,
+              strokeWidth: 6,
+              pointRadius: 10,
+              fillColor: "blue",
+              fillOpacity: 0.25
+          });
+          var layer = new OpenLayers.Layer.Vector("Polygon", {
+              strategies: [new OpenLayers.Strategy.Fixed()],
+              protocol: new OpenLayers.Protocol.HTTP({
+                  url: data_url,
+                  format: new AugmentedDiffsFormat()
+              }),
+              styleMap: styleMap,
+              projection: new OpenLayers.Projection("EPSG:4326")
+          });
+
+          map.addLayers([layer]);
+      }
+  </script>
+</head>
+<body onload="init()">
+  <div id="map" class="smallmap"></div>
+
+</body>
+</html>
