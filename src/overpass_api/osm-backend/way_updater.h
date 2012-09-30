@@ -109,6 +109,13 @@ public:
       it->second.first.tags.push_back(make_pair(index.key, index.value));
   }
   
+  void keeping(const Tag_Index_Local& index, const Uint32_Index& ref)
+  {
+    map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator it = keep.find(ref.val());
+    if (it != keep.end())
+      it->second.first.tags.push_back(make_pair(index.key, index.value));
+  }
+  
   void deletion(const Uint31_Index& index,
 		const OSM_Element_Metadata_Skeleton< Way::Id_Type >& meta_skel)
   {
@@ -125,6 +132,23 @@ public:
       it->second.second = meta;
     }
     it = keep.find(meta_skel.ref);
+    if (it != keep.end())
+    {
+      if (it->second.second)
+        delete it->second.second;
+      OSM_Element_Metadata* meta = new OSM_Element_Metadata();
+      meta->version = meta_skel.version;
+      meta->timestamp = meta_skel.timestamp;
+      meta->changeset = meta_skel.changeset;
+      meta->user_id = meta_skel.user_id;
+      it->second.second = meta;
+    }
+  }
+  
+  void keeping(const Uint31_Index& index,
+	       const OSM_Element_Metadata_Skeleton< Way::Id_Type >& meta_skel)
+  {
+    map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator it = keep.find(meta_skel.ref);
     if (it != keep.end())
     {
       if (it->second.second)

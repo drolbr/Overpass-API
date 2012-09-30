@@ -292,7 +292,7 @@ namespace
       state = IN_RELATIONS;
     }
     else if (state == 0)
-      state = IN_WAYS;
+      state = IN_RELATIONS;
     if (meta)
       *meta = OSM_Element_Metadata();
     
@@ -420,11 +420,72 @@ void end(const char *el)
 
 void collect_kept_members(Transaction& transaction,
 			  Update_Node_Logger& update_node_logger,
-			  Update_Way_Logger& update_way_logger)
+			  Update_Way_Logger& update_way_logger,
+			  Update_Relation_Logger& update_relation_logger)
 {
   Resource_Manager rman(transaction);
-  map< Uint31_Index, vector< Way_Skeleton > > ways;
-  vector< Node::Id_Type > node_ids;
+  map< Uint31_Index, vector< Relation_Skeleton > > relations;
+
+  for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator
+      it = update_relation_logger.insert_begin(); it != update_relation_logger.insert_end(); ++it)
+    relations[it->second.first.index].push_back(it->second.first);
+  for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator
+      it = update_relation_logger.keep_begin(); it != update_relation_logger.keep_end(); ++it)
+    relations[it->second.first.index].push_back(it->second.first);
+  for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator
+      it = update_relation_logger.erase_begin(); it != update_relation_logger.erase_end(); ++it)
+    relations[it->second.first.index].push_back(it->second.first);
+
+  vector< Way::Id_Type > way_ids;
+
+  for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator
+      it = update_way_logger.insert_begin(); it != update_way_logger.insert_end(); ++it)
+    way_ids.push_back(it->second.first.id);
+  for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator
+      it = update_way_logger.keep_begin(); it != update_way_logger.keep_end(); ++it)
+    way_ids.push_back(it->second.first.id);
+  for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator
+      it = update_way_logger.erase_begin(); it != update_way_logger.erase_end(); ++it)
+    way_ids.push_back(it->second.first.id);
+
+  map< Uint31_Index, vector< Way_Skeleton > > ways =
+    relation_way_members(0, rman, relations, 0, &way_ids, true);
+  
+  map< uint32, vector< Node::Id_Type > > ways_by_idx;
+  set< Uint31_Index > meta_idx_set;
+  for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator it = ways.begin();
+       it != ways.end(); ++it)
+  {
+    meta_idx_set.insert(Uint31_Index(it->first.val()));
+    for (vector< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    {
+      update_way_logger.keeping(it->first, *it2);
+      ways_by_idx[it->first.val()].push_back(it2->id);
+    }
+  }
+  
+  set< pair< Tag_Index_Local, Tag_Index_Local > > tag_range_set
+      = make_range_set(collect_coarse(ways_by_idx));  
+  Block_Backend< Tag_Index_Local, Uint32_Index > ways_db
+      (transaction.data_index(osm_base_settings().NODE_TAGS_LOCAL));
+  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
+      it(ways_db.range_begin
+         (Default_Range_Iterator< Tag_Index_Local >(tag_range_set.begin()),
+          Default_Range_Iterator< Tag_Index_Local >(tag_range_set.end())));
+      !(it == ways_db.range_end()); ++it)
+    update_way_logger.keeping(it.index(), it.object());
+  
+  {
+    Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way::Id_Type > > meta_db
+        (transaction.data_index(meta_settings().NODES_META));
+    for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way::Id_Type > >::Discrete_Iterator
+        it(meta_db.discrete_begin(meta_idx_set.begin(), meta_idx_set.end()));
+        !(it == meta_db.discrete_end()); ++it)  
+      update_way_logger.keeping(it.index(), it.object());
+  }
+
+  
+  ways.clear();
   
   for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator
       it = update_way_logger.insert_begin(); it != update_way_logger.insert_end(); ++it)
@@ -436,6 +497,8 @@ void collect_kept_members(Transaction& transaction,
       it = update_way_logger.erase_begin(); it != update_way_logger.erase_end(); ++it)
     ways[it->second.first.index].push_back(it->second.first);
     
+  vector< Node::Id_Type > node_ids;
+
   for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator
       it = update_node_logger.insert_begin(); it != update_node_logger.insert_end(); ++it)
     node_ids.push_back(it->second.first.id);
@@ -452,8 +515,8 @@ void collect_kept_members(Transaction& transaction,
   map< Uint32_Index, vector< Node_Skeleton > > kept_nodes =
       way_members(0, rman, ways, 0, &node_ids, true);
 
-  map< uint32, vector< Node::Id_Type > > elems_by_idx;
-  set< Uint31_Index > meta_idx_set;
+  map< uint32, vector< Node::Id_Type > > nodes_by_idx;
+  meta_idx_set.clear();
   for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator it = kept_nodes.begin();
        it != kept_nodes.end(); ++it)
   {
@@ -461,7 +524,7 @@ void collect_kept_members(Transaction& transaction,
     for (vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
       update_node_logger.keeping(it->first, *it2);
-      elems_by_idx[it->first.val()].push_back(it2->id);
+      nodes_by_idx[it->first.val()].push_back(it2->id);
     }
   }
   
@@ -489,8 +552,7 @@ void collect_kept_members(Transaction& transaction,
 //   }
   // DEBUG end
   
-  set< pair< Tag_Index_Local, Tag_Index_Local > > tag_range_set
-      = make_range_set(collect_coarse(elems_by_idx));  
+  tag_range_set = make_range_set(collect_coarse(nodes_by_idx));  
   Block_Backend< Tag_Index_Local, Uint32_Index > nodes_db
       (transaction.data_index(osm_base_settings().NODE_TAGS_LOCAL));
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
@@ -500,12 +562,14 @@ void collect_kept_members(Transaction& transaction,
       !(it == nodes_db.range_end()); ++it)
     update_node_logger.keeping(it.index(), it.object());
   
-  Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node::Id_Type > > meta_db
-      (transaction.data_index(meta_settings().NODES_META));
-  for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node::Id_Type > >::Discrete_Iterator
-      it(meta_db.discrete_begin(meta_idx_set.begin(), meta_idx_set.end()));
-      !(it == meta_db.discrete_end()); ++it)  
-    update_node_logger.keeping(it.index(), it.object());
+  {
+    Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node::Id_Type > > meta_db
+        (transaction.data_index(meta_settings().NODES_META));
+    for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node::Id_Type > >::Discrete_Iterator
+        it(meta_db.discrete_begin(meta_idx_set.begin(), meta_idx_set.end()));
+        !(it == meta_db.discrete_end()); ++it)  
+      update_node_logger.keeping(it.index(), it.object());
+  }
 }
 
 
@@ -1131,7 +1195,7 @@ void Osm_Updater::flush()
 {
   if (transaction && update_node_logger && update_way_logger && update_relation_logger)
   {
-    collect_kept_members(*transaction, *update_node_logger, *update_way_logger);
+    collect_kept_members(*transaction, *update_node_logger, *update_way_logger, *update_relation_logger);
     complete_user_data(*transaction, *update_node_logger, *update_way_logger, *update_relation_logger);
     print_augmented_diff(*update_node_logger, *update_way_logger, *update_relation_logger);
   }

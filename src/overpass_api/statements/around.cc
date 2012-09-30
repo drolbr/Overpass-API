@@ -466,8 +466,8 @@ struct Relation_Member_Collection
 			     set< pair< Uint32_Index, Uint32_Index > >* node_ranges,
 			     set< pair< Uint31_Index, Uint31_Index > >* way_ranges)
       : query_(query),
-	way_members(relation_way_members(query, rman, relations, way_ranges)),
-        node_members(relation_node_members(query, rman, relations, node_ranges))
+	way_members(relation_way_members(&query, rman, relations, way_ranges)),
+        node_members(relation_node_members(&query, rman, relations, node_ranges))
   {
     // Retrieve all nodes referred by the ways.    
 /*    if (node_ranges)

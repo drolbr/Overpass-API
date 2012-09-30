@@ -157,7 +157,7 @@ private:
 //-----------------------------------------------------------------------------
 
 template < class TIndex, class TObject, class TContainer, class TPredicate >
-void collect_items_discrete(const Statement& stmt, Resource_Manager& rman,
+void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
 		   File_Properties& file_properties,
 		   const TContainer& req, const TPredicate& predicate,
 		   map< TIndex, vector< TObject > >& result)
@@ -172,7 +172,8 @@ void collect_items_discrete(const Statement& stmt, Resource_Manager& rman,
     if (++count >= 64*1024)
     {
       count = 0;
-      rman.health_check(stmt);
+      if (stmt)
+        rman.health_check(*stmt);
     }
     if (predicate.match(it.object()))
       result[it.index()].push_back(it.object());

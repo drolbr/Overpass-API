@@ -311,7 +311,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     get_ranges(rman, node_ranges);
     
     map< Uint32_Index, vector< Node_Skeleton > > node_members
-        = relation_node_members(query, rman, into.relations, &node_ranges);
+        = relation_node_members(&query, rman, into.relations, &node_ranges);
     //collect_nodes(query, rman, into.relations.begin(), into.relations.end(), node_members,
     //		  node_ranges);
   
@@ -332,7 +332,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     get_ranges(rman, way_ranges);
     
     map< Uint31_Index, vector< Way_Skeleton > > way_members_
-        = relation_way_members(query, rman, into.relations, &way_ranges);
+        = relation_way_members(&query, rman, into.relations, &way_ranges);
 /*    collect_ways(query, rman, into.relations.begin(), into.relations.end(), way_members_,
 		 way_ranges);*/
     
