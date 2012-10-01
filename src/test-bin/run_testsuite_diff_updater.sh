@@ -35,46 +35,75 @@ NOTIMES="$2"
 
 # Prepare testing the statements
 date +%T
-mkdir -p run/diff_updater
-rm -fR run/diff_updater/*
-$BASEDIR/test-bin/generate_test_file $DATA_SIZE >run/diff_updater/stdin.log
-$BASEDIR/bin/update_database --db-dir=run/diff_updater/ --version=mock-up-init <run/diff_updater/stdin.log
+mkdir -p run/diff_updater_1
+rm -fR run/diff_updater_1/*
+$BASEDIR/test-bin/generate_test_file $DATA_SIZE >run/diff_updater_1/stdin.log
+$BASEDIR/bin/update_database --db-dir=run/diff_updater_1/ --version=mock-up-init <run/diff_updater_1/stdin.log
 
 # Test a differential update - prepare needed data
 date +%T
-$BASEDIR/test-bin/generate_test_file $DATA_SIZE diff_do >run/diff_updater/do_stdin.log
+$BASEDIR/test-bin/generate_test_file $DATA_SIZE diff_do >run/diff_updater_1/do_stdin.log
 
 # do the differential update including start/stop of dispatcher
 date +%T
-$BASEDIR/bin/dispatcher --osm-base --db-dir=run/diff_updater/ &
+$BASEDIR/bin/dispatcher --osm-base --db-dir=run/diff_updater_1/ &
 sleep 1
-rm -f run/diff_updater/transactions.log
-$BASEDIR/bin/update_database --version=mock-up-diff <run/diff_updater/do_stdin.log
-cat run/diff_updater/transactions.log
+rm -f run/diff_updater_1/transactions.log
+$BASEDIR/bin/update_database --version=mock-up-diff <run/diff_updater_1/do_stdin.log
+cat run/diff_updater_1/transactions.log
 $BASEDIR/bin/dispatcher --terminate
 
 # collect the result
 date +%T
-$BASEDIR/test-bin/diff_updater --pattern_size=$DATA_SIZE --db-dir=run/diff_updater/ >run/diff_updater/diff_do.log
-$BASEDIR/test-bin/compare_osm_base_maps --db-dir=run/diff_updater/ >>run/diff_updater/diff_do.log 2>run/diff_updater/diff_stderr.log
+$BASEDIR/test-bin/diff_updater --pattern_size=$DATA_SIZE --db-dir=run/diff_updater_1/ >run/diff_updater_1/diff_do.log
+$BASEDIR/test-bin/compare_osm_base_maps --db-dir=run/diff_updater_1/ >>run/diff_updater_1/diff_do.log 2>run/diff_updater_1/diff_stderr.log
 date +%T
 
 # run a fresh import of adapted data to compare
-$BASEDIR/test-bin/generate_test_file $DATA_SIZE diff_compare >run/diff_updater/compare_stdin.log
+$BASEDIR/test-bin/generate_test_file $DATA_SIZE diff_compare >run/diff_updater_1/compare_stdin.log
 date +%T
-rm -f run/diff_updater/*.map run/diff_updater/*.bin run/diff_updater/*.idx
-$BASEDIR/bin/update_database --db-dir=run/diff_updater/ <run/diff_updater/compare_stdin.log
+rm -f run/diff_updater_1/*.map run/diff_updater_1/*.bin run/diff_updater_1/*.idx
+$BASEDIR/bin/update_database --db-dir=run/diff_updater_1/ <run/diff_updater_1/compare_stdin.log
 date +%T
-$BASEDIR/test-bin/diff_updater --pattern_size=$DATA_SIZE --db-dir=run/diff_updater/ >run/diff_updater/diff_compare.log
-$BASEDIR/test-bin/compare_osm_base_maps --db-dir=run/diff_updater/ >>run/diff_updater/diff_compare.log
+$BASEDIR/test-bin/diff_updater --pattern_size=$DATA_SIZE --db-dir=run/diff_updater_1/ >run/diff_updater_1/diff_compare.log
+$BASEDIR/test-bin/compare_osm_base_maps --db-dir=run/diff_updater_1/ >>run/diff_updater_1/diff_compare.log
 
 # compare both outcomes
-RES=`diff -q run/diff_updater/diff_compare.log run/diff_updater/diff_do.log`
-if [[ -n $RES || -s run/diff_updater/diff_stderr.log ]]; then
+RES=`diff -q run/diff_updater_1/diff_compare.log run/diff_updater_1/diff_do.log`
+if [[ -n $RES || -s run/diff_updater_1/diff_stderr.log ]]; then
 {
   echo `date +%T` "Test diff 1 FAILED."
 }; else
 {
   echo `date +%T` "Test diff 1 succeeded."
-  rm -R run/diff_updater
+  rm -R run/diff_updater_1
+}; fi
+
+
+# Test the augmented diffs
+
+# Prepare testing the statements
+date +%T
+mkdir -p run/diff_updater_2
+rm -fR run/diff_updater_2/*
+$BASEDIR/bin/update_database --db-dir=run/diff_updater_2/ --version=mock-up-init <input/diff_updater_2/augmented_init.osm
+
+# do the differential update including start/stop of dispatcher
+date +%T
+$BASEDIR/bin/dispatcher --osm-base --db-dir=run/diff_updater_2/ &
+sleep 1
+rm -f run/diff_updater_2/transactions.log
+$BASEDIR/bin/update_database --version=mock-up-diff --produce-diff <input/diff_updater_2/augmented_source.osm >run/diff_updater_2/augmented_diff.osm
+cat run/diff_updater_2/transactions.log
+$BASEDIR/bin/dispatcher --terminate
+
+# compare outcome to expected outcome
+RES=`diff -q expected/diff_updater_2/augmented_diff.osm run/diff_updater_2/augmented_diff.osm`
+if [[ -n $RES || ! -f run/diff_updater_2/augmented_diff.osm ]]; then
+{
+  echo `date +%T` "Test diff 2 FAILED."
+}; else
+{
+  echo `date +%T` "Test diff 2 succeeded."
+  rm -R run/diff_updater_2
 }; fi
