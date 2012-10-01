@@ -502,7 +502,7 @@ map< Uint32_Index, vector< Node_Skeleton > > relation_node_members
           (node_ids->begin(), node_ids->end(), children_ids.begin(), children_ids.end(),
 	  intersect_ids.begin()), intersect_ids.end());
     else
-      intersect_ids.erase(set_intersection
+      intersect_ids.erase(set_difference
           (children_ids.begin(), children_ids.end(),
 	  node_ids->begin(), node_ids->end(),
 	  intersect_ids.begin()), intersect_ids.end());

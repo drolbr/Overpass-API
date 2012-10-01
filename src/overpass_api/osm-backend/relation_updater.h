@@ -68,6 +68,9 @@ public:
     else
       it->second.first = Relation(skel.id.val());
     it->second.first.members = skel.members;
+    it->second.first.index = index.val();
+    it->second.first.node_idxs = skel.node_idxs;
+    it->second.first.way_idxs = skel.way_idxs;
 
     it = keep.find(skel.id);
     if (it != keep.end())
@@ -93,6 +96,9 @@ public:
     else
       it->second.first = Relation(skel.id.val());
     it->second.first.members = skel.members;
+    it->second.first.index = index.val();
+    it->second.first.node_idxs = skel.node_idxs;
+    it->second.first.way_idxs = skel.way_idxs;
   }
   
   void deletion(const Tag_Index_Local& index, const Uint32_Index& ref)

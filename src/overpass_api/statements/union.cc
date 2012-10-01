@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 
+#include "../data/abstract_processing.h"
 #include "union.h"
 
 using namespace std;

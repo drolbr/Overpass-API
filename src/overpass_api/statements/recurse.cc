@@ -29,7 +29,6 @@
 #include "../data/abstract_processing.h"
 #include "../data/collect_members.h"
 #include "recurse.h"
-#include "union.h"
 
 using namespace std;
 

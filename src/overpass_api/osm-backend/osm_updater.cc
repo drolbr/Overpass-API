@@ -25,6 +25,7 @@
 #include "../../template_db/random_file.h"
 #include "../../template_db/transaction.h"
 #include "../core/settings.h"
+#include "../data/abstract_processing.h"
 #include "../data/collect_members.h"
 #include "../dispatch/resource_manager.h"
 #include "../frontend/output.h"
@@ -467,7 +468,7 @@ void collect_kept_members(Transaction& transaction,
   set< pair< Tag_Index_Local, Tag_Index_Local > > tag_range_set
       = make_range_set(collect_coarse(ways_by_idx));  
   Block_Backend< Tag_Index_Local, Uint32_Index > ways_db
-      (transaction.data_index(osm_base_settings().NODE_TAGS_LOCAL));
+      (transaction.data_index(osm_base_settings().WAY_TAGS_LOCAL));
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
       it(ways_db.range_begin
          (Default_Range_Iterator< Tag_Index_Local >(tag_range_set.begin()),
@@ -477,7 +478,7 @@ void collect_kept_members(Transaction& transaction,
   
   {
     Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way::Id_Type > > meta_db
-        (transaction.data_index(meta_settings().NODES_META));
+        (transaction.data_index(meta_settings().WAYS_META));
     for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way::Id_Type > >::Discrete_Iterator
         it(meta_db.discrete_begin(meta_idx_set.begin(), meta_idx_set.end()));
         !(it == meta_db.discrete_end()); ++it)  
@@ -514,6 +515,10 @@ void collect_kept_members(Transaction& transaction,
   
   map< Uint32_Index, vector< Node_Skeleton > > kept_nodes =
       way_members(0, rman, ways, 0, &node_ids, true);
+  map< Uint32_Index, vector< Node_Skeleton > > rel_based_nodes =
+      relation_node_members(0, rman, relations, 0, &node_ids, true);
+      
+  indexed_set_union(kept_nodes, rel_based_nodes);
 
   map< uint32, vector< Node::Id_Type > > nodes_by_idx;
   meta_idx_set.clear();
