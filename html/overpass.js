@@ -46,11 +46,15 @@
 	  popup.contentSize = new OpenLayers.Size(400, 400);
 	  popup.closeOnMove = true;
 	  map.addPopup(popup);
-	  
+
+	  var rel_tolerance = this.tolerance * map.getScale();
+	  if (rel_tolerance > 0.01)
+	    rel_tolerance = 0.01;
+
 	  var request = OpenLayers.Request.GET({
 	      url: this.genericUrl + "&bbox="
-	          + (lonlat.lon - this.tolerance) + "," + (lonlat.lat - this.tolerance) + ","
-	          + (lonlat.lon + this.tolerance) + "," + (lonlat.lat + this.tolerance),
+	          + (lonlat.lon - rel_tolerance) + "," + (lonlat.lat - rel_tolerance) + ","
+	          + (lonlat.lon + rel_tolerance) + "," + (lonlat.lat + rel_tolerance),
 	      async: false
           });
 	  
