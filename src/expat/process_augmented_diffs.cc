@@ -112,6 +112,25 @@ void print_tag(const Tag& tag, string indent)
   }
   else if (tag.name == "bounds")
     return;
+  else if (tag.name == "osmAugmentedDiff")
+  {
+    cout<<indent<<"<"<<tag.name;
+    for (map< string, string >::const_iterator it = tag.attributes.begin();
+         it != tag.attributes.end(); ++it)
+    {
+      if (it->first != "format")
+        cout<<" "<<it->first<<"=\""<<escape_xml(it->second)<<"\"";
+    }
+    if (tag.children.empty())
+      cout<<"/>\n";
+    else
+    {
+      cout<<">\n";
+      for (vector< Tag* >::const_iterator it = tag.children.begin(); it != tag.children.end(); ++it)
+        print_tag(**it, indent + "  ");
+      cout<<indent<<"</"<<tag.name<<">\n";
+    }
+  }
   
   cout<<indent<<"<"<<tag.name;
   for (map< string, string >::const_iterator it = tag.attributes.begin();
