@@ -1203,7 +1203,7 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 	      cout<<"<new>\n"
 	          "  <node id=\""<<erase_it->second.first.id.val()<<"\"";
 	      print_meta(meta);
-	      cout<<"/>\n"
+	      cout<<" visible=\"false\"/>\n"
 	          "</new>\n";
 	    }
 	    cout<<"</action>\n";
@@ -1372,7 +1372,7 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 	      cout<<"<new>\n"
 	          "  <way id=\""<<erase_it->second.first.id.val()<<"\"";
 	      print_meta(meta);
-	      cout<<"/>\n"
+	      cout<<" visible=\"false\"/>\n"
 	          "</new>\n";
 	    }
 	    cout<<"</action>\n";
@@ -1549,7 +1549,7 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 	      cout<<"<new>\n"
 	          "  <relation id=\""<<erase_it->second.first.id.val()<<"\"";
 	      print_meta(meta);
-	      cout<<"/>\n"
+	      cout<<" visible=\"false\"/>\n"
 	          "</new>\n";
 	    }
 	    cout<<"</action>\n";
