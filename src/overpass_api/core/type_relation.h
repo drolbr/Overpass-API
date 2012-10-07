@@ -39,7 +39,13 @@ struct Relation_Entry
   const static uint32 NODE = 1;
   const static uint32 WAY = 2;
   const static uint32 RELATION = 3;
+
+  bool operator==(const Relation_Entry& a) const
+  {
+    return (a.ref == this->ref && a.type == this->type && a.role == this->role);
+  }
 };
+
 
 struct Relation
 {

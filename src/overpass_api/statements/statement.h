@@ -129,6 +129,7 @@ class Statement
     const static int NODE = 1;
     const static int WAY = 2;
     const static int RELATION = 3;
+    const static int AREA = 4;
     
   private:
     static Error_Output* error_output;

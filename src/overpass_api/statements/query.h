@@ -29,7 +29,10 @@ using namespace std;
 const int QUERY_NODE = 1;
 const int QUERY_WAY = 2;
 const int QUERY_RELATION = 3;
-// const int QUERY_AREA = 4;
+const int QUERY_AREA = 4;
+
+typedef enum { nothing, /*ids_collected,*/ ranges_collected, data_collected } Answer_State;
+
 
 class Regular_Expression;
 
@@ -81,6 +84,11 @@ class Query_Statement : public Statement
     set< pair< TIndex, TIndex > > get_ranges_by_id_from_db
         (const vector< Id_Type >& ids,
          Resource_Manager& rman, File_Properties& file_prop);
+
+    template< class Id_Type >
+    void progress_1(vector< Id_Type >& ids,
+				 bool& invert_ids, Answer_State& answer_state, Set& into,
+				 bool check_keys_late, File_Properties& file_prop, Resource_Manager& rman);
 };
 
 class Has_Kv_Statement : public Statement

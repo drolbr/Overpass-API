@@ -159,6 +159,15 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Update_Relation_Lo
     process_meta_data(*transaction->data_index(meta_settings().RELATIONS_META),
 		      rels_meta_to_insert, ids_to_modify, to_delete, update_logger);
     process_user_data(*transaction, user_by_id, idxs_by_id);
+    
+    if (update_logger)
+    {
+      stable_sort(rels_meta_to_delete.begin(), rels_meta_to_delete.begin());
+      rels_meta_to_delete.erase(unique(rels_meta_to_delete.begin(), rels_meta_to_delete.end()),
+				 rels_meta_to_delete.end());
+      update_logger->set_delete_meta_data(rels_meta_to_delete);
+      rels_meta_to_delete.clear();
+    }
   }
   callback->update_finished();
   

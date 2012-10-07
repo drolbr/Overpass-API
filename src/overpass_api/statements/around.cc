@@ -416,7 +416,9 @@ void Around_Constraint::filter(Resource_Manager& rman, Set& into)
         it->second.clear();
     }
   }
-  ranges_used = false;  
+  ranges_used = false;
+  
+  //TODO: areas
 }
 
 
@@ -623,6 +625,8 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
       it->second.swap(local_into);
     }
   }  
+  
+  //TODO: areas
 }
 
 //-----------------------------------------------------------------------------

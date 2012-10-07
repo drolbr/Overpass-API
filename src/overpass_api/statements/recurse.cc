@@ -427,15 +427,22 @@ bool Recurse_Constraint::get_data
     return true;
   
   if (stmt->get_type() == RECURSE_RELATION_WAY)
+  {
     collect_ways(query, rman, mit->second.relations, ranges, ids, invert_ids, into.ways);
+    return true;
+  }    
   else if (stmt->get_type() == RECURSE_RELATION_RELATION)
+  {
     collect_relations(query, rman, mit->second.relations, ranges,
 		      ids, invert_ids, into.relations);
+    return true;
+  }
   else if (stmt->get_type() == RECURSE_DOWN)
   {
     if (type != QUERY_WAY)
       return true;
     collect_ways(query, rman, mit->second.relations, ranges, ids, invert_ids, into.ways);
+    return true;
   }
   else if (stmt->get_type() == RECURSE_DOWN_REL)
   {
@@ -457,6 +464,7 @@ bool Recurse_Constraint::get_data
       }
       into.relations.swap(rel_rels);
     }
+    return true;
   }
   else if (stmt->get_type() == RECURSE_NODE_WAY)
   {
@@ -464,6 +472,7 @@ bool Recurse_Constraint::get_data
       collect_ways(query, rman, mit->second.nodes, into.ways);
     else
       collect_ways(query, rman, mit->second.nodes, into.ways, ids, invert_ids);
+    return true;
   }
   else if (stmt->get_type() == RECURSE_NODE_RELATION)
   {
@@ -471,6 +480,7 @@ bool Recurse_Constraint::get_data
       collect_relations(query, rman, mit->second.nodes, Relation_Entry::NODE, into.relations);
     else
       collect_relations(query, rman, mit->second.nodes, Relation_Entry::NODE, into.relations, ids, invert_ids);
+    return true;
   }
   else if (stmt->get_type() == RECURSE_WAY_RELATION)
   {
@@ -479,6 +489,7 @@ bool Recurse_Constraint::get_data
     else
       collect_relations(query, rman, mit->second.ways, Relation_Entry::WAY,
 			into.relations, ids, invert_ids);
+    return true;
   }
   else if (stmt->get_type() == RECURSE_RELATION_BACKWARDS)
   {
@@ -487,6 +498,7 @@ bool Recurse_Constraint::get_data
     else
       collect_relations(query, rman, mit->second.relations, into.relations,
 			ids, invert_ids);
+    return true;
   }
   else if (stmt->get_type() == RECURSE_UP)
   {
@@ -518,6 +530,7 @@ bool Recurse_Constraint::get_data
 			  ids, invert_ids);
       indexed_set_union(into.relations, node_rels);
     }
+    return true;
   }
   else if (stmt->get_type() == RECURSE_UP_REL)
   {
@@ -556,8 +569,9 @@ bool Recurse_Constraint::get_data
 	        (Id_Predicate< Relation_Skeleton >(ids)), into.relations);
       }
     }
+    return true;
   }
-  return true;
+  return false;
 }
 
 void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
@@ -568,6 +582,7 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
     into.nodes.clear();
     into.ways.clear();
     into.relations.clear();
+    into.areas.clear();
     return;
   }
   
@@ -633,6 +648,8 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
   }
   else
     into.relations.clear();
+  
+  //TODO: areas
 }
 
 void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
@@ -717,6 +734,8 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
     ids = extract_children_ids(rel_rels);
     filter_items(Id_Predicate< Relation_Skeleton >(ids), into.relations);
   }
+  
+  //TODO: areas
 }
 
 //-----------------------------------------------------------------------------

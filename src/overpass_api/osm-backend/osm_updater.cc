@@ -178,7 +178,7 @@ namespace
   inline void node_end()
   {
     if (modify_mode == DELETE)
-      node_updater->set_id_deleted(current_node.id);
+      node_updater->set_id_deleted(current_node.id, meta);
     else
       node_updater->set_node(current_node, meta);
     if (osm_element_count >= 4*1024*1024)
@@ -239,7 +239,7 @@ namespace
   inline void way_end()
   {
     if (modify_mode == DELETE)
-      way_updater->set_id_deleted(current_way.id);
+      way_updater->set_id_deleted(current_way.id, meta);
     else
       way_updater->set_way(current_way, meta);
     if (osm_element_count >= 4*1024*1024)
@@ -256,7 +256,7 @@ namespace
   inline void relation_end()
   {
     if (modify_mode == DELETE)
-      relation_updater->set_id_deleted(current_relation.id);
+      relation_updater->set_id_deleted(current_relation.id, meta);
     else
       relation_updater->set_relation(current_relation, meta);
     if (osm_element_count >= 4*1024*1024)
@@ -533,30 +533,6 @@ void collect_kept_members(Transaction& transaction,
     }
   }
   
-  // DEBUG begin
-//   node_ids.clear();
-//   for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator
-//       it = update_node_logger.insert_begin(); it != update_node_logger.insert_end(); ++it)
-//     node_ids.push_back(it->second.first.id);
-//   for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator
-//       it = update_node_logger.keep_begin(); it != update_node_logger.keep_end(); ++it)
-//     node_ids.push_back(it->second.first.id);
-//   for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator
-//       it = update_node_logger.erase_begin(); it != update_node_logger.erase_end(); ++it)
-//     node_ids.push_back(it->second.first.id);
-//   
-//   for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator
-//       it = update_way_logger.insert_begin(); it != update_way_logger.insert_end(); ++it)
-//   {
-//     for (vector< Node::Id_Type >::const_iterator it2 = it->second.first.nds.begin();
-// 	 it2 != it->second.first.nds.end(); ++it2)
-//     {
-//       if (!binary_search(node_ids.begin(), node_ids.end(), *it2))
-// 	cerr<<it->second.id<<'\t'<<*it2<<'\n';
-//     }
-//   }
-  // DEBUG end
-  
   tag_range_set = make_range_set(collect_coarse(nodes_by_idx));  
   Block_Backend< Tag_Index_Local, Uint32_Index > nodes_db
       (transaction.data_index(osm_base_settings().NODE_TAGS_LOCAL));
@@ -584,63 +560,10 @@ void complete_user_data(Transaction& transaction,
 			Update_Relation_Logger& update_relation_logger)
 {
   map< uint32, string > user_names;
-  
-  for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator
-      it = update_node_logger.insert_begin(); it != update_node_logger.insert_end(); ++it)
-  {
-    if (it->second.second)
-      user_names[it->second.second->user_id];
-  }
-  for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator
-      it = update_node_logger.keep_begin(); it != update_node_logger.keep_end(); ++it)
-  {
-    if (it->second.second)
-      user_names[it->second.second->user_id];
-  }
-  for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator
-      it = update_node_logger.erase_begin(); it != update_node_logger.erase_end(); ++it)
-  {
-    if (it->second.second)
-      user_names[it->second.second->user_id];
-  }
-  
-  for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator
-      it = update_way_logger.insert_begin(); it != update_way_logger.insert_end(); ++it)
-  {
-    if (it->second.second)
-      user_names[it->second.second->user_id];
-  }
-  for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator
-      it = update_way_logger.keep_begin(); it != update_way_logger.keep_end(); ++it)
-  {
-    if (it->second.second)
-      user_names[it->second.second->user_id];
-  }
-  for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator
-      it = update_way_logger.erase_begin(); it != update_way_logger.erase_end(); ++it)
-  {
-    if (it->second.second)
-      user_names[it->second.second->user_id];
-  }
-  
-  for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator
-      it = update_relation_logger.insert_begin(); it != update_relation_logger.insert_end(); ++it)
-  {
-    if (it->second.second)
-      user_names[it->second.second->user_id];
-  }
-  for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator
-      it = update_relation_logger.keep_begin(); it != update_relation_logger.keep_end(); ++it)
-  {
-    if (it->second.second)
-      user_names[it->second.second->user_id];
-  }
-  for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator
-      it = update_relation_logger.erase_begin(); it != update_relation_logger.erase_end(); ++it)
-  {
-    if (it->second.second)
-      user_names[it->second.second->user_id];
-  }
+
+  update_node_logger.request_user_names(user_names);
+  update_way_logger.request_user_names(user_names);
+  update_relation_logger.request_user_names(user_names);
    
   Block_Backend< Uint32_Index, User_Data > user_db
       (transaction.data_index(meta_settings().USER_DATA));
@@ -652,66 +575,130 @@ void complete_user_data(Transaction& transaction,
       mit->second = it.object().name;
   }
 
-  for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator
-      it = update_node_logger.insert_begin(); it != update_node_logger.insert_end(); ++it)
-  {
-    if (it->second.second)
-      it->second.second->user_name = user_names[it->second.second->user_id];
-  }  
-  for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator
-      it = update_node_logger.keep_begin(); it != update_node_logger.keep_end(); ++it)
-  {
-    if (it->second.second)
-      it->second.second->user_name = user_names[it->second.second->user_id];
-  }  
-  for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator
-      it = update_node_logger.erase_begin(); it != update_node_logger.erase_end(); ++it)
-  {
-    if (it->second.second)
-      it->second.second->user_name = user_names[it->second.second->user_id];
-  }  
-
-  for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator
-      it = update_way_logger.insert_begin(); it != update_way_logger.insert_end(); ++it)
-  {
-    if (it->second.second)
-      it->second.second->user_name = user_names[it->second.second->user_id];
-  }  
-  for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator
-      it = update_way_logger.keep_begin(); it != update_way_logger.keep_end(); ++it)
-  {
-    if (it->second.second)
-      it->second.second->user_name = user_names[it->second.second->user_id];
-  }  
-  for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator
-      it = update_way_logger.erase_begin(); it != update_way_logger.erase_end(); ++it)
-  {
-    if (it->second.second)
-      it->second.second->user_name = user_names[it->second.second->user_id];
-  }  
-
-  for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator
-      it = update_relation_logger.insert_begin(); it != update_relation_logger.insert_end(); ++it)
-  {
-    if (it->second.second)
-      it->second.second->user_name = user_names[it->second.second->user_id];
-  }  
-  for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator
-      it = update_relation_logger.keep_begin(); it != update_relation_logger.keep_end(); ++it)
-  {
-    if (it->second.second)
-      it->second.second->user_name = user_names[it->second.second->user_id];
-  }  
-  for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator
-      it = update_relation_logger.erase_begin(); it != update_relation_logger.erase_end(); ++it)
-  {
-    if (it->second.second)
-      it->second.second->user_name = user_names[it->second.second->user_id];
-  }  
+  update_node_logger.set_user_names(user_names);
+  update_way_logger.set_user_names(user_names);
+  update_relation_logger.set_user_names(user_names);
 }
 
 
-void print_meta(OSM_Element_Metadata* meta)
+vector< Node::Id_Type > node_ids_from_ways(const Update_Way_Logger& update_way_logger)
+{
+  vector< Node::Id_Type > node_ids;
+
+  for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator
+      it = update_way_logger.insert_begin(); it != update_way_logger.insert_end(); ++it)
+  {
+    for (vector< Node::Id_Type >::const_iterator it2 = it->second.first.nds.begin();
+	 it2 != it->second.first.nds.end(); ++it2)
+      node_ids.push_back(*it2);
+  }
+  for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator
+      it = update_way_logger.keep_begin(); it != update_way_logger.keep_end(); ++it)
+  {
+    for (vector< Node::Id_Type >::const_iterator it2 = it->second.first.nds.begin();
+	 it2 != it->second.first.nds.end(); ++it2)
+      node_ids.push_back(*it2);
+  }
+  for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator
+      it = update_way_logger.erase_begin(); it != update_way_logger.erase_end(); ++it)
+  {
+    for (vector< Node::Id_Type >::const_iterator it2 = it->second.first.nds.begin();
+	 it2 != it->second.first.nds.end(); ++it2)
+      node_ids.push_back(*it2);
+  }
+  
+  sort(node_ids.begin(), node_ids.end());
+  node_ids.erase(unique(node_ids.begin(), node_ids.end()), node_ids.end());
+
+  return node_ids;
+}
+
+
+vector< Node::Id_Type > node_ids_from_ways(const Update_Way_Logger& update_way_logger,
+					   const vector< Way::Id_Type >& way_ids)
+{
+  vector< Node::Id_Type > node_ids;
+
+  for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator
+      it = update_way_logger.insert_begin(); it != update_way_logger.insert_end(); ++it)
+  {
+    if (!binary_search(way_ids.begin(), way_ids.end(), it->first))
+      continue;
+    for (vector< Node::Id_Type >::const_iterator it2 = it->second.first.nds.begin();
+	 it2 != it->second.first.nds.end(); ++it2)
+      node_ids.push_back(*it2);
+  }
+  for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator
+      it = update_way_logger.keep_begin(); it != update_way_logger.keep_end(); ++it)
+  {
+    if (!binary_search(way_ids.begin(), way_ids.end(), it->first))
+      continue;
+    for (vector< Node::Id_Type >::const_iterator it2 = it->second.first.nds.begin();
+	 it2 != it->second.first.nds.end(); ++it2)
+      node_ids.push_back(*it2);
+  }
+  for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator
+      it = update_way_logger.erase_begin(); it != update_way_logger.erase_end(); ++it)
+  {
+    if (!binary_search(way_ids.begin(), way_ids.end(), it->first))
+      continue;
+    for (vector< Node::Id_Type >::const_iterator it2 = it->second.first.nds.begin();
+	 it2 != it->second.first.nds.end(); ++it2)
+      node_ids.push_back(*it2);
+  }
+  
+  sort(node_ids.begin(), node_ids.end());
+  node_ids.erase(unique(node_ids.begin(), node_ids.end()), node_ids.end());
+
+  return node_ids;
+}
+
+
+template< typename Id_Type >
+vector< Id_Type > ids_from_relations(const Update_Relation_Logger& update_relation_logger,
+				     uint type)
+{
+  vector< Id_Type > node_ids;
+
+  for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator
+      it = update_relation_logger.insert_begin(); it != update_relation_logger.insert_end(); ++it)
+  {
+    for (vector< Relation_Entry >::const_iterator it2 = it->second.first.members.begin();
+	 it2 != it->second.first.members.end(); ++it2)
+    {
+      if (it2->type == type)
+        node_ids.push_back(it2->ref);
+    }
+  }
+  for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator
+      it = update_relation_logger.keep_begin(); it != update_relation_logger.keep_end(); ++it)
+  {
+    for (vector< Relation_Entry >::const_iterator it2 = it->second.first.members.begin();
+	 it2 != it->second.first.members.end(); ++it2)
+    {
+      if (it2->type == type)
+        node_ids.push_back(it2->ref);
+    }
+  }
+  for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator
+      it = update_relation_logger.erase_begin(); it != update_relation_logger.erase_end(); ++it)
+  {
+    for (vector< Relation_Entry >::const_iterator it2 = it->second.first.members.begin();
+	 it2 != it->second.first.members.end(); ++it2)
+    {
+      if (it2->type == type)
+        node_ids.push_back(it2->ref);
+    }
+  }
+  
+  sort(node_ids.begin(), node_ids.end());
+  node_ids.erase(unique(node_ids.begin(), node_ids.end()), node_ids.end());
+
+  return node_ids;
+}
+
+
+void print_meta(const OSM_Element_Metadata* meta)
 {
   if (!meta)
     return;
@@ -753,6 +740,9 @@ void print_tags(const vector< pair< string, string > >& tags)
 }
 
 
+typedef enum { none, erase, keep, insert } Diff_State;
+
+
 void print_node(const Node& node, OSM_Element_Metadata* meta)
 {
   cout<<
@@ -771,13 +761,78 @@ void print_node(const Node& node, OSM_Element_Metadata* meta)
 }
 
 
-void print_way(const Way& way, OSM_Element_Metadata* meta)
+struct Bbox
+{
+  Bbox() : min_lat(90.0), max_lat(-90.0), min_lon(180.0), max_lon(-180.0) {}
+  
+  double min_lat;
+  double max_lat;
+  double min_lon;
+  double max_lon;
+};
+
+
+Bbox calc_bbox(const Way& way, Diff_State diff_state, Update_Node_Logger& update_node_logger)
+{
+  Bbox bbox;
+  for (vector< Node::Id_Type >::const_iterator it = way.nds.begin(); it != way.nds.end(); ++it)
+  {
+    const Node* node = (diff_state == erase ?
+        update_node_logger.get_erased(*it) : update_node_logger.get_inserted(*it));
+    if (node)
+    {
+      bbox.min_lat = min(bbox.min_lat, ::lat(node->index, node->ll_lower_));
+      bbox.max_lat = max(bbox.max_lat, ::lat(node->index, node->ll_lower_));
+      bbox.min_lon = min(bbox.min_lon, ::lon(node->index, node->ll_lower_));
+      bbox.max_lon = max(bbox.max_lon, ::lon(node->index, node->ll_lower_));
+    }
+  }
+  
+  if (bbox.max_lon - bbox.min_lon < 180.0)
+    return bbox;
+  
+  //Special case: we pass the date line
+  for (vector< Node::Id_Type >::const_iterator it = way.nds.begin(); it != way.nds.end(); ++it)
+  {
+    const Node* node = (diff_state == erase ?
+        update_node_logger.get_erased(*it) : update_node_logger.get_inserted(*it));
+    if (node)
+    {
+      bbox.min_lat = min(bbox.min_lat, ::lat(node->index, node->ll_lower_));
+      bbox.max_lat = max(bbox.max_lat, ::lat(node->index, node->ll_lower_));
+      if (::lon(node->index, node->ll_lower_) < 0.0)
+        bbox.max_lon = max(bbox.max_lon, ::lon(node->index, node->ll_lower_));
+      else
+        bbox.min_lon = min(bbox.min_lon, ::lon(node->index, node->ll_lower_));
+    }
+  }
+  
+  return bbox;
+}
+
+
+void print_way(const Way& way, OSM_Element_Metadata* meta,
+	       Diff_State diff_state, Update_Node_Logger& update_node_logger)
 {
   cout<<"  <way id=\""<<way.id.val()<<"\"";
   print_meta(meta);
   cout<<">\n";
+  Bbox bbox = calc_bbox(way, diff_state, update_node_logger);
+  cout<<"    <bounds "
+      "minlat=\""<<bbox.min_lat<<"\" minlon=\""<<bbox.min_lon<<"\" "
+      "maxlat=\""<<bbox.max_lat<<"\" maxlon=\""<<bbox.max_lon<<"\"";
+  cout<<"/>\n";
   for (vector< Node::Id_Type >::const_iterator it = way.nds.begin(); it != way.nds.end(); ++it)
-    cout<<"    <nd ref=\""<<it->val()<<"\"/>\n";
+  {
+    const Node* node = (diff_state == erase ?
+        update_node_logger.get_erased(*it) : update_node_logger.get_inserted(*it));
+    if (node)
+      cout<<"    <nd ref=\""<<it->val()<<"\" "
+          "lat=\""<<fixed<<setprecision(7)<<::lat(node->index, node->ll_lower_)<<"\" "
+          "lon=\""<<fixed<<setprecision(7)<<::lon(node->index, node->ll_lower_)<<"\"/>\n";
+    else
+      cout<<"    <nd ref=\""<<it->val()<<"\"/>\n";
+  }
   print_tags(way.tags);
   cout<<"  </way>\n";
 }
@@ -785,12 +840,110 @@ void print_way(const Way& way, OSM_Element_Metadata* meta)
 
 const char* MEMBER_TYPE[] = { 0, "node", "way", "relation" };
 
+
+Bbox calc_bbox(const Relation& relation, Diff_State diff_state,
+	       Update_Way_Logger& update_way_logger, Update_Node_Logger& update_node_logger)
+{
+  Bbox bbox;
+  for (vector< Relation_Entry >::const_iterator it = relation.members.begin();
+       it != relation.members.end(); ++it)
+  {
+    if (it->type == Relation_Entry::NODE)
+    {
+      const Node* node = (diff_state == erase ?
+          update_node_logger.get_erased(it->ref) : update_node_logger.get_inserted(it->ref));
+      if (node)
+      {
+        bbox.min_lat = min(bbox.min_lat, ::lat(node->index, node->ll_lower_));
+        bbox.max_lat = max(bbox.max_lat, ::lat(node->index, node->ll_lower_));
+        bbox.min_lon = min(bbox.min_lon, ::lon(node->index, node->ll_lower_));
+        bbox.max_lon = max(bbox.max_lon, ::lon(node->index, node->ll_lower_));
+      }
+    }
+    else if (it->type == Relation_Entry::WAY)
+    {
+      const Way* way = (diff_state == erase ?
+          update_way_logger.get_erased(it->ref) : update_way_logger.get_inserted(it->ref));
+      if (way)
+      {
+        for (vector< Node::Id_Type >::const_iterator it = way->nds.begin(); it != way->nds.end(); ++it)
+        {
+          const Node* node = (diff_state == erase ?
+              update_node_logger.get_erased(*it) : update_node_logger.get_inserted(*it));
+          if (node)
+          {
+            bbox.min_lat = min(bbox.min_lat, ::lat(node->index, node->ll_lower_));
+            bbox.max_lat = max(bbox.max_lat, ::lat(node->index, node->ll_lower_));
+            bbox.min_lon = min(bbox.min_lon, ::lon(node->index, node->ll_lower_));
+            bbox.max_lon = max(bbox.max_lon, ::lon(node->index, node->ll_lower_));
+          }
+        }
+      }
+    }
+  }
+  
+  if (bbox.max_lon - bbox.min_lon < 180.0)
+    return bbox;
+  
+  //Special case: we pass the date line
+  for (vector< Relation_Entry >::const_iterator it = relation.members.begin();
+       it != relation.members.end(); ++it)
+  {
+    if (it->type == Relation_Entry::NODE)
+    {
+      const Node* node = (diff_state == erase ?
+          update_node_logger.get_erased(it->ref) : update_node_logger.get_inserted(it->ref));
+      if (node)
+      {
+        bbox.min_lat = min(bbox.min_lat, ::lat(node->index, node->ll_lower_));
+        bbox.max_lat = max(bbox.max_lat, ::lat(node->index, node->ll_lower_));
+        if (::lon(node->index, node->ll_lower_) < 0.0)
+          bbox.max_lon = max(bbox.max_lon, ::lon(node->index, node->ll_lower_));
+        else
+          bbox.min_lon = min(bbox.min_lon, ::lon(node->index, node->ll_lower_));
+      }
+    }
+    else if (it->type == Relation_Entry::WAY)
+    {
+      const Way* way = (diff_state == erase ?
+          update_way_logger.get_erased(it->ref) : update_way_logger.get_inserted(it->ref));
+      if (way)
+      {
+        for (vector< Node::Id_Type >::const_iterator it = way->nds.begin(); it != way->nds.end(); ++it)
+        {
+          const Node* node = (diff_state == erase ?
+              update_node_logger.get_erased(*it) : update_node_logger.get_inserted(*it));
+          if (node)
+          {
+            bbox.min_lat = min(bbox.min_lat, ::lat(node->index, node->ll_lower_));
+            bbox.max_lat = max(bbox.max_lat, ::lat(node->index, node->ll_lower_));
+            if (::lon(node->index, node->ll_lower_) < 0.0)
+              bbox.max_lon = max(bbox.max_lon, ::lon(node->index, node->ll_lower_));
+            else
+              bbox.min_lon = min(bbox.min_lon, ::lon(node->index, node->ll_lower_));
+          }
+        }
+      }
+    }
+  }
+  
+  return bbox;
+}
+
+
 void print_relation(const Relation& relation, OSM_Element_Metadata* meta,
-		    const vector< string >& relation_roles)
+		    const vector< string >& relation_roles,
+	            Diff_State diff_state, Update_Way_Logger& update_way_logger,
+		    Update_Node_Logger& update_node_logger)
 {
   cout<<"  <relation id=\""<<relation.id.val()<<"\"";
   print_meta(meta);
   cout<<">\n";
+  Bbox bbox = calc_bbox(relation, diff_state, update_way_logger, update_node_logger);
+  cout<<"    <bounds "
+      "minlat=\""<<bbox.min_lat<<"\" minlon=\""<<bbox.min_lon<<"\" "
+      "maxlat=\""<<bbox.max_lat<<"\" maxlon=\""<<bbox.max_lon<<"\"";
+  cout<<"/>\n";
   for (vector< Relation_Entry >::const_iterator it = relation.members.begin();
        it != relation.members.end(); ++it)
     cout<<"    <member "
@@ -802,28 +955,137 @@ void print_relation(const Relation& relation, OSM_Element_Metadata* meta,
 }
 
 
-typedef enum { none, erase, keep, insert } Diff_State;
+// Bitfield for change evaluation
+const int TAGS = 1;
+const int GEOMETRY = 2;
+const int MEMBERS = 4;
+const int WAY_MEMBERSHIP = 8;
+const int RELATION_MEMBERSHIP = 16;
+const int INDIRECT_MEMBERSHIP = 32;
+const int MEMBER_PROPERTIES = 64;
 
 
-Diff_State change_diff_state(Diff_State state, Diff_State target)
+int detect_changes(const Node& old_node, const Node& new_node,
+		   const vector< Node::Id_Type >& nodes_used_by_ways,
+		   const vector< Node::Id_Type >& nodes_used_by_relations,
+		   const vector< Node::Id_Type >& nodes_used_indirectly)
 {
-  if (state != target)
+  int changes = 0;
+  if (old_node.index != new_node.index || old_node.ll_lower_ != new_node.ll_lower_)
+    changes |= GEOMETRY;
+  if (old_node.tags != new_node.tags)
+    changes |= TAGS;
+  if (binary_search(nodes_used_by_ways.begin(), nodes_used_by_ways.end(), old_node.id))
+    changes |= WAY_MEMBERSHIP;
+  if (binary_search(nodes_used_by_relations.begin(), nodes_used_by_relations.end(), old_node.id))
+    changes |= RELATION_MEMBERSHIP;
+  if (binary_search(nodes_used_indirectly.begin(), nodes_used_indirectly.end(), old_node.id))
+    changes |= INDIRECT_MEMBERSHIP;
+  return changes;
+}
+
+
+int detect_changes(const Way& old_way, const Way& new_way,
+		   const Update_Node_Logger& update_node_logger,
+		   const vector< Way::Id_Type >& ways_used_by_relations)
+{
+  int changes = 0;
+  if (old_way.index != new_way.index)
+    changes |= GEOMETRY;
+  if (old_way.tags != new_way.tags)
+    changes |= TAGS;
+  if (old_way.nds != new_way.nds)
+    changes |= GEOMETRY | MEMBERS;
+  else
   {
-    if (state == erase)
-      cout<<"</erase>\n";
-    else if (state == keep)
-      cout<<"</keep>\n";
-    else if (state == insert)
-      cout<<"</insert>\n";
-    
-    if (target == erase)
-      cout<<"<erase>\n";
-    else if (target == keep)
-      cout<<"<keep>\n";
-    else if (target == insert)
-      cout<<"<insert>\n";
+    for (vector< Node::Id_Type >::const_iterator it = old_way.nds.begin(); it != old_way.nds.end(); ++it)
+    {
+      const Node* old_node = update_node_logger.get_erased(*it);
+      const Node* new_node = update_node_logger.get_inserted(*it);
+      if (!old_node || !new_node)
+	changes |= GEOMETRY | MEMBER_PROPERTIES;
+      else
+      {
+	if (old_node->index != new_node->index
+	    || old_node->ll_lower_ != new_node->ll_lower_)
+	  changes |= GEOMETRY;
+	if (old_node->tags != new_node->tags)
+	  changes |= MEMBER_PROPERTIES;
+      }
+    }
   }
-  return target;
+  if (binary_search(ways_used_by_relations.begin(), ways_used_by_relations.end(), old_way.id))
+    changes |= RELATION_MEMBERSHIP;
+  return changes;
+}
+
+
+int detect_changes(const Relation& old_relation, const Relation& new_relation,
+		   const Update_Node_Logger& update_node_logger,
+		   const Update_Way_Logger& update_way_logger)
+{
+  int changes = 0;
+  if (old_relation.index != new_relation.index)
+    changes |= GEOMETRY;
+  if (old_relation.tags != new_relation.tags)
+    changes |= TAGS;
+  if (old_relation.members != new_relation.members)
+    changes |= MEMBERS;
+  
+  vector< Relation_Entry >::const_iterator old_it = old_relation.members.begin();
+  vector< Relation_Entry >::const_iterator new_it = new_relation.members.begin();
+  while (old_it != old_relation.members.end() && new_it != new_relation.members.end())
+  {
+    if (old_it != old_relation.members.end() && new_it != new_relation.members.end()
+      && *old_it == *new_it)
+    {
+      if (old_it->type == Relation_Entry::NODE)
+      {
+        const Node* old_node = update_node_logger.get_erased(old_it->ref);
+        const Node* new_node = update_node_logger.get_inserted(old_it->ref);
+        if (!old_node || !new_node)
+	  changes |= GEOMETRY | MEMBER_PROPERTIES;
+        else
+        {
+	  if (old_node->index != new_node->index
+	      || old_node->ll_lower_ != new_node->ll_lower_)
+	    changes |= GEOMETRY;
+	  if (old_node->tags != new_node->tags)
+	    changes |= MEMBER_PROPERTIES;
+        }
+      }
+      else if (old_it->type == Relation_Entry::WAY)
+      {
+        const Way* old_way = update_way_logger.get_erased(old_it->ref);
+        const Way* new_way = update_way_logger.get_inserted(old_it->ref);
+        if (!old_way || !new_way)
+	  changes |= GEOMETRY | MEMBER_PROPERTIES;
+        else
+	{
+	  int way_changes = detect_changes(*old_way, *new_way, update_node_logger,
+					   vector< Way::Id_Type >());
+	  if (way_changes & GEOMETRY)
+	    changes |= GEOMETRY;
+	  if (way_changes & (TAGS | MEMBERS | MEMBER_PROPERTIES))
+	    changes |= MEMBER_PROPERTIES;
+	}
+      }
+      ++old_it;
+      ++new_it;
+    }
+    else if (old_it != old_relation.members.end() && old_it->type == Relation_Entry::RELATION)
+      ++old_it;
+    else if (new_it != old_relation.members.end() && new_it->type == Relation_Entry::RELATION)
+      ++new_it;
+    else
+    {
+      // A node or way member of the relation has changed. This changes both geometry and memberships
+      changes |= GEOMETRY | MEMBERS;
+      changes &= ~MEMBER_PROPERTIES;
+      break;
+    }
+  }
+  return changes;
 }
 
 
@@ -833,14 +1095,20 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 {
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-  "<osmAugmentedDiff version=\"0.6\" generator=\"Overpass API\">\n"
+  "<osmAugmentedDiff version=\"0.6\" generator=\"Overpass API 0.6.99_d\">\n"
   "<note>The data included in this document is from www.openstreetmap.org. "
   "The data is made available under ODbL.</note>\n"
   "<meta osm_base=\""<<data_version<<"\"/>\n\n";
 
-  Diff_State state = none;
-
+  vector< Way::Id_Type > ways_used_by_relations =
+      ids_from_relations< Way::Id_Type >(update_relation_logger, Relation_Entry::WAY);
   {
+    vector< Node::Id_Type > nodes_used_by_ways = node_ids_from_ways(update_way_logger);
+    vector< Node::Id_Type > nodes_used_by_relations =
+        ids_from_relations< Node::Id_Type >(update_relation_logger, Relation_Entry::NODE);
+    vector< Node::Id_Type > nodes_used_indirectly =
+        node_ids_from_ways(update_way_logger, ways_used_by_relations);
+    
     map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator
         erase_it = update_node_logger.erase_begin();
     map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator
@@ -856,14 +1124,28 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 	{
 	  if (insert_it != update_node_logger.insert_end() && insert_it->first < keep_it->first)
 	  {
-	    state = change_diff_state(state, insert);
+	    int changes = detect_changes(insert_it->second.first, insert_it->second.first,
+					 nodes_used_by_ways, nodes_used_by_relations, nodes_used_indirectly);
+	    cout<<"<action type=\"create\""
+	        <<((changes & WAY_MEMBERSHIP) ? " waymember=\"yes\"" : "")
+	        <<((changes & RELATION_MEMBERSHIP) ? " relationmember=\"yes\"" : "")
+	        <<((changes & INDIRECT_MEMBERSHIP) ? " indirectmember=\"yes\"" : "")
+	        <<">\n";
 	    print_node(insert_it->second.first, insert_it->second.second);
+	    cout<<"</action>\n";
 	    ++insert_it;
 	  }
 	  else
 	  {
-	    state = change_diff_state(state, keep);
+	    int changes = detect_changes(keep_it->second.first, keep_it->second.first,
+					 nodes_used_by_ways, nodes_used_by_relations, nodes_used_indirectly);
+	    cout<<"<action type=\"info\""
+	        <<((changes & WAY_MEMBERSHIP) ? " waymember=\"yes\"" : "")
+	        <<((changes & RELATION_MEMBERSHIP) ? " relationmember=\"yes\"" : "")
+	        <<((changes & INDIRECT_MEMBERSHIP) ? " indirectmember=\"yes\"" : "")
+	        <<">\n";
 	    print_node(keep_it->second.first, keep_it->second.second);
+	    cout<<"</action>\n";
 	    ++keep_it;
 	  }
 	}
@@ -871,14 +1153,60 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 	{
 	  if (insert_it != update_node_logger.insert_end() && insert_it->first < erase_it->first)
 	  {
-	    state = change_diff_state(state, insert);
+	    int changes = detect_changes(insert_it->second.first, insert_it->second.first,
+					 nodes_used_by_ways, nodes_used_by_relations, nodes_used_indirectly);
+	    cout<<"<action type=\"create\""
+	        <<((changes & WAY_MEMBERSHIP) ? " waymember=\"yes\"" : "")
+	        <<((changes & RELATION_MEMBERSHIP) ? " relationmember=\"yes\"" : "")
+	        <<((changes & INDIRECT_MEMBERSHIP) ? " indirectmember=\"yes\"" : "")
+	        <<">\n";
 	    print_node(insert_it->second.first, insert_it->second.second);
+	    cout<<"</action>\n";
+	    ++insert_it;
+	  }
+	  else if (insert_it != update_node_logger.insert_end() && insert_it->first == erase_it->first)
+	  {
+	    int changes = detect_changes(erase_it->second.first, insert_it->second.first,
+					 nodes_used_by_ways, nodes_used_by_relations, nodes_used_indirectly);
+	    cout<<"<action type=\"modify\""
+	        <<((changes & GEOMETRY) ? " geometry=\"changed\"" : "")
+	        <<((changes & TAGS) ? " tags=\"changed\"" : "")
+	        <<((changes & WAY_MEMBERSHIP) ? " waymember=\"yes\"" : "")
+	        <<((changes & RELATION_MEMBERSHIP) ? " relationmember=\"yes\"" : "")
+	        <<((changes & INDIRECT_MEMBERSHIP) ? " indirectmember=\"yes\"" : "")
+	        <<">\n"
+	        "<old>\n";
+	    print_node(erase_it->second.first, erase_it->second.second);
+	    cout<<"</old>\n"
+	        "<new>\n";
+	    print_node(insert_it->second.first, insert_it->second.second);
+	    cout<<"</new>\n"
+	        "</action>\n";
+	    ++erase_it;
 	    ++insert_it;
 	  }
 	  else
 	  {
-	    state = change_diff_state(state, erase);
+	    int changes = detect_changes(erase_it->second.first, erase_it->second.first,
+					 nodes_used_by_ways, nodes_used_by_relations, nodes_used_indirectly);
+	    cout<<"<action type=\"delete\""
+	        <<((changes & WAY_MEMBERSHIP) ? " waymember=\"yes\"" : "")
+	        <<((changes & RELATION_MEMBERSHIP) ? " relationmember=\"yes\"" : "")
+	        <<((changes & INDIRECT_MEMBERSHIP) ? " indirectmember=\"yes\"" : "")
+	        <<">\n"
+	        "<old>\n";
 	    print_node(erase_it->second.first, erase_it->second.second);
+	    cout<<"</old>\n";
+	    const OSM_Element_Metadata* meta = update_node_logger.get_erased_meta(erase_it->second.first.id);
+	    if (meta)
+	    {
+	      cout<<"<new>\n"
+	          "  <node id=\""<<erase_it->second.first.id.val()<<"\"";
+	      print_meta(meta);
+	      cout<<"/>\n"
+	          "</new>\n";
+	    }
+	    cout<<"</action>\n";
 	    ++erase_it;
 	  }
 	}
@@ -889,14 +1217,28 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 	{
 	  if (insert_it != update_node_logger.insert_end() && insert_it->first < keep_it->first)
 	  {
-	    state = change_diff_state(state, insert);
+	    int changes = detect_changes(insert_it->second.first, insert_it->second.first,
+					 nodes_used_by_ways, nodes_used_by_relations, nodes_used_indirectly);
+	    cout<<"<action type=\"create\""
+	        <<((changes & WAY_MEMBERSHIP) ? " waymember=\"yes\"" : "")
+	        <<((changes & RELATION_MEMBERSHIP) ? " relationmember=\"yes\"" : "")
+	        <<((changes & INDIRECT_MEMBERSHIP) ? " indirectmember=\"yes\"" : "")
+	        <<">\n";
 	    print_node(insert_it->second.first, insert_it->second.second);
+	    cout<<"</action>\n";
 	    ++insert_it;
 	  }
 	  else
 	  {
-	    state = change_diff_state(state, keep);
+	    int changes = detect_changes(keep_it->second.first, keep_it->second.first,
+					 nodes_used_by_ways, nodes_used_by_relations, nodes_used_indirectly);
+	    cout<<"<action type=\"info\""
+	        <<((changes & WAY_MEMBERSHIP) ? " waymember=\"yes\"" : "")
+	        <<((changes & RELATION_MEMBERSHIP) ? " relationmember=\"yes\"" : "")
+	        <<((changes & INDIRECT_MEMBERSHIP) ? " indirectmember=\"yes\"" : "")
+	        <<">\n";
 	    print_node(keep_it->second.first, keep_it->second.second);
+	    cout<<"</action>\n";
 	    ++keep_it;
 	  }
 	}
@@ -904,8 +1246,15 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 	{
 	  if (insert_it != update_node_logger.insert_end())
 	  {
-	    state = change_diff_state(state, insert);
+	    int changes = detect_changes(insert_it->second.first, insert_it->second.first,
+					 nodes_used_by_ways, nodes_used_by_relations, nodes_used_indirectly);
+	    cout<<"<action type=\"create\""
+	        <<((changes & WAY_MEMBERSHIP) ? " waymember=\"yes\"" : "")
+	        <<((changes & RELATION_MEMBERSHIP) ? " relationmember=\"yes\"" : "")
+	        <<((changes & INDIRECT_MEMBERSHIP) ? " indirectmember=\"yes\"" : "")
+	        <<">\n";
 	    print_node(insert_it->second.first, insert_it->second.second);
+	    cout<<"</action>\n";
 	    ++insert_it;
 	  }
 	  else
@@ -931,14 +1280,45 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 	{
 	  if (insert_it != update_way_logger.insert_end() && insert_it->first < keep_it->first)
 	  {
-	    state = change_diff_state(state, insert);
-	    print_way(insert_it->second.first, insert_it->second.second);
+	    int changes = detect_changes(insert_it->second.first, insert_it->second.first,
+					 update_node_logger, ways_used_by_relations);
+	    cout<<"<action type=\"create\""
+	        <<((changes & RELATION_MEMBERSHIP) ? " relationmember=\"yes\"" : "")
+	        <<">\n";
+	    print_way(insert_it->second.first, insert_it->second.second, insert, update_node_logger);
+	    cout<<"</action>\n";
 	    ++insert_it;
 	  }
 	  else
 	  {
-	    state = change_diff_state(state, keep);
-	    print_way(keep_it->second.first, keep_it->second.second);
+	    int changes = detect_changes(keep_it->second.first, keep_it->second.first,
+					 update_node_logger, ways_used_by_relations);
+	    if (!(changes & (MEMBERS | GEOMETRY)))
+	    {
+	      cout<<"<action type=\"info\""
+	        <<((changes & RELATION_MEMBERSHIP) ? " relationmember=\"yes\"" : "")
+	        <<((changes & MEMBER_PROPERTIES) ? " memberproperties=\"changed\"" : "")
+	        <<">\n";
+	      print_way(keep_it->second.first, keep_it->second.second, keep, update_node_logger);
+	      cout<<"</action>\n";
+	    }
+	    else
+	    {
+	      cout<<"<action type=\"modify\""
+	          <<((changes & MEMBERS) ? " members=\"changed\"" : "")
+	          <<((changes & GEOMETRY) ? " geometry=\"changed\"" : "")
+	          <<((changes & TAGS) ? " tags=\"changed\"" : "")
+	          <<((changes & MEMBER_PROPERTIES) ? " memberproperties=\"changed\"" : "")
+	          <<((changes & RELATION_MEMBERSHIP) ? " relationmember=\"yes\"" : "")
+	          <<">\n"
+	          "<old>\n";
+	      print_way(keep_it->second.first, keep_it->second.second, erase, update_node_logger);
+	      cout<<"</old>\n"
+	          "<new>\n";
+	      print_way(keep_it->second.first, keep_it->second.second, insert, update_node_logger);
+	      cout<<"</new>\n"
+	          "</action>\n";
+	    }
 	    ++keep_it;
 	  }
 	}
@@ -946,14 +1326,56 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 	{
 	  if (insert_it != update_way_logger.insert_end() && insert_it->first < erase_it->first)
 	  {
-	    state = change_diff_state(state, insert);
-	    print_way(insert_it->second.first, insert_it->second.second);
+	    int changes = detect_changes(insert_it->second.first, insert_it->second.first,
+					 update_node_logger, ways_used_by_relations);
+	    cout<<"<action type=\"create\""
+	        <<((changes & RELATION_MEMBERSHIP) ? " relationmember=\"yes\"" : "")
+	        <<">\n";
+	    print_way(insert_it->second.first, insert_it->second.second, insert, update_node_logger);
+	    cout<<"</action>\n";
+	    ++insert_it;
+	  }
+	  else if (insert_it != update_way_logger.insert_end() && insert_it->first == erase_it->first)
+	  {
+	    int changes = detect_changes(erase_it->second.first, insert_it->second.first,
+					 update_node_logger, ways_used_by_relations);
+	    cout<<"<action type=\"modify\""
+	        <<((changes & MEMBERS) ? " members=\"changed\"" : "")
+	        <<((changes & GEOMETRY) ? " geometry=\"changed\"" : "")
+	        <<((changes & TAGS) ? " tags=\"changed\"" : "")
+	        <<((changes & MEMBER_PROPERTIES) ? " memberproperties=\"changed\"" : "")
+	        <<((changes & RELATION_MEMBERSHIP) ? " relationmember=\"yes\"" : "")
+	        <<">\n"
+	        "<old>\n";
+	    print_way(erase_it->second.first, erase_it->second.second, erase, update_node_logger);
+	    cout<<"</old>\n"
+	        "<new>\n";
+	    print_way(insert_it->second.first, erase_it->second.second, insert, update_node_logger);
+	    cout<<"</new>\n"
+	        "</action>\n";
+	    ++erase_it;
 	    ++insert_it;
 	  }
 	  else
 	  {
-	    state = change_diff_state(state, erase);
-	    print_way(erase_it->second.first, erase_it->second.second);
+	    int changes = detect_changes(erase_it->second.first, erase_it->second.first,
+					 update_node_logger, ways_used_by_relations);
+	    cout<<"<action type=\"delete\""
+	        <<((changes & RELATION_MEMBERSHIP) ? " relationmember=\"yes\"" : "")
+	        <<">\n"
+	        "<old>\n";
+	    print_way(erase_it->second.first, erase_it->second.second, erase, update_node_logger);
+	    cout<<"</old>\n";
+	    const OSM_Element_Metadata* meta = update_way_logger.get_erased_meta(erase_it->second.first.id);
+	    if (meta)
+	    {
+	      cout<<"<new>\n"
+	          "  <way id=\""<<erase_it->second.first.id.val()<<"\"";
+	      print_meta(meta);
+	      cout<<"/>\n"
+	          "</new>\n";
+	    }
+	    cout<<"</action>\n";
 	    ++erase_it;
 	  }
 	}
@@ -964,14 +1386,45 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 	{
 	  if (insert_it != update_way_logger.insert_end() && insert_it->first < keep_it->first)
 	  {
-	    state = change_diff_state(state, insert);
-	    print_way(insert_it->second.first, insert_it->second.second);
+	    int changes = detect_changes(insert_it->second.first, insert_it->second.first,
+					 update_node_logger, ways_used_by_relations);
+	    cout<<"<action type=\"create\""
+	        <<((changes & RELATION_MEMBERSHIP) ? " relationmember=\"yes\"" : "")
+	        <<">\n";
+	    print_way(insert_it->second.first, insert_it->second.second, insert, update_node_logger);
+	    cout<<"</action>\n";
 	    ++insert_it;
 	  }
 	  else
 	  {
-	    state = change_diff_state(state, keep);
-	    print_way(keep_it->second.first, keep_it->second.second);
+	    int changes = detect_changes(keep_it->second.first, keep_it->second.first,
+					 update_node_logger, ways_used_by_relations);
+	    if (!(changes & (MEMBERS | GEOMETRY)))
+	    {
+	      cout<<"<action type=\"info\""
+	        <<((changes & RELATION_MEMBERSHIP) ? " relationmember=\"yes\"" : "")
+	        <<((changes & MEMBER_PROPERTIES) ? " memberproperties=\"changed\"" : "")
+	        <<">\n";
+	      print_way(keep_it->second.first, keep_it->second.second, keep, update_node_logger);
+	      cout<<"</action>\n";
+	    }
+	    else
+	    {
+	      cout<<"<action type=\"modify\""
+	          <<((changes & MEMBERS) ? " members=\"changed\"" : "")
+	          <<((changes & GEOMETRY) ? " geometry=\"changed\"" : "")
+	          <<((changes & TAGS) ? " tags=\"changed\"" : "")
+	          <<((changes & MEMBER_PROPERTIES) ? " memberproperties=\"changed\"" : "")
+	          <<((changes & RELATION_MEMBERSHIP) ? " relationmember=\"yes\"" : "")
+	          <<">\n"
+	          "<old>\n";
+	      print_way(keep_it->second.first, keep_it->second.second, erase, update_node_logger);
+	      cout<<"</old>\n"
+	          "<new>\n";
+	      print_way(keep_it->second.first, keep_it->second.second, insert, update_node_logger);
+	      cout<<"</new>\n"
+	          "</action>\n";
+	    }
 	    ++keep_it;
 	  }
 	}
@@ -979,8 +1432,13 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 	{
 	  if (insert_it != update_way_logger.insert_end())
 	  {
-	    state = change_diff_state(state, insert);
-	    print_way(insert_it->second.first, insert_it->second.second);
+	    int changes = detect_changes(insert_it->second.first, insert_it->second.first,
+					 update_node_logger, ways_used_by_relations);
+	    cout<<"<action type=\"create\""
+	        <<((changes & RELATION_MEMBERSHIP) ? " relationmember=\"yes\"" : "")
+	        <<">\n";
+	    print_way(insert_it->second.first, insert_it->second.second, insert, update_node_logger);
+	    cout<<"</action>\n";
 	    ++insert_it;
 	  }
 	  else
@@ -1008,14 +1466,41 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 	{
 	  if (insert_it != update_relation_logger.insert_end() && insert_it->first < keep_it->first)
 	  {
-	    state = change_diff_state(state, insert);
-	    print_relation(insert_it->second.first, insert_it->second.second, relation_roles);
+	    cout<<"<action type=\"create\">\n";
+	    print_relation(insert_it->second.first, insert_it->second.second, relation_roles,
+	        insert, update_way_logger, update_node_logger);
+	    cout<<"</action>\n";
 	    ++insert_it;
 	  }
 	  else
 	  {
-	    state = change_diff_state(state, keep);
-	    print_relation(keep_it->second.first, keep_it->second.second, relation_roles);
+	    int changes = detect_changes(keep_it->second.first, keep_it->second.first,
+					 update_node_logger, update_way_logger);
+	    if (!(changes & GEOMETRY))
+	    {
+	      cout<<"<action type=\"info\""
+	          <<((changes & MEMBER_PROPERTIES) ? " memberproperties=\"changed\"" : "")
+	          <<">\n";
+	      print_relation(keep_it->second.first, keep_it->second.second, relation_roles,
+	          keep, update_way_logger, update_node_logger);
+	      cout<<"</action>\n";
+	    }
+	    else
+	    {
+	      cout<<"<action type=\"modify\""
+	          <<((changes & GEOMETRY) ? " geometry=\"changed\"" : "")
+	          <<((changes & MEMBER_PROPERTIES) ? " memberproperties=\"changed\"" : "")
+	          <<">\n"
+	          "<old>\n";
+	      print_relation(keep_it->second.first, keep_it->second.second, relation_roles,
+	          erase, update_way_logger, update_node_logger);
+	      cout<<"</old>\n"
+	          "<new>\n";
+	      print_relation(keep_it->second.first, keep_it->second.second, relation_roles,
+	          insert, update_way_logger, update_node_logger);
+	      cout<<"</new>\n"
+	          "</action>\n";
+	    }
 	    ++keep_it;
 	  }
 	}
@@ -1023,14 +1508,51 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 	{
 	  if (insert_it != update_relation_logger.insert_end() && insert_it->first < erase_it->first)
 	  {
-	    state = change_diff_state(state, insert);
-	    print_relation(insert_it->second.first, insert_it->second.second, relation_roles);
+	    cout<<"<action type=\"create\">\n";
+	    print_relation(insert_it->second.first, insert_it->second.second, relation_roles,
+	        insert, update_way_logger, update_node_logger);
+	    cout<<"</action>\n";
+	    ++insert_it;
+	  }
+	  else if (insert_it != update_relation_logger.insert_end() && insert_it->first == erase_it->first)
+	  {
+	    int changes = detect_changes(erase_it->second.first, insert_it->second.first,
+					 update_node_logger, update_way_logger);
+	    cout<<"<action type=\"modify\""
+	        <<((changes & MEMBERS) ? " members=\"changed\"" : "")
+	        <<((changes & GEOMETRY) ? " geometry=\"changed\"" : "")
+	        <<((changes & TAGS) ? " tags=\"changed\"" : "")
+	        <<((changes & MEMBER_PROPERTIES) ? " memberproperties=\"changed\"" : "")
+	        <<">\n"
+	        "<old>\n";
+	    print_relation(erase_it->second.first, erase_it->second.second, relation_roles,
+	        erase, update_way_logger, update_node_logger);
+	    cout<<"</old>\n"
+	        "<new>\n";
+	    print_relation(insert_it->second.first, erase_it->second.second, relation_roles,
+	        insert, update_way_logger, update_node_logger);
+	    cout<<"</new>\n"
+	        "</action>\n";
+	    ++erase_it;
 	    ++insert_it;
 	  }
 	  else
 	  {
-	    state = change_diff_state(state, erase);
-	    print_relation(erase_it->second.first, erase_it->second.second, relation_roles);
+	    cout<<"<action type=\"delete\">\n"
+	        "<old>\n";
+	    print_relation(erase_it->second.first, erase_it->second.second, relation_roles,
+	        erase, update_way_logger, update_node_logger);
+	    cout<<"</old>\n";
+	    const OSM_Element_Metadata* meta = update_relation_logger.get_erased_meta(erase_it->second.first.id);
+	    if (meta)
+	    {
+	      cout<<"<new>\n"
+	          "  <relation id=\""<<erase_it->second.first.id.val()<<"\"";
+	      print_meta(meta);
+	      cout<<"/>\n"
+	          "</new>\n";
+	    }
+	    cout<<"</action>\n";
 	    ++erase_it;
 	  }
 	}
@@ -1041,14 +1563,41 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 	{
 	  if (insert_it != update_relation_logger.insert_end() && insert_it->first < keep_it->first)
 	  {
-	    state = change_diff_state(state, insert);
-	    print_relation(insert_it->second.first, insert_it->second.second, relation_roles);
+	    cout<<"<action type=\"create\">\n";
+	    print_relation(insert_it->second.first, insert_it->second.second, relation_roles,
+	        insert, update_way_logger, update_node_logger);
+	    cout<<"</action>\n";
 	    ++insert_it;
 	  }
 	  else
 	  {
-	    state = change_diff_state(state, keep);
-	    print_relation(keep_it->second.first, keep_it->second.second, relation_roles);
+	    int changes = detect_changes(keep_it->second.first, keep_it->second.first,
+					 update_node_logger, update_way_logger);
+	    if (!(changes & GEOMETRY))
+	    {
+	      cout<<"<action type=\"info\""
+	          <<((changes & MEMBER_PROPERTIES) ? " memberproperties=\"changed\"" : "")
+	          <<">\n";
+	      print_relation(keep_it->second.first, keep_it->second.second, relation_roles,
+	          keep, update_way_logger, update_node_logger);
+	      cout<<"</action>\n";
+	    }
+	    else
+	    {
+	      cout<<"<action type=\"modify\""
+	          <<((changes & GEOMETRY) ? " geometry=\"changed\"" : "")
+	          <<((changes & MEMBER_PROPERTIES) ? " memberproperties=\"changed\"" : "")
+	          <<">\n"
+	          "<old>\n";
+	      print_relation(keep_it->second.first, keep_it->second.second, relation_roles,
+	          erase, update_way_logger, update_node_logger);
+	      cout<<"</old>\n"
+	          "<new>\n";
+	      print_relation(keep_it->second.first, keep_it->second.second, relation_roles,
+	          insert, update_way_logger, update_node_logger);
+	      cout<<"</new>\n"
+	          "</action>\n";
+	    }
 	    ++keep_it;
 	  }
 	}
@@ -1056,8 +1605,10 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 	{
 	  if (insert_it != update_relation_logger.insert_end())
 	  {
-	    state = change_diff_state(state, insert);
-	    print_relation(insert_it->second.first, insert_it->second.second, relation_roles);
+	    cout<<"<action type=\"create\">\n";
+	    print_relation(insert_it->second.first, insert_it->second.second, relation_roles,
+	        insert, update_way_logger, update_node_logger);
+	    cout<<"</action>\n";
 	    ++insert_it;
 	  }
 	  else
@@ -1067,8 +1618,6 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
     }
   }
   
-  change_diff_state(state, none);
-
   cout<<"\n</osmAugmentedDiff>\n";
 }
 

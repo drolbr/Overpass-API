@@ -130,6 +130,15 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
     process_meta_data(*transaction->data_index(meta_settings().WAYS_META),
 		      ways_meta_to_insert, ids_to_modify, to_delete, update_logger);
     process_user_data(*transaction, user_by_id, idxs_by_id);
+    
+    if (update_logger)
+    {
+      stable_sort(ways_meta_to_delete.begin(), ways_meta_to_delete.begin());
+      ways_meta_to_delete.erase(unique(ways_meta_to_delete.begin(), ways_meta_to_delete.end()),
+				 ways_meta_to_delete.end());
+      update_logger->set_delete_meta_data(ways_meta_to_delete);
+      ways_meta_to_delete.clear();
+    }
   }
   callback->update_finished();
   

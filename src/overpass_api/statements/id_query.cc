@@ -27,6 +27,7 @@ using namespace std;
 
 Generic_Statement_Maker< Id_Query_Statement > Id_Query_Statement::statement_maker("id-query");
 
+
 template< class TIndex, class TObject >
 void collect_elems(Resource_Manager& rman, const File_Properties& prop,
 		   uint32 lower, uint32 upper,
@@ -47,6 +48,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
       elems[it.index()].push_back(it.object());
   }
 }
+
 
 template< class TIndex, class TObject >
 void collect_elems(Resource_Manager& rman, const File_Properties& prop,
@@ -73,6 +75,24 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
       elems[it.index()].push_back(it.object());
   }
 }
+
+
+void collect_elems_flat(Resource_Manager& rman,
+		   Area_Skeleton::Id_Type lower, Area_Skeleton::Id_Type upper,
+		   const vector< Area_Skeleton::Id_Type >& ids, bool invert_ids,
+		   map< Uint31_Index, vector< Area_Skeleton > >& elems)
+{
+  Block_Backend< Uint31_Index, Area_Skeleton > elems_db
+      (rman.get_transaction()->data_index(area_settings().AREAS));
+  for (typename Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
+      it = elems_db.flat_begin(); !(it == elems_db.flat_end()); ++it)
+  {
+    if (!(it.object().id < lower) && !(upper < it.object().id)
+        && (binary_search(ids.begin(), ids.end(), it.object().id) ^ invert_ids))
+      elems[it.index()].push_back(it.object());
+  }
+}
+
 
 template< class TIndex, class TObject >
 void filter_elems(uint32 lower, uint32 upper,
@@ -145,6 +165,7 @@ bool Id_Query_Constraint::get_data
     else
       collect_elems(rman, *osm_base_settings().WAYS, stmt->get_lower(), stmt->get_upper(),
 		    ids, invert_ids, into.ways);
+    return true;
   }
   else if (stmt->get_type() == Statement::RELATION)
   {
@@ -154,9 +175,18 @@ bool Id_Query_Constraint::get_data
     else
       collect_elems(rman, *osm_base_settings().RELATIONS, stmt->get_lower(), stmt->get_upper(),
 		    ids, invert_ids, into.relations);
+    return true;
+  }
+  else if (stmt->get_type() == Statement::AREA)
+  {
+    if (ids.empty())
+      collect_elems_flat(rman, stmt->get_lower(), stmt->get_upper(), ids, true, into.areas);
+    else
+      collect_elems_flat(rman, stmt->get_lower(), stmt->get_upper(), ids, invert_ids, into.areas);
+    return true;
   }
 
-  return true;
+  return false;
 }
 
 void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into)
@@ -175,6 +205,11 @@ void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into)
     filter_elems(stmt->get_lower(), stmt->get_upper(), into.relations);
   else
     into.relations.clear();
+  
+  if (stmt->get_type() == Statement::AREA)
+    filter_elems(stmt->get_lower(), stmt->get_upper(), into.areas);
+  else
+    into.areas.clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -201,12 +236,14 @@ Id_Query_Statement::Id_Query_Statement
     type = Statement::WAY;
   else if (attributes["type"] == "relation")
     type = Statement::RELATION;
+  else if (attributes["type"] == "area")
+    type = Statement::AREA;
   else
   {
     type = 0;
     ostringstream temp;
     temp<<"For the attribute \"type\" of the element \"id-query\""
-	<<" the only allowed values are \"node\", \"way\" or \"relation\".";
+	<<" the only allowed values are \"node\", \"way\", \"relation\", or \"area\".";
     add_static_error(temp.str());
   }
   
@@ -256,6 +293,8 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
     collect_elems(rman, *osm_base_settings().WAYS, lower, upper, ways);
   else if (type == RELATION)
     collect_elems(rman, *osm_base_settings().RELATIONS, lower, upper, relations);
+  else if (type == AREA)
+    collect_elems_flat(rman, lower, upper, vector< Area_Skeleton::Id_Type >(), true, areas);
 
   rman.health_check(*this);
 }

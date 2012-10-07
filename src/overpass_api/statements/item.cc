@@ -119,6 +119,7 @@ void Item_Constraint::filter(Resource_Manager& rman, Set& into)
   item_filter_map(into.nodes, rman.sets()[item->get_result_name()].nodes);
   item_filter_map(into.ways, rman.sets()[item->get_result_name()].ways);
   item_filter_map(into.relations, rman.sets()[item->get_result_name()].relations);
+  item_filter_map(into.areas, rman.sets()[item->get_result_name()].areas);
 }
 
 //-----------------------------------------------------------------------------

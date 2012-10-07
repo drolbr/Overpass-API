@@ -236,10 +236,39 @@ RES=$RES`diff -q run/meta_1/after.log run/meta_1/db_after.log`
 RES=$RES`diff -q run/meta_1/newer.log run/meta_1/db_newer.log`
 if [[ -n $RES || -s run/meta_1/diff_stderr.log ]]; then
 {
-  echo `date +%T` "Test diff 1 FAILED."
+  echo `date +%T` "Test meta 1 FAILED."
   echo $RES
 }; else
 {
-  echo `date +%T` "Test diff 1 succeeded."
+  echo `date +%T` "Test meta 1 succeeded."
   rm -R run/meta_1
+}; fi
+
+
+# Test the augmented diffs
+
+# Prepare testing the statements
+date +%T
+mkdir -p run/meta_2
+rm -fR run/meta_2/*
+$BASEDIR/bin/update_database --db-dir=run/meta_2/ --version=mock-up-init --meta <input/meta_2/augmented_init.osm
+
+# do the differential update including start/stop of dispatcher
+date +%T
+$BASEDIR/bin/dispatcher --osm-base --meta --db-dir=run/meta_2/ &
+sleep 1
+rm -f run/meta_2/transactions.log
+$BASEDIR/bin/update_database --version=mock-up-meta --produce-diff --meta <input/meta_2/augmented_source.osm >run/meta_2/augmented_diff.osm
+cat run/meta_2/transactions.log
+$BASEDIR/bin/dispatcher --terminate
+
+# compare outcome to expected outcome
+RES=`diff -q expected/meta_2/augmented_diff.osm run/meta_2/augmented_diff.osm`
+if [[ -n $RES || ! -f run/meta_2/augmented_meta.osm ]]; then
+{
+  echo `date +%T` "Test meta 2 FAILED."
+}; else
+{
+  echo `date +%T` "Test meta 2 succeeded."
+  rm -R run/meta_2
 }; fi

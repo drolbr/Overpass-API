@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
       data_version = ((string)argv[argpos]).substr(10);
     else if (!(strncmp(argv[argpos], "--meta", 6)))
       meta = true;
-    else if (!(strncmp(argv[argpos], "--produce-diff", 6)))
+    else if (!(strncmp(argv[argpos], "--produce-diff", 14)))
       produce_augmented_diffs = true;
     else
     {

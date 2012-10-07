@@ -63,6 +63,9 @@ void Area_Constraint::filter(Resource_Manager& rman, Set& into)
   if (area_blocks_req.empty())
     area->get_ranges(range_req, area_blocks_req, rman);
   area->collect_nodes(into.nodes, area_blocks_req, rman);
+  into.ways.clear();
+  into.relations.clear();
+  into.areas.clear();
 }
 
 //-----------------------------------------------------------------------------

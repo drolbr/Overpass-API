@@ -140,6 +140,72 @@ public:
     }
   }
   
+  void set_delete_meta_data(const vector< OSM_Element_Metadata_Skeleton< Relation::Id_Type > >& meta_to_delete_)
+  {
+    for (typename vector< OSM_Element_Metadata_Skeleton< Relation::Id_Type > >::const_iterator
+        it = meta_to_delete_.begin(); it != meta_to_delete_.end(); ++it)
+    {
+      OSM_Element_Metadata meta;
+      meta.version = it->version;
+      meta.timestamp = it->timestamp;
+      meta.changeset = it->changeset;
+      meta.user_id = it->user_id;
+      meta_to_delete.push_back(make_pair(it->ref, meta));
+    }
+  }
+  
+  void request_user_names(map< uint32, string >& user_names)
+  {
+    for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator
+        it = insert_begin(); it != insert_end(); ++it)
+    {
+      if (it->second.second)
+        user_names[it->second.second->user_id];
+    }
+    for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator
+        it = keep_begin(); it != keep_end(); ++it)
+    {
+      if (it->second.second)
+        user_names[it->second.second->user_id];
+    }
+    for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator
+        it = erase_begin(); it != erase_end(); ++it)
+    {
+      if (it->second.second)
+        user_names[it->second.second->user_id];
+    }
+    
+    for (vector< pair< Relation::Id_Type, OSM_Element_Metadata > >::const_iterator
+        it = meta_to_delete.begin(); it != meta_to_delete.end(); ++it)
+      user_names[it->second.user_id];
+  }
+  
+  void set_user_names(map< uint32, string >& user_names)
+  {
+    for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator
+        it = insert_begin(); it != insert_end(); ++it)
+    {
+      if (it->second.second)
+        it->second.second->user_name = user_names[it->second.second->user_id];
+    }  
+    for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator
+        it = keep_begin(); it != keep_end(); ++it)
+    {
+      if (it->second.second)
+        it->second.second->user_name = user_names[it->second.second->user_id];
+    }  
+    for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator
+        it = erase_begin(); it != erase_end(); ++it)
+    {
+      if (it->second.second)
+        it->second.second->user_name = user_names[it->second.second->user_id];
+    }  
+    
+    for (vector< pair< Relation::Id_Type, OSM_Element_Metadata > >::iterator
+        it = meta_to_delete.begin(); it != meta_to_delete.end(); ++it)
+      it->second.user_name = user_names[it->second.user_id];
+  }
+
   map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator insert_begin() const
   { return insert.begin(); }
   map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator insert_end() const
@@ -165,6 +231,9 @@ public:
   { return erase.begin(); }
   map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator erase_end()
   { return erase.end(); }
+  
+  const OSM_Element_Metadata* get_erased_meta(Relation::Id_Type ref) const
+  { return binary_pair_search(meta_to_delete, ref); }
 
   ~Update_Relation_Logger();
   
@@ -172,6 +241,7 @@ private:
   map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > > insert;
   map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > > keep;
   map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > > erase;
+  vector< pair< Relation::Id_Type, OSM_Element_Metadata > > meta_to_delete;
 };
 
 
@@ -181,9 +251,20 @@ struct Relation_Updater
   
   Relation_Updater(string db_dir, bool meta);
   
-  void set_id_deleted(Relation::Id_Type id)
+  void set_id_deleted(Relation::Id_Type id, const OSM_Element_Metadata* meta = 0)
   {
     ids_to_modify.push_back(make_pair(id, false));
+    if (meta)
+    {
+      user_by_id[meta->user_id] = meta->user_name;
+      OSM_Element_Metadata_Skeleton< Relation::Id_Type > meta_skel;
+      meta_skel.ref = id;
+      meta_skel.version = meta->version;
+      meta_skel.changeset = meta->changeset;
+      meta_skel.timestamp = meta->timestamp;
+      meta_skel.user_id = meta->user_id;
+      rels_meta_to_delete.push_back(meta_skel);
+    }
   }
   
   void set_relation
@@ -252,6 +333,7 @@ private:
 
   bool meta;
   vector< pair< OSM_Element_Metadata_Skeleton< Relation::Id_Type >, uint32 > > rels_meta_to_insert;
+  vector< OSM_Element_Metadata_Skeleton< Relation::Id_Type > > rels_meta_to_delete;
   map< uint32, string > user_by_id;
   
   void find_affected_relations(const vector< pair< Node::Id_Type, Uint32_Index > >& moved_nodes,

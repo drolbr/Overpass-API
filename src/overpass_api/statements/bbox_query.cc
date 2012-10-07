@@ -224,6 +224,8 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
     for (; it != into.relations.end(); ++it)
       it->second.clear();
   }
+  
+  //TODO: filter areas
 }
 
 bool matches_bbox(const Bbox_Query_Statement& bbox, const Way_Skeleton& way,
@@ -409,6 +411,8 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
       it->second.swap(local_into);
     }
   }  
+  
+  //TODO: filter areas
 }
 
 //-----------------------------------------------------------------------------

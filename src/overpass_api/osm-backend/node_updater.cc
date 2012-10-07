@@ -124,6 +124,15 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
     process_meta_data(*transaction->data_index(meta_settings().NODES_META),
 		      nodes_meta_to_insert, ids_to_modify, to_delete, update_logger);
     process_user_data(*transaction, user_by_id, idxs_by_id);
+    
+    if (update_logger)
+    {
+      stable_sort(nodes_meta_to_delete.begin(), nodes_meta_to_delete.begin());
+      nodes_meta_to_delete.erase(unique(nodes_meta_to_delete.begin(), nodes_meta_to_delete.end()),
+				 nodes_meta_to_delete.end());
+      update_logger->set_delete_meta_data(nodes_meta_to_delete);
+      nodes_meta_to_delete.clear();
+    }
   }
   callback->update_finished();
   

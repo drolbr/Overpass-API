@@ -52,16 +52,14 @@ Query_Statement::Query_Statement
     type = QUERY_WAY;
   else if (attributes["type"] == "relation")
     type = QUERY_RELATION;
-/*  else if (attributes["type"] == "area")
-    type = QUERY_AREA;*/
+  else if (attributes["type"] == "area")
+    type = QUERY_AREA;
   else
   {
     type = 0;
     ostringstream temp;
     temp<<"For the attribute \"type\" of the element \"query\""
-	<<" the only allowed values are \"node\", \"way\" or \"relation\".";
-/*    temp<<"For the attribute \"type\" of the element \"query\""
-	<<" the only allowed values are \"node\", \"way\", \"relation\" or \"area\".";*/
+	<<" the only allowed values are \"node\", \"way\", \"relation\" or \"area\".";
     add_static_error(temp.str());
   }
 }
@@ -551,10 +549,44 @@ void Query_Statement::filter_by_tags
 }
 
 
+template< class Id_Type >
+void Query_Statement::progress_1(vector< Id_Type >& ids,
+				 bool& invert_ids, Answer_State& answer_state, Set& into,
+				 bool check_keys_late, File_Properties& file_prop, Resource_Manager& rman)
+{
+  if ((!keys.empty() && !check_keys_late)
+     || !key_values.empty() || (!key_regexes.empty() && !check_keys_late))
+  {
+    collect_ids< Id_Type >(file_prop, rman, check_keys_late).swap(ids);
+    if (!key_nvalues.empty() || !key_nregexes.empty())
+    {
+      vector< Id_Type > non_ids = collect_non_ids< Id_Type >(file_prop, rman);
+      vector< Id_Type > diff_ids(ids.size(), Id_Type(0u));
+      diff_ids.erase(set_difference(ids.begin(), ids.end(), non_ids.begin(), non_ids.end(),
+		     diff_ids.begin()), diff_ids.end());
+      ids.swap(diff_ids);
+    }
+    if (ids.empty())
+      answer_state = data_collected;
+  }
+  else if (!key_nvalues.empty() || !key_nregexes.empty())
+  {
+    invert_ids = true;
+    collect_non_ids< Id_Type >(file_prop, rman).swap(ids);
+  }
+    
+  for (vector< Query_Constraint* >::iterator it = constraints.begin();
+      it != constraints.end() && answer_state < data_collected; ++it)
+  {
+    if ((*it)->collect(rman, into, type, ids, invert_ids))
+      answer_state = data_collected;
+  }
+}
+
+
 void Query_Statement::execute(Resource_Manager& rman)
 {
-  enum { nothing, /*ids_collected,*/ ranges_collected, data_collected } answer_state
-      = nothing;
+  Answer_State answer_state = nothing;
   Set into;
   
   set_progress(1);
@@ -571,75 +603,17 @@ void Query_Statement::execute(Resource_Manager& rman)
     bool invert_ids = false;
 
     if (type == QUERY_NODE)
-    {
-      if ((!keys.empty() && !check_keys_late)
-          || !key_values.empty() || (!key_regexes.empty() && !check_keys_late))
-      {
-        collect_ids< Node::Id_Type >(*osm_base_settings().NODE_TAGS_GLOBAL, rman, check_keys_late)
-	    .swap(node_ids);
-        if (!key_nvalues.empty() || !key_nregexes.empty())
-        {
-	  vector< Node::Id_Type > non_ids
-	      = collect_non_ids< Node::Id_Type >(*osm_base_settings().NODE_TAGS_GLOBAL, rman);
-	  vector< Node::Id_Type > diff_ids(node_ids.size(), Node::Id_Type(0u));
-	  diff_ids.erase
-	      (set_difference(node_ids.begin(), node_ids.end(), non_ids.begin(), non_ids.end(),
-			    diff_ids.begin()), diff_ids.end());
-	  node_ids.swap(diff_ids);
-        }
-        if (node_ids.empty())
-	  answer_state = data_collected;
-      }
-      else if (!key_nvalues.empty() || !key_nregexes.empty())
-      {
-        invert_ids = true;
-        collect_non_ids< Node::Id_Type >(*osm_base_settings().NODE_TAGS_GLOBAL, rman).swap(node_ids);
-      }
-    
-      for (vector< Query_Constraint* >::iterator it = constraints.begin();
-          it != constraints.end() && answer_state < data_collected; ++it)
-      {
-        if ((*it)->collect(rman, into, type, node_ids, invert_ids))
-          answer_state = data_collected;
-      }
-    }
-    else
-    {
-      File_Properties* file_prop = 0;
-      if (type == QUERY_WAY)
-        file_prop = osm_base_settings().WAY_TAGS_GLOBAL;
-      else if (type == QUERY_RELATION)
-        file_prop = osm_base_settings().RELATION_TAGS_GLOBAL;
-
-      if ((!keys.empty() && !check_keys_late)
-          || !key_values.empty() || (!key_regexes.empty() && !check_keys_late))
-      {
-        collect_ids< Uint32_Index >(*file_prop, rman, check_keys_late).swap(ids);
-        if (!key_nvalues.empty() || !key_nregexes.empty())
-        {
-	  vector< Uint32_Index > non_ids = collect_non_ids< Uint32_Index >(*file_prop, rman);
-	  vector< Uint32_Index > diff_ids(ids.size(), Uint32_Index(0u));
-	  diff_ids.erase
-	      (set_difference(ids.begin(), ids.end(), non_ids.begin(), non_ids.end(),
-			    diff_ids.begin()), diff_ids.end());
-	  ids.swap(diff_ids);
-        }
-        if (ids.empty())
-	  answer_state = data_collected;
-      }
-      else if (!key_nvalues.empty() || !key_nregexes.empty())
-      {
-        invert_ids = true;
-        collect_non_ids< Uint32_Index >(*file_prop, rman).swap(ids);
-      }
-    
-      for (vector< Query_Constraint* >::iterator it = constraints.begin();
-          it != constraints.end() && answer_state < data_collected; ++it)
-      {
-        if ((*it)->collect(rman, into, type, ids, invert_ids))
-          answer_state = data_collected;
-      }
-    }   
+      progress_1(node_ids, invert_ids, answer_state, into,
+ 		 check_keys_late, *osm_base_settings().NODE_TAGS_GLOBAL, rman);
+    else if (type == QUERY_WAY)
+      progress_1(ids, invert_ids, answer_state, into,
+		 check_keys_late, *osm_base_settings().WAY_TAGS_GLOBAL, rman);
+    else if (type == QUERY_RELATION)
+      progress_1(ids, invert_ids, answer_state, into,
+		 check_keys_late, *osm_base_settings().RELATION_TAGS_GLOBAL, rman);
+    else if (type == QUERY_AREA)
+      progress_1(ids, invert_ids, answer_state, into,
+		 check_keys_late, *area_settings().AREA_TAGS_GLOBAL, rman);
 
     set_progress(2);
     rman.health_check(*this);
@@ -678,7 +652,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	  answer_state = data_collected;
       }
     }
-    else if (type == QUERY_WAY || type == QUERY_RELATION)
+    else if (type == QUERY_WAY || type == QUERY_RELATION || type == QUERY_AREA)
     {
       for (vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && answer_state < data_collected; ++it)
@@ -718,6 +692,10 @@ void Query_Statement::execute(Resource_Manager& rman)
 	get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
 	    (into.relations, ids, invert_ids, range_req_31, rman, *osm_base_settings().RELATIONS);
     }
+    else if (type == QUERY_AREA)
+    {
+      //TODO
+    }
   }
   
   set_progress(5);
@@ -738,6 +716,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 		   rman, *rman.get_transaction());
     filter_by_tags(into.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		   rman, *rman.get_transaction());
+    //TODO
   }
   
   set_progress(7);
@@ -753,11 +732,12 @@ void Query_Statement::execute(Resource_Manager& rman)
   clear_empty_indices(into.nodes);
   clear_empty_indices(into.ways);
   clear_empty_indices(into.relations);
+  clear_empty_indices(into.areas);
   
   into.nodes.swap(rman.sets()[output].nodes);
   into.ways.swap(rman.sets()[output].ways);
   into.relations.swap(rman.sets()[output].relations);
-  rman.sets()[output].areas.clear();
+  into.areas.swap(rman.sets()[output].areas);
   
   rman.health_check(*this);
 }

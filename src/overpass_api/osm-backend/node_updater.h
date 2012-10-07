@@ -77,14 +77,14 @@ public:
   
   void deletion(const Tag_Index_Local& index, const Uint32_Index& ref)
   {
-    map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator it = erase.find(ref.val());
+    map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator it = erase.find(ref);
     if (it != erase.end())
       it->second.first.tags.push_back(make_pair(index.key, index.value));
   }
   
   void keeping(const Tag_Index_Local& index, const Uint32_Index& ref)
   {
-    map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator it = keep.find(ref.val());
+    map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator it = keep.find(ref);
     if (it != keep.end())
       it->second.first.tags.push_back(make_pair(index.key, index.value));
   }
@@ -123,6 +123,72 @@ public:
     }
   }
   
+  void set_delete_meta_data(const vector< OSM_Element_Metadata_Skeleton< Node::Id_Type > >& meta_to_delete_)
+  {
+    for (typename vector< OSM_Element_Metadata_Skeleton< Node::Id_Type > >::const_iterator
+        it = meta_to_delete_.begin(); it != meta_to_delete_.end(); ++it)
+    {
+      OSM_Element_Metadata meta;
+      meta.version = it->version;
+      meta.timestamp = it->timestamp;
+      meta.changeset = it->changeset;
+      meta.user_id = it->user_id;
+      meta_to_delete.push_back(make_pair(it->ref, meta));
+    }
+  }
+  
+  void request_user_names(map< uint32, string >& user_names)
+  {
+    for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator
+        it = insert_begin(); it != insert_end(); ++it)
+    {
+      if (it->second.second)
+        user_names[it->second.second->user_id];
+    }
+    for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator
+        it = keep_begin(); it != keep_end(); ++it)
+    {
+      if (it->second.second)
+        user_names[it->second.second->user_id];
+    }
+    for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator
+        it = erase_begin(); it != erase_end(); ++it)
+    {
+      if (it->second.second)
+        user_names[it->second.second->user_id];
+    }
+    
+    for (vector< pair< Node::Id_Type, OSM_Element_Metadata > >::const_iterator
+        it = meta_to_delete.begin(); it != meta_to_delete.end(); ++it)
+      user_names[it->second.user_id];
+  }
+
+  void set_user_names(map< uint32, string >& user_names)
+  {
+    for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator
+        it = insert_begin(); it != insert_end(); ++it)
+    {
+      if (it->second.second)
+        it->second.second->user_name = user_names[it->second.second->user_id];
+    }  
+    for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator
+        it = keep_begin(); it != keep_end(); ++it)
+    {
+      if (it->second.second)
+        it->second.second->user_name = user_names[it->second.second->user_id];
+    }  
+    for (map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator
+        it = erase_begin(); it != erase_end(); ++it)
+    {
+      if (it->second.second)
+        it->second.second->user_name = user_names[it->second.second->user_id];
+    }  
+    
+    for (vector< pair< Node::Id_Type, OSM_Element_Metadata > >::iterator
+        it = meta_to_delete.begin(); it != meta_to_delete.end(); ++it)
+      it->second.user_name = user_names[it->second.user_id];
+  }
+
   map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator insert_begin() const
   { return insert.begin(); }
   map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator insert_end() const
@@ -149,13 +215,48 @@ public:
   map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator erase_end()
   { return erase.end(); }
 
+  const Node* get_erased(Node::Id_Type ref) const;
+  const Node* get_inserted(Node::Id_Type ref) const;
+  
+  const OSM_Element_Metadata* get_erased_meta(Node::Id_Type ref) const
+  { return binary_pair_search< Node::Id_Type, OSM_Element_Metadata >(meta_to_delete, ref); }
+  
   ~Update_Node_Logger();
   
 private:
   map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > > insert;
   map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > > keep;
   map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > > erase;
+  vector< pair< Node::Id_Type, OSM_Element_Metadata > > meta_to_delete;
 };
+
+
+inline const Node* Update_Node_Logger::get_erased(Node::Id_Type ref) const
+{
+  map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator it = erase.find(ref);
+  if (it != erase.end())
+    return &it->second.first;
+  
+  it = keep.find(ref);
+  if (it != keep.end())
+    return &it->second.first;
+  
+  return 0;
+}
+
+
+inline const Node* Update_Node_Logger::get_inserted(Node::Id_Type ref) const
+{
+  map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::const_iterator it = insert.find(ref);
+  if (it != insert.end())
+    return &it->second.first;
+  
+  it = keep.find(ref);
+  if (it != keep.end())
+    return &it->second.first;
+  
+  return 0;
+}
 
 
 struct Node_Updater
@@ -164,9 +265,20 @@ struct Node_Updater
   
   Node_Updater(string db_dir, bool meta);
   
-  void set_id_deleted(Node::Id_Type id)
+  void set_id_deleted(Node::Id_Type id, const OSM_Element_Metadata* meta = 0)
   {
     ids_to_modify.push_back(make_pair(id, false));
+    if (meta)
+    {
+      user_by_id[meta->user_id] = meta->user_name;
+      OSM_Element_Metadata_Skeleton< Node::Id_Type > meta_skel;
+      meta_skel.ref = id;
+      meta_skel.version = meta->version;
+      meta_skel.changeset = meta->changeset;
+      meta_skel.timestamp = meta->timestamp;
+      meta_skel.user_id = meta->user_id;
+      nodes_meta_to_delete.push_back(meta_skel);
+    }
   }
   
   void set_node
@@ -234,6 +346,7 @@ private:
 
   bool meta;
   vector< pair< OSM_Element_Metadata_Skeleton< Node::Id_Type >, uint32 > > nodes_meta_to_insert;
+  vector< OSM_Element_Metadata_Skeleton< Node::Id_Type > > nodes_meta_to_delete;
   map< uint32, string > user_by_id;
   
   void update_node_ids(map< uint32, vector< Node::Id_Type > >& to_delete, bool record_minuscule_moves);

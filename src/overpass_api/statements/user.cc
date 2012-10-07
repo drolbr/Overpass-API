@@ -78,6 +78,7 @@ void User_Constraint::filter(Resource_Manager& rman, Set& into)
   user_filter_map(into.nodes, rman, user_id, meta_settings().NODES_META);
   user_filter_map(into.ways, rman, user_id, meta_settings().WAYS_META);
   user_filter_map(into.relations, rman, user_id, meta_settings().RELATIONS_META);
+  into.areas.clear();
 }
 
 //-----------------------------------------------------------------------------
