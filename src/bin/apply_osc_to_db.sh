@@ -110,12 +110,13 @@ apply_minute_diffs_augmented()
     EXITCODE=$?
   };
   done
-  head <$DB_DIR/augmented_diffs/id_sorted/$REPLICATE_FILENAME.osc | grep "meta" | awk '{ print substr($0,7,25); }' >$DB_DIR/augmented_diffs/$REPLICATE_FILENAME.state.txt
-  echo $DIFF_COUNT >$DB_DIR/augmented_diffs/state.txt
   ./process_augmented_diffs <$DB_DIR/augmented_diffs/id_sorted/$REPLICATE_FILENAME.osc | gzip >$DB_DIR/augmented_diffs/$REPLICATE_FILENAME.osc.gz
   gzip <$DB_DIR/augmented_diffs/id_sorted/$REPLICATE_FILENAME.osc >$DB_DIR/augmented_diffs/id_sorted/$REPLICATE_FILENAME.osc.gz
   rm $DB_DIR/augmented_diffs/id_sorted/$REPLICATE_FILENAME.osc
   DIFF_COUNT=$(($DIFF_COUNT + 1))
+  
+  echo "osm_base=$DATA_VERSION" >$DB_DIR/augmented_diffs/$REPLICATE_FILENAME.state.txt
+  echo $DIFF_COUNT >$DB_DIR/augmented_diffs/state.txt
 };
 
 
