@@ -1,4 +1,4 @@
-bin_PROGRAMS = osm3s_query dispatcher update_database update_from_dir sketch_route_svg draw_route_svg tocgi uncgi escape_xml bbox_brim_query translate_xapi
+bin_PROGRAMS = osm3s_query dispatcher update_database update_from_dir sketch_route_svg draw_route_svg tocgi uncgi escape_xml bbox_brim_query translate_xapi process_augmented_diffs
 dist_bin_SCRIPTS = apply_osc_to_db.sh cleanup_xapi_tmp.sh clone.sh compress_clone.sh download_clone.sh fetch_osc.sh run_osm3s_minutely.sh rules_loop.sh
 
 escape_xml_cc = ../expat/escape_xml.cc
@@ -36,3 +36,5 @@ bbox_brim_query_SOURCES = ${expat_cc} ../pt_diagrams/bbox-brim-query.cc
 bbox_brim_query_LDADD = -lexpat
 translate_xapi_SOURCES = ../expat/translate_xapi.cc ../expat/escape_xml.cc
 translate_xapi_LDADD = 
+process_augmented_diffs_SOURCES = ../expat/process_augmented_diffs.cc ../expat/expat_justparse_interface.cc ../expat/escape_xml.cc
+process_augmented_diffs_LDADD = -lexpat
