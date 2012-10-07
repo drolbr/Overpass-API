@@ -9,7 +9,8 @@
       var lat = 50.7421;
       var lon = 7.0624;
       var zoom = 6;
-      var data_url = "http://overpass-api.de/api/augmented_diff?id=$ID";
+      var current_id = "$ID";
+      var data_url = "http://overpass-api.de/api/augmented_diff?id=";
       var map;
 
 /**  
@@ -57,8 +58,8 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
 
         var erasedNodes = {};
         var keptNodes = {};
-        var nodes = {};
-        this.parseNodes(doc, erasedNodes, keptNodes, nodes);
+        var insertedNodes = {};
+        this.parseNodes(doc, erasedNodes, keptNodes, insertedNodes);
         var erasedWays = {};
         var keptWays = {};
         var insertedWays = {};
@@ -67,7 +68,7 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
         for (var node in keptNodes)
         {
             erasedNodes[node] = keptNodes[node];
-            nodes[node] = keptNodes[node];
+            insertedNodes[node] = keptNodes[node];
         }
 
         for (var way_id in keptWays)
@@ -94,16 +95,45 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
               fillOpacity: 0.25
           };
         
+        var tagChangedStyle = {
+              strokeColor: "yellow",
+              strokeOpacity: 0.5,
+              strokeWidth: 6,
+              pointRadius: 10,
+              fillColor: "yellow",
+              fillOpacity: 0.25
+          };
+          
+        var unchangedStyle = {
+              strokeColor: "grey",
+              strokeOpacity: 0.5,
+              strokeWidth: 6,
+              pointRadius: 10,
+              fillColor: "grey",
+              fillOpacity: 0.25
+          };
+          
         // Geoms will contain at least ways.length entries.
         var feat_list = [];
         
         for (var way_id in erasedWays) {
             var feat = this.makeWayFeature(erasedWays[way_id], erasedNodes);
-            feat.style = deleteStyle;
+            if (insertedWays[way_id] &&
+                    this.equalGeometry(erasedWays[way_id], erasedNodes, insertedWays[way_id], insertedNodes)) {
+                if (insertedWays[way_id].tagsEqual)
+                    feat.style = unchangedStyle;
+                else
+                    feat.style = tagChangedStyle;
+            }
+            else
+                feat.style = deleteStyle;
             feat_list.push(feat);
         } 
         for (var way_id in insertedWays) {
-            var feat = this.makeWayFeature(insertedWays[way_id], nodes);
+            if (erasedWays[way_id] &&
+                    this.equalGeometry(erasedWays[way_id], erasedNodes, insertedWays[way_id], insertedNodes))
+                continue;
+            var feat = this.makeWayFeature(insertedWays[way_id], insertedNodes);
             feat.style = insertStyle;
             feat_list.push(feat);
         } 
@@ -117,13 +147,24 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
                     feat.geometry.transform(this.externalProjection, 
                         this.internalProjection);
                 }        
-                feat.osm_id = parseInt(node_id); 
-                feat.style = deleteStyle;
+                feat.osm_id = parseInt(node_id);
+                
+                if (insertedNodes[node_id] &&
+                        insertedNodes[node_id].lon == node.lon &&
+                        insertedNodes[node_id].lat == node.lat) {
+                    if (insertedNodes[node_id].tagsEqual)
+                        feat.style = unchangedStyle;
+                    else
+                        feat.style = tagChangedStyle;
+                    insertedNodes[node_id].used = true;
+                }
+                else
+                    feat.style = deleteStyle;
                 feat_list.push(feat);
             }   
         }        
-        for (var node_id in nodes) {
-            var node = nodes[node_id];
+        for (var node_id in insertedNodes) {
+            var node = insertedNodes[node_id];
             if (!node.used) {
                 var feat = new OpenLayers.Feature.Vector(
                     new OpenLayers.Geometry.Point(node['lon'], node['lat']), null);
@@ -148,20 +189,44 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
      */
     parseNodes: function(doc, erasedNodes, keptNodes, insertedNodes) {
         var node_list = doc.getElementsByTagName("node");
+        var lastTags;
+        var lastErasedId;
         for (var i = 0; i < node_list.length; i++) {
             var node = node_list[i];
             var id = node.getAttribute("id");
             var nodeObj = {
                 'lat': node.getAttribute("lat"),
                 'lon': node.getAttribute("lon"),
-                'node': node
+                'tagsEqual': true
             };
             if (node.parentNode.tagName == "erase") {
-              erasedNodes[id] = nodeObj;
+                erasedNodes[id] = nodeObj;
+                lastTags = [];
+                lastErasedId = id;
+                var tags = node.getElementsByTagName("tag");
+                for (var j = 0; j < tags.length; j++)
+                    lastTags[j] = {
+                        'k': tags[j].getAttribute("k"),
+                        'v': tags[j].getAttribute("v")
+                        };
+                    
             } else if (node.parentNode.tagName == "keep") {
-              keptNodes[id] = nodeObj;
+                keptNodes[id] = nodeObj;
+                
             } else if (node.parentNode.tagName == "insert") {
-              insertedNodes[id] = nodeObj;
+                insertedNodes[id] = nodeObj;
+                var tags = node.getElementsByTagName("tag");
+                if (lastErasedId != id || tags.length != lastTags.length)
+                    nodeObj['tagsEqual'] = false;
+                else {
+                    for (var j = 0; j < tags.length; j++) {
+                        if (lastTags[j]['k'] != tags[j].getAttribute("k") ||
+                                lastTags[j]['v'] != tags[j].getAttribute("v")) {
+                            nodeObj['tagsEqual'] = false;
+                            break;
+                        }
+                    }
+                }
             }
         }
     },
@@ -175,25 +240,51 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
      */
     parseWays: function(doc, erasedWays, keptWays, insertedWays) {
         var way_list = doc.getElementsByTagName("way");
+        var lastTags;
+        var lastErasedId;
         for (var i = 0; i < way_list.length; i++) {
             var way = way_list[i];
-            var way_object = {
-              id: way.getAttribute("id")
+            var id = way.getAttribute("id");
+            var wayObj = {
+                'id': id,
+                'tagsEqual': true
             };
             
             var node_list = way.getElementsByTagName("nd");
             
-            way_object.nodes = new Array(node_list.length);
+            wayObj.nodes = new Array(node_list.length);
             
             for (var j = 0; j < node_list.length; j++) {
-                way_object.nodes[j] = node_list[j].getAttribute("ref");
+                wayObj.nodes[j] = node_list[j].getAttribute("ref");
             }  
             if (way.parentNode.tagName == "erase") {
-              erasedWays[way_object.id] = way_object;
+                erasedWays[wayObj.id] = wayObj;
+                lastTags = [];
+                lastErasedId = id;
+                var tags = way.getElementsByTagName("tag");
+                for (var j = 0; j < tags.length; j++)
+                    lastTags[j] = {
+                        'k': tags[j].getAttribute("k"),
+                        'v': tags[j].getAttribute("v")
+                        };
+                        
             } else if (way.parentNode.tagName == "keep") {
-              keptWays[way_object.id] = way_object;
+                keptWays[wayObj.id] = wayObj;
+              
             } else if (way.parentNode.tagName == "insert") {
-              insertedWays[way_object.id] = way_object;
+                insertedWays[wayObj.id] = wayObj;
+                var tags = way.getElementsByTagName("tag");
+                if (lastErasedId != id || tags.length != lastTags.length)
+                    wayObj['tagsEqual'] = false;
+                else {
+                    for (var j = 0; j < tags.length; j++) {
+                        if (lastTags[j]['k'] != tags[j].getAttribute("k") ||
+                                lastTags[j]['v'] != tags[j].getAttribute("v")) {
+                            wayObj['tagsEqual'] = false;
+                            break;
+                        }
+                    }
+                }
             }
         }
     },  
@@ -235,6 +326,24 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
         return feat;
     },
     
+    equalGeometry: function(way1, nodes1, way2, nodes2) {
+
+        if (way1.nodes.length != way2.nodes.length)
+            return false;
+    
+        for (var j = 0; j < way1.nodes.length; j++) {
+            var node1 = nodes1[way1.nodes[j]];
+            var node2 = nodes2[way2.nodes[j]];
+            if (!node1 || !node2)
+                return false;
+               
+            if (node1.lon != node2.lon || node1.lat != node2.lat)
+                return false;
+        }
+        
+        return true;
+    },
+    
     /**
      * APIMethod: write 
      */
@@ -244,6 +353,30 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
 
     CLASS_NAME: "AugmentedDiffsFormat" 
 });     
+
+      function add_layer(id) {
+      
+          var styleMap = new OpenLayers.StyleMap({
+              strokeColor: "blue",
+              strokeOpacity: 0.5,
+              strokeWidth: 6,
+              pointRadius: 10,
+              fillColor: "blue",
+              fillOpacity: 0.25
+          });
+          
+          var layer = new OpenLayers.Layer.Vector("Diff " + id, {
+              strategies: [new OpenLayers.Strategy.Fixed()],
+              protocol: new OpenLayers.Protocol.HTTP({
+                  url: data_url + id,
+                  format: new AugmentedDiffsFormat()
+              }),
+              styleMap: styleMap,
+              projection: new OpenLayers.Projection("EPSG:4326")
+          });
+
+          map.addLayers([layer]);
+      }
 
 
       function init(){
@@ -271,30 +404,12 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
           map.setCenter (lonLat, zoom);
 
           //Initialise the vector layer using AugmentedDiffsFormat
-          var styleMap = new OpenLayers.StyleMap({
-              strokeColor: "blue",
-              strokeOpacity: 0.5,
-              strokeWidth: 6,
-              pointRadius: 10,
-              fillColor: "blue",
-              fillOpacity: 0.25
-          });
-          var layer = new OpenLayers.Layer.Vector("Polygon", {
-              strategies: [new OpenLayers.Strategy.Fixed()],
-              protocol: new OpenLayers.Protocol.HTTP({
-                  url: data_url,
-                  format: new AugmentedDiffsFormat()
-              }),
-              styleMap: styleMap,
-              projection: new OpenLayers.Projection("EPSG:4326")
-          });
-
-          map.addLayers([layer]);
+          add_layer(current_id);
       }
   </script>
 </head>
 <body onload="init()">
   <div id="map" class="smallmap"></div>
-
+  <button onclick="current_id++;add_layer(current_id)">Add diff</button>
 </body>
 </html>
