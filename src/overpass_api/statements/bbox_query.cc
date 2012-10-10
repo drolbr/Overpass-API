@@ -23,6 +23,7 @@
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
 #include "../data/collect_members.h"
+#include "../data/geometry.h"
 #include "bbox_query.h"
 #include "recurse.h"
 
@@ -79,50 +80,6 @@ bool Bbox_Constraint::get_ranges
   set< pair< Uint32_Index, Uint32_Index > > node_ranges;
   this->get_ranges(rman, node_ranges);
   ranges = calc_parents(node_ranges);
-  return true;
-}
-
-inline bool segment_intersects_bbox
-    (double first_lat, double first_lon, double second_lat, double second_lon,
-     double south, double north, double west, double east)
-{
-  if (first_lat < south)
-  {
-    if (second_lat < south)
-      return false;
-    // Otherwise just adjust first_lat and first_lon
-    first_lon += (second_lon - first_lon)*(south - first_lat)/(second_lat - first_lat);
-    first_lat = south;
-  }
-  if (first_lat > north)
-  {
-    if (second_lat > north)
-      return false;
-    // Otherwise just adjust first_lat and first_lon
-    first_lon += (second_lon - first_lon)*(north - first_lat)/(second_lat - first_lat);
-    first_lat = north;
-  }
-
-  if (second_lat < south)
-  {
-    // Adjust second_lat and second_lon
-    second_lon += (first_lon - second_lon)*(south - second_lat)/(first_lat - second_lat);
-    second_lat = south;
-  }
-  if (second_lat > north)
-  {
-    // Adjust second_lat and second_lon
-    second_lon += (first_lon - second_lon)*(north - second_lat)/(first_lat - second_lat);
-    second_lat = north;
-  }
-
-  // Now we know that both latitudes are between south and north.
-  // Thus we only need to check whether the segment touches the bbox in its east-west-extension.
-  if (first_lon < west && second_lon < west)
-    return false;
-  if (first_lon > east && second_lon > east)
-    return false;
-  
   return true;
 }
 
