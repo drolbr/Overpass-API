@@ -52,9 +52,13 @@ public:
   
   void insertion(Way::Id_Type id, const OSM_Element_Metadata& meta)
   {
-    if (insert[id].second)
-      delete insert[id].second;
-    insert[id].second = new OSM_Element_Metadata(meta);
+    map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator it = insert.find(id);
+    if (it != insert.end())
+    {
+      if (it->second.second)
+        delete it->second.second;
+      it->second.second = new OSM_Element_Metadata(meta);
+    }
   }
   
   void deletion(const Uint31_Index& index, const Way_Skeleton& skel)

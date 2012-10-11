@@ -264,7 +264,7 @@ $BASEDIR/bin/dispatcher --terminate
 
 # compare outcome to expected outcome
 RES=`diff -q expected/meta_2/augmented_diff.osm run/meta_2/augmented_diff.osm`
-if [[ -n $RES || ! -f run/meta_2/augmented_meta.osm ]]; then
+if [[ -n $RES || ! -f run/meta_2/augmented_diff.osm ]]; then
 {
   echo `date +%T` "Test meta 2 FAILED."
 }; else

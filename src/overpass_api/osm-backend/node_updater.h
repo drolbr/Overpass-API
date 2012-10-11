@@ -46,9 +46,13 @@ public:
   
   void insertion(Node::Id_Type id, const OSM_Element_Metadata& meta)
   {
-    if (insert[id].second)
-      delete insert[id].second;
-    insert[id].second = new OSM_Element_Metadata(meta);
+    map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator it = insert.find(id);
+    if (it != insert.end())
+    {
+      if (it->second.second)
+        delete it->second.second;
+      it->second.second = new OSM_Element_Metadata(meta);
+    }
   }
   
   void deletion(const Uint32_Index& index, const Node_Skeleton& skel)

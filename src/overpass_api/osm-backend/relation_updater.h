@@ -52,9 +52,13 @@ public:
   
   void insertion(Relation::Id_Type id, const OSM_Element_Metadata& meta)
   {
-    if (insert[id].second)
-      delete insert[id].second;
-    insert[id].second = new OSM_Element_Metadata(meta);
+    map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator it = insert.find(id);
+    if (it != insert.end())
+    {
+      if (it->second.second)
+        delete it->second.second;
+      it->second.second = new OSM_Element_Metadata(meta);
+    }
   }
   
   void deletion(const Uint31_Index& index, const Relation_Skeleton& skel)

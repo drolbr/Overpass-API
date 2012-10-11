@@ -159,6 +159,12 @@ void print_tag_firstversion(const Tag& tag, string indent)
       cout<<indent<<"</"<<tag.name<<">\n";
     }
   }
+  else if (tag.name == "note")
+  {
+    cout<<"<note>The data included in this document is from www.openstreetmap.org. "
+          "The data is made available under ODbL.</note>\n";
+    return;
+  }
   
   cout<<indent<<"<"<<tag.name;
   for (map< string, string >::const_iterator it = tag.attributes.begin();
@@ -348,6 +354,12 @@ void print_tag_idsorted(const Tag& tag, string indent,
       return;
     }
   }
+  else if (tag.name == "note")
+  {
+    cout<<"<note>The data included in this document is from www.openstreetmap.org. "
+          "The data is made available under ODbL.</note>\n";
+    return;
+  }
   
   cout<<indent<<"<"<<tag.name;
   for (map< string, string >::const_iterator it = tag.attributes.begin();
@@ -460,11 +472,17 @@ bool check_bbox_relation(const Tag& tag,
 	      (*nodes.find(atoll((*it)->attributes.find("ref")->second.c_str()))->second, flag),
 	      south, north, east, west))
         return true;
-      else if ((*it)->attributes.find("type")->second == "way" &&
-	  check_bbox_way(*obtain_data_from_action
-	      (*ways.find(atoll((*it)->attributes.find("ref")->second.c_str()))->second, flag),
+      else if ((*it)->attributes.find("type")->second == "way")
+      {
+	string s = (*it)->attributes.find("ref")->second;
+	map< Way::Id_Type, const Tag* >::const_iterator ptr = ways.find(atoll(s.c_str()));
+	cout<<(ptr==ways.end())<<'\n';
+	const Tag* action = ptr->second;
+	if (check_bbox_way(*obtain_data_from_action
+	      (*action, flag),
 	      south, north, east, west))
-        return true;
+          return true;
+      }
     }
   }
   return false;
