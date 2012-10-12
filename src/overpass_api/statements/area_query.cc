@@ -266,6 +266,11 @@ void Area_Query_Statement::collect_nodes
     }
     current_idx = area_it.index().val();
   }
+  while (nodes_it != nodes.end())
+  {
+    nodes_it->second.clear();
+    ++nodes_it;
+  }
 }
 
 void collect_nodes_from_req
