@@ -180,13 +180,7 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
         return feat_list;
     },
 
-    /**
-     * Method: getNodes
-     * Return the node items from a doc.  
-     *
-     * Parameters:
-     * doc - {DOMElement} node to parse tags from
-     */
+    
     parseNodes: function(doc, erasedNodes, keptNodes, insertedNodes) {
         var node_list = doc.getElementsByTagName("node");
         var lastTags;
@@ -199,7 +193,7 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
                 'lon': node.getAttribute("lon"),
                 'tagsEqual': true
             };
-            if (node.parentNode.tagName == "erase") {
+            if (node.parentNode.tagName == "old") {
                 erasedNodes[id] = nodeObj;
                 lastTags = [];
                 lastErasedId = id;
@@ -210,10 +204,14 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
                         'v': tags[j].getAttribute("v")
                         };
                     
-            } else if (node.parentNode.tagName == "keep") {
+            } else if (node.parentNode.tagName == "action" &&
+                    node.parentNode.getAttribute("type") == "info") {
                 keptNodes[id] = nodeObj;
-                
-            } else if (node.parentNode.tagName == "insert") {
+
+            } else if ((node.parentNode.tagName == "new" &&
+                    node.parentNode.parentNode.getAttribute("type") != "delete") ||
+                    (node.parentNode.tagName == "action" &&
+                    node.parentNode.getAttribute("type") == "create")) {
                 insertedNodes[id] = nodeObj;
                 var tags = node.getElementsByTagName("tag");
                 if (lastErasedId != id || tags.length != lastTags.length)
@@ -268,10 +266,14 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
                         'v': tags[j].getAttribute("v")
                         };
                         
-            } else if (way.parentNode.tagName == "keep") {
-                keptWays[wayObj.id] = wayObj;
-              
-            } else if (way.parentNode.tagName == "insert") {
+            } else if (way.parentNode.tagName == "action" &&
+                    way.parentNode.getAttribute("type") == "info") {
+                keptWays[id] = wayObj;
+
+            } else if ((way.parentNode.tagName == "new" &&
+                    way.parentNode.parentNode.getAttribute("type") != "delete") ||
+                    (way.parentNode.tagName == "action" &&
+                    way.parentNode.getAttribute("type") == "create")) {
                 insertedWays[wayObj.id] = wayObj;
                 var tags = way.getElementsByTagName("tag");
                 if (lastErasedId != id || tags.length != lastTags.length)
@@ -366,7 +368,7 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
           });
           
           var layer = new OpenLayers.Layer.Vector("Diff " + id, {
-              strategies: [new OpenLayers.Strategy.Fixed()],
+              strategies: [new OpenLayers.Strategy.BBOX()],
               protocol: new OpenLayers.Protocol.HTTP({
                   url: data_url + id,
                   format: new AugmentedDiffsFormat()
