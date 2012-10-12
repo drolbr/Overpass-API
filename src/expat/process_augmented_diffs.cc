@@ -83,18 +83,22 @@ const int INSERT = 4;
 
 const Tag* obtain_data_from_action(const Tag& tag, int flag = 0)
 {
-  if (tag.attributes.find("type")->second == "create")
+  if (tag.attributes.find("type") == tag.attributes.end())
+    return 0;
+  else if (tag.attributes.find("type")->second == "create" && !tag.children.empty())
     return tag.children[0];
-  else if (tag.attributes.find("type")->second == "delete")
+  else if (tag.attributes.find("type")->second == "delete" &&
+      !tag.children.empty() && !tag.children[0]->children.empty())
     return tag.children[0]->children[0];
-  else if (tag.attributes.find("type")->second == "modify")
+  else if (tag.attributes.find("type")->second == "modify" &&
+      tag.children.size() >= 2 && !tag.children[0]->children.empty() && !tag.children[1]->children.empty())
   {
     if (flag == ERASE)
       return tag.children[0]->children[0];
     else
       return tag.children[1]->children[0];
   }
-  else if (tag.attributes.find("type")->second == "info")
+  else if (tag.attributes.find("type")->second == "info" && !tag.children.empty())
     return tag.children[0];
   
   return 0;
@@ -378,8 +382,10 @@ void detect_osm_tags
   if (tag.name =="action")
   {
     const Tag* osm_tag = obtain_data_from_action(tag);
-    
-    if (osm_tag->name == "node")
+
+    if (osm_tag == 0 || osm_tag->attributes.find("id") == osm_tag->attributes.end())
+      ; // Something is malformed - skip element
+    else if (osm_tag->name == "node")
         nodes[Node::Id_Type(atoll(osm_tag->attributes.find("id")->second.c_str()))] = &tag;
     else if (osm_tag->name == "way")
         ways[Way::Id_Type(atoll(osm_tag->attributes.find("id")->second.c_str()))] = &tag;
@@ -395,6 +401,10 @@ void detect_osm_tags
 bool check_bbox_node(const Tag& tag, 
     double south, double north, double east, double west)
 {
+  if (tag.attributes.find("lat") == tag.attributes.end() ||
+      tag.attributes.find("lon") == tag.attributes.end())
+    return false; // No coordinates in this node - skip element
+    
   double lat = atof(tag.attributes.find("lat")->second.c_str());
   double lon = atof(tag.attributes.find("lon")->second.c_str());
   if (west <= east)
@@ -413,6 +423,10 @@ bool check_bbox_way(const Tag& tag,
   if (it == tag.children.end())
     return false;
   
+  if ((*it)->attributes.find("lat") == tag.attributes.end() ||
+      (*it)->attributes.find("lon") == tag.attributes.end())
+    return false; // No coordinates in this node - skip element
+    
   double last_lat = atof((*it)->attributes.find("lat")->second.c_str());
   double last_lon = atof((*it)->attributes.find("lon")->second.c_str());
   if (west <= east)
@@ -625,6 +639,30 @@ int main(int argc, char *argv[])
       west = atof(((string)(argv[argi])).substr(7).c_str());
     else if (!strncmp("--east=", argv[argi], 7))
       east = atof(((string)(argv[argi])).substr(7).c_str());
+    else if (!strncmp("--bbox=", argv[argi], 7))
+    {
+      string bbox = argv[argi];
+      string::size_type split = bbox.find(",");
+      if (split != string::npos)
+      {
+	west = atof(bbox.substr(7, split).c_str());
+	bbox = bbox.substr(split+1);
+	split = bbox.find(",");
+      }
+      if (split != string::npos)
+      {
+	south = atof(bbox.substr(0, split).c_str());
+	bbox = bbox.substr(split+1);
+	split = bbox.find(",");
+      }
+      if (split != string::npos)
+      {
+	east = atof(bbox.substr(0, split).c_str());
+	bbox = bbox.substr(split+1);
+	split = bbox.find(",");
+      }
+      north = atof(bbox.c_str());
+    }
     ++argi;
   }
   

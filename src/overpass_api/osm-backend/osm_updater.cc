@@ -1350,7 +1350,7 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 	    print_way(erase_it->second.first, erase_it->second.second, erase, update_node_logger);
 	    cout<<"</old>\n"
 	        "<new>\n";
-	    print_way(insert_it->second.first, erase_it->second.second, insert, update_node_logger);
+	    print_way(insert_it->second.first, insert_it->second.second, insert, update_node_logger);
 	    cout<<"</new>\n"
 	        "</action>\n";
 	    ++erase_it;
@@ -1529,7 +1529,7 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 	        erase, update_way_logger, update_node_logger);
 	    cout<<"</old>\n"
 	        "<new>\n";
-	    print_relation(insert_it->second.first, erase_it->second.second, relation_roles,
+	    print_relation(insert_it->second.first, insert_it->second.second, relation_roles,
 	        insert, update_way_logger, update_node_logger);
 	    cout<<"</new>\n"
 	        "</action>\n";
