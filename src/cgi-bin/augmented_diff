@@ -20,12 +20,16 @@
 BUF="$QUERY_STRING&"
 
 ID=
+BBOX=
+EXECBASE="/../`dirname $0`"
 
 IFS=$'&'
 for KEY_VAL in $QUERY_STRING; do
 {
   if [[ ${KEY_VAL:0:3} == "id=" ]]; then
     ID="${KEY_VAL:3}"
+  elif [[ ${KEY_VAL:0:5} == "bbox=" ]]; then
+    BBOX="${KEY_VAL:5}"
   fi
 }; done
 unset IFS
@@ -40,4 +44,9 @@ printf -v TDIGIT2 %03u $(($ARG % 1000))
 ARG=$(($ARG / 1000))
 printf -v TDIGIT1 %03u $ARG
 
-cat /var/www/augmented_diffs/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz
+if [[ -z BBOX ]]; then
+  cat /var/www/augmented_diffs/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz
+else
+{
+  gunzip </var/www/augmented_diffs/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz | $EXECBASE/bin/process_augmented_diffs --bbox=$BBOX | gzip
+}; fi
