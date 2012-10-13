@@ -219,6 +219,12 @@ void Area_Query_Statement::collect_nodes
   uint32 current_idx(0);
   if (!(area_it == area_blocks_db.discrete_end()))
     current_idx = area_it.index().val();
+  while (nodes_it != nodes.end() && nodes_it->first.val() < current_idx)
+  {
+    nodes_it->second.clear();
+    ++nodes_it;
+  }
+  
   while (!(area_it == area_blocks_db.discrete_end()))
   {
     rman.health_check(*this);
