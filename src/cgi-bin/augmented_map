@@ -20,12 +20,21 @@
 BUF="$QUERY_STRING&"
 
 ID=
+LAT=50.7421
+LON=7.0624
+ZOOM=6
 
 IFS=$'&'
 for KEY_VAL in $QUERY_STRING; do
 {
   if [[ ${KEY_VAL:0:3} == "id=" ]]; then
     ID="${KEY_VAL:3}"
+  elif [[ ${KEY_VAL:0:4} == "lat=" ]]; then
+    LAT="${KEY_VAL:4}"
+  elif [[ ${KEY_VAL:0:4} == "lon=" ]]; then
+    LON="${KEY_VAL:4}"
+  elif [[ ${KEY_VAL:0:5} == "zoom=" ]]; then
+    ZOOM="${KEY_VAL:5}"
   fi
 }; done
 unset IFS
@@ -33,4 +42,4 @@ unset IFS
 echo "Content-Type: text/html; charset=utf-8"
 echo
 
-cat </var/www/augmented_diffs.html | awk "{ i=index(\$0,\"\$ID\"); if (i==0) { print \$0; } else { print substr(\$0,1,i-1) \"$ID\" substr(\$0,i+3); }; }"
+cat </var/www/augmented_diffs.html | awk "{ i=index(\$0,\"\$ID\"); if (i==0) { i=index(\$0,\"\$LAT\"); if (i==0) { i=index(\$0,\"\$LON\"); if (i==0) { i=index(\$0,\"\$ZOOM\"); if (i==0) { print \$0; } else { print substr(\$0,1,i-1) \"$ZOOM\" substr(\$0,i+5); } } else { print substr(\$0,1,i-1) \"$LON\" substr(\$0,i+4); } } else { print substr(\$0,1,i-1) \"$LAT\" substr(\$0,i+4); } } else { print substr(\$0,1,i-1) \"$ID\" substr(\$0,i+3); }; }"
