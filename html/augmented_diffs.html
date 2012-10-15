@@ -6,9 +6,9 @@
   <script src="http://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
   <script src="http://overpass-api.de/overpass.js"></script>
   <script type="text/javascript">
-      var lat = 50.7421;
-      var lon = 7.0624;
-      var zoom = 6;
+      var lat = "$LAT";
+      var lon = "$LON";
+      var zoom = "$ZOOM";
       var current_id = "$ID";
       var data_url = "http://overpass-api.de/api/augmented_diff?id=";
       var map;
@@ -123,10 +123,16 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
                 if (insertedWays[way_id].tagsEqual)
                     feat.style = unchangedStyle;
                 else
+                {
+                    this.enlargeBoundsWay(erasedWays[way_id], erasedNodes);
                     feat.style = tagChangedStyle;
+                }
             }
             else
+            {
+                this.enlargeBoundsWay(erasedWays[way_id], erasedNodes);
                 feat.style = deleteStyle;
+            }
             feat_list.push(feat);
         } 
         for (var way_id in insertedWays) {
@@ -134,6 +140,7 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
                     this.equalGeometry(erasedWays[way_id], erasedNodes, insertedWays[way_id], insertedNodes))
                 continue;
             var feat = this.makeWayFeature(insertedWays[way_id], insertedNodes);
+            this.enlargeBoundsWay(insertedWays[way_id], insertedNodes);
             feat.style = insertStyle;
             feat_list.push(feat);
         } 
@@ -141,6 +148,7 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
         for (var node_id in erasedNodes) {
             var node = erasedNodes[node_id];
             if (!node.used) {
+            
                 var feat = new OpenLayers.Feature.Vector(
                     new OpenLayers.Geometry.Point(node['lon'], node['lat']), null);
                 if (this.internalProjection && this.externalProjection) {
@@ -155,17 +163,24 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
                     if (insertedNodes[node_id].tagsEqual)
                         feat.style = unchangedStyle;
                     else
+                    {
                         feat.style = tagChangedStyle;
+                        this.enlargeBounds(node['lat'], node['lon']);
+                    }
                     insertedNodes[node_id].used = true;
                 }
-                else
+                else {
+                    this.enlargeBounds(node['lat'], node['lon']);
                     feat.style = deleteStyle;
+                }
                 feat_list.push(feat);
             }   
         }        
         for (var node_id in insertedNodes) {
             var node = insertedNodes[node_id];
             if (!node.used) {
+            
+                this.enlargeBounds(node['lat'], node['lon']);
                 var feat = new OpenLayers.Feature.Vector(
                     new OpenLayers.Geometry.Point(node['lon'], node['lat']), null);
                 if (this.internalProjection && this.externalProjection) {
@@ -176,7 +191,29 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
                 feat.style = insertStyle;
                 feat_list.push(feat);
             }   
-        }        
+        }
+        
+        var lonLat = new OpenLayers.LonLat(
+            (Number(this.minLon) + Number(this.maxLon))/2.0,
+            (Number(this.minLat) + Number(this.maxLat))/2.0)
+            .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+        var southwest = new OpenLayers.LonLat(
+            Number(this.minLon), Number(this.minLat))
+            .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+        var northeast = new OpenLayers.LonLat(
+            Number(this.maxLon), Number(this.maxLat))
+            .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+        map.zoomTo(18);
+        map.setCenter(lonLat);
+
+        var extent = map.getExtent();
+        extent.extend(southwest);
+        extent.extend(northeast);
+        map.zoomToExtent(extent);
+        
         return feat_list;
     },
 
@@ -229,6 +266,37 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
         }
     },
 
+    
+    minLat: 90.0,
+    maxLat: -90.0,
+    minLon: 180.0,
+    maxLon: -180.0,
+    
+    enlargeBounds: function(lat, lon) {
+    
+        if (lat < this.minLat)
+            this.minLat = lat;
+        if (lat > this.maxLat)
+            this.maxLat = lat;
+        if (lon < this.minLon)
+            this.minLon = lon;
+        if (lon > this.maxLon)
+            this.maxLon = lon;
+    },
+    
+    
+    enlargeBoundsWay: function(way, nodes) {
+
+        for (var j = 0; j < way.nodes.length; j++) {
+            var node = nodes[way.nodes[j]];
+
+            if (!node)
+              continue;
+               
+            this.enlargeBounds(node['lat'], node['lon']);
+        }
+    },
+    
     /**
      * Method: getWays
      * Return the way items from a doc.  
@@ -255,7 +323,7 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
             for (var j = 0; j < node_list.length; j++) {
                 wayObj.nodes[j] = node_list[j].getAttribute("ref");
             }  
-            if (way.parentNode.tagName == "erase") {
+            if (way.parentNode.tagName == "old") {
                 erasedWays[wayObj.id] = wayObj;
                 lastTags = [];
                 lastErasedId = id;
