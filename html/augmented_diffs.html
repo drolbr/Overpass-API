@@ -193,26 +193,32 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
             }   
         }
         
-        var lonLat = new OpenLayers.LonLat(
-            (Number(this.minLon) + Number(this.maxLon))/2.0,
-            (Number(this.minLat) + Number(this.maxLat))/2.0)
-            .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+        if (this.minLat < 90.0)
+        {
+            var lonLat = new OpenLayers.LonLat(
+                (Number(this.minLon) + Number(this.maxLon))/2.0,
+                (Number(this.minLat) + Number(this.maxLat))/2.0)
+                .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
 
-        var southwest = new OpenLayers.LonLat(
-            Number(this.minLon), Number(this.minLat))
-            .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+            var southwest = new OpenLayers.LonLat(
+                Number(this.minLon), Number(this.minLat))
+                .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
 
-        var northeast = new OpenLayers.LonLat(
-            Number(this.maxLon), Number(this.maxLat))
-            .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+            var northeast = new OpenLayers.LonLat(
+                Number(this.maxLon), Number(this.maxLat))
+                .transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
 
-        map.zoomTo(18);
-        map.setCenter(lonLat);
+            if (map.getExtent().containsLonLat(southwest) && map.getExtent().containsLonLat(northeast))
+            {
+                map.zoomTo(18);
+                map.setCenter(lonLat);
 
-        var extent = map.getExtent();
-        extent.extend(southwest);
-        extent.extend(northeast);
-        map.zoomToExtent(extent);
+                var extent = map.getExtent();
+                extent.extend(southwest);
+                extent.extend(northeast);
+                map.zoomToExtent(extent);
+            }
+        }
         
         return feat_list;
     },
@@ -442,7 +448,8 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
                   format: new AugmentedDiffsFormat()
               }),
               styleMap: styleMap,
-              projection: new OpenLayers.Projection("EPSG:4326")
+              projection: new OpenLayers.Projection("EPSG:4326"),
+              ratio: 1.0
           });
 
           map.addLayers([layer]);
