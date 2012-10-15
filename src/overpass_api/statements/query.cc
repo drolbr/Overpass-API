@@ -32,6 +32,8 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
+bool Query_Statement::area_query_exists_ = false;
+
 Generic_Statement_Maker< Query_Statement > Query_Statement::statement_maker("query");
 
 Query_Statement::Query_Statement
@@ -53,7 +55,10 @@ Query_Statement::Query_Statement
   else if (attributes["type"] == "relation")
     type = QUERY_RELATION;
   else if (attributes["type"] == "area")
+  {
     type = QUERY_AREA;
+    area_query_exists_ = true;
+  }
   else
   {
     type = 0;
@@ -323,6 +328,7 @@ vector< Id_Type > Query_Statement::collect_non_ids
   return new_ids;
 }
 
+
 template < typename TIndex, typename TObject >
 void Query_Statement::get_elements_by_id_from_db
     (map< TIndex, vector< TObject > >& elements,
@@ -346,6 +352,22 @@ void Query_Statement::get_elements_by_id_from_db
 			(Id_Predicate< TObject >(ids)), elements);
 }
 
+
+void Query_Statement::get_elements_by_id_from_db
+    (map< Uint31_Index, vector< Area_Skeleton > >& elements,
+     const vector< Area_Skeleton::Id_Type >& ids, bool invert_ids,
+     Resource_Manager& rman, File_Properties& file_prop)
+{
+  if (!invert_ids)
+    collect_items_flat(*this, rman, file_prop,
+			Id_Predicate< Area_Skeleton >(ids), elements);
+  else
+    collect_items_flat(*this, rman, file_prop,
+			Not_Predicate< Area_Skeleton, Id_Predicate< Area_Skeleton > >
+			(Id_Predicate< Area_Skeleton >(ids)), elements);
+}
+
+
 template < typename TIndex, typename Id_Type >
 set< pair< TIndex, TIndex > > Query_Statement::get_ranges_by_id_from_db
     (const vector< Id_Type >& ids,
@@ -360,6 +382,7 @@ set< pair< TIndex, TIndex > > Query_Statement::get_ranges_by_id_from_db
   }
   return range_req;
 }
+
 
 template< typename TIndex, typename TObject >
 void clear_empty_indices
@@ -694,7 +717,10 @@ void Query_Statement::execute(Resource_Manager& rman)
     }
     else if (type == QUERY_AREA)
     {
-      //TODO
+//       for (vector< Uint32_Index >::const_iterator it = ids.begin(); it != ids.end(); ++it)
+// 	cout<<it->val()<<'\n';
+      if (answer_state < data_collected)
+	get_elements_by_id_from_db(into.areas, ids, invert_ids, rman, *area_settings().AREAS);
     }
   }
   

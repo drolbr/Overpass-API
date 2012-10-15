@@ -26,6 +26,7 @@
 #include "../statements/coord_query.h"
 #include "../statements/make_area.h"
 #include "../statements/osm_script.h"
+#include "../statements/query.h"
 #include "../statements/statement.h"
 #include "../statements/statement_dump.h"
 #include "../../expat/expat_justparse_interface.h"
@@ -109,7 +110,8 @@ Dispatcher_Stub::Dispatcher_Stub
     }
   }
   if ((area_level == 0) &&
-      ((Coord_Query_Statement::is_used()) || (Area_Query_Statement::is_used())))
+      (Coord_Query_Statement::is_used() || Area_Query_Statement::is_used() ||
+       Query_Statement::area_query_exists()))
     area_level = 1;
   
   if (db_dir == "")
@@ -278,7 +280,7 @@ Dispatcher_Stub::Dispatcher_Stub
     {
       ifstream version((db_dir + "area_version").c_str());
       getline(version, area_timestamp);
-      timestamp = de_escape(timestamp);
+      area_timestamp = de_escape(timestamp);
     }
     else if (area_level == 2)
     {

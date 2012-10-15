@@ -49,6 +49,8 @@ class Query_Statement : public Statement
     
     static Generic_Statement_Maker< Query_Statement > statement_maker;
     
+    static bool area_query_exists() { return area_query_exists_; }
+    
   private:
     string output;
     int type;
@@ -58,6 +60,8 @@ class Query_Statement : public Statement
     vector< pair< string, string > > key_nvalues;    
     vector< pair< string, Regular_Expression* > > key_nregexes;    
     vector< Query_Constraint* > constraints;
+    
+    static bool area_query_exists_;
     
     template< class Id_Type >
     vector< Id_Type > collect_ids
@@ -72,6 +76,11 @@ class Query_Statement : public Statement
         (map< TIndex, vector< TObject > >& elements,
 	 const vector< typename TObject::Id_Type >& ids, bool invert_ids,
 	 const set< pair< TIndex, TIndex > >& range_req,
+         Resource_Manager& rman, File_Properties& file_prop);
+
+    void get_elements_by_id_from_db
+        (map< Uint31_Index, vector< Area_Skeleton > >& elements,
+	 const vector< Area_Skeleton::Id_Type >& ids, bool invert_ids,
          Resource_Manager& rman, File_Properties& file_prop);
 
     template< class TIndex, class TObject >

@@ -211,7 +211,7 @@ void collect_items_flat(const Statement& stmt, Resource_Manager& rman,
 {
   uint32 count = 0;
   Block_Backend< TIndex, TObject > db
-      (rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
+      (rman.get_transaction()->data_index(&file_properties));
   for (typename Block_Backend< TIndex, TObject >::Flat_Iterator
       it(db.flat_begin()); !(it == db.flat_end()); ++it)
   {
