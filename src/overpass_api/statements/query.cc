@@ -683,7 +683,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	if ((*it)->get_data(*this, rman, into, range_req_31, type, ids, invert_ids))
 	  answer_state = data_collected;
       }
-    }
+    }  
     
     set_progress(4);
     rman.health_check(*this);
@@ -742,7 +742,9 @@ void Query_Statement::execute(Resource_Manager& rman)
 		   rman, *rman.get_transaction());
     filter_by_tags(into.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		   rman, *rman.get_transaction());
-    //TODO
+    if (rman.get_area_transaction())
+      filter_by_tags(into.areas, *area_settings().AREA_TAGS_LOCAL,
+		     rman, *rman.get_transaction());
   }
   
   set_progress(7);

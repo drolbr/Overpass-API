@@ -84,6 +84,9 @@ bool Item_Constraint::collect(Resource_Manager& rman, Set& into,
   if (type == QUERY_RELATION)
     collect_elements(rman.sets()[item->get_result_name()].relations, into.relations,
 		     ids, invert_ids);
+  if (type == QUERY_AREA)
+    collect_elements(rman.sets()[item->get_result_name()].areas, into.areas,
+		     ids, invert_ids);
   return true;
 }
 
