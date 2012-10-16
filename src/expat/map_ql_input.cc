@@ -428,11 +428,21 @@ inline void Tokenizer< In >::get(string& s)
 	++pos;
       grow_buffer(pos + 1);
     }
-    s = buffer.substr(0, pos+1);
-    for (uint i = 0; i < pos+1; ++i)
-      line_cols.pop();
-    buffer = buffer.substr(pos+1);
-    clear_space();
+    if (buffer.size() == pos)
+    {
+      s = buffer.substr(0, pos);
+      for (uint i = 0; i < pos; ++i)
+        line_cols.pop();
+      buffer = "";
+    }
+    else
+    {
+      s = buffer.substr(0, pos+1);
+      for (uint i = 0; i < pos+1; ++i)
+        line_cols.pop();
+      buffer = buffer.substr(pos+1);
+      clear_space();
+    }
   }
   else if (buffer[0] == '"')
   {
@@ -446,11 +456,21 @@ inline void Tokenizer< In >::get(string& s)
 	++pos;
       grow_buffer(pos + 1);
     }
-    s = buffer.substr(0, pos+1);
-    for (uint i = 0; i < pos+1; ++i)
-      line_cols.pop();
-    buffer = buffer.substr(pos+1);
-    clear_space();
+    if (buffer.size() == pos)
+    {
+      s = buffer.substr(0, pos);
+      for (uint i = 0; i < pos; ++i)
+        line_cols.pop();
+      buffer = "";
+    }
+    else
+    {
+      s = buffer.substr(0, pos+1);
+      for (uint i = 0; i < pos+1; ++i)
+        line_cols.pop();
+      buffer = buffer.substr(pos+1);
+      clear_space();
+    }
   }
   else if (buffer[0] == ':')
     probe(s, "::");
