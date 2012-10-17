@@ -934,7 +934,7 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory,
     type = *token;
     if (type == "rel")
       type = "relation";
-    else if (type != "node" && type != "way" && type != "relation" && type != "all")
+    else if (type != "node" && type != "way" && type != "relation" && type != "area")
     {
       if (error_output)
 	error_output->add_parse_error("Unknown type \"" + type + "\"", token.line_col().first);
