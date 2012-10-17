@@ -1,0 +1,143 @@
+<id-query type="area" ref="2400000001"/>
+<print/>
+
+<id-query type="area" ref="3600000001"/>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+
+<query type="area">
+  <has-kv k="multpoly" v="1"/>
+</query>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+
+<query type="area">
+  <has-kv k="multpoly"/>
+</query>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+
+<query type="area">
+  <has-kv k="multpoly" regv="[12]"/>
+</query>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+
+<query type="area">
+  <has-kv k="scale" v="0.1000000" modv="not"/>
+</query>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+
+<query type="area">
+  <has-kv k="scale" regv="^0.*" modv="not"/>
+</query>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+
+<query type="area">
+  <has-kv k="triangle" v="1"/>
+  <has-kv k="scale" v="1.0000000"/>
+</query>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+
+<query type="area">
+  <has-kv k="triangle" v="1"/>
+  <has-kv k="scale" regv="...000000"/>
+</query>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+
+<query type="area">
+  <has-kv k="triangle"/>
+  <has-kv k="scale" regv="...000000"/>
+</query>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+
+<union>
+  <query type="area">
+    <has-kv k="multpoly"/>
+  </query>
+  <query type="area">
+    <has-kv k="shapes"/>
+  </query>
+</union>
+<query type="area">
+  <item/>
+  <has-kv k="multpoly" v="1"/>
+</query>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+
+<union>
+  <query type="area">
+    <has-kv k="multpoly"/>
+  </query>
+  <query type="area">
+    <has-kv k="shapes"/>
+  </query>
+</union>
+<query type="area">
+  <item/>
+  <has-kv k="multpoly" v="1" modv="not"/>
+</query>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+
+<union>
+  <query type="area">
+    <has-kv k="multpoly"/>
+  </query>
+  <query type="area">
+    <has-kv k="shapes"/>
+  </query>
+</union>
+<query type="area">
+  <item/>
+  <has-kv k="multpoly" regv="[12]"/>
+</query>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+
+<union>
+  <query type="area">
+    <has-kv k="multpoly"/>
+  </query>
+  <query type="area">
+    <has-kv k="shapes"/>
+  </query>
+</union>
+<query type="area">
+  <item/>
+  <has-kv k="multpoly" regv="[12]" modv="not"/>
+</query>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+
+<union>
+  <query type="area">
+    <has-kv k="scale"/>
+  </query>
+</union>
+<query type="area">
+  <item/>
+  <has-kv k="multpoly"/>
+</query>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>

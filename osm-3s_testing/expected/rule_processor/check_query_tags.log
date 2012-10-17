@@ -1,0 +1,573 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="Overpass API">
+<note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
+<meta osm_base="mock-up-diff" areas="mock-up-init"/>
+
+  <area id="2400000001">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="1"/>
+  </area>
+  <area id="3600000001">
+    <tag k="multpoly" v="1"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <relation id="1"/>
+  <area id="3600000001">
+    <tag k="multpoly" v="1"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <relation id="1"/>
+  <area id="3600000001">
+    <tag k="multpoly" v="1"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000002">
+    <tag k="multpoly" v="2"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000003">
+    <tag k="multpoly" v="3"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000004">
+    <tag k="multpoly" v="4"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <relation id="1"/>
+  <area id="3600000001">
+    <tag k="multpoly" v="1"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000002">
+    <tag k="multpoly" v="2"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <relation id="1"/>
+  <area id="2400000001">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="1"/>
+  </area>
+  <area id="2400000002">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="2"/>
+  </area>
+  <area id="2400000003">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="3"/>
+  </area>
+  <area id="2400000004">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="4"/>
+  </area>
+  <area id="2400000005">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="5"/>
+  </area>
+  <area id="2400000006">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="6"/>
+  </area>
+  <area id="2400000007">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="7"/>
+  </area>
+  <area id="2400000008">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="8"/>
+  </area>
+  <area id="2400000021">
+    <tag k="scale" v="0.0100000"/>
+    <tag k="triangle" v="1"/>
+  </area>
+  <area id="2400000022">
+    <tag k="scale" v="0.0100000"/>
+    <tag k="triangle" v="2"/>
+  </area>
+  <area id="2400000023">
+    <tag k="scale" v="0.0100000"/>
+    <tag k="triangle" v="3"/>
+  </area>
+  <area id="2400000024">
+    <tag k="scale" v="0.0100000"/>
+    <tag k="triangle" v="4"/>
+  </area>
+  <area id="2400000025">
+    <tag k="scale" v="0.0100000"/>
+    <tag k="triangle" v="5"/>
+  </area>
+  <area id="2400000026">
+    <tag k="scale" v="0.0100000"/>
+    <tag k="triangle" v="6"/>
+  </area>
+  <area id="2400000027">
+    <tag k="scale" v="0.0100000"/>
+    <tag k="triangle" v="7"/>
+  </area>
+  <area id="2400000028">
+    <tag k="scale" v="0.0100000"/>
+    <tag k="triangle" v="8"/>
+  </area>
+  <area id="2400000031">
+    <tag k="scale" v="0.0010000"/>
+    <tag k="triangle" v="1"/>
+  </area>
+  <area id="2400000032">
+    <tag k="scale" v="0.0010000"/>
+    <tag k="triangle" v="2"/>
+  </area>
+  <area id="2400000033">
+    <tag k="scale" v="0.0010000"/>
+    <tag k="triangle" v="3"/>
+  </area>
+  <area id="2400000034">
+    <tag k="scale" v="0.0010000"/>
+    <tag k="triangle" v="4"/>
+  </area>
+  <area id="2400000035">
+    <tag k="scale" v="0.0010000"/>
+    <tag k="triangle" v="5"/>
+  </area>
+  <area id="2400000036">
+    <tag k="scale" v="0.0010000"/>
+    <tag k="triangle" v="6"/>
+  </area>
+  <area id="2400000037">
+    <tag k="scale" v="0.0010000"/>
+    <tag k="triangle" v="7"/>
+  </area>
+  <area id="2400000038">
+    <tag k="scale" v="0.0010000"/>
+    <tag k="triangle" v="8"/>
+  </area>
+  <area id="2400000041">
+    <tag k="scale" v="0.0001000"/>
+    <tag k="triangle" v="1"/>
+  </area>
+  <area id="2400000042">
+    <tag k="scale" v="0.0001000"/>
+    <tag k="triangle" v="2"/>
+  </area>
+  <area id="2400000043">
+    <tag k="scale" v="0.0001000"/>
+    <tag k="triangle" v="3"/>
+  </area>
+  <area id="2400000044">
+    <tag k="scale" v="0.0001000"/>
+    <tag k="triangle" v="4"/>
+  </area>
+  <area id="2400000045">
+    <tag k="scale" v="0.0001000"/>
+    <tag k="triangle" v="5"/>
+  </area>
+  <area id="2400000046">
+    <tag k="scale" v="0.0001000"/>
+    <tag k="triangle" v="6"/>
+  </area>
+  <area id="2400000047">
+    <tag k="scale" v="0.0001000"/>
+    <tag k="triangle" v="7"/>
+  </area>
+  <area id="2400000048">
+    <tag k="scale" v="0.0001000"/>
+    <tag k="triangle" v="8"/>
+  </area>
+  <area id="2400000051">
+    <tag k="scale" v="0.0000100"/>
+    <tag k="triangle" v="1"/>
+  </area>
+  <area id="2400000052">
+    <tag k="scale" v="0.0000100"/>
+    <tag k="triangle" v="2"/>
+  </area>
+  <area id="2400000053">
+    <tag k="scale" v="0.0000100"/>
+    <tag k="triangle" v="3"/>
+  </area>
+  <area id="2400000054">
+    <tag k="scale" v="0.0000100"/>
+    <tag k="triangle" v="4"/>
+  </area>
+  <area id="2400000055">
+    <tag k="scale" v="0.0000100"/>
+    <tag k="triangle" v="5"/>
+  </area>
+  <area id="2400000056">
+    <tag k="scale" v="0.0000100"/>
+    <tag k="triangle" v="6"/>
+  </area>
+  <area id="2400000057">
+    <tag k="scale" v="0.0000100"/>
+    <tag k="triangle" v="7"/>
+  </area>
+  <area id="2400000058">
+    <tag k="scale" v="0.0000100"/>
+    <tag k="triangle" v="8"/>
+  </area>
+  <area id="2400000061">
+    <tag k="scale" v="0.0000010"/>
+    <tag k="triangle" v="1"/>
+  </area>
+  <area id="2400000062">
+    <tag k="scale" v="0.0000010"/>
+    <tag k="triangle" v="2"/>
+  </area>
+  <area id="2400000063">
+    <tag k="scale" v="0.0000010"/>
+    <tag k="triangle" v="3"/>
+  </area>
+  <area id="2400000064">
+    <tag k="scale" v="0.0000010"/>
+    <tag k="triangle" v="4"/>
+  </area>
+  <area id="2400000065">
+    <tag k="scale" v="0.0000010"/>
+    <tag k="triangle" v="5"/>
+  </area>
+  <area id="2400000066">
+    <tag k="scale" v="0.0000010"/>
+    <tag k="triangle" v="6"/>
+  </area>
+  <area id="2400000067">
+    <tag k="scale" v="0.0000010"/>
+    <tag k="triangle" v="7"/>
+  </area>
+  <area id="2400000068">
+    <tag k="scale" v="0.0000010"/>
+    <tag k="triangle" v="8"/>
+  </area>
+  <area id="2400000101">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000102">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000121">
+    <tag k="scale" v="0.0100000"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000122">
+    <tag k="scale" v="0.0100000"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000131">
+    <tag k="scale" v="0.0010000"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000132">
+    <tag k="scale" v="0.0010000"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000141">
+    <tag k="scale" v="0.0001000"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000142">
+    <tag k="scale" v="0.0001000"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000151">
+    <tag k="scale" v="0.0000100"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000152">
+    <tag k="scale" v="0.0000100"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000161">
+    <tag k="scale" v="0.0000010"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000162">
+    <tag k="scale" v="0.0000010"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <relation id="1"/>
+  <area id="2400000001">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="1"/>
+  </area>
+  <area id="2400000002">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="2"/>
+  </area>
+  <area id="2400000003">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="3"/>
+  </area>
+  <area id="2400000004">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="4"/>
+  </area>
+  <area id="2400000005">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="5"/>
+  </area>
+  <area id="2400000006">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="6"/>
+  </area>
+  <area id="2400000007">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="7"/>
+  </area>
+  <area id="2400000008">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="8"/>
+  </area>
+  <area id="2400000101">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000102">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <relation id="1"/>
+  <area id="2400000001">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="1"/>
+  </area>
+  <relation id="1"/>
+  <area id="2400000001">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="1"/>
+  </area>
+  <area id="2400000011">
+    <tag k="scale" v="0.1000000"/>
+    <tag k="triangle" v="1"/>
+  </area>
+  <relation id="1"/>
+  <area id="2400000001">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="1"/>
+  </area>
+  <area id="2400000002">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="2"/>
+  </area>
+  <area id="2400000003">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="3"/>
+  </area>
+  <area id="2400000004">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="4"/>
+  </area>
+  <area id="2400000005">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="5"/>
+  </area>
+  <area id="2400000006">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="6"/>
+  </area>
+  <area id="2400000007">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="7"/>
+  </area>
+  <area id="2400000008">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="8"/>
+  </area>
+  <area id="2400000011">
+    <tag k="scale" v="0.1000000"/>
+    <tag k="triangle" v="1"/>
+  </area>
+  <area id="2400000012">
+    <tag k="scale" v="0.1000000"/>
+    <tag k="triangle" v="2"/>
+  </area>
+  <area id="2400000013">
+    <tag k="scale" v="0.1000000"/>
+    <tag k="triangle" v="3"/>
+  </area>
+  <area id="2400000014">
+    <tag k="scale" v="0.1000000"/>
+    <tag k="triangle" v="4"/>
+  </area>
+  <area id="2400000015">
+    <tag k="scale" v="0.1000000"/>
+    <tag k="triangle" v="5"/>
+  </area>
+  <area id="2400000016">
+    <tag k="scale" v="0.1000000"/>
+    <tag k="triangle" v="6"/>
+  </area>
+  <area id="2400000017">
+    <tag k="scale" v="0.1000000"/>
+    <tag k="triangle" v="7"/>
+  </area>
+  <area id="2400000018">
+    <tag k="scale" v="0.1000000"/>
+    <tag k="triangle" v="8"/>
+  </area>
+  <relation id="1"/>
+  <area id="3600000001">
+    <tag k="multpoly" v="1"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <relation id="1"/>
+  <area id="2400000101">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000102">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000111">
+    <tag k="scale" v="0.1000000"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000112">
+    <tag k="scale" v="0.1000000"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000121">
+    <tag k="scale" v="0.0100000"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000122">
+    <tag k="scale" v="0.0100000"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000131">
+    <tag k="scale" v="0.0010000"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000132">
+    <tag k="scale" v="0.0010000"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000141">
+    <tag k="scale" v="0.0001000"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000142">
+    <tag k="scale" v="0.0001000"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000151">
+    <tag k="scale" v="0.0000100"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000152">
+    <tag k="scale" v="0.0000100"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000161">
+    <tag k="scale" v="0.0000010"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000162">
+    <tag k="scale" v="0.0000010"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="3600000002">
+    <tag k="multpoly" v="2"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000003">
+    <tag k="multpoly" v="3"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000004">
+    <tag k="multpoly" v="4"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <relation id="1"/>
+  <area id="3600000001">
+    <tag k="multpoly" v="1"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000002">
+    <tag k="multpoly" v="2"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <relation id="1"/>
+  <area id="2400000101">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000102">
+    <tag k="scale" v="1.0000000"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000111">
+    <tag k="scale" v="0.1000000"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000112">
+    <tag k="scale" v="0.1000000"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000121">
+    <tag k="scale" v="0.0100000"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000122">
+    <tag k="scale" v="0.0100000"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000131">
+    <tag k="scale" v="0.0010000"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000132">
+    <tag k="scale" v="0.0010000"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000141">
+    <tag k="scale" v="0.0001000"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000142">
+    <tag k="scale" v="0.0001000"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000151">
+    <tag k="scale" v="0.0000100"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000152">
+    <tag k="scale" v="0.0000100"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000161">
+    <tag k="scale" v="0.0000010"/>
+    <tag k="shapes" v="1"/>
+  </area>
+  <area id="2400000162">
+    <tag k="scale" v="0.0000010"/>
+    <tag k="shapes" v="2"/>
+  </area>
+  <area id="3600000003">
+    <tag k="multpoly" v="3"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000004">
+    <tag k="multpoly" v="4"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <relation id="1"/>
+  <area id="3600000001">
+    <tag k="multpoly" v="1"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000002">
+    <tag k="multpoly" v="2"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000003">
+    <tag k="multpoly" v="3"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <area id="3600000004">
+    <tag k="multpoly" v="4"/>
+    <tag k="scale" v="0.1000000"/>
+  </area>
+  <relation id="1"/>
+
+</osm>
