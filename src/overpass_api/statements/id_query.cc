@@ -25,6 +25,8 @@
 
 using namespace std;
 
+bool Id_Query_Statement::area_query_exists_ = false;
+
 Generic_Statement_Maker< Id_Query_Statement > Id_Query_Statement::statement_maker("id-query");
 
 
@@ -237,7 +239,10 @@ Id_Query_Statement::Id_Query_Statement
   else if (attributes["type"] == "relation")
     type = Statement::RELATION;
   else if (attributes["type"] == "area")
+  {
     type = Statement::AREA;
+    area_query_exists_ = true;
+  }
   else
   {
     type = 0;

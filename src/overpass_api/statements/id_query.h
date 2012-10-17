@@ -43,11 +43,15 @@ class Id_Query_Statement : public Statement
     unsigned int get_upper() const { return upper; }
     int get_type() const { return type; }
     
+    static bool area_query_exists() { return area_query_exists_; }
+    
   private:
     string output;
     int type;
     unsigned int ref, lower, upper;
     vector< Query_Constraint* > constraints;
+    
+    static bool area_query_exists_;
 };
 
 #endif
