@@ -304,12 +304,14 @@ struct Area_Skeleton
 
 struct Area_Block
 {
-  uint32 id;
+  typedef Area::Id_Type Id_Type;
+  
+  Id_Type id;
   vector< uint64 > coors;
   
-  Area_Block() {}
+  Area_Block() : id(0u) {}
   
-  Area_Block(void* data)
+  Area_Block(void* data) : id(*(uint32*)data)
   {
     id = *(uint32*)data;
     coors.resize(*((uint16*)data + 2));
@@ -332,7 +334,7 @@ struct Area_Block
   
   void to_data(void* data) const
   {
-    *(uint32*)data = id;
+    *(uint32*)data = id.val();
     *((uint16*)data + 2) = coors.size();
     for (uint i(0); i < coors.size(); ++i)
     {
@@ -345,7 +347,7 @@ struct Area_Block
   {
     if (this->id < a.id)
       return true;
-    else if (this->id > a.id)
+    else if (a.id < this->id)
       return false;
     return (this->coors < a.coors);
   }

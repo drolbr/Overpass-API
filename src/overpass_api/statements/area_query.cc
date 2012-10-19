@@ -83,21 +83,24 @@ Area_Query_Statement::Area_Query_Statement
   map< string, string > attributes;
   long long submitted_id;
   
+  attributes["from"] = "_";
   attributes["into"] = "_";
   attributes["ref"] = "";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
+  input = attributes["from"];
   output = attributes["into"];
   submitted_id = atoll(attributes["ref"].c_str());
-  if (submitted_id <= 0)
+  if (submitted_id <= 0 && attributes["ref"] != "")
   {
     ostringstream temp;
     temp<<"For the attribute \"ref\" of the element \"area-query\""
     <<" the only allowed values are positive integers.";
     add_static_error(temp.str());
   }
-  area_id = submitted_id;
+  else if (submitted_id > 0)
+    area_id.push_back(Area_Skeleton::Id_Type(submitted_id));
 }
 
 Area_Query_Statement::~Area_Query_Statement()
@@ -111,6 +114,7 @@ void Area_Query_Statement::forecast()
 {
 }
 
+
 void Area_Query_Statement::get_ranges
     (set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
      set< Uint31_Index >& area_block_req,
@@ -122,7 +126,7 @@ void Area_Query_Statement::get_ranges
       it(area_locations_db.flat_begin());
       !(it == area_locations_db.flat_end()); ++it)
   {
-    if (it.object().id == area_id)
+    if (binary_search(area_id.begin(), area_id.end(), it.object().id))
     {
       for (set< uint32 >::const_iterator it2(it.object().used_indices.begin());
           it2 != it.object().used_indices.end(); ++it2)
@@ -135,6 +139,35 @@ void Area_Query_Statement::get_ranges
     }
   }
 }
+
+
+void Area_Query_Statement::get_ranges
+    (const map< Uint31_Index, vector< Area_Skeleton > >& input_areas,
+     set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
+     set< Uint31_Index >& area_block_req,
+     Resource_Manager& rman)
+{
+  for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator it = input_areas.begin();
+       it != input_areas.end(); ++it)
+  {
+    for (vector< Area_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    {
+      area_id.push_back(it2->id);
+      
+      for (set< uint32 >::const_iterator it3(it2->used_indices.begin());
+          it3 != it2->used_indices.end(); ++it3)
+      {
+        area_block_req.insert(Uint31_Index(*it3));
+        pair< Uint32_Index, Uint32_Index > range
+	    (make_pair(Uint32_Index(*it3), Uint32_Index((*it3) + 0x100)));
+        nodes_req.insert(range);
+      }
+    }
+  }
+  
+  sort(area_id.begin(), area_id.end());
+}
+
 
 void Area_Query_Statement::collect_nodes
     (const set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
@@ -158,12 +191,12 @@ void Area_Query_Statement::collect_nodes
   {
     rman.health_check(*this);
     
-    vector< Area_Block > areas;
+    map< Area_Skeleton::Id_Type, vector< Area_Block > > areas;
     while ((!(area_it == area_blocks_db.discrete_end())) &&
         (area_it.index().val() == current_idx))
     {
-      if (area_it.object().id == area_id)
-	areas.push_back(area_it.object());
+      if (binary_search(area_id.begin(), area_id.end(), area_it.object().id))
+	areas[area_it.object().id].push_back(area_it.object());
       ++area_it;
     }
     while ((!(nodes_it == nodes_db.range_end())) &&
@@ -176,28 +209,33 @@ void Area_Query_Statement::collect_nodes
 	continue;
       }
       
-      int inside = 0;
       uint32 ilat((::lat(nodes_it.index().val(), nodes_it.object().ll_lower)
           + 91.0)*10000000+0.5);
       int32 ilon(::lon(nodes_it.index().val(), nodes_it.object().ll_lower)*10000000
           + (::lon(nodes_it.index().val(), nodes_it.object().ll_lower) > 0
 	      ? 0.5 : -0.5));
-      for (vector< Area_Block >::const_iterator it(areas.begin());
-          it != areas.end(); ++it)
+      for (map< Area_Skeleton::Id_Type, vector< Area_Block > >::const_iterator it = areas.begin();
+	   it != areas.end(); ++it)
       {
-	int check(Coord_Query_Statement::check_area_block
-	    (current_idx, *it, ilat, ilon));
-	if (check == Coord_Query_Statement::HIT)
+        int inside = 0;
+        for (vector< Area_Block >::const_iterator it2 = it->second.begin(); it2 != it->second.end();
+	     ++it2)
+        {
+	  int check(Coord_Query_Statement::check_area_block(current_idx, *it2, ilat, ilon));
+	  if (check == Coord_Query_Statement::HIT)
+	  {
+	    inside = 1;
+	    break;
+	  }
+	  else if (check != 0)
+	    inside ^= check;
+        }
+        if (inside)
 	{
 	  nodes[nodes_it.index()].push_back(nodes_it.object());
-	  inside = 0;
 	  break;
 	}
-	else if (check != 0)
-	  inside ^= check;
       }
-      if (inside)
-	nodes[nodes_it.index()].push_back(nodes_it.object());
       ++nodes_it;
     }
     current_idx = area_it.index().val();
@@ -224,12 +262,12 @@ void Area_Query_Statement::collect_nodes
   {
     rman.health_check(*this);
     
-    vector< Area_Block > areas;
+    map< Area_Skeleton::Id_Type, vector< Area_Block > > areas;
     while ((!(area_it == area_blocks_db.discrete_end())) &&
         (area_it.index().val() == current_idx))
     {
-      if (area_it.object().id == area_id)
-	areas.push_back(area_it.object());
+      if (binary_search(area_id.begin(), area_id.end(), area_it.object().id))
+	areas[area_it.object().id].push_back(area_it.object());
       ++area_it;
     }
     
@@ -245,29 +283,34 @@ void Area_Query_Statement::collect_nodes
       for (vector< Node_Skeleton >::const_iterator iit = nodes_it->second.begin();
           iit != nodes_it->second.end(); ++iit)
       {
-        int inside = 0;
         uint32 ilat((::lat(nodes_it->first.val(), iit->ll_lower)
             + 91.0)*10000000+0.5);
         int32 ilon(::lon(nodes_it->first.val(), iit->ll_lower)*10000000
             + (::lon(nodes_it->first.val(), iit->ll_lower) > 0 ? 0.5 : -0.5));
-        for (vector< Area_Block >::const_iterator it(areas.begin());
-            it != areas.end(); ++it)
+        for (map< Area_Skeleton::Id_Type, vector< Area_Block > >::const_iterator it = areas.begin();
+	     it != areas.end(); ++it)
         {
-	  int check(Coord_Query_Statement::check_area_block(current_idx, *it, ilat, ilon));
-	  if (check == Coord_Query_Statement::HIT)
+          int inside = 0;
+          for (vector< Area_Block >::const_iterator it2 = it->second.begin(); it2 != it->second.end();
+	       ++it2)
+          {
+	    int check(Coord_Query_Statement::check_area_block(current_idx, *it2, ilat, ilon));
+	    if (check == Coord_Query_Statement::HIT)
+	    {
+	      inside = 1;
+	      break;
+	    }
+	    else if (check != 0)
+	      inside ^= check;
+          }
+          if (inside)
 	  {
 	    into.push_back(*iit);
-	    inside = 0;
 	    break;
 	  }
-	  else if (check != 0)
-	    inside ^= check;
         }
-        if (inside)
-	  into.push_back(*iit);
       }
-      nodes_it->second.swap(into);
-      
+      nodes_it->second.swap(into);      
       ++nodes_it;
     }
     current_idx = area_it.index().val();
@@ -295,28 +338,27 @@ void collect_nodes_from_req
 }
 
 void Area_Query_Statement::execute(Resource_Manager& rman)
-{ 
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes
-      (rman.sets()[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways
-      (rman.sets()[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations
-      (rman.sets()[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas
-      (rman.sets()[output].areas);
-  
-  nodes.clear();
-  ways.clear();
-  relations.clear();
-  areas.clear();
+{
+  map< Uint32_Index, vector< Node_Skeleton > > nodes;
+  map< Uint31_Index, vector< Way_Skeleton > > ways;
+  map< Uint31_Index, vector< Relation_Skeleton > > relations;
+  map< Uint31_Index, vector< Area_Skeleton > > areas;
   
   set< Uint31_Index > req;
   
   set< pair< Uint32_Index, Uint32_Index > > nodes_req;
-  get_ranges(nodes_req, req, rman);
+  if (area_id.empty())
+    get_ranges(rman.sets()[input].areas, nodes_req, req, rman);
+  else
+    get_ranges(nodes_req, req, rman);
   collect_nodes_from_req(nodes_req, nodes, rman);
   
   collect_nodes(nodes, req, rman);
+  
+  nodes.swap(rman.sets()[output].nodes);
+  ways.swap(rman.sets()[output].ways);
+  relations.swap(rman.sets()[output].relations);
+  areas.swap(rman.sets()[output].areas);
   
   rman.health_check(*this);
 }

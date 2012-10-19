@@ -44,7 +44,13 @@ class Area_Query_Statement : public Statement
       (set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
        set< Uint31_Index >& area_block_req,
        Resource_Manager& rman);
-       
+
+    void get_ranges
+      (const map< Uint31_Index, vector< Area_Skeleton > >& input_areas,
+       set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
+       set< Uint31_Index >& area_block_req,
+       Resource_Manager& rman);
+
     void collect_nodes
       (const set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
        const set< Uint31_Index >& req,
@@ -60,8 +66,9 @@ class Area_Query_Statement : public Statement
     static bool is_used() { return is_used_; }
   
   private:
+    string input;
     string output;
-    unsigned int area_id;    
+    vector< Area_Skeleton::Id_Type > area_id;    
     static bool is_used_;
     vector< Query_Constraint* > constraints;
 };
