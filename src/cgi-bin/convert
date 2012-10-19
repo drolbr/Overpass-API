@@ -243,14 +243,14 @@ else
   };
   elif [[ $OUTPUT_TYPE == "mapql" ]]; then
   {
-    echo "<p>Your query in pretty XML:</p>"
+    echo "<p>Your query in pretty Overpass QL:</p>"
     echo "<pre>"
     echo "$DATA" | ../bin/osm3s_query --dump-pretty-map-ql --concise | ../bin/escape_xml
     echo "</pre>"
   };
   elif [[ $OUTPUT_TYPE == "compact" ]]; then
   {
-    echo "<p>Your query in compact MapQL:</p>"
+    echo "<p>Your query in compact Overpass QL:</p>"
     echo "<a href=\"interpreter?data=`echo "$DATA" | ../bin/osm3s_query --dump-compact-map-ql --concise | ../bin/tocgi `\"><pre>"
     echo "$DATA" | ../bin/osm3s_query --dump-compact-map-ql --concise | ../bin/escape_xml 
     echo "</pre></a>"
