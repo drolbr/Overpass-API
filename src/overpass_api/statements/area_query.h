@@ -63,6 +63,9 @@ class Area_Query_Statement : public Statement
        const set< Uint31_Index >& req,
        Resource_Manager& rman);
 
+    bool areas_from_input() const { return area_id.empty(); }
+    string get_input() const { return input; }
+    
     static bool is_used() { return is_used_; }
   
   private:
