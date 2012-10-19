@@ -1,0 +1,54 @@
+<area-query ref="2400000001"/>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+
+<id-query type="area" ref="2400000001"/>
+<area-query/>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+
+<union>
+  <id-query type="area" ref="2400000001"/>
+  <id-query type="area" ref="2400000002"/>
+</union>
+<area-query/>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+
+<union>
+  <id-query type="area" ref="2400000001"/>
+  <id-query type="area" ref="2400000002"/>
+</union>
+<query type="node">
+  <area-query/>
+</query>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+
+<union>
+  <id-query type="area" ref="2400000001"/>
+  <id-query type="area" ref="2400000002"/>
+</union>
+<query type="node">
+  <area-query/>
+  <bbox-query s="0.0" n="2.0" w="0.0" e="12.0"/>
+</query>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
+
+<union>
+  <id-query type="area" ref="2400000001"/>
+  <id-query type="area" ref="2400000002"/>
+</union>
+<query type="node">
+  <bbox-query s="0.0" n="2.0" w="0.0" e="12.0"/>
+  <area-query/>
+</query>
+<print/>
+<id-query type="relation" ref="1"/>
+<print mode="ids_only"/>
