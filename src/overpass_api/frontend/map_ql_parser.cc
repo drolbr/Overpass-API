@@ -368,6 +368,18 @@ TStatement* create_area_statement(typename TStatement::Factory& stmt_factory,
   return stmt_factory.create_statement("area-query", line_nr, attr);
 }
 
+template< class TStatement >
+TStatement* create_coord_query_statement(typename TStatement::Factory& stmt_factory,
+				     string lat, string lon, string from, string into, uint line_nr)
+{
+  map< string, string > attr;
+  attr["from"] = (from == "" ? "_" : from);
+  attr["into"] = into;
+  attr["lat"] = lat;
+  attr["lon"] = lon;
+  return stmt_factory.create_statement("coord-query", line_nr, attr);
+}
+
 //-----------------------------------------------------------------------------
 
 pair< string, string > parse_setup(Tokenizer_Wrapper& token, Error_Output* error_output,
@@ -691,6 +703,33 @@ TStatement* parse_full_recurse(typename TStatement::Factory& stmt_factory,
 }
 
 template< class TStatement >
+TStatement* parse_coord_query(typename TStatement::Factory& stmt_factory,
+    Tokenizer_Wrapper& token, const string& from, Error_Output* error_output)
+{
+  string type = *token;
+  uint line_col = token.line_col().first;
+  ++token;
+  
+  string lat, lon;
+  if (*token == "(")
+  {
+    ++token;
+    lat = get_text_token(token, error_output, "Number");
+    clear_until_after(token, error_output, ",", ")", false);
+    if (*token == ",")
+    {
+      ++token;
+      lon = get_text_token(token, error_output, "Number");
+      clear_until_after(token, error_output, ")", false);
+    }
+    ++token;
+  }
+  string into = probe_into(token, error_output);
+  
+  return create_coord_query_statement< TStatement >(stmt_factory, lat, lon, from, into, line_col);
+}
+
+template< class TStatement >
 TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 			const string& type, const string& from, Tokenizer_Wrapper& token,
 		 Error_Output* error_output)
@@ -956,6 +995,8 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory,
     return parse_output< TStatement >(stmt_factory, from, token, error_output);
   if (token.good() && (*token == "<" || *token == "<<" || *token == ">" || *token == ">>"))
     return parse_full_recurse< TStatement >(stmt_factory, token, from, error_output);
+  if (token.good() && *token == "is_in")
+    return parse_coord_query< TStatement >(stmt_factory, token, from, error_output);
   
   string type = "";
   if (*token != "out" && from == "")

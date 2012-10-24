@@ -55,6 +55,7 @@ class Coord_Query_Statement : public Statement
     static bool is_used() { return is_used_; }
   
   private:
+    string input;
     string output;
     double lat, lon;
     

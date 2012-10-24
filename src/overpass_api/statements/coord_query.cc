@@ -46,29 +46,39 @@ Coord_Query_Statement::Coord_Query_Statement
 
   map< string, string > attributes;
   
+  attributes["from"] = "_";
   attributes["into"] = "_";
   attributes["lat"] = "";
   attributes["lon"] = "";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
+  input = attributes["from"];
   output = attributes["into"];
-  lat = atof(attributes["lat"].c_str());
-  if ((lat < -90.0) || (lat > 90.0) || (attributes["lat"] == ""))
+  
+  lat = 100.0;
+  lon = 200.0;
+  if (attributes["lat"] != "" || attributes["lon"] != "")
   {
-    ostringstream temp;
-    temp<<"For the attribute \"lat\" of the element \"coord-query\""
-    <<" the only allowed values are floats between -90.0 and 90.0.";
-    add_static_error(temp.str());
+    lat = atof(attributes["lat"].c_str());
+    if ((lat < -90.0) || (lat > 90.0) || (attributes["lat"] == ""))
+    {
+      ostringstream temp;
+      temp<<"For the attribute \"lat\" of the element \"coord-query\""
+          <<" the only allowed values are floats between -90.0 and 90.0.";
+      add_static_error(temp.str());
+    }
+  
+    lon = atof(attributes["lon"].c_str());
+    if ((lon < -180.0) || (lon > 180.0) || (attributes["lon"] == ""))
+    {
+      ostringstream temp;
+      temp<<"For the attribute \"lon\" of the element \"coord-query\""
+          <<" the only allowed values are floats between -180.0 and 180.0.";
+      add_static_error(temp.str());
+    }
   }
-  lon = atof(attributes["lon"].c_str());
-  if ((lon < -180.0) || (lon > 180.0) || (attributes["lon"] == ""))
-  {
-    ostringstream temp;
-    temp<<"For the attribute \"lon\" of the element \"coord-query\""
-    <<" the only allowed values are floats between -180.0 and 180.0.";
-    add_static_error(temp.str());
-  }
+  
 }
 
 void Coord_Query_Statement::forecast()
@@ -277,12 +287,36 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
     rman.area_updater()->flush();
   
   set< Uint31_Index > req;
-  map< Area::Id_Type, int > areas_inside;
-  set< Area::Id_Type > areas_on_border;
-  req.insert(Uint31_Index(::ll_upper_(lat, lon) & 0xffffff00));
+  map< Uint31_Index, vector< pair< double, double > > > coord_per_req;
+  
+  map< pair< double, double >, map< Area::Id_Type, int > > areas_inside;
+  set< Area::Id_Type > areas_found;
+  
+  if (lat != 100.0)
+  {
+    Uint31_Index idx = Uint31_Index(::ll_upper_(lat, lon) & 0xffffff00);
+    req.insert(idx);
+    coord_per_req[idx].push_back(make_pair(lat, lon));
+  }
+  else
+  {
+    const map< Uint32_Index, vector< Node_Skeleton > >& nodes = rman.sets()[input].nodes;
+    for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator it = nodes.begin();
+	 it != nodes.end(); ++it)
+    {
+      for (vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      {
+	double lat = ::lat(it->first.val(), it2->ll_lower);
+	double lon = ::lon(it->first.val(), it2->ll_lower);
+        Uint31_Index idx = Uint31_Index(::ll_upper_(lat, lon) & 0xffffff00);
+        req.insert(idx);
+        coord_per_req[idx].push_back(make_pair(lat, lon));
+      }
+    }
+  }
 
-  uint32 ilat((lat + 91.0)*10000000+0.5);
-  int32 ilon(lon*10000000 + (lon > 0 ? 0.5 : -0.5));
+  map< Uint31_Index, vector< pair< double, double > > >::const_iterator coord_block_it = coord_per_req.begin();
+  Uint31_Index last_idx = req.empty() ? Uint31_Index(0u) : *req.begin();
   
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
       (rman.get_area_transaction()->data_index(area_settings().AREA_BLOCKS));
@@ -290,18 +324,59 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
       it(area_blocks_db.discrete_begin(req.begin(), req.end()));
       !(it == area_blocks_db.discrete_end()); ++it)
   {
-    int check = check_area_block(it.index().val(), it.object(), ilat, ilon);
-    if (check == HIT)
-      areas_on_border.insert(it.object().id);
-    else if (check != 0)
+    if (!(it.index() == last_idx))
     {
-      map< Area::Id_Type, int >::iterator it2 = areas_inside.find(it.object().id);
-      if (it2 != areas_inside.end())
-	it2->second ^= check;
-      else
-	areas_inside.insert(make_pair(it.object().id, check));
+      last_idx = it.index();
+      
+      for (map< pair< double, double >, map< Area::Id_Type, int > >::const_iterator
+	  inside_it = areas_inside.begin(); inside_it != areas_inside.end(); ++inside_it)
+      {
+	for (map< Area::Id_Type, int >::const_iterator inside_it2 = inside_it->second.begin();
+	     inside_it2 != inside_it->second.end(); ++inside_it2)
+	{
+	  if (inside_it2->second != 0)
+	    areas_found.insert(inside_it2->first);
+	}
+      }
+      areas_inside.clear();
+      
+      while (coord_block_it != coord_per_req.end() && coord_block_it->first < it.index())
+        ++coord_block_it;
+      if (coord_block_it == coord_per_req.end())
+        break;
+    }
+
+    for (vector< pair< double, double > >::const_iterator coord_it = coord_block_it->second.begin();
+	 coord_it != coord_block_it->second.end(); ++coord_it)
+    {
+      uint32 ilat((coord_it->first + 91.0)*10000000+0.5);
+      int32 ilon(coord_it->second*10000000 + (coord_it->second > 0 ? 0.5 : -0.5));
+  
+      int check = check_area_block(it.index().val(), it.object(), ilat, ilon);
+      if (check == HIT)
+        areas_found.insert(it.object().id);
+      else if (check != 0)
+      {
+        map< Area::Id_Type, int >::iterator it2 = areas_inside[*coord_it].find(it.object().id);
+        if (it2 != areas_inside[*coord_it].end())
+	  it2->second ^= check;
+        else
+	  areas_inside[*coord_it].insert(make_pair(it.object().id, check));
+      }
     }
   }
+  
+  for (map< pair< double, double >, map< Area::Id_Type, int > >::const_iterator
+      inside_it = areas_inside.begin(); inside_it != areas_inside.end(); ++inside_it)
+  {
+    for (map< Area::Id_Type, int >::const_iterator inside_it2 = inside_it->second.begin();
+        inside_it2 != inside_it->second.end(); ++inside_it2)
+    {
+      if (inside_it2->second != 0)
+        areas_found.insert(inside_it2->first);
+    }
+  }
+  areas_inside.clear();
   
   map< Uint32_Index, vector< Node_Skeleton > >& nodes
       (rman.sets()[output].nodes);
@@ -323,11 +398,11 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
       it(area_locations_db.flat_begin());
       !(it == area_locations_db.flat_end()); ++it)
   {
-    if (areas_on_border.find(it.object().id) != areas_on_border.end())
+    if (areas_found.find(it.object().id) != areas_found.end())
       areas[it.index()].push_back(it.object());
-    else if ((areas_inside.find(it.object().id) != areas_inside.end())
-        && (areas_inside[it.object().id] != 0))
-      areas[it.index()].push_back(it.object());
+//     else if ((areas_inside.find(it.object().id) != areas_inside.end())
+//         && (areas_inside[it.object().id] != 0))
+//       areas[it.index()].push_back(it.object());
   }
 
   rman.health_check(*this);
