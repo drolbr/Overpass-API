@@ -664,8 +664,8 @@ TStatement* create_query_substatement
 	 into, clause.line_col.first);
   else if (clause.statement == "area")
     return create_area_statement< TStatement >
-        (stmt_factory, clause.attributes.empty() ? "" : clause.attributes[0],
-	 from, into, clause.line_col.first);
+        (stmt_factory, clause.attributes.size() <= 1 ? "" : clause.attributes[1],
+	 clause.attributes[0], into, clause.line_col.first);
   return 0;
 }
 
@@ -813,6 +813,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
       {
 	Statement_Text clause("area", token.line_col());
 	++token;
+	clause.attributes.push_back(probe_from(token, error_output));
 	if (*token == ":")
 	{
 	  ++token;
