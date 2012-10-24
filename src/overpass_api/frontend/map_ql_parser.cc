@@ -357,6 +357,17 @@ TStatement* create_newer_statement(typename TStatement::Factory& stmt_factory,
   return stmt_factory.create_statement("newer", line_nr, attr);
 }
 
+template< class TStatement >
+TStatement* create_area_statement(typename TStatement::Factory& stmt_factory,
+				   string ref, string from, string into, uint line_nr)
+{
+  map< string, string > attr;
+  attr["from"] = (from == "" ? "_" : from);
+  attr["into"] = into;
+  attr["ref"] = ref;
+  return stmt_factory.create_statement("area-query", line_nr, attr);
+}
+
 //-----------------------------------------------------------------------------
 
 pair< string, string > parse_setup(Tokenizer_Wrapper& token, Error_Output* error_output,
@@ -651,6 +662,10 @@ TStatement* create_query_substatement
         (stmt_factory,
 	 clause.attributes[0], clause.attributes[2], clause.attributes[1], clause.attributes[3],
 	 into, clause.line_col.first);
+  else if (clause.statement == "area")
+    return create_area_statement< TStatement >
+        (stmt_factory, clause.attributes.empty() ? "" : clause.attributes[0],
+	 from, into, clause.line_col.first);
   return 0;
 }
 
@@ -794,6 +809,18 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	clear_until_after(token, error_output, ")");
 	clauses.push_back(clause);
       }
+      else if (*token == "area")
+      {
+	Statement_Text clause("area", token.line_col());
+	++token;
+	if (*token == ":")
+	{
+	  ++token;
+	  clause.attributes.push_back(get_text_token(token, error_output, "Positive integer"));
+	}
+	clear_until_after(token, error_output, ")");
+	clauses.push_back(clause);
+      }
       else if (*token == ">" || *token == ">>" || *token == "<" || *token == "<<")
       {
 	Statement_Text clause("recurse", token.line_col());
@@ -854,6 +881,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
   else if (clauses.size() == 1 && from == "")
   {
     if (clauses.front().statement == "has-kv" || clauses.front().statement == "has-kv_regex"
+       || (clauses.front().statement == "area" && type != "node")
        || (clauses.front().statement == "around" && type != "node")
        || (clauses.front().statement == "bbox-query" && type != "node")
        || (clauses.front().statement == "recurse" &&
