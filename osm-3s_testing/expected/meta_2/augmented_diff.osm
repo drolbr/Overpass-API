@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osmAugmentedDiff version="0.6" generator="Overpass API 0.6.99_d" format="id-sorted">
+<note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
+<meta osm_base="mock-up-meta"/>
+
+<action type="modify" tags="changed" waymember="yes" relationmember="yes" indirectmember="yes">
+<old>
+  <node id="1" lat="51.0000000" lon="7.1000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <tag k="node_key" v="node_old_1"/>
+  </node>
+</old>
+<new>
+  <node id="1" lat="51.0000000" lon="7.1000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <tag k="node_key" v="node_new_1"/>
+  </node>
+</new>
+</action>
+<action type="modify" geometry="changed" waymember="yes" relationmember="yes" indirectmember="yes">
+<old>
+  <node id="2" lat="51.0000000" lon="7.2000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</old>
+<new>
+  <node id="2" lat="51.0100000" lon="7.2000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</new>
+</action>
+<action type="delete">
+<old>
+  <node id="3" lat="51.0000000" lon="7.3000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</old>
+<new>
+  <node id="3" version="3" timestamp="2011-01-01T00:00:00Z" changeset="2" uid="2" user="foo" visible="false"/>
+</new>
+</action>
+<action type="create">
+  <node id="4" lat="51.0000000" lon="7.4000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes" indirectmember="yes">
+  <node id="11" lat="51.1000000" lon="7.1000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes" indirectmember="yes">
+  <node id="12" lat="51.1000000" lon="7.2000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" relationmember="yes">
+  <node id="21" lat="51.2000000" lon="7.1000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" relationmember="yes">
+  <node id="22" lat="51.2000000" lon="7.2000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes" indirectmember="yes">
+  <node id="31" lat="51.3000000" lon="7.1000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes" indirectmember="yes">
+  <node id="32" lat="51.3000000" lon="7.2000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes" indirectmember="yes">
+  <node id="33" lat="51.3000000" lon="7.3000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes" indirectmember="yes">
+  <node id="34" lat="51.3000000" lon="7.4000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes" indirectmember="yes">
+  <node id="51" lat="51.5000000" lon="7.1000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes" indirectmember="yes">
+  <node id="52" lat="51.5000000" lon="7.2000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes" indirectmember="yes">
+  <node id="53" lat="51.5000000" lon="7.3000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" relationmember="yes">
+  <node id="61" lat="51.6000000" lon="8.1000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" relationmember="yes">
+  <node id="62" lat="51.6000000" lon="8.2000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" relationmember="yes">
+  <node id="63" lat="51.6000000" lon="8.3000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" relationmember="yes">
+  <node id="64" lat="51.6000000" lon="8.4000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" relationmember="yes">
+  <node id="65" lat="51.6000000" lon="8.5000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes">
+  <node id="71" lat="51.7000000" lon="9.1000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes">
+  <node id="72" lat="51.7000000" lon="9.2000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes">
+  <node id="73" lat="51.7000000" lon="9.3000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes">
+  <node id="74" lat="51.7000000" lon="9.4000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes">
+  <node id="75" lat="51.7000000" lon="9.5000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes">
+  <node id="76" lat="51.7000000" lon="9.6000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes">
+  <node id="77" lat="51.7000000" lon="9.7000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes">
+  <node id="78" lat="51.7000000" lon="9.8000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes">
+  <node id="79" lat="51.7000000" lon="9.9000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="info" waymember="yes">
+  <node id="80" lat="51.7000000" lon="10.0000000" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname"/>
+</action>
+<action type="modify" tags="changed">
+<old>
+  <way id="101" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.7000000" minlon="9.1000000" maxlat="51.7000000" maxlon="9.2000000"/>
+    <nd ref="71" lat="51.7000000" lon="9.1000000"/>
+    <nd ref="72" lat="51.7000000" lon="9.2000000"/>
+    <tag k="way_key" v="way_old_101"/>
+  </way>
+</old>
+<new>
+  <way id="101" version="2" timestamp="2011-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.7000000" minlon="9.1000000" maxlat="51.7000000" maxlon="9.2000000"/>
+    <nd ref="71" lat="51.7000000" lon="9.1000000"/>
+    <nd ref="72" lat="51.7000000" lon="9.2000000"/>
+    <tag k="way_key" v="way_new_101"/>
+  </way>
+</new>
+</action>
+<action type="modify" members="changed" geometry="changed" tags="changed">
+<old>
+  <way id="102" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.7000000" minlon="9.3000000" maxlat="51.7000000" maxlon="9.4000000"/>
+    <nd ref="73" lat="51.7000000" lon="9.3000000"/>
+    <nd ref="74" lat="51.7000000" lon="9.4000000"/>
+    <tag k="way_key" v="way_old_102"/>
+  </way>
+</old>
+<new>
+  <way id="102" version="2" timestamp="2011-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.7000000" minlon="9.9000000" maxlat="51.7000000" maxlon="10.0000000"/>
+    <nd ref="79" lat="51.7000000" lon="9.9000000"/>
+    <nd ref="80" lat="51.7000000" lon="10.0000000"/>
+    <tag k="way_key" v="way_new_102"/>
+  </way>
+</new>
+</action>
+<action type="delete">
+<old>
+  <way id="103" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.7000000" minlon="9.5000000" maxlat="51.7000000" maxlon="9.6000000"/>
+    <nd ref="75" lat="51.7000000" lon="9.5000000"/>
+    <nd ref="76" lat="51.7000000" lon="9.6000000"/>
+    <tag k="way_key" v="way_103"/>
+  </way>
+</old>
+<new>
+  <way id="103" version="2" timestamp="2011-01-01T00:00:00Z" changeset="2" uid="2" user="foo" visible="false"/>
+</new>
+</action>
+<action type="create">
+  <way id="104" version="1" timestamp="2011-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.7000000" minlon="9.7000000" maxlat="51.7000000" maxlon="9.8000000"/>
+    <nd ref="77" lat="51.7000000" lon="9.7000000"/>
+    <nd ref="78" lat="51.7000000" lon="9.8000000"/>
+    <tag k="way_key" v="way_104"/>
+  </way>
+</action>
+<action type="info" relationmember="yes">
+  <way id="131" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.3000000" minlon="7.1000000" maxlat="51.3000000" maxlon="7.2000000"/>
+    <nd ref="31" lat="51.3000000" lon="7.1000000"/>
+    <nd ref="32" lat="51.3000000" lon="7.2000000"/>
+    <tag k="way_key" v="way_131"/>
+  </way>
+</action>
+<action type="info" relationmember="yes">
+  <way id="132" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.3000000" minlon="7.3000000" maxlat="51.3000000" maxlon="7.4000000"/>
+    <nd ref="33" lat="51.3000000" lon="7.3000000"/>
+    <nd ref="34" lat="51.3000000" lon="7.4000000"/>
+    <tag k="way_key" v="way_132"/>
+  </way>
+</action>
+<action type="info" relationmember="yes" memberproperties="changed">
+  <way id="141" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.0000000" minlon="7.1000000" maxlat="51.1000000" maxlon="7.1000000"/>
+    <nd ref="1" lat="51.0000000" lon="7.1000000"/>
+    <nd ref="11" lat="51.1000000" lon="7.1000000"/>
+    <tag k="way_key" v="way_141"/>
+  </way>
+</action>
+<action type="modify" geometry="changed" relationmember="yes">
+<old>
+  <way id="142" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.0000000" minlon="7.2000000" maxlat="51.1000000" maxlon="7.2000000"/>
+    <nd ref="2" lat="51.0000000" lon="7.2000000"/>
+    <nd ref="12" lat="51.1000000" lon="7.2000000"/>
+    <tag k="way_key" v="way_142"/>
+  </way>
+</old>
+<new>
+  <way id="142" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.0100000" minlon="7.2000000" maxlat="51.1000000" maxlon="7.2000000"/>
+    <nd ref="2" lat="51.0100000" lon="7.2000000"/>
+    <nd ref="12" lat="51.1000000" lon="7.2000000"/>
+    <tag k="way_key" v="way_142"/>
+  </way>
+</new>
+</action>
+<action type="info" relationmember="yes">
+  <way id="151" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.5000000" minlon="7.1000000" maxlat="51.5000000" maxlon="7.2000000"/>
+    <nd ref="51" lat="51.5000000" lon="7.1000000"/>
+    <nd ref="52" lat="51.5000000" lon="7.2000000"/>
+    <tag k="way_key" v="way_151"/>
+  </way>
+</action>
+<action type="info" relationmember="yes">
+  <way id="152" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.5000000" minlon="7.1000000" maxlat="51.5000000" maxlon="7.2000000"/>
+    <nd ref="52" lat="51.5000000" lon="7.2000000"/>
+    <nd ref="51" lat="51.5000000" lon="7.1000000"/>
+    <tag k="way_key" v="way_152"/>
+  </way>
+</action>
+<action type="info" relationmember="yes">
+  <way id="153" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.5000000" minlon="7.1000000" maxlat="51.5000000" maxlon="7.2000000"/>
+    <nd ref="51" lat="51.5000000" lon="7.1000000"/>
+    <nd ref="52" lat="51.5000000" lon="7.2000000"/>
+    <nd ref="51" lat="51.5000000" lon="7.1000000"/>
+    <tag k="way_key" v="way_153"/>
+  </way>
+</action>
+<action type="info" relationmember="yes">
+  <way id="154" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.5000000" minlon="7.1000000" maxlat="51.5000000" maxlon="7.2000000"/>
+    <nd ref="52" lat="51.5000000" lon="7.2000000"/>
+    <nd ref="51" lat="51.5000000" lon="7.1000000"/>
+    <nd ref="52" lat="51.5000000" lon="7.2000000"/>
+    <tag k="way_key" v="way_154"/>
+  </way>
+</action>
+<action type="info" relationmember="yes">
+  <way id="155" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.5000000" minlon="7.2000000" maxlat="51.5000000" maxlon="7.3000000"/>
+    <nd ref="52" lat="51.5000000" lon="7.2000000"/>
+    <nd ref="53" lat="51.5000000" lon="7.3000000"/>
+    <tag k="way_key" v="way_154"/>
+  </way>
+</action>
+<action type="modify" tags="changed">
+<old>
+  <relation id="201" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.5000000" minlon="7.1000000" maxlat="51.6000000" maxlon="8.1000000"/>
+    <member type="node" ref="61" role=""/>
+    <member type="way" ref="151" role=""/>
+    <tag k="rel_key" v="rel_old_201"/>
+  </relation>
+</old>
+<new>
+  <relation id="201" version="2" timestamp="2011-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.5000000" minlon="7.1000000" maxlat="51.6000000" maxlon="8.1000000"/>
+    <member type="node" ref="61" role=""/>
+    <member type="way" ref="151" role=""/>
+    <tag k="rel_key" v="rel_new_201"/>
+  </relation>
+</new>
+</action>
+<action type="modify" members="changed" geometry="changed" tags="changed">
+<old>
+  <relation id="202" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.5000000" minlon="7.1000000" maxlat="51.6000000" maxlon="8.2000000"/>
+    <member type="node" ref="62" role=""/>
+    <member type="way" ref="152" role=""/>
+    <tag k="rel_key" v="rel_old_202"/>
+  </relation>
+</old>
+<new>
+  <relation id="202" version="2" timestamp="2011-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.5000000" minlon="7.2000000" maxlat="51.6000000" maxlon="8.5000000"/>
+    <member type="node" ref="65" role=""/>
+    <member type="way" ref="155" role=""/>
+    <tag k="rel_key" v="rel_new_202"/>
+  </relation>
+</new>
+</action>
+<action type="delete">
+<old>
+  <relation id="203" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.5000000" minlon="7.1000000" maxlat="51.6000000" maxlon="8.3000000"/>
+    <member type="node" ref="63" role=""/>
+    <member type="way" ref="153" role=""/>
+    <tag k="rel_key" v="rel_203"/>
+  </relation>
+</old>
+<new>
+  <relation id="203" version="2" timestamp="2011-01-01T00:00:00Z" changeset="2" uid="2" user="foo" visible="false"/>
+</new>
+</action>
+<action type="create">
+  <relation id="204" version="1" timestamp="2011-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.5000000" minlon="7.1000000" maxlat="51.6000000" maxlon="8.4000000"/>
+    <member type="node" ref="64" role=""/>
+    <member type="way" ref="154" role=""/>
+    <tag k="rel_key" v="rel_204"/>
+  </relation>
+</action>
+<action type="info" memberproperties="changed">
+  <relation id="231" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.0000000" minlon="7.1000000" maxlat="51.2000000" maxlon="7.1000000"/>
+    <member type="node" ref="1" role=""/>
+    <member type="node" ref="21" role=""/>
+    <tag k="relation_key" v="relation_231"/>
+  </relation>
+</action>
+<action type="modify" geometry="changed">
+<old>
+  <relation id="232" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.0000000" minlon="7.2000000" maxlat="51.2000000" maxlon="7.2000000"/>
+    <member type="node" ref="2" role=""/>
+    <member type="node" ref="22" role=""/>
+    <tag k="relation_key" v="relation_232"/>
+  </relation>
+</old>
+<new>
+  <relation id="232" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.0100000" minlon="7.2000000" maxlat="51.2000000" maxlon="7.2000000"/>
+    <member type="node" ref="2" role=""/>
+    <member type="node" ref="22" role=""/>
+    <tag k="relation_key" v="relation_232"/>
+  </relation>
+</new>
+</action>
+<action type="info" memberproperties="changed">
+  <relation id="241" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.0000000" minlon="7.1000000" maxlat="51.3000000" maxlon="7.2000000"/>
+    <member type="way" ref="141" role=""/>
+    <member type="way" ref="131" role=""/>
+    <tag k="relation_key" v="relation_241"/>
+  </relation>
+</action>
+<action type="modify" geometry="changed">
+<old>
+  <relation id="242" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.0000000" minlon="7.2000000" maxlat="51.3000000" maxlon="7.4000000"/>
+    <member type="way" ref="142" role=""/>
+    <member type="way" ref="132" role=""/>
+    <tag k="relation_key" v="relation_242"/>
+  </relation>
+</old>
+<new>
+  <relation id="242" version="1" timestamp="2010-01-01T00:00:00Z" changeset="1" uid="1" user="noname">
+    <bounds minlat="51.0100000" minlon="7.2000000" maxlat="51.3000000" maxlon="7.4000000"/>
+    <member type="way" ref="142" role=""/>
+    <member type="way" ref="132" role=""/>
+    <tag k="relation_key" v="relation_242"/>
+  </relation>
+</new>
+</action>
+
+</osmAugmentedDiff>

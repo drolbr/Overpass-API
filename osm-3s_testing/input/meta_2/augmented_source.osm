@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm>
+<modify>
+  <node id="1" lat="51.0" lon="7.1" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <tag k="node_key" v="node_new_1"/>
+  </node>
+  <node id="2" lat="51.01" lon="7.2" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="3" lat="51.01" lon="7.3" version="2" timestamp="2011-01-01T00:00:00Z" user="foo" uid="2" changeset="2"/>
+</modify>
+<delete>
+  <node id="3" version="3" timestamp="2011-01-01T00:00:00Z" user="foo" uid="2" changeset="2"/>
+</delete>
+<create>
+  <node id="4" lat="51.0" lon="7.4" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+</create>
+<modify>
+  <way id="101" version="2" timestamp="2011-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <nd ref="71"/>
+    <nd ref="72"/>
+    <tag k="way_key" v="way_new_101"/>
+  </way>
+  <way id="102" version="2" timestamp="2011-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <nd ref="79"/>
+    <nd ref="80"/>
+    <tag k="way_key" v="way_new_102"/>
+  </way>
+</modify>
+<delete>
+  <way id="103" version="2" timestamp="2011-01-01T00:00:00Z" user="foo" uid="2" changeset="2"/>
+</delete>
+<create>
+  <way id="104" version="1" timestamp="2011-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <nd ref="77"/>
+    <nd ref="78"/>
+    <tag k="way_key" v="way_104"/>
+  </way>
+</create>
+<modify>
+  <relation id="201" version="2" timestamp="2011-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <member type="node" ref="61"/>
+    <member type="way" ref="151"/>
+    <tag k="rel_key" v="rel_new_201"/>
+  </relation>
+  <relation id="202" version="2" timestamp="2011-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <member type="node" ref="65"/>
+    <member type="way" ref="155"/>
+    <tag k="rel_key" v="rel_new_202"/>
+  </relation>
+</modify>
+<delete>
+  <relation id="203" version="2" timestamp="2011-01-01T00:00:00Z" user="foo" uid="2" changeset="2"/>
+</delete>
+<create>
+  <relation id="204" version="1" timestamp="2011-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <member type="node" ref="64"/>
+    <member type="way" ref="154"/>
+    <tag k="rel_key" v="rel_204"/>
+  </relation>
+</create>
+</osm>

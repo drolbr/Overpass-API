@@ -10,5 +10,6 @@ configure.scan
 depcomp
 install-sh
 ltmain.sh
+m4
 missing
 

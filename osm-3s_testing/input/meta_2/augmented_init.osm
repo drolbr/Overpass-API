@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm>
+  <node id="1" lat="51.0" lon="7.1" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <tag k="node_key" v="node_old_1"/>
+  </node>
+  <node id="2" lat="51.0" lon="7.2" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="3" lat="51.0" lon="7.3" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  
+  <node id="11" lat="51.1" lon="7.1" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="12" lat="51.1" lon="7.2" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+
+  <node id="21" lat="51.2" lon="7.1" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="22" lat="51.2" lon="7.2" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+
+  <node id="31" lat="51.3" lon="7.1" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="32" lat="51.3" lon="7.2" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="33" lat="51.3" lon="7.3" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="34" lat="51.3" lon="7.4" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+
+  <node id="51" lat="51.5" lon="7.1" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="52" lat="51.5" lon="7.2" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="53" lat="51.5" lon="7.3" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+
+  <node id="61" lat="51.6" lon="8.1" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="62" lat="51.6" lon="8.2" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="63" lat="51.6" lon="8.3" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="64" lat="51.6" lon="8.4" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="65" lat="51.6" lon="8.5" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+
+  <node id="71" lat="51.7" lon="9.1" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="72" lat="51.7" lon="9.2" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="73" lat="51.7" lon="9.3" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="74" lat="51.7" lon="9.4" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="75" lat="51.7" lon="9.5" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="76" lat="51.7" lon="9.6" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="77" lat="51.7" lon="9.7" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="78" lat="51.7" lon="9.8" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="79" lat="51.7" lon="9.9" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+  <node id="80" lat="51.7" lon="10.0" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1"/>
+
+  <way id="101" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <nd ref="71"/>
+    <nd ref="72"/>
+    <tag k="way_key" v="way_old_101"/>
+  </way>
+  <way id="102" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <nd ref="73"/>
+    <nd ref="74"/>
+    <tag k="way_key" v="way_old_102"/>
+  </way>
+  <way id="103" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <nd ref="75"/>
+    <nd ref="76"/>
+    <tag k="way_key" v="way_103"/>
+  </way>
+
+  <way id="131" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <nd ref="31"/>
+    <nd ref="32"/>
+    <tag k="way_key" v="way_131"/>
+  </way>
+  <way id="132" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <nd ref="33"/>
+    <nd ref="34"/>
+    <tag k="way_key" v="way_132"/>
+  </way>
+
+  <way id="141" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <nd ref="1"/>
+    <nd ref="11"/>
+    <tag k="way_key" v="way_141"/>
+  </way>
+  <way id="142" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <nd ref="2"/>
+    <nd ref="12"/>
+    <tag k="way_key" v="way_142"/>
+  </way>
+
+  <way id="151" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <nd ref="51"/>
+    <nd ref="52"/>
+    <tag k="way_key" v="way_151"/>
+  </way>
+  <way id="152" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <nd ref="52"/>
+    <nd ref="51"/>
+    <tag k="way_key" v="way_152"/>
+  </way>
+  <way id="153" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <nd ref="51"/>
+    <nd ref="52"/>
+    <nd ref="51"/>
+    <tag k="way_key" v="way_153"/>
+  </way>
+  <way id="154" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <nd ref="52"/>
+    <nd ref="51"/>
+    <nd ref="52"/>
+    <tag k="way_key" v="way_154"/>
+  </way>
+  <way id="155" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <nd ref="52"/>
+    <nd ref="53"/>
+    <tag k="way_key" v="way_154"/>
+  </way>
+
+  <relation id="201" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <member type="node" ref="61"/>
+    <member type="way" ref="151"/>
+    <tag k="rel_key" v="rel_old_201"/>
+  </relation>
+  <relation id="202" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <member type="node" ref="62"/>
+    <member type="way" ref="152"/>
+    <tag k="rel_key" v="rel_old_202"/>
+  </relation>
+  <relation id="203" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <member type="node" ref="63"/>
+    <member type="way" ref="153"/>
+    <tag k="rel_key" v="rel_203"/>
+  </relation>
+  
+  <relation id="231" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <member type="node" ref="1"/>
+    <member type="node" ref="21"/>
+    <tag k="relation_key" v="relation_231"/>
+  </relation>
+  <relation id="232" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <member type="node" ref="2"/>
+    <member type="node" ref="22"/>
+    <tag k="relation_key" v="relation_232"/>
+  </relation>
+  
+  <relation id="241" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <member type="way" ref="141"/>
+    <member type="way" ref="131"/>
+    <tag k="relation_key" v="relation_241"/>
+  </relation>
+  <relation id="242" version="1" timestamp="2010-01-01T00:00:00Z" user="noname" uid="1" changeset="1">
+    <member type="way" ref="142"/>
+    <member type="way" ref="132"/>
+    <tag k="relation_key" v="relation_242"/>
+  </relation>
+</osm>
