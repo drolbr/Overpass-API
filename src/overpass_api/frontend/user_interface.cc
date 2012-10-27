@@ -178,7 +178,7 @@ string get_xml_cgi(Error_Output* error_output, uint32 max_input_size, string& ur
     if (cgi_error)
     {
       if (error_output)
-	error_output->add_encoding_remark("Your input neither starts with '<' nor does it contain the string \"data=\". It will be interpreted as MapQL");
+	error_output->add_encoding_remark("Your input neither starts with '<' nor does it contain the string \"data=\". It will be interpreted as OverpassQL");
     }
     else if (jsonp != "")
       error_output->add_padding(jsonp);

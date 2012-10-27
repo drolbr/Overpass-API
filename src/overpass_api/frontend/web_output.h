@@ -50,7 +50,7 @@ struct Web_Output : public Error_Output
   
   virtual void add_padding(const string& padding_) { padding = padding_; }
   
-  void enforce_header();
+  void enforce_header(uint write_mime);
   void write_html_header
       (const string& timestamp = "", const string& area_timestamp = "", uint write_mime = 200,
        bool write_js_init = false, bool write_remarks = true);
@@ -69,7 +69,7 @@ private:
   string padding;
   
   void display_remark(const string& text);
-  void display_error(const string& text);
+  void display_error(const string& text, uint write_mime);
 };
 
 #endif

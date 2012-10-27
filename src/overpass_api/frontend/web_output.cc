@@ -31,7 +31,7 @@ void Web_Output::add_encoding_error(const string& error)
   {
     ostringstream out;
     out<<"encoding error: "<<error;
-    display_error(out.str());
+    display_error(out.str(), 400);
   }
   encoding_errors = true;
 }
@@ -42,7 +42,7 @@ void Web_Output::add_parse_error(const string& error, int line_number)
   {
     ostringstream out;
     out<<"line "<<line_number<<": parse error: "<<error;
-    display_error(out.str());
+    display_error(out.str(), 400);
   }
   parse_errors = true;
 }
@@ -53,7 +53,7 @@ void Web_Output::add_static_error(const string& error, int line_number)
   {
     ostringstream out;
     out<<"line "<<line_number<<": static error: "<<error;
-    display_error(out.str());
+    display_error(out.str(), 400);
   }
   static_errors = true;
 }
@@ -94,7 +94,7 @@ void Web_Output::runtime_error(const string& error)
   {
     ostringstream out;
     out<<"runtime error: "<<error;
-    display_error(out.str());
+    display_error(out.str(), 200);
   }
 }
 
@@ -108,10 +108,10 @@ void Web_Output::runtime_remark(const string& error)
   }
 }
 
-void Web_Output::enforce_header()
+void Web_Output::enforce_header(uint write_mime)
 {
   if (header_written == not_yet)
-    write_html_header();
+    write_html_header("", "", write_mime);
 }
 
 void Web_Output::write_html_header
@@ -128,6 +128,8 @@ void Web_Output::write_html_header
     {
       if (write_mime == 504)
         cout<<"Status: "<<write_mime<<" Gateway Timeout\n";
+      else if (write_mime == 400)
+        cout<<"Status: "<<write_mime<<" Bad Request\n";
       else
         cout<<"Status: "<<write_mime<<"\n";
     }
@@ -217,7 +219,7 @@ void Web_Output::write_footer()
 
 void Web_Output::display_remark(const string& text)
 {
-  enforce_header();
+  enforce_header(200);
   if (header_written == xml)
     cout<<"<remark> "<<text<<" </remark>\n";
   else if (header_written == html)
@@ -225,9 +227,9 @@ void Web_Output::display_remark(const string& text)
         <<text<<" </p>\n";
 }
 
-void Web_Output::display_error(const string& text)
+void Web_Output::display_error(const string& text, uint write_mime)
 {
-  enforce_header();
+  enforce_header(write_mime);
   if (header_written == xml)
     cout<<"<remark> "<<text<<" </remark>\n";
   else if (header_written == html)
