@@ -138,12 +138,11 @@ void Web_Output::write_html_header
     if (has_origin)
       cout<<"Access-Control-Allow-Origin: *\n";
     if (is_options_request)
-    {
       cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
             "Content-Length: 0\n";
-      return;
-    }
     cout<<"Content-type: text/html; charset=utf-8\n\n";
+    if (is_options_request)
+      return;
   }
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -184,12 +183,11 @@ void Web_Output::write_xml_header
     if (has_origin)
       cout<<"Access-Control-Allow-Origin: *\n";
     if (is_options_request)
-    {
       cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
             "Content-Length: 0\n";
-      return;
-    }
     cout<<"Content-type: application/osm3s+xml\n\n";
+    if (is_options_request)
+      return;
   }
   
   cout<<
@@ -216,12 +214,11 @@ void Web_Output::write_json_header
     if (has_origin)
       cout<<"Access-Control-Allow-Origin: *\n";
     if (is_options_request)
-    {
       cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
             "Content-Length: 0\n";
-      return;
-    }
     cout<<"Content-type: application/json\n\n";
+    if (is_options_request)
+      return;
   }
 
   if (padding != "")
