@@ -105,8 +105,16 @@ namespace
 }
 
 string get_xml_cgi(Error_Output* error_output, uint32 max_input_size, string& url, bool& redirect,
-		   string& template_name)
+		   string& template_name, bool& is_options, string& allow_header, bool& has_origin)
 {
+  // Check for various HTTP headers
+  char* method = getenv("REQUEST_METHOD");
+  is_options = ((method) && (!strncmp(method, "OPTIONS", 8)));
+  char* allow_header_c = getenv("HTTP_ACCESS_CONTROL_REQUEST_HEADERS");
+  allow_header = ((allow_header_c) ? allow_header_c : "");
+  char* origin = getenv("HTTP_ORIGIN");
+  has_origin = ((origin) && strnlen(origin, 1) > 0);
+  
   int line_number(1);
   // If there is nonempty input from GET method, use GET
   string input(cgi_get_to_text());

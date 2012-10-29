@@ -53,7 +53,8 @@ int main(int argc, char *argv[])
     string url = "http://www.openstreetmap.org/browse/{{{type}}}/{{{id}}}";
     string template_name = "default.wiki";
     bool redirect = true;
-    string xml_raw(get_xml_cgi(&error_output, 1048576, url, redirect, template_name));
+    string xml_raw(get_xml_cgi(&error_output, 1048576, url, redirect, template_name,
+	error_output.is_options_request, error_output.allow_headers, error_output.has_origin));
     
     if (error_output.display_encoding_errors())
       return 0;
@@ -96,49 +97,52 @@ int main(int argc, char *argv[])
     else
       osm_script->set_template_name(template_name);
 
-    for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
-	 it != get_statement_stack()->end(); ++it)
-      (*it)->execute(dispatcher.resource_manager());
-
-    if (osm_script && osm_script->get_type() == "custom")
+    if (!error_output.is_options_request)
     {
-      uint32 count = osm_script->get_written_elements_count();
-      if (count == 0 && redirect)
+      for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
+	   it != get_statement_stack()->end(); ++it)
+        (*it)->execute(dispatcher.resource_manager());
+
+      if (osm_script && osm_script->get_type() == "custom")
       {
-        error_output.write_html_header
-            (dispatcher.get_timestamp(),
-	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
-	cout<<"<p>No results found.</p>\n";
-	error_output.write_footer();
+        uint32 count = osm_script->get_written_elements_count();
+        if (count == 0 && redirect)
+        {
+          error_output.write_html_header
+              (dispatcher.get_timestamp(),
+	       area_level > 0 ? dispatcher.get_area_timestamp() : "");
+	  cout<<"<p>No results found.</p>\n";
+	  error_output.write_footer();
+        }
+        else if (count == 1 && redirect)
+        {
+	  cout<<"Status: 302 Moved\n";
+	  cout<<"Location: "
+	      <<osm_script->adapt_url(url)
+	      <<"\n\n";
+        }
+        else
+        {
+          error_output.write_html_header
+              (dispatcher.get_timestamp(),
+	       area_level > 0 ? dispatcher.get_area_timestamp() : "", 200,
+	       osm_script->template_contains_js());
+	  osm_script->write_output();
+	  error_output.write_footer();
+        }
       }
-      else if (count == 1 && redirect)
-      {
-	cout<<"Status: 302 Moved\n";
-	cout<<"Location: "
-	    <<osm_script->adapt_url(url)
-	    <<"\n\n";
-      }
-      else
+      else if (osm_script && osm_script->get_type() == "popup")
       {
         error_output.write_html_header
             (dispatcher.get_timestamp(),
 	     area_level > 0 ? dispatcher.get_area_timestamp() : "", 200,
-	     osm_script->template_contains_js());
-	osm_script->write_output();
-	error_output.write_footer();
+	     osm_script->template_contains_js(), false);
+        osm_script->write_output();
+        error_output.write_footer();
       }
+      else
+        error_output.write_footer();
     }
-    else if (osm_script && osm_script->get_type() == "popup")
-    {
-      error_output.write_html_header
-          (dispatcher.get_timestamp(),
-	   area_level > 0 ? dispatcher.get_area_timestamp() : "", 200,
-	   osm_script->template_contains_js(), false);
-      osm_script->write_output();
-      error_output.write_footer();
-    }
-    else
-      error_output.write_footer();
   }
   catch(File_Error e)
   {
@@ -146,8 +150,9 @@ int main(int argc, char *argv[])
     if (e.origin.substr(e.origin.size()-9) == "::timeout")
     {
       error_output.write_html_header("", "", 504, false);
-      temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin
-          <<". Probably the server is overcrowded.\n";
+      if (!error_output.is_options_request)
+        temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin
+            <<". Probably the server is overcrowded.\n";
     }
     else
       temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin;

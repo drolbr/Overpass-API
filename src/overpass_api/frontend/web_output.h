@@ -25,7 +25,8 @@ using namespace std;
 
 struct Web_Output : public Error_Output
 {
-  Web_Output(uint log_level_) : header_written(not_yet), encoding_errors(false), parse_errors(false), static_errors(false), log_level(log_level_) {}
+  Web_Output(uint log_level_) : is_options_request(false), has_origin(false), header_written(not_yet),
+      encoding_errors(false), parse_errors(false), static_errors(false), log_level(log_level_) {}
   
   ~Web_Output() { write_footer(); }
   
@@ -59,6 +60,11 @@ struct Web_Output : public Error_Output
   void write_json_header
       (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
   void write_footer();
+  
+public:
+  bool is_options_request;
+  string allow_headers;
+  bool has_origin;
   
 private:
   enum { not_yet, xml, html, json, final } header_written;

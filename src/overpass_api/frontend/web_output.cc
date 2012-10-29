@@ -133,6 +133,16 @@ void Web_Output::write_html_header
       else
         cout<<"Status: "<<write_mime<<"\n";
     }
+    if (allow_headers != "")
+      cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
+    if (has_origin)
+      cout<<"Access-Control-Allow-Origin: *\n";
+    if (is_options_request)
+    {
+      cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
+            "Content-Length: 0\n";
+      return;
+    }
     cout<<"Content-type: text/html; charset=utf-8\n\n";
   }
   cout<<
@@ -168,7 +178,19 @@ void Web_Output::write_xml_header
   header_written = xml;
   
   if (write_mime)
+  {
+    if (allow_headers != "")
+      cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
+    if (has_origin)
+      cout<<"Access-Control-Allow-Origin: *\n";
+    if (is_options_request)
+    {
+      cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
+            "Content-Length: 0\n";
+      return;
+    }
     cout<<"Content-type: application/osm3s+xml\n\n";
+  }
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm version=\"0.6\" generator=\"Overpass API\">\n"
@@ -188,7 +210,19 @@ void Web_Output::write_json_header
   header_written = json;
   
   if (write_mime)
+  {
+    if (allow_headers != "")
+      cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
+    if (has_origin)
+      cout<<"Access-Control-Allow-Origin: *\n";
+    if (is_options_request)
+    {
+      cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
+            "Content-Length: 0\n";
+      return;
+    }
     cout<<"Content-type: application/json\n\n";
+  }
 
   if (padding != "")
     cout<<padding<<"(";
@@ -208,6 +242,8 @@ void Web_Output::write_json_header
 
 void Web_Output::write_footer()
 {
+  if (is_options_request)
+    return;
   if (header_written == xml)
     cout<<"\n</osm>\n";
   else if (header_written == html)
@@ -220,6 +256,8 @@ void Web_Output::write_footer()
 void Web_Output::display_remark(const string& text)
 {
   enforce_header(200);
+  if (is_options_request)
+    return;
   if (header_written == xml)
     cout<<"<remark> "<<text<<" </remark>\n";
   else if (header_written == html)
@@ -230,6 +268,8 @@ void Web_Output::display_remark(const string& text)
 void Web_Output::display_error(const string& text, uint write_mime)
 {
   enforce_header(write_mime);
+  if (is_options_request)
+    return;
   if (header_written == xml)
     cout<<"<remark> "<<text<<" </remark>\n";
   else if (header_written == html)

@@ -52,7 +52,9 @@ string cgi_get_to_text()
 {
   char* method;
   method = getenv("REQUEST_METHOD");
-  if ((method) && (!strcmp(method, "GET")))
+  if ((method) && (!strncmp(method, "GET", 4)))
+    return getenv("QUERY_STRING");
+  if ((method) && (!strncmp(method, "OPTIONS", 8)))
     return getenv("QUERY_STRING");
   
   return "";
