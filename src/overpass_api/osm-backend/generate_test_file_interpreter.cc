@@ -318,6 +318,7 @@ int main(int argc, char* args[])
       || string(args[2]) == "interpreter_9" || string(args[2]) == "interpreter_10")
   {
     cout<<
+    "Status: 400 Bad Request\n"
     "Content-type: text/html; charset=utf-8\n"
     "\n"
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
