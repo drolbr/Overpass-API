@@ -36,6 +36,11 @@ struct Aligned_Segment
 {
   uint32 ll_upper_;
   uint64 ll_lower_a, ll_lower_b;
+  
+  bool operator<(const Aligned_Segment& b) const
+  {
+    return (ll_upper_ < b.ll_upper_);
+  }
 };
 
 struct Area
@@ -69,10 +74,8 @@ struct Area
        uint32 from_lat, uint32 from_lon, uint32 to_lat, uint32 to_lon)
   {
     if ((from_lat & 0xfff00000) == (to_lat & 0xfff00000))
-    {
       aligned_segments.push_back(segment_from_ll_quad
-      (from_lat, from_lon, to_lat, to_lon));
-    }
+          (from_lat, from_lon, to_lat, to_lon));
     else if (from_lat < to_lat)
     {
       uint32 split_lat((from_lat & 0xfff00000) + 0x100000);
@@ -109,16 +112,14 @@ struct Area
     }
   }
   
+  
   static void calc_vert_aligned_segments
       (vector< Aligned_Segment >& aligned_segments,
        uint32 from_lat, int32 from_lon, uint32 to_lat, int32 to_lon)
   {
     if ((from_lon & 0xfff00000) == (to_lon & 0xfff00000))
-    {
       calc_horiz_aligned_segments
           (aligned_segments, from_lat, from_lon, to_lat, to_lon);
-      return;
-    }
     else if (from_lon < to_lon)
     {
       int32 split_lon((from_lon & 0xfff00000) + 0x100000);
@@ -155,15 +156,11 @@ struct Area
     }
   }
   
+  
   static void calc_aligned_segments
       (vector< Aligned_Segment >& aligned_segments,
-       uint64 from, uint64 to)
+       uint32 from_lat, int32 from_lon, uint32 to_lat, int32 to_lon)
   {
-    uint32 from_lat = ::ilat(from>>32, from&0xffffffff);
-    uint32 to_lat = ::ilat(to>>32, to&0xffffffff);
-    int32 from_lon = ::ilon(from>>32, from&0xffffffff);
-    int32 to_lon = ::ilon(to>>32, to&0xffffffff);
-    
     if ((from_lon < -900000000) && (to_lon > 900000000))
     {
       calc_vert_aligned_segments
@@ -189,6 +186,29 @@ struct Area
     else
       calc_vert_aligned_segments
         (aligned_segments, from_lat, from_lon, to_lat, to_lon);
+  }
+      
+      
+  static void calc_aligned_segments
+      (vector< Aligned_Segment >& aligned_segments,
+       uint64 from, uint64 to)
+  {
+    uint32 from_lat = ::ilat(from>>32, from&0xffffffff);
+    uint32 to_lat = ::ilat(to>>32, to&0xffffffff);
+    int32 from_lon = ::ilon(from>>32, from&0xffffffff);
+    int32 to_lon = ::ilon(to>>32, to&0xffffffff);
+
+    calc_aligned_segments(aligned_segments, from_lat, from_lon, to_lat, to_lon);
+  }
+
+        
+      
+  static void calc_aligned_segments
+      (vector< Aligned_Segment >& aligned_segments,
+       double from_lat, double from_lon, double to_lat, double to_lon)
+  {
+    calc_aligned_segments(aligned_segments,
+			  ::ilat(from_lat), ::ilon(from_lon), ::ilat(to_lat), ::ilon(to_lon));
   }
 };
 

@@ -944,6 +944,18 @@ inline uint32 ll_lower(double lat, double lon)
 }
 
 
+inline uint32 ilat(double lat)
+{
+  return (lat + 91.0)*10000000+0.5;
+}
+
+
+inline int32 ilon(double lon)
+{
+  return lon*10000000 + (lon > 0 ? 0.5 : -0.5);
+}
+
+
 inline uint32 ilat(uint32 ll_upper, uint32 ll_lower)
 {
   uint32 result(0);
