@@ -61,58 +61,31 @@ bool Polygon_Constraint::delivers_data()
 bool Polygon_Constraint::get_ranges
     (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
 {
-  return false;
-  
-//   vector< pair< uint32, uint32 > > int_ranges = polygon->calc_ranges();
-//   for (vector< pair< uint32, uint32 > >::const_iterator
-//       it(int_ranges.begin()); it != int_ranges.end(); ++it)
-//   {
-//     pair< Uint32_Index, Uint32_Index > range
-//         (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
-//     ranges.insert(range);
-//   }
-//   return true;
+  ranges = polygon->calc_ranges();
+  return true;
 }
+
 
 bool Polygon_Constraint::get_ranges
     (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
   return false;
-  
-//   set< pair< Uint32_Index, Uint32_Index > > node_ranges;
-//   this->get_ranges(rman, node_ranges);
+
+//   set< pair< Uint32_Index, Uint32_Index > > node_ranges = polygon->calc_ranges();
 //   ranges = calc_parents(node_ranges);
 //   return true;
 }
 
+
 void Polygon_Constraint::filter(Resource_Manager& rman, Set& into)
 {
-  // process nodes
-  for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = into.nodes.begin();
-      it != into.nodes.end(); ++it)
-  {
-    vector< Node_Skeleton > local_into;
-    for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-        iit != it->second.end(); ++iit)
-    {
-      double lat(::lat(it->first.val(), iit->ll_lower));
-      double lon(::lon(it->first.val(), iit->ll_lower));
-      if (false) //TODO: Check auf polygon->Zugehörigkeit
-	local_into.push_back(*iit);
-    }
-    it->second.swap(local_into);
-  }  
+  polygon->collect_nodes(into.nodes);
   
   into.ways.clear();
   into.relations.clear();
   //TODO: filter areas
 }
 
-bool matches_polygon(const Polygon_Query_Statement& polygon, const Way_Skeleton& way,
-		  const vector< pair< Uint32_Index, const Node_Skeleton* > >& nodes_by_id)
-{
-  return false;
-}
 
 void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
@@ -249,9 +222,7 @@ void Polygon_Query_Statement::forecast()
 }
 
 
-void Polygon_Query_Statement::collect_nodes
-    (map< Uint32_Index, vector< Node_Skeleton > >& nodes,
-     Resource_Manager& rman)
+void Polygon_Query_Statement::collect_nodes(map< Uint32_Index, vector< Node_Skeleton > >& nodes)
 {
   vector< Aligned_Segment >::const_iterator area_it = segments.begin();
   map< Uint32_Index, vector< Node_Skeleton > >::iterator nodes_it = nodes.begin();
@@ -262,8 +233,6 @@ void Polygon_Query_Statement::collect_nodes
   
   while (area_it != segments.end())
   {
-    rman.health_check(*this);
-    
     vector< Area_Block > areas;
     while (area_it != segments.end() && area_it->ll_upper_ == current_idx)
     {
@@ -342,7 +311,7 @@ void Polygon_Query_Statement::execute(Resource_Manager& rman)
   collect_items_range(this, rman, *osm_base_settings().NODES, nodes_req,
 		      Trivial_Predicate< Node_Skeleton >(), nodes);
   
-  collect_nodes(nodes, rman);
+  collect_nodes(nodes);
   
   rman.health_check(*this);
 }

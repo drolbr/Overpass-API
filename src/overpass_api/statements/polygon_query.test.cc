@@ -23,6 +23,7 @@
 #include "../core/settings.h"
 #include "polygon_query.h"
 #include "print.h"
+#include "query.h"
 
 
 using namespace std;
@@ -38,6 +39,42 @@ void perform_polygon_print(string bounds, Transaction& transaction)
     {
       const char* attributes[] = { "bounds", bounds.c_str(), 0 };
       Polygon_Query_Statement* stmt1 = new Polygon_Query_Statement(0, convert_c_pairs(attributes));
+      stmt1->execute(rman);
+    }
+    {
+      const char* attributes[] = { "mode", "body", "order", "id", 0 };
+      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes));
+      stmt1->execute(rman);
+    }
+  }
+  catch (File_Error e)
+  {
+    cerr<<"File error caught: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
+
+void perform_query_polygon_print(string bounds, Transaction& transaction)
+{
+  try
+  {
+    // Select a polygon from the testset that contains one quarter
+    // of only one polygon.
+    Resource_Manager rman(transaction);
+    {
+      const char* attributes[] = { "type", "node", 0 };
+      Query_Statement* stmt1 = new Query_Statement(0, convert_c_pairs(attributes));
+      {
+        const char* attributes[] = { "bounds", bounds.c_str(), 0 };
+        Polygon_Query_Statement* stmt2 = new Polygon_Query_Statement(0, convert_c_pairs(attributes));
+        stmt1->add_statement(stmt2, "");
+      }
+      {
+        const char* attributes[] = { "k", "node_key_5", 0 };
+        Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0, convert_c_pairs(attributes));
+        stmt1->add_statement(stmt2, "");
+      }
       stmt1->execute(rman);
     }
     {
@@ -75,18 +112,18 @@ int main(int argc, char* args[])
   {
     ostringstream bounds;
     bounds<<fixed<<setprecision(7)<<30.0 + 11*(20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + 15*(60.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<-120 + 14.9*(60.0/2.0/pattern_size)<<' '
           <<fixed<<setprecision(7)<<30.0 + 11*(20.0/2.0/pattern_size)<<' '
           <<fixed<<setprecision(7)<<-120 + 19*(60.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<30.0 + 15*(20.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<30.0 + 14.9*(20.0/2.0/pattern_size)<<' '
           <<fixed<<setprecision(7)<<-120 + 23*(60.0/2.0/pattern_size)<<' '
           <<fixed<<setprecision(7)<<30.0 + 19*(20.0/2.0/pattern_size)<<' '
           <<fixed<<setprecision(7)<<-120 + 23*(60.0/2.0/pattern_size)<<' '
           <<fixed<<setprecision(7)<<30.0 + 23*(20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + 19*(60.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<-120 + 19.1*(60.0/2.0/pattern_size)<<' '
           <<fixed<<setprecision(7)<<30.0 + 23*(20.0/2.0/pattern_size)<<' '
           <<fixed<<setprecision(7)<<-120 + 15*(60.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<30.0 + 19*(20.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<30.0 + 19.1*(20.0/2.0/pattern_size)<<' '
           <<fixed<<setprecision(7)<<-120 + 11*(60.0/2.0/pattern_size)<<' '
           <<fixed<<setprecision(7)<<30.0 + 15*(20.0/2.0/pattern_size)<<' '
           <<fixed<<setprecision(7)<<-120 + 11*(60.0/2.0/pattern_size)<<' ';
@@ -102,6 +139,27 @@ int main(int argc, char* args[])
           <<fixed<<setprecision(7)<<80.0<<' '
           <<fixed<<setprecision(7)<<-120<<' ';
     perform_polygon_print(bounds.str(), transaction);
+  }
+  if ((test_to_execute == "") || (test_to_execute == "3"))
+  {
+    ostringstream bounds;
+    bounds<<fixed<<setprecision(7)<<30.0 + 11*(20.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<-120 + 14.9*(60.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<30.0 + 11*(20.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<-120 + 19*(60.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<30.0 + 14.9*(20.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<-120 + 23*(60.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<30.0 + 19*(20.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<-120 + 23*(60.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<30.0 + 23*(20.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<-120 + 19.1*(60.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<30.0 + 23*(20.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<-120 + 15*(60.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<30.0 + 19.1*(20.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<-120 + 11*(60.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<30.0 + 15*(20.0/2.0/pattern_size)<<' '
+          <<fixed<<setprecision(7)<<-120 + 11*(60.0/2.0/pattern_size)<<' ';
+    perform_query_polygon_print(bounds.str(), transaction);
   }
   
   cout<<"</osm>\n";
