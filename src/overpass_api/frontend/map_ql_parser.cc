@@ -336,6 +336,16 @@ TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
 }
 
 template< class TStatement >
+TStatement* create_polygon_statement(typename TStatement::Factory& stmt_factory,
+				   string bounds, string into, uint line_nr)
+{
+  map< string, string > attr;
+  attr["bounds"] = bounds;
+  attr["into"] = into;
+  return stmt_factory.create_statement("polygon-query", line_nr, attr);
+}
+
+template< class TStatement >
 TStatement* create_user_statement
     (typename TStatement::Factory& stmt_factory,
      string type, string name, string uid, string into, uint line_nr)
@@ -650,6 +660,9 @@ TStatement* create_query_substatement
   else if (clause.statement == "around")
     return create_around_statement< TStatement >
         (stmt_factory, clause.attributes[1], clause.attributes[0], into, clause.line_col.first);
+  else if (clause.statement == "polygon")
+    return create_polygon_statement< TStatement >
+        (stmt_factory, clause.attributes[0], into, clause.line_col.first);
   else if (clause.statement == "user")
     return create_user_statement< TStatement >
         (stmt_factory, type, clause.attributes[0], "", into, clause.line_col.first);
@@ -812,6 +825,15 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	clear_until_after(token, error_output, ")");
 	clauses.push_back(clause);
       }
+      else if (*token == "poly")
+      {
+	Statement_Text clause("polygon", token.line_col());
+	++token;
+	clear_until_after(token, error_output, ":");
+	clause.attributes.push_back(get_text_token(token, error_output, "List of Coordinates"));
+	clear_until_after(token, error_output, ")");
+	clauses.push_back(clause);
+      }
       else if (*token == "user")
       {
 	Statement_Text clause("user", token.line_col());
@@ -923,6 +945,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
     if (clauses.front().statement == "has-kv" || clauses.front().statement == "has-kv_regex"
        || (clauses.front().statement == "area" && type != "node")
        || (clauses.front().statement == "around" && type != "node")
+       || (clauses.front().statement == "polygon" && type != "node")
        || (clauses.front().statement == "bbox-query" && type != "node")
        || (clauses.front().statement == "recurse" &&
            (clauses.front().attributes[0] == "<" || clauses.front().attributes[0] == "<<"
