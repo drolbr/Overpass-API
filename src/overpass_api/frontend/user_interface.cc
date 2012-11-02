@@ -128,6 +128,11 @@ string get_xml_cgi(Error_Output* error_output, uint32 max_input_size, string& ur
   
   if (pos == input.size())
   {
+    if (is_options)
+      // if we have an OPTIONS request then assume the query is valid
+      // As a quick hack set the input to a valid dummy value
+      return "out;";
+    
     // otherwise use POST input
     if (pos == 0)
     {
