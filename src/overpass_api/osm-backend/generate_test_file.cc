@@ -2217,6 +2217,50 @@ struct Accept_Union_6 : public Accept_All_Tags
     uint pattern_size;
 };
 
+struct Accept_Polygon_1 : public Accept_All_Tags
+{
+  Accept_Polygon_1(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const
+  { 
+    return ((id >= pattern_size*pattern_size*3 + pattern_size*5 + 8
+            && id <= pattern_size*pattern_size*3 + pattern_size*5 + 10)
+        || (id >= pattern_size*pattern_size*3 + pattern_size*6 + 7
+            && id <= pattern_size*pattern_size*3 + pattern_size*6 + 11)
+        || (id >= pattern_size*pattern_size*3 + pattern_size*7 + 6
+            && id <= pattern_size*pattern_size*3 + pattern_size*7 + 12)
+        || (id >= pattern_size*pattern_size*3 + pattern_size*8 + 6
+            && id <= pattern_size*pattern_size*3 + pattern_size*8 + 12)
+        || (id >= pattern_size*pattern_size*3 + pattern_size*9 + 6
+            && id <= pattern_size*pattern_size*3 + pattern_size*9 + 12)
+        || (id >= pattern_size*pattern_size*3 + pattern_size*10 + 7
+            && id <= pattern_size*pattern_size*3 + pattern_size*10 + 11)
+        || (id >= pattern_size*pattern_size*3 + pattern_size*11 + 8
+            && id <= pattern_size*pattern_size*3 + pattern_size*11 + 10)); 
+  }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Polygon_2 : public Accept_All_Tags
+{
+  Accept_Polygon_2(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const
+  {
+    return (id == pattern_size*pattern_size*2
+        || id == pattern_size*pattern_size*4 - pattern_size + 1);
+  }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
 struct Accept_All_But_5 : public Accept_All_Tags
 {
   Accept_All_But_5(uint pattern_size_) : pattern_size(pattern_size_) {}
@@ -2948,6 +2992,10 @@ int main(int argc, char* args[])
       modifier = new Accept_Around_1(pattern_size, 200.1);
     else if (string(args[2]) == "around_6")
       modifier = new Accept_Around_1(pattern_size, 200.1, true);
+    else if (string(args[2]) == "polygon_query_1")
+      modifier = new Accept_Polygon_1(pattern_size);
+    else if (string(args[2]) == "polygon_query_2")
+      modifier = new Accept_Polygon_2(pattern_size);
     else if (string(args[2]) == "diff_do")
       modifier = new Accept_All;
     else if (string(args[2]) == "diff_compare")

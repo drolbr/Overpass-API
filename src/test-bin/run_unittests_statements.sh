@@ -193,4 +193,9 @@ prepare_test_loop union 6 $DATA_SIZE
 date +%T
 perform_test_loop union 6 ../../input/update_database/
 
+# Test the union statement
+prepare_test_loop polygon_query 2 $DATA_SIZE
+date +%T
+perform_test_loop polygon_query 2 ../../input/update_database/
+
 rm -f input/update_database/*
