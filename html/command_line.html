@@ -9,7 +9,11 @@
 
 <p><a href="index.html">Overpass API</a> &gt;</p>
 
+
 <h1>Command line</h1>
+
+
+<h2><a name="download">Perform a Download</a></h2>
 
 <p>To download data (by hand or in a script) from Overpass API, you can use for example the well-known program <em>wget</em>. Alternatives are for example <em>curl</em> or, in case of FreeBSD, <em>fetch</em>. We assume here that you plan to use it in a script or other non-interactive way, because otherwise the <a href="query_form.html">query form</a> might be a more convenient alternative.</p>
 
@@ -25,6 +29,33 @@
 <p>For longer queries, it could be helpful to have the query in a separate file. That is also possible:</p>
 <pre>echo &quot;data=node[name=\&quot;Gielgen\&quot;];out;&quot; <strong>&gt;query.osm</strong>
 wget -O target.osm <strong>--post-file=query.osm</strong> &quot;http://overpass-api.de/api/interpreter&quot;</pre>
+
+<p>A subtle detail you may have recognized in the last example is the prefix <em>data=</em>. This can be omitted, but has slightly different meaning: If the <em>data=</em> prefix is present, then Overpass API assumes the query behind this prefix is <a href="http://en.wikipedia.org/wiki/Percent-encoding">URL encoded</a>. This is what usually happens when it comes from a HTML form and sometimes by some HTTP clients. If you omit the prefix, Overpass API takes the data to be verbatim and does no URL deocding.</p>
+
+
+<h2><a name="headers">HTTP methods and headers</a></h2>
+
+<p>Overpass API accepts both HTTP GET and HTTP PUT requests. Both are handled as similar as possible, so we treat them together. Additionally, Overpass API handles HTTP OPTIONS requests. We explain the details in the last paragraph.</p>
+
+<p>If an HTTP <em>Origin</em> header is sent, the response always contains the header</p>
+<pre>Access-Control-Allow-Origin: *</pre>
+<p>regardless of other properties of the query. This is to allow <a href="http://www.w3.org/TR/cors/">HTTP cross-origin sharing</a>, especially for JavaScript executed in a browser as a client.</p>
+
+<p>For HTTP GET and POST, no other headers affect the behaviour of Overpass API. If the string <em>data=</em> is present in the request, the query is assumed to be the substring between <em>data=</em> and the next literal &quot;&amp;&quot;. Overpass API will URL decode this string, but also will keep all not encoded characters verbatim. Thus, a verbatim request behaves exactly the same like an URL encoded request. If no string <em>data=</em> is present, then the whole query string is assumed to be the query and taken verbatim.</p>
+
+<p>Overpass API may return on GET or POST requests the HTTP status codes 200, 302, 400, or 504. We explain all more detailed.</p>
+
+<p><strong>200 OK</strong> is sent when the query has been successfully answered. The payload of the response is the result data. The possible formats are described on the <a href="output_formats.html">output formats</a> page.</p>
+
+<p><strong>302 Moved</strong> is only relevant in the context of the <a href="http://wiki.openstreetmap.org/wiki/Overpass_API/Permanent_ID">permanent id</a> feature. It is the status code for the redirection to the corresponding main API page. No payload is sent in this case.</p>
+
+<p><strong>400 Bad Request</strong> is sent if the request has a syntax error. In this case the payload contains a HTML document describing what is wrong with the request. Please note that although the <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4">HTTP standard</a> requires such a payload, some HTTP clients, notably <em>wget</em> ignore the payload. Please try then <em>curl</em> or your favourite browser.</p>
+
+<p><strong>504 Gateway Timeout</strong> is sent if the server has already so much load that the request cannot be executed. In most cases, it is best to try again later. Please note that the server decides this based on the <a href="http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#timeout">timeout</a> and <a href="http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#element-limit">maxsize</a> parameters of the request, so smaller values for them may also make the request acceptable.</p>
+
+<p>Overpass API handles the HTTP OPTIONS method to implement the server part of <a href="http://www.w3.org/TR/cors/">CORS</a>. This is relevant only for the nonetheless important use case to access Overpass API from the JavaScript of another website executed in the browser. The response to the HTTP OPTIONS consists always only of headers: If the HTTP header <em>Request-Method</em> is set by the client, Overpass API contains the header</p>
+<pre>Access-Control-Allow-Methods: GET, POST, OPTIONS</pre>
+<p>in the response. If the HTTP header <em>Request-Headers</em> is set by the client, all the header names there are echoed in the response at the then included HTTP header <em>Access-Control-Allow-Headers</em>. POST requests don't get any more details in their response, GET requests may see a <em>400 Bad Request</em> response if there is a syntax error in the request. This discrimination sounds a little bit odd, but is explicity required by the <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.2">HTTP 1.1 standard</a>: for GET requests, the whole request is part of the URL; for POST requests, the Overpass QL script is not part of the URL.</p>
 
 </body>
 </html>
