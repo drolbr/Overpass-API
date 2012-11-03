@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<osmAugmentedDiff version="0.6" generator="Overpass API 0.6.99_d" format="id-sorted">
+<osmAugmentedDiff version="0.6" generator="Overpass API 0.7" format="id-sorted">
 <note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
 <meta osm_base="mock-up-diff"/>
 

@@ -1095,7 +1095,7 @@ void print_augmented_diff(Update_Node_Logger& update_node_logger,
 {
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-  "<osmAugmentedDiff version=\"0.6\" generator=\"Overpass API 0.6.99_d\" format=\"id-sorted\">\n"
+  "<osmAugmentedDiff version=\"0.6\" generator=\"Overpass API 0.7\" format=\"id-sorted\">\n"
   "<note>The data included in this document is from www.openstreetmap.org. "
   "The data is made available under ODbL.</note>\n"
   "<meta osm_base=\""<<data_version<<"\"/>\n\n";
