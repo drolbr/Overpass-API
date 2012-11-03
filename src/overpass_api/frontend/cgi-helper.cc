@@ -109,38 +109,6 @@ string decode_cgi_to_plain(const string& raw, int& error,
   error = 0;
   string result;
   string::size_type pos = raw.find("data=");
-/*  if ((pos >= raw.size()) || (pos == string::npos))
-  {
-    error = 1;
-    return "";
-  }
-  pos += 5;
-  
-  while (pos < raw.size())
-  {
-    if (raw[pos] == '%')
-    {
-      if (pos >= raw.size()+2)
-	return (result + raw.substr(0, pos));
-      char a(hex_digit(raw[pos+1])), b(hex_digit(raw[pos+2]));
-      if ((a < 16) && (b < 16))
-      {
-	result += (char)(a*16 + b);
-	pos += 3;
-      }
-      else
-	result += raw[pos++];
-    }
-    else if (raw[pos] == '+')
-    {
-      result += ' ';
-      ++pos;
-    }
-    else if (raw[pos] == '&')
-      pos = raw.size();
-    else
-      result += raw[pos++];
-  }*/
   
   if (pos != string::npos)
   {
@@ -153,10 +121,7 @@ string decode_cgi_to_plain(const string& raw, int& error,
     result = replace_cgi(raw.substr(pos + 5, endpos - pos - 5));
   }
   else
-  {
-    error = 1;
-    return "";
-  }
+    return raw;
   
   pos = raw.find("jsonp=");
   if (pos != string::npos)

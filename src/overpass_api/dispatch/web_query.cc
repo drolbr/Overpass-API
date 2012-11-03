@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     string url = "http://www.openstreetmap.org/browse/{{{type}}}/{{{id}}}";
     string template_name = "default.wiki";
     bool redirect = true;
-    string xml_raw(get_xml_cgi(&error_output, 1048576, url, redirect, template_name,
+    string xml_raw(get_xml_cgi(&error_output, 16*1024*1024, url, redirect, template_name,
 	error_output.is_options_request, error_output.allow_headers, error_output.has_origin));
     
     if (error_output.display_encoding_errors())
