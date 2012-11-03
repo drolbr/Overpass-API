@@ -118,6 +118,8 @@ int main(int argc, char* argv[])
   string db_dir;
   bool osm_base(false), areas(false), meta(false), terminate(false), status(false), show_dir(false);
   uint32 purge_id = 0;
+  uint64 max_allowed_space = 0;
+  uint64 max_allowed_time_units = 0;
   
   int argpos(1);
   while (argpos < argc)
@@ -142,6 +144,10 @@ int main(int argc, char* argv[])
       show_dir = true;
     else if (!(strncmp(argv[argpos], "--purge=", 8)))
       purge_id = atoll(((string)argv[argpos]).substr(8).c_str());
+    else if (!(strncmp(argv[argpos], "--space=", 8)))
+      max_allowed_space = atoll(((string)argv[argpos]).substr(8).c_str());
+    else if (!(strncmp(argv[argpos], "--time=", 7)))
+      max_allowed_time_units = atoll(((string)argv[argpos]).substr(7).c_str());
     ++argpos;
   }
   
@@ -197,6 +203,20 @@ int main(int argc, char* argv[])
       Dispatcher_Client client
           (areas ? area_settings().shared_name : osm_base_settings().shared_name);
       client.purge(purge_id);
+    }
+    catch (File_Error e)
+    {
+      cout<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+    return 0;
+  }
+  else if (max_allowed_space > 0 || max_allowed_time_units > 0)
+  {
+    try
+    {
+      Dispatcher_Client client
+          (areas ? area_settings().shared_name : osm_base_settings().shared_name);
+      client.set_global_limits(max_allowed_space, max_allowed_time_units);
     }
     catch (File_Error e)
     {

@@ -155,6 +155,7 @@ class Dispatcher
     static const uint32 OUTPUT_STATUS = 2;
     static const uint32 HANGUP = 3;
     static const uint32 PURGE = 4;
+    static const uint32 SET_GLOBAL_LIMITS = 5;
     static const uint32 WRITE_START = 101;
     static const uint32 WRITE_ROLLBACK = 102;
     static const uint32 WRITE_COMMIT = 103;
@@ -239,6 +240,9 @@ class Dispatcher_Client
     
     /** Purge another instance. */
     void purge(uint32 pid);
+    
+    /** Purge another instance. */
+    void set_global_limits(uint64 max_allowed_space, uint64 max_allowed_time_units);
     
     /** Called regularly to tell the dispatcher that this process is still alive */
     void ping();

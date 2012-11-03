@@ -811,6 +811,23 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	connection_per_pid[client_pid]->send_result(command);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
+      else if (command == SET_GLOBAL_LIMITS)
+      {
+	vector< uint32 > arguments = connection_per_pid[client_pid]->get_arguments(4);
+	if (arguments.size() < 4)
+	  continue;
+	
+	uint64 new_total_available_space = (((uint64)arguments[1])<<32 | arguments[0]);
+	uint64 new_total_available_time_units = (((uint64)arguments[3])<<32 | arguments[2]);
+	
+	if (new_total_available_space > 0)
+	  total_available_space = new_total_available_space;
+	if (new_total_available_time_units > 0)
+	  total_available_time_units = new_total_available_time_units;
+	
+	connection_per_pid[client_pid]->send_result(command);
+	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
+      }
 // Ping-Feature removed. The concept of unassured messages doesn't fit in the context of strict
 // two-directional communication.
 //       else if (command == PING)
@@ -1033,12 +1050,14 @@ Dispatcher_Client::~Dispatcher_Client()
   close(dispatcher_shm_fd);
 }
 
+
 template< class TObject >
 void Dispatcher_Client::send_message(TObject message, string source_pos)
 {
   if (send(socket_descriptor, &message, sizeof(TObject), 0) == -1)
     throw File_Error(errno, dispatcher_share_name, source_pos);
 }
+
 
 bool Dispatcher_Client::ack_arrived()
 {
@@ -1195,6 +1214,7 @@ void Dispatcher_Client::read_finished()
   throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::read_finished::timeout");
 }
 
+
 void Dispatcher_Client::purge(uint32 pid)
 {
   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
@@ -1208,6 +1228,23 @@ void Dispatcher_Client::purge(uint32 pid)
       return;
   }
 }
+
+
+void Dispatcher_Client::set_global_limits(uint64 max_allowed_space, uint64 max_allowed_time_units)
+{
+  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+		     
+  while (true)
+  {
+    send_message(Dispatcher::SET_GLOBAL_LIMITS, "Dispatcher_Client::set_global_limits::1");
+    send_message(max_allowed_space, "Dispatcher_Client::set_global_limits::2");
+    send_message(max_allowed_time_units, "Dispatcher_Client::set_global_limits::3");
+    
+    if (ack_arrived())
+      return;
+  }
+}
+
 
 void Dispatcher_Client::ping()
 {
