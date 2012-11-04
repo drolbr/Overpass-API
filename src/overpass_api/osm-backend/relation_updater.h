@@ -146,7 +146,7 @@ public:
   
   void set_delete_meta_data(const vector< OSM_Element_Metadata_Skeleton< Relation::Id_Type > >& meta_to_delete_)
   {
-    for (typename vector< OSM_Element_Metadata_Skeleton< Relation::Id_Type > >::const_iterator
+    for (vector< OSM_Element_Metadata_Skeleton< Relation::Id_Type > >::const_iterator
         it = meta_to_delete_.begin(); it != meta_to_delete_.end(); ++it)
     {
       OSM_Element_Metadata meta;
