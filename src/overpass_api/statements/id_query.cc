@@ -86,7 +86,7 @@ void collect_elems_flat(Resource_Manager& rman,
 {
   Block_Backend< Uint31_Index, Area_Skeleton > elems_db
       (rman.get_transaction()->data_index(area_settings().AREAS));
-  for (typename Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
+  for (Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
       it = elems_db.flat_begin(); !(it == elems_db.flat_end()); ++it)
   {
     if (!(it.object().id < lower) && !(upper < it.object().id)
