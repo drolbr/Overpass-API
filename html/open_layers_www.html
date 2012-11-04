@@ -39,7 +39,7 @@
           ]);
           
 	  var click = new OpenLayers.Control.Click(
-	      "http://overpass-api.de/api/popup?data="
+	      "http://overpass-api.de/api/interpreter?data="
 	          + "[out:popup(\"Restaurants\";[amenity~\"^cafe$|^restaurant$|^fast_food$|^pub$\"];\"name\";)];"
 	          + "(node(bbox);way(bbox););(._;<;);out;"
 		  + "&redirect=no&template=ids.popup", 0.0003, map);

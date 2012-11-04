@@ -41,7 +41,7 @@
           ]);
           
 	  var click = new OpenLayers.Control.Click(
-	      "http://overpass-api.de/api/popup?data="
+	      "http://overpass-api.de/api/interpreter?data="
 	          + "[out:popup(\"\";[amenity=kindergarten];\"name\";)(\"\";[amenity=school];\"name\";)(\"\";[amenity=university];\"name\";)];"
 	          + "(node(bbox);way(bbox););(._;<;);out;"
 		  + "&redirect=no&template=ids.popup", 0.0005, map);
