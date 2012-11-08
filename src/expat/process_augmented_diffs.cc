@@ -490,7 +490,6 @@ bool check_bbox_relation(const Tag& tag,
       {
 	string s = (*it)->attributes.find("ref")->second;
 	map< Way::Id_Type, const Tag* >::const_iterator ptr = ways.find(atoll(s.c_str()));
-	cout<<(ptr==ways.end())<<'\n';
 	const Tag* action = ptr->second;
 	if (check_bbox_way(*obtain_data_from_action
 	      (*action, flag),
