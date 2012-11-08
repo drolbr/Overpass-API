@@ -21,7 +21,7 @@ BUF="$QUERY_STRING&"
 
 ID=
 BBOX=
-EXECBASE="/../`dirname $0`"
+EXECBASE="`dirname $0`/../"
 
 IFS=$'&'
 for KEY_VAL in $QUERY_STRING; do
@@ -36,6 +36,7 @@ unset IFS
 
 echo "Content-Type: application/osm3s+xml"
 echo "Content-Encoding: gzip"
+echo 'Access-Control-Allow-Origin: *'
 echo
 
 printf -v TDIGIT3 %03u $(($ID % 1000))
