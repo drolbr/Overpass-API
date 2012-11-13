@@ -29,14 +29,22 @@
 
 using namespace std;
 
+string to_string(uint64 val)
+{
+  ostringstream buf;
+  buf<<val;
+  return buf.str();
+}
+
 int main(int argc, char* args[])
 {
-  if (argc < 3)
+  if (argc < 4)
   {
-    cout<<"Usage: "<<args[0]<<" test_to_execute db_dir\n";
+    cout<<"Usage: "<<args[0]<<" test_to_execute db_dir node_id_offset\n";
     return 0;
   }
   string test_to_execute = args[1];
+  uint64 global_node_offset = atoll(args[3]);
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -53,8 +61,9 @@ int main(int argc, char* args[])
 	
 	const char* attributes[] = { 0 };
 	Union_Statement stmt(0, convert_c_pairs(attributes));
-	
-	const char* attributes1[] = { "type", "node", "ref", "2", 0 };
+
+	string buf = to_string(2 + global_node_offset);
+	const char* attributes1[] = { "type", "node", "ref", buf.c_str(), 0 };
 	Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
 	stmt.add_statement(&stmt1, "");
 	
@@ -96,11 +105,13 @@ int main(int argc, char* args[])
       const char* attributes[] = { 0 };
       Union_Statement stmt(0, convert_c_pairs(attributes));
       
-      const char* attributes1[] = { "type", "node", "ref", "2", 0 };
+      string buf = to_string(2 + global_node_offset);
+      const char* attributes1[] = { "type", "node", "ref", buf.c_str(), 0 };
       Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
       stmt.add_statement(&stmt1, "");
       
-      const char* attributes2[] = { "type", "node", "ref", "1", 0 };
+      buf = to_string(1 + global_node_offset);
+      const char* attributes2[] = { "type", "node", "ref", buf.c_str(), 0 };
       Id_Query_Statement stmt2(0, convert_c_pairs(attributes2));
       stmt.add_statement(&stmt2, "");
       
@@ -128,7 +139,8 @@ int main(int argc, char* args[])
       const char* attributes[] = { "into", "A", 0 };
       Union_Statement stmt(0, convert_c_pairs(attributes));
       
-      const char* attributes1[] = { "type", "node", "ref", "2", "into", "B", 0 };
+      string buf = to_string(2 + global_node_offset);
+      const char* attributes1[] = { "type", "node", "ref", buf.c_str(), "into", "B", 0 };
       Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
       stmt.add_statement(&stmt1, "");
       
@@ -178,7 +190,8 @@ int main(int argc, char* args[])
       Item_Statement stmt0(0, convert_c_pairs(attributes0));
       stmt.add_statement(&stmt0, "");
       
-      const char* attributes1[] = { "type", "node", "ref", "2", "into", "B", 0 };
+      string buf = to_string(2 + global_node_offset);
+      const char* attributes1[] = { "type", "node", "ref", buf.c_str(), "into", "B", 0 };
       Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
       stmt.add_statement(&stmt1, "");
       
@@ -219,7 +232,8 @@ int main(int argc, char* args[])
       Item_Statement stmt0(0, convert_c_pairs(attributes0));
       stmt.add_statement(&stmt0, "");
       
-      const char* attributes1[] = { "type", "node", "ref", "2", "into", "B", 0 };
+      string buf = to_string(2 + global_node_offset);
+      const char* attributes1[] = { "type", "node", "ref", buf.c_str(), "into", "B", 0 };
       Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
       stmt.add_statement(&stmt1, "");
       
@@ -260,7 +274,8 @@ int main(int argc, char* args[])
       Item_Statement stmt0(0, convert_c_pairs(attributes0));
       stmt.add_statement(&stmt0, "");
       
-      const char* attributes1[] = { "type", "node", "ref", "2", "into", "B", 0 };
+      string buf = to_string(2 + global_node_offset);
+      const char* attributes1[] = { "type", "node", "ref", buf.c_str(), "into", "B", 0 };
       Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
       stmt.add_statement(&stmt1, "");
       

@@ -26,6 +26,7 @@
 using namespace std;
 
 typedef unsigned int uint;
+typedef unsigned long long uint64;
 
 template < typename T >
 struct V : public vector< T >
@@ -2409,7 +2410,7 @@ vector< pair< string, string > > collect_tags(string prefix, uint id)
 
 void fill_bbox_with_nodes
     (double south, double north, double west, double east,
-     uint begin_id, uint end_id,
+     uint begin_id, uint end_id, uint64 global_node_offset,
      const Data_Modifier* modifier)
 {
   int sqrt_ = sqrt(end_id - begin_id);
@@ -2422,10 +2423,10 @@ void fill_bbox_with_nodes
       if (!modifier->admit_node_skeleton(begin_id + i*sqrt_ + j) &&
 	  !modifier->admit_node_tags(begin_id + i*sqrt_ + j))
       {
-	cout<<"  <node id=\""<<(begin_id + i*sqrt_ + j)<<"\"/>\n";
+	cout<<"  <node id=\""<<(begin_id + i*sqrt_ + j + global_node_offset)<<"\"/>\n";
 	continue;
       }
-      cout<<"  <node id=\""<<(begin_id + i*sqrt_ + j)<<"\""
+      cout<<"  <node id=\""<<(begin_id + i*sqrt_ + j + global_node_offset)<<"\""
       " lat=\""<<fixed<<setprecision(7)<<((north - south)/sqrt_*(0.5 + i) + south)<<"\""
       " lon=\""<<fixed<<setprecision(7)<<((east - west)/sqrt_*(0.5 + j) + west)<<"\"";
       vector< pair< string, string > > tags
@@ -2445,7 +2446,7 @@ void fill_bbox_with_nodes
 }
 
 void create_way
-  (uint id, uint start_node_ref, uint end_node_ref, uint stepping,
+  (uint id, uint start_node_ref, uint end_node_ref, uint stepping, uint64 global_node_offset,
    const Data_Modifier* modifier)
 {
   if (!modifier->admit_way(id))
@@ -2459,12 +2460,12 @@ void create_way
   if (start_node_ref < end_node_ref)
   {
     for (uint ref = start_node_ref; ref <= end_node_ref; ref += stepping)
-      cout<<"    <nd ref=\""<<ref<<"\"/>\n";
+      cout<<"    <nd ref=\""<<ref + global_node_offset<<"\"/>\n";
   }
   else
   {
     for (uint ref = start_node_ref; (int)ref >= (int)end_node_ref; ref -= stepping)
-      cout<<"    <nd ref=\""<<ref<<"\"/>\n";
+      cout<<"    <nd ref=\""<<ref + global_node_offset<<"\"/>\n";
   }
   if (modifier->admit_way_tags(id))
   {
@@ -2477,7 +2478,7 @@ void create_way
 }
 
 void create_relation
-    (uint id, const vector< uint >& refs, const vector< uint >& types,
+    (uint id, const vector< uint >& refs, uint64 global_node_offset, const vector< uint >& types,
      const Data_Modifier* modifier)
 {
   if (!modifier->admit_relation(id))
@@ -2496,7 +2497,7 @@ void create_relation
   for (uint i = 0; i < refs.size(); ++i)
   {
     cout<<"    <member type=\""<<typenames[types[i]]<<
-    "\" ref=\""<<refs[i]<<
+    "\" ref=\""<<refs[i] + (types[i] == 0 ? global_node_offset : 0)<<
     "\" role=\""<<roles[(refs[i] + types[i]) % 4]<<"\"/>\n";
   }
   if (modifier->admit_relation_tags(id))
@@ -2510,15 +2511,15 @@ void create_relation
 }
 
 void create_node_test_pattern
-    (double south, double north, double west, double east, uint id, uint size,
+    (double south, double north, double west, double east, uint id, uint size, uint64 global_node_offset,
      const Data_Modifier* modifier)
 {
   fill_bbox_with_nodes
       (south, north, west, east,
-       id*size*size + 1, (id+1)*size*size + 1, modifier);
+       id*size*size + 1, (id+1)*size*size + 1, global_node_offset, modifier);
 }
 
-void create_way_test_pattern(uint id, uint size, const Data_Modifier* modifier)
+void create_way_test_pattern(uint id, uint size, uint64 global_node_offset, const Data_Modifier* modifier)
 {
   uint way_id_offset = id * (2*(size/2+1)*(size/2-1) + size/2);
   uint node_id_offset = id*size*size;
@@ -2527,14 +2528,14 @@ void create_way_test_pattern(uint id, uint size, const Data_Modifier* modifier)
   for (uint i = 1; i < size/2; ++i)
     for (uint j = 1; j <= size/2; ++j)
       create_way(way_id_offset + (i-1)*size/2 + j,
-		 node_id_offset + i*size + j, node_id_offset + i*size + j + 1, 1,
+		 node_id_offset + i*size + j, node_id_offset + i*size + j + 1, 1, global_node_offset,
 		 modifier);
   way_id_offset += size/2*(size/2-1);
   for (uint i = 1; i <= size/2; ++i)
     for (uint j = 1; j < size/2; ++j)
       create_way(way_id_offset + (i-1)*(size/2-1) + j,
 		 node_id_offset + (i-1)*size + j + 1,
-		 node_id_offset + i*size + j + 1, size, modifier);
+		 node_id_offset + i*size + j + 1, size, global_node_offset, modifier);
 		 
   way_id_offset += size/2*(size/2-1);
   
@@ -2542,23 +2543,23 @@ void create_way_test_pattern(uint id, uint size, const Data_Modifier* modifier)
   for (uint j = size/2+1; j < size; ++j)
     create_way(way_id_offset + j - size/2,
 	       node_id_offset + j,
-	       node_id_offset + size*(size-1) + j, size, modifier);  
+	       node_id_offset + size*(size-1) + j, size, global_node_offset, modifier);  
   way_id_offset += size/2-1;
   // Draw long straight ways from east to west.
   for (uint i = size/2+1; i < size; ++i)
     create_way(way_id_offset + i - size/2,
 	       node_id_offset + size*i,
-	       node_id_offset + size*(i-1) + 1, 1, modifier);
+	       node_id_offset + size*(i-1) + 1, 1, global_node_offset, modifier);
 	       
   way_id_offset += size/2-1;
   // Draw diagonal ways from northwest to southeast
   for (uint i = 0; i < size/2; ++i)
     create_way(way_id_offset + i + 1,
 	       node_id_offset + size*(i+size/2) + 1,
-	       node_id_offset + i+size/2 + 1, (size-1)*(i+size/2), modifier);
+	       node_id_offset + i+size/2 + 1, (size-1)*(i+size/2), global_node_offset, modifier);
 }
 
-void create_relation_test_pattern(uint id, uint size, const Data_Modifier* modifier)
+void create_relation_test_pattern(uint id, uint size, uint64 global_node_offset, const Data_Modifier* modifier)
 {
   uint way_id_offset = id * (2*(size/2+1)*(size/2-1) + size/2);
   uint node_id_offset = id*size*size;
@@ -2566,36 +2567,36 @@ void create_relation_test_pattern(uint id, uint size, const Data_Modifier* modif
 
   //create three small and two big relations based only on nodes
   create_relation(relation_id_offset + 1,
-		  V< uint >(node_id_offset + 1)(node_id_offset + size + 2),
+		  V< uint >(node_id_offset + 1)(node_id_offset + size + 2), global_node_offset,
 		  V< uint >(0)(0), modifier);
   create_relation
       (relation_id_offset + 2,
        V< uint >(node_id_offset + 1)(node_id_offset + 2)
-         (node_id_offset + size + 2)(node_id_offset + size + 1)(node_id_offset + 1),
+         (node_id_offset + size + 2)(node_id_offset + size + 1)(node_id_offset + 1), global_node_offset,
        V< uint >(0)(0)(0)(0)(0), modifier);
   create_relation(relation_id_offset + 3,
-		  V< uint >(node_id_offset + 1)(node_id_offset + size*size),
+		  V< uint >(node_id_offset + 1)(node_id_offset + size*size), global_node_offset,
 		  V< uint >(0)(0), modifier);
   create_relation
       (relation_id_offset + 4,
        V< uint >(node_id_offset + 1)(node_id_offset + size)
-         (node_id_offset + size*size)(node_id_offset + size*(size-1)),
+         (node_id_offset + size*size)(node_id_offset + size*(size-1)), global_node_offset,
        V< uint >(0)(0)(0)(0), modifier);
   create_relation(relation_id_offset + 5,
-		  V< uint >(node_id_offset + size/2*size/2),
+		  V< uint >(node_id_offset + size/2*size/2), global_node_offset,
 		  V< uint >(0), modifier);
 
   //create one small and one big relation based only on ways
   create_relation
       (relation_id_offset + 6,
        V< uint >(way_id_offset + 1)(way_id_offset + 2)
-         (way_id_offset + size/2*(size/2-1) + 1)(way_id_offset + size/2*(size/2+1) + 1),
+         (way_id_offset + size/2*(size/2-1) + 1)(way_id_offset + size/2*(size/2+1) + 1), global_node_offset,
        V< uint >(1)(1)(1)(1), modifier);
   create_relation
       (relation_id_offset + 7,
        V< uint >(way_id_offset + size*(size/2-1) + 1)
                 (way_id_offset + size*(size/2-1) + size/2)
-		(way_id_offset + size*(size/2-1) + size - 1),
+		(way_id_offset + size*(size/2-1) + size - 1), global_node_offset,
        V< uint >(1)(1)(1), modifier);
        
   // mixed
@@ -2609,14 +2610,14 @@ void create_relation_test_pattern(uint id, uint size, const Data_Modifier* modif
 	 (way_id_offset + size/2*(size/2-1) + 1)
 	 (node_id_offset + size + 1)
 	 (way_id_offset + size/2*(size/2+1) + 1)
-	 (node_id_offset + 1),
+	 (node_id_offset + 1), global_node_offset,
        V< uint >(0)(1)(0)(1)(0)(1)(0)(1)(0), modifier);
   
   // relations on relations
   create_relation
       (relation_id_offset + 9,
        V< uint >(relation_id_offset + 1)(relation_id_offset + 2)(relation_id_offset + 3)
-         (relation_id_offset + 4)(relation_id_offset + 5)(relation_id_offset + 6),
+         (relation_id_offset + 4)(relation_id_offset + 5)(relation_id_offset + 6), global_node_offset,
        V< uint >(2)(2)(2)(2)(2)(2), modifier);
   create_relation
       (relation_id_offset + 10,
@@ -2630,7 +2631,7 @@ void create_relation_test_pattern(uint id, uint size, const Data_Modifier* modif
 	 (node_id_offset + size + 1)
 	 (way_id_offset + size/2*(size/2+1) + 1)
 	 (node_id_offset + 1)
-	 (relation_id_offset + 2),
+	 (relation_id_offset + 2), global_node_offset,
        V< uint >(2)(0)(1)(0)(1)(0)(1)(0)(1)(0)(2), modifier);
        
    // a big relation
@@ -2648,11 +2649,12 @@ void create_relation_test_pattern(uint id, uint size, const Data_Modifier* modif
      refs.push_back(node_id_offset + i + 1);
      types.push_back(0);
    }
-   create_relation(relation_id_offset + 11, refs, types, modifier);
+   create_relation(relation_id_offset + 11, refs, global_node_offset, types, modifier);
 }
 
 int main(int argc, char* args[])
 {
+  uint64 global_node_offset = 0;  
   uint pattern_size = 2;
   if (argc > 1)
     pattern_size = atoi(args[1]);
@@ -3031,12 +3033,17 @@ int main(int argc, char* args[])
       modifier = new Accept_All;
     else if (string(args[2]) == "diff_compare")
       modifier = new Accept_All_But_5(pattern_size);
+    else if (string(args[2]) == "")
+      modifier = new Accept_All;
     else
       // return an empty osm file otherwise
       modifier = new Accept_Bbox_Query_5(pattern_size);
   }
   else
     modifier = new Accept_All;
+  
+  if (argc > 3)
+    global_node_offset = atoll(args[3]);
 
   if ((argc > 2) && (string(args[2]) == "diff_do"))
   {
@@ -3045,34 +3052,34 @@ int main(int argc, char* args[])
     "<osm>\n";
     
     cout<<
-    "  <node id=\"5\" lat=\"-10.0\" lon=\"-15.0\">\n"
+    "  <node id=\""<<5 + global_node_offset<<"\" lat=\"-10.0\" lon=\"-15.0\">\n"
     "    <tag k=\"node_key_5\" v=\"node_value_5\"/>\n"
     "  </node>\n";
     
     cout<<"<delete>\n";
-    create_node_test_pattern(-10.0, 80.0, -15.0, 105.0, 1, pattern_size, modifier);
+    create_node_test_pattern(-10.0, 80.0, -15.0, 105.0, 1, pattern_size, global_node_offset, modifier);
     cout<<"</delete>\n";
     
     cout<<
     "  <way id=\"5\">\n"
-    "    <nd ref=\"15\"/>\n"
-    "    <nd ref=\"16\"/>\n"
+    "    <nd ref=\""<<15 + global_node_offset<<"\"/>\n"
+    "    <nd ref=\""<<16 + global_node_offset<<"\"/>\n"
     "    <tag k=\"way_key_5\" v=\"way_value_5\"/>\n"
     "  </way>\n";
     
     cout<<"<delete>\n";
-    create_way_test_pattern(1, pattern_size, modifier);
+    create_way_test_pattern(1, pattern_size, global_node_offset, modifier);
     cout<<"</delete>\n";
     
     cout<<
     "  <relation id=\"5\">\n"
-    "    <member type=\"node\" ref=\"15\" role=\"three\"/>\n"
-    "    <member type=\"node\" ref=\"16\" role=\"zero\"/>\n"
+    "    <member type=\"node\" ref=\""<<15 + global_node_offset<<"\" role=\"three\"/>\n"
+    "    <member type=\"node\" ref=\""<<16 + global_node_offset<<"\" role=\"zero\"/>\n"
     "    <tag k=\"relation_key_5\" v=\"relation_value_5\"/>\n"
     "  </relation>\n";
     
     cout<<"<delete>\n";
-    create_relation_test_pattern(1, pattern_size, modifier);
+    create_relation_test_pattern(1, pattern_size, global_node_offset, modifier);
     cout<<"</delete>\n";
     
     cout<<"</osm>\n";
@@ -3083,32 +3090,32 @@ int main(int argc, char* args[])
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<osm>\n";
     
-    create_node_test_pattern(51.0, 52.0, 7.0, 8.0, 0, pattern_size, modifier);
-    create_node_test_pattern(47.9, 48.1, -0.2, 0.2, 2, pattern_size, modifier);
-    create_node_test_pattern(30.0, 50.0, -120.0, -60.0, 3, pattern_size, modifier);
+    create_node_test_pattern(51.0, 52.0, 7.0, 8.0, 0, pattern_size, global_node_offset, modifier);
+    create_node_test_pattern(47.9, 48.1, -0.2, 0.2, 2, pattern_size, global_node_offset, modifier);
+    create_node_test_pattern(30.0, 50.0, -120.0, -60.0, 3, pattern_size, global_node_offset, modifier);
 
     cout<<
-    "  <node id=\"5\" lat=\"-10.0000000\" lon=\"-15.0000000\">\n"
+    "  <node id=\""<<5 + global_node_offset<<"\" lat=\"-10.0000000\" lon=\"-15.0000000\">\n"
     "    <tag k=\"node_key_5\" v=\"node_value_5\"/>\n"
     "  </node>\n";
     
-    create_way_test_pattern(0, pattern_size, modifier);
-    create_way_test_pattern(2, pattern_size, modifier);
+    create_way_test_pattern(0, pattern_size, global_node_offset, modifier);
+    create_way_test_pattern(2, pattern_size, global_node_offset, modifier);
     
     cout<<
     "  <way id=\"5\">\n"
-    "    <nd ref=\"15\"/>\n"
-    "    <nd ref=\"16\"/>\n"
+    "    <nd ref=\""<<15 + global_node_offset<<"\"/>\n"
+    "    <nd ref=\""<<16 + global_node_offset<<"\"/>\n"
     "    <tag k=\"way_key_5\" v=\"way_value_5\"/>\n"
     "  </way>\n";
     
-    create_relation_test_pattern(0, pattern_size, modifier);
-    create_relation_test_pattern(2, pattern_size, modifier);
+    create_relation_test_pattern(0, pattern_size, global_node_offset, modifier);
+    create_relation_test_pattern(2, pattern_size, global_node_offset, modifier);
     
     cout<<
     "  <relation id=\"5\">\n"
-    "    <member type=\"node\" ref=\"15\" role=\"three\"/>\n"
-    "    <member type=\"node\" ref=\"16\" role=\"zero\"/>\n"
+    "    <member type=\"node\" ref=\""<<15 + global_node_offset<<"\" role=\"three\"/>\n"
+    "    <member type=\"node\" ref=\""<<16 + global_node_offset<<"\" role=\"zero\"/>\n"
     "    <tag k=\"relation_key_5\" v=\"relation_value_5\"/>\n"
     "  </relation>\n";
     
@@ -3120,16 +3127,16 @@ int main(int argc, char* args[])
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<osm>\n";
     
-    create_node_test_pattern(51.0, 52.0, 7.0, 8.0, 0, pattern_size, modifier);
-    create_node_test_pattern(-10.0, 80.0, -15.0, 105.0, 1, pattern_size, modifier);
-    create_node_test_pattern(47.9, 48.1, -0.2, 0.2, 2, pattern_size, modifier);
-    create_node_test_pattern(30.0, 50.0, -120.0, -60.0, 3, pattern_size, modifier);
+    create_node_test_pattern(51.0, 52.0, 7.0, 8.0, 0, pattern_size, global_node_offset, modifier);
+    create_node_test_pattern(-10.0, 80.0, -15.0, 105.0, 1, pattern_size, global_node_offset, modifier);
+    create_node_test_pattern(47.9, 48.1, -0.2, 0.2, 2, pattern_size, global_node_offset, modifier);
+    create_node_test_pattern(30.0, 50.0, -120.0, -60.0, 3, pattern_size, global_node_offset, modifier);
     
     for (uint i = 0; i < 3; ++i)
-      create_way_test_pattern(i, pattern_size, modifier);
+      create_way_test_pattern(i, pattern_size, global_node_offset, modifier);
     
     for (uint i = 0; i < 3; ++i)
-      create_relation_test_pattern(i, pattern_size, modifier);
+      create_relation_test_pattern(i, pattern_size, global_node_offset, modifier);
     
     cout<<"</osm>\n";
   }

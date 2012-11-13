@@ -26,7 +26,7 @@
 
 using namespace std;
 
-Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint32 id)
+Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint64 id)
 {
   ostringstream buf("");
   buf<<id;
@@ -46,19 +46,19 @@ Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint32 i
 }
 
 Resource_Manager& fill_loop_set
-    (Resource_Manager& rman, string set_name, uint pattern_size,
+    (Resource_Manager& rman, string set_name, uint pattern_size, uint64 global_node_offset,
      Transaction& transaction)
 {
   uint way_id_offset = (2*(pattern_size/2+1)*(pattern_size/2-1) + pattern_size/2);
   
   Resource_Manager partial_rman(transaction);
-  perform_id_query(partial_rman, "node", 1);
+  perform_id_query(partial_rman, "node", 1 + global_node_offset);
   if (!partial_rman.sets()["_"].nodes.empty())
     rman.sets()[set_name].nodes[partial_rman.sets()["_"].nodes.begin()->first].push_back(partial_rman.sets()["_"].nodes.begin()->second.front());
-  perform_id_query(partial_rman, "node", 2);
+  perform_id_query(partial_rman, "node", 2 + global_node_offset);
   if (!partial_rman.sets()["_"].nodes.empty())
     rman.sets()[set_name].nodes[partial_rman.sets()["_"].nodes.begin()->first].push_back(partial_rman.sets()["_"].nodes.begin()->second.front());
-  perform_id_query(partial_rman, "node", 3);
+  perform_id_query(partial_rman, "node", 3 + global_node_offset);
   if (!partial_rman.sets()["_"].nodes.empty())
     rman.sets()[set_name].nodes[partial_rman.sets()["_"].nodes.begin()->first].push_back(partial_rman.sets()["_"].nodes.begin()->second.front());
 /*  perform_id_query(partial_rman, "way", 1);
@@ -85,14 +85,15 @@ Resource_Manager& fill_loop_set
 
 int main(int argc, char* args[])
 {
-  if (argc < 4)
+  if (argc < 5)
   {
-    cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir\n";
+    cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir node_id_offset\n";
     return 0;
   }
   string test_to_execute = args[1];
   uint pattern_size = 0;
   pattern_size = atoi(args[2]);
+  uint64 global_node_offset = atoll(args[4]);
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -104,7 +105,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager rman(transaction);
-      fill_loop_set(rman, "_", pattern_size, transaction);
+      fill_loop_set(rman, "_", pattern_size, global_node_offset, transaction);
       {
 	const char* attributes[] = { 0 };
 	Foreach_Statement stmt1(0, convert_c_pairs(attributes));
@@ -128,7 +129,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager rman(transaction);
-      fill_loop_set(rman, "_", pattern_size, transaction);
+      fill_loop_set(rman, "_", pattern_size, global_node_offset, transaction);
       {
 	const char* attributes[] = { 0 };
 	Foreach_Statement stmt1(0, convert_c_pairs(attributes));
@@ -152,7 +153,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager rman(transaction);
-      fill_loop_set(rman, "A", pattern_size, transaction);
+      fill_loop_set(rman, "A", pattern_size, global_node_offset, transaction);
       {
 	const char* attributes[] = { "from", "A", "into", "B", 0 };
 	Foreach_Statement stmt1(0, convert_c_pairs(attributes));
@@ -176,7 +177,7 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager rman(transaction);
-      fill_loop_set(rman, "A", pattern_size, transaction);
+      fill_loop_set(rman, "A", pattern_size, global_node_offset, transaction);
       {
 	const char* attributes[] = { "from", "A", "into", "B", 0 };
 	Foreach_Statement stmt1(0, convert_c_pairs(attributes));

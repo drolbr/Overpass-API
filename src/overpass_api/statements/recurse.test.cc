@@ -26,7 +26,7 @@
 
 using namespace std;
 
-Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint32 id)
+Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint64 id)
 {
   ostringstream buf("");
   buf<<id;
@@ -47,14 +47,15 @@ Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint32 i
 
 int main(int argc, char* args[])
 {
-  if (argc < 4)
+  if (argc < 5)
   {
-    cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir\n";
+    cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir node_id_offset\n";
     return 0;
   }
   string test_to_execute = args[1];
   uint pattern_size = 0;
   pattern_size = atoi(args[2]);
+  uint64 global_node_offset = atoll(args[4]);
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -132,7 +133,7 @@ int main(int argc, char* args[])
       // Recurse node-way: try a node without ways
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager rman(transaction);
-      perform_id_query(rman, "node", 1);
+      perform_id_query(rman, "node", 1 + global_node_offset);
       {
 	const char* attributes[] = { "type", "node-way", 0 };
 	Recurse_Statement stmt(2, convert_c_pairs(attributes));
@@ -157,7 +158,7 @@ int main(int argc, char* args[])
       // Recurse node-way: try a node with a long way
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager rman(transaction);
-      perform_id_query(rman, "node", pattern_size*pattern_size + pattern_size*3/2 + 2);
+      perform_id_query(rman, "node", pattern_size*pattern_size + pattern_size*3/2 + 2 + global_node_offset);
       {
 	const char* attributes[] = { "type", "node-way", 0 };
 	Recurse_Statement stmt(2, convert_c_pairs(attributes));
@@ -187,7 +188,7 @@ int main(int argc, char* args[])
 	for (uint j = 1; j <= pattern_size/2; ++j)
 	{
 	  Resource_Manager rman(transaction);
-	  perform_id_query(rman, "node", pattern_size*i + j);
+	  perform_id_query(rman, "node", pattern_size*i + j + global_node_offset);
 	  if (!rman.sets()["_"].nodes.empty())
 	    total_rman.sets()["_"].nodes[rman.sets()["_"].nodes.begin()->first].push_back(rman.sets()["_"].nodes.begin()->second.front());
 	}
@@ -247,7 +248,7 @@ int main(int argc, char* args[])
       // Recurse node-relation
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager rman(transaction);
-      perform_id_query(rman, "node", 2);
+      perform_id_query(rman, "node", 2 + global_node_offset);
       {
 	const char* attributes[] = { "type", "node-relation", 0 };
 	Recurse_Statement stmt(2, convert_c_pairs(attributes));
@@ -472,7 +473,7 @@ int main(int argc, char* args[])
       // Recurse up
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction);
-      perform_id_query(total_rman, "node", pattern_size + 2);
+      perform_id_query(total_rman, "node", pattern_size + 2 + global_node_offset);
       {
 	const char* attributes[] = { "type", "up", 0 };
 	Recurse_Statement stmt(2, convert_c_pairs(attributes));
@@ -522,7 +523,7 @@ int main(int argc, char* args[])
       // Recurse up-rel with a node
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction);
-      perform_id_query(total_rman, "node", 2);
+      perform_id_query(total_rman, "node", 2 + global_node_offset);
       {
 	const char* attributes[] = { "type", "up-rel", 0 };
 	Recurse_Statement stmt(2, convert_c_pairs(attributes));

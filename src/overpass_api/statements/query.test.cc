@@ -288,7 +288,7 @@ void perform_regex_query
 
 void perform_query_with_around
     (string id_type, string type, string key1, string value1, string db_dir, uint pattern_size,
-     bool big_radius = false)
+     uint64 global_node_offset, bool big_radius = false)
 {
   string radius = "200.1";
   if (id_type == "node" && type == "way")
@@ -335,13 +335,13 @@ void perform_query_with_around
     {
       ostringstream buf;
       if (id_type == "node" && type == "node")
-        buf<<(2*pattern_size*pattern_size + 1);
+        buf<<(2*pattern_size*pattern_size + 1 + global_node_offset);
       else if (id_type == "node" && type == "relation")
       {
 	if (big_radius)
-	  buf<<(pattern_size*pattern_size + pattern_size*3/2 + 1);
+	  buf<<(pattern_size*pattern_size + pattern_size*3/2 + 1 + global_node_offset);
 	else
-	  buf<<(pattern_size*pattern_size + 2);
+	  buf<<(pattern_size*pattern_size + 2 + global_node_offset);
       }
       else if (id_type == "way")
       {
@@ -358,9 +358,9 @@ void perform_query_with_around
 	  buf<<17;
       }
       else if (big_radius)
-	buf<<(pattern_size*pattern_size + 2*pattern_size);
+	buf<<(pattern_size*pattern_size + 2*pattern_size + global_node_offset);
       else
-	buf<<(pattern_size*pattern_size + pattern_size - 1);
+	buf<<(pattern_size*pattern_size + pattern_size - 1 + global_node_offset);
       SProxy< Id_Query_Statement >()("type", id_type)("ref", buf.str()).stmt().execute(rman);
     }
     {
@@ -381,9 +381,11 @@ void perform_query_with_around
     {
       ostringstream buf;
       if (id_type == "node" && type == "node")
-	buf<<(2*pattern_size*pattern_size + 1);
+	buf<<(2*pattern_size*pattern_size + 1 + global_node_offset);
       else if (id_type == "node" && big_radius)
-	buf<<(pattern_size*pattern_size + 2*pattern_size);
+	buf<<(pattern_size*pattern_size + 2*pattern_size + global_node_offset);
+      else if (id_type == "node")
+	buf<<(pattern_size*pattern_size + pattern_size - 1 + global_node_offset);
       else
 	buf<<(pattern_size*pattern_size + pattern_size - 1);
       SProxy< Id_Query_Statement >()("type", id_type)("ref", buf.str())("into", "a")
@@ -538,7 +540,7 @@ void perform_multi_query_with_bbox
 void perform_query_with_recurse
     (string query_type, string recurse_type, string key1, string value1,
      double south, double north, double west, double east, bool double_recurse,
-     int pattern_size, string db_dir)
+     int pattern_size, uint64 global_node_offset, string db_dir)
 {
   try
   {
@@ -555,11 +557,11 @@ void perform_query_with_recurse
       else if (recurse_type == "relation-relation")
 	stmt1("type", "relation")("ref", "9").stmt().execute(rman);
       else if (recurse_type == "node-way")
-	stmt1("type", "node")("lower", to_string(pattern_size*pattern_size - 4))
-	    ("upper", to_string(pattern_size*pattern_size - 1)).stmt().execute(rman);
+	stmt1("type", "node")("lower", to_string(pattern_size*pattern_size - 4 + global_node_offset))
+	    ("upper", to_string(pattern_size*pattern_size - 1 + global_node_offset)).stmt().execute(rman);
       else if (recurse_type == "node-relation")
-	stmt1("type", "node")("lower", to_string(pattern_size))
-	    ("upper", to_string(pattern_size + 2)).stmt().execute(rman);
+	stmt1("type", "node")("lower", to_string(pattern_size + global_node_offset))
+	    ("upper", to_string(pattern_size + 2 + global_node_offset)).stmt().execute(rman);
       else if (recurse_type == "way-relation")
 	stmt1("type", "way")("ref", "1").stmt().execute(rman);
       else if (recurse_type == "relation-backwards")
@@ -572,7 +574,7 @@ void perform_query_with_recurse
       {
 	SProxy< Id_Query_Statement > stmt2;
 	SProxy< Union_Statement > stmt3;
-	stmt3.stmt().add_statement(&stmt1("type", "node")("ref", "2").stmt(), "");
+	stmt3.stmt().add_statement(&stmt1("type", "node")("ref", to_string(2 +  + global_node_offset)).stmt(), "");
 	stmt3.stmt().add_statement(&stmt2("type", "way")("ref",
 	    to_string(pattern_size*pattern_size/2 - 1)).stmt(), "");
 	stmt3.stmt().execute(rman);
@@ -594,11 +596,11 @@ void perform_query_with_recurse
 	stmt1("type", "relation")("ref", "10")("into", "elem2").stmt().execute(rman);
       else if (recurse_type == "node-way")
 	stmt1("type", "node")("into", "elem2")
-	    ("lower", to_string(pattern_size*pattern_size - pattern_size - 6))
-	    ("upper", to_string(pattern_size*pattern_size - pattern_size - 3)).stmt().execute(rman);
+	    ("lower", to_string(pattern_size*pattern_size - pattern_size - 6 + global_node_offset))
+	    ("upper", to_string(pattern_size*pattern_size - pattern_size - 3 + global_node_offset)).stmt().execute(rman);
       else if (recurse_type == "node-relation")
 	stmt1("type", "node")("into", "elem2")
-	    ("ref", to_string(pattern_size*pattern_size)).stmt().execute(rman);
+	    ("ref", to_string(pattern_size*pattern_size + global_node_offset)).stmt().execute(rman);
       else if (recurse_type == "way-relation")
 	stmt1("type", "way")("ref", "2")("into", "elem2").stmt().execute(rman);
       else if (recurse_type == "relation-backwards")
@@ -641,7 +643,7 @@ void perform_query_with_recurse
 void perform_query_with_id_query
     (string query_type, string key1, string value1,
      double south, double north, double west, double east, bool double_id_query,
-     int pattern_size, string db_dir)
+     int pattern_size, uint64 global_node_offset, string db_dir)
 {
   try
   {
@@ -653,7 +655,9 @@ void perform_query_with_id_query
       
       SProxy< Id_Query_Statement > stmt2;
       stmt1.stmt().add_statement(&stmt2
-          ("type", query_type)("lower", "1")("upper", "10").stmt(), "");
+          ("type", query_type)
+	  ("lower", to_string(1 + (query_type == "node" ? global_node_offset : 0)))
+	  ("upper", to_string(10 + (query_type == "node" ? global_node_offset : 0))).stmt(), "");
 
       SProxy< Has_Kv_Statement > stmt3;
       if (key1 != "")
@@ -670,7 +674,9 @@ void perform_query_with_id_query
       SProxy< Id_Query_Statement > stmt5;
       if (double_id_query)
 	stmt1.stmt().add_statement(&stmt5
-	    ("type", query_type)("lower", "9")("upper", "12").stmt(), "");
+	    ("type", query_type)
+	    ("lower", to_string(9 + (query_type == "node" ? global_node_offset : 0)))
+	    ("upper", to_string(12 + (query_type == "node" ? global_node_offset : 0))).stmt(), "");
 
       stmt1.stmt().execute(rman);
     }
@@ -685,14 +691,15 @@ void perform_query_with_id_query
 
 int main(int argc, char* args[])
 {
-  if (argc < 4)
+  if (argc < 5)
   {
-    cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir\n";
+    cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir node_id_offset\n";
     return 0;
   }
   string test_to_execute = args[1];
   uint pattern_size = 0;
   pattern_size = atoi(args[2]);
+  uint64 global_node_offset = atoll(args[4]);
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -788,10 +795,11 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "26"))
     // Test an around combined with a local key-value pair
-    perform_query_with_around("node", "node", "node_key_11", "", args[3], pattern_size);
+    perform_query_with_around("node", "node", "node_key_11", "", args[3], pattern_size, global_node_offset);
   if ((test_to_execute == "") || (test_to_execute == "27"))
     // Test an around combined with a global key-value pair
-    perform_query_with_around("node", "node", "node_key_7", "node_value_1", args[3], pattern_size);
+    perform_query_with_around("node", "node", "node_key_7", "node_value_1", args[3],
+			      pattern_size, global_node_offset);
 
   if ((test_to_execute == "") || (test_to_execute == "28"))
     // Test a bbox combined with a global key-value pair, yielding diagonal ways.
@@ -840,31 +848,31 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "37"))
     // Test an around collecting ways from nodes
-    perform_query_with_around("node", "way", "", "", args[3], pattern_size);
+    perform_query_with_around("node", "way", "", "", args[3], pattern_size, global_node_offset);
   if ((test_to_execute == "") || (test_to_execute == "38"))
     // Test an around collecting ways from nodes
-    perform_query_with_around("node", "way", "", "", args[3], pattern_size, true);
+    perform_query_with_around("node", "way", "", "", args[3], pattern_size, global_node_offset, true);
 
   if ((test_to_execute == "") || (test_to_execute == "39"))
     // Test an around collecting relations from nodes based on node membership
-    perform_query_with_around("node", "relation", "", "", args[3], pattern_size);
+    perform_query_with_around("node", "relation", "", "", args[3], pattern_size, global_node_offset);
   if ((test_to_execute == "") || (test_to_execute == "40"))
     // Test an around collecting relations from nodes based on way membership
-    perform_query_with_around("node", "relation", "", "", args[3], pattern_size, true);
+    perform_query_with_around("node", "relation", "", "", args[3], pattern_size, global_node_offset, true);
 
   if ((test_to_execute == "") || (test_to_execute == "41"))
     // Test an around collecting relations from nodes based on node membership
-    perform_query_with_around("way", "node", "", "", args[3], pattern_size);
+    perform_query_with_around("way", "node", "", "", args[3], pattern_size, global_node_offset);
   if ((test_to_execute == "") || (test_to_execute == "42"))
     // Test an around collecting relations from nodes based on way membership
-    perform_query_with_around("way", "way", "", "", args[3], pattern_size);
+    perform_query_with_around("way", "way", "", "", args[3], pattern_size, global_node_offset);
   
   if ((test_to_execute == "") || (test_to_execute == "43"))
     // Test an around collecting relations from nodes based on node membership
-    perform_query_with_around("relation", "node", "", "", args[3], pattern_size);
+    perform_query_with_around("relation", "node", "", "", args[3], pattern_size, global_node_offset);
   if ((test_to_execute == "") || (test_to_execute == "44"))
     // Test an around collecting relations from nodes based on way membership
-    perform_query_with_around("relation", "way", "", "", args[3], pattern_size);
+    perform_query_with_around("relation", "way", "", "", args[3], pattern_size, global_node_offset);
 
   if ((test_to_execute == "") || (test_to_execute == "45"))
     // Test a simple has-k-not-v
@@ -902,278 +910,278 @@ int main(int argc, char* args[])
   // Test recurse of type way-node as subquery
   if ((test_to_execute == "") || (test_to_execute == "51"))
     perform_query_with_recurse("node", "way-node", "", "", 100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "52"))
     perform_query_with_recurse("node", "way-node", "node_key_5", "node_value_5",
 			       100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "53"))
     perform_query_with_recurse("node", "way-node", "", "", 51.5, 52.0, 7.5, 8.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "54"))
     perform_query_with_recurse("node", "way-node", "node_key_5", "node_value_5",
 			       51.5, 52.0, 7.5, 8.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "55"))
     perform_query_with_recurse("node", "way-node", "", "", 100.0, 100.0, 0.0, 0.0, true,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   
   // Test recurse of type relation-node as subquery
   if ((test_to_execute == "") || (test_to_execute == "56"))
     perform_query_with_recurse("node", "relation-node", "", "", 100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "57"))
     perform_query_with_recurse("node", "relation-node", "node_key_5", "node_value_5",
 			       100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "58"))
     perform_query_with_recurse("node", "relation-node", "", "", 51.5, 52.0, 7.5, 8.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "59"))
     perform_query_with_recurse("node", "relation-node", "node_key_5", "node_value_5",
 			       51.5, 52.0, 7.5, 8.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "60"))
     perform_query_with_recurse("node", "relation-node", "", "", 100.0, 100.0, 0.0, 0.0, true,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   
   // Test recurse of type relation-way as subquery
   if ((test_to_execute == "") || (test_to_execute == "61"))
     perform_query_with_recurse("way", "relation-way", "", "", 100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "62"))
     perform_query_with_recurse("way", "relation-way", "way_key_2/4", "way_value_1",
 			       100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "63"))
     perform_query_with_recurse("way", "relation-way", "", "",
 			       51.0, 51.0 + 2.0/pattern_size, 7.0, 7.5, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "64"))
     perform_query_with_recurse("way", "relation-way", "way_key_2/4", "way_value_1",
 			       51.0, 51.0 + 2.0/pattern_size, 7.0, 7.5, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "65"))
     perform_query_with_recurse("way", "relation-way", "", "", 100.0, 100.0, 0.0, 0.0, true,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   
   // Test recurse of type relation-relation as subquery
   if ((test_to_execute == "") || (test_to_execute == "66"))
     perform_query_with_recurse("relation", "relation-relation", "", "",
 			       100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "67"))
     perform_query_with_recurse("relation", "relation-relation",
 			       "relation_key_2/4", "relation_value_0",
 			       100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "68"))
     perform_query_with_recurse("relation", "relation-relation", "", "",
 			       51.75, 52.0, 7.0, 8.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "69"))
     perform_query_with_recurse("relation", "relation-relation",
 			       "relation_key_2/4", "relation_value_0",
 			       51.75, 52.0, 7.0, 8.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "70"))
     perform_query_with_recurse("relation", "relation-relation", "", "",
 			       100.0, 100.0, 0.0, 0.0, true,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
 
   // Test recurse of type relation-relation as subquery
   if ((test_to_execute == "") || (test_to_execute == "71"))
     perform_query_with_recurse("way", "node-way", "", "",
 			       100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "72"))
     perform_query_with_recurse("way", "node-way", "way_key_2/4", "way_value_0",
 			       100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "73"))
     perform_query_with_recurse("way", "node-way", "", "",
 			       51.0, 51.5, 8.0 - 3.0/pattern_size, 8.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "74"))
     perform_query_with_recurse("way", "node-way", "way_key_2/4", "way_value_0",
 			       51.0, 51.5, 8.0 - 3.0/pattern_size, 8.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "75"))
     perform_query_with_recurse("way", "node-way", "", "",
 			       100.0, 100.0, 0.0, 0.0, true,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
 
   // Test recurse of type relation-relation as subquery
   if ((test_to_execute == "") || (test_to_execute == "76"))
     perform_query_with_recurse("relation", "node-relation", "", "",
 			       100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "77"))
     perform_query_with_recurse("relation", "node-relation", "relation_key_2/4", "relation_value_0",
 			       100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "78"))
     perform_query_with_recurse("relation", "node-relation", "", "",
 			       52.0 - 1.0/pattern_size, 52.0, 8.0 - 1.0/pattern_size, 8.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "79"))
     perform_query_with_recurse("relation", "node-relation", "relation_key_2/4", "relation_value_0",
 			       52.0 - 1.0/pattern_size, 52.0, 8.0 - 1.0/pattern_size, 8.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "80"))
     perform_query_with_recurse("relation", "node-relation", "", "",
 			       100.0, 100.0, 0.0, 0.0, true,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
 
   // Test recurse of type relation-relation as subquery
   if ((test_to_execute == "") || (test_to_execute == "81"))
     perform_query_with_recurse("relation", "way-relation", "", "",
 			       100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "82"))
     perform_query_with_recurse("relation", "way-relation", "relation_key_5", "relation_value_5",
 			       100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "83"))
     perform_query_with_recurse("relation", "way-relation", "", "",
 			       51.0, 51.0 + 2.0/pattern_size, 7.0, 7.0 + 1.0/pattern_size, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "84"))
     perform_query_with_recurse("relation", "way-relation", "relation_key_5", "relation_value_5",
 			       51.0, 51.0 + 2.0/pattern_size, 7.0, 7.0 + 1.0/pattern_size, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "85"))
     perform_query_with_recurse("relation", "way-relation", "", "",
 			       100.0, 100.0, 0.0, 0.0, true,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
 
   // Test recurse of type relation-relation as subquery
   if ((test_to_execute == "") || (test_to_execute == "86"))
     perform_query_with_recurse("relation", "relation-backwards", "", "",
 			       100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "87"))
     perform_query_with_recurse("relation", "relation-backwards",
 			       "relation_key_2/4", "relation_value_0",
 			       100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "88"))
     perform_query_with_recurse("relation", "relation-backwards", "", "",
 			       51.0, 51.0 + 1.0/pattern_size, 7.0, 7.0 + 1.0/pattern_size, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "89"))
     perform_query_with_recurse("relation", "relation-backwards",
 			       "relation_key_2/4", "relation_value_0",
 			       51.0, 51.0 + 1.0/pattern_size, 7.0, 7.0 + 1.0/pattern_size, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "90"))
     perform_query_with_recurse("relation", "relation-backwards", "", "",
 			       100.0, 100.0, 0.0, 0.0, true,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
 			       
   // Test id-query type node as subquery
   if ((test_to_execute == "") || (test_to_execute == "91"))
     perform_query_with_id_query("node", "", "", 100.0, 100.0, 0.0, 0.0, false,
-			        pattern_size, args[3]);
+			        pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "92"))
     perform_query_with_id_query("node", "node_key_5", "node_value_5",
 			        100.0, 100.0, 0.0, 0.0, false,
-			        pattern_size, args[3]);
+			        pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "93"))
     perform_query_with_id_query("node", "", "",
 				51.0, 51.5, 7.0, 7.0 + 5.0/pattern_size, false,
-			        pattern_size, args[3]);
+			        pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "94"))
     perform_query_with_id_query("node", "node_key_5", "node_value_5",
 				51.0, 51.5, 7.0, 7.0 + 5.0/pattern_size, false,
-			        pattern_size, args[3]);
+			        pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "95"))
     perform_query_with_id_query("node", "", "", 100.0, 100.0, 0.0, 0.0, true,
-			        pattern_size, args[3]);
+			        pattern_size, global_node_offset, args[3]);
 			       
   // Test id-query type way as subquery
   if ((test_to_execute == "") || (test_to_execute == "96"))
     perform_query_with_id_query("way", "", "", 100.0, 100.0, 0.0, 0.0, false,
-			        pattern_size, args[3]);
+			        pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "97"))
     perform_query_with_id_query("way", "way_key_5", "way_value_5",
 			        100.0, 100.0, 0.0, 0.0, false,
-			        pattern_size, args[3]);
+			        pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "98"))
     perform_query_with_id_query("way", "", "",
 				51.0, 51.5, 7.0, 7.0 + 5.0/pattern_size, false,
-			        pattern_size, args[3]);
+			        pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "99"))
     perform_query_with_id_query("way", "way_key_5", "way_value_5",
 				51.0, 51.5, 7.0, 7.0 + 5.0/pattern_size, false,
-			        pattern_size, args[3]);
+			        pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "100"))
     perform_query_with_id_query("way", "", "", 100.0, 100.0, 0.0, 0.0, true,
-			        pattern_size, args[3]);
+			        pattern_size, global_node_offset, args[3]);
 			       
   // Test id-query type relation as subquery
   if ((test_to_execute == "") || (test_to_execute == "101"))
     perform_query_with_id_query("relation", "", "", 100.0, 100.0, 0.0, 0.0, false,
-			        pattern_size, args[3]);
+			        pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "102"))
     perform_query_with_id_query("relation", "relation_key_5", "relation_value_5",
 			        100.0, 100.0, 0.0, 0.0, false,
-			        pattern_size, args[3]);
+			        pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "103"))
     perform_query_with_id_query("relation", "", "",
 				51.0, 51.5, 7.0, 7.0 + 6.0/pattern_size, false,
-			        pattern_size, args[3]);
+			        pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "104"))
     perform_query_with_id_query("relation", "relation_key_5", "relation_value_5",
 				51.0, 51.5, 7.0, 7.0 + 6.0/pattern_size, false,
-			        pattern_size, args[3]);
+			        pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "105"))
     perform_query_with_id_query("relation", "", "", 100.0, 100.0, 0.0, 0.0, true,
-			        pattern_size, args[3]);
+			        pattern_size, global_node_offset, args[3]);
   
   // Test recurse of type down as subquery
   if ((test_to_execute == "") || (test_to_execute == "106"))
     perform_query_with_recurse("node", "down", "", "", 100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "107"))
     perform_query_with_recurse("way", "down", "", "", 100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "108"))
     perform_query_with_recurse("relation", "down", "", "", 100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   
   // Test recurse of type down-rel as subquery
   if ((test_to_execute == "") || (test_to_execute == "109"))
     perform_query_with_recurse("node", "down-rel", "", "", 100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "110"))
     perform_query_with_recurse("way", "down-rel", "", "", 100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "111"))
     perform_query_with_recurse("relation", "down-rel", "", "", 100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   
   // Test recurse of type up as subquery
   if ((test_to_execute == "") || (test_to_execute == "112"))
     perform_query_with_recurse("node", "up", "", "", 100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "113"))
     perform_query_with_recurse("way", "up", "", "", 100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "114"))
     perform_query_with_recurse("relation", "up", "", "", 100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   
   // Test recurse of type up-rel as subquery
   if ((test_to_execute == "") || (test_to_execute == "115"))
     perform_query_with_recurse("node", "up-rel", "", "", 100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "116"))
     perform_query_with_recurse("way", "up-rel", "", "", 100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "117"))
     perform_query_with_recurse("relation", "up-rel", "", "", 100.0, 100.0, 0.0, 0.0, false,
-			       pattern_size, args[3]);
+			       pattern_size, global_node_offset, args[3]);
     
   // Test combination of keys-only with several other elements
   if ((test_to_execute == "") || (test_to_execute == "118"))

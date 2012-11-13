@@ -28,22 +28,20 @@
 
 using namespace std;
 
-void perform_around_print(uint pattern_size, string radius, Transaction& transaction)
+void perform_around_print(uint pattern_size, string radius, uint64 global_node_offset,
+			  Transaction& transaction)
 {
   try
   {
     Resource_Manager rman(transaction);
     {
       ostringstream buf;
-      buf<<(2*pattern_size*pattern_size + 1);
-      char* buf_str = new char[40];
-      strncpy(buf_str, buf.str().c_str(), 40);
+      buf<<(2*pattern_size*pattern_size + 1 + global_node_offset);
+      string buf_ = buf.str();
       
-      const char* attributes[] = { "type", "node", "ref", buf_str, 0 };
+      const char* attributes[] = { "type", "node", "ref", buf_.c_str(), 0 };
       Id_Query_Statement* stmt1 = new Id_Query_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
-      
-      delete[] buf_str;
     }
     {
       const char* attributes[] = { "radius", radius.c_str(), 0 };
@@ -64,14 +62,15 @@ void perform_around_print(uint pattern_size, string radius, Transaction& transac
 
 int main(int argc, char* args[])
 {
-  if (argc < 4)
+  if (argc < 5)
   {
-    cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir\n";
+    cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir node_id_offset\n";
     return 0;
   }
   string test_to_execute = args[1];
   uint pattern_size = 0;
   pattern_size = atoi(args[2]);
+  uint64 global_node_offset = atoll(args[4]);
 
   Nonsynced_Transaction transaction(false, false, args[3], "");
   
@@ -80,25 +79,22 @@ int main(int argc, char* args[])
   "<osm>\n";
     
   if ((test_to_execute == "") || (test_to_execute == "1"))
-    perform_around_print(pattern_size, "20.01", transaction);
+    perform_around_print(pattern_size, "20.01", global_node_offset, transaction);
   if ((test_to_execute == "") || (test_to_execute == "2"))
-    perform_around_print(pattern_size, "200.1", transaction);
+    perform_around_print(pattern_size, "200.1", global_node_offset, transaction);
   if ((test_to_execute == "") || (test_to_execute == "3"))
-    perform_around_print(pattern_size, "2001", transaction);
+    perform_around_print(pattern_size, "2001", global_node_offset, transaction);
   if ((test_to_execute == "") || (test_to_execute == "4"))
   {
     Resource_Manager rman(transaction);
     {
       ostringstream buf;
-      buf<<(2*pattern_size*pattern_size + 1);
-      char* buf_str = new char[40];
-      strncpy(buf_str, buf.str().c_str(), 40);
+      buf<<(2*pattern_size*pattern_size + 1 + global_node_offset);
+      string buf_ = buf.str();
       
-      const char* attributes[] = { "type", "node", "into", "foo", "ref", buf_str, 0 };
+      const char* attributes[] = { "type", "node", "into", "foo", "ref", buf_.c_str(), 0 };
       Id_Query_Statement* stmt1 = new Id_Query_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
-      
-      delete[] buf_str;
     }
     {
       const char* attributes[] = { "radius", "200.1", "from", "foo", 0 };
@@ -116,15 +112,12 @@ int main(int argc, char* args[])
     Resource_Manager rman(transaction);
     {
       ostringstream buf;
-      buf<<(2*pattern_size*pattern_size + 1);
-      char* buf_str = new char[40];
-      strncpy(buf_str, buf.str().c_str(), 40);
+      buf<<(2*pattern_size*pattern_size + 1 + global_node_offset);
+      string buf_ = buf.str();
       
-      const char* attributes[] = { "type", "node", "ref", buf_str, 0 };
+      const char* attributes[] = { "type", "node", "ref", buf_.c_str(), 0 };
       Id_Query_Statement* stmt1 = new Id_Query_Statement(0, convert_c_pairs(attributes));
       stmt1->execute(rman);
-      
-      delete[] buf_str;
     }
     {
       const char* attributes[] = { "radius", "200.1", "into", "foo", 0 };
@@ -142,29 +135,24 @@ int main(int argc, char* args[])
     Resource_Manager rman(transaction);
     {
       ostringstream buf1, buf2;
-      buf1<<(2*pattern_size*pattern_size + 1);
-      buf2<<(3*pattern_size*pattern_size);
-      char* buf_str_1 = new char[40];
-      char* buf_str_2 = new char[40];
-      strncpy(buf_str_1, buf1.str().c_str(), 40);
-      strncpy(buf_str_2, buf2.str().c_str(), 40);
+      buf1<<(2*pattern_size*pattern_size + 1 + global_node_offset);
+      buf2<<(3*pattern_size*pattern_size + global_node_offset);
+      string buf1_ = buf1.str();
+      string buf2_ = buf2.str();
       
       const char* attributes[] = { 0 };
       Union_Statement* stmt1 = new Union_Statement(0, convert_c_pairs(attributes));
       {
-	const char* attributes[] = { "type", "node", "ref", buf_str_1, 0 };
+	const char* attributes[] = { "type", "node", "ref", buf1_.c_str(), 0 };
 	Id_Query_Statement* stmt2 = new Id_Query_Statement(0, convert_c_pairs(attributes));
 	stmt1->add_statement(stmt2, "");
       }
       {
-	const char* attributes[] = { "type", "node", "ref", buf_str_2, 0 };
+	const char* attributes[] = { "type", "node", "ref", buf2_.c_str(), 0 };
 	Id_Query_Statement* stmt2 = new Id_Query_Statement(0, convert_c_pairs(attributes));
 	stmt1->add_statement(stmt2, "");
       }
       stmt1->execute(rman);
-      
-      delete[] buf_str_1;
-      delete[] buf_str_2;
     }
     {
       const char* attributes[] = { "radius", "200.1", 0 };

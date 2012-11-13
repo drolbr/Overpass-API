@@ -32,6 +32,7 @@ fi
 DATA_SIZE="$1"
 BASEDIR="$(cd `dirname $0` && pwd)/.."
 NOTIMES="$2"
+NODE_OFFSET=1000000
 
 evaluate_test()
 {
@@ -141,7 +142,7 @@ prepare_test_loop()
     }; fi
     mkdir -p expected/$1_$I/
     rm -f expected/$1_$I/*
-    $BASEDIR/test-bin/generate_test_file $DATA_SIZE $1_$I >expected/$1_$I/stdout.log
+    $BASEDIR/test-bin/generate_test_file $DATA_SIZE $1_$I $NODE_OFFSET >expected/$1_$I/stdout.log
     touch expected/$1_$I/stderr.log
     I=$(($I + 1))
   }; done
@@ -150,13 +151,13 @@ prepare_test_loop()
 # Prepare testing the statements
 mkdir -p input/update_database/
 rm -f input/update_database/*
-$BASEDIR/test-bin/generate_test_file $DATA_SIZE >input/update_database/stdin.log
+$BASEDIR/test-bin/generate_test_file $DATA_SIZE "" $NODE_OFFSET >input/update_database/stdin.log
 $BASEDIR/bin/update_database --db-dir=input/update_database/ --version=mock-up-init <input/update_database/stdin.log
 
 # Test the print and id_query statements
 prepare_test_loop print 4 $DATA_SIZE
 mkdir -p expected/print_5/
-$BASEDIR/test-bin/generate_test_file $DATA_SIZE print_4 | grep "^  <" | sort >expected/print_5/stdout.log
+$BASEDIR/test-bin/generate_test_file $DATA_SIZE print_4 $NODE_OFFSET | grep "^  <" | sort >expected/print_5/stdout.log
 touch expected/print_5/stderr.log
 
 date +%T
@@ -166,7 +167,7 @@ print_test_5 print 5 "$DATA_SIZE ../../input/update_database/"
 # Test the recurse statement
 prepare_test_loop recurse 22 $DATA_SIZE
 date +%T
-perform_test_loop recurse 22 "$DATA_SIZE ../../input/update_database/"
+perform_test_loop recurse 22 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 # Test the bbox_query statement
 prepare_test_loop bbox_query 8 $DATA_SIZE
@@ -176,22 +177,22 @@ perform_test_loop bbox_query 8 "$DATA_SIZE ../../input/update_database/"
 # Test the bbox_query statement
 prepare_test_loop around 6 $DATA_SIZE
 date +%T
-perform_test_loop around 6 "$DATA_SIZE ../../input/update_database/"
+perform_test_loop around 6 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 # Test the query statement
 prepare_test_loop query 126 $DATA_SIZE
 date +%T
-perform_test_loop query 126 "$DATA_SIZE ../../input/update_database/"
+perform_test_loop query 126 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 # Test the foreach statement
 prepare_test_loop foreach 4 $DATA_SIZE
 date +%T
-perform_test_loop foreach 4 "$DATA_SIZE ../../input/update_database/"
+perform_test_loop foreach 4 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 # Test the union statement
 prepare_test_loop union 6 $DATA_SIZE
 date +%T
-perform_test_loop union 6 ../../input/update_database/
+perform_test_loop union 6 "../../input/update_database/ $NODE_OFFSET"
 
 # Test the union statement
 prepare_test_loop polygon_query 3 $DATA_SIZE
