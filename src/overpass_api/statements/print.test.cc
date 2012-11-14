@@ -25,7 +25,7 @@
 
 using namespace std;
 
-Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint32 id)
+Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint64 id)
 {
   ostringstream buf("");
   buf<<id;
@@ -46,14 +46,15 @@ Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint32 i
 
 int main(int argc, char* args[])
 {
-  if (argc < 4)
+  if (argc < 5)
   {
-    cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir\n";
+    cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir global_node_offset\n";
     return 0;
   }
   string test_to_execute = args[1];
   uint pattern_size = 0;
   pattern_size = atoi(args[2]);
+  uint64 global_node_offset = atoll(args[4]);
   
   uint32 node_id_upper_limit = 5*pattern_size*pattern_size;
   uint32 way_id_upper_limit = 5*pattern_size*pattern_size;
@@ -74,7 +75,7 @@ int main(int argc, char* args[])
       {
 	// Print nodes:
 	Resource_Manager rman(transaction);
-	perform_id_query(rman, "node", i);
+	perform_id_query(rman, "node", i + global_node_offset);
 	{
 	  const char* attributes[] = { 0 };
 	  Print_Statement stmt(2, convert_c_pairs(attributes));
@@ -119,7 +120,7 @@ int main(int argc, char* args[])
       {
 	// Print nodes:
 	Resource_Manager rman(transaction);
-	perform_id_query(rman, "node", i);
+	perform_id_query(rman, "node", i + global_node_offset);
 	{
 	  const char* attributes[] = { "mode", "skeleton", 0 };
 	  Print_Statement stmt(2, convert_c_pairs(attributes));
@@ -164,7 +165,7 @@ int main(int argc, char* args[])
       {
 	// Print nodes:
 	Resource_Manager rman(transaction);
-	perform_id_query(rman, "node", i);
+	perform_id_query(rman, "node", i + global_node_offset);
 	{
 	  const char* attributes[] = { "mode", "ids_only", 0 };
 	  Print_Statement stmt(2, convert_c_pairs(attributes));
@@ -209,7 +210,7 @@ int main(int argc, char* args[])
       for (uint32 i = 10000; i <= node_id_upper_limit; i += 10000)
       {
 	Resource_Manager rman(transaction);
-	perform_id_query(rman, "node", i);
+	perform_id_query(rman, "node", i + global_node_offset);
 	if (!rman.sets()["_"].nodes.empty())
 	  total_rman.sets()["_"].nodes[rman.sets()["_"].nodes.begin()->first].push_back(rman.sets()["_"].nodes.begin()->second.front());
       }
@@ -248,7 +249,7 @@ int main(int argc, char* args[])
       for (uint32 i = 10000; i <= node_id_upper_limit; i += 10000)
       {
 	Resource_Manager rman(transaction);
-	perform_id_query(rman, "node", i);
+	perform_id_query(rman, "node", i + global_node_offset);
 	if (!rman.sets()["_"].nodes.empty())
 	  total_rman.sets()["_"].nodes[rman.sets()["_"].nodes.begin()->first].push_back(rman.sets()["_"].nodes.begin()->second.front());
       }

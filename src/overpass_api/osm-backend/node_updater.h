@@ -79,14 +79,14 @@ public:
       it->second.first = Node(skel.id.val(), index.val(), skel.ll_lower);
   }
   
-  void deletion(const Tag_Index_Local& index, const Uint32_Index& ref)
+  void deletion(const Tag_Index_Local& index, const Node::Id_Type& ref)
   {
     map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator it = erase.find(ref);
     if (it != erase.end())
       it->second.first.tags.push_back(make_pair(index.key, index.value));
   }
   
-  void keeping(const Tag_Index_Local& index, const Uint32_Index& ref)
+  void keeping(const Tag_Index_Local& index, const Node::Id_Type& ref)
   {
     map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator it = keep.find(ref);
     if (it != keep.end())
@@ -360,15 +360,6 @@ private:
   
   void merge_files(const vector< string >& froms, string into);
 };
-
-
-// make indices appropriately coarse
-map< uint32, set< Node::Id_Type > > collect_coarse
-    (const map< uint32, vector< Node::Id_Type > >& elems_by_idx);
-
-// formulate range query
-set< pair< Tag_Index_Local, Tag_Index_Local > > make_range_set
-    (const map< uint32, set< Node::Id_Type > >& coarse);
 
 
 #endif

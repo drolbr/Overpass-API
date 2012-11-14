@@ -32,21 +32,21 @@ Generic_Statement_Maker< Id_Query_Statement > Id_Query_Statement::statement_make
 
 template< class TIndex, class TObject >
 void collect_elems(Resource_Manager& rman, const File_Properties& prop,
-		   uint32 lower, uint32 upper,
+		   Uint64 lower, Uint64 upper,
 		   map< TIndex, vector< TObject > >& elems)
 {
   set< TIndex > req;
   {
     Random_File< TIndex > random(rman.get_transaction()->random_index(&prop));
-    for (uint32 i = lower; i <= upper; ++i)
-      req.insert(random.get(i));
+    for (Uint64 i = lower; !(upper < i); ++i)
+      req.insert(random.get(i.val()));
   }    
   Block_Backend< TIndex, TObject > elems_db(rman.get_transaction()->data_index(&prop));
   for (typename Block_Backend< TIndex, TObject >::Discrete_Iterator
       it(elems_db.discrete_begin(req.begin(), req.end()));
       !(it == elems_db.discrete_end()); ++it)
   {
-    if (it.object().id.val() >= lower && it.object().id.val() <= upper)
+    if (it.object().id.val() >= lower.val() && it.object().id.val() <= upper.val())
       elems[it.index()].push_back(it.object());
   }
 }
@@ -54,14 +54,14 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
 
 template< class TIndex, class TObject >
 void collect_elems(Resource_Manager& rman, const File_Properties& prop,
-		   typename TObject::Id_Type lower, typename TObject::Id_Type upper,
+		   Uint64 lower, Uint64 upper,
 		   const vector< typename TObject::Id_Type >& ids, bool invert_ids,
 		   map< TIndex, vector< TObject > >& elems)
 {
   set< TIndex > req;
   {
     Random_File< TIndex > random(rman.get_transaction()->random_index(&prop));
-    for (typename TObject::Id_Type i = lower; !(upper < i); ++i)
+    for (typename TObject::Id_Type i = lower.val(); !(upper.val() < i.val()); ++i)
     {
       if (binary_search(ids.begin(), ids.end(), i) ^ invert_ids)
         req.insert(random.get(i.val()));
@@ -72,7 +72,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
       it(elems_db.discrete_begin(req.begin(), req.end()));
       !(it == elems_db.discrete_end()); ++it)
   {
-    if (!(it.object().id < lower) && !(upper < it.object().id)
+    if (!(it.object().id.val() < lower.val()) && !(upper.val() < it.object().id.val())
         && (binary_search(ids.begin(), ids.end(), it.object().id) ^ invert_ids))
       elems[it.index()].push_back(it.object());
   }
@@ -97,7 +97,7 @@ void collect_elems_flat(Resource_Manager& rman,
 
 
 template< class TIndex, class TObject >
-void filter_elems(uint32 lower, uint32 upper,
+void filter_elems(Uint64 lower, Uint64 upper,
 		  map< TIndex, vector< TObject > >& elems)
 {
   for (typename map< TIndex, vector< TObject > >::iterator it = elems.begin();
@@ -107,7 +107,7 @@ void filter_elems(uint32 lower, uint32 upper,
     for (typename vector< TObject >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
-      if (iit->id.val() >= lower && iit->id.val() <= upper)
+      if (iit->id.val() >= lower.val() && iit->id.val() <= upper.val())
 	local_into.push_back(*iit);
     }
     it->second.swap(local_into);
@@ -182,9 +182,9 @@ bool Id_Query_Constraint::get_data
   else if (stmt->get_type() == Statement::AREA)
   {
     if (ids.empty())
-      collect_elems_flat(rman, stmt->get_lower(), stmt->get_upper(), ids, true, into.areas);
+      collect_elems_flat(rman, stmt->get_lower().val(), stmt->get_upper().val(), ids, true, into.areas);
     else
-      collect_elems_flat(rman, stmt->get_lower(), stmt->get_upper(), ids, invert_ids, into.areas);
+      collect_elems_flat(rman, stmt->get_lower().val(), stmt->get_upper().val(), ids, invert_ids, into.areas);
     return true;
   }
 
@@ -252,12 +252,12 @@ Id_Query_Statement::Id_Query_Statement
     add_static_error(temp.str());
   }
   
-  ref = (unsigned int)atol(attributes["ref"].c_str());
-  lower = (unsigned int)atol(attributes["lower"].c_str());
-  upper = (unsigned int)atol(attributes["upper"].c_str());
-  if (ref <= 0)
+  ref = atoll(attributes["ref"].c_str());
+  lower = atoll(attributes["lower"].c_str());
+  upper = atoll(attributes["upper"].c_str());
+  if (ref.val() <= 0)
   {
-    if (lower == 0 || upper == 0)
+    if (lower.val() == 0 || upper.val() == 0)
     {
       ostringstream temp;
       temp<<"For the attribute \"ref\" of the element \"id-query\""
@@ -299,7 +299,7 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
   else if (type == RELATION)
     collect_elems(rman, *osm_base_settings().RELATIONS, lower, upper, relations);
   else if (type == AREA)
-    collect_elems_flat(rman, lower, upper, vector< Area_Skeleton::Id_Type >(), true, areas);
+    collect_elems_flat(rman, lower.val(), upper.val(), vector< Area_Skeleton::Id_Type >(), true, areas);
 
   rman.health_check(*this);
 }

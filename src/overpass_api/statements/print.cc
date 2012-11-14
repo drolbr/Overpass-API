@@ -111,7 +111,7 @@ void Print_Statement::forecast() {}
 template< class Id_Type >
 void collect_tags
   (map< Id_Type, vector< pair< string, string > > >& tags_by_id,
-   const Block_Backend< Tag_Index_Local, Uint32_Index >& items_db,
+   const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
    typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
    map< uint32, vector< Id_Type > >& ids_by_coarse,
    uint32 coarse_index)
@@ -131,7 +131,7 @@ void collect_tags
 template< class Id_Type >
 void collect_tags_framed
   (map< Id_Type, vector< pair< string, string > > >& tags_by_id,
-   const Block_Backend< Tag_Index_Local, Uint32_Index >& items_db,
+   const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
    typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
    map< uint32, vector< Id_Type > >& ids_by_coarse,
    uint32 coarse_index,
@@ -194,9 +194,9 @@ void Print_Statement::tags_quadtile
   
   // iterate over the result
   uint coarse_count = 0;
-  Block_Backend< Tag_Index_Local, Uint32_Index > items_db
+  Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db
       (transaction.data_index(&file_prop));
-  Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
+  typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
     tag_it(items_db.range_begin
     (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
      Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
@@ -332,15 +332,15 @@ void Print_Statement::tags_by_id
   Meta_Collector< TIndex, TObject > meta_printer(items, transaction, meta_file_prop);
   
   // iterate over the result
-  Block_Backend< Tag_Index_Local, Uint32_Index > items_db
+  Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db
       (transaction.data_index(&file_prop));
-  for (typename TObject::Id_Type id_pos(0u); id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
+  for (typename TObject::Id_Type id_pos; id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
   {
     rman.health_check(*this);
     
     map< typename TObject::Id_Type, vector< pair< string, string > > > tags_by_id;
     typename TObject::Id_Type lower_id_bound(items_by_id[id_pos.val()].first->id);
-    typename TObject::Id_Type upper_id_bound(0u);
+    typename TObject::Id_Type upper_id_bound;
     if (id_pos + FLUSH_SIZE < items_by_id.size())
       upper_id_bound = items_by_id[(id_pos + FLUSH_SIZE).val()].first->id;
     else
@@ -355,7 +355,7 @@ void Print_Statement::tags_by_id
          Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
     for (typename set< TIndex >::const_iterator
         it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
-      collect_tags_framed(tags_by_id, items_db, tag_it, ids_by_coarse, it->val(),
+      collect_tags_framed< typename TObject::Id_Type >(tags_by_id, items_db, tag_it, ids_by_coarse, it->val(),
 			  lower_id_bound, upper_id_bound);
     
     // collect metadata if required

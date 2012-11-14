@@ -56,9 +56,12 @@ map< Uint32_Index, vector< Node_Skeleton > > way_members
      const vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false);
 
      
-vector< Uint32_Index > relation_member_ids
-    (Resource_Manager& rman, uint32 type,
-     const map< Uint31_Index, vector< Relation_Skeleton > >& rels);
+vector< Node::Id_Type > relation_node_member_ids
+    (Resource_Manager& rman, const map< Uint31_Index, vector< Relation_Skeleton > >& rels);
+vector< Way::Id_Type > relation_way_member_ids
+    (Resource_Manager& rman, const map< Uint31_Index, vector< Relation_Skeleton > >& rels);
+vector< Relation::Id_Type > relation_relation_member_ids
+    (Resource_Manager& rman, const map< Uint31_Index, vector< Relation_Skeleton > >& rels);
 
 vector< Node::Id_Type > way_nd_ids(const map< Uint31_Index, vector< Way_Skeleton > >& ways);
 

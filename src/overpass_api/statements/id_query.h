@@ -39,8 +39,8 @@ class Id_Query_Statement : public Statement
     static Generic_Statement_Maker< Id_Query_Statement > statement_maker;
 
     virtual Query_Constraint* get_query_constraint();
-    unsigned int get_lower() const { return lower; }
-    unsigned int get_upper() const { return upper; }
+    Uint64 get_lower() const { return lower; }
+    Uint64 get_upper() const { return upper; }
     int get_type() const { return type; }
     
     static bool area_query_exists() { return area_query_exists_; }
@@ -48,7 +48,7 @@ class Id_Query_Statement : public Statement
   private:
     string output;
     int type;
-    unsigned int ref, lower, upper;
+    Uint64 ref, lower, upper;
     vector< Query_Constraint* > constraints;
     
     static bool area_query_exists_;

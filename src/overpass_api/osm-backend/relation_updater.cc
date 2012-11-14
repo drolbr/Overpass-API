@@ -256,7 +256,8 @@ void Relation_Updater::find_affected_relations
      const vector< pair< Way::Id_Type, Uint31_Index > >& moved_ways,
      Update_Relation_Logger* update_logger)
 {
-  static Pair_Comparator_By_Id< Relation::Id_Type, Uint32_Index > pair_comparator_by_id;
+  static Pair_Comparator_By_Id< Node::Id_Type, Uint32_Index > node_pair_comparator_by_id;
+  static Pair_Comparator_By_Id< Way::Id_Type, Uint32_Index > way_pair_comparator_by_id;
 
   set< Uint31_Index > req;
   {
@@ -294,7 +295,7 @@ void Relation_Updater::find_affected_relations
       if (it3->type == Relation_Entry::NODE)
       {
 	if (binary_search(moved_nodes.begin(), moved_nodes.end(),
-	  make_pair(it3->ref, 0), pair_comparator_by_id))
+	  make_pair(it3->ref, 0), node_pair_comparator_by_id))
 	{
 	  if (update_logger)
 	    update_logger->keeping(it.index(), relation);
@@ -305,7 +306,7 @@ void Relation_Updater::find_affected_relations
       else if (it3->type == Relation_Entry::WAY)
       {
 	if (binary_search(moved_ways.begin(), moved_ways.end(),
-	  make_pair(it3->ref, 0), pair_comparator_by_id))
+	  make_pair(it3->ref32(), 0), way_pair_comparator_by_id))
 	{
 	  if (update_logger)
 	    update_logger->keeping(it.index(), relation);
@@ -330,7 +331,7 @@ void Relation_Updater::find_affected_relations
       if (nit->type == Relation_Entry::NODE)
 	used_nodes[nit->ref] = 0;
       else if (nit->type == Relation_Entry::WAY)
-	used_ways[nit->ref] = 0;
+	used_ways[nit->ref32()] = 0;
     }
   }
   
@@ -361,8 +362,8 @@ void Relation_Updater::find_affected_relations
       }
       else if (nit->type == Relation_Entry::WAY)
       {
-	member_idxs.push_back(used_ways[nit->ref]);
-	way_idxs.push_back(used_ways[nit->ref]);
+	member_idxs.push_back(used_ways[nit->ref32()]);
+	way_idxs.push_back(used_ways[nit->ref32()]);
       }
     }
     
@@ -411,7 +412,7 @@ void Relation_Updater::compute_indexes(vector< Relation* >& rels_ptr)
       if (nit->type == Relation_Entry::NODE)
 	used_nodes[nit->ref] = 0;
       else if (nit->type == Relation_Entry::WAY)
-	used_ways[nit->ref] = 0;
+	used_ways[nit->ref32()] = 0;
     }
   }
   
@@ -441,8 +442,8 @@ void Relation_Updater::compute_indexes(vector< Relation* >& rels_ptr)
       }
       else if (nit->type == Relation_Entry::WAY)
       {
-	member_idxs.push_back(used_ways[nit->ref]);
-	way_idxs.push_back(used_ways[nit->ref]);
+	member_idxs.push_back(used_ways[nit->ref32()]);
+	way_idxs.push_back(used_ways[nit->ref32()]);
       }
     }
     (*rit)->index = Relation::calc_index(member_idxs);

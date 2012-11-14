@@ -301,53 +301,15 @@ void Node_Updater::update_coords(const map< uint32, vector< Node::Id_Type > >& t
 }
 
 
-// make indices appropriately coarse
-map< uint32, set< Node::Id_Type > > collect_coarse
-    (const map< uint32, vector< Node::Id_Type > >& elems_by_idx)
-{
-  map< uint32, set< Node::Id_Type > > coarse;
-  for (map< uint32, vector< Node::Id_Type > >::const_iterator
-      it(elems_by_idx.begin()); it != elems_by_idx.end(); ++it)
-  {
-    set< Node::Id_Type >& handle(coarse[it->first & 0xffffff00]);
-    for (vector< Node::Id_Type >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-      handle.insert(*it2);
-  }
-  return coarse;
-}
-
-
-// formulate range query
-set< pair< Tag_Index_Local, Tag_Index_Local > > make_range_set
-    (const map< uint32, set< Node::Id_Type > >& coarse)
-{
-  set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  for (map< uint32, set< Node::Id_Type > >::const_iterator
-      it(coarse.begin()); it != coarse.end(); ++it)
-  {
-    Tag_Index_Local lower, upper;
-    lower.index = it->first;
-    lower.key = "";
-    lower.value = "";
-    upper.index = it->first + 1;
-    upper.key = "";
-    upper.value = "";
-    range_set.insert(make_pair(lower, upper));
-  }
-  return range_set;
-}
-
-
 void Node_Updater::merge_files(const vector< string >& froms, string into)
 {
   Transaction_Collection from_transactions(false, false, db_dir, froms);
   Nonsynced_Transaction into_transaction(true, false, db_dir, into);
   ::merge_files< Uint32_Index, Node_Skeleton >
       (from_transactions, into_transaction, *osm_base_settings().NODES);
-  ::merge_files< Tag_Index_Local, Uint32_Index >
+  ::merge_files< Tag_Index_Local, Node::Id_Type >
       (from_transactions, into_transaction, *osm_base_settings().NODE_TAGS_LOCAL);
-  ::merge_files< Tag_Index_Global, Uint32_Index >
+  ::merge_files< Tag_Index_Global, Node::Id_Type >
       (from_transactions, into_transaction, *osm_base_settings().NODE_TAGS_GLOBAL);
   if (meta)
   {

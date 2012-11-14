@@ -83,8 +83,8 @@ struct Way_Skeleton
   {
     nds.reserve(*((uint16*)data + 2));
     for (int i(0); i < *((uint16*)data + 2); ++i)
-      nds.push_back(*(uint32*)((uint16*)data + 4 + 2*i));
-    uint16* start_ptr = (uint16*)data + 4 + 2*nds.size();
+      nds.push_back(*(uint64*)((uint16*)data + 4 + 4*i));
+    uint16* start_ptr = (uint16*)data + 4 + 4*nds.size();
     segment_idxs.resize(*((uint16*)data + 3), 0u);
     for (int i(0); i < *((uint16*)data + 3); ++i)
       segment_idxs[i] = *(Uint31_Index*)(start_ptr + 2*i);
@@ -98,12 +98,12 @@ struct Way_Skeleton
   
   uint32 size_of() const
   {
-    return 8 + 4*nds.size() + 4*segment_idxs.size();
+    return 8 + 8*nds.size() + 4*segment_idxs.size();
   }
   
   static uint32 size_of(void* data)
   {
-    return (8 + 4 * *((uint16*)data + 2) + 4 * *((uint16*)data + 3));
+    return (8 + 8 * *((uint16*)data + 2) + 4 * *((uint16*)data + 3));
   }
   
   void to_data(void* data) const
@@ -112,8 +112,8 @@ struct Way_Skeleton
     *((uint16*)data + 2) = nds.size();
     *((uint16*)data + 3) = segment_idxs.size();
     for (uint i(0); i < nds.size(); ++i)
-      *(uint32*)((uint16*)data + 4 + 2*i) = nds[i].val();
-    uint16* start_ptr = (uint16*)data + 4 + 2*nds.size();
+      *(uint64*)((uint16*)data + 4 + 4*i) = nds[i].val();
+    uint16* start_ptr = (uint16*)data + 4 + 4*nds.size();
     for (uint i(0); i < segment_idxs.size(); ++i)
       *(Uint31_Index*)(start_ptr + 2*i) = segment_idxs[i];
   }

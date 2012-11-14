@@ -56,6 +56,46 @@ void update_tags_global
      const vector< pair< typename TObject::Id_Type, bool > >& ids_to_modify,
      const vector< Tag_Entry< typename TObject::Id_Type > >& tags_to_delete);
        
+    
+// make indices appropriately coarse
+template< typename Id_Type >
+map< uint32, set< Id_Type > > collect_coarse
+    (const map< uint32, vector< Id_Type > >& elems_by_idx)
+{
+  map< uint32, set< Id_Type > > coarse;
+  for (typename map< uint32, vector< Id_Type > >::const_iterator
+      it(elems_by_idx.begin()); it != elems_by_idx.end(); ++it)
+  {
+    set< Id_Type >& handle(coarse[it->first & 0xffffff00]);
+    for (typename vector< Id_Type >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      handle.insert(*it2);
+  }
+  return coarse;
+}
+
+
+// formulate range query
+template< typename Id_Type >
+set< pair< Tag_Index_Local, Tag_Index_Local > > make_range_set
+    (const map< uint32, set< Id_Type > >& coarse)
+{
+  set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
+  for (typename map< uint32, set< Id_Type > >::const_iterator
+      it(coarse.begin()); it != coarse.end(); ++it)
+  {
+    Tag_Index_Local lower, upper;
+    lower.index = it->first;
+    lower.key = "";
+    lower.value = "";
+    upper.index = it->first + 1;
+    upper.key = "";
+    upper.value = "";
+    range_set.insert(make_pair(lower, upper));
+  }
+  return range_set;
+}
+    
 
 //-----------------------------------------------------------------------------
 
@@ -94,7 +134,7 @@ void prepare_delete_tags
   }
   
   // iterate over the result
-  Block_Backend< Tag_Index_Local, Uint32_Index > rels_db(&tags_local);
+  Block_Backend< Tag_Index_Local, Id_Type > rels_db(&tags_local);
   Tag_Index_Local current_index;
   Tag_Entry< Id_Type > tag_entry;
   current_index.index = 0xffffffff;
@@ -199,8 +239,8 @@ void update_tags_local
      const vector< Tag_Entry< typename TObject::Id_Type > >& tags_to_delete,
      Update_Logger* update_logger)
 {
-  map< Tag_Index_Local, set< Uint32_Index > > db_to_delete;
-  map< Tag_Index_Local, set< Uint32_Index > > db_to_insert;
+  map< Tag_Index_Local, set< typename TObject::Id_Type > > db_to_delete;
+  map< Tag_Index_Local, set< typename TObject::Id_Type > > db_to_insert;
   
   for (typename vector< Tag_Entry< typename TObject::Id_Type > >::const_iterator
       it(tags_to_delete.begin()); it != tags_to_delete.end(); ++it)
@@ -256,8 +296,8 @@ void update_tags_global
      const vector< pair< typename TObject::Id_Type, bool > >& ids_to_modify,
      const vector< Tag_Entry< typename TObject::Id_Type > >& tags_to_delete)
 {
-  map< Tag_Index_Global, set< Uint32_Index > > db_to_delete;
-  map< Tag_Index_Global, set< Uint32_Index > > db_to_insert;
+  map< Tag_Index_Global, set< typename TObject::Id_Type > > db_to_delete;
+  map< Tag_Index_Global, set< typename TObject::Id_Type > > db_to_insert;
   
   for (typename vector< Tag_Entry< typename TObject::Id_Type > >::const_iterator
       it(tags_to_delete.begin()); it != tags_to_delete.end(); ++it)

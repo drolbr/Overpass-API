@@ -72,10 +72,10 @@ void Make_Area_Statement::forecast()
   display_state();*/
 }
 
-pair< uint32, Uint32_Index > Make_Area_Statement::detect_pivot(const Set& pivot)
+pair< uint32, Uint64 > Make_Area_Statement::detect_pivot(const Set& pivot)
 {
   uint32 pivot_type(0);
-  Uint32_Index pivot_id(0u);
+  Node::Id_Type pivot_id(0ull);
   map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
       nit(pivot.nodes.begin());
   while ((pivot_id.val() == 0) && (nit != pivot.nodes.end()))
@@ -93,7 +93,7 @@ pair< uint32, Uint32_Index > Make_Area_Statement::detect_pivot(const Set& pivot)
   {
     if (wit->second.size() > 0)
     {
-      pivot_id = wit->second.front().id;
+      pivot_id = Uint64(wit->second.front().id.val());
       pivot_type = WAY;
     }
     ++wit;
@@ -104,13 +104,13 @@ pair< uint32, Uint32_Index > Make_Area_Statement::detect_pivot(const Set& pivot)
   {
     if (rit->second.size() > 0)
     {
-      pivot_id = rit->second.front().id;
+      pivot_id = Uint64(rit->second.front().id.val());
       pivot_type = RELATION;
     }
     ++rit;
   }
   
-  return make_pair< uint32, Uint32_Index >(pivot_type, pivot_id);
+  return make_pair(pivot_type, pivot_id);
 }
 
 Node::Id_Type Make_Area_Statement::check_node_parity(const Set& pivot)
@@ -136,10 +136,10 @@ Node::Id_Type Make_Area_Statement::check_node_parity(const Set& pivot)
   }
   if (node_parity_control.size() > 0)
     return *(node_parity_control.begin());
-  return 0u;
+  return Node::Id_Type(0ull);
 }
 
-pair< Uint32_Index, Uint32_Index > Make_Area_Statement::create_area_blocks
+pair< Node::Id_Type, Uint32_Index > Make_Area_Statement::create_area_blocks
     (map< Uint31_Index, vector< Area_Block > >& areas,
      uint32 id, const Set& pivot)
 {
@@ -295,7 +295,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
     
     return;
   }
-  pair< uint32, Uint32_Index > pivot_pair(detect_pivot(mit->second));
+  pair< uint32, Uint64 > pivot_pair(detect_pivot(mit->second));
   int pivot_type(pivot_pair.first);
   uint32 pivot_id(pivot_pair.second.val());
   
@@ -360,7 +360,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   
   // check node parity
   Node::Id_Type odd_id(check_node_parity(mit->second));
-  if (!(odd_id == Node::Id_Type(0u)))
+  if (!(odd_id == Node::Id_Type(0ull)))
   {
     ostringstream temp;
     temp<<"make-area: Node "<<odd_id.val()
@@ -372,7 +372,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   map< Uint31_Index, vector< Area_Block > > area_blocks;
   pair< Node::Id_Type, Way::Id_Type > odd_pair
     (create_area_blocks(area_blocks, pivot_id, mit->second));
-  if (!(odd_pair.first == Node::Id_Type(0u)))
+  if (!(odd_pair.first == Node::Id_Type(0ull)))
   {
     ostringstream temp;
     temp<<"make-area: Node "<<odd_pair.first.val()
@@ -381,7 +381,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
     runtime_remark(temp.str());
   }
   
-  if (!(odd_id == Node::Id_Type(0u)) || !(odd_pair.first == Node::Id_Type(0u)))
+  if (!(odd_id == Node::Id_Type(0ull)) || !(odd_pair.first == Node::Id_Type(0ull)))
   {
     nodes.clear();
     ways.clear();

@@ -354,7 +354,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 	  else if (nit->type == Relation_Entry::WAY)
 	  {
 	    const pair< Uint31_Index, const Way_Skeleton* >* second_nd =
-	        binary_search_for_pair_id(way_members_by_id, nit->ref);
+	        binary_search_for_pair_id(way_members_by_id, nit->ref32());
 	    if (!second_nd)
 	      continue;
 	    if (matches_bbox(*bbox, *second_nd->second, way_nds_by_id))

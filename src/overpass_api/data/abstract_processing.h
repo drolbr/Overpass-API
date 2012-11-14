@@ -101,7 +101,7 @@ class Id_Predicate
 //-----------------------------------------------------------------------------
 
 inline bool has_a_child_with_id
-    (const Relation_Skeleton& relation, const vector< Uint32_Index >& ids, uint32 type)
+    (const Relation_Skeleton& relation, const vector< Uint64 >& ids, uint32 type)
 {
   for (vector< Relation_Entry >::const_iterator it3(relation.members.begin());
       it3 != relation.members.end(); ++it3)
@@ -128,7 +128,7 @@ inline bool has_a_child_with_id
 class Get_Parent_Rels_Predicate
 {
 public:
-  Get_Parent_Rels_Predicate(const vector< Uint32_Index >& ids_, uint32 child_type_)
+  Get_Parent_Rels_Predicate(const vector< Uint64 >& ids_, uint32 child_type_)
     : ids(ids_), child_type(child_type_) {}
   bool match(const Relation_Skeleton& obj) const
   {
@@ -136,7 +136,7 @@ public:
   }
   
 private:
-  const vector< Uint32_Index >& ids;
+  const vector< Uint64 >& ids;
   uint32 child_type;
 };
 

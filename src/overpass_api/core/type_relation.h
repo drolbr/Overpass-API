@@ -31,9 +31,11 @@ using namespace std;
 
 struct Relation_Entry
 {
-  Relation_Entry() : ref(0u), type(0), role(0) {}
+  typedef Uint64 Ref_Type;
   
-  Uint32_Index ref;
+  Relation_Entry() : ref(0ull), type(0), role(0) {}
+  
+  Uint64 ref;
   uint32 type;
   uint32 role;
   const static uint32 NODE = 1;
@@ -44,6 +46,8 @@ struct Relation_Entry
   {
     return (a.ref == this->ref && a.type == this->type && a.role == this->role);
   }
+  
+  Uint32_Index ref32() const { return Uint32_Index(ref.val()); }
 };
 
 
@@ -103,14 +107,14 @@ struct Relation_Skeleton
     way_idxs.resize(*((uint32*)data + 3), 0u);
     for (uint i(0); i < *((uint32*)data + 1); ++i)
     {
-      members[i].ref = *((uint32*)data + 4 + 2*i);
-      members[i].role = *((uint32*)data + 5 + 2*i) & 0xffffff;
-      members[i].type = *((uint8*)data + 23 + 8*i);
+      members[i].ref = *(uint64*)((uint32*)data + 4 + 3*i);
+      members[i].role = *((uint32*)data + 6 + 3*i) & 0xffffff;
+      members[i].type = *((uint8*)data + 27 + 12*i);
     }
-    uint32* start_ptr = (uint32*)data + 4 + 2*members.size();
+    uint32* start_ptr = (uint32*)data + 4 + 3*members.size();
     for (uint i = 0; i < node_idxs.size(); ++i)
       node_idxs[i] = *(start_ptr + i);
-    start_ptr = (uint32*)data + 4 + 2*members.size() + node_idxs.size();
+    start_ptr = (uint32*)data + 4 + 3*members.size() + node_idxs.size();
     for (uint i = 0; i < way_idxs.size(); ++i)
       way_idxs[i] = *(start_ptr + i);
   }
@@ -125,12 +129,12 @@ struct Relation_Skeleton
   
   uint32 size_of() const
   {
-    return 16 + 8*members.size() + 4*node_idxs.size() + 4*way_idxs.size();
+    return 16 + 12*members.size() + 4*node_idxs.size() + 4*way_idxs.size();
   }
   
   static uint32 size_of(void* data)
   {
-    return (16 + 8 * *((uint32*)data + 1) + 4* *((uint32*)data + 2) + 4* *((uint32*)data + 3));
+    return (16 + 12 * *((uint32*)data + 1) + 4* *((uint32*)data + 2) + 4* *((uint32*)data + 3));
   }
   
   void to_data(void* data) const
@@ -141,14 +145,14 @@ struct Relation_Skeleton
     *((uint32*)data + 3) = way_idxs.size();
     for (uint i = 0; i < members.size(); ++i)
     {
-      *((uint32*)data + 4 + 2*i) = members[i].ref.val();
-      *((uint32*)data + 5 + 2*i) = members[i].role & 0xffffff;
-      *((uint8*)data + 23 + 8*i) = members[i].type;
+      *(uint64*)((uint32*)data + 4 + 3*i) = members[i].ref.val();
+      *((uint32*)data + 6 + 3*i) = members[i].role & 0xffffff;
+      *((uint8*)data + 27 + 12*i) = members[i].type;
     }
-    Uint31_Index* start_ptr = (Uint31_Index*)data + 4 + 2*members.size();
+    Uint31_Index* start_ptr = (Uint31_Index*)data + 4 + 3*members.size();
     for (uint i = 0; i < node_idxs.size(); ++i)
       *(start_ptr + i) = node_idxs[i];
-    start_ptr = (Uint31_Index*)data + 4 + 2*members.size() + node_idxs.size();
+    start_ptr = (Uint31_Index*)data + 4 + 3*members.size() + node_idxs.size();
     for (uint i = 0; i < way_idxs.size(); ++i)
       *(start_ptr + i) = way_idxs[i];
   }

@@ -19,6 +19,7 @@
 #include "node_updater.h"
 #include "osm_updater.h"
 #include "relation_updater.h"
+#include "tags_updater.h"
 #include "way_updater.h"
 #include "../../expat/expat_justparse_interface.h"
 #include "../../template_db/dispatcher.h"
@@ -95,11 +96,11 @@ namespace
   {
     if (current_way.id.val() > 0)
     {
-      unsigned int ref(0);
+      Uint64 ref;
       for (unsigned int i(0); attr[i]; i += 2)
       {
 	if (!strcmp(attr[i], "ref"))
-	  ref = atoi(attr[i+1]);
+	  ref = atoll(attr[i+1]);
       }
       current_way.nds.push_back(ref);
     }
@@ -110,12 +111,12 @@ namespace
   {
     if (current_relation.id.val() > 0)
     {
-      unsigned int ref(0);
+      Uint64 ref;
       string type, role;
       for (unsigned int i(0); attr[i]; i += 2)
       {
 	if (!strcmp(attr[i], "ref"))
-	  ref = atoi(attr[i+1]);
+	  ref = atoll(attr[i+1]);
 	if (!strcmp(attr[i], "type"))
 	  type = attr[i+1];
 	if (!strcmp(attr[i], "role"))
@@ -142,7 +143,7 @@ namespace
     if (meta)
       *meta = OSM_Element_Metadata();
     
-    unsigned int id(0);
+    Node::Id_Type id;
     double lat(100.0), lon(200.0);
     for (unsigned int i(0); attr[i]; i += 2)
     {
@@ -188,7 +189,7 @@ namespace
       callback->parser_started();
       osm_element_count = 0;
     }
-    current_node.id = 0u;
+    current_node.id = Node::Id_Type();
   }
   
   
@@ -208,11 +209,11 @@ namespace
     if (meta)
       *meta = OSM_Element_Metadata();
     
-    unsigned int id(0);
+    Way::Id_Type id;
     for (unsigned int i(0); attr[i]; i += 2)
     {
       if (!strcmp(attr[i], "id"))
-	id = atoi(attr[i+1]);
+	id = atoll(attr[i+1]);
       if (meta && (!strcmp(attr[i], "version")))
 	meta->version = atoi(attr[i+1]);
       if (meta && (!strcmp(attr[i], "timestamp")))
@@ -232,7 +233,7 @@ namespace
       if (meta && (!strcmp(attr[i], "uid")))
 	meta->user_id = atoi(attr[i+1]);
     }
-    current_way = Way(id);
+    current_way = Way(id.val());
   }
   
 
@@ -297,11 +298,11 @@ namespace
     if (meta)
       *meta = OSM_Element_Metadata();
     
-    unsigned int id(0);
+    Relation::Id_Type id;
     for (unsigned int i(0); attr[i]; i += 2)
     {
       if (!strcmp(attr[i], "id"))
-	id = atoi(attr[i+1]);
+	id = atoll(attr[i+1]);
       if (meta && (!strcmp(attr[i], "version")))
 	meta->version = atoi(attr[i+1]);
       if (meta && (!strcmp(attr[i], "timestamp")))
@@ -321,7 +322,7 @@ namespace
       if (meta && (!strcmp(attr[i], "uid")))
 	meta->user_id = atoi(attr[i+1]);
     }
-    current_relation = Relation(id);
+    current_relation = Relation(id.val());
   }
 }
 
@@ -452,7 +453,7 @@ void collect_kept_members(Transaction& transaction,
   map< Uint31_Index, vector< Way_Skeleton > > ways =
     relation_way_members(0, rman, relations, 0, &way_ids, true);
   
-  map< uint32, vector< Node::Id_Type > > ways_by_idx;
+  map< uint32, vector< Way::Id_Type > > ways_by_idx;
   set< Uint31_Index > meta_idx_set;
   for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator it = ways.begin();
        it != ways.end(); ++it)
@@ -534,9 +535,9 @@ void collect_kept_members(Transaction& transaction,
   }
   
   tag_range_set = make_range_set(collect_coarse(nodes_by_idx));  
-  Block_Backend< Tag_Index_Local, Uint32_Index > nodes_db
+  Block_Backend< Tag_Index_Local, Node::Id_Type > nodes_db
       (transaction.data_index(osm_base_settings().NODE_TAGS_LOCAL));
-  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
+  for (Block_Backend< Tag_Index_Local, Node::Id_Type >::Range_Iterator
       it(nodes_db.range_begin
          (Default_Range_Iterator< Tag_Index_Local >(tag_range_set.begin()),
           Default_Range_Iterator< Tag_Index_Local >(tag_range_set.end())));
@@ -667,7 +668,7 @@ vector< Id_Type > ids_from_relations(const Update_Relation_Logger& update_relati
 	 it2 != it->second.first.members.end(); ++it2)
     {
       if (it2->type == type)
-        node_ids.push_back(it2->ref);
+        node_ids.push_back(Id_Type(it2->ref.val()));
     }
   }
   for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator
@@ -677,7 +678,7 @@ vector< Id_Type > ids_from_relations(const Update_Relation_Logger& update_relati
 	 it2 != it->second.first.members.end(); ++it2)
     {
       if (it2->type == type)
-        node_ids.push_back(it2->ref);
+        node_ids.push_back(Id_Type(it2->ref.val()));
     }
   }
   for (map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::const_iterator
@@ -687,7 +688,7 @@ vector< Id_Type > ids_from_relations(const Update_Relation_Logger& update_relati
 	 it2 != it->second.first.members.end(); ++it2)
     {
       if (it2->type == type)
-        node_ids.push_back(it2->ref);
+        node_ids.push_back(Id_Type(it2->ref.val()));
     }
   }
   
@@ -863,7 +864,7 @@ Bbox calc_bbox(const Relation& relation, Diff_State diff_state,
     else if (it->type == Relation_Entry::WAY)
     {
       const Way* way = (diff_state == erase ?
-          update_way_logger.get_erased(it->ref) : update_way_logger.get_inserted(it->ref));
+          update_way_logger.get_erased(it->ref32()) : update_way_logger.get_inserted(it->ref32()));
       if (way)
       {
         for (vector< Node::Id_Type >::const_iterator it = way->nds.begin(); it != way->nds.end(); ++it)
@@ -906,7 +907,7 @@ Bbox calc_bbox(const Relation& relation, Diff_State diff_state,
     else if (it->type == Relation_Entry::WAY)
     {
       const Way* way = (diff_state == erase ?
-          update_way_logger.get_erased(it->ref) : update_way_logger.get_inserted(it->ref));
+          update_way_logger.get_erased(it->ref32()) : update_way_logger.get_inserted(it->ref32()));
       if (way)
       {
         for (vector< Node::Id_Type >::const_iterator it = way->nds.begin(); it != way->nds.end(); ++it)
@@ -1056,8 +1057,8 @@ int detect_changes(const Relation& old_relation, const Relation& new_relation,
       }
       else if (old_it->type == Relation_Entry::WAY)
       {
-        const Way* old_way = update_way_logger.get_erased(old_it->ref);
-        const Way* new_way = update_way_logger.get_inserted(old_it->ref);
+        const Way* old_way = update_way_logger.get_erased(old_it->ref32());
+        const Way* new_way = update_way_logger.get_inserted(old_it->ref32());
         if (!old_way || !new_way)
 	  changes |= GEOMETRY | MEMBER_PROPERTIES;
         else

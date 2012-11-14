@@ -52,7 +52,7 @@ class Make_Area_Statement : public Statement
   private:
     string input, output, pivot;
     
-    static pair< uint32, Uint32_Index > detect_pivot(const Set& pivot);
+    static pair< uint32, Uint64 > detect_pivot(const Set& pivot);
     static Node::Id_Type check_node_parity(const Set& pivot);
     static pair< Node::Id_Type, Way::Id_Type > create_area_blocks
         (map< Uint31_Index, vector< Area_Block > >& areas,

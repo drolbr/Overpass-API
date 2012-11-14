@@ -96,8 +96,18 @@ class Query_Statement : public Statement
 
     template< class Id_Type >
     void progress_1(vector< Id_Type >& ids,
-				 bool& invert_ids, Answer_State& answer_state, Set& into,
+				 bool& invert_ids, Answer_State& answer_state,
 				 bool check_keys_late, File_Properties& file_prop, Resource_Manager& rman);
+
+    template< class Id_Type >
+    void collect_nodes(vector< Id_Type >& ids,
+				 bool& invert_ids, Answer_State& answer_state, Set& into,
+				 Resource_Manager& rman);
+
+    template< class Id_Type >
+    void collect_elems(vector< Id_Type >& ids,
+				 bool& invert_ids, Answer_State& answer_state, Set& into,
+				 Resource_Manager& rman);
 };
 
 class Has_Kv_Statement : public Statement

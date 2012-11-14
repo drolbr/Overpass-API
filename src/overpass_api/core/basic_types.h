@@ -34,6 +34,7 @@ typedef unsigned long long uint64;
 
 struct Uint32_Index
 {
+  Uint32_Index() : value(0u) {}
   Uint32_Index(uint32 i) : value(i) {}
   Uint32_Index(void* data) : value(*(uint32*)data) {}
   
@@ -107,6 +108,55 @@ struct Uint31_Index : Uint32_Index
     }
     return (this->value < index.value);
   }
+};
+
+struct Uint64
+{
+  Uint64() : value(0ull) {}
+  Uint64(uint64 i) : value(i) {}
+  Uint64(void* data) : value(*(uint64*)data) {}
+  
+  uint32 size_of() const { return 8; }
+  static uint32 max_size_of() { return 8; }
+  static uint32 size_of(void* data) { return 8; }
+  
+  void to_data(void* data) const
+  {
+    *(uint64*)data = value;
+  }
+  
+  bool operator<(const Uint64& index) const
+  {
+    return this->value < index.value;
+  }
+  
+  bool operator==(const Uint64& index) const
+  {
+    return this->value == index.value;
+  }
+  
+  Uint64 operator++()
+  {
+    ++value;
+    return this;
+  }
+  
+  Uint64 operator+=(Uint64 offset)
+  {
+    value += offset.val();
+    return this;
+  }
+  
+  Uint64 operator+(Uint64 offset) const
+  {
+    Uint64 temp(*this);
+    return (temp += offset);
+  }
+  
+  uint64 val() const { return value; }
+  
+  protected:
+    uint64 value;
 };
 
 #endif

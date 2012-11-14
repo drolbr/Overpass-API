@@ -27,6 +27,8 @@ class Item_Constraint : public Query_Constraint
 
     bool delivers_data() { return true; }
     
+    bool collect_nodes(Resource_Manager& rman, Set& into,
+		 const vector< Uint64 >& ids, bool invert_ids);
     bool collect(Resource_Manager& rman, Set& into, int type,
 		 const vector< Uint32_Index >& ids, bool invert_ids);
     void filter(Resource_Manager& rman, Set& into);
@@ -72,12 +74,19 @@ void collect_elements(const map< TIndex, vector< TObject > >& from,
   }
 }
 
+
+bool Item_Constraint::collect_nodes(Resource_Manager& rman, Set& into,
+				    const vector< Uint64 >& ids, bool invert_ids)
+{
+  collect_elements(rman.sets()[item->get_result_name()].nodes, into.nodes,
+		   ids, invert_ids);
+  return true;
+}
+
+
 bool Item_Constraint::collect(Resource_Manager& rman, Set& into,
 			      int type, const vector< Uint32_Index >& ids, bool invert_ids)
 {
-  if (type == QUERY_NODE)
-    collect_elements(rman.sets()[item->get_result_name()].nodes, into.nodes,
-		     ids, invert_ids);
   if (type == QUERY_WAY)
     collect_elements(rman.sets()[item->get_result_name()].ways, into.ways,
 		     ids, invert_ids);
@@ -89,6 +98,7 @@ bool Item_Constraint::collect(Resource_Manager& rman, Set& into,
 		     ids, invert_ids);
   return true;
 }
+
 
 template< typename TIndex, typename TObject >
 void item_filter_map

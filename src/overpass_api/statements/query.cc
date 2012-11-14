@@ -152,7 +152,7 @@ vector< Id_Type > Query_Statement::collect_ids
   if (key_values.empty() && keys.empty() && key_regexes.empty())
     return vector< Id_Type >();
  
-  Block_Backend< Tag_Index_Global, Uint32_Index > tags_db
+  Block_Backend< Tag_Index_Global, Id_Type > tags_db
       (rman.get_transaction()->data_index(&file_prop));
   
   // Handle simple Key-Value pairs
@@ -162,7 +162,7 @@ vector< Id_Type > Query_Statement::collect_ids
   if (kvit != key_values.end())
   {
     set< Tag_Index_Global > tag_req = get_kv_req(kvit->first, kvit->second);
-    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Discrete_Iterator
+    for (typename Block_Backend< Tag_Index_Global, Id_Type >::Discrete_Iterator
         it2(tags_db.discrete_begin(tag_req.begin(), tag_req.end()));
         !(it2 == tags_db.discrete_end()); ++it2)
       new_ids.push_back(it2.object().val());
@@ -196,7 +196,7 @@ vector< Id_Type > Query_Statement::collect_ids
     if (key_values.empty() && kit != keys.end())
     {
       set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
-      for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
+      for (typename Block_Backend< Tag_Index_Global, Id_Type >::Range_Iterator
           it2(tags_db.range_begin
             (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
 	   Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
@@ -233,7 +233,7 @@ vector< Id_Type > Query_Statement::collect_ids
     if (key_values.empty() && (keys.empty() || check_keys_late) && krit != key_regexes.end())
     {
       set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
-      for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
+      for (typename Block_Backend< Tag_Index_Global, Id_Type >::Range_Iterator
           it2(tags_db.range_begin
             (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
 	     Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
@@ -281,7 +281,7 @@ vector< Id_Type > Query_Statement::collect_non_ids
   if (key_nvalues.empty() && key_nregexes.empty())
     return vector< Id_Type >();
  
-  Block_Backend< Tag_Index_Global, Uint32_Index > tags_db
+  Block_Backend< Tag_Index_Global, Id_Type > tags_db
       (rman.get_transaction()->data_index(&file_prop));
   
   vector< Id_Type > new_ids;
@@ -291,7 +291,7 @@ vector< Id_Type > Query_Statement::collect_non_ids
       knvit != key_nvalues.end(); ++knvit)
   {
     set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knvit->first);
-    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
+    for (typename Block_Backend< Tag_Index_Global, Id_Type >::Range_Iterator
 	it2(tags_db.range_begin
 	(Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
 	 Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
@@ -309,7 +309,7 @@ vector< Id_Type > Query_Statement::collect_non_ids
       knrit != key_nregexes.end(); ++knrit)
   {
     set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knrit->first);
-    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Range_Iterator
+    for (typename Block_Backend< Tag_Index_Global, Id_Type >::Range_Iterator
 	it2(tags_db.range_begin
 	(Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
 	 Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
@@ -415,8 +415,8 @@ void clear_empty_indices
 template< typename Id_Type >
 void filter_ids_by_tags
   (const map< string, vector< Regular_Expression* > >& keys,
-   const Block_Backend< Tag_Index_Local, Uint32_Index >& items_db,
-   Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator& tag_it,
+   const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
+   typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
    uint32 coarse_index,
    vector< Id_Type >& new_ids)
 {
@@ -489,8 +489,8 @@ template< typename Id_Type >
 void filter_ids_by_tags
   (map< uint32, vector< Id_Type > >& ids_by_coarse,
    const map< string, vector< Regular_Expression* > >& keys,
-   const Block_Backend< Tag_Index_Local, Uint32_Index >& items_db,
-   Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator& tag_it,
+   const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
+   typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
    uint32 coarse_index)
 {
   vector< Id_Type > new_ids = ids_by_coarse[coarse_index & 0x7fffff00];
@@ -533,9 +533,9 @@ void Query_Statement::filter_by_tags
   // iterate over the result
   map< TIndex, vector< TObject > > result;
   uint coarse_count = 0;
-  Block_Backend< Tag_Index_Local, Uint32_Index > items_db
+  Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db
       (transaction.data_index(&file_prop));
-  Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
+  typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
     tag_it(items_db.range_begin
     (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
      Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
@@ -574,7 +574,7 @@ void Query_Statement::filter_by_tags
 
 template< class Id_Type >
 void Query_Statement::progress_1(vector< Id_Type >& ids,
-				 bool& invert_ids, Answer_State& answer_state, Set& into,
+				 bool& invert_ids, Answer_State& answer_state,
 				 bool check_keys_late, File_Properties& file_prop, Resource_Manager& rman)
 {
   if ((!keys.empty() && !check_keys_late)
@@ -584,7 +584,7 @@ void Query_Statement::progress_1(vector< Id_Type >& ids,
     if (!key_nvalues.empty() || !key_nregexes.empty())
     {
       vector< Id_Type > non_ids = collect_non_ids< Id_Type >(file_prop, rman);
-      vector< Id_Type > diff_ids(ids.size(), Id_Type(0u));
+      vector< Id_Type > diff_ids(ids.size(), Id_Type());
       diff_ids.erase(set_difference(ids.begin(), ids.end(), non_ids.begin(), non_ids.end(),
 		     diff_ids.begin()), diff_ids.end());
       ids.swap(diff_ids);
@@ -597,7 +597,28 @@ void Query_Statement::progress_1(vector< Id_Type >& ids,
     invert_ids = true;
     collect_non_ids< Id_Type >(file_prop, rman).swap(ids);
   }
-    
+}
+
+
+template< class Id_Type >
+void Query_Statement::collect_nodes(vector< Id_Type >& ids,
+				 bool& invert_ids, Answer_State& answer_state, Set& into,
+				 Resource_Manager& rman)
+{
+  for (vector< Query_Constraint* >::iterator it = constraints.begin();
+      it != constraints.end() && answer_state < data_collected; ++it)
+  {
+    if ((*it)->collect_nodes(rman, into, ids, invert_ids))
+      answer_state = data_collected;
+  }
+}
+
+
+template< class Id_Type >
+void Query_Statement::collect_elems(vector< Id_Type >& ids,
+				 bool& invert_ids, Answer_State& answer_state, Set& into,
+				 Resource_Manager& rman)
+{
   for (vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end() && answer_state < data_collected; ++it)
   {
@@ -626,18 +647,30 @@ void Query_Statement::execute(Resource_Manager& rman)
     bool invert_ids = false;
 
     if (type == QUERY_NODE)
-      progress_1(node_ids, invert_ids, answer_state, into,
+    {
+      progress_1(node_ids, invert_ids, answer_state,
  		 check_keys_late, *osm_base_settings().NODE_TAGS_GLOBAL, rman);
+      collect_nodes(node_ids, invert_ids, answer_state, into, rman);
+    }
     else if (type == QUERY_WAY)
-      progress_1(ids, invert_ids, answer_state, into,
+    {
+      progress_1(ids, invert_ids, answer_state,
 		 check_keys_late, *osm_base_settings().WAY_TAGS_GLOBAL, rman);
+      collect_elems(ids, invert_ids, answer_state, into, rman);
+    }
     else if (type == QUERY_RELATION)
-      progress_1(ids, invert_ids, answer_state, into,
+    {
+      progress_1(ids, invert_ids, answer_state,
 		 check_keys_late, *osm_base_settings().RELATION_TAGS_GLOBAL, rman);
+      collect_elems(ids, invert_ids, answer_state, into, rman);
+    }
     else if (type == QUERY_AREA)
-      progress_1(ids, invert_ids, answer_state, into,
+    {
+      progress_1(ids, invert_ids, answer_state,
 		 check_keys_late, *area_settings().AREA_TAGS_GLOBAL, rman);
-
+      collect_elems(ids, invert_ids, answer_state, into, rman);
+    }
+    
     set_progress(2);
     rman.health_check(*this);
 

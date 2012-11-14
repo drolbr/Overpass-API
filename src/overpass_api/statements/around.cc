@@ -506,7 +506,7 @@ struct Relation_Member_Collection
     sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_way_id);
   }
   
-  const pair< Uint32_Index, const Node_Skeleton* >* get_node_by_id(Uint32_Index id) const
+  const pair< Uint32_Index, const Node_Skeleton* >* get_node_by_id(Uint64 id) const
   {
     const pair< Uint32_Index, const Node_Skeleton* >* node =
         binary_search_for_pair_id(node_members_by_id, id);
@@ -611,7 +611,7 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
 	  else if (nit->type == Relation_Entry::WAY)
 	  {
 	    const pair< Uint31_Index, const Way_Skeleton* >* second_nd =
-	        relation_members.get_way_by_id(nit->ref);
+	        relation_members.get_way_by_id(nit->ref32());
 	    if (!second_nd)
 	      continue;
 	    if (around->is_inside(*second_nd->second, way_members.node_members_by_id))
@@ -911,7 +911,7 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
 	  else if (nit->type == Relation_Entry::WAY)
 	  {
 	    const pair< Uint31_Index, const Way_Skeleton* >* second_nd =
-	        relation_members.get_way_by_id(nit->ref);
+	        relation_members.get_way_by_id(nit->ref32());
 	    if (!second_nd)
 	      continue;
 	    

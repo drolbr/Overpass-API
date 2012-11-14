@@ -86,7 +86,7 @@ void start(const char *el, const char **attr)
       for (unsigned int i(0); attr[i]; i += 2)
       {
 	if (!strcmp(attr[i], "ref"))
-	  ref = atoi(attr[i+1]);
+	  ref = atoll(attr[i+1]);
       }
       current_way.nds.push_back(ref);
     }
@@ -100,7 +100,7 @@ void start(const char *el, const char **attr)
       for (unsigned int i(0); attr[i]; i += 2)
       {
 	if (!strcmp(attr[i], "ref"))
-	  ref = atoi(attr[i+1]);
+	  ref = atoll(attr[i+1]);
 	if (!strcmp(attr[i], "type"))
 	  type = attr[i+1];
 	if (!strcmp(attr[i], "role"))
@@ -130,7 +130,7 @@ void start(const char *el, const char **attr)
     for (unsigned int i(0); attr[i]; i += 2)
     {
       if (!strcmp(attr[i], "id"))
-	id = atoi(attr[i+1]);
+	id = atoll(attr[i+1]);
       if (!strcmp(attr[i], "lat"))
 	lat = atof(attr[i+1]);
       if (!strcmp(attr[i], "lon"))
@@ -153,7 +153,7 @@ void start(const char *el, const char **attr)
     for (unsigned int i(0); attr[i]; i += 2)
     {
       if (!strcmp(attr[i], "id"))
-	id = atoi(attr[i+1]);
+	id = atoll(attr[i+1]);
     }
     current_way = Way(id);
   }
@@ -180,7 +180,7 @@ void start(const char *el, const char **attr)
     for (unsigned int i(0); attr[i]; i += 2)
     {
       if (!strcmp(attr[i], "id"))
-	id = atoi(attr[i+1]);
+	id = atoll(attr[i+1]);
     }
     current_relation = Relation(id);
     
@@ -201,7 +201,7 @@ void end(const char *el)
       callback->parser_started();
       osm_element_count = 0;
     }
-    current_node.id = 0u;
+    current_node.id = Node::Id_Type();
   }
   else if (!strcmp(el, "way"))
   {

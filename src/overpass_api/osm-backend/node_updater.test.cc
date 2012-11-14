@@ -74,7 +74,7 @@ void start(const char *el, const char **attr)
     for (unsigned int i(0); attr[i]; i += 2)
     {
       if (!strcmp(attr[i], "id"))
-	id = atoi(attr[i+1]);
+	id = atoll(attr[i+1]);
       if (!strcmp(attr[i], "lat"))
 	lat = atof(attr[i+1]);
       if (!strcmp(attr[i], "lon"))
@@ -101,7 +101,7 @@ void end(const char *el)
       osm_element_count = 0;
     }
     
-    current_node.id = 0u;
+    current_node.id = Node::Id_Type();
   }
   ++osm_element_count;
 }

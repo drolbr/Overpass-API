@@ -446,7 +446,7 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Way_Skeleton& skel,
   
   if ((mode & PRINT_NDS) != 0 && !skel.nds.empty())
   {
-    vector< Uint32_Index >::const_iterator it = skel.nds.begin();
+    vector< Node::Id_Type >::const_iterator it = skel.nds.begin();
     cout<<",\n  \"nodes\": ["
            "\n    "<<it->val();
     for (++it; it != skel.nds.end(); ++it)
@@ -799,7 +799,7 @@ string antiprocess_coords(const string& raw_template)
 string process_template(const string& raw_template, uint32 id, string type,
 			double south, double west, double north, double east, uint zoom,
 			const vector< pair< string, string > >* tags,
-			const vector< Uint32_Index >* nds,
+			const vector< Node::Id_Type >* nds,
 			const vector< Relation_Entry >* members,
 			const map< uint32, string >* roles)
 {
@@ -857,7 +857,7 @@ string process_template(const string& raw_template, uint32 id, string type,
     {
       if (nds != 0 && !nds->empty())
       {
-	vector< Uint32_Index >::const_iterator it = nds->begin();
+	vector< Node::Id_Type >::const_iterator it = nds->begin();
 	
 	string first = extract_first(raw_template.substr(new_pos + 10, old_pos - new_pos - 12));
 	if (first != "" && it != nds->end())

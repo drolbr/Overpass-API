@@ -297,7 +297,7 @@ vector< Uint31_Index > calc_segment_idxs(const vector< uint32 >& nd_idxs)
 }
 
 void filter_affected_ways(Transaction& transaction, 
-			  vector< pair< Node::Id_Type, bool > >& ids_to_modify,
+			  vector< pair< Way::Id_Type, bool > >& ids_to_modify,
 			  vector< Way >& ways_to_insert,
 			  const vector< Way >& maybe_affected_ways,
 			  bool keep_all)
@@ -344,7 +344,7 @@ void Way_Updater::find_affected_ways
     (const vector< pair< Node::Id_Type, Uint32_Index > >& moved_nodes,
        Update_Way_Logger* update_logger)
 {
-  static Pair_Comparator_By_Id< Way::Id_Type, Uint32_Index > pair_comparator_by_id;
+  static Pair_Comparator_By_Id< Node::Id_Type, Uint32_Index > pair_comparator_by_id;
 
   vector< Way > maybe_affected_ways;
   
@@ -532,9 +532,9 @@ void Way_Updater::merge_files(const vector< string >& froms, string into)
   Nonsynced_Transaction into_transaction(true, false, db_dir, into);
   ::merge_files< Uint31_Index, Way_Skeleton >
       (from_transactions, into_transaction, *osm_base_settings().WAYS);
-  ::merge_files< Tag_Index_Local, Uint32_Index >
+  ::merge_files< Tag_Index_Local, Way::Id_Type >
       (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_LOCAL);
-  ::merge_files< Tag_Index_Global, Uint32_Index >
+  ::merge_files< Tag_Index_Global, Way::Id_Type >
       (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
   if (meta)
   {

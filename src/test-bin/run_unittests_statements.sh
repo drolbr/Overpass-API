@@ -32,7 +32,7 @@ fi
 DATA_SIZE="$1"
 BASEDIR="$(cd `dirname $0` && pwd)/.."
 NOTIMES="$2"
-NODE_OFFSET=1000000
+NODE_OFFSET=10000000000
 
 evaluate_test()
 {
@@ -161,8 +161,8 @@ $BASEDIR/test-bin/generate_test_file $DATA_SIZE print_4 $NODE_OFFSET | grep "^  
 touch expected/print_5/stderr.log
 
 date +%T
-perform_test_loop print 4 "$DATA_SIZE ../../input/update_database/"
-print_test_5 print 5 "$DATA_SIZE ../../input/update_database/"
+perform_test_loop print 4 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
+print_test_5 print 5 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 # Test the recurse statement
 prepare_test_loop recurse 22 $DATA_SIZE

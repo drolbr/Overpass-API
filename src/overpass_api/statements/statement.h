@@ -35,6 +35,8 @@ class Query_Constraint
   public:
     virtual bool delivers_data() = 0;
     
+    virtual bool collect_nodes(Resource_Manager& rman, Set& into,
+			 const vector< Uint64 >& ids, bool invert_ids) { return false; }
     virtual bool collect(Resource_Manager& rman, Set& into,
 			 int type, const vector< Uint32_Index >& ids, bool invert_ids) { return false; }
 			 
