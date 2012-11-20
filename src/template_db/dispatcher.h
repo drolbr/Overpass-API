@@ -63,7 +63,54 @@ struct Dispatcher_Logger
 };
 
 
-class Blocking_Client_Socket;
+/* Represents the connection to a client that is blocking after it has send a command until
+ * it gets an answer about the command execution state. This class ensures that the software cannot
+ * fail due to a broken pipe. */
+struct Blocking_Client_Socket
+{
+  Blocking_Client_Socket(int socket_descriptor_);
+  uint32 get_command();
+  vector< uint32 > get_arguments(int num_arguments);
+  void clear_state();
+  void send_result(uint32 result);
+  ~Blocking_Client_Socket();
+private:
+  int socket_descriptor;
+  enum { waiting, processing_command, disconnected } state;
+  uint32 last_command;
+};
+
+
+class Connection_Per_Pid_Map
+{
+public:
+  typedef uint pid_t;
+    
+  Blocking_Client_Socket* get(pid_t pid)
+  {
+    map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.find(pid);    
+    if (it != connection_per_pid.end())
+      return it->second;
+    else
+      return 0;
+  }
+  
+  void set(pid_t pid, Blocking_Client_Socket* socket)
+  {
+    map< pid_t, Blocking_Client_Socket* >::iterator it = connection_per_pid.find(pid);
+    if (it != connection_per_pid.end())
+      delete it->second;
+    if (socket != 0)
+      connection_per_pid[pid] = socket;
+    else
+      connection_per_pid.erase(pid);
+  }
+  
+  const map< pid_t, Blocking_Client_Socket* >& base_map() const { return connection_per_pid; }
+  
+private:
+  map< pid_t, Blocking_Client_Socket* > connection_per_pid;
+};
 
 
 struct Reader_Entry
@@ -181,7 +228,7 @@ class Dispatcher
     Dispatcher_Logger* logger;
     int socket_descriptor;
     vector< int > started_connections;
-    map< pid_t, Blocking_Client_Socket* > connection_per_pid;
+    Connection_Per_Pid_Map connection_per_pid;
     set< pid_t > disconnected;
     bool pending_commit;
     

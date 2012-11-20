@@ -98,23 +98,6 @@ struct sockaddr_un
 };
 
 
-/* Represents the connection to a client that is blocking after it has send a command until
- * it gets an answer about the command execution state. This class ensures that the software cannot
- * fail due to a broken pipe. */
-struct Blocking_Client_Socket
-{
-  Blocking_Client_Socket(int socket_descriptor_);
-  uint32 get_command();
-  vector< uint32 > get_arguments(int num_arguments);
-  void clear_state();
-  void send_result(uint32 result);
-  ~Blocking_Client_Socket();
-private:
-  int socket_descriptor;
-  enum { waiting, processing_command, disconnected } state;
-  uint32 last_command;
-};
-
 Blocking_Client_Socket::Blocking_Client_Socket
   (int socket_descriptor_) : socket_descriptor(socket_descriptor_), state(waiting) {}
 
@@ -604,7 +587,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       else
       {
 	if (bytes_read != 0)
-	  connection_per_pid[pid] = new Blocking_Client_Socket(*it);
+	  connection_per_pid.set(pid, new Blocking_Client_Socket(*it));
 	else
 	  close(*it);
 	
@@ -619,8 +602,8 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     
     // poll all open connections round robin
     for (map< pid_t, Blocking_Client_Socket* >::const_iterator
-        it = connection_per_pid.upper_bound(last_pid);
-        it != connection_per_pid.end(); ++it)
+        it = connection_per_pid.base_map().upper_bound(last_pid);
+        it != connection_per_pid.base_map().end(); ++it)
     {
       command = it->second->get_command();
       if (command != 0)
@@ -631,8 +614,8 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     }
     if (command == 0)
     {
-      for (map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.begin();
-          it != connection_per_pid.upper_bound(last_pid); ++it)
+      for (map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.base_map().begin();
+          it != connection_per_pid.base_map().upper_bound(last_pid); ++it)
       {
         command = it->second->get_command();
         if (command != 0)
@@ -679,11 +662,10 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       {
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       
-	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
+	if (connection_per_pid.get(client_pid) != 0)
 	{
-	  connection_per_pid[client_pid]->send_result(command);
-	  delete connection_per_pid[client_pid];
-	  connection_per_pid.erase(client_pid);
+	  connection_per_pid.get(client_pid)->send_result(command);
+	  connection_per_pid.set(client_pid, 0);
 	}
 	
 	break;
@@ -693,66 +675,59 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	output_status();
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
 	
-	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
+	if (connection_per_pid.get(client_pid) != 0)
 	{
-	  connection_per_pid[client_pid]->send_result(command);
-	  delete connection_per_pid[client_pid];
-	  connection_per_pid.erase(client_pid);
+	  connection_per_pid.get(client_pid)->send_result(command);
+	  connection_per_pid.set(client_pid, 0);
 	}
       }
       else if (command == WRITE_START)
       {
 	check_and_purge();
 	write_start(client_pid);
-	connection_per_pid[client_pid]->send_result(command);
+	connection_per_pid.get(client_pid)->send_result(command);
       }
       else if (command == WRITE_ROLLBACK)
       {
 	write_rollback(client_pid);
-	connection_per_pid[client_pid]->send_result(command);
+	connection_per_pid.get(client_pid)->send_result(command);
       }
       else if (command == WRITE_COMMIT)
       {
 	check_and_purge();
 	write_commit(client_pid);
-	connection_per_pid[client_pid]->send_result(command);
+	connection_per_pid.get(client_pid)->send_result(command);
       }
       else if (command == HANGUP)
       {
-	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
-	{
-	  delete connection_per_pid[client_pid];
-	  connection_per_pid.erase(client_pid);
-	}
+	if (connection_per_pid.get(client_pid) != 0)
+	  connection_per_pid.set(client_pid, 0);
       }
       else if (command == READ_ABORTED)
       {
 	read_finished(client_pid);
-	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
-	{
-	  delete connection_per_pid[client_pid];
-	  connection_per_pid.erase(client_pid);
-	}
+	if (connection_per_pid.get(client_pid) != 0)
+	  connection_per_pid.set(client_pid, 0);
       }
       else if (command == REQUEST_READ_AND_IDX)
       {
 	if (processes_reading.size() >= max_num_reading_processes)
 	{
 	  check_and_purge();
-	  connection_per_pid[client_pid]->send_result(0);
+	  connection_per_pid.get(client_pid)->send_result(0);
 	  continue;
 	}
 	
 	if (pending_commit)
 	{
-	  connection_per_pid[client_pid]->send_result(0);
+	  connection_per_pid.get(client_pid)->send_result(0);
 	  continue;
 	}
 	
-	vector< uint32 > arguments = connection_per_pid[client_pid]->get_arguments(3);
+	vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(3);
 	if (arguments.size() < 3)
 	{
-	  connection_per_pid[client_pid]->send_result(0);
+	  connection_per_pid.get(client_pid)->send_result(0);
 	  continue;
 	}
 	
@@ -761,59 +736,57 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	
 	if (max_allowed_space > (total_available_space - total_claimed_space())/2)
 	{
-	  connection_per_pid[client_pid]->send_result(0);
+	  connection_per_pid.get(client_pid)->send_result(0);
 	  continue;
 	}
 	
 	if (max_allowed_time > (total_available_time_units - total_claimed_time_units())/2)
 	{
-	  connection_per_pid[client_pid]->send_result(0);
+	  connection_per_pid.get(client_pid)->send_result(0);
 	  continue;
 	}
 	
 	request_read_and_idx(client_pid, max_allowed_time, max_allowed_space);
-	connection_per_pid[client_pid]->send_result(command);
+	connection_per_pid.get(client_pid)->send_result(command);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == READ_IDX_FINISHED)
       {
 	read_idx_finished(client_pid);
-        if (connection_per_pid.find(client_pid) != connection_per_pid.end())
-	  connection_per_pid[client_pid]->send_result(command);
+        if (connection_per_pid.get(client_pid) != 0)
+	  connection_per_pid.get(client_pid)->send_result(command);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == READ_FINISHED)
       {
 	read_finished(client_pid);	
-	if (connection_per_pid.find(client_pid) != connection_per_pid.end())
+	if (connection_per_pid.get(client_pid) != 0)
 	{
-	  connection_per_pid[client_pid]->send_result(command);
-	  delete connection_per_pid[client_pid];
-	  connection_per_pid.erase(client_pid);
+	  connection_per_pid.get(client_pid)->send_result(command);
+	  connection_per_pid.set(client_pid, 0);
 	}
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == PURGE)
       {
-	vector< uint32 > arguments = connection_per_pid[client_pid]->get_arguments(1);
+	vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(1);
 	if (arguments.size() < 1)
 	  continue;
 	uint32 target_pid = arguments[0];
 
 	read_finished(target_pid);
-        if (connection_per_pid.find(target_pid) != connection_per_pid.end())
+        if (connection_per_pid.get(target_pid) != 0)
         {
-	  connection_per_pid[target_pid]->send_result(READ_FINISHED);
-	  delete connection_per_pid[target_pid];
-          connection_per_pid.erase(target_pid);
+	  connection_per_pid.get(target_pid)->send_result(READ_FINISHED);
+	  connection_per_pid.set(target_pid, 0);
         }
         
-	connection_per_pid[client_pid]->send_result(command);
+	connection_per_pid.get(client_pid)->send_result(command);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == SET_GLOBAL_LIMITS)
       {
-	vector< uint32 > arguments = connection_per_pid[client_pid]->get_arguments(4);
+	vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(4);
 	if (arguments.size() < 4)
 	  continue;
 	
@@ -825,7 +798,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	if (new_total_available_time_units > 0)
 	  total_available_time_units = new_total_available_time_units;
 	
-	connection_per_pid[client_pid]->send_result(command);
+	connection_per_pid.get(client_pid)->send_result(command);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
 // Ping-Feature removed. The concept of unassured messages doesn't fit in the context of strict
@@ -833,7 +806,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 //       else if (command == PING)
 //       {
 // 	prolongate(client_pid);
-// 	connection_per_pid[client_pid]->send_result(0);
+// 	connection_per_pid.get(client_pid)->send_result(0);
 //       }
     }
     catch (File_Error e)
@@ -855,7 +828,7 @@ void Dispatcher::output_status()
   {
     ofstream status((shadow_name + ".status").c_str());
     
-    status<<started_connections.size()<<' '<<connection_per_pid.size()
+    status<<started_connections.size()<<' '<<connection_per_pid.base_map().size()
         <<' '<<total_available_space<<' '<<total_claimed_space()
 	<<' '<<total_available_time_units<<' '<<total_claimed_time_units()<<'\n';
     
@@ -894,6 +867,14 @@ void Dispatcher::output_status()
 	status<<READ_IDX_FINISHED<<' '<<*it
 	  <<' '<<processes_reading[*it].max_space
 	  <<' '<<processes_reading[*it].max_time<<'\n';
+    }
+    
+    for (map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.base_map().begin();
+	 it != connection_per_pid.base_map().end(); ++it)
+    {
+      if (processes_reading_idx.find(it->first) == processes_reading_idx.end()
+	  && collected_pids.find(it->first) == collected_pids.end())
+	status<<"pending\t"<<it->first<<'\n';
     }
   }
   catch (...) {}
