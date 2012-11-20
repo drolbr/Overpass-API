@@ -45,6 +45,7 @@ EXITCODE=$?
 if [[ $EXITCODE -ne 0 ]]; then
 {
   echo "Content-Type: text/plain; charset=utf-8"
+  echo "Status: 400 Bad Request"
   echo
   echo "Error in [$BUF]:"
   cat <$REQUEST_FILE
