@@ -39,7 +39,7 @@ public:
   {
     map< Node::Id_Type, pair< Node, OSM_Element_Metadata* > >::iterator it = insert.find(node.id);
     if (it == insert.end())
-      insert.insert(make_pair(node.id, make_pair< Node, OSM_Element_Metadata* >(node, 0)));
+      insert.insert(make_pair(node.id, make_pair(node, (OSM_Element_Metadata*)0)));
     else
       it->second.first = node;
   }

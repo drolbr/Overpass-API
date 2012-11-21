@@ -74,7 +74,7 @@ void start(const char *el, const char **attr)
 	value = attr[i+1];
     }
     current_tags.insert
-      (make_pair< string, string >(key, value));
+      (make_pair((string)key, (string)value));
   }
   else if (!strcmp(el, "node"))
   {
@@ -91,7 +91,7 @@ void start(const char *el, const char **attr)
     }
     current_elem = id;
     bool inserted(current_data.nodes.insert
-        (make_pair< uint32, Node* >(id, node)).second);
+        (make_pair(id, node)).second);
     if (!inserted)
       delete node;
   }
@@ -106,7 +106,7 @@ void start(const char *el, const char **attr)
     }
     current_elem = id;
     bool inserted(current_data.ways.insert
-        (make_pair< uint32, Way* >(id, way)).second);
+        (make_pair(id, way)).second);
     if (!inserted)
       delete way;
   }
@@ -131,7 +131,7 @@ void start(const char *el, const char **attr)
     }
     current_elem = id;
     bool inserted(current_data.relations.insert
-        (make_pair< uint32, Relation* >(id, rel)).second);
+        (make_pair(id, rel)).second);
     if (!inserted)
       delete rel;
   }

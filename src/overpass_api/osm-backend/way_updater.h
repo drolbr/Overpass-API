@@ -41,7 +41,7 @@ public:
   {
     map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::iterator it = insert.find(way.id);
     if (it == insert.end())
-      insert.insert(make_pair(way.id, make_pair< Way, OSM_Element_Metadata* >(way, 0)));
+      insert.insert(make_pair(way.id, make_pair(way, (OSM_Element_Metadata*)00)));
     else
       it->second.first = way;
     

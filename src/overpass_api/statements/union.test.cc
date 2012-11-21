@@ -29,7 +29,7 @@
 
 using namespace std;
 
-string to_string(uint64 val)
+string to_string_(uint64 val)
 {
   ostringstream buf;
   buf<<val;
@@ -62,7 +62,7 @@ int main(int argc, char* args[])
 	const char* attributes[] = { 0 };
 	Union_Statement stmt(0, convert_c_pairs(attributes));
 
-	string buf = to_string(2 + global_node_offset);
+	string buf = to_string_(2 + global_node_offset);
 	const char* attributes1[] = { "type", "node", "ref", buf.c_str(), 0 };
 	Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
 	stmt.add_statement(&stmt1, "");
@@ -105,12 +105,12 @@ int main(int argc, char* args[])
       const char* attributes[] = { 0 };
       Union_Statement stmt(0, convert_c_pairs(attributes));
       
-      string buf = to_string(2 + global_node_offset);
+      string buf = to_string_(2 + global_node_offset);
       const char* attributes1[] = { "type", "node", "ref", buf.c_str(), 0 };
       Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
       stmt.add_statement(&stmt1, "");
       
-      buf = to_string(1 + global_node_offset);
+      buf = to_string_(1 + global_node_offset);
       const char* attributes2[] = { "type", "node", "ref", buf.c_str(), 0 };
       Id_Query_Statement stmt2(0, convert_c_pairs(attributes2));
       stmt.add_statement(&stmt2, "");
@@ -139,7 +139,7 @@ int main(int argc, char* args[])
       const char* attributes[] = { "into", "A", 0 };
       Union_Statement stmt(0, convert_c_pairs(attributes));
       
-      string buf = to_string(2 + global_node_offset);
+      string buf = to_string_(2 + global_node_offset);
       const char* attributes1[] = { "type", "node", "ref", buf.c_str(), "into", "B", 0 };
       Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
       stmt.add_statement(&stmt1, "");
@@ -190,7 +190,7 @@ int main(int argc, char* args[])
       Item_Statement stmt0(0, convert_c_pairs(attributes0));
       stmt.add_statement(&stmt0, "");
       
-      string buf = to_string(2 + global_node_offset);
+      string buf = to_string_(2 + global_node_offset);
       const char* attributes1[] = { "type", "node", "ref", buf.c_str(), "into", "B", 0 };
       Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
       stmt.add_statement(&stmt1, "");
@@ -232,7 +232,7 @@ int main(int argc, char* args[])
       Item_Statement stmt0(0, convert_c_pairs(attributes0));
       stmt.add_statement(&stmt0, "");
       
-      string buf = to_string(2 + global_node_offset);
+      string buf = to_string_(2 + global_node_offset);
       const char* attributes1[] = { "type", "node", "ref", buf.c_str(), "into", "B", 0 };
       Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
       stmt.add_statement(&stmt1, "");
@@ -274,7 +274,7 @@ int main(int argc, char* args[])
       Item_Statement stmt0(0, convert_c_pairs(attributes0));
       stmt.add_statement(&stmt0, "");
       
-      string buf = to_string(2 + global_node_offset);
+      string buf = to_string_(2 + global_node_offset);
       const char* attributes1[] = { "type", "node", "ref", buf.c_str(), "into", "B", 0 };
       Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
       stmt.add_statement(&stmt1, "");

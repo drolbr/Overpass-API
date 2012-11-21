@@ -41,7 +41,7 @@ public:
   {
     map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator it = insert.find(relation.id);
     if (it == insert.end())
-      insert.insert(make_pair(relation.id, make_pair< Relation, OSM_Element_Metadata* >(relation, 0)));
+      insert.insert(make_pair(relation.id, make_pair(relation, (OSM_Element_Metadata*)0)));
     else
       it->second.first = relation;
     

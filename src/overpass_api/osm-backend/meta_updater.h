@@ -40,7 +40,7 @@ struct Meta_Comparator_By_Id {
   (const pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 >& a,
    const pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 >& b)
    {
-     return (a.first.ref < b.first.ref);
+     return ((a.first.ref) < b.first.ref);
    }
 };
 

@@ -42,7 +42,7 @@ class Comment_Replacer
     void get(char& c);
     
     // The line and the column of the next character to read.
-    pair< uint, uint > line_col() { return make_pair< uint, uint >(line, col); }
+    pair< uint, uint > line_col() { return make_pair(line, col); }
     
   private:
     In& in;
