@@ -327,7 +327,7 @@ void filter_affected_ways(Transaction& transaction,
     uint32 index(Way::calc_index(nd_idxs));
 
     vector< Uint31_Index > segment_idxs;
-    if ((index & 0x80000000) != 0 && (index & 0xfc) != 0)
+    if ((index & 0x80000000) != 0 && ((index & 0x3) == 0))
       segment_idxs = calc_segment_idxs(nd_idxs);
     
     if (wit->index != index || wit->segment_idxs != segment_idxs || keep_all)
@@ -430,7 +430,7 @@ void Way_Updater::compute_indexes(vector< Way* >& ways_ptr)
       nd_idxs.push_back(used_nodes[*nit]);
     
     (*wit)->index = Way::calc_index(nd_idxs);
-    if (((*wit)->index & 0x80000000) != 0 && ((*wit)->index & 0xfc) != 0)
+    if (((*wit)->index & 0x80000000) != 0 && (((*wit)->index & 0x3) == 0))
       (*wit)->segment_idxs = calc_segment_idxs(nd_idxs);
   }
   vector< Way* >::const_iterator wit = ways_ptr.begin();

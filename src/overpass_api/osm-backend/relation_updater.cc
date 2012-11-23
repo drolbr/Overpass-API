@@ -370,7 +370,7 @@ void Relation_Updater::find_affected_relations
     uint32 index = Relation::calc_index(member_idxs);
     vector< Uint31_Index > node_idxs_;
     vector< Uint31_Index > way_idxs_;
-    if ((index & 0x80000000) != 0 && (index & 0xfc) != 0)
+    if ((index & 0x80000000) != 0 && ((index & 0x3) == 0))
     {
       node_idxs_ = calc_node_idxs(node_idxs);
       way_idxs_ = calc_way_idxs(way_idxs);
@@ -447,7 +447,7 @@ void Relation_Updater::compute_indexes(vector< Relation* >& rels_ptr)
       }
     }
     (*rit)->index = Relation::calc_index(member_idxs);
-    if (((*rit)->index & 0x80000000) != 0 && ((*rit)->index & 0xfc) != 0)
+    if (((*rit)->index & 0x80000000) != 0 && (((*rit)->index & 0x3) == 0))
     {
       (*rit)->node_idxs = calc_node_idxs(node_idxs);
       (*rit)->way_idxs = calc_way_idxs(way_idxs);
