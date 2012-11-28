@@ -177,6 +177,7 @@ public:
       meta.changeset = it->changeset;
       meta.user_id = it->user_id;
       meta_to_delete.push_back(make_pair(it->ref, meta));
+      meta_to_delete_sorted = false;
     }
   }
   
@@ -261,8 +262,15 @@ public:
   const Way* get_erased(Way::Id_Type ref) const;
   const Way* get_inserted(Way::Id_Type ref) const;
   
-  const OSM_Element_Metadata* get_erased_meta(Way::Id_Type ref) const
-  { return binary_pair_search(meta_to_delete, ref); }
+  const OSM_Element_Metadata* get_erased_meta(Way::Id_Type ref)
+  {
+    if (!meta_to_delete_sorted)
+    {
+      sort(meta_to_delete.begin(), meta_to_delete.end());
+      meta_to_delete_sorted = true;
+    }
+    return binary_pair_search< Way::Id_Type, OSM_Element_Metadata >(meta_to_delete, ref);    
+  }
   
   ~Update_Way_Logger();
   
@@ -271,6 +279,7 @@ private:
   map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > > keep;
   map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > > erase;
   vector< pair< Way::Id_Type, OSM_Element_Metadata > > meta_to_delete;
+  bool meta_to_delete_sorted;
 };
 
 

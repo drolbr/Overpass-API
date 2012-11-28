@@ -155,6 +155,7 @@ public:
       meta.changeset = it->changeset;
       meta.user_id = it->user_id;
       meta_to_delete.push_back(make_pair(it->ref, meta));
+      meta_to_delete_sorted = false;
     }
   }
   
@@ -236,8 +237,15 @@ public:
   map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > >::iterator erase_end()
   { return erase.end(); }
   
-  const OSM_Element_Metadata* get_erased_meta(Relation::Id_Type ref) const
-  { return binary_pair_search(meta_to_delete, ref); }
+  const OSM_Element_Metadata* get_erased_meta(Relation::Id_Type ref)
+  {
+    if (!meta_to_delete_sorted)
+    {
+      sort(meta_to_delete.begin(), meta_to_delete.end());
+      meta_to_delete_sorted = true;
+    }
+    return binary_pair_search< Relation::Id_Type, OSM_Element_Metadata >(meta_to_delete, ref);    
+  }
 
   ~Update_Relation_Logger();
   
@@ -246,6 +254,7 @@ private:
   map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > > keep;
   map< Relation::Id_Type, pair< Relation, OSM_Element_Metadata* > > erase;
   vector< pair< Relation::Id_Type, OSM_Element_Metadata > > meta_to_delete;
+  bool meta_to_delete_sorted;
 };
 
 

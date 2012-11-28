@@ -276,6 +276,8 @@ struct OSM_Element_Metadata
   uint32 changeset;
   uint32 user_id;
   string user_name;
+  
+  bool operator<(const OSM_Element_Metadata&) const { return false; }
 };
 
 
