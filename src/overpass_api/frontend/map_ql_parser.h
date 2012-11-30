@@ -39,6 +39,9 @@ void parse_and_dump_xml_from_map_ql
 void parse_and_dump_compact_from_map_ql
     (const string& xml_raw, Error_Output* error_output);
 
+void parse_and_dump_bbox_from_map_ql
+    (const string& xml_raw, Error_Output* error_output);
+
 void parse_and_dump_pretty_from_map_ql
     (const string& xml_raw, Error_Output* error_output);
 

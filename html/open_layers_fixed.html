@@ -29,8 +29,6 @@
 
           layerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
           map.addLayer(layerMapnik);
-          layerCycleMap = new OpenLayers.Layer.OSM.CycleMap("CycleMap");
-          map.addLayer(layerCycleMap);
 
           var lonLat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
 

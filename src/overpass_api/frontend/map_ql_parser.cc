@@ -1123,6 +1123,20 @@ void parse_and_dump_compact_from_map_ql
     delete *it;
 }
 
+void parse_and_dump_bbox_from_map_ql
+    (const string& xml_raw, Error_Output* error_output)
+{
+  Statement_Dump::Factory stmt_factory;
+  vector< Statement_Dump* > stmt_seq;
+  generic_parse_and_validate_map_ql< Statement_Dump >(stmt_factory, xml_raw, error_output, stmt_seq);
+  for (vector< Statement_Dump* >::const_iterator it = stmt_seq.begin();
+      it != stmt_seq.end(); ++it)
+    cout<<(*it)->dump_bbox_map_ql()<<'\n';
+  for (vector< Statement_Dump* >::iterator it = stmt_seq.begin();
+      it != stmt_seq.end(); ++it)
+    delete *it;
+}
+
 void parse_and_dump_pretty_from_map_ql
     (const string& xml_raw, Error_Output* error_output)
 {

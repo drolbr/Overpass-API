@@ -78,7 +78,7 @@ class Dispatcher_Stub : public Watchdog_Callback
 };
 
 typedef enum
-    { parser_execute, parser_dump_xml, parser_dump_pretty_map_ql, parser_dump_compact_map_ql }
+    { parser_execute, parser_dump_xml, parser_dump_pretty_map_ql, parser_dump_compact_map_ql, parser_dump_bbox_map_ql }
     Debug_Level;
     
 bool parse_and_validate

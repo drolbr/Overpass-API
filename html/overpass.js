@@ -81,15 +81,10 @@
       var zoom_valid = true;
       var load_counter = 0;      
       
-      function make_features_added_closure() {
+      function make_features_added_closure(layer) {
+	  var layer_ = layer;
           return function(evt) {
-	      setStatusText("");
-              if (zoom_valid)
-              {
-                  --load_counter;
-                  if (load_counter <= 0)
-                      setStatusText("");
-              }
+	      setStatusText("Displaying " + layer_.features.length + " features ...");
           };
       }
 
@@ -141,10 +136,11 @@
                   format: new OpenLayers.Format.OSM()
               }),
               styleMap: styleMap,
-              projection: new OpenLayers.Projection("EPSG:4326")
+              projection: new OpenLayers.Projection("EPSG:4326"),
+              ratio: 1.0
           });
 
-          layer.events.register("featuresadded", layer, make_features_added_closure());
+          layer.events.register("featuresadded", layer, make_features_added_closure(layer));
 
           return layer;
       }

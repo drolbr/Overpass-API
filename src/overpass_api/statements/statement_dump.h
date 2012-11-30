@@ -45,6 +45,7 @@ class Statement_Dump
     string dump_xml() const;
     string dump_pretty_map_ql() const;
     string dump_compact_map_ql() const;
+    string dump_bbox_map_ql() const;
     
     void add_final_text(string text) {}
 

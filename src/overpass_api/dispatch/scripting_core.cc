@@ -429,7 +429,7 @@ bool parse_and_validate
     try
     {
       if (debug_level == parser_dump_xml || debug_level == parser_dump_compact_map_ql
-	  || debug_level == parser_dump_pretty_map_ql)
+	  || debug_level == parser_dump_pretty_map_ql || debug_level == parser_dump_bbox_map_ql)
       {
 	Statement_Dump::Factory stmt_dump_factory;
 	stmt_dump_factory_global = &stmt_dump_factory;
@@ -443,6 +443,8 @@ bool parse_and_validate
             cout<<(*it)->dump_xml();
 	  else if (debug_level == parser_dump_compact_map_ql)
 	    cout<<(*it)->dump_compact_map_ql();
+	  else if (debug_level == parser_dump_bbox_map_ql)
+	    cout<<(*it)->dump_bbox_map_ql();
 	  else if (debug_level == parser_dump_pretty_map_ql)
 	    cout<<(*it)->dump_pretty_map_ql();
 	}
@@ -491,6 +493,8 @@ bool parse_and_validate
       parse_and_dump_xml_from_map_ql(xml_raw, error_output);
     else if (debug_level == parser_dump_compact_map_ql)
       parse_and_dump_compact_from_map_ql(xml_raw, error_output);
+    else if (debug_level == parser_dump_bbox_map_ql)
+      parse_and_dump_bbox_from_map_ql(xml_raw, error_output);
     else if (debug_level == parser_dump_pretty_map_ql)
       parse_and_dump_pretty_from_map_ql(xml_raw, error_output);
   }

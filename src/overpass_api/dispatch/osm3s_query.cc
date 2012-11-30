@@ -79,6 +79,8 @@ int main(int argc, char *argv[])
       debug_level = parser_dump_pretty_map_ql;
     else if (!(strcmp(argv[argpos], "--dump-compact-map-ql")))
       debug_level = parser_dump_compact_map_ql;
+    else if (!(strcmp(argv[argpos], "--dump-bbox-map-ql")))
+      debug_level = parser_dump_bbox_map_ql;
     else if (!(strncmp(argv[argpos], "--clone=", 8)))
     {
       clone_db_dir = ((string)argv[argpos]).substr(8);
