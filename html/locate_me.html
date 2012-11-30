@@ -16,14 +16,6 @@
       var layerBoundaries = null;
       
       var customLayers = new Array();
-
-      function set_status_text(status_text)
-      {
-        var target_div = document.getElementById("status_text");
-        while (target_div.hasChildNodes())
-          target_div.removeChild(target_div.firstChild);
-        target_div.appendChild(document.createTextNode(status_text));
-      }
       
       ZoomOutOSMFormat = OpenLayers.Class(OpenLayers.Format.OSM, {
 
@@ -71,7 +63,7 @@
               projection: new OpenLayers.Projection("EPSG:4326")
           });
 
-          layer.events.register("featuresadded", layer, make_features_added_closure());
+          layer.events.register("featuresadded", layer, make_features_added_closure(layer));
 
           return layer;
       }
@@ -126,7 +118,7 @@
       });
 
       var osm_format = new DetectBoundsOSMFormat();
-
+      
       function make_bbox_detect_closure() {
           return function(evt) {
 
@@ -151,9 +143,27 @@
             map.zoomToExtent(extent);
           };
       }
+      
+     var storedStatusText = "";
+
+     function restoreStatusText() {
+         setStatusText(storedStatusText);
+     }
+     
+     function pushStatusText(text) {
+     
+	  var html_node = document.getElementById("statusline");
+	  if (html_node != null)
+	  {
+            var div = html_node.firstChild;
+            storedStatusText = div.nodeValue;
+            div.deleteData(0, div.nodeValue.length);
+            div.appendData(text);
+	  }
+     }
 
      function showMap(position) {
-         set_status_text("Landkarte"/* um " + position.coords.latitude + "° Nord, " + position.coords.longitude + "° Ost"*/); 
+         setStatusText("Landkarte"/* um " + position.coords.latitude + "° Nord, " + position.coords.longitude + "° Ost"*/); 
          var lonLat = new OpenLayers.LonLat(position.coords.longitude, position.coords.latitude).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
          var markers = new OpenLayers.Layer.Markers("Geolocation position");
          map.addLayer(markers);
@@ -202,7 +212,7 @@
 	      'click': this.trigger
 	    }, this.handlerOptions
 	  );
-	  this.handler.pixelTolerance = 40;
+	  this.handler.pixelTolerance = 20;
 	}, 
 	
 	trigger: function(evt) {
@@ -210,7 +220,7 @@
 	      .transform(new OpenLayers.Projection("EPSG:900913"),
 		         new OpenLayers.Projection("EPSG:4326"));
 		         
-          set_status_text("Details"/* bei " + lonlat.lat + "° Nord, " + lonlat.lon + "° Ost"*/);
+          pushStatusText("Details");
 	  zShow("element_details");
 	  
 	  var rel_tolerance = this.tolerance * map.getScale();
@@ -231,7 +241,7 @@
           var newElem = document.createElement("a");
           newElem.appendChild(document.createTextNode("zurück zur Karte"));
           newElem.href = "#";
-          newElem.setAttribute("onclick", "zShow(\"map\")");
+          newElem.setAttribute("onclick", "restoreStatusText();zShow(\"map\")");
           target_div.appendChild(newElem);
           target_div.appendChild(document.createElement("br"));
           target_div.appendChild(document.createElement("br"));
@@ -337,7 +347,7 @@
       
       function showQueryLayer(conjunctions, desc)
       {
-          set_status_text("Suche nach " + desc);
+          setStatusText("Suche nach " + desc);
           var query = "(";
           for (var i = 0; i < conjunctions.length; i++)
             query = query + "way" + conjunctions[i] + "(bbox);>;node" + conjunctions[i] + "(bbox);";
@@ -352,7 +362,7 @@
 
       function showNameQueryLayer(query_value)
       {
-          set_status_text("Suche nach " + query_value);
+          setStatusText("Suche nach " + query_value);
           showCustomLayer("(node[name~\"" + query_value + "\"](bbox);way[name~\"" + query_value + "\"](bbox);>;rel[name~\"" + query_value + "\"](bbox);>;);");
           current_query = "(node[name~\"" + query_value + "\"](bbox);way[name~\"" + query_value + "\"](bbox);rel[name~\"" + query_value + "\"](bbox););";
       }
@@ -485,7 +495,7 @@
   </script>
 </head>
 <body onload="init()">
-  <div id="status_text" style="min-height:10%; font-family:sans-serif; font-size:16pt"><strong>Landkarte</strong></div>
+  <div id="statusline" style="min-height:10%; font-family:sans-serif; font-size:16pt; font-weight:bold">Landkarte</div>
 
   <div id="menu" style="height:10%; width:100%; font-family:sans-serif; font-size:16pt; position:absolute; top:90%; left:0%; text-align:center">
     <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;map&quot;);map.zoomIn()"><img src="plus.png" alt="zoom in" height="100%"/></a></div>
