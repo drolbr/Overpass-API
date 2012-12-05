@@ -74,7 +74,8 @@ public:
   void pop_reference();
   void count_loop();
 
-  void health_check(const Statement& stmt);
+  void health_check(const Statement& stmt, uint32 extra_time = 0, uint64 extra_space = 0);
+  
   void set_limits(uint32 max_allowed_time_, uint64 max_allowed_space_)
   {
     max_allowed_time = max_allowed_time_;

@@ -78,11 +78,11 @@ uint64 eval_set(const Set& set_)
   return size;
 }
 
-void Resource_Manager::health_check(const Statement& stmt)
+void Resource_Manager::health_check(const Statement& stmt, uint32 extra_time, uint64 extra_space)
 {
   uint32 elapsed_time = 0;
   if (max_allowed_time > 0)
-    elapsed_time = time(NULL) - start_time;
+    elapsed_time = time(NULL) - start_time + extra_time;
   
   if (elapsed_time >= last_ping_time + 5)
   {
@@ -105,6 +105,8 @@ void Resource_Manager::health_check(const Statement& stmt)
   uint64 size = 0;
   if (max_allowed_space > 0)
   {
+    size = extra_space;
+    
     for (map< string, Set >::const_iterator it(sets_.begin()); it != sets_.end();
         ++it)
       size += eval_set(it->second);

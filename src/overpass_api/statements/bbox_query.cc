@@ -461,6 +461,7 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
 
   vector< pair< uint32, uint32 > > uint_ranges
     (::calc_ranges(south, north, west, east));
+  rman.health_check(*this);
     
   set< pair< Uint32_Index, Uint32_Index > > req;
   for (vector< pair< uint32, uint32 > >::const_iterator
@@ -470,6 +471,7 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
       (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
     req.insert(range);
   }
+  rman.health_check(*this);
   
   uint nodes_count = 0;
   

@@ -377,8 +377,16 @@ set< pair< TIndex, TIndex > > Query_Statement::get_ranges_by_id_from_db
   {
     Random_File< TIndex > random
         (rman.get_transaction()->random_index(&file_prop));
+    uint count = 0;
     for (typename vector< Id_Type >::const_iterator it(ids.begin()); it != ids.end(); ++it)
+    {
       range_req.insert(make_pair(random.get(it->val()), TIndex(random.get(it->val()).val()+1)));
+      if (++count >= 100)
+      {
+	rman.health_check(*this);
+	count = 0;
+      }
+    }
   }
   return range_req;
 }
