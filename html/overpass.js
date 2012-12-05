@@ -118,6 +118,37 @@
 
           CLASS_NAME: "ZoomLimitedBBOXStrategy"
       });
+      
+      OSMTimeoutFormat = OpenLayers.Class(OpenLayers.Format.OSM, {
+	
+	  initialize: function(strategy) {
+	      this.strategy = strategy;
+	  },
+	
+	  read: function(doc) {
+	      var feat_list = OpenLayers.Format.OSM.prototype.read.apply(this, [doc]);
+	      
+              if (typeof doc == "string") {
+		  doc = OpenLayers.Format.XML.prototype.read.apply(this, [doc]);
+	      }
+	      
+	      if (this.strategy)
+	      {
+		  var node_list = doc.getElementsByTagName("remark");
+		  if (node_list.length > 0)
+		  {
+		      setStatusText("Please zoom in to view data.");
+		      this.strategy.bounds = null;
+		  }
+	      }
+	      
+	      return feat_list;
+	  },
+	  
+	  strategy: null,
+
+          CLASS_NAME: "OSMTimeoutFormat"
+      });
 
       function make_large_layer(data_url, color, zoom) {
 
@@ -129,11 +160,13 @@
               fillColor: color,
               fillOpacity: 0.25
           });
+	  
+	  var strategy = new ZoomLimitedBBOXStrategy(8);
           var layer = new OpenLayers.Layer.Vector(color, {
-              strategies: [new ZoomLimitedBBOXStrategy(11)],
+              strategies: [strategy],
               protocol: new OpenLayers.Protocol.HTTP({
                   url: data_url,
-                  format: new OpenLayers.Format.OSM()
+                  format: new OSMTimeoutFormat(strategy)
               }),
               styleMap: styleMap,
               projection: new OpenLayers.Projection("EPSG:4326"),

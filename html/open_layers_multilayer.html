@@ -35,16 +35,16 @@
           map.setCenter (lonLat, zoom);
 
           map.addLayers([
-              make_layer("http://overpass-api.de/api/interpreter?data=node[amenity=kindergarten](bbox);out+skel;(way[amenity=kindergarten](bbox);node(w););out+skel;", "green"),
-              make_layer("http://overpass-api.de/api/interpreter?data=node[amenity=school](bbox);out+skel;(way[amenity=school](bbox);node(w););out+skel;", "blue"),
-              make_layer("http://overpass-api.de/api/interpreter?data=node[amenity=university](bbox);out+skel;(way[amenity=university](bbox);node(w););out+skel;", "orange")
+              make_layer("http://overpass-api.de/api/interpreter?data=[timeout:1];node[amenity=kindergarten](bbox);out+skel;(way[amenity=kindergarten](bbox);node(w););out+skel;", "green"),
+              make_layer("http://overpass-api.de/api/interpreter?data=[timeout:1];node[amenity=school](bbox);out+skel;(way[amenity=school](bbox);node(w););out+skel;", "blue"),
+              make_layer("http://overpass-api.de/api/interpreter?data=[timeout:1];node[amenity=university](bbox);out+skel;(way[amenity=university](bbox);node(w););out+skel;", "orange")
           ]);
           
 	  var click = new OpenLayers.Control.Click(
 	      "http://overpass-api.de/api/interpreter?data="
-	          + "[out:popup(\"\";[amenity=kindergarten];\"name\";)(\"\";[amenity=school];\"name\";)(\"\";[amenity=university];\"name\";)];"
+	          + "[timeout:5][out:popup(\"\";[amenity=kindergarten];\"name\";)(\"\";[amenity=school];\"name\";)(\"\";[amenity=university];\"name\";)];"
 	          + "(node(bbox);way(bbox););(._;<;);out;"
-		  + "&redirect=no&template=ids.popup", 0.0005, map);
+		  + "&redirect=no&template=ids.popup", 0.0000001, map);
 		  
           map.addControl(click);
           click.activate();
