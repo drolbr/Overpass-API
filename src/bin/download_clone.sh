@@ -64,14 +64,12 @@ FILES_META="nodes_meta.bin ways_meta.bin relations_meta.bin user_data.bin user_i
 # $2 - local destination
 fetch_file()
 {
-  wget -O "$2" "$1"
+  wget -c -O "$2" "$1"
 };
 
 retry_fetch_file()
 {
-  if [[ ! -s "$2" ]]; then {
-    fetch_file "$1" "$2"
-  }; fi
+  fetch_file "$1" "$2"
   until [[ -s "$2" ]]; do {
     sleep 15
     fetch_file "$1" "$2"
