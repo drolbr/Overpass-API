@@ -60,7 +60,8 @@
                   format: new ZoomOutOSMFormat()
               }),
               styleMap: styleMap,
-              projection: new OpenLayers.Projection("EPSG:4326")
+              projection: new OpenLayers.Projection("EPSG:4326"),
+              ratio: 0.8
           });
 
           layer.events.register("featuresadded", layer, make_features_added_closure(layer));

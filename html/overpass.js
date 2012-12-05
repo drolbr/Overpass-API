@@ -97,6 +97,7 @@
           },
 
           update: function(options) {
+	      this.ratio = this.layer.ratio;
               var mapBounds = this.getMapBounds();
               if (this.layer && this.layer.map && this.layer.map.getZoom() < this.zoom_data_limit) {
                   setStatusText("Please zoom in to view data.");
