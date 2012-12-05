@@ -373,6 +373,7 @@ set< pair< TIndex, TIndex > > Query_Statement::get_ranges_by_id_from_db
     (const vector< Id_Type >& ids,
      Resource_Manager& rman, File_Properties& file_prop)
 {
+  rman.health_check(*this, ids.size()/1000, ids.size()*60);
   set< pair< TIndex, TIndex > > range_req;
   {
     Random_File< TIndex > random
@@ -381,7 +382,7 @@ set< pair< TIndex, TIndex > > Query_Statement::get_ranges_by_id_from_db
     for (typename vector< Id_Type >::const_iterator it(ids.begin()); it != ids.end(); ++it)
     {
       range_req.insert(make_pair(random.get(it->val()), TIndex(random.get(it->val()).val()+1)));
-      if (++count >= 100)
+      if (++count >= 1000)
       {
 	rman.health_check(*this);
 	count = 0;
