@@ -154,6 +154,13 @@ int main(int argc, char *argv[])
         temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin
             <<". Probably the server is overcrowded.\n";
     }
+    else if (e.origin.substr(e.origin.size()-14) == "::rate_limited")
+    {
+      error_output.write_html_header("", "", 429, false);
+      if (!error_output.is_options_request)
+        temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin
+            <<". Another request from your IP is still running.\n";
+    }
     else
       temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin;
     error_output.runtime_error(temp.str());

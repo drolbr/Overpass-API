@@ -702,7 +702,7 @@ int main(int argc, char* args[])
       Random_File< IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0, 1);
     }
-    dispatcher.request_read_and_idx(640, 180, 512*1024*1024);
+    dispatcher.request_read_and_idx(640, 180, 512*1024*1024, 640);
     dispatcher.output_status();
     dispatcher.write_commit(0);
     cout<<"Write lock is "
@@ -726,7 +726,7 @@ int main(int argc, char* args[])
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
 			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
-    dispatcher.request_read_and_idx(640, 180, 512*1024*1024);
+    dispatcher.request_read_and_idx(640, 180, 512*1024*1024, 640);
     dispatcher.read_idx_finished(640);
     dispatcher.output_status();
     {
@@ -738,7 +738,7 @@ int main(int argc, char* args[])
     dispatcher.read_finished(640);
     dispatcher.write_commit(0);
     dispatcher.write_start(481);
-    dispatcher.request_read_and_idx(641, 180, 512*1024*1024);
+    dispatcher.request_read_and_idx(641, 180, 512*1024*1024, 641);
     dispatcher.read_idx_finished(641);
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
@@ -749,7 +749,7 @@ int main(int argc, char* args[])
     dispatcher.read_finished(641);
     dispatcher.write_commit(0);
     dispatcher.write_start(482);
-    dispatcher.request_read_and_idx(642, 180, 512*1024*1024);
+    dispatcher.request_read_and_idx(642, 180, 512*1024*1024, 642);
     dispatcher.read_idx_finished(642);
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
@@ -774,20 +774,20 @@ int main(int argc, char* args[])
 			  BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
 			  5, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
-    dispatcher.request_read_and_idx(640, 180, 512*1024*1024);
+    dispatcher.request_read_and_idx(640, 180, 512*1024*1024, 640);
     dispatcher.read_idx_finished(640);
     put_elem(0, 1, test_file);
     dispatcher.read_finished(640);
     dispatcher.output_status();
     dispatcher.write_commit(0);
     dispatcher.write_start(481);
-    dispatcher.request_read_and_idx(641, 180, 512*1024*1024);
+    dispatcher.request_read_and_idx(641, 180, 512*1024*1024, 641);
     dispatcher.read_idx_finished(641);
     put_elem(0, 2, test_file);
     dispatcher.read_finished(641);
     dispatcher.write_commit(0);
     dispatcher.write_start(482);
-    dispatcher.request_read_and_idx(642, 180, 512*1024*1024);
+    dispatcher.request_read_and_idx(642, 180, 512*1024*1024, 642);
     dispatcher.read_idx_finished(642);
     put_elem(0, 3, test_file);
     dispatcher.read_finished(642);
@@ -814,7 +814,7 @@ int main(int argc, char* args[])
       blocks.put(0, 1);
     }
     dispatcher.write_commit(0);
-    dispatcher.request_read_and_idx(640, 180, 512*1024*1024);
+    dispatcher.request_read_and_idx(640, 180, 512*1024*1024, 640);
     dispatcher.read_idx_finished(640);
     dispatcher.write_start(481);
     {
@@ -850,7 +850,7 @@ int main(int argc, char* args[])
     dispatcher.write_start(480);
     put_elem(0, 1, test_file);
     dispatcher.write_commit(0);
-    dispatcher.request_read_and_idx(640, 180, 512*1024*1024);
+    dispatcher.request_read_and_idx(640, 180, 512*1024*1024, 640);
     dispatcher.read_idx_finished(640);
     dispatcher.write_start(481);
     put_elem(0, 2, test_file);
@@ -881,7 +881,7 @@ int main(int argc, char* args[])
       blocks.put(0, 1);
     }
     dispatcher.write_commit(0);
-    dispatcher.request_read_and_idx(640, 180, 512*1024*1024);
+    dispatcher.request_read_and_idx(640, 180, 512*1024*1024, 640);
     dispatcher.read_idx_finished(640);
     dispatcher.write_start(481);
     {
@@ -925,7 +925,7 @@ int main(int argc, char* args[])
     dispatcher.write_start(480);
     put_elem(0, 1, test_file);
     dispatcher.write_commit(0);
-    dispatcher.request_read_and_idx(640, 180, 512*1024*1024);
+    dispatcher.request_read_and_idx(640, 180, 512*1024*1024, 640);
     dispatcher.read_idx_finished(640);
     dispatcher.write_start(481);
     put_elem(0, 2, test_file);
@@ -1249,7 +1249,7 @@ int main(int argc, char* args[])
       test_file.set_basedir(dispatcher_client.get_db_dir());
       
       sync_log("Try request_read().\n");
-      dispatcher_client.request_read_and_idx(24*60, 1024*1024);
+      dispatcher_client.request_read_and_idx(24*60, 1024*1024, 0);
       sync_log("request_read() returned.\n");
       
       {
@@ -1333,7 +1333,7 @@ int main(int argc, char* args[])
       test_file.set_basedir(dispatcher_client.get_db_dir());
       
       sync_log("Try request_read().\n");
-      dispatcher_client.request_read_and_idx(24*60, 1024*1024);
+      dispatcher_client.request_read_and_idx(24*60, 1024*1024, 0);
       sync_log("request_read() done.\n");
       
       Nonsynced_Transaction transaction

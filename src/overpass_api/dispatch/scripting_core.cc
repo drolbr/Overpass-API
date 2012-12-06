@@ -94,6 +94,7 @@ string de_escape(string input)
   return result;
 }
 
+
 Dispatcher_Stub::Dispatcher_Stub
     (string db_dir_, Error_Output* error_output_, string xml_raw, int& area_level,
      uint32 max_allowed_time, uint64 max_allowed_space)
@@ -117,12 +118,13 @@ Dispatcher_Stub::Dispatcher_Stub
   
   if (db_dir == "")
   {
+    uint32 client_token = probe_client_token();
     dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
     Logger logger(dispatcher_client->get_db_dir());
     try
     {
       logger.annotated_log("request_read_and_idx() start");
-      dispatcher_client->request_read_and_idx(max_allowed_time, max_allowed_space);
+      dispatcher_client->request_read_and_idx(max_allowed_time, max_allowed_space, client_token);
       logger.annotated_log("request_read_and_idx() end");
     }
     catch (const File_Error& e)
@@ -188,7 +190,7 @@ Dispatcher_Stub::Dispatcher_Stub
 	try
 	{
           logger.annotated_log("request_read_and_idx() area start");
-	  area_dispatcher_client->request_read_and_idx(max_allowed_time, max_allowed_space);
+	  area_dispatcher_client->request_read_and_idx(max_allowed_time, max_allowed_space, client_token);
           logger.annotated_log("request_read_and_idx() area end");
         }
 	catch (const File_Error& e)

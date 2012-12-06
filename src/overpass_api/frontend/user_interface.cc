@@ -206,6 +206,7 @@ string get_xml_cgi(Error_Output* error_output, uint32 max_input_size, string& ur
   return input;
 }
 
+
 string get_xml_console(Error_Output* error_output, uint32 max_input_size)
 {
   if (error_output)
@@ -216,4 +217,31 @@ string get_xml_console(Error_Output* error_output, uint32 max_input_size)
   input = cgi_post_to_text();
   input = autocomplete(input, error_output, max_input_size);
   return input;
+}
+
+
+uint32 probe_client_token()
+{
+  char* remote_addr_c = getenv("REMOTE_ADDR");
+  if (!remote_addr_c)
+    return 0;
+  
+  string ip_addr(remote_addr_c);
+  
+  string::size_type pos = ip_addr.find(".");
+  string::size_type old_pos = 0;
+  uint32 client_token = 0;
+  
+  // Try IPv4 address format
+  while (pos != string::npos)
+  {
+    client_token = (client_token<<8 |
+        atoll(ip_addr.substr(old_pos, pos - old_pos).c_str()));
+    old_pos = pos + 1;
+    pos = ip_addr.find(".", old_pos);
+  }
+  client_token = (client_token<<8 |
+    atoll(ip_addr.substr(old_pos).c_str()));
+  
+  return client_token;
 }

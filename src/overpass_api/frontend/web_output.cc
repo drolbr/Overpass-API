@@ -130,6 +130,8 @@ void Web_Output::write_html_header
         cout<<"Status: "<<write_mime<<" Gateway Timeout\n";
       else if (write_mime == 400)
         cout<<"Status: "<<write_mime<<" Bad Request\n";
+      else if (write_mime == 429)
+        cout<<"Status: "<<write_mime<<" Too Many Requests\n";
       else
         cout<<"Status: "<<write_mime<<"\n";
     }

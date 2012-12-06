@@ -115,13 +115,45 @@ private:
 
 struct Reader_Entry
 {
-  Reader_Entry(uint32 ping_time_, uint64 max_space_, uint32 max_time_)
-    : ping_time(ping_time_), max_space(max_space_), max_time(max_time_) {}
-  Reader_Entry() : ping_time(0), max_space(0), max_time(0) {}
+  Reader_Entry(uint32 ping_time_, uint64 max_space_, uint32 max_time_, uint32 client_token_)
+    : ping_time(ping_time_), max_space(max_space_), max_time(max_time_), client_token(client_token_)
+  {
+    ++active_client_tokens[client_token];
+  }
+  
+  Reader_Entry() : ping_time(0), max_space(0), max_time(0), client_token(0) {}
+  
+  Reader_Entry(const Reader_Entry& e)
+    : ping_time(e.ping_time), max_space(e.max_space), max_time(e.max_time), client_token(e.client_token)
+  {
+    ++active_client_tokens[client_token];
+  }
+  
+  Reader_Entry& operator=(const Reader_Entry& e)
+  {
+    --active_client_tokens[client_token];
+    
+    ping_time = e.ping_time;
+    max_space = e.max_space;
+    max_time = e.max_time;
+    client_token = e.client_token;
+    
+    ++active_client_tokens[client_token];
+    
+    return *this;
+  }
+  
+  ~Reader_Entry()
+  {
+    --active_client_tokens[client_token];
+  }
   
   uint32 ping_time;
   uint64 max_space;
   uint32 max_time;
+  uint32 client_token;
+
+  static map< uint32, uint > active_client_tokens;
 };
 
 
@@ -176,7 +208,8 @@ class Dispatcher
     /** Request the index for a read operation and registers the reading process.
         Reading the index files should be taking a quick copy, because if any process
 	is in this state, write_commits are blocked. */
-    void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space);
+    void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space,
+			      uint32 client_token);
     
     /** Changes the registered state from reading the index to reading the
         database. Can be safely called multiple times for the same process. */
@@ -203,6 +236,7 @@ class Dispatcher
     static const uint32 HANGUP = 3;
     static const uint32 PURGE = 4;
     static const uint32 SET_GLOBAL_LIMITS = 5;
+    static const uint32 RATE_LIMITED = 6;
     static const uint32 WRITE_START = 101;
     static const uint32 WRITE_ROLLBACK = 102;
     static const uint32 WRITE_COMMIT = 103;
@@ -268,7 +302,8 @@ class Dispatcher_Client
     /** Request the index for a read operation and registers the reading process.
     Reading the index files should be taking a quick copy, because if any process
     is in this state, write_commits are blocked. */
-    void request_read_and_idx(uint32 max_allowed_time, uint64 max_allowed_space);
+    void request_read_and_idx(uint32 max_allowed_time, uint64 max_allowed_space,
+			      uint32 client_token);
     
     /** Changes the registered state from reading the index to reading the
     database. Can be safely called multiple times for the same process. */
@@ -304,7 +339,7 @@ class Dispatcher_Client
     string db_dir, shadow_name;
     int socket_descriptor;
     
-    bool ack_arrived();
+    uint32 ack_arrived();
     
     template< class TObject >
     void send_message(TObject message, string source_pos);

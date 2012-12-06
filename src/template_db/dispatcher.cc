@@ -38,6 +38,8 @@
 
 using namespace std;
 
+map< uint32, uint > Reader_Entry::active_client_tokens;
+
 void copy_file(const string& source, const string& dest)
 {
   if (!file_exists(source))
@@ -361,7 +363,8 @@ void Dispatcher::write_commit(pid_t pid)
   set_current_footprints();
 }
 
-void Dispatcher::request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space)
+void Dispatcher::request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space,
+				      uint32 client_token)
 {
   if (logger)
     logger->request_read_and_idx(pid, max_allowed_time, max_allowed_space);
@@ -372,7 +375,7 @@ void Dispatcher::request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64
       it != map_footprints.end(); ++it)
     it->register_pid(pid);
   processes_reading_idx.insert(pid);
-  processes_reading[pid] = Reader_Entry(time(NULL), max_allowed_space, max_allowed_time);
+  processes_reading[pid] = Reader_Entry(time(NULL), max_allowed_space, max_allowed_time, client_token);
 }
 
 void Dispatcher::read_idx_finished(pid_t pid)
@@ -711,6 +714,13 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       }
       else if (command == REQUEST_READ_AND_IDX)
       {
+	vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(4);
+	if (arguments.size() < 4)
+	{
+	  connection_per_pid.get(client_pid)->send_result(0);
+	  continue;
+	}
+	
 	if (processes_reading.size() >= max_num_reading_processes)
 	{
 	  check_and_purge();
@@ -724,15 +734,9 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	  continue;
 	}
 	
-	vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(3);
-	if (arguments.size() < 3)
-	{
-	  connection_per_pid.get(client_pid)->send_result(0);
-	  continue;
-	}
-	
 	uint32 max_allowed_time = arguments[0];
 	uint64 max_allowed_space = (((uint64)arguments[2])<<32 | arguments[1]);
+	uint32 client_token = arguments[3];
 	
 	if (max_allowed_space > (total_available_space - total_claimed_space())/2)
 	{
@@ -746,7 +750,14 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	  continue;
 	}
 	
-	request_read_and_idx(client_pid, max_allowed_time, max_allowed_space);
+	cerr<<hex<<client_token<<'\t'<<dec<<Reader_Entry::active_client_tokens[client_token]<<'\n';
+	if (client_token > 0 && Reader_Entry::active_client_tokens[client_token] > 0)
+	{
+	  connection_per_pid.get(client_pid)->send_result(RATE_LIMITED);
+	  continue;
+	}
+	
+	request_read_and_idx(client_pid, max_allowed_time, max_allowed_space, client_token);
 	connection_per_pid.get(client_pid)->send_result(command);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
@@ -1040,7 +1051,7 @@ void Dispatcher_Client::send_message(TObject message, string source_pos)
 }
 
 
-bool Dispatcher_Client::ack_arrived()
+uint32 Dispatcher_Client::ack_arrived()
 {
   uint32 answer = 0;
   int bytes_read = recv(socket_descriptor, &answer, sizeof(uint32), 0);
@@ -1050,13 +1061,13 @@ bool Dispatcher_Client::ack_arrived()
     bytes_read = recv(socket_descriptor, &answer, sizeof(uint32), 0);
   }
   if (bytes_read == 4)
-    return (answer != 0);
+    return answer;
   
   uint32 pid = getpid();
   if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
-    return true;
+    return 1;
   millisleep(50);  
-  return (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid);
+  return (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid ? 1 : 0);
 }
 
 void Dispatcher_Client::write_start()
@@ -1145,24 +1156,31 @@ void Dispatcher_Client::write_commit()
   }
 }
 
-void Dispatcher_Client::request_read_and_idx(uint32 max_allowed_time, uint64 max_allowed_space)
+void Dispatcher_Client::request_read_and_idx(uint32 max_allowed_time, uint64 max_allowed_space,
+					     uint32 client_token)
 {
   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
   
   uint counter = 0;
-  while (++counter <= 300)
+  uint32 ack = 0;
+  while (++counter <= 50)
   {
     send_message(Dispatcher::REQUEST_READ_AND_IDX,
 		 "Dispatcher_Client::request_read_and_idx::socket::1");
     send_message(max_allowed_time, "Dispatcher_Client::request_read_and_idx::socket::2");
     send_message(max_allowed_space, "Dispatcher_Client::request_read_and_idx::socket::3");
+    send_message(client_token, "Dispatcher_Client::request_read_and_idx::socket::4");
     
-    if (ack_arrived())
+    ack = ack_arrived();
+    if (ack != 0 && ack != Dispatcher::RATE_LIMITED)
       return;
     
-    millisleep(200);
+    millisleep(300);
   }
-  throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::request_read_and_idx::timeout");
+  if (ack == Dispatcher::RATE_LIMITED)
+    throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::request_read_and_idx::rate_limited");
+  else
+    throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::request_read_and_idx::timeout");
 }
 
 void Dispatcher_Client::read_idx_finished()
