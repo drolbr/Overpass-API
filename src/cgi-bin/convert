@@ -127,7 +127,7 @@ echo -e "\
                 this.max_lon = 0;\n\
             }\n\
 \n\
-            setStatusText(\"No features found.\");\n\
+            setStatusText(\"Result contains no nodes.\");\n\
             return nodes;\n\
           },          \n\
 \n\
