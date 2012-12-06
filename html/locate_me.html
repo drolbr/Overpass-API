@@ -61,7 +61,7 @@
               }),
               styleMap: styleMap,
               projection: new OpenLayers.Projection("EPSG:4326"),
-              ratio: 0.8
+              ratio: 1.0
           });
 
           layer.events.register("featuresadded", layer, make_features_added_closure(layer));
@@ -227,7 +227,7 @@
 	  var rel_tolerance = this.tolerance * map.getScale();
 
           var request = OpenLayers.Request.GET({
-              url: this.genericUrl + current_query + "out;&bbox="
+              url: this.genericUrl + current_query + "out qt;&bbox="
                   + (lonlat.lon - rel_tolerance) + "," + (lonlat.lat - rel_tolerance) + ","
                   + (lonlat.lon + rel_tolerance) + "," + (lonlat.lat + rel_tolerance),
               async: false
@@ -286,20 +286,6 @@
 
      function init(){
 
-  // Try W3C Geolocation
-  if(navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function(position) {
-      // success
-    }, function(position_error) {
-      // failure
-      alert(position_error.message);
-    }, {
-      // options
-      enableHighAccuracy: true
-    });
-  } else {
-    alert("The W3C Geolocation API isn't availble.");
-  }
           map = new OpenLayers.Map ("map", {
           controls:[
               new OpenLayers.Control.Navigation(),
@@ -331,9 +317,23 @@
           });
 
           map.setCenter(lonLat, zoom);
-          navigator.geolocation.getCurrentPosition(showMap);
           
-          var click = new Click("http://overpass-api.de/api/interpreter?data=[out:json];", 0.0000001, map);
+          // Try W3C Geolocation
+          if (navigator.geolocation)
+            navigator.geolocation.getCurrentPosition(showMap, { enableHighAccuracy: true });
+    //navigator.geolocation.getCurrentPosition(function(position) {
+      // success
+    //}, function(position_error) {
+      // failure
+      //alert(position_error.message);
+    //}, {
+      // options
+      //enableHighAccuracy: true
+    //});
+          else
+            alert("The W3C Geolocation API isn't availble.");
+          
+          var click = new Click("http://overpass-api.de/api/interpreter?data=[timeout:3][out:json];", 0.0000001, map);
           map.addControl(click);
           click.activate();
       }
