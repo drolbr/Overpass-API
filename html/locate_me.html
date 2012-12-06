@@ -258,10 +258,22 @@
                 target_div.appendChild(newElem);
                 target_div.appendChild(document.createElement("br"));
               }
+              if (result.elements[i].tags["addr:street"] && result.elements[i].tags["addr:housenumber"])
+              {
+                var newElem = document.createElement("em");
+                newElem.appendChild(document.createTextNode(
+                    result.elements[i].tags["addr:street"] + " "
+                    + result.elements[i].tags["addr:housenumber"]));
+                target_div.appendChild(newElem);
+                target_div.appendChild(document.createElement("br"));
+              }
               for (var key in result.elements[i].tags)
               {
-                target_div.appendChild(document.createTextNode(key + " = " + result.elements[i].tags[key]));
-                target_div.appendChild(document.createElement("br"));
+                if (key.substr(0,4) != "addr")
+                {
+                    target_div.appendChild(document.createTextNode(key + " = " + result.elements[i].tags[key]));
+                    target_div.appendChild(document.createElement("br"));
+                }
               }
               target_div.appendChild(document.createElement("br"));
             }
