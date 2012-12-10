@@ -320,7 +320,13 @@
           
           // Try W3C Geolocation
           if (navigator.geolocation)
-            navigator.geolocation.getCurrentPosition(showMap, { enableHighAccuracy: true });
+              navigator.geolocation.getCurrentPosition(showMap,
+                  function(position_error) {
+                      alert(position_error.message);
+                  },                
+                  {
+                      enableHighAccuracy: true
+                  });
     //navigator.geolocation.getCurrentPosition(function(position) {
       // success
     //}, function(position_error) {
