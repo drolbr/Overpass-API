@@ -750,7 +750,6 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	  continue;
 	}
 	
-	cerr<<hex<<client_token<<'\t'<<dec<<Reader_Entry::active_client_tokens[client_token]<<'\n';
 	if (client_token > 0 && Reader_Entry::active_client_tokens[client_token] > 0)
 	{
 	  connection_per_pid.get(client_pid)->send_result(RATE_LIMITED);
@@ -793,6 +792,24 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         }
         
 	connection_per_pid.get(client_pid)->send_result(command);
+	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
+      }
+      else if (command == QUERY_BY_TOKEN)
+      {
+	vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(1);
+	if (arguments.size() < 1)
+	  continue;
+	uint32 target_token = arguments[0];
+
+	pid_t target_pid = 0;
+	for (map< pid_t, Reader_Entry >::const_iterator it = processes_reading.begin();
+	     it != processes_reading.end(); ++it)
+	{
+	  if (it->second.client_token == target_token)
+	    target_pid = it->first;
+	}
+	
+	connection_per_pid.get(client_pid)->send_result(target_pid);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == SET_GLOBAL_LIMITS)
@@ -1226,6 +1243,17 @@ void Dispatcher_Client::purge(uint32 pid)
     if (ack_arrived())
       return;
   }
+}
+
+
+pid_t Dispatcher_Client::query_by_token(uint32 token)
+{
+  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+		     
+  send_message(Dispatcher::QUERY_BY_TOKEN, "Dispatcher_Client::query_by_token::socket::1");
+  send_message(token, "Dispatcher_Client::query_by_token::socket::2");
+    
+  return ack_arrived();
 }
 
 

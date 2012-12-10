@@ -167,11 +167,28 @@ class Dispatcher
     static const int OFFSET_DB_1 = OFFSET_BACK+12;
     static const int OFFSET_DB_2 = OFFSET_DB_1+(256+4);
     
+    static const uint32 TERMINATE = 1;
+    static const uint32 OUTPUT_STATUS = 2;
+    static const uint32 HANGUP = 3;
+    static const uint32 PURGE = 4;
+    static const uint32 SET_GLOBAL_LIMITS = 5;
+    
     static const uint32 REGISTER_PID = 16;
     static const uint32 SET_LIMITS = 17;
     static const uint32 PING = 18;
     static const uint32 UNREGISTER_PID = 19;
+    static const uint32 QUERY_BY_TOKEN = 20;
+    
+    static const uint32 RATE_LIMITED = 31;
     static const uint32 QUERY_REJECTED = 32;
+    
+    static const uint32 WRITE_START = 101;
+    static const uint32 WRITE_ROLLBACK = 102;
+    static const uint32 WRITE_COMMIT = 103;
+    static const uint32 REQUEST_READ_AND_IDX = 201;
+    static const uint32 READ_IDX_FINISHED = 202;
+    static const uint32 READ_FINISHED = 203;
+    static const uint32 READ_ABORTED = 204;
     
     /** Opens a shared memory for dispatcher communication. Furthermore,
       * detects whether idx or idy are valid, clears to idx if necessary,
@@ -230,20 +247,6 @@ class Dispatcher
     /** Outputs the status of the processes registered with the dispatcher
         into shadow_name.status. */
     void output_status();
-    
-    static const uint32 TERMINATE = 1;
-    static const uint32 OUTPUT_STATUS = 2;
-    static const uint32 HANGUP = 3;
-    static const uint32 PURGE = 4;
-    static const uint32 SET_GLOBAL_LIMITS = 5;
-    static const uint32 RATE_LIMITED = 6;
-    static const uint32 WRITE_START = 101;
-    static const uint32 WRITE_ROLLBACK = 102;
-    static const uint32 WRITE_COMMIT = 103;
-    static const uint32 REQUEST_READ_AND_IDX = 201;
-    static const uint32 READ_IDX_FINISHED = 202;
-    static const uint32 READ_FINISHED = 203;
-    static const uint32 READ_ABORTED = 204;
     
   private:
     vector< File_Properties* > controlled_files;
@@ -322,6 +325,9 @@ class Dispatcher_Client
     
     /** Purge another instance. */
     void purge(uint32 pid);
+    
+    /** Query the pid of the instance with the given token. */
+    pid_t query_by_token(uint32 token);
     
     /** Purge another instance. */
     void set_global_limits(uint64 max_allowed_space, uint64 max_allowed_time_units);

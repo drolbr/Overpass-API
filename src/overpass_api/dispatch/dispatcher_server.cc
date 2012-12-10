@@ -17,6 +17,7 @@
 */
 
 #include "../core/settings.h"
+#include "../frontend/user_interface.h"
 #include "../../template_db/dispatcher.h"
 
 #include <cstring>
@@ -118,6 +119,7 @@ int main(int argc, char* argv[])
   string db_dir;
   bool osm_base(false), areas(false), meta(false), terminate(false), status(false), show_dir(false);
   uint32 purge_id = 0;
+  bool query_token = false;
   uint64 max_allowed_space = 0;
   uint64 max_allowed_time_units = 0;
   
@@ -144,6 +146,8 @@ int main(int argc, char* argv[])
       show_dir = true;
     else if (!(strncmp(argv[argpos], "--purge=", 8)))
       purge_id = atoll(((string)argv[argpos]).substr(8).c_str());
+    else if (!(strncmp(argv[argpos], "--query_token", 13)))
+      query_token = true;
     else if (!(strncmp(argv[argpos], "--space=", 8)))
       max_allowed_space = atoll(((string)argv[argpos]).substr(8).c_str());
     else if (!(strncmp(argv[argpos], "--time=", 7)))
@@ -203,6 +207,22 @@ int main(int argc, char* argv[])
       Dispatcher_Client client
           (areas ? area_settings().shared_name : osm_base_settings().shared_name);
       client.purge(purge_id);
+    }
+    catch (File_Error e)
+    {
+      cout<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+    return 0;
+  }
+  else if (query_token)
+  {
+    try
+    {
+      Dispatcher_Client client
+          (areas ? area_settings().shared_name : osm_base_settings().shared_name);
+      pid_t pid = client.query_by_token(probe_client_token());
+      if (pid > 0)
+        cout<<pid<<'\n';
     }
     catch (File_Error e)
     {
