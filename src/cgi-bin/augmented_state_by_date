@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+
+# Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
+#
+# This file is part of Overpass_API.
+#
+# Overpass_API is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# Overpass_API is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+
+BUF="$QUERY_STRING&"
+
+STATE=
+EXECBASE="`dirname $0`/../"
+BIN_DIR="${EXECBASE}bin"
+
+IFS=$'&'
+for KEY_VAL in $QUERY_STRING; do
+{
+  if [[ ${KEY_VAL:0:9} == "osm_base=" ]]; then
+    STATE="${KEY_VAL:9}"
+  fi
+}; done
+unset IFS
+
+
+TARGET_TIME="`echo "$STATE" | $BIN_DIR/uncgi`"
+LOWER="0"
+UPPER="`cat /var/www/augmented_diffs/state.txt`"
+LOCAL_DIR="/var/www/augmented_diffs/"
+
+get_replicate_filename()
+{
+  printf -v TDIGIT3 %03u $(($TARGET % 1000))
+  ARG=$(($TARGET / 1000))
+  printf -v TDIGIT2 %03u $(($ARG % 1000))
+  ARG=$(($ARG / 1000))
+  printf -v TDIGIT1 %03u $ARG
+  LOCAL_PATH="$LOCAL_DIR/$TDIGIT1/$TDIGIT2"
+  REPLICATE_FILENAME="$LOCAL_PATH/$TDIGIT3"
+};
+
+update_state()
+{
+  get_replicate_filename
+  if [[ -s "$REPLICATE_FILENAME.state.txt" ]]; then {
+    TIMESTAMP_LINE=`cat "$REPLICATE_FILENAME.state.txt"`
+    DATA_VERSION=${TIMESTAMP_LINE:9}
+  }; fi
+};
+
+while [[ $(($LOWER + 1)) -lt $UPPER ]]; do
+{
+  TARGET=$((($LOWER + $UPPER) / 2))
+  update_state
+  #echo "$TARGET - $TIMESTAMP_LINE"
+  if [[ -s "$REPLICATE_FILENAME.state.txt" && "$DATA_VERSION" < "$TARGET_TIME" ]]; then
+  {
+    LOWER=$TARGET
+  }; else
+  {
+    UPPER=$TARGET
+  }; fi
+}; done
+
+echo "Content-Type: text/plain; charset=utf-8"
+echo
+echo "$LOWER"
