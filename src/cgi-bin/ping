@@ -32,7 +32,7 @@ if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
 fi
 
 BIN_DIR="$EXEC_DIR/../bin"
-BASE_URL="http://overpass.osm.rambler.ru/cgi"
+BASE_URL="http://overpass-api.de/api"
 
 echo "Content-Type: text/html; charset=utf-8"
 echo
