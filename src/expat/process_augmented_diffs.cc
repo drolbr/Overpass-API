@@ -187,14 +187,14 @@ void print_tag_firstversion(const Tag& tag, string indent)
 
 
 void print_tag_idsorted(const Tag& tag, string indent,
-    bool bbox,
+    bool bbox, bool print_info_action,
     map< Node::Id_Type, int >& node_actions,
     map< Way::Id_Type, int >& way_actions,
     map< Relation::Id_Type, int >& relation_actions);
 
 
 void print_subtags(const Tag& tag, string indent,
-    bool bbox,
+    bool bbox, bool print_info_action,
     map< Node::Id_Type, int >& node_actions,
     map< Way::Id_Type, int >& way_actions,
     map< Relation::Id_Type, int >& relation_actions)
@@ -205,14 +205,15 @@ void print_subtags(const Tag& tag, string indent,
   {
     cout<<">\n";
     for (vector< Tag* >::const_iterator it = tag.children.begin(); it != tag.children.end(); ++it)
-      print_tag_idsorted(**it, indent + "  ", bbox, node_actions, way_actions, relation_actions);
+      print_tag_idsorted(**it, indent + "  ", bbox, print_info_action,
+			 node_actions, way_actions, relation_actions);
     cout<<indent<<"</"<<tag.name<<">\n";
   }
 }
 
 
 void print_tag_idsorted(const Tag& tag, string indent,
-    bool bbox,
+    bool bbox, bool print_info_action,
     map< Node::Id_Type, int >& node_actions,
     map< Way::Id_Type, int >& way_actions,
     map< Relation::Id_Type, int >& relation_actions)
@@ -241,7 +242,7 @@ void print_tag_idsorted(const Tag& tag, string indent,
         for (map< string, string >::const_iterator it = tag.attributes.begin();
             it != tag.attributes.end(); ++it)
           cout<<" "<<it->first<<"=\""<<escape_xml(it->second)<<"\"";
-        print_subtags(tag, indent, bbox, node_actions, way_actions, relation_actions);
+        print_subtags(tag, indent, bbox, print_info_action, node_actions, way_actions, relation_actions);
       }
       return;
     }
@@ -253,7 +254,7 @@ void print_tag_idsorted(const Tag& tag, string indent,
         for (map< string, string >::const_iterator it = tag.attributes.begin();
             it != tag.attributes.end(); ++it)
           cout<<" "<<it->first<<"=\""<<escape_xml(it->second)<<"\"";
-        print_subtags(tag, indent, bbox, node_actions, way_actions, relation_actions);
+        print_subtags(tag, indent, bbox, print_info_action, node_actions, way_actions, relation_actions);
       }
       return;
     }
@@ -288,7 +289,8 @@ void print_tag_idsorted(const Tag& tag, string indent,
           for (map< string, string >::const_iterator it = modified_tag.attributes.begin();
               it != modified_tag.attributes.end(); ++it)
             cout<<" "<<it->first<<"=\""<<escape_xml(it->second)<<"\"";
-          print_subtags(modified_tag, indent, bbox, node_actions, way_actions, relation_actions);
+          print_subtags(modified_tag, indent, bbox, print_info_action,
+			node_actions, way_actions, relation_actions);
           return;
 	}
       }
@@ -299,12 +301,16 @@ void print_tag_idsorted(const Tag& tag, string indent,
 	else
 	  return;
       }
+      
+      if (!print_info_action && modified_tag.attributes["type"] == "info")
+	return;
 	
       cout<<indent<<"<"<<tag.name;
       for (map< string, string >::const_iterator it = modified_tag.attributes.begin();
           it != modified_tag.attributes.end(); ++it)
         cout<<" "<<it->first<<"=\""<<escape_xml(it->second)<<"\"";
-      print_subtags(modified_tag, indent, bbox, node_actions, way_actions, relation_actions);
+      print_subtags(modified_tag, indent, bbox, print_info_action,
+		    node_actions, way_actions, relation_actions);
       return;
     }
     else if (tag.attributes.find("type")->second == "modify")
@@ -334,7 +340,8 @@ void print_tag_idsorted(const Tag& tag, string indent,
           for (map< string, string >::const_iterator it = modified_tag.attributes.begin();
               it != modified_tag.attributes.end(); ++it)
             cout<<" "<<it->first<<"=\""<<escape_xml(it->second)<<"\"";
-          print_subtags(modified_tag, indent, bbox, node_actions, way_actions, relation_actions);
+          print_subtags(modified_tag, indent, bbox, print_info_action,
+			node_actions, way_actions, relation_actions);
           return;
 	}
       }
@@ -354,8 +361,31 @@ void print_tag_idsorted(const Tag& tag, string indent,
       for (map< string, string >::const_iterator it = modified_tag.attributes.begin();
           it != modified_tag.attributes.end(); ++it)
         cout<<" "<<it->first<<"=\""<<escape_xml(it->second)<<"\"";
-      print_subtags(modified_tag, indent, bbox, node_actions, way_actions, relation_actions);
+      print_subtags(modified_tag, indent, bbox, print_info_action,
+		    node_actions, way_actions, relation_actions);
       return;
+    }
+  }
+  else if (tag.name =="action")
+  {
+    const Tag* osm_tag = obtain_data_from_action(tag);
+    
+    int action = 0;
+    if (osm_tag->name == "node" &&
+        node_actions.find(Node::Id_Type(atoll(osm_tag->attributes.find("id")->second.c_str()))) != node_actions.end())
+      action = node_actions.find(Node::Id_Type(atoll(osm_tag->attributes.find("id")->second.c_str())))->second;
+    else if (osm_tag->name == "way" &&
+        way_actions.find(Way::Id_Type(atoll(osm_tag->attributes.find("id")->second.c_str()))) != way_actions.end())
+      action = way_actions.find(Way::Id_Type(atoll(osm_tag->attributes.find("id")->second.c_str())))->second;
+    if (osm_tag->name == "relation" &&
+        relation_actions.find(Relation::Id_Type(atoll(osm_tag->attributes.find("id")->second.c_str()))) !=
+        relation_actions.end())
+      action = relation_actions.find(Relation::Id_Type(atoll(osm_tag->attributes.find("id")->second.c_str())))->second;
+    
+    if (tag.attributes.find("type")->second == "info")
+    {
+      if (!print_info_action && !(action & (ERASE | INSERT)))
+	return;
     }
   }
   else if (tag.name == "note")
@@ -369,7 +399,7 @@ void print_tag_idsorted(const Tag& tag, string indent,
   for (map< string, string >::const_iterator it = tag.attributes.begin();
        it != tag.attributes.end(); ++it)
      cout<<" "<<it->first<<"=\""<<escape_xml(it->second)<<"\"";
-  print_subtags(tag, indent, bbox, node_actions, way_actions, relation_actions);
+  print_subtags(tag, indent, bbox, print_info_action, node_actions, way_actions, relation_actions);
 }
 
 
@@ -626,6 +656,7 @@ int main(int argc, char *argv[])
   int argi(1);
   enum { first, id_sorted, geo_sorted } target = id_sorted;
   double north(100.0), south(100.0), east(200.0), west(200.0);
+  bool print_info_action = true;
   while (argi < argc)
   {
     if (!strncmp("--target=first", argv[argi], 14))
@@ -662,6 +693,8 @@ int main(int argc, char *argv[])
       }
       north = atof(bbox.c_str());
     }
+    else if (!strncmp("--noinfo", argv[argi], 8))
+      print_info_action = false;
     ++argi;
   }
   
@@ -694,7 +727,8 @@ int main(int argc, char *argv[])
   else if (target == id_sorted)
   {
     cout<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    print_tag_idsorted(*root, "", south != 100.0, node_actions, way_actions, relation_actions);
+    print_tag_idsorted(*root, "", south != 100.0, print_info_action,
+		       node_actions, way_actions, relation_actions);
   }
   
   return 0;

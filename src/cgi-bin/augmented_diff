@@ -19,8 +19,9 @@
 
 BUF="$QUERY_STRING&"
 
-ID=
+ID=0
 BBOX=
+INFO=
 EXECBASE="`dirname $0`/../"
 
 IFS=$'&'
@@ -30,6 +31,8 @@ for KEY_VAL in $QUERY_STRING; do
     ID="${KEY_VAL:3}"
   elif [[ ${KEY_VAL:0:5} == "bbox=" ]]; then
     BBOX="${KEY_VAL:5}"
+  elif [[ ${KEY_VAL:0:7} == "info=no" ]]; then
+    INFO="--noinfo"
   fi
 }; done
 unset IFS
@@ -45,9 +48,16 @@ printf -v TDIGIT2 %03u $(($ARG % 1000))
 ARG=$(($ARG / 1000))
 printf -v TDIGIT1 %03u $ARG
 
-if [[ -z BBOX ]]; then
-  cat /var/www/augmented_diffs/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz
+if [[ -z $BBOX ]]; then
+{
+  if [[ -z $INFO ]]; then
+    cat /var/www/augmented_diffs/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz
+  else
+  {
+    gunzip </var/www/augmented_diffs/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz | $EXECBASE/bin/process_augmented_diffs $INFO | gzip
+  }; fi
+};
 else
 {
-  gunzip </var/www/augmented_diffs/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz | $EXECBASE/bin/process_augmented_diffs --bbox=$BBOX | gzip
+  gunzip </var/www/augmented_diffs/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz | $EXECBASE/bin/process_augmented_diffs --bbox=$BBOX $INFO | gzip
 }; fi
