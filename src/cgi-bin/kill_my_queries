@@ -27,6 +27,7 @@ fi
 BIN_DIR="$EXEC_DIR/../bin"
 
 echo "Content-Type: text/plain; charset=utf-8"
+echo 'Access-Control-Allow-Origin: *'
 echo
 
 PID=`$BIN_DIR/dispatcher --query_token`
