@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 
-BASE_DIR="/home/roland/osm-3s/html/"
+BASE_DIR="/var/www/"
 
 echo "Content-Type: application/xml; charset=utf-8"
 echo
