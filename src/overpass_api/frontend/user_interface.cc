@@ -220,13 +220,21 @@ string get_xml_console(Error_Output* error_output, uint32 max_input_size)
 }
 
 
-uint32 probe_client_token()
+string probe_client_identifier()
 {
   char* remote_addr_c = getenv("REMOTE_ADDR");
   if (!remote_addr_c)
-    return 0;
+    return "";
   
-  string ip_addr(remote_addr_c);
+  return string(remote_addr_c);  
+}
+
+
+uint32 probe_client_token()
+{
+  string ip_addr = probe_client_identifier();
+  if (ip_addr == "")
+    return 0;
   
   string::size_type pos = ip_addr.find(".");
   string::size_type old_pos = 0;

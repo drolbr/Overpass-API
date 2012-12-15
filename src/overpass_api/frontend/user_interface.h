@@ -34,4 +34,6 @@ string get_xml_console(Error_Output* error_output, uint32 max_input_size = 10485
 
 uint32 probe_client_token();
 
+string probe_client_identifier();
+
 #endif
