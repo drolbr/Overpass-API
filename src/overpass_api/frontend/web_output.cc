@@ -16,6 +16,7 @@
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "output.h"
 #include "web_output.h"
 
 #include <iomanip>
@@ -248,7 +249,8 @@ void Web_Output::write_footer()
   else if (header_written == html)
     cout<<"\n</body>\n</html>\n";
   else if (header_written == json)
-    cout<<"\n\n  ]\n}"<<(padding != "" ? ");\n" : "\n");
+    cout<<"\n\n  ]"<<(messages != "" ? ",\n\"remark\": \"" + escape_cstr(messages) + "\"" : "")
+        <<"\n}"<<(padding != "" ? ");\n" : "\n");
   header_written = final;
 }
 
@@ -274,4 +276,6 @@ void Web_Output::display_error(const string& text, uint write_mime)
   else if (header_written == html)
     cout<<"<p><strong style=\"color:#FF0000\">Error</strong>: "
         <<text<<" </p>\n";
+  else if (header_written == json)
+    messages += text;
 }

@@ -73,6 +73,7 @@ private:
   bool static_errors;
   uint log_level;
   string padding;
+  string messages;
   
   void display_remark(const string& text);
   void display_error(const string& text, uint write_mime);
