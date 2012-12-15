@@ -16,8 +16,6 @@
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../expat/expat_justparse_interface.h"
-
 #include <iostream>
 
 using namespace std;
