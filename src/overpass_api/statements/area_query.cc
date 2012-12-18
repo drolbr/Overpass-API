@@ -100,7 +100,6 @@ Area_Query_Statement::Area_Query_Statement
   is_used_ = true;
 
   map< string, string > attributes;
-  long long submitted_id;
   
   attributes["from"] = "_";
   attributes["into"] = "_";
@@ -366,8 +365,11 @@ void Area_Query_Statement::execute(Resource_Manager& rman)
   set< Uint31_Index > req;
   
   set< pair< Uint32_Index, Uint32_Index > > nodes_req;
-  if (area_id.empty())
+  if (submitted_id == 0)
+  {
+    area_id.clear();
     get_ranges(rman.sets()[input].areas, nodes_req, req, rman);
+  }
   else
     get_ranges(nodes_req, req, rman);
   collect_nodes_from_req(nodes_req, nodes, rman);

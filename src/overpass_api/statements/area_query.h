@@ -71,6 +71,7 @@ class Area_Query_Statement : public Statement
   private:
     string input;
     string output;
+    long long submitted_id;
     vector< Area_Skeleton::Id_Type > area_id;    
     static bool is_used_;
     vector< Query_Constraint* > constraints;
