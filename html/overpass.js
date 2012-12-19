@@ -162,7 +162,7 @@
               fillOpacity: 0.25
           });
 	  
-	  var strategy = new ZoomLimitedBBOXStrategy(8);
+	  var strategy = new ZoomLimitedBBOXStrategy(zoom);
           var layer = new OpenLayers.Layer.Vector(color, {
               strategies: [strategy],
               protocol: new OpenLayers.Protocol.HTTP({
@@ -180,6 +180,6 @@
       }
 
       function make_layer(data_url, color) {
-	  return make_large_layer(data_url, color, 13);
+	  return make_large_layer(data_url, color, 8);
       }
       
