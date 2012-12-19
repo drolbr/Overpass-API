@@ -70,17 +70,15 @@ bool Area_Constraint::get_ranges
 void Area_Constraint::filter(Resource_Manager& rman, Set& into)
 {
   set< pair< Uint32_Index, Uint32_Index > > range_req;
-  if (area_blocks_req.empty())
+  if (area->areas_from_input())
   {
-    if (area->areas_from_input())
-    {
-      map< string, Set >::const_iterator mit = rman.sets().find(area->get_input());
-      if (mit != rman.sets().end())
-        area->get_ranges(mit->second.areas, range_req, area_blocks_req, rman);
-    }
-    else
-      area->get_ranges(range_req, area_blocks_req, rman);
+    map< string, Set >::const_iterator mit = rman.sets().find(area->get_input());
+    if (mit != rman.sets().end())
+      area->get_ranges(mit->second.areas, range_req, area_blocks_req, rman);
   }
+  else
+    area->get_ranges(range_req, area_blocks_req, rman);
+  
   area->collect_nodes(into.nodes, area_blocks_req, rman);
   into.ways.clear();
   into.relations.clear();
@@ -165,6 +163,7 @@ void Area_Query_Statement::get_ranges
      set< Uint31_Index >& area_block_req,
      Resource_Manager& rman)
 {
+  area_id.clear();
   for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator it = input_areas.begin();
        it != input_areas.end(); ++it)
   {
@@ -366,10 +365,7 @@ void Area_Query_Statement::execute(Resource_Manager& rman)
   
   set< pair< Uint32_Index, Uint32_Index > > nodes_req;
   if (submitted_id == 0)
-  {
-    area_id.clear();
     get_ranges(rman.sets()[input].areas, nodes_req, req, rman);
-  }
   else
     get_ranges(nodes_req, req, rman);
   collect_nodes_from_req(nodes_req, nodes, rman);
