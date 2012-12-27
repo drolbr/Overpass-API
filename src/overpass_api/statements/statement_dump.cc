@@ -255,6 +255,15 @@ string dump_subquery_map_ql(const string& name, const map< string, string >& att
     if (attributes.find("than") != attributes.end() && attributes.find("than")->second != "")
       result += "(newer:\"" + escape_quotation_marks(attributes.find("than")->second) + "\")";
   }
+  else if (name == "area-query")
+  {
+    result += "(area";
+    if (attributes.find("from") != attributes.end() && attributes.find("from")->second != "_")
+      result += "." + attributes.find("from")->second;
+    if (attributes.find("ref") != attributes.end() && attributes.find("ref")->second != "")
+      result += ":" + attributes.find("ref")->second;
+    result += ")";
+  }
   else
     result += "(" + name + ":)";
   
@@ -399,6 +408,13 @@ string Statement_Dump::dump_compact_map_ql() const
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
+  else if (name == "area-query")
+  {
+    result += "node" + dump_subquery_map_ql(name, attributes);
+    
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+  }
   else
     result += "(" + name + ":)";
   
@@ -410,20 +426,25 @@ string Statement_Dump::dump_compact_map_ql() const
 string Statement_Dump::dump_bbox_map_ql() const
 {
   string result;
+  bool auto_timeout = true;
   if (name == "osm-script")
   {
     for (map< string, string >::const_iterator it = attributes.begin();
         it != attributes.end(); ++it)
     {
       if (it->first == "timeout")
+      {
 	result += "[timeout:" + it->second + "]";
+	auto_timeout = false;
+      }
       else if (it->first == "element-limit")
 	result += "[maxsize:" + it->second + "]";
       else if (it->first == "output")
 	result += "[out:" + it->second + "]";
     }
-    if (!attributes.empty())
-      result += ";";
+    if (auto_timeout)
+      result += "[timeout:1]";
+    result += ";";
     for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
       result += (*it)->dump_bbox_map_ql();
@@ -546,6 +567,13 @@ string Statement_Dump::dump_bbox_map_ql() const
       else if (rel_type == "up-rel")
 	result += "<<";
     }
+    
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+  }
+  else if (name == "area-query")
+  {
+    result += "node" + dump_subquery_map_ql(name, attributes) + "(bbox)";
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
@@ -711,6 +739,13 @@ string Statement_Dump::dump_pretty_map_ql() const
       else if (rel_type == "up-rel")
 	result += "<<";
     }
+    
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+  }
+  else if (name == "area-query")
+  {
+    result += "node" + dump_subquery_map_ql(name, attributes);
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
