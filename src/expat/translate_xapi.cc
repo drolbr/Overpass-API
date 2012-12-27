@@ -24,6 +24,47 @@
 
 using namespace std;
 
+string xapi_unescape(string input)
+{
+  string result;
+  string::size_type pos = 0;
+  while (pos < input.length())
+  {
+    if (input[pos] != '\\')
+      result += input[pos];
+    else
+    {
+      ++pos;
+      if (pos >= input.length())
+	break;
+      result += input[pos];
+    }
+    ++pos;
+  }
+  return result;
+}
+
+
+string::size_type find_unescaped(const string& input, char c)
+{
+  if (input[0] == c)
+    return 0;
+  string::size_type pos = input.find(c);
+  while (pos != string::npos)
+  {
+    if (input[pos-1] != '\\')
+      return pos;
+    int backslash_pos = pos-1;
+    while (backslash_pos >= 0 && input[backslash_pos] == '\\')
+      --backslash_pos;
+    if ((pos - backslash_pos) % 2 == 1)
+      return pos;
+    pos = input.find(c, pos+1);
+  }
+  return string::npos;
+}
+
+
 struct InputAnalizer
 {
   InputAnalizer(const string& input, bool force_meta = false);
@@ -100,16 +141,16 @@ InputAnalizer::InputAnalizer(const string& input_, bool force_meta)
     {
       key_value.push_back(make_pair("", ""));
       input = input.substr(1);
-      if (input.find('=') != string::npos && input.find(']') != string::npos &&
-	 input.find('=') < input.find(']'))
+      if (find_unescaped(input, '=') != string::npos && find_unescaped(input, ']') != string::npos &&
+	 find_unescaped(input, '=') < find_unescaped(input, ']'))
       {
-        key_value.back().first = input.substr(0, input.find('='));
-        input = input.substr(input.find('=')+1);
-        key_value.back().second = input.substr(0, input.find(']'));
+        key_value.back().first = input.substr(0, find_unescaped(input, '='));
+        input = input.substr(find_unescaped(input, '=')+1);
+        key_value.back().second = input.substr(0, find_unescaped(input, ']'));
       }
       else
       {
-	if (input.find(']') == string::npos)
+	if (find_unescaped(input, ']') == string::npos)
 	  cout<<"Error: Expected ']' after value.\n";
 	else
 	  cout<<"Error: Expected '=' after key.\n";
@@ -117,7 +158,7 @@ InputAnalizer::InputAnalizer(const string& input_, bool force_meta)
       }
       if (key_value.back().second == "*")
 	key_value.back().second="";
-      input = input.substr(input.find(']')+1);
+      input = input.substr(find_unescaped(input, ']')+1);
     }
   }
 }
@@ -152,6 +193,24 @@ void print_bbox(const InputAnalizer& analizer, string prefix)
       <<"\" w=\""<<escape_xml(analizer.west)<<"\" e=\""<<escape_xml(analizer.east)<<"\"/>\n";
 }
 
+
+void print_key_values(const InputAnalizer& analizer)
+{
+  for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
+      it != analizer.key_value.end(); ++it)
+  {
+    if (it->second == "*")
+      cout<<"  <has-kv k=\""<<escape_xml(xapi_unescape(it->first))<<"\"/>\n";
+    else if (find_unescaped(it->second, '|') != string::npos)
+      cout<<"  <has-kv k=\""<<escape_xml(xapi_unescape(it->first))
+          <<"\" regv=\"^("<<escape_xml(xapi_unescape(it->second))<<")$\"/>\n";
+    else
+      cout<<"  <has-kv k=\""<<escape_xml(xapi_unescape(it->first))
+          <<"\" v=\""<<escape_xml(xapi_unescape(it->second))<<"\"/>\n";
+  }
+}
+
+
 void print_print(const InputAnalizer& analizer)
 {
   if (analizer.meta_found)
@@ -169,16 +228,7 @@ void process_nodes(string input, bool is_star = false, bool force_meta = false)
   cout<<"<query type=\"node\">\n";
   if (analizer.bbox_found)
     print_bbox(analizer, "  ");
-  for (vector< pair< string, string > >::const_iterator it = analizer.key_value.begin();
-      it != analizer.key_value.end(); ++it)
-  {
-    if (it->second == "*")
-      cout<<"  <has-kv k=\""<<escape_xml(it->first)<<"\"/>\n";
-    else if (it->second.find('|') != string::npos)
-      cout<<"  <has-kv k=\""<<escape_xml(it->first)<<"\" regv=\"^("<<escape_xml(it->second)<<")$\"/>\n";
-    else
-      cout<<"  <has-kv k=\""<<escape_xml(it->first)<<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
-  }
+  print_key_values(analizer);
   print_meta(analizer, "  ");
   cout<<"</query>\n";
     
