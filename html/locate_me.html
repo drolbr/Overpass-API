@@ -10,6 +10,7 @@
       var lat = 53.86;
       var lon = 8.44;
       var zoom = 18;
+      var located = false;
       var map;
       var current_query = "";
       
@@ -258,6 +259,13 @@
                 target_div.appendChild(newElem);
                 target_div.appendChild(document.createElement("br"));
               }
+              else if (result.elements[i].tags.operator)
+              {
+                var newElem = document.createElement("strong");
+                newElem.appendChild(document.createTextNode(result.elements[i].tags.operator));
+                target_div.appendChild(newElem);
+                target_div.appendChild(document.createElement("br"));
+              }
               if (result.elements[i].tags["addr:street"] && result.elements[i].tags["addr:housenumber"])
               {
                 var newElem = document.createElement("em");
@@ -267,6 +275,32 @@
                 target_div.appendChild(newElem);
                 target_div.appendChild(document.createElement("br"));
               }
+              else if (result.elements[i].type && result.elements[i].id)
+              {
+                var type_letter = (result.elements[i].type == "node" ? "N"
+                    : (result.elements[i].type == "way" ? "W" : "R"));
+                var nominatim_req = OpenLayers.Request.GET({
+                    url: "http://nominatim.openstreetmap.org/reverse?format=json&osm_type=" + type_letter + "&osm_id=" + result.elements[i].id,
+                    async: false
+                });
+                var nominatim_result = JSON.parse(nominatim_req.responseText);
+                
+                var nominatim_road = "";
+                if (nominatim_result.address && nominatim_result.address.road)
+                    nominatim_road = nominatim_result.address.road;
+                else if (nominatim_result.address && nominatim_result.address.pedestrian)
+                    nominatim_road = nominatim_result.address.pedestrian;
+                    
+                var nominatim_house_number = "";
+                if (nominatim_result.address && nominatim_result.address.house_number)
+                    nominatim_house_number = nominatim_result.address.house_number;
+                
+                var newElem = document.createElement("em");
+                newElem.appendChild(document.createTextNode(nominatim_road + " " + nominatim_house_number));
+                target_div.appendChild(newElem);
+                target_div.appendChild(document.createElement("br"));
+              }
+
               for (var key in result.elements[i].tags)
               {
                 if (key.substr(0,4) != "addr")
@@ -319,25 +353,19 @@
           map.setCenter(lonLat, zoom);
           
           // Try W3C Geolocation
-          if (navigator.geolocation)
-              navigator.geolocation.getCurrentPosition(showMap,
-                  function(position_error) {
-                      alert(position_error.message);
-                  },                
-                  {
-                      enableHighAccuracy: true
-                  });
-    //navigator.geolocation.getCurrentPosition(function(position) {
-      // success
-    //}, function(position_error) {
-      // failure
-      //alert(position_error.message);
-    //}, {
-      // options
-      //enableHighAccuracy: true
-    //});
-          else
-            alert("The W3C Geolocation API isn't availble.");
+          if (!located)
+          {
+              if (navigator.geolocation)
+                  navigator.geolocation.getCurrentPosition(showMap,
+                      function(position_error) {
+                          alert(position_error.message);
+                      },                
+                      {
+                          enableHighAccuracy: true
+                      });
+              else
+                  alert("The W3C Geolocation API isn't availble.");
+          }
           
           var click = new Click("http://overpass-api.de/api/interpreter?data=[timeout:3][out:json];", 0.0000001, map);
           map.addControl(click);
@@ -517,10 +545,10 @@
   <div id="statusline" style="min-height:10%; font-family:sans-serif; font-size:16pt; font-weight:bold">Landkarte</div>
 
   <div id="menu" style="height:10%; width:100%; font-family:sans-serif; font-size:16pt; position:absolute; top:90%; left:0%; text-align:center">
-    <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;map&quot;);map.zoomIn()"><img src="plus.png" alt="zoom in" height="100%"/></a></div>
-    <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;map&quot;);map.zoomOut()"><img src="minus.png" alt="zoom out" height="100%"/></a></div>
-    <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;menu_search&quot;);populateSearchForm()"><img src="search.png" alt="search" height="100%"/></a></div>
-    <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;menu_text&quot;);prepareStartMenu()"><img src="find.png" alt="find" height="100%"/></a></div>
+    <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;map&quot;);map.zoomIn()"><img src="/plus.png" alt="zoom in" height="100%"/></a></div>
+    <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;map&quot;);map.zoomOut()"><img src="/minus.png" alt="zoom out" height="100%"/></a></div>
+    <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;menu_search&quot;);populateSearchForm()"><img src="/search.png" alt="search" height="100%"/></a></div>
+    <div style="background-color:blue; width:24%; float:left; margin-right:1%"><a href="#" onclick="zShow(&quot;menu_text&quot;);prepareStartMenu()"><img src="/find.png" alt="find" height="100%"/></a></div>
   </div>
 
   <div id="map" class="smallmap" style="position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:1"></div>
