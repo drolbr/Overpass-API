@@ -183,6 +183,16 @@
           document.getElementById(target).style.zIndex = "1";
       }
       
+
+      function addMapBacklink(target_div) {
+          var newElem = document.createElement("a");
+          newElem.appendChild(document.createTextNode("zurück zur Karte"));
+          newElem.href = "#";
+          newElem.setAttribute("onclick", "restoreStatusText();zShow(\"map\")");
+          target_div.appendChild(newElem);
+          target_div.appendChild(document.createElement("br"));
+          target_div.appendChild(document.createElement("br"));
+      }
      
      Click = OpenLayers.Class(OpenLayers.Control, {
 	
@@ -240,20 +250,18 @@
             target_div.removeChild(target_div.firstChild);
           target_div.style.overflow = "hidden";
 
-          var newElem = document.createElement("a");
-          newElem.appendChild(document.createTextNode("zurück zur Karte"));
-          newElem.href = "#";
-          newElem.setAttribute("onclick", "restoreStatusText();zShow(\"map\")");
-          target_div.appendChild(newElem);
-          target_div.appendChild(document.createElement("br"));
-          target_div.appendChild(document.createElement("br"));
+          addMapBacklink(target_div);
 
           for (var i = 0; i < result.elements.length; i++)
           {
+            var name_detected = false;
+            var address_detected = false;
+          
             if (result.elements[i].tags)
             {
               if (result.elements[i].tags.name)
               {
+                name_detected = true;
                 var newElem = document.createElement("strong");
                 newElem.appendChild(document.createTextNode(result.elements[i].tags.name));
                 target_div.appendChild(newElem);
@@ -261,6 +269,7 @@
               }
               else if (result.elements[i].tags.operator)
               {
+                name_detected = true;
                 var newElem = document.createElement("strong");
                 newElem.appendChild(document.createTextNode(result.elements[i].tags.operator));
                 target_div.appendChild(newElem);
@@ -268,6 +277,7 @@
               }
               if (result.elements[i].tags["addr:street"] && result.elements[i].tags["addr:housenumber"])
               {
+                address_detected = true;
                 var newElem = document.createElement("em");
                 newElem.appendChild(document.createTextNode(
                     result.elements[i].tags["addr:street"] + " "
@@ -280,7 +290,7 @@
                 var type_letter = (result.elements[i].type == "node" ? "N"
                     : (result.elements[i].type == "way" ? "W" : "R"));
                 var nominatim_req = OpenLayers.Request.GET({
-                    url: "http://nominatim.openstreetmap.org/reverse?format=json&osm_type=" + type_letter + "&osm_id=" + result.elements[i].id,
+                    url: "http://nominatim.openstreetmap.org/reverse?email=overpass&format=json&osm_type=" + type_letter + "&osm_id=" + result.elements[i].id,
                     async: false
                 });
                 var nominatim_result = JSON.parse(nominatim_req.responseText);
@@ -294,20 +304,24 @@
                 var nominatim_house_number = "";
                 if (nominatim_result.address && nominatim_result.address.house_number)
                     nominatim_house_number = nominatim_result.address.house_number;
-                
+
+                address_detected = true;
                 var newElem = document.createElement("em");
                 newElem.appendChild(document.createTextNode(nominatim_road + " " + nominatim_house_number));
                 target_div.appendChild(newElem);
                 target_div.appendChild(document.createElement("br"));
               }
 
-              for (var key in result.elements[i].tags)
+              if (!name_detected || !address_detected)
               {
-                if (key.substr(0,4) != "addr")
-                {
-                    target_div.appendChild(document.createTextNode(key + " = " + result.elements[i].tags[key]));
-                    target_div.appendChild(document.createElement("br"));
-                }
+                  for (var key in result.elements[i].tags)
+                  {
+                    if (key.substr(0,4) != "addr")
+                    {
+                        target_div.appendChild(document.createTextNode(key + " = " + result.elements[i].tags[key]));
+                        target_div.appendChild(document.createElement("br"));
+                    }
+                  }
               }
               target_div.appendChild(document.createElement("br"));
             }
@@ -424,7 +438,6 @@
           "Postbox": ["[amenity=post_box]"],
           "Gasstation": ["[amenity=fuel]"],
           "WC": ["[amenity=toilets]"],
-          "WLAN": ["[wifi=yes]"],
 
           "Foodsource": ["[shop=supermarket]", "[shop=convenience]"],
           "Chemist": ["[shop=chemist]"],
@@ -437,6 +450,12 @@
           "Cafe": ["[amenity=cafe]"],
           "IceCafe": ["[cuisine=ice_cream]"],
           "Restaurant": ["[amenity=restaurant]"],
+          "Regional": ["[amenity=restaurant][cuisine=regional]", "[amenity=restaurant][cuisine=german]"],
+          "Italian": ["[amenity=restaurant][cuisine=italian]"],
+          "Greek": ["[amenity=restaurant][cuisine=greek]"],
+          "Chinese": ["[amenity=restaurant][cuisine=chinese]"],
+          "Spain": ["[amenity=restaurant][cuisine=spanish]", "[amenity=restaurant][cuisine=mexican]"],
+          "OtherRestaurant": ["[amenity=restaurant][cuisine!~'regional|german|italian|greek|chinese|spanish|mexican']"],
           "Pub": ["[amenity=pub]"],
           "Fastfood": ["[amenity=fast_food]"]
       };
@@ -496,6 +515,7 @@
 
       function prepareStartMenu() {
           clearChoiceMenu();
+          addMapBacklink(document.getElementById("menu_text"));
           addPOIFolder("Service", "Service");
           addPOIFolder("Shopping", "Einkaufen");
           addPOIFolder("Food", "Essen");
@@ -503,15 +523,16 @@
       
       function prepareServiceMenu() {
           clearChoiceMenu();
+          addPOIFolder("Start", "zurück");
           addPOIFolder("ATM", "Geldautomat");
           addPOILayerChoice("Postbox", "Briefkasten");
           addPOILayerChoice("Gasstation", "Tankstelle");
           addPOILayerChoice("WC", "WC");
-          addPOILayerChoice("WLAN", "WLAN");
       }
       
       function prepareATMMenu() {
           clearChoiceMenu();
+          addPOIFolder("Service", "zurück");
           addPOILayerChoice("ATM", "alle");
           addPOILayerChoice("Sparkasse", "Sparkasse");
           addPOILayerChoice("Postbank", "Cash Group");
@@ -521,6 +542,7 @@
       
       function prepareShoppingMenu() {
           clearChoiceMenu();
+          addPOIFolder("Start", "zurück");
           addPOILayerChoice("Foodsource", "Lebensmittel");
           addPOILayerChoice("Chemist", "Drogerie");
           addPOILayerChoice("Pharmacy", "Apotheke");
@@ -531,12 +553,25 @@
       
       function prepareFoodMenu() {
           clearChoiceMenu();
+          addPOIFolder("Start", "zurück");
           addPOILayerChoice("Baker", "Bäcker");
           addPOILayerChoice("Cafe", "Café");
           addPOILayerChoice("IceCafe", "Eisdiele");
-          addPOILayerChoice("Restaurant", "Restaurant");
+          addPOIFolder("Restaurant", "Restaurant");
           addPOILayerChoice("Pub", "Kneipe");
           addPOILayerChoice("Fastfood", "Fastfood");
+      }
+      
+      function prepareRestaurantMenu() {
+          clearChoiceMenu();
+          addPOIFolder("Food", "zurück");
+          addPOILayerChoice("Restaurant", "Alle");
+          addPOILayerChoice("Regional", "gutbürgerlich");
+          addPOILayerChoice("Italian", "italienisch");
+          addPOILayerChoice("Greek", "griechisch");
+          addPOILayerChoice("Chinese", "chinesisch");
+          addPOILayerChoice("Spain", "spanisch");
+          addPOILayerChoice("OtherRestaurant", "sonstige");
       }
       
   </script>
