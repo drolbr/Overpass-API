@@ -161,7 +161,7 @@ class Element_Collector
     struct Element_Collector_Condition
     {
       Element_Collector_Condition(const string& key_, const string& value_, bool straight_)
-      : key(key_), value(value_), straight(straight_) {}
+      : key(key_), value(value_, true), straight(straight_) {}
       
       string key;
       Regular_Expression value;

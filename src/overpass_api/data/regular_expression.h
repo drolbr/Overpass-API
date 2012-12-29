@@ -22,6 +22,7 @@
 #include "sys/types.h"
 #include "regex.h"
 
+#include <iostream>
 #include <string>
 
 using namespace std;
@@ -40,9 +41,10 @@ struct Regular_Expression_Error
 class Regular_Expression
 {
   public:
-    Regular_Expression(const string& regex)
+    Regular_Expression(const string& regex, bool case_sensitive)
     {
-      int error_no = regcomp(&preg, regex.c_str(), REG_EXTENDED|REG_NOSUB);
+      int case_flag = case_sensitive ? 0 : REG_ICASE;
+      int error_no = regcomp(&preg, regex.c_str(), REG_EXTENDED|REG_NOSUB|case_flag);
       if (error_no != 0)
 	throw Regular_Expression_Error(error_no);
     }

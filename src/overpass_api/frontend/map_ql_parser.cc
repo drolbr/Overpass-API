@@ -267,14 +267,24 @@ TStatement* create_query_statement(typename TStatement::Factory& stmt_factory,
   return stmt_factory.create_statement("query", line_nr, attr);
 }
 
+typedef enum { haskv_plain, haskv_regex, haskv_icase } haskv_type;
+
 template< class TStatement >
 TStatement* create_has_kv_statement(typename TStatement::Factory& stmt_factory,
-				    string key, string value, bool regex, bool straight,
+				    string key, string value, haskv_type regex, bool straight,
 				    uint line_nr)
 {
   map< string, string > attr;
   attr["k"] = key;
-  attr[regex ? "regv" : "v"] = value;
+  if (regex == haskv_plain)
+    attr["v"] = value;
+  else if (regex == haskv_regex)
+    attr["regv"] = value;
+  else
+  {
+    attr["regv"] = value;
+    attr["case"] = "ignore";
+  }
   attr["modv"] = (straight ? "" : "not");
   return stmt_factory.create_statement("has-kv", line_nr, attr);
 }
@@ -651,11 +661,15 @@ TStatement* create_query_substatement
 {
   if (clause.statement == "has-kv")
     return create_has_kv_statement< TStatement >
-        (stmt_factory, clause.attributes[0], clause.attributes[1], false,
+        (stmt_factory, clause.attributes[0], clause.attributes[1], haskv_plain,
 	 (clause.attributes[2] == ""), clause.line_col.first);
   else if (clause.statement == "has-kv_regex")
     return create_has_kv_statement< TStatement >
-        (stmt_factory, clause.attributes[0], clause.attributes[1], true,
+        (stmt_factory, clause.attributes[0], clause.attributes[1], haskv_regex,
+	 (clause.attributes[2] == ""), clause.line_col.first);
+  else if (clause.statement == "has-kv_icase")
+    return create_has_kv_statement< TStatement >
+        (stmt_factory, clause.attributes[0], clause.attributes[1], haskv_icase,
 	 (clause.attributes[2] == ""), clause.line_col.first);
   else if (clause.statement == "around")
     return create_around_statement< TStatement >
@@ -801,7 +815,15 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	clause.attributes.push_back(key);
 	clause.attributes.push_back(get_text_token(token, error_output, "Value"));
 	clause.attributes.push_back(straight ? "" : "!");
-	clear_until_after(token, error_output, "]");
+	clear_until_after(token, error_output, ",", "]", false);
+	if (*token == ",")
+	{
+	  clause.statement = "has-kv_icase";
+	  ++token;
+	  clear_until_after(token, error_output, "i");
+	  clear_until_after(token, error_output, "]", false);
+	}
+	++token;
 	clauses.push_back(clause);
       }
     }
@@ -942,7 +964,9 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
   }
   else if (clauses.size() == 1 && from == "")
   {
-    if (clauses.front().statement == "has-kv" || clauses.front().statement == "has-kv_regex"
+    if (clauses.front().statement == "has-kv"
+       || clauses.front().statement == "has-kv_regex"
+       || clauses.front().statement == "has-kv_icase"
        || (clauses.front().statement == "area" && type != "node")
        || (clauses.front().statement == "around" && type != "node")
        || (clauses.front().statement == "polygon" && type != "node")

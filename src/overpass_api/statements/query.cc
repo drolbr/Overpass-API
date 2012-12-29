@@ -826,6 +826,7 @@ Has_Kv_Statement::Has_Kv_Statement
   attributes["v"] = "";
   attributes["regv"] = "";
   attributes["modv"] = "";
+  attributes["case"] = "sensitive";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
@@ -840,6 +841,15 @@ Has_Kv_Statement::Has_Kv_Statement
     add_static_error(temp.str());
   }
   
+  bool case_sensitive = false;
+  if (attributes["case"] != "ignore")
+  {
+    if (attributes["case"] != "sensitive")
+      add_static_error("For the attribute \"case\" of the element \"has-kv\""
+	  " the only allowed values are \"sensitive\" or \"ignore\".");
+    case_sensitive = true;
+  }
+  
   if (attributes["regv"] != "")
   {
     if (value != "")
@@ -852,7 +862,7 @@ Has_Kv_Statement::Has_Kv_Statement
     
     try
     {
-      regex = new Regular_Expression(attributes["regv"]);
+      regex = new Regular_Expression(attributes["regv"], case_sensitive);
     }
     catch (Regular_Expression_Error e)
     {
