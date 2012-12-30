@@ -80,25 +80,34 @@ int main(int argc, char *argv[])
       max_allowed_time = temp.get_max_allowed_time();
       max_allowed_space = temp.get_max_allowed_space();
     }
-    
-    // open read transaction and log this.
-    int area_level = 0;
-    Dispatcher_Stub dispatcher("", &error_output, xml_raw, area_level,
-			       max_allowed_time, max_allowed_space);
-    
-    if (!osm_script || osm_script->get_type() == "xml")
-      error_output.write_xml_header
-          (dispatcher.get_timestamp(),
-	   area_level > 0 ? dispatcher.get_area_timestamp() : "");
-    else if (osm_script->get_type() == "json")
-      error_output.write_json_header
-          (dispatcher.get_timestamp(),
-	   area_level > 0 ? dispatcher.get_area_timestamp() : "");
-    else
-      osm_script->set_template_name(template_name);
 
-    if (!error_output.is_options_request)
+    if (error_output.is_options_request)
     {
+      if (!osm_script || osm_script->get_type() == "xml")
+        error_output.write_xml_header("", "");
+      else if (osm_script->get_type() == "json")
+        error_output.write_json_header("", "");
+      else
+        osm_script->set_template_name(template_name);
+    }
+    else
+    {
+      // open read transaction and log this.
+      int area_level = 0;
+      Dispatcher_Stub dispatcher("", &error_output, xml_raw, area_level,
+			         max_allowed_time, max_allowed_space);
+    
+      if (!osm_script || osm_script->get_type() == "xml")
+        error_output.write_xml_header
+            (dispatcher.get_timestamp(),
+	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
+      else if (osm_script->get_type() == "json")
+        error_output.write_json_header
+            (dispatcher.get_timestamp(),
+	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
+      else
+        osm_script->set_template_name(template_name);
+      
       for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	   it != get_statement_stack()->end(); ++it)
         (*it)->execute(dispatcher.resource_manager());
