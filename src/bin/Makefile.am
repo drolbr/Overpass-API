@@ -1,5 +1,5 @@
 bin_PROGRAMS = osm3s_query dispatcher update_database update_from_dir sketch_route_svg draw_route_svg tocgi uncgi escape_xml bbox_brim_query translate_xapi process_augmented_diffs
-dist_bin_SCRIPTS = apply_osc_to_db.sh cleanup_xapi_tmp.sh clone.sh compress_clone.sh download_clone.sh fetch_osc.sh run_osm3s_minutely.sh rules_loop.sh
+dist_bin_SCRIPTS = apply_osc_to_db.sh cleanup_xapi_tmp.sh clone.sh compress_clone.sh download_clone.sh fetch_osc.sh run_osm3s_minutely.sh rules_loop.sh 
 
 escape_xml_cc = ../expat/escape_xml.cc
 expat_cc = ../expat/expat_justparse_interface.cc
