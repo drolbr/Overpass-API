@@ -5,7 +5,7 @@ EXEC_DIR, META, AREA)
 You can also set those variables in the /etc/default/overpass file
 
 This script runs the dispatcher at start up and the diff update process.
-You first need to update in your $DB_DIR the replicate_id file with the
+You first need to update or create in your $DB_DIR the replicate_id file with the
 replicate sequence number corresponding to the date of the OSM file you
 imported if your are running it for the first time
 
