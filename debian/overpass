@@ -1,0 +1,133 @@
+#! /bin/sh
+
+### BEGIN INIT INFO
+# Provides:		overpass
+# Required-Start:	$remote_fs $syslog
+# Required-Stop:	$remote_fs $syslog
+# Default-Start:	2 3 4 5
+# Default-Stop:         0 1 6
+# Short-Description:	Overpass startup script for dispatcher, area-queries and diff updates
+### END INIT INFO
+
+#set -e
+
+#You can also set those variables in /etc/default/overpass
+DIFF_URL="http://planet.osm.org/replication/minute"
+DB_DIR=/path/to/overpassDB/
+EXEC_DIR=/path/to/binaries/
+LOG_DIR=/var/log/overpass/
+RUN_AS_USER=root
+
+META=yes
+#To enable area, setting this to yes isn't enought ! Please also read : http://wiki.openstreetmap.org/wiki/Talk:Overpass_API/install
+AREA=no
+
+if test -f /etc/default/overpass; then
+    . /etc/default/overpass
+fi
+
+mkdir $LOG_DIR 2>/dev/null 
+
+DISPATCHER_PID_FILE=/var/run/dispatcher.pid
+DISPATCHER_AREA_PID_FILE=/var/run/dispatcher_area.pid
+DIFF_UPDATE_PID_FILE=/var/run/diff_update.pid
+DISPATCHER=$EXEC_DIR/dispatcher
+DIFF_UPDATER=$EXEC_DIR/fetch_osc_and_apply.sh
+
+DISPATCHER_OPTIONS="--meta=$META --osm-base --db-dir=$DB_DIR"
+
+test -x $DISPATCHER || exit 0
+. /lib/lsb/init-functions
+
+# Are we running from init?
+run_by_init() {
+    ([ "$previous" ] && [ "$runlevel" ]) || [ "$runlevel" = S ]
+}
+
+check_dev_null() {
+    if [ ! -c /dev/null ]; then
+	if [ "$1" = log_end_msg ]; then
+	    log_end_msg 1 || true
+	fi
+	if ! run_by_init; then
+	    log_action_msg "/dev/null is not a character device!"
+	fi
+	exit 1
+    fi
+}
+
+case "$1" in
+  start)
+	check_dev_null
+	log_daemon_msg "Starting Overpass dispatcher daemon" "dispatcher"
+	if test -f $DISPATCHER_PID_FILE ; then 
+	  echo "dispatcher allready running ? : pid file exists in $DISPATCHER_PID_FILE"
+	  exit 0
+	fi
+	rm /dev/shm/osm3s* 2>/dev/null
+	rm $DB_DIR/osm3s* 2>/dev/null
+	if start-stop-daemon --start --quiet -b --oknodo --make-pidfile -c $RUN_AS_USER --pidfile $DISPATCHER_PID_FILE --exec $DISPATCHER -- $DISPATCHER_OPTIONS >> $LOG_DIR/dispatcher.log 2>&1; then
+	    log_end_msg 0
+	else
+	    log_end_msg 1
+	fi
+	if [ $AREA = "yes" ] ; then
+	  log_daemon_msg "Starting Overpass dispatcher daemon for areas" "dispatcher areas"
+	  if start-stop-daemon --start --quiet -b --oknodo --make-pidfile -c $RUN_AS_USER --pidfile $DISPATCHER_AREA_PID_FILE --exec $DISPATCHER -- --areas $DISPATCHER_OPTIONS >> $LOG_DIR/dispatcher.log 2>&1; then
+	    log_end_msg 0
+	  else
+	    log_end_msg 1
+	  fi
+	fi
+	if test -x $DIFF_UPDATER ; then
+	sleep 1 # Wait a bit for the dispatcher to be running
+	log_daemon_msg "Starting Overpass diff updates with command $DIFF_UPDATER $DIFF_URL" "diff updates"
+	  if start-stop-daemon --start --quiet -b --oknodo --make-pidfile -c $RUN_AS_USER --pidfile $DIFF_UPDATE_PID_FILE --exec $DIFF_UPDATER -- $DIFF_URL >> $LOG_DIR/diff-updates.log 2>&1; then
+	    log_end_msg 0
+	  else
+	    log_end_msg 1
+	  fi
+	fi
+	;;
+  stop)
+	if test -x $DIFF_UPDATER ; then
+	  if start-stop-daemon --stop --quiet --oknodo --pidfile $DIFF_UPDATE_PID_FILE; then
+	    log_daemon_msg "Stopping Overpass diff updates" "diff updates"
+	    rm -f $DIFF_UPDATE_PID_FILE
+	    log_end_msg 0
+	  else
+	    log_end_msg 1
+	  fi
+	fi
+	log_daemon_msg "Stopping Overpass dispatcher daemon" "dispatcher"
+	if start-stop-daemon --stop --quiet --oknodo --pidfile $DISPATCHER_PID_FILE; then
+	    log_end_msg 0
+	    rm /dev/shm/osm3s* 2>/dev/null
+	    rm $DB_DIR/osm3s* 2>/dev/null
+	    rm -f $DISPATCHER_PID_FILE
+	else
+	    log_end_msg 1
+	fi
+	if [ $AREA = "yes" ] ; then
+	  log_daemon_msg "Stopping Overpass dispatcher area daemon " "dispatcher area"
+	  if start-stop-daemon --stop --quiet --oknodo --pidfile $DISPATCHER_AREA_PID_FILE; then
+	    log_end_msg 0
+	    rm -f $DISPATCHER_AREA_PID_FILE
+	  else
+	    log_end_msg 1
+	  fi
+	fi
+	;;
+
+  status)
+	status_of_proc -p $DISPATCHER_PID_FILE "" "overpass dispatcher" && exit 0 || exit $?
+	status_of_proc -p $DIFF_UPDATE_PID_FILE "" "overpass diff updates" && exit 0 || exit $?
+	status_of_proc -p $DISPATCHER_AREA_PID_FILE "" "overpass dispatcher areas" && exit 0 || exit $?
+	;;
+
+  *)
+	log_action_msg "Usage: /etc/init.d/overpass {start|stop|status}"
+	exit 1
+esac
+
+exit 0

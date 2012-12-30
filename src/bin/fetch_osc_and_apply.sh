@@ -26,7 +26,7 @@ if [[ -z $1  ]]; then
 fi
 
 DIFF_URL=$1
-
+EXEC_DIR="`dirname $0`/"
 if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
 {
   EXEC_DIR="`pwd`/$EXEC_DIR"
