@@ -73,9 +73,9 @@ fetch_and_apply_minute_diff()
 #Default is no meta
 META=
 
-if [[ $2 == "--meta=yes" ]]; then
+if [ $2 == "--meta=yes" ]; then
 {
-  META="--meta"
+  $META_OPTION="--meta"
 }; fi
 
 
@@ -85,7 +85,7 @@ do
 {
   REPLICATE_ID=$(($REPLICATE_ID + 1))
   echo "`date '+%F %T'`: updating to $REPLICATE_ID" >>$DB_DIR/apply_osc_to_db.log
-  fetch_and_apply_minute_diff $REPLICATE_ID $META
+  fetch_and_apply_minute_diff $REPLICATE_ID $META_OPTION
   if [[ $? == 0 ]] ; then # Update success
   {
     echo "$REPLICATE_ID" > $DB_DIR/replicate_id
