@@ -65,7 +65,7 @@ fetch_and_apply_minute_diff()
     return 77
   fi
   
-  gunzip -c /tmp/diff.osc.gz | $EXEC_DIR/update_database $2
+  gunzip -c /tmp/diff.osc.gz | $EXEC_DIR/update_database $2 > /dev/null
   return $?
 
 };
@@ -94,8 +94,8 @@ do
   else
   {
     REPLICATE_ID=$(($REPLICATE_ID - 1))
+    sleep 5 #Wait 5 seconds for the diff to be uvailable
   }; fi
-  sleep 2
 };
 done
 
