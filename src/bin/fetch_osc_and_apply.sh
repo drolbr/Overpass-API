@@ -58,15 +58,19 @@ fetch_and_apply_minute_diff()
   ARG=$(($ARG / 1000))
   printf -v TDIGIT1 %03u $ARG
   
-  REMOTE_PATH="$DIFF_URL/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz"
+  REMOTE_PATH="$DIFF_URL/$TDIGIT1/$TDIGIT2/$TDIGIT3"
+  REMOTE_DIFF="$REMOTE_PATH.osc.gz"
+  REMOTE_STATE="$REMOTE_PATH.state.txt"
   #echo $REMOTE_PATH
-  wget -q -O - "$REMOTE_PATH" > /tmp/diff.osc.gz 
+  wget -q -O - "$REMOTE_DIFF" > /tmp/diff.osc.gz 
   if [[ ! $? == 0 ]] ; then
     return 77
   fi
   
   gunzip -c /tmp/diff.osc.gz | $EXEC_DIR/update_database $2 > /dev/null
-  return $?
+  ret=$?
+  wget -q -O - "$REMOTE_STATE" | grep timestamp | cut -f2 -d\= > $DB_DIR/osm_base_version
+  return $ret
 
 };
 
