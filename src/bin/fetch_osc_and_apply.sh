@@ -84,12 +84,12 @@ while [[ true ]];
 do
 {
   REPLICATE_ID=$(($REPLICATE_ID + 1))
-  echo "`date '+%F %T'`: updating to $REPLICATE_ID" >>$DB_DIR/apply_osc_to_db.log
+  echo "`date '+%F %T'`: trying to apply $REPLICATE_ID" >>$DB_DIR/apply_osc_to_db.log
   fetch_and_apply_minute_diff $REPLICATE_ID $META_OPTION
   if [[ $? == 0 ]] ; then # Update success
   {
     echo "$REPLICATE_ID" > $DB_DIR/replicate_id
-    echo "`date '+%F %T'`: update complete" $REPLICATE_ID >>$DB_DIR/apply_osc_to_db.log
+    echo "`date '+%F %T'`: update complete of $REPLICATE_ID" >>$DB_DIR/apply_osc_to_db.log
   }
   else
   {
