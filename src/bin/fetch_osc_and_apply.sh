@@ -25,6 +25,7 @@ if [[ -z $1  ]]; then
 };
 fi
 
+TMP_DIFF=/tmp/diff.osc.gz
 DIFF_URL=$1
 EXEC_DIR="`dirname $0`/"
 if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
@@ -61,25 +62,29 @@ fetch_and_apply_minute_diff()
   REMOTE_PATH="$DIFF_URL/$TDIGIT1/$TDIGIT2/$TDIGIT3"
   REMOTE_DIFF="$REMOTE_PATH.osc.gz"
   REMOTE_STATE="$REMOTE_PATH.state.txt"
-  #echo $REMOTE_PATH
-  wget -q -O - "$REMOTE_DIFF" > /tmp/diff.osc.gz 
+
+  wget -q -O - "$REMOTE_DIFF" > $TMP_DIFF
   if [[ ! $? == 0 ]] ; then
-    return 77
+    rm $TMP_DIFF
+    return 1
   fi
-  
-  gunzip -c /tmp/diff.osc.gz | $EXEC_DIR/update_database $2 > /dev/null
+  if ! test -s $TMP_DIFF ; then  # Empty file ? don't apply
+    return 2
+  fi
+  gunzip -c $TMP_DIFF |  $EXEC_DIR/update_database $2 > /dev/null 2>&1
   ret=$?
+  rm $TMP_DIFF 2>/dev/null
   wget -q -O - "$REMOTE_STATE" | grep timestamp | cut -f2 -d\= > $DB_DIR/osm_base_version
   return $ret
 
 };
 
 #Default is no meta
-META=
+META_OPTION=
 
-if [ $2 == "--meta=yes" ]; then
+if [[ $2 == "--meta=yes" ]]; then
 {
-  $META_OPTION="--meta"
+  META_OPTION="--meta"
 }; fi
 
 
@@ -98,7 +103,7 @@ do
   else
   {
     REPLICATE_ID=$(($REPLICATE_ID - 1))
-    sleep 5 #Wait 5 seconds for the diff to be uvailable
+    sleep 10 #Wait 5 seconds for the diff to be uvailable
   }; fi
 };
 done
