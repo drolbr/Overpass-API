@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
+# Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht and Sylvain Letuffe
 #
 # This file is part of Overpass_API.
 #
@@ -16,6 +16,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+
+# If you have questions about this code https://github.com/sletuffe/Overpass-API or sylvain@letuffe.org
+# Roland is not to be bothered with bugs in this code
 
 if [[ -z $1  ]]; then
 {

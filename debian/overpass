@@ -9,12 +9,11 @@
 # Short-Description:	Overpass startup script for dispatcher, area-queries and diff updates
 ### END INIT INFO
 
-#set -e
 
-#You can also set those variables in /etc/default/overpass
+#You can also override those variables in /etc/default/overpass
 DIFF_URL="http://planet.osm.org/replication/minute"
-DB_DIR=/path/to/overpassDB/
-EXEC_DIR=/path/to/binaries/
+DB_DIR=/var/lib/overpass/
+EXEC_DIR=/usr/local/bin/
 LOG_DIR=/var/log/overpass/
 RUN_AS_USER=root
 

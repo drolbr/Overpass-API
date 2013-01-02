@@ -1,3 +1,7 @@
+Author : sylvain@letuffe.org if you have problems with this, better ask me than the author of OverpassAPI (Roland)
+More information here : https://github.com/sletuffe/Overpass-API
+
+
 If runing under debian you can use that SysV start-up script.
 
 Change the variables at the begining to match your installation (DB_DIR,
