@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht and Sylvain Letuffe
+# Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
 #
 # This file is part of Overpass_API.
 #
@@ -17,9 +17,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 
-# If you have questions about this code https://github.com/sletuffe/Overpass-API or sylvain@letuffe.org
-# Roland is not to be bothered with bugs in this code
-
 if [[ -z $1  ]]; then
 {
   echo "Usage: $0 diff_url --meta=(yes|no)"
@@ -29,6 +26,7 @@ if [[ -z $1  ]]; then
 fi
 
 TMP_DIFF=/tmp/diff.osc.gz
+TMP_DIFF_UNCOMPRESS=/tmp/diff.osc
 DIFF_URL=$1
 EXEC_DIR="`dirname $0`/"
 if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
@@ -67,16 +65,22 @@ fetch_and_apply_minute_diff()
   REMOTE_STATE="$REMOTE_PATH.state.txt"
 
   wget -q -O - "$REMOTE_DIFF" > $TMP_DIFF
-  if [[ ! $? == 0 ]] ; then
+  if [[ ! $? == 0 ]] ; then # Diff failed to download (404, no answers, etc.)
     rm $TMP_DIFF
     return 1
   fi
-  if ! test -s $TMP_DIFF ; then  # Empty file ? don't apply
+  gunzip -c $TMP_DIFF > $TMP_DIFF_UNCOMPRESS
+  if [[ ! $? == 0 ]] ; then # For unknown reasons, the diff get sometimes corrupted or empty, don't try to apply
+    rm $TMP_DIFF 2>/dev/null
+    rm $TMP_DIFF_UNCOMPRESS 2>/dev/null
     return 2
   fi
-  gunzip -c $TMP_DIFF |  $EXEC_DIR/update_database $2 > /dev/null 2>&1
+  cat $TMP_DIFF_UNCOMPRESS | $EXEC_DIR/update_database $2 >> /dev/null 2>&1
   ret=$?
   rm $TMP_DIFF 2>/dev/null
+  rm $TMP_DIFF_UNCOMPRESS 2>/dev/null
+  
+  #Update the timestamp
   wget -q -O - "$REMOTE_STATE" | grep timestamp | cut -f2 -d\= > $DB_DIR/osm_base_version
   return $ret
 
@@ -106,7 +110,7 @@ do
   else
   {
     REPLICATE_ID=$(($REPLICATE_ID - 1))
-    sleep 10 #Wait 5 seconds for the diff to be uvailable
+    sleep 10 #Wait for the diff to be uvailable
   }; fi
 };
 done
