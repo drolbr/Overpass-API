@@ -26,6 +26,8 @@ if test -f /etc/default/overpass; then
 fi
 
 mkdir $LOG_DIR 2>/dev/null 
+mkdir $DB_DIR 2>/dev/null
+chown $RUN_AS_USER $DB_DIR 
 
 DISPATCHER_PID_FILE=/var/run/dispatcher.pid
 DISPATCHER_AREA_PID_FILE=/var/run/dispatcher_area.pid
