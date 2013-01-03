@@ -1,0 +1,20 @@
+Author : sylvain@letuffe.org if you have problems with this, better ask me than the author of OverpassAPI (Roland)
+More information here : https://github.com/sletuffe/Overpass-API
+
+
+If runing under debian you can use that SysV start-up script.
+
+Change the variables at the begining to match your installation (DB_DIR,
+EXEC_DIR, META, AREA)
+You can also set those variables in the /etc/default/overpass file
+
+This script runs the dispatcher at start up and the diff update process.
+You first need to update or create in your $DB_DIR the replicate_id file with the
+replicate sequence number corresponding to the date of the OSM file you
+imported if your are running it for the first time
+
+
+INSTALL for squeeze/wheezy
+
+cp overpass /etc/init.d/
+update-rc.d overpass defaults
