@@ -125,9 +125,11 @@ case "$1" in
 	;;
 
   status)
-	status_of_proc -p $DISPATCHER_PID_FILE "" "overpass dispatcher" && exit 0 || exit $?
-	status_of_proc -p $DIFF_UPDATE_PID_FILE "" "overpass diff updates" && exit 0 || exit $?
-	status_of_proc -p $DISPATCHER_AREA_PID_FILE "" "overpass dispatcher areas" && exit 0 || exit $?
+	status_of_proc -p $DISPATCHER_PID_FILE "" "overpass dispatcher"
+	status_of_proc -p $DIFF_UPDATE_PID_FILE "" "overpass diff updates"
+	if [ $AREA = "yes" ] ; then
+	  status_of_proc -p $DISPATCHER_AREA_PID_FILE "" "overpass dispatcher areas" 
+	fi
 	;;
 
   *)
