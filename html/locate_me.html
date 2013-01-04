@@ -3,7 +3,7 @@
   <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"/>
   <meta name="HandheldFriendly" content="true"/>
   <title>Stadtplan am aktuellen Ort</title>
-  <script src="http://openlayers.org/api/OpenLayers.js"></script>
+  <script src="http://openlayers.org/api/2.11/OpenLayers.js"></script>
   <script src="http://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
   <script src="http://overpass-api.de/overpass.js"></script>
   <script type="text/javascript">
@@ -300,6 +300,12 @@
                     nominatim_road = nominatim_result.address.road;
                 else if (nominatim_result.address && nominatim_result.address.pedestrian)
                     nominatim_road = nominatim_result.address.pedestrian;
+                else if (nominatim_result.address && nominatim_result.address.footway)
+                    nominatim_road = nominatim_result.address.footway;
+                else if (nominatim_result.address && nominatim_result.address.cycleway)
+                    nominatim_road = nominatim_result.address.cycleway;
+                else if (nominatim_result.address && nominatim_result.address.path)
+                    nominatim_road = nominatim_result.address.path;
                     
                 var nominatim_house_number = "";
                 if (nominatim_result.address && nominatim_result.address.house_number)
@@ -421,19 +427,32 @@
           current_query = current_query + ");";
       }
 
-      function showNameQueryLayer(query_value)
+      function showNameQueryLayer(query_value_user)
       {
+          var query_value = "";
+          for (var i = 0; i < query_value_user.length; ++i)
+          {
+              if (query_value_user[i] >= 'A' && query_value_user[i] <= 'Z')
+                  query_value += query_value_user[i];
+              else if (query_value_user[i] >= 'a' && query_value_user[i] <= 'z')
+                  query_value += query_value_user[i];
+              else if (query_value_user[i] >= '0' && query_value_user[i] <= '9')
+                  query_value += query_value_user[i];
+              else
+                  query_value += ".{1,4}";
+          }
+      
           setStatusText("Suche nach " + query_value);
-          showCustomLayer("(node[name~\"" + query_value + "\"](bbox);way[name~\"" + query_value + "\"](bbox);>;rel[name~\"" + query_value + "\"](bbox);>;);");
-          current_query = "(node[name~\"" + query_value + "\"](bbox);way[name~\"" + query_value + "\"](bbox);rel[name~\"" + query_value + "\"](bbox););";
+          showCustomLayer("(node[name~\"" + query_value + "\",i](bbox);way[name~\"" + query_value + "\",i](bbox);>;rel[name~\"" + query_value + "\",i](bbox);>;);");
+          current_query = "(node[name~\"" + query_value + "\",i](bbox);way[name~\"" + query_value + "\",i](bbox);rel[name~\"" + query_value + "\",i](bbox););";
       }
       
       var queryLayers = {
-          "ATM": ["[amenity=atm]", "[atm=yes]"],
-          "Sparkasse": ["[amenity=atm][name~\"[sS]parkasse\"]", "[atm=yes][name~\"[sS]parkasse\"]"],
-          "Postbank": ["[amenity=atm][name~\"Deutsche Bank\"]", "[atm=yes][name~\"Deutsche Bank\"]", "[amenity=atm][name~\"Commerzbank\"]", "[atm=yes][name~\"Commerzbank\"]", "[amenity=atm][name~\"Postbank\"]", "[atm=yes][name~\"Postbank\"]"],
-          "Volksbank": ["[amenity=atm][name~'[vV]olksbank']", "[atm=yes][name~'[vV]olksbank']", "[amenity=atm][name~'Raiffeisenbank']", "[atm=yes][name~'Raiffeisenbank']", "[amenity=atm][name~'Kölner Bank']", "[atm=yes][name~'Kölner Bank']"],
-          "Sparda": ["[amenity=atm][name~'Sparda']", "[atm=yes][name~'Sparda']", "[amenity=atm][name~'Targo']", "[atm=yes][name~'Targo']", "[amenity=atm][name~'Santander']", "[atm=yes][name~'Santander']", "[amenity=atm][name~'BB ?Bank']", "[atm=yes][name~'BB ?Bank']", "[amenity=atm][name~'National-Bank']", "[atm=yes][name~'National-Bank']"],
+          "ATM": ["[amenity=atm]", "[amenity=bank][atm!=no]"],
+          "Sparkasse": ["[amenity=atm][name~\"[sS]parkasse\"]", "[amenity=bank][atm!=no][name~\"[sS]parkasse\"]", "[amenity=atm][operator~\"[sS]parkasse\"]", "[amenity=bank][atm!=no][operator~\"[sS]parkasse\"]"],
+          "Postbank": ["[amenity=atm][name~\"Deutsche Bank\"]", "[amenity=bank][atm!=no][name~\"Deutsche Bank\"]", "[amenity=atm][name~\"Commerzbank\"]", "[amenity=bank][atm!=no][name~\"Commerzbank\"]", "[amenity=atm][name~\"Postbank\"]", "[amenity=bank][atm!=no][name~\"Postbank\"]", "[amenity=atm][operator~\"Deutsche Bank\"]", "[amenity=bank][atm!=no][operator~\"Deutsche Bank\"]", "[amenity=atm][operator~\"Commerzbank\"]", "[amenity=bank][atm!=no][operator~\"Commerzbank\"]", "[amenity=atm][operator~\"Postbank\"]", "[amenity=bank][atm!=no][operator~\"Postbank\"]"],
+          "Volksbank": ["[amenity=atm][name~'[vV]olksbank']", "[amenity=bank][atm!=no][name~'[vV]olksbank']", "[amenity=atm][name~'Raiffeisenbank']", "[amenity=bank][atm!=no][name~'Raiffeisenbank']", "[amenity=atm][name~'Kölner Bank']", "[amenity=bank][atm!=no][name~'Kölner Bank']", "[amenity=atm][operator~'[vV]olksbank']", "[amenity=bank][atm!=no][operator~'[vV]olksbank']", "[amenity=atm][operator~'Raiffeisenbank']", "[amenity=bank][atm!=no][operator~'Raiffeisenbank']", "[amenity=atm][operator~'Kölner Bank']", "[amenity=bank][atm!=no][operator~'Kölner Bank']"],
+          "Sparda": ["[amenity=atm][name~'Sparda']", "[amenity=bank][atm!=no][name~'Sparda']", "[amenity=atm][name~'Targo']", "[amenity=bank][atm!=no][name~'Targo']", "[amenity=atm][name~'Santander']", "[amenity=bank][atm!=no][name~'Santander']", "[amenity=atm][name~'BB ?Bank']", "[amenity=bank][atm!=no][name~'BB ?Bank']", "[amenity=atm][name~'National-Bank']", "[amenity=bank][atm!=no][name~'National-Bank']", "[amenity=atm][operator~'Sparda']", "[amenity=bank][atm!=no][operator~'Sparda']", "[amenity=atm][operator~'Targo']", "[amenity=bank][atm!=no][operator~'Targo']", "[amenity=atm][operator~'Santander']", "[amenity=bank][atm!=no][operator~'Santander']", "[amenity=atm][operator~'BB ?Bank']", "[amenity=bank][atm!=no][operator~'BB ?Bank']", "[amenity=atm][operator~'National-Bank']", "[amenity=bank][atm!=no][operator~'National-Bank']"],
 
           "Postbox": ["[amenity=post_box]"],
           "Gasstation": ["[amenity=fuel]"],
