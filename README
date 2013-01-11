@@ -29,6 +29,8 @@ pushd src/
 autoscan
 aclocal
 autoheader
+#Needed at least on debian to correct Error: ‘required file `./ltmain.sh' not found’
+libtoolize
 automake --add-missing
 autoconf
 popd
