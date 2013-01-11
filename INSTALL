@@ -1,0 +1,18 @@
+#List of commands to run for an install from sources on debian squeeze or ubuntu
+
+sudo apt-get install g++ make expat libexpat1-dev git autoconf automake
+git clone https://github.com/drolbr/Overpass-API.git
+
+cd Overpass-API/src
+autoscan
+aclocal
+autoheader
+#Needed at least on debian to correct Error: ‘required file `./ltmain.sh' not found’
+libtoolize
+automake --add-missing
+autoconf
+
+#Default is /usr/local/bin without --prefix
+./configure --prefix=YOUR_DIRECTORY_FOR_BINARIES
+
+make install
