@@ -3,7 +3,7 @@
   <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"/>
   <meta name="HandheldFriendly" content="true"/>
   <title>Stadtplan am aktuellen Ort</title>
-  <script src="http://openlayers.org/api/2.11/OpenLayers.js"></script>
+  <script src="http://openlayers.org/api/2.12/OpenLayers.js"></script>
   <script src="http://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
   <script src="http://overpass-api.de/overpass.js"></script>
   <script type="text/javascript">
@@ -353,7 +353,12 @@
               displayProjection: new OpenLayers.Projection("EPSG:4326")
           } );
 
-          layerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
+          layerMapnik = /*new OpenLayers.Layer.OSM.Mapnik("Mapnik");*/
+              new OpenLayers.Layer.OSM("OSM_de",
+              ["http://a.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png",
+               "http://b.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png",
+               "http://c.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png",
+               "http://d.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png"]);
           map.addLayer(layerMapnik);
           layerCycleMap = new OpenLayers.Layer.OSM.CycleMap("CycleMap");
           map.addLayer(layerCycleMap);
