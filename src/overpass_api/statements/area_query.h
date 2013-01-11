@@ -62,6 +62,13 @@ class Area_Query_Statement : public Statement
       (map< Uint32_Index, vector< Node_Skeleton > >& nodes,
        const set< Uint31_Index >& req,
        Resource_Manager& rman);
+       
+    void collect_ways
+      (map< Uint31_Index, vector< Way_Skeleton > >& ways,
+       map< Uint32_Index, vector< Node_Skeleton > >& way_members_,
+       vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id,
+       const set< Uint31_Index >& req,
+       Resource_Manager& rman);
 
     bool areas_from_input() const { return (submitted_id == 0); }
     string get_input() const { return input; }

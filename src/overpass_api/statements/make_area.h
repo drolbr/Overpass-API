@@ -65,4 +65,9 @@ class Make_Area_Statement : public Statement
     static bool is_used_;
 };
 
+
+void add_way_to_area_blocks(const Way_Skeleton& way, const vector< Node >& nodes,
+			    uint32 id, map< Uint31_Index, vector< Area_Block > >& areas);
+
+
 #endif
