@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm-script timeout="86400" element-limit="1073741824">
+
+<union>
+  <query type="relation">
+    <has-kv k="type" v="boundary"/>
+    <has-kv k="name"/>
+  </query>
+  <query type="relation">
+    <has-kv k="type" v="multipolygon"/>
+    <has-kv k="name"/>
+  </query>
+</union>
+<foreach into="pivot">
+  <union>
+    <recurse type="relation-way" from="pivot"/>
+    <recurse type="way-node"/>
+  </union>
+  <make-area pivot="pivot"/>
+</foreach>
+
+</osm-script>
