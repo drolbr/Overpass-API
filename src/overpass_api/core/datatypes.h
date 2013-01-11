@@ -95,7 +95,7 @@ struct Pair_Equal_Id {
 
 
 template < class T >
-T* binary_search_for_id(vector< T >& vect, typename T::Id_Type id)
+const T* binary_search_for_id(const vector< T >& vect, typename T::Id_Type id)
 {
   uint32 lower(0);
   uint32 upper(vect.size());
@@ -115,7 +115,7 @@ T* binary_search_for_id(vector< T >& vect, typename T::Id_Type id)
 
 
 template < class TObject >
-TObject* binary_ptr_search_for_id(vector< TObject* >& vect, typename TObject::Id_Type id)
+TObject* binary_ptr_search_for_id(const vector< TObject* >& vect, typename TObject::Id_Type id)
 {
   uint32 lower(0);
   uint32 upper(vect.size());

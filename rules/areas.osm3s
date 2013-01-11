@@ -10,11 +10,28 @@
     <has-kv k="type" v="multipolygon"/>
     <has-kv k="name"/>
   </query>
+  <query type="relation">
+    <has-kv k="postal_code"/>
+  </query>
+  <query type="relation">
+    <has-kv k="addr:postcode"/>
+  </query>
 </union>
 <foreach into="pivot">
   <union>
     <recurse type="relation-way" from="pivot"/>
     <recurse type="way-node"/>
+  </union>
+  <make-area pivot="pivot"/>
+</foreach>
+<query type="way">
+  <has-kv k="area" v="yes"/>
+  <has-kv k="name"/>
+</query>
+<foreach into="pivot">
+  <union>
+    <item set="pivot"/>
+    <recurse type="way-node" from="pivot"/>
   </union>
   <make-area pivot="pivot"/>
 </foreach>
