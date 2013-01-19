@@ -1019,11 +1019,7 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 //-----------------------------------------------------------------------------
 
 Element_Collector::Element_Collector(const string& title_key_, const string& title_)
-    : title_key(title_key_), title(title_)
-{
-  if (title != "")
-    output = "\n<h2>" + title + "</h2>\n\n";
-}
+    : title_key(title_key_), title(title_) {}
 
 
 Element_Collector& Element_Collector::add_constraint(const string& key, const string& value, bool straight)
@@ -1073,6 +1069,9 @@ template< typename TSkel >
 void Element_Collector::print(const TSkel& skel,
 		const vector< pair< string, string > >* tags)
 {
+  if (output == "" && title != "")
+    output = "\n<h2>" + title + "</h2>\n\n";
+
   // Search for a weblink
   string link;
   for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
