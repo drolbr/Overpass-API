@@ -1,0 +1,27 @@
+#!/bin/sh
+# -*- sh -*-
+
+. /etc/default/overpass
+
+
+# configuration section
+if [ "$1" = "config" ]; then
+
+        echo 'graph_title OSM OverpassDB lag'
+        echo 'graph_args --base 1000'
+        echo 'graph_vlabel minutes behind main database'
+	echo 'graph_scale no'
+        echo 'graph_category osm'
+
+        echo 'lag.label replication lag'
+        echo 'lag.draw LINE'
+        echo 'lag.cdef lag,60,/'
+        echo 'lag.critical 1000'
+#        echo 'lag.critical 8000'
+
+        exit 0
+fi
+
+lag=$(($(date +%s)-$(date +%s --utc -d "$(cat $DB_DIR/osm_base_version | cut -f2 -d\" | sed s/"\\\\"/""/g | sed s/[ZT]/" "/g)" )))
+echo "lag.value $lag"
+exit 0
