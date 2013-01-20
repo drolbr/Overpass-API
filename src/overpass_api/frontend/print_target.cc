@@ -1094,7 +1094,7 @@ void Element_Collector::print(const TSkel& skel,
     {
       if (link != "")
 	output += "<a href=\"" + link + "\" target=\"_blank\">";
-      output += "<strong>" + it->second + "</strong>\n";
+      output += "<strong>" + it->second + "</strong>";
       if (link != "")
 	output += "</a>";
       output += "<br/>\n";
