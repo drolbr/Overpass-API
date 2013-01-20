@@ -1107,9 +1107,10 @@ void Element_Collector::print(const TSkel& skel,
       output += "<a href=\"" + link + "\" target=\"_blank\">";
     ostringstream out;
     out<<skel.id.val();
-    output += "<strong>" + elem_type< TSkel >() + " " + out.str() + "</strong><br/>\n";
+    output += "<strong>" + elem_type< TSkel >() + " " + out.str() + "</strong>";
     if (link != "")
       output += "</a>";
+    output += "<br/>\n";
   }
 
   for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
