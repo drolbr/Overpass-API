@@ -1094,9 +1094,10 @@ void Element_Collector::print(const TSkel& skel,
     {
       if (link != "")
 	output += "<a href=\"" + link + "\" target=\"_blank\">";
-      output += "<strong>" + it->second + "</strong><br/>\n";
+      output += "<strong>" + it->second + "</strong>\n";
       if (link != "")
 	output += "</a>";
+      output += "<br/>\n";
       title_key_found = true;
     }
   }
