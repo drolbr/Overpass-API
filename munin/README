@@ -1,0 +1,2 @@
+This script will read the database path from /etc/default/overpass and then
+compute the delay between the database timestamp and now.
