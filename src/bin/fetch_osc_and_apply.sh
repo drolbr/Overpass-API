@@ -27,6 +27,7 @@ fi
 
 TMP_DIFF=/tmp/diff.osc.gz
 TMP_DIFF_UNCOMPRESS=/tmp/diff.osc
+TMP_STATE=/tmp/state.txt
 DIFF_URL=$1
 EXEC_DIR="`dirname $0`/"
 if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
@@ -71,18 +72,32 @@ fetch_and_apply_minute_diff()
   fi
   gunzip -c $TMP_DIFF > $TMP_DIFF_UNCOMPRESS
   if [[ ! $? == 0 ]] ; then # For unknown reasons, the diff get sometimes corrupted or empty, don't try to apply
+  {
     rm $TMP_DIFF 2>/dev/null
     rm $TMP_DIFF_UNCOMPRESS 2>/dev/null
     return 2
-  fi
+  } ; fi
   cat $TMP_DIFF_UNCOMPRESS | $EXEC_DIR/update_database $2 >> /dev/null 2>&1
   ret=$?
   rm $TMP_DIFF 2>/dev/null
   rm $TMP_DIFF_UNCOMPRESS 2>/dev/null
   
   #Update the timestamp
-  wget -q -O - "$REMOTE_STATE" | grep timestamp | cut -f2 -d\= > $DB_DIR/osm_base_version
-  return $ret
+  while [[ true ]];
+  do
+  	wget -q -O - "$REMOTE_STATE" > $TMP_STATE
+  	if [[ ! $? == 0 ]] ; then # In case the state file wasn't there in time but the diff was, let'y wait until it become available
+  	{
+  	  rm $TMP_SATE
+  	  sleep 1
+  	} else
+  	{
+  	  grep timestamp $TMP_STATE | cut -f2 -d\= > $DB_DIR/tmp
+  	  mv $DB_DIR/tmp $DB_DIR/osm_base_version
+  	  rm $TMP_STATE
+  	  return $ret
+  	}; fi	
+  done
 
 };
 
@@ -110,7 +125,7 @@ do
   else
   {
     REPLICATE_ID=$(($REPLICATE_ID - 1))
-    sleep 10 #Wait for the diff to be uvailable
+    sleep 10 #Wait for the diff to be available
   }; fi
 };
 done
