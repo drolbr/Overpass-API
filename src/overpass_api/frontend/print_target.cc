@@ -1175,6 +1175,15 @@ bool Element_Collector::consider(uint32 ll_upper, const Area_Skeleton& skel,
 		const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta,
 		const map< uint32, string >* users)
 {
+  for (vector< Element_Collector_Condition* >::const_iterator it = constraints.begin();
+       it != constraints.end(); ++it)
+  {
+    if (!check_tag_criterion(tags, **it))
+      return false;
+  }
+  
+  print(skel, tags);
+
   return true;
 }
 
