@@ -150,7 +150,7 @@ void add_way_to_area_blocks(const Way_Skeleton& way, const vector< Node >& nodes
   for (vector< Node::Id_Type >::const_iterator it3(way.nds.begin());
       it3 != way.nds.end(); ++it3)
   {
-    const Node* node = binary_search_for_id< Node >(nodes, *it3);
+    const Node* node = binary_search_for_id(nodes, *it3);
     if (node == 0)
       return;
     if ((node->index & 0xffffff00) != cur_idx)
@@ -211,7 +211,7 @@ pair< Node::Id_Type, Uint32_Index > Make_Area_Statement::create_area_blocks
 //       for (vector< Node::Id_Type >::const_iterator it3(it2->nds.begin());
 //           it3 != it2->nds.end(); ++it3)
 //       {
-// 	Node* node(binary_search_for_id(nodes, *it3));
+// 	const Node* node(binary_search_for_id(nodes, *it3));
 // 	if (node == 0)
 // 	  return make_pair(*it3, it2->id);
 // 	if ((node->index & 0xffffff00) != cur_idx)
@@ -343,7 +343,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   pair< uint32, Uint64 > pivot_pair(detect_pivot(mit->second));
   int pivot_type(pivot_pair.first);
   uint32 pivot_id(pivot_pair.second.val());
-  
+
   if (pivot_type == 0)
   {
     nodes.clear();

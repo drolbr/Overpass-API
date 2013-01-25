@@ -144,6 +144,9 @@ rm -f run/rule_processor/*
 $BASEDIR/bin/osm3s_query <input/rule_processor/check_area_query.osm >run/rule_processor/check_area_query.log
 $BASEDIR/bin/osm3s_query <input/rule_processor/check_coord_query.osm >run/rule_processor/check_coord_query.log
 $BASEDIR/bin/osm3s_query <input/rule_processor/check_query_tags.osm >run/rule_processor/check_query_tags.log
+$BASEDIR/bin/osm3s_query <input/rule_processor/check_area_query_ways.osm >run/rule_processor/check_area_query_ways.log
+
+echo "(area[triangle];area[shapes];area[multpoly];);out;" | $BASEDIR/bin/osm3s_query >result.osm
 
 $BASEDIR/bin/dispatcher --terminate
 $BASEDIR/bin/dispatcher --areas --terminate
@@ -162,4 +165,4 @@ if [[ -n $FAILED ]]; then
 }; fi
 popd >/dev/null
 
-rm -f input/update_database/*
+#rm -f input/update_database/*

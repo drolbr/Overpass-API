@@ -469,37 +469,25 @@ void Area_Query_Statement::collect_nodes
 }
 
 
-inline uint32 ilat__(uint32 ll_upper, uint32 ll_lower)
-{
-  uint32 result(0);
-    
-  for (uint32 i(0); i < 16; i+=1)
-  {
-    result |= ((0x1<<(31-2*i))&ll_upper)<<i;
-    result |= ((0x1<<(31-2*i))&ll_lower)>>(16-i);
-  }
- 
-  return result;
-}
-
-
 inline bool ordered_intersects_inner
     (uint32 lat_a0, uint32 lon_a0, uint32 lat_a1, uint32 lon_a1,
      uint32 lat_b0, uint32 lon_b0, uint32 lat_b1, uint32 lon_b1)
 {
-  double det = ((lat_a1 - lat_a0)*(lon_b1 - lon_b0) - (lat_b1 - lat_b0)*(lon_a1 - lon_a0));
+  double det = ((double(lat_a1) - lat_a0)*(double(lon_b1) - lon_b0) - (double(lat_b1) - lat_b0)*(double(lon_a1) - lon_a0));
   if (det != 0)
   {
     double lon = 
 	double(lat_b0 - lat_a0
-	    + double(lon_a0)/(lon_a1 - lon_a0)*(lat_a1 - lat_a0)
-	    - double(lon_b0)/(lon_b1 - lon_b0)*(lat_b1 - lat_b0))
-	/det*(lon_a1 - lon_a0)*(lon_b1 - lon_b0);
+	    + double(lon_a0)/(double(lon_a1) - lon_a0)*(double(lat_a1) - lat_a0)
+	    - double(lon_b0)/(double(lon_b1) - lon_b0)*(double(lat_b1) - lat_b0))
+	/det*(double(lon_a1) - lon_a0)*(double(lon_b1) - lon_b0);
     if (lon_a0 < lon && lon < lon_a1 && lon_b0 <= lon && lon <= lon_b1)
       return true;
   }
-  else if ((fabs(lat_a0 - double(lon_a0 - lon_b0)/(lon_b1 - lon_b0)*(lat_b1 - lat_b0) - lat_b0) <= 1)
-	|| (fabs(lat_a1 - double(lon_a1 - lon_b0)/(lon_b1 - lon_b0)*(lat_b1 - lat_b0) - lat_b0) <= 1))
+  else if ((fabs(lat_a0 - (double(lon_a0) - lon_b0)/(double(lon_b1) - lon_b0)
+                *(double(lat_b1) - lat_b0) - lat_b0) <= 1)
+	|| (fabs(lat_a1 - (double(lon_a1) - lon_b0)/(double(lon_b1) - lon_b0)
+                *(double(lat_b1) - lat_b0) - lat_b0) <= 1))
     return true;
   
   return false;
@@ -513,26 +501,19 @@ inline bool ordered_a_intersects_inner
   if (lon_b0 < lon_b1)
   {
     if (lon_a0 < lon_b1 && lon_b0 < lon_a1)
-    {
-      if (ordered_intersects_inner(lat_a0, lon_a0, lat_a1, lon_a1, lat_b0, lon_b0, lat_b1, lon_b1))
-	return true;
-    }
+      return (ordered_intersects_inner(lat_a0, lon_a0, lat_a1, lon_a1, lat_b0, lon_b0, lat_b1, lon_b1));
   }
   else if (lon_b1 < lon_b0)
   {
     if (lon_a0 < lon_b0 && lon_b1 < lon_a1)
-    {
-      if (ordered_intersects_inner(lat_a0, lon_a0, lat_a1, lon_a1, lat_b1, lon_b1, lat_b0, lon_b0))
-	return true;
-    }
+      return ordered_intersects_inner(lat_a0, lon_a0, lat_a1, lon_a1, lat_b1, lon_b1, lat_b0, lon_b0);
   }
   else // lon_b0 == lon_b1
   {
     if (lon_a0 < lon_b0 && lon_b0 < lon_a1)
     {
-      double lat = double(lon_b0 - lon_a0)/(lon_a1 - lon_a0)*(lat_a1 - lat_a0) + lat_a0;
-      if ((lat_b0 < lat && lat < lat_b1) || (lat_b1 < lat && lat < lat_b0))
-	return true;
+      double lat = (double(lon_b0) - lon_a0)/(double(lon_a1) - lon_a0)*(double(lat_a1) - lat_a0) + lat_a0;
+      return ((lat_b0 < lat && lat < lat_b1) || (lat_b1 < lat && lat < lat_b0));
     }
   }
   
@@ -548,18 +529,16 @@ inline bool longitude_a_intersects_inner
   {
     if (lon_a < lon_b1 && lon_b0 < lon_a)
     {
-      double lat = double(lon_a - lon_b0)/(lon_b1 - lon_b0)*(lat_b1 - lat_b0) + lat_b0;
-      if ((lat_a0 < lat && lat < lat_a1) || (lat_a1 < lat && lat < lat_a0))
-	return true;
+      double lat = (double(lon_a) - lon_b0)/(double(lon_b1) - lon_b0)*(double(lat_b1) - lat_b0) + lat_b0;
+      return ((lat_a0 < lat && lat < lat_a1) || (lat_a1 < lat && lat < lat_a0));
     }
   }
   else if (lon_b1 < lon_b0)
   {
     if (lon_a < lon_b0 && lon_b1 < lon_a)
     {
-      double lat = double(lon_a - lon_b0)/(lon_b1 - lon_b0)*(lat_b1 - lat_b0) + lat_b0;
-      if ((lat_a0 < lat && lat < lat_a1) || (lat_a1 < lat && lat < lat_a0))
-	return true;
+      double lat = (double(lon_a) - lon_b0)/(double(lon_b1) - lon_b0)*(double(lat_b1) - lat_b0) + lat_b0;
+      return ((lat_a0 < lat && lat < lat_a1) || (lat_a1 < lat && lat < lat_a0));
     }
   }
   else // lon_b0 == lon_b1
@@ -569,28 +548,16 @@ inline bool longitude_a_intersects_inner
     if (lat_a0 < lat_a1)
     {
       if (lat_b0 < lat_b1)
-      {
-        if (lat_a0 < lat_b1 && lat_b0 < lat_a1)
-	  return true;
-      }
+        return (lat_a0 < lat_b1 && lat_b0 < lat_a1);
       else
-      {
-        if (lat_a0 < lat_b0 && lat_b1 < lat_a1)
-	  return true;
-      }
+        return (lat_a0 < lat_b0 && lat_b1 < lat_a1);
     }
     else
     {
       if (lat_b0 < lat_b1)
-      {
-        if (lat_a1 < lat_b1 && lat_b0 < lat_a0)
-	  return true;
-      }
+        return (lat_a1 < lat_b1 && lat_b0 < lat_a0);
       else
-      {
-        if (lat_a1 < lat_b0 && lat_b1 < lat_a0)
-	  return true;
-      }
+        return (lat_a1 < lat_b0 && lat_b1 < lat_a0);
     }
   }
   
@@ -641,8 +608,25 @@ bool intersects_inner(const Area_Block& string_a, const Area_Block& string_b)
 	  return true;
       }
   }
-  
-  return false;
+
+  // Check additionally the middle of the segment to also get segments
+  // that run through the area
+  cout<<string_a.id.val()<<'\n';
+  int inside = 0;
+  for (vector< pair< uint32, uint32 > >::size_type i = 0; i < coords_a.size()-1; ++i)
+  {
+    uint32 ilat = (coords_a[i].first + coords_a[i+1].first)/2;
+    uint32 ilon = (coords_a[i].second + coords_a[i+1].second)/2 + 0x80000000u;
+    cout<<ilat<<'\t'<<ilon<<'\n';
+    int check = Coord_Query_Statement::check_area_block(0, string_b, ilat, ilon);
+    if ((check != 0) && (check != Coord_Query_Statement::HIT))
+      inside ^= check;
+  }
+  for (vector< pair< uint32, uint32 > >::size_type j = 0; j < coords_b.size(); ++j)
+    cout<<"b\t"<<coords_b[j].first<<'\t'<<coords_b[j].second<<'\n';
+  cout<<'\n';
+
+  return (inside);
 }
 
 
@@ -675,7 +659,6 @@ void Area_Query_Statement::collect_ways
   map< Uint31_Index, vector< Area_Block > > way_segments;
   for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
   {
-    vector< Way_Skeleton > result;
     for (vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
       add_way_to_area_blocks(*it2, nodes, it2->id.val(), way_segments);
   }
@@ -750,30 +733,13 @@ void Area_Query_Statement::collect_ways
 	  // If an area segment intersects this way segment in the inner of the way,
           // the way is contained in the area.
           // The endpoints are properly handled via the point-in-area test
+          // Check additionally the middle of the segment to also get segments
+          // that run through the area
 	  if (intersects_inner(*sit, *it2))
 	  {
 	    ways_inside[Way::Id_Type(sit->id)] = true;
-// 	    cerr<<::lat(current_idx, 0)<<'\t'<<::lon(current_idx, 0)<<'\t';
-// 	    cerr<<(sit->id.val())<<'\t'<<(it2->id.val())<<'\n';
-//             for (vector< uint64 >::const_iterator it = it2->coors.begin(); it != it2->coors.end(); ++it)
-// 	      cerr<<::lat(current_idx | uint32((*it>>32)&0xff), 0)<<'\t'<<::lon(current_idx | uint32((*it>>32)&0xff), 0)<<'\t';
-// 	    cerr<<'\n';
-// 	    cerr<<'\n';
-//             for (vector< uint64 >::const_iterator it = sit->coors.begin(); it != sit->coors.end(); ++it)
-// 	      cerr<<::lat(current_idx | uint32((*it>>32)&0xff), 0)<<'\t'<<::lon(current_idx | uint32((*it>>32)&0xff), 0)<<'\t';
-// 	    cerr<<'\n';
-// 	    cerr<<'\n';
-//             for (vector< uint64 >::const_iterator it = it2->coors.begin(); it != it2->coors.end(); ++it)
-// 	      cerr<<::lat(uint32((*it>>32)&0xff), 0)<<'\t'<<::lon(uint32((*it>>32)&0xff), 0)<<'\t';
-// 	    cerr<<'\n';
-// 	    cerr<<'\n';
-//             for (vector< uint64 >::const_iterator it = sit->coors.begin(); it != sit->coors.end(); ++it)
-// 	      cerr<<::lat(uint32((*it>>32)&0xff), 0)<<'\t'<<::lon(uint32((*it>>32)&0xff), 0)<<'\t';
-// 	    cerr<<'\n';
-// 	    cerr<<'\n';
-	    
 	    break;
-	  }
+	  }	  
 	}
       }
       //TODO: special case that a segment goes straight from a border node to a border node
