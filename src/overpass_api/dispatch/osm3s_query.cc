@@ -53,6 +53,7 @@ int main(int argc, char *argv[])
   uint log_level = Error_Output::ASSISTING;
   Debug_Level debug_level = parser_execute;
   int area_level = 0;
+  bool respect_timeout = true;
   
   int argpos = 1;
   while (argpos < argc)
@@ -72,7 +73,10 @@ int main(int argc, char *argv[])
     else if (!(strcmp(argv[argpos], "--verbose")))
       log_level = Error_Output::VERBOSE;
     else if (!(strcmp(argv[argpos], "--rules")))
+    {
       area_level = 2;
+      respect_timeout = false;
+    }
     else if (!(strcmp(argv[argpos], "--dump-xml")))
       debug_level = parser_dump_xml;
     else if (!(strcmp(argv[argpos], "--dump-pretty-map-ql")))
@@ -134,6 +138,10 @@ int main(int argc, char *argv[])
       max_allowed_time = temp.get_max_allowed_time();
       max_allowed_space = temp.get_max_allowed_space();
     }
+    
+    // Allow rules to run for unlimited time
+    if (!respect_timeout)
+      max_allowed_time = 0;
     
     // open read transaction and log this.
     Dispatcher_Stub dispatcher(db_dir, error_output, xml_raw, area_level,
