@@ -82,6 +82,10 @@ struct InputAnalizer
 InputAnalizer::InputAnalizer(const string& input_, bool force_meta)
     : bbox_found(false), meta_found(force_meta)
 {
+#ifdef HOURLY_TIMEOUT
+  timeout = "3600";
+#endif
+    
   string input = input_;
   while (!input.empty())
   {
@@ -386,6 +390,6 @@ int main(int argc, char* argv[])
     cout<<"Error: Query must start with 'node', 'way', 'relation', or '*'\n";
     return 1;
   }
-  
+
   return 0;
 }
