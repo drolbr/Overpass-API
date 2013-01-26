@@ -30,6 +30,9 @@ inline uint32 ll_upper(uint32 ilat, int32 ilon);
 inline uint32 ll_upper_(uint32 ilat, int32 ilon);
 inline uint32 upper_ilat(uint32 quadtile);
 inline uint32 upper_ilon(uint32 quadtile);
+inline uint32 ilat(uint32 ll_upper, uint32 ll_lower);
+inline int32 ilon(uint32 ll_upper, uint32 ll_lower);
+
 inline uint32 calc_index(const std::vector< uint32 >& node_idxs);
 inline std::pair< Uint32_Index, Uint32_Index > calc_bbox_bounds(Uint31_Index way_rel_idx);
 inline std::vector< Uint32_Index > calc_node_children(const std::vector< uint32 >& way_rel_idxs);
@@ -956,17 +959,23 @@ inline int32 ilon(double lon)
 }
 
 
+// convert interleaved coordinates to plain integers
 inline uint32 ilat(uint32 ll_upper, uint32 ll_lower)
-{
-  uint32 result(0);
-    
-  for (uint32 i(0); i < 16; i+=1)
-  {
-    result |= ((0x1<<(31-2*i))&ll_upper)<<i;
-    result |= ((0x1<<(31-2*i))&ll_lower)>>(16-i);
-  }
- 
-  return result;
+{  
+  uint32 upper = ll_upper & 0xaaaaaaaa;
+  upper = (upper | (upper<<1)) & 0xcccccccc;
+  upper = (upper | (upper<<2)) & 0xf0f0f0f0;
+  upper = (upper | (upper<<4)) & 0xff00ff00;
+  upper = (upper | (upper<<8)) & 0xffff0000;
+  
+  uint32 lower = ll_lower & 0xaaaaaaaa;
+  lower = (lower | (lower>>1)) & 0x99999999;
+  lower = (lower | (lower>>2)) & 0x87878787;
+  lower = (lower | (lower>>4)) & 0x807f807f;
+  lower = (lower | (lower>>8)) & 0x80007fff;
+  lower = (lower | (lower>>16)) & 0x0000ffff;
+  
+  return (upper | lower);
 }
 
 
@@ -976,18 +985,23 @@ inline double lat(uint32 ll_upper, uint32 ll_lower)
 }
 
 
+// convert interleaved coordinates to plain integers
 inline int32 ilon(uint32 ll_upper, uint32 ll_lower)
 {
-  int32 result(0);
+  uint32 upper = (ll_upper ^ 0x40000000) & 0x55555555;
+  upper = (upper | (upper<<1)) & 0x99999999;
+  upper = (upper | (upper<<2)) & 0xe1e1e1e1;
+  upper = (upper | (upper<<4)) & 0xfe01fe01;
+  upper = (upper | (upper<<8)) & 0xfffe0001;
+  upper = (upper | (upper<<16)) & 0xffff0000;
   
-  for (uint32 i(0); i < 16; i+=1)
-  {
-    result |= ((0x1<<(30-2*i))&ll_upper)<<(i+1);
-    result |= ((0x1<<(30-2*i))&ll_lower)>>(15-i);
-  }
-  result ^= 0x80000000;
-    
-  return result;
+  uint32 lower = ll_lower & 0x55555555;
+  lower = (lower | (lower>>1)) & 0x33333333;
+  lower = (lower | (lower>>2)) & 0x0f0f0f0f;
+  lower = (lower | (lower>>4)) & 0x00ff00ff;
+  lower = (lower | (lower>>8)) & 0x0000ffff;
+  
+  return (upper | lower);
 }
 
 

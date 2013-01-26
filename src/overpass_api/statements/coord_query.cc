@@ -93,6 +93,7 @@ void Coord_Query_Statement::forecast()
   display_state();*/
 }
 
+
 /*overall strategy: we count the number of intersections of a straight line from
   the coordinates to the southern end of the block. If it is odd, the coordinate
   is inside the area, if not, they are not.
