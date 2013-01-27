@@ -205,11 +205,12 @@ void Print_Statement::tags_quadtile
   for (typename set< TIndex >::const_iterator
       it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
   {
-    if (++coarse_count >= 1024)
-    {
-      coarse_count = 0;
-      rman.health_check(*this);
-    }
+    // Disable health_check: This ensures that a result will be always printed completely
+//     if (++coarse_count >= 1024)
+//     {
+//       coarse_count = 0;
+//       rman.health_check(*this);
+//     }
     
     sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
     
@@ -336,7 +337,8 @@ void Print_Statement::tags_by_id
       (transaction.data_index(&file_prop));
   for (typename TObject::Id_Type id_pos; id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
   {
-    rman.health_check(*this);
+    // Disable health_check: This ensures that a result will be always printed completely
+    //rman.health_check(*this);
     
     map< typename TObject::Id_Type, vector< pair< string, string > > > tags_by_id;
     typename TObject::Id_Type lower_id_bound(items_by_id[id_pos.val()].first->id);
