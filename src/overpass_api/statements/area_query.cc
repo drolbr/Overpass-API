@@ -611,20 +611,15 @@ bool intersects_inner(const Area_Block& string_a, const Area_Block& string_b)
 
   // Check additionally the middle of the segment to also get segments
   // that run through the area
-  cout<<string_a.id.val()<<'\n';
   int inside = 0;
   for (vector< pair< uint32, uint32 > >::size_type i = 0; i < coords_a.size()-1; ++i)
   {
     uint32 ilat = (coords_a[i].first + coords_a[i+1].first)/2;
     uint32 ilon = (coords_a[i].second + coords_a[i+1].second)/2 + 0x80000000u;
-    cout<<ilat<<'\t'<<ilon<<'\n';
     int check = Coord_Query_Statement::check_area_block(0, string_b, ilat, ilon);
     if ((check != 0) && (check != Coord_Query_Statement::HIT))
       inside ^= check;
   }
-  for (vector< pair< uint32, uint32 > >::size_type j = 0; j < coords_b.size(); ++j)
-    cout<<"b\t"<<coords_b[j].first<<'\t'<<coords_b[j].second<<'\n';
-  cout<<'\n';
 
   return (inside);
 }
