@@ -24,10 +24,24 @@
   </union>
   <make-area pivot="pivot"/>
 </foreach>
-<query type="way">
-  <has-kv k="area" v="yes"/>
-  <has-kv k="name"/>
-</query>
+<union>
+  <query type="way">
+    <has-kv k="area" v="yes"/>
+    <has-kv k="name"/>
+  </query>
+  <query type="way">
+    <has-kv k="building" v="yes"/>
+    <has-kv k="name"/>
+  </query>
+  <query type="way">
+    <has-kv k="natural"/>
+    <has-kv k="name"/>
+  </query>
+  <query type="way">
+    <has-kv k="leisure"/>
+    <has-kv k="name"/>
+  </query>
+</union>
 <foreach into="pivot">
   <union>
     <item set="pivot"/>
