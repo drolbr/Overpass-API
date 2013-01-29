@@ -193,7 +193,6 @@ void Print_Statement::tags_quadtile
   Meta_Collector< TIndex, TObject > meta_printer(items, transaction, meta_file_prop);
   
   // iterate over the result
-  uint coarse_count = 0;
   Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db
       (transaction.data_index(&file_prop));
   typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
@@ -202,6 +201,8 @@ void Print_Statement::tags_quadtile
      Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
   typename map< TIndex, vector< TObject > >::const_iterator
       item_it(items.begin());
+      
+  //uint coarse_count = 0;
   for (typename set< TIndex >::const_iterator
       it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
   {
