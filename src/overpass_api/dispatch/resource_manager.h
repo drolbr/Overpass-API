@@ -89,6 +89,7 @@ private:
   map< string, Set > sets_;
   vector< const Set* > set_stack;
   vector< pair< uint, uint > > stack_progress;
+  vector< long long > set_stack_sizes;
   Transaction* transaction;
   Error_Output* error_output;
   Transaction* area_transaction;
