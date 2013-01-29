@@ -161,7 +161,7 @@ InputAnalizer::InputAnalizer(const string& input_, bool force_meta)
 	throw string();
       }
       if (key_value.back().second == "*")
-	key_value.back().second="";
+	key_value.back().second = "";
       input = input.substr(find_unescaped(input, ']')+1);
     }
   }
