@@ -9,15 +9,17 @@
 # Short-Description:	Overpass startup script for dispatcher, area-queries and diff updates
 ### END INIT INFO
 
+#You can override those  variables in /etc/default/overpass
 
-#You can also override those variables in /etc/default/overpass
 DIFF_URL="http://planet.osm.org/replication/minute"
 DB_DIR=/var/lib/overpass/
 EXEC_DIR=/usr/local/bin/
+
+#This directory will only contain logs in case of problems at start 
 LOG_DIR=/var/log/overpass/
 RUN_AS_USER=root
-
 META=yes
+
 #To enable area, setting this to yes isn't enought ! Please also read : http://wiki.openstreetmap.org/wiki/Talk:Overpass_API/install
 AREA=no
 
@@ -32,8 +34,10 @@ chown $RUN_AS_USER $DB_DIR
 DISPATCHER_PID_FILE=/var/run/dispatcher.pid
 DISPATCHER_AREA_PID_FILE=/var/run/dispatcher_area.pid
 DIFF_UPDATE_PID_FILE=/var/run/diff_update.pid
+AREA_UPDATE_PID_FILE=/var/run/area_update.pid
 DISPATCHER=$EXEC_DIR/dispatcher
 DIFF_UPDATER=$EXEC_DIR/fetch_osc_and_apply.sh
+AREA_BUILDER=$EXEC_DIR/rules_loop.sh
 
 DISPATCHER_OPTIONS="--meta=$META --osm-base --db-dir=$DB_DIR"
 DIFF_UPDATER_OPTION="$DIFF_URL --meta=$META"
@@ -83,9 +87,15 @@ case "$1" in
 	  else
 	    log_end_msg 1
 	  fi
+	  log_daemon_msg "Starting Overpass areas builder" "areas building"
+
+	  if start-stop-daemon --start --quiet -b --oknodo --make-pidfile -c $RUN_AS_USER --pidfile $AREA_UPDATE_PID_FILE --exec $AREA_BUILDER -- $DB_DIR  >> $LOG_DIR/area_update.log 2>&1; then
+	    log_end_msg 0
+	  else
+	    log_end_msg 1
+	  fi
 	fi
 	if test -x $DIFF_UPDATER ; then
-	sleep 1 # Wait a bit for the dispatcher to be running
 	log_daemon_msg "Starting Overpass diff updates with command $DIFF_UPDATER $DIFF_UPDATER_OPTION" "diff updates"
 	  if start-stop-daemon --start --quiet -b --oknodo --make-pidfile -c $RUN_AS_USER --pidfile $DIFF_UPDATE_PID_FILE --exec $DIFF_UPDATER -- $DIFF_UPDATER_OPTION >> $LOG_DIR/diff-updates.log 2>&1; then
 	    log_end_msg 0
@@ -118,6 +128,15 @@ case "$1" in
 	  if start-stop-daemon --stop --quiet --oknodo --pidfile $DISPATCHER_AREA_PID_FILE; then
 	    log_end_msg 0
 	    rm -f $DISPATCHER_AREA_PID_FILE
+	  else
+	    log_end_msg 1
+	  fi
+	  #FIXME this isn't enought, the osm3s_query builder will keep running for an entire loop of several hours, but we don't get it's pid
+	  # Better than nothing -- sly 
+	  log_daemon_msg "Stopping Overpass area builder " "area builder"
+	  if start-stop-daemon --stop --quiet --oknodo --pidfile $AREA_UPDATE_PID_FILE; then
+	    log_end_msg 0
+	    rm -f $AREA_UPDATE_PID_FILE
 	  else
 	    log_end_msg 1
 	  fi
