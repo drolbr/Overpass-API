@@ -61,7 +61,6 @@ void Union_Statement::forecast()
 void Union_Statement::execute(Resource_Manager& rman)
 {
   Set base_set;
-  rman.push_reference(base_set);
   map< Uint32_Index, vector< Node_Skeleton > >& nodes(base_set.nodes);
   map< Uint31_Index, vector< Way_Skeleton > >& ways(base_set.ways);
   map< Uint31_Index, vector< Relation_Skeleton > >& relations(base_set.relations);
@@ -70,7 +69,9 @@ void Union_Statement::execute(Resource_Manager& rman)
   for (vector< Statement* >::iterator it(substatements.begin());
        it != substatements.end(); ++it)
   {
+    rman.push_reference(base_set);
     (*it)->execute(rman);
+    rman.pop_reference();
     
     Set& summand(rman.sets()[(*it)->get_result_name()]);
 
@@ -82,6 +83,5 @@ void Union_Statement::execute(Resource_Manager& rman)
   
   rman.sets()[output] = base_set;
   
-  rman.pop_reference();
   rman.health_check(*this);
 }
