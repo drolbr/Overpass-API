@@ -286,6 +286,25 @@ void perform_regex_query
   }
 }
 
+
+template< class T >
+string to_string(T d)
+{
+  ostringstream out;
+  out<<d;
+  return out.str();
+}
+
+
+template< >
+string to_string< double >(double d)
+{
+  ostringstream out;
+  out<<setprecision(14)<<d;
+  return out.str();
+}
+
+
 void perform_query_with_around
     (string id_type, string type, string key1, string value1, string db_dir, uint pattern_size,
      uint64 global_node_offset, bool big_radius = false)
@@ -425,6 +444,86 @@ void perform_query_with_around
   }
 }
 
+
+void perform_query_with_around
+    (string type, string key1, string value1, string db_dir, uint pattern_size, bool big_radius = false)
+{
+  string radius = "200.1";
+  if (type == "way")
+  {
+    ostringstream out;
+    if (big_radius)
+      out<<(120.0/pattern_size)/360.0*40*1000*1000*cos(-10.0/90.0*acos(0))*0.5;
+    else
+      out<<(120.0/pattern_size)/360.0*40*1000*1000*cos(-10.0/90.0*acos(0))*0.1;
+    radius = out.str();
+  }
+  else if (type == "relation")
+  {
+    ostringstream out;
+    if (big_radius)
+      out<<(120.0/pattern_size)/360.0*40*1000*1000*cos(-10.0/90.0*acos(0))*0.9;
+    else
+      out<<(120.0/pattern_size)/360.0*40*1000*1000*cos(-10.0/90.0*acos(0))*1.2;
+    radius = out.str();
+  }
+  
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Resource_Manager rman(transaction);
+    {
+      string lat, lon;
+      if (type == "node")
+      {
+        lat = to_string(47.9 + 0.1/pattern_size);
+        lon = to_string(-0.2 + 0.2/pattern_size);
+      }
+      else if (type == "relation")
+      {
+        if (big_radius)
+        {
+          lat = to_string(-10.0 + 45.0/pattern_size);
+          lon = to_string(45.0 + 60.0/pattern_size);
+        }
+        else
+        {
+          lat = to_string(-10.0 + 45.0/pattern_size);
+          lon = to_string(-15.0 + 60.0/pattern_size*3);
+        }
+      }
+      else if (big_radius)
+      {
+        lat = to_string(-10.0 + 45.0/pattern_size*3);
+        lon = to_string(105.0 - 60.0/pattern_size);
+      }
+      else
+      {
+        lat = to_string(-10.0 + 45.0/pattern_size);
+        lon = to_string(105.0 - 60.0/pattern_size*3);
+      }
+      
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", type);
+      SProxy< Has_Kv_Statement > stmt2;
+      if (value1 != "")
+        stmt1.stmt().add_statement(&stmt2("k", key1)("v", value1).stmt(), "");
+      else if (key1 != "")
+        stmt1.stmt().add_statement(&stmt2("k", key1).stmt(), "");
+      SProxy< Around_Statement > stmt3;
+      stmt1.stmt().add_statement(&stmt3("radius", radius)("lat", lat)("lon", lon).stmt(), "");      
+      stmt1.stmt().execute(rman);
+    }
+    perform_print(rman);
+  }
+  catch (File_Error e)
+  {
+    cerr<<"File error caught: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
+
 void perform_query_with_bbox
     (string type, string key1, string value1,
      string south, string north, string west, string east, string db_dir)
@@ -472,24 +571,6 @@ void perform_query_with_bbox
     cerr<<"File error caught: "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
-}
-
-
-template< class T >
-string to_string(T d)
-{
-  ostringstream out;
-  out<<d;
-  return out.str();
-}
-
-
-template< >
-string to_string< double >(double d)
-{
-  ostringstream out;
-  out<<setprecision(14)<<d;
-  return out.str();
 }
 
 
@@ -1212,6 +1293,28 @@ int main(int argc, char* args[])
     perform_multi_query_with_bbox("node", "node_key_7", "node_....._0", "node_key_7", "value_", 3, true,
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
     
+  if ((test_to_execute == "") || (test_to_execute == "127"))
+    // Test an around combined with a local key-value pair
+    perform_query_with_around("node", "node_key_11", "", args[3], pattern_size);
+  if ((test_to_execute == "") || (test_to_execute == "128"))
+    // Test an around combined with a global key-value pair
+    perform_query_with_around("node", "node_key_7", "node_value_1", args[3],
+                              pattern_size);
+
+  if ((test_to_execute == "") || (test_to_execute == "129"))
+    // Test an around collecting ways from nodes
+    perform_query_with_around("way", "", "", args[3], pattern_size);
+  if ((test_to_execute == "") || (test_to_execute == "130"))
+    // Test an around collecting ways from nodes
+    perform_query_with_around("way", "", "", args[3], pattern_size, true);
+
+  if ((test_to_execute == "") || (test_to_execute == "131"))
+    // Test an around collecting relations from nodes based on node membership
+    perform_query_with_around("relation", "", "", args[3], pattern_size);
+  if ((test_to_execute == "") || (test_to_execute == "132"))
+    // Test an around collecting relations from nodes based on way membership
+    perform_query_with_around("relation", "", "", args[3], pattern_size, true);
+
   cout<<"</osm>\n";
   return 0;
 }

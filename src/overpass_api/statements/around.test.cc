@@ -28,6 +28,7 @@
 
 using namespace std;
 
+
 void perform_around_print(uint pattern_size, string radius, uint64 global_node_offset,
 			  Transaction& transaction)
 {
@@ -59,6 +60,38 @@ void perform_around_print(uint pattern_size, string radius, uint64 global_node_o
     cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
+
+
+void perform_coord_print(uint pattern_size, string radius, uint64 global_node_offset,
+                          Transaction& transaction)
+{
+  try
+  {
+    Resource_Manager rman(transaction);
+    {
+      ostringstream buf;
+      buf<<(47.9 + 0.1/pattern_size);
+      string lat = buf.str();
+      buf.str("");
+      buf<<(-0.2 + 0.2/pattern_size);
+      string lon = buf.str();
+      
+      const char* attributes[] = { "radius", radius.c_str(), "lat", lat.c_str(), "lon", lon.c_str(),  0 };
+      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes));
+      stmt1->execute(rman);
+    }
+    {
+      const char* attributes[] = { "order", "id", 0 };
+      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes));
+      stmt1->execute(rman);
+    }
+  }
+  catch (File_Error e)
+  {
+    cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
 
 int main(int argc, char* args[])
 {
@@ -165,7 +198,14 @@ int main(int argc, char* args[])
       stmt1->execute(rman);
     }
   }
-  
+
+  if ((test_to_execute == "") || (test_to_execute == "7"))
+    perform_coord_print(pattern_size, "20.01", global_node_offset, transaction);
+  if ((test_to_execute == "") || (test_to_execute == "8"))
+    perform_coord_print(pattern_size, "200.1", global_node_offset, transaction);
+  if ((test_to_execute == "") || (test_to_execute == "9"))
+    perform_coord_print(pattern_size, "2001", global_node_offset, transaction);
+
   cout<<"</osm>\n";
   return 0;
 }

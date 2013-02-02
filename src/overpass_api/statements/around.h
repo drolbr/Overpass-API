@@ -57,6 +57,8 @@ class Around_Statement : public Statement
   private:
     string input, output;
     double radius;
+    double lat;
+    double lon;
     map< Uint32_Index, vector< pair< double, double > > > radius_lat_lons;
     vector< pair< double, double > > simple_lat_lons;
     vector< pair< pair< double, double >, pair< double, double > > > simple_segments;
