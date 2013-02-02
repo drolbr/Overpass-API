@@ -18,19 +18,20 @@
 
 <h2>Outline</h2>
 
-<p>We first give a complete list of commands you need for installation and startup:</p>
+<p>We first give a complete list of commands you need for installation and startup:
+The comands are explained afterwards:</p>
 
 <p><a href="#required">Install required software packages (on Ubuntu)</a>:</p>
 <pre>sudo apt-get install wget g++ make expat libexpat1-dev</pre>
 
 <p><a href="#install">Install the Overpass API software</a>:</p>
-<pre>wget http://overpass-api.de/misc/osm-3s_v0.7.tar.gz
-gunzip &lt;osm-3s_v0.7.tar.gz | tar xvf -
-cd osm-3s_v0.7/build/
+<pre>wget http://overpass-api.de/misc/osm-3s_v0.7.1.tar.gz
+gunzip &lt;osm-3s_v0.7.1.tar.gz | tar xvf -
+cd osm-3s_v0.7.1/build/
 ../src/configure --prefix=&quot;`pwd`/../&quot;
 make CXXFLAGS=&quot;-O3&quot; install</pre>
 
-<p><a href="#clone">Clone the database</a> or <a href="#startup">Iimport a planet file</a>:</p>
+<p><a href="#clone">Clone the database</a> or <a href="#startup">import a planet file</a>:</p>
 <pre>../src/bin/download_clone.sh --source=http://overpass-api.de/api/ --db-dir=&quot;../db/&quot; --meta=no</pre>
 <p>or</p>
 <pre>wget -O planet.osm.bz2 &quot;http://ftp.heanet.ie/mirrors/openstreetmap.org/planet-latest.osm.bz2&quot;
@@ -38,9 +39,9 @@ make CXXFLAGS=&quot;-O3&quot; install</pre>
 
 <p><a href="#minute_updates">Activate minutely updates</a>:</p>
 <pre>nohup ../bin/dispatcher --osm-base --meta --db-dir=&quot;../db/&quot; &amp;
-chmod 666 &quot;../db/osm3s_v0.7_osm_base&quot;
-nohup ../bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/minute-replicate/&quot; &quot;../minute-diffs/&quot; &amp;
-nohup ../bin/apply_osc_to_db.sh &quot;../db/&quot; &quot;../minute-diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
+chmod 666 &quot;../db/osm3s_v0.7.1_osm_base&quot;
+nohup ../bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/replication/minute/&quot; &quot;../minute-diffs/&quot; &amp;
+nohup ../bin/apply_osc_to_db.sh &quot;../minute-diffs/&quot; <em>id</em> --meta=yes --augmented_diffs=no &amp;</pre>
 
 
 <h2><a name="required">Requirements</a></h2>
@@ -63,10 +64,10 @@ nohup ../bin/apply_osc_to_db.sh &quot;../db/&quot; &quot;../minute-diffs/&quot; 
 
 <h2><a name="install">Software Installation</a></h2>
 
-<p>First, you need to download <a href="http://overpass-api.de/misc/osm-3s_v0.7.tar.gz">the tarball of the latest version</a>:</p>
-<pre>wget http://overpass-api.de/misc/osm-3s_v0.7.tar.gz
-gunzip &lt;osm-3s_v0.7.tar.gz | tar xvf -
-cd osm-3s_v0.7/build/</pre>
+<p>First, you need to download <a href="http://overpass-api.de/misc/osm-3s_v0.7.1.tar.gz">the tarball of the latest version</a>:</p>
+<pre>wget http://overpass-api.de/misc/osm-3s_v0.7.1.tar.gz
+gunzip &lt;osm-3s_v0.7.1.tar.gz | tar xvf -
+cd osm-3s_v0.7.1/build/</pre>
 
 <p>You need to choose a directory where you put the executable files. You can later move them to a different directory. But the default choice of the installation program <em>automake</em>, /usr/bin, requires root permissions, although no root permissions are really necessary to run the program. I suggest the parent directory of the source code directory: this can be reached with &quot;`pwd`/../&quot;. To configure this output directory and detect necessary adaptions of your system, run in the <em>build</em> subdirectory:</p>
 <pre>../src/configure --prefix=&quot;`pwd`/../&quot;</pre>
@@ -110,12 +111,12 @@ cd osm-3s_v0.7/build/</pre>
 
 <p>But maybe you also want minutely updates. In this case, run the commands:</p>
 <pre>nohup ../bin/dispatcher --osm-base --meta --db-dir=&quot;../db/&quot; &amp;</pre>
-<pre>chmod 666 &quot;../db/osm3s_v0.7_osm_base&quot;</pre>
-<pre>nohup ../bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/minute-replicate/&quot; &quot;../minute-diffs/&quot; &amp;</pre>
-<pre>nohup ../bin/apply_osc_to_db.sh &quot;../db/&quot; &quot;../minute-diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
-<p>These commands don't make sense without <em>nohup</em>, because the programs become daemons and never terminate. Once again, you need to replace parameters: you always need to replace <em>id</em> by the replicate id to start from. Search on <a href="http://planet.openstreetmap.org/minute-replicate/">http://planet.openstreetmap.org/minute-replicate/</a> with your browser for the last replication diff that has been created before the planet creation date.</p>
+<pre>chmod 666 &quot;../db/osm3s_v0.7.1_osm_base&quot;</pre>
+<pre>nohup ../bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/replication/minute/&quot; &quot;../minute-diffs/&quot; &amp;</pre>
+<pre>nohup ../bin/apply_osc_to_db.sh &quot;../minute-diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
+<p>These commands don't make sense without <em>nohup</em>, because the programs become daemons and never terminate. Once again, you need to replace parameters: you always need to replace <em>id</em> by the replicate id to start from. Search on <a href="http://planet.openstreetmap.org/replication/minute/">http://planet.openstreetmap.org/replication/minute/</a> with your browser for the last replication diff that has been created before the planet creation date.</p>
 
-<p>The other parameters need only to be adapted if you have chosen a different directory in a previous step: <em>&quot;../db/&quot;</em> is the directory of the database, <em>&quot;http://planet.openstreetmap.org/minute-replicate/&quot;</em> is the replicate diff's remote source, and <em>&quot;../minute-diffs/&quot;</em> is the directory where the minute diffs are stored until they have been applied.</p>
+<p>The other parameters need only to be adapted if you have chosen a different directory in a previous step: <em>&quot;../db/&quot;</em> is the directory of the database, <em>&quot;http://planet.openstreetmap.org/replication/minute/&quot;</em> is the replicate diff's remote source, and <em>&quot;../minute-diffs/&quot;</em> is the directory where the minute diffs are stored until they have been applied.</p>
 
 <p>Congratulations! Now you have a database mirror that can serve the entire world and is always only a few minutes behind the OSM main database.</p>
 
