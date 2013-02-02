@@ -19,7 +19,7 @@
 
 if [[ -z $4  ]]; then
 {
-  echo "Usage: $0 start_id --meta=(yes|no) --augmented_diffs=(yes|no)"
+  echo "Usage: $0 replicate_dir start_id --meta=(yes|no) --augmented_diffs=(yes|no)"
   exit 0
 }; fi
 
