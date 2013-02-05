@@ -31,6 +31,7 @@
 #include "../data/collect_members.h"
 #include "area_query.h"
 #include "coord_query.h"
+#include "make_area.h"
 #include "recurse.h"
 
 using namespace std;
@@ -98,7 +99,6 @@ void Area_Constraint::filter(Resource_Manager& rman, Set& into)
   
   area->collect_nodes(into.nodes, area_blocks_req, rman);
   
-
   set< pair< Uint31_Index, Uint31_Index > > ranges;
   get_ranges(rman, ranges);
   
@@ -196,7 +196,6 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     // Retrieve all nodes referred by the ways.
     map< Uint32_Index, vector< Node_Skeleton > > way_members_
         = way_members(&query, rman, into.ways);
-    //collect_nodes(query, rman, into.ways.begin(), into.ways.end(), way_members);
   
     // Order node ids by id.
     vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id;
@@ -470,6 +469,162 @@ void Area_Query_Statement::collect_nodes
 }
 
 
+inline bool ordered_intersects_inner
+    (uint32 lat_a0, uint32 lon_a0, uint32 lat_a1, uint32 lon_a1,
+     uint32 lat_b0, uint32 lon_b0, uint32 lat_b1, uint32 lon_b1)
+{
+  double det = ((double(lat_a1) - lat_a0)*(double(lon_b1) - lon_b0) - (double(lat_b1) - lat_b0)*(double(lon_a1) - lon_a0));
+  if (det != 0)
+  {
+    double lon = 
+	double(lat_b0 - lat_a0
+	    + double(lon_a0)/(double(lon_a1) - lon_a0)*(double(lat_a1) - lat_a0)
+	    - double(lon_b0)/(double(lon_b1) - lon_b0)*(double(lat_b1) - lat_b0))
+	/det*(double(lon_a1) - lon_a0)*(double(lon_b1) - lon_b0);
+    if (lon_a0 < lon && lon < lon_a1 && lon_b0 <= lon && lon <= lon_b1)
+      return true;
+  }
+  else if ((fabs(lat_a0 - (double(lon_a0) - lon_b0)/(double(lon_b1) - lon_b0)
+                *(double(lat_b1) - lat_b0) - lat_b0) <= 1)
+	|| (fabs(lat_a1 - (double(lon_a1) - lon_b0)/(double(lon_b1) - lon_b0)
+                *(double(lat_b1) - lat_b0) - lat_b0) <= 1))
+    return true;
+  
+  return false;
+}
+
+
+inline bool ordered_a_intersects_inner
+    (uint32 lat_a0, uint32 lon_a0, uint32 lat_a1, uint32 lon_a1,
+     uint32 lat_b0, uint32 lon_b0, uint32 lat_b1, uint32 lon_b1)
+{
+  if (lon_b0 < lon_b1)
+  {
+    if (lon_a0 < lon_b1 && lon_b0 < lon_a1)
+      return (ordered_intersects_inner(lat_a0, lon_a0, lat_a1, lon_a1, lat_b0, lon_b0, lat_b1, lon_b1));
+  }
+  else if (lon_b1 < lon_b0)
+  {
+    if (lon_a0 < lon_b0 && lon_b1 < lon_a1)
+      return ordered_intersects_inner(lat_a0, lon_a0, lat_a1, lon_a1, lat_b1, lon_b1, lat_b0, lon_b0);
+  }
+  else // lon_b0 == lon_b1
+  {
+    if (lon_a0 < lon_b0 && lon_b0 < lon_a1)
+    {
+      double lat = (double(lon_b0) - lon_a0)/(double(lon_a1) - lon_a0)*(double(lat_a1) - lat_a0) + lat_a0;
+      return ((lat_b0 < lat && lat < lat_b1) || (lat_b1 < lat && lat < lat_b0));
+    }
+  }
+  
+  return false;
+}
+
+
+inline bool longitude_a_intersects_inner
+    (uint32 lat_a0, uint32 lon_a, uint32 lat_a1,
+     uint32 lat_b0, uint32 lon_b0, uint32 lat_b1, uint32 lon_b1)
+{
+  if (lon_b0 < lon_b1)
+  {
+    if (lon_a < lon_b1 && lon_b0 < lon_a)
+    {
+      double lat = (double(lon_a) - lon_b0)/(double(lon_b1) - lon_b0)*(double(lat_b1) - lat_b0) + lat_b0;
+      return ((lat_a0 < lat && lat < lat_a1) || (lat_a1 < lat && lat < lat_a0));
+    }
+  }
+  else if (lon_b1 < lon_b0)
+  {
+    if (lon_a < lon_b0 && lon_b1 < lon_a)
+    {
+      double lat = (double(lon_a) - lon_b0)/(double(lon_b1) - lon_b0)*(double(lat_b1) - lat_b0) + lat_b0;
+      return ((lat_a0 < lat && lat < lat_a1) || (lat_a1 < lat && lat < lat_a0));
+    }
+  }
+  else // lon_b0 == lon_b1
+  {
+    if (lon_a != lon_b0)
+      return false;
+    if (lat_a0 < lat_a1)
+    {
+      if (lat_b0 < lat_b1)
+        return (lat_a0 < lat_b1 && lat_b0 < lat_a1);
+      else
+        return (lat_a0 < lat_b0 && lat_b1 < lat_a1);
+    }
+    else
+    {
+      if (lat_b0 < lat_b1)
+        return (lat_a1 < lat_b1 && lat_b0 < lat_a0);
+      else
+        return (lat_a1 < lat_b0 && lat_b1 < lat_a0);
+    }
+  }
+  
+  return false;
+}
+
+
+bool intersects_inner(const Area_Block& string_a, const Area_Block& string_b)
+{
+  vector< pair< uint32, uint32 > > coords_a;
+  for (vector< uint64 >::const_iterator it = string_a.coors.begin(); it != string_a.coors.end(); ++it)
+    coords_a.push_back(make_pair(::ilat(uint32((*it>>32)&0xff), uint32(*it & 0xffffffffull)),
+				 ::ilon(uint32((*it>>32)&0xff), uint32(*it & 0xffffffffull))));
+  
+  vector< pair< uint32, uint32 > > coords_b;
+  for (vector< uint64 >::const_iterator it = string_b.coors.begin(); it != string_b.coors.end(); ++it)
+    coords_b.push_back(make_pair(::ilat(uint32((*it>>32)&0xff), uint32(*it & 0xffffffffull)),
+				 ::ilon(uint32((*it>>32)&0xff), uint32(*it & 0xffffffffull))));
+
+  for (vector< pair< uint32, uint32 > >::size_type i = 0; i < coords_a.size()-1; ++i)
+  {
+    if (coords_a[i].second < coords_a[i+1].second)
+    {
+      for (vector< pair< uint32, uint32 > >::size_type j = 0; j < coords_b.size()-1; ++j)
+      {
+	if (ordered_a_intersects_inner
+	    (coords_a[i].first, coords_a[i].second, coords_a[i+1].first, coords_a[i+1].second,
+	     coords_b[j].first, coords_b[j].second, coords_b[j+1].first, coords_b[j+1].second))
+	  return true;
+      }
+    }
+    else if (coords_a[i+1].second < coords_a[i].second)
+    {
+      for (vector< pair< uint32, uint32 > >::size_type j = 0; j < coords_b.size()-1; ++j)
+      {
+	if (ordered_a_intersects_inner
+	    (coords_a[i+1].first, coords_a[i+1].second, coords_a[i].first, coords_a[i].second,
+	     coords_b[j].first, coords_b[j].second, coords_b[j+1].first, coords_b[j+1].second))
+	  return true;
+      }
+    }
+    else
+      for (vector< pair< uint32, uint32 > >::size_type j = 0; j < coords_b.size()-1; ++j)
+      {
+	if (longitude_a_intersects_inner
+	    (coords_a[i].first, coords_a[i].second, coords_a[i+1].first,
+	     coords_b[j].first, coords_b[j].second, coords_b[j+1].first, coords_b[j+1].second))
+	  return true;
+      }
+  }
+
+  // Check additionally the middle of the segment to also get segments
+  // that run through the area
+  int inside = 0;
+  for (vector< pair< uint32, uint32 > >::size_type i = 0; i < coords_a.size()-1; ++i)
+  {
+    uint32 ilat = (coords_a[i].first + coords_a[i+1].first)/2;
+    uint32 ilon = (coords_a[i].second + coords_a[i+1].second)/2 + 0x80000000u;
+    int check = Coord_Query_Statement::check_area_block(0, string_b, ilat, ilon);
+    if ((check != 0) && (check != Coord_Query_Statement::HIT))
+      inside ^= check;
+  }
+
+  return (inside);
+}
+
+
 void Area_Query_Statement::collect_ways
       (map< Uint31_Index, vector< Way_Skeleton > >& ways,
        map< Uint32_Index, vector< Node_Skeleton > >& way_members_,
@@ -477,15 +632,33 @@ void Area_Query_Statement::collect_ways
        const set< Uint31_Index >& req,
        Resource_Manager& rman)
 {
+  vector< Node > nodes;
+  for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator it = way_members_.begin();
+       it != way_members_.end(); ++it)
+  {
+    for (vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      nodes.push_back(Node(it2->id, it->first.val(), it2->ll_lower));
+  }
+  sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
+  
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
       (rman.get_area_transaction()->data_index(area_settings().AREA_BLOCKS));
   Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
       area_it(area_blocks_db.discrete_begin(req.begin(), req.end()));
 
   map< Node::Id_Type, uint > node_status;
+  map< Way::Id_Type, bool > ways_inside;
+  
   map< Uint32_Index, vector< Node_Skeleton > >::iterator nodes_it = way_members_.begin();
+  
+  map< Uint31_Index, vector< Area_Block > > way_segments;
+  for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
+  {
+    for (vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      add_way_to_area_blocks(*it2, nodes, it2->id.val(), way_segments);
+  }
       
-  // Fill node_status with the area related status of each node
+  // Fill node_status with the area related status of each node and segment
   uint32 current_idx(0);
   while (!(area_it == area_blocks_db.discrete_end()))
   {
@@ -501,6 +674,7 @@ void Area_Query_Statement::collect_ways
       ++area_it;
     }
     
+    // check nodes
     while (nodes_it != way_members_.end() && nodes_it->first.val() < current_idx)
     {
       nodes_it->second.clear();
@@ -538,28 +712,73 @@ void Area_Query_Statement::collect_ways
       }
       ++nodes_it;
     }
-  }
     
+    // check segments
+    for (vector< Area_Block >::const_iterator sit = way_segments[Uint31_Index(current_idx)].begin();
+	 sit != way_segments[Uint31_Index(current_idx)].end(); ++sit)
+    {
+      for (map< Area_Skeleton::Id_Type, vector< Area_Block > >::const_iterator it = areas.begin();
+	   it != areas.end(); ++it)
+      {
+	if (ways_inside[Way::Id_Type(sit->id)])
+	  break;
+        for (vector< Area_Block >::const_iterator it2 = it->second.begin(); it2 != it->second.end();
+	     ++it2)
+	{
+	  // If an area segment intersects this way segment in the inner of the way,
+          // the way is contained in the area.
+          // The endpoints are properly handled via the point-in-area test
+          // Check additionally the middle of the segment to also get segments
+          // that run through the area
+	  if (intersects_inner(*sit, *it2))
+	  {
+	    ways_inside[Way::Id_Type(sit->id)] = true;
+	    break;
+	  }	  
+	}
+      }
+      //TODO: special case that a segment goes straight from a border node to a border node
+    }
+  }
+
+  map< Uint31_Index, vector< Way_Skeleton > > result;
+
+  // Mark ways as found that intersect the area border
+  for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
+  {
+    vector< Way_Skeleton > cur_result;
+    for (vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    {
+      if (ways_inside[it2->id])
+      {
+	cur_result.push_back(*it2);
+	it2->id = Way::Id_Type(0u);
+      }
+    }
+    result[it->first].swap(cur_result);
+  }
+
   // Mark ways as found that have an inner node as a member
   for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
   {
-    vector< Way_Skeleton > result;
+    vector< Way_Skeleton >& cur_result = result[it->first];
     for (vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
+      if (it2->id == Way::Id_Type(0u))
+	continue;
       for (vector< Node::Id_Type >::const_iterator nit = it2->nds.begin(); nit != it2->nds.end(); ++nit)
       {
 	if (node_status[*nit] & (Coord_Query_Statement::TOGGLE_EAST | Coord_Query_Statement::TOGGLE_WEST))
 	{
-	  result.push_back(*it2);
+	  cur_result.push_back(*it2);
 	  it2->id = Way::Id_Type(0u);
 	  break;
 	}
       }
     }
-    it->second.swap(result);
   }
-    
-  //TODO: verbleibende Ways mit Segment-Schnitttest behandeln
+  
+  result.swap(ways);
 }
 
 

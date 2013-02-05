@@ -167,7 +167,7 @@ void create_idxs_by_id
       it = meta_to_insert.begin(); it != meta_to_insert.end(); ++it)
   {
     uint32 compressed_idx = (it->second & 0xffffff00);
-    if ((compressed_idx & 0x80000000) && ((it->second & 0x3) == 0))
+    if ((it->second & 0x80000000) && ((it->second & 0x3) == 0))
       compressed_idx = it->second;
     idxs_by_user_id[it->first.user_id].push_back(compressed_idx);
   }

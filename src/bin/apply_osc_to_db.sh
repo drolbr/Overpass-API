@@ -30,15 +30,15 @@ if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
 }; fi
 
 DB_DIR=`$EXEC_DIR/dispatcher --show-dir`
-REPLICATE_DIR="$2"
-START=$3
+REPLICATE_DIR="$1"
+START=$2
 META=
 
-if [[ $4 == "--meta=yes" || $4 == "--meta" ]]; then
+if [[ $3 == "--meta=yes" || $3 == "--meta" ]]; then
 {
   META="--meta"
 }
-elif [[ $4 == "--meta=no" ]]; then
+elif [[ $3 == "--meta=no" ]]; then
 {
   META=
 }
@@ -48,11 +48,11 @@ else
   exit 0
 }; fi
 
-if [[ $5 == "--augmented_diffs=yes" || $5 == "--augmented_diffs" ]]; then
+if [[ $4 == "--augmented_diffs=yes" || $4 == "--augmented_diffs" ]]; then
 {
   PRODUCE_DIFF="yes"
 }
-elif [[ $5 == "--augmented_diffs=no" ]]; then
+elif [[ $4 == "--augmented_diffs=no" ]]; then
 {
   PRODUCE_DIFF=
 }

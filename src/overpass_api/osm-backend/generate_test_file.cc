@@ -2987,6 +2987,18 @@ int main(int argc, char* args[])
       modifier = new Accept_Query_125(pattern_size);
     else if (string(args[2]) == "query_126")
       modifier = new Accept_Query_125(pattern_size);
+    else if (string(args[2]) == "query_127")
+      modifier = new Accept_Around_1(pattern_size, 200.1, false, 11);
+    else if (string(args[2]) == "query_128")
+      modifier = new Accept_Around_1(pattern_size, 200.1, false, 7);
+    else if (string(args[2]) == "query_129")
+      modifier = new Accept_Query_37(pattern_size);
+    else if (string(args[2]) == "query_130")
+      modifier = new Accept_Query_38(pattern_size);
+    else if (string(args[2]) == "query_131")
+      modifier = new Accept_Query_39(pattern_size);
+    else if (string(args[2]) == "query_132")
+      modifier = new Accept_Query_40(pattern_size);
     else if (string(args[2]) == "union_1")
       modifier = new Accept_Union_1(pattern_size);
     else if (string(args[2]) == "union_2")
@@ -3023,6 +3035,12 @@ int main(int argc, char* args[])
       modifier = new Accept_Around_1(pattern_size, 200.1);
     else if (string(args[2]) == "around_6")
       modifier = new Accept_Around_1(pattern_size, 200.1, true);
+    else if (string(args[2]) == "around_7")
+      modifier = new Accept_Around_1(pattern_size, 20.01);
+    else if (string(args[2]) == "around_8")
+      modifier = new Accept_Around_1(pattern_size, 200.1);
+    else if (string(args[2]) == "around_9")
+      modifier = new Accept_Around_1(pattern_size, 2001);
     else if (string(args[2]) == "polygon_query_1")
       modifier = new Accept_Polygon_1(pattern_size);
     else if (string(args[2]) == "polygon_query_2")

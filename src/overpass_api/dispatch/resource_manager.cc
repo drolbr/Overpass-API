@@ -42,22 +42,6 @@ uint count_set(const Set& set_)
   return size;
 }
 
-void Resource_Manager::push_reference(const Set& set_)
-{
-  set_stack.push_back(&set_);
-  stack_progress.push_back(make_pair(0, count_set(set_)));
-}
-
-void Resource_Manager::pop_reference()
-{
-  set_stack.pop_back();
-  stack_progress.pop_back();
-}
-
-void Resource_Manager::count_loop()
-{
-  ++stack_progress.back().first;
-}
 
 uint64 eval_set(const Set& set_)
 {
@@ -77,6 +61,29 @@ uint64 eval_set(const Set& set_)
   
   return size;
 }
+
+
+void Resource_Manager::push_reference(const Set& set_)
+{
+  set_stack.push_back(&set_);
+  stack_progress.push_back(make_pair(0, count_set(set_)));
+  set_stack_sizes.push_back(eval_set(set_));
+}
+
+
+void Resource_Manager::pop_reference()
+{
+  set_stack.pop_back();
+  stack_progress.pop_back();
+  set_stack_sizes.pop_back();
+}
+
+
+void Resource_Manager::count_loop()
+{
+  ++stack_progress.back().first;
+}
+
 
 void Resource_Manager::health_check(const Statement& stmt, uint32 extra_time, uint64 extra_space)
 {
@@ -110,9 +117,9 @@ void Resource_Manager::health_check(const Statement& stmt, uint32 extra_time, ui
     for (map< string, Set >::const_iterator it(sets_.begin()); it != sets_.end();
         ++it)
       size += eval_set(it->second);
-    for (vector< const Set* >::const_iterator it(set_stack.begin());
-        it != set_stack.end(); ++it)
-      size += eval_set(**it);
+    for (vector< long long >::const_iterator it = set_stack_sizes.begin();
+        it != set_stack_sizes.end(); ++it)
+      size += *it;
   }
 
   if (elapsed_time > max_allowed_time)

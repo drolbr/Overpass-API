@@ -128,7 +128,7 @@ class Print_Target_Custom : public Print_Target
 class Element_Collector
 {
   public:
-    Element_Collector(const string& title_key_, const string& title_);
+    Element_Collector(const string& title_key_);
     Element_Collector& add_constraint(const string& key, const string& value, bool straight);
     
     ~Element_Collector();
@@ -151,10 +151,10 @@ class Element_Collector
 			    const map< uint32, string >* users = 0);
   
     string get_output() const { return output; }
+    bool empty() const { return (output == ""); }
     
   private:
     string title_key;
-    string title;
     
     string output;
     
@@ -205,7 +205,7 @@ class Print_Target_Popup : public Print_Target
     string get_output() const;
     
   private:
-    vector< Element_Collector* > collector;
+    vector< pair< string, vector< Element_Collector* > > > collector;
 };
 
 //-----------------------------------------------------------------------------
@@ -1018,12 +1018,8 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 
 //-----------------------------------------------------------------------------
 
-Element_Collector::Element_Collector(const string& title_key_, const string& title_)
-    : title_key(title_key_), title(title_)
-{
-  if (title != "")
-    output = "\n<h2>" + title + "</h2>\n\n";
-}
+Element_Collector::Element_Collector(const string& title_key_)
+    : title_key(title_key_) {}
 
 
 Element_Collector& Element_Collector::add_constraint(const string& key, const string& value, bool straight)
@@ -1095,9 +1091,10 @@ void Element_Collector::print(const TSkel& skel,
     {
       if (link != "")
 	output += "<a href=\"" + link + "\" target=\"_blank\">";
-      output += "<strong>" + it->second + "</strong><br/>\n";
+      output += "<strong>" + it->second + "</strong>";
       if (link != "")
 	output += "</a>";
+      output += "<br/>\n";
       title_key_found = true;
     }
   }
@@ -1107,9 +1104,10 @@ void Element_Collector::print(const TSkel& skel,
       output += "<a href=\"" + link + "\" target=\"_blank\">";
     ostringstream out;
     out<<skel.id.val();
-    output += "<strong>" + elem_type< TSkel >() + " " + out.str() + "</strong><br/>\n";
+    output += "<strong>" + elem_type< TSkel >() + " " + out.str() + "</strong>";
     if (link != "")
       output += "</a>";
+    output += "<br/>\n";
   }
 
   for (vector< pair< string, string > >::const_iterator it = tags->begin(); it != tags->end(); ++it)
@@ -1177,6 +1175,15 @@ bool Element_Collector::consider(uint32 ll_upper, const Area_Skeleton& skel,
 		const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta,
 		const map< uint32, string >* users)
 {
+  for (vector< Element_Collector_Condition* >::const_iterator it = constraints.begin();
+       it != constraints.end(); ++it)
+  {
+    if (!check_tag_criterion(tags, **it))
+      return false;
+  }
+  
+  print(skel, tags);
+
   return true;
 }
 
@@ -1188,24 +1195,28 @@ Print_Target_Popup::Print_Target_Popup(uint32 mode, Transaction& transaction,
 {
   if (categories.empty())
   {
-    collector.push_back(&(*new Element_Collector("name", "POIs"))
+    collector.push_back(make_pair("POIs", vector< Element_Collector* >(1,
+        &(*new Element_Collector("name"))
         .add_constraint("name", ".", true)
         .add_constraint("highway", ".", false)
         .add_constraint("railway", ".", false)
         .add_constraint("landuse", ".", false)
         .add_constraint("type", "route|network|associatedStreet", false)
         .add_constraint("public_transport", ".", false)
-        .add_constraint("route", "bus|ferry|railway|train|tram|trolleybus|subway|light_rail", false));
-    collector.push_back(&(*new Element_Collector("name", "Streets"))
-        .add_constraint("highway", "primary|secondary|tertiary|residential|unclassified", true));
-    collector.push_back(&(*new Element_Collector("name", "Public Transport Stops"))
+        .add_constraint("route", "bus|ferry|railway|train|tram|trolleybus|subway|light_rail", false))));
+    collector.push_back(make_pair("Streets", vector< Element_Collector* >(1,
+        &(*new Element_Collector("name"))
+        .add_constraint("highway", "primary|secondary|tertiary|residential|unclassified", true))));
+    collector.push_back(make_pair("Public Transport Stops", vector< Element_Collector* >(1,
+        &(*new Element_Collector("name"))
         .add_constraint("name", ".", true)
-        .add_constraint("highway", "bus_stop|tram_stop", true));
-    collector.push_back(&(*new Element_Collector("name", ""))
+        .add_constraint("highway", "bus_stop|tram_stop", true))));
+    collector.back().second.push_back(&(*new Element_Collector("name"))
         .add_constraint("name", ".", true)
         .add_constraint("railway", "halt|station|tram_stop", true));
-    collector.push_back(&(*new Element_Collector("ref", "Public Transport Lines"))
-        .add_constraint("route", "bus|ferry|railway|train|tram|trolleybus|subway|light_rail", true));
+    collector.push_back(make_pair("Public Transport Lines", vector< Element_Collector* >(1,
+        &(*new Element_Collector("ref"))
+        .add_constraint("route", "bus|ferry|railway|train|tram|trolleybus|subway|light_rail", true))));
   }
   else
   {
@@ -1220,20 +1231,20 @@ Print_Target_Popup::Print_Target_Popup(uint32 mode, Transaction& transaction,
           = it->filter_disjunction.begin();
 	  
       Element_Collector* new_collector
-          = new Element_Collector(title_key, it->title);
+          = new Element_Collector(title_key);
       for (vector< Tag_Filter >::const_iterator it3 = it2->begin();
 	  it3 != it2->end(); ++it3)
 	new_collector->add_constraint(it3->key, it3->value, it3->straight);
-      collector.push_back(new_collector);
+      collector.push_back(make_pair(it->title, vector< Element_Collector* >(1, new_collector)));
       
       for (++it2; it2 != it->filter_disjunction.end(); ++it2)
       {
         Element_Collector* new_collector
-            = new Element_Collector(title_key, "");
+            = new Element_Collector(title_key);
         for (vector< Tag_Filter >::const_iterator it3 = it2->begin();
 	    it3 != it2->end(); ++it3)
 	  new_collector->add_constraint(it3->key, it3->value, it3->straight);
-        collector.push_back(new_collector);
+        collector.back().second.push_back(new_collector);
       }
     }
   }
@@ -1242,9 +1253,13 @@ Print_Target_Popup::Print_Target_Popup(uint32 mode, Transaction& transaction,
 
 Print_Target_Popup::~Print_Target_Popup()
 {
-  for (vector< Element_Collector* >::iterator it = collector.begin();
-       it != collector.end(); ++it)
-    delete *it;
+  for (vector< pair< string, vector< Element_Collector* > > >::iterator it2 = collector.begin();
+       it2 != collector.end(); ++it2)
+  {
+    for (vector< Element_Collector* >::iterator it = it2->second.begin();
+        it != it2->second.end(); ++it)
+      delete *it;
+  }
 }
 
 void Print_Target_Popup::print_item(uint32 ll_upper, const Node_Skeleton& skel,
@@ -1252,11 +1267,15 @@ void Print_Target_Popup::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 		const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
 		const map< uint32, string >* users)
 {
-  for (vector< Element_Collector* >::iterator it = collector.begin();
-       it != collector.end(); ++it)
+  for (vector< pair< string, vector< Element_Collector* > > >::iterator it2 = collector.begin();
+       it2 != collector.end(); ++it2)
   {
-    if ((*it)->consider(ll_upper, skel, tags, meta, users))
-      break;
+    for (vector< Element_Collector* >::iterator it = it2->second.begin();
+        it != it2->second.end(); ++it)
+    {
+      if ((*it)->consider(ll_upper, skel, tags, meta, users))
+        return;
+    }
   }
 }
 
@@ -1265,11 +1284,15 @@ void Print_Target_Popup::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 		const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
 		const map< uint32, string >* users)
 {
-  for (vector< Element_Collector* >::iterator it = collector.begin();
-       it != collector.end(); ++it)
+  for (vector< pair< string, vector< Element_Collector* > > >::iterator it2 = collector.begin();
+       it2 != collector.end(); ++it2)
   {
-    if ((*it)->consider(ll_upper, skel, tags, meta, users))
-      break;
+    for (vector< Element_Collector* >::iterator it = it2->second.begin();
+        it != it2->second.end(); ++it)
+    {
+      if ((*it)->consider(ll_upper, skel, tags, meta, users))
+        return;
+    }
   }
 }
 
@@ -1278,11 +1301,15 @@ void Print_Target_Popup::print_item(uint32 ll_upper, const Relation_Skeleton& sk
 		const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
 		const map< uint32, string >* users)
 { 
-  for (vector< Element_Collector* >::iterator it = collector.begin();
-       it != collector.end(); ++it)
+  for (vector< pair< string, vector< Element_Collector* > > >::iterator it2 = collector.begin();
+       it2 != collector.end(); ++it2)
   {
-    if ((*it)->consider(ll_upper, skel, tags, meta, users))
-      break;
+    for (vector< Element_Collector* >::iterator it = it2->second.begin();
+        it != it2->second.end(); ++it)
+    {
+      if ((*it)->consider(ll_upper, skel, tags, meta, users))
+        return;
+    }
   }
 }
 
@@ -1291,20 +1318,37 @@ void Print_Target_Popup::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 		const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta,
 		const map< uint32, string >* users)
 {
-  for (vector< Element_Collector* >::iterator it = collector.begin();
-       it != collector.end(); ++it)
+  for (vector< pair< string, vector< Element_Collector* > > >::iterator it2 = collector.begin();
+       it2 != collector.end(); ++it2)
   {
-    if ((*it)->consider(ll_upper, skel, tags, meta, users))
-      break;
+    for (vector< Element_Collector* >::iterator it = it2->second.begin();
+        it != it2->second.end(); ++it)
+    {
+      if ((*it)->consider(ll_upper, skel, tags, meta, users))
+        return;
+    }
   }
 }
 
 string Print_Target_Popup::get_output() const
 {
   string result;
-  for (vector< Element_Collector* >::const_iterator it = collector.begin();
-       it != collector.end(); ++it)
-    result += (*it)->get_output();
+  for (vector< pair< string, vector< Element_Collector* > > >::const_iterator it2 = collector.begin();
+       it2 != collector.end(); ++it2)
+  {
+    bool empty = true;
+    for (vector< Element_Collector* >::const_iterator it = it2->second.begin();
+        it != it2->second.end(); ++it)
+      empty &= (*it)->empty();
+    if (!empty)
+    {
+      result += "\n<h2>" + it2->first + "</h2>\n\n";
+      
+      for (vector< Element_Collector* >::const_iterator it = it2->second.begin();
+          it != it2->second.end(); ++it)
+        result += (*it)->get_output();
+    }
+  }
   return result;
 }
 

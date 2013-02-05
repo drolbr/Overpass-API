@@ -285,6 +285,120 @@ void create_shapes_test_pattern_ways(uint id, uint node_ref, double scale)
       (node_ref + 12), tags);
 }
 
+void create_area_way_ways(uint id, uint node_ref)
+{
+  vector< pair< string, string > > tags;
+  tags.push_back(make_pair< string, string >("shapes", "3"));
+  
+  create_way(id, V< uint >(node_ref + 43)(node_ref + 45)(node_ref + 85)(node_ref + 47)
+      (node_ref + 208)(node_ref + 207)(node_ref + 204)(node_ref + 243)(node_ref + 43), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("inner_point", "middle"));  
+  
+  create_way(id + 1, V< uint >(node_ref + 121)(node_ref + 125)(node_ref + 129), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("inner_point", "first"));  
+  
+  create_way(id + 2, V< uint >(node_ref + 125)(node_ref + 129)(node_ref + 133), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("inner_point", "last"));  
+  
+  create_way(id + 3, V< uint >(node_ref + 121)(node_ref + 122)(node_ref + 125), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("inner_point", "total"));
+  
+  create_way(id + 4, V< uint >(node_ref + 124)(node_ref + 125)(node_ref + 126), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("touch_point", "middle"));
+  
+  create_way(id + 11, V< uint >(node_ref + 242)(node_ref + 243)(node_ref + 244), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("touch_point", "first"));
+  
+  create_way(id + 12, V< uint >(node_ref + 205)(node_ref + 246)(node_ref + 285), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("touch_point", "last"));
+  
+  create_way(id + 13, V< uint >(node_ref + 284)(node_ref + 281)(node_ref + 43), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("touch_point", "multiple_1"));
+  
+  create_way(id + 14, V< uint >(node_ref + 4)(node_ref + 45)(node_ref + 47)(node_ref + 8), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("touch_point", "multiple_2"));
+  
+  create_way(id + 15, V< uint >(node_ref + 201)(node_ref + 243)(node_ref + 208)(node_ref + 209), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("intersect", "middle_segment"));
+  
+  create_way(id + 21, V< uint >(node_ref + 81)(node_ref + 122)(node_ref + 88)(node_ref + 129), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("intersect", "first_segment"));
+  
+  create_way(id + 22, V< uint >(node_ref + 4)(node_ref + 244)(node_ref + 284), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("intersect", "last_segment"));
+  
+  create_way(id + 23, V< uint >(node_ref + 1)(node_ref + 2)(node_ref + 248), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("intersect", "single_segment"));
+  
+  create_way(id + 24, V< uint >(node_ref + 41)(node_ref + 49), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("intersect", "lat_segment"));
+  
+  create_way(id + 25, V< uint >(node_ref + 121)(node_ref + 129), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("intersect", "lon_segment"));
+  
+  create_way(id + 26, V< uint >(node_ref + 7)(node_ref + 287), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("intersect", "lat_boundary"));
+  
+  create_way(id + 27, V< uint >(node_ref + 204)(node_ref + 207), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("intersect", "lon_boundary"));
+  
+  create_way(id + 28, V< uint >(node_ref + 43)(node_ref + 203), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("through", "first_segment"));
+  
+  create_way(id + 31, V< uint >(node_ref + 43)(node_ref + 85)(node_ref + 6), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("through", "middle_segment"));
+  
+  create_way(id + 32, V< uint >(node_ref + 6)(node_ref + 85)(node_ref + 208)(node_ref + 248), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("through", "last_segment"));
+  
+  create_way(id + 33, V< uint >(node_ref + 281)(node_ref + 243)(node_ref + 85), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("through", "single_segment"));
+  
+  create_way(id + 34, V< uint >(node_ref + 243)(node_ref + 85), tags);
+}
+
 void create_multpolys_test_pattern_nodes
     (uint id, double lat, double lon, double scale)
 {
@@ -429,6 +543,8 @@ int main(int argc, char* args[])
     create_multpolys_test_pattern_nodes(2001, 10.0, 20.0, 0.1);
     
     create_node_grid(10001, 11.0, 11.05, 10.0, 10.05, pattern_size);
+
+    create_node_grid(30001, 30.0, 30.975, 0.0, 0.975, 39);
     
     create_triangle_test_pattern_ways( 1,   1, 1.0);
     create_triangle_test_pattern_ways(11, 101, 0.1);
@@ -447,6 +563,8 @@ int main(int argc, char* args[])
     create_shapes_test_pattern_ways(161, 1601, 0.000001);
     
     create_multpolys_test_pattern_ways(201, 2001, 0.1);
+    
+    create_area_way_ways(300, 30000);
     
     create_multpolys_test_pattern_relations(1, 201, 0.1);
     

@@ -325,12 +325,15 @@ TStatement* create_bbox_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_around_statement(typename TStatement::Factory& stmt_factory,
-				    string radius, string from, string into, uint line_nr)
+				    string radius, string lat, string lon,
+                                    string from, string into, uint line_nr)
 {
   map< string, string > attr;
   attr["from"] = from;
   attr["into"] = into;
   attr["radius"] = radius;
+  attr["lat"] = lat;
+  attr["lon"] = lon;
   return stmt_factory.create_statement("around", line_nr, attr);
 }
 
@@ -673,7 +676,8 @@ TStatement* create_query_substatement
 	 (clause.attributes[2] == ""), clause.line_col.first);
   else if (clause.statement == "around")
     return create_around_statement< TStatement >
-        (stmt_factory, clause.attributes[1], clause.attributes[0], into, clause.line_col.first);
+        (stmt_factory, clause.attributes[1], clause.attributes[2], clause.attributes[3],
+         clause.attributes[0], into, clause.line_col.first);
   else if (clause.statement == "polygon")
     return create_polygon_statement< TStatement >
         (stmt_factory, clause.attributes[0], into, clause.line_col.first);
@@ -844,7 +848,20 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	clause.attributes.push_back(probe_from(token, error_output));
 	clear_until_after(token, error_output, ":");
 	clause.attributes.push_back(get_text_token(token, error_output, "Floating point number"));
-	clear_until_after(token, error_output, ")");
+	clear_until_after(token, error_output, ",", ")", false);
+        if (*token == ",")
+        {
+          ++token;
+          clause.attributes.push_back(get_text_token(token, error_output, "Floating point number"));
+          clear_until_after(token, error_output, ",");
+          clause.attributes.push_back(get_text_token(token, error_output, "Floating point number"));
+          clear_until_after(token, error_output, ")");
+        }
+        else
+        {
+          clause.attributes.push_back("");
+          clause.attributes.push_back("");
+        }
 	clauses.push_back(clause);
       }
       else if (*token == "poly")

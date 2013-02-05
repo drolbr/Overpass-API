@@ -248,6 +248,16 @@ Dispatcher::Dispatcher
         (errno, socket_name, "Dispatcher_Server::5");
   
   // open dispatcher_share
+#ifdef __APPLE__
+  dispatcher_shm_fd = shm_open
+      (dispatcher_share_name.c_str(), O_RDWR|O_CREAT, S_666);
+  if (dispatcher_shm_fd < 0)
+  {
+    remove(socket_name.c_str());
+    throw File_Error
+        (errno, dispatcher_share_name, "Dispatcher_Server::APPLE::1");
+  }
+#else
   dispatcher_shm_fd = shm_open
       (dispatcher_share_name.c_str(), O_RDWR|O_CREAT|O_TRUNC|O_EXCL, S_666);
   if (dispatcher_shm_fd < 0)
@@ -257,6 +267,8 @@ Dispatcher::Dispatcher
         (errno, dispatcher_share_name, "Dispatcher_Server::1");
   }
   fchmod(dispatcher_shm_fd, S_666);
+#endif
+  
   int foo = ftruncate(dispatcher_shm_fd,
 		      SHM_SIZE + db_dir.size() + shadow_name.size()); foo = foo;
   dispatcher_shm_ptr = (uint8*)mmap

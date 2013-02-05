@@ -283,6 +283,9 @@
     <tag k="scale" v="0.0000010"/>
     <tag k="shapes" v="2"/>
   </area>
+  <area id="2400000300">
+    <tag k="shapes" v="3"/>
+  </area>
   <relation id="1"/>
   <area id="2400000001">
     <tag k="scale" v="1.0000000"/>
@@ -323,6 +326,9 @@
   <area id="2400000102">
     <tag k="scale" v="1.0000000"/>
     <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000300">
+    <tag k="shapes" v="3"/>
   </area>
   <relation id="1"/>
   <area id="2400000001">
@@ -465,6 +471,9 @@
     <tag k="scale" v="0.0000010"/>
     <tag k="shapes" v="2"/>
   </area>
+  <area id="2400000300">
+    <tag k="shapes" v="3"/>
+  </area>
   <area id="3600000002">
     <tag k="multpoly" v="2"/>
     <tag k="scale" v="0.1000000"/>
@@ -542,6 +551,9 @@
   <area id="2400000162">
     <tag k="scale" v="0.0000010"/>
     <tag k="shapes" v="2"/>
+  </area>
+  <area id="2400000300">
+    <tag k="shapes" v="3"/>
   </area>
   <area id="3600000003">
     <tag k="multpoly" v="3"/>

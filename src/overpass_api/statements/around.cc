@@ -51,6 +51,7 @@ Uint31_Index inc(Uint31_Index idx)
     return Uint31_Index(idx.val() | 0x80000000);
 }
 
+
 template < class TIndex, class TObject >
 set< pair< TIndex, TIndex > > ranges(const map< TIndex, vector< TObject > >& elems)
 {
@@ -73,6 +74,16 @@ set< pair< TIndex, TIndex > > ranges(const map< TIndex, vector< TObject > >& ele
   
   return result;
 }
+
+
+set< pair< Uint32_Index, Uint32_Index > > ranges(double lat, double lon)
+{
+  Uint32_Index idx = ::ll_upper_(lat, lon);
+  set< pair< Uint32_Index, Uint32_Index > > result;
+  result.insert(make_pair(idx, inc(idx)));
+  return result;
+}
+
 
 template < class TIndex >
 set< pair< TIndex, TIndex > > set_union_(const set< pair< TIndex, TIndex > >& a,
@@ -635,25 +646,52 @@ Generic_Statement_Maker< Around_Statement > Around_Statement::statement_maker("a
 
 Around_Statement::Around_Statement
     (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_)
+    : Statement(line_number_), lat(100.0), lon(200.0)
 {
   map< string, string > attributes;
   
   attributes["from"] = "_";
   attributes["into"] = "_";
   attributes["radius"] = "";
+  attributes["lat"] = "";
+  attributes["lon"] = "";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
   input = attributes["from"];
   output = attributes["into"];
+  
   radius = atof(attributes["radius"].c_str());
   if ((radius < 0.0) || (attributes["radius"] == ""))
   {
     ostringstream temp;
     temp<<"For the attribute \"radius\" of the element \"around\""
-    <<" the only allowed values are nonnegative floats.";
+        <<" the only allowed values are nonnegative floats.";
     add_static_error(temp.str());
+  }
+  
+  if (attributes["lat"] != "")
+  {
+    lat = atof(attributes["lat"].c_str());
+    if ((lat < -90.0) || (lat > 90.0))
+    {
+      ostringstream temp;
+      temp<<"For the attribute \"lat\" of the element \"around\""
+          <<" the only allowed values are floats between -90.0 and 90.0 or an empty value.";
+      add_static_error(temp.str());
+    }
+  }
+  
+  if (attributes["lon"] != "")
+  {
+    lon = atof(attributes["lon"].c_str());
+    if ((lon < -180.0) || (lon > 180.0))
+    {
+      ostringstream temp;
+      temp<<"For the attribute \"lon\" of the element \"around\""
+          <<" the only allowed values are floats between -180.0 and 180.0 or an empty value.";
+      add_static_error(temp.str());
+    }
   }
 }
 
@@ -765,18 +803,19 @@ bool intersect(double alat1, double alon1, double alat2, double alon2,
 set< pair< Uint32_Index, Uint32_Index > > Around_Statement::calc_ranges
     (const Set& input, Resource_Manager& rman) const
 {
-  return expand(set_union_
-      (ranges(input.nodes), children(set_union_(ranges(input.ways), ranges(input.relations)))),
-      radius);
+  if (lat < 100.0)
+    return expand(ranges(lat, lon), radius);
+  else
+    return expand(set_union_
+        (ranges(input.nodes), children(set_union_(ranges(input.ways), ranges(input.relations)))),
+        radius);
 }
 
 
-void add_node(Uint32_Index idx, const Node_Skeleton& node, double radius,
-	      map< Uint32_Index, vector< pair< double, double > > >& radius_lat_lons,
-	      vector< pair< double, double > >& simple_lat_lons)
+void add_coord(double lat, double lon, double radius,
+	       map< Uint32_Index, vector< pair< double, double > > >& radius_lat_lons,
+	       vector< pair< double, double > >& simple_lat_lons)
 {
-  double lat = ::lat(idx.val(), node.ll_lower);
-  double lon = ::lon(idx.val(), node.ll_lower);
   double south = lat - radius*(360.0/(40000.0*1000.0));
   double north = lat + radius*(360.0/(40000.0*1000.0));
   double scale_lat = lat > 0.0 ? north : south;
@@ -799,6 +838,15 @@ void add_node(Uint32_Index idx, const Node_Skeleton& node, double radius,
         idx < Uint32_Index(it->second).val(); ++idx)
       radius_lat_lons[idx].push_back(make_pair(lat, lon));
   }
+}
+
+
+void add_node(Uint32_Index idx, const Node_Skeleton& node, double radius,
+              map< Uint32_Index, vector< pair< double, double > > >& radius_lat_lons,
+              vector< pair< double, double > >& simple_lat_lons)
+{
+  add_coord(::lat(idx.val(), node.ll_lower), ::lon(idx.val(), node.ll_lower),
+            radius, radius_lat_lons, simple_lat_lons);
 }
 
 
@@ -847,6 +895,14 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
   radius_lat_lons.clear();
   simple_lat_lons.clear();
   
+  simple_segments.clear();
+  
+  if (lat < 100.0)
+  {
+    add_coord(lat, lon, radius, radius_lat_lons, simple_lat_lons);
+    return;
+  }
+  
   for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator iit(input.nodes.begin());
       iit != input.nodes.end(); ++iit)
   {
@@ -854,8 +910,6 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
         nit != iit->second.end(); ++nit)
       add_node(iit->first, *nit, radius, radius_lat_lons, simple_lat_lons);
   }
-  
-  simple_segments.clear();
   
   {
     //Process ways
