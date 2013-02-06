@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="Overpass API">
+<note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
+<meta osm_base="mock-up-diff" areas="mock-up-init"/>
+
+  <area id="2400000300">
+    <tag k="shapes" v="3"/>
+  </area>
+  <relation id="12">
+    <member type="node" ref="30165" role="one"/>
+    <tag k="nodes" v="inside"/>
+  </relation>
+  <relation id="22">
+    <member type="way" ref="331" role="zero"/>
+    <tag k="ways" v="inside"/>
+  </relation>
+  <relation id="31">
+    <member type="node" ref="30245" role="one"/>
+    <member type="node" ref="30286" role="two"/>
+    <member type="way" ref="311" role="zero"/>
+    <member type="way" ref="311" role="zero"/>
+    <member type="way" ref="331" role="zero"/>
+    <tag k="multiple" v="last_inside"/>
+  </relation>
+  <area id="2400000300">
+    <tag k="shapes" v="3"/>
+  </area>
+  <relation id="12">
+    <member type="node" ref="30165" role="one"/>
+    <tag k="nodes" v="inside"/>
+  </relation>
+  <relation id="22">
+    <member type="way" ref="331" role="zero"/>
+    <tag k="ways" v="inside"/>
+  </relation>
+  <relation id="31">
+    <member type="node" ref="30245" role="one"/>
+    <member type="node" ref="30286" role="two"/>
+    <member type="way" ref="311" role="zero"/>
+    <member type="way" ref="311" role="zero"/>
+    <member type="way" ref="331" role="zero"/>
+    <tag k="multiple" v="last_inside"/>
+  </relation>
+  <area id="2400000300">
+    <tag k="shapes" v="3"/>
+  </area>
+  <relation id="12">
+    <member type="node" ref="30165" role="one"/>
+    <tag k="nodes" v="inside"/>
+  </relation>
+
+</osm>

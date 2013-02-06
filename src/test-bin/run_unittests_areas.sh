@@ -145,6 +145,7 @@ $BASEDIR/bin/osm3s_query <input/rule_processor/check_area_query.osm >run/rule_pr
 $BASEDIR/bin/osm3s_query <input/rule_processor/check_coord_query.osm >run/rule_processor/check_coord_query.log
 $BASEDIR/bin/osm3s_query <input/rule_processor/check_query_tags.osm >run/rule_processor/check_query_tags.log
 $BASEDIR/bin/osm3s_query <input/rule_processor/check_area_query_ways.osm >run/rule_processor/check_area_query_ways.log
+$BASEDIR/bin/osm3s_query <input/rule_processor/check_area_query_relations.osm >run/rule_processor/check_area_query_relations.log
 
 echo "(area[triangle];area[shapes];area[multpoly];);out;" | $BASEDIR/bin/osm3s_query >result.osm
 

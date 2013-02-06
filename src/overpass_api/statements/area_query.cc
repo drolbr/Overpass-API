@@ -257,8 +257,8 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     // Filter for those ways that are in one of the areas
     // Retrieve all nodes referred by the ways.
     map< Uint32_Index, vector< Node_Skeleton > > node_members_
-        = way_members(&query, rman, into.ways);
-  
+        = way_members(&query, rman, way_members_);
+
     // Order node ids by id.
     vector< pair< Uint32_Index, const Node_Skeleton* > > way_node_members_by_id;
     for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = node_members_.begin();
