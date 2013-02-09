@@ -84,4 +84,9 @@ class Area_Query_Statement : public Statement
     vector< Query_Constraint* > constraints;
 };
 
+
+bool intersects_inner(const Area_Block& string_a, const Area_Block& string_b);
+
+void has_inner_points(const Area_Block& string_a, const Area_Block& string_b, int& inside);
+
 #endif

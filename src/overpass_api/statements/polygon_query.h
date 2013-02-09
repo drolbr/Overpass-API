@@ -44,6 +44,12 @@ class Polygon_Query_Statement : public Statement
     set< pair< Uint32_Index, Uint32_Index > > calc_ranges();
 
     void collect_nodes(map< Uint32_Index, vector< Node_Skeleton > >& nodes);
+       
+    void collect_ways
+      (map< Uint31_Index, vector< Way_Skeleton > >& ways,
+       map< Uint32_Index, vector< Node_Skeleton > >& way_members_,
+       vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id,
+       Resource_Manager& rman);
 
   private:
     string output;

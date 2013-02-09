@@ -87,16 +87,6 @@ bool Area_Constraint::get_ranges
 
 void Area_Constraint::filter(Resource_Manager& rman, Set& into)
 {
-  set< pair< Uint32_Index, Uint32_Index > > range_req;
-  if (area->areas_from_input())
-  {
-    map< string, Set >::const_iterator mit = rman.sets().find(area->get_input());
-    if (mit != rman.sets().end())
-      area->get_ranges(mit->second.areas, range_req, area_blocks_req, rman);
-  }
-  else
-    area->get_ranges(range_req, area_blocks_req, rman);
-  
   set< pair< Uint31_Index, Uint31_Index > > ranges;
   get_ranges(rman, ranges);
   
