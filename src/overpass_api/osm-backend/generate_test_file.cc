@@ -2291,6 +2291,39 @@ struct Accept_Polygon_3 : public Accept_All_Tags
     uint pattern_size;
 };
 
+struct Accept_Polygon_4 : public Accept_All_Tags
+{
+  Accept_Polygon_4(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const
+  { 
+    return ((id >= pattern_size*pattern_size - pattern_size/2 - 1
+            && id <= pattern_size*pattern_size - pattern_size/4 - 2)
+        || (id >= pattern_size*pattern_size + pattern_size/2 - 3
+            && id <= pattern_size*pattern_size + pattern_size/4*3 - 3));
+  }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Polygon_5 : public Accept_All_Tags
+{
+  Accept_Polygon_5(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const
+  { 
+    return (id == 18 || id == 22);
+  }
+  
+  private:
+    uint pattern_size;
+};
+
 struct Accept_All_But_5 : public Accept_All_Tags
 {
   Accept_All_But_5(uint pattern_size_) : pattern_size(pattern_size_) {}
@@ -3047,6 +3080,10 @@ int main(int argc, char* args[])
       modifier = new Accept_Polygon_2(pattern_size);
     else if (string(args[2]) == "polygon_query_3")
       modifier = new Accept_Polygon_3(pattern_size);
+    else if (string(args[2]) == "polygon_query_4")
+      modifier = new Accept_Polygon_4(pattern_size);
+    else if (string(args[2]) == "polygon_query_5")
+      modifier = new Accept_Polygon_5(pattern_size);
     else if (string(args[2]) == "diff_do")
       modifier = new Accept_All;
     else if (string(args[2]) == "diff_compare")

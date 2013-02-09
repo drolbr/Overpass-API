@@ -55,7 +55,7 @@ void perform_polygon_print(string bounds, Transaction& transaction)
 }
 
 
-void perform_query_polygon_print(string bounds, Transaction& transaction)
+void perform_query_polygon_print(string bounds, string type, Transaction& transaction)
 {
   try
   {
@@ -63,13 +63,14 @@ void perform_query_polygon_print(string bounds, Transaction& transaction)
     // of only one polygon.
     Resource_Manager rman(transaction);
     {
-      const char* attributes[] = { "type", "node", 0 };
+      const char* attributes[] = { "type", type.c_str(), 0 };
       Query_Statement* stmt1 = new Query_Statement(0, convert_c_pairs(attributes));
       {
         const char* attributes[] = { "bounds", bounds.c_str(), 0 };
         Polygon_Query_Statement* stmt2 = new Polygon_Query_Statement(0, convert_c_pairs(attributes));
         stmt1->add_statement(stmt2, "");
       }
+      if (type == "node")
       {
         const char* attributes[] = { "k", "node_key_5", 0 };
         Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0, convert_c_pairs(attributes));
@@ -159,7 +160,33 @@ int main(int argc, char* args[])
           <<fixed<<setprecision(7)<<-120 + 11*(60.0/2.0/pattern_size)<<' '
           <<fixed<<setprecision(7)<<30.0 + 15*(20.0/2.0/pattern_size)<<' '
           <<fixed<<setprecision(7)<<-120 + 11*(60.0/2.0/pattern_size)<<' ';
-    perform_query_polygon_print(bounds.str(), transaction);
+    perform_query_polygon_print(bounds.str(), "node", transaction);
+  }
+  if ((test_to_execute == "") || (test_to_execute == "4"))
+  {
+    ostringstream bounds;
+    bounds<<fixed<<setprecision(7)<<-10.0<<' '
+          <<fixed<<setprecision(7)<<45.0<<' '
+          <<fixed<<setprecision(7)<<-10.0<<' '
+          <<fixed<<setprecision(7)<<75.0<<' '
+          <<fixed<<setprecision(7)<<-10.0 + 90.0/pattern_size<<' '
+          <<fixed<<setprecision(7)<<75.0 + 120.0/2.0/pattern_size<<' '
+          <<fixed<<setprecision(7)<<-10.0 + 90.0/pattern_size<<' '
+          <<fixed<<setprecision(7)<<45.0<<' ';
+    perform_query_polygon_print(bounds.str(), "way", transaction);
+  }
+  if ((test_to_execute == "") || (test_to_execute == "5"))
+  {
+    ostringstream bounds;
+    bounds<<fixed<<setprecision(7)<<-10.0<<' '
+          <<fixed<<setprecision(7)<<45.0<<' '
+          <<fixed<<setprecision(7)<<-10.0<<' '
+          <<fixed<<setprecision(7)<<75.0<<' '
+          <<fixed<<setprecision(7)<<-10.0 + 90.0/pattern_size<<' '
+          <<fixed<<setprecision(7)<<75.0 + 120.0/2.0/pattern_size<<' '
+          <<fixed<<setprecision(7)<<-10.0 + 90.0/pattern_size<<' '
+          <<fixed<<setprecision(7)<<45.0<<' ';
+    perform_query_polygon_print(bounds.str(), "relation", transaction);
   }
   
   cout<<"</osm>\n";
