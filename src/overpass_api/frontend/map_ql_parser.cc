@@ -41,20 +41,26 @@ string get_text_token(Tokenizer_Wrapper& token, Error_Output* error_output,
 {
   string result = "";
   bool result_valid = true;
-  
+
   if (!token.good() || (*token).size() == 0)
     result_valid = false;
   else if ((*token)[0] == '"' || (*token)[0] == '\'')
   {
-    string::size_type start = 0;
+    string::size_type start = 1;
     string::size_type pos = (*token).find('\\');
     while (pos != string::npos)
     {
-      result += (*token).substr(start + 1, pos - start - 1);
-      start = pos;
-      pos = (*token).find('\\', start + 1);
+      result += (*token).substr(start, pos - start);
+      if ((*token)[pos + 1] == 'n')
+        result += '\n';
+      else if ((*token)[pos + 1] == 't')
+        result += '\t';
+      else
+        result += (*token)[pos + 1];
+      start = pos + 2;
+      pos = (*token).find('\\', start);
     }
-    result += (*token).substr(start + 1, (*token).size() - start - 2);
+    result += (*token).substr(start, (*token).size() - start - 1);
   }
   else if (isalpha((*token)[0]) || isdigit((*token)[0]) || (*token)[0] == '_')
     result = *token;
@@ -855,7 +861,6 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
           clause.attributes.push_back(get_text_token(token, error_output, "Floating point number"));
           clear_until_after(token, error_output, ",");
           clause.attributes.push_back(get_text_token(token, error_output, "Floating point number"));
-          clear_until_after(token, error_output, ")");
         }
         else
         {
@@ -863,6 +868,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
           clause.attributes.push_back("");
         }
 	clauses.push_back(clause);
+        clear_until_after(token, error_output, ")");
       }
       else if (*token == "poly")
       {
