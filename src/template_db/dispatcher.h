@@ -248,6 +248,9 @@ class Dispatcher
         into shadow_name.status. */
     void output_status();
     
+    /** Set the limit of simultaneous queries from a single IP address. */
+    void set_rate_limit(uint rate_limit_) { rate_limit = rate_limit_; }
+    
   private:
     vector< File_Properties* > controlled_files;
     vector< Idx_Footprints > data_footprints;
@@ -258,6 +261,7 @@ class Dispatcher
     string dispatcher_share_name;
     int dispatcher_shm_fd;
     uint max_num_reading_processes;
+    uint rate_limit;
     uint purge_timeout;
     uint64 total_available_space;
     uint64 total_available_time_units;
@@ -330,7 +334,7 @@ class Dispatcher_Client
     pid_t query_by_token(uint32 token);
     
     /** Purge another instance. */
-    void set_global_limits(uint64 max_allowed_space, uint64 max_allowed_time_units);
+    void set_global_limits(uint64 max_allowed_space, uint64 max_allowed_time_units, int rate_limit);
     
     /** Called regularly to tell the dispatcher that this process is still alive */
     void ping();

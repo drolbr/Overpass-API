@@ -122,6 +122,7 @@ int main(int argc, char* argv[])
   bool query_token = false;
   uint64 max_allowed_space = 0;
   uint64 max_allowed_time_units = 0;
+  int rate_limit = -1;
   
   int argpos(1);
   while (argpos < argc)
@@ -152,6 +153,8 @@ int main(int argc, char* argv[])
       max_allowed_space = atoll(((string)argv[argpos]).substr(8).c_str());
     else if (!(strncmp(argv[argpos], "--time=", 7)))
       max_allowed_time_units = atoll(((string)argv[argpos]).substr(7).c_str());
+    else if (!(strncmp(argv[argpos], "--rate-limit=", 13)))
+      rate_limit = atoll(((string)argv[argpos]).substr(13).c_str());
     ++argpos;
   }
   
@@ -230,13 +233,13 @@ int main(int argc, char* argv[])
     }
     return 0;
   }
-  else if (max_allowed_space > 0 || max_allowed_time_units > 0)
+  else if (max_allowed_space > 0 || max_allowed_time_units > 0 || rate_limit > -1)
   {
     try
     {
       Dispatcher_Client client
           (areas ? area_settings().shared_name : osm_base_settings().shared_name);
-      client.set_global_limits(max_allowed_space, max_allowed_time_units);
+      client.set_global_limits(max_allowed_space, max_allowed_time_units, rate_limit);
     }
     catch (File_Error e)
     {
@@ -304,6 +307,8 @@ int main(int argc, char* argv[])
 	 areas ? area_settings().total_available_space : osm_base_settings().total_available_space,
 	 areas ? area_settings().total_available_time_units : osm_base_settings().total_available_time_units,
 	 files_to_manage, &disp_logger);
+    if (rate_limit > -1)
+      dispatcher.set_rate_limit(rate_limit);
     dispatcher.standby_loop(0);
   }
   catch (File_Error e)
