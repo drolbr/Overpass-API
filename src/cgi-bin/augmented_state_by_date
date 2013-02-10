@@ -72,6 +72,20 @@ while [[ $(($LOWER + 1)) -lt $UPPER ]]; do
   }; fi
 }; done
 
+# Do HTTP headers with respect to CORS
 echo "Content-Type: text/plain; charset=utf-8"
+if [[ -n $HTTP_ACCESS_CONTROL_REQUEST_HEADERS ]]; then
+  echo "Access-Control-Allow-Headers: $HTTP_ACCESS_CONTROL_REQUEST_HEADERS"
+fi
+if [[ -n $HTTP_ORIGIN ]]; then
+  echo "Access-Control-Allow-Origin: *"
+fi
+if [[ $REQUEST_METHOD == "OPTIONS" ]]; then {
+  echo "Access-Control-Allow-Methods: GET, POST, OPTIONS"
+  echo "Content-Length: 0"
+  echo
+  exit 0
+}; fi
 echo
+
 echo "$LOWER"
