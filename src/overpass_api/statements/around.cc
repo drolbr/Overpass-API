@@ -704,6 +704,8 @@ Around_Statement::~Around_Statement()
 
 double great_circle_dist(double lat1, double lon1, double lat2, double lon2)
 {
+  if (lat1 == lat2 && lon1 == lon2)
+    return 0;
   double scalar_prod =
       sin(lat1/90.0*acos(0))*sin(lat2/90.0*acos(0)) +
       cos(lat1/90.0*acos(0))*sin(lon1/90.0*acos(0))*cos(lat2/90.0*acos(0))*sin(lon2/90.0*acos(0)) +
@@ -764,8 +766,39 @@ vector< double > cross_prod(const vector< double >& v, const vector< double >& w
 }
 
 
+  
+Prepared_Segment::Prepared_Segment
+  (double first_lat_, double first_lon_, double second_lat_, double second_lon_)
+  : first_lat(first_lat_), first_lon(first_lon_), second_lat(second_lat_), second_lon(second_lon_)
+{
+  first_cartesian = cartesian(first_lat, first_lon);
+  second_cartesian = cartesian(second_lat, second_lon);
+  norm = cross_prod(first_cartesian, second_cartesian);
+}
+
+
+Prepared_Point::Prepared_Point
+  (double lat_, double lon_)
+  : lat(lat_), lon(lon_)
+{
+  cartesian = ::cartesian(lat, lon);
+}
+
+
+double great_circle_line_dist(const Prepared_Segment& segment, const vector< double >& cartesian)
+{
+  double scalar_prod_ = abs(scalar_prod(cartesian, segment.norm))
+      /sqrt(scalar_prod(segment.norm, segment.norm));
+  
+  if (scalar_prod_ > 1)
+    scalar_prod_ = 1;
+  
+  return asin(scalar_prod_)*(10*1000*1000/acos(0));
+}
+
+
 double great_circle_line_dist(double llat1, double llon1, double llat2, double llon2,
-			      double plat, double plon)
+                              double plat, double plon)
 {
   vector< double > norm = cross_prod(cartesian(llat1, llon1), cartesian(llat2, llon2));
   
@@ -776,6 +809,20 @@ double great_circle_line_dist(double llat1, double llon1, double llat2, double l
     scalar_prod_ = 1;
   
   return asin(scalar_prod_)*(10*1000*1000/acos(0));
+}
+
+
+bool intersect(const Prepared_Segment& segment_a,
+               const Prepared_Segment& segment_b)
+{
+  vector< double > intersection_pt = cross_prod(segment_a.norm, segment_b.norm);
+  rescale(1.0/sqrt(scalar_prod(intersection_pt, intersection_pt)), intersection_pt);
+  
+  vector< double > asum = sum(segment_a.first_cartesian, segment_a.second_cartesian);
+  vector< double > bsum = sum(segment_b.first_cartesian, segment_b.second_cartesian);
+  
+  return (abs(scalar_prod(asum, intersection_pt)) >= scalar_prod(asum, segment_a.first_cartesian)
+      && abs(scalar_prod(bsum, intersection_pt)) >= scalar_prod(bsum, segment_b.first_cartesian));
 }
 
 
@@ -814,7 +861,7 @@ set< pair< Uint32_Index, Uint32_Index > > Around_Statement::calc_ranges
 
 void add_coord(double lat, double lon, double radius,
 	       map< Uint32_Index, vector< pair< double, double > > >& radius_lat_lons,
-	       vector< pair< double, double > >& simple_lat_lons)
+	       vector< Prepared_Point >& simple_lat_lons)
 {
   double south = lat - radius*(360.0/(40000.0*1000.0));
   double north = lat + radius*(360.0/(40000.0*1000.0));
@@ -824,7 +871,7 @@ void add_coord(double lat, double lon, double radius,
   double west = lon - radius*(360.0/(40000.0*1000.0))/cos(scale_lat/90.0*acos(0));
   double east = lon + radius*(360.0/(40000.0*1000.0))/cos(scale_lat/90.0*acos(0));
   
-  simple_lat_lons.push_back(make_pair(lat, lon));
+  simple_lat_lons.push_back(Prepared_Point(lat, lon));
   
   vector< pair< uint32, uint32 > > uint_ranges
       (calc_ranges(south, north, west, east));
@@ -843,7 +890,7 @@ void add_coord(double lat, double lon, double radius,
 
 void add_node(Uint32_Index idx, const Node_Skeleton& node, double radius,
               map< Uint32_Index, vector< pair< double, double > > >& radius_lat_lons,
-              vector< pair< double, double > >& simple_lat_lons)
+              vector< Prepared_Point >& simple_lat_lons)
 {
   add_coord(::lat(idx.val(), node.ll_lower), ::lon(idx.val(), node.ll_lower),
             radius, radius_lat_lons, simple_lat_lons);
@@ -852,7 +899,7 @@ void add_node(Uint32_Index idx, const Node_Skeleton& node, double radius,
 
 void add_way(Uint31_Index idx, const Way_Skeleton& way, double radius,
 	     const Way_Member_Collection& way_members,
-	     vector< pair< pair< double, double >, pair< double, double > > >& simple_segments)
+	     vector< Prepared_Segment >& simple_segments)
 {
   vector< Node::Id_Type >::const_iterator nit = way.nds.begin();
   if (nit == way.nds.end())
@@ -881,8 +928,7 @@ void add_way(Uint31_Index idx, const Way_Skeleton& way, double radius,
     double second_lat(::lat(second_nd->first.val(), second_nd->second->ll_lower));
     double second_lon(::lon(second_nd->first.val(), second_nd->second->ll_lower));
     
-    simple_segments.push_back(make_pair(make_pair(first_lat, first_lon),
-					make_pair(second_lat, second_lon)));
+    simple_segments.push_back(Prepared_Segment(first_lat, first_lon, second_lat, second_lon));
 					
     first_lat = second_lat;
     first_lon = second_lon;
@@ -991,22 +1037,23 @@ bool Around_Statement::is_inside(double lat, double lon) const
     for (vector< pair< double, double > >::const_iterator cit = mit->second.begin();
         cit != mit->second.end(); ++cit)
     {
-      if (great_circle_dist(cit->first, cit->second, lat, lon) <= radius)
+      if ((radius > 0 && great_circle_dist(cit->first, cit->second, lat, lon) <= radius)
+          || (cit->first == lat && cit->second == lon))
         return true;
     }
   }
   
-  for (vector< pair< pair< double, double >, pair< double, double > > >::const_iterator
+  vector< double > coord_cartesian = cartesian(lat, lon);
+  for (vector< Prepared_Segment >::const_iterator
       it = simple_segments.begin(); it != simple_segments.end(); ++it)
   {
-    if (great_circle_line_dist(it->first.first, it->first.second,
-        it->second.first, it->second.second, lat, lon) <= radius)
+    if (great_circle_line_dist(*it, coord_cartesian) <= radius)
     {
       double gcdist = great_circle_dist
-          (it->first.first, it->first.second, it->second.first, it->second.second);
+          (it->first_lat, it->first_lon, it->second_lat, it->second_lon);
       double limit = sqrt(gcdist*gcdist + radius*radius);
-      if (great_circle_dist(lat, lon, it->first.first, it->first.second) <= limit &&
-          great_circle_dist(lat, lon, it->second.first, it->second.second) <= limit)
+      if (great_circle_dist(lat, lon, it->first_lat, it->first_lon) <= limit &&
+          great_circle_dist(lat, lon, it->second_lat, it->second_lon) <= limit)
 	return true;
     }
   }
@@ -1017,25 +1064,25 @@ bool Around_Statement::is_inside(double lat, double lon) const
 bool Around_Statement::is_inside
     (double first_lat, double first_lon, double second_lat, double second_lon) const
 {
-  for (vector< pair< double, double > >::const_iterator cit = simple_lat_lons.begin();
+  Prepared_Segment segment(first_lat, first_lon, second_lat, second_lon);
+  
+  for (vector< Prepared_Point >::const_iterator cit = simple_lat_lons.begin();
       cit != simple_lat_lons.end(); ++cit)
   {
-    if (great_circle_line_dist(first_lat, first_lon, second_lat, second_lon,
-                               cit->first, cit->second) <= radius)
+    if (great_circle_line_dist(segment, cit->cartesian) <= radius)
     {
       double gcdist = great_circle_dist(first_lat, first_lon, second_lat, second_lon);
       double limit = sqrt(gcdist*gcdist + radius*radius);
-      if (great_circle_dist(cit->first, cit->second, first_lat, first_lon) <= limit &&
-	  great_circle_dist(cit->first, cit->second, second_lat, second_lon) <= limit)
+      if (great_circle_dist(cit->lat, cit->lon, first_lat, first_lon) <= limit &&
+	  great_circle_dist(cit->lat, cit->lon, second_lat, second_lon) <= limit)
         return true;
     }
   }
   
-  for (vector< pair< pair< double, double >, pair< double, double > > >::const_iterator
+  for (vector< Prepared_Segment >::const_iterator
       cit = simple_segments.begin(); cit != simple_segments.end(); ++cit)
   {
-    if (intersect(cit->first.first, cit->first.second, cit->second.first, cit->second.second,
-                  first_lat, first_lon, second_lat, second_lon))
+    if (intersect(*cit, segment))
       return true;
   }
   
@@ -1112,17 +1159,11 @@ void Around_Statement::execute(Resource_Manager& rman)
 
   map< Uint32_Index, vector< Node_Skeleton > >& nodes
       (rman.sets()[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways
-      (rman.sets()[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations
-      (rman.sets()[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas
-      (rman.sets()[output].areas);
-  
+      
   nodes.clear();
-  ways.clear();
-  relations.clear();
-  areas.clear();
+  rman.sets()[output].ways.clear();
+  rman.sets()[output].relations.clear();
+  rman.sets()[output].areas.clear();
 
   uint nodes_count = 0;
   
