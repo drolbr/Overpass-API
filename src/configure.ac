@@ -46,6 +46,7 @@ AC_FUNC_MMAP
 AC_FUNC_SELECT_ARGTYPES
 AC_FUNC_STAT
 AC_FUNC_STRFTIME
+AC_FUNC_STRNLEN
 
 AC_CONFIG_FILES([Makefile bin/Makefile cgi-bin/Makefile lib/Makefile test-bin/Makefile])
 AC_OUTPUT
