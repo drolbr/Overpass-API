@@ -7,7 +7,7 @@
     <tag k="shapes" v="3"/>
   </area>
   <relation id="12">
-    <member type="node" ref="30165" role="one"/>
+    <member type="node" ref="3000000165" role="one"/>
     <tag k="nodes" v="inside"/>
   </relation>
   <relation id="22">
@@ -15,8 +15,8 @@
     <tag k="ways" v="inside"/>
   </relation>
   <relation id="31">
-    <member type="node" ref="30245" role="one"/>
-    <member type="node" ref="30286" role="two"/>
+    <member type="node" ref="3000000245" role="one"/>
+    <member type="node" ref="3000000286" role="two"/>
     <member type="way" ref="311" role="zero"/>
     <member type="way" ref="311" role="zero"/>
     <member type="way" ref="331" role="zero"/>
@@ -26,7 +26,7 @@
     <tag k="shapes" v="3"/>
   </area>
   <relation id="12">
-    <member type="node" ref="30165" role="one"/>
+    <member type="node" ref="3000000165" role="one"/>
     <tag k="nodes" v="inside"/>
   </relation>
   <relation id="22">
@@ -34,8 +34,8 @@
     <tag k="ways" v="inside"/>
   </relation>
   <relation id="31">
-    <member type="node" ref="30245" role="one"/>
-    <member type="node" ref="30286" role="two"/>
+    <member type="node" ref="3000000245" role="one"/>
+    <member type="node" ref="3000000286" role="two"/>
     <member type="way" ref="311" role="zero"/>
     <member type="way" ref="311" role="zero"/>
     <member type="way" ref="331" role="zero"/>
@@ -45,7 +45,7 @@
     <tag k="shapes" v="3"/>
   </area>
   <relation id="12">
-    <member type="node" ref="30165" role="one"/>
+    <member type="node" ref="3000000165" role="one"/>
     <tag k="nodes" v="inside"/>
   </relation>
 

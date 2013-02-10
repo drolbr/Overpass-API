@@ -575,7 +575,7 @@ int main(int argc, char* args[])
     
     create_node_grid(10001, 11.0, 11.05, 10.0, 10.05, pattern_size);
 
-    create_node_grid(30001, 30.0, 30.975, 0.0, 0.975, 39);
+    create_node_grid(3000000001u, 30.0, 30.975, 0.0, 0.975, 39);
     
     create_triangle_test_pattern_ways( 1,   1, 1.0);
     create_triangle_test_pattern_ways(11, 101, 0.1);
@@ -595,11 +595,11 @@ int main(int argc, char* args[])
     
     create_multpolys_test_pattern_ways(201, 2001, 0.1);
     
-    create_area_way_ways(300, 30000);
+    create_area_way_ways(300, 3000000000u);
     
     create_multpolys_test_pattern_relations(1, 201, 0.1);
     
-    create_area_relation_relations(10, 30000, 300);
+    create_area_relation_relations(10, 3000000000u, 300);
     
     cout<<"</osm>\n";
   }
