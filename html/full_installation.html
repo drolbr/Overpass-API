@@ -82,7 +82,7 @@
 <p>The following steps are only needed if you want minutely updates. In this case, run the following commands:</p>
 
 <pre>nohup ../bin/dispatcher --osm-base --meta --db-dir=&quot;../db/&quot; &amp;</pre>
-<pre>chmod 666 &quot;../db/osm3s_v0.7_osm_base&quot;</pre>
+<pre>chmod 666 &quot;../db/osm3s_v0.7.2_osm_base&quot;</pre>
 <p>(without <em>--meta</em> if you have not processed meta data)</p>
 <p>The dispatcher has been successfully started if you find a line &quot;<em>Dispatcher just started.</em>&quot; with correct date (in UTC) in the file <em>transactions.log</em> in the database directory.</p>
 
@@ -111,24 +111,24 @@ ServerName www.overpass-api.de
 LogLevel info
 DocumentRoot /path/to/osm-3s_v0.7/html/
 
-ScriptAlias /api/ /path/to/osm-3s_v0.7/cgi-bin/
-&lt;Directory &quot;/path/to/osm-3s_v0.7/cgi-bin/&quot;&gt;
+ScriptAlias /api/ /path/to/osm-3s_v0.7.2/cgi-bin/
+&lt;Directory &quot;/path/to/osm-3s_v0.7.2/cgi-bin/&quot;&gt;
   AllowOverride None
   Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
   Order allow,deny
   Allow from all
 &lt;/Directory&gt;
 </pre>
-<p>The essential part is to replace all occurences of the path <em>/path/to/osm-3s_v0.7/</em> to the real pathes. This configuration file tells Apache to serve the html files from the directory <em>/path/to/osm-3s_v0.7/html/</em> and to call programs in <em>/path/to/osm-3s_v0.7/cgi-bin/</em> by CGI. The <em>ScriptAlias</em> makes them visible externally as <em>/api/</em> instead of <em>/cgi-bin/</em>. For the remaining options, please look into the <a href="http://httpd.apache.org/">Apache documentation</a>.</p>
+<p>The essential part is to replace all occurences of the path <em>/path/to/osm-3s_v0.7.2/</em> to the real pathes. This configuration file tells Apache to serve the html files from the directory <em>/path/to/osm-3s_v0.7.2/html/</em> and to call programs in <em>/path/to/osm-3s_v0.7.2/cgi-bin/</em> by CGI. The <em>ScriptAlias</em> makes them visible externally as <em>/api/</em> instead of <em>/cgi-bin/</em>. For the remaining options, please look into the <a href="http://httpd.apache.org/">Apache documentation</a>.</p>
 
 <p>You need to check whether the involved directories and their parent directories have sufficient permissions for all users, because otherwise Apache (with its proxy user <em>www-data</em>) cannot access them:</p>
 <pre>chmod 755 /path
 chmod 755 /path/to
-chmod 755 /path/to/osm-3s_v0.7
-chmod 755 /path/to/osm-3s_v0.7/html
-chmod 755 /path/to/osm-3s_v0.7/bin
-chmod 755 /path/to/osm-3s_v0.7/cgi-bin
-chmod 755 /path/to/osm-3s_v0.7/db</pre>
+chmod 755 /path/to/osm-3s_v0.7.2
+chmod 755 /path/to/osm-3s_v0.7.2/html
+chmod 755 /path/to/osm-3s_v0.7.2/bin
+chmod 755 /path/to/osm-3s_v0.7.2/cgi-bin
+chmod 755 /path/to/osm-3s_v0.7.2/db</pre>
 <p>Some directories are added later for some of the optional modules.</p>
 
 <p>You can now (re-)start Apache to let the updated configuration come into effect:</p>
@@ -151,7 +151,7 @@ chmod 755 /path/to/osm-3s_v0.7/db</pre>
 
 <p>The next step is to start a second dispatcher that coordinates read and write operations for the areas related files in the database:</p>
 <pre>nohup ../bin/dispatcher --areas --db-dir=&quot;../db/&quot; &amp;</pre>
-<pre>chmod 666 &quot;../db/osm3s_v0.7_areas&quot;</pre>
+<pre>chmod 666 &quot;../db/osm3s_v0.7.2_areas&quot;</pre>
 <p>The dispatcher has been successfully started if you find a line &quot;<em>Dispatcher just started.</em>&quot; with correct date (in UTC) in the file <em>transactions.log</em> in the database directory.</p>
 
 <p>The third step then is to start the rule batch processor as a daemon:</p>
