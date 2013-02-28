@@ -409,6 +409,16 @@ TStatement* create_coord_query_statement(typename TStatement::Factory& stmt_fact
   return stmt_factory.create_statement("coord-query", line_nr, attr);
 }
 
+template< class TStatement >
+TStatement* create_pivot_statement(typename TStatement::Factory& stmt_factory,
+                                   string from, string into, uint line_nr)
+{
+  map< string, string > attr;
+  attr["from"] = (from == "" ? "_" : from);
+  attr["into"] = into;
+  return stmt_factory.create_statement("pivot", line_nr, attr);
+}
+
 //-----------------------------------------------------------------------------
 
 pair< string, string > parse_setup(Tokenizer_Wrapper& token, Error_Output* error_output,
@@ -715,6 +725,9 @@ TStatement* create_query_substatement
     return create_area_statement< TStatement >
         (stmt_factory, clause.attributes.size() <= 1 ? "" : clause.attributes[1],
 	 clause.attributes[0], into, clause.line_col.first);
+  else if (clause.statement == "pivot")
+    return create_pivot_statement< TStatement >
+        (stmt_factory, clause.attributes[0], into, clause.line_col.first);
   return 0;
 }
 
@@ -928,6 +941,14 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	clear_until_after(token, error_output, ")");
 	clauses.push_back(clause);
       }
+      else if (*token == "pivot")
+      {
+        Statement_Text clause("pivot", token.line_col());
+        ++token;
+        clause.attributes.push_back(probe_from(token, error_output));
+        clear_until_after(token, error_output, ")");
+        clauses.push_back(clause);
+      }
       else if (*token == ">" || *token == ">>" || *token == "<" || *token == "<<")
       {
 	Statement_Text clause("recurse", token.line_col());
@@ -992,6 +1013,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
        || clauses.front().statement == "has-kv_icase"
        || (clauses.front().statement == "area" && type != "node")
        || (clauses.front().statement == "around" && type != "node")
+       || (clauses.front().statement == "pivot" && type != "node")
        || (clauses.front().statement == "polygon" && type != "node")
        || (clauses.front().statement == "bbox-query" && type != "node")
        || (clauses.front().statement == "recurse" &&

@@ -41,6 +41,10 @@
     <has-kv k="leisure"/>
     <has-kv k="name"/>
   </query>
+  <query type="way">
+    <has-kv k="landuse"/>
+    <has-kv k="name"/>
+  </query>
 </union>
 <foreach into="pivot">
   <union>
