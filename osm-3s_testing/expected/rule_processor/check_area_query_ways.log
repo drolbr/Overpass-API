@@ -110,6 +110,18 @@
     <nd ref="3000000085"/>
     <tag k="through" v="single_segment"/>
   </way>
+  <way id="341">
+    <nd ref="3000000043"/>
+    <nd ref="3000000045"/>
+    <nd ref="3000000085"/>
+    <nd ref="3000000047"/>
+    <nd ref="3000000208"/>
+    <nd ref="3000000207"/>
+    <nd ref="3000000204"/>
+    <nd ref="3000000243"/>
+    <nd ref="3000000043"/>
+    <tag k="touch_segment" v="multiple_segments"/>
+  </way>
   <area id="2400000300">
     <tag k="shapes" v="3"/>
   </area>
@@ -216,6 +228,18 @@
     <nd ref="3000000243"/>
     <nd ref="3000000085"/>
     <tag k="through" v="single_segment"/>
+  </way>
+  <way id="341">
+    <nd ref="3000000043"/>
+    <nd ref="3000000045"/>
+    <nd ref="3000000085"/>
+    <nd ref="3000000047"/>
+    <nd ref="3000000208"/>
+    <nd ref="3000000207"/>
+    <nd ref="3000000204"/>
+    <nd ref="3000000243"/>
+    <nd ref="3000000043"/>
+    <tag k="touch_segment" v="multiple_segments"/>
   </way>
   <area id="2400000300">
     <tag k="shapes" v="3"/>

@@ -178,7 +178,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   else
     area->get_ranges(range_req, area_blocks_req, rman);
   
-  area->collect_nodes(into.nodes, area_blocks_req, rman);
+  area->collect_nodes(into.nodes, area_blocks_req, true, rman);
   
   {
     //Process ways
@@ -199,7 +199,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     Order_By_Node_Id order_by_node_id;
     sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_node_id);
     
-    area->collect_ways(into.ways, way_members_, way_members_by_id, area_blocks_req, rman);
+    area->collect_ways(into.ways, way_members_, way_members_by_id, area_blocks_req, true, rman);
   }
   {
     //Process relations
@@ -223,7 +223,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     else
       area->get_ranges(range_req, area_blocks_req, rman);
   
-    area->collect_nodes(node_members, area_blocks_req, rman);
+    area->collect_nodes(node_members, area_blocks_req, false, rman);
   
     // Order node ids by id.
     vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id;
@@ -260,7 +260,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     }
     sort(way_node_members_by_id.begin(), way_node_members_by_id.end(), order_by_node_id);
     
-    area->collect_ways(way_members_, node_members_, way_node_members_by_id, area_blocks_req, rman);
+    area->collect_ways(way_members_, node_members_, way_node_members_by_id, area_blocks_req, false, rman);
     
     // Order way ids by id.
     vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id;
@@ -491,7 +491,7 @@ void Area_Query_Statement::collect_nodes
 
 void Area_Query_Statement::collect_nodes
     (map< Uint32_Index, vector< Node_Skeleton > >& nodes,
-     const set< Uint31_Index >& req,
+     const set< Uint31_Index >& req, bool add_border,
      Resource_Manager& rman)
 {
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
@@ -540,7 +540,7 @@ void Area_Query_Statement::collect_nodes
 	       ++it2)
           {
 	    int check(Coord_Query_Statement::check_area_block(current_idx, *it2, ilat, ilon));
-	    if (check == Coord_Query_Statement::HIT)
+	    if (check == Coord_Query_Statement::HIT && add_border)
 	    {
 	      inside = 1;
 	      break;
@@ -569,7 +569,7 @@ void Area_Query_Statement::collect_nodes
 
 inline bool ordered_intersects_inner
     (uint32 lat_a0, uint32 lon_a0, uint32 lat_a1, uint32 lon_a1,
-     uint32 lat_b0, uint32 lon_b0, uint32 lat_b1, uint32 lon_b1)
+     uint32 lat_b0, uint32 lon_b0, uint32 lat_b1, uint32 lon_b1, bool add_border)
 {
   double det = ((double(lat_a1) - lat_a0)*(double(lon_b1) - lon_b0) - (double(lat_b1) - lat_b0)*(double(lon_a1) - lon_a0));
   if (det != 0)
@@ -586,7 +586,7 @@ inline bool ordered_intersects_inner
                 *(double(lat_b1) - lat_b0) - lat_b0) <= 1)
 	|| (fabs(lat_a1 - (double(lon_a1) - lon_b0)/(double(lon_b1) - lon_b0)
                 *(double(lat_b1) - lat_b0) - lat_b0) <= 1))
-    return true;
+    return add_border;
   
   return false;
 }
@@ -594,17 +594,19 @@ inline bool ordered_intersects_inner
 
 inline bool ordered_a_intersects_inner
     (uint32 lat_a0, uint32 lon_a0, uint32 lat_a1, uint32 lon_a1,
-     uint32 lat_b0, uint32 lon_b0, uint32 lat_b1, uint32 lon_b1)
+     uint32 lat_b0, uint32 lon_b0, uint32 lat_b1, uint32 lon_b1, bool add_border)
 {
   if (lon_b0 < lon_b1)
   {
     if (lon_a0 < lon_b1 && lon_b0 < lon_a1)
-      return (ordered_intersects_inner(lat_a0, lon_a0, lat_a1, lon_a1, lat_b0, lon_b0, lat_b1, lon_b1));
+      return (ordered_intersects_inner(lat_a0, lon_a0, lat_a1, lon_a1, lat_b0, lon_b0, lat_b1, lon_b1,
+                                       add_border));
   }
   else if (lon_b1 < lon_b0)
   {
     if (lon_a0 < lon_b0 && lon_b1 < lon_a1)
-      return ordered_intersects_inner(lat_a0, lon_a0, lat_a1, lon_a1, lat_b1, lon_b1, lat_b0, lon_b0);
+      return ordered_intersects_inner(lat_a0, lon_a0, lat_a1, lon_a1, lat_b1, lon_b1, lat_b0, lon_b0,
+                                      add_border);
   }
   else // lon_b0 == lon_b1
   {
@@ -621,7 +623,8 @@ inline bool ordered_a_intersects_inner
 
 inline bool longitude_a_intersects_inner
     (uint32 lat_a0, uint32 lon_a, uint32 lat_a1,
-     uint32 lat_b0, uint32 lon_b0, uint32 lat_b1, uint32 lon_b1)
+     uint32 lat_b0, uint32 lon_b0, uint32 lat_b1, uint32 lon_b1,
+     bool add_border)
 {
   if (lon_b0 < lon_b1)
   {
@@ -641,6 +644,8 @@ inline bool longitude_a_intersects_inner
   }
   else // lon_b0 == lon_b1
   {
+    if (!add_border)
+      return false;
     if (lon_a != lon_b0)
       return false;
     if (lat_a0 < lat_a1)
@@ -663,7 +668,7 @@ inline bool longitude_a_intersects_inner
 }
 
 
-bool intersects_inner(const Area_Block& string_a, const Area_Block& string_b)
+bool intersects_inner(const Area_Block& string_a, const Area_Block& string_b, bool add_border)
 {
   vector< pair< uint32, uint32 > > coords_a;
   for (vector< uint64 >::const_iterator it = string_a.coors.begin(); it != string_a.coors.end(); ++it)
@@ -683,7 +688,8 @@ bool intersects_inner(const Area_Block& string_a, const Area_Block& string_b)
       {
 	if (ordered_a_intersects_inner
 	    (coords_a[i].first, coords_a[i].second, coords_a[i+1].first, coords_a[i+1].second,
-	     coords_b[j].first, coords_b[j].second, coords_b[j+1].first, coords_b[j+1].second))
+	     coords_b[j].first, coords_b[j].second, coords_b[j+1].first, coords_b[j+1].second,
+             add_border))
 	  return true;
       }
     }
@@ -693,7 +699,8 @@ bool intersects_inner(const Area_Block& string_a, const Area_Block& string_b)
       {
 	if (ordered_a_intersects_inner
 	    (coords_a[i+1].first, coords_a[i+1].second, coords_a[i].first, coords_a[i].second,
-	     coords_b[j].first, coords_b[j].second, coords_b[j+1].first, coords_b[j+1].second))
+	     coords_b[j].first, coords_b[j].second, coords_b[j+1].first, coords_b[j+1].second,
+             add_border))
 	  return true;
       }
     }
@@ -702,7 +709,8 @@ bool intersects_inner(const Area_Block& string_a, const Area_Block& string_b)
       {
 	if (longitude_a_intersects_inner
 	    (coords_a[i].first, coords_a[i].second, coords_a[i+1].first,
-	     coords_b[j].first, coords_b[j].second, coords_b[j+1].first, coords_b[j+1].second))
+	     coords_b[j].first, coords_b[j].second, coords_b[j+1].first, coords_b[j+1].second,
+             add_border))
 	  return true;
       }
   }
@@ -725,7 +733,9 @@ void has_inner_points(const Area_Block& string_a, const Area_Block& string_b, in
     uint32 ilat = (coords_a[i].first + coords_a[i+1].first)/2;
     uint32 ilon = (coords_a[i].second + coords_a[i+1].second)/2 + 0x80000000u;
     int check = Coord_Query_Statement::check_area_block(0, string_b, ilat, ilon);
-    if ((check != 0) && (check != Coord_Query_Statement::HIT))
+    if (check & Coord_Query_Statement::HIT)
+      inside = check;
+    else if (check)
       inside ^= check;
   }
 }
@@ -735,7 +745,7 @@ void Area_Query_Statement::collect_ways
       (map< Uint31_Index, vector< Way_Skeleton > >& ways,
        map< Uint32_Index, vector< Node_Skeleton > >& way_members_,
        vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id,
-       const set< Uint31_Index >& req,
+       const set< Uint31_Index >& req, bool add_border,
        Resource_Manager& rman)
 {
   vector< Node > nodes;
@@ -818,7 +828,7 @@ void Area_Query_Statement::collect_ways
       }
       ++nodes_it;
     }
-    
+      
     // check segments
     for (vector< Area_Block >::const_iterator sit = way_segments[Uint31_Index(current_idx)].begin();
 	 sit != way_segments[Uint31_Index(current_idx)].end(); ++sit)
@@ -837,7 +847,7 @@ void Area_Query_Statement::collect_ways
           // The endpoints are properly handled via the point-in-area test
           // Check additionally the middle of the segment to also get segments
           // that run through the area
-	  if (intersects_inner(*sit, *it2))
+	  if (intersects_inner(*sit, *it2, add_border))
 	  {
 	    ways_inside[Way::Id_Type(sit->id)] = true;
 	    break;
@@ -845,7 +855,8 @@ void Area_Query_Statement::collect_ways
           has_inner_points(*sit, *it2, inside);
 	}
       }
-      if (inside)
+      if ((inside && (!(inside & Coord_Query_Statement::HIT))) ||
+          (inside && add_border))
         ways_inside[Way::Id_Type(sit->id)] = true;
     }
   }
@@ -922,7 +933,7 @@ void Area_Query_Statement::execute(Resource_Manager& rman)
     get_ranges(nodes_req, req, rman);
   collect_nodes_from_req(nodes_req, nodes, rman);
   
-  collect_nodes(nodes, req, rman);
+  collect_nodes(nodes, req, true, rman);
   
   nodes.swap(rman.sets()[output].nodes);
   ways.swap(rman.sets()[output].ways);

@@ -79,7 +79,7 @@ bool Polygon_Constraint::get_ranges
 
 void Polygon_Constraint::filter(Resource_Manager& rman, Set& into)
 {
-  polygon->collect_nodes(into.nodes);
+  polygon->collect_nodes(into.nodes, true);
   
   set< pair< Uint31_Index, Uint31_Index > > ranges;
   get_ranges(rman, ranges);
@@ -183,7 +183,7 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
     Order_By_Node_Id order_by_node_id;
     sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_node_id);
     
-    polygon->collect_ways(into.ways, way_members_, way_members_by_id, rman);
+    polygon->collect_ways(into.ways, way_members_, way_members_by_id, true, rman);
   }
   {
     //Process relations
@@ -196,7 +196,7 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
         = relation_node_members(&query, rman, into.relations, &node_ranges);
   
     // filter for those nodes that are in one of the areas
-    polygon->collect_nodes(node_members);
+    polygon->collect_nodes(node_members, false);
   
     // Order node ids by id.
     vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id;
@@ -233,7 +233,7 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
     }
     sort(way_node_members_by_id.begin(), way_node_members_by_id.end(), order_by_node_id);
     
-    polygon->collect_ways(way_members_, node_members_, way_node_members_by_id, rman);
+    polygon->collect_ways(way_members_, node_members_, way_node_members_by_id, false, rman);
     
     // Order way ids by id.
     vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id;
@@ -414,7 +414,8 @@ void Polygon_Query_Statement::forecast()
 }
 
 
-void Polygon_Query_Statement::collect_nodes(map< Uint32_Index, vector< Node_Skeleton > >& nodes)
+void Polygon_Query_Statement::collect_nodes(map< Uint32_Index, vector< Node_Skeleton > >& nodes,
+                                            bool add_border)
 {
   vector< Aligned_Segment >::const_iterator area_it = segments.begin();
   map< Uint32_Index, vector< Node_Skeleton > >::iterator nodes_it = nodes.begin();
@@ -457,7 +458,7 @@ void Polygon_Query_Statement::collect_nodes(map< Uint32_Index, vector< Node_Skel
 	     it != areas.end(); ++it)
         {
 	  int check(Coord_Query_Statement::check_area_block(current_idx, *it, ilat, ilon));
-	  if (check == Coord_Query_Statement::HIT)
+	  if (check == Coord_Query_Statement::HIT && add_border)
 	  {
 	    inside = 1;
 	    break;
@@ -484,6 +485,7 @@ void Polygon_Query_Statement::collect_ways
       (map< Uint31_Index, vector< Way_Skeleton > >& ways,
        map< Uint32_Index, vector< Node_Skeleton > >& way_members_,
        vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id,
+       bool add_border,
        Resource_Manager& rman)
 {
   vector< Node > nodes;
@@ -573,7 +575,7 @@ void Polygon_Query_Statement::collect_ways
         // The endpoints are properly handled via the point-in-area test
         // Check additionally the middle of the segment to also get segments
         // that run through the area
-        if (intersects_inner(*sit, *it))
+        if (intersects_inner(*sit, *it, add_border))
         {
           ways_inside[Way::Id_Type(sit->id)] = true;
           break;
@@ -647,7 +649,7 @@ void Polygon_Query_Statement::execute(Resource_Manager& rman)
   collect_items_range(this, rman, *osm_base_settings().NODES, nodes_req,
 		      Trivial_Predicate< Node_Skeleton >(), nodes);
   
-  collect_nodes(nodes);
+  collect_nodes(nodes, true);
   
   rman.health_check(*this);
 }

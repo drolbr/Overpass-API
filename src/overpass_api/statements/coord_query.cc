@@ -176,8 +176,13 @@ int Coord_Query_Statement::check_area_block
 	continue;
       }
     }
-    else // last_lon == lon should normally not happen and can be safely ignored
-      continue; // otherwise.
+    else // last_lon == lon
+    {
+      if (lon == coord_lon &&
+          ((last_lat <= coord_lat && coord_lat <= lat) || (lat <= coord_lat && coord_lat <= last_lat)))
+        return HIT; // case (2)
+      continue; // else: case (1)
+    }
     
     uint32 intersect_lat = lat +
         ((int64)coord_lon - lon)*((int64)last_lat - lat)/((int64)last_lon - lon);

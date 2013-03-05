@@ -397,6 +397,12 @@ void create_area_way_ways(uint id, uint node_ref)
   tags.push_back(make_pair< string, string >("through", "single_segment"));
   
   create_way(id + 34, V< uint >(node_ref + 243)(node_ref + 85), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("touch_segment", "multiple_segments"));
+  
+  create_way(id + 41, V< uint >(node_ref + 43)(node_ref + 45)(node_ref + 85)(node_ref + 47)
+      (node_ref + 208)(node_ref + 207)(node_ref + 204)(node_ref + 243)(node_ref + 43), tags);
 }
 
 
@@ -421,6 +427,11 @@ void create_area_relation_relations(uint id, uint node_ref, uint way_ref)
   tags.push_back(make_pair< string, string >("ways", "inside"));
   
   create_relation(id + 12, V< uint >(way_ref + 31), V< uint >(1), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("ways", "touch"));
+  
+  create_relation(id + 13, V< uint >(way_ref + 41), V< uint >(1), tags);
 
   tags.pop_back();
   tags.push_back(make_pair< string, string >("multiple", "last_inside"));
