@@ -51,6 +51,7 @@ class Coord_Query_Statement : public Statement
     const static int HIT = 1;
     const static int TOGGLE_EAST = 2;
     const static int TOGGLE_WEST = 4;
+    const static int INTERSECT = 8;
     
     static bool is_used() { return is_used_; }
   

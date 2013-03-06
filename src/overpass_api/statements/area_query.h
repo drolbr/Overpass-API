@@ -85,7 +85,7 @@ class Area_Query_Statement : public Statement
 };
 
 
-bool intersects_inner(const Area_Block& string_a, const Area_Block& string_b, bool add_border);
+int intersects_inner(const Area_Block& string_a, const Area_Block& string_b);
 
 void has_inner_points(const Area_Block& string_a, const Area_Block& string_b, int& inside);
 

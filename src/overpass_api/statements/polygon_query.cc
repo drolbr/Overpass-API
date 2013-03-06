@@ -575,14 +575,24 @@ void Polygon_Query_Statement::collect_ways
         // The endpoints are properly handled via the point-in-area test
         // Check additionally the middle of the segment to also get segments
         // that run through the area
-        if (intersects_inner(*sit, *it, add_border))
+        int intersect = intersects_inner(*sit, *it);
+        if (intersect == Coord_Query_Statement::INTERSECT)
         {
           ways_inside[Way::Id_Type(sit->id)] = true;
           break;
         }
+        else if (intersect == Coord_Query_Statement::HIT)
+        {
+          if (add_border)
+            ways_inside[Way::Id_Type(sit->id)] = true;
+          else
+            inside = 0;
+          break;
+        }
         has_inner_points(*sit, *it, inside);
       }
-      if (inside)
+      if ((inside && (!(inside & Coord_Query_Statement::HIT))) ||
+          (inside && add_border))
         ways_inside[Way::Id_Type(sit->id)] = true;
     }
   }
