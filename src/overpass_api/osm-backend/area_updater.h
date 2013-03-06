@@ -116,7 +116,7 @@ inline void Area_Updater::flush()
   }
   catch(File_Error e)
   {
-    cerr<<"File_Error: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cerr<<"File_Error: "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
 

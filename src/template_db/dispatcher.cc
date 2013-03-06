@@ -327,7 +327,7 @@ void Dispatcher::write_start(pid_t pid)
       if (locked_pid == pid)
 	return;
     }
-    cerr<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
     return;
   }
 
@@ -366,7 +366,7 @@ void Dispatcher::write_commit(pid_t pid)
   }
   catch (File_Error e)
   {
-    cerr<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
     return;
   }
   
@@ -480,7 +480,7 @@ void Dispatcher::set_current_footprints()
     }
     catch (File_Error e)
     {
-      cerr<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     catch (...) {}
     
@@ -491,7 +491,7 @@ void Dispatcher::set_current_footprints()
     }
     catch (File_Error e)
     {
-      cerr<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     catch (...) {}
   }
@@ -856,7 +856,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     }
     catch (File_Error e)
     {
-      cerr<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
       
       counter += 30;
       millisleep(3000);

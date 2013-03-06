@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
     }
     catch (File_Error e)
     {
-      cout<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     return 0;
   }
@@ -183,7 +183,7 @@ int main(int argc, char* argv[])
     }
     catch (File_Error e)
     {
-      cout<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     return 0;
   }
@@ -198,7 +198,7 @@ int main(int argc, char* argv[])
     }
     catch (File_Error e)
     {
-      cout<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     return 0;
   }
@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
     }
     catch (File_Error e)
     {
-      cout<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     return 0;
   }
@@ -229,7 +229,7 @@ int main(int argc, char* argv[])
     }
     catch (File_Error e)
     {
-      cout<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     return 0;
   }
@@ -243,7 +243,7 @@ int main(int argc, char* argv[])
     }
     catch (File_Error e)
     {
-      cout<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     return 0;
   }
@@ -313,7 +313,7 @@ int main(int argc, char* argv[])
   }
   catch (File_Error e)
   {
-    cout<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
   
   return 0;

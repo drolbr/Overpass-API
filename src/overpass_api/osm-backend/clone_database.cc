@@ -67,7 +67,7 @@ void clone_bin_file(const File_Properties& file_prop, Transaction& transaction, 
   }
   catch (File_Error e)
   {
-    cout<<e.origin<<' '<<e.error_number<<' '<<e.filename<<'\n';
+    cout<<e.origin<<' '<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<'\n';
   }
 }
 
@@ -98,7 +98,7 @@ void clone_map_file(const File_Properties& file_prop, Transaction& transaction, 
   }
   catch (File_Error e)
   {
-    cout<<e.origin<<' '<<e.error_number<<' '<<e.filename<<'\n';
+    cout<<e.origin<<' '<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<'\n';
   }
 }
 
