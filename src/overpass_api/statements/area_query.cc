@@ -373,7 +373,7 @@ void Area_Query_Statement::get_ranges
   {
     if (binary_search(area_id.begin(), area_id.end(), it.object().id))
     {
-      for (set< uint32 >::const_iterator it2(it.object().used_indices.begin());
+      for (vector< uint32 >::const_iterator it2(it.object().used_indices.begin());
           it2 != it.object().used_indices.end(); ++it2)
       {
 	area_block_req.insert(Uint31_Index(*it2));
@@ -400,7 +400,7 @@ void Area_Query_Statement::get_ranges
     {
       area_id.push_back(it2->id);
       
-      for (set< uint32 >::const_iterator it3(it2->used_indices.begin());
+      for (vector< uint32 >::const_iterator it3(it2->used_indices.begin());
           it3 != it2->used_indices.end(); ++it3)
       {
         area_block_req.insert(Uint31_Index(*it3));

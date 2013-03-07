@@ -438,10 +438,11 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
 
   add_segment_blocks(area_blocks, pivot_id);
   
-  set< uint32 > used_indices;
+  vector< uint32 > used_indices;
   for (map< Uint31_Index, vector< Area_Block > >::const_iterator
       it(area_blocks.begin()); it != area_blocks.end(); ++it)
-    used_indices.insert(it->first.val());
+    used_indices.push_back(it->first.val());
+  sort(used_indices.begin(), used_indices.end());
   
   Area_Location new_location(pivot_id, used_indices);
   new_location.tags = new_tags;

@@ -127,7 +127,12 @@ inline void Area_Updater::set_area
 {
   ids_to_modify.insert(id);
   
-  Area_Location area(id, used_indices);
+  vector< uint32 > indices;
+  for (set< uint32 >::const_iterator it(used_indices.begin());
+      it != used_indices.end(); ++it)
+    indices.push_back(*it);
+    
+  Area_Location area(id, indices);
   area.tags = tags;
   areas_to_insert.push_back(make_pair(area, index));
 }

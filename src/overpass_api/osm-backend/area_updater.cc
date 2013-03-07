@@ -97,7 +97,7 @@ void Area_Updater::update_area_ids
   {
     if (ids_to_modify.find(it.object().id) != ids_to_modify.end())
     {
-      for (set< uint32 >::const_iterator it2(it.object().used_indices.begin());
+      for (vector< uint32 >::const_iterator it2(it.object().used_indices.begin());
           it2 != it.object().used_indices.end(); ++it2)
         blocks_req.insert(*it2);
       locations_to_delete[it.index().val()].insert(it.object());
