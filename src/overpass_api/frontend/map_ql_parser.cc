@@ -36,6 +36,58 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
+string decode_to_utf8(const string& token, string::size_type& pos, Error_Output* error_output)
+{
+  uint val = 0;
+  pos += 2;
+  string::size_type max_pos = pos + 4;
+  if (token.size() < max_pos)
+    max_pos = token.size();
+  while (pos < max_pos &&
+      ((token[pos] >= '0' && token[pos] <= '9')
+      || (token[pos] >= 'a' && token[pos] <= 'f')
+      || (token[pos] >= 'A' && token[pos] <= 'F')))
+  {
+    val *= 16;
+    if (token[pos] >= '0' && token[pos] <= '9')
+      val += (token[pos] - 0x30);
+    else if (token[pos] >= 'a' && token[pos] <= 'f')
+      val += (token[pos] - 87);
+    else if (token[pos] >= 'A' && token[pos] <= 'F')
+      val += (token[pos] - 55);
+    ++pos;
+  }
+  if (val < 0x20)
+  {
+    if (error_output)
+      error_output->add_parse_error("Invalid UTF-8 character (value below 32) in escape sequence.", 0);
+  }
+  else if (val < 0x80)
+  {
+    string buf = " ";
+    buf[0] = val;
+    return buf;
+  }
+  else if (val < 0x800)
+  {
+    cout<<val<<'\n';
+    string buf = "  ";
+    buf[0] = (0xc0 | (val>>6));
+    buf[1] = (0x80 | (val & 0x3f));
+    return buf;
+  }
+  else
+  {
+    cout<<val<<'\n';
+    string buf = "   ";
+    buf[0] = (0xe0 | (val>>12));
+    buf[1] = (0x80 | ((val>>6) & 0x3f));
+    buf[2] = (0x80 | (val & 0x3f));
+    return buf;
+  }
+  return "";
+}
+
 string get_text_token(Tokenizer_Wrapper& token, Error_Output* error_output,
 		      string type_of_token)
 {
@@ -55,6 +107,11 @@ string get_text_token(Tokenizer_Wrapper& token, Error_Output* error_output,
         result += '\n';
       else if ((*token)[pos + 1] == 't')
         result += '\t';
+      else if ((*token)[pos + 1] == 'u')
+      {
+        result += decode_to_utf8(*token, pos, error_output);
+        pos -= 2;
+      }
       else
         result += (*token)[pos + 1];
       start = pos + 2;

@@ -212,6 +212,7 @@ struct Area
   }
 };
 
+
 struct Area_Location
 {
   uint32 id;
@@ -237,37 +238,16 @@ struct Area_Location
   {
     if (used_indices.empty())
       return 0;
-    
-    uint32 bitmask(0), value(*used_indices.begin());
+
+    vector< uint32 > indices;
     for (set< uint32 >::const_iterator it(used_indices.begin());
         it != used_indices.end(); ++it)
-    {
-      bitmask |= (value ^ (*it));
-      if (*it & 0x80000000)
-      {
-	if ((*it & 0xff) == 0x10)
-	  bitmask |= 0xff;
-	else if ((*it & 0xff) == 0x20)
-	  bitmask |= 0xffff;
-	else if ((*it & 0xff) == 0x30)
-	  bitmask |= 0xffffff;
-	else
-	  bitmask |= 0xffffffff;
-      }
-    }
-    bitmask = bitmask & 0x7fffffff;
-    if (bitmask & 0xff000000)
-      value = 0x80000040;
-    else if (bitmask & 0xffff0000)
-      value = (value & 0xff000000) | 0x80000030;
-    else if (bitmask & 0xffffff00)
-      value = (value & 0xffff0000) | 0x80000020;
-    else if (bitmask)
-      value = (value & 0xffffff00) | 0x80000010;
+      indices.push_back(*it);
     
-    return value;
+    return ::calc_index(indices);
   }
 };
+
 
 struct Area_Skeleton
 {
