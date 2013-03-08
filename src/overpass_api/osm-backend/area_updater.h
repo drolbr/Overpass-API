@@ -101,7 +101,7 @@ private:
 
 inline void Area_Updater::commit()
 {
-  if (total_area_blocks_count > 64*1024)
+  if (total_area_blocks_count > 512*1024)
     update();
 }
 
