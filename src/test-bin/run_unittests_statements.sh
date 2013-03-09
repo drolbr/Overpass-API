@@ -165,9 +165,9 @@ perform_test_loop print 4 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 print_test_5 print 5 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 # Test the recurse statement
-prepare_test_loop recurse 22 $DATA_SIZE
+prepare_test_loop recurse 28 $DATA_SIZE
 date +%T
-perform_test_loop recurse 22 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
+perform_test_loop recurse 28 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 # Test the bbox_query statement
 prepare_test_loop bbox_query 8 $DATA_SIZE

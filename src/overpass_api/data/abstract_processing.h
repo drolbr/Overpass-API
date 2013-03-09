@@ -106,12 +106,27 @@ inline bool has_a_child_with_id
   for (vector< Relation_Entry >::const_iterator it3(relation.members.begin());
       it3 != relation.members.end(); ++it3)
   {
-    if ((it3->type == type) &&
-        (binary_search(ids.begin(), ids.end(), it3->ref)))
+    if (it3->type == type &&
+        binary_search(ids.begin(), ids.end(), it3->ref))
       return true;
   }
   return false;
 }
+
+
+inline bool has_a_child_with_id_and_role
+    (const Relation_Skeleton& relation, const vector< Uint64 >& ids, uint32 type, uint32 role_id)
+{
+  for (vector< Relation_Entry >::const_iterator it3(relation.members.begin());
+      it3 != relation.members.end(); ++it3)
+  {
+    if (it3->type == type && it3->role == role_id &&
+        binary_search(ids.begin(), ids.end(), it3->ref))
+      return true;
+  }
+  return false;
+}
+
 
 inline bool has_a_child_with_id
     (const Way_Skeleton& way, const vector< Node::Id_Type >& ids)
@@ -124,6 +139,7 @@ inline bool has_a_child_with_id
   }
   return false;
 }
+
 
 class Get_Parent_Rels_Predicate
 {
@@ -139,6 +155,24 @@ private:
   const vector< Uint64 >& ids;
   uint32 child_type;
 };
+
+
+class Get_Parent_Rels_Role_Predicate
+{
+public:
+  Get_Parent_Rels_Role_Predicate(const vector< Uint64 >& ids_, uint32 child_type_, uint32 role_id_)
+    : ids(ids_), child_type(child_type_), role_id(role_id_) {}
+  bool match(const Relation_Skeleton& obj) const
+  {
+    return has_a_child_with_id_and_role(obj, ids, child_type, role_id);
+  }
+  
+private:
+  const vector< Uint64 >& ids;
+  uint32 child_type;
+  uint32 role_id;
+};
+
 
 class Get_Parent_Ways_Predicate
 {

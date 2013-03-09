@@ -16,6 +16,7 @@
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../data/collect_members.h"
 #include "../frontend/print_target.h"
 #include "meta_collector.h"
 #include "print.h"
@@ -40,11 +41,7 @@ const unsigned int AREA_FLUSH_SIZE = 64*1024;
 Print_Target::Print_Target(uint32 mode_, Transaction& transaction) : mode(mode_)
 {
   // prepare check update_members - load roles
-  Block_Backend< Uint32_Index, String_Object > roles_db
-      (transaction.data_index(osm_base_settings().RELATION_ROLES));
-  for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
-      it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
-    roles[it.index().val()] = it.object().val();
+  roles = relation_member_roles(transaction);
 }
 
 

@@ -17,6 +17,7 @@
 */
 
 #include "abstract_processing.h"
+#include "collect_members.h"
 
 using namespace std;
 
@@ -34,6 +35,23 @@ void filter_for_member_ids(const vector< Relation_Skeleton >& relations,
     {
       if (it3->type == type)
 	ids.push_back(Ref_Type(it3->ref.val()));
+    }
+  }
+}
+
+
+template< typename Ref_Type >
+void filter_for_member_ids(const vector< Relation_Skeleton >& relations,
+                           vector< Ref_Type >& ids, uint32 type, uint32 role_id)
+{
+  for (vector< Relation_Skeleton >::const_iterator it2(relations.begin());
+      it2 != relations.end(); ++it2)
+  {
+    for (vector< Relation_Entry >::const_iterator it3(it2->members.begin());
+        it3 != it2->members.end(); ++it3)
+    {
+      if (it3->type == type && it3->role == role_id)
+        ids.push_back(Ref_Type(it3->ref.val()));
     }
   }
 }
@@ -385,12 +403,21 @@ set< pair< Uint32_Index, Uint32_Index > > way_nd_indices
 
 vector< Node::Id_Type > relation_node_member_ids
     (Resource_Manager& rman,
-     const map< Uint31_Index, vector< Relation_Skeleton > >& rels)
+     const map< Uint31_Index, vector< Relation_Skeleton > >& rels, const uint32* role_id)
 {
-  vector< Node::Id_Type > ids;    
-  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
-      it(rels.begin()); it != rels.end(); ++it)
-    filter_for_member_ids(it->second, ids, Relation_Entry::NODE);
+  vector< Node::Id_Type > ids;
+  if (role_id)
+  {
+    for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
+        it(rels.begin()); it != rels.end(); ++it)
+      filter_for_member_ids(it->second, ids, Relation_Entry::NODE, *role_id);
+  }
+  else
+  {
+    for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
+        it(rels.begin()); it != rels.end(); ++it)
+      filter_for_member_ids(it->second, ids, Relation_Entry::NODE);
+  }
   
   sort(ids.begin(), ids.end());
   
@@ -400,12 +427,21 @@ vector< Node::Id_Type > relation_node_member_ids
 
 vector< Way::Id_Type > relation_way_member_ids
     (Resource_Manager& rman,
-     const map< Uint31_Index, vector< Relation_Skeleton > >& rels)
+     const map< Uint31_Index, vector< Relation_Skeleton > >& rels, const uint32* role_id)
 {
   vector< Way::Id_Type > ids;    
-  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
-      it(rels.begin()); it != rels.end(); ++it)
-    filter_for_member_ids(it->second, ids, Relation_Entry::WAY);
+  if (role_id)
+  {
+    for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
+        it(rels.begin()); it != rels.end(); ++it)
+      filter_for_member_ids(it->second, ids, Relation_Entry::WAY, *role_id);
+  }
+  else
+  {
+    for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
+        it(rels.begin()); it != rels.end(); ++it)
+      filter_for_member_ids(it->second, ids, Relation_Entry::WAY);
+  }
   
   sort(ids.begin(), ids.end());
   
@@ -415,12 +451,21 @@ vector< Way::Id_Type > relation_way_member_ids
 
 vector< Relation::Id_Type > relation_relation_member_ids
     (Resource_Manager& rman,
-     const map< Uint31_Index, vector< Relation_Skeleton > >& rels)
+     const map< Uint31_Index, vector< Relation_Skeleton > >& rels, const uint32* role_id)
 {
   vector< Relation::Id_Type > ids;    
-  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
-      it(rels.begin()); it != rels.end(); ++it)
-    filter_for_member_ids(it->second, ids, Relation_Entry::RELATION);
+  if (role_id)
+  {
+    for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
+        it(rels.begin()); it != rels.end(); ++it)
+      filter_for_member_ids(it->second, ids, Relation_Entry::RELATION, *role_id);
+  }
+  else
+  {
+    for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
+        it(rels.begin()); it != rels.end(); ++it)
+      filter_for_member_ids(it->second, ids, Relation_Entry::RELATION);
+  }
   
   sort(ids.begin(), ids.end());
   
@@ -432,12 +477,12 @@ map< Uint31_Index, vector< Relation_Skeleton > > relation_relation_members
     (const Statement& stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Relation_Skeleton > >& parents,
      const set< pair< Uint31_Index, Uint31_Index > >* children_ranges,
-     const vector< Relation::Id_Type >* children_ids, bool invert_ids)
+     const vector< Relation::Id_Type >* children_ids, bool invert_ids, const uint32* role_id)
 {
   vector< Relation::Id_Type > intersect_ids;
   if (children_ids)
   {
-    vector< Relation::Id_Type > children_ids_ = relation_relation_member_ids(rman, parents);
+    vector< Relation::Id_Type > children_ids_ = relation_relation_member_ids(rman, parents, role_id);
     rman.health_check(stmt);
     intersect_ids.resize(children_ids_.size(), Relation::Id_Type(0u));
     if (!invert_ids)
@@ -453,7 +498,7 @@ map< Uint31_Index, vector< Relation_Skeleton > > relation_relation_members
   }
   else
   {
-    intersect_ids = relation_relation_member_ids(rman, parents);
+    intersect_ids = relation_relation_member_ids(rman, parents, role_id);
     rman.health_check(stmt);
   }
     
@@ -475,12 +520,12 @@ map< Uint31_Index, vector< Way_Skeleton > > relation_way_members
     (const Statement* stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
      const set< pair< Uint31_Index, Uint31_Index > >* way_ranges,
-     const vector< Way::Id_Type >* way_ids, bool invert_ids)
+     const vector< Way::Id_Type >* way_ids, bool invert_ids, const uint32* role_id)
 {
   vector< Way::Id_Type > intersect_ids;
   if (way_ids)
   {
-    vector< Way::Id_Type > children_ids = relation_way_member_ids(rman, relations);
+    vector< Way::Id_Type > children_ids = relation_way_member_ids(rman, relations, role_id);
     if (stmt)
       rman.health_check(*stmt);
     intersect_ids.resize(children_ids.size(), Way::Id_Type(0u));
@@ -496,7 +541,7 @@ map< Uint31_Index, vector< Way_Skeleton > > relation_way_members
   }
   else
   {
-    intersect_ids = relation_way_member_ids(rman, relations);
+    intersect_ids = relation_way_member_ids(rman, relations, role_id);
     if (stmt)
       rman.health_check(*stmt);
   }
@@ -519,12 +564,12 @@ map< Uint32_Index, vector< Node_Skeleton > > relation_node_members
     (const Statement* stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
      const set< pair< Uint32_Index, Uint32_Index > >* node_ranges,
-     const vector< Node::Id_Type >* node_ids, bool invert_ids)
+     const vector< Node::Id_Type >* node_ids, bool invert_ids, const uint32* role_id)
 {
   vector< Node::Id_Type > intersect_ids;
   if (node_ids)
   {
-    vector< Node::Id_Type > children_ids = relation_node_member_ids(rman, relations);
+    vector< Node::Id_Type > children_ids = relation_node_member_ids(rman, relations, role_id);
     if (stmt)
       rman.health_check(*stmt);
     intersect_ids.resize(children_ids.size(), Node::Id_Type(0ull));
@@ -540,7 +585,7 @@ map< Uint32_Index, vector< Node_Skeleton > > relation_node_members
   }
   else
   {
-    intersect_ids = relation_node_member_ids(rman, relations);
+    intersect_ids = relation_node_member_ids(rman, relations, role_id);
     if (stmt)
       rman.health_check(*stmt);
   }
@@ -603,4 +648,34 @@ map< Uint32_Index, vector< Node_Skeleton > > way_members
   }
   
   return result;
+}
+
+//-----------------------------------------------------------------------------
+
+const map< uint32, string >& relation_member_roles(Transaction& transaction)
+{
+  static map< uint32, string > roles;
+  
+  if (roles.empty())
+  {
+    Block_Backend< Uint32_Index, String_Object > roles_db
+        (transaction.data_index(osm_base_settings().RELATION_ROLES));
+    for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
+        it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
+      roles[it.index().val()] = it.object().val();
+  }
+  
+  return roles;
+}
+
+
+uint32 determine_role_id(Transaction& transaction, const string& role)
+{
+  const map< uint32, string >& roles = relation_member_roles(transaction);
+  for (map< uint32, string >::const_iterator it = roles.begin(); it != roles.end(); ++it)
+  {
+    if (it->second == role)
+      return it->first;
+  }
+  return numeric_limits< uint32 >::max();
 }

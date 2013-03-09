@@ -110,6 +110,22 @@ template< class TSourceIndex, class TSourceObject >
 void collect_relations
     (const Statement& stmt, Resource_Manager& rman,
      const map< TSourceIndex, vector< TSourceObject > >& sources, uint32 source_type,
+     map< Uint31_Index, vector< Relation_Skeleton > >& result, uint32 role_id)
+{
+  vector< Relation_Entry::Ref_Type > ids = extract_children_ids< TSourceIndex, TSourceObject, Relation_Entry::Ref_Type >(sources);    
+  rman.health_check(stmt);
+  set< Uint31_Index > req = extract_parent_indices(sources);
+  rman.health_check(stmt);
+
+  collect_items_discrete(&stmt, rman, *osm_base_settings().RELATIONS, req,
+                         Get_Parent_Rels_Role_Predicate(ids, source_type, role_id), result);
+}
+
+
+template< class TSourceIndex, class TSourceObject >
+void collect_relations
+    (const Statement& stmt, Resource_Manager& rman,
+     const map< TSourceIndex, vector< TSourceObject > >& sources, uint32 source_type,
      map< Uint31_Index, vector< Relation_Skeleton > >& result,
      const vector< Relation::Id_Type >& ids, bool invert_ids)
 {
@@ -134,6 +150,7 @@ void collect_relations
             Get_Parent_Rels_Predicate(children_ids, source_type)), result);
 }
 
+
 void collect_relations
     (const Statement& stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Relation_Skeleton > >& sources,
@@ -144,6 +161,19 @@ void collect_relations
   
   collect_items_flat(stmt, rman, *osm_base_settings().RELATIONS,
       Get_Parent_Rels_Predicate(ids, Relation_Entry::RELATION), result);
+}
+
+
+void collect_relations
+    (const Statement& stmt, Resource_Manager& rman,
+     const map< Uint31_Index, vector< Relation_Skeleton > >& sources,
+     map< Uint31_Index, vector< Relation_Skeleton > >& result, uint32 role_id)
+{
+  vector< Uint64 > ids = extract_children_ids< Uint31_Index, Relation_Skeleton, Uint64 >(sources);    
+  rman.health_check(stmt);
+  
+  collect_items_flat(stmt, rman, *osm_base_settings().RELATIONS,
+      Get_Parent_Rels_Role_Predicate(ids, Relation_Entry::RELATION, role_id), result);
 }
 
 
@@ -173,6 +203,7 @@ void collect_relations
             Get_Parent_Rels_Predicate(children_ids, Relation_Entry::RELATION)),
         result);
 }
+
 
 void collect_ways
     (const Statement& stmt, Resource_Manager& rman,
@@ -749,13 +780,15 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
 
 Recurse_Statement::Recurse_Statement
     (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_)
+    : Statement(line_number_), restrict_to_role(false)
 {
   map< string, string > attributes;
   
   attributes["from"] = "_";
   attributes["into"] = "_";
   attributes["type"] = "";
+  attributes["role"] = "";
+  attributes["role-restricted"] = "no";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
@@ -796,6 +829,24 @@ Recurse_Statement::Recurse_Statement
 	<<"\"node-relation\", \"node-way\", \"down\", \"down-rel\", \"up\", or \"up-rel\".";
     add_static_error(temp.str());
   }
+  if (attributes["role"] != "" || attributes["role-restricted"] == "yes")
+  {
+    if (type != RECURSE_RELATION_RELATION && type != RECURSE_RELATION_BACKWARDS
+        && type != RECURSE_RELATION_WAY && type != RECURSE_WAY_RELATION
+        && type != RECURSE_RELATION_NODE && type != RECURSE_NODE_RELATION)
+    {
+      ostringstream temp;
+      temp<<"A role can only be specified for values \"relation-relation\", \"relation-backwards\","
+          <<"\"relation-way\", \"relation-node\", \"way-relation\","
+          <<"or \"node-relation\".";
+      add_static_error(temp.str());
+    }
+    else
+    {
+      role = attributes["role"];
+      restrict_to_role = true;
+    }
+  }
 }
 
 void Recurse_Statement::forecast()
@@ -816,8 +867,37 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   }
 
   Set into;
-
-  if (type == RECURSE_RELATION_RELATION)
+  
+  if (restrict_to_role)
+  {
+    uint32 role_id = determine_role_id(*rman.get_transaction(), role);
+    if (role_id == numeric_limits< uint32 >::max())
+    {
+      rman.sets()[output].nodes.clear();
+      rman.sets()[output].ways.clear();
+      rman.sets()[output].relations.clear();
+      rman.sets()[output].areas.clear();
+    
+      return;
+    }
+        
+    if (type == RECURSE_RELATION_RELATION)
+      into.relations = relation_relation_members(*this, rman, mit->second.relations,
+                                                 0, 0, false, &role_id);
+    else if (type == RECURSE_RELATION_WAY)
+      into.ways = relation_way_members(this, rman, mit->second.relations,
+                                       0, 0, false, &role_id);
+    else if (type == RECURSE_RELATION_NODE)
+      into.nodes = relation_node_members(this, rman, mit->second.relations,
+                                         0, 0, false, &role_id);
+    else if (type == RECURSE_RELATION_BACKWARDS)
+      collect_relations(*this, rman, mit->second.relations, into.relations, role_id);
+    else if (type == RECURSE_WAY_RELATION)
+      collect_relations(*this, rman, mit->second.ways, Relation_Entry::WAY, into.relations, role_id);
+    else if (type == RECURSE_NODE_RELATION)
+      collect_relations(*this, rman, mit->second.nodes, Relation_Entry::NODE, into.relations, role_id);
+  }
+  else if (type == RECURSE_RELATION_RELATION)
     into.relations = relation_relation_members(*this, rman, mit->second.relations);
   else if (type == RECURSE_RELATION_BACKWARDS)
     collect_relations(*this, rman, mit->second.relations, into.relations);
