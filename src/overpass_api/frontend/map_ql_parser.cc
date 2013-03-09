@@ -412,6 +412,19 @@ TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
 }
 
 template< class TStatement >
+TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
+                                     string type, string from, string role, string into, uint line_nr)
+{
+  map< string, string > attr;
+  attr["from"] = (from == "" ? "_" : from);
+  attr["into"] = into;
+  attr["type"] = type;
+  attr["role"] = role;
+  attr["role-restricted"] = "yes";
+  return stmt_factory.create_statement("recurse", line_nr, attr);
+}
+
+template< class TStatement >
 TStatement* create_polygon_statement(typename TStatement::Factory& stmt_factory,
 				   string bounds, string into, uint line_nr)
 {
@@ -765,10 +778,16 @@ TStatement* create_query_substatement
         (stmt_factory, clause.attributes[0], clause.line_col.first);
   else if (clause.statement == "recurse")
   {
-    return create_recurse_statement< TStatement >
-        (stmt_factory,
-	 determine_recurse_type(clause.attributes[0], type, error_output, clause.line_col),
-	 clause.attributes[1], into, clause.line_col.first);
+    if (clause.attributes.size() == 2)
+      return create_recurse_statement< TStatement >
+          (stmt_factory,
+	   determine_recurse_type(clause.attributes[0], type, error_output, clause.line_col),
+	   clause.attributes[1], into, clause.line_col.first);
+    else
+      return create_recurse_statement< TStatement >
+          (stmt_factory,
+           determine_recurse_type(clause.attributes[0], type, error_output, clause.line_col),
+           clause.attributes[1], clause.attributes[2], into, clause.line_col.first);
   }
   else if (clause.statement == "id-query")
     return create_id_query_statement< TStatement >
@@ -982,6 +1001,12 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	Statement_Text clause("recurse", token.line_col());
 	clause.attributes.push_back(get_text_token(token, error_output, "Recurse type"));
 	clause.attributes.push_back(probe_from(token, error_output));
+        clear_until_after(token, error_output, ":", ")", false);
+        if (*token == ":")
+        {
+          ++token;
+          clause.attributes.push_back(get_text_token(token, error_output, "Role"));
+        }
 	clear_until_after(token, error_output, ")");
 	clauses.push_back(clause);
       }
