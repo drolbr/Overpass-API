@@ -3134,6 +3134,18 @@ int main(int argc, char* args[])
       modifier = new Accept_Query_39(pattern_size);
     else if (string(args[2]) == "query_132")
       modifier = new Accept_Query_40(pattern_size);
+    else if (string(args[2]) == "query_133")
+      modifier = new Accept_Recurse_23(pattern_size);
+    else if (string(args[2]) == "query_134")
+      modifier = new Accept_Recurse_25(pattern_size);
+    else if (string(args[2]) == "query_135")
+      modifier = new Accept_Recurse_27(pattern_size);
+    else if (string(args[2]) == "query_136")
+      modifier = new Accept_Recurse_24(pattern_size);
+    else if (string(args[2]) == "query_137")
+      modifier = new Accept_Recurse_26(pattern_size);
+    else if (string(args[2]) == "query_138")
+      modifier = new Accept_Recurse_28(pattern_size);
     else if (string(args[2]) == "union_1")
       modifier = new Accept_Union_1(pattern_size);
     else if (string(args[2]) == "union_2")
