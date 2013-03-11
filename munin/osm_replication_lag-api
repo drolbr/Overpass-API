@@ -22,6 +22,6 @@ if [ "$1" = "config" ]; then
         exit 0
 fi
 
-lag=$(($(date +%s)-$(date +%s --utc -d "$(cat $DB_DIR/osm_base_version | cut -f2 -d\" | sed s/"\\\\"/""/g | sed s/[ZT]/" "/g)" )))
+lag=$(($(date +%s)-$(date +%s --utc -d "$(cat $DB_DIR/osm_base_version_munin | cut -f2 -d\" | sed s/"\\\\"/""/g | sed s/[ZT]/" "/g)" )))
 echo "lag.value $lag"
 exit 0
