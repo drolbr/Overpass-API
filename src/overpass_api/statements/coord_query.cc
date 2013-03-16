@@ -176,8 +176,13 @@ int Coord_Query_Statement::check_area_block
 	continue;
       }
     }
-    else // last_lon == lon should normally not happen and can be safely ignored
-      continue; // otherwise.
+    else // last_lon == lon
+    {
+      if (lon == coord_lon &&
+          ((last_lat <= coord_lat && coord_lat <= lat) || (lat <= coord_lat && coord_lat <= last_lat)))
+        return HIT; // case (2)
+      continue; // else: case (1)
+    }
     
     uint32 intersect_lat = lat +
         ((int64)coord_lon - lon)*((int64)last_lat - lat)/((int64)last_lon - lon);
@@ -300,18 +305,23 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   ways.clear();
   relations.clear();
   areas.clear();
-
-  Block_Backend< Uint31_Index, Area_Skeleton > area_locations_db
+  
+  vector< uint32 > req_v;
+  for (set< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+    req_v.push_back(it->val());
+  vector< uint32 > idx_req_v = ::calc_parents(req_v);
+  vector< Uint31_Index > idx_req;
+  for (vector< uint32 >::const_iterator it = idx_req_v.begin(); it != idx_req_v.end(); ++it)
+    idx_req.push_back(*it);
+  sort(idx_req.begin(), idx_req.end());
+  Block_Backend< Uint31_Index, Area_Skeleton, vector< Uint31_Index >::const_iterator > area_locations_db
       (rman.get_area_transaction()->data_index(area_settings().AREAS));
-  for (Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
-      it(area_locations_db.flat_begin());
-      !(it == area_locations_db.flat_end()); ++it)
+  for (Block_Backend< Uint31_Index, Area_Skeleton, vector< Uint31_Index >::const_iterator >::Discrete_Iterator
+      it = area_locations_db.discrete_begin(idx_req.begin(), idx_req.end());
+      !(it == area_locations_db.discrete_end()); ++it)
   {
     if (areas_found.find(it.object().id) != areas_found.end())
       areas[it.index()].push_back(it.object());
-//     else if ((areas_inside.find(it.object().id) != areas_inside.end())
-//         && (areas_inside[it.object().id] != 0))
-//       areas[it.index()].push_back(it.object());
   }
 
   rman.health_check(*this);

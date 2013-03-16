@@ -130,7 +130,7 @@ Dispatcher_Stub::Dispatcher_Stub
     catch (const File_Error& e)
     {
       ostringstream out;
-      out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
+      out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
       if (e.origin == "Dispatcher_Client::request_read_and_idx::rate_limited")
 	out<<' '<<probe_client_identifier();
       logger.annotated_log(out.str());
@@ -177,7 +177,7 @@ Dispatcher_Stub::Dispatcher_Stub
     catch (const File_Error& e)
     {
       ostringstream out;
-      out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
+      out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
       logger.annotated_log(out.str());
       throw;
     }
@@ -198,7 +198,7 @@ Dispatcher_Stub::Dispatcher_Stub
 	catch (const File_Error& e)
 	{
 	  ostringstream out;
-	  out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
+	  out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
 	  logger.annotated_log(out.str());
 	  throw;
 	}
@@ -222,7 +222,7 @@ Dispatcher_Stub::Dispatcher_Stub
 	catch (const File_Error& e)
 	{
 	  ostringstream out;
-	  out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
+	  out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
 	  logger.annotated_log(out.str());
 	  throw;
 	}
@@ -252,7 +252,7 @@ Dispatcher_Stub::Dispatcher_Stub
 	catch (const File_Error& e)
 	{
 	  ostringstream out;
-	  out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
+	  out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
 	  logger.annotated_log(out.str());
 	  throw;
 	}
@@ -324,7 +324,7 @@ Dispatcher_Stub::~Dispatcher_Stub()
     catch (const File_Error& e)
     {
       ostringstream out;
-      out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
+      out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
       logger.annotated_log(out.str());
     }
     delete dispatcher_client;
@@ -345,7 +345,7 @@ Dispatcher_Stub::~Dispatcher_Stub()
       catch (const File_Error& e)
       {
         ostringstream out;
-        out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
+        out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
         logger.annotated_log(out.str());
       }
     }
@@ -361,7 +361,7 @@ Dispatcher_Stub::~Dispatcher_Stub()
       catch (const File_Error& e)
       {
         ostringstream out;
-        out<<e.origin<<' '<<e.filename<<' '<<e.error_number;
+        out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
         logger.annotated_log(out.str());
       }
     }
@@ -476,7 +476,7 @@ bool parse_and_validate
     catch(File_Error e)
     {
       ostringstream temp;
-      temp<<"open: "<<e.error_number<<' '<<e.filename<<' '<<e.origin;
+      temp<<"open: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin;
       if (error_output)
         error_output->runtime_error(temp.str());
     

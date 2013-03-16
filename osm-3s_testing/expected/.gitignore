@@ -4,6 +4,9 @@ around_3/
 around_4/
 around_5/
 around_6/
+around_7/
+around_8/
+around_9/
 bbox_query_1/
 bbox_query_2/
 bbox_query_3/
@@ -62,6 +65,11 @@ interpreter_43/
 interpreter_44/
 interpreter_45/
 interpreter_46/
+polygon_query_1/
+polygon_query_2/
+polygon_query_3/
+polygon_query_4/
+polygon_query_5/
 print_1/
 print_2/
 print_3/

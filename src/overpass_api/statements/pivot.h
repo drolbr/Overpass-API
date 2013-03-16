@@ -16,8 +16,8 @@
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__POLYGON_QUERY_H
-#define DE__OSM3S___OVERPASS_API__STATEMENTS__POLYGON_QUERY_H
+#ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__AREA_QUERY_H
+#define DE__OSM3S___OVERPASS_API__STATEMENTS__AREA_QUERY_H
 
 #include <map>
 #include <string>
@@ -26,36 +26,24 @@
 
 using namespace std;
 
-
-class Polygon_Query_Statement : public Statement
+class Pivot_Statement : public Statement
 {
   public:
-    Polygon_Query_Statement(int line_number_, const map< string, string >& attributes);
-    virtual string get_name() const { return "polygon-query"; }
+    Pivot_Statement(int line_number_, const map< string, string >& attributes);
+    virtual string get_name() const { return "pivot"; }
     virtual string get_result_name() const { return output; }
     virtual void forecast();
     virtual void execute(Resource_Manager& rman);
-    virtual ~Polygon_Query_Statement();
+    virtual ~Pivot_Statement();
     
-    static Generic_Statement_Maker< Polygon_Query_Statement > statement_maker;
+    static Generic_Statement_Maker< Pivot_Statement > statement_maker;
     
     virtual Query_Constraint* get_query_constraint();
-    
-    set< pair< Uint32_Index, Uint32_Index > > calc_ranges();
-
-    void collect_nodes(map< Uint32_Index, vector< Node_Skeleton > >& nodes, bool add_border);
-       
-    void collect_ways
-      (map< Uint31_Index, vector< Way_Skeleton > >& ways,
-       map< Uint32_Index, vector< Node_Skeleton > >& way_members_,
-       vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id,
-       bool add_border,
-       Resource_Manager& rman);
-
+    string get_input() const { return input; }
+  
   private:
+    string input;
     string output;
-    unsigned int type;
-    vector< Aligned_Segment > segments;
     vector< Query_Constraint* > constraints;
 };
 

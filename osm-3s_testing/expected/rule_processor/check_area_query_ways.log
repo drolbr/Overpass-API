@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="Overpass API">
+<note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
+<meta osm_base="mock-up-diff" areas="mock-up-init"/>
+
+  <area id="2400000300">
+    <tag k="shapes" v="3"/>
+  </area>
+  <way id="300">
+    <nd ref="3000000043"/>
+    <nd ref="3000000045"/>
+    <nd ref="3000000085"/>
+    <nd ref="3000000047"/>
+    <nd ref="3000000208"/>
+    <nd ref="3000000207"/>
+    <nd ref="3000000204"/>
+    <nd ref="3000000243"/>
+    <nd ref="3000000043"/>
+    <tag k="shapes" v="3"/>
+  </way>
+  <way id="301">
+    <nd ref="3000000121"/>
+    <nd ref="3000000125"/>
+    <nd ref="3000000129"/>
+    <tag k="inner_point" v="middle"/>
+  </way>
+  <way id="302">
+    <nd ref="3000000125"/>
+    <nd ref="3000000129"/>
+    <nd ref="3000000133"/>
+    <tag k="inner_point" v="first"/>
+  </way>
+  <way id="303">
+    <nd ref="3000000121"/>
+    <nd ref="3000000122"/>
+    <nd ref="3000000125"/>
+    <tag k="inner_point" v="last"/>
+  </way>
+  <way id="304">
+    <nd ref="3000000124"/>
+    <nd ref="3000000125"/>
+    <nd ref="3000000126"/>
+    <tag k="inner_point" v="total"/>
+  </way>
+  <way id="321">
+    <nd ref="3000000081"/>
+    <nd ref="3000000122"/>
+    <nd ref="3000000088"/>
+    <nd ref="3000000129"/>
+    <tag k="intersect" v="middle_segment"/>
+  </way>
+  <way id="322">
+    <nd ref="3000000004"/>
+    <nd ref="3000000244"/>
+    <nd ref="3000000284"/>
+    <tag k="intersect" v="first_segment"/>
+  </way>
+  <way id="323">
+    <nd ref="3000000001"/>
+    <nd ref="3000000002"/>
+    <nd ref="3000000248"/>
+    <tag k="intersect" v="last_segment"/>
+  </way>
+  <way id="324">
+    <nd ref="3000000041"/>
+    <nd ref="3000000049"/>
+    <tag k="intersect" v="single_segment"/>
+  </way>
+  <way id="325">
+    <nd ref="3000000121"/>
+    <nd ref="3000000129"/>
+    <tag k="intersect" v="lat_segment"/>
+  </way>
+  <way id="326">
+    <nd ref="3000000007"/>
+    <nd ref="3000000287"/>
+    <tag k="intersect" v="lon_segment"/>
+  </way>
+  <way id="327">
+    <nd ref="3000000204"/>
+    <nd ref="3000000207"/>
+    <tag k="intersect" v="lat_boundary"/>
+  </way>
+  <way id="328">
+    <nd ref="3000000043"/>
+    <nd ref="3000000203"/>
+    <tag k="intersect" v="lon_boundary"/>
+  </way>
+  <way id="331">
+    <nd ref="3000000043"/>
+    <nd ref="3000000085"/>
+    <nd ref="3000000006"/>
+    <tag k="through" v="first_segment"/>
+  </way>
+  <way id="332">
+    <nd ref="3000000006"/>
+    <nd ref="3000000085"/>
+    <nd ref="3000000208"/>
+    <nd ref="3000000248"/>
+    <tag k="through" v="middle_segment"/>
+  </way>
+  <way id="333">
+    <nd ref="3000000281"/>
+    <nd ref="3000000243"/>
+    <nd ref="3000000085"/>
+    <tag k="through" v="last_segment"/>
+  </way>
+  <way id="334">
+    <nd ref="3000000243"/>
+    <nd ref="3000000085"/>
+    <tag k="through" v="single_segment"/>
+  </way>
+  <way id="341">
+    <nd ref="3000000043"/>
+    <nd ref="3000000045"/>
+    <nd ref="3000000085"/>
+    <nd ref="3000000047"/>
+    <nd ref="3000000208"/>
+    <nd ref="3000000207"/>
+    <nd ref="3000000204"/>
+    <nd ref="3000000243"/>
+    <nd ref="3000000043"/>
+    <tag k="touch_segment" v="multiple_segments"/>
+  </way>
+  <area id="2400000300">
+    <tag k="shapes" v="3"/>
+  </area>
+  <way id="300">
+    <nd ref="3000000043"/>
+    <nd ref="3000000045"/>
+    <nd ref="3000000085"/>
+    <nd ref="3000000047"/>
+    <nd ref="3000000208"/>
+    <nd ref="3000000207"/>
+    <nd ref="3000000204"/>
+    <nd ref="3000000243"/>
+    <nd ref="3000000043"/>
+    <tag k="shapes" v="3"/>
+  </way>
+  <way id="301">
+    <nd ref="3000000121"/>
+    <nd ref="3000000125"/>
+    <nd ref="3000000129"/>
+    <tag k="inner_point" v="middle"/>
+  </way>
+  <way id="302">
+    <nd ref="3000000125"/>
+    <nd ref="3000000129"/>
+    <nd ref="3000000133"/>
+    <tag k="inner_point" v="first"/>
+  </way>
+  <way id="303">
+    <nd ref="3000000121"/>
+    <nd ref="3000000122"/>
+    <nd ref="3000000125"/>
+    <tag k="inner_point" v="last"/>
+  </way>
+  <way id="304">
+    <nd ref="3000000124"/>
+    <nd ref="3000000125"/>
+    <nd ref="3000000126"/>
+    <tag k="inner_point" v="total"/>
+  </way>
+  <way id="321">
+    <nd ref="3000000081"/>
+    <nd ref="3000000122"/>
+    <nd ref="3000000088"/>
+    <nd ref="3000000129"/>
+    <tag k="intersect" v="middle_segment"/>
+  </way>
+  <way id="322">
+    <nd ref="3000000004"/>
+    <nd ref="3000000244"/>
+    <nd ref="3000000284"/>
+    <tag k="intersect" v="first_segment"/>
+  </way>
+  <way id="323">
+    <nd ref="3000000001"/>
+    <nd ref="3000000002"/>
+    <nd ref="3000000248"/>
+    <tag k="intersect" v="last_segment"/>
+  </way>
+  <way id="324">
+    <nd ref="3000000041"/>
+    <nd ref="3000000049"/>
+    <tag k="intersect" v="single_segment"/>
+  </way>
+  <way id="325">
+    <nd ref="3000000121"/>
+    <nd ref="3000000129"/>
+    <tag k="intersect" v="lat_segment"/>
+  </way>
+  <way id="326">
+    <nd ref="3000000007"/>
+    <nd ref="3000000287"/>
+    <tag k="intersect" v="lon_segment"/>
+  </way>
+  <way id="327">
+    <nd ref="3000000204"/>
+    <nd ref="3000000207"/>
+    <tag k="intersect" v="lat_boundary"/>
+  </way>
+  <way id="328">
+    <nd ref="3000000043"/>
+    <nd ref="3000000203"/>
+    <tag k="intersect" v="lon_boundary"/>
+  </way>
+  <way id="331">
+    <nd ref="3000000043"/>
+    <nd ref="3000000085"/>
+    <nd ref="3000000006"/>
+    <tag k="through" v="first_segment"/>
+  </way>
+  <way id="332">
+    <nd ref="3000000006"/>
+    <nd ref="3000000085"/>
+    <nd ref="3000000208"/>
+    <nd ref="3000000248"/>
+    <tag k="through" v="middle_segment"/>
+  </way>
+  <way id="333">
+    <nd ref="3000000281"/>
+    <nd ref="3000000243"/>
+    <nd ref="3000000085"/>
+    <tag k="through" v="last_segment"/>
+  </way>
+  <way id="334">
+    <nd ref="3000000243"/>
+    <nd ref="3000000085"/>
+    <tag k="through" v="single_segment"/>
+  </way>
+  <way id="341">
+    <nd ref="3000000043"/>
+    <nd ref="3000000045"/>
+    <nd ref="3000000085"/>
+    <nd ref="3000000047"/>
+    <nd ref="3000000208"/>
+    <nd ref="3000000207"/>
+    <nd ref="3000000204"/>
+    <nd ref="3000000243"/>
+    <nd ref="3000000043"/>
+    <tag k="touch_segment" v="multiple_segments"/>
+  </way>
+  <area id="2400000300">
+    <tag k="shapes" v="3"/>
+  </area>
+  <way id="321">
+    <nd ref="3000000081"/>
+    <nd ref="3000000122"/>
+    <nd ref="3000000088"/>
+    <nd ref="3000000129"/>
+    <tag k="intersect" v="middle_segment"/>
+  </way>
+  <way id="322">
+    <nd ref="3000000004"/>
+    <nd ref="3000000244"/>
+    <nd ref="3000000284"/>
+    <tag k="intersect" v="first_segment"/>
+  </way>
+  <way id="323">
+    <nd ref="3000000001"/>
+    <nd ref="3000000002"/>
+    <nd ref="3000000248"/>
+    <tag k="intersect" v="last_segment"/>
+  </way>
+  <way id="324">
+    <nd ref="3000000041"/>
+    <nd ref="3000000049"/>
+    <tag k="intersect" v="single_segment"/>
+  </way>
+  <way id="325">
+    <nd ref="3000000121"/>
+    <nd ref="3000000129"/>
+    <tag k="intersect" v="lat_segment"/>
+  </way>
+  <way id="326">
+    <nd ref="3000000007"/>
+    <nd ref="3000000287"/>
+    <tag k="intersect" v="lon_segment"/>
+  </way>
+  <way id="327">
+    <nd ref="3000000204"/>
+    <nd ref="3000000207"/>
+    <tag k="intersect" v="lat_boundary"/>
+  </way>
+  <way id="328">
+    <nd ref="3000000043"/>
+    <nd ref="3000000203"/>
+    <tag k="intersect" v="lon_boundary"/>
+  </way>
+
+</osm>

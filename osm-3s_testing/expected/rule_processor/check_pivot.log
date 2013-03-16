@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="Overpass API">
+<note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
+<meta osm_base="mock-up-diff" areas="mock-up-init"/>
+
+  <area id="2400000300"/>
+  <way id="300">
+    <nd ref="3000000043"/>
+    <nd ref="3000000045"/>
+    <nd ref="3000000085"/>
+    <nd ref="3000000047"/>
+    <nd ref="3000000208"/>
+    <nd ref="3000000207"/>
+    <nd ref="3000000204"/>
+    <nd ref="3000000243"/>
+    <nd ref="3000000043"/>
+    <tag k="shapes" v="3"/>
+  </way>
+  <area id="2400000300"/>
+  <way id="300">
+    <nd ref="3000000043"/>
+    <nd ref="3000000045"/>
+    <nd ref="3000000085"/>
+    <nd ref="3000000047"/>
+    <nd ref="3000000208"/>
+    <nd ref="3000000207"/>
+    <nd ref="3000000204"/>
+    <nd ref="3000000243"/>
+    <nd ref="3000000043"/>
+    <tag k="shapes" v="3"/>
+  </way>
+  <area id="2400000300"/>
+  <area id="2400000300"/>
+  <area id="2400000300"/>
+  <way id="300">
+    <nd ref="3000000043"/>
+    <nd ref="3000000045"/>
+    <nd ref="3000000085"/>
+    <nd ref="3000000047"/>
+    <nd ref="3000000208"/>
+    <nd ref="3000000207"/>
+    <nd ref="3000000204"/>
+    <nd ref="3000000243"/>
+    <nd ref="3000000043"/>
+    <tag k="shapes" v="3"/>
+  </way>
+  <area id="3600000002"/>
+  <relation id="2">
+    <member type="way" ref="212" role="one"/>
+    <member type="way" ref="214" role="three"/>
+    <member type="way" ref="215" role="zero"/>
+    <tag k="multpoly" v="2"/>
+    <tag k="scale" v="0.1000000"/>
+  </relation>
+  <area id="3600000002"/>
+  <relation id="2">
+    <member type="way" ref="212" role="one"/>
+    <member type="way" ref="214" role="three"/>
+    <member type="way" ref="215" role="zero"/>
+    <tag k="multpoly" v="2"/>
+    <tag k="scale" v="0.1000000"/>
+  </relation>
+  <area id="3600000002"/>
+  <area id="3600000002"/>
+  <area id="3600000002"/>
+  <relation id="2">
+    <member type="way" ref="212" role="one"/>
+    <member type="way" ref="214" role="three"/>
+    <member type="way" ref="215" role="zero"/>
+    <tag k="multpoly" v="2"/>
+    <tag k="scale" v="0.1000000"/>
+  </relation>
+
+</osm>

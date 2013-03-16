@@ -70,10 +70,10 @@ void perform_coord_print(uint pattern_size, string radius, uint64 global_node_of
     Resource_Manager rman(transaction);
     {
       ostringstream buf;
-      buf<<(47.9 + 0.1/pattern_size);
+      buf<<setprecision(14)<<(47.9 + 0.1/pattern_size);
       string lat = buf.str();
       buf.str("");
-      buf<<(-0.2 + 0.2/pattern_size);
+      buf<<setprecision(14)<<(-0.2 + 0.2/pattern_size);
       string lon = buf.str();
       
       const char* attributes[] = { "radius", radius.c_str(), "lat", lat.c_str(), "lon", lon.c_str(),  0 };

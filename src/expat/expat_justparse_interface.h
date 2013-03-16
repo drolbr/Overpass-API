@@ -145,6 +145,7 @@ private:
 
 void parse(FILE* in,
 	   void (*start)(const char*, const char**),
-	   void (*end)(const char*));
+	   void (*end)(const char*),
+           void (*text_handler)(void *data, const XML_Char *s, int len) = 0);
 
 #endif

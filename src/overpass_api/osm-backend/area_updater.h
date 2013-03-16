@@ -101,7 +101,7 @@ private:
 
 inline void Area_Updater::commit()
 {
-  if (total_area_blocks_count > 64*1024)
+  if (total_area_blocks_count > 512*1024)
     update();
 }
 
@@ -116,7 +116,7 @@ inline void Area_Updater::flush()
   }
   catch(File_Error e)
   {
-    cerr<<"File_Error: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cerr<<"File_Error: "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
 
@@ -127,7 +127,12 @@ inline void Area_Updater::set_area
 {
   ids_to_modify.insert(id);
   
-  Area_Location area(id, used_indices);
+  vector< uint32 > indices;
+  for (set< uint32 >::const_iterator it(used_indices.begin());
+      it != used_indices.end(); ++it)
+    indices.push_back(*it);
+    
+  Area_Location area(id, indices);
   area.tags = tags;
   areas_to_insert.push_back(make_pair(area, index));
 }

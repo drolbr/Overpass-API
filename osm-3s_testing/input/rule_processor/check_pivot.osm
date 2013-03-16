@@ -1,0 +1,94 @@
+<query type="area">
+  <has-kv k="shapes" v="3"/>
+</query>
+<print mode="ids_only"/>
+<pivot/>
+<print/>
+
+<query type="area">
+  <has-kv k="shapes" v="3"/>
+</query>
+<print mode="ids_only"/>
+<query type="way">
+  <has-kv k="shapes" v="3"/>
+  <pivot/>
+</query>
+<print/>
+
+<query type="area">
+  <has-kv k="shapes" v="3"/>
+</query>
+<print mode="ids_only"/>
+<query type="way">
+  <has-kv k="shapes" v="1"/>
+  <pivot/>
+</query>
+<print/>
+
+<query type="area">
+  <has-kv k="shapes" v="3"/>
+</query>
+<print mode="ids_only"/>
+<query type="way">
+  <has-kv k="shapes" v="3" modv="not"/>
+  <pivot/>
+</query>
+<print/>
+
+<query type="area">
+  <has-kv k="shapes" v="3"/>
+</query>
+<print mode="ids_only"/>
+<query type="way">
+  <has-kv k="shapes" v="1" modv="not"/>
+  <pivot/>
+</query>
+
+
+<print/>
+<query type="area">
+  <has-kv k="multpoly" v="2"/>
+</query>
+<print mode="ids_only"/>
+<pivot/>
+<print/>
+
+<query type="area">
+  <has-kv k="multpoly" v="2"/>
+</query>
+<print mode="ids_only"/>
+<query type="relation">
+  <has-kv k="multpoly" v="2"/>
+  <pivot/>
+</query>
+<print/>
+
+<query type="area">
+  <has-kv k="multpoly" v="2"/>
+</query>
+<print mode="ids_only"/>
+<query type="relation">
+  <has-kv k="multpoly" v="1"/>
+  <pivot/>
+</query>
+<print/>
+
+<query type="area">
+  <has-kv k="multpoly" v="2"/>
+</query>
+<print mode="ids_only"/>
+<query type="relation">
+  <has-kv k="multpoly" v="2" modv="not"/>
+  <pivot/>
+</query>
+<print/>
+
+<query type="area">
+  <has-kv k="multpoly" v="2"/>
+</query>
+<print mode="ids_only"/>
+<query type="relation">
+  <has-kv k="multpoly" v="1" modv="not"/>
+  <pivot/>
+</query>
+<print/>

@@ -20,6 +20,7 @@
 #define DE__OSM3S___OVERPASS_API__DATA__COLLECT_MEMBERS_H
 
 #include "../core/datatypes.h"
+#include "../statements/statement.h"
 
 #include <map>
 #include <set>
@@ -35,19 +36,19 @@ map< Uint31_Index, vector< Relation_Skeleton > > relation_relation_members
     (const Statement& stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Relation_Skeleton > >& parents,
      const set< pair< Uint31_Index, Uint31_Index > >* children_ranges = 0,
-     const vector< Relation::Id_Type >* children_ids = 0, bool invert_ids = false);
+     const vector< Relation::Id_Type >* children_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
 
 map< Uint31_Index, vector< Way_Skeleton > > relation_way_members
     (const Statement* stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
      const set< pair< Uint31_Index, Uint31_Index > >* way_ranges = 0,
-     const vector< Way::Id_Type >* way_ids = 0, bool invert_ids = false);
+     const vector< Way::Id_Type >* way_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
 
 map< Uint32_Index, vector< Node_Skeleton > > relation_node_members
     (const Statement* stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
      const set< pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
-     const vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false);
+     const vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
  
 map< Uint32_Index, vector< Node_Skeleton > > way_members
     (const Statement* stmt, Resource_Manager& rman,
@@ -57,12 +58,18 @@ map< Uint32_Index, vector< Node_Skeleton > > way_members
 
      
 vector< Node::Id_Type > relation_node_member_ids
-    (Resource_Manager& rman, const map< Uint31_Index, vector< Relation_Skeleton > >& rels);
+    (Resource_Manager& rman, const map< Uint31_Index, vector< Relation_Skeleton > >& rels,
+     const uint32* role_id = 0);
 vector< Way::Id_Type > relation_way_member_ids
-    (Resource_Manager& rman, const map< Uint31_Index, vector< Relation_Skeleton > >& rels);
+    (Resource_Manager& rman, const map< Uint31_Index, vector< Relation_Skeleton > >& rels,
+     const uint32* role_id = 0);
 vector< Relation::Id_Type > relation_relation_member_ids
-    (Resource_Manager& rman, const map< Uint31_Index, vector< Relation_Skeleton > >& rels);
+    (Resource_Manager& rman, const map< Uint31_Index, vector< Relation_Skeleton > >& rels,
+     const uint32* role_id = 0);
 
 vector< Node::Id_Type > way_nd_ids(const map< Uint31_Index, vector< Way_Skeleton > >& ways);
+
+const map< uint32, string >& relation_member_roles(Transaction& transaction);
+uint32 determine_role_id(Transaction& transaction, const string& role);
 
 #endif

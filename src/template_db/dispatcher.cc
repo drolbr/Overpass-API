@@ -210,6 +210,7 @@ Dispatcher::Dispatcher
       shadow_name(shadow_name_), db_dir(db_dir_),
       dispatcher_share_name(dispatcher_share_name_),
       max_num_reading_processes(max_num_reading_processes_),
+      rate_limit(0),
       purge_timeout(purge_timeout_),
       total_available_space(total_available_space_),
       total_available_time_units(total_available_time_units_),
@@ -326,7 +327,7 @@ void Dispatcher::write_start(pid_t pid)
       if (locked_pid == pid)
 	return;
     }
-    cerr<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
     return;
   }
 
@@ -365,7 +366,7 @@ void Dispatcher::write_commit(pid_t pid)
   }
   catch (File_Error e)
   {
-    cerr<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
     return;
   }
   
@@ -479,7 +480,7 @@ void Dispatcher::set_current_footprints()
     }
     catch (File_Error e)
     {
-      cerr<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     catch (...) {}
     
@@ -490,7 +491,7 @@ void Dispatcher::set_current_footprints()
     }
     catch (File_Error e)
     {
-      cerr<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     catch (...) {}
   }
@@ -762,7 +763,8 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	  continue;
 	}
 	
-	if (client_token > 0 && Reader_Entry::active_client_tokens[client_token] > 0)
+	if (rate_limit > 0 && client_token > 0
+            && Reader_Entry::active_client_tokens[client_token] >= rate_limit)
 	{
 	  connection_per_pid.get(client_pid)->send_result(RATE_LIMITED);
 	  continue;
@@ -826,17 +828,20 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       }
       else if (command == SET_GLOBAL_LIMITS)
       {
-	vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(4);
-	if (arguments.size() < 4)
+	vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(5);
+	if (arguments.size() < 5)
 	  continue;
 	
 	uint64 new_total_available_space = (((uint64)arguments[1])<<32 | arguments[0]);
 	uint64 new_total_available_time_units = (((uint64)arguments[3])<<32 | arguments[2]);
+        int rate_limit_ = arguments[4];
 	
 	if (new_total_available_space > 0)
 	  total_available_space = new_total_available_space;
 	if (new_total_available_time_units > 0)
 	  total_available_time_units = new_total_available_time_units;
+        if (rate_limit_ > -1)
+          rate_limit = rate_limit_;
 	
 	connection_per_pid.get(client_pid)->send_result(command);
 	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
@@ -851,7 +856,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     }
     catch (File_Error e)
     {
-      cerr<<"File_Error "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
       
       counter += 30;
       millisleep(3000);
@@ -869,6 +874,7 @@ void Dispatcher::output_status()
     ofstream status((shadow_name + ".status").c_str());
     
     status<<started_connections.size()<<' '<<connection_per_pid.base_map().size()
+        <<' '<<rate_limit
         <<' '<<total_available_space<<' '<<total_claimed_space()
 	<<' '<<total_available_time_units<<' '<<total_claimed_time_units()<<'\n';
     
@@ -1269,7 +1275,8 @@ pid_t Dispatcher_Client::query_by_token(uint32 token)
 }
 
 
-void Dispatcher_Client::set_global_limits(uint64 max_allowed_space, uint64 max_allowed_time_units)
+void Dispatcher_Client::set_global_limits(uint64 max_allowed_space, uint64 max_allowed_time_units,
+                                          int rate_limit)
 {
   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
 		     
@@ -1278,6 +1285,7 @@ void Dispatcher_Client::set_global_limits(uint64 max_allowed_space, uint64 max_a
     send_message(Dispatcher::SET_GLOBAL_LIMITS, "Dispatcher_Client::set_global_limits::1");
     send_message(max_allowed_space, "Dispatcher_Client::set_global_limits::2");
     send_message(max_allowed_time_units, "Dispatcher_Client::set_global_limits::3");
+    send_message(rate_limit, "Dispatcher_Client::set_global_limits::4");
     
     if (ack_arrived())
       return;

@@ -133,5 +133,5 @@ Osm_Backend_Callback* get_quiet_callback()
 void report_file_error(const File_Error& e)
 {
   cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      <<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
 }

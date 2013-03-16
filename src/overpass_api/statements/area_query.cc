@@ -87,18 +87,6 @@ bool Area_Constraint::get_ranges
 
 void Area_Constraint::filter(Resource_Manager& rman, Set& into)
 {
-  set< pair< Uint32_Index, Uint32_Index > > range_req;
-  if (area->areas_from_input())
-  {
-    map< string, Set >::const_iterator mit = rman.sets().find(area->get_input());
-    if (mit != rman.sets().end())
-      area->get_ranges(mit->second.areas, range_req, area_blocks_req, rman);
-  }
-  else
-    area->get_ranges(range_req, area_blocks_req, rman);
-  
-  area->collect_nodes(into.nodes, area_blocks_req, rman);
-  
   set< pair< Uint31_Index, Uint31_Index > > ranges;
   get_ranges(rman, ranges);
   
@@ -190,6 +178,8 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   else
     area->get_ranges(range_req, area_blocks_req, rman);
   
+  area->collect_nodes(into.nodes, area_blocks_req, true, rman);
+  
   {
     //Process ways
   
@@ -209,8 +199,116 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     Order_By_Node_Id order_by_node_id;
     sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_node_id);
     
-    area->collect_ways(into.ways, way_members_, way_members_by_id, area_blocks_req, rman);
+    area->collect_ways(into.ways, way_members_, way_members_by_id, area_blocks_req, true, rman);
   }
+  {
+    //Process relations
+    
+    // Retrieve all nodes referred by the relations.
+    set< pair< Uint32_Index, Uint32_Index > > node_ranges;
+    get_ranges(rman, node_ranges);
+    
+    map< Uint32_Index, vector< Node_Skeleton > > node_members
+        = relation_node_members(&query, rman, into.relations, &node_ranges);
+  
+    // filter for those nodes that are in one of the areas
+    set< Uint31_Index > area_blocks_req;
+    set< pair< Uint32_Index, Uint32_Index > > range_req;
+    if (area->areas_from_input())
+    {
+      map< string, Set >::const_iterator mit = rman.sets().find(area->get_input());
+      if (mit != rman.sets().end())
+        area->get_ranges(mit->second.areas, range_req, area_blocks_req, rman);
+    }
+    else
+      area->get_ranges(range_req, area_blocks_req, rman);
+  
+    area->collect_nodes(node_members, area_blocks_req, false, rman);
+  
+    // Order node ids by id.
+    vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id;
+    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = node_members.begin();
+        it != node_members.end(); ++it)
+    {
+      for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
+          iit != it->second.end(); ++iit)
+        node_members_by_id.push_back(make_pair(it->first, &*iit));
+    }
+    Order_By_Node_Id order_by_node_id;
+    sort(node_members_by_id.begin(), node_members_by_id.end(), order_by_node_id);
+    
+    // Retrieve all ways referred by the relations.
+    set< pair< Uint31_Index, Uint31_Index > > way_ranges;
+    get_ranges(rman, way_ranges);
+    
+    map< Uint31_Index, vector< Way_Skeleton > > way_members_
+        = relation_way_members(&query, rman, into.relations, &way_ranges);
+  
+    // Filter for those ways that are in one of the areas
+    // Retrieve all nodes referred by the ways.
+    map< Uint32_Index, vector< Node_Skeleton > > node_members_
+        = way_members(&query, rman, way_members_);
+
+    // Order node ids by id.
+    vector< pair< Uint32_Index, const Node_Skeleton* > > way_node_members_by_id;
+    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = node_members_.begin();
+        it != node_members_.end(); ++it)
+    {
+      for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
+          iit != it->second.end(); ++iit)
+        way_node_members_by_id.push_back(make_pair(it->first, &*iit));
+    }
+    sort(way_node_members_by_id.begin(), way_node_members_by_id.end(), order_by_node_id);
+    
+    area->collect_ways(way_members_, node_members_, way_node_members_by_id, area_blocks_req, false, rman);
+    
+    // Order way ids by id.
+    vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id;
+    for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = way_members_.begin();
+        it != way_members_.end(); ++it)
+    {
+      for (vector< Way_Skeleton >::const_iterator iit = it->second.begin();
+          iit != it->second.end(); ++iit)
+        way_members_by_id.push_back(make_pair(it->first, &*iit));
+    }
+    Order_By_Way_Id order_by_way_id;
+    sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_way_id);
+    
+    for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = into.relations.begin();
+        it != into.relations.end(); ++it)
+    {
+      vector< Relation_Skeleton > local_into;
+      for (vector< Relation_Skeleton >::const_iterator iit = it->second.begin();
+          iit != it->second.end(); ++iit)
+      {
+        for (vector< Relation_Entry >::const_iterator nit = iit->members.begin();
+            nit != iit->members.end(); ++nit)
+        {
+          if (nit->type == Relation_Entry::NODE)
+          {
+            const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
+                binary_search_for_pair_id(node_members_by_id, nit->ref);
+            if (second_nd)
+            {
+              local_into.push_back(*iit);
+              break;
+            }
+          }
+          else if (nit->type == Relation_Entry::WAY)
+          {
+            const pair< Uint31_Index, const Way_Skeleton* >* second_nd =
+                binary_search_for_pair_id(way_members_by_id, nit->ref32());
+            if (second_nd)
+            {
+              local_into.push_back(*iit);
+              break;
+            }
+          }
+        }
+      }
+      it->second.swap(local_into);
+    }
+  }  
   
   //TODO: filter areas
 }
@@ -275,7 +373,7 @@ void Area_Query_Statement::get_ranges
   {
     if (binary_search(area_id.begin(), area_id.end(), it.object().id))
     {
-      for (set< uint32 >::const_iterator it2(it.object().used_indices.begin());
+      for (vector< uint32 >::const_iterator it2(it.object().used_indices.begin());
           it2 != it.object().used_indices.end(); ++it2)
       {
 	area_block_req.insert(Uint31_Index(*it2));
@@ -302,7 +400,7 @@ void Area_Query_Statement::get_ranges
     {
       area_id.push_back(it2->id);
       
-      for (set< uint32 >::const_iterator it3(it2->used_indices.begin());
+      for (vector< uint32 >::const_iterator it3(it2->used_indices.begin());
           it3 != it2->used_indices.end(); ++it3)
       {
         area_block_req.insert(Uint31_Index(*it3));
@@ -393,7 +491,7 @@ void Area_Query_Statement::collect_nodes
 
 void Area_Query_Statement::collect_nodes
     (map< Uint32_Index, vector< Node_Skeleton > >& nodes,
-     const set< Uint31_Index >& req,
+     const set< Uint31_Index >& req, bool add_border,
      Resource_Manager& rman)
 {
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
@@ -442,7 +540,7 @@ void Area_Query_Statement::collect_nodes
 	       ++it2)
           {
 	    int check(Coord_Query_Statement::check_area_block(current_idx, *it2, ilat, ilon));
-	    if (check == Coord_Query_Statement::HIT)
+	    if (check == Coord_Query_Statement::HIT && add_border)
 	    {
 	      inside = 1;
 	      break;
@@ -469,7 +567,11 @@ void Area_Query_Statement::collect_nodes
 }
 
 
-inline bool ordered_intersects_inner
+const int HIT = 1;
+const int INTERSECT = 8;
+
+
+inline int ordered_intersects_inner
     (uint32 lat_a0, uint32 lon_a0, uint32 lat_a1, uint32 lon_a1,
      uint32 lat_b0, uint32 lon_b0, uint32 lat_b1, uint32 lon_b1)
 {
@@ -482,26 +584,27 @@ inline bool ordered_intersects_inner
 	    - double(lon_b0)/(double(lon_b1) - lon_b0)*(double(lat_b1) - lat_b0))
 	/det*(double(lon_a1) - lon_a0)*(double(lon_b1) - lon_b0);
     if (lon_a0 < lon && lon < lon_a1 && lon_b0 <= lon && lon <= lon_b1)
-      return true;
+      return (((lat_a0 != lat_b0 || lon_a0 != lon_b0) && (lat_a1 != lat_b1 || lon_a1 != lon_b1)) ?
+          INTERSECT : 0);
   }
   else if ((fabs(lat_a0 - (double(lon_a0) - lon_b0)/(double(lon_b1) - lon_b0)
                 *(double(lat_b1) - lat_b0) - lat_b0) <= 1)
 	|| (fabs(lat_a1 - (double(lon_a1) - lon_b0)/(double(lon_b1) - lon_b0)
                 *(double(lat_b1) - lat_b0) - lat_b0) <= 1))
-    return true;
+    return HIT;
   
-  return false;
+  return 0;
 }
 
 
-inline bool ordered_a_intersects_inner
+inline int ordered_a_intersects_inner
     (uint32 lat_a0, uint32 lon_a0, uint32 lat_a1, uint32 lon_a1,
      uint32 lat_b0, uint32 lon_b0, uint32 lat_b1, uint32 lon_b1)
 {
   if (lon_b0 < lon_b1)
   {
     if (lon_a0 < lon_b1 && lon_b0 < lon_a1)
-      return (ordered_intersects_inner(lat_a0, lon_a0, lat_a1, lon_a1, lat_b0, lon_b0, lat_b1, lon_b1));
+      return ordered_intersects_inner(lat_a0, lon_a0, lat_a1, lon_a1, lat_b0, lon_b0, lat_b1, lon_b1);
   }
   else if (lon_b1 < lon_b0)
   {
@@ -513,15 +616,16 @@ inline bool ordered_a_intersects_inner
     if (lon_a0 < lon_b0 && lon_b0 < lon_a1)
     {
       double lat = (double(lon_b0) - lon_a0)/(double(lon_a1) - lon_a0)*(double(lat_a1) - lat_a0) + lat_a0;
-      return ((lat_b0 < lat && lat < lat_b1) || (lat_b1 < lat && lat < lat_b0));
+      return (((lat_b0 < lat && lat < lat_b1) || (lat_b1 < lat && lat < lat_b0)) ?
+          INTERSECT : 0);
     }
   }
   
-  return false;
+  return 0;
 }
 
 
-inline bool longitude_a_intersects_inner
+inline int longitude_a_intersects_inner
     (uint32 lat_a0, uint32 lon_a, uint32 lat_a1,
      uint32 lat_b0, uint32 lon_b0, uint32 lat_b1, uint32 lon_b1)
 {
@@ -530,7 +634,7 @@ inline bool longitude_a_intersects_inner
     if (lon_a < lon_b1 && lon_b0 < lon_a)
     {
       double lat = (double(lon_a) - lon_b0)/(double(lon_b1) - lon_b0)*(double(lat_b1) - lat_b0) + lat_b0;
-      return ((lat_a0 < lat && lat < lat_a1) || (lat_a1 < lat && lat < lat_a0));
+      return (((lat_a0 < lat && lat < lat_a1) || (lat_a1 < lat && lat < lat_a0)) ? INTERSECT : 0);
     }
   }
   else if (lon_b1 < lon_b0)
@@ -538,34 +642,34 @@ inline bool longitude_a_intersects_inner
     if (lon_a < lon_b0 && lon_b1 < lon_a)
     {
       double lat = (double(lon_a) - lon_b0)/(double(lon_b1) - lon_b0)*(double(lat_b1) - lat_b0) + lat_b0;
-      return ((lat_a0 < lat && lat < lat_a1) || (lat_a1 < lat && lat < lat_a0));
+      return (((lat_a0 < lat && lat < lat_a1) || (lat_a1 < lat && lat < lat_a0)) ? INTERSECT : 0);
     }
   }
   else // lon_b0 == lon_b1
   {
     if (lon_a != lon_b0)
-      return false;
+      return 0;
     if (lat_a0 < lat_a1)
     {
       if (lat_b0 < lat_b1)
-        return (lat_a0 < lat_b1 && lat_b0 < lat_a1);
+        return ((lat_a0 < lat_b1 && lat_b0 < lat_a1) ? HIT : 0);
       else
-        return (lat_a0 < lat_b0 && lat_b1 < lat_a1);
+        return ((lat_a0 < lat_b0 && lat_b1 < lat_a1) ? HIT : 0);
     }
     else
     {
       if (lat_b0 < lat_b1)
-        return (lat_a1 < lat_b1 && lat_b0 < lat_a0);
+        return ((lat_a1 < lat_b1 && lat_b0 < lat_a0) ? HIT : 0);
       else
-        return (lat_a1 < lat_b0 && lat_b1 < lat_a0);
+        return ((lat_a1 < lat_b0 && lat_b1 < lat_a0) ? HIT : 0);
     }
   }
   
-  return false;
+  return 0;
 }
 
 
-bool intersects_inner(const Area_Block& string_a, const Area_Block& string_b)
+int intersects_inner(const Area_Block& string_a, const Area_Block& string_b)
 {
   vector< pair< uint32, uint32 > > coords_a;
   for (vector< uint64 >::const_iterator it = string_a.coors.begin(); it != string_a.coors.end(); ++it)
@@ -583,45 +687,58 @@ bool intersects_inner(const Area_Block& string_a, const Area_Block& string_b)
     {
       for (vector< pair< uint32, uint32 > >::size_type j = 0; j < coords_b.size()-1; ++j)
       {
-	if (ordered_a_intersects_inner
+	int result = ordered_a_intersects_inner
 	    (coords_a[i].first, coords_a[i].second, coords_a[i+1].first, coords_a[i+1].second,
-	     coords_b[j].first, coords_b[j].second, coords_b[j+1].first, coords_b[j+1].second))
-	  return true;
+	     coords_b[j].first, coords_b[j].second, coords_b[j+1].first, coords_b[j+1].second);
+        if (result)
+	  return result;
       }
     }
     else if (coords_a[i+1].second < coords_a[i].second)
     {
       for (vector< pair< uint32, uint32 > >::size_type j = 0; j < coords_b.size()-1; ++j)
       {
-	if (ordered_a_intersects_inner
+	int result = ordered_a_intersects_inner
 	    (coords_a[i+1].first, coords_a[i+1].second, coords_a[i].first, coords_a[i].second,
-	     coords_b[j].first, coords_b[j].second, coords_b[j+1].first, coords_b[j+1].second))
-	  return true;
+	     coords_b[j].first, coords_b[j].second, coords_b[j+1].first, coords_b[j+1].second);
+        if (result)
+          return result;
       }
     }
     else
       for (vector< pair< uint32, uint32 > >::size_type j = 0; j < coords_b.size()-1; ++j)
       {
-	if (longitude_a_intersects_inner
+	int result = longitude_a_intersects_inner
 	    (coords_a[i].first, coords_a[i].second, coords_a[i+1].first,
-	     coords_b[j].first, coords_b[j].second, coords_b[j+1].first, coords_b[j+1].second))
-	  return true;
+	     coords_b[j].first, coords_b[j].second, coords_b[j+1].first, coords_b[j+1].second);
+        if (result)
+          return result;
       }
   }
 
+  return 0;
+}
+
+
+void has_inner_points(const Area_Block& string_a, const Area_Block& string_b, int& inside)
+{
+  vector< pair< uint32, uint32 > > coords_a;
+  for (vector< uint64 >::const_iterator it = string_a.coors.begin(); it != string_a.coors.end(); ++it)
+    coords_a.push_back(make_pair(::ilat(uint32((*it>>32)&0xff), uint32(*it & 0xffffffffull)),
+                                 ::ilon(uint32((*it>>32)&0xff), uint32(*it & 0xffffffffull))));
+  
   // Check additionally the middle of the segment to also get segments
   // that run through the area
-  int inside = 0;
   for (vector< pair< uint32, uint32 > >::size_type i = 0; i < coords_a.size()-1; ++i)
   {
     uint32 ilat = (coords_a[i].first + coords_a[i+1].first)/2;
     uint32 ilon = (coords_a[i].second + coords_a[i+1].second)/2 + 0x80000000u;
     int check = Coord_Query_Statement::check_area_block(0, string_b, ilat, ilon);
-    if ((check != 0) && (check != Coord_Query_Statement::HIT))
+    if (check & Coord_Query_Statement::HIT)
+      inside = check;
+    else if (check)
       inside ^= check;
   }
-
-  return (inside);
 }
 
 
@@ -629,7 +746,7 @@ void Area_Query_Statement::collect_ways
       (map< Uint31_Index, vector< Way_Skeleton > >& ways,
        map< Uint32_Index, vector< Node_Skeleton > >& way_members_,
        vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id,
-       const set< Uint31_Index >& req,
+       const set< Uint31_Index >& req, bool add_border,
        Resource_Manager& rman)
 {
   vector< Node > nodes;
@@ -712,11 +829,12 @@ void Area_Query_Statement::collect_ways
       }
       ++nodes_it;
     }
-    
+      
     // check segments
     for (vector< Area_Block >::const_iterator sit = way_segments[Uint31_Index(current_idx)].begin();
 	 sit != way_segments[Uint31_Index(current_idx)].end(); ++sit)
     {
+      map< Area::Id_Type, int > area_status;
       for (map< Area_Skeleton::Id_Type, vector< Area_Block > >::const_iterator it = areas.begin();
 	   it != areas.end(); ++it)
       {
@@ -730,14 +848,29 @@ void Area_Query_Statement::collect_ways
           // The endpoints are properly handled via the point-in-area test
           // Check additionally the middle of the segment to also get segments
           // that run through the area
-	  if (intersects_inner(*sit, *it2))
+          int intersect = intersects_inner(*sit, *it2);
+	  if (intersect == Coord_Query_Statement::INTERSECT)
 	  {
 	    ways_inside[Way::Id_Type(sit->id)] = true;
 	    break;
-	  }	  
+          }
+          else if (intersect == Coord_Query_Statement::HIT)
+          {
+            if (add_border)
+              ways_inside[Way::Id_Type(sit->id)] = true;
+            else
+              area_status[it2->id] = Coord_Query_Statement::HIT;
+            break;
+          }
+          has_inner_points(*sit, *it2, area_status[it2->id]);
 	}
       }
-      //TODO: special case that a segment goes straight from a border node to a border node
+      for (map< Area::Id_Type, int >::const_iterator it = area_status.begin(); it != area_status.end(); ++it)
+      {
+        if ((it->second && (!(it->second & Coord_Query_Statement::HIT))) ||
+            (it->second && add_border))
+          ways_inside[Way::Id_Type(sit->id)] = true;
+      }
     }
   }
 
@@ -813,7 +946,7 @@ void Area_Query_Statement::execute(Resource_Manager& rman)
     get_ranges(nodes_req, req, rman);
   collect_nodes_from_req(nodes_req, nodes, rman);
   
-  collect_nodes(nodes, req, rman);
+  collect_nodes(nodes, req, true, rman);
   
   nodes.swap(rman.sets()[output].nodes);
   ways.swap(rman.sets()[output].ways);

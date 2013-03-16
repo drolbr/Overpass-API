@@ -27,6 +27,31 @@
 
 using namespace std;
 
+
+struct Prepared_Segment
+{
+  double first_lat;
+  double first_lon;
+  double second_lat;
+  double second_lon;
+  vector< double > first_cartesian;
+  vector< double > second_cartesian;
+  vector< double > norm;
+  
+  Prepared_Segment(double first_lat, double first_lon, double second_lat, double second_lon);
+};
+
+
+struct Prepared_Point
+{
+  double lat;
+  double lon;
+  vector< double > cartesian;
+  
+  Prepared_Point(double lat, double lon);
+};
+
+
 class Around_Statement : public Statement
 {
   public:
@@ -60,8 +85,8 @@ class Around_Statement : public Statement
     double lat;
     double lon;
     map< Uint32_Index, vector< pair< double, double > > > radius_lat_lons;
-    vector< pair< double, double > > simple_lat_lons;
-    vector< pair< pair< double, double >, pair< double, double > > > simple_segments;
+    vector< Prepared_Point > simple_lat_lons;
+    vector< Prepared_Segment > simple_segments;
     vector< Query_Constraint* > constraints;
 };
 

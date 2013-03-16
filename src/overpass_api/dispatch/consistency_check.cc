@@ -275,7 +275,7 @@ int main(int argc, char *argv[])
     ostringstream temp;
     if (e.origin != "Dispatcher_Stub::Dispatcher_Stub::1")
     {
-      temp<<"open64: "<<e.error_number<<' '<<e.filename<<' '<<e.origin;
+      temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin;
       if (error_output)
         error_output->runtime_error(temp.str());
     }

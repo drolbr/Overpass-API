@@ -397,7 +397,49 @@ void create_area_way_ways(uint id, uint node_ref)
   tags.push_back(make_pair< string, string >("through", "single_segment"));
   
   create_way(id + 34, V< uint >(node_ref + 243)(node_ref + 85), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("touch_segment", "multiple_segments"));
+  
+  create_way(id + 41, V< uint >(node_ref + 43)(node_ref + 45)(node_ref + 85)(node_ref + 47)
+      (node_ref + 208)(node_ref + 207)(node_ref + 204)(node_ref + 243)(node_ref + 43), tags);
 }
+
+
+void create_area_relation_relations(uint id, uint node_ref, uint way_ref)
+{
+  vector< pair< string, string > > tags;
+  tags.push_back(make_pair< string, string >("nodes", "outside"));
+  
+  create_relation(id + 1, V< uint >(node_ref + 245), V< uint >(0), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("nodes", "inside"));
+  
+  create_relation(id + 2, V< uint >(node_ref + 165), V< uint >(0), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("ways", "outside"));
+  
+  create_relation(id + 11, V< uint >(way_ref + 11), V< uint >(1), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("ways", "inside"));
+  
+  create_relation(id + 12, V< uint >(way_ref + 31), V< uint >(1), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("ways", "touch"));
+  
+  create_relation(id + 13, V< uint >(way_ref + 41), V< uint >(1), tags);
+
+  tags.pop_back();
+  tags.push_back(make_pair< string, string >("multiple", "last_inside"));
+  
+  create_relation(id + 21, V< uint >(node_ref + 245)(node_ref + 286)
+      (way_ref + 11)(way_ref + 11)(way_ref + 31), V< uint >(0)(0)(1)(1)(1), tags);
+}
+
 
 void create_multpolys_test_pattern_nodes
     (uint id, double lat, double lon, double scale)
@@ -544,7 +586,7 @@ int main(int argc, char* args[])
     
     create_node_grid(10001, 11.0, 11.05, 10.0, 10.05, pattern_size);
 
-    create_node_grid(30001, 30.0, 30.975, 0.0, 0.975, 39);
+    create_node_grid(3000000001u, 30.0, 30.975, 0.0, 0.975, 39);
     
     create_triangle_test_pattern_ways( 1,   1, 1.0);
     create_triangle_test_pattern_ways(11, 101, 0.1);
@@ -564,9 +606,11 @@ int main(int argc, char* args[])
     
     create_multpolys_test_pattern_ways(201, 2001, 0.1);
     
-    create_area_way_ways(300, 30000);
+    create_area_way_ways(300, 3000000000u);
     
     create_multpolys_test_pattern_relations(1, 201, 0.1);
+    
+    create_area_relation_relations(10, 3000000000u, 300);
     
     cout<<"</osm>\n";
   }

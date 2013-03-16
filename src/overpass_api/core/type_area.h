@@ -212,15 +212,16 @@ struct Area
   }
 };
 
+
 struct Area_Location
 {
   uint32 id;
-  set< uint32 > used_indices;
+  vector< uint32 > used_indices;
   vector< pair< string, string > > tags;
   
   Area_Location() {}
   
-  Area_Location(uint32 id_, const set< uint32 >& used_indices_)
+  Area_Location(uint32 id_, const vector< uint32 >& used_indices_)
   : id(id_), used_indices(used_indices_) {}
   
   bool operator<(const Area_Location& a) const
@@ -237,44 +238,18 @@ struct Area_Location
   {
     if (used_indices.empty())
       return 0;
-    
-    uint32 bitmask(0), value(*used_indices.begin());
-    for (set< uint32 >::const_iterator it(used_indices.begin());
-        it != used_indices.end(); ++it)
-    {
-      bitmask |= (value ^ (*it));
-      if (*it & 0x80000000)
-      {
-	if ((*it & 0xff) == 0x10)
-	  bitmask |= 0xff;
-	else if ((*it & 0xff) == 0x20)
-	  bitmask |= 0xffff;
-	else if ((*it & 0xff) == 0x30)
-	  bitmask |= 0xffffff;
-	else
-	  bitmask |= 0xffffffff;
-      }
-    }
-    bitmask = bitmask & 0x7fffffff;
-    if (bitmask & 0xff000000)
-      value = 0x80000040;
-    else if (bitmask & 0xffff0000)
-      value = (value & 0xff000000) | 0x80000030;
-    else if (bitmask & 0xffffff00)
-      value = (value & 0xffff0000) | 0x80000020;
-    else if (bitmask)
-      value = (value & 0xffffff00) | 0x80000010;
-    
-    return value;
+
+    return ::calc_index(used_indices);
   }
 };
+
 
 struct Area_Skeleton
 {
   typedef Area::Id_Type Id_Type;
   
   Id_Type id;
-  set< uint32 > used_indices;
+  vector< uint32 > used_indices;
   
   Area_Skeleton() : id(0u) {}
   
@@ -282,11 +257,11 @@ struct Area_Skeleton
   {
     id = *(uint32*)data;
     for (uint i(0); i < *((uint32*)data + 1); ++i)
-      used_indices.insert(*((uint32*)data + i + 2));
+      used_indices.push_back(*((uint32*)data + i + 2));
   }
   
   Area_Skeleton(const Area_Location& loc)
-  : id(loc.id), used_indices(loc.used_indices) {}
+      : id(loc.id), used_indices(loc.used_indices) {}
   
   uint32 size_of() const
   {
@@ -303,7 +278,7 @@ struct Area_Skeleton
     *(uint32*)data = id.val();
     *((uint32*)data + 1) = used_indices.size();
     uint i(2);
-    for (set< uint32 >::const_iterator it(used_indices.begin());
+    for (vector< uint32 >::const_iterator it(used_indices.begin());
     it != used_indices.end(); ++it)
     {
       *((uint32*)data + i) = *it;

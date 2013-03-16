@@ -1,0 +1,30 @@
+<query type="area">
+  <has-kv k="shapes" v="3"/>
+</query>
+<print/>
+
+<query type="relation">
+  <area-query/>
+</query>
+<print/>
+
+<query type="area">
+  <has-kv k="shapes" v="3"/>
+</query>
+<print/>
+
+<query type="relation">
+  <area-query ref="2400000300"/>
+</query>
+<print/>
+
+<query type="area">
+  <has-kv k="shapes" v="3"/>
+</query>
+<print/>
+
+<query type="relation">
+  <area-query ref="2400000300"/>
+  <has-kv k="nodes"/>
+</query>
+<print/>

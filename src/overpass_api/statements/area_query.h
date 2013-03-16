@@ -60,14 +60,14 @@ class Area_Query_Statement : public Statement
        
     void collect_nodes
       (map< Uint32_Index, vector< Node_Skeleton > >& nodes,
-       const set< Uint31_Index >& req,
+       const set< Uint31_Index >& req, bool add_border,
        Resource_Manager& rman);
        
     void collect_ways
       (map< Uint31_Index, vector< Way_Skeleton > >& ways,
        map< Uint32_Index, vector< Node_Skeleton > >& way_members_,
        vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id,
-       const set< Uint31_Index >& req,
+       const set< Uint31_Index >& req, bool add_border,
        Resource_Manager& rman);
 
     bool areas_from_input() const { return (submitted_id == 0); }
@@ -83,5 +83,10 @@ class Area_Query_Statement : public Statement
     static bool is_used_;
     vector< Query_Constraint* > constraints;
 };
+
+
+int intersects_inner(const Area_Block& string_a, const Area_Block& string_b);
+
+void has_inner_points(const Area_Block& string_a, const Area_Block& string_b, int& inside);
 
 #endif

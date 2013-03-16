@@ -1,0 +1,30 @@
+<query type="area">
+  <has-kv k="shapes" v="3"/>
+</query>
+<print/>
+
+<query type="way">
+  <area-query/>
+</query>
+<print/>
+
+<query type="area">
+  <has-kv k="shapes" v="3"/>
+</query>
+<print/>
+
+<query type="way">
+  <area-query ref="2400000300"/>
+</query>
+<print/>
+
+<query type="area">
+  <has-kv k="shapes" v="3"/>
+</query>
+<print/>
+
+<query type="way">
+  <area-query ref="2400000300"/>
+  <has-kv k="intersect"/>
+</query>
+<print/>

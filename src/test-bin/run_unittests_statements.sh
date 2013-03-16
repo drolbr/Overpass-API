@@ -165,9 +165,9 @@ perform_test_loop print 4 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 print_test_5 print 5 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 # Test the recurse statement
-prepare_test_loop recurse 22 $DATA_SIZE
+prepare_test_loop recurse 28 $DATA_SIZE
 date +%T
-perform_test_loop recurse 22 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
+perform_test_loop recurse 28 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 # Test the bbox_query statement
 prepare_test_loop bbox_query 8 $DATA_SIZE
@@ -180,9 +180,9 @@ date +%T
 perform_test_loop around 9 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 # Test the query statement
-prepare_test_loop query 132 $DATA_SIZE
+prepare_test_loop query 138 $DATA_SIZE
 date +%T
-perform_test_loop query 132 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
+perform_test_loop query 138 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 # Test the foreach statement
 prepare_test_loop foreach 4 $DATA_SIZE
@@ -195,8 +195,8 @@ date +%T
 perform_test_loop union 6 "../../input/update_database/ $NODE_OFFSET"
 
 # Test the union statement
-prepare_test_loop polygon_query 3 $DATA_SIZE
+prepare_test_loop polygon_query 5 $DATA_SIZE
 date +%T
-perform_test_loop polygon_query 3 "$DATA_SIZE ../../input/update_database/"
+perform_test_loop polygon_query 5 "$DATA_SIZE ../../input/update_database/"
 
 rm -f input/update_database/*

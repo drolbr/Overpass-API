@@ -44,9 +44,13 @@ class Recurse_Statement : public Statement
     unsigned int get_type() const { return type; }
     string get_input() const { return input; }
     
+    const string* get_role() const { return (restrict_to_role ? &role : 0); }
+    
   private:
     string input, output;
     unsigned int type;
+    string role;
+    bool restrict_to_role;
     vector< Query_Constraint* > constraints;
 };
       

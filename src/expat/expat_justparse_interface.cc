@@ -41,6 +41,7 @@ using namespace std;
 
 void (*working_start)(const char*, const char**);
 void (*working_end)(const char*);
+void (*working_text_handler)(void *data, const XML_Char *s, int len);
 
 //for the XMLParser
 char Buff[BUFFSIZE];
@@ -60,12 +61,21 @@ expat_wrapper_end(void *data, const char *el)
   working_end(el);
 }
 
+static void XMLCALL
+expat_wrapper_text_handler(void *data, const XML_Char *s, int len)
+{
+  if (working_text_handler)
+    working_text_handler(data, s, len);
+}
+
 void parse(FILE* in,
 	   void (*start)(const char*, const char**),
-	   void (*end)(const char*))
+	   void (*end)(const char*),
+           void (*text_handler)(void *data, const XML_Char *s, int len))
 {
   working_start = start;
   working_end = end;
+  working_text_handler = text_handler;
   
   XML_Parser p = XML_ParserCreate(NULL);
   if (! p) {
@@ -74,6 +84,8 @@ void parse(FILE* in,
   }
 
   XML_SetElementHandler(p, expat_wrapper_start, expat_wrapper_end);
+  
+  XML_SetCharacterDataHandler(p, expat_wrapper_text_handler);
 
   for (;;) {
     int done;

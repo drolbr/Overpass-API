@@ -86,7 +86,7 @@ fetch_and_apply_minute_diff()
   while [[ true ]];
   do
   	wget -q -O - "$REMOTE_STATE" > $TMP_STATE
-  	if [[ ! $? == 0 ]] ; then # In case the state file wasn't there in time but the diff was, let'y wait until it become available
+  	if [[ ! $? == 0 ]] ; then # In case the state file wasn't there in time but the diff was, let's wait until it become available
   	{
   	  rm $TMP_SATE
   	  sleep 1

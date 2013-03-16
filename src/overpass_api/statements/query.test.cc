@@ -721,6 +721,60 @@ void perform_query_with_recurse
   }
 }
 
+
+void perform_query_with_role_recurse
+    (string recurse_type, string role, string key1, string value1,
+     int pattern_size, uint64 global_node_offset, string db_dir)
+{
+  string query_type = "relation";
+  if (recurse_type == "relation-node")
+    query_type = "node";
+  else if (recurse_type == "relation-way")
+    query_type = "way";
+  
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Resource_Manager rman(transaction);
+    {
+      SProxy< Id_Query_Statement > stmt1;
+      if (recurse_type == "relation-node")
+        stmt1("type", "relation")("ref", "1").stmt().execute(rman);
+      else if (recurse_type == "relation-way")
+        stmt1("type", "relation")("ref", "7").stmt().execute(rman);
+      else if (recurse_type == "relation-relation")
+        stmt1("type", "relation")("ref", "9").stmt().execute(rman);
+      else if (recurse_type == "node-relation")
+        stmt1("type", "node")("lower", to_string(global_node_offset + 1))
+            ("upper", to_string(global_node_offset + 4)).stmt().execute(rman);
+      else if (recurse_type == "way-relation")
+        stmt1("type", "way")("ref", "1").stmt().execute(rman);
+      else if (recurse_type == "relation-backwards")
+        stmt1("type", "relation")("ref", "3").stmt().execute(rman);
+    }
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", query_type);
+      
+      SProxy< Recurse_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("type", recurse_type)("role", role).stmt(), "");
+
+      SProxy< Has_Kv_Statement > stmt3;
+      if (key1 != "")
+        stmt1.stmt().add_statement(&stmt3("k", key1)("v", value1).stmt(), "");
+
+      stmt1.stmt().execute(rman);
+    }
+    perform_print(rman);
+  }
+  catch (File_Error e)
+  {
+    cerr<<"File error caught: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
+
 void perform_query_with_id_query
     (string query_type, string key1, string value1,
      double south, double north, double west, double east, bool double_id_query,
@@ -1315,6 +1369,31 @@ int main(int argc, char* args[])
     // Test an around collecting relations from nodes based on way membership
     perform_query_with_around("relation", "", "", args[3], pattern_size, true);
 
+  if ((test_to_execute == "") || (test_to_execute == "133"))
+    // Test an around collecting relations from nodes based on way membership
+    perform_query_with_role_recurse("relation-node", "one", "", "",
+                                    pattern_size, global_node_offset, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "134"))
+    // Test an around collecting relations from nodes based on way membership
+    perform_query_with_role_recurse("relation-way", "two", "", "",
+                                    pattern_size, global_node_offset, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "135"))
+    // Test an around collecting relations from nodes based on way membership
+    perform_query_with_role_recurse("relation-relation", "one", "", "",
+                                    pattern_size, global_node_offset, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "136"))
+    // Test an around collecting relations from nodes based on way membership
+    perform_query_with_role_recurse("node-relation", "zero", "", "",
+                                    pattern_size, global_node_offset, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "137"))
+    // Test an around collecting relations from nodes based on way membership
+    perform_query_with_role_recurse("way-relation", "two", "", "",
+                                    pattern_size, global_node_offset, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "138"))
+    // Test an around collecting relations from nodes based on way membership
+    perform_query_with_role_recurse("relation-backwards", "one", "", "",
+                                    pattern_size, global_node_offset, args[3]);
+  
   cout<<"</osm>\n";
   return 0;
 }

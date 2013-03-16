@@ -36,25 +36,88 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
+string decode_to_utf8(const string& token, string::size_type& pos, Error_Output* error_output)
+{
+  uint val = 0;
+  pos += 2;
+  string::size_type max_pos = pos + 4;
+  if (token.size() < max_pos)
+    max_pos = token.size();
+  while (pos < max_pos &&
+      ((token[pos] >= '0' && token[pos] <= '9')
+      || (token[pos] >= 'a' && token[pos] <= 'f')
+      || (token[pos] >= 'A' && token[pos] <= 'F')))
+  {
+    val *= 16;
+    if (token[pos] >= '0' && token[pos] <= '9')
+      val += (token[pos] - 0x30);
+    else if (token[pos] >= 'a' && token[pos] <= 'f')
+      val += (token[pos] - 87);
+    else if (token[pos] >= 'A' && token[pos] <= 'F')
+      val += (token[pos] - 55);
+    ++pos;
+  }
+  if (val < 0x20)
+  {
+    if (error_output)
+      error_output->add_parse_error("Invalid UTF-8 character (value below 32) in escape sequence.", 0);
+  }
+  else if (val < 0x80)
+  {
+    string buf = " ";
+    buf[0] = val;
+    return buf;
+  }
+  else if (val < 0x800)
+  {
+    cout<<val<<'\n';
+    string buf = "  ";
+    buf[0] = (0xc0 | (val>>6));
+    buf[1] = (0x80 | (val & 0x3f));
+    return buf;
+  }
+  else
+  {
+    cout<<val<<'\n';
+    string buf = "   ";
+    buf[0] = (0xe0 | (val>>12));
+    buf[1] = (0x80 | ((val>>6) & 0x3f));
+    buf[2] = (0x80 | (val & 0x3f));
+    return buf;
+  }
+  return "";
+}
+
 string get_text_token(Tokenizer_Wrapper& token, Error_Output* error_output,
 		      string type_of_token)
 {
   string result = "";
   bool result_valid = true;
-  
+
   if (!token.good() || (*token).size() == 0)
     result_valid = false;
   else if ((*token)[0] == '"' || (*token)[0] == '\'')
   {
-    string::size_type start = 0;
+    string::size_type start = 1;
     string::size_type pos = (*token).find('\\');
     while (pos != string::npos)
     {
-      result += (*token).substr(start + 1, pos - start - 1);
-      start = pos;
-      pos = (*token).find('\\', start + 1);
+      result += (*token).substr(start, pos - start);
+      if ((*token)[pos + 1] == 'n')
+        result += '\n';
+      else if ((*token)[pos + 1] == 't')
+        result += '\t';
+      else if ((*token)[pos + 1] == 'u')
+      {
+        result += decode_to_utf8(*token, pos, error_output);
+        pos -= 2;
+      }
+      else
+        result += (*token)[pos + 1];
+      start = pos + 2;
+      pos = (*token).find('\\', start);
     }
-    result += (*token).substr(start + 1, (*token).size() - start - 2);
+    result += (*token).substr(start, (*token).size() - start - 1);
   }
   else if (isalpha((*token)[0]) || isdigit((*token)[0]) || (*token)[0] == '_')
     result = *token;
@@ -349,6 +412,19 @@ TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
 }
 
 template< class TStatement >
+TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
+                                     string type, string from, string role, string into, uint line_nr)
+{
+  map< string, string > attr;
+  attr["from"] = (from == "" ? "_" : from);
+  attr["into"] = into;
+  attr["type"] = type;
+  attr["role"] = role;
+  attr["role-restricted"] = "yes";
+  return stmt_factory.create_statement("recurse", line_nr, attr);
+}
+
+template< class TStatement >
 TStatement* create_polygon_statement(typename TStatement::Factory& stmt_factory,
 				   string bounds, string into, uint line_nr)
 {
@@ -401,6 +477,16 @@ TStatement* create_coord_query_statement(typename TStatement::Factory& stmt_fact
   attr["lat"] = lat;
   attr["lon"] = lon;
   return stmt_factory.create_statement("coord-query", line_nr, attr);
+}
+
+template< class TStatement >
+TStatement* create_pivot_statement(typename TStatement::Factory& stmt_factory,
+                                   string from, string into, uint line_nr)
+{
+  map< string, string > attr;
+  attr["from"] = (from == "" ? "_" : from);
+  attr["into"] = into;
+  return stmt_factory.create_statement("pivot", line_nr, attr);
 }
 
 //-----------------------------------------------------------------------------
@@ -692,10 +778,16 @@ TStatement* create_query_substatement
         (stmt_factory, clause.attributes[0], clause.line_col.first);
   else if (clause.statement == "recurse")
   {
-    return create_recurse_statement< TStatement >
-        (stmt_factory,
-	 determine_recurse_type(clause.attributes[0], type, error_output, clause.line_col),
-	 clause.attributes[1], into, clause.line_col.first);
+    if (clause.attributes.size() == 2)
+      return create_recurse_statement< TStatement >
+          (stmt_factory,
+	   determine_recurse_type(clause.attributes[0], type, error_output, clause.line_col),
+	   clause.attributes[1], into, clause.line_col.first);
+    else
+      return create_recurse_statement< TStatement >
+          (stmt_factory,
+           determine_recurse_type(clause.attributes[0], type, error_output, clause.line_col),
+           clause.attributes[1], clause.attributes[2], into, clause.line_col.first);
   }
   else if (clause.statement == "id-query")
     return create_id_query_statement< TStatement >
@@ -709,6 +801,9 @@ TStatement* create_query_substatement
     return create_area_statement< TStatement >
         (stmt_factory, clause.attributes.size() <= 1 ? "" : clause.attributes[1],
 	 clause.attributes[0], into, clause.line_col.first);
+  else if (clause.statement == "pivot")
+    return create_pivot_statement< TStatement >
+        (stmt_factory, clause.attributes[0], into, clause.line_col.first);
   return 0;
 }
 
@@ -855,7 +950,6 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
           clause.attributes.push_back(get_text_token(token, error_output, "Floating point number"));
           clear_until_after(token, error_output, ",");
           clause.attributes.push_back(get_text_token(token, error_output, "Floating point number"));
-          clear_until_after(token, error_output, ")");
         }
         else
         {
@@ -863,6 +957,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
           clause.attributes.push_back("");
         }
 	clauses.push_back(clause);
+        clear_until_after(token, error_output, ")");
       }
       else if (*token == "poly")
       {
@@ -906,6 +1001,12 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	Statement_Text clause("recurse", token.line_col());
 	clause.attributes.push_back(get_text_token(token, error_output, "Recurse type"));
 	clause.attributes.push_back(probe_from(token, error_output));
+        clear_until_after(token, error_output, ":", ")", false);
+        if (*token == ":")
+        {
+          ++token;
+          clause.attributes.push_back(get_text_token(token, error_output, "Role"));
+        }
 	clear_until_after(token, error_output, ")");
 	clauses.push_back(clause);
       }
@@ -921,6 +1022,14 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	}
 	clear_until_after(token, error_output, ")");
 	clauses.push_back(clause);
+      }
+      else if (*token == "pivot")
+      {
+        Statement_Text clause("pivot", token.line_col());
+        ++token;
+        clause.attributes.push_back(probe_from(token, error_output));
+        clear_until_after(token, error_output, ")");
+        clauses.push_back(clause);
       }
       else if (*token == ">" || *token == ">>" || *token == "<" || *token == "<<")
       {
@@ -986,6 +1095,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
        || clauses.front().statement == "has-kv_icase"
        || (clauses.front().statement == "area" && type != "node")
        || (clauses.front().statement == "around" && type != "node")
+       || (clauses.front().statement == "pivot" && type != "node")
        || (clauses.front().statement == "polygon" && type != "node")
        || (clauses.front().statement == "bbox-query" && type != "node")
        || (clauses.front().statement == "recurse" &&

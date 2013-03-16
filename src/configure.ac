@@ -39,13 +39,13 @@ AC_HEADER_TIME
 AC_STRUCT_TM
 
 # Checks for library functions.
-AC_CHECK_FUNCS([clock_gettime floor ftruncate getcwd munmap regcomp select socket sqrt strnlen])
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_FUNC_SELECT_ARGTYPES
 AC_FUNC_STAT
 AC_FUNC_STRFTIME
+AC_CHECK_FUNCS([clock_gettime floor ftruncate getcwd munmap regcomp select socket sqrt strnlen])
 
 AC_CONFIG_FILES([Makefile bin/Makefile cgi-bin/Makefile lib/Makefile test-bin/Makefile])
 AC_OUTPUT
