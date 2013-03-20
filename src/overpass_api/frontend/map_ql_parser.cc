@@ -70,7 +70,6 @@ string decode_to_utf8(const string& token, string::size_type& pos, Error_Output*
   }
   else if (val < 0x800)
   {
-    cout<<val<<'\n';
     string buf = "  ";
     buf[0] = (0xc0 | (val>>6));
     buf[1] = (0x80 | (val & 0x3f));
@@ -78,7 +77,6 @@ string decode_to_utf8(const string& token, string::size_type& pos, Error_Output*
   }
   else
   {
-    cout<<val<<'\n';
     string buf = "   ";
     buf[0] = (0xe0 | (val>>12));
     buf[1] = (0x80 | ((val>>6) & 0x3f));
