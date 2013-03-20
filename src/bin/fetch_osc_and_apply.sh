@@ -92,8 +92,8 @@ fetch_and_apply_minute_diff()
   	  sleep 1
   	} else
   	{
-  	  grep timestamp $TMP_STATE | cut -f2 -d\= > $DB_DIR/tmp
-  	  mv $DB_DIR/tmp $DB_DIR/osm_base_version
+  	  grep timestamp $TMP_STATE | cut -f2 -d\= > $DB_DIR/osm_base_version
+  	  cp $DB_DIR/osm_base_version $DB_DIR/osm_base_version_munin
   	  rm $TMP_STATE
   	  return $ret
   	}; fi	
