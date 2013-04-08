@@ -507,7 +507,7 @@ void filter_ids_by_tags
 
 template< typename Id_Type >
 void filter_ids_by_ntags
-  (const map< string, vector< Regular_Expression* > >& keys,
+  (const map< string, pair< vector< Regular_Expression* >, vector< string > > >& keys,
    const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
    typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
    uint32 coarse_index,
@@ -517,7 +517,8 @@ void filter_ids_by_ntags
   string last_key, last_value;  
   bool relevant = false;
   bool valid = false;
-  map< string, vector< Regular_Expression* > >::const_iterator key_it = keys.begin();
+  map< string, pair< vector< Regular_Expression* >, vector< string > > >::const_iterator
+      key_it = keys.begin();
   
   while ((!(tag_it == items_db.range_end())) &&
       (((tag_it.index().index) & 0xffffff00) == coarse_index))
@@ -555,9 +556,12 @@ void filter_ids_by_ntags
       if (tag_it.index().value != last_value)
       {
         valid = false;
-        for (vector< Regular_Expression* >::const_iterator rit = key_it->second.begin();
-            rit != key_it->second.end(); ++rit)
+        for (vector< Regular_Expression* >::const_iterator rit = key_it->second.first.begin();
+            rit != key_it->second.first.end(); ++rit)
           valid |= (*rit)->matches(tag_it.index().value);
+        for (vector< string >::const_iterator rit = key_it->second.second.begin();
+            rit != key_it->second.second.end(); ++rit)
+          valid |= (*rit == tag_it.index().value);
         last_value = tag_it.index().value;
       }
       
@@ -583,7 +587,7 @@ void filter_ids_by_ntags
 template< typename Id_Type >
 void filter_ids_by_ntags
   (map< uint32, vector< Id_Type > >& ids_by_coarse,
-   const map< string, vector< Regular_Expression* > >& keys,
+   const map< string, pair< vector< Regular_Expression* >, vector< string > > >& keys,
    const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
    typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
    uint32 coarse_index)
@@ -665,14 +669,17 @@ void Query_Statement::filter_by_tags
     
   items.swap(result);
 
-  if (key_nregexes.empty())
+  if (key_nregexes.empty() && key_nvalues.empty())
     return;
   
   // prepare negated keys
-  key_union.clear();
+  map< string, pair< vector< Regular_Expression* >, vector< string > > > nkey_union;
   for (vector< pair< string, Regular_Expression* > >::const_iterator
       it = key_nregexes.begin(); it != key_nregexes.end(); ++it)
-    key_union[it->first].push_back(it->second);
+    nkey_union[it->first].first.push_back(it->second);
+  for (vector< pair< string, string > >::const_iterator
+      it = key_nvalues.begin(); it != key_nvalues.end(); ++it)
+    nkey_union[it->first].second.push_back(it->second);
   
   // iterate over the result
   result.clear();
@@ -692,7 +699,7 @@ void Query_Statement::filter_by_tags
     
     sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
     
-    filter_ids_by_ntags(ids_by_coarse, key_union, items_db, ntag_it, it->val());
+    filter_ids_by_ntags(ids_by_coarse, nkey_union, items_db, ntag_it, it->val());
     
     while ((item_it != items.end()) &&
         ((item_it->first.val() & 0x7fffff00) == it->val()))
@@ -732,7 +739,7 @@ void Query_Statement::progress_1(vector< Id_Type >& ids,
     if (ids.empty())
       answer_state = data_collected;
   }
-  else if (!key_nvalues.empty() || !key_nregexes.empty())
+  else if ((!key_nvalues.empty() || !key_nregexes.empty()) && !check_keys_late)
   {
     invert_ids = true;
     collect_non_ids< Id_Type >(file_prop, rman).swap(ids);
