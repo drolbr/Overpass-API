@@ -131,7 +131,8 @@ Dispatcher_Stub::Dispatcher_Stub
     {
       ostringstream out;
       out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
-      if (e.origin == "Dispatcher_Client::request_read_and_idx::rate_limited")
+      if (e.origin == "Dispatcher_Client::request_read_and_idx::rate_limited"
+          || e.origin == "Dispatcher_Client::request_read_and_idx::timeout")
 	out<<' '<<probe_client_identifier();
       logger.annotated_log(out.str());
       throw;

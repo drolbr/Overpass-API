@@ -91,6 +91,26 @@ int main(int argc, char *argv[])
       if ((clone_db_dir.size() > 0) && (clone_db_dir[clone_db_dir.size()-1] != '/'))
 	clone_db_dir += '/';
     }
+    else
+    {
+      cout<<"Unknown argument: "<<argv[argpos]<<"\n\n"
+      "Accepted arguments are:\n"
+      "  --db-dir=$DB_DIR: The directory where the database resides. If you set this parameter\n"
+      "        then osm3s_query will read from the database without using the dispatcher management.\n"
+      "  --dump-xml: Don't execute the query but only dump the query in XML format.\n"
+      "  --dump-pretty-map-ql: Don't execute the query but only dump the query in pretty QL format.\n"
+      "  --dump-compact-map-ql: Don't execute the query but only dump the query in compact QL format.\n"
+      "  --dump-bbox-map-ql: Don't execute the query but only dump the query in a suitable form\n"
+      "        for an OpenLayers slippy map.\n"
+      "  --clone=$TARGET_DIR: Write a consistent copy of the entire database to the given $TARGET_DIR.\n"
+      "  --rules: Ignore all time limits and allow area creation by this query.\n"
+      "  --quiet: Don't print anything on stderr.\n"
+      "  --concise: Print concise information on stderr.\n"
+      "  --progress: Print also progress information on stderr.\n"
+      "  --verbose: Print everything that happens on stderr.\n";
+      
+      return 0;
+    }
     ++argpos;
   }
   

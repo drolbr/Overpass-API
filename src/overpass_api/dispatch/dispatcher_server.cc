@@ -155,6 +155,26 @@ int main(int argc, char* argv[])
       max_allowed_time_units = atoll(((string)argv[argpos]).substr(7).c_str());
     else if (!(strncmp(argv[argpos], "--rate-limit=", 13)))
       rate_limit = atoll(((string)argv[argpos]).substr(13).c_str());
+    else
+    {
+      cout<<"Unknown argument: "<<argv[argpos]<<"\n\n"
+      "Accepted arguments are:\n"
+      "  --osm-base: Start or talk to the dispatcher for the osm data.\n"
+      "  --areas: Start or talk to the dispatcher for the areas data.\n"
+      "  --meta: When starting the osm data dispatcher, also care for meta data.\n"
+      "  --db-dir=$DB_DIR: The directory where the database resides.\n"
+      "  --terminate: Stop the adressed dispatcher.\n"
+      "  --status: Let the adressed dispatcher dump its status into\n"
+      "        $DB_DIR/osm_base_shadow.status or $DB_DIR/areas_shadow.status\n"
+      "  --show-dir: Returns $DB_DIR\n"
+      "  --purge=pid: Let the adressed dispatcher forget everything known about that pid.\n"
+      "  --query_token: Returns the pid of a running query for the same client IP.\n"
+      "  --space=number: Set the memory limit for the total of all running processes to this value in bytes.\n"
+      "  --time=number: Set the time unit  limit for the total of all running processes to this value in bytes.\n"
+      "  --rate-limit=number: Set the maximum allowed number of concurrent accesses from a single IP.\n";
+      
+      return 0;
+    }
     ++argpos;
   }
   
