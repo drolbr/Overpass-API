@@ -762,10 +762,7 @@ void Area_Query_Statement::collect_ways
   Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
       area_it(area_blocks_db.discrete_begin(req.begin(), req.end()));
 
-  map< Node::Id_Type, uint > node_status;
   map< Way::Id_Type, bool > ways_inside;
-  
-  map< Uint32_Index, vector< Node_Skeleton > >::iterator nodes_it = way_members_.begin();
   
   map< Uint31_Index, vector< Area_Block > > way_segments;
   for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
@@ -774,6 +771,19 @@ void Area_Query_Statement::collect_ways
       add_way_to_area_blocks(make_geometry(*it2, nodes), it2->id.val(), way_segments);
   }
       
+  map< uint32, vector< pair< uint32, Way::Id_Type > > > way_coords_to_id;
+  for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
+  {
+    for (vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    {
+      vector< Quad_Coord > coords = make_geometry(*it2, nodes);
+      for (vector< Quad_Coord >::const_iterator it3 = coords.begin(); it3 != coords.end(); ++it3)
+        way_coords_to_id[it3->ll_upper].push_back(make_pair(it3->ll_lower, it2->id));
+    }
+  }
+  
+  map< uint32, vector< pair< uint32, Way::Id_Type > > >::const_iterator nodes_it = way_coords_to_id.begin();
+  
   // Fill node_status with the area related status of each node and segment
   uint32 current_idx(0);
   while (!(area_it == area_blocks_db.discrete_end()))
@@ -791,22 +801,17 @@ void Area_Query_Statement::collect_ways
     }
     
     // check nodes
-    while (nodes_it != way_members_.end() && nodes_it->first.val() < current_idx)
-    {
-      nodes_it->second.clear();
+    while (nodes_it != way_coords_to_id.end() && nodes_it->first < current_idx)
       ++nodes_it;
-    }
-    while (nodes_it != way_members_.end() &&
-        (nodes_it->first.val() & 0xffffff00) == current_idx)
+    while (nodes_it != way_coords_to_id.end() &&
+        (nodes_it->first & 0xffffff00) == current_idx)
     {
-      vector< Node_Skeleton > into;
-      for (vector< Node_Skeleton >::const_iterator iit = nodes_it->second.begin();
+      vector< pair< uint32, Way::Id_Type > > into;
+      for (vector< pair< uint32, Way::Id_Type > >::const_iterator iit = nodes_it->second.begin();
           iit != nodes_it->second.end(); ++iit)
       {
-        uint32 ilat((::lat(nodes_it->first.val(), iit->ll_lower)
-            + 91.0)*10000000+0.5);
-        int32 ilon(::lon(nodes_it->first.val(), iit->ll_lower)*10000000
-            + (::lon(nodes_it->first.val(), iit->ll_lower) > 0 ? 0.5 : -0.5));
+        uint32 ilat = ::ilat(nodes_it->first, iit->first);
+        int32 ilon = ::ilon(nodes_it->first, iit->first);
         for (map< Area_Skeleton::Id_Type, vector< Area_Block > >::const_iterator it = areas.begin();
 	     it != areas.end(); ++it)
         {
@@ -816,14 +821,15 @@ void Area_Query_Statement::collect_ways
           {
 	    int check(Coord_Query_Statement::check_area_block(current_idx, *it2, ilat, ilon));
 	    if (check == Coord_Query_Statement::HIT)
-	    {
-	      inside = Coord_Query_Statement::HIT;
-	      break;
-	    }
-	    else if (check != 0)
+            {
+              inside = Coord_Query_Statement::HIT;
+              break;
+            }
+	    else
 	      inside ^= check;
           }
-          node_status[iit->id] |= inside;
+          if (inside & (Coord_Query_Statement::TOGGLE_EAST | Coord_Query_Statement::TOGGLE_WEST))
+            ways_inside[iit->second] = true;
         }
       }
       ++nodes_it;
@@ -888,26 +894,6 @@ void Area_Query_Statement::collect_ways
       }
     }
     result[it->first].swap(cur_result);
-  }
-
-  // Mark ways as found that have an inner node as a member
-  for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
-  {
-    vector< Way_Skeleton >& cur_result = result[it->first];
-    for (vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-    {
-      if (it2->id == Way::Id_Type(0u))
-	continue;
-      for (vector< Node::Id_Type >::const_iterator nit = it2->nds.begin(); nit != it2->nds.end(); ++nit)
-      {
-	if (node_status[*nit] & (Coord_Query_Statement::TOGGLE_EAST | Coord_Query_Statement::TOGGLE_WEST))
-	{
-	  cur_result.push_back(*it2);
-	  it2->id = Way::Id_Type(0u);
-	  break;
-	}
-      }
-    }
   }
   
   result.swap(ways);
