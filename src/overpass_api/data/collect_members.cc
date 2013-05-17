@@ -679,3 +679,65 @@ uint32 determine_role_id(Transaction& transaction, const string& role)
   }
   return numeric_limits< uint32 >::max();
 }
+
+
+//-----------------------------------------------------------------------------
+
+
+void add_way_to_area_blocks(const vector< Quad_Coord >& coords,
+                            uint32 id, map< Uint31_Index, vector< Area_Block > >& areas)
+{
+  if (coords.size() < 2)
+    return;
+  uint32 cur_idx = 0;
+  vector< uint64 > cur_polyline;
+  for (vector< Quad_Coord >::const_iterator it = coords.begin(); it != coords.end(); ++it)
+  {
+    if ((it->ll_upper & 0xffffff00) != cur_idx)
+    {
+      if (cur_idx != 0)
+      {
+        if (cur_polyline.size() > 1)
+          areas[cur_idx].push_back(Area_Block(id, cur_polyline));
+            
+        vector< Aligned_Segment > aligned_segments;
+        Area::calc_aligned_segments
+            (aligned_segments, cur_polyline.back(),
+             ((uint64)it->ll_upper<<32) | it->ll_lower);
+        cur_polyline.clear();
+        for (vector< Aligned_Segment >::const_iterator
+            it(aligned_segments.begin()); it != aligned_segments.end(); ++it)
+        {
+          cur_polyline.push_back((((uint64)it->ll_upper_)<<32) | it->ll_lower_a);
+          cur_polyline.push_back((((uint64)it->ll_upper_)<<32) | it->ll_lower_b);
+          areas[it->ll_upper_].push_back(Area_Block(id, cur_polyline));
+          cur_polyline.clear();
+        }
+      }
+      cur_idx = (it->ll_upper & 0xffffff00);
+    }
+    cur_polyline.push_back(((uint64)it->ll_upper<<32) | it->ll_lower);
+  }
+  if ((cur_idx != 0) && (cur_polyline.size() > 1))
+    areas[cur_idx].push_back(Area_Block(id, cur_polyline));
+}
+
+
+vector< Quad_Coord > make_geometry(const Way_Skeleton& way, const vector< Node >& nodes)
+{
+  vector< Quad_Coord > result;
+  
+  for (vector< Node::Id_Type >::const_iterator it3(way.nds.begin());
+      it3 != way.nds.end(); ++it3)
+  {
+    const Node* node = binary_search_for_id(nodes, *it3);
+    if (node == 0)
+    {
+      result.clear();
+      return result;
+    }
+    result.push_back(Quad_Coord(node->index, node->ll_lower_));
+  }
+  
+  return result;
+}

@@ -771,7 +771,7 @@ void Area_Query_Statement::collect_ways
   for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
   {
     for (vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      add_way_to_area_blocks(*it2, nodes, it2->id.val(), way_segments);
+      add_way_to_area_blocks(make_geometry(*it2, nodes), it2->id.val(), way_segments);
   }
       
   // Fill node_status with the area related status of each node and segment

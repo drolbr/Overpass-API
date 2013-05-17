@@ -29,6 +29,7 @@
 
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
+#include "../data/collect_members.h"
 #include "../osm-backend/area_updater.h"
 #include "make_area.h"
 #include "print.h"
@@ -140,49 +141,6 @@ Node::Id_Type Make_Area_Statement::check_node_parity(const Set& pivot)
 }
 
 
-void add_way_to_area_blocks(const Way_Skeleton& way, const vector< Node >& nodes,
-			    uint32 id, map< Uint31_Index, vector< Area_Block > >& areas)
-{
-  if (way.nds.size() < 2)
-    return;
-  uint32 cur_idx(0);
-  vector< uint64 > cur_polyline;
-  for (vector< Node::Id_Type >::const_iterator it3(way.nds.begin());
-      it3 != way.nds.end(); ++it3)
-  {
-    const Node* node = binary_search_for_id(nodes, *it3);
-    if (node == 0)
-      return;
-    if ((node->index & 0xffffff00) != cur_idx)
-    {
-      if (cur_idx != 0)
-      {
-	if (cur_polyline.size() > 1)
-	  areas[cur_idx].push_back(Area_Block(id, cur_polyline));
-	    
-	vector< Aligned_Segment > aligned_segments;
-	Area::calc_aligned_segments
-	    (aligned_segments, cur_polyline.back(),
-	     ((uint64)node->index<<32) | node->ll_lower_);
-	cur_polyline.clear();
-	for (vector< Aligned_Segment >::const_iterator
-	    it(aligned_segments.begin()); it != aligned_segments.end(); ++it)
-	{
-	  cur_polyline.push_back((((uint64)it->ll_upper_)<<32) | it->ll_lower_a);
-	  cur_polyline.push_back((((uint64)it->ll_upper_)<<32) | it->ll_lower_b);
-	  areas[it->ll_upper_].push_back(Area_Block(id, cur_polyline));
-	  cur_polyline.clear();
-	}
-      }
-      cur_idx = (node->index & 0xffffff00);
-    }
-    cur_polyline.push_back(((uint64)node->index<<32) | node->ll_lower_);
-  }
-  if ((cur_idx != 0) && (cur_polyline.size() > 1))
-    areas[cur_idx].push_back(Area_Block(id, cur_polyline));
-}
-
-
 pair< Node::Id_Type, Uint32_Index > Make_Area_Statement::create_area_blocks
     (map< Uint31_Index, vector< Area_Block > >& areas,
      uint32 id, const Set& pivot)
@@ -202,15 +160,17 @@ pair< Node::Id_Type, Uint32_Index > Make_Area_Statement::create_area_blocks
   {
     for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
-      add_way_to_area_blocks(*it2, nodes, id, areas);
+      add_way_to_area_blocks(make_geometry(*it2, nodes), id, areas);
   }
   return make_pair< uint32, uint32 >(0, 0);
 }
+
 
 uint32 Make_Area_Statement::shifted_lat(uint32 ll_index, uint64 coord)
 {
   return ::ilat(ll_index | (coord>>32), coord & 0xffffffff);
 }
+
 
 int32 Make_Area_Statement::lon_(uint32 ll_index, uint64 coord)
 {
