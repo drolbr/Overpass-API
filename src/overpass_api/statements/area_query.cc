@@ -199,7 +199,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     Order_By_Node_Id order_by_node_id;
     sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_node_id);
     
-    area->collect_ways(into.ways, way_members_, way_members_by_id, area_blocks_req, true, rman);
+    area->collect_ways(into.ways, way_members_, area_blocks_req, true, rman);
   }
   {
     //Process relations
@@ -260,7 +260,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     }
     sort(way_node_members_by_id.begin(), way_node_members_by_id.end(), order_by_node_id);
     
-    area->collect_ways(way_members_, node_members_, way_node_members_by_id, area_blocks_req, false, rman);
+    area->collect_ways(way_members_, node_members_, area_blocks_req, false, rman);
     
     // Order way ids by id.
     vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id;
@@ -745,7 +745,6 @@ void has_inner_points(const Area_Block& string_a, const Area_Block& string_b, in
 void Area_Query_Statement::collect_ways
       (map< Uint31_Index, vector< Way_Skeleton > >& ways,
        map< Uint32_Index, vector< Node_Skeleton > >& way_members_,
-       vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id,
        const set< Uint31_Index >& req, bool add_border,
        Resource_Manager& rman)
 {
