@@ -165,25 +165,8 @@ void Polygon_Constraint::filter(Resource_Manager& rman, Set& into)
 void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
   {
-    //Process ways
-  
-    // Retrieve all nodes referred by the ways.
-    map< Uint32_Index, vector< Node_Skeleton > > way_members_
-        = way_members(&query, rman, into.ways);
-  
-    // Order node ids by id.
-    vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id;
-    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = way_members_.begin();
-        it != way_members_.end(); ++it)
-    {
-      for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-        way_members_by_id.push_back(make_pair(it->first, &*iit));
-    }
-    Order_By_Node_Id order_by_node_id;
-    sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_node_id);
-    
-    polygon->collect_ways(into.ways, way_members_, way_members_by_id, true, rman);
+    //Process ways  
+    polygon->collect_ways(into.ways, true, query, rman);
   }
   {
     //Process relations
@@ -217,23 +200,7 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
     map< Uint31_Index, vector< Way_Skeleton > > way_members_
         = relation_way_members(&query, rman, into.relations, &way_ranges);
   
-    // Filter for those ways that are in one of the areas
-    // Retrieve all nodes referred by the ways.
-    map< Uint32_Index, vector< Node_Skeleton > > node_members_
-        = way_members(&query, rman, way_members_);
-
-    // Order node ids by id.
-    vector< pair< Uint32_Index, const Node_Skeleton* > > way_node_members_by_id;
-    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = node_members_.begin();
-        it != node_members_.end(); ++it)
-    {
-      for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-        way_node_members_by_id.push_back(make_pair(it->first, &*iit));
-    }
-    sort(way_node_members_by_id.begin(), way_node_members_by_id.end(), order_by_node_id);
-    
-    polygon->collect_ways(way_members_, node_members_, way_node_members_by_id, false, rman);
+    polygon->collect_ways(way_members_, false, query, rman);
     
     // Order way ids by id.
     vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id;
@@ -483,44 +450,34 @@ void Polygon_Query_Statement::collect_nodes(map< Uint32_Index, vector< Node_Skel
 
 void Polygon_Query_Statement::collect_ways
       (map< Uint31_Index, vector< Way_Skeleton > >& ways,
-       map< Uint32_Index, vector< Node_Skeleton > >& way_members_,
-       vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id,
-       bool add_border,
-       Resource_Manager& rman)
+       bool add_border, const Statement& query, Resource_Manager& rman)
 {
-  vector< Node > nodes;
-  for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator it = way_members_.begin();
-       it != way_members_.end(); ++it)
-  {
-    for (vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      nodes.push_back(Node(it2->id, it->first.val(), it2->ll_lower));
-  }
-  sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
-
-  map< Way::Id_Type, bool > ways_inside;
-  
-  vector< Aligned_Segment >::const_iterator area_it = segments.begin();
-  
-  map< Uint31_Index, vector< Area_Block > > way_segments;
-  for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
-  {
-    for (vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      add_way_to_area_blocks(make_geometry(*it2, nodes), it2->id.val(), way_segments);
-  }
+  Way_Geometry_Store way_geometries(ways, query, rman);
   
   map< uint32, vector< pair< uint32, Way::Id_Type > > > way_coords_to_id;
   for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
   {
     for (vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
-      vector< Quad_Coord > coords = make_geometry(*it2, nodes);
+      vector< Quad_Coord > coords = way_geometries.get_geometry(*it2);
       for (vector< Quad_Coord >::const_iterator it3 = coords.begin(); it3 != coords.end(); ++it3)
         way_coords_to_id[it3->ll_upper].push_back(make_pair(it3->ll_lower, it2->id));
     }
   }
   
   map< uint32, vector< pair< uint32, Way::Id_Type > > >::const_iterator nodes_it = way_coords_to_id.begin();
+
+  vector< Aligned_Segment >::const_iterator area_it = segments.begin();
+  
+  map< Uint31_Index, vector< Area_Block > > way_segments;
+  for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
+  {
+    for (vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      add_way_to_area_blocks(way_geometries.get_geometry(*it2), it2->id.val(), way_segments);
+  }
       
+  map< Way::Id_Type, bool > ways_inside;
+  
   // Fill node_status with the area related status of each node and segment
   uint32 current_idx(0);
   while (area_it != segments.end())

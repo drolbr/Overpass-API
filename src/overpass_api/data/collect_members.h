@@ -88,4 +88,19 @@ void add_way_to_area_blocks(const vector< Quad_Coord >& coords,
 
 vector< Quad_Coord > make_geometry(const Way_Skeleton& way, const vector< Node >& nodes);
 
+
+class Way_Geometry_Store
+{
+public:
+  Way_Geometry_Store(const map< Uint31_Index, vector< Way_Skeleton > >& ways,
+                     const Statement& query, Resource_Manager& rman);
+  
+  // return the empty vector if the way is not found
+  vector< Quad_Coord > get_geometry(const Way_Skeleton& way);
+  
+private:
+  vector< Node > nodes;
+};
+
+
 #endif

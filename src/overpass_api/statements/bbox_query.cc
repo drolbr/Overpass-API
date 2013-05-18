@@ -185,36 +185,18 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
   //TODO: filter areas
 }
 
-bool matches_bbox(const Bbox_Query_Statement& bbox, const Way_Skeleton& way,
-		  const vector< pair< Uint32_Index, const Node_Skeleton* > >& nodes_by_id)
+
+bool matches_bbox(const Bbox_Query_Statement& bbox, const vector< Quad_Coord >& way_geometry)
 {
-  vector< Node::Id_Type >::const_iterator nit = way.nds.begin();
-  if (nit == way.nds.end())
+  vector< Quad_Coord >::const_iterator nit = way_geometry.begin();
+  if (nit == way_geometry.end())
     return false;
-  const pair< Uint32_Index, const Node_Skeleton* >* first_nd =
-      binary_search_for_pair_id(nodes_by_id, *nit);
-  if (!first_nd)
+  double first_lat(::lat(nit->ll_upper, nit->ll_lower));
+  double first_lon(::lon(nit->ll_upper, nit->ll_lower));
+  for (++nit; nit != way_geometry.end(); ++nit)
   {
-    ostringstream out;
-    out<<"Node "<<nit->val()<<" not found in the database. This is a serious fault of the database.";
-    bbox.runtime_remark(out.str());
-    return true;
-  }
-  double first_lat(::lat(first_nd->first.val(), first_nd->second->ll_lower));
-  double first_lon(::lon(first_nd->first.val(), first_nd->second->ll_lower));
-  for (++nit; nit != way.nds.end(); ++nit)
-  {
-    const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
-        binary_search_for_pair_id(nodes_by_id, *nit);
-    if (!second_nd)
-    {
-      ostringstream out;
-      out<<"Node "<<nit->val()<<" not found in the database. This is a serious fault of the database.";
-      bbox.runtime_remark(out.str());
-      return true;
-    }
-    double second_lat(::lat(second_nd->first.val(), second_nd->second->ll_lower));
-    double second_lon(::lon(second_nd->first.val(), second_nd->second->ll_lower));
+    double second_lat(::lat(nit->ll_upper, nit->ll_lower));
+    double second_lon(::lon(nit->ll_upper, nit->ll_lower));
     
     if (segment_intersects_bbox
         (first_lat, first_lon, second_lat, second_lon,
@@ -227,27 +209,12 @@ bool matches_bbox(const Bbox_Query_Statement& bbox, const Way_Skeleton& way,
   return false;
 }
 
+
 void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
   {
     //Process ways
-  
-    // Retrieve all nodes referred by the ways.
-    map< Uint32_Index, vector< Node_Skeleton > > way_members_
-        = way_members(&query, rman, into.ways);
-    //collect_nodes(query, rman, into.ways.begin(), into.ways.end(), way_members);
-  
-    // Order node ids by id.
-    vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id;
-    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = way_members_.begin();
-        it != way_members_.end(); ++it)
-    {
-      for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-        way_members_by_id.push_back(make_pair(it->first, &*iit));
-    }
-    Order_By_Node_Id order_by_node_id;
-    sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_node_id);
+    Way_Geometry_Store way_geometries(into.ways, query, rman);
   
     for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = into.ways.begin();
         it != into.ways.end(); ++it)
@@ -256,7 +223,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
       for (vector< Way_Skeleton >::const_iterator iit = it->second.begin();
           iit != it->second.end(); ++iit)
       {
-	if (matches_bbox(*bbox, *iit, way_members_by_id))
+        if (matches_bbox(*bbox, way_geometries.get_geometry(*iit)))
 	  local_into.push_back(*iit);
       }
       it->second.swap(local_into);
@@ -307,21 +274,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     Order_By_Way_Id order_by_way_id;
     sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_way_id);
     
-    // Retrieve all nodes referred by the ways.
-    map< Uint32_Index, vector< Node_Skeleton > > way_nds
-        = way_members(&query, rman, way_members_);
-    //collect_nodes(query, rman, way_members_.begin(), way_members_.end(), way_nds);
-    
-    // Order node ids by id.
-    vector< pair< Uint32_Index, const Node_Skeleton* > > way_nds_by_id;
-    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = way_nds.begin();
-        it != way_nds.end(); ++it)
-    {
-      for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-        way_nds_by_id.push_back(make_pair(it->first, &*iit));
-    }
-    sort(way_nds_by_id.begin(), way_nds_by_id.end(), order_by_node_id);
+    Way_Geometry_Store way_geometries(way_members_, query, rman);
     
     for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = into.relations.begin();
         it != into.relations.end(); ++it)
@@ -357,7 +310,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 	        binary_search_for_pair_id(way_members_by_id, nit->ref32());
 	    if (!second_nd)
 	      continue;
-	    if (matches_bbox(*bbox, *second_nd->second, way_nds_by_id))
+            if (matches_bbox(*bbox, way_geometries.get_geometry(*second_nd->second)))
 	    {
 	      local_into.push_back(*iit);
 	      break;

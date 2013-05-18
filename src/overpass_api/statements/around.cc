@@ -433,45 +433,6 @@ void Around_Constraint::filter(Resource_Manager& rman, Set& into)
 }
 
 
-struct Way_Member_Collection
-{
-  Way_Member_Collection(const map< Uint31_Index, vector< Way_Skeleton > >& ways,
-			const Statement& query, Resource_Manager& rman)
-      : query_(query),
-        node_members(way_members(&query, rman, ways))
-  {
-    // Order node ids by id.
-    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = node_members.begin();
-        it != node_members.end(); ++it)
-    {
-      for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-        node_members_by_id.push_back(make_pair(it->first, &*iit));
-    }
-    Order_By_Node_Id order_by_node_id;
-    sort(node_members_by_id.begin(), node_members_by_id.end(), order_by_node_id);
-  }
-  
-  const pair< Uint32_Index, const Node_Skeleton* >* get_node_by_id(Node::Id_Type id) const
-  {
-    const pair< Uint32_Index, const Node_Skeleton* >* node =
-        binary_search_for_pair_id(node_members_by_id, id);
-    if (!node)
-    {
-      ostringstream out;
-      out<<"Node "<<id.val()<<" not found in the database. This is a serious fault of the database.";
-      query_.runtime_remark(out.str());
-    }
-    
-    return node;
-  }
-
-  const Statement& query_;
-  map< Uint32_Index, vector< Node_Skeleton > > node_members;
-  vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id;
-};
-
-
 struct Relation_Member_Collection
 {
   Relation_Member_Collection(const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
@@ -565,7 +526,7 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
     //Process ways
 
     // Retrieve all nodes referred by the ways.
-    Way_Member_Collection way_members(into.ways, query, rman);
+    Way_Geometry_Store way_geometries(into.ways, query, rman);
     
     for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = into.ways.begin();
         it != into.ways.end(); ++it)
@@ -574,7 +535,7 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
       for (vector< Way_Skeleton >::const_iterator iit = it->second.begin();
           iit != it->second.end(); ++iit)
       {
-	if (around->is_inside(*iit, way_members.node_members_by_id))
+	if (around->is_inside(way_geometries.get_geometry(*iit)))
 	  local_into.push_back(*iit);
       }
       it->second.swap(local_into);
@@ -592,7 +553,7 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
         (into.relations, query, rman, &node_ranges, &way_ranges);
         
     // Retrieve all nodes referred by the ways.
-    Way_Member_Collection way_members(relation_members.way_members, query, rman);
+    Way_Geometry_Store way_geometries(relation_members.way_members, query, rman);
     
     for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = into.relations.begin();
         it != into.relations.end(); ++it)
@@ -625,7 +586,7 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
 	        relation_members.get_way_by_id(nit->ref32());
 	    if (!second_nd)
 	      continue;
-	    if (around->is_inside(*second_nd->second, way_members.node_members_by_id))
+	    if (around->is_inside(way_geometries.get_geometry(*second_nd->second)))
 	    {
 	      local_into.push_back(*iit);
 	      break;
@@ -897,39 +858,34 @@ void add_node(Uint32_Index idx, const Node_Skeleton& node, double radius,
 }
 
 
-void add_way(Uint31_Index idx, const Way_Skeleton& way, double radius,
-	     const Way_Member_Collection& way_members,
-	     vector< Prepared_Segment >& simple_segments)
+void add_way(const vector< Quad_Coord >& way_geometry, double radius,
+             map< Uint32_Index, vector< pair< double, double > > >& radius_lat_lons,
+             vector< Prepared_Point >& simple_lat_lons,
+             vector< Prepared_Segment >& simple_segments)
 {
-  vector< Node::Id_Type >::const_iterator nit = way.nds.begin();
-  if (nit == way.nds.end())
+  // add nodes
+  
+  for (vector< Quad_Coord >::const_iterator nit = way_geometry.begin(); nit != way_geometry.end(); ++nit)
+    add_coord(::lat(nit->ll_upper, nit->ll_lower),
+              ::lon(nit->ll_upper, nit->ll_lower),
+              radius, radius_lat_lons, simple_lat_lons);
+  
+  // add segments
+  
+  vector< Quad_Coord >::const_iterator nit = way_geometry.begin();
+  if (nit == way_geometry.end())
     return;
-  
-  const pair< Uint32_Index, const Node_Skeleton* >* first_nd = 0;
-  while (first_nd == 0 && nit != way.nds.end())
-  {
-    first_nd = way_members.get_node_by_id(*nit);
-    ++nit;
-  }
-  if (!first_nd)
-    return;
-  
-  double first_lat(::lat(first_nd->first.val(), first_nd->second->ll_lower));
-  double first_lon(::lon(first_nd->first.val(), first_nd->second->ll_lower));
-  
-  for (; nit != way.nds.end(); ++nit)
-  {
-    const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
-        way_members.get_node_by_id(*nit);
     
-    if (!second_nd)
-      continue;
-    
-    double second_lat(::lat(second_nd->first.val(), second_nd->second->ll_lower));
-    double second_lon(::lon(second_nd->first.val(), second_nd->second->ll_lower));
+  double first_lat(::lat(nit->ll_upper, nit->ll_lower));
+  double first_lon(::lon(nit->ll_upper, nit->ll_lower));
+  
+  for (; nit != way_geometry.end(); ++nit)
+  {
+    double second_lat(::lat(nit->ll_upper, nit->ll_lower));
+    double second_lon(::lon(nit->ll_upper, nit->ll_lower));
     
     simple_segments.push_back(Prepared_Segment(first_lat, first_lon, second_lat, second_lon));
-					
+                                        
     first_lat = second_lat;
     first_lon = second_lon;
   }
@@ -959,26 +915,16 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
   
   {
     //Process ways
-
-    // Retrieve all nodes referred by the ways.
-    Way_Member_Collection way_members(input.ways, query, rman);
-
-    // Add nodes to the source points.
-    for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
-        iit = way_members.node_members.begin(); iit != way_members.node_members.end(); ++iit)
-    {
-      for (vector< Node_Skeleton >::const_iterator nit(iit->second.begin());
-          nit != iit->second.end(); ++nit)
-        add_node(iit->first, *nit, radius, radius_lat_lons, simple_lat_lons);
-    }
-  
+    Way_Geometry_Store way_geometries(input.ways, query, rman);
+    
     for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator it = input.ways.begin();
         it != input.ways.end(); ++it)
     {
       vector< Way_Skeleton > local_into;
       for (vector< Way_Skeleton >::const_iterator iit = it->second.begin();
           iit != it->second.end(); ++iit)
-	add_way(it->first, *iit, radius, way_members, simple_segments);
+	add_way(way_geometries.get_geometry(*iit), radius,
+                radius_lat_lons, simple_lat_lons, simple_segments);
     }
   }
   {
@@ -988,7 +934,7 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
     Relation_Member_Collection relation_members(input.relations, query, rman, 0, 0);
         
     // Retrieve all nodes referred by the ways.
-    Way_Member_Collection way_members(relation_members.way_members, query, rman);
+    Way_Geometry_Store way_geometries(relation_members.way_members, query, rman);
     
     for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
         it = input.relations.begin(); it != input.relations.end(); ++it)
@@ -1015,8 +961,8 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
 	    if (!second_nd)
 	      continue;
 	    
-	    add_way(second_nd->first, *second_nd->second, radius,
-		    way_members, simple_segments);
+	    add_way(way_geometries.get_geometry(*second_nd->second), radius,
+                    radius_lat_lons, simple_lat_lons, simple_segments);
 	  }
         }
       }
@@ -1089,59 +1035,29 @@ bool Around_Statement::is_inside
   return false;
 }
 
-bool Around_Statement::is_inside
-    (const Way_Skeleton& way,
-     const vector< pair< Uint32_Index, const Node_Skeleton* > >& nodes_by_id) const
+
+bool Around_Statement::is_inside(const vector< Quad_Coord >& way_geometry) const
 {
-  vector< Node::Id_Type >::const_iterator nit = way.nds.begin();
-  if (nit == way.nds.end())
-    return false;
-  const pair< Uint32_Index, const Node_Skeleton* >* first_nd =
-      binary_search_for_pair_id(nodes_by_id, *nit);
-  if (!first_nd)
-  {
-    ostringstream out;
-    out<<"Node "<<nit->val()<<" not found in the database. This is a serious fault of the database.";
-    this->runtime_remark(out.str());
-    return true;
-  }
-  double first_lat(::lat(first_nd->first.val(), first_nd->second->ll_lower));
-  double first_lon(::lon(first_nd->first.val(), first_nd->second->ll_lower));
+  vector< Quad_Coord >::const_iterator nit = way_geometry.begin();
+  double first_lat(::lat(nit->ll_upper, nit->ll_lower));
+  double first_lon(::lon(nit->ll_upper, nit->ll_lower));
   
   // Pre-check if node is inside
   if (is_inside(first_lat, first_lon))
     return true;
-  for (vector< Node::Id_Type >::const_iterator it = nit; it != way.nds.end(); ++it)
+  for (vector< Quad_Coord >::const_iterator it = nit; it != way_geometry.end(); ++it)
   {
-    const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
-        binary_search_for_pair_id(nodes_by_id, *it);
-    if (!second_nd)
-    {
-      ostringstream out;
-      out<<"Node "<<nit->val()<<" not found in the database. This is a serious fault of the database.";
-      this->runtime_remark(out.str());
-      return true;
-    }
-    double second_lat(::lat(second_nd->first.val(), second_nd->second->ll_lower));
-    double second_lon(::lon(second_nd->first.val(), second_nd->second->ll_lower));
+    double second_lat(::lat(it->ll_upper, it->ll_lower));
+    double second_lon(::lon(it->ll_upper, it->ll_lower));
 
     if (is_inside(second_lat, second_lon))
       return true;
   }
   
-  for (++nit; nit != way.nds.end(); ++nit)
+  for (++nit; nit != way_geometry.end(); ++nit)
   {
-    const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
-        binary_search_for_pair_id(nodes_by_id, *nit);
-    if (!second_nd)
-    {
-      ostringstream out;
-      out<<"Node "<<nit->val()<<" not found in the database. This is a serious fault of the database.";
-      this->runtime_remark(out.str());
-      return true;
-    }
-    double second_lat(::lat(second_nd->first.val(), second_nd->second->ll_lower));
-    double second_lon(::lon(second_nd->first.val(), second_nd->second->ll_lower));
+    double second_lat(::lat(nit->ll_upper, nit->ll_lower));
+    double second_lon(::lon(nit->ll_upper, nit->ll_lower));
     
     if (is_inside(first_lat, first_lon, second_lat, second_lon))
       return true;
@@ -1151,6 +1067,7 @@ bool Around_Statement::is_inside
   }
   return false;
 }
+
 
 void Around_Statement::execute(Resource_Manager& rman)
 {

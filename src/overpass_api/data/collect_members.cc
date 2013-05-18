@@ -741,3 +741,28 @@ vector< Quad_Coord > make_geometry(const Way_Skeleton& way, const vector< Node >
   
   return result;
 }
+
+
+Way_Geometry_Store::Way_Geometry_Store
+    (const map< Uint31_Index, vector< Way_Skeleton > >& ways, const Statement& query, Resource_Manager& rman)
+{
+  // Retrieve all nodes referred by the ways.
+  map< Uint32_Index, vector< Node_Skeleton > > way_members_ = way_members(&query, rman, ways);
+  
+  // Order node ids by id.
+  vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id;
+  for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = way_members_.begin();
+      it != way_members_.end(); ++it)
+  {
+    for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      nodes.push_back(Node(iit->id, it->first.val(), iit->ll_lower));
+  }
+  sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
+}
+
+
+vector< Quad_Coord > Way_Geometry_Store::get_geometry(const Way_Skeleton& way)
+{
+  return make_geometry(way, nodes);
+}

@@ -181,25 +181,8 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   area->collect_nodes(into.nodes, area_blocks_req, true, rman);
   
   {
-    //Process ways
-  
-    // Retrieve all nodes referred by the ways.
-    map< Uint32_Index, vector< Node_Skeleton > > way_members_
-        = way_members(&query, rman, into.ways);
-  
-    // Order node ids by id.
-    vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id;
-    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = way_members_.begin();
-        it != way_members_.end(); ++it)
-    {
-      for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-        way_members_by_id.push_back(make_pair(it->first, &*iit));
-    }
-    Order_By_Node_Id order_by_node_id;
-    sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_node_id);
-    
-    area->collect_ways(into.ways, way_members_, area_blocks_req, true, rman);
+    //Process ways  
+    area->collect_ways(into.ways, area_blocks_req, true, query, rman);
   }
   {
     //Process relations
@@ -245,22 +228,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
         = relation_way_members(&query, rman, into.relations, &way_ranges);
   
     // Filter for those ways that are in one of the areas
-    // Retrieve all nodes referred by the ways.
-    map< Uint32_Index, vector< Node_Skeleton > > node_members_
-        = way_members(&query, rman, way_members_);
-
-    // Order node ids by id.
-    vector< pair< Uint32_Index, const Node_Skeleton* > > way_node_members_by_id;
-    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = node_members_.begin();
-        it != node_members_.end(); ++it)
-    {
-      for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-        way_node_members_by_id.push_back(make_pair(it->first, &*iit));
-    }
-    sort(way_node_members_by_id.begin(), way_node_members_by_id.end(), order_by_node_id);
-    
-    area->collect_ways(way_members_, node_members_, area_blocks_req, false, rman);
+    area->collect_ways(way_members_, area_blocks_req, false, query, rman);
     
     // Order way ids by id.
     vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id;
@@ -744,18 +712,10 @@ void has_inner_points(const Area_Block& string_a, const Area_Block& string_b, in
 
 void Area_Query_Statement::collect_ways
       (map< Uint31_Index, vector< Way_Skeleton > >& ways,
-       map< Uint32_Index, vector< Node_Skeleton > >& way_members_,
        const set< Uint31_Index >& req, bool add_border,
-       Resource_Manager& rman)
+       const Statement& query, Resource_Manager& rman)
 {
-  vector< Node > nodes;
-  for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator it = way_members_.begin();
-       it != way_members_.end(); ++it)
-  {
-    for (vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      nodes.push_back(Node(it2->id, it->first.val(), it2->ll_lower));
-  }
-  sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
+  Way_Geometry_Store way_geometries(ways, query, rman);
   
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
       (rman.get_area_transaction()->data_index(area_settings().AREA_BLOCKS));
@@ -768,7 +728,7 @@ void Area_Query_Statement::collect_ways
   for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
   {
     for (vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      add_way_to_area_blocks(make_geometry(*it2, nodes), it2->id.val(), way_segments);
+      add_way_to_area_blocks(way_geometries.get_geometry(*it2), it2->id.val(), way_segments);
   }
       
   map< uint32, vector< pair< uint32, Way::Id_Type > > > way_coords_to_id;
@@ -776,7 +736,7 @@ void Area_Query_Statement::collect_ways
   {
     for (vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
-      vector< Quad_Coord > coords = make_geometry(*it2, nodes);
+      vector< Quad_Coord > coords = way_geometries.get_geometry(*it2);
       for (vector< Quad_Coord >::const_iterator it3 = coords.begin(); it3 != coords.end(); ++it3)
         way_coords_to_id[it3->ll_upper].push_back(make_pair(it3->ll_lower, it2->id));
     }
