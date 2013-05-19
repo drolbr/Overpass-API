@@ -89,6 +89,10 @@ void add_way_to_area_blocks(const vector< Quad_Coord >& coords,
 vector< Quad_Coord > make_geometry(const Way_Skeleton& way, const vector< Node >& nodes);
 
 
+void filter_ways_by_ranges(map< Uint31_Index, vector< Way_Skeleton > >& ways,
+                           const set< pair< Uint31_Index, Uint31_Index > >& ranges);
+
+
 class Way_Geometry_Store
 {
 public:

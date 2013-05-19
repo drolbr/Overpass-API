@@ -743,6 +743,62 @@ vector< Quad_Coord > make_geometry(const Way_Skeleton& way, const vector< Node >
 }
 
 
+void filter_ways_by_ranges(map< Uint31_Index, vector< Way_Skeleton > >& ways,
+                           const set< pair< Uint31_Index, Uint31_Index > >& ranges)
+{
+  set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it = ranges.begin();
+  map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin();
+  set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_begin = ranges.begin();
+  for (; it != ways.end() && ranges_it != ranges.end(); )
+  {
+    if (!(it->first < ranges_it->second))
+      ++ranges_it;
+    else if (!(it->first < ranges_it->first))
+    {
+      if ((it->first.val() & 0x80000000) == 0 || (it->first.val() & 0x3) != 0)
+        ++it;
+      else
+      {
+        vector< Way_Skeleton > filtered_ways;
+        while (!(Uint31_Index(it->first.val() & 0x7fffff00) < ranges_begin->second))
+          ++ranges_begin;
+        for (vector< Way_Skeleton >::const_iterator it2 = it->second.begin();
+             it2 != it->second.end(); ++it2)
+        {
+          set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it2 = ranges_begin;
+          vector< Uint31_Index >::const_iterator it3 = it2->segment_idxs.begin();
+          for (; it3 != it2->segment_idxs.end() && ranges_it2 != ranges.end(); )
+          {
+            if (!(*it3 < ranges_it2->second))
+              ++ranges_it2;
+            else if (!(*it3 < ranges_it2->first))
+            {
+              // A relevant index is found; thus the way is relevant.
+              filtered_ways.push_back(*it2);
+              break;
+            }
+            else
+              ++it3;
+          }
+        }
+          
+        filtered_ways.swap(it->second);
+        ++it;
+      }
+    }
+    else
+    {
+      // The index of the way is not in the current set of ranges.
+      // Thus it cannot be in the result set.
+      it->second.clear();
+      ++it;
+    }
+  }
+  for (; it != ways.end(); ++it)
+    it->second.clear();  
+}
+
+
 Way_Geometry_Store::Way_Geometry_Store
     (const map< Uint31_Index, vector< Way_Skeleton > >& ways, const Statement& query, Resource_Manager& rman)
 {
