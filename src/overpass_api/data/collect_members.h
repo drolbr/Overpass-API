@@ -73,15 +73,6 @@ const map< uint32, string >& relation_member_roles(Transaction& transaction);
 uint32 determine_role_id(Transaction& transaction, const string& role);
 
 
-struct Quad_Coord
-{
-  Quad_Coord(uint32 ll_upper_, uint32 ll_lower_) : ll_upper(ll_upper_), ll_lower(ll_lower_) {}
-  
-  uint32 ll_upper;
-  uint32 ll_lower;
-};
-
-
 void add_way_to_area_blocks(const vector< Quad_Coord >& coords,
                             uint32 id, map< Uint31_Index, vector< Area_Block > >& areas);
 

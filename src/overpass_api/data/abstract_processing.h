@@ -214,6 +214,30 @@ void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
   }
 }
 
+
+template < class TIndex, class TObject, class TContainer, class TPredicate >
+void collect_items_discrete(Transaction& transaction,
+                   File_Properties& file_properties,
+                   const TContainer& req, const TPredicate& predicate,
+                   map< TIndex, vector< TObject > >& result)
+{
+  uint32 count = 0;
+  Block_Backend< TIndex, TObject, typename TContainer::const_iterator > db
+      (transaction.data_index(&file_properties));
+  for (typename Block_Backend< TIndex, TObject, typename TContainer
+      ::const_iterator >::Discrete_Iterator
+      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+  {
+    if (++count >= 64*1024)
+    {
+      count = 0;
+    }
+    if (predicate.match(it.object()))
+      result[it.index()].push_back(it.object());
+  }
+}
+
+
 template < class TIndex, class TObject, class TContainer, class TPredicate >
 void collect_items_range(const Statement* stmt, Resource_Manager& rman,
 		   File_Properties& file_properties,

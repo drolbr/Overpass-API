@@ -73,7 +73,8 @@ public:
       it->second.first = Way(skel.id.val());
     it->second.first.index = index.val();
     it->second.first.nds = skel.nds;
-    it->second.first.segment_idxs = skel.segment_idxs;
+//     it->second.first.segment_idxs = skel.segment_idxs;
+    it->second.first.geometry = skel.geometry;
 
     it = keep.find(skel.id);
     if (it != keep.end())
@@ -100,7 +101,8 @@ public:
       it->second.first = Way(skel.id.val());
     it->second.first.index = index.val();
     it->second.first.nds = skel.nds;
-    it->second.first.segment_idxs = skel.segment_idxs;
+//     it->second.first.segment_idxs = skel.segment_idxs;
+    it->second.first.geometry = skel.geometry;
   }
   
   void deletion(const Tag_Index_Local& index, const Uint32_Index& ref)

@@ -28,6 +28,8 @@
 #include "../../template_db/random_file.h"
 #include "../core/datatypes.h"
 #include "../core/settings.h"
+#include "../data/abstract_processing.h"
+#include "../data/collect_members.h"
 #include "meta_updater.h"
 #include "tags_updater.h"
 #include "way_updater.h"
@@ -278,23 +280,6 @@ void Way_Updater::update_moved_idxs
     delete transaction;
 }
 
-vector< Uint31_Index > calc_segment_idxs(const vector< uint32 >& nd_idxs)
-{
-  vector< Uint31_Index > result;
-  vector< uint32 > segment_nd_idxs(2, 0);
-  for (vector< uint32 >::size_type i = 1; i < nd_idxs.size(); ++i)
-  {
-    segment_nd_idxs[0] = nd_idxs[i-1];
-    segment_nd_idxs[1] = nd_idxs[i];
-    Uint31_Index segment_index = Way::calc_index(segment_nd_idxs);
-    if ((segment_index.val() & 0x80000000) != 0)
-      result.push_back(segment_index);
-  }
-  sort(result.begin(), result.end());
-  result.erase(unique(result.begin(), result.end()), result.end());
-  
-  return result;
-}
 
 void filter_affected_ways(Transaction& transaction, 
 			  vector< pair< Way::Id_Type, bool > >& ids_to_modify,
@@ -316,6 +301,48 @@ void filter_affected_ways(Transaction& transaction,
   for (map< Node::Id_Type, uint32 >::iterator it(used_nodes.begin());
       it != used_nodes.end(); ++it)
     it->second = node_random.get(it->first.val()).val();
+  
+  vector< Node::Id_Type > used_large_way_nodes;
+  vector< Uint32_Index > used_large_way_idxs;
+  
+  for (vector< Way >::const_iterator wit(maybe_affected_ways.begin());
+      wit != maybe_affected_ways.end(); ++wit)
+  {
+    vector< uint32 > nd_idxs;
+    for (vector< Node::Id_Type >::const_iterator nit = wit->nds.begin();
+        nit != wit->nds.end(); ++nit)
+      nd_idxs.push_back(used_nodes[*nit]);
+    
+    Uint31_Index index = Way::calc_index(nd_idxs);
+    if ((index.val() & 0x80000000) != 0 && (index.val() & 0x1) == 0) // Adapt 0x3
+    {
+      for (vector< Node::Id_Type >::const_iterator nit = wit->nds.begin();
+          nit != wit->nds.end(); ++nit)
+      {
+        used_large_way_nodes.push_back(*nit);
+        used_large_way_idxs.push_back(Uint32_Index(used_nodes[*nit]));
+      }
+    }
+  }
+  
+  // collect referred nodes
+  sort(used_large_way_nodes.begin(), used_large_way_nodes.end());
+  used_large_way_nodes.erase(unique(used_large_way_nodes.begin(), used_large_way_nodes.end()),
+      used_large_way_nodes.end());
+  sort(used_large_way_idxs.begin(), used_large_way_idxs.end());
+  used_large_way_idxs.erase(unique(used_large_way_idxs.begin(), used_large_way_idxs.end()),
+      used_large_way_idxs.end());
+  map< Uint31_Index, vector< Node_Skeleton > > large_way_nodes;
+  collect_items_discrete(transaction, *osm_base_settings().NODES, used_large_way_idxs,
+                        Id_Predicate< Node_Skeleton >(used_large_way_nodes), large_way_nodes);
+  map< Node::Id_Type, Quad_Coord > node_coords_by_id;
+  for (map< Uint31_Index, vector< Node_Skeleton > >::const_iterator it = large_way_nodes.begin();
+       it != large_way_nodes.end(); ++it)
+  {
+    for (vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      node_coords_by_id[it2->id] = Quad_Coord(it->first.val(), it2->ll_lower);
+  }
+  
   for (vector< Way >::const_iterator wit(maybe_affected_ways.begin());
       wit != maybe_affected_ways.end(); ++wit)
   {
@@ -326,16 +353,20 @@ void filter_affected_ways(Transaction& transaction,
     
     uint32 index(Way::calc_index(nd_idxs));
 
-    vector< Uint31_Index > segment_idxs;
-    if ((index & 0x80000000) != 0 && ((index & 0x3) == 0))
-      segment_idxs = calc_segment_idxs(nd_idxs);
+    vector< Quad_Coord > geometry;
+    if ((index & 0x80000000) != 0 && ((index & 0x1) == 0))
+    {
+      for (vector< Node::Id_Type >::const_iterator nit = wit->nds.begin();
+          nit != wit->nds.end(); ++nit)
+        geometry.push_back(node_coords_by_id[*nit]);
+    }
     
-    if (wit->index != index || wit->segment_idxs != segment_idxs || keep_all)
+    if (wit->index != index || wit->geometry != geometry || keep_all)
     {
       ids_to_modify.push_back(make_pair(wit->id, true));
       ways_to_insert.push_back(*wit);
       ways_to_insert.back().index = index;
-      ways_to_insert.back().segment_idxs = segment_idxs;
+      ways_to_insert.back().geometry = geometry;
     }
   }
 }
@@ -422,6 +453,9 @@ void Way_Updater::compute_indexes(vector< Way* >& ways_ptr)
       it != used_nodes.end(); ++it)
     it->second = node_random.get(it->first.val()).val();
 
+  vector< Node::Id_Type > used_large_way_nodes;
+  vector< Uint32_Index > used_large_way_idxs;
+  
   for (vector< Way* >::iterator wit = ways_ptr.begin(); wit != ways_ptr.end(); ++wit)
   {
     vector< uint32 > nd_idxs;
@@ -430,9 +464,50 @@ void Way_Updater::compute_indexes(vector< Way* >& ways_ptr)
       nd_idxs.push_back(used_nodes[*nit]);
     
     (*wit)->index = Way::calc_index(nd_idxs);
-    if (((*wit)->index & 0x80000000) != 0 && (((*wit)->index & 0x3) == 0))
-      (*wit)->segment_idxs = calc_segment_idxs(nd_idxs);
+    if (((*wit)->index & 0x80000000) != 0 && (((*wit)->index & 0x1) == 0)) // Adapt 0x3
+    {
+      for (vector< Node::Id_Type >::const_iterator nit = (*wit)->nds.begin();
+          nit != (*wit)->nds.end(); ++nit)
+      {
+        used_large_way_nodes.push_back(*nit);
+        used_large_way_idxs.push_back(Uint32_Index(used_nodes[*nit]));
+      }
+      
+      // old code
+      //(*wit)->segment_idxs = calc_segment_idxs(nd_idxs);      
+    }
   }
+  
+  // collect referred nodes
+  sort(used_large_way_nodes.begin(), used_large_way_nodes.end());
+  used_large_way_nodes.erase(unique(used_large_way_nodes.begin(), used_large_way_nodes.end()),
+      used_large_way_nodes.end());
+  sort(used_large_way_idxs.begin(), used_large_way_idxs.end());
+  used_large_way_idxs.erase(unique(used_large_way_idxs.begin(), used_large_way_idxs.end()),
+      used_large_way_idxs.end());
+  map< Uint31_Index, vector< Node_Skeleton > > large_way_nodes;
+  collect_items_discrete(*transaction, *osm_base_settings().NODES, used_large_way_idxs,
+                        Id_Predicate< Node_Skeleton >(used_large_way_nodes), large_way_nodes);
+  map< Node::Id_Type, Quad_Coord > node_coords_by_id;
+  for (map< Uint31_Index, vector< Node_Skeleton > >::const_iterator it = large_way_nodes.begin();
+       it != large_way_nodes.end(); ++it)
+  {
+    for (vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      node_coords_by_id[it2->id] = Quad_Coord(it->first.val(), it2->ll_lower);
+  }
+  
+  // calculate for all large ways their geometry
+  for (vector< Way* >::iterator wit = ways_ptr.begin(); wit != ways_ptr.end(); ++wit)
+  {
+    if (((*wit)->index & 0x80000000) != 0 && (((*wit)->index & 0x1) == 0))
+    {
+      for (vector< Node::Id_Type >::const_iterator nit = (*wit)->nds.begin();
+          nit != (*wit)->nds.end(); ++nit)
+        (*wit)->geometry.push_back(node_coords_by_id[*nit]);
+    }
+  }
+  
+  // Adapt meta data
   vector< Way* >::const_iterator wit = ways_ptr.begin();
   for (vector< pair< OSM_Element_Metadata_Skeleton< Way::Id_Type >, uint32 > >::iterator
       mit(ways_meta_to_insert.begin()); mit != ways_meta_to_insert.end(); ++mit)
@@ -499,7 +574,7 @@ void Way_Updater::update_members
     Uint31_Index idx(it->first);
     for (vector< Way::Id_Type >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
-      db_to_delete[idx].insert(Way_Skeleton(it2->val(), vector< Node::Id_Type >(), vector< Uint31_Index >()));
+      db_to_delete[idx].insert(Way_Skeleton(it2->val(), vector< Node::Id_Type >(), vector< Quad_Coord >()));
   }
   vector< Way* >::const_iterator wit = ways_ptr.begin();
   for (vector< pair< Way::Id_Type, bool > >::const_iterator it(ids_to_modify.begin());

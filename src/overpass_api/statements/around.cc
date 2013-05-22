@@ -828,7 +828,7 @@ void add_way(const vector< Quad_Coord >& way_geometry, double radius,
   double first_lat(::lat(nit->ll_upper, nit->ll_lower));
   double first_lon(::lon(nit->ll_upper, nit->ll_lower));
   
-  for (; nit != way_geometry.end(); ++nit)
+  for (++nit; nit != way_geometry.end(); ++nit)
   {
     double second_lat(::lat(nit->ll_upper, nit->ll_lower));
     double second_lon(::lon(nit->ll_upper, nit->ll_lower));
@@ -988,13 +988,11 @@ bool Around_Statement::is_inside
 bool Around_Statement::is_inside(const vector< Quad_Coord >& way_geometry) const
 {
   vector< Quad_Coord >::const_iterator nit = way_geometry.begin();
-  double first_lat(::lat(nit->ll_upper, nit->ll_lower));
-  double first_lon(::lon(nit->ll_upper, nit->ll_lower));
+  if (nit == way_geometry.end())
+    return false;
   
-  // Pre-check if node is inside
-  if (is_inside(first_lat, first_lon))
-    return true;
-  for (vector< Quad_Coord >::const_iterator it = nit; it != way_geometry.end(); ++it)
+  // Pre-check if a node is inside
+  for (vector< Quad_Coord >::const_iterator it = way_geometry.begin(); it != way_geometry.end(); ++it)
   {
     double second_lat(::lat(it->ll_upper, it->ll_lower));
     double second_lon(::lon(it->ll_upper, it->ll_lower));
@@ -1002,6 +1000,9 @@ bool Around_Statement::is_inside(const vector< Quad_Coord >& way_geometry) const
     if (is_inside(second_lat, second_lon))
       return true;
   }
+  
+  double first_lat(::lat(nit->ll_upper, nit->ll_lower));
+  double first_lon(::lon(nit->ll_upper, nit->ll_lower));
   
   for (++nit; nit != way_geometry.end(); ++nit)
   {
