@@ -1,4 +1,4 @@
-File_Error 0 /home/roland/osm3s/osm-3s_testing/run/test_dispatcher_1/./Test_File_1.bin.idx File_Blocks_Index: bad pos in index file
-File_Error 0 /home/roland/osm3s/osm-3s_testing/run/test_dispatcher_1/./Test_File_2.map.idx Random_File: bad pos in index file
-File_Error 0 /home/roland/osm3s/osm-3s_testing/run/test_dispatcher_1/./Test_File_3.bin.idx File_Blocks_Index: bad pos in index file
-File_Error 0 /home/roland/osm3s/osm-3s_testing/run/test_dispatcher_1/./Test_File_3.map.idx Random_File: bad pos in index file
+File_Error 0 Success /home/roland/osm3s/osm-3s_testing/run/test_dispatcher_1/./Test_File_1.bin.idx File_Blocks_Index: bad pos in index file
+File_Error 0 Success /home/roland/osm3s/osm-3s_testing/run/test_dispatcher_1/./Test_File_2.map.idx Random_File: bad pos in index file
+File_Error 0 Success /home/roland/osm3s/osm-3s_testing/run/test_dispatcher_1/./Test_File_3.bin.idx File_Blocks_Index: bad pos in index file
+File_Error 0 Success /home/roland/osm3s/osm-3s_testing/run/test_dispatcher_1/./Test_File_3.map.idx Random_File: bad pos in index file

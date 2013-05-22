@@ -276,7 +276,7 @@ void process_relations(string input, bool is_star = false, bool force_meta = fal
   cout<<"<query type=\"relation\">\n";
   if (analizer.bbox_found)
     print_bbox(analizer, "  ");
-  print_key_values(analizer, "    ");
+  print_key_values(analizer, "  ");
   print_meta(analizer, "  ");
   cout<<"</query>\n";
     
