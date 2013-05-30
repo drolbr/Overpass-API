@@ -261,9 +261,9 @@ string correspondence_item_template()
 
 string correspondence_below_template()
 {
-  return "<text x=\"0\" y=\"0\" transform=\"translate($hpos;,$vpos;)\""
+  return "<a xlink:href=\"/api/sketch-line?ref=$ref;&network=$network;&style=wuppertal\"><text x=\"0\" y=\"0\" transform=\"translate($hpos;,$vpos;)\""
   " font-family=\"Liberation Sans, sans-serif\" font-size=\"$stop_fontsize;px\""
-  " text-anchor=\"middle\" fill=\"$color;\">$ref;</text>\n"
+  " text-anchor=\"middle\" fill=\"$color;\">$ref;</text></a>\n"
   "\n";
 }
 
@@ -1025,6 +1025,7 @@ int main(int argc, char *argv[])
 	{
 	  result<<Replacer< string >("$ref;", cit->ref).apply
 	      (Replacer< string >("$color;", cit->color).apply
+		  (Replacer< string >("$network;", pivot_network).apply
 	      (Replacer< double >("$stop_fontsize;", stop_font_size).apply
 	      (Replacer< double >("$hpos;", pos).apply
 	      (Replacer< double >("$vpos;", vpos + stop_font_size*(i+1) + 20*offset_of[relations.size()] - 10).apply
@@ -1277,6 +1278,7 @@ int main(int argc, char *argv[])
 	{
 	  result<<Replacer< string >("$ref;", cit->ref).apply
 	  (Replacer< string >("$color;", cit->color).apply
+	  (Replacer< string >("$network;", pivot_network).apply
 	  (Replacer< double >("$stop_fontsize;", stop_font_size).apply
 	  (Replacer< double >("$hpos;", pos).apply
 	  (Replacer< double >("$vpos;", vpos + stop_font_size*(i+1) + 20*offset_of[relations.size()] - 10).apply
