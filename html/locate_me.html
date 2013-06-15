@@ -193,7 +193,64 @@
           target_div.appendChild(document.createElement("br"));
           target_div.appendChild(document.createElement("br"));
       }
-     
+    
+    
+    function getIdentificatorString(osm_element)
+    {
+        if (osm_element.tags)
+        {
+            if (osm_element.tags.name)
+                return osm_element.tags.name;
+            else if (osm_element.tags.operator)
+                return osm_element.tags.operator;
+        }
+            
+        return null;
+    }
+    
+    var nominatim_identfier = "email=overpass";
+
+    function getPostalAdress(osm_element)
+    {
+        if (osm_element.tags)
+        {
+            if (osm_element.tags["addr:street"] && osm_element.tags["addr:housenumber"])
+                return osm_element.tags["addr:street"] + " "
+                    + osm_element.tags["addr:housenumber"];
+            else if (osm_element.type && osm_element.id)
+            {
+                var type_letter = (osm_element.type == "node" ? "N"
+                    : (osm_element.type == "way" ? "W" : "R"));
+                var nominatim_req = OpenLayers.Request.GET({
+                    url: "http://nominatim.openstreetmap.org/reverse?"
+                        + nominatim_identfier + "&format=json"
+                        + "&osm_type=" + type_letter + "&osm_id=" + osm_element.id,
+                    async: false
+                });
+                var nominatim_result = JSON.parse(nominatim_req.responseText);
+                
+                var nominatim_road = "";
+                if (nominatim_result.address && nominatim_result.address.road)
+                    nominatim_road = nominatim_result.address.road;
+                else if (nominatim_result.address && nominatim_result.address.pedestrian)
+                    nominatim_road = nominatim_result.address.pedestrian;
+                else if (nominatim_result.address && nominatim_result.address.footway)
+                    nominatim_road = nominatim_result.address.footway;
+                else if (nominatim_result.address && nominatim_result.address.cycleway)
+                    nominatim_road = nominatim_result.address.cycleway;
+                else if (nominatim_result.address && nominatim_result.address.path)
+                    nominatim_road = nominatim_result.address.path;
+                    
+                var nominatim_house_number = "";
+                if (nominatim_result.address && nominatim_result.address.house_number)
+                    nominatim_house_number = nominatim_result.address.house_number;
+                    
+                return nominatim_road + " " + nominatim_house_number;
+            }
+        }
+    }
+
+    
      Click = OpenLayers.Class(OpenLayers.Control, {
 	
         genericUrl: "",
@@ -259,65 +316,26 @@
           
             if (result.elements[i].tags)
             {
-              if (result.elements[i].tags.name)
+              identificator = getIdentificatorString(result.elements[i]);
+              if (identificator)
               {
                 name_detected = true;
                 var newElem = document.createElement("strong");
-                newElem.appendChild(document.createTextNode(result.elements[i].tags.name));
+                newElem.appendChild(document.createTextNode(identificator));
                 target_div.appendChild(newElem);
                 target_div.appendChild(document.createElement("br"));
               }
-              else if (result.elements[i].tags.operator)
-              {
-                name_detected = true;
-                var newElem = document.createElement("strong");
-                newElem.appendChild(document.createTextNode(result.elements[i].tags.operator));
-                target_div.appendChild(newElem);
-                target_div.appendChild(document.createElement("br"));
-              }
-              if (result.elements[i].tags["addr:street"] && result.elements[i].tags["addr:housenumber"])
+              
+              address = getPostalAdress(result.elements[i]);
+              if (address)
               {
                 address_detected = true;
                 var newElem = document.createElement("em");
-                newElem.appendChild(document.createTextNode(
-                    result.elements[i].tags["addr:street"] + " "
-                    + result.elements[i].tags["addr:housenumber"]));
+                newElem.appendChild(document.createTextNode(address));
                 target_div.appendChild(newElem);
                 target_div.appendChild(document.createElement("br"));
               }
-              else if (result.elements[i].type && result.elements[i].id)
-              {
-                var type_letter = (result.elements[i].type == "node" ? "N"
-                    : (result.elements[i].type == "way" ? "W" : "R"));
-                var nominatim_req = OpenLayers.Request.GET({
-                    url: "http://nominatim.openstreetmap.org/reverse?email=overpass&format=json&osm_type=" + type_letter + "&osm_id=" + result.elements[i].id,
-                    async: false
-                });
-                var nominatim_result = JSON.parse(nominatim_req.responseText);
-                
-                var nominatim_road = "";
-                if (nominatim_result.address && nominatim_result.address.road)
-                    nominatim_road = nominatim_result.address.road;
-                else if (nominatim_result.address && nominatim_result.address.pedestrian)
-                    nominatim_road = nominatim_result.address.pedestrian;
-                else if (nominatim_result.address && nominatim_result.address.footway)
-                    nominatim_road = nominatim_result.address.footway;
-                else if (nominatim_result.address && nominatim_result.address.cycleway)
-                    nominatim_road = nominatim_result.address.cycleway;
-                else if (nominatim_result.address && nominatim_result.address.path)
-                    nominatim_road = nominatim_result.address.path;
-                    
-                var nominatim_house_number = "";
-                if (nominatim_result.address && nominatim_result.address.house_number)
-                    nominatim_house_number = nominatim_result.address.house_number;
-
-                address_detected = true;
-                var newElem = document.createElement("em");
-                newElem.appendChild(document.createTextNode(nominatim_road + " " + nominatim_house_number));
-                target_div.appendChild(newElem);
-                target_div.appendChild(document.createElement("br"));
-              }
-
+              
               if (!name_detected || !address_detected)
               {
                   for (var key in result.elements[i].tags)
@@ -353,13 +371,14 @@
               displayProjection: new OpenLayers.Projection("EPSG:4326")
           } );
 
-          layerMapnik = /*new OpenLayers.Layer.OSM.Mapnik("Mapnik");*/
-              new OpenLayers.Layer.OSM("OSM_de",
+          layerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
+          map.addLayer(layerMapnik);
+          layerDe = new OpenLayers.Layer.OSM("OSM_de",
               ["http://a.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png",
                "http://b.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png",
                "http://c.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png",
                "http://d.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png"]);
-          map.addLayer(layerMapnik);
+          map.addLayer(layerDe);
           layerCycleMap = new OpenLayers.Layer.OSM.CycleMap("CycleMap");
           map.addLayer(layerCycleMap);
 
