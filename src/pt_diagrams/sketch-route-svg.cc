@@ -1025,11 +1025,11 @@ int main(int argc, char *argv[])
 	{
 	  result<<Replacer< string >("$ref;", cit->ref).apply
 	      (Replacer< string >("$color;", cit->color).apply
-		  (Replacer< string >("$network;", pivot_network).apply
+              (Replacer< string >("$network;", pivot_network).apply
 	      (Replacer< double >("$stop_fontsize;", stop_font_size).apply
 	      (Replacer< double >("$hpos;", pos).apply
-	      (Replacer< double >("$vpos;", vpos + stop_font_size*(i+1) + 20*offset_of[relations.size()] - 10).apply
-	      (correspondence_below_template())))));
+	      (Replacer< double >("$vpos;", vpos + stop_font_size*(i+1) + 20*offset_of[relations.size()] - 10)
+                  .apply(correspondence_below_template()))))));
 	  ++i;
 	}
       }
@@ -1281,8 +1281,8 @@ int main(int argc, char *argv[])
 	  (Replacer< string >("$network;", pivot_network).apply
 	  (Replacer< double >("$stop_fontsize;", stop_font_size).apply
 	  (Replacer< double >("$hpos;", pos).apply
-	  (Replacer< double >("$vpos;", vpos + stop_font_size*(i+1) + 20*offset_of[relations.size()] - 10).apply
-	  (correspondence_below_template())))));
+	  (Replacer< double >("$vpos;", vpos + stop_font_size*(i+1) + 20*offset_of[relations.size()] - 10)
+              .apply(correspondence_below_template()))))));
 	  ++i;
 	}
       }
