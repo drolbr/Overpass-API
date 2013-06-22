@@ -30,7 +30,7 @@ for KEY_VAL in $QUERY_STRING; do
   if [[ ${KEY_VAL:0:3} == "id=" ]]; then
     ID="${KEY_VAL:3}"
   elif [[ ${KEY_VAL:0:5} == "bbox=" ]]; then
-    BBOX="${KEY_VAL:5}"
+    BBOX=`echo "${KEY_VAL:5}" | $EXECBASE/bin/uncgi`
   elif [[ ${KEY_VAL:0:7} == "info=no" ]]; then
     INFO="--noinfo"
   fi
@@ -41,6 +41,17 @@ echo "Content-Type: application/osm3s+xml"
 echo "Content-Encoding: gzip"
 echo 'Access-Control-Allow-Origin: *'
 echo
+
+while [[ -a /tmp/augmented_diff ]]; do
+{
+  PID=`cat /tmp/augmented_diff`
+  if [[ -a /proc/$PID ]]; then
+    sleep 1
+  else
+    rm -f /tmp/augmented_diff
+  fi
+}; done
+cat $$ >/tmp/augmented_diff
 
 printf -v TDIGIT3 %03u $(($ID % 1000))
 ARG=$(($ID / 1000))
@@ -61,3 +72,5 @@ else
 {
   gunzip </var/www/augmented_diffs/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz | $EXECBASE/bin/process_augmented_diffs --bbox=$BBOX $INFO | gzip
 }; fi
+
+rm -f /tmp/augmented_diff
