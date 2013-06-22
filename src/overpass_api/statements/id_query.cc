@@ -38,7 +38,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
   set< TIndex > req;
   {
     Random_File< TIndex > random(rman.get_transaction()->random_index(&prop));
-    for (Uint64 i = lower; !(upper < i); ++i)
+    for (Uint64 i = lower; i < upper; ++i)
       req.insert(random.get(i.val()));
   }    
   Block_Backend< TIndex, TObject > elems_db(rman.get_transaction()->data_index(&prop));
@@ -46,7 +46,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
       it(elems_db.discrete_begin(req.begin(), req.end()));
       !(it == elems_db.discrete_end()); ++it)
   {
-    if (it.object().id.val() >= lower.val() && it.object().id.val() <= upper.val())
+    if (it.object().id.val() >= lower.val() && it.object().id.val() < upper.val())
       elems[it.index()].push_back(it.object());
   }
 }
@@ -61,7 +61,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
   set< TIndex > req;
   {
     Random_File< TIndex > random(rman.get_transaction()->random_index(&prop));
-    for (typename TObject::Id_Type i = lower.val(); !(upper.val() < i.val()); ++i)
+    for (typename TObject::Id_Type i = lower.val(); i.val() < upper.val(); ++i)
     {
       if (binary_search(ids.begin(), ids.end(), i) ^ invert_ids)
         req.insert(random.get(i.val()));
@@ -72,7 +72,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
       it(elems_db.discrete_begin(req.begin(), req.end()));
       !(it == elems_db.discrete_end()); ++it)
   {
-    if (!(it.object().id.val() < lower.val()) && !(upper.val() < it.object().id.val())
+    if (!(it.object().id.val() < lower.val()) && it.object().id.val() < upper.val()
         && (binary_search(ids.begin(), ids.end(), it.object().id) ^ invert_ids))
       elems[it.index()].push_back(it.object());
   }
@@ -89,7 +89,7 @@ void collect_elems_flat(Resource_Manager& rman,
   for (Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
       it = elems_db.flat_begin(); !(it == elems_db.flat_end()); ++it)
   {
-    if (!(it.object().id < lower) && !(upper < it.object().id)
+    if (!(it.object().id < lower) && it.object().id < upper
         && (binary_search(ids.begin(), ids.end(), it.object().id) ^ invert_ids))
       elems[it.index()].push_back(it.object());
   }
@@ -107,7 +107,7 @@ void filter_elems(Uint64 lower, Uint64 upper,
     for (typename vector< TObject >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
-      if (iit->id.val() >= lower.val() && iit->id.val() <= upper.val())
+      if (iit->id.val() >= lower.val() && iit->id.val() < upper.val())
 	local_into.push_back(*iit);
     }
     it->second.swap(local_into);
@@ -257,18 +257,19 @@ Id_Query_Statement::Id_Query_Statement
   upper = atoll(attributes["upper"].c_str());
   if (ref.val() <= 0)
   {
-    if (lower.val() == 0 || upper.val() == 0)
+    if (lower.val() == 0 || upper.val() == 1)
     {
       ostringstream temp;
       temp<<"For the attribute \"ref\" of the element \"id-query\""
 	  <<" the only allowed values are positive integers.";
       add_static_error(temp.str());
     }
+    ++upper;
   }
   else
   {
     lower = ref;
-    upper = ref;
+    upper = ++ref;
   }
 }
 
