@@ -22,6 +22,7 @@
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
 #include "pivot.h"
+#include "query.h"
 
 using namespace std;
 
@@ -175,6 +176,7 @@ bool Pivot_Constraint::get_data
      const set< pair< Uint31_Index, Uint31_Index > >& ranges,
      int type, const vector< Uint32_Index >& ids, bool invert_ids)
 {
+  if (type == QUERY_WAY)
   {
     vector< Way::Id_Type > pivot_ids = get_way_pivot_ids(rman.sets()[stmt->get_input()].areas);
     vector< Way::Id_Type > intersect_ids(pivot_ids.size());
@@ -192,6 +194,7 @@ bool Pivot_Constraint::get_data
           intersect_ids.begin()), intersect_ids.end());
     collect_elems(rman, *osm_base_settings().WAYS, intersect_ids, into.ways);
   }
+  else if (type == QUERY_RELATION)
   {
     vector< Relation::Id_Type > pivot_ids = get_relation_pivot_ids(rman.sets()[stmt->get_input()].areas);
     vector< Relation::Id_Type > intersect_ids(pivot_ids.size());
