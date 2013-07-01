@@ -56,6 +56,8 @@ string cgi_get_to_text()
     return getenv("QUERY_STRING");
   if ((method) && (!strncmp(method, "OPTIONS", 8)))
     return getenv("QUERY_STRING");
+  if ((method) && (!strncmp(method, "HEAD", 5)))
+    return getenv("QUERY_STRING");
   
   return "";
 }

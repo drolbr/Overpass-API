@@ -23,12 +23,13 @@
 #include <string>
 
 #include "../core/datatypes.h"
+#include "web_output.h"
 
 using namespace std;
 
 string get_xml_cgi(Error_Output* error_output, uint32 max_input_size,
 		   string& url, bool& redirect, string& template_name,
-		   bool& is_options, string& allow_header, bool& has_origin);
+		   Web_Output::Http_Methods& http_method, string& allow_header, bool& has_origin);
 
 string get_xml_console(Error_Output* error_output, uint32 max_input_size = 1048576);
 
