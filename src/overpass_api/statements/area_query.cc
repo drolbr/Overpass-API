@@ -131,7 +131,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   
   {
     //Process ways  
-    area->collect_ways(into.ways, area_blocks_req, true, query, rman);
+    area->collect_ways(into.ways, area_blocks_req, false, query, rman);
   }
   {
     //Process relations
