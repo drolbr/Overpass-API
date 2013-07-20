@@ -2308,6 +2308,54 @@ struct Accept_Union_6 : public Accept_All_Tags
     uint pattern_size;
 };
 
+struct Accept_Difference_1 : public Accept_All_Tags
+{
+  Accept_Difference_1(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Difference_2 : public Accept_All_Tags
+{
+  Accept_Difference_2(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return (id == 2); }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Difference_4 : public Accept_All_Tags
+{
+  Accept_Difference_4(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return (id == 1 || id == 4); }
+  virtual bool admit_relation(uint id) const { return (id == 1 || id == 4); }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Difference_5 : public Accept_All_Tags
+{
+  Accept_Difference_5(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return (id == 1 || id == 4); }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
 struct Accept_Polygon_1 : public Accept_All_Tags
 {
   Accept_Polygon_1(uint pattern_size_) : pattern_size(pattern_size_) {}
@@ -3170,6 +3218,16 @@ int main(int argc, char* args[])
       modifier = new Accept_Union_5(pattern_size);
     else if (string(args[2]) == "union_6")
       modifier = new Accept_Union_6(pattern_size);
+    else if (string(args[2]) == "difference_1")
+      modifier = new Accept_Difference_1(pattern_size);
+    else if (string(args[2]) == "difference_2")
+      modifier = new Accept_Difference_2(pattern_size);
+    else if (string(args[2]) == "difference_3")
+      modifier = new Accept_Difference_1(pattern_size);
+    else if (string(args[2]) == "difference_4")
+      modifier = new Accept_Difference_4(pattern_size);
+    else if (string(args[2]) == "difference_5")
+      modifier = new Accept_Difference_5(pattern_size);
     else if (string(args[2]) == "around_1")
       modifier = new Accept_Around_1(pattern_size, 20.01);
     else if (string(args[2]) == "around_2")

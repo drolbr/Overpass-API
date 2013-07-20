@@ -336,4 +336,22 @@ void indexed_set_union(map< TIndex, vector< TObject > >& result,
   }
 }
 
+//-----------------------------------------------------------------------------
+
+template< class TIndex, class TObject >
+void indexed_set_difference(map< TIndex, vector< TObject > >& result,
+                            map< TIndex, vector< TObject > >& to_substract)
+{
+  for (typename map< TIndex, vector< TObject > >::iterator
+      it = to_substract.begin(); it != to_substract.end(); ++it)
+  {
+    sort(it->second.begin(), it->second.end());
+    vector< TObject > other;
+    other.swap(result[it->first]);
+    sort(other.begin(), other.end());
+    set_difference(other.begin(), other.end(), it->second.begin(), it->second.end(),
+                   back_inserter(result[it->first]));
+  }
+}
+
 #endif
