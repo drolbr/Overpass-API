@@ -26,13 +26,11 @@
 
 using namespace std;
 
-class Pivot_Statement : public Statement
+class Pivot_Statement : public Output_Statement
 {
   public:
     Pivot_Statement(int line_number_, const map< string, string >& attributes);
     virtual string get_name() const { return "pivot"; }
-    virtual string get_result_name() const { return output; }
-    virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     virtual ~Pivot_Statement();
     
@@ -43,7 +41,6 @@ class Pivot_Statement : public Statement
   
   private:
     string input;
-    string output;
     vector< Query_Constraint* > constraints;
 };
 

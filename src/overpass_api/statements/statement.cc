@@ -148,3 +148,17 @@ map< string, string > convert_c_pairs(const char** attr)
     result[attr[i]] = attr[i+1];
   return result;
 }
+
+
+void Output_Statement::transfer_output(Resource_Manager& rman, Set& into) const
+{
+  rman.sets()[output].nodes.swap(into.nodes);
+  rman.sets()[output].ways.swap(into.ways);
+  rman.sets()[output].relations.swap(into.relations);
+  rman.sets()[output].areas.swap(into.areas);
+  
+  into.nodes.clear();
+  into.ways.clear();
+  into.relations.clear();
+  into.areas.clear();
+}

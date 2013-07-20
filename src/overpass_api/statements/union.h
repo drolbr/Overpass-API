@@ -25,8 +25,6 @@
 
 #include "statement.h"
 
-using namespace std;
-
 class Union_Statement : public Statement
 {
   public:
@@ -34,7 +32,6 @@ class Union_Statement : public Statement
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "union"; }
     virtual string get_result_name() const { return output; }
-    virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     virtual ~Union_Statement() {}
     
@@ -44,5 +41,6 @@ class Union_Statement : public Statement
     string output;
     vector< Statement* > substatements;
 };
+
 
 #endif

@@ -54,9 +54,6 @@ void Union_Statement::add_statement(Statement* statement, string text)
     substatement_error(get_name(), statement);
 }
 
-void Union_Statement::forecast()
-{
-}
 
 void Union_Statement::execute(Resource_Manager& rman)
 {

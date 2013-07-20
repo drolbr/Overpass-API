@@ -117,7 +117,6 @@ Newer_Statement::~Newer_Statement()
     delete *it;
 }
 
-void Newer_Statement::forecast() {}
 
 void Newer_Statement::execute(Resource_Manager& rman) {}
 

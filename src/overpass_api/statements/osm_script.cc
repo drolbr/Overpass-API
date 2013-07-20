@@ -115,9 +115,6 @@ void Osm_Script_Statement::add_statement(Statement* statement, string text)
   substatements.push_back(statement);
 }
 
-void Osm_Script_Statement::forecast()
-{
-}
 
 bool set_output_templates
     (Output_Handle& output, string& header, const string& name, Transaction& transaction)

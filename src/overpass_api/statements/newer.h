@@ -33,7 +33,6 @@ class Newer_Statement : public Statement
     Newer_Statement(int line_number_, const map< string, string >& input_attributes);
     virtual string get_name() const { return "newer"; }
     virtual string get_result_name() const { return ""; }
-    virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     virtual ~Newer_Statement();
     

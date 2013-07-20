@@ -102,9 +102,6 @@ Print_Statement::Print_Statement
 }
 
 
-void Print_Statement::forecast() {}
-
-
 template< class Id_Type >
 void collect_tags
   (map< Id_Type, vector< pair< string, string > > >& tags_by_id,

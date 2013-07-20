@@ -71,7 +71,6 @@ class Print_Statement : public Statement
     Print_Statement(int line_number_, const map< string, string >& attributes);
     virtual string get_name() const { return "print"; }
     virtual string get_result_name() const { return ""; }
-    virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     virtual ~Print_Statement();
 

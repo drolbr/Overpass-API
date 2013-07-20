@@ -26,16 +26,13 @@
 
 using namespace std;
 
-class Area_Query_Statement : public Statement
+class Area_Query_Statement : public Output_Statement
 {
   public:
     Area_Query_Statement(int line_number_, const map< string, string >& attributes);
     virtual string get_name() const { return "area-query"; }
-    virtual string get_result_name() const { return output; }
-    virtual void forecast();
     virtual void execute(Resource_Manager& rman);
-    virtual ~Area_Query_Statement();
-    
+    virtual ~Area_Query_Statement();    
     static Generic_Statement_Maker< Area_Query_Statement > statement_maker;
     
     virtual Query_Constraint* get_query_constraint();
@@ -75,7 +72,6 @@ class Area_Query_Statement : public Statement
   
   private:
     string input;
-    string output;
     long long submitted_id;
     vector< Area_Skeleton::Id_Type > area_id;    
     static bool is_used_;

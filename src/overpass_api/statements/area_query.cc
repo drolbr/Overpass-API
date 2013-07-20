@@ -239,7 +239,7 @@ Generic_Statement_Maker< Area_Query_Statement > Area_Query_Statement::statement_
 
 Area_Query_Statement::Area_Query_Statement
     (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_)
+    : Output_Statement(line_number_)
 {
   is_used_ = true;
 
@@ -252,7 +252,7 @@ Area_Query_Statement::Area_Query_Statement
   eval_attributes_array(get_name(), attributes, input_attributes);
   
   input = attributes["from"];
-  output = attributes["into"];
+  set_output(attributes["into"]);
   submitted_id = atoll(attributes["ref"].c_str());
   if (submitted_id <= 0 && attributes["ref"] != "")
   {
@@ -270,10 +270,6 @@ Area_Query_Statement::~Area_Query_Statement()
   for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
       it != constraints.end(); ++it)
     delete *it;
-}
-
-void Area_Query_Statement::forecast()
-{
 }
 
 
@@ -824,13 +820,9 @@ void collect_nodes_from_req
     nodes[it.index()].push_back(it.object());    
 }
 
+
 void Area_Query_Statement::execute(Resource_Manager& rman)
 {
-  map< Uint32_Index, vector< Node_Skeleton > > nodes;
-  map< Uint31_Index, vector< Way_Skeleton > > ways;
-  map< Uint31_Index, vector< Relation_Skeleton > > relations;
-  map< Uint31_Index, vector< Area_Skeleton > > areas;
-  
   set< Uint31_Index > req;
   
   set< pair< Uint32_Index, Uint32_Index > > nodes_req;
@@ -838,17 +830,15 @@ void Area_Query_Statement::execute(Resource_Manager& rman)
     get_ranges(rman.sets()[input].areas, nodes_req, req, rman);
   else
     get_ranges(nodes_req, req, rman);
-  collect_nodes_from_req(nodes_req, nodes, rman);
   
-  collect_nodes(nodes, req, true, rman);
-  
-  nodes.swap(rman.sets()[output].nodes);
-  ways.swap(rman.sets()[output].ways);
-  relations.swap(rman.sets()[output].relations);
-  areas.swap(rman.sets()[output].areas);
-  
+  Set into;
+  collect_nodes_from_req(nodes_req, into.nodes, rman);
+  collect_nodes(into.nodes, req, true, rman);
+
+  transfer_output(rman, into);
   rman.health_check(*this);
 }
+
 
 Query_Constraint* Area_Query_Statement::get_query_constraint()
 {

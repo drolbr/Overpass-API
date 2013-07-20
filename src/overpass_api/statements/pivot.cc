@@ -228,7 +228,7 @@ void Pivot_Constraint::filter(Resource_Manager& rman, Set& into)
 
 Pivot_Statement::Pivot_Statement
     (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_)
+    : Output_Statement(line_number_)
 {
   map< string, string > attributes;
   
@@ -238,37 +238,20 @@ Pivot_Statement::Pivot_Statement
   Statement::eval_attributes_array(get_name(), attributes, input_attributes);
   
   input = attributes["from"];
-  output = attributes["into"];  
-}
-
-
-void Pivot_Statement::forecast()
-{
+  set_output(attributes["into"]);
 }
 
 
 void Pivot_Statement::execute(Resource_Manager& rman)
 {
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes
-      (rman.sets()[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways
-      (rman.sets()[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations
-      (rman.sets()[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas
-      (rman.sets()[output].areas);
-  
-  nodes.clear();
-  ways.clear();
-  relations.clear();
+  Set into;
 
-  collect_elems(rman, *osm_base_settings().NODES, get_node_pivot_ids(rman.sets()[input].areas), nodes);
-  collect_elems(rman, *osm_base_settings().WAYS, get_way_pivot_ids(rman.sets()[input].areas), ways);
+  collect_elems(rman, *osm_base_settings().NODES, get_node_pivot_ids(rman.sets()[input].areas), into.nodes);
+  collect_elems(rman, *osm_base_settings().WAYS, get_way_pivot_ids(rman.sets()[input].areas), into.ways);
   collect_elems(rman, *osm_base_settings().RELATIONS,
-                get_relation_pivot_ids(rman.sets()[input].areas), relations);
-  
-  areas.clear();
+                get_relation_pivot_ids(rman.sets()[input].areas), into.relations);
 
+  transfer_output(rman, into);
   rman.health_check(*this);
 }
 

@@ -38,7 +38,7 @@ Generic_Statement_Maker< Query_Statement > Query_Statement::statement_maker("que
 
 Query_Statement::Query_Statement
     (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_)
+    : Output_Statement(line_number_)
 {
   map< string, string > attributes;
   
@@ -47,7 +47,7 @@ Query_Statement::Query_Statement
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
-  output = attributes["into"];
+  set_output(attributes["into"]);
   if (attributes["type"] == "node")
     type = QUERY_NODE;
   else if (attributes["type"] == "way")
@@ -106,9 +106,6 @@ void Query_Statement::add_statement(Statement* statement, string text)
     substatement_error(get_name(), statement);
 }
 
-void Query_Statement::forecast()
-{
-}
 
 set< Tag_Index_Global > get_kv_req(const string& key, const string& value)
 {
@@ -938,12 +935,8 @@ void Query_Statement::execute(Resource_Manager& rman)
   clear_empty_indices(into.ways);
   clear_empty_indices(into.relations);
   clear_empty_indices(into.areas);
-  
-  into.nodes.swap(rman.sets()[output].nodes);
-  into.ways.swap(rman.sets()[output].ways);
-  into.relations.swap(rman.sets()[output].relations);
-  into.areas.swap(rman.sets()[output].areas);
-  
+
+  transfer_output(rman, into);
   rman.health_check(*this);
 }
 
@@ -1022,9 +1015,4 @@ Has_Kv_Statement::~Has_Kv_Statement()
 {
   if (regex)
     delete regex;
-}
-
-void Has_Kv_Statement::forecast()
-{
-  // will never be called
 }

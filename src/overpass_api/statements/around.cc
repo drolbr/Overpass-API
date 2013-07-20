@@ -556,7 +556,7 @@ Generic_Statement_Maker< Around_Statement > Around_Statement::statement_maker("a
 
 Around_Statement::Around_Statement
     (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_), lat(100.0), lon(200.0)
+    : Output_Statement(line_number_), lat(100.0), lon(200.0)
 {
   map< string, string > attributes;
   
@@ -569,7 +569,7 @@ Around_Statement::Around_Statement
   eval_attributes_array(get_name(), attributes, input_attributes);
   
   input = attributes["from"];
-  output = attributes["into"];
+  set_output(attributes["into"]);
   
   radius = atof(attributes["radius"].c_str());
   if ((radius < 0.0) || (attributes["radius"] == ""))
@@ -919,9 +919,6 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
   }  
 }
 
-void Around_Statement::forecast()
-{
-}
 
 bool Around_Statement::is_inside(double lat, double lon) const
 {
@@ -1024,14 +1021,7 @@ void Around_Statement::execute(Resource_Manager& rman)
   set< pair< Uint32_Index, Uint32_Index > > req = calc_ranges(rman.sets()[input], rman);  
   calc_lat_lons(rman.sets()[input], *this, rman);
 
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes
-      (rman.sets()[output].nodes);
-      
-  nodes.clear();
-  rman.sets()[output].ways.clear();
-  rman.sets()[output].relations.clear();
-  rman.sets()[output].areas.clear();
-
+  Set into;
   uint nodes_count = 0;
   
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
@@ -1051,11 +1041,13 @@ void Around_Statement::execute(Resource_Manager& rman)
     double lat(::lat(it.index().val(), it.object().ll_lower));
     double lon(::lon(it.index().val(), it.object().ll_lower));
     if (is_inside(lat, lon))
-      nodes[it.index()].push_back(it.object());
+      into.nodes[it.index()].push_back(it.object());
   }
 
+  transfer_output(rman, into);
   rman.health_check(*this);
 }
+
 
 Query_Constraint* Around_Statement::get_query_constraint()
 {

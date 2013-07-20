@@ -218,7 +218,7 @@ void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into)
 
 Id_Query_Statement::Id_Query_Statement
     (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_)
+    : Output_Statement(line_number_)
 {
   map< string, string > attributes;
   
@@ -230,7 +230,7 @@ Id_Query_Statement::Id_Query_Statement
   
   Statement::eval_attributes_array(get_name(), attributes, input_attributes);
   
-  output = attributes["into"];
+  set_output(attributes["into"]);
   
   if (attributes["type"] == "node")
     type = Statement::NODE;
@@ -273,35 +273,21 @@ Id_Query_Statement::Id_Query_Statement
   }
 }
 
-void Id_Query_Statement::forecast()
-{
-}
 
 void Id_Query_Statement::execute(Resource_Manager& rman)
 {
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes
-      (rman.sets()[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways
-      (rman.sets()[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations
-      (rman.sets()[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas
-      (rman.sets()[output].areas);
-  
-  nodes.clear();
-  ways.clear();
-  relations.clear();
-  areas.clear();
+  Set into;
 
   if (type == NODE)
-    collect_elems(rman, *osm_base_settings().NODES, lower, upper, nodes);
+    collect_elems(rman, *osm_base_settings().NODES, lower, upper, into.nodes);
   else if (type == WAY)
-    collect_elems(rman, *osm_base_settings().WAYS, lower, upper, ways);
+    collect_elems(rman, *osm_base_settings().WAYS, lower, upper, into.ways);
   else if (type == RELATION)
-    collect_elems(rman, *osm_base_settings().RELATIONS, lower, upper, relations);
+    collect_elems(rman, *osm_base_settings().RELATIONS, lower, upper, into.relations);
   else if (type == AREA)
-    collect_elems_flat(rman, lower.val(), upper.val(), vector< Area_Skeleton::Id_Type >(), true, areas);
+    collect_elems_flat(rman, lower.val(), upper.val(), vector< Area_Skeleton::Id_Type >(), true, into.areas);
 
+  transfer_output(rman, into);
   rman.health_check(*this);
 }
 

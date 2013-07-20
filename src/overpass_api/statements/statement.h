@@ -100,7 +100,6 @@ class Statement
     virtual void add_final_text(string text);
     virtual string get_name() const = 0;
     virtual string get_result_name() const = 0;
-    virtual void forecast() = 0;
     virtual void execute(Resource_Manager& rman) = 0;
 
     // May return 0. The ownership of the Query_Constraint remains at the called
@@ -168,5 +167,23 @@ class Generic_Statement_Maker : public Statement::Statement_Maker
     Generic_Statement_Maker(const string& name) { Statement::maker_by_name()[name] = this; }
     virtual ~Generic_Statement_Maker() {}
 };
+
+
+class Output_Statement : public Statement
+{
+  public:
+    Output_Statement(int line_number) : Statement(line_number), output("_") {}
+    
+    virtual string get_result_name() const { return output; }
+    
+  protected:
+    void set_output(std::string output_) { output = output_; }
+
+    void transfer_output(Resource_Manager& rman, Set& into) const;
+  
+  private:
+    string output;
+};
+
 
 #endif

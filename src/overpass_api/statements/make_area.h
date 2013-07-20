@@ -35,22 +35,19 @@ using namespace std;
 // - due to the size restrictions, the algorithm might split up line segments and produce
 //   addtional vertices. It does not add nodes for these datastructures to the "into"-set,
 //   they are contained only in the Area dataset.
-class Make_Area_Statement : public Statement
+class Make_Area_Statement : public Output_Statement
 {
   public:
     Make_Area_Statement(int line_number_, const map< string, string >& attributes);
     virtual string get_name() const { return "make-area"; }
-    virtual string get_result_name() const { return output; }
-    virtual void forecast();
     virtual void execute(Resource_Manager& rman);
-    virtual ~Make_Area_Statement() {}
-    
+    virtual ~Make_Area_Statement() {}    
     static Generic_Statement_Maker< Make_Area_Statement > statement_maker;
     
     static bool is_used() { return is_used_; }
     
   private:
-    string input, output, pivot;
+    string input, pivot;
     
     static pair< uint32, Uint64 > detect_pivot(const Set& pivot);
     static Node::Id_Type check_node_parity(const Set& pivot);

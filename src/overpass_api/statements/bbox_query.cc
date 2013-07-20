@@ -280,7 +280,7 @@ Generic_Statement_Maker< Bbox_Query_Statement > Bbox_Query_Statement::statement_
 
 Bbox_Query_Statement::Bbox_Query_Statement
     (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_)
+    : Output_Statement(line_number_)
 {
   map< string, string > attributes;
   
@@ -292,7 +292,7 @@ Bbox_Query_Statement::Bbox_Query_Statement
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
-  output = attributes["into"];
+  set_output(attributes["into"]);
   south = atof(attributes["s"].c_str());
   if ((south < -90.0) || (south > 90.0) || (attributes["s"] == ""))
   {
@@ -334,6 +334,7 @@ Bbox_Query_Statement::Bbox_Query_Statement
   }
 }
 
+
 Bbox_Query_Statement::~Bbox_Query_Statement()
 {
   for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
@@ -341,25 +342,10 @@ Bbox_Query_Statement::~Bbox_Query_Statement()
     delete *it;
 }
 
-void Bbox_Query_Statement::forecast()
-{
-}
 
 void Bbox_Query_Statement::execute(Resource_Manager& rman)
 {
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes
-      (rman.sets()[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways
-      (rman.sets()[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations
-      (rman.sets()[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas
-      (rman.sets()[output].areas);
-  
-  nodes.clear();
-  ways.clear();
-  relations.clear();
-  areas.clear();
+  Set into;
 
   vector< pair< uint32, uint32 > > uint_ranges
     (::calc_ranges(south, north, west, east));
@@ -401,9 +387,10 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
     if ((ilat >= isouth) && (ilat <= inorth) &&
         (((ilon >= iwest) && (ilon <= ieast))
 	  || ((ieast < iwest) && ((ilon >= iwest) || (ilon <= ieast)))))
-      nodes[it.index()].push_back(it.object());    
+      into.nodes[it.index()].push_back(it.object());    
   }
   
+  transfer_output(rman, into);
   rman.health_check(*this);
 }
 

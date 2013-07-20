@@ -34,7 +34,6 @@ class Item_Statement : public Statement
     Item_Statement(int line_number_, const map< string, string >& attributes);
     virtual string get_name() const { return "item"; }
     virtual string get_result_name() const { return output; }
-    virtual void forecast();
     virtual void execute(Resource_Manager& rman) {}
     virtual ~Item_Statement();
     

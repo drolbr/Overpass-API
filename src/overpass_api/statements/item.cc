@@ -158,15 +158,6 @@ Item_Statement::~Item_Statement()
     delete *it;
 }
 
-void Item_Statement::forecast()
-{
-/*  declare_union_set(output);
-  
-  finish_statement_forecast();
-  
-  display_full();
-  display_state();*/
-}
 
 Query_Constraint* Item_Statement::get_query_constraint()
 {

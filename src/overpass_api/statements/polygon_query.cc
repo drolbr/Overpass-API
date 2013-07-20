@@ -273,7 +273,7 @@ Generic_Statement_Maker< Polygon_Query_Statement > Polygon_Query_Statement::stat
 
 Polygon_Query_Statement::Polygon_Query_Statement
     (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_)
+    : Output_Statement(line_number_)
 {
   map< string, string > attributes;
   
@@ -282,7 +282,7 @@ Polygon_Query_Statement::Polygon_Query_Statement
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
-  output = attributes["into"];
+  set_output(attributes["into"]);
   
   //convert bounds
   istringstream in(attributes["bounds"]);
@@ -322,11 +322,6 @@ set< pair< Uint32_Index, Uint32_Index > > Polygon_Query_Statement::calc_ranges()
   for (vector< Aligned_Segment >::const_iterator it = segments.begin(); it != segments.end(); ++it)
     result.insert(make_pair(it->ll_upper_, it->ll_upper_ + 0x100));
   return result;
-}
-
-
-void Polygon_Query_Statement::forecast()
-{
 }
 
 
@@ -533,29 +528,18 @@ void Polygon_Query_Statement::collect_ways
 
 void Polygon_Query_Statement::execute(Resource_Manager& rman)
 {
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes
-      (rman.sets()[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways
-      (rman.sets()[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations
-      (rman.sets()[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas
-      (rman.sets()[output].areas);
-  
-  nodes.clear();
-  ways.clear();
-  relations.clear();
-  areas.clear();
+  Set into;
 
   set< pair< Uint32_Index, Uint32_Index > > nodes_req = calc_ranges();
 
   collect_items_range(this, rman, *osm_base_settings().NODES, nodes_req,
-		      Trivial_Predicate< Node_Skeleton >(), nodes);
-  
-  collect_nodes(nodes, true);
-  
+		      Trivial_Predicate< Node_Skeleton >(), into.nodes);
+  collect_nodes(into.nodes, true);
+
+  transfer_output(rman, into);
   rman.health_check(*this);
 }
+
 
 Query_Constraint* Polygon_Query_Statement::get_query_constraint()
 {

@@ -53,9 +53,6 @@ void Foreach_Statement::add_statement(Statement* statement, string text)
   substatements.push_back(statement);
 }
 
-void Foreach_Statement::forecast()
-{
-}
 
 void Foreach_Statement::execute(Resource_Manager& rman)
 {

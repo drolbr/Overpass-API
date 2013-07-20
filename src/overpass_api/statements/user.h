@@ -27,13 +27,11 @@
 
 using namespace std;
 
-class User_Statement : public Statement
+class User_Statement : public Output_Statement
 {
   public:
     User_Statement(int line_number_, const map< string, string >& input_attributes);
     virtual string get_name() const { return "user"; }
-    virtual string get_result_name() const { return output; }
-    virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     virtual ~User_Statement();
     
@@ -53,7 +51,7 @@ class User_Statement : public Statement
     uint32 get_id() const { return user_id; }
     
   private:
-    string input, output;
+    string input;
     uint32 user_id;
     string user_name;
     string result_type;

@@ -42,7 +42,7 @@ Generic_Statement_Maker< Make_Area_Statement > Make_Area_Statement::statement_ma
 
 Make_Area_Statement::Make_Area_Statement
     (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_)
+    : Output_Statement(line_number_)
 { 
   is_used_ = true;
   
@@ -55,23 +55,10 @@ Make_Area_Statement::Make_Area_Statement
   eval_attributes_array(get_name(), attributes, input_attributes);
   
   input = attributes["from"];
-  output = attributes["into"];
+  set_output(attributes["into"]);
   pivot = attributes["pivot"];
 }
 
-void Make_Area_Statement::forecast()
-{
-/*  Set_Forecast sf_in(declare_read_set(input));
-  declare_read_set(tags);
-  Set_Forecast& sf_out(declare_write_set(output));
-    
-  sf_out.area_count = 1;
-  declare_used_time(100 + sf_in.node_count + sf_in.way_count);
-  finish_statement_forecast();
-    
-  display_full();
-  display_state();*/
-}
 
 pair< uint32, Uint64 > Make_Area_Statement::detect_pivot(const Set& pivot)
 {
@@ -239,24 +226,13 @@ void Make_Area_Statement::add_segment_blocks
 
 void Make_Area_Statement::execute(Resource_Manager& rman)
 {
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes
-      (rman.sets()[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways
-      (rman.sets()[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations
-      (rman.sets()[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas
-      (rman.sets()[output].areas);
+  Set into;
   
   // detect pivot element
   map< string, Set >::const_iterator mit(rman.sets().find(pivot));
   if (mit == rman.sets().end())
   {
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-    
+    transfer_output(rman, into);
     return;
   }
   pair< uint32, Uint64 > pivot_pair(detect_pivot(mit->second));
@@ -265,11 +241,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
 
   if (pivot_type == 0)
   {
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-    
+    transfer_output(rman, into);
     return;
   }
   
@@ -314,11 +286,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   mit = rman.sets().find(input);
   if (mit == rman.sets().end())
   {
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-    
+    transfer_output(rman, into);
     return;
   }
   
@@ -347,11 +315,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   
   if (!(odd_id == Node::Id_Type(0ull)) || !(odd_pair.first == Node::Id_Type(0ull)))
   {
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-    
+    transfer_output(rman, into);
     return;
   }
 
@@ -367,13 +331,11 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   new_location.tags = new_tags;
   Uint31_Index new_index(new_location.calc_index());
   
-  nodes.clear();
-  ways.clear();
-  relations.clear();
-  areas.clear();
-
   if (new_index.val() == 0)
+  {
+    transfer_output(rman, into);
     return;
+  }
   
   if (rman.area_updater())
   {
@@ -383,7 +345,8 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
     area_updater->commit();
   }
   
-  areas[new_index].push_back(Area_Skeleton(new_location));
+  into.areas[new_index].push_back(Area_Skeleton(new_location));
   
+  transfer_output(rman, into);
   rman.health_check(*this);
 }

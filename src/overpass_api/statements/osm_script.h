@@ -51,7 +51,6 @@ class Osm_Script_Statement : public Statement
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "osm-script"; }
     virtual string get_result_name() const { return ""; }
-    virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     virtual ~Osm_Script_Statement();
     

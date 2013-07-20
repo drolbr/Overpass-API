@@ -36,15 +36,13 @@ typedef enum { nothing, /*ids_collected,*/ ranges_collected, data_collected } An
 
 class Regular_Expression;
 
-class Query_Statement : public Statement
+class Query_Statement : public Output_Statement
 {
   public:
     Query_Statement(int line_number_, const map< string, string >& input_attributes);
     virtual ~Query_Statement() {}
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "query"; }
-    virtual string get_result_name() const { return output; }
-    virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     
     static Generic_Statement_Maker< Query_Statement > statement_maker;
@@ -52,7 +50,6 @@ class Query_Statement : public Statement
     static bool area_query_exists() { return area_query_exists_; }
     
   private:
-    string output;
     int type;
     vector< string > keys;    
     vector< pair< string, string > > key_values;    
@@ -116,7 +113,6 @@ class Has_Kv_Statement : public Statement
     Has_Kv_Statement(int line_number_, const map< string, string >& input_attributes);
     virtual string get_name() const { return "has-kv"; }
     virtual string get_result_name() const { return ""; }
-    virtual void forecast();
     virtual void execute(Resource_Manager& rman) {}
     virtual ~Has_Kv_Statement();
     

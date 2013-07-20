@@ -23,19 +23,15 @@
 #include <string>
 #include <vector>
 #include "statement.h"
+    
 
-using namespace std;
-
-class Bbox_Query_Statement : public Statement
+class Bbox_Query_Statement : public Output_Statement
 {
   public:
     Bbox_Query_Statement(int line_number_, const map< string, string >& attributes);
     virtual string get_name() const { return "bbox-query"; }
-    virtual string get_result_name() const { return output; }
-    virtual void forecast();
     virtual void execute(Resource_Manager& rman);
-    virtual ~Bbox_Query_Statement();
-    
+    virtual ~Bbox_Query_Statement();    
     static Generic_Statement_Maker< Bbox_Query_Statement > statement_maker;
     
     virtual Query_Constraint* get_query_constraint();
@@ -51,7 +47,6 @@ class Bbox_Query_Statement : public Statement
     double get_east() const { return east; }
 
   private:
-    string output;
     unsigned int type;
     double south, north, west, east;
     vector< Query_Constraint* > constraints;

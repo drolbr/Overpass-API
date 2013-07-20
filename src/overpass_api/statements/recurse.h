@@ -28,16 +28,13 @@
 
 using namespace std;
 
-class Recurse_Statement : public Statement
+class Recurse_Statement : public Output_Statement
 {
   public:
     Recurse_Statement(int line_number_, const map< string, string >& input_attributes);
     virtual string get_name() const { return "recurse"; }
-    virtual string get_result_name() const { return output; }
-    virtual void forecast();
     virtual void execute(Resource_Manager& rman);
-    virtual ~Recurse_Statement();
-    
+    virtual ~Recurse_Statement();    
     static Generic_Statement_Maker< Recurse_Statement > statement_maker;
 
     virtual Query_Constraint* get_query_constraint();
@@ -47,13 +44,13 @@ class Recurse_Statement : public Statement
     const string* get_role() const { return (restrict_to_role ? &role : 0); }
     
   private:
-    string input, output;
+    string input;
     unsigned int type;
     string role;
     bool restrict_to_role;
     vector< Query_Constraint* > constraints;
 };
-      
+
 struct Order_By_Node_Id
 {
   bool operator() (const pair< Uint32_Index, const Node_Skeleton* >& a,

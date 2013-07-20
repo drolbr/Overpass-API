@@ -1015,7 +1015,7 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
 
 Recurse_Statement::Recurse_Statement
     (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_), restrict_to_role(false)
+    : Output_Statement(line_number_), restrict_to_role(false)
 {
   map< string, string > attributes;
   
@@ -1028,7 +1028,7 @@ Recurse_Statement::Recurse_Statement
   eval_attributes_array(get_name(), attributes, input_attributes);
   
   input = attributes["from"];
-  output = attributes["into"];
+  set_output(attributes["into"]);
   
   if (attributes["type"] == "relation-relation")
     type = RECURSE_RELATION_RELATION;
@@ -1084,35 +1084,24 @@ Recurse_Statement::Recurse_Statement
   }
 }
 
-void Recurse_Statement::forecast()
-{
-}
 
 void Recurse_Statement::execute(Resource_Manager& rman)
 {
+  Set into;
+  
   map< string, Set >::const_iterator mit(rman.sets().find(input));
   if (mit == rman.sets().end())
   {
-    rman.sets()[output].nodes.clear();
-    rman.sets()[output].ways.clear();
-    rman.sets()[output].relations.clear();
-    rman.sets()[output].areas.clear();
-    
+    transfer_output(rman, into);
     return;
   }
 
-  Set into;
-  
   if (restrict_to_role)
   {
     uint32 role_id = determine_role_id(*rman.get_transaction(), role);
     if (role_id == numeric_limits< uint32 >::max())
     {
-      rman.sets()[output].nodes.clear();
-      rman.sets()[output].ways.clear();
-      rman.sets()[output].relations.clear();
-      rman.sets()[output].areas.clear();
-    
+      transfer_output(rman, into);
       return;
     }
         
@@ -1198,12 +1187,8 @@ void Recurse_Statement::execute(Resource_Manager& rman)
 
     relations_up_loop(*this, rman, rel_rels, into.relations);    
   }
-  
-  into.nodes.swap(rman.sets()[output].nodes);
-  into.ways.swap(rman.sets()[output].ways);
-  into.relations.swap(rman.sets()[output].relations);
-  rman.sets()[output].areas.clear();
-  
+
+  transfer_output(rman, into);
   rman.health_check(*this);
 }
 
