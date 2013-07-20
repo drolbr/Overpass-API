@@ -77,6 +77,8 @@ class Print_Target_Json : public Print_Target
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0);
+    
+    bool nothing_written() const { return first_elem; }
 			    
   private:
     mutable bool first_elem;
@@ -1375,13 +1377,18 @@ Print_Target& Output_Handle::get_print_target(uint32 current_mode, Transaction& 
 	  first_id = dynamic_cast< Print_Target_Custom* >(print_target)->get_first_id();
 	}
       }
-      if (dynamic_cast< Print_Target_Custom* >(print_target)
-	  || dynamic_cast< Print_Target_Xml* >(print_target)
-	  || dynamic_cast< Print_Target_Json* >(print_target))
+      else if (dynamic_cast< Print_Target_Custom* >(print_target)
+	  || dynamic_cast< Print_Target_Xml* >(print_target))
       {
         delete print_target;
         print_target = 0;
         first_target = false;
+      }
+      else if (dynamic_cast< Print_Target_Json* >(print_target))
+      {
+        first_target = dynamic_cast< Print_Target_Json* >(print_target)->nothing_written();
+        delete print_target;
+        print_target = 0;
       }
     }
   }
