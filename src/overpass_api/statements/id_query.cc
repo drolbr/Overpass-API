@@ -257,7 +257,7 @@ Id_Query_Statement::Id_Query_Statement
   upper = atoll(attributes["upper"].c_str());
   if (ref.val() <= 0)
   {
-    if (lower.val() == 0 || upper.val() == 1)
+    if (lower.val() == 0 || upper.val() == 0)
     {
       ostringstream temp;
       temp<<"For the attribute \"ref\" of the element \"id-query\""
