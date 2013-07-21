@@ -1,5 +1,5 @@
 cgibindir = ${prefix}/cgi-bin
-cgibin_PROGRAMS = interpreter position_flag show_position
+cgibin_PROGRAMS = interpreter position_flag show_position timestamp
 dist_cgibin_SCRIPTS = augmented_diff augmented_state_by_date convert convert_xapi draw-line kill_my_queries ping sitemap sketch-line sketch-options sketch-route template trigger_clone xapi xapi_meta
 
 escape_xml_cc = ../expat/escape_xml.cc
@@ -14,6 +14,8 @@ statements_cc = ${statements_dir}/statement.cc ${statements_dir}/area_query.cc $
 
 interpreter_SOURCES = ${expat_cc} ${settings_cc} ${web_frontend_cc} ${statements_cc} ${dispatcher_cc} ../overpass_api/dispatch/web_query.cc ../overpass_api/osm-backend/area_updater.cc
 interpreter_LDADD = -lexpat
+timestamp_SOURCES = ${expat_cc} ${settings_cc} ${web_frontend_cc} ${statements_cc} ${dispatcher_cc} ../overpass_api/dispatch/db_timestamp.cc ../overpass_api/osm-backend/area_updater.cc
+timestamp_LDADD = -lexpat
 position_flag_SOURCES = ${settings_cc} ../overpass_api/frontend/cgi-helper.cc ../pt_diagrams/position_flag.cc
 position_flag_LDADD = -lexpat
 show_position_SOURCES = ${settings_cc} ../overpass_api/frontend/cgi-helper.cc ../pt_diagrams/show_position.cc

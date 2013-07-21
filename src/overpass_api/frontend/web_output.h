@@ -59,6 +59,8 @@ struct Web_Output : public Error_Output
       (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
   void write_json_header
       (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
+  void write_text_header
+      (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
   void write_footer();
   
 public:
@@ -68,7 +70,7 @@ public:
   bool has_origin;
   
 private:
-  enum { not_yet, xml, html, json, final } header_written;
+  enum { not_yet, xml, html, json, text, final } header_written;
   bool encoding_errors;
   bool parse_errors;
   bool static_errors;
