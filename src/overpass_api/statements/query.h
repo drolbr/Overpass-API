@@ -31,15 +31,18 @@ const int QUERY_WAY = 2;
 const int QUERY_RELATION = 3;
 const int QUERY_AREA = 4;
 
+
 typedef enum { nothing, /*ids_collected,*/ ranges_collected, data_collected } Answer_State;
 
 
 class Regular_Expression;
 
+
 class Query_Statement : public Output_Statement
 {
   public:
-    Query_Statement(int line_number_, const map< string, string >& input_attributes);
+    Query_Statement(int line_number_, const map< string, string >& input_attributes, 
+                    Query_Constraint* bbox_limitation = 0);
     virtual ~Query_Statement() {}
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "query"; }
@@ -107,10 +110,12 @@ class Query_Statement : public Output_Statement
 				 Resource_Manager& rman);
 };
 
+
 class Has_Kv_Statement : public Statement
 {
   public:
-    Has_Kv_Statement(int line_number_, const map< string, string >& input_attributes);
+    Has_Kv_Statement(int line_number_, const map< string, string >& input_attributes,
+                     Query_Constraint* bbox_limitation = 0);
     virtual string get_name() const { return "has-kv"; }
     virtual string get_result_name() const { return ""; }
     virtual void execute(Resource_Manager& rman) {}

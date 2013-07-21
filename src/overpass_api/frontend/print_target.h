@@ -53,6 +53,8 @@ class Output_Handle
     uint32 get_written_elements_count() const;
 
     void set_categories(const vector< Category_Filter >& categories_) { categories = categories_; }
+    
+    void print_bounds(double south, double west, double north, double east);
 
   private:
     string type;

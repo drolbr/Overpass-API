@@ -22,6 +22,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "bbox_query.h"
 #include "statement.h"
 
 using namespace std;
@@ -47,7 +48,8 @@ struct Category_Filter
 class Osm_Script_Statement : public Statement
 {
   public:
-    Osm_Script_Statement(int line_number_, const map< string, string >& input_attributes);
+    Osm_Script_Statement(int line_number_, const map< string, string >& input_attributes,
+                         Query_Constraint* bbox_limitation = 0);
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "osm-script"; }
     virtual string get_result_name() const { return ""; }
@@ -74,9 +76,12 @@ class Osm_Script_Statement : public Statement
     
     uint32 get_max_allowed_time() const { return max_allowed_time; }
     uint64 get_max_allowed_space() const { return max_allowed_space; }
+    Query_Constraint* get_bbox_limitation() { return bbox_limitation; }
     
   private:
     vector< Statement* > substatements;
+    Query_Constraint* bbox_limitation;
+    Bbox_Query_Statement* bbox_statement;
     uint32 max_allowed_time;
     uint64 max_allowed_space;
     string type;

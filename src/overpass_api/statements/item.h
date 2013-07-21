@@ -31,7 +31,8 @@ using namespace std;
 class Item_Statement : public Statement
 {
   public:
-    Item_Statement(int line_number_, const map< string, string >& attributes);
+    Item_Statement(int line_number_, const map< string, string >& attributes,
+                   Query_Constraint* bbox_limitation = 0);
     virtual string get_name() const { return "item"; }
     virtual string get_result_name() const { return output; }
     virtual void execute(Resource_Manager& rman) {}

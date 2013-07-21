@@ -30,7 +30,8 @@ using namespace std;
 class Foreach_Statement : public Statement
 {
   public:
-    Foreach_Statement(int line_number_, const map< string, string >& attributes);
+    Foreach_Statement(int line_number_, const map< string, string >& attributes,
+                      Query_Constraint* bbox_limitation = 0);
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "foreach"; }
     virtual string get_result_name() const { return ""; }

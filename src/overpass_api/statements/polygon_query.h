@@ -30,7 +30,8 @@ using namespace std;
 class Polygon_Query_Statement : public Output_Statement
 {
   public:
-    Polygon_Query_Statement(int line_number_, const map< string, string >& attributes);
+    Polygon_Query_Statement(int line_number_, const map< string, string >& attributes,
+                            Query_Constraint* bbox_limitation = 0);
     virtual string get_name() const { return "polygon-query"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Polygon_Query_Statement();

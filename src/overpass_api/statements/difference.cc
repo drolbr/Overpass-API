@@ -32,7 +32,7 @@ Generic_Statement_Maker< Difference_Statement > Difference_Statement::statement_
 
 
 Difference_Statement::Difference_Statement
-    (int line_number_, const map< string, string >& input_attributes)
+    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
     : Output_Statement(line_number_)
 {
   map< string, string > attributes;

@@ -31,6 +31,7 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
+    
 class Bbox_Constraint : public Query_Constraint
 {
   public:
@@ -63,25 +64,18 @@ bool Bbox_Constraint::delivers_data()
 bool Bbox_Constraint::get_ranges
     (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
 {
-  vector< pair< uint32, uint32 > > int_ranges = bbox->calc_ranges();
-  for (vector< pair< uint32, uint32 > >::const_iterator
-      it(int_ranges.begin()); it != int_ranges.end(); ++it)
-  {
-    pair< Uint32_Index, Uint32_Index > range
-        (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
-    ranges.insert(range);
-  }
+  ranges = bbox->get_ranges_32();
   return true;
 }
+
 
 bool Bbox_Constraint::get_ranges
     (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
-  set< pair< Uint32_Index, Uint32_Index > > node_ranges;
-  this->get_ranges(rman, node_ranges);
-  ranges = calc_parents(node_ranges);
+  ranges = bbox->get_ranges_31();
   return true;
 }
+
 
 void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
 {
@@ -105,8 +99,7 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
   }  
 
   
-  set< pair< Uint31_Index, Uint31_Index > > ranges;
-  get_ranges(rman, ranges);
+  const set< pair< Uint31_Index, Uint31_Index > >& ranges = bbox->get_ranges_31();
   
   // pre-process ways to reduce the load of the expensive filter
   filter_ways_by_ranges(into.ways, ranges);
@@ -182,8 +175,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     //Process relations
     
     // Retrieve all nodes referred by the relations.
-    set< pair< Uint32_Index, Uint32_Index > > node_ranges;
-    get_ranges(rman, node_ranges);
+    const set< pair< Uint32_Index, Uint32_Index > >& node_ranges = bbox->get_ranges_32();
     
     map< Uint32_Index, vector< Node_Skeleton > > node_members
         = relation_node_members(&query, rman, into.relations, &node_ranges);
@@ -203,8 +195,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     sort(node_members_by_id.begin(), node_members_by_id.end(), order_by_node_id);
     
     // Retrieve all ways referred by the relations.
-    set< pair< Uint31_Index, Uint31_Index > > way_ranges;
-    get_ranges(rman, way_ranges);
+    const set< pair< Uint31_Index, Uint31_Index > >& way_ranges = bbox->get_ranges_31();
     
     map< Uint31_Index, vector< Way_Skeleton > > way_members_
         = relation_way_members(&query, rman, into.relations, &way_ranges);
@@ -279,7 +270,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 Generic_Statement_Maker< Bbox_Query_Statement > Bbox_Query_Statement::statement_maker("bbox-query");
 
 Bbox_Query_Statement::Bbox_Query_Statement
-    (int line_number_, const map< string, string >& input_attributes)
+    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
     : Output_Statement(line_number_)
 {
   map< string, string > attributes;
@@ -343,30 +334,39 @@ Bbox_Query_Statement::~Bbox_Query_Statement()
 }
 
 
+const set< pair< Uint32_Index, Uint32_Index > >& Bbox_Query_Statement::get_ranges_32()
+{
+  if (ranges_32.empty())
+  {
+    vector< pair< uint32, uint32 > > uint_ranges = ::calc_ranges(south, north, west, east);
+    for (vector< pair< uint32, uint32 > >::const_iterator
+        it(uint_ranges.begin()); it != uint_ranges.end(); ++it)
+    {
+      pair< Uint32_Index, Uint32_Index > range
+        (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
+      ranges_32.insert(range);
+    }
+  }
+  return ranges_32;
+}
+
+
+const set< pair< Uint31_Index, Uint31_Index > >& Bbox_Query_Statement::get_ranges_31()
+{
+  if (ranges_31.empty())
+    ranges_31 = calc_parents(get_ranges_32());
+  return ranges_31;
+}
+
+
 void Bbox_Query_Statement::execute(Resource_Manager& rman)
 {
   Set into;
 
-  vector< pair< uint32, uint32 > > uint_ranges
-    (::calc_ranges(south, north, west, east));
-  rman.health_check(*this);
-    
-  set< pair< Uint32_Index, Uint32_Index > > req;
-  for (vector< pair< uint32, uint32 > >::const_iterator
-      it(uint_ranges.begin()); it != uint_ranges.end(); ++it)
-  {
-    pair< Uint32_Index, Uint32_Index > range
-      (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
-    req.insert(range);
-  }
+  const set< pair< Uint32_Index, Uint32_Index > >& req = get_ranges_32();
   rman.health_check(*this);
   
   uint nodes_count = 0;
-  
-  uint32 isouth((south + 91.0)*10000000+0.5);
-  uint32 inorth((north + 91.0)*10000000+0.5);
-  int32 iwest(west*10000000 + (west > 0 ? 0.5 : -0.5));
-  int32 ieast(east*10000000 + (east > 0 ? 0.5 : -0.5));
   
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
     (rman.get_transaction()->data_index(osm_base_settings().NODES));
@@ -382,11 +382,11 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
       rman.health_check(*this);
     }
     
-    uint32 ilat(::ilat(it.index().val(), it.object().ll_lower));
-    int32 ilon(::ilon(it.index().val(), it.object().ll_lower));
-    if ((ilat >= isouth) && (ilat <= inorth) &&
-        (((ilon >= iwest) && (ilon <= ieast))
-	  || ((ieast < iwest) && ((ilon >= iwest) || (ilon <= ieast)))))
+    double lat(::lat(it.index().val(), it.object().ll_lower));
+    double lon(::lon(it.index().val(), it.object().ll_lower));
+    if ((lat >= south) && (lat <= north) &&
+        (((lon >= west) && (lon <= east))
+	  || ((east < west) && ((lon >= west) || (lon <= east)))))
       into.nodes[it.index()].push_back(it.object());    
   }
   

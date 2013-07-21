@@ -32,7 +32,7 @@ using namespace std;
 Generic_Statement_Maker< Union_Statement > Union_Statement::statement_maker("union");
 
 Union_Statement::Union_Statement
-    (int line_number_, const map< string, string >& input_attributes)
+    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
     : Statement(line_number_)
 {
   map< string, string > attributes;

@@ -29,7 +29,8 @@ using namespace std;
 class Pivot_Statement : public Output_Statement
 {
   public:
-    Pivot_Statement(int line_number_, const map< string, string >& attributes);
+    Pivot_Statement(int line_number_, const map< string, string >& attributes,
+                    Query_Constraint* bbox_limitation = 0);
     virtual string get_name() const { return "pivot"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Pivot_Statement();

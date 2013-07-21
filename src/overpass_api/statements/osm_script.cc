@@ -22,6 +22,7 @@
 
 #include "../core/settings.h"
 #include "../frontend/print_target.h"
+#include "bbox_query.h"
 #include "osm_script.h"
 #include "print.h"
 // #include "area_query.h"
@@ -33,20 +34,18 @@ using namespace std;
 Generic_Statement_Maker< Osm_Script_Statement > Osm_Script_Statement::statement_maker("osm-script");
 
 Osm_Script_Statement::Osm_Script_Statement
-    (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_), max_allowed_time(0), max_allowed_space(0), type("xml"),
-      output_handle(0), factory(0), template_name("default.wiki"), template_contains_js_(false)
+    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation_)
+    : Statement(line_number_), bbox_limitation(bbox_limitation_), bbox_statement(0),
+       max_allowed_time(0), max_allowed_space(0),
+       type("xml"), output_handle(0), factory(0),
+       template_name("default.wiki"), template_contains_js_(false)
 {
   map< string, string > attributes;
   
+  attributes["bbox"] = "";
   attributes["timeout"] = "180";
   attributes["element-limit"] = "536870912";
   attributes["output"] = "xml";
-  
-  /*attributes["name"] = "";
-  attributes["replace"] = "0";
-  attributes["version"] = "0";
-  attributes["debug"] = "errors";*/
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
@@ -80,32 +79,76 @@ Osm_Script_Statement::Osm_Script_Statement
         <<" the only allowed values are \"xml\", \"json\", \"custom\", or \"popup\".";
     add_static_error(temp.str());
   }
-    
-/*  name = attributes["name"];
-  replace = atoi(attributes["replace"].c_str());
-  version = atoi(attributes["version"].c_str());
   
-  if (attributes["debug"] == "quiet")
-    set_debug_mode(QUIET);
-  else if (attributes["debug"] == "errors")
-    set_debug_mode(ERRORS);
-  else if (attributes["debug"] == "verbose")
-    set_debug_mode(VERBOSE);
-  else if (attributes["debug"] == "static")
-    set_debug_mode(STATIC_ANALYSIS);
-  else
+  if (attributes["bbox"] != "")
   {
-    ostringstream temp;
-    temp<<"For the attribute \"debug\" of the element \"osm-script\""
-    <<" the only allowed values are \"quiet\", \"errors\", \"verbose\" or \"static\".";
-    add_static_error(temp.str());
+    map< string, string > bbox_attributes;
+    
+    string& bbox_s = attributes["bbox"];
+    string::size_type pos = bbox_s.find(",");
+    string::size_type from = 0;
+    if (pos != string::npos)
+    {
+      bbox_attributes["s"] = bbox_s.substr(0, pos);
+      from = pos + 1;
+      pos = bbox_s.find(",", from);
+    }
+    else
+    {
+      ostringstream temp;
+      temp<<"A bounding box needs four comma separated values.";
+      add_static_error(temp.str());
+    }
+    if (pos != string::npos)
+    {
+      bbox_attributes["w"] = bbox_s.substr(from, pos-from);
+      from = pos + 1;
+      pos = bbox_s.find(",", from);
+    }
+    else
+    {
+      ostringstream temp;
+      temp<<"A bounding box needs four comma separated values.";
+      add_static_error(temp.str());
+    }
+    if (pos != string::npos)
+    {
+      bbox_attributes["n"] = bbox_s.substr(from, pos-from);
+      from = pos + 1;
+    }
+    else
+    {
+      ostringstream temp;
+      temp<<"A bounding box needs four comma separated values.";
+      add_static_error(temp.str());
+    }
+    bbox_attributes["e"] = bbox_s.substr(from);
+
+    double south = atof(bbox_attributes["s"].c_str());
+    double north = atof(bbox_attributes["n"].c_str());
+    if (south < -90.0 || south > 90.0 || north < -90.0 || north > 90.0)
+    {
+      ostringstream temp;
+      temp<<"Latitudes in bounding boxes must be between -90.0 and 90.0.";
+      add_static_error(temp.str());
+    }
+    
+    double west = atof(bbox_attributes["w"].c_str());
+    double east = atof(bbox_attributes["e"].c_str());
+    if (west < -180.0 || west > 180.0 || east < -180.0 || east > 180.0)
+    {
+      ostringstream temp;
+      temp<<"Longitudes in bounding boxes must be between -1800.0 and 180.0.";
+      add_static_error(temp.str());
+    }
+    
+    if (south >= -90.0 && south <= 90.0 && north >= -90.0 && north <= 90.0
+        && west >= -180.0 && west <= 180.0 && east >= -180.0 && east <= 180.0)
+    {
+      bbox_statement = new Bbox_Query_Statement(line_number_, bbox_attributes, 0);
+      bbox_limitation = bbox_statement->get_query_constraint();
+    }
   }
-  
-  script_timeout = timeout;
-  element_limit = elem_limit;
-  ostringstream temp;
-  temp<<"Timeout is set to "<<timeout<<", element_limit is "<<elem_limit;
-  add_static_remark(temp.str());*/
 }
 
 void Osm_Script_Statement::add_statement(Statement* statement, string text)
@@ -240,6 +283,10 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
       if (print)
 	print->set_output_handle(output_handle);
     }
+    
+    if (bbox_statement)
+      output_handle->print_bounds(bbox_statement->get_south(), bbox_statement->get_east(),
+                                  bbox_statement->get_north(), bbox_statement->get_west());
   }
   
   for (vector< Statement* >::iterator it(substatements.begin());

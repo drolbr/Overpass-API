@@ -555,7 +555,7 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
 Generic_Statement_Maker< Around_Statement > Around_Statement::statement_maker("around");
 
 Around_Statement::Around_Statement
-    (int line_number_, const map< string, string >& input_attributes)
+    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
     : Output_Statement(line_number_), lat(100.0), lon(200.0)
 {
   map< string, string > attributes;

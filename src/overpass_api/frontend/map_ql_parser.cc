@@ -624,6 +624,28 @@ pair< string, string > parse_setup(Tokenizer_Wrapper& token, Error_Output* error
     }
     clear_until_after(token, error_output, "]", true);
   }
+  else if (result.first == "bbox")
+  {
+    clear_until_after(token, error_output, ",", "]", false);
+    if (*token == ",")
+    {
+      ++token;
+      result.second += "," + get_text_token(token, error_output, "Value");
+      clear_until_after(token, error_output, ",", "]", false);
+    }
+    if (*token == ",")
+    {
+      ++token;
+      result.second += "," + get_text_token(token, error_output, "Value");
+      clear_until_after(token, error_output, ",", "]", false);
+    }
+    if (*token == ",")
+    {
+      ++token;
+      result.second += "," + get_text_token(token, error_output, "Value");
+      clear_until_after(token, error_output, "]");
+    }
+  }
   else
     clear_until_after(token, error_output, "]");
   return result;
@@ -1270,6 +1292,25 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory,
   return parse_query< TStatement >(stmt_factory, type, from, token, error_output);
 }
 
+
+void process_osm_script_statement(Statement::Factory& stmt_factory, Statement* base_statement,
+    const vector< Category_Filter >& categories)
+{
+  Osm_Script_Statement* osm_script_statement = dynamic_cast< Osm_Script_Statement* >(base_statement);
+  if (osm_script_statement)
+  {
+    stmt_factory.bbox_limitation = osm_script_statement->get_bbox_limitation();
+    
+    if (!categories.empty())
+      osm_script_statement->set_categories(categories);
+  }
+}
+
+
+void process_osm_script_statement(Statement_Dump::Factory&, Statement_Dump*,
+    const vector< Category_Filter >&) {}
+
+
 template< class TStatement >
 void generic_parse_and_validate_map_ql
     (typename TStatement::Factory& stmt_factory,
@@ -1292,8 +1333,8 @@ void generic_parse_and_validate_map_ql
   
   TStatement* base_statement = stmt_factory.create_statement
       ("osm-script", token.line_col().first, attr);
-  if (!categories.empty())
-    ((Osm_Script_Statement*)base_statement)->set_categories(categories);
+      
+  process_osm_script_statement(stmt_factory, base_statement, categories);
       
   if (!attr.empty())
     clear_until_after(token, error_output, ";");

@@ -29,7 +29,8 @@ using namespace std;
 class Coord_Query_Statement : public Output_Statement
 {
   public:
-    Coord_Query_Statement(int line_number_, const map< string, string >& attributes);
+    Coord_Query_Statement(int line_number_, const map< string, string >& attributes,
+                          Query_Constraint* bbox_limitation = 0);
     virtual string get_name() const { return "coord-query"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Coord_Query_Statement() {}    

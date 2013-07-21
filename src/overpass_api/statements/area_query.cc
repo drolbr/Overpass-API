@@ -238,7 +238,7 @@ bool Area_Query_Statement::is_used_ = false;
 Generic_Statement_Maker< Area_Query_Statement > Area_Query_Statement::statement_maker("area-query");
 
 Area_Query_Statement::Area_Query_Statement
-    (int line_number_, const map< string, string >& input_attributes)
+    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
     : Output_Statement(line_number_)
 {
   is_used_ = true;

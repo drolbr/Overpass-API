@@ -56,7 +56,8 @@ struct Prepared_Point
 class Around_Statement : public Output_Statement
 {
   public:
-    Around_Statement(int line_number_, const map< string, string >& attributes);
+    Around_Statement(int line_number_, const map< string, string >& attributes,
+                     Query_Constraint* bbox_limitation = 0);
     virtual string get_name() const { return "around"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Around_Statement();    

@@ -1441,6 +1441,15 @@ uint32 Output_Handle::get_written_elements_count() const
     return written_elements_count;
 }
 
+    
+void Output_Handle::print_bounds(double south, double west, double north, double east)
+{
+  if (type == "xml")
+    cout<<"  <bounds minlat=\""<<south<<"\" minlon=\""<<west<<"\" "
+          "maxlat=\""<<north<<"\" maxlon=\""<<east<<"\"/>\n\n";
+}
+
+
 Output_Handle::~Output_Handle()
 {
   if (print_target)

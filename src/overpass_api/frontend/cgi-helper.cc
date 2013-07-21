@@ -208,6 +208,10 @@ string decode_cgi_to_plain(const string& raw, int& error,
         result = result.substr(0, pos) + "(" + latlon + ")" + result.substr(pos + 6);
         pos = result.find("(bbox)");
       }
+      
+      pos = result.find("[bbox]");
+      if (pos != string::npos)
+        result = result.substr(0, pos) + "[bbox:" + latlon + "]" + result.substr(pos + 6);
     }
   }
   

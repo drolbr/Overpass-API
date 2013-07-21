@@ -49,7 +49,7 @@ Generic_Statement_Maker< Print_Statement > Print_Statement::statement_maker("pri
 
 
 Print_Statement::Print_Statement
-    (int line_number_, const map< string, string >& input_attributes)
+    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
     : Statement(line_number_),
       mode(0), order(order_by_id), limit(numeric_limits< unsigned int >::max()),
       output_handle(0)

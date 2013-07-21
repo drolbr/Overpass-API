@@ -217,7 +217,7 @@ void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into)
 //-----------------------------------------------------------------------------
 
 Id_Query_Statement::Id_Query_Statement
-    (int line_number_, const map< string, string >& input_attributes)
+    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
     : Output_Statement(line_number_)
 {
   map< string, string > attributes;

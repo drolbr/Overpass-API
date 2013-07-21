@@ -68,7 +68,8 @@ class Output_Handle;
 class Print_Statement : public Statement
 {
   public:
-    Print_Statement(int line_number_, const map< string, string >& attributes);
+    Print_Statement(int line_number_, const map< string, string >& attributes,
+                    Query_Constraint* bbox_limitation = 0);
     virtual string get_name() const { return "print"; }
     virtual string get_result_name() const { return ""; }
     virtual void execute(Resource_Manager& rman);

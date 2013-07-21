@@ -388,7 +388,7 @@ void start(const char *el, const char **attr)
 {
   TStatement* statement(get_factory((typename TStatement::Factory*)(0))->create_statement
       (el, xml_parser.current_line_number(), convert_c_pairs(attr)));
-      
+  
   statement_stack< TStatement >().push_back(statement);
   text_stack.push_back(xml_parser.get_parsed_text());
   xml_parser.reset_parsed_text();
