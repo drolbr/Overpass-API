@@ -241,6 +241,10 @@ string dump_subquery_map_ql(const string& name, const map< string, string >& att
     result += ":";
     if (attributes.find("radius") != attributes.end())
       result += attributes.find("radius")->second;
+    if (attributes.find("lat") != attributes.end())
+      result += "," + attributes.find("lat")->second;
+    if (attributes.find("lon") != attributes.end())
+      result += "," + attributes.find("lon")->second;
     result += ")";
   }
   else if (name == "user")
