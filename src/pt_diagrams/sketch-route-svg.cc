@@ -117,7 +117,7 @@ string right_join_template()
 string stop_name_template()
 {
   return "<text x=\"0\" y=\"-10\" transform=\"translate($hpos;,$vpos;) rotate(-45,0,-10)\""
-      " font-family=\"Liberation Sans, sans-serif\" font-size=\"$stop_fontsize;px\">$stopname;</text>\n"
+      " font-family=\"Liberation Sans, sans-serif\" font-size=\"$stop_fontsize;px\" id=\"$stopname;\">$stopname;</text>\n"
       "\n";
 }
 
@@ -125,7 +125,7 @@ string terminus_name_template()
 {
   return "<text x=\"0\" y=\"-10\" transform=\"translate($hpos;,$vpos;) rotate(-45,0,-10)\""
       " font-family=\"Liberation Sans, sans-serif\" font-size=\"$stop_fontsize;px\""
-      " font-weight=\"bold\">$stopname;</text>\n"
+      " font-weight=\"bold\" id=\"$stopname;\">$stopname;</text>\n"
       "\n";
 }
 
@@ -261,7 +261,7 @@ string correspondence_item_template()
 
 string correspondence_below_template()
 {
-  return "<a xlink:href=\"/api/sketch-line?ref=$ref;&network=$network;&style=wuppertal\"><text x=\"0\" y=\"0\" transform=\"translate($hpos;,$vpos;)\""
+  return "<a xlink:href=\"/api/sketch-line?ref=$ref;&network=$network;&style=wuppertal#$stopname;\"><text x=\"0\" y=\"0\" transform=\"translate($hpos;,$vpos;)\""
   " font-family=\"Liberation Sans, sans-serif\" font-size=\"$stop_fontsize;px\""
   " text-anchor=\"middle\" fill=\"$color;\">$ref;</text></a>\n"
   "\n";
@@ -1029,7 +1029,8 @@ int main(int argc, char *argv[])
 	      (Replacer< double >("$stop_fontsize;", stop_font_size).apply
 	      (Replacer< double >("$hpos;", pos).apply
 	      (Replacer< double >("$vpos;", vpos + stop_font_size*(i+1) + 20*offset_of[relations.size()] - 10).apply
-	      (correspondence_below_template())))));
+		  (Replacer< string >("$stopname;", stopname).apply
+	      (correspondence_below_template()))))));
 	  ++i;
 	}
       }
@@ -1282,6 +1283,7 @@ int main(int argc, char *argv[])
 	  (Replacer< double >("$stop_fontsize;", stop_font_size).apply
 	  (Replacer< double >("$hpos;", pos).apply
 	  (Replacer< double >("$vpos;", vpos + stop_font_size*(i+1) + 20*offset_of[relations.size()] - 10).apply
+	  (Replacer< string >("$stopname;", stopname).apply
 	  (correspondence_below_template())))));
 	  ++i;
 	}
