@@ -49,7 +49,7 @@ struct Area_Pair_Equal_Id {
   }
 };
 
-struct Area_Updater
+struct Area_Updater : public Area_Usage_Listener
 {
   Area_Updater(Transaction& transaction_);
   Area_Updater(string db_dir_);
@@ -64,7 +64,7 @@ struct Area_Updater
   void set_area(const Uint31_Index& index, const Area_Location& area);
   void add_blocks(const map< Uint31_Index, vector< Area_Block > >& area_blocks_);
   void commit();  
-  void flush();
+  virtual void flush();
   
 private:
   uint32 update_counter;

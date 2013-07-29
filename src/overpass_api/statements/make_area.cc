@@ -339,7 +339,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   
   if (rman.area_updater())
   {
-    Area_Updater* area_updater(rman.area_updater());
+    Area_Updater* area_updater = dynamic_cast< Area_Updater* >(rman.area_updater());
     area_updater->set_area(new_index, new_location);
     area_updater->add_blocks(area_blocks);
     area_updater->commit();

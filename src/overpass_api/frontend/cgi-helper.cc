@@ -183,7 +183,6 @@ string decode_cgi_to_plain(const string& raw, int& error,
       --endpos;
     
     string lonlat = replace_cgi(raw.substr(pos + 5, endpos - pos - 5));
-    cerr<<lonlat<<'\n';
     
     vector< string > coords;
     pos = 0;
@@ -191,7 +190,6 @@ string decode_cgi_to_plain(const string& raw, int& error,
     while (newpos != string::npos)
     {
       coords.push_back(lonlat.substr(pos, newpos - pos));
-      cerr<<coords.back()<<'\n';
       pos = newpos + 1;
       newpos = lonlat.find(",", pos);
     }
@@ -200,7 +198,6 @@ string decode_cgi_to_plain(const string& raw, int& error,
     if (coords.size() == 4)
     {
       string latlon = coords[1] + "," + coords[0] + "," + coords[3] + "," + coords[2];
-      cerr<<latlon<<'\n';
       
       pos = result.find("(bbox)");
       while (pos != string::npos)

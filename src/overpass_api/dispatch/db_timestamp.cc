@@ -16,32 +16,9 @@
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "resource_manager.h"
-#include "scripting_core.h"
+#include "dispatcher_stub.h"
 #include "../frontend/web_output.h"
-#include "../frontend/user_interface.h"
-#include "../statements/osm_script.h"
-#include "../statements/statement.h"
-#include "../../expat/expat_justparse_interface.h"
-#include "../../template_db/dispatcher.h"
 
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/select.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include <cstdlib>
-#include <cstring>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
-
-using namespace std;
 
 int main(int argc, char *argv[])
 {
@@ -55,8 +32,7 @@ int main(int argc, char *argv[])
     else
     {
       // open read transaction and log this.
-      int area_level = 0;
-      Dispatcher_Stub dispatcher("", &error_output, "-- db-timestamp --", area_level, 5, 256);
+      Dispatcher_Stub dispatcher("", &error_output, "-- db-timestamp --", false, 0, 5, 256);
       error_output.write_text_header(dispatcher.get_timestamp());
     }
   }

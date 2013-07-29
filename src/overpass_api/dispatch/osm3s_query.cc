@@ -123,8 +123,9 @@ int main(int argc, char *argv[])
     if (clone_db_dir != "")
     {
       // open read transaction and log this.
+      area_level = determine_area_level(error_output, area_level);
       Dispatcher_Stub dispatcher(db_dir, error_output, "-- clone database --", area_level,
-				 24*60*60, 1024*1024*1024);
+				 get_uses_meta_data(), 24*60*60, 1024*1024*1024);
       
       clone_database(*dispatcher.resource_manager().get_transaction(), clone_db_dir);
       return 0;
@@ -164,8 +165,9 @@ int main(int argc, char *argv[])
       max_allowed_time = 0;
     
     // open read transaction and log this.
+    area_level = determine_area_level(error_output, area_level);
     Dispatcher_Stub dispatcher(db_dir, error_output, xml_raw, area_level,
-			       max_allowed_time, max_allowed_space);
+			       get_uses_meta_data(), max_allowed_time, max_allowed_space);
  
     Web_Output web_output(log_level);
     if (!osm_script || osm_script->get_type() == "xml")

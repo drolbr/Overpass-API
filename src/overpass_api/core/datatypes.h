@@ -199,6 +199,13 @@ struct Error_Output
 };
 
 
+class Area_Usage_Listener
+{
+  public:
+    virtual void flush() = 0;
+};
+
+
 class Osm_Backend_Callback
 {
   public:
