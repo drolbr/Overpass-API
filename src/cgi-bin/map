@@ -24,6 +24,6 @@ if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
 };
 fi
 
-QUERY_STRING="data=(node(bbox);way(bn);node(w););(._;(rel(bn)->.a;rel(bw)->.a;);rel(br););out meta;&$QUERY_STRING"
+QUERY_STRING="data=[bbox];(node(bbox);way(bn);node(w););(._;(rel(bn)->.a;rel(bw)->.a;);rel(br););out meta;&$QUERY_STRING"
 
 ./interpreter

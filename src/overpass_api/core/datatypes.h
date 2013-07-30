@@ -202,6 +202,7 @@ struct Error_Output
 class Area_Usage_Listener
 {
   public:
+    virtual ~Area_Usage_Listener() {}
     virtual void flush() = 0;
 };
 
