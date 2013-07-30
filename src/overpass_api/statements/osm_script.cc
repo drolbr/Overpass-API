@@ -285,8 +285,8 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
     }
     
     if (bbox_statement)
-      output_handle->print_bounds(bbox_statement->get_south(), bbox_statement->get_east(),
-                                  bbox_statement->get_north(), bbox_statement->get_west());
+      output_handle->print_bounds(bbox_statement->get_south(), bbox_statement->get_west(),
+                                  bbox_statement->get_north(), bbox_statement->get_east());
   }
   
   for (vector< Statement* >::iterator it(substatements.begin());
