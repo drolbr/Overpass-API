@@ -261,7 +261,7 @@ string correspondence_item_template()
 
 string correspondence_below_template()
 {
-  return "<a xlink:href=\"/api/sketch-line?ref=$ref;&network=$network;&style=wuppertal#$stopname;\"><text x=\"0\" y=\"0\" transform=\"translate($hpos;,$vpos;)\""
+  return "<a xlink:href=\"/api/sketch-line?ref=$ref;&network=$network;&style=$stylename;#$stopname;\"><text x=\"0\" y=\"0\" transform=\"translate($hpos;,$vpos;)\""
   " font-family=\"Liberation Sans, sans-serif\" font-size=\"$stop_fontsize;px\""
   " text-anchor=\"middle\" fill=\"$color;\">$ref;</text></a>\n"
   "\n";
@@ -495,12 +495,15 @@ int main(int argc, char *argv[])
   
   doubleread_rel = false;
   int argi(1);
+  string stylename;
+  stylename = "";
   // check on early run for options only
   while (argi < argc)
   {
     if (!strncmp("--options=", argv[argi], 10))
     {
-      FILE* options_file(fopen(((string)(argv[argi])).substr(10).c_str(), "r"));
+	  style_name = ((string)(argv[argi])).substr(10).c_str(), "r";
+      FILE* options_file(fopen(style_name));
       if (!options_file)
       {
 	cout<<Replacer< double >("$width;", width).apply
@@ -1025,12 +1028,13 @@ int main(int argc, char *argv[])
 	{
 	  result<<Replacer< string >("$ref;", cit->ref).apply
 	      (Replacer< string >("$color;", cit->color).apply
-		  (Replacer< string >("$network;", pivot_network).apply
+		  (Replacer< string >("$network;", cit->network).apply
 	      (Replacer< double >("$stop_fontsize;", stop_font_size).apply
 	      (Replacer< double >("$hpos;", pos).apply
 	      (Replacer< double >("$vpos;", vpos + stop_font_size*(i+1) + 20*offset_of[relations.size()] - 10).apply
 		  (Replacer< string >("$stopname;", stopname).apply
-	      (correspondence_below_template()))))));
+		  (Replacer< string >("$stylename;", stylename).apply
+	      (correspondence_below_template())))))));
 	  ++i;
 	}
       }
@@ -1279,12 +1283,13 @@ int main(int argc, char *argv[])
 	{
 	  result<<Replacer< string >("$ref;", cit->ref).apply
 	  (Replacer< string >("$color;", cit->color).apply
-	  (Replacer< string >("$network;", pivot_network).apply
+	  (Replacer< string >("$network;", cit->network).apply
 	  (Replacer< double >("$stop_fontsize;", stop_font_size).apply
 	  (Replacer< double >("$hpos;", pos).apply
 	  (Replacer< double >("$vpos;", vpos + stop_font_size*(i+1) + 20*offset_of[relations.size()] - 10).apply
 	  (Replacer< string >("$stopname;", stopname).apply
-	  (correspondence_below_template())))));
+	  (Replacer< string >("$stylename;", style).apply
+	  (correspondence_below_template())))))));
 	  ++i;
 	}
       }
