@@ -72,17 +72,17 @@ dist_cgibin_SCRIPTS = \
 templatesdir = ${prefix}/templates
 templates_DATA = templates/default.wiki templates/base.wiki
 
-noinst_LTLIBRARIES = libcore.la libdata.la libdispatcher.la libexpatwrapper.la libfrontend.la liboutput.la libsettings.la libstatements.la libweboutput.la
+noinst_LTLIBRARIES = libcore.la libdata.la libdispatcher.la libexpatwrapper.la libfrontend.la liboutput.la libsettings.la libweboutput.la
 
 statements_dir = overpass_api/statements
 statements_cc = ${statements_dir}/statement.cc ${statements_dir}/area_query.cc ${statements_dir}/around.cc ${statements_dir}/bbox_query.cc ${statements_dir}/coord_query.cc ${statements_dir}/difference.cc ${statements_dir}/foreach.cc ${statements_dir}/id_query.cc ${statements_dir}/item.cc ${statements_dir}/make_area.cc ${statements_dir}/newer.cc ${statements_dir}/osm_script.cc ${statements_dir}/pivot.cc ${statements_dir}/polygon_query.cc ${statements_dir}/print.cc ${statements_dir}/query.cc ${statements_dir}/recurse.cc ${statements_dir}/union.cc ${statements_dir}/user.cc overpass_api/frontend/print_target.cc
 
 libcore_la_SOURCES = overpass_api/frontend/map_ql_parser.cc overpass_api/statements/statement_dump.cc expat/map_ql_input.cc
-libcore_la_LIBADD = libdispatcher.la libexpatwrapper.la libsettings.la libstatements.la libweboutput.la
+libcore_la_LIBADD = libdispatcher.la libexpatwrapper.la libsettings.la libweboutput.la
 libdata_la_SOURCES = overpass_api/data/collect_members.cc
 libdata_la_LIBADD =
 libdispatcher_la_SOURCES = template_db/dispatcher.cc overpass_api/dispatch/resource_manager.cc overpass_api/osm-backend/area_updater.cc
-libdispatcher_la_LIBADD = 
+libdispatcher_la_LIBADD = -lrt
 libexpatwrapper_la_SOURCES = expat/expat_justparse_interface.cc
 libexpatwrapper_la_LIBADD = -lexpat
 libfrontend_la_SOURCES = overpass_api/frontend/cgi-helper.cc overpass_api/frontend/user_interface.cc
@@ -91,8 +91,8 @@ liboutput_la_SOURCES = overpass_api/frontend/output.cc
 liboutput_la_LIBADD =
 libsettings_la_SOURCES = overpass_api/core/settings.cc
 libsettings_la_LIBADD =
-libstatements_la_SOURCES = ${statements_cc}
-libstatements_la_LIBADD = libdata.la
+# libstatements_la_SOURCES = ${statements_cc}
+# libstatements_la_LIBADD = libdata.la
 libweboutput_la_SOURCES = overpass_api/frontend/web_output.cc
 libweboutput_la_LIBADD = libfrontend.la
 
@@ -103,14 +103,14 @@ bin_update_database_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/update_
 bin_update_database_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la
 bin_update_from_dir_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/update_from_dir.cc
 bin_update_from_dir_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la
-bin_osm3s_query_SOURCES = overpass_api/frontend/console_output.cc overpass_api/dispatch/osm3s_query.cc overpass_api/osm-backend/clone_database.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc
-bin_osm3s_query_LDADD = libcore.la
+bin_osm3s_query_SOURCES = ${statements_cc} overpass_api/frontend/console_output.cc overpass_api/dispatch/osm3s_query.cc overpass_api/osm-backend/clone_database.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc
+bin_osm3s_query_LDADD = libcore.la libdata.la
 bin_dispatcher_SOURCES = overpass_api/dispatch/dispatcher_server.cc
 bin_dispatcher_LDADD = libdispatcher.la libfrontend.la libsettings.la
 
 
-cgi_bin_interpreter_SOURCES = overpass_api/dispatch/web_query.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc
-cgi_bin_interpreter_LDADD = libcore.la
+cgi_bin_interpreter_SOURCES = ${statements_cc} overpass_api/dispatch/web_query.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc
+cgi_bin_interpreter_LDADD = libcore.la libdata.la
 cgi_bin_timestamp_SOURCES = overpass_api/dispatch/db_timestamp.cc overpass_api/dispatch/dispatcher_stub.cc
 cgi_bin_timestamp_LDADD = libdispatcher.la libsettings.la libweboutput.la
 

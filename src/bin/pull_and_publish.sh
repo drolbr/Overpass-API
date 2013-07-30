@@ -145,6 +145,7 @@ if [[ -n $PUBLISH || -n $INSTALL ]]; then
 
   pushd src/
   autoscan
+  libtoolize
   aclocal
   autoheader
   automake --add-missing
