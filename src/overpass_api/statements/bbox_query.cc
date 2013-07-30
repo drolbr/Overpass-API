@@ -80,6 +80,11 @@ bool Bbox_Constraint::get_ranges
 void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
 {
   // process nodes
+  uint32 south_ = ilat_(bbox->get_south());
+  uint32 north_ = ilat_(bbox->get_north());
+  int32 west_ = ilon_(bbox->get_west());
+  int32 east_ = ilon_(bbox->get_east());
+  
   for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = into.nodes.begin();
       it != into.nodes.end(); ++it)
   {
@@ -87,12 +92,11 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
     for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
-      double lat(::lat(it->first.val(), iit->ll_lower));
-      double lon(::lon(it->first.val(), iit->ll_lower));
-      if ((lat >= bbox->get_south()) && (lat <= bbox->get_north()) &&
-	  (((lon >= bbox->get_west()) && (lon <= bbox->get_east())) ||
-	  ((bbox->get_east() < bbox->get_west()) && ((lon >= bbox->get_west()) ||
-	  (lon <= bbox->get_east())))))
+      uint32 lat(::ilat(it->first.val(), iit->ll_lower));
+      int32 lon(::ilon(it->first.val(), iit->ll_lower));
+      if ((lat >= south_) && (lat <= north_) &&
+          (((lon >= west_) && (lon <= east_))
+            || ((east_ < west_) && ((lon >= west_) || (lon <= east_)))))
 	local_into.push_back(*iit);
     }
     it->second.swap(local_into);
@@ -368,6 +372,11 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
   
   uint nodes_count = 0;
   
+  uint32 south_ = ilat_(south);
+  uint32 north_ = ilat_(north);
+  int32 west_ = ilon_(west);
+  int32 east_ = ilon_(east);
+  
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
     (rman.get_transaction()->data_index(osm_base_settings().NODES));
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
@@ -382,12 +391,12 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
       rman.health_check(*this);
     }
     
-    double lat(::lat(it.index().val(), it.object().ll_lower));
-    double lon(::lon(it.index().val(), it.object().ll_lower));
-    if ((lat >= south) && (lat <= north) &&
-        (((lon >= west) && (lon <= east))
-	  || ((east < west) && ((lon >= west) || (lon <= east)))))
-      into.nodes[it.index()].push_back(it.object());    
+    uint32 lat(::ilat(it.index().val(), it.object().ll_lower));
+    int32 lon(::ilon(it.index().val(), it.object().ll_lower));
+    if ((lat >= south_) && (lat <= north_) &&
+        (((lon >= west_) && (lon <= east_))
+	  || ((east_ < west_) && ((lon >= west_) || (lon <= east_)))))
+      into.nodes[it.index()].push_back(it.object());
   }
   
   transfer_output(rman, into);
