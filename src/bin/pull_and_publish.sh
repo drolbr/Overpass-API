@@ -162,9 +162,9 @@ fi
 
 if [[ -n $PUBLISH ]]; then
 {
-  echo "SUBDIRS = bin cgi-bin" >"osm-3s_v$VERSION/src/Makefile.am"
+  #echo "SUBDIRS = bin cgi-bin" >"osm-3s_v$VERSION/src/Makefile.am"
   tar chvf - --exclude=osm-3s_testing "osm-3s_v$VERSION/" | gzip >"$PUBLISH/osm-3s_v$VERSION.tar.gz"
-  echo "SUBDIRS = bin cgi-bin test-bin" >"osm-3s_v$VERSION/src/Makefile.am"
+  #echo "SUBDIRS = bin cgi-bin test-bin" >"osm-3s_v$VERSION/src/Makefile.am"
 };
 fi
 

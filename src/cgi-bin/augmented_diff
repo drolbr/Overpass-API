@@ -51,7 +51,7 @@ while [[ -a /tmp/augmented_diff ]]; do
     rm -f /tmp/augmented_diff
   fi
 }; done
-cat $$ >/tmp/augmented_diff
+echo $$ >/tmp/augmented_diff
 
 printf -v TDIGIT3 %03u $(($ID % 1000))
 ARG=$(($ID / 1000))
