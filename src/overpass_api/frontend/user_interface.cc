@@ -73,11 +73,11 @@ namespace
     }
     
     // pos again points at the first non-whitespace character.
-    if (input.substr(pos, 11) == "<osm-script")
+    if (input.substr(pos, 1) == "<" && input.find("<osm-script") != string::npos)
       // Add a header line and remove trailing whitespace.
     {
       ostringstream temp;
-      temp<<"Your input starts with a 'osm-script' tag. Thus, a line with the\n"
+      temp<<"Your input contains an 'osm-script' tag. Thus, a line with the\n"
       <<"datatype declaration is added. This shifts line numbering by "
       <<(int)line_number - 2<<" line(s).";
       if (error_output)
