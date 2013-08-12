@@ -303,6 +303,11 @@ struct OSM_Element_Metadata_Skeleton
   OSM_Element_Metadata_Skeleton(Id_Type ref_)
     : ref(ref_), version(0), timestamp(0), changeset(0), user_id(0) {}
   
+  OSM_Element_Metadata_Skeleton(Id_Type ref_, const OSM_Element_Metadata& meta)
+    : ref(ref_),
+      version(meta.version), timestamp(meta.timestamp),
+      changeset(meta.changeset), user_id(meta.user_id) {}
+  
   OSM_Element_Metadata_Skeleton(void* data)
     : ref(*(Id_Type*)data)
   {

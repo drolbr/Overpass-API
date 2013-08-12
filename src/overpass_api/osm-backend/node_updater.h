@@ -285,41 +285,11 @@ struct Node_Updater
     if (meta)
     {
       user_by_id[meta->user_id] = meta->user_name;
-      OSM_Element_Metadata_Skeleton< Node::Id_Type > meta_skel;
-      meta_skel.ref = id;
-      meta_skel.version = meta->version;
-      meta_skel.changeset = meta->changeset;
-      meta_skel.timestamp = meta->timestamp;
-      meta_skel.user_id = meta->user_id;
+      OSM_Element_Metadata_Skeleton< Node::Id_Type > meta_skel(id, *meta);
       nodes_meta_to_delete.push_back(meta_skel);
     }
   }
   
-  void set_node
-      (uint32 id, uint32 lat, uint32 lon,
-       const vector< pair< string, string > >& tags,
-       const OSM_Element_Metadata* meta = 0)
-  {
-    ids_to_modify.push_back(make_pair(id, true));
-    
-    Node node;
-    node.id = id;
-    node.index = ::ll_upper_(lat, lon);
-    node.ll_lower_ = ::ll_lower(lat, lon);
-    node.tags = tags;
-    nodes_to_insert.push_back(node);
-    if (meta)
-    {
-      user_by_id[meta->user_id] = meta->user_name;
-      OSM_Element_Metadata_Skeleton< Node::Id_Type > meta_skel;
-      meta_skel.ref = node.id;
-      meta_skel.version = meta->version;
-      meta_skel.changeset = meta->changeset;
-      meta_skel.timestamp = meta->timestamp;
-      meta_skel.user_id = meta->user_id;
-      nodes_meta_to_insert.push_back(make_pair(meta_skel, node.index));
-    }
-  }
   
   void set_node(const Node& node, const OSM_Element_Metadata* meta = 0)
   {
@@ -328,12 +298,7 @@ struct Node_Updater
     if (meta)
     {
       user_by_id[meta->user_id] = meta->user_name;
-      OSM_Element_Metadata_Skeleton< Node::Id_Type > meta_skel;
-      meta_skel.ref = node.id;
-      meta_skel.version = meta->version;
-      meta_skel.changeset = meta->changeset;
-      meta_skel.timestamp = meta->timestamp;
-      meta_skel.user_id = meta->user_id;
+      OSM_Element_Metadata_Skeleton< Node::Id_Type > meta_skel(node.id, *meta);
       nodes_meta_to_insert.push_back(make_pair(meta_skel, node.index));
     }
   }
@@ -351,12 +316,13 @@ private:
   Transaction* transaction;
   bool external_transaction;
   bool partial_possible;
-  vector< pair< Node::Id_Type, bool > > ids_to_modify;
-  vector< Node > nodes_to_insert;
   static Node_Comparator_By_Id node_comparator_by_id;
   static Node_Equal_Id node_equal_id;
-  vector< pair< Node::Id_Type, Uint32_Index > > moved_nodes;
   string db_dir;
+
+  vector< pair< Node::Id_Type, bool > > ids_to_modify;
+  vector< Node > nodes_to_insert;
+  vector< pair< Node::Id_Type, Uint32_Index > > moved_nodes;
 
   bool meta;
   vector< pair< OSM_Element_Metadata_Skeleton< Node::Id_Type >, uint32 > > nodes_meta_to_insert;
