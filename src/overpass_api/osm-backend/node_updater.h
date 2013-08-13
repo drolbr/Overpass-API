@@ -273,6 +273,36 @@ inline const Node* Update_Node_Logger::get_inserted(Node::Id_Type ref) const
 }
 
 
+template< typename Element_Skeleton >
+struct Data_By_Id
+{
+  struct Entry
+  {
+    Uint31_Index idx;
+    Element_Skeleton elem;
+    OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > meta;
+    std::vector< std::pair< std::string, std::string > > tags;
+    
+    Entry(Uint31_Index idx_, Element_Skeleton elem_,
+        OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > meta_,
+        std::vector< std::pair< std::string, std::string > > tags_
+            = std::vector< std::pair< std::string, std::string > >())
+        : idx(idx_), elem(elem_), meta(meta_), tags(tags_) {}
+    
+    bool operator<(const Entry& e) const
+    {
+      if (this->elem.id < e.elem.id)
+        return true;
+      if (e.elem.id < this->elem.id)
+        return false;
+      return (this->meta.version < e.meta.version);
+    }
+  };
+  
+  std::vector< Entry > data;
+};
+
+
 struct Node_Updater
 {
   Node_Updater(Transaction& transaction, bool meta);
@@ -281,6 +311,15 @@ struct Node_Updater
   
   void set_id_deleted(Node::Id_Type id, const OSM_Element_Metadata* meta = 0)
   {
+    if (meta)
+      new_data.data.push_back(Data_By_Id< Node_Skeleton >::Entry
+          (Uint31_Index(0u), Node_Skeleton(id, 0u),
+           OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(id, *meta)));
+    else
+      new_data.data.push_back(Data_By_Id< Node_Skeleton >::Entry
+          (Uint31_Index(0u), Node_Skeleton(id, 0u),
+           OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(id)));
+    
     ids_to_modify.push_back(make_pair(id, false));
     if (meta)
     {
@@ -293,6 +332,15 @@ struct Node_Updater
   
   void set_node(const Node& node, const OSM_Element_Metadata* meta = 0)
   {
+    if (meta)
+      new_data.data.push_back(Data_By_Id< Node_Skeleton >::Entry
+          (Uint31_Index(node.index), Node_Skeleton(node),
+           OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(node.id, *meta)));
+    else
+      new_data.data.push_back(Data_By_Id< Node_Skeleton >::Entry
+          (Uint31_Index(node.index), Node_Skeleton(node),
+           OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(node.id)));
+    
     ids_to_modify.push_back(make_pair(node.id, true));
     nodes_to_insert.push_back(node);
     if (meta)
@@ -320,6 +368,8 @@ private:
   static Node_Equal_Id node_equal_id;
   string db_dir;
 
+  Data_By_Id< Node_Skeleton > new_data;
+  
   vector< pair< Node::Id_Type, bool > > ids_to_modify;
   vector< Node > nodes_to_insert;
   vector< pair< Node::Id_Type, Uint32_Index > > moved_nodes;
@@ -329,7 +379,8 @@ private:
   vector< OSM_Element_Metadata_Skeleton< Node::Id_Type > > nodes_meta_to_delete;
   map< uint32, string > user_by_id;
   
-  void update_node_ids(map< uint32, vector< Node::Id_Type > >& to_delete, bool record_minuscule_moves);
+  void update_node_ids(map< uint32, vector< Node::Id_Type > >& to_delete, bool record_minuscule_moves,
+      const std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > >& new_idx_positions);
   
   void update_coords(const map< uint32, vector< Node::Id_Type > >& to_delete,
 		     Update_Node_Logger* update_logger);
