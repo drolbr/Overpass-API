@@ -52,7 +52,7 @@ void update_tags_local
 
 template< class TObject >
 void update_tags_global
-    (File_Blocks_Index_Base& tags_global, vector< TObject* >& elems_ptr,
+    (File_Blocks_Index_Base& tags_global, const vector< TObject* >& elems_ptr,
      const vector< pair< typename TObject::Id_Type, bool > >& ids_to_modify,
      const vector< Tag_Entry< typename TObject::Id_Type > >& tags_to_delete);
        
@@ -349,7 +349,7 @@ void update_tags_local
 
 template < class TObject >
 void update_tags_global
-    (File_Blocks_Index_Base& tags_global, vector< TObject* >& elems_ptr,
+    (File_Blocks_Index_Base& tags_global, const vector< TObject* >& elems_ptr,
      const vector< pair< typename TObject::Id_Type, bool > >& ids_to_modify,
      const vector< Tag_Entry< typename TObject::Id_Type > >& tags_to_delete)
 {

@@ -390,6 +390,34 @@ void new_current_local_tags
 }
 
 
+/* Constructs the global tags from the local tags. */
+template< typename Id_Type >
+void new_current_global_tags
+    (const std::map< Tag_Index_Local, std::set< Id_Type > >& attic_local_tags,
+     const std::map< Tag_Index_Local, std::set< Id_Type > >& new_local_tags,
+     std::map< Tag_Index_Global, std::set< Id_Type > >& attic_global_tags,
+     std::map< Tag_Index_Global, std::set< Id_Type > >& new_global_tags)
+{
+  for (typename std::map< Tag_Index_Local, std::set< Id_Type > >::const_iterator
+      it_idx = attic_local_tags.begin(); it_idx != attic_local_tags.end(); ++it_idx)
+  {
+    std::set< Id_Type >& handle(attic_global_tags[Tag_Index_Global(it_idx->first)]);
+    for (typename std::set< Id_Type >::const_iterator it = it_idx->second.begin();
+         it != it_idx->second.end(); ++it)
+      handle.insert(*it);
+  }
+  
+  for (typename std::map< Tag_Index_Local, std::set< Id_Type > >::const_iterator
+      it_idx = new_local_tags.begin(); it_idx != new_local_tags.end(); ++it_idx)
+  {
+    std::set< Id_Type >& handle(new_global_tags[Tag_Index_Global(it_idx->first)]);
+    for (typename std::set< Id_Type >::const_iterator it = it_idx->second.begin();
+         it != it_idx->second.end(); ++it)
+      handle.insert(*it);
+  }
+}
+
+
 template< typename Index, typename Object, typename Update_Logger >
 void update_elements
     (const std::map< Index, std::set< Object > >& attic_objects,
@@ -402,6 +430,17 @@ void update_elements
     db.update(attic_objects, new_objects, *update_logger);
   else
     db.update(attic_objects, new_objects);
+}
+
+
+template< typename Index, typename Object >
+void update_elements
+    (const std::map< Index, std::set< Object > >& attic_objects,
+     const std::map< Index, std::set< Object > >& new_objects,
+     Transaction& transaction, const File_Properties& file_properties)
+{
+  Block_Backend< Index, Object > db(transaction.data_index(&file_properties));
+  db.update(attic_objects, new_objects);
 }
 
 
@@ -564,6 +603,10 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
   std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > > new_local_tags;
   new_current_local_tags< Node_Skeleton, Update_Node_Logger, Node_Skeleton::Id_Type >
       (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
+  std::map< Tag_Index_Global, std::set< Node_Skeleton::Id_Type > > attic_global_tags;
+  std::map< Tag_Index_Global, std::set< Node_Skeleton::Id_Type > > new_global_tags;
+  new_current_global_tags< Node_Skeleton::Id_Type >
+      (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
   
   // TODO: old code
   map< uint32, vector< Node::Id_Type > > to_delete;
@@ -586,6 +629,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
   }
 
   callback->update_started();
+  callback->prepare_delete_tags_finished();
   
   // Update id indexes
   update_map_positions(new_map_positions, *transaction, *osm_base_settings().NODES);
@@ -604,23 +648,12 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
                   update_logger);
   callback->tags_local_finished();
   
+  // Update global tags
+  update_elements(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().NODE_TAGS_GLOBAL);
+  callback->tags_global_finished();
+  
   new_data.data.clear();
   
-  Node_Comparator_By_Id node_comparator_by_id;
-  Node_Equal_Id node_equal_id;
-  
-//  vector< Tag_Entry< Node::Id_Type > > tags_to_delete;
-//   prepare_delete_tags(*transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL),
-// 		      tags_to_delete, to_delete);
-  callback->prepare_delete_tags_finished();
-  vector< Node* > nodes_ptr = sort_elems_to_insert
-      (nodes_to_insert, node_comparator_by_id, node_equal_id);
-//   update_tags_local(*transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL),
-//  		    nodes_ptr, ids_to_modify, existing_local_tags, update_logger,
-//                     attic_local_tags, new_local_tags);
-  update_tags_global(*transaction->data_index(osm_base_settings().NODE_TAGS_GLOBAL),
-		     nodes_ptr, ids_to_modify, existing_local_tags);
-  callback->tags_global_finished();
   if (meta)
   {
     map< uint32, vector< uint32 > > idxs_by_id;

@@ -165,6 +165,8 @@ struct Tag_Index_Global
 		   *((uint16*)data + 1));
   }
   
+  Tag_Index_Global(const Tag_Index_Local& tag_idx) : key(tag_idx.key), value(tag_idx.value) {}
+  
   uint32 size_of() const
   {
     return 4 + key.length() + value.length();
