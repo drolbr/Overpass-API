@@ -127,6 +127,32 @@ std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_skeletons
 
 
 template< typename Element_Skeleton >
+std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_meta
+    (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& ids_with_position,
+     Transaction& transaction, const File_Properties& file_properties)
+{
+  std::set< Uint31_Index > req;
+  for (typename std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >::const_iterator
+      it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
+    req.insert(it->second);
+  
+  std::map< Uint31_Index, std::set< Element_Skeleton > > result;
+  Idx_Agnostic_Compare< typename Element_Skeleton::Id_Type > comp;
+  
+  Block_Backend< Uint31_Index, Element_Skeleton > db(transaction.data_index(&file_properties));
+  for (typename Block_Backend< Uint31_Index, Element_Skeleton >::Discrete_Iterator
+      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+  {
+    if (binary_search(ids_with_position.begin(), ids_with_position.end(),
+        make_pair(it.object().ref, 0), comp))
+      result[it.index()].insert(it.object());
+  }
+
+  return result;
+}
+
+
+template< typename Element_Skeleton >
 std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > > new_idx_positions
     (const Data_By_Id< Element_Skeleton >& new_data)
 {
@@ -163,10 +189,23 @@ bool geometrically_equal(const Node_Skeleton& a, const Node_Skeleton& b)
 }
 
 
+// TODO: temporary helper function for update_logger
+void tell_update_logger_insertions
+    (const typename Data_By_Id< Node_Skeleton >::Entry& entry, Update_Node_Logger* update_logger)
+{
+  if (update_logger)
+  {
+    Node node(entry.elem.id, entry.idx.val(), entry.elem.ll_lower);
+    node.tags = entry.tags;
+    update_logger->insertion(node);
+  }
+}
+
+
 /* Compares the new data and the already existing skeletons to determine those that have
  * moved. This information is used to prepare the deletion and insertion lists for the
  * database operation.  Also, the list of moved nodes is filled. */
-template< typename Element_Skeleton >
+template< typename Element_Skeleton, typename Update_Logger >
 void new_current_skeletons
     (const Data_By_Id< Element_Skeleton >& new_data,
      const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
@@ -174,7 +213,8 @@ void new_current_skeletons
      bool record_minuscule_moves,
      std::map< Uint31_Index, std::set< Element_Skeleton > >& attic_skeletons,
      std::map< Uint31_Index, std::set< Element_Skeleton > >& new_skeletons,
-     vector< pair< Node::Id_Type, Uint32_Index > >& moved_nodes)
+     vector< pair< Node::Id_Type, Uint32_Index > >& moved_nodes,
+     Update_Logger* update_logger)
 {
   attic_skeletons = existing_skeletons;
   
@@ -197,6 +237,7 @@ void new_current_skeletons
     if (!idx)
     {
       // No old data exists. So we can add the new data and are done.
+      tell_update_logger_insertions(*it, update_logger);
       new_skeletons[it->idx].insert(it->elem);
       continue;
     }
@@ -204,6 +245,7 @@ void new_current_skeletons
     {
       // The old and new version have different indexes. So they are surely different.
       moved_nodes.push_back(make_pair(it->elem.id, Uint32_Index(idx->val())));
+      tell_update_logger_insertions(*it, update_logger);
       new_skeletons[it->idx].insert(it->elem);
       continue;
     }
@@ -213,6 +255,7 @@ void new_current_skeletons
     if (it_attic_idx == attic_skeletons.end())
     {
       // Something has gone wrong. Save at least the new node.
+      tell_update_logger_insertions(*it, update_logger);
       new_skeletons[it->idx].insert(it->elem);
       continue;
     }
@@ -222,17 +265,19 @@ void new_current_skeletons
     if (it_attic == it_attic_idx->second.end())
     {
       // Something has gone wrong. Save at least the new node.
+      tell_update_logger_insertions(*it, update_logger);
       new_skeletons[it->idx].insert(it->elem);
       continue;
     }
     
     // We have found an element at the same index with the same id, so this is a candidate for
     // not being moved.
-    if (geometrically_equal(it->elem, *it_attic))
+    if (false/*geometrically_equal(it->elem, *it_attic)*/) // TODO: temporary change to keep update_logger working
       // The element stays unchanged.
       it_attic_idx->second.erase(it_attic);
     else
     {
+      tell_update_logger_insertions(*it, update_logger);
       new_skeletons[it->idx].insert(it->elem);
       if (record_minuscule_moves)
         moved_nodes.push_back(make_pair(it->elem.id, Uint32_Index(idx->val())));
@@ -241,19 +286,122 @@ void new_current_skeletons
 }
 
 
-template< typename Element_Skeleton, typename Update_Logger >
-void update_skeletons
-    (const std::map< Uint31_Index, std::set< Element_Skeleton > >& attic_skeletons,
-     const std::map< Uint31_Index, std::set< Element_Skeleton > >& new_skeletons,
+/* Compares the new data and the already existing skeletons to determine those that have
+ * moved. This information is used to prepare the deletion and insertion lists for the
+ * database operation.  Also, the list of moved nodes is filled. */
+template< typename Element_Skeleton >
+void new_current_meta
+    (const Data_By_Id< Element_Skeleton >& new_data,
+     const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
+     const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& existing_meta,
+     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& attic_meta,
+     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& new_meta)
+{
+  attic_meta = existing_meta;
+  
+  typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator next_it
+      = new_data.data.begin();
+  for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
+      it = new_data.data.begin(); it != new_data.data.end(); ++it)
+  {
+    ++next_it;
+    if (next_it != new_data.data.end() && it->elem.id == next_it->elem.id)
+      // A later version exist also in new_data. So there is nothing to do.
+      continue;
+
+    if (it->idx == Uint31_Index(0u))
+      // There is nothing to do for elements to delete. If they exist, they are contained in the
+      // attic_meta.
+      continue;
+    
+    new_meta[it->idx].insert(it->meta);    
+  }
+}
+
+
+template< typename Id_Type >
+void add_tags(Id_Type id, Uint31_Index idx,
+    const std::vector< std::pair< std::string, std::string > >& tags,
+    std::map< Tag_Index_Local, std::set< Id_Type > >& attic_local_tags,
+    std::map< Tag_Index_Local, std::set< Id_Type > >& new_local_tags)
+{
+  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags.begin();
+       it != tags.end(); ++it)
+    new_local_tags[Tag_Index_Local(idx.val() & 0xffffff00, it->first, it->second)].insert(id);
+}
+
+
+/* Compares the new data and the already existing skeletons to determine those that have
+ * moved. This information is used to prepare the deletion and insertion lists for the
+ * database operation.  Also, the list of moved nodes is filled. */
+template< typename Element_Skeleton, typename Update_Logger, typename Id_Type >
+void new_current_local_tags
+    (const Data_By_Id< Element_Skeleton >& new_data,
+     const std::vector< std::pair< Id_Type, Uint31_Index > >& existing_map_positions,
+     const std::vector< Tag_Entry< Id_Type > >& existing_local_tags,
+     std::map< Tag_Index_Local, std::set< Id_Type > >& attic_local_tags,
+     std::map< Tag_Index_Local, std::set< Id_Type > >& new_local_tags)
+{
+  //TODO: convert the data format until existing_local_tags get the new data format
+  attic_local_tags.clear();
+  for (typename std::vector< Tag_Entry< Id_Type > >::const_iterator it_idx = existing_local_tags.begin();
+       it_idx != existing_local_tags.end(); ++it_idx)
+  {
+    std::set< Id_Type >& handle(attic_local_tags[*it_idx]);
+    for (typename std::vector< Id_Type >::const_iterator it = it_idx->ids.begin();
+         it != it_idx->ids.end(); ++it)
+      handle.insert(*it);
+  }
+  
+  typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator next_it
+      = new_data.data.begin();
+  for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
+      it = new_data.data.begin(); it != new_data.data.end(); ++it)
+  {
+    ++next_it;
+    if (next_it != new_data.data.end() && it->elem.id == next_it->elem.id)
+      // A later version exist also in new_data. So there is nothing to do.
+      continue;
+
+    if (it->idx == Uint31_Index(0u))
+      // There is nothing to do for elements to delete. If they exist, they are contained in the
+      // attic_skeletons.
+      continue;
+    
+    const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
+    if (!idx)
+    {
+      // No old data exists. So we can add the new data and are done.
+      add_tags(it->elem.id, it->idx, it->tags, attic_local_tags, new_local_tags);
+      continue;
+    }
+    else if ((idx->val() & 0xffffff00) != (it->idx.val() & 0xffffff00))
+    {
+      // The old and new version have different indexes. So they are surely different.
+      add_tags(it->elem.id, it->idx, it->tags, attic_local_tags, new_local_tags);
+      continue;
+    }
+    
+    // The old and new tags for this id go to the same index.
+    // TODO: For compatibility with the update_logger, we add all tags
+    // regardless whether they existed already before
+    add_tags(it->elem.id, it->idx, it->tags, attic_local_tags, new_local_tags);
+  }
+}
+
+
+template< typename Index, typename Object, typename Update_Logger >
+void update_elements
+    (const std::map< Index, std::set< Object > >& attic_objects,
+     const std::map< Index, std::set< Object > >& new_objects,
      Transaction& transaction, const File_Properties& file_properties,
      Update_Logger* update_logger)
 {
-  Block_Backend< Uint31_Index, Element_Skeleton > node_db
-      (transaction.data_index(&file_properties));
+  Block_Backend< Index, Object > db(transaction.data_index(&file_properties));
   if (update_logger)
-    node_db.update(attic_skeletons, new_skeletons, *update_logger);
+    db.update(attic_objects, new_objects, *update_logger);
   else
-    node_db.update(attic_skeletons, new_skeletons);
+    db.update(attic_objects, new_objects);
 }
 
 
@@ -349,8 +497,8 @@ void update_skeletons
   //     (Data_Dict new_data, each data to delete: skels, tags)
   
   // write_update_trail(vec< pair< Id, vec< Idx > > >)
+    
   
-
 Node_Updater::Node_Updater(Transaction& transaction_, bool meta_)
   : update_counter(0), transaction(&transaction_),
     external_transaction(true), partial_possible(false), meta(meta_)
@@ -373,34 +521,55 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
   
+  // Prepare collecting all data of existing skeletons
   std::sort(new_data.data.begin(), new_data.data.end());  
-  std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > new_idx_positions_
+  std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > new_map_positions
       = new_idx_positions(new_data);
-  
   std::vector< Node_Skeleton::Id_Type > ids_to_update_ = ids_to_update(new_data);
+  
+  // Collect all data of existing id indexes
   std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > existing_map_positions
       = get_existing_map_positions(ids_to_update_, *transaction, *osm_base_settings().NODES);
+  
+  // Collect all data of existing skeletons
   std::map< Uint31_Index, std::set< Node_Skeleton > > existing_skeletons
       = get_existing_skeletons< Node_Skeleton >
       (existing_map_positions, *transaction, *osm_base_settings().NODES);
 
+  // Collect all data of existing meta elements
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node::Id_Type > > > existing_meta
+      = (meta ? get_existing_meta< OSM_Element_Metadata_Skeleton< Node::Id_Type > >
+             (existing_map_positions, *transaction, *meta_settings().NODES_META) :
+         std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node::Id_Type > > >());
+      
+  // Collect all data of existing tags
+  std::vector< Tag_Entry< Node_Skeleton::Id_Type > > existing_local_tags;
+  get_existing_tags< Node_Skeleton::Id_Type >
+      (existing_map_positions, *transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL),
+       existing_local_tags);
+
+  // Compute which objects really have changed
   std::map< Uint31_Index, std::set< Node_Skeleton > > attic_skeletons;
   std::map< Uint31_Index, std::set< Node_Skeleton > > new_skeletons;
   new_current_skeletons(new_data, existing_map_positions, existing_skeletons,
-      (update_logger != 0), attic_skeletons, new_skeletons, moved_nodes);
+      (update_logger != 0), attic_skeletons, new_skeletons, moved_nodes, update_logger);
+      
+  // Compute which meta data really has changed
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > attic_meta;
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > new_meta;
+  new_current_meta(new_data, existing_map_positions, existing_meta, attic_meta, new_meta);
+      
+  // Compute which tags really have changed
+  std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > > attic_local_tags;
+  std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > > new_local_tags;
+  new_current_local_tags< Node_Skeleton, Update_Node_Logger, Node_Skeleton::Id_Type >
+      (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
   
+  // TODO: old code
   map< uint32, vector< Node::Id_Type > > to_delete;
-  callback->update_started();
-  update_node_ids(to_delete, (update_logger != 0), new_idx_positions_);
-  callback->update_ids_finished();
-  update_coords(to_delete, update_logger);
-  callback->update_coords_finished();
+  update_node_ids(to_delete, (update_logger != 0), new_map_positions);
 
-  update_map_positions(new_idx_positions_, *transaction, *osm_base_settings().NODES);
-  update_skeletons(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().NODES, update_logger);
-  
-  new_data.data.clear();
-  
+  // TODO: old code
   if (update_logger && meta)
   {
     for (vector< pair< OSM_Element_Metadata_Skeleton< Node::Id_Type >, uint32 > >::const_iterator
@@ -415,28 +584,47 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
       update_logger->insertion(it->first.ref, meta);
     }
   }
+
+  callback->update_started();
+  
+  // Update id indexes
+  update_map_positions(new_map_positions, *transaction, *osm_base_settings().NODES);
+  callback->update_ids_finished();
+  
+  // Update skeletons
+  update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().NODES, update_logger);
+  callback->update_coords_finished();
+  
+  // Update meta
+  if (meta)
+    update_elements(attic_meta, new_meta, *transaction, *meta_settings().NODES_META, update_logger);
+  
+  // Update local tags
+  update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().NODE_TAGS_LOCAL,
+                  update_logger);
+  callback->tags_local_finished();
+  
+  new_data.data.clear();
   
   Node_Comparator_By_Id node_comparator_by_id;
   Node_Equal_Id node_equal_id;
   
-  vector< Tag_Entry< Node::Id_Type > > tags_to_delete;
-  prepare_delete_tags(*transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL),
-		      tags_to_delete, to_delete);
+//  vector< Tag_Entry< Node::Id_Type > > tags_to_delete;
+//   prepare_delete_tags(*transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL),
+// 		      tags_to_delete, to_delete);
   callback->prepare_delete_tags_finished();
   vector< Node* > nodes_ptr = sort_elems_to_insert
       (nodes_to_insert, node_comparator_by_id, node_equal_id);
-  update_tags_local(*transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL),
-		    nodes_ptr, ids_to_modify, tags_to_delete, update_logger);
-  callback->tags_local_finished();
+//   update_tags_local(*transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL),
+//  		    nodes_ptr, ids_to_modify, existing_local_tags, update_logger,
+//                     attic_local_tags, new_local_tags);
   update_tags_global(*transaction->data_index(osm_base_settings().NODE_TAGS_GLOBAL),
-		     nodes_ptr, ids_to_modify, tags_to_delete);
+		     nodes_ptr, ids_to_modify, existing_local_tags);
   callback->tags_global_finished();
   if (meta)
   {
     map< uint32, vector< uint32 > > idxs_by_id;
     create_idxs_by_id(nodes_meta_to_insert, idxs_by_id);
-    process_meta_data(*transaction->data_index(meta_settings().NODES_META),
-		      nodes_meta_to_insert, ids_to_modify, to_delete, update_logger);
     process_user_data(*transaction, user_by_id, idxs_by_id);
     
     if (update_logger)
@@ -545,84 +733,16 @@ void Node_Updater::update_node_ids
   vector< pair< Node::Id_Type, bool > >::iterator modi_begin
       (unique(ids_to_modify.rbegin(), ids_to_modify.rend(), pair_equal_id).base());
   ids_to_modify.erase(ids_to_modify.begin(), modi_begin);
-  stable_sort
-      (nodes_to_insert.begin(), nodes_to_insert.end(), node_comparator_by_id);
-  vector< Node >::iterator nodes_begin
-      (unique(nodes_to_insert.rbegin(), nodes_to_insert.rend(), node_equal_id)
-       .base());
-  nodes_to_insert.erase(nodes_to_insert.begin(), nodes_begin);
-  
-//   uint put_count = 0;
   
   Random_File< Uint32_Index > random
       (transaction->random_index(osm_base_settings().NODES));
-  vector< Node >::const_iterator nit(nodes_to_insert.begin());
   for (vector< pair< Node::Id_Type, bool > >::const_iterator it(ids_to_modify.begin());
       it != ids_to_modify.end(); ++it)
   {
     Uint32_Index index(random.get(it->first.val()));
     if (index.val() > 0)
       to_delete[index.val()].push_back(it->first);
-    if ((nit != nodes_to_insert.end()) && (it->first == nit->id))
-    {
-      if (it->second)
-      {
-//         ++put_count;
-//         std::cerr<<(binary_search(new_idx_positions.begin(), new_idx_positions.end(),
-//             make_pair(it->first, Uint31_Index(nit->index)), Idx_Agnostic_Compare< Node_Skeleton::Id_Type >()));
-//         if (put_count % 100 == 0)
-//           std::cerr<<'\n';
-	//random.put(it->first.val(), Uint32_Index(nit->index));
-	if ((index.val() > 0) &&
-	    (index.val() != nit->index || record_minuscule_moves))
-	  ;//moved_nodes.push_back(make_pair(it->first, index));
-      }
-      ++nit;
-    }
   }
-  
-//   std::cerr<<(new_idx_positions.size() == put_count)<<'\n';
-  
-  sort(moved_nodes.begin(), moved_nodes.end());
-}
-
-void Node_Updater::update_coords(const map< uint32, vector< Node::Id_Type > >& to_delete,
-				 Update_Node_Logger* update_logger)
-{
-  map< Uint32_Index, set< Node_Skeleton > > db_to_delete;
-  map< Uint32_Index, set< Node_Skeleton > > db_to_insert;
-  
-  for (map< uint32, vector< Node::Id_Type > >::const_iterator
-      it(to_delete.begin()); it != to_delete.end(); ++it)
-  {
-    Uint32_Index idx(it->first);
-    for (vector< Node::Id_Type >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-    db_to_delete[idx].insert(Node_Skeleton(*it2, 0));
-  }
-  vector< Node >::const_iterator nit(nodes_to_insert.begin());
-  for (vector< pair< Node::Id_Type, bool > >::const_iterator it(ids_to_modify.begin());
-      it != ids_to_modify.end(); ++it)
-  {
-    if ((nit != nodes_to_insert.end()) && (it->first == nit->id))
-    {
-      if (it->second)
-      {
-	Uint32_Index idx(nit->index);
-	db_to_insert[idx].insert(Node_Skeleton(*nit));
-	if (update_logger)
-          update_logger->insertion(*nit);	  
-      }
-      ++nit;
-    }
-  }
-  
-//   Block_Backend< Uint32_Index, Node_Skeleton > node_db
-//       (transaction->data_index(osm_base_settings().NODES));
-//   if (update_logger)
-//     node_db.update(db_to_delete, db_to_insert, *update_logger);
-//   else
-//     node_db.update(db_to_delete, db_to_insert);
 }
 
 

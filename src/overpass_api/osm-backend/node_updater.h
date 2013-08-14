@@ -335,11 +335,13 @@ struct Node_Updater
     if (meta)
       new_data.data.push_back(Data_By_Id< Node_Skeleton >::Entry
           (Uint31_Index(node.index), Node_Skeleton(node),
-           OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(node.id, *meta)));
+           OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(node.id, *meta),
+           node.tags));
     else
       new_data.data.push_back(Data_By_Id< Node_Skeleton >::Entry
           (Uint31_Index(node.index), Node_Skeleton(node),
-           OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(node.id)));
+           OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(node.id),
+           node.tags));
     
     ids_to_modify.push_back(make_pair(node.id, true));
     nodes_to_insert.push_back(node);
@@ -375,15 +377,13 @@ private:
   vector< pair< Node::Id_Type, Uint32_Index > > moved_nodes;
 
   bool meta;
+  map< uint32, string > user_by_id;
+  
   vector< pair< OSM_Element_Metadata_Skeleton< Node::Id_Type >, uint32 > > nodes_meta_to_insert;
   vector< OSM_Element_Metadata_Skeleton< Node::Id_Type > > nodes_meta_to_delete;
-  map< uint32, string > user_by_id;
   
   void update_node_ids(map< uint32, vector< Node::Id_Type > >& to_delete, bool record_minuscule_moves,
       const std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > >& new_idx_positions);
-  
-  void update_coords(const map< uint32, vector< Node::Id_Type > >& to_delete,
-		     Update_Node_Logger* update_logger);
   
   void merge_files(const vector< string >& froms, string into);
 };

@@ -51,6 +51,13 @@ struct Tag_Index_Local
   
   Tag_Index_Local() {}
   
+  template< typename Id_Type >
+  Tag_Index_Local(const Tag_Entry< Id_Type >& entry)
+      : index(entry.index), key(entry.key), value(entry.value) {}
+  
+  Tag_Index_Local(Uint31_Index index_, string key_, string value_)
+      : index(index_.val()), key(key_), value(value_) {}
+  
   Tag_Index_Local(void* data)
   {
     index = (*((uint32*)data + 1))<<8;

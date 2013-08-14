@@ -289,9 +289,11 @@ struct OSM_Element_Metadata
 };
 
 
-template< class Id_Type >
+template< typename Id_Type_ >
 struct OSM_Element_Metadata_Skeleton
 {
+  typedef Id_Type_ Id_Type;
+  
   Id_Type ref;
   uint32 version;
   uint64 timestamp;
