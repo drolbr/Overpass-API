@@ -340,7 +340,11 @@ struct OSM_Element_Metadata_Skeleton
   
   bool operator<(const OSM_Element_Metadata_Skeleton& a) const
   {
-    return (ref < a.ref);
+    if (ref < a.ref)
+      return true;
+    else if (a.ref < ref)
+      return false;
+    return (version < a.version);
   }
   
   bool operator==(const OSM_Element_Metadata_Skeleton& a) const

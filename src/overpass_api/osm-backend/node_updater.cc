@@ -351,6 +351,54 @@ void new_current_meta
 }
 
 
+/* Enhance the existing attic meta by the meta entries of deleted elements. */
+template< typename Element_Skeleton >
+void compute_new_attic_meta
+    (const Data_By_Id< Element_Skeleton >& new_data,
+     const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
+     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& new_attic_meta)
+{
+  typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator next_it
+      = new_data.data.begin();
+  Uint31_Index last_index(0u);
+  typename Element_Skeleton::Id_Type last_id(0ull);
+  for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
+      it = new_data.data.begin(); it != new_data.data.end(); ++it)
+  {
+    ++next_it;
+        
+    if (it->idx == Uint31_Index(0u))
+    {
+      // For elements to delete we store the deletion meta data.
+      
+      // We don't have an earlier version of this element in new_data
+      if (!(last_id == it->elem.id))
+      {
+        const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
+        if (idx)
+          // Take index of the existing element.
+          last_index = *idx;
+        else
+          // Something has gone wrong. We neither have a deleted version in new_data
+          // nor in the existing data.
+          last_index = Uint31_Index(0u);
+      }
+      
+      new_attic_meta[last_index].insert(it->meta);
+      
+      last_id = it->elem.id;
+      continue;
+    }
+    last_id = it->elem.id;
+    last_index = it->idx;
+    
+    if (next_it != new_data.data.end() && it->elem.id == next_it->elem.id)
+      // A later version also exists in new_data. Store the meta data of this version directly in attic.
+      new_attic_meta[it->idx].insert(it->meta);
+  }
+}
+
+
 /* Compares the new data and the already existing skeletons to determine those that have
  * moved. This information is used to prepare the set of elements to store to attic.
  * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
@@ -560,55 +608,8 @@ void update_elements
 }
 
 
-/* Szenarien:
- * - nur Basisdaten
- * - auch aktuelle Metadaten
- * - auch Historie
- * Update-Log kann immer geschrieben werden.
- */
-  
-  // Wir haben vorab: Skeleton, Tags, Meta der neuen und Zwischenversionen
-  // Für die Planung, welche Elemente eingefügt werden müssen, reicht diese Information aus
-  // typedef vmap< (Id, version), (Idx, Skel, Meta, Tags) > Data_Dict
-  
-  // vmap< Id > ids_to_update(Data_Dict new_data)
-  
-  // vmap < Id, Idx > get_exisiting_map_positions(vmap< Id >)
-  
-  // map< Idx, set< Skel > > get_existing_skeletons(vmap < Id, Idx >)
+  // ...
 
-  // vmap < Id, Idx > new_idx_positions(Data_Dict new_data, map< Idx, set< Skel > >)
-  
-  // update_map_positions(vmap < Id, Idx >)
-  
-  // pair< map< Idx, set< Skel > >, map< Idx, set< Skel > > >
-  //     new_current_skeletons(Data_Dict new_data, map< Idx, set< Skel > >)
-  
-  // update_skeletons(map< Idx, set< Skel > > delete, map< Idx, set< Skel > > insert)
-
-  // == meta ==
-  
-  // map< Idx, set< Meta > > get_existing_meta(vmap < Id, Idx >)
-
-  // pair< map< Idx, set< Meta > >, map< Idx, set< Meta > > >
-  //     new_current_meta(Data_Dict new_data, map< Idx, set< Meta > >)
-  
-  // update_meta(map< Idx, set< Meta > > delete, map< Idx, set< Meta > > insert)
-  
-  // == tags ==
-  
-  // map< (Idx, key, value), vec< Id > > get_existing_local_tags(vmap < Id, Idx >)
-
-  // pair< map< (Idx, key, value), vec< Id > >, map< (Idx, key, value), vec< Id > > >
-  //     new_current_local_tags(Data_Dict new_data, map< Idx, set< Skel > >)
-  
-  // update_local_tags(map< (Idx, key, value), vec< Id > > delete, map< (Idx, key, value), vec< Id > > insert)
-  
-  // pair< map< (key, value), vec< Id > >, map< (key, value), vec< Id > > > new_current_global_tags
-  //    (map< (Idx, key, value), vec< Id > > delete, map< (Idx, key, value), vec< Id > > insert)
-  
-  // update_global_tags(map< (Idx, key, value), vec< Id > > delete, map< (Idx, key, value), vec< Id > > insert)
-  
   // == attic ==
   
   // vmap < Id, Idx > get_exisiting_attic_map_positions(vmap< Id >)
@@ -788,6 +789,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
     std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > new_attic_map_positions
         = strip_single_idxs(new_attic_idx_lists);
 
+    compute_new_attic_meta(new_data, existing_map_positions, attic_meta);
+        
     // Update id indexes
     update_map_positions(new_attic_map_positions, *transaction, *attic_settings().NODES);
   
@@ -798,6 +801,11 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
     // Add attic elements
     update_elements(std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >(), new_attic_skeletons,
                     *transaction, *attic_settings().NODES);
+  
+    // Add attic meta
+    update_elements
+        (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >(),
+         attic_meta, *transaction, *attic_settings().NODES_META);
   }
       
   //TODO: old code
