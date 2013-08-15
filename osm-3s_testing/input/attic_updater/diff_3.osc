@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm>
+  <!-- Test case overview: see init.osm -->
+
+<delete>
+  <node id="1502" version="4" timestamp="2013-07-01T09:04:12" changeset="496" uid="42" user="foo"/>
+  <node id="1503" version="4" timestamp="2013-07-01T09:04:13" changeset="496" uid="42" user="foo"/>
+  <node id="1504" version="4" timestamp="2013-07-01T09:04:14" changeset="496" uid="42" user="foo"/>
+  <node id="1505" version="4" timestamp="2013-07-01T09:04:15" changeset="496" uid="42" user="foo"/>
+</delete>
+<create>
+  <node id="1505" lat="20.0" lon="15.05" version="5" timestamp="2013-07-01T09:04:25" changeset="496" uid="42" user="foo"/>
+</create>
+<delete>
+  <node id="1505" version="6" timestamp="2013-07-01T09:04:35" changeset="496" uid="42" user="foo"/>
+</delete>
+
+</osm>

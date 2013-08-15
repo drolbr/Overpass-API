@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
   // read command line arguments
   string source_dir, db_dir, data_version;
   vector< string > source_file_names;
-  bool meta = false;
+  meta_modes meta = only_data;
   bool produce_augmented_diffs = false;
   bool abort = false;
   
@@ -109,7 +109,9 @@ int main(int argc, char* argv[])
     else if (!(strncmp(argv[argpos], "--version=", 10)))
       data_version = ((string)argv[argpos]).substr(10);
     else if (!(strncmp(argv[argpos], "--meta", 6)))
-      meta = true;
+      meta = keep_meta;
+    else if (!(strncmp(argv[argpos], "--keep-attic", 12)))
+      meta = keep_attic;
     else if (!(strncmp(argv[argpos], "--produce-diff", 6)))
       produce_augmented_diffs = true;
     else
@@ -125,7 +127,11 @@ int main(int argc, char* argv[])
     abort = true;
   }
   if (abort)
+  {
+    cerr<<"Usage: "<<argv[0]<<" --osc-dir=DIR"
+          " [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--produce-diff]\n";
     return -1;
+  }
   
   // read file names from source directory
   DIR *dp;

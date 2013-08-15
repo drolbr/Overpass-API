@@ -152,6 +152,38 @@ std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_meta
 }
 
 
+template< typename Id_Type >
+std::map< Id_Type, std::set< Uint31_Index > > get_existing_idx_lists
+    (const std::vector< Id_Type >& ids,
+     const std::vector< std::pair< Id_Type, Uint31_Index > >& ids_with_position,
+     Transaction& transaction, const File_Properties& file_properties)
+{
+  std::map< Id_Type, std::set< Uint31_Index > > result;
+  
+  std::set< Id_Type > req;
+  typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator
+      it_pos = ids_with_position.begin();
+  for (typename std::vector< Id_Type >::const_iterator it = ids.begin(); it != ids.end(); ++it)
+  {
+    if (it_pos != ids_with_position.end() && *it == it_pos->first)
+    {
+      if (it_pos->second.val() == 0xff)
+        req.insert(*it);
+      else
+        result[*it].insert(it_pos->second);
+      ++it_pos;
+    }
+  }
+  
+  Block_Backend< Id_Type, Uint31_Index > db(transaction.data_index(&file_properties));
+  for (typename Block_Backend< Id_Type, Uint31_Index >::Discrete_Iterator
+      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+    result[it.index()].insert(it.object());
+
+  return result;
+}
+
+
 template< typename Element_Skeleton >
 std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > > new_idx_positions
     (const Data_By_Id< Element_Skeleton >& new_data)
@@ -251,7 +283,7 @@ void new_current_skeletons
     }
     
     typename std::map< Uint31_Index, std::set< Element_Skeleton > >::iterator it_attic_idx
-        = attic_skeletons.find(it->idx);
+        = attic_skeletons.find(*idx);
     if (it_attic_idx == attic_skeletons.end())
     {
       // Something has gone wrong. Save at least the new node.
@@ -316,6 +348,90 @@ void new_current_meta
     
     new_meta[it->idx].insert(it->meta);    
   }
+}
+
+
+/* Compares the new data and the already existing skeletons to determine those that have
+ * moved. This information is used to prepare the set of elements to store to attic.
+ * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
+template< typename Element_Skeleton >
+void compute_new_attic_skeletons
+    (const Data_By_Id< Element_Skeleton >& new_data,
+     const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
+     const std::map< Uint31_Index, std::set< Element_Skeleton > >& attic_skeletons,
+     std::map< Uint31_Index, std::set< Attic< Element_Skeleton > > >& full_attic,
+     std::map< typename Element_Skeleton::Id_Type, std::set< Uint31_Index > >& idx_lists)
+{
+  typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator next_it
+      = new_data.data.begin();
+  typename Element_Skeleton::Id_Type last_id = typename Element_Skeleton::Id_Type(0ull);
+  for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
+      it = new_data.data.begin(); it != new_data.data.end(); ++it)
+  {
+    ++next_it;
+    if (next_it != new_data.data.end() && it->elem.id == next_it->elem.id)
+      // A later version exist also in new_data. Make this version a (short-lived) attic version.
+      if (it->idx.val() != 0 && (next_it->idx.val() == 0 || !geometrically_equal(it->elem, next_it->elem)))
+      {
+        full_attic[it->idx].insert(Attic< Element_Skeleton >(it->elem, next_it->meta.timestamp));
+        idx_lists[it->elem.id].insert(it->idx);
+      }
+    
+    if (last_id == it->elem.id)
+      // An earlier version exists also in new_data. So there is nothing to do here.
+      continue;
+    last_id = it->elem.id;
+    
+    const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
+    if (!idx)
+      // No old data exists. So there is nothing to do here.
+      continue;    
+
+    typename std::map< Uint31_Index, std::set< Element_Skeleton > >::const_iterator it_attic_idx
+        = attic_skeletons.find(*idx);
+    if (it_attic_idx == attic_skeletons.end())
+      // Something has gone wrong. Skip this object.
+      continue;
+    
+    typename std::set< Element_Skeleton >::iterator it_attic
+        = it_attic_idx->second.find(it->elem);
+    if (it_attic == it_attic_idx->second.end())
+      // Something has gone wrong. Skip this object.
+      continue;
+    
+    if (!geometrically_equal(*it_attic, it->elem))
+    {
+      full_attic[*idx].insert(Attic< Element_Skeleton >(*it_attic, it->meta.timestamp));
+      idx_lists[it_attic->id].insert(*idx);
+    }
+  }
+}
+
+
+/* Moves idx entries with only one idx to the return value and erases them from the list. */
+template< typename Id_Type >
+std::vector< std::pair< Id_Type, Uint31_Index > > strip_single_idxs
+    (std::map< Id_Type, std::set< Uint31_Index > >& idx_list)
+{
+  std::vector< std::pair< Id_Type, Uint31_Index > > result;
+  
+  for (typename std::map< Id_Type, std::set< Uint31_Index > >::const_iterator it = idx_list.begin();
+       it != idx_list.end(); ++it)
+  {
+    if (it->second.size() == 1)
+      result.push_back(make_pair(it->first, *it->second.begin()));
+    else
+      result.push_back(make_pair(it->first, Uint31_Index(0xffu)));
+  }
+  
+  for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator it = result.begin();
+       it != result.end(); ++it)
+  {
+    if (it->second.val() != 0xff)
+      idx_list.erase(it->first);
+  }
+
+  return result;
 }
 
 
@@ -538,14 +654,15 @@ void update_elements
   // write_update_trail(vec< pair< Id, vec< Idx > > >)
     
   
-Node_Updater::Node_Updater(Transaction& transaction_, bool meta_)
+Node_Updater::Node_Updater(Transaction& transaction_, meta_modes meta_)
   : update_counter(0), transaction(&transaction_),
     external_transaction(true), partial_possible(false), meta(meta_)
 {}
 
-Node_Updater::Node_Updater(string db_dir_, bool meta_)
+Node_Updater::Node_Updater(string db_dir_, meta_modes meta_)
   : update_counter(0), transaction(0),
-    external_transaction(false), partial_possible(true), db_dir(db_dir_), meta(meta_)
+    external_transaction(false), partial_possible(meta_ == only_data || meta_ == keep_meta),
+    db_dir(db_dir_), meta(meta_)
 {
   partial_possible = !file_exists
       (db_dir + 
@@ -652,9 +769,39 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
   update_elements(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().NODE_TAGS_GLOBAL);
   callback->tags_global_finished();
   
-  new_data.data.clear();
+  if (meta == keep_attic)
+  {
+    // Collect all data of existing attic id indexes
+    std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > existing_attic_map_positions
+        = get_existing_map_positions(ids_to_update_, *transaction, *attic_settings().NODES);
+    std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > > existing_idx_lists
+        = get_existing_idx_lists(ids_to_update_, existing_attic_map_positions,
+                                 *transaction, *attic_settings().NODE_IDX_LIST);
+
+    // Compute which objects really have changed
+    std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > > new_attic_skeletons;
+    std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > > new_attic_idx_lists = existing_idx_lists;
+    compute_new_attic_skeletons(new_data, existing_map_positions, attic_skeletons,
+                                new_attic_skeletons, new_attic_idx_lists);
+    
+    strip_single_idxs(existing_idx_lists);
+    std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > new_attic_map_positions
+        = strip_single_idxs(new_attic_idx_lists);
+
+    // Update id indexes
+    update_map_positions(new_attic_map_positions, *transaction, *attic_settings().NODES);
   
-  if (meta)
+    // Update id index lists
+    update_elements(existing_idx_lists, new_attic_idx_lists,
+                    *transaction, *attic_settings().NODE_IDX_LIST);
+  
+    // Add attic elements
+    update_elements(std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >(), new_attic_skeletons,
+                    *transaction, *attic_settings().NODES);
+  }
+      
+  //TODO: old code
+  if (meta != only_data)
   {
     map< uint32, vector< uint32 > > idxs_by_id;
     create_idxs_by_id(nodes_meta_to_insert, idxs_by_id);
@@ -671,6 +818,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
   }
   callback->update_finished();
   
+  new_data.data.clear();
   ids_to_modify.clear();
   nodes_to_insert.clear();
 

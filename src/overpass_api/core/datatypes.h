@@ -371,4 +371,48 @@ const pair< TIndex, const TObject* >* binary_search_for_pair_id
 }
 
 
+template< typename Element_Skeleton >
+struct Attic : public Element_Skeleton
+{
+  Attic(const Element_Skeleton& elem, uint64 timestamp_) : Element_Skeleton(elem), timestamp(timestamp_) {}
+  
+  uint64 timestamp;
+  
+  Attic(void* data)
+    : Element_Skeleton(data),
+      timestamp(*(uint64*)((uint8*)data + Element_Skeleton::size_of(data)) & 0xffffffffffull) {}
+  
+  uint32 size_of() const
+  {
+    return Element_Skeleton::size_of() + 5;
+  }
+  
+  static uint32 size_of(void* data)
+  {
+    return Element_Skeleton::size_of(data) + 5;
+  }
+  
+  void to_data(void* data) const
+  {
+    Element_Skeleton::to_data(data);
+    void* pos = (uint8*)data + Element_Skeleton::size_of();
+    *(uint32*)(pos) = (timestamp & 0xffffffffull);
+    *(uint8*)((uint8*)pos+4) = ((timestamp & 0xff00000000ull)>>32);
+  }
+  
+  bool operator<(const Attic& rhs) const
+  {
+    if (this->id.val() == rhs.id.val())
+      return (timestamp < rhs.timestamp);
+    else
+      return (this->id < rhs.id);
+  }
+  
+  bool operator==(const Attic& rhs) const
+  {
+    return (this->id.val() == rhs.id.val() && timestamp == rhs.timestamp);
+  }
+};
+
+
 #endif

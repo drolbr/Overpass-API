@@ -1676,7 +1676,7 @@ void parse_relations_only(FILE* in)
 }
 
 Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version_,
-			 bool meta_, bool produce_augmented_diffs)
+			 meta_modes meta_, bool produce_augmented_diffs)
   : dispatcher_client(0), meta(meta_)
 {
   dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
@@ -1694,9 +1694,9 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
 
   node_updater_ = new Node_Updater(*transaction, meta);
   update_node_logger_ = (produce_augmented_diffs ? new Update_Node_Logger() : 0);
-  way_updater_ = new Way_Updater(*transaction, meta);
+  way_updater_ = new Way_Updater(*transaction, meta != only_data);
   update_way_logger_ = (produce_augmented_diffs ? new Update_Way_Logger() : 0);
-  relation_updater_ = new Relation_Updater(*transaction, meta);
+  relation_updater_ = new Relation_Updater(*transaction, meta != only_data);
   update_relation_logger_ = (produce_augmented_diffs ? new Update_Relation_Logger() : 0);
   
   data_version = data_version_;
@@ -1716,7 +1716,7 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
 
 Osm_Updater::Osm_Updater
     (Osm_Backend_Callback* callback_, string db_dir, const string& data_version_,
-     bool meta_, bool produce_augmented_diffs)
+     meta_modes meta_, bool produce_augmented_diffs)
   : transaction(0), dispatcher_client(0), db_dir_(db_dir), meta(meta_)
 {
   {
@@ -1726,9 +1726,9 @@ Osm_Updater::Osm_Updater
   
   node_updater_ = new Node_Updater(db_dir, meta);
   update_node_logger_ = (produce_augmented_diffs ? new Update_Node_Logger() : 0);
-  way_updater_ = new Way_Updater(db_dir, meta);
+  way_updater_ = new Way_Updater(db_dir, meta != only_data);
   update_way_logger_ = (produce_augmented_diffs ? new Update_Way_Logger() : 0);
-  relation_updater_ = new Relation_Updater(db_dir, meta);
+  relation_updater_ = new Relation_Updater(db_dir, meta != only_data);
   update_relation_logger_ = (produce_augmented_diffs ? new Update_Relation_Logger() : 0);
 
   data_version = data_version_;
@@ -1756,7 +1756,7 @@ void Osm_Updater::flush()
   }
   
   delete node_updater_;
-  node_updater_ = new Node_Updater(db_dir_, meta);
+  node_updater_ = new Node_Updater(db_dir_, meta ? keep_meta : only_data);
   delete way_updater_;
   way_updater_ = new Way_Updater(db_dir_, meta);
   delete relation_updater_;

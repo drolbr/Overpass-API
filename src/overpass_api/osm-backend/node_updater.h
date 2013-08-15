@@ -303,11 +303,14 @@ struct Data_By_Id
 };
 
 
+typedef enum { only_data, keep_meta, keep_attic } meta_modes;
+  
+
 struct Node_Updater
 {
-  Node_Updater(Transaction& transaction, bool meta);
+  Node_Updater(Transaction& transaction, meta_modes meta);
   
-  Node_Updater(string db_dir, bool meta);
+  Node_Updater(string db_dir, meta_modes meta);
   
   void set_id_deleted(Node::Id_Type id, const OSM_Element_Metadata* meta = 0)
   {
@@ -376,7 +379,7 @@ private:
   vector< Node > nodes_to_insert;
   vector< pair< Node::Id_Type, Uint32_Index > > moved_nodes;
 
-  bool meta;
+  meta_modes meta;
   map< uint32, string > user_by_id;
   
   vector< pair< OSM_Element_Metadata_Skeleton< Node::Id_Type >, uint32 > > nodes_meta_to_insert;

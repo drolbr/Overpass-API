@@ -90,7 +90,7 @@ Basic_Settings::Basic_Settings()
 
   base_directory("./"),
   logfile_name("transactions.log"),
-  shared_name_base("/osm3s_v0.7.4")
+  shared_name_base("/osm3s_v0.7.50")
 {}
 
 Basic_Settings& basic_settings()
@@ -180,6 +180,47 @@ Meta_Settings::Meta_Settings()
 const Meta_Settings& meta_settings()
 {
   static Meta_Settings obj;
+  return obj;
+}
+
+//-----------------------------------------------------------------------------
+
+Attic_Settings::Attic_Settings()
+:
+  NODES(new OSM_File_Properties< Uint31_Index >("nodes_attic", 512*1024, 64*1024)),
+  NODE_IDX_LIST(new OSM_File_Properties< Node::Id_Type >
+      ("node_attic_indexes", 512*1024, 0)),
+  NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+      ("node_tags_local_attic", 512*1024, 0)),
+  NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+      ("node_tags_global_attic", 2*1024*1024, 0)),
+  NODES_META(new OSM_File_Properties< Uint31_Index >
+      ("nodes_meta_attic", 512*1024, 0)),
+      
+  WAYS(new OSM_File_Properties< Uint31_Index >("ways_attic", 512*1024, 64*1024)),
+  WAY_IDX_LIST(new OSM_File_Properties< Way::Id_Type >
+      ("way_attic_indexes", 512*1024, 0)),
+  WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+      ("way_tags_local_attic", 512*1024, 0)),
+  WAY_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+      ("way_tags_global_attic", 2*1024*1024, 0)),
+  WAYS_META(new OSM_File_Properties< Uint31_Index >
+      ("ways_meta_attic", 512*1024, 0)),
+      
+  RELATIONS(new OSM_File_Properties< Uint31_Index >("relations_attic", 1024*1024, 64*1024)),
+  RELATION_IDX_LIST(new OSM_File_Properties< Relation::Id_Type >
+      ("relation_attic_indexes", 512*1024, 0)),
+  RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+      ("relation_tags_local_attic", 512*1024, 0)),
+  RELATION_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+      ("relation_tags_global_attic", 2*1024*1024, 0)),
+  RELATIONS_META(new OSM_File_Properties< Uint31_Index >
+      ("relations_meta_attic", 512*1024, 0))
+{}
+
+const Attic_Settings& attic_settings()
+{
+  static Attic_Settings obj;
   return obj;
 }
 

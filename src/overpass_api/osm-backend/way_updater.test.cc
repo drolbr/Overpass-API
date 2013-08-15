@@ -186,7 +186,7 @@ int main(int argc, char* args[])
     ofstream tags_local_out((db_dir + "tags_local.csv").c_str());
     ofstream tags_global_out((db_dir + "tags_global.csv").c_str());
     {
-      Node_Updater node_updater_("./", false);
+      Node_Updater node_updater_("./", only_data);
       node_updater = &node_updater_;
       Way_Updater way_updater_("./", false);
       way_updater = &way_updater_;

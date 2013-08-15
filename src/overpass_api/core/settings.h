@@ -88,10 +88,32 @@ struct Meta_Settings
   Meta_Settings();
 };
 
+struct Attic_Settings
+{
+  File_Properties* NODES;
+  File_Properties* NODE_IDX_LIST;
+  File_Properties* NODE_TAGS_LOCAL;
+  File_Properties* NODE_TAGS_GLOBAL;
+  File_Properties* NODES_META;
+  File_Properties* WAYS;
+  File_Properties* WAY_IDX_LIST;
+  File_Properties* WAY_TAGS_LOCAL;
+  File_Properties* WAY_TAGS_GLOBAL;
+  File_Properties* WAYS_META;
+  File_Properties* RELATIONS;
+  File_Properties* RELATION_IDX_LIST;
+  File_Properties* RELATION_TAGS_LOCAL;
+  File_Properties* RELATION_TAGS_GLOBAL;
+  File_Properties* RELATIONS_META;
+  
+  Attic_Settings();
+};
+
 Basic_Settings& basic_settings();
 const Osm_Base_Settings& osm_base_settings();
 const Area_Settings& area_settings();
 const Meta_Settings& meta_settings();
+const Attic_Settings& attic_settings();
 
 void show_mem_status();
 

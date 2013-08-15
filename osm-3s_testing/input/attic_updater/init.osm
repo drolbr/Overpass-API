@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm>
+  <!-- Test case overview:
+  
+       1101  created and then unchanged node
+       1102  later created node
+       
+       1201  created, then unchanged updated node
+       1202  created, then multiple times unchanged updated node
+       1203  created, then in an update several times unchanged updated node
+       
+       1301  created, then minuscule changed updated node
+       1302  created, then multiple times minuscule changed updated node
+       1303  created, then in an update several times minuscule changed updated node       
+       
+       1401  created, then drastically changed updated node
+       1402  created, then multiple times drastically changed updated node
+       1403  created, then in an update several times drastically changed updated node       
+       
+       1501  created, then deleted node
+       1502  created, then deleted, then unchanged restored, then again deleted node
+       1503  created, then deleted, then minuscule changed restored, then again deleted node
+       1504  created, then deleted, then drastically changed restored, then again deleted node
+       1505  created, then deleted, then drastically changed restored, then same again done node
+    -->
+    
+  <node id="1101" lat="10.0" lon="1.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
+  
+  <node id="1201" lat="10.0" lon="2.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
+  <node id="1202" lat="10.0" lon="2.02" version="1" timestamp="2013-07-01T09:01:12" changeset="496" uid="42" user="foo"/>
+  <node id="1203" lat="10.0" lon="2.03" version="1" timestamp="2013-07-01T09:01:13" changeset="496" uid="42" user="foo"/>
+    
+  <node id="1301" lat="10.0" lon="3.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
+  <node id="1302" lat="10.0" lon="3.02" version="1" timestamp="2013-07-01T09:01:12" changeset="496" uid="42" user="foo"/>
+  <node id="1303" lat="10.0" lon="3.03" version="1" timestamp="2013-07-01T09:01:13" changeset="496" uid="42" user="foo"/>
+    
+  <node id="1401" lat="10.0" lon="4.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
+  <node id="1402" lat="10.0" lon="4.02" version="1" timestamp="2013-07-01T09:01:12" changeset="496" uid="42" user="foo"/>
+  <node id="1403" lat="10.0" lon="4.03" version="1" timestamp="2013-07-01T09:01:13" changeset="496" uid="42" user="foo"/>
+    
+  <node id="1501" lat="10.0" lon="5.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
+  <node id="1502" lat="10.0" lon="5.02" version="1" timestamp="2013-07-01T09:01:12" changeset="496" uid="42" user="foo"/>
+  <node id="1503" lat="10.0" lon="5.03" version="1" timestamp="2013-07-01T09:01:13" changeset="496" uid="42" user="foo"/>
+  <node id="1504" lat="10.0" lon="5.04" version="1" timestamp="2013-07-01T09:01:14" changeset="496" uid="42" user="foo"/>
+  <node id="1505" lat="10.0" lon="5.05" version="1" timestamp="2013-07-01T09:01:15" changeset="496" uid="42" user="foo"/>
+
+</osm>

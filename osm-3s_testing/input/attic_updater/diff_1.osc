@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm>
+  <!-- Test case overview: see init.osm -->
+    
+<create>
+  <node id="1102" lat="10.0" lon="1.02" version="1" timestamp="2013-07-01T09:02:11" changeset="496" uid="42" user="foo"/>
+</create>
+  
+<modify>
+  <node id="1201" lat="10.0" lon="2.01" version="2" timestamp="2013-07-01T09:02:11" changeset="496" uid="42" user="foo"/>
+  <node id="1202" lat="10.0" lon="2.02" version="2" timestamp="2013-07-01T09:02:12" changeset="496" uid="42" user="foo"/>
+    
+  <node id="1301" lat="10.0000001" lon="3.01" version="2" timestamp="2013-07-01T09:02:11" changeset="496" uid="42" user="foo"/>
+  <node id="1302" lat="10.0" lon="3.0200001" version="2" timestamp="2013-07-01T09:02:12" changeset="496" uid="42" user="foo"/>
+    
+  <node id="1401" lat="20.0" lon="4.01" version="2" timestamp="2013-07-01T09:02:11" changeset="496" uid="42" user="foo"/>
+  <node id="1402" lat="10.0" lon="14.02" version="2" timestamp="2013-07-01T09:02:12" changeset="496" uid="42" user="foo"/>
+</modify>
+  
+<delete>
+  <node id="1501" version="2" timestamp="2013-07-01T09:02:11" changeset="496" uid="42" user="foo"/>
+  <node id="1502" version="2" timestamp="2013-07-01T09:02:12" changeset="496" uid="42" user="foo"/>
+  <node id="1503" version="2" timestamp="2013-07-01T09:02:13" changeset="496" uid="42" user="foo"/>
+  <node id="1504" version="2" timestamp="2013-07-01T09:02:14" changeset="496" uid="42" user="foo"/>
+  <node id="1505" version="2" timestamp="2013-07-01T09:02:15" changeset="496" uid="42" user="foo"/>
+</delete>
+
+</osm>

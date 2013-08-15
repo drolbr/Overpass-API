@@ -69,7 +69,7 @@ struct Ofstream_Collection
   }
 };
 
-void dump_nodes(Transaction& transaction, const string& db_dir)
+void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
 {
   Ofstream_Collection node_db_out(db_dir + "after_node_", "_db.csv");
   Ofstream_Collection node_tags_local_out(db_dir + "after_node_tags_", "_local.csv");
@@ -108,6 +108,57 @@ void dump_nodes(Transaction& transaction, const string& db_dir)
     ofstream* out(node_tags_global_out.get(it.object().val() / 5000000));
     (*out)<<it.object().val()<<'\t'
         <<it.index().key<<'\t'<<it.index().value<<'\n';
+  }
+    
+  if (attic)
+  {
+    Ofstream_Collection node_meta_db_out(db_dir + "after_node_meta_", "_db.csv");
+    Ofstream_Collection node_attic_db_out(db_dir + "after_node_attic_", "_db.csv");
+    Ofstream_Collection node_idx_list_out(db_dir + "after_node_idx_list_", "_db.csv");
+    
+    Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > nodes_meta_db
+        (transaction.data_index(meta_settings().NODES_META));
+    for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >::Flat_Iterator
+        it(nodes_meta_db.flat_begin()); !(it == nodes_meta_db.flat_end()); ++it)
+    {
+      ofstream* out(node_meta_db_out.get(it.object().ref.val() / 5000000));
+      (*out)<<it.object().ref.val()<<'\t'
+          <<it.object().version<<'\t'
+          <<((it.object().timestamp)>>26)<<' '
+          <<((it.object().timestamp & 0x3c00000)>>22)<<' '
+          <<((it.object().timestamp & 0x3e0000)>>17)<<' '
+          <<((it.object().timestamp & 0x1f000)>>12)<<' '
+          <<((it.object().timestamp & 0xfc0)>>6)<<' '
+          <<(it.object().timestamp & 0x3f)<<'\t'
+          <<it.object().changeset<<'\t'<<it.object().user_id<<'\n';
+    }
+    
+    Block_Backend< Uint31_Index, Attic< Node_Skeleton > > nodes_db
+        (transaction.data_index(attic_settings().NODES));
+    for (Block_Backend< Uint31_Index, Attic< Node_Skeleton > >::Flat_Iterator
+        it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
+    {
+      ofstream* out(node_attic_db_out.get(it.object().id.val() / 5000000));
+      (*out)<<dec<<it.object().id.val()<<'\t'<<setprecision(10)
+          <<::lat(it.index().val(), it.object().ll_lower)<<'\t'
+          <<::lon(it.index().val(), it.object().ll_lower)<<'\t'
+          <<((it.object().timestamp)>>26)<<' '
+          <<((it.object().timestamp & 0x3c00000)>>22)<<' '
+          <<((it.object().timestamp & 0x3e0000)>>17)<<' '
+          <<((it.object().timestamp & 0x1f000)>>12)<<' '
+          <<((it.object().timestamp & 0xfc0)>>6)<<' '
+          <<(it.object().timestamp & 0x3f)<<'\t'
+          <<hex<<it.index().val()<<'\n';
+    }
+    
+    Block_Backend< Node::Id_Type, Uint31_Index > idx_db
+        (transaction.data_index(attic_settings().NODE_IDX_LIST));
+    for (Block_Backend< Node::Id_Type, Uint31_Index >::Flat_Iterator
+        it(idx_db.flat_begin()); !(it == idx_db.flat_end()); ++it)
+    {
+      ofstream* out(node_idx_list_out.get(it.index().val() / 5000000));
+      (*out)<<dec<<it.index().val()<<'\t'<<hex<<it.object().val()<<'\n';
+    }
   }
 }
 
@@ -360,6 +411,7 @@ int main(int argc, char* argv[])
   // read command line arguments
   string db_dir;
   bool dump = true;
+  bool attic = false;
   
   int argpos(1);
   while (argpos < argc)
@@ -372,6 +424,8 @@ int main(int argc, char* argv[])
     }
     else if (!(strncmp(argv[argpos], "--only-check", 12)))
       dump = false;
+    else if (!(strncmp(argv[argpos], "--attic", 7)))
+      attic = true;
     ++argpos;
   }
   
@@ -380,7 +434,7 @@ int main(int argc, char* argv[])
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     if (dump)
     {
-      dump_nodes(transaction, db_dir);
+      dump_nodes(transaction, db_dir, attic);
       dump_ways(transaction, db_dir);
       dump_relations(transaction, db_dir);
     }

@@ -36,9 +36,9 @@ class Osm_Updater
 {
   public:
     Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version,
-		bool meta, bool produce_augmented_diffs);
+		meta_modes meta, bool produce_augmented_diffs);
     Osm_Updater(Osm_Backend_Callback* callback_, string db_dir, const string& data_version,
-		bool meta, bool produce_augmented_diffs);
+		meta_modes meta, bool produce_augmented_diffs);
     ~Osm_Updater();
 
     void finish_updater();
@@ -54,7 +54,7 @@ class Osm_Updater
     Relation_Updater* relation_updater_;
     Update_Relation_Logger* update_relation_logger_;
     string db_dir_;
-    bool meta;
+    meta_modes meta;
 
     void flush();
 };

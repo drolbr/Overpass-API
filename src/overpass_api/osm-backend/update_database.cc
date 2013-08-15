@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
   // read command line arguments
   string db_dir, data_version;
   bool transactional = true;
-  bool meta = false;
+  meta_modes meta = only_data;
   bool produce_augmented_diffs = false;
   bool abort = false;
   
@@ -54,7 +54,9 @@ int main(int argc, char* argv[])
     else if (!(strncmp(argv[argpos], "--version=", 10)))
       data_version = ((string)argv[argpos]).substr(10);
     else if (!(strncmp(argv[argpos], "--meta", 6)))
-      meta = true;
+      meta = keep_meta;
+    else if (!(strncmp(argv[argpos], "--keep-attic", 12)))
+      meta = keep_attic;
     else if (!(strncmp(argv[argpos], "--produce-diff", 14)))
       produce_augmented_diffs = true;
     else
@@ -70,7 +72,10 @@ int main(int argc, char* argv[])
     abort = true;
   }
   if (abort)
+  {
+    cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--produce-diff]\n";
     return 0;
+  }
   
   try
   {
