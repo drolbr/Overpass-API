@@ -406,15 +406,16 @@ struct Attic : public Element_Skeleton
   
   bool operator<(const Attic& rhs) const
   {
-    if (this->id.val() == rhs.id.val())
-      return (timestamp < rhs.timestamp);
-    else
-      return (this->id < rhs.id);
+    if (*static_cast< const Element_Skeleton* >(this) < *static_cast< const Element_Skeleton* >(&rhs))
+      return true;
+    else if (*static_cast< const Element_Skeleton* >(&rhs) < *static_cast< const Element_Skeleton* >(this))
+      return false;
+    return (timestamp < rhs.timestamp);
   }
   
   bool operator==(const Attic& rhs) const
   {
-    return (this->id.val() == rhs.id.val() && timestamp == rhs.timestamp);
+    return (*static_cast< const Element_Skeleton* >(this) == rhs && timestamp == rhs.timestamp);
   }
 };
 

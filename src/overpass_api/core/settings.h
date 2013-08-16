@@ -91,6 +91,7 @@ struct Meta_Settings
 struct Attic_Settings
 {
   File_Properties* NODES;
+  File_Properties* NODES_UNDELETED;
   File_Properties* NODE_IDX_LIST;
   File_Properties* NODE_TAGS_LOCAL;
   File_Properties* NODE_TAGS_GLOBAL;

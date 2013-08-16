@@ -114,6 +114,7 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
   {
     Ofstream_Collection node_meta_db_out(db_dir + "after_node_meta_", "_db.csv");
     Ofstream_Collection node_attic_db_out(db_dir + "after_node_attic_", "_db.csv");
+    Ofstream_Collection node_undeleted_db_out(db_dir + "after_node_undeleted_", "_db.csv");
     Ofstream_Collection node_idx_list_out(db_dir + "after_node_idx_list_", "_db.csv");
     Ofstream_Collection node_attic_meta_db_out(db_dir + "after_node_attic_meta_", "_db.csv");
     
@@ -143,6 +144,22 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
       (*out)<<dec<<it.object().id.val()<<'\t'<<setprecision(10)
           <<::lat(it.index().val(), it.object().ll_lower)<<'\t'
           <<::lon(it.index().val(), it.object().ll_lower)<<'\t'
+          <<((it.object().timestamp)>>26)<<' '
+          <<((it.object().timestamp & 0x3c00000)>>22)<<' '
+          <<((it.object().timestamp & 0x3e0000)>>17)<<' '
+          <<((it.object().timestamp & 0x1f000)>>12)<<' '
+          <<((it.object().timestamp & 0xfc0)>>6)<<' '
+          <<(it.object().timestamp & 0x3f)<<'\t'
+          <<hex<<it.index().val()<<'\n';
+    }
+    
+    Block_Backend< Uint31_Index, Attic< Node_Skeleton::Id_Type > > nodes_undeleted_db
+        (transaction.data_index(attic_settings().NODES_UNDELETED));
+    for (Block_Backend< Uint31_Index, Attic< Node_Skeleton::Id_Type > >::Flat_Iterator
+        it(nodes_undeleted_db.flat_begin()); !(it == nodes_undeleted_db.flat_end()); ++it)
+    {
+      ofstream* out(node_undeleted_db_out.get(it.object().val() / 5000000));
+      (*out)<<dec<<it.object().val()<<'\t'
           <<((it.object().timestamp)>>26)<<' '
           <<((it.object().timestamp & 0x3c00000)>>22)<<' '
           <<((it.object().timestamp & 0x3e0000)>>17)<<' '

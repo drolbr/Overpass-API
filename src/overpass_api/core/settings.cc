@@ -188,6 +188,7 @@ const Meta_Settings& meta_settings()
 Attic_Settings::Attic_Settings()
 :
   NODES(new OSM_File_Properties< Uint31_Index >("nodes_attic", 512*1024, 64*1024)),
+  NODES_UNDELETED(new OSM_File_Properties< Uint31_Index >("nodes_attic_undeleted", 512*1024, 64*1024)),
   NODE_IDX_LIST(new OSM_File_Properties< Node::Id_Type >
       ("node_attic_indexes", 512*1024, 0)),
   NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
