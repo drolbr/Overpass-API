@@ -658,7 +658,7 @@ std::map< Tag_Index_Local, std::set< Attic< typename Element_Skeleton::Id_Type >
     if (next_it != new_data.data.end() && it->elem.id == next_it->elem.id)
       // A later version exist also in new_data. This is not a deletion.
       // So add the tags from this intermediate version.
-      add_tags(Attic< typename Element_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp),
+      add_tags(Attic< typename Element_Skeleton::Id_Type >(it->elem.id, next_it->meta.timestamp),
                it->idx, it->tags, result);
   }
   
@@ -750,6 +750,8 @@ void update_elements
 
 
   // ...
+  
+  // TODO: Doch gleiche Tags nicht in die History, da sonst zu viele Daten.
 
   // == attic ==
   

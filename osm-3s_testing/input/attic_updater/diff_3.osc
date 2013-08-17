@@ -9,7 +9,10 @@
   <node id="1505" version="4" timestamp="2013-07-01T09:04:15" changeset="496" uid="42" user="foo"/>
 </delete>
 <create>
-  <node id="1505" lat="20.0" lon="15.05" version="5" timestamp="2013-07-01T09:04:25" changeset="496" uid="42" user="foo"/>
+  <node id="1505" lat="20.0" lon="15.05" version="5" timestamp="2013-07-01T09:04:25" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1505"/>
+    <tag k="foo_1505" v="bar"/>
+  </node>
 </create>
 <delete>
   <node id="1505" version="6" timestamp="2013-07-01T09:04:35" changeset="496" uid="42" user="foo"/>

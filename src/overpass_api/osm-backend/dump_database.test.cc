@@ -87,21 +87,21 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
   }
     
   // check update_node_tags_local - compare both files for the result
-  Block_Backend< Tag_Index_Local, Uint32_Index > nodes_local_db
+  Block_Backend< Tag_Index_Local, Node_Skeleton::Id_Type > nodes_local_db
       (transaction.data_index(osm_base_settings().NODE_TAGS_LOCAL));
-  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
+  for (Block_Backend< Tag_Index_Local, Node_Skeleton::Id_Type >::Flat_Iterator
       it(nodes_local_db.flat_begin());
       !(it == nodes_local_db.flat_end()); ++it)
   {
     ofstream* out(node_tags_local_out.get(it.object().val() / 5000000));
-    (*out)<<it.object().val()<<'\t'
+    (*out)<<hex<<it.index().index<<'\t'<<dec<<it.object().val()<<'\t'
         <<it.index().key<<'\t'<<it.index().value<<'\n';
   }
   
   // check update_node_tags_global - compare both files for the result
-  Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
+  Block_Backend< Tag_Index_Global, Node_Skeleton::Id_Type > nodes_global_db
       (transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL));
-  for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
+  for (Block_Backend< Tag_Index_Global, Node_Skeleton::Id_Type >::Flat_Iterator
       it(nodes_global_db.flat_begin());
       !(it == nodes_global_db.flat_end()); ++it)
   {
@@ -117,6 +117,8 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
     Ofstream_Collection node_undeleted_db_out(db_dir + "after_node_undeleted_", "_db.csv");
     Ofstream_Collection node_idx_list_out(db_dir + "after_node_idx_list_", "_db.csv");
     Ofstream_Collection node_attic_meta_db_out(db_dir + "after_node_attic_meta_", "_db.csv");
+    Ofstream_Collection node_attic_tags_local_out(db_dir + "after_node_attic_tags_", "_local.csv");
+    Ofstream_Collection node_attic_tags_global_out(db_dir + "after_node_attic_tags_", "_global.csv");
     
     Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > nodes_meta_db
         (transaction.data_index(meta_settings().NODES_META));
@@ -194,6 +196,40 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
           <<(it.object().timestamp & 0x3f)<<'\t'
           <<it.object().changeset<<'\t'<<it.object().user_id<<'\t'
           <<hex<<it.index().val()<<'\n';
+    }
+    
+    Block_Backend< Tag_Index_Local, Attic< Node_Skeleton::Id_Type > > nodes_local_db
+        (transaction.data_index(attic_settings().NODE_TAGS_LOCAL));
+    for (Block_Backend< Tag_Index_Local, Attic< Node_Skeleton::Id_Type > >::Flat_Iterator
+        it(nodes_local_db.flat_begin());
+        !(it == nodes_local_db.flat_end()); ++it)
+    {
+      ofstream* out(node_attic_tags_local_out.get(it.object().val() / 5000000));
+      (*out)<<hex<<it.index().index<<'\t'<<dec<<it.object().val()<<'\t'
+          <<it.index().key<<'\t'<<it.index().value<<'\t'
+          <<((it.object().timestamp)>>26)<<' '
+          <<((it.object().timestamp & 0x3c00000)>>22)<<' '
+          <<((it.object().timestamp & 0x3e0000)>>17)<<' '
+          <<((it.object().timestamp & 0x1f000)>>12)<<' '
+          <<((it.object().timestamp & 0xfc0)>>6)<<' '
+          <<(it.object().timestamp & 0x3f)<<'\n';
+    }
+  
+    Block_Backend< Tag_Index_Global, Attic< Node_Skeleton::Id_Type > > nodes_global_db
+        (transaction.data_index(attic_settings().NODE_TAGS_GLOBAL));
+    for (Block_Backend< Tag_Index_Global, Attic< Node_Skeleton::Id_Type > >::Flat_Iterator
+        it(nodes_global_db.flat_begin());
+        !(it == nodes_global_db.flat_end()); ++it)
+    {
+      ofstream* out(node_tags_global_out.get(it.object().val() / 5000000));
+      (*out)<<it.object().val()<<'\t'
+          <<it.index().key<<'\t'<<it.index().value<<'\t'
+          <<((it.object().timestamp)>>26)<<' '
+          <<((it.object().timestamp & 0x3c00000)>>22)<<' '
+          <<((it.object().timestamp & 0x3e0000)>>17)<<' '
+          <<((it.object().timestamp & 0x1f000)>>12)<<' '
+          <<((it.object().timestamp & 0xfc0)>>6)<<' '
+          <<(it.object().timestamp & 0x3f)<<'\n';
     }
   }
 }
