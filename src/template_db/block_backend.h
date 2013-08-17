@@ -1104,15 +1104,13 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
   set< TIndex > index_values_set;
   for (typename map< TIndex, Index_Collection< TIndex, TObject > >::const_iterator
       it(index_values.begin()); it != index_values.end(); ++it)
-  index_values_set.insert(it->first);
+    index_values_set.insert(it->first);
   calc_split_idxs(split, vsizes, index_values_set.begin(), index_values_set.end());
     
   // really write data
   typename vector< TIndex >::const_iterator split_it(split.begin());
   pos = (dest.ptr + 4);
   uint32 max_size(0);
-  for (typename map< TIndex, Index_Collection< TIndex, TObject > >::const_iterator
-    it(index_values.begin()); it != index_values.end(); ++it);
   for (typename map< TIndex, Index_Collection< TIndex, TObject > >::const_iterator
     it(index_values.begin()); it != index_values.end(); ++it)
   {

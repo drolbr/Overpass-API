@@ -97,30 +97,30 @@
     <tag k="foo_6" v="final"/>
   </node>
 
-  <node id="2302" lat="11.0" lon="2.02" version="3" timestamp="2013-07-01T09:03:12" changeset="496" uid="42" user="foo">
+  <node id="2302" lat="11.0" lon="3.02" version="3" timestamp="2013-07-01T09:03:12" changeset="496" uid="42" user="foo">
     <tag k="sense" v="no"/>
     <tag k="faa_2" v="new_vaa"/>
     <tag k="fee_2" v="new_vee"/>
   </node>
-  <node id="2304" lat="11.0" lon="2.04" version="2" timestamp="2013-07-01T09:03:14" changeset="496" uid="42" user="foo">
+  <node id="2304" lat="11.0" lon="3.04" version="2" timestamp="2013-07-01T09:03:14" changeset="496" uid="42" user="foo">
     <tag k="sense" v="no"/>
     <tag k="faa_4" v="new_vaa"/>
     <tag k="fee_4" v="bez"/>
   </node>
-  <node id="2304" lat="11.0" lon="2.04" version="3" timestamp="2013-07-01T09:03:24" changeset="496" uid="42" user="foo">
+  <node id="2304" lat="11.0" lon="3.04" version="3" timestamp="2013-07-01T09:03:24" changeset="496" uid="42" user="foo">
     <tag k="sense" v="no"/>
     <tag k="faa_4" v="new_vaa"/>
     <tag k="fee_4" v="new_vee"/>
   </node>
-  <node id="2305" lat="11.0" lon="2.05" version="3" timestamp="2013-07-01T09:03:15" changeset="496" uid="42" user="foo">
+  <node id="2305" lat="11.0" lon="3.05" version="3" timestamp="2013-07-01T09:03:15" changeset="496" uid="42" user="foo">
     <tag k="sense" v="no"/>
     <tag k="foo_5" v="final"/>
   </node>
-  <node id="2306" lat="11.0" lon="2.06" version="2" timestamp="2013-07-01T09:03:16" changeset="496" uid="42" user="foo">
+  <node id="2306" lat="11.0" lon="3.06" version="2" timestamp="2013-07-01T09:03:16" changeset="496" uid="42" user="foo">
     <tag k="sense" v="no"/>
     <tag k="foo_6" v="intermediate"/>
   </node>
-  <node id="2306" lat="11.0" lon="2.06" version="3" timestamp="2013-07-01T09:03:26" changeset="496" uid="42" user="foo">
+  <node id="2306" lat="11.0" lon="3.06" version="3" timestamp="2013-07-01T09:03:26" changeset="496" uid="42" user="foo">
     <tag k="sense" v="no"/>
     <tag k="foo_6" v="final"/>
   </node>
