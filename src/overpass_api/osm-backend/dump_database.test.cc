@@ -221,7 +221,7 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
         it(nodes_global_db.flat_begin());
         !(it == nodes_global_db.flat_end()); ++it)
     {
-      ofstream* out(node_tags_global_out.get(it.object().val() / 5000000));
+      ofstream* out(node_attic_tags_global_out.get(it.object().val() / 5000000));
       (*out)<<it.object().val()<<'\t'
           <<it.index().key<<'\t'<<it.index().value<<'\t'
           <<((it.object().timestamp)>>26)<<' '

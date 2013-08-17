@@ -801,6 +801,26 @@ void new_current_global_tags
 }
 
 
+/* Constructs the global tags from the local tags. */
+template< typename Id_Type >
+std::map< Tag_Index_Global, std::set< Attic< Id_Type > > > compute_attic_global_tags
+    (const std::map< Tag_Index_Local, std::set< Attic< Id_Type > > >& new_attic_local_tags)
+{
+  std::map< Tag_Index_Global, std::set< Attic< Id_Type > > > result;
+  
+  for (typename std::map< Tag_Index_Local, std::set< Attic< Id_Type > > >::const_iterator
+      it_idx = new_attic_local_tags.begin(); it_idx != new_attic_local_tags.end(); ++it_idx)
+  {
+    std::set< Attic< Id_Type > >& handle(result[Tag_Index_Global(it_idx->first)]);
+    for (typename std::set< Attic< Id_Type > >::const_iterator it = it_idx->second.begin();
+         it != it_idx->second.end(); ++it)
+      handle.insert(*it);
+  }
+  
+  return result;
+}
+
+
 template< typename Index, typename Object, typename Update_Logger >
 void update_elements
     (const std::map< Index, std::set< Object > >& attic_objects,
@@ -827,49 +847,10 @@ void update_elements
 }
 
 
-  // ...
-  
   // == attic ==
   
-  // vmap < Id, Idx > get_exisiting_attic_map_positions(vmap< Id >)
-  
-  // vmap < Id, Idx_List > get_exisiting_index_lists(vmap< Id >)
-  
-  // map< Idx, set< Attic< Skel > > > compile_new_attic_skeletons(Data_Dict new_data, map< Idx, set< Skel > >)
-  
-  // map< Idx, set< Attic< Skel > > > compile_undeleted_skeletons(Data_Dict new_data, map< Idx, set< Skel > >)
-  // Zwischenversionen hierhin, wenn die Vorgängerversion gelöscht war.
-  // Älteste Versionen hierhin, wenn keine Bestandversion existiert hat.
-  
-  // vmap < Id, Idx_List > create_and_update_idx_lists(vmap < Id, Idx_List >, vmap < Id, Idx >,
-  //     map< Idx, set< Attic< Skel > > >)
-  // Ermittele zu jeder Id die zutreffenden Versionen und sammele pro Id die Idxe
-  // erstellt pro neuer Attic-Id mindestens einen Idx, ggf. mehrere
-  
-  // update_attic_map_positions(vmap < Id, Idx_List >)
-  
-  // update_index_lists(vmap < Id, Idx_List >)
-  
-  // add_new_attic_skeletons(map< Idx, set< Attic< Skel > > >)
+  // ...
     
-  // == attic meta ==
-  
-  // map< Idx, set< Attic< Meta > > > compile_new_attic_meta(Data_Dict new_data, map< Idx, set< Meta > >)
-  
-  // add_new_attic_meta(map< Idx, set< Attic< Meta > > >)
-  
-  // == attic tags ==
-  
-  // map< (Idx, key, value), vec< Id > > compile_new_attic_local_tags
-  //     (Data_Dict new_data, map< (Idx, key, value), vec< Id > >)
-  
-  // add_new_attic_local_tags(map< (Idx, key, value), vec< Id > >)
-  
-  // map< (key, value), vec< Id > > compile_new_attic_global_tags
-  //     (Data_Dict new_data, map< (key, value), vec< Id > >)
-  
-  // add_new_attic_global_tags(map< (key, value), vec< Id > >)
-  
   // == update trail ==
   
   // vec< (Id, geom? tags?, vec< Idx >) > compile_update_trail
@@ -1020,10 +1001,12 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
 
     compute_new_attic_meta(new_data, existing_map_positions, attic_meta);
     
-    // Compute local tags
+    // Compute tags
     std::map< Tag_Index_Local, std::set< Attic< Node_Skeleton::Id_Type > > > new_attic_local_tags
         = compute_new_attic_local_tags(new_data, existing_map_positions, attic_local_tags);
-        
+    std::map< Tag_Index_Global, std::set< Attic< Node_Skeleton::Id_Type > > > new_attic_global_tags
+        = compute_attic_global_tags(new_attic_local_tags);
+    
     // Update id indexes
     update_map_positions(new_attic_map_positions, *transaction, *attic_settings().NODES);
   
@@ -1044,10 +1027,11 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
         (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >(),
          attic_meta, *transaction, *attic_settings().NODES_META);
   
-    // Update local tags
+    // Update tags
     update_elements(std::map< Tag_Index_Local, std::set< Attic < Node_Skeleton::Id_Type > > >(),
                     new_attic_local_tags, *transaction, *attic_settings().NODE_TAGS_LOCAL);
-    std::cerr<<"local tags done.\n";
+    update_elements(std::map< Tag_Index_Global, std::set< Attic < Node_Skeleton::Id_Type > > >(),
+                    new_attic_global_tags, *transaction, *attic_settings().NODE_TAGS_GLOBAL);
   }
       
   //TODO: old code
