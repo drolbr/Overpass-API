@@ -54,7 +54,7 @@ void user_filter_map
 {
   if (modify.empty())
     return;
-  Meta_Collector< TIndex, TObject > meta_collector
+  Meta_Collector< TIndex, typename TObject::Id_Type > meta_collector
       (modify, *rman.get_transaction(), file_properties, false);
   for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
       it != modify.end(); ++it)
@@ -209,7 +209,7 @@ void User_Statement::execute(Resource_Manager& rman)
   
   if ((result_type == "") || (result_type == "node"))
   {
-    Meta_Collector< Uint32_Index, Node_Skeleton > meta_collector
+    Meta_Collector< Uint32_Index, Node_Skeleton::Id_Type > meta_collector
         (node_req, *rman.get_transaction(), meta_settings().NODES_META);
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
         (rman.get_transaction()->data_index(osm_base_settings().NODES));
@@ -236,7 +236,7 @@ void User_Statement::execute(Resource_Manager& rman)
   
   if ((result_type == "") || (result_type == "way"))
   {
-    Meta_Collector< Uint31_Index, Way_Skeleton > meta_collector
+    Meta_Collector< Uint31_Index, Way_Skeleton::Id_Type > meta_collector
         (other_req, *rman.get_transaction(), meta_settings().WAYS_META);
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
         (rman.get_transaction()->data_index(osm_base_settings().WAYS));
@@ -263,7 +263,7 @@ void User_Statement::execute(Resource_Manager& rman)
   
   if ((result_type == "") || (result_type == "relation"))
   {
-    Meta_Collector< Uint31_Index, Relation_Skeleton > meta_collector
+    Meta_Collector< Uint31_Index, Relation_Skeleton::Id_Type > meta_collector
         (other_req, *rman.get_transaction(), meta_settings().RELATIONS_META);
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
         (rman.get_transaction()->data_index(osm_base_settings().RELATIONS));

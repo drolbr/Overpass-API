@@ -49,6 +49,12 @@ class Print_Target_Xml : public Print_Target
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0);
+    
+    virtual void print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0);
+    
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
@@ -73,6 +79,12 @@ class Print_Target_Json : public Print_Target
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0);
+    
+    virtual void print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0);
+    
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
@@ -106,6 +118,12 @@ class Print_Target_Custom : public Print_Target
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0);
+    
+    virtual void print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0);
+    
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
@@ -199,6 +217,12 @@ class Print_Target_Popup : public Print_Target
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0);
+    
+    virtual void print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0);
+    
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
@@ -246,6 +270,7 @@ void print_meta_xml(const OSM_Element_Metadata_Skeleton< Id_Type >& meta,
     cout<<" user=\""<<escape_xml(it->second)<<"\"";
 }
 
+
 void Print_Target_Xml::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
@@ -271,6 +296,16 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Node_Skeleton& skel,
     cout<<"  </node>\n";
   }
 }
+
+
+void Print_Target_Xml::print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
+                const vector< pair< string, string > >* tags,
+                const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+                const map< uint32, string >* users)
+{
+  print_item(ll_upper, static_cast< Node_Skeleton >(skel), tags, meta, users);
+}
+
 
 void Print_Target_Xml::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
@@ -428,6 +463,16 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Node_Skeleton& skel,
   
   cout<<"\n}";
 }
+
+
+void Print_Target_Json::print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
+                const vector< pair< string, string > >* tags,
+                const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+                const map< uint32, string >* users)
+{
+  print_item(ll_upper, static_cast< Node_Skeleton >(skel), tags, meta, users);
+}
+
 
 void Print_Target_Json::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
@@ -967,6 +1012,16 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Node_Skeleton& skel,
   output += process_template(node_template, skel.id.val(), "node", lat, lon, 100.0, 0, 17, tags, 0, 0, 0);
 }
 
+
+void Print_Target_Custom::print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
+                const vector< pair< string, string > >* tags,
+                const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+                const map< uint32, string >* users)
+{
+  print_item(ll_upper, static_cast< Node_Skeleton >(skel), tags, meta, users);
+}
+
+
 void Print_Target_Custom::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
@@ -1280,6 +1335,16 @@ void Print_Target_Popup::print_item(uint32 ll_upper, const Node_Skeleton& skel,
     }
   }
 }
+
+
+void Print_Target_Popup::print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
+                const vector< pair< string, string > >* tags,
+                const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+                const map< uint32, string >* users)
+{
+  print_item(ll_upper, static_cast< Node_Skeleton >(skel), tags, meta, users);
+}
+
 
 void Print_Target_Popup::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 		const vector< pair< string, string > >* tags,

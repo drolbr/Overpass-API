@@ -77,11 +77,13 @@ class Osm_Script_Statement : public Statement
     uint32 get_max_allowed_time() const { return max_allowed_time; }
     uint64 get_max_allowed_space() const { return max_allowed_space; }
     Query_Constraint* get_bbox_limitation() { return bbox_limitation; }
+    uint64 get_desired_timestamp() const { return desired_timestamp; }
     
   private:
     vector< Statement* > substatements;
     Query_Constraint* bbox_limitation;
     Bbox_Query_Statement* bbox_statement;
+    uint64 desired_timestamp;
     uint32 max_allowed_time;
     uint64 max_allowed_space;
     string type;

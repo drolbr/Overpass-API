@@ -44,6 +44,12 @@ class Print_Target
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0) = 0;
+                            
+    virtual void print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0) = 0;
+                            
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
@@ -86,10 +92,17 @@ class Print_Statement : public Statement
     unsigned int limit;
     Output_Handle* output_handle;
 
-    template< class TIndex, class TObject >
+    template< class Index, class Object >
     void tags_quadtile
-      (const map< TIndex, vector< TObject > >& items,
+      (const map< Index, vector< Object > >& items,
        const File_Properties& file_prop, Print_Target& target,
+       Resource_Manager& rman, Transaction& transaction,
+       const File_Properties* meta_file_prop, uint32& element_count);
+    
+    template< class Index, class Object >
+    void tags_quadtile_attic
+      (const map< Index, vector< Attic< Object > > >& items,
+       Print_Target& target,
        Resource_Manager& rman, Transaction& transaction,
        const File_Properties* meta_file_prop, uint32& element_count);
     
@@ -97,6 +110,13 @@ class Print_Statement : public Statement
     void tags_by_id
       (const map< TIndex, vector< TObject > >& items,
        const File_Properties& file_prop,
+       uint32 FLUSH_SIZE, Print_Target& target,
+       Resource_Manager& rman, Transaction& transaction,
+       const File_Properties* meta_file_prop, uint32& element_count);
+    
+    template< class TIndex, class TObject >
+    void tags_by_id_attic
+      (const map< TIndex, vector< Attic< TObject > > >& items,
        uint32 FLUSH_SIZE, Print_Target& target,
        Resource_Manager& rman, Transaction& transaction,
        const File_Properties* meta_file_prop, uint32& element_count);

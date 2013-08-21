@@ -168,6 +168,8 @@ int main(int argc, char *argv[])
     area_level = determine_area_level(error_output, area_level);
     Dispatcher_Stub dispatcher(db_dir, error_output, xml_raw,
 			       get_uses_meta_data(), area_level, max_allowed_time, max_allowed_space);
+    if (osm_script && osm_script->get_desired_timestamp())
+      dispatcher.resource_manager().set_desired_timestamp(osm_script->get_desired_timestamp());
  
     Web_Output web_output(log_level);
     if (!osm_script || osm_script->get_type() == "xml")

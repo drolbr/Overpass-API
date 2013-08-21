@@ -88,6 +88,9 @@ struct Node_Skeleton
   Node_Skeleton(const Node& node)
   : id(node.id), ll_lower(node.ll_lower_) {}
   
+  Node_Skeleton(Node::Id_Type id_)
+  : id(id_), ll_lower(0) {}
+  
   Node_Skeleton(Node::Id_Type id_, uint32 ll_lower_)
   : id(id_), ll_lower(ll_lower_) {}
   

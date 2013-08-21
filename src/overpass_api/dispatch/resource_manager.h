@@ -42,7 +42,7 @@ public:
         area_transaction(0), area_updater_(0),
         watchdog(watchdog_),
 	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
-	max_allowed_time(0), max_allowed_space(0) {}
+	max_allowed_time(0), max_allowed_space(0), desired_timestamp(0) {}
   
   Resource_Manager(Transaction& transaction_, Error_Output* error_output_,
 		   Transaction& area_transaction_, Watchdog_Callback* watchdog_,
@@ -51,7 +51,7 @@ public:
         area_transaction(&area_transaction_),
         area_updater_(area_updater__),
 	watchdog(watchdog_), start_time(time(NULL)), last_ping_time(0), last_report_time(0),
-	max_allowed_time(0), max_allowed_space(0) {}
+	max_allowed_time(0), max_allowed_space(0), desired_timestamp(0) {}
 	
   ~Resource_Manager()
   {
@@ -85,6 +85,9 @@ public:
   Transaction* get_transaction() { return transaction; }
   Transaction* get_area_transaction() { return area_transaction; }
   
+  uint64 get_desired_timestamp() const { return desired_timestamp; }
+  void set_desired_timestamp(uint64 timestamp) { desired_timestamp = timestamp; }
+  
 private:
   map< string, Set > sets_;
   vector< const Set* > set_stack;
@@ -100,6 +103,8 @@ private:
   uint32 last_report_time;
   uint32 max_allowed_time;
   uint64 max_allowed_space;
+  
+  uint64 desired_timestamp;
 };
 
 struct Resource_Error

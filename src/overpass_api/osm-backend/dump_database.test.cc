@@ -81,9 +81,10 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
       it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
   {
     ofstream* out(node_db_out.get(it.object().id.val() / 5000000));
-    (*out)<<it.object().id.val()<<'\t'<<setprecision(10)
+    (*out)<<dec<<it.object().id.val()<<'\t'<<setprecision(10)
 	<<::lat(it.index().val(), it.object().ll_lower)<<'\t'
-	<<::lon(it.index().val(), it.object().ll_lower)<<'\n';
+	<<::lon(it.index().val(), it.object().ll_lower)<<'\t'
+          <<hex<<it.index().val()<<'\n';
   }
     
   // check update_node_tags_local - compare both files for the result
@@ -94,7 +95,7 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
       !(it == nodes_local_db.flat_end()); ++it)
   {
     ofstream* out(node_tags_local_out.get(it.object().val() / 5000000));
-    (*out)<<hex<<it.index().index<<'\t'<<dec<<it.object().val()<<'\t'
+    (*out)<<dec<<hex<<it.index().index<<'\t'<<dec<<it.object().val()<<'\t'
         <<it.index().key<<'\t'<<it.index().value<<'\n';
   }
   
@@ -106,7 +107,7 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
       !(it == nodes_global_db.flat_end()); ++it)
   {
     ofstream* out(node_tags_global_out.get(it.object().val() / 5000000));
-    (*out)<<it.object().val()<<'\t'
+    (*out)<<dec<<it.object().val()<<'\t'
         <<it.index().key<<'\t'<<it.index().value<<'\n';
   }
     
@@ -126,7 +127,7 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
         it(nodes_meta_db.flat_begin()); !(it == nodes_meta_db.flat_end()); ++it)
     {
       ofstream* out(node_meta_db_out.get(it.object().ref.val() / 5000000));
-      (*out)<<it.object().ref.val()<<'\t'
+      (*out)<<dec<<it.object().ref.val()<<'\t'
           <<it.object().version<<'\t'
           <<((it.object().timestamp)>>26)<<' '
           <<((it.object().timestamp & 0x3c00000)>>22)<<' '
@@ -134,7 +135,8 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
           <<((it.object().timestamp & 0x1f000)>>12)<<' '
           <<((it.object().timestamp & 0xfc0)>>6)<<' '
           <<(it.object().timestamp & 0x3f)<<'\t'
-          <<it.object().changeset<<'\t'<<it.object().user_id<<'\n';
+          <<it.object().changeset<<'\t'<<it.object().user_id<<'\t'
+          <<hex<<it.index().val()<<'\n';
     }
     
     Block_Backend< Uint31_Index, Attic< Node_Skeleton > > nodes_db

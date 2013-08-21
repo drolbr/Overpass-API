@@ -97,6 +97,8 @@ int main(int argc, char *argv[])
       int area_level = determine_area_level(&error_output, 0);
       Dispatcher_Stub dispatcher("", &error_output, xml_raw,
 			         get_uses_meta_data(), area_level, max_allowed_time, max_allowed_space);
+      if (osm_script && osm_script->get_desired_timestamp())
+        dispatcher.resource_manager().set_desired_timestamp(osm_script->get_desired_timestamp());
     
       if (!osm_script || osm_script->get_type() == "xml")
         error_output.write_xml_header

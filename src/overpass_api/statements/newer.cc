@@ -52,7 +52,7 @@ void newer_filter_map
 {
   if (modify.empty())
     return;
-  Meta_Collector< TIndex, TObject > meta_collector
+  Meta_Collector< TIndex, typename TObject::Id_Type > meta_collector
       (modify, *rman.get_transaction(), file_properties, false);
   for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
       it != modify.end(); ++it)

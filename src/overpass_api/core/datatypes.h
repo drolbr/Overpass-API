@@ -162,7 +162,28 @@ struct Set
   map< Uint32_Index, vector< Node_Skeleton > > nodes;
   map< Uint31_Index, vector< Way_Skeleton > > ways;
   map< Uint31_Index, vector< Relation_Skeleton > > relations;
+  
+  map< Uint32_Index, vector< Attic< Node_Skeleton > > > attic_nodes;
+  
   map< Uint31_Index, vector< Area_Skeleton > > areas;
+  
+  void swap(Set& rhs)
+  {
+    nodes.swap(rhs.nodes);
+    ways.swap(rhs.ways);
+    relations.swap(rhs.relations);
+    attic_nodes.swap(rhs.attic_nodes);
+    areas.swap(rhs.areas);
+  }
+  
+  void clear()
+  {
+    nodes.clear();
+    ways.clear();
+    relations.clear();
+    attic_nodes.clear();
+    areas.clear();
+  }
 };
 
 
@@ -310,6 +331,10 @@ struct OSM_Element_Metadata_Skeleton
       version(meta.version), timestamp(meta.timestamp),
       changeset(meta.changeset), user_id(meta.user_id) {}
   
+  OSM_Element_Metadata_Skeleton(Id_Type ref_, uint64 timestamp_)
+    : ref(ref_), version(0), timestamp(timestamp_),
+      changeset(0), user_id(0) {}
+  
   OSM_Element_Metadata_Skeleton(void* data)
     : ref(*(Id_Type*)data)
   {
@@ -344,7 +369,7 @@ struct OSM_Element_Metadata_Skeleton
       return true;
     else if (a.ref < ref)
       return false;
-    return (version < a.version);
+    return (timestamp < a.timestamp);
   }
   
   bool operator==(const OSM_Element_Metadata_Skeleton& a) const
@@ -373,51 +398,6 @@ const pair< TIndex, const TObject* >* binary_search_for_pair_id
   }
   return 0;
 }
-
-
-template< typename Element_Skeleton >
-struct Attic : public Element_Skeleton
-{
-  Attic(const Element_Skeleton& elem, uint64 timestamp_) : Element_Skeleton(elem), timestamp(timestamp_) {}
-  
-  uint64 timestamp;
-  
-  Attic(void* data)
-    : Element_Skeleton(data),
-      timestamp(*(uint64*)((uint8*)data + Element_Skeleton::size_of(data)) & 0xffffffffffull) {}
-  
-  uint32 size_of() const
-  {
-    return Element_Skeleton::size_of() + 5;
-  }
-  
-  static uint32 size_of(void* data)
-  {
-    return Element_Skeleton::size_of(data) + 5;
-  }
-  
-  void to_data(void* data) const
-  {
-    Element_Skeleton::to_data(data);
-    void* pos = (uint8*)data + Element_Skeleton::size_of();
-    *(uint32*)(pos) = (timestamp & 0xffffffffull);
-    *(uint8*)((uint8*)pos+4) = ((timestamp & 0xff00000000ull)>>32);
-  }
-  
-  bool operator<(const Attic& rhs) const
-  {
-    if (*static_cast< const Element_Skeleton* >(this) < *static_cast< const Element_Skeleton* >(&rhs))
-      return true;
-    else if (*static_cast< const Element_Skeleton* >(&rhs) < *static_cast< const Element_Skeleton* >(this))
-      return false;
-    return (timestamp < rhs.timestamp);
-  }
-  
-  bool operator==(const Attic& rhs) const
-  {
-    return (*static_cast< const Element_Skeleton* >(this) == rhs && timestamp == rhs.timestamp);
-  }
-};
 
 
 #endif

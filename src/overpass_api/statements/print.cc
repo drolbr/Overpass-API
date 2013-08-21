@@ -17,6 +17,7 @@
 */
 
 #include "../data/collect_members.h"
+#include "../data/filenames.h"
 #include "../frontend/print_target.h"
 #include "meta_collector.h"
 #include "print.h"
@@ -123,6 +124,114 @@ void collect_tags
 
 
 template< class Id_Type >
+void collect_tags
+  (std::map< Attic< Id_Type >, std::vector< std::pair< std::string, std::string > > >& tags_by_id,
+   const Block_Backend< Tag_Index_Local, Id_Type >& current_items_db,
+   typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& current_tag_it,
+   const Block_Backend< Tag_Index_Local, Attic< Id_Type > >& attic_items_db,
+   typename Block_Backend< Tag_Index_Local, Attic< Id_Type > >::Range_Iterator& attic_tag_it,
+   std::map< uint32, std::vector< Attic< Id_Type > > >& ids_by_coarse,
+   uint32 coarse_index,
+   Id_Type lower_id_bound, Id_Type upper_id_bound)
+{
+  std::vector< Attic< Id_Type > > id_vec = ids_by_coarse[coarse_index];
+  std::sort(id_vec.begin(), id_vec.end());
+
+  if (!(upper_id_bound == 0ull))
+  {
+    typename std::vector< Attic< Id_Type > >::iterator it_id
+        = std::lower_bound(id_vec.begin(), id_vec.end(),
+                           Attic< Id_Type >(upper_id_bound, 0ull));
+    id_vec.erase(it_id, id_vec.end());
+  }
+  if (!(lower_id_bound == 0ull))
+  {
+    typename std::vector< Attic< Id_Type > >::iterator it_id
+        = std::lower_bound(id_vec.begin(), id_vec.end(),
+                           Attic< Id_Type >(lower_id_bound, 0ull));
+    id_vec.erase(id_vec.begin(), it_id);
+  }
+  
+  std::map< Attic< Id_Type >, std::vector< std::pair< std::string, std::string > > > found_tags;
+  
+  // Collect all id-matched tag information from the current tags
+  while ((!(current_tag_it == current_items_db.range_end())) &&
+      (((current_tag_it.index().index) & 0x7fffff00) == coarse_index))
+  {
+    typename std::vector< Attic< Id_Type > >::const_iterator it_id
+        = std::lower_bound(id_vec.begin(), id_vec.end(), Attic< Id_Type >(current_tag_it.object(), 0ull));
+    typename std::vector< Attic< Id_Type > >::const_iterator it_id_end
+        = std::upper_bound(id_vec.begin(), id_vec.end(), Attic< Id_Type >
+            (current_tag_it.object(), 0xffffffffffffffffull));
+    if (it_id != it_id_end)
+      found_tags[Attic< Id_Type >(current_tag_it.object(), 0xffffffffffffffffull)].push_back
+          (make_pair(current_tag_it.index().key, current_tag_it.index().value));
+    ++current_tag_it;
+  }
+  
+  // Collect all id-matched tag information that is younger than the respective timestamp from the attic tags
+  while ((!(attic_tag_it == attic_items_db.range_end())) &&
+      (((attic_tag_it.index().index) & 0x7fffff00) == coarse_index))
+  {
+    typename std::vector< Attic< Id_Type > >::const_iterator it_id
+        = std::lower_bound(id_vec.begin(), id_vec.end(), Attic< Id_Type >(attic_tag_it.object(), 0ull));
+    typename std::vector< Attic< Id_Type > >::const_iterator it_id_end
+        = std::upper_bound(id_vec.begin(), id_vec.end(), attic_tag_it.object());
+    if (it_id != it_id_end)
+      found_tags[attic_tag_it.object()].push_back
+          (make_pair(attic_tag_it.index().key, attic_tag_it.index().value));
+    ++attic_tag_it;
+  }
+  
+  // Actually take for each object and key of the multiple versions only the oldest valid version
+  for (typename std::map< Attic< Id_Type >, std::vector< std::pair< std::string, std::string > > >
+          ::const_iterator
+      it = found_tags.begin(); it != found_tags.end(); ++it)
+  {
+    typename std::vector< Attic< Id_Type > >::const_iterator it_id
+        = std::lower_bound(id_vec.begin(), id_vec.end(), Attic< Id_Type >(it->first, 0ull));
+    typename std::vector< Attic< Id_Type > >::const_iterator it_id_end
+        = std::upper_bound(id_vec.begin(), id_vec.end(), it->first);
+    while(it_id != it_id_end)
+    {
+      std::vector< std::pair< std::string, std::string > >& obj_vec = tags_by_id[*it_id];
+      for (std::vector< std::pair< std::string, std::string > >::const_iterator
+          it_source = it->second.begin(); it_source != it->second.end(); ++it_source)
+      {
+        std::vector< std::pair< std::string, std::string > >::iterator it_obj = obj_vec.begin();
+        for (; it_obj != obj_vec.end(); ++it_obj)
+        {
+          if (it_obj->first == it_source->first)
+            break;
+        }
+        if (it_obj == obj_vec.end())
+          obj_vec.push_back(*it_source);
+      }
+      ++it_id;
+    }
+  }
+  
+  // Remove empty tags. They are placeholders for tags added later than each timestamp in question.
+  for (typename std::map< Attic< Id_Type >, std::vector< std::pair< std::string, std::string > > >
+          ::iterator
+      it_obj = tags_by_id.begin(); it_obj != tags_by_id.end(); ++it_obj)
+  {
+    for (typename std::vector< std::pair< std::string, std::string > >::size_type
+        i = 0; i < it_obj->second.size(); )
+    {
+      if (it_obj->second[i].second == "")
+      {
+        it_obj->second[i] = it_obj->second.back();
+        it_obj->second.pop_back();
+      }
+      else
+        ++i;
+    }
+  }
+}
+
+
+template< class Id_Type >
 void collect_tags_framed
   (map< Id_Type, vector< pair< string, string > > >& tags_by_id,
    const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
@@ -167,16 +276,16 @@ void quadtile
 }
 
 
-template< class TIndex, class TObject >
+template< class Index, class Object >
 void Print_Statement::tags_quadtile
-    (const map< TIndex, vector< TObject > >& items,
+    (const map< Index, vector< Object > >& items,
      const File_Properties& file_prop, Print_Target& target,
      Resource_Manager& rman, Transaction& transaction,
      const File_Properties* meta_file_prop, uint32& element_count)
 {
   //generate set of relevant coarse indices
-  set< TIndex > coarse_indices;
-  map< uint32, vector< typename TObject::Id_Type > > ids_by_coarse;
+  set< Index > coarse_indices;
+  map< uint32, vector< typename Object::Id_Type > > ids_by_coarse;
   generate_ids_by_coarse(coarse_indices, ids_by_coarse, items);
   
   //formulate range query
@@ -184,20 +293,20 @@ void Print_Statement::tags_quadtile
   formulate_range_query(range_set, coarse_indices);
   
   // formulate meta query if meta data shall be printed
-  Meta_Collector< TIndex, TObject > meta_printer(items, transaction, meta_file_prop);
+  Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, transaction, meta_file_prop);
   
   // iterate over the result
-  Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db
+  Block_Backend< Tag_Index_Local, typename Object::Id_Type > items_db
       (transaction.data_index(&file_prop));
-  typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
+  typename Block_Backend< Tag_Index_Local, typename Object::Id_Type >::Range_Iterator
     tag_it(items_db.range_begin
     (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
      Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-  typename map< TIndex, vector< TObject > >::const_iterator
+  typename map< Index, vector< Object > >::const_iterator
       item_it(items.begin());
       
   //uint coarse_count = 0;
-  for (typename set< TIndex >::const_iterator
+  for (typename set< Index >::const_iterator
       it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
   {
     // Disable health_check: This ensures that a result will be always printed completely
@@ -209,20 +318,94 @@ void Print_Statement::tags_quadtile
     
     sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
     
-    map< typename TObject::Id_Type, vector< pair< string, string > > > tags_by_id;
+    map< typename Object::Id_Type, vector< pair< string, string > > > tags_by_id;
     collect_tags(tags_by_id, items_db, tag_it, ids_by_coarse, it->val());
     
     // print the result
     while ((item_it != items.end()) &&
         ((item_it->first.val() & 0x7fffff00) == it->val()))
     {
-      for (typename vector< TObject >::const_iterator it2(item_it->second.begin());
+      for (typename vector< Object >::const_iterator it2(item_it->second.begin());
           it2 != item_it->second.end(); ++it2)
       {
 	if (++element_count > limit)
 	  return;
-	target.print_item(item_it->first.val(), *it2, &(tags_by_id[it2->id.val()]),
+	target.print_item(item_it->first.val(), *it2, &(tags_by_id[it2->id]),
 		   meta_printer.get(item_it->first, it2->id), &(meta_printer.users()));
+      }
+      ++item_it;
+    }
+  }
+}
+
+
+template< class Index, class Object >
+void Print_Statement::tags_quadtile_attic
+    (const map< Index, vector< Attic< Object > > >& items,
+     Print_Target& target,
+     Resource_Manager& rman, Transaction& transaction,
+     const File_Properties* meta_file_prop, uint32& element_count)
+{
+  //generate set of relevant coarse indices
+  set< Index > coarse_indices;
+  map< uint32, vector< Attic< typename Object::Id_Type > > > ids_by_coarse;
+  generate_ids_by_coarse(coarse_indices, ids_by_coarse, items);
+  
+  //formulate range query
+  set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
+  formulate_range_query(range_set, coarse_indices);
+  
+  // formulate meta query if meta data shall be printed
+  Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, transaction, meta_file_prop);
+  
+  // iterate over the result
+  Block_Backend< Tag_Index_Local, typename Object::Id_Type > current_tags_db
+      (transaction.data_index(current_local_tags_file_properties< Object >()));
+  typename Block_Backend< Tag_Index_Local, typename Object::Id_Type >::Range_Iterator
+    current_tag_it(current_tags_db.range_begin
+    (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+     Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+      
+  // iterate over the result
+  Block_Backend< Tag_Index_Local, Attic< typename Object::Id_Type > > attic_tags_db
+      (transaction.data_index(attic_local_tags_file_properties< Object >()));
+  typename Block_Backend< Tag_Index_Local, Attic< typename Object::Id_Type > >::Range_Iterator
+    attic_tag_it(attic_tags_db.range_begin
+    (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+     Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+    
+  typename map< Index, vector< Attic< Object > > >::const_iterator
+      item_it(items.begin());
+      
+  //uint coarse_count = 0;
+  for (typename set< Index >::const_iterator
+      it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
+  {
+    // Disable health_check: This ensures that a result will be always printed completely
+//     if (++coarse_count >= 1024)
+//     {
+//       coarse_count = 0;
+//       rman.health_check(*this);
+//     }
+    
+    sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
+    
+    map< Attic< typename Object::Id_Type >, vector< pair< string, string > > > tags_by_id;
+    collect_tags(tags_by_id, current_tags_db, current_tag_it, attic_tags_db, attic_tag_it,
+                 ids_by_coarse, it->val(), typename Object::Id_Type(0ull), typename Object::Id_Type(0ull));
+    
+    // print the result
+    while ((item_it != items.end()) &&
+        ((item_it->first.val() & 0x7fffff00) == it->val()))
+    {
+      for (typename vector< Attic< Object > >::const_iterator it2(item_it->second.begin());
+          it2 != item_it->second.end(); ++it2)
+      {
+        if (++element_count > limit)
+          return;
+        target.print_item(item_it->first.val(), *it2,
+                          &(tags_by_id[Attic< typename Object::Id_Type >(it2->id, it2->timestamp)]),
+                   meta_printer.get(item_it->first, it2->id, it2->timestamp), &(meta_printer.users()));
       }
       ++item_it;
     }
@@ -235,7 +418,7 @@ struct Skeleton_Comparator_By_Id {
   bool operator() (const pair< const TComp*, uint32 >& a, 
 		   const pair< const TComp*, uint32 >& b)
   {
-    return (a.first->id < b.first->id);
+    return (*a.first < *b.first);
   }
 };
 
@@ -271,7 +454,7 @@ template< class TIndex, class TObject >
 void collect_metadata(set< OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > >& metadata,
 		      const map< TIndex, vector< TObject > >& items,
 		      typename TObject::Id_Type lower_id_bound, typename TObject::Id_Type upper_id_bound,
-		      Meta_Collector< TIndex, TObject>& meta_printer)
+		      Meta_Collector< TIndex, typename TObject::Id_Type >& meta_printer)
 {
   for (typename map< TIndex, vector< TObject > >::const_iterator
       it(items.begin()); it != items.end(); ++it)
@@ -285,6 +468,30 @@ void collect_metadata(set< OSM_Element_Metadata_Skeleton< typename TObject::Id_T
 	    = meta_printer.get(it->first, it2->id);
 	if (meta)
 	  metadata.insert(*meta);
+      }
+    }
+  }
+}
+
+
+template< class TIndex, class TObject >
+void collect_metadata(set< OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > >& metadata,
+                      const map< TIndex, vector< Attic< TObject > > >& items,
+                      typename TObject::Id_Type lower_id_bound, typename TObject::Id_Type upper_id_bound,
+                      Meta_Collector< TIndex, typename TObject::Id_Type >& meta_printer)
+{
+  for (typename map< TIndex, vector< Attic< TObject > > >::const_iterator
+      it(items.begin()); it != items.end(); ++it)
+  {
+    for (typename vector< Attic< TObject > >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+    {
+      if (!(it2->id < lower_id_bound) && (it2->id < upper_id_bound))
+      {
+        const OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >* meta
+            = meta_printer.get(it->first, it2->id, it2->timestamp);
+        if (meta)
+          metadata.insert(*meta);
       }
     }
   }
@@ -325,7 +532,7 @@ void Print_Statement::tags_by_id
     sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
   
   // formulate meta query if meta data shall be printed
-  Meta_Collector< TIndex, TObject > meta_printer(items, transaction, meta_file_prop);
+  Meta_Collector< TIndex, typename TObject::Id_Type > meta_printer(items, transaction, meta_file_prop);
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db
@@ -365,13 +572,125 @@ void Print_Statement::tags_by_id
          (i < id_pos + FLUSH_SIZE) && (i < items_by_id.size()); ++i)
     {
       typename set< OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > >::const_iterator meta_it
-          = metadata.find(OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >
+          = metadata.lower_bound(OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >
               (items_by_id[i.val()].first->id));
       if (++element_count > limit)
 	return;
       target.print_item(items_by_id[i.val()].second, *(items_by_id[i.val()].first),
 		 &(tags_by_id[items_by_id[i.val()].first->id.val()]),
-		 meta_it != metadata.end() ? &*meta_it : 0, &(meta_printer.users()));
+		 (meta_it != metadata.end() && meta_it->ref == items_by_id[i.val()].first->id) ?
+		     &*meta_it : 0, &(meta_printer.users()));
+    }
+  }
+}
+
+
+template< typename Id_Type >
+typename set< OSM_Element_Metadata_Skeleton< Id_Type > >::const_iterator
+    find_matching_metadata
+    (const set< OSM_Element_Metadata_Skeleton< Id_Type > >& metadata,
+     Id_Type ref, uint64 timestamp)
+{
+  typename set< OSM_Element_Metadata_Skeleton< Id_Type > >::iterator it
+      = metadata.lower_bound(OSM_Element_Metadata_Skeleton< Id_Type >(ref, timestamp));
+  if (it == metadata.begin())
+    return metadata.end();
+  --it;
+  if (it->ref == ref)
+    return it;
+  else
+    return metadata.end();
+}
+
+
+template< class TIndex, class TObject >
+void Print_Statement::tags_by_id_attic
+  (const map< TIndex, vector< Attic< TObject > > >& items,
+   uint32 FLUSH_SIZE, Print_Target& target,
+   Resource_Manager& rman, Transaction& transaction,
+   const File_Properties* meta_file_prop, uint32& element_count)
+{
+  // order relevant elements by id
+  vector< pair< const Attic< TObject >*, uint32 > > items_by_id;
+  for (typename map< TIndex, vector< Attic< TObject > > >::const_iterator
+    it(items.begin()); it != items.end(); ++it)
+  {
+    for (typename vector< Attic< TObject > >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      items_by_id.push_back(make_pair(&(*it2), it->first.val()));
+  }
+  sort(items_by_id.begin(), items_by_id.end(),
+       Skeleton_Comparator_By_Id< Attic< TObject > >());
+  
+  //generate set of relevant coarse indices
+  set< TIndex > coarse_indices;
+  map< uint32, vector< Attic< typename TObject::Id_Type > > > ids_by_coarse;
+  generate_ids_by_coarse(coarse_indices, ids_by_coarse, items);
+  
+  //formulate range query
+  set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
+  formulate_range_query(range_set, coarse_indices);
+  
+  for (typename set< TIndex >::const_iterator
+      it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
+    sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
+  
+  // formulate meta query if meta data shall be printed
+  Meta_Collector< TIndex, typename TObject::Id_Type > meta_printer(items, transaction, meta_file_prop);
+  
+  // iterate over the result
+  Block_Backend< Tag_Index_Local, typename TObject::Id_Type > current_tags_db
+      (transaction.data_index(current_local_tags_file_properties< TObject >()));
+  Block_Backend< Tag_Index_Local, Attic< typename TObject::Id_Type > > attic_tags_db
+      (transaction.data_index(attic_local_tags_file_properties< TObject >()));
+      
+  for (typename TObject::Id_Type id_pos; id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
+  {
+    // Disable health_check: This ensures that a result will be always printed completely
+    //rman.health_check(*this);
+    
+    map< Attic< typename TObject::Id_Type >, vector< pair< string, string > > > tags_by_id;
+    typename TObject::Id_Type lower_id_bound(items_by_id[id_pos.val()].first->id);
+    typename TObject::Id_Type upper_id_bound;
+    if (id_pos + FLUSH_SIZE < items_by_id.size())
+      upper_id_bound = items_by_id[(id_pos + FLUSH_SIZE).val()].first->id;
+    else
+    {
+      upper_id_bound = items_by_id[items_by_id.size()-1].first->id;
+      ++upper_id_bound;
+    }
+    
+    typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
+        current_tag_it(current_tags_db.range_begin
+        (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+         Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+    typename Block_Backend< Tag_Index_Local, Attic< typename TObject::Id_Type > >::Range_Iterator
+        attic_tag_it(attic_tags_db.range_begin
+        (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+         Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+    for (typename set< TIndex >::const_iterator
+        it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
+      collect_tags(tags_by_id, current_tags_db, current_tag_it, attic_tags_db, attic_tag_it,
+                 ids_by_coarse, it->val(), lower_id_bound, upper_id_bound);
+    
+    // collect metadata if required
+    set< OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > > metadata;
+    collect_metadata(metadata, items, lower_id_bound, upper_id_bound, meta_printer);
+    meta_printer.reset();
+
+    // print the result
+    for (typename TObject::Id_Type i(id_pos);
+         (i < id_pos + FLUSH_SIZE) && (i < items_by_id.size()); ++i)
+    {
+      typename set< OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > >::const_iterator meta_it
+          = find_matching_metadata(metadata,
+                                   items_by_id[i.val()].first->id, items_by_id[i.val()].first->timestamp);
+      if (++element_count > limit)
+        return;
+      target.print_item(items_by_id[i.val()].second, *(items_by_id[i.val()].first),
+                 &(tags_by_id[Attic< typename TObject::Id_Type >
+                     (items_by_id[i.val()].first->id, items_by_id[i.val()].first->timestamp)]),
+                 meta_it != metadata.end() ? &*meta_it : 0, &meta_printer.users());
     }
   }
 }
@@ -386,7 +705,7 @@ void Print_Statement::execute(Resource_Manager& rman)
   uint32 element_count = 0;
   if (mit == rman.sets().end())
     return;
-
+    
   Output_Handle output_handle("xml");
   Print_Target* target = 0;
   if (this->output_handle)
@@ -403,6 +722,15 @@ void Print_Statement::execute(Resource_Manager& rman)
 		 *rman.get_transaction(),
 		 (mode & Print_Target::PRINT_META) ?
 		     meta_settings().NODES_META : 0, element_count);
+      if (rman.get_desired_timestamp() != 0)
+      {
+        tags_by_id_attic(mit->second.attic_nodes,
+                   NODE_FLUSH_SIZE, *target, rman,
+                   *rman.get_transaction(),
+                   (mode & Print_Target::PRINT_META) ?
+                       attic_settings().NODES_META : 0, element_count);
+      }
+      
       tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		 WAY_FLUSH_SIZE, *target, rman,
 		 *rman.get_transaction(),
@@ -413,6 +741,7 @@ void Print_Statement::execute(Resource_Manager& rman)
 		 *rman.get_transaction(),
 		 (mode & Print_Target::PRINT_META) ?
 		     meta_settings().RELATIONS_META : 0, element_count);
+      
       if (rman.get_area_transaction())
       {
 	tags_by_id(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
@@ -426,6 +755,14 @@ void Print_Statement::execute(Resource_Manager& rman)
 		    *target, rman, *rman.get_transaction(),
 		    (mode & Print_Target::PRINT_META) ?
 		        meta_settings().NODES_META : 0, element_count);
+      if (rman.get_desired_timestamp() != 0)
+      {
+        tags_quadtile_attic(mit->second.attic_nodes,
+                      *target, rman, *rman.get_transaction(),
+                      (mode & Print_Target::PRINT_META) ?
+                          attic_settings().NODES_META : 0, element_count);
+      }
+      
       tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		    *target, rman, *rman.get_transaction(),
 		    (mode & Print_Target::PRINT_META) ?
@@ -434,6 +771,8 @@ void Print_Statement::execute(Resource_Manager& rman)
 		    *target, rman, *rman.get_transaction(),
 		    (mode & Print_Target::PRINT_META) ?
 		        meta_settings().RELATIONS_META : 0, element_count);
+      
+      
       if (rman.get_area_transaction())
       {
         tags_quadtile(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
@@ -448,6 +787,9 @@ void Print_Statement::execute(Resource_Manager& rman)
       by_id(mit->second.nodes, *target, *rman.get_transaction(), limit, element_count);
       by_id(mit->second.ways, *target, *rman.get_transaction(), limit, element_count);
       by_id(mit->second.relations, *target, *rman.get_transaction(), limit, element_count);
+      
+      by_id(mit->second.attic_nodes, *target, *rman.get_transaction(), limit, element_count);
+      
       if (rman.get_area_transaction())
 	by_id(mit->second.areas, *target, *rman.get_area_transaction(), limit, element_count);
     }
@@ -456,6 +798,9 @@ void Print_Statement::execute(Resource_Manager& rman)
       quadtile(mit->second.nodes, *target, *rman.get_transaction(), limit, element_count);
       quadtile(mit->second.ways, *target, *rman.get_transaction(), limit, element_count);
       quadtile(mit->second.relations, *target, *rman.get_transaction(), limit, element_count);
+      
+      quadtile(mit->second.attic_nodes, *target, *rman.get_transaction(), limit, element_count);
+      
       if (rman.get_area_transaction())
 	quadtile(mit->second.areas, *target, *rman.get_area_transaction(), limit, element_count);
     }
