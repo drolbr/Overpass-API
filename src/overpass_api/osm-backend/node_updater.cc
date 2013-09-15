@@ -859,7 +859,7 @@ std::map< Timestamp, std::set< Change_Entry< typename Element_Skeleton::Id_Type 
      const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& new_meta,
      const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& attic_meta)
 {
-  for (std::map< Uint31_Index,
+  for (typename std::map< Uint31_Index,
       std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >::const_iterator
       it = new_meta.begin(); it != new_meta.end(); ++it)
     ;
