@@ -197,6 +197,8 @@ Attic_Settings::Attic_Settings()
       ("node_tags_global_attic", 2*1024*1024, 0)),
   NODES_META(new OSM_File_Properties< Uint31_Index >
       ("nodes_meta_attic", 512*1024, 0)),
+  NODE_CHANGELOG(new OSM_File_Properties< Timestamp >
+      ("node_changelog", 512*1024, 0)),
       
   WAYS(new OSM_File_Properties< Uint31_Index >("ways_attic", 512*1024, 64*1024)),
   WAY_IDX_LIST(new OSM_File_Properties< Way::Id_Type >

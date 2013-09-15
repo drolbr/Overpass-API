@@ -400,4 +400,102 @@ const pair< TIndex, const TObject* >* binary_search_for_pair_id
 }
 
 
+template< typename Id_Type >
+struct Change_Entry
+{
+  Change_Entry(char status_flags_, const Id_Type& elem_id_,
+               const Uint31_Index& old_idx_, const Uint31_Index& new_idx_)
+      : status_flags(status_flags_), old_idx(old_idx_), new_idx(new_idx_), elem_id(elem_id_) {}
+
+  char status_flags;
+  Uint31_Index old_idx;
+  Uint31_Index new_idx;
+  Id_Type elem_id;
+  
+  Change_Entry(void* data)
+    : status_flags(*(uint8*)data), old_idx((uint8*)data + 1), new_idx((uint8*)data + 5),
+      elem_id(Id_Type((uint8*)data + 9)) {}
+  
+  uint32 size_of() const
+  {
+    return elem_id.size_of() + 9;
+  }
+  
+  static uint32 size_of(void* data)
+  {
+    return Id_Type::size_of((uint8*)data + 9) + 9;
+  }
+  
+  void to_data(void* data) const
+  {
+    *(uint8*)data = status_flags;
+    old_idx.to_data((uint8*)data + 1);
+    new_idx.to_data((uint8*)data + 5);
+    elem_id.to_data((uint8*)data + 9);
+  }
+  
+  bool operator<(const Change_Entry& rhs) const
+  {
+    if (old_idx < rhs.old_idx)
+      return true;
+    if (rhs.old_idx < old_idx)
+      return true;
+    if (new_idx < rhs.new_idx)
+      return true;
+    if (rhs.new_idx < new_idx)
+      return true;
+    return (elem_id < rhs.elem_id);
+  }
+  
+  bool operator==(const Change_Entry& rhs) const
+  {
+    return (old_idx == rhs.old_idx && new_idx == rhs.new_idx && elem_id == rhs.elem_id);
+  }
+};
+
+
+struct Timestamp
+{
+  Timestamp(uint64 timestamp_) : timestamp(timestamp_) {}
+  
+  uint64 timestamp;
+  
+  Timestamp(void* data)
+    : timestamp((*(uint64*)(uint8*)data) & 0xffffffffffull) {}
+  
+  uint32 size_of() const
+  {
+    return 5;
+  }
+  
+  static uint32 size_of(void* data)
+  {
+    return 5;
+  }
+  
+  void to_data(void* data) const
+  {
+    void* pos = (uint8*)data;
+    *(uint32*)(pos) = (timestamp & 0xffffffffull);
+    *(uint8*)((uint8*)pos+4) = ((timestamp & 0xff00000000ull)>>32);
+  }
+  
+  bool operator<(const Timestamp& rhs) const
+  {
+    return (timestamp < rhs.timestamp);
+  }
+  
+  bool operator==(const Timestamp& rhs) const
+  {
+    return (timestamp == rhs.timestamp);
+  }
+  
+  static uint32 max_size_of()
+  {
+    throw Unsupported_Error("static uint32 Tag_Index_Global::max_size_of()");
+    return 0;
+  }
+};
+
+
 #endif

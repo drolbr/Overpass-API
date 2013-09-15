@@ -96,6 +96,7 @@ struct Attic_Settings
   File_Properties* NODE_TAGS_LOCAL;
   File_Properties* NODE_TAGS_GLOBAL;
   File_Properties* NODES_META;
+  File_Properties* NODE_CHANGELOG;
   File_Properties* WAYS;
   File_Properties* WAY_IDX_LIST;
   File_Properties* WAY_TAGS_LOCAL;
