@@ -446,11 +446,6 @@ void get_elements
       }
     }
     
-//     for (typename std::vector< Attic_Skeleton_By_Id< Index, Skeleton > >::const_iterator
-//          it = attic_dict.begin(); it != attic_dict.end(); ++it)
-//       cout<<it->id.val()<<'\t'<<it->timestamp<<'\t'<<it->elem.id.val()<<'\t'<<it->elem.timestamp<<'\t'<<it->meta_confirmed<<'\n';
-//     cout<<'\n';
-    
     // Remove elements that have been deleted at the given point of time
     Block_Backend< Index, Attic< typename Skeleton::Id_Type >, typename std::vector< Index >::const_iterator >
         undeleted_db(rman.get_transaction()->data_index(attic_undeleted_file_properties< Skeleton >()));
@@ -470,11 +465,6 @@ void get_elements
         it_dict->index = 0xffu;
       }
     }
-    
-//     for (typename std::vector< Attic_Skeleton_By_Id< Index, Skeleton > >::const_iterator
-//          it = attic_dict.begin(); it != attic_dict.end(); ++it)
-//       cout<<it->id.val()<<'\t'<<it->timestamp<<'\t'<<it->elem.id.val()<<'\t'<<it->elem.timestamp<<'\t'<<it->meta_confirmed<<'\n';
-//     cout<<'\n';
     
     // Confirm elements that are backed by meta data
     // Update element's expiration timestamp if a meta exists that is older than the current
@@ -505,11 +495,6 @@ void get_elements
       }
     }
     
-//     for (typename std::vector< Attic_Skeleton_By_Id< Index, Skeleton > >::const_iterator
-//          it = attic_dict.begin(); it != attic_dict.end(); ++it)
-//       cout<<it->id.val()<<'\t'<<it->timestamp<<'\t'<<it->elem.id.val()<<'\t'<<it->elem.timestamp<<'\t'<<it->meta_confirmed<<'\n';
-//     cout<<'\n';
-    
     // Same thing with current meta data
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
             typename std::vector< Index >::const_iterator >
@@ -537,11 +522,6 @@ void get_elements
         ++it_dict;
       }
     }
-    
-//     for (typename std::vector< Attic_Skeleton_By_Id< Index, Skeleton > >::const_iterator
-//          it = attic_dict.begin(); it != attic_dict.end(); ++it)
-//       cout<<it->id.val()<<'\t'<<it->timestamp<<'\t'<<it->elem.id.val()<<'\t'<<it->elem.timestamp<<'\t'<<it->meta_confirmed<<'\n';
-//     cout<<'\n';
     
     // Filter the current elements such that only those not superseded by older remain.
     for (typename std::map< Index, vector< Skeleton > >::iterator it_idx = current.begin();
@@ -572,11 +552,6 @@ void get_elements
       it_idx->second.swap(filtered);
     }
   
-//     for (typename std::vector< Attic_Skeleton_By_Id< Index, Skeleton > >::const_iterator
-//          it = attic_dict.begin(); it != attic_dict.end(); ++it)
-//       cout<<it->id.val()<<'\t'<<it->timestamp<<'\t'<<it->elem.id.val()<<'\t'<<it->elem.timestamp<<'\t'<<it->meta_confirmed<<'\n';
-//     cout<<'\n';
-    
     // Copy the found attic elements to attic.
     for (typename std::vector< Attic_Skeleton_By_Id< Index, Skeleton > >::const_iterator
          it = attic_dict.begin(); it != attic_dict.end(); ++it)
@@ -611,22 +586,6 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
     collect_elems(rman, *osm_base_settings().RELATIONS, lower, upper, into.relations);
   else if (type == AREA)
     collect_elems_flat(rman, lower.val(), upper.val(), vector< Area_Skeleton::Id_Type >(), true, into.areas);
-
-//   for (std::map< Uint32_Index, vector< Attic< Node_Skeleton > > >::const_iterator
-//       it_idx = into.attic_nodes.begin(); it_idx != into.attic_nodes.end(); ++it_idx)
-//   {
-//     for (vector< Attic< Node_Skeleton > >::const_iterator
-//         it = it_idx->second.begin(); it != it_idx->second.end(); ++it)
-//       std::cout<<it->id.val()<<'\t'
-//           <<::lat(it_idx->first.val(), it->ll_lower)<<'\t'
-//           <<::lon(it_idx->first.val(), it->ll_lower)<<'\t'          
-//           <<((it->timestamp)>>26)<<' '
-//           <<((it->timestamp & 0x3c00000)>>22)<<' '
-//           <<((it->timestamp & 0x3e0000)>>17)<<' '
-//           <<((it->timestamp & 0x1f000)>>12)<<' '
-//           <<((it->timestamp & 0xfc0)>>6)<<' '
-//           <<(it->timestamp & 0x3f)<<'\n';
-//   }
 
   transfer_output(rman, into);
   rman.health_check(*this);
