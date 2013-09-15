@@ -898,6 +898,9 @@ TStatement* create_query_substatement
   else if (clause.statement == "pivot")
     return create_pivot_statement< TStatement >
         (stmt_factory, clause.attributes[0], into, clause.line_col.first);
+  else if (clause.statement == "item")
+    return create_item_statement< TStatement >
+        (stmt_factory, clause.attributes[0], clause.line_col.first);
   return 0;
 }
 
@@ -957,7 +960,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
   pair< uint, uint > query_line_col = token.line_col();
   
   vector< Statement_Text > clauses;
-  while (token.good() && (*token == "[" || *token == "("))
+  while (token.good() && (*token == "[" || *token == "(" || *token == "."))
   {
     if (*token == "[")
     {
@@ -1020,7 +1023,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	clauses.push_back(clause);
       }
     }
-    else
+    else if (*token == "(")
     {
       ++token;
       if (!token.good())
@@ -1166,6 +1169,14 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	  error_output->add_parse_error("Unknown query clause", token.line_col().first);
 	clear_until_after(token, error_output, ")");
       }
+    }
+    else
+    {
+      Statement_Text clause("item", token.line_col());
+      ++token;
+      clause.attributes.push_back(probe_from(token, error_output));
+      ++token;
+      clauses.push_back(clause);
     }
   }
   
