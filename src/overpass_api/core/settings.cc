@@ -201,6 +201,7 @@ Attic_Settings::Attic_Settings()
       ("node_changelog", 512*1024, 0)),
       
   WAYS(new OSM_File_Properties< Uint31_Index >("ways_attic", 512*1024, 64*1024)),
+  WAYS_UNDELETED(new OSM_File_Properties< Uint31_Index >("ways_attic_undeleted", 512*1024, 64*1024)),
   WAY_IDX_LIST(new OSM_File_Properties< Way::Id_Type >
       ("way_attic_indexes", 512*1024, 0)),
   WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
@@ -209,8 +210,11 @@ Attic_Settings::Attic_Settings()
       ("way_tags_global_attic", 2*1024*1024, 0)),
   WAYS_META(new OSM_File_Properties< Uint31_Index >
       ("ways_meta_attic", 512*1024, 0)),
+  WAY_CHANGELOG(new OSM_File_Properties< Timestamp >
+      ("way_changelog", 512*1024, 0)),
       
   RELATIONS(new OSM_File_Properties< Uint31_Index >("relations_attic", 1024*1024, 64*1024)),
+  RELATIONS_UNDELETED(new OSM_File_Properties< Uint31_Index >("relations_attic_undeleted", 512*1024, 64*1024)),
   RELATION_IDX_LIST(new OSM_File_Properties< Relation::Id_Type >
       ("relation_attic_indexes", 512*1024, 0)),
   RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
@@ -218,7 +222,9 @@ Attic_Settings::Attic_Settings()
   RELATION_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
       ("relation_tags_global_attic", 2*1024*1024, 0)),
   RELATIONS_META(new OSM_File_Properties< Uint31_Index >
-      ("relations_meta_attic", 512*1024, 0))
+      ("relations_meta_attic", 512*1024, 0)),
+  RELATION_CHANGELOG(new OSM_File_Properties< Timestamp >
+      ("relation_changelog", 512*1024, 0))
 {}
 
 const Attic_Settings& attic_settings()

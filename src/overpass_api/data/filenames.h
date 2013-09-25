@@ -30,12 +30,12 @@ File_Properties* current_skeleton_file_properties()
   return 0;
 }
 
+template< > inline File_Properties* current_skeleton_file_properties< Node_Skeleton >()
+{ return osm_base_settings().NODES; }
 
-template< > inline
-File_Properties* current_skeleton_file_properties< Node_Skeleton >()
-{
-  return osm_base_settings().NODES;
-}
+template< > inline File_Properties* current_skeleton_file_properties< Way_Skeleton >()
+{ return osm_base_settings().WAYS; }
+
 
 
 template< typename Skeleton >
@@ -44,12 +44,12 @@ File_Properties* current_meta_file_properties()
   return 0;
 }
 
+template< > inline File_Properties* current_meta_file_properties< Node_Skeleton >()
+{ return meta_settings().NODES_META; }
 
-template< > inline
-File_Properties* current_meta_file_properties< Node_Skeleton >()
-{
-  return meta_settings().NODES_META;
-}
+template< > inline File_Properties* current_meta_file_properties< Way_Skeleton >()
+{ return meta_settings().WAYS_META; }
+
 
 
 template< typename Skeleton >
@@ -58,6 +58,13 @@ File_Properties* attic_skeleton_file_properties()
   return 0;
 }
 
+template< > inline File_Properties* attic_skeleton_file_properties< Node_Skeleton >()
+{ return attic_settings().NODES; }
+
+template< > inline File_Properties* attic_skeleton_file_properties< Way_Skeleton >()
+{ return attic_settings().WAYS; }
+
+
 
 template< typename Skeleton >
 File_Properties* current_local_tags_file_properties()
@@ -65,19 +72,12 @@ File_Properties* current_local_tags_file_properties()
   return 0;
 }
 
+template< > inline File_Properties* current_local_tags_file_properties< Node_Skeleton >()
+{ return osm_base_settings().NODE_TAGS_LOCAL; }
 
-template< > inline
-File_Properties* current_local_tags_file_properties< Node_Skeleton >()
-{
-  return osm_base_settings().NODE_TAGS_LOCAL;
-}
+template< > inline File_Properties* current_local_tags_file_properties< Way_Skeleton >()
+{ return osm_base_settings().WAY_TAGS_LOCAL; }
 
-
-template< > inline
-File_Properties* attic_skeleton_file_properties< Node_Skeleton >()
-{
-  return attic_settings().NODES;
-}
 
 
 template< typename Skeleton >
@@ -86,12 +86,12 @@ File_Properties* attic_idx_list_properties()
   return 0;
 }
 
+template< > inline File_Properties* attic_idx_list_properties< Node_Skeleton >()
+{ return attic_settings().NODE_IDX_LIST; }
 
-template< > inline
-File_Properties* attic_idx_list_properties< Node_Skeleton >()
-{
-  return attic_settings().NODE_IDX_LIST;
-}
+template< > inline File_Properties* attic_idx_list_properties< Way_Skeleton >()
+{ return attic_settings().WAY_IDX_LIST; }
+
 
 
 template< typename Skeleton >
@@ -100,12 +100,12 @@ File_Properties* attic_undeleted_file_properties()
   return 0;
 }
 
+template< > inline File_Properties* attic_undeleted_file_properties< Node_Skeleton >()
+{ return attic_settings().NODES_UNDELETED; }
 
-template< > inline
-File_Properties* attic_undeleted_file_properties< Node_Skeleton >()
-{
-  return attic_settings().NODES_UNDELETED;
-}
+template< > inline File_Properties* attic_undeleted_file_properties< Way_Skeleton >()
+{ return attic_settings().WAYS_UNDELETED; }
+
 
 
 template< typename Skeleton >
@@ -114,12 +114,12 @@ File_Properties* attic_meta_file_properties()
   return 0;
 }
 
+template< > inline File_Properties* attic_meta_file_properties< Node_Skeleton >()
+{ return attic_settings().NODES_META; }
 
-template< > inline
-File_Properties* attic_meta_file_properties< Node_Skeleton >()
-{
-  return attic_settings().NODES_META;
-}
+template< > inline File_Properties* attic_meta_file_properties< Way_Skeleton >()
+{ return attic_settings().WAYS_META; }
+
 
 
 template< typename Skeleton >
@@ -128,12 +128,11 @@ File_Properties* attic_local_tags_file_properties()
   return 0;
 }
 
+template< > inline File_Properties* attic_local_tags_file_properties< Node_Skeleton >()
+{ return attic_settings().NODE_TAGS_LOCAL; }
 
-template< > inline
-File_Properties* attic_local_tags_file_properties< Node_Skeleton >()
-{
-  return attic_settings().NODE_TAGS_LOCAL;
-}
+template< > inline File_Properties* attic_local_tags_file_properties< Way_Skeleton >()
+{ return attic_settings().WAY_TAGS_LOCAL; }
 
 
 #endif

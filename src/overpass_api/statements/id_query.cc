@@ -361,7 +361,7 @@ struct Attic_Skeleton_By_Id
 {
   Attic_Skeleton_By_Id(const typename Skeleton::Id_Type& id_, uint64 timestamp_)
       : id(id_), timestamp(timestamp_), index(0u), meta_confirmed(false),
-        elem(Skeleton(typename Skeleton::Id_Type(0ull)), 0xffffffffffffffffull) {}
+        elem(Skeleton(), 0xffffffffffffffffull) {}
   
   typename Skeleton::Id_Type id;
   uint64 timestamp;
@@ -439,7 +439,7 @@ void get_elements
           = std::upper_bound(attic_dict.begin(), attic_dict.end(),
                              Attic_Skeleton_By_Id< Index, Skeleton >(it.object().id, it.object().timestamp));
       if (it_dict != attic_dict.end() && it_dict->id == it.object().id
-          && (it_dict->elem.id == 0ull || it.object().timestamp < it_dict->elem.timestamp))
+          && (it_dict->elem.id == typename Skeleton::Id_Type() || it.object().timestamp < it_dict->elem.timestamp))
       {
         it_dict->index = it.index();
         it_dict->elem = it.object();
@@ -459,9 +459,9 @@ void get_elements
           = std::upper_bound(attic_dict.begin(), attic_dict.end(),
                              Attic_Skeleton_By_Id< Index, Skeleton >(it.object(), it.object().timestamp));
       if (it_dict != attic_dict.end() && it_dict->id == it.object()
-          && (it_dict->elem.id == 0ull || it.object().timestamp < it_dict->elem.timestamp))
+          && (it_dict->elem.id == typename Skeleton::Id_Type() || it.object().timestamp < it_dict->elem.timestamp))
       {
-        it_dict->elem.id = 0ull;
+        it_dict->elem.id = typename Skeleton::Id_Type();
         it_dict->index = 0xffu;
       }
     }
@@ -536,7 +536,7 @@ void get_elements
                              Attic_Skeleton_By_Id< Index, Skeleton >(it->id, 0xffffffffffffffffull));
         while (it_dict != attic_dict.end() && it_dict->id == it->id)
         {
-          if (it_dict->elem.id == 0ull && it_dict->index == 0u && it_dict->meta_confirmed)
+          if (it_dict->elem.id == typename Skeleton::Id_Type() && it_dict->index == 0u && it_dict->meta_confirmed)
           {
             if (it_dict->elem.timestamp == 0xffffffffffffffffull)
               filtered.push_back(*it);
@@ -556,7 +556,7 @@ void get_elements
     for (typename std::vector< Attic_Skeleton_By_Id< Index, Skeleton > >::const_iterator
          it = attic_dict.begin(); it != attic_dict.end(); ++it)
     {
-      if (!(it->elem.id == 0ull) && it->meta_confirmed)
+      if (!(it->elem.id == typename Skeleton::Id_Type()) && it->meta_confirmed)
         attic[it->index].push_back(it->elem);
     }
   }
@@ -569,19 +569,28 @@ void get_elements
 void Id_Query_Statement::execute(Resource_Manager& rman)
 {
   Set into;
-  std::map< Uint32_Index, vector< Attic< Node_Skeleton > > > attic;
-  
-  std::vector< std::pair< Node_Skeleton::Id_Type, uint64 > > ids;
-  for (uint64 i = lower.val(); i < upper.val(); ++i)
-    ids.push_back(make_pair(i, rman.get_desired_timestamp()));
-  std::pair< std::vector< Uint32_Index >, std::vector< Uint32_Index > > req
-      = get_indexes< Uint32_Index, Node_Skeleton >(ids, rman);
-  get_elements(ids, req, rman, into.nodes, into.attic_nodes);
   
   if (type == NODE)
-    ;//collect_elems(rman, *osm_base_settings().NODES, lower, upper, into.nodes);
+  {
+    std::vector< std::pair< Node_Skeleton::Id_Type, uint64 > > ids;
+    for (uint64 i = lower.val(); i < upper.val(); ++i)
+      ids.push_back(make_pair(i, rman.get_desired_timestamp()));
+    std::pair< std::vector< Uint32_Index >, std::vector< Uint32_Index > > req
+        = get_indexes< Uint32_Index, Node_Skeleton >(ids, rman);
+        
+    get_elements(ids, req, rman, into.nodes, into.attic_nodes);
+  }
   else if (type == WAY)
-    collect_elems(rman, *osm_base_settings().WAYS, lower, upper, into.ways);
+  {
+    std::vector< std::pair< Way_Skeleton::Id_Type, uint64 > > ids;
+    for (uint64 i = lower.val(); i < upper.val(); ++i)
+      ids.push_back(make_pair(i, rman.get_desired_timestamp()));
+    std::pair< std::vector< Uint31_Index >, std::vector< Uint31_Index > > req
+        = get_indexes< Uint31_Index, Way_Skeleton >(ids, rman);
+        
+    get_elements(ids, req, rman, into.ways, into.attic_ways);
+  }
+//     collect_elems(rman, *osm_base_settings().WAYS, lower, upper, into.ways);
   else if (type == RELATION)
     collect_elems(rman, *osm_base_settings().RELATIONS, lower, upper, into.relations);
   else if (type == AREA)

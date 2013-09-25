@@ -97,6 +97,7 @@ struct Uint32_Index
 
 struct Uint31_Index : Uint32_Index
 {
+  Uint31_Index() : Uint32_Index() {}
   Uint31_Index(uint32 i) : Uint32_Index(i) {}
   Uint31_Index(void* data) : Uint32_Index(*(uint32*)data) {}
   

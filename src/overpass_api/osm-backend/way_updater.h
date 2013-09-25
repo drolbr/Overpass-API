@@ -30,8 +30,7 @@
 #include "../../template_db/transaction.h"
 #include "../core/datatypes.h"
 #include "../core/settings.h"
-
-using namespace std;
+#include "basic_updater.h"
 
 
 struct Update_Way_Logger
@@ -321,6 +320,15 @@ struct Way_Updater
   
   void set_id_deleted(Way::Id_Type id, const OSM_Element_Metadata* meta = 0)
   {
+    if (meta)
+      new_data.data.push_back(Data_By_Id< Way_Skeleton >::Entry
+          (Uint31_Index(0u), Way_Skeleton(id),
+           OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(id, *meta)));
+    else
+      new_data.data.push_back(Data_By_Id< Way_Skeleton >::Entry
+          (Uint31_Index(0u), Way_Skeleton(id),
+           OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(id)));
+    
     ids_to_modify.push_back(make_pair(id, false));
     if (meta)
     {
@@ -335,34 +343,20 @@ struct Way_Updater
     }
   }
   
-  void set_way
-      (uint32 id, uint32 lat, uint32 lon, const vector< pair< string, string > >& tags,
-       const vector< Node::Id_Type > nds,
-       const OSM_Element_Metadata* meta = 0)
-  {
-    ids_to_modify.push_back(make_pair(id, true));
-    
-    Way way;
-    way.id = id;
-    way.nds = nds;
-    way.tags = tags;
-    ways_to_insert.push_back(way);
-    if (meta)
-    {
-      user_by_id[meta->user_id] = meta->user_name;
-      OSM_Element_Metadata_Skeleton< Way::Id_Type > meta_skel;
-      meta_skel.ref= way.id;
-      meta_skel.version = meta->version;
-      meta_skel.changeset = meta->changeset;
-      meta_skel.timestamp = meta->timestamp;
-      meta_skel.user_id = meta->user_id;
-      ways_meta_to_insert.push_back(make_pair(meta_skel, 0));
-    }
-  }
-  
   void set_way(const Way& way,
 	       const OSM_Element_Metadata* meta = 0)
   {
+    if (meta)
+      new_data.data.push_back(Data_By_Id< Way_Skeleton >::Entry
+          (Uint31_Index(0xff), Way_Skeleton(way),
+           OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(way.id, *meta),
+           way.tags));
+    else
+      new_data.data.push_back(Data_By_Id< Way_Skeleton >::Entry
+          (Uint31_Index(0xff), Way_Skeleton(way),
+           OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(way.id),
+           way.tags));
+    
     ids_to_modify.push_back(make_pair(way.id, true));
     ways_to_insert.push_back(way);
     if (meta)
@@ -399,6 +393,8 @@ private:
   vector< Way > ways_to_insert;
   vector< pair< Way::Id_Type, Uint31_Index > > moved_ways;
   string db_dir;
+
+  Data_By_Id< Way_Skeleton > new_data;
   
   bool meta;
   vector< pair< OSM_Element_Metadata_Skeleton< Way::Id_Type >, uint32 > > ways_meta_to_insert;

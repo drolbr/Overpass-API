@@ -82,6 +82,169 @@ namespace
   Way_Equal_Id way_equal_id;
 }
 
+
+// Geupdatete Wege separat laden, alte Fassung, und separat behalten
+
+//   // Prepare collecting all data of existing skeletons
+//   std::sort(new_data.data.begin(), new_data.data.end());
+//   std::vector< Node_Skeleton::Id_Type > ids_to_update_ = ids_to_update(new_data);
+//   
+//   // Collect all data of existing id indexes
+//   std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > existing_map_positions
+//       = get_existing_map_positions(ids_to_update_, *transaction, *osm_base_settings().NODES);
+//   
+//   // Collect all data of existing skeletons
+//   std::map< Uint31_Index, std::set< Node_Skeleton > > existing_skeletons
+//       = get_existing_skeletons< Node_Skeleton >
+//       (existing_map_positions, *transaction, *osm_base_settings().NODES);
+// 
+//   // Collect all data of existing meta elements
+//   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node::Id_Type > > > existing_meta
+//       = (meta ? get_existing_meta< OSM_Element_Metadata_Skeleton< Node::Id_Type > >
+//              (existing_map_positions, *transaction, *meta_settings().NODES_META) :
+//          std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node::Id_Type > > >());
+
+// Für geupdatete Wege altes Meta kopieren
+
+//   // Collect all data of existing tags
+//   std::vector< Tag_Entry< Node_Skeleton::Id_Type > > existing_local_tags;
+//   get_existing_tags< Node_Skeleton::Id_Type >
+//       (existing_map_positions, *transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL),
+//        existing_local_tags);
+
+// Für geupdatete Wege Tags kopieren
+
+// Neueste Versionen aus new_data, mit Index auf Basis der neuesten Nodes
+// zuästzlich neue Fassungen der verschobenen Ways
+
+//   // Compute which objects really have changed
+//   std::map< Uint31_Index, std::set< Node_Skeleton > > attic_skeletons;
+//   std::map< Uint31_Index, std::set< Node_Skeleton > > new_skeletons;
+//   new_current_skeletons(new_data, existing_map_positions, existing_skeletons,
+//       (update_logger != 0), attic_skeletons, new_skeletons, moved_nodes, update_logger);
+
+// Indexe von Skeletons. Duplizierung von Versionen ebenso.
+// Wenn Meta aktiv, soll zu jedem Skeleton genau eine neue Meta-Version existieren
+
+//   // Compute which meta data really has changed
+//   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > attic_meta;
+//   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > new_meta;
+//   new_current_meta(new_data, existing_map_positions, existing_meta, attic_meta, new_meta);
+
+// Auf Basis der Skeletons und geladenen Tags
+// Neue Tags aus new_data, wenn dort mind. eine Version vorliegt, sonst aus geladenen Tags
+
+//   // Compute which tags really have changed
+//   std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > > attic_local_tags;
+//   std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > > new_local_tags;
+//   new_current_local_tags< Node_Skeleton, Update_Node_Logger, Node_Skeleton::Id_Type >
+//       (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
+//   std::map< Tag_Index_Global, std::set< Node_Skeleton::Id_Type > > attic_global_tags;
+//   std::map< Tag_Index_Global, std::set< Node_Skeleton::Id_Type > > new_global_tags;
+//   new_current_global_tags< Node_Skeleton::Id_Type >
+//       (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
+//   
+//   std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > new_map_positions
+//       = new_idx_positions(new_data);
+//   // TODO: old code
+//      ...
+//   
+//   if (meta == keep_attic)
+//   {
+//     // TODO: For compatibility with the update_logger, this doesn't happen during the tag processing itself.
+//     //cancel_out_equal_tags(attic_local_tags, new_local_tags);
+// 
+//     // Collect all data of existing attic id indexes
+//     std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > existing_attic_map_positions
+//         = get_existing_map_positions(ids_to_update_, *transaction, *attic_settings().NODES);
+//     std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > > existing_idx_lists
+//         = get_existing_idx_lists(ids_to_update_, existing_attic_map_positions,
+//                                  *transaction, *attic_settings().NODE_IDX_LIST);
+
+// Älteste Version ist immer alte Nodes + altes Skeleton
+// Neueste Version ist schon geklärt
+// Dazwischen: anhand der timestamps ausrechnen!
+//
+// Aus exakter Zustandfolge leiten sich auch Tags und Meta her:
+// Beides jeweils kopieren für indirekt geänderte Wege
+
+//     // Compute which objects really have changed
+//     std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > > new_attic_skeletons;
+//     std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > > new_attic_idx_lists = existing_idx_lists;
+//     compute_new_attic_skeletons(new_data, existing_map_positions, attic_skeletons,
+//                                 new_attic_skeletons, new_attic_idx_lists);
+//     
+//     std::map< Uint31_Index, std::set< Attic< Node_Skeleton::Id_Type > > > new_undeleted
+//         = compute_undeleted_skeletons(new_data, existing_map_positions, existing_attic_map_positions);
+//     
+//     strip_single_idxs(existing_idx_lists);
+//     std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > new_attic_map_positions
+//         = strip_single_idxs(new_attic_idx_lists);
+// 
+//     compute_new_attic_meta(new_data, existing_map_positions, attic_meta);
+//     
+//     // Compute tags
+//     std::map< Tag_Index_Local, std::set< Attic< Node_Skeleton::Id_Type > > > new_attic_local_tags
+//         = compute_new_attic_local_tags(new_data, existing_map_positions, attic_local_tags);
+//     std::map< Tag_Index_Global, std::set< Attic< Node_Skeleton::Id_Type > > > new_attic_global_tags
+//         = compute_attic_global_tags(new_attic_local_tags);
+//     
+//     // Compute changelog
+//     std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > changelog
+//         = compute_changelog(new_skeletons, new_attic_skeletons,
+//                             new_local_tags, new_attic_local_tags,
+//                             new_meta, attic_meta);
+//     
+//     // Update id indexes
+//     update_map_positions(new_attic_map_positions, *transaction, *attic_settings().NODES);
+//   
+//     // Update id index lists
+//     update_elements(existing_idx_lists, new_attic_idx_lists,
+//                     *transaction, *attic_settings().NODE_IDX_LIST);
+//   
+//     // Add attic elements
+//     update_elements(std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >(), new_attic_skeletons,
+//                     *transaction, *attic_settings().NODES);
+//   
+//     // Add attic elements
+//     update_elements(std::map< Uint31_Index, std::set< Attic< Node_Skeleton::Id_Type > > >(),
+//                     new_undeleted, *transaction, *attic_settings().NODES_UNDELETED);
+//   
+//     // Add attic meta
+//     update_elements
+//         (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >(),
+//          attic_meta, *transaction, *attic_settings().NODES_META);
+//   
+//     // Update tags
+//     update_elements(std::map< Tag_Index_Local, std::set< Attic < Node_Skeleton::Id_Type > > >(),
+//                     new_attic_local_tags, *transaction, *attic_settings().NODE_TAGS_LOCAL);
+//     update_elements(std::map< Tag_Index_Global, std::set< Attic < Node_Skeleton::Id_Type > > >(),
+//                     new_attic_global_tags, *transaction, *attic_settings().NODE_TAGS_GLOBAL);
+//     
+//     // Write changelog
+//     update_elements(std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > >(), changelog,
+//                     *transaction, *attic_settings().NODE_CHANGELOG);
+//   }
+//       
+//   //TODO: old code
+//   if (meta != only_data)
+//   {
+//     map< uint32, vector< uint32 > > idxs_by_id;
+//     create_idxs_by_id(nodes_meta_to_insert, idxs_by_id);
+//     process_user_data(*transaction, user_by_id, idxs_by_id);
+//     
+//     if (update_logger)
+//     {
+//       stable_sort(nodes_meta_to_delete.begin(), nodes_meta_to_delete.begin());
+//       nodes_meta_to_delete.erase(unique(nodes_meta_to_delete.begin(), nodes_meta_to_delete.end()),
+//                                  nodes_meta_to_delete.end());
+//       update_logger->set_delete_meta_data(nodes_meta_to_delete);
+//       nodes_meta_to_delete.clear();
+//     }
+//   }
+//   callback->update_finished();
+
+
 void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
 	      Update_Way_Logger* update_logger)
 {

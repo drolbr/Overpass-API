@@ -164,6 +164,8 @@ struct Set
   map< Uint31_Index, vector< Relation_Skeleton > > relations;
   
   map< Uint32_Index, vector< Attic< Node_Skeleton > > > attic_nodes;
+  map< Uint31_Index, vector< Attic< Way_Skeleton > > > attic_ways;
+  map< Uint31_Index, vector< Attic< Relation_Skeleton > > > attic_relations;
   
   map< Uint31_Index, vector< Area_Skeleton > > areas;
   
@@ -173,6 +175,8 @@ struct Set
     ways.swap(rhs.ways);
     relations.swap(rhs.relations);
     attic_nodes.swap(rhs.attic_nodes);
+    attic_ways.swap(rhs.attic_ways);
+    attic_relations.swap(rhs.attic_relations);
     areas.swap(rhs.areas);
   }
   
@@ -182,6 +186,8 @@ struct Set
     ways.clear();
     relations.clear();
     attic_nodes.clear();
+    attic_ways.clear();
+    attic_relations.clear();
     areas.clear();
   }
 };

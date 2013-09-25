@@ -81,27 +81,22 @@ struct Way_Skeleton
   
   Way_Skeleton() : id(0u) {}
   
+  Way_Skeleton(Way::Id_Type id_) : id(id_) {}
+  
   Way_Skeleton(void* data) : id(*(uint32*)data)
   {
     nds.reserve(*((uint16*)data + 2));
     for (int i(0); i < *((uint16*)data + 2); ++i)
       nds.push_back(*(uint64*)((uint16*)data + 4 + 4*i));
     uint16* start_ptr = (uint16*)data + 4 + 4*nds.size();
-//     segment_idxs.resize(*((uint16*)data + 3), 0u);
-//     for (int i(0); i < *((uint16*)data + 3); ++i)
-//       segment_idxs[i] = *(Uint31_Index*)(start_ptr + 2*i);
     geometry.reserve(*((uint16*)data + 3));
     for (int i(0); i < *((uint16*)data + 3); ++i)
       geometry.push_back(Quad_Coord(*(uint32*)(start_ptr + 4*i), *(uint32*)(start_ptr + 4*i + 2)));
   }
   
-//   Way_Skeleton(const Way& way)
-//   : id(way.id), nds(way.nds), segment_idxs(way.segment_idxs) {}
   Way_Skeleton(const Way& way)
       : id(way.id), nds(way.nds), geometry(way.geometry) {}
   
-//   Way_Skeleton(uint32 id_, const vector< Node::Id_Type >& nds_, const vector< Uint31_Index >& segment_idxs_)
-//   : id(id_), nds(nds_), segment_idxs(segment_idxs_) {}
   Way_Skeleton(uint32 id_, const vector< Node::Id_Type >& nds_, const vector< Quad_Coord >& geometry_)
       : id(id_), nds(nds_), geometry(geometry_) {}
   

@@ -906,8 +906,6 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
   
   // Prepare collecting all data of existing skeletons
   std::sort(new_data.data.begin(), new_data.data.end());
-  std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > new_map_positions
-      = new_idx_positions(new_data);
   std::vector< Node_Skeleton::Id_Type > ids_to_update_ = ids_to_update(new_data);
   
   // Collect all data of existing id indexes
@@ -951,7 +949,10 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
   std::map< Tag_Index_Global, std::set< Node_Skeleton::Id_Type > > new_global_tags;
   new_current_global_tags< Node_Skeleton::Id_Type >
       (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
-  
+
+  // Compute idx positions of new nodes
+  std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > new_map_positions
+      = new_idx_positions(new_data);
   // TODO: old code
   map< uint32, vector< Node::Id_Type > > to_delete;
   update_node_ids(to_delete, (update_logger != 0), new_map_positions);

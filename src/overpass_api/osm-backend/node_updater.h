@@ -29,8 +29,8 @@
 #include "../../template_db/transaction.h"
 #include "../core/datatypes.h"
 #include "../core/settings.h"
+#include "basic_updater.h"
 
-using namespace std;
 
 struct Update_Node_Logger
 {
@@ -271,39 +271,6 @@ inline const Node* Update_Node_Logger::get_inserted(Node::Id_Type ref) const
   
   return 0;
 }
-
-
-template< typename Element_Skeleton >
-struct Data_By_Id
-{
-  struct Entry
-  {
-    Uint31_Index idx;
-    Element_Skeleton elem;
-    OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > meta;
-    std::vector< std::pair< std::string, std::string > > tags;
-    
-    Entry(Uint31_Index idx_, Element_Skeleton elem_,
-        OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > meta_,
-        std::vector< std::pair< std::string, std::string > > tags_
-            = std::vector< std::pair< std::string, std::string > >())
-        : idx(idx_), elem(elem_), meta(meta_), tags(tags_) {}
-    
-    bool operator<(const Entry& e) const
-    {
-      if (this->elem.id < e.elem.id)
-        return true;
-      if (e.elem.id < this->elem.id)
-        return false;
-      return (this->meta.version < e.meta.version);
-    }
-  };
-  
-  std::vector< Entry > data;
-};
-
-
-typedef enum { only_data, keep_meta, keep_attic } meta_modes;
   
 
 struct Node_Updater

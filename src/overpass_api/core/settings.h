@@ -98,15 +98,19 @@ struct Attic_Settings
   File_Properties* NODES_META;
   File_Properties* NODE_CHANGELOG;
   File_Properties* WAYS;
+  File_Properties* WAYS_UNDELETED;
   File_Properties* WAY_IDX_LIST;
   File_Properties* WAY_TAGS_LOCAL;
   File_Properties* WAY_TAGS_GLOBAL;
   File_Properties* WAYS_META;
+  File_Properties* WAY_CHANGELOG;
   File_Properties* RELATIONS;
+  File_Properties* RELATIONS_UNDELETED;
   File_Properties* RELATION_IDX_LIST;
   File_Properties* RELATION_TAGS_LOCAL;
   File_Properties* RELATION_TAGS_GLOBAL;
   File_Properties* RELATIONS_META;
+  File_Properties* RELATION_CHANGELOG;
   
   Attic_Settings();
 };
