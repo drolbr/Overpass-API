@@ -103,16 +103,6 @@ namespace
 // Auf Basis der Skeletons und geladenen Tags
 // Neue Tags aus new_data, wenn dort mind. eine Version vorliegt, sonst aus geladenen Tags
 
-//   // Compute which tags really have changed
-//   std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > > attic_local_tags;
-//   std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > > new_local_tags;
-//   new_current_local_tags< Node_Skeleton, Update_Node_Logger, Node_Skeleton::Id_Type >
-//       (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
-//   std::map< Tag_Index_Global, std::set< Node_Skeleton::Id_Type > > attic_global_tags;
-//   std::map< Tag_Index_Global, std::set< Node_Skeleton::Id_Type > > new_global_tags;
-//   new_current_global_tags< Node_Skeleton::Id_Type >
-//       (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
-//   
 //   std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > new_map_positions
 //       = new_idx_positions(new_data);
 //   // TODO: old code
@@ -363,6 +353,24 @@ void lookup_missing_nodes
 }
 
 
+std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > make_id_idx_directory
+    (const std::map< Uint31_Index, std::set< Way_Skeleton > >& implicitly_moved_skeletons)
+{
+  std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > result;
+  Pair_Comparator_By_Id< Way_Skeleton::Id_Type, Uint31_Index > less;
+  
+  for (std::map< Uint31_Index, std::set< Way_Skeleton > >::const_iterator
+       it = implicitly_moved_skeletons.begin(); it != implicitly_moved_skeletons.end(); ++it)
+  {
+    for (std::set< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      result.push_back(make_pair(it2->id, it->first));
+  }
+  std::sort(result.begin(), result.end(), less);
+  
+  return result;
+}
+
+
 /* We assert that every node id that appears in a way in existing_skeletons has its Quad_Coord
    in new_node_idx_by_id. */
 void compute_geometry
@@ -481,6 +489,38 @@ void new_implicit_skeletons
 }
 
 
+/* Adds to attic_local_tags and new_local_tags the tags to delete resp. add from only
+   implicitly moved ways. */
+void new_implicit_local_tags
+    (const std::vector< Tag_Entry< Way_Skeleton::Id_Type > >& existing_local_tags,
+     const std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > >& new_positions,
+     std::map< Tag_Index_Local, std::set< Way_Skeleton::Id_Type > >& attic_local_tags,
+     std::map< Tag_Index_Local, std::set< Way_Skeleton::Id_Type > >& new_local_tags)
+{
+  //TODO: convert the data format until existing_local_tags get the new data format
+  for (typename std::vector< Tag_Entry< Way_Skeleton::Id_Type > >::const_iterator
+      it_idx = existing_local_tags.begin(); it_idx != existing_local_tags.end(); ++it_idx)
+  {
+    std::set< Way_Skeleton::Id_Type >& handle(attic_local_tags[*it_idx]);
+    for (typename std::vector< Way_Skeleton::Id_Type >::const_iterator it = it_idx->ids.begin();
+         it != it_idx->ids.end(); ++it)
+      handle.insert(*it);
+  }
+
+  for (typename std::vector< Tag_Entry< Way_Skeleton::Id_Type > >::const_iterator
+      it_idx = existing_local_tags.begin(); it_idx != existing_local_tags.end(); ++it_idx)
+  {
+    for (typename std::vector< Way_Skeleton::Id_Type >::const_iterator it = it_idx->ids.begin();
+         it != it_idx->ids.end(); ++it)
+    {
+      const Uint31_Index* idx = binary_pair_search(new_positions, *it);
+      if (idx)
+        new_local_tags[Tag_Index_Local(idx->val() & 0x7fffff00, it_idx->key, it_idx->value)].insert(*it);
+    }
+  }  
+}
+
+
 void Way_Updater::update__(Osm_Backend_Callback* callback, bool partial,
               Update_Way_Logger* update_logger,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
@@ -513,11 +553,19 @@ void Way_Updater::update__(Osm_Backend_Callback* callback, bool partial,
 //              (existing_map_positions, *transaction, *meta_settings().WAYS_META) :
 //          std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way::Id_Type > > >());
 
-//   // Collect all data of existing tags
-//   std::vector< Tag_Entry< Node_Skeleton::Id_Type > > existing_local_tags;
-//   get_existing_tags< Node_Skeleton::Id_Type >
-//       (existing_map_positions, *transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL),
-//        existing_local_tags);
+  // Collect all data of existing tags
+  std::vector< Tag_Entry< Way_Skeleton::Id_Type > > existing_local_tags;
+  get_existing_tags< Way_Skeleton::Id_Type >
+      (existing_map_positions, *transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
+       existing_local_tags);
+      
+  // Collect all data of existing tags for moved ways
+  std::vector< Tag_Entry< Way_Skeleton::Id_Type > > implicitly_moved_local_tags;
+  std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > implicitly_moved_positions
+      = make_id_idx_directory(implicitly_moved_skeletons);
+  get_existing_tags< Way_Skeleton::Id_Type >
+      (implicitly_moved_positions, *transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
+       implicitly_moved_local_tags);
 
   // Create a node directory id to idx:
   // Evaluate first the new_node_skeletons
@@ -542,6 +590,19 @@ void Way_Updater::update__(Osm_Backend_Callback* callback, bool partial,
   // Compute and add implicitly moved ways
   new_implicit_skeletons(new_node_idx_by_id, implicitly_moved_skeletons,
       (update_logger != 0), attic_skeletons, new_skeletons, moved_ways, update_logger);
+
+  // Compute which tags really have changed
+  std::map< Tag_Index_Local, std::set< Way_Skeleton::Id_Type > > attic_local_tags;
+  std::map< Tag_Index_Local, std::set< Way_Skeleton::Id_Type > > new_local_tags;
+  new_current_local_tags< Way_Skeleton, Update_Way_Logger, Way_Skeleton::Id_Type >
+      (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
+  std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > new_positions
+      = make_id_idx_directory(new_skeletons);
+  new_implicit_local_tags(implicitly_moved_local_tags, new_positions, attic_local_tags, new_local_tags);
+  std::map< Tag_Index_Global, std::set< Way_Skeleton::Id_Type > > attic_global_tags;
+  std::map< Tag_Index_Global, std::set< Way_Skeleton::Id_Type > > new_global_tags;
+  new_current_global_tags< Way_Skeleton::Id_Type >
+      (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
   
   std::cout<<"Attic:\n";
   for (std::map< Uint31_Index, std::set< Way_Skeleton > >::const_iterator it = attic_skeletons.begin();
@@ -559,6 +620,42 @@ void Way_Updater::update__(Osm_Backend_Callback* callback, bool partial,
       std::cout<<it2->id.val()<<'\t'<<hex<<it->first.val()<<'\t'<<dec<<it2->nds.size()<<'\t'<<it2->geometry.size()<<'\n';
   }
   
+  std::cout<<"\nAttic local tags:\n";  
+  for (std::map< Tag_Index_Local, std::set< Way_Skeleton::Id_Type > >::const_iterator
+      it = attic_local_tags.begin(); it != attic_local_tags.end(); ++it)
+  {
+    for (std::set< Way_Skeleton::Id_Type >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+      std::cout<<dec<<it2->val()<<'\t'<<hex<<it->first.index<<'\t'<<it->first.key<<'\t'<<it->first.value<<'\n';
+  }
+  
+  std::cout<<"\nNew local tags:\n";  
+  for (std::map< Tag_Index_Local, std::set< Way_Skeleton::Id_Type > >::const_iterator
+      it = new_local_tags.begin(); it != new_local_tags.end(); ++it)
+  {
+    for (std::set< Way_Skeleton::Id_Type >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+      std::cout<<dec<<it2->val()<<'\t'<<hex<<it->first.index<<'\t'<<it->first.key<<'\t'<<it->first.value<<'\n';
+  }
+  
+  std::cout<<"\nAttic global tags:\n";  
+  for (std::map< Tag_Index_Global, std::set< Way_Skeleton::Id_Type > >::const_iterator
+      it = attic_global_tags.begin(); it != attic_global_tags.end(); ++it)
+  {
+    for (std::set< Way_Skeleton::Id_Type >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+      std::cout<<dec<<it2->val()<<'\t'<<it->first.key<<'\t'<<it->first.value<<'\n';
+  }
+  
+  std::cout<<"\nNew global tags:\n";  
+  for (std::map< Tag_Index_Global, std::set< Way_Skeleton::Id_Type > >::const_iterator
+      it = new_global_tags.begin(); it != new_global_tags.end(); ++it)
+  {
+    for (std::set< Way_Skeleton::Id_Type >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+      std::cout<<dec<<it2->val()<<'\t'<<it->first.key<<'\t'<<it->first.value<<'\n';
+  }
+  
   if (!external_transaction)
     delete transaction;  
 }
@@ -572,60 +669,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
 {
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
-
-//   // Prepare collecting all data of existing skeletons
-//   std::sort(new_data.data.begin(), new_data.data.end());
-//   std::vector< Way_Skeleton::Id_Type > ids_to_update_ = ids_to_update(new_data);
-//   
-//   // Collect all data of existing id indexes
-//   std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > existing_map_positions
-//       = get_existing_map_positions(ids_to_update_, *transaction, *osm_base_settings().WAYS);
-//   
-//   // Collect all data of existing and explicitly changed skeletons
-//   std::map< Uint31_Index, std::set< Way_Skeleton > > existing_skeletons
-//       = get_existing_skeletons< Way_Skeleton >
-//       (existing_map_positions, *transaction, *osm_base_settings().WAYS);
-//   
-//   // Collect also all data of existing and implicitly changed skeletons
-//   std::map< Uint31_Index, std::set< Way_Skeleton > > implicitly_moved_skeletons
-//       = get_implicitly_moved_skeletons
-//           (attic_node_skeletons, existing_skeletons, *transaction, *osm_base_settings().WAYS);
-//           
-// //   // Collect all data of existing meta elements
-// //   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way::Id_Type > > > existing_meta
-// //       = (meta ? get_existing_meta< OSM_Element_Metadata_Skeleton< Way::Id_Type > >
-// //              (existing_map_positions, *transaction, *meta_settings().WAYS_META) :
-// //          std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way::Id_Type > > >());
-// 
-// //   // Collect all data of existing tags
-// //   std::vector< Tag_Entry< Node_Skeleton::Id_Type > > existing_local_tags;
-// //   get_existing_tags< Node_Skeleton::Id_Type >
-// //       (existing_map_positions, *transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL),
-// //        existing_local_tags);
-// 
-//   // Create a node directory id to idx:
-//   // Evaluate first the new_node_skeletons
-//   std::map< Node_Skeleton::Id_Type, Quad_Coord > new_node_idx_by_id
-//       = dictionary_from_skeletons(new_node_skeletons);
-//   // Then add all nodes known from existing_skeletons geometry.
-//   add_implicity_known_nodes(new_node_idx_by_id, existing_skeletons);
-//   // Then add all nodes known from implicitly_moved_skeletons geometry.
-//   add_implicity_known_nodes(new_node_idx_by_id, implicitly_moved_skeletons);
-//   // Then lookup the missing nodes.
-//   lookup_missing_nodes(new_node_idx_by_id, new_data, implicitly_moved_skeletons, *transaction);
-//   
-//   // Compute the indices of the new ways
-//   compute_geometry(new_node_idx_by_id, new_data);
-// 
-//   // Compute which objects really have changed
-//   std::map< Uint31_Index, std::set< Way_Skeleton > > attic_skeletons;
-//   std::map< Uint31_Index, std::set< Way_Skeleton > > new_skeletons;
-//   new_current_skeletons(new_data, existing_map_positions, existing_skeletons,
-//       (update_logger != 0), attic_skeletons, new_skeletons, moved_ways, update_logger);
-//   
-//   // Compute and add implicitly moved ways
-//   new_implicit_skeletons(new_node_idx_by_id, implicitly_moved_skeletons,
-//       (update_logger != 0), attic_skeletons, new_skeletons, moved_ways, update_logger);
   
   // --------------------------------------------------------------------------
     

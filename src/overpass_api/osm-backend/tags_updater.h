@@ -66,7 +66,7 @@ map< uint32, set< Id_Type > > collect_coarse
   for (typename map< uint32, vector< Id_Type > >::const_iterator
       it(elems_by_idx.begin()); it != elems_by_idx.end(); ++it)
   {
-    set< Id_Type >& handle(coarse[it->first & 0xffffff00]);
+    set< Id_Type >& handle(coarse[it->first & 0x7fffff00]);
     for (typename vector< Id_Type >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
       handle.insert(*it2);
@@ -110,7 +110,7 @@ void prepare_delete_tags
   for (typename map< uint32, vector< Id_Type > >::const_iterator
       it(to_delete.begin()); it != to_delete.end(); ++it)
   {
-    set< Id_Type >& handle(to_delete_coarse[it->first & 0xffffff00]);
+    set< Id_Type >& handle(to_delete_coarse[it->first & 0x7fffff00]);
     for (typename vector< Id_Type >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
     {
@@ -173,7 +173,7 @@ void get_existing_tags
   map< uint32, set< Id_Type > > to_delete_coarse;
   for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator
       it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
-    to_delete_coarse[it->second.val() & 0xffffff00].insert(it->first);
+    to_delete_coarse[it->second.val() & 0x7fffff00].insert(it->first);
   
   // formulate range query
   set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
@@ -232,7 +232,7 @@ void prepare_tags
   for (typename map< uint32, vector< typename TObject::Id_Type > >::const_iterator
       it(to_delete.begin()); it != to_delete.end(); ++it)
   {
-    set< typename TObject::Id_Type >& handle(to_delete_coarse[it->first & 0xffffff00]);
+    set< typename TObject::Id_Type >& handle(to_delete_coarse[it->first & 0x7fffff00]);
     for (typename vector< typename TObject::Id_Type >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
       handle.insert(*it2);
@@ -324,7 +324,7 @@ void update_tags_local
       if (it->second)
       {
 	Tag_Index_Local index;
-	index.index = (*rit)->index & 0xffffff00;
+	index.index = (*rit)->index & 0x7fffff00;
 	
 	for (vector< pair< string, string > >::const_iterator
 	  it2((*rit)->tags.begin()); it2 != (*rit)->tags.end(); ++it2)

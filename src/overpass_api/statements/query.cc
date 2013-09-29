@@ -424,7 +424,7 @@ void filter_ids_by_tags
   map< string, vector< Regular_Expression* > >::const_iterator key_it = keys.begin();
   
   while ((!(tag_it == items_db.range_end())) &&
-      (((tag_it.index().index) & 0xffffff00) == coarse_index))
+      (((tag_it.index().index) & 0x7fffff00) == coarse_index))
   {
     if (tag_it.index().key != last_key)
     {
@@ -469,7 +469,7 @@ void filter_ids_by_tags
     ++tag_it;
   }
   while ((!(tag_it == items_db.range_end())) &&
-      (((tag_it.index().index) & 0xffffff00) == coarse_index))
+      (((tag_it.index().index) & 0x7fffff00) == coarse_index))
     ++tag_it;
 
   if (relevant && key_it != keys.end())
@@ -521,7 +521,7 @@ void filter_ids_by_ntags
       key_it = keys.begin();
   
   while ((!(tag_it == items_db.range_end())) &&
-      (((tag_it.index().index) & 0xffffff00) == coarse_index))
+      (((tag_it.index().index) & 0x7fffff00) == coarse_index))
   {
     if (tag_it.index().key != last_key)
     {
@@ -572,7 +572,7 @@ void filter_ids_by_ntags
     ++tag_it;
   }
   while ((!(tag_it == items_db.range_end())) &&
-      (((tag_it.index().index) & 0xffffff00) == coarse_index))
+      (((tag_it.index().index) & 0x7fffff00) == coarse_index))
     ++tag_it;
   
   sort(removed_ids.begin(), removed_ids.end());
