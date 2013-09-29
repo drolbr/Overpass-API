@@ -199,7 +199,7 @@ namespace
     {
       callback->nodes_finished();
       node_updater->update(callback, false, update_node_logger);
-      way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
+      //way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
       callback->parser_started();
       osm_element_count = 0;
       state = IN_WAYS;
@@ -246,7 +246,11 @@ namespace
     if (osm_element_count >= 4*1024*1024)
     {
       callback->way_elapsed(current_way.id);
-      way_updater->update(callback, true, update_way_logger);
+      way_updater->update__(callback, true, update_way_logger,
+                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons());
+      way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
+      way_updater->update(callback, true, update_way_logger,
+                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons());
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -286,7 +290,11 @@ namespace
     else if (state == IN_WAYS)
     {
       callback->ways_finished();
-      way_updater->update(callback, false, update_way_logger);
+      way_updater->update__(callback, false, update_way_logger,
+                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons());
+      way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
+      way_updater->update(callback, false, update_way_logger,
+                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons());
       relation_updater->update_moved_idxs
           (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
       callback->parser_started();
@@ -1635,12 +1643,16 @@ void Osm_Updater::finish_updater()
   if (state == IN_NODES)
   {
     node_updater->update(callback, false, update_node_logger);
-    way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
+    //way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
     state = IN_WAYS;
   }
   if (state == IN_WAYS)
   {  
-    way_updater->update(callback, false, update_way_logger);
+    way_updater->update__(callback, false, update_way_logger,
+                        node_updater->get_new_skeletons(), node_updater->get_attic_skeletons());
+    way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
+    way_updater->update(callback, false, update_way_logger,
+                        node_updater->get_new_skeletons(), node_updater->get_attic_skeletons());
     relation_updater->update_moved_idxs
         (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
     state = IN_RELATIONS;

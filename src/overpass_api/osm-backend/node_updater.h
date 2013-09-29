@@ -331,6 +331,11 @@ struct Node_Updater
     return moved_nodes;
   }
   
+  const std::map< Uint31_Index, std::set< Node_Skeleton > > get_new_skeletons() const
+      { return new_skeletons; }
+  const std::map< Uint31_Index, std::set< Node_Skeleton > > get_attic_skeletons() const
+      { return attic_skeletons; }
+  
 private:
   uint32 update_counter;
   Transaction* transaction;
@@ -348,7 +353,10 @@ private:
 
   meta_modes meta;
   map< uint32, string > user_by_id;
-  
+
+  std::map< Uint31_Index, std::set< Node_Skeleton > > new_skeletons;
+  std::map< Uint31_Index, std::set< Node_Skeleton > > attic_skeletons;
+
   vector< pair< OSM_Element_Metadata_Skeleton< Node::Id_Type >, uint32 > > nodes_meta_to_insert;
   vector< OSM_Element_Metadata_Skeleton< Node::Id_Type > > nodes_meta_to_delete;
   

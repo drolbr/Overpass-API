@@ -372,8 +372,14 @@ struct Way_Updater
     }
   }
   
+  void update__(Osm_Backend_Callback* callback, bool partial,
+              Update_Way_Logger* update_logger,
+              const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
+              const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons);
   void update(Osm_Backend_Callback* callback, bool partial,
-	      Update_Way_Logger* update_logger);
+	      Update_Way_Logger* update_logger,
+              const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
+              const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons);
   
   void update_moved_idxs
       (Osm_Backend_Callback* callback, const vector< pair< Node::Id_Type, Uint32_Index > >& moved_nodes,

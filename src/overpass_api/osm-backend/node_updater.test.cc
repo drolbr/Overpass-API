@@ -109,18 +109,18 @@ void end(const char *el)
 void cleanup_files(const File_Properties& file_properties, string db_dir,
 		   bool cleanup_map)
 {
-  remove((db_dir + file_properties.get_file_name_trunk() +
-          file_properties.get_data_suffix() +
-	  file_properties.get_index_suffix()).c_str());
-  remove((db_dir + file_properties.get_file_name_trunk() +
-          file_properties.get_data_suffix()).c_str());
-  if (cleanup_map)
-  {
-    remove((db_dir + file_properties.get_file_name_trunk() +
-        file_properties.get_id_suffix()).c_str());
-    remove((db_dir + file_properties.get_file_name_trunk() +
-	file_properties.get_id_suffix() + file_properties.get_index_suffix()).c_str());
-  }
+//   remove((db_dir + file_properties.get_file_name_trunk() +
+//           file_properties.get_data_suffix() +
+// 	  file_properties.get_index_suffix()).c_str());
+//   remove((db_dir + file_properties.get_file_name_trunk() +
+//           file_properties.get_data_suffix()).c_str());
+//   if (cleanup_map)
+//   {
+//     remove((db_dir + file_properties.get_file_name_trunk() +
+//         file_properties.get_id_suffix()).c_str());
+//     remove((db_dir + file_properties.get_file_name_trunk() +
+// 	file_properties.get_id_suffix() + file_properties.get_index_suffix()).c_str());
+//   }
 }
 
 int main(int argc, char* args[])

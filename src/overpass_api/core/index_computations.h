@@ -602,6 +602,71 @@ inline std::vector< Uint31_Index > calc_children(const std::vector< uint32 >& wa
   return result;
 }
 
+
+inline std::set< Uint31_Index > calc_parents(const std::set< Uint31_Index >& node_idxs)
+{
+  std::set< Uint31_Index > result;
+  result.insert(0x80000080);
+  
+  for (std::set< Uint31_Index >::const_iterator it = node_idxs.begin();
+      it != node_idxs.end(); ++it)
+  {
+    result.insert(*it);
+    
+    uint32 lat = upper_ilat(it->val() & 0x2aaaaaa8) & 0xfffe;
+    uint32 lon = upper_ilon(it->val() & 0x55555554) & 0xfffe;
+    result.insert(ll_upper((lat - 2)<<16, (lon - 2)<<16) | 0x80000001);
+    result.insert(ll_upper(lat<<16, (lon - 2)<<16) | 0x80000001);
+    result.insert(ll_upper((lat - 2)<<16, lon<<16) | 0x80000001);
+    result.insert(ll_upper(lat<<16, lon<<16) | 0x80000001);
+    
+    lat = lat & 0xfff8;
+    lon = lon & 0xfff8;
+    result.insert(ll_upper((lat - 8)<<16, (lon - 8)<<16) | 0x80000002);
+    result.insert(ll_upper(lat<<16, (lon - 8)<<16) | 0x80000002);
+    result.insert(ll_upper((lat - 8)<<16, lon<<16) | 0x80000002);
+    result.insert(ll_upper(lat<<16, lon<<16) | 0x80000002);
+    
+    lat = lat & 0xffe0;
+    lon = lon & 0xffe0;
+    result.insert(ll_upper((lat - 0x20)<<16, (lon - 0x20)<<16) | 0x80000004);
+    result.insert(ll_upper(lat<<16, (lon - 0x20)<<16) | 0x80000004);
+    result.insert(ll_upper((lat - 0x20)<<16, lon<<16) | 0x80000004);
+    result.insert(ll_upper(lat<<16, lon<<16) | 0x80000004);
+    
+    lat = lat & 0xff80;
+    lon = lon & 0xff80;
+    result.insert(ll_upper((lat - 0x80)<<16, (lon - 0x80)<<16) | 0x80000008);
+    result.insert(ll_upper(lat<<16, (lon - 0x80)<<16) | 0x80000008);
+    result.insert(ll_upper((lat - 0x80)<<16, lon<<16) | 0x80000008);
+    result.insert(ll_upper(lat<<16, lon<<16) | 0x80000008);
+    
+    lat = lat & 0xfe00;
+    lon = lon & 0xfe00;
+    result.insert(ll_upper((lat - 0x200)<<16, (lon - 0x200)<<16) | 0x80000010);
+    result.insert(ll_upper(lat<<16, (lon - 0x200)<<16) | 0x80000010);
+    result.insert(ll_upper((lat - 0x200)<<16, lon<<16) | 0x80000010);
+    result.insert(ll_upper(lat<<16, lon<<16) | 0x80000010);
+    
+    lat = lat & 0xf800;
+    lon = lon & 0xf800;
+    result.insert(ll_upper((lat - 0x800)<<16, (lon - 0x800)<<16) | 0x80000020);
+    result.insert(ll_upper(lat<<16, (lon - 0x800)<<16) | 0x80000020);
+    result.insert(ll_upper((lat - 0x800)<<16, lon<<16) | 0x80000020);
+    result.insert(ll_upper(lat<<16, lon<<16) | 0x80000020);
+    
+    lat = lat & 0xe000;
+    lon = lon & 0xe000;
+    result.insert(ll_upper((lat - 0x2000)<<16, (lon - 0x2000)<<16) | 0x80000040);
+    result.insert(ll_upper(lat<<16, (lon - 0x2000)<<16) | 0x80000040);
+    result.insert(ll_upper((lat - 0x2000)<<16, lon<<16) | 0x80000040);
+    result.insert(ll_upper(lat<<16, lon<<16) | 0x80000040);
+  }
+  
+  return result;
+}
+
+
 inline std::vector< uint32 > calc_parents(const std::vector< uint32 >& node_idxs)
 {
   std::vector< uint32 > result;

@@ -60,73 +60,6 @@ Update_Node_Logger::~Update_Node_Logger()
 
 
 template< typename Element_Skeleton >
-std::vector< typename Element_Skeleton::Id_Type > ids_to_update
-    (const Data_By_Id< Element_Skeleton >& new_data)
-{
-  std::vector< typename Element_Skeleton::Id_Type > result;
-  for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
-      it = new_data.data.begin(); it != new_data.data.end(); ++it)
-    result.push_back(it->elem.id);
-  result.erase(std::unique(result.begin(), result.end()), result.end());
-  return result;
-}
-
-
-template< typename Id_Type >
-std::vector< std::pair< Id_Type, Uint31_Index > > get_existing_map_positions
-    (const std::vector< Id_Type >& ids,
-     Transaction& transaction, const File_Properties& file_properties)
-{
-  Random_File< Uint31_Index > random(transaction.random_index(&file_properties));
-  
-  std::vector< std::pair< Id_Type, Uint31_Index > > result;
-  for (typename std::vector< Id_Type >::const_iterator it = ids.begin(); it != ids.end(); ++it)
-  {
-    Uint31_Index idx = random.get(it->val());
-    if (idx.val() > 0)
-      result.push_back(make_pair(*it, idx));
-  }
-  return result;
-}
-
-
-template< typename Id_Type >
-struct Idx_Agnostic_Compare
-{
-  bool operator()(const std::pair< Id_Type, Uint31_Index >& a, const std::pair< Id_Type, Uint31_Index >& b)
-  {
-    return (a.first < b.first);
-  }
-};
-
-
-template< typename Element_Skeleton >
-std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_skeletons
-    (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& ids_with_position,
-     Transaction& transaction, const File_Properties& file_properties)
-{
-  std::set< Uint31_Index > req;
-  for (typename std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >::const_iterator
-      it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
-    req.insert(it->second);
-  
-  std::map< Uint31_Index, std::set< Element_Skeleton > > result;
-  Idx_Agnostic_Compare< typename Element_Skeleton::Id_Type > comp;
-  
-  Block_Backend< Uint31_Index, Element_Skeleton > db(transaction.data_index(&file_properties));
-  for (typename Block_Backend< Uint31_Index, Element_Skeleton >::Discrete_Iterator
-      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
-  {
-    if (binary_search(ids_with_position.begin(), ids_with_position.end(),
-        make_pair(it.object().id, 0), comp))
-      result[it.index()].insert(it.object());
-  }
-
-  return result;
-}
-
-
-template< typename Element_Skeleton >
 std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_meta
     (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& ids_with_position,
      Transaction& transaction, const File_Properties& file_properties)
@@ -230,90 +163,6 @@ void tell_update_logger_insertions
     Node node(entry.elem.id, entry.idx.val(), entry.elem.ll_lower);
     node.tags = entry.tags;
     update_logger->insertion(node);
-  }
-}
-
-
-/* Compares the new data and the already existing skeletons to determine those that have
- * moved. This information is used to prepare the deletion and insertion lists for the
- * database operation.  Also, the list of moved nodes is filled. */
-template< typename Element_Skeleton, typename Update_Logger >
-void new_current_skeletons
-    (const Data_By_Id< Element_Skeleton >& new_data,
-     const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
-     const std::map< Uint31_Index, std::set< Element_Skeleton > >& existing_skeletons,
-     bool record_minuscule_moves,
-     std::map< Uint31_Index, std::set< Element_Skeleton > >& attic_skeletons,
-     std::map< Uint31_Index, std::set< Element_Skeleton > >& new_skeletons,
-     vector< pair< Node::Id_Type, Uint32_Index > >& moved_nodes,
-     Update_Logger* update_logger)
-{
-  attic_skeletons = existing_skeletons;
-  
-  typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator next_it
-      = new_data.data.begin();
-  for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
-      it = new_data.data.begin(); it != new_data.data.end(); ++it)
-  {
-    ++next_it;
-    if (next_it != new_data.data.end() && it->elem.id == next_it->elem.id)
-      // A later version exist also in new_data. So there is nothing to do.
-      continue;
-
-    if (it->idx == Uint31_Index(0u))
-      // There is nothing to do for elements to delete. If they exist, they are contained in the
-      // attic_skeletons.
-      continue;
-    
-    const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
-    if (!idx)
-    {
-      // No old data exists. So we can add the new data and are done.
-      tell_update_logger_insertions(*it, update_logger);
-      new_skeletons[it->idx].insert(it->elem);
-      continue;
-    }
-    else if (!(*idx == it->idx))
-    {
-      // The old and new version have different indexes. So they are surely different.
-      moved_nodes.push_back(make_pair(it->elem.id, Uint32_Index(idx->val())));
-      tell_update_logger_insertions(*it, update_logger);
-      new_skeletons[it->idx].insert(it->elem);
-      continue;
-    }
-    
-    typename std::map< Uint31_Index, std::set< Element_Skeleton > >::iterator it_attic_idx
-        = attic_skeletons.find(*idx);
-    if (it_attic_idx == attic_skeletons.end())
-    {
-      // Something has gone wrong. Save at least the new node.
-      tell_update_logger_insertions(*it, update_logger);
-      new_skeletons[it->idx].insert(it->elem);
-      continue;
-    }
-    
-    typename std::set< Element_Skeleton >::iterator it_attic
-        = it_attic_idx->second.find(it->elem);
-    if (it_attic == it_attic_idx->second.end())
-    {
-      // Something has gone wrong. Save at least the new node.
-      tell_update_logger_insertions(*it, update_logger);
-      new_skeletons[it->idx].insert(it->elem);
-      continue;
-    }
-    
-    // We have found an element at the same index with the same id, so this is a candidate for
-    // not being moved.
-    if (false/*geometrically_equal(it->elem, *it_attic)*/) // TODO: temporary change to keep update_logger working
-      // The element stays unchanged.
-      it_attic_idx->second.erase(it_attic);
-    else
-    {
-      tell_update_logger_insertions(*it, update_logger);
-      new_skeletons[it->idx].insert(it->elem);
-      if (record_minuscule_moves)
-        moved_nodes.push_back(make_pair(it->elem.id, Uint32_Index(idx->val())));
-    }
   }
 }
 
@@ -930,8 +779,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
        existing_local_tags);
 
   // Compute which objects really have changed
-  std::map< Uint31_Index, std::set< Node_Skeleton > > attic_skeletons;
-  std::map< Uint31_Index, std::set< Node_Skeleton > > new_skeletons;
+  attic_skeletons.clear();
+  new_skeletons.clear();
   new_current_skeletons(new_data, existing_map_positions, existing_skeletons,
       (update_logger != 0), attic_skeletons, new_skeletons, moved_nodes, update_logger);
       
@@ -1094,6 +943,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
   
   if (partial_possible && !partial && (update_counter > 0))
   {
+    new_skeletons.clear();
+    attic_skeletons.clear();
     callback->partial_started();
 
     vector< string > froms;
@@ -1125,6 +976,9 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
   }
   else if (partial_possible && partial)
   {
+    new_skeletons.clear();
+    attic_skeletons.clear();
+    
     string to(".0a");
     to[2] += update_counter % 16;
     rename_referred_file(db_dir, "", to, *osm_base_settings().NODES);

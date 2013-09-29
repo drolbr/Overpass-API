@@ -54,6 +54,11 @@ struct Way
   {
     return ::calc_index(nd_idxs);
   }
+  
+  static bool indicates_geometry(Uint31_Index index)
+  {
+    return ((index.val() & 0x80000000) != 0 && ((index.val() & 0x1) == 0));
+  }
 };
 
 struct Way_Comparator_By_Id {
