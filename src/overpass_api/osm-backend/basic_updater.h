@@ -129,6 +129,32 @@ std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_skeletons
 }
 
 
+template< typename Element_Skeleton >
+std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_meta
+    (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& ids_with_position,
+     Transaction& transaction, const File_Properties& file_properties)
+{
+  std::set< Uint31_Index > req;
+  for (typename std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >::const_iterator
+      it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
+    req.insert(it->second);
+  
+  std::map< Uint31_Index, std::set< Element_Skeleton > > result;
+  Idx_Agnostic_Compare< typename Element_Skeleton::Id_Type > comp;
+  
+  Block_Backend< Uint31_Index, Element_Skeleton > db(transaction.data_index(&file_properties));
+  for (typename Block_Backend< Uint31_Index, Element_Skeleton >::Discrete_Iterator
+      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+  {
+    if (binary_search(ids_with_position.begin(), ids_with_position.end(),
+        make_pair(it.object().ref, 0), comp))
+      result[it.index()].insert(it.object());
+  }
+
+  return result;
+}
+
+
 /* Compares the new data and the already existing skeletons to determine those that have
  * moved. This information is used to prepare the deletion and insertion lists for the
  * database operation.  Also, the list of moved objects is filled. */
@@ -211,6 +237,39 @@ void new_current_skeletons
     }
   }
   std::cerr<<'\n';
+}
+
+
+/* Compares the new data and the already existing skeletons to determine those that have
+ * moved. This information is used to prepare the deletion and insertion lists for the
+ * database operation.  Also, the list of moved nodes is filled. */
+template< typename Element_Skeleton >
+void new_current_meta
+    (const Data_By_Id< Element_Skeleton >& new_data,
+     const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
+     const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& existing_meta,
+     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& attic_meta,
+     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& new_meta)
+{
+  attic_meta = existing_meta;
+  
+  typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator next_it
+      = new_data.data.begin();
+  for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
+      it = new_data.data.begin(); it != new_data.data.end(); ++it)
+  {
+    ++next_it;
+    if (next_it != new_data.data.end() && it->elem.id == next_it->elem.id)
+      // A later version exist also in new_data. So there is nothing to do.
+      continue;
+
+    if (it->idx == Uint31_Index(0u))
+      // There is nothing to do for elements to delete. If they exist, they are contained in the
+      // attic_meta.
+      continue;
+    
+    new_meta[it->idx].insert(it->meta);    
+  }
 }
 
 
@@ -309,6 +368,63 @@ void new_current_global_tags
          it != it_idx->second.end(); ++it)
       handle.insert(*it);
   }
+}
+
+
+template< typename Element_Skeleton >
+std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > > new_idx_positions
+    (const Data_By_Id< Element_Skeleton >& new_data)
+{
+  std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > > result;
+  typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator next_it
+      = new_data.data.begin();
+  for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
+      it = new_data.data.begin(); it != new_data.data.end(); ++it)
+  {
+    ++next_it;
+    if (next_it == new_data.data.end() || !(it->elem.id == next_it->elem.id))
+      result.push_back(make_pair(it->elem.id, it->idx));
+  }
+  return result;
+}
+
+
+template< typename Id_Type >
+void update_map_positions
+    (std::vector< std::pair< Id_Type, Uint31_Index > > new_idx_positions,
+     Transaction& transaction, const File_Properties& file_properties)
+{
+  Random_File< Uint31_Index > random(transaction.random_index(&file_properties));
+  
+  for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator
+      it = new_idx_positions.begin(); it != new_idx_positions.end(); ++it)
+    random.put(it->first.val(), it->second);
+}
+
+
+template< typename Index, typename Object, typename Update_Logger >
+void update_elements
+    (const std::map< Index, std::set< Object > >& attic_objects,
+     const std::map< Index, std::set< Object > >& new_objects,
+     Transaction& transaction, const File_Properties& file_properties,
+     Update_Logger* update_logger)
+{
+  Block_Backend< Index, Object > db(transaction.data_index(&file_properties));
+  if (update_logger)
+    db.update(attic_objects, new_objects, *update_logger);
+  else
+    db.update(attic_objects, new_objects);
+}
+
+
+template< typename Index, typename Object >
+void update_elements
+    (const std::map< Index, std::set< Object > >& attic_objects,
+     const std::map< Index, std::set< Object > >& new_objects,
+     Transaction& transaction, const File_Properties& file_properties)
+{
+  Block_Backend< Index, Object > db(transaction.data_index(&file_properties));
+  db.update(attic_objects, new_objects);
 }
   
 

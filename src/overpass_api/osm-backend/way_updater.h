@@ -412,6 +412,9 @@ private:
   
   void compute_indexes(vector< Way* >& ways_ptr);
 
+  void update_way_ids
+       (map< uint32, vector< Way::Id_Type > >& to_delete, bool record_minuscule_moves,
+        const std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > >& new_idx_positions);
   void update_way_ids(const vector< Way* >& ways_ptr, map< uint32, vector< Way::Id_Type > >& to_delete,
 		      bool record_minuscule_moves);
   

@@ -95,11 +95,6 @@ namespace
 // Indexe von Skeletons. Duplizierung von Versionen ebenso.
 // Wenn Meta aktiv, soll zu jedem Skeleton genau eine neue Meta-Version existieren
 
-//   // Compute which meta data really has changed
-//   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > attic_meta;
-//   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > new_meta;
-//   new_current_meta(new_data, existing_map_positions, existing_meta, attic_meta, new_meta);
-
 // Auf Basis der Skeletons und geladenen Tags
 // Neue Tags aus new_data, wenn dort mind. eine Version vorliegt, sonst aus geladenen Tags
 
@@ -489,6 +484,38 @@ void new_implicit_skeletons
 }
 
 
+/* Adds to attic_meta and new_meta the meta elements to delete resp. add from only
+   implicitly moved ways. */
+void new_implicit_meta
+    (const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >&
+         existing_meta,
+     const std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > >& new_positions,
+     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >& attic_meta,
+     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >& new_meta)
+{
+  for (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+          ::const_iterator it_idx = existing_meta.begin(); it_idx != existing_meta.end(); ++it_idx)
+  {
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& handle(attic_meta[it_idx->first]);
+    for (std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >::const_iterator
+        it = it_idx->second.begin(); it != it_idx->second.end(); ++it)
+      handle.insert(*it);
+  }
+
+  for (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+          ::const_iterator it_idx = existing_meta.begin(); it_idx != existing_meta.end(); ++it_idx)
+  {
+    for (std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >::const_iterator
+        it = it_idx->second.begin(); it != it_idx->second.end(); ++it)
+    {
+      const Uint31_Index* idx = binary_pair_search(new_positions, it->ref);
+      if (idx)
+        new_meta[*idx].insert(*it);
+    }
+  }
+}
+
+
 /* Adds to attic_local_tags and new_local_tags the tags to delete resp. add from only
    implicitly moved ways. */
 void new_implicit_local_tags
@@ -547,11 +574,19 @@ void Way_Updater::update__(Osm_Backend_Callback* callback, bool partial,
       = get_implicitly_moved_skeletons
           (attic_node_skeletons, existing_skeletons, *transaction, *osm_base_settings().WAYS);
           
-//   // Collect all data of existing meta elements
-//   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way::Id_Type > > > existing_meta
-//       = (meta ? get_existing_meta< OSM_Element_Metadata_Skeleton< Way::Id_Type > >
-//              (existing_map_positions, *transaction, *meta_settings().WAYS_META) :
-//          std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way::Id_Type > > >());
+  // Collect all data of existing meta elements
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way::Id_Type > > > existing_meta
+      = (meta ? get_existing_meta< OSM_Element_Metadata_Skeleton< Way::Id_Type > >
+             (existing_map_positions, *transaction, *meta_settings().WAYS_META) :
+         std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way::Id_Type > > >());
+          
+  // Collect all data of existing meta elements
+  std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > implicitly_moved_positions
+      = make_id_idx_directory(implicitly_moved_skeletons);
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way::Id_Type > > > implicitly_moved_meta
+      = (meta ? get_existing_meta< OSM_Element_Metadata_Skeleton< Way::Id_Type > >
+             (implicitly_moved_positions, *transaction, *meta_settings().WAYS_META) :
+         std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way::Id_Type > > >());
 
   // Collect all data of existing tags
   std::vector< Tag_Entry< Way_Skeleton::Id_Type > > existing_local_tags;
@@ -561,8 +596,6 @@ void Way_Updater::update__(Osm_Backend_Callback* callback, bool partial,
       
   // Collect all data of existing tags for moved ways
   std::vector< Tag_Entry< Way_Skeleton::Id_Type > > implicitly_moved_local_tags;
-  std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > implicitly_moved_positions
-      = make_id_idx_directory(implicitly_moved_skeletons);
   get_existing_tags< Way_Skeleton::Id_Type >
       (implicitly_moved_positions, *transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
        implicitly_moved_local_tags);
@@ -590,14 +623,31 @@ void Way_Updater::update__(Osm_Backend_Callback* callback, bool partial,
   // Compute and add implicitly moved ways
   new_implicit_skeletons(new_node_idx_by_id, implicitly_moved_skeletons,
       (update_logger != 0), attic_skeletons, new_skeletons, moved_ways, update_logger);
+  
+//   cout<<"\nWays:\n";
+//   for (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+//           ::const_iterator it_idx = existing_meta.begin(); it_idx != existing_meta.end(); ++it_idx)
+//   {
+//     for (std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >::const_iterator
+//         it = it_idx->second.begin(); it != it_idx->second.end(); ++it)
+//       cout<<dec<<it->ref.val()<<'\t'<<it->version<<'\t'<<hex<<it_idx->first.val()<<'\n';
+//   }
+
+  // Compute which meta data really has changed
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > attic_meta;
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > new_meta;
+  new_current_meta(new_data, existing_map_positions, existing_meta, attic_meta, new_meta);
+
+  // Compute which meta data has moved
+  std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > new_positions
+      = make_id_idx_directory(new_skeletons);
+  new_implicit_meta(implicitly_moved_meta, new_positions, attic_meta, new_meta);
 
   // Compute which tags really have changed
   std::map< Tag_Index_Local, std::set< Way_Skeleton::Id_Type > > attic_local_tags;
   std::map< Tag_Index_Local, std::set< Way_Skeleton::Id_Type > > new_local_tags;
   new_current_local_tags< Way_Skeleton, Update_Way_Logger, Way_Skeleton::Id_Type >
       (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
-  std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > new_positions
-      = make_id_idx_directory(new_skeletons);
   new_implicit_local_tags(implicitly_moved_local_tags, new_positions, attic_local_tags, new_local_tags);
   std::map< Tag_Index_Global, std::set< Way_Skeleton::Id_Type > > attic_global_tags;
   std::map< Tag_Index_Global, std::set< Way_Skeleton::Id_Type > > new_global_tags;
@@ -618,6 +668,38 @@ void Way_Updater::update__(Osm_Backend_Callback* callback, bool partial,
   {
     for (std::set< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
       std::cout<<it2->id.val()<<'\t'<<hex<<it->first.val()<<'\t'<<dec<<it2->nds.size()<<'\t'<<it2->geometry.size()<<'\n';
+  }
+  
+  std::cout<<"\nAttic meta:\n";
+  for (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+          ::const_iterator it = attic_meta.begin(); it != attic_meta.end(); ++it)
+  {
+    for (std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >::const_iterator
+        it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      std::cout<<it2->ref.val()<<'\t'<<hex<<it->first.val()<<'\t'<<dec<<it2->version<<'\t'
+          <<((it2->timestamp)>>26)<<' '
+          <<((it2->timestamp & 0x3c00000)>>22)<<' '
+          <<((it2->timestamp & 0x3e0000)>>17)<<' '
+          <<((it2->timestamp & 0x1f000)>>12)<<' '
+          <<((it2->timestamp & 0xfc0)>>6)<<' '
+          <<(it2->timestamp & 0x3f)<<'\t'
+          <<it2->changeset<<'\t'<<it2->user_id<<'\n';
+  }
+  
+  std::cout<<"\nNew meta:\n";
+  for (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+          ::const_iterator it = new_meta.begin(); it != new_meta.end(); ++it)
+  {
+    for (std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >::const_iterator
+        it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      std::cout<<it2->ref.val()<<'\t'<<hex<<it->first.val()<<'\t'<<dec<<it2->version<<'\t'
+          <<((it2->timestamp)>>26)<<' '
+          <<((it2->timestamp & 0x3c00000)>>22)<<' '
+          <<((it2->timestamp & 0x3e0000)>>17)<<' '
+          <<((it2->timestamp & 0x1f000)>>12)<<' '
+          <<((it2->timestamp & 0xfc0)>>6)<<' '
+          <<(it2->timestamp & 0x3f)<<'\t'
+          <<it2->changeset<<'\t'<<it2->user_id<<'\n';
   }
   
   std::cout<<"\nAttic local tags:\n";  
@@ -655,6 +737,75 @@ void Way_Updater::update__(Osm_Backend_Callback* callback, bool partial,
          it2 != it->second.end(); ++it2)
       std::cout<<dec<<it2->val()<<'\t'<<it->first.key<<'\t'<<it->first.value<<'\n';
   }
+
+  // Compute idx positions of new nodes
+  // TODO: old code
+  map< uint32, vector< Way::Id_Type > > to_delete;
+  update_way_ids(to_delete, (update_logger != 0), new_positions);
+
+  // TODO: old code
+  if (update_logger && meta)
+  {
+    for (vector< pair< OSM_Element_Metadata_Skeleton< Way::Id_Type >, uint32 > >::const_iterator
+        it = ways_meta_to_insert.begin(); it != ways_meta_to_insert.end(); ++it)
+    {
+      OSM_Element_Metadata meta;
+      meta.version = it->first.version;
+      meta.timestamp = it->first.timestamp;
+      meta.changeset = it->first.changeset;
+      meta.user_id = it->first.user_id;
+      meta.user_name = user_by_id[it->first.user_id];
+      update_logger->insertion(it->first.ref, meta);
+    }
+  }
+
+  callback->update_started();
+  callback->prepare_delete_tags_finished();
+  
+  // Update id indexes
+  update_map_positions(new_positions, *transaction, *osm_base_settings().WAYS);
+  callback->update_ids_finished();
+  
+  // Update skeletons
+  update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().WAYS, update_logger);
+  callback->update_coords_finished();
+  
+  // Update meta
+  if (meta)
+    update_elements(attic_meta, new_meta, *transaction, *meta_settings().WAYS_META, update_logger);
+  
+  // Update local tags
+  update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().WAY_TAGS_LOCAL,
+                  update_logger);
+  callback->tags_local_finished();
+  
+  // Update global tags
+  update_elements(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
+  callback->tags_global_finished();
+  
+  //TODO: insert code for attic here
+      
+  //TODO: old code
+  if (meta != only_data)
+  {
+    map< uint32, vector< uint32 > > idxs_by_id;
+    create_idxs_by_id(ways_meta_to_insert, idxs_by_id);
+    process_user_data(*transaction, user_by_id, idxs_by_id);
+    
+    if (update_logger)
+    {
+      stable_sort(ways_meta_to_delete.begin(), ways_meta_to_delete.begin());
+      ways_meta_to_delete.erase(unique(ways_meta_to_delete.begin(), ways_meta_to_delete.end()),
+                                 ways_meta_to_delete.end());
+      update_logger->set_delete_meta_data(ways_meta_to_delete);
+      ways_meta_to_delete.clear();
+    }
+  }
+  callback->update_finished();
+  
+  new_data.data.clear();
+  ids_to_modify.clear();
+  ways_to_insert.clear();
   
   if (!external_transaction)
     delete transaction;  
@@ -960,6 +1111,7 @@ void filter_affected_ways(Transaction& transaction,
   }
 }
 
+
 void Way_Updater::find_affected_ways
     (const vector< pair< Node::Id_Type, Uint32_Index > >& moved_nodes,
        Update_Way_Logger* update_logger)
@@ -1014,6 +1166,7 @@ void Way_Updater::find_affected_ways
 			   (update_logger != 0));
   maybe_affected_ways.clear();
 }
+
 
 void Way_Updater::compute_indexes(vector< Way* >& ways_ptr)
 {
@@ -1111,6 +1264,33 @@ void Way_Updater::compute_indexes(vector< Way* >& ways_ptr)
   }
 }
 
+
+void Way_Updater::update_way_ids
+    (map< uint32, vector< Way::Id_Type > >& to_delete, bool record_minuscule_moves,
+     const std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > >& new_idx_positions)
+{
+  static Pair_Comparator_By_Id< Way::Id_Type, bool > pair_comparator_by_id;
+  static Pair_Equal_Id< Way::Id_Type, bool > pair_equal_id;
+
+  // keep always the most recent (last) element of all equal elements
+  stable_sort
+      (ids_to_modify.begin(), ids_to_modify.end(), pair_comparator_by_id);
+  vector< pair< Way::Id_Type, bool > >::iterator modi_begin
+      (unique(ids_to_modify.rbegin(), ids_to_modify.rend(), pair_equal_id).base());
+  ids_to_modify.erase(ids_to_modify.begin(), modi_begin);
+  
+  Random_File< Uint32_Index > random
+      (transaction->random_index(osm_base_settings().NODES));
+  for (vector< pair< Way::Id_Type, bool > >::const_iterator it(ids_to_modify.begin());
+      it != ids_to_modify.end(); ++it)
+  {
+    Uint32_Index index(random.get(it->first.val()));
+    if (index.val() > 0)
+      to_delete[index.val()].push_back(it->first);
+  }
+}
+
+
 void Way_Updater::update_way_ids
     (const vector< Way* >& ways_ptr, map< uint32, vector< Way::Id_Type > >& to_delete,
      bool record_minuscule_moves)
@@ -1149,6 +1329,7 @@ void Way_Updater::update_way_ids
   }
   sort(moved_ways.begin(), moved_ways.end());
 }
+
 
 void Way_Updater::update_members
     (const vector< Way* >& ways_ptr, const map< uint32, vector< Way::Id_Type > >& to_delete,
@@ -1189,6 +1370,7 @@ void Way_Updater::update_members
   else
     way_db.update(db_to_delete, db_to_insert);
 }
+
 
 void Way_Updater::merge_files(const vector< string >& froms, string into)
 {
