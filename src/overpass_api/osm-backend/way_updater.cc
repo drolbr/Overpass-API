@@ -623,15 +623,6 @@ void Way_Updater::update__(Osm_Backend_Callback* callback, bool partial,
   // Compute and add implicitly moved ways
   new_implicit_skeletons(new_node_idx_by_id, implicitly_moved_skeletons,
       (update_logger != 0), attic_skeletons, new_skeletons, moved_ways, update_logger);
-  
-//   cout<<"\nWays:\n";
-//   for (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
-//           ::const_iterator it_idx = existing_meta.begin(); it_idx != existing_meta.end(); ++it_idx)
-//   {
-//     for (std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >::const_iterator
-//         it = it_idx->second.begin(); it != it_idx->second.end(); ++it)
-//       cout<<dec<<it->ref.val()<<'\t'<<it->version<<'\t'<<hex<<it_idx->first.val()<<'\n';
-//   }
 
   // Compute which meta data really has changed
   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > attic_meta;
