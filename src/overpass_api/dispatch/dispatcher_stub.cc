@@ -229,7 +229,7 @@ Dispatcher_Stub::Dispatcher_Stub
 	  *area_transaction, this, area_level == 2 ? new Area_Updater(*area_transaction) : 0);
     }
     else
-      rman = new Resource_Manager(*transaction, this);
+      rman = new Resource_Manager(*transaction, this, error_output);
     
     {
       ifstream version((db_dir + "osm_base_version").c_str());
