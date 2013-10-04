@@ -506,6 +506,9 @@ map< Uint31_Index, vector< Relation_Skeleton > > relation_relation_members
   }
     
   map< Uint31_Index, vector< Relation_Skeleton > > result;
+  if (intersect_ids.empty())
+    return result;
+  
   if (children_ranges)
     collect_items_range(&stmt, rman, *osm_base_settings().RELATIONS, *children_ranges,
 			Id_Predicate< Relation_Skeleton >(intersect_ids), result);
@@ -550,6 +553,9 @@ map< Uint31_Index, vector< Way_Skeleton > > relation_way_members
   }
     
   map< Uint31_Index, vector< Way_Skeleton > > result;
+  if (intersect_ids.empty())
+    return result;
+  
   if (way_ranges)
     collect_items_range(stmt, rman, *osm_base_settings().WAYS, *way_ranges,
 			Id_Predicate< Way_Skeleton >(intersect_ids), result);
@@ -592,8 +598,11 @@ map< Uint32_Index, vector< Node_Skeleton > > relation_node_members
     if (stmt)
       rman.health_check(*stmt);
   }
-    
+  
   map< Uint32_Index, vector< Node_Skeleton > > result;
+  if (intersect_ids.empty())
+    return result;
+    
   if (node_ranges)
     collect_items_range(stmt, rman, *osm_base_settings().NODES, *node_ranges,
 			Id_Predicate< Node_Skeleton >(intersect_ids), result);
@@ -639,6 +648,9 @@ map< Uint32_Index, vector< Node_Skeleton > > way_members
   }
 
   map< Uint32_Index, vector< Node_Skeleton > > result;
+  if (intersect_ids.empty())
+    return result;
+  
   if (node_ranges)
     collect_items_range(stmt, rman, *osm_base_settings().NODES, *node_ranges,
 			Id_Predicate< Node_Skeleton >(intersect_ids), result);

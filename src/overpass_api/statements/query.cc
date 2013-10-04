@@ -926,7 +926,7 @@ void Query_Statement::execute(Resource_Manager& rman)
   
   set_progress(7);
   rman.health_check(*this);
-  
+       
   for (vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end(); ++it)
     (*it)->filter(*this, rman, into);
