@@ -20,13 +20,14 @@
 
 #include "escape_xml.h"
 
-using namespace std;
 
-string escape_xml(const string& s)
+std::string escape_xml(const std::string& s)
 {
-  string result;
+  const char* digit = "0123456789abcdef";
+  
+  std::string result;
   result.reserve(s.length()*2);
-  for (string::size_type i(0); i < s.size(); ++i)
+  for (std::string::size_type i(0); i < s.size(); ++i)
   {
     if (s[i] == '&')
       result += "&amp;";
@@ -39,7 +40,7 @@ string escape_xml(const string& s)
     else if ((unsigned char)s[i] < 32)
     {
       if ((s[i] == '\n') || (s[i] == '\t') || (s[i] == '\r'))
-	result += s[i];
+	result += std::string("&#x") + digit[s[i] / 16] + digit[s[i] % 16] + ';';
       else
         result += '?';
     }
