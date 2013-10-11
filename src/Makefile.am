@@ -75,7 +75,7 @@ templates_DATA = templates/default.wiki templates/base.wiki
 noinst_LTLIBRARIES = libcore.la libdata.la libdispatcher.la libexpatwrapper.la libfrontend.la liboutput.la libsettings.la libweboutput.la
 
 statements_dir = overpass_api/statements
-statements_cc = ${statements_dir}/statement.cc ${statements_dir}/area_query.cc ${statements_dir}/around.cc ${statements_dir}/bbox_query.cc ${statements_dir}/coord_query.cc ${statements_dir}/difference.cc ${statements_dir}/foreach.cc ${statements_dir}/id_query.cc ${statements_dir}/item.cc ${statements_dir}/make_area.cc ${statements_dir}/newer.cc ${statements_dir}/osm_script.cc ${statements_dir}/pivot.cc ${statements_dir}/polygon_query.cc ${statements_dir}/print.cc ${statements_dir}/query.cc ${statements_dir}/recurse.cc ${statements_dir}/union.cc ${statements_dir}/user.cc overpass_api/frontend/print_target.cc
+statements_cc = ${statements_dir}/statement.cc ${statements_dir}/area_query.cc ${statements_dir}/around.cc ${statements_dir}/bbox_query.cc ${statements_dir}/coord_query.cc ${statements_dir}/difference.cc ${statements_dir}/foreach.cc ${statements_dir}/id_query.cc ${statements_dir}/item.cc ${statements_dir}/make_area.cc ${statements_dir}/newer.cc ${statements_dir}/osm_script.cc ${statements_dir}/pivot.cc ${statements_dir}/polygon_query.cc ${statements_dir}/print.cc ${statements_dir}/query.cc ${statements_dir}/recurse.cc ${statements_dir}/union.cc ${statements_dir}/user.cc overpass_api/frontend/print_target.cc expat/escape_xml.cc
 
 libcore_la_SOURCES = overpass_api/frontend/map_ql_parser.cc overpass_api/statements/statement_dump.cc expat/map_ql_input.cc
 libcore_la_LIBADD = libdispatcher.la libexpatwrapper.la libsettings.la libweboutput.la
@@ -96,7 +96,7 @@ libsettings_la_LIBADD =
 libweboutput_la_SOURCES = overpass_api/frontend/web_output.cc
 libweboutput_la_LIBADD = libfrontend.la
 
-osm_updater_cc = overpass_api/osm-backend/meta_updater.cc overpass_api/osm-backend/node_updater.cc overpass_api/osm-backend/way_updater.cc overpass_api/osm-backend/relation_updater.cc overpass_api/osm-backend/osm_updater.cc
+osm_updater_cc = overpass_api/osm-backend/meta_updater.cc overpass_api/osm-backend/node_updater.cc overpass_api/osm-backend/way_updater.cc overpass_api/osm-backend/relation_updater.cc overpass_api/osm-backend/osm_updater.cc expat/escape_xml.cc
 
 
 bin_update_database_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/update_database.cc 
