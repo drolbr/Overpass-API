@@ -27,6 +27,10 @@
     <tag k="foo" v="bar_1302"/>
     <tag k="foo_1302" v="bar"/>
   </node>
+  <node id="1304" lat="10.0" lon="3.0400001" version="2" timestamp="2013-07-01T09:02:14" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1304"/>
+    <tag k="foo_1304" v="bar"/>
+  </node>
     
   <node id="1401" lat="20.0" lon="4.01" version="2" timestamp="2013-07-01T09:02:11" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1401"/>
@@ -35,6 +39,10 @@
   <node id="1402" lat="10.0" lon="14.02" version="2" timestamp="2013-07-01T09:02:12" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1402"/>
     <tag k="foo_1402" v="bar"/>
+  </node>
+  <node id="1404" lat="10.0" lon="14.04" version="2" timestamp="2013-07-01T09:02:14" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
   </node>
 </modify>
   
@@ -111,10 +119,16 @@
   <node id="13021" lat="10.0" lon="3.020001" version="2" timestamp="2013-07-01T09:02:12" changeset="496" uid="42" user="foo"/>    
   <node id="13022" lat="10.001" lon="3.020001" version="2" timestamp="2013-07-01T09:02:12" changeset="496" uid="42" user="foo"/>
 
+  <node id="13041" lat="10.0" lon="3.040001" version="2" timestamp="2013-07-01T09:02:14" changeset="496" uid="42" user="foo"/>    
+  <node id="13042" lat="10.001" lon="3.040001" version="2" timestamp="2013-07-01T09:02:14" changeset="496" uid="42" user="foo"/>
+
   <node id="14011" lat="20.0" lon="4.01" version="2" timestamp="2013-07-01T09:02:11" changeset="496" uid="42" user="foo"/>    
 
   <node id="14021" lat="10.0" lon="14.02" version="2" timestamp="2013-07-01T09:02:12" changeset="496" uid="42" user="foo"/>    
   <node id="14022" lat="10.001" lon="14.02" version="2" timestamp="2013-07-01T09:02:12" changeset="496" uid="42" user="foo"/>
+
+  <node id="14041" lat="10.0" lon="14.04" version="2" timestamp="2013-07-01T09:02:14" changeset="496" uid="42" user="foo"/>    
+  <node id="14042" lat="10.001" lon="14.04" version="2" timestamp="2013-07-01T09:02:14" changeset="496" uid="42" user="foo"/>
 </modify>
   
 <delete>

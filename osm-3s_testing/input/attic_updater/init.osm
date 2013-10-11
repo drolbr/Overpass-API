@@ -11,11 +11,13 @@
        
        1301  created, then minuscule changed updated node
        1302  created, then multiple times minuscule changed updated node
-       1303  created, then in an update several times minuscule changed updated node       
+       1303  created, then in an update several times minuscule changed updated node
+       1304  created, then moved forth and back with minuscule changes
        
        1401  created, then drastically changed updated node
        1402  created, then multiple times drastically changed updated node
        1403  created, then in an update several times drastically changed updated node       
+       1404  created, then moved forth and back with drastic changes
        
        1501  created, then deleted node
        1502  created, then deleted, then unchanged restored, then again deleted node
@@ -64,10 +66,12 @@
        1301  created, then minuscule changed updated way (represented by node change only)
        1302  created, then multiple times minuscule changed updated way (represented by node change only)
        1303  created, then in an update several times minuscule changed updated way (represented by node change only)
+       1304  created, then moved forth and back with minuscule changes (represented by node change only)
        
        1401  created, then drastically changed updated way (represented by node change only)
        1402  created, then multiple times drastically changed updated way (represented by node change only)
        1403  created, then in an update several times drastically changed updated way (represented by node change only)
+       1404  created, then moved forth and back with drastic changes (represented by node change only)
        
        1501  created, then deleted way
        1502  created, then deleted, then unchanged restored, then again deleted way
@@ -149,6 +153,10 @@
     <tag k="foo" v="bar_1303"/>
     <tag k="foo_1303" v="bar"/>
   </node>
+  <node id="1304" lat="10.0" lon="3.04" version="1" timestamp="2013-07-01T09:01:14" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1304"/>
+    <tag k="foo_1304" v="bar"/>
+  </node>
     
   <node id="1401" lat="10.0" lon="4.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1401"/>
@@ -161,6 +169,10 @@
   <node id="1403" lat="10.0" lon="4.03" version="1" timestamp="2013-07-01T09:01:13" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
+  </node>
+  <node id="1404" lat="10.0" lon="4.04" version="1" timestamp="2013-07-01T09:01:14" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
   </node>
     
   <node id="1501" lat="10.0" lon="5.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo">
@@ -298,6 +310,10 @@
   <node id="13032" lat="10.001" lon="3.03" version="1" timestamp="2013-07-01T09:01:13" changeset="496" uid="42" user="foo"/>
   <node id="13033" lat="10.002" lon="3.03" version="1" timestamp="2013-07-01T09:01:13" changeset="496" uid="42" user="foo"/>
 
+  <node id="13041" lat="10.0" lon="3.04" version="1" timestamp="2013-07-01T09:01:14" changeset="496" uid="42" user="foo"/>    
+  <node id="13042" lat="10.001" lon="3.04" version="1" timestamp="2013-07-01T09:01:14" changeset="496" uid="42" user="foo"/>
+  <node id="13043" lat="10.002" lon="3.04" version="1" timestamp="2013-07-01T09:01:14" changeset="496" uid="42" user="foo"/>
+
   <node id="14011" lat="10.0" lon="4.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>    
   <node id="14012" lat="10.001" lon="4.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
   <node id="14013" lat="10.002" lon="4.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
@@ -309,6 +325,10 @@
   <node id="14031" lat="10.0" lon="4.03" version="1" timestamp="2013-07-01T09:01:13" changeset="496" uid="42" user="foo"/>    
   <node id="14032" lat="10.001" lon="4.03" version="1" timestamp="2013-07-01T09:01:13" changeset="496" uid="42" user="foo"/>
   <node id="14033" lat="10.002" lon="4.03" version="1" timestamp="2013-07-01T09:01:13" changeset="496" uid="42" user="foo"/>
+
+  <node id="14041" lat="10.0" lon="4.04" version="1" timestamp="2013-07-01T09:01:14" changeset="496" uid="42" user="foo"/>    
+  <node id="14042" lat="10.001" lon="4.04" version="1" timestamp="2013-07-01T09:01:14" changeset="496" uid="42" user="foo"/>
+  <node id="14043" lat="10.002" lon="4.04" version="1" timestamp="2013-07-01T09:01:14" changeset="496" uid="42" user="foo"/>
 
   <node id="15011" lat="10.0" lon="5.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>    
   <node id="15012" lat="10.001" lon="5.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
@@ -518,6 +538,13 @@
     <tag k="foo" v="bar_1303"/>
     <tag k="foo_1303" v="bar"/>
   </way>
+  <way id="1304" version="1" timestamp="2013-07-01T09:01:14" changeset="496" uid="42" user="foo">
+    <nd ref="13041"/>
+    <nd ref="13042"/>
+    <nd ref="13043"/>
+    <tag k="foo" v="bar_1304"/>
+    <tag k="foo_1304" v="bar"/>
+  </way>
     
   <way id="1401" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo">
     <nd ref="14011"/>
@@ -539,6 +566,13 @@
     <nd ref="14033"/>
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
+  </way>
+  <way id="1404" version="1" timestamp="2013-07-01T09:01:14" changeset="496" uid="42" user="foo">
+    <nd ref="14041"/>
+    <nd ref="14042"/>
+    <nd ref="14043"/>
+    <tag k="foo" v="bar_1304"/>
+    <tag k="foo_1304" v="bar"/>
   </way>
 
   <way id="1501" lat="10.0" lon="5.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo">

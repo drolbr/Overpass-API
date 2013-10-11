@@ -35,6 +35,10 @@
     <tag k="foo" v="bar_1303"/>
     <tag k="foo_1303" v="bar"/>
   </node>
+  <node id="1304" lat="10.0000000" lon="3.0400001" version="2" timestamp="2013-07-01T09:02:14Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1304"/>
+    <tag k="foo_1304" v="bar"/>
+  </node>
   <node id="1401" lat="20.0000000" lon="4.0100000" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1401"/>
     <tag k="foo_1401" v="bar"/>
@@ -46,6 +50,10 @@
   <node id="1403" lat="10.0000000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
+  </node>
+  <node id="1404" lat="10.0000000" lon="14.0400000" version="2" timestamp="2013-07-01T09:02:14Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
   </node>
   <node id="2101" lat="11.0000000" lon="1.0100000" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <tag k="faa_1" v="baz_1"/>

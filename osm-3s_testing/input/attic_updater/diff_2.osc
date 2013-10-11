@@ -28,6 +28,10 @@
     <tag k="foo" v="bar_1303"/>
     <tag k="foo_1303" v="bar"/>
   </node>
+  <node id="1304" lat="10.0" lon="3.04" version="3" timestamp="2013-07-01T09:03:14" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1304"/>
+    <tag k="foo_1304" v="bar"/>
+  </node>
     
   <node id="1402" lat="20.0" lon="14.02" version="3" timestamp="2013-07-01T09:03:12" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1402"/>
@@ -40,6 +44,10 @@
   <node id="1403" lat="10.0" lon="14.03" version="3" timestamp="2013-07-01T09:03:23" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
+  </node>
+  <node id="1404" lat="10.0" lon="4.04" version="3" timestamp="2013-07-01T09:03:14" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
   </node>
 </modify>
 
@@ -170,6 +178,9 @@
   <node id="13021" lat="10.0" lon="3.020002" version="3" timestamp="2013-07-01T09:03:12" changeset="496" uid="42" user="foo"/>    
   <node id="13023" lat="10.002" lon="3.020001" version="2" timestamp="2013-07-01T09:03:12" changeset="496" uid="42" user="foo"/>
   
+  <node id="13041" lat="10.0" lon="3.04" version="3" timestamp="2013-07-01T09:03:14" changeset="496" uid="42" user="foo"/>    
+  <node id="13042" lat="10.001" lon="3.04" version="3" timestamp="2013-07-01T09:03:14" changeset="496" uid="42" user="foo"/>
+  
   <node id="13033" lat="10.002" lon="3.030001" version="2" timestamp="2013-07-01T09:03:13" changeset="496" uid="42" user="foo"/>
   <node id="13033" lat="10.002" lon="3.030002" version="3" timestamp="2013-07-01T09:03:23" changeset="496" uid="42" user="foo"/>
 
@@ -178,6 +189,9 @@
   
   <node id="14033" lat="10.002" lon="14.03" version="2" timestamp="2013-07-01T09:03:13" changeset="496" uid="42" user="foo"/>
   <node id="14033" lat="10.002" lon="24.03" version="3" timestamp="2013-07-01T09:03:23" changeset="496" uid="42" user="foo"/>
+  
+  <node id="14041" lat="10.0" lon="4.04" version="3" timestamp="2013-07-01T09:03:14" changeset="496" uid="42" user="foo"/>    
+  <node id="14042" lat="10.001" lon="4.04" version="3" timestamp="2013-07-01T09:03:14" changeset="496" uid="42" user="foo"/>
 </modify>
   
 <delete>
