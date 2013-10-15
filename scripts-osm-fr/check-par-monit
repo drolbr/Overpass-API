@@ -1,0 +1,7 @@
+check process overpass with pidfile /var/run/dispatcher.pid
+  start program = "/etc/init.d/overpass start"
+  stop program  = "/etc/init.d/overpass stop"
+
+  if failed url http://api.openstreetmap.fr/xapi/xapi?node[bbox=1,1,1,1]
+  content == "<osm"
+  with timeout 10 seconds for 3 cycles then alert
