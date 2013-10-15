@@ -92,6 +92,11 @@ Le module de protection installé par debian (suhosin) limite la taille des vari
 
 Configuration du proxy "api 0.6"
 ================================
+* htaccess dans le dossier vhost de apache
+Plus flexible que dans la config du vhost, on trouvera
+dans Overpass-API/scripts-osm-fr/htaccess-a-mettre-dans-vhost un fichier
+htacess qui fourni des redirects en cas de panne
+
 en utilisateur api :
 cd ~
 cd web
@@ -109,3 +114,43 @@ Installer munin pour le suivi et monit pour la gestion de panne
 le script munin est là : ./Overpass-API/munin
 celui de monit est là : ./Overpass-API/scripts-osm-fr/monit
 (FIXME je ne sais pas comment l'installer moi, demander à jocelyn)
+
+A compléter :
+============
+- Lorsque, pour quelle que raison que ce soit, les données de la base
+- locales sont vielles de plus de x minutes ou que la base locale ne répond
+- pas passer sur une autre OverpassAPI et si pas disponible devenir
+- uniquement un proxy de l'api officielle et prévenir par mail du problème
+- et envoyer un email sur tech@listes.openstreetmap.Fr pour informer de ce
+- problème
+
+- Sur l'appel "map" Mettre en place l'inclusion des ways qui interse la bbox
+- mais n'ayant pas de nœud à l'intérieur
+
+- Lors d'un ajout/modification de donnée en passant par cette API trouver un
+- moyen pour que la récupération des données dans les secondes qui suivent
+- contiennent les modifications récentes de l'utilisateur.
+
+    Soit injecter dans la base locale les données en même temps qu'elles
+sont envoyé à l'api officielle
+    attendre que l'api officielle propose un mécanisme de "seconde diff"
+    bidouiller et interroger l'api officielle si l'utilisateur redemande la
+même zone dans la minute qui suit
+    autre idée ? 
+
+en cas de maintenance
+
+Lors des maintenances qui coupent totalement les apis, il est possible de
+réduire l'impact négatif de cette coupure par plusieurs subterfuge dont le
+principe est toujours le même : - Renvoyer automatique vers un miroir de
+l'overpass situé là : http://www.overpass-api.de
+Pour l'API 0.6
+
+il suffit de changer la variable dans le code de config.php et dé-commenter
+:
+$config['overpass_interpreter_url']="http://www.overpass-api.de/api/interpreter";
+
+xapi et overpass
+================
+Voir le fichier .htaccess et dé-commenter la fin pour activer un redirect
+301 
