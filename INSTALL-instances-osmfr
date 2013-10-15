@@ -70,9 +70,23 @@ ou (mais il vous faut télécharger et compiler osmconvert http://wiki.openstree
 
 On attend des plombes
 on fait 
+# chargement des chemins
+. /etc/default/overpass
 echo 456123 > $DB_DIR/replicate_id 
 ou 456123 est le numéro de séquence diff un peu avant la date du dernier object modifié contenu dans fichier osm importé
 Pour démarrer le tout : /etc/init.d/overpass start 
+
+Activation des query "area"
+==========================
+(Note que cela peut aussi se faire après coup)
+dans $DB_DIR créer un dossier "rules" et mettre dedans le 
+
+Dans /etc/default/overpass pensez à mettre AREA=yes
+# chargement des chemins
+. /etc/default/overpass
+mkdir $DB_DIR/rules 
+cp ./Overpass-API/scripts-osm-fr/areas.osm3s $DB_DIR/rules
+/etc/init.d/overpass restart
 
 
 Configuration de apache
