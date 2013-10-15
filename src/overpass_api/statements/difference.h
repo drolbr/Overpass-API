@@ -16,35 +16,30 @@
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__ITEM_H
-#define DE__OSM3S___OVERPASS_API__STATEMENTS__ITEM_H
+#ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__DIFFERENCE_H
+#define DE__OSM3S___OVERPASS_API__STATEMENTS__DIFFERENCE_H
 
 #include <map>
 #include <string>
 #include <vector>
 
-#include "query.h"
 #include "statement.h"
 
-using namespace std;
-
-class Item_Statement : public Statement
+class Difference_Statement : public Output_Statement
 {
   public:
-    Item_Statement(int line_number_, const map< string, string >& attributes,
-                   Query_Constraint* bbox_limitation = 0);
-    virtual string get_name() const { return "item"; }
-    virtual string get_result_name() const { return output; }
-    virtual void execute(Resource_Manager& rman) {}
-    virtual ~Item_Statement();
+    Difference_Statement(int line_number_, const map< string, string >& input_attributes,
+                         Query_Constraint* bbox_limitation = 0);
+    virtual void add_statement(Statement* statement, string text);
+    virtual string get_name() const { return "difference"; }
+    virtual void execute(Resource_Manager& rman);
+    virtual ~Difference_Statement() {}
     
-    static Generic_Statement_Maker< Item_Statement > statement_maker;
-    
-    virtual Query_Constraint* get_query_constraint();
-    
+    static Generic_Statement_Maker< Difference_Statement > statement_maker;
+
   private:
-    string output;
-    vector< Query_Constraint* > constraints;
+    vector< Statement* > substatements;
 };
+
 
 #endif

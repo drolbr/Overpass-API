@@ -86,8 +86,8 @@ void User_Constraint::filter(Resource_Manager& rman, Set& into)
 Generic_Statement_Maker< User_Statement > User_Statement::statement_maker("user");
 
 User_Statement::User_Statement
-    (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_)
+    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    : Output_Statement(line_number_)
 {
   map< string, string > attributes;
   
@@ -98,7 +98,7 @@ User_Statement::User_Statement
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
-  output = attributes["into"];
+  set_output(attributes["into"]);
   user_name = attributes["name"];
   user_id = atoll(attributes["uid"].c_str());
   if (((user_id == 0) && (user_name == "")) ||
@@ -196,25 +196,10 @@ void User_Statement::calc_ranges
   ::calc_ranges(node_req, other_req, user_id, transaction);
 }
 
-void User_Statement::forecast()
-{
-}
 
 void User_Statement::execute(Resource_Manager& rman)
 {
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes
-      (rman.sets()[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways
-      (rman.sets()[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations
-      (rman.sets()[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas
-      (rman.sets()[output].areas);
-
-  nodes.clear();
-  ways.clear();
-  relations.clear();
-  areas.clear();
+  Set into;
 
   set< pair< Uint32_Index, Uint32_Index > > node_req;
   set< pair< Uint31_Index, Uint31_Index > > other_req;
@@ -243,7 +228,7 @@ void User_Statement::execute(Resource_Manager& rman)
       const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta_skel
           = meta_collector.get(it.index(), it.object().id);
       if ((meta_skel) && (meta_skel->user_id == user_id))
-        nodes[it.index()].push_back(it.object());
+        into.nodes[it.index()].push_back(it.object());
     }
   }
   
@@ -270,7 +255,7 @@ void User_Statement::execute(Resource_Manager& rman)
       const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta_skel
           = meta_collector.get(it.index(), it.object().id);
       if ((meta_skel) && (meta_skel->user_id == user_id))
-        ways[it.index()].push_back(it.object());
+        into.ways[it.index()].push_back(it.object());
     }
   }
   
@@ -297,10 +282,11 @@ void User_Statement::execute(Resource_Manager& rman)
       const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta_skel
           = meta_collector.get(it.index(), it.object().id);
       if ((meta_skel) && (meta_skel->user_id == user_id))
-        relations[it.index()].push_back(it.object());
+        into.relations[it.index()].push_back(it.object());
     }
   }
-  
+
+  transfer_output(rman, into);
   rman.health_check(*this);
 }
 

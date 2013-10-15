@@ -159,4 +159,20 @@ struct Uint64
     uint64 value;
 };
 
+
+struct Quad_Coord
+{
+  Quad_Coord() : ll_upper(0), ll_lower(0) {}
+  Quad_Coord(uint32 ll_upper_, uint32 ll_lower_) : ll_upper(ll_upper_), ll_lower(ll_lower_) {}
+  
+  uint32 ll_upper;
+  uint32 ll_lower;
+  
+  bool operator==(const Quad_Coord& rhs) const
+  {
+    return ll_upper == rhs.ll_upper && ll_lower == rhs.ll_lower;
+  }
+};
+
+
 #endif

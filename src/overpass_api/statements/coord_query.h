@@ -26,16 +26,14 @@
 
 using namespace std;
 
-class Coord_Query_Statement : public Statement
+class Coord_Query_Statement : public Output_Statement
 {
   public:
-    Coord_Query_Statement(int line_number_, const map< string, string >& attributes);
+    Coord_Query_Statement(int line_number_, const map< string, string >& attributes,
+                          Query_Constraint* bbox_limitation = 0);
     virtual string get_name() const { return "coord-query"; }
-    virtual string get_result_name() const { return output; }
-    virtual void forecast();
     virtual void execute(Resource_Manager& rman);
-    virtual ~Coord_Query_Statement() {}
-    
+    virtual ~Coord_Query_Statement() {}    
     static Generic_Statement_Maker< Coord_Query_Statement > statement_maker;
     
     static int check_segment
@@ -57,7 +55,6 @@ class Coord_Query_Statement : public Statement
   
   private:
     string input;
-    string output;
     double lat, lon;
     
     static bool is_used_;

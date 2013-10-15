@@ -83,7 +83,7 @@ void Newer_Constraint::filter(Resource_Manager& rman, Set& into)
 Generic_Statement_Maker< Newer_Statement > Newer_Statement::statement_maker("newer");
 
 Newer_Statement::Newer_Statement
-    (int line_number_, const map< string, string >& input_attributes)
+    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
     : Statement(line_number_)
 {
   map< string, string > attributes;
@@ -117,7 +117,6 @@ Newer_Statement::~Newer_Statement()
     delete *it;
 }
 
-void Newer_Statement::forecast() {}
 
 void Newer_Statement::execute(Resource_Manager& rman) {}
 

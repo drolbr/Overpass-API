@@ -91,6 +91,26 @@ int main(int argc, char *argv[])
       if ((clone_db_dir.size() > 0) && (clone_db_dir[clone_db_dir.size()-1] != '/'))
 	clone_db_dir += '/';
     }
+    else
+    {
+      cout<<"Unknown argument: "<<argv[argpos]<<"\n\n"
+      "Accepted arguments are:\n"
+      "  --db-dir=$DB_DIR: The directory where the database resides. If you set this parameter\n"
+      "        then osm3s_query will read from the database without using the dispatcher management.\n"
+      "  --dump-xml: Don't execute the query but only dump the query in XML format.\n"
+      "  --dump-pretty-map-ql: Don't execute the query but only dump the query in pretty QL format.\n"
+      "  --dump-compact-map-ql: Don't execute the query but only dump the query in compact QL format.\n"
+      "  --dump-bbox-map-ql: Don't execute the query but only dump the query in a suitable form\n"
+      "        for an OpenLayers slippy map.\n"
+      "  --clone=$TARGET_DIR: Write a consistent copy of the entire database to the given $TARGET_DIR.\n"
+      "  --rules: Ignore all time limits and allow area creation by this query.\n"
+      "  --quiet: Don't print anything on stderr.\n"
+      "  --concise: Print concise information on stderr.\n"
+      "  --progress: Print also progress information on stderr.\n"
+      "  --verbose: Print everything that happens on stderr.\n";
+      
+      return 0;
+    }
     ++argpos;
   }
   
@@ -103,8 +123,9 @@ int main(int argc, char *argv[])
     if (clone_db_dir != "")
     {
       // open read transaction and log this.
-      Dispatcher_Stub dispatcher(db_dir, error_output, "-- clone database --", area_level,
-				 24*60*60, 1024*1024*1024);
+      area_level = determine_area_level(error_output, area_level);
+      Dispatcher_Stub dispatcher(db_dir, error_output, "-- clone database --",
+				 get_uses_meta_data(), area_level, 24*60*60, 1024*1024*1024);
       
       clone_database(*dispatcher.resource_manager().get_transaction(), clone_db_dir);
       return 0;
@@ -134,7 +155,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-      Osm_Script_Statement temp(0, map< string, string >());
+      Osm_Script_Statement temp(0, map< string, string >(), 0);
       max_allowed_time = temp.get_max_allowed_time();
       max_allowed_space = temp.get_max_allowed_space();
     }
@@ -144,8 +165,9 @@ int main(int argc, char *argv[])
       max_allowed_time = 0;
     
     // open read transaction and log this.
-    Dispatcher_Stub dispatcher(db_dir, error_output, xml_raw, area_level,
-			       max_allowed_time, max_allowed_space);
+    area_level = determine_area_level(error_output, area_level);
+    Dispatcher_Stub dispatcher(db_dir, error_output, xml_raw,
+			       get_uses_meta_data(), area_level, max_allowed_time, max_allowed_space);
  
     Web_Output web_output(log_level);
     if (!osm_script || osm_script->get_type() == "xml")

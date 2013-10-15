@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+# If you want munin monitoring then please copy this file to /etc/munin/plugins
+
+if [[ "$1" = "config" ]]; then
+{
+  echo 'graph_title Lag to OSM main database'
+  echo 'graph_vlabel seconds'
+  echo "osm_db_lag.label osm_base"
+  echo "osm_db_lag.warning 300"
+  echo "osm_db_lag.critical 3600"
+  exit 0
+}; fi
+
+DB_DATE=`cat /OVERPASS_DB_DIR/osm_base_version` # adapt directory
+CUR_DATE=`date -u +%T`
+DB_SECONDS=$((10#${DB_DATE:11:2}*3600 + 10#${DB_DATE:15:2}*60 + 10#${DB_DATE:19:2}))
+CUR_SECONDS=$((10#${CUR_DATE:0:2}*3600 + 10#${CUR_DATE:3:2}*60 + 10#${CUR_DATE:6:2}))
+LAG=$(( ( $CUR_SECONDS + 86400 - $DB_SECONDS ) % 86400 ))
+
+echo "osm_db_lag.value $LAG"

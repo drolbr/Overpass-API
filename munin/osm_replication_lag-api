@@ -17,7 +17,6 @@ if [ "$1" = "config" ]; then
         echo 'lag.draw LINE'
         echo 'lag.cdef lag,60,/'
         echo 'lag.critical 1000'
-#        echo 'lag.critical 8000'
 
         exit 0
 fi

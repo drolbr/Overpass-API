@@ -27,13 +27,12 @@
 using namespace std;
 
 
-class Polygon_Query_Statement : public Statement
+class Polygon_Query_Statement : public Output_Statement
 {
   public:
-    Polygon_Query_Statement(int line_number_, const map< string, string >& attributes);
+    Polygon_Query_Statement(int line_number_, const map< string, string >& attributes,
+                            Query_Constraint* bbox_limitation = 0);
     virtual string get_name() const { return "polygon-query"; }
-    virtual string get_result_name() const { return output; }
-    virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     virtual ~Polygon_Query_Statement();
     
@@ -47,13 +46,9 @@ class Polygon_Query_Statement : public Statement
        
     void collect_ways
       (map< Uint31_Index, vector< Way_Skeleton > >& ways,
-       map< Uint32_Index, vector< Node_Skeleton > >& way_members_,
-       vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id,
-       bool add_border,
-       Resource_Manager& rman);
+       bool add_border, const Statement& query, Resource_Manager& rman);
 
   private:
-    string output;
     unsigned int type;
     vector< Aligned_Segment > segments;
     vector< Query_Constraint* > constraints;

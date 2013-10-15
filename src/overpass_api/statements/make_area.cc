@@ -29,6 +29,7 @@
 
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
+#include "../data/collect_members.h"
 #include "../osm-backend/area_updater.h"
 #include "make_area.h"
 #include "print.h"
@@ -40,8 +41,8 @@ bool Make_Area_Statement::is_used_ = false;
 Generic_Statement_Maker< Make_Area_Statement > Make_Area_Statement::statement_maker("make-area");
 
 Make_Area_Statement::Make_Area_Statement
-    (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_)
+    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    : Output_Statement(line_number_)
 { 
   is_used_ = true;
   
@@ -54,23 +55,10 @@ Make_Area_Statement::Make_Area_Statement
   eval_attributes_array(get_name(), attributes, input_attributes);
   
   input = attributes["from"];
-  output = attributes["into"];
+  set_output(attributes["into"]);
   pivot = attributes["pivot"];
 }
 
-void Make_Area_Statement::forecast()
-{
-/*  Set_Forecast sf_in(declare_read_set(input));
-  declare_read_set(tags);
-  Set_Forecast& sf_out(declare_write_set(output));
-    
-  sf_out.area_count = 1;
-  declare_used_time(100 + sf_in.node_count + sf_in.way_count);
-  finish_statement_forecast();
-    
-  display_full();
-  display_state();*/
-}
 
 pair< uint32, Uint64 > Make_Area_Statement::detect_pivot(const Set& pivot)
 {
@@ -140,49 +128,6 @@ Node::Id_Type Make_Area_Statement::check_node_parity(const Set& pivot)
 }
 
 
-void add_way_to_area_blocks(const Way_Skeleton& way, const vector< Node >& nodes,
-			    uint32 id, map< Uint31_Index, vector< Area_Block > >& areas)
-{
-  if (way.nds.size() < 2)
-    return;
-  uint32 cur_idx(0);
-  vector< uint64 > cur_polyline;
-  for (vector< Node::Id_Type >::const_iterator it3(way.nds.begin());
-      it3 != way.nds.end(); ++it3)
-  {
-    const Node* node = binary_search_for_id(nodes, *it3);
-    if (node == 0)
-      return;
-    if ((node->index & 0xffffff00) != cur_idx)
-    {
-      if (cur_idx != 0)
-      {
-	if (cur_polyline.size() > 1)
-	  areas[cur_idx].push_back(Area_Block(id, cur_polyline));
-	    
-	vector< Aligned_Segment > aligned_segments;
-	Area::calc_aligned_segments
-	    (aligned_segments, cur_polyline.back(),
-	     ((uint64)node->index<<32) | node->ll_lower_);
-	cur_polyline.clear();
-	for (vector< Aligned_Segment >::const_iterator
-	    it(aligned_segments.begin()); it != aligned_segments.end(); ++it)
-	{
-	  cur_polyline.push_back((((uint64)it->ll_upper_)<<32) | it->ll_lower_a);
-	  cur_polyline.push_back((((uint64)it->ll_upper_)<<32) | it->ll_lower_b);
-	  areas[it->ll_upper_].push_back(Area_Block(id, cur_polyline));
-	  cur_polyline.clear();
-	}
-      }
-      cur_idx = (node->index & 0xffffff00);
-    }
-    cur_polyline.push_back(((uint64)node->index<<32) | node->ll_lower_);
-  }
-  if ((cur_idx != 0) && (cur_polyline.size() > 1))
-    areas[cur_idx].push_back(Area_Block(id, cur_polyline));
-}
-
-
 pair< Node::Id_Type, Uint32_Index > Make_Area_Statement::create_area_blocks
     (map< Uint31_Index, vector< Area_Block > >& areas,
      uint32 id, const Set& pivot)
@@ -202,56 +147,17 @@ pair< Node::Id_Type, Uint32_Index > Make_Area_Statement::create_area_blocks
   {
     for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
-    {
-      add_way_to_area_blocks(*it2, nodes, id, areas);
-//       if (it2->nds.size() < 2)
-// 	continue;
-//       uint32 cur_idx(0);
-//       vector< uint64 > cur_polyline;
-//       for (vector< Node::Id_Type >::const_iterator it3(it2->nds.begin());
-//           it3 != it2->nds.end(); ++it3)
-//       {
-// 	const Node* node(binary_search_for_id(nodes, *it3));
-// 	if (node == 0)
-// 	  return make_pair(*it3, it2->id);
-// 	if ((node->index & 0xffffff00) != cur_idx)
-// 	{
-// 	  if (cur_idx != 0)
-// 	  {
-// 	    if (cur_polyline.size() > 1)
-// 	      areas[cur_idx].push_back(Area_Block(id, cur_polyline));
-// 	    
-// 	    vector< Aligned_Segment > aligned_segments;
-// 	    Area::calc_aligned_segments
-// 	        (aligned_segments, cur_polyline.back(),
-// 		 ((uint64)node->index<<32) | node->ll_lower_);
-// 	    cur_polyline.clear();
-// 	    for (vector< Aligned_Segment >::const_iterator
-// 	        it(aligned_segments.begin()); it != aligned_segments.end(); ++it)
-// 	    {
-// 	      cur_polyline.push_back((((uint64)it->ll_upper_)<<32)
-// 	        | it->ll_lower_a);
-// 	      cur_polyline.push_back((((uint64)it->ll_upper_)<<32)
-// 	        | it->ll_lower_b);
-// 	      areas[it->ll_upper_].push_back(Area_Block(id, cur_polyline));
-// 	      cur_polyline.clear();
-// 	    }
-// 	  }
-// 	  cur_idx = (node->index & 0xffffff00);
-// 	}
-// 	cur_polyline.push_back(((uint64)node->index<<32) | node->ll_lower_);
-//       }
-//       if ((cur_idx != 0) && (cur_polyline.size() > 1))
-// 	areas[cur_idx].push_back(Area_Block(id, cur_polyline));
-    }
+      add_way_to_area_blocks(make_geometry(*it2, nodes), id, areas);
   }
   return make_pair< uint32, uint32 >(0, 0);
 }
+
 
 uint32 Make_Area_Statement::shifted_lat(uint32 ll_index, uint64 coord)
 {
   return ::ilat(ll_index | (coord>>32), coord & 0xffffffff);
 }
+
 
 int32 Make_Area_Statement::lon_(uint32 ll_index, uint64 coord)
 {
@@ -320,24 +226,13 @@ void Make_Area_Statement::add_segment_blocks
 
 void Make_Area_Statement::execute(Resource_Manager& rman)
 {
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes
-      (rman.sets()[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways
-      (rman.sets()[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations
-      (rman.sets()[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas
-      (rman.sets()[output].areas);
+  Set into;
   
   // detect pivot element
   map< string, Set >::const_iterator mit(rman.sets().find(pivot));
   if (mit == rman.sets().end())
   {
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-    
+    transfer_output(rman, into);
     return;
   }
   pair< uint32, Uint64 > pivot_pair(detect_pivot(mit->second));
@@ -346,11 +241,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
 
   if (pivot_type == 0)
   {
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-    
+    transfer_output(rman, into);
     return;
   }
   
@@ -395,11 +286,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   mit = rman.sets().find(input);
   if (mit == rman.sets().end())
   {
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-    
+    transfer_output(rman, into);
     return;
   }
   
@@ -428,11 +315,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   
   if (!(odd_id == Node::Id_Type(0ull)) || !(odd_pair.first == Node::Id_Type(0ull)))
   {
-    nodes.clear();
-    ways.clear();
-    relations.clear();
-    areas.clear();
-    
+    transfer_output(rman, into);
     return;
   }
 
@@ -448,23 +331,22 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   new_location.tags = new_tags;
   Uint31_Index new_index(new_location.calc_index());
   
-  nodes.clear();
-  ways.clear();
-  relations.clear();
-  areas.clear();
-
   if (new_index.val() == 0)
+  {
+    transfer_output(rman, into);
     return;
+  }
   
   if (rman.area_updater())
   {
-    Area_Updater* area_updater(rman.area_updater());
+    Area_Updater* area_updater = dynamic_cast< Area_Updater* >(rman.area_updater());
     area_updater->set_area(new_index, new_location);
     area_updater->add_blocks(area_blocks);
     area_updater->commit();
   }
   
-  areas[new_index].push_back(Area_Skeleton(new_location));
+  into.areas[new_index].push_back(Area_Skeleton(new_location));
   
+  transfer_output(rman, into);
   rman.health_check(*this);
 }

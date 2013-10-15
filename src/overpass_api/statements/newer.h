@@ -30,10 +30,10 @@ using namespace std;
 class Newer_Statement : public Statement
 {
   public:
-    Newer_Statement(int line_number_, const map< string, string >& input_attributes);
+    Newer_Statement(int line_number_, const map< string, string >& input_attributes,
+                    Query_Constraint* bbox_limitation = 0);
     virtual string get_name() const { return "newer"; }
     virtual string get_result_name() const { return ""; }
-    virtual void forecast();
     virtual void execute(Resource_Manager& rman);
     virtual ~Newer_Statement();
     

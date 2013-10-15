@@ -356,36 +356,39 @@ set< pair< Uint32_Index, Uint32_Index > > way_nd_indices
   for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
     it(ways_begin); it != ways_end; ++it)
   {
-    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x1) == 0)) // Adapt 0x3
     {
       // Treat ways with really large indices: get the node indexes from the segment indexes
       for (vector< Way_Skeleton >::const_iterator it2 = it->second.begin();
           it2 != it->second.end(); ++it2)
       {
-	bool large_indices = false;
-	for (vector< Uint31_Index >::const_iterator it3 = it2->segment_idxs.begin();
-	    it3 != it2->segment_idxs.end(); ++it3)
-	{
-	  if ((it3->val() & 0x80000000) && ((it3->val() & 0xf) == 0))
-	  {
-	    //Treat ways with really large indices: get the node indexes from nodes.map.
-	    large_indices = true;
-	    break;
-	  }
-	}
-	
-	if (large_indices)
-	{
-	  for (vector< Node::Id_Type >::const_iterator it3(it2->nds.begin());
-	      it3 != it2->nds.end(); ++it3)
-	    map_ids.push_back(*it3);
-	}
-	else
-	{
-	  for (vector< Uint31_Index >::const_iterator it3 = it2->segment_idxs.begin();
-	      it3 != it2->segment_idxs.end(); ++it3)
-	    parents.push_back(it3->val());
-	}
+// 	bool large_indices = false;
+// 	for (vector< Uint31_Index >::const_iterator it3 = it2->segment_idxs.begin();
+// 	    it3 != it2->segment_idxs.end(); ++it3)
+// 	{
+// 	  if ((it3->val() & 0x80000000) && ((it3->val() & 0xf) == 0))
+// 	  {
+// 	    //Treat ways with really large indices: get the node indexes from nodes.map.
+// 	    large_indices = true;
+// 	    break;
+// 	  }
+// 	}
+// 	
+// 	if (large_indices)
+// 	{
+// 	  for (vector< Node::Id_Type >::const_iterator it3(it2->nds.begin());
+// 	      it3 != it2->nds.end(); ++it3)
+// 	    map_ids.push_back(*it3);
+// 	}
+// 	else
+// 	{
+// 	  for (vector< Uint31_Index >::const_iterator it3 = it2->segment_idxs.begin();
+// 	      it3 != it2->segment_idxs.end(); ++it3)
+// 	    parents.push_back(it3->val());
+// 	}        
+        for (vector< Quad_Coord >::const_iterator it3 = it2->geometry.begin();
+            it3 != it2->geometry.end(); ++it3)
+          parents.push_back(it3->ll_upper);
       }
     }
     else
@@ -678,4 +681,223 @@ uint32 determine_role_id(Transaction& transaction, const string& role)
       return it->first;
   }
   return numeric_limits< uint32 >::max();
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+void add_way_to_area_blocks(const vector< Quad_Coord >& coords,
+                            uint32 id, map< Uint31_Index, vector< Area_Block > >& areas)
+{
+  if (coords.size() < 2)
+    return;
+  uint32 cur_idx = 0;
+  vector< uint64 > cur_polyline;
+  for (vector< Quad_Coord >::const_iterator it = coords.begin(); it != coords.end(); ++it)
+  {
+    if ((it->ll_upper & 0xffffff00) != cur_idx)
+    {
+      if (cur_idx != 0)
+      {
+        if (cur_polyline.size() > 1)
+          areas[cur_idx].push_back(Area_Block(id, cur_polyline));
+            
+        vector< Aligned_Segment > aligned_segments;
+        Area::calc_aligned_segments
+            (aligned_segments, cur_polyline.back(),
+             ((uint64)it->ll_upper<<32) | it->ll_lower);
+        cur_polyline.clear();
+        for (vector< Aligned_Segment >::const_iterator
+            it(aligned_segments.begin()); it != aligned_segments.end(); ++it)
+        {
+          cur_polyline.push_back((((uint64)it->ll_upper_)<<32) | it->ll_lower_a);
+          cur_polyline.push_back((((uint64)it->ll_upper_)<<32) | it->ll_lower_b);
+          areas[it->ll_upper_].push_back(Area_Block(id, cur_polyline));
+          cur_polyline.clear();
+        }
+      }
+      cur_idx = (it->ll_upper & 0xffffff00);
+    }
+    cur_polyline.push_back(((uint64)it->ll_upper<<32) | it->ll_lower);
+  }
+  if ((cur_idx != 0) && (cur_polyline.size() > 1))
+    areas[cur_idx].push_back(Area_Block(id, cur_polyline));
+}
+
+
+vector< Quad_Coord > make_geometry(const Way_Skeleton& way, const vector< Node >& nodes)
+{
+  vector< Quad_Coord > result;
+  
+  for (vector< Node::Id_Type >::const_iterator it3(way.nds.begin());
+      it3 != way.nds.end(); ++it3)
+  {
+    const Node* node = binary_search_for_id(nodes, *it3);
+    if (node == 0)
+    {
+      result.clear();
+      return result;
+    }
+    result.push_back(Quad_Coord(node->index, node->ll_lower_));
+  }
+  
+  return result;
+}
+
+
+vector< Uint31_Index > segment_idxs(const vector< Quad_Coord >& geometry)
+{
+  vector< uint32 > nd_idxs;
+  
+  for (vector< Quad_Coord >::const_iterator it = geometry.begin(); it != geometry.end(); ++it)
+    nd_idxs.push_back(it->ll_upper);
+
+  return calc_segment_idxs(nd_idxs);
+}
+
+
+void filter_ways_by_ranges(map< Uint31_Index, vector< Way_Skeleton > >& ways,
+                           const set< pair< Uint31_Index, Uint31_Index > >& ranges)
+{
+  set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it = ranges.begin();
+  map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin();
+  set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_begin = ranges.begin();
+  for (; it != ways.end() && ranges_it != ranges.end(); )
+  {
+    if (!(it->first < ranges_it->second))
+      ++ranges_it;
+    else if (!(it->first < ranges_it->first))
+    {
+      if ((it->first.val() & 0x80000000) == 0 || (it->first.val() & 0x1) != 0) // Adapt 0x3
+        ++it;
+      else
+      {
+        vector< Way_Skeleton > filtered_ways;
+        while (!(Uint31_Index(it->first.val() & 0x7fffff00) < ranges_begin->second))
+          ++ranges_begin;
+        for (vector< Way_Skeleton >::const_iterator it2 = it->second.begin();
+             it2 != it->second.end(); ++it2)
+        {
+          set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it2 = ranges_begin;
+          vector< Uint31_Index > segment_idxs_ = segment_idxs(it2->geometry);
+          for (vector< Uint31_Index >::const_iterator it3 = segment_idxs_.begin();
+               it3 != segment_idxs_.end() && ranges_it2 != ranges.end(); )
+          {
+            if (!(*it3 < ranges_it2->second))
+              ++ranges_it2;
+            else if (!(*it3 < ranges_it2->first))
+            {
+              // A relevant index is found; thus the way is relevant.
+              filtered_ways.push_back(*it2);
+              break;
+            }
+            else
+              ++it3;
+          }
+        }
+          
+        filtered_ways.swap(it->second);
+        ++it;
+      }
+    }
+    else
+    {
+      // The index of the way is not in the current set of ranges.
+      // Thus it cannot be in the result set.
+      it->second.clear();
+      ++it;
+    }
+  }
+  for (; it != ways.end(); ++it)
+    it->second.clear();  
+}
+
+
+vector< Node::Id_Type > small_way_nd_ids(const map< Uint31_Index, vector< Way_Skeleton > >& ways)
+{
+  vector< Node::Id_Type > ids;
+  for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
+      it(ways.begin()); it != ways.end(); ++it)
+  {
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x1) == 0))
+      continue;
+    for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+    {
+      for (vector< Node::Id_Type >::const_iterator it3(it2->nds.begin());
+          it3 != it2->nds.end(); ++it3)
+        ids.push_back(*it3);
+    }
+  }
+  
+  sort(ids.begin(), ids.end());
+  ids.erase(unique(ids.begin(), ids.end()), ids.end());
+  
+  return ids;
+}
+
+
+set< pair< Uint32_Index, Uint32_Index > > small_way_nd_indices
+    (const Statement* stmt, Resource_Manager& rman,
+     map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_begin,
+     map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_end)
+{
+  vector< uint32 > parents;
+  
+  for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
+    it(ways_begin); it != ways_end; ++it)
+  {
+    if (!(it->first.val() & 0x80000000) || ((it->first.val() & 0x1) != 0)) // Adapt 0x3
+      parents.push_back(it->first.val());
+  }
+  sort(parents.begin(), parents.end());
+  parents.erase(unique(parents.begin(), parents.end()), parents.end());
+  
+  if (stmt)
+    rman.health_check(*stmt);
+  
+  return collect_node_req(stmt, rman, vector< Node::Id_Type >(), parents);
+}
+
+
+map< Uint32_Index, vector< Node_Skeleton > > small_way_members
+    (const Statement* stmt, Resource_Manager& rman,
+     const map< Uint31_Index, vector< Way_Skeleton > >& ways)
+{
+  map< Uint32_Index, vector< Node_Skeleton > > result;
+  
+  collect_items_range(stmt, rman, *osm_base_settings().NODES,
+                      small_way_nd_indices(stmt, rman, ways.begin(), ways.end()),
+                      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), result);
+  
+  return result;
+}
+
+
+Way_Geometry_Store::Way_Geometry_Store
+    (const map< Uint31_Index, vector< Way_Skeleton > >& ways, const Statement& query, Resource_Manager& rman)
+{
+  // Retrieve all nodes referred by the ways.
+  map< Uint32_Index, vector< Node_Skeleton > > way_members_ = small_way_members(&query, rman, ways);
+  
+  // Order node ids by id.
+  vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id;
+  for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = way_members_.begin();
+      it != way_members_.end(); ++it)
+  {
+    for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      nodes.push_back(Node(iit->id, it->first.val(), iit->ll_lower));
+  }
+  sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
+}
+
+
+vector< Quad_Coord > Way_Geometry_Store::get_geometry(const Way_Skeleton& way)
+{
+  if (way.geometry.empty())
+    return make_geometry(way, nodes);
+  else
+    return way.geometry;
 }

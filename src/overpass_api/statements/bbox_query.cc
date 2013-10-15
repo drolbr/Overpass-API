@@ -31,6 +31,7 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
+    
 class Bbox_Constraint : public Query_Constraint
 {
   public:
@@ -63,29 +64,27 @@ bool Bbox_Constraint::delivers_data()
 bool Bbox_Constraint::get_ranges
     (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
 {
-  vector< pair< uint32, uint32 > > int_ranges = bbox->calc_ranges();
-  for (vector< pair< uint32, uint32 > >::const_iterator
-      it(int_ranges.begin()); it != int_ranges.end(); ++it)
-  {
-    pair< Uint32_Index, Uint32_Index > range
-        (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
-    ranges.insert(range);
-  }
+  ranges = bbox->get_ranges_32();
   return true;
 }
+
 
 bool Bbox_Constraint::get_ranges
     (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
-  set< pair< Uint32_Index, Uint32_Index > > node_ranges;
-  this->get_ranges(rman, node_ranges);
-  ranges = calc_parents(node_ranges);
+  ranges = bbox->get_ranges_31();
   return true;
 }
+
 
 void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
 {
   // process nodes
+  uint32 south_ = ilat_(bbox->get_south());
+  uint32 north_ = ilat_(bbox->get_north());
+  int32 west_ = ilon_(bbox->get_west());
+  int32 east_ = ilon_(bbox->get_east());
+  
   for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = into.nodes.begin();
       it != into.nodes.end(); ++it)
   {
@@ -93,74 +92,21 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
     for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
-      double lat(::lat(it->first.val(), iit->ll_lower));
-      double lon(::lon(it->first.val(), iit->ll_lower));
-      if ((lat >= bbox->get_south()) && (lat <= bbox->get_north()) &&
-	  (((lon >= bbox->get_west()) && (lon <= bbox->get_east())) ||
-	  ((bbox->get_east() < bbox->get_west()) && ((lon >= bbox->get_west()) ||
-	  (lon <= bbox->get_east())))))
+      uint32 lat(::ilat(it->first.val(), iit->ll_lower));
+      int32 lon(::ilon(it->first.val(), iit->ll_lower));
+      if ((lat >= south_) && (lat <= north_) &&
+          (((lon >= west_) && (lon <= east_))
+            || ((east_ < west_) && ((lon >= west_) || (lon <= east_)))))
 	local_into.push_back(*iit);
     }
     it->second.swap(local_into);
   }  
 
   
-  set< pair< Uint31_Index, Uint31_Index > > ranges;
-  get_ranges(rman, ranges);
+  const set< pair< Uint31_Index, Uint31_Index > >& ranges = bbox->get_ranges_31();
   
   // pre-process ways to reduce the load of the expensive filter
-  {
-    set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it = ranges.begin();
-    map< Uint31_Index, vector< Way_Skeleton > >::iterator it = into.ways.begin();
-    set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_begin = ranges.begin();
-    for (; it != into.ways.end() && ranges_it != ranges.end(); )
-    {
-      if (!(it->first < ranges_it->second))
-	++ranges_it;
-      else if (!(it->first < ranges_it->first))
-      {
-	if ((it->first.val() & 0x80000000) == 0 || (it->first.val() & 0x3) != 0)
-	  ++it;
-	else
-	{
-	  vector< Way_Skeleton > filtered_ways;
-	  while (!(Uint31_Index(it->first.val() & 0x7fffff00) < ranges_begin->second))
-	    ++ranges_begin;
-	  for (vector< Way_Skeleton >::const_iterator it2 = it->second.begin();
-	       it2 != it->second.end(); ++it2)
-	  {
-	    set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it2 = ranges_begin;
-	    vector< Uint31_Index >::const_iterator it3 = it2->segment_idxs.begin();
-	    for (; it3 != it2->segment_idxs.end() && ranges_it2 != ranges.end(); )
-	    {
-	      if (!(*it3 < ranges_it2->second))
-		++ranges_it2;
-	      else if (!(*it3 < ranges_it2->first))
-	      {
-		// A relevant index is found; thus the way is relevant.
-		filtered_ways.push_back(*it2);
-		break;
-	      }
-	      else
-		++it3;
-	    }
-	  }
-	  
-	  filtered_ways.swap(it->second);
-	  ++it;
-	}
-      }
-      else
-      {
-	// The index of the way is not in the current set of ranges.
-	// Thus it cannot be in the result set.
-	it->second.clear();
-	++it;
-      }
-    }
-    for (; it != into.ways.end(); ++it)
-      it->second.clear();
-  }
+  filter_ways_by_ranges(into.ways, ranges);
   
   // pre-filter relations
   {
@@ -185,36 +131,18 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
   //TODO: filter areas
 }
 
-bool matches_bbox(const Bbox_Query_Statement& bbox, const Way_Skeleton& way,
-		  const vector< pair< Uint32_Index, const Node_Skeleton* > >& nodes_by_id)
+
+bool matches_bbox(const Bbox_Query_Statement& bbox, const vector< Quad_Coord >& way_geometry)
 {
-  vector< Node::Id_Type >::const_iterator nit = way.nds.begin();
-  if (nit == way.nds.end())
+  vector< Quad_Coord >::const_iterator nit = way_geometry.begin();
+  if (nit == way_geometry.end())
     return false;
-  const pair< Uint32_Index, const Node_Skeleton* >* first_nd =
-      binary_search_for_pair_id(nodes_by_id, *nit);
-  if (!first_nd)
+  double first_lat(::lat(nit->ll_upper, nit->ll_lower));
+  double first_lon(::lon(nit->ll_upper, nit->ll_lower));
+  for (++nit; nit != way_geometry.end(); ++nit)
   {
-    ostringstream out;
-    out<<"Node "<<nit->val()<<" not found in the database. This is a serious fault of the database.";
-    bbox.runtime_remark(out.str());
-    return true;
-  }
-  double first_lat(::lat(first_nd->first.val(), first_nd->second->ll_lower));
-  double first_lon(::lon(first_nd->first.val(), first_nd->second->ll_lower));
-  for (++nit; nit != way.nds.end(); ++nit)
-  {
-    const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
-        binary_search_for_pair_id(nodes_by_id, *nit);
-    if (!second_nd)
-    {
-      ostringstream out;
-      out<<"Node "<<nit->val()<<" not found in the database. This is a serious fault of the database.";
-      bbox.runtime_remark(out.str());
-      return true;
-    }
-    double second_lat(::lat(second_nd->first.val(), second_nd->second->ll_lower));
-    double second_lon(::lon(second_nd->first.val(), second_nd->second->ll_lower));
+    double second_lat(::lat(nit->ll_upper, nit->ll_lower));
+    double second_lon(::lon(nit->ll_upper, nit->ll_lower));
     
     if (segment_intersects_bbox
         (first_lat, first_lon, second_lat, second_lon,
@@ -227,27 +155,12 @@ bool matches_bbox(const Bbox_Query_Statement& bbox, const Way_Skeleton& way,
   return false;
 }
 
+
 void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
   {
     //Process ways
-  
-    // Retrieve all nodes referred by the ways.
-    map< Uint32_Index, vector< Node_Skeleton > > way_members_
-        = way_members(&query, rman, into.ways);
-    //collect_nodes(query, rman, into.ways.begin(), into.ways.end(), way_members);
-  
-    // Order node ids by id.
-    vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id;
-    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = way_members_.begin();
-        it != way_members_.end(); ++it)
-    {
-      for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-        way_members_by_id.push_back(make_pair(it->first, &*iit));
-    }
-    Order_By_Node_Id order_by_node_id;
-    sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_node_id);
+    Way_Geometry_Store way_geometries(into.ways, query, rman);
   
     for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = into.ways.begin();
         it != into.ways.end(); ++it)
@@ -256,7 +169,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
       for (vector< Way_Skeleton >::const_iterator iit = it->second.begin();
           iit != it->second.end(); ++iit)
       {
-	if (matches_bbox(*bbox, *iit, way_members_by_id))
+        if (matches_bbox(*bbox, way_geometries.get_geometry(*iit)))
 	  local_into.push_back(*iit);
       }
       it->second.swap(local_into);
@@ -266,8 +179,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     //Process relations
     
     // Retrieve all nodes referred by the relations.
-    set< pair< Uint32_Index, Uint32_Index > > node_ranges;
-    get_ranges(rman, node_ranges);
+    const set< pair< Uint32_Index, Uint32_Index > >& node_ranges = bbox->get_ranges_32();
     
     map< Uint32_Index, vector< Node_Skeleton > > node_members
         = relation_node_members(&query, rman, into.relations, &node_ranges);
@@ -287,8 +199,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     sort(node_members_by_id.begin(), node_members_by_id.end(), order_by_node_id);
     
     // Retrieve all ways referred by the relations.
-    set< pair< Uint31_Index, Uint31_Index > > way_ranges;
-    get_ranges(rman, way_ranges);
+    const set< pair< Uint31_Index, Uint31_Index > >& way_ranges = bbox->get_ranges_31();
     
     map< Uint31_Index, vector< Way_Skeleton > > way_members_
         = relation_way_members(&query, rman, into.relations, &way_ranges);
@@ -307,21 +218,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     Order_By_Way_Id order_by_way_id;
     sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_way_id);
     
-    // Retrieve all nodes referred by the ways.
-    map< Uint32_Index, vector< Node_Skeleton > > way_nds
-        = way_members(&query, rman, way_members_);
-    //collect_nodes(query, rman, way_members_.begin(), way_members_.end(), way_nds);
-    
-    // Order node ids by id.
-    vector< pair< Uint32_Index, const Node_Skeleton* > > way_nds_by_id;
-    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = way_nds.begin();
-        it != way_nds.end(); ++it)
-    {
-      for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-        way_nds_by_id.push_back(make_pair(it->first, &*iit));
-    }
-    sort(way_nds_by_id.begin(), way_nds_by_id.end(), order_by_node_id);
+    Way_Geometry_Store way_geometries(way_members_, query, rman);
     
     for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = into.relations.begin();
         it != into.relations.end(); ++it)
@@ -357,7 +254,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 	        binary_search_for_pair_id(way_members_by_id, nit->ref32());
 	    if (!second_nd)
 	      continue;
-	    if (matches_bbox(*bbox, *second_nd->second, way_nds_by_id))
+            if (matches_bbox(*bbox, way_geometries.get_geometry(*second_nd->second)))
 	    {
 	      local_into.push_back(*iit);
 	      break;
@@ -377,8 +274,8 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 Generic_Statement_Maker< Bbox_Query_Statement > Bbox_Query_Statement::statement_maker("bbox-query");
 
 Bbox_Query_Statement::Bbox_Query_Statement
-    (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_)
+    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    : Output_Statement(line_number_)
 {
   map< string, string > attributes;
   
@@ -390,7 +287,7 @@ Bbox_Query_Statement::Bbox_Query_Statement
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
-  output = attributes["into"];
+  set_output(attributes["into"]);
   south = atof(attributes["s"].c_str());
   if ((south < -90.0) || (south > 90.0) || (attributes["s"] == ""))
   {
@@ -432,6 +329,7 @@ Bbox_Query_Statement::Bbox_Query_Statement
   }
 }
 
+
 Bbox_Query_Statement::~Bbox_Query_Statement()
 {
   for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
@@ -439,46 +337,45 @@ Bbox_Query_Statement::~Bbox_Query_Statement()
     delete *it;
 }
 
-void Bbox_Query_Statement::forecast()
+
+const set< pair< Uint32_Index, Uint32_Index > >& Bbox_Query_Statement::get_ranges_32()
 {
+  if (ranges_32.empty())
+  {
+    vector< pair< uint32, uint32 > > uint_ranges = ::calc_ranges(south, north, west, east);
+    for (vector< pair< uint32, uint32 > >::const_iterator
+        it(uint_ranges.begin()); it != uint_ranges.end(); ++it)
+    {
+      pair< Uint32_Index, Uint32_Index > range
+        (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
+      ranges_32.insert(range);
+    }
+  }
+  return ranges_32;
 }
+
+
+const set< pair< Uint31_Index, Uint31_Index > >& Bbox_Query_Statement::get_ranges_31()
+{
+  if (ranges_31.empty())
+    ranges_31 = calc_parents(get_ranges_32());
+  return ranges_31;
+}
+
 
 void Bbox_Query_Statement::execute(Resource_Manager& rman)
 {
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes
-      (rman.sets()[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways
-      (rman.sets()[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations
-      (rman.sets()[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas
-      (rman.sets()[output].areas);
-  
-  nodes.clear();
-  ways.clear();
-  relations.clear();
-  areas.clear();
+  Set into;
 
-  vector< pair< uint32, uint32 > > uint_ranges
-    (::calc_ranges(south, north, west, east));
-  rman.health_check(*this);
-    
-  set< pair< Uint32_Index, Uint32_Index > > req;
-  for (vector< pair< uint32, uint32 > >::const_iterator
-      it(uint_ranges.begin()); it != uint_ranges.end(); ++it)
-  {
-    pair< Uint32_Index, Uint32_Index > range
-      (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
-    req.insert(range);
-  }
+  const set< pair< Uint32_Index, Uint32_Index > >& req = get_ranges_32();
   rman.health_check(*this);
   
   uint nodes_count = 0;
   
-  uint32 isouth((south + 91.0)*10000000+0.5);
-  uint32 inorth((north + 91.0)*10000000+0.5);
-  int32 iwest(west*10000000 + (west > 0 ? 0.5 : -0.5));
-  int32 ieast(east*10000000 + (east > 0 ? 0.5 : -0.5));
+  uint32 south_ = ilat_(south);
+  uint32 north_ = ilat_(north);
+  int32 west_ = ilon_(west);
+  int32 east_ = ilon_(east);
   
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
     (rman.get_transaction()->data_index(osm_base_settings().NODES));
@@ -494,14 +391,15 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
       rman.health_check(*this);
     }
     
-    uint32 ilat(::ilat(it.index().val(), it.object().ll_lower));
-    int32 ilon(::ilon(it.index().val(), it.object().ll_lower));
-    if ((ilat >= isouth) && (ilat <= inorth) &&
-        (((ilon >= iwest) && (ilon <= ieast))
-	  || ((ieast < iwest) && ((ilon >= iwest) || (ilon <= ieast)))))
-      nodes[it.index()].push_back(it.object());    
+    uint32 lat(::ilat(it.index().val(), it.object().ll_lower));
+    int32 lon(::ilon(it.index().val(), it.object().ll_lower));
+    if ((lat >= south_) && (lat <= north_) &&
+        (((lon >= west_) && (lon <= east_))
+	  || ((east_ < west_) && ((lon >= west_) || (lon <= east_)))))
+      into.nodes[it.index()].push_back(it.object());
   }
   
+  transfer_output(rman, into);
   rman.health_check(*this);
 }
 

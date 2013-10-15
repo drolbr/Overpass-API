@@ -23,27 +23,22 @@
 #include <string>
 #include <vector>
 #include "statement.h"
+    
 
-using namespace std;
-
-class Bbox_Query_Statement : public Statement
+class Bbox_Query_Statement : public Output_Statement
 {
   public:
-    Bbox_Query_Statement(int line_number_, const map< string, string >& attributes);
+    Bbox_Query_Statement(int line_number_, const map< string, string >& attributes,
+                         Query_Constraint* bbox_limitation = 0);
     virtual string get_name() const { return "bbox-query"; }
-    virtual string get_result_name() const { return output; }
-    virtual void forecast();
     virtual void execute(Resource_Manager& rman);
-    virtual ~Bbox_Query_Statement();
-    
+    virtual ~Bbox_Query_Statement();    
     static Generic_Statement_Maker< Bbox_Query_Statement > statement_maker;
     
     virtual Query_Constraint* get_query_constraint();
     
-    vector< pair< uint32, uint32 > > calc_ranges()
-    {
-      return ::calc_ranges(south, north, west, east);
-    }
+    const set< pair< Uint32_Index, Uint32_Index > >& get_ranges_32();
+    const set< pair< Uint31_Index, Uint31_Index > >& get_ranges_31();
     
     double get_south() const { return south; }
     double get_north() const { return north; }
@@ -51,9 +46,9 @@ class Bbox_Query_Statement : public Statement
     double get_east() const { return east; }
 
   private:
-    string output;
-    unsigned int type;
     double south, north, west, east;
+    set< pair< Uint32_Index, Uint32_Index > > ranges_32;
+    set< pair< Uint31_Index, Uint31_Index > > ranges_31;
     vector< Query_Constraint* > constraints;
 };
 

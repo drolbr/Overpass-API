@@ -139,7 +139,8 @@ void Item_Constraint::filter(Resource_Manager& rman, Set& into)
 
 Generic_Statement_Maker< Item_Statement > Item_Statement::statement_maker("item");
 
-Item_Statement::Item_Statement(int line_number_, const map< string, string >& input_attributes)
+Item_Statement::Item_Statement(int line_number_, const map< string, string >& input_attributes,
+                               Query_Constraint* bbox_limitation)
     : Statement(line_number_)
 {
   map< string, string > attributes;
@@ -158,15 +159,6 @@ Item_Statement::~Item_Statement()
     delete *it;
 }
 
-void Item_Statement::forecast()
-{
-/*  declare_union_set(output);
-  
-  finish_statement_forecast();
-  
-  display_full();
-  display_state();*/
-}
 
 Query_Constraint* Item_Statement::get_query_constraint()
 {

@@ -919,10 +919,21 @@ inline void recursively_calc_ranges
 /*---------------------------------------------------------------------------*/
 
 
+inline uint32 ilat_(double lat)
+{
+  return ((lat + 91.0)*10000000+0.5);
+}
+
+
+inline int32 ilon_(double lon)
+{
+  return (lon*10000000 + (lon > 0 ? 0.5 : -0.5));
+}
+
+
 inline uint32 ll_upper_(double lat, double lon)
 {
-  uint32 temp = ll_upper
-      ((uint32)((lat + 91.0)*10000000+0.5), (int32)(lon*10000000 + (lon > 0 ? 0.5 : -0.5)));
+  uint32 temp = ll_upper(ilat_(lat), ilon_(lon));
   return (temp ^ 0x40000000);
 }
   
@@ -943,7 +954,7 @@ inline uint32 ll_lower(uint32 ilat, int32 ilon)
 
 inline uint32 ll_lower(double lat, double lon)
 {
-  return ll_lower((uint32)((lat + 91.0)*10000000+0.5), (int32)(lon*10000000 + (lon > 0 ? 0.5 : -0.5)));
+  return ll_lower(ilat_(lat), ilon_(lon));
 }
 
 

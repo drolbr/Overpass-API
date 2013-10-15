@@ -23,6 +23,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include "../data/collect_members.h"
 #include "statement.h"
 
 using namespace std;
@@ -52,16 +53,14 @@ struct Prepared_Point
 };
 
 
-class Around_Statement : public Statement
+class Around_Statement : public Output_Statement
 {
   public:
-    Around_Statement(int line_number_, const map< string, string >& attributes);
+    Around_Statement(int line_number_, const map< string, string >& attributes,
+                     Query_Constraint* bbox_limitation = 0);
     virtual string get_name() const { return "around"; }
-    virtual string get_result_name() const { return output; }
-    virtual void forecast();
     virtual void execute(Resource_Manager& rman);
-    virtual ~Around_Statement();
-    
+    virtual ~Around_Statement();    
     static Generic_Statement_Maker< Around_Statement > statement_maker;
     
     virtual Query_Constraint* get_query_constraint();
@@ -75,12 +74,10 @@ class Around_Statement : public Statement
 
     bool is_inside(double lat, double lon) const;
     bool is_inside(double first_lat, double first_lon, double second_lat, double second_lon) const;
-    bool is_inside(const Way_Skeleton& way,
-		   const vector< pair< Uint32_Index, const Node_Skeleton* > >& way_members_by_id)
-		   const;
+    bool is_inside(const vector< Quad_Coord >& way_geometry) const;
     
   private:
-    string input, output;
+    string input;
     double radius;
     double lat;
     double lon;

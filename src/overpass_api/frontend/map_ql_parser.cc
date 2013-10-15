@@ -70,7 +70,6 @@ string decode_to_utf8(const string& token, string::size_type& pos, Error_Output*
   }
   else if (val < 0x800)
   {
-    cout<<val<<'\n';
     string buf = "  ";
     buf[0] = (0xc0 | (val>>6));
     buf[1] = (0x80 | (val & 0x3f));
@@ -78,7 +77,6 @@ string decode_to_utf8(const string& token, string::size_type& pos, Error_Output*
   }
   else
   {
-    cout<<val<<'\n';
     string buf = "   ";
     buf[0] = (0xe0 | (val>>12));
     buf[1] = (0x80 | ((val>>6) & 0x3f));
@@ -286,6 +284,59 @@ vector< TStatement* > collect_substatements(typename TStatement::Factory& stmt_f
   return substatements;
 }
 
+template< class TStatement >
+vector< TStatement* > collect_substatements_and_probe(typename TStatement::Factory& stmt_factory,
+                                            Tokenizer_Wrapper& token, Error_Output* error_output,
+                                            bool& is_difference)
+{
+  is_difference = false;
+  
+  vector< TStatement* > substatements;
+  clear_until_after(token, error_output, "(");
+  if (token.good() && *token != ")")
+  {
+    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output);
+    if (substatement)
+      substatements.push_back(substatement);
+    clear_until_after(token, error_output, ";", ")", "-", false);
+    if (*token == ";")
+      ++token;
+    if (*token == "-")
+    {
+      is_difference = true;
+      ++token;
+    }
+  }
+  if (token.good() && *token != ")")
+  {
+    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output);
+    if (substatement)
+      substatements.push_back(substatement);
+    clear_until_after(token, error_output, ";", ")", false);
+    if (*token == ";")
+      ++token;
+    if (is_difference && *token != ")")
+    {
+      if (error_output)
+        error_output->add_parse_error("difference takes always two operands", token.line_col().first);
+      clear_until_after(token, error_output, ")", false);
+    }
+  }
+  while (token.good() && *token != ")")
+  {
+    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output);
+    if (substatement)
+      substatements.push_back(substatement);
+    clear_until_after(token, error_output, ";", ")", false);
+    if (*token == ";")
+      ++token;
+  }
+  if (token.good())
+    ++token;
+  
+  return substatements;
+}
+
 //-----------------------------------------------------------------------------
 
 template< class TStatement >
@@ -295,6 +346,15 @@ TStatement* create_union_statement(typename TStatement::Factory& stmt_factory,
   map< string, string > attr;
   attr["into"] = into;
   return stmt_factory.create_statement("union", line_nr, attr);
+}
+
+template< class TStatement >
+TStatement* create_difference_statement(typename TStatement::Factory& stmt_factory,
+                                   string into, uint line_nr)
+{
+  map< string, string > attr;
+  attr["into"] = into;
+  return stmt_factory.create_statement("difference", line_nr, attr);
 }
 
 template< class TStatement >
@@ -564,6 +624,28 @@ pair< string, string > parse_setup(Tokenizer_Wrapper& token, Error_Output* error
     }
     clear_until_after(token, error_output, "]", true);
   }
+  else if (result.first == "bbox")
+  {
+    clear_until_after(token, error_output, ",", "]", false);
+    if (*token == ",")
+    {
+      ++token;
+      result.second += "," + get_text_token(token, error_output, "Value");
+      clear_until_after(token, error_output, ",", "]", false);
+    }
+    if (*token == ",")
+    {
+      ++token;
+      result.second += "," + get_text_token(token, error_output, "Value");
+      clear_until_after(token, error_output, ",", "]", false);
+    }
+    if (*token == ",")
+    {
+      ++token;
+      result.second += "," + get_text_token(token, error_output, "Value");
+      clear_until_after(token, error_output, "]");
+    }
+  }
   else
     clear_until_after(token, error_output, "]");
   return result;
@@ -575,15 +657,27 @@ TStatement* parse_union(typename TStatement::Factory& stmt_factory,
 {
   pair< uint, uint > line_col = token.line_col();
   
+  bool is_difference = false;
   vector< TStatement* > substatements =
-      collect_substatements< TStatement >(stmt_factory, token, error_output);
+      collect_substatements_and_probe< TStatement >(stmt_factory, token, error_output, is_difference);
   string into = probe_into(token, error_output);
   
-  TStatement* statement = create_union_statement< TStatement >(stmt_factory, into, line_col.first);
-  for (typename vector< TStatement* >::const_iterator it = substatements.begin();
-      it != substatements.end(); ++it)
-    statement->add_statement(*it, "");
-  return statement;
+  if (is_difference)
+  {
+    TStatement* statement = create_difference_statement< TStatement >(stmt_factory, into, line_col.first);
+    for (typename vector< TStatement* >::const_iterator it = substatements.begin();
+        it != substatements.end(); ++it)
+      statement->add_statement(*it, "");
+    return statement;
+  }
+  else
+  {
+    TStatement* statement = create_union_statement< TStatement >(stmt_factory, into, line_col.first);
+    for (typename vector< TStatement* >::const_iterator it = substatements.begin();
+        it != substatements.end(); ++it)
+      statement->add_statement(*it, "");
+    return statement;
+  }
 }
 
 template< class TStatement >
@@ -1198,6 +1292,25 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory,
   return parse_query< TStatement >(stmt_factory, type, from, token, error_output);
 }
 
+
+void process_osm_script_statement(Statement::Factory& stmt_factory, Statement* base_statement,
+    const vector< Category_Filter >& categories)
+{
+  Osm_Script_Statement* osm_script_statement = dynamic_cast< Osm_Script_Statement* >(base_statement);
+  if (osm_script_statement)
+  {
+    stmt_factory.bbox_limitation = osm_script_statement->get_bbox_limitation();
+    
+    if (!categories.empty())
+      osm_script_statement->set_categories(categories);
+  }
+}
+
+
+void process_osm_script_statement(Statement_Dump::Factory&, Statement_Dump*,
+    const vector< Category_Filter >&) {}
+
+
 template< class TStatement >
 void generic_parse_and_validate_map_ql
     (typename TStatement::Factory& stmt_factory,
@@ -1220,8 +1333,8 @@ void generic_parse_and_validate_map_ql
   
   TStatement* base_statement = stmt_factory.create_statement
       ("osm-script", token.line_col().first, attr);
-  if (!categories.empty())
-    ((Osm_Script_Statement*)base_statement)->set_categories(categories);
+      
+  process_osm_script_statement(stmt_factory, base_statement, categories);
       
   if (!attr.empty())
     clear_until_after(token, error_output, ";");

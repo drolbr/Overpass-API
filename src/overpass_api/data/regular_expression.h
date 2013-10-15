@@ -20,6 +20,7 @@
 #define DE__OSM3S___OVERPASS_API__DATA__REGULAR_EXPRESSION_H
 
 #include "sys/types.h"
+#include "locale.h"
 #include "regex.h"
 
 #include <iostream>
@@ -43,6 +44,7 @@ class Regular_Expression
   public:
     Regular_Expression(const string& regex, bool case_sensitive)
     {
+      setlocale(LC_ALL, "C.UTF-8");
       int case_flag = case_sensitive ? 0 : REG_ICASE;
       int error_no = regcomp(&preg, regex.c_str(), REG_EXTENDED|REG_NOSUB|case_flag);
       if (error_no != 0)
@@ -52,7 +54,9 @@ class Regular_Expression
     ~Regular_Expression() { regfree(&preg); }
     
     bool matches(const string& line) const
-    { return (regexec(&preg, line.c_str(), 0, 0, 0) == 0); }
+    {
+      return (regexec(&preg, line.c_str(), 0, 0, 0) == 0);
+    }
     
   private:
     regex_t preg;

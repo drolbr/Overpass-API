@@ -39,8 +39,8 @@ bool Coord_Query_Statement::is_used_ = false;
 Generic_Statement_Maker< Coord_Query_Statement > Coord_Query_Statement::statement_maker("coord-query");
 
 Coord_Query_Statement::Coord_Query_Statement
-    (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_)
+    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    : Output_Statement(line_number_)
 {
   is_used_ = true;
 
@@ -54,7 +54,7 @@ Coord_Query_Statement::Coord_Query_Statement
   eval_attributes_array(get_name(), attributes, input_attributes);
   
   input = attributes["from"];
-  output = attributes["into"];
+  set_output(attributes["into"]);
   
   lat = 100.0;
   lon = 200.0;
@@ -79,18 +79,6 @@ Coord_Query_Statement::Coord_Query_Statement
     }
   }
   
-}
-
-void Coord_Query_Statement::forecast()
-{
-/*  Set_Forecast& sf_out(declare_write_set(output));
-    
-  sf_out.area_count = 10;
-  declare_used_time(10);
-  finish_statement_forecast();
-    
-  display_full();
-  display_state();*/
 }
 
 
@@ -292,19 +280,7 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   }
   areas_inside.clear();
   
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes
-      (rman.sets()[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways
-      (rman.sets()[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations
-      (rman.sets()[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas
-      (rman.sets()[output].areas);
-  
-  nodes.clear();
-  ways.clear();
-  relations.clear();
-  areas.clear();
+  Set into;
   
   vector< uint32 > req_v;
   for (set< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
@@ -321,8 +297,9 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
       !(it == area_locations_db.discrete_end()); ++it)
   {
     if (areas_found.find(it.object().id) != areas_found.end())
-      areas[it.index()].push_back(it.object());
+      into.areas[it.index()].push_back(it.object());
   }
 
+  transfer_output(rman, into);
   rman.health_check(*this);
 }

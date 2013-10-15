@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# If you want munin monitoring then please copy this file to /etc/munin/plugins
+
+if [[ "$1" = "config" ]]; then
+{
+  echo 'graph_title Overpass API request count'
+  echo 'graph_vlabel per minute'
+  echo "overpass_request_started.label started"
+  echo "overpass_request_started.type COUNTER"
+  echo "overpass_request_started.cdef overpass_request_started,60,*"
+  echo "overpass_request_completed.label completed"
+  echo "overpass_request_completed.type COUNTER"
+  echo "overpass_request_completed.cdef overpass_request_completed,60,*"
+  exit 0
+}; fi
+
+STARTED=`ls -l /OVERPASS_DB_DIR/started_count.dot | awk '{ print $5 }'` # adapt directory
+echo "overpass_request_started.value $STARTED"
+
+COMPLETED=`ls -l /OVERPASS_DB_DIR/completed_count.dot | awk '{ print $5 }'` # adapt directory
+echo "overpass_request_completed.value $COMPLETED"
+

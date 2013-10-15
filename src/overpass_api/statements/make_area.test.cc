@@ -90,8 +90,8 @@ int main(int argc, char* args[])
     return 0;
   }
   string test_to_execute = args[1];
-  uint pattern_size = 0;
-  pattern_size = atoi(args[2]);
+  // uint pattern_size = 0;
+  // pattern_size = atoi(args[2]);
   string db_dir(args[3]);
   
   Error_Output* error_output(new Console_Output(Error_Output::ASSISTING));
@@ -99,7 +99,7 @@ int main(int argc, char* args[])
   
   Nonsynced_Transaction transaction(false, false, db_dir, "");
   Nonsynced_Transaction area_transaction(true, false, db_dir, "");
-  Resource_Manager rman(transaction, 0, area_transaction, 0, true);
+  Resource_Manager rman(transaction, 0, area_transaction, 0, new Area_Updater(area_transaction));
   
   if (test_to_execute == "create")
   {

@@ -38,7 +38,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
   set< TIndex > req;
   {
     Random_File< TIndex > random(rman.get_transaction()->random_index(&prop));
-    for (Uint64 i = lower; !(upper < i); ++i)
+    for (Uint64 i = lower; i < upper; ++i)
       req.insert(random.get(i.val()));
   }    
   Block_Backend< TIndex, TObject > elems_db(rman.get_transaction()->data_index(&prop));
@@ -46,7 +46,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
       it(elems_db.discrete_begin(req.begin(), req.end()));
       !(it == elems_db.discrete_end()); ++it)
   {
-    if (it.object().id.val() >= lower.val() && it.object().id.val() <= upper.val())
+    if (it.object().id.val() >= lower.val() && it.object().id.val() < upper.val())
       elems[it.index()].push_back(it.object());
   }
 }
@@ -61,7 +61,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
   set< TIndex > req;
   {
     Random_File< TIndex > random(rman.get_transaction()->random_index(&prop));
-    for (typename TObject::Id_Type i = lower.val(); !(upper.val() < i.val()); ++i)
+    for (typename TObject::Id_Type i = lower.val(); i.val() < upper.val(); ++i)
     {
       if (binary_search(ids.begin(), ids.end(), i) ^ invert_ids)
         req.insert(random.get(i.val()));
@@ -72,7 +72,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
       it(elems_db.discrete_begin(req.begin(), req.end()));
       !(it == elems_db.discrete_end()); ++it)
   {
-    if (!(it.object().id.val() < lower.val()) && !(upper.val() < it.object().id.val())
+    if (!(it.object().id.val() < lower.val()) && it.object().id.val() < upper.val()
         && (binary_search(ids.begin(), ids.end(), it.object().id) ^ invert_ids))
       elems[it.index()].push_back(it.object());
   }
@@ -89,7 +89,7 @@ void collect_elems_flat(Resource_Manager& rman,
   for (Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
       it = elems_db.flat_begin(); !(it == elems_db.flat_end()); ++it)
   {
-    if (!(it.object().id < lower) && !(upper < it.object().id)
+    if (!(it.object().id < lower) && it.object().id < upper
         && (binary_search(ids.begin(), ids.end(), it.object().id) ^ invert_ids))
       elems[it.index()].push_back(it.object());
   }
@@ -107,7 +107,7 @@ void filter_elems(Uint64 lower, Uint64 upper,
     for (typename vector< TObject >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
-      if (iit->id.val() >= lower.val() && iit->id.val() <= upper.val())
+      if (iit->id.val() >= lower.val() && iit->id.val() < upper.val())
 	local_into.push_back(*iit);
     }
     it->second.swap(local_into);
@@ -217,8 +217,8 @@ void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into)
 //-----------------------------------------------------------------------------
 
 Id_Query_Statement::Id_Query_Statement
-    (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_)
+    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    : Output_Statement(line_number_)
 {
   map< string, string > attributes;
   
@@ -230,7 +230,7 @@ Id_Query_Statement::Id_Query_Statement
   
   Statement::eval_attributes_array(get_name(), attributes, input_attributes);
   
-  output = attributes["into"];
+  set_output(attributes["into"]);
   
   if (attributes["type"] == "node")
     type = Statement::NODE;
@@ -264,43 +264,30 @@ Id_Query_Statement::Id_Query_Statement
 	  <<" the only allowed values are positive integers.";
       add_static_error(temp.str());
     }
+    ++upper;
   }
   else
   {
     lower = ref;
-    upper = ref;
+    upper = ++ref;
   }
 }
 
-void Id_Query_Statement::forecast()
-{
-}
 
 void Id_Query_Statement::execute(Resource_Manager& rman)
 {
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes
-      (rman.sets()[output].nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways
-      (rman.sets()[output].ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations
-      (rman.sets()[output].relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas
-      (rman.sets()[output].areas);
-  
-  nodes.clear();
-  ways.clear();
-  relations.clear();
-  areas.clear();
+  Set into;
 
   if (type == NODE)
-    collect_elems(rman, *osm_base_settings().NODES, lower, upper, nodes);
+    collect_elems(rman, *osm_base_settings().NODES, lower, upper, into.nodes);
   else if (type == WAY)
-    collect_elems(rman, *osm_base_settings().WAYS, lower, upper, ways);
+    collect_elems(rman, *osm_base_settings().WAYS, lower, upper, into.ways);
   else if (type == RELATION)
-    collect_elems(rman, *osm_base_settings().RELATIONS, lower, upper, relations);
+    collect_elems(rman, *osm_base_settings().RELATIONS, lower, upper, into.relations);
   else if (type == AREA)
-    collect_elems_flat(rman, lower.val(), upper.val(), vector< Area_Skeleton::Id_Type >(), true, areas);
+    collect_elems_flat(rman, lower.val(), upper.val(), vector< Area_Skeleton::Id_Type >(), true, into.areas);
 
+  transfer_output(rman, into);
   rman.health_check(*this);
 }
 

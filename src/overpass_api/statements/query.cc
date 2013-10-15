@@ -37,8 +37,8 @@ bool Query_Statement::area_query_exists_ = false;
 Generic_Statement_Maker< Query_Statement > Query_Statement::statement_maker("query");
 
 Query_Statement::Query_Statement
-    (int line_number_, const map< string, string >& input_attributes)
-    : Statement(line_number_)
+    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    : Output_Statement(line_number_)
 {
   map< string, string > attributes;
   
@@ -47,7 +47,7 @@ Query_Statement::Query_Statement
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
-  output = attributes["into"];
+  set_output(attributes["into"]);
   if (attributes["type"] == "node")
     type = QUERY_NODE;
   else if (attributes["type"] == "way")
@@ -67,6 +67,9 @@ Query_Statement::Query_Statement
 	<<" the only allowed values are \"node\", \"way\", \"relation\" or \"area\".";
     add_static_error(temp.str());
   }
+  
+  if (bbox_limitation)
+    constraints.push_back(bbox_limitation);
 }
 
 void Query_Statement::add_statement(Statement* statement, string text)
@@ -106,9 +109,6 @@ void Query_Statement::add_statement(Statement* statement, string text)
     substatement_error(get_name(), statement);
 }
 
-void Query_Statement::forecast()
-{
-}
 
 set< Tag_Index_Global > get_kv_req(const string& key, const string& value)
 {
@@ -505,11 +505,123 @@ void filter_ids_by_tags
 }
 
 
+template< typename Id_Type >
+void filter_ids_by_ntags
+  (const map< string, pair< vector< Regular_Expression* >, vector< string > > >& keys,
+   const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
+   typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
+   uint32 coarse_index,
+   vector< Id_Type >& new_ids)
+{
+  vector< Id_Type > removed_ids;
+  string last_key, last_value;  
+  bool relevant = false;
+  bool valid = false;
+  map< string, pair< vector< Regular_Expression* >, vector< string > > >::const_iterator
+      key_it = keys.begin();
+  
+  while ((!(tag_it == items_db.range_end())) &&
+      (((tag_it.index().index) & 0xffffff00) == coarse_index))
+  {
+    if (tag_it.index().key != last_key)
+    {
+      last_value = "";
+      
+      if (relevant)
+      {
+        ++key_it;
+        sort(removed_ids.begin(), removed_ids.end());
+        removed_ids.erase(unique(removed_ids.begin(), removed_ids.end()), removed_ids.end());
+        new_ids.erase(set_difference(new_ids.begin(), new_ids.end(),
+                      removed_ids.begin(), removed_ids.end(), new_ids.begin()), new_ids.end());
+      }
+      relevant = false;
+      
+      last_key = tag_it.index().key;
+      while (key_it != keys.end() && last_key > key_it->first)
+        ++key_it;
+      
+      if (key_it == keys.end())
+        break;
+      
+      if (last_key == key_it->first)
+      {
+        relevant = true;
+        removed_ids.clear();
+      }
+    }
+    
+    if (relevant)
+    {
+      if (tag_it.index().value != last_value)
+      {
+        valid = false;
+        for (vector< Regular_Expression* >::const_iterator rit = key_it->second.first.begin();
+            rit != key_it->second.first.end(); ++rit)
+          valid |= (*rit)->matches(tag_it.index().value);
+        for (vector< string >::const_iterator rit = key_it->second.second.begin();
+            rit != key_it->second.second.end(); ++rit)
+          valid |= (*rit == tag_it.index().value);
+        last_value = tag_it.index().value;
+      }
+      
+      if (valid)
+        removed_ids.push_back(tag_it.object());
+    }
+
+    ++tag_it;
+  }
+  while ((!(tag_it == items_db.range_end())) &&
+      (((tag_it.index().index) & 0xffffff00) == coarse_index))
+    ++tag_it;
+  
+  sort(removed_ids.begin(), removed_ids.end());
+  removed_ids.erase(unique(removed_ids.begin(), removed_ids.end()), removed_ids.end());
+  new_ids.erase(set_difference(new_ids.begin(), new_ids.end(),
+                removed_ids.begin(), removed_ids.end(), new_ids.begin()), new_ids.end());
+  
+  sort(new_ids.begin(), new_ids.end());
+}
+
+
+template< typename Id_Type >
+void filter_ids_by_ntags
+  (map< uint32, vector< Id_Type > >& ids_by_coarse,
+   const map< string, pair< vector< Regular_Expression* >, vector< string > > >& keys,
+   const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
+   typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
+   uint32 coarse_index)
+{
+  vector< Id_Type > new_ids = ids_by_coarse[coarse_index & 0x7fffff00];
+  
+  filter_ids_by_ntags(keys, items_db, tag_it, coarse_index & 0x7fffff00, new_ids);
+
+  new_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
+    
+  filter_ids_by_ntags(keys, items_db, tag_it, coarse_index | 0x80000000, new_ids);
+
+  vector< Id_Type > old_ids;
+  old_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
+  set_intersection(old_ids.begin(), old_ids.end(), new_ids.begin(), new_ids.end(),
+      back_inserter(ids_by_coarse[coarse_index & 0x7fffff00]));
+}
+
+
 template< class TIndex, class TObject >
 void Query_Statement::filter_by_tags
     (map< TIndex, vector< TObject > >& items,
      const File_Properties& file_prop, Resource_Manager& rman, Transaction& transaction)
-{
+{  
+  // generate set of relevant coarse indices
+  set< TIndex > coarse_indices;
+  map< uint32, vector< typename TObject::Id_Type > > ids_by_coarse;
+  generate_ids_by_coarse(coarse_indices, ids_by_coarse, items);
+  
+  // formulate range query
+  set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
+  formulate_range_query(range_set, coarse_indices);
+
+  // prepare straight keys
   map< string, vector< Regular_Expression* > > key_union;
   for (vector< string >::const_iterator it = keys.begin(); it != keys.end();
       ++it)
@@ -517,15 +629,6 @@ void Query_Statement::filter_by_tags
   for (vector< pair< string, Regular_Expression* > >::const_iterator
       it = key_regexes.begin(); it != key_regexes.end(); ++it)
     key_union[it->first].push_back(it->second);
-  
-  //generate set of relevant coarse indices
-  set< TIndex > coarse_indices;
-  map< uint32, vector< typename TObject::Id_Type > > ids_by_coarse;
-  generate_ids_by_coarse(coarse_indices, ids_by_coarse, items);
-  
-  //formulate range query
-  set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  formulate_range_query(range_set, coarse_indices);
   
   // iterate over the result
   map< TIndex, vector< TObject > > result;
@@ -538,8 +641,7 @@ void Query_Statement::filter_by_tags
      Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
   typename map< TIndex, vector< TObject > >::const_iterator
       item_it(items.begin());
-  for (typename set< TIndex >::const_iterator
-      it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
+  for (typename set< TIndex >::const_iterator it = coarse_indices.begin(); it != coarse_indices.end(); ++it)
   {
     if (++coarse_count >= 1024)
     {
@@ -560,6 +662,54 @@ void Query_Statement::filter_by_tags
         if (binary_search(ids_by_coarse[it->val()].begin(),
             ids_by_coarse[it->val()].end(), eit->id))
 	  result[item_it->first.val()].push_back(*eit);
+      }
+      ++item_it;
+    }
+  }
+    
+  items.swap(result);
+
+  if (key_nregexes.empty() && key_nvalues.empty())
+    return;
+  
+  // prepare negated keys
+  map< string, pair< vector< Regular_Expression* >, vector< string > > > nkey_union;
+  for (vector< pair< string, Regular_Expression* > >::const_iterator
+      it = key_nregexes.begin(); it != key_nregexes.end(); ++it)
+    nkey_union[it->first].first.push_back(it->second);
+  for (vector< pair< string, string > >::const_iterator
+      it = key_nvalues.begin(); it != key_nvalues.end(); ++it)
+    nkey_union[it->first].second.push_back(it->second);
+  
+  // iterate over the result
+  result.clear();
+  coarse_count = 0;
+  typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
+      ntag_it(items_db.range_begin
+      (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+       Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+  item_it = items.begin();
+  for (typename set< TIndex >::const_iterator it = coarse_indices.begin(); it != coarse_indices.end(); ++it)
+  {
+    if (++coarse_count >= 1024)
+    {
+      coarse_count = 0;
+      rman.health_check(*this);
+    }
+    
+    sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
+    
+    filter_ids_by_ntags(ids_by_coarse, nkey_union, items_db, ntag_it, it->val());
+    
+    while ((item_it != items.end()) &&
+        ((item_it->first.val() & 0x7fffff00) == it->val()))
+    {
+      for (typename vector< TObject >::const_iterator eit = item_it->second.begin();
+           eit != item_it->second.end(); ++eit)
+      {
+        if (binary_search(ids_by_coarse[it->val()].begin(),
+            ids_by_coarse[it->val()].end(), eit->id))
+          result[item_it->first.val()].push_back(*eit);
       }
       ++item_it;
     }
@@ -589,7 +739,7 @@ void Query_Statement::progress_1(vector< Id_Type >& ids,
     if (ids.empty())
       answer_state = data_collected;
   }
-  else if (!key_nvalues.empty() || !key_nregexes.empty())
+  else if ((!key_nvalues.empty() || !key_nregexes.empty()) && !check_keys_late)
   {
     invert_ids = true;
     collect_non_ids< Id_Type >(file_prop, rman).swap(ids);
@@ -634,8 +784,7 @@ void Query_Statement::execute(Resource_Manager& rman)
   rman.health_check(*this);
 
   bool check_keys_late = false;
-  for (vector< Query_Constraint* >::iterator it = constraints.begin();
-      it != constraints.end() && answer_state < data_collected; ++it)
+  for (vector< Query_Constraint* >::iterator it = constraints.begin(); it != constraints.end(); ++it)
     check_keys_late |= (*it)->delivers_data();
 
   {
@@ -713,8 +862,8 @@ void Query_Statement::execute(Resource_Manager& rman)
 	if ((*it)->get_data(*this, rman, into, range_req_31, type, ids, invert_ids))
 	  answer_state = data_collected;
       }
-    }  
-    
+    }
+  
     set_progress(4);
     rman.health_check(*this);
     
@@ -747,8 +896,6 @@ void Query_Statement::execute(Resource_Manager& rman)
     }
     else if (type == QUERY_AREA)
     {
-//       for (vector< Uint32_Index >::const_iterator it = ids.begin(); it != ids.end(); ++it)
-// 	cout<<it->val()<<'\n';
       if (answer_state < data_collected)
 	get_elements_by_id_from_db(into.areas, ids, invert_ids, rman, *area_settings().AREAS);
     }
@@ -791,12 +938,8 @@ void Query_Statement::execute(Resource_Manager& rman)
   clear_empty_indices(into.ways);
   clear_empty_indices(into.relations);
   clear_empty_indices(into.areas);
-  
-  into.nodes.swap(rman.sets()[output].nodes);
-  into.ways.swap(rman.sets()[output].ways);
-  into.relations.swap(rman.sets()[output].relations);
-  into.areas.swap(rman.sets()[output].areas);
-  
+
+  transfer_output(rman, into);
   rman.health_check(*this);
 }
 
@@ -805,7 +948,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 Generic_Statement_Maker< Has_Kv_Statement > Has_Kv_Statement::statement_maker("has-kv");
 
 Has_Kv_Statement::Has_Kv_Statement
-    (int line_number_, const map< string, string >& input_attributes)
+    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
     : Statement(line_number_), regex(0), straight(true)
 {
   map< string, string > attributes;
@@ -875,9 +1018,4 @@ Has_Kv_Statement::~Has_Kv_Statement()
 {
   if (regex)
     delete regex;
-}
-
-void Has_Kv_Statement::forecast()
-{
-  // will never be called
 }

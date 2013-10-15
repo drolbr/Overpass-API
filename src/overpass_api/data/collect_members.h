@@ -72,4 +72,30 @@ vector< Node::Id_Type > way_nd_ids(const map< Uint31_Index, vector< Way_Skeleton
 const map< uint32, string >& relation_member_roles(Transaction& transaction);
 uint32 determine_role_id(Transaction& transaction, const string& role);
 
+
+void add_way_to_area_blocks(const vector< Quad_Coord >& coords,
+                            uint32 id, map< Uint31_Index, vector< Area_Block > >& areas);
+
+
+vector< Quad_Coord > make_geometry(const Way_Skeleton& way, const vector< Node >& nodes);
+
+
+void filter_ways_by_ranges(map< Uint31_Index, vector< Way_Skeleton > >& ways,
+                           const set< pair< Uint31_Index, Uint31_Index > >& ranges);
+
+
+class Way_Geometry_Store
+{
+public:
+  Way_Geometry_Store(const map< Uint31_Index, vector< Way_Skeleton > >& ways,
+                     const Statement& query, Resource_Manager& rman);
+  
+  // return the empty vector if the way is not found
+  vector< Quad_Coord > get_geometry(const Way_Skeleton& way);
+  
+private:
+  vector< Node > nodes;
+};
+
+
 #endif

@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     string template_name = "default.wiki";
     bool redirect = true;
     string xml_raw(get_xml_cgi(&error_output, 16*1024*1024, url, redirect, template_name,
-	error_output.is_options_request, error_output.allow_headers, error_output.has_origin));
+	error_output.http_method, error_output.allow_headers, error_output.has_origin));
     
     if (error_output.display_encoding_errors())
       return 0;
@@ -76,12 +76,13 @@ int main(int argc, char *argv[])
     }
     else
     {
-      Osm_Script_Statement temp(0, map< string, string >());
+      Osm_Script_Statement temp(0, map< string, string >(), 0);
       max_allowed_time = temp.get_max_allowed_time();
       max_allowed_space = temp.get_max_allowed_space();
     }
 
-    if (error_output.is_options_request)
+    if (error_output.http_method == error_output.http_options
+        || error_output.http_method == error_output.http_head)
     {
       if (!osm_script || osm_script->get_type() == "xml")
         error_output.write_xml_header("", "");
@@ -93,9 +94,9 @@ int main(int argc, char *argv[])
     else
     {
       // open read transaction and log this.
-      int area_level = 0;
-      Dispatcher_Stub dispatcher("", &error_output, xml_raw, area_level,
-			         max_allowed_time, max_allowed_space);
+      int area_level = determine_area_level(&error_output, 0);
+      Dispatcher_Stub dispatcher("", &error_output, xml_raw,
+			         get_uses_meta_data(), area_level, max_allowed_time, max_allowed_space);
     
       if (!osm_script || osm_script->get_type() == "xml")
         error_output.write_xml_header
@@ -159,14 +160,16 @@ int main(int argc, char *argv[])
     if (e.origin.substr(e.origin.size()-9) == "::timeout")
     {
       error_output.write_html_header("", "", 504, false);
-      if (!error_output.is_options_request)
+      if (error_output.http_method == error_output.http_get
+          || error_output.http_method == error_output.http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
             <<". Probably the server is overcrowded.\n";
     }
     else if (e.origin.substr(e.origin.size()-14) == "::rate_limited")
     {
       error_output.write_html_header("", "", 429, false);
-      if (!error_output.is_options_request)
+      if (error_output.http_method == error_output.http_get
+          || error_output.http_method == error_output.http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
             <<". Another request from your IP is still running.\n";
     }

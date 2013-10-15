@@ -46,10 +46,10 @@ public:
   
   Resource_Manager(Transaction& transaction_, Error_Output* error_output_,
 		   Transaction& area_transaction_, Watchdog_Callback* watchdog_,
-		   bool writeable = false)
+		   Area_Usage_Listener* area_updater__)
       : transaction(&transaction_), error_output(error_output_),
         area_transaction(&area_transaction_),
-        area_updater_(writeable ? new Area_Updater(area_transaction_) : 0),
+        area_updater_(area_updater__),
 	watchdog(watchdog_), start_time(time(NULL)), last_ping_time(0), last_report_time(0),
 	max_allowed_time(0), max_allowed_space(0) {}
 	
@@ -65,7 +65,7 @@ public:
     return sets_;
   }
   
-  Area_Updater* area_updater()
+  Area_Usage_Listener* area_updater()
   {
     return area_updater_;
   }
@@ -93,7 +93,7 @@ private:
   Transaction* transaction;
   Error_Output* error_output;
   Transaction* area_transaction;
-  Area_Updater* area_updater_;
+  Area_Usage_Listener* area_updater_;
   Watchdog_Callback* watchdog;
   int start_time;
   uint32 last_ping_time;

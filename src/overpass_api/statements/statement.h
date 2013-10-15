@@ -74,7 +74,7 @@ class Statement
   public:
     struct Factory
     {
-      Factory() : error_output_(error_output) {}
+      Factory() : error_output_(error_output), bbox_limitation(0) {}
       ~Factory();
       
       Statement* create_statement(string element, int line_number,
@@ -82,13 +82,14 @@ class Statement
       
       vector< Statement* > created_statements;
       Error_Output* error_output_;
+      Query_Constraint* bbox_limitation;
     };
     
     class Statement_Maker
     {
       public:
 	virtual Statement* create_statement
-	    (int line_number, const map< string, string >& attributes) = 0;
+	    (int line_number, const map< string, string >& attributes, Query_Constraint* bbox_limitation) = 0;
 	virtual ~Statement_Maker() {}
     };
     
@@ -100,7 +101,6 @@ class Statement
     virtual void add_final_text(string text);
     virtual string get_name() const = 0;
     virtual string get_result_name() const = 0;
-    virtual void forecast() = 0;
     virtual void execute(Resource_Manager& rman) = 0;
 
     // May return 0. The ownership of the Query_Constraint remains at the called
@@ -162,11 +162,31 @@ class Generic_Statement_Maker : public Statement::Statement_Maker
 {
   public:
     virtual Statement* create_statement
-    (int line_number, const map< string, string >& attributes)
-    { return new TStatement(line_number, attributes); }
+        (int line_number, const map< string, string >& attributes, Query_Constraint* bbox_limitation)
+    {
+      return new TStatement(line_number, attributes, bbox_limitation);
+    }
     
     Generic_Statement_Maker(const string& name) { Statement::maker_by_name()[name] = this; }
     virtual ~Generic_Statement_Maker() {}
 };
+
+
+class Output_Statement : public Statement
+{
+  public:
+    Output_Statement(int line_number) : Statement(line_number), output("_") {}
+    
+    virtual string get_result_name() const { return output; }
+    
+  protected:
+    void set_output(std::string output_) { output = output_; }
+
+    void transfer_output(Resource_Manager& rman, Set& into) const;
+  
+  private:
+    string output;
+};
+
 
 #endif

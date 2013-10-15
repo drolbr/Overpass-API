@@ -105,11 +105,18 @@ namespace
 }
 
 string get_xml_cgi(Error_Output* error_output, uint32 max_input_size, string& url, bool& redirect,
-		   string& template_name, bool& is_options, string& allow_header, bool& has_origin)
+		   string& template_name, Web_Output::Http_Methods& http_method, string& allow_header,
+                   bool& has_origin)
 {
   // Check for various HTTP headers
   char* method = getenv("REQUEST_METHOD");
-  is_options = ((method) && (!strncmp(method, "OPTIONS", 8)));
+  if (method)
+  {
+    if (!strncmp(method, "HEAD", 5))
+      http_method = Web_Output::http_head;
+    else if (!strncmp(method, "OPTIONS", 8))
+      http_method = Web_Output::http_options;
+  }
   char* allow_header_c = getenv("HTTP_ACCESS_CONTROL_REQUEST_HEADERS");
   allow_header = ((allow_header_c) ? allow_header_c : "");
   char* origin = getenv("HTTP_ORIGIN");
@@ -128,11 +135,11 @@ string get_xml_cgi(Error_Output* error_output, uint32 max_input_size, string& ur
   
   if (pos == input.size())
   {
-    if (is_options)
+    if (http_method == Web_Output::http_options)
       // if we have an OPTIONS request then assume the query is valid
       // As a quick hack set the input to a valid dummy value
       return "out;";
-    
+
     // otherwise use POST input
     if (pos == 0)
     {
