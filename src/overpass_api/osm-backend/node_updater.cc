@@ -59,38 +59,6 @@ Update_Node_Logger::~Update_Node_Logger()
 // New node_updater:
 
 
-template< typename Id_Type >
-std::map< Id_Type, std::set< Uint31_Index > > get_existing_idx_lists
-    (const std::vector< Id_Type >& ids,
-     const std::vector< std::pair< Id_Type, Uint31_Index > >& ids_with_position,
-     Transaction& transaction, const File_Properties& file_properties)
-{
-  std::map< Id_Type, std::set< Uint31_Index > > result;
-  
-  std::set< Id_Type > req;
-  typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator
-      it_pos = ids_with_position.begin();
-  for (typename std::vector< Id_Type >::const_iterator it = ids.begin(); it != ids.end(); ++it)
-  {
-    if (it_pos != ids_with_position.end() && *it == it_pos->first)
-    {
-      if (it_pos->second.val() == 0xff)
-        req.insert(*it);
-      else
-        result[*it].insert(it_pos->second);
-      ++it_pos;
-    }
-  }
-  
-  Block_Backend< Id_Type, Uint31_Index > db(transaction.data_index(&file_properties));
-  for (typename Block_Backend< Id_Type, Uint31_Index >::Discrete_Iterator
-      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
-    result[it.index()].insert(it.object());
-
-  return result;
-}
-
-
 bool geometrically_equal(const Node_Skeleton& a, const Node_Skeleton& b)
 {
   return (a.ll_lower == b.ll_lower);
@@ -177,12 +145,14 @@ void compute_new_attic_skeletons
   {
     ++next_it;
     if (next_it != new_data.data.end() && it->elem.id == next_it->elem.id)
+    {
       // A later version exist also in new_data. Make this version a (short-lived) attic version.
       if (it->idx.val() != 0 && (next_it->idx.val() == 0 || !geometrically_equal(it->elem, next_it->elem)))
       {
         full_attic[it->idx].insert(Attic< Element_Skeleton >(it->elem, next_it->meta.timestamp));
         idx_lists[it->elem.id].insert(it->idx);
       }
+    }
     
     if (last_id == it->elem.id)
       // An earlier version exists also in new_data. So there is nothing to do here.
@@ -645,7 +615,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
                                  *transaction, *attic_settings().NODE_IDX_LIST);
 
     // Compute which objects really have changed
-    std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > > new_attic_skeletons;
+    new_attic_skeletons.clear();
     std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > > new_attic_idx_lists = existing_idx_lists;
     compute_new_attic_skeletons(new_data, existing_map_positions, attic_skeletons,
                                 new_attic_skeletons, new_attic_idx_lists);
@@ -731,6 +701,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
   {
     new_skeletons.clear();
     attic_skeletons.clear();
+    new_attic_skeletons.clear();
   }
   
   if (partial_possible && !partial && (update_counter > 0))

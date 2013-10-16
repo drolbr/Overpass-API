@@ -70,6 +70,7 @@ std::vector< typename Element_Skeleton::Id_Type > ids_to_update
   for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
       it = new_data.data.begin(); it != new_data.data.end(); ++it)
     result.push_back(it->elem.id);
+  std::sort(result.begin(), result.end());
   result.erase(std::unique(result.begin(), result.end()), result.end());
   return result;
 }
@@ -425,6 +426,38 @@ void update_elements
 {
   Block_Backend< Index, Object > db(transaction.data_index(&file_properties));
   db.update(attic_objects, new_objects);
+}
+
+
+template< typename Id_Type >
+std::map< Id_Type, std::set< Uint31_Index > > get_existing_idx_lists
+    (const std::vector< Id_Type >& ids,
+     const std::vector< std::pair< Id_Type, Uint31_Index > >& ids_with_position,
+     Transaction& transaction, const File_Properties& file_properties)
+{
+  std::map< Id_Type, std::set< Uint31_Index > > result;
+  
+  std::set< Id_Type > req;
+  typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator
+      it_pos = ids_with_position.begin();
+  for (typename std::vector< Id_Type >::const_iterator it = ids.begin(); it != ids.end(); ++it)
+  {
+    if (it_pos != ids_with_position.end() && *it == it_pos->first)
+    {
+      if (it_pos->second.val() == 0xff)
+        req.insert(*it);
+      else
+        result[*it].insert(it_pos->second);
+      ++it_pos;
+    }
+  }
+  
+  Block_Backend< Id_Type, Uint31_Index > db(transaction.data_index(&file_properties));
+  for (typename Block_Backend< Id_Type, Uint31_Index >::Discrete_Iterator
+      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+    result[it.index()].insert(it.object());
+
+  return result;
 }
   
 

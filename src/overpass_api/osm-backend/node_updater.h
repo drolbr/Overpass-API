@@ -335,6 +335,8 @@ struct Node_Updater
       { return new_skeletons; }
   const std::map< Uint31_Index, std::set< Node_Skeleton > > get_attic_skeletons() const
       { return attic_skeletons; }
+  const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > > get_new_attic_skeletons() const
+      { return new_attic_skeletons; }
   
 private:
   uint32 update_counter;
@@ -356,6 +358,7 @@ private:
 
   std::map< Uint31_Index, std::set< Node_Skeleton > > new_skeletons;
   std::map< Uint31_Index, std::set< Node_Skeleton > > attic_skeletons;
+  std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > > new_attic_skeletons;
 
   vector< pair< OSM_Element_Metadata_Skeleton< Node::Id_Type >, uint32 > > nodes_meta_to_insert;
   vector< OSM_Element_Metadata_Skeleton< Node::Id_Type > > nodes_meta_to_delete;

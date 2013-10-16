@@ -60,12 +60,12 @@ Update_Way_Logger::~Update_Way_Logger()
 }
 
 
-Way_Updater::Way_Updater(Transaction& transaction_, bool meta_)
+Way_Updater::Way_Updater(Transaction& transaction_, meta_modes meta_)
   : update_counter(0), transaction(&transaction_),
     external_transaction(true), partial_possible(false), meta(meta_)
 {}
 
-Way_Updater::Way_Updater(string db_dir_, bool meta_)
+Way_Updater::Way_Updater(string db_dir_, meta_modes meta_)
   : update_counter(0), transaction(0),
     external_transaction(false), partial_possible(true), db_dir(db_dir_), meta(meta_)
 {
@@ -74,12 +74,6 @@ Way_Updater::Way_Updater(string db_dir_, bool meta_)
        osm_base_settings().WAYS->get_file_name_trunk() +
        osm_base_settings().WAYS->get_data_suffix() +
        osm_base_settings().WAYS->get_index_suffix());
-}
-
-namespace
-{
-  Way_Comparator_By_Id way_comparator_by_id;
-  Way_Equal_Id way_equal_id;
 }
 
 
@@ -98,29 +92,224 @@ namespace
 // Auf Basis der Skeletons und geladenen Tags
 // Neue Tags aus new_data, wenn dort mind. eine Version vorliegt, sonst aus geladenen Tags
 
-//   std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > new_map_positions
-//       = new_idx_positions(new_data);
-//   // TODO: old code
-//      ...
-//   
-//   if (meta == keep_attic)
-//   {
-//     // TODO: For compatibility with the update_logger, this doesn't happen during the tag processing itself.
-//     //cancel_out_equal_tags(attic_local_tags, new_local_tags);
-// 
-//     // Collect all data of existing attic id indexes
-//     std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > existing_attic_map_positions
-//         = get_existing_map_positions(ids_to_update_, *transaction, *attic_settings().NODES);
-//     std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > > existing_idx_lists
-//         = get_existing_idx_lists(ids_to_update_, existing_attic_map_positions,
-//                                  *transaction, *attic_settings().NODE_IDX_LIST);
+// ...
+
+
+bool geometrically_equal(const Way_Skeleton& a, const Way_Skeleton& b)
+{
+  return (a.nds == b.nds);
+}
+
 
 // Älteste Version ist immer alte Nodes + altes Skeleton
 // Neueste Version ist schon geklärt
 // Dazwischen: anhand der timestamps ausrechnen!
-//
+
+// Liste der Timestamps pro Node und jeweils gültige Koordinate aus new_attic_node_skeletons erstellen
+// Liste der Zeitpunkte pro Way anhand new_data-Zeitpunkte plus Node-Zeitpunkte erstellen:
+// - durchlaufe alle Einträge in new_data für den jeweils aktuellen Zustand
+// - durchlaufe alle Einträge in implicitly_moved_skeletons für Gesamtzustand
+// An jedem Zustandswechsel wird der Änderungszeitpunkt am alten Element eingetragen
+// Hat ein Way an einem Zeitpunkt seinen Index verändert,
+// so muss am neuen Standort zusätzlich ein Undelete-Eintrag gesetzt werden,
+// wenn es nicht zum gleichen Zeitpunkt ein Meta-Update gegeben hat.
+
 // Aus exakter Zustandfolge leiten sich auch Tags und Meta her:
 // Beides jeweils kopieren für indirekt geänderte Wege
+
+
+void compute_idx_and_geometry
+    (Uint31_Index& idx, Way_Skeleton& skeleton,
+     uint64 expiration_timestamp,
+     const std::map< Node_Skeleton::Id_Type,
+         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >& nodes_by_id)
+{
+  std::vector< Quad_Coord > geometry;
+  
+  for (std::vector< Node_Skeleton::Id_Type >::const_iterator it = skeleton.nds.begin();
+       it != skeleton.nds.end(); ++it)
+  {
+    std::map< Node_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >
+        ::const_iterator nit = nodes_by_id.find(*it);
+    if (nit != nodes_by_id.end() && !nit->second.empty())
+    {
+      std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > >::const_iterator
+          it2 = nit->second.begin();
+      while (it2 != nit->second.end() && it2->second.timestamp < expiration_timestamp)
+        ++it2;
+      if (it2 != nit->second.end())
+        geometry.push_back(Quad_Coord(it2->first.val(), it2->second.ll_lower));
+      // Otherwise the node has expired before our way - something has gone wrong seriously.
+    }
+    // Otherwise the node is not contained in our list - something has gone wrong seriously.
+  }
+  
+  vector< uint32 > nd_idxs;
+  for (std::vector< Quad_Coord >::const_iterator it = geometry.begin(); it != geometry.end(); ++it)
+    nd_idxs.push_back(it->ll_upper);
+    
+  idx = Way::calc_index(nd_idxs);
+      
+  if (Way::indicates_geometry(idx))
+    skeleton.geometry.swap(geometry);
+  else
+    skeleton.geometry.clear();
+}
+
+
+/* Checks the nds of the way whether in the time window an underlying node has moved.
+ * If yes, the necessary intermediate versions are generated.
+ */
+void add_intermediate_versions
+    (const Way_Skeleton& skeleton, const uint64 old_timestamp, const uint64 new_timestamp,
+     const std::map< Node_Skeleton::Id_Type,
+         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >& nodes_by_id,
+     bool add_last_version, Uint31_Index attic_idx,
+     std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > >& full_attic,
+     std::map< Way_Skeleton::Id_Type, std::set< Uint31_Index > >& idx_lists)
+{
+  std::vector< uint64 > relevant_timestamps;
+  for (std::vector< Node_Skeleton::Id_Type >::const_iterator it = skeleton.nds.begin();
+       it != skeleton.nds.end(); ++it)
+  {
+    std::map< Node_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >
+        ::const_iterator nit = nodes_by_id.find(*it);
+    if (nit != nodes_by_id.end() && !nit->second.empty())
+    {
+      for (std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > >::const_iterator
+          it2 = nit->second.begin(); it2 != nit->second.end(); ++it2)
+      {
+        if (old_timestamp < it2->second.timestamp && it2->second.timestamp < new_timestamp)
+          relevant_timestamps.push_back(it2->second.timestamp);
+      }
+    }
+    // Otherwise the node is not contained in our list - something has gone wrong seriously.
+  }
+  std::sort(relevant_timestamps.begin(), relevant_timestamps.end());
+  relevant_timestamps.erase(std::unique(relevant_timestamps.begin(), relevant_timestamps.end()),
+                            relevant_timestamps.end());
+  
+  for (std::vector< uint64 >::const_iterator it = relevant_timestamps.begin();
+       it != relevant_timestamps.end(); ++it)
+  {
+    Uint31_Index idx = attic_idx;
+    attic_idx = Uint31_Index(0u);
+    Way_Skeleton cur_skeleton = skeleton;
+    if (idx.val() == 0)
+      compute_idx_and_geometry(idx, cur_skeleton, *it, nodes_by_id);
+    full_attic[idx].insert(Attic< Way_Skeleton >(cur_skeleton, *it));
+    idx_lists[skeleton.id].insert(idx);
+  }
+
+  if (add_last_version)
+  {
+    Uint31_Index idx = attic_idx;
+    Way_Skeleton last_skeleton = skeleton;
+    if (idx.val() == 0)
+      compute_idx_and_geometry(idx, last_skeleton, new_timestamp, nodes_by_id);
+    full_attic[idx].insert(Attic< Way_Skeleton >(last_skeleton, new_timestamp));
+    idx_lists[skeleton.id].insert(idx);
+  }
+}
+
+
+/* Compares the new data and the already existing skeletons to determine those that have
+ * moved. This information is used to prepare the set of elements to store to attic.
+ * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
+void compute_new_attic_skeletons
+    (const Data_By_Id< Way_Skeleton >& new_data,
+     const std::map< Uint31_Index, std::set< Way_Skeleton > >& implicitly_moved_skeletons,
+     const std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
+     const std::map< Uint31_Index, std::set< Way_Skeleton > >& attic_skeletons,
+     const std::map< Node_Skeleton::Id_Type, Quad_Coord >& new_node_idx_by_id,
+     const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
+     std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > >& full_attic,
+     std::map< Way_Skeleton::Id_Type, std::set< Uint31_Index > >& idx_lists)
+{
+  // Fill nodes_by_id from attic nodes as well as the current nodes in new_node_idx_by_id
+  std::map< Node_Skeleton::Id_Type,
+         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > > nodes_by_id;
+  for (std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >::const_iterator
+      it = new_attic_node_skeletons.begin(); it != new_attic_node_skeletons.end(); ++it)
+  {
+    for (std::set< Attic< Node_Skeleton > >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+      nodes_by_id[it2->id].push_back(std::make_pair(it->first, *it2));
+  }
+  
+  for (std::map< Node_Skeleton::Id_Type, Quad_Coord >::const_iterator it = new_node_idx_by_id.begin();
+       it != new_node_idx_by_id.end(); ++it)
+    nodes_by_id[it->first].push_back(std::make_pair
+        (it->second.ll_upper, Attic< Node_Skeleton >(Node_Skeleton(it->first, it->second.ll_lower),
+             std::numeric_limits< unsigned long long >::max())));
+    
+  // Create full_attic and idx_lists by going through new_data and filling the gaps
+  std::vector< Data_By_Id< Way_Skeleton >::Entry >::const_iterator next_it
+      = new_data.data.begin();
+  Way_Skeleton::Id_Type last_id = Way_Skeleton::Id_Type(0u);
+  for (std::vector< Data_By_Id< Way_Skeleton >::Entry >::const_iterator
+      it = new_data.data.begin(); it != new_data.data.end(); ++it)
+  {
+    ++next_it;
+    if (next_it != new_data.data.end() && it->elem.id == next_it->elem.id)
+    {
+      if (it->idx.val() != 0)
+      {
+        add_intermediate_versions(it->elem, it->meta.timestamp, next_it->meta.timestamp, nodes_by_id,
+                                  // Add last version only if it differs from the next version
+                                  (next_it->idx.val() == 0 || !geometrically_equal(it->elem, next_it->elem)),
+                                  Uint31_Index(0u),
+                                  full_attic, idx_lists);
+      }
+    }
+    
+    if (last_id == it->elem.id)
+      // An earlier version exists also in new_data. So there is nothing to do here.
+      continue;
+    last_id = it->elem.id;
+    
+    const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
+    if (!idx)
+      // No old data exists. So there is nothing to do here.
+      continue;    
+
+    std::map< Uint31_Index, std::set< Way_Skeleton > >::const_iterator it_attic_idx
+        = attic_skeletons.find(*idx);
+    if (it_attic_idx == attic_skeletons.end())
+      // Something has gone wrong. Skip this object.
+      continue;
+    
+    std::set< Way_Skeleton >::iterator it_attic
+        = it_attic_idx->second.find(it->elem);
+    if (it_attic == it_attic_idx->second.end())
+      // Something has gone wrong. Skip this object.
+      continue;
+
+    add_intermediate_versions(*it_attic, 0, it->meta.timestamp, nodes_by_id,
+                              !geometrically_equal(*it_attic, it->elem), *idx,
+                              full_attic, idx_lists);
+    
+    if (next_it == new_data.data.end() || !(it->elem.id == next_it->elem.id))
+      // This is the latest version of this element. Care here for changes since this element.
+    {
+      add_intermediate_versions(it->elem, it->meta.timestamp,
+                                std::numeric_limits< unsigned long long >::max(), nodes_by_id,
+                                false, Uint31_Index(0u),
+                                full_attic, idx_lists);
+    }
+  }
+  
+  // Add the missing elements that result from node moves only
+  for (std::map< Uint31_Index, std::set< Way_Skeleton > >::const_iterator
+      it = implicitly_moved_skeletons.begin(); it != implicitly_moved_skeletons.end(); ++it)
+  {
+    for (std::set< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      add_intermediate_versions(*it2, 0, std::numeric_limits< unsigned long long >::max(), nodes_by_id,
+                                false, it->first,
+                                full_attic, idx_lists);
+  }
+}
+
 
 //     // Compute which objects really have changed
 //     std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > > new_attic_skeletons;
@@ -548,10 +737,29 @@ void new_implicit_local_tags
 }
 
 
-void Way_Updater::update__(Osm_Backend_Callback* callback, bool partial,
+template< typename Element_Skeleton >
+std::vector< typename Element_Skeleton::Id_Type > enhance_ids_to_update
+    (const std::map< Uint31_Index, std::set< Element_Skeleton > >& implicitly_moved_skeletons,
+     std::vector< typename Element_Skeleton::Id_Type >& ids_to_update)
+{
+  for (typename std::map< Uint31_Index, std::set< Element_Skeleton > >::const_iterator
+     it = implicitly_moved_skeletons.begin(); it != implicitly_moved_skeletons.end(); ++it)
+  {
+    for (typename std::set< Element_Skeleton >::const_iterator
+        it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      ids_to_update.push_back(it2->id);
+  }
+  std::sort(ids_to_update.begin(), ids_to_update.end());
+  ids_to_update.erase(std::unique(ids_to_update.begin(), ids_to_update.end()), ids_to_update.end());
+  return ids_to_update;
+}
+
+
+void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
               Update_Way_Logger* update_logger,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
-              const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons)
+              const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
+              const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons)
 {
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
@@ -773,8 +981,47 @@ void Way_Updater::update__(Osm_Backend_Callback* callback, bool partial,
   // Update global tags
   update_elements(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
   callback->tags_global_finished();
-  
-  //TODO: insert code for attic here
+    
+  if (meta == keep_attic)
+  {
+    // TODO: For compatibility with the update_logger, this doesn't happen during the tag processing itself.
+    //cancel_out_equal_tags(attic_local_tags, new_local_tags);
+
+    // Also include ids from the only moved ways
+    enhance_ids_to_update(implicitly_moved_skeletons, ids_to_update_);
+    
+    // Collect all data of existing attic id indexes
+    std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > existing_attic_map_positions
+        = get_existing_map_positions(ids_to_update_, *transaction, *attic_settings().WAYS);
+    std::map< Way_Skeleton::Id_Type, std::set< Uint31_Index > > existing_idx_lists
+        = get_existing_idx_lists(ids_to_update_, existing_attic_map_positions,
+                                 *transaction, *attic_settings().WAY_IDX_LIST);
+        
+    // Compute which objects really have changed
+    std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > > new_attic_skeletons;
+    std::map< Way_Skeleton::Id_Type, std::set< Uint31_Index > > new_attic_idx_lists = existing_idx_lists;
+    compute_new_attic_skeletons(new_data, implicitly_moved_skeletons, existing_map_positions, attic_skeletons,
+                                new_node_idx_by_id, new_attic_node_skeletons,
+                                new_attic_skeletons, new_attic_idx_lists);
+    
+    // ...
+    
+    std::cout<<"\n\nNew Attic:\n";
+    for (std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > >::const_iterator
+         it = new_attic_skeletons.begin(); it != new_attic_skeletons.end(); ++it)
+    {
+      for (std::set< Attic< Way_Skeleton > >::const_iterator it2 = it->second.begin();
+           it2 != it->second.end(); ++it2)
+        std::cout<<it2->id.val()<<'\t'<<hex<<it->first.val()<<'\t'<<dec<<it2->nds.size()<<'\t'
+          <<it2->geometry.size()<<'\t'
+          <<((it2->timestamp)>>26)<<' '
+          <<((it2->timestamp & 0x3c00000)>>22)<<' '
+          <<((it2->timestamp & 0x3e0000)>>17)<<' '
+          <<((it2->timestamp & 0x1f000)>>12)<<' '
+          <<((it2->timestamp & 0xfc0)>>6)<<' '
+          <<(it2->timestamp & 0x3f)<<'\n';
+    }
+  }
       
   //TODO: old code
   if (meta != only_data)
@@ -799,83 +1046,14 @@ void Way_Updater::update__(Osm_Backend_Callback* callback, bool partial,
   ways_to_insert.clear();
   
   if (!external_transaction)
-    delete transaction;  
-}
-
-
-//TODO: Kombination aus partial update und impliziten Wegen
-void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
-	      Update_Way_Logger* update_logger,
-              const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
-              const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons)
-{
-  if (!external_transaction)
-    transaction = new Nonsynced_Transaction(true, false, db_dir, "");
-  
-  // --------------------------------------------------------------------------
-    
-  map< uint32, vector< Way::Id_Type > > to_delete;
-  callback->update_started();
-  vector< Way* > ways_ptr = sort_elems_to_insert
-      (ways_to_insert, way_comparator_by_id, way_equal_id);
-  compute_indexes(ways_ptr);
-  callback->compute_indexes_finished();
-  
-  update_way_ids(ways_ptr, to_delete, (update_logger != 0));
-  callback->update_ids_finished();
-  update_members(ways_ptr, to_delete, update_logger);
-  callback->update_coords_finished();
-  
-  if (update_logger && meta)
-  {
-    for (vector< pair< OSM_Element_Metadata_Skeleton< Way::Id_Type >, uint32 > >::const_iterator
-        it = ways_meta_to_insert.begin(); it != ways_meta_to_insert.end(); ++it)
-    {
-      OSM_Element_Metadata meta;
-      meta.version = it->first.version;
-      meta.timestamp = it->first.timestamp;
-      meta.changeset = it->first.changeset;
-      meta.user_id = it->first.user_id;
-      meta.user_name = user_by_id[it->first.user_id];
-      update_logger->insertion(it->first.ref, meta);
-    }
-  }  
-  
-  vector< Tag_Entry< Way::Id_Type > > tags_to_delete;
-  prepare_delete_tags(*transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
-		      tags_to_delete, to_delete);
-  callback->prepare_delete_tags_finished();
-  update_tags_local(*transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
-		    ways_ptr, ids_to_modify, tags_to_delete, update_logger);
-  callback->tags_local_finished();
-  update_tags_global(*transaction->data_index(osm_base_settings().WAY_TAGS_GLOBAL),
-		     ways_ptr, ids_to_modify, tags_to_delete);
-  callback->tags_global_finished();
-  if (meta)
-  {
-    map< uint32, vector< uint32 > > idxs_by_id;
-    create_idxs_by_id(ways_meta_to_insert, idxs_by_id);
-    process_meta_data(*transaction->data_index(meta_settings().WAYS_META),
-		      ways_meta_to_insert, ids_to_modify, to_delete, update_logger);
-    process_user_data(*transaction, user_by_id, idxs_by_id);
-    
-    if (update_logger)
-    {
-      stable_sort(ways_meta_to_delete.begin(), ways_meta_to_delete.begin());
-      ways_meta_to_delete.erase(unique(ways_meta_to_delete.begin(), ways_meta_to_delete.end()),
-				 ways_meta_to_delete.end());
-      update_logger->set_delete_meta_data(ways_meta_to_delete);
-      ways_meta_to_delete.clear();
-    }
-  }
-  callback->update_finished();
-  
-  ids_to_modify.clear();
-  ways_to_insert.clear();
-  
-  if (!external_transaction)
     delete transaction;
   
+  if (partial_possible)
+  {
+    new_skeletons.clear();
+    attic_skeletons.clear();
+  }
+    
   if (partial_possible && !partial && (update_counter > 0))
   {
     callback->partial_started();
@@ -896,9 +1074,9 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
       vector< string > froms;
       for (uint i = 0; i < update_counter/16 % 16; ++i)
       {
-	string from(".1a");
-	from[2] += i;
-	froms.push_back(from);
+       string from(".1a");
+       from[2] += i;
+       froms.push_back(from);
       }
       merge_files(froms, ".1");
       
@@ -928,9 +1106,9 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
       vector< string > froms;
       for (uint i = 0; i < 16; ++i)
       {
-	string from(".0a");
-	from[2] += i;
-	froms.push_back(from);
+       string from(".0a");
+       from[2] += i;
+       froms.push_back(from);
       }
       merge_files(froms, to);
       callback->partial_finished();
@@ -942,73 +1120,14 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
       vector< string > froms;
       for (uint i = 0; i < 16; ++i)
       {
-	string from(".1a");
-	from[2] += i;
-	froms.push_back(from);
+       string from(".1a");
+       from[2] += i;
+       froms.push_back(from);
       }
       merge_files(froms, ".2");
       callback->partial_finished();
     }
-  }
-}
-
-void Way_Updater::update_moved_idxs
-    (Osm_Backend_Callback* callback, const vector< pair< Node::Id_Type, Uint32_Index > >& moved_nodes,
-     Update_Way_Logger* update_logger)
-{
-  vector< pair< Way::Id_Type, bool > > ids_to_modify__;
-  vector< Way > ways_to_insert__;
-  vector< pair< OSM_Element_Metadata_Skeleton< Way::Id_Type >, uint32 > > ways_meta_to_insert__;
-  map< uint32, string > user_by_id__;
-  
-  ids_to_modify__.swap(ids_to_modify);
-  ways_to_insert__.swap(ways_to_insert);
-  ways_meta_to_insert__.swap(ways_meta_to_insert);
-  user_by_id__.swap(user_by_id);
-  
-/*  if (!map_file_existed_before)
-    return;*/
-  
-  if (!external_transaction)
-    transaction = new Nonsynced_Transaction(true, false, db_dir, "");
-  
-  map< uint32, vector< Way::Id_Type > > to_delete;
-  find_affected_ways(moved_nodes, update_logger);
-  vector< Way* > ways_ptr = sort_elems_to_insert
-      (ways_to_insert, way_comparator_by_id, way_equal_id);
-  update_way_ids(ways_ptr, to_delete, (update_logger != 0));
-  if (meta)
-  {
-    map< Way::Id_Type, uint32 > new_index_by_id;
-    collect_new_indexes(ways_ptr, new_index_by_id);
-    collect_old_meta_data(*transaction->data_index(meta_settings().WAYS_META), to_delete,
-		          new_index_by_id, ways_meta_to_insert);
-  }
-  update_members(ways_ptr, to_delete, 0);
-  
-  vector< Tag_Entry< Way::Id_Type > > tags_to_delete;
-  prepare_tags(*transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
-	       ways_ptr, tags_to_delete, to_delete);
-  update_tags_local(*transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
-		    ways_ptr, ids_to_modify, tags_to_delete, update_logger);
-  if (meta)
-  {
-    map< uint32, vector< uint32 > > idxs_by_id;
-    create_idxs_by_id(ways_meta_to_insert, idxs_by_id);
-    process_meta_data(*transaction->data_index(meta_settings().WAYS_META), ways_meta_to_insert,
-		      ids_to_modify, to_delete, update_logger);
-    process_user_data(*transaction, user_by_id, idxs_by_id);
-  }
-  
-  //show_mem_status();
-  
-  ids_to_modify__.swap(ids_to_modify);
-  ways_to_insert__.swap(ways_to_insert);
-  ways_meta_to_insert__.swap(ways_meta_to_insert);
-  user_by_id__.swap(user_by_id);
-  
-  if (!external_transaction)
-    delete transaction;
+  }  
 }
 
 

@@ -171,7 +171,8 @@ void start(const char *el, const char **attr)
     {
       callback->ways_finished();
       way_updater->update(callback, false, 0,
-                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons());
+                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
+                          node_updater->get_new_attic_skeletons());
       callback->parser_started();
       osm_element_count = 0;
       state = IN_RELATIONS;
@@ -212,7 +213,8 @@ void end(const char *el)
     {
       callback->way_elapsed(current_way.id);
       way_updater->update(callback, false, 0,
-                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons());
+                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
+                          node_updater->get_new_attic_skeletons());
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -264,7 +266,7 @@ int main(int argc, char* args[])
     {
       Node_Updater node_updater_("./", only_data);
       node_updater = &node_updater_;
-      Way_Updater way_updater_("./", false);
+      Way_Updater way_updater_("./", only_data);
       way_updater = &way_updater_;
       Relation_Updater relation_updater_("./", false);
       relation_updater = &relation_updater_;
@@ -289,7 +291,8 @@ int main(int argc, char* args[])
       {
 	callback->ways_finished();
 	way_updater->update(callback, false, 0,
-                            node_updater->get_new_skeletons(), node_updater->get_attic_skeletons());
+                            node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
+                            node_updater->get_new_attic_skeletons());
       }
       else if (state == IN_RELATIONS)
       {

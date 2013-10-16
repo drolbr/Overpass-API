@@ -314,9 +314,9 @@ inline const Way* Update_Way_Logger::get_inserted(Way::Id_Type ref) const
 
 struct Way_Updater
 {
-  Way_Updater(Transaction& transaction, bool meta);
+  Way_Updater(Transaction& transaction, meta_modes meta);
   
-  Way_Updater(string db_dir, bool meta);
+  Way_Updater(string db_dir, meta_modes meta);
   
   void set_id_deleted(Way::Id_Type id, const OSM_Element_Metadata* meta = 0)
   {
@@ -372,18 +372,11 @@ struct Way_Updater
     }
   }
   
-  void update__(Osm_Backend_Callback* callback, bool partial,
+  void update(Osm_Backend_Callback* callback, bool partial,
               Update_Way_Logger* update_logger,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
-              const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons);
-  void update(Osm_Backend_Callback* callback, bool partial,
-	      Update_Way_Logger* update_logger,
-              const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
-              const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons);
-  
-  void update_moved_idxs
-      (Osm_Backend_Callback* callback, const vector< pair< Node::Id_Type, Uint32_Index > >& moved_nodes,
-       Update_Way_Logger* update_logger);
+              const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
+              const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons);
   
   const vector< pair< Way::Id_Type, Uint31_Index > >& get_moved_ways() const
   {
@@ -402,7 +395,7 @@ private:
 
   Data_By_Id< Way_Skeleton > new_data;
   
-  bool meta;
+  meta_modes meta;
   vector< pair< OSM_Element_Metadata_Skeleton< Way::Id_Type >, uint32 > > ways_meta_to_insert;
   vector< OSM_Element_Metadata_Skeleton< Way::Id_Type > > ways_meta_to_delete;
   map< uint32, string > user_by_id;

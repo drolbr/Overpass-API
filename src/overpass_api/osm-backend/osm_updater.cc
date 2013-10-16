@@ -246,11 +246,9 @@ namespace
     if (osm_element_count >= 4*1024*1024)
     {
       callback->way_elapsed(current_way.id);
-      way_updater->update__(callback, true, update_way_logger,
-                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons());
-//       way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
-//       way_updater->update(callback, true, update_way_logger,
-//                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons());
+      way_updater->update(callback, true, update_way_logger,
+                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
+                          node_updater->get_new_attic_skeletons());
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -290,11 +288,9 @@ namespace
     else if (state == IN_WAYS)
     {
       callback->ways_finished();
-      way_updater->update__(callback, false, update_way_logger,
-                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons());
-//       way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
-//       way_updater->update(callback, false, update_way_logger,
-//                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons());
+      way_updater->update(callback, false, update_way_logger,
+                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
+                          node_updater->get_new_attic_skeletons());
       relation_updater->update_moved_idxs
           (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
       callback->parser_started();
@@ -1648,11 +1644,9 @@ void Osm_Updater::finish_updater()
   }
   if (state == IN_WAYS)
   {  
-    way_updater->update__(callback, false, update_way_logger,
-                        node_updater->get_new_skeletons(), node_updater->get_attic_skeletons());
-//     way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
-//     way_updater->update(callback, false, update_way_logger,
-//                         node_updater->get_new_skeletons(), node_updater->get_attic_skeletons());
+    way_updater->update(callback, false, update_way_logger,
+                        node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
+                        node_updater->get_new_attic_skeletons());
     relation_updater->update_moved_idxs
         (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
     state = IN_RELATIONS;
@@ -1706,7 +1700,7 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
 
   node_updater_ = new Node_Updater(*transaction, meta);
   update_node_logger_ = (produce_augmented_diffs ? new Update_Node_Logger() : 0);
-  way_updater_ = new Way_Updater(*transaction, meta != only_data);
+  way_updater_ = new Way_Updater(*transaction, meta);
   update_way_logger_ = (produce_augmented_diffs ? new Update_Way_Logger() : 0);
   relation_updater_ = new Relation_Updater(*transaction, meta != only_data);
   update_relation_logger_ = (produce_augmented_diffs ? new Update_Relation_Logger() : 0);
@@ -1738,7 +1732,7 @@ Osm_Updater::Osm_Updater
   
   node_updater_ = new Node_Updater(db_dir, meta);
   update_node_logger_ = (produce_augmented_diffs ? new Update_Node_Logger() : 0);
-  way_updater_ = new Way_Updater(db_dir, meta != only_data);
+  way_updater_ = new Way_Updater(db_dir, meta);
   update_way_logger_ = (produce_augmented_diffs ? new Update_Way_Logger() : 0);
   relation_updater_ = new Relation_Updater(db_dir, meta != only_data);
   update_relation_logger_ = (produce_augmented_diffs ? new Update_Relation_Logger() : 0);
