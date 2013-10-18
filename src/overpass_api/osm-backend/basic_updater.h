@@ -459,6 +459,33 @@ std::map< Id_Type, std::set< Uint31_Index > > get_existing_idx_lists
 
   return result;
 }
+
+
+/* Moves idx entries with only one idx to the return value and erases them from the list. */
+template< typename Id_Type >
+std::vector< std::pair< Id_Type, Uint31_Index > > strip_single_idxs
+    (std::map< Id_Type, std::set< Uint31_Index > >& idx_list)
+{
+  std::vector< std::pair< Id_Type, Uint31_Index > > result;
+  
+  for (typename std::map< Id_Type, std::set< Uint31_Index > >::const_iterator it = idx_list.begin();
+       it != idx_list.end(); ++it)
+  {
+    if (it->second.size() == 1)
+      result.push_back(make_pair(it->first, *it->second.begin()));
+    else
+      result.push_back(make_pair(it->first, Uint31_Index(0xffu)));
+  }
+  
+  for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator it = result.begin();
+       it != result.end(); ++it)
+  {
+    if (it->second.val() != 0xff)
+      idx_list.erase(it->first);
+  }
+
+  return result;
+}
   
 
 #endif

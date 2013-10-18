@@ -157,6 +157,12 @@ void compute_idx_and_geometry
 }
 
 
+// Wenn es keine Zwischenversion gibt, passt das Meta, und es ist nichts zu tun.
+// Wenn es Zwischenversionen gibt, muss für jede spätere Version als die Startversion
+// () mit abweichendem Index von der vorhergehenden Version ein Undelete am neuen Index
+// produziert werden mit neuer Timestamp produziert werden
+
+
 /* Checks the nds of the way whether in the time window an underlying node has moved.
  * If yes, the necessary intermediate versions are generated.
  */
@@ -166,6 +172,7 @@ void add_intermediate_versions
          std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >& nodes_by_id,
      bool add_last_version, Uint31_Index attic_idx,
      std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > >& full_attic,
+     std::map< Uint31_Index, std::set< Attic< Way_Skeleton::Id_Type > > >& new_undeleted,
      std::map< Way_Skeleton::Id_Type, std::set< Uint31_Index > >& idx_lists)
 {
   std::vector< uint64 > relevant_timestamps;
@@ -189,6 +196,9 @@ void add_intermediate_versions
   relevant_timestamps.erase(std::unique(relevant_timestamps.begin(), relevant_timestamps.end()),
                             relevant_timestamps.end());
   
+  // Track index for the undelete creation
+  Uint31_Index last_idx = Uint31_Index(0u);
+  
   for (std::vector< uint64 >::const_iterator it = relevant_timestamps.begin();
        it != relevant_timestamps.end(); ++it)
   {
@@ -199,17 +209,27 @@ void add_intermediate_versions
       compute_idx_and_geometry(idx, cur_skeleton, *it, nodes_by_id);
     full_attic[idx].insert(Attic< Way_Skeleton >(cur_skeleton, *it));
     idx_lists[skeleton.id].insert(idx);
+    
+    // Manage undelete entries
+    if (it != relevant_timestamps.begin() && !(last_idx == idx))
+      new_undeleted[idx].insert(Attic< Way_Skeleton::Id_Type >(skeleton.id, *(it-1)));
+    last_idx = idx;
   }
 
+  Uint31_Index idx = attic_idx;
+  Way_Skeleton last_skeleton = skeleton;
+  if (idx.val() == 0)
+    compute_idx_and_geometry(idx, last_skeleton, new_timestamp, nodes_by_id);
+    
   if (add_last_version)
   {
-    Uint31_Index idx = attic_idx;
-    Way_Skeleton last_skeleton = skeleton;
-    if (idx.val() == 0)
-      compute_idx_and_geometry(idx, last_skeleton, new_timestamp, nodes_by_id);
     full_attic[idx].insert(Attic< Way_Skeleton >(last_skeleton, new_timestamp));
     idx_lists[skeleton.id].insert(idx);
   }
+    
+  // Manage undelete entries
+  if (!relevant_timestamps.empty() && !(last_idx == idx))
+    new_undeleted[idx].insert(Attic< Way_Skeleton::Id_Type >(skeleton.id, relevant_timestamps.back()));
 }
 
 
@@ -220,10 +240,12 @@ void compute_new_attic_skeletons
     (const Data_By_Id< Way_Skeleton >& new_data,
      const std::map< Uint31_Index, std::set< Way_Skeleton > >& implicitly_moved_skeletons,
      const std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
+     const std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > >& attic_map_positions,
      const std::map< Uint31_Index, std::set< Way_Skeleton > >& attic_skeletons,
      const std::map< Node_Skeleton::Id_Type, Quad_Coord >& new_node_idx_by_id,
      const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
      std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > >& full_attic,
+     std::map< Uint31_Index, std::set< Attic< Way_Skeleton::Id_Type > > >& new_undeleted,
      std::map< Way_Skeleton::Id_Type, std::set< Uint31_Index > >& idx_lists)
 {
   // Fill nodes_by_id from attic nodes as well as the current nodes in new_node_idx_by_id
@@ -259,13 +281,26 @@ void compute_new_attic_skeletons
                                   // Add last version only if it differs from the next version
                                   (next_it->idx.val() == 0 || !geometrically_equal(it->elem, next_it->elem)),
                                   Uint31_Index(0u),
-                                  full_attic, idx_lists);
+                                  full_attic, new_undeleted, idx_lists);
       }
     }
-    
+
     if (last_id == it->elem.id)
-      // An earlier version exists also in new_data. So there is nothing to do here.
+    {
+      // An earlier version exists also in new_data.
+      std::vector< Data_By_Id< Way_Skeleton >::Entry >::const_iterator last_it = it;
+      --last_it;
+      if (last_it->idx == Uint31_Index(0u))
+        new_undeleted[it->idx].insert(Attic< Way_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
       continue;
+    }
+    else
+    {
+      const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
+      const Uint31_Index* idx_attic = binary_pair_search(attic_map_positions, it->elem.id);
+      if (!idx && idx_attic)
+        new_undeleted[it->idx].insert(Attic< Way_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
+    }
     last_id = it->elem.id;
     
     const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
@@ -287,7 +322,7 @@ void compute_new_attic_skeletons
 
     add_intermediate_versions(*it_attic, 0, it->meta.timestamp, nodes_by_id,
                               !geometrically_equal(*it_attic, it->elem), *idx,
-                              full_attic, idx_lists);
+                              full_attic, new_undeleted, idx_lists);
     
     if (next_it == new_data.data.end() || !(it->elem.id == next_it->elem.id))
       // This is the latest version of this element. Care here for changes since this element.
@@ -295,7 +330,7 @@ void compute_new_attic_skeletons
       add_intermediate_versions(it->elem, it->meta.timestamp,
                                 std::numeric_limits< unsigned long long >::max(), nodes_by_id,
                                 false, Uint31_Index(0u),
-                                full_attic, idx_lists);
+                                full_attic, new_undeleted, idx_lists);
     }
   }
   
@@ -306,7 +341,7 @@ void compute_new_attic_skeletons
     for (std::set< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
       add_intermediate_versions(*it2, 0, std::numeric_limits< unsigned long long >::max(), nodes_by_id,
                                 false, it->first,
-                                full_attic, idx_lists);
+                                full_attic, new_undeleted, idx_lists);
   }
 }
 
@@ -578,10 +613,10 @@ void compute_geometry
     
     Uint31_Index index = Way::calc_index(nd_idxs);
       
+    it->elem.geometry.clear();
+    
     if (Way::indicates_geometry(index))
-    {
-      it->elem.geometry.clear();
-        
+    {    
       for (vector< Node::Id_Type >::const_iterator nit = it->elem.nds.begin();
            nit != it->elem.nds.end(); ++nit)
       {
@@ -593,6 +628,7 @@ void compute_geometry
           it->elem.geometry.push_back(Quad_Coord(0, 0));          
       }
     }
+    
     if (!nd_idxs.empty())
       it->idx = index;
   }
@@ -649,11 +685,11 @@ void new_implicit_skeletons
       if (nd_idxs.empty())
         index = 0xff;
       
+      Way_Skeleton new_skeleton = *it2;
+      new_skeleton.geometry.clear();
+      
       if (Way::indicates_geometry(index))
-      {
-        Way_Skeleton new_skeleton = *it2;
-        new_skeleton.geometry.clear();
-        
+      {  
         for (vector< Node::Id_Type >::const_iterator nit = it2->nds.begin(); nit != it2->nds.end(); ++nit)
         {
           std::map< Node_Skeleton::Id_Type, Quad_Coord >::const_iterator it3 = new_node_idx_by_id.find(*nit);
@@ -667,7 +703,7 @@ void new_implicit_skeletons
         new_skeletons[index].insert(new_skeleton);
       }
       else
-        new_skeletons[index].insert(*it2);
+        new_skeletons[index].insert(new_skeleton);
     }
   }
 }
@@ -755,6 +791,26 @@ std::vector< typename Element_Skeleton::Id_Type > enhance_ids_to_update
 }
 
 
+void add_deleted_skeletons
+    (const std::map< Uint31_Index, std::set< Way_Skeleton > >& attic_skeletons,
+     std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > >& new_positions)
+{
+  for (std::map< Uint31_Index, std::set< Way_Skeleton > >::const_iterator it = attic_skeletons.begin();
+       it != attic_skeletons.end(); ++it)
+  {
+    for (std::set< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    {
+      new_positions.push_back(std::make_pair(it2->id, Uint31_Index(0u)));
+    }
+  }
+  
+  std::stable_sort(new_positions.begin(), new_positions.end(),
+                   Pair_Comparator_By_Id< Way_Skeleton::Id_Type, Uint31_Index >());
+  new_positions.erase(std::unique(new_positions.begin(), new_positions.end(),
+                      Pair_Equal_Id< Way_Skeleton::Id_Type, Uint31_Index >()), new_positions.end());
+}
+
+
 void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
               Update_Way_Logger* update_logger,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
@@ -771,7 +827,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
   // Collect all data of existing id indexes
   std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > existing_map_positions
       = get_existing_map_positions(ids_to_update_, *transaction, *osm_base_settings().WAYS);
-  
+        
   // Collect all data of existing and explicitly changed skeletons
   std::map< Uint31_Index, std::set< Way_Skeleton > > existing_skeletons
       = get_existing_skeletons< Way_Skeleton >
@@ -853,12 +909,21 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
   new_current_global_tags< Way_Skeleton::Id_Type >
       (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
   
+  add_deleted_skeletons(attic_skeletons, new_positions);
+
   std::cout<<"Attic:\n";
   for (std::map< Uint31_Index, std::set< Way_Skeleton > >::const_iterator it = attic_skeletons.begin();
        it != attic_skeletons.end(); ++it)
   {
     for (std::set< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      std::cout<<it2->id.val()<<'\t'<<hex<<it->first.val()<<'\t'<<dec<<it2->nds.size()<<'\t'<<it2->geometry.size()<<'\n';
+    {
+      std::cout<<it2->id.val()<<'\t'<<hex<<it->first.val()<<'\t'<<dec<<it2->nds.size();
+      for (std::vector< Quad_Coord >::const_iterator it3 = it2->geometry.begin();
+          it3 != it2->geometry.end(); ++it3)
+        std::cout<<'\t'<<::lat(it3->ll_upper, it3->ll_lower)
+            <<' '<<::lon(it3->ll_upper, it3->ll_lower);
+      std::cout<<'\n';
+    }
   }
   
   std::cout<<"\nNew:\n";
@@ -866,7 +931,14 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
        it != new_skeletons.end(); ++it)
   {
     for (std::set< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      std::cout<<it2->id.val()<<'\t'<<hex<<it->first.val()<<'\t'<<dec<<it2->nds.size()<<'\t'<<it2->geometry.size()<<'\n';
+    {
+      std::cout<<it2->id.val()<<'\t'<<hex<<it->first.val()<<'\t'<<dec<<it2->nds.size();
+      for (std::vector< Quad_Coord >::const_iterator it3 = it2->geometry.begin();
+          it3 != it2->geometry.end(); ++it3)
+        std::cout<<'\t'<<::lat(it3->ll_upper, it3->ll_lower)
+            <<' '<<::lon(it3->ll_upper, it3->ll_lower);
+      std::cout<<'\n';
+    }
   }
   
   std::cout<<"\nAttic meta:\n";
@@ -1000,9 +1072,15 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
     // Compute which objects really have changed
     std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > > new_attic_skeletons;
     std::map< Way_Skeleton::Id_Type, std::set< Uint31_Index > > new_attic_idx_lists = existing_idx_lists;
-    compute_new_attic_skeletons(new_data, implicitly_moved_skeletons, existing_map_positions, attic_skeletons,
+    std::map< Uint31_Index, std::set< Attic< Way_Skeleton::Id_Type > > > new_undeleted;
+    compute_new_attic_skeletons(new_data, implicitly_moved_skeletons,
+                                existing_map_positions, existing_attic_map_positions, attic_skeletons,
                                 new_node_idx_by_id, new_attic_node_skeletons,
-                                new_attic_skeletons, new_attic_idx_lists);
+                                new_attic_skeletons, new_undeleted, new_attic_idx_lists);
+    
+    strip_single_idxs(existing_idx_lists);
+    std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > new_attic_map_positions
+        = strip_single_idxs(new_attic_idx_lists);
     
     // ...
     
@@ -1012,15 +1090,42 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
     {
       for (std::set< Attic< Way_Skeleton > >::const_iterator it2 = it->second.begin();
            it2 != it->second.end(); ++it2)
-        std::cout<<it2->id.val()<<'\t'<<hex<<it->first.val()<<'\t'<<dec<<it2->nds.size()<<'\t'
-          <<it2->geometry.size()<<'\t'
-          <<((it2->timestamp)>>26)<<' '
+      {
+        std::cout<<it2->id.val()<<'\t'<<hex<<it->first.val()<<'\t'<<dec<<it2->nds.size();
+        for (std::vector< Quad_Coord >::const_iterator it3 = it2->geometry.begin();
+             it3 != it2->geometry.end(); ++it3)
+          std::cout<<'\t'<<::lat(it3->ll_upper, it3->ll_lower)
+              <<' '<<::lon(it3->ll_upper, it3->ll_lower);
+        std::cout<<'\t'<<((it2->timestamp)>>26)<<' '
+          <<((it2->timestamp & 0x3c00000)>>22)<<' '
+          <<((it2->timestamp & 0x3e0000)>>17)<<' '
+          <<((it2->timestamp & 0x1f000)>>12)<<' '
+          <<((it2->timestamp & 0xfc0)>>6)<<' '
+          <<(it2->timestamp & 0x3f)<<'\n';
+      }
+    }
+    
+    std::cout<<"\nUndelete:\n";
+    for (std::map< Uint31_Index, std::set< Attic< Way_Skeleton::Id_Type > > >::const_iterator
+         it = new_undeleted.begin(); it != new_undeleted.end(); ++it)
+    {
+      for (std::set< Attic< Way_Skeleton::Id_Type > >::const_iterator it2 = it->second.begin();
+           it2 != it->second.end(); ++it2)
+        std::cout<<it2->val()<<'\t'<<hex<<it->first.val()<<'\t'
+          <<dec<<((it2->timestamp)>>26)<<' '
           <<((it2->timestamp & 0x3c00000)>>22)<<' '
           <<((it2->timestamp & 0x3e0000)>>17)<<' '
           <<((it2->timestamp & 0x1f000)>>12)<<' '
           <<((it2->timestamp & 0xfc0)>>6)<<' '
           <<(it2->timestamp & 0x3f)<<'\n';
     }
+    
+    // Update id indexes
+    update_map_positions(new_attic_map_positions, *transaction, *attic_settings().WAYS);
+  
+    // Update id index lists
+    update_elements(existing_idx_lists, new_attic_idx_lists,
+                    *transaction, *attic_settings().WAY_IDX_LIST);
   }
       
   //TODO: old code

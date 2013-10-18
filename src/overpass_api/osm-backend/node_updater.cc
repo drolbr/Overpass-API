@@ -186,7 +186,7 @@ void compute_new_attic_skeletons
 
 
 /* Collects undeleted elements with their index and their timestamp. This is necessary to identify
- * for an undeleted object the fact that is what deleted before its recreation. */
+ * for an undeleted object the fact that is was deleted before its recreation. */
 template< typename Element_Skeleton >
 std::map< Uint31_Index, std::set< Attic< typename Element_Skeleton::Id_Type > > >
     compute_undeleted_skeletons
@@ -218,33 +218,6 @@ std::map< Uint31_Index, std::set< Attic< typename Element_Skeleton::Id_Type > > 
     last_id = it->elem.id;
   }
   
-  return result;
-}
-
-
-/* Moves idx entries with only one idx to the return value and erases them from the list. */
-template< typename Id_Type >
-std::vector< std::pair< Id_Type, Uint31_Index > > strip_single_idxs
-    (std::map< Id_Type, std::set< Uint31_Index > >& idx_list)
-{
-  std::vector< std::pair< Id_Type, Uint31_Index > > result;
-  
-  for (typename std::map< Id_Type, std::set< Uint31_Index > >::const_iterator it = idx_list.begin();
-       it != idx_list.end(); ++it)
-  {
-    if (it->second.size() == 1)
-      result.push_back(make_pair(it->first, *it->second.begin()));
-    else
-      result.push_back(make_pair(it->first, Uint31_Index(0xffu)));
-  }
-  
-  for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator it = result.begin();
-       it != result.end(); ++it)
-  {
-    if (it->second.val() != 0xff)
-      idx_list.erase(it->first);
-  }
-
   return result;
 }
 
