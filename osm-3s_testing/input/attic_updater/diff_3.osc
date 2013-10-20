@@ -28,7 +28,7 @@
   <way id="1505" version="5" timestamp="2013-07-01T09:04:25" changeset="496" uid="42" user="foo">
     <nd ref="15051"/>
     <nd ref="15052"/>
-    <nd ref="15053"/>
+    <nd ref="15055"/>
     <tag k="foo" v="bar_1505"/>
     <tag k="foo_1505" v="bar"/>
   </way>

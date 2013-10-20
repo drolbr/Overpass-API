@@ -214,7 +214,7 @@
 </create>
 
 <delete>
-  <node id="18024" version="2" timestamp="2013-07-01T09:02:11" changeset="496" uid="42" user="foo"/>
+  <node id="18024" version="2" timestamp="2013-07-01T09:03:11" changeset="496" uid="42" user="foo"/>
 </delete>
 <create>
   <node id="18025" lat="10.004" lon="8.02" version="2" timestamp="2013-07-01T09:03:13" changeset="496" uid="42" user="foo"/>
@@ -276,21 +276,21 @@
   <way id="1503" version="3" timestamp="2013-07-01T09:03:13" changeset="496" uid="42" user="foo">
     <nd ref="15031"/>
     <nd ref="15032"/>
-    <nd ref="15033"/>
+    <nd ref="15034"/>
     <tag k="foo" v="bar_1503"/>
     <tag k="foo_1503" v="bar"/>
   </way>
   <way id="1504" version="3" timestamp="2013-07-01T09:03:14" changeset="496" uid="42" user="foo">
     <nd ref="15041"/>
     <nd ref="15042"/>
-    <nd ref="15043"/>
+    <nd ref="15044"/>
     <tag k="foo" v="bar_1504"/>
     <tag k="foo_1504" v="bar"/>
   </way>
   <way id="1505" version="3" timestamp="2013-07-01T09:03:15" changeset="496" uid="42" user="foo">
     <nd ref="15051"/>
     <nd ref="15052"/>
-    <nd ref="15053"/>
+    <nd ref="15054"/>
     <tag k="foo" v="bar_1505"/>
     <tag k="foo_1505" v="bar"/>
   </way>
@@ -373,9 +373,9 @@
     <tag k="faa_2" v="baz_2"/>
   </way>
   <way id="2103" version="2" timestamp="2013-07-01T09:03:13" changeset="496" uid="42" user="foo">
-    <nd ref="21021"/>
-    <nd ref="21022"/>
-    <nd ref="21023"/>
+    <nd ref="21031"/>
+    <nd ref="21032"/>
+    <nd ref="21033"/>
     <tag k="faa_1" v="baz_1"/>
   </way>
   <way id="2103" version="3" timestamp="2013-07-01T09:03:23" changeset="496" uid="42" user="foo">
