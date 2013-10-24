@@ -438,11 +438,6 @@ std::map< typename Element_Skeleton::Id_Type,
 }
 
 
-// Jede Meta wird mindestens einmal geschrieben,
-// und zwar an den Index des nächstjüngeren oder gleichalten(!) Skeletons,
-// nur die erste Meta wird übersprungen, wenn das Element existiert.
-
-
 /* Enhance the existing attic meta by the meta entries of deleted elements.
    Assert: the sequence in the vector are ordered from recent to old. */
 template< typename Id_Type >
@@ -516,6 +511,168 @@ std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Id_Type > > >
     for (typename std::set< OSM_Element_Metadata_Skeleton< Id_Type > >::const_iterator
         it2 = it->second.begin(); it2 != it->second.end(); ++it2)
       result[it->first].erase(*it2);
+  }
+  
+  return result;
+}
+
+
+template< typename Element_Skeleton >
+std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >, std::vector< Attic< std::string > > >
+    compute_tags_by_id_and_time
+    (const Data_By_Id< Element_Skeleton >& new_data,
+     const std::map< Tag_Index_Local, std::set< typename Element_Skeleton::Id_Type > >& attic_local_tags)
+{
+  std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >,
+      std::vector< Attic< std::string > > > result;
+      
+  std::map< typename Element_Skeleton::Id_Type, uint64 > timestamp_per_id;
+
+  typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
+      next_it = new_data.data.begin();
+  if (next_it != new_data.data.end())
+  {
+    timestamp_per_id[next_it->elem.id] = next_it->meta.timestamp;
+    ++next_it;
+  }
+  for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
+      it = new_data.data.begin(); it != new_data.data.end(); ++it)
+  {
+    uint64 next_timestamp = std::numeric_limits< unsigned long long >::max();
+    if (next_it != new_data.data.end())
+    {
+      if (next_it->elem.id == it->elem.id)
+        next_timestamp = next_it->meta.timestamp;
+      else
+        timestamp_per_id[next_it->elem.id] = next_it->meta.timestamp;
+      ++next_it;
+    }
+
+    for (std::vector< std::pair< std::string, std::string > >::const_iterator it2 = it->tags.begin();
+         it2 != it->tags.end(); ++it2)
+    {
+      std::vector< Attic< std::string > >& result_ref = result[std::make_pair(it->elem.id, it2->first)];
+      if (result_ref.empty() || result_ref.back().timestamp != it->meta.timestamp)
+        result_ref.push_back(Attic< std::string >("", it->meta.timestamp));
+      result_ref.push_back(Attic< std::string >(it2->second, next_timestamp));
+    }
+  }
+  
+  for (typename std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >,
+      std::vector< Attic< std::string > > >::iterator it = result.begin(); it != result.end(); ++it)
+    std::sort(it->second.begin(), it->second.end(), Descending_By_Timestamp< Attic< std::string > >());
+
+  for (typename std::map< Tag_Index_Local, std::set< typename Element_Skeleton::Id_Type > >::const_iterator
+      it = attic_local_tags.begin(); it != attic_local_tags.end(); ++it)
+  {
+    for (typename std::set< typename Element_Skeleton::Id_Type >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+    {
+      std::vector< Attic< std::string > >& result_ref = result[std::make_pair(*it2, it->first.key)];
+      uint64 timestamp = (timestamp_per_id[*it2] == 0 ?
+          std::numeric_limits< unsigned long long >::max() : timestamp_per_id[*it2]);
+      if (result_ref.empty() || result_ref.back().timestamp != timestamp_per_id[*it2])
+        result_ref.push_back(Attic< std::string >(it->first.value, timestamp));
+      else
+        result_ref.back() = Attic< std::string >(it->first.value, timestamp);
+    }
+  }
+  
+  return result;
+}
+
+
+template< typename Id_Type >
+std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_local_tags
+    (const std::map< Id_Type, std::vector< Attic< Uint31_Index > > >& new_attic_idx_by_id_and_time,
+     const std::map< std::pair< Id_Type, std::string >, std::vector< Attic< std::string > > >&
+         tags_by_id_and_time,
+     const std::map< Way_Skeleton::Id_Type, std::set< Uint31_Index > >& existing_idx_lists)
+{
+  std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > result;
+  
+  typename std::map< std::pair< Id_Type, std::string >, std::vector< Attic< std::string > > >
+      ::const_iterator tit = tags_by_id_and_time.begin();
+  for (typename std::map< Id_Type, std::vector< Attic< Uint31_Index > > >::const_iterator
+      it = new_attic_idx_by_id_and_time.begin(); it != new_attic_idx_by_id_and_time.end(); ++it)
+  {
+    while (tit->first.first == it->first)
+    {
+      // Use that one cannot insert the same value twice in a set
+      
+      typename std::vector< Attic< std::string > >::const_iterator tit2 = tit->second.begin();
+      std::vector< Attic< Uint31_Index > >::const_iterator it2 = it->second.begin();
+      if (it2 == it->second.end())
+        // Assert: Can't happen
+        continue;
+      
+      std::set< Uint31_Index > existing_attic_idxs;
+      std::map< Way_Skeleton::Id_Type, std::set< Uint31_Index > >::const_iterator iit
+          = existing_idx_lists.find(it->first);
+      if (iit != existing_idx_lists.end())
+      {
+        for (std::set< Uint31_Index >::const_iterator iit2 = iit->second.begin(); iit2 != iit->second.end();
+             ++iit2)
+          existing_attic_idxs.insert(Uint31_Index(iit2->val() & 0x7fffff00));
+      }
+      
+      Uint31_Index last_idx = *it2;
+      std::string last_value = "";
+      ++it2;
+      if (tit2 != tit->second.end() && tit2->timestamp == std::numeric_limits< unsigned long long >::max())
+      {
+        last_value = *tit2;
+        ++tit2;
+      }
+      while (it2 != it->second.end() || tit2 != tit->second.end())
+      {
+        if (it2 == it->second.end() || it2->timestamp < tit2->timestamp)
+        {
+          if (last_idx.val() != 0u && last_value != *tit2 && (it2 != it->second.end() || *tit2 != "" ||
+              existing_attic_idxs.find(Uint31_Index(last_idx.val() & 0x7fffff00))
+                  != existing_attic_idxs.end()))
+            result[Tag_Index_Local(last_idx, tit->first.second, *tit2)]
+                .insert(Attic< Id_Type >(it->first, tit2->timestamp));
+          last_value = *tit2;
+          ++tit2;
+        }
+        else if (tit2 == tit->second.end() || tit2->timestamp < it2->timestamp)
+        {
+          if (!(last_idx == *it2) && last_value != "")
+          {
+            if (it2->val() != 0u)
+              result[Tag_Index_Local(*it2, tit->first.second, last_value)]
+                .insert(Attic< Id_Type >(it->first, it2->timestamp));
+            if (last_idx.val() != 0u)
+              result[Tag_Index_Local(last_idx, tit->first.second, "")]
+                  .insert(Attic< Id_Type >(it->first, it2->timestamp));
+          }
+          // Wenn Idx ungleich Vorgänger, schreibe tit2-Vorgänger an Index it2, schreibe an last_idx leer
+          last_idx = *it2;
+          ++it2;
+        }
+        else
+        {
+          if (it2->val() != 0u && (!(last_idx == *it2) || last_value != *tit2))
+            result[Tag_Index_Local(*it2, tit->first.second, *tit2)]
+                .insert(Attic< Id_Type >(it->first, tit2->timestamp));
+          if (!(last_idx == *it2) && last_idx.val() != 0u)
+            result[Tag_Index_Local(last_idx, tit->first.second, "")]
+                .insert(Attic< Id_Type >(it->first, tit2->timestamp));
+                
+          last_value = *tit2;
+          ++tit2;
+          last_idx = *it2;
+          ++it2;
+        }
+      }
+
+      for (typename std::vector< Attic< std::string > >::const_iterator tit2 = tit->second.begin();
+           tit2 != tit->second.end(); ++tit2)
+        std::cout<<tit->first.second<<'\t'<<std::string(*tit2)<<'\t'<<tit2->timestamp<<'\n';
+      
+      ++tit;
+    }
   }
   
   return result;
@@ -1176,18 +1333,24 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
                                 existing_map_positions, existing_attic_map_positions, attic_skeletons,
                                 new_node_idx_by_id, new_attic_node_skeletons,
                                 new_attic_skeletons, new_undeleted, new_attic_idx_lists);
-    
-    strip_single_idxs(existing_idx_lists);
-    std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > new_attic_map_positions
-        = strip_single_idxs(new_attic_idx_lists);
 
+    std::map< Way_Skeleton::Id_Type, std::vector< Attic< Uint31_Index > > > new_attic_idx_by_id_and_time =
+        compute_new_attic_idx_by_id_and_time(new_data, new_skeletons, new_attic_skeletons);
+        
     // Compute new meta data
     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
-        new_attic_meta = compute_new_attic_meta(
-            compute_new_attic_idx_by_id_and_time(new_data, new_skeletons, new_attic_skeletons),
+        new_attic_meta = compute_new_attic_meta(new_attic_idx_by_id_and_time,
             compute_meta_by_id_and_time(new_data, attic_meta), new_meta);
     
+    // Compute tags
+    std::map< Tag_Index_Local, std::set< Attic< Way_Skeleton::Id_Type > > > new_attic_local_tags
+        = compute_new_attic_local_tags(new_attic_idx_by_id_and_time,
+            compute_tags_by_id_and_time(new_data, attic_local_tags), existing_idx_lists);
     // ...
+        
+    strip_single_idxs(existing_idx_lists);    
+    std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > new_attic_map_positions
+        = strip_single_idxs(new_attic_idx_lists);
     
     std::cout<<"\n\nNew Attic:\n";
     for (std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > >::const_iterator
@@ -1239,6 +1402,22 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
             <<((it2->timestamp & 0xfc0)>>6)<<' '
             <<(it2->timestamp & 0x3f)<<'\t'
             <<it2->changeset<<'\t'<<it2->user_id<<'\n';
+    }
+  
+    std::cout<<"\nNew attic local tags:\n";  
+    for (std::map< Tag_Index_Local, std::set< Attic< Way_Skeleton::Id_Type > > >::const_iterator
+        it = new_attic_local_tags.begin(); it != new_attic_local_tags.end(); ++it)
+    {
+      for (std::set< Attic< Way_Skeleton::Id_Type > >::const_iterator it2 = it->second.begin();
+          it2 != it->second.end(); ++it2)
+        std::cout<<dec<<it2->val()<<'\t'<<hex<<it->first.index<<'\t'<<it->first.key<<'\t'
+          <<(it->first.value == "" ? "(void)" : it->first.value)<<'\t'
+          <<dec<<((it2->timestamp)>>26)<<' '
+          <<((it2->timestamp & 0x3c00000)>>22)<<' '
+          <<((it2->timestamp & 0x3e0000)>>17)<<' '
+          <<((it2->timestamp & 0x1f000)>>12)<<' '
+          <<((it2->timestamp & 0xfc0)>>6)<<' '
+          <<(it2->timestamp & 0x3f)<<'\n';
     }
     
     // Update id indexes

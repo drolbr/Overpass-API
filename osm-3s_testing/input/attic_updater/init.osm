@@ -575,8 +575,8 @@
     <nd ref="14041"/>
     <nd ref="14042"/>
     <nd ref="14043"/>
-    <tag k="foo" v="bar_1304"/>
-    <tag k="foo_1304" v="bar"/>
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
   </way>
 
   <way id="1501" lat="10.0" lon="5.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo">

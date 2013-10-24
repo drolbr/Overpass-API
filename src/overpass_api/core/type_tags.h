@@ -56,7 +56,7 @@ struct Tag_Index_Local
       : index(entry.index), key(entry.key), value(entry.value) {}
   
   Tag_Index_Local(Uint31_Index index_, string key_, string value_)
-      : index(index_.val()), key(key_), value(value_) {}
+      : index(index_.val() & 0x7fffff00), key(key_), value(value_) {}
   
   Tag_Index_Local(void* data)
   {
