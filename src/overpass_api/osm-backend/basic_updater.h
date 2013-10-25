@@ -486,6 +486,67 @@ std::vector< std::pair< Id_Type, Uint31_Index > > strip_single_idxs
 
   return result;
 }
+
+
+/* Constructs the global tags from the local tags. */
+template< typename Id_Type >
+std::map< Tag_Index_Global, std::set< Attic< Id_Type > > > compute_attic_global_tags
+    (const std::map< Tag_Index_Local, std::set< Attic< Id_Type > > >& new_attic_local_tags)
+{
+  std::map< Tag_Index_Global, std::set< Attic< Id_Type > > > result;
+  
+  for (typename std::map< Tag_Index_Local, std::set< Attic< Id_Type > > >::const_iterator
+      it_idx = new_attic_local_tags.begin(); it_idx != new_attic_local_tags.end(); ++it_idx)
+  {
+    if (it_idx->first.value == "")
+    {
+      std::set< Attic< Id_Type > >& handle(result[Tag_Index_Global(it_idx->first)]);
+      for (typename std::set< Attic< Id_Type > >::const_iterator it = it_idx->second.begin();
+           it != it_idx->second.end(); ++it)
+        handle.insert(*it);
+    }
+  }
+  
+  for (typename std::map< Tag_Index_Local, std::set< Attic< Id_Type > > >::const_iterator
+      it_idx = new_attic_local_tags.begin(); it_idx != new_attic_local_tags.end(); ++it_idx)
+  {
+    if (it_idx->first.value != "")
+    {
+      std::set< Attic< Id_Type > >& handle(result[Tag_Index_Global(it_idx->first)]);
+      std::set< Attic< Id_Type > >& void_handle(result[Tag_Index_Global(it_idx->first.key, "")]);
+      for (typename std::set< Attic< Id_Type > >::const_iterator it = it_idx->second.begin();
+           it != it_idx->second.end(); ++it)
+      {
+        handle.insert(*it);
+        void_handle.erase(*it);
+      }
+    }
+  }
+  
+  return result;
+}
+
+
+/* Compares the new data and the already existing skeletons to determine those that have
+ * moved. This information is used to prepare the set of elements to store to attic.
+ * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
+template< typename Element_Skeleton >
+std::map< Timestamp, std::set< Change_Entry< typename Element_Skeleton::Id_Type > > > compute_changelog
+    (const std::map< Uint31_Index, std::set< Element_Skeleton > >& new_skeletons,
+     const std::map< Uint31_Index, std::set< Attic< Element_Skeleton > > >& attic_skeletons,
+     const std::map< Tag_Index_Local, std::set< typename Element_Skeleton::Id_Type > >& new_local_tags,
+     const std::map< Tag_Index_Local, std::set< Attic< typename Element_Skeleton::Id_Type > > >& attic_local_tags,
+     const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& new_meta,
+     const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& attic_meta)
+{
+  for (typename std::map< Uint31_Index,
+      std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >::const_iterator
+      it = new_meta.begin(); it != new_meta.end(); ++it)
+    ;
+  std::map< Timestamp, std::set< Change_Entry< typename Element_Skeleton::Id_Type > > > result;
+  
+  return result;
+}
   
 
 #endif

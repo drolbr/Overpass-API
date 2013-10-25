@@ -185,6 +185,8 @@ struct Tag_Index_Global
   
   Tag_Index_Global(const Tag_Index_Local& tag_idx) : key(tag_idx.key), value(tag_idx.value) {}
   
+  Tag_Index_Global(const std::string& key_, const std::string& value_) : key(key_), value(value_) {}
+  
   uint32 size_of() const
   {
     return 4 + key.length() + value.length();
