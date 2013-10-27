@@ -670,10 +670,6 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
           ++it2;
         }
       }
-
-      for (typename std::vector< Attic< std::string > >::const_iterator tit2 = tit->second.begin();
-           tit2 != tit->second.end(); ++tit2)
-        std::cout<<dec<<tit->first.second<<'\t'<<std::string(*tit2)<<'\t'<<tit2->timestamp<<'\n';
       
       ++tit;
     }
@@ -1170,104 +1166,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
       (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
   
   add_deleted_skeletons(attic_skeletons, new_positions);
-    
-  std::cout<<"Attic:\n";
-  for (std::map< Uint31_Index, std::set< Way_Skeleton > >::const_iterator it = attic_skeletons.begin();
-       it != attic_skeletons.end(); ++it)
-  {
-    for (std::set< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-    {
-      std::cout<<it2->id.val()<<'\t'<<hex<<it->first.val()<<'\t'<<dec<<it2->nds.size();
-      for (std::vector< Quad_Coord >::const_iterator it3 = it2->geometry.begin();
-          it3 != it2->geometry.end(); ++it3)
-        std::cout<<'\t'<<::lat(it3->ll_upper, it3->ll_lower)
-            <<' '<<::lon(it3->ll_upper, it3->ll_lower);
-      std::cout<<'\n';
-    }
-  }
-  
-  std::cout<<"\nNew:\n";
-  for (std::map< Uint31_Index, std::set< Way_Skeleton > >::const_iterator it = new_skeletons.begin();
-       it != new_skeletons.end(); ++it)
-  {
-    for (std::set< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-    {
-      std::cout<<it2->id.val()<<'\t'<<hex<<it->first.val()<<'\t'<<dec<<it2->nds.size();
-      for (std::vector< Quad_Coord >::const_iterator it3 = it2->geometry.begin();
-          it3 != it2->geometry.end(); ++it3)
-        std::cout<<'\t'<<::lat(it3->ll_upper, it3->ll_lower)
-            <<' '<<::lon(it3->ll_upper, it3->ll_lower);
-      std::cout<<'\n';
-    }
-  }
-  
-  std::cout<<"\nAttic meta:\n";
-  for (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
-          ::const_iterator it = attic_meta.begin(); it != attic_meta.end(); ++it)
-  {
-    for (std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >::const_iterator
-        it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      std::cout<<it2->ref.val()<<'\t'<<hex<<it->first.val()<<'\t'<<dec<<it2->version<<'\t'
-          <<((it2->timestamp)>>26)<<' '
-          <<((it2->timestamp & 0x3c00000)>>22)<<' '
-          <<((it2->timestamp & 0x3e0000)>>17)<<' '
-          <<((it2->timestamp & 0x1f000)>>12)<<' '
-          <<((it2->timestamp & 0xfc0)>>6)<<' '
-          <<(it2->timestamp & 0x3f)<<'\t'
-          <<it2->changeset<<'\t'<<it2->user_id<<'\n';
-  }
-  
-  std::cout<<"\nNew meta:\n";
-  for (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
-          ::const_iterator it = new_meta.begin(); it != new_meta.end(); ++it)
-  {
-    for (std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >::const_iterator
-        it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      std::cout<<it2->ref.val()<<'\t'<<hex<<it->first.val()<<'\t'<<dec<<it2->version<<'\t'
-          <<((it2->timestamp)>>26)<<' '
-          <<((it2->timestamp & 0x3c00000)>>22)<<' '
-          <<((it2->timestamp & 0x3e0000)>>17)<<' '
-          <<((it2->timestamp & 0x1f000)>>12)<<' '
-          <<((it2->timestamp & 0xfc0)>>6)<<' '
-          <<(it2->timestamp & 0x3f)<<'\t'
-          <<it2->changeset<<'\t'<<it2->user_id<<'\n';
-  }
-  
-  std::cout<<"\nAttic local tags:\n";  
-  for (std::map< Tag_Index_Local, std::set< Way_Skeleton::Id_Type > >::const_iterator
-      it = attic_local_tags.begin(); it != attic_local_tags.end(); ++it)
-  {
-    for (std::set< Way_Skeleton::Id_Type >::const_iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
-      std::cout<<dec<<it2->val()<<'\t'<<hex<<it->first.index<<'\t'<<it->first.key<<'\t'<<it->first.value<<'\n';
-  }
-  
-  std::cout<<"\nNew local tags:\n";  
-  for (std::map< Tag_Index_Local, std::set< Way_Skeleton::Id_Type > >::const_iterator
-      it = new_local_tags.begin(); it != new_local_tags.end(); ++it)
-  {
-    for (std::set< Way_Skeleton::Id_Type >::const_iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
-      std::cout<<dec<<it2->val()<<'\t'<<hex<<it->first.index<<'\t'<<it->first.key<<'\t'<<it->first.value<<'\n';
-  }
-  
-  std::cout<<"\nAttic global tags:\n";  
-  for (std::map< Tag_Index_Global, std::set< Way_Skeleton::Id_Type > >::const_iterator
-      it = attic_global_tags.begin(); it != attic_global_tags.end(); ++it)
-  {
-    for (std::set< Way_Skeleton::Id_Type >::const_iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
-      std::cout<<dec<<it2->val()<<'\t'<<it->first.key<<'\t'<<it->first.value<<'\n';
-  }
-  
-  std::cout<<"\nNew global tags:\n";  
-  for (std::map< Tag_Index_Global, std::set< Way_Skeleton::Id_Type > >::const_iterator
-      it = new_global_tags.begin(); it != new_global_tags.end(); ++it)
-  {
-    for (std::set< Way_Skeleton::Id_Type >::const_iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
-      std::cout<<dec<<it2->val()<<'\t'<<it->first.key<<'\t'<<it->first.value<<'\n';
-  }
 
   // Compute idx positions of new nodes
   // TODO: old code
@@ -1329,10 +1227,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
         = get_existing_idx_lists(ids_to_update_, existing_attic_map_positions,
                                  *transaction, *attic_settings().WAY_IDX_LIST);
         
-    for (std::map< Way_Skeleton::Id_Type, std::set< Uint31_Index > >::const_iterator
-        it = existing_idx_lists.begin(); it != existing_idx_lists.end(); ++it)
-      std::cout<<dec<<it->first.val()<<'\t'<<it->second.size()<<'\n';
-        
     // Compute which objects really have changed
     std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > > new_attic_skeletons;
     std::map< Way_Skeleton::Id_Type, std::set< Uint31_Index > > new_attic_idx_lists = existing_idx_lists;
@@ -1367,90 +1261,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
     strip_single_idxs(existing_idx_lists);    
     std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > new_attic_map_positions
         = strip_single_idxs(new_attic_idx_lists);
-    
-    std::cout<<"\n\nNew Attic:\n";
-    for (std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > >::const_iterator
-         it = new_attic_skeletons.begin(); it != new_attic_skeletons.end(); ++it)
-    {
-      for (std::set< Attic< Way_Skeleton > >::const_iterator it2 = it->second.begin();
-           it2 != it->second.end(); ++it2)
-      {
-        std::cout<<it2->id.val()<<'\t'<<hex<<it->first.val()<<'\t'<<dec<<it2->nds.size();
-        for (std::vector< Quad_Coord >::const_iterator it3 = it2->geometry.begin();
-             it3 != it2->geometry.end(); ++it3)
-          std::cout<<'\t'<<::lat(it3->ll_upper, it3->ll_lower)
-              <<' '<<::lon(it3->ll_upper, it3->ll_lower);
-        std::cout<<'\t'<<((it2->timestamp)>>26)<<' '
-          <<((it2->timestamp & 0x3c00000)>>22)<<' '
-          <<((it2->timestamp & 0x3e0000)>>17)<<' '
-          <<((it2->timestamp & 0x1f000)>>12)<<' '
-          <<((it2->timestamp & 0xfc0)>>6)<<' '
-          <<(it2->timestamp & 0x3f)<<'\n';
-      }
-    }
-    
-    std::cout<<"\nUndelete:\n";
-    for (std::map< Uint31_Index, std::set< Attic< Way_Skeleton::Id_Type > > >::const_iterator
-         it = new_undeleted.begin(); it != new_undeleted.end(); ++it)
-    {
-      for (std::set< Attic< Way_Skeleton::Id_Type > >::const_iterator it2 = it->second.begin();
-           it2 != it->second.end(); ++it2)
-        std::cout<<it2->val()<<'\t'<<hex<<it->first.val()<<'\t'
-          <<dec<<((it2->timestamp)>>26)<<' '
-          <<((it2->timestamp & 0x3c00000)>>22)<<' '
-          <<((it2->timestamp & 0x3e0000)>>17)<<' '
-          <<((it2->timestamp & 0x1f000)>>12)<<' '
-          <<((it2->timestamp & 0xfc0)>>6)<<' '
-          <<(it2->timestamp & 0x3f)<<'\n';
-    }
-  
-    std::cout<<"\nNew attic meta:\n";
-    for (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
-            ::const_iterator it = new_attic_meta.begin(); it != new_attic_meta.end(); ++it)
-    {
-      for (std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >::const_iterator
-          it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-        std::cout<<it2->ref.val()<<'\t'<<hex<<it->first.val()<<'\t'<<dec<<it2->version<<'\t'
-            <<((it2->timestamp)>>26)<<' '
-            <<((it2->timestamp & 0x3c00000)>>22)<<' '
-            <<((it2->timestamp & 0x3e0000)>>17)<<' '
-            <<((it2->timestamp & 0x1f000)>>12)<<' '
-            <<((it2->timestamp & 0xfc0)>>6)<<' '
-            <<(it2->timestamp & 0x3f)<<'\t'
-            <<it2->changeset<<'\t'<<it2->user_id<<'\n';
-    }
-  
-    std::cout<<"\nNew attic local tags:\n";  
-    for (std::map< Tag_Index_Local, std::set< Attic< Way_Skeleton::Id_Type > > >::const_iterator
-        it = new_attic_local_tags.begin(); it != new_attic_local_tags.end(); ++it)
-    {
-      for (std::set< Attic< Way_Skeleton::Id_Type > >::const_iterator it2 = it->second.begin();
-          it2 != it->second.end(); ++it2)
-        std::cout<<dec<<it2->val()<<'\t'<<hex<<it->first.index<<'\t'<<it->first.key<<'\t'
-          <<(it->first.value == "" ? "(void)" : it->first.value)<<'\t'
-          <<dec<<((it2->timestamp)>>26)<<' '
-          <<((it2->timestamp & 0x3c00000)>>22)<<' '
-          <<((it2->timestamp & 0x3e0000)>>17)<<' '
-          <<((it2->timestamp & 0x1f000)>>12)<<' '
-          <<((it2->timestamp & 0xfc0)>>6)<<' '
-          <<(it2->timestamp & 0x3f)<<'\n';
-    }
-  
-    std::cout<<"\nNew attic global tags:\n";  
-    for (std::map< Tag_Index_Global, std::set< Attic< Way_Skeleton::Id_Type > > >::const_iterator
-        it = new_attic_global_tags.begin(); it != new_attic_global_tags.end(); ++it)
-    {
-      for (std::set< Attic< Way_Skeleton::Id_Type > >::const_iterator it2 = it->second.begin();
-          it2 != it->second.end(); ++it2)
-        std::cout<<dec<<it2->val()<<'\t'<<it->first.key<<'\t'
-          <<(it->first.value == "" ? "(void)" : it->first.value)<<'\t'
-          <<dec<<((it2->timestamp)>>26)<<' '
-          <<((it2->timestamp & 0x3c00000)>>22)<<' '
-          <<((it2->timestamp & 0x3e0000)>>17)<<' '
-          <<((it2->timestamp & 0x1f000)>>12)<<' '
-          <<((it2->timestamp & 0xfc0)>>6)<<' '
-          <<(it2->timestamp & 0x3f)<<'\n';
-    }
     
     // Update id indexes
     update_map_positions(new_attic_map_positions, *transaction, *attic_settings().WAYS);
