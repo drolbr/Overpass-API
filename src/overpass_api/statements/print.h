@@ -104,7 +104,8 @@ class Print_Statement : public Statement
       (const map< Index, vector< Attic< Object > > >& items,
        Print_Target& target,
        Resource_Manager& rman, Transaction& transaction,
-       const File_Properties* meta_file_prop, uint32& element_count);
+       const File_Properties* current_meta_file_prop, const File_Properties* attic_meta_file_prop,
+       uint32& element_count);
     
     template< class TIndex, class TObject >
     void tags_by_id
@@ -119,7 +120,8 @@ class Print_Statement : public Statement
       (const map< TIndex, vector< Attic< TObject > > >& items,
        uint32 FLUSH_SIZE, Print_Target& target,
        Resource_Manager& rman, Transaction& transaction,
-       const File_Properties* meta_file_prop, uint32& element_count);
+       const File_Properties* current_meta_file_prop, const File_Properties* attic_meta_file_prop,
+       uint32& element_count);
 };
 
 #endif
