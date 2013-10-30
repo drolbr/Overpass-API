@@ -101,6 +101,23 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp
     }
     it->second.swap(local_into);
   }  
+  
+  for (map< Uint32_Index, vector< Attic< Node_Skeleton > > >::iterator it = into.attic_nodes.begin();
+      it != into.attic_nodes.end(); ++it)
+  {
+    vector< Attic< Node_Skeleton > > local_into;
+    for (vector< Attic< Node_Skeleton > >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      uint32 lat(::ilat(it->first.val(), iit->ll_lower));
+      int32 lon(::ilon(it->first.val(), iit->ll_lower));
+      if ((lat >= south_) && (lat <= north_) &&
+          (((lon >= west_) && (lon <= east_))
+            || ((east_ < west_) && ((lon >= west_) || (lon <= east_)))))
+        local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }
 
   
   const set< pair< Uint31_Index, Uint31_Index > >& ranges = bbox->get_ranges_31();
