@@ -40,7 +40,7 @@ class User_Constraint : public Query_Constraint
     
     bool get_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
     bool get_ranges(Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
-    void filter(Resource_Manager& rman, Set& into);
+    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~User_Constraint() {}
     
   private:
@@ -72,7 +72,7 @@ void user_filter_map
   }
 }
 
-void User_Constraint::filter(Resource_Manager& rman, Set& into)
+void User_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   uint32 user_id = user->get_id(*rman.get_transaction());
   user_filter_map(into.nodes, rman, user_id, meta_settings().NODES_META);

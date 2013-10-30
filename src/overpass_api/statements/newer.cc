@@ -38,7 +38,7 @@ class Newer_Constraint : public Query_Constraint
 
     bool delivers_data() { return false; }
     
-    void filter(Resource_Manager& rman, Set& into);
+    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Newer_Constraint() {}
     
   private:
@@ -70,7 +70,7 @@ void newer_filter_map
   }
 }
 
-void Newer_Constraint::filter(Resource_Manager& rman, Set& into)
+void Newer_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   newer_filter_map(into.nodes, rman, timestamp, meta_settings().NODES_META);
   newer_filter_map(into.ways, rman, timestamp, meta_settings().WAYS_META);

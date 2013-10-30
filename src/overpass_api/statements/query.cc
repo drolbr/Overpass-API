@@ -320,24 +320,44 @@ vector< Id_Type > Query_Statement::collect_non_ids
 template < typename TIndex, typename TObject >
 void Query_Statement::get_elements_by_id_from_db
     (map< TIndex, vector< TObject > >& elements,
-     const vector< typename TObject::Id_Type >& ids, bool invert_ids,
+     map< TIndex, vector< Attic< TObject > > >& attic_elements,
+     const vector< typename TObject::Id_Type >& ids, bool invert_ids, uint64 timestamp,
      const set< pair< TIndex, TIndex > >& range_req,
-     Resource_Manager& rman, File_Properties& file_prop)
+     Resource_Manager& rman, File_Properties& file_prop, File_Properties& attic_file_prop)
 {
+  elements.clear();
+  attic_elements.clear();
   if (ids.empty())
+  {
     collect_items_range(this, rman, file_prop, range_req,
 			Trivial_Predicate< TObject >(), elements);
+    if (timestamp != NOW)
+    {
+      collect_items_range(this, rman, attic_file_prop, range_req,
+                          Trivial_Predicate< Attic< TObject > >(), attic_elements);
+      keep_only_least_younger_than(attic_elements, elements, timestamp);
+    }
+  }
   else if (!invert_ids)
+  {
+    //TODO
     collect_items_range(this, rman, file_prop, range_req,
 		        Id_Predicate< TObject >(ids), elements);
+  }
   else if (!range_req.empty())
+  {
+    //TODO
     collect_items_range(this, rman, file_prop, range_req,
 			Not_Predicate< TObject, Id_Predicate< TObject > >
 			(Id_Predicate< TObject >(ids)), elements);
+  }
   else
+  {
+    //TODO
     collect_items_flat(*this, rman, file_prop,
 			Not_Predicate< TObject, Id_Predicate< TObject > >
 			(Id_Predicate< TObject >(ids)), elements);
+  }
 }
 
 
@@ -779,6 +799,9 @@ void Query_Statement::execute(Resource_Manager& rman)
 {
   Answer_State answer_state = nothing;
   Set into;
+  uint64 timestamp = rman.get_desired_timestamp();
+  if (timestamp == 0)
+    timestamp = NOW;
   
   set_progress(1);
   rman.health_check(*this);
@@ -802,13 +825,13 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       progress_1(ids, invert_ids, answer_state,
 		 check_keys_late, *osm_base_settings().WAY_TAGS_GLOBAL, rman);
-      collect_elems(ids, invert_ids, answer_state, into, rman);
+      collect_elems(ids, invert_ids, answer_state, into, rman); //TODO: attic einbauen
     }
     else if (type == QUERY_RELATION)
     {
       progress_1(ids, invert_ids, answer_state,
 		 check_keys_late, *osm_base_settings().RELATION_TAGS_GLOBAL, rman);
-      collect_elems(ids, invert_ids, answer_state, into, rman);
+      collect_elems(ids, invert_ids, answer_state, into, rman); //TODO: attic einbauen
     }
     else if (type == QUERY_AREA)
     {
@@ -850,7 +873,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       for (vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && answer_state < data_collected; ++it)
       {
-	if ((*it)->get_data(*this, rman, into, range_req_32, node_ids, invert_ids))
+	if ((*it)->get_data(*this, rman, into, range_req_32, node_ids, invert_ids, timestamp))
 	  answer_state = data_collected;
       }
     }
@@ -859,7 +882,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       for (vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && answer_state < data_collected; ++it)
       {
-	if ((*it)->get_data(*this, rman, into, range_req_31, type, ids, invert_ids))
+	if ((*it)->get_data(*this, rman, into, range_req_31, type, ids, invert_ids, timestamp))
 	  answer_state = data_collected;
       }
     }
@@ -874,7 +897,9 @@ void Query_Statement::execute(Resource_Manager& rman)
             (node_ids, rman, *osm_base_settings().NODES);
       if (answer_state < data_collected)
         get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
-            (into.nodes, node_ids, invert_ids, range_req_32, rman, *osm_base_settings().NODES);
+            (into.nodes, into.attic_nodes,
+             node_ids, invert_ids, timestamp, range_req_32, rman,
+             *osm_base_settings().NODES, *attic_settings().NODES);
     }
     else if (type == QUERY_WAY)
     {
@@ -883,7 +908,9 @@ void Query_Statement::execute(Resource_Manager& rman)
 	    (ids, rman, *osm_base_settings().WAYS);
       if (answer_state < data_collected)
 	get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
-	    (into.ways, ids, invert_ids, range_req_31, rman, *osm_base_settings().WAYS);
+	    (into.ways, into.attic_ways,
+             ids, invert_ids, timestamp, range_req_31, rman,
+             *osm_base_settings().WAYS, *attic_settings().WAYS);
     }
     else if (type == QUERY_RELATION)
     {
@@ -892,7 +919,9 @@ void Query_Statement::execute(Resource_Manager& rman)
 	    (ids, rman, *osm_base_settings().RELATIONS);
       if (answer_state < data_collected)
 	get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
-	    (into.relations, ids, invert_ids, range_req_31, rman, *osm_base_settings().RELATIONS);
+	    (into.relations, into.attic_relations,
+             ids, invert_ids, timestamp, range_req_31, rman,
+             *osm_base_settings().RELATIONS, *attic_settings().RELATIONS);
     }
     else if (type == QUERY_AREA)
     {
@@ -906,7 +935,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 
   for (vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end(); ++it)
-    (*it)->filter(rman, into);
+    (*it)->filter(rman, into, timestamp);
   
   set_progress(6);
   rman.health_check(*this);
@@ -929,13 +958,15 @@ void Query_Statement::execute(Resource_Manager& rman)
        
   for (vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end(); ++it)
-    (*it)->filter(*this, rman, into);
+    (*it)->filter(*this, rman, into, timestamp);
     
   set_progress(8);
   rman.health_check(*this);
   
   clear_empty_indices(into.nodes);
+  clear_empty_indices(into.attic_nodes);
   clear_empty_indices(into.ways);
+  clear_empty_indices(into.attic_ways);
   clear_empty_indices(into.relations);
   clear_empty_indices(into.areas);
 

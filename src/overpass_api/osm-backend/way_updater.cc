@@ -257,7 +257,7 @@ void compute_new_attic_skeletons
        it != new_node_idx_by_id.end(); ++it)
     nodes_by_id[it->first].push_back(std::make_pair
         (it->second.ll_upper, Attic< Node_Skeleton >(Node_Skeleton(it->first, it->second.ll_lower),
-             std::numeric_limits< unsigned long long >::max())));
+             NOW)));
     
   // Create full_attic and idx_lists by going through new_data and filling the gaps
   std::vector< Data_By_Id< Way_Skeleton >::Entry >::const_iterator next_it
@@ -322,7 +322,7 @@ void compute_new_attic_skeletons
       // This is the latest version of this element. Care here for changes since this element.
     {
       add_intermediate_versions(it->elem, it->meta.timestamp,
-                                std::numeric_limits< unsigned long long >::max(), nodes_by_id,
+                                NOW, nodes_by_id,
                                 false, Uint31_Index(0u),
                                 full_attic, new_undeleted, idx_lists);
     }
@@ -333,7 +333,7 @@ void compute_new_attic_skeletons
       it = implicitly_moved_skeletons.begin(); it != implicitly_moved_skeletons.end(); ++it)
   {
     for (std::set< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      add_intermediate_versions(*it2, 0, std::numeric_limits< unsigned long long >::max(), nodes_by_id,
+      add_intermediate_versions(*it2, 0, NOW, nodes_by_id,
                                 false, it->first,
                                 full_attic, new_undeleted, idx_lists);
   }
@@ -365,7 +365,7 @@ std::map< typename Element_Skeleton::Id_Type, std::vector< Attic< Uint31_Index >
     for (typename std::set< Element_Skeleton >::const_iterator it2 = it->second.begin();
          it2 != it->second.end(); ++it2)
       result[it2->id].push_back(Attic< Uint31_Index >
-          (it->first, std::numeric_limits< unsigned long long >::max()));
+          (it->first, NOW));
   }
   
   typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
@@ -378,8 +378,7 @@ std::map< typename Element_Skeleton::Id_Type, std::vector< Attic< Uint31_Index >
     if (it->idx.val() == 0)
     {
       if (next_it == new_data.data.end() || !(it->elem.id == next_it->elem.id))
-        result[it->elem.id].push_back(Attic< Uint31_Index >(it->idx,
-            std::numeric_limits< unsigned long long >::max()));
+        result[it->elem.id].push_back(Attic< Uint31_Index >(it->idx, NOW));
       else 
         result[it->elem.id].push_back(Attic< Uint31_Index >(it->idx, next_it->meta.timestamp));
     }
@@ -538,7 +537,7 @@ std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >, std::vec
   for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
       it = new_data.data.begin(); it != new_data.data.end(); ++it)
   {
-    uint64 next_timestamp = std::numeric_limits< unsigned long long >::max();
+    uint64 next_timestamp = NOW;
     if (next_it != new_data.data.end())
     {
       if (next_it->elem.id == it->elem.id)
@@ -569,8 +568,7 @@ std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >, std::vec
          it2 != it->second.end(); ++it2)
     {
       std::vector< Attic< std::string > >& result_ref = result[std::make_pair(*it2, it->first.key)];
-      uint64 timestamp = (timestamp_per_id[*it2] == 0 ?
-          std::numeric_limits< unsigned long long >::max() : timestamp_per_id[*it2]);
+      uint64 timestamp = (timestamp_per_id[*it2] == 0 ? NOW : timestamp_per_id[*it2]);
       if (result_ref.empty() || result_ref.back().timestamp != timestamp_per_id[*it2])
         result_ref.push_back(Attic< std::string >(it->first.value, timestamp));
       else
@@ -624,7 +622,7 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
       Uint31_Index last_idx = *it2;
       std::string last_value = "";
       ++it2;
-      if (tit2 != tit->second.end() && tit2->timestamp == std::numeric_limits< unsigned long long >::max())
+      if (tit2 != tit->second.end() && tit2->timestamp == NOW)
       {
         last_value = *tit2;
         ++tit2;

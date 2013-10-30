@@ -525,14 +525,17 @@ class Recurse_Constraint : public Query_Constraint
 
     bool delivers_data() { return true; }
     
-    bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-		  const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-		  const vector< Node::Id_Type >& ids, bool invert_ids);
-    bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-		  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-		  int type, const vector< Uint32_Index >& ids, bool invert_ids);
-    void filter(Resource_Manager& rman, Set& into);
-    void filter(const Statement& query, Resource_Manager& rman, Set& into);
+    virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
+                          const set< pair< Uint32_Index, Uint32_Index > >& ranges,
+                          const vector< Node::Id_Type >& ids,
+                          bool invert_ids, uint64 timestamp);
+    virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
+                          const set< pair< Uint31_Index, Uint31_Index > >& ranges,
+                          int type,
+                          const vector< Uint32_Index >& ids,
+                          bool invert_ids, uint64 timestamp);
+    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Recurse_Constraint() {}
     
   private:
@@ -542,7 +545,8 @@ class Recurse_Constraint : public Query_Constraint
 bool Recurse_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
      const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-     const vector< Node::Id_Type >& ids, bool invert_ids)
+     const vector< Node::Id_Type >& ids,
+     bool invert_ids, uint64 timestamp)
 {
   map< string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
   if (mit == rman.sets().end())
@@ -589,7 +593,9 @@ bool Recurse_Constraint::get_data
 bool Recurse_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
      const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-     int type, const vector< Uint32_Index >& ids, bool invert_ids)
+     int type,
+     const vector< Uint32_Index >& ids,
+     bool invert_ids, uint64 timestamp)
 {
   map< string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
   if (mit == rman.sets().end())
@@ -789,7 +795,7 @@ bool Recurse_Constraint::get_data
   return false;
 }
 
-void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
+void Recurse_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   map< string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
   if (mit == rman.sets().end())
@@ -923,7 +929,7 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
   //TODO: areas
 }
 
-void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
+void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   map< string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
   

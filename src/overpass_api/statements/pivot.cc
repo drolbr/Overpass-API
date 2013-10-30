@@ -132,13 +132,16 @@ class Pivot_Constraint : public Query_Constraint
     
     bool delivers_data() { return true; }
     
-    bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-		  const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-		  const vector< Node_Skeleton::Id_Type >& ids, bool invert_ids);
-    bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-		  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-		  int type, const vector< Uint32_Index >& ids, bool invert_ids);
-    void filter(Resource_Manager& rman, Set& into);
+    virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
+                          const set< pair< Uint32_Index, Uint32_Index > >& ranges,
+                          const vector< Node::Id_Type >& ids,
+                          bool invert_ids, uint64 timestamp);
+    virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
+                          const set< pair< Uint31_Index, Uint31_Index > >& ranges,
+                          int type,
+                          const vector< Uint32_Index >& ids,
+                          bool invert_ids, uint64 timestamp);
+    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Pivot_Constraint() {}
     
   private:
@@ -149,7 +152,8 @@ class Pivot_Constraint : public Query_Constraint
 bool Pivot_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
      const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-     const vector< Node_Skeleton::Id_Type >& ids, bool invert_ids)
+     const vector< Node_Skeleton::Id_Type >& ids,
+     bool invert_ids, uint64 timestamp)
 {
   vector< Node::Id_Type > pivot_ids = get_node_pivot_ids(rman.sets()[stmt->get_input()].areas);
   vector< Node::Id_Type > intersect_ids(pivot_ids.size());
@@ -174,7 +178,9 @@ bool Pivot_Constraint::get_data
 bool Pivot_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
      const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-     int type, const vector< Uint32_Index >& ids, bool invert_ids)
+     int type,
+     const vector< Uint32_Index >& ids,
+     bool invert_ids, uint64 timestamp)
 {
   if (type == QUERY_WAY)
   {
@@ -216,7 +222,7 @@ bool Pivot_Constraint::get_data
   return true;
 }
 
-void Pivot_Constraint::filter(Resource_Manager& rman, Set& into)
+void Pivot_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   filter_elems(get_node_pivot_ids(rman.sets()[stmt->get_input()].areas), into.nodes);
   filter_elems(get_way_pivot_ids(rman.sets()[stmt->get_input()].areas), into.ways);

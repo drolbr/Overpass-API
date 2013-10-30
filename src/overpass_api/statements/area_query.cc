@@ -47,8 +47,8 @@ class Area_Constraint : public Query_Constraint
         (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges
         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
-    void filter(Resource_Manager& rman, Set& into);
-    void filter(const Statement& query, Resource_Manager& rman, Set& into);
+    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Area_Constraint() {}
     
   private:
@@ -85,7 +85,7 @@ bool Area_Constraint::get_ranges
 }
 
 
-void Area_Constraint::filter(Resource_Manager& rman, Set& into)
+void Area_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   set< pair< Uint31_Index, Uint31_Index > > ranges;
   get_ranges(rman, ranges);
@@ -115,7 +115,7 @@ void Area_Constraint::filter(Resource_Manager& rman, Set& into)
 }
 
 
-void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
+void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   set< pair< Uint32_Index, Uint32_Index > > range_req;
   if (area->areas_from_input())

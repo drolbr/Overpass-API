@@ -45,8 +45,8 @@ class Polygon_Constraint : public Query_Constraint
         (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges
         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
-    void filter(Resource_Manager& rman, Set& into);
-    void filter(const Statement& query, Resource_Manager& rman, Set& into);
+    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Polygon_Constraint() {}
     
   private:
@@ -77,7 +77,7 @@ bool Polygon_Constraint::get_ranges
 }
 
 
-void Polygon_Constraint::filter(Resource_Manager& rman, Set& into)
+void Polygon_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   polygon->collect_nodes(into.nodes, true);
   
@@ -111,7 +111,7 @@ void Polygon_Constraint::filter(Resource_Manager& rman, Set& into)
 }
 
 
-void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
+void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   {
     //Process ways  

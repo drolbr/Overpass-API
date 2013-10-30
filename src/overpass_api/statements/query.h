@@ -74,9 +74,10 @@ class Query_Statement : public Output_Statement
     template < typename TIndex, typename TObject >
     void get_elements_by_id_from_db
         (map< TIndex, vector< TObject > >& elements,
-	 const vector< typename TObject::Id_Type >& ids, bool invert_ids,
+	 map< TIndex, vector< Attic< TObject > > >& attic_elements,
+         const vector< typename TObject::Id_Type >& ids, bool invert_ids, uint64 timestamp,
 	 const set< pair< TIndex, TIndex > >& range_req,
-         Resource_Manager& rman, File_Properties& file_prop);
+         Resource_Manager& rman, File_Properties& file_prop, File_Properties& attic_file_prop);
 
     void get_elements_by_id_from_db
         (map< Uint31_Index, vector< Area_Skeleton > >& elements,

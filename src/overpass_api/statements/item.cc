@@ -31,7 +31,7 @@ class Item_Constraint : public Query_Constraint
 		 const vector< Uint64 >& ids, bool invert_ids);
     bool collect(Resource_Manager& rman, Set& into, int type,
 		 const vector< Uint32_Index >& ids, bool invert_ids);
-    void filter(Resource_Manager& rman, Set& into);
+    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Item_Constraint() {}
     
   private:
@@ -127,7 +127,7 @@ void item_filter_map
   }
 }
 
-void Item_Constraint::filter(Resource_Manager& rman, Set& into)
+void Item_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   item_filter_map(into.nodes, rman.sets()[item->get_result_name()].nodes);
   item_filter_map(into.ways, rman.sets()[item->get_result_name()].ways);

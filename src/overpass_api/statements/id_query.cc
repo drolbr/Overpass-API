@@ -124,13 +124,16 @@ class Id_Query_Constraint : public Query_Constraint
     
     bool delivers_data() { return true; }
     
-    bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-		  const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-		  const vector< Node_Skeleton::Id_Type >& ids, bool invert_ids);
-    bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-		  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-		  int type, const vector< Uint32_Index >& ids, bool invert_ids);
-    void filter(Resource_Manager& rman, Set& into);
+    virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
+                          const set< pair< Uint32_Index, Uint32_Index > >& ranges,
+                          const vector< Node::Id_Type >& ids,
+                          bool invert_ids, uint64 timestamp);
+    virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
+                          const set< pair< Uint31_Index, Uint31_Index > >& ranges,
+                          int type,
+                          const vector< Uint32_Index >& ids,
+                          bool invert_ids, uint64 timestamp);
+    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Id_Query_Constraint() {}
     
   private:
@@ -140,7 +143,8 @@ class Id_Query_Constraint : public Query_Constraint
 bool Id_Query_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
      const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-     const vector< Node_Skeleton::Id_Type >& ids, bool invert_ids)
+     const vector< Node_Skeleton::Id_Type >& ids,
+     bool invert_ids, uint64 timestamp)
 {
   if (stmt->get_type() == Statement::NODE)
   {
@@ -158,7 +162,9 @@ bool Id_Query_Constraint::get_data
 bool Id_Query_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
      const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-     int type, const vector< Uint32_Index >& ids, bool invert_ids)
+     int type,
+     const vector< Uint32_Index >& ids,
+     bool invert_ids, uint64 timestamp)
 {
   if (stmt->get_type() == Statement::WAY)
   {
@@ -192,7 +198,7 @@ bool Id_Query_Constraint::get_data
   return false;
 }
 
-void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into)
+void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   if (stmt->get_type() == Statement::NODE)
     filter_elems(stmt->get_lower(), stmt->get_upper(), into.nodes);

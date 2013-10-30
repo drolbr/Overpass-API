@@ -295,8 +295,8 @@ class Around_Constraint : public Query_Constraint
         (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges
         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
-    void filter(Resource_Manager& rman, Set& into);
-    void filter(const Statement& query, Resource_Manager& rman, Set& into);
+    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Around_Constraint() {}
     
   private:
@@ -322,7 +322,7 @@ bool Around_Constraint::get_ranges
   return true;
 }
 
-void Around_Constraint::filter(Resource_Manager& rman, Set& into)
+void Around_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   // pre-process ways to reduce the load of the expensive filter
   if (ranges_used == false)
@@ -451,7 +451,7 @@ struct Relation_Member_Collection
 };
 
 
-void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
+void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   around->calc_lat_lons(rman.sets()[around->get_source_name()], *around, rman);
   

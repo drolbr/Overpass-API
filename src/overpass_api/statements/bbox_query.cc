@@ -42,8 +42,8 @@ class Bbox_Constraint : public Query_Constraint
         (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges
         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
-    void filter(Resource_Manager& rman, Set& into);
-    void filter(const Statement& query, Resource_Manager& rman, Set& into);
+    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Bbox_Constraint() {}
     
   private:
@@ -77,7 +77,7 @@ bool Bbox_Constraint::get_ranges
 }
 
 
-void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
+void Bbox_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   // process nodes
   uint32 south_ = ilat_(bbox->get_south());
@@ -128,6 +128,8 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
       it->second.clear();
   }
   
+  //TODO: filter attic elements
+  
   //TODO: filter areas
 }
 
@@ -156,7 +158,7 @@ bool matches_bbox(const Bbox_Query_Statement& bbox, const vector< Quad_Coord >& 
 }
 
 
-void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
+void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   {
     //Process ways
@@ -265,6 +267,8 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
       it->second.swap(local_into);
     }
   }  
+  
+  //TODO: filter attic elements
   
   //TODO: filter areas
 }

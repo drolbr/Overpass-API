@@ -19,11 +19,11 @@
 #ifndef DE__OSM3S___OVERPASS_API__CORE__SETTINGS_H
 #define DE__OSM3S___OVERPASS_API__CORE__SETTINGS_H
 
+#include <limits>
 #include <string>
 
 #include "../../template_db/types.h"
 
-using namespace std;
 
 struct Basic_Settings
 {
@@ -38,6 +38,7 @@ struct Basic_Settings
   
   Basic_Settings();
 };
+
 
 struct Osm_Base_Settings
 {
@@ -61,6 +62,7 @@ struct Osm_Base_Settings
   Osm_Base_Settings();
 };
 
+
 struct Area_Settings
 {
   File_Properties* AREA_BLOCKS;
@@ -77,6 +79,7 @@ struct Area_Settings
   Area_Settings();
 };
 
+
 struct Meta_Settings
 {
   File_Properties* USER_DATA;
@@ -87,6 +90,7 @@ struct Meta_Settings
   
   Meta_Settings();
 };
+
 
 struct Attic_Settings
 {
@@ -115,6 +119,7 @@ struct Attic_Settings
   Attic_Settings();
 };
 
+
 Basic_Settings& basic_settings();
 const Osm_Base_Settings& osm_base_settings();
 const Area_Settings& area_settings();
@@ -122,6 +127,7 @@ const Meta_Settings& meta_settings();
 const Attic_Settings& attic_settings();
 
 void show_mem_status();
+
 
 class Logger
 {
@@ -133,5 +139,8 @@ class Logger
   private:
     string logfile_full_name;
 };
+
+
+const uint64 NOW = std::numeric_limits< unsigned long long >::max();
 
 #endif
