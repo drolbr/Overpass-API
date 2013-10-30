@@ -36,7 +36,7 @@ Generic_Statement_Maker< Osm_Script_Statement > Osm_Script_Statement::statement_
 Osm_Script_Statement::Osm_Script_Statement
     (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation_)
     : Statement(line_number_), bbox_limitation(bbox_limitation_), bbox_statement(0),
-       desired_timestamp(0), max_allowed_time(0), max_allowed_space(0),
+       desired_timestamp(NOW), max_allowed_time(0), max_allowed_space(0),
        type("xml"), output_handle(0), factory(0),
        template_name("default.wiki"), template_contains_js_(false)
 {

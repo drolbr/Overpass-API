@@ -387,39 +387,17 @@ const set< pair< Uint31_Index, Uint31_Index > >& Bbox_Query_Statement::get_range
 void Bbox_Query_Statement::execute(Resource_Manager& rman)
 {
   Set into;
+  
+  Bbox_Constraint constraint(*this);
+  set< pair< Uint32_Index, Uint32_Index > > ranges;
+  constraint.get_ranges(rman, ranges);
+  get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
+      (into.nodes, into.attic_nodes,
+       vector< Node::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
+       *osm_base_settings().NODES, *attic_settings().NODES);  
+  constraint.filter(rman, into, rman.get_desired_timestamp());
+  filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
 
-  const set< pair< Uint32_Index, Uint32_Index > >& req = get_ranges_32();
-  rman.health_check(*this);
-  
-  uint nodes_count = 0;
-  
-  uint32 south_ = ilat_(south);
-  uint32 north_ = ilat_(north);
-  int32 west_ = ilon_(west);
-  int32 east_ = ilon_(east);
-  
-  Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-    (rman.get_transaction()->data_index(osm_base_settings().NODES));
-  for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
-    it(nodes_db.range_begin
-      (Default_Range_Iterator< Uint32_Index >(req.begin()),
-       Default_Range_Iterator< Uint32_Index >(req.end())));
-    !(it == nodes_db.range_end()); ++it)
-  {
-    if (++nodes_count >= 64*1024)
-    {
-      nodes_count = 0;
-      rman.health_check(*this);
-    }
-    
-    uint32 lat(::ilat(it.index().val(), it.object().ll_lower));
-    int32 lon(::ilon(it.index().val(), it.object().ll_lower));
-    if ((lat >= south_) && (lat <= north_) &&
-        (((lon >= west_) && (lon <= east_))
-	  || ((east_ < west_) && ((lon >= west_) || (lon <= east_)))))
-      into.nodes[it.index()].push_back(it.object());
-  }
-  
   transfer_output(rman, into);
   rman.health_check(*this);
 }

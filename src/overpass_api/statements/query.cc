@@ -20,6 +20,7 @@
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
 #include "../data/abstract_processing.h"
+#include "../data/collect_members.h"
 #include "../data/filenames.h"
 #include "../data/regular_expression.h"
 #include "meta_collector.h"
@@ -315,50 +316,6 @@ vector< Id_Type > Query_Statement::collect_non_ids
   new_ids.erase(unique(new_ids.begin(), new_ids.end()), new_ids.end());
 
   return new_ids;
-}
-
-
-template < typename TIndex, typename TObject >
-void Query_Statement::get_elements_by_id_from_db
-    (map< TIndex, vector< TObject > >& elements,
-     map< TIndex, vector< Attic< TObject > > >& attic_elements,
-     const vector< typename TObject::Id_Type >& ids, bool invert_ids, uint64 timestamp,
-     const set< pair< TIndex, TIndex > >& range_req,
-     Resource_Manager& rman, File_Properties& file_prop, File_Properties& attic_file_prop)
-{
-  elements.clear();
-  attic_elements.clear();
-  if (ids.empty())
-  {
-    collect_items_range(this, rman, file_prop, range_req,
-			Trivial_Predicate< TObject >(), elements);
-    if (timestamp != NOW)
-    {
-      collect_items_range(this, rman, attic_file_prop, range_req,
-                          Trivial_Predicate< Attic< TObject > >(), attic_elements);
-      keep_only_least_younger_than(attic_elements, elements, timestamp);
-    }
-  }
-  else if (!invert_ids)
-  {
-    //TODO
-    collect_items_range(this, rman, file_prop, range_req,
-		        Id_Predicate< TObject >(ids), elements);
-  }
-  else if (!range_req.empty())
-  {
-    //TODO
-    collect_items_range(this, rman, file_prop, range_req,
-			Not_Predicate< TObject, Id_Predicate< TObject > >
-			(Id_Predicate< TObject >(ids)), elements);
-  }
-  else
-  {
-    //TODO
-    collect_items_flat(*this, rman, file_prop,
-			Not_Predicate< TObject, Id_Predicate< TObject > >
-			(Id_Predicate< TObject >(ids)), elements);
-  }
 }
 
 
@@ -796,186 +753,6 @@ void Query_Statement::collect_elems(vector< Id_Type >& ids,
 }
 
 
-template< typename Index, typename Skeleton >
-void filter_attic_elements
-    (Resource_Manager& rman, uint64 timestamp,
-     std::map< Index, std::vector< Skeleton > >& current,
-     std::map< Index, std::vector< Attic< Skeleton > > >& attic)
-{
-  if (timestamp != NOW)
-  {
-    std::vector< Index > idx_set;
-    for (typename std::map< Index, std::vector< Skeleton > >::const_iterator it = current.begin();
-         it != current.end(); ++it)
-      idx_set.push_back(it->first);
-    for (typename std::map< Index, std::vector< Attic< Skeleton > > >::const_iterator it = attic.begin();
-         it != attic.end(); ++it)
-      idx_set.push_back(it->first);
-    std::sort(idx_set.begin(), idx_set.end());
-    idx_set.erase(std::unique(idx_set.begin(), idx_set.end()), idx_set.end());
-    
-    // Remove elements that have been deleted at the given point of time
-    std::map< Index, std::vector< typename Skeleton::Id_Type > > deleted_items;
-    
-    Block_Backend< Index, Attic< typename Skeleton::Id_Type >, typename std::vector< Index >::const_iterator >
-        undeleted_db(rman.get_transaction()->data_index(attic_undeleted_file_properties< Skeleton >()));
-    for (typename Block_Backend< Index, Attic< typename Skeleton::Id_Type >,
-            typename std::vector< Index >::const_iterator >
-        ::Discrete_Iterator
-        it = undeleted_db.discrete_begin(idx_set.begin(), idx_set.end());
-        !(it == undeleted_db.discrete_end()); ++it)
-    {
-      if (it.object().timestamp <= timestamp)
-        continue;
-      
-      typename std::map< Index, vector< Skeleton > >::iterator cit = current.find(it.index());
-      if (cit != current.end())
-      {
-        for (typename vector< Skeleton >::iterator it2 = cit->second.begin(); it2 != cit->second.end(); )
-        {
-          if (it2->id == it.object())
-          {
-            *it2 = cit->second.back();
-            cit->second.pop_back();
-          }
-          else
-            ++it2;
-        }
-      }
-      
-      typename std::map< Index, vector< Attic< Skeleton > > >::iterator ait = attic.find(it.index());
-      if (ait != attic.end())
-      {
-        for (typename vector< Attic< Skeleton > >::iterator it2 = ait->second.begin();
-             it2 != ait->second.end(); )
-        {
-          if (it2->id == it.object() && it.object().timestamp < it2->timestamp)
-          {
-            *it2 = ait->second.back();
-            ait->second.pop_back();
-          }
-          else
-            ++it2;
-        }
-      }
-    }
-    
-    
-    // Confirm elements that are backed by meta data
-    // Update element's expiration timestamp if a meta exists that is older than the current
-    // expiration date and younger than timestamp
-    std::map< Index, std::map< typename Skeleton::Id_Type, std::pair< uint64, uint64 > > >
-        timestamp_by_id_by_idx;
-    for (typename std::map< Index, std::vector< Skeleton > >::const_iterator it = current.begin();
-         it != current.end(); ++it)
-    {
-      std::map< typename Skeleton::Id_Type, std::pair< uint64, uint64 > >& entry
-          = timestamp_by_id_by_idx[it->first];
-      for (typename std::vector< Skeleton >::const_iterator it2 = it->second.begin();
-           it2 != it->second.end(); ++it2)
-        entry[it2->id] = std::make_pair(0, NOW);
-    }
-    for (typename std::map< Index, vector< Attic< Skeleton > > >::const_iterator it = attic.begin();
-         it != attic.end(); ++it)
-    {
-      std::map< typename Skeleton::Id_Type, std::pair< uint64, uint64 > >& entry
-          = timestamp_by_id_by_idx[it->first];
-      for (typename std::vector< Attic< Skeleton > >::const_iterator it2 = it->second.begin();
-           it2 != it->second.end(); ++it2)
-        entry[it2->id] = std::make_pair(0, it2->timestamp);
-    }
-    
-    Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
-            typename std::vector< Index >::const_iterator >
-        attic_meta_db(rman.get_transaction()->data_index
-          (attic_meta_file_properties< Skeleton >()));
-    for (typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
-            typename std::vector< Index >::const_iterator >
-        ::Discrete_Iterator
-        it = attic_meta_db.discrete_begin(idx_set.begin(), idx_set.end());
-        !(it == attic_meta_db.discrete_end()); ++it)
-    {
-      typename std::map< typename Skeleton::Id_Type, std::pair< uint64, uint64 > >::iterator
-          tit = timestamp_by_id_by_idx[it.index()].find(it.object().ref);
-      if (tit != timestamp_by_id_by_idx[it.index()].end())
-      {
-        if (timestamp < it.object().timestamp)
-          tit->second.second = std::min(tit->second.second, it.object().timestamp);
-        else
-          tit->second.first = std::max(tit->second.first, it.object().timestamp);
-      }
-    }
-    
-    // Same thing with current meta data
-    Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
-            typename std::vector< Index >::const_iterator >
-        meta_db(rman.get_transaction()->data_index
-          (current_meta_file_properties< Skeleton >()));
-        
-    for (typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
-            typename std::vector< Index >::const_iterator >
-        ::Discrete_Iterator
-        it = meta_db.discrete_begin(idx_set.begin(), idx_set.end());
-        !(it == meta_db.discrete_end()); ++it)
-    {
-      typename std::map< typename Skeleton::Id_Type, std::pair< uint64, uint64 > >::iterator
-          tit = timestamp_by_id_by_idx[it.index()].find(it.object().ref);
-      if (tit != timestamp_by_id_by_idx[it.index()].end())
-      {
-        if (timestamp < it.object().timestamp)
-          tit->second.second = std::min(tit->second.second, it.object().timestamp);
-        else
-          tit->second.first = std::max(tit->second.first, it.object().timestamp);
-      }
-    }
-    
-    // Filter current: only keep elements that have already existed at timestamp
-    for (typename std::map< Index, std::vector< Skeleton > >::iterator it = current.begin();
-         it != current.end(); ++it)
-    {
-      std::vector< Skeleton > result;      
-      std::map< typename Skeleton::Id_Type, std::pair< uint64, uint64 > >& entry
-          = timestamp_by_id_by_idx[it->first];
-          
-      for (typename std::vector< Skeleton >::const_iterator it2 = it->second.begin();
-           it2 != it->second.end(); ++it2)
-      {
-        if (entry[it2->id].first > 0)
-        {
-          if (entry[it2->id].second == NOW)
-            result.push_back(*it2);
-          else
-            attic[it->first].push_back(Attic< Skeleton >(*it2, entry[it2->id].second));
-        }
-      }
-      
-      result.swap(it->second);
-    }
-    
-    // Filter attic: only keep elements that have already existed at timestamp
-    for (typename std::map< Index, std::vector< Attic< Skeleton > > >::iterator it = attic.begin();
-         it != attic.end(); ++it)
-    {
-      std::vector< Attic< Skeleton > > result;      
-      std::map< typename Skeleton::Id_Type, std::pair< uint64, uint64 > >& entry
-          = timestamp_by_id_by_idx[it->first];
-          
-      for (typename std::vector< Attic< Skeleton > >::const_iterator it2 = it->second.begin();
-           it2 != it->second.end(); ++it2)
-      {
-        if (entry[it2->id].first > 0)
-        {
-          result.push_back(*it2);
-          result.back().timestamp = entry[it2->id].second;
-        }
-      }
-      
-      result.swap(it->second);
-    }
-  }
-}
-
-
 void Query_Statement::execute(Resource_Manager& rman)
 {
   Answer_State answer_state = nothing;
@@ -1077,9 +854,9 @@ void Query_Statement::execute(Resource_Manager& rman)
         range_req_32 = get_ranges_by_id_from_db< Uint32_Index >
             (node_ids, rman, *osm_base_settings().NODES);
       if (answer_state < data_collected)
-        get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
+        ::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
             (into.nodes, into.attic_nodes,
-             node_ids, invert_ids, timestamp, range_req_32, rman,
+             node_ids, invert_ids, timestamp, range_req_32, *this, rman,
              *osm_base_settings().NODES, *attic_settings().NODES);
     }
     else if (type == QUERY_WAY)
@@ -1088,9 +865,9 @@ void Query_Statement::execute(Resource_Manager& rman)
 	range_req_31 = get_ranges_by_id_from_db< Uint31_Index >
 	    (ids, rman, *osm_base_settings().WAYS);
       if (answer_state < data_collected)
-	get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
+	::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
 	    (into.ways, into.attic_ways,
-             ids, invert_ids, timestamp, range_req_31, rman,
+             ids, invert_ids, timestamp, range_req_31, *this, rman,
              *osm_base_settings().WAYS, *attic_settings().WAYS);
     }
     else if (type == QUERY_RELATION)
@@ -1099,9 +876,9 @@ void Query_Statement::execute(Resource_Manager& rman)
 	range_req_31 = get_ranges_by_id_from_db< Uint31_Index >
 	    (ids, rman, *osm_base_settings().RELATIONS);
       if (answer_state < data_collected)
-	get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
+	::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
 	    (into.relations, into.attic_relations,
-             ids, invert_ids, timestamp, range_req_31, rman,
+             ids, invert_ids, timestamp, range_req_31, *this, rman,
              *osm_base_settings().RELATIONS, *attic_settings().RELATIONS);
     }
     else if (type == QUERY_AREA)
