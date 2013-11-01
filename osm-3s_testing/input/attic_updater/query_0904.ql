@@ -1,4 +1,4 @@
-[date:"2013-07-01T09:04:10Z"];
+[date:"2013-07-01T09:04:00Z"];
 
 node(1101);out meta;
 node(1102);out meta;
@@ -117,3 +117,5 @@ way(2503);out meta;
 way(2504);out meta;
 way(2505);out meta;
 way(2506);out meta;
+
+node(0,0,30,40);out meta;

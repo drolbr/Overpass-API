@@ -116,3 +116,5 @@ way(2503);out meta;
 way(2504);out meta;
 way(2505);out meta;
 way(2506);out meta;
+
+node(0,0,30,40);out meta;
