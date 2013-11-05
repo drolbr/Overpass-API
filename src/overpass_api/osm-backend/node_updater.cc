@@ -192,7 +192,7 @@ std::map< Uint31_Index, std::set< Attic< typename Element_Skeleton::Id_Type > > 
     compute_undeleted_skeletons
     (const Data_By_Id< Element_Skeleton >& new_data,
      const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
-     const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& attic_map_positions)
+     const std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > >& existing_idx_lists)
 {
   std::map< Uint31_Index, std::set< Attic< typename Element_Skeleton::Id_Type > > > result;
 
@@ -205,15 +205,20 @@ std::map< Uint31_Index, std::set< Attic< typename Element_Skeleton::Id_Type > > 
       // An earlier version exists also in new_data.
       typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator last_it = it;
       --last_it;
-      if (last_it->idx == Uint31_Index(0u))
+      if (!(last_it->idx == it->idx))
         result[it->idx].insert(Attic< typename Element_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
     }
     else
     {
-      const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
-      const Uint31_Index* idx_attic = binary_pair_search(attic_map_positions, it->elem.id);
-      if (!idx && idx_attic)
-        result[it->idx].insert(Attic< typename Element_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
+      std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > >::const_iterator
+          attic_idx_it = existing_idx_lists.find(it->elem.id);
+      if (attic_idx_it != existing_idx_lists.end()
+          && attic_idx_it->second.find(it->idx) != attic_idx_it->second.end())
+      {
+        const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
+        if (!idx || !(*idx == it->idx))
+          result[it->idx].insert(Attic< typename Element_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
+      }
     }
     last_id = it->elem.id;
   }
@@ -552,7 +557,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
                                 new_attic_skeletons, new_attic_idx_lists);
     
     std::map< Uint31_Index, std::set< Attic< Node_Skeleton::Id_Type > > > new_undeleted
-        = compute_undeleted_skeletons(new_data, existing_map_positions, existing_attic_map_positions);
+        = compute_undeleted_skeletons(new_data, existing_map_positions, existing_idx_lists);
     
     strip_single_idxs(existing_idx_lists);
     std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > new_attic_map_positions

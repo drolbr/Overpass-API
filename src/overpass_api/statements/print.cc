@@ -498,10 +498,10 @@ void collect_metadata(set< OSM_Element_Metadata_Skeleton< typename TObject::Id_T
       if (!(it2->id < lower_id_bound) && (it2->id < upper_id_bound))
       {
         const OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >* meta
-            = attic_meta_printer.get(it->first, it2->id, it2->timestamp);
-        if (!meta)
-          meta = current_meta_printer.get(it->first, it2->id, it2->timestamp);
-        if (meta)
+            = current_meta_printer.get(it->first, it2->id, it2->timestamp);
+        if (!meta || !(meta->timestamp < it2->timestamp))
+          meta = attic_meta_printer.get(it->first, it2->id, it2->timestamp);
+        if (meta)          
           metadata.insert(*meta);
       }
     }
