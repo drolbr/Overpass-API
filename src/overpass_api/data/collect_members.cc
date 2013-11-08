@@ -769,11 +769,13 @@ vector< Uint31_Index > segment_idxs(const vector< Quad_Coord >& geometry)
 }
 
 
-void filter_ways_by_ranges(map< Uint31_Index, vector< Way_Skeleton > >& ways,
-                           const set< pair< Uint31_Index, Uint31_Index > >& ranges)
+template< typename Object >
+void filter_ways_by_ranges_generic
+    (map< Uint31_Index, vector< Object > >& ways,
+    const set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
   set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it = ranges.begin();
-  map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin();
+  typename map< Uint31_Index, vector< Object > >::iterator it = ways.begin();
   set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_begin = ranges.begin();
   for (; it != ways.end() && ranges_it != ranges.end(); )
   {
@@ -785,10 +787,10 @@ void filter_ways_by_ranges(map< Uint31_Index, vector< Way_Skeleton > >& ways,
         ++it;
       else
       {
-        vector< Way_Skeleton > filtered_ways;
+        vector< Object > filtered_ways;
         while (!(Uint31_Index(it->first.val() & 0x7fffff00) < ranges_begin->second))
           ++ranges_begin;
-        for (vector< Way_Skeleton >::const_iterator it2 = it->second.begin();
+        for (typename vector< Object >::const_iterator it2 = it->second.begin();
              it2 != it->second.end(); ++it2)
         {
           set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it2 = ranges_begin;
@@ -826,15 +828,30 @@ void filter_ways_by_ranges(map< Uint31_Index, vector< Way_Skeleton > >& ways,
 }
 
 
-vector< Node::Id_Type > small_way_nd_ids(const map< Uint31_Index, vector< Way_Skeleton > >& ways)
+void filter_ways_by_ranges(map< Uint31_Index, vector< Way_Skeleton > >& ways,
+                           const set< pair< Uint31_Index, Uint31_Index > >& ranges)
+{
+  filter_ways_by_ranges_generic(ways, ranges);
+}
+
+
+void filter_ways_by_ranges(map< Uint31_Index, vector< Attic< Way_Skeleton > > >& ways,
+                           const set< pair< Uint31_Index, Uint31_Index > >& ranges)
+{
+  filter_ways_by_ranges_generic(ways, ranges);
+}
+
+
+template< typename Object >
+vector< Node::Id_Type > small_way_nd_ids(const map< Uint31_Index, vector< Object > >& ways)
 {
   vector< Node::Id_Type > ids;
-  for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
+  for (typename map< Uint31_Index, vector< Object > >::const_iterator
       it(ways.begin()); it != ways.end(); ++it)
   {
     if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x1) == 0))
       continue;
-    for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
+    for (typename vector< Object >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
     {
       for (vector< Node::Id_Type >::const_iterator it3(it2->nds.begin());
@@ -850,14 +867,15 @@ vector< Node::Id_Type > small_way_nd_ids(const map< Uint31_Index, vector< Way_Sk
 }
 
 
+template< typename Object >
 set< pair< Uint32_Index, Uint32_Index > > small_way_nd_indices
     (const Statement* stmt, Resource_Manager& rman,
-     map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_begin,
-     map< Uint31_Index, vector< Way_Skeleton > >::const_iterator ways_end)
+     typename map< Uint31_Index, vector< Object > >::const_iterator ways_begin,
+     typename map< Uint31_Index, vector< Object > >::const_iterator ways_end)
 {
   vector< uint32 > parents;
   
-  for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
+  for (typename map< Uint31_Index, vector< Object > >::const_iterator
     it(ways_begin); it != ways_end; ++it)
   {
     if (!(it->first.val() & 0x80000000) || ((it->first.val() & 0x1) != 0)) // Adapt 0x3
@@ -880,10 +898,64 @@ map< Uint32_Index, vector< Node_Skeleton > > small_way_members
   map< Uint32_Index, vector< Node_Skeleton > > result;
   
   collect_items_range(stmt, rman, *osm_base_settings().NODES,
-                      small_way_nd_indices(stmt, rman, ways.begin(), ways.end()),
+                      small_way_nd_indices< Way_Skeleton >(stmt, rman, ways.begin(), ways.end()),
                       Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), result);
   
   return result;
+}
+
+
+void keep_matching_skeletons
+    (std::vector< Node >& result,
+     const map< Uint32_Index, vector< Node_Skeleton > >& current,
+     const map< Uint32_Index, vector< Attic< Node_Skeleton > > >& attic,
+     uint64 timestamp)
+{
+  std::map< Node_Skeleton::Id_Type, uint64 > timestamp_by_id;
+  
+  result.clear();
+  
+  for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator it = current.begin();
+       it != current.end(); ++it)
+  {
+    for (vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      timestamp_by_id[it2->id] = NOW;
+  }
+  
+  for (map< Uint32_Index, vector< Attic< Node_Skeleton > > >::const_iterator it = attic.begin();
+       it != attic.end(); ++it)
+  {
+    for (vector< Attic<Node_Skeleton > >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+    {
+      uint64& stored_timestamp = timestamp_by_id[it2->id];
+      if (it2->timestamp > timestamp && (stored_timestamp == 0 || stored_timestamp > it2->timestamp))
+        stored_timestamp = it2->timestamp;
+    }
+  }
+  
+  for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator it = current.begin();
+       it != current.end(); ++it)
+  {
+    for (vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    {
+      if (timestamp_by_id[it2->id] == NOW)
+        result.push_back(Node(it2->id, it->first.val(), it2->ll_lower));
+    }
+  }
+  
+  for (map< Uint32_Index, vector< Attic< Node_Skeleton > > >::const_iterator it = attic.begin();
+       it != attic.end(); ++it)
+  {
+    for (vector< Attic<Node_Skeleton > >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+    {
+      if (timestamp_by_id[it2->id] == it2->timestamp)
+        result.push_back(Node(it2->id, it->first.val(), it2->ll_lower));
+    }
+  }
+
+  std::sort(result.begin(), result.end(), Node_Comparator_By_Id());
 }
 
 
@@ -894,7 +966,6 @@ Way_Geometry_Store::Way_Geometry_Store
   map< Uint32_Index, vector< Node_Skeleton > > way_members_ = small_way_members(&query, rman, ways);
   
   // Order node ids by id.
-  vector< pair< Uint32_Index, const Node_Skeleton* > > way_members_by_id;
   for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = way_members_.begin();
       it != way_members_.end(); ++it)
   {
@@ -903,6 +974,25 @@ Way_Geometry_Store::Way_Geometry_Store
       nodes.push_back(Node(iit->id, it->first.val(), iit->ll_lower));
   }
   sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
+}
+
+
+Way_Geometry_Store::Way_Geometry_Store
+    (const map< Uint31_Index, vector< Attic< Way_Skeleton > > >& ways, uint64 timestamp,
+     const Statement& query, Resource_Manager& rman)
+{
+  // Retrieve all nodes referred by the ways.
+  map< Uint32_Index, vector< Node_Skeleton > > current;
+  collect_items_range(&query, rman, *osm_base_settings().NODES,
+                      small_way_nd_indices< Attic< Way_Skeleton > >(&query, rman, ways.begin(), ways.end()),
+                      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), current);
+  
+  map< Uint32_Index, vector< Attic< Node_Skeleton > > > attic;
+  collect_items_range(&query, rman, *attic_settings().NODES,
+                      small_way_nd_indices< Attic< Way_Skeleton > >(&query, rman, ways.begin(), ways.end()),
+                      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), attic);
+  
+  keep_matching_skeletons(nodes, current, attic, timestamp);
 }
 
 

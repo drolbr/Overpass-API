@@ -124,6 +124,7 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp
   
   // pre-process ways to reduce the load of the expensive filter
   filter_ways_by_ranges(into.ways, ranges);
+  filter_ways_by_ranges(into.attic_ways, ranges);
   
   // pre-filter relations
   {
@@ -145,7 +146,7 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp
       it->second.clear();
   }
   
-  //TODO: filter attic elements
+  //TODO: filter attic relations
   
   //TODO: filter areas
 }
@@ -190,6 +191,23 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
       {
         if (matches_bbox(*bbox, way_geometries.get_geometry(*iit)))
 	  local_into.push_back(*iit);
+      }
+      it->second.swap(local_into);
+    }
+  }
+  {
+    //Process attic ways
+    Way_Geometry_Store way_geometries(into.attic_ways, timestamp, query, rman);
+  
+    for (map< Uint31_Index, vector< Attic< Way_Skeleton > > >::iterator it = into.attic_ways.begin();
+        it != into.attic_ways.end(); ++it)
+    {
+      vector< Attic< Way_Skeleton > > local_into;
+      for (vector< Attic< Way_Skeleton > >::const_iterator iit = it->second.begin();
+          iit != it->second.end(); ++iit)
+      {
+        if (matches_bbox(*bbox, way_geometries.get_geometry(*iit)))
+          local_into.push_back(*iit);
       }
       it->second.swap(local_into);
     }

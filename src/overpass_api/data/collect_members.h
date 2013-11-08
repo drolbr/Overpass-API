@@ -84,12 +84,16 @@ vector< Quad_Coord > make_geometry(const Way_Skeleton& way, const vector< Node >
 
 void filter_ways_by_ranges(map< Uint31_Index, vector< Way_Skeleton > >& ways,
                            const set< pair< Uint31_Index, Uint31_Index > >& ranges);
+void filter_ways_by_ranges(map< Uint31_Index, vector< Attic< Way_Skeleton > > >& ways,
+                           const set< pair< Uint31_Index, Uint31_Index > >& ranges);
 
 
 class Way_Geometry_Store
 {
 public:
   Way_Geometry_Store(const map< Uint31_Index, vector< Way_Skeleton > >& ways,
+                     const Statement& query, Resource_Manager& rman);
+  Way_Geometry_Store(const map< Uint31_Index, vector< Attic< Way_Skeleton > > >& ways, uint64 timestamp,
                      const Statement& query, Resource_Manager& rman);
   
   // return the empty vector if the way is not found
