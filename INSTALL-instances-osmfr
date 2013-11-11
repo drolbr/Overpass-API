@@ -98,14 +98,17 @@ a2ensite api.openstreetmap.fr
 /etc/init.d/apache2 reload
 
 
-Configuration php
-=================
+
+Configuration du proxy "api 0.6"
+================================
+
+* dépendances
+apt-get install php5 php5-curl libapache2-mod-php5
+* Configuration php
 php dispose par défaut de 128Mo de Mémoire autorisé par script, dans certains cas de grosses requête c'est trop juste, je pousse donc à 1go - 
 Le max input size est à 2Mo, c'est parfois trop juste lorsqu'on réalise un très gros édit, le passer à 20Mo laisse plus de marge - 
 Le module de protection installé par debian (suhosin) limite la taille des variables $_GET (soit enlever se module soit trouver où augmenter cette limite)
 
-Configuration du proxy "api 0.6"
-================================
 * htaccess dans le dossier vhost de apache
 Plus flexible que dans la config du vhost, on trouvera
 dans Overpass-API/scripts-osm-fr/htaccess-a-mettre-dans-vhost un fichier
