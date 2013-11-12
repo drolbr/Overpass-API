@@ -329,7 +329,6 @@ struct Way_Updater
           (Uint31_Index(0u), Way_Skeleton(id),
            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(id)));
     
-    ids_to_modify.push_back(make_pair(id, false));
     if (meta)
     {
       user_by_id[meta->user_id] = meta->user_name;
@@ -357,8 +356,6 @@ struct Way_Updater
            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(way.id),
            way.tags));
     
-    ids_to_modify.push_back(make_pair(way.id, true));
-    ways_to_insert.push_back(way);
     if (meta)
     {
       user_by_id[meta->user_id] = meta->user_name;
@@ -388,8 +385,6 @@ private:
   Transaction* transaction;
   bool external_transaction;
   bool partial_possible;
-  vector< pair< Way::Id_Type, bool > > ids_to_modify;
-  vector< Way > ways_to_insert;
   vector< pair< Way::Id_Type, Uint31_Index > > moved_ways;
   string db_dir;
 
@@ -399,21 +394,6 @@ private:
   vector< pair< OSM_Element_Metadata_Skeleton< Way::Id_Type >, uint32 > > ways_meta_to_insert;
   vector< OSM_Element_Metadata_Skeleton< Way::Id_Type > > ways_meta_to_delete;
   map< uint32, string > user_by_id;
-  
-  void find_affected_ways(const vector< pair< Node::Id_Type, Uint32_Index > >& moved_nodes,
-       Update_Way_Logger* update_logger);
-  
-  void compute_indexes(vector< Way* >& ways_ptr);
-
-  void update_way_ids
-       (map< uint32, vector< Way::Id_Type > >& to_delete, bool record_minuscule_moves,
-        const std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > >& new_idx_positions);
-  void update_way_ids(const vector< Way* >& ways_ptr, map< uint32, vector< Way::Id_Type > >& to_delete,
-		      bool record_minuscule_moves);
-  
-  void update_members
-      (const vector< Way* >& ways_ptr, const map< uint32, vector< Way::Id_Type > >& to_delete,
-       Update_Way_Logger* update_logger);
   
   void merge_files(const vector< string >& froms, string into);
 };
