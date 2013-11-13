@@ -958,6 +958,9 @@ void new_implicit_skeletons
       }
       else
         new_skeletons[index].insert(new_skeleton);
+      
+      if (!(index == it->first))
+        moved_ways.push_back(std::make_pair(it2->id, it->first));
     }
   }
 }
