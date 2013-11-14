@@ -111,6 +111,8 @@ case "$1" in
 	if test -x $DIFF_UPDATER ; then
 	  if start-stop-daemon --stop --quiet --oknodo --pidfile $DIFF_UPDATE_PID_FILE; then
 	    log_daemon_msg "Stopping Overpass diff updates" "diff updates"
+	    #A little clean up of the xapi tmp dirrectory
+	    rm -r /tmp/translate_xapi 2>/dev/null
 	    rm -f $DIFF_UPDATE_PID_FILE
 	    log_end_msg 0
 	  else
