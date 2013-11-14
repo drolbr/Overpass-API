@@ -133,6 +133,7 @@ case "$1" in
 	  fi
 	  #FIXME this isn't enought, the osm3s_query builder will keep running for an entire loop of several hours, but we don't get it's pid
 	  # Better than nothing -- sly 
+	  killall osm3s_query
 	  log_daemon_msg "Stopping Overpass area builder " "area builder"
 	  if start-stop-daemon --stop --quiet --oknodo --pidfile $AREA_UPDATE_PID_FILE; then
 	    log_end_msg 0
