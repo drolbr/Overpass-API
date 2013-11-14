@@ -40,7 +40,10 @@ DIFF_UPDATER=$EXEC_DIR/fetch_osc_and_apply.sh
 AREA_BUILDER=$EXEC_DIR/rules_loop.sh
 
 DISPATCHER_OPTIONS="--meta=$META --osm-base --db-dir=$DB_DIR"
+AREA_DISPATCHER_OPTIONS="--areas --db-dir=$DB_DIR"
+
 DIFF_UPDATER_OPTION="$DIFF_URL --meta=$META"
+
 
 test -x $DISPATCHER || exit 0
 . /lib/lsb/init-functions
@@ -82,7 +85,7 @@ case "$1" in
 	fi
 	if [ $AREA = "yes" ] ; then
 	  log_daemon_msg "Starting Overpass dispatcher daemon for areas" "dispatcher areas"
-	  if start-stop-daemon --start --quiet -b --oknodo --make-pidfile -c $RUN_AS_USER --pidfile $DISPATCHER_AREA_PID_FILE --exec $DISPATCHER -- --areas $DISPATCHER_OPTIONS >> $LOG_DIR/dispatcher.log 2>&1; then
+	  if start-stop-daemon --start --quiet -b --oknodo --make-pidfile -c $RUN_AS_USER --pidfile $DISPATCHER_AREA_PID_FILE --exec $DISPATCHER -- $AREA_DISPATCHER_OPTIONS >> $LOG_DIR/dispatcher.log 2>&1; then
 	    log_end_msg 0
 	  else
 	    log_end_msg 1
