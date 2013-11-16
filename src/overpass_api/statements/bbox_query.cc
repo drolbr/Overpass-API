@@ -276,10 +276,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 	    double lat(::lat(second_nd->first.val(), second_nd->second->ll_lower));
 	    double lon(::lon(second_nd->first.val(), second_nd->second->ll_lower));
 	  
-	    if ((lat >= bbox->get_south()) && (lat <= bbox->get_north()) &&
-	        (((lon >= bbox->get_west()) && (lon <= bbox->get_east())) ||
-	        ((bbox->get_east() < bbox->get_west()) && ((lon >= bbox->get_west()) ||
-	        (lon <= bbox->get_east())))))
+	    if (bbox->matches_bbox(lat, lon))
 	    {
 	      local_into.push_back(*iit);
 	      break;

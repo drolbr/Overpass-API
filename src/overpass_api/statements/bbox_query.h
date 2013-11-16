@@ -44,6 +44,7 @@ class Bbox_Query_Statement : public Output_Statement
     double get_north() const { return north; }
     double get_west() const { return west; }
     double get_east() const { return east; }
+    bool matches_bbox(double lat, double lon) const;
 
   private:
     double south, north, west, east;
@@ -51,5 +52,14 @@ class Bbox_Query_Statement : public Output_Statement
     set< pair< Uint31_Index, Uint31_Index > > ranges_31;
     vector< Query_Constraint* > constraints;
 };
+
+
+inline bool Bbox_Query_Statement::matches_bbox(double lat, double lon) const
+{
+  return ((lat >= south - 1e-8) && (lat <= north + 1e+8) &&
+      (((lon >= west - 1e-8) && (lon <= east + 1e-8)) ||
+          ((east < west) && ((lon >= west - 1e-8) || (lon <= east + 1e-8)))));
+}
+
 
 #endif
