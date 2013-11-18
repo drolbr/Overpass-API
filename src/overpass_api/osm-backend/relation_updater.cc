@@ -108,6 +108,7 @@ namespace
   Relation_Equal_Id rel_equal_id;
 }
 
+
 void Relation_Updater::update(Osm_Backend_Callback* callback, Update_Relation_Logger* update_logger)
 {
   if (!external_transaction)

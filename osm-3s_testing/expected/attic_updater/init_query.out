@@ -823,8 +823,8 @@
     <tag k="foo_1632" v="bar"/>
   </relation>
   <relation id="1633" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <member type="node" ref="163110" role=""/>
-    <member type="node" ref="163120" role=""/>
+    <member type="node" ref="163310" role=""/>
+    <member type="node" ref="163320" role=""/>
     <member type="way" ref="16331" role=""/>
     <member type="way" ref="16332" role=""/>
     <tag k="foo" v="bar_1633"/>
@@ -931,8 +931,8 @@
     <tag k="foo_1732" v="bar"/>
   </relation>
   <relation id="1733" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <member type="node" ref="173110" role=""/>
-    <member type="node" ref="173120" role=""/>
+    <member type="node" ref="173310" role=""/>
+    <member type="node" ref="173320" role=""/>
     <member type="way" ref="17331" role=""/>
     <member type="way" ref="17332" role=""/>
     <tag k="foo" v="bar_1733"/>
@@ -1039,8 +1039,8 @@
     <tag k="foo_1832" v="bar"/>
   </relation>
   <relation id="1833" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <member type="node" ref="183110" role=""/>
-    <member type="node" ref="183120" role=""/>
+    <member type="node" ref="183310" role=""/>
+    <member type="node" ref="183320" role=""/>
     <member type="way" ref="18331" role=""/>
     <member type="way" ref="18332" role=""/>
     <tag k="foo" v="bar_1833"/>
@@ -1583,14 +1583,14 @@
   <node id="120220" lat="10.0020000" lon="2.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="120310" lat="10.0010000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="120320" lat="10.0020000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="131110" lat="10.3010000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="131120" lat="10.3020000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="131210" lat="10.3010000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="131220" lat="10.3020000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="131310" lat="10.3010000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="131320" lat="10.3020000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="131410" lat="10.3010000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="131420" lat="10.3020000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="131110" lat="10.1010000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="131120" lat="10.1020000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="131210" lat="10.1010000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="131220" lat="10.1020000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="131310" lat="10.1010000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="131320" lat="10.1020000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="131410" lat="10.1010000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="131420" lat="10.1020000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
   <node id="132111" lat="10.2010000" lon="3.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="132112" lat="10.2010000" lon="3.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="132121" lat="10.2020000" lon="3.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
@@ -1643,14 +1643,14 @@
   <node id="133420" lat="10.3020000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="133421" lat="10.3020000" lon="3.0401000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
   <node id="133422" lat="10.3020000" lon="3.0402000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="141110" lat="10.3010000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="141120" lat="10.3020000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="141210" lat="10.3010000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="141220" lat="10.3020000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="141310" lat="10.3010000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="141320" lat="10.3020000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="141410" lat="10.3010000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="141420" lat="10.3020000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="141110" lat="10.1010000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="141120" lat="10.1020000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="141210" lat="10.1010000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="141220" lat="10.1020000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="141310" lat="10.1010000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="141320" lat="10.1020000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="141410" lat="10.1010000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="141420" lat="10.1020000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
   <node id="142111" lat="10.2010000" lon="4.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="142112" lat="10.2010000" lon="4.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="142121" lat="10.2020000" lon="4.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
@@ -3082,8 +3082,8 @@
     <tag k="foo_1632" v="bar"/>
   </relation>
   <relation id="1633" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <member type="node" ref="163110" role=""/>
-    <member type="node" ref="163120" role=""/>
+    <member type="node" ref="163310" role=""/>
+    <member type="node" ref="163320" role=""/>
     <member type="way" ref="16331" role=""/>
     <member type="way" ref="16332" role=""/>
     <tag k="foo" v="bar_1633"/>
@@ -3172,8 +3172,8 @@
     <tag k="foo_1732" v="bar"/>
   </relation>
   <relation id="1733" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <member type="node" ref="173110" role=""/>
-    <member type="node" ref="173120" role=""/>
+    <member type="node" ref="173310" role=""/>
+    <member type="node" ref="173320" role=""/>
     <member type="way" ref="17331" role=""/>
     <member type="way" ref="17332" role=""/>
     <tag k="foo" v="bar_1733"/>
@@ -3262,8 +3262,8 @@
     <tag k="foo_1832" v="bar"/>
   </relation>
   <relation id="1833" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <member type="node" ref="183110" role=""/>
-    <member type="node" ref="183120" role=""/>
+    <member type="node" ref="183310" role=""/>
+    <member type="node" ref="183320" role=""/>
     <member type="way" ref="18331" role=""/>
     <member type="way" ref="18332" role=""/>
     <tag k="foo" v="bar_1833"/>
@@ -4062,8 +4062,8 @@
     <tag k="foo_1632" v="bar"/>
   </relation>
   <relation id="1633" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <member type="node" ref="163110" role=""/>
-    <member type="node" ref="163120" role=""/>
+    <member type="node" ref="163310" role=""/>
+    <member type="node" ref="163320" role=""/>
     <member type="way" ref="16331" role=""/>
     <member type="way" ref="16332" role=""/>
     <tag k="foo" v="bar_1633"/>
@@ -4187,8 +4187,8 @@
     <tag k="foo_1732" v="bar"/>
   </relation>
   <relation id="1733" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <member type="node" ref="173110" role=""/>
-    <member type="node" ref="173120" role=""/>
+    <member type="node" ref="173310" role=""/>
+    <member type="node" ref="173320" role=""/>
     <member type="way" ref="17331" role=""/>
     <member type="way" ref="17332" role=""/>
     <tag k="foo" v="bar_1733"/>
@@ -4307,8 +4307,8 @@
     <tag k="foo_1832" v="bar"/>
   </relation>
   <relation id="1833" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <member type="node" ref="183110" role=""/>
-    <member type="node" ref="183120" role=""/>
+    <member type="node" ref="183310" role=""/>
+    <member type="node" ref="183320" role=""/>
     <member type="way" ref="18331" role=""/>
     <member type="way" ref="18332" role=""/>
     <tag k="foo" v="bar_1833"/>

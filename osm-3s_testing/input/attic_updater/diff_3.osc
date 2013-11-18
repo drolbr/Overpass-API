@@ -37,4 +37,22 @@
   <way id="1505" version="6" timestamp="2013-07-01T09:04:35" changeset="496" uid="42" user="foo"/>
 </delete>
 
+<delete>
+  <relation id="1502" version="4" timestamp="2013-07-01T09:04:12" changeset="496" uid="42" user="foo"/>
+  <relation id="1503" version="4" timestamp="2013-07-01T09:04:13" changeset="496" uid="42" user="foo"/>
+  <relation id="1504" version="4" timestamp="2013-07-01T09:04:14" changeset="496" uid="42" user="foo"/>
+  <relation id="1505" version="4" timestamp="2013-07-01T09:04:15" changeset="496" uid="42" user="foo"/>
+</delete>
+<create>
+  <relation id="1505" version="5" timestamp="2013-07-01T09:03:25" changeset="496" uid="42" user="foo">
+    <member type="node" ref="150510" role=""/>
+    <member type="node" ref="150540" role=""/>
+    <tag k="foo" v="bar_1505"/>
+    <tag k="foo_1505" v="bar"/>
+  </relation>
+</create>
+<delete>
+  <relation id="1505" version="6" timestamp="2013-07-01T09:04:35" changeset="496" uid="42" user="foo"/>
+</delete>
+
 </osm>
