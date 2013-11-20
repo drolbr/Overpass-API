@@ -30,8 +30,7 @@
 #include "../../template_db/transaction.h"
 #include "../core/datatypes.h"
 #include "../core/settings.h"
-
-using namespace std;
+#include "basic_updater.h"
 
 
 struct Update_Relation_Logger
@@ -260,13 +259,22 @@ private:
 
 struct Relation_Updater
 {
-  Relation_Updater(Transaction& transaction, bool meta);
+  Relation_Updater(Transaction& transaction, meta_modes meta);
   
-  Relation_Updater(string db_dir, bool meta);
+  Relation_Updater(string db_dir, meta_modes meta);
   
   void set_id_deleted(Relation::Id_Type id, const OSM_Element_Metadata* meta = 0)
   {
-    ids_to_modify.push_back(make_pair(id, false));
+    if (meta)
+      new_data.data.push_back(Data_By_Id< Relation_Skeleton >::Entry
+          (Uint31_Index(0u), Relation_Skeleton(id),
+           OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(id, *meta)));
+    else
+      new_data.data.push_back(Data_By_Id< Relation_Skeleton >::Entry
+          (Uint31_Index(0u), Relation_Skeleton(id),
+           OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(id)));
+    
+//     ids_to_modify.push_back(make_pair(id, false));
     if (meta)
     {
       user_by_id[meta->user_id] = meta->user_name;
@@ -280,36 +288,47 @@ struct Relation_Updater
     }
   }
   
-  void set_relation
-      (uint32 id, uint32 lat, uint32 lon, const vector< pair< string, string > >& tags,
-       const vector< Relation_Entry >& members,
-       const OSM_Element_Metadata* meta = 0)
-  {
-    ids_to_modify.push_back(make_pair(id, true));
-    
-    Relation rel;
-    rel.id = id;
-    rel.members = members;
-    rel.tags = tags;
-    rels_to_insert.push_back(rel);
-    if (meta)
-    {
-      user_by_id[meta->user_id] = meta->user_name;
-      OSM_Element_Metadata_Skeleton< Relation::Id_Type > meta_skel;
-      meta_skel.ref= rel.id;
-      meta_skel.version = meta->version;
-      meta_skel.changeset = meta->changeset;
-      meta_skel.timestamp = meta->timestamp;
-      meta_skel.user_id = meta->user_id;
-      rels_meta_to_insert.push_back(make_pair(meta_skel, 0));
-    }
-  }
+//   void set_relation
+//       (uint32 id, uint32 lat, uint32 lon, const vector< pair< string, string > >& tags,
+//        const vector< Relation_Entry >& members,
+//        const OSM_Element_Metadata* meta = 0)
+//   {
+//     ids_to_modify.push_back(make_pair(id, true));
+//     
+//     Relation rel;
+//     rel.id = id;
+//     rel.members = members;
+//     rel.tags = tags;
+//     rels_to_insert.push_back(rel);
+//     if (meta)
+//     {
+//       user_by_id[meta->user_id] = meta->user_name;
+//       OSM_Element_Metadata_Skeleton< Relation::Id_Type > meta_skel;
+//       meta_skel.ref= rel.id;
+//       meta_skel.version = meta->version;
+//       meta_skel.changeset = meta->changeset;
+//       meta_skel.timestamp = meta->timestamp;
+//       meta_skel.user_id = meta->user_id;
+//       rels_meta_to_insert.push_back(make_pair(meta_skel, 0));
+//     }
+//   }
   
   void set_relation(const Relation& rel,
 		    const OSM_Element_Metadata* meta = 0)
   {
-    ids_to_modify.push_back(make_pair(rel.id, true));
-    rels_to_insert.push_back(rel);
+    if (meta)
+      new_data.data.push_back(Data_By_Id< Relation_Skeleton >::Entry
+          (Uint31_Index(0xff), Relation_Skeleton(rel),
+           OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(rel.id, *meta),
+           rel.tags));
+    else
+      new_data.data.push_back(Data_By_Id< Relation_Skeleton >::Entry
+          (Uint31_Index(0xff), Relation_Skeleton(rel),
+           OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(rel.id),
+           rel.tags));
+    
+//     ids_to_modify.push_back(make_pair(rel.id, true));
+//     rels_to_insert.push_back(rel);
     if (meta)
     {
       user_by_id[meta->user_id] = meta->user_name;
@@ -326,11 +345,18 @@ struct Relation_Updater
   uint32 get_role_id(const string& s);
   vector< string > get_roles();
   
-  void update(Osm_Backend_Callback* callback, Update_Relation_Logger* update_logger);
+  void update(Osm_Backend_Callback* callback,
+              Update_Relation_Logger* update_logger,
+              const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
+              const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
+              const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
+              const std::map< Uint31_Index, std::set< Way_Skeleton > >& new_way_skeletons,
+              const std::map< Uint31_Index, std::set< Way_Skeleton > >& attic_way_skeletons,
+              const std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > >& new_attic_way_skeletons);
   
-  void update_moved_idxs(const vector< pair< Node::Id_Type, Uint32_Index > >& moved_nodes,
-			 const vector< pair< Way::Id_Type, Uint31_Index > >& moved_ways,
-			 Update_Relation_Logger* update_logger);
+//   void update_moved_idxs(const vector< pair< Node::Id_Type, Uint32_Index > >& moved_nodes,
+// 			 const vector< pair< Way::Id_Type, Uint31_Index > >& moved_ways,
+// 			 Update_Relation_Logger* update_logger);
   
 private:
   uint32 update_counter;
@@ -339,27 +365,29 @@ private:
   map< string, uint32 > role_ids;
   uint32 max_role_id;
   uint32 max_written_role_id;
-  vector< pair< Relation::Id_Type, bool > > ids_to_modify;
-  vector< Relation > rels_to_insert;
-  vector< pair< Relation::Id_Type, uint32 > > moved_relations;
+//   vector< pair< Relation::Id_Type, bool > > ids_to_modify;
+//   vector< Relation > rels_to_insert;
+  vector< pair< Relation::Id_Type, Uint31_Index > > moved_relations;
   string db_dir;
 
-  bool meta;
+  Data_By_Id< Relation_Skeleton > new_data;
+
+  meta_modes meta;
   vector< pair< OSM_Element_Metadata_Skeleton< Relation::Id_Type >, uint32 > > rels_meta_to_insert;
   vector< OSM_Element_Metadata_Skeleton< Relation::Id_Type > > rels_meta_to_delete;
   map< uint32, string > user_by_id;
   
-  void find_affected_relations(const vector< pair< Node::Id_Type, Uint32_Index > >& moved_nodes,
-			       const vector< pair< Way::Id_Type, Uint31_Index > >& moved_ways,
-			       Update_Relation_Logger* update_logger);
-  
-  void compute_indexes(vector< Relation* >& rels_ptr);
-  
-  void update_rel_ids(vector< Relation* >& rels_ptr, map< uint32, vector< Relation::Id_Type > >& to_delete);
-  
-  void update_members(vector< Relation* >& rels_ptr,
-		      const map< uint32, vector< Relation::Id_Type > >& to_delete,
-		      Update_Relation_Logger* update_logger);
+//   void find_affected_relations(const vector< pair< Node::Id_Type, Uint32_Index > >& moved_nodes,
+// 			       const vector< pair< Way::Id_Type, Uint31_Index > >& moved_ways,
+// 			       Update_Relation_Logger* update_logger);
+//   
+//   void compute_indexes(vector< Relation* >& rels_ptr);
+//   
+//   void update_rel_ids(vector< Relation* >& rels_ptr, map< uint32, vector< Relation::Id_Type > >& to_delete);
+//   
+//   void update_members(vector< Relation* >& rels_ptr,
+// 		      const map< uint32, vector< Relation::Id_Type > >& to_delete,
+// 		      Update_Relation_Logger* update_logger);
   
   void flush_roles();
   void load_roles();

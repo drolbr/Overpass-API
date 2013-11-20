@@ -549,4 +549,126 @@ std::map< Timestamp, std::set< Change_Entry< typename Element_Skeleton::Id_Type 
 }
   
 
+inline std::map< Node_Skeleton::Id_Type, Quad_Coord > dictionary_from_skeletons
+    (const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons)
+{
+  std::map< Node_Skeleton::Id_Type, Quad_Coord > result;
+  
+  for (std::map< Uint31_Index, std::set< Node_Skeleton > >::const_iterator
+      it = new_node_skeletons.begin(); it != new_node_skeletons.end(); ++it)
+  {
+    for (std::set< Node_Skeleton >::const_iterator nit = it->second.begin(); nit != it->second.end(); ++nit)
+      result.insert(make_pair(nit->id, Quad_Coord(it->first.val(), nit->ll_lower)));
+  }
+  
+  return result;
+}
+
+
+template< typename Skeleton >
+std::vector< std::pair< typename Skeleton::Id_Type, Uint31_Index > > make_id_idx_directory
+    (const std::map< Uint31_Index, std::set< Skeleton > >& implicitly_moved_skeletons)
+{
+  std::vector< std::pair< typename Skeleton::Id_Type, Uint31_Index > > result;
+  Pair_Comparator_By_Id< typename Skeleton::Id_Type, Uint31_Index > less;
+  
+  for (typename std::map< Uint31_Index, std::set< Skeleton > >::const_iterator
+       it = implicitly_moved_skeletons.begin(); it != implicitly_moved_skeletons.end(); ++it)
+  {
+    for (typename std::set< Skeleton >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+      result.push_back(make_pair(it2->id, it->first));
+  }
+  std::sort(result.begin(), result.end(), less);
+  
+  return result;
+}
+
+
+/* Adds to attic_meta and new_meta the meta elements to delete resp. add from only
+   implicitly moved ways. */
+template< typename Id_Type >
+void new_implicit_meta
+    (const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Id_Type > > >&
+         existing_meta,
+     const std::vector< std::pair< Id_Type, Uint31_Index > >& new_positions,
+     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Id_Type > > >& attic_meta,
+     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Id_Type > > >& new_meta)
+{
+  for (typename std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Id_Type > > >
+          ::const_iterator it_idx = existing_meta.begin(); it_idx != existing_meta.end(); ++it_idx)
+  {
+    std::set< OSM_Element_Metadata_Skeleton< Id_Type > >& handle(attic_meta[it_idx->first]);
+    for (typename std::set< OSM_Element_Metadata_Skeleton< Id_Type > >::const_iterator
+        it = it_idx->second.begin(); it != it_idx->second.end(); ++it)
+      handle.insert(*it);
+  }
+
+  for (typename std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Id_Type > > >
+          ::const_iterator it_idx = existing_meta.begin(); it_idx != existing_meta.end(); ++it_idx)
+  {
+    for (typename std::set< OSM_Element_Metadata_Skeleton< Id_Type > >::const_iterator
+        it = it_idx->second.begin(); it != it_idx->second.end(); ++it)
+    {
+      const Uint31_Index* idx = binary_pair_search(new_positions, it->ref);
+      if (idx)
+        new_meta[*idx].insert(*it);
+    }
+  }
+}
+
+
+/* Adds to attic_local_tags and new_local_tags the tags to delete resp. add from only
+   implicitly moved ways. */
+template< typename Id_Type >
+void new_implicit_local_tags
+    (const std::vector< Tag_Entry< Id_Type > >& existing_local_tags,
+     const std::vector< std::pair< Id_Type, Uint31_Index > >& new_positions,
+     std::map< Tag_Index_Local, std::set< Id_Type > >& attic_local_tags,
+     std::map< Tag_Index_Local, std::set< Id_Type > >& new_local_tags)
+{
+  //TODO: convert the data format until existing_local_tags get the new data format
+  for (typename std::vector< Tag_Entry< Id_Type > >::const_iterator
+      it_idx = existing_local_tags.begin(); it_idx != existing_local_tags.end(); ++it_idx)
+  {
+    std::set< Id_Type >& handle(attic_local_tags[*it_idx]);
+    for (typename std::vector< Id_Type >::const_iterator it = it_idx->ids.begin();
+         it != it_idx->ids.end(); ++it)
+      handle.insert(*it);
+  }
+
+  for (typename std::vector< Tag_Entry< Id_Type > >::const_iterator
+      it_idx = existing_local_tags.begin(); it_idx != existing_local_tags.end(); ++it_idx)
+  {
+    for (typename std::vector< Id_Type >::const_iterator it = it_idx->ids.begin();
+         it != it_idx->ids.end(); ++it)
+    {
+      const Uint31_Index* idx = binary_pair_search(new_positions, *it);
+      if (idx)
+        new_local_tags[Tag_Index_Local(idx->val() & 0x7fffff00, it_idx->key, it_idx->value)].insert(*it);
+    }
+  }  
+}
+
+
+template< typename Skeleton >
+void add_deleted_skeletons
+    (const std::map< Uint31_Index, std::set< Skeleton > >& attic_skeletons,
+     std::vector< std::pair< typename Skeleton::Id_Type, Uint31_Index > >& new_positions)
+{
+  for (typename std::map< Uint31_Index, std::set< Skeleton > >::const_iterator it = attic_skeletons.begin();
+       it != attic_skeletons.end(); ++it)
+  {
+    for (typename std::set< Skeleton >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+      new_positions.push_back(std::make_pair(it2->id, Uint31_Index(0u)));
+  }
+  
+  std::stable_sort(new_positions.begin(), new_positions.end(),
+                   Pair_Comparator_By_Id< typename Skeleton::Id_Type, Uint31_Index >());
+  new_positions.erase(std::unique(new_positions.begin(), new_positions.end(),
+                      Pair_Equal_Id< typename Skeleton::Id_Type, Uint31_Index >()), new_positions.end());
+}
+
+
 #endif

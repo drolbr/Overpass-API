@@ -561,19 +561,19 @@
     <tag k="foo" v="bar_1173"/>
     <tag k="foo_1173" v="bar"/>
   </relation>
-  <relation id="1201" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1201" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="120110" role=""/>
     <member type="node" ref="120120" role=""/>
     <tag k="foo" v="bar_1201"/>
     <tag k="foo_1201" v="bar"/>
   </relation>
-  <relation id="1202" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1202" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="120210" role=""/>
     <member type="node" ref="120220" role=""/>
     <tag k="foo" v="bar_1202"/>
     <tag k="foo_1202" v="bar"/>
   </relation>
-  <relation id="1203" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1203" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="120310" role=""/>
     <member type="node" ref="120320" role=""/>
     <tag k="foo" v="bar_1203"/>
@@ -781,7 +781,7 @@
     <tag k="foo" v="bar_1611"/>
     <tag k="foo_1611" v="bar"/>
   </relation>
-  <relation id="1612" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1612" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="161210" role=""/>
     <member type="node" ref="161240" role=""/>
     <tag k="foo" v="bar_1612"/>
@@ -793,25 +793,25 @@
     <tag k="foo" v="bar_1613"/>
     <tag k="foo_1613" v="bar"/>
   </relation>
-  <relation id="1621" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1621" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="16211" role=""/>
     <member type="way" ref="16213" role=""/>
     <tag k="foo" v="bar_1621"/>
     <tag k="foo_1621" v="bar"/>
   </relation>
-  <relation id="1622" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1622" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="16221" role=""/>
     <member type="way" ref="16224" role=""/>
     <tag k="foo" v="bar_1622"/>
     <tag k="foo_1622" v="bar"/>
   </relation>
-  <relation id="1623" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1623" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="16231" role=""/>
     <member type="way" ref="16234" role=""/>
     <tag k="foo" v="bar_1623"/>
     <tag k="foo_1623" v="bar"/>
   </relation>
-  <relation id="1631" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1631" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="163110" role=""/>
     <member type="node" ref="163130" role=""/>
     <member type="way" ref="16311" role=""/>
@@ -819,7 +819,7 @@
     <tag k="foo" v="bar_1631"/>
     <tag k="foo_1631" v="bar"/>
   </relation>
-  <relation id="1632" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1632" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="163210" role=""/>
     <member type="node" ref="163240" role=""/>
     <member type="way" ref="16321" role=""/>
@@ -827,7 +827,7 @@
     <tag k="foo" v="bar_1632"/>
     <tag k="foo_1632" v="bar"/>
   </relation>
-  <relation id="1633" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1633" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="163310" role=""/>
     <member type="node" ref="163340" role=""/>
     <member type="way" ref="16331" role=""/>
@@ -835,25 +835,25 @@
     <tag k="foo" v="bar_1633"/>
     <tag k="foo_1633" v="bar"/>
   </relation>
-  <relation id="1641" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1641" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="16411" role=""/>
     <member type="relation" ref="16413" role=""/>
     <tag k="foo" v="bar_1641"/>
     <tag k="foo_1641" v="bar"/>
   </relation>
-  <relation id="1642" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1642" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="16421" role=""/>
     <member type="relation" ref="16424" role=""/>
     <tag k="foo" v="bar_1642"/>
     <tag k="foo_1642" v="bar"/>
   </relation>
-  <relation id="1643" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1643" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="16431" role=""/>
     <member type="relation" ref="16434" role=""/>
     <tag k="foo" v="bar_1643"/>
     <tag k="foo_1643" v="bar"/>
   </relation>
-  <relation id="1671" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1671" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="167110" role=""/>
     <member type="node" ref="167130" role=""/>
     <member type="way" ref="16711" role=""/>
@@ -863,7 +863,7 @@
     <tag k="foo" v="bar_1671"/>
     <tag k="foo_1671" v="bar"/>
   </relation>
-  <relation id="1672" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1672" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="167210" role=""/>
     <member type="node" ref="167240" role=""/>
     <member type="way" ref="16721" role=""/>
@@ -873,7 +873,7 @@
     <tag k="foo" v="bar_1672"/>
     <tag k="foo_1672" v="bar"/>
   </relation>
-  <relation id="1673" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1673" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="167310" role=""/>
     <member type="node" ref="167340" role=""/>
     <member type="way" ref="16731" role=""/>
@@ -883,43 +883,43 @@
     <tag k="foo" v="bar_1673"/>
     <tag k="foo_1673" v="bar"/>
   </relation>
-  <relation id="1711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1711" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="171110" role=""/>
     <member type="node" ref="171130" role=""/>
     <tag k="foo" v="bar_1711"/>
     <tag k="foo_1711" v="bar"/>
   </relation>
-  <relation id="1712" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1712" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="171210" role=""/>
     <member type="node" ref="171240" role=""/>
     <tag k="foo" v="bar_1712"/>
     <tag k="foo_1712" v="bar"/>
   </relation>
-  <relation id="1713" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1713" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="171310" role=""/>
     <member type="node" ref="171340" role=""/>
     <tag k="foo" v="bar_1713"/>
     <tag k="foo_1713" v="bar"/>
   </relation>
-  <relation id="1721" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1721" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="17211" role=""/>
     <member type="way" ref="17213" role=""/>
     <tag k="foo" v="bar_1721"/>
     <tag k="foo_1721" v="bar"/>
   </relation>
-  <relation id="1722" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1722" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="17221" role=""/>
     <member type="way" ref="17224" role=""/>
     <tag k="foo" v="bar_1722"/>
     <tag k="foo_1722" v="bar"/>
   </relation>
-  <relation id="1723" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1723" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="17231" role=""/>
     <member type="way" ref="17234" role=""/>
     <tag k="foo" v="bar_1723"/>
     <tag k="foo_1723" v="bar"/>
   </relation>
-  <relation id="1731" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1731" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="173110" role=""/>
     <member type="node" ref="173130" role=""/>
     <member type="way" ref="17311" role=""/>
@@ -927,7 +927,7 @@
     <tag k="foo" v="bar_1731"/>
     <tag k="foo_1731" v="bar"/>
   </relation>
-  <relation id="1732" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1732" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="173210" role=""/>
     <member type="node" ref="173240" role=""/>
     <member type="way" ref="17321" role=""/>
@@ -935,7 +935,7 @@
     <tag k="foo" v="bar_1732"/>
     <tag k="foo_1732" v="bar"/>
   </relation>
-  <relation id="1733" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1733" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="173310" role=""/>
     <member type="node" ref="173340" role=""/>
     <member type="way" ref="17331" role=""/>
@@ -943,25 +943,25 @@
     <tag k="foo" v="bar_1733"/>
     <tag k="foo_1733" v="bar"/>
   </relation>
-  <relation id="1741" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1741" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="17411" role=""/>
     <member type="relation" ref="17413" role=""/>
     <tag k="foo" v="bar_1741"/>
     <tag k="foo_1741" v="bar"/>
   </relation>
-  <relation id="1742" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1742" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="17421" role=""/>
     <member type="relation" ref="17424" role=""/>
     <tag k="foo" v="bar_1742"/>
     <tag k="foo_1742" v="bar"/>
   </relation>
-  <relation id="1743" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1743" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="17431" role=""/>
     <member type="relation" ref="17434" role=""/>
     <tag k="foo" v="bar_1743"/>
     <tag k="foo_1743" v="bar"/>
   </relation>
-  <relation id="1771" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1771" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="177110" role=""/>
     <member type="node" ref="177130" role=""/>
     <member type="way" ref="17711" role=""/>
@@ -971,7 +971,7 @@
     <tag k="foo" v="bar_1771"/>
     <tag k="foo_1771" v="bar"/>
   </relation>
-  <relation id="1772" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1772" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="177210" role=""/>
     <member type="node" ref="177240" role=""/>
     <member type="way" ref="17721" role=""/>
@@ -981,7 +981,7 @@
     <tag k="foo" v="bar_1772"/>
     <tag k="foo_1772" v="bar"/>
   </relation>
-  <relation id="1773" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1773" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="177310" role=""/>
     <member type="node" ref="177340" role=""/>
     <member type="way" ref="17731" role=""/>
@@ -997,7 +997,7 @@
     <tag k="foo" v="bar_1811"/>
     <tag k="foo_1811" v="bar"/>
   </relation>
-  <relation id="1812" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1812" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="181210" role=""/>
     <member type="node" ref="181240" role=""/>
     <tag k="foo" v="bar_1812"/>
@@ -1009,25 +1009,25 @@
     <tag k="foo" v="bar_1813"/>
     <tag k="foo_1813" v="bar"/>
   </relation>
-  <relation id="1821" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1821" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="18211" role=""/>
     <member type="way" ref="18213" role=""/>
     <tag k="foo" v="bar_1821"/>
     <tag k="foo_1821" v="bar"/>
   </relation>
-  <relation id="1822" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1822" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="18221" role=""/>
     <member type="way" ref="18224" role=""/>
     <tag k="foo" v="bar_1822"/>
     <tag k="foo_1822" v="bar"/>
   </relation>
-  <relation id="1823" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1823" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="18231" role=""/>
     <member type="way" ref="18234" role=""/>
     <tag k="foo" v="bar_1823"/>
     <tag k="foo_1823" v="bar"/>
   </relation>
-  <relation id="1831" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1831" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="183110" role=""/>
     <member type="node" ref="183130" role=""/>
     <member type="way" ref="18311" role=""/>
@@ -1035,7 +1035,7 @@
     <tag k="foo" v="bar_1831"/>
     <tag k="foo_1831" v="bar"/>
   </relation>
-  <relation id="1832" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1832" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="183210" role=""/>
     <member type="node" ref="183240" role=""/>
     <member type="way" ref="18321" role=""/>
@@ -1043,7 +1043,7 @@
     <tag k="foo" v="bar_1832"/>
     <tag k="foo_1832" v="bar"/>
   </relation>
-  <relation id="1833" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1833" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="183310" role=""/>
     <member type="node" ref="183340" role=""/>
     <member type="way" ref="18331" role=""/>
@@ -1051,25 +1051,25 @@
     <tag k="foo" v="bar_1833"/>
     <tag k="foo_1833" v="bar"/>
   </relation>
-  <relation id="1841" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1841" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="18411" role=""/>
     <member type="relation" ref="18413" role=""/>
     <tag k="foo" v="bar_1841"/>
     <tag k="foo_1841" v="bar"/>
   </relation>
-  <relation id="1842" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1842" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="18421" role=""/>
     <member type="relation" ref="18424" role=""/>
     <tag k="foo" v="bar_1842"/>
     <tag k="foo_1842" v="bar"/>
   </relation>
-  <relation id="1843" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1843" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="18431" role=""/>
     <member type="relation" ref="18434" role=""/>
     <tag k="foo" v="bar_1843"/>
     <tag k="foo_1843" v="bar"/>
   </relation>
-  <relation id="1871" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1871" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="187110" role=""/>
     <member type="node" ref="187130" role=""/>
     <member type="way" ref="18711" role=""/>
@@ -1079,7 +1079,7 @@
     <tag k="foo" v="bar_1871"/>
     <tag k="foo_1871" v="bar"/>
   </relation>
-  <relation id="1872" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1872" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="187210" role=""/>
     <member type="node" ref="187240" role=""/>
     <member type="way" ref="18721" role=""/>
@@ -1089,7 +1089,7 @@
     <tag k="foo" v="bar_1872"/>
     <tag k="foo_1872" v="bar"/>
   </relation>
-  <relation id="1873" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1873" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="187310" role=""/>
     <member type="node" ref="187340" role=""/>
     <member type="way" ref="18731" role=""/>
@@ -1103,28 +1103,28 @@
     <tag k="foo" v="bar_1901"/>
     <tag k="foo_1901" v="bar"/>
   </relation>
-  <relation id="1911" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1911" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="191110" role="intermediate"/>
     <tag k="foo" v="bar_1911"/>
     <tag k="foo_1911" v="bar"/>
   </relation>
-  <relation id="1921" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1921" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="19211" role="intermediate"/>
     <tag k="foo" v="bar_1921"/>
     <tag k="foo_1921" v="bar"/>
   </relation>
-  <relation id="1922" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1922" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="19221" role="intermediate"/>
     <member type="way" ref="19222" role="intermediate"/>
     <tag k="foo" v="bar_1922"/>
     <tag k="foo_1922" v="bar"/>
   </relation>
-  <relation id="1941" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1941" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="19411" role="intermediate"/>
     <tag k="foo" v="bar_1941"/>
     <tag k="foo_1941" v="bar"/>
   </relation>
-  <relation id="2101" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+  <relation id="2101" version="3" timestamp="2013-07-01T09:03:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="210110" role=""/>
     <member type="node" ref="210120" role=""/>
     <tag k="faa_1" v="baz_1"/>
@@ -1147,7 +1147,7 @@
     <member type="node" ref="220120" role=""/>
     <tag k="foo_1" v="new_value"/>
   </relation>
-  <relation id="2202" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+  <relation id="2202" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="220210" role=""/>
     <member type="node" ref="220220" role=""/>
     <tag k="faa_2" v="new_vaa"/>
@@ -1165,7 +1165,7 @@
     <tag k="faa_4" v="new_vaa"/>
     <tag k="fee_4" v="new_vee"/>
   </relation>
-  <relation id="2205" version="2" timestamp="2013-07-01T09:02:15Z" changeset="496" uid="42" user="foo">
+  <relation id="2205" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="220510" role=""/>
     <member type="node" ref="220520" role=""/>
     <tag k="foo_5" v="final"/>
@@ -1181,7 +1181,7 @@
     <tag k="foo_1" v="new_value"/>
     <tag k="sense" v="no"/>
   </relation>
-  <relation id="2302" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+  <relation id="2302" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="230210" role=""/>
     <member type="node" ref="230220" role=""/>
     <tag k="faa_2" v="new_vaa"/>
@@ -1202,7 +1202,7 @@
     <tag k="fee_4" v="new_vee"/>
     <tag k="sense" v="no"/>
   </relation>
-  <relation id="2305" version="2" timestamp="2013-07-01T09:02:15Z" changeset="496" uid="42" user="foo">
+  <relation id="2305" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="230510" role=""/>
     <member type="node" ref="230520" role=""/>
     <tag k="foo_5" v="final"/>
@@ -1214,7 +1214,7 @@
     <tag k="foo_6" v="final"/>
     <tag k="sense" v="no"/>
   </relation>
-  <relation id="2401" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+  <relation id="2401" version="3" timestamp="2013-07-01T09:03:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="240110" role=""/>
     <member type="node" ref="240120" role=""/>
   </relation>
@@ -1226,17 +1226,17 @@
     <member type="node" ref="240310" role=""/>
     <member type="node" ref="240320" role=""/>
   </relation>
-  <relation id="2501" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+  <relation id="2501" version="3" timestamp="2013-07-01T09:03:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="250110" role=""/>
     <member type="node" ref="250120" role=""/>
     <tag k="changes" v="no"/>
   </relation>
-  <relation id="2502" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+  <relation id="2502" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="250210" role=""/>
     <member type="node" ref="250220" role=""/>
     <tag k="changes" v="indeed"/>
   </relation>
-  <relation id="2503" version="2" timestamp="2013-07-01T09:02:13Z" changeset="496" uid="42" user="foo">
+  <relation id="2503" version="3" timestamp="2013-07-01T09:03:13Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="250310" role=""/>
     <member type="node" ref="250320" role=""/>
     <tag k="after" v="recreation"/>
@@ -2953,19 +2953,19 @@
     <tag k="foo" v="bar_1173"/>
     <tag k="foo_1173" v="bar"/>
   </relation>
-  <relation id="1201" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1201" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="120110" role=""/>
     <member type="node" ref="120120" role=""/>
     <tag k="foo" v="bar_1201"/>
     <tag k="foo_1201" v="bar"/>
   </relation>
-  <relation id="1202" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1202" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="120210" role=""/>
     <member type="node" ref="120220" role=""/>
     <tag k="foo" v="bar_1202"/>
     <tag k="foo_1202" v="bar"/>
   </relation>
-  <relation id="1203" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1203" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="120310" role=""/>
     <member type="node" ref="120320" role=""/>
     <tag k="foo" v="bar_1203"/>
@@ -3173,7 +3173,7 @@
     <tag k="foo" v="bar_1611"/>
     <tag k="foo_1611" v="bar"/>
   </relation>
-  <relation id="1612" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1612" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="161210" role=""/>
     <member type="node" ref="161240" role=""/>
     <tag k="foo" v="bar_1612"/>
@@ -3185,25 +3185,25 @@
     <tag k="foo" v="bar_1613"/>
     <tag k="foo_1613" v="bar"/>
   </relation>
-  <relation id="1621" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1621" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="16211" role=""/>
     <member type="way" ref="16213" role=""/>
     <tag k="foo" v="bar_1621"/>
     <tag k="foo_1621" v="bar"/>
   </relation>
-  <relation id="1622" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1622" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="16221" role=""/>
     <member type="way" ref="16224" role=""/>
     <tag k="foo" v="bar_1622"/>
     <tag k="foo_1622" v="bar"/>
   </relation>
-  <relation id="1623" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1623" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="16231" role=""/>
     <member type="way" ref="16234" role=""/>
     <tag k="foo" v="bar_1623"/>
     <tag k="foo_1623" v="bar"/>
   </relation>
-  <relation id="1631" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1631" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="163110" role=""/>
     <member type="node" ref="163130" role=""/>
     <member type="way" ref="16311" role=""/>
@@ -3211,7 +3211,7 @@
     <tag k="foo" v="bar_1631"/>
     <tag k="foo_1631" v="bar"/>
   </relation>
-  <relation id="1632" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1632" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="163210" role=""/>
     <member type="node" ref="163240" role=""/>
     <member type="way" ref="16321" role=""/>
@@ -3219,7 +3219,7 @@
     <tag k="foo" v="bar_1632"/>
     <tag k="foo_1632" v="bar"/>
   </relation>
-  <relation id="1633" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1633" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="163310" role=""/>
     <member type="node" ref="163340" role=""/>
     <member type="way" ref="16331" role=""/>
@@ -3227,7 +3227,7 @@
     <tag k="foo" v="bar_1633"/>
     <tag k="foo_1633" v="bar"/>
   </relation>
-  <relation id="1671" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1671" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="167110" role=""/>
     <member type="node" ref="167130" role=""/>
     <member type="way" ref="16711" role=""/>
@@ -3237,7 +3237,7 @@
     <tag k="foo" v="bar_1671"/>
     <tag k="foo_1671" v="bar"/>
   </relation>
-  <relation id="1672" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1672" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="167210" role=""/>
     <member type="node" ref="167240" role=""/>
     <member type="way" ref="16721" role=""/>
@@ -3247,7 +3247,7 @@
     <tag k="foo" v="bar_1672"/>
     <tag k="foo_1672" v="bar"/>
   </relation>
-  <relation id="1673" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1673" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="167310" role=""/>
     <member type="node" ref="167340" role=""/>
     <member type="way" ref="16731" role=""/>
@@ -3257,43 +3257,43 @@
     <tag k="foo" v="bar_1673"/>
     <tag k="foo_1673" v="bar"/>
   </relation>
-  <relation id="1711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1711" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="171110" role=""/>
     <member type="node" ref="171130" role=""/>
     <tag k="foo" v="bar_1711"/>
     <tag k="foo_1711" v="bar"/>
   </relation>
-  <relation id="1712" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1712" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="171210" role=""/>
     <member type="node" ref="171240" role=""/>
     <tag k="foo" v="bar_1712"/>
     <tag k="foo_1712" v="bar"/>
   </relation>
-  <relation id="1713" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1713" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="171310" role=""/>
     <member type="node" ref="171340" role=""/>
     <tag k="foo" v="bar_1713"/>
     <tag k="foo_1713" v="bar"/>
   </relation>
-  <relation id="1721" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1721" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="17211" role=""/>
     <member type="way" ref="17213" role=""/>
     <tag k="foo" v="bar_1721"/>
     <tag k="foo_1721" v="bar"/>
   </relation>
-  <relation id="1722" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1722" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="17221" role=""/>
     <member type="way" ref="17224" role=""/>
     <tag k="foo" v="bar_1722"/>
     <tag k="foo_1722" v="bar"/>
   </relation>
-  <relation id="1723" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1723" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="17231" role=""/>
     <member type="way" ref="17234" role=""/>
     <tag k="foo" v="bar_1723"/>
     <tag k="foo_1723" v="bar"/>
   </relation>
-  <relation id="1731" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1731" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="173110" role=""/>
     <member type="node" ref="173130" role=""/>
     <member type="way" ref="17311" role=""/>
@@ -3301,7 +3301,7 @@
     <tag k="foo" v="bar_1731"/>
     <tag k="foo_1731" v="bar"/>
   </relation>
-  <relation id="1732" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1732" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="173210" role=""/>
     <member type="node" ref="173240" role=""/>
     <member type="way" ref="17321" role=""/>
@@ -3309,7 +3309,7 @@
     <tag k="foo" v="bar_1732"/>
     <tag k="foo_1732" v="bar"/>
   </relation>
-  <relation id="1733" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1733" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="173310" role=""/>
     <member type="node" ref="173340" role=""/>
     <member type="way" ref="17331" role=""/>
@@ -3317,7 +3317,7 @@
     <tag k="foo" v="bar_1733"/>
     <tag k="foo_1733" v="bar"/>
   </relation>
-  <relation id="1771" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1771" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="177110" role=""/>
     <member type="node" ref="177130" role=""/>
     <member type="way" ref="17711" role=""/>
@@ -3327,7 +3327,7 @@
     <tag k="foo" v="bar_1771"/>
     <tag k="foo_1771" v="bar"/>
   </relation>
-  <relation id="1772" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1772" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="177210" role=""/>
     <member type="node" ref="177240" role=""/>
     <member type="way" ref="17721" role=""/>
@@ -3337,7 +3337,7 @@
     <tag k="foo" v="bar_1772"/>
     <tag k="foo_1772" v="bar"/>
   </relation>
-  <relation id="1773" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1773" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="177310" role=""/>
     <member type="node" ref="177340" role=""/>
     <member type="way" ref="17731" role=""/>
@@ -3353,7 +3353,7 @@
     <tag k="foo" v="bar_1811"/>
     <tag k="foo_1811" v="bar"/>
   </relation>
-  <relation id="1812" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1812" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="181210" role=""/>
     <member type="node" ref="181240" role=""/>
     <tag k="foo" v="bar_1812"/>
@@ -3365,25 +3365,25 @@
     <tag k="foo" v="bar_1813"/>
     <tag k="foo_1813" v="bar"/>
   </relation>
-  <relation id="1821" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1821" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="18211" role=""/>
     <member type="way" ref="18213" role=""/>
     <tag k="foo" v="bar_1821"/>
     <tag k="foo_1821" v="bar"/>
   </relation>
-  <relation id="1822" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1822" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="18221" role=""/>
     <member type="way" ref="18224" role=""/>
     <tag k="foo" v="bar_1822"/>
     <tag k="foo_1822" v="bar"/>
   </relation>
-  <relation id="1823" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1823" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="18231" role=""/>
     <member type="way" ref="18234" role=""/>
     <tag k="foo" v="bar_1823"/>
     <tag k="foo_1823" v="bar"/>
   </relation>
-  <relation id="1831" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1831" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="183110" role=""/>
     <member type="node" ref="183130" role=""/>
     <member type="way" ref="18311" role=""/>
@@ -3391,7 +3391,7 @@
     <tag k="foo" v="bar_1831"/>
     <tag k="foo_1831" v="bar"/>
   </relation>
-  <relation id="1832" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1832" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="183210" role=""/>
     <member type="node" ref="183240" role=""/>
     <member type="way" ref="18321" role=""/>
@@ -3399,7 +3399,7 @@
     <tag k="foo" v="bar_1832"/>
     <tag k="foo_1832" v="bar"/>
   </relation>
-  <relation id="1833" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1833" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="183310" role=""/>
     <member type="node" ref="183340" role=""/>
     <member type="way" ref="18331" role=""/>
@@ -3407,7 +3407,7 @@
     <tag k="foo" v="bar_1833"/>
     <tag k="foo_1833" v="bar"/>
   </relation>
-  <relation id="1871" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1871" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="187110" role=""/>
     <member type="node" ref="187130" role=""/>
     <member type="way" ref="18711" role=""/>
@@ -3417,7 +3417,7 @@
     <tag k="foo" v="bar_1871"/>
     <tag k="foo_1871" v="bar"/>
   </relation>
-  <relation id="1872" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1872" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="187210" role=""/>
     <member type="node" ref="187240" role=""/>
     <member type="way" ref="18721" role=""/>
@@ -3427,7 +3427,7 @@
     <tag k="foo" v="bar_1872"/>
     <tag k="foo_1872" v="bar"/>
   </relation>
-  <relation id="1873" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1873" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="187310" role=""/>
     <member type="node" ref="187340" role=""/>
     <member type="way" ref="18731" role=""/>
@@ -3437,17 +3437,17 @@
     <tag k="foo" v="bar_1873"/>
     <tag k="foo_1873" v="bar"/>
   </relation>
-  <relation id="1911" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1911" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="191110" role="intermediate"/>
     <tag k="foo" v="bar_1911"/>
     <tag k="foo_1911" v="bar"/>
   </relation>
-  <relation id="1921" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1921" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="19211" role="intermediate"/>
     <tag k="foo" v="bar_1921"/>
     <tag k="foo_1921" v="bar"/>
   </relation>
-  <relation id="1922" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1922" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="19221" role="intermediate"/>
     <member type="way" ref="19222" role="intermediate"/>
     <tag k="foo" v="bar_1922"/>
@@ -3630,19 +3630,19 @@
     <tag k="foo" v="bar_1203"/>
     <tag k="foo_1203" v="bar"/>
   </way>
-  <relation id="1201" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1201" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="120110" role=""/>
     <member type="node" ref="120120" role=""/>
     <tag k="foo" v="bar_1201"/>
     <tag k="foo_1201" v="bar"/>
   </relation>
-  <relation id="1202" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1202" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="120210" role=""/>
     <member type="node" ref="120220" role=""/>
     <tag k="foo" v="bar_1202"/>
     <tag k="foo_1202" v="bar"/>
   </relation>
-  <relation id="1203" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1203" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="120310" role=""/>
     <member type="node" ref="120320" role=""/>
     <tag k="foo" v="bar_1203"/>
@@ -3989,7 +3989,7 @@
     <tag k="foo" v="bar_1611"/>
     <tag k="foo_1611" v="bar"/>
   </relation>
-  <relation id="1612" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1612" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="161210" role=""/>
     <member type="node" ref="161240" role=""/>
     <tag k="foo" v="bar_1612"/>
@@ -4001,25 +4001,25 @@
     <tag k="foo" v="bar_1613"/>
     <tag k="foo_1613" v="bar"/>
   </relation>
-  <relation id="1621" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1621" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="16211" role=""/>
     <member type="way" ref="16213" role=""/>
     <tag k="foo" v="bar_1621"/>
     <tag k="foo_1621" v="bar"/>
   </relation>
-  <relation id="1622" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1622" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="16221" role=""/>
     <member type="way" ref="16224" role=""/>
     <tag k="foo" v="bar_1622"/>
     <tag k="foo_1622" v="bar"/>
   </relation>
-  <relation id="1623" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1623" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="16231" role=""/>
     <member type="way" ref="16234" role=""/>
     <tag k="foo" v="bar_1623"/>
     <tag k="foo_1623" v="bar"/>
   </relation>
-  <relation id="1631" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1631" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="163110" role=""/>
     <member type="node" ref="163130" role=""/>
     <member type="way" ref="16311" role=""/>
@@ -4027,7 +4027,7 @@
     <tag k="foo" v="bar_1631"/>
     <tag k="foo_1631" v="bar"/>
   </relation>
-  <relation id="1632" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1632" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="163210" role=""/>
     <member type="node" ref="163240" role=""/>
     <member type="way" ref="16321" role=""/>
@@ -4035,7 +4035,7 @@
     <tag k="foo" v="bar_1632"/>
     <tag k="foo_1632" v="bar"/>
   </relation>
-  <relation id="1633" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1633" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="163310" role=""/>
     <member type="node" ref="163340" role=""/>
     <member type="way" ref="16331" role=""/>
@@ -4043,7 +4043,7 @@
     <tag k="foo" v="bar_1633"/>
     <tag k="foo_1633" v="bar"/>
   </relation>
-  <relation id="1671" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1671" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="167110" role=""/>
     <member type="node" ref="167130" role=""/>
     <member type="way" ref="16711" role=""/>
@@ -4053,7 +4053,7 @@
     <tag k="foo" v="bar_1671"/>
     <tag k="foo_1671" v="bar"/>
   </relation>
-  <relation id="1672" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1672" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="167210" role=""/>
     <member type="node" ref="167240" role=""/>
     <member type="way" ref="16721" role=""/>
@@ -4063,7 +4063,7 @@
     <tag k="foo" v="bar_1672"/>
     <tag k="foo_1672" v="bar"/>
   </relation>
-  <relation id="1673" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1673" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="167310" role=""/>
     <member type="node" ref="167340" role=""/>
     <member type="way" ref="16731" role=""/>
@@ -4115,43 +4115,43 @@
     <tag k="foo" v="bar_1703"/>
     <tag k="foo_1703" v="bar"/>
   </way>
-  <relation id="1711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1711" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="171110" role=""/>
     <member type="node" ref="171130" role=""/>
     <tag k="foo" v="bar_1711"/>
     <tag k="foo_1711" v="bar"/>
   </relation>
-  <relation id="1712" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1712" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="171210" role=""/>
     <member type="node" ref="171240" role=""/>
     <tag k="foo" v="bar_1712"/>
     <tag k="foo_1712" v="bar"/>
   </relation>
-  <relation id="1713" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1713" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="171310" role=""/>
     <member type="node" ref="171340" role=""/>
     <tag k="foo" v="bar_1713"/>
     <tag k="foo_1713" v="bar"/>
   </relation>
-  <relation id="1721" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1721" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="17211" role=""/>
     <member type="way" ref="17213" role=""/>
     <tag k="foo" v="bar_1721"/>
     <tag k="foo_1721" v="bar"/>
   </relation>
-  <relation id="1722" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1722" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="17221" role=""/>
     <member type="way" ref="17224" role=""/>
     <tag k="foo" v="bar_1722"/>
     <tag k="foo_1722" v="bar"/>
   </relation>
-  <relation id="1723" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1723" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="17231" role=""/>
     <member type="way" ref="17234" role=""/>
     <tag k="foo" v="bar_1723"/>
     <tag k="foo_1723" v="bar"/>
   </relation>
-  <relation id="1731" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1731" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="173110" role=""/>
     <member type="node" ref="173130" role=""/>
     <member type="way" ref="17311" role=""/>
@@ -4159,7 +4159,7 @@
     <tag k="foo" v="bar_1731"/>
     <tag k="foo_1731" v="bar"/>
   </relation>
-  <relation id="1732" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1732" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="173210" role=""/>
     <member type="node" ref="173240" role=""/>
     <member type="way" ref="17321" role=""/>
@@ -4167,7 +4167,7 @@
     <tag k="foo" v="bar_1732"/>
     <tag k="foo_1732" v="bar"/>
   </relation>
-  <relation id="1733" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1733" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="173310" role=""/>
     <member type="node" ref="173340" role=""/>
     <member type="way" ref="17331" role=""/>
@@ -4175,7 +4175,7 @@
     <tag k="foo" v="bar_1733"/>
     <tag k="foo_1733" v="bar"/>
   </relation>
-  <relation id="1771" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1771" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="177110" role=""/>
     <member type="node" ref="177130" role=""/>
     <member type="way" ref="17711" role=""/>
@@ -4185,7 +4185,7 @@
     <tag k="foo" v="bar_1771"/>
     <tag k="foo_1771" v="bar"/>
   </relation>
-  <relation id="1772" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1772" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="177210" role=""/>
     <member type="node" ref="177240" role=""/>
     <member type="way" ref="17721" role=""/>
@@ -4195,7 +4195,7 @@
     <tag k="foo" v="bar_1772"/>
     <tag k="foo_1772" v="bar"/>
   </relation>
-  <relation id="1773" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1773" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="177310" role=""/>
     <member type="node" ref="177340" role=""/>
     <member type="way" ref="17731" role=""/>
@@ -4248,7 +4248,7 @@
     <tag k="foo" v="bar_1811"/>
     <tag k="foo_1811" v="bar"/>
   </relation>
-  <relation id="1812" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1812" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="181210" role=""/>
     <member type="node" ref="181240" role=""/>
     <tag k="foo" v="bar_1812"/>
@@ -4260,25 +4260,25 @@
     <tag k="foo" v="bar_1813"/>
     <tag k="foo_1813" v="bar"/>
   </relation>
-  <relation id="1821" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1821" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="18211" role=""/>
     <member type="way" ref="18213" role=""/>
     <tag k="foo" v="bar_1821"/>
     <tag k="foo_1821" v="bar"/>
   </relation>
-  <relation id="1822" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1822" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="18221" role=""/>
     <member type="way" ref="18224" role=""/>
     <tag k="foo" v="bar_1822"/>
     <tag k="foo_1822" v="bar"/>
   </relation>
-  <relation id="1823" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1823" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="18231" role=""/>
     <member type="way" ref="18234" role=""/>
     <tag k="foo" v="bar_1823"/>
     <tag k="foo_1823" v="bar"/>
   </relation>
-  <relation id="1831" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1831" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="183110" role=""/>
     <member type="node" ref="183130" role=""/>
     <member type="way" ref="18311" role=""/>
@@ -4286,7 +4286,7 @@
     <tag k="foo" v="bar_1831"/>
     <tag k="foo_1831" v="bar"/>
   </relation>
-  <relation id="1832" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1832" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="183210" role=""/>
     <member type="node" ref="183240" role=""/>
     <member type="way" ref="18321" role=""/>
@@ -4294,7 +4294,7 @@
     <tag k="foo" v="bar_1832"/>
     <tag k="foo_1832" v="bar"/>
   </relation>
-  <relation id="1833" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1833" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="183310" role=""/>
     <member type="node" ref="183340" role=""/>
     <member type="way" ref="18331" role=""/>
@@ -4302,7 +4302,7 @@
     <tag k="foo" v="bar_1833"/>
     <tag k="foo_1833" v="bar"/>
   </relation>
-  <relation id="1871" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1871" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="187110" role=""/>
     <member type="node" ref="187130" role=""/>
     <member type="way" ref="18711" role=""/>
@@ -4312,7 +4312,7 @@
     <tag k="foo" v="bar_1871"/>
     <tag k="foo_1871" v="bar"/>
   </relation>
-  <relation id="1872" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1872" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="187210" role=""/>
     <member type="node" ref="187240" role=""/>
     <member type="way" ref="18721" role=""/>
@@ -4322,7 +4322,7 @@
     <tag k="foo" v="bar_1872"/>
     <tag k="foo_1872" v="bar"/>
   </relation>
-  <relation id="1873" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <relation id="1873" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="187310" role=""/>
     <member type="node" ref="187340" role=""/>
     <member type="way" ref="18731" role=""/>
@@ -4344,17 +4344,17 @@
     <nd ref="192221"/>
     <nd ref="192222"/>
   </way>
-  <relation id="1911" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1911" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="191110" role="intermediate"/>
     <tag k="foo" v="bar_1911"/>
     <tag k="foo_1911" v="bar"/>
   </relation>
-  <relation id="1921" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <relation id="1921" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="19211" role="intermediate"/>
     <tag k="foo" v="bar_1921"/>
     <tag k="foo_1921" v="bar"/>
   </relation>
-  <relation id="1922" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1922" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="19221" role="intermediate"/>
     <member type="way" ref="19222" role="intermediate"/>
     <tag k="foo" v="bar_1922"/>
@@ -4622,6 +4622,12 @@
     <nd ref="143213"/>
     <nd ref="143214"/>
   </way>
+  <relation id="1422" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <member type="way" ref="14221" role=""/>
+    <member type="way" ref="14222" role=""/>
+    <tag k="foo" v="bar_1422"/>
+    <tag k="foo_1422" v="bar"/>
+  </relation>
   <relation id="1432" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="143210" role=""/>
     <member type="node" ref="143220" role=""/>
@@ -4702,7 +4708,7 @@
     <nd ref="25063"/>
     <tag k="after" v="recreation"/>
   </way>
-  <relation id="1922" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <relation id="1922" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="19221" role="intermediate"/>
     <member type="way" ref="19222" role="intermediate"/>
     <tag k="foo" v="bar_1922"/>

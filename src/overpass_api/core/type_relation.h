@@ -73,6 +73,11 @@ struct Relation
   {
     return ::calc_index(memb_idxs);
   }
+  
+  static bool indicates_geometry(Uint31_Index index)
+  {
+    return ((index.val() & 0x80000000) != 0 && ((index.val() & 0x1) == 0));
+  }
 };
 
 struct Relation_Comparator_By_Id {
@@ -99,6 +104,8 @@ struct Relation_Skeleton
   vector< Uint31_Index > way_idxs;
   
   Relation_Skeleton() : id(0u) {}
+  
+  Relation_Skeleton(Relation::Id_Type id_) : id(id_) {}
   
   Relation_Skeleton(void* data) : id(*(uint32*)data)
   {

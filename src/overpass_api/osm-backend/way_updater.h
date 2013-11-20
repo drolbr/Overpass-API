@@ -380,6 +380,13 @@ struct Way_Updater
     return moved_ways;
   }
   
+  const std::map< Uint31_Index, std::set< Way_Skeleton > > get_new_skeletons() const
+      { return new_skeletons; }
+  const std::map< Uint31_Index, std::set< Way_Skeleton > > get_attic_skeletons() const
+      { return attic_skeletons; }
+  const std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > > get_new_attic_skeletons() const
+      { return new_attic_skeletons; }
+  
 private:
   uint32 update_counter;
   Transaction* transaction;
@@ -394,6 +401,10 @@ private:
   vector< pair< OSM_Element_Metadata_Skeleton< Way::Id_Type >, uint32 > > ways_meta_to_insert;
   vector< OSM_Element_Metadata_Skeleton< Way::Id_Type > > ways_meta_to_delete;
   map< uint32, string > user_by_id;
+
+  std::map< Uint31_Index, std::set< Way_Skeleton > > new_skeletons;
+  std::map< Uint31_Index, std::set< Way_Skeleton > > attic_skeletons;
+  std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > > new_attic_skeletons;
   
   void merge_files(const vector< string >& froms, string into);
 };

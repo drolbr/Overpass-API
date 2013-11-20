@@ -42,7 +42,6 @@
 #include <list>
 #include <sstream>
 
-using namespace std;
 
 /**
  * Tests the library node_updater, way_updater and relation_updater
@@ -265,7 +264,11 @@ namespace
     if (osm_element_count >= 4*1024*1024)
     {
       callback->relation_elapsed(current_relation.id);
-      relation_updater->update(callback, update_relation_logger);
+      relation_updater->update(callback, update_relation_logger,
+                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
+                          node_updater->get_new_attic_skeletons(),
+                          way_updater->get_new_skeletons(), way_updater->get_attic_skeletons(),
+                          way_updater->get_new_attic_skeletons());
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -279,8 +282,8 @@ namespace
     {
       callback->nodes_finished();
       node_updater->update(callback, false, update_node_logger);
-      relation_updater->update_moved_idxs
-          (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
+//       relation_updater->update_moved_idxs
+//           (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
       callback->parser_started();
       osm_element_count = 0;
       state = IN_RELATIONS;
@@ -291,8 +294,8 @@ namespace
       way_updater->update(callback, false, update_way_logger,
                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
                           node_updater->get_new_attic_skeletons());
-      relation_updater->update_moved_idxs
-          (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
+//       relation_updater->update_moved_idxs
+//           (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
       callback->parser_started();
       osm_element_count = 0;
       state = IN_RELATIONS;
@@ -1647,12 +1650,16 @@ void Osm_Updater::finish_updater()
     way_updater->update(callback, false, update_way_logger,
                         node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
                         node_updater->get_new_attic_skeletons());
-    relation_updater->update_moved_idxs
-        (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
+//     relation_updater->update_moved_idxs
+//         (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
     state = IN_RELATIONS;
   }
   if (state == IN_RELATIONS)
-    relation_updater->update(callback, update_relation_logger);
+    relation_updater->update(callback, update_relation_logger,
+                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
+                          node_updater->get_new_attic_skeletons(),
+                          way_updater->get_new_skeletons(), way_updater->get_attic_skeletons(),
+                          way_updater->get_new_attic_skeletons());
   
   flush();
   callback->parser_succeeded();
@@ -1702,7 +1709,7 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
   update_node_logger_ = (produce_augmented_diffs ? new Update_Node_Logger() : 0);
   way_updater_ = new Way_Updater(*transaction, meta);
   update_way_logger_ = (produce_augmented_diffs ? new Update_Way_Logger() : 0);
-  relation_updater_ = new Relation_Updater(*transaction, meta != only_data);
+  relation_updater_ = new Relation_Updater(*transaction, meta);
   update_relation_logger_ = (produce_augmented_diffs ? new Update_Relation_Logger() : 0);
   
   data_version = data_version_;
@@ -1734,7 +1741,7 @@ Osm_Updater::Osm_Updater
   update_node_logger_ = (produce_augmented_diffs ? new Update_Node_Logger() : 0);
   way_updater_ = new Way_Updater(db_dir, meta);
   update_way_logger_ = (produce_augmented_diffs ? new Update_Way_Logger() : 0);
-  relation_updater_ = new Relation_Updater(db_dir, meta != only_data);
+  relation_updater_ = new Relation_Updater(db_dir, meta);
   update_relation_logger_ = (produce_augmented_diffs ? new Update_Relation_Logger() : 0);
 
   data_version = data_version_;

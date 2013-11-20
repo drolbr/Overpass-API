@@ -621,7 +621,6 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
       nodes_meta_to_delete.erase(unique(nodes_meta_to_delete.begin(), nodes_meta_to_delete.end()),
 				 nodes_meta_to_delete.end());
       update_logger->set_delete_meta_data(nodes_meta_to_delete);
-      nodes_meta_to_delete.clear();
     }
   }
   callback->update_finished();
@@ -629,6 +628,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
   new_data.data.clear();
   ids_to_modify.clear();
   nodes_to_insert.clear();
+  nodes_meta_to_insert.clear();
+  nodes_meta_to_delete.clear();
 
   if (!external_transaction)
     delete transaction;
