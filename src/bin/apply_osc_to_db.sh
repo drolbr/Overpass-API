@@ -67,7 +67,7 @@ collect_minute_diffs()
 
   get_replicate_filename $TARGET
 
-  while [[ ( -s $REPLICATE_DIR/$REPLICATE_FILENAME.state.txt ) && ( $(($START + 60)) -ge $(($TARGET)) ) && ( `du -m $TEMP_DIR | awk '{ print $1; }'` -le 512 ) ]];
+  while [[ ( -s $REPLICATE_DIR/$REPLICATE_FILENAME.state.txt ) && ( $(($START + 1440)) -ge $(($TARGET)) ) && ( `du -m $TEMP_DIR | awk '{ print $1; }'` -le 512 ) ]];
   do
   {
     printf -v TARGET_FILE %09u $TARGET
@@ -85,7 +85,7 @@ apply_minute_diffs_augmented()
   get_replicate_filename $DIFF_COUNT
   mkdir -p $DB_DIR/augmented_diffs/$REPLICATE_TRUNK_DIR
   mkdir -p $DB_DIR/augmented_diffs/id_sorted/$REPLICATE_TRUNK_DIR
-  ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --produce-diff >$DB_DIR/augmented_diffs/id_sorted/$REPLICATE_FILENAME.osc
+  ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --produce-diff --flush-size=0 >$DB_DIR/augmented_diffs/id_sorted/$REPLICATE_FILENAME.osc
   EXITCODE=$?
   while [[ $EXITCODE -ne 0 ]];
   do
