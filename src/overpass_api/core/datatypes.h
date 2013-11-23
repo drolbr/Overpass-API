@@ -504,4 +504,7 @@ struct Timestamp
 };
 
 
+typedef enum { only_data, keep_meta, keep_attic } meta_modes;
+
+
 #endif

@@ -56,9 +56,6 @@ struct Data_By_Id
   std::vector< Entry > data;
 };
 
-
-typedef enum { only_data, keep_meta, keep_attic } meta_modes;
-
 // ----------------------------------------------------------------------------
 // generic updater functions
 

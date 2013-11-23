@@ -241,7 +241,7 @@ vector< Statement* >* get_statement_stack()
   return &statement_stack_;
 }
 
-bool get_uses_meta_data()
+meta_modes get_uses_meta_data()
 {
-  return true;
+  return keep_attic;
 }

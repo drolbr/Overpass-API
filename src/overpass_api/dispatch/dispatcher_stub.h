@@ -47,7 +47,7 @@ class Dispatcher_Stub : public Watchdog_Callback
     // and registers the process. error_output_ must remain valid over the
     // entire lifetime of this object.
     Dispatcher_Stub(string db_dir_, Error_Output* error_output_, string xml_raw,
-		    bool uses_meta, int area_level,
+		    meta_modes meta_, int area_level,
 		    uint32 max_allowed_time, uint64 max_allowed_space);
     
     // Called once per minute from the resource manager
