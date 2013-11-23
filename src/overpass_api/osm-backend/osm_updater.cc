@@ -65,6 +65,7 @@ namespace
   const int IN_RELATIONS = 3;
   int modify_mode = 0;
   const int DELETE = 1;
+  uint flush_limit = 4*1024*1024;
   OSM_Element_Metadata* meta;
   
   uint32 osm_element_count;
@@ -181,7 +182,7 @@ namespace
       node_updater->set_id_deleted(current_node.id, meta);
     else
       node_updater->set_node(current_node, meta);
-    if (osm_element_count >= 4*1024*1024)
+    if (osm_element_count >= flush_limit)
     {
       callback->node_elapsed(current_node.id);
       node_updater->update(callback, true, update_node_logger);
@@ -242,7 +243,7 @@ namespace
       way_updater->set_id_deleted(current_way.id, meta);
     else
       way_updater->set_way(current_way, meta);
-    if (osm_element_count >= 4*1024*1024)
+    if (osm_element_count >= flush_limit)
     {
       callback->way_elapsed(current_way.id);
       way_updater->update(callback, true, update_way_logger,
@@ -261,7 +262,7 @@ namespace
       relation_updater->set_id_deleted(current_relation.id, meta);
     else
       relation_updater->set_relation(current_relation, meta);
-    if (osm_element_count >= 4*1024*1024)
+    if (osm_element_count >= flush_limit)
     {
       callback->relation_elapsed(current_relation.id);
       relation_updater->update(callback, update_relation_logger,
@@ -1689,7 +1690,7 @@ void parse_relations_only(FILE* in)
 }
 
 Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version_,
-			 meta_modes meta_, bool produce_augmented_diffs)
+			 meta_modes meta_, bool produce_augmented_diffs, unsigned int flush_limit_)
   : dispatcher_client(0), meta(meta_)
 {
   dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
@@ -1711,6 +1712,7 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
   update_way_logger_ = (produce_augmented_diffs ? new Update_Way_Logger() : 0);
   relation_updater_ = new Relation_Updater(*transaction, meta);
   update_relation_logger_ = (produce_augmented_diffs ? new Update_Relation_Logger() : 0);
+  flush_limit = flush_limit_;
   
   data_version = data_version_;
 
@@ -1729,7 +1731,7 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
 
 Osm_Updater::Osm_Updater
     (Osm_Backend_Callback* callback_, string db_dir, const string& data_version_,
-     meta_modes meta_, bool produce_augmented_diffs)
+     meta_modes meta_, bool produce_augmented_diffs, unsigned int flush_limit_)
   : transaction(0), dispatcher_client(0), db_dir_(db_dir), meta(meta_)
 {
   {
@@ -1743,6 +1745,7 @@ Osm_Updater::Osm_Updater
   update_way_logger_ = (produce_augmented_diffs ? new Update_Way_Logger() : 0);
   relation_updater_ = new Relation_Updater(db_dir, meta);
   update_relation_logger_ = (produce_augmented_diffs ? new Update_Relation_Logger() : 0);
+  flush_limit = flush_limit_;
 
   data_version = data_version_;
 

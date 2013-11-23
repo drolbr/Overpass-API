@@ -772,6 +772,16 @@ void Print_Statement::execute(Resource_Manager& rman)
 		 (mode & Print_Target::PRINT_META) ? meta_settings().RELATIONS_META : 0,
                  element_count);
       
+      if (rman.get_desired_timestamp() != 0)
+      {
+        tags_by_id_attic(mit->second.attic_relations,
+                   RELATION_FLUSH_SIZE, *target, rman,
+                   *rman.get_transaction(),
+                   (mode & Print_Target::PRINT_META) ? meta_settings().RELATIONS_META : 0,
+                   (mode & Print_Target::PRINT_META) ? attic_settings().RELATIONS_META : 0,
+                   element_count);
+      }
+      
       if (rman.get_area_transaction())
       {
 	tags_by_id(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
@@ -814,6 +824,14 @@ void Print_Statement::execute(Resource_Manager& rman)
 		    (mode & Print_Target::PRINT_META) ?
 		        meta_settings().RELATIONS_META : 0, element_count);
       
+      if (rman.get_desired_timestamp() != 0)
+      {
+        tags_quadtile_attic(mit->second.attic_relations,
+                      *target, rman, *rman.get_transaction(),
+                      (mode & Print_Target::PRINT_META) ? meta_settings().RELATIONS_META : 0,
+                      (mode & Print_Target::PRINT_META) ? attic_settings().RELATIONS_META : 0,
+                      element_count);
+      }
       
       if (rman.get_area_transaction())
       {

@@ -90,6 +90,7 @@ int main(int argc, char* argv[])
   meta_modes meta = only_data;
   bool produce_augmented_diffs = false;
   bool abort = false;
+  unsigned int flush_limit = 16*1024*1024;
   
   int argpos(1);
   while (argpos < argc)
@@ -114,6 +115,12 @@ int main(int argc, char* argv[])
       meta = keep_attic;
     else if (!(strncmp(argv[argpos], "--produce-diff", 6)))
       produce_augmented_diffs = true;
+    else if (!(strncmp(argv[argpos], "--flush-size=", 13)))
+    {
+      flush_limit = atoll(string(argv[argpos]).substr(13).c_str()) *1024*1024;
+      if (flush_limit == 0)
+        flush_limit = std::numeric_limits< unsigned int >::max();
+    }
     else
     {
       cerr<<"Unkown argument: "<<argv[argpos]<<'\n';
@@ -155,7 +162,8 @@ int main(int argc, char* argv[])
   {
     if (db_dir == "")
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta, produce_augmented_diffs);
+      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta,
+                              produce_augmented_diffs, flush_limit);
       get_verbatim_callback()->parser_started();
       
       process_source_files< Node_Caller >(source_dir, source_file_names);
@@ -166,7 +174,8 @@ int main(int argc, char* argv[])
     }
     else
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta, produce_augmented_diffs);
+      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta,
+                              produce_augmented_diffs, flush_limit);
       get_verbatim_callback()->parser_started();
       
       process_source_files< Node_Caller >(source_dir, source_file_names);

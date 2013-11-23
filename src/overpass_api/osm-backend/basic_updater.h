@@ -671,4 +671,359 @@ void add_deleted_skeletons
 }
 
 
+template< typename Element_Skeleton >
+std::vector< typename Element_Skeleton::Id_Type > enhance_ids_to_update
+    (const std::map< Uint31_Index, std::set< Element_Skeleton > >& implicitly_moved_skeletons,
+     std::vector< typename Element_Skeleton::Id_Type >& ids_to_update)
+{
+  for (typename std::map< Uint31_Index, std::set< Element_Skeleton > >::const_iterator
+     it = implicitly_moved_skeletons.begin(); it != implicitly_moved_skeletons.end(); ++it)
+  {
+    for (typename std::set< Element_Skeleton >::const_iterator
+        it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      ids_to_update.push_back(it2->id);
+  }
+  std::sort(ids_to_update.begin(), ids_to_update.end());
+  ids_to_update.erase(std::unique(ids_to_update.begin(), ids_to_update.end()), ids_to_update.end());
+  return ids_to_update;
+}
+
+
+template< typename Id_Type >
+struct Descending_By_Timestamp
+{
+  bool operator()(const Id_Type& lhs, const Id_Type& rhs) const
+  {
+    return rhs.timestamp < lhs.timestamp;
+  }
+};
+
+
+template< typename Element_Skeleton >
+std::map< typename Element_Skeleton::Id_Type, std::vector< Attic< Uint31_Index > > >
+    compute_new_attic_idx_by_id_and_time
+    (const Data_By_Id< Element_Skeleton >& new_data,
+     const std::map< Uint31_Index, std::set< Element_Skeleton > >& new_skeletons,
+     const std::map< Uint31_Index, std::set< Attic< Element_Skeleton > > >& full_attic)
+{
+  std::map< typename Element_Skeleton::Id_Type, std::vector< Attic< Uint31_Index > > > result;
+  
+  for (typename std::map< Uint31_Index, std::set< Element_Skeleton > >::const_iterator
+      it = new_skeletons.begin(); it != new_skeletons.end(); ++it)
+  {
+    for (typename std::set< Element_Skeleton >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+      result[it2->id].push_back(Attic< Uint31_Index >
+          (it->first, NOW));
+  }
+  
+  typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
+      next_it = new_data.data.begin();
+  if (next_it != new_data.data.end())
+    ++next_it;
+  for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
+      it = new_data.data.begin(); it != new_data.data.end(); ++it)
+  {
+    if (it->idx.val() == 0)
+    {
+      if (next_it == new_data.data.end() || !(it->elem.id == next_it->elem.id))
+        result[it->elem.id].push_back(Attic< Uint31_Index >(it->idx, NOW));
+      else 
+        result[it->elem.id].push_back(Attic< Uint31_Index >(it->idx, next_it->meta.timestamp));
+    }
+    ++next_it;
+  }
+        
+  for (typename std::map< Uint31_Index, std::set< Attic< Element_Skeleton > > >::const_iterator
+      it = full_attic.begin(); it != full_attic.end(); ++it)
+  {
+    for (typename std::set< Attic< Element_Skeleton > >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+      result[it2->id].push_back(Attic< Uint31_Index >(it->first, it2->timestamp));
+  }
+  
+  for (typename std::map< typename Element_Skeleton::Id_Type, std::vector< Attic< Uint31_Index > > >::iterator
+      it = result.begin(); it != result.end(); ++it)
+    std::sort(it->second.begin(), it->second.end(),
+              Descending_By_Timestamp< Attic< Uint31_Index > >());
+    
+  return result;
+}
+
+
+/* Enhance the existing attic meta by the meta entries of deleted elements.
+   Assert: the sequence in the vector is ordered from recent to old. */
+template< typename Id_Type >
+std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Id_Type > > >
+    compute_new_attic_meta
+    (const std::map< Id_Type, std::vector< Attic< Uint31_Index > > >& new_attic_idx_by_id_and_time,
+     const std::map< Id_Type, std::vector< OSM_Element_Metadata_Skeleton< Id_Type > > >& meta_by_id_and_time,
+     const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Id_Type > > >& new_meta)
+{
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Id_Type > > > result;
+  
+  for (typename std::map< Id_Type, std::vector< Attic< Uint31_Index > > >::const_iterator
+      it = new_attic_idx_by_id_and_time.begin(); it != new_attic_idx_by_id_and_time.end(); ++it)
+  {
+    typename std::map< Id_Type, std::vector< OSM_Element_Metadata_Skeleton< Id_Type > > >
+        ::const_iterator mit = meta_by_id_and_time.find(it->first);
+        
+    if (mit == meta_by_id_and_time.end())
+      // Something has gone wrong seriously. We anyway cannot then copy any meta information here
+      continue;
+    
+    // Use that one cannot insert the same value twice in a set
+      
+    typename std::vector< OSM_Element_Metadata_Skeleton< Id_Type > >::const_iterator
+        mit2 = mit->second.begin();
+    std::vector< Attic< Uint31_Index > >::const_iterator it2 = it->second.begin();
+    if (it2 == it->second.end())
+      // Assert: Can't happen
+      continue;
+    
+    Uint31_Index last_idx(*it2);
+    ++it2;
+            
+    while (mit2 != mit->second.end())
+    {
+      if (it2 == it->second.end())
+      {
+        result[last_idx].insert(*mit2);
+        ++mit2;
+      }
+      else if (it2->timestamp < mit2->timestamp)
+      {
+        // Assert: last_idx != 0
+        result[last_idx].insert(*mit2);
+        ++mit2;
+      }
+      else if (it2->timestamp == mit2->timestamp)
+      {
+        if (last_idx.val() == 0)
+          result[*it2].insert(*mit2);
+        else
+          result[last_idx].insert(*mit2);
+        ++mit2;
+        last_idx = *it2;
+        ++it2;
+      }
+      else
+      {
+        if (!(it2->val() == 0) && !(last_idx == *it2))
+          result[last_idx].insert(*mit2);
+        last_idx = *it2;
+        ++it2;
+      }
+    }
+  }
+  
+  // Remove current meta from attic if it were still at the right place
+  for (typename std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Id_Type > > >
+        ::const_iterator it = new_meta.begin(); it != new_meta.end(); ++it)
+  {
+    for (typename std::set< OSM_Element_Metadata_Skeleton< Id_Type > >::const_iterator
+        it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      result[it->first].erase(*it2);
+  }
+  
+  return result;
+}
+
+
+template< typename Id_Type >
+std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_local_tags
+    (const std::map< Id_Type, std::vector< Attic< Uint31_Index > > >& new_attic_idx_by_id_and_time,
+     const std::map< std::pair< Id_Type, std::string >, std::vector< Attic< std::string > > >&
+         tags_by_id_and_time,
+     const std::vector< std::pair< Id_Type, Uint31_Index > >& existing_map_positions,
+     const std::map< Id_Type, std::set< Uint31_Index > >& existing_idx_lists)
+{
+  std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > result;
+  
+  typename std::map< std::pair< Id_Type, std::string >, std::vector< Attic< std::string > > >
+      ::const_iterator tit = tags_by_id_and_time.begin();
+  for (typename std::map< Id_Type, std::vector< Attic< Uint31_Index > > >::const_iterator
+      it = new_attic_idx_by_id_and_time.begin(); it != new_attic_idx_by_id_and_time.end(); ++it)
+  {
+    while (tit != tags_by_id_and_time.end() && tit->first.first == it->first)
+    {
+      // Use that one cannot insert the same value twice in a set
+      
+      typename std::vector< Attic< std::string > >::const_iterator tit2 = tit->second.begin();
+      std::vector< Attic< Uint31_Index > >::const_iterator it2 = it->second.begin();
+      if (it2 == it->second.end())
+        // Assert: Can't happen
+        continue;
+      
+      std::set< Uint31_Index > existing_attic_idxs;
+      typename std::map< Id_Type, std::set< Uint31_Index > >::const_iterator iit
+          = existing_idx_lists.find(it->first);
+      if (iit != existing_idx_lists.end())
+      {
+        for (std::set< Uint31_Index >::const_iterator iit2 = iit->second.begin(); iit2 != iit->second.end();
+             ++iit2)
+          existing_attic_idxs.insert(Uint31_Index(iit2->val() & 0x7fffff00));
+      }
+      
+      const Uint31_Index* idx_ptr = binary_pair_search(existing_map_positions, it->first);
+      if (idx_ptr != 0)
+        existing_attic_idxs.insert(Uint31_Index(idx_ptr->val() & 0x7fffff00));
+      
+      Uint31_Index last_idx = *it2;
+      std::string last_value = "";
+      ++it2;
+      if (tit2 != tit->second.end() && tit2->timestamp == NOW)
+      {
+        last_value = *tit2;
+        ++tit2;
+      }
+      while (it2 != it->second.end() || tit2 != tit->second.end())
+      {
+        if (it2 == it->second.end() || (tit2 != tit->second.end() && it2->timestamp < tit2->timestamp))
+        {
+          if (last_idx.val() != 0u && last_value != *tit2 && (it2 != it->second.end() || *tit2 != "" ||
+              existing_attic_idxs.find(Uint31_Index(last_idx.val() & 0x7fffff00))
+                  != existing_attic_idxs.end()))
+            result[Tag_Index_Local(last_idx, tit->first.second, *tit2)]
+                .insert(Attic< Id_Type >(it->first, tit2->timestamp));
+          last_value = *tit2;
+          ++tit2;
+        }
+        else if (tit2 == tit->second.end() || tit2->timestamp < it2->timestamp)
+        {
+          if (!(last_idx == *it2) && last_value != "")
+          {
+            if (it2->val() != 0u)
+              result[Tag_Index_Local(*it2, tit->first.second, last_value)]
+                .insert(Attic< Id_Type >(it->first, it2->timestamp));
+            if (last_idx.val() != 0u)
+              result[Tag_Index_Local(last_idx, tit->first.second, "")]
+                  .insert(Attic< Id_Type >(it->first, it2->timestamp));
+          }
+          last_idx = *it2;
+          ++it2;
+        }
+        else
+        {
+          if (it2->val() != 0u && (!(last_idx == *it2) || last_value != *tit2))
+            result[Tag_Index_Local(*it2, tit->first.second, *tit2)]
+                .insert(Attic< Id_Type >(it->first, tit2->timestamp));
+          if (!(last_idx == *it2) && last_idx.val() != 0u)
+            result[Tag_Index_Local(last_idx, tit->first.second, "")]
+                .insert(Attic< Id_Type >(it->first, tit2->timestamp));
+                
+          last_value = *tit2;
+          ++tit2;
+          last_idx = *it2;
+          ++it2;
+        }
+      }
+      
+      ++tit;
+    }
+  }
+  
+  return result;
+}
+
+
+template< typename Element_Skeleton >
+std::map< typename Element_Skeleton::Id_Type,
+    std::vector< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >
+    compute_meta_by_id_and_time
+    (const Data_By_Id< Element_Skeleton >& new_data,
+     const std::map< Uint31_Index,
+         std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& attic_meta)
+{
+  std::map< typename Element_Skeleton::Id_Type, std::vector<
+      OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > > result;
+
+  for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
+      it = new_data.data.begin(); it != new_data.data.end(); ++it)
+    result[it->elem.id].push_back(it->meta);
+      
+  for (typename std::map< Uint31_Index, std::set<
+        OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >::const_iterator
+      it = attic_meta.begin(); it != attic_meta.end(); ++it)
+  {
+    for (typename std::set<
+          OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > >::const_iterator
+        it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      result[it2->ref].push_back(*it2);
+  }
+  
+  for (typename std::map< typename Element_Skeleton::Id_Type, std::vector<
+          OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >::iterator
+      it = result.begin(); it != result.end(); ++it)
+    std::sort(it->second.begin(), it->second.end(),
+        Descending_By_Timestamp< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > >());
+  
+  return result;
+}
+
+
+template< typename Element_Skeleton >
+std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >, std::vector< Attic< std::string > > >
+    compute_tags_by_id_and_time
+    (const Data_By_Id< Element_Skeleton >& new_data,
+     const std::map< Tag_Index_Local, std::set< typename Element_Skeleton::Id_Type > >& attic_local_tags)
+{
+  std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >,
+      std::vector< Attic< std::string > > > result;
+      
+  std::map< typename Element_Skeleton::Id_Type, uint64 > timestamp_per_id;
+
+  typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
+      next_it = new_data.data.begin();
+  if (next_it != new_data.data.end())
+  {
+    timestamp_per_id[next_it->elem.id] = next_it->meta.timestamp;
+    ++next_it;
+  }
+  for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
+      it = new_data.data.begin(); it != new_data.data.end(); ++it)
+  {
+    uint64 next_timestamp = NOW;
+    if (next_it != new_data.data.end())
+    {
+      if (next_it->elem.id == it->elem.id)
+        next_timestamp = next_it->meta.timestamp;
+      else
+        timestamp_per_id[next_it->elem.id] = next_it->meta.timestamp;
+      ++next_it;
+    }
+
+    for (std::vector< std::pair< std::string, std::string > >::const_iterator it2 = it->tags.begin();
+         it2 != it->tags.end(); ++it2)
+    {
+      std::vector< Attic< std::string > >& result_ref = result[std::make_pair(it->elem.id, it2->first)];
+      if (result_ref.empty() || result_ref.back().timestamp != it->meta.timestamp)
+        result_ref.push_back(Attic< std::string >("", it->meta.timestamp));
+      result_ref.push_back(Attic< std::string >(it2->second, next_timestamp));
+    }
+  }
+  
+  for (typename std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >,
+      std::vector< Attic< std::string > > >::iterator it = result.begin(); it != result.end(); ++it)
+    std::sort(it->second.begin(), it->second.end(), Descending_By_Timestamp< Attic< std::string > >());
+
+  for (typename std::map< Tag_Index_Local, std::set< typename Element_Skeleton::Id_Type > >::const_iterator
+      it = attic_local_tags.begin(); it != attic_local_tags.end(); ++it)
+  {
+    for (typename std::set< typename Element_Skeleton::Id_Type >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+    {
+      std::vector< Attic< std::string > >& result_ref = result[std::make_pair(*it2, it->first.key)];
+      uint64 timestamp = (timestamp_per_id[*it2] == 0 ? NOW : timestamp_per_id[*it2]);
+      if (result_ref.empty() || result_ref.back().timestamp != timestamp_per_id[*it2])
+        result_ref.push_back(Attic< std::string >(it->first.value, timestamp));
+      else
+        result_ref.back() = Attic< std::string >(it->first.value, timestamp);
+    }
+  }
+  
+  return result;
+}
+
+
 #endif

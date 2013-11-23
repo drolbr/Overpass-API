@@ -621,9 +621,16 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
         
     get_elements(ids, req, rman, into.ways, into.attic_ways);
   }
-//     collect_elems(rman, *osm_base_settings().WAYS, lower, upper, into.ways);
   else if (type == RELATION)
-    collect_elems(rman, *osm_base_settings().RELATIONS, lower, upper, into.relations);
+  {
+    std::vector< std::pair< Relation_Skeleton::Id_Type, uint64 > > ids;
+    for (uint64 i = lower.val(); i < upper.val(); ++i)
+      ids.push_back(make_pair(i, rman.get_desired_timestamp()));
+    std::pair< std::vector< Uint31_Index >, std::vector< Uint31_Index > > req
+        = get_indexes< Uint31_Index, Relation_Skeleton >(ids, rman);
+        
+    get_elements(ids, req, rman, into.relations, into.attic_relations);
+  }
   else if (type == AREA)
     collect_elems_flat(rman, lower.val(), upper.val(), vector< Area_Skeleton::Id_Type >(), true, into.areas);
 

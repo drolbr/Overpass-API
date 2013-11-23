@@ -36,9 +36,9 @@ class Osm_Updater
 {
   public:
     Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version,
-		meta_modes meta, bool produce_augmented_diffs);
+		meta_modes meta, bool produce_augmented_diffs, unsigned int flush_limit);
     Osm_Updater(Osm_Backend_Callback* callback_, string db_dir, const string& data_version,
-		meta_modes meta, bool produce_augmented_diffs);
+		meta_modes meta, bool produce_augmented_diffs, unsigned int flush_limit);
     ~Osm_Updater();
 
     void finish_updater();

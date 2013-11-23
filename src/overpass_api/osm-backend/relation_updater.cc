@@ -487,6 +487,305 @@ void compute_geometry
 }
 
 
+void compute_idx_and_geometry
+    (Uint31_Index& idx, Relation_Skeleton& skeleton,
+     uint64 expiration_timestamp,
+     const std::map< Node_Skeleton::Id_Type,
+         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >& nodes_by_id,
+     const std::map< Way_Skeleton::Id_Type,
+         std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > > >& ways_by_id)
+{
+  std::vector< Uint31_Index > node_idxs;
+  std::vector< Uint31_Index > way_idxs;
+   
+  for (vector< Relation_Entry >::const_iterator mit = skeleton.members.begin();
+       mit != skeleton.members.end(); ++mit)
+  {
+      if (mit->type == Relation_Entry::NODE)
+      {
+        std::map< Node_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >
+            ::const_iterator nit = nodes_by_id.find(Node_Skeleton::Id_Type(mit->ref.val()));
+        if (nit != nodes_by_id.end() && !nit->second.empty())
+        {
+          std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > >::const_iterator
+              it2 = nit->second.begin();
+          while (it2 != nit->second.end() && it2->second.timestamp < expiration_timestamp)
+            ++it2;
+          if (it2 != nit->second.end())
+            node_idxs.push_back(it2->first);
+          // Otherwise the node has expired before our relation - something has gone wrong seriously.
+        }
+        // Otherwise the node is not contained in our list - something has gone wrong seriously.
+      }
+      else if (mit->type == Relation_Entry::WAY)
+      {
+        std::map< Way_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > > >
+            ::const_iterator nit = ways_by_id.find(Way_Skeleton::Id_Type(mit->ref.val()));
+        if (nit != ways_by_id.end() && !nit->second.empty())
+        {
+          std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > >::const_iterator
+              it2 = nit->second.begin();
+          while (it2 != nit->second.end() && it2->second.timestamp < expiration_timestamp)
+            ++it2;
+          if (it2 != nit->second.end())
+            way_idxs.push_back(it2->first);
+          // Otherwise the way has expired before our relation - something has gone wrong seriously.
+        }
+        // Otherwise the way is not contained in our list - something has gone wrong seriously.
+      }
+  }
+  
+  std::vector< uint32 > member_idxs;
+  for (std::vector< Uint31_Index >::const_iterator it = node_idxs.begin(); it != node_idxs.end(); ++it)
+    member_idxs.push_back(it->val());
+  for (std::vector< Uint31_Index >::const_iterator it = way_idxs.begin(); it != way_idxs.end(); ++it)
+    member_idxs.push_back(it->val());
+  std::sort(member_idxs.begin(), member_idxs.end());
+  member_idxs.erase(std::unique(member_idxs.begin(), member_idxs.end()), member_idxs.end());
+    
+  idx = Relation::calc_index(member_idxs);
+      
+  if (Relation::indicates_geometry(idx))
+  {
+    skeleton.node_idxs.swap(node_idxs);
+    skeleton.way_idxs.swap(way_idxs);
+  }
+  else
+  {
+    skeleton.node_idxs.clear();
+    skeleton.way_idxs.clear();
+  }
+}
+
+
+/* Checks the nds of the relation whether in the time window an underlying node has moved.
+ * If yes, the necessary intermediate versions are generated.
+ */
+void add_intermediate_versions
+    (const Relation_Skeleton& skeleton, const uint64 old_timestamp, const uint64 new_timestamp,
+     const std::map< Node_Skeleton::Id_Type,
+         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >& nodes_by_id,
+     const std::map< Way_Skeleton::Id_Type,
+         std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > > >& ways_by_id,
+     bool add_last_version, Uint31_Index attic_idx,
+     std::map< Uint31_Index, std::set< Attic< Relation_Skeleton > > >& full_attic,
+     std::map< Uint31_Index, std::set< Attic< Relation_Skeleton::Id_Type > > >& new_undeleted,
+     std::map< Relation_Skeleton::Id_Type, std::set< Uint31_Index > >& idx_lists)
+{
+  std::vector< uint64 > relevant_timestamps;
+  for (std::vector< Relation_Entry >::const_iterator mit = skeleton.members.begin();
+       mit != skeleton.members.end(); ++mit)
+  {
+    if (mit->type == Relation_Entry::NODE)
+    {
+      std::map< Node_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >
+          ::const_iterator nit = nodes_by_id.find(Node_Skeleton::Id_Type(mit->ref.val()));
+      if (nit != nodes_by_id.end() && !nit->second.empty())
+      {
+        for (std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > >::const_iterator
+            it2 = nit->second.begin(); it2 != nit->second.end(); ++it2)
+        {
+          if (old_timestamp < it2->second.timestamp && it2->second.timestamp < new_timestamp)
+            relevant_timestamps.push_back(it2->second.timestamp);
+        }
+      }
+      // Otherwise the node is not contained in our list - something has gone wrong seriously.
+    }
+    else if (mit->type == Relation_Entry::WAY)
+    {
+      std::map< Way_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > > >
+          ::const_iterator nit = ways_by_id.find(Way_Skeleton::Id_Type(mit->ref.val()));
+      if (nit != ways_by_id.end() && !nit->second.empty())
+      {
+        for (std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > >::const_iterator
+            it2 = nit->second.begin(); it2 != nit->second.end(); ++it2)
+        {
+          if (old_timestamp < it2->second.timestamp && it2->second.timestamp < new_timestamp)
+            relevant_timestamps.push_back(it2->second.timestamp);
+        }
+      }
+      // Otherwise the way is not contained in our list - something has gone wrong seriously.
+    }
+  }
+  std::sort(relevant_timestamps.begin(), relevant_timestamps.end());
+  relevant_timestamps.erase(std::unique(relevant_timestamps.begin(), relevant_timestamps.end()),
+                            relevant_timestamps.end());
+  
+  // Track index for the undelete creation
+  Uint31_Index last_idx = Uint31_Index(0u);
+  
+  for (std::vector< uint64 >::const_iterator it = relevant_timestamps.begin();
+       it != relevant_timestamps.end(); ++it)
+  {
+    Uint31_Index idx = attic_idx;
+    attic_idx = Uint31_Index(0u);
+    Relation_Skeleton cur_skeleton = skeleton;
+    if (idx.val() == 0)
+      compute_idx_and_geometry(idx, cur_skeleton, *it, nodes_by_id, ways_by_id);
+    full_attic[idx].insert(Attic< Relation_Skeleton >(cur_skeleton, *it));
+    idx_lists[skeleton.id].insert(idx);
+    
+    // Manage undelete entries
+    if (it != relevant_timestamps.begin() && !(last_idx == idx))
+      new_undeleted[idx].insert(Attic< Relation_Skeleton::Id_Type >(skeleton.id, *(it-1)));
+    last_idx = idx;
+  }
+
+  Uint31_Index idx = attic_idx;
+  Relation_Skeleton last_skeleton = skeleton;
+  if (idx.val() == 0)
+    compute_idx_and_geometry(idx, last_skeleton, new_timestamp, nodes_by_id, ways_by_id);
+    
+  if (add_last_version)
+  {
+    full_attic[idx].insert(Attic< Relation_Skeleton >(last_skeleton, new_timestamp));
+    idx_lists[skeleton.id].insert(idx);
+  }
+    
+  // Manage undelete entries
+  if (!relevant_timestamps.empty() && !(last_idx == idx))
+    new_undeleted[idx].insert(Attic< Relation_Skeleton::Id_Type >(skeleton.id, relevant_timestamps.back()));
+}
+
+
+bool geometrically_equal(const Relation_Skeleton& a, const Relation_Skeleton& b)
+{
+  return (a.members == b.members);
+}
+
+
+/* Compares the new data and the already existing skeletons to determine those that have
+ * moved. This information is used to prepare the set of elements to store to attic.
+ * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
+void compute_new_attic_skeletons
+    (const Data_By_Id< Relation_Skeleton >& new_data,
+     const std::map< Uint31_Index, std::set< Relation_Skeleton > >& implicitly_moved_skeletons,
+     const std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
+     const std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > >& attic_map_positions,
+     const std::map< Uint31_Index, std::set< Relation_Skeleton > >& attic_skeletons,
+     const std::map< Node_Skeleton::Id_Type, Quad_Coord >& new_node_idx_by_id,
+     const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
+     const std::map< Way_Skeleton::Id_Type, Uint31_Index >& new_way_idx_by_id,
+     const std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > >& new_attic_way_skeletons,
+     std::map< Uint31_Index, std::set< Attic< Relation_Skeleton > > >& full_attic,
+     std::map< Uint31_Index, std::set< Attic< Relation_Skeleton::Id_Type > > >& new_undeleted,
+     std::map< Relation_Skeleton::Id_Type, std::set< Uint31_Index > >& idx_lists)
+{
+  // Fill nodes_by_id from attic nodes as well as the current nodes in new_node_idx_by_id
+  std::map< Node_Skeleton::Id_Type,
+         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > > nodes_by_id;
+  for (std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >::const_iterator
+      it = new_attic_node_skeletons.begin(); it != new_attic_node_skeletons.end(); ++it)
+  {
+    for (std::set< Attic< Node_Skeleton > >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+      nodes_by_id[it2->id].push_back(std::make_pair(it->first, *it2));
+  }
+  
+  for (std::map< Node_Skeleton::Id_Type, Quad_Coord >::const_iterator it = new_node_idx_by_id.begin();
+       it != new_node_idx_by_id.end(); ++it)
+    nodes_by_id[it->first].push_back(std::make_pair
+        (it->second.ll_upper, Attic< Node_Skeleton >(Node_Skeleton(it->first, it->second.ll_lower),
+             NOW)));
+    
+  // Fill ways_by_id from attic ways as well as the current ways in new_way_idx_by_id
+  std::map< Way_Skeleton::Id_Type,
+         std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > > > ways_by_id;
+  for (std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > >::const_iterator
+      it = new_attic_way_skeletons.begin(); it != new_attic_way_skeletons.end(); ++it)
+  {
+    for (std::set< Attic< Way_Skeleton > >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+      ways_by_id[it2->id].push_back(std::make_pair(it->first, *it2));
+  }
+  
+  for (std::map< Way_Skeleton::Id_Type, Uint31_Index >::const_iterator it = new_way_idx_by_id.begin();
+       it != new_way_idx_by_id.end(); ++it)
+    ways_by_id[it->first].push_back(std::make_pair
+        (it->second, Attic< Way_Skeleton >(Way_Skeleton(it->first), NOW)));
+    
+  // Create full_attic and idx_lists by going through new_data and filling the gaps
+  std::vector< Data_By_Id< Relation_Skeleton >::Entry >::const_iterator next_it
+      = new_data.data.begin();
+  Relation_Skeleton::Id_Type last_id = Relation_Skeleton::Id_Type(0u);
+  for (std::vector< Data_By_Id< Relation_Skeleton >::Entry >::const_iterator
+      it = new_data.data.begin(); it != new_data.data.end(); ++it)
+  {
+    ++next_it;
+    if (next_it != new_data.data.end() && it->elem.id == next_it->elem.id)
+    {
+      if (it->idx.val() != 0)
+      {
+        add_intermediate_versions(it->elem, it->meta.timestamp, next_it->meta.timestamp,
+                                  nodes_by_id, ways_by_id,
+                                  // Add last version only if it differs from the next version
+                                  (next_it->idx.val() == 0 || !geometrically_equal(it->elem, next_it->elem)),
+                                  Uint31_Index(0u),
+                                  full_attic, new_undeleted, idx_lists);
+      }
+    }
+
+    if (last_id == it->elem.id)
+    {
+      // An earlier version exists also in new_data.
+      std::vector< Data_By_Id< Relation_Skeleton >::Entry >::const_iterator last_it = it;
+      --last_it;
+      if (last_it->idx == Uint31_Index(0u))
+        new_undeleted[it->idx].insert(Attic< Relation_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
+      continue;
+    }
+    else
+    {
+      const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
+      const Uint31_Index* idx_attic = binary_pair_search(attic_map_positions, it->elem.id);
+      if (!idx && idx_attic)
+        new_undeleted[it->idx].insert(Attic< Relation_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
+    }
+    last_id = it->elem.id;
+    
+    const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
+    if (!idx)
+      // No old data exists. So there is nothing to do here.
+      continue;    
+
+    std::map< Uint31_Index, std::set< Relation_Skeleton > >::const_iterator it_attic_idx
+        = attic_skeletons.find(*idx);
+    if (it_attic_idx == attic_skeletons.end())
+      // Something has gone wrong. Skip this object.
+      continue;
+    
+    std::set< Relation_Skeleton >::iterator it_attic
+        = it_attic_idx->second.find(it->elem);
+    if (it_attic == it_attic_idx->second.end())
+      // Something has gone wrong. Skip this object.
+      continue;
+
+    add_intermediate_versions(*it_attic, 0, it->meta.timestamp, nodes_by_id, ways_by_id,
+                              !geometrically_equal(*it_attic, it->elem), *idx,
+                              full_attic, new_undeleted, idx_lists);
+    
+    if (next_it == new_data.data.end() || !(it->elem.id == next_it->elem.id))
+      // This is the latest version of this element. Care here for changes since this element.
+    {
+      add_intermediate_versions(it->elem, it->meta.timestamp, NOW, nodes_by_id, ways_by_id,
+                                false, Uint31_Index(0u),
+                                full_attic, new_undeleted, idx_lists);
+    }
+  }
+  
+  // Add the missing elements that result from node moves only
+  for (std::map< Uint31_Index, std::set< Relation_Skeleton > >::const_iterator
+      it = implicitly_moved_skeletons.begin(); it != implicitly_moved_skeletons.end(); ++it)
+  {
+    for (std::set< Relation_Skeleton >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+      add_intermediate_versions(*it2, 0, NOW, nodes_by_id, ways_by_id,
+                                false, it->first,
+                                full_attic, new_undeleted, idx_lists);
+  }
+}
+
+
 void Relation_Updater::update(Osm_Backend_Callback* callback,
               Update_Relation_Logger* update_logger,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
@@ -562,8 +861,8 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
   compute_geometry(new_node_idx_by_id, new_way_idx_by_id, new_data);
 
   // Compute which objects really have changed
-  std::map< Uint31_Index, std::set< Relation_Skeleton > > attic_skeletons;
-  std::map< Uint31_Index, std::set< Relation_Skeleton > > new_skeletons;
+  attic_skeletons.clear();
+  new_skeletons.clear();
   new_current_skeletons(new_data, existing_map_positions, existing_skeletons,
       (update_logger != 0), attic_skeletons, new_skeletons, moved_relations, update_logger);
   
@@ -637,6 +936,89 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
   flush_roles();
   callback->flush_roles_finished();
   
+  if (meta == keep_attic)
+  {
+    // TODO: For compatibility with the update_logger, this doesn't happen during the tag processing itself.
+    //cancel_out_equal_tags(attic_local_tags, new_local_tags);
+
+    // Also include ids from the only moved relations
+    enhance_ids_to_update(implicitly_moved_skeletons, ids_to_update_);
+    
+    // Collect all data of existing attic id indexes
+    std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > > existing_attic_map_positions
+        = get_existing_map_positions(ids_to_update_, *transaction, *attic_settings().RELATIONS);
+    std::map< Relation_Skeleton::Id_Type, std::set< Uint31_Index > > existing_idx_lists
+        = get_existing_idx_lists(ids_to_update_, existing_attic_map_positions,
+                                 *transaction, *attic_settings().RELATION_IDX_LIST);
+        
+    // Compute which objects really have changed
+    new_attic_skeletons.clear();
+    std::map< Relation_Skeleton::Id_Type, std::set< Uint31_Index > > new_attic_idx_lists = existing_idx_lists;
+    std::map< Uint31_Index, std::set< Attic< Relation_Skeleton::Id_Type > > > new_undeleted;
+    compute_new_attic_skeletons(new_data, implicitly_moved_skeletons,
+                                existing_map_positions, existing_attic_map_positions, attic_skeletons,
+                                new_node_idx_by_id, new_attic_node_skeletons,
+                                new_way_idx_by_id, new_attic_way_skeletons,
+                                new_attic_skeletons, new_undeleted, new_attic_idx_lists);
+
+    std::map< Relation_Skeleton::Id_Type, std::vector< Attic< Uint31_Index > > > new_attic_idx_by_id_and_time =
+        compute_new_attic_idx_by_id_and_time(new_data, new_skeletons, new_attic_skeletons);
+        
+    // Compute new meta data
+    std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > >
+        new_attic_meta = compute_new_attic_meta(new_attic_idx_by_id_and_time,
+            compute_meta_by_id_and_time(new_data, attic_meta), new_meta);
+    
+    // Compute tags
+    std::map< Tag_Index_Local, std::set< Attic< Relation_Skeleton::Id_Type > > > new_attic_local_tags
+        = compute_new_attic_local_tags(new_attic_idx_by_id_and_time,
+            compute_tags_by_id_and_time(new_data, attic_local_tags),
+                                       existing_map_positions, existing_idx_lists);
+    std::map< Tag_Index_Global, std::set< Attic< Relation_Skeleton::Id_Type > > > new_attic_global_tags
+        = compute_attic_global_tags(new_attic_local_tags);
+    
+    // Compute changelog
+    std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > > changelog
+        = compute_changelog(new_skeletons, new_attic_skeletons,
+                            new_local_tags, new_attic_local_tags,
+                            new_meta, attic_meta);
+        
+    strip_single_idxs(existing_idx_lists);    
+    std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > > new_attic_map_positions
+        = strip_single_idxs(new_attic_idx_lists);
+    
+    // Update id indexes
+    update_map_positions(new_attic_map_positions, *transaction, *attic_settings().RELATIONS);
+  
+    // Update id index lists
+    update_elements(existing_idx_lists, new_attic_idx_lists,
+                    *transaction, *attic_settings().RELATION_IDX_LIST);
+  
+    // Add attic elements
+    update_elements(std::map< Uint31_Index, std::set< Attic< Relation_Skeleton > > >(), new_attic_skeletons,
+                    *transaction, *attic_settings().RELATIONS);
+  
+    // Add attic elements
+    update_elements(std::map< Uint31_Index, std::set< Attic< Relation_Skeleton::Id_Type > > >(),
+                    new_undeleted, *transaction, *attic_settings().RELATIONS_UNDELETED);
+  
+    // Add attic meta
+    update_elements
+        (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > >(),
+         new_attic_meta, *transaction, *attic_settings().RELATIONS_META);
+  
+    // Update tags
+    update_elements(std::map< Tag_Index_Local, std::set< Attic < Relation_Skeleton::Id_Type > > >(),
+                    new_attic_local_tags, *transaction, *attic_settings().RELATION_TAGS_LOCAL);
+    update_elements(std::map< Tag_Index_Global, std::set< Attic < Relation_Skeleton::Id_Type > > >(),
+                    new_attic_global_tags, *transaction, *attic_settings().RELATION_TAGS_GLOBAL);
+    
+    // Write changelog
+    update_elements(std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > >(), changelog,
+                    *transaction, *attic_settings().RELATION_CHANGELOG);
+  }
+
+  //TODO: old code
   if (meta != only_data)
   {
     map< uint32, vector< uint32 > > idxs_by_id;
@@ -649,7 +1031,6 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
       rels_meta_to_delete.erase(unique(rels_meta_to_delete.begin(), rels_meta_to_delete.end()),
 				 rels_meta_to_delete.end());
       update_logger->set_delete_meta_data(rels_meta_to_delete);
-      rels_meta_to_delete.clear();
     }
   }
   callback->update_finished();
@@ -657,6 +1038,10 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
   new_data.data.clear();
   rels_meta_to_delete.clear();
   rels_meta_to_insert.clear();
+  
+  new_skeletons.clear();
+  attic_skeletons.clear();
+  new_attic_skeletons.clear();
   
   if (!external_transaction)
     delete transaction;
