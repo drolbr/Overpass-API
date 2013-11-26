@@ -881,33 +881,54 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
           if (last_idx.val() != 0u && last_value != *tit2 && (it2 != it->second.end() || *tit2 != "" ||
               existing_attic_idxs.find(Uint31_Index(last_idx.val() & 0x7fffff00))
                   != existing_attic_idxs.end()))
-            result[Tag_Index_Local(last_idx, tit->first.second, *tit2)]
+          {
+            std::cerr<<"A\t"<<hex<<last_idx.val()<<'\t'<<tit->first.second<<'\t'<<*tit2<<'\t'
+                <<dec<<it->first.val()<<'\t'<<tit2->timestamp<<'\n';
+            result[Tag_Index_Local(Uint31_Index(last_idx.val() & 0x7fffff00), tit->first.second, *tit2)]
                 .insert(Attic< Id_Type >(it->first, tit2->timestamp));
+          }
           last_value = *tit2;
           ++tit2;
         }
         else if (tit2 == tit->second.end() || tit2->timestamp < it2->timestamp)
         {
-          if (!(last_idx == *it2) && last_value != "")
+          if (!((last_idx.val() & 0x7fffff00) == (it2->val() & 0x7fffff00)) && last_value != "")
           {
             if (it2->val() != 0u)
-              result[Tag_Index_Local(*it2, tit->first.second, last_value)]
+            {
+              std::cerr<<"B\t"<<hex<<it2->val()<<'\t'<<tit->first.second<<'\t'<<last_value<<'\t'
+                  <<dec<<it->first.val()<<'\t'<<it2->timestamp<<'\n';
+              result[Tag_Index_Local(Uint31_Index(it2->val() & 0x7fffff00), tit->first.second, last_value)]
                 .insert(Attic< Id_Type >(it->first, it2->timestamp));
+            }
             if (last_idx.val() != 0u)
-              result[Tag_Index_Local(last_idx, tit->first.second, "")]
+            {
+              std::cerr<<"C\t"<<hex<<last_idx.val()<<'\t'<<tit->first.second<<'\t'<<""<<'\t'
+                  <<dec<<it->first.val()<<'\t'<<it2->timestamp<<'\n';
+              result[Tag_Index_Local(Uint31_Index(last_idx.val() & 0x7fffff00), tit->first.second, "")]
                   .insert(Attic< Id_Type >(it->first, it2->timestamp));
+            }
           }
           last_idx = *it2;
           ++it2;
         }
         else
         {
-          if (it2->val() != 0u && (!(last_idx == *it2) || last_value != *tit2))
-            result[Tag_Index_Local(*it2, tit->first.second, *tit2)]
+          if (it2->val() != 0u && (!((last_idx.val() & 0x7fffff00) == (it2->val() & 0x7fffff00))
+                || last_value != *tit2))
+          {
+            std::cerr<<"D\t"<<hex<<it2->val()<<'\t'<<tit->first.second<<'\t'<<*tit2<<'\t'
+                <<dec<<it->first.val()<<'\t'<<tit2->timestamp<<'\n';
+            result[Tag_Index_Local(Uint31_Index(it2->val() & 0x7fffff00), tit->first.second, *tit2)]
                 .insert(Attic< Id_Type >(it->first, tit2->timestamp));
-          if (!(last_idx == *it2) && last_idx.val() != 0u)
-            result[Tag_Index_Local(last_idx, tit->first.second, "")]
+          }
+          if (!((last_idx.val() & 0x7fffff00) == (it2->val() & 0x7fffff00)) && last_idx.val() != 0u)
+          {
+            std::cerr<<"E\t"<<hex<<last_idx.val()<<'\t'<<tit->first.second<<'\t'<<""<<'\t'
+                <<dec<<it->first.val()<<'\t'<<tit2->timestamp<<'\n';
+            result[Tag_Index_Local(Uint31_Index(last_idx.val() & 0x7fffff00), tit->first.second, "")]
                 .insert(Attic< Id_Type >(it->first, tit2->timestamp));
+          }
                 
           last_value = *tit2;
           ++tit2;

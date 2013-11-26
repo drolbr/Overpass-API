@@ -900,6 +900,7 @@ void Query_Statement::execute(Resource_Manager& rman)
   
   filter_attic_elements(rman, timestamp, into.nodes, into.attic_nodes);
   filter_attic_elements(rman, timestamp, into.ways, into.attic_ways);
+  filter_attic_elements(rman, timestamp, into.relations, into.attic_relations);
   
   set_progress(7);
   rman.health_check(*this);
