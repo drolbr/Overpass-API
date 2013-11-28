@@ -427,9 +427,15 @@ void compute_geometry
      const std::map< Way_Skeleton::Id_Type, Uint31_Index >& new_way_idx_by_id,
      Data_By_Id< Relation_Skeleton >& new_data)
 {
+  std::vector< Data_By_Id< Relation_Skeleton >::Entry >::const_iterator next_it = new_data.data.begin();
   for (std::vector< Data_By_Id< Relation_Skeleton >::Entry >::iterator
       it = new_data.data.begin(); it != new_data.data.end(); ++it)
   {
+    ++next_it;
+    if (next_it != new_data.data.end() && next_it->elem.id == it->elem.id)
+      // We don't care on intermediate versions
+      continue;
+      
     if (it->idx == 0u)
       // We don't touch deleted objects
       continue;
@@ -444,6 +450,8 @@ void compute_geometry
             = new_node_idx_by_id.find(Node_Skeleton::Id_Type(nit->ref.val()));
         if (it2 != new_node_idx_by_id.end())
           member_idxs.push_back(it2->second.ll_upper);
+        else
+          std::cerr<<"Node "<<nit->ref.val()<<" used in relation "<<it->elem.id.val()<<" not found.\n";
       }
       else if (nit->type == Relation_Entry::WAY)
       {
@@ -451,6 +459,8 @@ void compute_geometry
             = new_way_idx_by_id.find(Way_Skeleton::Id_Type(nit->ref.val()));
         if (it2 != new_way_idx_by_id.end())
           member_idxs.push_back(it2->second.val());
+        else
+          std::cerr<<"Way "<<nit->ref.val()<<" used in relation "<<it->elem.id.val()<<" not found.\n";
       }
     }
     
@@ -515,6 +525,8 @@ void compute_idx_and_geometry
             node_idxs.push_back(it2->first);
           // Otherwise the node has expired before our relation - something has gone wrong seriously.
         }
+        else
+          std::cerr<<"Node "<<mit->ref.val()<<" used in relation "<<skeleton.id.val()<<" not found.\n";
         // Otherwise the node is not contained in our list - something has gone wrong seriously.
       }
       else if (mit->type == Relation_Entry::WAY)
@@ -531,6 +543,8 @@ void compute_idx_and_geometry
             way_idxs.push_back(it2->first);
           // Otherwise the way has expired before our relation - something has gone wrong seriously.
         }
+        else
+          std::cerr<<"Way "<<mit->ref.val()<<" used in relation "<<skeleton.id.val()<<" not found.\n";
         // Otherwise the way is not contained in our list - something has gone wrong seriously.
       }
   }
@@ -589,7 +603,7 @@ void add_intermediate_versions
             relevant_timestamps.push_back(it2->second.timestamp);
         }
       }
-      // Otherwise the node is not contained in our list - something has gone wrong seriously.
+      // Otherwise the node is not contained in our list. Could happen if it didn't changed at all.
     }
     else if (mit->type == Relation_Entry::WAY)
     {
@@ -604,7 +618,7 @@ void add_intermediate_versions
             relevant_timestamps.push_back(it2->second.timestamp);
         }
       }
-      // Otherwise the way is not contained in our list - something has gone wrong seriously.
+      // Otherwise the way is not contained in our list. Could happen if it didn't changed at all.
     }
   }
   std::sort(relevant_timestamps.begin(), relevant_timestamps.end());
