@@ -740,7 +740,7 @@ void Print_Statement::execute(Resource_Manager& rman)
 		 (mode & Print_Target::PRINT_META) ? meta_settings().NODES_META : 0,
                  element_count);
       
-      if (rman.get_desired_timestamp() != 0)
+      if (rman.get_desired_timestamp() != NOW)
       {
         tags_by_id_attic(mit->second.attic_nodes,
                    NODE_FLUSH_SIZE, *target, rman,
@@ -756,7 +756,7 @@ void Print_Statement::execute(Resource_Manager& rman)
 		 (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
                  element_count);
       
-      if (rman.get_desired_timestamp() != 0)
+      if (rman.get_desired_timestamp() != NOW)
       {
         tags_by_id_attic(mit->second.attic_ways,
                    WAY_FLUSH_SIZE, *target, rman,
@@ -772,7 +772,7 @@ void Print_Statement::execute(Resource_Manager& rman)
 		 (mode & Print_Target::PRINT_META) ? meta_settings().RELATIONS_META : 0,
                  element_count);
       
-      if (rman.get_desired_timestamp() != 0)
+      if (rman.get_desired_timestamp() != NOW)
       {
         tags_by_id_attic(mit->second.attic_relations,
                    RELATION_FLUSH_SIZE, *target, rman,
@@ -796,7 +796,7 @@ void Print_Statement::execute(Resource_Manager& rman)
 		    (mode & Print_Target::PRINT_META) ? meta_settings().NODES_META : 0,
                     element_count);
       
-      if (rman.get_desired_timestamp() != 0)
+      if (rman.get_desired_timestamp() != NOW)
       {
         tags_quadtile_attic(mit->second.attic_nodes,
                       *target, rman, *rman.get_transaction(),
@@ -810,7 +810,7 @@ void Print_Statement::execute(Resource_Manager& rman)
 		    (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
                     element_count);
       
-      if (rman.get_desired_timestamp() != 0)
+      if (rman.get_desired_timestamp() != NOW)
       {
         tags_quadtile_attic(mit->second.attic_ways,
                       *target, rman, *rman.get_transaction(),
@@ -824,7 +824,7 @@ void Print_Statement::execute(Resource_Manager& rman)
 		    (mode & Print_Target::PRINT_META) ?
 		        meta_settings().RELATIONS_META : 0, element_count);
       
-      if (rman.get_desired_timestamp() != 0)
+      if (rman.get_desired_timestamp() != NOW)
       {
         tags_quadtile_attic(mit->second.attic_relations,
                       *target, rman, *rman.get_transaction(),
