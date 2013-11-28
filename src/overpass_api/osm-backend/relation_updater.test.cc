@@ -229,7 +229,11 @@ void end(const char *el)
     if (osm_element_count >= 4*1024*1024)
     {
       callback->relation_elapsed(current_relation.id);
-      relation_updater->update(callback, 0);
+      relation_updater->update(callback, 0,
+                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
+                          node_updater->get_new_attic_skeletons(),
+                          way_updater->get_new_skeletons(), way_updater->get_attic_skeletons(),
+                          way_updater->get_new_attic_skeletons());
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -268,7 +272,7 @@ int main(int argc, char* args[])
       node_updater = &node_updater_;
       Way_Updater way_updater_("./", only_data);
       way_updater = &way_updater_;
-      Relation_Updater relation_updater_("./", false);
+      Relation_Updater relation_updater_("./", only_data);
       relation_updater = &relation_updater_;
       
       member_source_out = new ofstream((db_dir + "member_source.csv").c_str());
@@ -297,7 +301,11 @@ int main(int argc, char* args[])
       else if (state == IN_RELATIONS)
       {
 	callback->relations_finished();
-	relation_updater->update(callback, 0);
+	relation_updater->update(callback, 0,
+                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
+                          node_updater->get_new_attic_skeletons(),
+                          way_updater->get_new_skeletons(), way_updater->get_attic_skeletons(),
+                          way_updater->get_new_attic_skeletons());
       }
       
       delete member_source_out;
