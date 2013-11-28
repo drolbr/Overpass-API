@@ -124,6 +124,8 @@ void compute_idx_and_geometry
         geometry.push_back(Quad_Coord(it2->first.val(), it2->second.ll_lower));
       // Otherwise the node has expired before our way - something has gone wrong seriously.
     }
+    else
+      std::cerr<<"Node "<<it->val()<<" used in way "<<skeleton.id.val()<<" not found.\n";
     // Otherwise the node is not contained in our list - something has gone wrong seriously.
   }
   
@@ -167,7 +169,7 @@ void add_intermediate_versions
           relevant_timestamps.push_back(it2->second.timestamp);
       }
     }
-    // Otherwise the node is not contained in our list - something has gone wrong seriously.
+    // Otherwise the node is not contained in our list. Could happen if it didn't change at all.
   }
   std::sort(relevant_timestamps.begin(), relevant_timestamps.end());
   relevant_timestamps.erase(std::unique(relevant_timestamps.begin(), relevant_timestamps.end()),
@@ -233,14 +235,20 @@ void compute_new_attic_skeletons
   {
     for (std::set< Attic< Node_Skeleton > >::const_iterator it2 = it->second.begin();
          it2 != it->second.end(); ++it2)
+    {
+      //std::cout<<it2->id.val()<<'\t'<<it2->timestamp<<'\n';
       nodes_by_id[it2->id].push_back(std::make_pair(it->first, *it2));
+    }
   }
   
   for (std::map< Node_Skeleton::Id_Type, Quad_Coord >::const_iterator it = new_node_idx_by_id.begin();
        it != new_node_idx_by_id.end(); ++it)
+  {
+    //std::cout<<it->first.val()<<'\n';
     nodes_by_id[it->first].push_back(std::make_pair
         (it->second.ll_upper, Attic< Node_Skeleton >(Node_Skeleton(it->first, it->second.ll_lower),
              NOW)));
+  }
     
   // Create full_attic and idx_lists by going through new_data and filling the gaps
   std::vector< Data_By_Id< Way_Skeleton >::Entry >::const_iterator next_it
@@ -462,9 +470,15 @@ void compute_geometry
     (const std::map< Node_Skeleton::Id_Type, Quad_Coord >& new_node_idx_by_id,
      Data_By_Id< Way_Skeleton >& new_data)
 {
+  std::vector< Data_By_Id< Way_Skeleton >::Entry >::const_iterator next_it = new_data.data.begin();
   for (std::vector< Data_By_Id< Way_Skeleton >::Entry >::iterator
       it = new_data.data.begin(); it != new_data.data.end(); ++it)
   {
+    ++next_it;
+    if (next_it != new_data.data.end() && next_it->elem.id == it->elem.id)
+      // We don't care on intermediate versions
+      continue;
+      
     if (it->idx == 0u)
       // We don't touch deleted objects
       continue;
@@ -475,6 +489,8 @@ void compute_geometry
       std::map< Node_Skeleton::Id_Type, Quad_Coord >::const_iterator it2 = new_node_idx_by_id.find(*nit);
       if (it2 != new_node_idx_by_id.end())
         nd_idxs.push_back(it2->second.ll_upper);
+      else
+        std::cerr<<"Node "<<nit->val()<<" used in way "<<it->elem.id.val()<<" not found.\n";
     }
     
     Uint31_Index index = Way::calc_index(nd_idxs);
@@ -545,6 +561,8 @@ void new_implicit_skeletons
         std::map< Node_Skeleton::Id_Type, Quad_Coord >::const_iterator it3 = new_node_idx_by_id.find(*nit);
         if (it3 != new_node_idx_by_id.end())
           nd_idxs.push_back(it3->second.ll_upper);
+        else
+          std::cerr<<"Node "<<nit->val()<<" used in way "<<it2->id.val()<<" not found.\n";
       }
     
       Uint31_Index index = Way::calc_index(nd_idxs);
