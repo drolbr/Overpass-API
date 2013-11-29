@@ -44,7 +44,7 @@
   <relation id="1505" version="4" timestamp="2013-07-01T09:04:15" changeset="496" uid="42" user="foo"/>
 </delete>
 <create>
-  <relation id="1505" version="5" timestamp="2013-07-01T09:03:25" changeset="496" uid="42" user="foo">
+  <relation id="1505" version="5" timestamp="2013-07-01T09:04:25" changeset="496" uid="42" user="foo">
     <member type="node" ref="150510" role=""/>
     <member type="node" ref="150540" role=""/>
     <tag k="foo" v="bar_1505"/>

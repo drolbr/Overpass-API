@@ -47,7 +47,81 @@ int main(int argc, char* args[])
   {    
     Nonsynced_Transaction transaction(false, false, db_dir, "");
 
-    if (std::string("--rels") == args[2])
+    if (std::string("--ways") == args[2])
+    {
+      Block_Backend< Uint31_Index, Way_Skeleton > db
+          (transaction.data_index(osm_base_settings().WAYS));
+      for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.index().val()<<'\t'
+            <<dec<<it.object().id.val()<<'\n';
+      }
+    }
+    else if (std::string("--ways-meta") == args[2])
+    {
+      Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > db
+          (transaction.data_index(meta_settings().WAYS_META));
+      for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+               ::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.index().val()<<'\t'
+            <<dec<<it.object().ref.val()<<'\t'
+            <<it.object().timestamp<<'\n';
+      }
+    }
+    else if (std::string("--way-tags-local") == args[2])
+    {
+      Block_Backend< Tag_Index_Local, Way_Skeleton::Id_Type > db
+          (transaction.data_index(osm_base_settings().WAY_TAGS_LOCAL));
+      for (Block_Backend< Tag_Index_Local, Way_Skeleton::Id_Type >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.index().index<<'\t'
+            <<dec<<it.object().val()<<'\t'
+            <<it.index().key<<'\t'<<it.index().value<<'\n';
+      }
+    }
+    else if (std::string("--attic-ways") == args[2])
+    {
+      Block_Backend< Uint31_Index, Attic< Way_Skeleton > > db
+          (transaction.data_index(attic_settings().WAYS));
+      for (Block_Backend< Uint31_Index, Attic< Way_Skeleton > >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.index().val()<<'\t'
+            <<dec<<it.object().id.val()<<'\t'
+            <<it.object().timestamp<<'\n';
+      }
+    }
+    else if (std::string("--attic-ways-meta") == args[2])
+    {
+      Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > db
+          (transaction.data_index(attic_settings().WAYS_META));
+      for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+               ::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.index().val()<<'\t'
+            <<dec<<it.object().ref.val()<<'\t'
+            <<it.object().timestamp<<'\n';
+      }
+    }
+    else if (std::string("--attic-way-tags-local") == args[2])
+    {
+      Block_Backend< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > > db
+          (transaction.data_index(attic_settings().WAY_TAGS_LOCAL));
+      for (Block_Backend< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.index().index<<'\t'
+            <<dec<<it.object().val()<<'\t'
+            <<it.index().key<<'\t'<<it.index().value<<'\t'
+            <<it.object().timestamp<<'\n';
+      }
+    }
+    else if (std::string("--rels") == args[2])
     {
       Block_Backend< Uint31_Index, Relation_Skeleton > db
           (transaction.data_index(osm_base_settings().RELATIONS));

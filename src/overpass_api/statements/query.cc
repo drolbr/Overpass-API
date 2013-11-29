@@ -888,6 +888,22 @@ void Query_Statement::execute(Resource_Manager& rman)
     }
   }
   
+//   std::cout<<'\n';
+//   for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator it = into.ways.begin();
+//        it != into.ways.end(); ++it)
+//   {
+//     for (vector< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+//       std::cout<<it2->id.val()<<'\n';
+//   }
+//   std::cout<<'\n';
+//   for (map< Uint31_Index, vector< Attic< Way_Skeleton > > >::const_iterator
+//        it = into.attic_ways.begin(); it != into.attic_ways.end(); ++it)
+//   {
+//     for (vector< Attic< Way_Skeleton > >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+//       std::cout<<it2->id.val()<<'\n';
+//   }
+//   std::cout<<'\n';
+  
   set_progress(5);
   rman.health_check(*this);
 

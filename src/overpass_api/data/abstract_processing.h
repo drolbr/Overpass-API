@@ -334,7 +334,7 @@ void keep_only_least_younger_than
     typename std::vector< TObject >::iterator it_to = it->second.begin();
     while (it_from != it->second.end())
     {
-      if (timestamp_per_id.find(it_to->id) == timestamp_per_id.end())
+      if (timestamp_per_id.find(it_from->id) == timestamp_per_id.end())
       {
         *it_to = *it_from;
         ++it_to;

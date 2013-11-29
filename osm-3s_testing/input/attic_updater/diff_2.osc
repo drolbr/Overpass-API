@@ -285,7 +285,7 @@
 
 <create>
   <node id="133214" lat="10.301" lon="3.0204" version="1" timestamp="2013-07-01T09:03:12" changeset="496" uid="42" user="foo"/>
-  <node id="133223" lat="10.302" lon="3.0203" version="1" timestamp="2013-07-01T09:02:12" changeset="496" uid="42" user="foo"/>
+  <node id="133223" lat="10.302" lon="3.0203" version="1" timestamp="2013-07-01T09:03:12" changeset="496" uid="42" user="foo"/>
 </create>
 
 <modify>
