@@ -489,7 +489,7 @@ struct Timestamp
   static int day(uint64 timestamp) { return ((timestamp>>17) & 0x1f); }
   static int hour(uint64 timestamp) { return ((timestamp>>12) & 0x1f); }
   static int minute(uint64 timestamp) { return ((timestamp>>6) & 0x3f); }
-  static int second(uint64 timestamp) { return ((timestamp>>6) & 0x3f); }
+  static int second(uint64 timestamp) { return (timestamp & 0x3f); }
   
   int year() { return year(timestamp); }
   int month() { return month(timestamp); }
