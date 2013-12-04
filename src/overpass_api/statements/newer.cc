@@ -94,13 +94,14 @@ Newer_Statement::Newer_Statement
   
   string timestamp = attributes["than"];
   
-  than_timestamp = 0;
-  than_timestamp |= (atoll(timestamp.c_str())<<26); //year
-  than_timestamp |= (atoi(timestamp.c_str()+5)<<22); //month
-  than_timestamp |= (atoi(timestamp.c_str()+8)<<17); //day
-  than_timestamp |= (atoi(timestamp.c_str()+11)<<12); //hour
-  than_timestamp |= (atoi(timestamp.c_str()+14)<<6); //minute
-  than_timestamp |= atoi(timestamp.c_str()+17); //second
+  than_timestamp = Timestamp(
+      atol(timestamp.c_str()), //year
+      atoi(timestamp.c_str()+5), //month
+      atoi(timestamp.c_str()+8)<<17, //day
+      atoi(timestamp.c_str()+11)<<12, //hour
+      atoi(timestamp.c_str()+14)<<6, //minute
+      atoi(timestamp.c_str()+17) //second
+      ).timestamp;
   
   if (than_timestamp == 0)
   {

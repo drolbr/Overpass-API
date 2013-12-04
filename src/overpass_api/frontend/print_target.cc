@@ -242,12 +242,12 @@ template< typename Id_Type >
 void print_meta_xml(const OSM_Element_Metadata_Skeleton< Id_Type >& meta,
 		    const map< uint32, string >& users)
 {
-  uint32 year = (meta.timestamp)>>26;
-  uint32 month = ((meta.timestamp)>>22) & 0xf;
-  uint32 day = ((meta.timestamp)>>17) & 0x1f;
-  uint32 hour = ((meta.timestamp)>>12) & 0x1f;
-  uint32 minute = ((meta.timestamp)>>6) & 0x3f;
-  uint32 second = meta.timestamp & 0x3f;
+  uint32 year = Timestamp::year(meta.timestamp);
+  uint32 month = Timestamp::month(meta.timestamp);
+  uint32 day = Timestamp::day(meta.timestamp);
+  uint32 hour = Timestamp::hour(meta.timestamp);
+  uint32 minute = Timestamp::minute(meta.timestamp);
+  uint32 second = Timestamp::second(meta.timestamp);
   string timestamp("    -  -  T  :  :  Z");
   timestamp[0] = (year / 1000) % 10 + '0';
   timestamp[1] = (year / 100) % 10 + '0';
