@@ -410,18 +410,55 @@ std::map< Tag_Index_Local, std::set< Attic< typename Element_Skeleton::Id_Type >
 }
 
 
-  // == attic ==
+/* Compares the new data and the already existing skeletons to determine those that have
+ * moved. This information is used to prepare the set of elements to store to attic.
+ * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
+std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > compute_changelog
+    (const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_skeletons,
+     const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& attic_skeletons,
+     const std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > >& new_local_tags,
+     const std::map< Tag_Index_Local, std::set< Attic< Node_Skeleton::Id_Type > > >& attic_local_tags,
+     const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >& new_meta,
+     const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >& attic_meta)
+    //undelete
+{
+  std::map< Node_Skeleton::Id_Type, std::vector< Attic< Node > > > states_by_id;
   
-  // ...
-    
-  // == update trail ==
+  for (std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >::const_iterator
+      it = attic_skeletons.begin(); it != attic_skeletons.end(); ++it)
+  {
+    for (std::set< Attic< Node_Skeleton > >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+      states_by_id[it2->id].push_back(Attic< Node >(
+          Node(it2->id, it->first.val(), it2->ll_lower), it2->timestamp));
+  }
+  for (std::map< Uint31_Index, std::set< Node_Skeleton > >::const_iterator
+      it = new_skeletons.begin(); it != new_skeletons.end(); ++it)
+  {
+    for (std::set< Node_Skeleton >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+      states_by_id[it2->id].push_back(Attic< Node >(
+          Node(it2->id, it->first.val(), it2->ll_lower), NOW));
+  }
+
+  for (std::map< Node_Skeleton::Id_Type, std::vector< Attic< Node > > >::iterator
+      it = states_by_id.begin(); it != states_by_id.end(); ++it)
+    std::sort(it->second.begin(), it->second.end());
+
+  std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > result;
   
-  // vec< (Id, geom? tags?, vec< Idx >) > compile_update_trail
-  //     (Data_Dict new_data, each data to delete: skels, tags)
+  for (std::map< Node_Skeleton::Id_Type, std::vector< Attic< Node > > >::const_iterator
+      it = states_by_id.begin(); it != states_by_id.end(); ++it)
+  {
+    for (std::vector< Attic< Node > >::size_type i = 1; i < it->second.size(); ++i)
+      result[Timestamp(it->second[i-1].timestamp)].insert(
+          Change_Entry< Node_Skeleton::Id_Type >(0, it->first, it->second[i-1].index, it->second[i].index));
+  }
   
-  // write_update_trail(vec< pair< Id, vec< Idx > > >)
-    
+  return result;
+}
   
+
 Node_Updater::Node_Updater(Transaction& transaction_, meta_modes meta_)
   : update_counter(0), transaction(&transaction_),
     external_transaction(true), partial_possible(false), meta(meta_)
@@ -438,6 +475,7 @@ Node_Updater::Node_Updater(string db_dir_, meta_modes meta_)
        osm_base_settings().NODES->get_data_suffix() +
        osm_base_settings().NODES->get_index_suffix());
 }
+
 
 void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
 			  Update_Node_Logger* update_logger)

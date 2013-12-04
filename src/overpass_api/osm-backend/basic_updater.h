@@ -523,28 +523,6 @@ std::map< Tag_Index_Global, std::set< Attic< Id_Type > > > compute_attic_global_
 }
 
 
-/* Compares the new data and the already existing skeletons to determine those that have
- * moved. This information is used to prepare the set of elements to store to attic.
- * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
-template< typename Element_Skeleton >
-std::map< Timestamp, std::set< Change_Entry< typename Element_Skeleton::Id_Type > > > compute_changelog
-    (const std::map< Uint31_Index, std::set< Element_Skeleton > >& new_skeletons,
-     const std::map< Uint31_Index, std::set< Attic< Element_Skeleton > > >& attic_skeletons,
-     const std::map< Tag_Index_Local, std::set< typename Element_Skeleton::Id_Type > >& new_local_tags,
-     const std::map< Tag_Index_Local, std::set< Attic< typename Element_Skeleton::Id_Type > > >& attic_local_tags,
-     const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& new_meta,
-     const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& attic_meta)
-{
-  for (typename std::map< Uint31_Index,
-      std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >::const_iterator
-      it = new_meta.begin(); it != new_meta.end(); ++it)
-    ;
-  std::map< Timestamp, std::set< Change_Entry< typename Element_Skeleton::Id_Type > > > result;
-  
-  return result;
-}
-  
-
 inline std::map< Node_Skeleton::Id_Type, Quad_Coord > dictionary_from_skeletons
     (const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons)
 {
