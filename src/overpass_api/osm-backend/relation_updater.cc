@@ -993,9 +993,9 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
     
     // Compute changelog
     std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > > changelog
-        = compute_changelog(new_skeletons, new_attic_skeletons,
+        ;/*= compute_changelog(new_skeletons, new_attic_skeletons,
                             new_local_tags, new_attic_local_tags,
-                            new_meta, attic_meta);
+                            new_meta, attic_meta);*/
         
     strip_single_idxs(existing_idx_lists);    
     std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > > new_attic_map_positions
