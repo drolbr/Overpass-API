@@ -157,13 +157,14 @@ namespace
 	meta->version = atoi(attr[i+1]);
       if (meta && (!strcmp(attr[i], "timestamp")))
       {
-	meta->timestamp = 0;
-	meta->timestamp |= (atoll(attr[i+1])<<26); //year
-	meta->timestamp |= (atoi(attr[i+1]+5)<<22); //month
-	meta->timestamp |= (atoi(attr[i+1]+8)<<17); //day
-	meta->timestamp |= (atoi(attr[i+1]+11)<<12); //hour
-	meta->timestamp |= (atoi(attr[i+1]+14)<<6); //minute
-	meta->timestamp |= atoi(attr[i+1]+17); //second
+        meta->timestamp = Timestamp(
+            atol(attr[i+1]), //year
+            atoi(attr[i+1]+5), //month
+            atoi(attr[i+1]+8), //day
+            atoi(attr[i+1]+11), //hour
+            atoi(attr[i+1]+14), //minute
+            atoi(attr[i+1]+17) //second
+            ).timestamp;
       }
       if (meta && (!strcmp(attr[i], "changeset")))
 	meta->changeset = atoi(attr[i+1]);

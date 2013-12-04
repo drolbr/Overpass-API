@@ -476,12 +476,12 @@ struct Timestamp
   Timestamp(int year, int month, int day, int hour, int minute, int second)
     : timestamp(0)
   {
-    timestamp |= (uint64(year)<<26); //year
-    timestamp |= (month<<22); //month
-    timestamp |= (day<<17); //day
-    timestamp |= (hour<<12); //hour
-    timestamp |= (minute<<6); //minute
-    timestamp |= second; //second
+    timestamp |= (uint64(year & 0x3fff)<<26); //year
+    timestamp |= ((month & 0xf)<<22); //month
+    timestamp |= ((day & 0x1f)<<17); //day
+    timestamp |= ((hour & 0x1f)<<12); //hour
+    timestamp |= ((minute & 0x3f)<<6); //minute
+    timestamp |= (second & 0x3f); //second
   }
   
   static int year(uint64 timestamp) { return ((timestamp>>26) & 0x3fff); }
