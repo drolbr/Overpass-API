@@ -418,6 +418,10 @@ struct Change_Entry
   Uint31_Index new_idx;
   Id_Type elem_id;
   
+  static const int VERSION_CHANGED = 1;
+  static const int TAGS_CHANGED = 2;
+  static const int GEOMETRY_CHANGED = 4;
+  
   Change_Entry(void* data)
     : status_flags(*(uint8*)data), old_idx((uint8*)data + 1), new_idx((uint8*)data + 5),
       elem_id(Id_Type((uint8*)data + 9)) {}
@@ -468,6 +472,31 @@ struct Timestamp
   
   Timestamp(void* data)
     : timestamp((*(uint64*)(uint8*)data) & 0xffffffffffull) {}
+  
+  Timestamp(int year, int month, int day, int hour, int minute, int second)
+    : timestamp(0)
+  {
+    timestamp |= (uint64(year)<<26); //year
+    timestamp |= (month<<22); //month
+    timestamp |= (day<<17); //day
+    timestamp |= (hour<<12); //hour
+    timestamp |= (minute<<6); //minute
+    timestamp |= second; //second
+  }
+  
+  static int year(uint64 timestamp) { return ((timestamp>>26) & 0x3fff); }
+  static int month(uint64 timestamp) { return ((timestamp>>22) & 0xf); }
+  static int day(uint64 timestamp) { return ((timestamp>>17) & 0x1f); }
+  static int hour(uint64 timestamp) { return ((timestamp>>12) & 0x1f); }
+  static int minute(uint64 timestamp) { return ((timestamp>>6) & 0x3f); }
+  static int second(uint64 timestamp) { return ((timestamp>>6) & 0x3f); }
+  
+  int year() { return year(timestamp); }
+  int month() { return month(timestamp); }
+  int day() { return day(timestamp); }
+  int hour() { return hour(timestamp); }
+  int minute() { return minute(timestamp); }
+  int second() { return second(timestamp); }
   
   uint32 size_of() const
   {

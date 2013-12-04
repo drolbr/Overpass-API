@@ -44,6 +44,16 @@ struct Node
   Node(Id_Type id_, uint32 ll_upper_, uint32 ll_lower__)
       : id(id_), index(ll_upper_), ll_lower_(ll_lower__)
   {}  
+  
+  bool operator<(const Node& a) const
+  {
+    return this->id.val() < a.id.val();
+  }
+  
+  bool operator==(const Node& a) const
+  {
+    return this->id.val() == a.id.val();
+  }
 };
 
 
