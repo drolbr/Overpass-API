@@ -47,7 +47,19 @@ int main(int argc, char* args[])
   {    
     Nonsynced_Transaction transaction(false, false, db_dir, "");
 
-    if (std::string("--ways") == args[2])
+    if (std::string("--node-changelog") == args[2])
+    {
+      Block_Backend< Timestamp, Change_Entry< Node_Skeleton::Id_Type > > db
+          (transaction.data_index(attic_settings().NODE_CHANGELOG));
+      for (Block_Backend< Timestamp, Change_Entry< Node_Skeleton::Id_Type > >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<dec<<it.index().timestamp<<'\t'
+            <<hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
+            <<dec<<it.object().elem_id.val()<<'\t'<<it.object().status_flags<<'\n';
+      }
+    }
+    else if (std::string("--ways") == args[2])
     {
       Block_Backend< Uint31_Index, Way_Skeleton > db
           (transaction.data_index(osm_base_settings().WAYS));
