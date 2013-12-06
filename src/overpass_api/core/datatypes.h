@@ -409,39 +409,31 @@ const pair< TIndex, const TObject* >* binary_search_for_pair_id
 template< typename Id_Type >
 struct Change_Entry
 {
-  Change_Entry(char status_flags_, const Id_Type& elem_id_,
-               const Uint31_Index& old_idx_, const Uint31_Index& new_idx_)
-      : status_flags(status_flags_), old_idx(old_idx_), new_idx(new_idx_), elem_id(elem_id_) {}
+  Change_Entry(const Id_Type& elem_id_, const Uint31_Index& old_idx_, const Uint31_Index& new_idx_)
+      : old_idx(old_idx_), new_idx(new_idx_), elem_id(elem_id_) {}
 
-  char status_flags;
   Uint31_Index old_idx;
   Uint31_Index new_idx;
   Id_Type elem_id;
   
-  static const int VERSION_CHANGED = 1;
-  static const int TAGS_CHANGED = 2;
-  static const int GEOMETRY_CHANGED = 4;
-  
   Change_Entry(void* data)
-    : status_flags(*(uint8*)data), old_idx((uint8*)data + 1), new_idx((uint8*)data + 5),
-      elem_id(Id_Type((uint8*)data + 9)) {}
+    : old_idx((uint8*)data), new_idx((uint8*)data + 4), elem_id(Id_Type((uint8*)data + 8)) {}
   
   uint32 size_of() const
   {
-    return elem_id.size_of() + 9;
+    return elem_id.size_of() + 8;
   }
   
   static uint32 size_of(void* data)
   {
-    return Id_Type::size_of((uint8*)data + 9) + 9;
+    return Id_Type::size_of((uint8*)data + 8) + 8;
   }
   
   void to_data(void* data) const
   {
-    *(uint8*)data = status_flags;
-    old_idx.to_data((uint8*)data + 1);
-    new_idx.to_data((uint8*)data + 5);
-    elem_id.to_data((uint8*)data + 9);
+    old_idx.to_data((uint8*)data);
+    new_idx.to_data((uint8*)data + 4);
+    elem_id.to_data((uint8*)data + 8);
   }
   
   bool operator<(const Change_Entry& rhs) const

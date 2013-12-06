@@ -431,11 +431,7 @@ std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > comput
     {
       // A later version exists also in new_data. Make this version a (short-lived) attic version.
       result[next_it->meta.timestamp].insert(
-          Change_Entry< Node_Skeleton::Id_Type >(
-              Change_Entry< int >::VERSION_CHANGED
-              | (it->tags == next_it->tags ? 0 : Change_Entry< int >::TAGS_CHANGED)
-              | (it->elem == next_it->elem ? 0 : Change_Entry< int >::GEOMETRY_CHANGED),
-              it->elem.id, it->idx, next_it->idx));
+          Change_Entry< Node_Skeleton::Id_Type >(it->elem.id, it->idx, next_it->idx));
     }
     
     if (last_id == it->elem.id)
@@ -448,11 +444,7 @@ std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > comput
     {
       // No old data exists.
       result[it->meta.timestamp].insert(
-          Change_Entry< Node_Skeleton::Id_Type >(
-              Change_Entry< int >::VERSION_CHANGED
-              | Change_Entry< int >::TAGS_CHANGED
-              | Change_Entry< int >::GEOMETRY_CHANGED,
-              it->elem.id, 0u, it->idx));
+          Change_Entry< Node_Skeleton::Id_Type >(it->elem.id, 0u, it->idx));
       continue;
     }
 
@@ -469,9 +461,7 @@ std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > comput
       continue;
     
     result[it->meta.timestamp].insert(
-        Change_Entry< Node_Skeleton::Id_Type >(
-            Change_Entry< int >::VERSION_CHANGED,
-            it->elem.id, *idx, it->idx));
+        Change_Entry< Node_Skeleton::Id_Type >(it->elem.id, *idx, it->idx));
   }
   
   return result;
