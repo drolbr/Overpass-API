@@ -56,7 +56,7 @@ int main(int argc, char* args[])
       {
         cout<<dec<<it.index().timestamp<<'\t'
             <<hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
-            <<dec<<it.object().elem_id.val()<<'\t'<<int(it.object().status_flags)<<'\n';
+            <<dec<<it.object().elem_id.val()<<'\n';
       }
     }
     else if (std::string("--ways") == args[2])
