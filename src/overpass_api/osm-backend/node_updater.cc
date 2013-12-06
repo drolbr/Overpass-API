@@ -428,11 +428,9 @@ std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > comput
   {
     ++next_it;
     if (next_it != new_data.data.end() && it->elem.id == next_it->elem.id)
-    {
-      // A later version exists also in new_data. Make this version a (short-lived) attic version.
+      // A later version exists also in new_data.
       result[next_it->meta.timestamp].insert(
           Change_Entry< Node_Skeleton::Id_Type >(it->elem.id, it->idx, next_it->idx));
-    }
     
     if (last_id == it->elem.id)
       // An earlier version exists also in new_data. So there is nothing to do here.
