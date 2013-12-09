@@ -219,6 +219,18 @@ int main(int argc, char* args[])
             <<it.object().timestamp<<'\n';
       }
     }
+    else if (std::string("--rel-changelog") == args[2])
+    {
+      Block_Backend< Timestamp, Change_Entry< Relation_Skeleton::Id_Type > > db
+          (transaction.data_index(attic_settings().RELATION_CHANGELOG));
+      for (Block_Backend< Timestamp, Change_Entry< Relation_Skeleton::Id_Type > >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<dec<<it.index().timestamp<<'\t'
+            <<hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
+            <<dec<<it.object().elem_id.val()<<'\n';
+      }
+    }
     else
       std::cout<<"Unknown target.\n";
   }
