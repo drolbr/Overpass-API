@@ -1108,8 +1108,8 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
   new_current_local_tags< Relation_Skeleton, Update_Relation_Logger, Relation_Skeleton::Id_Type >
       (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
   new_implicit_local_tags(implicitly_moved_local_tags, new_positions, attic_local_tags, new_local_tags);
-  std::map< Tag_Index_Global, std::set< Relation_Skeleton::Id_Type > > attic_global_tags;
-  std::map< Tag_Index_Global, std::set< Relation_Skeleton::Id_Type > > new_global_tags;
+  std::map< Tag_Index_Global, std::set< Tag_Object_Global< Relation_Skeleton::Id_Type > > > attic_global_tags;
+  std::map< Tag_Index_Global, std::set< Tag_Object_Global< Relation_Skeleton::Id_Type > > > new_global_tags;
   new_current_global_tags< Relation_Skeleton::Id_Type >
       (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
   
@@ -1196,8 +1196,8 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
         = compute_new_attic_local_tags(new_attic_idx_by_id_and_time,
             compute_tags_by_id_and_time(new_data, attic_local_tags),
                                        existing_map_positions, existing_idx_lists);
-    std::map< Tag_Index_Global, std::set< Attic< Relation_Skeleton::Id_Type > > > new_attic_global_tags
-        = compute_attic_global_tags(new_attic_local_tags);
+    std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Relation_Skeleton::Id_Type > > > >
+        new_attic_global_tags = compute_attic_global_tags(new_attic_local_tags);
     
     // Compute changelog
     std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > > changelog
@@ -1233,7 +1233,8 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
     // Update tags
     update_elements(std::map< Tag_Index_Local, std::set< Attic < Relation_Skeleton::Id_Type > > >(),
                     new_attic_local_tags, *transaction, *attic_settings().RELATION_TAGS_LOCAL);
-    update_elements(std::map< Tag_Index_Global, std::set< Attic < Relation_Skeleton::Id_Type > > >(),
+    update_elements(std::map< Tag_Index_Global,
+                        std::set< Attic < Tag_Object_Global< Relation_Skeleton::Id_Type > > > >(),
                     new_attic_global_tags, *transaction, *attic_settings().RELATION_TAGS_GLOBAL);
     
     // Write changelog

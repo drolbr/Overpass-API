@@ -108,7 +108,7 @@ struct Tag_Index_Local
   
   static uint32 max_size_of()
   {
-    throw Unsupported_Error("static uint32 Tag_Index_Global::max_size_of()");
+    throw Unsupported_Error("static uint32 Tag_Index_Local::max_size_of()");
     return 0;
   }
 };
@@ -224,6 +224,60 @@ struct Tag_Index_Global
   {
     throw Unsupported_Error("static uint32 Tag_Index_Global::max_size_of()");
     return 0;
+  }
+};
+
+
+template< typename Id_Type >
+struct Tag_Object_Global
+{
+  Uint31_Index idx;
+  Id_Type id;
+  
+  Tag_Object_Global() {}
+  
+  Tag_Object_Global(Id_Type id_, Uint31_Index idx_) : idx(idx_), id(id_) {}
+  
+  Tag_Object_Global(void* data)
+  {
+    idx = Uint31_Index(((*((uint32*)data))<<8) & 0xffffff00);
+    id = Id_Type((void*)((uint8*)data + 3));
+  }
+  
+  uint32 size_of() const
+  {
+    return 3 + id.size_of();
+  }
+  
+  static uint32 size_of(void* data)
+  {
+    return 3 + Id_Type::size_of((void*)((uint8*)data + 3));
+  }
+  
+  void to_data(void* data) const
+  {
+    *(uint32*)data = ((idx.val()>>8) & 0x7fffff);
+    id.to_data((void*)((uint8*)data + 3));
+  }
+  
+  bool operator<(const Tag_Object_Global& a) const
+  {
+    if (id < a.id)
+      return true;
+    if (a.id < id)
+      return false;
+    
+    return (idx < a.idx);
+  }
+  
+  bool operator==(const Tag_Object_Global& a) const
+  {
+    return (id == a.id && idx == a.idx);
+  }
+  
+  static uint32 max_size_of()
+  {
+    return 3 + Id_Type::max_size_of();
   }
 };
 

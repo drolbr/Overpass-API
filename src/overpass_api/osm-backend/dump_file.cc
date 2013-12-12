@@ -47,7 +47,106 @@ int main(int argc, char* args[])
   {    
     Nonsynced_Transaction transaction(false, false, db_dir, "");
 
-    if (std::string("--node-changelog") == args[2])
+    if (std::string("--nodes") == args[2])
+    {
+      Block_Backend< Uint31_Index, Node_Skeleton > db
+          (transaction.data_index(osm_base_settings().NODES));
+      for (Block_Backend< Uint31_Index, Node_Skeleton >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.index().val()<<'\t'
+            <<dec<<it.object().id.val()<<'\n';
+      }
+    }
+    else if (std::string("--nodes-meta") == args[2])
+    {
+      Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > db
+          (transaction.data_index(meta_settings().NODES_META));
+      for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >
+               ::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.index().val()<<'\t'
+            <<dec<<it.object().ref.val()<<'\t'
+            <<it.object().timestamp<<'\n';
+      }
+    }
+    else if (std::string("--node-tags-local") == args[2])
+    {
+      Block_Backend< Tag_Index_Local, Node_Skeleton::Id_Type > db
+          (transaction.data_index(osm_base_settings().NODE_TAGS_LOCAL));
+      for (Block_Backend< Tag_Index_Local, Node_Skeleton::Id_Type >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.index().index<<'\t'
+            <<dec<<it.object().val()<<'\t'
+            <<it.index().key<<'\t'<<it.index().value<<'\n';
+      }
+    }
+    else if (std::string("--node-tags-global") == args[2])
+    {
+      Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > > db
+          (transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL));
+      for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.object().idx.val()<<'\t'
+            <<dec<<it.object().id.val()<<'\t'
+            <<it.index().key<<'\t'<<it.index().value<<'\n';
+      }
+    }
+    else if (std::string("--attic-nodes") == args[2])
+    {
+      Block_Backend< Uint31_Index, Attic< Node_Skeleton > > db
+          (transaction.data_index(attic_settings().NODES));
+      for (Block_Backend< Uint31_Index, Attic< Node_Skeleton > >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.index().val()<<'\t'
+            <<dec<<it.object().id.val()<<'\t'
+            <<it.object().timestamp<<'\n';
+      }
+    }
+    else if (std::string("--attic-nodes-meta") == args[2])
+    {
+      Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > db
+          (transaction.data_index(attic_settings().NODES_META));
+      for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >
+               ::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.index().val()<<'\t'
+            <<dec<<it.object().ref.val()<<'\t'
+            <<it.object().timestamp<<'\n';
+      }
+    }
+    else if (std::string("--attic-node-tags-local") == args[2])
+    {
+      Block_Backend< Tag_Index_Local, Attic< Node_Skeleton::Id_Type > > db
+          (transaction.data_index(attic_settings().NODE_TAGS_LOCAL));
+      for (Block_Backend< Tag_Index_Local, Attic< Node_Skeleton::Id_Type > >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.index().index<<'\t'
+            <<dec<<it.object().val()<<'\t'
+            <<it.index().key<<'\t'<<it.index().value<<'\t'
+            <<it.object().timestamp<<'\n';
+      }
+    }
+    else if (std::string("--attic-node-tags-global") == args[2])
+    {
+      Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Node_Skeleton::Id_Type > > > db
+          (transaction.data_index(attic_settings().NODE_TAGS_GLOBAL));
+      for (Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Node_Skeleton::Id_Type > > >
+               ::Flat_Iterator it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.object().idx.val()<<'\t'
+            <<dec<<it.object().id.val()<<'\t'
+            <<it.index().key<<'\t'<<it.index().value<<'\t'
+            <<it.object().timestamp<<'\n';
+      }
+    }
+    else if (std::string("--node-changelog") == args[2])
     {
       Block_Backend< Timestamp, Change_Entry< Node_Skeleton::Id_Type > > db
           (transaction.data_index(attic_settings().NODE_CHANGELOG));
@@ -95,6 +194,18 @@ int main(int argc, char* args[])
             <<it.index().key<<'\t'<<it.index().value<<'\n';
       }
     }
+    else if (std::string("--way-tags-global") == args[2])
+    {
+      Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > > db
+          (transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL));
+      for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.object().idx.val()<<'\t'
+            <<dec<<it.object().id.val()<<'\t'
+            <<it.index().key<<'\t'<<it.index().value<<'\n';
+      }
+    }
     else if (std::string("--attic-ways") == args[2])
     {
       Block_Backend< Uint31_Index, Attic< Way_Skeleton > > db
@@ -129,6 +240,19 @@ int main(int argc, char* args[])
       {
         cout<<hex<<it.index().index<<'\t'
             <<dec<<it.object().val()<<'\t'
+            <<it.index().key<<'\t'<<it.index().value<<'\t'
+            <<it.object().timestamp<<'\n';
+      }
+    }
+    else if (std::string("--attic-way-tags-global") == args[2])
+    {
+      Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > > db
+          (transaction.data_index(attic_settings().WAY_TAGS_GLOBAL));
+      for (Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > >
+               ::Flat_Iterator it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.object().idx.val()<<'\t'
+            <<dec<<it.object().id.val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\t'
             <<it.object().timestamp<<'\n';
       }
@@ -181,6 +305,18 @@ int main(int argc, char* args[])
             <<it.index().key<<'\t'<<it.index().value<<'\n';
       }
     }
+    else if (std::string("--rel-tags-global") == args[2])
+    {
+      Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > > db
+          (transaction.data_index(osm_base_settings().RELATION_TAGS_GLOBAL));
+      for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.object().idx.val()<<'\t'
+            <<dec<<it.object().id.val()<<'\t'
+            <<it.index().key<<'\t'<<it.index().value<<'\n';
+      }
+    }
     else if (std::string("--attic-rels") == args[2])
     {
       Block_Backend< Uint31_Index, Attic< Relation_Skeleton > > db
@@ -215,6 +351,19 @@ int main(int argc, char* args[])
       {
         cout<<hex<<it.index().index<<'\t'
             <<dec<<it.object().val()<<'\t'
+            <<it.index().key<<'\t'<<it.index().value<<'\t'
+            <<it.object().timestamp<<'\n';
+      }
+    }
+    else if (std::string("--attic-rel-tags-global") == args[2])
+    {
+      Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Relation_Skeleton::Id_Type > > > db
+          (transaction.data_index(attic_settings().RELATION_TAGS_GLOBAL));
+      for (Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Relation_Skeleton::Id_Type > > >
+               ::Flat_Iterator it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.object().idx.val()<<'\t'
+            <<dec<<it.object().id.val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\t'
             <<it.object().timestamp<<'\n';
       }

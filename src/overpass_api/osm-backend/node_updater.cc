@@ -531,8 +531,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
   std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > > new_local_tags;
   new_current_local_tags< Node_Skeleton, Update_Node_Logger, Node_Skeleton::Id_Type >
       (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
-  std::map< Tag_Index_Global, std::set< Node_Skeleton::Id_Type > > attic_global_tags;
-  std::map< Tag_Index_Global, std::set< Node_Skeleton::Id_Type > > new_global_tags;
+  std::map< Tag_Index_Global, std::set< Tag_Object_Global< Node_Skeleton::Id_Type > > > attic_global_tags;
+  std::map< Tag_Index_Global, std::set< Tag_Object_Global< Node_Skeleton::Id_Type > > > new_global_tags;
   new_current_global_tags< Node_Skeleton::Id_Type >
       (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
 
@@ -613,8 +613,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
     // Compute tags
     std::map< Tag_Index_Local, std::set< Attic< Node_Skeleton::Id_Type > > > new_attic_local_tags
         = compute_new_attic_local_tags(new_data, existing_map_positions, attic_local_tags);
-    std::map< Tag_Index_Global, std::set< Attic< Node_Skeleton::Id_Type > > > new_attic_global_tags
-        = compute_attic_global_tags(new_attic_local_tags);
+    std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Node_Skeleton::Id_Type > > > >
+        new_attic_global_tags = compute_attic_global_tags(new_attic_local_tags);
     
     // Compute changelog
     std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > changelog
@@ -643,7 +643,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
     // Update tags
     update_elements(std::map< Tag_Index_Local, std::set< Attic < Node_Skeleton::Id_Type > > >(),
                     new_attic_local_tags, *transaction, *attic_settings().NODE_TAGS_LOCAL);
-    update_elements(std::map< Tag_Index_Global, std::set< Attic < Node_Skeleton::Id_Type > > >(),
+    update_elements(std::map< Tag_Index_Global,
+                    std::set< Attic < Tag_Object_Global< Node_Skeleton::Id_Type > > > >(),
                     new_attic_global_tags, *transaction, *attic_settings().NODE_TAGS_GLOBAL);
     
     // Write changelog
