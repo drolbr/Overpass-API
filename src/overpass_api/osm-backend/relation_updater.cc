@@ -242,8 +242,6 @@ void new_implicit_skeletons
       }
     
       Uint31_Index index = Relation::calc_index(member_idxs);
-      if (member_idxs.empty())
-        index = 0xff;
       
       Relation_Skeleton new_skeleton = *it2;
       new_skeleton.node_idxs.clear();
@@ -491,8 +489,7 @@ void compute_geometry
       }
     }
     
-    if (!member_idxs.empty())
-      it->idx = index;
+    it->idx = index;
   }
 }
 

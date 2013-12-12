@@ -576,8 +576,7 @@ void compute_geometry
       }
     }
     
-    if (!nd_idxs.empty())
-      it->idx = index;
+    it->idx = index;
   }
 }
 
@@ -631,8 +630,6 @@ void new_implicit_skeletons
       }
     
       Uint31_Index index = Way::calc_index(nd_idxs);
-      if (nd_idxs.empty())
-        index = 0xff;
       
       Way_Skeleton new_skeleton = *it2;
       new_skeleton.geometry.clear();

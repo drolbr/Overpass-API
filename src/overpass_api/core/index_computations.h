@@ -126,7 +126,7 @@ inline uint32 upper_ilon(uint32 quadtile)
 inline uint32 calc_index(const std::vector< uint32 >& node_idxs)
 {
   if (node_idxs.empty())
-    return 0;
+    return 0xfe;
   
   // Calculate the bounding box of the appearing indices.
   
