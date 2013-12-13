@@ -34,10 +34,10 @@ bin_script_public_transport =
 cgi_bin_public_transport =
 cgi_bin_script_public_transport = cgi-bin/draw-line cgi-bin/sketch-line cgi-bin/sketch-options cgi-bin/sketch-route
 
-bin_convienience =
-bin_script_convienience = bin/run_osm3s_minutely.sh bin/fetch_osc_and_apply.sh
-cgi_bin_convienience =
-cgi_bin_script_convienience = cgi-bin/ping cgi-bin/sitemap
+bin_convenience =
+bin_script_convenience = bin/run_osm3s_minutely.sh bin/fetch_osc_and_apply.sh
+cgi_bin_convenience =
+cgi_bin_script_convenience = cgi-bin/ping cgi-bin/sitemap
 
 bindir = ${prefix}/bin
 bin_PROGRAMS = \
@@ -47,7 +47,8 @@ bin_PROGRAMS = \
   ${bin_augmented_diffs} \
   ${bin_xapi_layer} \
   ${bin_openlayers} \
-  ${bin_public_transport}
+  ${bin_public_transport} \
+  ${bin_convenience}
   
 dist_bin_SCRIPTS = \
   ${bin_script_mandatory} \
@@ -56,7 +57,9 @@ dist_bin_SCRIPTS = \
   ${bin_script_augmented_diffs} \
   ${bin_script_xapi_layer} \
   ${bin_script_openlayers} \
-  ${bin_script_public_transport}
+  ${bin_script_public_transport} \
+  ${bin_script_convenience}
+  
 
 cgibindir = ${prefix}/cgi-bin
 cgibin_PROGRAMS = ${cgi_bin_mandatory}
@@ -67,7 +70,8 @@ dist_cgibin_SCRIPTS = \
   ${cgi_bin_script_augmented_diffs} \
   ${cgi_bin_script_xapi_layer} \
   ${cgi_bin_script_openlayers} \
-  ${cgi_bin_script_public_transport}
+  ${cgi_bin_script_public_transport} \
+  ${cgi_bin_script_convenience}
 
 templatesdir = ${prefix}/templates
 templates_DATA = templates/default.wiki templates/base.wiki
