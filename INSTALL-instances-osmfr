@@ -79,13 +79,17 @@ Pour démarrer le tout : /etc/init.d/overpass start
 Activation des query "area"
 ==========================
 (Note que cela peut aussi se faire après coup)
-dans $DB_DIR créer un dossier "rules" et mettre dedans le 
+dans $DB_DIR créer un dossier "rules" et mettre dedans le fichier ./scripts-osm-fr/areas.osm3s
+(c'est ce fichier qui indique quelles sont les polygones et relations qui
+doivent être considérées comme des surfaces)
 
-Dans /etc/default/overpass pensez à mettre AREA=yes
-# chargement des chemins
+# chargement des chemins de la config
 . /etc/default/overpass
 mkdir $DB_DIR/rules 
 cp ./Overpass-API/scripts-osm-fr/areas.osm3s $DB_DIR/rules
+
+#Dans /etc/default/overpass pensez à mettre AREA=yes
+
 /etc/init.d/overpass restart
 
 
