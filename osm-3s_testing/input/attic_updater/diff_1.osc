@@ -105,6 +105,54 @@
   <node id="2501" lat="11.0" lon="5.01" version="2" timestamp="2013-07-01T09:02:11" changeset="496" uid="42" user="foo"/>
   <node id="2502" lat="11.0" lon="5.02" version="2" timestamp="2013-07-01T09:02:12" changeset="496" uid="42" user="foo"/>
   <node id="2503" lat="11.0" lon="5.03" version="2" timestamp="2013-07-01T09:02:13" changeset="496" uid="42" user="foo"/>
+  
+  <node id="2601" lat="11.0" lon="6.01" version="2" timestamp="2013-07-01T09:02:11" changeset="496" uid="42" user="foo"/>
+  <node id="2602" lat="11.0" lon="6.02" version="2" timestamp="2013-07-01T09:02:12" changeset="496" uid="42" user="foo"/>
+  <node id="2603" lat="11.0" lon="6.03" version="2" timestamp="2013-07-01T09:02:13" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="no"/>
+  </node>
+  <node id="2604" lat="11.0" lon="6.04" version="2" timestamp="2013-07-01T09:02:14" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </node>
+  <node id="2605" lat="11.0" lon="6.05" version="2" timestamp="2013-07-01T09:02:15" changeset="496" uid="42" user="foo"/>
+</modify>
+
+<create>
+  <node id="2606" lat="11.0" lon="6.06" version="1" timestamp="2013-07-01T09:02:16" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </node>
+</create>
+  
+<modify>
+  <node id="2606" lat="11.0" lon="6.06" version="2" timestamp="2013-07-01T09:02:26" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="no"/>
+  </node>
+</modify>
+
+<create>
+  <node id="2607" lat="11.0" lon="6.07" version="1" timestamp="2013-07-01T09:02:17" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="no"/>
+  </node>
+</create>
+  
+<modify>
+  <node id="2607" lat="11.0" lon="6.07" version="2" timestamp="2013-07-01T09:02:27" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </node>
+</modify>
+
+<create>
+  <node id="2608" lat="11.0" lon="6.08" version="1" timestamp="2013-07-01T09:02:18" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </node>
+</create>
+  
+<modify>
+  <node id="2608" lat="11.0" lon="6.08" version="2" timestamp="2013-07-01T09:02:28" changeset="496" uid="42" user="foo"/>
 </modify>
 
 <create>

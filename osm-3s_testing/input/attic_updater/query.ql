@@ -51,6 +51,15 @@ node(2504);out meta;
 node(2505);out meta;
 node(2506);out meta;
 
+node(2601);out meta;
+node(2602);out meta;
+node(2603);out meta;
+node(2604);out meta;
+node(2605);out meta;
+node(2606);out meta;
+node(2607);out meta;
+node(2608);out meta;
+
 
 way(1101);out meta;
 way(1102);out meta;

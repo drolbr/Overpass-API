@@ -53,6 +53,15 @@
        2504  tag deleted then same tag recreated within one diff
        2505  tag deleted then same key with other val recreated within one diff
        2506  tag deleted then another tag created within one diff
+       
+       2601 tag with empty value created, later removed
+       2602 tag with empty key created, later removed
+       2603 key with multiple values created, later removed
+       2604 key with one value created, second value added
+       2605 key with multiple values created, one value removed
+       2606 key with multiple values created, later removed, all in one changeset
+       2607 key with one value created, second value added, all in one changeset
+       2608 key with multiple values created, one value removed, all in one changeset
 
   
        1101  created and then unchanged way
@@ -446,6 +455,24 @@
   </node>
   <node id="2506" lat="11.0" lon="5.06" version="1" timestamp="2013-07-01T09:01:16" changeset="496" uid="42" user="foo">
     <tag k="before" v="deletion"/>
+  </node>
+
+  <node id="2601" lat="11.0" lon="6.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo">
+    <tag k="empty_value" v=""/>
+  </node>
+  <node id="2602" lat="11.0" lon="6.02" version="1" timestamp="2013-07-01T09:01:12" changeset="496" uid="42" user="foo">
+    <tag k="" v="empty_key"/>
+  </node>
+  <node id="2603" lat="11.0" lon="6.03" version="1" timestamp="2013-07-01T09:01:13" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </node>
+  <node id="2604" lat="11.0" lon="6.04" version="1" timestamp="2013-07-01T09:01:14" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="no"/>
+  </node>
+  <node id="2605" lat="11.0" lon="6.05" version="1" timestamp="2013-07-01T09:01:15" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
   </node>
 
   <node id="11011" lat="10.0" lon="1.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>    

@@ -345,7 +345,7 @@ std::map< Tag_Index_Local, std::set< Attic< typename Element_Skeleton::Id_Type >
            tag_it != it->tags.end(); ++tag_it)
       {
         if (old_keys.find(tag_it->first) == old_keys.end())
-          result[Tag_Index_Local(it->idx.val() & 0x7fffff00, tag_it->first, "")]
+          result[Tag_Index_Local(it->idx.val() & 0x7fffff00, tag_it->first, void_tag_value())]
               .insert(Attic< typename Element_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
       }
     }
@@ -402,7 +402,7 @@ std::map< Tag_Index_Local, std::set< Attic< typename Element_Skeleton::Id_Type >
   {
     for (std::map< std::string, std::string >::const_iterator it = it_id->second.begin();
          it != it_id->second.end(); ++it)
-      result[Tag_Index_Local(idx_by_id.find(it_id->first)->second.val(), it->first, "")]
+      result[Tag_Index_Local(idx_by_id.find(it_id->first)->second.val(), it->first, void_tag_value())]
           .insert(Attic< typename Element_Skeleton::Id_Type >(it_id->first, timestamp_of[it_id->first]));
   }
   

@@ -494,7 +494,7 @@ std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Id_Type > > > > 
   for (typename std::map< Tag_Index_Local, std::set< Attic< Id_Type > > >::const_iterator
       it_idx = new_attic_local_tags.begin(); it_idx != new_attic_local_tags.end(); ++it_idx)
   {
-    if (it_idx->first.value == "")
+    if (it_idx->first.value == void_tag_value())
     {
       std::set< Attic< Tag_Object_Global< Id_Type > > >& handle(result[Tag_Index_Global(it_idx->first)]);
       for (typename std::set< Attic< Id_Type > >::const_iterator it = it_idx->second.begin();
@@ -507,11 +507,11 @@ std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Id_Type > > > > 
   for (typename std::map< Tag_Index_Local, std::set< Attic< Id_Type > > >::const_iterator
       it_idx = new_attic_local_tags.begin(); it_idx != new_attic_local_tags.end(); ++it_idx)
   {
-    if (it_idx->first.value != "")
+    if (it_idx->first.value != void_tag_value())
     {
       std::set< Attic< Tag_Object_Global< Id_Type > > >& handle(result[Tag_Index_Global(it_idx->first)]);
       std::set< Attic< Tag_Object_Global< Id_Type > > >& void_handle
-          (result[Tag_Index_Global(it_idx->first.key, "")]);
+          (result[Tag_Index_Global(it_idx->first.key, void_tag_value())]);
       for (typename std::set< Attic< Id_Type > >::const_iterator it = it_idx->second.begin();
            it != it_idx->second.end(); ++it)
       {
@@ -848,7 +848,7 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
         existing_attic_idxs.insert(Uint31_Index(idx_ptr->val() & 0x7fffff00));
       
       Uint31_Index last_idx = *it2;
-      std::string last_value = "";
+      std::string last_value = void_tag_value();
       ++it2;
       if (tit2 != tit->second.end() && tit2->timestamp == NOW)
       {
@@ -859,7 +859,8 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
       {
         if (it2 == it->second.end() || (tit2 != tit->second.end() && it2->timestamp < tit2->timestamp))
         {
-          if (last_idx.val() != 0u && last_value != *tit2 && (it2 != it->second.end() || *tit2 != "" ||
+          if (last_idx.val() != 0u && last_value != *tit2 && (it2 != it->second.end()
+                  || *tit2 != void_tag_value() ||
               existing_attic_idxs.find(Uint31_Index(last_idx.val() & 0x7fffff00))
                   != existing_attic_idxs.end()))
             result[Tag_Index_Local(Uint31_Index(last_idx.val() & 0x7fffff00), tit->first.second, *tit2)]
@@ -869,13 +870,14 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
         }
         else if (tit2 == tit->second.end() || tit2->timestamp < it2->timestamp)
         {
-          if (!((last_idx.val() & 0x7fffff00) == (it2->val() & 0x7fffff00)) && last_value != "")
+          if (!((last_idx.val() & 0x7fffff00) == (it2->val() & 0x7fffff00)) && last_value != void_tag_value())
           {
             if (it2->val() != 0u)
               result[Tag_Index_Local(Uint31_Index(it2->val() & 0x7fffff00), tit->first.second, last_value)]
                 .insert(Attic< Id_Type >(it->first, it2->timestamp));
             if (last_idx.val() != 0u)
-              result[Tag_Index_Local(Uint31_Index(last_idx.val() & 0x7fffff00), tit->first.second, "")]
+              result[Tag_Index_Local(Uint31_Index(last_idx.val() & 0x7fffff00),
+                                     tit->first.second, void_tag_value())]
                   .insert(Attic< Id_Type >(it->first, it2->timestamp));
           }
           last_idx = *it2;
@@ -888,7 +890,8 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
             result[Tag_Index_Local(Uint31_Index(it2->val() & 0x7fffff00), tit->first.second, *tit2)]
                 .insert(Attic< Id_Type >(it->first, tit2->timestamp));
           if (!((last_idx.val() & 0x7fffff00) == (it2->val() & 0x7fffff00)) && last_idx.val() != 0u)
-            result[Tag_Index_Local(Uint31_Index(last_idx.val() & 0x7fffff00), tit->first.second, "")]
+            result[Tag_Index_Local(Uint31_Index(last_idx.val() & 0x7fffff00),
+                                   tit->first.second, void_tag_value())]
                 .insert(Attic< Id_Type >(it->first, tit2->timestamp));
                 
           last_value = *tit2;
@@ -977,7 +980,7 @@ std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >, std::vec
     {
       std::vector< Attic< std::string > >& result_ref = result[std::make_pair(it->elem.id, it2->first)];
       if (result_ref.empty() || result_ref.back().timestamp != it->meta.timestamp)
-        result_ref.push_back(Attic< std::string >("", it->meta.timestamp));
+        result_ref.push_back(Attic< std::string >(void_tag_value(), it->meta.timestamp));
       result_ref.push_back(Attic< std::string >(it2->second, next_timestamp));
     }
   }

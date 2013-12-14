@@ -219,7 +219,7 @@ void collect_tags
     for (typename std::vector< std::pair< std::string, std::string > >::size_type
         i = 0; i < it_obj->second.size(); )
     {
-      if (it_obj->second[i].second == "")
+      if (it_obj->second[i].second == void_tag_value())
       {
         it_obj->second[i] = it_obj->second.back();
         it_obj->second.pop_back();

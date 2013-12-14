@@ -114,6 +114,15 @@ struct Tag_Index_Local
 };
 
 
+inline const std::string& void_tag_value()
+{
+  static std::string void_value = " ";
+  if (void_value == " ")
+    void_value[0] = 0xff;
+  return void_value;
+}
+
+
 template< class TIndex >
 void formulate_range_query
     (set< pair< Tag_Index_Local, Tag_Index_Local > >& range_set,
