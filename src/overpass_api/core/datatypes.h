@@ -519,7 +519,7 @@ struct Timestamp
   
   static uint32 max_size_of()
   {
-    throw Unsupported_Error("static uint32 Tag_Index_Global::max_size_of()");
+    throw Unsupported_Error("static uint32 Timestamp::max_size_of()");
     return 0;
   }
 };

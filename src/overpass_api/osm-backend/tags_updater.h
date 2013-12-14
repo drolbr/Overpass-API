@@ -347,54 +347,54 @@ void update_tags_local
 }
 
 
-template < class TObject >
-void update_tags_global
-    (File_Blocks_Index_Base& tags_global, const vector< TObject* >& elems_ptr,
-     const vector< pair< typename TObject::Id_Type, bool > >& ids_to_modify,
-     const vector< Tag_Entry< typename TObject::Id_Type > >& tags_to_delete)
-{
-  map< Tag_Index_Global, set< typename TObject::Id_Type > > db_to_delete;
-  map< Tag_Index_Global, set< typename TObject::Id_Type > > db_to_insert;
-  
-  for (typename vector< Tag_Entry< typename TObject::Id_Type > >::const_iterator
-      it(tags_to_delete.begin()); it != tags_to_delete.end(); ++it)
-  {
-    Tag_Index_Global index;
-    index.key = it->key;
-    index.value = it->value;
-    
-    set< typename TObject::Id_Type > elem_ids;
-    for (typename vector< typename TObject::Id_Type >::const_iterator it2(it->ids.begin());
-        it2 != it->ids.end(); ++it2)
-      db_to_delete[index].insert(*it2);
-  }
-  
-  typename vector< TObject* >::const_iterator rit = elems_ptr.begin();
-  for (typename vector< pair< typename TObject::Id_Type, bool > >::const_iterator
-      it(ids_to_modify.begin()); it != ids_to_modify.end(); ++it)
-  {
-    if ((rit != elems_ptr.end()) && (it->first == (*rit)->id))
-    {
-      if (it->second)
-      {
-	Tag_Index_Global index;
-	
-	for (vector< pair< string, string > >::const_iterator
-	  it2((*rit)->tags.begin()); it2 != (*rit)->tags.end(); ++it2)
-	{
-	  index.key = it2->first;
-	  index.value = it2->second;
-	  db_to_insert[index].insert(it->first);
-	  db_to_delete[index];
-	}
-      }
-      ++rit;
-    }
-  }
-  
-  Block_Backend< Tag_Index_Global, typename TObject::Id_Type > elem_db(&tags_global);
-  elem_db.update(db_to_delete, db_to_insert);
-}
+// template < class TObject >
+// void update_tags_global
+//     (File_Blocks_Index_Base& tags_global, const vector< TObject* >& elems_ptr,
+//      const vector< pair< typename TObject::Id_Type, bool > >& ids_to_modify,
+//      const vector< Tag_Entry< typename TObject::Id_Type > >& tags_to_delete)
+// {
+//   map< Tag_Index_Global, set< typename TObject::Id_Type > > db_to_delete;
+//   map< Tag_Index_Global, set< typename TObject::Id_Type > > db_to_insert;
+//   
+//   for (typename vector< Tag_Entry< typename TObject::Id_Type > >::const_iterator
+//       it(tags_to_delete.begin()); it != tags_to_delete.end(); ++it)
+//   {
+//     Tag_Index_Global index;
+//     index.key = it->key;
+//     index.value = it->value;
+//     
+//     set< typename TObject::Id_Type > elem_ids;
+//     for (typename vector< typename TObject::Id_Type >::const_iterator it2(it->ids.begin());
+//         it2 != it->ids.end(); ++it2)
+//       db_to_delete[index].insert(*it2);
+//   }
+//   
+//   typename vector< TObject* >::const_iterator rit = elems_ptr.begin();
+//   for (typename vector< pair< typename TObject::Id_Type, bool > >::const_iterator
+//       it(ids_to_modify.begin()); it != ids_to_modify.end(); ++it)
+//   {
+//     if ((rit != elems_ptr.end()) && (it->first == (*rit)->id))
+//     {
+//       if (it->second)
+//       {
+// 	Tag_Index_Global index;
+// 	
+// 	for (vector< pair< string, string > >::const_iterator
+// 	  it2((*rit)->tags.begin()); it2 != (*rit)->tags.end(); ++it2)
+// 	{
+// 	  index.key = it2->first;
+// 	  index.value = it2->second;
+// 	  db_to_insert[index].insert(it->first);
+// 	  db_to_delete[index];
+// 	}
+//       }
+//       ++rit;
+//     }
+//   }
+//   
+//   Block_Backend< Tag_Index_Global, typename TObject::Id_Type > elem_db(&tags_global);
+//   elem_db.update(db_to_delete, db_to_insert);
+// }
 
 
 #endif
