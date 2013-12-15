@@ -675,6 +675,69 @@
     <nd ref="25033"/>
   </way>
   
+  <way id="2601" version="2" timestamp="2013-07-01T09:02:11" changeset="496" uid="42" user="foo">
+    <nd ref="2601"/>
+  </way>
+  <way id="2602" version="2" timestamp="2013-07-01T09:02:12" changeset="496" uid="42" user="foo">
+    <nd ref="2602"/>
+  </way>
+  <way id="2603" version="2" timestamp="2013-07-01T09:02:13" changeset="496" uid="42" user="foo">
+    <nd ref="2603"/>
+    <tag k="multiple_values" v="no"/>
+  </way>
+  <way id="2604" version="2" timestamp="2013-07-01T09:02:14" changeset="496" uid="42" user="foo">
+    <nd ref="2604"/>
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </way>
+  <way id="2605" version="2" timestamp="2013-07-01T09:02:15" changeset="496" uid="42" user="foo">
+    <nd ref="2605"/>
+  </way>
+</modify>
+
+<create>
+  <way id="2606" version="1" timestamp="2013-07-01T09:02:16" changeset="496" uid="42" user="foo">
+    <nd ref="2606"/>
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </way>
+</create>
+  
+<modify>
+  <way id="2606" version="2" timestamp="2013-07-01T09:02:26" changeset="496" uid="42" user="foo">
+    <nd ref="2606"/>
+    <tag k="multiple_values" v="no"/>
+  </way>
+</modify>
+
+<create>
+  <way id="2607" version="1" timestamp="2013-07-01T09:02:17" changeset="496" uid="42" user="foo">
+    <nd ref="2607"/>
+    <tag k="multiple_values" v="no"/>
+  </way>
+</create>
+  
+<modify>
+  <way id="2607" version="2" timestamp="2013-07-01T09:02:27" changeset="496" uid="42" user="foo">
+    <nd ref="2607"/>
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </way>
+</modify>
+
+<create>
+  <way id="2608" version="1" timestamp="2013-07-01T09:02:18" changeset="496" uid="42" user="foo">
+    <nd ref="2608"/>
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </way>
+</create>
+  
+<modify>
+  <way id="2608" version="2" timestamp="2013-07-01T09:02:28" changeset="496" uid="42" user="foo">
+    <nd ref="2608"/>
+  </way>
+  
   <way id="11221" version="1" timestamp="2013-07-01T09:02:11" changeset="496" uid="42" user="foo">
     <nd ref="112211"/>
     <nd ref="112212"/>
@@ -1393,6 +1456,69 @@
   <relation id="2503" version="2" timestamp="2013-07-01T09:02:13" changeset="496" uid="42" user="foo">
     <member type="node" ref="25031" role=""/>
     <member type="node" ref="25032" role=""/>
+  </relation>
+  
+  <relation id="2601" version="2" timestamp="2013-07-01T09:02:11" changeset="496" uid="42" user="foo">
+    <member type="node" ref="2601" role=""/>
+  </relation>
+  <relation id="2602" version="2" timestamp="2013-07-01T09:02:12" changeset="496" uid="42" user="foo">
+    <member type="node" ref="2602" role=""/>
+  </relation>
+  <relation id="2603" version="2" timestamp="2013-07-01T09:02:13" changeset="496" uid="42" user="foo">
+    <member type="node" ref="2603" role=""/>
+    <tag k="multiple_values" v="no"/>
+  </relation>
+  <relation id="2604" version="2" timestamp="2013-07-01T09:02:14" changeset="496" uid="42" user="foo">
+    <member type="node" ref="2604" role=""/>
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </relation>
+  <relation id="2605" version="2" timestamp="2013-07-01T09:02:15" changeset="496" uid="42" user="foo">
+    <member type="node" ref="2605" role=""/>
+  </relation>
+</modify>
+
+<create>
+  <relation id="2606" version="1" timestamp="2013-07-01T09:02:16" changeset="496" uid="42" user="foo">
+    <member type="node" ref="2606" role=""/>
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </relation>
+</create>
+  
+<modify>
+  <relation id="2606" version="2" timestamp="2013-07-01T09:02:26" changeset="496" uid="42" user="foo">
+    <member type="node" ref="2606" role=""/>
+    <tag k="multiple_values" v="no"/>
+  </relation>
+</modify>
+
+<create>
+  <relation id="2607" version="1" timestamp="2013-07-01T09:02:17" changeset="496" uid="42" user="foo">
+    <member type="node" ref="2607" role=""/>
+    <tag k="multiple_values" v="no"/>
+  </relation>
+</create>
+  
+<modify>
+  <relation id="2607" version="2" timestamp="2013-07-01T09:02:27" changeset="496" uid="42" user="foo">
+    <member type="node" ref="2607" role=""/>
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </relation>
+</modify>
+
+<create>
+  <relation id="2608" version="1" timestamp="2013-07-01T09:02:18" changeset="496" uid="42" user="foo">
+    <member type="node" ref="2608" role=""/>
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </relation>
+</create>
+  
+<modify>
+  <relation id="2608" version="2" timestamp="2013-07-01T09:02:28" changeset="496" uid="42" user="foo">
+    <member type="node" ref="2608" role=""/>
   </relation>
 </modify>
 

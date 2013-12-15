@@ -127,6 +127,15 @@ way(2504);out meta;
 way(2505);out meta;
 way(2506);out meta;
 
+way(2601);out meta;
+way(2602);out meta;
+way(2603);out meta;
+way(2604);out meta;
+way(2605);out meta;
+way(2606);out meta;
+way(2607);out meta;
+way(2608);out meta;
+
 
 rel(1111);out meta;
 rel(1112);out meta;
@@ -288,6 +297,15 @@ rel(2503);out meta;
 rel(2504);out meta;
 rel(2505);out meta;
 rel(2506);out meta;
+
+rel(2601);out meta;
+rel(2602);out meta;
+rel(2603);out meta;
+rel(2604);out meta;
+rel(2605);out meta;
+rel(2606);out meta;
+rel(2607);out meta;
+rel(2608);out meta;
 
 
 node(0,0,30,40);out meta;

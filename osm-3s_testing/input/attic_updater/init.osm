@@ -1493,6 +1493,29 @@
     <nd ref="25063"/>
     <tag k="before" v="deletion"/>
   </way>
+
+  <way id="2601" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo">
+    <nd ref="2601"/>
+    <tag k="empty_value" v=""/>
+  </way>
+  <way id="2602" version="1" timestamp="2013-07-01T09:01:12" changeset="496" uid="42" user="foo">
+    <nd ref="2602"/>
+    <tag k="" v="empty_key"/>
+  </way>
+  <way id="2603" version="1" timestamp="2013-07-01T09:01:13" changeset="496" uid="42" user="foo">
+    <nd ref="2603"/>
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </way>
+  <way id="2604" version="1" timestamp="2013-07-01T09:01:14" changeset="496" uid="42" user="foo">
+    <nd ref="2604"/>
+    <tag k="multiple_values" v="no"/>
+  </way>
+  <way id="2605" version="1" timestamp="2013-07-01T09:01:15" changeset="496" uid="42" user="foo">
+    <nd ref="2605"/>
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </way>
   
   <way id="11211" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo">
     <nd ref="112111"/>
@@ -2793,6 +2816,29 @@
     <member type="node" ref="25061" role=""/>
     <member type="node" ref="25062" role=""/>
     <tag k="before" v="deletion"/>
+  </relation>
+
+  <relation id="2601" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo">
+    <member type="node" ref="2601" role=""/>
+    <tag k="empty_value" v=""/>
+  </relation>
+  <relation id="2602" version="1" timestamp="2013-07-01T09:01:12" changeset="496" uid="42" user="foo">
+    <member type="node" ref="2602" role=""/>
+    <tag k="" v="empty_key"/>
+  </relation>
+  <relation id="2603" version="1" timestamp="2013-07-01T09:01:13" changeset="496" uid="42" user="foo">
+    <member type="node" ref="2603" role=""/>
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </relation>
+  <relation id="2604" version="1" timestamp="2013-07-01T09:01:14" changeset="496" uid="42" user="foo">
+    <member type="node" ref="2604" role=""/>
+    <tag k="multiple_values" v="no"/>
+  </relation>
+  <relation id="2605" version="1" timestamp="2013-07-01T09:01:15" changeset="496" uid="42" user="foo">
+    <member type="node" ref="2605" role=""/>
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
   </relation>
   
   <relation id="11411" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>

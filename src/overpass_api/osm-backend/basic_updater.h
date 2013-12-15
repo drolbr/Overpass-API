@@ -979,7 +979,7 @@ std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >, std::vec
          it2 != it->tags.end(); ++it2)
     {
       std::vector< Attic< std::string > >& result_ref = result[std::make_pair(it->elem.id, it2->first)];
-      if (result_ref.empty() || result_ref.back().timestamp != it->meta.timestamp)
+      if (result_ref.empty() || result_ref.back().timestamp < it->meta.timestamp)
         result_ref.push_back(Attic< std::string >(void_tag_value(), it->meta.timestamp));
       result_ref.push_back(Attic< std::string >(it2->second, next_timestamp));
     }
@@ -997,7 +997,8 @@ std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >, std::vec
     {
       std::vector< Attic< std::string > >& result_ref = result[std::make_pair(*it2, it->first.key)];
       uint64 timestamp = (timestamp_per_id[*it2] == 0 ? NOW : timestamp_per_id[*it2]);
-      if (result_ref.empty() || result_ref.back().timestamp != timestamp_per_id[*it2])
+      if (result_ref.empty() || result_ref.back().timestamp < timestamp_per_id[*it2]
+          || result_ref.back() != void_tag_value())
         result_ref.push_back(Attic< std::string >(it->first.value, timestamp));
       else
         result_ref.back() = Attic< std::string >(it->first.value, timestamp);
