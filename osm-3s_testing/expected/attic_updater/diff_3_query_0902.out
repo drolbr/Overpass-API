@@ -152,6 +152,23 @@
   <node id="2506" lat="11.0000000" lon="5.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
     <tag k="before" v="deletion"/>
   </node>
+  <node id="2601" lat="11.0000000" lon="6.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <tag k="empty_value" v=""/>
+  </node>
+  <node id="2602" lat="11.0000000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <tag k="" v="empty_key"/>
+  </node>
+  <node id="2603" lat="11.0000000" lon="6.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </node>
+  <node id="2604" lat="11.0000000" lon="6.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="no"/>
+  </node>
+  <node id="2605" lat="11.0000000" lon="6.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </node>
   <way id="1101" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="11011"/>
     <nd ref="11012"/>
@@ -1858,6 +1875,23 @@
   </node>
   <node id="2506" lat="11.0000000" lon="5.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
     <tag k="before" v="deletion"/>
+  </node>
+  <node id="2601" lat="11.0000000" lon="6.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <tag k="empty_value" v=""/>
+  </node>
+  <node id="2602" lat="11.0000000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <tag k="" v="empty_key"/>
+  </node>
+  <node id="2603" lat="11.0000000" lon="6.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </node>
+  <node id="2604" lat="11.0000000" lon="6.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="no"/>
+  </node>
+  <node id="2605" lat="11.0000000" lon="6.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
   </node>
   <node id="13011" lat="10.0000000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="13021" lat="10.0000000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
@@ -4813,6 +4847,23 @@
     <member type="node" ref="25062" role=""/>
     <tag k="before" v="deletion"/>
   </relation>
+  <node id="2601" lat="11.0000000" lon="6.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <tag k="empty_value" v=""/>
+  </node>
+  <node id="2602" lat="11.0000000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <tag k="" v="empty_key"/>
+  </node>
+  <node id="2603" lat="11.0000000" lon="6.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </node>
+  <node id="2604" lat="11.0000000" lon="6.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="no"/>
+  </node>
+  <node id="2605" lat="11.0000000" lon="6.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </node>
   <relation id="1922" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="19221" role="initial"/>
     <member type="way" ref="19222" role="initial"/>

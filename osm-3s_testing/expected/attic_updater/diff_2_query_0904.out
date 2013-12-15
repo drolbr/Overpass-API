@@ -152,6 +152,24 @@
   <node id="2506" lat="11.0000000" lon="5.0600000" version="5" timestamp="2013-07-01T09:03:46Z" changeset="496" uid="42" user="foo">
     <tag k="after" v="recreation"/>
   </node>
+  <node id="2601" lat="11.0000000" lon="6.0100000" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="2602" lat="11.0000000" lon="6.0200000" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="2603" lat="11.0000000" lon="6.0300000" version="2" timestamp="2013-07-01T09:02:13Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="no"/>
+  </node>
+  <node id="2604" lat="11.0000000" lon="6.0400000" version="2" timestamp="2013-07-01T09:02:14Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </node>
+  <node id="2605" lat="11.0000000" lon="6.0500000" version="2" timestamp="2013-07-01T09:02:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="2606" lat="11.0000000" lon="6.0600000" version="2" timestamp="2013-07-01T09:02:26Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="no"/>
+  </node>
+  <node id="2607" lat="11.0000000" lon="6.0700000" version="2" timestamp="2013-07-01T09:02:27Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </node>
+  <node id="2608" lat="11.0000000" lon="6.0800000" version="2" timestamp="2013-07-01T09:02:28Z" changeset="496" uid="42" user="foo"/>
   <way id="1101" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="11011"/>
     <nd ref="11012"/>
@@ -1473,6 +1491,24 @@
   <node id="2506" lat="11.0000000" lon="5.0600000" version="5" timestamp="2013-07-01T09:03:46Z" changeset="496" uid="42" user="foo">
     <tag k="after" v="recreation"/>
   </node>
+  <node id="2601" lat="11.0000000" lon="6.0100000" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="2602" lat="11.0000000" lon="6.0200000" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="2603" lat="11.0000000" lon="6.0300000" version="2" timestamp="2013-07-01T09:02:13Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="no"/>
+  </node>
+  <node id="2604" lat="11.0000000" lon="6.0400000" version="2" timestamp="2013-07-01T09:02:14Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </node>
+  <node id="2605" lat="11.0000000" lon="6.0500000" version="2" timestamp="2013-07-01T09:02:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="2606" lat="11.0000000" lon="6.0600000" version="2" timestamp="2013-07-01T09:02:26Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="no"/>
+  </node>
+  <node id="2607" lat="11.0000000" lon="6.0700000" version="2" timestamp="2013-07-01T09:02:27Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </node>
+  <node id="2608" lat="11.0000000" lon="6.0800000" version="2" timestamp="2013-07-01T09:02:28Z" changeset="496" uid="42" user="foo"/>
   <node id="11011" lat="10.0000000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="11012" lat="10.0010000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="11013" lat="10.0020000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
@@ -5308,6 +5344,24 @@
     <member type="node" ref="25062" role=""/>
     <tag k="after" v="recreation"/>
   </relation>
+  <node id="2601" lat="11.0000000" lon="6.0100000" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="2602" lat="11.0000000" lon="6.0200000" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="2603" lat="11.0000000" lon="6.0300000" version="2" timestamp="2013-07-01T09:02:13Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="no"/>
+  </node>
+  <node id="2604" lat="11.0000000" lon="6.0400000" version="2" timestamp="2013-07-01T09:02:14Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </node>
+  <node id="2605" lat="11.0000000" lon="6.0500000" version="2" timestamp="2013-07-01T09:02:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="2606" lat="11.0000000" lon="6.0600000" version="2" timestamp="2013-07-01T09:02:26Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="no"/>
+  </node>
+  <node id="2607" lat="11.0000000" lon="6.0700000" version="2" timestamp="2013-07-01T09:02:27Z" changeset="496" uid="42" user="foo">
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </node>
+  <node id="2608" lat="11.0000000" lon="6.0800000" version="2" timestamp="2013-07-01T09:02:28Z" changeset="496" uid="42" user="foo"/>
   <relation id="1922" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="19221" role="intermediate"/>
     <member type="way" ref="19222" role="intermediate"/>

@@ -192,20 +192,35 @@ void collect_tags
         = std::lower_bound(id_vec.begin(), id_vec.end(), Attic< Id_Type >(it->first, 0ull));
     typename std::vector< Attic< Id_Type > >::const_iterator it_id_end
         = std::upper_bound(id_vec.begin(), id_vec.end(), it->first);
-    while(it_id != it_id_end)
+    while (it_id != it_id_end)
     {
       std::vector< std::pair< std::string, std::string > >& obj_vec = tags_by_id[*it_id];
+      std::vector< std::pair< std::string, std::string > >::const_iterator last_added_it = it->second.end();
       for (std::vector< std::pair< std::string, std::string > >::const_iterator
           it_source = it->second.begin(); it_source != it->second.end(); ++it_source)
       {
-        std::vector< std::pair< std::string, std::string > >::iterator it_obj = obj_vec.begin();
+        if (last_added_it != it->second.end())
+        {
+          if (last_added_it->first == it_source->first)
+          {
+            obj_vec.push_back(*it_source);
+            continue;
+          }
+          else
+            last_added_it = it->second.end();
+        }
+        
+        std::vector< std::pair< std::string, std::string > >::const_iterator it_obj = obj_vec.begin();
         for (; it_obj != obj_vec.end(); ++it_obj)
         {
           if (it_obj->first == it_source->first)
             break;
         }
         if (it_obj == obj_vec.end())
+        {
           obj_vec.push_back(*it_source);
+          last_added_it = it_source;
+        }
       }
       ++it_id;
     }
