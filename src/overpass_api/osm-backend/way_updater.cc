@@ -1112,7 +1112,7 @@ void Way_Updater::merge_files(const vector< string >& froms, string into)
       (from_transactions, into_transaction, *osm_base_settings().WAYS);
   ::merge_files< Tag_Index_Local, Way::Id_Type >
       (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_LOCAL);
-  ::merge_files< Tag_Index_Global, Way::Id_Type >
+  ::merge_files< Tag_Index_Global, Tag_Object_Global< Way::Id_Type > >
       (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
   if (meta)
   {

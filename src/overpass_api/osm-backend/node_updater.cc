@@ -798,7 +798,7 @@ void Node_Updater::merge_files(const vector< string >& froms, string into)
       (from_transactions, into_transaction, *osm_base_settings().NODES);
   ::merge_files< Tag_Index_Local, Node::Id_Type >
       (from_transactions, into_transaction, *osm_base_settings().NODE_TAGS_LOCAL);
-  ::merge_files< Tag_Index_Global, Node::Id_Type >
+  ::merge_files< Tag_Index_Global, Tag_Object_Global< Node::Id_Type > >
       (from_transactions, into_transaction, *osm_base_settings().NODE_TAGS_GLOBAL);
   if (meta)
   {
