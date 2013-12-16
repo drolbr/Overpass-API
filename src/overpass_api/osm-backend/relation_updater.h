@@ -348,6 +348,8 @@ private:
   std::map< Uint31_Index, std::set< Relation_Skeleton > > attic_skeletons;
   std::map< Uint31_Index, std::set< Attic< Relation_Skeleton > > > new_attic_skeletons;
   
+  Key_Storage keys;
+  
   void flush_roles();
   void load_roles();
 };

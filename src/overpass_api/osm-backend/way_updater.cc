@@ -62,12 +62,13 @@ Update_Way_Logger::~Update_Way_Logger()
 
 Way_Updater::Way_Updater(Transaction& transaction_, meta_modes meta_)
   : update_counter(0), transaction(&transaction_),
-    external_transaction(true), partial_possible(false), meta(meta_)
+    external_transaction(true), partial_possible(false), meta(meta_), keys(*osm_base_settings().WAY_KEYS)
 {}
 
 Way_Updater::Way_Updater(string db_dir_, meta_modes meta_)
   : update_counter(0), transaction(0),
-    external_transaction(false), partial_possible(true), db_dir(db_dir_), meta(meta_)
+    external_transaction(false), partial_possible(true), db_dir(db_dir_), meta(meta_),
+    keys(*osm_base_settings().WAY_KEYS)
 {
   partial_possible = !file_exists
       (db_dir + 
@@ -889,6 +890,8 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
 
   callback->update_started();
   callback->prepare_delete_tags_finished();
+  
+  store_new_keys(new_data, keys, *transaction);
   
   // Update id indexes
   update_map_positions(new_positions, *transaction, *osm_base_settings().WAYS);

@@ -107,13 +107,17 @@ Osm_Base_Settings::Osm_Base_Settings()
   NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("node_tags_local", 512*1024, 0)),
   NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("node_tags_global", 2*1024*1024, 0)),
+      ("node_tags_global", 512*1024, 0)),
+  NODE_KEYS(new OSM_File_Properties< Uint32_Index >
+      ("node_keys", 512*1024, 0)),
       
   WAYS(new OSM_File_Properties< Uint31_Index >("ways", 512*1024, 64*1024)),
   WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("way_tags_local", 512*1024, 0)),
   WAY_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("way_tags_global", 2*1024*1024, 0)),
+      ("way_tags_global", 512*1024, 0)),
+  WAY_KEYS(new OSM_File_Properties< Uint32_Index >
+      ("way_keys", 512*1024, 0)),
       
   RELATIONS(new OSM_File_Properties< Uint31_Index >("relations", 1024*1024, 64*1024)),
   RELATION_ROLES(new OSM_File_Properties< Uint32_Index >
@@ -121,7 +125,9 @@ Osm_Base_Settings::Osm_Base_Settings()
   RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("relation_tags_local", 512*1024, 0)),
   RELATION_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("relation_tags_global", 2*1024*1024, 0)),
+      ("relation_tags_global", 512*1024, 0)),
+  RELATION_KEYS(new OSM_File_Properties< Uint32_Index >
+      ("relation_keys", 512*1024, 0)),
       
   shared_name(basic_settings().shared_name_base + "_osm_base"),
   max_num_processes(20),

@@ -45,13 +45,16 @@ struct Osm_Base_Settings
   File_Properties* NODES;
   File_Properties* NODE_TAGS_LOCAL;
   File_Properties* NODE_TAGS_GLOBAL;
+  File_Properties* NODE_KEYS;
   File_Properties* WAYS;
   File_Properties* WAY_TAGS_LOCAL;
   File_Properties* WAY_TAGS_GLOBAL;
+  File_Properties* WAY_KEYS;
   File_Properties* RELATIONS;
   File_Properties* RELATION_ROLES;
   File_Properties* RELATION_TAGS_LOCAL;
   File_Properties* RELATION_TAGS_GLOBAL;
+  File_Properties* RELATION_KEYS;
   
   string shared_name;
   uint max_num_processes;

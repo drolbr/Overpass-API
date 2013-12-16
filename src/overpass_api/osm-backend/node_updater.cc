@@ -468,13 +468,13 @@ std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > comput
 
 Node_Updater::Node_Updater(Transaction& transaction_, meta_modes meta_)
   : update_counter(0), transaction(&transaction_),
-    external_transaction(true), partial_possible(false), meta(meta_)
+    external_transaction(true), partial_possible(false), meta(meta_), keys(*osm_base_settings().NODE_KEYS)
 {}
 
 Node_Updater::Node_Updater(string db_dir_, meta_modes meta_)
   : update_counter(0), transaction(0),
     external_transaction(false), partial_possible(meta_ == only_data || meta_ == keep_meta),
-    db_dir(db_dir_), meta(meta_)
+    db_dir(db_dir_), meta(meta_), keys(*osm_base_settings().NODE_KEYS)
 {
   partial_possible = !file_exists
       (db_dir + 
@@ -561,6 +561,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
 
   callback->update_started();
   callback->prepare_delete_tags_finished();
+  
+  store_new_keys(new_data, keys, *transaction);
   
   // Update id indexes
   update_map_positions(new_map_positions, *transaction, *osm_base_settings().NODES);

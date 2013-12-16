@@ -95,6 +95,14 @@ int main(int argc, char* args[])
             <<it.index().key<<'\t'<<it.index().value<<'\n';
       }
     }
+    else if (std::string("--node-keys") == args[2])
+    {
+      Block_Backend< Uint32_Index, String_Object > db
+          (transaction.data_index(osm_base_settings().NODE_KEYS));
+      for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+        cout<<dec<<it.index().val()<<'\t'<<it.object().val()<<'\n';
+    }
     else if (std::string("--attic-nodes") == args[2])
     {
       Block_Backend< Uint31_Index, Attic< Node_Skeleton > > db
@@ -206,6 +214,14 @@ int main(int argc, char* args[])
             <<it.index().key<<'\t'<<it.index().value<<'\n';
       }
     }
+    else if (std::string("--way-keys") == args[2])
+    {
+      Block_Backend< Uint32_Index, String_Object > db
+          (transaction.data_index(osm_base_settings().WAY_KEYS));
+      for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+        cout<<dec<<it.index().val()<<'\t'<<it.object().val()<<'\n';
+    }
     else if (std::string("--attic-ways") == args[2])
     {
       Block_Backend< Uint31_Index, Attic< Way_Skeleton > > db
@@ -280,6 +296,14 @@ int main(int argc, char* args[])
             <<dec<<it.object().id.val()<<'\n';
       }
     }
+    else if (std::string("--rel-roles") == args[2])
+    {
+      Block_Backend< Uint32_Index, String_Object > db
+          (transaction.data_index(osm_base_settings().RELATION_ROLES));
+      for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+        cout<<dec<<it.index().val()<<'\t'<<it.object().val()<<'\n';
+    }
     else if (std::string("--rels-meta") == args[2])
     {
       Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > db
@@ -316,6 +340,14 @@ int main(int argc, char* args[])
             <<dec<<it.object().id.val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\n';
       }
+    }
+    else if (std::string("--rel-keys") == args[2])
+    {
+      Block_Backend< Uint32_Index, String_Object > db
+          (transaction.data_index(osm_base_settings().RELATION_KEYS));
+      for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+        cout<<dec<<it.index().val()<<'\t'<<it.object().val()<<'\n';
     }
     else if (std::string("--attic-rels") == args[2])
     {

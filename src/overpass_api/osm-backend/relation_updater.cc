@@ -59,13 +59,14 @@ Update_Relation_Logger::~Update_Relation_Logger()
 Relation_Updater::Relation_Updater(Transaction& transaction_, meta_modes meta_)
   : update_counter(0), transaction(&transaction_),
     external_transaction(true),
-    max_role_id(0), max_written_role_id(0), meta(meta_)
+    max_role_id(0), max_written_role_id(0), meta(meta_), keys(*osm_base_settings().RELATION_KEYS)
 {}
 
 Relation_Updater::Relation_Updater(string db_dir_, meta_modes meta_)
   : update_counter(0), transaction(0),
     external_transaction(false),
-    max_role_id(0), max_written_role_id(0), db_dir(db_dir_), meta(meta_)
+    max_role_id(0), max_written_role_id(0), db_dir(db_dir_), meta(meta_),
+    keys(*osm_base_settings().RELATION_KEYS)
 {}
 
 
@@ -1134,6 +1135,8 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
   callback->update_started();
   callback->prepare_delete_tags_finished();
   
+  store_new_keys(new_data, keys, *transaction);
+  
   // Update id indexes
   update_map_positions(new_positions, *transaction, *osm_base_settings().RELATIONS);
   callback->update_ids_finished();
@@ -1240,6 +1243,8 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
     // Write changelog
     update_elements(std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > >(), changelog,
                     *transaction, *attic_settings().RELATION_CHANGELOG);
+    
+    flush_roles();
   }
 
   //TODO: old code

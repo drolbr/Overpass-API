@@ -24,7 +24,10 @@
 #include <set>
 #include <vector>
 
+#include "../../template_db/block_backend.h"
+#include "../../template_db/transaction.h"
 #include "../core/datatypes.h"
+#include "../core/settings.h"
 
 
 template< typename Element_Skeleton >
@@ -1006,6 +1009,49 @@ std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >, std::vec
   }
   
   return result;
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+struct Key_Storage
+{
+  Key_Storage(const File_Properties& file_properties_)
+    : file_properties(&file_properties_), max_key_id(0), max_written_key_id(0) {}
+  
+  void load_keys(Transaction& transaction);
+  void flush_keys(Transaction& transaction);
+  
+  void register_key(const std::string& key);
+
+private:
+  const File_Properties* file_properties;
+  std::map< std::string, uint32 > key_ids;
+  uint32 max_key_id;
+  uint32 max_written_key_id;
+};
+
+
+template< typename Skeleton >
+void store_new_keys(const Data_By_Id< Skeleton >& new_data,
+                    Key_Storage& keys, Transaction& transaction)
+{
+  keys.load_keys(transaction);
+  
+  for (typename std::vector< typename Data_By_Id< Skeleton >::Entry >::const_iterator
+      it = new_data.data.begin(); it != new_data.data.end(); ++it)
+  {
+    if (it->idx == 0u)
+      // We don't touch deleted objects
+      continue;
+    
+    for (std::vector< std::pair< std::string, std::string > >::const_iterator it2 = it->tags.begin();
+         it2 != it->tags.end(); ++it2)
+      keys.register_key(it2->first);
+  }
+  
+  keys.flush_keys(transaction);
 }
 
 

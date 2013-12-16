@@ -359,6 +359,8 @@ private:
   std::map< Uint31_Index, std::set< Node_Skeleton > > new_skeletons;
   std::map< Uint31_Index, std::set< Node_Skeleton > > attic_skeletons;
   std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > > new_attic_skeletons;
+  
+  Key_Storage keys;
 
   vector< pair< OSM_Element_Metadata_Skeleton< Node::Id_Type >, uint32 > > nodes_meta_to_insert;
   vector< OSM_Element_Metadata_Skeleton< Node::Id_Type > > nodes_meta_to_delete;

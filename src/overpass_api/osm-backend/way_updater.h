@@ -406,6 +406,8 @@ private:
   std::map< Uint31_Index, std::set< Way_Skeleton > > attic_skeletons;
   std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > > new_attic_skeletons;
   
+  Key_Storage keys;
+  
   void merge_files(const vector< string >& froms, string into);
 };
 
