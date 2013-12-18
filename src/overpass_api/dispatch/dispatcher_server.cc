@@ -165,6 +165,7 @@ int main(int argc, char* argv[])
       "  --osm-base: Start or talk to the dispatcher for the osm data.\n"
       "  --areas: Start or talk to the dispatcher for the areas data.\n"
       "  --meta: When starting the osm data dispatcher, also care for meta data.\n"
+      "  --attic: When starting the osm data dispatcher, also care for meta and attic data.\n"
       "  --db-dir=$DB_DIR: The directory where the database resides.\n"
       "  --terminate: Stop the adressed dispatcher.\n"
       "  --status: Let the adressed dispatcher dump its status into\n"
@@ -283,13 +284,16 @@ int main(int argc, char* argv[])
     files_to_manage.push_back(osm_base_settings().NODES);
     files_to_manage.push_back(osm_base_settings().NODE_TAGS_LOCAL);
     files_to_manage.push_back(osm_base_settings().NODE_TAGS_GLOBAL);
+    files_to_manage.push_back(osm_base_settings().NODE_KEYS);
     files_to_manage.push_back(osm_base_settings().WAYS);
     files_to_manage.push_back(osm_base_settings().WAY_TAGS_LOCAL);
     files_to_manage.push_back(osm_base_settings().WAY_TAGS_GLOBAL);
+    files_to_manage.push_back(osm_base_settings().WAY_KEYS);
     files_to_manage.push_back(osm_base_settings().RELATIONS);
     files_to_manage.push_back(osm_base_settings().RELATION_ROLES);
     files_to_manage.push_back(osm_base_settings().RELATION_TAGS_LOCAL);
     files_to_manage.push_back(osm_base_settings().RELATION_TAGS_GLOBAL);
+    files_to_manage.push_back(osm_base_settings().RELATION_KEYS);
   }
   if (areas)
   {

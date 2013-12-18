@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 
-if [[ -z $4  ]]; then
+if [[ -z $3  ]]; then
 {
   echo "Usage: $0 replicate_dir start_id --meta=(attic|yes|no)"
   exit 0
@@ -91,7 +91,7 @@ apply_minute_diffs_augmented()
   do
   {
     sleep 60
-    ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --produce-diff >$DB_DIR/augmented_diffs/id_sorted/$REPLICATE_FILENAME.osc
+    ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --produce-diff --flush-size=0 >$DB_DIR/augmented_diffs/id_sorted/$REPLICATE_FILENAME.osc
     EXITCODE=$?
   };
   done
@@ -107,13 +107,13 @@ apply_minute_diffs_augmented()
 
 apply_minute_diffs()
 {
-  ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META
+  ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --flush-size=0
   EXITCODE=$?
   while [[ $EXITCODE -ne 0 ]];
   do
   {
     sleep 60
-    ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META
+    ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --flush-size=0
     EXITCODE=$?
   };
   done

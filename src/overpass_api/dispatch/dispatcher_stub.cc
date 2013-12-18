@@ -98,15 +98,18 @@ Dispatcher_Stub::Dispatcher_Stub
     transaction->random_index(osm_base_settings().NODES);
     transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL);
     transaction->data_index(osm_base_settings().NODE_TAGS_GLOBAL);
+    transaction->data_index(osm_base_settings().NODE_KEYS);
     transaction->data_index(osm_base_settings().WAYS);
     transaction->random_index(osm_base_settings().WAYS);
     transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL);
     transaction->data_index(osm_base_settings().WAY_TAGS_GLOBAL);
+    transaction->data_index(osm_base_settings().WAY_KEYS);
     transaction->data_index(osm_base_settings().RELATIONS);
     transaction->random_index(osm_base_settings().RELATIONS);
     transaction->data_index(osm_base_settings().RELATION_ROLES);
     transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL);
     transaction->data_index(osm_base_settings().RELATION_TAGS_GLOBAL);
+    transaction->data_index(osm_base_settings().RELATION_KEYS);
     
     if (meta == keep_meta || meta == keep_attic)
     {
