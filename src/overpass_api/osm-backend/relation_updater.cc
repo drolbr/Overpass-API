@@ -300,7 +300,8 @@ inline std::map< Way_Skeleton::Id_Type, Uint31_Index > dictionary_from_skeletons
 void lookup_missing_nodes
     (std::map< Node_Skeleton::Id_Type, Quad_Coord >& new_node_idx_by_id,
      const Data_By_Id< Relation_Skeleton >& new_data,
-     const std::map< Uint31_Index, std::set< Relation_Skeleton > >& known_skeletons,
+     const std::map< Uint31_Index, std::set< Relation_Skeleton > >& known_skeletons_1,
+     const std::map< Uint31_Index, std::set< Relation_Skeleton > >& known_skeletons_2,
      Transaction& transaction)
 {
   std::vector< Node_Skeleton::Id_Type > missing_ids;
@@ -322,8 +323,23 @@ void lookup_missing_nodes
     }
   }
   
-  for (std::map< Uint31_Index, std::set< Relation_Skeleton > >::const_iterator it = known_skeletons.begin();
-       it != known_skeletons.end(); ++it)
+  for (std::map< Uint31_Index, std::set< Relation_Skeleton > >::const_iterator it = known_skeletons_1.begin();
+       it != known_skeletons_1.end(); ++it)
+  {
+    for (std::set< Relation_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    {
+      for (vector< Relation_Entry >::const_iterator nit = it2->members.begin();
+           nit != it2->members.end(); ++nit)
+      {
+        if (nit->type == Relation_Entry::NODE &&
+            new_node_idx_by_id.find(nit->ref) == new_node_idx_by_id.end())
+          missing_ids.push_back(nit->ref);
+      }
+    }
+  }
+  
+  for (std::map< Uint31_Index, std::set< Relation_Skeleton > >::const_iterator it = known_skeletons_2.begin();
+       it != known_skeletons_2.end(); ++it)
   {
     for (std::set< Relation_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
@@ -361,7 +377,8 @@ void lookup_missing_nodes
 void lookup_missing_ways
     (std::map< Way_Skeleton::Id_Type, Uint31_Index >& new_way_idx_by_id,
      const Data_By_Id< Relation_Skeleton >& new_data,
-     const std::map< Uint31_Index, std::set< Relation_Skeleton > >& known_skeletons,
+     const std::map< Uint31_Index, std::set< Relation_Skeleton > >& known_skeletons_1,
+     const std::map< Uint31_Index, std::set< Relation_Skeleton > >& known_skeletons_2,
      Transaction& transaction)
 {
   std::vector< Way_Skeleton::Id_Type > missing_ids;
@@ -383,8 +400,23 @@ void lookup_missing_ways
     }
   }
   
-  for (std::map< Uint31_Index, std::set< Relation_Skeleton > >::const_iterator it = known_skeletons.begin();
-       it != known_skeletons.end(); ++it)
+  for (std::map< Uint31_Index, std::set< Relation_Skeleton > >::const_iterator it = known_skeletons_1.begin();
+       it != known_skeletons_1.end(); ++it)
+  {
+    for (std::set< Relation_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    {
+      for (vector< Relation_Entry >::const_iterator nit = it2->members.begin();
+           nit != it2->members.end(); ++nit)
+      {
+        if (nit->type == Relation_Entry::WAY &&
+            new_way_idx_by_id.find(Way_Skeleton::Id_Type(nit->ref.val())) == new_way_idx_by_id.end())
+          missing_ids.push_back(Way_Skeleton::Id_Type(nit->ref.val()));
+      }
+    }
+  }
+  
+  for (std::map< Uint31_Index, std::set< Relation_Skeleton > >::const_iterator it = known_skeletons_2.begin();
+       it != known_skeletons_2.end(); ++it)
   {
     for (std::set< Relation_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
@@ -668,7 +700,7 @@ void add_intermediate_changelog_entries
      const std::map< Node_Skeleton::Id_Type,
          std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >& nodes_by_id,
      const std::map< Way_Skeleton::Id_Type,
-         std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > > > ways_by_id,
+         std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > > >& ways_by_id,
      bool add_last_version, Uint31_Index attic_idx, Uint31_Index new_idx,
      std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > >& result)
 {
@@ -1071,14 +1103,16 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
   std::map< Node_Skeleton::Id_Type, Quad_Coord > new_node_idx_by_id
       = dictionary_from_skeletons(new_node_skeletons);
   // Then lookup the missing nodes.
-  lookup_missing_nodes(new_node_idx_by_id, new_data, implicitly_moved_skeletons, *transaction);
+  lookup_missing_nodes(new_node_idx_by_id, new_data, existing_skeletons, implicitly_moved_skeletons,
+                       *transaction);
   
   // Create a node directory id to idx:
   // Evaluate first the new_way_skeletons
   std::map< Way_Skeleton::Id_Type, Uint31_Index > new_way_idx_by_id
       = dictionary_from_skeletons(new_way_skeletons);
   // Then lookup the missing nodes.
-  lookup_missing_ways(new_way_idx_by_id, new_data, implicitly_moved_skeletons, *transaction);
+  lookup_missing_ways(new_way_idx_by_id, new_data, existing_skeletons, implicitly_moved_skeletons,
+                      *transaction);
   
   // Compute the indices of the new relations
   compute_geometry(new_node_idx_by_id, new_way_idx_by_id, new_data);

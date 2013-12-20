@@ -475,8 +475,9 @@ void add_implicitly_known_nodes
 
 void lookup_missing_nodes
     (std::map< Node_Skeleton::Id_Type, Quad_Coord >& new_node_idx_by_id,
+     const std::map< Uint31_Index, std::set< Way_Skeleton > >& known_skeletons_1,
+     const std::map< Uint31_Index, std::set< Way_Skeleton > >& known_skeletons_2,
      const Data_By_Id< Way_Skeleton >& new_data,
-     const std::map< Uint31_Index, std::set< Way_Skeleton > >& known_skeletons,
      Transaction& transaction)
 {
   std::vector< Node_Skeleton::Id_Type > missing_ids;
@@ -496,8 +497,21 @@ void lookup_missing_nodes
     }
   }
   
-  for (std::map< Uint31_Index, std::set< Way_Skeleton > >::const_iterator it = known_skeletons.begin();
-       it != known_skeletons.end(); ++it)
+  for (std::map< Uint31_Index, std::set< Way_Skeleton > >::const_iterator it = known_skeletons_1.begin();
+       it != known_skeletons_1.end(); ++it)
+  {
+    for (std::set< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    {
+      for (vector< Node::Id_Type >::const_iterator nit = it2->nds.begin(); nit != it2->nds.end(); ++nit)
+      {
+        if (new_node_idx_by_id.find(*nit) == new_node_idx_by_id.end())
+          missing_ids.push_back(*nit);
+      }
+    }
+  }
+  
+  for (std::map< Uint31_Index, std::set< Way_Skeleton > >::const_iterator it = known_skeletons_2.begin();
+       it != known_skeletons_2.end(); ++it)
   {
     for (std::set< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
@@ -834,7 +848,8 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
   // Then add all nodes known from implicitly_moved_skeletons geometry.
   add_implicitly_known_nodes(new_node_idx_by_id, implicitly_moved_skeletons);
   // Then lookup the missing nodes.
-  lookup_missing_nodes(new_node_idx_by_id, new_data, implicitly_moved_skeletons, *transaction);
+  lookup_missing_nodes(new_node_idx_by_id, existing_skeletons, implicitly_moved_skeletons, new_data,
+                       *transaction);
   
   // Compute the indices of the new ways
   compute_geometry(new_node_idx_by_id, new_data);
