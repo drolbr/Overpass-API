@@ -120,7 +120,7 @@ void item_filter_map
     for (typename vector< TObject >::const_iterator iit = from_it->second.begin();
         iit != from_it->second.end(); ++iit)
     {
-      if (binary_search(it->second.begin(), it->second.end(), *iit))
+      if (std::binary_search(it->second.begin(), it->second.end(), *iit))
 	local_into.push_back(*iit);
     }
     it->second.swap(local_into);

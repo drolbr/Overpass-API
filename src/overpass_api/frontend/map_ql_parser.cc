@@ -1173,9 +1173,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
     else
     {
       Statement_Text clause("item", token.line_col());
-      ++token;
       clause.attributes.push_back(probe_from(token, error_output));
-      ++token;
       clauses.push_back(clause);
     }
   }
