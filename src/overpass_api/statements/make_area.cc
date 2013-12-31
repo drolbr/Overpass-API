@@ -173,6 +173,12 @@ void Make_Area_Statement::add_segment_blocks
   for (map< Uint31_Index, vector< Area_Block > >::const_iterator
     it(area_blocks.begin()); it != area_blocks.end(); ++it)
   {
+    if (area_blocks.size() > 384*1024)
+    {
+      area_blocks.clear();
+      break;
+    }
+    
     set< int32 > lons;
     
     for (vector< Area_Block >::const_iterator it2(it->second.begin());
