@@ -147,23 +147,40 @@ void get_elements_by_id_from_db
   }
   else if (!invert_ids)
   {
-    //TODO
     collect_items_range(&query, rman, file_prop, range_req,
                         Id_Predicate< TObject >(ids), elements);
+    if (timestamp != NOW)
+    {
+      collect_items_range(&query, rman, attic_file_prop, range_req,
+                          Id_Predicate< TObject >(ids), attic_elements);
+      keep_only_least_younger_than(attic_elements, elements, timestamp);
+    }
   }
   else if (!range_req.empty())
   {
-    //TODO
     collect_items_range(&query, rman, file_prop, range_req,
                         Not_Predicate< TObject, Id_Predicate< TObject > >
                         (Id_Predicate< TObject >(ids)), elements);
+    if (timestamp != NOW)
+    {
+      collect_items_range(&query, rman, attic_file_prop, range_req,
+                          Not_Predicate< TObject, Id_Predicate< TObject > >
+                          (Id_Predicate< TObject >(ids)), attic_elements);
+      keep_only_least_younger_than(attic_elements, elements, timestamp);
+    }
   }
   else
   {
-    //TODO
     collect_items_flat(query, rman, file_prop,
                         Not_Predicate< TObject, Id_Predicate< TObject > >
                         (Id_Predicate< TObject >(ids)), elements);
+    if (timestamp != NOW)
+    {
+      collect_items_flat(query, rman, attic_file_prop,
+                          Not_Predicate< TObject, Id_Predicate< TObject > >
+                          (Id_Predicate< TObject >(ids)), attic_elements);
+      keep_only_least_younger_than(attic_elements, elements, timestamp);
+    }
   }
 }
 
