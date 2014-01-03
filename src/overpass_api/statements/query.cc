@@ -1280,6 +1280,37 @@ void Query_Statement::collect_elems(vector< Id_Type >& ids,
 }
 
 
+template< typename Index >
+std::set< std::pair< Index, Index > > intersect_ranges
+    (const std::set< std::pair< Index, Index > >& range_a,
+     const std::set< std::pair< Index, Index > >& range_b)
+{
+  std::set< std::pair< Index, Index > > result;
+  typename std::set< std::pair< Index, Index > >::const_iterator it_a = range_a.begin();
+  typename std::set< std::pair< Index, Index > >::const_iterator it_b = range_b.begin();
+  
+  while (it_a != range_a.end() && it_b != range_b.end())
+  {
+    if (!(it_a->first < it_b->second))
+      ++it_b;
+    else if (!(it_b->first < it_a->second))
+      ++it_a;
+    else if (it_b->second < it_a->second)
+    {
+      result.insert(std::make_pair(std::max(it_a->first, it_b->first), it_b->second));
+      ++it_b;
+    }
+    else
+    {
+      result.insert(std::make_pair(std::max(it_a->first, it_b->first), it_a->second));
+      ++it_a;
+    }
+  }
+  
+  return result;
+}
+
+
 void Query_Statement::execute(Resource_Manager& rman)
 {
   Answer_State answer_state = nothing;
@@ -1334,19 +1365,33 @@ void Query_Statement::execute(Resource_Manager& rman)
     if (type == QUERY_NODE)
     {
       for (vector< Query_Constraint* >::iterator it = constraints.begin();
-          it != constraints.end() && answer_state < ranges_collected; ++it)
+          it != constraints.end() && answer_state < data_collected; ++it)
       {
-        if ((*it)->get_ranges(rman, range_req_32))
+        set< pair< Uint32_Index, Uint32_Index > > range_req;
+        if ((*it)->get_ranges(rman, range_req))
+        {
+          if (answer_state < ranges_collected)
+            range_req.swap(range_req_32);
+          else
+            intersect_ranges(range_req_32, range_req).swap(range_req_32);
 	  answer_state = ranges_collected;
+        }
       }
     }
     else if (type == QUERY_WAY || type == QUERY_RELATION)
     {
       for (vector< Query_Constraint* >::iterator it = constraints.begin();
-          it != constraints.end() && answer_state < ranges_collected; ++it)
+          it != constraints.end() && answer_state < data_collected; ++it)
       {
-	if ((*it)->get_ranges(rman, range_req_31))
+        set< pair< Uint31_Index, Uint31_Index > > range_req;
+	if ((*it)->get_ranges(rman, range_req))
+        {
+          if (answer_state < ranges_collected)
+            range_req.swap(range_req_31);
+          else
+            intersect_ranges(range_req_31, range_req).swap(range_req_31);
 	  answer_state = ranges_collected;
+        }
       }
     }
     
