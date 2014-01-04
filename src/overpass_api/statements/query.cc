@@ -687,7 +687,7 @@ void filter_ids_by_tags
   {
     if (tag_it.index().key != last_key)
     {
-      last_value = "";
+      last_value = void_tag_value() + " ";
       
       if (relevant)
         ++key_it;
@@ -784,7 +784,7 @@ void filter_ids_by_ntags
   {
     if (tag_it.index().key != last_key)
     {
-      last_value = "";
+      last_value = void_tag_value() + " ";
       
       if (relevant)
       {
