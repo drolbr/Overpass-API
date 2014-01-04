@@ -302,7 +302,9 @@ Dispatcher_Stub::~Dispatcher_Stub()
     Logger logger(dispatcher_client->get_db_dir());
     try
     {
-      logger.annotated_log("read_finished() start");
+      ostringstream out;
+      out<<"read_finished() start "<<global_read_counter();
+      logger.annotated_log(out.str());
       dispatcher_client->read_finished();
       logger.annotated_log("read_finished() end");
     }

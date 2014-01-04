@@ -186,4 +186,8 @@ inline void Raw_File::seek(uint64 pos, string caller_id) const
     throw File_Error(errno, name, caller_id);
 }
 
+
+int& global_read_counter();
+
+
 #endif

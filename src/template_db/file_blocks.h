@@ -33,6 +33,7 @@
 
 using namespace std;
 
+
 template< class TIndex >
 struct File_Blocks_Basic_Iterator
 {
@@ -541,6 +542,7 @@ void* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
   data_file.seek((int64)(it.block_it->pos)*(block_size), "File_Blocks::read_block::1");
   data_file.read((uint8*)buffer.ptr, block_size, "File_Blocks::read_block::2");
   ++read_count_;
+  ++global_read_counter();
   return buffer.ptr;
 }
 
@@ -555,6 +557,7 @@ void* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
     throw File_Error(it.block_it->pos, index->get_data_file_name(),
 		     "File_Blocks::read_block: Index inconsistent");
   ++read_count_;
+  ++global_read_counter();
   return buffer;
 }
 
