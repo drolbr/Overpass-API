@@ -26,10 +26,6 @@
 #include <iostream>
 #include <string>
 
-using namespace std;
-
-//-----------------------------------------------------------------------------
-
 
 struct Regular_Expression_Error
 {
@@ -42,7 +38,7 @@ struct Regular_Expression_Error
 class Regular_Expression
 {
   public:
-    Regular_Expression(const string& regex, bool case_sensitive)
+    Regular_Expression(const std::string& regex, bool case_sensitive)
     {
       setlocale(LC_ALL, "C.UTF-8");
       int case_flag = case_sensitive ? 0 : REG_ICASE;
@@ -53,7 +49,7 @@ class Regular_Expression
     
     ~Regular_Expression() { regfree(&preg); }
     
-    bool matches(const string& line) const
+    bool matches(const std::string& line) const
     {
       return (regexec(&preg, line.c_str(), 0, 0, 0) == 0);
     }

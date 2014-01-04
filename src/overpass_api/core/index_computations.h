@@ -1087,4 +1087,35 @@ inline double lon(uint32 ll_upper, uint32 ll_lower)
 }
 
 
+template< typename Index >
+std::set< std::pair< Index, Index > > intersect_ranges
+    (const std::set< std::pair< Index, Index > >& range_a,
+     const std::set< std::pair< Index, Index > >& range_b)
+{
+  std::set< std::pair< Index, Index > > result;
+  typename std::set< std::pair< Index, Index > >::const_iterator it_a = range_a.begin();
+  typename std::set< std::pair< Index, Index > >::const_iterator it_b = range_b.begin();
+  
+  while (it_a != range_a.end() && it_b != range_b.end())
+  {
+    if (!(it_a->first < it_b->second))
+      ++it_b;
+    else if (!(it_b->first < it_a->second))
+      ++it_a;
+    else if (it_b->second < it_a->second)
+    {
+      result.insert(std::make_pair(std::max(it_a->first, it_b->first), it_b->second));
+      ++it_b;
+    }
+    else
+    {
+      result.insert(std::make_pair(std::max(it_a->first, it_b->first), it_a->second));
+      ++it_a;
+    }
+  }
+  
+  return result;
+}
+
+
 #endif

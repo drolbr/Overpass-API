@@ -22,6 +22,7 @@
 #include "../data/abstract_processing.h"
 #include "../data/collect_members.h"
 #include "../data/filenames.h"
+#include "../data/filter_by_tags.h"
 #include "../data/regular_expression.h"
 #include "meta_collector.h"
 #include "area_query.h"
@@ -112,198 +113,6 @@ void Query_Statement::add_statement(Statement* statement, string text)
 }
 
 
-set< Tag_Index_Global > get_kv_req(const string& key, const string& value)
-{
-  set< Tag_Index_Global > result;
-  Tag_Index_Global idx;
-  idx.key = key;
-  idx.value = value;
-  result.insert(idx);
-  return result;
-}
-
-
-set< pair< Tag_Index_Global, Tag_Index_Global > > get_k_req(const string& key)
-{
-  set< pair< Tag_Index_Global, Tag_Index_Global > > result;
-  pair< Tag_Index_Global, Tag_Index_Global > idx_pair;
-  idx_pair.first.key = key;
-  idx_pair.first.value = "";
-  idx_pair.second.key = key + (char)0;
-  idx_pair.second.value = "";
-  result.insert(idx_pair);
-  return result;
-}
-
-
-template< typename Id_Type >
-bool operator<(const std::pair< Id_Type, Uint31_Index >& lhs, const std::pair< Id_Type, Uint31_Index >& rhs)
-{
-  return lhs.first < rhs.first;
-}
-
-
-template< typename Id_Type >
-bool operator==(const std::pair< Id_Type, Uint31_Index >& lhs, const std::pair< Id_Type, Uint31_Index >& rhs)
-{
-  return lhs.first == rhs.first;
-}
-
-
-template< class Id_Type >
-std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_kv(
-    vector< pair< string, string > >::const_iterator kvit, uint64 timestamp,
-    Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >& tags_db,
-    Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >& attic_tags_db)
-{
-  std::map< Id_Type, std::pair< uint64, Uint31_Index > > timestamp_per_id;
-  set< Tag_Index_Global > tag_req = get_kv_req(kvit->first, kvit->second);
-      
-  for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Discrete_Iterator
-      it2(tags_db.discrete_begin(tag_req.begin(), tag_req.end()));
-      !(it2 == tags_db.discrete_end()); ++it2)
-    timestamp_per_id[it2.object().id] = std::make_pair(NOW, it2.object().idx);
-      
-  for (typename Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >::Discrete_Iterator
-      it2(attic_tags_db.discrete_begin(tag_req.begin(), tag_req.end()));
-      !(it2 == attic_tags_db.discrete_end()); ++it2)
-  {
-    if (it2.object().timestamp > timestamp)
-    {
-      std::pair< uint64, Uint31_Index >& ref = timestamp_per_id[it2.object().id];
-      if (ref.first == 0 || it2.object().timestamp < ref.first)
-        ref = std::make_pair(it2.object().timestamp, it2.object().idx);
-    }
-  }
-      
-  set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(kvit->first);
-      
-  for (typename Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >::Range_Iterator
-      it2(attic_tags_db.range_begin(Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
-          Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
-      !(it2 == attic_tags_db.range_end()); ++it2)
-  {
-    if (it2.object().timestamp > timestamp)
-    {
-      typename std::map< Id_Type, std::pair< uint64, Uint31_Index > >::iterator
-          it = timestamp_per_id.find(it2.object().id);
-      if (it != timestamp_per_id.end())
-      {
-        if (it2.object().timestamp < it->second.first)
-          timestamp_per_id.erase(it);
-      }
-    }
-  }
-  
-  return timestamp_per_id;
-}
-
-
-template< class Id_Type >
-std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_k(
-    vector< string >::const_iterator kit, uint64 timestamp,
-    Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >& tags_db,
-    Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >& attic_tags_db)
-{
-  std::map< Id_Type, std::pair< uint64, Uint31_Index > > timestamp_per_id;
-  set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
-      
-  for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Range_Iterator
-      it2(tags_db.range_begin
-        (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
-      Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
-      !(it2 == tags_db.range_end()); ++it2)
-    timestamp_per_id[it2.object().id] = std::make_pair(NOW, it2.object().idx);
-      
-  for (typename Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >::Range_Iterator
-      it2(attic_tags_db.range_begin
-        (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
-      Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
-      !(it2 == attic_tags_db.range_end()); ++it2)
-  {
-    if (it2.object().timestamp > timestamp && it2.index().value != void_tag_value())
-    {
-      std::pair< uint64, Uint31_Index >& ref = timestamp_per_id[it2.object().id];
-      if (ref.first == 0 || it2.object().timestamp < ref.first)
-        ref = std::make_pair(it2.object().timestamp, it2.object().idx);
-    }
-  }
-      
-  for (typename Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >::Range_Iterator
-      it2(attic_tags_db.range_begin(Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
-          Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
-      !(it2 == attic_tags_db.range_end()); ++it2)
-  {
-    if (it2.object().timestamp > timestamp && it2.index().value == void_tag_value())
-    {
-      typename std::map< Id_Type, std::pair< uint64, Uint31_Index > >::iterator
-          it = timestamp_per_id.find(it2.object().id);
-      if (it != timestamp_per_id.end())
-      {
-        if (it2.object().timestamp < it->second.first)
-          timestamp_per_id.erase(it);
-      }
-    }
-  }
-  
-  return timestamp_per_id;
-}
-
-
-template< class Id_Type >
-std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_kregv(
-    vector< pair< string, Regular_Expression* > >::const_iterator krit, uint64 timestamp,
-    Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >& tags_db,
-    Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >& attic_tags_db)
-{
-  std::map< Id_Type, std::pair< uint64, Uint31_Index > > timestamp_per_id;
-  set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
-      
-  for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Range_Iterator
-      it2(tags_db.range_begin
-        (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
-      Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
-      !(it2 == tags_db.range_end()); ++it2)
-  {
-    if (krit->second->matches(it2.index().value))
-      timestamp_per_id[it2.object().id] = std::make_pair(NOW, it2.object().idx);
-  }
-      
-  for (typename Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >::Range_Iterator
-      it2(attic_tags_db.range_begin
-        (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
-      Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
-      !(it2 == attic_tags_db.range_end()); ++it2)
-  {
-    if (it2.object().timestamp > timestamp && krit->second->matches(it2.index().value))
-    {
-      std::pair< uint64, Uint31_Index >& ref = timestamp_per_id[it2.object().id];
-      if (ref.first == 0 || it2.object().timestamp < ref.first)
-        ref = std::make_pair(it2.object().timestamp, it2.object().idx);
-    }
-  }
-      
-  for (typename Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >::Range_Iterator
-      it2(attic_tags_db.range_begin(Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
-          Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
-      !(it2 == attic_tags_db.range_end()); ++it2)
-  {
-    if (it2.object().timestamp > timestamp)
-    {
-      typename std::map< Id_Type, std::pair< uint64, Uint31_Index > >::iterator
-          it = timestamp_per_id.find(it2.object().id);
-      if (it != timestamp_per_id.end())
-      {
-        if (it2.object().timestamp < it->second.first)
-          timestamp_per_id.erase(it);
-      }
-    }
-  }
-  
-  return timestamp_per_id;
-}
-
-
 template < typename T >
 struct Optional
 {
@@ -337,7 +146,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_ids
   {
     if (timestamp == NOW)
     {
-      set< Tag_Index_Global > tag_req = get_kv_req(kvit->first, kvit->second);
+      std::set< Tag_Index_Global > tag_req = get_kv_req(kvit->first, kvit->second);
       for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Discrete_Iterator
           it2(tags_db.discrete_begin(tag_req.begin(), tag_req.end()));
           !(it2 == tags_db.discrete_end()); ++it2)
@@ -365,7 +174,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_ids
 
     if (timestamp == NOW)
     {
-      set< Tag_Index_Global > tag_req = get_kv_req(kvit->first, kvit->second);
+      std::set< Tag_Index_Global > tag_req = get_kv_req(kvit->first, kvit->second);
       for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Discrete_Iterator
           it2(tags_db.discrete_begin(tag_req.begin(), tag_req.end()));
           !(it2 == tags_db.discrete_end()); ++it2)
@@ -398,7 +207,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_ids
     {
       if (timestamp == NOW)
       {
-        set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
+        std::set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
         for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Range_Iterator
             it2(tags_db.range_begin
               (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
@@ -427,7 +236,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_ids
       old_ids.swap(new_ids);
       if (timestamp == NOW)
       {
-        set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
+        std::set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
         for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Range_Iterator
             it2(tags_db.range_begin
               (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
@@ -461,7 +270,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_ids
     {
       if (timestamp == NOW)
       {
-        set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
+        std::set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
         for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Range_Iterator
             it2(tags_db.range_begin
               (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
@@ -493,7 +302,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_ids
       old_ids.swap(new_ids);
       if (timestamp == NOW)
       {
-        set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
+        std::set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
         for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Range_Iterator
             it2(tags_db.range_begin
             (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
@@ -544,7 +353,7 @@ vector< Id_Type > Query_Statement::collect_ids
 
   if (kvit != key_values.end())
   {
-    set< Tag_Index_Global > tag_req = get_kv_req(kvit->first, kvit->second);
+    std::set< Tag_Index_Global > tag_req = get_kv_req(kvit->first, kvit->second);
     for (typename Block_Backend< Tag_Index_Global, Id_Type >::Discrete_Iterator
         it2(tags_db.discrete_begin(tag_req.begin(), tag_req.end()));
         !(it2 == tags_db.discrete_end()); ++it2)
@@ -560,7 +369,7 @@ vector< Id_Type > Query_Statement::collect_ids
     vector< Id_Type > old_ids;
     old_ids.swap(new_ids);
 
-    set< Tag_Index_Global > tag_req = get_kv_req(kvit->first, kvit->second);
+    std::set< Tag_Index_Global > tag_req = get_kv_req(kvit->first, kvit->second);
     for (typename Block_Backend< Tag_Index_Global, Id_Type >::Discrete_Iterator
         it2(tags_db.discrete_begin(tag_req.begin(), tag_req.end()));
         !(it2 == tags_db.discrete_end()); ++it2)
@@ -578,7 +387,7 @@ vector< Id_Type > Query_Statement::collect_ids
     vector< string >::const_iterator kit = keys.begin();
     if (key_values.empty() && kit != keys.end())
     {
-      set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
+      std::set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
       for (typename Block_Backend< Tag_Index_Global, Id_Type >::Range_Iterator
           it2(tags_db.range_begin
             (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
@@ -596,7 +405,7 @@ vector< Id_Type > Query_Statement::collect_ids
       vector< Id_Type > old_ids;
       old_ids.swap(new_ids);
       {
-        set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
+        std::set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
         for (typename Block_Backend< Tag_Index_Global, Id_Type >::Range_Iterator
             it2(tags_db.range_begin
               (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
@@ -615,7 +424,7 @@ vector< Id_Type > Query_Statement::collect_ids
     vector< pair< string, Regular_Expression* > >::const_iterator krit = key_regexes.begin();
     if (key_values.empty() && (keys.empty() || check_keys_late) && krit != key_regexes.end())
     {
-      set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
+      std::set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
       for (typename Block_Backend< Tag_Index_Global, Id_Type >::Range_Iterator
           it2(tags_db.range_begin
             (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
@@ -636,7 +445,7 @@ vector< Id_Type > Query_Statement::collect_ids
       vector< Id_Type > old_ids;
       old_ids.swap(new_ids);
       {
-        set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
+        std::set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
         for (typename Block_Backend< Tag_Index_Global, Id_Type >::Range_Iterator
             it2(tags_db.range_begin
             (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
@@ -681,7 +490,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_non_i
   {
     if (timestamp == NOW)
     {
-      set< Tag_Index_Global > tag_req = get_kv_req(knvit->first, knvit->second);
+      std::set< Tag_Index_Global > tag_req = get_kv_req(knvit->first, knvit->second);
       for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Discrete_Iterator
           it2(tags_db.discrete_begin(tag_req.begin(), tag_req.end()));
           !(it2 == tags_db.discrete_end()); ++it2)
@@ -705,7 +514,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_non_i
   {
     if (timestamp == NOW)
     {
-      set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knrit->first);
+      std::set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knrit->first);
       for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Range_Iterator
           it2(tags_db.range_begin
           (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
@@ -751,7 +560,7 @@ vector< Id_Type > Query_Statement::collect_non_ids
   for (vector< pair< string, string > >::const_iterator knvit = key_nvalues.begin();
       knvit != key_nvalues.end(); ++knvit)
   {
-    set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knvit->first);
+    std::set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knvit->first);
     for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Range_Iterator
         it2(tags_db.range_begin
         (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
@@ -769,7 +578,7 @@ vector< Id_Type > Query_Statement::collect_non_ids
   for (vector< pair< string, Regular_Expression* > >::const_iterator knrit = key_nregexes.begin();
       knrit != key_nregexes.end(); ++knrit)
   {
-    set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knrit->first);
+    std::set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knrit->first);
     for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Range_Iterator
         it2(tags_db.range_begin
         (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
@@ -932,27 +741,27 @@ void filter_ids_by_tags
 }
 
 
-template< typename Id_Type >
-void filter_ids_by_tags
-  (map< uint32, vector< Id_Type > >& ids_by_coarse,
-   const map< string, vector< Regular_Expression* > >& keys,
-   const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
-   typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
-   uint32 coarse_index)
-{
-  vector< Id_Type > new_ids = ids_by_coarse[coarse_index & 0x7fffff00];
-  
-  filter_ids_by_tags(keys, items_db, tag_it, coarse_index & 0x7fffff00, new_ids);
-
-  new_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
-    
-  filter_ids_by_tags(keys, items_db, tag_it, coarse_index | 0x80000000, new_ids);
-
-  vector< Id_Type > old_ids;
-  old_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
-  set_union(old_ids.begin(), old_ids.end(), new_ids.begin(), new_ids.end(),
-      back_inserter(ids_by_coarse[coarse_index & 0x7fffff00]));
-}
+// template< typename Id_Type >
+// void filter_ids_by_tags
+//   (map< uint32, vector< Id_Type > >& ids_by_coarse,
+//    const map< string, vector< Regular_Expression* > >& keys,
+//    const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
+//    typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
+//    uint32 coarse_index)
+// {
+//   vector< Id_Type > new_ids = ids_by_coarse[coarse_index & 0x7fffff00];
+//   
+//   filter_ids_by_tags(keys, items_db, tag_it, coarse_index & 0x7fffff00, new_ids);
+// 
+//   new_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
+//     
+//   filter_ids_by_tags(keys, items_db, tag_it, coarse_index | 0x80000000, new_ids);
+// 
+//   vector< Id_Type > old_ids;
+//   old_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
+//   set_union(old_ids.begin(), old_ids.end(), new_ids.begin(), new_ids.end(),
+//       back_inserter(ids_by_coarse[coarse_index & 0x7fffff00]));
+// }
 
 
 template< typename Id_Type >
@@ -1034,27 +843,27 @@ void filter_ids_by_ntags
 }
 
 
-template< typename Id_Type >
-void filter_ids_by_ntags
-  (map< uint32, vector< Id_Type > >& ids_by_coarse,
-   const map< string, pair< vector< Regular_Expression* >, vector< string > > >& keys,
-   const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
-   typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
-   uint32 coarse_index)
-{
-  vector< Id_Type > new_ids = ids_by_coarse[coarse_index & 0x7fffff00];
-  
-  filter_ids_by_ntags(keys, items_db, tag_it, coarse_index & 0x7fffff00, new_ids);
-
-  new_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
-    
-  filter_ids_by_ntags(keys, items_db, tag_it, coarse_index | 0x80000000, new_ids);
-
-  vector< Id_Type > old_ids;
-  old_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
-  set_intersection(old_ids.begin(), old_ids.end(), new_ids.begin(), new_ids.end(),
-      back_inserter(ids_by_coarse[coarse_index & 0x7fffff00]));
-}
+// template< typename Id_Type >
+// void filter_ids_by_ntags
+//   (map< uint32, vector< Id_Type > >& ids_by_coarse,
+//    const map< string, pair< vector< Regular_Expression* >, vector< string > > >& keys,
+//    const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
+//    typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
+//    uint32 coarse_index)
+// {
+//   vector< Id_Type > new_ids = ids_by_coarse[coarse_index & 0x7fffff00];
+//   
+//   filter_ids_by_ntags(keys, items_db, tag_it, coarse_index & 0x7fffff00, new_ids);
+// 
+//   new_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
+//     
+//   filter_ids_by_ntags(keys, items_db, tag_it, coarse_index | 0x80000000, new_ids);
+// 
+//   vector< Id_Type > old_ids;
+//   old_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
+//   set_intersection(old_ids.begin(), old_ids.end(), new_ids.begin(), new_ids.end(),
+//       back_inserter(ids_by_coarse[coarse_index & 0x7fffff00]));
+// }
 
 
 template< class TIndex, class TObject >
@@ -1101,7 +910,9 @@ void Query_Statement::filter_by_tags
     
     sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
     
-    filter_ids_by_tags(ids_by_coarse, key_union, items_db, tag_it, it->val());
+//     filter_ids_by_tags(ids_by_coarse, key_union, items_db, tag_it, it->val());
+    filter_ids_by_tags(key_union, items_db, tag_it,
+                       it->val() & 0x7fffff00, ids_by_coarse[it->val() & 0x7fffff00]);
     
     while ((item_it != items.end()) &&
         ((item_it->first.val() & 0x7fffff00) == it->val()))
@@ -1149,7 +960,9 @@ void Query_Statement::filter_by_tags
     
     sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
     
-    filter_ids_by_ntags(ids_by_coarse, nkey_union, items_db, ntag_it, it->val());
+//     filter_ids_by_ntags(ids_by_coarse, nkey_union, items_db, ntag_it, it->val());
+    filter_ids_by_ntags(nkey_union, items_db, ntag_it,
+                        it->val() & 0x7fffff00, ids_by_coarse[it->val() & 0x7fffff00]);
     
     while ((item_it != items.end()) &&
         ((item_it->first.val() & 0x7fffff00) == it->val()))
@@ -1277,37 +1090,6 @@ void Query_Statement::collect_elems(vector< Id_Type >& ids,
     if ((*it)->collect(rman, into, type, ids, invert_ids))
       answer_state = data_collected;
   }
-}
-
-
-template< typename Index >
-std::set< std::pair< Index, Index > > intersect_ranges
-    (const std::set< std::pair< Index, Index > >& range_a,
-     const std::set< std::pair< Index, Index > >& range_b)
-{
-  std::set< std::pair< Index, Index > > result;
-  typename std::set< std::pair< Index, Index > >::const_iterator it_a = range_a.begin();
-  typename std::set< std::pair< Index, Index > >::const_iterator it_b = range_b.begin();
-  
-  while (it_a != range_a.end() && it_b != range_b.end())
-  {
-    if (!(it_a->first < it_b->second))
-      ++it_b;
-    else if (!(it_b->first < it_a->second))
-      ++it_a;
-    else if (it_b->second < it_a->second)
-    {
-      result.insert(std::make_pair(std::max(it_a->first, it_b->first), it_b->second));
-      ++it_b;
-    }
-    else
-    {
-      result.insert(std::make_pair(std::max(it_a->first, it_b->first), it_a->second));
-      ++it_a;
-    }
-  }
-  
-  return result;
 }
 
 
