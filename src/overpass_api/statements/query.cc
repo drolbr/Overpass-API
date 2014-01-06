@@ -669,16 +669,80 @@ void clear_empty_indices
 
 
 template< typename Id_Type >
+struct Check_Trivial
+{
+  bool valid(const Id_Type& obj) const
+  {
+    return true;
+  }
+  
+  bool valid_and_relevant(const Id_Type& obj) const
+  {
+    return binary_search(ids.begin(), ids.end(), obj);
+  }
+  
+  std::vector< Id_Type > ids;
+};
+
+
+template< typename Attic >
+struct Less_By_Id
+{
+  bool operator()(const Attic& lhs, const Attic& rhs)
+  {
+    return lhs.id < rhs.id;
+  }
+};
+
+
+template< typename Attic >
+struct Check_Timestamp
+{
+  Check_Timestamp(uint64 timestamp_) : timestamp(timestamp_) {}
+  
+  bool valid(const Attic& obj) const
+  {
+    return timestamp < obj.timestamp;
+  }
+  
+  bool valid_and_relevant(const Attic& obj) const
+  {
+    if (!(timestamp < obj.timestamp))
+      return false;
+    
+    std::vector< Attic >::const_iterator it =
+        std::lower_bound(ids.begin(), ids.end(), obj, less_by_id);
+    
+    // TODO
+        
+    return (binary_search(ids.begin(), ids.end(), obj));
+  }
+  
+  std::vector< Attic > ids;
+  uint64 timestamp;
+  Less_By_Id< Attic > less_by_id;
+};
+
+
+// per Key und Id:
+// Die ältesten Einträge, die echt jünger als Timestamp sind, entscheiden.
+// Einträge werden vereinigt (positiv) als auch geschnitten (negativ).
+// 
+// per Key:
+// Einträge werden vereinigt, d.h. kein Eintrag heißt kein Treffer.
+// Brauchen: älteste Timestamp per Id überhaupt
+// Brauchen: älteste Timestamp eines Positivs
+
+template< typename Id_Type, typename Check_Object >
 void filter_ids_by_tags
-  (const map< string, vector< Regular_Expression* > >& keys,
+  (const map< string, vector< Regular_Expression* > >& keys, Check_Object obj_valid,
    const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
    typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
    uint32 coarse_index,
    vector< Id_Type >& new_ids)
 {
-  vector< Id_Type > old_ids;
   string last_key, last_value;  
-  bool relevant = false;
+  bool key_relevant = false;
   bool valid = false;
   map< string, vector< Regular_Expression* > >::const_iterator key_it = keys.begin();
   
@@ -689,9 +753,9 @@ void filter_ids_by_tags
     {
       last_value = void_tag_value() + " ";
       
-      if (relevant)
+      if (key_relevant)
         ++key_it;
-      relevant = false;
+      key_relevant = false;
       
       if (key_it == keys.end())
 	break;
@@ -703,15 +767,17 @@ void filter_ids_by_tags
           // There are keys missing for all objects with this index. Drop all.
 	  break;
 
-	relevant = true;
-	old_ids.clear();
-        old_ids.swap(new_ids);
-        sort(old_ids.begin(), old_ids.end());
+	key_relevant = true;
+	obj_valid.ids.clear();
+        // check new ids
+        obj_valid.ids.swap(new_ids);
+        sort(obj_valid.ids.begin(), obj_valid.ids.end());
       }
     }
     
-    if (relevant)
+    if (key_relevant)
     {
+      // notify
       if (tag_it.index().value != last_value)
       {
 	valid = true;
@@ -721,7 +787,7 @@ void filter_ids_by_tags
 	last_value = tag_it.index().value;
       }
       
-      if (valid && binary_search(old_ids.begin(), old_ids.end(), tag_it.object()))
+      if (valid && obj_valid.valid_and_relevant(tag_it.object()))
         new_ids.push_back(tag_it.object());
     }
 
@@ -731,42 +797,21 @@ void filter_ids_by_tags
       (((tag_it.index().index) & 0x7fffff00) == coarse_index))
     ++tag_it;
 
-  if (relevant && key_it != keys.end())
+  if (key_relevant && key_it != keys.end())
     ++key_it;
   if (key_it != keys.end())
     // There are keys missing for all objects with this index. Drop all.
     new_ids.clear();
   
+  // check new ids
   sort(new_ids.begin(), new_ids.end());
 }
 
 
-// template< typename Id_Type >
-// void filter_ids_by_tags
-//   (map< uint32, vector< Id_Type > >& ids_by_coarse,
-//    const map< string, vector< Regular_Expression* > >& keys,
-//    const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
-//    typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
-//    uint32 coarse_index)
-// {
-//   vector< Id_Type > new_ids = ids_by_coarse[coarse_index & 0x7fffff00];
-//   
-//   filter_ids_by_tags(keys, items_db, tag_it, coarse_index & 0x7fffff00, new_ids);
-// 
-//   new_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
-//     
-//   filter_ids_by_tags(keys, items_db, tag_it, coarse_index | 0x80000000, new_ids);
-// 
-//   vector< Id_Type > old_ids;
-//   old_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
-//   set_union(old_ids.begin(), old_ids.end(), new_ids.begin(), new_ids.end(),
-//       back_inserter(ids_by_coarse[coarse_index & 0x7fffff00]));
-// }
-
-
-template< typename Id_Type >
+template< typename Id_Type, typename Check_Object >
 void filter_ids_by_ntags
   (const map< string, pair< vector< Regular_Expression* >, vector< string > > >& keys,
+   Check_Object obj_valid,
    const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
    typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
    uint32 coarse_index,
@@ -774,7 +819,7 @@ void filter_ids_by_ntags
 {
   vector< Id_Type > removed_ids;
   string last_key, last_value;  
-  bool relevant = false;
+  bool key_relevant = false;
   bool valid = false;
   map< string, pair< vector< Regular_Expression* >, vector< string > > >::const_iterator
       key_it = keys.begin();
@@ -786,7 +831,7 @@ void filter_ids_by_ntags
     {
       last_value = void_tag_value() + " ";
       
-      if (relevant)
+      if (key_relevant)
       {
         ++key_it;
         sort(removed_ids.begin(), removed_ids.end());
@@ -794,7 +839,7 @@ void filter_ids_by_ntags
         new_ids.erase(set_difference(new_ids.begin(), new_ids.end(),
                       removed_ids.begin(), removed_ids.end(), new_ids.begin()), new_ids.end());
       }
-      relevant = false;
+      key_relevant = false;
       
       last_key = tag_it.index().key;
       while (key_it != keys.end() && last_key > key_it->first)
@@ -805,12 +850,12 @@ void filter_ids_by_ntags
       
       if (last_key == key_it->first)
       {
-        relevant = true;
+        key_relevant = true;
         removed_ids.clear();
       }
     }
     
-    if (relevant)
+    if (key_relevant)
     {
       if (tag_it.index().value != last_value)
       {
@@ -824,7 +869,7 @@ void filter_ids_by_ntags
         last_value = tag_it.index().value;
       }
       
-      if (valid)
+      if (valid && obj_valid.valid(tag_it.object()))
         removed_ids.push_back(tag_it.object());
     }
 
@@ -841,29 +886,6 @@ void filter_ids_by_ntags
   
   sort(new_ids.begin(), new_ids.end());
 }
-
-
-// template< typename Id_Type >
-// void filter_ids_by_ntags
-//   (map< uint32, vector< Id_Type > >& ids_by_coarse,
-//    const map< string, pair< vector< Regular_Expression* >, vector< string > > >& keys,
-//    const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
-//    typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
-//    uint32 coarse_index)
-// {
-//   vector< Id_Type > new_ids = ids_by_coarse[coarse_index & 0x7fffff00];
-//   
-//   filter_ids_by_ntags(keys, items_db, tag_it, coarse_index & 0x7fffff00, new_ids);
-// 
-//   new_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
-//     
-//   filter_ids_by_ntags(keys, items_db, tag_it, coarse_index | 0x80000000, new_ids);
-// 
-//   vector< Id_Type > old_ids;
-//   old_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
-//   set_intersection(old_ids.begin(), old_ids.end(), new_ids.begin(), new_ids.end(),
-//       back_inserter(ids_by_coarse[coarse_index & 0x7fffff00]));
-// }
 
 
 template< class TIndex, class TObject >
@@ -910,8 +932,7 @@ void Query_Statement::filter_by_tags
     
     sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
     
-//     filter_ids_by_tags(ids_by_coarse, key_union, items_db, tag_it, it->val());
-    filter_ids_by_tags(key_union, items_db, tag_it,
+    filter_ids_by_tags(key_union, Check_Trivial< typename TObject::Id_Type >(), items_db, tag_it,
                        it->val() & 0x7fffff00, ids_by_coarse[it->val() & 0x7fffff00]);
     
     while ((item_it != items.end()) &&
@@ -960,8 +981,7 @@ void Query_Statement::filter_by_tags
     
     sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
     
-//     filter_ids_by_ntags(ids_by_coarse, nkey_union, items_db, ntag_it, it->val());
-    filter_ids_by_ntags(nkey_union, items_db, ntag_it,
+    filter_ids_by_ntags(nkey_union, Check_Trivial< typename TObject::Id_Type >(), items_db, ntag_it,
                         it->val() & 0x7fffff00, ids_by_coarse[it->val() & 0x7fffff00]);
     
     while ((item_it != items.end()) &&
