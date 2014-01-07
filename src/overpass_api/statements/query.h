@@ -89,9 +89,9 @@ class Query_Statement : public Output_Statement
 
     template< class TIndex, class TObject >
     void filter_by_tags
-        (map< TIndex, vector< TObject > >& items,
-         const File_Properties& file_prop, Resource_Manager& rman,
-	 Transaction& transaction);
+        (map< TIndex, vector< TObject > >& items, uint64 timestamp,
+         const File_Properties& file_prop, const File_Properties* attic_file_prop,
+         Resource_Manager& rman, Transaction& transaction);
 
     template < typename TIndex, typename Id_Type >
     set< pair< TIndex, TIndex > > get_ranges_by_id_from_db
