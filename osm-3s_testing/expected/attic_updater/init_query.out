@@ -8513,9 +8513,6 @@
   <node id="2602" lat="11.0000000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <tag k="" v="empty_key"/>
   </node>
-  <node id="2604" lat="11.0000000" lon="6.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
-    <tag k="multiple_values" v="no"/>
-  </node>
   <node id="12023"/>
   <node id="2502" lat="11.0000000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <tag k="changes" v="yes"/>

@@ -36,39 +36,39 @@ pushd run/attic_updater
 
 $BASEDIR/bin/update_database --db-dir=./ --keep-attic <$INPUTDIR/init.osm
 
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query.ql >init_query.out 2>init_query.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0901.ql >init_query_0901.out 2>init_query_0901.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0902.ql >init_query_0902.out 2>init_query_0902.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0903.ql >init_query_0903.out 2>init_query_0903.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0904.ql >init_query_0904.out 2>init_query_0904.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0905.ql >init_query_0905.out 2>init_query_0905.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query.ql >init_query.out 2>init_query.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0901.ql >init_query_0901.out 2>init_query_0901.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0902.ql >init_query_0902.out 2>init_query_0902.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0903.ql >init_query_0903.out 2>init_query_0903.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0904.ql >init_query_0904.out 2>init_query_0904.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0905.ql >init_query_0905.out 2>init_query_0905.err
 
 $BASEDIR/bin/update_database --db-dir=./ --keep-attic <$INPUTDIR/diff_1.osc
 
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query.ql >diff_1_query.out 2>diff_1_query.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0901.ql >diff_1_query_0901.out 2>diff_1_query_0901.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0902.ql >diff_1_query_0902.out 2>diff_1_query_0902.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0903.ql >diff_1_query_0903.out 2>diff_1_query_0903.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0904.ql >diff_1_query_0904.out 2>diff_1_query_0904.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0905.ql >diff_1_query_0905.out 2>diff_1_query_0905.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query.ql >diff_1_query.out 2>diff_1_query.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0901.ql >diff_1_query_0901.out 2>diff_1_query_0901.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0902.ql >diff_1_query_0902.out 2>diff_1_query_0902.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0903.ql >diff_1_query_0903.out 2>diff_1_query_0903.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0904.ql >diff_1_query_0904.out 2>diff_1_query_0904.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0905.ql >diff_1_query_0905.out 2>diff_1_query_0905.err
 
 $BASEDIR/bin/update_database --db-dir=./ --keep-attic <$INPUTDIR/diff_2.osc
 
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query.ql >diff_2_query.out 2>diff_2_query.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0901.ql >diff_2_query_0901.out 2>diff_2_query_0901.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0902.ql >diff_2_query_0902.out 2>diff_2_query_0902.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0903.ql >diff_2_query_0903.out 2>diff_2_query_0903.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0904.ql >diff_2_query_0904.out 2>diff_2_query_0904.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0905.ql >diff_2_query_0905.out 2>diff_2_query_0905.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query.ql >diff_2_query.out 2>diff_2_query.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0901.ql >diff_2_query_0901.out 2>diff_2_query_0901.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0902.ql >diff_2_query_0902.out 2>diff_2_query_0902.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0903.ql >diff_2_query_0903.out 2>diff_2_query_0903.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0904.ql >diff_2_query_0904.out 2>diff_2_query_0904.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0905.ql >diff_2_query_0905.out 2>diff_2_query_0905.err
 
 $BASEDIR/bin/update_database --db-dir=./ --keep-attic <$INPUTDIR/diff_3.osc
 
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query.ql >diff_3_query.out 2>diff_3_query.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0901.ql >diff_3_query_0901.out 2>diff_3_query_0901.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0902.ql >diff_3_query_0902.out 2>diff_3_query_0902.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0903.ql >diff_3_query_0903.out 2>diff_3_query_0903.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0904.ql >diff_3_query_0904.out 2>diff_3_query_0904.err
-$BASEDIR/bin/osm3s_query --db-dir=./ <$INPUTDIR/query_0905.ql >diff_3_query_0905.out 2>diff_3_query_0905.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query.ql >diff_3_query.out 2>diff_3_query.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0901.ql >diff_3_query_0901.out 2>diff_3_query_0901.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0902.ql >diff_3_query_0902.out 2>diff_3_query_0902.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0903.ql >diff_3_query_0903.out 2>diff_3_query_0903.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0904.ql >diff_3_query_0904.out 2>diff_3_query_0904.err
+$BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0905.ql >diff_3_query_0905.out 2>diff_3_query_0905.err
 
 for i in *.err; do
   diff -q "../../expected/attic_updater/$i" "$i"

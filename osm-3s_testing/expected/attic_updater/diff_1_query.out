@@ -9029,13 +9029,7 @@
   <node id="12022"/>
   <node id="2601" lat="11.0000000" lon="6.0100000" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
   <node id="2602" lat="11.0000000" lon="6.0200000" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="2603" lat="11.0000000" lon="6.0300000" version="2" timestamp="2013-07-01T09:02:13Z" changeset="496" uid="42" user="foo">
-    <tag k="multiple_values" v="no"/>
-  </node>
   <node id="2605" lat="11.0000000" lon="6.0500000" version="2" timestamp="2013-07-01T09:02:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="2606" lat="11.0000000" lon="6.0600000" version="2" timestamp="2013-07-01T09:02:26Z" changeset="496" uid="42" user="foo">
-    <tag k="multiple_values" v="no"/>
-  </node>
   <node id="12023"/>
   <node id="2505" lat="11.0000000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo">
     <tag k="changes" v="yes"/>
