@@ -295,7 +295,6 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > relation_node_member_indices
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end)
 {
-  std::vector< Node::Id_Type > map_ids;
   std::vector< uint32 > parents;
   
   for (typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
@@ -307,36 +306,71 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > relation_node_member_indices
       for (typename std::vector< Relation_Skeleton >::const_iterator it2 = it->second.begin();
           it2 != it->second.end(); ++it2)
       {
-	bool large_indices = false;
 	for (std::vector< Uint31_Index >::const_iterator it3 = it2->node_idxs.begin();
 	    it3 != it2->node_idxs.end(); ++it3)
-	{
-	  if ((it3->val() & 0x80000000) && ((it3->val() & 0xf) == 0))
-	  {
-	    //Treat relations with really large indices: get the node indexes from nodes.map.
-	    large_indices = true;
-	    break;
-	  }
-	}
-	
-	if (large_indices)
-	  filter_for_member_ids(it->second, map_ids, Relation_Entry::NODE);
-	else
-	{
-	  for (std::vector< Uint31_Index >::const_iterator it3 = it2->node_idxs.begin();
-	      it3 != it2->node_idxs.end(); ++it3)
-	    parents.push_back(it3->val());
-	}
+	  parents.push_back(it3->val());
       }
     }
     else
       parents.push_back(it->first.val());
   }    
-  sort(map_ids.begin(), map_ids.end());
   if (stmt)
     rman.health_check(*stmt);
   
-  return collect_node_req(stmt, rman, map_ids, parents);
+  return collect_node_req(stmt, rman, std::vector< Node::Id_Type >(), parents);
+}
+
+
+template< typename Relation_Skeleton >
+std::set< std::pair< Uint32_Index, Uint32_Index > > relation_node_member_indices
+    (const Statement* stmt, Resource_Manager& rman,
+     typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
+     typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end,
+     typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
+         attic_rels_begin,
+     typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
+         attic_rels_end)
+{
+  std::vector< uint32 > parents;
+  
+  for (typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
+      it = rels_begin; it != rels_end; ++it)
+  {
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
+    {
+      // Treat relations with really large indices: get the node indexes from the segement indexes
+      for (typename std::vector< Relation_Skeleton >::const_iterator it2 = it->second.begin();
+          it2 != it->second.end(); ++it2)
+      {
+        for (std::vector< Uint31_Index >::const_iterator it3 = it2->node_idxs.begin();
+            it3 != it2->node_idxs.end(); ++it3)
+          parents.push_back(it3->val());
+      }
+    }
+    else
+      parents.push_back(it->first.val());
+  }    
+  for (typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
+      it = attic_rels_begin; it != attic_rels_end; ++it)
+  {
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
+    {
+      // Treat relations with really large indices: get the node indexes from the segement indexes
+      for (typename std::vector< Attic< Relation_Skeleton > >::const_iterator it2 = it->second.begin();
+          it2 != it->second.end(); ++it2)
+      {
+        for (std::vector< Uint31_Index >::const_iterator it3 = it2->node_idxs.begin();
+            it3 != it2->node_idxs.end(); ++it3)
+          parents.push_back(it3->val());
+      }
+    }
+    else
+      parents.push_back(it->first.val());
+  }    
+  if (stmt)
+    rman.health_check(*stmt);
+  
+  return collect_node_req(stmt, rman, std::vector< Node::Id_Type >(), parents);
 }
 
 
@@ -743,6 +777,68 @@ std::map< Uint32_Index, std::vector< Node_Skeleton > > relation_node_members
 }
 
 
+std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
+    std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > relation_node_members
+    (const Statement* stmt, Resource_Manager& rman,
+     const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
+     const map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_relations,
+     uint64 timestamp,
+     const set< pair< Uint32_Index, Uint32_Index > >* node_ranges,
+     const vector< Node::Id_Type >* node_ids, bool invert_ids, const uint32* role_id)
+{
+  std::vector< Node::Id_Type > intersect_ids;
+  if (node_ids)
+  {
+    std::vector< Node::Id_Type > children_ids
+        = relation_node_member_ids(rman, relations, attic_relations, role_id);
+    if (stmt)
+      rman.health_check(*stmt);
+    intersect_ids.resize(children_ids.size(), Node::Id_Type(0ull));
+    if (!invert_ids)
+      intersect_ids.erase(set_intersection
+          (node_ids->begin(), node_ids->end(), children_ids.begin(), children_ids.end(),
+          intersect_ids.begin()), intersect_ids.end());
+    else
+      intersect_ids.erase(set_difference
+          (children_ids.begin(), children_ids.end(),
+          node_ids->begin(), node_ids->end(),
+          intersect_ids.begin()), intersect_ids.end());
+  }
+  else
+  {
+    intersect_ids = relation_node_member_ids(rman, relations, attic_relations, role_id);
+    if (stmt)
+      rman.health_check(*stmt);
+  }
+  
+  std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
+      std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > result;
+  if (intersect_ids.empty())
+    return result;
+  
+  if (node_ranges)
+  {
+    collect_items_range(stmt, rman, *osm_base_settings().NODES, *node_ranges,
+                        Id_Predicate< Node_Skeleton >(intersect_ids), result.first);
+    collect_items_range(stmt, rman, *attic_settings().NODES, *node_ranges,
+                        Id_Predicate< Attic< Node_Skeleton > >(intersect_ids), result.second);
+  }
+  else
+  {
+    std::set< std::pair< Uint32_Index, Uint32_Index > > req =
+        relation_node_member_indices< Relation_Skeleton >(stmt, rman,
+            relations.begin(), relations.end(), attic_relations.begin(), attic_relations.end());
+    collect_items_range(stmt, rman, *osm_base_settings().NODES, req,
+                        Id_Predicate< Node_Skeleton >(intersect_ids), result.first);
+    collect_items_range(stmt, rman, *attic_settings().NODES, req,
+                        Id_Predicate< Attic< Node_Skeleton > >(intersect_ids), result.second);
+  }
+  keep_matching_skeletons(result.first, result.second, timestamp);
+  
+  return result;
+}
+
+
 std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > relation_node_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
@@ -880,7 +976,7 @@ std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
     collect_items_range(stmt, rman, *osm_base_settings().NODES, *node_ranges,
                         Id_Predicate< Node_Skeleton >(intersect_ids), result.first);
     collect_items_range(stmt, rman, *attic_settings().NODES, *node_ranges,
-                        Id_Predicate< Node_Skeleton >(intersect_ids), result.second);
+                        Id_Predicate< Attic< Node_Skeleton > >(intersect_ids), result.second);
   }
   else
   {
