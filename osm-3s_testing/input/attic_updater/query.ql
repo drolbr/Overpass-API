@@ -471,3 +471,16 @@ way(1402);node(10,4,10.2,4.2)(w);out meta;
 way(1602);node(10,6,10.2,6.2)(w);out meta;
 way(1702);node(10,7,10.2,7.2)(w);out meta;
 way(1802);node(10,8,10.2,8.2)(w);out meta;
+
+node(11011);out ids;
+rel(1312);node(r);out meta;
+rel(1412);node(r);out meta;
+rel(1612);node(r);out meta;
+rel(1712);node(r);out meta;
+rel(1812);node(r);out meta;
+node(11012);out ids;
+rel(1312);node(10,3,10.2,3.2)(r);out meta;
+rel(1412);node(10,4,10.2,4.2)(r);out meta;
+rel(1612);node(10,6,10.2,6.2)(r);out meta;
+rel(1712);node(10,7,10.2,7.2)(r);out meta;
+rel(1812);node(10,8,10.2,8.2)(r);out meta;
