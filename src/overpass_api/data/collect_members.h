@@ -46,6 +46,15 @@ map< Uint31_Index, vector< Way_Skeleton > > relation_way_members
      const set< pair< Uint31_Index, Uint31_Index > >* way_ranges = 0,
      const vector< Way::Id_Type >* way_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
 
+std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
+    std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > > relation_way_members
+    (const Statement* stmt, Resource_Manager& rman,
+     const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
+     const map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_relations,
+     uint64 timestamp,
+     const set< pair< Uint31_Index, Uint31_Index > >* way_ranges = 0,
+     const vector< Way::Id_Type >* way_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
+
 map< Uint31_Index, vector< Attic< Way_Skeleton > > > relation_way_members
     (const Statement* stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& relations,
@@ -103,6 +112,13 @@ vector< Node::Id_Type > relation_node_member_ids
 template< typename Relation_Skeleton >
 vector< Way::Id_Type > relation_way_member_ids
     (Resource_Manager& rman, const map< Uint31_Index, vector< Relation_Skeleton > >& rels,
+     const uint32* role_id = 0);
+    
+template< typename Relation_Skeleton >
+vector< Way::Id_Type > relation_way_member_ids
+    (Resource_Manager& rman,
+     const map< Uint31_Index, vector< Relation_Skeleton > >& rels,
+     const map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_rels,
      const uint32* role_id = 0);
     
 vector< Relation::Id_Type > relation_relation_member_ids
@@ -499,6 +515,34 @@ vector< Way::Id_Type > relation_way_member_ids
   {
     for (typename map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
         it(rels.begin()); it != rels.end(); ++it)
+      filter_for_member_ids(it->second, ids, Relation_Entry::WAY);
+  }
+  
+  sort(ids.begin(), ids.end());
+  ids.erase(unique(ids.begin(), ids.end()), ids.end());
+  
+  return ids;
+}
+
+
+template< typename Relation_Skeleton >
+vector< Way::Id_Type > relation_way_member_ids
+    (Resource_Manager& rman,
+     const map< Uint31_Index, vector< Relation_Skeleton > >& rels,
+     const map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_rels,
+     const uint32* role_id)
+{
+  vector< Way::Id_Type > ids = relation_way_member_ids(rman, rels, role_id);
+  if (role_id)
+  {
+    for (typename map< Uint31_Index, vector< Attic< Relation_Skeleton > > >::const_iterator
+        it(attic_rels.begin()); it != attic_rels.end(); ++it)
+      filter_for_member_ids(it->second, ids, Relation_Entry::WAY, *role_id);
+  }
+  else
+  {
+    for (typename map< Uint31_Index, vector< Attic< Relation_Skeleton > > >::const_iterator
+        it(attic_rels.begin()); it != attic_rels.end(); ++it)
       filter_for_member_ids(it->second, ids, Relation_Entry::WAY);
   }
   

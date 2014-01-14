@@ -485,3 +485,16 @@ rel(1412);node(10,4,10.2,4.2)(r);out meta;
 rel(1612);node(10,6,10.2,6.2)(r);out meta;
 rel(1712);node(10,7,10.2,7.2)(r);out meta;
 rel(1812);node(10,8,10.2,8.2)(r);out meta;
+
+node(11011);out ids;
+rel(1322);way(r);out meta;
+rel(1422);way(r);out meta;
+rel(1622);way(r);out meta;
+rel(1722);way(r);out meta;
+rel(1822);way(r);out meta;
+node(11022);out ids;
+rel(1322);way(10.2,3,10.3,3.2)(r);out meta;
+rel(1422);way(10.2,4,10.3,4.2)(r);out meta;
+rel(1622);way(10.2,6,10.3,6.2)(r);out meta;
+rel(1722);way(10.2,7,10.3,7.2)(r);out meta;
+rel(1822);way(10.2,8,10.3,8.2)(r);out meta;
