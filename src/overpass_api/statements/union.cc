@@ -27,13 +27,13 @@
 #include "../data/abstract_processing.h"
 #include "union.h"
 
-using namespace std;
 
 Generic_Statement_Maker< Union_Statement > Union_Statement::statement_maker("union");
 
+
 Union_Statement::Union_Statement
     (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
-    : Statement(line_number_)
+    : Output_Statement(line_number_)
 {
   map< string, string > attributes;
   
@@ -41,8 +41,9 @@ Union_Statement::Union_Statement
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
-  output = attributes["into"];
+  set_output(attributes["into"]);
 }
+
 
 void Union_Statement::add_statement(Statement* statement, string text)
 {
@@ -58,10 +59,6 @@ void Union_Statement::add_statement(Statement* statement, string text)
 void Union_Statement::execute(Resource_Manager& rman)
 {
   Set base_set;
-  map< Uint32_Index, vector< Node_Skeleton > >& nodes(base_set.nodes);
-  map< Uint31_Index, vector< Way_Skeleton > >& ways(base_set.ways);
-  map< Uint31_Index, vector< Relation_Skeleton > >& relations(base_set.relations);
-  map< Uint31_Index, vector< Area_Skeleton > >& areas(base_set.areas);
   
   for (vector< Statement* >::iterator it(substatements.begin());
        it != substatements.end(); ++it)
@@ -72,13 +69,15 @@ void Union_Statement::execute(Resource_Manager& rman)
     
     Set& summand(rman.sets()[(*it)->get_result_name()]);
 
-    indexed_set_union(nodes, summand.nodes);
-    indexed_set_union(ways, summand.ways);
-    indexed_set_union(relations, summand.relations);
-    indexed_set_union(areas, summand.areas);
+    indexed_set_union(base_set.nodes, summand.nodes);
+    indexed_set_union(base_set.attic_nodes, summand.attic_nodes);
+    indexed_set_union(base_set.ways, summand.ways);
+    indexed_set_union(base_set.attic_ways, summand.attic_ways);
+    indexed_set_union(base_set.relations, summand.relations);
+    indexed_set_union(base_set.attic_relations, summand.attic_relations);
+    indexed_set_union(base_set.areas, summand.areas);
   }
   
-  rman.sets()[output] = base_set;
-  
+  transfer_output(rman, base_set);
   rman.health_check(*this);
 }

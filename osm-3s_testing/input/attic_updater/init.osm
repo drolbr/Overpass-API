@@ -2363,8 +2363,8 @@
     <tag k="foo_1631" v="bar"/>
   </relation>
   <relation id="1632" version="1" timestamp="2013-07-01T09:01:12" changeset="496" uid="42" user="foo">
-    <member type="node" ref="163110" role=""/>
-    <member type="node" ref="163120" role=""/>
+    <member type="node" ref="163210" role=""/>
+    <member type="node" ref="163220" role=""/>
     <member type="way" ref="16321" role=""/>
     <member type="way" ref="16322" role=""/>
     <tag k="foo" v="bar_1632"/>
@@ -2476,8 +2476,8 @@
     <tag k="foo_1731" v="bar"/>
   </relation>
   <relation id="1732" version="1" timestamp="2013-07-01T09:01:12" changeset="496" uid="42" user="foo">
-    <member type="node" ref="173110" role=""/>
-    <member type="node" ref="173120" role=""/>
+    <member type="node" ref="173210" role=""/>
+    <member type="node" ref="173220" role=""/>
     <member type="way" ref="17321" role=""/>
     <member type="way" ref="17322" role=""/>
     <tag k="foo" v="bar_1732"/>
@@ -2589,8 +2589,8 @@
     <tag k="foo_1831" v="bar"/>
   </relation>
   <relation id="1832" version="1" timestamp="2013-07-01T09:01:12" changeset="496" uid="42" user="foo">
-    <member type="node" ref="183110" role=""/>
-    <member type="node" ref="183120" role=""/>
+    <member type="node" ref="183210" role=""/>
+    <member type="node" ref="183220" role=""/>
     <member type="way" ref="18321" role=""/>
     <member type="way" ref="18322" role=""/>
     <tag k="foo" v="bar_1832"/>
