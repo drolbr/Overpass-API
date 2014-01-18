@@ -21,6 +21,7 @@
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
+#include "../data/abstract_processing.h"
 #include "../data/filenames.h"
 #include "id_query.h"
 
@@ -282,58 +283,6 @@ Id_Query_Statement::Id_Query_Statement
 
 
 // Nach "data" verschieben ---------------------------
-
-
-/* Returns for the given set of ids the set of corresponding indexes.
- * For ids where the timestamp is zero, only the current index is returned.
- * For ids where the timestamp is nonzero, all attic indexes are also returned.
- * The function requires that the ids are sorted ascending by id.
- */
-template< typename Index, typename Skeleton >
-std::pair< std::vector< Index >, std::vector< Index > > get_indexes
-    (const std::vector< std::pair< typename Skeleton::Id_Type, uint64 > >& ids,
-     Resource_Manager& rman)
-{
-  std::pair< std::vector< Index >, std::vector< Index > > result;
-  
-  Random_File< Index > current(rman.get_transaction()->random_index
-      (current_skeleton_file_properties< Skeleton >()));
-  for (typename std::vector< std::pair< typename Skeleton::Id_Type, uint64 > >::const_iterator
-      it = ids.begin(); it != ids.end(); ++it)
-    result.first.push_back(current.get(it->first.val()));
-  
-  std::sort(result.first.begin(), result.first.end());
-  result.first.erase(std::unique(result.first.begin(), result.first.end()), result.first.end());
-  
-  if (rman.get_desired_timestamp() != NOW)
-  {
-    Random_File< Index > attic_random(rman.get_transaction()->random_index
-        (attic_skeleton_file_properties< Skeleton >()));
-    std::set< typename Skeleton::Id_Type > idx_list_ids;
-    for (typename std::vector< std::pair< typename Skeleton::Id_Type, uint64 > >::const_iterator
-        it = ids.begin(); it != ids.end(); ++it)
-    {
-      if (it->second == 0 || attic_random.get(it->first.val()).val() == 0)
-        ;
-      else if (attic_random.get(it->first.val()) == 0xff)
-        idx_list_ids.insert(it->first.val());
-      else
-        result.second.push_back(attic_random.get(it->first.val()));
-    }
-  
-    Block_Backend< typename Skeleton::Id_Type, Index > idx_list_db
-        (rman.get_transaction()->data_index(attic_idx_list_properties< Skeleton >()));
-    for (typename Block_Backend< typename Skeleton::Id_Type, Index >::Discrete_Iterator
-        it(idx_list_db.discrete_begin(idx_list_ids.begin(), idx_list_ids.end()));
-        !(it == idx_list_db.discrete_end()); ++it)
-      result.second.push_back(it.object());
-  
-    std::sort(result.second.begin(), result.second.end());
-    result.second.erase(std::unique(result.second.begin(), result.second.end()), result.second.end());
-  }
-  
-  return result;
-}
 
 
 template< typename Id_Type >

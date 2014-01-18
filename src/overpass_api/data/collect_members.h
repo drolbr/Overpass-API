@@ -40,6 +40,15 @@ map< Uint31_Index, vector< Relation_Skeleton > > relation_relation_members
      const set< pair< Uint31_Index, Uint31_Index > >* children_ranges = 0,
      const vector< Relation::Id_Type >* children_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
 
+std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
+    std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > > > relation_relation_members
+    (const Statement& stmt, Resource_Manager& rman,
+     const map< Uint31_Index, vector< Relation_Skeleton > >& parents,
+     const map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_parents,
+     uint64 timestamp,
+     const set< pair< Uint31_Index, Uint31_Index > >* children_ranges = 0,
+     const vector< Relation::Id_Type >* children_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
+
 map< Uint31_Index, vector< Way_Skeleton > > relation_way_members
     (const Statement* stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
@@ -123,6 +132,12 @@ vector< Way::Id_Type > relation_way_member_ids
     
 vector< Relation::Id_Type > relation_relation_member_ids
     (Resource_Manager& rman, const map< Uint31_Index, vector< Relation_Skeleton > >& rels,
+     const uint32* role_id = 0);
+
+vector< Relation::Id_Type > relation_relation_member_ids
+    (Resource_Manager& rman,
+     const map< Uint31_Index, vector< Relation_Skeleton > >& rels,
+     const map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_rels,
      const uint32* role_id = 0);
 
 vector< Node::Id_Type > way_nd_ids(const map< Uint31_Index, vector< Way_Skeleton > >& ways);
