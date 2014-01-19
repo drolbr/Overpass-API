@@ -30,8 +30,6 @@
 #include "relation_updater.h"
 #include "tags_updater.h"
 
-using namespace std;
-
 
 Update_Relation_Logger::~Update_Relation_Logger()
 {
@@ -856,11 +854,9 @@ void compute_new_attic_skeletons
     
     if (next_it == new_data.data.end() || !(it->elem.id == next_it->elem.id))
       // This is the latest version of this element. Care here for changes since this element.
-    {
       add_intermediate_versions(it->elem, it->meta.timestamp, NOW, nodes_by_id, ways_by_id,
                                 false, Uint31_Index(0u),
                                 full_attic, new_undeleted, idx_lists);
-    }
 
     if (last_id == it->elem.id)
     {
@@ -898,7 +894,7 @@ void compute_new_attic_skeletons
       continue;
 
     add_intermediate_versions(*it_attic, 0, it->meta.timestamp, nodes_by_id, ways_by_id,
-                              !geometrically_equal(*it_attic, it->elem), *idx,
+                              (it->idx.val() == 0 || !geometrically_equal(*it_attic, it->elem)), *idx,
                               full_attic, new_undeleted, idx_lists);
   }
   

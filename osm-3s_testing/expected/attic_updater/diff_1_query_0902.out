@@ -8837,5 +8837,19 @@
     <nd ref="183221"/>
     <nd ref="183222"/>
   </way>
+  <node id="11011"/>
+  <relation id="16421" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="16422" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17421" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17422" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="18421" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="18422" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <node id="11012"/>
 
 </osm>

@@ -9753,5 +9753,19 @@
     <nd ref="183241"/>
     <nd ref="183242"/>
   </way>
+  <node id="11011"/>
+  <relation id="16421" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="16424" version="1" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17421" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17424" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="18421" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="18424" version="1" timestamp="2013-07-01T09:03:11Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <node id="11012"/>
 
 </osm>

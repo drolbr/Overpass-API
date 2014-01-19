@@ -517,3 +517,12 @@ node(11013);out ids;
 (rel(1632);way(1602););>;out meta;
 (rel(1732);way(1702););>;out meta;
 (rel(1832);way(1802););>;out meta;
+
+node(11011);out ids;
+rel(1642);rel(r);out meta;
+rel(1742);rel(r);out meta;
+rel(1842);rel(r);out meta;
+node(11012);out ids;
+rel(1642);rel(10.3,6,10.4,6.2)(r);out meta;
+rel(1742);rel(10.3,7,10.4,7.2)(r);out meta;
+rel(1842);rel(10.3,8,10.4,8.2)(r);out meta;
