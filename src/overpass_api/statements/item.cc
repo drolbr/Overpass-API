@@ -16,6 +16,7 @@
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../data/collect_members.h"
 #include "item.h"
 
 using namespace std;
@@ -99,33 +100,6 @@ bool Item_Constraint::collect(Resource_Manager& rman, Set& into,
   return true;
 }
 
-
-template< typename TIndex, typename TObject >
-void item_filter_map
-    (map< TIndex, vector< TObject > >& modify,
-     const map< TIndex, vector< TObject > >& read)
-{
-  for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
-      it != modify.end(); ++it)
-  {
-    sort(it->second.begin(), it->second.end());
-    typename map< TIndex, vector< TObject > >::const_iterator
-        from_it = read.find(it->first);
-    if (from_it == read.end())
-    {
-      it->second.clear();
-      continue;
-    }
-    vector< TObject > local_into;
-    for (typename vector< TObject >::const_iterator iit = from_it->second.begin();
-        iit != from_it->second.end(); ++iit)
-    {
-      if (std::binary_search(it->second.begin(), it->second.end(), *iit))
-	local_into.push_back(*iit);
-    }
-    it->second.swap(local_into);
-  }
-}
 
 void Item_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {

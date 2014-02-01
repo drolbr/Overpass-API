@@ -568,4 +568,87 @@ vector< Way::Id_Type > relation_way_member_ids
 }
 
 
+template< typename Index, typename Skeleton >
+void keep_matching_skeletons
+    (std::map< Index, std::vector< Skeleton > >& current,
+     std::map< Index, std::vector< Attic< Skeleton > > >& attic,
+     uint64 timestamp)
+{
+  std::map< typename Skeleton::Id_Type, uint64 > timestamp_by_id;
+  
+  for (typename std::map< Index, std::vector< Skeleton > >::const_iterator it = current.begin();
+       it != current.end(); ++it)
+  {
+    for (typename std::vector< Skeleton >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+      timestamp_by_id[it2->id] = NOW;
+  }
+  
+  for (typename std::map< Index, std::vector< Attic< Skeleton > > >::const_iterator it = attic.begin();
+       it != attic.end(); ++it)
+  {
+    for (typename std::vector< Attic<Skeleton > >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+    {
+      uint64& stored_timestamp = timestamp_by_id[it2->id];
+      if (it2->timestamp > timestamp && (stored_timestamp == 0 || stored_timestamp > it2->timestamp))
+        stored_timestamp = it2->timestamp;
+    }
+  }
+  
+  for (typename std::map< Index, std::vector< Skeleton > >::iterator it = current.begin();
+       it != current.end(); ++it)
+  {
+    std::vector< Skeleton > local_into;
+    for (typename std::vector< Skeleton >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+    {
+      if (timestamp_by_id[it2->id] == NOW)
+        local_into.push_back(*it2);
+    }
+    local_into.swap(it->second);
+  }
+  
+  for (typename std::map< Index, std::vector< Attic< Skeleton > > >::iterator it = attic.begin();
+       it != attic.end(); ++it)
+  {
+    std::vector< Attic< Skeleton > > local_into;
+    for (typename std::vector< Attic< Skeleton > >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+    {
+      if (timestamp_by_id[it2->id] == it2->timestamp)
+        local_into.push_back(*it2);
+    }
+    local_into.swap(it->second);
+  }
+}
+
+
+template< typename TIndex, typename TObject >
+void item_filter_map
+    (map< TIndex, vector< TObject > >& modify,
+     const map< TIndex, vector< TObject > >& read)
+{
+  for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
+      it != modify.end(); ++it)
+  {
+    sort(it->second.begin(), it->second.end());
+    typename map< TIndex, vector< TObject > >::const_iterator
+        from_it = read.find(it->first);
+    if (from_it == read.end())
+    {
+      it->second.clear();
+      continue;
+    }
+    vector< TObject > local_into;
+    for (typename vector< TObject >::const_iterator iit = from_it->second.begin();
+        iit != from_it->second.end(); ++iit)
+    {
+      if (std::binary_search(it->second.begin(), it->second.end(), *iit))
+        local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }
+}
+
 #endif

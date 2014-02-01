@@ -1520,6 +1520,11 @@
   <relation id="2608" version="2" timestamp="2013-07-01T09:02:28" changeset="496" uid="42" user="foo">
     <member type="node" ref="2608" role=""/>
   </relation>
+  
+  <relation id="3000" version="2" timestamp="2013-07-01T09:02:11" changeset="496" uid="42" user="foo">
+    <member type="relation" ref="1171" role="once_changed"/>
+    <tag k="purpose" v="meta"/>
+  </relation>
 </modify>
 
 <create>

@@ -293,6 +293,8 @@
        2505  tag deleted then same key with other val recreated within one diff
        2506  tag deleted then another tag created within one diff
        
+       3000  meta-relation on relations 117x
+       
        corresponding nodes are have ids between 100*(id of relation)+10 and 100*(id of relation)+90
        corresponding ways are have ids between 10*(id of relation)+1 and 10*(id of relation)+9, their
        nodes tenfold, never ending on 0
@@ -2839,6 +2841,11 @@
     <member type="node" ref="2605" role=""/>
     <tag k="multiple_values" v="first"/>
     <tag k="multiple_values" v="second"/>
+  </relation>
+  
+  <relation id="3000" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo">
+    <member type="relation" ref="1171" role="initial"/>
+    <tag k="purpose" v="meta"/>
   </relation>
   
   <relation id="11411" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>

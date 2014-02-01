@@ -1970,6 +1970,11 @@
     <member type="node" ref="25062" role=""/>
     <tag k="after" v="recreation"/>
   </relation>
+  
+  <relation id="3000" version="3" timestamp="2013-07-01T09:03:11" changeset="496" uid="42" user="foo">
+    <member type="relation" ref="1171" role="twice_changed"/>
+    <tag k="purpose" v="meta"/>
+  </relation>
 </modify>
 
 <delete>
