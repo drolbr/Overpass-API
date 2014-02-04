@@ -312,6 +312,181 @@ void collect_ways
 }
 
 
+template < class TIndex, class TObject, class TContainer, class TPredicate >
+void collect_items_discrete_by_timestamp(const Statement* stmt, Resource_Manager& rman,
+                   const TContainer& req, const TPredicate& predicate,
+                   map< TIndex, vector< TObject > >& result,
+                   map< TIndex, vector< Attic< TObject > > >& attic_result)
+{
+  std::vector< std::pair< typename TObject::Id_Type, uint64 > > timestamp_by_id;
+  uint64 timestamp = rman.get_desired_timestamp();
+  
+  uint32 count = 0;
+  Block_Backend< TIndex, TObject, typename TContainer::const_iterator > current_db
+      (rman.get_transaction()->data_index(current_skeleton_file_properties< TObject >()));
+  for (typename Block_Backend< TIndex, TObject, typename TContainer
+      ::const_iterator >::Discrete_Iterator
+      it(current_db.discrete_begin(req.begin(), req.end())); !(it == current_db.discrete_end()); ++it)
+  {
+    if (++count >= 64*1024)
+    {
+      count = 0;
+      if (stmt)
+        rman.health_check(*stmt);
+    }
+    timestamp_by_id.push_back(std::make_pair(it.object().id, NOW));
+    if (predicate.match(it.object()))
+      result[it.index()].push_back(it.object());
+  }
+
+  count = 0;
+  Block_Backend< TIndex, Attic< TObject >, typename TContainer::const_iterator > attic_db
+      (rman.get_transaction()->data_index(attic_skeleton_file_properties< TObject >()));
+  for (typename Block_Backend< TIndex, Attic< TObject >, typename TContainer
+      ::const_iterator >::Discrete_Iterator
+      it(attic_db.discrete_begin(req.begin(), req.end())); !(it == attic_db.discrete_end()); ++it)
+  {
+    if (++count >= 64*1024)
+    {
+      count = 0;
+      if (stmt)
+        rman.health_check(*stmt);
+    }
+    if (timestamp < it.object().timestamp)
+      timestamp_by_id.push_back(std::make_pair(it.object().id, it.object().timestamp));
+    if (predicate.match(it.object()))
+      attic_result[it.index()].push_back(it.object());
+  }
+  
+  std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
+  
+  for (typename std::map< TIndex, std::vector< TObject > >::iterator it = result.begin();
+       it != result.end(); ++it)
+  {
+    typename std::vector< TObject >::iterator target_it = it->second.begin();
+    for (typename std::vector< TObject >::iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+    {
+      typename std::vector< std::pair< typename TObject::Id_Type, uint64 > >::const_iterator
+          tit = std::lower_bound(timestamp_by_id.begin(), timestamp_by_id.end(),
+              std::make_pair(it2->id, 0ull));
+      if (tit != timestamp_by_id.end() && tit->first == it2->id && tit->second == NOW)
+      {
+        *target_it = *it2;
+        ++target_it;
+      }
+    }
+    it->second.erase(target_it, it->second.end());
+  }
+  
+  for (typename std::map< TIndex, std::vector< Attic< TObject > > >::iterator it = attic_result.begin();
+       it != attic_result.end(); ++it)
+  {
+    typename std::vector< Attic< TObject > >::iterator target_it = it->second.begin();
+    for (typename std::vector< Attic< TObject > >::iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+    {
+      typename std::vector< std::pair< typename TObject::Id_Type, uint64 > >::const_iterator
+          tit = std::lower_bound(timestamp_by_id.begin(), timestamp_by_id.end(),
+              std::make_pair(it2->id, 0ull));
+      if (tit != timestamp_by_id.end() && tit->first == it2->id && tit->second == it2->timestamp)
+      {
+        *target_it = *it2;
+        ++target_it;
+      }
+    }
+    it->second.erase(target_it, it->second.end());
+  }
+}
+
+
+void collect_ways
+    (const Statement& stmt, Resource_Manager& rman,
+     const map< Uint32_Index, vector< Node_Skeleton > >& nodes,
+     const map< Uint32_Index, vector< Attic< Node_Skeleton > > >& attic_nodes,
+     map< Uint31_Index, vector< Way_Skeleton > >& result,
+     map< Uint31_Index, vector< Attic< Way_Skeleton > > >& attic_result)
+{
+  vector< Uint64 > current_ids = extract_children_ids< Uint32_Index, Node_Skeleton, Uint64 >(nodes);    
+  rman.health_check(stmt);
+  set< Uint31_Index > req = extract_parent_indices(nodes);
+  rman.health_check(stmt);
+  
+  vector< Uint64 > attic_ids = extract_children_ids< Uint32_Index, Attic< Node_Skeleton >, Uint64 >
+      (attic_nodes);    
+  rman.health_check(stmt);
+  set< Uint31_Index > attic_req = extract_parent_indices(attic_nodes);
+  rman.health_check(stmt);
+  
+  vector< Uint64 > ids;
+  std::set_union(current_ids.begin(), current_ids.end(), attic_ids.begin(), attic_ids.end(),
+                 std::back_inserter(ids));
+  for (std::set< Uint31_Index >::const_iterator it = attic_req.begin(); it != attic_req.end(); ++it)
+    req.insert(*it);
+  
+  collect_items_discrete_by_timestamp(&stmt, rman, req,
+      Get_Parent_Ways_Predicate(ids), result, attic_result);
+}
+
+
+void collect_ways
+    (const Statement& stmt, Resource_Manager& rman,
+     const map< Uint32_Index, vector< Node_Skeleton > >& nodes,
+     const map< Uint32_Index, vector< Attic< Node_Skeleton > > >& attic_nodes,
+     map< Uint31_Index, vector< Way_Skeleton > >& result,
+     map< Uint31_Index, vector< Attic< Way_Skeleton > > >& attic_result,
+     const vector< Way::Id_Type >& ids, bool invert_ids)
+{
+  vector< Uint64 > current_ids = extract_children_ids< Uint32_Index, Node_Skeleton, Uint64 >(nodes);    
+  rman.health_check(stmt);
+  set< Uint31_Index > req = extract_parent_indices(nodes);
+  rman.health_check(stmt);
+  
+  vector< Uint64 > attic_ids = extract_children_ids< Uint32_Index, Attic< Node_Skeleton >, Uint64 >
+      (attic_nodes);    
+  rman.health_check(stmt);
+  set< Uint31_Index > attic_req = extract_parent_indices(attic_nodes);
+  rman.health_check(stmt);
+  
+  vector< Uint64 > children_ids;
+  std::set_union(current_ids.begin(), current_ids.end(), attic_ids.begin(), attic_ids.end(),
+                 std::back_inserter(children_ids));
+  for (std::set< Uint31_Index >::const_iterator it = attic_req.begin(); it != attic_req.end(); ++it)
+    req.insert(*it);
+  
+  if (!invert_ids)
+  {
+    collect_items_discrete(&stmt, rman, *osm_base_settings().WAYS, req,
+        And_Predicate< Way_Skeleton,
+            Id_Predicate< Way_Skeleton >, Get_Parent_Ways_Predicate >
+            (Id_Predicate< Way_Skeleton >(ids), Get_Parent_Ways_Predicate(children_ids)), result);
+    collect_items_discrete(&stmt, rman, *attic_settings().WAYS, req,
+        And_Predicate< Attic< Way_Skeleton >,
+            Id_Predicate< Attic< Way_Skeleton > >, Get_Parent_Ways_Predicate >
+            (Id_Predicate< Attic< Way_Skeleton > >(ids), Get_Parent_Ways_Predicate(children_ids)),
+        attic_result);
+  }
+  else
+  {
+    collect_items_discrete(&stmt, rman, *osm_base_settings().WAYS, req,
+        And_Predicate< Way_Skeleton,
+            Not_Predicate< Way_Skeleton, Id_Predicate< Way_Skeleton > >,
+            Get_Parent_Ways_Predicate >
+            (Not_Predicate< Way_Skeleton, Id_Predicate< Way_Skeleton > >
+              (Id_Predicate< Way_Skeleton >(ids)),
+             Get_Parent_Ways_Predicate(children_ids)), result);
+    collect_items_discrete(&stmt, rman, *attic_settings().WAYS, req,
+        And_Predicate< Way_Skeleton,
+            Not_Predicate< Way_Skeleton, Id_Predicate< Way_Skeleton > >,
+            Get_Parent_Ways_Predicate >
+            (Not_Predicate< Way_Skeleton, Id_Predicate< Way_Skeleton > >
+              (Id_Predicate< Way_Skeleton >(ids)),
+             Get_Parent_Ways_Predicate(children_ids)), result);
+  }
+  keep_matching_skeletons(result, attic_result, rman.get_desired_timestamp());
+}
+
+
 void collect_nodes(const Statement& query, Resource_Manager& rman,
 		   const map< Uint31_Index, vector< Relation_Skeleton > >& rels,
 		   const set< pair< Uint32_Index, Uint32_Index > >& ranges,
@@ -1194,13 +1369,16 @@ bool Recurse_Constraint::get_data
         keep_matching_skeletons(into.relations, into.attic_relations, timestamp);
       }
     }
-//     else if (stmt->get_type() == RECURSE_NODE_WAY)
-//     {
-//       if (ids.empty())
-//         collect_ways(query, rman, mit->second.nodes, into.ways);
-//       else
-//         collect_ways(query, rman, mit->second.nodes, into.ways, ids, invert_ids);
-//     }
+    else if (stmt->get_type() == RECURSE_NODE_WAY)
+    {
+      if (ids.empty())
+        collect_ways(query, rman,
+                     mit->second.nodes, mit->second.attic_nodes, into.ways, into.attic_ways);
+      else
+        collect_ways(query, rman,
+                     mit->second.nodes, mit->second.attic_nodes, into.ways, into.attic_ways,
+                     ids, invert_ids);
+    }
 //     else if (stmt->get_type() == RECURSE_NODE_RELATION)
 //     {
 //       if (ids.empty())
@@ -1424,8 +1602,15 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
   else if (stmt->get_type() == RECURSE_NODE_WAY || stmt->get_type() == RECURSE_UP
       || stmt->get_type() == RECURSE_UP_REL)
   {
-    vector< Node::Id_Type > ids = extract_children_ids< Uint32_Index, Node_Skeleton, Node::Id_Type >(mit->second.nodes);
+    vector< Node::Id_Type > current_ids = extract_children_ids
+        < Uint32_Index, Node_Skeleton, Node::Id_Type >(mit->second.nodes);
+    vector< Node::Id_Type > attic_ids = extract_children_ids
+        < Uint32_Index, Attic< Node_Skeleton >, Node::Id_Type >(mit->second.attic_nodes);
+    vector< Node::Id_Type > ids;
+    std::set_union(current_ids.begin(), current_ids.end(), attic_ids.begin(), attic_ids.end(),
+                   std::back_inserter(ids));
     filter_items(Get_Parent_Ways_Predicate(ids), into.ways);
+    filter_items(Get_Parent_Ways_Predicate(ids), into.attic_ways);
   }
   else
     into.ways.clear();
@@ -1915,7 +2100,13 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   else if (type == RECURSE_WAY_RELATION)
     collect_relations(*this, rman, mit->second.ways, Relation_Entry::WAY, into.relations);
   else if (type == RECURSE_NODE_WAY)
-    collect_ways(*this, rman, mit->second.nodes, into.ways);
+  {
+    if (rman.get_desired_timestamp() == NOW)
+      collect_ways(*this, rman, mit->second.nodes, into.ways);
+    else
+      collect_ways(*this, rman,
+                   mit->second.nodes, mit->second.attic_nodes, into.ways, into.attic_ways);
+  }
   else if (type == RECURSE_NODE_RELATION)
     collect_relations(*this, rman, mit->second.nodes, Relation_Entry::NODE, into.relations);
   else if (type == RECURSE_UP)
@@ -1948,9 +2139,17 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     relations_up_loop(*this, rman, rel_rels, into.relations);    
   }
 
+  if (rman.get_desired_timestamp() != NOW)
+  {
+    filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
+    filter_attic_elements(rman, rman.get_desired_timestamp(), into.ways, into.attic_ways);
+    filter_attic_elements(rman, rman.get_desired_timestamp(), into.relations, into.attic_relations);
+  }
+  
   transfer_output(rman, into);
   rman.health_check(*this);
 }
+
 
 Recurse_Statement::~Recurse_Statement()
 {
@@ -1958,6 +2157,7 @@ Recurse_Statement::~Recurse_Statement()
       it != constraints.end(); ++it)
     delete *it;
 }
+
 
 Query_Constraint* Recurse_Statement::get_query_constraint()
 {
