@@ -216,6 +216,94 @@ void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
 
 
 template < class TIndex, class TObject, class TContainer, class TPredicate >
+void collect_items_discrete_by_timestamp(const Statement* stmt, Resource_Manager& rman,
+                   const TContainer& req, const TPredicate& predicate,
+                   map< TIndex, vector< TObject > >& result,
+                   map< TIndex, vector< Attic< TObject > > >& attic_result)
+{
+  std::vector< std::pair< typename TObject::Id_Type, uint64 > > timestamp_by_id;
+  uint64 timestamp = rman.get_desired_timestamp();
+  
+  uint32 count = 0;
+  Block_Backend< TIndex, TObject, typename TContainer::const_iterator > current_db
+      (rman.get_transaction()->data_index(current_skeleton_file_properties< TObject >()));
+  for (typename Block_Backend< TIndex, TObject, typename TContainer
+      ::const_iterator >::Discrete_Iterator
+      it(current_db.discrete_begin(req.begin(), req.end())); !(it == current_db.discrete_end()); ++it)
+  {
+    if (++count >= 64*1024)
+    {
+      count = 0;
+      if (stmt)
+        rman.health_check(*stmt);
+    }
+    timestamp_by_id.push_back(std::make_pair(it.object().id, NOW));
+    if (predicate.match(it.object()))
+      result[it.index()].push_back(it.object());
+  }
+
+  count = 0;
+  Block_Backend< TIndex, Attic< TObject >, typename TContainer::const_iterator > attic_db
+      (rman.get_transaction()->data_index(attic_skeleton_file_properties< TObject >()));
+  for (typename Block_Backend< TIndex, Attic< TObject >, typename TContainer
+      ::const_iterator >::Discrete_Iterator
+      it(attic_db.discrete_begin(req.begin(), req.end())); !(it == attic_db.discrete_end()); ++it)
+  {
+    if (++count >= 64*1024)
+    {
+      count = 0;
+      if (stmt)
+        rman.health_check(*stmt);
+    }
+    if (timestamp < it.object().timestamp)
+      timestamp_by_id.push_back(std::make_pair(it.object().id, it.object().timestamp));
+    if (predicate.match(it.object()))
+      attic_result[it.index()].push_back(it.object());
+  }
+  
+  std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
+  
+  for (typename std::map< TIndex, std::vector< TObject > >::iterator it = result.begin();
+       it != result.end(); ++it)
+  {
+    typename std::vector< TObject >::iterator target_it = it->second.begin();
+    for (typename std::vector< TObject >::iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+    {
+      typename std::vector< std::pair< typename TObject::Id_Type, uint64 > >::const_iterator
+          tit = std::lower_bound(timestamp_by_id.begin(), timestamp_by_id.end(),
+              std::make_pair(it2->id, 0ull));
+      if (tit != timestamp_by_id.end() && tit->first == it2->id && tit->second == NOW)
+      {
+        *target_it = *it2;
+        ++target_it;
+      }
+    }
+    it->second.erase(target_it, it->second.end());
+  }
+  
+  for (typename std::map< TIndex, std::vector< Attic< TObject > > >::iterator it = attic_result.begin();
+       it != attic_result.end(); ++it)
+  {
+    typename std::vector< Attic< TObject > >::iterator target_it = it->second.begin();
+    for (typename std::vector< Attic< TObject > >::iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+    {
+      typename std::vector< std::pair< typename TObject::Id_Type, uint64 > >::const_iterator
+          tit = std::lower_bound(timestamp_by_id.begin(), timestamp_by_id.end(),
+              std::make_pair(it2->id, 0ull));
+      if (tit != timestamp_by_id.end() && tit->first == it2->id && tit->second == it2->timestamp)
+      {
+        *target_it = *it2;
+        ++target_it;
+      }
+    }
+    it->second.erase(target_it, it->second.end());
+  }
+}
+
+
+template < class TIndex, class TObject, class TContainer, class TPredicate >
 void collect_items_discrete(Transaction& transaction,
                    File_Properties& file_properties,
                    const TContainer& req, const TPredicate& predicate,
