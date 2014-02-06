@@ -620,3 +620,16 @@ node(11013);out ids;
 (node(161210);node(161230););rel[foo](bn);out meta;
 (node(171210);node(171230););rel[foo](bn);out meta;
 (node(181210);node(181230););rel[foo](bn);out meta;
+
+node(11011);out ids;
+rel(1612);node(r:"");out meta;
+rel(1622);way(r:"");out meta;
+rel(1941);rel(r:"initial");out meta;
+node(11012);out ids;
+node(120210);rel(bn:"");out meta;
+node(12011);out ids;
+rel(1612);node(r:"foo");out meta;
+rel(1622);way(r:"foo");out meta;
+rel(1941);rel(r:"intermediate");out meta;
+node(12012);out ids;
+node(120210);rel(bn:"foo");out meta;

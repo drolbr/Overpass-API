@@ -10242,5 +10242,27 @@
     <tag k="foo" v="bar_1812"/>
     <tag k="foo_1812" v="bar"/>
   </relation>
+  <node id="11011"/>
+  <node id="161210" lat="10.1010000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="161240" lat="10.1040000" lon="6.0200000" version="1" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo"/>
+  <way id="16221" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="162211"/>
+    <nd ref="162212"/>
+  </way>
+  <way id="16224" version="1" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="162241"/>
+    <nd ref="162242"/>
+  </way>
+  <node id="11012"/>
+  <relation id="1202" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+    <member type="node" ref="120210" role=""/>
+    <member type="node" ref="120220" role=""/>
+    <tag k="foo" v="bar_1202"/>
+    <tag k="foo_1202" v="bar"/>
+  </relation>
+  <node id="12011"/>
+  <relation id="19411" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <node id="12012"/>
 
 </osm>
