@@ -660,6 +660,16 @@ node(11013);out ids;
 (way(18221);way(18223););rel[foo](bw);out meta;
 
 node(11011);out ids;
+node(132111);<;out meta;
+node(161210);<;out meta;
+way(16221);<;out meta;
+node(163211);<;out meta;
+node(11012);out ids;
+(node(161210);way(16221);node(163211););<;out meta;
+node(11013);out ids;
+(node(163210);way(16321);node(163211););<;out meta;
+
+node(11011);out ids;
 rel(1612);node(r:"");out meta;
 rel(1622);way(r:"");out meta;
 rel(1941);rel(r:"initial");out meta;
