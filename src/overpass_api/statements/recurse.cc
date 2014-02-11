@@ -49,6 +49,93 @@ Generic_Statement_Maker< Recurse_Statement > Recurse_Statement::statement_maker(
 
 //-----------------------------------------------------------------------------
 
+
+template < class TIndex, class TObject, class TPredicate >
+void collect_items_flat_by_timestamp(const Statement& stmt, Resource_Manager& rman,
+                   const TPredicate& predicate,
+                   map< TIndex, vector< TObject > >& result,
+                   map< TIndex, vector< Attic< TObject > > >& attic_result)
+{
+  std::vector< std::pair< typename TObject::Id_Type, uint64 > > timestamp_by_id;
+  uint64 timestamp = rman.get_desired_timestamp();
+  
+  uint32 count = 0;
+  Block_Backend< TIndex, TObject > current_db
+      (rman.get_transaction()->data_index(current_skeleton_file_properties< TObject >()));
+  for (typename Block_Backend< TIndex, TObject >::Flat_Iterator
+      it(current_db.flat_begin()); !(it == current_db.flat_end()); ++it)
+  {
+    if (++count >= 64*1024)
+    {
+      count = 0;
+      rman.health_check(stmt);
+    }
+    timestamp_by_id.push_back(std::make_pair(it.object().id, NOW));
+    if (predicate.match(it.object()))
+      result[it.index()].push_back(it.object());
+  }
+
+  count = 0;
+  Block_Backend< TIndex, Attic< TObject > > attic_db
+      (rman.get_transaction()->data_index(attic_skeleton_file_properties< TObject >()));
+  for (typename Block_Backend< TIndex, Attic< TObject > >::Flat_Iterator
+      it(attic_db.flat_begin()); !(it == attic_db.flat_end()); ++it)
+  {
+    if (++count >= 64*1024)
+    {
+      count = 0;
+      rman.health_check(stmt);
+    }
+    if (timestamp < it.object().timestamp)
+    {
+      timestamp_by_id.push_back(std::make_pair(it.object().id, it.object().timestamp));
+      if (predicate.match(it.object()))
+        attic_result[it.index()].push_back(it.object());
+    }
+  }
+  
+  std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
+  
+  for (typename std::map< TIndex, std::vector< TObject > >::iterator it = result.begin();
+       it != result.end(); ++it)
+  {
+    typename std::vector< TObject >::iterator target_it = it->second.begin();
+    for (typename std::vector< TObject >::iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+    {
+      typename std::vector< std::pair< typename TObject::Id_Type, uint64 > >::const_iterator
+          tit = std::lower_bound(timestamp_by_id.begin(), timestamp_by_id.end(),
+              std::make_pair(it2->id, 0ull));
+      if (tit != timestamp_by_id.end() && tit->first == it2->id && tit->second == NOW)
+      {
+        *target_it = *it2;
+        ++target_it;
+      }
+    }
+    it->second.erase(target_it, it->second.end());
+  }
+  
+  for (typename std::map< TIndex, std::vector< Attic< TObject > > >::iterator it = attic_result.begin();
+       it != attic_result.end(); ++it)
+  {
+    typename std::vector< Attic< TObject > >::iterator target_it = it->second.begin();
+    for (typename std::vector< Attic< TObject > >::iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+    {
+      typename std::vector< std::pair< typename TObject::Id_Type, uint64 > >::const_iterator
+          tit = std::lower_bound(timestamp_by_id.begin(), timestamp_by_id.end(),
+              std::make_pair(it2->id, 0ull));
+      if (tit != timestamp_by_id.end() && tit->first == it2->id && tit->second == it2->timestamp)
+      {
+        *target_it = *it2;
+        ++target_it;
+      }
+    }
+    it->second.erase(target_it, it->second.end());
+  }
+}
+
+
 template< class TIndex, class TObject, class Id_Type >
 vector< Id_Type > extract_children_ids(const map< TIndex, vector< TObject > >& elems)
 {
@@ -414,6 +501,132 @@ void collect_relations
               (Id_Predicate< Relation_Skeleton >(ids)),
             Get_Parent_Rels_Role_Predicate(children_ids, Relation_Entry::RELATION, role_id)),
         result);
+}
+
+
+void collect_relations
+    (const Statement& stmt, Resource_Manager& rman,
+     const map< Uint31_Index, vector< Relation_Skeleton > >& sources,
+     const map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_sources,
+     map< Uint31_Index, vector< Relation_Skeleton > >& result,
+     map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_result)
+{
+  vector< Relation_Entry::Ref_Type > current_ids = extract_children_ids
+      < Uint31_Index, Relation_Skeleton, Relation_Entry::Ref_Type >(sources);
+  rman.health_check(stmt);
+  
+  vector< Relation_Entry::Ref_Type > attic_ids = extract_children_ids
+      < Uint31_Index, Attic< Relation_Skeleton >, Relation_Entry::Ref_Type >(attic_sources);
+  rman.health_check(stmt);
+  
+  vector< Uint64 > ids;
+  std::set_union(current_ids.begin(), current_ids.end(), attic_ids.begin(), attic_ids.end(),
+                 std::back_inserter(ids));
+  
+  collect_items_flat_by_timestamp(stmt, rman,
+      Get_Parent_Rels_Predicate(ids, Relation_Entry::RELATION), result, attic_result);
+}
+
+
+void collect_relations
+    (const Statement& stmt, Resource_Manager& rman,
+     const map< Uint31_Index, vector< Relation_Skeleton > >& sources,
+     const map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_sources,
+     map< Uint31_Index, vector< Relation_Skeleton > >& result,
+     map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_result, uint32 role_id)
+{
+  vector< Relation_Entry::Ref_Type > current_ids = extract_children_ids
+      < Uint31_Index, Relation_Skeleton, Relation_Entry::Ref_Type >(sources);
+  rman.health_check(stmt);
+  
+  vector< Relation_Entry::Ref_Type > attic_ids = extract_children_ids
+      < Uint31_Index, Attic< Relation_Skeleton >, Relation_Entry::Ref_Type >(attic_sources);
+  rman.health_check(stmt);
+  
+  vector< Uint64 > ids;
+  std::set_union(current_ids.begin(), current_ids.end(), attic_ids.begin(), attic_ids.end(),
+                 std::back_inserter(ids));
+  
+  collect_items_flat_by_timestamp(stmt, rman,
+      Get_Parent_Rels_Role_Predicate(ids, Relation_Entry::RELATION, role_id), result, attic_result);
+}
+
+
+void collect_relations
+    (const Statement& stmt, Resource_Manager& rman,
+     const map< Uint31_Index, vector< Relation_Skeleton > >& sources,
+     const map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_sources,
+     map< Uint31_Index, vector< Relation_Skeleton > >& result,
+     map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_result,
+     const vector< Relation::Id_Type >& ids, bool invert_ids)
+{
+  vector< Relation_Entry::Ref_Type > current_ids = extract_children_ids
+      < Uint31_Index, Relation_Skeleton, Relation_Entry::Ref_Type >(sources);
+  rman.health_check(stmt);
+  
+  vector< Relation_Entry::Ref_Type > attic_ids = extract_children_ids
+      < Uint31_Index, Attic< Relation_Skeleton >, Relation_Entry::Ref_Type >(attic_sources);
+  rman.health_check(stmt);
+  
+  vector< Uint64 > children_ids;
+  std::set_union(current_ids.begin(), current_ids.end(), attic_ids.begin(), attic_ids.end(),
+                 std::back_inserter(children_ids));
+  
+  if (!invert_ids)
+    collect_items_flat_by_timestamp(stmt, rman,
+        And_Predicate< Relation_Skeleton,
+            Id_Predicate< Relation_Skeleton >, Get_Parent_Rels_Predicate >
+            (Id_Predicate< Relation_Skeleton >(ids),
+            Get_Parent_Rels_Predicate(children_ids, Relation_Entry::RELATION)),
+        result, attic_result);
+  else
+    collect_items_flat_by_timestamp(stmt, rman,
+        And_Predicate< Relation_Skeleton,
+            Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >,
+            Get_Parent_Rels_Predicate >
+            (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
+              (Id_Predicate< Relation_Skeleton >(ids)),
+            Get_Parent_Rels_Predicate(children_ids, Relation_Entry::RELATION)),
+        result, attic_result);
+}
+
+
+void collect_relations
+    (const Statement& stmt, Resource_Manager& rman,
+     const map< Uint31_Index, vector< Relation_Skeleton > >& sources,
+     const map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_sources,
+     map< Uint31_Index, vector< Relation_Skeleton > >& result,
+     map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_result,
+     const vector< Relation::Id_Type >& ids, bool invert_ids, uint32 role_id)
+{
+  vector< Relation_Entry::Ref_Type > current_ids = extract_children_ids
+      < Uint31_Index, Relation_Skeleton, Relation_Entry::Ref_Type >(sources);
+  rman.health_check(stmt);
+  
+  vector< Relation_Entry::Ref_Type > attic_ids = extract_children_ids
+      < Uint31_Index, Attic< Relation_Skeleton >, Relation_Entry::Ref_Type >(attic_sources);
+  rman.health_check(stmt);
+  
+  vector< Uint64 > children_ids;
+  std::set_union(current_ids.begin(), current_ids.end(), attic_ids.begin(), attic_ids.end(),
+                 std::back_inserter(children_ids));
+  
+  if (!invert_ids)
+    collect_items_flat_by_timestamp(stmt, rman,
+        And_Predicate< Relation_Skeleton,
+            Id_Predicate< Relation_Skeleton >, Get_Parent_Rels_Role_Predicate >
+            (Id_Predicate< Relation_Skeleton >(ids),
+            Get_Parent_Rels_Role_Predicate(children_ids, Relation_Entry::RELATION, role_id)),
+        result, attic_result);
+  else
+    collect_items_flat_by_timestamp(stmt, rman,
+        And_Predicate< Relation_Skeleton,
+            Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >,
+            Get_Parent_Rels_Role_Predicate >
+            (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
+              (Id_Predicate< Relation_Skeleton >(ids)),
+            Get_Parent_Rels_Role_Predicate(children_ids, Relation_Entry::RELATION, role_id)),
+        result, attic_result);
 }
 
 
@@ -1364,14 +1577,15 @@ bool Recurse_Constraint::get_data
                             Relation_Entry::WAY, into.relations, into.attic_relations,
                             ids, invert_ids, role_id);
       }
-//       else if (stmt->get_type() == RECURSE_RELATION_BACKWARDS)
-//       {
-//         if (ids.empty())
-//           collect_relations(query, rman, mit->second.relations, into.relations, role_id);
-//         else
-//           collect_relations(query, rman, mit->second.relations, into.relations,
-//                         ids, invert_ids, role_id);
-//       }
+      else if (stmt->get_type() == RECURSE_RELATION_BACKWARDS)
+      {
+        if (ids.empty())
+          collect_relations(query, rman, mit->second.relations, mit->second.attic_relations,
+                            into.relations, into.attic_relations, role_id);
+        else
+          collect_relations(query, rman, mit->second.relations, mit->second.attic_relations,
+                            into.relations, into.attic_relations, ids, invert_ids, role_id);
+      }
       else
         return false;
       
@@ -1458,14 +1672,15 @@ bool Recurse_Constraint::get_data
                           ids, invert_ids);
       return true;
     }
-//     else if (stmt->get_type() == RECURSE_RELATION_BACKWARDS)
-//     {
-//       if (ids.empty())
-//         collect_relations(query, rman, mit->second.relations, into.relations);
-//       else
-//         collect_relations(query, rman, mit->second.relations, into.relations,
-//                           ids, invert_ids);
-//     }
+    else if (stmt->get_type() == RECURSE_RELATION_BACKWARDS)
+    {
+        if (ids.empty())
+          collect_relations(query, rman, mit->second.relations, mit->second.attic_relations,
+                            into.relations, into.attic_relations);
+        else
+          collect_relations(query, rman, mit->second.relations, mit->second.attic_relations,
+                            into.relations, into.attic_relations, ids, invert_ids);
+    }
     else if (stmt->get_type() == RECURSE_UP)
     {
       if (type == QUERY_WAY)
@@ -1756,7 +1971,15 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
                std::back_inserter(ids));
     }
     else if (stmt->get_type() == RECURSE_RELATION_BACKWARDS)
-      ids = extract_children_ids< Uint31_Index, Relation_Skeleton, Relation_Entry::Ref_Type >(mit->second.relations);
+    {
+      vector< Relation_Entry::Ref_Type > current_ids = extract_children_ids
+          < Uint31_Index, Relation_Skeleton, Relation_Entry::Ref_Type >(mit->second.relations);
+      vector< Relation_Entry::Ref_Type > attic_ids = extract_children_ids
+          < Uint31_Index, Attic< Relation_Skeleton >, Relation_Entry::Ref_Type >(mit->second.attic_relations);
+      ids.clear();
+      std::set_union(current_ids.begin(), current_ids.end(), attic_ids.begin(), attic_ids.end(),
+               std::back_inserter(ids));
+    }
     
     filter_items(Get_Parent_Rels_Predicate(ids, source_type), into.relations);
     filter_items(Get_Parent_Rels_Predicate(ids, source_type), into.attic_relations);
@@ -2099,7 +2322,13 @@ void Recurse_Statement::execute(Resource_Manager& rman)
       }
     }
     else if (type == RECURSE_RELATION_BACKWARDS)
-      collect_relations(*this, rman, mit->second.relations, into.relations, role_id);
+    {
+      if (rman.get_desired_timestamp() == NOW)
+        collect_relations(*this, rman, mit->second.relations, into.relations, role_id);
+      else
+        collect_relations(*this, rman, mit->second.relations, mit->second.attic_relations,
+                          into.relations, into.attic_relations, role_id);
+    }
     else if (type == RECURSE_NODE_RELATION)
     {
       if (rman.get_desired_timestamp() == NOW)
@@ -2132,7 +2361,13 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     }
   }
   else if (type == RECURSE_RELATION_BACKWARDS)
-    collect_relations(*this, rman, mit->second.relations, into.relations);
+  {
+    if (rman.get_desired_timestamp() == NOW)
+      collect_relations(*this, rman, mit->second.relations, into.relations);
+    else
+      collect_relations(*this, rman, mit->second.relations, mit->second.attic_relations,
+                        into.relations, into.attic_relations);
+  }
   else if (type == RECURSE_RELATION_WAY)
   {
     if (rman.get_desired_timestamp() == NOW)

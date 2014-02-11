@@ -671,6 +671,32 @@ node(11013);out ids;
 (node(163210);way(16321);node(163211););<;out meta;
 
 node(11011);out ids;
+rel(16421);rel(br);out meta;
+rel(17421);rel(br);out meta;
+rel(18421);rel(br);out meta;
+node(11012);out ids;
+rel(16423);rel(br);out meta;
+rel(17423);rel(br);out meta;
+rel(18423);rel(br);out meta;
+node(11013);out ids;
+(rel(16421);rel(16423););rel(br);out meta;
+(rel(17421);rel(17423););rel(br);out meta;
+(rel(18421);rel(18423););rel(br);out meta;
+
+node(11011);out ids;
+rel(16421);rel[foo](br);out meta;
+rel(17421);rel[foo](br);out meta;
+rel(18421);rel[foo](br);out meta;
+node(11012);out ids;
+rel(16423);rel[foo](br);out meta;
+rel(17423);rel[foo](br);out meta;
+rel(18423);rel[foo](br);out meta;
+node(11013);out ids;
+(rel(16421);rel(16423););rel[foo](br);out meta;
+(rel(17421);rel(17423););rel[foo](br);out meta;
+(rel(18421);rel(18423););rel[foo](br);out meta;
+
+node(11011);out ids;
 rel(1612);node(r:"");out meta;
 rel(1622);way(r:"");out meta;
 rel(1941);rel(r:"initial");out meta;
