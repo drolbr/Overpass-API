@@ -22,6 +22,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "../data/collect_members.h"
 #include "statement.h"
 
 using namespace std;
@@ -38,17 +39,15 @@ class Print_Target
 			    const map< uint32, string >* users = 0) = 0;
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
+                            const std::pair< Quad_Coord, Quad_Coord >* bounds = 0,
+                            const std::vector< Quad_Coord >* geometry = 0,
 			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0) = 0;
     virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
+                            const std::pair< Quad_Coord, Quad_Coord >* bounds = 0,
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0) = 0;
-                            
-    virtual void print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
-                            const vector< pair< string, string > >* tags = 0,
-                            const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
-                            const map< uint32, string >* users = 0) = 0;
                             
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
@@ -59,10 +58,12 @@ class Print_Target
     static const unsigned int PRINT_COORDS = 2;
     static const unsigned int PRINT_NDS = 4;
     static const unsigned int PRINT_MEMBERS = 8;
-    static const unsigned int PRINT_TAGS = 16;
-    static const unsigned int PRINT_VERSION = 32;
-    static const unsigned int PRINT_META = 64;
-			    
+    static const unsigned int PRINT_TAGS = 0x10;
+    static const unsigned int PRINT_VERSION = 0x20;
+    static const unsigned int PRINT_META = 0x40;
+    static const unsigned int PRINT_GEOMETRY = 0x80;
+    static const unsigned int PRINT_BOUNDS = 0x100;
+
   protected:
     uint32 mode;
     map< uint32, string > roles;
@@ -70,6 +71,16 @@ class Print_Target
 
 
 class Output_Handle;
+
+
+template< typename Id_Type, typename Index >
+class Geometry_Store_Manager
+{
+public:
+  virtual void prepare_geometry_store(Id_Type id_pos, uint32 FLUSH_SIZE) {}  
+  virtual void prepare_geometry_store(Index index, uint32 FLUSH_SIZE) {}
+};
+
 
 class Print_Statement : public Statement
 {
@@ -91,12 +102,15 @@ class Print_Statement : public Statement
     enum { order_by_id, order_by_quadtile } order;
     unsigned int limit;
     Output_Handle* output_handle;
+    Way_Geometry_Store* way_geometry_store;
+    Way_Geometry_Store* attic_way_geometry_store;
 
     template< class Index, class Object >
     void tags_quadtile
       (const map< Index, vector< Object > >& items,
        const File_Properties& file_prop, Print_Target& target,
        Resource_Manager& rman, Transaction& transaction,
+       Geometry_Store_Manager< typename Object::Id_Type, Index >& geometry_store,
        const File_Properties* meta_file_prop, uint32& element_count);
     
     template< class Index, class Object >
@@ -104,6 +118,7 @@ class Print_Statement : public Statement
       (const map< Index, vector< Attic< Object > > >& items,
        Print_Target& target,
        Resource_Manager& rman, Transaction& transaction,
+       Geometry_Store_Manager< typename Object::Id_Type, Index >& geometry_store,
        const File_Properties* current_meta_file_prop, const File_Properties* attic_meta_file_prop,
        uint32& element_count);
     
@@ -113,6 +128,7 @@ class Print_Statement : public Statement
        const File_Properties& file_prop,
        uint32 FLUSH_SIZE, Print_Target& target,
        Resource_Manager& rman, Transaction& transaction,
+       Geometry_Store_Manager< typename TObject::Id_Type, TIndex >& geometry_store,
        const File_Properties* meta_file_prop, uint32& element_count);
     
     template< class TIndex, class TObject >
@@ -120,8 +136,37 @@ class Print_Statement : public Statement
       (const map< TIndex, vector< Attic< TObject > > >& items,
        uint32 FLUSH_SIZE, Print_Target& target,
        Resource_Manager& rman, Transaction& transaction,
+       Geometry_Store_Manager< typename TObject::Id_Type, TIndex >& geometry_store,
        const File_Properties* current_meta_file_prop, const File_Properties* attic_meta_file_prop,
        uint32& element_count);
+      
+    void print_item(Print_Target& target, uint32 ll_upper, const Node_Skeleton& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0);
+    
+    void print_item(Print_Target& target, uint32 ll_upper, const Way_Skeleton& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0);
+    void print_item(Print_Target& target, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0);
+    
+    void print_item(Print_Target& target, uint32 ll_upper, const Relation_Skeleton& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0);
+    void print_item(Print_Target& target, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0);
+    
+    void print_item(Print_Target& target, uint32 ll_upper, const Area_Skeleton& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0);    
 };
 
 #endif
