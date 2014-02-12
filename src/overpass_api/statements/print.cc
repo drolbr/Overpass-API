@@ -53,15 +53,15 @@ Print_Statement::Print_Statement
     (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
     : Statement(line_number_),
       mode(0), order(order_by_id), limit(numeric_limits< unsigned int >::max()),
-      output_handle(0), way_geometry_store(0)
+      output_handle(0)
 {
   map< string, string > attributes;
   
   attributes["from"] = "_";
-  attributes["geometry"] = "skeleton";
-  attributes["limit"] = "";
   attributes["mode"] = "body";
   attributes["order"] = "id";
+  attributes["limit"] = "";
+  attributes["geometry"] = "skeleton";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
@@ -88,7 +88,6 @@ Print_Statement::Print_Statement
 	<<" the only allowed values are \"ids_only\", \"skeleton\", \"body\", or \"meta\".";
     add_static_error(temp.str());
   }
-  
   if (attributes["order"] == "id")
     order = order_by_id;
   else if (attributes["order"] == "quadtile")
@@ -100,23 +99,96 @@ Print_Statement::Print_Statement
         <<" the only allowed values are \"id\" or \"quadtile\".";
     add_static_error(temp.str());
   }
-  
   if (attributes["limit"] != "")
     limit = atoll(attributes["limit"].c_str());
-  
+    
   if (attributes["geometry"] == "skeleton")
     ;
   else if (attributes["geometry"] == "full")
     mode |= Print_Target::PRINT_GEOMETRY | Print_Target::PRINT_BOUNDS;
   else if (attributes["geometry"] == "bounds")
     mode |= Print_Target::PRINT_BOUNDS;
+  else if (attributes["geometry"] == "center")
+    mode |= Print_Target::PRINT_CENTER;
   else
   {
     ostringstream temp;
     temp<<"For the attribute \"geometry\" of the element \"print\""
-        <<" the only allowed values are \"skeleton\", \"full\", or \"bounds\".";
+        <<" the only allowed values are \"skeleton\", \"full\", \"bounds\", or \"center\".";
     add_static_error(temp.str());
   }
+}
+
+
+void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Node_Skeleton& skel,
+                    const vector< pair< string, string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta,
+                    const map< uint32, string >* users)
+{
+  target.print_item(ll_upper, skel, tags, meta, users);
+}
+
+
+void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Way_Skeleton& skel,
+                    const vector< pair< string, string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta,
+                    const map< uint32, string >* users)
+{
+  if (way_geometry_store)
+  {
+    std::vector< Quad_Coord > geometry = way_geometry_store->get_geometry(skel);
+    if (geometry.size() == skel.nds.size())
+      target.print_item(ll_upper, skel, tags, 0, &geometry, meta, users);
+    else
+      target.print_item(ll_upper, skel, tags, 0, 0, meta, users);
+  }
+  else
+    target.print_item(ll_upper, skel, tags, 0, 0, meta, users);
+}
+
+
+void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
+                    const vector< pair< string, string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta,
+                    const map< uint32, string >* users)
+{
+  if (attic_way_geometry_store)
+  {
+    std::vector< Quad_Coord > geometry = attic_way_geometry_store->get_geometry(skel);
+    if (geometry.size() == skel.nds.size())
+      target.print_item(ll_upper, skel, tags, 0, &geometry, meta, users);
+    else
+      target.print_item(ll_upper, skel, tags, 0, 0, meta, users);
+  }
+  else
+    target.print_item(ll_upper, skel, tags, 0, 0, meta, users);
+}
+
+
+void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Relation_Skeleton& skel,
+                    const vector< pair< string, string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta,
+                    const map< uint32, string >* users)
+{
+  target.print_item(ll_upper, skel, tags, 0, meta, users);
+}
+
+
+void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
+                    const vector< pair< string, string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta,
+                    const map< uint32, string >* users)
+{
+  target.print_item(ll_upper, skel, tags, 0, meta, users);
+}
+
+
+void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Area_Skeleton& skel,
+                    const vector< pair< string, string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta,
+                    const map< uint32, string >* users)
+{
+  target.print_item(ll_upper, skel, tags, meta, users);
 }
 
 
@@ -308,57 +380,11 @@ void quadtile
 }
 
 
-void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Node_Skeleton& skel,
-                    const vector< pair< string, string > >* tags,
-                    const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta,
-                    const map< uint32, string >* users)
-{
-  target.print_item(ll_upper, skel, tags, meta, users);
-}
-
-
-void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Way_Skeleton& skel,
-                    const vector< pair< string, string > >* tags,
-                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta,
-                    const map< uint32, string >* users)
-{
-  if (way_geometry_store)
-  {
-    std::vector< Quad_Coord > geometry = way_geometry_store->get_geometry(skel);
-    if (geometry.size() == skel.nds.size())
-      target.print_item(ll_upper, skel, tags, 0, &geometry, meta, users);
-    else
-      target.print_item(ll_upper, skel, tags, 0, 0, meta, users);
-  }
-  else
-    target.print_item(ll_upper, skel, tags, 0, 0, meta, users);
-}
-
-
-void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Relation_Skeleton& skel,
-                    const vector< pair< string, string > >* tags,
-                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta,
-                    const map< uint32, string >* users)
-{
-  target.print_item(ll_upper, skel, tags, 0, meta, users);
-}
-
-
-void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Area_Skeleton& skel,
-                    const vector< pair< string, string > >* tags,
-                    const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta,
-                    const map< uint32, string >* users)
-{
-  target.print_item(ll_upper, skel, tags, meta, users);
-}
-
-
 template< class Index, class Object >
 void Print_Statement::tags_quadtile
     (const map< Index, vector< Object > >& items,
      const File_Properties& file_prop, Print_Target& target,
      Resource_Manager& rman, Transaction& transaction,
-     Geometry_Store_Manager< typename Object::Id_Type, Index >& geometry_store,
      const File_Properties* meta_file_prop, uint32& element_count)
 {
   //generate set of relevant coarse indices
@@ -422,7 +448,6 @@ void Print_Statement::tags_quadtile_attic
     (const map< Index, vector< Attic< Object > > >& items,
      Print_Target& target,
      Resource_Manager& rman, Transaction& transaction,
-     Geometry_Store_Manager< typename Object::Id_Type, Index >& geometry_store,
      const File_Properties* current_meta_file_prop, const File_Properties* attic_meta_file_prop,
      uint32& element_count)
 {
@@ -594,7 +619,6 @@ void Print_Statement::tags_by_id
    const File_Properties& file_prop,
    uint32 FLUSH_SIZE, Print_Target& target,
    Resource_Manager& rman, Transaction& transaction,
-   Geometry_Store_Manager< typename TObject::Id_Type, TIndex >& geometry_store,
    const File_Properties* meta_file_prop, uint32& element_count)
 {
   // order relevant elements by id
@@ -699,7 +723,6 @@ void Print_Statement::tags_by_id_attic
   (const map< Index, vector< Attic< Object > > >& items,
    uint32 FLUSH_SIZE, Print_Target& target,
    Resource_Manager& rman, Transaction& transaction,
-   Geometry_Store_Manager< typename Object::Id_Type, Index >& geometry_store,
    const File_Properties* current_meta_file_prop, const File_Properties* attic_meta_file_prop,
    uint32& element_count)
 {
@@ -810,66 +833,63 @@ void Print_Statement::execute(Resource_Manager& rman)
     target = &this->output_handle->get_print_target(mode, *rman.get_transaction());
   else
     target = &output_handle.get_print_target(mode, *rman.get_transaction());
-  
-  delete way_geometry_store;
-  way_geometry_store = new Way_Geometry_Store(mit->second.ways, *this, rman);
-  delete attic_way_geometry_store;
-  attic_way_geometry_store = new Way_Geometry_Store(mit->second.attic_ways, rman.get_desired_timestamp(), *this, rman);
+
+  if (mode & (Print_Target::PRINT_GEOMETRY | Print_Target::PRINT_BOUNDS | Print_Target::PRINT_CENTER))
+  {
+    delete way_geometry_store;
+    way_geometry_store = new Way_Geometry_Store(mit->second.ways, *this, rman);
+    delete attic_way_geometry_store;
+    attic_way_geometry_store = new Way_Geometry_Store
+        (mit->second.attic_ways, rman.get_desired_timestamp(), *this, rman);
+  }
 
   if (mode & Print_Target::PRINT_TAGS)
   {
     if (order == order_by_id)
     {
-      Geometry_Store_Manager< Node_Skeleton::Id_Type, Uint32_Index > geometry_store_manager;
       tags_by_id(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
 		 NODE_FLUSH_SIZE, *target, rman,
-		 *rman.get_transaction(), geometry_store_manager,
+		 *rman.get_transaction(),
 		 (mode & Print_Target::PRINT_META) ? meta_settings().NODES_META : 0,
                  element_count);
       
       if (rman.get_desired_timestamp() != NOW)
       {
-        Geometry_Store_Manager< Node_Skeleton::Id_Type, Uint32_Index > geometry_store_manager;
         tags_by_id_attic(mit->second.attic_nodes,
                    NODE_FLUSH_SIZE, *target, rman,
-                   *rman.get_transaction(), geometry_store_manager,
+                   *rman.get_transaction(),
                    (mode & Print_Target::PRINT_META) ? meta_settings().NODES_META : 0,
                    (mode & Print_Target::PRINT_META) ? attic_settings().NODES_META : 0,
                    element_count);
       }
       
-      Geometry_Store_Manager< Way_Skeleton::Id_Type, Uint31_Index > way_geometry_store_manager;
       tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		 WAY_FLUSH_SIZE, *target, rman,
-                 *rman.get_transaction(), way_geometry_store_manager,
+		 *rman.get_transaction(),
 		 (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
                  element_count);
       
       if (rman.get_desired_timestamp() != NOW)
       {
-        Geometry_Store_Manager< Way_Skeleton::Id_Type, Uint31_Index > way_geometry_store_manager;
         tags_by_id_attic(mit->second.attic_ways,
                    WAY_FLUSH_SIZE, *target, rman,
-                   *rman.get_transaction(), way_geometry_store_manager,
+                   *rman.get_transaction(),
                    (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
                    (mode & Print_Target::PRINT_META) ? attic_settings().WAYS_META : 0,
                    element_count);
       }
       
-      Geometry_Store_Manager< Relation_Skeleton::Id_Type, Uint31_Index > rel_geometry_store_manager;
       tags_by_id(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		 RELATION_FLUSH_SIZE, *target, rman,
-                 *rman.get_transaction(), rel_geometry_store_manager,
+		 *rman.get_transaction(),
 		 (mode & Print_Target::PRINT_META) ? meta_settings().RELATIONS_META : 0,
                  element_count);
       
       if (rman.get_desired_timestamp() != NOW)
       {
-        Geometry_Store_Manager< Relation_Skeleton::Id_Type, Uint31_Index > rel_geometry_store_manager;
         tags_by_id_attic(mit->second.attic_relations,
                    RELATION_FLUSH_SIZE, *target, rman,
                    *rman.get_transaction(),
-                   rel_geometry_store_manager,
                    (mode & Print_Target::PRINT_META) ? meta_settings().RELATIONS_META : 0,
                    (mode & Print_Target::PRINT_META) ? attic_settings().RELATIONS_META : 0,
                    element_count);
@@ -877,65 +897,50 @@ void Print_Statement::execute(Resource_Manager& rman)
       
       if (rman.get_area_transaction())
       {
-        Geometry_Store_Manager< Area_Skeleton::Id_Type, Uint31_Index > geometry_store_manager;
 	tags_by_id(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
 		   AREA_FLUSH_SIZE, *target, rman,
-		   *rman.get_area_transaction(),
-                   geometry_store_manager,
-                   0, element_count);
+		   *rman.get_area_transaction(), 0, element_count);
       }
     }
     else
     {
-      Geometry_Store_Manager< Node_Skeleton::Id_Type, Uint32_Index > geometry_store_manager;
       tags_quadtile(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
 		    *target, rman, *rman.get_transaction(),
-                    geometry_store_manager,
 		    (mode & Print_Target::PRINT_META) ? meta_settings().NODES_META : 0,
                     element_count);
       
       if (rman.get_desired_timestamp() != NOW)
       {
-        Geometry_Store_Manager< Node_Skeleton::Id_Type, Uint32_Index > geometry_store_manager;
         tags_quadtile_attic(mit->second.attic_nodes,
                       *target, rman, *rman.get_transaction(),
-                      geometry_store_manager,
                       (mode & Print_Target::PRINT_META) ? meta_settings().NODES_META : 0,
                       (mode & Print_Target::PRINT_META) ? attic_settings().NODES_META : 0,
                       element_count);
       }
       
-      Geometry_Store_Manager< Way_Skeleton::Id_Type, Uint31_Index > way_geometry_store_manager;
       tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		    *target, rman, *rman.get_transaction(),
-                    way_geometry_store_manager,
 		    (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
                     element_count);
       
       if (rman.get_desired_timestamp() != NOW)
       {
-        Geometry_Store_Manager< Way_Skeleton::Id_Type, Uint31_Index > way_geometry_store_manager;
         tags_quadtile_attic(mit->second.attic_ways,
                       *target, rman, *rman.get_transaction(),
-                      way_geometry_store_manager,
                       (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
                       (mode & Print_Target::PRINT_META) ? attic_settings().WAYS_META : 0,
                       element_count);
       }
       
-      Geometry_Store_Manager< Relation_Skeleton::Id_Type, Uint31_Index > rel_geometry_store_manager;
       tags_quadtile(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		    *target, rman, *rman.get_transaction(),
-                    rel_geometry_store_manager,
 		    (mode & Print_Target::PRINT_META) ?
 		        meta_settings().RELATIONS_META : 0, element_count);
       
       if (rman.get_desired_timestamp() != NOW)
       {
-        Geometry_Store_Manager< Relation_Skeleton::Id_Type, Uint31_Index > rel_geometry_store_manager;
         tags_quadtile_attic(mit->second.attic_relations,
                       *target, rman, *rman.get_transaction(),
-                      rel_geometry_store_manager,
                       (mode & Print_Target::PRINT_META) ? meta_settings().RELATIONS_META : 0,
                       (mode & Print_Target::PRINT_META) ? attic_settings().RELATIONS_META : 0,
                       element_count);
@@ -943,16 +948,14 @@ void Print_Statement::execute(Resource_Manager& rman)
       
       if (rman.get_area_transaction())
       {
-        Geometry_Store_Manager< Area_Skeleton::Id_Type, Uint31_Index > geometry_store_manager;
         tags_quadtile(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
-		      *target, rman, *rman.get_area_transaction(),
-                      geometry_store_manager,
-                      0, element_count);
+		      *target, rman, *rman.get_area_transaction(), 0, element_count);
       }
     }
   }
   else
   {
+    //TODO: make print_item(target, ...) available here
     if (order == order_by_id)
     {
       by_id(mit->second.nodes, *target, *rman.get_transaction(), limit, element_count);
@@ -983,7 +986,4 @@ void Print_Statement::execute(Resource_Manager& rman)
 }
 
 
-Print_Statement::~Print_Statement()
-{
-  delete way_geometry_store;
-}
+Print_Statement::~Print_Statement() {}

@@ -63,6 +63,7 @@ class Print_Target
     static const unsigned int PRINT_META = 0x40;
     static const unsigned int PRINT_GEOMETRY = 0x80;
     static const unsigned int PRINT_BOUNDS = 0x100;
+    static const unsigned int PRINT_CENTER = 0x200;
 
   protected:
     uint32 mode;
@@ -71,15 +72,6 @@ class Print_Target
 
 
 class Output_Handle;
-
-
-template< typename Id_Type, typename Index >
-class Geometry_Store_Manager
-{
-public:
-  virtual void prepare_geometry_store(Id_Type id_pos, uint32 FLUSH_SIZE) {}  
-  virtual void prepare_geometry_store(Index index, uint32 FLUSH_SIZE) {}
-};
 
 
 class Print_Statement : public Statement
@@ -110,7 +102,6 @@ class Print_Statement : public Statement
       (const map< Index, vector< Object > >& items,
        const File_Properties& file_prop, Print_Target& target,
        Resource_Manager& rman, Transaction& transaction,
-       Geometry_Store_Manager< typename Object::Id_Type, Index >& geometry_store,
        const File_Properties* meta_file_prop, uint32& element_count);
     
     template< class Index, class Object >
@@ -118,7 +109,6 @@ class Print_Statement : public Statement
       (const map< Index, vector< Attic< Object > > >& items,
        Print_Target& target,
        Resource_Manager& rman, Transaction& transaction,
-       Geometry_Store_Manager< typename Object::Id_Type, Index >& geometry_store,
        const File_Properties* current_meta_file_prop, const File_Properties* attic_meta_file_prop,
        uint32& element_count);
     
@@ -128,7 +118,6 @@ class Print_Statement : public Statement
        const File_Properties& file_prop,
        uint32 FLUSH_SIZE, Print_Target& target,
        Resource_Manager& rman, Transaction& transaction,
-       Geometry_Store_Manager< typename TObject::Id_Type, TIndex >& geometry_store,
        const File_Properties* meta_file_prop, uint32& element_count);
     
     template< class TIndex, class TObject >
@@ -136,7 +125,6 @@ class Print_Statement : public Statement
       (const map< TIndex, vector< Attic< TObject > > >& items,
        uint32 FLUSH_SIZE, Print_Target& target,
        Resource_Manager& rman, Transaction& transaction,
-       Geometry_Store_Manager< typename TObject::Id_Type, TIndex >& geometry_store,
        const File_Properties* current_meta_file_prop, const File_Properties* attic_meta_file_prop,
        uint32& element_count);
       
