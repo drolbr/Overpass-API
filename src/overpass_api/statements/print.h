@@ -39,13 +39,13 @@ class Print_Target
 			    const map< uint32, string >* users = 0) = 0;
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
-                            const std::pair< Quad_Coord, Quad_Coord >* bounds = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
                             const std::vector< Quad_Coord >* geometry = 0,
 			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0) = 0;
     virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
-                            const std::pair< Quad_Coord, Quad_Coord >* bounds = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0) = 0;
                             
@@ -87,6 +87,34 @@ class Print_Statement : public Statement
     static Generic_Statement_Maker< Print_Statement > statement_maker;
     
     void set_output_handle(Output_Handle* output_handle_) { output_handle = output_handle_; }
+      
+    void print_item(Print_Target& target, uint32 ll_upper, const Node_Skeleton& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0);
+    
+    void print_item(Print_Target& target, uint32 ll_upper, const Way_Skeleton& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0);
+    void print_item(Print_Target& target, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0);
+    
+    void print_item(Print_Target& target, uint32 ll_upper, const Relation_Skeleton& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0);
+    void print_item(Print_Target& target, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0);
+    
+    void print_item(Print_Target& target, uint32 ll_upper, const Area_Skeleton& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0);    
     
   private:
     string input;
@@ -127,34 +155,6 @@ class Print_Statement : public Statement
        Resource_Manager& rman, Transaction& transaction,
        const File_Properties* current_meta_file_prop, const File_Properties* attic_meta_file_prop,
        uint32& element_count);
-      
-    void print_item(Print_Target& target, uint32 ll_upper, const Node_Skeleton& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0);
-    
-    void print_item(Print_Target& target, uint32 ll_upper, const Way_Skeleton& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0);
-    void print_item(Print_Target& target, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0);
-    
-    void print_item(Print_Target& target, uint32 ll_upper, const Relation_Skeleton& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0);
-    void print_item(Print_Target& target, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0);
-    
-    void print_item(Print_Target& target, uint32 ll_upper, const Area_Skeleton& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0);    
 };
 
 #endif
