@@ -273,7 +273,7 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Node_Skeleton& skel,
   cout<<"  <node";
   if (mode & PRINT_IDS)
     cout<<" id=\""<<skel.id.val()<<'\"';
-  if (mode & PRINT_COORDS)
+  if (mode & (PRINT_COORDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER))
     cout<<" lat=\""<<fixed<<setprecision(7)<<::lat(ll_upper, skel.ll_lower)
         <<"\" lon=\""<<fixed<<setprecision(7)<<::lon(ll_upper, skel.ll_lower)<<'\"';
   if (meta)
@@ -304,18 +304,27 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Way_Skeleton& skel,
     cout<<" id=\""<<skel.id.val()<<'\"';
   if (meta)
     print_meta_xml(*meta, *users);
-  if (((tags == 0) || (tags->empty())) && ((mode & PRINT_NDS) == 0))
+  if (((tags == 0) || (tags->empty())) &&
+      ((mode & (PRINT_NDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER)) == 0))
     cout<<"/>\n";
   else
   {
     cout<<">\n";
-    if (bounds && bounds->second)
-      std::cerr<<"    <bounds"
-          " minlat=\""<<fixed<<setprecision(7)<<::lat(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
-          " minlon=\""<<fixed<<setprecision(7)<<::lon(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
-          " maxlat=\""<<fixed<<setprecision(7)<<::lat(bounds->second->ll_upper, bounds->second->ll_lower)<<"\""
-          " maxlon=\""<<fixed<<setprecision(7)<<::lon(bounds->second->ll_upper, bounds->second->ll_lower)<<"\""
-          "/>\n";
+    if (bounds)
+    {
+      if (bounds->second)
+        std::cerr<<"    <bounds"
+            " minlat=\""<<fixed<<setprecision(7)<<::lat(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
+            " minlon=\""<<fixed<<setprecision(7)<<::lon(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
+            " maxlat=\""<<fixed<<setprecision(7)<<::lat(bounds->second->ll_upper, bounds->second->ll_lower)<<"\""
+            " maxlon=\""<<fixed<<setprecision(7)<<::lon(bounds->second->ll_upper, bounds->second->ll_lower)<<"\""
+            "/>\n";
+      else
+        std::cerr<<"    <center"
+            " lat=\""<<fixed<<setprecision(7)<<::lat(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
+            " lon=\""<<fixed<<setprecision(7)<<::lon(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
+            "/>\n";
+    }
     if (mode & PRINT_NDS)
     {
       for (uint i = 0; i < skel.nds.size(); ++i)
@@ -352,17 +361,27 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Relation_Skeleton& skel
     cout<<" id=\""<<skel.id.val()<<'\"';
   if (meta)
     print_meta_xml(*meta, *users);
-  if (((tags == 0) || (tags->empty())) && ((mode & PRINT_NDS) == 0))
+  if (((tags == 0) || (tags->empty())) &&
+      ((mode & (PRINT_NDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER)) == 0))
     cout<<"/>\n";
   else
   {
     cout<<">\n";
-    if (bounds && bounds->second)
-      std::cerr<<"    <bounds"
-          " minlat=\""<<::lat(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
-          " minlon=\""<<::lon(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
-          " maxlat=\""<<::lat(bounds->second->ll_upper, bounds->second->ll_lower)<<"\""
-          " maxlon=\""<<::lon(bounds->second->ll_upper, bounds->second->ll_lower)<<"\"/>\n";
+    if (bounds)
+    {
+      if (bounds->second)
+        std::cerr<<"    <bounds"
+            " minlat=\""<<fixed<<setprecision(7)<<::lat(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
+            " minlon=\""<<fixed<<setprecision(7)<<::lon(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
+            " maxlat=\""<<fixed<<setprecision(7)<<::lat(bounds->second->ll_upper, bounds->second->ll_lower)<<"\""
+            " maxlon=\""<<fixed<<setprecision(7)<<::lon(bounds->second->ll_upper, bounds->second->ll_lower)<<"\""
+            "/>\n";
+      else
+        std::cerr<<"    <center"
+            " lat=\""<<fixed<<setprecision(7)<<::lat(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
+            " lon=\""<<fixed<<setprecision(7)<<::lon(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
+            "/>\n";
+    }
     if (mode & PRINT_MEMBERS)
     {
       for (uint i(0); i < skel.members.size(); ++i)

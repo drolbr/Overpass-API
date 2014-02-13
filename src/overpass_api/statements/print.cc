@@ -53,7 +53,7 @@ Print_Statement::Print_Statement
     (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
     : Statement(line_number_),
       mode(0), order(order_by_id), limit(numeric_limits< unsigned int >::max()),
-      output_handle(0)
+      output_handle(0), way_geometry_store(0), attic_way_geometry_store(0)
 {
   map< string, string > attributes;
   
@@ -152,6 +152,15 @@ public:
     bounds_ = make_pair(Quad_Coord(::ll_upper_(min_lat, min_lon), ::ll_lower(min_lat, min_lon)), &max);
     return bounds_;
   }
+  
+  const std::pair< Quad_Coord, Quad_Coord* >& center()
+  {
+    center_ = make_pair(Quad_Coord(
+        ::ll_upper_((min_lat + max_lat) / 2, (min_lon + max_lon) / 2),
+        ::ll_lower((min_lat + max_lat) / 2, (min_lon + max_lon) / 2)
+        ), (Quad_Coord*)0);
+    return center_;
+  }
 
 private:
   double min_lat;
@@ -159,8 +168,20 @@ private:
   double min_lon;
   double max_lon;
   std::pair< Quad_Coord, Quad_Coord* > bounds_;
+  std::pair< Quad_Coord, Quad_Coord* > center_;
   Quad_Coord max;
 };
+
+
+const std::pair< Quad_Coord, Quad_Coord* >* bound_variant(Double_Coords& double_coords, unsigned int mode)
+{
+  if (mode & Print_Target::PRINT_BOUNDS)
+    return &double_coords.bounds();
+  else if (mode & Print_Target::PRINT_CENTER)
+    return &double_coords.center();
+  
+  return 0;
+}
 
 
 void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Way_Skeleton& skel,
@@ -172,14 +193,10 @@ void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Wa
   {
     std::vector< Quad_Coord > geometry = way_geometry_store->get_geometry(skel);
     Double_Coords double_coords(geometry);
-    if ((mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.nds.size())
-      target.print_item(ll_upper, skel, tags,
-                        (mode & Print_Target::PRINT_BOUNDS) && !geometry.empty() ? &double_coords.bounds() : 0,
-                        &geometry, meta, users);
-    else
-      target.print_item(ll_upper, skel, tags,
-                        (mode & Print_Target::PRINT_BOUNDS) && !geometry.empty() ? &double_coords.bounds() : 0,
-                        0, meta, users);
+    target.print_item(ll_upper, skel, tags,
+        geometry.empty() ? 0 : bound_variant(double_coords, mode),
+        ((mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
+        meta, users);
   }
   else
     target.print_item(ll_upper, skel, tags, 0, 0, meta, users);
@@ -195,14 +212,10 @@ void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const At
   {
     std::vector< Quad_Coord > geometry = attic_way_geometry_store->get_geometry(skel);
     Double_Coords double_coords(geometry);
-    if ((mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.nds.size())
-      target.print_item(ll_upper, skel, tags,
-                        (mode & Print_Target::PRINT_BOUNDS) && !geometry.empty() ? &double_coords.bounds() : 0,
-                        &geometry, meta, users);
-    else
-      target.print_item(ll_upper, skel, tags,
-                        (mode & Print_Target::PRINT_BOUNDS) && !geometry.empty() ? &double_coords.bounds() : 0,
-                        0, meta, users);
+    target.print_item(ll_upper, skel, tags,
+        geometry.empty() ? 0 : bound_variant(double_coords, mode),
+        ((mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
+        meta, users);
   }
   else
     target.print_item(ll_upper, skel, tags, 0, 0, meta, users);
