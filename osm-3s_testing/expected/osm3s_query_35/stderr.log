@@ -1,4 +1,5 @@
 encoding remark: Please enter your query and terminate it with CTRL+D.
-encoding remark: Your input starts with a 'osm-script' tag. Thus, a line with the
+encoding remark: Your input contains an 'osm-script' tag. Thus, a line with the
 datatype declaration is added. This shifts line numbering by -1 line(s).
+After 0h0m0s: in "recurse", part 0, on line 5.
 runtime error: Query run out of memory in "recurse" at line 5 using about 0 MB of RAM.

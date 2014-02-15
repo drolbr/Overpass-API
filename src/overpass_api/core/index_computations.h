@@ -319,6 +319,7 @@ inline uint32 calc_index(const std::vector< uint32 >& node_idxs)
   return 0x80000080;
 }
 
+
 inline std::pair< Uint32_Index, Uint32_Index > calc_bbox_bounds(Uint31_Index way_rel_idx)
 {
   if (way_rel_idx.val() & 0x80000000)
@@ -379,9 +380,12 @@ inline std::pair< Uint32_Index, Uint32_Index > calc_bbox_bounds(Uint31_Index way
     return std::make_pair(ll_upper(lat<<16, lon<<16),
 		      ll_upper((lat+2*offset-1)<<16, (lon+2*offset-1)<<16)+1);
   }
-  else
+  else if (way_rel_idx.val() > 0xff)
     return std::make_pair(way_rel_idx.val(), way_rel_idx.val() + 1);
+  else
+    return std::make_pair(0u, 1u);
 }
+
 
 inline std::vector< Uint32_Index > calc_node_children(const std::vector< uint32 >& way_rel_idxs)
 {

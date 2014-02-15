@@ -348,13 +348,13 @@ int main(int argc, char* args[])
     }
     
     // check update_way_tags_local - compare both files for the result
-    Block_Backend< Tag_Index_Global, Uint32_Index > relations_global_db
+    Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > > relations_global_db
 	(transaction.data_index(osm_base_settings().RELATION_TAGS_GLOBAL));
-    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
+    for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > >::Flat_Iterator
 	 it(relations_global_db.flat_begin());
          !(it == relations_global_db.flat_end()); ++it)
     {
-      tags_global_out<<it.object().val()<<'\t'
+      tags_global_out<<it.object().id.val()<<'\t'
 	  <<it.index().key<<'\t'<<it.index().value<<'\n';
     }
   }

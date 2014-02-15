@@ -100,14 +100,14 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
   }
   
   // check update_node_tags_global - compare both files for the result
-  Block_Backend< Tag_Index_Global, Node_Skeleton::Id_Type > nodes_global_db
+  Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > > nodes_global_db
       (transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL));
-  for (Block_Backend< Tag_Index_Global, Node_Skeleton::Id_Type >::Flat_Iterator
+  for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > >::Flat_Iterator
       it(nodes_global_db.flat_begin());
       !(it == nodes_global_db.flat_end()); ++it)
   {
-    ofstream* out(node_tags_global_out.get(it.object().val() / 5000000));
-    (*out)<<dec<<it.object().val()<<'\t'
+    ofstream* out(node_tags_global_out.get(it.object().id.val() / 5000000));
+    (*out)<<dec<<it.object().id.val()<<'\t'
         <<it.index().key<<'\t'<<it.index().value<<'\n';
   }
     
@@ -217,14 +217,14 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
           <<(it.object().timestamp & 0x3f)<<'\n';
     }
   
-    Block_Backend< Tag_Index_Global, Attic< Node_Skeleton::Id_Type > > nodes_global_db
+    Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Node_Skeleton::Id_Type > > > nodes_global_db
         (transaction.data_index(attic_settings().NODE_TAGS_GLOBAL));
-    for (Block_Backend< Tag_Index_Global, Attic< Node_Skeleton::Id_Type > >::Flat_Iterator
+    for (Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Node_Skeleton::Id_Type > > >::Flat_Iterator
         it(nodes_global_db.flat_begin());
         !(it == nodes_global_db.flat_end()); ++it)
     {
-      ofstream* out(node_attic_tags_global_out.get(it.object().val() / 5000000));
-      (*out)<<it.object().val()<<'\t'
+      ofstream* out(node_attic_tags_global_out.get(it.object().id.val() / 5000000));
+      (*out)<<it.object().id.val()<<'\t'
           <<it.index().key<<'\t'<<it.index().value<<'\t'
           <<((it.object().timestamp)>>26)<<' '
           <<((it.object().timestamp & 0x3c00000)>>22)<<' '
@@ -267,13 +267,13 @@ void check_nodes(Transaction& transaction)
   }
   
   // check update_node_tags_global - compare both files for the result
-  Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
+  Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > > nodes_global_db
       (transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL));
-  for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
+  for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > >::Flat_Iterator
     it(nodes_global_db.flat_begin());
   !(it == nodes_global_db.flat_end()); ++it)
   {
-    out<<it.object().val()<<'\t'
+    out<<it.object().id.val()<<'\t'
         <<it.index().key<<'\t'<<it.index().value<<'\n';
     if (++element_count % 1000000 == 0)
       cerr<<it.index().key<<' ';
@@ -312,14 +312,14 @@ void dump_ways(Transaction& transaction, const string& db_dir)
   }
   
   // check update_way_tags_global - compare both files for the result
-  Block_Backend< Tag_Index_Global, Uint32_Index > ways_global_db
+  Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > > ways_global_db
       (transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL));
-  for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
+  for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > >::Flat_Iterator
       it(ways_global_db.flat_begin());
       !(it == ways_global_db.flat_end()); ++it)
   {
-    ofstream* out(way_tags_global_out.get(it.object().val() / 1000000));
-    (*out)<<it.object().val()<<'\t'
+    ofstream* out(way_tags_global_out.get(it.object().id.val() / 1000000));
+    (*out)<<it.object().id.val()<<'\t'
 	<<it.index().key<<'\t'<<it.index().value<<'\n';
   }
 }
@@ -357,13 +357,13 @@ void check_ways(Transaction& transaction)
   }
     
   // check update_way_tags_global - compare both files for the result
-  Block_Backend< Tag_Index_Global, Uint32_Index > ways_global_db
+  Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > > ways_global_db
       (transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL));
-  for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
+  for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > >::Flat_Iterator
       it(ways_global_db.flat_begin());
       !(it == ways_global_db.flat_end()); ++it)
   {
-    out<<it.object().val()<<'\t'
+    out<<it.object().id.val()<<'\t'
 	<<it.index().key<<'\t'<<it.index().value<<'\n';
     if (++element_count % 1000000 == 0)
       cerr<<it.index().key<<' ';
@@ -412,14 +412,14 @@ void dump_relations(Transaction& transaction, const string& db_dir)
     }
     
     // check update_relation_tags_global - compare both files for the result
-    Block_Backend< Tag_Index_Global, Uint32_Index > relations_global_db
+    Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > > relations_global_db
 	(transaction.data_index(osm_base_settings().RELATION_TAGS_GLOBAL));
-    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
+    for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > >::Flat_Iterator
 	 it(relations_global_db.flat_begin());
          !(it == relations_global_db.flat_end()); ++it)
     {
-      ofstream* out(relation_tags_global_out.get(it.object().val() / 200000));
-      (*out)<<it.object().val()<<'\t'
+      ofstream* out(relation_tags_global_out.get(it.object().id.val() / 200000));
+      (*out)<<it.object().id.val()<<'\t'
 	  <<it.index().key<<'\t'<<it.index().value<<'\n';
     }
 }
@@ -467,13 +467,13 @@ void check_relations(Transaction& transaction)
   }
   
   // check update_relation_tags_global - compare both files for the result
-  Block_Backend< Tag_Index_Global, Uint32_Index > relations_global_db
+  Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > > relations_global_db
   (transaction.data_index(osm_base_settings().RELATION_TAGS_GLOBAL));
-  for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
+  for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > >::Flat_Iterator
     it(relations_global_db.flat_begin());
   !(it == relations_global_db.flat_end()); ++it)
   {
-    out<<it.object().val()<<'\t'
+    out<<it.object().id.val()<<'\t'
         <<it.index().key<<'\t'<<it.index().value<<'\n';
     if (++element_count % 1000000 == 0)
       cerr<<it.index().key<<' ';

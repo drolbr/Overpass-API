@@ -51,7 +51,7 @@ sleep 1
 rm -f run/diff_updater_1/transactions.log
 $BASEDIR/bin/update_database --version=mock-up-diff <run/diff_updater_1/do_stdin.log
 cat run/diff_updater_1/transactions.log
-$BASEDIR/bin/dispatcher --terminate
+$BASEDIR/bin/dispatcher --osm-base --terminate
 
 # collect the result
 date +%T

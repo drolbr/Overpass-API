@@ -2470,7 +2470,8 @@ struct Accept_All_But_5 : public Accept_All_Tags
       { return (id != 5); }
   virtual bool admit_way(uint id) const
       { return (id != 5); }
-  virtual bool admit_relation(uint id) const { return true; }
+  virtual bool admit_relation(uint id) const
+      { return (id != 5); }
   
   private:
     uint pattern_size;

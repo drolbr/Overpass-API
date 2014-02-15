@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <osm version="0.6" generator="Overpass API">
-<note>The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>
+<note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
 <meta osm_base="mock-up-init"/>
 
   <relation id="5">
-    <member type="node" ref="1000000" role="zero"/>
+    <member type="node" ref="400" role="zero"/>
     <tag k="relation_key" v="relation_few"/>
     <tag k="relation_key_2/4" v="relation_value_1"/>
     <tag k="relation_key_5" v="relation_value_5"/>
@@ -15,10 +15,10 @@
     <member type="way" ref="1" role="two"/>
     <member type="node" ref="2" role="two"/>
     <member type="way" ref="2" role="three"/>
-    <member type="node" ref="2002" role="two"/>
-    <member type="way" ref="999001" role="two"/>
-    <member type="node" ref="2001" role="one"/>
-    <member type="way" ref="1001001" role="two"/>
+    <member type="node" ref="42" role="two"/>
+    <member type="way" ref="381" role="two"/>
+    <member type="node" ref="41" role="one"/>
+    <member type="way" ref="421" role="two"/>
     <member type="node" ref="1" role="one"/>
     <member type="relation" ref="2" role="zero"/>
     <tag k="relation_key" v="relation_few"/>
@@ -37,22 +37,22 @@
     <tag k="relation_key_5" v="relation_value_5"/>
   </relation>
   <relation id="25">
-    <member type="node" ref="8000001" role="one"/>
-    <member type="node" ref="12000000" role="zero"/>
+    <member type="node" ref="3201" role="one"/>
+    <member type="node" ref="4800" role="zero"/>
     <tag k="relation_key" v="relation_few"/>
     <tag k="relation_key_2/4" v="relation_value_1"/>
     <tag k="relation_key_5" v="relation_value_5"/>
   </relation>
   <relation id="30">
-    <member type="node" ref="8000001" role="one"/>
-    <member type="way" ref="4001997" role="two"/>
-    <member type="node" ref="8000002" role="two"/>
-    <member type="way" ref="4001998" role="three"/>
-    <member type="node" ref="8002002" role="two"/>
-    <member type="way" ref="5000997" role="two"/>
-    <member type="node" ref="8002001" role="one"/>
-    <member type="way" ref="5002997" role="two"/>
-    <member type="node" ref="8000001" role="one"/>
+    <member type="node" ref="3201" role="one"/>
+    <member type="way" ref="1637" role="two"/>
+    <member type="node" ref="3202" role="two"/>
+    <member type="way" ref="1638" role="three"/>
+    <member type="node" ref="3242" role="two"/>
+    <member type="way" ref="2017" role="two"/>
+    <member type="node" ref="3241" role="one"/>
+    <member type="way" ref="2057" role="two"/>
+    <member type="node" ref="3201" role="one"/>
     <tag k="relation_key" v="relation_few"/>
     <tag k="relation_key_15" v="relation_value_15"/>
     <tag k="relation_key_2/4" v="relation_value_0"/>

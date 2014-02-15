@@ -136,16 +136,16 @@ void dump_node_tags_global(uint32 pattern_size, string db_dir)
   Output_Sorter_Kv output_sorter;
   
   Nonsynced_Transaction transaction(false, false, db_dir, "");
-  Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
+  Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > > nodes_global_db
       (transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL));
-  for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
+  for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > >::Flat_Iterator
       it(nodes_global_db.flat_begin());
       !(it == nodes_global_db.flat_end()); ++it)
   {
     output_sorter.sort_and_output_if_index_changed
         (make_pair(it.index().key, it.index().value));
     ostringstream buf;
-    buf<<it.object().val()<<'\t'
+    buf<<it.object().id.val()<<'\t'
         <<it.index().key<<'\t'<<it.index().value<<'\n';
     output_sorter.output_per_index.push_back(buf.str());
   }
@@ -197,16 +197,16 @@ void dump_way_tags_global(uint32 pattern_size, string db_dir)
   Output_Sorter_Kv output_sorter;
   
   Nonsynced_Transaction transaction(false, false, db_dir, "");
-  Block_Backend< Tag_Index_Global, Uint32_Index > ways_global_db
+  Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > > ways_global_db
       (transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL));
-  for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
+  for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > >::Flat_Iterator
       it(ways_global_db.flat_begin());
       !(it == ways_global_db.flat_end()); ++it)
   {
     output_sorter.sort_and_output_if_index_changed
         (make_pair(it.index().key, it.index().value));
     ostringstream buf;
-    buf<<it.object().val()<<'\t'
+    buf<<it.object().id.val()<<'\t'
         <<it.index().key<<'\t'<<it.index().value<<'\n';
     output_sorter.output_per_index.push_back(buf.str());
   }
@@ -267,16 +267,16 @@ void dump_relation_tags_global(uint32 pattern_size, string db_dir)
   Output_Sorter_Kv output_sorter;
   
   Nonsynced_Transaction transaction(false, false, db_dir, "");
-  Block_Backend< Tag_Index_Global, Uint32_Index > relations_global_db
+  Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > > relations_global_db
       (transaction.data_index(osm_base_settings().RELATION_TAGS_GLOBAL));
-  for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
+  for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > >::Flat_Iterator
     it(relations_global_db.flat_begin());
   !(it == relations_global_db.flat_end()); ++it)
   {
     output_sorter.sort_and_output_if_index_changed
         (make_pair(it.index().key, it.index().value));
     ostringstream buf;
-    buf<<it.object().val()<<'\t'
+    buf<<it.object().id.val()<<'\t'
         <<it.index().key<<'\t'<<it.index().value<<'\n';
     output_sorter.output_per_index.push_back(buf.str());
   }
