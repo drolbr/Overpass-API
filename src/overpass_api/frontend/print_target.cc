@@ -42,17 +42,16 @@ class Print_Target_Xml : public Print_Target
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0);
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
-			    const vector< pair< string, string > >* tags = 0,
-			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0);
-    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
-			    const vector< pair< string, string > >* tags = 0,
-			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0);
-    
-    virtual void print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
                             const vector< pair< string, string > >* tags = 0,
-                            const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< Quad_Coord >* geometry = 0,
+                            const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0);
+    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< std::vector< Quad_Coord > >* geometry = 0,
+                            const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
                             const map< uint32, string >* users = 0);
     
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
@@ -60,6 +59,7 @@ class Print_Target_Xml : public Print_Target
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0);
 };
+
 
 class Print_Target_Json : public Print_Target
 {
@@ -72,17 +72,16 @@ class Print_Target_Json : public Print_Target
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0);
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
-			    const vector< pair< string, string > >* tags = 0,
-			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0);
-    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
-			    const vector< pair< string, string > >* tags = 0,
-			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0);
-    
-    virtual void print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
                             const vector< pair< string, string > >* tags = 0,
-                            const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< Quad_Coord >* geometry = 0,
+                            const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0);
+    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< std::vector< Quad_Coord > >* geometry = 0,
+                            const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
                             const map< uint32, string >* users = 0);
     
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
@@ -95,6 +94,7 @@ class Print_Target_Json : public Print_Target
   private:
     mutable bool first_elem;
 };
+
 
 class Print_Target_Custom : public Print_Target
 {
@@ -111,17 +111,16 @@ class Print_Target_Custom : public Print_Target
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0);
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
-			    const vector< pair< string, string > >* tags = 0,
-			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0);
-    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
-			    const vector< pair< string, string > >* tags = 0,
-			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0);
-    
-    virtual void print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
                             const vector< pair< string, string > >* tags = 0,
-                            const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< Quad_Coord >* geometry = 0,
+                            const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0);
+    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< std::vector< Quad_Coord > >* geometry = 0,
+                            const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
                             const map< uint32, string >* users = 0);
     
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
@@ -210,17 +209,16 @@ class Print_Target_Popup : public Print_Target
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0);
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
-			    const vector< pair< string, string > >* tags = 0,
-			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0);
-    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
-			    const vector< pair< string, string > >* tags = 0,
-			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0);
-    
-    virtual void print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
                             const vector< pair< string, string > >* tags = 0,
-                            const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< Quad_Coord >* geometry = 0,
+                            const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0);
+    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< std::vector< Quad_Coord > >* geometry = 0,
+                            const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
                             const map< uint32, string >* users = 0);
     
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
@@ -279,7 +277,7 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Node_Skeleton& skel,
   cout<<"  <node";
   if (mode & PRINT_IDS)
     cout<<" id=\""<<skel.id.val()<<'\"';
-  if (mode & PRINT_COORDS)
+  if (mode & (PRINT_COORDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER))
     cout<<" lat=\""<<fixed<<setprecision(7)<<::lat(ll_upper, skel.ll_lower)
         <<"\" lon=\""<<fixed<<setprecision(7)<<::lon(ll_upper, skel.ll_lower)<<'\"';
   if (meta)
@@ -298,17 +296,10 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 }
 
 
-void Print_Target_Xml::print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
-                const vector< pair< string, string > >* tags,
-                const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
-                const map< uint32, string >* users)
-{
-  print_item(ll_upper, static_cast< Node_Skeleton >(skel), tags, meta, users);
-}
-
-
 void Print_Target_Xml::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
+                const std::pair< Quad_Coord, Quad_Coord* >* bounds,
+                const std::vector< Quad_Coord >* geometry,
 		const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
 		const map< uint32, string >* users)
 {
@@ -317,15 +308,39 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Way_Skeleton& skel,
     cout<<" id=\""<<skel.id.val()<<'\"';
   if (meta)
     print_meta_xml(*meta, *users);
-  if (((tags == 0) || (tags->empty())) && ((mode & PRINT_NDS) == 0))
+  if (((tags == 0) || (tags->empty())) &&
+      ((mode & (PRINT_NDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER)) == 0))
     cout<<"/>\n";
   else
   {
     cout<<">\n";
+    if (bounds)
+    {
+      if (bounds->second)
+        std::cout<<"    <bounds"
+            " minlat=\""<<fixed<<setprecision(7)<<::lat(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
+            " minlon=\""<<fixed<<setprecision(7)<<::lon(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
+            " maxlat=\""<<fixed<<setprecision(7)<<::lat(bounds->second->ll_upper, bounds->second->ll_lower)<<"\""
+            " maxlon=\""<<fixed<<setprecision(7)<<::lon(bounds->second->ll_upper, bounds->second->ll_lower)<<"\""
+            "/>\n";
+      else
+        std::cout<<"    <center"
+            " lat=\""<<fixed<<setprecision(7)<<::lat(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
+            " lon=\""<<fixed<<setprecision(7)<<::lon(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
+            "/>\n";
+    }
     if (mode & PRINT_NDS)
     {
-      for (uint i(0); i < skel.nds.size(); ++i)
-	cout<<"    <nd ref=\""<<skel.nds[i].val()<<"\"/>\n";
+      for (uint i = 0; i < skel.nds.size(); ++i)
+      {
+	cout<<"    <nd ref=\""<<skel.nds[i].val()<<"\"";
+        if (geometry)
+          cout<<" lat=\""<<fixed<<setprecision(7)
+              <<::lat((*geometry)[i].ll_upper, (*geometry)[i].ll_lower)
+              <<"\" lon=\""<<fixed<<setprecision(7)
+              <<::lon((*geometry)[i].ll_upper, (*geometry)[i].ll_lower)<<'\"';
+        cout<<"/>\n";
+      }
     }
     if ((tags != 0) && (!tags->empty()))
     {
@@ -338,8 +353,11 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Way_Skeleton& skel,
   }
 }
 
+
 void Print_Target_Xml::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
+                const std::pair< Quad_Coord, Quad_Coord* >* bounds,
+                const std::vector< std::vector< Quad_Coord > >* geometry,
 		const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
 		const map< uint32, string >* users)
 { 
@@ -348,19 +366,41 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Relation_Skeleton& skel
     cout<<" id=\""<<skel.id.val()<<'\"';
   if (meta)
     print_meta_xml(*meta, *users);
-  if (((tags == 0) || (tags->empty())) && ((mode & PRINT_NDS) == 0))
+  if (((tags == 0) || (tags->empty())) &&
+      ((mode & (PRINT_NDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER)) == 0))
     cout<<"/>\n";
   else
   {
     cout<<">\n";
+    if (bounds)
+    {
+      if (bounds->second)
+        std::cout<<"    <bounds"
+            " minlat=\""<<fixed<<setprecision(7)<<::lat(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
+            " minlon=\""<<fixed<<setprecision(7)<<::lon(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
+            " maxlat=\""<<fixed<<setprecision(7)<<::lat(bounds->second->ll_upper, bounds->second->ll_lower)<<"\""
+            " maxlon=\""<<fixed<<setprecision(7)<<::lon(bounds->second->ll_upper, bounds->second->ll_lower)<<"\""
+            "/>\n";
+      else
+        std::cout<<"    <center"
+            " lat=\""<<fixed<<setprecision(7)<<::lat(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
+            " lon=\""<<fixed<<setprecision(7)<<::lon(bounds->first.ll_upper, bounds->first.ll_lower)<<"\""
+            "/>\n";
+    }
     if (mode & PRINT_MEMBERS)
     {
-      for (uint i(0); i < skel.members.size(); ++i)
+      for (uint i = 0; i < skel.members.size(); ++i)
       {
 	map< uint32, string >::const_iterator it = roles.find(skel.members[i].role);
 	cout<<"    <member type=\""<<MEMBER_TYPE[skel.members[i].type]
 	    <<"\" ref=\""<<skel.members[i].ref.val()
 	    <<"\" role=\""<<escape_xml(it != roles.end() ? it->second : "???")<<"\"/>\n";
+//         if (geometry)
+//         {
+//           for (uint j = 0; j < (*geometry)[i].size(); ++j)
+//             std::cout<<fixed<<setprecision(7)<<::lat((*geometry)[i][j].ll_upper, (*geometry)[i][j].ll_lower)<<", "
+//                 <<fixed<<setprecision(7)<<::lon((*geometry)[i][j].ll_upper, (*geometry)[i][j].ll_lower)<<'\n';
+//         }
       }
     }
     if ((tags != 0) && (!tags->empty()))
@@ -373,6 +413,7 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Relation_Skeleton& skel
     cout<<"  </relation>\n";
   }
 }
+
 
 void Print_Target_Xml::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
@@ -431,6 +472,7 @@ void print_meta_json(const OSM_Element_Metadata_Skeleton< Id_Type >& meta,
   cout<<",\n  \"uid\": "<<meta.user_id;
 }
 
+
 void Print_Target_Json::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
@@ -465,17 +507,10 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 }
 
 
-void Print_Target_Json::print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
-                const vector< pair< string, string > >* tags,
-                const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
-                const map< uint32, string >* users)
-{
-  print_item(ll_upper, static_cast< Node_Skeleton >(skel), tags, meta, users);
-}
-
-
 void Print_Target_Json::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
+                const std::pair< Quad_Coord, Quad_Coord* >* bounds,
+                const std::vector< Quad_Coord >* geometry,
 		const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
 		const map< uint32, string >* users)
 {
@@ -514,8 +549,11 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Way_Skeleton& skel,
   cout<<"\n}";
 }
 
+
 void Print_Target_Json::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
+                const std::pair< Quad_Coord, Quad_Coord* >* bounds,
+                const std::vector< std::vector< Quad_Coord > >* geometry,
 		const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
 		const map< uint32, string >* users)
 { 
@@ -565,6 +603,7 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Relation_Skeleton& ske
   
   cout<<"\n}";
 }
+
 
 void Print_Target_Json::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
@@ -1013,17 +1052,10 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 }
 
 
-void Print_Target_Custom::print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
-                const vector< pair< string, string > >* tags,
-                const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
-                const map< uint32, string >* users)
-{
-  print_item(ll_upper, static_cast< Node_Skeleton >(skel), tags, meta, users);
-}
-
-
 void Print_Target_Custom::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
+                const std::pair< Quad_Coord, Quad_Coord* >* bounds,
+                const std::vector< Quad_Coord >* geometry,
 		const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
 		const map< uint32, string >* users)
 {
@@ -1044,8 +1076,11 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 			     tags, mode & PRINT_NDS ? &skel.nds : 0, 0, 0);
 }
 
+
 void Print_Target_Custom::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
+                const std::pair< Quad_Coord, Quad_Coord* >* bounds,
+                const std::vector< std::vector< Quad_Coord > >* geometry,
 		const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
 		const map< uint32, string >* users)
 { 
@@ -1065,6 +1100,7 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Relation_Skeleton& s
 			     detect_zoom(ll_upper),
 			     tags, 0, mode & PRINT_MEMBERS ? &skel.members : 0, &roles);
 }
+
 
 void Print_Target_Custom::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
@@ -1337,17 +1373,10 @@ void Print_Target_Popup::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 }
 
 
-void Print_Target_Popup::print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
-                const vector< pair< string, string > >* tags,
-                const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
-                const map< uint32, string >* users)
-{
-  print_item(ll_upper, static_cast< Node_Skeleton >(skel), tags, meta, users);
-}
-
-
 void Print_Target_Popup::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
+                const std::pair< Quad_Coord, Quad_Coord* >* bounds,
+                const std::vector< Quad_Coord >* geometry,
 		const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
 		const map< uint32, string >* users)
 {
@@ -1363,8 +1392,11 @@ void Print_Target_Popup::print_item(uint32 ll_upper, const Way_Skeleton& skel,
   }
 }
 
+
 void Print_Target_Popup::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
+                const std::pair< Quad_Coord, Quad_Coord* >* bounds,
+                const std::vector< std::vector< Quad_Coord > >* geometry,
 		const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
 		const map< uint32, string >* users)
 { 
@@ -1379,6 +1411,7 @@ void Print_Target_Popup::print_item(uint32 ll_upper, const Relation_Skeleton& sk
     }
   }
 }
+
 
 void Print_Target_Popup::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
@@ -1396,6 +1429,7 @@ void Print_Target_Popup::print_item(uint32 ll_upper, const Area_Skeleton& skel,
     }
   }
 }
+
 
 string Print_Target_Popup::get_output() const
 {

@@ -22,6 +22,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "../data/collect_members.h"
 #include "statement.h"
 
 using namespace std;
@@ -38,17 +39,16 @@ class Print_Target
 			    const map< uint32, string >* users = 0) = 0;
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< Quad_Coord >* geometry = 0,
 			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0) = 0;
     virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< std::vector< Quad_Coord > >* geometry = 0,
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0) = 0;
-                            
-    virtual void print_item(uint32 ll_upper, const Attic< Node_Skeleton >& skel,
-                            const vector< pair< string, string > >* tags = 0,
-                            const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
-                            const map< uint32, string >* users = 0) = 0;
                             
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
@@ -59,17 +59,43 @@ class Print_Target
     static const unsigned int PRINT_COORDS = 2;
     static const unsigned int PRINT_NDS = 4;
     static const unsigned int PRINT_MEMBERS = 8;
-    static const unsigned int PRINT_TAGS = 16;
-    static const unsigned int PRINT_VERSION = 32;
-    static const unsigned int PRINT_META = 64;
-			    
+    static const unsigned int PRINT_TAGS = 0x10;
+    static const unsigned int PRINT_VERSION = 0x20;
+    static const unsigned int PRINT_META = 0x40;
+    static const unsigned int PRINT_GEOMETRY = 0x80;
+    static const unsigned int PRINT_BOUNDS = 0x100;
+    static const unsigned int PRINT_CENTER = 0x200;
+
   protected:
     uint32 mode;
     map< uint32, string > roles;
 };
 
 
+class Relation_Geometry_Store
+{
+public:
+  Relation_Geometry_Store
+      (const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
+      const Statement& query, Resource_Manager& rman);
+  Relation_Geometry_Store
+      (const map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& relations, uint64 timestamp,
+      const Statement& query, Resource_Manager& rman);
+      
+  ~Relation_Geometry_Store();
+  
+  // return the empty vector if the relation is not found
+  std::vector< std::vector< Quad_Coord > > get_geometry(const Relation_Skeleton& relation) const;
+  
+private:
+  std::vector< Node > nodes;
+  std::vector< Way_Skeleton > ways;
+  Way_Geometry_Store* way_geometry_store;
+};
+
+
 class Output_Handle;
+
 
 class Print_Statement : public Statement
 {
@@ -84,6 +110,34 @@ class Print_Statement : public Statement
     static Generic_Statement_Maker< Print_Statement > statement_maker;
     
     void set_output_handle(Output_Handle* output_handle_) { output_handle = output_handle_; }
+      
+    void print_item(Print_Target& target, uint32 ll_upper, const Node_Skeleton& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0);
+    
+    void print_item(Print_Target& target, uint32 ll_upper, const Way_Skeleton& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0);
+    void print_item(Print_Target& target, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0);
+    
+    void print_item(Print_Target& target, uint32 ll_upper, const Relation_Skeleton& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0);
+    void print_item(Print_Target& target, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0);
+    
+    void print_item(Print_Target& target, uint32 ll_upper, const Area_Skeleton& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0);    
     
   private:
     string input;
@@ -91,6 +145,10 @@ class Print_Statement : public Statement
     enum { order_by_id, order_by_quadtile } order;
     unsigned int limit;
     Output_Handle* output_handle;
+    Way_Geometry_Store* way_geometry_store;
+    Way_Geometry_Store* attic_way_geometry_store;
+    Relation_Geometry_Store* relation_geometry_store;
+    Relation_Geometry_Store* attic_relation_geometry_store;
 
     template< class Index, class Object >
     void tags_quadtile

@@ -369,7 +369,7 @@ TStatement* create_foreach_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_print_statement(typename TStatement::Factory& stmt_factory,
-				   string from, string mode, string order, string limit,
+				   string from, string mode, string order, string limit, string geometry,
 				  uint line_nr)
 {
   map< string, string > attr;
@@ -377,6 +377,7 @@ TStatement* create_print_statement(typename TStatement::Factory& stmt_factory,
   attr["mode"] = mode;
   attr["order"] = order;
   attr["limit"] = limit;
+  attr["geometry"] = geometry;
   return stmt_factory.create_statement("print", line_nr, attr);
 }
 
@@ -711,6 +712,7 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
     string mode = "body";
     string order = "id";
     string limit = "";
+    string geometry = "skeleton";
     while (token.good() && *token != ";")
     {
       if (*token == "ids")
@@ -727,6 +729,12 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
 	order = "quadtile";
       else if (*token == "asc")
 	order = "id";
+      else if (*token == "geom")
+        geometry = "full";
+      else if (*token == "bb")
+        geometry = "bounds";
+      else if (*token == "center")
+        geometry = "center";
       else if (isdigit((*token)[0]))
 	limit = *token;
       else
@@ -741,7 +749,7 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
     if (statement == 0)
     {
       statement = create_print_statement< TStatement >
-          (stmt_factory, from == "" ? "_" : from, mode, order, limit, token.line_col().first);
+          (stmt_factory, from == "" ? "_" : from, mode, order, limit, geometry, token.line_col().first);
     }
     else
     {

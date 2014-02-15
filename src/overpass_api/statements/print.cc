@@ -31,7 +31,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 
 const unsigned int NODE_FLUSH_SIZE = 1024*1024;
 const unsigned int WAY_FLUSH_SIZE = 512*1024;
@@ -53,7 +52,7 @@ Print_Statement::Print_Statement
     (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
     : Statement(line_number_),
       mode(0), order(order_by_id), limit(numeric_limits< unsigned int >::max()),
-      output_handle(0)
+      output_handle(0), way_geometry_store(0), attic_way_geometry_store(0), relation_geometry_store(0), attic_relation_geometry_store(0)
 {
   map< string, string > attributes;
   
@@ -61,6 +60,7 @@ Print_Statement::Print_Statement
   attributes["mode"] = "body";
   attributes["order"] = "id";
   attributes["limit"] = "";
+  attributes["geometry"] = "skeleton";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
@@ -100,6 +100,189 @@ Print_Statement::Print_Statement
   }
   if (attributes["limit"] != "")
     limit = atoll(attributes["limit"].c_str());
+    
+  if (attributes["geometry"] == "skeleton")
+    ;
+  else if (attributes["geometry"] == "full")
+    mode |= Print_Target::PRINT_GEOMETRY | Print_Target::PRINT_BOUNDS;
+  else if (attributes["geometry"] == "bounds")
+    mode |= Print_Target::PRINT_BOUNDS;
+  else if (attributes["geometry"] == "center")
+    mode |= Print_Target::PRINT_CENTER;
+  else
+  {
+    ostringstream temp;
+    temp<<"For the attribute \"geometry\" of the element \"print\""
+        <<" the only allowed values are \"skeleton\", \"full\", \"bounds\", or \"center\".";
+    add_static_error(temp.str());
+  }
+}
+
+
+void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Node_Skeleton& skel,
+                    const vector< pair< string, string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta,
+                    const map< uint32, string >* users)
+{
+  target.print_item(ll_upper, skel, tags, meta, users);
+}
+
+
+struct Double_Coords
+{
+public:
+  explicit Double_Coords(const std::vector< Quad_Coord >& geometry)
+    : min_lat(100.0), max_lat(-100.0), min_lon(200.0), max_lon(-200.0)
+  {
+    for (std::vector< Quad_Coord >::const_iterator it = geometry.begin(); it != geometry.end(); ++it)
+    {
+      double lat = ::lat(it->ll_upper, it->ll_lower);
+      double lon = ::lon(it->ll_upper, it->ll_lower);
+      min_lat = std::min(min_lat, lat);
+      max_lat = std::max(max_lat, lat);
+      min_lon = std::min(min_lon, lon);
+      max_lon = std::max(max_lon, lon);
+    }
+  }
+  
+  explicit Double_Coords(const std::vector< std::vector< Quad_Coord > >& geometry)
+    : min_lat(100.0), max_lat(-100.0), min_lon(200.0), max_lon(-200.0)
+  {
+    for (std::vector< std::vector< Quad_Coord > >::const_iterator it = geometry.begin();
+         it != geometry.end(); ++it)
+    {
+      for (std::vector< Quad_Coord >::const_iterator it2 = it->begin(); it2 != it->end(); ++it2)
+      {
+        double lat = ::lat(it2->ll_upper, it2->ll_lower);
+        double lon = ::lon(it2->ll_upper, it2->ll_lower);
+        min_lat = std::min(min_lat, lat);
+        max_lat = std::max(max_lat, lat);
+        min_lon = std::min(min_lon, lon);
+        max_lon = std::max(max_lon, lon);
+      }
+    }
+  }
+  
+  const std::pair< Quad_Coord, Quad_Coord* >& bounds()
+  {
+    max = Quad_Coord(::ll_upper_(max_lat, max_lon), ::ll_lower(max_lat, max_lon));
+    bounds_ = make_pair(Quad_Coord(::ll_upper_(min_lat, min_lon), ::ll_lower(min_lat, min_lon)), &max);
+    return bounds_;
+  }
+  
+  const std::pair< Quad_Coord, Quad_Coord* >& center()
+  {
+    center_ = make_pair(Quad_Coord(
+        ::ll_upper_((min_lat + max_lat) / 2, (min_lon + max_lon) / 2),
+        ::ll_lower((min_lat + max_lat) / 2, (min_lon + max_lon) / 2)
+        ), (Quad_Coord*)0);
+    return center_;
+  }
+
+private:
+  double min_lat;
+  double max_lat;
+  double min_lon;
+  double max_lon;
+  std::pair< Quad_Coord, Quad_Coord* > bounds_;
+  std::pair< Quad_Coord, Quad_Coord* > center_;
+  Quad_Coord max;
+};
+
+
+const std::pair< Quad_Coord, Quad_Coord* >* bound_variant(Double_Coords& double_coords, unsigned int mode)
+{
+  if (mode & Print_Target::PRINT_BOUNDS)
+    return &double_coords.bounds();
+  else if (mode & Print_Target::PRINT_CENTER)
+    return &double_coords.center();
+  
+  return 0;
+}
+
+
+void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Way_Skeleton& skel,
+                    const vector< pair< string, string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta,
+                    const map< uint32, string >* users)
+{
+  if (way_geometry_store)
+  {
+    std::vector< Quad_Coord > geometry = way_geometry_store->get_geometry(skel);
+    Double_Coords double_coords(geometry);
+    target.print_item(ll_upper, skel, tags,
+        geometry.empty() ? 0 : bound_variant(double_coords, mode),
+        ((mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
+        meta, users);
+  }
+  else
+    target.print_item(ll_upper, skel, tags, 0, 0, meta, users);
+}
+
+
+void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
+                    const vector< pair< string, string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta,
+                    const map< uint32, string >* users)
+{
+  if (attic_way_geometry_store)
+  {
+    std::vector< Quad_Coord > geometry = attic_way_geometry_store->get_geometry(skel);
+    Double_Coords double_coords(geometry);
+    target.print_item(ll_upper, skel, tags,
+        geometry.empty() ? 0 : bound_variant(double_coords, mode),
+        ((mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
+        meta, users);
+  }
+  else
+    target.print_item(ll_upper, skel, tags, 0, 0, meta, users);
+}
+
+
+void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Relation_Skeleton& skel,
+                    const vector< pair< string, string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta,
+                    const map< uint32, string >* users)
+{
+  if (relation_geometry_store)
+  {
+    std::vector< std::vector< Quad_Coord > > geometry = relation_geometry_store->get_geometry(skel);
+    Double_Coords double_coords(geometry);
+    target.print_item(ll_upper, skel, tags,
+        geometry.empty() ? 0 : bound_variant(double_coords, mode),
+        ((mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
+        meta, users);
+  }
+  else
+    target.print_item(ll_upper, skel, tags, 0, 0, meta, users);
+}
+
+
+void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
+                    const vector< pair< string, string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta,
+                    const map< uint32, string >* users)
+{
+  if (attic_relation_geometry_store)
+  {
+    std::vector< std::vector< Quad_Coord > > geometry = attic_relation_geometry_store->get_geometry(skel);
+    Double_Coords double_coords(geometry);
+    target.print_item(ll_upper, skel, tags,
+        geometry.empty() ? 0 : bound_variant(double_coords, mode),
+        ((mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
+        meta, users);
+  }
+  else
+    target.print_item(ll_upper, skel, tags, 0, 0, meta, users);
+}
+
+
+void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Area_Skeleton& skel,
+                    const vector< pair< string, string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta,
+                    const map< uint32, string >* users)
+{
+  target.print_item(ll_upper, skel, tags, meta, users);
 }
 
 
@@ -272,7 +455,7 @@ void collect_tags_framed
 template< class TIndex, class TObject >
 void quadtile
     (const map< TIndex, vector< TObject > >& items, Print_Target& target,
-     Transaction& transaction, uint32 limit, uint32& element_count)
+     Transaction& transaction, Print_Statement& stmt, uint32 limit, uint32& element_count)
 {
   typename map< TIndex, vector< TObject > >::const_iterator
       item_it(items.begin());
@@ -284,7 +467,7 @@ void quadtile
     {
       if (++element_count > limit)
 	return;
-      target.print_item(item_it->first.val(), *it2);
+      stmt.print_item(target, item_it->first.val(), *it2);
     }
     ++item_it;
   }
@@ -345,7 +528,7 @@ void Print_Statement::tags_quadtile
       {
 	if (++element_count > limit)
 	  return;
-	target.print_item(item_it->first.val(), *it2, &(tags_by_id[it2->id]),
+	print_item(target, item_it->first.val(), *it2, &(tags_by_id[it2->id]),
 		   meta_printer.get(item_it->first, it2->id), &(meta_printer.users()));
       }
       ++item_it;
@@ -426,7 +609,7 @@ void Print_Statement::tags_quadtile_attic
             = attic_meta_printer.get(item_it->first, it2->id, it2->timestamp);
         if (!meta)
           meta = current_meta_printer.get(item_it->first, it2->id, it2->timestamp);
-        target.print_item(item_it->first.val(), *it2,
+        print_item(target, item_it->first.val(), *it2,
                           &(tags_by_id[Attic< typename Object::Id_Type >(it2->id, it2->timestamp)]),
                    meta, &(current_meta_printer.users()));
       }
@@ -449,7 +632,7 @@ struct Skeleton_Comparator_By_Id {
 template< class TIndex, class TObject >
 void by_id
   (const map< TIndex, vector< TObject > >& items, Print_Target& target,
-   Transaction& transaction, uint32 limit, uint32& element_count)
+   Transaction& transaction, Print_Statement& stmt, uint32 limit, uint32& element_count)
 {
   // order relevant elements by id
   vector< pair< const TObject*, uint32 > > items_by_id;
@@ -468,7 +651,7 @@ void by_id
   {
     if (++element_count > limit)
       return;
-    target.print_item(items_by_id[i].second, *(items_by_id[i].first));
+    stmt.print_item(target, items_by_id[i].second, *(items_by_id[i].first));
   }
 }
 
@@ -602,7 +785,7 @@ void Print_Statement::tags_by_id
               (items_by_id[i.val()].first->id));
       if (++element_count > limit)
 	return;
-      target.print_item(items_by_id[i.val()].second, *(items_by_id[i.val()].first),
+      print_item(target, items_by_id[i.val()].second, *(items_by_id[i.val()].first),
 		 &(tags_by_id[items_by_id[i.val()].first->id.val()]),
 		 (meta_it != metadata.end() && meta_it->ref == items_by_id[i.val()].first->id) ?
 		     &*meta_it : 0, &(meta_printer.users()));
@@ -719,12 +902,139 @@ void Print_Statement::tags_by_id_attic
                                    items_by_id[i.val()].first->id, items_by_id[i.val()].first->timestamp);
       if (++element_count > limit)
         return;
-      target.print_item(items_by_id[i.val()].second, *(items_by_id[i.val()].first),
+      print_item(target, items_by_id[i.val()].second, *(items_by_id[i.val()].first),
                  &(tags_by_id[Attic< typename Object::Id_Type >
                      (items_by_id[i.val()].first->id, items_by_id[i.val()].first->timestamp)]),
                  meta_it != metadata.end() ? &*meta_it : 0, &current_meta_printer.users());
     }
   }
+}
+
+
+Relation_Geometry_Store::~Relation_Geometry_Store()
+{
+  delete way_geometry_store;
+}
+
+
+Relation_Geometry_Store::Relation_Geometry_Store
+    (const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations, const Statement& query, Resource_Manager& rman)
+{
+  // Retrieve all nodes referred by the relations.
+  std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
+      = relation_node_members(&query, rman, relations);
+  
+  // Order node ids by id.
+  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = node_members.begin();
+      it != node_members.end(); ++it)
+  {
+    for (std::vector< Node_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      nodes.push_back(Node(iit->id, it->first.val(), iit->ll_lower));
+  }
+  sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
+  
+  // Retrieve all ways referred by the relations.
+  std::map< Uint31_Index, std::vector< Way_Skeleton > > way_members
+      = relation_way_members(&query, rman, relations);
+      
+  way_geometry_store = new Way_Geometry_Store(way_members, query, rman);
+  
+  // Order way ids by id.
+  for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::iterator it = way_members.begin();
+      it != way_members.end(); ++it)
+  {
+    for (std::vector< Way_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      ways.push_back(*iit);
+  }
+  sort(ways.begin(), ways.end());
+}
+
+
+Relation_Geometry_Store::Relation_Geometry_Store
+    (const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations, uint64 timestamp,
+     const Statement& query, Resource_Manager& rman)
+{
+  // Retrieve all nodes referred by the relations.
+  std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
+      std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > nodes_by_idx
+      = relation_node_members(&query, rman,
+          std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations, timestamp);
+  
+  // Order node ids by id.
+  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = nodes_by_idx.first.begin();
+      it != nodes_by_idx.first.end(); ++it)
+  {
+    for (std::vector< Node_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      nodes.push_back(Node(iit->id, it->first.val(), iit->ll_lower));
+  }
+  for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::iterator it = nodes_by_idx.second.begin();
+      it != nodes_by_idx.second.end(); ++it)
+  {
+    for (std::vector< Attic< Node_Skeleton > >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      nodes.push_back(Node(iit->id, it->first.val(), iit->ll_lower));
+  }
+  sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
+      
+  // Retrieve all ways referred by the relations.
+  std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
+      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > > ways_by_idx
+      = relation_way_members(&query, rman,
+          std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations, timestamp);
+  
+  for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::iterator it = ways_by_idx.first.begin();
+      it != ways_by_idx.first.end(); ++it)
+  {
+    std::vector< Attic< Way_Skeleton > >& target = ways_by_idx.second[it->first];
+    for (std::vector< Way_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      target.push_back(Attic< Way_Skeleton >(*iit, NOW));
+  }
+  
+  way_geometry_store = new Way_Geometry_Store(ways_by_idx.second, timestamp, query, rman);
+  
+  for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::iterator it = ways_by_idx.second.begin();
+      it != ways_by_idx.second.end(); ++it)
+  {
+    for (std::vector< Attic< Way_Skeleton > >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      ways.push_back(*iit);
+  }
+  sort(ways.begin(), ways.end());
+}
+
+
+std::vector< std::vector< Quad_Coord > > Relation_Geometry_Store::get_geometry
+    (const Relation_Skeleton& relation) const
+{
+  std::vector< std::vector< Quad_Coord > > result;
+  for (std::vector< Relation_Entry >::const_iterator it = relation.members.begin();
+       it != relation.members.end(); ++it)
+  {
+    if (it->type == Relation_Entry::NODE)
+    {
+      const Node* node = binary_search_for_id(nodes, it->ref);
+      if (node == 0)
+        result.push_back(std::vector< Quad_Coord >());
+      else
+        result.push_back(std::vector< Quad_Coord >(1, Quad_Coord(node->index, node->ll_lower_)));
+    }
+    else if (it->type == Relation_Entry::WAY)
+    {
+      const Way_Skeleton* way = binary_search_for_id(ways, Way_Skeleton::Id_Type(it->ref.val()));
+      if (way == 0)
+        result.push_back(std::vector< Quad_Coord >());
+      else
+        result.push_back(way_geometry_store->get_geometry(*way));
+    }
+    else if (it->type == Relation_Entry::RELATION)
+      result.push_back(std::vector< Quad_Coord >());
+  }
+  
+  return result;
 }
 
 
@@ -744,6 +1054,21 @@ void Print_Statement::execute(Resource_Manager& rman)
     target = &this->output_handle->get_print_target(mode, *rman.get_transaction());
   else
     target = &output_handle.get_print_target(mode, *rman.get_transaction());
+
+  if (mode & (Print_Target::PRINT_GEOMETRY | Print_Target::PRINT_BOUNDS | Print_Target::PRINT_CENTER))
+  {
+    delete way_geometry_store;
+    way_geometry_store = new Way_Geometry_Store(mit->second.ways, *this, rman);
+    delete attic_way_geometry_store;
+    attic_way_geometry_store = new Way_Geometry_Store
+        (mit->second.attic_ways, rman.get_desired_timestamp(), *this, rman);
+        
+    delete relation_geometry_store;
+    relation_geometry_store = new Relation_Geometry_Store(mit->second.relations, *this, rman);
+    delete attic_relation_geometry_store;
+    attic_relation_geometry_store = new Relation_Geometry_Store
+        (mit->second.attic_relations, rman.get_desired_timestamp(), *this, rman);
+  }
 
   if (mode & Print_Target::PRINT_TAGS)
   {
@@ -859,27 +1184,31 @@ void Print_Statement::execute(Resource_Manager& rman)
   {
     if (order == order_by_id)
     {
-      by_id(mit->second.nodes, *target, *rman.get_transaction(), limit, element_count);
-      by_id(mit->second.ways, *target, *rman.get_transaction(), limit, element_count);
-      by_id(mit->second.relations, *target, *rman.get_transaction(), limit, element_count);
+      by_id(mit->second.nodes, *target, *rman.get_transaction(), *this, limit, element_count);
+      by_id(mit->second.attic_nodes, *target, *rman.get_transaction(), *this, limit, element_count);
       
-      by_id(mit->second.attic_nodes, *target, *rman.get_transaction(), limit, element_count);
-      by_id(mit->second.attic_ways, *target, *rman.get_transaction(), limit, element_count);
+      by_id(mit->second.ways, *target, *rman.get_transaction(), *this, limit, element_count);
+      by_id(mit->second.attic_ways, *target, *rman.get_transaction(), *this, limit, element_count);
+      
+      by_id(mit->second.relations, *target, *rman.get_transaction(), *this, limit, element_count);
+      by_id(mit->second.attic_relations, *target, *rman.get_transaction(), *this, limit, element_count);
       
       if (rman.get_area_transaction())
-	by_id(mit->second.areas, *target, *rman.get_area_transaction(), limit, element_count);
+	by_id(mit->second.areas, *target, *rman.get_area_transaction(), *this, limit, element_count);
     }
     else
     {
-      quadtile(mit->second.nodes, *target, *rman.get_transaction(), limit, element_count);
-      quadtile(mit->second.ways, *target, *rman.get_transaction(), limit, element_count);
-      quadtile(mit->second.relations, *target, *rman.get_transaction(), limit, element_count);
+      quadtile(mit->second.nodes, *target, *rman.get_transaction(), *this, limit, element_count);
+      quadtile(mit->second.attic_nodes, *target, *rman.get_transaction(), *this, limit, element_count);
       
-      quadtile(mit->second.attic_nodes, *target, *rman.get_transaction(), limit, element_count);
-      quadtile(mit->second.attic_ways, *target, *rman.get_transaction(), limit, element_count);
+      quadtile(mit->second.ways, *target, *rman.get_transaction(), *this, limit, element_count);
+      quadtile(mit->second.attic_ways, *target, *rman.get_transaction(), *this, limit, element_count);
+      
+      quadtile(mit->second.relations, *target, *rman.get_transaction(), *this, limit, element_count);
+      quadtile(mit->second.attic_relations, *target, *rman.get_transaction(), *this, limit, element_count);
       
       if (rman.get_area_transaction())
-	quadtile(mit->second.areas, *target, *rman.get_area_transaction(), limit, element_count);
+	quadtile(mit->second.areas, *target, *rman.get_area_transaction(), *this, limit, element_count);
     }
   }
   
@@ -887,4 +1216,10 @@ void Print_Statement::execute(Resource_Manager& rman)
 }
 
 
-Print_Statement::~Print_Statement() {}
+Print_Statement::~Print_Statement()
+{
+  delete way_geometry_store;
+  delete attic_way_geometry_store;
+  delete relation_geometry_store;
+  delete attic_relation_geometry_store;
+}
