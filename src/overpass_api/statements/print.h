@@ -46,6 +46,7 @@ class Print_Target
     virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< std::vector< Quad_Coord > >* geometry = 0,
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0) = 0;
                             
@@ -68,6 +69,28 @@ class Print_Target
   protected:
     uint32 mode;
     map< uint32, string > roles;
+};
+
+
+class Relation_Geometry_Store
+{
+public:
+  Relation_Geometry_Store
+      (const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
+      const Statement& query, Resource_Manager& rman);
+  Relation_Geometry_Store
+      (const map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& relations, uint64 timestamp,
+      const Statement& query, Resource_Manager& rman);
+      
+  ~Relation_Geometry_Store();
+  
+  // return the empty vector if the relation is not found
+  std::vector< std::vector< Quad_Coord > > get_geometry(const Relation_Skeleton& relation) const;
+  
+private:
+  std::vector< Node > nodes;
+  std::vector< Way_Skeleton > ways;
+  Way_Geometry_Store* way_geometry_store;
 };
 
 
@@ -124,6 +147,8 @@ class Print_Statement : public Statement
     Output_Handle* output_handle;
     Way_Geometry_Store* way_geometry_store;
     Way_Geometry_Store* attic_way_geometry_store;
+    Relation_Geometry_Store* relation_geometry_store;
+    Relation_Geometry_Store* attic_relation_geometry_store;
 
     template< class Index, class Object >
     void tags_quadtile

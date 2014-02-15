@@ -146,6 +146,24 @@ public:
     }
   }
   
+  explicit Double_Coords(const std::vector< std::vector< Quad_Coord > >& geometry)
+    : min_lat(100.0), max_lat(-100.0), min_lon(200.0), max_lon(-200.0)
+  {
+    for (std::vector< std::vector< Quad_Coord > >::const_iterator it = geometry.begin();
+         it != geometry.end(); ++it)
+    {
+      for (std::vector< Quad_Coord >::const_iterator it2 = it->begin(); it2 != it->end(); ++it2)
+      {
+        double lat = ::lat(it2->ll_upper, it2->ll_lower);
+        double lon = ::lon(it2->ll_upper, it2->ll_lower);
+        min_lat = std::min(min_lat, lat);
+        max_lat = std::max(max_lat, lat);
+        min_lon = std::min(min_lon, lon);
+        max_lon = std::max(max_lon, lon);
+      }
+    }
+  }
+  
   const std::pair< Quad_Coord, Quad_Coord* >& bounds()
   {
     max = Quad_Coord(::ll_upper_(max_lat, max_lon), ::ll_lower(max_lat, max_lon));
@@ -227,7 +245,17 @@ void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Re
                     const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta,
                     const map< uint32, string >* users)
 {
-  target.print_item(ll_upper, skel, tags, 0, meta, users);
+  if (relation_geometry_store)
+  {
+    std::vector< std::vector< Quad_Coord > > geometry = relation_geometry_store->get_geometry(skel);
+    Double_Coords double_coords(geometry);
+    target.print_item(ll_upper, skel, tags,
+        geometry.empty() ? 0 : bound_variant(double_coords, mode),
+        ((mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
+        meta, users);
+  }
+  else
+    target.print_item(ll_upper, skel, tags, 0, 0, meta, users);
 }
 
 
@@ -236,7 +264,17 @@ void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const At
                     const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta,
                     const map< uint32, string >* users)
 {
-  target.print_item(ll_upper, skel, tags, 0, meta, users);
+  if (attic_relation_geometry_store)
+  {
+    std::vector< std::vector< Quad_Coord > > geometry = attic_relation_geometry_store->get_geometry(skel);
+    //Double_Coords double_coords(geometry);
+    target.print_item(ll_upper, skel, tags,
+        0,//geometry.empty() ? 0 : bound_variant(double_coords, mode),
+        ((mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
+        meta, users);
+  }
+  else
+    target.print_item(ll_upper, skel, tags, 0, 0, meta, users);
 }
 
 
@@ -874,6 +912,133 @@ void Print_Statement::tags_by_id_attic
 }
 
 
+Relation_Geometry_Store::~Relation_Geometry_Store()
+{
+  delete way_geometry_store;
+}
+
+
+Relation_Geometry_Store::Relation_Geometry_Store
+    (const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations, const Statement& query, Resource_Manager& rman)
+{
+  // Retrieve all nodes referred by the relations.
+  std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
+      = relation_node_members(&query, rman, relations);
+  
+  // Order node ids by id.
+  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = node_members.begin();
+      it != node_members.end(); ++it)
+  {
+    for (std::vector< Node_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      nodes.push_back(Node(iit->id, it->first.val(), iit->ll_lower));
+  }
+  sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
+  
+  // Retrieve all ways referred by the relations.
+  std::map< Uint31_Index, std::vector< Way_Skeleton > > way_members
+      = relation_way_members(&query, rman, relations);
+      
+  way_geometry_store = new Way_Geometry_Store(way_members, query, rman);
+  
+  // Order way ids by id.
+  for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::iterator it = way_members.begin();
+      it != way_members.end(); ++it)
+  {
+    for (std::vector< Way_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      ways.push_back(*iit);
+  }
+  sort(ways.begin(), ways.end());
+}
+
+
+Relation_Geometry_Store::Relation_Geometry_Store
+    (const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations, uint64 timestamp,
+     const Statement& query, Resource_Manager& rman)
+{
+  // Retrieve all nodes referred by the relations.
+  std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
+      std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > nodes_by_idx
+      = relation_node_members(&query, rman,
+          std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations, timestamp);
+  
+  // Order node ids by id.
+  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = nodes_by_idx.first.begin();
+      it != nodes_by_idx.first.end(); ++it)
+  {
+    for (std::vector< Node_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      nodes.push_back(Node(iit->id, it->first.val(), iit->ll_lower));
+  }
+  for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::iterator it = nodes_by_idx.second.begin();
+      it != nodes_by_idx.second.end(); ++it)
+  {
+    for (std::vector< Attic< Node_Skeleton > >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      nodes.push_back(Node(iit->id, it->first.val(), iit->ll_lower));
+  }
+  sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
+      
+  // Retrieve all ways referred by the relations.
+  std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
+      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > > ways_by_idx
+      = relation_way_members(&query, rman,
+          std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations, timestamp);
+  
+  for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::iterator it = ways_by_idx.first.begin();
+      it != ways_by_idx.first.end(); ++it)
+  {
+    std::vector< Attic< Way_Skeleton > >& target = ways_by_idx.second[it->first];
+    for (std::vector< Way_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      target.push_back(Attic< Way_Skeleton >(*iit, NOW));
+  }
+  
+  way_geometry_store = new Way_Geometry_Store(ways_by_idx.second, timestamp, query, rman);
+  
+  for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::iterator it = ways_by_idx.second.begin();
+      it != ways_by_idx.second.end(); ++it)
+  {
+    for (std::vector< Attic< Way_Skeleton > >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      ways.push_back(*iit);
+  }
+  sort(ways.begin(), ways.end());
+}
+
+
+std::vector< std::vector< Quad_Coord > > Relation_Geometry_Store::get_geometry
+    (const Relation_Skeleton& relation) const
+{
+  std::vector< std::vector< Quad_Coord > > result;
+  for (std::vector< Relation_Entry >::const_iterator it = relation.members.begin();
+       it != relation.members.end(); ++it)
+  {
+    if (it->type == Relation_Entry::NODE)
+    {
+      const Node* node = binary_search_for_id(nodes, it->ref);
+      if (node == 0)
+        result.push_back(std::vector< Quad_Coord >());
+      else
+        result.push_back(std::vector< Quad_Coord >(1, Quad_Coord(node->index, node->ll_lower_)));
+    }
+    else if (it->type == Relation_Entry::WAY)
+    {
+      const Way_Skeleton* way = binary_search_for_id(ways, Way_Skeleton::Id_Type(it->ref.val()));
+      if (way == 0)
+        result.push_back(std::vector< Quad_Coord >());
+      else
+        result.push_back(way_geometry_store->get_geometry(*way));
+    }
+    else if (it->type == Relation_Entry::RELATION)
+      result.push_back(std::vector< Quad_Coord >());
+  }
+  
+  return result;
+}
+
+
 void Print_Statement::execute(Resource_Manager& rman)
 {
   if (rman.area_updater())
@@ -898,6 +1063,12 @@ void Print_Statement::execute(Resource_Manager& rman)
     delete attic_way_geometry_store;
     attic_way_geometry_store = new Way_Geometry_Store
         (mit->second.attic_ways, rman.get_desired_timestamp(), *this, rman);
+        
+    delete relation_geometry_store;
+    relation_geometry_store = new Relation_Geometry_Store(mit->second.relations, *this, rman);
+    delete attic_relation_geometry_store;
+    attic_relation_geometry_store = new Relation_Geometry_Store
+        (mit->second.attic_relations, rman.get_desired_timestamp(), *this, rman);
   }
 
   if (mode & Print_Target::PRINT_TAGS)
@@ -1042,4 +1213,10 @@ void Print_Statement::execute(Resource_Manager& rman)
 }
 
 
-Print_Statement::~Print_Statement() {}
+Print_Statement::~Print_Statement()
+{
+  delete way_geometry_store;
+  delete attic_way_geometry_store;
+  delete relation_geometry_store;
+  delete attic_relation_geometry_store;
+}
