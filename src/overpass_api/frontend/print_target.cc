@@ -395,12 +395,12 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Relation_Skeleton& skel
 	cout<<"    <member type=\""<<MEMBER_TYPE[skel.members[i].type]
 	    <<"\" ref=\""<<skel.members[i].ref.val()
 	    <<"\" role=\""<<escape_xml(it != roles.end() ? it->second : "???")<<"\"/>\n";
-        if (geometry)
-        {
-          for (uint j = 0; j < (*geometry)[i].size(); ++j)
-            std::cout<<fixed<<setprecision(7)<<::lat((*geometry)[i][j].ll_upper, (*geometry)[i][j].ll_lower)<<", "
-                <<fixed<<setprecision(7)<<::lon((*geometry)[i][j].ll_upper, (*geometry)[i][j].ll_lower)<<'\n';
-        }
+//         if (geometry)
+//         {
+//           for (uint j = 0; j < (*geometry)[i].size(); ++j)
+//             std::cout<<fixed<<setprecision(7)<<::lat((*geometry)[i][j].ll_upper, (*geometry)[i][j].ll_lower)<<", "
+//                 <<fixed<<setprecision(7)<<::lon((*geometry)[i][j].ll_upper, (*geometry)[i][j].ll_lower)<<'\n';
+//         }
       }
     }
     if ((tags != 0) && (!tags->empty()))

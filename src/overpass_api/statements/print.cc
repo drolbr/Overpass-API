@@ -31,7 +31,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 
 const unsigned int NODE_FLUSH_SIZE = 1024*1024;
 const unsigned int WAY_FLUSH_SIZE = 512*1024;
@@ -53,7 +52,7 @@ Print_Statement::Print_Statement
     (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
     : Statement(line_number_),
       mode(0), order(order_by_id), limit(numeric_limits< unsigned int >::max()),
-      output_handle(0), way_geometry_store(0), attic_way_geometry_store(0)
+      output_handle(0), way_geometry_store(0), attic_way_geometry_store(0), relation_geometry_store(0), attic_relation_geometry_store(0)
 {
   map< string, string > attributes;
   
@@ -267,9 +266,9 @@ void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const At
   if (attic_relation_geometry_store)
   {
     std::vector< std::vector< Quad_Coord > > geometry = attic_relation_geometry_store->get_geometry(skel);
-    //Double_Coords double_coords(geometry);
+    Double_Coords double_coords(geometry);
     target.print_item(ll_upper, skel, tags,
-        0,//geometry.empty() ? 0 : bound_variant(double_coords, mode),
+        geometry.empty() ? 0 : bound_variant(double_coords, mode),
         ((mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
         meta, users);
   }
@@ -1186,11 +1185,13 @@ void Print_Statement::execute(Resource_Manager& rman)
     if (order == order_by_id)
     {
       by_id(mit->second.nodes, *target, *rman.get_transaction(), *this, limit, element_count);
-      by_id(mit->second.ways, *target, *rman.get_transaction(), *this, limit, element_count);
-      by_id(mit->second.relations, *target, *rman.get_transaction(), *this, limit, element_count);
-      
       by_id(mit->second.attic_nodes, *target, *rman.get_transaction(), *this, limit, element_count);
+      
+      by_id(mit->second.ways, *target, *rman.get_transaction(), *this, limit, element_count);
       by_id(mit->second.attic_ways, *target, *rman.get_transaction(), *this, limit, element_count);
+      
+      by_id(mit->second.relations, *target, *rman.get_transaction(), *this, limit, element_count);
+      by_id(mit->second.attic_relations, *target, *rman.get_transaction(), *this, limit, element_count);
       
       if (rman.get_area_transaction())
 	by_id(mit->second.areas, *target, *rman.get_area_transaction(), *this, limit, element_count);
@@ -1198,11 +1199,13 @@ void Print_Statement::execute(Resource_Manager& rman)
     else
     {
       quadtile(mit->second.nodes, *target, *rman.get_transaction(), *this, limit, element_count);
-      quadtile(mit->second.ways, *target, *rman.get_transaction(), *this, limit, element_count);
-      quadtile(mit->second.relations, *target, *rman.get_transaction(), *this, limit, element_count);
-      
       quadtile(mit->second.attic_nodes, *target, *rman.get_transaction(), *this, limit, element_count);
+      
+      quadtile(mit->second.ways, *target, *rman.get_transaction(), *this, limit, element_count);
       quadtile(mit->second.attic_ways, *target, *rman.get_transaction(), *this, limit, element_count);
+      
+      quadtile(mit->second.relations, *target, *rman.get_transaction(), *this, limit, element_count);
+      quadtile(mit->second.attic_relations, *target, *rman.get_transaction(), *this, limit, element_count);
       
       if (rman.get_area_transaction())
 	quadtile(mit->second.areas, *target, *rman.get_area_transaction(), *this, limit, element_count);
