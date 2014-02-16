@@ -888,20 +888,20 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
   add_deleted_skeletons(attic_skeletons, new_positions);
 
   // TODO: old code
-  if (update_logger && meta)
-  {
-    for (vector< pair< OSM_Element_Metadata_Skeleton< Way::Id_Type >, uint32 > >::const_iterator
-        it = ways_meta_to_insert.begin(); it != ways_meta_to_insert.end(); ++it)
-    {
-      OSM_Element_Metadata meta;
-      meta.version = it->first.version;
-      meta.timestamp = it->first.timestamp;
-      meta.changeset = it->first.changeset;
-      meta.user_id = it->first.user_id;
-      meta.user_name = user_by_id[it->first.user_id];
-      update_logger->insertion(it->first.ref, meta);
-    }
-  }
+//   if (update_logger && meta)
+//   {
+//     for (vector< pair< OSM_Element_Metadata_Skeleton< Way::Id_Type >, uint32 > >::const_iterator
+//         it = ways_meta_to_insert.begin(); it != ways_meta_to_insert.end(); ++it)
+//     {
+//       OSM_Element_Metadata meta;
+//       meta.version = it->first.version;
+//       meta.timestamp = it->first.timestamp;
+//       meta.changeset = it->first.changeset;
+//       meta.user_id = it->first.user_id;
+//       meta.user_name = user_by_id[it->first.user_id];
+//       update_logger->insertion(it->first.ref, meta);
+//     }
+//   }
 
   callback->update_started();
   callback->prepare_delete_tags_finished();
@@ -1011,26 +1011,25 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
                     *transaction, *attic_settings().WAY_CHANGELOG);
   }
       
-  //TODO: old code
   if (meta != only_data)
   {
     map< uint32, vector< uint32 > > idxs_by_id;
-    create_idxs_by_id(ways_meta_to_insert, idxs_by_id);
+    create_idxs_by_id(new_data.data, idxs_by_id);
     process_user_data(*transaction, user_by_id, idxs_by_id);
     
-    if (update_logger)
-    {
-      stable_sort(ways_meta_to_delete.begin(), ways_meta_to_delete.begin());
-      ways_meta_to_delete.erase(unique(ways_meta_to_delete.begin(), ways_meta_to_delete.end()),
-                                 ways_meta_to_delete.end());
-      update_logger->set_delete_meta_data(ways_meta_to_delete);
-    }
+//     if (update_logger)
+//     {
+//       stable_sort(ways_meta_to_delete.begin(), ways_meta_to_delete.begin());
+//       ways_meta_to_delete.erase(unique(ways_meta_to_delete.begin(), ways_meta_to_delete.end()),
+//                                  ways_meta_to_delete.end());
+//       update_logger->set_delete_meta_data(ways_meta_to_delete);
+//     }
   }
   callback->update_finished();
   
   new_data.data.clear();
-  ways_meta_to_insert.clear();
-  ways_meta_to_delete.clear();
+//   ways_meta_to_insert.clear();
+//   ways_meta_to_delete.clear();
   
   if (!external_transaction)
     delete transaction;

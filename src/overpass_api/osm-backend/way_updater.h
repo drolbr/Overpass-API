@@ -330,16 +330,7 @@ struct Way_Updater
            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(id)));
     
     if (meta)
-    {
       user_by_id[meta->user_id] = meta->user_name;
-      OSM_Element_Metadata_Skeleton< Way::Id_Type > meta_skel;
-      meta_skel.ref = id;
-      meta_skel.version = meta->version;
-      meta_skel.changeset = meta->changeset;
-      meta_skel.timestamp = meta->timestamp;
-      meta_skel.user_id = meta->user_id;
-      ways_meta_to_delete.push_back(meta_skel);
-    }
   }
   
   void set_way(const Way& way,
@@ -357,16 +348,7 @@ struct Way_Updater
            way.tags));
     
     if (meta)
-    {
       user_by_id[meta->user_id] = meta->user_name;
-      OSM_Element_Metadata_Skeleton< Way::Id_Type > meta_skel;
-      meta_skel.ref= way.id;
-      meta_skel.version = meta->version;
-      meta_skel.changeset = meta->changeset;
-      meta_skel.timestamp = meta->timestamp;
-      meta_skel.user_id = meta->user_id;
-      ways_meta_to_insert.push_back(make_pair(meta_skel, 0));
-    }
   }
   
   void update(Osm_Backend_Callback* callback, bool partial,
@@ -398,8 +380,6 @@ private:
   Data_By_Id< Way_Skeleton > new_data;
   
   meta_modes meta;
-  vector< pair< OSM_Element_Metadata_Skeleton< Way::Id_Type >, uint32 > > ways_meta_to_insert;
-  vector< OSM_Element_Metadata_Skeleton< Way::Id_Type > > ways_meta_to_delete;
   map< uint32, string > user_by_id;
 
   std::map< Uint31_Index, std::set< Way_Skeleton > > new_skeletons;

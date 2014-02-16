@@ -174,6 +174,20 @@ void create_idxs_by_id
 }
 
    
+template< typename Vector >
+void create_idxs_by_id
+    (const Vector& new_data, map< uint32, vector< uint32 > >& idxs_by_user_id)
+{
+  for (typename Vector::const_iterator it = new_data.begin(); it != new_data.end(); ++it)
+  {
+    uint32 compressed_idx = (it->idx.val() & 0xffffff00);
+    if ((it->idx.val() & 0x80000000) && ((it->idx.val() & 0x3) == 0))
+      compressed_idx = it->idx.val();
+    idxs_by_user_id[it->meta.user_id].push_back(compressed_idx);
+  }
+}
+
+   
 void process_user_data(Transaction& transaction, map< uint32, string >& user_by_id,
    map< uint32, vector< uint32 > >& idxs_by_user_id);
 

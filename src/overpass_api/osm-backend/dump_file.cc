@@ -412,6 +412,14 @@ int main(int argc, char* args[])
             <<dec<<it.object().elem_id.val()<<'\n';
       }
     }
+    else if (std::string("--user") == args[2])
+    {
+      Block_Backend< Uint32_Index, Uint31_Index > db
+          (transaction.data_index(meta_settings().USER_INDICES));
+      for (Block_Backend< Uint32_Index, Uint31_Index >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+        cout<<dec<<it.index().val()<<'\t'<<hex<<it.object().val()<<'\n';
+    }
     else
       std::cout<<"Unknown target.\n";
   }

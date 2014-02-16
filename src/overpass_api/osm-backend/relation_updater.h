@@ -274,18 +274,8 @@ struct Relation_Updater
           (Uint31_Index(0u), Relation_Skeleton(id),
            OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(id)));
     
-//     ids_to_modify.push_back(make_pair(id, false));
     if (meta)
-    {
       user_by_id[meta->user_id] = meta->user_name;
-      OSM_Element_Metadata_Skeleton< Relation::Id_Type > meta_skel;
-      meta_skel.ref = id;
-      meta_skel.version = meta->version;
-      meta_skel.changeset = meta->changeset;
-      meta_skel.timestamp = meta->timestamp;
-      meta_skel.user_id = meta->user_id;
-      rels_meta_to_delete.push_back(meta_skel);
-    }
   }
   
   void set_relation(const Relation& rel,
@@ -303,16 +293,7 @@ struct Relation_Updater
            rel.tags));
     
     if (meta)
-    {
       user_by_id[meta->user_id] = meta->user_name;
-      OSM_Element_Metadata_Skeleton< Relation::Id_Type > meta_skel;
-      meta_skel.ref= rel.id;
-      meta_skel.version = meta->version;
-      meta_skel.changeset = meta->changeset;
-      meta_skel.timestamp = meta->timestamp;
-      meta_skel.user_id = meta->user_id;
-      rels_meta_to_insert.push_back(make_pair(meta_skel, 0));
-    }
   }
   
   uint32 get_role_id(const string& s);
@@ -340,8 +321,6 @@ private:
   Data_By_Id< Relation_Skeleton > new_data;
 
   meta_modes meta;
-  vector< pair< OSM_Element_Metadata_Skeleton< Relation::Id_Type >, uint32 > > rels_meta_to_insert;
-  vector< OSM_Element_Metadata_Skeleton< Relation::Id_Type > > rels_meta_to_delete;
   map< uint32, string > user_by_id;
   
   std::map< Uint31_Index, std::set< Relation_Skeleton > > new_skeletons;

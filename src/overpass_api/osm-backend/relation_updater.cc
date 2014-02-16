@@ -1147,20 +1147,20 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
   add_deleted_skeletons(attic_skeletons, new_positions);
 
   //TODO: old code
-  if (update_logger && meta)
-  {
-    for (vector< pair< OSM_Element_Metadata_Skeleton< Relation::Id_Type >, uint32 > >::const_iterator
-        it = rels_meta_to_insert.begin(); it != rels_meta_to_insert.end(); ++it)
-    {
-      OSM_Element_Metadata meta;
-      meta.version = it->first.version;
-      meta.timestamp = it->first.timestamp;
-      meta.changeset = it->first.changeset;
-      meta.user_id = it->first.user_id;
-      meta.user_name = user_by_id[it->first.user_id];
-      update_logger->insertion(it->first.ref, meta);
-    }
-  }
+//   if (update_logger && meta)
+//   {
+//     for (vector< pair< OSM_Element_Metadata_Skeleton< Relation::Id_Type >, uint32 > >::const_iterator
+//         it = rels_meta_to_insert.begin(); it != rels_meta_to_insert.end(); ++it)
+//     {
+//       OSM_Element_Metadata meta;
+//       meta.version = it->first.version;
+//       meta.timestamp = it->first.timestamp;
+//       meta.changeset = it->first.changeset;
+//       meta.user_id = it->first.user_id;
+//       meta.user_name = user_by_id[it->first.user_id];
+//       update_logger->insertion(it->first.ref, meta);
+//     }
+//   }
 
   callback->update_started();
   callback->prepare_delete_tags_finished();
@@ -1277,26 +1277,25 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
     flush_roles();
   }
 
-  //TODO: old code
   if (meta != only_data)
   {
     map< uint32, vector< uint32 > > idxs_by_id;
-    create_idxs_by_id(rels_meta_to_insert, idxs_by_id);
+    create_idxs_by_id(new_data.data, idxs_by_id);
     process_user_data(*transaction, user_by_id, idxs_by_id);
     
-    if (update_logger)
-    {
-      stable_sort(rels_meta_to_delete.begin(), rels_meta_to_delete.begin());
-      rels_meta_to_delete.erase(unique(rels_meta_to_delete.begin(), rels_meta_to_delete.end()),
-				 rels_meta_to_delete.end());
-      update_logger->set_delete_meta_data(rels_meta_to_delete);
-    }
+//     if (update_logger)
+//     {
+//       stable_sort(rels_meta_to_delete.begin(), rels_meta_to_delete.begin());
+//       rels_meta_to_delete.erase(unique(rels_meta_to_delete.begin(), rels_meta_to_delete.end()),
+// 				 rels_meta_to_delete.end());
+//       update_logger->set_delete_meta_data(rels_meta_to_delete);
+//     }
   }
   callback->update_finished();
 
   new_data.data.clear();
-  rels_meta_to_delete.clear();
-  rels_meta_to_insert.clear();
+//   rels_meta_to_delete.clear();
+//   rels_meta_to_insert.clear();
   
   new_skeletons.clear();
   attic_skeletons.clear();

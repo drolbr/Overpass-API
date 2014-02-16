@@ -292,11 +292,7 @@ struct Node_Updater
     
     ids_to_modify.push_back(make_pair(id, false));
     if (meta)
-    {
       user_by_id[meta->user_id] = meta->user_name;
-      OSM_Element_Metadata_Skeleton< Node::Id_Type > meta_skel(id, *meta);
-      nodes_meta_to_delete.push_back(meta_skel);
-    }
   }
   
   
@@ -316,11 +312,7 @@ struct Node_Updater
     ids_to_modify.push_back(make_pair(node.id, true));
     nodes_to_insert.push_back(node);
     if (meta)
-    {
       user_by_id[meta->user_id] = meta->user_name;
-      OSM_Element_Metadata_Skeleton< Node::Id_Type > meta_skel(node.id, *meta);
-      nodes_meta_to_insert.push_back(make_pair(meta_skel, node.index));
-    }
   }
   
   void update(Osm_Backend_Callback* callback, bool partial,
@@ -362,9 +354,6 @@ private:
   
   Key_Storage keys;
 
-  vector< pair< OSM_Element_Metadata_Skeleton< Node::Id_Type >, uint32 > > nodes_meta_to_insert;
-  vector< OSM_Element_Metadata_Skeleton< Node::Id_Type > > nodes_meta_to_delete;
-  
   void update_node_ids(map< uint32, vector< Node::Id_Type > >& to_delete, bool record_minuscule_moves,
       const std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > >& new_idx_positions);
   
