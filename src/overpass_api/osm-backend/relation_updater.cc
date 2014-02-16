@@ -1191,6 +1191,8 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
   flush_roles();
   callback->flush_roles_finished();
   
+  map< uint32, vector< uint32 > > idxs_by_id;
+  
   if (meta == keep_attic)
   {
     // TODO: For compatibility with the update_logger, this doesn't happen during the tag processing itself.
@@ -1242,6 +1244,9 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
     strip_single_idxs(existing_idx_lists);    
     std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > > new_attic_map_positions
         = strip_single_idxs(new_attic_idx_lists);
+        
+    // Prepare user indices
+    copy_idxs_by_id(new_attic_meta, idxs_by_id);
     
     // Update id indexes
     update_map_positions(new_attic_map_positions, *transaction, *attic_settings().RELATIONS);
@@ -1279,8 +1284,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
 
   if (meta != only_data)
   {
-    map< uint32, vector< uint32 > > idxs_by_id;
-    create_idxs_by_id(new_data.data, idxs_by_id);
+    copy_idxs_by_id(new_meta, idxs_by_id);
     process_user_data(*transaction, user_by_id, idxs_by_id);
     
 //     if (update_logger)

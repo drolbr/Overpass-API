@@ -584,6 +584,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
   // Update global tags
   update_elements(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().NODE_TAGS_GLOBAL);
   callback->tags_global_finished();
+
+  map< uint32, vector< uint32 > > idxs_by_id;
   
   if (meta == keep_attic)
   {
@@ -622,6 +624,9 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
     std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > changelog
         = compute_changelog(new_data, existing_map_positions, attic_skeletons);
     
+    // Prepare user indices
+    copy_idxs_by_id(attic_meta, idxs_by_id);
+    
     // Update id indexes
     update_map_positions(new_attic_map_positions, *transaction, *attic_settings().NODES);
   
@@ -656,8 +661,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
       
   if (meta != only_data)
   {
-    map< uint32, vector< uint32 > > idxs_by_id;
-    create_idxs_by_id(new_data.data, idxs_by_id);
+    copy_idxs_by_id(new_meta, idxs_by_id);
     process_user_data(*transaction, user_by_id, idxs_by_id);
     
 //     if (update_logger)
