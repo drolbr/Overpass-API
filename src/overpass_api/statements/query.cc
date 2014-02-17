@@ -551,7 +551,7 @@ vector< Id_Type > Query_Statement::collect_non_ids
   if (key_nvalues.empty() && key_nregexes.empty())
     return vector< Id_Type >();
  
-  Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > > tags_db
+  Block_Backend< Tag_Index_Global, Id_Type > tags_db
       (rman.get_transaction()->data_index(&file_prop));
   
   vector< Id_Type > new_ids;
@@ -561,14 +561,14 @@ vector< Id_Type > Query_Statement::collect_non_ids
       knvit != key_nvalues.end(); ++knvit)
   {
     std::set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knvit->first);
-    for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Range_Iterator
+    for (typename Block_Backend< Tag_Index_Global, Id_Type >::Range_Iterator
         it2(tags_db.range_begin
         (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
          Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
         !(it2 == tags_db.range_end()); ++it2)
     {
       if (it2.index().value == knvit->second)
-        new_ids.push_back(it2.object().id);
+        new_ids.push_back(it2.object());
     }
       
     rman.health_check(*this);
@@ -579,14 +579,14 @@ vector< Id_Type > Query_Statement::collect_non_ids
       knrit != key_nregexes.end(); ++knrit)
   {
     std::set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knrit->first);
-    for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Range_Iterator
+    for (typename Block_Backend< Tag_Index_Global, Id_Type >::Range_Iterator
         it2(tags_db.range_begin
         (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
          Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
         !(it2 == tags_db.range_end()); ++it2)
     {
       if (knrit->second->matches(it2.index().value))
-        new_ids.push_back(it2.object().id);
+        new_ids.push_back(it2.object());
     }
 
     rman.health_check(*this);
