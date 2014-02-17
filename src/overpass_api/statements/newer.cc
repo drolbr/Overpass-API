@@ -72,9 +72,9 @@ void newer_filter_map
 
 void Newer_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
-  newer_filter_map(into.nodes, rman, timestamp, meta_settings().NODES_META);
-  newer_filter_map(into.ways, rman, timestamp, meta_settings().WAYS_META);
-  newer_filter_map(into.relations, rman, timestamp, meta_settings().RELATIONS_META);
+  newer_filter_map(into.nodes, rman, this->timestamp, meta_settings().NODES_META);
+  newer_filter_map(into.ways, rman, this->timestamp, meta_settings().WAYS_META);
+  newer_filter_map(into.relations, rman, this->timestamp, meta_settings().RELATIONS_META);
   into.areas.clear();
 }
 
