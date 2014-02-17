@@ -255,11 +255,11 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   set< Uint31_Index > coarse_indices;
   set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
   if (pivot_type == NODE)
-    coarse_indices.insert(mit->second.nodes.begin()->first.val() & 0xffffff00);
+    coarse_indices.insert(mit->second.nodes.begin()->first.val() & 0x7fffff00);
   else if (pivot_type == WAY)
-    coarse_indices.insert(mit->second.ways.begin()->first.val() & 0xffffff00);
+    coarse_indices.insert(mit->second.ways.begin()->first.val() & 0x7fffff00);
   else if (pivot_type == RELATION)
-    coarse_indices.insert(mit->second.relations.begin()->first.val() & 0xffffff00);
+    coarse_indices.insert(mit->second.relations.begin()->first.val() & 0x7fffff00);
   
   formulate_range_query(range_set, coarse_indices);
   
