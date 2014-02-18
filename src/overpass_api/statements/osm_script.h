@@ -84,6 +84,7 @@ class Osm_Script_Statement : public Statement
     Query_Constraint* bbox_limitation;
     Bbox_Query_Statement* bbox_statement;
     uint64 desired_timestamp;
+    uint64 comparison_timestamp;
     uint32 max_allowed_time;
     uint64 max_allowed_space;
     string type;

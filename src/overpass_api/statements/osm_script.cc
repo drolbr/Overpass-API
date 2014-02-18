@@ -36,7 +36,7 @@ Generic_Statement_Maker< Osm_Script_Statement > Osm_Script_Statement::statement_
 Osm_Script_Statement::Osm_Script_Statement
     (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation_)
     : Statement(line_number_), bbox_limitation(bbox_limitation_), bbox_statement(0),
-       desired_timestamp(NOW), max_allowed_time(0), max_allowed_space(0),
+       desired_timestamp(NOW), comparison_timestamp(0), max_allowed_time(0), max_allowed_space(0),
        type("xml"), output_handle(0), factory(0),
        template_name("default.wiki"), template_contains_js_(false)
 {
@@ -47,6 +47,7 @@ Osm_Script_Statement::Osm_Script_Statement
   attributes["element-limit"] = "536870912";
   attributes["output"] = "xml";
   attributes["date"] = "";
+  attributes["from"] = "";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
@@ -167,6 +168,25 @@ Osm_Script_Statement::Osm_Script_Statement
     {
       ostringstream temp;
       temp<<"The attribute \"date\" must be empty or contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".";
+      add_static_error(temp.str());
+    }
+  }
+  if (attributes["from"] != "")
+  {
+    string timestamp = attributes["from"];
+  
+    comparison_timestamp = 0;
+    comparison_timestamp |= (atoll(timestamp.c_str())<<26); //year
+    comparison_timestamp |= (atoi(timestamp.c_str()+5)<<22); //month
+    comparison_timestamp |= (atoi(timestamp.c_str()+8)<<17); //day
+    comparison_timestamp |= (atoi(timestamp.c_str()+11)<<12); //hour
+    comparison_timestamp |= (atoi(timestamp.c_str()+14)<<6); //minute
+    comparison_timestamp |= atoi(timestamp.c_str()+17); //second
+  
+    if (comparison_timestamp == 0)
+    {
+      ostringstream temp;
+      temp<<"The attribute \"from\" must be empty or contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".";
       add_static_error(temp.str());
     }
   }
@@ -308,6 +328,18 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
     if (bbox_statement)
       output_handle->print_bounds(bbox_statement->get_south(), bbox_statement->get_west(),
                                   bbox_statement->get_north(), bbox_statement->get_east());
+  }
+  
+  if (comparison_timestamp > 0)
+  {
+    rman.set_desired_timestamp(comparison_timestamp);
+    
+    for (vector< Statement* >::iterator it(substatements.begin());
+        it != substatements.end(); ++it)
+      (*it)->execute(rman);
+    
+    rman.sets().clear();
+    rman.set_desired_timestamp(desired_timestamp);
   }
   
   for (vector< Statement* >::iterator it(substatements.begin());

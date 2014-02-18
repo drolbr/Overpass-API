@@ -552,15 +552,27 @@ TStatement* create_pivot_statement(typename TStatement::Factory& stmt_factory,
 
 //-----------------------------------------------------------------------------
 
-pair< string, string > parse_setup(Tokenizer_Wrapper& token, Error_Output* error_output,
+std::vector< std::string > parse_setup(Tokenizer_Wrapper& token, Error_Output* error_output,
       vector< Category_Filter >& categories)
 {
   ++token;
-  pair< string, string > result = make_pair
-      (get_text_token(token, error_output, "Keyword"), "");  
+  std::vector< std::string > result;
+  result.push_back(get_text_token(token, error_output, "Keyword"));  
   clear_until_after(token, error_output, ":", "]");
-  result.second = get_text_token(token, error_output, "Value");
-  if (result.second == "popup")
+  result.push_back(get_text_token(token, error_output, "Value"));
+  if (result.front() == "adiff")
+  {
+    clear_until_after(token, error_output, ",", "]", false);
+    if (*token == ",")
+    {
+      ++token;
+      result.push_back(get_text_token(token, error_output, "Value"));
+      clear_until_after(token, error_output, "]", true);      
+    }
+    else
+      ++token;
+  }
+  else if (result.back() == "popup")
   {
     clear_until_after(token, error_output, "(", "]", false);
     while (*token == "(")
@@ -625,25 +637,25 @@ pair< string, string > parse_setup(Tokenizer_Wrapper& token, Error_Output* error
     }
     clear_until_after(token, error_output, "]", true);
   }
-  else if (result.first == "bbox")
+  else if (result.front() == "bbox")
   {
     clear_until_after(token, error_output, ",", "]", false);
     if (*token == ",")
     {
       ++token;
-      result.second += "," + get_text_token(token, error_output, "Value");
+      result.back() += "," + get_text_token(token, error_output, "Value");
       clear_until_after(token, error_output, ",", "]", false);
     }
     if (*token == ",")
     {
       ++token;
-      result.second += "," + get_text_token(token, error_output, "Value");
+      result.back() += "," + get_text_token(token, error_output, "Value");
       clear_until_after(token, error_output, ",", "]", false);
     }
     if (*token == ",")
     {
       ++token;
-      result.second += "," + get_text_token(token, error_output, "Value");
+      result.back() += "," + get_text_token(token, error_output, "Value");
       clear_until_after(token, error_output, "]");
     }
   }
@@ -1340,12 +1352,20 @@ void generic_parse_and_validate_map_ql
   map< string, string > attr;
   while (token.good() && *token == "[")
   {
-    pair< string, string > kv = parse_setup(token, error_output, categories);
-    if (kv.first == "maxsize")
-      kv.first = "element-limit";
-    if (kv.first == "out")
-      kv.first = "output";
-    attr.insert(kv);
+    std::vector< string > kv = parse_setup(token, error_output, categories);
+    if (kv.size() < 2)
+      continue;
+    if (kv[0] == "maxsize")
+      kv[0] = "element-limit";
+    else if (kv[0] == "out")
+      kv[0] = "output";
+    else if (kv[0] == "adiff")
+    {
+      if (kv.size() >= 3)
+        attr["date"] = kv[2];
+      kv[0] = "from";
+    }
+    attr[kv[0]] = kv[1];
   }
   
   TStatement* base_statement = stmt_factory.create_statement
