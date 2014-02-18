@@ -1191,8 +1191,8 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
       // No corresponding new element exists, thus the old one has been deleted.
       final_target->print_item(ways_it->idx.val(), ways_it->elem,
                                tags ? &ways_it->tags : 0,
-                               bounds ? 0 : 0,
-                               geometry ? 0 : 0,
+                               bounds ? 0 : 0, //TODO
+                               geometry ? &ways_it->geometry : 0,
                                meta ? &ways_it->meta : 0, users, DELETE);
       ++ways_it;
     }
@@ -1209,7 +1209,7 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
       // The elements differ
       final_target->print_item(ways_it->idx.val(), ways_it->elem,
                                tags ? &ways_it->tags : 0,
-                               bounds ? 0 : 0,
+                               bounds ? 0 : 0, //TODO
                                geometry ? &ways_it->geometry : 0,
                                meta ? &ways_it->meta : 0, users, MODIFY_OLD);
       final_target->print_item(ll_upper, skel, tags, bounds, geometry, meta, users, MODIFY_NEW);
