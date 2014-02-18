@@ -1094,10 +1094,38 @@ class Collection_Print_Target : public Print_Target
         return (this->meta.version < e.meta.version);
       }
     };
+    
+    struct Way_Entry
+    {
+      Uint31_Index idx;
+      Way_Skeleton elem;
+      OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta;
+      std::vector< std::pair< std::string, std::string > > tags;
+      std::vector< Quad_Coord > geometry;
+    
+      Way_Entry(Uint31_Index idx_, Way_Skeleton elem_,
+            const std::vector< Quad_Coord >& geometry_,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta_
+                = OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
+            std::vector< std::pair< std::string, std::string > > tags_
+                = std::vector< std::pair< std::string, std::string > >())
+          : idx(idx_), elem(elem_), meta(meta_), tags(tags_), geometry(geometry_) {}
+    
+      bool operator<(const Way_Entry& e) const
+      {
+        if (this->elem.id < e.elem.id)
+          return true;
+        if (e.elem.id < this->elem.id)
+          return false;
+        return (this->meta.version < e.meta.version);
+      }
+    };
   
     Print_Target* final_target;
     std::vector< Node_Entry > nodes;
     std::vector< Node_Entry >::const_iterator nodes_it;
+    std::vector< Way_Entry > ways;
+    std::vector< Way_Entry >::const_iterator ways_it;
 };
 
     
@@ -1106,6 +1134,8 @@ void Collection_Print_Target::set_target(Print_Target* target)
   final_target = target;
   std::sort(nodes.begin(), nodes.end());
   nodes_it = nodes.begin();
+  std::sort(ways.begin(), ways.end());
+  ways_it = ways.begin();
 }
 
 
@@ -1120,8 +1150,8 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& s
     {
       // No corresponding new element exists, thus the old one has been deleted.
       final_target->print_item(nodes_it->idx.val(), nodes_it->elem,
-                              tags ? &nodes_it->tags : 0,
-                              meta ? &nodes_it->meta : 0, users, DELETE);
+                               tags ? &nodes_it->tags : 0,
+                               meta ? &nodes_it->meta : 0, users, DELETE);
       ++nodes_it;
     }
     
@@ -1135,8 +1165,8 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& s
     {
       // The elements differ
       final_target->print_item(nodes_it->idx.val(), nodes_it->elem,
-                              tags ? &nodes_it->tags : 0,
-                              meta ? &nodes_it->meta : 0, users, MODIFY_OLD);
+                               tags ? &nodes_it->tags : 0,
+                               meta ? &nodes_it->meta : 0, users, MODIFY_OLD);
       final_target->print_item(ll_upper, skel, tags, meta, users, MODIFY_NEW);
     }
   }
@@ -1152,7 +1182,45 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds,
                             const std::vector< Quad_Coord >* geometry,
                             const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
-                            const map< uint32, string >* users, const Action& action) {}
+                            const map< uint32, string >* users, const Action& action)
+{
+  if (final_target)
+  {
+    while (ways_it != ways.end() && ways_it->elem.id < skel.id)
+    {
+      // No corresponding new element exists, thus the old one has been deleted.
+      final_target->print_item(ways_it->idx.val(), ways_it->elem,
+                               tags ? &ways_it->tags : 0,
+                               bounds ? 0 : 0,
+                               geometry ? 0 : 0,
+                               meta ? &ways_it->meta : 0, users, DELETE);
+      ++ways_it;
+    }
+    
+    if (ways_it == ways.end() || skel.id < ways_it->elem.id)
+    {
+      // No old element exists
+      final_target->print_item(ll_upper, skel, tags, bounds, geometry, meta, users, CREATE);
+    }
+    else if (!(ways_it->idx.val() == ll_upper) || !(ways_it->elem == skel) ||
+      (geometry && !(ways_it->geometry == *geometry)) ||
+      (tags && !(ways_it->tags == *tags)) || (meta && !(ways_it->meta.timestamp == meta->timestamp)))
+    {
+      // The elements differ
+      final_target->print_item(ways_it->idx.val(), ways_it->elem,
+                               tags ? &ways_it->tags : 0,
+                               bounds ? 0 : 0,
+                               geometry ? &ways_it->geometry : 0,
+                               meta ? &ways_it->meta : 0, users, MODIFY_OLD);
+      final_target->print_item(ll_upper, skel, tags, bounds, geometry, meta, users, MODIFY_NEW);
+    }
+  }
+  else
+    ways.push_back(Way_Entry(ll_upper, skel,
+        geometry ? *geometry : std::vector< Quad_Coord >(),
+        meta ? *meta : OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
+        tags ? *tags : std::vector< std::pair< std::string, std::string > >()));
+}
 
 
 void Collection_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleton& skel,

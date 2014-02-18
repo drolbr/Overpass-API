@@ -325,6 +325,17 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 		const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
 		const map< uint32, string >* users, const Action& action)
 {
+  if (action == KEEP)
+    ;
+  else if (action == MODIFY_OLD)
+    std::cout<<"<action type=\"modify\">\n<old>\n";
+  else if (action == MODIFY_NEW)
+    std::cout<<"<new>\n";
+  else if (action == DELETE)
+    std::cout<<"<action type=\"delete\">\n<old>\n";
+  else if (action == CREATE)
+    std::cout<<"<action type=\"create\">\n";
+  
   cout<<"  <way";
   if (mode & PRINT_IDS)
     cout<<" id=\""<<skel.id.val()<<'\"';
@@ -373,6 +384,17 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Way_Skeleton& skel,
     }
     cout<<"  </way>\n";
   }
+  
+  if (action == KEEP)
+    ;
+  else if (action == MODIFY_OLD)
+    std::cout<<"</old>\n";
+  else if (action == MODIFY_NEW)
+    std::cout<<"</new>\n</action>\n";
+  else if (action == DELETE)
+    std::cout<<"</old>\n</action>\n";
+  else if (action == CREATE)
+    std::cout<<"</action>\n";
 }
 
 
@@ -383,6 +405,17 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Relation_Skeleton& skel
 		const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
 		const map< uint32, string >* users, const Action& action)
 { 
+  if (action == KEEP)
+    ;
+  else if (action == MODIFY_OLD)
+    std::cout<<"<action type=\"modify\">\n<old>\n";
+  else if (action == MODIFY_NEW)
+    std::cout<<"<new>\n";
+  else if (action == DELETE)
+    std::cout<<"<action type=\"delete\">\n<old>\n";
+  else if (action == CREATE)
+    std::cout<<"<action type=\"create\">\n";
+  
   cout<<"  <relation";
   if (mode & PRINT_IDS)
     cout<<" id=\""<<skel.id.val()<<'\"';
@@ -434,6 +467,17 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Relation_Skeleton& skel
     }
     cout<<"  </relation>\n";
   }
+  
+  if (action == KEEP)
+    ;
+  else if (action == MODIFY_OLD)
+    std::cout<<"</old>\n";
+  else if (action == MODIFY_NEW)
+    std::cout<<"</new>\n</action>\n";
+  else if (action == DELETE)
+    std::cout<<"</old>\n</action>\n";
+  else if (action == CREATE)
+    std::cout<<"</action>\n";
 }
 
 
