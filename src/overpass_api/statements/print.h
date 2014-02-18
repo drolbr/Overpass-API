@@ -30,30 +30,32 @@ using namespace std;
 class Print_Target
 {
   public:
+    typedef enum { KEEP, MODIFY_OLD, MODIFY_NEW, CREATE, DELETE } Action;
+    
     Print_Target(uint32 mode_, Transaction& transaction);
     virtual ~Print_Target() {}
     
     virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0) = 0;
+			    const map< uint32, string >* users = 0, const Action& action = KEEP) = 0;
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
                             const std::vector< Quad_Coord >* geometry = 0,
 			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0) = 0;
+			    const map< uint32, string >* users = 0, const Action& action = KEEP) = 0;
     virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
                             const std::vector< std::vector< Quad_Coord > >* geometry = 0,
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0) = 0;
+			    const map< uint32, string >* users = 0, const Action& action = KEEP) = 0;
                             
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0) = 0;
+			    const map< uint32, string >* users = 0, const Action& action = KEEP) = 0;
 
     static const unsigned int PRINT_IDS = 1;
     static const unsigned int PRINT_COORDS = 2;
@@ -70,6 +72,9 @@ class Print_Target
     uint32 mode;
     map< uint32, string > roles;
 };
+
+
+class Collection_Print_Target;
 
 
 class Relation_Geometry_Store
@@ -139,6 +144,9 @@ class Print_Statement : public Statement
                     const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta = 0,
                     const map< uint32, string >* users = 0);    
     
+    void set_collect_lhs();
+    void set_collect_rhs();
+    
   private:
     string input;
     unsigned int mode;
@@ -149,6 +157,8 @@ class Print_Statement : public Statement
     Way_Geometry_Store* attic_way_geometry_store;
     Relation_Geometry_Store* relation_geometry_store;
     Relation_Geometry_Store* attic_relation_geometry_store;
+    Collection_Print_Target* collection_print_target;
+    enum { dont_collect, collect_lhs, collect_rhs } collection_mode;
 
     template< class Index, class Object >
     void tags_quadtile

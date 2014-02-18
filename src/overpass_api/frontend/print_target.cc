@@ -40,24 +40,24 @@ class Print_Target_Xml : public Print_Target
     virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0);
+			    const map< uint32, string >* users = 0, const Action& action = KEEP);
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
                             const vector< pair< string, string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
                             const std::vector< Quad_Coord >* geometry = 0,
                             const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
-                            const map< uint32, string >* users = 0);
+                            const map< uint32, string >* users = 0, const Action& action = KEEP);
     virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
                             const vector< pair< string, string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
                             const std::vector< std::vector< Quad_Coord > >* geometry = 0,
                             const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
-                            const map< uint32, string >* users = 0);
+                            const map< uint32, string >* users = 0, const Action& action = KEEP);
     
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0);
+			    const map< uint32, string >* users = 0, const Action& action = KEEP);
 };
 
 
@@ -70,24 +70,24 @@ class Print_Target_Json : public Print_Target
     virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0);
+			    const map< uint32, string >* users = 0, const Action& action = KEEP);
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
                             const vector< pair< string, string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
                             const std::vector< Quad_Coord >* geometry = 0,
                             const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
-                            const map< uint32, string >* users = 0);
+                            const map< uint32, string >* users = 0, const Action& action = KEEP);
     virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
                             const vector< pair< string, string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
                             const std::vector< std::vector< Quad_Coord > >* geometry = 0,
                             const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
-                            const map< uint32, string >* users = 0);
+                            const map< uint32, string >* users = 0, const Action& action = KEEP);
     
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0);
+			    const map< uint32, string >* users = 0, const Action& action = KEEP);
     
     bool nothing_written() const { return first_elem; }
 			    
@@ -109,24 +109,24 @@ class Print_Target_Custom : public Print_Target
     virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0);
+			    const map< uint32, string >* users = 0, const Action& action = KEEP);
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
                             const vector< pair< string, string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
                             const std::vector< Quad_Coord >* geometry = 0,
                             const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
-                            const map< uint32, string >* users = 0);
+                            const map< uint32, string >* users = 0, const Action& action = KEEP);
     virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
                             const vector< pair< string, string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
                             const std::vector< std::vector< Quad_Coord > >* geometry = 0,
                             const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
-                            const map< uint32, string >* users = 0);
+                            const map< uint32, string >* users = 0, const Action& action = KEEP);
     
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0);
+			    const map< uint32, string >* users = 0, const Action& action = KEEP);
 			    
     string get_output() const { return output; }
     uint32 get_written_elements_count() const { return written_elements_count; }
@@ -207,24 +207,24 @@ class Print_Target_Popup : public Print_Target
     virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0);
+			    const map< uint32, string >* users = 0, const Action& action = KEEP);
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
                             const vector< pair< string, string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
                             const std::vector< Quad_Coord >* geometry = 0,
                             const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
-                            const map< uint32, string >* users = 0);
+                            const map< uint32, string >* users = 0, const Action& action = KEEP);
     virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
                             const vector< pair< string, string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
                             const std::vector< std::vector< Quad_Coord > >* geometry = 0,
                             const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
-                            const map< uint32, string >* users = 0);
+                            const map< uint32, string >* users = 0, const Action& action = KEEP);
     
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0);
+			    const map< uint32, string >* users = 0, const Action& action = KEEP);
 			    
     string get_output() const;
     
@@ -272,8 +272,19 @@ void print_meta_xml(const OSM_Element_Metadata_Skeleton< Id_Type >& meta,
 void Print_Target_Xml::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
-		const map< uint32, string >* users)
+		const map< uint32, string >* users, const Action& action)
 {
+  if (action == KEEP)
+    ;
+  else if (action == MODIFY_OLD)
+    std::cout<<"<action type=\"modify\">\n<old>\n";
+  else if (action == MODIFY_NEW)
+    std::cout<<"<new>\n";
+  else if (action == DELETE)
+    std::cout<<"<action type=\"delete\">\n<old>\n";
+  else if (action == CREATE)
+    std::cout<<"<action type=\"create\">\n";
+  
   cout<<"  <node";
   if (mode & PRINT_IDS)
     cout<<" id=\""<<skel.id.val()<<'\"';
@@ -293,6 +304,17 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 	    <<"\" v=\""<<escape_xml(it->second)<<"\"/>\n";
     cout<<"  </node>\n";
   }
+  
+  if (action == KEEP)
+    ;
+  else if (action == MODIFY_OLD)
+    std::cout<<"</old>\n";
+  else if (action == MODIFY_NEW)
+    std::cout<<"</new>\n</action>\n";
+  else if (action == DELETE)
+    std::cout<<"</old>\n</action>\n";
+  else if (action == CREATE)
+    std::cout<<"</action>\n";
 }
 
 
@@ -301,7 +323,7 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Way_Skeleton& skel,
                 const std::pair< Quad_Coord, Quad_Coord* >* bounds,
                 const std::vector< Quad_Coord >* geometry,
 		const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
-		const map< uint32, string >* users)
+		const map< uint32, string >* users, const Action& action)
 {
   cout<<"  <way";
   if (mode & PRINT_IDS)
@@ -359,7 +381,7 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Relation_Skeleton& skel
                 const std::pair< Quad_Coord, Quad_Coord* >* bounds,
                 const std::vector< std::vector< Quad_Coord > >* geometry,
 		const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
-		const map< uint32, string >* users)
+		const map< uint32, string >* users, const Action& action)
 { 
   cout<<"  <relation";
   if (mode & PRINT_IDS)
@@ -418,7 +440,7 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Relation_Skeleton& skel
 void Print_Target_Xml::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta,
-		const map< uint32, string >* users)
+		const map< uint32, string >* users, const Action& action)
 {
   cout<<"  <area";
   if (mode & PRINT_IDS)
@@ -476,7 +498,7 @@ void print_meta_json(const OSM_Element_Metadata_Skeleton< Id_Type >& meta,
 void Print_Target_Json::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
-		const map< uint32, string >* users)
+		const map< uint32, string >* users, const Action& action)
 {
   if (first_elem)
     first_elem = false;
@@ -512,7 +534,7 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Way_Skeleton& skel,
                 const std::pair< Quad_Coord, Quad_Coord* >* bounds,
                 const std::vector< Quad_Coord >* geometry,
 		const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
-		const map< uint32, string >* users)
+		const map< uint32, string >* users, const Action& action)
 {
   if (first_elem)
     first_elem = false;
@@ -555,7 +577,7 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Relation_Skeleton& ske
                 const std::pair< Quad_Coord, Quad_Coord* >* bounds,
                 const std::vector< std::vector< Quad_Coord > >* geometry,
 		const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
-		const map< uint32, string >* users)
+		const map< uint32, string >* users, const Action& action)
 { 
   if (first_elem)
     first_elem = false;
@@ -608,7 +630,7 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Relation_Skeleton& ske
 void Print_Target_Json::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta,
-		const map< uint32, string >* users)
+		const map< uint32, string >* users, const Action& action)
 {
   if (first_elem)
     first_elem = false;
@@ -1032,7 +1054,7 @@ uint detect_zoom(Uint31_Index ll_upper)
 void Print_Target_Custom::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
-		const map< uint32, string >* users)
+		const map< uint32, string >* users, const Action& action)
 {
   if (written_elements_count == 0)
   {
@@ -1057,7 +1079,7 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Way_Skeleton& skel,
                 const std::pair< Quad_Coord, Quad_Coord* >* bounds,
                 const std::vector< Quad_Coord >* geometry,
 		const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
-		const map< uint32, string >* users)
+		const map< uint32, string >* users, const Action& action)
 {
   if (written_elements_count == 0)
   {
@@ -1082,7 +1104,7 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Relation_Skeleton& s
                 const std::pair< Quad_Coord, Quad_Coord* >* bounds,
                 const std::vector< std::vector< Quad_Coord > >* geometry,
 		const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
-		const map< uint32, string >* users)
+		const map< uint32, string >* users, const Action& action)
 { 
   if (written_elements_count == 0)
   {
@@ -1105,7 +1127,7 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Relation_Skeleton& s
 void Print_Target_Custom::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta,
-		const map< uint32, string >* users)
+		const map< uint32, string >* users, const Action& action)
 {
 }
 
@@ -1358,7 +1380,7 @@ Print_Target_Popup::~Print_Target_Popup()
 void Print_Target_Popup::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
-		const map< uint32, string >* users)
+		const map< uint32, string >* users, const Action& action)
 {
   for (vector< pair< string, vector< Element_Collector* > > >::iterator it2 = collector.begin();
        it2 != collector.end(); ++it2)
@@ -1378,7 +1400,7 @@ void Print_Target_Popup::print_item(uint32 ll_upper, const Way_Skeleton& skel,
                 const std::pair< Quad_Coord, Quad_Coord* >* bounds,
                 const std::vector< Quad_Coord >* geometry,
 		const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
-		const map< uint32, string >* users)
+		const map< uint32, string >* users, const Action& action)
 {
   for (vector< pair< string, vector< Element_Collector* > > >::iterator it2 = collector.begin();
        it2 != collector.end(); ++it2)
@@ -1398,7 +1420,7 @@ void Print_Target_Popup::print_item(uint32 ll_upper, const Relation_Skeleton& sk
                 const std::pair< Quad_Coord, Quad_Coord* >* bounds,
                 const std::vector< std::vector< Quad_Coord > >* geometry,
 		const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
-		const map< uint32, string >* users)
+		const map< uint32, string >* users, const Action& action)
 { 
   for (vector< pair< string, vector< Element_Collector* > > >::iterator it2 = collector.begin();
        it2 != collector.end(); ++it2)
@@ -1416,7 +1438,7 @@ void Print_Target_Popup::print_item(uint32 ll_upper, const Relation_Skeleton& sk
 void Print_Target_Popup::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
 		const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta,
-		const map< uint32, string >* users)
+		const map< uint32, string >* users, const Action& action)
 {
   for (vector< pair< string, vector< Element_Collector* > > >::iterator it2 = collector.begin();
        it2 != collector.end(); ++it2)

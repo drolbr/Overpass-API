@@ -332,11 +332,27 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
   
   if (comparison_timestamp > 0)
   {
+    for (vector< Statement* >::iterator it = factory->created_statements.begin();
+        it != factory->created_statements.end(); ++it)
+    {
+      Print_Statement* print = dynamic_cast< Print_Statement* >(*it);
+      if (print)
+        print->set_collect_lhs();
+    }
+    
     rman.set_desired_timestamp(comparison_timestamp);
     
     for (vector< Statement* >::iterator it(substatements.begin());
         it != substatements.end(); ++it)
       (*it)->execute(rman);
+    
+    for (vector< Statement* >::iterator it = factory->created_statements.begin();
+        it != factory->created_statements.end(); ++it)
+    {
+      Print_Statement* print = dynamic_cast< Print_Statement* >(*it);
+      if (print)
+        print->set_collect_rhs();
+    }
     
     rman.sets().clear();
     rman.set_desired_timestamp(desired_timestamp);
