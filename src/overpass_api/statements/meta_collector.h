@@ -72,6 +72,19 @@ struct Meta_Collector
     void update_current_objects(const Index&);
 };
 
+
+struct User_Data_Cache
+{
+  public:
+    User_Data_Cache(Transaction& transaction);
+    
+    const map< uint32, string >& users() const { return users_; }
+    
+  private:
+    map< uint32, string > users_;
+};
+
+
 /** Implementation --------------------------------------------------------- */
 
 template< typename Index, typename Object >
@@ -246,5 +259,16 @@ const OSM_Element_Metadata_Skeleton< Id_Type >* Meta_Collector< Index, Id_Type >
   else
     return 0;
 }
+
+
+inline User_Data_Cache::User_Data_Cache(Transaction& transaction)
+{
+  Block_Backend< Uint32_Index, User_Data > user_db
+      (transaction.data_index(meta_settings().USER_DATA));
+  for (Block_Backend< Uint32_Index, User_Data >::Flat_Iterator it = user_db.flat_begin();
+      !(it == user_db.flat_end()); ++it)
+    users_[it.object().id] = it.object().name;
+}
+
 
 #endif

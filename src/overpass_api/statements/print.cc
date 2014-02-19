@@ -1069,6 +1069,10 @@ class Collection_Print_Target : public Print_Target
     
     void set_target(Print_Target* target);
     
+    void clear_nodes(bool print_tags, bool print_meta, const map< uint32, string >* users = 0);
+    void clear_ways(bool print_tags, bool print_meta, const map< uint32, string >* users = 0);
+    void clear_relations(bool print_tags, bool print_meta, const map< uint32, string >* users = 0);
+    
   private:
     
     struct Node_Entry
@@ -1123,9 +1127,9 @@ class Collection_Print_Target : public Print_Target
   
     Print_Target* final_target;
     std::vector< Node_Entry > nodes;
-    std::vector< Node_Entry >::const_iterator nodes_it;
+    //std::vector< Node_Entry >::const_iterator nodes_it;
     std::vector< Way_Entry > ways;
-    std::vector< Way_Entry >::const_iterator ways_it;
+    //std::vector< Way_Entry >::const_iterator ways_it;
 };
 
     
@@ -1133,9 +1137,9 @@ void Collection_Print_Target::set_target(Print_Target* target)
 { 
   final_target = target;
   std::sort(nodes.begin(), nodes.end());
-  nodes_it = nodes.begin();
+  //nodes_it = nodes.begin();
   std::sort(ways.begin(), ways.end());
-  ways_it = ways.begin();
+  //ways_it = ways.begin();
 }
 
 
@@ -1146,28 +1150,34 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& s
 {
   if (final_target)
   {
-    while (nodes_it != nodes.end() && nodes_it->elem.id < skel.id)
-    {
-      // No corresponding new element exists, thus the old one has been deleted.
-      final_target->print_item(nodes_it->idx.val(), nodes_it->elem,
-                               tags ? &nodes_it->tags : 0,
-                               meta ? &nodes_it->meta : 0, users, DELETE);
-      ++nodes_it;
-    }
-    
+//     while (nodes_it != nodes.end() && nodes_it->elem.id < skel.id)
+//     {
+//       // No corresponding new element exists, thus the old one has been deleted.
+//       final_target->print_item(nodes_it->idx.val(), nodes_it->elem,
+//                                tags ? &nodes_it->tags : 0,
+//                                meta ? &nodes_it->meta : 0, users, DELETE);
+//       ++nodes_it;
+//     }
+    std::vector< Node_Entry >::iterator nodes_it
+        = std::lower_bound(nodes.begin(), nodes.end(), Node_Entry(ll_upper, skel));
+
     if (nodes_it == nodes.end() || skel.id < nodes_it->elem.id)
     {
       // No old element exists
       final_target->print_item(ll_upper, skel, tags, meta, users, CREATE);
     }
-    else if (!(nodes_it->idx.val() == ll_upper) || !(nodes_it->elem == skel) ||
-      (tags && !(nodes_it->tags == *tags)) || (meta && !(nodes_it->meta.timestamp == meta->timestamp)))
+    else
     {
-      // The elements differ
-      final_target->print_item(nodes_it->idx.val(), nodes_it->elem,
-                               tags ? &nodes_it->tags : 0,
-                               meta ? &nodes_it->meta : 0, users, MODIFY_OLD);
-      final_target->print_item(ll_upper, skel, tags, meta, users, MODIFY_NEW);
+      if (!(nodes_it->idx.val() == ll_upper) || !(nodes_it->elem == skel) ||
+          (tags && !(nodes_it->tags == *tags)) || (meta && !(nodes_it->meta.timestamp == meta->timestamp)))
+      {
+        // The elements differ
+        final_target->print_item(nodes_it->idx.val(), nodes_it->elem,
+                                 tags ? &nodes_it->tags : 0,
+                                 meta ? &nodes_it->meta : 0, users, MODIFY_OLD);
+        final_target->print_item(ll_upper, skel, tags, meta, users, MODIFY_NEW);
+      }
+      nodes_it->idx = 0xffu;
     }
   }
   else
@@ -1176,6 +1186,22 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& s
         tags ? *tags : std::vector< std::pair< std::string, std::string > >()));
 }
 
+
+void Collection_Print_Target::clear_nodes(bool print_tags, bool print_meta,
+                                          const map< uint32, string >* users)
+{
+  for (std::vector< Node_Entry >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
+  {
+    if (it->idx.val() != 0xffu)
+    {
+      // No corresponding new element exists, thus the old one has been deleted.
+      final_target->print_item(it->idx.val(), it->elem,
+                               print_tags ? &it->tags : 0,
+                               print_meta ? &it->meta : 0, users, DELETE);
+    }
+  }
+}
+ 
                             
 void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& skel,
                             const vector< pair< string, string > >* tags,
@@ -1186,33 +1212,39 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
 {
   if (final_target)
   {
-    while (ways_it != ways.end() && ways_it->elem.id < skel.id)
-    {
-      // No corresponding new element exists, thus the old one has been deleted.
-      final_target->print_item(ways_it->idx.val(), ways_it->elem,
-                               tags ? &ways_it->tags : 0,
-                               bounds ? 0 : 0, //TODO
-                               geometry ? &ways_it->geometry : 0,
-                               meta ? &ways_it->meta : 0, users, DELETE);
-      ++ways_it;
-    }
+//     while (ways_it != ways.end() && ways_it->elem.id < skel.id)
+//     {
+//       // No corresponding new element exists, thus the old one has been deleted.
+//       final_target->print_item(ways_it->idx.val(), ways_it->elem,
+//                                tags ? &ways_it->tags : 0,
+//                                bounds ? 0 : 0, //TODO
+//                                geometry ? &ways_it->geometry : 0,
+//                                meta ? &ways_it->meta : 0, users, DELETE);
+//       ++ways_it;
+//     }
+    std::vector< Way_Entry >::iterator ways_it
+        = std::lower_bound(ways.begin(), ways.end(), Way_Entry(ll_upper, skel, std::vector< Quad_Coord >()));
     
     if (ways_it == ways.end() || skel.id < ways_it->elem.id)
     {
       // No old element exists
       final_target->print_item(ll_upper, skel, tags, bounds, geometry, meta, users, CREATE);
     }
-    else if (!(ways_it->idx.val() == ll_upper) || !(ways_it->elem == skel) ||
-      (geometry && !(ways_it->geometry == *geometry)) ||
-      (tags && !(ways_it->tags == *tags)) || (meta && !(ways_it->meta.timestamp == meta->timestamp)))
+    else
     {
-      // The elements differ
-      final_target->print_item(ways_it->idx.val(), ways_it->elem,
-                               tags ? &ways_it->tags : 0,
-                               bounds ? 0 : 0, //TODO
-                               geometry ? &ways_it->geometry : 0,
-                               meta ? &ways_it->meta : 0, users, MODIFY_OLD);
-      final_target->print_item(ll_upper, skel, tags, bounds, geometry, meta, users, MODIFY_NEW);
+      if (!(ways_it->idx.val() == ll_upper) || !(ways_it->elem == skel) ||
+          (geometry && !(ways_it->geometry == *geometry)) ||
+          (tags && !(ways_it->tags == *tags)) || (meta && !(ways_it->meta.timestamp == meta->timestamp)))
+      {
+        // The elements differ
+        final_target->print_item(ways_it->idx.val(), ways_it->elem,
+                                 tags ? &ways_it->tags : 0,
+                                 bounds ? 0 : 0, //TODO
+                                 geometry ? &ways_it->geometry : 0,
+                                 meta ? &ways_it->meta : 0, users, MODIFY_OLD);
+        final_target->print_item(ll_upper, skel, tags, bounds, geometry, meta, users, MODIFY_NEW);
+      }
+      ways_it->idx = 0xffu;
     }
   }
   else
@@ -1282,6 +1314,8 @@ void Print_Statement::execute(Resource_Manager& rman)
 
   if (mode & Print_Target::PRINT_TAGS)
   {
+    User_Data_Cache user_data_cache(*rman.get_transaction());
+  
     if (order == order_by_id)
     {
       tags_by_id(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
@@ -1299,6 +1333,10 @@ void Print_Statement::execute(Resource_Manager& rman)
                    (mode & Print_Target::PRINT_META) ? attic_settings().NODES_META : 0,
                    element_count);
       }
+      
+      if (collection_mode == collect_rhs)
+        collection_print_target->clear_nodes
+            (true, (mode & Print_Target::PRINT_META), &user_data_cache.users());
       
       tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		 WAY_FLUSH_SIZE, *target, rman,
@@ -1355,6 +1393,10 @@ void Print_Statement::execute(Resource_Manager& rman)
                       element_count);
       }
       
+      if (collection_mode == collect_rhs)
+        collection_print_target->clear_nodes
+            (true, (mode & Print_Target::PRINT_META), &user_data_cache.users());
+      
       tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		    *target, rman, *rman.get_transaction(),
 		    (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
@@ -1396,6 +1438,8 @@ void Print_Statement::execute(Resource_Manager& rman)
     {
       by_id(mit->second.nodes, *target, *rman.get_transaction(), *this, limit, element_count);
       by_id(mit->second.attic_nodes, *target, *rman.get_transaction(), *this, limit, element_count);
+      if (collection_mode == collect_rhs)
+        collection_print_target->clear_nodes(false, false, 0);
       
       by_id(mit->second.ways, *target, *rman.get_transaction(), *this, limit, element_count);
       by_id(mit->second.attic_ways, *target, *rman.get_transaction(), *this, limit, element_count);
@@ -1410,6 +1454,8 @@ void Print_Statement::execute(Resource_Manager& rman)
     {
       quadtile(mit->second.nodes, *target, *rman.get_transaction(), *this, limit, element_count);
       quadtile(mit->second.attic_nodes, *target, *rman.get_transaction(), *this, limit, element_count);
+      if (collection_mode == collect_rhs)
+        collection_print_target->clear_nodes(false, false, 0);
       
       quadtile(mit->second.ways, *target, *rman.get_transaction(), *this, limit, element_count);
       quadtile(mit->second.attic_ways, *target, *rman.get_transaction(), *this, limit, element_count);
