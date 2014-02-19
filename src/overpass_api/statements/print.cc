@@ -1070,8 +1070,10 @@ class Collection_Print_Target : public Print_Target
     void set_target(Print_Target* target);
     
     void clear_nodes(bool print_tags, bool print_meta, const map< uint32, string >* users = 0);
-    void clear_ways(bool print_tags, bool print_meta, const map< uint32, string >* users = 0);
-    void clear_relations(bool print_tags, bool print_meta, const map< uint32, string >* users = 0);
+    void clear_ways(bool print_tags, bool print_meta, bool print_bounds, bool print_geometry,
+                    const map< uint32, string >* users = 0);
+    void clear_relations(bool print_tags, bool print_meta, bool print_bounds, bool print_geometry,
+                         const map< uint32, string >* users = 0);
     
   private:
     
@@ -1124,12 +1126,37 @@ class Collection_Print_Target : public Print_Target
         return (this->meta.version < e.meta.version);
       }
     };
+    
+    struct Relation_Entry
+    {
+      Uint31_Index idx;
+      Relation_Skeleton elem;
+      OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > meta;
+      std::vector< std::pair< std::string, std::string > > tags;
+      std::vector< std::vector< Quad_Coord > > geometry;
+    
+      Relation_Entry(Uint31_Index idx_, Relation_Skeleton elem_,
+            const std::vector< std::vector< Quad_Coord > >& geometry_,
+            OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > meta_
+                = OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
+            std::vector< std::pair< std::string, std::string > > tags_
+                = std::vector< std::pair< std::string, std::string > >())
+          : idx(idx_), elem(elem_), meta(meta_), tags(tags_), geometry(geometry_) {}
+    
+      bool operator<(const Relation_Entry& e) const
+      {
+        if (this->elem.id < e.elem.id)
+          return true;
+        if (e.elem.id < this->elem.id)
+          return false;
+        return (this->meta.version < e.meta.version);
+      }
+    };
   
     Print_Target* final_target;
     std::vector< Node_Entry > nodes;
-    //std::vector< Node_Entry >::const_iterator nodes_it;
     std::vector< Way_Entry > ways;
-    //std::vector< Way_Entry >::const_iterator ways_it;
+    std::vector< Relation_Entry > relations;
 };
 
     
@@ -1137,9 +1164,8 @@ void Collection_Print_Target::set_target(Print_Target* target)
 { 
   final_target = target;
   std::sort(nodes.begin(), nodes.end());
-  //nodes_it = nodes.begin();
   std::sort(ways.begin(), ways.end());
-  //ways_it = ways.begin();
+  std::sort(relations.begin(), relations.end());
 }
 
 
@@ -1150,14 +1176,6 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& s
 {
   if (final_target)
   {
-//     while (nodes_it != nodes.end() && nodes_it->elem.id < skel.id)
-//     {
-//       // No corresponding new element exists, thus the old one has been deleted.
-//       final_target->print_item(nodes_it->idx.val(), nodes_it->elem,
-//                                tags ? &nodes_it->tags : 0,
-//                                meta ? &nodes_it->meta : 0, users, DELETE);
-//       ++nodes_it;
-//     }
     std::vector< Node_Entry >::iterator nodes_it
         = std::lower_bound(nodes.begin(), nodes.end(), Node_Entry(ll_upper, skel));
 
@@ -1212,16 +1230,6 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
 {
   if (final_target)
   {
-//     while (ways_it != ways.end() && ways_it->elem.id < skel.id)
-//     {
-//       // No corresponding new element exists, thus the old one has been deleted.
-//       final_target->print_item(ways_it->idx.val(), ways_it->elem,
-//                                tags ? &ways_it->tags : 0,
-//                                bounds ? 0 : 0, //TODO
-//                                geometry ? &ways_it->geometry : 0,
-//                                meta ? &ways_it->meta : 0, users, DELETE);
-//       ++ways_it;
-//     }
     std::vector< Way_Entry >::iterator ways_it
         = std::lower_bound(ways.begin(), ways.end(), Way_Entry(ll_upper, skel, std::vector< Quad_Coord >()));
     
@@ -1255,12 +1263,85 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
 }
 
 
+void Collection_Print_Target::clear_ways
+    (bool print_tags, bool print_meta, bool print_bounds, bool print_geometry,
+     const map< uint32, string >* users)
+{
+  for (std::vector< Way_Entry >::const_iterator it = ways.begin(); it != ways.end(); ++it)
+  {
+    if (it->idx.val() != 0xffu)
+    {
+      // No corresponding new element exists, thus the old one has been deleted.
+      final_target->print_item(it->idx.val(), it->elem,
+                               print_tags ? &it->tags : 0,
+                               print_bounds ? 0 : 0, //TODO
+                               print_geometry ? &it->geometry : 0,
+                               print_meta ? &it->meta : 0, users, DELETE);
+    }
+  }
+}
+
+
 void Collection_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
                             const vector< pair< string, string > >* tags,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds,
                             const std::vector< std::vector< Quad_Coord > >* geometry,
                             const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
-                            const map< uint32, string >* users, const Action& action) {}
+                            const map< uint32, string >* users, const Action& action)
+{
+  if (final_target)
+  {
+    std::vector< Relation_Entry >::iterator relations_it
+        = std::lower_bound(relations.begin(), relations.end(),
+            Relation_Entry(ll_upper, skel, std::vector< std::vector< Quad_Coord > >()));
+    
+    if (relations_it == relations.end() || skel.id < relations_it->elem.id)
+    {
+      // No old element exists
+      final_target->print_item(ll_upper, skel, tags, bounds, geometry, meta, users, CREATE);
+    }
+    else
+    {
+      if (!(relations_it->idx.val() == ll_upper) || !(relations_it->elem == skel) ||
+          (geometry && !(relations_it->geometry == *geometry)) ||
+          (tags && !(relations_it->tags == *tags)) || (meta && !(relations_it->meta.timestamp == meta->timestamp)))
+      {
+        // The elements differ
+        final_target->print_item(relations_it->idx.val(), relations_it->elem,
+                                 tags ? &relations_it->tags : 0,
+                                 bounds ? 0 : 0, //TODO
+                                 geometry ? &relations_it->geometry : 0,
+                                 meta ? &relations_it->meta : 0, users, MODIFY_OLD);
+        final_target->print_item(ll_upper, skel, tags, bounds, geometry, meta, users, MODIFY_NEW);
+      }
+      relations_it->idx = 0xffu;
+    }
+  }
+  else
+    relations.push_back(Relation_Entry(ll_upper, skel,
+        geometry ? *geometry : std::vector< std::vector< Quad_Coord > >(),
+        meta ? *meta : OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
+        tags ? *tags : std::vector< std::pair< std::string, std::string > >()));
+}
+
+
+void Collection_Print_Target::clear_relations
+    (bool print_tags, bool print_meta, bool print_bounds, bool print_geometry,
+     const map< uint32, string >* users)
+{
+  for (std::vector< Relation_Entry >::const_iterator it = relations.begin(); it != relations.end(); ++it)
+  {
+    if (it->idx.val() != 0xffu)
+    {
+      // No corresponding new element exists, thus the old one has been deleted.
+      final_target->print_item(it->idx.val(), it->elem,
+                               print_tags ? &it->tags : 0,
+                               print_bounds ? 0 : 0, //TODO
+                               print_geometry ? &it->geometry : 0,
+                               print_meta ? &it->meta : 0, users, DELETE);
+    }
+  }
+}
 
 
 void Collection_Print_Target::print_item(uint32 ll_upper, const Area_Skeleton& skel,
@@ -1354,6 +1435,12 @@ void Print_Statement::execute(Resource_Manager& rman)
                    element_count);
       }
       
+      if (collection_mode == collect_rhs)
+        collection_print_target->clear_ways
+            (true, (mode & Print_Target::PRINT_META),
+             (mode & Print_Target::PRINT_BOUNDS), (mode & Print_Target::PRINT_GEOMETRY),
+             &user_data_cache.users());
+      
       tags_by_id(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		 RELATION_FLUSH_SIZE, *target, rman,
 		 *rman.get_transaction(),
@@ -1369,6 +1456,11 @@ void Print_Statement::execute(Resource_Manager& rman)
                    (mode & Print_Target::PRINT_META) ? attic_settings().RELATIONS_META : 0,
                    element_count);
       }
+      
+      if (collection_mode == collect_rhs)
+        collection_print_target->clear_relations
+            (true, (mode & Print_Target::PRINT_META),
+             (mode & Print_Target::PRINT_BOUNDS), (mode & Print_Target::PRINT_GEOMETRY), &user_data_cache.users());
       
       if (rman.get_area_transaction())
       {
@@ -1411,6 +1503,11 @@ void Print_Statement::execute(Resource_Manager& rman)
                       element_count);
       }
       
+      if (collection_mode == collect_rhs)
+        collection_print_target->clear_ways
+            (true, (mode & Print_Target::PRINT_META),
+             (mode & Print_Target::PRINT_BOUNDS), (mode & Print_Target::PRINT_GEOMETRY), &user_data_cache.users());
+      
       tags_quadtile(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		    *target, rman, *rman.get_transaction(),
 		    (mode & Print_Target::PRINT_META) ?
@@ -1424,6 +1521,11 @@ void Print_Statement::execute(Resource_Manager& rman)
                       (mode & Print_Target::PRINT_META) ? attic_settings().RELATIONS_META : 0,
                       element_count);
       }
+      
+      if (collection_mode == collect_rhs)
+        collection_print_target->clear_relations
+            (true, (mode & Print_Target::PRINT_META),
+             (mode & Print_Target::PRINT_BOUNDS), (mode & Print_Target::PRINT_GEOMETRY), &user_data_cache.users());
       
       if (rman.get_area_transaction())
       {
@@ -1443,9 +1545,13 @@ void Print_Statement::execute(Resource_Manager& rman)
       
       by_id(mit->second.ways, *target, *rman.get_transaction(), *this, limit, element_count);
       by_id(mit->second.attic_ways, *target, *rman.get_transaction(), *this, limit, element_count);
+      if (collection_mode == collect_rhs)
+        collection_print_target->clear_ways(false, false, false, false, 0);
       
       by_id(mit->second.relations, *target, *rman.get_transaction(), *this, limit, element_count);
-      by_id(mit->second.attic_relations, *target, *rman.get_transaction(), *this, limit, element_count);
+      by_id(mit->second.attic_relations, *target, *rman.get_transaction(), *this, limit, element_count);      
+      if (collection_mode == collect_rhs)
+        collection_print_target->clear_relations(false, false, false, false, 0);
       
       if (rman.get_area_transaction())
 	by_id(mit->second.areas, *target, *rman.get_area_transaction(), *this, limit, element_count);
@@ -1459,9 +1565,13 @@ void Print_Statement::execute(Resource_Manager& rman)
       
       quadtile(mit->second.ways, *target, *rman.get_transaction(), *this, limit, element_count);
       quadtile(mit->second.attic_ways, *target, *rman.get_transaction(), *this, limit, element_count);
+      if (collection_mode == collect_rhs)
+        collection_print_target->clear_ways(false, false, false, false, 0);
       
       quadtile(mit->second.relations, *target, *rman.get_transaction(), *this, limit, element_count);
       quadtile(mit->second.attic_relations, *target, *rman.get_transaction(), *this, limit, element_count);
+      if (collection_mode == collect_rhs)
+        collection_print_target->clear_relations(false, false, false, false, 0);
       
       if (rman.get_area_transaction())
 	quadtile(mit->second.areas, *target, *rman.get_area_transaction(), *this, limit, element_count);
