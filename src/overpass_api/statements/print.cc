@@ -1069,11 +1069,9 @@ class Collection_Print_Target : public Print_Target
     
     void set_target(Print_Target* target);
     
-    void clear_nodes(bool print_tags, bool print_meta, const map< uint32, string >* users = 0);
-    void clear_ways(bool print_tags, bool print_meta, bool print_bounds, bool print_geometry,
-                    const map< uint32, string >* users = 0);
-    void clear_relations(bool print_tags, bool print_meta, bool print_bounds, bool print_geometry,
-                         const map< uint32, string >* users = 0);
+    void clear_nodes(const map< uint32, string >* users = 0);
+    void clear_ways(const map< uint32, string >* users = 0);
+    void clear_relations(const map< uint32, string >* users = 0);
     
   private:
     
@@ -1182,7 +1180,9 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& s
     if (nodes_it == nodes.end() || skel.id < nodes_it->elem.id)
     {
       // No old element exists
-      final_target->print_item(ll_upper, skel, tags, meta, users, CREATE);
+      final_target->print_item(ll_upper, skel,
+                               (mode & Print_Target::PRINT_TAGS) ? tags : 0,
+                               (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
     }
     else
     {
@@ -1191,9 +1191,11 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& s
       {
         // The elements differ
         final_target->print_item(nodes_it->idx.val(), nodes_it->elem,
-                                 tags ? &nodes_it->tags : 0,
-                                 meta ? &nodes_it->meta : 0, users, MODIFY_OLD);
-        final_target->print_item(ll_upper, skel, tags, meta, users, MODIFY_NEW);
+                                 (mode & Print_Target::PRINT_TAGS) ? &nodes_it->tags : 0,
+                                 (mode & Print_Target::PRINT_META) ? &nodes_it->meta : 0, users, MODIFY_OLD);
+        final_target->print_item(ll_upper, skel,
+                                 (mode & Print_Target::PRINT_TAGS) ? tags : 0,
+                                 (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
       }
       nodes_it->idx = 0xffu;
     }
@@ -1205,8 +1207,7 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& s
 }
 
 
-void Collection_Print_Target::clear_nodes(bool print_tags, bool print_meta,
-                                          const map< uint32, string >* users)
+void Collection_Print_Target::clear_nodes(const map< uint32, string >* users)
 {
   for (std::vector< Node_Entry >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
   {
@@ -1214,8 +1215,8 @@ void Collection_Print_Target::clear_nodes(bool print_tags, bool print_meta,
     {
       // No corresponding new element exists, thus the old one has been deleted.
       final_target->print_item(it->idx.val(), it->elem,
-                               print_tags ? &it->tags : 0,
-                               print_meta ? &it->meta : 0, users, DELETE);
+                               (mode & Print_Target::PRINT_TAGS) ? &it->tags : 0,
+                               (mode & Print_Target::PRINT_META) ? &it->meta : 0, users, DELETE);
     }
   }
 }
@@ -1236,7 +1237,12 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
     if (ways_it == ways.end() || skel.id < ways_it->elem.id)
     {
       // No old element exists
-      final_target->print_item(ll_upper, skel, tags, bounds, geometry, meta, users, CREATE);
+      Double_Coords double_coords(*geometry);
+      final_target->print_item(ll_upper, skel,
+                               (mode & Print_Target::PRINT_TAGS) ? tags : 0,
+                               (mode & Print_Target::PRINT_BOUNDS) ? bound_variant(double_coords, mode) : 0,
+                               (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
+                               (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
     }
     else
     {
@@ -1245,12 +1251,18 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
           (tags && !(ways_it->tags == *tags)) || (meta && !(ways_it->meta.timestamp == meta->timestamp)))
       {
         // The elements differ
+        Double_Coords double_coords(ways_it->geometry);
         final_target->print_item(ways_it->idx.val(), ways_it->elem,
-                                 tags ? &ways_it->tags : 0,
-                                 bounds ? 0 : 0, //TODO
-                                 geometry ? &ways_it->geometry : 0,
-                                 meta ? &ways_it->meta : 0, users, MODIFY_OLD);
-        final_target->print_item(ll_upper, skel, tags, bounds, geometry, meta, users, MODIFY_NEW);
+                               (mode & Print_Target::PRINT_TAGS) ? &ways_it->tags : 0,
+                               (mode & Print_Target::PRINT_BOUNDS) ? bound_variant(double_coords, mode) : 0,
+                               (mode & Print_Target::PRINT_GEOMETRY) ? &ways_it->geometry : 0,
+                               (mode & Print_Target::PRINT_META) ? &ways_it->meta : 0, users, MODIFY_OLD);
+        Double_Coords double_coords_new(*geometry);
+        final_target->print_item(ll_upper, skel,
+                                 (mode & Print_Target::PRINT_TAGS) ? tags : 0,
+                                 (mode & Print_Target::PRINT_BOUNDS) ? bound_variant(double_coords_new, mode) : 0,
+                                 (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
+                                 (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
       }
       ways_it->idx = 0xffu;
     }
@@ -1263,20 +1275,19 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
 }
 
 
-void Collection_Print_Target::clear_ways
-    (bool print_tags, bool print_meta, bool print_bounds, bool print_geometry,
-     const map< uint32, string >* users)
+void Collection_Print_Target::clear_ways(const map< uint32, string >* users)
 {
   for (std::vector< Way_Entry >::const_iterator it = ways.begin(); it != ways.end(); ++it)
   {
     if (it->idx.val() != 0xffu)
     {
       // No corresponding new element exists, thus the old one has been deleted.
+      Double_Coords double_coords(it->geometry);
       final_target->print_item(it->idx.val(), it->elem,
-                               print_tags ? &it->tags : 0,
-                               print_bounds ? 0 : 0, //TODO
-                               print_geometry ? &it->geometry : 0,
-                               print_meta ? &it->meta : 0, users, DELETE);
+                               (mode & Print_Target::PRINT_TAGS) ? &it->tags : 0,
+                               (mode & Print_Target::PRINT_BOUNDS) ? bound_variant(double_coords, mode) : 0,
+                               (mode & Print_Target::PRINT_GEOMETRY) ? &it->geometry : 0,
+                               (mode & Print_Target::PRINT_META) ? &it->meta : 0, users, DELETE);
     }
   }
 }
@@ -1298,7 +1309,12 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleto
     if (relations_it == relations.end() || skel.id < relations_it->elem.id)
     {
       // No old element exists
-      final_target->print_item(ll_upper, skel, tags, bounds, geometry, meta, users, CREATE);
+      Double_Coords double_coords(*geometry);
+      final_target->print_item(ll_upper, skel,
+                               (mode & Print_Target::PRINT_TAGS) ? tags : 0,
+                               (mode & Print_Target::PRINT_BOUNDS) ? bound_variant(double_coords, mode) : 0,
+                               (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
+                               (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
     }
     else
     {
@@ -1307,12 +1323,18 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleto
           (tags && !(relations_it->tags == *tags)) || (meta && !(relations_it->meta.timestamp == meta->timestamp)))
       {
         // The elements differ
+        Double_Coords double_coords(relations_it->geometry);
         final_target->print_item(relations_it->idx.val(), relations_it->elem,
-                                 tags ? &relations_it->tags : 0,
-                                 bounds ? 0 : 0, //TODO
-                                 geometry ? &relations_it->geometry : 0,
-                                 meta ? &relations_it->meta : 0, users, MODIFY_OLD);
-        final_target->print_item(ll_upper, skel, tags, bounds, geometry, meta, users, MODIFY_NEW);
+                                 (mode & Print_Target::PRINT_TAGS) ? &relations_it->tags : 0,
+                                 (mode & Print_Target::PRINT_BOUNDS) ? bound_variant(double_coords, mode) : 0,
+                                 (mode & Print_Target::PRINT_GEOMETRY) ? &relations_it->geometry : 0,
+                                 (mode & Print_Target::PRINT_META) ? &relations_it->meta : 0, users, MODIFY_OLD);
+        Double_Coords double_coords_new(*geometry);
+        final_target->print_item(ll_upper, skel,
+                                 (mode & Print_Target::PRINT_TAGS) ? tags : 0,
+                                 (mode & Print_Target::PRINT_BOUNDS) ? bound_variant(double_coords_new, mode) : 0,
+                                 (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
+                                 (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
       }
       relations_it->idx = 0xffu;
     }
@@ -1325,20 +1347,19 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleto
 }
 
 
-void Collection_Print_Target::clear_relations
-    (bool print_tags, bool print_meta, bool print_bounds, bool print_geometry,
-     const map< uint32, string >* users)
+void Collection_Print_Target::clear_relations(const map< uint32, string >* users)
 {
   for (std::vector< Relation_Entry >::const_iterator it = relations.begin(); it != relations.end(); ++it)
   {
     if (it->idx.val() != 0xffu)
     {
       // No corresponding new element exists, thus the old one has been deleted.
+      Double_Coords double_coords(it->geometry);
       final_target->print_item(it->idx.val(), it->elem,
-                               print_tags ? &it->tags : 0,
-                               print_bounds ? 0 : 0, //TODO
-                               print_geometry ? &it->geometry : 0,
-                               print_meta ? &it->meta : 0, users, DELETE);
+                               (mode & Print_Target::PRINT_TAGS) ? &it->tags : 0,
+                               (mode & Print_Target::PRINT_BOUNDS) ? bound_variant(double_coords, mode) : 0,
+                               (mode & Print_Target::PRINT_GEOMETRY) ? &it->geometry : 0,
+                               (mode & Print_Target::PRINT_META) ? &it->meta : 0, users, DELETE);
     }
   }
 }
@@ -1366,6 +1387,10 @@ void Print_Statement::execute(Resource_Manager& rman)
   {
     collection_print_target = new Collection_Print_Target(mode, *rman.get_transaction());
     target = collection_print_target;
+    mode = Print_Target::PRINT_IDS
+        | Print_Target::PRINT_COORDS | Print_Target::PRINT_NDS | Print_Target::PRINT_MEMBERS
+        | Print_Target::PRINT_TAGS | Print_Target::PRINT_VERSION | Print_Target::PRINT_META
+        | Print_Target::PRINT_GEOMETRY;
   }
   else if (this->output_handle)
     target = &this->output_handle->get_print_target(mode, *rman.get_transaction());
@@ -1416,8 +1441,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_nodes
-            (true, (mode & Print_Target::PRINT_META), &user_data_cache.users());
+        collection_print_target->clear_nodes(&user_data_cache.users());
       
       tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		 WAY_FLUSH_SIZE, *target, rman,
@@ -1436,10 +1460,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_ways
-            (true, (mode & Print_Target::PRINT_META),
-             (mode & Print_Target::PRINT_BOUNDS), (mode & Print_Target::PRINT_GEOMETRY),
-             &user_data_cache.users());
+        collection_print_target->clear_ways(&user_data_cache.users());
       
       tags_by_id(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		 RELATION_FLUSH_SIZE, *target, rman,
@@ -1458,9 +1479,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_relations
-            (true, (mode & Print_Target::PRINT_META),
-             (mode & Print_Target::PRINT_BOUNDS), (mode & Print_Target::PRINT_GEOMETRY), &user_data_cache.users());
+        collection_print_target->clear_relations(&user_data_cache.users());
       
       if (rman.get_area_transaction())
       {
@@ -1486,8 +1505,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_nodes
-            (true, (mode & Print_Target::PRINT_META), &user_data_cache.users());
+        collection_print_target->clear_nodes(&user_data_cache.users());
       
       tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		    *target, rman, *rman.get_transaction(),
@@ -1504,9 +1522,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_ways
-            (true, (mode & Print_Target::PRINT_META),
-             (mode & Print_Target::PRINT_BOUNDS), (mode & Print_Target::PRINT_GEOMETRY), &user_data_cache.users());
+        collection_print_target->clear_ways(&user_data_cache.users());
       
       tags_quadtile(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		    *target, rman, *rman.get_transaction(),
@@ -1523,9 +1539,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_relations
-            (true, (mode & Print_Target::PRINT_META),
-             (mode & Print_Target::PRINT_BOUNDS), (mode & Print_Target::PRINT_GEOMETRY), &user_data_cache.users());
+        collection_print_target->clear_relations(&user_data_cache.users());
       
       if (rman.get_area_transaction())
       {
@@ -1541,17 +1555,17 @@ void Print_Statement::execute(Resource_Manager& rman)
       by_id(mit->second.nodes, *target, *rman.get_transaction(), *this, limit, element_count);
       by_id(mit->second.attic_nodes, *target, *rman.get_transaction(), *this, limit, element_count);
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_nodes(false, false, 0);
+        collection_print_target->clear_nodes(0);
       
       by_id(mit->second.ways, *target, *rman.get_transaction(), *this, limit, element_count);
       by_id(mit->second.attic_ways, *target, *rman.get_transaction(), *this, limit, element_count);
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_ways(false, false, false, false, 0);
+        collection_print_target->clear_ways(0);
       
       by_id(mit->second.relations, *target, *rman.get_transaction(), *this, limit, element_count);
       by_id(mit->second.attic_relations, *target, *rman.get_transaction(), *this, limit, element_count);      
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_relations(false, false, false, false, 0);
+        collection_print_target->clear_relations(0);
       
       if (rman.get_area_transaction())
 	by_id(mit->second.areas, *target, *rman.get_area_transaction(), *this, limit, element_count);
@@ -1561,17 +1575,17 @@ void Print_Statement::execute(Resource_Manager& rman)
       quadtile(mit->second.nodes, *target, *rman.get_transaction(), *this, limit, element_count);
       quadtile(mit->second.attic_nodes, *target, *rman.get_transaction(), *this, limit, element_count);
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_nodes(false, false, 0);
+        collection_print_target->clear_nodes(0);
       
       quadtile(mit->second.ways, *target, *rman.get_transaction(), *this, limit, element_count);
       quadtile(mit->second.attic_ways, *target, *rman.get_transaction(), *this, limit, element_count);
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_ways(false, false, false, false, 0);
+        collection_print_target->clear_ways(0);
       
       quadtile(mit->second.relations, *target, *rman.get_transaction(), *this, limit, element_count);
       quadtile(mit->second.attic_relations, *target, *rman.get_transaction(), *this, limit, element_count);
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_relations(false, false, false, false, 0);
+        collection_print_target->clear_relations(0);
       
       if (rman.get_area_transaction())
 	quadtile(mit->second.areas, *target, *rman.get_area_transaction(), *this, limit, element_count);
