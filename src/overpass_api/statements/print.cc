@@ -1240,7 +1240,7 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
       Double_Coords double_coords(*geometry);
       final_target->print_item(ll_upper, skel,
                                (mode & Print_Target::PRINT_TAGS) ? tags : 0,
-                               (mode & Print_Target::PRINT_BOUNDS) ? bound_variant(double_coords, mode) : 0,
+                               bound_variant(double_coords, mode),
                                (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
                                (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
     }
@@ -1254,13 +1254,13 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
         Double_Coords double_coords(ways_it->geometry);
         final_target->print_item(ways_it->idx.val(), ways_it->elem,
                                (mode & Print_Target::PRINT_TAGS) ? &ways_it->tags : 0,
-                               (mode & Print_Target::PRINT_BOUNDS) ? bound_variant(double_coords, mode) : 0,
+                               bound_variant(double_coords, mode),
                                (mode & Print_Target::PRINT_GEOMETRY) ? &ways_it->geometry : 0,
                                (mode & Print_Target::PRINT_META) ? &ways_it->meta : 0, users, MODIFY_OLD);
         Double_Coords double_coords_new(*geometry);
         final_target->print_item(ll_upper, skel,
                                  (mode & Print_Target::PRINT_TAGS) ? tags : 0,
-                                 (mode & Print_Target::PRINT_BOUNDS) ? bound_variant(double_coords_new, mode) : 0,
+                                 bound_variant(double_coords_new, mode),
                                  (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
                                  (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
       }
@@ -1285,7 +1285,7 @@ void Collection_Print_Target::clear_ways(const map< uint32, string >* users)
       Double_Coords double_coords(it->geometry);
       final_target->print_item(it->idx.val(), it->elem,
                                (mode & Print_Target::PRINT_TAGS) ? &it->tags : 0,
-                               (mode & Print_Target::PRINT_BOUNDS) ? bound_variant(double_coords, mode) : 0,
+                               bound_variant(double_coords, mode),
                                (mode & Print_Target::PRINT_GEOMETRY) ? &it->geometry : 0,
                                (mode & Print_Target::PRINT_META) ? &it->meta : 0, users, DELETE);
     }
@@ -1312,7 +1312,7 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleto
       Double_Coords double_coords(*geometry);
       final_target->print_item(ll_upper, skel,
                                (mode & Print_Target::PRINT_TAGS) ? tags : 0,
-                               (mode & Print_Target::PRINT_BOUNDS) ? bound_variant(double_coords, mode) : 0,
+                               bound_variant(double_coords, mode),
                                (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
                                (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
     }
@@ -1326,13 +1326,13 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleto
         Double_Coords double_coords(relations_it->geometry);
         final_target->print_item(relations_it->idx.val(), relations_it->elem,
                                  (mode & Print_Target::PRINT_TAGS) ? &relations_it->tags : 0,
-                                 (mode & Print_Target::PRINT_BOUNDS) ? bound_variant(double_coords, mode) : 0,
+                                 bound_variant(double_coords, mode),
                                  (mode & Print_Target::PRINT_GEOMETRY) ? &relations_it->geometry : 0,
                                  (mode & Print_Target::PRINT_META) ? &relations_it->meta : 0, users, MODIFY_OLD);
         Double_Coords double_coords_new(*geometry);
         final_target->print_item(ll_upper, skel,
                                  (mode & Print_Target::PRINT_TAGS) ? tags : 0,
-                                 (mode & Print_Target::PRINT_BOUNDS) ? bound_variant(double_coords_new, mode) : 0,
+                                 bound_variant(double_coords_new, mode),
                                  (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
                                  (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
       }
@@ -1357,7 +1357,7 @@ void Collection_Print_Target::clear_relations(const map< uint32, string >* users
       Double_Coords double_coords(it->geometry);
       final_target->print_item(it->idx.val(), it->elem,
                                (mode & Print_Target::PRINT_TAGS) ? &it->tags : 0,
-                               (mode & Print_Target::PRINT_BOUNDS) ? bound_variant(double_coords, mode) : 0,
+                               bound_variant(double_coords, mode),
                                (mode & Print_Target::PRINT_GEOMETRY) ? &it->geometry : 0,
                                (mode & Print_Target::PRINT_META) ? &it->meta : 0, users, DELETE);
     }
@@ -1383,6 +1383,7 @@ void Print_Statement::execute(Resource_Manager& rman)
     
   Output_Handle output_handle("xml");
   Print_Target* target = 0;
+  uint32 outer_mode = mode;
   if (collection_mode == collect_lhs)
   {
     collection_print_target = new Collection_Print_Target(mode, *rman.get_transaction());
@@ -1401,6 +1402,10 @@ void Print_Statement::execute(Resource_Manager& rman)
   {
     collection_print_target->set_target(target);
     target = collection_print_target;
+    mode = Print_Target::PRINT_IDS
+        | Print_Target::PRINT_COORDS | Print_Target::PRINT_NDS | Print_Target::PRINT_MEMBERS
+        | Print_Target::PRINT_TAGS | Print_Target::PRINT_VERSION | Print_Target::PRINT_META
+        | Print_Target::PRINT_GEOMETRY;
   }
 
   if (mode & (Print_Target::PRINT_GEOMETRY | Print_Target::PRINT_BOUNDS | Print_Target::PRINT_CENTER))
@@ -1591,6 +1596,9 @@ void Print_Statement::execute(Resource_Manager& rman)
 	quadtile(mit->second.areas, *target, *rman.get_area_transaction(), *this, limit, element_count);
     }
   }
+
+  if (collection_mode == collect_lhs)
+    mode = outer_mode;
   
   rman.health_check(*this);
 }

@@ -42,6 +42,7 @@ date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0902
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0903.ql >init_query_0903.out 2>init_query_0903.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0904.ql >init_query_0904.out 2>init_query_0904.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0905.ql >init_query_0905.out 2>init_query_0905.err
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/adiff_0902.ql >init_adiff_0902.out 2>init_adiff_0902.err
 
 date '+%T'; $BASEDIR/bin/update_database --db-dir=./ --keep-attic <$INPUTDIR/diff_1.osc
 
@@ -51,6 +52,7 @@ date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0902
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0903.ql >diff_1_query_0903.out 2>diff_1_query_0903.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0904.ql >diff_1_query_0904.out 2>diff_1_query_0904.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0905.ql >diff_1_query_0905.out 2>diff_1_query_0905.err
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/adiff_0902.ql >diff_1_adiff_0902.out 2>diff_1_adiff_0902.err
 
 date '+%T'; $BASEDIR/bin/update_database --db-dir=./ --keep-attic <$INPUTDIR/diff_2.osc
 
@@ -60,6 +62,7 @@ date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0902
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0903.ql >diff_2_query_0903.out 2>diff_2_query_0903.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0904.ql >diff_2_query_0904.out 2>diff_2_query_0904.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0905.ql >diff_2_query_0905.out 2>diff_2_query_0905.err
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/adiff_0902.ql >diff_2_adiff_0902.out 2>diff_2_adiff_0902.err
 
 date '+%T'; $BASEDIR/bin/update_database --db-dir=./ --keep-attic <$INPUTDIR/diff_3.osc
 
@@ -69,6 +72,7 @@ date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0902
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0903.ql >diff_3_query_0903.out 2>diff_3_query_0903.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0904.ql >diff_3_query_0904.out 2>diff_3_query_0904.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0905.ql >diff_3_query_0905.out 2>diff_3_query_0905.err
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/adiff_0902.ql >diff_3_adiff_0902.out 2>diff_3_adiff_0902.err
 
 date '+%T'
 
