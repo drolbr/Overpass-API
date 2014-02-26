@@ -27,16 +27,16 @@
               
               var feat_list = [];
               
-              var nodes = this.getNodes(doc);
-              for (var node_id in nodes) {
-                  var node = nodes[node_id];
-                  feat_list.push(node);
-              }
-              
               var ways = this.getWays(doc);
               for (var way_id in ways) {
                   var way = ways[way_id];
                   feat_list.push(way);
+              }
+              
+              var nodes = this.getNodes(doc);
+              for (var node_id in nodes) {
+                  var node = nodes[node_id];
+                  feat_list.push(node);
               }
               
               setStatus("Ready");
