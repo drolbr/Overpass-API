@@ -178,6 +178,40 @@ struct Relation_Skeleton
 };
 
 
+template< typename Object >
+void make_delta(const std::vector< Object >& source, const std::vector< Object >& reference,
+                std::vector< uint >& to_remove, std::vector< std::pair< uint, Object > >& to_add)
+{
+  //Detect a common prefix
+  uint prefix_length = 0;
+  while (prefix_length < source.size() && prefix_length < reference.size()
+      && source[prefix_length] == reference[prefix_length])
+    ++prefix_length;
+  
+  //Detect a common suffix
+  uint suffix_length = 1;
+  while (suffix_length < source.size() - prefix_length && suffix_length < reference.size() - prefix_length
+      && source[source.size() - suffix_length] == reference[reference.size() - suffix_length])
+    ++suffix_length;
+  --suffix_length;
+  
+  for (uint i = prefix_length; i < reference.size() - suffix_length; ++i)
+    to_remove.push_back(i);
+  
+  for (uint i = prefix_length; i < source.size() - suffix_length; ++i)
+    to_add.push_back(std::make_pair(i, source[i]));
+}
+
+
+template< typename Object >
+void copy_elems(const std::vector< Object >& source, std::vector< std::pair< uint, Object > >& target)
+{
+  uint i = 0;
+  for (typename std::vector< Object >::const_iterator it = source.begin(); it != source.end(); ++it)
+    target.push_back(make_pair(i++, *it));
+}
+
+
 struct Relation_Delta
 {
   typedef Relation_Skeleton::Id_Type Id_Type;
@@ -285,11 +319,34 @@ struct Relation_Delta
   }
   
   Relation_Delta(const Relation_Skeleton& reference, const Relation_Skeleton& skel)
-    : id(skel.id)
+    : id(skel.id), full(false)
   {
     if (!(id == skel.id))
       full = true;
-    //TODO
+    else
+    {  
+      make_delta(skel.members, reference.members, members_removed, members_added);
+      make_delta(skel.node_idxs, reference.node_idxs, node_idxs_removed, node_idxs_added);
+      make_delta(skel.way_idxs, reference.way_idxs, way_idxs_removed, way_idxs_added);
+    }
+    
+    if (members_added.size() >= skel.members.size()/2)
+    {
+      members_removed.clear();
+      members_added.clear();
+      node_idxs_removed.clear();
+      node_idxs_added.clear();
+      way_idxs_removed.clear();
+      way_idxs_added.clear();
+      full = true;
+    }
+    
+    if (full)
+    {
+      copy_elems(skel.members, members_added);
+      copy_elems(skel.node_idxs, node_idxs_added);
+      copy_elems(skel.way_idxs, way_idxs_added);
+    }
   }
   
   Relation_Skeleton expand(const Relation_Skeleton& reference)
