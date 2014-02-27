@@ -631,7 +631,7 @@ void add_intermediate_versions
             relevant_timestamps.push_back(it2->second.timestamp);
         }
       }
-      // Otherwise the node is not contained in our list. Could happen if it didn't changed at all.
+      // Otherwise the node is not contained in our list. Could happen if it hasn't changed at all.
     }
     else if (mit->type == Relation_Entry::WAY)
     {
@@ -646,7 +646,7 @@ void add_intermediate_versions
             relevant_timestamps.push_back(it2->second.timestamp);
         }
       }
-      // Otherwise the way is not contained in our list. Could happen if it didn't changed at all.
+      // Otherwise the way is not contained in our list. Could happen if it hasn't changed at all.
     }
   }
   std::sort(relevant_timestamps.begin(), relevant_timestamps.end());
