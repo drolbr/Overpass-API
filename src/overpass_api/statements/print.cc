@@ -1425,7 +1425,8 @@ void Print_Statement::execute(Resource_Manager& rman)
 
   if (mode & Print_Target::PRINT_TAGS)
   {
-    User_Data_Cache user_data_cache(*rman.get_transaction());
+    User_Data_Cache* user_data_cache =
+        (collection_mode == collect_rhs ? new User_Data_Cache(*rman.get_transaction()) : 0);
   
     if (order == order_by_id)
     {
@@ -1446,7 +1447,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_nodes(&user_data_cache.users());
+        collection_print_target->clear_nodes(&user_data_cache->users());
       
       tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		 WAY_FLUSH_SIZE, *target, rman,
@@ -1465,7 +1466,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_ways(&user_data_cache.users());
+        collection_print_target->clear_ways(&user_data_cache->users());
       
       tags_by_id(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		 RELATION_FLUSH_SIZE, *target, rman,
@@ -1484,7 +1485,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_relations(&user_data_cache.users());
+        collection_print_target->clear_relations(&user_data_cache->users());
       
       if (rman.get_area_transaction())
       {
@@ -1510,7 +1511,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_nodes(&user_data_cache.users());
+        collection_print_target->clear_nodes(&user_data_cache->users());
       
       tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		    *target, rman, *rman.get_transaction(),
@@ -1527,7 +1528,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_ways(&user_data_cache.users());
+        collection_print_target->clear_ways(&user_data_cache->users());
       
       tags_quadtile(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		    *target, rman, *rman.get_transaction(),
@@ -1544,7 +1545,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_relations(&user_data_cache.users());
+        collection_print_target->clear_relations(&user_data_cache->users());
       
       if (rman.get_area_transaction())
       {
@@ -1552,6 +1553,8 @@ void Print_Statement::execute(Resource_Manager& rman)
 		      *target, rman, *rman.get_area_transaction(), 0, element_count);
       }
     }
+    
+    delete user_data_cache;
   }
   else
   {
