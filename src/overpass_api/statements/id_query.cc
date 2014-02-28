@@ -22,6 +22,7 @@
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
 #include "../data/abstract_processing.h"
+#include "../data/collect_members.h"
 #include "../data/filenames.h"
 #include "id_query.h"
 
@@ -335,215 +336,77 @@ struct Attic_Skeleton_By_Id
 };
 
 
-/* Returns for the given set of ids the set of corresponding elements.
+/* Returns for the given set of ids the set of corresponding indexes.
+ * For ids where the timestamp is zero, only the current index is returned.
+ * For ids where the timestamp is nonzero, all attic indexes are also returned.
  * The function requires that the ids are sorted ascending by id.
- * The function only searches at the provided indexes.
- * Also, the function does always find the oldest object that has not been expired at timestamp
- * (or not yet if timestamp is zero).
- * So the user still needs to filter away objects that have been created after timestamp.
  */
 template< typename Index, typename Skeleton >
-void get_elements
-    (const std::vector< std::pair< typename Skeleton::Id_Type, uint64 > >& ids,
-     const std::pair< std::vector< Index >, std::vector< Index > > & idx_set,
-     Resource_Manager& rman,
-     std::map< Index, vector< Skeleton > >& current,
-     std::map< Index, vector< Attic< Skeleton > > >& attic)
+std::vector< Index > get_indexes_
+    (const std::vector< typename Skeleton::Id_Type >& ids, Resource_Manager& rman)
 {
-  std::vector< Index > joint_idx_set(idx_set.first.size() + idx_set.second.size());
-  joint_idx_set.erase(std::set_union
-      (idx_set.first.begin(), idx_set.first.end(), idx_set.second.begin(), idx_set.second.end(),
-       joint_idx_set.begin()), joint_idx_set.end());
+  std::vector< Index > result;
   
-  current.clear();
-  attic.clear();
+  Random_File< Index > current(rman.get_transaction()->random_index
+      (current_skeleton_file_properties< Skeleton >()));
+  for (typename std::vector< typename Skeleton::Id_Type >::const_iterator
+      it = ids.begin(); it != ids.end(); ++it)
+    result.push_back(current.get(it->val()));
   
-  Id_Pair_First_Comparator< typename Skeleton::Id_Type > first_comp;
+  std::sort(result.begin(), result.end());
+  result.erase(std::unique(result.begin(), result.end()), result.end());
   
-  if (rman.get_desired_timestamp() == NOW)
+  if (rman.get_desired_timestamp() != NOW)
   {
-    // Get the current elements.
-    Block_Backend< Index, Skeleton, typename std::vector< Index >::const_iterator >
-        current_db(rman.get_transaction()->data_index(current_skeleton_file_properties< Skeleton >()));
-    for (typename Block_Backend< Index, Skeleton, typename std::vector< Index >::const_iterator >
-        ::Discrete_Iterator
-        it = current_db.discrete_begin(idx_set.first.begin(), idx_set.first.end());
-        !(it == current_db.discrete_end()); ++it)
-    {
-      if (std::binary_search(ids.begin(), ids.end(), make_pair(it.object().id, 0), first_comp))
-        current[it.index()].push_back(it.object());
-    }
-  }
-  else
-  {
-    // Set up a dictionary to store for each requested element the oldest that would fit.
-    std::vector< Attic_Skeleton_By_Id< Index, Skeleton > > attic_dict;
-    for (typename std::vector< std::pair< typename Skeleton::Id_Type, uint64 > >::const_iterator
+    Random_File< Index > attic_random(rman.get_transaction()->random_index
+        (attic_skeleton_file_properties< Skeleton >()));
+    std::set< typename Skeleton::Id_Type > idx_list_ids;
+    for (typename std::vector< typename Skeleton::Id_Type >::const_iterator
         it = ids.begin(); it != ids.end(); ++it)
-      attic_dict.push_back(Attic_Skeleton_By_Id< Index, Skeleton >
-          (it->first, it->second == 0ull ? 0xffffffffffffffffull : it->second));
-    sort(attic_dict.begin(), attic_dict.end());
-    
-    // Get the current elements and put each to the dictionary.
-    Block_Backend< Index, Skeleton, typename std::vector< Index >::const_iterator >
-        current_db(rman.get_transaction()->data_index(current_skeleton_file_properties< Skeleton >()));
-    for (typename Block_Backend< Index, Skeleton, typename std::vector< Index >::const_iterator >
-        ::Discrete_Iterator
-        it = current_db.discrete_begin(idx_set.first.begin(), idx_set.first.end());
-        !(it == current_db.discrete_end()); ++it)
     {
-      typename std::vector< Attic_Skeleton_By_Id< Index, Skeleton > >::iterator it_dict
-          = std::upper_bound(attic_dict.begin(), attic_dict.end(),
-                             Attic_Skeleton_By_Id< Index, Skeleton >(it.object().id, NOW));
-      if (it_dict != attic_dict.end() && it_dict->id == it.object().id)
-      {
-        it_dict->index = it.index();
-        it_dict->elem = Attic< Skeleton >(it.object(), NOW);
-      }
+      if (attic_random.get(it->val()).val() == 0)
+        ;
+      else if (attic_random.get(it->val()) == 0xff)
+        idx_list_ids.insert(it->val());
+      else
+        result.push_back(attic_random.get(it->val()));
     }
   
-    // Get the attic elements and put each to the dictionary if it is the best hit.
-    Block_Backend< Index, Attic< Skeleton >, typename std::vector< Index >::const_iterator >
-        attic_db(rman.get_transaction()->data_index(attic_skeleton_file_properties< Skeleton >()));
-    for (typename Block_Backend< Index, Attic< Skeleton >, typename std::vector< Index >::const_iterator >
-        ::Discrete_Iterator
-        it = attic_db.discrete_begin(idx_set.second.begin(), idx_set.second.end());
-        !(it == attic_db.discrete_end()); ++it)
-    {
-      typename std::vector< Attic_Skeleton_By_Id< Index, Skeleton > >::iterator it_dict
-          = std::upper_bound(attic_dict.begin(), attic_dict.end(),
-                             Attic_Skeleton_By_Id< Index, Skeleton >(it.object().id, it.object().timestamp));
-      if (it_dict != attic_dict.end() && it_dict->id == it.object().id
-          && (it_dict->elem.id == typename Skeleton::Id_Type() || it.object().timestamp < it_dict->elem.timestamp))
-      {
-        it_dict->index = it.index();
-        it_dict->elem = it.object();
-      }
-    }
-    
-    // Remove elements that have been deleted at the given point of time
-    Block_Backend< Index, Attic< typename Skeleton::Id_Type >, typename std::vector< Index >::const_iterator >
-        undeleted_db(rman.get_transaction()->data_index(attic_undeleted_file_properties< Skeleton >()));
-    for (typename Block_Backend< Index, Attic< typename Skeleton::Id_Type >,
-            typename std::vector< Index >::const_iterator >
-        ::Discrete_Iterator
-        it = undeleted_db.discrete_begin(joint_idx_set.begin(), joint_idx_set.end());
-        !(it == undeleted_db.discrete_end()); ++it)
-    {
-      typename std::vector< Attic_Skeleton_By_Id< Index, Skeleton > >::iterator it_dict
-          = std::upper_bound(attic_dict.begin(), attic_dict.end(),
-                             Attic_Skeleton_By_Id< Index, Skeleton >(it.object(), it.object().timestamp));
-      if (it_dict != attic_dict.end() && it_dict->id == it.object()
-          && (it_dict->elem.id == typename Skeleton::Id_Type() || it.object().timestamp < it_dict->elem.timestamp))
-      {
-        it_dict->elem.id = typename Skeleton::Id_Type();
-        it_dict->index = 0xffu;
-      }
-    }
-    
-    // Confirm elements that are backed by meta data
-    // Update element's expiration timestamp if a meta exists that is older than the current
-    // expiration date and younger than timestamp
-    Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
-            typename std::vector< Index >::const_iterator >
-        attic_meta_db(rman.get_transaction()->data_index
-          (attic_meta_file_properties< Skeleton >()));
-    for (typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
-            typename std::vector< Index >::const_iterator >
-        ::Discrete_Iterator
-        it = attic_meta_db.discrete_begin(joint_idx_set.begin(), joint_idx_set.end());
-        !(it == attic_meta_db.discrete_end()); ++it)
-    {
-      typename std::vector< Attic_Skeleton_By_Id< Index, Skeleton > >::iterator it_dict
-          = std::lower_bound(attic_dict.begin(), attic_dict.end(),
-                             Attic_Skeleton_By_Id< Index, Skeleton >(it.object().ref, 0xffffffffffffffffull));
-      typename std::vector< Attic_Skeleton_By_Id< Index, Skeleton > >::iterator it_dict_end
-          = std::upper_bound(attic_dict.begin(), attic_dict.end(),
-                             Attic_Skeleton_By_Id< Index, Skeleton >(it.object().ref, 0ull));
-      while (it_dict != it_dict_end)
-      {
-        if (it_dict->timestamp >= it.object().timestamp)
-          it_dict->meta_confirmed |= (it_dict->index == it.index());
-        else
-          it_dict->elem.timestamp = std::min(it_dict->elem.timestamp, it.object().timestamp);
-        ++it_dict;
-      }
-    }
-    
-    // Same thing with current meta data
-    Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
-            typename std::vector< Index >::const_iterator >
-        meta_db(rman.get_transaction()->data_index
-          (current_meta_file_properties< Skeleton >()));
-        
-    for (typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
-            typename std::vector< Index >::const_iterator >
-        ::Discrete_Iterator
-        it = meta_db.discrete_begin(idx_set.first.begin(), idx_set.first.end());
-        !(it == meta_db.discrete_end()); ++it)
-    {
-      typename std::vector< Attic_Skeleton_By_Id< Index, Skeleton > >::iterator it_dict
-          = std::lower_bound(attic_dict.begin(), attic_dict.end(),
-                             Attic_Skeleton_By_Id< Index, Skeleton >(it.object().ref, 0xffffffffffffffffull));
-      typename std::vector< Attic_Skeleton_By_Id< Index, Skeleton > >::iterator it_dict_end
-          = std::upper_bound(attic_dict.begin(), attic_dict.end(),
-                             Attic_Skeleton_By_Id< Index, Skeleton >(it.object().ref, 0ull));
-      while (it_dict != it_dict_end)
-      {
-        if (it_dict->timestamp >= it.object().timestamp)
-          it_dict->meta_confirmed |= (it_dict->index == it.index());
-        else
-          it_dict->elem.timestamp = std::min(it_dict->elem.timestamp, it.object().timestamp);
-        ++it_dict;
-      }
-    }
-    
-    // Filter the current elements such that only those not superseded by older remain.
-    for (typename std::map< Index, vector< Skeleton > >::iterator it_idx = current.begin();
-         it_idx != current.end(); ++it_idx)
-    {
-      vector< Skeleton > filtered;
-      for (typename vector< Skeleton >::iterator it = it_idx->second.begin();
-           it != it_idx->second.end(); ++it)
-      {
-        typename std::vector< Attic_Skeleton_By_Id< Index, Skeleton > >::iterator it_dict
-            = std::lower_bound(attic_dict.begin(), attic_dict.end(),
-                             Attic_Skeleton_By_Id< Index, Skeleton >(it->id, 0xffffffffffffffffull));
-        while (it_dict != attic_dict.end() && it_dict->id == it->id)
-        {
-          if (it_dict->elem.id == typename Skeleton::Id_Type() && it_dict->index == 0u && it_dict->meta_confirmed)
-          {
-            if (it_dict->elem.timestamp == 0xffffffffffffffffull)
-              filtered.push_back(*it);
-            else
-            {
-              it_dict->index = it_idx->first;
-              it_dict->elem = Attic< Skeleton >(*it, it_dict->elem.timestamp);
-            }
-          }
-          ++it_dict;
-        }
-      }
-      it_idx->second.swap(filtered);
-    }
+    Block_Backend< typename Skeleton::Id_Type, Index > idx_list_db
+        (rman.get_transaction()->data_index(attic_idx_list_properties< Skeleton >()));
+    for (typename Block_Backend< typename Skeleton::Id_Type, Index >::Discrete_Iterator
+        it(idx_list_db.discrete_begin(idx_list_ids.begin(), idx_list_ids.end()));
+        !(it == idx_list_db.discrete_end()); ++it)
+      result.push_back(it.object());
   
-    // Copy the found attic elements to attic or current.
-    for (typename std::vector< Attic_Skeleton_By_Id< Index, Skeleton > >::const_iterator
-         it = attic_dict.begin(); it != attic_dict.end(); ++it)
-    {
-      if (!(it->elem.id == typename Skeleton::Id_Type()) && it->meta_confirmed)
-      {
-        if (it->elem.timestamp == NOW)
-          current[it->index].push_back(it->elem);
-        else
-          attic[it->index].push_back(it->elem);
-      }
-    }
+    std::sort(result.begin(), result.end());
+    result.erase(std::unique(result.begin(), result.end()), result.end());
   }
+  
+  return result;
 }
 
 
-// Nach "data" verschieben ---------------------------
+template< typename Index, typename Skeleton >
+void get_elements(uint64 lower, uint64 upper, Statement* stmt, Resource_Manager& rman,
+    std::map< Index, std::vector< Skeleton > >& current_result,
+    std::map< Index, std::vector< Attic< Skeleton > > >& attic_result)
+{
+  std::vector< typename Skeleton::Id_Type > ids;
+  for (uint64 i = lower; i < upper; ++i)
+    ids.push_back(i);
+  std::vector< Index > req = get_indexes_< Index, Skeleton >(ids, rman);
+        
+  if (rman.get_desired_timestamp() == NOW)
+    collect_items_discrete(stmt, rman, *current_skeleton_file_properties< Skeleton >(), req,
+        Id_Predicate< Skeleton >(ids), current_result);
+  else
+  {
+    collect_items_discrete_by_timestamp(stmt, rman, req,
+        Id_Predicate< Skeleton >(ids), current_result, attic_result);
+    filter_attic_elements(rman, rman.get_desired_timestamp(), current_result, attic_result);
+  }
+}
 
 
 void Id_Query_Statement::execute(Resource_Manager& rman)
@@ -551,35 +414,11 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
   Set into;
   
   if (type == NODE)
-  {
-    std::vector< std::pair< Node_Skeleton::Id_Type, uint64 > > ids;
-    for (uint64 i = lower.val(); i < upper.val(); ++i)
-      ids.push_back(make_pair(i, rman.get_desired_timestamp()));
-    std::pair< std::vector< Uint32_Index >, std::vector< Uint32_Index > > req
-        = get_indexes< Uint32_Index, Node_Skeleton >(ids, rman);
-        
-    get_elements(ids, req, rman, into.nodes, into.attic_nodes);
-  }
+    get_elements(lower.val(), upper.val(), this, rman, into.nodes, into.attic_nodes);
   else if (type == WAY)
-  {
-    std::vector< std::pair< Way_Skeleton::Id_Type, uint64 > > ids;
-    for (uint64 i = lower.val(); i < upper.val(); ++i)
-      ids.push_back(make_pair(i, rman.get_desired_timestamp()));
-    std::pair< std::vector< Uint31_Index >, std::vector< Uint31_Index > > req
-        = get_indexes< Uint31_Index, Way_Skeleton >(ids, rman);
-        
-    get_elements(ids, req, rman, into.ways, into.attic_ways);
-  }
+    get_elements(lower.val(), upper.val(), this, rman, into.ways, into.attic_ways);
   else if (type == RELATION)
-  {
-    std::vector< std::pair< Relation_Skeleton::Id_Type, uint64 > > ids;
-    for (uint64 i = lower.val(); i < upper.val(); ++i)
-      ids.push_back(make_pair(i, rman.get_desired_timestamp()));
-    std::pair< std::vector< Uint31_Index >, std::vector< Uint31_Index > > req
-        = get_indexes< Uint31_Index, Relation_Skeleton >(ids, rman);
-        
-    get_elements(ids, req, rman, into.relations, into.attic_relations);
-  }
+    get_elements(lower.val(), upper.val(), this, rman, into.relations, into.attic_relations);
   else if (type == AREA)
     collect_elems_flat(rman, lower.val(), upper.val(), vector< Area_Skeleton::Id_Type >(), true, into.areas);
 

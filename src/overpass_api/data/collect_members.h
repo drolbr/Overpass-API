@@ -194,51 +194,43 @@ void get_elements_by_id_from_db
   attic_elements.clear();
   if (ids.empty())
   {
-    collect_items_range(&query, rman, file_prop, range_req,
-                        Trivial_Predicate< TObject >(), elements);
-    if (timestamp != NOW)
-    {
-      collect_items_range(&query, rman, attic_file_prop, range_req,
-                          Trivial_Predicate< Attic< TObject > >(), attic_elements);
-      keep_only_least_younger_than(attic_elements, elements, timestamp);
-    }
+    if (timestamp == NOW)
+      collect_items_range(&query, rman, file_prop, range_req,
+          Trivial_Predicate< TObject >(), elements);
+    else
+      collect_items_range_by_timestamp(&query, rman, range_req,
+          Trivial_Predicate< TObject >(), elements, attic_elements);
   }
   else if (!invert_ids)
   {
-    collect_items_range(&query, rman, file_prop, range_req,
-                        Id_Predicate< TObject >(ids), elements);
-    if (timestamp != NOW)
-    {
-      collect_items_range(&query, rman, attic_file_prop, range_req,
-                          Id_Predicate< TObject >(ids), attic_elements);
-      keep_only_least_younger_than(attic_elements, elements, timestamp);
-    }
+    if (timestamp == NOW)
+      collect_items_range(&query, rman, file_prop, range_req,
+          Id_Predicate< TObject >(ids), elements);
+    else
+      collect_items_range_by_timestamp(&query, rman, range_req,
+          Id_Predicate< TObject >(ids), elements, attic_elements);
   }
   else if (!range_req.empty())
   {
-    collect_items_range(&query, rman, file_prop, range_req,
-                        Not_Predicate< TObject, Id_Predicate< TObject > >
-                        (Id_Predicate< TObject >(ids)), elements);
-    if (timestamp != NOW)
-    {
-      collect_items_range(&query, rman, attic_file_prop, range_req,
-                          Not_Predicate< TObject, Id_Predicate< TObject > >
-                          (Id_Predicate< TObject >(ids)), attic_elements);
-      keep_only_least_younger_than(attic_elements, elements, timestamp);
-    }
+    if (timestamp == NOW)
+      collect_items_range(&query, rman, file_prop, range_req,
+          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
+          elements);
+    else
+      collect_items_range_by_timestamp(&query, rman, range_req,
+          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
+          elements, attic_elements);
   }
   else
   {
-    collect_items_flat(query, rman, file_prop,
-                        Not_Predicate< TObject, Id_Predicate< TObject > >
-                        (Id_Predicate< TObject >(ids)), elements);
-    if (timestamp != NOW)
-    {
-      collect_items_flat(query, rman, attic_file_prop,
-                          Not_Predicate< TObject, Id_Predicate< TObject > >
-                          (Id_Predicate< TObject >(ids)), attic_elements);
-      keep_only_least_younger_than(attic_elements, elements, timestamp);
-    }
+    if (timestamp == NOW)
+      collect_items_flat(query, rman, file_prop,
+          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
+          elements);
+    else
+      collect_items_flat_by_timestamp(query, rman,
+          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
+          elements, attic_elements);
   }
 }
 

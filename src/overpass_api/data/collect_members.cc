@@ -716,24 +716,16 @@ std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
     return result;
   
   if (children_ranges)
-  {
-    collect_items_range(&stmt, rman, *osm_base_settings().RELATIONS, *children_ranges,
-                        Id_Predicate< Relation_Skeleton >(intersect_ids), result.first);
-    collect_items_range(&stmt, rman, *attic_settings().RELATIONS, *children_ranges,
-                        Id_Predicate< Relation_Skeleton >(intersect_ids), result.second);
-  }
+    collect_items_range_by_timestamp(&stmt, rman, *children_ranges,
+        Id_Predicate< Relation_Skeleton >(intersect_ids), result.first, result.second);
   else
   {    
     std::vector< Uint31_Index > req =
         relation_relation_member_indices(stmt, rman,
             parents.begin(), parents.end(), attic_parents.begin(), attic_parents.end());
-    collect_items_discrete(&stmt, rman, *osm_base_settings().RELATIONS, req,
-                        Id_Predicate< Relation_Skeleton >(intersect_ids), result.first);
-    collect_items_discrete(&stmt, rman, *attic_settings().RELATIONS, req,
-                        Id_Predicate< Relation_Skeleton >(intersect_ids), result.second);
+    collect_items_discrete_by_timestamp(&stmt, rman, req,
+        Id_Predicate< Relation_Skeleton >(intersect_ids), result.first, result.second);
   }
-  
-  keep_matching_skeletons(result.first, result.second, timestamp);
   return result;
 }
 
