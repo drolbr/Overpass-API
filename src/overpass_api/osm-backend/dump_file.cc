@@ -361,6 +361,18 @@ int main(int argc, char* args[])
             <<it.object().timestamp<<'\n';
       }
     }
+    else if (std::string("--attic-rels-delta") == args[2])
+    {
+      Block_Backend< Uint31_Index, Attic< Relation_Skeleton > > db
+          (transaction.data_index(attic_settings().RELATIONS));
+      for (Block_Backend< Uint31_Index, Attic< Relation_Delta > >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.index().val()<<'\t'
+            <<dec<<it.object().id.val()<<'\t'
+            <<it.object().timestamp<<'\n';
+      }
+    }
     else if (std::string("--attic-rels-meta") == args[2])
     {
       Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > db

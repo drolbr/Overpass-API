@@ -680,12 +680,12 @@ struct Descending_By_Timestamp
 };
 
 
-template< typename Element_Skeleton >
+template< typename Element_Skeleton, typename Attic_Skeleton >
 std::map< typename Element_Skeleton::Id_Type, std::vector< Attic< Uint31_Index > > >
     compute_new_attic_idx_by_id_and_time
     (const Data_By_Id< Element_Skeleton >& new_data,
      const std::map< Uint31_Index, std::set< Element_Skeleton > >& new_skeletons,
-     const std::map< Uint31_Index, std::set< Attic< Element_Skeleton > > >& full_attic)
+     const std::map< Uint31_Index, std::set< Attic_Skeleton > >& full_attic)
 {
   std::map< typename Element_Skeleton::Id_Type, std::vector< Attic< Uint31_Index > > > result;
   
@@ -715,10 +715,10 @@ std::map< typename Element_Skeleton::Id_Type, std::vector< Attic< Uint31_Index >
     ++next_it;
   }
         
-  for (typename std::map< Uint31_Index, std::set< Attic< Element_Skeleton > > >::const_iterator
+  for (typename std::map< Uint31_Index, std::set< Attic_Skeleton > >::const_iterator
       it = full_attic.begin(); it != full_attic.end(); ++it)
   {
-    for (typename std::set< Attic< Element_Skeleton > >::const_iterator it2 = it->second.begin();
+    for (typename std::set< Attic_Skeleton >::const_iterator it2 = it->second.begin();
          it2 != it->second.end(); ++it2)
       result[it2->id].push_back(Attic< Uint31_Index >(it->first, it2->timestamp));
   }

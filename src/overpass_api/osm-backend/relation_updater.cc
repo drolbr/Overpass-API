@@ -652,41 +652,41 @@ void add_intermediate_versions
   std::sort(relevant_timestamps.begin(), relevant_timestamps.end());
   relevant_timestamps.erase(std::unique(relevant_timestamps.begin(), relevant_timestamps.end()),
                             relevant_timestamps.end());
-  
-  // Track index for the undelete creation
-  Uint31_Index last_idx = Uint31_Index(0u);
-  
-  for (std::vector< uint64 >::const_iterator it = relevant_timestamps.begin();
-       it != relevant_timestamps.end(); ++it)
+
+  // Care for latest element
+  Uint31_Index idx = attic_idx;
+  Relation_Skeleton cur_skeleton = skeleton;
+  if (idx.val() == 0 || !relevant_timestamps.empty())
+    compute_idx_and_geometry(idx, cur_skeleton, new_timestamp, nodes_by_id, ways_by_id);
+    
+  if (add_last_version)
   {
+    full_attic[idx].insert(Attic< Relation_Skeleton >(cur_skeleton, new_timestamp));
+    idx_lists[skeleton.id].insert(idx);
+  }
+    
+  // Track index for the undelete creation
+  Uint31_Index last_idx = idx;
+  Relation_Skeleton last_skeleton = cur_skeleton;
+  
+  for (std::vector< uint64 >::const_iterator it = relevant_timestamps.end();
+       it != relevant_timestamps.begin(); )
+  {
+    --it;
+    
     Uint31_Index idx = attic_idx;
-    attic_idx = Uint31_Index(0u);
     Relation_Skeleton cur_skeleton = skeleton;
-    if (idx.val() == 0)
+    if (idx.val() == 0 || it != relevant_timestamps.begin())
       compute_idx_and_geometry(idx, cur_skeleton, *it, nodes_by_id, ways_by_id);
     full_attic[idx].insert(Attic< Relation_Skeleton >(cur_skeleton, *it));
     idx_lists[skeleton.id].insert(idx);
     
     // Manage undelete entries
-    if (it != relevant_timestamps.begin() && !(last_idx == idx))
-      new_undeleted[idx].insert(Attic< Relation_Skeleton::Id_Type >(skeleton.id, *(it-1)));
+    if (!(last_idx == idx))
+      new_undeleted[last_idx].insert(Attic< Relation_Skeleton::Id_Type >(skeleton.id, *it));
     last_idx = idx;
+    last_skeleton = cur_skeleton;
   }
-
-  Uint31_Index idx = attic_idx;
-  Relation_Skeleton last_skeleton = skeleton;
-  if (idx.val() == 0)
-    compute_idx_and_geometry(idx, last_skeleton, new_timestamp, nodes_by_id, ways_by_id);
-    
-  if (add_last_version)
-  {
-    full_attic[idx].insert(Attic< Relation_Skeleton >(last_skeleton, new_timestamp));
-    idx_lists[skeleton.id].insert(idx);
-  }
-    
-  // Manage undelete entries
-  if (!relevant_timestamps.empty() && !(last_idx == idx))
-    new_undeleted[idx].insert(Attic< Relation_Skeleton::Id_Type >(skeleton.id, relevant_timestamps.back()));
 }
 
 
