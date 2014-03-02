@@ -212,6 +212,35 @@ void copy_elems(const std::vector< Object >& source, std::vector< std::pair< uin
 }
 
 
+template< typename Object >
+void expand_diff(const std::vector< Object >& reference,
+    const std::vector< uint >& removed, const std::vector< std::pair< uint, Object > >& added,
+    std::vector< Object >& target)
+{
+  target.reserve(reference.size() - removed.size() + added.size());
+  std::vector< uint >::const_iterator it_removed = removed.begin();
+  typename std::vector< std::pair< uint, Object > >::const_iterator it_added = added.begin();
+  for (uint i = 0; i < reference.size(); ++i)
+  {
+    while (it_added != added.end() && target.size() == it_added->first)
+    {
+      target.push_back(it_added->second);
+      ++it_added;
+    }
+      
+    if (it_removed == removed.end() || i < *it_removed)
+      target.push_back(reference[i]);
+    else
+      ++it_removed;
+  }
+  while (it_added != added.end() && target.size() == it_added->first)
+  {
+    target.push_back(it_added->second);
+    ++it_added;
+  }
+}
+
+
 struct Relation_Delta
 {
   typedef Relation_Skeleton::Id_Type Id_Type;
@@ -352,71 +381,26 @@ struct Relation_Delta
   Relation_Skeleton expand(const Relation_Skeleton& reference)
   {
     Relation_Skeleton result(id);
-    
-    result.members.reserve(reference.members.size() - members_removed.size() + members_added.size());
-    std::vector< uint >::const_iterator it_removed = members_removed.begin();
-    std::vector< std::pair< uint, Relation_Entry > >::const_iterator it_added_members = members_added.begin();
-    for (uint i = 0; i < reference.members.size(); ++i)
+
+    if (full)
     {
-      while (it_added_members != members_added.end() && result.members.size() == it_added_members->first)
-      {
-        result.members.push_back(it_added_members->second);
-        ++it_added_members;
-      }
+      result.members.reserve(members_added.size());
+      for (uint i = 0; i < members_added.size(); ++i)
+        result.members.push_back(members_added[i].second);
       
-      if (it_removed == members_removed.end() || i < *it_removed)
-        result.members.push_back(reference.members[i]);
-      else
-        ++it_removed;
-    }
-    while (it_added_members != members_added.end() && result.members.size() == it_added_members->first)
-    {
-      result.members.push_back(it_added_members->second);
-      ++it_added_members;
-    }
-    
-    result.node_idxs.reserve(reference.node_idxs.size() - node_idxs_removed.size() + node_idxs_added.size());
-    it_removed = node_idxs_removed.begin();
-    std::vector< std::pair< uint, Uint31_Index > >::const_iterator it_added_idxs = node_idxs_added.begin();
-    for (uint i = 0; i < reference.node_idxs.size(); ++i)
-    {
-      while (it_added_idxs != node_idxs_added.end() && result.node_idxs.size() == it_added_idxs->first)
-      {
-        result.node_idxs.push_back(it_added_idxs->second);
-        ++it_added_idxs;
-      }
+      result.node_idxs.reserve(node_idxs_added.size());
+      for (uint i = 0; i < node_idxs_added.size(); ++i)
+        result.node_idxs.push_back(node_idxs_added[i].second);
       
-      if (it_removed == node_idxs_removed.end() || i < *it_removed)
-        result.node_idxs.push_back(reference.node_idxs[i]);
-      else
-        ++it_removed;
+      result.way_idxs.reserve(way_idxs_added.size());
+      for (uint i = 0; i < way_idxs_added.size(); ++i)
+        result.way_idxs.push_back(way_idxs_added[i].second);  
     }
-    while (it_added_idxs != node_idxs_added.end() && result.node_idxs.size() == it_added_idxs->first)
+    else
     {
-      result.node_idxs.push_back(it_added_idxs->second);
-      ++it_added_idxs;
-    }
-    
-    result.way_idxs.reserve(reference.way_idxs.size() - way_idxs_removed.size() + way_idxs_added.size());
-    it_removed = way_idxs_removed.begin();
-    it_added_idxs = way_idxs_added.begin();
-    for (uint i = 0; i < reference.way_idxs.size(); ++i)
-    {
-      while (it_added_idxs != way_idxs_added.end() && result.way_idxs.size() == it_added_idxs->first)
-      {
-        result.way_idxs.push_back(it_added_idxs->second);
-        ++it_added_idxs;
-      }
-      
-      if (it_removed == way_idxs_removed.end() || i < *it_removed)
-        result.way_idxs.push_back(reference.way_idxs[i]);
-      else
-        ++it_removed;
-    }
-    while (it_added_idxs != way_idxs_added.end() && result.way_idxs.size() == it_added_idxs->first)
-    {
-      result.way_idxs.push_back(it_added_idxs->second);
-      ++it_added_idxs;
+      expand_diff(reference.members, members_removed, members_added, result.members);
+      expand_diff(reference.node_idxs, node_idxs_removed, node_idxs_added, result.node_idxs);
+      expand_diff(reference.way_idxs, way_idxs_removed, way_idxs_added, result.way_idxs);
     }
     
     return result;

@@ -23,19 +23,25 @@
 #include "filenames.h"
 
 
-template < class Index, class Object, class Current_Iterator, class Attic_Iterator, class Predicate >
-void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
-                   Current_Iterator current_begin, Current_Iterator current_end,
-                   Attic_Iterator attic_begin, Attic_Iterator attic_end,
-                   const Predicate& predicate,
-                   map< Index, vector< Object > >& result,
-                   map< Index, vector< Attic< Object > > >& attic_result)
+inline uint64 timestamp_of(const Attic< Node_Skeleton >& skel) { return skel.timestamp; }
+inline uint64 timestamp_of(const Attic< Way_Skeleton >& skel) { return skel.timestamp; }
+inline uint64 timestamp_of(const Attic< Relation_Skeleton >& skel) { return skel.timestamp; }
+
+inline uint64 timestamp_of(const Node_Skeleton& skel) { return NOW; }
+inline uint64 timestamp_of(const Way_Skeleton& skel) { return NOW; }
+inline uint64 timestamp_of(const Relation_Skeleton& skel) { return NOW; }
+
+
+template < class Index, class Object, class Iterator, class Predicate >
+void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
+    Iterator begin, Iterator end,
+    const Predicate& predicate,
+    std::map< Index, std::vector< Object > >& result,
+    std::vector< std::pair< typename Object::Id_Type, uint64 > >& timestamp_by_id)
 {
-  std::vector< std::pair< typename Object::Id_Type, uint64 > > timestamp_by_id;
   uint64 timestamp = rman.get_desired_timestamp();
-  
   uint32 count = 0;
-  for (Current_Iterator it = current_begin; !(it == current_end); ++it)
+  for (Iterator it = begin; !(it == end); ++it)
   {
     if (++count >= 64*1024)
     {
@@ -43,28 +49,19 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
       if (stmt)
         rman.health_check(*stmt);
     }
-    timestamp_by_id.push_back(std::make_pair(it.object().id, NOW));
+    if (timestamp < timestamp_of(it.object()))
+      timestamp_by_id.push_back(std::make_pair(it.object().id, timestamp_of(it.object())));
     if (predicate.match(it.object()))
       result[it.index()].push_back(it.object());
   }
+}
 
-  count = 0;
-  for (Attic_Iterator it = attic_begin; !(it == attic_end); ++it)
-  {
-    if (++count >= 64*1024)
-    {
-      count = 0;
-      if (stmt)
-        rman.health_check(*stmt);
-    }
-    if (timestamp < it.object().timestamp)
-      timestamp_by_id.push_back(std::make_pair(it.object().id, it.object().timestamp));
-    if (predicate.match(it.object()))
-      attic_result[it.index()].push_back(it.object());
-  }
-  
-  std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
-  
+
+template < class Index, class Object >
+void filter_items_by_timestamp(
+    const std::vector< std::pair< typename Object::Id_Type, uint64 > >& timestamp_by_id,
+    std::map< Index, std::vector< Object > >& result)
+{
   for (typename std::map< Index, std::vector< Object > >::iterator it = result.begin();
        it != result.end(); ++it)
   {
@@ -75,7 +72,7 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
       typename std::vector< std::pair< typename Object::Id_Type, uint64 > >::const_iterator
           tit = std::lower_bound(timestamp_by_id.begin(), timestamp_by_id.end(),
               std::make_pair(it2->id, 0ull));
-      if (tit != timestamp_by_id.end() && tit->first == it2->id && tit->second == NOW)
+      if (tit != timestamp_by_id.end() && tit->first == it2->id && tit->second == timestamp_of(*it2))
       {
         *target_it = *it2;
         ++target_it;
@@ -83,25 +80,26 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
     }
     it->second.erase(target_it, it->second.end());
   }
+}
+
+
+template < class Index, class Object, class Current_Iterator, class Attic_Iterator, class Predicate >
+void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
+                   Current_Iterator current_begin, Current_Iterator current_end,
+                   Attic_Iterator attic_begin, Attic_Iterator attic_end,
+                   const Predicate& predicate,
+                   map< Index, vector< Object > >& result,
+                   map< Index, vector< Attic< Object > > >& attic_result)
+{
+  std::vector< std::pair< typename Object::Id_Type, uint64 > > timestamp_by_id;
+
+  reconstruct_items(stmt, rman, current_begin, current_end, predicate, result, timestamp_by_id);
+  reconstruct_items(stmt, rman, attic_begin, attic_end, predicate, attic_result, timestamp_by_id);
   
-  for (typename std::map< Index, std::vector< Attic< Object > > >::iterator it = attic_result.begin();
-       it != attic_result.end(); ++it)
-  {
-    typename std::vector< Attic< Object > >::iterator target_it = it->second.begin();
-    for (typename std::vector< Attic< Object > >::iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
-    {
-      typename std::vector< std::pair< typename Object::Id_Type, uint64 > >::const_iterator
-          tit = std::lower_bound(timestamp_by_id.begin(), timestamp_by_id.end(),
-              std::make_pair(it2->id, 0ull));
-      if (tit != timestamp_by_id.end() && tit->first == it2->id && tit->second == it2->timestamp)
-      {
-        *target_it = *it2;
-        ++target_it;
-      }
-    }
-    it->second.erase(target_it, it->second.end());
-  }
+  std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
+  
+  filter_items_by_timestamp(timestamp_by_id, result);
+  filter_items_by_timestamp(timestamp_by_id, attic_result);
 }
 
 
