@@ -325,7 +325,7 @@ private:
   
   std::map< Uint31_Index, std::set< Relation_Skeleton > > new_skeletons;
   std::map< Uint31_Index, std::set< Relation_Skeleton > > attic_skeletons;
-  std::map< Uint31_Index, std::set< Attic< Relation_Skeleton > > > new_attic_skeletons;
+  std::map< Uint31_Index, std::set< Attic< Relation_Delta > > > new_attic_skeletons;
   
   Key_Storage keys;
   

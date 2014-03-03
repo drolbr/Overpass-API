@@ -604,13 +604,14 @@ void compute_idx_and_geometry
  * If yes, the necessary intermediate versions are generated.
  */
 void add_intermediate_versions
-    (const Relation_Skeleton& skeleton, const uint64 old_timestamp, const uint64 new_timestamp,
+    (const Relation_Skeleton& skeleton, const Relation_Skeleton& reference,
+     const uint64 old_timestamp, const uint64 new_timestamp,
      const std::map< Node_Skeleton::Id_Type,
          std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >& nodes_by_id,
      const std::map< Way_Skeleton::Id_Type,
          std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > > >& ways_by_id,
      bool add_last_version, Uint31_Index attic_idx,
-     std::map< Uint31_Index, std::set< Attic< Relation_Skeleton > > >& full_attic,
+     std::map< Uint31_Index, std::set< Attic< Relation_Delta > > >& full_attic,
      std::map< Uint31_Index, std::set< Attic< Relation_Skeleton::Id_Type > > >& new_undeleted,
      std::map< Relation_Skeleton::Id_Type, std::set< Uint31_Index > >& idx_lists)
 {
@@ -661,7 +662,15 @@ void add_intermediate_versions
     
   if (add_last_version)
   {
-    full_attic[idx].insert(Attic< Relation_Skeleton >(cur_skeleton, new_timestamp));
+    Uint31_Index reference_idx;
+    Relation_Skeleton reference_skel = reference;
+    compute_idx_and_geometry(reference_idx, reference_skel, new_timestamp + 1, nodes_by_id, ways_by_id);
+    if (idx == reference_idx)
+      full_attic[idx].insert(Attic< Relation_Delta >(
+          Relation_Delta(reference, cur_skeleton), new_timestamp));
+    else
+      full_attic[idx].insert(Attic< Relation_Delta >(
+          Relation_Delta(Relation_Skeleton(), cur_skeleton), new_timestamp));      
     idx_lists[skeleton.id].insert(idx);
   }
     
@@ -678,7 +687,12 @@ void add_intermediate_versions
     Relation_Skeleton cur_skeleton = skeleton;
     if (idx.val() == 0 || it != relevant_timestamps.begin())
       compute_idx_and_geometry(idx, cur_skeleton, *it, nodes_by_id, ways_by_id);
-    full_attic[idx].insert(Attic< Relation_Skeleton >(cur_skeleton, *it));
+    if (last_idx == idx)
+      full_attic[idx].insert(Attic< Relation_Delta >(
+          Relation_Delta(last_skeleton, cur_skeleton), *it));
+    else
+      full_attic[idx].insert(Attic< Relation_Delta >(
+          Relation_Delta(Relation_Skeleton(), cur_skeleton), *it));
     idx_lists[skeleton.id].insert(idx);
     
     // Manage undelete entries
@@ -794,7 +808,7 @@ void compute_new_attic_skeletons
      const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
      const std::map< Way_Skeleton::Id_Type, Uint31_Index >& new_way_idx_by_id,
      const std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > >& new_attic_way_skeletons,
-     std::map< Uint31_Index, std::set< Attic< Relation_Skeleton > > >& full_attic,
+     std::map< Uint31_Index, std::set< Attic< Relation_Delta > > >& full_attic,
      std::map< Uint31_Index, std::set< Attic< Relation_Skeleton::Id_Type > > >& new_undeleted,
      std::map< Relation_Skeleton::Id_Type, std::set< Uint31_Index > >& idx_lists)
 {
@@ -843,19 +857,18 @@ void compute_new_attic_skeletons
     {
       if (it->idx.val() != 0)
       {
-        add_intermediate_versions(it->elem, it->meta.timestamp, next_it->meta.timestamp,
+        add_intermediate_versions(it->elem, next_it->elem, it->meta.timestamp, next_it->meta.timestamp,
                                   nodes_by_id, ways_by_id,
                                   // Add last version only if it differs from the next version
                                   (next_it->idx.val() == 0 || !geometrically_equal(it->elem, next_it->elem)),
-                                  Uint31_Index(0u),
-                                  full_attic, new_undeleted, idx_lists);
+                                  Uint31_Index(0u), full_attic, new_undeleted, idx_lists);
       }
     }
     
     if (next_it == new_data.data.end() || !(it->elem.id == next_it->elem.id))
       // This is the latest version of this element. Care here for changes since this element.
-      add_intermediate_versions(it->elem, it->meta.timestamp, NOW, nodes_by_id, ways_by_id,
-                                false, Uint31_Index(0u),
+      add_intermediate_versions(it->elem, Relation_Skeleton(), it->meta.timestamp, NOW,
+                                nodes_by_id, ways_by_id, false, Uint31_Index(0u),
                                 full_attic, new_undeleted, idx_lists);
 
     if (last_id == it->elem.id)
@@ -864,7 +877,15 @@ void compute_new_attic_skeletons
       std::vector< Data_By_Id< Relation_Skeleton >::Entry >::const_iterator last_it = it;
       --last_it;
       if (last_it->idx == Uint31_Index(0u))
-        new_undeleted[it->idx].insert(Attic< Relation_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
+      {
+        Uint31_Index it_idx = it->idx;
+        if (it_idx.val() == 0xff)
+        {
+          Relation_Skeleton skel = it->elem;
+          compute_idx_and_geometry(it_idx, skel, it->meta.timestamp + 1, nodes_by_id, ways_by_id);
+        }
+        new_undeleted[it_idx].insert(Attic< Relation_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
+      }
       continue;
     }
     else
@@ -872,7 +893,15 @@ void compute_new_attic_skeletons
       const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
       const Uint31_Index* idx_attic = binary_pair_search(attic_map_positions, it->elem.id);
       if (!idx && idx_attic)
-        new_undeleted[it->idx].insert(Attic< Relation_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
+      {
+        Uint31_Index it_idx = it->idx;
+        if (it_idx.val() == 0xff)
+        {
+          Relation_Skeleton skel = it->elem;
+          compute_idx_and_geometry(it_idx, skel, it->meta.timestamp + 1, nodes_by_id, ways_by_id);
+        }
+        new_undeleted[it_idx].insert(Attic< Relation_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
+      }
     }
     last_id = it->elem.id;
     
@@ -893,9 +922,9 @@ void compute_new_attic_skeletons
       // Something has gone wrong. Skip this object.
       continue;
 
-    add_intermediate_versions(*it_attic, 0, it->meta.timestamp, nodes_by_id, ways_by_id,
-                              (it->idx.val() == 0 || !geometrically_equal(*it_attic, it->elem)), *idx,
-                              full_attic, new_undeleted, idx_lists);
+    add_intermediate_versions(*it_attic, it->elem, 0, it->meta.timestamp, nodes_by_id, ways_by_id,
+                              (it->idx.val() == 0 || !geometrically_equal(*it_attic, it->elem)),
+                              *idx, full_attic, new_undeleted, idx_lists);
   }
   
   // Add the missing elements that result from node moves only
@@ -904,7 +933,7 @@ void compute_new_attic_skeletons
   {
     for (std::set< Relation_Skeleton >::const_iterator it2 = it->second.begin();
          it2 != it->second.end(); ++it2)
-      add_intermediate_versions(*it2, 0, NOW, nodes_by_id, ways_by_id,
+      add_intermediate_versions(*it2, *it2, 0, NOW, nodes_by_id, ways_by_id,
                                 false, it->first,
                                 full_attic, new_undeleted, idx_lists);
   }
@@ -1256,7 +1285,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
                     *transaction, *attic_settings().RELATION_IDX_LIST);
   
     // Add attic elements
-    update_elements(std::map< Uint31_Index, std::set< Attic< Relation_Skeleton > > >(), new_attic_skeletons,
+    update_elements(std::map< Uint31_Index, std::set< Attic< Relation_Delta > > >(), new_attic_skeletons,
                     *transaction, *attic_settings().RELATIONS);
   
     // Add attic elements

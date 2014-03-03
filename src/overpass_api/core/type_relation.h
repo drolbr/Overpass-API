@@ -23,6 +23,7 @@
 #include "index_computations.h"
 
 #include <cstring>
+#include <iostream>
 #include <map>
 #include <set>
 #include <vector>
@@ -96,9 +97,13 @@ struct Relation_Equal_Id {
 };
 
 
+struct Relation_Delta;
+
+
 struct Relation_Skeleton
 {
   typedef Relation::Id_Type Id_Type;
+  typedef Relation_Delta Delta;
 
   Id_Type id;
   vector< Relation_Entry > members;
@@ -378,7 +383,7 @@ struct Relation_Delta
     }
   }
   
-  Relation_Skeleton expand(const Relation_Skeleton& reference)
+  Relation_Skeleton expand(const Relation_Skeleton& reference) const
   {
     Relation_Skeleton result(id);
 
@@ -396,12 +401,14 @@ struct Relation_Delta
       for (uint i = 0; i < way_idxs_added.size(); ++i)
         result.way_idxs.push_back(way_idxs_added[i].second);  
     }
-    else
+    else if (reference.id == id)
     {
       expand_diff(reference.members, members_removed, members_added, result.members);
       expand_diff(reference.node_idxs, node_idxs_removed, node_idxs_added, result.node_idxs);
       expand_diff(reference.way_idxs, way_idxs_removed, way_idxs_added, result.way_idxs);
     }
+    else
+      std::cerr<<"Error: Delta of relation "<<id.val()<<" applied on relation "<<reference.id.val()<<'\n';
     
     return result;
   }

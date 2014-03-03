@@ -86,6 +86,7 @@ struct Node_Equal_Id {
 struct Node_Skeleton
 {
   typedef Node::Id_Type Id_Type;
+  typedef Node_Skeleton Delta;
 
   Node::Id_Type id;
   uint32 ll_lower;

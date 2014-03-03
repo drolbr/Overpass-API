@@ -363,13 +363,13 @@ int main(int argc, char* args[])
     }
     else if (std::string("--attic-rels-delta") == args[2])
     {
-      Block_Backend< Uint31_Index, Attic< Relation_Skeleton > > db
+      Block_Backend< Uint31_Index, Attic< Relation_Delta > > db
           (transaction.data_index(attic_settings().RELATIONS));
       for (Block_Backend< Uint31_Index, Attic< Relation_Delta > >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
         cout<<hex<<it.index().val()<<'\t'
-            <<dec<<it.object().id.val()<<'\t'
+            <<dec<<it.object().id.val()<<'\t'<<it.object().full<<'\t'
             <<it.object().timestamp<<'\n';
       }
     }

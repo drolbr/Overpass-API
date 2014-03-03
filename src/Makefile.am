@@ -139,6 +139,6 @@ bin_process_augmented_diffs_SOURCES = expat/process_augmented_diffs.cc expat/esc
 bin_process_augmented_diffs_LDADD = libexpatwrapper.la
 
 # Put test-bin here and test-bin/Makefile in configure.ac to activate test-bin
-SUBDIRS = test-bin
+#SUBDIRS = test-bin
 
-#SUBDIRS =
+SUBDIRS =

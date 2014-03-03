@@ -78,6 +78,7 @@ struct Way_Equal_Id {
 struct Way_Skeleton
 {
   typedef Way::Id_Type Id_Type;
+  typedef Way_Skeleton Delta;
 
   Id_Type id;
   vector< Node::Id_Type > nds;
