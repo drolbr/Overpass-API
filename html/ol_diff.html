@@ -1,0 +1,291 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
+  <title>OSM3S on Mapnik via Open Layers</title>
+  <script src="http://openlayers.org/api/2.13.1/OpenLayers.js"></script>
+  <script src="http://overpass-api.de/OpenStreetMap.js"></script>
+  <script src="http://overpass-api.de/overpass.js"></script>
+  <script type="text/javascript">
+      var lat = 50.82;
+      var lon = 7.15;
+      var zoom = 16;
+      var data_url = "http://overpass-api.de/api/interpreter_0750";
+      var map;
+
+      var OSMDiffFormat = OpenLayers.Class(OpenLayers.Format.OSM, {
+        
+          initialize: function() {},
+        
+          read: function(doc)
+          {
+              setStatus("Processing data");
+              clearTextualResults();
+
+              if (typeof doc == "string") {
+                  doc = OpenLayers.Format.XML.prototype.read.apply(this, [doc]);
+              }
+              
+              var feat_list = [];
+              
+              var ways = this.getWays(doc);
+              for (var way_id in ways) {
+                  var way = ways[way_id];
+                  feat_list.push(way);
+              }
+              
+              var nodes = this.getNodes(doc);
+              for (var node_id in nodes) {
+                  var node = nodes[node_id];
+                  feat_list.push(node);
+              }
+              
+              setStatus("Ready");
+              return feat_list;
+          },
+          
+    getNodes: function(doc) {
+        var node_list = doc.getElementsByTagName("node");
+        var nodes = {};
+        for (var i = 0; i < node_list.length; i++) {
+            var node = node_list[i];
+            var id = node.getAttribute("id");
+            var geom = new OpenLayers.Geometry.Point(
+                    node.getAttribute("lon"),
+                    node.getAttribute("lat"))
+            if (this.internalProjection && this.externalProjection) {
+                geom.transform(this.externalProjection,
+                    this.internalProjection);
+            }
+            var state = {};
+            if (node.parentNode.nodeName == "old")
+                state = { state: "old" };
+            else
+                state = { state: "new" };
+                
+            var feat = new OpenLayers.Feature.Vector(geom, state);
+            feat.tags = this.getTags(node);
+            feat.osm_id = parseInt(id);
+            feat.osm_version = parseInt(node.getAttribute("version"));
+            feat.type = "node";
+            feat.fid = "node." + feat.osm_id;
+
+            // Since OSM is topological, we stash the node ID internally.
+            feat.geometry.osm_id = feat.osm_id;
+
+            nodes[id + "." + state.state] = feat;
+            
+            pushTextualResult(feat);
+        }
+        return nodes;
+    },
+          
+    getWays: function(doc) {
+        var way_list = doc.getElementsByTagName("way");
+        var return_ways = {};
+        for (var i = 0; i < way_list.length; i++) {
+            var way = way_list[i];
+            var id = way.getAttribute("id");
+            
+            var node_list = way.getElementsByTagName("nd");
+            var point_list = new Array(node_list.length);
+            for (var j = 0; j < node_list.length; j++) {
+                var geom = new OpenLayers.Geometry.Point(
+                    node_list[j].getAttribute("lon"),
+                    node_list[j].getAttribute("lat"))
+                if (this.internalProjection && this.externalProjection) {
+                    geom.transform(this.externalProjection,
+                        this.internalProjection);
+                }
+                point_list[j] = geom;
+            }
+            var geom = new OpenLayers.Geometry.LineString(point_list);
+            
+            
+            var state = {};
+            if (way.parentNode.nodeName == "old")
+                state = { state: "old" };
+            else
+                state = { state: "new" };
+                
+            var feat = new OpenLayers.Feature.Vector(geom, state);
+            feat.tags = this.getTags(way);
+            feat.osm_id = parseInt(id);
+            feat.osm_version = parseInt(way.getAttribute("version"));
+            feat.type = "way";
+            feat.fid = "way." + feat.osm_id;
+
+            return_ways[id + "." + state.state] = feat;
+            
+            pushTextualResult(feat);
+        }
+        return return_ways;
+    },
+
+          strategy: null,
+
+          CLASS_NAME: "OSMDiffFormat"
+      });
+
+      var layer = false;
+      var layerMapnik = false;
+      function refreshData()
+      {
+          if (layer)
+              map.removeLayer(layer);
+
+          setStatus("Loading data");
+
+          var mindate = fullDate(new Date());
+          var select_mindate = document.getElementById("select_mindate");
+          if (select_mindate)
+              mindate = select_mindate.value;
+
+          //Initialise the vector layer using OpenLayers.Format.OSM
+          var styleMap = new OpenLayers.StyleMap({
+              strokeColor: "blue",
+              strokeOpacity: 0.5,
+              strokeWidth: 6,
+              pointRadius: 10,
+              fillColor: "blue",
+              fillOpacity: 0.25
+          });
+          
+          var lookup = {
+              "old": { strokeColor: "red", fillColor: "red" },
+              "new": { strokeColor: "green", fillColor: "green" }
+          }
+          
+          styleMap.addUniqueValueRules("default", "state", lookup);
+          layer = new OpenLayers.Layer.Vector("Polygon", {
+              strategies: [new OpenLayers.Strategy.Fixed()],
+              protocol: new OpenLayers.Protocol.HTTP({
+                  //url: data_url + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
+                  url: data_url + "?data=[adiff:\"" + mindate + "\"];(node(bbox);way(bbox););out meta geom;&bbox=" + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
+                  format: new OSMDiffFormat()
+              }),
+              styleMap: styleMap,
+              projection: new OpenLayers.Projection("EPSG:4326")
+          });
+
+          map.addLayers([layer]);
+      }
+
+
+      function fullDate(date)
+      {
+          var result = date.getUTCFullYear();
+          result += "-";
+
+          var month = date.getUTCMonth() + 1;
+          result += (month <= 9 ? ("0" + month) : month); 
+
+          result += "-";
+
+          var day = date.getUTCDate();
+          result += (day <= 9 ? ("0" + day) : day); 
+
+          result += "T";
+
+          var hour = date.getUTCHours();
+          result += (hour <= 9 ? ("0" + hour) : hour); 
+
+          result += ":";
+
+          var minute = date.getUTCMinutes();
+          result += (minute <= 9 ? ("0" + minute) : minute); 
+
+          result += ":";
+
+          var second = date.getUTCSeconds();
+          result += (second <= 9 ? ("0" + second) : second); 
+
+          result += "Z";
+
+          return result;
+      }
+
+      function init(){
+          map = new OpenLayers.Map ("map", {
+          controls:[
+              new OpenLayers.Control.Navigation(),
+              new OpenLayers.Control.PanZoomBar(),
+              new OpenLayers.Control.LayerSwitcher(),
+              new OpenLayers.Control.Attribution()],
+              maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
+              maxResolution: 156543.0399,
+              numZoomLevels: 19,
+              units: 'm',
+              projection: new OpenLayers.Projection("EPSG:900913"),
+              displayProjection: new OpenLayers.Projection("EPSG:4326")
+          } );
+
+          layerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
+          map.addLayer(layerMapnik);
+
+          var lonLat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+          map.setCenter (lonLat, zoom);
+
+          var yesterday = new Date(new Date().getTime() - 86400*1000);
+          var select_mindate = document.getElementById("select_mindate");
+          if (select_mindate)
+              select_mindate.value = fullDate(yesterday);
+
+          refreshData();
+      }
+
+      function setStatus(status)
+      {
+          var status_line = document.getElementById("status_line");
+          if (status_line)
+              status_line.innerHTML = status;
+      }
+      
+      function clearTextualResults()
+      {
+          var textual_results = document.getElementById("textual_results");
+          if (textual_results)
+              textual_results.innerHTML = "";
+      }
+
+      function pushTextualResult(feature)
+      {
+          var result = "<br/><br/>";
+          
+          if (feature.data && feature.data.state)
+              result += feature.data.state + " ";
+              
+          if (feature.type)
+              result += feature.type + " ";
+      
+          if (feature.osm_id)
+              result += feature.osm_id + " ";
+              
+          if (feature.tags)
+          {
+              for (tag in feature.tags)
+                  result += "<br/>" + tag + "=" + feature.tags[tag];
+          }
+              
+          var textual_results = document.getElementById("textual_results");
+          if (textual_results)
+              textual_results.innerHTML += result;
+      }
+
+  </script>
+</head>
+<body onload="init()">
+  <div id="control_bar" class="control_bar" style="position:absolute; top:0%; left:0%; height:100%; width:30%; z-index:1">
+    <form action="#" acceptCharset="UTF-8" onsubmit="alert(&nbsp;foo&nbsp;);">
+      <input type="text" id="select_mindate" value=""></input>
+      <input type="submit" value="Fetch data" onclick="refreshData()"></input>
+    </form>  
+    <div id="status_line" class="status_line">Ready</div>
+    <div id="textual_results" class="textual_results"><br/>(no entries)</div>
+  </div>
+  <div id="map" class="smallmap" style="position:absolute; top:0%; left:30%; height:100%; width:70%; z-index:1"></div>
+
+</body>
+</html>
+
+

@@ -449,7 +449,27 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Relation_Skeleton& skel
 	map< uint32, string >::const_iterator it = roles.find(skel.members[i].role);
 	cout<<"    <member type=\""<<MEMBER_TYPE[skel.members[i].type]
 	    <<"\" ref=\""<<skel.members[i].ref.val()
-	    <<"\" role=\""<<escape_xml(it != roles.end() ? it->second : "???")<<"\"/>\n";
+	    <<"\" role=\""<<escape_xml(it != roles.end() ? it->second : "???")<<"\"";
+            
+        if (geometry && skel.members[i].type == Relation_Entry::NODE)
+          cout<<" lat=\""<<fixed<<setprecision(7)
+              <<::lat((*geometry)[i][0].ll_upper, (*geometry)[i][0].ll_lower)
+              <<"\" lon=\""<<fixed<<setprecision(7)
+              <<::lon((*geometry)[i][0].ll_upper, (*geometry)[i][0].ll_lower)<<'\"';
+              
+        if (geometry && skel.members[i].type == Relation_Entry::WAY)
+        {
+          cout<<">\n";
+          for (std::vector< Quad_Coord >::const_iterator it = (*geometry)[i].begin();
+               it != (*geometry)[i].end(); ++it)
+            cout<<"      <nd lat=\""<<fixed<<setprecision(7)
+              <<::lat(it->ll_upper, it->ll_lower)
+              <<"\" lon=\""<<fixed<<setprecision(7)
+              <<::lon(it->ll_upper, it->ll_lower)<<"\"/>\n";
+          cout<<"    </member>\n";
+        }
+        else
+          cout<<"/>\n";
 //         if (geometry)
 //         {
 //           for (uint j = 0; j < (*geometry)[i].size(); ++j)

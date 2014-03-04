@@ -1479,18 +1479,36 @@
   <node id="14011"/>
   <relation id="1332">
     <bounds minlat="10.3010000" minlon="3.0200000" maxlat="10.3020000" maxlon="3.0204000"/>
-    <member type="node" ref="133210" role=""/>
-    <member type="node" ref="133220" role=""/>
-    <member type="way" ref="13321" role=""/>
-    <member type="way" ref="13322" role=""/>
+    <member type="node" ref="133210" role="" lat="10.3010001" lon="3.0200001"/>
+    <member type="node" ref="133220" role="" lat="10.3020000" lon="3.0200000"/>
+    <member type="way" ref="13321" role="">
+      <nd lat="10.3010000" lon="3.0201000"/>
+      <nd lat="10.3010000" lon="3.0202000"/>
+      <nd lat="10.3010000" lon="3.0203000"/>
+      <nd lat="10.3010000" lon="3.0204000"/>
+    </member>
+    <member type="way" ref="13322" role="">
+      <nd lat="10.3020000" lon="3.0201000"/>
+      <nd lat="10.3020000" lon="3.0202000"/>
+      <nd lat="10.3020000" lon="3.0203000"/>
+    </member>
   </relation>
   <node id="14012"/>
   <relation id="1332">
     <bounds minlat="10.3010000" minlon="3.0200000" maxlat="10.3020000" maxlon="3.0204000"/>
-    <member type="node" ref="133210" role=""/>
-    <member type="node" ref="133220" role=""/>
-    <member type="way" ref="13321" role=""/>
-    <member type="way" ref="13322" role=""/>
+    <member type="node" ref="133210" role="" lat="10.3010001" lon="3.0200001"/>
+    <member type="node" ref="133220" role="" lat="10.3020000" lon="3.0200000"/>
+    <member type="way" ref="13321" role="">
+      <nd lat="10.3010000" lon="3.0201000"/>
+      <nd lat="10.3010000" lon="3.0202000"/>
+      <nd lat="10.3010000" lon="3.0203000"/>
+      <nd lat="10.3010000" lon="3.0204000"/>
+    </member>
+    <member type="way" ref="13322" role="">
+      <nd lat="10.3020000" lon="3.0201000"/>
+      <nd lat="10.3020000" lon="3.0202000"/>
+      <nd lat="10.3020000" lon="3.0203000"/>
+    </member>
   </relation>
   <node id="11011"/>
   <relation id="1332">
@@ -1553,20 +1571,38 @@
   <node id="14011"/>
   <relation id="1332">
     <bounds minlat="10.3010000" minlon="3.0200000" maxlat="10.3020000" maxlon="3.0204000"/>
-    <member type="node" ref="133210" role=""/>
-    <member type="node" ref="133220" role=""/>
-    <member type="way" ref="13321" role=""/>
-    <member type="way" ref="13322" role=""/>
+    <member type="node" ref="133210" role="" lat="10.3010001" lon="3.0200001"/>
+    <member type="node" ref="133220" role="" lat="10.3020000" lon="3.0200000"/>
+    <member type="way" ref="13321" role="">
+      <nd lat="10.3010000" lon="3.0201000"/>
+      <nd lat="10.3010000" lon="3.0202000"/>
+      <nd lat="10.3010000" lon="3.0203000"/>
+      <nd lat="10.3010000" lon="3.0204000"/>
+    </member>
+    <member type="way" ref="13322" role="">
+      <nd lat="10.3020000" lon="3.0201000"/>
+      <nd lat="10.3020000" lon="3.0202000"/>
+      <nd lat="10.3020000" lon="3.0203000"/>
+    </member>
     <tag k="foo" v="bar_1332"/>
     <tag k="foo_1332" v="bar"/>
   </relation>
   <node id="14012"/>
   <relation id="1332">
     <bounds minlat="10.3010000" minlon="3.0200000" maxlat="10.3020000" maxlon="3.0204000"/>
-    <member type="node" ref="133210" role=""/>
-    <member type="node" ref="133220" role=""/>
-    <member type="way" ref="13321" role=""/>
-    <member type="way" ref="13322" role=""/>
+    <member type="node" ref="133210" role="" lat="10.3010001" lon="3.0200001"/>
+    <member type="node" ref="133220" role="" lat="10.3020000" lon="3.0200000"/>
+    <member type="way" ref="13321" role="">
+      <nd lat="10.3010000" lon="3.0201000"/>
+      <nd lat="10.3010000" lon="3.0202000"/>
+      <nd lat="10.3010000" lon="3.0203000"/>
+      <nd lat="10.3010000" lon="3.0204000"/>
+    </member>
+    <member type="way" ref="13322" role="">
+      <nd lat="10.3020000" lon="3.0201000"/>
+      <nd lat="10.3020000" lon="3.0202000"/>
+      <nd lat="10.3020000" lon="3.0203000"/>
+    </member>
     <tag k="foo" v="bar_1332"/>
     <tag k="foo_1332" v="bar"/>
   </relation>
@@ -1909,10 +1945,19 @@
   </way>
   <relation id="1332">
     <bounds minlat="10.3010000" minlon="3.0200000" maxlat="10.3020000" maxlon="3.0204000"/>
-    <member type="node" ref="133210" role=""/>
-    <member type="node" ref="133220" role=""/>
-    <member type="way" ref="13321" role=""/>
-    <member type="way" ref="13322" role=""/>
+    <member type="node" ref="133210" role="" lat="10.3010001" lon="3.0200001"/>
+    <member type="node" ref="133220" role="" lat="10.3020000" lon="3.0200000"/>
+    <member type="way" ref="13321" role="">
+      <nd lat="10.3010000" lon="3.0201000"/>
+      <nd lat="10.3010000" lon="3.0202000"/>
+      <nd lat="10.3010000" lon="3.0203000"/>
+      <nd lat="10.3010000" lon="3.0204000"/>
+    </member>
+    <member type="way" ref="13322" role="">
+      <nd lat="10.3020000" lon="3.0201000"/>
+      <nd lat="10.3020000" lon="3.0202000"/>
+      <nd lat="10.3020000" lon="3.0203000"/>
+    </member>
   </relation>
   <node id="14012"/>
   <node id="133210" lat="10.3010001" lon="3.0200001"/>
@@ -1939,10 +1984,19 @@
   </way>
   <relation id="1332">
     <bounds minlat="10.3010000" minlon="3.0200000" maxlat="10.3020000" maxlon="3.0204000"/>
-    <member type="node" ref="133210" role=""/>
-    <member type="node" ref="133220" role=""/>
-    <member type="way" ref="13321" role=""/>
-    <member type="way" ref="13322" role=""/>
+    <member type="node" ref="133210" role="" lat="10.3010001" lon="3.0200001"/>
+    <member type="node" ref="133220" role="" lat="10.3020000" lon="3.0200000"/>
+    <member type="way" ref="13321" role="">
+      <nd lat="10.3010000" lon="3.0201000"/>
+      <nd lat="10.3010000" lon="3.0202000"/>
+      <nd lat="10.3010000" lon="3.0203000"/>
+      <nd lat="10.3010000" lon="3.0204000"/>
+    </member>
+    <member type="way" ref="13322" role="">
+      <nd lat="10.3020000" lon="3.0201000"/>
+      <nd lat="10.3020000" lon="3.0202000"/>
+      <nd lat="10.3020000" lon="3.0203000"/>
+    </member>
   </relation>
   <node id="11011"/>
   <node id="133210" lat="10.3010001" lon="3.0200001"/>
@@ -2155,10 +2209,19 @@
   </way>
   <relation id="1332">
     <bounds minlat="10.3010000" minlon="3.0200000" maxlat="10.3020000" maxlon="3.0204000"/>
-    <member type="node" ref="133210" role=""/>
-    <member type="node" ref="133220" role=""/>
-    <member type="way" ref="13321" role=""/>
-    <member type="way" ref="13322" role=""/>
+    <member type="node" ref="133210" role="" lat="10.3010001" lon="3.0200001"/>
+    <member type="node" ref="133220" role="" lat="10.3020000" lon="3.0200000"/>
+    <member type="way" ref="13321" role="">
+      <nd lat="10.3010000" lon="3.0201000"/>
+      <nd lat="10.3010000" lon="3.0202000"/>
+      <nd lat="10.3010000" lon="3.0203000"/>
+      <nd lat="10.3010000" lon="3.0204000"/>
+    </member>
+    <member type="way" ref="13322" role="">
+      <nd lat="10.3020000" lon="3.0201000"/>
+      <nd lat="10.3020000" lon="3.0202000"/>
+      <nd lat="10.3020000" lon="3.0203000"/>
+    </member>
     <tag k="foo" v="bar_1332"/>
     <tag k="foo_1332" v="bar"/>
   </relation>
@@ -2187,10 +2250,19 @@
   </way>
   <relation id="1332">
     <bounds minlat="10.3010000" minlon="3.0200000" maxlat="10.3020000" maxlon="3.0204000"/>
-    <member type="node" ref="133210" role=""/>
-    <member type="node" ref="133220" role=""/>
-    <member type="way" ref="13321" role=""/>
-    <member type="way" ref="13322" role=""/>
+    <member type="node" ref="133210" role="" lat="10.3010001" lon="3.0200001"/>
+    <member type="node" ref="133220" role="" lat="10.3020000" lon="3.0200000"/>
+    <member type="way" ref="13321" role="">
+      <nd lat="10.3010000" lon="3.0201000"/>
+      <nd lat="10.3010000" lon="3.0202000"/>
+      <nd lat="10.3010000" lon="3.0203000"/>
+      <nd lat="10.3010000" lon="3.0204000"/>
+    </member>
+    <member type="way" ref="13322" role="">
+      <nd lat="10.3020000" lon="3.0201000"/>
+      <nd lat="10.3020000" lon="3.0202000"/>
+      <nd lat="10.3020000" lon="3.0203000"/>
+    </member>
     <tag k="foo" v="bar_1332"/>
     <tag k="foo_1332" v="bar"/>
   </relation>

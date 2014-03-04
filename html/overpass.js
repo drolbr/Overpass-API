@@ -126,12 +126,13 @@
 	      this.strategy = strategy;
 	  },
 	
-	  read: function(doc) {
-	      var feat_list = OpenLayers.Format.OSM.prototype.read.apply(this, [doc]);
-	      
+	  read: function(doc)
+          {
               if (typeof doc == "string") {
-		  doc = OpenLayers.Format.XML.prototype.read.apply(this, [doc]);
-	      }
+                  doc = OpenLayers.Format.XML.prototype.read.apply(this, [doc]);
+              }
+              
+	      var feat_list = OpenLayers.Format.OSM.prototype.read.apply(this, [doc]);
 	      
 	      if (this.strategy)
 	      {

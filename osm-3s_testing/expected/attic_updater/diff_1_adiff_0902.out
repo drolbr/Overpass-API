@@ -155,8 +155,8 @@
 <old>
   <relation id="1311" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.1010000" minlon="3.0100000" maxlat="10.1020000" maxlon="3.0100000"/>
-    <member type="node" ref="131110" role=""/>
-    <member type="node" ref="131120" role=""/>
+    <member type="node" ref="131110" role="" lat="10.1010000" lon="3.0100000"/>
+    <member type="node" ref="131120" role="" lat="10.1020000" lon="3.0100000"/>
     <tag k="foo" v="bar_1311"/>
     <tag k="foo_1311" v="bar"/>
   </relation>
@@ -164,8 +164,8 @@
 <new>
   <relation id="1311" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.1010001" minlon="3.0100000" maxlat="10.1020000" maxlon="3.0100000"/>
-    <member type="node" ref="131110" role=""/>
-    <member type="node" ref="131120" role=""/>
+    <member type="node" ref="131110" role="" lat="10.1010001" lon="3.0100000"/>
+    <member type="node" ref="131120" role="" lat="10.1020000" lon="3.0100000"/>
     <tag k="foo" v="bar_1311"/>
     <tag k="foo_1311" v="bar"/>
   </relation>
@@ -175,8 +175,8 @@
 <old>
   <relation id="1312" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.1010000" minlon="3.0200000" maxlat="10.1020000" maxlon="3.0200000"/>
-    <member type="node" ref="131210" role=""/>
-    <member type="node" ref="131220" role=""/>
+    <member type="node" ref="131210" role="" lat="10.1010000" lon="3.0200000"/>
+    <member type="node" ref="131220" role="" lat="10.1020000" lon="3.0200000"/>
     <tag k="foo" v="bar_1312"/>
     <tag k="foo_1312" v="bar"/>
   </relation>
@@ -184,8 +184,8 @@
 <new>
   <relation id="1312" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.1010000" minlon="3.0200001" maxlat="10.1020000" maxlon="3.0200001"/>
-    <member type="node" ref="131210" role=""/>
-    <member type="node" ref="131220" role=""/>
+    <member type="node" ref="131210" role="" lat="10.1010000" lon="3.0200001"/>
+    <member type="node" ref="131220" role="" lat="10.1020000" lon="3.0200001"/>
     <tag k="foo" v="bar_1312"/>
     <tag k="foo_1312" v="bar"/>
   </relation>
@@ -195,8 +195,8 @@
 <old>
   <relation id="1314" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.1010000" minlon="3.0400000" maxlat="10.1020000" maxlon="3.0400000"/>
-    <member type="node" ref="131410" role=""/>
-    <member type="node" ref="131420" role=""/>
+    <member type="node" ref="131410" role="" lat="10.1010000" lon="3.0400000"/>
+    <member type="node" ref="131420" role="" lat="10.1020000" lon="3.0400000"/>
     <tag k="foo" v="bar_1314"/>
     <tag k="foo_1314" v="bar"/>
   </relation>
@@ -204,8 +204,8 @@
 <new>
   <relation id="1314" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.1010000" minlon="3.0400001" maxlat="10.1020000" maxlon="3.0400001"/>
-    <member type="node" ref="131410" role=""/>
-    <member type="node" ref="131420" role=""/>
+    <member type="node" ref="131410" role="" lat="10.1010000" lon="3.0400001"/>
+    <member type="node" ref="131420" role="" lat="10.1020000" lon="3.0400001"/>
     <tag k="foo" v="bar_1314"/>
     <tag k="foo_1314" v="bar"/>
   </relation>
@@ -330,8 +330,8 @@
 <old>
   <relation id="1411" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.1010000" minlon="4.0100000" maxlat="10.1020000" maxlon="4.0100000"/>
-    <member type="node" ref="141110" role=""/>
-    <member type="node" ref="141120" role=""/>
+    <member type="node" ref="141110" role="" lat="10.1010000" lon="4.0100000"/>
+    <member type="node" ref="141120" role="" lat="10.1020000" lon="4.0100000"/>
     <tag k="foo" v="bar_1411"/>
     <tag k="foo_1411" v="bar"/>
   </relation>
@@ -339,8 +339,8 @@
 <new>
   <relation id="1411" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.1020000" minlon="4.0100000" maxlat="20.1010000" maxlon="4.0100000"/>
-    <member type="node" ref="141110" role=""/>
-    <member type="node" ref="141120" role=""/>
+    <member type="node" ref="141110" role="" lat="20.1010000" lon="4.0100000"/>
+    <member type="node" ref="141120" role="" lat="10.1020000" lon="4.0100000"/>
     <tag k="foo" v="bar_1411"/>
     <tag k="foo_1411" v="bar"/>
   </relation>
@@ -350,8 +350,8 @@
 <old>
   <relation id="1412" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.1010000" minlon="4.0200000" maxlat="10.1020000" maxlon="4.0200000"/>
-    <member type="node" ref="141210" role=""/>
-    <member type="node" ref="141220" role=""/>
+    <member type="node" ref="141210" role="" lat="10.1010000" lon="4.0200000"/>
+    <member type="node" ref="141220" role="" lat="10.1020000" lon="4.0200000"/>
     <tag k="foo" v="bar_1412"/>
     <tag k="foo_1412" v="bar"/>
   </relation>
@@ -361,8 +361,8 @@
 <old>
   <relation id="1414" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.1010000" minlon="4.0400000" maxlat="10.1020000" maxlon="4.0400000"/>
-    <member type="node" ref="141410" role=""/>
-    <member type="node" ref="141420" role=""/>
+    <member type="node" ref="141410" role="" lat="10.1010000" lon="4.0400000"/>
+    <member type="node" ref="141420" role="" lat="10.1020000" lon="4.0400000"/>
     <tag k="foo" v="bar_1414"/>
     <tag k="foo_1414" v="bar"/>
   </relation>
@@ -492,8 +492,8 @@
 <old>
   <relation id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.0010000" minlon="5.0100000" maxlat="10.0020000" maxlon="5.0100000"/>
-    <member type="node" ref="150110" role=""/>
-    <member type="node" ref="150120" role=""/>
+    <member type="node" ref="150110" role="" lat="10.0010000" lon="5.0100000"/>
+    <member type="node" ref="150120" role="" lat="10.0020000" lon="5.0100000"/>
     <tag k="foo" v="bar_1501"/>
     <tag k="foo_1501" v="bar"/>
   </relation>
@@ -503,8 +503,8 @@
 <old>
   <relation id="1502" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.0010000" minlon="5.0200000" maxlat="10.0020000" maxlon="5.0200000"/>
-    <member type="node" ref="150210" role=""/>
-    <member type="node" ref="150220" role=""/>
+    <member type="node" ref="150210" role="" lat="10.0010000" lon="5.0200000"/>
+    <member type="node" ref="150220" role="" lat="10.0020000" lon="5.0200000"/>
     <tag k="foo" v="bar_1502"/>
     <tag k="foo_1502" v="bar"/>
   </relation>
@@ -514,8 +514,8 @@
 <old>
   <relation id="1503" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.0010000" minlon="5.0300000" maxlat="10.0020000" maxlon="5.0300000"/>
-    <member type="node" ref="150310" role=""/>
-    <member type="node" ref="150320" role=""/>
+    <member type="node" ref="150310" role="" lat="10.0010000" lon="5.0300000"/>
+    <member type="node" ref="150320" role="" lat="10.0020000" lon="5.0300000"/>
     <tag k="foo" v="bar_1503"/>
     <tag k="foo_1503" v="bar"/>
   </relation>
@@ -525,8 +525,8 @@
 <old>
   <relation id="1504" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.0010000" minlon="5.0400000" maxlat="10.0020000" maxlon="5.0400000"/>
-    <member type="node" ref="150410" role=""/>
-    <member type="node" ref="150420" role=""/>
+    <member type="node" ref="150410" role="" lat="10.0010000" lon="5.0400000"/>
+    <member type="node" ref="150420" role="" lat="10.0020000" lon="5.0400000"/>
     <tag k="foo" v="bar_1504"/>
     <tag k="foo_1504" v="bar"/>
   </relation>
@@ -536,8 +536,8 @@
 <old>
   <relation id="1505" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.0010000" minlon="5.0500000" maxlat="10.0020000" maxlon="5.0500000"/>
-    <member type="node" ref="150510" role=""/>
-    <member type="node" ref="150520" role=""/>
+    <member type="node" ref="150510" role="" lat="10.0010000" lon="5.0500000"/>
+    <member type="node" ref="150520" role="" lat="10.0020000" lon="5.0500000"/>
     <tag k="foo" v="bar_1505"/>
     <tag k="foo_1505" v="bar"/>
   </relation>
@@ -590,8 +590,8 @@
 <action type="create">
   <relation id="1412" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.1010000" minlon="14.0200000" maxlat="10.1020000" maxlon="14.0200000"/>
-    <member type="node" ref="141210" role=""/>
-    <member type="node" ref="141220" role=""/>
+    <member type="node" ref="141210" role="" lat="10.1010000" lon="14.0200000"/>
+    <member type="node" ref="141220" role="" lat="10.1020000" lon="14.0200000"/>
     <tag k="foo" v="bar_1412"/>
     <tag k="foo_1412" v="bar"/>
   </relation>
@@ -599,8 +599,8 @@
 <action type="create">
   <relation id="1414" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.1010000" minlon="14.0400000" maxlat="10.1020000" maxlon="14.0400000"/>
-    <member type="node" ref="141410" role=""/>
-    <member type="node" ref="141420" role=""/>
+    <member type="node" ref="141410" role="" lat="10.1010000" lon="14.0400000"/>
+    <member type="node" ref="141420" role="" lat="10.1020000" lon="14.0400000"/>
     <tag k="foo" v="bar_1414"/>
     <tag k="foo_1414" v="bar"/>
   </relation>
@@ -2525,8 +2525,8 @@
 <old>
   <relation id="1311">
     <bounds minlat="10.1010000" minlon="3.0100000" maxlat="10.1020000" maxlon="3.0100000"/>
-    <member type="node" ref="131110" role=""/>
-    <member type="node" ref="131120" role=""/>
+    <member type="node" ref="131110" role="" lat="10.1010000" lon="3.0100000"/>
+    <member type="node" ref="131120" role="" lat="10.1020000" lon="3.0100000"/>
     <tag k="foo" v="bar_1311"/>
     <tag k="foo_1311" v="bar"/>
   </relation>
@@ -2534,8 +2534,8 @@
 <new>
   <relation id="1311">
     <bounds minlat="10.1010001" minlon="3.0100000" maxlat="10.1020000" maxlon="3.0100000"/>
-    <member type="node" ref="131110" role=""/>
-    <member type="node" ref="131120" role=""/>
+    <member type="node" ref="131110" role="" lat="10.1010001" lon="3.0100000"/>
+    <member type="node" ref="131120" role="" lat="10.1020000" lon="3.0100000"/>
     <tag k="foo" v="bar_1311"/>
     <tag k="foo_1311" v="bar"/>
   </relation>
@@ -2545,8 +2545,8 @@
 <old>
   <relation id="1312">
     <bounds minlat="10.1010000" minlon="3.0200000" maxlat="10.1020000" maxlon="3.0200000"/>
-    <member type="node" ref="131210" role=""/>
-    <member type="node" ref="131220" role=""/>
+    <member type="node" ref="131210" role="" lat="10.1010000" lon="3.0200000"/>
+    <member type="node" ref="131220" role="" lat="10.1020000" lon="3.0200000"/>
     <tag k="foo" v="bar_1312"/>
     <tag k="foo_1312" v="bar"/>
   </relation>
@@ -2554,8 +2554,8 @@
 <new>
   <relation id="1312">
     <bounds minlat="10.1010000" minlon="3.0200001" maxlat="10.1020000" maxlon="3.0200001"/>
-    <member type="node" ref="131210" role=""/>
-    <member type="node" ref="131220" role=""/>
+    <member type="node" ref="131210" role="" lat="10.1010000" lon="3.0200001"/>
+    <member type="node" ref="131220" role="" lat="10.1020000" lon="3.0200001"/>
     <tag k="foo" v="bar_1312"/>
     <tag k="foo_1312" v="bar"/>
   </relation>
@@ -2565,8 +2565,8 @@
 <old>
   <relation id="1314">
     <bounds minlat="10.1010000" minlon="3.0400000" maxlat="10.1020000" maxlon="3.0400000"/>
-    <member type="node" ref="131410" role=""/>
-    <member type="node" ref="131420" role=""/>
+    <member type="node" ref="131410" role="" lat="10.1010000" lon="3.0400000"/>
+    <member type="node" ref="131420" role="" lat="10.1020000" lon="3.0400000"/>
     <tag k="foo" v="bar_1314"/>
     <tag k="foo_1314" v="bar"/>
   </relation>
@@ -2574,8 +2574,8 @@
 <new>
   <relation id="1314">
     <bounds minlat="10.1010000" minlon="3.0400001" maxlat="10.1020000" maxlon="3.0400001"/>
-    <member type="node" ref="131410" role=""/>
-    <member type="node" ref="131420" role=""/>
+    <member type="node" ref="131410" role="" lat="10.1010000" lon="3.0400001"/>
+    <member type="node" ref="131420" role="" lat="10.1020000" lon="3.0400001"/>
     <tag k="foo" v="bar_1314"/>
     <tag k="foo_1314" v="bar"/>
   </relation>
@@ -2700,8 +2700,8 @@
 <old>
   <relation id="1411">
     <bounds minlat="10.1010000" minlon="4.0100000" maxlat="10.1020000" maxlon="4.0100000"/>
-    <member type="node" ref="141110" role=""/>
-    <member type="node" ref="141120" role=""/>
+    <member type="node" ref="141110" role="" lat="10.1010000" lon="4.0100000"/>
+    <member type="node" ref="141120" role="" lat="10.1020000" lon="4.0100000"/>
     <tag k="foo" v="bar_1411"/>
     <tag k="foo_1411" v="bar"/>
   </relation>
@@ -2709,8 +2709,8 @@
 <new>
   <relation id="1411">
     <bounds minlat="10.1020000" minlon="4.0100000" maxlat="20.1010000" maxlon="4.0100000"/>
-    <member type="node" ref="141110" role=""/>
-    <member type="node" ref="141120" role=""/>
+    <member type="node" ref="141110" role="" lat="20.1010000" lon="4.0100000"/>
+    <member type="node" ref="141120" role="" lat="10.1020000" lon="4.0100000"/>
     <tag k="foo" v="bar_1411"/>
     <tag k="foo_1411" v="bar"/>
   </relation>
@@ -2720,8 +2720,8 @@
 <old>
   <relation id="1412">
     <bounds minlat="10.1010000" minlon="4.0200000" maxlat="10.1020000" maxlon="4.0200000"/>
-    <member type="node" ref="141210" role=""/>
-    <member type="node" ref="141220" role=""/>
+    <member type="node" ref="141210" role="" lat="10.1010000" lon="4.0200000"/>
+    <member type="node" ref="141220" role="" lat="10.1020000" lon="4.0200000"/>
     <tag k="foo" v="bar_1412"/>
     <tag k="foo_1412" v="bar"/>
   </relation>
@@ -2731,8 +2731,8 @@
 <old>
   <relation id="1414">
     <bounds minlat="10.1010000" minlon="4.0400000" maxlat="10.1020000" maxlon="4.0400000"/>
-    <member type="node" ref="141410" role=""/>
-    <member type="node" ref="141420" role=""/>
+    <member type="node" ref="141410" role="" lat="10.1010000" lon="4.0400000"/>
+    <member type="node" ref="141420" role="" lat="10.1020000" lon="4.0400000"/>
     <tag k="foo" v="bar_1414"/>
     <tag k="foo_1414" v="bar"/>
   </relation>
@@ -2862,8 +2862,8 @@
 <old>
   <relation id="1501">
     <bounds minlat="10.0010000" minlon="5.0100000" maxlat="10.0020000" maxlon="5.0100000"/>
-    <member type="node" ref="150110" role=""/>
-    <member type="node" ref="150120" role=""/>
+    <member type="node" ref="150110" role="" lat="10.0010000" lon="5.0100000"/>
+    <member type="node" ref="150120" role="" lat="10.0020000" lon="5.0100000"/>
     <tag k="foo" v="bar_1501"/>
     <tag k="foo_1501" v="bar"/>
   </relation>
@@ -2873,8 +2873,8 @@
 <old>
   <relation id="1502">
     <bounds minlat="10.0010000" minlon="5.0200000" maxlat="10.0020000" maxlon="5.0200000"/>
-    <member type="node" ref="150210" role=""/>
-    <member type="node" ref="150220" role=""/>
+    <member type="node" ref="150210" role="" lat="10.0010000" lon="5.0200000"/>
+    <member type="node" ref="150220" role="" lat="10.0020000" lon="5.0200000"/>
     <tag k="foo" v="bar_1502"/>
     <tag k="foo_1502" v="bar"/>
   </relation>
@@ -2884,8 +2884,8 @@
 <old>
   <relation id="1503">
     <bounds minlat="10.0010000" minlon="5.0300000" maxlat="10.0020000" maxlon="5.0300000"/>
-    <member type="node" ref="150310" role=""/>
-    <member type="node" ref="150320" role=""/>
+    <member type="node" ref="150310" role="" lat="10.0010000" lon="5.0300000"/>
+    <member type="node" ref="150320" role="" lat="10.0020000" lon="5.0300000"/>
     <tag k="foo" v="bar_1503"/>
     <tag k="foo_1503" v="bar"/>
   </relation>
@@ -2895,8 +2895,8 @@
 <old>
   <relation id="1504">
     <bounds minlat="10.0010000" minlon="5.0400000" maxlat="10.0020000" maxlon="5.0400000"/>
-    <member type="node" ref="150410" role=""/>
-    <member type="node" ref="150420" role=""/>
+    <member type="node" ref="150410" role="" lat="10.0010000" lon="5.0400000"/>
+    <member type="node" ref="150420" role="" lat="10.0020000" lon="5.0400000"/>
     <tag k="foo" v="bar_1504"/>
     <tag k="foo_1504" v="bar"/>
   </relation>
@@ -2906,8 +2906,8 @@
 <old>
   <relation id="1505">
     <bounds minlat="10.0010000" minlon="5.0500000" maxlat="10.0020000" maxlon="5.0500000"/>
-    <member type="node" ref="150510" role=""/>
-    <member type="node" ref="150520" role=""/>
+    <member type="node" ref="150510" role="" lat="10.0010000" lon="5.0500000"/>
+    <member type="node" ref="150520" role="" lat="10.0020000" lon="5.0500000"/>
     <tag k="foo" v="bar_1505"/>
     <tag k="foo_1505" v="bar"/>
   </relation>
@@ -2960,8 +2960,8 @@
 <action type="create">
   <relation id="1412">
     <bounds minlat="10.1010000" minlon="14.0200000" maxlat="10.1020000" maxlon="14.0200000"/>
-    <member type="node" ref="141210" role=""/>
-    <member type="node" ref="141220" role=""/>
+    <member type="node" ref="141210" role="" lat="10.1010000" lon="14.0200000"/>
+    <member type="node" ref="141220" role="" lat="10.1020000" lon="14.0200000"/>
     <tag k="foo" v="bar_1412"/>
     <tag k="foo_1412" v="bar"/>
   </relation>
@@ -2969,8 +2969,8 @@
 <action type="create">
   <relation id="1414">
     <bounds minlat="10.1010000" minlon="14.0400000" maxlat="10.1020000" maxlon="14.0400000"/>
-    <member type="node" ref="141410" role=""/>
-    <member type="node" ref="141420" role=""/>
+    <member type="node" ref="141410" role="" lat="10.1010000" lon="14.0400000"/>
+    <member type="node" ref="141420" role="" lat="10.1020000" lon="14.0400000"/>
     <tag k="foo" v="bar_1414"/>
     <tag k="foo_1414" v="bar"/>
   </relation>
