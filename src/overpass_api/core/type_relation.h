@@ -23,7 +23,6 @@
 #include "index_computations.h"
 
 #include <cstring>
-#include <iostream>
 #include <map>
 #include <set>
 #include <vector>
@@ -408,7 +407,7 @@ struct Relation_Delta
       expand_diff(reference.way_idxs, way_idxs_removed, way_idxs_added, result.way_idxs);
     }
     else
-      std::cerr<<"Error: Delta of relation "<<id.val()<<" applied on relation "<<reference.id.val()<<'\n';
+      result.id = 0u;
     
     return result;
   }
