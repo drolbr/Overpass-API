@@ -1,7 +1,7 @@
 <html>
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
-  <title>OSM3S on Mapnik via Open Layers</title>
+  <title>OSM3S Experimental Diff</title>
   <script src="http://openlayers.org/api/2.13.1/OpenLayers.js"></script>
   <script src="http://overpass-api.de/OpenStreetMap.js"></script>
   <script src="http://overpass-api.de/overpass.js"></script>
@@ -13,19 +13,29 @@
       var map;
 
       var OSMDiffFormat = OpenLayers.Class(OpenLayers.Format.OSM, {
+      
+          extent: {},
         
-          initialize: function() {},
+          initialize: function(extent)
+          {
+              this.extent = extent;
+          },
         
           read: function(doc)
           {
               setStatus("Processing data");
-              clearTextualResults();
 
               if (typeof doc == "string") {
                   doc = OpenLayers.Format.XML.prototype.read.apply(this, [doc]);
               }
               
               var feat_list = [];
+              
+              var relations = this.getRelations(doc);
+              for (var relation_id in relations) {
+                  var relation = relations[relation_id];
+                  feat_list.push(relation);
+              }
               
               var ways = this.getWays(doc);
               for (var way_id in ways) {
@@ -42,6 +52,52 @@
               setStatus("Ready");
               return feat_list;
           },
+
+    pointGeomFromNode: function(node)
+    {
+        var geom = new OpenLayers.Geometry.Point(
+            node.getAttribute("lon"),
+            node.getAttribute("lat"));
+        if (this.internalProjection && this.externalProjection)
+            geom.transform(this.externalProjection, this.internalProjection);
+
+        return geom;
+    },
+    
+    isInExtent: function(node)
+    {
+        var geom = new OpenLayers.Geometry.Point(
+            node.getAttribute("lon"),
+            node.getAttribute("lat"));
+            
+        return (geom.x <= this.extent.right && geom.x >= this.extent.left &&
+            geom.y <= this.extent.top && geom.y >= this.extent.bottom);
+    },
+    
+    pointListFromWay: function(node_list)
+    {
+        var lower = 0;
+        while (lower < node_list.length && !this.isInExtent(node_list[lower]))
+            ++lower;
+        if (lower > 0)
+            --lower;
+            
+        var upper = node_list.length;
+        while (upper > 0 && !this.isInExtent(node_list[upper-1]))
+            --upper;
+        if (upper < node_list.length)
+            ++upper;
+        
+        if (upper < lower)
+            return new Array();
+        
+        var point_list = new Array(upper - lower);
+        var pos = 0;
+        for (var j = lower; j < upper; j++)
+            point_list[pos++] = this.pointGeomFromNode(node_list[j]);
+            
+        return point_list;
+    },
           
     getNodes: function(doc) {
         var node_list = doc.getElementsByTagName("node");
@@ -49,13 +105,8 @@
         for (var i = 0; i < node_list.length; i++) {
             var node = node_list[i];
             var id = node.getAttribute("id");
-            var geom = new OpenLayers.Geometry.Point(
-                    node.getAttribute("lon"),
-                    node.getAttribute("lat"))
-            if (this.internalProjection && this.externalProjection) {
-                geom.transform(this.externalProjection,
-                    this.internalProjection);
-            }
+            var geom = this.pointGeomFromNode(node);
+
             var state = {};
             if (node.parentNode.nodeName == "old")
                 state = { state: "old" };
@@ -72,7 +123,8 @@
             // Since OSM is topological, we stash the node ID internally.
             feat.geometry.osm_id = feat.osm_id;
 
-            nodes[id + "." + state.state] = feat;
+            if (this.isInExtent(node))
+                nodes[id + "." + state.state] = feat;
             
             pushTextualResult(feat);
         }
@@ -86,20 +138,8 @@
             var way = way_list[i];
             var id = way.getAttribute("id");
             
-            var node_list = way.getElementsByTagName("nd");
-            var point_list = new Array(node_list.length);
-            for (var j = 0; j < node_list.length; j++) {
-                var geom = new OpenLayers.Geometry.Point(
-                    node_list[j].getAttribute("lon"),
-                    node_list[j].getAttribute("lat"))
-                if (this.internalProjection && this.externalProjection) {
-                    geom.transform(this.externalProjection,
-                        this.internalProjection);
-                }
-                point_list[j] = geom;
-            }
-            var geom = new OpenLayers.Geometry.LineString(point_list);
-            
+            var way_nodes = this.pointListFromWay(way.getElementsByTagName("nd"));
+            var geom = new OpenLayers.Geometry.LineString(way_nodes);
             
             var state = {};
             if (way.parentNode.nodeName == "old")
@@ -114,11 +154,54 @@
             feat.type = "way";
             feat.fid = "way." + feat.osm_id;
 
-            return_ways[id + "." + state.state] = feat;
+            if (way_nodes.length >= 2)
+                return_ways[id + "." + state.state] = feat;
             
             pushTextualResult(feat);
         }
         return return_ways;
+    },
+
+    getRelations: function(doc) {
+        var relation_list = doc.getElementsByTagName("relation");
+        var return_relations = {};
+        for (var i = 0; i < relation_list.length; i++) {
+            var relation = relation_list[i];
+            var id = relation.getAttribute("id");
+            
+            var member_list = relation.getElementsByTagName("member");
+            var geom = new OpenLayers.Geometry.Collection();
+                for (var j = 0; j < member_list.length; j++)
+                {
+                    if (member_list[j].getAttribute("type") == "node" && this.isInExtent(member_list[j]))
+                        geom.addComponent(this.pointGeomFromNode(member_list[j]));
+                    else if (member_list[j].getAttribute("type") == "way")
+                    {
+                        var way_nodes = this.pointListFromWay(member_list[j].getElementsByTagName("nd"));
+                        if (way_nodes.length >= 2)
+                            geom.addComponent(new OpenLayers.Geometry.LineString(way_nodes));
+                    }
+                }
+            
+            var state = {};
+            if (relation.parentNode.nodeName == "old")
+                state = { state: "old" };
+            else
+                state = { state: "new" };
+                
+            var feat = new OpenLayers.Feature.Vector(geom, state);
+            feat.tags = this.getTags(relation);
+            feat.osm_id = parseInt(id);
+            feat.osm_version = parseInt(relation.getAttribute("version"));
+            feat.type = "relation";
+            feat.fid = "relation." + feat.osm_id;
+
+            if (geom.components.length > 0)
+                return_relations[id + "." + state.state] = feat;
+            
+            pushTextualResult(feat);
+        }
+        return return_relations;
     },
 
           strategy: null,
@@ -126,12 +209,19 @@
           CLASS_NAME: "OSMDiffFormat"
       });
 
-      var layer = false;
+      var layerNodes = false;
+      var layerWays = false;
+      var layerRelations = false;
       var layerMapnik = false;
       function refreshData()
       {
-          if (layer)
-              map.removeLayer(layer);
+          if (layerNodes)
+              map.removeLayer(layerNodes);
+          if (layerWays)
+              map.removeLayer(layerWays);
+          if (layerRelations)
+              map.removeLayer(layerRelations);
+          clearTextualResults();
 
           setStatus("Loading data");
 
@@ -156,18 +246,38 @@
           }
           
           styleMap.addUniqueValueRules("default", "state", lookup);
-          layer = new OpenLayers.Layer.Vector("Polygon", {
+//           layerNodes = new OpenLayers.Layer.Vector("Polygon", {
+//               strategies: [new OpenLayers.Strategy.Fixed()],
+//               protocol: new OpenLayers.Protocol.HTTP({
+//                   //url: data_url + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
+//                   url: data_url + "?data=[adiff:\"" + mindate + "\"];node(bbox);out meta geom;&bbox=" + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
+//                   format: new OSMDiffFormat(layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326"))
+//               }),
+//               styleMap: styleMap,
+//               projection: new OpenLayers.Projection("EPSG:4326")
+//           });
+//           layerWays = new OpenLayers.Layer.Vector("Polygon", {
+//               strategies: [new OpenLayers.Strategy.Fixed()],
+//               protocol: new OpenLayers.Protocol.HTTP({
+//                   //url: data_url + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
+//                   url: data_url + "?data=[adiff:\"" + mindate + "\"];way(bbox);out meta geom;&bbox=" + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
+//                   format: new OSMDiffFormat(layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326"))
+//               }),
+//               styleMap: styleMap,
+//               projection: new OpenLayers.Projection("EPSG:4326")
+//           });
+          layerRelations = new OpenLayers.Layer.Vector("Polygon", {
               strategies: [new OpenLayers.Strategy.Fixed()],
               protocol: new OpenLayers.Protocol.HTTP({
                   //url: data_url + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
-                  url: data_url + "?data=[adiff:\"" + mindate + "\"];(node(bbox);way(bbox););out meta geom;&bbox=" + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
-                  format: new OSMDiffFormat()
+                  url: data_url + "?data=[adiff:\"" + mindate + "\"];(node(bbox);way(bbox);relation(bbox););out meta geom;&bbox=" + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
+                  format: new OSMDiffFormat(layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326"))
               }),
               styleMap: styleMap,
               projection: new OpenLayers.Projection("EPSG:4326")
           });
 
-          map.addLayers([layer]);
+          map.addLayers([/*layerNodes, layerWays,*/ layerRelations]);
       }
 
 
