@@ -729,6 +729,8 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
     {
       if (*token == "ids")
 	mode = "ids_only";
+      else if (*token == "tags")
+        mode = "tags";
       else if (*token == "skel")
 	mode = "skeleton";
       else if (*token == "body")

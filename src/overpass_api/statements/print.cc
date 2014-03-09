@@ -70,15 +70,17 @@ Print_Statement::Print_Statement
     mode = Print_Target::PRINT_IDS;
   else if (attributes["mode"] == "skeleton")
     mode = Print_Target::PRINT_IDS
-        |Print_Target::PRINT_COORDS|Print_Target::PRINT_NDS|Print_Target::PRINT_MEMBERS;
+        | Print_Target::PRINT_COORDS | Print_Target::PRINT_NDS | Print_Target::PRINT_MEMBERS;
+  else if (attributes["mode"] == "tags")
+    mode = Print_Target::PRINT_IDS | Print_Target::PRINT_TAGS;
   else if (attributes["mode"] == "body")
     mode = Print_Target::PRINT_IDS
-        |Print_Target::PRINT_COORDS|Print_Target::PRINT_NDS|Print_Target::PRINT_MEMBERS
-	|Print_Target::PRINT_TAGS;
+        | Print_Target::PRINT_COORDS | Print_Target::PRINT_NDS | Print_Target::PRINT_MEMBERS
+	| Print_Target::PRINT_TAGS;
   else if (attributes["mode"] == "meta")
     mode = Print_Target::PRINT_IDS
-        |Print_Target::PRINT_COORDS|Print_Target::PRINT_NDS|Print_Target::PRINT_MEMBERS
-	|Print_Target::PRINT_TAGS|Print_Target::PRINT_VERSION|Print_Target::PRINT_META;
+        | Print_Target::PRINT_COORDS | Print_Target::PRINT_NDS | Print_Target::PRINT_MEMBERS
+	| Print_Target::PRINT_TAGS | Print_Target::PRINT_VERSION | Print_Target::PRINT_META;
   else
   {
     mode = 0;

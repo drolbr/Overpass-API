@@ -325,6 +325,23 @@ node(14012);out ids;
 rel(1332);out ids qt geom;
 
 node(11011);out ids;
+rel(1332);out tags;
+node(11012);out ids;
+rel(1332);out tags qt;
+node(12011);out ids;
+rel(1332);out tags center;
+node(12012);out ids;
+rel(1332);out tags qt center;
+node(13011);out ids;
+rel(1332);out tags bb;
+node(13012);out ids;
+rel(1332);out tags qt bb;
+node(14011);out ids;
+rel(1332);out tags geom;
+node(14012);out ids;
+rel(1332);out tags qt geom;
+
+node(11011);out ids;
 rel(1332);out skel;
 node(11012);out ids;
 rel(1332);out skel qt;
@@ -374,6 +391,23 @@ node(14011);out ids;
 (rel(1332);>;);out ids geom;
 node(14012);out ids;
 (rel(1332);>;);out ids qt geom;
+
+node(11011);out ids;
+(rel(1332);>;);out tags;
+node(11012);out ids;
+(rel(1332);>;);out tags qt;
+node(12011);out ids;
+(rel(1332);>;);out tags center;
+node(12012);out ids;
+(rel(1332);>;);out tags qt center;
+node(13011);out ids;
+(rel(1332);>;);out tags bb;
+node(13012);out ids;
+(rel(1332);>;);out tags qt bb;
+node(14011);out ids;
+(rel(1332);>;);out tags geom;
+node(14012);out ids;
+(rel(1332);>;);out tags qt geom;
 
 node(11011);out ids;
 (rel(1332);>;);out skel;

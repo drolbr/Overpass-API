@@ -1353,6 +1353,52 @@
   </relation>
   <node id="11011"/>
   <relation id="1332">
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
+  </relation>
+  <node id="11012"/>
+  <relation id="1332">
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
+  </relation>
+  <node id="12011"/>
+  <relation id="1332">
+    <center lat="10.3015000" lon="3.0201500"/>
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
+  </relation>
+  <node id="12012"/>
+  <relation id="1332">
+    <center lat="10.3015000" lon="3.0201500"/>
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
+  </relation>
+  <node id="13011"/>
+  <relation id="1332">
+    <bounds minlat="10.3010000" minlon="3.0200000" maxlat="10.3020000" maxlon="3.0203000"/>
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
+  </relation>
+  <node id="13012"/>
+  <relation id="1332">
+    <bounds minlat="10.3010000" minlon="3.0200000" maxlat="10.3020000" maxlon="3.0203000"/>
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
+  </relation>
+  <node id="14011"/>
+  <relation id="1332">
+    <bounds minlat="10.3010000" minlon="3.0200000" maxlat="10.3020000" maxlon="3.0203000"/>
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
+  </relation>
+  <node id="14012"/>
+  <relation id="1332">
+    <bounds minlat="10.3010000" minlon="3.0200000" maxlat="10.3020000" maxlon="3.0203000"/>
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
+  </relation>
+  <node id="11011"/>
+  <relation id="1332">
     <member type="node" ref="133210" role=""/>
     <member type="node" ref="133220" role=""/>
     <member type="way" ref="13321" role=""/>
@@ -1642,6 +1688,148 @@
   </way>
   <relation id="1332">
     <bounds minlat="10.3010000" minlon="3.0200000" maxlat="10.3020000" maxlon="3.0203000"/>
+  </relation>
+  <node id="11011"/>
+  <node id="133211"/>
+  <node id="133212"/>
+  <node id="133213"/>
+  <node id="133220"/>
+  <node id="133221"/>
+  <node id="133222"/>
+  <node id="133210"/>
+  <way id="13321"/>
+  <way id="13322"/>
+  <relation id="1332">
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
+  </relation>
+  <node id="11012"/>
+  <node id="133211"/>
+  <node id="133212"/>
+  <node id="133213"/>
+  <node id="133220"/>
+  <node id="133221"/>
+  <node id="133222"/>
+  <node id="133210"/>
+  <way id="13321"/>
+  <way id="13322"/>
+  <relation id="1332">
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
+  </relation>
+  <node id="12011"/>
+  <node id="133211" lat="10.3010000" lon="3.0201000"/>
+  <node id="133212" lat="10.3010000" lon="3.0202000"/>
+  <node id="133213" lat="10.3010000" lon="3.0203000"/>
+  <node id="133220" lat="10.3020000" lon="3.0200000"/>
+  <node id="133221" lat="10.3020000" lon="3.0201000"/>
+  <node id="133222" lat="10.3020000" lon="3.0202000"/>
+  <node id="133210" lat="10.3010000" lon="3.0200001"/>
+  <way id="13321">
+    <center lat="10.3010000" lon="3.0202000"/>
+  </way>
+  <way id="13322">
+    <center lat="10.3020000" lon="3.0201500"/>
+  </way>
+  <relation id="1332">
+    <center lat="10.3015000" lon="3.0201500"/>
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
+  </relation>
+  <node id="12012"/>
+  <node id="133211" lat="10.3010000" lon="3.0201000"/>
+  <node id="133212" lat="10.3010000" lon="3.0202000"/>
+  <node id="133213" lat="10.3010000" lon="3.0203000"/>
+  <node id="133220" lat="10.3020000" lon="3.0200000"/>
+  <node id="133221" lat="10.3020000" lon="3.0201000"/>
+  <node id="133222" lat="10.3020000" lon="3.0202000"/>
+  <node id="133210" lat="10.3010000" lon="3.0200001"/>
+  <way id="13321">
+    <center lat="10.3010000" lon="3.0202000"/>
+  </way>
+  <way id="13322">
+    <center lat="10.3020000" lon="3.0201500"/>
+  </way>
+  <relation id="1332">
+    <center lat="10.3015000" lon="3.0201500"/>
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
+  </relation>
+  <node id="13011"/>
+  <node id="133211" lat="10.3010000" lon="3.0201000"/>
+  <node id="133212" lat="10.3010000" lon="3.0202000"/>
+  <node id="133213" lat="10.3010000" lon="3.0203000"/>
+  <node id="133220" lat="10.3020000" lon="3.0200000"/>
+  <node id="133221" lat="10.3020000" lon="3.0201000"/>
+  <node id="133222" lat="10.3020000" lon="3.0202000"/>
+  <node id="133210" lat="10.3010000" lon="3.0200001"/>
+  <way id="13321">
+    <bounds minlat="10.3010000" minlon="3.0201000" maxlat="10.3010000" maxlon="3.0203000"/>
+  </way>
+  <way id="13322">
+    <bounds minlat="10.3020000" minlon="3.0201000" maxlat="10.3020000" maxlon="3.0202000"/>
+  </way>
+  <relation id="1332">
+    <bounds minlat="10.3010000" minlon="3.0200000" maxlat="10.3020000" maxlon="3.0203000"/>
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
+  </relation>
+  <node id="13012"/>
+  <node id="133211" lat="10.3010000" lon="3.0201000"/>
+  <node id="133212" lat="10.3010000" lon="3.0202000"/>
+  <node id="133213" lat="10.3010000" lon="3.0203000"/>
+  <node id="133220" lat="10.3020000" lon="3.0200000"/>
+  <node id="133221" lat="10.3020000" lon="3.0201000"/>
+  <node id="133222" lat="10.3020000" lon="3.0202000"/>
+  <node id="133210" lat="10.3010000" lon="3.0200001"/>
+  <way id="13321">
+    <bounds minlat="10.3010000" minlon="3.0201000" maxlat="10.3010000" maxlon="3.0203000"/>
+  </way>
+  <way id="13322">
+    <bounds minlat="10.3020000" minlon="3.0201000" maxlat="10.3020000" maxlon="3.0202000"/>
+  </way>
+  <relation id="1332">
+    <bounds minlat="10.3010000" minlon="3.0200000" maxlat="10.3020000" maxlon="3.0203000"/>
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
+  </relation>
+  <node id="14011"/>
+  <node id="133211" lat="10.3010000" lon="3.0201000"/>
+  <node id="133212" lat="10.3010000" lon="3.0202000"/>
+  <node id="133213" lat="10.3010000" lon="3.0203000"/>
+  <node id="133220" lat="10.3020000" lon="3.0200000"/>
+  <node id="133221" lat="10.3020000" lon="3.0201000"/>
+  <node id="133222" lat="10.3020000" lon="3.0202000"/>
+  <node id="133210" lat="10.3010000" lon="3.0200001"/>
+  <way id="13321">
+    <bounds minlat="10.3010000" minlon="3.0201000" maxlat="10.3010000" maxlon="3.0203000"/>
+  </way>
+  <way id="13322">
+    <bounds minlat="10.3020000" minlon="3.0201000" maxlat="10.3020000" maxlon="3.0202000"/>
+  </way>
+  <relation id="1332">
+    <bounds minlat="10.3010000" minlon="3.0200000" maxlat="10.3020000" maxlon="3.0203000"/>
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
+  </relation>
+  <node id="14012"/>
+  <node id="133211" lat="10.3010000" lon="3.0201000"/>
+  <node id="133212" lat="10.3010000" lon="3.0202000"/>
+  <node id="133213" lat="10.3010000" lon="3.0203000"/>
+  <node id="133220" lat="10.3020000" lon="3.0200000"/>
+  <node id="133221" lat="10.3020000" lon="3.0201000"/>
+  <node id="133222" lat="10.3020000" lon="3.0202000"/>
+  <node id="133210" lat="10.3010000" lon="3.0200001"/>
+  <way id="13321">
+    <bounds minlat="10.3010000" minlon="3.0201000" maxlat="10.3010000" maxlon="3.0203000"/>
+  </way>
+  <way id="13322">
+    <bounds minlat="10.3020000" minlon="3.0201000" maxlat="10.3020000" maxlon="3.0202000"/>
+  </way>
+  <relation id="1332">
+    <bounds minlat="10.3010000" minlon="3.0200000" maxlat="10.3020000" maxlon="3.0203000"/>
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
   </relation>
   <node id="11011"/>
   <node id="133211" lat="10.3010000" lon="3.0201000"/>
