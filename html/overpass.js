@@ -169,7 +169,7 @@ var OSMDiffFormat = OpenLayers.Class(OpenLayers.Format.OSM, {
         if (options && options.setStatus)
             this.setStatus = options.setStatus;
         if (options && options.pushTextualResult)
-            this.setStatus = options.pushTextualResult;
+            this.pushTextualResult = options.pushTextualResult;
     },
         
     read: function(doc)
@@ -199,7 +199,7 @@ var OSMDiffFormat = OpenLayers.Class(OpenLayers.Format.OSM, {
 
     isInExtent: function(node)
     {
-        if (extent)
+        if (this.extent)
         {
             var geom = new OpenLayers.Geometry.Point(
                 node.getAttribute("lon"), node.getAttribute("lat"));
