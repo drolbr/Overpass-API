@@ -52,7 +52,8 @@ Print_Statement::Print_Statement
     (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
     : Statement(line_number_),
       mode(0), order(order_by_id), limit(numeric_limits< unsigned int >::max()),
-      output_handle(0), way_geometry_store(0), attic_way_geometry_store(0), relation_geometry_store(0), attic_relation_geometry_store(0), collection_print_target(0), collection_mode(dont_collect)
+      output_handle(0), way_geometry_store(0), attic_way_geometry_store(0), relation_geometry_store(0), attic_relation_geometry_store(0), collection_print_target(0), collection_mode(dont_collect),
+      south(1.0), north(0.0), west(0.0), east(0.0)
 {
   map< string, string > attributes;
   
@@ -61,6 +62,10 @@ Print_Statement::Print_Statement
   attributes["order"] = "id";
   attributes["limit"] = "";
   attributes["geometry"] = "skeleton";
+  attributes["s"] = "";
+  attributes["n"] = "";
+  attributes["w"] = "";
+  attributes["e"] = "";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
@@ -118,6 +123,52 @@ Print_Statement::Print_Statement
         <<" the only allowed values are \"skeleton\", \"full\", \"bounds\", or \"center\".";
     add_static_error(temp.str());
   }
+  
+  south = atof(attributes["s"].c_str());
+  if ((south < -90.0) || (south > 90.0))
+  {
+    ostringstream temp;
+    temp<<"For the attribute \"s\" of the element \"print\""
+    <<" the only allowed values are floats between -90.0 and 90.0.";
+    add_static_error(temp.str());
+  }
+  north = atof(attributes["n"].c_str());
+  if ((north < -90.0) || (north > 90.0))
+  {
+    ostringstream temp;
+    temp<<"For the attribute \"n\" of the element \"print\""
+    <<" the only allowed values are floats between -90.0 and 90.0.";
+    add_static_error(temp.str());
+  }
+  if (north < south)
+  {
+    ostringstream temp;
+    temp<<"The value of attribute \"n\" of the element \"print\""
+    <<" must always be greater or equal than the value of attribute \"s\".";
+    add_static_error(temp.str());
+  }
+  west = atof(attributes["w"].c_str());
+  if ((west < -180.0) || (west > 180.0))
+  {
+    ostringstream temp;
+    temp<<"For the attribute \"w\" of the element \"print\""
+    <<" the only allowed values are floats between -180.0 and 180.0.";
+    add_static_error(temp.str());
+  }
+  east = atof(attributes["e"].c_str());
+  if ((east < -180.0) || (east > 180.0))
+  {
+    ostringstream temp;
+    temp<<"For the attribute \"e\" of the element \"print\""
+    <<" the only allowed values are floats between -180.0 and 180.0.";
+    add_static_error(temp.str());
+  }
+  if ((attributes["n"] == "") && (attributes["s"] == "") &&
+      (attributes["w"] == "") && (attributes["e"] == ""))
+  {
+    south = 1.0;
+    north = 0.0;
+  }
 }
 
 
@@ -138,12 +189,15 @@ public:
   {
     for (std::vector< Quad_Coord >::const_iterator it = geometry.begin(); it != geometry.end(); ++it)
     {
-      double lat = ::lat(it->ll_upper, it->ll_lower);
-      double lon = ::lon(it->ll_upper, it->ll_lower);
-      min_lat = std::min(min_lat, lat);
-      max_lat = std::max(max_lat, lat);
-      min_lon = std::min(min_lon, lon);
-      max_lon = std::max(max_lon, lon);
+      if (it->ll_upper != 0 || it->ll_lower != 0)
+      {
+        double lat = ::lat(it->ll_upper, it->ll_lower);
+        double lon = ::lon(it->ll_upper, it->ll_lower);
+        min_lat = std::min(min_lat, lat);
+        max_lat = std::max(max_lat, lat);
+        min_lon = std::min(min_lon, lon);
+        max_lon = std::max(max_lon, lon);
+      }
     }
   }
   
@@ -155,29 +209,43 @@ public:
     {
       for (std::vector< Quad_Coord >::const_iterator it2 = it->begin(); it2 != it->end(); ++it2)
       {
-        double lat = ::lat(it2->ll_upper, it2->ll_lower);
-        double lon = ::lon(it2->ll_upper, it2->ll_lower);
-        min_lat = std::min(min_lat, lat);
-        max_lat = std::max(max_lat, lat);
-        min_lon = std::min(min_lon, lon);
-        max_lon = std::max(max_lon, lon);
+        if (it2->ll_upper != 0 || it2->ll_lower != 0)
+        {
+          double lat = ::lat(it2->ll_upper, it2->ll_lower);
+          double lon = ::lon(it2->ll_upper, it2->ll_lower);
+          min_lat = std::min(min_lat, lat);
+          max_lat = std::max(max_lat, lat);
+          min_lon = std::min(min_lon, lon);
+          max_lon = std::max(max_lon, lon);
+        }
       }
     }
   }
   
   const std::pair< Quad_Coord, Quad_Coord* >& bounds()
   {
-    max = Quad_Coord(::ll_upper_(max_lat, max_lon), ::ll_lower(max_lat, max_lon));
-    bounds_ = make_pair(Quad_Coord(::ll_upper_(min_lat, min_lon), ::ll_lower(min_lat, min_lon)), &max);
+    if (max_lat > -100.0)
+    {
+      max = Quad_Coord(::ll_upper_(max_lat, max_lon), ::ll_lower(max_lat, max_lon));
+      bounds_ = make_pair(Quad_Coord(::ll_upper_(min_lat, min_lon), ::ll_lower(min_lat, min_lon)), &max);
+    }
+    else
+    {
+      max = Quad_Coord(0u, 0u);
+      bounds_ = make_pair(Quad_Coord(0u, 0u), &max);
+    }
     return bounds_;
   }
   
   const std::pair< Quad_Coord, Quad_Coord* >& center()
   {
-    center_ = make_pair(Quad_Coord(
-        ::ll_upper_((min_lat + max_lat) / 2, (min_lon + max_lon) / 2),
-        ::ll_lower((min_lat + max_lat) / 2, (min_lon + max_lon) / 2)
-        ), (Quad_Coord*)0);
+    if (max_lat > -100.0)
+      center_ = make_pair(Quad_Coord(
+          ::ll_upper_((min_lat + max_lat) / 2, (min_lon + max_lon) / 2),
+          ::ll_lower((min_lat + max_lat) / 2, (min_lon + max_lon) / 2)
+          ), (Quad_Coord*)0);
+    else
+      center_ = make_pair(Quad_Coord(0u, 0u), (Quad_Coord*)0);
     return center_;
   }
 
@@ -920,7 +988,10 @@ Relation_Geometry_Store::~Relation_Geometry_Store()
 
 
 Relation_Geometry_Store::Relation_Geometry_Store
-    (const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations, const Statement& query, Resource_Manager& rman)
+    (const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
+     const Statement& query, Resource_Manager& rman,
+     double south_, double north_, double west_, double east_)
+    : south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
 {
   // Retrieve all nodes referred by the relations.
   std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
@@ -956,7 +1027,9 @@ Relation_Geometry_Store::Relation_Geometry_Store
 
 Relation_Geometry_Store::Relation_Geometry_Store
     (const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations, uint64 timestamp,
-     const Statement& query, Resource_Manager& rman)
+     const Statement& query, Resource_Manager& rman,
+     double south_, double north_, double west_, double east_)
+    : south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
 {
   // Retrieve all nodes referred by the relations.
   std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
@@ -1009,6 +1082,18 @@ Relation_Geometry_Store::Relation_Geometry_Store
 }
 
 
+bool Relation_Geometry_Store::matches_bbox(const Node& node) const
+{
+  if (north < south)
+    return true;
+  uint32 lat(::ilat(node.index, node.ll_lower_));
+  int32 lon(::ilon(node.index, node.ll_lower_));
+  return (lat >= south && lat <= north &&
+     ((lon >= west && lon <= east)
+            || (east < west && (lon >= west || lon <= east))));
+}
+
+
 std::vector< std::vector< Quad_Coord > > Relation_Geometry_Store::get_geometry
     (const Relation_Skeleton& relation) const
 {
@@ -1019,8 +1104,8 @@ std::vector< std::vector< Quad_Coord > > Relation_Geometry_Store::get_geometry
     if (it->type == Relation_Entry::NODE)
     {
       const Node* node = binary_search_for_id(nodes, it->ref);
-      if (node == 0)
-        result.push_back(std::vector< Quad_Coord >());
+      if (node == 0 || !matches_bbox(*node))
+        result.push_back(std::vector< Quad_Coord >(1, Quad_Coord(0u, 0u)));
       else
         result.push_back(std::vector< Quad_Coord >(1, Quad_Coord(node->index, node->ll_lower_)));
     }
@@ -1419,10 +1504,13 @@ void Print_Statement::execute(Resource_Manager& rman)
         (mit->second.attic_ways, rman.get_desired_timestamp(), *this, rman);
         
     delete relation_geometry_store;
-    relation_geometry_store = new Relation_Geometry_Store(mit->second.relations, *this, rman);
+    relation_geometry_store = new Relation_Geometry_Store(
+        mit->second.relations, *this, rman,
+        south, north, west, east);
     delete attic_relation_geometry_store;
-    attic_relation_geometry_store = new Relation_Geometry_Store
-        (mit->second.attic_relations, rman.get_desired_timestamp(), *this, rman);
+    attic_relation_geometry_store = new Relation_Geometry_Store(
+        mit->second.attic_relations, rman.get_desired_timestamp(), *this, rman,
+        south, north, west, east);
   }
 
   if (mode & Print_Target::PRINT_TAGS)

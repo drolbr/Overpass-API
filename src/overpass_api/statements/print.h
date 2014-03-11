@@ -82,10 +82,12 @@ class Relation_Geometry_Store
 public:
   Relation_Geometry_Store
       (const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
-      const Statement& query, Resource_Manager& rman);
+      const Statement& query, Resource_Manager& rman,
+      double south_, double north_, double west_, double east_);
   Relation_Geometry_Store
       (const map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& relations, uint64 timestamp,
-      const Statement& query, Resource_Manager& rman);
+      const Statement& query, Resource_Manager& rman,
+      double south_, double north_, double west_, double east_);
       
   ~Relation_Geometry_Store();
   
@@ -96,6 +98,13 @@ private:
   std::vector< Node > nodes;
   std::vector< Way_Skeleton > ways;
   Way_Geometry_Store* way_geometry_store;
+  
+  uint32 south;
+  uint32 north;
+  int32 west;
+  int32 east;
+  
+  bool matches_bbox(const Node& node) const;
 };
 
 
@@ -159,6 +168,11 @@ class Print_Statement : public Statement
     Relation_Geometry_Store* attic_relation_geometry_store;
     Collection_Print_Target* collection_print_target;
     enum { dont_collect, collect_lhs, collect_rhs } collection_mode;
+    
+    double south;
+    double north;
+    double west;
+    double east;
 
     template< class Index, class Object >
     void tags_quadtile
