@@ -1041,7 +1041,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
     : south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
 {
   std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
-  if (north < south)
+  if (south <= north)
     get_ranges_32(south_, north_, west_, east_).swap(node_ranges);
   
   // Retrieve all nodes referred by the relations.
@@ -1069,7 +1069,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
   sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
       
   std::set< std::pair< Uint31_Index, Uint31_Index > > way_ranges;
-  if (north < south)
+  if (south <= north)
     calc_parents(node_ranges).swap(way_ranges);
   
   // Retrieve all ways referred by the relations.
@@ -1149,7 +1149,7 @@ std::vector< std::vector< Quad_Coord > > Relation_Geometry_Store::get_geometry
           bool next_matches = matches_bbox(result.back()[1].ll_upper, result.back()[1].ll_lower);
           if (!this_matches && !next_matches)
             result.back()[0] = Quad_Coord(0u, 0u);
-          for (uint i = 1; i < result.size() - 2; ++i)
+          for (uint i = 1; i < result.back().size() - 1; ++i)
           {
             bool last_matches = this_matches;
             this_matches = next_matches;

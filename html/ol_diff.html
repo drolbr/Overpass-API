@@ -48,7 +48,7 @@
               strategies: [new OpenLayers.Strategy.Fixed()],
               protocol: new OpenLayers.Protocol.HTTP({
                   //url: data_url + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
-                  url: data_url + "?data=[adiff:\"" + mindate + "\"];(node(bbox);way(bbox);relation(bbox););out meta geom;&bbox=" + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
+                  url: data_url + "?data=[adiff:\"" + mindate + "\"];(node(bbox);way(bbox);relation(bbox););out meta geom(bbox);&bbox=" + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
                   format: new OSMDiffFormat({
                       extent: layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326"),
                       setStatus: function(status) { setStatus(status); },
