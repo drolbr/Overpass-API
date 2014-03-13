@@ -108,6 +108,29 @@ private:
 };
 
 
+class Way_Bbox_Geometry_Store : public Way_Geometry_Store
+{
+public:
+  Way_Bbox_Geometry_Store(const map< Uint31_Index, vector< Way_Skeleton > >& ways,
+                     const Statement& query, Resource_Manager& rman,
+                     double south_, double north_, double west_, double east_);
+  Way_Bbox_Geometry_Store(const map< Uint31_Index, vector< Attic< Way_Skeleton > > >& ways, uint64 timestamp,
+                     const Statement& query, Resource_Manager& rman,
+                     double south_, double north_, double west_, double east_);
+  
+  // return the empty vector if the way is not found
+  vector< Quad_Coord > get_geometry(const Way_Skeleton& way) const;
+  
+private:
+  uint32 south;
+  uint32 north;
+  int32 west;
+  int32 east;
+  
+  bool matches_bbox(uint32 ll_upper, uint32 ll_lower) const;
+};
+
+
 class Output_Handle;
 
 
@@ -162,8 +185,8 @@ class Print_Statement : public Statement
     enum { order_by_id, order_by_quadtile } order;
     unsigned int limit;
     Output_Handle* output_handle;
-    Way_Geometry_Store* way_geometry_store;
-    Way_Geometry_Store* attic_way_geometry_store;
+    Way_Bbox_Geometry_Store* way_geometry_store;
+    Way_Bbox_Geometry_Store* attic_way_geometry_store;
     Relation_Geometry_Store* relation_geometry_store;
     Relation_Geometry_Store* attic_relation_geometry_store;
     Collection_Print_Target* collection_print_target;

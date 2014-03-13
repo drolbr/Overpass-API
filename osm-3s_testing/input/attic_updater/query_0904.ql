@@ -445,6 +445,10 @@ node(14012);out ids;
 (rel(1332);>;);out body qt geom;
 
 
+way(1302);out geom(0,0,1,1);
+way(1302);out geom(-90,-180,90,180);
+way(1302);out geom(10,3.02,10,3.03);
+
 rel(1332);out geom(0,0,1,1);
 rel(1332);out geom(-90,-180,90,180);
 rel(1332);out geom(10,3.02001,11,3.02011);

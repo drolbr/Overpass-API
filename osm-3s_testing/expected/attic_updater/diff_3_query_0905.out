@@ -2402,6 +2402,29 @@
     <tag k="foo" v="bar_1332"/>
     <tag k="foo_1332" v="bar"/>
   </relation>
+  <way id="1302">
+    <nd ref="13021"/>
+    <nd ref="13022"/>
+    <nd ref="13023"/>
+    <tag k="foo" v="bar_1302"/>
+    <tag k="foo_1302" v="bar"/>
+  </way>
+  <way id="1302">
+    <bounds minlat="10.0000000" minlon="3.0200010" maxlat="10.0020000" maxlon="3.0200020"/>
+    <nd ref="13021" lat="10.0000000" lon="3.0200020"/>
+    <nd ref="13022" lat="10.0010000" lon="3.0200010"/>
+    <nd ref="13023" lat="10.0020000" lon="3.0200010"/>
+    <tag k="foo" v="bar_1302"/>
+    <tag k="foo_1302" v="bar"/>
+  </way>
+  <way id="1302">
+    <bounds minlat="10.0000000" minlon="3.0200010" maxlat="10.0010000" maxlon="3.0200020"/>
+    <nd ref="13021" lat="10.0000000" lon="3.0200020"/>
+    <nd ref="13022" lat="10.0010000" lon="3.0200010"/>
+    <nd ref="13023"/>
+    <tag k="foo" v="bar_1302"/>
+    <tag k="foo_1302" v="bar"/>
+  </way>
   <relation id="1332">
     <member type="node" ref="133210" role=""/>
     <member type="node" ref="133220" role=""/>

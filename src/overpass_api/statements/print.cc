@@ -982,6 +982,69 @@ void Print_Statement::tags_by_id_attic
 }
 
 
+Way_Bbox_Geometry_Store::Way_Bbox_Geometry_Store(
+    const map< Uint31_Index, vector< Way_Skeleton > >& ways,
+    const Statement& query, Resource_Manager& rman,
+    double south_, double north_, double west_, double east_)
+  : Way_Geometry_Store(ways, query, rman),
+    south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
+{}
+
+
+Way_Bbox_Geometry_Store::Way_Bbox_Geometry_Store(
+    const map< Uint31_Index, vector< Attic< Way_Skeleton > > >& ways, uint64 timestamp,
+    const Statement& query, Resource_Manager& rman,
+    double south_, double north_, double west_, double east_)
+  : Way_Geometry_Store(ways, timestamp, query, rman),
+    south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
+{}
+
+
+bool Way_Bbox_Geometry_Store::matches_bbox(uint32 ll_upper, uint32 ll_lower) const
+{
+  if (north < south)
+    return true;
+  uint32 lat(::ilat(ll_upper, ll_lower));
+  int32 lon(::ilon(ll_upper, ll_lower));
+  return (lat >= south && lat <= north &&
+     ((lon >= west && lon <= east)
+            || (east < west && (lon >= west || lon <= east))));
+}
+
+
+std::vector< Quad_Coord > Way_Bbox_Geometry_Store::get_geometry(const Way_Skeleton& way) const
+{
+  std::vector< Quad_Coord > result = Way_Geometry_Store::get_geometry(way);
+  
+  if (result.empty())
+    ;
+  else if (result.size() == 1)
+  {
+    if (!matches_bbox(result.begin()->ll_upper, result.begin()->ll_lower))
+      *result.begin() = Quad_Coord(0u, 0u);
+  }
+  else
+  {
+    bool this_matches = matches_bbox(result[0].ll_upper, result[0].ll_lower);
+    bool next_matches = matches_bbox(result[1].ll_upper, result[1].ll_lower);
+    if (!this_matches && !next_matches)
+      result[0] = Quad_Coord(0u, 0u);
+    for (uint i = 1; i < result.size() - 1; ++i)
+    {
+      bool last_matches = this_matches;
+      this_matches = next_matches;
+      next_matches = matches_bbox(result[i+1].ll_upper, result[i+1].ll_lower);
+      if (!last_matches && !this_matches && !next_matches)
+        result[i] = Quad_Coord(0u, 0u);
+    }
+    if (!this_matches && !next_matches)
+      result[result.size()-1] = Quad_Coord(0u, 0u);
+  }
+        
+  return result;
+}
+  
+  
 Relation_Geometry_Store::~Relation_Geometry_Store()
 {
   delete way_geometry_store;
@@ -994,6 +1057,13 @@ Relation_Geometry_Store::Relation_Geometry_Store
      double south_, double north_, double west_, double east_)
     : south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
 {
+  if (relations.empty())
+  {
+    // Turn off bounding bix, because it isn't needed anyway
+    north = 0;
+    south = 1;
+  }
+  
   std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
   if (south <= north)
     get_ranges_32(south_, north_, west_, east_).swap(node_ranges);
@@ -1040,6 +1110,13 @@ Relation_Geometry_Store::Relation_Geometry_Store
      double south_, double north_, double west_, double east_)
     : south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
 {
+  if (relations.empty())
+  {
+    // Turn off bounding bix, because it isn't needed anyway
+    north = 0;
+    south = 1;
+  }
+  
   std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
   if (south <= north)
     get_ranges_32(south_, north_, west_, east_).swap(node_ranges);
@@ -1543,10 +1620,12 @@ void Print_Statement::execute(Resource_Manager& rman)
   if (mode & (Print_Target::PRINT_GEOMETRY | Print_Target::PRINT_BOUNDS | Print_Target::PRINT_CENTER))
   {
     delete way_geometry_store;
-    way_geometry_store = new Way_Geometry_Store(mit->second.ways, *this, rman);
+    way_geometry_store = new Way_Bbox_Geometry_Store(mit->second.ways, *this, rman,
+        south, north, west, east);
     delete attic_way_geometry_store;
-    attic_way_geometry_store = new Way_Geometry_Store
-        (mit->second.attic_ways, rman.get_desired_timestamp(), *this, rman);
+    attic_way_geometry_store = new Way_Bbox_Geometry_Store
+        (mit->second.attic_ways, rman.get_desired_timestamp(), *this, rman,
+        south, north, west, east);
         
     delete relation_geometry_store;
     relation_geometry_store = new Relation_Geometry_Store(
