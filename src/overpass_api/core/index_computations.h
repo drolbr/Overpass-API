@@ -909,6 +909,25 @@ inline std::vector< std::pair< uint32, uint32 > > calc_ranges
   return ranges;
 }
 
+
+inline std::set< std::pair< Uint32_Index, Uint32_Index > > get_ranges_32(
+    double south, double north, double west, double east)
+{
+  std::set< std::pair< Uint32_Index, Uint32_Index > > ranges;
+  
+  std::vector< std::pair< uint32, uint32 > > uint_ranges = ::calc_ranges(south, north, west, east);
+  for (std::vector< std::pair< uint32, uint32 > >::const_iterator
+      it(uint_ranges.begin()); it != uint_ranges.end(); ++it)
+  {
+    std::pair< Uint32_Index, Uint32_Index > range
+      (std::make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
+    ranges.insert(range);
+  }
+    
+  return ranges;
+}
+
+
 // Adds recursively the ranges based on the given products of
 // closed intervals.
 // The expected assertion for the recursion is that the indices are equal

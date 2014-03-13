@@ -104,7 +104,7 @@ private:
   int32 west;
   int32 east;
   
-  bool matches_bbox(const Node& node) const;
+  bool matches_bbox(uint32 ll_upper, uint32 ll_lower) const;
 };
 
 

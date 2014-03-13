@@ -16,6 +16,7 @@
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../core/index_computations.h"
 #include "../data/collect_members.h"
 #include "../data/filenames.h"
 #include "../frontend/print_target.h"
@@ -993,9 +994,13 @@ Relation_Geometry_Store::Relation_Geometry_Store
      double south_, double north_, double west_, double east_)
     : south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
 {
+  std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
+  if (south <= north)
+    get_ranges_32(south_, north_, west_, east_).swap(node_ranges);
+  
   // Retrieve all nodes referred by the relations.
   std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
-      = relation_node_members(&query, rman, relations);
+      = relation_node_members(&query, rman, relations, north < south ? 0 : &node_ranges);
   
   // Order node ids by id.
   for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = node_members.begin();
@@ -1007,9 +1012,13 @@ Relation_Geometry_Store::Relation_Geometry_Store
   }
   sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
   
+  std::set< std::pair< Uint31_Index, Uint31_Index > > way_ranges;
+  if (south <= north)
+    calc_parents(node_ranges).swap(way_ranges);
+  
   // Retrieve all ways referred by the relations.
   std::map< Uint31_Index, std::vector< Way_Skeleton > > way_members
-      = relation_way_members(&query, rman, relations);
+      = relation_way_members(&query, rman, relations, north < south ? 0 : &way_ranges);
       
   way_geometry_store = new Way_Geometry_Store(way_members, query, rman);
   
@@ -1031,11 +1040,16 @@ Relation_Geometry_Store::Relation_Geometry_Store
      double south_, double north_, double west_, double east_)
     : south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
 {
+  std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
+  if (north < south)
+    get_ranges_32(south_, north_, west_, east_).swap(node_ranges);
+  
   // Retrieve all nodes referred by the relations.
   std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
       std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > nodes_by_idx
       = relation_node_members(&query, rman,
-          std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations, timestamp);
+          std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations, timestamp,
+          north < south ? 0 : &node_ranges);
   
   // Order node ids by id.
   for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = nodes_by_idx.first.begin();
@@ -1054,11 +1068,16 @@ Relation_Geometry_Store::Relation_Geometry_Store
   }
   sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
       
+  std::set< std::pair< Uint31_Index, Uint31_Index > > way_ranges;
+  if (north < south)
+    calc_parents(node_ranges).swap(way_ranges);
+  
   // Retrieve all ways referred by the relations.
   std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
       std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > > ways_by_idx
       = relation_way_members(&query, rman,
-          std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations, timestamp);
+          std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations, timestamp,
+          north < south ? 0 : &way_ranges);
   
   for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::iterator it = ways_by_idx.first.begin();
       it != ways_by_idx.first.end(); ++it)
@@ -1082,12 +1101,12 @@ Relation_Geometry_Store::Relation_Geometry_Store
 }
 
 
-bool Relation_Geometry_Store::matches_bbox(const Node& node) const
+bool Relation_Geometry_Store::matches_bbox(uint32 ll_upper, uint32 ll_lower) const
 {
   if (north < south)
     return true;
-  uint32 lat(::ilat(node.index, node.ll_lower_));
-  int32 lon(::ilon(node.index, node.ll_lower_));
+  uint32 lat(::ilat(ll_upper, ll_lower));
+  int32 lon(::ilon(ll_upper, ll_lower));
   return (lat >= south && lat <= north &&
      ((lon >= west && lon <= east)
             || (east < west && (lon >= west || lon <= east))));
@@ -1104,7 +1123,7 @@ std::vector< std::vector< Quad_Coord > > Relation_Geometry_Store::get_geometry
     if (it->type == Relation_Entry::NODE)
     {
       const Node* node = binary_search_for_id(nodes, it->ref);
-      if (node == 0 || !matches_bbox(*node))
+      if (node == 0 || !matches_bbox(node->index, node->ll_lower_))
         result.push_back(std::vector< Quad_Coord >(1, Quad_Coord(0u, 0u)));
       else
         result.push_back(std::vector< Quad_Coord >(1, Quad_Coord(node->index, node->ll_lower_)));
@@ -1115,7 +1134,33 @@ std::vector< std::vector< Quad_Coord > > Relation_Geometry_Store::get_geometry
       if (way == 0)
         result.push_back(std::vector< Quad_Coord >());
       else
+      {
         result.push_back(way_geometry_store->get_geometry(*way));
+        if (result.back().empty())
+          ;
+        else if (result.back().size() == 1)
+        {
+          if (!matches_bbox(result.back().begin()->ll_upper, result.back().begin()->ll_lower))
+            *result.back().begin() = Quad_Coord(0u, 0u);
+        }
+        else
+        {
+          bool this_matches = matches_bbox(result.back()[0].ll_upper, result.back()[0].ll_lower);
+          bool next_matches = matches_bbox(result.back()[1].ll_upper, result.back()[1].ll_lower);
+          if (!this_matches && !next_matches)
+            result.back()[0] = Quad_Coord(0u, 0u);
+          for (uint i = 1; i < result.size() - 2; ++i)
+          {
+            bool last_matches = this_matches;
+            this_matches = next_matches;
+            next_matches = matches_bbox(result.back()[i+1].ll_upper, result.back()[i+1].ll_lower);
+            if (!last_matches && !this_matches && !next_matches)
+              result.back()[i] = Quad_Coord(0u, 0u);
+          }
+          if (!this_matches && !next_matches)
+            result.back()[result.back().size()-1] = Quad_Coord(0u, 0u);
+        }
+      }
     }
     else if (it->type == Relation_Entry::RELATION)
       result.push_back(std::vector< Quad_Coord >());
