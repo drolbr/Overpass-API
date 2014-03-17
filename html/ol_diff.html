@@ -47,12 +47,11 @@
           layer = new OpenLayers.Layer.Vector("Polygon", {
               strategies: [new OpenLayers.Strategy.Fixed()],
               protocol: new OpenLayers.Protocol.HTTP({
-                  //url: data_url + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
                   url: data_url + "?data=[adiff:\"" + mindate + "\"];(node(bbox);way(bbox);relation(bbox););out meta geom(bbox);&bbox=" + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
                   format: new OSMDiffFormat({
                       extent: layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326"),
                       setStatus: function(status) { setStatus(status); },
-                      pushTextualResult: function(feature) { pushTextualResult(feature); }
+                      pushTextualResult: function(feature) { collectFeature(feature); }
                       })
               }),
               styleMap: styleMap,
@@ -126,43 +125,195 @@
 
           refreshData();
       }
+      
+      var textual_old = "";
+      var textual_geometry_changed = "";
+      var textual_new = "";
+      var textual_tags_changed = "";
+      var textual_unchanged = "";
+      var old_feat = false;
 
       function setStatus(status)
       {
           var status_line = document.getElementById("status_line");
           if (status_line)
               status_line.innerHTML = status;
+          
+          if (status == "Ready")
+          {
+              if (old_feat)
+                  pushTextualResult(old_feat, false);
+              old_feat = false;
+                  
+              var textual_results_html = document.getElementById("textual_results");
+              if (textual_results_html)
+                  textual_results_html.innerHTML =
+                      textual_old + textual_geometry_changed + textual_new
+                      + textual_tags_changed + textual_unchanged;
+          }
       }
       
       function clearTextualResults()
       {
-          var textual_results = document.getElementById("textual_results");
-          if (textual_results)
-              textual_results.innerHTML = "";
+          textual_old = "";
+          textual_geometry_changed = "";
+          textual_new = "";
+          textual_tags_changed = "";
+          textual_unchanged = "";
+          var textual_results_html = document.getElementById("textual_results");
+          if (textual_results_html)
+              textual_results_html.innerHTML = "";
       }
-
-      function pushTextualResult(feature)
-      {
-          var result = "<br/><br/>";
-          
-          if (feature.data && feature.data.state)
-              result += feature.data.state + " ";
-              
-          if (feature.type)
-              result += feature.type + " ";
       
-          if (feature.osm_id)
-              result += feature.osm_id + " ";
+      
+      function equal_geom(lhs, rhs)
+      {
+          if (lhs.x || lhs.y || rhs.x || rhs.y)
+              return (lhs.x && lhs.y && rhs.x && rhs.y && lhs.x == rhs.x && lhs.y == rhs.y);
               
-          if (feature.tags)
+          if (rhs.components && !lhs.components)
+              return false;
+          if (lhs.components && (!rhs.components || lhs.components.length != rhs.components.length))
+              return false;
+              
+          for (var i = 0; i < lhs.components.length; ++i)
           {
-              for (tag in feature.tags)
-                  result += "<br/>" + tag + "=" + feature.tags[tag];
+              if (!equal_geom(lhs.components[i], rhs.components[i]))
+                  return false;
           }
+          return true;
+      }
+      
+
+      function pushTextualResult(old_feat, new_feat)
+      {
+          if (old_feat && new_feat)
+          {
+              var geometry_changed = false;
+              if (old_feat.geometry && new_feat.geometry)
+                  geometry_changed = !equal_geom(old_feat.geometry, new_feat.geometry);
+              else
+                  geometry_changed = (old_feat.geometry || new_feat.geometry);
               
-          var textual_results = document.getElementById("textual_results");
-          if (textual_results)
-              textual_results.innerHTML += result;
+              var taglist = "";
+              var tags_changed = false;
+              
+              if (old_feat.tags)
+              {
+                  for (tag in old_feat.tags)
+                  {
+                      if (!new_feat.tags || new_feat.tags[tag] != old_feat.tags[tag])
+                      {
+                          taglist += "<br/>- &nbsp;<span style=\"color:red\">"
+                              + tag + "=" + old_feat.tags[tag] + "</span>";
+                          tags_changed = true;
+                      }
+                  }
+              }
+              
+              if (new_feat.tags)
+              {
+                  for (tag in new_feat.tags)
+                  {
+                      if (!old_feat.tags || old_feat.tags[tag] != new_feat.tags[tag])
+                      {
+                          taglist += "<br/>+ &nbsp;<span style=\"color:green\">"
+                              + tag + "=" + new_feat.tags[tag] + "</span>";
+                          tags_changed = true;
+                      }
+                  }
+              }
+              
+              if (old_feat.tags && new_feat.tags)
+              {
+                  for (tag in new_feat.tags)
+                  {
+                      if (old_feat.tags && old_feat.tags[tag] == new_feat.tags[tag])
+                          taglist += "<br/>&nbsp; &nbsp;" + tag + "=" + new_feat.tags[tag];
+                  }
+              }
+              
+              var result = "<br/><br/>";
+              if (geometry_changed)
+                  result += "reshaped ";
+              else if (tags_changed)
+                  result += "retagged ";
+              else
+                  result += "changed ";
+                  
+              if (old_feat.type && old_feat.osm_id)
+                  result += "<a href=\"http://osm.org/browse/"
+                      + old_feat.type + "/" + old_feat.osm_id + "\"/>"
+                      + old_feat.type + " " + old_feat.osm_id + "</a>";
+              
+              if (geometry_changed)
+                  textual_geometry_changed += result + taglist;
+              else if (tags_changed)
+                  textual_tags_changed += result + taglist;
+              else
+                  textual_unchanged += result + taglist;
+          }
+          else if (old_feat)
+          {
+              var result = "<br/><br/><span style=\"color:red\">old ";
+                  
+              if (old_feat.type && old_feat.osm_id)
+                  result += "<a href=\"http://osm.org/browse/"
+                      + old_feat.type + "/" + old_feat.osm_id + "\"/>"
+                      + old_feat.type + " " + old_feat.osm_id + "</a>";
+                  
+              result += "</span>";
+              
+              if (old_feat.tags)
+              {
+                  for (tag in old_feat.tags)
+                      result += "<br/>" + tag + "=" + old_feat.tags[tag];
+              }
+              
+              textual_old += result;
+          }
+          else
+          {
+              var result = "<br/><br/><span style=\"color:green\">new ";
+                  
+              if (new_feat.type && new_feat.osm_id)
+                  result += "<a href=\"http://osm.org/browse/"
+                      + new_feat.type + "/" + new_feat.osm_id + "\"/>"
+                      + new_feat.type + " " + new_feat.osm_id + "</a>";
+                  
+              result += "</span>";
+              
+              if (new_feat.tags)
+              {
+                  for (tag in new_feat.tags)
+                      result += "<br/>" + tag + "=" + new_feat.tags[tag];
+              }
+              
+              textual_new += result;
+          }
+      }
+      
+      function collectFeature(feature)
+      {
+          if (feature.data && feature.data.state && feature.data.state == "old")
+          {
+              if (old_feat)
+                  pushTextualResult(old_feat, false);
+              old_feat = feature;
+          }
+          else if (old_feat)
+          {
+              if (old_feat.osm_id && old_feat.osm_id == feature.osm_id)
+                  pushTextualResult(old_feat, feature);
+              else
+              {
+                  pushTextualResult(old_feat, false);
+                  pushTextualResult(false, feature);
+              }
+              old_feat = false;
+          }
+          else
+              pushTextualResult(false, feature);
       }
 
   </script>

@@ -237,13 +237,14 @@ var OSMDiffFormat = OpenLayers.Class(OpenLayers.Format.OSM, {
         var lower = 0;
         while (lower < node_list.length && !this.isInExtent(node_list[lower]))
             ++lower;
-        if (lower > 0)
+        if (lower > 0 && node_list[lower-1].getAttribute("lat") && node_list[lower-1].getAttribute("lon"))
             --lower;
             
         var upper = node_list.length;
         while (upper > 0 && !this.isInExtent(node_list[upper-1]))
             --upper;
-        if (upper < node_list.length)
+        if (upper < node_list.length
+                && node_list[upper].getAttribute("lat") && node_list[upper].getAttribute("lon"))
             ++upper;
         
         if (upper < lower)
@@ -252,7 +253,11 @@ var OSMDiffFormat = OpenLayers.Class(OpenLayers.Format.OSM, {
         var point_list = new Array(upper - lower);
         var pos = 0;
         for (var j = lower; j < upper; ++j)
-            point_list[pos++] = this.pointGeomFromNode(node_list[j]);
+        {
+            if (node_list[j].getAttribute("lat") && node_list[j].getAttribute("lon"))
+                point_list[pos++] = this.pointGeomFromNode(node_list[j]);
+        }
+        point_list = point_list.slice(0, pos);
             
         return point_list;
     },
@@ -276,9 +281,10 @@ var OSMDiffFormat = OpenLayers.Class(OpenLayers.Format.OSM, {
             feat.geometry.osm_id = feat.osm_id;
 
             if (this.isInExtent(node))
+            {
                 nodes[id + "." + state.state] = feat;
-            
-            this.pushTextualResult(feat);
+                this.pushTextualResult(feat);
+            }
         }
         return nodes;
     },
@@ -301,9 +307,10 @@ var OSMDiffFormat = OpenLayers.Class(OpenLayers.Format.OSM, {
             feat.fid = "way." + feat.osm_id;
 
             if (way_nodes.length >= 2)
+            {
                 ways[id + "." + state.state] = feat;
-            
-            this.pushTextualResult(feat);
+                this.pushTextualResult(feat);
+            }
         }
         return ways;
     },
@@ -339,9 +346,10 @@ var OSMDiffFormat = OpenLayers.Class(OpenLayers.Format.OSM, {
             feat.fid = "relation." + feat.osm_id;
 
             if (geom.components.length > 0)
+            {
                 return_relations[id + "." + state.state] = feat;
-            
-            this.pushTextualResult(feat);
+                this.pushTextualResult(feat);
+            }
         }
         return return_relations;
     },
