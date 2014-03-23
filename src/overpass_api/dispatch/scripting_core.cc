@@ -182,7 +182,8 @@ bool parse_and_validate
 	stmt_factory_global = &stmt_factory;
         xml_parser.parse(xml_raw, start< Statement >, end< Statement >);
 	Osm_Script_Statement* root =
-	    dynamic_cast< Osm_Script_Statement* >(get_statement_stack()->front());
+	    get_statement_stack()->empty() ? 0 :
+	        dynamic_cast< Osm_Script_Statement* >(get_statement_stack()->front());
 	if (root)
 	  root->set_factory(&stmt_factory);
 	stmt_factory_global = 0;

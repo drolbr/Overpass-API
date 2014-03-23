@@ -73,31 +73,33 @@ namespace
     }
     
     // pos again points at the first non-whitespace character.
-    if (input.substr(pos, 1) == "<" && input.find("<osm-script") != string::npos)
-      // Add a header line and remove trailing whitespace.
+    if (input.substr(pos, 1) == "<" && input.substr(pos, 2) != "<?")
     {
-      ostringstream temp;
-      temp<<"Your input contains an 'osm-script' tag. Thus, a line with the\n"
-      <<"datatype declaration is added. This shifts line numbering by "
-      <<(int)line_number - 2<<" line(s).";
-      if (error_output)
-	error_output->add_encoding_remark(temp.str());
+      if (input.find("<osm-script") == string::npos)
+        // Add a header line, the root tag 'osm-script' and remove trailing whitespace
+      {
+        ostringstream temp;
+        temp<<"Your input starts with a tag but not the root tag. Thus, a line with the\n"
+            <<"datatype declaration and a line with the root tag 'osm-script' is\n"
+            <<"added. This shifts line numbering by "<<(int)line_number-3<<" line(s).";
+        if (error_output)
+          error_output->add_encoding_remark(temp.str());
       
-      input = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-      + input.substr(pos);
-    }
-    else if (input.substr(pos, 1) == "<" && input.substr(pos, 2) != "<?")
-      // add a header line, the root tag 'osm-script' and remove trailing whitespace
-    {
-      ostringstream temp;
-      temp<<"Your input starts with a tag but not the root tag. Thus, a line with the\n"
-      <<"datatype declaration and a line with the root tag 'osm-script' is\n"
-      <<"added. This shifts line numbering by "<<(int)line_number-3<<" line(s).";
-      if (error_output)
-	error_output->add_encoding_remark(temp.str());
+        input = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm-script>\n"
+            + input.substr(pos) + "\n</osm-script>\n";
+      }
+      else
+        // Add a header line and remove trailing whitespace.
+      {
+        ostringstream temp;
+        temp<<"Your input contains an 'osm-script' tag. Thus, a line with the\n"
+            <<"datatype declaration is added. This shifts line numbering by "
+            <<(int)line_number - 2<<" line(s).";
+        if (error_output)
+          error_output->add_encoding_remark(temp.str());
       
-      input = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm-script>\n"
-      + input.substr(pos) + "\n</osm-script>\n";
+        input = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + input.substr(pos);
+      }
     }
     
     return input;
