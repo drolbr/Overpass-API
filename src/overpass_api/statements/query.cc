@@ -614,7 +614,6 @@ void Query_Statement::get_elements_by_id_from_db
 }
 
 
-//TODO: timestamp
 template < typename TIndex, typename Id_Type >
 set< pair< TIndex, TIndex > > Query_Statement::get_ranges_by_id_from_db
     (const vector< Id_Type >& ids,
@@ -1278,25 +1277,19 @@ void Query_Statement::filter_by_tags
 
 
 template< typename Id_Type, typename Index >
-void Query_Statement::progress_1(vector< Id_Type >& ids, std::set< std::pair< Index, Index > >& range_req,
+void Query_Statement::progress_1(vector< Id_Type >& ids, std::vector< Index >& range_vec,
                                  bool& invert_ids, uint64 timestamp,
                                  Answer_State& answer_state, bool check_keys_late,
                                  const File_Properties& file_prop, const File_Properties& attic_file_prop,
                                  Resource_Manager& rman)
 {
   ids.clear();
-  range_req.clear();
+  range_vec.clear();
   if ((!keys.empty() && !check_keys_late)
      || !key_values.empty() || (!key_regexes.empty() && !check_keys_late))
   {
     std::vector< std::pair< Id_Type, Uint31_Index > > id_idxs =
         collect_ids< Id_Type >(file_prop, attic_file_prop, rman, timestamp, check_keys_late);
-    for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator it = id_idxs.begin();
-        it != id_idxs.end(); ++it)
-    {
-      ids.push_back(it->first);
-      range_req.insert(std::make_pair(it->second, Uint31_Index(it->second.val() + 0x100)));
-    }
     
     if (!key_nvalues.empty() || !key_nregexes.empty())
     {
@@ -1306,18 +1299,26 @@ void Query_Statement::progress_1(vector< Id_Type >& ids, std::set< std::pair< In
       diff_ids.erase(set_difference(id_idxs.begin(), id_idxs.end(), non_ids.begin(), non_ids.end(),
 		     diff_ids.begin()), diff_ids.end());
       ids.clear();
-      range_req.clear();
+      range_vec.clear();
       for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator it = diff_ids.begin();
           it != diff_ids.end(); ++it)
       {
         ids.push_back(it->first);
-        range_req.insert(std::make_pair(it->second, Uint31_Index(it->second.val() + 0x100)));
+        range_vec.push_back(it->second);
       }
     }
+    else
+    {
+      for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator it = id_idxs.begin();
+          it != id_idxs.end(); ++it)
+      {
+        ids.push_back(it->first);
+        range_vec.push_back(it->second);
+      }
+    }
+      
     if (ids.empty())
       answer_state = data_collected;
-    else
-      answer_state = ranges_collected;
   }
   else if ((!key_nvalues.empty() || !key_nregexes.empty()) && !check_keys_late)
   {
@@ -1388,6 +1389,62 @@ void Query_Statement::collect_elems(vector< Id_Type >& ids,
 }
 
 
+//TODO: move to basic_types.h
+unsigned long long difference(Uint32_Index lhs, Uint32_Index rhs)
+{
+  return rhs.val() - lhs.val();
+}
+
+
+//TODO: move to basic_types.h
+unsigned long long difference(Uint31_Index lhs, Uint31_Index rhs)
+{
+  return 2*(rhs.val() - lhs.val()) - ((lhs.val()>>31) & 0x1) + ((rhs.val()>>31) & 0x1);
+}
+
+
+template< typename Index >
+std::set< std::pair< Index, Index > > intersect_ranges
+    (const std::set< std::pair< Index, Index > >& range_a,
+     std::vector< Index >& range_vec)
+{
+  std::set< std::pair< Index, Index > > result;
+  
+  unsigned long long sum = 0;
+  for (typename std::set< std::pair< Index, Index > >::const_iterator it = range_a.begin();
+       it != range_a.end(); ++it)
+    sum += difference(it->first, it->second);
+  
+  if (sum/256 < range_vec.size())
+    return range_a;
+  
+  std::sort(range_vec.begin(), range_vec.end());
+  
+  typename std::set< std::pair< Index, Index > >::const_iterator it_a = range_a.begin();
+  typename std::vector< Index >::const_iterator it_vec = range_vec.begin();
+  
+  while (it_a != range_a.end() && it_vec != range_vec.end())
+  {
+    if (*it_vec < it_a->first)
+      ++it_vec;
+    else if (!(*it_vec < it_a->second))
+      ++it_a;
+    else if (Index(it_vec->val() + 0x100) < it_a->second)
+    {
+      result.insert(std::make_pair(std::max(it_a->first, *it_vec), Index(it_vec->val() + 0x100)));
+      ++it_vec;
+    }
+    else
+    {
+      result.insert(std::make_pair(std::max(it_a->first, *it_vec), it_a->second));
+      ++it_a;
+    }
+  }
+  
+  return result;
+}
+
+
 void Query_Statement::execute(Resource_Manager& rman)
 {
   Answer_State answer_state = nothing;
@@ -1409,23 +1466,25 @@ void Query_Statement::execute(Resource_Manager& rman)
     bool invert_ids = false;
 
     set< pair< Uint32_Index, Uint32_Index > > range_req_32;
+    std::vector< Uint32_Index > range_vec_32;
     set< pair< Uint31_Index, Uint31_Index > > range_req_31;
+    std::vector< Uint31_Index > range_vec_31;
 
     if (type == QUERY_NODE)
     {
-      progress_1(node_ids, range_req_32, invert_ids, timestamp, answer_state, check_keys_late,
+      progress_1(node_ids, range_vec_32, invert_ids, timestamp, answer_state, check_keys_late,
                  *osm_base_settings().NODE_TAGS_GLOBAL, *attic_settings().NODE_TAGS_GLOBAL, rman);
       collect_nodes(node_ids, invert_ids, answer_state, into, rman);
     }
     else if (type == QUERY_WAY)
     {
-      progress_1(ids, range_req_31, invert_ids, timestamp, answer_state, check_keys_late,
+      progress_1(ids, range_vec_31, invert_ids, timestamp, answer_state, check_keys_late,
                  *osm_base_settings().WAY_TAGS_GLOBAL, *attic_settings().WAY_TAGS_GLOBAL, rman);
       collect_elems(ids, invert_ids, answer_state, into, rman);
     }
     else if (type == QUERY_RELATION)
     {
-      progress_1(ids, range_req_31, invert_ids, timestamp, answer_state, check_keys_late,
+      progress_1(ids, range_vec_31, invert_ids, timestamp, answer_state, check_keys_late,
                  *osm_base_settings().RELATION_TAGS_GLOBAL,  *attic_settings().RELATION_TAGS_GLOBAL, rman);
       collect_elems(ids, invert_ids, answer_state, into, rman);
     }
@@ -1454,6 +1513,19 @@ void Query_Statement::execute(Resource_Manager& rman)
 	  answer_state = ranges_collected;
         }
       }
+      
+      if (!range_vec_32.empty())
+      {
+        if (answer_state < ranges_collected)
+        {
+          answer_state = ranges_collected;
+          range_req_32.clear();
+          range_req_32.insert(std::make_pair(Uint32_Index(0u), Uint32_Index(0xffffffff)));
+          intersect_ranges(range_req_32, range_vec_32).swap(range_req_32);
+        }
+        else
+          intersect_ranges(range_req_32, range_vec_32).swap(range_req_32);
+      }
     }
     else if (type == QUERY_WAY || type == QUERY_RELATION)
     {
@@ -1469,6 +1541,19 @@ void Query_Statement::execute(Resource_Manager& rman)
             intersect_ranges(range_req_31, range_req).swap(range_req_31);
 	  answer_state = ranges_collected;
         }
+      }
+      
+      if (!range_vec_31.empty())
+      {
+        if (answer_state < ranges_collected)
+        {
+          answer_state = ranges_collected;
+          range_req_31.clear();
+          range_req_31.insert(std::make_pair(Uint31_Index(0u), Uint31_Index(0xffffffff)));
+          intersect_ranges(range_req_31, range_vec_31).swap(range_req_31);
+        }
+        else
+          intersect_ranges(range_req_31, range_vec_31).swap(range_req_31);
       }
     }
     

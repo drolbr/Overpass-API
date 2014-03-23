@@ -101,7 +101,7 @@ class Query_Statement : public Output_Statement
          Resource_Manager& rman, File_Properties& file_prop);
 
     template< typename Id_Type, typename Index >
-    void progress_1(vector< Id_Type >& ids, set< pair< Index, Index > >& range_req,
+    void progress_1(std::vector< Id_Type >& ids, std::vector< Index >& range_req,
                     bool& invert_ids, uint64 timestamp,
                     Answer_State& answer_state, bool check_keys_late,
                     const File_Properties& file_prop, const File_Properties& attic_file_prop,
