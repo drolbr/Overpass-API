@@ -1516,14 +1516,10 @@ Way_Geometry_Store::Way_Geometry_Store
 {
   // Retrieve all nodes referred by the ways.
   std::map< Uint32_Index, std::vector< Node_Skeleton > > current;
-  collect_items_range(&query, rman, *osm_base_settings().NODES,
-                      small_way_nd_indices< Attic< Way_Skeleton > >(&query, rman, ways.begin(), ways.end()),
-                      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), current);
-  
   std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > attic;
-  collect_items_range(&query, rman, *attic_settings().NODES,
-                      small_way_nd_indices< Attic< Way_Skeleton > >(&query, rman, ways.begin(), ways.end()),
-                      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), attic);
+  collect_items_range_by_timestamp(&query, rman, 
+      small_way_nd_indices< Attic< Way_Skeleton > >(&query, rman, ways.begin(), ways.end()),
+      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), current, attic);
   
   keep_matching_skeletons(nodes, current, attic, timestamp);
 }

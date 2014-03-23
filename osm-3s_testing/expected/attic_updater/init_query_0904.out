@@ -2212,6 +2212,67 @@
     <tag k="foo" v="bar_1332"/>
     <tag k="foo_1332" v="bar"/>
   </relation>
+  <way id="1302">
+    <nd ref="13021"/>
+    <nd ref="13022"/>
+    <nd ref="13023"/>
+    <tag k="foo" v="bar_1302"/>
+    <tag k="foo_1302" v="bar"/>
+  </way>
+  <way id="1302">
+    <bounds minlat="10.0000000" minlon="3.0200000" maxlat="10.0020000" maxlon="3.0200000"/>
+    <nd ref="13021" lat="10.0000000" lon="3.0200000"/>
+    <nd ref="13022" lat="10.0010000" lon="3.0200000"/>
+    <nd ref="13023" lat="10.0020000" lon="3.0200000"/>
+    <tag k="foo" v="bar_1302"/>
+    <tag k="foo_1302" v="bar"/>
+  </way>
+  <way id="1302">
+    <bounds minlat="10.0000000" minlon="3.0200000" maxlat="10.0010000" maxlon="3.0200000"/>
+    <nd ref="13021" lat="10.0000000" lon="3.0200000"/>
+    <nd ref="13022" lat="10.0010000" lon="3.0200000"/>
+    <nd ref="13023"/>
+    <tag k="foo" v="bar_1302"/>
+    <tag k="foo_1302" v="bar"/>
+  </way>
+  <relation id="1332">
+    <member type="node" ref="133210" role=""/>
+    <member type="node" ref="133220" role=""/>
+    <member type="way" ref="13321" role=""/>
+    <member type="way" ref="13322" role=""/>
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
+  </relation>
+  <relation id="1332">
+    <bounds minlat="10.3010000" minlon="3.0200000" maxlat="10.3020000" maxlon="3.0202000"/>
+    <member type="node" ref="133210" role="" lat="10.3010000" lon="3.0200000"/>
+    <member type="node" ref="133220" role="" lat="10.3020000" lon="3.0200000"/>
+    <member type="way" ref="13321" role="">
+      <nd lat="10.3010000" lon="3.0201000"/>
+      <nd lat="10.3010000" lon="3.0202000"/>
+    </member>
+    <member type="way" ref="13322" role="">
+      <nd lat="10.3020000" lon="3.0201000"/>
+      <nd lat="10.3020000" lon="3.0202000"/>
+    </member>
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
+  </relation>
+  <relation id="1332">
+    <bounds minlat="10.3010000" minlon="3.0201000" maxlat="10.3020000" maxlon="3.0202000"/>
+    <member type="node" ref="133210" role=""/>
+    <member type="node" ref="133220" role=""/>
+    <member type="way" ref="13321" role="">
+      <nd lat="10.3010000" lon="3.0201000"/>
+      <nd lat="10.3010000" lon="3.0202000"/>
+    </member>
+    <member type="way" ref="13322" role="">
+      <nd lat="10.3020000" lon="3.0201000"/>
+      <nd lat="10.3020000" lon="3.0202000"/>
+    </member>
+    <tag k="foo" v="bar_1332"/>
+    <tag k="foo_1332" v="bar"/>
+  </relation>
   <node id="1101" lat="10.0000000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1101"/>
     <tag k="foo_1101" v="bar"/>

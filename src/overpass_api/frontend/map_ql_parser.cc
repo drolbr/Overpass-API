@@ -370,6 +370,7 @@ TStatement* create_foreach_statement(typename TStatement::Factory& stmt_factory,
 template< class TStatement >
 TStatement* create_print_statement(typename TStatement::Factory& stmt_factory,
 				   string from, string mode, string order, string limit, string geometry,
+                                   string south, string north, string west, string east,
 				  uint line_nr)
 {
   map< string, string > attr;
@@ -378,6 +379,10 @@ TStatement* create_print_statement(typename TStatement::Factory& stmt_factory,
   attr["order"] = order;
   attr["limit"] = limit;
   attr["geometry"] = geometry;
+  attr["s"] = south;
+  attr["n"] = north;
+  attr["w"] = west;
+  attr["e"] = east;
   return stmt_factory.create_statement("print", line_nr, attr);
 }
 
@@ -725,6 +730,10 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
     string order = "id";
     string limit = "";
     string geometry = "skeleton";
+    string south = "";
+    string north = "";
+    string west = "";
+    string east = "";
     while (token.good() && *token != ";")
     {
       if (*token == "ids")
@@ -751,6 +760,18 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
         geometry = "center";
       else if (isdigit((*token)[0]))
 	limit = *token;
+      else if (*token == "(")
+      {
+        ++token;
+        south = get_text_token(token, error_output, "Number");
+        clear_until_after(token, error_output, ",");
+        west = get_text_token(token, error_output, "Number");
+        clear_until_after(token, error_output, ",");
+        north = get_text_token(token, error_output, "Number");
+        clear_until_after(token, error_output, ",");
+        east = get_text_token(token, error_output, "Number");
+        clear_until_after(token, error_output, ")", false);
+      }
       else
       {
 	if (error_output)
@@ -763,7 +784,9 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
     if (statement == 0)
     {
       statement = create_print_statement< TStatement >
-          (stmt_factory, from == "" ? "_" : from, mode, order, limit, geometry, token.line_col().first);
+          (stmt_factory, from == "" ? "_" : from, mode, order, limit, geometry,
+           south, north, west, east,
+           token.line_col().first);
     }
     else
     {

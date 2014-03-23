@@ -544,14 +544,6 @@ void collect_relations
 }
 
 
-template< typename First, typename Second >
-void swap_components(std::pair< First, Second > pair, First& first, Second& second)
-{
-  first.swap(pair.first);
-  second.swap(pair.second);
-}
-
-
 void collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      const map< Uint32_Index, vector< Node_Skeleton > >& nodes,

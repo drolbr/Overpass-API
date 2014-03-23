@@ -347,7 +347,7 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Way_Skeleton& skel,
   else
   {
     cout<<">\n";
-    if (bounds)
+    if (bounds && !(bounds->first == Quad_Coord(0u, 0u)))
     {
       if (bounds->second)
         std::cout<<"    <bounds"
@@ -367,7 +367,7 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Way_Skeleton& skel,
       for (uint i = 0; i < skel.nds.size(); ++i)
       {
 	cout<<"    <nd ref=\""<<skel.nds[i].val()<<"\"";
-        if (geometry)
+        if (geometry && !((*geometry)[i] == Quad_Coord(0u, 0u)))
           cout<<" lat=\""<<fixed<<setprecision(7)
               <<::lat((*geometry)[i].ll_upper, (*geometry)[i].ll_lower)
               <<"\" lon=\""<<fixed<<setprecision(7)
@@ -427,7 +427,7 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Relation_Skeleton& skel
   else
   {
     cout<<">\n";
-    if (bounds)
+    if (bounds && !(bounds->first == Quad_Coord(0u, 0u)))
     {
       if (bounds->second)
         std::cout<<"    <bounds"
@@ -451,21 +451,27 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Relation_Skeleton& skel
 	    <<"\" ref=\""<<skel.members[i].ref.val()
 	    <<"\" role=\""<<escape_xml(it != roles.end() ? it->second : "???")<<"\"";
             
-        if (geometry && skel.members[i].type == Relation_Entry::NODE)
+        if (geometry && skel.members[i].type == Relation_Entry::NODE
+            && !((*geometry)[i][0] == Quad_Coord(0u, 0u)))
           cout<<" lat=\""<<fixed<<setprecision(7)
               <<::lat((*geometry)[i][0].ll_upper, (*geometry)[i][0].ll_lower)
               <<"\" lon=\""<<fixed<<setprecision(7)
               <<::lon((*geometry)[i][0].ll_upper, (*geometry)[i][0].ll_lower)<<'\"';
               
-        if (geometry && skel.members[i].type == Relation_Entry::WAY)
+        if (geometry && skel.members[i].type == Relation_Entry::WAY && !(*geometry)[i].empty())
         {
           cout<<">\n";
           for (std::vector< Quad_Coord >::const_iterator it = (*geometry)[i].begin();
                it != (*geometry)[i].end(); ++it)
-            cout<<"      <nd lat=\""<<fixed<<setprecision(7)
-              <<::lat(it->ll_upper, it->ll_lower)
-              <<"\" lon=\""<<fixed<<setprecision(7)
-              <<::lon(it->ll_upper, it->ll_lower)<<"\"/>\n";
+          {
+            cout<<"      <nd";
+            if (!(*it == Quad_Coord(0u, 0u)))
+              cout<<" lat=\""<<fixed<<setprecision(7)
+                  <<::lat(it->ll_upper, it->ll_lower)
+                  <<"\" lon=\""<<fixed<<setprecision(7)
+                  <<::lon(it->ll_upper, it->ll_lower)<<"\"";
+            cout<<"/>\n";
+          }
           cout<<"    </member>\n";
         }
         else

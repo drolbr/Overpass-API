@@ -643,4 +643,13 @@ void item_filter_map
   }
 }
 
+
+template< typename First, typename Second >
+void swap_components(std::pair< First, Second > pair, First& first, Second& second)
+{
+  first.swap(pair.first);
+  second.swap(pair.second);
+}
+
+
 #endif

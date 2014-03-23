@@ -420,16 +420,7 @@ Bbox_Query_Statement::~Bbox_Query_Statement()
 const set< pair< Uint32_Index, Uint32_Index > >& Bbox_Query_Statement::get_ranges_32()
 {
   if (ranges_32.empty())
-  {
-    vector< pair< uint32, uint32 > > uint_ranges = ::calc_ranges(south, north, west, east);
-    for (vector< pair< uint32, uint32 > >::const_iterator
-        it(uint_ranges.begin()); it != uint_ranges.end(); ++it)
-    {
-      pair< Uint32_Index, Uint32_Index > range
-        (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
-      ranges_32.insert(range);
-    }
-  }
+    ::get_ranges_32(south, north, west, east).swap(ranges_32);
   return ranges_32;
 }
 
