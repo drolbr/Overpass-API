@@ -27,6 +27,13 @@
           var select_mindate = document.getElementById("select_mindate");
           if (select_mindate)
               mindate = select_mindate.value;
+              
+          var maxdate = "";
+          var select_maxdate = document.getElementById("select_maxdate");
+          if (select_maxdate)
+              maxdate = select_maxdate.value;
+          if (maxdate != "")
+              maxdate = ",\"" + maxdate + "\"";
 
           //Initialise the vector layer using OpenLayers.Format.OSM
           var styleMap = new OpenLayers.StyleMap({
@@ -47,7 +54,8 @@
           layer = new OpenLayers.Layer.Vector("Polygon", {
               strategies: [new OpenLayers.Strategy.Fixed()],
               protocol: new OpenLayers.Protocol.HTTP({
-                  url: data_url + "?data=[adiff:\"" + mindate + "\"];(node(bbox);way(bbox);relation(bbox););out meta geom(bbox);&bbox=" + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
+                  url: data_url + "?data=[adiff:\"" + mindate + "\"" + maxdate
+                      + "];(node(bbox);way(bbox);relation(bbox););out meta geom(bbox);&bbox=" + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
                   format: new OSMDiffFormat({
                       extent: layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326"),
                       setStatus: function(status) { setStatus(status); },
@@ -322,6 +330,7 @@
   <div id="control_bar" class="control_bar" style="position:absolute; top:0%; left:0%; height:100%; width:30%; z-index:1">
     <form action="#" acceptCharset="UTF-8" onsubmit="alert(&nbsp;foo&nbsp;);">
       <input type="text" id="select_mindate" value=""></input>
+      <input type="text" id="select_maxdate" value=""></input>
       <input type="submit" value="Fetch data" onclick="refreshData()"></input>
     </form>  
     <div id="status_line" class="status_line">Ready</div>
