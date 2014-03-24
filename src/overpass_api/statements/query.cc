@@ -1425,7 +1425,7 @@ std::set< std::pair< Index, Index > > intersect_ranges
   
   while (it_a != range_a.end() && it_vec != range_vec.end())
   {
-    if (*it_vec < it_a->first)
+    if (!(it_a->first < Index(it_vec->val() + 0x100)))
       ++it_vec;
     else if (!(*it_vec < it_a->second))
       ++it_a;

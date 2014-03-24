@@ -81,7 +81,6 @@ void process_user_data(Transaction& transaction, map< uint32, string >& user_by_
           it2 != it->second.end(); ++it2)
 	ins.insert(Uint31_Index(*it2));
     }
-    user_by_id.clear();
   
     Block_Backend< Uint32_Index, Uint31_Index > user_db
         (transaction.data_index(meta_settings().USER_INDICES));

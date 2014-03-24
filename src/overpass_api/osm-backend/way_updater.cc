@@ -1018,7 +1018,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
       
   if (meta != only_data)
   {
-    map< uint32, vector< uint32 > > idxs_by_id;
     copy_idxs_by_id(new_meta, idxs_by_id);
     process_user_data(*transaction, user_by_id, idxs_by_id);
     
