@@ -1389,20 +1389,6 @@ void Query_Statement::collect_elems(vector< Id_Type >& ids,
 }
 
 
-//TODO: move to basic_types.h
-unsigned long long difference(Uint32_Index lhs, Uint32_Index rhs)
-{
-  return rhs.val() - lhs.val();
-}
-
-
-//TODO: move to basic_types.h
-unsigned long long difference(Uint31_Index lhs, Uint31_Index rhs)
-{
-  return 2*(rhs.val() - lhs.val()) - ((lhs.val()>>31) & 0x1) + ((rhs.val()>>31) & 0x1);
-}
-
-
 template< typename Index >
 std::set< std::pair< Index, Index > > intersect_ranges
     (const std::set< std::pair< Index, Index > >& range_a,

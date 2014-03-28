@@ -95,6 +95,13 @@ struct Uint32_Index
     uint32 value;
 };
 
+
+inline unsigned long long difference(Uint32_Index lhs, Uint32_Index rhs)
+{
+  return rhs.val() - lhs.val();
+}
+
+
 struct Uint31_Index : Uint32_Index
 {
   Uint31_Index() : Uint32_Index() {}
@@ -110,6 +117,13 @@ struct Uint31_Index : Uint32_Index
     return (this->value < index.value);
   }
 };
+
+
+inline unsigned long long difference(Uint31_Index lhs, Uint31_Index rhs)
+{
+  return 2*(rhs.val() - lhs.val()) - ((lhs.val()>>31) & 0x1) + ((rhs.val()>>31) & 0x1);
+}
+
 
 struct Uint64
 {
