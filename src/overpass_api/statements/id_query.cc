@@ -148,17 +148,10 @@ bool Id_Query_Constraint::get_data
      const vector< Node_Skeleton::Id_Type >& ids,
      bool invert_ids, uint64 timestamp)
 {
-  if (stmt->get_type() == Statement::NODE)
-  {
-    if (ids.empty())
-      collect_elems(rman, *osm_base_settings().NODES, stmt->get_lower(), stmt->get_upper(),
-		    into.nodes);
-    else
-      collect_elems(rman, *osm_base_settings().NODES, stmt->get_lower(), stmt->get_upper(),
-		    ids, invert_ids, into.nodes);
-  }
-		    
-  return true;
+  // Removed: doesn't work well with attic data
+  // and the function anyway shouldn't read from file
+    
+  return false;
 }
 
 bool Id_Query_Constraint::get_data
@@ -168,34 +161,8 @@ bool Id_Query_Constraint::get_data
      const vector< Uint32_Index >& ids,
      bool invert_ids, uint64 timestamp)
 {
-  if (stmt->get_type() == Statement::WAY)
-  {
-    if (ids.empty())
-      collect_elems(rman, *osm_base_settings().WAYS, stmt->get_lower(), stmt->get_upper(),
-		    into.ways);
-    else
-      collect_elems(rman, *osm_base_settings().WAYS, stmt->get_lower(), stmt->get_upper(),
-		    ids, invert_ids, into.ways);
-    return true;
-  }
-  else if (stmt->get_type() == Statement::RELATION)
-  {
-    if (ids.empty())
-      collect_elems(rman, *osm_base_settings().RELATIONS, stmt->get_lower(), stmt->get_upper(),
-		    into.relations);
-    else
-      collect_elems(rman, *osm_base_settings().RELATIONS, stmt->get_lower(), stmt->get_upper(),
-		    ids, invert_ids, into.relations);
-    return true;
-  }
-  else if (stmt->get_type() == Statement::AREA)
-  {
-    if (ids.empty())
-      collect_elems_flat(rman, stmt->get_lower().val(), stmt->get_upper().val(), ids, true, into.areas);
-    else
-      collect_elems_flat(rman, stmt->get_lower().val(), stmt->get_upper().val(), ids, invert_ids, into.areas);
-    return true;
-  }
+  // Removed: doesn't work well with attic data
+  // and the function anyway shouldn't read from file
 
   return false;
 }
@@ -203,17 +170,26 @@ bool Id_Query_Constraint::get_data
 void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   if (stmt->get_type() == Statement::NODE)
+  {
     filter_elems(stmt->get_lower(), stmt->get_upper(), into.nodes);
+    filter_elems(stmt->get_lower(), stmt->get_upper(), into.attic_nodes);
+  }
   else
     into.nodes.clear();
 
   if (stmt->get_type() == Statement::WAY)
+  {
     filter_elems(stmt->get_lower(), stmt->get_upper(), into.ways);
+    filter_elems(stmt->get_lower(), stmt->get_upper(), into.attic_ways);
+  }
   else
     into.ways.clear();
   
   if (stmt->get_type() == Statement::RELATION)
+  {
     filter_elems(stmt->get_lower(), stmt->get_upper(), into.relations);
+    filter_elems(stmt->get_lower(), stmt->get_upper(), into.attic_relations);
+  }
   else
     into.relations.clear();
   
