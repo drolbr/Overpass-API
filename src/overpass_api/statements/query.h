@@ -95,11 +95,6 @@ class Query_Statement : public Output_Statement
          const File_Properties& file_prop, const File_Properties* attic_file_prop,
          Resource_Manager& rman, Transaction& transaction);
 
-    template < typename TIndex, typename Id_Type >
-    set< pair< TIndex, TIndex > > get_ranges_by_id_from_db
-        (const vector< Id_Type >& ids,
-         Resource_Manager& rman, File_Properties& file_prop);
-
     template< typename Id_Type, typename Index >
     void progress_1(std::vector< Id_Type >& ids, std::vector< Index >& range_req,
                     bool& invert_ids, uint64 timestamp,

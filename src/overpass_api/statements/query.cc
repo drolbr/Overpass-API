@@ -614,31 +614,6 @@ void Query_Statement::get_elements_by_id_from_db
 }
 
 
-template < typename TIndex, typename Id_Type >
-set< pair< TIndex, TIndex > > Query_Statement::get_ranges_by_id_from_db
-    (const vector< Id_Type >& ids,
-     Resource_Manager& rman, File_Properties& file_prop)
-{
-  rman.health_check(*this, ids.size()/1000, ids.size()*60);
-  set< pair< TIndex, TIndex > > range_req;
-  {
-    Random_File< TIndex > random
-        (rman.get_transaction()->random_index(&file_prop));
-    uint count = 0;
-    for (typename vector< Id_Type >::const_iterator it(ids.begin()); it != ids.end(); ++it)
-    {
-      range_req.insert(make_pair(random.get(it->val()), TIndex(random.get(it->val()).val()+1)));
-      if (++count >= 1000)
-      {
-	rman.health_check(*this);
-	count = 0;
-      }
-    }
-  }
-  return range_req;
-}
-
-
 template< typename TIndex, typename TObject >
 void clear_empty_indices
     (map< TIndex, vector< TObject > >& modify)
@@ -1580,13 +1555,6 @@ void Query_Statement::execute(Resource_Manager& rman)
     
     if (type == QUERY_NODE)
     {
-      if (answer_state < ranges_collected && !invert_ids)
-        range_req_32 = get_ranges_by_id_from_db< Uint32_Index >
-            (node_ids, rman, *osm_base_settings().NODES);
-//       for (set< pair< Uint32_Index, Uint32_Index > >::const_iterator it = range_req_32.begin();
-//           it != range_req_32.end(); ++it)
-//         std::cout<<hex<<it->first.val()<<'\t'<<it->second.val()<<'\n';
-//       std::cout<<dec<<answer_state<<'\n';
       if (answer_state < data_collected)
         ::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
             (into.nodes, into.attic_nodes,
@@ -1595,9 +1563,6 @@ void Query_Statement::execute(Resource_Manager& rman)
     }
     else if (type == QUERY_WAY)
     {
-      if (answer_state < ranges_collected && !invert_ids)
-	range_req_31 = get_ranges_by_id_from_db< Uint31_Index >
-	    (ids, rman, *osm_base_settings().WAYS);
       if (answer_state < data_collected)
 	::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
 	    (into.ways, into.attic_ways,
@@ -1606,9 +1571,6 @@ void Query_Statement::execute(Resource_Manager& rman)
     }
     else if (type == QUERY_RELATION)
     {
-      if (answer_state < ranges_collected && !invert_ids)
-	range_req_31 = get_ranges_by_id_from_db< Uint31_Index >
-	    (ids, rman, *osm_base_settings().RELATIONS);
       if (answer_state < data_collected)
 	::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
 	    (into.relations, into.attic_relations,
