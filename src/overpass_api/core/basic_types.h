@@ -20,6 +20,9 @@
 #define DE__OSM3S___OVERPASS_API__CORE__BASIC_TYPES_H
 
 
+#include <vector>
+
+
 typedef unsigned int uint;
 
 typedef char int8;
@@ -233,6 +236,69 @@ struct Attic : public Element_Skeleton
     return (*static_cast< const Element_Skeleton* >(this) == rhs && timestamp == rhs.timestamp);
   }
 };
+
+
+template< typename Object >
+void make_delta(const std::vector< Object >& source, const std::vector< Object >& reference,
+                std::vector< uint >& to_remove, std::vector< std::pair< uint, Object > >& to_add)
+{
+  //Detect a common prefix
+  uint prefix_length = 0;
+  while (prefix_length < source.size() && prefix_length < reference.size()
+      && source[prefix_length] == reference[prefix_length])
+    ++prefix_length;
+  
+  //Detect a common suffix
+  uint suffix_length = 1;
+  while (suffix_length < source.size() - prefix_length && suffix_length < reference.size() - prefix_length
+      && source[source.size() - suffix_length] == reference[reference.size() - suffix_length])
+    ++suffix_length;
+  --suffix_length;
+  
+  for (uint i = prefix_length; i < reference.size() - suffix_length; ++i)
+    to_remove.push_back(i);
+  
+  for (uint i = prefix_length; i < source.size() - suffix_length; ++i)
+    to_add.push_back(std::make_pair(i, source[i]));
+}
+
+
+template< typename Object >
+void copy_elems(const std::vector< Object >& source, std::vector< std::pair< uint, Object > >& target)
+{
+  uint i = 0;
+  for (typename std::vector< Object >::const_iterator it = source.begin(); it != source.end(); ++it)
+    target.push_back(make_pair(i++, *it));
+}
+
+
+template< typename Object >
+void expand_diff(const std::vector< Object >& reference,
+    const std::vector< uint >& removed, const std::vector< std::pair< uint, Object > >& added,
+    std::vector< Object >& target)
+{
+  target.reserve(reference.size() - removed.size() + added.size());
+  std::vector< uint >::const_iterator it_removed = removed.begin();
+  typename std::vector< std::pair< uint, Object > >::const_iterator it_added = added.begin();
+  for (uint i = 0; i < reference.size(); ++i)
+  {
+    while (it_added != added.end() && target.size() == it_added->first)
+    {
+      target.push_back(it_added->second);
+      ++it_added;
+    }
+      
+    if (it_removed == removed.end() || i < *it_removed)
+      target.push_back(reference[i]);
+    else
+      ++it_removed;
+  }
+  while (it_added != added.end() && target.size() == it_added->first)
+  {
+    target.push_back(it_added->second);
+    ++it_added;
+  }
+}
 
 
 #endif
