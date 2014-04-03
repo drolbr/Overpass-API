@@ -238,6 +238,20 @@ struct Attic : public Element_Skeleton
 };
 
 
+template< typename Attic >
+struct Delta_Comparator
+{
+public:
+  bool operator()(const Attic& lhs, const Attic& rhs) const
+  {
+    if (lhs.id == rhs.id)
+      return rhs.timestamp < lhs.timestamp;
+    else
+      return lhs.id < rhs.id;
+  }
+};
+
+
 template< typename Object >
 void make_delta(const std::vector< Object >& source, const std::vector< Object >& reference,
                 std::vector< uint >& to_remove, std::vector< std::pair< uint, Object > >& to_add)

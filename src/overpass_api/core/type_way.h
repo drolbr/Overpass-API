@@ -84,8 +84,7 @@ struct Way_Delta;
 struct Way_Skeleton
 {
   typedef Way::Id_Type Id_Type;
-  typedef Way_Skeleton Delta;
-  //TODO typedef Way_Delta Delta;
+  typedef Way_Delta Delta;
 
   Id_Type id;
   std::vector< Node::Id_Type > nds;

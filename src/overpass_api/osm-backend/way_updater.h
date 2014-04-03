@@ -366,7 +366,7 @@ struct Way_Updater
       { return new_skeletons; }
   const std::map< Uint31_Index, std::set< Way_Skeleton > > get_attic_skeletons() const
       { return attic_skeletons; }
-  const std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > > get_new_attic_skeletons() const
+  const std::map< Uint31_Index, std::set< Attic< Way_Delta > > > get_new_attic_skeletons() const
       { return new_attic_skeletons; }
   
 private:
@@ -384,7 +384,7 @@ private:
 
   std::map< Uint31_Index, std::set< Way_Skeleton > > new_skeletons;
   std::map< Uint31_Index, std::set< Way_Skeleton > > attic_skeletons;
-  std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > > new_attic_skeletons;
+  std::map< Uint31_Index, std::set< Attic< Way_Delta > > > new_attic_skeletons;
   
   Key_Storage keys;
   
