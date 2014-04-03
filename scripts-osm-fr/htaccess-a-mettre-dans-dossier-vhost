@@ -2,14 +2,16 @@ RewriteEngine on
 Rewriterule (osm2node) osm2node.php
 Rewriterule (osm2nodegpx) osm2node.php
 
-RewriteCond %{REQUEST_URI} ^/(browse|user|oauth)/
+RewriteCond %{REQUEST_URI} ^/(browse|user|oauth|way|node|relation)/
 Rewriterule (.*) http://www.openstreetmap.org/$1 [R=301]
 
 #Quand overpass et xapi sont down, redirect vers autre miroir overpass
+#ATTENTION : j'ai bien l'impression que parfois ça foire, lié à une encodage curieux de l'url
+
 #RewriteCond %{REQUEST_URI}  ^/xapi(.*)
-#Rewriterule .* http://overpass-api.de/api/xapi_meta$1 [R=302]
+#Rewriterule .* http://www.overpass-api.de/api/xapi_meta$1 [R=302]
 #RewriteCond %{REQUEST_URI}  ^/xapi-without-meta(.*)
-#Rewriterule .* http://overpass-api.de/api/xapi$1 [R=302]
+#Rewriterule .* http://www.overpass-api.de/api/xapi$1 [R=302]
 #RewriteCond %{REQUEST_URI}  ^/oapi/interpreter(.*)
-#Rewriterule .* http://overpass-api.de/api/interpreter$1 [R=302]    
+#Rewriterule .* http://www.overpass-api.de/api/interpreter$1 [R=302]    
 
