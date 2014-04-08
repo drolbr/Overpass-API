@@ -2,7 +2,7 @@ RewriteEngine on
 Rewriterule (osm2node) osm2node.php
 Rewriterule (osm2nodegpx) osm2node.php
 
-RewriteCond %{REQUEST_URI} ^/(browse|user|oauth|way|node|relation)/
+RewriteCond %{REQUEST_URI} ^/(browse|user|oauth|way|node|relation|changeset)/
 Rewriterule (.*) http://www.openstreetmap.org/$1 [R=301]
 
 #Quand overpass et xapi sont down, redirect vers autre miroir overpass
