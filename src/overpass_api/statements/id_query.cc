@@ -117,6 +117,58 @@ void filter_elems(Uint64 lower, Uint64 upper,
   }
 }
 
+
+/* Returns for the given set of ids the set of corresponding indexes.
+ * For ids where the timestamp is zero, only the current index is returned.
+ * For ids where the timestamp is nonzero, all attic indexes are also returned.
+ * The function requires that the ids are sorted ascending by id.
+ */
+template< typename Index, typename Skeleton >
+std::vector< Index > get_indexes_
+    (const std::vector< typename Skeleton::Id_Type >& ids, Resource_Manager& rman)
+{
+  std::vector< Index > result;
+  
+  Random_File< Index > current(rman.get_transaction()->random_index
+      (current_skeleton_file_properties< Skeleton >()));
+  for (typename std::vector< typename Skeleton::Id_Type >::const_iterator
+      it = ids.begin(); it != ids.end(); ++it)
+    result.push_back(current.get(it->val()));
+  
+  std::sort(result.begin(), result.end());
+  result.erase(std::unique(result.begin(), result.end()), result.end());
+  
+  if (rman.get_desired_timestamp() != NOW)
+  {
+    Random_File< Index > attic_random(rman.get_transaction()->random_index
+        (attic_skeleton_file_properties< Skeleton >()));
+    std::set< typename Skeleton::Id_Type > idx_list_ids;
+    for (typename std::vector< typename Skeleton::Id_Type >::const_iterator
+        it = ids.begin(); it != ids.end(); ++it)
+    {
+      if (attic_random.get(it->val()).val() == 0)
+        ;
+      else if (attic_random.get(it->val()) == 0xff)
+        idx_list_ids.insert(it->val());
+      else
+        result.push_back(attic_random.get(it->val()));
+    }
+  
+    Block_Backend< typename Skeleton::Id_Type, Index > idx_list_db
+        (rman.get_transaction()->data_index(attic_idx_list_properties< Skeleton >()));
+    for (typename Block_Backend< typename Skeleton::Id_Type, Index >::Discrete_Iterator
+        it(idx_list_db.discrete_begin(idx_list_ids.begin(), idx_list_ids.end()));
+        !(it == idx_list_db.discrete_end()); ++it)
+      result.push_back(it.object());
+  
+    std::sort(result.begin(), result.end());
+    result.erase(std::unique(result.begin(), result.end()), result.end());
+  }
+  
+  return result;
+}
+
+
 //-----------------------------------------------------------------------------
 
 class Id_Query_Constraint : public Query_Constraint
@@ -126,15 +178,19 @@ class Id_Query_Constraint : public Query_Constraint
     
     bool delivers_data() { return true; }
     
-    virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-                          const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-                          const vector< Node::Id_Type >& ids,
-                          bool invert_ids, uint64 timestamp);
-    virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-                          const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-                          int type,
-                          const vector< Uint32_Index >& ids,
-                          bool invert_ids, uint64 timestamp);
+    bool get_ranges
+        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
+    bool get_ranges
+        (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
+//     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
+//                           const set< pair< Uint32_Index, Uint32_Index > >& ranges,
+//                           const vector< Node::Id_Type >& ids,
+//                           bool invert_ids, uint64 timestamp);
+//     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
+//                           const set< pair< Uint31_Index, Uint31_Index > >& ranges,
+//                           int type,
+//                           const vector< Uint32_Index >& ids,
+//                           bool invert_ids, uint64 timestamp);
     void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Id_Query_Constraint() {}
     
@@ -142,30 +198,74 @@ class Id_Query_Constraint : public Query_Constraint
     Id_Query_Statement* stmt;
 };
 
-bool Id_Query_Constraint::get_data
-    (const Statement& query, Resource_Manager& rman, Set& into,
-     const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-     const vector< Node_Skeleton::Id_Type >& ids,
-     bool invert_ids, uint64 timestamp)
+
+bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
 {
-  // Removed: doesn't work well with attic data
-  // and the function anyway shouldn't read from file
-    
-  return false;
+  std::vector< Node_Skeleton::Id_Type > ids;
+  for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
+    ids.push_back(i);
+  std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(ids, rman);
+  
+  ranges.clear();
+  for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+    ranges.insert(std::make_pair(*it, ++Uint32_Index(*it)));
+  
+  return true;
 }
 
-bool Id_Query_Constraint::get_data
-    (const Statement& query, Resource_Manager& rman, Set& into,
-     const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-     int type,
-     const vector< Uint32_Index >& ids,
-     bool invert_ids, uint64 timestamp)
-{
-  // Removed: doesn't work well with attic data
-  // and the function anyway shouldn't read from file
 
-  return false;
+bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
+{
+  std::vector< Uint31_Index > req;
+  if (stmt->get_type() == Statement::WAY)
+  {
+    std::vector< Way_Skeleton::Id_Type > ids;
+    for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
+      ids.push_back(i);
+    get_indexes_< Uint31_Index, Way_Skeleton >(ids, rman).swap(req);
+  }
+  else
+  {
+    std::vector< Relation_Skeleton::Id_Type > ids;
+    for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
+      ids.push_back(i);
+    get_indexes_< Uint31_Index, Relation_Skeleton >(ids, rman).swap(req);
+  }
+  
+  ranges.clear();
+  for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+    ranges.insert(std::make_pair(*it, inc(*it)));
+  
+  return true;
 }
+
+
+// bool Id_Query_Constraint::get_data
+//     (const Statement& query, Resource_Manager& rman, Set& into,
+//      const set< pair< Uint32_Index, Uint32_Index > >& ranges,
+//      const vector< Node_Skeleton::Id_Type >& ids,
+//      bool invert_ids, uint64 timestamp)
+// {
+//   // Removed: doesn't work well with attic data
+//   // and the function anyway shouldn't read from file
+//     
+//   return false;
+// }
+
+
+// bool Id_Query_Constraint::get_data
+//     (const Statement& query, Resource_Manager& rman, Set& into,
+//      const set< pair< Uint31_Index, Uint31_Index > >& ranges,
+//      int type,
+//      const vector< Uint32_Index >& ids,
+//      bool invert_ids, uint64 timestamp)
+// {
+//   // Removed: doesn't work well with attic data
+//   // and the function anyway shouldn't read from file
+// 
+//   return false;
+// }
+
 
 void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
@@ -310,57 +410,6 @@ struct Attic_Skeleton_By_Id
     return (rhs.timestamp < timestamp);
   }
 };
-
-
-/* Returns for the given set of ids the set of corresponding indexes.
- * For ids where the timestamp is zero, only the current index is returned.
- * For ids where the timestamp is nonzero, all attic indexes are also returned.
- * The function requires that the ids are sorted ascending by id.
- */
-template< typename Index, typename Skeleton >
-std::vector< Index > get_indexes_
-    (const std::vector< typename Skeleton::Id_Type >& ids, Resource_Manager& rman)
-{
-  std::vector< Index > result;
-  
-  Random_File< Index > current(rman.get_transaction()->random_index
-      (current_skeleton_file_properties< Skeleton >()));
-  for (typename std::vector< typename Skeleton::Id_Type >::const_iterator
-      it = ids.begin(); it != ids.end(); ++it)
-    result.push_back(current.get(it->val()));
-  
-  std::sort(result.begin(), result.end());
-  result.erase(std::unique(result.begin(), result.end()), result.end());
-  
-  if (rman.get_desired_timestamp() != NOW)
-  {
-    Random_File< Index > attic_random(rman.get_transaction()->random_index
-        (attic_skeleton_file_properties< Skeleton >()));
-    std::set< typename Skeleton::Id_Type > idx_list_ids;
-    for (typename std::vector< typename Skeleton::Id_Type >::const_iterator
-        it = ids.begin(); it != ids.end(); ++it)
-    {
-      if (attic_random.get(it->val()).val() == 0)
-        ;
-      else if (attic_random.get(it->val()) == 0xff)
-        idx_list_ids.insert(it->val());
-      else
-        result.push_back(attic_random.get(it->val()));
-    }
-  
-    Block_Backend< typename Skeleton::Id_Type, Index > idx_list_db
-        (rman.get_transaction()->data_index(attic_idx_list_properties< Skeleton >()));
-    for (typename Block_Backend< typename Skeleton::Id_Type, Index >::Discrete_Iterator
-        it(idx_list_db.discrete_begin(idx_list_ids.begin(), idx_list_ids.end()));
-        !(it == idx_list_db.discrete_end()); ++it)
-      result.push_back(it.object());
-  
-    std::sort(result.begin(), result.end());
-    result.erase(std::unique(result.begin(), result.end()), result.end());
-  }
-  
-  return result;
-}
 
 
 template< typename Index, typename Skeleton >

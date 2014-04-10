@@ -162,6 +162,29 @@ void filter_ways_by_ranges(map< Uint31_Index, vector< Attic< Way_Skeleton > > >&
                            const set< pair< Uint31_Index, Uint31_Index > >& ranges);
 
 
+template< typename Relation_Skeleton >
+void filter_relations_by_ranges(map< Uint31_Index, vector< Relation_Skeleton > >& relations,
+                                const set< pair< Uint31_Index, Uint31_Index > >& ranges)
+{
+  set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it = ranges.begin();
+  typename map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = relations.begin();
+  for (; it != relations.end() && ranges_it != ranges.end(); )
+  {
+    if (!(it->first < ranges_it->second))
+      ++ranges_it;
+    else if (!(it->first < ranges_it->first))
+      ++it;
+    else
+    {
+      it->second.clear();
+      ++it;
+    }
+  }
+  for (; it != relations.end(); ++it)
+    it->second.clear();
+}
+
+
 class Way_Geometry_Store
 {
 public:

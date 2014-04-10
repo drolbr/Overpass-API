@@ -96,6 +96,18 @@ struct Uint32_Index
 };
 
 
+inline Uint32_Index inc(Uint32_Index idx)
+{
+  return Uint32_Index(idx.val() + 1);
+}
+
+
+inline Uint32_Index dec(Uint32_Index idx)
+{
+  return Uint32_Index(idx.val() - 1);
+}
+
+
 inline unsigned long long difference(Uint32_Index lhs, Uint32_Index rhs)
 {
   return rhs.val() - lhs.val();
@@ -117,6 +129,15 @@ struct Uint31_Index : Uint32_Index
     return (this->value < index.value);
   }
 };
+
+
+inline Uint31_Index inc(Uint31_Index idx)
+{
+  if (idx.val() & 0x80000000)
+    return Uint31_Index((idx.val() & 0x7fffffff) + 1);
+  else
+    return Uint31_Index(idx.val() | 0x80000000);
+}
 
 
 inline unsigned long long difference(Uint31_Index lhs, Uint31_Index rhs)

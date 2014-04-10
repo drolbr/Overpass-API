@@ -33,25 +33,6 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
-Uint32_Index inc(Uint32_Index idx)
-{
-  return Uint32_Index(idx.val() + 1);
-}
-
-Uint32_Index dec(Uint32_Index idx)
-{
-  return Uint32_Index(idx.val() - 1);
-}
-
-Uint31_Index inc(Uint31_Index idx)
-{
-  if (idx.val() & 0x80000000)
-    return Uint31_Index((idx.val() & 0x7fffffff) + 1);
-  else
-    return Uint31_Index(idx.val() | 0x80000000);
-}
-
-
 template < class TIndex, class TObject >
 set< pair< TIndex, TIndex > > ranges(const map< TIndex, vector< TObject > >& elems)
 {
@@ -304,6 +285,7 @@ class Around_Constraint : public Query_Constraint
     bool ranges_used;
 };
 
+
 bool Around_Constraint::get_ranges
     (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
 {
@@ -312,6 +294,7 @@ bool Around_Constraint::get_ranges
   ranges = around->calc_ranges(rman.sets()[around->get_source_name()], rman);
   return true;
 }
+
 
 bool Around_Constraint::get_ranges
     (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
@@ -322,9 +305,9 @@ bool Around_Constraint::get_ranges
   return true;
 }
 
+
 void Around_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
-  // pre-process ways to reduce the load of the expensive filter
   if (ranges_used == false)
   {
     // pre-filter nodes
@@ -333,8 +316,25 @@ void Around_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timesta
       get_ranges(rman, ranges);
       
       set< pair< Uint32_Index, Uint32_Index > >::const_iterator ranges_it = ranges.begin();
-      map< Uint32_Index, vector< Node_Skeleton > >::iterator it = into.nodes.begin();
-      for (; it != into.nodes.end() && ranges_it != ranges.end(); )
+      map< Uint32_Index, vector< Node_Skeleton > >::iterator nit = into.nodes.begin();
+      for (; nit != into.nodes.end() && ranges_it != ranges.end(); )
+      {
+        if (!(nit->first < ranges_it->second))
+	  ++ranges_it;
+        else if (!(nit->first < ranges_it->first))
+	  ++nit;
+        else
+        {
+	  nit->second.clear();
+	  ++nit;
+        }
+      }
+      for (; nit != into.nodes.end(); ++nit)
+        nit->second.clear();
+      
+      ranges_it = ranges.begin();
+      map< Uint32_Index, vector< Attic< Node_Skeleton > > >::iterator it = into.attic_nodes.begin();
+      for (; it != into.attic_nodes.end() && ranges_it != ranges.end(); )
       {
         if (!(it->first < ranges_it->second))
 	  ++ranges_it;
@@ -346,35 +346,56 @@ void Around_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timesta
 	  ++it;
         }
       }
-      for (; it != into.nodes.end(); ++it)
+      for (; it != into.attic_nodes.end(); ++it)
         it->second.clear();
     }
     
     set< pair< Uint31_Index, Uint31_Index > > ranges;
     get_ranges(rman, ranges);
     
+    // pre-process ways to reduce the load of the expensive filter
     // pre-filter ways
     filter_ways_by_ranges(into.ways, ranges);
+    filter_ways_by_ranges(into.attic_ways, ranges);
 
     // pre-filter relations
-    {
-      set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it = ranges.begin();
-      map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = into.relations.begin();
-      for (; it != into.relations.end() && ranges_it != ranges.end(); )
-      {
-        if (!(it->first < ranges_it->second))
-	  ++ranges_it;
-        else if (!(it->first < ranges_it->first))
-	  ++it;
-        else
-        {
-	  it->second.clear();
-	  ++it;
-        }
-      }
-      for (; it != into.relations.end(); ++it)
-        it->second.clear();
-    }
+    filter_relations_by_ranges(into.relations, ranges);
+    filter_relations_by_ranges(into.attic_relations, ranges);
+//     {
+//       set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it = ranges.begin();
+//       map< Uint31_Index, vector< Relation_Skeleton > >::iterator rit = into.relations.begin();
+//       for (; rit != into.relations.end() && ranges_it != ranges.end(); )
+//       {
+//         if (!(rit->first < ranges_it->second))
+// 	  ++ranges_it;
+//         else if (!(rit->first < ranges_it->first))
+// 	  ++rit;
+//         else
+//         {
+// 	  rit->second.clear();
+// 	  ++rit;
+//         }
+//       }
+//       for (; rit != into.relations.end(); ++rit)
+//         rit->second.clear();
+//       
+//       ranges_it = ranges.begin();
+//       map< Uint31_Index, vector< Attic< Relation_Skeleton > > >::iterator it = into.attic_relations.begin();
+//       for (; it != into.attic_relations.end() && ranges_it != ranges.end(); )
+//       {
+//         if (!(it->first < ranges_it->second))
+// 	  ++ranges_it;
+//         else if (!(it->first < ranges_it->first))
+// 	  ++it;
+//         else
+//         {
+// 	  it->second.clear();
+// 	  ++it;
+//         }
+//       }
+//       for (; it != into.attic_relations.end(); ++it)
+//         it->second.clear();
+//     }
   }
   ranges_used = false;
   
@@ -764,7 +785,10 @@ set< pair< Uint32_Index, Uint32_Index > > Around_Statement::calc_ranges
     return expand(ranges(lat, lon), radius);
   else
     return expand(set_union_
-        (ranges(input.nodes), children(set_union_(ranges(input.ways), ranges(input.relations)))),
+        (set_union_(ranges(input.nodes), ranges(input.attic_nodes)),
+	    children(set_union_(
+	        set_union_(ranges(input.ways), ranges(input.attic_ways)),
+	        set_union_(ranges(input.relations), ranges(input.attic_relations))))),
         radius);
 }
 
