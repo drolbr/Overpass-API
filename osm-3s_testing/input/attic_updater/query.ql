@@ -868,3 +868,17 @@ node(12012);out ids;
 node(120210);rel(bn:"foo");out meta;
 node(11013);out ids;
 way(13221);rel(bw:"foo");out meta;
+
+node(around:2500,10.0,4.0);out meta;
+way(around:2500,10.0,4.0);out meta;
+node(11011);out ids;
+rel(around:1,10.301,4.02);out meta;
+node(11011);out ids;
+rel(around:100,20.2,4.0203);out meta;
+
+node(11011);out ids;
+node(1402);node(around:1500);out meta;
+node(11011);out ids;
+way(1402);node(around:1500);out meta;
+node(11011);out ids;
+rel(1432);node(around:1500);out meta;

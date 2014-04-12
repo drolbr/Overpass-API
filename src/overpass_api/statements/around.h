@@ -76,6 +76,12 @@ class Around_Statement : public Output_Statement
     bool is_inside(double first_lat, double first_lon, double second_lat, double second_lon) const;
     bool is_inside(const vector< Quad_Coord >& way_geometry) const;
     
+    template< typename Node_Skeleton >
+    void add_nodes(const map< Uint32_Index, vector< Node_Skeleton > >& nodes);
+    
+    template< typename Way_Skeleton >
+    void add_ways(const map< Uint31_Index, vector< Way_Skeleton > >& ways,
+		  const Way_Geometry_Store& way_geometries);
   private:
     string input;
     double radius;

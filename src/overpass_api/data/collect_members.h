@@ -675,4 +675,42 @@ void swap_components(std::pair< First, Second > pair, First& first, Second& seco
 }
 
 
+template< typename Index, typename Skeleton, typename Order_By_Id >
+vector< pair< Index, const Skeleton* > > order_by_id
+    (const map< Index, vector< Skeleton > >& skels,
+     const Order_By_Id& order_by_id)
+{
+  vector< pair< Index, const Skeleton* > > skels_by_id;
+  for (typename map< Index, vector< Skeleton > >::const_iterator it = skels.begin();
+      it != skels.end(); ++it)
+  {
+    for (typename vector< Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      skels_by_id.push_back(make_pair(it->first, &*iit));
+  }
+  sort(skels_by_id.begin(), skels_by_id.end(), order_by_id);
+  
+  return skels_by_id;
+}
+
+
+template< typename Index, typename Skeleton, typename Order_By_Id >
+vector< pair< Index, const Skeleton* > > order_attic_by_id
+    (const map< Index, vector< Attic< Skeleton > > >& skels,
+     const Order_By_Id& order_by_id)
+{
+  vector< pair< Index, const Skeleton* > > skels_by_id;
+  for (typename map< Index, vector< Attic< Skeleton > > >::const_iterator it = skels.begin();
+      it != skels.end(); ++it)
+  {
+    for (typename vector< Attic< Skeleton > >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      skels_by_id.push_back(make_pair(it->first, &*iit));
+  }
+  sort(skels_by_id.begin(), skels_by_id.end(), order_by_id);
+  
+  return skels_by_id;
+}
+
+
 #endif

@@ -308,266 +308,216 @@ bool Around_Constraint::get_ranges
 
 void Around_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
-  if (ranges_used == false)
   {
-    // pre-filter nodes
-    {
-      set< pair< Uint32_Index, Uint32_Index > > ranges;
-      get_ranges(rman, ranges);
-      
-      set< pair< Uint32_Index, Uint32_Index > >::const_iterator ranges_it = ranges.begin();
-      map< Uint32_Index, vector< Node_Skeleton > >::iterator nit = into.nodes.begin();
-      for (; nit != into.nodes.end() && ranges_it != ranges.end(); )
-      {
-        if (!(nit->first < ranges_it->second))
-	  ++ranges_it;
-        else if (!(nit->first < ranges_it->first))
-	  ++nit;
-        else
-        {
-	  nit->second.clear();
-	  ++nit;
-        }
-      }
-      for (; nit != into.nodes.end(); ++nit)
-        nit->second.clear();
-      
-      ranges_it = ranges.begin();
-      map< Uint32_Index, vector< Attic< Node_Skeleton > > >::iterator it = into.attic_nodes.begin();
-      for (; it != into.attic_nodes.end() && ranges_it != ranges.end(); )
-      {
-        if (!(it->first < ranges_it->second))
-	  ++ranges_it;
-        else if (!(it->first < ranges_it->first))
-	  ++it;
-        else
-        {
-	  it->second.clear();
-	  ++it;
-        }
-      }
-      for (; it != into.attic_nodes.end(); ++it)
-        it->second.clear();
-    }
-    
-    set< pair< Uint31_Index, Uint31_Index > > ranges;
+    set< pair< Uint32_Index, Uint32_Index > > ranges;
     get_ranges(rman, ranges);
     
-    // pre-process ways to reduce the load of the expensive filter
-    // pre-filter ways
-    filter_ways_by_ranges(into.ways, ranges);
-    filter_ways_by_ranges(into.attic_ways, ranges);
-
-    // pre-filter relations
-    filter_relations_by_ranges(into.relations, ranges);
-    filter_relations_by_ranges(into.attic_relations, ranges);
-//     {
-//       set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it = ranges.begin();
-//       map< Uint31_Index, vector< Relation_Skeleton > >::iterator rit = into.relations.begin();
-//       for (; rit != into.relations.end() && ranges_it != ranges.end(); )
-//       {
-//         if (!(rit->first < ranges_it->second))
-// 	  ++ranges_it;
-//         else if (!(rit->first < ranges_it->first))
-// 	  ++rit;
-//         else
-//         {
-// 	  rit->second.clear();
-// 	  ++rit;
-//         }
-//       }
-//       for (; rit != into.relations.end(); ++rit)
-//         rit->second.clear();
-//       
-//       ranges_it = ranges.begin();
-//       map< Uint31_Index, vector< Attic< Relation_Skeleton > > >::iterator it = into.attic_relations.begin();
-//       for (; it != into.attic_relations.end() && ranges_it != ranges.end(); )
-//       {
-//         if (!(it->first < ranges_it->second))
-// 	  ++ranges_it;
-//         else if (!(it->first < ranges_it->first))
-// 	  ++it;
-//         else
-//         {
-// 	  it->second.clear();
-// 	  ++it;
-//         }
-//       }
-//       for (; it != into.attic_relations.end(); ++it)
-//         it->second.clear();
-//     }
+    set< pair< Uint32_Index, Uint32_Index > >::const_iterator ranges_it = ranges.begin();
+    map< Uint32_Index, vector< Node_Skeleton > >::iterator nit = into.nodes.begin();
+    for (; nit != into.nodes.end() && ranges_it != ranges.end(); )
+    {
+      if (!(nit->first < ranges_it->second))
+	  ++ranges_it;
+      else if (!(nit->first < ranges_it->first))
+	  ++nit;
+      else
+      {
+	  nit->second.clear();
+	  ++nit;
+      }
+    }
+    for (; nit != into.nodes.end(); ++nit)
+      nit->second.clear();
+    
+    ranges_it = ranges.begin();
+    map< Uint32_Index, vector< Attic< Node_Skeleton > > >::iterator it = into.attic_nodes.begin();
+    for (; it != into.attic_nodes.end() && ranges_it != ranges.end(); )
+    {
+      if (!(it->first < ranges_it->second))
+	  ++ranges_it;
+      else if (!(it->first < ranges_it->first))
+	  ++it;
+      else
+      {
+	  it->second.clear();
+	  ++it;
+      }
+    }
+    for (; it != into.attic_nodes.end(); ++it)
+      it->second.clear();
   }
+  
+  set< pair< Uint31_Index, Uint31_Index > > ranges;
+  get_ranges(rman, ranges);
+  
+  // pre-process ways to reduce the load of the expensive filter
+  // pre-filter ways
+  filter_ways_by_ranges(into.ways, ranges);
+  filter_ways_by_ranges(into.attic_ways, ranges);
+
+  // pre-filter relations
+  filter_relations_by_ranges(into.relations, ranges);
+  filter_relations_by_ranges(into.attic_relations, ranges);
+
   ranges_used = false;
   
   //TODO: areas
 }
 
 
-struct Relation_Member_Collection
+template< typename Node_Skeleton >
+void filter_nodes_expensive(const Around_Statement& around,
+                            map< Uint32_Index, vector< Node_Skeleton > >& nodes)
 {
-  Relation_Member_Collection(const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
-			     const Statement& query, Resource_Manager& rman,
-			     set< pair< Uint32_Index, Uint32_Index > >* node_ranges,
-			     set< pair< Uint31_Index, Uint31_Index > >* way_ranges)
-      : query_(query),
-	way_members(relation_way_members(&query, rman, relations, way_ranges)),
-        node_members(relation_node_members(&query, rman, relations, node_ranges))
+  for (typename map< Uint32_Index, vector< Node_Skeleton > >::iterator it = nodes.begin();
+      it != nodes.end(); ++it)
   {
-    // Retrieve all nodes referred by the ways.    
-/*    if (node_ranges)
-      collect_nodes(query, rman, relations.begin(), relations.end(), node_members, *node_ranges);
-    else
-      collect_nodes(query, rman, relations.begin(), relations.end(), node_members);*/
-    
-    // Order node ids by id.
-    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = node_members.begin();
-        it != node_members.end(); ++it)
+    vector< Node_Skeleton > local_into;
+    for (typename vector< Node_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
     {
-      for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-        node_members_by_id.push_back(make_pair(it->first, &*iit));
+      double lat(::lat(it->first.val(), iit->ll_lower));
+      double lon(::lon(it->first.val(), iit->ll_lower));
+      if (around.is_inside(lat, lon))
+	local_into.push_back(*iit);
     }
-    Order_By_Node_Id order_by_node_id;
-    sort(node_members_by_id.begin(), node_members_by_id.end(), order_by_node_id);
-    
-    // Retrieve all ways referred by the relations.
-/*    if (way_ranges)
-      collect_ways(query, rman, relations.begin(), relations.end(), way_members, *way_ranges);
-    else
-      collect_ways(query, rman, relations.begin(), relations.end(), way_members);*/
-    
-    // Order way ids by id.
-    for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = way_members.begin();
-        it != way_members.end(); ++it)
+    it->second.swap(local_into);
+  }
+}
+
+
+template< typename Way_Skeleton >
+void filter_ways_expensive(const Around_Statement& around,
+                           const Way_Geometry_Store& way_geometries,
+                           map< Uint31_Index, vector< Way_Skeleton > >& ways)
+{
+  for (typename map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin();
+      it != ways.end(); ++it)
+  {
+    vector< Way_Skeleton > local_into;
+    for (typename vector< Way_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
     {
-      for (vector< Way_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-        way_members_by_id.push_back(make_pair(it->first, &*iit));
+      if (around.is_inside(way_geometries.get_geometry(*iit)))
+	local_into.push_back(*iit);
     }
-    Order_By_Way_Id order_by_way_id;
-    sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_way_id);
+    it->second.swap(local_into);
   }
-  
-  const pair< Uint32_Index, const Node_Skeleton* >* get_node_by_id(Uint64 id) const
-  {
-    const pair< Uint32_Index, const Node_Skeleton* >* node =
-        binary_search_for_pair_id(node_members_by_id, id);
-    
-    return node;
-  }
+}
 
-  const pair< Uint31_Index, const Way_Skeleton* >* get_way_by_id(Uint32_Index id) const
-  {
-    const pair< Uint31_Index, const Way_Skeleton* >* way =
-        binary_search_for_pair_id(way_members_by_id, id);
-    
-    return way;
-  }
 
-  const Statement& query_;
-  map< Uint31_Index, vector< Way_Skeleton > > way_members;
-  map< Uint32_Index, vector< Node_Skeleton > > node_members;
-  vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id;
-  vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id;
-};
+template< typename Relation_Skeleton >
+void filter_relations_expensive(const Around_Statement& around,
+                                const vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id,
+                                const vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id,
+                                const Way_Geometry_Store& way_geometries,
+                                map< Uint31_Index, vector< Relation_Skeleton > >& relations)
+{
+  for (typename map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = relations.begin();
+      it != relations.end(); ++it)
+  {
+    vector< Relation_Skeleton > local_into;
+    for (typename vector< Relation_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      for (vector< Relation_Entry >::const_iterator nit = iit->members.begin();
+	  nit != iit->members.end(); ++nit)
+      {
+	if (nit->type == Relation_Entry::NODE)
+	{
+          const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
+              binary_search_for_pair_id(node_members_by_id, nit->ref);
+	  if (!second_nd)
+	    continue;
+	  double lat(::lat(second_nd->first.val(), second_nd->second->ll_lower));
+	  double lon(::lon(second_nd->first.val(), second_nd->second->ll_lower));
+	  
+	  if (around.is_inside(lat, lon))
+	  {
+	    local_into.push_back(*iit);
+	    break;
+	  }
+	}
+	else if (nit->type == Relation_Entry::WAY)
+	{
+          const pair< Uint31_Index, const Way_Skeleton* >* second_nd =
+              binary_search_for_pair_id(way_members_by_id, nit->ref32());
+	  if (!second_nd)
+	    continue;
+	  if (around.is_inside(way_geometries.get_geometry(*second_nd->second)))
+	  {
+	    local_into.push_back(*iit);
+	    break;
+	  }
+	}
+      }
+    }
+    it->second.swap(local_into);
+  }
+}
 
 
 void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   around->calc_lat_lons(rman.sets()[around->get_source_name()], *around, rman);
   
-  // process nodes
-  for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = into.nodes.begin();
-      it != into.nodes.end(); ++it)
-  {
-    vector< Node_Skeleton > local_into;
-    for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-        iit != it->second.end(); ++iit)
-    {
-      double lat(::lat(it->first.val(), iit->ll_lower));
-      double lon(::lon(it->first.val(), iit->ll_lower));
-      if (around->is_inside(lat, lon))
-	local_into.push_back(*iit);
-    }
-    it->second.swap(local_into);
-  }
+  filter_nodes_expensive(*around, into.nodes);  
+  filter_ways_expensive(*around, Way_Geometry_Store(into.ways, query, rman), into.ways);
   
-  {
-    //Process ways
-
-    // Retrieve all nodes referred by the ways.
-    Way_Geometry_Store way_geometries(into.ways, query, rman);
-    
-    for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = into.ways.begin();
-        it != into.ways.end(); ++it)
-    {
-      vector< Way_Skeleton > local_into;
-      for (vector< Way_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-      {
-	if (around->is_inside(way_geometries.get_geometry(*iit)))
-	  local_into.push_back(*iit);
-      }
-      it->second.swap(local_into);
-    }
-  }
   {
     //Process relations
     
     // Retrieve all node and way members referred by the relations.
     set< pair< Uint32_Index, Uint32_Index > > node_ranges;
     get_ranges(rman, node_ranges);
+    
+    map< Uint32_Index, vector< Node_Skeleton > > node_members
+        = relation_node_members(&query, rman, into.relations, &node_ranges);
+    vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
+        = order_by_id(node_members, Order_By_Node_Id());
+	
+    // Retrieve all ways referred by the relations.
     set< pair< Uint31_Index, Uint31_Index > > way_ranges;
     get_ranges(rman, way_ranges);
-    Relation_Member_Collection relation_members
-        (into.relations, query, rman, &node_ranges, &way_ranges);
+    
+    map< Uint31_Index, vector< Way_Skeleton > > way_members_
+        = relation_way_members(&query, rman, into.relations, &way_ranges);
+    vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id
+        = order_by_id(way_members_, Order_By_Way_Id());
         
     // Retrieve all nodes referred by the ways.
-    Way_Geometry_Store way_geometries(relation_members.way_members, query, rman);
-    
-    for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = into.relations.begin();
-        it != into.relations.end(); ++it)
-    {
-      vector< Relation_Skeleton > local_into;
-      for (vector< Relation_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-      {
-	for (vector< Relation_Entry >::const_iterator nit = iit->members.begin();
-	    nit != iit->members.end(); ++nit)
-        {
-	  if (nit->type == Relation_Entry::NODE)
-	  {
-	    const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
-	        relation_members.get_node_by_id(nit->ref);
-	    if (!second_nd)
-	      continue;
-	    double lat(::lat(second_nd->first.val(), second_nd->second->ll_lower));
-	    double lon(::lon(second_nd->first.val(), second_nd->second->ll_lower));
-	  
-	    if (around->is_inside(lat, lon))
-	    {
-	      local_into.push_back(*iit);
-	      break;
-	    }
-	  }
-	  else if (nit->type == Relation_Entry::WAY)
-	  {
-	    const pair< Uint31_Index, const Way_Skeleton* >* second_nd =
-	        relation_members.get_way_by_id(nit->ref32());
-	    if (!second_nd)
-	      continue;
-	    if (around->is_inside(way_geometries.get_geometry(*second_nd->second)))
-	    {
-	      local_into.push_back(*iit);
-	      break;
-	    }
-	  }
-        }
-      }
-      it->second.swap(local_into);
-    }
-  }  
+    filter_relations_expensive(*around, node_members_by_id, way_members_by_id,
+        Way_Geometry_Store(way_members_, query, rman), into.relations);
+  }
   
+  if (timestamp != NOW)
+  {
+    filter_nodes_expensive(*around, into.attic_nodes);  
+    filter_ways_expensive(*around, Way_Geometry_Store(into.attic_ways, timestamp, query, rman), into.attic_ways);
+  
+    {
+      //Process relations
+      set< pair< Uint32_Index, Uint32_Index > > node_ranges;
+      get_ranges(rman, node_ranges);
+    
+      map< Uint32_Index, vector< Attic< Node_Skeleton > > > node_members
+          = relation_node_members(&query, rman, into.attic_relations, timestamp, &node_ranges);
+      vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
+          = order_attic_by_id(node_members, Order_By_Node_Id());
+    
+      // Retrieve all ways referred by the relations.
+      set< pair< Uint31_Index, Uint31_Index > > way_ranges;
+      get_ranges(rman, way_ranges);
+    
+      map< Uint31_Index, vector< Attic< Way_Skeleton > > > way_members_
+          = relation_way_members(&query, rman, into.attic_relations, timestamp, &way_ranges);
+      vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id
+          = order_attic_by_id(way_members_, Order_By_Way_Id());
+    
+      filter_relations_expensive(*around, node_members_by_id, way_members_by_id,
+          Way_Geometry_Store(way_members_, timestamp, query, rman), into.attic_relations);
+    }
+  }
   //TODO: areas
 }
 
@@ -865,6 +815,95 @@ void add_way(const vector< Quad_Coord >& way_geometry, double radius,
 }
 
 
+struct Relation_Member_Collection
+{
+  Relation_Member_Collection(const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
+			     const Statement& query, Resource_Manager& rman,
+			     set< pair< Uint32_Index, Uint32_Index > >* node_ranges,
+			     set< pair< Uint31_Index, Uint31_Index > >* way_ranges)
+      : query_(query),
+	way_members(relation_way_members(&query, rman, relations, way_ranges)),
+        node_members(relation_node_members(&query, rman, relations, node_ranges))
+  {
+    // Retrieve all nodes referred by the ways.    
+    
+    // Order node ids by id.
+    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = node_members.begin();
+        it != node_members.end(); ++it)
+    {
+      for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
+          iit != it->second.end(); ++iit)
+        node_members_by_id.push_back(make_pair(it->first, &*iit));
+    }
+    Order_By_Node_Id order_by_node_id;
+    sort(node_members_by_id.begin(), node_members_by_id.end(), order_by_node_id);
+    
+    // Retrieve all ways referred by the relations.
+    
+    // Order way ids by id.
+    for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = way_members.begin();
+        it != way_members.end(); ++it)
+    {
+      for (vector< Way_Skeleton >::const_iterator iit = it->second.begin();
+          iit != it->second.end(); ++iit)
+        way_members_by_id.push_back(make_pair(it->first, &*iit));
+    }
+    Order_By_Way_Id order_by_way_id;
+    sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_way_id);
+  }
+  
+  const pair< Uint32_Index, const Node_Skeleton* >* get_node_by_id(Uint64 id) const
+  {
+    const pair< Uint32_Index, const Node_Skeleton* >* node =
+        binary_search_for_pair_id(node_members_by_id, id);
+    
+    return node;
+  }
+
+  const pair< Uint31_Index, const Way_Skeleton* >* get_way_by_id(Uint32_Index id) const
+  {
+    const pair< Uint31_Index, const Way_Skeleton* >* way =
+        binary_search_for_pair_id(way_members_by_id, id);
+    
+    return way;
+  }
+
+  const Statement& query_;
+  map< Uint31_Index, vector< Way_Skeleton > > way_members;
+  map< Uint32_Index, vector< Node_Skeleton > > node_members;
+  vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id;
+  vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id;
+};
+
+
+template< typename Node_Skeleton >
+void Around_Statement::add_nodes(const map< Uint32_Index, vector< Node_Skeleton > >& nodes)
+{
+  for (typename map< Uint32_Index, vector< Node_Skeleton > >::const_iterator iit(nodes.begin());
+      iit != nodes.end(); ++iit)
+  {
+    for (typename vector< Node_Skeleton >::const_iterator nit(iit->second.begin());
+        nit != iit->second.end(); ++nit)
+      add_node(iit->first, *nit, radius, radius_lat_lons, simple_lat_lons);
+  }
+}
+
+
+template< typename Way_Skeleton >
+void Around_Statement::add_ways(const map< Uint31_Index, vector< Way_Skeleton > >& ways,
+				const Way_Geometry_Store& way_geometries)
+{
+  for (typename map< Uint31_Index, vector< Way_Skeleton > >::const_iterator it = ways.begin();
+      it != ways.end(); ++it)
+  {
+    for (typename vector< Way_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+      add_way(way_geometries.get_geometry(*iit), radius,
+          radius_lat_lons, simple_lat_lons, simple_segments);
+  }
+}
+
+
 void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resource_Manager& rman)
 {
   radius_lat_lons.clear();
@@ -878,69 +917,31 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
     return;
   }
   
-  for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator iit(input.nodes.begin());
-      iit != input.nodes.end(); ++iit)
-  {
-    for (vector< Node_Skeleton >::const_iterator nit(iit->second.begin());
-        nit != iit->second.end(); ++nit)
-      add_node(iit->first, *nit, radius, radius_lat_lons, simple_lat_lons);
-  }
+  add_nodes(input.nodes);
+  add_ways(input.ways, Way_Geometry_Store(input.ways, query, rman));
   
-  {
-    //Process ways
-    Way_Geometry_Store way_geometries(input.ways, query, rman);
+  // Retrieve all node and way members referred by the relations.
+  add_nodes(relation_node_members(&query, rman, input.relations));
     
-    for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator it = input.ways.begin();
-        it != input.ways.end(); ++it)
-    {
-      vector< Way_Skeleton > local_into;
-      for (vector< Way_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-	add_way(way_geometries.get_geometry(*iit), radius,
-                radius_lat_lons, simple_lat_lons, simple_segments);
-    }
-  }
-  {
-    //Process relations
+  // Retrieve all ways referred by the relations.
+  map< Uint31_Index, vector< Way_Skeleton > > way_members
+      = relation_way_members(&query, rman, input.relations);
+  add_ways(way_members, Way_Geometry_Store(way_members, query, rman));
     
+  uint64 timestamp = rman.get_desired_timestamp();  
+  if (timestamp != NOW)
+  {
+    add_nodes(input.attic_nodes);
+    add_ways(input.attic_ways, Way_Geometry_Store(input.attic_ways, rman.get_desired_timestamp(), query, rman));
+  
     // Retrieve all node and way members referred by the relations.
-    Relation_Member_Collection relation_members(input.relations, query, rman, 0, 0);
-        
-    // Retrieve all nodes referred by the ways.
-    Way_Geometry_Store way_geometries(relation_members.way_members, query, rman);
+    add_nodes(relation_node_members(&query, rman, input.attic_relations, timestamp));
     
-    for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
-        it = input.relations.begin(); it != input.relations.end(); ++it)
-    {
-      for (vector< Relation_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-      {
-	for (vector< Relation_Entry >::const_iterator nit = iit->members.begin();
-	    nit != iit->members.end(); ++nit)
-        {
-	  if (nit->type == Relation_Entry::NODE)
-	  {
-	    const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
-	        relation_members.get_node_by_id(nit->ref);
-	    if (!second_nd)
-	      continue;
-	    
-	    add_node(second_nd->first, *second_nd->second, radius, radius_lat_lons, simple_lat_lons);
-	  }
-	  else if (nit->type == Relation_Entry::WAY)
-	  {
-	    const pair< Uint31_Index, const Way_Skeleton* >* second_nd =
-	        relation_members.get_way_by_id(nit->ref32());
-	    if (!second_nd)
-	      continue;
-	    
-	    add_way(way_geometries.get_geometry(*second_nd->second), radius,
-                    radius_lat_lons, simple_lat_lons, simple_segments);
-	  }
-        }
-      }
-    }
-  }  
+    // Retrieve all ways referred by the relations.
+    map< Uint31_Index, vector< Attic< Way_Skeleton > > > way_members
+        = relation_way_members(&query, rman, input.attic_relations, timestamp);
+    add_ways(way_members, Way_Geometry_Store(way_members, timestamp, query, rman));
+  }
 }
 
 
@@ -1042,32 +1043,18 @@ bool Around_Statement::is_inside(const vector< Quad_Coord >& way_geometry) const
 
 void Around_Statement::execute(Resource_Manager& rman)
 {
-  set< pair< Uint32_Index, Uint32_Index > > req = calc_ranges(rman.sets()[input], rman);  
-  calc_lat_lons(rman.sets()[input], *this, rman);
-
   Set into;
-  uint nodes_count = 0;
   
-  Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-    (rman.get_transaction()->data_index(osm_base_settings().NODES));
-  for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
-    it(nodes_db.range_begin
-      (Default_Range_Iterator< Uint32_Index >(req.begin()),
-       Default_Range_Iterator< Uint32_Index >(req.end())));
-    !(it == nodes_db.range_end()); ++it)
-  {
-    if (++nodes_count >= 64*1024)
-    {
-      nodes_count = 0;
-      rman.health_check(*this);
-    }
-    
-    double lat(::lat(it.index().val(), it.object().ll_lower));
-    double lon(::lon(it.index().val(), it.object().ll_lower));
-    if (is_inside(lat, lon))
-      into.nodes[it.index()].push_back(it.object());
-  }
-
+  Around_Constraint constraint(*this);
+  set< pair< Uint32_Index, Uint32_Index > > ranges;
+  constraint.get_ranges(rman, ranges);
+  get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
+      (into.nodes, into.attic_nodes,
+       vector< Node::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
+       *osm_base_settings().NODES, *attic_settings().NODES);
+  constraint.filter(*this, rman, into, rman.get_desired_timestamp());
+  filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
+  
   transfer_output(rman, into);
   rman.health_check(*this);
 }
