@@ -66,10 +66,17 @@ void Foreach_Statement::execute(Resource_Manager& rman)
         it2 != it->second.end(); ++it2)
     {
       rman.count_loop();
+      
       rman.sets()[output].nodes.clear();
       rman.sets()[output].ways.clear();
       rman.sets()[output].relations.clear();
+      
+      rman.sets()[output].attic_nodes.clear();
+      rman.sets()[output].attic_ways.clear();
+      rman.sets()[output].attic_relations.clear();
+      
       rman.sets()[output].areas.clear();
+      
       rman.sets()[output].nodes[it->first].push_back(*it2);
       for (vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
@@ -83,10 +90,17 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     it2 != it->second.end(); ++it2)
     {
       rman.count_loop();
+      
       rman.sets()[output].nodes.clear();
       rman.sets()[output].ways.clear();
       rman.sets()[output].relations.clear();
+      
+      rman.sets()[output].attic_nodes.clear();
+      rman.sets()[output].attic_ways.clear();
+      rman.sets()[output].attic_relations.clear();
+      
       rman.sets()[output].areas.clear();
+
       rman.sets()[output].ways[it->first].push_back(*it2);
       for (vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
@@ -100,10 +114,17 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     it2 != it->second.end(); ++it2)
     {
       rman.count_loop();
+      
       rman.sets()[output].nodes.clear();
       rman.sets()[output].ways.clear();
       rman.sets()[output].relations.clear();
+      
+      rman.sets()[output].attic_nodes.clear();
+      rman.sets()[output].attic_ways.clear();
+      rman.sets()[output].attic_relations.clear();
+      
       rman.sets()[output].areas.clear();
+
       rman.sets()[output].relations[it->first].push_back(*it2);
       for (vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
@@ -117,10 +138,17 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     it2 != it->second.end(); ++it2)
     {
       rman.count_loop();
+      
       rman.sets()[output].nodes.clear();
       rman.sets()[output].ways.clear();
       rman.sets()[output].relations.clear();
+      
+      rman.sets()[output].attic_nodes.clear();
+      rman.sets()[output].attic_ways.clear();
+      rman.sets()[output].attic_relations.clear();
+            
       rman.sets()[output].areas.clear();
+      
       rman.sets()[output].areas[it->first].push_back(*it2);
       for (vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
