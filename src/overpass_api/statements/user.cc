@@ -19,6 +19,7 @@
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
+#include "../data/collect_members.h"
 #include "meta_collector.h"
 #include "user.h"
 
@@ -47,6 +48,7 @@ class User_Constraint : public Query_Constraint
     User_Statement* user;
 };
 
+
 template< typename TIndex, typename TObject >
 void user_filter_map
     (map< TIndex, vector< TObject > >& modify,
@@ -54,8 +56,10 @@ void user_filter_map
 {
   if (modify.empty())
     return;
+  
   Meta_Collector< TIndex, typename TObject::Id_Type > meta_collector
       (modify, *rman.get_transaction(), file_properties, false);
+      
   for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
       it != modify.end(); ++it)
   {
@@ -72,18 +76,66 @@ void user_filter_map
   }
 }
 
+
+template< typename TIndex, typename TObject >
+void user_filter_map_attic
+    (map< TIndex, vector< TObject > >& modify,
+     Resource_Manager& rman, uint32 user_id,
+     File_Properties* current_file_properties, File_Properties* attic_file_properties)
+{
+  if (modify.empty())
+    return;
+  
+  Meta_Collector< TIndex, typename TObject::Id_Type > current_meta_collector
+      (modify, *rman.get_transaction(), current_file_properties, false);
+  Meta_Collector< TIndex, typename TObject::Id_Type > attic_meta_collector
+      (modify, *rman.get_transaction(), attic_file_properties, false);
+      
+  for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
+      it != modify.end(); ++it)
+  {
+    vector< TObject > local_into;
+    for (typename vector< TObject >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      const OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >* meta_skel
+	  = current_meta_collector.get(it->first, iit->id);
+      if (!meta_skel || !(meta_skel->timestamp < iit->timestamp))
+        meta_skel = attic_meta_collector.get(it->first, iit->id, iit->timestamp);
+      if ((meta_skel) && (meta_skel->user_id == user_id))
+	local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }
+}
+
+
 void User_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   uint32 user_id = user->get_id(*rman.get_transaction());
+  
   user_filter_map(into.nodes, rman, user_id, meta_settings().NODES_META);
   user_filter_map(into.ways, rman, user_id, meta_settings().WAYS_META);
   user_filter_map(into.relations, rman, user_id, meta_settings().RELATIONS_META);
+  
+  if (timestamp != NOW)
+  {
+    user_filter_map_attic(into.attic_nodes, rman, user_id,
+			  meta_settings().NODES_META, attic_settings().NODES_META);
+    user_filter_map_attic(into.attic_ways, rman, user_id,
+			  meta_settings().WAYS_META, attic_settings().WAYS_META);
+    user_filter_map_attic(into.attic_relations, rman, user_id,
+			  meta_settings().RELATIONS_META, attic_settings().RELATIONS_META);
+  }
+  
   into.areas.clear();
 }
 
 //-----------------------------------------------------------------------------
 
+
 Generic_Statement_Maker< User_Statement > User_Statement::statement_maker("user");
+
 
 User_Statement::User_Statement
     (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
@@ -111,12 +163,14 @@ User_Statement::User_Statement
   result_type = attributes["type"];
 }
 
+
 User_Statement::~User_Statement()
 {
   for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
       it != constraints.end(); ++it)
     delete *it;
 }
+
 
 uint32 get_user_id(const string& user_name, Transaction& transaction)
 {
@@ -131,6 +185,7 @@ uint32 get_user_id(const string& user_name, Transaction& transaction)
   return numeric_limits< uint32 >::max();
 }
 
+
 uint32 User_Statement::get_id(Transaction& transaction)
 {
   if (user_name != "")
@@ -138,6 +193,7 @@ uint32 User_Statement::get_id(Transaction& transaction)
   
   return user_id;
 }
+
 
 void calc_ranges
   (set< pair< Uint32_Index, Uint32_Index > >& node_req,
@@ -169,6 +225,7 @@ void calc_ranges
   }
 }
 
+
 bool User_Constraint::get_ranges
     (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
 {
@@ -177,6 +234,7 @@ bool User_Constraint::get_ranges
   return true;
 }
 
+
 bool User_Constraint::get_ranges
     (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
@@ -184,6 +242,7 @@ bool User_Constraint::get_ranges
   calc_ranges(nodes, ranges, user->get_id(*rman.get_transaction()), *rman.get_transaction());
   return true;
 }
+
 
 void User_Statement::calc_ranges
     (set< pair< Uint32_Index, Uint32_Index > >& node_req,
@@ -200,95 +259,50 @@ void User_Statement::calc_ranges
 void User_Statement::execute(Resource_Manager& rman)
 {
   Set into;
-
-  set< pair< Uint32_Index, Uint32_Index > > node_req;
-  set< pair< Uint31_Index, Uint31_Index > > other_req;
-  calc_ranges(node_req, other_req, *rman.get_transaction());
-  
-  uint nodes_count = 0;
   
   if ((result_type == "") || (result_type == "node"))
   {
-    Meta_Collector< Uint32_Index, Node_Skeleton::Id_Type > meta_collector
-        (node_req, *rman.get_transaction(), meta_settings().NODES_META);
-    Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-        (rman.get_transaction()->data_index(osm_base_settings().NODES));
-    for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
-        it(nodes_db.range_begin
-        (Default_Range_Iterator< Uint32_Index >(node_req.begin()),
-	 Default_Range_Iterator< Uint32_Index >(node_req.end())));
-        !(it == nodes_db.range_end()); ++it)
-    {
-      if (++nodes_count >= 64*1024)
-      {
-        nodes_count = 0;
-        rman.health_check(*this);
-      }
-    
-      const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta_skel
-          = meta_collector.get(it.index(), it.object().id);
-      if ((meta_skel) && (meta_skel->user_id == user_id))
-        into.nodes[it.index()].push_back(it.object());
-    }
+    User_Constraint constraint(*this);
+    set< pair< Uint32_Index, Uint32_Index > > ranges;
+    constraint.get_ranges(rman, ranges);
+    get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
+        (into.nodes, into.attic_nodes,
+         vector< Node::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
+         *osm_base_settings().NODES, *attic_settings().NODES);  
+    constraint.filter(rman, into, rman.get_desired_timestamp());
+    filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
   }
-  
-  uint ways_count = 0;
   
   if ((result_type == "") || (result_type == "way"))
   {
-    Meta_Collector< Uint31_Index, Way_Skeleton::Id_Type > meta_collector
-        (other_req, *rman.get_transaction(), meta_settings().WAYS_META);
-    Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-        (rman.get_transaction()->data_index(osm_base_settings().WAYS));
-    for (Block_Backend< Uint31_Index, Way_Skeleton >::Range_Iterator
-        it(ways_db.range_begin
-        (Default_Range_Iterator< Uint31_Index >(other_req.begin()),
-	 Default_Range_Iterator< Uint31_Index >(other_req.end())));
-        !(it == ways_db.range_end()); ++it)
-    {
-      if (++ways_count >= 64*1024)
-      {
-        ways_count = 0;
-        rman.health_check(*this);
-      }
-    
-      const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta_skel
-          = meta_collector.get(it.index(), it.object().id);
-      if ((meta_skel) && (meta_skel->user_id == user_id))
-        into.ways[it.index()].push_back(it.object());
-    }
+    User_Constraint constraint(*this);
+    set< pair< Uint31_Index, Uint31_Index > > ranges;
+    constraint.get_ranges(rman, ranges);
+    get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
+        (into.ways, into.attic_ways,
+         vector< Way::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
+         *osm_base_settings().WAYS, *attic_settings().WAYS);  
+    constraint.filter(rman, into, rman.get_desired_timestamp());
+    filter_attic_elements(rman, rman.get_desired_timestamp(), into.ways, into.attic_ways);
   }
-  
-  uint relations_count = 0;
   
   if ((result_type == "") || (result_type == "relation"))
   {
-    Meta_Collector< Uint31_Index, Relation_Skeleton::Id_Type > meta_collector
-        (other_req, *rman.get_transaction(), meta_settings().RELATIONS_META);
-    Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-        (rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
-    for (Block_Backend< Uint31_Index, Relation_Skeleton >::Range_Iterator
-        it(relations_db.range_begin
-        (Default_Range_Iterator< Uint31_Index >(other_req.begin()),
-	 Default_Range_Iterator< Uint31_Index >(other_req.end())));
-        !(it == relations_db.range_end()); ++it)
-    {
-      if (++relations_count >= 64*1024)
-      {
-        relations_count = 0;
-        rman.health_check(*this);
-      }
-    
-      const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta_skel
-          = meta_collector.get(it.index(), it.object().id);
-      if ((meta_skel) && (meta_skel->user_id == user_id))
-        into.relations[it.index()].push_back(it.object());
-    }
+    User_Constraint constraint(*this);
+    set< pair< Uint31_Index, Uint31_Index > > ranges;
+    constraint.get_ranges(rman, ranges);
+    get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
+        (into.relations, into.attic_relations,
+         vector< Relation::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
+         *osm_base_settings().RELATIONS, *attic_settings().RELATIONS);  
+    constraint.filter(rman, into, rman.get_desired_timestamp());
+    filter_attic_elements(rman, rman.get_desired_timestamp(), into.relations, into.attic_relations);
   }
 
   transfer_output(rman, into);
   rman.health_check(*this);
 }
+
 
 Query_Constraint* User_Statement::get_query_constraint()
 {

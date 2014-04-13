@@ -889,3 +889,7 @@ node(11011);out ids;
 rel(poly:"10.3 4.019 10.302 4.019 10.302 4.021 10.3 4.021");out meta;
 node(11011);out ids;
 rel(poly:"10.3 4.019 10.302 4.019 10.302 4.021 10.3 4.021");out meta;
+
+node(uid:42)(10,4,10.1,4.1);out meta;
+way(uid:42)(10,4,10.1,4.1);out meta;
+rel(uid:42)(10,5,10.1,5.1);out meta;
