@@ -71,10 +71,13 @@ void Union_Statement::execute(Resource_Manager& rman)
 
     indexed_set_union(base_set.nodes, summand.nodes);
     indexed_set_union(base_set.attic_nodes, summand.attic_nodes);
+    
     indexed_set_union(base_set.ways, summand.ways);
     indexed_set_union(base_set.attic_ways, summand.attic_ways);
+    
     indexed_set_union(base_set.relations, summand.relations);
     indexed_set_union(base_set.attic_relations, summand.attic_relations);
+    
     indexed_set_union(base_set.areas, summand.areas);
   }
   
