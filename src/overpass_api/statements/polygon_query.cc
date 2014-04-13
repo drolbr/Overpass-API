@@ -80,124 +80,121 @@ bool Polygon_Constraint::get_ranges
 void Polygon_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   polygon->collect_nodes(into.nodes, true);
+  if (timestamp != NOW)
+    polygon->collect_nodes(into.attic_nodes, true);
   
   set< pair< Uint31_Index, Uint31_Index > > ranges;
   get_ranges(rman, ranges);
   
   // pre-process ways to reduce the load of the expensive filter
   filter_ways_by_ranges(into.ways, ranges);
+  if (timestamp != NOW)
+    filter_ways_by_ranges(into.attic_ways, ranges);
   
   // pre-filter relations
-  {
-    set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it = ranges.begin();
-    map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = into.relations.begin();
-    for (; it != into.relations.end() && ranges_it != ranges.end(); )
-    {
-      if (!(it->first < ranges_it->second))
-        ++ranges_it;
-      else if (!(it->first < ranges_it->first))
-        ++it;
-      else
-      {
-        it->second.clear();
-        ++it;
-      }
-    }
-    for (; it != into.relations.end(); ++it)
-      it->second.clear();
-  }
+  filter_relations_by_ranges(into.relations, ranges);
+  if (timestamp != NOW)
+    filter_relations_by_ranges(into.attic_relations, ranges);
   
   //TODO: filter areas
 }
 
 
+void filter_relations_expensive(const vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id,
+				const vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id,
+				map< Uint31_Index, vector< Relation_Skeleton > >& relations)
+{
+  for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = relations.begin();
+      it != relations.end(); ++it)
+  {
+    vector< Relation_Skeleton > local_into;
+    for (vector< Relation_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      for (vector< Relation_Entry >::const_iterator nit = iit->members.begin();
+          nit != iit->members.end(); ++nit)
+      {
+        if (nit->type == Relation_Entry::NODE)
+        {
+          const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
+              binary_search_for_pair_id(node_members_by_id, nit->ref);
+          if (second_nd)
+          {
+            local_into.push_back(*iit);
+            break;
+          }
+        }
+        else if (nit->type == Relation_Entry::WAY)
+        {
+          const pair< Uint31_Index, const Way_Skeleton* >* second_nd =
+              binary_search_for_pair_id(way_members_by_id, nit->ref32());
+          if (second_nd)
+          {
+            local_into.push_back(*iit);
+            break;
+          }
+        }
+      }
+    }
+    it->second.swap(local_into);
+  }
+}
+
+
 void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
 {
+  //Process ways  
+  polygon->collect_ways(into.ways, Way_Geometry_Store(into.ways, query, rman), true, query, rman);
+  
+  //Process relations
+  
+  // Retrieve all nodes referred by the relations.
+  set< pair< Uint32_Index, Uint32_Index > > node_ranges;
+  get_ranges(rman, node_ranges);
+  map< Uint32_Index, vector< Node_Skeleton > > node_members
+      = relation_node_members(&query, rman, into.relations, &node_ranges);
+  
+  // filter for those nodes that are in one of the areas
+  polygon->collect_nodes(node_members, false);
+  
+  // Retrieve all ways referred by the relations.
+  set< pair< Uint31_Index, Uint31_Index > > way_ranges;
+  get_ranges(rman, way_ranges);  
+  map< Uint31_Index, vector< Way_Skeleton > > way_members_
+      = relation_way_members(&query, rman, into.relations, &way_ranges);
+  
+  polygon->collect_ways(way_members_, Way_Geometry_Store(way_members_, query, rman), false, query, rman);
+  
+  filter_relations_expensive(order_by_id(node_members, Order_By_Node_Id()),
+			     order_by_id(way_members_, Order_By_Way_Id()),
+			     into.relations);
+  
+  if (timestamp != NOW)
   {
     //Process ways  
-    polygon->collect_ways(into.ways, true, query, rman);
-  }
-  {
+    polygon->collect_ways(into.attic_ways, Way_Geometry_Store(into.attic_ways, timestamp, query, rman),
+			  true, query, rman);
+  
     //Process relations
-    
+  
     // Retrieve all nodes referred by the relations.
-    set< pair< Uint32_Index, Uint32_Index > > node_ranges;
-    get_ranges(rman, node_ranges);
-    
-    map< Uint32_Index, vector< Node_Skeleton > > node_members
-        = relation_node_members(&query, rman, into.relations, &node_ranges);
+    map< Uint32_Index, vector< Attic< Node_Skeleton > > > node_members
+        = relation_node_members(&query, rman, into.attic_relations, timestamp, &node_ranges);
   
     // filter for those nodes that are in one of the areas
     polygon->collect_nodes(node_members, false);
   
-    // Order node ids by id.
-    vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id;
-    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = node_members.begin();
-        it != node_members.end(); ++it)
-    {
-      for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-        node_members_by_id.push_back(make_pair(it->first, &*iit));
-    }
-    Order_By_Node_Id order_by_node_id;
-    sort(node_members_by_id.begin(), node_members_by_id.end(), order_by_node_id);
-    
     // Retrieve all ways referred by the relations.
-    set< pair< Uint31_Index, Uint31_Index > > way_ranges;
-    get_ranges(rman, way_ranges);
-    
-    map< Uint31_Index, vector< Way_Skeleton > > way_members_
-        = relation_way_members(&query, rman, into.relations, &way_ranges);
+    map< Uint31_Index, vector< Attic< Way_Skeleton > > > way_members_
+        = relation_way_members(&query, rman, into.attic_relations, timestamp, &way_ranges);
   
-    polygon->collect_ways(way_members_, false, query, rman);
-    
-    // Order way ids by id.
-    vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id;
-    for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = way_members_.begin();
-        it != way_members_.end(); ++it)
-    {
-      for (vector< Way_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-        way_members_by_id.push_back(make_pair(it->first, &*iit));
-    }
-    Order_By_Way_Id order_by_way_id;
-    sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_way_id);
-    
-    for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = into.relations.begin();
-        it != into.relations.end(); ++it)
-    {
-      vector< Relation_Skeleton > local_into;
-      for (vector< Relation_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-      {
-        for (vector< Relation_Entry >::const_iterator nit = iit->members.begin();
-            nit != iit->members.end(); ++nit)
-        {
-          if (nit->type == Relation_Entry::NODE)
-          {
-            const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
-                binary_search_for_pair_id(node_members_by_id, nit->ref);
-            if (second_nd)
-            {
-              local_into.push_back(*iit);
-              break;
-            }
-          }
-          else if (nit->type == Relation_Entry::WAY)
-          {
-            const pair< Uint31_Index, const Way_Skeleton* >* second_nd =
-                binary_search_for_pair_id(way_members_by_id, nit->ref32());
-            if (second_nd)
-            {
-              local_into.push_back(*iit);
-              break;
-            }
-          }
-        }
-      }
-      it->second.swap(local_into);
-    }
-  }  
+    polygon->collect_ways(way_members_, Way_Geometry_Store(way_members_, timestamp, query, rman),
+			  false, query, rman);
+  
+    filter_relations_expensive(order_attic_by_id(node_members, Order_By_Node_Id()),
+			       order_attic_by_id(way_members_, Order_By_Way_Id()),
+			       into.relations);
+  }
   
   //TODO: filter areas
 }
@@ -325,11 +322,12 @@ set< pair< Uint32_Index, Uint32_Index > > Polygon_Query_Statement::calc_ranges()
 }
 
 
+template< typename Node_Skeleton >
 void Polygon_Query_Statement::collect_nodes(map< Uint32_Index, vector< Node_Skeleton > >& nodes,
                                             bool add_border)
 {
   vector< Aligned_Segment >::const_iterator area_it = segments.begin();
-  map< Uint32_Index, vector< Node_Skeleton > >::iterator nodes_it = nodes.begin();
+  typename map< Uint32_Index, vector< Node_Skeleton > >::iterator nodes_it = nodes.begin();
   
   uint32 current_idx(0);
   
@@ -356,7 +354,7 @@ void Polygon_Query_Statement::collect_nodes(map< Uint32_Index, vector< Node_Skel
         (nodes_it->first.val() & 0xffffff00) == current_idx)
     {
       vector< Node_Skeleton > into;
-      for (vector< Node_Skeleton >::const_iterator iit = nodes_it->second.begin();
+      for (typename vector< Node_Skeleton >::const_iterator iit = nodes_it->second.begin();
           iit != nodes_it->second.end(); ++iit)
       {
         uint32 ilat((::lat(nodes_it->first.val(), iit->ll_lower)
@@ -392,16 +390,16 @@ void Polygon_Query_Statement::collect_nodes(map< Uint32_Index, vector< Node_Skel
 }
 
 
+template< typename Way_Skeleton >
 void Polygon_Query_Statement::collect_ways
       (map< Uint31_Index, vector< Way_Skeleton > >& ways,
+       const Way_Geometry_Store& way_geometries,
        bool add_border, const Statement& query, Resource_Manager& rman)
 {
-  Way_Geometry_Store way_geometries(ways, query, rman);
-  
   map< uint32, vector< pair< uint32, Way::Id_Type > > > way_coords_to_id;
-  for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
+  for (typename map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
   {
-    for (vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    for (typename vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
       vector< Quad_Coord > coords = way_geometries.get_geometry(*it2);
       for (vector< Quad_Coord >::const_iterator it3 = coords.begin(); it3 != coords.end(); ++it3)
@@ -414,9 +412,9 @@ void Polygon_Query_Statement::collect_ways
   vector< Aligned_Segment >::const_iterator area_it = segments.begin();
   
   map< Uint31_Index, vector< Area_Block > > way_segments;
-  for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
+  for (typename map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
   {
-    for (vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    for (typename vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
       add_way_to_area_blocks(way_geometries.get_geometry(*it2), it2->id.val(), way_segments);
   }
       
@@ -508,10 +506,10 @@ void Polygon_Query_Statement::collect_ways
   map< Uint31_Index, vector< Way_Skeleton > > result;
 
   // Mark ways as found that intersect the area border
-  for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
+  for (typename map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
   {
     vector< Way_Skeleton > cur_result;
-    for (vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    for (typename vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
       if (ways_inside[it2->id])
       {
@@ -529,12 +527,16 @@ void Polygon_Query_Statement::collect_ways
 void Polygon_Query_Statement::execute(Resource_Manager& rman)
 {
   Set into;
-
-  set< pair< Uint32_Index, Uint32_Index > > nodes_req = calc_ranges();
-
-  collect_items_range(this, rman, *osm_base_settings().NODES, nodes_req,
-		      Trivial_Predicate< Node_Skeleton >(), into.nodes);
-  collect_nodes(into.nodes, true);
+  
+  Polygon_Constraint constraint(*this);
+  set< pair< Uint32_Index, Uint32_Index > > ranges;
+  constraint.get_ranges(rman, ranges);
+  get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
+      (into.nodes, into.attic_nodes,
+       vector< Node::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
+       *osm_base_settings().NODES, *attic_settings().NODES);  
+  constraint.filter(rman, into, rman.get_desired_timestamp());
+  filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
 
   transfer_output(rman, into);
   rman.health_check(*this);
