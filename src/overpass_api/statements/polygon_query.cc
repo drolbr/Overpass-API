@@ -100,15 +100,16 @@ void Polygon_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
 }
 
 
+template< typename Relation_Skeleton >
 void filter_relations_expensive(const vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id,
 				const vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id,
 				map< Uint31_Index, vector< Relation_Skeleton > >& relations)
 {
-  for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = relations.begin();
+  for (typename map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = relations.begin();
       it != relations.end(); ++it)
   {
     vector< Relation_Skeleton > local_into;
-    for (vector< Relation_Skeleton >::const_iterator iit = it->second.begin();
+    for (typename vector< Relation_Skeleton >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
       for (vector< Relation_Entry >::const_iterator nit = iit->members.begin();
@@ -193,7 +194,7 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
   
     filter_relations_expensive(order_attic_by_id(node_members, Order_By_Node_Id()),
 			       order_attic_by_id(way_members_, Order_By_Way_Id()),
-			       into.relations);
+			       into.attic_relations);
   }
   
   //TODO: filter areas

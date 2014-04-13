@@ -12252,5 +12252,44 @@
   <node id="143320" lat="20.3020000" lon="14.0300000" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo"/>
   <node id="143321" lat="10.3020000" lon="4.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="143322" lat="10.3020000" lon="4.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="14012" lat="10.0010000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="14013" lat="10.0020000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <way id="1401" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="14011"/>
+    <nd ref="14012"/>
+    <nd ref="14013"/>
+    <tag k="foo" v="bar_1401"/>
+    <tag k="foo_1401" v="bar"/>
+  </way>
+  <node id="11011"/>
+  <relation id="1422" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <member type="way" ref="14221" role=""/>
+    <member type="way" ref="14222" role=""/>
+    <tag k="foo" v="bar_1422"/>
+    <tag k="foo_1422" v="bar"/>
+  </relation>
+  <relation id="1432" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <member type="node" ref="143210" role=""/>
+    <member type="node" ref="143220" role=""/>
+    <member type="way" ref="14321" role=""/>
+    <member type="way" ref="14322" role=""/>
+    <tag k="foo" v="bar_1432"/>
+    <tag k="foo_1432" v="bar"/>
+  </relation>
+  <node id="11011"/>
+  <relation id="1422" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <member type="way" ref="14221" role=""/>
+    <member type="way" ref="14222" role=""/>
+    <tag k="foo" v="bar_1422"/>
+    <tag k="foo_1422" v="bar"/>
+  </relation>
+  <relation id="1432" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <member type="node" ref="143210" role=""/>
+    <member type="node" ref="143220" role=""/>
+    <member type="way" ref="14321" role=""/>
+    <member type="way" ref="14322" role=""/>
+    <tag k="foo" v="bar_1432"/>
+    <tag k="foo_1432" v="bar"/>
+  </relation>
 
 </osm>

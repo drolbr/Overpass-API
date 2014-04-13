@@ -883,3 +883,10 @@ node(11011);out ids;
 way(1402);node(around:1500);out meta;
 node(11011);out ids;
 rel(1432);node(around:1500);out meta;
+
+node(poly:"10.0 4.0 10.02 4.0 10.02 4.02 10.0 4.02");out meta;
+way(poly:"10.0 4.0 10.02 4.0 10.02 4.02 10.0 4.02");out meta;
+node(11011);out ids;
+rel(poly:"10.3 4.019 10.302 4.019 10.302 4.021 10.3 4.021");out meta;
+node(11011);out ids;
+rel(poly:"10.3 4.019 10.302 4.019 10.302 4.021 10.3 4.021");out meta;
