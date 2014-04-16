@@ -894,3 +894,7 @@ rel(poly:"10.3 4.019 10.302 4.019 10.302 4.021 10.3 4.021");out meta;
 node(uid:42)(10,4,10.1,4.1);out meta;
 way(uid:42)(10,4,10.1,4.1);out meta;
 rel(uid:42)(10,5,10.1,5.1);out meta;
+
+node(10,0,20,10)(newer:"2013-07-01T09:03:15Z");out meta;
+way(10,0,20,10)(newer:"2013-07-01T09:03:15Z");out meta;
+rel(10,0,20,10)(newer:"2013-07-01T09:03:15Z");out meta;

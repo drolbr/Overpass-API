@@ -41,7 +41,7 @@ class User_Constraint : public Query_Constraint
     
     bool get_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
     bool get_ranges(Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
-    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~User_Constraint() {}
     
   private:
@@ -110,7 +110,7 @@ void user_filter_map_attic
 }
 
 
-void User_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
+void User_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   uint32 user_id = user->get_id(*rman.get_transaction());
   
@@ -269,8 +269,8 @@ void User_Statement::execute(Resource_Manager& rman)
         (into.nodes, into.attic_nodes,
          vector< Node::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
          *osm_base_settings().NODES, *attic_settings().NODES);  
-    constraint.filter(rman, into, rman.get_desired_timestamp());
     filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
+    constraint.filter(*this, rman, into, rman.get_desired_timestamp());
   }
   
   if ((result_type == "") || (result_type == "way"))
@@ -282,8 +282,8 @@ void User_Statement::execute(Resource_Manager& rman)
         (into.ways, into.attic_ways,
          vector< Way::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
          *osm_base_settings().WAYS, *attic_settings().WAYS);  
-    constraint.filter(rman, into, rman.get_desired_timestamp());
     filter_attic_elements(rman, rman.get_desired_timestamp(), into.ways, into.attic_ways);
+    constraint.filter(*this, rman, into, rman.get_desired_timestamp());
   }
   
   if ((result_type == "") || (result_type == "relation"))
@@ -295,8 +295,8 @@ void User_Statement::execute(Resource_Manager& rman)
         (into.relations, into.attic_relations,
          vector< Relation::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
          *osm_base_settings().RELATIONS, *attic_settings().RELATIONS);  
-    constraint.filter(rman, into, rman.get_desired_timestamp());
     filter_attic_elements(rman, rman.get_desired_timestamp(), into.relations, into.attic_relations);
+    constraint.filter(*this, rman, into, rman.get_desired_timestamp());
   }
 
   transfer_output(rman, into);

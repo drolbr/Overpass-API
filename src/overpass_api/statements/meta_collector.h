@@ -232,7 +232,7 @@ const OSM_Element_Metadata_Skeleton< Id_Type >* Meta_Collector< Index, Id_Type >
   
   typename set< OSM_Element_Metadata_Skeleton< Id_Type > >::iterator it
       = current_objects.lower_bound(OSM_Element_Metadata_Skeleton< Id_Type >(ref));
-  if (it != current_objects.end())
+  if (it != current_objects.end() && it->ref == ref)
     return &*it;
   else
     return 0;

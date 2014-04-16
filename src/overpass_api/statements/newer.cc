@@ -38,12 +38,13 @@ class Newer_Constraint : public Query_Constraint
 
     bool delivers_data() { return false; }
     
-    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Newer_Constraint() {}
     
   private:
     uint64 timestamp;
 };
+
 
 template< typename TIndex, typename TObject >
 void newer_filter_map
@@ -70,11 +71,56 @@ void newer_filter_map
   }
 }
 
-void Newer_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
+
+template< typename TIndex, typename TObject >
+void newer_filter_map_attic
+    (map< TIndex, vector< TObject > >& modify,
+     Resource_Manager& rman, uint64 timestamp,
+     File_Properties* current_file_properties, File_Properties* attic_file_properties)
+{
+  if (modify.empty())
+    return;
+  
+  Meta_Collector< TIndex, typename TObject::Id_Type > current_meta_collector
+      (modify, *rman.get_transaction(), current_file_properties, false);
+  Meta_Collector< TIndex, typename TObject::Id_Type > attic_meta_collector
+      (modify, *rman.get_transaction(), attic_file_properties, false);
+      
+  for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
+      it != modify.end(); ++it)
+  {
+    vector< TObject > local_into;
+    for (typename vector< TObject >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      const OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >* meta_skel
+	  = current_meta_collector.get(it->first, iit->id);
+      if (!meta_skel || !(meta_skel->timestamp < iit->timestamp))
+        meta_skel = attic_meta_collector.get(it->first, iit->id, iit->timestamp);
+      if ((meta_skel) && (meta_skel->timestamp >= timestamp))
+	local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }
+}
+
+
+void Newer_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   newer_filter_map(into.nodes, rman, this->timestamp, meta_settings().NODES_META);
   newer_filter_map(into.ways, rman, this->timestamp, meta_settings().WAYS_META);
   newer_filter_map(into.relations, rman, this->timestamp, meta_settings().RELATIONS_META);
+  
+  if (timestamp != NOW)
+  {
+    newer_filter_map_attic(into.attic_nodes, rman, this->timestamp,
+			   meta_settings().NODES_META, attic_settings().NODES_META);
+    newer_filter_map_attic(into.attic_ways, rman, this->timestamp,
+			   meta_settings().WAYS_META, attic_settings().WAYS_META);
+    newer_filter_map_attic(into.attic_relations, rman, this->timestamp,
+			   meta_settings().RELATIONS_META, attic_settings().RELATIONS_META);
+  }
+  
   into.areas.clear();
 }
 
@@ -97,9 +143,9 @@ Newer_Statement::Newer_Statement
   than_timestamp = Timestamp(
       atol(timestamp.c_str()), //year
       atoi(timestamp.c_str()+5), //month
-      atoi(timestamp.c_str()+8)<<17, //day
-      atoi(timestamp.c_str()+11)<<12, //hour
-      atoi(timestamp.c_str()+14)<<6, //minute
+      atoi(timestamp.c_str()+8), //day
+      atoi(timestamp.c_str()+11), //hour
+      atoi(timestamp.c_str()+14), //minute
       atoi(timestamp.c_str()+17) //second
       ).timestamp;
   
