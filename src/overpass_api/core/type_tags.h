@@ -21,6 +21,7 @@
 
 #include <map>
 #include <set>
+#include <string>
 #include <vector>
 
 #include "basic_types.h"
@@ -28,8 +29,8 @@
 
 struct Unsupported_Error
 {
-  Unsupported_Error(const string& method_name_) : method_name(method_name_) {}
-  string method_name;
+  Unsupported_Error(const std::string& method_name_) : method_name(method_name_) {}
+  std::string method_name;
 };
 
 
@@ -37,17 +38,17 @@ template< class Id_Type >
 struct Tag_Entry
 {
   uint32 index;
-  string key;
-  string value;
-  vector< Id_Type > ids;
+  std::string key;
+  std::string value;
+  std::vector< Id_Type > ids;
 };
 
 
 struct Tag_Index_Local
 {
   uint32 index;
-  string key;
-  string value;
+  std::string key;
+  std::string value;
   
   Tag_Index_Local() {}
   
@@ -55,14 +56,14 @@ struct Tag_Index_Local
   Tag_Index_Local(const Tag_Entry< Id_Type >& entry)
       : index(entry.index), key(entry.key), value(entry.value) {}
   
-  Tag_Index_Local(Uint31_Index index_, string key_, string value_)
+  Tag_Index_Local(Uint31_Index index_, std::string key_, std::string value_)
       : index(index_.val() & 0x7fffff00), key(key_), value(value_) {}
   
   Tag_Index_Local(void* data)
   {
     index = (*((uint32*)data + 1))<<8;
-    key = string(((int8*)data + 7), *(uint16*)data);
-    value = string(((int8*)data + 7 + key.length()),
+    key = std::string(((int8*)data + 7), *(uint16*)data);
+    value = std::string(((int8*)data + 7 + key.length()),
 		   *((uint16*)data + 1));
   }
   
@@ -125,10 +126,10 @@ inline const std::string& void_tag_value()
 
 template< class TIndex >
 void formulate_range_query
-    (set< pair< Tag_Index_Local, Tag_Index_Local > >& range_set,
-     const set< TIndex >& coarse_indices)
+    (std::set< std::pair< Tag_Index_Local, Tag_Index_Local > >& range_set,
+     const std::set< TIndex >& coarse_indices)
 {
-  for (typename set< TIndex >::const_iterator
+  for (typename std::set< TIndex >::const_iterator
     it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
   {
     Tag_Index_Local lower, upper;
@@ -138,22 +139,22 @@ void formulate_range_query
     upper.index = it->val() + 1;
     upper.key = "";
     upper.value = "";
-    range_set.insert(make_pair(lower, upper));
+    range_set.insert(std::make_pair(lower, upper));
   }
 }
 
 
 template< class TIndex, class TObject >
 void generate_ids_by_coarse
-  (set< TIndex >& coarse_indices,
-   map< uint32, vector< typename TObject::Id_Type > >& ids_by_coarse,
-   const map< TIndex, vector< TObject > >& items)
+  (std::set< TIndex >& coarse_indices,
+   std::map< uint32, std::vector< typename TObject::Id_Type > >& ids_by_coarse,
+   const std::map< TIndex, std::vector< TObject > >& items)
 {
-  for (typename map< TIndex, vector< TObject > >::const_iterator
+  for (typename std::map< TIndex, std::vector< TObject > >::const_iterator
     it(items.begin()); it != items.end(); ++it)
   {
     coarse_indices.insert(TIndex(it->first.val() & 0x7fffff00));
-    for (typename vector< TObject >::const_iterator it2(it->second.begin());
+    for (typename std::vector< TObject >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
       ids_by_coarse[it->first.val() & 0x7fffff00].push_back(it2->id);
   }
@@ -164,13 +165,13 @@ template< class TIndex, class TObject >
 void generate_ids_by_coarse
   (std::set< TIndex >& coarse_indices,
    std::map< uint32, std::vector< Attic< typename TObject::Id_Type > > >& ids_by_coarse,
-   const map< TIndex, vector< TObject > >& items)
+   const std::map< TIndex, std::vector< TObject > >& items)
 {
-  for (typename map< TIndex, vector< TObject > >::const_iterator
+  for (typename std::map< TIndex, std::vector< TObject > >::const_iterator
     it(items.begin()); it != items.end(); ++it)
   {
     coarse_indices.insert(TIndex(it->first.val() & 0x7fffff00));
-    for (typename vector< TObject >::const_iterator it2(it->second.begin());
+    for (typename std::vector< TObject >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
       ids_by_coarse[it->first.val() & 0x7fffff00].push_back
           (Attic< typename TObject::Id_Type >(it2->id, it2->timestamp));
@@ -180,15 +181,15 @@ void generate_ids_by_coarse
 
 struct Tag_Index_Global
 {
-  string key;
-  string value;
+  std::string key;
+  std::string value;
   
   Tag_Index_Global() {}
   
   Tag_Index_Global(void* data)
   {
-    key = string(((int8*)data + 4), *(uint16*)data);
-    value = string(((int8*)data + 4 + key.length()),
+    key = std::string(((int8*)data + 4), *(uint16*)data);
+    value = std::string(((int8*)data + 4 + key.length()),
 		   *((uint16*)data + 1));
   }
   

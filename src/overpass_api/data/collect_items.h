@@ -59,20 +59,6 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
 }
 
 
-template< typename Attic >
-struct Delta_Comparator
-{
-public:
-  bool operator()(const Attic& lhs, const Attic& rhs) const
-  {
-    if (lhs.id == rhs.id)
-      return rhs.timestamp < lhs.timestamp;
-    else
-      return lhs.id < rhs.id;
-  }
-};
-
-
 template < class Index, class Object, class Attic_Iterator, class Current_Iterator, class Predicate >
 void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
     Current_Iterator current_begin, Current_Iterator current_end,
@@ -207,6 +193,26 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
                    map< Index, vector< Attic< Relation_Skeleton > > >& attic_result)
 {
   std::vector< std::pair< Relation_Skeleton::Id_Type, uint64 > > timestamp_by_id;
+
+  reconstruct_items(stmt, rman, current_begin, current_end, attic_begin, attic_end,
+                    predicate, result, attic_result, timestamp_by_id);
+  
+  std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
+  
+  filter_items_by_timestamp(timestamp_by_id, result);
+  filter_items_by_timestamp(timestamp_by_id, attic_result);
+}
+
+
+template < class Index, class Current_Iterator, class Attic_Iterator, class Predicate >
+void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
+                   Current_Iterator current_begin, Current_Iterator current_end,
+                   Attic_Iterator attic_begin, Attic_Iterator attic_end,
+                   const Predicate& predicate,
+                   map< Index, vector< Way_Skeleton > >& result,
+                   map< Index, vector< Attic< Way_Skeleton > > >& attic_result)
+{
+  std::vector< std::pair< Way_Skeleton::Id_Type, uint64 > > timestamp_by_id;
 
   reconstruct_items(stmt, rman, current_begin, current_end, attic_begin, attic_end,
                     predicate, result, attic_result, timestamp_by_id);

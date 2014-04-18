@@ -306,7 +306,7 @@ struct Relation_Updater
               const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
               const std::map< Uint31_Index, std::set< Way_Skeleton > >& new_way_skeletons,
               const std::map< Uint31_Index, std::set< Way_Skeleton > >& attic_way_skeletons,
-              const std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > >& new_attic_way_skeletons);
+              const std::map< Uint31_Index, std::set< Attic< Way_Delta > > >& new_attic_way_skeletons);
   
 private:
   uint32 update_counter;

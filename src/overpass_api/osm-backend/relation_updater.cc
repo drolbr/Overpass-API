@@ -531,7 +531,7 @@ void compute_idx_and_geometry
      const std::map< Node_Skeleton::Id_Type,
          std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >& nodes_by_id,
      const std::map< Way_Skeleton::Id_Type,
-         std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > > >& ways_by_id)
+         std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton::Id_Type > > > >& ways_by_id)
 {
   std::vector< Uint31_Index > node_idxs;
   std::vector< Uint31_Index > way_idxs;
@@ -559,11 +559,12 @@ void compute_idx_and_geometry
       }
       else if (mit->type == Relation_Entry::WAY)
       {
-        std::map< Way_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > > >
+        std::map< Way_Skeleton::Id_Type,
+            std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton::Id_Type > > > >
             ::const_iterator nit = ways_by_id.find(Way_Skeleton::Id_Type(mit->ref.val()));
         if (nit != ways_by_id.end() && !nit->second.empty())
         {
-          std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > >::const_iterator
+          std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton::Id_Type > > >::const_iterator
               it2 = nit->second.begin();
           while (it2 != nit->second.end() && it2->second.timestamp < expiration_timestamp)
             ++it2;
@@ -609,7 +610,7 @@ void add_intermediate_versions
      const std::map< Node_Skeleton::Id_Type,
          std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >& nodes_by_id,
      const std::map< Way_Skeleton::Id_Type,
-         std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > > >& ways_by_id,
+         std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton::Id_Type > > > >& ways_by_id,
      bool add_last_version, Uint31_Index attic_idx,
      std::map< Uint31_Index, std::set< Attic< Relation_Delta > > >& full_attic,
      std::map< Uint31_Index, std::set< Attic< Relation_Skeleton::Id_Type > > >& new_undeleted,
@@ -636,11 +637,12 @@ void add_intermediate_versions
     }
     else if (mit->type == Relation_Entry::WAY)
     {
-      std::map< Way_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > > >
+      std::map< Way_Skeleton::Id_Type,
+          std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton::Id_Type > > > >
           ::const_iterator nit = ways_by_id.find(Way_Skeleton::Id_Type(mit->ref.val()));
       if (nit != ways_by_id.end() && !nit->second.empty())
       {
-        for (std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > >::const_iterator
+        for (std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton::Id_Type > > >::const_iterator
             it2 = nit->second.begin(); it2 != nit->second.end(); ++it2)
         {
           if (old_timestamp < it2->second.timestamp && it2->second.timestamp < new_timestamp)
@@ -712,7 +714,7 @@ void add_intermediate_changelog_entries
      const std::map< Node_Skeleton::Id_Type,
          std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >& nodes_by_id,
      const std::map< Way_Skeleton::Id_Type,
-         std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > > >& ways_by_id,
+         std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton::Id_Type > > > >& ways_by_id,
      bool add_last_version, Uint31_Index attic_idx, Uint31_Index new_idx,
      std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > >& result)
 {
@@ -737,11 +739,12 @@ void add_intermediate_changelog_entries
     }
     else if (mit->type == Relation_Entry::WAY)
     {
-      std::map< Way_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > > >
+      std::map< Way_Skeleton::Id_Type,
+          std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton::Id_Type > > > >
           ::const_iterator nit = ways_by_id.find(Way_Skeleton::Id_Type(mit->ref.val()));
       if (nit != ways_by_id.end() && !nit->second.empty())
       {
-        for (std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > >::const_iterator
+        for (std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton::Id_Type > > >::const_iterator
             it2 = nit->second.begin(); it2 != nit->second.end(); ++it2)
         {
           if (old_timestamp < it2->second.timestamp && it2->second.timestamp < new_timestamp)
@@ -795,26 +798,14 @@ bool geometrically_equal(const Relation_Skeleton& a, const Relation_Skeleton& b)
 }
 
 
-/* Compares the new data and the already existing skeletons to determine those that have
- * moved. This information is used to prepare the set of elements to store to attic.
- * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
-void compute_new_attic_skeletons
-    (const Data_By_Id< Relation_Skeleton >& new_data,
-     const std::map< Uint31_Index, std::set< Relation_Skeleton > >& implicitly_moved_skeletons,
-     const std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
-     const std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > >& attic_map_positions,
-     const std::map< Uint31_Index, std::set< Relation_Skeleton > >& attic_skeletons,
-     const std::map< Node_Skeleton::Id_Type, Quad_Coord >& new_node_idx_by_id,
-     const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
-     const std::map< Way_Skeleton::Id_Type, Uint31_Index >& new_way_idx_by_id,
-     const std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > >& new_attic_way_skeletons,
-     std::map< Uint31_Index, std::set< Attic< Relation_Delta > > >& full_attic,
-     std::map< Uint31_Index, std::set< Attic< Relation_Skeleton::Id_Type > > >& new_undeleted,
-     std::map< Relation_Skeleton::Id_Type, std::set< Uint31_Index > >& idx_lists)
+std::map< Node_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >
+    compute_nodes_by_id(
+        const std::map< Node_Skeleton::Id_Type, Quad_Coord >& new_node_idx_by_id,
+        const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons)
 {
-  // Fill nodes_by_id from attic nodes as well as the current nodes in new_node_idx_by_id
   std::map< Node_Skeleton::Id_Type,
          std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > > nodes_by_id;
+         
   for (std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >::const_iterator
       it = new_attic_node_skeletons.begin(); it != new_attic_node_skeletons.end(); ++it)
   {
@@ -829,22 +820,63 @@ void compute_new_attic_skeletons
         (it->second.ll_upper, Attic< Node_Skeleton >(Node_Skeleton(it->first, it->second.ll_lower),
              NOW)));
     
-  // Fill ways_by_id from attic ways as well as the current ways in new_way_idx_by_id
+  return nodes_by_id;
+}
+
+
+std::map< Way_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton::Id_Type > > > >
+    compute_ways_by_id(
+        const std::map< Way_Skeleton::Id_Type, Uint31_Index >& new_way_idx_by_id,
+        const std::map< Uint31_Index, std::set< Attic< Way_Delta > > >& new_attic_way_skeletons)
+{
   std::map< Way_Skeleton::Id_Type,
-         std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > > > ways_by_id;
-  for (std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > >::const_iterator
-      it = new_attic_way_skeletons.begin(); it != new_attic_way_skeletons.end(); ++it)
-  {
-    for (std::set< Attic< Way_Skeleton > >::const_iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
-      ways_by_id[it2->id].push_back(std::make_pair(it->first, *it2));
-  }
-  
+         std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton::Id_Type > > > > ways_by_id;
+         
   for (std::map< Way_Skeleton::Id_Type, Uint31_Index >::const_iterator it = new_way_idx_by_id.begin();
        it != new_way_idx_by_id.end(); ++it)
     ways_by_id[it->first].push_back(std::make_pair
-        (it->second, Attic< Way_Skeleton >(Way_Skeleton(it->first), NOW)));
+        (it->second, Attic< Way_Skeleton::Id_Type >(it->first, NOW)));
     
+  for (std::map< Uint31_Index, std::set< Attic< Way_Delta > > >::const_iterator
+      it = new_attic_way_skeletons.begin(); it != new_attic_way_skeletons.end(); ++it)
+  {
+    for (std::set< Attic< Way_Delta > >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+      ways_by_id[it2->id].push_back(std::make_pair(it->first,
+          Attic< Way_Skeleton::Id_Type >(it2->id, it2->timestamp)));
+  }
+  
+  return ways_by_id;
+}
+
+
+/* Compares the new data and the already existing skeletons to determine those that have
+ * moved. This information is used to prepare the set of elements to store to attic.
+ * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
+void compute_new_attic_skeletons
+    (const Data_By_Id< Relation_Skeleton >& new_data,
+     const std::map< Uint31_Index, std::set< Relation_Skeleton > >& implicitly_moved_skeletons,
+     const std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
+     const std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > >& attic_map_positions,
+     const std::map< Uint31_Index, std::set< Relation_Skeleton > >& attic_skeletons,
+     const std::map< Node_Skeleton::Id_Type, Quad_Coord >& new_node_idx_by_id,
+     const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
+     const std::map< Way_Skeleton::Id_Type, Uint31_Index >& new_way_idx_by_id,
+     const std::map< Uint31_Index, std::set< Attic< Way_Delta > > >& new_attic_way_skeletons,
+     std::map< Uint31_Index, std::set< Attic< Relation_Delta > > >& full_attic,
+     std::map< Uint31_Index, std::set< Attic< Relation_Skeleton::Id_Type > > >& new_undeleted,
+     std::map< Relation_Skeleton::Id_Type, std::set< Uint31_Index > >& idx_lists)
+{
+  // Fill nodes_by_id from attic nodes as well as the current nodes in new_node_idx_by_id
+  std::map< Node_Skeleton::Id_Type,
+         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > > nodes_by_id
+         = compute_nodes_by_id(new_node_idx_by_id, new_attic_node_skeletons);
+    
+  // Fill ways_by_id from attic ways as well as the current ways in new_way_idx_by_id
+  std::map< Way_Skeleton::Id_Type,
+         std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton::Id_Type > > > > ways_by_id
+         = compute_ways_by_id(new_way_idx_by_id, new_attic_way_skeletons);
+         
   // Create full_attic and idx_lists by going through new_data and filling the gaps
   std::vector< Data_By_Id< Relation_Skeleton >::Entry >::const_iterator next_it
       = new_data.data.begin();
@@ -952,42 +984,19 @@ std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > > co
     const std::map< Node_Skeleton::Id_Type, Quad_Coord >& new_node_idx_by_id,
     const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
     const std::map< Way_Skeleton::Id_Type, Uint31_Index >& new_way_idx_by_id,
-    const std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > >& new_attic_way_skeletons)
+    const std::map< Uint31_Index, std::set< Attic< Way_Delta > > >& new_attic_way_skeletons)
 {
   std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > > result;
   
   // Fill nodes_by_id from attic nodes as well as the current nodes in new_node_idx_by_id
   std::map< Node_Skeleton::Id_Type,
-         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > > nodes_by_id;
-  for (std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >::const_iterator
-      it = new_attic_node_skeletons.begin(); it != new_attic_node_skeletons.end(); ++it)
-  {
-    for (std::set< Attic< Node_Skeleton > >::const_iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
-      nodes_by_id[it2->id].push_back(std::make_pair(it->first, *it2));
-  }
-  
-  for (std::map< Node_Skeleton::Id_Type, Quad_Coord >::const_iterator it = new_node_idx_by_id.begin();
-       it != new_node_idx_by_id.end(); ++it)
-    nodes_by_id[it->first].push_back(std::make_pair
-        (it->second.ll_upper, Attic< Node_Skeleton >(Node_Skeleton(it->first, it->second.ll_lower),
-             NOW)));
+         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > > nodes_by_id
+         = compute_nodes_by_id(new_node_idx_by_id, new_attic_node_skeletons);
     
   // Fill ways_by_id from attic ways as well as the current ways in new_way_idx_by_id
   std::map< Way_Skeleton::Id_Type,
-         std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton > > > > ways_by_id;
-  for (std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > >::const_iterator
-      it = new_attic_way_skeletons.begin(); it != new_attic_way_skeletons.end(); ++it)
-  {
-    for (std::set< Attic< Way_Skeleton > >::const_iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
-      ways_by_id[it2->id].push_back(std::make_pair(it->first, *it2));
-  }
-  
-  for (std::map< Way_Skeleton::Id_Type, Uint31_Index >::const_iterator it = new_way_idx_by_id.begin();
-       it != new_way_idx_by_id.end(); ++it)
-    ways_by_id[it->first].push_back(std::make_pair
-        (it->second, Attic< Way_Skeleton >(Way_Skeleton(it->first), NOW)));
+         std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton::Id_Type > > > > ways_by_id
+         = compute_ways_by_id(new_way_idx_by_id, new_attic_way_skeletons);
     
   std::vector< Data_By_Id< Relation_Skeleton >::Entry >::const_iterator next_it
       = new_data.data.begin();
@@ -1073,7 +1082,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
               const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
               const std::map< Uint31_Index, std::set< Way_Skeleton > >& new_way_skeletons,
               const std::map< Uint31_Index, std::set< Way_Skeleton > >& attic_way_skeletons,
-              const std::map< Uint31_Index, std::set< Attic< Way_Skeleton > > >& new_attic_way_skeletons)
+              const std::map< Uint31_Index, std::set< Attic< Way_Delta > > >& new_attic_way_skeletons)
 {
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
