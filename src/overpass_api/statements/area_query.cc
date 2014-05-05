@@ -92,31 +92,21 @@ void Area_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp
   
   // pre-process ways to reduce the load of the expensive filter
   filter_ways_by_ranges(into.ways, ranges);
+  if (timestamp != NOW)
+    filter_ways_by_ranges(into.attic_ways, ranges);
   
   // pre-filter relations
-  {
-    set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it = ranges.begin();
-    map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = into.relations.begin();
-    for (; it != into.relations.end() && ranges_it != ranges.end(); )
-    {
-      if (!(it->first < ranges_it->second))
-	++ranges_it;
-      else if (!(it->first < ranges_it->first))
-	++it;
-      else
-      {
-	it->second.clear();
-	++it;
-      }
-    }
-    for (; it != into.relations.end(); ++it)
-      it->second.clear();
-  }
+  filter_relations_by_ranges(into.relations, ranges);
+  if (timestamp != NOW)
+    filter_relations_by_ranges(into.attic_relations, ranges);
+  
+  //TODO: filter areas
 }
 
 
 void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
 {
+  set< Uint31_Index > area_blocks_req;
   set< pair< Uint32_Index, Uint32_Index > > range_req;
   if (area->areas_from_input())
   {
@@ -127,105 +117,72 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   else
     area->get_ranges(range_req, area_blocks_req, rman);
   
+  //Process nodes
   area->collect_nodes(into.nodes, area_blocks_req, true, rman);
   
+  //Process ways  
+  area->collect_ways(Way_Geometry_Store(into.ways, query, rman),
+		     into.ways, area_blocks_req, false, query, rman);
+    
+  //Process relations
+    
+  // Retrieve all nodes referred by the relations.
+  set< pair< Uint32_Index, Uint32_Index > > node_ranges;
+  get_ranges(rman, node_ranges);
+  std::map< Uint32_Index, vector< Node_Skeleton > > node_members
+      = relation_node_members(&query, rman, into.relations, &node_ranges);
+  
+  // filter for those nodes that are in one of the areas
+  area->collect_nodes(node_members, area_blocks_req, false, rman);
+  
+  // Retrieve all ways referred by the relations.
+  set< pair< Uint31_Index, Uint31_Index > > way_ranges;
+  get_ranges(rman, way_ranges);    
+  std::map< Uint31_Index, vector< Way_Skeleton > > way_members_
+      = relation_way_members(&query, rman, into.relations, &way_ranges);
+  
+  // Filter for those ways that are in one of the areas
+  area->collect_ways(Way_Geometry_Store(way_members_, query, rman),
+		     way_members_, area_blocks_req, false, query, rman);
+    
+  filter_relations_expensive(order_by_id(node_members, Order_By_Node_Id()),
+			     order_by_id(way_members_, Order_By_Way_Id()),
+			     into.relations);
+
+  if (timestamp != NOW)
   {
-    //Process ways  
-    area->collect_ways(into.ways, area_blocks_req, false, query, rman);
-  }
-  {
+    //Process nodes
+    area->collect_nodes(into.attic_nodes, area_blocks_req, true, rman);
+  
+    //Process ways
+    area->collect_ways(Way_Geometry_Store(into.attic_ways, timestamp, query, rman),
+		       into.attic_ways, area_blocks_req, false, query, rman);
+    
     //Process relations
     
     // Retrieve all nodes referred by the relations.
     set< pair< Uint32_Index, Uint32_Index > > node_ranges;
     get_ranges(rman, node_ranges);
-    
-    map< Uint32_Index, vector< Node_Skeleton > > node_members
-        = relation_node_members(&query, rman, into.relations, &node_ranges);
+    map< Uint32_Index, vector< Attic< Node_Skeleton > > > node_members
+        = relation_node_members(&query, rman, into.attic_relations, timestamp, &node_ranges);
   
     // filter for those nodes that are in one of the areas
-    set< Uint31_Index > area_blocks_req;
-    set< pair< Uint32_Index, Uint32_Index > > range_req;
-    if (area->areas_from_input())
-    {
-      map< string, Set >::const_iterator mit = rman.sets().find(area->get_input());
-      if (mit != rman.sets().end())
-        area->get_ranges(mit->second.areas, range_req, area_blocks_req, rman);
-    }
-    else
-      area->get_ranges(range_req, area_blocks_req, rman);
-  
     area->collect_nodes(node_members, area_blocks_req, false, rman);
   
-    // Order node ids by id.
-    vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id;
-    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = node_members.begin();
-        it != node_members.end(); ++it)
-    {
-      for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-        node_members_by_id.push_back(make_pair(it->first, &*iit));
-    }
-    Order_By_Node_Id order_by_node_id;
-    sort(node_members_by_id.begin(), node_members_by_id.end(), order_by_node_id);
-    
     // Retrieve all ways referred by the relations.
     set< pair< Uint31_Index, Uint31_Index > > way_ranges;
-    get_ranges(rman, way_ranges);
-    
-    map< Uint31_Index, vector< Way_Skeleton > > way_members_
-        = relation_way_members(&query, rman, into.relations, &way_ranges);
+    get_ranges(rman, way_ranges);    
+    map< Uint31_Index, vector< Attic< Way_Skeleton > > > way_members_
+        = relation_way_members(&query, rman, into.attic_relations, timestamp, &way_ranges);
   
     // Filter for those ways that are in one of the areas
-    area->collect_ways(way_members_, area_blocks_req, false, query, rman);
+    area->collect_ways(Way_Geometry_Store(way_members_, timestamp, query, rman),
+		       way_members_, area_blocks_req, false, query, rman);
     
-    // Order way ids by id.
-    vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id;
-    for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = way_members_.begin();
-        it != way_members_.end(); ++it)
-    {
-      for (vector< Way_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-        way_members_by_id.push_back(make_pair(it->first, &*iit));
-    }
-    Order_By_Way_Id order_by_way_id;
-    sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_way_id);
-    
-    for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = into.relations.begin();
-        it != into.relations.end(); ++it)
-    {
-      vector< Relation_Skeleton > local_into;
-      for (vector< Relation_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-      {
-        for (vector< Relation_Entry >::const_iterator nit = iit->members.begin();
-            nit != iit->members.end(); ++nit)
-        {
-          if (nit->type == Relation_Entry::NODE)
-          {
-            const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
-                binary_search_for_pair_id(node_members_by_id, nit->ref);
-            if (second_nd)
-            {
-              local_into.push_back(*iit);
-              break;
-            }
-          }
-          else if (nit->type == Relation_Entry::WAY)
-          {
-            const pair< Uint31_Index, const Way_Skeleton* >* second_nd =
-                binary_search_for_pair_id(way_members_by_id, nit->ref32());
-            if (second_nd)
-            {
-              local_into.push_back(*iit);
-              break;
-            }
-          }
-        }
-      }
-      it->second.swap(local_into);
-    }
-  }  
+    filter_relations_expensive(order_attic_by_id(node_members, Order_By_Node_Id()),
+			       order_attic_by_id(way_members_, Order_By_Way_Id()),
+			       into.attic_relations);
+  }
   
   //TODO: filter areas
 }
@@ -402,6 +359,7 @@ void Area_Query_Statement::collect_nodes
 }
 
 
+template< typename Node_Skeleton >
 void Area_Query_Statement::collect_nodes
     (map< Uint32_Index, vector< Node_Skeleton > >& nodes,
      const set< Uint31_Index >& req, bool add_border,
@@ -412,7 +370,7 @@ void Area_Query_Statement::collect_nodes
   Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
       area_it(area_blocks_db.discrete_begin(req.begin(), req.end()));
 
-  map< Uint32_Index, vector< Node_Skeleton > >::iterator nodes_it = nodes.begin();
+  typename std::map< Uint32_Index, vector< Node_Skeleton > >::iterator nodes_it = nodes.begin();
   
   uint32 current_idx(0);
   while (!(area_it == area_blocks_db.discrete_end()))
@@ -437,8 +395,8 @@ void Area_Query_Statement::collect_nodes
     while (nodes_it != nodes.end() &&
         (nodes_it->first.val() & 0xffffff00) == current_idx)
     {
-      vector< Node_Skeleton > into;
-      for (vector< Node_Skeleton >::const_iterator iit = nodes_it->second.begin();
+      std::vector< Node_Skeleton > into;
+      for (typename std::vector< Node_Skeleton >::const_iterator iit = nodes_it->second.begin();
           iit != nodes_it->second.end(); ++iit)
       {
         uint32 ilat((::lat(nodes_it->first.val(), iit->ll_lower)
@@ -655,13 +613,13 @@ void has_inner_points(const Area_Block& string_a, const Area_Block& string_b, in
 }
 
 
+template< typename Way_Skeleton >
 void Area_Query_Statement::collect_ways
-      (map< Uint31_Index, vector< Way_Skeleton > >& ways,
+      (const Way_Geometry_Store& way_geometries,
+       std::map< Uint31_Index, vector< Way_Skeleton > >& ways,
        const set< Uint31_Index >& req, bool add_border,
        const Statement& query, Resource_Manager& rman)
 {
-  Way_Geometry_Store way_geometries(ways, query, rman);
-  
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
       (rman.get_area_transaction()->data_index(area_settings().AREA_BLOCKS));
   Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
@@ -670,16 +628,16 @@ void Area_Query_Statement::collect_ways
   map< Way::Id_Type, bool > ways_inside;
   
   map< Uint31_Index, vector< Area_Block > > way_segments;
-  for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
+  for (typename std::map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
   {
-    for (vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    for (typename std::vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
       add_way_to_area_blocks(way_geometries.get_geometry(*it2), it2->id.val(), way_segments);
   }
       
   map< uint32, vector< pair< uint32, Way::Id_Type > > > way_coords_to_id;
-  for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
+  for (typename std::map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
   {
-    for (vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    for (typename std::vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
       vector< Quad_Coord > coords = way_geometries.get_geometry(*it2);
       for (vector< Quad_Coord >::const_iterator it3 = coords.begin(); it3 != coords.end(); ++it3)
@@ -787,10 +745,11 @@ void Area_Query_Statement::collect_ways
   map< Uint31_Index, vector< Way_Skeleton > > result;
 
   // Mark ways as found that intersect the area border
-  for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
+  for (typename std::map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin();
+       it != ways.end(); ++it)
   {
     vector< Way_Skeleton > cur_result;
-    for (vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    for (typename std::vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
       if (ways_inside[it2->id])
       {
@@ -823,17 +782,18 @@ void collect_nodes_from_req
 
 void Area_Query_Statement::execute(Resource_Manager& rman)
 {
-  set< Uint31_Index > req;
-  
-  set< pair< Uint32_Index, Uint32_Index > > nodes_req;
-  if (submitted_id == 0)
-    get_ranges(rman.sets()[input].areas, nodes_req, req, rman);
-  else
-    get_ranges(nodes_req, req, rman);
-  
   Set into;
-  collect_nodes_from_req(nodes_req, into.nodes, rman);
-  collect_nodes(into.nodes, req, true, rman);
+  
+  Area_Constraint constraint(*this);
+  set< pair< Uint32_Index, Uint32_Index > > ranges;
+  constraint.get_ranges(rman, ranges);
+  get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
+      (into.nodes, into.attic_nodes,
+       vector< Node::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
+       *osm_base_settings().NODES, *attic_settings().NODES);  
+  constraint.filter(rman, into, rman.get_desired_timestamp());
+  filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
+  constraint.filter(*this, rman, into, rman.get_desired_timestamp());
 
   transfer_output(rman, into);
   rman.health_check(*this);

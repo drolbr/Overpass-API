@@ -713,4 +713,46 @@ vector< pair< Index, const Skeleton* > > order_attic_by_id
 }
 
 
+template< typename Relation_Skeleton >
+void filter_relations_expensive(const vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id,
+				const vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id,
+				map< Uint31_Index, vector< Relation_Skeleton > >& relations)
+{
+  for (typename map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = relations.begin();
+      it != relations.end(); ++it)
+  {
+    vector< Relation_Skeleton > local_into;
+    for (typename vector< Relation_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      for (vector< Relation_Entry >::const_iterator nit = iit->members.begin();
+          nit != iit->members.end(); ++nit)
+      {
+        if (nit->type == Relation_Entry::NODE)
+        {
+          const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
+              binary_search_for_pair_id(node_members_by_id, nit->ref);
+          if (second_nd)
+          {
+            local_into.push_back(*iit);
+            break;
+          }
+        }
+        else if (nit->type == Relation_Entry::WAY)
+        {
+          const pair< Uint31_Index, const Way_Skeleton* >* second_nd =
+              binary_search_for_pair_id(way_members_by_id, nit->ref32());
+          if (second_nd)
+          {
+            local_into.push_back(*iit);
+            break;
+          }
+        }
+      }
+    }
+    it->second.swap(local_into);
+  }
+}
+
+
 #endif
