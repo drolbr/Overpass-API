@@ -68,7 +68,7 @@ class Dispatcher_Stub : public Watchdog_Callback
     Nonsynced_Transaction* transaction;
     Nonsynced_Transaction* area_transaction;
     Resource_Manager* rman;
-    bool meta;
+    meta_modes meta;
 };
 
 
