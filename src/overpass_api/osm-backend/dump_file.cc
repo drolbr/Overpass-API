@@ -437,7 +437,7 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    std::cout<<e.origin<<' '<<e.filename<<' '<<e.error_number<<'\n';
+    std::cerr<<e.origin<<' '<<e.filename<<' '<<e.error_number<<'\n';
   }
   
   return 0;
