@@ -150,15 +150,21 @@ string escape_quotation_marks(const string& input)
   string::size_type pos = result.find('\\');
   while (pos != string::npos)
   {
-    result = result.substr(0, pos) + "\\\\" + input.substr(pos+1);
-    pos = result.find('\\', pos + 2);
+    result = result.substr(0, pos) + "\\\\" + (pos < result.size()-1 ? input.substr(pos+1) : "");
+    if (pos < result.size()-2)
+      pos = result.find('\\', pos + 2);
+    else
+      break;
   }
   
   pos = result.find('\"');
   while (pos != string::npos)
   {
-    result = result.substr(0, pos) + "\\\"" + input.substr(pos+1);
-    pos = result.find('\"', pos + 2);
+    result = result.substr(0, pos) + "\\\"" + (pos < result.size()-1 ? input.substr(pos+1) : "");
+    if (pos < result.size()-2)
+      pos = result.find('\\', pos + 2);
+    else
+      break;
   }
   
   return result;
