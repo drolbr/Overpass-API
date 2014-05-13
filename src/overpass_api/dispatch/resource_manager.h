@@ -107,6 +107,18 @@ private:
   uint64 desired_timestamp;
 };
 
+
+uint64 eval_map(const std::map< Uint32_Index, vector< Node_Skeleton > >& nodes);
+uint64 eval_map(const std::map< Uint31_Index, vector< Way_Skeleton > >& ways);
+uint64 eval_map(const std::map< Uint31_Index, vector< Relation_Skeleton > >& relations);
+
+uint64 eval_map(const std::map< Uint32_Index, vector< Attic< Node_Skeleton > > >& nodes);
+uint64 eval_map(const std::map< Uint31_Index, vector< Attic< Way_Skeleton > > >& ways);
+uint64 eval_map(const std::map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& relations);
+
+uint64 eval_map(const std::map< Uint31_Index, vector< Area_Skeleton > >& areas);
+
+
 struct Resource_Error
 {
   bool timed_out;

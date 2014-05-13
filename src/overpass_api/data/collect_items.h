@@ -237,11 +237,11 @@ void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
       ::const_iterator >::Discrete_Iterator
       it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
   {
-    if (++count >= 64*1024)
+    if (++count >= 256*1024)
     {
       count = 0;
       if (stmt)
-        rman.health_check(*stmt);
+        rman.health_check(*stmt, 0, eval_map(result));
     }
     if (predicate.match(it.object()))
       result[it.index()].push_back(it.object());
@@ -298,10 +298,10 @@ void collect_items_range(const Statement* stmt, Resource_Manager& rman,
       it(db.range_begin(req.begin(), req.end()));
 	   !(it == db.range_end()); ++it)
   {
-    if (++count >= 64*1024 && stmt)
+    if (++count >= 256*1024 && stmt)
     {
       count = 0;
-      rman.health_check(*stmt);
+      rman.health_check(*stmt, 0, eval_map(result));
     }
     if (predicate.match(it.object()))
       result[it.index()].push_back(it.object());
@@ -337,10 +337,10 @@ void collect_items_flat(const Statement& stmt, Resource_Manager& rman,
   for (typename Block_Backend< Index, Object >::Flat_Iterator
       it(db.flat_begin()); !(it == db.flat_end()); ++it)
   {
-    if (++count >= 64*1024)
+    if (++count >= 256*1024)
     {
       count = 0;
-      rman.health_check(stmt);
+      rman.health_check(stmt, 0, eval_map(result));
     }
     if (predicate.match(it.object()))
       result[it.index()].push_back(it.object());
