@@ -167,7 +167,7 @@ void add_intermediate_versions
       for (std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > >::const_iterator
           it2 = nit->second.begin(); it2 != nit->second.end(); ++it2)
       {
-        if (old_timestamp < it2->second.timestamp && it2->second.timestamp < new_timestamp)
+        if (old_timestamp < it2->second.timestamp && it2->second.timestamp <= new_timestamp)
           relevant_timestamps.push_back(it2->second.timestamp);
       }
     }
@@ -176,6 +176,9 @@ void add_intermediate_versions
   std::sort(relevant_timestamps.begin(), relevant_timestamps.end());
   relevant_timestamps.erase(std::unique(relevant_timestamps.begin(), relevant_timestamps.end()),
                             relevant_timestamps.end());
+    
+  if (!relevant_timestamps.empty() && relevant_timestamps.back() == NOW)
+    relevant_timestamps.pop_back();
   
   // Care for latest element
   Uint31_Index idx = attic_idx;
@@ -183,7 +186,7 @@ void add_intermediate_versions
   if (idx.val() == 0 || !relevant_timestamps.empty())
     compute_idx_and_geometry(idx, cur_skeleton, new_timestamp, nodes_by_id);
     
-  if (add_last_version)
+  if (add_last_version || (!relevant_timestamps.empty() && relevant_timestamps.back() == new_timestamp))
   {
     Uint31_Index reference_idx;
     Way_Skeleton reference_skel = reference;
@@ -195,6 +198,13 @@ void add_intermediate_versions
       full_attic[idx].insert(Attic< Way_Delta >(
           Way_Delta(Way_Skeleton(), cur_skeleton), new_timestamp));      
     idx_lists[skeleton.id].insert(idx);
+    
+    // Manage undelete entries
+    if (!(idx == reference_idx))
+      new_undeleted[reference_idx].insert(Attic< Way_Skeleton::Id_Type >(skeleton.id, new_timestamp));
+    
+    if (!relevant_timestamps.empty() && relevant_timestamps.back() == new_timestamp)
+      relevant_timestamps.pop_back();
   }
     
   // Track index for the undelete creation
@@ -248,7 +258,7 @@ void add_intermediate_changelog_entries
       for (std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > >::const_iterator
           it2 = nit->second.begin(); it2 != nit->second.end(); ++it2)
       {
-        if (old_timestamp < it2->second.timestamp && it2->second.timestamp < new_timestamp)
+        if (old_timestamp < it2->second.timestamp && it2->second.timestamp <= new_timestamp)
           relevant_timestamps.push_back(it2->second.timestamp);
       }
     }
@@ -257,6 +267,9 @@ void add_intermediate_changelog_entries
   std::sort(relevant_timestamps.begin(), relevant_timestamps.end());
   relevant_timestamps.erase(std::unique(relevant_timestamps.begin(), relevant_timestamps.end()),
                             relevant_timestamps.end());
+    
+  if (!relevant_timestamps.empty() && relevant_timestamps.back() == NOW)
+    relevant_timestamps.pop_back();
   
   std::vector< Uint31_Index > idxs;
   
@@ -309,20 +322,8 @@ void compute_new_attic_skeletons
 {
   // Fill nodes_by_id from attic nodes as well as the current nodes in new_node_idx_by_id
   std::map< Node_Skeleton::Id_Type,
-         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > > nodes_by_id;
-  for (std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >::const_iterator
-      it = new_attic_node_skeletons.begin(); it != new_attic_node_skeletons.end(); ++it)
-  {
-    for (std::set< Attic< Node_Skeleton > >::const_iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
-      nodes_by_id[it2->id].push_back(std::make_pair(it->first, *it2));
-  }
-  
-  for (std::map< Node_Skeleton::Id_Type, Quad_Coord >::const_iterator it = new_node_idx_by_id.begin();
-       it != new_node_idx_by_id.end(); ++it)
-    nodes_by_id[it->first].push_back(std::make_pair
-        (it->second.ll_upper, Attic< Node_Skeleton >(Node_Skeleton(it->first, it->second.ll_lower),
-             NOW)));
+         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > > nodes_by_id
+         = collect_nodes_by_id(new_attic_node_skeletons, new_node_idx_by_id);
     
   // Create full_attic and idx_lists by going through new_data and filling the gaps
   std::vector< Data_By_Id< Way_Skeleton >::Entry >::const_iterator next_it
@@ -712,27 +713,8 @@ std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > > compute
   
   // Fill nodes_by_id from attic nodes as well as the current nodes in new_node_idx_by_id
   std::map< Node_Skeleton::Id_Type,
-         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > > nodes_by_id;
-  for (std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >::const_iterator
-      it = new_attic_node_skeletons.begin(); it != new_attic_node_skeletons.end(); ++it)
-  {
-    for (std::set< Attic< Node_Skeleton > >::const_iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
-    {
-      //std::cout<<it2->id.val()<<'\t'<<it2->timestamp<<'\n';
-      nodes_by_id[it2->id].push_back(std::make_pair(it->first, *it2));
-    }
-  }
-  
-  for (std::map< Node_Skeleton::Id_Type, Quad_Coord >::const_iterator it = new_node_idx_by_id.begin();
-       it != new_node_idx_by_id.end(); ++it)
-  {
-    //std::cout<<it->first.val()<<'\n';
-    nodes_by_id[it->first].push_back(std::make_pair
-        (it->second.ll_upper, Attic< Node_Skeleton >(Node_Skeleton(it->first, it->second.ll_lower),
-             NOW)));
-  }
-    
+         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > > nodes_by_id
+         = collect_nodes_by_id(new_attic_node_skeletons, new_node_idx_by_id);    
 
   std::vector< Data_By_Id< Way_Skeleton >::Entry >::const_iterator next_it
       = new_data.data.begin();
