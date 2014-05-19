@@ -899,12 +899,33 @@ inline std::vector< std::pair< uint32, uint32 > > calc_ranges
   }
   else
   {
-    recursively_calc_ranges
-        (isouth & 0xffff0000, inorth & 0xffff0000,
-	 iwest & 0xffff0000, int32(180.0*10000000 + 0.5) & 0xffff0000, 1, ranges);
-    recursively_calc_ranges
-        (isouth & 0xffff0000, inorth & 0xffff0000,
-	 int32(-180.0*10000000 - 0.5) & 0xffff0000, ieast & 0xffff0000, 1, ranges);
+    if (west < 0)
+    {
+      recursively_calc_ranges
+          (isouth & 0xffff0000, inorth & 0xffff0000,
+	   iwest & 0xffff0000, 0xffff0000, 1, ranges);
+      recursively_calc_ranges
+          (isouth & 0xffff0000, inorth & 0xffff0000,
+	   0, int32(180.0*10000000 + 0.5) & 0xffff0000, 1, ranges);
+    }
+    else
+      recursively_calc_ranges
+          (isouth & 0xffff0000, inorth & 0xffff0000,
+	   iwest & 0xffff0000, int32(180.0*10000000 + 0.5) & 0xffff0000, 1, ranges);
+	  
+    if (east > 0)
+    {
+      recursively_calc_ranges
+          (isouth & 0xffff0000, inorth & 0xffff0000,
+	   int32(-180.0*10000000 - 0.5) & 0xffff0000, 0xffff0000, 1, ranges);
+      recursively_calc_ranges
+          (isouth & 0xffff0000, inorth & 0xffff0000,
+	   0, ieast & 0xffff0000, 1, ranges);
+    }
+    else
+      recursively_calc_ranges
+          (isouth & 0xffff0000, inorth & 0xffff0000,
+	   int32(-180.0*10000000 - 0.5) & 0xffff0000, ieast & 0xffff0000, 1, ranges);
   }
   return ranges;
 }
