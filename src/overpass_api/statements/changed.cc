@@ -51,14 +51,27 @@ void filter_elems(const std::vector< typename TObject::Id_Type >& ids, map< TInd
 
 
 template< typename Index, typename Skeleton >
-void collect_changed_elements
+std::vector< typename Skeleton::Id_Type > collect_changed_elements
     (uint64 since,
      uint64 until,
-     std::vector< typename Skeleton::Id_Type >& ids,
-     std::vector< Index >& req,
      Resource_Manager& rman)
 {
-  //TODO
+  std::set< std::pair< Timestamp, Timestamp > > range;
+  range.insert(std::make_pair(Timestamp(since), Timestamp(until)));
+  
+  std::vector< typename Skeleton::Id_Type > ids;
+  
+  Block_Backend< Timestamp, Change_Entry< typename Skeleton::Id_Type > > changelog_db
+      (rman.get_transaction()->data_index(changelog_file_properties< Skeleton >()));
+  for (typename Block_Backend< Timestamp, Change_Entry< typename Skeleton::Id_Type > >::Range_Iterator
+      it = changelog_db.range_begin(Default_Range_Iterator< Timestamp >(range.begin()),
+            Default_Range_Iterator< Timestamp >(range.end()));
+      !(it == changelog_db.range_end()); ++it)
+    ids.push_back(it.object().elem_id);
+    
+  std::sort(ids.begin(), ids.end());
+  ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
+  return ids;
 }
 
 
@@ -85,10 +98,10 @@ class Changed_Constraint : public Query_Constraint
 
 bool Changed_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
 {
-  std::vector< Node_Skeleton::Id_Type > ids;
-  std::vector< Uint32_Index > req;
-  collect_changed_elements< Uint32_Index, Node_Skeleton >
-      (stmt->get_since(rman), stmt->get_until(rman), ids, req, rman);
+  std::vector< Node_Skeleton::Id_Type > ids
+      = collect_changed_elements< Uint32_Index, Node_Skeleton >(stmt->get_since(rman), stmt->get_until(rman), rman);
+      
+  std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(ids, rman);
   
   ranges.clear();
   for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
@@ -100,18 +113,21 @@ bool Changed_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint32_In
 
 bool Changed_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
-  std::vector< Way_Skeleton::Id_Type > way_ids;
-  std::vector< Relation_Skeleton::Id_Type > rel_ids;
-  std::vector< Uint31_Index > req;
-  collect_changed_elements< Uint31_Index, Way_Skeleton >
-      (stmt->get_since(rman), stmt->get_until(rman), way_ids, req, rman);
-  collect_changed_elements< Uint31_Index, Relation_Skeleton >
-      (stmt->get_since(rman), stmt->get_until(rman), rel_ids, req, rman);
-  
+  std::vector< Way_Skeleton::Id_Type > way_ids = collect_changed_elements< Uint31_Index, Way_Skeleton >
+      (stmt->get_since(rman), stmt->get_until(rman), rman);
+  std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(way_ids, rman);
+      
   ranges.clear();
   for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
     ranges.insert(std::make_pair(*it, inc(*it)));
+
+  std::vector< Relation_Skeleton::Id_Type > rel_ids = collect_changed_elements< Uint31_Index, Relation_Skeleton >
+      (stmt->get_since(rman), stmt->get_until(rman), rman);
+  get_indexes_< Uint31_Index, Relation_Skeleton >(rel_ids, rman).swap(req);
   
+  for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+    ranges.insert(std::make_pair(*it, inc(*it)));
+
   return true;
 }
 
@@ -119,28 +135,25 @@ bool Changed_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint31_In
 void Changed_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   {
-    std::vector< Node_Skeleton::Id_Type > ids;
-    std::vector< Uint32_Index > req;
-    collect_changed_elements< Uint32_Index, Node_Skeleton >
-        (stmt->get_since(rman), stmt->get_until(rman), ids, req, rman);
+    std::vector< Node_Skeleton::Id_Type > ids =
+        collect_changed_elements< Uint32_Index, Node_Skeleton >
+        (stmt->get_since(rman), stmt->get_until(rman), rman);
       
     filter_elems(ids, into.nodes);
     filter_elems(ids, into.attic_nodes);
   }
   {
-    std::vector< Way_Skeleton::Id_Type > ids;
-    std::vector< Uint31_Index > req;
-    collect_changed_elements< Uint31_Index, Way_Skeleton >
-        (stmt->get_since(rman), stmt->get_until(rman), ids, req, rman);
+    std::vector< Way_Skeleton::Id_Type > ids =
+        collect_changed_elements< Uint31_Index, Way_Skeleton >
+        (stmt->get_since(rman), stmt->get_until(rman), rman);
       
     filter_elems(ids, into.ways);
     filter_elems(ids, into.attic_ways);
   }
   {
-    std::vector< Relation_Skeleton::Id_Type > ids;
-    std::vector< Uint31_Index > req;
-    collect_changed_elements< Uint31_Index, Relation_Skeleton >
-        (stmt->get_since(rman), stmt->get_until(rman), ids, req, rman);
+    std::vector< Relation_Skeleton::Id_Type > ids =
+        collect_changed_elements< Uint31_Index, Relation_Skeleton >
+        (stmt->get_since(rman), stmt->get_until(rman), rman);
       
     filter_elems(ids, into.relations);
     filter_elems(ids, into.attic_relations);
@@ -226,10 +239,9 @@ void get_elements(Changed_Statement& stmt, Resource_Manager& rman,
     std::map< Index, std::vector< Skeleton > >& current_result,
     std::map< Index, std::vector< Attic< Skeleton > > >& attic_result)
 {
-  std::vector< typename Skeleton::Id_Type > ids;
-  std::vector< Index > req;
-  collect_changed_elements< Index, Skeleton >
-      (stmt.get_since(rman), stmt.get_until(rman), ids, req, rman);
+  std::vector< typename Skeleton::Id_Type > ids =
+      collect_changed_elements< Index, Skeleton >(stmt.get_since(rman), stmt.get_until(rman), rman);
+  std::vector< Index > req = get_indexes_< Index, Skeleton >(ids, rman);
         
   if (rman.get_desired_timestamp() == NOW)
     collect_items_discrete(&stmt, rman, *current_skeleton_file_properties< Skeleton >(), req,

@@ -118,57 +118,6 @@ void filter_elems(Uint64 lower, Uint64 upper,
 }
 
 
-/* Returns for the given set of ids the set of corresponding indexes.
- * For ids where the timestamp is zero, only the current index is returned.
- * For ids where the timestamp is nonzero, all attic indexes are also returned.
- * The function requires that the ids are sorted ascending by id.
- */
-template< typename Index, typename Skeleton >
-std::vector< Index > get_indexes_
-    (const std::vector< typename Skeleton::Id_Type >& ids, Resource_Manager& rman)
-{
-  std::vector< Index > result;
-  
-  Random_File< Index > current(rman.get_transaction()->random_index
-      (current_skeleton_file_properties< Skeleton >()));
-  for (typename std::vector< typename Skeleton::Id_Type >::const_iterator
-      it = ids.begin(); it != ids.end(); ++it)
-    result.push_back(current.get(it->val()));
-  
-  std::sort(result.begin(), result.end());
-  result.erase(std::unique(result.begin(), result.end()), result.end());
-  
-  if (rman.get_desired_timestamp() != NOW)
-  {
-    Random_File< Index > attic_random(rman.get_transaction()->random_index
-        (attic_skeleton_file_properties< Skeleton >()));
-    std::set< typename Skeleton::Id_Type > idx_list_ids;
-    for (typename std::vector< typename Skeleton::Id_Type >::const_iterator
-        it = ids.begin(); it != ids.end(); ++it)
-    {
-      if (attic_random.get(it->val()).val() == 0)
-        ;
-      else if (attic_random.get(it->val()) == 0xff)
-        idx_list_ids.insert(it->val());
-      else
-        result.push_back(attic_random.get(it->val()));
-    }
-  
-    Block_Backend< typename Skeleton::Id_Type, Index > idx_list_db
-        (rman.get_transaction()->data_index(attic_idx_list_properties< Skeleton >()));
-    for (typename Block_Backend< typename Skeleton::Id_Type, Index >::Discrete_Iterator
-        it(idx_list_db.discrete_begin(idx_list_ids.begin(), idx_list_ids.end()));
-        !(it == idx_list_db.discrete_end()); ++it)
-      result.push_back(it.object());
-  
-    std::sort(result.begin(), result.end());
-    result.erase(std::unique(result.begin(), result.end()), result.end());
-  }
-  
-  return result;
-}
-
-
 //-----------------------------------------------------------------------------
 
 class Id_Query_Constraint : public Query_Constraint

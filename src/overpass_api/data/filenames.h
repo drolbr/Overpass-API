@@ -159,4 +159,21 @@ template< > inline File_Properties* attic_local_tags_file_properties< Relation_S
 { return attic_settings().RELATION_TAGS_LOCAL; }
 
 
+
+template< typename Skeleton >
+File_Properties* changelog_file_properties()
+{
+  return 0;
+}
+
+template< > inline File_Properties* changelog_file_properties< Node_Skeleton >()
+{ return attic_settings().NODE_CHANGELOG; }
+
+template< > inline File_Properties* changelog_file_properties< Way_Skeleton >()
+{ return attic_settings().WAY_CHANGELOG; }
+
+template< > inline File_Properties* changelog_file_properties< Relation_Skeleton >()
+{ return attic_settings().RELATION_CHANGELOG; }
+
+
 #endif
