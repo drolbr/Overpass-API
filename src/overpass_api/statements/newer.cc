@@ -130,7 +130,7 @@ Generic_Statement_Maker< Newer_Statement > Newer_Statement::statement_maker("new
 
 Newer_Statement::Newer_Statement
     (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
-    : Statement(line_number_)
+    : Statement(line_number_), than_timestamp(0)
 {
   map< string, string > attributes;
   
@@ -140,14 +140,15 @@ Newer_Statement::Newer_Statement
   
   string timestamp = attributes["than"];
   
-  than_timestamp = Timestamp(
-      atol(timestamp.c_str()), //year
-      atoi(timestamp.c_str()+5), //month
-      atoi(timestamp.c_str()+8), //day
-      atoi(timestamp.c_str()+11), //hour
-      atoi(timestamp.c_str()+14), //minute
-      atoi(timestamp.c_str()+17) //second
-      ).timestamp;
+  if (timestamp.size() >= 19)
+    than_timestamp = Timestamp(
+        atol(timestamp.c_str()), //year
+        atoi(timestamp.c_str()+5), //month
+        atoi(timestamp.c_str()+8), //day
+        atoi(timestamp.c_str()+11), //hour
+        atoi(timestamp.c_str()+14), //minute
+        atoi(timestamp.c_str()+17) //second
+        ).timestamp;
   
   if (than_timestamp == 0)
   {
