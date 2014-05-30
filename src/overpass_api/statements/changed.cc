@@ -166,7 +166,7 @@ void Changed_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
 
 Changed_Statement::Changed_Statement
     (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
-    : Output_Statement(line_number_), since(NOW), until(0)
+    : Output_Statement(line_number_), since(NOW), until(NOW)
 {
   map< string, string > attributes;
   
@@ -189,7 +189,7 @@ Changed_Statement::Changed_Statement
         atoi(timestamp.c_str()+17) //second
         ).timestamp;
 	
-  if (timestamp != "auto" && since == NOW)
+  if (timestamp != "auto" && (since == 0 || since == NOW))
   {
     ostringstream temp;
     temp<<"The attribute \"since\" must contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".";
@@ -207,7 +207,7 @@ Changed_Statement::Changed_Statement
         atoi(timestamp.c_str()+17) //second
         ).timestamp;
 	
-  if (timestamp != "auto" && until == 0)
+  if (timestamp != "auto" && (until == 0 || until == NOW))
   {
     ostringstream temp;
     temp<<"The attribute \"until\" must contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".";
@@ -218,19 +218,23 @@ Changed_Statement::Changed_Statement
 
 uint64 Changed_Statement::get_since(Resource_Manager& rman) const
 {
-  if (since < rman.get_desired_timestamp())
-    return since;
-  else
+  if (since == until)
+    return std::min(since, rman.get_desired_timestamp());
+  else if (since == NOW)
     return rman.get_desired_timestamp();
+  else
+    return since;
 }
 
 
 uint64 Changed_Statement::get_until(Resource_Manager& rman) const
 {
-  if (rman.get_desired_timestamp() < until)
-    return until;
-  else
+  if (since == until)
+    return std::max(until, rman.get_desired_timestamp());
+  else if (until == NOW)
     return rman.get_desired_timestamp();
+  else
+    return until;
 }
 
 

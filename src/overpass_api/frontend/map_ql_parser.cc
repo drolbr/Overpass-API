@@ -555,6 +555,17 @@ TStatement* create_pivot_statement(typename TStatement::Factory& stmt_factory,
   return stmt_factory.create_statement("pivot", line_nr, attr);
 }
 
+template< class TStatement >
+TStatement* create_changed_statement(typename TStatement::Factory& stmt_factory,
+				   string since, string until, string into, uint line_nr)
+{
+  map< string, string > attr;
+  attr["since"] = since;
+  attr["until"] = until;
+  attr["into"] = into;
+  return stmt_factory.create_statement("changed", line_nr, attr);
+}
+
 //-----------------------------------------------------------------------------
 
 std::vector< std::string > parse_setup(Tokenizer_Wrapper& token, Error_Output* error_output,
@@ -946,6 +957,9 @@ TStatement* create_query_substatement
   else if (clause.statement == "item")
     return create_item_statement< TStatement >
         (stmt_factory, clause.attributes[0], clause.line_col.first);
+  else if (clause.statement == "changed")
+    return create_changed_statement< TStatement >
+        (stmt_factory, clause.attributes[0], clause.attributes[1], into, clause.line_col.first);
   return 0;
 }
 
@@ -1137,6 +1151,32 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	clear_until_after(token, error_output, ")");
 	clauses.push_back(clause);
       }
+      else if (*token == "changed")
+      {
+	Statement_Text clause("changed", token.line_col());
+	++token;
+	clear_until_after(token, error_output, ":", ")", false);
+	if (*token == ":")
+	{
+	  ++token;
+	  clause.attributes.push_back(get_text_token(token, error_output, "\"YYYY-MM-DDThh:mm:ssZ\""));
+	  clear_until_after(token, error_output, ",", ")", false);
+          if (*token == ",")
+          {
+            ++token;
+	    clause.attributes.push_back(get_text_token(token, error_output, "\"YYYY-MM-DDThh:mm:ssZ\""));
+	  }
+	  else
+	    clause.attributes.push_back(clause.attributes.back());
+	}
+	else
+	{
+	  clause.attributes.push_back("auto");
+	  clause.attributes.push_back("auto");
+	}
+	clear_until_after(token, error_output, ")");
+	clauses.push_back(clause);
+      }
       else if (*token == "r" || *token == "w"
 	    || *token == "bn" || *token == "bw" || *token == "br")
       {
@@ -1246,6 +1286,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
        || (clauses.front().statement == "pivot" && type != "node")
        || (clauses.front().statement == "polygon" && type != "node")
        || (clauses.front().statement == "bbox-query" && type != "node")
+       || clauses.front().statement == "changed"
        || (clauses.front().statement == "recurse" &&
            (clauses.front().attributes[0] == "<" || clauses.front().attributes[0] == "<<"
 	   || clauses.front().attributes[0] == ">" || clauses.front().attributes[0] == ">>")))
