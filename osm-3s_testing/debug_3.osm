@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="Overpass API">
+<note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
+<meta osm_base="2014-05-11T17:49:02Z"/>
+
+  <node id="2135147402" lat="53.5567528" lon="9.9080024" version="4" timestamp="2013-06-26T07:18:36Z" changeset="16708965" uid="1584748" user="dierkh"/>
+  <node id="2135147403" lat="53.5568119" lon="9.9085890" version="4" timestamp="2013-06-26T07:18:36Z" changeset="16708965" uid="1584748" user="dierkh"/>
+  <node id="2135147405" lat="53.5566804" lon="9.9086266" version="4" timestamp="2013-06-26T07:18:36Z" changeset="16708965" uid="1584748" user="dierkh"/>
+  <node id="2135147407" lat="53.5566213" lon="9.9080399" version="4" timestamp="2013-06-26T07:18:36Z" changeset="16708965" uid="1584748" user="dierkh"/>
+  
+  <node id="2135147402" lat="53.5567112" lon="9.9079940" version="5" timestamp="2013-06-26T07:26:24Z" changeset="16709101" uid="1584748" user="dierkh"/>
+  <node id="2135147403" lat="53.5567104" lon="9.9085899" version="5" timestamp="2013-06-26T07:26:24Z" changeset="16709101" uid="1584748" user="dierkh"/>
+  <node id="2135147405" lat="53.5565678" lon="9.9086219" version="5" timestamp="2013-06-26T07:26:24Z" changeset="16709101" uid="1584748" user="dierkh"/>
+  <node id="2135147407" lat="53.5565735" lon="9.9080306" version="5" timestamp="2013-06-26T07:26:24Z" changeset="16709101" uid="1584748" user="dierkh"/>
+  <node id="2361270112" lat="53.5567491" lon="9.9090030" version="1" timestamp="2013-06-26T07:26:24Z" changeset="16709101" uid="1584748" user="dierkh"/>
+  <node id="2361270113" lat="53.5566071" lon="9.9090407" version="1" timestamp="2013-06-26T07:26:24Z" changeset="16709101" uid="1584748" user="dierkh"/>
+  <node id="2361270114" lat="53.5567657" lon="9.9085751" version="1" timestamp="2013-06-26T07:26:24Z" changeset="16709101" uid="1584748" user="dierkh"/>
+  <node id="2361270115" lat="53.5566275" lon="9.9086060" version="1" timestamp="2013-06-26T07:26:24Z" changeset="16709101" uid="1584748" user="dierkh"/>
+  
+  <way id="203500898" version="3" timestamp="2013-06-26T07:11:30Z" changeset="16708965" uid="999" user="paul">
+    <nd ref="2135147407"/>
+    <nd ref="2135147405"/>
+    <nd ref="2135147403"/>
+    <nd ref="2135147402"/>
+    <nd ref="2135147407"/>
+    <tag k="addr:housename" v="Haus 25"/>
+    <tag k="addr:housenumber" v="75"/>
+    <tag k="name" v="Haus 25"/>
+    <tag k="addr:postcode" v="22763"/>
+    <tag k="addr:street" v="Griegstraße"/>
+    <tag k="building" v="office"/>
+    <tag k="note" v="Gebäude sehr grob geschätzt, ist Neubau und noch auf keinem Luftbild"/>
+  </way>
+
+  <way id="203500898" version="4" timestamp="2013-06-26T07:26:24Z" changeset="16709101" uid="999" user="paul">
+    <nd ref="2135147407"/>
+    <nd ref="2361270115"/>
+    <nd ref="2135147405"/>
+    <nd ref="2361270113"/>
+    <nd ref="2361270112"/>
+    <nd ref="2135147403"/>
+    <nd ref="2361270114"/>
+    <nd ref="2135147402"/>
+    <nd ref="2135147407"/>
+    <tag k="addr:housename" v="Haus 25"/>
+    <tag k="addr:housenumber" v="75"/>
+    <tag k="name" v="Haus 25"/>
+    <tag k="addr:postcode" v="22763"/>
+    <tag k="addr:street" v="Griegstraße"/>
+    <tag k="building" v="office"/>
+    <tag k="note" v="Gebäude sehr grob geschätzt, ist Neubau und noch auf keinem Luftbild"/>
+  </way>
+
+</osm>
