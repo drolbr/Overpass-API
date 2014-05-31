@@ -179,7 +179,7 @@ Changed_Statement::Changed_Statement
   set_output(attributes["into"]);
 
   string timestamp = attributes["since"];
-  if (timestamp != "auto" && timestamp.size() >= 19)
+  if (timestamp.size() >= 19)
     since = Timestamp(
         atol(timestamp.c_str()), //year
         atoi(timestamp.c_str()+5), //month
@@ -219,22 +219,22 @@ Changed_Statement::Changed_Statement
 uint64 Changed_Statement::get_since(Resource_Manager& rman) const
 {
   if (since == until)
-    return std::min(since, rman.get_desired_timestamp());
+    return std::min(since + 1, rman.get_desired_timestamp());
   else if (since == NOW)
     return rman.get_desired_timestamp();
   else
-    return since;
+    return since + 1;
 }
 
 
 uint64 Changed_Statement::get_until(Resource_Manager& rman) const
 {
   if (since == until)
-    return std::max(until, rman.get_desired_timestamp());
+    return until == NOW ? NOW : std::max(until + 1, rman.get_desired_timestamp());
   else if (until == NOW)
     return rman.get_desired_timestamp();
   else
-    return until;
+    return until + 1;
 }
 
 
