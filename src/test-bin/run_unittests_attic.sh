@@ -76,6 +76,18 @@ date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/adiff_0902
 
 date '+%T'
 
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/changed_0902.ql >changed_0902.out 2>changed_0902.err
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/changed_0903.ql >changed_0903.out 2>changed_0903.err
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/changed_0904.ql >changed_0904.out 2>changed_0904.err
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/changed_0905.ql >changed_0905.out 2>changed_0905.err
+
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/changed_fwd_0902.ql >changed_fwd_0902.out 2>changed_fwd_0902.err
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/changed_fwd_0903.ql >changed_fwd_0903.out 2>changed_fwd_0903.err
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/changed_fwd_0904.ql >changed_fwd_0904.out 2>changed_fwd_0904.err
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/changed_fwd_0905.ql >changed_fwd_0905.out 2>changed_fwd_0905.err
+
+date '+%T'
+
 for i in *.err; do
   diff -q "../../expected/attic_updater/$i" "$i"
 done
