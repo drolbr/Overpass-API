@@ -193,7 +193,7 @@ void add_intermediate_versions
     compute_idx_and_geometry(reference_idx, reference_skel, new_timestamp + 1, nodes_by_id);
     if (idx == reference_idx)
       full_attic[idx].insert(Attic< Way_Delta >(
-          Way_Delta(reference, cur_skeleton), new_timestamp));
+          Way_Delta(reference_skel, cur_skeleton), new_timestamp));
     else
       full_attic[idx].insert(Attic< Way_Delta >(
           Way_Delta(Way_Skeleton(), cur_skeleton), new_timestamp));      
