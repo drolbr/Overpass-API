@@ -17,11 +17,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PT_Diagrams.  If not, see <http://www.gnu.org/licenses/>.
 
-BUF="$QUERY_STRING&"
 
 ID=0
 BBOX=
 INFO=
+DEBUG=
 EXECBASE="`dirname $0`/../"
 
 IFS=$'&'
@@ -31,46 +31,27 @@ for KEY_VAL in $QUERY_STRING; do
     ID="${KEY_VAL:3}"
   elif [[ ${KEY_VAL:0:5} == "bbox=" ]]; then
     BBOX=`echo "${KEY_VAL:5}" | $EXECBASE/bin/uncgi`
-  elif [[ ${KEY_VAL:0:7} == "info=no" ]]; then
-    INFO="--noinfo"
+  elif [[ ${KEY_VAL:0:6} == "debug=" ]]; then
+    DEBUG=`echo "${KEY_VAL:6}" | $EXECBASE/bin/uncgi`
   fi
 }; done
 unset IFS
 
-echo "Content-Type: application/osm3s+xml"
-echo "Content-Encoding: gzip"
-echo 'Access-Control-Allow-Origin: *'
-echo
-
-while [[ -a /tmp/augmented_diff ]]; do
-{
-  PID=`cat /tmp/augmented_diff`
-  if [[ -a /proc/$PID ]]; then
-    sleep 1
-  else
-    rm -f /tmp/augmented_diff
-  fi
-}; done
-echo $$ >/tmp/augmented_diff
-
-printf -v TDIGIT3 %03u $(($ID % 1000))
-ARG=$(($ID / 1000))
-printf -v TDIGIT2 %03u $(($ARG % 1000))
-ARG=$(($ARG / 1000))
-printf -v TDIGIT1 %03u $ARG
+EPOCHSECS=$(($ID * 60 + 1347400800))
+SINCE=`date --date="@$EPOCHSECS" '+%FT%H:%M:%SZ'`
+UNTIL=`date --date="@$(($EPOCHSECS + 60))" '+%FT%H:%M:%SZ'`
 
 if [[ -z $BBOX ]]; then
-{
-  if [[ -z $INFO ]]; then
-    cat /var/www/augmented_diffs/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz
-  else
-  {
-    gunzip </var/www/augmented_diffs/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz | $EXECBASE/bin/process_augmented_diffs $INFO | gzip
-  }; fi
-};
+  QUERY_STRING='data=[adiff:"'$SINCE'","'$UNTIL'"];(node(changed:"'$SINCE'","'$UNTIL'");way(changed:"'$SINCE'","'$UNTIL'");rel(changed:"'$SINCE'","'$UNTIL'"););out meta geom;'
 else
-{
-  gunzip </var/www/augmented_diffs/$TDIGIT1/$TDIGIT2/$TDIGIT3.osc.gz | $EXECBASE/bin/process_augmented_diffs --bbox=$BBOX $INFO | gzip
-}; fi
+  QUERY_STRING='data=[adiff:"'$SINCE'","'$UNTIL'"];(node(bbox)(changed:"'$SINCE'","'$UNTIL'");way(bbox)(changed:"'$SINCE'","'$UNTIL'");rel(bbox)(changed:"'$SINCE'","'$UNTIL'"););out meta geom;&bbox='$BBOX
+fi
+HTTP_METHOD=GET
 
-rm -f /tmp/augmented_diff
+if [[ -z $DEBUG ]]; then
+  ./interpreter
+else
+  echo "Content-Type: text/plain"
+  echo
+  echo $QUERY_STRING
+fi
