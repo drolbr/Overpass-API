@@ -136,7 +136,7 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
         std::ostringstream out;
 	out<<name_of_type< Object >()<<" "<<it->id.val()<<" cannot be expanded at timestamp: "
 	    <<e.what();
-        rman.log_and_display_error(e.what());
+        rman.log_and_display_error(out.str());
       }
     }
     
