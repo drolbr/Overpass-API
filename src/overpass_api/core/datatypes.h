@@ -20,8 +20,11 @@
 #define DE__OSM3S___OVERPASS_API__CORE__DATATYPES_H
 
 #include <cstring>
+#include <iomanip>
 #include <map>
 #include <set>
+#include <sstream>
+#include <string>
 #include <vector>
 
 #include "basic_types.h"
@@ -483,12 +486,24 @@ struct Timestamp
   static int minute(uint64 timestamp) { return ((timestamp>>6) & 0x3f); }
   static int second(uint64 timestamp) { return (timestamp & 0x3f); }
   
-  int year() { return year(timestamp); }
-  int month() { return month(timestamp); }
-  int day() { return day(timestamp); }
-  int hour() { return hour(timestamp); }
-  int minute() { return minute(timestamp); }
-  int second() { return second(timestamp); }
+  int year() const { return year(timestamp); }
+  int month() const { return month(timestamp); }
+  int day() const { return day(timestamp); }
+  int hour() const { return hour(timestamp); }
+  int minute() const { return minute(timestamp); }
+  int second() const { return second(timestamp); }
+  
+  std::string str() const
+  {
+    std::ostringstream out;
+    out<<std::setw(4)<<std::setfill('0')<<year()<<"-"
+        <<std::setw(2)<<std::setfill('0')<<month()<<"-"
+	<<std::setw(2)<<std::setfill('0')<<day()<<"T"
+	<<std::setw(2)<<std::setfill('0')<<hour()<<":"
+	<<std::setw(2)<<std::setfill('0')<<minute()<<":"
+	<<std::setw(2)<<std::setfill('0')<<second()<<"Z";
+    return out.str();
+  }
   
   uint32 size_of() const
   {
@@ -526,6 +541,15 @@ struct Timestamp
 
 
 typedef enum { only_data, keep_meta, keep_attic } meta_modes;
+
+
+template< typename Object >
+std::string name_of_type() { return "[undefined]"; }
+
+template< > inline std::string name_of_type< Node_Skeleton >() { return "Node"; }
+template< > inline std::string name_of_type< Way_Skeleton >() { return "Way"; }
+template< > inline std::string name_of_type< Relation_Skeleton >() { return "Relation"; }
+template< > inline std::string name_of_type< Area_Skeleton >() { return "Area"; }
 
 
 #endif

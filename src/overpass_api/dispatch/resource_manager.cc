@@ -154,6 +154,16 @@ void Resource_Manager::count_loop()
 }
 
 
+void Resource_Manager::log_and_display_error(std::string message)
+{
+  if (error_output)
+    error_output->runtime_error(message);
+  
+  Logger logger(transaction->get_db_dir());
+  logger.annotated_log(message);  
+}
+
+
 void Resource_Manager::health_check(const Statement& stmt, uint32 extra_time, uint64 extra_space)
 {
   uint32 elapsed_time = 0;
