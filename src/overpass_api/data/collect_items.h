@@ -120,20 +120,23 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
       try
       {
         attics.push_back(Attic< Object >(it->expand(reference), it->timestamp));
+        if (attics.back().id.val() != 0)
+          reference = attics.back();
+        else
+        {
+          // Relation_Delta without a reference of the same index
+          std::ostringstream out;
+	  out<<name_of_type< Object >()<<" "<<it->id.val()<<" cannot be expanded at timestamp "
+	      <<Timestamp(it->timestamp).str()<<".";
+          rman.log_and_display_error(out.str());
+        }
       }
-      catch (std::exception e)
+      catch (const std::exception& e)
       {
-        rman.log_and_display_error(e.what());
-      }
-      if (attics.back().id.val() != 0)
-        reference = attics.back();
-      else
-      {
-        // Relation_Delta without a reference of the same index
         std::ostringstream out;
-	out<<name_of_type< Object >()<<" "<<it->id.val()<<" cannot be expanded at timestamp "
-	    <<Timestamp(it->timestamp).str()<<".\n";
-        rman.log_and_display_error(out.str());
+	out<<name_of_type< Object >()<<" "<<it->id.val()<<" cannot be expanded at timestamp: "
+	    <<e.what();
+        rman.log_and_display_error(e.what());
       }
     }
     
