@@ -17,7 +17,7 @@ cgi_bin_script_clone = cgi-bin/trigger_clone
 bin_augmented_diffs = bin/process_augmented_diffs bin/uncgi
 bin_script_augmented_diffs =
 cgi_bin_augmented_diffs =
-cgi_bin_script_augmented_diffs = cgi-bin/augmented_diff cgi-bin/augmented_state_by_date
+cgi_bin_script_augmented_diffs = cgi-bin/augmented_diff cgi-bin/augmented_diff_status cgi-bin/augmented_state_by_date
 
 bin_xapi_layer = bin/translate_xapi
 bin_script_xapi_layer = bin/cleanup_xapi_tmp.sh
