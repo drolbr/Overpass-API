@@ -53,7 +53,8 @@ Print_Statement::Print_Statement
     (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
     : Statement(line_number_),
       mode(0), order(order_by_id), limit(numeric_limits< unsigned int >::max()),
-      output_handle(0), way_geometry_store(0), attic_way_geometry_store(0), relation_geometry_store(0), attic_relation_geometry_store(0), collection_print_target(0), collection_mode(dont_collect),
+      output_handle(0), way_geometry_store(0), attic_way_geometry_store(0), relation_geometry_store(0), attic_relation_geometry_store(0), collection_print_target(0),
+      collection_mode(dont_collect), add_deletion_information(false),
       south(1.0), north(0.0), west(0.0), east(0.0)
 {
   map< string, string > attributes;
@@ -1278,9 +1279,9 @@ class Collection_Print_Target : public Print_Target
     
     void set_target(Print_Target* target);
     
-    void clear_nodes(const map< uint32, string >* users = 0);
-    void clear_ways(const map< uint32, string >* users = 0);
-    void clear_relations(const map< uint32, string >* users = 0);
+    void clear_nodes(const map< uint32, string >* users = 0, bool add_deletion_information = false);
+    void clear_ways(const map< uint32, string >* users = 0, bool add_deletion_information = false);
+    void clear_relations(const map< uint32, string >* users = 0, bool add_deletion_information = false);
     
   private:
     
@@ -1416,8 +1417,9 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& s
 }
 
 
-void Collection_Print_Target::clear_nodes(const map< uint32, string >* users)
+void Collection_Print_Target::clear_nodes(const map< uint32, string >* users, bool add_deletion_information)
 {
+  //TODO
   for (std::vector< Node_Entry >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
   {
     if (it->idx.val() != 0xffu)
@@ -1484,8 +1486,9 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
 }
 
 
-void Collection_Print_Target::clear_ways(const map< uint32, string >* users)
+void Collection_Print_Target::clear_ways(const map< uint32, string >* users, bool add_deletion_information)
 {
+  //TODO
   for (std::vector< Way_Entry >::const_iterator it = ways.begin(); it != ways.end(); ++it)
   {
     if (it->idx.val() != 0xffu)
@@ -1556,8 +1559,9 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleto
 }
 
 
-void Collection_Print_Target::clear_relations(const map< uint32, string >* users)
+void Collection_Print_Target::clear_relations(const map< uint32, string >* users, bool add_deletion_information)
 {
+  //TODO
   for (std::vector< Relation_Entry >::const_iterator it = relations.begin(); it != relations.end(); ++it)
   {
     if (it->idx.val() != 0xffu)
@@ -1661,7 +1665,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_nodes(&user_data_cache->users());
+        collection_print_target->clear_nodes(&user_data_cache->users(), add_deletion_information);
       
       tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		 WAY_FLUSH_SIZE, *target, rman,
@@ -1680,7 +1684,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_ways(&user_data_cache->users());
+        collection_print_target->clear_ways(&user_data_cache->users(), add_deletion_information);
       
       tags_by_id(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		 RELATION_FLUSH_SIZE, *target, rman,
@@ -1699,7 +1703,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_relations(&user_data_cache->users());
+        collection_print_target->clear_relations(&user_data_cache->users(), add_deletion_information);
       
       if (rman.get_area_transaction())
       {
@@ -1725,7 +1729,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_nodes(&user_data_cache->users());
+        collection_print_target->clear_nodes(&user_data_cache->users(), add_deletion_information);
       
       tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		    *target, rman, *rman.get_transaction(),
@@ -1742,7 +1746,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_ways(&user_data_cache->users());
+        collection_print_target->clear_ways(&user_data_cache->users(), add_deletion_information);
       
       tags_quadtile(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		    *target, rman, *rman.get_transaction(),
@@ -1759,7 +1763,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_relations(&user_data_cache->users());
+        collection_print_target->clear_relations(&user_data_cache->users(), add_deletion_information);
       
       if (rman.get_area_transaction())
       {
@@ -1777,17 +1781,17 @@ void Print_Statement::execute(Resource_Manager& rman)
       by_id(mit->second.nodes, *target, *rman.get_transaction(), *this, limit, element_count);
       by_id(mit->second.attic_nodes, *target, *rman.get_transaction(), *this, limit, element_count);
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_nodes(0);
+        collection_print_target->clear_nodes(0, add_deletion_information);
       
       by_id(mit->second.ways, *target, *rman.get_transaction(), *this, limit, element_count);
       by_id(mit->second.attic_ways, *target, *rman.get_transaction(), *this, limit, element_count);
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_ways(0);
+        collection_print_target->clear_ways(0, add_deletion_information);
       
       by_id(mit->second.relations, *target, *rman.get_transaction(), *this, limit, element_count);
       by_id(mit->second.attic_relations, *target, *rman.get_transaction(), *this, limit, element_count);      
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_relations(0);
+        collection_print_target->clear_relations(0, add_deletion_information);
       
       if (rman.get_area_transaction())
 	by_id(mit->second.areas, *target, *rman.get_area_transaction(), *this, limit, element_count);
@@ -1797,17 +1801,17 @@ void Print_Statement::execute(Resource_Manager& rman)
       quadtile(mit->second.nodes, *target, *rman.get_transaction(), *this, limit, element_count);
       quadtile(mit->second.attic_nodes, *target, *rman.get_transaction(), *this, limit, element_count);
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_nodes(0);
+        collection_print_target->clear_nodes(0, add_deletion_information);
       
       quadtile(mit->second.ways, *target, *rman.get_transaction(), *this, limit, element_count);
       quadtile(mit->second.attic_ways, *target, *rman.get_transaction(), *this, limit, element_count);
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_ways(0);
+        collection_print_target->clear_ways(0, add_deletion_information);
       
       quadtile(mit->second.relations, *target, *rman.get_transaction(), *this, limit, element_count);
       quadtile(mit->second.attic_relations, *target, *rman.get_transaction(), *this, limit, element_count);
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_relations(0);
+        collection_print_target->clear_relations(0, add_deletion_information);
       
       if (rman.get_area_transaction())
 	quadtile(mit->second.areas, *target, *rman.get_area_transaction(), *this, limit, element_count);
@@ -1837,7 +1841,8 @@ void Print_Statement::set_collect_lhs()
 }
 
 
-void Print_Statement::set_collect_rhs()
+void Print_Statement::set_collect_rhs(bool add_deletion_information_)
 {  
   collection_mode = collect_rhs;
+  add_deletion_information = add_deletion_information_;
 }

@@ -85,6 +85,7 @@ class Osm_Script_Statement : public Statement
     Bbox_Query_Statement* bbox_statement;
     uint64 desired_timestamp;
     uint64 comparison_timestamp;
+    bool add_deletion_information;
     uint32 max_allowed_time;
     uint64 max_allowed_space;
     string type;

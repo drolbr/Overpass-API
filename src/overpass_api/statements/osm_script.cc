@@ -36,7 +36,8 @@ Generic_Statement_Maker< Osm_Script_Statement > Osm_Script_Statement::statement_
 Osm_Script_Statement::Osm_Script_Statement
     (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation_)
     : Statement(line_number_), bbox_limitation(bbox_limitation_), bbox_statement(0),
-       desired_timestamp(NOW), comparison_timestamp(0), max_allowed_time(0), max_allowed_space(0),
+       desired_timestamp(NOW), comparison_timestamp(0), add_deletion_information(false),
+       max_allowed_time(0), max_allowed_space(0),
        type("xml"), output_handle(0), factory(0),
        template_name("default.wiki"), template_contains_js_(false)
 {
@@ -48,6 +49,7 @@ Osm_Script_Statement::Osm_Script_Statement
   attributes["output"] = "xml";
   attributes["date"] = "";
   attributes["from"] = "";
+  attributes["augmented"] = "";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
@@ -171,6 +173,7 @@ Osm_Script_Statement::Osm_Script_Statement
       add_static_error(temp.str());
     }
   }
+  
   if (attributes["from"] != "")
   {
     string timestamp = attributes["from"];
@@ -189,6 +192,25 @@ Osm_Script_Statement::Osm_Script_Statement
       temp<<"The attribute \"from\" must be empty or contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".";
       add_static_error(temp.str());
     }
+  }
+  
+  if (attributes["augmented"] != "")
+  {    
+    if (attributes["augmented"] == "deletions" && attributes["from"] != "")      
+      add_deletion_information = true;
+
+    if (attributes["augmented"] != "deletions")
+    {
+      ostringstream temp;
+      temp<<"The only allowed values for \"augmented\" are an empty value or \"deletions\".";
+      add_static_error(temp.str());
+    }    
+    if (attributes["from"] == "")
+    {
+      ostringstream temp;
+      temp<<"The attribute \"augmented\" can only be set if the attribute \"from\" is set.";
+      add_static_error(temp.str());
+    }      
   }
 }
 
@@ -351,7 +373,7 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
     {
       Print_Statement* print = dynamic_cast< Print_Statement* >(*it);
       if (print)
-        print->set_collect_rhs();
+        print->set_collect_rhs(add_deletion_information);
     }
     
     rman.sets().clear();

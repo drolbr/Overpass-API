@@ -576,7 +576,7 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token, Error_Output* e
   result.push_back(get_text_token(token, error_output, "Keyword"));  
   clear_until_after(token, error_output, ":", "]");
   result.push_back(get_text_token(token, error_output, "Value"));
-  if (result.front() == "adiff")
+  if (result.front() == "diff" || result.front() == "adiff")
   {
     clear_until_after(token, error_output, ",", "]", false);
     if (*token == ",")
@@ -1425,8 +1425,10 @@ void generic_parse_and_validate_map_ql
       kv[0] = "element-limit";
     else if (kv[0] == "out")
       kv[0] = "output";
-    else if (kv[0] == "adiff")
+    else if (kv[0] == "diff" || kv[0] == "adiff")
     {
+      if (kv[0] == "adiff")
+	attr["augmented"] = "deletions";
       if (kv.size() >= 3)
         attr["date"] = kv[2];
       kv[0] = "from";

@@ -177,7 +177,7 @@ class Print_Statement : public Statement
                     const map< uint32, string >* users = 0);    
     
     void set_collect_lhs();
-    void set_collect_rhs();
+    void set_collect_rhs(bool add_deletion_information);
     
   private:
     string input;
@@ -191,6 +191,7 @@ class Print_Statement : public Statement
     Relation_Geometry_Store* attic_relation_geometry_store;
     Collection_Print_Target* collection_print_target;
     enum { dont_collect, collect_lhs, collect_rhs } collection_mode;
+    bool add_deletion_information;
     
     double south;
     double north;
