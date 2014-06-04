@@ -370,7 +370,7 @@ void collect_items_flat_by_timestamp(const Statement& stmt, Resource_Manager& rm
  */
 template< typename Index, typename Skeleton >
 std::vector< Index > get_indexes_
-    (const std::vector< typename Skeleton::Id_Type >& ids, Resource_Manager& rman)
+    (const std::vector< typename Skeleton::Id_Type >& ids, Resource_Manager& rman, bool get_attic_idxs = false)
 {
   std::vector< Index > result;
   
@@ -383,7 +383,7 @@ std::vector< Index > get_indexes_
   std::sort(result.begin(), result.end());
   result.erase(std::unique(result.begin(), result.end()), result.end());
   
-  if (rman.get_desired_timestamp() != NOW)
+  if (rman.get_desired_timestamp() != NOW || get_attic_idxs)
   {
     Random_File< Index > attic_random(rman.get_transaction()->random_index
         (attic_skeleton_file_properties< Skeleton >()));
