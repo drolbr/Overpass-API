@@ -31,6 +31,7 @@ class Print_Target
 {
   public:
     typedef enum { KEEP, MODIFY_OLD, MODIFY_NEW, CREATE, DELETE } Action;
+    typedef enum { visible_void, visible_false, visible_true } Show_New_Elem;
     
     Print_Target(uint32 mode_, Transaction& transaction);
     virtual ~Print_Target() {}
@@ -40,7 +41,7 @@ class Print_Target
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0, const Action& action = KEEP,
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0,
-			    bool show_new_elem = false) = 0;
+			    Show_New_Elem show_new_elem = visible_void) = 0;
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
@@ -48,7 +49,7 @@ class Print_Target
 			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0, const Action& action = KEEP,
 			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0,
-			    bool show_new_elem = false) = 0;
+			    Show_New_Elem show_new_elem = visible_void) = 0;
     virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
@@ -56,7 +57,7 @@ class Print_Target
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0, const Action& action = KEEP,
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0,
-			    bool show_new_elem = false) = 0;
+			    Show_New_Elem show_new_elem = visible_void) = 0;
                             
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,

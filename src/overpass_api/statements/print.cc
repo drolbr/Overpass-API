@@ -1260,7 +1260,7 @@ class Collection_Print_Target : public Print_Target
                             const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
                             const map< uint32, string >* users = 0, const Action& action = KEEP,
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0,
-			    bool show_new_elem = false);
+			    Show_New_Elem show_new_elem = visible_void);
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
                             const vector< pair< string, string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
@@ -1268,7 +1268,7 @@ class Collection_Print_Target : public Print_Target
                             const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
                             const map< uint32, string >* users = 0, const Action& action = KEEP,
 			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0,
-			    bool show_new_elem = false);
+			    Show_New_Elem show_new_elem = visible_void);
     virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
                             const vector< pair< string, string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
@@ -1276,7 +1276,7 @@ class Collection_Print_Target : public Print_Target
                             const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
                             const map< uint32, string >* users = 0, const Action& action = KEEP,
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0,
-			    bool show_new_elem = false);
+			    Show_New_Elem show_new_elem = visible_void);
                             
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
                             const vector< pair< string, string > >* tags = 0,
@@ -1391,7 +1391,7 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& s
                             const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
                             const map< uint32, string >* users, const Action& action,
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta,
-			    bool show_new_elem)
+			    Show_New_Elem show_new_elem)
 {
   if (final_target)
   {
@@ -1548,8 +1548,10 @@ void Collection_Print_Target::clear_nodes
         final_target->print_item(it->idx.val(), it->elem,
                                  (mode & Print_Target::PRINT_TAGS) ? &it->tags : 0,
                                  (mode & Print_Target::PRINT_META) ? &it->meta : 0, users, DELETE,
-				 (meta_it == found_meta.end() ? 0 : &meta_it->second),
-				 std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id));
+				 ((mode & Print_Target::PRINT_META) && meta_it != found_meta.end() ?
+				     &meta_it->second : 0),
+				 std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id) ?
+				     visible_true : visible_false);
       }
     }
   }
@@ -1576,7 +1578,7 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
                             const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
                             const map< uint32, string >* users, const Action& action,
 			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta,
-			    bool show_new_elem)
+			    Show_New_Elem show_new_elem)
 {
   if (final_target)
   {
@@ -1655,8 +1657,10 @@ void Collection_Print_Target::clear_ways
                                  bound_variant(double_coords, mode),
                                  (mode & Print_Target::PRINT_GEOMETRY) ? &it->geometry : 0,
                                  (mode & Print_Target::PRINT_META) ? &it->meta : 0, users, DELETE,
-				 (meta_it == found_meta.end() ? 0 : &meta_it->second),
-				 std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id));
+				 ((mode & Print_Target::PRINT_META) && meta_it != found_meta.end() ?
+				     &meta_it->second : 0),
+				 std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id) ?
+				     visible_true : visible_false);
       }
     }
   }
@@ -1686,7 +1690,7 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleto
                             const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
                             const map< uint32, string >* users, const Action& action,
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta,
-			    bool show_new_elem)
+			    Show_New_Elem show_new_elem)
 {
   if (final_target)
   {
@@ -1766,8 +1770,10 @@ void Collection_Print_Target::clear_relations
                                  bound_variant(double_coords, mode),
                                  (mode & Print_Target::PRINT_GEOMETRY) ? &it->geometry : 0,
                                  (mode & Print_Target::PRINT_META) ? &it->meta : 0, users, DELETE,
-				 (meta_it == found_meta.end() ? 0 : &meta_it->second),
-				 std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id));
+				 ((mode & Print_Target::PRINT_META) && meta_it != found_meta.end() ?
+				     &meta_it->second : 0),
+				 std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id) ?
+				     visible_true : visible_false);
       }
     }
   }
