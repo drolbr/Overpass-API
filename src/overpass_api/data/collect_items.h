@@ -22,6 +22,8 @@
 
 #include "filenames.h"
 
+#include <exception>
+
 
 inline uint64 timestamp_of(const Attic< Node_Skeleton >& skel) { return skel.timestamp; }
 inline uint64 timestamp_of(const Attic< Way_Skeleton >& skel) { return skel.timestamp; }
@@ -115,12 +117,27 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
         else
           reference = Object();
       }
-      attics.push_back(Attic< Object >(it->expand(reference), it->timestamp));
-      if (attics.back().id.val() != 0)
-        reference = attics.back();
-      else
-        // Relation_Delta without a reference of the same index
-        throw File_Error(0, "-", "reconstruct_items::1");
+      try
+      {
+        attics.push_back(Attic< Object >(it->expand(reference), it->timestamp));
+        if (attics.back().id.val() != 0)
+          reference = attics.back();
+        else
+        {
+          // Relation_Delta without a reference of the same index
+          std::ostringstream out;
+	  out<<name_of_type< Object >()<<" "<<it->id.val()<<" cannot be expanded at timestamp "
+	      <<Timestamp(it->timestamp).str()<<".";
+          rman.log_and_display_error(out.str());
+        }
+      }
+      catch (const std::exception& e)
+      {
+        std::ostringstream out;
+	out<<name_of_type< Object >()<<" "<<it->id.val()<<" cannot be expanded at timestamp: "
+	    <<e.what();
+        rman.log_and_display_error(out.str());
+      }
     }
     
     for (typename std::vector< Attic< Object > >::const_iterator it = attics.begin(); it != attics.end(); ++it)

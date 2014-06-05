@@ -303,7 +303,7 @@ void copy_elems(const std::vector< Object >& source, std::vector< std::pair< uin
 {
   uint i = 0;
   for (typename std::vector< Object >::const_iterator it = source.begin(); it != source.end(); ++it)
-    target.push_back(make_pair(i++, *it));
+    target.push_back(std::make_pair(i++, *it));
 }
 
 
