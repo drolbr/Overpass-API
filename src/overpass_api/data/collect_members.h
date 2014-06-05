@@ -506,7 +506,7 @@ vector< Node::Id_Type > relation_node_member_ids
     (Resource_Manager& rman,
      const map< Uint31_Index, vector< Relation_Skeleton > >& rels,
      const map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_rels,
-     const uint32* role_id = 0)
+     const uint32* role_id)
 {
   vector< Node::Id_Type > ids = relation_node_member_ids(rman, rels, role_id);
   if (role_id)
