@@ -24,4 +24,4 @@ echo
 TIMESTAMP=`./timestamp | tail -n 1`
 EPOCHSECS=`date --date=$TIMESTAMP '+%s'`
 
-echo $(( ( $EPOCHSECS - 1347408000 ) / 60 ))
+echo $(( ( $EPOCHSECS - 1347433200 ) / 60 ))

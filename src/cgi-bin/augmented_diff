@@ -37,7 +37,7 @@ for KEY_VAL in $QUERY_STRING; do
 }; done
 unset IFS
 
-EPOCHSECS=$(($ID * 60 + 1347408000))
+EPOCHSECS=$(($ID * 60 + 1347433200))
 SINCE=`date --date="@$EPOCHSECS" '+%FT%H:%M:%SZ'`
 UNTIL=`date --date="@$(($EPOCHSECS + 60))" '+%FT%H:%M:%SZ'`
 
