@@ -1056,7 +1056,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
     (const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
      const Statement& query, Resource_Manager& rman,
      double south_, double north_, double west_, double east_)
-    : south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
+    : south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_)), way_geometry_store(0)
 {
   if (relations.empty())
   {
