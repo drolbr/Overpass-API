@@ -101,6 +101,7 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
     
     std::sort(skels.begin(), skels.end());
     std::sort(deltas.begin(), deltas.end(), Delta_Comparator< Attic< typename Object::Delta > >());
+    std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
 
     std::vector< Attic< Object > > attics;
     typename std::vector< Object >::const_iterator skels_it = skels.begin();
@@ -119,9 +120,15 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
       }
       try
       {
-        attics.push_back(Attic< Object >(it->expand(reference), it->timestamp));
-        if (attics.back().id.val() != 0)
-          reference = attics.back();
+	Attic< Object > attic_obj = Attic< Object >(it->expand(reference), it->timestamp);
+        if (attic_obj.id.val() != 0)
+	{
+          reference = attic_obj;
+          typename std::vector< std::pair< typename Object::Id_Type, uint64 > >::const_iterator
+              tit = std::lower_bound(timestamp_by_id.begin(), timestamp_by_id.end(), std::make_pair(it->id, 0ull));
+	  if (tit != timestamp_by_id.end() && tit->first == it->id && tit->second == it->timestamp)
+	    attics.push_back(attic_obj);
+	}
         else
         {
           // Relation_Delta without a reference of the same index
@@ -134,8 +141,8 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
       catch (const std::exception& e)
       {
         std::ostringstream out;
-	out<<name_of_type< Object >()<<" "<<it->id.val()<<" cannot be expanded at timestamp: "
-	    <<e.what();
+	out<<name_of_type< Object >()<<" "<<it->id.val()<<" cannot be expanded at timestamp "
+	    <<Timestamp(it->timestamp).str()<<": "<<e.what();
         rman.log_and_display_error(out.str());
       }
     }
