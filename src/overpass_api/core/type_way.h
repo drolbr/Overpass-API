@@ -271,7 +271,7 @@ struct Way_Delta
     {
       expand_diff(reference.nds, nds_removed, nds_added, result.nds);
       expand_diff(reference.geometry, geometry_removed, geometry_added, result.geometry);
-      if (result.nds.size() != result.geometry.size())
+      if (!result.geometry.empty() && result.nds.size() != result.geometry.size())
       {
 	std::ostringstream out;
 	out<<"Bad geometry for way "<<id.val();
