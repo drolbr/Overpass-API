@@ -81,10 +81,12 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
     
     std::vector< Object > skels;
     std::vector< Attic< typename Object::Delta > > deltas;
+    std::vector< std::pair< typename Object::Id_Type, uint64 > > local_timestamp_by_id;
     
     while (!(current_it == current_end) && current_it.index() == idx)
     {
       timestamp_by_id.push_back(std::make_pair(current_it.object().id, NOW));
+      local_timestamp_by_id.push_back(std::make_pair(current_it.object().id, NOW));
       skels.push_back(current_it.object());
       ++current_it;
     }
@@ -94,6 +96,7 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
       if (timestamp < attic_it.object().timestamp)
       {
         timestamp_by_id.push_back(std::make_pair(attic_it.object().id, attic_it.object().timestamp));
+        local_timestamp_by_id.push_back(std::make_pair(attic_it.object().id, attic_it.object().timestamp));
         deltas.push_back(attic_it.object());
       }
       ++attic_it;
@@ -101,7 +104,7 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
     
     std::sort(skels.begin(), skels.end());
     std::sort(deltas.begin(), deltas.end(), Delta_Comparator< Attic< typename Object::Delta > >());
-    std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
+    std::sort(local_timestamp_by_id.begin(), local_timestamp_by_id.end());
 
     std::vector< Attic< Object > > attics;
     typename std::vector< Object >::const_iterator skels_it = skels.begin();
@@ -125,8 +128,9 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
 	{
           reference = attic_obj;
           typename std::vector< std::pair< typename Object::Id_Type, uint64 > >::const_iterator
-              tit = std::lower_bound(timestamp_by_id.begin(), timestamp_by_id.end(), std::make_pair(it->id, 0ull));
-	  if (tit != timestamp_by_id.end() && tit->first == it->id && tit->second == it->timestamp)
+              tit = std::lower_bound(local_timestamp_by_id.begin(), local_timestamp_by_id.end(),
+				     std::make_pair(it->id, 0ull));
+	  if (tit != local_timestamp_by_id.end() && tit->first == it->id && tit->second == it->timestamp)
 	    attics.push_back(attic_obj);
 	}
         else
