@@ -37,16 +37,16 @@ for KEY_VAL in $QUERY_STRING; do
 }; done
 unset IFS
 
-EPOCHSECS=$(($ID * 60 + 1347408000))
-SINCE=`date --date="@$EPOCHSECS" '+%FT%H:%M:%SZ'`
-UNTIL=`date --date="@$(($EPOCHSECS + 60))" '+%FT%H:%M:%SZ'`
+EPOCHSECS=$(($ID * 60 + 1347432900))
+SINCE=`date --utc --date="@$EPOCHSECS" '+%FT%H:%M:%SZ'`
+UNTIL=`date --utc --date="@$(($EPOCHSECS + 60))" '+%FT%H:%M:%SZ'`
 
 if [[ -z $BBOX ]]; then
   QUERY_STRING='data=[adiff:"'$SINCE'","'$UNTIL'"];(node(changed:"'$SINCE'","'$UNTIL'");way(changed:"'$SINCE'","'$UNTIL'");rel(changed:"'$SINCE'","'$UNTIL'"););out meta geom;'
 else
   QUERY_STRING='data=[adiff:"'$SINCE'","'$UNTIL'"];(node(bbox)(changed:"'$SINCE'","'$UNTIL'");way(bbox)(changed:"'$SINCE'","'$UNTIL'");rel(bbox)(changed:"'$SINCE'","'$UNTIL'"););out meta geom;&bbox='$BBOX
 fi
-HTTP_METHOD=GET
+REQUEST_METHOD=GET
 
 if [[ -z $DEBUG ]]; then
   ./interpreter

@@ -1056,7 +1056,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
     (const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
      const Statement& query, Resource_Manager& rman,
      double south_, double north_, double west_, double east_)
-    : south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
+    : way_geometry_store(0), south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
 {
   if (relations.empty())
   {
@@ -1109,7 +1109,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
     (const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations, uint64 timestamp,
      const Statement& query, Resource_Manager& rman,
      double south_, double north_, double west_, double east_)
-    : south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
+    : way_geometry_store(0), south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
 {
   if (relations.empty())
   {
@@ -1588,12 +1588,20 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
     if (ways_it == ways.end() || skel.id < ways_it->elem.id)
     {
       // No old element exists
-      Double_Coords double_coords(*geometry);
-      final_target->print_item(ll_upper, skel,
-                               (mode & Print_Target::PRINT_TAGS) ? tags : 0,
-                               bound_variant(double_coords, mode),
-                               (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
-                               (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
+      if (geometry)
+      {
+        Double_Coords double_coords(*geometry);
+        final_target->print_item(ll_upper, skel,
+                                 (mode & Print_Target::PRINT_TAGS) ? tags : 0,
+                                 bound_variant(double_coords, mode),
+                                 (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
+                                 (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
+      }
+      else
+        final_target->print_item(ll_upper, skel,
+                                 (mode & Print_Target::PRINT_TAGS) ? tags : 0,
+                                 0, 0,
+                                 (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
     }
     else
     {
@@ -1608,12 +1616,20 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
                                bound_variant(double_coords, mode),
                                (mode & Print_Target::PRINT_GEOMETRY) ? &ways_it->geometry : 0,
                                (mode & Print_Target::PRINT_META) ? &ways_it->meta : 0, users, MODIFY_OLD);
-        Double_Coords double_coords_new(*geometry);
-        final_target->print_item(ll_upper, skel,
-                                 (mode & Print_Target::PRINT_TAGS) ? tags : 0,
-                                 bound_variant(double_coords_new, mode),
-                                 (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
-                                 (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
+	if (geometry)
+	{
+          Double_Coords double_coords_new(*geometry);
+          final_target->print_item(ll_upper, skel,
+                                   (mode & Print_Target::PRINT_TAGS) ? tags : 0,
+                                   bound_variant(double_coords_new, mode),
+                                   (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
+                                   (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
+	}
+	else
+          final_target->print_item(ll_upper, skel,
+                                   (mode & Print_Target::PRINT_TAGS) ? tags : 0,
+                                   0, 0,
+                                   (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
       }
       ways_it->idx = 0xffu;
     }
@@ -1701,12 +1717,20 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleto
     if (relations_it == relations.end() || skel.id < relations_it->elem.id)
     {
       // No old element exists
-      Double_Coords double_coords(*geometry);
-      final_target->print_item(ll_upper, skel,
-                               (mode & Print_Target::PRINT_TAGS) ? tags : 0,
-                               bound_variant(double_coords, mode),
-                               (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
-                               (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
+      if (geometry)
+      {
+        Double_Coords double_coords(*geometry);
+        final_target->print_item(ll_upper, skel,
+                                 (mode & Print_Target::PRINT_TAGS) ? tags : 0,
+                                 bound_variant(double_coords, mode),
+                                 (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
+                                 (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
+      }
+      else
+        final_target->print_item(ll_upper, skel,
+                                 (mode & Print_Target::PRINT_TAGS) ? tags : 0,
+                                 0, 0,
+                                 (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
     }
     else
     {
@@ -1721,12 +1745,20 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleto
                                  bound_variant(double_coords, mode),
                                  (mode & Print_Target::PRINT_GEOMETRY) ? &relations_it->geometry : 0,
                                  (mode & Print_Target::PRINT_META) ? &relations_it->meta : 0, users, MODIFY_OLD);
-        Double_Coords double_coords_new(*geometry);
-        final_target->print_item(ll_upper, skel,
-                                 (mode & Print_Target::PRINT_TAGS) ? tags : 0,
-                                 bound_variant(double_coords_new, mode),
-                                 (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
-                                 (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
+	if (geometry)
+	{
+          Double_Coords double_coords_new(*geometry);
+          final_target->print_item(ll_upper, skel,
+                                   (mode & Print_Target::PRINT_TAGS) ? tags : 0,
+                                   bound_variant(double_coords_new, mode),
+                                   (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
+                                   (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
+	}
+	else
+          final_target->print_item(ll_upper, skel,
+                                   (mode & Print_Target::PRINT_TAGS) ? tags : 0,
+                                   0, 0,
+                                   (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
       }
       relations_it->idx = 0xffu;
     }
