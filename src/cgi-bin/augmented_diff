@@ -46,7 +46,7 @@ if [[ -z $BBOX ]]; then
 else
   QUERY_STRING='data=[adiff:"'$SINCE'","'$UNTIL'"];(node(bbox)(changed:"'$SINCE'","'$UNTIL'");way(bbox)(changed:"'$SINCE'","'$UNTIL'");rel(bbox)(changed:"'$SINCE'","'$UNTIL'"););out meta geom;&bbox='$BBOX
 fi
-HTTP_METHOD=GET
+REQUEST_METHOD=GET
 
 if [[ -z $DEBUG ]]; then
   ./interpreter
