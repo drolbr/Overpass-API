@@ -148,7 +148,7 @@ void clone_database(Transaction& transaction, string dest_db_dir)
   clone_bin_file< Timestamp >(*attic_settings().WAY_CHANGELOG, transaction, dest_db_dir);
   
   clone_bin_file< Uint31_Index >(*attic_settings().RELATIONS, transaction, dest_db_dir);
-  clone_map_file< Uint31_Index >(*attic_settings().WAYS, transaction, dest_db_dir);
+  clone_map_file< Uint31_Index >(*attic_settings().RELATIONS, transaction, dest_db_dir);
   clone_bin_file< Uint31_Index >(*attic_settings().RELATIONS_UNDELETED, transaction, dest_db_dir);
   clone_bin_file< Relation::Id_Type >(*attic_settings().RELATION_IDX_LIST, transaction, dest_db_dir);
   clone_bin_file< Tag_Index_Local >(*attic_settings().RELATION_TAGS_LOCAL, transaction, dest_db_dir);
