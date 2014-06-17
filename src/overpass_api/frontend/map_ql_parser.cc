@@ -236,7 +236,7 @@ void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
 
 template< class TStatement >
 TStatement* parse_statement(typename TStatement::Factory& stmt_factory,
-			    Tokenizer_Wrapper& token, Error_Output* error_output);
+			    Tokenizer_Wrapper& token, Error_Output* error_output, int depth);
 
 string probe_into(Tokenizer_Wrapper& token, Error_Output* error_output)
 {
@@ -265,13 +265,13 @@ string probe_from(Tokenizer_Wrapper& token, Error_Output* error_output)
 
 template< class TStatement >
 vector< TStatement* > collect_substatements(typename TStatement::Factory& stmt_factory,
-					    Tokenizer_Wrapper& token, Error_Output* error_output)
+					    Tokenizer_Wrapper& token, Error_Output* error_output, int depth)
 {
   vector< TStatement* > substatements;
   clear_until_after(token, error_output, "(");
   while (token.good() && *token != ")")
   {
-    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output);
+    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output, ++depth);
     if (substatement)
       substatements.push_back(substatement);
     clear_until_after(token, error_output, ";", ")", false);
@@ -287,7 +287,7 @@ vector< TStatement* > collect_substatements(typename TStatement::Factory& stmt_f
 template< class TStatement >
 vector< TStatement* > collect_substatements_and_probe(typename TStatement::Factory& stmt_factory,
                                             Tokenizer_Wrapper& token, Error_Output* error_output,
-                                            bool& is_difference)
+                                            bool& is_difference, int depth)
 {
   is_difference = false;
   
@@ -295,7 +295,7 @@ vector< TStatement* > collect_substatements_and_probe(typename TStatement::Facto
   clear_until_after(token, error_output, "(");
   if (token.good() && *token != ")")
   {
-    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output);
+    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output, ++depth);
     if (substatement)
       substatements.push_back(substatement);
     clear_until_after(token, error_output, ";", ")", "-", false);
@@ -309,7 +309,7 @@ vector< TStatement* > collect_substatements_and_probe(typename TStatement::Facto
   }
   if (token.good() && *token != ")")
   {
-    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output);
+    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output, ++depth);
     if (substatement)
       substatements.push_back(substatement);
     clear_until_after(token, error_output, ";", ")", false);
@@ -324,7 +324,7 @@ vector< TStatement* > collect_substatements_and_probe(typename TStatement::Facto
   }
   while (token.good() && *token != ")")
   {
-    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output);
+    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output, ++depth);
     if (substatement)
       substatements.push_back(substatement);
     clear_until_after(token, error_output, ";", ")", false);
@@ -682,13 +682,13 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token, Error_Output* e
 
 template< class TStatement >
 TStatement* parse_union(typename TStatement::Factory& stmt_factory,
-			Tokenizer_Wrapper& token, Error_Output* error_output)
+			Tokenizer_Wrapper& token, Error_Output* error_output, int depth)
 {
   pair< uint, uint > line_col = token.line_col();
   
   bool is_difference = false;
   vector< TStatement* > substatements =
-      collect_substatements_and_probe< TStatement >(stmt_factory, token, error_output, is_difference);
+      collect_substatements_and_probe< TStatement >(stmt_factory, token, error_output, is_difference, depth);
   string into = probe_into(token, error_output);
   
   if (is_difference)
@@ -711,7 +711,7 @@ TStatement* parse_union(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* parse_foreach(typename TStatement::Factory& stmt_factory,
-			  Tokenizer_Wrapper& token, Error_Output* error_output)
+			  Tokenizer_Wrapper& token, Error_Output* error_output, int depth)
 {
   pair< uint, uint > line_col = token.line_col();
   ++token;
@@ -719,7 +719,7 @@ TStatement* parse_foreach(typename TStatement::Factory& stmt_factory,
   string from = probe_from(token, error_output);
   string into = probe_into(token, error_output);
   vector< TStatement* > substatements =
-      collect_substatements< TStatement >(stmt_factory, token, error_output);
+      collect_substatements< TStatement >(stmt_factory, token, error_output, depth);
 
   TStatement* statement = create_foreach_statement< TStatement >
       (stmt_factory, from, into, line_col.first);
@@ -1333,15 +1333,22 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* parse_statement(typename TStatement::Factory& stmt_factory,
-			    Tokenizer_Wrapper& token, Error_Output* error_output)
+			    Tokenizer_Wrapper& token, Error_Output* error_output, int depth)
 {
   if (!token.good())
     return 0;
   
+  if (depth >= 1024)
+  {
+    if (error_output)
+      error_output->add_parse_error("Nesting of statements limited to 1023 levels", token.line_col().first);
+    return 0;
+  }
+  
   if (*token == "(")
-    return parse_union< TStatement >(stmt_factory, token, error_output);
+    return parse_union< TStatement >(stmt_factory, token, error_output, depth);
   else if (*token == "foreach")
-    return parse_foreach< TStatement >(stmt_factory, token, error_output);
+    return parse_foreach< TStatement >(stmt_factory, token, error_output, depth);
 
   string from = "";
   if (token.good() && *token == ".")
@@ -1446,7 +1453,7 @@ void generic_parse_and_validate_map_ql
   
   while (token.good())
   {
-    TStatement* statement = parse_statement< TStatement >(stmt_factory, token, error_output);
+    TStatement* statement = parse_statement< TStatement >(stmt_factory, token, error_output, 0);
     if (statement)
     {
       base_statement->add_statement(statement, "");
