@@ -480,8 +480,8 @@
     <nd ref="22021"/>
     <nd ref="22022"/>
     <nd ref="22023"/>
-    <tag k="fee_2" v="bez"/>
     <tag k="faa_2" v="new_vaa"/>
+    <tag k="fee_2" v="bez"/>
   </way>
   <way id="2205" version="2" timestamp="2013-07-01T09:02:15Z" changeset="496" uid="42" user="foo">
     <nd ref="22051"/>
@@ -493,9 +493,9 @@
     <nd ref="23021"/>
     <nd ref="23022"/>
     <nd ref="23023"/>
-    <tag k="fee_2" v="bez"/>
     <tag k="faa_2" v="new_vaa"/>
     <tag k="sense" v="no"/>
+    <tag k="fee_2" v="bez"/>
   </way>
   <way id="2305" version="2" timestamp="2013-07-01T09:02:15Z" changeset="496" uid="42" user="foo">
     <nd ref="23051"/>
@@ -1197,8 +1197,8 @@
   <relation id="2202" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="22021" role=""/>
     <member type="node" ref="22022" role=""/>
-    <tag k="fee_2" v="bez"/>
     <tag k="faa_2" v="new_vaa"/>
+    <tag k="fee_2" v="bez"/>
   </relation>
   <relation id="2205" version="2" timestamp="2013-07-01T09:02:15Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="22051" role=""/>
@@ -1208,9 +1208,9 @@
   <relation id="2302" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="23021" role=""/>
     <member type="node" ref="23022" role=""/>
-    <tag k="fee_2" v="bez"/>
     <tag k="faa_2" v="new_vaa"/>
     <tag k="sense" v="no"/>
+    <tag k="fee_2" v="bez"/>
   </relation>
   <relation id="2305" version="2" timestamp="2013-07-01T09:02:15Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="23051" role=""/>
