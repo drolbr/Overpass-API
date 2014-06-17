@@ -192,17 +192,28 @@ string get_xml_cgi(Error_Output* error_output, uint32 max_input_size, string& ur
   {
     if (error_output)
       error_output->add_encoding_remark("The server now removes the CGI character escaping.");
-    int cgi_error(0);
     string jsonp;
-    input = decode_cgi_to_plain(input, cgi_error, jsonp, url, redirect, template_name);
+    input = decode_cgi_to_plain(input, jsonp, url, redirect, template_name);
     
-    // no 'data=' found
-    if (cgi_error)
+    // sanity check for template_name
+    if (template_name.find("/") != std::string::npos)
     {
       if (error_output)
-	error_output->add_encoding_remark("Your input neither starts with '<' nor does it contain the string \"data=\". It will be interpreted as OverpassQL");
+	error_output->add_encoding_error("Parameter \"template\" must not contain slashes.");
+      template_name = "";
     }
-    else if (jsonp != "")
+    
+    // sanity check for jsonp
+    for (std::string::size_type i = 0; i < jsonp.size(); ++i)
+    {
+      if (!isalnum(jsonp[i]) && !(jsonp[i] == '_'))
+      {
+	error_output->add_encoding_error("Parameter \"jsonp\" must contain only letters, digits, or the underscore.");
+	jsonp = "";
+      }
+    }
+    
+    if (jsonp != "")
       error_output->add_padding(jsonp);
   }
   else
