@@ -154,6 +154,18 @@ int main(int argc, char* args[])
             <<it.object().timestamp<<'\n';
       }
     }
+    else if (std::string("--nodes-undelete") == args[2])
+    {
+      Block_Backend< Uint32_Index, Attic< Node_Skeleton::Id_Type > > db
+          (transaction.data_index(attic_settings().WAYS_UNDELETED));
+      for (Block_Backend< Uint32_Index, Attic< Node_Skeleton::Id_Type > >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.index().val()<<'\t'
+            <<dec<<it.object().val()<<'\t'
+            <<dec<<it.object().timestamp<<'\n';
+      }
+    }
     else if (std::string("--node-changelog") == args[2])
     {
       Block_Backend< Timestamp, Change_Entry< Node_Skeleton::Id_Type > > db
@@ -283,6 +295,18 @@ int main(int argc, char* args[])
             <<dec<<it.object().id.val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\t'
             <<it.object().timestamp<<'\n';
+      }
+    }
+    else if (std::string("--ways-undelete") == args[2])
+    {
+      Block_Backend< Uint31_Index, Attic< Way_Skeleton::Id_Type > > db
+          (transaction.data_index(attic_settings().WAYS_UNDELETED));
+      for (Block_Backend< Uint31_Index, Attic< Way_Skeleton::Id_Type > >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        cout<<hex<<it.index().val()<<'\t'
+            <<dec<<it.object().val()<<'\t'
+            <<dec<<it.object().timestamp<<'\n';
       }
     }
     else if (std::string("--way-changelog") == args[2])

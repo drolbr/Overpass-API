@@ -200,7 +200,7 @@ void add_intermediate_versions
     idx_lists[skeleton.id].insert(idx);
     
     // Manage undelete entries
-    if (!(idx == reference_idx))
+    if (!(idx == reference_idx) && !(reference_idx == Uint31_Index(0xfe)))
       new_undeleted[reference_idx].insert(Attic< Way_Skeleton::Id_Type >(skeleton.id, new_timestamp));
     
     if (!relevant_timestamps.empty() && relevant_timestamps.back() == new_timestamp)
@@ -229,7 +229,7 @@ void add_intermediate_versions
     idx_lists[skeleton.id].insert(idx);
     
     // Manage undelete entries
-    if (!(last_idx == idx))
+    if (!(last_idx == idx) && !(last_idx == Uint31_Index(0xfe)))
       new_undeleted[last_idx].insert(Attic< Way_Skeleton::Id_Type >(skeleton.id, *it));
     last_idx = idx;
     last_skeleton = cur_skeleton;
@@ -366,7 +366,7 @@ void compute_new_attic_skeletons
           Way_Skeleton skel = it->elem;
           compute_idx_and_geometry(it_idx, skel, it->meta.timestamp + 1, nodes_by_id);
         }
-        new_undeleted[it->idx].insert(Attic< Way_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
+        new_undeleted[it_idx].insert(Attic< Way_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
       }
       continue;
     }
@@ -382,7 +382,7 @@ void compute_new_attic_skeletons
           Way_Skeleton skel = it->elem;
           compute_idx_and_geometry(it_idx, skel, it->meta.timestamp + 1, nodes_by_id);
         }
-        new_undeleted[it->idx].insert(Attic< Way_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
+        new_undeleted[it_idx].insert(Attic< Way_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
       }
     }
     last_id = it->elem.id;
