@@ -29,7 +29,7 @@ for KEY_VAL in $QUERY_STRING; do
 {
   if [[ ${KEY_VAL:0:3} == "id=" ]]; then
     ID="${KEY_VAL:3}"
-  elif [[ ${KEY_VAL:0:5} == "bbox=" ]]; then
+  elif [[ ${KEY_VAL:0:5} == "bbox=" && ${KEY_VAL:0:9} != "bbox=-180" ]]; then
     BBOX=`echo "${KEY_VAL:5}" | $EXECBASE/bin/uncgi`
   elif [[ ${KEY_VAL:0:6} == "debug=" ]]; then
     DEBUG=`echo "${KEY_VAL:6}" | $EXECBASE/bin/uncgi`
@@ -46,7 +46,7 @@ if [[ -z $BBOX ]]; then
 else
   QUERY_STRING='data=[adiff:"'$SINCE'","'$UNTIL'"];(node(bbox)(changed:"'$SINCE'","'$UNTIL'");way(bbox)(changed:"'$SINCE'","'$UNTIL'");rel(bbox)(changed:"'$SINCE'","'$UNTIL'"););out meta geom;&bbox='$BBOX
 fi
-REQUEST_METHOD=GET
+#REQUEST_METHOD=GET
 
 if [[ -z $DEBUG ]]; then
   ./interpreter
