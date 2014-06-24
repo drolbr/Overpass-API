@@ -93,9 +93,10 @@ Print_Statement::Print_Statement
     mode = 0;
     ostringstream temp;
     temp<<"For the attribute \"mode\" of the element \"print\""
-	<<" the only allowed values are \"ids_only\", \"skeleton\", \"body\", or \"meta\".";
+	<<" the only allowed values are \"ids_only\", \"skeleton\", \"body\", \"tags\", or \"meta\".";
     add_static_error(temp.str());
   }
+  
   if (attributes["order"] == "id")
     order = order_by_id;
   else if (attributes["order"] == "quadtile")
@@ -107,6 +108,7 @@ Print_Statement::Print_Statement
         <<" the only allowed values are \"id\" or \"quadtile\".";
     add_static_error(temp.str());
   }
+  
   if (attributes["limit"] != "")
     limit = atoll(attributes["limit"].c_str());
     
@@ -149,6 +151,7 @@ Print_Statement::Print_Statement
     <<" must always be greater or equal than the value of attribute \"s\".";
     add_static_error(temp.str());
   }
+  
   west = atof(attributes["w"].c_str());
   if ((west < -180.0) || (west > 180.0))
   {
