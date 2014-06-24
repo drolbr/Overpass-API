@@ -294,22 +294,22 @@ void cancel_out_equal_tags
 /* Enhance the existing attic tags by the tags of intermediate versions.
    Also store for tags that have been created on already existing elements a non-tag, i.e.
    write explicitly that until now the key existed with empty value for this element. */
-template< typename Element_Skeleton >
-std::map< Tag_Index_Local, std::set< Attic< typename Element_Skeleton::Id_Type > > >
+std::map< Tag_Index_Local, std::set< Attic< Node_Skeleton::Id_Type > > >
     compute_new_attic_local_tags
-    (const Data_By_Id< Element_Skeleton >& new_data,
-     const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
-     const std::map< Tag_Index_Local, std::set< typename Element_Skeleton::Id_Type > >& attic_local_tags)
+    (const Data_By_Id< Node_Skeleton >& new_data,
+     const std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
+     const std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > >& existing_attic_map_positions,
+     const std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > >& attic_local_tags)
 {
-  std::map< Tag_Index_Local, std::set< Attic< typename Element_Skeleton::Id_Type > > > result;  
-  std::map< typename Element_Skeleton::Id_Type, uint64 > timestamp_of;
-  std::map< typename Element_Skeleton::Id_Type, std::map< std::string, std::string > > unmatched_tags;
-  std::map< typename Element_Skeleton::Id_Type, Uint31_Index > idx_by_id;
+  std::map< Tag_Index_Local, std::set< Attic< Node_Skeleton::Id_Type > > > result;  
+  std::map< Node_Skeleton::Id_Type, uint64 > timestamp_of;
+  std::map< Node_Skeleton::Id_Type, std::map< std::string, std::string > > unmatched_tags;
+  std::map< Node_Skeleton::Id_Type, Uint31_Index > idx_by_id;
   
-  typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator next_it
+  std::vector< Data_By_Id< Node_Skeleton >::Entry >::const_iterator next_it
       = new_data.data.begin();
-  typename Element_Skeleton::Id_Type last_id(0ull);
-  for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
+  Node_Skeleton::Id_Type last_id(0ull);
+  for (std::vector< Data_By_Id< Node_Skeleton >::Entry >::const_iterator
       it = new_data.data.begin(); it != new_data.data.end(); ++it)
   {
     ++next_it;
@@ -329,13 +329,26 @@ std::map< Tag_Index_Local, std::set< Attic< typename Element_Skeleton::Id_Type >
           unmatched_tags[it->elem.id].insert(make_pair(tag_it->first, tag_it->second));
         idx_by_id.insert(make_pair(it->elem.id, it->idx.val() & 0x7fffff00));
       }
+      else
+      {
+	// This is object is just going to be undeleted
+	// Explicitly add to undeleted all tags the object now gets
+	idx = binary_pair_search(existing_attic_map_positions, it->elem.id);
+	if (idx && !(it->idx == Uint31_Index(0u)))
+	{
+          for (std::vector< std::pair< std::string, std::string > >::const_iterator tag_it = it->tags.begin();
+               tag_it != it->tags.end(); ++tag_it)
+            result[Tag_Index_Local(it->idx.val() & 0x7fffff00, tag_it->first, void_tag_value())]
+                .insert(Attic< Node_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
+	}
+      }
     }
     else if (!(it->idx == Uint31_Index(0u)))
     {
       // Compare to the tags of the preceeding version. For each unmatched tag of the new version,
       // add an explicitly void tag to the new_attic_local_tags
       std::set< std::string > old_keys;
-      typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator last_it = it;
+      std::vector< Data_By_Id< Node_Skeleton >::Entry >::const_iterator last_it = it;
       --last_it;
       for (std::vector< std::pair< std::string, std::string > >::const_iterator
            tag_it = last_it->tags.begin(); tag_it != last_it->tags.end(); ++tag_it)
@@ -346,7 +359,7 @@ std::map< Tag_Index_Local, std::set< Attic< typename Element_Skeleton::Id_Type >
       {
         if (old_keys.find(tag_it->first) == old_keys.end())
           result[Tag_Index_Local(it->idx.val() & 0x7fffff00, tag_it->first, void_tag_value())]
-              .insert(Attic< typename Element_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
+              .insert(Attic< Node_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
       }
     }
     last_id = it->elem.id;
@@ -362,48 +375,48 @@ std::map< Tag_Index_Local, std::set< Attic< typename Element_Skeleton::Id_Type >
     {
       if ((it->idx.val() & 0x7fffff00) == (next_it->idx.val() & 0x7fffff00))
         compare_and_add_different_tags
-          (Attic< typename Element_Skeleton::Id_Type >(it->elem.id, next_it->meta.timestamp),
+          (Attic< Node_Skeleton::Id_Type >(it->elem.id, next_it->meta.timestamp),
                  it->idx, it->tags, next_it->tags, result);
       else
-        add_tags(Attic< typename Element_Skeleton::Id_Type >(it->elem.id, next_it->meta.timestamp),
+        add_tags(Attic< Node_Skeleton::Id_Type >(it->elem.id, next_it->meta.timestamp),
                  it->idx, it->tags, result);
     }
   }
   
   // Copy all attic local tags to the set of all new attic local tags
   // Leave out those that have an entry in unmatched tags, because these are unchanged
-  for (typename std::map< Tag_Index_Local, std::set< typename Element_Skeleton::Id_Type > >::const_iterator
+  for (std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > >::const_iterator
       it_idx = attic_local_tags.begin(); it_idx != attic_local_tags.end(); ++it_idx)
   {
-    std::set< Attic< typename Element_Skeleton::Id_Type > >& handle(result[it_idx->first]);
-    for (typename std::set< typename Element_Skeleton::Id_Type >::const_iterator
+    std::set< Attic< Node_Skeleton::Id_Type > >& handle(result[it_idx->first]);
+    for (std::set< Node_Skeleton::Id_Type >::const_iterator
         it = it_idx->second.begin(); it != it_idx->second.end(); ++it)
     {
       std::map< std::string, std::string >::const_iterator it_unmatched
           = unmatched_tags[*it].find(it_idx->first.key);
       if (it_unmatched == unmatched_tags[*it].end() || it_unmatched->second != it_idx->first.value
           || idx_by_id.find(*it)->second.val() != it_idx->first.index)
-        handle.insert(Attic< typename Element_Skeleton::Id_Type >(*it, timestamp_of[*it]));
+        handle.insert(Attic< Node_Skeleton::Id_Type >(*it, timestamp_of[*it]));
     }
   }
   
   // Check which of the unmatched_keys are really unmatched.
-  for (typename std::map< Tag_Index_Local, std::set< typename Element_Skeleton::Id_Type > >::const_iterator
+  for (std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > >::const_iterator
       it_idx = attic_local_tags.begin(); it_idx != attic_local_tags.end(); ++it_idx)
   {
-    for (typename std::set< typename Element_Skeleton::Id_Type >::const_iterator
+    for (std::set< Node_Skeleton::Id_Type >::const_iterator
         it = it_idx->second.begin(); it != it_idx->second.end(); ++it)
       unmatched_tags[*it].erase(it_idx->first.key);
   }
   
   // Now copy the remaining unmatched keys to new_attic_local_tags
-  for (typename std::map< typename Element_Skeleton::Id_Type, std::map< std::string, std::string > >::const_iterator
+  for (std::map< Node_Skeleton::Id_Type, std::map< std::string, std::string > >::const_iterator
       it_id = unmatched_tags.begin(); it_id != unmatched_tags.end(); ++it_id)
   {
     for (std::map< std::string, std::string >::const_iterator it = it_id->second.begin();
          it != it_id->second.end(); ++it)
       result[Tag_Index_Local(idx_by_id.find(it_id->first)->second.val(), it->first, void_tag_value())]
-          .insert(Attic< typename Element_Skeleton::Id_Type >(it_id->first, timestamp_of[it_id->first]));
+          .insert(Attic< Node_Skeleton::Id_Type >(it_id->first, timestamp_of[it_id->first]));
   }
   
   return result;
@@ -616,7 +629,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
     
     // Compute tags
     std::map< Tag_Index_Local, std::set< Attic< Node_Skeleton::Id_Type > > > new_attic_local_tags
-        = compute_new_attic_local_tags(new_data, existing_map_positions, attic_local_tags);
+        = compute_new_attic_local_tags(new_data,
+	    existing_map_positions, existing_attic_map_positions, attic_local_tags);
     std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Node_Skeleton::Id_Type > > > >
         new_attic_global_tags = compute_attic_global_tags(new_attic_local_tags);
     

@@ -157,7 +157,7 @@ int main(int argc, char* args[])
     else if (std::string("--nodes-undelete") == args[2])
     {
       Block_Backend< Uint32_Index, Attic< Node_Skeleton::Id_Type > > db
-          (transaction.data_index(attic_settings().WAYS_UNDELETED));
+          (transaction.data_index(attic_settings().NODES_UNDELETED));
       for (Block_Backend< Uint32_Index, Attic< Node_Skeleton::Id_Type > >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
