@@ -622,7 +622,7 @@ void compute_geometry
 
 // TODO: temporary helper function for update_logger
 void tell_update_logger_insertions
-    (const typename Data_By_Id< Way_Skeleton >::Entry& entry, Update_Way_Logger* update_logger)
+    (const Data_By_Id< Way_Skeleton >::Entry& entry, Update_Way_Logger* update_logger)
 {
   if (update_logger)
   {

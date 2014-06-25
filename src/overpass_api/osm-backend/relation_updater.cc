@@ -104,7 +104,7 @@ uint32 Relation_Updater::get_role_id(const string& s)
 
 // TODO: temporary helper function for update_logger
 void tell_update_logger_insertions
-    (const typename Data_By_Id< Relation_Skeleton >::Entry& entry, Update_Relation_Logger* update_logger)
+    (const Data_By_Id< Relation_Skeleton >::Entry& entry, Update_Relation_Logger* update_logger)
 {
   if (update_logger)
   {
