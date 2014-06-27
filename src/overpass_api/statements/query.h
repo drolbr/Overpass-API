@@ -95,6 +95,12 @@ class Query_Statement : public Output_Statement
          const File_Properties& file_prop, const File_Properties* attic_file_prop,
          Resource_Manager& rman, Transaction& transaction);
 
+    template< class TIndex, class TObject >
+    void filter_by_tags
+        (std::map< TIndex, std::vector< TObject > >& items,
+         const File_Properties& file_prop,
+         Resource_Manager& rman, Transaction& transaction);
+
     template< typename Id_Type, typename Index >
     void progress_1(std::vector< Id_Type >& ids, std::vector< Index >& range_req,
                     bool& invert_ids, uint64 timestamp,
