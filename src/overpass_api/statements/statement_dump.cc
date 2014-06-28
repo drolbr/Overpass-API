@@ -118,10 +118,25 @@ string dump_print_map_ql(const map< string, string >& attributes, bool pretty = 
 	result += " skel";
       else if (it->second == "body")
 	result += " body";
+      else if (it->second == "tags")
+        result += " tags";
       else if (it->second == "meta")
 	result += " meta";
       else if (it->second == "quirks")
 	result += " quirks";
+    }
+  }
+  for (map< string, string >::const_iterator it = attributes.begin();
+      it != attributes.end(); ++it)
+  {
+    if (it->first == "geometry")
+    {
+      if (it->second == "full")
+	result += " geom";
+      else if (it->second == "center")
+        result += " center";
+      else if (it->second == "bounds")
+        result += " bb";
     }
   }
   for (map< string, string >::const_iterator it = attributes.begin();
@@ -265,6 +280,15 @@ string dump_subquery_map_ql(const string& name, const map< string, string >& att
     if (attributes.find("than") != attributes.end() && attributes.find("than")->second != "")
       result += "(newer:\"" + escape_quotation_marks(attributes.find("than")->second) + "\")";
   }
+  else if (name == "changed")
+  {
+    result += "(changed:";
+    if (attributes.find("since") != attributes.end() && attributes.find("since")->second != "")
+      result += "\"" + escape_quotation_marks(attributes.find("since")->second) + "\"";
+    if (attributes.find("until") != attributes.end() && attributes.find("until")->second != "")
+      result += ",\"" + escape_quotation_marks(attributes.find("until")->second) + "\"";
+    result += ")";
+  }
   else if (name == "area-query")
   {
     result += "(area";
@@ -294,6 +318,8 @@ string Statement_Dump::dump_compact_map_ql() const
 	result += "[maxsize:" + it->second + "]";
       else if (it->first == "output")
 	result += "[out:" + it->second + "]";
+      else if (it->first == "date")
+        result += "[date:\"" + it->second + "\"]";
     }
     if (!attributes.empty())
       result += ";";
@@ -314,6 +340,27 @@ string Statement_Dump::dump_compact_map_ql() const
       result += (*it)->dump_compact_map_ql();
     result += ")";
     
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+  }
+  else if (name == "difference")
+  {
+    result += "(";
+
+    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    if (it == substatements.end())
+      return ");";
+
+    result += (*it)->dump_compact_map_ql();
+    it++;
+
+    if (it == substatements.end())
+      return ");";
+
+    result += " - ";
+    result += (*it)->dump_compact_map_ql();
+    result += ")";
+
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
@@ -451,6 +498,8 @@ string Statement_Dump::dump_bbox_map_ql() const
 	result += "[maxsize:" + it->second + "]";
       else if (it->first == "output")
 	result += "[out:" + it->second + "]";
+      else if (it->first == "date")
+        result += "[date:\"" + it->second + "\"]";
     }
     if (auto_timeout)
       result += "[timeout:1]";
@@ -472,6 +521,27 @@ string Statement_Dump::dump_bbox_map_ql() const
       result += (*it)->dump_bbox_map_ql();
     result += ")";
     
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+  }
+  else if (name == "difference")
+  {
+    result += "(";
+
+    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    if (it == substatements.end())
+      return ");";
+
+    result += (*it)->dump_bbox_map_ql();
+    it++;
+
+    if (it == substatements.end())
+      return ");";
+
+    result += " - ";
+    result += (*it)->dump_bbox_map_ql();
+    result += ")";
+
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
@@ -610,6 +680,8 @@ string Statement_Dump::dump_pretty_map_ql() const
 	result += "[maxsize:" + it->second + "]\n";
       else if (it->first == "output")
 	result += "[out:" + it->second + "]\n";
+      else if (it->first == "date")
+        result += "[date:\"" + it->second + "\"]";
     }
     if (result != "")
       result += ";\n";
@@ -630,6 +702,27 @@ string Statement_Dump::dump_pretty_map_ql() const
       result += "\n" + indent((*it)->dump_pretty_map_ql());
     result += "\n)";
     
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+  }
+  else if (name == "difference")
+  {
+    result += "(";
+
+    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    if (it == substatements.end())
+      return ");";
+
+    result += indent((*it)->dump_pretty_map_ql());
+    it++;
+
+    if (it == substatements.end())
+      return ");";
+
+    result += "\n " + indent("-");
+    result += "\n " + indent((*it)->dump_pretty_map_ql());
+    result += "\n)";
+
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
