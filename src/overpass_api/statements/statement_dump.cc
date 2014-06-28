@@ -318,9 +318,27 @@ string Statement_Dump::dump_compact_map_ql() const
 	result += "[maxsize:" + it->second + "]";
       else if (it->first == "output")
 	result += "[out:" + it->second + "]";
-      else if (it->first == "date")
-        result += "[date:\"" + it->second + "\"]";
     }
+
+    if (attributes.find("augmented") != attributes.end() && 
+        attributes.find("augmented")->second == "deletions" &&
+        attributes.find("from") != attributes.end())
+    {
+      result += "[adiff:\"" + attributes.find("from")->second;
+      if (attributes.find("date") != attributes.end())
+        result += "\",\"" + attributes.find("date")->second;
+      result += "\"]";
+    }
+    else if (attributes.find("from") != attributes.end())
+    {
+      result += "[diff:\"" + attributes.find("from")->second;
+      if (attributes.find("date") != attributes.end())
+        result += "\",\"" + attributes.find("date")->second;
+      result += "\"]";
+    }
+    else if (attributes.find("date") != attributes.end())
+      result += "[date:\"" + attributes.find("date")->second + "\"]";
+
     if (!attributes.empty())
       result += ";";
     for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
@@ -498,9 +516,27 @@ string Statement_Dump::dump_bbox_map_ql() const
 	result += "[maxsize:" + it->second + "]";
       else if (it->first == "output")
 	result += "[out:" + it->second + "]";
-      else if (it->first == "date")
-        result += "[date:\"" + it->second + "\"]";
     }
+
+    if (attributes.find("augmented") != attributes.end() && 
+        attributes.find("augmented")->second == "deletions" &&
+        attributes.find("from") != attributes.end())
+    {
+      result += "[adiff:\"" + attributes.find("from")->second;
+      if (attributes.find("date") != attributes.end())
+        result += "\",\"" + attributes.find("date")->second;
+      result += "\"]";
+    }
+    else if (attributes.find("from") != attributes.end())
+    {
+      result += "[diff:\"" + attributes.find("from")->second;
+      if (attributes.find("date") != attributes.end())
+        result += "\",\"" + attributes.find("date")->second;
+      result += "\"]";
+    }
+    else if (attributes.find("date") != attributes.end())
+      result += "[date:\"" + attributes.find("date")->second + "\"]";
+
     if (auto_timeout)
       result += "[timeout:1]";
     result += ";";
@@ -680,9 +716,27 @@ string Statement_Dump::dump_pretty_map_ql() const
 	result += "[maxsize:" + it->second + "]\n";
       else if (it->first == "output")
 	result += "[out:" + it->second + "]\n";
-      else if (it->first == "date")
-        result += "[date:\"" + it->second + "\"]";
     }
+
+    if (attributes.find("augmented") != attributes.end() && 
+        attributes.find("augmented")->second == "deletions" &&
+        attributes.find("from") != attributes.end())
+    {
+      result += "[adiff:\"" + attributes.find("from")->second;
+      if (attributes.find("date") != attributes.end())
+        result += "\",\"" + attributes.find("date")->second;
+      result += "\"]\n";
+    }
+    else if (attributes.find("from") != attributes.end())
+    {
+      result += "[diff:\"" + attributes.find("from")->second;
+      if (attributes.find("date") != attributes.end())
+        result += "\",\"" + attributes.find("date")->second;
+      result += "\"]\n";
+    }
+    else if (attributes.find("date") != attributes.end())
+      result += "[date:\"" + attributes.find("date")->second + "\"]\n";
+
     if (result != "")
       result += ";\n";
     for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
