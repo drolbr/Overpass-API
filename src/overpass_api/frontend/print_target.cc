@@ -650,7 +650,7 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Node_Skeleton& skel,
         "  \"type\": \"node\"";
   if (mode & PRINT_IDS)
     cout<<",\n  \"id\": "<<skel.id.val();
-  if (mode & PRINT_COORDS)
+  if (mode & PRINT_COORDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER)
     cout<<",\n  \"lat\": "<<fixed<<setprecision(7)<<::lat(ll_upper, skel.ll_lower)
         <<",\n  \"lon\": "<<fixed<<setprecision(7)<<::lon(ll_upper, skel.ll_lower);
   if (meta)
@@ -688,8 +688,28 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Way_Skeleton& skel,
         "  \"type\": \"way\"";
   if (mode & PRINT_IDS)
     cout<<",\n  \"id\": "<<skel.id.val();
+
   if (meta)
     print_meta_json(*meta, *users);
+
+  if (mode & PRINT_BOUNDS | PRINT_CENTER)
+  {
+    if (bounds && !(bounds->first == Quad_Coord(0u, 0u)))
+    {
+      if (bounds->second)
+        std::cout<<",\n  \"bounds\": {\n"
+            "    \"minlat\": "<<fixed<<setprecision(7)<<::lat(bounds->first.ll_upper, bounds->first.ll_lower)<<",\n"
+            "    \"minlon\": "<<fixed<<setprecision(7)<<::lon(bounds->first.ll_upper, bounds->first.ll_lower)<<",\n"
+            "    \"maxlat\": "<<fixed<<setprecision(7)<<::lat(bounds->second->ll_upper, bounds->second->ll_lower)<<",\n"
+            "    \"maxlon\": "<<fixed<<setprecision(7)<<::lon(bounds->second->ll_upper, bounds->second->ll_lower)<<"\n"
+            "  }";
+      else
+        std::cout<<",\n  \"center\": {\n"
+            "    \"lat\": "<<fixed<<setprecision(7)<<::lat(bounds->first.ll_upper, bounds->first.ll_lower)<<",\n"
+            "    \"lon\": "<<fixed<<setprecision(7)<<::lon(bounds->first.ll_upper, bounds->first.ll_lower)<<"\n"
+            "  }";
+    }
+  }
   
   if ((mode & PRINT_NDS) != 0 && !skel.nds.empty())
   {
@@ -700,7 +720,28 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Way_Skeleton& skel,
       cout<<",\n    "<<it->val();
     cout<<"\n  ]";
   }
-  
+
+  if ((mode & PRINT_GEOMETRY) != 0 && !skel.nds.empty())
+  {
+    vector< Node::Id_Type >::const_iterator it = skel.nds.begin();
+    cout<<",\n  \"geometry\": [";
+    for (uint i = 0; i < skel.nds.size(); ++i) 
+    {
+      if (geometry && !((*geometry)[i] == Quad_Coord(0u, 0u)))
+      {
+        cout<<"\n    { \"lat\": "<<fixed<<setprecision(7)
+            <<::lat((*geometry)[i].ll_upper, (*geometry)[i].ll_lower)
+            <<", \"lon\": "<<fixed<<setprecision(7)
+            <<::lon((*geometry)[i].ll_upper, (*geometry)[i].ll_lower)<<" }";
+      }
+      else
+        cout<<"\n    {}";
+      if (i < skel.nds.size() - 1)
+        cout << ",";
+    }
+    cout<<"\n  ]";
+  }  
+
   if (tags != 0 && !tags->empty())
   {
     vector< pair< string, string > >::const_iterator it = tags->begin();
