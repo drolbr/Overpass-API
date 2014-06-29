@@ -132,7 +132,24 @@ string dump_print_map_ql(const map< string, string >& attributes, bool pretty = 
     if (it->first == "geometry")
     {
       if (it->second == "full")
+      {
 	result += " geom";
+        if (attributes.find("s") != attributes.end() && attributes.find("s")->second != "" &&
+            attributes.find("w") != attributes.end() && attributes.find("w")->second != "" &&
+            attributes.find("n") != attributes.end() && attributes.find("n")->second != "" && 
+            attributes.find("e") != attributes.end() && attributes.find("e")->second != "")
+        {
+          result += "(";
+          result += attributes.find("s")->second;
+          result += ",";
+          result += attributes.find("w")->second;
+          result += ",";
+          result += attributes.find("n")->second;
+          result += ",";
+          result += attributes.find("e")->second;
+          result += ")";
+        }
+      }
       else if (it->second == "center")
         result += " center";
       else if (it->second == "bounds")
