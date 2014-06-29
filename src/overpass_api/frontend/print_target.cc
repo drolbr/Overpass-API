@@ -723,7 +723,6 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 
   if ((mode & PRINT_GEOMETRY) != 0 && !skel.nds.empty())
   {
-    vector< Node::Id_Type >::const_iterator it = skel.nds.begin();
     cout<<",\n  \"geometry\": [";
     for (uint i = 0; i < skel.nds.size(); ++i) 
     {
@@ -776,25 +775,66 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Relation_Skeleton& ske
     cout<<",\n  \"id\": "<<skel.id.val();
   if (meta)
     print_meta_json(*meta, *users);
+
+  if (mode & PRINT_BOUNDS | PRINT_CENTER)
+  {
+    if (bounds && !(bounds->first == Quad_Coord(0u, 0u)))
+    {
+      if (bounds->second)
+        std::cout<<",\n  \"bounds\": {\n"
+            "    \"minlat\": "<<fixed<<setprecision(7)<<::lat(bounds->first.ll_upper, bounds->first.ll_lower)<<",\n"
+            "    \"minlon\": "<<fixed<<setprecision(7)<<::lon(bounds->first.ll_upper, bounds->first.ll_lower)<<",\n"
+            "    \"maxlat\": "<<fixed<<setprecision(7)<<::lat(bounds->second->ll_upper, bounds->second->ll_lower)<<",\n"
+            "    \"maxlon\": "<<fixed<<setprecision(7)<<::lon(bounds->second->ll_upper, bounds->second->ll_lower)<<"\n"
+            "  }";
+      else
+        std::cout<<",\n  \"center\": {\n"
+            "    \"lat\": "<<fixed<<setprecision(7)<<::lat(bounds->first.ll_upper, bounds->first.ll_lower)<<",\n"
+            "    \"lon\": "<<fixed<<setprecision(7)<<::lon(bounds->first.ll_upper, bounds->first.ll_lower)<<"\n"
+            "  }";
+    }
+  }
   
   if ((mode & PRINT_MEMBERS) != 0 && !skel.members.empty())
   {
-    vector< Relation_Entry >::const_iterator it = skel.members.begin();
-    map< uint32, string >::const_iterator rit = roles.find(it->role);
-    cout<<",\n  \"members\": ["
-           "\n    {"
-	   "\n      \"type\": \""<<MEMBER_TYPE[it->type]<<
-	   "\",\n      \"ref\": "<<it->ref.val()<<
-	   ",\n      \"role\": \""<<escape_cstr(rit != roles.end() ? rit->second : "???")<<
-	   "\"\n    }";
-    for (++it; it != skel.members.end(); ++it)
+    cout<<",\n  \"members\": [";
+    for (uint i = 0; i < skel.members.size(); i++)
     {
-      map< uint32, string >::const_iterator rit = roles.find(it->role);
-      cout<<",\n    {"
-            "\n      \"type\": \""<<MEMBER_TYPE[it->type]<<
-            "\",\n      \"ref\": "<<it->ref.val()<<
-            ",\n      \"role\": \""<<escape_cstr(rit != roles.end() ? rit->second : "???")<<
-            "\"\n    }";
+      map< uint32, string >::const_iterator rit = roles.find(skel.members[i].role);
+      cout<< (i == 0 ? "" : ",");
+      cout <<"\n    {"
+            "\n      \"type\": \""<<MEMBER_TYPE[skel.members[i].type]<<
+            "\",\n      \"ref\": "<<skel.members[i].ref.val()<<
+            ",\n      \"role\": \""<<escape_cstr(rit != roles.end() ? rit->second : "???") << "\"";
+
+      if (geometry && skel.members[i].type == Relation_Entry::NODE &&
+         !((*geometry)[i][0] == Quad_Coord(0u, 0u)))
+      {
+        cout<<",\n      \"lat\": "<<fixed<<setprecision(7)
+            <<::lat((*geometry)[i][0].ll_upper, (*geometry)[i][0].ll_lower)
+            <<",\n      \"lon\": "<<fixed<<setprecision(7)
+            <<::lon((*geometry)[i][0].ll_upper, (*geometry)[i][0].ll_lower);
+      }
+      if (geometry && skel.members[i].type == Relation_Entry::WAY && !(*geometry)[i].empty())
+      {
+        cout<<",\n      \"geometry\": [";
+        for (std::vector< Quad_Coord >::const_iterator it = (*geometry)[i].begin();
+             it != (*geometry)[i].end(); ++it)
+        {
+           if (!(*it == Quad_Coord(0u, 0u)))
+           {
+             cout<<"\n         { \"lat\": "<<fixed<<setprecision(7)
+                 <<::lat(it->ll_upper, it->ll_lower)
+                 <<", \"lon\": "<<fixed<<setprecision(7)
+                 <<::lon(it->ll_upper, it->ll_lower)<<" }";
+           } else
+             cout<<"\n         null";
+           if (it + 1 != (*geometry)[i].end())
+             cout << ",";
+        }
+        cout<<"\n      ]";
+      }
+      cout<<"\n    }";
     }
     cout<<"\n  ]";
   }
