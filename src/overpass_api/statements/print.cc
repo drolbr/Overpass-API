@@ -1880,18 +1880,20 @@ void Print_Statement::execute(Resource_Manager& rman)
     way_geometry_store = new Way_Bbox_Geometry_Store(mit->second.ways, *this, rman,
         south, north, west, east);
     delete attic_way_geometry_store;
-    attic_way_geometry_store = new Way_Bbox_Geometry_Store
-        (mit->second.attic_ways, rman.get_desired_timestamp(), *this, rman,
-        south, north, west, east);
+    if (rman.get_desired_timestamp() != NOW)
+      attic_way_geometry_store = new Way_Bbox_Geometry_Store
+          (mit->second.attic_ways, rman.get_desired_timestamp(), *this, rman,
+          south, north, west, east);
         
     delete relation_geometry_store;
     relation_geometry_store = new Relation_Geometry_Store(
         mit->second.relations, *this, rman,
         south, north, west, east);
     delete attic_relation_geometry_store;
-    attic_relation_geometry_store = new Relation_Geometry_Store(
-        mit->second.attic_relations, rman.get_desired_timestamp(), *this, rman,
-        south, north, west, east);
+    if (rman.get_desired_timestamp() != NOW)
+      attic_relation_geometry_store = new Relation_Geometry_Store(
+          mit->second.attic_relations, rman.get_desired_timestamp(), *this, rman,
+          south, north, west, east);
   }
 
   if (mode & Print_Target::PRINT_TAGS)
