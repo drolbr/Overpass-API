@@ -735,7 +735,7 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Way_Skeleton& skel,
             <<::lon((*geometry)[i].ll_upper, (*geometry)[i].ll_lower)<<" }";
       }
       else
-        cout<<"\n    {}";
+        cout<<"\n    null";
       if (i < skel.nds.size() - 1)
         cout << ",";
     }
