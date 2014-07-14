@@ -335,6 +335,8 @@ string Statement_Dump::dump_compact_map_ql() const
 	result += "[maxsize:" + it->second + "]";
       else if (it->first == "output")
 	result += "[out:" + it->second + "]";
+      else if (it->first == "bbox")
+	result += "[bbox:" + it->second + "]";
     }
 
     if (attributes.find("augmented") != attributes.end() && 
@@ -533,6 +535,8 @@ string Statement_Dump::dump_bbox_map_ql() const
 	result += "[maxsize:" + it->second + "]";
       else if (it->first == "output")
 	result += "[out:" + it->second + "]";
+      else if (it->first == "bbox")
+	result += "[bbox:" + it->second + "]";
     }
 
     if (attributes.find("augmented") != attributes.end() && 
@@ -733,6 +737,8 @@ string Statement_Dump::dump_pretty_map_ql() const
 	result += "[maxsize:" + it->second + "]\n";
       else if (it->first == "output")
 	result += "[out:" + it->second + "]\n";
+      else if (it->first == "bbox")
+	result += "[bbox:" + it->second + "]\n";
     }
 
     if (attributes.find("augmented") != attributes.end() && 
