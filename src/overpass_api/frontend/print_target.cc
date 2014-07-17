@@ -650,7 +650,7 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Node_Skeleton& skel,
         "  \"type\": \"node\"";
   if (mode & PRINT_IDS)
     cout<<",\n  \"id\": "<<skel.id.val();
-  if (mode & PRINT_COORDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER)
+  if (mode & (PRINT_COORDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER))
     cout<<",\n  \"lat\": "<<fixed<<setprecision(7)<<::lat(ll_upper, skel.ll_lower)
         <<",\n  \"lon\": "<<fixed<<setprecision(7)<<::lon(ll_upper, skel.ll_lower);
   if (meta)
@@ -692,7 +692,7 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Way_Skeleton& skel,
   if (meta)
     print_meta_json(*meta, *users);
 
-  if (mode & PRINT_BOUNDS | PRINT_CENTER)
+  if (mode & (PRINT_BOUNDS | PRINT_CENTER))
   {
     if (bounds && !(bounds->first == Quad_Coord(0u, 0u)))
     {
@@ -776,7 +776,7 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Relation_Skeleton& ske
   if (meta)
     print_meta_json(*meta, *users);
 
-  if (mode & PRINT_BOUNDS | PRINT_CENTER)
+  if (mode & (PRINT_BOUNDS | PRINT_CENTER))
   {
     if (bounds && !(bounds->first == Quad_Coord(0u, 0u)))
     {
