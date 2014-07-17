@@ -206,7 +206,7 @@ string get_xml_cgi(Error_Output* error_output, uint32 max_input_size, string& ur
     // sanity check for jsonp
     for (std::string::size_type i = 0; i < jsonp.size(); ++i)
     {
-      if (!isalnum(jsonp[i]) && !(jsonp[i] == '_'))
+      if (!isalnum(jsonp[i]) && !(jsonp[i] == '_') && !(jsonp[i] == '.'))
       {
 	error_output->add_encoding_error("Parameter \"jsonp\" must contain only letters, digits, or the underscore.");
 	jsonp = "";
