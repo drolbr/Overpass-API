@@ -218,7 +218,13 @@ void Osm_Script_Statement::add_statement(Statement* statement, string text)
 {
   assure_no_text(text, this->get_name());
   
-  substatements.push_back(statement);
+  if (statement)
+  {
+    if (statement->get_name() != "newer")
+      substatements.push_back(statement);
+    else
+      add_static_error("\"newer\" can appear only inside \"query\" statements.");
+  }
 }
 
 
