@@ -118,10 +118,42 @@ string dump_print_map_ql(const map< string, string >& attributes, bool pretty = 
 	result += " skel";
       else if (it->second == "body")
 	result += " body";
+      else if (it->second == "tags")
+        result += " tags";
       else if (it->second == "meta")
 	result += " meta";
       else if (it->second == "quirks")
 	result += " quirks";
+    }
+  }
+  for (map< string, string >::const_iterator it = attributes.begin();
+      it != attributes.end(); ++it)
+  {
+    if (it->first == "geometry")
+    {
+      if (it->second == "full")
+      {
+	result += " geom";
+        if (attributes.find("s") != attributes.end() && attributes.find("s")->second != "" &&
+            attributes.find("w") != attributes.end() && attributes.find("w")->second != "" &&
+            attributes.find("n") != attributes.end() && attributes.find("n")->second != "" && 
+            attributes.find("e") != attributes.end() && attributes.find("e")->second != "")
+        {
+          result += "(";
+          result += attributes.find("s")->second;
+          result += ",";
+          result += attributes.find("w")->second;
+          result += ",";
+          result += attributes.find("n")->second;
+          result += ",";
+          result += attributes.find("e")->second;
+          result += ")";
+        }
+      }
+      else if (it->second == "center")
+        result += " center";
+      else if (it->second == "bounds")
+        result += " bb";
     }
   }
   for (map< string, string >::const_iterator it = attributes.begin();
@@ -265,6 +297,15 @@ string dump_subquery_map_ql(const string& name, const map< string, string >& att
     if (attributes.find("than") != attributes.end() && attributes.find("than")->second != "")
       result += "(newer:\"" + escape_quotation_marks(attributes.find("than")->second) + "\")";
   }
+  else if (name == "changed")
+  {
+    result += "(changed:";
+    if (attributes.find("since") != attributes.end() && attributes.find("since")->second != "")
+      result += "\"" + escape_quotation_marks(attributes.find("since")->second) + "\"";
+    if (attributes.find("until") != attributes.end() && attributes.find("until")->second != "")
+      result += ",\"" + escape_quotation_marks(attributes.find("until")->second) + "\"";
+    result += ")";
+  }
   else if (name == "area-query")
   {
     result += "(area";
@@ -294,7 +335,29 @@ string Statement_Dump::dump_compact_map_ql() const
 	result += "[maxsize:" + it->second + "]";
       else if (it->first == "output")
 	result += "[out:" + it->second + "]";
+      else if (it->first == "bbox")
+	result += "[bbox:" + it->second + "]";
     }
+
+    if (attributes.find("augmented") != attributes.end() && 
+        attributes.find("augmented")->second == "deletions" &&
+        attributes.find("from") != attributes.end())
+    {
+      result += "[adiff:\"" + attributes.find("from")->second;
+      if (attributes.find("date") != attributes.end())
+        result += "\",\"" + attributes.find("date")->second;
+      result += "\"]";
+    }
+    else if (attributes.find("from") != attributes.end())
+    {
+      result += "[diff:\"" + attributes.find("from")->second;
+      if (attributes.find("date") != attributes.end())
+        result += "\",\"" + attributes.find("date")->second;
+      result += "\"]";
+    }
+    else if (attributes.find("date") != attributes.end())
+      result += "[date:\"" + attributes.find("date")->second + "\"]";
+
     if (!attributes.empty())
       result += ";";
     for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
@@ -314,6 +377,27 @@ string Statement_Dump::dump_compact_map_ql() const
       result += (*it)->dump_compact_map_ql();
     result += ")";
     
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+  }
+  else if (name == "difference")
+  {
+    result += "(";
+
+    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    if (it == substatements.end())
+      return ");";
+
+    result += (*it)->dump_compact_map_ql();
+    it++;
+
+    if (it == substatements.end())
+      return ");";
+
+    result += " - ";
+    result += (*it)->dump_compact_map_ql();
+    result += ")";
+
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
@@ -451,7 +535,29 @@ string Statement_Dump::dump_bbox_map_ql() const
 	result += "[maxsize:" + it->second + "]";
       else if (it->first == "output")
 	result += "[out:" + it->second + "]";
+      else if (it->first == "bbox")
+	result += "[bbox:" + it->second + "]";
     }
+
+    if (attributes.find("augmented") != attributes.end() && 
+        attributes.find("augmented")->second == "deletions" &&
+        attributes.find("from") != attributes.end())
+    {
+      result += "[adiff:\"" + attributes.find("from")->second;
+      if (attributes.find("date") != attributes.end())
+        result += "\",\"" + attributes.find("date")->second;
+      result += "\"]";
+    }
+    else if (attributes.find("from") != attributes.end())
+    {
+      result += "[diff:\"" + attributes.find("from")->second;
+      if (attributes.find("date") != attributes.end())
+        result += "\",\"" + attributes.find("date")->second;
+      result += "\"]";
+    }
+    else if (attributes.find("date") != attributes.end())
+      result += "[date:\"" + attributes.find("date")->second + "\"]";
+
     if (auto_timeout)
       result += "[timeout:1]";
     result += ";";
@@ -472,6 +578,27 @@ string Statement_Dump::dump_bbox_map_ql() const
       result += (*it)->dump_bbox_map_ql();
     result += ")";
     
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+  }
+  else if (name == "difference")
+  {
+    result += "(";
+
+    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    if (it == substatements.end())
+      return ");";
+
+    result += (*it)->dump_bbox_map_ql();
+    it++;
+
+    if (it == substatements.end())
+      return ");";
+
+    result += " - ";
+    result += (*it)->dump_bbox_map_ql();
+    result += ")";
+
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
@@ -610,7 +737,29 @@ string Statement_Dump::dump_pretty_map_ql() const
 	result += "[maxsize:" + it->second + "]\n";
       else if (it->first == "output")
 	result += "[out:" + it->second + "]\n";
+      else if (it->first == "bbox")
+	result += "[bbox:" + it->second + "]\n";
     }
+
+    if (attributes.find("augmented") != attributes.end() && 
+        attributes.find("augmented")->second == "deletions" &&
+        attributes.find("from") != attributes.end())
+    {
+      result += "[adiff:\"" + attributes.find("from")->second;
+      if (attributes.find("date") != attributes.end())
+        result += "\",\"" + attributes.find("date")->second;
+      result += "\"]\n";
+    }
+    else if (attributes.find("from") != attributes.end())
+    {
+      result += "[diff:\"" + attributes.find("from")->second;
+      if (attributes.find("date") != attributes.end())
+        result += "\",\"" + attributes.find("date")->second;
+      result += "\"]\n";
+    }
+    else if (attributes.find("date") != attributes.end())
+      result += "[date:\"" + attributes.find("date")->second + "\"]\n";
+
     if (result != "")
       result += ";\n";
     for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
@@ -630,6 +779,27 @@ string Statement_Dump::dump_pretty_map_ql() const
       result += "\n" + indent((*it)->dump_pretty_map_ql());
     result += "\n)";
     
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+  }
+  else if (name == "difference")
+  {
+    result += "(";
+
+    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    if (it == substatements.end())
+      return ");";
+
+    result += indent((*it)->dump_pretty_map_ql());
+    it++;
+
+    if (it == substatements.end())
+      return ");";
+
+    result += "\n " + indent("-");
+    result += "\n " + indent((*it)->dump_pretty_map_ql());
+    result += "\n)";
+
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
