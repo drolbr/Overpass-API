@@ -103,6 +103,15 @@ int main(int argc, char* args[])
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
         cout<<dec<<it.index().val()<<'\t'<<it.object().val()<<'\n';
     }
+    else if (std::string("--attic-node-idxs") == args[2])
+    {
+      Block_Backend< Node_Skeleton::Id_Type, Uint31_Index > db
+          (transaction.data_index(attic_settings().NODE_IDX_LIST));
+      for (Block_Backend< Node_Skeleton::Id_Type, Uint31_Index >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+        cout<<dec<<it.index().val()<<'\t'
+            <<hex<<it.object().val()<<'\n';
+    }
     else if (std::string("--attic-nodes") == args[2])
     {
       Block_Backend< Uint31_Index, Attic< Node_Skeleton > > db
@@ -233,6 +242,15 @@ int main(int argc, char* args[])
       for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
         cout<<dec<<it.index().val()<<'\t'<<it.object().val()<<'\n';
+    }
+    else if (std::string("--attic-way-idxs") == args[2])
+    {
+      Block_Backend< Way_Skeleton::Id_Type, Uint31_Index > db
+          (transaction.data_index(attic_settings().WAY_IDX_LIST));
+      for (Block_Backend< Way_Skeleton::Id_Type, Uint31_Index >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+        cout<<dec<<it.index().val()<<'\t'
+            <<hex<<it.object().val()<<'\n';
     }
     else if (std::string("--attic-ways") == args[2])
     {
@@ -384,6 +402,15 @@ int main(int argc, char* args[])
       for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
         cout<<dec<<it.index().val()<<'\t'<<it.object().val()<<'\n';
+    }
+    else if (std::string("--attic-rel-idxs") == args[2])
+    {
+      Block_Backend< Relation_Skeleton::Id_Type, Uint31_Index > db
+          (transaction.data_index(attic_settings().RELATION_IDX_LIST));
+      for (Block_Backend< Relation_Skeleton::Id_Type, Uint31_Index >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+        cout<<dec<<it.index().val()<<'\t'
+            <<hex<<it.object().val()<<'\n';
     }
     else if (std::string("--attic-rels") == args[2])
     {
