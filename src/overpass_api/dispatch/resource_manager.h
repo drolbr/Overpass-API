@@ -42,7 +42,8 @@ public:
         area_transaction(0), area_updater_(0),
         watchdog(watchdog_),
 	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
-	max_allowed_time(0), max_allowed_space(0), desired_timestamp(NOW) {}
+	max_allowed_time(0), max_allowed_space(0),
+	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW) {}
   
   Resource_Manager(Transaction& transaction_, Error_Output* error_output_,
 		   Transaction& area_transaction_, Watchdog_Callback* watchdog_,
@@ -51,7 +52,8 @@ public:
         area_transaction(&area_transaction_),
         area_updater_(area_updater__),
 	watchdog(watchdog_), start_time(time(NULL)), last_ping_time(0), last_report_time(0),
-	max_allowed_time(0), max_allowed_space(0), desired_timestamp(NOW) {}
+	max_allowed_time(0), max_allowed_space(0),
+	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW) {}
 	
   ~Resource_Manager()
   {
@@ -88,7 +90,12 @@ public:
   Transaction* get_area_transaction() { return area_transaction; }
   
   uint64 get_desired_timestamp() const { return desired_timestamp; }
+  uint64 get_diff_from_timestamp() const { return diff_from_timestamp; }
+  uint64 get_diff_to_timestamp() const { return diff_to_timestamp; }
+  
   void set_desired_timestamp(uint64 timestamp) { desired_timestamp = timestamp; }
+  void set_diff_from_timestamp(uint64 timestamp) { diff_from_timestamp = timestamp; }
+  void set_diff_to_timestamp(uint64 timestamp) { diff_to_timestamp = timestamp; }
   
 private:
   map< string, Set > sets_;
@@ -107,6 +114,8 @@ private:
   uint64 max_allowed_space;
   
   uint64 desired_timestamp;
+  uint64 diff_from_timestamp;
+  uint64 diff_to_timestamp;
 };
 
 

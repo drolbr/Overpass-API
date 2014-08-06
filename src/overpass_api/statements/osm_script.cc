@@ -362,6 +362,8 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
         print->set_collect_lhs();
     }
     
+    rman.set_diff_from_timestamp(comparison_timestamp);
+    rman.set_diff_to_timestamp(desired_timestamp);
     rman.set_desired_timestamp(comparison_timestamp);
     
     for (vector< Statement* >::iterator it(substatements.begin());
