@@ -253,12 +253,12 @@ uint64 Changed_Statement::get_since(Resource_Manager& rman) const
   if (since == NOW)
   {
     if (until == NOW)
-      return rman.get_diff_from_timestamp() + 1;
+      return rman.get_diff_from_timestamp() + (rman.get_diff_from_timestamp() == NOW ? 0 : 1);
     else
-      return rman.get_desired_timestamp() + 1;
+      return rman.get_desired_timestamp() + (rman.get_desired_timestamp() == NOW ? 0 : 1);
   }
   else if (since == until)
-    return std::min(since + 1, rman.get_desired_timestamp() + 1);    
+    return std::min(since + 1, rman.get_desired_timestamp() + (rman.get_desired_timestamp() == NOW ? 0 : 1));
   else
     return since + 1;
 }
@@ -269,12 +269,12 @@ uint64 Changed_Statement::get_until(Resource_Manager& rman) const
   if (until == NOW)
   {
     if (since == NOW)
-      return rman.get_diff_to_timestamp() + 1;
+      return rman.get_diff_to_timestamp() + (rman.get_diff_to_timestamp() == NOW ? 0 : 1);
     else
-      return rman.get_desired_timestamp() + 1;
+      return rman.get_desired_timestamp() + (rman.get_desired_timestamp() == NOW ? 0 : 1);
   }
   else if (since == until)
-    return std::max(until + 1, rman.get_desired_timestamp() + 1);
+    return std::max(until + 1, rman.get_desired_timestamp() + (rman.get_desired_timestamp() == NOW ? 0 : 1));
   else
     return until + 1;
 }
