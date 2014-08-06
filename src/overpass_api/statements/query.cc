@@ -1678,7 +1678,80 @@ void Query_Statement::execute(Resource_Manager& rman)
     
     set_progress(2);
     rman.health_check(*this);
-    
+
+    if (type == QUERY_NODE)
+    {
+      for (vector< Query_Constraint* >::iterator it = constraints.begin();
+          it != constraints.end() && answer_state < data_collected; ++it)
+      {
+	vector< Node::Id_Type > constraint_node_ids;
+	if ((*it)->get_node_ids(rman, constraint_node_ids))
+	{
+	  if (node_ids.empty())
+	    node_ids.swap(constraint_node_ids);
+	  else
+	  {
+	    vector< Node::Id_Type > new_ids(node_ids.size());
+	    new_ids.erase(std::set_intersection(
+	        node_ids.begin(), node_ids.end(), constraint_node_ids.begin(), constraint_node_ids.end(),
+	        new_ids.begin()), new_ids.end());
+	    node_ids.swap(new_ids);
+	  }
+	  
+	  if (node_ids.empty())
+	    answer_state = data_collected;
+	}
+      }
+    }
+    else if (type == QUERY_WAY)
+    {
+      for (vector< Query_Constraint* >::iterator it = constraints.begin();
+          it != constraints.end() && answer_state < data_collected; ++it)
+      {
+	vector< Way::Id_Type > constraint_way_ids;
+	if ((*it)->get_way_ids(rman, constraint_way_ids))
+	{
+	  if (ids.empty())
+	    ids.swap(constraint_way_ids);
+	  else
+	  {
+	    vector< Way::Id_Type > new_ids(ids.size());
+	    new_ids.erase(std::set_intersection(
+	        ids.begin(), ids.end(), constraint_way_ids.begin(), constraint_way_ids.end(),
+	        new_ids.begin()), new_ids.end());
+	    ids.swap(new_ids);
+	  }
+	  
+	  if (ids.empty())
+	    answer_state = data_collected;
+	}
+      }
+    }
+    else if (type == QUERY_RELATION)
+    {
+      for (vector< Query_Constraint* >::iterator it = constraints.begin();
+          it != constraints.end() && answer_state < data_collected; ++it)
+      {
+	vector< Relation::Id_Type > constraint_relation_ids;
+	if ((*it)->get_relation_ids(rman, constraint_relation_ids))
+	{
+	  if (ids.empty())
+	    ids.swap(constraint_relation_ids);
+	  else
+	  {
+	    vector< Relation::Id_Type > new_ids(ids.size());
+	    new_ids.erase(std::set_intersection(
+	        ids.begin(), ids.end(), constraint_relation_ids.begin(), constraint_relation_ids.end(),
+	        new_ids.begin()), new_ids.end());
+	    ids.swap(new_ids);
+	  }
+	  
+	  if (ids.empty())
+	    answer_state = data_collected;
+	}
+      }
+    }
+
     if (type == QUERY_NODE)
     {
       for (vector< Query_Constraint* >::iterator it = constraints.begin();
@@ -1776,26 +1849,50 @@ void Query_Statement::execute(Resource_Manager& rman)
     if (type == QUERY_NODE)
     {
       if (answer_state < data_collected)
+      {
+        if (range_req_32.empty() && answer_state < ranges_collected && !invert_ids)
+	{
+          std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(node_ids, rman);  
+          for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+            range_req_32.insert(std::make_pair(*it, ++Uint32_Index(*it)));
+	}
         ::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
             (into.nodes, into.attic_nodes,
              node_ids, invert_ids, timestamp, range_req_32, *this, rman,
              *osm_base_settings().NODES, *attic_settings().NODES);
+      }
     }
     else if (type == QUERY_WAY)
     {
       if (answer_state < data_collected)
+      {
+        if (range_req_31.empty() && answer_state < ranges_collected && !invert_ids)
+	{
+          std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(ids, rman);  
+          for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+            range_req_31.insert(std::make_pair(*it, inc(*it)));
+	}
 	::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
 	    (into.ways, into.attic_ways,
              ids, invert_ids, timestamp, range_req_31, *this, rman,
              *osm_base_settings().WAYS, *attic_settings().WAYS);
+      }
     }
     else if (type == QUERY_RELATION)
     {
       if (answer_state < data_collected)
+      {
+        if (range_req_31.empty() && answer_state < ranges_collected && !invert_ids)
+	{
+          std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Relation_Skeleton >(ids, rman);  
+          for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+            range_req_31.insert(std::make_pair(*it, inc(*it)));
+	}
 	::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
 	    (into.relations, into.attic_relations,
              ids, invert_ids, timestamp, range_req_31, *this, rman,
              *osm_base_settings().RELATIONS, *attic_settings().RELATIONS);
+      }
     }
     else if (type == QUERY_AREA)
     {

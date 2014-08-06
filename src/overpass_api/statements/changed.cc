@@ -84,10 +84,18 @@ class Changed_Constraint : public Query_Constraint
     
     bool delivers_data() { return true; }
     
-    bool get_ranges
-        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
-    bool get_ranges
-        (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
+//     bool get_ranges
+//         (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
+//     bool get_ranges
+//         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
+	
+    bool get_node_ids
+        (Resource_Manager& rman, vector< Node_Skeleton::Id_Type >& ids);
+    bool get_way_ids
+        (Resource_Manager& rman, vector< Way_Skeleton::Id_Type >& ids);
+    bool get_relation_ids
+        (Resource_Manager& rman, vector< Relation_Skeleton::Id_Type >& ids);
+	
     void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Changed_Constraint() {}
     
@@ -96,40 +104,64 @@ class Changed_Constraint : public Query_Constraint
 };
 
 
-bool Changed_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+bool Changed_Constraint::get_node_ids(Resource_Manager& rman, vector< Node_Skeleton::Id_Type >& ids)
 {
-  std::vector< Node_Skeleton::Id_Type > ids
-      = collect_changed_elements< Uint32_Index, Node_Skeleton >(stmt->get_since(rman), stmt->get_until(rman), rman);
-      
-  std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(ids, rman);
-  
-  ranges.clear();
-  for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-    ranges.insert(std::make_pair(*it, ++Uint32_Index(*it)));
-  
+  ids = collect_changed_elements< Uint32_Index, Node_Skeleton >(
+      stmt->get_since(rman), stmt->get_until(rman), rman);
   return true;
 }
 
 
-bool Changed_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
+bool Changed_Constraint::get_way_ids(Resource_Manager& rman, vector< Way_Skeleton::Id_Type >& ids)
 {
-  std::vector< Way_Skeleton::Id_Type > way_ids = collect_changed_elements< Uint31_Index, Way_Skeleton >
-      (stmt->get_since(rman), stmt->get_until(rman), rman);
-  std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(way_ids, rman);
-      
-  ranges.clear();
-  for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-    ranges.insert(std::make_pair(*it, inc(*it)));
-
-  std::vector< Relation_Skeleton::Id_Type > rel_ids = collect_changed_elements< Uint31_Index, Relation_Skeleton >
-      (stmt->get_since(rman), stmt->get_until(rman), rman);
-  get_indexes_< Uint31_Index, Relation_Skeleton >(rel_ids, rman).swap(req);
-  
-  for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-    ranges.insert(std::make_pair(*it, inc(*it)));
-
+  ids = collect_changed_elements< Uint31_Index, Way_Skeleton >(
+      stmt->get_since(rman), stmt->get_until(rman), rman);
   return true;
 }
+
+
+bool Changed_Constraint::get_relation_ids(Resource_Manager& rman, vector< Relation_Skeleton::Id_Type >& ids)
+{
+  ids = collect_changed_elements< Uint31_Index, Relation_Skeleton >(
+      stmt->get_since(rman), stmt->get_until(rman), rman);
+  return true;
+}
+
+
+// bool Changed_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+// {
+//   std::vector< Node_Skeleton::Id_Type > ids
+//       = collect_changed_elements< Uint32_Index, Node_Skeleton >(stmt->get_since(rman), stmt->get_until(rman), rman);
+//       
+//   std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(ids, rman);
+//   
+//   ranges.clear();
+//   for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+//     ranges.insert(std::make_pair(*it, ++Uint32_Index(*it)));
+//   
+//   return true;
+// }
+
+
+// bool Changed_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
+// {
+//   std::vector< Way_Skeleton::Id_Type > way_ids = collect_changed_elements< Uint31_Index, Way_Skeleton >
+//       (stmt->get_since(rman), stmt->get_until(rman), rman);
+//   std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(way_ids, rman);
+//       
+//   ranges.clear();
+//   for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+//     ranges.insert(std::make_pair(*it, inc(*it)));
+// 
+//   std::vector< Relation_Skeleton::Id_Type > rel_ids = collect_changed_elements< Uint31_Index, Relation_Skeleton >
+//       (stmt->get_since(rman), stmt->get_until(rman), rman);
+//   get_indexes_< Uint31_Index, Relation_Skeleton >(rel_ids, rman).swap(req);
+//   
+//   for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+//     ranges.insert(std::make_pair(*it, inc(*it)));
+// 
+//   return true;
+// }
 
 
 void Changed_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)

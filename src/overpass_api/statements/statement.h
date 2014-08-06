@@ -47,6 +47,16 @@ class Query_Constraint
         (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
       { return false; }
       
+    virtual bool get_node_ids
+        (Resource_Manager& rman, vector< Node_Skeleton::Id_Type >& ids)
+      { return false; }
+    virtual bool get_way_ids
+        (Resource_Manager& rman, vector< Way_Skeleton::Id_Type >& ids)
+      { return false; }
+    virtual bool get_relation_ids
+        (Resource_Manager& rman, vector< Relation_Skeleton::Id_Type >& ids)
+      { return false; }
+      
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
 			  const set< pair< Uint32_Index, Uint32_Index > >& ranges,
 			  const vector< Node::Id_Type >& ids,
