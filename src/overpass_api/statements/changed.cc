@@ -321,7 +321,7 @@ uint64 Changed_Statement::get_until(Resource_Manager& rman) const
     {
       if (since == rman.get_diff_from_timestamp() || since == rman.get_diff_to_timestamp())
 	// If the only parameter is equal to the time range then silently ignore it
-	return rman.get_diff_to_timestamp() + 1;
+	return rman.get_diff_to_timestamp() + (rman.get_diff_to_timestamp() == NOW ? 0 : 1);
       else
         // Trigger an empty result on purpose
         return NOW;
