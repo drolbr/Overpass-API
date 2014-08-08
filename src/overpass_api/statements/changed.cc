@@ -209,6 +209,13 @@ Changed_Statement::Changed_Statement
   Statement::eval_attributes_array(get_name(), attributes, input_attributes);
   
   set_output(attributes["into"]);
+  
+  if ((attributes["since"] == "auto") ^ (attributes["until"] == "auto"))
+  {
+    ostringstream temp;
+    temp<<"The attributes \"since\" and \"until\" must be set either both or none.";
+    add_static_error(temp.str());
+  }
 
   string timestamp = attributes["since"];
   if (timestamp.size() >= 19)
@@ -250,56 +257,86 @@ Changed_Statement::Changed_Statement
 
 uint64 Changed_Statement::get_since(Resource_Manager& rman) const
 {
-  if (since == NOW)
+  if (since == NOW && until == NOW)
+    // We have zero arguments on changed.
   {
-    if (until == NOW)
+    if (rman.get_diff_from_timestamp() != rman.get_diff_to_timestamp())
+      // We are on diff mode
       return rman.get_diff_from_timestamp() + (rman.get_diff_from_timestamp() == NOW ? 0 : 1);
+    else if (rman.get_desired_timestamp() != NOW)
+      // We are in attic mode
+      return rman.get_desired_timestamp() + 1;
     else
-      return rman.get_desired_timestamp() + (rman.get_desired_timestamp() == NOW ? 0 : 1);
+      // We are in present mode.
+      // Trigger an empty result on purpose
+      return NOW;
   }
   else if (since == until)
-    return std::min(since + 1, rman.get_desired_timestamp() + (rman.get_desired_timestamp() == NOW ? 0 : 1));
+    // We have one argument on changed only.
+  {
+    if (rman.get_diff_from_timestamp() != rman.get_diff_to_timestamp())
+      // We are on diff mode
+    {
+      if (since == rman.get_diff_from_timestamp() || since == rman.get_diff_to_timestamp())
+	// If the only parameter is equal to the time range then silently ignore it
+	return rman.get_diff_from_timestamp() + 1;
+      else
+        // Trigger an empty result on purpose
+        return NOW;
+    }
+    else if (rman.get_desired_timestamp() != NOW)
+      // We are in attic mode
+      return std::min(since, rman.get_desired_timestamp()) + 1;
+    else
+      // We are in present mode.
+      return since + 1;
+  }
   else
+    // We have two arguments on changed.
     return since + 1;
 }
 
 
 uint64 Changed_Statement::get_until(Resource_Manager& rman) const
 {
-  if (until == NOW)
+  if (since == NOW && until == NOW)
+    // We have zero arguments on changed.
   {
-    if (since == NOW)
+    if (rman.get_diff_from_timestamp() != rman.get_diff_to_timestamp())
+      // We are on diff mode
       return rman.get_diff_to_timestamp() + (rman.get_diff_to_timestamp() == NOW ? 0 : 1);
+    else if (rman.get_desired_timestamp() != NOW)
+      // We are in attic mode
+      return NOW;
     else
-      return rman.get_desired_timestamp() + (rman.get_desired_timestamp() == NOW ? 0 : 1);
+      // We are in present mode.
+      // Trigger an empty result on purpose
+      return NOW;
   }
   else if (since == until)
-    return std::max(until + 1, rman.get_desired_timestamp() + (rman.get_desired_timestamp() == NOW ? 0 : 1));
+    // We have one argument on changed only.
+  {
+    if (rman.get_diff_from_timestamp() != rman.get_diff_to_timestamp())
+      // We are on diff mode
+    {
+      if (since == rman.get_diff_from_timestamp() || since == rman.get_diff_to_timestamp())
+	// If the only parameter is equal to the time range then silently ignore it
+	return rman.get_diff_to_timestamp() + 1;
+      else
+        // Trigger an empty result on purpose
+        return NOW;
+    }
+    else if (rman.get_desired_timestamp() != NOW)
+      // We are in attic mode
+      return std::max(until, rman.get_desired_timestamp()) + 1;
+    else
+      // We are in present mode.
+      return NOW;
+  }
   else
+    // We have two arguments on changed.
     return until + 1;
 }
-
-
-// uint64 Changed_Statement::get_since(Resource_Manager& rman) const
-// {
-//   if (since == until)
-//     return std::min(since + 1, rman.get_desired_timestamp() + 1);
-//   else if (since == NOW)
-//     return rman.get_desired_timestamp() + 1;
-//   else
-//     return since + 1;
-// }
-// 
-// 
-// uint64 Changed_Statement::get_until(Resource_Manager& rman) const
-// {
-//   if (since == until)
-//     return until == NOW ? NOW : std::max(until + 1, rman.get_desired_timestamp() + 1);
-//   else if (until == NOW)
-//     return rman.get_desired_timestamp() + 1;
-//   else
-//     return until + 1;
-// }
 
 
 template< typename Index, typename Skeleton >
