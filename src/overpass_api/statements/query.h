@@ -57,8 +57,10 @@ class Query_Statement : public Output_Statement
     vector< string > keys;    
     vector< pair< string, string > > key_values;    
     vector< pair< string, Regular_Expression* > > key_regexes;    
+    vector< pair< Regular_Expression*, Regular_Expression* > > regkey_regexes;    
     vector< pair< string, string > > key_nvalues;    
     vector< pair< string, Regular_Expression* > > key_nregexes;    
+    vector< pair< Regular_Expression*, Regular_Expression* > > regkey_nregexes;    
     vector< Query_Constraint* > constraints;
     
     static bool area_query_exists_;
@@ -139,6 +141,7 @@ class Has_Kv_Statement : public Statement
     static Generic_Statement_Maker< Has_Kv_Statement > statement_maker;
     
     string get_key() const { return key; }
+    Regular_Expression* get_key_regex() { return key_regex; }
     string get_value() const { return value; }
     Regular_Expression* get_regex() { return regex; }
     bool get_straight() const { return straight; }
@@ -146,6 +149,7 @@ class Has_Kv_Statement : public Statement
   private:
     string key, value;
     Regular_Expression* regex;
+    Regular_Expression* key_regex;
     bool straight;
 };
 

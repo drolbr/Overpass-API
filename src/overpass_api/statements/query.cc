@@ -1533,11 +1533,13 @@ void Query_Statement::progress_1(vector< Id_Type >& ids, bool& invert_ids,
                                  const File_Properties& file_prop,
                                  Resource_Manager& rman)
 {
-  if ((!keys.empty() && !check_keys_late)
-     || !key_values.empty() || (!key_regexes.empty() && !check_keys_late))
+  if (!key_values.empty()
+     || (!keys.empty() && !check_keys_late)
+     || (!key_regexes.empty() && !check_keys_late)
+     || (!regkey_regexes.empty() && !check_keys_late))
   {
     collect_ids< Id_Type >(file_prop, rman, check_keys_late).swap(ids);
-    if (!key_nvalues.empty() || !key_nregexes.empty())
+    if (!key_nvalues.empty() || !key_nregexes.empty() || !regkey_nregexes.empty())
     {
       vector< Id_Type > non_ids = collect_non_ids< Id_Type >(file_prop, rman);
       vector< Id_Type > diff_ids(ids.size(), Id_Type());
@@ -1548,7 +1550,7 @@ void Query_Statement::progress_1(vector< Id_Type >& ids, bool& invert_ids,
     if (ids.empty())
       answer_state = data_collected;
   }
-  else if ((!key_nvalues.empty() || !key_nregexes.empty()) && !check_keys_late)
+  else if ((!key_nvalues.empty() || !key_nregexes.empty() || !regkey_nregexes.empty()) && !check_keys_late)
   {
     invert_ids = true;
     collect_non_ids< Id_Type >(file_prop, rman).swap(ids);
@@ -1901,6 +1903,7 @@ Has_Kv_Statement::Has_Kv_Statement
   map< string, string > attributes;
   
   attributes["k"] = "";
+  attributes["regk"] = "";
   attributes["v"] = "";
   attributes["regv"] = "";
   attributes["modv"] = "";
@@ -1926,6 +1929,32 @@ Has_Kv_Statement::Has_Kv_Statement
       add_static_error("For the attribute \"case\" of the element \"has-kv\""
 	  " the only allowed values are \"sensitive\" or \"ignore\".");
     case_sensitive = true;
+  }
+  
+  if (attributes["regk"] != "")
+  {
+    if (key != "")
+    {
+      ostringstream temp("");
+      temp<<"In the element \"has-kv\" only one of the attributes \"k\" and \"regk\""
+            " can be nonempty.";
+      add_static_error(temp.str());
+    }
+    if (value != "")
+    {
+      ostringstream temp("");
+      temp<<"In the element \"has-kv\" the attribute \"regk\" must be combined with \"regv\".";
+      add_static_error(temp.str());
+    }
+    
+    try
+    {
+      key_regex = new Regular_Expression(attributes["regk"], case_sensitive);
+    }
+    catch (Regular_Expression_Error e)
+    {
+      add_static_error("Invalid regular expression: \"" + attributes["regk"] + "\"");
+    }
   }
   
   if (attributes["regv"] != "")

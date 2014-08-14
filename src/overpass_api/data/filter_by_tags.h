@@ -215,4 +215,66 @@ std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_kregv(
 }
 
 
+template< class Id_Type >
+std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_regkregv(
+    vector< pair< Regular_Expression*, Regular_Expression* > >::const_iterator krit, uint64 timestamp,
+    Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >& tags_db,
+    Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >& attic_tags_db)
+{
+  //TODO
+  std::map< Id_Type, std::pair< uint64, Uint31_Index > > timestamp_per_id;
+      
+  std::string last_key = void_tag_value();
+  bool matches = false;
+  for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Flat_Iterator
+      it2(tags_db.flat_begin()); !(it2 == tags_db.flat_end()); ++it2)
+  {
+    if (it2.index().key != last_key)
+    {
+      last_key = it2.index().key;
+      matches = krit->first->matches(it2.index().key);
+    }  
+    if (matches && krit->second->matches(it2.index().value))
+      timestamp_per_id[it2.object().id] = std::make_pair(NOW, it2.object().idx);
+  }
+      
+  last_key = void_tag_value();
+  matches = false;
+  for (typename Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >::Flat_Iterator
+      it2(attic_tags_db.flat_begin()); !(it2 == attic_tags_db.flat_end()); ++it2)
+  {
+    if (it2.index().key != last_key)
+    {
+      last_key = it2.index().key;
+      matches = krit->first->matches(it2.index().key);
+    }
+    if (it2.object().timestamp > timestamp && matches && krit->second->matches(it2.index().value))
+    {
+      std::pair< uint64, Uint31_Index >& ref = timestamp_per_id[it2.object().id];
+      if (ref.first == 0 || it2.object().timestamp < ref.first)
+        ref = std::make_pair(it2.object().timestamp, it2.object().idx);
+    }
+  }
+      
+  last_key = void_tag_value();
+  matches = false;
+  for (typename Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >::Flat_Iterator
+      it2(attic_tags_db.flat_begin()); !(it2 == attic_tags_db.flat_end()); ++it2)
+  {
+    if (it2.object().timestamp > timestamp)
+    {
+      typename std::map< Id_Type, std::pair< uint64, Uint31_Index > >::iterator
+          it = timestamp_per_id.find(it2.object().id);
+      if (it != timestamp_per_id.end())
+      {
+        if (matches && it2.object().timestamp < it->second.first)
+          timestamp_per_id.erase(it);
+      }
+    }
+  }
+  
+  return timestamp_per_id;
+}
+
+
 #endif
