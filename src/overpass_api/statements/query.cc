@@ -136,7 +136,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_ids
   (const File_Properties& file_prop, const File_Properties& attic_file_prop, Resource_Manager& rman,
    uint64 timestamp, bool check_keys_late)
 {
-  if (key_values.empty() && keys.empty() && key_regexes.empty())
+  if (key_values.empty() && keys.empty() && key_regexes.empty() && regkey_regexes.empty())
     return std::vector< std::pair< Id_Type, Uint31_Index > >();
   
   Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > > tags_db
@@ -1466,8 +1466,10 @@ void Query_Statement::progress_1(vector< Id_Type >& ids, std::vector< Index >& r
 {
   ids.clear();
   range_vec.clear();
-  if ((!keys.empty() && !check_keys_late)
-     || !key_values.empty() || (!key_regexes.empty() && !check_keys_late))
+  if (!key_values.empty()
+     || (!keys.empty() && !check_keys_late)
+     || (!key_regexes.empty() && !check_keys_late)
+     || (!regkey_regexes.empty() && !check_keys_late))
   {
     std::vector< std::pair< Id_Type, Uint31_Index > > id_idxs =
         collect_ids< Id_Type >(file_prop, attic_file_prop, rman, timestamp, check_keys_late);
@@ -1900,7 +1902,7 @@ Has_Kv_Statement::Has_Kv_Statement
   key = attributes["k"];
   value = attributes["v"];
   
-  if (key == "")
+  if (key == "" && attributes["regk"] == "")
   {
     ostringstream temp("");
     temp<<"For the attribute \"k\" of the element \"has-kv\""
