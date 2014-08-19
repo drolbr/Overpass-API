@@ -1968,7 +1968,13 @@ Has_Kv_Statement::Has_Kv_Statement
   if (attributes["modv"] == "" || attributes["modv"] == "not")
   {
     if (attributes["modv"] == "not")
-      straight = false;
+    {
+      if (attributes["regk"] == "")
+        straight = false;
+      else
+	add_static_error("In the element \"has-kv\" regular expressions on keys cannot be combined"
+	  " with negation.");
+    }
   }
   else
   {
@@ -1977,6 +1983,7 @@ Has_Kv_Statement::Has_Kv_Statement
     add_static_error(temp.str());
   }
 }
+
 
 Has_Kv_Statement::~Has_Kv_Statement()
 {
