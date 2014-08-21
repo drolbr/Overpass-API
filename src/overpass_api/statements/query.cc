@@ -529,23 +529,14 @@ void clear_empty_indices
 }
 
 
-template< typename Attic >
-struct Less_By_Id
-{
-  bool operator()(const Attic& lhs, const Attic& rhs)
-  {
-    return lhs.id < rhs.id;
-  }
-};
-
-
 template< typename Id_Type >
 void filter_ids_by_tags
   (const map< string, vector< Regular_Expression* > >& keys,
    const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
    typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
    uint32 coarse_index,
-   vector< Id_Type >& new_ids)
+   vector< Id_Type >& new_ids,
+   int bitmask = 0x7fffff00)
 {
   string last_key, last_value;  
   bool key_relevant = false;
@@ -555,7 +546,7 @@ void filter_ids_by_tags
   std::vector< Id_Type > old_ids;
   
   while ((!(tag_it == items_db.range_end())) &&
-      (((tag_it.index().index) & 0x7fffff00) == coarse_index))
+      (((tag_it.index().index) & bitmask) == coarse_index))
   {
     if (tag_it.index().key != last_key)
     {
@@ -600,81 +591,7 @@ void filter_ids_by_tags
     ++tag_it;
   }
   while ((!(tag_it == items_db.range_end())) &&
-      (((tag_it.index().index) & 0x7fffff00) == coarse_index))
-    ++tag_it;
-
-  if (key_relevant && key_it != keys.end())
-    ++key_it;
-  if (key_it != keys.end())
-    // There are keys missing for all objects with this index. Drop all.
-    new_ids.clear();
-  
-  sort(new_ids.begin(), new_ids.end());
-}
-
-
-template< typename Id_Type >
-void filter_ids_by_tags_old
-  (const map< string, vector< Regular_Expression* > >& keys,
-   const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
-   typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
-   uint32 coarse_index,
-   vector< Id_Type >& new_ids)
-{
-  string last_key, last_value;  
-  bool key_relevant = false;
-  bool valid = false;
-  map< string, vector< Regular_Expression* > >::const_iterator key_it = keys.begin();
-  
-  std::vector< Id_Type > old_ids;
-  
-  while ((!(tag_it == items_db.range_end())) &&
-      (((tag_it.index().index) & 0xffffff00) == coarse_index))
-  {
-    if (tag_it.index().key != last_key)
-    {
-      last_value = void_tag_value() + " ";
-      
-      if (key_relevant)
-        ++key_it;
-      key_relevant = false;
-      
-      if (key_it == keys.end())
-	break;
-      
-      last_key = tag_it.index().key;
-      if (last_key >= key_it->first)
-      {
-	if (last_key > key_it->first)
-          // There are keys missing for all objects with this index. Drop all.
-	  break;
-
-	key_relevant = true;
-	old_ids.clear();
-        old_ids.swap(new_ids);
-        sort(old_ids.begin(), old_ids.end());
-      }
-    }
-    
-    if (key_relevant)
-    {
-      if (tag_it.index().value != last_value)
-      {
-	valid = true;
-	for (vector< Regular_Expression* >::const_iterator rit = key_it->second.begin();
-	    rit != key_it->second.end(); ++rit)
-	  valid &= (*rit)->matches(tag_it.index().value);
-	last_value = tag_it.index().value;
-      }
-      
-      if (valid && std::binary_search(old_ids.begin(), old_ids.end(), tag_it.object()))
-        new_ids.push_back(tag_it.object());
-    }
-
-    ++tag_it;
-  }
-  while ((!(tag_it == items_db.range_end())) &&
-      (((tag_it.index().index) & 0xffffff00) == coarse_index))
+      (((tag_it.index().index) & bitmask) == coarse_index))
     ++tag_it;
 
   if (key_relevant && key_it != keys.end())
@@ -697,11 +614,11 @@ void filter_ids_by_tags_old
 {
   vector< Id_Type > new_ids = ids_by_coarse[coarse_index & 0x7fffff00];
   
-  filter_ids_by_tags_old(keys, items_db, tag_it, coarse_index & 0x7fffff00, new_ids);
+  filter_ids_by_tags(keys, items_db, tag_it, coarse_index & 0x7fffff00, new_ids, 0xffffff00);
 
   new_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
     
-  filter_ids_by_tags_old(keys, items_db, tag_it, coarse_index | 0x80000000, new_ids);
+  filter_ids_by_tags(keys, items_db, tag_it, coarse_index | 0x80000000, new_ids, 0xffffff00);
 
   vector< Id_Type > old_ids;
   old_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
