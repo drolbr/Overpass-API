@@ -266,8 +266,8 @@ public:
     new_ids_.erase(std::unique(new_ids_.begin(), new_ids_.end()), new_ids_.end());
     
     vector< Id_Type > result(new_ids_.size());
-    result.erase(std::set_difference(new_ids.begin(), new_ids.end(), new_ids_.begin(), new_ids_.end(),
-				     result.begin()), result.end());
+    result.erase(std::set_intersection(new_ids.begin(), new_ids.end(), new_ids_.begin(), new_ids_.end(),
+	result.begin()), result.end());
     
     result.swap(new_ids);
   }
