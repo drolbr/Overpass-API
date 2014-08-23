@@ -195,6 +195,8 @@ string dump_subquery_map_ql(const string& name, const map< string, string >& att
     result += "[";
     if (attributes.find("k") != attributes.end())
       result += "\"" + escape_quotation_marks(attributes.find("k")->second) + "\"";
+    if (attributes.find("regk") != attributes.end() && attributes.find("regk")->second != "")
+      result += "~\"" + escape_quotation_marks(attributes.find("regk")->second) + "\"";
     if (attributes.find("modv") != attributes.end() && attributes.find("modv")->second == "not")
       result += "!";
     if (attributes.find("v") != attributes.end() && attributes.find("v")->second != "")
