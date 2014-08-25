@@ -66,6 +66,8 @@
 </table>
 <p>Any other character with ASCII value between 0 and 31 is replaced for safety reasons by a question mark. In principle, this can't happen, because these characters are disallowed in the main database. Characters are encoded as UTF-8.</p>
 
+<p>Please note that some Firefox versions do present JSON as if it were ISO-8859-1. This means that non-ASCII characters are presented as random nonsense. You can force Firefox to a conforming presentation by setting it to &quot;Unicode&quot; encoding.</p>
+
 <p>To get a response in format JSON, start the request with a <em>[out:json]</em> directive, for example:</p>
 <pre>
 <a href="api/interpreter?data=[out:json];out;">/api/interpreter?data=<strong>[out:json];</strong>out;</a>
