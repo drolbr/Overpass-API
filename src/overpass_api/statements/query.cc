@@ -770,10 +770,10 @@ void Query_Statement::filter_by_tags
       }
     
       sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
-
+      
       filter_ids_by_tags(key_union, regkey_regexes, items_db, tag_it,
                          it->val() & 0x7fffff00, ids_by_coarse[it->val() & 0x7fffff00]);
-    
+
       while ((item_it != items.end()) &&
           ((item_it->first.val() & 0x7fffff00) == it->val()))
       {

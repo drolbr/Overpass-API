@@ -100,8 +100,8 @@ void filter_ids_by_tags
       new_ids.push_back(tag_it.object());
     
     if (!matched_by_both_regexes.empty() &&
-	((key_relevant && std::binary_search(old_ids.begin(), old_ids.end(), tag_it.object())) ||
-	(!key_relevant && std::binary_search(new_ids.begin(), new_ids.end(), tag_it.object()))))
+	(std::binary_search(old_ids.begin(), old_ids.end(), tag_it.object()) ||
+	 std::binary_search(new_ids.begin(), new_ids.end(), tag_it.object())))
     {
       for (std::vector< uint64 >::const_iterator reg_it = matched_by_both_regexes.begin();
 	  reg_it != matched_by_both_regexes.end(); ++reg_it)
