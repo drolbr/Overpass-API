@@ -2335,7 +2335,12 @@ struct Accept_Query_147 : public Accept_All_Tags
   Accept_Query_147(uint pattern_size_) : pattern_size(pattern_size_) {}
   
   virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return (id % 22 == 0 && id >= 99 && id <= 1078); }
+  virtual bool admit_way(uint id) const
+  { 
+    return (id % 22 == 0 && id >= 99 && id <= 1078 &&
+      (id <= (pattern_size+1)*(pattern_size/2-1)
+      || (id > (pattern_size+2)*(pattern_size/2-1) && id <= (pattern_size+3)*(pattern_size/2-1)+1)));
+  }
   virtual bool admit_relation(uint id) const { return false; }
   
   private:
@@ -2347,7 +2352,12 @@ struct Accept_Query_148 : public Accept_All_Tags
   Accept_Query_148(uint pattern_size_) : pattern_size(pattern_size_) {}
   
   virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return (id % 110 == 0 && id >= 99 && id <= 1078); }
+  virtual bool admit_way(uint id) const
+  {
+    return (id % 110 == 0 && id >= 99 && id <= 1078 &&
+      (id <= (pattern_size+1)*(pattern_size/2-1)
+      || (id > (pattern_size+2)*(pattern_size/2-1) && id <= (pattern_size+3)*(pattern_size/2-1)+1)));
+  }
   virtual bool admit_relation(uint id) const { return false; }
   
   private:
@@ -2359,7 +2369,12 @@ struct Accept_Query_149 : public Accept_All_Tags
   Accept_Query_149(uint pattern_size_) : pattern_size(pattern_size_) {}
   
   virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return (id % 11 == 0 && id % 4 != 3 && id >= 99 && id <= 1078); }
+  virtual bool admit_way(uint id) const
+  {
+    return (id % 11 == 0 && id % 4 != 3 && id >= 99 && id <= 1078 &&
+      (id <= (pattern_size+1)*(pattern_size/2-1)
+      || (id > (pattern_size+2)*(pattern_size/2-1) && id <= (pattern_size+3)*(pattern_size/2-1)+1)));
+  }
   virtual bool admit_relation(uint id) const { return false; }
   
   private:
@@ -2371,7 +2386,12 @@ struct Accept_Query_150 : public Accept_All_Tags
   Accept_Query_150(uint pattern_size_) : pattern_size(pattern_size_) {}
   
   virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return (id % 55 == 0 && id % 4 != 3 && id >= 99 && id <= 1078); }
+  virtual bool admit_way(uint id) const
+  {
+    return (id % 55 == 0 && id % 4 != 3 && id >= 99 && id <= 1078 &&
+      (id <= (pattern_size+1)*(pattern_size/2-1)
+      || (id > (pattern_size+2)*(pattern_size/2-1) && id <= (pattern_size+3)*(pattern_size/2-1)+1)));
+  }
   virtual bool admit_relation(uint id) const { return false; }
   
   private:
