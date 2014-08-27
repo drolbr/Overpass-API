@@ -1386,8 +1386,8 @@ struct Accept_Query_62 : public Accept_All_Tags
   virtual bool admit_node(uint id) const { return false; }
   virtual bool admit_way(uint id) const
   {
-    return (id == 1 || id == pattern_size/2*(pattern_size/2-1) + 1
-        || id == pattern_size/2*(pattern_size/2-1) + pattern_size + 1);
+    return ((id == 1 || id == pattern_size/2*(pattern_size/2-1) + 1
+        || id == pattern_size/2*(pattern_size/2-1) + pattern_size + 1) && id % 4 == 1);
   }
   virtual bool admit_relation(uint id) const { return false; }
   
@@ -1417,7 +1417,7 @@ struct Accept_Query_64 : public Accept_All_Tags
   virtual bool admit_node(uint id) const { return false; }
   virtual bool admit_way(uint id) const
   {
-    return (id == 1 || id == pattern_size/2*(pattern_size/2-1) + 1);
+    return ((id == 1 || id == pattern_size/2*(pattern_size/2-1) + 1) && id % 4 == 1);
   }
   virtual bool admit_relation(uint id) const { return false; }
   
