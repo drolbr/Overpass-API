@@ -199,7 +199,7 @@ void filter_id_list(
 }
 
 
-template< class Id_Type >
+template< typename Skeleton, typename Id_Type >
 std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_ids
   (const File_Properties& file_prop, const File_Properties& attic_file_prop, Resource_Manager& rman,
    uint64 timestamp, bool check_keys_late)
@@ -275,11 +275,14 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_ids
     {
       if (timestamp == NOW)
       {
+	std::set< pair< Tag_Index_Global, Tag_Index_Global > > range_req
+	    = get_regk_req< Skeleton >(it->first, rman, *this);
 	filter_id_list(new_ids, filtered,
-	    tags_db.flat_begin(), tags_db.flat_end(), *it->first, *it->second);
+	    tags_db.range_begin(range_req.begin(), range_req.end()), tags_db.range_end(), *it->first, *it->second);
       }
       else
-	filter_id_list(new_ids, filtered, collect_attic_regkregv(it, timestamp, tags_db, *attic_tags_db.obj));
+	filter_id_list(new_ids, filtered, collect_attic_regkregv< Skeleton, Id_Type >(
+	    it, timestamp, tags_db, *attic_tags_db.obj, rman, *this));
       
       rman.health_check(*this);
     }
@@ -1077,7 +1080,7 @@ void Query_Statement::filter_by_tags
 }
 
 
-template< typename Id_Type, typename Index >
+template< typename Skeleton, typename Id_Type, typename Index >
 void Query_Statement::progress_1(vector< Id_Type >& ids, std::vector< Index >& range_vec,
                                  bool& invert_ids, uint64 timestamp,
                                  Answer_State& answer_state, bool check_keys_late,
@@ -1092,7 +1095,7 @@ void Query_Statement::progress_1(vector< Id_Type >& ids, std::vector< Index >& r
      || (!regkey_regexes.empty() && !check_keys_late))
   {
     std::vector< std::pair< Id_Type, Uint31_Index > > id_idxs =
-        collect_ids< Id_Type >(file_prop, attic_file_prop, rman, timestamp, check_keys_late);
+        collect_ids< Skeleton, Id_Type >(file_prop, attic_file_prop, rman, timestamp, check_keys_late);
     
     if (!key_nvalues.empty() || !key_nregexes.empty())
     {
@@ -1263,20 +1266,23 @@ void Query_Statement::execute(Resource_Manager& rman)
 
     if (type == QUERY_NODE)
     {
-      progress_1(node_ids, range_vec_32, invert_ids, timestamp, answer_state, check_keys_late,
-                 *osm_base_settings().NODE_TAGS_GLOBAL, *attic_settings().NODE_TAGS_GLOBAL, rman);
+      progress_1< Node_Skeleton, Node::Id_Type, Uint32_Index >(
+	  node_ids, range_vec_32, invert_ids, timestamp, answer_state, check_keys_late,
+          *osm_base_settings().NODE_TAGS_GLOBAL, *attic_settings().NODE_TAGS_GLOBAL, rman);
       collect_nodes(node_ids, invert_ids, answer_state, into, rman);
     }
     else if (type == QUERY_WAY)
     {
-      progress_1(ids, range_vec_31, invert_ids, timestamp, answer_state, check_keys_late,
-                 *osm_base_settings().WAY_TAGS_GLOBAL, *attic_settings().WAY_TAGS_GLOBAL, rman);
+      progress_1< Way_Skeleton, Way::Id_Type, Uint31_Index >(
+	  ids, range_vec_31, invert_ids, timestamp, answer_state, check_keys_late,
+          *osm_base_settings().WAY_TAGS_GLOBAL, *attic_settings().WAY_TAGS_GLOBAL, rman);
       collect_elems(ids, invert_ids, answer_state, into, rman);
     }
     else if (type == QUERY_RELATION)
     {
-      progress_1(ids, range_vec_31, invert_ids, timestamp, answer_state, check_keys_late,
-                 *osm_base_settings().RELATION_TAGS_GLOBAL,  *attic_settings().RELATION_TAGS_GLOBAL, rman);
+      progress_1< Relation_Skeleton, Relation::Id_Type, Uint31_Index >(
+	  ids, range_vec_31, invert_ids, timestamp, answer_state, check_keys_late,
+          *osm_base_settings().RELATION_TAGS_GLOBAL,  *attic_settings().RELATION_TAGS_GLOBAL, rman);
       collect_elems(ids, invert_ids, answer_state, into, rman);
     }
     else if (type == QUERY_AREA)

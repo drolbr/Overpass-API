@@ -65,7 +65,7 @@ class Query_Statement : public Output_Statement
     
     static bool area_query_exists_;
     
-    template< class Id_Type >
+    template< typename Skeleton, typename Id_Type >
     std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids
         (const File_Properties& file_prop, const File_Properties& attic_file_prop,
          Resource_Manager& rman, uint64 timestamp, bool check_keys_late);
@@ -103,7 +103,7 @@ class Query_Statement : public Output_Statement
          const File_Properties& file_prop,
          Resource_Manager& rman, Transaction& transaction);
 
-    template< typename Id_Type, typename Index >
+    template< typename Skeleton, typename Id_Type, typename Index >
     void progress_1(std::vector< Id_Type >& ids, std::vector< Index >& range_req,
                     bool& invert_ids, uint64 timestamp,
                     Answer_State& answer_state, bool check_keys_late,
