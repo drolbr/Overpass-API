@@ -591,7 +591,7 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token, Error_Output* e
   else if (result.back() == "popup")
   {
     clear_until_after(token, error_output, "(", "]", false);
-    while (*token == "(")
+    while (token.good() && *token == "(")
     {
       ++token;
       
@@ -600,11 +600,11 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token, Error_Output* e
       category.title = get_text_token(token, error_output, "title");
       clear_until_after(token, error_output, ";", ")", true);
 
-      while (*token == "[")
+      while (token.good() && *token == "[")
       {	
 	vector< Tag_Filter > filter_conjunction;
 	
-        while (*token == "[")
+        while (token.good() && *token == "[")
 	{
 	  ++token;
 	  
