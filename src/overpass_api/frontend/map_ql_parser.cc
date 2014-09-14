@@ -568,6 +568,16 @@ TStatement* create_changed_statement(typename TStatement::Factory& stmt_factory,
 
 //-----------------------------------------------------------------------------
 
+bool has_bbox_limitation(Statement::Factory& stmt_factory)
+{
+  return (stmt_factory.bbox_limitation != 0);
+}
+
+bool has_bbox_limitation(Statement_Dump::Factory&)
+{
+  return true;
+}
+
 std::vector< std::string > parse_setup(Tokenizer_Wrapper& token, Error_Output* error_output,
       vector< Category_Filter >& categories)
 {
@@ -1270,8 +1280,14 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
   {
     if (from == "")
     {
-      if (error_output)
-	error_output->add_parse_error("An empty query is not allowed", token.line_col().first);
+      if (has_bbox_limitation(stmt_factory))
+      {
+        statement = create_query_statement< TStatement >
+            (stmt_factory, type, into, query_line_col.first);
+      }
+      else 
+        if (error_output)
+	  error_output->add_parse_error("An empty query is not allowed", token.line_col().first);
     }
     else
       statement = create_item_statement< TStatement >(stmt_factory, from, query_line_col.first);
