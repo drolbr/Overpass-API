@@ -350,6 +350,8 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
     if (bbox_statement)
       output_handle->print_bounds(bbox_statement->get_south(), bbox_statement->get_west(),
                                   bbox_statement->get_north(), bbox_statement->get_east());
+
+    output_handle->print_elements_header();
   }
   
   if (comparison_timestamp > 0)

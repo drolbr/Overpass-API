@@ -55,6 +55,7 @@ class Output_Handle
     void set_categories(const vector< Category_Filter >& categories_) { categories = categories_; }
     
     void print_bounds(double south, double west, double north, double east);
+    void print_elements_header();
 
   private:
     string type;
