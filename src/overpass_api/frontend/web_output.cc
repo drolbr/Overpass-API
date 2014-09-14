@@ -236,8 +236,8 @@ void Web_Output::write_json_header
     cout<<"    \"timestamp_areas_base\": \""<<area_timestamp<<"\",\n";
   cout<<"    \"copyright\": \"The data included in this document is from www.openstreetmap.org."
 	" The data is made available under ODbL.\"\n"
-        "  },\n"
-        "  \"elements\": [\n\n";
+        "  },\n";
+//  cout<< "  \"elements\": [\n\n";
 }
 
 
