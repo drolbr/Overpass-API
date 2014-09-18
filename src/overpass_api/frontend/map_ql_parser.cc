@@ -546,6 +546,16 @@ TStatement* create_coord_query_statement(typename TStatement::Factory& stmt_fact
 }
 
 template< class TStatement >
+TStatement* create_map_to_area_statement(typename TStatement::Factory& stmt_factory,
+				     string from, string into, uint line_nr)
+{
+  map< string, string > attr;
+  attr["from"] = (from == "" ? "_" : from);
+  attr["into"] = into;
+  return stmt_factory.create_statement("map-to-area", line_nr, attr);
+}
+
+template< class TStatement >
 TStatement* create_pivot_statement(typename TStatement::Factory& stmt_factory,
                                    string from, string into, uint line_nr)
 {
@@ -1012,6 +1022,20 @@ TStatement* parse_coord_query(typename TStatement::Factory& stmt_factory,
 }
 
 template< class TStatement >
+TStatement* parse_map_to_area(typename TStatement::Factory& stmt_factory,
+    Tokenizer_Wrapper& token, const string& from, Error_Output* error_output)
+{
+  string type = *token;
+  uint line_col = token.line_col().first;
+  ++token;
+  
+  string into = probe_into(token, error_output);
+  
+  return create_map_to_area_statement< TStatement >(stmt_factory, from, into, line_col);
+}
+
+
+template< class TStatement >
 TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 			const string& type, const string& from, Tokenizer_Wrapper& token,
 		 Error_Output* error_output)
@@ -1367,6 +1391,8 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory,
     return parse_full_recurse< TStatement >(stmt_factory, token, from, error_output);
   if (token.good() && *token == "is_in")
     return parse_coord_query< TStatement >(stmt_factory, token, from, error_output);
+  if (token.good() && *token == "map_to_area")
+    return parse_map_to_area< TStatement >(stmt_factory, token, from, error_output);
   
   string type = "";
   if (*token != "out" && from == "")
