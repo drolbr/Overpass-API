@@ -16,19 +16,6 @@
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <cctype>
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <set>
-#include <sstream>
-#include <string>
-#include <math.h>
-#include <stdlib.h>
-#include <vector>
-
-#include <iomanip>
-
 #include "../../template_db/block_backend.h"
 #include "map_to_area.h"
 
@@ -56,9 +43,95 @@ Map_To_Area_Statement::Map_To_Area_Statement
  
 }
 
+vector< Area_Skeleton::Id_Type > get_area_ids_for_ways(const map< Uint31_Index, vector< Way_Skeleton > >& ways)
+{
+  vector< Area::Id_Type > area_ids;
+  for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator it = ways.begin();
+      it != ways.end(); ++it)
+  {
+    for (vector< Way_Skeleton >::const_iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
+    {
+        area_ids.push_back(sit->id.val() + 2400000000u);
+    }
+  }
+  sort(area_ids.begin(), area_ids.end());
+  return area_ids;
+}
+
+vector< Area_Skeleton::Id_Type > get_area_ids_for_attic_ways(map< Uint31_Index, vector< Attic< Way_Skeleton > > >& attic_ways)
+{
+  vector< Area::Id_Type > area_ids;
+  for (map< Uint31_Index, vector< Attic< Way_Skeleton > > >::const_iterator it = attic_ways.begin();
+      it != attic_ways.end(); ++it)
+  {
+    for (vector< Attic < Way_Skeleton > >::const_iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
+    {
+        area_ids.push_back(sit->id.val() + 2400000000u);
+    }
+  }
+  sort(area_ids.begin(), area_ids.end());
+  return area_ids;
+}
+
+vector< Area_Skeleton::Id_Type > get_area_ids_for_relations(const map< Uint31_Index, vector< Relation_Skeleton > >& rels)
+{
+  vector< Area::Id_Type > area_ids;
+  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator it = rels.begin();
+      it != rels.end(); ++it)
+  {
+    for (vector< Relation_Skeleton >::const_iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
+    {
+        area_ids.push_back(sit->id.val() + 3600000000u);
+    }
+  }
+  sort(area_ids.begin(), area_ids.end());
+  return area_ids;
+}
+
+vector< Area_Skeleton::Id_Type > get_area_ids_for_attic_relations(map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_rels)
+{
+  vector< Area::Id_Type > area_ids;
+  for (map< Uint31_Index, vector< Attic< Relation_Skeleton > > >::const_iterator it = attic_rels.begin();
+      it != attic_rels.end(); ++it)
+  {
+    for (vector< Attic < Relation_Skeleton > >::const_iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
+    {
+        area_ids.push_back(sit->id.val() + 3600000000u);
+    }
+  }
+  sort(area_ids.begin(), area_ids.end());
+  return area_ids;
+}
+
+void collect_elems_flat(Resource_Manager& rman,
+		   const vector< Area_Skeleton::Id_Type >& ids, 
+		   map< Uint31_Index, vector< Area_Skeleton > >& elems)
+{
+  Block_Backend< Uint31_Index, Area_Skeleton > elems_db
+      (rman.get_transaction()->data_index(area_settings().AREAS));
+  for (Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
+      it = elems_db.flat_begin(); !(it == elems_db.flat_end()); ++it)
+  {
+    if (binary_search(ids.begin(), ids.end(), it.object().id))
+      elems[it.index()].push_back(it.object());
+  }
+}
+
 void Map_To_Area_Statement::execute(Resource_Manager& rman)
 { 
   Set into;
+
+  vector< Area_Skeleton::Id_Type > ways_idx = get_area_ids_for_ways(rman.sets()[input].ways);
+  vector< Area_Skeleton::Id_Type > rels_idx = get_area_ids_for_relations(rman.sets()[input].relations);
+
+  collect_elems_flat(rman, ways_idx, into.areas);
+  collect_elems_flat(rman, rels_idx, into.areas);
+
+  vector< Area_Skeleton::Id_Type > attic_ways_idx = get_area_ids_for_attic_ways(rman.sets()[input].attic_ways);
+  vector< Area_Skeleton::Id_Type > attic_rels_idx = get_area_ids_for_attic_relations(rman.sets()[input].attic_relations);
+
+  collect_elems_flat(rman, attic_ways_idx, into.areas);
+  collect_elems_flat(rman, attic_rels_idx, into.areas);
 
   transfer_output(rman, into);
   rman.health_check(*this);
