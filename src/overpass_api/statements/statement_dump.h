@@ -23,7 +23,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 
 /**
  * The base class for all statements
@@ -33,12 +32,16 @@ class Statement_Dump
   public:
     struct Factory
     {
+      Factory() : bbox_limitation(0) {}
+      
       Statement_Dump* create_statement(string element, int line_number,
 				       const map< string, string >& attributes);
+      
+      int bbox_limitation;
     };
     
-    Statement_Dump(string name_, const map< string, string >& attributes_)
-        : name(name_), attributes(attributes_) {}
+    Statement_Dump(string name, const map< string, string >& attributes_)
+        : name_(name), attributes(attributes_) {}
     ~Statement_Dump();
     
     void add_statement(Statement_Dump* statement, string text);
@@ -47,10 +50,13 @@ class Statement_Dump
     string dump_compact_map_ql() const;
     string dump_bbox_map_ql() const;
     
+    const std::string& name() const { return name_; }
+    std::string attribute(const std::string& key) const;
+    
     void add_final_text(string text) {}
 
   private:
-    string name;
+    string name_;
     map< string, string > attributes;
     vector< Statement_Dump* > substatements;
 };
