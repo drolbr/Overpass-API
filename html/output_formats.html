@@ -55,7 +55,7 @@
 
 <h2><a name="json">OSM JSON</a></h2>
 
-<p>Unfortunately, there are several slightly different syntaxes for OSM data in JSON. For that reason, we describe the syntax used by Overpass API en detail here. On the lowest level, it is <a href="http://www.json.org/">well-formed JSON</a>. In particular, the following characters are escaped:</p>
+<p>Unfortunately, there are several slightly different syntaxes for OSM data in JSON. For that reason, we will describe the syntax used by Overpass API in detail here. At the lowest level, it is <a href="http://www.json.org/">well-formed JSON</a>. In particular, the following characters are escaped:</p>
 <table>
 <tr><th>Character</th><th>Escaped as literally</th></tr>
 <tr><td><em>&quot;</em> (quotation mark)</td><td>\&quot;</td></tr>
@@ -73,7 +73,7 @@
 <a href="api/interpreter?data=[out:json];out;">/api/interpreter?data=<strong>[out:json];</strong>out;</a>
 </pre>
 
-<p>A response (<a href="api/interpreter?data=[out:json];out;">an example</a>) from Overpass API has always the following header and footer:</p>
+<p>A response (<a href="api/interpreter?data=[out:json];out;">an example</a>) from Overpass API always has the following header and footer:</p>
 <pre>
 {
   &quot;version&quot;: 0.6,

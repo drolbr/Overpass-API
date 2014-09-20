@@ -139,7 +139,8 @@ void Web_Output::write_html_header
     if (allow_headers != "")
       cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
     if (has_origin)
-      cout<<"Access-Control-Allow-Origin: *\n";
+      cout<<"Access-Control-Allow-Origin: *\n"
+            "Access-Control-Max-Age: 600\n";
     if (http_method == http_options)
       cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
             "Content-Length: 0\n";
@@ -184,7 +185,8 @@ void Web_Output::write_xml_header
     if (allow_headers != "")
       cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
     if (has_origin)
-      cout<<"Access-Control-Allow-Origin: *\n";
+      cout<<"Access-Control-Allow-Origin: *\n"
+            "Access-Control-Max-Age: 600\n";
     if (http_method == http_options)
       cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
             "Content-Length: 0\n";
@@ -215,7 +217,8 @@ void Web_Output::write_json_header
     if (allow_headers != "")
       cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
     if (has_origin)
-      cout<<"Access-Control-Allow-Origin: *\n";
+      cout<<"Access-Control-Allow-Origin: *\n"
+            "Access-Control-Max-Age: 600\n";
     if (http_method == http_options)
       cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
             "Content-Length: 0\n";
@@ -253,7 +256,8 @@ void Web_Output::write_text_header
     if (allow_headers != "")
       cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
     if (has_origin)
-      cout<<"Access-Control-Allow-Origin: *\n";
+      cout<<"Access-Control-Allow-Origin: *\n"
+            "Access-Control-Max-Age: 600\n";
     if (http_method == http_options)
       cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
             "Content-Length: 0\n";
