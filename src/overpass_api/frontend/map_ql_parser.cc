@@ -30,6 +30,7 @@
 #include <queue>
 #include <set>
 #include <sstream>
+#include <iterator>
 #include <vector>
 
 using namespace std;
@@ -569,7 +570,7 @@ TStatement* create_changed_statement(typename TStatement::Factory& stmt_factory,
 //-----------------------------------------------------------------------------
 
 std::vector< std::string > parse_setup(Tokenizer_Wrapper& token, Error_Output* error_output,
-      vector< Category_Filter >& categories)
+      vector< Category_Filter >& categories, Csv_Settings& csv_settings)
 {
   ++token;
   std::vector< std::string > result;
@@ -652,6 +653,38 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token, Error_Output* e
       categories.push_back(category);
     }
     clear_until_after(token, error_output, "]", true);
+  }
+  else if (result.back() == "csv")
+  {
+    std::string csv_format_string;
+    std::string csv_headline;
+    std::string csv_separator;
+
+    clear_until_after(token, error_output, "(");
+    csv_format_string = get_text_token(token, error_output, "CSV format string");
+    clear_until_after(token, error_output, ",", ")", false);
+    
+    if (*token == ",")
+    {
+      ++token;
+      csv_headline = get_text_token(token, error_output, "CSV headline");
+      clear_until_after(token, error_output, ",", ")", false);
+    }
+    if (*token == ",")
+    {
+      ++token;
+      csv_separator = get_text_token(token, error_output, "CSV separator");
+    }
+    clear_until_after(token, error_output, ")");
+    clear_until_after(token, error_output, "]");
+
+    std::istringstream buf(csv_format_string);
+    std::istream_iterator<std::string> beg(buf), end;
+    std::vector<std::string> tokens(beg, end);
+    csv_settings.keyfields = tokens;
+
+    csv_settings.with_headerline = (csv_headline == "true" ? true : false);
+    csv_settings.separator = csv_separator;
   }
   else if (result.front() == "bbox")
   {
@@ -1396,7 +1429,7 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory,
 
 
 void process_osm_script_statement(Statement::Factory& stmt_factory, Statement* base_statement,
-    const vector< Category_Filter >& categories)
+    const vector< Category_Filter >& categories, const Csv_Settings& csv_settings)
 {
   Osm_Script_Statement* osm_script_statement = dynamic_cast< Osm_Script_Statement* >(base_statement);
   if (osm_script_statement)
@@ -1405,12 +1438,14 @@ void process_osm_script_statement(Statement::Factory& stmt_factory, Statement* b
     
     if (!categories.empty())
       osm_script_statement->set_categories(categories);
+
+    osm_script_statement->set_csv_settings(csv_settings);
   }
 }
 
 
 void process_osm_script_statement(Statement_Dump::Factory&, Statement_Dump*,
-    const vector< Category_Filter >&) {}
+    const vector< Category_Filter >&, const Csv_Settings& csv_settings) {}
 
 
 template< class TStatement >
@@ -1422,10 +1457,11 @@ void generic_parse_and_validate_map_ql
   Tokenizer_Wrapper token(in);
 
   vector< Category_Filter > categories;
+  Csv_Settings csv_settings;
   map< string, string > attr;
   while (token.good() && *token == "[")
   {
-    std::vector< string > kv = parse_setup(token, error_output, categories);
+    std::vector< string > kv = parse_setup(token, error_output, categories, csv_settings);
     if (kv.size() < 2)
       continue;
     if (kv[0] == "maxsize")
@@ -1446,7 +1482,7 @@ void generic_parse_and_validate_map_ql
   TStatement* base_statement = stmt_factory.create_statement
       ("osm-script", token.line_col().first, attr);
       
-  process_osm_script_statement(stmt_factory, base_statement, categories);
+  process_osm_script_statement(stmt_factory, base_statement, categories, csv_settings);
       
   if (!attr.empty())
     clear_until_after(token, error_output, ";");

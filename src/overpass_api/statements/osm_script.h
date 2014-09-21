@@ -44,6 +44,13 @@ struct Category_Filter
   vector< vector< Tag_Filter > > filter_disjunction;
 };
 
+struct Csv_Settings
+{
+  std::vector<std::string> keyfields;
+  bool with_headerline;
+  string separator;
+};
+
 
 class Osm_Script_Statement : public Statement
 {
@@ -73,6 +80,7 @@ class Osm_Script_Statement : public Statement
     void write_output() const;
 
     void set_categories(const vector< Category_Filter >& categories_) { categories = categories_; }
+    void set_csv_settings(const Csv_Settings csv_settings_) { csv_settings = csv_settings_; }
     
     uint32 get_max_allowed_time() const { return max_allowed_time; }
     uint64 get_max_allowed_space() const { return max_allowed_space; }
@@ -95,6 +103,7 @@ class Osm_Script_Statement : public Statement
     string header;
     bool template_contains_js_;
     vector< Category_Filter > categories;
+    Csv_Settings csv_settings;
 };
 
 #endif

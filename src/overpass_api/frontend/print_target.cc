@@ -107,6 +107,44 @@ class Print_Target_Json : public Print_Target
     mutable bool first_elem;
 };
 
+class Print_Target_Csv : public Print_Target
+{
+  public:
+    Print_Target_Csv(uint32 mode, Transaction& transaction, const Csv_Settings& csv_settings_)
+        : Print_Target(mode, transaction) { csv_settings = csv_settings_; }
+    
+    virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
+			    const map< uint32, string >* users = 0, const Action& action = KEEP,
+			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0,
+			    Show_New_Elem show_new_elem = visible_void);
+    virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< Quad_Coord >* geometry = 0,
+                            const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0, const Action& action = KEEP,
+			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0,
+			    Show_New_Elem show_new_elem = visible_void);
+    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< std::vector< Quad_Coord > >* geometry = 0,
+                            const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0, const Action& action = KEEP,
+			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0,
+			    Show_New_Elem show_new_elem = visible_void);
+    
+    virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
+			    const map< uint32, string >* users = 0, const Action& action = KEEP);
+  private:
+    Csv_Settings csv_settings;
+};
+
+
 
 class Print_Target_Custom : public Print_Target
 {
@@ -799,6 +837,135 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Area_Skeleton& skel,
   
   cout<<"\n}\n";
 }
+
+//-----------------------------------------------------------------------------
+
+string timestamp_to_string(uint64 ts)
+{
+  uint32 year = (ts)>>26;
+  uint32 month = ((ts)>>22) & 0xf;
+  uint32 day = ((ts)>>17) & 0x1f;
+  uint32 hour = ((ts)>>12) & 0x1f;
+  uint32 minute = ((ts)>>6) & 0x3f;
+  uint32 second = ts & 0x3f;
+  string timestamp("    -  -  T  :  :  Z");
+  timestamp[0] = (year / 1000) % 10 + '0';
+  timestamp[1] = (year / 100) % 10 + '0';
+  timestamp[2] = (year / 10) % 10 + '0';
+  timestamp[3] = year % 10 + '0';
+  timestamp[5] = (month / 10) % 10 + '0';
+  timestamp[6] = month % 10 + '0';
+  timestamp[8] = (day / 10) % 10 + '0';
+  timestamp[9] = day % 10 + '0';
+  timestamp[11] = (hour / 10) % 10 + '0';
+  timestamp[12] = hour % 10 + '0';
+  timestamp[14] = (minute / 10) % 10 + '0';
+  timestamp[15] = minute % 10 + '0';
+  timestamp[17] = (second / 10) % 10 + '0';
+  timestamp[18] = second % 10 + '0';
+  return timestamp;
+}
+
+
+void Print_Target_Csv::print_item(uint32 ll_upper, const Node_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+		const map< uint32, string >* users, const Action& action,
+		const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta,
+		Show_New_Elem show_new_elem)
+{
+  vector< string >::const_iterator it;
+  std::map<std::string, std::string> tags_map(tags->begin(), tags->end());
+
+  for (it = csv_settings.keyfields.begin(); it != csv_settings.keyfields.end(); ++it)
+  {
+    if (meta)
+    {
+      if (*it == "@version")
+      {
+         cout<<meta->version;
+      } 
+      else if (*it == "@timestamp")
+      {
+         cout<<timestamp_to_string(meta->timestamp);
+      }
+      else if (*it == "@changeset")
+      {
+         cout<<meta->changeset;
+      }
+      else if (*it == "@uid")
+      {
+         cout<<meta->user_id;
+      }
+      else if (*it == "@user")
+      {
+         map< uint32, string >::const_iterator it = users->find(meta->user_id);
+         if (it != users->end())
+           cout<< it->second;
+      }
+    }
+
+    if (*it == "@id") 
+    {
+     if (mode & PRINT_IDS)
+      cout<<skel.id.val();
+    }
+    else if (*it == "@lat")
+    {
+      if (mode & (PRINT_COORDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER))
+        cout<<fixed<<setprecision(7)<<::lat(ll_upper, skel.ll_lower);
+    }
+    else if (*it == "@lon")
+    {
+      if (mode & (PRINT_COORDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER))
+        cout<<fixed<<setprecision(7)<<::lon(ll_upper, skel.ll_lower);
+    }
+    else 
+    {
+      map<std::string,std::string>::const_iterator it_tags = tags_map.find(*it);
+      if (it_tags!=tags_map.end()) 
+        cout<< it_tags->second;
+    }
+    cout << "	";
+  }
+
+  cout<< "\n";
+}
+
+void Print_Target_Csv::print_item(uint32 ll_upper, const Way_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+                const std::pair< Quad_Coord, Quad_Coord* >* bounds,
+                const std::vector< Quad_Coord >* geometry,
+		const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
+		const map< uint32, string >* users, const Action& action,
+		const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta,
+		Show_New_Elem show_new_elem)
+{
+// TODO
+}
+
+void Print_Target_Csv::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+                const std::pair< Quad_Coord, Quad_Coord* >* bounds,
+                const std::vector< std::vector< Quad_Coord > >* geometry,
+		const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
+		const map< uint32, string >* users, const Action& action,
+		const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta,
+		Show_New_Elem show_new_elem)
+{ 
+// TODO
+}
+
+
+void Print_Target_Csv::print_item(uint32 ll_upper, const Area_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta,
+		const map< uint32, string >* users, const Action& action)
+
+{
+// TODO
+}
+
 
 //-----------------------------------------------------------------------------
 
@@ -1656,7 +1823,8 @@ Print_Target& Output_Handle::get_print_target(uint32 current_mode, Transaction& 
 	}
       }
       else if (dynamic_cast< Print_Target_Custom* >(print_target)
-	  || dynamic_cast< Print_Target_Xml* >(print_target))
+	  || dynamic_cast< Print_Target_Xml* >(print_target)
+          || dynamic_cast< Print_Target_Csv* >(print_target))
       {
         delete print_target;
         print_target = 0;
@@ -1677,6 +1845,8 @@ Print_Target& Output_Handle::get_print_target(uint32 current_mode, Transaction& 
       print_target = new Print_Target_Xml(mode, transaction);
     else if (type == "json")
       print_target = new Print_Target_Json(mode, transaction, first_target);
+    else if (type == "csv")
+      print_target = new Print_Target_Csv(mode, transaction, csv_settings);
     else if (type == "custom")
       print_target = new Print_Target_Custom(mode, transaction, first_target,
 					     node_template, way_template, relation_template);
