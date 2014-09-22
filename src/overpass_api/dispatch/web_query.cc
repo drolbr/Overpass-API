@@ -112,7 +112,8 @@ int main(int argc, char *argv[])
       else if (osm_script->get_type() == "csv")
         error_output.write_csv_header
             (dispatcher.get_timestamp(),
-	     area_level > 0 ? dispatcher.get_area_timestamp() : "");      else
+	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
+      else
         osm_script->set_template_name(template_name);
       
       for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
