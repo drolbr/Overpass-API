@@ -657,20 +657,20 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token, Error_Output* e
   else if (result.back() == "csv")
   {
     std::string csv_format_string;
-    std::string csv_headline;
-    std::string csv_separator;
+    std::string csv_headline("true");
+    std::string csv_separator("	");
 
     clear_until_after(token, error_output, "(");
     csv_format_string = get_text_token(token, error_output, "CSV format string");
     clear_until_after(token, error_output, ",", ")", false);
     
-    if (*token == ",")
+    if (*token == ";")
     {
       ++token;
       csv_headline = get_text_token(token, error_output, "CSV headline");
-      clear_until_after(token, error_output, ",", ")", false);
+      clear_until_after(token, error_output, ";", ")", false);
     }
-    if (*token == ",")
+    if (*token == ";")
     {
       ++token;
       csv_separator = get_text_token(token, error_output, "CSV separator");
