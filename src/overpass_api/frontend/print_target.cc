@@ -947,6 +947,9 @@ string Print_Target_Csv::process_csv_line(uint32 otype,
       case 2:
         result << "relation";
         break;
+      case 3:
+        result << "area";
+        break;
       default:
         result << "unknown object";
       }

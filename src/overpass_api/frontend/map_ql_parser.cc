@@ -656,34 +656,38 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token, Error_Output* e
   }
   else if (result.back() == "csv")
   {
-    std::string csv_format_string;
-    std::string csv_headline("true");
-    std::string csv_separator("	");
+    string csv_format_string_field;
+    string csv_headerline;
+    string csv_separator("	");
 
-    clear_until_after(token, error_output, "(");
-    csv_format_string = get_text_token(token, error_output, "CSV format string");
-    clear_until_after(token, error_output, ",", ")", false);
-    
-    if (*token == ";")
+    clear_until_after(token, error_output, "(", false);
+
+    if (*token == "(")
     {
-      ++token;
-      csv_headline = get_text_token(token, error_output, "CSV headline");
-      clear_until_after(token, error_output, ";", ")", false);
+      do
+      {
+        ++token;
+        csv_format_string_field = get_text_token(token, error_output, "CSV format specification");
+        csv_settings.keyfields.push_back(csv_format_string_field);
+        clear_until_after(token, error_output, ",", ";", ")", false);
+      } while (token.good() && *token == ",");
+
+      if (*token == ";")
+      {
+        ++token;
+        csv_headerline = get_text_token(token, error_output, "CSV output header line (true or false)");
+        clear_until_after(token, error_output, ";", ")", false);
+      }
+      if (*token == ";")
+      {
+        ++token;
+        csv_separator = get_text_token(token, error_output, "CSV separator character");
+      }
+      clear_until_after(token, error_output, ")");
     }
-    if (*token == ";")
-    {
-      ++token;
-      csv_separator = get_text_token(token, error_output, "CSV separator");
-    }
-    clear_until_after(token, error_output, ")");
     clear_until_after(token, error_output, "]");
 
-    std::istringstream buf(csv_format_string);
-    std::istream_iterator<std::string> beg(buf), end;
-    std::vector<std::string> tokens(beg, end);
-    csv_settings.keyfields = tokens;
-
-    csv_settings.with_headerline = (csv_headline == "true" ? true : false);
+    csv_settings.with_headerline = (csv_headerline == "false" ? false : true);
     csv_settings.separator = csv_separator;
   }
   else if (result.front() == "bbox")
