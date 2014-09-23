@@ -1043,8 +1043,11 @@ void Print_Target_Csv::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 		const map< uint32, string >* users, const Action& action)
 
 {
+  double lat(100.0), lon(200.0);
+
   print_headerline_if_needed();
-// TODO: not implemented yet
+
+  cout << process_csv_line(3, meta, tags, users, skel.id.val(), lat, lon);
 }
 
 
