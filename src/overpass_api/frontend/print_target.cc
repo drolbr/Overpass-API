@@ -853,32 +853,6 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 
 //-----------------------------------------------------------------------------
 
-string timestamp_to_string(uint64 ts)
-{
-  uint32 year = (ts)>>26;
-  uint32 month = ((ts)>>22) & 0xf;
-  uint32 day = ((ts)>>17) & 0x1f;
-  uint32 hour = ((ts)>>12) & 0x1f;
-  uint32 minute = ((ts)>>6) & 0x3f;
-  uint32 second = ts & 0x3f;
-  string timestamp("    -  -  T  :  :  Z");
-  timestamp[0] = (year / 1000) % 10 + '0';
-  timestamp[1] = (year / 100) % 10 + '0';
-  timestamp[2] = (year / 10) % 10 + '0';
-  timestamp[3] = year % 10 + '0';
-  timestamp[5] = (month / 10) % 10 + '0';
-  timestamp[6] = month % 10 + '0';
-  timestamp[8] = (day / 10) % 10 + '0';
-  timestamp[9] = day % 10 + '0';
-  timestamp[11] = (hour / 10) % 10 + '0';
-  timestamp[12] = hour % 10 + '0';
-  timestamp[14] = (minute / 10) % 10 + '0';
-  timestamp[15] = minute % 10 + '0';
-  timestamp[17] = (second / 10) % 10 + '0';
-  timestamp[18] = second % 10 + '0';
-  return timestamp;
-}
-
 void Print_Target_Csv::print_headerline_if_needed()
 {
   vector<string>::const_iterator it;
@@ -893,8 +867,8 @@ void Print_Target_Csv::print_headerline_if_needed()
         cout << csv_settings.separator;
     }
     cout << "\n";
+    needs_headerline = false;
   }
-  needs_headerline = false;
 }
 
 template< typename OSM_Element_Metadata_Skeleton >
@@ -907,15 +881,14 @@ string Print_Target_Csv::process_csv_line(uint32 otype,
   vector<string>::const_iterator it;
   std::map<std::string, std::string> tags_map(tags->begin(), tags->end());
 
-  for (it = csv_settings.keyfields.begin(); it != csv_settings.keyfields.end();
-      ++it)
+  for (it = csv_settings.keyfields.begin(); it != csv_settings.keyfields.end(); ++it)
   {
     if (meta)
     {
       if (*it == "@version")
         result << meta->version;
       else if (*it == "@timestamp")
-        result << timestamp_to_string(meta->timestamp);
+        result << Timestamp(meta->timestamp).str();
       else if (*it == "@changeset")
         result << meta->changeset;
       else if (*it == "@uid")
@@ -966,8 +939,7 @@ string Print_Target_Csv::process_csv_line(uint32 otype,
     }
     else
     {
-      map<std::string, std::string>::const_iterator it_tags = tags_map.find(
-          *it);
+      map<std::string, std::string>::const_iterator it_tags = tags_map.find(*it);
       if (it_tags != tags_map.end())
         result << it_tags->second;
     }
