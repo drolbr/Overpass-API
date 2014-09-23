@@ -879,7 +879,12 @@ string Print_Target_Csv::process_csv_line(uint32 otype,
 {
   ostringstream result;
   vector<string>::const_iterator it;
-  std::map<std::string, std::string> tags_map(tags->begin(), tags->end());
+  std::map<std::string, std::string> tags_map;
+
+  if ((tags == 0) || (tags->empty()))
+    std::map<std::string, std::string> tags_map();
+  else
+    std::map<std::string, std::string> tags_map(tags->begin(), tags->end());
 
   for (it = csv_settings.keyfields.begin(); it != csv_settings.keyfields.end(); ++it)
   {
