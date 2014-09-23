@@ -110,10 +110,11 @@ class Print_Target_Json : public Print_Target
 class Print_Target_Csv : public Print_Target
 {
   public:
-    Print_Target_Csv(uint32 mode, Transaction& transaction, const Csv_Settings& csv_settings_)
+    Print_Target_Csv(uint32 mode, Transaction& transaction, bool first_target,
+         const Csv_Settings& csv_settings_)
         : Print_Target(mode, transaction) {
       csv_settings = csv_settings_;
-      needs_headerline = csv_settings.with_headerline;
+      needs_headerline = first_target ? csv_settings.with_headerline : false;
     }
     
     virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
@@ -879,12 +880,14 @@ string Print_Target_Csv::process_csv_line(uint32 otype,
 {
   ostringstream result;
   vector<string>::const_iterator it;
-  std::map<std::string, std::string> tags_map;
+  vector<pair<string, string> > tags_;
 
   if ((tags == 0) || (tags->empty()))
-    std::map<std::string, std::string> tags_map();
+    tags_.clear();
   else
-    std::map<std::string, std::string> tags_map(tags->begin(), tags->end());
+    tags_.assign(tags->begin(),tags->end());
+
+  std::map<std::string, std::string> tags_map(tags_.begin(), tags_.end());
 
   for (it = csv_settings.keyfields.begin(); it != csv_settings.keyfields.end(); ++it)
   {
@@ -1907,7 +1910,7 @@ Print_Target& Output_Handle::get_print_target(uint32 current_mode, Transaction& 
     else if (type == "json")
       print_target = new Print_Target_Json(mode, transaction, first_target);
     else if (type == "csv")
-      print_target = new Print_Target_Csv(mode, transaction, csv_settings);
+      print_target = new Print_Target_Csv(mode, transaction, first_target, csv_settings);
     else if (type == "custom")
       print_target = new Print_Target_Custom(mode, transaction, first_target,
 					     node_template, way_template, relation_template);
