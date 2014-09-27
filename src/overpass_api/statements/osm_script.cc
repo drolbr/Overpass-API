@@ -73,14 +73,14 @@ Osm_Script_Statement::Osm_Script_Statement
   }
   max_allowed_space = max_space;
 
-  if (attributes["output"] == "xml" || attributes["output"] == "json" || attributes["output"] == "custom"
-      || attributes["output"] == "popup")
+  if (attributes["output"] == "xml" || attributes["output"] == "json" || attributes["output"] == "csv" 
+      || attributes["output"] == "custom" || attributes["output"] == "popup")
     type = attributes["output"];
   else
   {
     ostringstream temp;
     temp<<"For the attribute \"output\" of the element \"osm-script\""
-        <<" the only allowed values are \"xml\", \"json\", \"custom\", or \"popup\".";
+        <<" the only allowed values are \"xml\", \"json\", \"csv\", \"custom\", or \"popup\".";
     add_static_error(temp.str());
   }
   
@@ -334,6 +334,8 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
   {
     if (!output_handle)
       output_handle = new Output_Handle(type);
+    if (type == "csv")
+      output_handle->set_csv_settings(csv_settings);
     if (type == "custom")
       template_contains_js_ =
           set_output_templates(*output_handle, header, template_name, *rman.get_transaction());

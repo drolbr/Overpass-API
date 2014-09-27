@@ -111,6 +111,58 @@ class Print_Target_Json : public Print_Target
     mutable bool first_elem;
 };
 
+class Print_Target_Csv : public Print_Target
+{
+  public:
+    Print_Target_Csv(uint32 mode, Transaction& transaction, bool first_target,
+         const Csv_Settings& csv_settings_)
+        : Print_Target(mode, transaction) {
+      csv_settings = csv_settings_;
+      needs_headerline = first_target ? csv_settings.with_headerline : false;
+    }
+    
+    virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
+			    const map< uint32, string >* users = 0, const Action& action = KEEP,
+			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0,
+			    Show_New_Elem show_new_elem = visible_void);
+    virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< Quad_Coord >* geometry = 0,
+                            const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0, const Action& action = KEEP,
+			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0,
+			    Show_New_Elem show_new_elem = visible_void);
+    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< std::vector< Quad_Coord > >* geometry = 0,
+                            const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0, const Action& action = KEEP,
+			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0,
+			    Show_New_Elem show_new_elem = visible_void);
+    
+    virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
+			    const map< uint32, string >* users = 0, const Action& action = KEEP);
+  private:
+    template< typename OSM_Element_Metadata_Skeleton >
+    string process_csv_line(uint32 otype,
+                            const OSM_Element_Metadata_Skeleton* meta,
+                            const vector< pair< string, string > >* tags,
+                            const map< uint32, string >* users,
+                            uint32 id, double lat, double lon);
+
+    void print_headerline_if_needed();
+
+    Csv_Settings csv_settings;
+    mutable bool needs_headerline;
+};
+
+
 
 class Print_Target_Custom : public Print_Target
 {
@@ -818,6 +870,185 @@ void Print_Target_Json::print_item_count(const Output_Item_Count& item_count)
 {
 
 }
+
+//-----------------------------------------------------------------------------
+
+void Print_Target_Csv::print_headerline_if_needed()
+{
+  vector<string>::const_iterator it;
+
+  if (needs_headerline)
+  {
+    for (it = csv_settings.keyfields.begin();
+        it != csv_settings.keyfields.end(); ++it)
+    {
+      cout << *it;
+      if (it + 1 != csv_settings.keyfields.end())
+        cout << csv_settings.separator;
+    }
+    cout << "\n";
+    needs_headerline = false;
+  }
+}
+
+template< typename OSM_Element_Metadata_Skeleton >
+string Print_Target_Csv::process_csv_line(uint32 otype,
+    const OSM_Element_Metadata_Skeleton* meta,
+    const vector<pair<string, string> >* tags, const map<uint32, string>* users,
+    uint32 id, double lat, double lon)
+{
+  ostringstream result;
+  vector<string>::const_iterator it;
+  vector<pair<string, string> > tags_;
+
+  if ((tags == 0) || (tags->empty()))
+    tags_.clear();
+  else
+    tags_.assign(tags->begin(),tags->end());
+
+  std::map<std::string, std::string> tags_map(tags_.begin(), tags_.end());
+
+  for (it = csv_settings.keyfields.begin(); it != csv_settings.keyfields.end(); ++it)
+  {
+    if (meta)
+    {
+      if (*it == "@version")
+        result << meta->version;
+      else if (*it == "@timestamp")
+        result << Timestamp(meta->timestamp).str();
+      else if (*it == "@changeset")
+        result << meta->changeset;
+      else if (*it == "@uid")
+        result << meta->user_id;
+      else if (*it == "@user")
+      {
+        map<uint32, string>::const_iterator it = users->find(meta->user_id);
+        if (it != users->end())
+          result << it->second;
+      }
+    }
+
+    if (*it == "@id")
+    {
+      if (mode & PRINT_IDS)
+        result << id;
+    }
+    else if (*it == "@otype")
+      result << otype;
+    else if (*it == "@oname")
+    {
+      switch (otype) {
+      case 0:
+        result << "node";
+        break;
+      case 1:
+        result << "way";
+        break;
+      case 2:
+        result << "relation";
+        break;
+      case 3:
+        result << "area";
+        break;
+      default:
+        result << "unknown object";
+      }
+    }
+    else if (*it == "@lat")
+    {
+      if ((mode & (PRINT_COORDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER)) && lat < 100)
+        result << fixed << setprecision(7) << lat;
+    }
+    else if (*it == "@lon")
+    {
+      if ((mode & (PRINT_COORDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER)) && lon < 200)
+        result << fixed << setprecision(7) << lon;
+    }
+    else
+    {
+      map<std::string, std::string>::const_iterator it_tags = tags_map.find(*it);
+      if (it_tags != tags_map.end())
+        result << it_tags->second;
+    }
+    if (it + 1 != csv_settings.keyfields.end())
+      result << csv_settings.separator;
+  }
+  result << "\n";
+
+  return result.str();
+}
+
+
+void Print_Target_Csv::print_item(uint32 ll_upper, const Node_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+		const map< uint32, string >* users, const Action& action,
+		const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta,
+		Show_New_Elem show_new_elem)
+{
+  print_headerline_if_needed();
+  cout << process_csv_line(0, meta, tags, users, skel.id.val(),
+          ::lat(ll_upper, skel.ll_lower), ::lon(ll_upper, skel.ll_lower));
+}
+
+void Print_Target_Csv::print_item(uint32 ll_upper, const Way_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+                const std::pair< Quad_Coord, Quad_Coord* >* bounds,
+                const std::vector< Quad_Coord >* geometry,
+		const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
+		const map< uint32, string >* users, const Action& action,
+		const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta,
+		Show_New_Elem show_new_elem)
+{
+  double lat(100.0), lon(200.0);
+
+  print_headerline_if_needed();
+
+  if (bounds && !(bounds->first == Quad_Coord(0u, 0u)))
+  {
+    lat = ::lat(bounds->first.ll_upper, bounds->first.ll_lower);
+    lon = ::lon(bounds->first.ll_upper, bounds->first.ll_lower);
+  }
+
+  cout << process_csv_line(1, meta, tags, users, skel.id.val(), lat, lon);
+}
+
+void Print_Target_Csv::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+                const std::pair< Quad_Coord, Quad_Coord* >* bounds,
+                const std::vector< std::vector< Quad_Coord > >* geometry,
+		const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
+		const map< uint32, string >* users, const Action& action,
+		const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta,
+		Show_New_Elem show_new_elem)
+{
+  double lat(100.0), lon(200.0);
+
+  print_headerline_if_needed();
+
+  if (bounds && !(bounds->first == Quad_Coord(0u, 0u)))
+  {
+    lat = ::lat(bounds->first.ll_upper, bounds->first.ll_lower);
+    lon = ::lon(bounds->first.ll_upper, bounds->first.ll_lower);
+  }
+
+  cout << process_csv_line(2, meta, tags, users, skel.id.val(), lat, lon);
+}
+
+
+void Print_Target_Csv::print_item(uint32 ll_upper, const Area_Skeleton& skel,
+		const vector< pair< string, string > >* tags,
+		const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta,
+		const map< uint32, string >* users, const Action& action)
+
+{
+  double lat(100.0), lon(200.0);
+
+  print_headerline_if_needed();
+
+  cout << process_csv_line(3, meta, tags, users, skel.id.val(), lat, lon);
+}
+
 
 //-----------------------------------------------------------------------------
 
@@ -1684,7 +1915,8 @@ Print_Target& Output_Handle::get_print_target(uint32 current_mode, Transaction& 
 	}
       }
       else if (dynamic_cast< Print_Target_Custom* >(print_target)
-	  || dynamic_cast< Print_Target_Xml* >(print_target))
+	  || dynamic_cast< Print_Target_Xml* >(print_target)
+          || dynamic_cast< Print_Target_Csv* >(print_target))
       {
         delete print_target;
         print_target = 0;
@@ -1705,6 +1937,8 @@ Print_Target& Output_Handle::get_print_target(uint32 current_mode, Transaction& 
       print_target = new Print_Target_Xml(mode, transaction);
     else if (type == "json")
       print_target = new Print_Target_Json(mode, transaction, first_target);
+    else if (type == "csv")
+      print_target = new Print_Target_Csv(mode, transaction, first_target, csv_settings);
     else if (type == "custom")
       print_target = new Print_Target_Custom(mode, transaction, first_target,
 					     node_template, way_template, relation_template);
