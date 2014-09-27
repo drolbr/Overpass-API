@@ -882,10 +882,10 @@ void Print_Target_Json::print_item_count(const Output_Item_Count& item_count)
   cout<<"{\n"
         "  \"count\": {";
   cout<<"\n    \"total\": " << item_count.total
-      <<"\n    \"nodes\": " << item_count.nodes
-      <<"\n    \"ways\": " << item_count.ways
-      <<"\n    \"relations\": " << item_count.relations
-      <<"\n    \"areas\": " << item_count.areas
+      <<",\n    \"nodes\": " << item_count.nodes
+      <<",\n    \"ways\": " << item_count.ways
+      <<",\n    \"relations\": " << item_count.relations
+      <<",\n    \"areas\": " << item_count.areas
       <<"\n  }";
   cout<<"\n}\n";
 }
