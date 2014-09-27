@@ -1019,7 +1019,7 @@ string Print_Target_Csv::process_csv_line(const Output_Item_Count& item_count)
     else if (*it == "@otype")
       result << 4;
     else if (*it == "@oname")
-      result << "counter";
+      result << "count";
 
     if (it + 1 != csv_settings.keyfields.end())
       result << csv_settings.separator;
