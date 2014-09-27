@@ -759,6 +759,8 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
 	mode = "meta";
       else if (*token == "quirks")
 	mode = "quirks";
+      else if (*token == "count")
+    mode = "count";
       else if (*token == "qt")
 	order = "quadtile";
       else if (*token == "asc")

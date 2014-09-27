@@ -88,12 +88,14 @@ Print_Statement::Print_Statement
     mode = Print_Target::PRINT_IDS
         | Print_Target::PRINT_COORDS | Print_Target::PRINT_NDS | Print_Target::PRINT_MEMBERS
 	| Print_Target::PRINT_TAGS | Print_Target::PRINT_VERSION | Print_Target::PRINT_META;
+  else if (attributes["mode"] == "count")
+    mode = Print_Target::PRINT_COUNT;
   else
   {
     mode = 0;
     ostringstream temp;
     temp<<"For the attribute \"mode\" of the element \"print\""
-	<<" the only allowed values are \"ids_only\", \"skeleton\", \"body\", \"tags\", or \"meta\".";
+	<<" the only allowed values are \"ids_only\", \"skeleton\", \"body\", \"tags\",  \"count\", or \"meta\".";
     add_static_error(temp.str());
   }
   
@@ -360,6 +362,28 @@ void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Ar
   target.print_item(ll_upper, skel, tags, meta, users);
 }
 
+void Print_Statement::print_item_count(Print_Target& target, const Output_Item_Count & item_count)
+{
+  target.print_item_count(item_count);
+}
+
+template< class TIndex, class TObject >
+uint32 count_items
+    (const map< TIndex, vector< TObject > >& items, Print_Target& target,
+     Transaction& transaction, Print_Statement& stmt)
+{
+  uint32 item_count = 0;
+  typename map<TIndex, vector<TObject> >::const_iterator item_it(items.begin());
+
+  while (item_it != items.end())
+  {
+    for (typename vector<TObject>::const_iterator it2(item_it->second.begin());
+        it2 != item_it->second.end(); ++it2)
+      item_count++;
+    ++item_it;
+  }
+  return item_count;
+}
 
 template< class Id_Type >
 void collect_tags
@@ -702,7 +726,6 @@ struct Skeleton_Comparator_By_Id {
     return (*a.first < *b.first);
   }
 };
-
 
 template< class TIndex, class TObject >
 void by_id
@@ -1286,6 +1309,8 @@ class Collection_Print_Target : public Print_Target
                             const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
                             const map< uint32, string >* users = 0, const Action& action = KEEP);
     
+    virtual void print_item_count(const Output_Item_Count& item_count);
+
     void set_target(Print_Target* target);
     
     void clear_nodes
@@ -2032,6 +2057,20 @@ void Print_Statement::execute(Resource_Manager& rman)
     }
     
     delete user_data_cache;
+  }
+  else if (mode & Print_Target::PRINT_COUNT)
+  {
+    Output_Item_Count item_count;
+
+    item_count.nodes = count_items(mit->second.nodes, *target, *rman.get_transaction(), *this);
+    item_count.attic_nodes = count_items(mit->second.attic_nodes, *target, *rman.get_transaction(), *this);
+    item_count.ways = count_items(mit->second.ways, *target, *rman.get_transaction(), *this);
+    item_count.attic_ways = count_items(mit->second.attic_ways, *target, *rman.get_transaction(), *this);
+    item_count.relations = count_items(mit->second.relations, *target, *rman.get_transaction(), *this);
+    item_count.attic_relations = count_items(mit->second.attic_relations, *target, *rman.get_transaction(), *this);
+    item_count.areas = rman.get_area_transaction() ?
+                            count_items(mit->second.areas, *target, *rman.get_area_transaction(), *this) : 0;
+    print_item_count(*target, item_count);
   }
   else
   {

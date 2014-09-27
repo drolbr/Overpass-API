@@ -27,6 +27,18 @@
 
 using namespace std;
 
+struct Output_Item_Count
+{
+  uint32 nodes;
+  uint32 attic_nodes;
+  uint32 ways;
+  uint32 attic_ways;
+  uint32 relations;
+  uint32 attic_relations;
+  uint32 areas;
+  uint32 total;
+};
+
 class Print_Target
 {
   public:
@@ -64,6 +76,8 @@ class Print_Target
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0, const Action& action = KEEP) = 0;
 
+    virtual void print_item_count(const Output_Item_Count& item_count) = 0;
+
     static const unsigned int PRINT_IDS = 1;
     static const unsigned int PRINT_COORDS = 2;
     static const unsigned int PRINT_NDS = 4;
@@ -74,6 +88,7 @@ class Print_Target
     static const unsigned int PRINT_GEOMETRY = 0x80;
     static const unsigned int PRINT_BOUNDS = 0x100;
     static const unsigned int PRINT_CENTER = 0x200;
+    static const unsigned int PRINT_COUNT = 0x400;
 
   protected:
     uint32 mode;
@@ -181,7 +196,9 @@ class Print_Statement : public Statement
     void print_item(Print_Target& target, uint32 ll_upper, const Area_Skeleton& skel,
                     const vector< pair< string, string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0);    
+                    const map< uint32, string >* users = 0);
+
+    void print_item_count(Print_Target& target, const Output_Item_Count & item_count);
     
     void set_collect_lhs();
     void set_collect_rhs(bool add_deletion_information);

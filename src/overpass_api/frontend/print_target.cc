@@ -64,6 +64,8 @@ class Print_Target_Xml : public Print_Target
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0, const Action& action = KEEP);
+
+    virtual void print_item_count(const Output_Item_Count& item_count);
 };
 
 
@@ -101,6 +103,8 @@ class Print_Target_Json : public Print_Target
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0, const Action& action = KEEP);
     
+    virtual void print_item_count(const Output_Item_Count& item_count);
+
     bool nothing_written() const { return first_elem; }
 			    
   private:
@@ -145,6 +149,8 @@ class Print_Target_Custom : public Print_Target
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0, const Action& action = KEEP);
+
+    virtual void print_item_count(const Output_Item_Count& item_count);
 			    
     string get_output() const { return output; }
     uint32 get_written_elements_count() const { return written_elements_count; }
@@ -249,6 +255,8 @@ class Print_Target_Popup : public Print_Target
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0, const Action& action = KEEP);
+
+    virtual void print_item_count(const Output_Item_Count& item_count);
 			    
     string get_output() const;
     
@@ -597,6 +605,11 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Area_Skeleton& skel,
   }
 }
 
+void Print_Target_Xml::print_item_count(const Output_Item_Count& item_count)
+{
+
+}
+
 //-----------------------------------------------------------------------------
 
 template< typename Id_Type >
@@ -798,6 +811,12 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Area_Skeleton& skel,
   }
   
   cout<<"\n}\n";
+}
+
+
+void Print_Target_Json::print_item_count(const Output_Item_Count& item_count)
+{
+
 }
 
 //-----------------------------------------------------------------------------
@@ -1282,6 +1301,11 @@ void Print_Target_Custom::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 {
 }
 
+void Print_Target_Custom::print_item_count(const Output_Item_Count& item_count)
+{
+
+}
+
 //-----------------------------------------------------------------------------
 
 Element_Collector::Element_Collector(const string& title_key_)
@@ -1609,6 +1633,10 @@ void Print_Target_Popup::print_item(uint32 ll_upper, const Area_Skeleton& skel,
   }
 }
 
+void Print_Target_Popup::print_item_count(const Output_Item_Count& item_count)
+{
+
+}
 
 string Print_Target_Popup::get_output() const
 {
