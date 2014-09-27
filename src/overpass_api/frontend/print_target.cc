@@ -159,6 +159,8 @@ class Print_Target_Csv : public Print_Target
                             const map< uint32, string >* users,
                             uint32 id, double lat, double lon);
 
+    string process_csv_line(const Output_Item_Count& item_count);
+
     void print_headerline_if_needed();
 
     Csv_Settings csv_settings;
@@ -997,6 +999,36 @@ string Print_Target_Csv::process_csv_line(uint32 otype,
   return result.str();
 }
 
+string Print_Target_Csv::process_csv_line(const Output_Item_Count& item_count)
+{
+  ostringstream result;
+  vector<string>::const_iterator it;
+
+  for (it = csv_settings.keyfields.begin(); it != csv_settings.keyfields.end(); ++it)
+  {
+    if (*it == "@count")
+      result << item_count.total;
+    else if (*it == "@count:nodes")
+      result << item_count.nodes;
+    else if (*it == "@count:ways")
+      result << item_count.ways;
+    else if (*it == "@count:relations")
+      result << item_count.relations;
+    else if (*it == "@count:areas")
+      result << item_count.areas;
+    else if (*it == "@otype")
+      result << 4;
+    else if (*it == "@oname")
+      result << "counter";
+
+    if (it + 1 != csv_settings.keyfields.end())
+      result << csv_settings.separator;
+  }
+  result << "\n";
+
+  return result.str();
+}
+
 
 void Print_Target_Csv::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 		const vector< pair< string, string > >* tags,
@@ -1071,6 +1103,8 @@ void Print_Target_Csv::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 void Print_Target_Csv::print_item_count(const Output_Item_Count& item_count)
 {
   print_headerline_if_needed();
+
+  cout << process_csv_line(item_count);
 
 }
 
