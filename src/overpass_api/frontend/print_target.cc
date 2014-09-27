@@ -148,6 +148,9 @@ class Print_Target_Csv : public Print_Target
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0, const Action& action = KEEP);
+
+    virtual void print_item_count(const Output_Item_Count& item_count);
+
   private:
     template< typename OSM_Element_Metadata_Skeleton >
     string process_csv_line(uint32 otype,
@@ -659,7 +662,10 @@ void Print_Target_Xml::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 
 void Print_Target_Xml::print_item_count(const Output_Item_Count& item_count)
 {
-
+  cout<<"  <count total=\"" << item_count.total << "\" "
+        "nodes=\"" << item_count.nodes << "\" "
+        "ways=\"" << item_count.ways << "\" "
+        "relations=\"" << item_count.relations << "\"/>\n";
 }
 
 //-----------------------------------------------------------------------------
@@ -868,7 +874,20 @@ void Print_Target_Json::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 
 void Print_Target_Json::print_item_count(const Output_Item_Count& item_count)
 {
+  if (first_elem)
+    first_elem = false;
+  else
+    cout<<",\n";
 
+  cout<<"{\n"
+        "  \"count\": {";
+  cout<<"\n    \"total\": " << item_count.total
+      <<"\n    \"nodes\": " << item_count.nodes
+      <<"\n    \"ways\": " << item_count.ways
+      <<"\n    \"relations\": " << item_count.relations
+      <<"\n    \"areas\": " << item_count.areas
+      <<"\n  }";
+  cout<<"\n}\n";
 }
 
 //-----------------------------------------------------------------------------
@@ -1049,6 +1068,11 @@ void Print_Target_Csv::print_item(uint32 ll_upper, const Area_Skeleton& skel,
   cout << process_csv_line(3, meta, tags, users, skel.id.val(), lat, lon);
 }
 
+void Print_Target_Csv::print_item_count(const Output_Item_Count& item_count)
+{
+  print_headerline_if_needed();
+
+}
 
 //-----------------------------------------------------------------------------
 

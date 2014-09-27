@@ -30,11 +30,8 @@ using namespace std;
 struct Output_Item_Count
 {
   uint32 nodes;
-  uint32 attic_nodes;
   uint32 ways;
-  uint32 attic_ways;
   uint32 relations;
-  uint32 attic_relations;
   uint32 areas;
   uint32 total;
 };

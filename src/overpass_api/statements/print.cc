@@ -1862,6 +1862,9 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Area_Skeleton& s
                             const map< uint32, string >* users, const Action& action) {}
                             
 
+void Collection_Print_Target::print_item_count(const Output_Item_Count & item_count) {}
+
+
 void Print_Statement::execute(Resource_Manager& rman)
 {
   if (rman.area_updater())
@@ -2063,13 +2066,14 @@ void Print_Statement::execute(Resource_Manager& rman)
     Output_Item_Count item_count;
 
     item_count.nodes = count_items(mit->second.nodes, *target, *rman.get_transaction(), *this);
-    item_count.attic_nodes = count_items(mit->second.attic_nodes, *target, *rman.get_transaction(), *this);
+    item_count.nodes += count_items(mit->second.attic_nodes, *target, *rman.get_transaction(), *this);
     item_count.ways = count_items(mit->second.ways, *target, *rman.get_transaction(), *this);
-    item_count.attic_ways = count_items(mit->second.attic_ways, *target, *rman.get_transaction(), *this);
+    item_count.ways += count_items(mit->second.attic_ways, *target, *rman.get_transaction(), *this);
     item_count.relations = count_items(mit->second.relations, *target, *rman.get_transaction(), *this);
-    item_count.attic_relations = count_items(mit->second.attic_relations, *target, *rman.get_transaction(), *this);
+    item_count.relations += count_items(mit->second.attic_relations, *target, *rman.get_transaction(), *this);
     item_count.areas = rman.get_area_transaction() ?
                             count_items(mit->second.areas, *target, *rman.get_area_transaction(), *this) : 0;
+    item_count.total = item_count.nodes + item_count.ways +  item_count.relations + item_count.areas;
     print_item_count(*target, item_count);
   }
   else
