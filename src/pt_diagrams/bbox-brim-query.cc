@@ -108,6 +108,32 @@ int main(int argc, char *argv[])
     ++argi;
   }
   
+  //transform the network name (that the user types in) to all upper case.
+  //This will cut down on returning an empty set, as the network name is
+  //stored in the database as all capitals
+  transform(network.begin(), network.end(), network.begin(), ::toupper);
+
+  //If the ref(aka line number) is a word, then capitalize the first letter and
+  //make the rest lowercase. Public transport in Chicago for instance have colors
+  //for their line numbers, i.e. Blue, Green
+locale loc;
+for(string::iterator it = ref.begin(); it != ref.end(); it++)
+{	//if it's a word keep going, else break
+	if(isalpha(*it, loc)){
+		//if the whole string consists of letters
+		if(it == ref.end()-1)
+		{
+			//capitalize the first letter
+			ref[0] = toupper(ref[0]);
+			for(int i = 1; i < ref.size(); i++)
+			{	//make rest of letters lowercase
+				ref[i] = tolower(ref[i]);
+			}
+		}
+	}
+	else break;
+}
+
   cout<<"<osm-script>\n"
       <<"\n"
       <<"<query type=\"relation\">\n"
