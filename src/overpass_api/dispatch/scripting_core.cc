@@ -158,24 +158,7 @@ bool parse_and_validate
       {
 	Statement_Dump::Factory stmt_dump_factory;
 	stmt_dump_factory_global = &stmt_dump_factory;
-	xml_parser.parse(xml_raw, start< Statement_Dump >, end< Statement_Dump >);
-      
-        for (vector< Statement_Dump* >::const_iterator it =
-	    statement_stack< Statement_Dump >().begin();
-            it != statement_stack< Statement_Dump >().end(); ++it)
-	{
-	  if (debug_level == parser_dump_xml)
-            cout<<(*it)->dump_xml();
-	  else if (debug_level == parser_dump_compact_map_ql)
-	    cout<<(*it)->dump_compact_map_ql();
-	  else if (debug_level == parser_dump_bbox_map_ql)
-	    cout<<(*it)->dump_bbox_map_ql();
-	  else if (debug_level == parser_dump_pretty_map_ql)
-	    cout<<(*it)->dump_pretty_map_ql();
-	}
-        for (vector< Statement_Dump* >::iterator it = statement_stack< Statement_Dump >().begin();
-            it != statement_stack< Statement_Dump >().end(); ++it)
-          delete *it;
+	xml_parser.parse(xml_raw, start< Statement_Dump >, end< Statement_Dump >);      
       }
       else
       {
@@ -191,9 +174,9 @@ bool parse_and_validate
     }
     catch(Parse_Error parse_error)
     {
-      if (error_output)
-        error_output->add_parse_error(parse_error.message,
-				      xml_parser.current_line_number());
+//       if (error_output)
+//         error_output->add_parse_error(parse_error.message,
+// 				      xml_parser.current_line_number());
     }
     catch(File_Error e)
     {
@@ -204,6 +187,23 @@ bool parse_and_validate
     
       return false;
     }
+        for (vector< Statement_Dump* >::const_iterator it =
+	    statement_stack< Statement_Dump >().begin();
+            it != statement_stack< Statement_Dump >().end(); ++it)
+	{
+	  if (debug_level == parser_dump_xml)
+            cout<<(*it)->dump_xml();
+	  else if (debug_level == parser_dump_compact_map_ql)
+	    (*it)->dump_compact_map_ql();
+	  else if (debug_level == parser_dump_bbox_map_ql)
+	    cout<<(*it)->dump_bbox_map_ql();
+	  else if (debug_level == parser_dump_pretty_map_ql)
+	    cout<<(*it)->dump_pretty_map_ql();
+	}
+        for (vector< Statement_Dump* >::iterator it = statement_stack< Statement_Dump >().begin();
+            it != statement_stack< Statement_Dump >().end(); ++it)
+          delete *it;
+	statement_stack< Statement_Dump >().clear();
   }
   else
   {

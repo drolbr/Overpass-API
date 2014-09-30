@@ -41,24 +41,38 @@ class Statement_Dump
     };
     
     Statement_Dump(string name, const map< string, string >& attributes_)
-        : name_(name), attributes(attributes_) {}
+        : name_(name), attributes(attributes_)
+	{
+	  if (bbox_count.empty())
+	    bbox_count.resize(1800, std::vector< int >(3600));
+	}
     ~Statement_Dump();
     
     void add_statement(Statement_Dump* statement, string text);
     string dump_xml() const;
-    string dump_pretty_map_ql() const;
-    string dump_compact_map_ql() const;
-    string dump_bbox_map_ql() const;
+    string dump_pretty_map_ql();
+    bool dump_compact_map_ql();
+    string dump_bbox_map_ql();
     
     const std::string& name() const { return name_; }
     std::string attribute(const std::string& key) const;
     
     void add_final_text(string text) {}
+   
+    static void dump_bbox_count()
+    {
+      for (int i = 0; i < 1800; ++i)
+      {
+	for (int j = 0; j < 3600; ++j)
+	  std::cout<<(i - 900)<<'\t'<<(j - 1800)<<'\t'<<bbox_count[i][j]<<'\n';
+      }      
+    }
 
   private:
     string name_;
     map< string, string > attributes;
     vector< Statement_Dump* > substatements;
+    static std::vector< std::vector< int > > bbox_count;
 };
 
 #endif

@@ -24,6 +24,7 @@
 #include "../osm-backend/clone_database.h"
 #include "../statements/osm_script.h"
 #include "../statements/statement.h"
+#include "../statements/statement_dump.h"
 #include "resource_manager.h"
 #include "scripting_core.h"
 
@@ -51,68 +52,68 @@ int main(int argc, char *argv[])
   string db_dir = "";
   string clone_db_dir = "";
   uint log_level = Error_Output::ASSISTING;
-  Debug_Level debug_level = parser_execute;
+  Debug_Level debug_level = parser_dump_compact_map_ql;
   int area_level = 0;
   bool respect_timeout = true;
   
-  int argpos = 1;
-  while (argpos < argc)
-  {
-    if (!(strncmp(argv[argpos], "--db-dir=", 9)))
-    {
-      db_dir = ((string)argv[argpos]).substr(9);
-      if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
-	db_dir += '/';
-    }
-    else if (!(strcmp(argv[argpos], "--quiet")))
-      log_level = Error_Output::QUIET;
-    else if (!(strcmp(argv[argpos], "--concise")))
-      log_level = Error_Output::CONCISE;
-    else if (!(strcmp(argv[argpos], "--progress")))
-      log_level = Error_Output::PROGRESS;
-    else if (!(strcmp(argv[argpos], "--verbose")))
-      log_level = Error_Output::VERBOSE;
-    else if (!(strcmp(argv[argpos], "--rules")))
-    {
-      area_level = 2;
-      respect_timeout = false;
-    }
-    else if (!(strcmp(argv[argpos], "--dump-xml")))
-      debug_level = parser_dump_xml;
-    else if (!(strcmp(argv[argpos], "--dump-pretty-map-ql")))
-      debug_level = parser_dump_pretty_map_ql;
-    else if (!(strcmp(argv[argpos], "--dump-compact-map-ql")))
-      debug_level = parser_dump_compact_map_ql;
-    else if (!(strcmp(argv[argpos], "--dump-bbox-map-ql")))
-      debug_level = parser_dump_bbox_map_ql;
-    else if (!(strncmp(argv[argpos], "--clone=", 8)))
-    {
-      clone_db_dir = ((string)argv[argpos]).substr(8);
-      if ((clone_db_dir.size() > 0) && (clone_db_dir[clone_db_dir.size()-1] != '/'))
-	clone_db_dir += '/';
-    }
-    else
-    {
-      cout<<"Unknown argument: "<<argv[argpos]<<"\n\n"
-      "Accepted arguments are:\n"
-      "  --db-dir=$DB_DIR: The directory where the database resides. If you set this parameter\n"
-      "        then osm3s_query will read from the database without using the dispatcher management.\n"
-      "  --dump-xml: Don't execute the query but only dump the query in XML format.\n"
-      "  --dump-pretty-map-ql: Don't execute the query but only dump the query in pretty QL format.\n"
-      "  --dump-compact-map-ql: Don't execute the query but only dump the query in compact QL format.\n"
-      "  --dump-bbox-map-ql: Don't execute the query but only dump the query in a suitable form\n"
-      "        for an OpenLayers slippy map.\n"
-      "  --clone=$TARGET_DIR: Write a consistent copy of the entire database to the given $TARGET_DIR.\n"
-      "  --rules: Ignore all time limits and allow area creation by this query.\n"
-      "  --quiet: Don't print anything on stderr.\n"
-      "  --concise: Print concise information on stderr.\n"
-      "  --progress: Print also progress information on stderr.\n"
-      "  --verbose: Print everything that happens on stderr.\n";
-      
-      return 0;
-    }
-    ++argpos;
-  }
+//   int argpos = 1;
+//   while (argpos < argc)
+//   {
+//     if (!(strncmp(argv[argpos], "--db-dir=", 9)))
+//     {
+//       db_dir = ((string)argv[argpos]).substr(9);
+//       if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
+// 	db_dir += '/';
+//     }
+//     else if (!(strcmp(argv[argpos], "--quiet")))
+//       log_level = Error_Output::QUIET;
+//     else if (!(strcmp(argv[argpos], "--concise")))
+//       log_level = Error_Output::CONCISE;
+//     else if (!(strcmp(argv[argpos], "--progress")))
+//       log_level = Error_Output::PROGRESS;
+//     else if (!(strcmp(argv[argpos], "--verbose")))
+//       log_level = Error_Output::VERBOSE;
+//     else if (!(strcmp(argv[argpos], "--rules")))
+//     {
+//       area_level = 2;
+//       respect_timeout = false;
+//     }
+//     else if (!(strcmp(argv[argpos], "--dump-xml")))
+//       debug_level = parser_dump_xml;
+//     else if (!(strcmp(argv[argpos], "--dump-pretty-map-ql")))
+//       debug_level = parser_dump_pretty_map_ql;
+//     else if (!(strcmp(argv[argpos], "--dump-compact-map-ql")))
+//       debug_level = parser_dump_compact_map_ql;
+//     else if (!(strcmp(argv[argpos], "--dump-bbox-map-ql")))
+//       debug_level = parser_dump_bbox_map_ql;
+//     else if (!(strncmp(argv[argpos], "--clone=", 8)))
+//     {
+//       clone_db_dir = ((string)argv[argpos]).substr(8);
+//       if ((clone_db_dir.size() > 0) && (clone_db_dir[clone_db_dir.size()-1] != '/'))
+// 	clone_db_dir += '/';
+//     }
+//     else
+//     {
+//       cout<<"Unknown argument: "<<argv[argpos]<<"\n\n"
+//       "Accepted arguments are:\n"
+//       "  --db-dir=$DB_DIR: The directory where the database resides. If you set this parameter\n"
+//       "        then osm3s_query will read from the database without using the dispatcher management.\n"
+//       "  --dump-xml: Don't execute the query but only dump the query in XML format.\n"
+//       "  --dump-pretty-map-ql: Don't execute the query but only dump the query in pretty QL format.\n"
+//       "  --dump-compact-map-ql: Don't execute the query but only dump the query in compact QL format.\n"
+//       "  --dump-bbox-map-ql: Don't execute the query but only dump the query in a suitable form\n"
+//       "        for an OpenLayers slippy map.\n"
+//       "  --clone=$TARGET_DIR: Write a consistent copy of the entire database to the given $TARGET_DIR.\n"
+//       "  --rules: Ignore all time limits and allow area creation by this query.\n"
+//       "  --quiet: Don't print anything on stderr.\n"
+//       "  --concise: Print concise information on stderr.\n"
+//       "  --progress: Print also progress information on stderr.\n"
+//       "  --verbose: Print everything that happens on stderr.\n";
+//       
+//       return 0;
+//     }
+//     ++argpos;
+//   }
   
   Error_Output* error_output(new Console_Output(log_level));
   Statement::set_error_output(error_output);
@@ -120,26 +121,40 @@ int main(int argc, char *argv[])
   // connect to dispatcher and get database dir
   try
   {
-    if (clone_db_dir != "")
+//     if (clone_db_dir != "")
+//     {
+//       // open read transaction and log this.
+//       area_level = determine_area_level(error_output, area_level);
+//       Dispatcher_Stub dispatcher(db_dir, error_output, "-- clone database --",
+// 				 get_uses_meta_data(), area_level, 24*60*60, 1024*1024*1024);
+//       
+//       clone_database(*dispatcher.resource_manager().get_transaction(), clone_db_dir);
+//       return 0;
+//     }
+    
+    string xml_raw;
+    getline(cin, xml_raw);
+    
+    int line_count = 0;
+    
+    while (cin.good())
     {
-      // open read transaction and log this.
-      area_level = determine_area_level(error_output, area_level);
-      Dispatcher_Stub dispatcher(db_dir, error_output, "-- clone database --",
-				 get_uses_meta_data(), area_level, 24*60*60, 1024*1024*1024);
+//       if ((error_output) && (error_output->display_encoding_errors()))
+//         return 0;
+    
+      Statement::Factory stmt_factory;
+      if (!parse_and_validate(stmt_factory, xml_raw, 0, debug_level))
+        ;//return 0;
       
-      clone_database(*dispatcher.resource_manager().get_transaction(), clone_db_dir);
-      return 0;
+      getline(cin, xml_raw);
+      
+      if (++line_count % 1000 == 0)
+	std::cerr<<(line_count % 100000 == 0 ? '\n' : '.');
     }
-    
-    string xml_raw(get_xml_console(error_output));
-    
-    if ((error_output) && (error_output->display_encoding_errors()))
-      return 0;
-    
-    Statement::Factory stmt_factory;
-    if (!parse_and_validate(stmt_factory, xml_raw, error_output, debug_level))
-      return 0;
-    if (debug_level != parser_execute)
+        
+    Statement_Dump::dump_bbox_count();
+        
+//     if (debug_level != parser_execute)
       return 0;
 
     Osm_Script_Statement* osm_script = 0;

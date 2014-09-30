@@ -67,6 +67,13 @@ struct Script_Parser
 	void (*start)(const char*, const char**),
 	void (*end)(const char*))
   {
+    // Reset parser if it was already used before
+    if (!parser_online && p)
+    {
+      XML_ParserFree(p);
+      p = XML_ParserCreate(NULL);
+    }
+    
     working_start = start;
     working_end = end;
   
