@@ -22,6 +22,7 @@
 #include <iomanip>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
@@ -108,37 +109,14 @@ int main(int argc, char *argv[])
     ++argi;
   }
   
-  //transform the network name (that the user types in) to all upper case.
-  //This will cut down on returning an empty set, as the network name is
-  //stored in the database as all capitals
-  transform(network.begin(), network.end(), network.begin(), ::toupper);
-
-  //If the ref(aka line number) is a word, then capitalize the first letter and
-  //make the rest lowercase. Public transport in Chicago for instance have colors
-  //for their line numbers, i.e. Blue, Green
-locale loc;
-for(string::iterator it = ref.begin(); it != ref.end(); it++)
-{	//if it's a word keep going, else break
-	if(isalpha(*it, loc)){
-		//if the whole string consists of letters
-		if(it == ref.end()-1)
-		{
-			//capitalize the first letter
-			ref[0] = toupper(ref[0]);
-			for(int i = 1; i < ref.size(); i++)
-			{	//make rest of letters lowercase
-				ref[i] = tolower(ref[i]);
-			}
-		}
-	}
-	else break;
-}
-
+	//The case insensitve search (case=ignore) was added to the script for the
+	//network and ref values to reduce zero results returned for a user
+	//who capitalizes the word incorrectly when submitting the web form
   cout<<"<osm-script>\n"
       <<"\n"
       <<"<query type=\"relation\">\n"
-      <<"  <has-kv k=\"network\" v=\""<<network<<"\"/>\n"
-      <<"  <has-kv k=\"ref\" v=\""<<ref<<"\"/>\n";
+      <<"  <has-kv case=\"ignore\" k=\"network\" regv=\""<<network<<"\"/>\n"
+      <<"  <has-kv case=\"ignore\" k=\"ref\" regv=\""<<ref<<"\"/>\n";
   if (operator_ != "")
     cout<<"  <has-kv k=\"operator\" v=\""<<operator_<<"\"/>\n";
   cout<<"</query>\n"
