@@ -658,7 +658,7 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token, Error_Output* e
   {
     string csv_format_string_field;
     string csv_headerline;
-    string csv_separator("	");
+    string csv_separator("\t");
 
     clear_until_after(token, error_output, "(", false);
 
