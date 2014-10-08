@@ -111,6 +111,13 @@ class Print_Target_Json : public Print_Target
     mutable bool first_elem;
 };
 
+
+struct Object_Type
+{
+  typedef enum { invalid, node, way, relation, area } _;
+};
+
+
 class Print_Target_Csv : public Print_Target
 {
   public:
@@ -153,7 +160,7 @@ class Print_Target_Csv : public Print_Target
 
   private:
     template< typename OSM_Element_Metadata_Skeleton >
-    string process_csv_line(uint32 otype,
+    string process_csv_line(Object_Type otype,
                             const OSM_Element_Metadata_Skeleton* meta,
                             const vector< pair< string, string > >* tags,
                             const map< uint32, string >* users,
@@ -166,7 +173,6 @@ class Print_Target_Csv : public Print_Target
     Csv_Settings csv_settings;
     mutable bool needs_headerline;
 };
-
 
 
 class Print_Target_Custom : public Print_Target
@@ -913,7 +919,7 @@ void Print_Target_Csv::print_headerline_if_needed()
 }
 
 template< typename OSM_Element_Metadata_Skeleton >
-string Print_Target_Csv::process_csv_line(uint32 otype,
+string Print_Target_Csv::process_csv_line(Object_Type otype,
     const OSM_Element_Metadata_Skeleton* meta,
     const vector<pair<string, string> >* tags, const map<uint32, string>* users,
     uint32 id, double lat, double lon)
@@ -958,22 +964,16 @@ string Print_Target_Csv::process_csv_line(uint32 otype,
       result << otype;
     else if (*it == "@oname")
     {
-      switch (otype) {
-      case 0:
+      if (otype == Object_Type::node)
         result << "node";
-        break;
-      case 1:
+      else if (otype == Object_Type::way)
         result << "way";
-        break;
-      case 2:
+      else if (otype == Object_Type::relation)
         result << "relation";
-        break;
-      case 3:
+      else if (otype == Object_Type::area)
         result << "area";
-        break;
-      default:
+      else
         result << "unknown object";
-      }
     }
     else if (*it == "@lat")
     {
@@ -1038,7 +1038,7 @@ void Print_Target_Csv::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 		Show_New_Elem show_new_elem)
 {
   print_headerline_if_needed();
-  cout << process_csv_line(0, meta, tags, users, skel.id.val(),
+  cout << process_csv_line(Object_Type::node, meta, tags, users, skel.id.val(),
           ::lat(ll_upper, skel.ll_lower), ::lon(ll_upper, skel.ll_lower));
 }
 
@@ -1061,7 +1061,7 @@ void Print_Target_Csv::print_item(uint32 ll_upper, const Way_Skeleton& skel,
     lon = ::lon(bounds->first.ll_upper, bounds->first.ll_lower);
   }
 
-  cout << process_csv_line(1, meta, tags, users, skel.id.val(), lat, lon);
+  cout << process_csv_line(Object_Type::way, meta, tags, users, skel.id.val(), lat, lon);
 }
 
 void Print_Target_Csv::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
@@ -1083,7 +1083,7 @@ void Print_Target_Csv::print_item(uint32 ll_upper, const Relation_Skeleton& skel
     lon = ::lon(bounds->first.ll_upper, bounds->first.ll_lower);
   }
 
-  cout << process_csv_line(2, meta, tags, users, skel.id.val(), lat, lon);
+  cout << process_csv_line(Object_Type::relation, meta, tags, users, skel.id.val(), lat, lon);
 }
 
 
@@ -1097,7 +1097,7 @@ void Print_Target_Csv::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 
   print_headerline_if_needed();
 
-  cout << process_csv_line(3, meta, tags, users, skel.id.val(), lat, lon);
+  cout << process_csv_line(Object_Type::area, meta, tags, users, skel.id.val(), lat, lon);
 }
 
 void Print_Target_Csv::print_item_count(const Output_Item_Count& item_count)
