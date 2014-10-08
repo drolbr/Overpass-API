@@ -80,7 +80,7 @@ class Osm_Script_Statement : public Statement
     void write_output() const;
 
     void set_categories(const vector< Category_Filter >& categories_) { categories = categories_; }
-    void set_csv_settings(const Csv_Settings csv_settings_) { csv_settings = csv_settings_; }
+    void set_csv_settings(const Csv_Settings& csv_settings_) { csv_settings = csv_settings_; }
     
     uint32 get_max_allowed_time() const { return max_allowed_time; }
     uint64 get_max_allowed_space() const { return max_allowed_space; }
