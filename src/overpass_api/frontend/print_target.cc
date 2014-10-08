@@ -160,13 +160,14 @@ class Print_Target_Csv : public Print_Target
 
   private:
     template< typename OSM_Element_Metadata_Skeleton >
-    string process_csv_line(Object_Type otype,
-                            const OSM_Element_Metadata_Skeleton* meta,
-                            const vector< pair< string, string > >* tags,
-                            const map< uint32, string >* users,
-                            uint32 id, double lat, double lon);
+    void process_csv_line(std::ostream& result,
+			  Object_Type::_ otype,
+                          const OSM_Element_Metadata_Skeleton* meta,
+                          const vector< pair< string, string > >* tags,
+                          const map< uint32, string >* users,
+                          uint32 id, double lat, double lon);
 
-    string process_csv_line(const Output_Item_Count& item_count);
+    void process_csv_line(std::ostream& result, const Output_Item_Count& item_count);
 
     void print_headerline_if_needed();
 
@@ -919,12 +920,11 @@ void Print_Target_Csv::print_headerline_if_needed()
 }
 
 template< typename OSM_Element_Metadata_Skeleton >
-string Print_Target_Csv::process_csv_line(Object_Type otype,
+void Print_Target_Csv::process_csv_line(std::ostream& result, Object_Type::_ otype,
     const OSM_Element_Metadata_Skeleton* meta,
     const vector<pair<string, string> >* tags, const map<uint32, string>* users,
     uint32 id, double lat, double lon)
 {
-  ostringstream result;
   vector<string>::const_iterator it;
   vector<pair<string, string> > tags_;
 
@@ -961,7 +961,7 @@ string Print_Target_Csv::process_csv_line(Object_Type otype,
         result << id;
     }
     else if (*it == "@otype")
-      result << otype;
+      result << int(otype);
     else if (*it == "@oname")
     {
       if (otype == Object_Type::node)
@@ -995,13 +995,11 @@ string Print_Target_Csv::process_csv_line(Object_Type otype,
       result << csv_settings.separator;
   }
   result << "\n";
-
-  return result.str();
 }
 
-string Print_Target_Csv::process_csv_line(const Output_Item_Count& item_count)
+
+void Print_Target_Csv::process_csv_line(std::ostream& result, const Output_Item_Count& item_count)
 {
-  ostringstream result;
   vector<string>::const_iterator it;
 
   for (it = csv_settings.keyfields.begin(); it != csv_settings.keyfields.end(); ++it)
@@ -1025,8 +1023,6 @@ string Print_Target_Csv::process_csv_line(const Output_Item_Count& item_count)
       result << csv_settings.separator;
   }
   result << "\n";
-
-  return result.str();
 }
 
 
@@ -1038,7 +1034,7 @@ void Print_Target_Csv::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 		Show_New_Elem show_new_elem)
 {
   print_headerline_if_needed();
-  cout << process_csv_line(Object_Type::node, meta, tags, users, skel.id.val(),
+  process_csv_line(std::cout, Object_Type::node, meta, tags, users, skel.id.val(),
           ::lat(ll_upper, skel.ll_lower), ::lon(ll_upper, skel.ll_lower));
 }
 
@@ -1061,7 +1057,7 @@ void Print_Target_Csv::print_item(uint32 ll_upper, const Way_Skeleton& skel,
     lon = ::lon(bounds->first.ll_upper, bounds->first.ll_lower);
   }
 
-  cout << process_csv_line(Object_Type::way, meta, tags, users, skel.id.val(), lat, lon);
+  process_csv_line(std::cout, Object_Type::way, meta, tags, users, skel.id.val(), lat, lon);
 }
 
 void Print_Target_Csv::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
@@ -1083,7 +1079,7 @@ void Print_Target_Csv::print_item(uint32 ll_upper, const Relation_Skeleton& skel
     lon = ::lon(bounds->first.ll_upper, bounds->first.ll_lower);
   }
 
-  cout << process_csv_line(Object_Type::relation, meta, tags, users, skel.id.val(), lat, lon);
+  process_csv_line(std::cout, Object_Type::relation, meta, tags, users, skel.id.val(), lat, lon);
 }
 
 
@@ -1097,15 +1093,14 @@ void Print_Target_Csv::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 
   print_headerline_if_needed();
 
-  cout << process_csv_line(Object_Type::area, meta, tags, users, skel.id.val(), lat, lon);
+  process_csv_line(std::cout, Object_Type::area, meta, tags, users, skel.id.val(), lat, lon);
 }
 
 void Print_Target_Csv::print_item_count(const Output_Item_Count& item_count)
 {
   print_headerline_if_needed();
 
-  cout << process_csv_line(item_count);
-
+  process_csv_line(std::cout, item_count);
 }
 
 //-----------------------------------------------------------------------------
