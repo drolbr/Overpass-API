@@ -27,10 +27,10 @@
 #include <cctype>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <queue>
 #include <set>
 #include <sstream>
-#include <iterator>
 #include <vector>
 
 using namespace std;
