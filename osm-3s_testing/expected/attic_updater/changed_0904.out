@@ -150,7 +150,9 @@
   <node id="142323" lat="10.2020000" lon="4.0203000" version="1" timestamp="2013-07-01T09:03:13Z" changeset="496" uid="42" user="foo"/>
   <node id="142324" lat="10.2020000" lon="4.0204000" version="1" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
   <node id="142511" lat="20.2010000" lon="14.0501000" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="142522" lat="20.2020000" lon="14.0502000" version="3" timestamp="2013-07-01T09:03:26Z" changeset="496" uid="42" user="foo"/>
+  <node id="142522" lat="20.2020000" lon="14.0502000" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="142611" lat="20.2010000" lon="14.0601000" version="3" timestamp="2013-07-01T09:03:26Z" changeset="496" uid="42" user="foo"/>
+  <node id="142622" lat="20.2020000" lon="14.0602000" version="3" timestamp="2013-07-01T09:03:26Z" changeset="496" uid="42" user="foo"/>
   <node id="142711" lat="10.2010000" lon="4.0701000" version="3" timestamp="2013-07-01T09:03:17Z" changeset="496" uid="42" user="foo"/>
   <node id="142722" lat="10.2020000" lon="4.0702000" version="3" timestamp="2013-07-01T09:03:17Z" changeset="496" uid="42" user="foo"/>
   <node id="143113" lat="10.3010000" lon="4.0103000" version="1" timestamp="2013-07-01T09:03:11Z" changeset="496" uid="42" user="foo"/>
@@ -561,6 +563,14 @@
     <nd ref="142521"/>
     <nd ref="142522"/>
   </way>
+  <way id="14261" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
+    <nd ref="142611"/>
+    <nd ref="142612"/>
+  </way>
+  <way id="14262" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
+    <nd ref="142621"/>
+    <nd ref="142622"/>
+  </way>
   <way id="14271" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo">
     <nd ref="142711"/>
     <nd ref="142712"/>
@@ -806,6 +816,12 @@
     <member type="way" ref="14252" role=""/>
     <tag k="foo" v="bar_1425"/>
     <tag k="foo_1425" v="bar"/>
+  </relation>
+  <relation id="1426" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
+    <member type="way" ref="14261" role=""/>
+    <member type="way" ref="14262" role=""/>
+    <tag k="foo" v="bar_1426"/>
+    <tag k="foo_1426" v="bar"/>
   </relation>
   <relation id="1427" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="14271" role=""/>

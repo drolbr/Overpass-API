@@ -341,10 +341,10 @@
   <node id="142511" lat="20.201" lon="14.0501" version="3" timestamp="2013-07-01T09:03:15" changeset="496" uid="42" user="foo"/>
   <node id="142522" lat="20.202" lon="14.0502" version="3" timestamp="2013-07-01T09:03:15" changeset="496" uid="42" user="foo"/>    
 
-  <node id="142511" lat="10.201" lon="14.0501" version="2" timestamp="2013-07-01T09:03:16" changeset="496" uid="42" user="foo"/>
-  <node id="142511" lat="20.201" lon="14.0501" version="3" timestamp="2013-07-01T09:03:26" changeset="496" uid="42" user="foo"/>
-  <node id="142522" lat="10.202" lon="14.0502" version="2" timestamp="2013-07-01T09:03:16" changeset="496" uid="42" user="foo"/>    
-  <node id="142522" lat="20.202" lon="14.0502" version="3" timestamp="2013-07-01T09:03:26" changeset="496" uid="42" user="foo"/>    
+  <node id="142611" lat="10.201" lon="14.0601" version="2" timestamp="2013-07-01T09:03:16" changeset="496" uid="42" user="foo"/>
+  <node id="142611" lat="20.201" lon="14.0601" version="3" timestamp="2013-07-01T09:03:26" changeset="496" uid="42" user="foo"/>
+  <node id="142622" lat="10.202" lon="14.0602" version="2" timestamp="2013-07-01T09:03:16" changeset="496" uid="42" user="foo"/>    
+  <node id="142622" lat="20.202" lon="14.0602" version="3" timestamp="2013-07-01T09:03:26" changeset="496" uid="42" user="foo"/>    
 
   <node id="142711" lat="10.201" lon="4.0701" version="3" timestamp="2013-07-01T09:03:17" changeset="496" uid="42" user="foo"/>    
   <node id="142722" lat="10.202" lon="4.0702" version="3" timestamp="2013-07-01T09:03:17" changeset="496" uid="42" user="foo"/>    
