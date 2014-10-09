@@ -903,14 +903,12 @@ void Print_Target_Json::print_item_count(const Output_Item_Count& item_count)
 
 void Print_Target_Csv::print_headerline_if_needed()
 {
-  vector<string>::const_iterator it;
-
   if (needs_headerline)
   {
-    for (it = csv_settings.keyfields.begin();
+    for (std::vector< std::pair< std::string, bool > >::const_iterator it = csv_settings.keyfields.begin();
         it != csv_settings.keyfields.end(); ++it)
     {
-      cout << *it;
+      cout << (it->second ? "@" : "") << it->first;
       if (it + 1 != csv_settings.keyfields.end())
         cout << csv_settings.separator;
     }
@@ -925,44 +923,52 @@ void Print_Target_Csv::process_csv_line(std::ostream& result, Object_Type::_ oty
     const vector<pair<string, string> >* tags, const map<uint32, string>* users,
     uint32 id, double lat, double lon)
 {
-  vector<string>::const_iterator it;
-  vector<pair<string, string> > tags_;
-
-  if ((tags == 0) || (tags->empty()))
-    tags_.clear();
-  else
-    tags_.assign(tags->begin(),tags->end());
-
-  std::map<std::string, std::string> tags_map(tags_.begin(), tags_.end());
-
-  for (it = csv_settings.keyfields.begin(); it != csv_settings.keyfields.end(); ++it)
+  for (std::vector< std::pair< std::string, bool > >::const_iterator it = csv_settings.keyfields.begin();
+       it != csv_settings.keyfields.end(); ++it)
   {
+    if (!it->second)
+    {
+      if (tags)
+      {
+	for (std::vector< std::pair< std::string, std::string> >::const_iterator it_tags = tags->begin();
+	     it_tags != tags->end(); ++it_tags)
+	{
+	  if (it_tags->first == it->first)
+	  {
+	    result << it_tags->second;
+	    break;
+	  }
+	}
+      }
+      continue;
+    }
+    
     if (meta)
     {
-      if (*it == "@version")
+      if (it->first == "version")
         result << meta->version;
-      else if (*it == "@timestamp")
+      else if (it->first == "timestamp")
         result << Timestamp(meta->timestamp).str();
-      else if (*it == "@changeset")
+      else if (it->first == "changeset")
         result << meta->changeset;
-      else if (*it == "@uid")
+      else if (it->first == "uid")
         result << meta->user_id;
-      else if (*it == "@user")
+      else if (it->first == "user")
       {
-        map<uint32, string>::const_iterator it = users->find(meta->user_id);
-        if (it != users->end())
-          result << it->second;
+        map<uint32, string>::const_iterator uit = users->find(meta->user_id);
+        if (uit != users->end())
+          result << uit->second;
       }
     }
 
-    if (*it == "@id")
+    if (it->first == "id")
     {
       if (mode & PRINT_IDS)
         result << id;
     }
-    else if (*it == "@otype")
+    else if (it->first == "otype")
       result << int(otype);
-    else if (*it == "@oname")
+    else if (it->first == "oname")
     {
       if (otype == Object_Type::node)
         result << "node";
@@ -975,22 +981,17 @@ void Print_Target_Csv::process_csv_line(std::ostream& result, Object_Type::_ oty
       else
         result << "unknown object";
     }
-    else if (*it == "@lat")
+    else if (it->first == "lat")
     {
       if ((mode & (PRINT_COORDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER)) && lat < 100)
         result << fixed << setprecision(7) << lat;
     }
-    else if (*it == "@lon")
+    else if (it->first == "lon")
     {
       if ((mode & (PRINT_COORDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER)) && lon < 200)
         result << fixed << setprecision(7) << lon;
     }
     else
-    {
-      map<std::string, std::string>::const_iterator it_tags = tags_map.find(*it);
-      if (it_tags != tags_map.end())
-        result << it_tags->second;
-    }
     if (it + 1 != csv_settings.keyfields.end())
       result << csv_settings.separator;
   }
@@ -1000,23 +1001,22 @@ void Print_Target_Csv::process_csv_line(std::ostream& result, Object_Type::_ oty
 
 void Print_Target_Csv::process_csv_line(std::ostream& result, const Output_Item_Count& item_count)
 {
-  vector<string>::const_iterator it;
-
-  for (it = csv_settings.keyfields.begin(); it != csv_settings.keyfields.end(); ++it)
+  for (std::vector< std::pair< std::string, bool > >::const_iterator it = csv_settings.keyfields.begin();
+       it != csv_settings.keyfields.end(); ++it)
   {
-    if (*it == "@count")
+    if (it->first == "count")
       result << item_count.total;
-    else if (*it == "@count:nodes")
+    else if (it->first == "count:nodes")
       result << item_count.nodes;
-    else if (*it == "@count:ways")
+    else if (it->first == "count:ways")
       result << item_count.ways;
-    else if (*it == "@count:relations")
+    else if (it->first == "count:relations")
       result << item_count.relations;
-    else if (*it == "@count:areas")
+    else if (it->first == "count:areas")
       result << item_count.areas;
-    else if (*it == "@otype")
-      result << 4;
-    else if (*it == "@oname")
+    else if (it->first == "otype")
+      result << Object_Type::invalid;
+    else if (it->first == "oname")
       result << "count";
 
     if (it + 1 != csv_settings.keyfields.end())

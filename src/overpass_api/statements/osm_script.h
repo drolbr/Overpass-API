@@ -46,7 +46,7 @@ struct Category_Filter
 
 struct Csv_Settings
 {
-  std::vector<std::string> keyfields;
+  std::vector< std::pair< std::string, bool > > keyfields;
   bool with_headerline;
   string separator;
 };

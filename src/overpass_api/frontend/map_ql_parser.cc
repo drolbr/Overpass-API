@@ -667,8 +667,11 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token, Error_Output* e
       do
       {
         ++token;
+	bool placeholder = (*token == "::");
+	if (placeholder)
+	  ++token;
         csv_format_string_field = get_text_token(token, error_output, "CSV format specification");
-        csv_settings.keyfields.push_back(csv_format_string_field);
+        csv_settings.keyfields.push_back(std::make_pair(csv_format_string_field, placeholder));
         clear_until_after(token, error_output, ",", ";", ")", false);
       } while (token.good() && *token == ",");
 
