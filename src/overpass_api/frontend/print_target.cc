@@ -923,8 +923,8 @@ void Print_Target_Csv::process_csv_line(std::ostream& result, Object_Type::_ oty
     const vector<pair<string, string> >* tags, const map<uint32, string>* users,
     uint32 id, double lat, double lon)
 {
-  for (std::vector< std::pair< std::string, bool > >::const_iterator it = csv_settings.keyfields.begin();
-       it != csv_settings.keyfields.end(); ++it)
+  std::vector< std::pair< std::string, bool > >::const_iterator it = csv_settings.keyfields.begin();
+  while (true)
   {
     if (!it->second)
     {
@@ -940,60 +940,62 @@ void Print_Target_Csv::process_csv_line(std::ostream& result, Object_Type::_ oty
 	  }
 	}
       }
-      continue;
-    }
-    
-    if (meta)
-    {
-      if (it->first == "version")
-        result << meta->version;
-      else if (it->first == "timestamp")
-        result << Timestamp(meta->timestamp).str();
-      else if (it->first == "changeset")
-        result << meta->changeset;
-      else if (it->first == "uid")
-        result << meta->user_id;
-      else if (it->first == "user")
-      {
-        map<uint32, string>::const_iterator uit = users->find(meta->user_id);
-        if (uit != users->end())
-          result << uit->second;
-      }
-    }
-
-    if (it->first == "id")
-    {
-      if (mode & PRINT_IDS)
-        result << id;
-    }
-    else if (it->first == "otype")
-      result << int(otype);
-    else if (it->first == "oname")
-    {
-      if (otype == Object_Type::node)
-        result << "node";
-      else if (otype == Object_Type::way)
-        result << "way";
-      else if (otype == Object_Type::relation)
-        result << "relation";
-      else if (otype == Object_Type::area)
-        result << "area";
-      else
-        result << "unknown object";
-    }
-    else if (it->first == "lat")
-    {
-      if ((mode & (PRINT_COORDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER)) && lat < 100)
-        result << fixed << setprecision(7) << lat;
-    }
-    else if (it->first == "lon")
-    {
-      if ((mode & (PRINT_COORDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER)) && lon < 200)
-        result << fixed << setprecision(7) << lon;
     }
     else
-    if (it + 1 != csv_settings.keyfields.end())
-      result << csv_settings.separator;
+    {
+      if (meta)
+      {
+        if (it->first == "version")
+          result << meta->version;
+        else if (it->first == "timestamp")
+          result << Timestamp(meta->timestamp).str();
+        else if (it->first == "changeset")
+          result << meta->changeset;
+        else if (it->first == "uid")
+          result << meta->user_id;
+        else if (it->first == "user")
+        {
+          map<uint32, string>::const_iterator uit = users->find(meta->user_id);
+          if (uit != users->end())
+            result << uit->second;
+        }
+      }
+
+      if (it->first == "id")
+      {
+        if (mode & PRINT_IDS)
+          result << id;
+      }
+      else if (it->first == "otype")
+        result << int(otype);
+      else if (it->first == "oname")
+      {
+        if (otype == Object_Type::node)
+          result << "node";
+        else if (otype == Object_Type::way)
+          result << "way";
+        else if (otype == Object_Type::relation)
+          result << "relation";
+        else if (otype == Object_Type::area)
+          result << "area";
+        else
+          result << "unknown object";
+      }
+      else if (it->first == "lat")
+      {
+        if ((mode & (PRINT_COORDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER)) && lat < 100)
+          result << fixed << setprecision(7) << lat;
+      }
+      else if (it->first == "lon")
+      {
+        if ((mode & (PRINT_COORDS | PRINT_GEOMETRY | PRINT_BOUNDS | PRINT_CENTER)) && lon < 200)
+          result << fixed << setprecision(7) << lon;
+      }
+    }
+      
+    if (++it == csv_settings.keyfields.end())
+      break;
+    result << csv_settings.separator;
   }
   result << "\n";
 }
