@@ -968,7 +968,7 @@ void Print_Target_Csv::process_csv_line(std::ostream& result, Object_Type::_ oty
       }
       else if (it->first == "otype")
         result << int(otype);
-      else if (it->first == "oname")
+      else if (it->first == "type")
       {
         if (otype == Object_Type::node)
           result << "node";
@@ -1018,7 +1018,7 @@ void Print_Target_Csv::process_csv_line(std::ostream& result, const Output_Item_
       result << item_count.areas;
     else if (it->first == "otype")
       result << Object_Type::invalid;
-    else if (it->first == "oname")
+    else if (it->first == "type")
       result << "count";
 
     if (it + 1 != csv_settings.keyfields.end())
@@ -1053,7 +1053,7 @@ void Print_Target_Csv::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 
   print_headerline_if_needed();
 
-  if (bounds && !(bounds->first == Quad_Coord(0u, 0u)))
+  if (bounds && !(bounds->first == Quad_Coord(0u, 0u)) && !(bounds->second))
   {
     lat = ::lat(bounds->first.ll_upper, bounds->first.ll_lower);
     lon = ::lon(bounds->first.ll_upper, bounds->first.ll_lower);
@@ -1075,7 +1075,7 @@ void Print_Target_Csv::print_item(uint32 ll_upper, const Relation_Skeleton& skel
 
   print_headerline_if_needed();
 
-  if (bounds && !(bounds->first == Quad_Coord(0u, 0u)))
+  if (bounds && !(bounds->first == Quad_Coord(0u, 0u)) && !(bounds->second))
   {
     lat = ::lat(bounds->first.ll_upper, bounds->first.ll_lower);
     lon = ::lon(bounds->first.ll_upper, bounds->first.ll_lower);

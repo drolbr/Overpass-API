@@ -1,0 +1,15 @@
+Content-type: text/csv
+
+even---@id---foo
+---1---
+yes---2---
+---7---bar
+yes---14---bar
+---1---
+yes---2---
+---7---bar
+yes---14---bar
+---1---
+yes---2---
+yes---42---bar
+---161---bar

@@ -142,7 +142,7 @@ Osm_Script_Statement::Osm_Script_Statement
     if (west < -180.0 || west > 180.0 || east < -180.0 || east > 180.0)
     {
       ostringstream temp;
-      temp<<"Longitudes in bounding boxes must be between -1800.0 and 180.0.";
+      temp<<"Longitudes in bounding boxes must be between -180.0 and 180.0.";
       add_static_error(temp.str());
     }
     
