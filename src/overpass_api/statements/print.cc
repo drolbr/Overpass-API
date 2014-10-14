@@ -731,6 +731,60 @@ void by_id
 }
 
 
+template< typename Index, typename Object >
+struct Maybe_Attic_Ref
+{
+public:
+  Maybe_Attic_Ref(Index idx_, const Object* obj_, uint64 timestamp_)
+  : idx(idx_), obj(obj_), timestamp(timestamp_) {}
+  
+  Index idx;
+  const Object* obj;
+  uint64 timestamp;
+  
+  bool operator<(const Maybe_Attic_Ref& rhs) const { return obj->id < rhs.obj->id; }
+};
+
+
+template< class TIndex, class TObject >
+void by_id
+  (const std::map< TIndex, std::vector< TObject > >& items,
+   const std::map< TIndex, std::vector< Attic< TObject > > >& attic_items,
+   Print_Target& target,
+   Transaction& transaction, Print_Statement& stmt, uint32 limit, uint32& element_count)
+{
+  // order relevant elements by id
+  std::vector< Maybe_Attic_Ref< TIndex, TObject > > items_by_id;
+  for (typename std::map< TIndex, std::vector< TObject > >::const_iterator
+      it(items.begin()); it != items.end(); ++it)
+  {
+    for (typename std::vector< TObject >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      items_by_id.push_back(Maybe_Attic_Ref< TIndex, TObject >(it->first, &(*it2), NOW));
+  }
+  for (typename std::map< TIndex, std::vector< Attic< TObject > > >::const_iterator
+      it(attic_items.begin()); it != attic_items.end(); ++it)
+  {
+    for (typename std::vector< Attic< TObject > >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      items_by_id.push_back(Maybe_Attic_Ref< TIndex, TObject >(it->first, &(*it2), it2->timestamp));
+  }
+  sort(items_by_id.begin(), items_by_id.end());
+  
+  // iterate over the result
+  for (uint32 i(0); i < items_by_id.size(); ++i)
+  {
+    if (++element_count > limit)
+      return;
+    if (items_by_id[i].timestamp == NOW)
+      stmt.print_item(target, items_by_id[i].idx.val(), *items_by_id[i].obj);
+    else
+      stmt.print_item(target, items_by_id[i].idx.val(),
+		      Attic< TObject >(*items_by_id[i].obj, items_by_id[i].timestamp));
+  }
+}
+
+
 template< class TIndex, class TObject >
 void collect_metadata(set< OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > >& metadata,
 		      const map< TIndex, vector< TObject > >& items,
@@ -2037,18 +2091,18 @@ void Print_Statement::execute(Resource_Manager& rman)
   {
     if (order == order_by_id)
     {
-      by_id(mit->second.nodes, *target, *rman.get_transaction(), *this, limit, element_count);
-      by_id(mit->second.attic_nodes, *target, *rman.get_transaction(), *this, limit, element_count);
+      by_id(mit->second.nodes, mit->second.attic_nodes,
+	    *target, *rman.get_transaction(), *this, limit, element_count);
       if (collection_mode == collect_rhs)
         collection_print_target->clear_nodes(rman, 0, add_deletion_information);
       
-      by_id(mit->second.ways, *target, *rman.get_transaction(), *this, limit, element_count);
-      by_id(mit->second.attic_ways, *target, *rman.get_transaction(), *this, limit, element_count);
+      by_id(mit->second.ways, mit->second.attic_ways,
+	    *target, *rman.get_transaction(), *this, limit, element_count);
       if (collection_mode == collect_rhs)
         collection_print_target->clear_ways(rman, 0, add_deletion_information);
       
-      by_id(mit->second.relations, *target, *rman.get_transaction(), *this, limit, element_count);
-      by_id(mit->second.attic_relations, *target, *rman.get_transaction(), *this, limit, element_count);      
+      by_id(mit->second.relations, mit->second.attic_relations,
+	    *target, *rman.get_transaction(), *this, limit, element_count);      
       if (collection_mode == collect_rhs)
         collection_print_target->clear_relations(rman, 0, add_deletion_information);
       
