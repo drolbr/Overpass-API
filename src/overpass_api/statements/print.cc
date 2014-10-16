@@ -943,42 +943,63 @@ typename set< OSM_Element_Metadata_Skeleton< Id_Type > >::const_iterator
 
 template< class Index, class Object >
 void Print_Statement::tags_by_id_attic
-  (const map< Index, vector< Attic< Object > > >& items,
+  (const map< Index, vector< Object > >& current_items,
+   const map< Index, vector< Attic< Object > > >& attic_items,
    uint32 FLUSH_SIZE, Print_Target& target,
    Resource_Manager& rman, Transaction& transaction,
    const File_Properties* current_meta_file_prop, const File_Properties* attic_meta_file_prop,
    uint32& element_count)
 {
   // order relevant elements by id
-  vector< pair< const Attic< Object >*, uint32 > > items_by_id;
-  for (typename map< Index, vector< Attic< Object > > >::const_iterator
-    it(items.begin()); it != items.end(); ++it)
+  std::vector< Maybe_Attic_Ref< Index, Object > > items_by_id;
+  for (typename std::map< Index, std::vector< Object > >::const_iterator
+      it(current_items.begin()); it != current_items.end(); ++it)
   {
-    for (typename vector< Attic< Object > >::const_iterator it2(it->second.begin());
+    for (typename std::vector< Object >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
-      items_by_id.push_back(make_pair(&(*it2), it->first.val()));
+      items_by_id.push_back(Maybe_Attic_Ref< Index, Object >(it->first, &(*it2), NOW));
   }
-  sort(items_by_id.begin(), items_by_id.end(),
-       Skeleton_Comparator_By_Id< Attic< Object > >());
+  for (typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
+      it(attic_items.begin()); it != attic_items.end(); ++it)
+  {
+    for (typename std::vector< Attic< Object > >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      items_by_id.push_back(Maybe_Attic_Ref< Index, Object >(it->first, &(*it2), it2->timestamp));
+  }
+  sort(items_by_id.begin(), items_by_id.end());
   
   //generate set of relevant coarse indices
-  set< Index > coarse_indices;
-  map< uint32, vector< Attic< typename Object::Id_Type > > > ids_by_coarse;
-  generate_ids_by_coarse(coarse_indices, ids_by_coarse, items);
+  std::set< Index > current_coarse_indices;
+  std::map< uint32, std::vector< typename Object::Id_Type > > current_ids_by_coarse;
+  generate_ids_by_coarse(current_coarse_indices, current_ids_by_coarse, current_items);
+  
+  std::set< Index > attic_coarse_indices;
+  std::map< uint32, std::vector< Attic< typename Object::Id_Type > > > attic_ids_by_coarse;
+  generate_ids_by_coarse(attic_coarse_indices, attic_ids_by_coarse, attic_items);
   
   //formulate range query
-  set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  formulate_range_query(range_set, coarse_indices);
+  set< pair< Tag_Index_Local, Tag_Index_Local > > current_range_set;
+  formulate_range_query(current_range_set, current_coarse_indices);
+  
+  set< pair< Tag_Index_Local, Tag_Index_Local > > attic_range_set;
+  formulate_range_query(attic_range_set, attic_coarse_indices);
   
   for (typename set< Index >::const_iterator
-      it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
-    sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
+      it(current_coarse_indices.begin()); it != current_coarse_indices.end(); ++it)
+    sort(current_ids_by_coarse[it->val()].begin(), current_ids_by_coarse[it->val()].end());
+  
+  for (typename set< Index >::const_iterator
+      it(attic_coarse_indices.begin()); it != attic_coarse_indices.end(); ++it)
+    sort(attic_ids_by_coarse[it->val()].begin(), attic_ids_by_coarse[it->val()].end());
   
   // formulate meta query if meta data shall be printed
+  Meta_Collector< Index, typename Object::Id_Type > only_current_meta_printer
+      (current_items, transaction, current_meta_file_prop);
+  
   Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
-      (items, transaction, current_meta_file_prop);
+      (attic_items, transaction, current_meta_file_prop);
   Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
-      (items, transaction, attic_meta_file_prop);
+      (attic_items, transaction, attic_meta_file_prop);
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, typename Object::Id_Type > current_tags_db
@@ -991,33 +1012,48 @@ void Print_Statement::tags_by_id_attic
     // Disable health_check: This ensures that a result will be always printed completely
     //rman.health_check(*this);
     
-    map< Attic< typename Object::Id_Type >, vector< pair< string, string > > > tags_by_id;
-    typename Object::Id_Type lower_id_bound(items_by_id[id_pos.val()].first->id);
+    typename Object::Id_Type lower_id_bound(items_by_id[id_pos.val()].obj->id);
     typename Object::Id_Type upper_id_bound;
     if (id_pos + FLUSH_SIZE < items_by_id.size())
-      upper_id_bound = items_by_id[(id_pos + FLUSH_SIZE).val()].first->id;
+      upper_id_bound = items_by_id[(id_pos + FLUSH_SIZE).val()].obj->id;
     else
     {
-      upper_id_bound = items_by_id[items_by_id.size()-1].first->id;
+      upper_id_bound = items_by_id[items_by_id.size()-1].obj->id;
       ++upper_id_bound;
     }
     
+    map< typename Object::Id_Type, vector< pair< string, string > > > current_tags_by_id;
+    typename Block_Backend< Tag_Index_Local, typename Object::Id_Type >::Range_Iterator
+        only_current_tag_it(current_tags_db.range_begin
+        (Default_Range_Iterator< Tag_Index_Local >(current_range_set.begin()),
+         Default_Range_Iterator< Tag_Index_Local >(current_range_set.end())));
+    for (typename set< Index >::const_iterator
+        it(current_coarse_indices.begin()); it != current_coarse_indices.end(); ++it)
+      collect_tags_framed< typename Object::Id_Type >(current_tags_by_id, current_tags_db, only_current_tag_it,
+	  current_ids_by_coarse, it->val(), lower_id_bound, upper_id_bound);
+      
+    map< Attic< typename Object::Id_Type >, vector< pair< string, string > > > attic_tags_by_id;
     typename Block_Backend< Tag_Index_Local, typename Object::Id_Type >::Range_Iterator
         current_tag_it(current_tags_db.range_begin
-        (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-         Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+        (Default_Range_Iterator< Tag_Index_Local >(attic_range_set.begin()),
+         Default_Range_Iterator< Tag_Index_Local >(attic_range_set.end())));
     typename Block_Backend< Tag_Index_Local, Attic< typename Object::Id_Type > >::Range_Iterator
         attic_tag_it(attic_tags_db.range_begin
-        (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-         Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+        (Default_Range_Iterator< Tag_Index_Local >(attic_range_set.begin()),
+         Default_Range_Iterator< Tag_Index_Local >(attic_range_set.end())));
     for (typename set< Index >::const_iterator
-        it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
-      collect_tags(tags_by_id, current_tags_db, current_tag_it, attic_tags_db, attic_tag_it,
-                 ids_by_coarse, it->val(), lower_id_bound, upper_id_bound);
+        it(attic_coarse_indices.begin()); it != attic_coarse_indices.end(); ++it)
+      collect_tags(attic_tags_by_id, current_tags_db, current_tag_it, attic_tags_db, attic_tag_it,
+                 attic_ids_by_coarse, it->val(), lower_id_bound, upper_id_bound);
     
     // collect metadata if required
-    set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > metadata;
-    collect_metadata(metadata, items, lower_id_bound, upper_id_bound,
+    set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > only_current_metadata;
+    collect_metadata(only_current_metadata, current_items, lower_id_bound, upper_id_bound,
+		     only_current_meta_printer);
+    only_current_meta_printer.reset();
+
+    set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > attic_metadata;
+    collect_metadata(attic_metadata, attic_items, lower_id_bound, upper_id_bound,
                      current_meta_printer, attic_meta_printer);
     attic_meta_printer.reset();
     current_meta_printer.reset();
@@ -1026,15 +1062,29 @@ void Print_Statement::tags_by_id_attic
     for (typename Object::Id_Type i(id_pos);
          (i < id_pos + FLUSH_SIZE) && (i < items_by_id.size()); ++i)
     {
-      typename set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > >::const_iterator meta_it
-          = find_matching_metadata(metadata,
-                                   items_by_id[i.val()].first->id, items_by_id[i.val()].first->timestamp);
       if (++element_count > limit)
-        return;
-      print_item(target, items_by_id[i.val()].second, *(items_by_id[i.val()].first),
-                 &(tags_by_id[Attic< typename Object::Id_Type >
-                     (items_by_id[i.val()].first->id, items_by_id[i.val()].first->timestamp)]),
-                 meta_it != metadata.end() ? &*meta_it : 0, &current_meta_printer.users());
+	return;
+      if (items_by_id[i.val()].timestamp == NOW)
+      {
+        typename set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > >::const_iterator meta_it
+            = only_current_metadata.lower_bound(OSM_Element_Metadata_Skeleton< typename Object::Id_Type >
+                (items_by_id[i.val()].obj->id));
+        print_item(target, items_by_id[i.val()].idx.val(), *items_by_id[i.val()].obj,
+		 &(current_tags_by_id[items_by_id[i.val()].obj->id.val()]),
+		 (meta_it != only_current_metadata.end() && meta_it->ref == items_by_id[i.val()].obj->id) ?
+		     &*meta_it : 0, &(only_current_meta_printer.users()));
+      }
+      else
+      {
+        typename set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > >::const_iterator meta_it
+            = find_matching_metadata(attic_metadata,
+                  items_by_id[i.val()].obj->id, items_by_id[i.val()].timestamp);
+        print_item(target, items_by_id[i.val()].idx.val(),
+		   Attic< Object >(*items_by_id[i.val()].obj, items_by_id[i.val()].timestamp),
+                 &(attic_tags_by_id[Attic< typename Object::Id_Type >
+                     (items_by_id[i.val()].obj->id, items_by_id[i.val()].timestamp)]),
+                 meta_it != attic_metadata.end() ? &*meta_it : 0, &current_meta_printer.users());
+      }
     }
   }
 }
@@ -1961,69 +2011,61 @@ void Print_Statement::execute(Resource_Manager& rman)
   
     if (order == order_by_id)
     {
-      tags_by_id(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
-		 NODE_FLUSH_SIZE, *target, rman,
-		 *rman.get_transaction(),
-		 (mode & Print_Target::PRINT_META) ? meta_settings().NODES_META : 0,
-                 element_count);
-      
-      if (rman.get_desired_timestamp() != NOW)
-      {
-        tags_by_id_attic(mit->second.attic_nodes,
+      if (rman.get_desired_timestamp() == NOW)
+        tags_by_id(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
+		  NODE_FLUSH_SIZE, *target, rman,
+		  *rman.get_transaction(),
+		  (mode & Print_Target::PRINT_META) ? meta_settings().NODES_META : 0,
+		  element_count);
+      else
+        tags_by_id_attic(mit->second.nodes, mit->second.attic_nodes,
                    NODE_FLUSH_SIZE, *target, rman,
                    *rman.get_transaction(),
                    (mode & Print_Target::PRINT_META) ? meta_settings().NODES_META : 0,
                    (mode & Print_Target::PRINT_META) ? attic_settings().NODES_META : 0,
                    element_count);
-      }
       
       if (collection_mode == collect_rhs)
         collection_print_target->clear_nodes(rman, &user_data_cache->users(), add_deletion_information);
       
-      tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
-		 WAY_FLUSH_SIZE, *target, rman,
-		 *rman.get_transaction(),
-		 (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
-                 element_count);
-      
-      if (rman.get_desired_timestamp() != NOW)
-      {
-        tags_by_id_attic(mit->second.attic_ways,
+      if (rman.get_desired_timestamp() == NOW)
+        tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
+		  WAY_FLUSH_SIZE, *target, rman,
+		  *rman.get_transaction(),
+		  (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
+		  element_count);
+      else
+        tags_by_id_attic(mit->second.ways, mit->second.attic_ways,
                    WAY_FLUSH_SIZE, *target, rman,
                    *rman.get_transaction(),
                    (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
                    (mode & Print_Target::PRINT_META) ? attic_settings().WAYS_META : 0,
                    element_count);
-      }
       
       if (collection_mode == collect_rhs)
         collection_print_target->clear_ways(rman, &user_data_cache->users(), add_deletion_information);
       
-      tags_by_id(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
-		 RELATION_FLUSH_SIZE, *target, rman,
-		 *rman.get_transaction(),
-		 (mode & Print_Target::PRINT_META) ? meta_settings().RELATIONS_META : 0,
-                 element_count);
-      
-      if (rman.get_desired_timestamp() != NOW)
-      {
-        tags_by_id_attic(mit->second.attic_relations,
+      if (rman.get_desired_timestamp() == NOW)
+        tags_by_id(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
+		  RELATION_FLUSH_SIZE, *target, rman,
+		  *rman.get_transaction(),
+		  (mode & Print_Target::PRINT_META) ? meta_settings().RELATIONS_META : 0,
+		  element_count);
+      else
+        tags_by_id_attic(mit->second.relations, mit->second.attic_relations,
                    RELATION_FLUSH_SIZE, *target, rman,
                    *rman.get_transaction(),
                    (mode & Print_Target::PRINT_META) ? meta_settings().RELATIONS_META : 0,
                    (mode & Print_Target::PRINT_META) ? attic_settings().RELATIONS_META : 0,
                    element_count);
-      }
       
       if (collection_mode == collect_rhs)
         collection_print_target->clear_relations(rman, &user_data_cache->users(), add_deletion_information);
       
       if (rman.get_area_transaction())
-      {
 	tags_by_id(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
 		   AREA_FLUSH_SIZE, *target, rman,
 		   *rman.get_area_transaction(), 0, element_count);
-      }
     }
     else
     {
