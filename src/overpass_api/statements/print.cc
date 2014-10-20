@@ -1390,7 +1390,7 @@ class Collection_Print_Target : public Print_Target
                             const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
                             const map< uint32, string >* users = 0, const Action& action = KEEP);
     
-    void set_target(Print_Target* target);
+    void set_target(Print_Target* target, bool order_by_id);
     
     void clear_nodes
         (Resource_Manager& rman, const map< uint32, string >* users = 0, bool add_deletion_information = false);
@@ -1481,15 +1481,20 @@ class Collection_Print_Target : public Print_Target
     std::vector< Node_Entry > nodes;
     std::vector< Way_Entry > ways;
     std::vector< Relation_Entry > relations;
+    std::vector< Node_Entry > new_nodes;
+    std::vector< Way_Entry > new_ways;
+    std::vector< Relation_Entry > new_relations;
+    bool order_by_id;
 };
 
     
-void Collection_Print_Target::set_target(Print_Target* target)
+void Collection_Print_Target::set_target(Print_Target* target, bool order_by_id_)
 { 
   final_target = target;
   std::sort(nodes.begin(), nodes.end());
   std::sort(ways.begin(), ways.end());
   std::sort(relations.begin(), relations.end());
+  order_by_id = order_by_id_;
 }
 
 
@@ -1502,30 +1507,37 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& s
 {
   if (final_target)
   {
-    std::vector< Node_Entry >::iterator nodes_it
-        = std::lower_bound(nodes.begin(), nodes.end(), Node_Entry(ll_upper, skel));
-
-    if (nodes_it == nodes.end() || skel.id < nodes_it->elem.id)
-    {
-      // No old element exists
-      final_target->print_item(ll_upper, skel,
-                               (mode & Print_Target::PRINT_TAGS) ? tags : 0,
-                               (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
-    }
+    if (order_by_id)
+      new_nodes.push_back(Node_Entry(ll_upper, skel,
+          meta ? *meta : OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
+          tags ? *tags : std::vector< std::pair< std::string, std::string > >()));
     else
     {
-      if (!(nodes_it->idx.val() == ll_upper) || !(nodes_it->elem == skel) ||
-          (tags && !(nodes_it->tags == *tags)) || (meta && !(nodes_it->meta.timestamp == meta->timestamp)))
+      std::vector< Node_Entry >::iterator nodes_it
+          = std::lower_bound(nodes.begin(), nodes.end(), Node_Entry(ll_upper, skel));
+
+      if (nodes_it == nodes.end() || skel.id < nodes_it->elem.id)
       {
-        // The elements differ
-        final_target->print_item(nodes_it->idx.val(), nodes_it->elem,
-                                 (mode & Print_Target::PRINT_TAGS) ? &nodes_it->tags : 0,
-                                 (mode & Print_Target::PRINT_META) ? &nodes_it->meta : 0, users, MODIFY_OLD);
+        // No old element exists
         final_target->print_item(ll_upper, skel,
                                  (mode & Print_Target::PRINT_TAGS) ? tags : 0,
-                                 (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
+                                 (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
       }
-      nodes_it->idx = 0xffu;
+      else
+      {
+        if (!(nodes_it->idx.val() == ll_upper) || !(nodes_it->elem.ll_lower == skel.ll_lower) ||
+            (tags && !(nodes_it->tags == *tags)) || (meta && !(nodes_it->meta.timestamp == meta->timestamp)))
+        {
+          // The elements differ
+          final_target->print_item(nodes_it->idx.val(), nodes_it->elem,
+                                   (mode & Print_Target::PRINT_TAGS) ? &nodes_it->tags : 0,
+                                   (mode & Print_Target::PRINT_META) ? &nodes_it->meta : 0, users, MODIFY_OLD);
+          final_target->print_item(ll_upper, skel,
+                                   (mode & Print_Target::PRINT_TAGS) ? tags : 0,
+                                   (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
+        }
+        nodes_it->idx = 0xffu;
+      }
     }
   }
   else
@@ -1630,7 +1642,89 @@ std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Sk
 void Collection_Print_Target::clear_nodes
     (Resource_Manager& rman, const map< uint32, string >* users, bool add_deletion_information)
 {
-  if (add_deletion_information)
+  if (order_by_id)
+  {
+    std::sort(new_nodes.begin(), new_nodes.end());
+    std::vector< Node_Entry >::const_iterator old_it = nodes.begin();
+    std::vector< Node_Entry >::const_iterator new_it = new_nodes.begin();
+    
+    std::vector< Node_Skeleton::Id_Type > found_ids;
+    std::map< Node_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Node::Id_Type > > found_meta;
+    if (add_deletion_information)
+    {
+      std::vector< Node_Skeleton::Id_Type > searched_ids;
+      while (old_it != nodes.end() || new_it != new_nodes.end())
+      {
+        if (new_it == new_nodes.end() || (old_it != nodes.end() && old_it->elem.id < new_it->elem.id))
+        {
+	  searched_ids.push_back(old_it->elem.id);
+	  ++old_it;
+        }
+        else if (old_it != nodes.end() && old_it->elem.id == new_it->elem.id)
+        {
+	  ++old_it;
+	  ++new_it;
+        }
+        else
+	  ++new_it;
+      }
+    
+      std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(searched_ids, rman, true);
+      find_still_existing_skeletons< Uint32_Index, Node_Skeleton >(rman, req, searched_ids).swap(found_ids);
+      find_meta_elements< Uint32_Index, Node_Skeleton >(rman, req, searched_ids).swap(found_meta);
+    }
+	
+    old_it = nodes.begin();
+    new_it = new_nodes.begin();
+    
+    while (old_it != nodes.end() || new_it != new_nodes.end())
+    {
+      if (new_it == new_nodes.end() || (old_it != nodes.end() && old_it->elem.id < new_it->elem.id))
+      {
+	std::map< Node_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Node::Id_Type > >::const_iterator
+	    meta_it = found_meta.find(old_it->elem.id);
+        // No corresponding new element exists, thus the old one has been deleted.
+	if (add_deletion_information)
+          final_target->print_item(old_it->idx.val(), old_it->elem,
+                                 (mode & Print_Target::PRINT_TAGS) ? &old_it->tags : 0,
+                                 (mode & Print_Target::PRINT_META) ? &old_it->meta : 0, users, DELETE,
+				 ((mode & Print_Target::PRINT_META) && meta_it != found_meta.end() ?
+				     &meta_it->second : 0),
+				 std::binary_search(found_ids.begin(), found_ids.end(), old_it->elem.id) ?
+				     visible_true : visible_false);
+	else
+          final_target->print_item(old_it->idx.val(), old_it->elem,
+                                 (mode & Print_Target::PRINT_TAGS) ? &old_it->tags : 0,
+                                 (mode & Print_Target::PRINT_META) ? &old_it->meta : 0, users, DELETE);
+	++old_it;
+      }
+      else if (old_it != nodes.end() && old_it->elem.id == new_it->elem.id)
+      {
+        if (!(old_it->idx == new_it->idx) || !(old_it->elem.ll_lower == new_it->elem.ll_lower) ||
+            !(old_it->tags == new_it->tags) || !(old_it->meta.timestamp == new_it->meta.timestamp))
+        {
+          // The elements differ
+          final_target->print_item(old_it->idx.val(), old_it->elem,
+                                   (mode & Print_Target::PRINT_TAGS) ? &old_it->tags : 0,
+                                   (mode & Print_Target::PRINT_META) ? &old_it->meta : 0, users, MODIFY_OLD);
+          final_target->print_item(new_it->idx.val(), new_it->elem,
+                                   (mode & Print_Target::PRINT_TAGS) ? &new_it->tags : 0,
+                                   (mode & Print_Target::PRINT_META) ? &new_it->meta : 0, users, MODIFY_NEW);
+        }
+	++old_it;
+	++new_it;
+      }
+      else
+      {
+        // No old element exists
+        final_target->print_item(new_it->idx.val(), new_it->elem,
+                                 (mode & Print_Target::PRINT_TAGS) ? &new_it->tags : 0,
+                                 (mode & Print_Target::PRINT_META) ? &new_it->meta : 0, users, CREATE);
+	++new_it;
+      }
+    }
+  }
+  else if (add_deletion_information)
   {
     std::vector< Node_Skeleton::Id_Type > searched_ids;
     for (std::vector< Node_Entry >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
@@ -1970,7 +2064,7 @@ void Print_Statement::execute(Resource_Manager& rman)
   
   if (collection_mode == collect_rhs)
   {
-    collection_print_target->set_target(target);
+    collection_print_target->set_target(target, order == order_by_id);
     target = collection_print_target;
     mode = Print_Target::PRINT_IDS
         | Print_Target::PRINT_COORDS | Print_Target::PRINT_NDS | Print_Target::PRINT_MEMBERS
