@@ -1783,56 +1783,64 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
 {
   if (final_target)
   {
-    std::vector< Way_Entry >::iterator ways_it
-        = std::lower_bound(ways.begin(), ways.end(), Way_Entry(ll_upper, skel, std::vector< Quad_Coord >()));
-    
-    if (ways_it == ways.end() || skel.id < ways_it->elem.id)
+    if (order_by_id)
+      new_ways.push_back(Way_Entry(ll_upper, skel,
+          geometry ? *geometry : std::vector< Quad_Coord >(),
+          meta ? *meta : OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
+          tags ? *tags : std::vector< std::pair< std::string, std::string > >()));
+    else
     {
-      // No old element exists
-      if (geometry)
+      std::vector< Way_Entry >::iterator ways_it
+          = std::lower_bound(ways.begin(), ways.end(), Way_Entry(ll_upper, skel, std::vector< Quad_Coord >()));
+    
+      if (ways_it == ways.end() || skel.id < ways_it->elem.id)
       {
-        Double_Coords double_coords(*geometry);
-        final_target->print_item(ll_upper, skel,
+        // No old element exists
+        if (geometry)
+        {
+          Double_Coords double_coords(*geometry);
+          final_target->print_item(ll_upper, skel,
                                  (mode & Print_Target::PRINT_TAGS) ? tags : 0,
                                  bound_variant(double_coords, mode),
                                  (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
                                  (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
-      }
-      else
-        final_target->print_item(ll_upper, skel,
+        }
+        else
+          final_target->print_item(ll_upper, skel,
                                  (mode & Print_Target::PRINT_TAGS) ? tags : 0,
                                  0, 0,
                                  (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
-    }
-    else
-    {
-      if (!(ways_it->idx.val() == ll_upper) || !(ways_it->elem == skel) ||
-          (geometry && !(ways_it->geometry == *geometry)) ||
-          (tags && !(ways_it->tags == *tags)) || (meta && !(ways_it->meta.timestamp == meta->timestamp)))
+      }
+      else
       {
-        // The elements differ
-        Double_Coords double_coords(ways_it->geometry);
-        final_target->print_item(ways_it->idx.val(), ways_it->elem,
+        if (!(ways_it->idx.val() == ll_upper) || !(ways_it->elem == skel) ||
+            (geometry && !(ways_it->geometry == *geometry)) ||
+            (tags && !(ways_it->tags == *tags)) || (meta && !(ways_it->meta.timestamp == meta->timestamp)))
+        {
+          // The elements differ
+          Double_Coords double_coords(ways_it->geometry);
+          final_target->print_item(ways_it->idx.val(), ways_it->elem,
                                (mode & Print_Target::PRINT_TAGS) ? &ways_it->tags : 0,
                                bound_variant(double_coords, mode),
                                (mode & Print_Target::PRINT_GEOMETRY) ? &ways_it->geometry : 0,
                                (mode & Print_Target::PRINT_META) ? &ways_it->meta : 0, users, MODIFY_OLD);
-	if (geometry)
-	{
-          Double_Coords double_coords_new(*geometry);
-          final_target->print_item(ll_upper, skel,
+	  if (geometry)
+	  {
+            Double_Coords double_coords_new(*geometry);
+            final_target->print_item(ll_upper, skel,
                                    (mode & Print_Target::PRINT_TAGS) ? tags : 0,
                                    bound_variant(double_coords_new, mode),
                                    (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
                                    (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
-	}
-	else
-          final_target->print_item(ll_upper, skel,
+	  }
+	  else
+            final_target->print_item(ll_upper, skel,
                                    (mode & Print_Target::PRINT_TAGS) ? tags : 0,
                                    0, 0,
                                    (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
+        }
+        ways_it->idx = 0xffu;
       }
-      ways_it->idx = 0xffu;
     }
   }
   else
@@ -1846,7 +1854,105 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
 void Collection_Print_Target::clear_ways
     (Resource_Manager& rman, const map< uint32, string >* users, bool add_deletion_information)
 {
-  if (add_deletion_information)
+  if (order_by_id)
+  {
+    std::sort(new_ways.begin(), new_ways.end());
+    std::vector< Way_Entry >::const_iterator old_it = ways.begin();
+    std::vector< Way_Entry >::const_iterator new_it = new_ways.begin();
+    
+    std::vector< Way_Skeleton::Id_Type > found_ids;
+    std::map< Way_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Way::Id_Type > > found_meta;
+    if (add_deletion_information)
+    {
+      std::vector< Way_Skeleton::Id_Type > searched_ids;
+      while (old_it != ways.end() || new_it != new_ways.end())
+      {
+        if (new_it == new_ways.end() || (old_it != ways.end() && old_it->elem.id < new_it->elem.id))
+        {
+	  searched_ids.push_back(old_it->elem.id);
+	  ++old_it;
+        }
+        else if (old_it != ways.end() && old_it->elem.id == new_it->elem.id)
+        {
+	  ++old_it;
+	  ++new_it;
+        }
+        else
+	  ++new_it;
+      }
+    
+      std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(searched_ids, rman, true);
+      find_still_existing_skeletons< Uint31_Index, Way_Skeleton >(rman, req, searched_ids).swap(found_ids);
+      find_meta_elements< Uint31_Index, Way_Skeleton >(rman, req, searched_ids).swap(found_meta);
+    }
+	
+    old_it = ways.begin();
+    new_it = new_ways.begin();
+    
+    while (old_it != ways.end() || new_it != new_ways.end())
+    {
+      if (new_it == new_ways.end() || (old_it != ways.end() && old_it->elem.id < new_it->elem.id))
+      {
+	std::map< Way_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Way::Id_Type > >::const_iterator
+	    meta_it = found_meta.find(old_it->elem.id);
+        Double_Coords double_coords(old_it->geometry);
+        // No corresponding new element exists, thus the old one has been deleted.
+	if (add_deletion_information)
+          final_target->print_item(old_it->idx.val(), old_it->elem,
+                                 (mode & Print_Target::PRINT_TAGS) ? &old_it->tags : 0,
+                                 bound_variant(double_coords, mode),
+                                 (mode & Print_Target::PRINT_GEOMETRY) ? &old_it->geometry : 0,
+                                 (mode & Print_Target::PRINT_META) ? &old_it->meta : 0, users, DELETE,
+				 ((mode & Print_Target::PRINT_META) && meta_it != found_meta.end() ?
+				     &meta_it->second : 0),
+				 std::binary_search(found_ids.begin(), found_ids.end(), old_it->elem.id) ?
+				     visible_true : visible_false);
+	else
+          final_target->print_item(old_it->idx.val(), old_it->elem,
+                                 (mode & Print_Target::PRINT_TAGS) ? &old_it->tags : 0,
+                                 bound_variant(double_coords, mode),
+                                 (mode & Print_Target::PRINT_GEOMETRY) ? &old_it->geometry : 0,
+                                 (mode & Print_Target::PRINT_META) ? &old_it->meta : 0, users, DELETE);
+	++old_it;
+      }
+      else if (old_it != ways.end() && old_it->elem.id == new_it->elem.id)
+      {
+        if (!(old_it->idx == new_it->idx) || !(old_it->elem.nds == new_it->elem.nds) ||
+            !(old_it->geometry == new_it->geometry) ||
+            !(old_it->tags == new_it->tags) || !(old_it->meta.timestamp == new_it->meta.timestamp))
+        {
+          // The elements differ
+          Double_Coords double_coords(old_it->geometry);
+          final_target->print_item(old_it->idx.val(), old_it->elem,
+                               (mode & Print_Target::PRINT_TAGS) ? &old_it->tags : 0,
+                               bound_variant(double_coords, mode),
+                               (mode & Print_Target::PRINT_GEOMETRY) ? &old_it->geometry : 0,
+                               (mode & Print_Target::PRINT_META) ? &old_it->meta : 0, users, MODIFY_OLD);
+	  
+          Double_Coords double_coords_new(new_it->geometry);
+          final_target->print_item(new_it->idx.val(), new_it->elem,
+                               (mode & Print_Target::PRINT_TAGS) ? &new_it->tags : 0,
+                               bound_variant(double_coords_new, mode),
+                               (mode & Print_Target::PRINT_GEOMETRY) ? &new_it->geometry : 0,
+                               (mode & Print_Target::PRINT_META) ? &new_it->meta : 0, users, MODIFY_NEW);
+        }
+	++old_it;
+	++new_it;
+      }
+      else
+      {
+        // No old element exists
+        Double_Coords double_coords(new_it->geometry);
+        final_target->print_item(new_it->idx.val(), new_it->elem,
+                                 (mode & Print_Target::PRINT_TAGS) ? &new_it->tags : 0,
+                                 bound_variant(double_coords, mode),
+                                 (mode & Print_Target::PRINT_GEOMETRY) ? &new_it->geometry : 0,
+                                 (mode & Print_Target::PRINT_META) ? &new_it->meta : 0, users, CREATE);
+	++new_it;
+      }
+    }
+  }
+  else if (add_deletion_information)
   {
     std::vector< Way_Skeleton::Id_Type > searched_ids;
     for (std::vector< Way_Entry >::const_iterator it = ways.begin(); it != ways.end(); ++it)
