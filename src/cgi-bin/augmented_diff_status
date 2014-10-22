@@ -18,10 +18,23 @@
 # along with PT_Diagrams.  If not, see <http://www.gnu.org/licenses/>.
 
 
-echo "Content-Type: text/plain"
+# Do HTTP headers with respect to CORS
+echo "Content-Type: text/plain; charset=utf-8"
+if [[ -n $HTTP_ACCESS_CONTROL_REQUEST_HEADERS ]]; then
+  echo "Access-Control-Allow-Headers: $HTTP_ACCESS_CONTROL_REQUEST_HEADERS"
+fi
+if [[ -n $HTTP_ORIGIN ]]; then
+  echo "Access-Control-Allow-Origin: *"
+fi
+if [[ $REQUEST_METHOD == "OPTIONS" ]]; then {
+  echo "Access-Control-Allow-Methods: GET, POST, OPTIONS"
+  echo "Content-Length: 0"
+  echo
+  exit 0
+}; fi
 echo
 
 TIMESTAMP=`./timestamp | tail -n 1`
 EPOCHSECS=`date --date=$TIMESTAMP '+%s'`
 
-echo $(( ( $EPOCHSECS - 1347432900 ) / 60 ))
+echo $(( ( $EPOCHSECS - 1347432960 ) / 60 ))
