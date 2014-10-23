@@ -37,7 +37,7 @@ class User_Constraint : public Query_Constraint
   public:
     User_Constraint(User_Statement& user_) : user(&user_) {}
 
-    bool delivers_data() { return false; }
+    bool delivers_data(Resource_Manager& rman) { return false; }
     
     bool get_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
     bool get_ranges(Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);

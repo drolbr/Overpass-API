@@ -33,7 +33,7 @@ using namespace std;
 class Query_Constraint
 {
   public:
-    virtual bool delivers_data() = 0;
+    virtual bool delivers_data(Resource_Manager& rman) = 0;
     
     virtual bool collect_nodes(Resource_Manager& rman, Set& into,
 			 const vector< Uint64 >& ids, bool invert_ids) { return false; }

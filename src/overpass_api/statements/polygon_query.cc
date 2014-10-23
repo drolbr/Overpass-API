@@ -38,7 +38,7 @@ using namespace std;
 class Polygon_Constraint : public Query_Constraint
 {
   public:
-    bool delivers_data();
+    bool delivers_data(Resource_Manager& rman);
     
     Polygon_Constraint(Polygon_Query_Statement& polygon_) : polygon(&polygon_) {}
     bool get_ranges
@@ -54,7 +54,7 @@ class Polygon_Constraint : public Query_Constraint
 };
 
 
-bool Polygon_Constraint::delivers_data()
+bool Polygon_Constraint::delivers_data(Resource_Manager& rman)
 {
   return false;
 }

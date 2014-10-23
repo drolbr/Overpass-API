@@ -130,7 +130,7 @@ class Pivot_Constraint : public Query_Constraint
   public:
     Pivot_Constraint(Pivot_Statement& stmt_) : stmt(&stmt_) {}
     
-    bool delivers_data() { return true; }
+    bool delivers_data(Resource_Manager& rman) { return true; }
     
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
                           const set< pair< Uint32_Index, Uint32_Index > >& ranges,

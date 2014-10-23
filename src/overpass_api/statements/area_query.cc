@@ -41,7 +41,7 @@ class Area_Constraint : public Query_Constraint
   public:
     Area_Constraint(Area_Query_Statement& area_) : area(&area_) {}
 
-    bool delivers_data() { return true; }
+    bool delivers_data(Resource_Manager& rman);
     
     bool get_ranges
         (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
@@ -282,6 +282,31 @@ void Area_Query_Statement::get_ranges
   }
   
   sort(area_id.begin(), area_id.end());
+}
+
+
+bool Area_Constraint::delivers_data(Resource_Manager& rman)
+{
+  if (!area->areas_from_input())
+    return false;
+  else
+  {
+    map< string, Set >::const_iterator mit = rman.sets().find(area->get_input());
+    if (mit == rman.sets().end())
+      return true;
+    
+    // Count the indicies of the input areas
+    int counter = 0;
+    
+    for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator it = mit->second.areas.begin();
+         it != mit->second.areas.end(); ++it)
+    {
+      for (vector< Area_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+        counter += it2->used_indices.size();
+    }
+  
+    return (counter <= 12);
+  }
 }
 
 

@@ -26,7 +26,7 @@ class Item_Constraint : public Query_Constraint
   public:
     Item_Constraint(Item_Statement& item_) : item(&item_) {}
 
-    bool delivers_data() { return true; }
+    bool delivers_data(Resource_Manager& rman) { return true; }
     
     bool collect_nodes(Resource_Manager& rman, Set& into,
 		 const vector< Uint64 >& ids, bool invert_ids);
