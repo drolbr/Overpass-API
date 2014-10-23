@@ -405,6 +405,7 @@ void Dispatcher::prolongate(pid_t pid)
   processes_reading[pid].ping_time = time(NULL);
 }
 
+
 void Dispatcher::read_finished(pid_t pid)
 {
   if (logger)
@@ -419,6 +420,23 @@ void Dispatcher::read_finished(pid_t pid)
   processes_reading.erase(pid);
   disconnected.erase(pid);
 }
+
+
+void Dispatcher::read_aborted(pid_t pid)
+{
+  if (logger)
+    logger->read_aborted(pid);
+  for (vector< Idx_Footprints >::iterator it(data_footprints.begin());
+      it != data_footprints.end(); ++it)
+    it->unregister_pid(pid);
+  for (vector< Idx_Footprints >::iterator it(map_footprints.begin());
+      it != map_footprints.end(); ++it)
+    it->unregister_pid(pid);
+  processes_reading_idx.erase(pid);
+  processes_reading.erase(pid);
+  disconnected.erase(pid);
+}
+
 
 void Dispatcher::copy_shadows_to_mains()
 {
@@ -721,7 +739,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       }
       else if (command == READ_ABORTED)
       {
-	read_finished(client_pid);
+	read_aborted(client_pid);
 	if (connection_per_pid.get(client_pid) != 0)
 	  connection_per_pid.set(client_pid, 0);
       }
@@ -798,7 +816,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	  continue;
 	uint32 target_pid = arguments[0];
 
-	read_finished(target_pid);
+	read_aborted(target_pid);
         if (connection_per_pid.get(target_pid) != 0)
         {
 	  connection_per_pid.get(target_pid)->send_result(READ_FINISHED);
@@ -1020,7 +1038,7 @@ void Dispatcher::check_and_purge()
     {
       if (logger)
 	logger->purge(*it);
-      read_finished(*it);
+      read_aborted(*it);
     }
   }
 }
