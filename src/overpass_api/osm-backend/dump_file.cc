@@ -291,8 +291,8 @@ int main(int argc, char* args[])
           (transaction.data_index(attic_settings().WAY_IDX_LIST));
       for (Block_Backend< Way_Skeleton::Id_Type, Uint31_Index >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
-        cout<<dec<<it.index().val()<<'\t'
-            <<hex<<it.object().val()<<'\n';
+        std::cout<<"0x"<<std::dec<<it.index().val()<<'\t'
+            <<"0x"<<std::hex<<it.object().val()<<'\n';
     }
     else if (std::string("--attic-ways") == args[2])
     {
