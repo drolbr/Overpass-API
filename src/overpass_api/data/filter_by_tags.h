@@ -47,6 +47,33 @@ std::set< pair< Tag_Index_Global, Tag_Index_Global > > get_k_req(const string& k
 }
 
 
+template< typename Skeleton >
+std::set< pair< Tag_Index_Global, Tag_Index_Global > > get_regk_req
+    (Regular_Expression* key, Resource_Manager& rman, Statement& stmt)
+{
+  std::set< pair< Tag_Index_Global, Tag_Index_Global > > result;
+  
+  Block_Backend< Uint32_Index, String_Object > db
+      (rman.get_transaction()->data_index(key_file_properties< Skeleton >()));
+  for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
+       it(db.flat_begin()); !(it == db.flat_end()); ++it)
+  {
+    if (key->matches(it.object().val()))
+    {
+      pair< Tag_Index_Global, Tag_Index_Global > idx_pair;
+      idx_pair.first.key = it.object().val();
+      idx_pair.first.value = "";
+      idx_pair.second.key = it.object().val() + (char)0;
+      idx_pair.second.value = "";
+      result.insert(idx_pair);
+    }
+  }
+  rman.health_check(stmt);
+  
+  return result;
+}
+
+
 template< typename Id_Type >
 bool operator<(const std::pair< Id_Type, Uint31_Index >& lhs, const std::pair< Id_Type, Uint31_Index >& rhs)
 {
@@ -212,6 +239,91 @@ std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_kregv(
   }
   
   return timestamp_per_id;
+}
+
+
+template< typename Skeleton, typename Id_Type >
+std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_regkregv(
+    vector< pair< Regular_Expression*, Regular_Expression* > >::const_iterator krit, uint64 timestamp,
+    Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >& tags_db,
+    Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >& attic_tags_db,
+    Resource_Manager& rman, Statement& stmt)
+{
+  std::map< Id_Type, std::map< std::string, std::pair< uint64, Uint31_Index > > > timestamp_per_id;
+  std::set< pair< Tag_Index_Global, Tag_Index_Global > > range_req
+      = get_regk_req< Skeleton >(krit->first, rman, stmt);
+      
+  std::string last_key = void_tag_value();
+  bool matches = false;
+  for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Range_Iterator
+      it2(tags_db.range_begin
+        (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
+      Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
+      !(it2 == tags_db.range_end()); ++it2)
+  {
+    if (it2.index().key != last_key)
+    {
+      last_key = it2.index().key;
+      matches = krit->first->matches(it2.index().key);
+    }  
+    if (matches && krit->second->matches(it2.index().value))
+      timestamp_per_id[it2.object().id][last_key] = std::make_pair(NOW, it2.object().idx);
+  }
+      
+  last_key = void_tag_value();
+  matches = false;
+  for (typename Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >::Flat_Iterator
+      it2(attic_tags_db.flat_begin()); !(it2 == attic_tags_db.flat_end()); ++it2)
+  {
+    if (it2.index().key != last_key)
+    {
+      last_key = it2.index().key;
+      matches = krit->first->matches(it2.index().key);
+    }
+    if (it2.object().timestamp > timestamp && matches && krit->second->matches(it2.index().value))
+    {
+      std::pair< uint64, Uint31_Index >& ref = timestamp_per_id[it2.object().id][last_key];
+      if (ref.first == 0 || it2.object().timestamp < ref.first)
+        ref = std::make_pair(it2.object().timestamp, it2.object().idx);
+    }
+  }
+      
+  last_key = void_tag_value();
+  matches = false;
+  for (typename Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >::Flat_Iterator
+      it2(attic_tags_db.flat_begin()); !(it2 == attic_tags_db.flat_end()); ++it2)
+  {
+    if (it2.index().key != last_key)
+    {
+      last_key = it2.index().key;
+      matches = krit->first->matches(it2.index().key);
+    }
+    if (matches && it2.object().timestamp > timestamp)
+    {
+      typename std::map< Id_Type, std::map< std::string, std::pair< uint64, Uint31_Index > > >::iterator
+          it = timestamp_per_id.find(it2.object().id);
+      if (it != timestamp_per_id.end())
+      {
+	typename std::map< std::string, std::pair< uint64, Uint31_Index > >::iterator
+	    it3 = it->second.find(last_key);
+	if (it3 != it->second.end())
+	{
+	  if (it2.object().timestamp < it3->second.first)
+	    it->second.erase(it3);
+	}
+      }
+    }
+  }
+
+  std::map< Id_Type, std::pair< uint64, Uint31_Index > > result;
+  for (typename std::map< Id_Type, std::map< std::string, std::pair< uint64, Uint31_Index > > >::const_iterator
+      it = timestamp_per_id.begin(); it != timestamp_per_id.end(); ++it)
+  {
+    if (!it->second.empty())
+      result[it->first] = it->second.begin()->second;
+  }
+
+  return result;
 }
 
 

@@ -93,6 +93,23 @@ template< > inline File_Properties* current_local_tags_file_properties< Relation
 
 
 template< typename Skeleton >
+File_Properties* key_file_properties()
+{
+  return 0;
+}
+
+template< > inline File_Properties* key_file_properties< Node_Skeleton >()
+{ return osm_base_settings().NODE_KEYS; }
+
+template< > inline File_Properties* key_file_properties< Way_Skeleton >()
+{ return osm_base_settings().WAY_KEYS; }
+
+template< > inline File_Properties* key_file_properties< Relation_Skeleton >()
+{ return osm_base_settings().RELATION_KEYS; }
+
+
+
+template< typename Skeleton >
 File_Properties* attic_idx_list_properties()
 {
   return 0;

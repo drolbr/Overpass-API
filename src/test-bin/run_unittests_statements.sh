@@ -180,9 +180,9 @@ date +%T
 perform_test_loop around 9 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 # Test the query statement
-prepare_test_loop query 138 $DATA_SIZE
+prepare_test_loop query 150 $DATA_SIZE
 date +%T
-perform_test_loop query 138 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
+perform_test_loop query 150 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 # Test the foreach statement
 prepare_test_loop foreach 4 $DATA_SIZE

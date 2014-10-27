@@ -57,13 +57,15 @@ class Query_Statement : public Output_Statement
     vector< string > keys;    
     vector< pair< string, string > > key_values;    
     vector< pair< string, Regular_Expression* > > key_regexes;    
+    vector< pair< Regular_Expression*, Regular_Expression* > > regkey_regexes;    
     vector< pair< string, string > > key_nvalues;    
     vector< pair< string, Regular_Expression* > > key_nregexes;    
+    vector< pair< Regular_Expression*, Regular_Expression* > > regkey_nregexes;    
     vector< Query_Constraint* > constraints;
     
     static bool area_query_exists_;
     
-    template< class Id_Type >
+    template< typename Skeleton, typename Id_Type >
     std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids
         (const File_Properties& file_prop, const File_Properties& attic_file_prop,
          Resource_Manager& rman, uint64 timestamp, bool check_keys_late);
@@ -101,7 +103,7 @@ class Query_Statement : public Output_Statement
          const File_Properties& file_prop,
          Resource_Manager& rman, Transaction& transaction);
 
-    template< typename Id_Type, typename Index >
+    template< typename Skeleton, typename Id_Type, typename Index >
     void progress_1(std::vector< Id_Type >& ids, std::vector< Index >& range_req,
                     bool& invert_ids, uint64 timestamp,
                     Answer_State& answer_state, bool check_keys_late,
@@ -139,6 +141,7 @@ class Has_Kv_Statement : public Statement
     static Generic_Statement_Maker< Has_Kv_Statement > statement_maker;
     
     string get_key() const { return key; }
+    Regular_Expression* get_key_regex() { return key_regex; }
     string get_value() const { return value; }
     Regular_Expression* get_regex() { return regex; }
     bool get_straight() const { return straight; }
@@ -146,6 +149,7 @@ class Has_Kv_Statement : public Statement
   private:
     string key, value;
     Regular_Expression* regex;
+    Regular_Expression* key_regex;
     bool straight;
 };
 
