@@ -131,21 +131,56 @@ class Id_Query_Constraint : public Query_Constraint
         (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges
         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
-//     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-//                           const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-//                           const vector< Node::Id_Type >& ids,
-//                           bool invert_ids, uint64 timestamp);
-//     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-//                           const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-//                           int type,
-//                           const vector< Uint32_Index >& ids,
-//                           bool invert_ids, uint64 timestamp);
+	
+    bool get_node_ids
+        (Resource_Manager& rman, vector< Node_Skeleton::Id_Type >& ids);
+    bool get_way_ids
+        (Resource_Manager& rman, vector< Way_Skeleton::Id_Type >& ids);
+    bool get_relation_ids
+        (Resource_Manager& rman, vector< Relation_Skeleton::Id_Type >& ids);
+	
     void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Id_Query_Constraint() {}
     
   private:
     Id_Query_Statement* stmt;
 };
+
+
+bool Id_Query_Constraint::get_node_ids(Resource_Manager& rman, vector< Node_Skeleton::Id_Type >& ids)
+{
+  ids.clear();
+  if (stmt->get_type() == Statement::NODE)
+  {
+    for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
+      ids.push_back(i);
+  }
+  return true;
+}
+
+
+bool Id_Query_Constraint::get_way_ids(Resource_Manager& rman, vector< Way_Skeleton::Id_Type >& ids)
+{
+  ids.clear();
+  if (stmt->get_type() == Statement::WAY)
+  {
+    for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
+      ids.push_back(i);
+  }
+  return true;
+}
+
+
+bool Id_Query_Constraint::get_relation_ids(Resource_Manager& rman, vector< Relation_Skeleton::Id_Type >& ids)
+{
+  ids.clear();
+  if (stmt->get_type() == Statement::RELATION)
+  {
+    for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
+      ids.push_back(i);
+  }
+  return true;
+}
 
 
 bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
@@ -187,33 +222,6 @@ bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint31_I
   
   return true;
 }
-
-
-// bool Id_Query_Constraint::get_data
-//     (const Statement& query, Resource_Manager& rman, Set& into,
-//      const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-//      const vector< Node_Skeleton::Id_Type >& ids,
-//      bool invert_ids, uint64 timestamp)
-// {
-//   // Removed: doesn't work well with attic data
-//   // and the function anyway shouldn't read from file
-//     
-//   return false;
-// }
-
-
-// bool Id_Query_Constraint::get_data
-//     (const Statement& query, Resource_Manager& rman, Set& into,
-//      const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-//      int type,
-//      const vector< Uint32_Index >& ids,
-//      bool invert_ids, uint64 timestamp)
-// {
-//   // Removed: doesn't work well with attic data
-//   // and the function anyway shouldn't read from file
-// 
-//   return false;
-// }
 
 
 void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
