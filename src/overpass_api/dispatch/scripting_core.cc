@@ -26,6 +26,7 @@
 #include "../statements/coord_query.h"
 #include "../statements/id_query.h"
 #include "../statements/make_area.h"
+#include "../statements/map_to_area.h"
 #include "../statements/osm_script.h"
 #include "../statements/query.h"
 #include "../statements/statement.h"
@@ -83,6 +84,7 @@ int determine_area_level(Error_Output* error_output, int area_level)
   }
   if ((area_level == 0) &&
       (Coord_Query_Statement::is_used() || Area_Query_Statement::is_used() ||
+       Map_To_Area_Statement::is_used() ||
        Query_Statement::area_query_exists() || Id_Query_Statement::area_query_exists()))
     area_level = 1;
   
