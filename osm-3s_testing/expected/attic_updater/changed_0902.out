@@ -7,467 +7,6 @@
     <tag k="foo" v="bar_1101"/>
     <tag k="foo_1101" v="bar"/>
   </node>
-  <node id="11011" lat="10.0000000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="11012" lat="10.0010000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="11013" lat="10.0020000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="12011" lat="10.0000000" lon="2.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="12012" lat="10.0010000" lon="2.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="12013" lat="10.0020000" lon="2.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="12021" lat="10.0000000" lon="2.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="12022" lat="10.0010000" lon="2.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="12023" lat="10.0020000" lon="2.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="12031" lat="10.0000000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="12032" lat="10.0010000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="12033" lat="10.0020000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="13012" lat="10.0010000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="13013" lat="10.0020000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="13031" lat="10.0000000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="13032" lat="10.0010000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="13043" lat="10.0020000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="14012" lat="10.0010000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="14013" lat="10.0020000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="14031" lat="10.0000000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="14032" lat="10.0010000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="14043" lat="10.0020000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="15011" lat="10.0000000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="15012" lat="10.0010000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="15013" lat="10.0020000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="15021" lat="10.0000000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="15022" lat="10.0010000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="15023" lat="10.0020000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="15031" lat="10.0000000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="15032" lat="10.0010000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="15033" lat="10.0020000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="15034" lat="10.0030000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="15041" lat="10.0000000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="15042" lat="10.0010000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="15043" lat="10.0020000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="15044" lat="10.0030000" lon="15.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="15051" lat="10.0000000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="15052" lat="10.0010000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="15053" lat="10.0020000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="15054" lat="10.0020000" lon="15.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="15055" lat="10.0030000" lon="35.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="16011" lat="10.0000000" lon="6.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="16012" lat="10.0010000" lon="6.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="16021" lat="10.0000000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="16022" lat="10.0010000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="16031" lat="10.0000000" lon="6.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="16032" lat="10.0010000" lon="6.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="17011" lat="10.0000000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="17012" lat="10.0010000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="17013" lat="10.0020000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="17014" lat="10.0030000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="17021" lat="10.0000000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="17022" lat="10.0010000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="17023" lat="10.0020000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="17024" lat="10.0030000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="17025" lat="10.0040000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="17031" lat="10.0000000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="17032" lat="10.0010000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="17033" lat="10.0020000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="17034" lat="10.0030000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="17035" lat="10.0040000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="18011" lat="10.0000000" lon="8.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="18021" lat="10.0000000" lon="8.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="18022" lat="10.0010000" lon="8.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="18031" lat="10.0000000" lon="8.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="18032" lat="10.0010000" lon="8.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="21011" lat="11.0000000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="21012" lat="11.0010000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="21013" lat="11.0020000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="21021" lat="11.0000000" lon="1.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="21022" lat="11.0010000" lon="1.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="21023" lat="11.0020000" lon="1.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="21031" lat="11.0000000" lon="1.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="21032" lat="11.0010000" lon="1.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="21033" lat="11.0020000" lon="1.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="22011" lat="11.0000000" lon="2.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="22012" lat="11.0010000" lon="2.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="22013" lat="11.0020000" lon="2.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="22021" lat="11.0000000" lon="2.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="22022" lat="11.0010000" lon="2.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="22023" lat="11.0020000" lon="2.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="22031" lat="11.0000000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="22032" lat="11.0010000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="22033" lat="11.0020000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="22041" lat="11.0000000" lon="2.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="22042" lat="11.0010000" lon="2.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="22043" lat="11.0020000" lon="2.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="22051" lat="11.0000000" lon="2.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="22052" lat="11.0010000" lon="2.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="22053" lat="11.0020000" lon="2.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="22061" lat="11.0000000" lon="2.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
-  <node id="22062" lat="11.0010000" lon="2.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
-  <node id="22063" lat="11.0020000" lon="2.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
-  <node id="23011" lat="11.0000000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="23012" lat="11.0010000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="23013" lat="11.0020000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="23021" lat="11.0000000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="23022" lat="11.0010000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="23023" lat="11.0020000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="23031" lat="11.0000000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="23032" lat="11.0010000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="23033" lat="11.0020000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="23041" lat="11.0000000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="23042" lat="11.0010000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="23043" lat="11.0020000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="23051" lat="11.0000000" lon="3.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="23052" lat="11.0010000" lon="3.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="23053" lat="11.0020000" lon="3.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="23061" lat="11.0000000" lon="3.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
-  <node id="23062" lat="11.0010000" lon="3.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
-  <node id="23063" lat="11.0020000" lon="3.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
-  <node id="24011" lat="11.0000000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="24012" lat="11.0010000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="24013" lat="11.0020000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="24021" lat="11.0000000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="24022" lat="11.0010000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="24023" lat="11.0020000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="24031" lat="11.0000000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="24032" lat="11.0010000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="24033" lat="11.0020000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="25011" lat="11.0000000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="25012" lat="11.0010000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="25013" lat="11.0020000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="25021" lat="11.0000000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="25022" lat="11.0010000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="25023" lat="11.0020000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="25031" lat="11.0000000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="25032" lat="11.0010000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="25033" lat="11.0020000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="25041" lat="11.0000000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="25042" lat="11.0010000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="25043" lat="11.0020000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="25051" lat="11.0000000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="25052" lat="11.0010000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="25053" lat="11.0020000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="25061" lat="11.0000000" lon="5.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
-  <node id="25062" lat="11.0010000" lon="5.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
-  <node id="25063" lat="11.0020000" lon="5.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
-  <node id="111110" lat="10.1000000" lon="1.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="111120" lat="10.1000000" lon="1.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="112111" lat="10.2010000" lon="1.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="112112" lat="10.2010000" lon="1.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="112121" lat="10.2020000" lon="1.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="112122" lat="10.2020000" lon="1.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="113110" lat="10.3000000" lon="1.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="113111" lat="10.3010000" lon="1.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="113112" lat="10.3010000" lon="1.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="113120" lat="10.3000000" lon="1.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="113121" lat="10.3020000" lon="1.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="113122" lat="10.3020000" lon="1.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="117110" lat="10.7000000" lon="1.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="117111" lat="10.7010000" lon="1.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="117112" lat="10.7010000" lon="1.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="117120" lat="10.7000000" lon="1.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="117121" lat="10.7020000" lon="1.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="117122" lat="10.7020000" lon="1.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="120110" lat="10.0010000" lon="2.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="120120" lat="10.0020000" lon="2.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="120210" lat="10.0010000" lon="2.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="120220" lat="10.0020000" lon="2.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="120310" lat="10.0010000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="120320" lat="10.0020000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="131120" lat="10.1020000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="132111" lat="10.2010000" lon="3.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="132112" lat="10.2010000" lon="3.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="132121" lat="10.2020000" lon="3.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="132122" lat="10.2020000" lon="3.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="132211" lat="10.2010000" lon="3.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="132212" lat="10.2010000" lon="3.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="132221" lat="10.2020000" lon="3.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="132222" lat="10.2020000" lon="3.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="132311" lat="10.2010000" lon="3.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="132312" lat="10.2010000" lon="3.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="132321" lat="10.2020000" lon="3.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="132322" lat="10.2020000" lon="3.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="132411" lat="10.2010000" lon="3.0401000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="132412" lat="10.2010000" lon="3.0402000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="132421" lat="10.2020000" lon="3.0401000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="132422" lat="10.2020000" lon="3.0402000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="132512" lat="10.2010000" lon="3.0502000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="132521" lat="10.2020000" lon="3.0501000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="132611" lat="10.2010000" lon="3.0601000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
-  <node id="132612" lat="10.2010000" lon="3.0602000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
-  <node id="132621" lat="10.2020000" lon="3.0601000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
-  <node id="132622" lat="10.2020000" lon="3.0602000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
-  <node id="132712" lat="10.2010000" lon="3.0702000" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo"/>
-  <node id="132721" lat="10.2020000" lon="3.0701000" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo"/>
-  <node id="133111" lat="10.3010000" lon="3.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="133112" lat="10.3010000" lon="3.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="133120" lat="10.3020000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="133121" lat="10.3020000" lon="3.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="133122" lat="10.3020000" lon="3.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="133211" lat="10.3010000" lon="3.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="133212" lat="10.3010000" lon="3.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="133220" lat="10.3020000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="133221" lat="10.3020000" lon="3.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="133222" lat="10.3020000" lon="3.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="133311" lat="10.3010000" lon="3.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="133312" lat="10.3010000" lon="3.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="133321" lat="10.3020000" lon="3.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="133322" lat="10.3020000" lon="3.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="133411" lat="10.3010000" lon="3.0401000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="133412" lat="10.3010000" lon="3.0402000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="133420" lat="10.3020000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="133421" lat="10.3020000" lon="3.0401000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="133422" lat="10.3020000" lon="3.0402000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="141120" lat="10.1020000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="142111" lat="10.2010000" lon="4.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="142112" lat="10.2010000" lon="4.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="142121" lat="10.2020000" lon="4.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="142122" lat="10.2020000" lon="4.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="142211" lat="10.2010000" lon="4.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="142212" lat="10.2010000" lon="4.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="142221" lat="10.2020000" lon="4.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="142222" lat="10.2020000" lon="4.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="142311" lat="10.2010000" lon="4.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="142312" lat="10.2010000" lon="4.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="142321" lat="10.2020000" lon="4.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="142322" lat="10.2020000" lon="4.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="142411" lat="10.2010000" lon="4.0401000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="142412" lat="10.2010000" lon="4.0402000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="142421" lat="10.2020000" lon="4.0401000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="142422" lat="10.2020000" lon="4.0402000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="142512" lat="10.2010000" lon="4.0502000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="142521" lat="10.2020000" lon="4.0501000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="142611" lat="10.2010000" lon="4.0601000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
-  <node id="142612" lat="10.2010000" lon="4.0602000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
-  <node id="142621" lat="10.2020000" lon="4.0601000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
-  <node id="142622" lat="10.2020000" lon="4.0602000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
-  <node id="142712" lat="10.2010000" lon="4.0702000" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo"/>
-  <node id="142721" lat="10.2020000" lon="4.0701000" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo"/>
-  <node id="143111" lat="10.3010000" lon="4.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="143112" lat="10.3010000" lon="4.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="143120" lat="10.3020000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="143121" lat="10.3020000" lon="4.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="143122" lat="10.3020000" lon="4.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="143211" lat="10.3010000" lon="4.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="143212" lat="10.3010000" lon="4.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="143220" lat="10.3020000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="143221" lat="10.3020000" lon="4.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="143222" lat="10.3020000" lon="4.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="143311" lat="10.3010000" lon="4.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="143312" lat="10.3010000" lon="4.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="143321" lat="10.3020000" lon="4.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="143322" lat="10.3020000" lon="4.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="143411" lat="10.3010000" lon="4.0401000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="143412" lat="10.3010000" lon="4.0402000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="143420" lat="10.3020000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="143421" lat="10.3020000" lon="4.0401000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="143422" lat="10.3020000" lon="4.0402000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="150110" lat="10.0010000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="150120" lat="10.0020000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="150210" lat="10.0010000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="150220" lat="10.0020000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="150310" lat="10.0010000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="150320" lat="10.0020000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="150330" lat="10.0030000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="150410" lat="10.0010000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="150420" lat="10.0020000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="150430" lat="20.0030000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="150510" lat="10.0010000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="150520" lat="10.0020000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="150530" lat="10.0030000" lon="15.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="150540" lat="10.0040000" lon="25.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
-  <node id="161110" lat="10.1010000" lon="6.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="161210" lat="10.1010000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="161310" lat="10.1010000" lon="6.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="161410" lat="10.1010000" lon="6.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="161420" lat="10.1020000" lon="6.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="162111" lat="10.2010000" lon="6.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="162112" lat="10.2010000" lon="6.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="162121" lat="10.2020000" lon="6.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="162122" lat="10.2020000" lon="6.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="162211" lat="10.2010000" lon="6.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="162212" lat="10.2010000" lon="6.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="162221" lat="10.2020000" lon="6.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="162222" lat="10.2020000" lon="6.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="162311" lat="10.2010000" lon="6.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="162312" lat="10.2010000" lon="6.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="162321" lat="10.2020000" lon="6.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="162322" lat="10.2020000" lon="6.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="163110" lat="10.3010000" lon="6.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="163111" lat="10.3010000" lon="6.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="163112" lat="10.3010000" lon="6.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="163121" lat="10.3020000" lon="6.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="163122" lat="10.3020000" lon="6.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="163210" lat="10.3010000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="163211" lat="10.3010000" lon="6.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="163212" lat="10.3010000" lon="6.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="163221" lat="10.3020000" lon="6.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="163222" lat="10.3020000" lon="6.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="163310" lat="10.3010000" lon="6.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="163311" lat="10.3010000" lon="6.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="163312" lat="10.3010000" lon="6.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="163321" lat="10.3020000" lon="6.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="163322" lat="10.3020000" lon="6.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="167110" lat="10.7010000" lon="6.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="167111" lat="10.7010000" lon="6.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="167112" lat="10.7010000" lon="6.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="167121" lat="10.7020000" lon="6.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="167122" lat="10.7020000" lon="6.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="167210" lat="10.7010000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="167211" lat="10.7010000" lon="6.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="167212" lat="10.7010000" lon="6.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="167221" lat="10.7020000" lon="6.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="167222" lat="10.7020000" lon="6.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="167310" lat="10.7010000" lon="6.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="167311" lat="10.7010000" lon="6.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="167312" lat="10.7010000" lon="6.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="167321" lat="10.7020000" lon="6.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="167322" lat="10.7020000" lon="6.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="171110" lat="10.1010000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="171120" lat="10.1020000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="171130" lat="10.1020000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="171210" lat="10.1010000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="171220" lat="10.1020000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="171230" lat="10.1010000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="171240" lat="10.1020000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="171310" lat="10.1010000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="171320" lat="10.1020000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="171330" lat="10.1010000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="171340" lat="10.1020000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="172111" lat="10.2010000" lon="7.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="172112" lat="10.2010000" lon="7.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="172121" lat="10.2020000" lon="7.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="172122" lat="10.2020000" lon="7.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="172131" lat="10.2020000" lon="7.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="172132" lat="10.2020000" lon="7.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="172211" lat="10.2010000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="172212" lat="10.2010000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="172221" lat="10.2020000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="172222" lat="10.2020000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="172231" lat="10.2010000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="172232" lat="10.2010000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="172241" lat="10.2020000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="172242" lat="10.2020000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="172311" lat="10.2010000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="172312" lat="10.2010000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="172321" lat="10.2020000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="172322" lat="10.2020000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="172331" lat="10.2010000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="172332" lat="10.2010000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="172341" lat="10.2020000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="172342" lat="10.2020000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="173110" lat="10.3010000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="173111" lat="10.3010000" lon="7.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="173112" lat="10.3010000" lon="7.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="173120" lat="10.3020000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="173121" lat="10.3020000" lon="7.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="173122" lat="10.3020000" lon="7.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="173130" lat="10.3020000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="173131" lat="10.3020000" lon="7.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="173132" lat="10.3020000" lon="7.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="173210" lat="10.3010000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="173211" lat="10.3010000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="173212" lat="10.3010000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="173220" lat="10.3020000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="173221" lat="10.3020000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="173222" lat="10.3020000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="173230" lat="10.3010000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="173231" lat="10.3010000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="173232" lat="10.3010000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="173240" lat="10.3020000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="173241" lat="10.3020000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="173242" lat="10.3020000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="173310" lat="10.3010000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="173311" lat="10.3010000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="173312" lat="10.3010000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="173320" lat="10.3020000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="173321" lat="10.3020000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="173322" lat="10.3020000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="173330" lat="10.3010000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="173331" lat="10.3010000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="173332" lat="10.3010000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="173340" lat="10.3020000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="173341" lat="10.3020000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="173342" lat="10.3020000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="177110" lat="10.7010000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="177111" lat="10.7010000" lon="7.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="177112" lat="10.7010000" lon="7.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="177120" lat="10.7020000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="177121" lat="10.7020000" lon="7.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="177122" lat="10.7020000" lon="7.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="177130" lat="10.7020000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="177131" lat="10.7020000" lon="7.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="177132" lat="10.7020000" lon="7.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="177210" lat="10.7010000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="177211" lat="10.7010000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="177212" lat="10.7010000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="177220" lat="10.7020000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="177221" lat="10.7020000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="177222" lat="10.7020000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="177230" lat="10.7010000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="177231" lat="10.7010000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="177232" lat="10.7010000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="177240" lat="10.7020000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="177241" lat="10.7020000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="177242" lat="10.7020000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="177310" lat="10.7010000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="177311" lat="10.7010000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="177312" lat="10.7010000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="177320" lat="10.7020000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="177321" lat="10.7020000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="177322" lat="10.7020000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="177330" lat="10.7010000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="177331" lat="10.7010000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="177332" lat="10.7010000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="177340" lat="10.7020000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="177341" lat="10.7020000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="177342" lat="10.7020000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="181210" lat="10.1010000" lon="8.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="181310" lat="10.1010000" lon="8.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="181410" lat="10.1010000" lon="8.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="181420" lat="10.1020000" lon="8.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="182111" lat="10.2010000" lon="8.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="182112" lat="10.2010000" lon="8.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="182121" lat="10.2020000" lon="8.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="182122" lat="10.2020000" lon="8.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="182211" lat="10.2010000" lon="8.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="182212" lat="10.2010000" lon="8.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="182221" lat="10.2020000" lon="8.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="182222" lat="10.2020000" lon="8.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="182311" lat="10.2010000" lon="8.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="182312" lat="10.2010000" lon="8.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="182321" lat="10.2020000" lon="8.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="182322" lat="10.2020000" lon="8.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="183111" lat="10.3010000" lon="8.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="183112" lat="10.3010000" lon="8.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="183121" lat="10.3020000" lon="8.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="183122" lat="10.3020000" lon="8.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="183210" lat="10.3010000" lon="8.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="183211" lat="10.3010000" lon="8.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="183212" lat="10.3010000" lon="8.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="183221" lat="10.3020000" lon="8.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="183222" lat="10.3020000" lon="8.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="183310" lat="10.3010000" lon="8.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="183311" lat="10.3010000" lon="8.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="183312" lat="10.3010000" lon="8.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="183321" lat="10.3020000" lon="8.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="183322" lat="10.3020000" lon="8.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="187111" lat="10.7010000" lon="8.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="187112" lat="10.7010000" lon="8.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="187121" lat="10.7020000" lon="8.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="187122" lat="10.7020000" lon="8.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="187210" lat="10.7010000" lon="8.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="187211" lat="10.7010000" lon="8.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="187212" lat="10.7010000" lon="8.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="187221" lat="10.7020000" lon="8.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="187222" lat="10.7020000" lon="8.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="187310" lat="10.7010000" lon="8.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="187311" lat="10.7010000" lon="8.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="187312" lat="10.7010000" lon="8.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="187321" lat="10.7020000" lon="8.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="187322" lat="10.7020000" lon="8.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
-  <node id="191110" lat="10.1010000" lon="9.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="192111" lat="10.2010000" lon="9.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="192112" lat="10.2010000" lon="9.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
-  <node id="192211" lat="10.2010000" lon="109.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="192212" lat="11.2010000" lon="109.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="192221" lat="10.2020000" lon="9.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
-  <node id="192222" lat="11.2020000" lon="9.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="1201" lat="10.0000000" lon="2.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1201"/>
     <tag k="foo_1201" v="bar"/>
@@ -630,350 +169,547 @@
     <tag k="multiple_values" v="first"/>
     <tag k="multiple_values" v="second"/>
   </node>
+  <node id="11011" lat="10.0000000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="11012" lat="10.0010000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="11013" lat="10.0020000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="12011" lat="10.0000000" lon="2.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="12012" lat="10.0010000" lon="2.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="12013" lat="10.0020000" lon="2.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="12021" lat="10.0000000" lon="2.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="12022" lat="10.0010000" lon="2.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="12023" lat="10.0020000" lon="2.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="12031" lat="10.0000000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="12032" lat="10.0010000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="12033" lat="10.0020000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="13011" lat="10.0000000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="13012" lat="10.0010000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="13013" lat="10.0020000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="13021" lat="10.0000000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="13022" lat="10.0010000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="13023" lat="10.0020000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="13031" lat="10.0000000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="13032" lat="10.0010000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="13033" lat="10.0020000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="13041" lat="10.0000000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
   <node id="13042" lat="10.0010000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="13043" lat="10.0020000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
   <node id="14011" lat="10.0000000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="14012" lat="10.0010000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="14013" lat="10.0020000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="14021" lat="10.0000000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="14022" lat="10.0010000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="14023" lat="10.0020000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="14031" lat="10.0000000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="14032" lat="10.0010000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="14033" lat="10.0020000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="14041" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
   <node id="14042" lat="10.0010000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="14043" lat="10.0020000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="15011" lat="10.0000000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="15012" lat="10.0010000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="15013" lat="10.0020000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="15021" lat="10.0000000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="15022" lat="10.0010000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="15023" lat="10.0020000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="15031" lat="10.0000000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="15032" lat="10.0010000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="15033" lat="10.0020000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="15034" lat="10.0030000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="15041" lat="10.0000000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="15042" lat="10.0010000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="15043" lat="10.0020000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="15044" lat="10.0030000" lon="15.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="15051" lat="10.0000000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="15052" lat="10.0010000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="15053" lat="10.0020000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="15054" lat="10.0020000" lon="15.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="15055" lat="10.0030000" lon="35.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="16011" lat="10.0000000" lon="6.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="16012" lat="10.0010000" lon="6.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="16013" lat="10.0020000" lon="6.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="16021" lat="10.0000000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="16022" lat="10.0010000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="16023" lat="10.0020000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="16031" lat="10.0000000" lon="6.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="16032" lat="10.0010000" lon="6.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="16033" lat="10.0020000" lon="6.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="17011" lat="10.0000000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="17012" lat="10.0010000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="17013" lat="10.0020000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="17014" lat="10.0030000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="17021" lat="10.0000000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="17022" lat="10.0010000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="17023" lat="10.0020000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="17024" lat="10.0030000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="17025" lat="10.0040000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="17031" lat="10.0000000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="17032" lat="10.0010000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="17033" lat="10.0020000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="17034" lat="10.0030000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="17035" lat="10.0040000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="18011" lat="10.0000000" lon="8.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="18012" lat="10.0010000" lon="8.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="18013" lat="10.0020000" lon="8.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="18021" lat="10.0000000" lon="8.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="18022" lat="10.0010000" lon="8.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="18023" lat="10.0020000" lon="8.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="18031" lat="10.0000000" lon="8.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="18032" lat="10.0010000" lon="8.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="18033" lat="10.0020000" lon="8.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="21011" lat="11.0000000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="21012" lat="11.0010000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="21013" lat="11.0020000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="21021" lat="11.0000000" lon="1.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="21022" lat="11.0010000" lon="1.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="21023" lat="11.0020000" lon="1.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="21031" lat="11.0000000" lon="1.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="21032" lat="11.0010000" lon="1.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="21033" lat="11.0020000" lon="1.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="22011" lat="11.0000000" lon="2.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="22012" lat="11.0010000" lon="2.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="22013" lat="11.0020000" lon="2.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="22021" lat="11.0000000" lon="2.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="22022" lat="11.0010000" lon="2.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="22023" lat="11.0020000" lon="2.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="22031" lat="11.0000000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="22032" lat="11.0010000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="22033" lat="11.0020000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="22041" lat="11.0000000" lon="2.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="22042" lat="11.0010000" lon="2.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="22043" lat="11.0020000" lon="2.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="22051" lat="11.0000000" lon="2.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="22052" lat="11.0010000" lon="2.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="22053" lat="11.0020000" lon="2.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="22061" lat="11.0000000" lon="2.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
+  <node id="22062" lat="11.0010000" lon="2.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
+  <node id="22063" lat="11.0020000" lon="2.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
+  <node id="23011" lat="11.0000000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="23012" lat="11.0010000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="23013" lat="11.0020000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="23021" lat="11.0000000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="23022" lat="11.0010000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="23023" lat="11.0020000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="23031" lat="11.0000000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="23032" lat="11.0010000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="23033" lat="11.0020000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="23041" lat="11.0000000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="23042" lat="11.0010000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="23043" lat="11.0020000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="23051" lat="11.0000000" lon="3.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="23052" lat="11.0010000" lon="3.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="23053" lat="11.0020000" lon="3.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="23061" lat="11.0000000" lon="3.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
+  <node id="23062" lat="11.0010000" lon="3.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
+  <node id="23063" lat="11.0020000" lon="3.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
+  <node id="24011" lat="11.0000000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="24012" lat="11.0010000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="24013" lat="11.0020000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="24021" lat="11.0000000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="24022" lat="11.0010000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="24023" lat="11.0020000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="24031" lat="11.0000000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="24032" lat="11.0010000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="24033" lat="11.0020000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="25011" lat="11.0000000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="25012" lat="11.0010000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="25013" lat="11.0020000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="25021" lat="11.0000000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="25022" lat="11.0010000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="25023" lat="11.0020000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="25031" lat="11.0000000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="25032" lat="11.0010000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="25033" lat="11.0020000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="25041" lat="11.0000000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="25042" lat="11.0010000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="25043" lat="11.0020000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="25051" lat="11.0000000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="25052" lat="11.0010000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="25053" lat="11.0020000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="25061" lat="11.0000000" lon="5.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
+  <node id="25062" lat="11.0010000" lon="5.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
+  <node id="25063" lat="11.0020000" lon="5.0600000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
+  <node id="111110" lat="10.1000000" lon="1.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="111120" lat="10.1000000" lon="1.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="112111" lat="10.2010000" lon="1.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="112112" lat="10.2010000" lon="1.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="112121" lat="10.2020000" lon="1.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="112122" lat="10.2020000" lon="1.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="113110" lat="10.3000000" lon="1.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="113111" lat="10.3010000" lon="1.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="113112" lat="10.3010000" lon="1.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="113120" lat="10.3000000" lon="1.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="113121" lat="10.3020000" lon="1.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="113122" lat="10.3020000" lon="1.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="117110" lat="10.7000000" lon="1.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="117111" lat="10.7010000" lon="1.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="117112" lat="10.7010000" lon="1.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="117120" lat="10.7000000" lon="1.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="117121" lat="10.7020000" lon="1.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="117122" lat="10.7020000" lon="1.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="120110" lat="10.0010000" lon="2.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="120120" lat="10.0020000" lon="2.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="120210" lat="10.0010000" lon="2.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="120220" lat="10.0020000" lon="2.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="120310" lat="10.0010000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="120320" lat="10.0020000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="131110" lat="10.1010000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="131120" lat="10.1020000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="131210" lat="10.1010000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="131220" lat="10.1020000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="131310" lat="10.1010000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="131320" lat="10.1020000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="131410" lat="10.1010000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
   <node id="131420" lat="10.1020000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="132111" lat="10.2010000" lon="3.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="132112" lat="10.2010000" lon="3.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="132121" lat="10.2020000" lon="3.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="132122" lat="10.2020000" lon="3.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="132211" lat="10.2010000" lon="3.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="132212" lat="10.2010000" lon="3.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="132221" lat="10.2020000" lon="3.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="132222" lat="10.2020000" lon="3.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="132311" lat="10.2010000" lon="3.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="132312" lat="10.2010000" lon="3.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="132321" lat="10.2020000" lon="3.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="132322" lat="10.2020000" lon="3.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="132411" lat="10.2010000" lon="3.0401000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="132412" lat="10.2010000" lon="3.0402000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="132421" lat="10.2020000" lon="3.0401000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="132422" lat="10.2020000" lon="3.0402000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
   <node id="132511" lat="10.2010000" lon="3.0501000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="132512" lat="10.2010000" lon="3.0502000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="132521" lat="10.2020000" lon="3.0501000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
   <node id="132522" lat="10.2020000" lon="3.0502000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="132611" lat="10.2010000" lon="3.0601000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
+  <node id="132612" lat="10.2010000" lon="3.0602000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
+  <node id="132621" lat="10.2020000" lon="3.0601000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
+  <node id="132622" lat="10.2020000" lon="3.0602000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
   <node id="132711" lat="10.2010000" lon="3.0701000" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo"/>
+  <node id="132712" lat="10.2010000" lon="3.0702000" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo"/>
+  <node id="132721" lat="10.2020000" lon="3.0701000" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo"/>
   <node id="132722" lat="10.2020000" lon="3.0702000" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo"/>
   <node id="133110" lat="10.3010000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="133111" lat="10.3010000" lon="3.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="133112" lat="10.3010000" lon="3.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="133120" lat="10.3020000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="133121" lat="10.3020000" lon="3.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="133122" lat="10.3020000" lon="3.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="133210" lat="10.3010000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="133211" lat="10.3010000" lon="3.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="133212" lat="10.3010000" lon="3.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="133220" lat="10.3020000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="133221" lat="10.3020000" lon="3.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="133222" lat="10.3020000" lon="3.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="133310" lat="10.3010000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="133311" lat="10.3010000" lon="3.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="133312" lat="10.3010000" lon="3.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="133320" lat="10.3020000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="133321" lat="10.3020000" lon="3.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="133322" lat="10.3020000" lon="3.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="133410" lat="10.3010000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="133411" lat="10.3010000" lon="3.0401000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="133412" lat="10.3010000" lon="3.0402000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="133420" lat="10.3020000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="133421" lat="10.3020000" lon="3.0401000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="133422" lat="10.3020000" lon="3.0402000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
   <node id="141110" lat="10.1010000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="141120" lat="10.1020000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="141210" lat="10.1010000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="141220" lat="10.1020000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="141310" lat="10.1010000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="141320" lat="10.1020000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="141410" lat="10.1010000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
   <node id="141420" lat="10.1020000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="142111" lat="10.2010000" lon="4.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="142112" lat="10.2010000" lon="4.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="142121" lat="10.2020000" lon="4.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="142122" lat="10.2020000" lon="4.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="142211" lat="10.2010000" lon="4.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="142212" lat="10.2010000" lon="4.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="142221" lat="10.2020000" lon="4.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="142222" lat="10.2020000" lon="4.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="142311" lat="10.2010000" lon="4.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="142312" lat="10.2010000" lon="4.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="142321" lat="10.2020000" lon="4.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="142322" lat="10.2020000" lon="4.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="142411" lat="10.2010000" lon="4.0401000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="142412" lat="10.2010000" lon="4.0402000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="142421" lat="10.2020000" lon="4.0401000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="142422" lat="10.2020000" lon="4.0402000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
   <node id="142511" lat="10.2010000" lon="4.0501000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="142512" lat="10.2010000" lon="4.0502000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="142521" lat="10.2020000" lon="4.0501000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
   <node id="142522" lat="10.2020000" lon="4.0502000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="142611" lat="10.2010000" lon="4.0601000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
+  <node id="142612" lat="10.2010000" lon="4.0602000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
+  <node id="142621" lat="10.2020000" lon="4.0601000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
+  <node id="142622" lat="10.2020000" lon="4.0602000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
   <node id="142711" lat="10.2010000" lon="4.0701000" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo"/>
+  <node id="142712" lat="10.2010000" lon="4.0702000" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo"/>
+  <node id="142721" lat="10.2020000" lon="4.0701000" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo"/>
   <node id="142722" lat="10.2020000" lon="4.0702000" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo"/>
   <node id="143110" lat="10.3010000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="143111" lat="10.3010000" lon="4.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="143112" lat="10.3010000" lon="4.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="143120" lat="10.3020000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="143121" lat="10.3020000" lon="4.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="143122" lat="10.3020000" lon="4.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="143210" lat="10.3010000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="143211" lat="10.3010000" lon="4.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="143212" lat="10.3010000" lon="4.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="143220" lat="10.3020000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="143221" lat="10.3020000" lon="4.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="143222" lat="10.3020000" lon="4.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="143310" lat="10.3010000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="143311" lat="10.3010000" lon="4.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="143312" lat="10.3010000" lon="4.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="143320" lat="10.3020000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="143321" lat="10.3020000" lon="4.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="143322" lat="10.3020000" lon="4.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="143410" lat="10.3010000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="143411" lat="10.3010000" lon="4.0401000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="143412" lat="10.3010000" lon="4.0402000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="143420" lat="10.3020000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="143421" lat="10.3020000" lon="4.0401000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="143422" lat="10.3020000" lon="4.0402000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="150110" lat="10.0010000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="150120" lat="10.0020000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="150210" lat="10.0010000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="150220" lat="10.0020000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="150310" lat="10.0010000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="150320" lat="10.0020000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="150330" lat="10.0030000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="150410" lat="10.0010000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="150420" lat="10.0020000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="150430" lat="20.0030000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="150510" lat="10.0010000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="150520" lat="10.0020000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="150530" lat="10.0030000" lon="15.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="150540" lat="10.0040000" lon="25.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="161110" lat="10.1010000" lon="6.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="161120" lat="10.1020000" lon="6.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="161210" lat="10.1010000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="161220" lat="10.1020000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="161310" lat="10.1010000" lon="6.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="161320" lat="10.1020000" lon="6.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="161410" lat="10.1010000" lon="6.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="161420" lat="10.1020000" lon="6.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="162111" lat="10.2010000" lon="6.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="162112" lat="10.2010000" lon="6.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="162121" lat="10.2020000" lon="6.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="162122" lat="10.2020000" lon="6.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="162211" lat="10.2010000" lon="6.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="162212" lat="10.2010000" lon="6.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="162221" lat="10.2020000" lon="6.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="162222" lat="10.2020000" lon="6.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="162311" lat="10.2010000" lon="6.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="162312" lat="10.2010000" lon="6.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="162321" lat="10.2020000" lon="6.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="162322" lat="10.2020000" lon="6.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="163110" lat="10.3010000" lon="6.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="163111" lat="10.3010000" lon="6.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="163112" lat="10.3010000" lon="6.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="163120" lat="10.3020000" lon="6.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="163121" lat="10.3020000" lon="6.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="163122" lat="10.3020000" lon="6.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="163210" lat="10.3010000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163211" lat="10.3010000" lon="6.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163212" lat="10.3010000" lon="6.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="163220" lat="10.3020000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163221" lat="10.3020000" lon="6.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163222" lat="10.3020000" lon="6.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163310" lat="10.3010000" lon="6.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="163311" lat="10.3010000" lon="6.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="163312" lat="10.3010000" lon="6.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="163320" lat="10.3020000" lon="6.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="163321" lat="10.3020000" lon="6.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="163322" lat="10.3020000" lon="6.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="167110" lat="10.7010000" lon="6.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="167111" lat="10.7010000" lon="6.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="167112" lat="10.7010000" lon="6.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="167120" lat="10.7020000" lon="6.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="167121" lat="10.7020000" lon="6.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="167122" lat="10.7020000" lon="6.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="167210" lat="10.7010000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="167211" lat="10.7010000" lon="6.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="167212" lat="10.7010000" lon="6.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="167220" lat="10.7020000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="167221" lat="10.7020000" lon="6.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="167222" lat="10.7020000" lon="6.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="167310" lat="10.7010000" lon="6.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="167311" lat="10.7010000" lon="6.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="167312" lat="10.7010000" lon="6.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="167320" lat="10.7020000" lon="6.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="167321" lat="10.7020000" lon="6.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="167322" lat="10.7020000" lon="6.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="171110" lat="10.1010000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="171120" lat="10.1020000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="171130" lat="10.1020000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="171210" lat="10.1010000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="171220" lat="10.1020000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="171230" lat="10.1010000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="171240" lat="10.1020000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="171310" lat="10.1010000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="171320" lat="10.1020000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="171330" lat="10.1010000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="171340" lat="10.1020000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="172111" lat="10.2010000" lon="7.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="172112" lat="10.2010000" lon="7.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="172121" lat="10.2020000" lon="7.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="172122" lat="10.2020000" lon="7.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="172131" lat="10.2020000" lon="7.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="172132" lat="10.2020000" lon="7.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="172211" lat="10.2010000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="172212" lat="10.2010000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="172221" lat="10.2020000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="172222" lat="10.2020000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="172231" lat="10.2010000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="172232" lat="10.2010000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="172241" lat="10.2020000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="172242" lat="10.2020000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="172311" lat="10.2010000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="172312" lat="10.2010000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="172321" lat="10.2020000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="172322" lat="10.2020000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="172331" lat="10.2010000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="172332" lat="10.2010000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="172341" lat="10.2020000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="172342" lat="10.2020000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="173110" lat="10.3010000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="173111" lat="10.3010000" lon="7.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="173112" lat="10.3010000" lon="7.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="173120" lat="10.3020000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="173121" lat="10.3020000" lon="7.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="173122" lat="10.3020000" lon="7.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="173130" lat="10.3020000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="173131" lat="10.3020000" lon="7.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="173132" lat="10.3020000" lon="7.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="173210" lat="10.3010000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="173211" lat="10.3010000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="173212" lat="10.3010000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="173220" lat="10.3020000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="173221" lat="10.3020000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="173222" lat="10.3020000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="173230" lat="10.3010000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="173231" lat="10.3010000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="173232" lat="10.3010000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="173240" lat="10.3020000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="173241" lat="10.3020000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="173242" lat="10.3020000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="173310" lat="10.3010000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="173311" lat="10.3010000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="173312" lat="10.3010000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="173320" lat="10.3020000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="173321" lat="10.3020000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="173322" lat="10.3020000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="173330" lat="10.3010000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="173331" lat="10.3010000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="173332" lat="10.3010000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="173340" lat="10.3020000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="173341" lat="10.3020000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="173342" lat="10.3020000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="177110" lat="10.7010000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="177111" lat="10.7010000" lon="7.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="177112" lat="10.7010000" lon="7.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="177120" lat="10.7020000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="177121" lat="10.7020000" lon="7.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="177122" lat="10.7020000" lon="7.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="177130" lat="10.7020000" lon="7.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="177131" lat="10.7020000" lon="7.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="177132" lat="10.7020000" lon="7.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="177210" lat="10.7010000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="177211" lat="10.7010000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="177212" lat="10.7010000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="177220" lat="10.7020000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="177221" lat="10.7020000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="177222" lat="10.7020000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="177230" lat="10.7010000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="177231" lat="10.7010000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="177232" lat="10.7010000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="177240" lat="10.7020000" lon="7.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="177241" lat="10.7020000" lon="7.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="177242" lat="10.7020000" lon="7.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="177310" lat="10.7010000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="177311" lat="10.7010000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="177312" lat="10.7010000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="177320" lat="10.7020000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="177321" lat="10.7020000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="177322" lat="10.7020000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="177330" lat="10.7010000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="177331" lat="10.7010000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="177332" lat="10.7010000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="177340" lat="10.7020000" lon="7.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="177341" lat="10.7020000" lon="7.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="177342" lat="10.7020000" lon="7.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="181110" lat="10.1010000" lon="8.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="181120" lat="10.1020000" lon="8.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="181210" lat="10.1010000" lon="8.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="181220" lat="10.1020000" lon="8.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="181310" lat="10.1010000" lon="8.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="181320" lat="10.1020000" lon="8.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="181410" lat="10.1010000" lon="8.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="181420" lat="10.1020000" lon="8.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="182111" lat="10.2010000" lon="8.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="182112" lat="10.2010000" lon="8.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="182121" lat="10.2020000" lon="8.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="182122" lat="10.2020000" lon="8.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="182211" lat="10.2010000" lon="8.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="182212" lat="10.2010000" lon="8.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="182221" lat="10.2020000" lon="8.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="182222" lat="10.2020000" lon="8.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="182311" lat="10.2010000" lon="8.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="182312" lat="10.2010000" lon="8.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="182321" lat="10.2020000" lon="8.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="182322" lat="10.2020000" lon="8.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="183110" lat="10.3010000" lon="8.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="183111" lat="10.3010000" lon="8.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="183112" lat="10.3010000" lon="8.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="183120" lat="10.3020000" lon="8.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="183121" lat="10.3020000" lon="8.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="183122" lat="10.3020000" lon="8.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="183210" lat="10.3010000" lon="8.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="183211" lat="10.3010000" lon="8.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="183212" lat="10.3010000" lon="8.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="183220" lat="10.3020000" lon="8.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="183221" lat="10.3020000" lon="8.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="183222" lat="10.3020000" lon="8.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="183310" lat="10.3010000" lon="8.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="183311" lat="10.3010000" lon="8.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="183312" lat="10.3010000" lon="8.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="183320" lat="10.3020000" lon="8.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="183321" lat="10.3020000" lon="8.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="183322" lat="10.3020000" lon="8.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="187110" lat="10.7010000" lon="8.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="187111" lat="10.7010000" lon="8.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="187112" lat="10.7010000" lon="8.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="187120" lat="10.7020000" lon="8.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="187121" lat="10.7020000" lon="8.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="187122" lat="10.7020000" lon="8.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="187210" lat="10.7010000" lon="8.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="187211" lat="10.7010000" lon="8.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="187212" lat="10.7010000" lon="8.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="187220" lat="10.7020000" lon="8.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="187221" lat="10.7020000" lon="8.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="187222" lat="10.7020000" lon="8.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="187310" lat="10.7010000" lon="8.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="187311" lat="10.7010000" lon="8.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="187312" lat="10.7010000" lon="8.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
   <node id="187320" lat="10.7020000" lon="8.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="187321" lat="10.7020000" lon="8.0301000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="187322" lat="10.7020000" lon="8.0302000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="191110" lat="10.1010000" lon="9.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="192111" lat="10.2010000" lon="9.0101000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="192112" lat="10.2010000" lon="9.0102000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="192211" lat="10.2010000" lon="109.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="192212" lat="11.2010000" lon="109.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="192221" lat="10.2020000" lon="9.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="192222" lat="11.2020000" lon="9.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <way id="1101" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="11011"/>
     <nd ref="11012"/>
     <nd ref="11013"/>
     <tag k="foo" v="bar_1101"/>
     <tag k="foo_1101" v="bar"/>
-  </way>
-  <way id="11211" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="112111"/>
-    <nd ref="112112"/>
-  </way>
-  <way id="11212" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="112121"/>
-    <nd ref="112122"/>
-  </way>
-  <way id="11311" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="113111"/>
-    <nd ref="113112"/>
-  </way>
-  <way id="11312" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="113121"/>
-    <nd ref="113122"/>
-  </way>
-  <way id="11711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="117111"/>
-    <nd ref="117112"/>
-  </way>
-  <way id="11712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="117121"/>
-    <nd ref="117122"/>
-  </way>
-  <way id="13212" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="132121"/>
-    <nd ref="132122"/>
-  </way>
-  <way id="13261" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
-    <nd ref="132611"/>
-    <nd ref="132612"/>
-  </way>
-  <way id="13262" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
-    <nd ref="132621"/>
-    <nd ref="132622"/>
-  </way>
-  <way id="13312" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="133121"/>
-    <nd ref="133122"/>
-  </way>
-  <way id="14211" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="142111"/>
-    <nd ref="142112"/>
-  </way>
-  <way id="14212" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="142121"/>
-    <nd ref="142122"/>
-  </way>
-  <way id="14261" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
-    <nd ref="142611"/>
-    <nd ref="142612"/>
-  </way>
-  <way id="14262" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
-    <nd ref="142621"/>
-    <nd ref="142622"/>
-  </way>
-  <way id="14312" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="143121"/>
-    <nd ref="143122"/>
-  </way>
-  <way id="16211" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="162111"/>
-    <nd ref="162112"/>
-  </way>
-  <way id="16221" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="162211"/>
-    <nd ref="162212"/>
-  </way>
-  <way id="16231" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <nd ref="162311"/>
-    <nd ref="162312"/>
-  </way>
-  <way id="16311" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="163111"/>
-    <nd ref="163112"/>
-  </way>
-  <way id="16321" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="163211"/>
-    <nd ref="163212"/>
-  </way>
-  <way id="16331" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <nd ref="163311"/>
-    <nd ref="163312"/>
-  </way>
-  <way id="16711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="167111"/>
-    <nd ref="167112"/>
-  </way>
-  <way id="16721" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="167211"/>
-    <nd ref="167212"/>
-  </way>
-  <way id="16731" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <nd ref="167311"/>
-    <nd ref="167312"/>
-  </way>
-  <way id="17211" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="172111"/>
-    <nd ref="172112"/>
-  </way>
-  <way id="17212" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="172121"/>
-    <nd ref="172122"/>
-  </way>
-  <way id="17213" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="172131"/>
-    <nd ref="172132"/>
-  </way>
-  <way id="17221" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="172211"/>
-    <nd ref="172212"/>
-  </way>
-  <way id="17222" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="172221"/>
-    <nd ref="172222"/>
-  </way>
-  <way id="17223" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="172231"/>
-    <nd ref="172232"/>
-  </way>
-  <way id="17224" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="172241"/>
-    <nd ref="172242"/>
-  </way>
-  <way id="17231" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <nd ref="172311"/>
-    <nd ref="172312"/>
-  </way>
-  <way id="17232" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <nd ref="172321"/>
-    <nd ref="172322"/>
-  </way>
-  <way id="17233" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <nd ref="172331"/>
-    <nd ref="172332"/>
-  </way>
-  <way id="17234" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <nd ref="172341"/>
-    <nd ref="172342"/>
-  </way>
-  <way id="17311" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="173111"/>
-    <nd ref="173112"/>
-  </way>
-  <way id="17312" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="173121"/>
-    <nd ref="173122"/>
-  </way>
-  <way id="17313" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="173131"/>
-    <nd ref="173132"/>
-  </way>
-  <way id="17321" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="173211"/>
-    <nd ref="173212"/>
-  </way>
-  <way id="17322" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="173221"/>
-    <nd ref="173222"/>
-  </way>
-  <way id="17323" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="173231"/>
-    <nd ref="173232"/>
-  </way>
-  <way id="17324" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="173241"/>
-    <nd ref="173242"/>
-  </way>
-  <way id="17331" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <nd ref="173311"/>
-    <nd ref="173312"/>
-  </way>
-  <way id="17332" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <nd ref="173321"/>
-    <nd ref="173322"/>
-  </way>
-  <way id="17333" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <nd ref="173331"/>
-    <nd ref="173332"/>
-  </way>
-  <way id="17334" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <nd ref="173341"/>
-    <nd ref="173342"/>
-  </way>
-  <way id="17711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="177111"/>
-    <nd ref="177112"/>
-  </way>
-  <way id="17712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="177121"/>
-    <nd ref="177122"/>
-  </way>
-  <way id="17713" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="177131"/>
-    <nd ref="177132"/>
-  </way>
-  <way id="17721" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="177211"/>
-    <nd ref="177212"/>
-  </way>
-  <way id="17722" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="177221"/>
-    <nd ref="177222"/>
-  </way>
-  <way id="17723" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="177231"/>
-    <nd ref="177232"/>
-  </way>
-  <way id="17724" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="177241"/>
-    <nd ref="177242"/>
-  </way>
-  <way id="17731" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <nd ref="177311"/>
-    <nd ref="177312"/>
-  </way>
-  <way id="17732" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <nd ref="177321"/>
-    <nd ref="177322"/>
-  </way>
-  <way id="17733" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <nd ref="177331"/>
-    <nd ref="177332"/>
-  </way>
-  <way id="17734" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <nd ref="177341"/>
-    <nd ref="177342"/>
-  </way>
-  <way id="18221" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="182211"/>
-    <nd ref="182212"/>
-  </way>
-  <way id="18231" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <nd ref="182311"/>
-    <nd ref="182312"/>
-  </way>
-  <way id="18321" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="183211"/>
-    <nd ref="183212"/>
-  </way>
-  <way id="18331" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <nd ref="183311"/>
-    <nd ref="183312"/>
-  </way>
-  <way id="18721" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="187211"/>
-    <nd ref="187212"/>
-  </way>
-  <way id="18731" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-    <nd ref="187311"/>
-    <nd ref="187312"/>
-  </way>
-  <way id="19211" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="192111"/>
-    <nd ref="192112"/>
-  </way>
-  <way id="19221" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="192211"/>
-    <nd ref="192212"/>
-  </way>
-  <way id="19222" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="192221"/>
-    <nd ref="192222"/>
   </way>
   <way id="1201" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="12011"/>
@@ -1328,9 +1064,37 @@
     <tag k="multiple_values" v="first"/>
     <tag k="multiple_values" v="second"/>
   </way>
+  <way id="11211" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="112111"/>
+    <nd ref="112112"/>
+  </way>
+  <way id="11212" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="112121"/>
+    <nd ref="112122"/>
+  </way>
+  <way id="11311" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="113111"/>
+    <nd ref="113112"/>
+  </way>
+  <way id="11312" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="113121"/>
+    <nd ref="113122"/>
+  </way>
+  <way id="11711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="117111"/>
+    <nd ref="117112"/>
+  </way>
+  <way id="11712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="117121"/>
+    <nd ref="117122"/>
+  </way>
   <way id="13211" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="132111"/>
     <nd ref="132112"/>
+  </way>
+  <way id="13212" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="132121"/>
+    <nd ref="132122"/>
   </way>
   <way id="13221" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="132211"/>
@@ -1364,6 +1128,14 @@
     <nd ref="132521"/>
     <nd ref="132522"/>
   </way>
+  <way id="13261" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
+    <nd ref="132611"/>
+    <nd ref="132612"/>
+  </way>
+  <way id="13262" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
+    <nd ref="132621"/>
+    <nd ref="132622"/>
+  </way>
   <way id="13271" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo">
     <nd ref="132711"/>
     <nd ref="132712"/>
@@ -1375,6 +1147,10 @@
   <way id="13311" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="133111"/>
     <nd ref="133112"/>
+  </way>
+  <way id="13312" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="133121"/>
+    <nd ref="133122"/>
   </way>
   <way id="13321" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="133211"/>
@@ -1399,6 +1175,14 @@
   <way id="13342" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <nd ref="133421"/>
     <nd ref="133422"/>
+  </way>
+  <way id="14211" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="142111"/>
+    <nd ref="142112"/>
+  </way>
+  <way id="14212" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="142121"/>
+    <nd ref="142122"/>
   </way>
   <way id="14221" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="142211"/>
@@ -1432,6 +1216,14 @@
     <nd ref="142521"/>
     <nd ref="142522"/>
   </way>
+  <way id="14261" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
+    <nd ref="142611"/>
+    <nd ref="142612"/>
+  </way>
+  <way id="14262" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
+    <nd ref="142621"/>
+    <nd ref="142622"/>
+  </way>
   <way id="14271" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo">
     <nd ref="142711"/>
     <nd ref="142712"/>
@@ -1443,6 +1235,10 @@
   <way id="14311" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="143111"/>
     <nd ref="143112"/>
+  </way>
+  <way id="14312" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="143121"/>
+    <nd ref="143122"/>
   </way>
   <way id="14321" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="143211"/>
@@ -1468,41 +1264,209 @@
     <nd ref="143421"/>
     <nd ref="143422"/>
   </way>
+  <way id="16211" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="162111"/>
+    <nd ref="162112"/>
+  </way>
   <way id="16212" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="162121"/>
     <nd ref="162122"/>
+  </way>
+  <way id="16221" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="162211"/>
+    <nd ref="162212"/>
   </way>
   <way id="16222" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="162221"/>
     <nd ref="162222"/>
   </way>
+  <way id="16231" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="162311"/>
+    <nd ref="162312"/>
+  </way>
   <way id="16232" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <nd ref="162321"/>
     <nd ref="162322"/>
+  </way>
+  <way id="16311" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="163111"/>
+    <nd ref="163112"/>
   </way>
   <way id="16312" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="163121"/>
     <nd ref="163122"/>
   </way>
+  <way id="16321" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="163211"/>
+    <nd ref="163212"/>
+  </way>
   <way id="16322" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="163221"/>
     <nd ref="163222"/>
+  </way>
+  <way id="16331" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="163311"/>
+    <nd ref="163312"/>
   </way>
   <way id="16332" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <nd ref="163321"/>
     <nd ref="163322"/>
   </way>
+  <way id="16711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="167111"/>
+    <nd ref="167112"/>
+  </way>
   <way id="16712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="167121"/>
     <nd ref="167122"/>
+  </way>
+  <way id="16721" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="167211"/>
+    <nd ref="167212"/>
   </way>
   <way id="16722" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="167221"/>
     <nd ref="167222"/>
   </way>
+  <way id="16731" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="167311"/>
+    <nd ref="167312"/>
+  </way>
   <way id="16732" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <nd ref="167321"/>
     <nd ref="167322"/>
+  </way>
+  <way id="17211" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="172111"/>
+    <nd ref="172112"/>
+  </way>
+  <way id="17212" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="172121"/>
+    <nd ref="172122"/>
+  </way>
+  <way id="17213" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="172131"/>
+    <nd ref="172132"/>
+  </way>
+  <way id="17221" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="172211"/>
+    <nd ref="172212"/>
+  </way>
+  <way id="17222" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="172221"/>
+    <nd ref="172222"/>
+  </way>
+  <way id="17223" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="172231"/>
+    <nd ref="172232"/>
+  </way>
+  <way id="17224" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="172241"/>
+    <nd ref="172242"/>
+  </way>
+  <way id="17231" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="172311"/>
+    <nd ref="172312"/>
+  </way>
+  <way id="17232" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="172321"/>
+    <nd ref="172322"/>
+  </way>
+  <way id="17233" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="172331"/>
+    <nd ref="172332"/>
+  </way>
+  <way id="17234" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="172341"/>
+    <nd ref="172342"/>
+  </way>
+  <way id="17311" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="173111"/>
+    <nd ref="173112"/>
+  </way>
+  <way id="17312" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="173121"/>
+    <nd ref="173122"/>
+  </way>
+  <way id="17313" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="173131"/>
+    <nd ref="173132"/>
+  </way>
+  <way id="17321" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="173211"/>
+    <nd ref="173212"/>
+  </way>
+  <way id="17322" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="173221"/>
+    <nd ref="173222"/>
+  </way>
+  <way id="17323" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="173231"/>
+    <nd ref="173232"/>
+  </way>
+  <way id="17324" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="173241"/>
+    <nd ref="173242"/>
+  </way>
+  <way id="17331" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="173311"/>
+    <nd ref="173312"/>
+  </way>
+  <way id="17332" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="173321"/>
+    <nd ref="173322"/>
+  </way>
+  <way id="17333" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="173331"/>
+    <nd ref="173332"/>
+  </way>
+  <way id="17334" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="173341"/>
+    <nd ref="173342"/>
+  </way>
+  <way id="17711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="177111"/>
+    <nd ref="177112"/>
+  </way>
+  <way id="17712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="177121"/>
+    <nd ref="177122"/>
+  </way>
+  <way id="17713" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="177131"/>
+    <nd ref="177132"/>
+  </way>
+  <way id="17721" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="177211"/>
+    <nd ref="177212"/>
+  </way>
+  <way id="17722" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="177221"/>
+    <nd ref="177222"/>
+  </way>
+  <way id="17723" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="177231"/>
+    <nd ref="177232"/>
+  </way>
+  <way id="17724" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="177241"/>
+    <nd ref="177242"/>
+  </way>
+  <way id="17731" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="177311"/>
+    <nd ref="177312"/>
+  </way>
+  <way id="17732" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="177321"/>
+    <nd ref="177322"/>
+  </way>
+  <way id="17733" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="177331"/>
+    <nd ref="177332"/>
+  </way>
+  <way id="17734" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="177341"/>
+    <nd ref="177342"/>
   </way>
   <way id="18211" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="182111"/>
@@ -1512,9 +1476,17 @@
     <nd ref="182121"/>
     <nd ref="182122"/>
   </way>
+  <way id="18221" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="182211"/>
+    <nd ref="182212"/>
+  </way>
   <way id="18222" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="182221"/>
     <nd ref="182222"/>
+  </way>
+  <way id="18231" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="182311"/>
+    <nd ref="182312"/>
   </way>
   <way id="18232" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <nd ref="182321"/>
@@ -1528,9 +1500,17 @@
     <nd ref="183121"/>
     <nd ref="183122"/>
   </way>
+  <way id="18321" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="183211"/>
+    <nd ref="183212"/>
+  </way>
   <way id="18322" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="183221"/>
     <nd ref="183222"/>
+  </way>
+  <way id="18331" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="183311"/>
+    <nd ref="183312"/>
   </way>
   <way id="18332" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <nd ref="183321"/>
@@ -1544,13 +1524,33 @@
     <nd ref="187121"/>
     <nd ref="187122"/>
   </way>
+  <way id="18721" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="187211"/>
+    <nd ref="187212"/>
+  </way>
   <way id="18722" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="187221"/>
     <nd ref="187222"/>
   </way>
+  <way id="18731" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="187311"/>
+    <nd ref="187312"/>
+  </way>
   <way id="18732" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <nd ref="187321"/>
     <nd ref="187322"/>
+  </way>
+  <way id="19211" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="192111"/>
+    <nd ref="192112"/>
+  </way>
+  <way id="19221" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="192211"/>
+    <nd ref="192212"/>
+  </way>
+  <way id="19222" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="192221"/>
+    <nd ref="192222"/>
   </way>
   <relation id="1111" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="111110" role=""/>
@@ -1587,102 +1587,6 @@
     <member type="relation" ref="11712" role=""/>
     <tag k="foo" v="bar_1171"/>
     <tag k="foo_1171" v="bar"/>
-  </relation>
-  <relation id="1326" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
-    <member type="way" ref="13261" role=""/>
-    <member type="way" ref="13262" role=""/>
-    <tag k="foo" v="bar_1326"/>
-    <tag k="foo_1326" v="bar"/>
-  </relation>
-  <relation id="1421" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <member type="way" ref="14211" role=""/>
-    <member type="way" ref="14212" role=""/>
-    <tag k="foo" v="bar_1421"/>
-    <tag k="foo_1421" v="bar"/>
-  </relation>
-  <relation id="1426" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
-    <member type="way" ref="14261" role=""/>
-    <member type="way" ref="14262" role=""/>
-    <tag k="foo" v="bar_1426"/>
-    <tag k="foo_1426" v="bar"/>
-  </relation>
-  <relation id="1901" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <tag k="foo" v="bar_1901"/>
-    <tag k="foo_1901" v="bar"/>
-  </relation>
-  <relation id="11411" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="11412" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="11711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="11712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="16411" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="16421" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="16431" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="16711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="16721" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="16731" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17411" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17412" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17413" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17421" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17422" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17423" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17424" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17431" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17432" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17433" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17434" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17713" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17721" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17722" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17723" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17724" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17731" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17732" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17733" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17734" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18421" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18431" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18721" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18731" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="19411" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
   </relation>
   <relation id="1201" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="120110" role=""/>
@@ -1756,6 +1660,12 @@
     <tag k="foo" v="bar_1325"/>
     <tag k="foo_1325" v="bar"/>
   </relation>
+  <relation id="1326" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
+    <member type="way" ref="13261" role=""/>
+    <member type="way" ref="13262" role=""/>
+    <tag k="foo" v="bar_1326"/>
+    <tag k="foo_1326" v="bar"/>
+  </relation>
   <relation id="1327" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="13271" role=""/>
     <member type="way" ref="13272" role=""/>
@@ -1818,6 +1728,12 @@
     <tag k="foo" v="bar_1414"/>
     <tag k="foo_1414" v="bar"/>
   </relation>
+  <relation id="1421" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <member type="way" ref="14211" role=""/>
+    <member type="way" ref="14212" role=""/>
+    <tag k="foo" v="bar_1421"/>
+    <tag k="foo_1421" v="bar"/>
+  </relation>
   <relation id="1422" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="14221" role=""/>
     <member type="way" ref="14222" role=""/>
@@ -1841,6 +1757,12 @@
     <member type="way" ref="14252" role=""/>
     <tag k="foo" v="bar_1425"/>
     <tag k="foo_1425" v="bar"/>
+  </relation>
+  <relation id="1426" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
+    <member type="way" ref="14261" role=""/>
+    <member type="way" ref="14262" role=""/>
+    <tag k="foo" v="bar_1426"/>
+    <tag k="foo_1426" v="bar"/>
   </relation>
   <relation id="1427" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="14271" role=""/>
@@ -2234,6 +2156,10 @@
     <tag k="foo" v="bar_1873"/>
     <tag k="foo_1873" v="bar"/>
   </relation>
+  <relation id="1901" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1901"/>
+    <tag k="foo_1901" v="bar"/>
+  </relation>
   <relation id="1911" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="191110" role="initial"/>
     <tag k="foo" v="bar_1911"/>
@@ -2413,23 +2339,91 @@
     <member type="relation" ref="1171" role="initial"/>
     <tag k="purpose" v="meta"/>
   </relation>
+  <relation id="11411" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="11412" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="11711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="11712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="16411" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  </relation>
   <relation id="16412" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="16421" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
   </relation>
   <relation id="16422" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
   </relation>
+  <relation id="16431" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  </relation>
   <relation id="16432" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="16711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
   </relation>
   <relation id="16712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
   </relation>
+  <relation id="16721" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
   <relation id="16722" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
   </relation>
+  <relation id="16731" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  </relation>
   <relation id="16732" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17411" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17412" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17413" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17421" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17422" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17423" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17424" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17431" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17432" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17433" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17434" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17713" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17721" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17722" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17723" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17724" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17731" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17732" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17733" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="17734" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
   </relation>
   <relation id="18411" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
   </relation>
   <relation id="18412" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
   </relation>
+  <relation id="18421" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
   <relation id="18422" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="18431" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
   </relation>
   <relation id="18432" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
   </relation>
@@ -2437,9 +2431,15 @@
   </relation>
   <relation id="18712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
   </relation>
+  <relation id="18721" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  </relation>
   <relation id="18722" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
   </relation>
+  <relation id="18731" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  </relation>
   <relation id="18732" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  </relation>
+  <relation id="19411" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
   </relation>
 
 </osm>

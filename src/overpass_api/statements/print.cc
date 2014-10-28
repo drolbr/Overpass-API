@@ -754,6 +754,60 @@ void by_id
 }
 
 
+template< typename Index, typename Object >
+struct Maybe_Attic_Ref
+{
+public:
+  Maybe_Attic_Ref(Index idx_, const Object* obj_, uint64 timestamp_)
+  : idx(idx_), obj(obj_), timestamp(timestamp_) {}
+  
+  Index idx;
+  const Object* obj;
+  uint64 timestamp;
+  
+  bool operator<(const Maybe_Attic_Ref& rhs) const { return obj->id < rhs.obj->id; }
+};
+
+
+template< class TIndex, class TObject >
+void by_id
+  (const std::map< TIndex, std::vector< TObject > >& items,
+   const std::map< TIndex, std::vector< Attic< TObject > > >& attic_items,
+   Print_Target& target,
+   Transaction& transaction, Print_Statement& stmt, uint32 limit, uint32& element_count)
+{
+  // order relevant elements by id
+  std::vector< Maybe_Attic_Ref< TIndex, TObject > > items_by_id;
+  for (typename std::map< TIndex, std::vector< TObject > >::const_iterator
+      it(items.begin()); it != items.end(); ++it)
+  {
+    for (typename std::vector< TObject >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      items_by_id.push_back(Maybe_Attic_Ref< TIndex, TObject >(it->first, &(*it2), NOW));
+  }
+  for (typename std::map< TIndex, std::vector< Attic< TObject > > >::const_iterator
+      it(attic_items.begin()); it != attic_items.end(); ++it)
+  {
+    for (typename std::vector< Attic< TObject > >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      items_by_id.push_back(Maybe_Attic_Ref< TIndex, TObject >(it->first, &(*it2), it2->timestamp));
+  }
+  sort(items_by_id.begin(), items_by_id.end());
+  
+  // iterate over the result
+  for (uint32 i(0); i < items_by_id.size(); ++i)
+  {
+    if (++element_count > limit)
+      return;
+    if (items_by_id[i].timestamp == NOW)
+      stmt.print_item(target, items_by_id[i].idx.val(), *items_by_id[i].obj);
+    else
+      stmt.print_item(target, items_by_id[i].idx.val(),
+		      Attic< TObject >(*items_by_id[i].obj, items_by_id[i].timestamp));
+  }
+}
+
+
 template< class TIndex, class TObject >
 void collect_metadata(set< OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > >& metadata,
 		      const map< TIndex, vector< TObject > >& items,
@@ -912,42 +966,63 @@ typename set< OSM_Element_Metadata_Skeleton< Id_Type > >::const_iterator
 
 template< class Index, class Object >
 void Print_Statement::tags_by_id_attic
-  (const map< Index, vector< Attic< Object > > >& items,
+  (const map< Index, vector< Object > >& current_items,
+   const map< Index, vector< Attic< Object > > >& attic_items,
    uint32 FLUSH_SIZE, Print_Target& target,
    Resource_Manager& rman, Transaction& transaction,
    const File_Properties* current_meta_file_prop, const File_Properties* attic_meta_file_prop,
    uint32& element_count)
 {
   // order relevant elements by id
-  vector< pair< const Attic< Object >*, uint32 > > items_by_id;
-  for (typename map< Index, vector< Attic< Object > > >::const_iterator
-    it(items.begin()); it != items.end(); ++it)
+  std::vector< Maybe_Attic_Ref< Index, Object > > items_by_id;
+  for (typename std::map< Index, std::vector< Object > >::const_iterator
+      it(current_items.begin()); it != current_items.end(); ++it)
   {
-    for (typename vector< Attic< Object > >::const_iterator it2(it->second.begin());
+    for (typename std::vector< Object >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
-      items_by_id.push_back(make_pair(&(*it2), it->first.val()));
+      items_by_id.push_back(Maybe_Attic_Ref< Index, Object >(it->first, &(*it2), NOW));
   }
-  sort(items_by_id.begin(), items_by_id.end(),
-       Skeleton_Comparator_By_Id< Attic< Object > >());
+  for (typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
+      it(attic_items.begin()); it != attic_items.end(); ++it)
+  {
+    for (typename std::vector< Attic< Object > >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      items_by_id.push_back(Maybe_Attic_Ref< Index, Object >(it->first, &(*it2), it2->timestamp));
+  }
+  sort(items_by_id.begin(), items_by_id.end());
   
   //generate set of relevant coarse indices
-  set< Index > coarse_indices;
-  map< uint32, vector< Attic< typename Object::Id_Type > > > ids_by_coarse;
-  generate_ids_by_coarse(coarse_indices, ids_by_coarse, items);
+  std::set< Index > current_coarse_indices;
+  std::map< uint32, std::vector< typename Object::Id_Type > > current_ids_by_coarse;
+  generate_ids_by_coarse(current_coarse_indices, current_ids_by_coarse, current_items);
+  
+  std::set< Index > attic_coarse_indices;
+  std::map< uint32, std::vector< Attic< typename Object::Id_Type > > > attic_ids_by_coarse;
+  generate_ids_by_coarse(attic_coarse_indices, attic_ids_by_coarse, attic_items);
   
   //formulate range query
-  set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  formulate_range_query(range_set, coarse_indices);
+  set< pair< Tag_Index_Local, Tag_Index_Local > > current_range_set;
+  formulate_range_query(current_range_set, current_coarse_indices);
+  
+  set< pair< Tag_Index_Local, Tag_Index_Local > > attic_range_set;
+  formulate_range_query(attic_range_set, attic_coarse_indices);
   
   for (typename set< Index >::const_iterator
-      it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
-    sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
+      it(current_coarse_indices.begin()); it != current_coarse_indices.end(); ++it)
+    sort(current_ids_by_coarse[it->val()].begin(), current_ids_by_coarse[it->val()].end());
+  
+  for (typename set< Index >::const_iterator
+      it(attic_coarse_indices.begin()); it != attic_coarse_indices.end(); ++it)
+    sort(attic_ids_by_coarse[it->val()].begin(), attic_ids_by_coarse[it->val()].end());
   
   // formulate meta query if meta data shall be printed
+  Meta_Collector< Index, typename Object::Id_Type > only_current_meta_printer
+      (current_items, transaction, current_meta_file_prop);
+  
   Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
-      (items, transaction, current_meta_file_prop);
+      (attic_items, transaction, current_meta_file_prop);
   Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
-      (items, transaction, attic_meta_file_prop);
+      (attic_items, transaction, attic_meta_file_prop);
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, typename Object::Id_Type > current_tags_db
@@ -960,33 +1035,48 @@ void Print_Statement::tags_by_id_attic
     // Disable health_check: This ensures that a result will be always printed completely
     //rman.health_check(*this);
     
-    map< Attic< typename Object::Id_Type >, vector< pair< string, string > > > tags_by_id;
-    typename Object::Id_Type lower_id_bound(items_by_id[id_pos.val()].first->id);
+    typename Object::Id_Type lower_id_bound(items_by_id[id_pos.val()].obj->id);
     typename Object::Id_Type upper_id_bound;
     if (id_pos + FLUSH_SIZE < items_by_id.size())
-      upper_id_bound = items_by_id[(id_pos + FLUSH_SIZE).val()].first->id;
+      upper_id_bound = items_by_id[(id_pos + FLUSH_SIZE).val()].obj->id;
     else
     {
-      upper_id_bound = items_by_id[items_by_id.size()-1].first->id;
+      upper_id_bound = items_by_id[items_by_id.size()-1].obj->id;
       ++upper_id_bound;
     }
     
+    map< typename Object::Id_Type, vector< pair< string, string > > > current_tags_by_id;
+    typename Block_Backend< Tag_Index_Local, typename Object::Id_Type >::Range_Iterator
+        only_current_tag_it(current_tags_db.range_begin
+        (Default_Range_Iterator< Tag_Index_Local >(current_range_set.begin()),
+         Default_Range_Iterator< Tag_Index_Local >(current_range_set.end())));
+    for (typename set< Index >::const_iterator
+        it(current_coarse_indices.begin()); it != current_coarse_indices.end(); ++it)
+      collect_tags_framed< typename Object::Id_Type >(current_tags_by_id, current_tags_db, only_current_tag_it,
+	  current_ids_by_coarse, it->val(), lower_id_bound, upper_id_bound);
+      
+    map< Attic< typename Object::Id_Type >, vector< pair< string, string > > > attic_tags_by_id;
     typename Block_Backend< Tag_Index_Local, typename Object::Id_Type >::Range_Iterator
         current_tag_it(current_tags_db.range_begin
-        (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-         Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+        (Default_Range_Iterator< Tag_Index_Local >(attic_range_set.begin()),
+         Default_Range_Iterator< Tag_Index_Local >(attic_range_set.end())));
     typename Block_Backend< Tag_Index_Local, Attic< typename Object::Id_Type > >::Range_Iterator
         attic_tag_it(attic_tags_db.range_begin
-        (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-         Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+        (Default_Range_Iterator< Tag_Index_Local >(attic_range_set.begin()),
+         Default_Range_Iterator< Tag_Index_Local >(attic_range_set.end())));
     for (typename set< Index >::const_iterator
-        it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
-      collect_tags(tags_by_id, current_tags_db, current_tag_it, attic_tags_db, attic_tag_it,
-                 ids_by_coarse, it->val(), lower_id_bound, upper_id_bound);
+        it(attic_coarse_indices.begin()); it != attic_coarse_indices.end(); ++it)
+      collect_tags(attic_tags_by_id, current_tags_db, current_tag_it, attic_tags_db, attic_tag_it,
+                 attic_ids_by_coarse, it->val(), lower_id_bound, upper_id_bound);
     
     // collect metadata if required
-    set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > metadata;
-    collect_metadata(metadata, items, lower_id_bound, upper_id_bound,
+    set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > only_current_metadata;
+    collect_metadata(only_current_metadata, current_items, lower_id_bound, upper_id_bound,
+		     only_current_meta_printer);
+    only_current_meta_printer.reset();
+
+    set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > attic_metadata;
+    collect_metadata(attic_metadata, attic_items, lower_id_bound, upper_id_bound,
                      current_meta_printer, attic_meta_printer);
     attic_meta_printer.reset();
     current_meta_printer.reset();
@@ -995,15 +1085,29 @@ void Print_Statement::tags_by_id_attic
     for (typename Object::Id_Type i(id_pos);
          (i < id_pos + FLUSH_SIZE) && (i < items_by_id.size()); ++i)
     {
-      typename set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > >::const_iterator meta_it
-          = find_matching_metadata(metadata,
-                                   items_by_id[i.val()].first->id, items_by_id[i.val()].first->timestamp);
       if (++element_count > limit)
-        return;
-      print_item(target, items_by_id[i.val()].second, *(items_by_id[i.val()].first),
-                 &(tags_by_id[Attic< typename Object::Id_Type >
-                     (items_by_id[i.val()].first->id, items_by_id[i.val()].first->timestamp)]),
-                 meta_it != metadata.end() ? &*meta_it : 0, &current_meta_printer.users());
+	return;
+      if (items_by_id[i.val()].timestamp == NOW)
+      {
+        typename set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > >::const_iterator meta_it
+            = only_current_metadata.lower_bound(OSM_Element_Metadata_Skeleton< typename Object::Id_Type >
+                (items_by_id[i.val()].obj->id));
+        print_item(target, items_by_id[i.val()].idx.val(), *items_by_id[i.val()].obj,
+		 &(current_tags_by_id[items_by_id[i.val()].obj->id.val()]),
+		 (meta_it != only_current_metadata.end() && meta_it->ref == items_by_id[i.val()].obj->id) ?
+		     &*meta_it : 0, &(only_current_meta_printer.users()));
+      }
+      else
+      {
+        typename set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > >::const_iterator meta_it
+            = find_matching_metadata(attic_metadata,
+                  items_by_id[i.val()].obj->id, items_by_id[i.val()].timestamp);
+        print_item(target, items_by_id[i.val()].idx.val(),
+		   Attic< Object >(*items_by_id[i.val()].obj, items_by_id[i.val()].timestamp),
+                 &(attic_tags_by_id[Attic< typename Object::Id_Type >
+                     (items_by_id[i.val()].obj->id, items_by_id[i.val()].timestamp)]),
+                 meta_it != attic_metadata.end() ? &*meta_it : 0, &current_meta_printer.users());
+      }
     }
   }
 }
@@ -1311,7 +1415,7 @@ class Collection_Print_Target : public Print_Target
     
     virtual void print_item_count(const Output_Item_Count& item_count);
 
-    void set_target(Print_Target* target);
+    void set_target(Print_Target* target, bool order_by_id);
     
     void clear_nodes
         (Resource_Manager& rman, const map< uint32, string >* users = 0, bool add_deletion_information = false);
@@ -1402,15 +1506,20 @@ class Collection_Print_Target : public Print_Target
     std::vector< Node_Entry > nodes;
     std::vector< Way_Entry > ways;
     std::vector< Relation_Entry > relations;
+    std::vector< Node_Entry > new_nodes;
+    std::vector< Way_Entry > new_ways;
+    std::vector< Relation_Entry > new_relations;
+    bool order_by_id;
 };
 
     
-void Collection_Print_Target::set_target(Print_Target* target)
+void Collection_Print_Target::set_target(Print_Target* target, bool order_by_id_)
 { 
   final_target = target;
   std::sort(nodes.begin(), nodes.end());
   std::sort(ways.begin(), ways.end());
   std::sort(relations.begin(), relations.end());
+  order_by_id = order_by_id_;
 }
 
 
@@ -1423,30 +1532,37 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& s
 {
   if (final_target)
   {
-    std::vector< Node_Entry >::iterator nodes_it
-        = std::lower_bound(nodes.begin(), nodes.end(), Node_Entry(ll_upper, skel));
-
-    if (nodes_it == nodes.end() || skel.id < nodes_it->elem.id)
-    {
-      // No old element exists
-      final_target->print_item(ll_upper, skel,
-                               (mode & Print_Target::PRINT_TAGS) ? tags : 0,
-                               (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
-    }
+    if (order_by_id)
+      new_nodes.push_back(Node_Entry(ll_upper, skel,
+          meta ? *meta : OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
+          tags ? *tags : std::vector< std::pair< std::string, std::string > >()));
     else
     {
-      if (!(nodes_it->idx.val() == ll_upper) || !(nodes_it->elem == skel) ||
-          (tags && !(nodes_it->tags == *tags)) || (meta && !(nodes_it->meta.timestamp == meta->timestamp)))
+      std::vector< Node_Entry >::iterator nodes_it
+          = std::lower_bound(nodes.begin(), nodes.end(), Node_Entry(ll_upper, skel));
+
+      if (nodes_it == nodes.end() || skel.id < nodes_it->elem.id)
       {
-        // The elements differ
-        final_target->print_item(nodes_it->idx.val(), nodes_it->elem,
-                                 (mode & Print_Target::PRINT_TAGS) ? &nodes_it->tags : 0,
-                                 (mode & Print_Target::PRINT_META) ? &nodes_it->meta : 0, users, MODIFY_OLD);
+        // No old element exists
         final_target->print_item(ll_upper, skel,
                                  (mode & Print_Target::PRINT_TAGS) ? tags : 0,
-                                 (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
+                                 (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
       }
-      nodes_it->idx = 0xffu;
+      else
+      {
+        if (!(nodes_it->idx.val() == ll_upper) || !(nodes_it->elem.ll_lower == skel.ll_lower) ||
+            (tags && !(nodes_it->tags == *tags)) || (meta && !(nodes_it->meta.timestamp == meta->timestamp)))
+        {
+          // The elements differ
+          final_target->print_item(nodes_it->idx.val(), nodes_it->elem,
+                                   (mode & Print_Target::PRINT_TAGS) ? &nodes_it->tags : 0,
+                                   (mode & Print_Target::PRINT_META) ? &nodes_it->meta : 0, users, MODIFY_OLD);
+          final_target->print_item(ll_upper, skel,
+                                   (mode & Print_Target::PRINT_TAGS) ? tags : 0,
+                                   (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
+        }
+        nodes_it->idx = 0xffu;
+      }
     }
   }
   else
@@ -1551,7 +1667,89 @@ std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Sk
 void Collection_Print_Target::clear_nodes
     (Resource_Manager& rman, const map< uint32, string >* users, bool add_deletion_information)
 {
-  if (add_deletion_information)
+  if (order_by_id)
+  {
+    std::sort(new_nodes.begin(), new_nodes.end());
+    std::vector< Node_Entry >::const_iterator old_it = nodes.begin();
+    std::vector< Node_Entry >::const_iterator new_it = new_nodes.begin();
+    
+    std::vector< Node_Skeleton::Id_Type > found_ids;
+    std::map< Node_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Node::Id_Type > > found_meta;
+    if (add_deletion_information)
+    {
+      std::vector< Node_Skeleton::Id_Type > searched_ids;
+      while (old_it != nodes.end() || new_it != new_nodes.end())
+      {
+        if (new_it == new_nodes.end() || (old_it != nodes.end() && old_it->elem.id < new_it->elem.id))
+        {
+	  searched_ids.push_back(old_it->elem.id);
+	  ++old_it;
+        }
+        else if (old_it != nodes.end() && old_it->elem.id == new_it->elem.id)
+        {
+	  ++old_it;
+	  ++new_it;
+        }
+        else
+	  ++new_it;
+      }
+    
+      std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(searched_ids, rman, true);
+      find_still_existing_skeletons< Uint32_Index, Node_Skeleton >(rman, req, searched_ids).swap(found_ids);
+      find_meta_elements< Uint32_Index, Node_Skeleton >(rman, req, searched_ids).swap(found_meta);
+    }
+	
+    old_it = nodes.begin();
+    new_it = new_nodes.begin();
+    
+    while (old_it != nodes.end() || new_it != new_nodes.end())
+    {
+      if (new_it == new_nodes.end() || (old_it != nodes.end() && old_it->elem.id < new_it->elem.id))
+      {
+	std::map< Node_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Node::Id_Type > >::const_iterator
+	    meta_it = found_meta.find(old_it->elem.id);
+        // No corresponding new element exists, thus the old one has been deleted.
+	if (add_deletion_information)
+          final_target->print_item(old_it->idx.val(), old_it->elem,
+                                 (mode & Print_Target::PRINT_TAGS) ? &old_it->tags : 0,
+                                 (mode & Print_Target::PRINT_META) ? &old_it->meta : 0, users, DELETE,
+				 ((mode & Print_Target::PRINT_META) && meta_it != found_meta.end() ?
+				     &meta_it->second : 0),
+				 std::binary_search(found_ids.begin(), found_ids.end(), old_it->elem.id) ?
+				     visible_true : visible_false);
+	else
+          final_target->print_item(old_it->idx.val(), old_it->elem,
+                                 (mode & Print_Target::PRINT_TAGS) ? &old_it->tags : 0,
+                                 (mode & Print_Target::PRINT_META) ? &old_it->meta : 0, users, DELETE);
+	++old_it;
+      }
+      else if (old_it != nodes.end() && old_it->elem.id == new_it->elem.id)
+      {
+        if (!(old_it->idx == new_it->idx) || !(old_it->elem.ll_lower == new_it->elem.ll_lower) ||
+            !(old_it->tags == new_it->tags) || !(old_it->meta.timestamp == new_it->meta.timestamp))
+        {
+          // The elements differ
+          final_target->print_item(old_it->idx.val(), old_it->elem,
+                                   (mode & Print_Target::PRINT_TAGS) ? &old_it->tags : 0,
+                                   (mode & Print_Target::PRINT_META) ? &old_it->meta : 0, users, MODIFY_OLD);
+          final_target->print_item(new_it->idx.val(), new_it->elem,
+                                   (mode & Print_Target::PRINT_TAGS) ? &new_it->tags : 0,
+                                   (mode & Print_Target::PRINT_META) ? &new_it->meta : 0, users, MODIFY_NEW);
+        }
+	++old_it;
+	++new_it;
+      }
+      else
+      {
+        // No old element exists
+        final_target->print_item(new_it->idx.val(), new_it->elem,
+                                 (mode & Print_Target::PRINT_TAGS) ? &new_it->tags : 0,
+                                 (mode & Print_Target::PRINT_META) ? &new_it->meta : 0, users, CREATE);
+	++new_it;
+      }
+    }
+  }
+  else if (add_deletion_information)
   {
     std::vector< Node_Skeleton::Id_Type > searched_ids;
     for (std::vector< Node_Entry >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
@@ -1610,56 +1808,64 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
 {
   if (final_target)
   {
-    std::vector< Way_Entry >::iterator ways_it
-        = std::lower_bound(ways.begin(), ways.end(), Way_Entry(ll_upper, skel, std::vector< Quad_Coord >()));
-    
-    if (ways_it == ways.end() || skel.id < ways_it->elem.id)
+    if (order_by_id)
+      new_ways.push_back(Way_Entry(ll_upper, skel,
+          geometry ? *geometry : std::vector< Quad_Coord >(),
+          meta ? *meta : OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
+          tags ? *tags : std::vector< std::pair< std::string, std::string > >()));
+    else
     {
-      // No old element exists
-      if (geometry)
+      std::vector< Way_Entry >::iterator ways_it
+          = std::lower_bound(ways.begin(), ways.end(), Way_Entry(ll_upper, skel, std::vector< Quad_Coord >()));
+    
+      if (ways_it == ways.end() || skel.id < ways_it->elem.id)
       {
-        Double_Coords double_coords(*geometry);
-        final_target->print_item(ll_upper, skel,
+        // No old element exists
+        if (geometry)
+        {
+          Double_Coords double_coords(*geometry);
+          final_target->print_item(ll_upper, skel,
                                  (mode & Print_Target::PRINT_TAGS) ? tags : 0,
                                  bound_variant(double_coords, mode),
                                  (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
                                  (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
-      }
-      else
-        final_target->print_item(ll_upper, skel,
+        }
+        else
+          final_target->print_item(ll_upper, skel,
                                  (mode & Print_Target::PRINT_TAGS) ? tags : 0,
                                  0, 0,
                                  (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
-    }
-    else
-    {
-      if (!(ways_it->idx.val() == ll_upper) || !(ways_it->elem == skel) ||
-          (geometry && !(ways_it->geometry == *geometry)) ||
-          (tags && !(ways_it->tags == *tags)) || (meta && !(ways_it->meta.timestamp == meta->timestamp)))
+      }
+      else
       {
-        // The elements differ
-        Double_Coords double_coords(ways_it->geometry);
-        final_target->print_item(ways_it->idx.val(), ways_it->elem,
+        if (!(ways_it->idx.val() == ll_upper) || !(ways_it->elem.nds == skel.nds) ||
+            (geometry && !(ways_it->geometry == *geometry)) ||
+            (tags && !(ways_it->tags == *tags)) || (meta && !(ways_it->meta.timestamp == meta->timestamp)))
+        {
+          // The elements differ
+          Double_Coords double_coords(ways_it->geometry);
+          final_target->print_item(ways_it->idx.val(), ways_it->elem,
                                (mode & Print_Target::PRINT_TAGS) ? &ways_it->tags : 0,
                                bound_variant(double_coords, mode),
                                (mode & Print_Target::PRINT_GEOMETRY) ? &ways_it->geometry : 0,
                                (mode & Print_Target::PRINT_META) ? &ways_it->meta : 0, users, MODIFY_OLD);
-	if (geometry)
-	{
-          Double_Coords double_coords_new(*geometry);
-          final_target->print_item(ll_upper, skel,
+	  if (geometry)
+	  {
+            Double_Coords double_coords_new(*geometry);
+            final_target->print_item(ll_upper, skel,
                                    (mode & Print_Target::PRINT_TAGS) ? tags : 0,
                                    bound_variant(double_coords_new, mode),
                                    (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
                                    (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
-	}
-	else
-          final_target->print_item(ll_upper, skel,
+	  }
+	  else
+            final_target->print_item(ll_upper, skel,
                                    (mode & Print_Target::PRINT_TAGS) ? tags : 0,
                                    0, 0,
                                    (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
+        }
+        ways_it->idx = 0xffu;
       }
-      ways_it->idx = 0xffu;
     }
   }
   else
@@ -1673,7 +1879,105 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
 void Collection_Print_Target::clear_ways
     (Resource_Manager& rman, const map< uint32, string >* users, bool add_deletion_information)
 {
-  if (add_deletion_information)
+  if (order_by_id)
+  {
+    std::sort(new_ways.begin(), new_ways.end());
+    std::vector< Way_Entry >::const_iterator old_it = ways.begin();
+    std::vector< Way_Entry >::const_iterator new_it = new_ways.begin();
+    
+    std::vector< Way_Skeleton::Id_Type > found_ids;
+    std::map< Way_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Way::Id_Type > > found_meta;
+    if (add_deletion_information)
+    {
+      std::vector< Way_Skeleton::Id_Type > searched_ids;
+      while (old_it != ways.end() || new_it != new_ways.end())
+      {
+        if (new_it == new_ways.end() || (old_it != ways.end() && old_it->elem.id < new_it->elem.id))
+        {
+	  searched_ids.push_back(old_it->elem.id);
+	  ++old_it;
+        }
+        else if (old_it != ways.end() && old_it->elem.id == new_it->elem.id)
+        {
+	  ++old_it;
+	  ++new_it;
+        }
+        else
+	  ++new_it;
+      }
+    
+      std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(searched_ids, rman, true);
+      find_still_existing_skeletons< Uint31_Index, Way_Skeleton >(rman, req, searched_ids).swap(found_ids);
+      find_meta_elements< Uint31_Index, Way_Skeleton >(rman, req, searched_ids).swap(found_meta);
+    }
+	
+    old_it = ways.begin();
+    new_it = new_ways.begin();
+    
+    while (old_it != ways.end() || new_it != new_ways.end())
+    {
+      if (new_it == new_ways.end() || (old_it != ways.end() && old_it->elem.id < new_it->elem.id))
+      {
+	std::map< Way_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Way::Id_Type > >::const_iterator
+	    meta_it = found_meta.find(old_it->elem.id);
+        Double_Coords double_coords(old_it->geometry);
+        // No corresponding new element exists, thus the old one has been deleted.
+	if (add_deletion_information)
+          final_target->print_item(old_it->idx.val(), old_it->elem,
+                                 (mode & Print_Target::PRINT_TAGS) ? &old_it->tags : 0,
+                                 bound_variant(double_coords, mode),
+                                 (mode & Print_Target::PRINT_GEOMETRY) ? &old_it->geometry : 0,
+                                 (mode & Print_Target::PRINT_META) ? &old_it->meta : 0, users, DELETE,
+				 ((mode & Print_Target::PRINT_META) && meta_it != found_meta.end() ?
+				     &meta_it->second : 0),
+				 std::binary_search(found_ids.begin(), found_ids.end(), old_it->elem.id) ?
+				     visible_true : visible_false);
+	else
+          final_target->print_item(old_it->idx.val(), old_it->elem,
+                                 (mode & Print_Target::PRINT_TAGS) ? &old_it->tags : 0,
+                                 bound_variant(double_coords, mode),
+                                 (mode & Print_Target::PRINT_GEOMETRY) ? &old_it->geometry : 0,
+                                 (mode & Print_Target::PRINT_META) ? &old_it->meta : 0, users, DELETE);
+	++old_it;
+      }
+      else if (old_it != ways.end() && old_it->elem.id == new_it->elem.id)
+      {
+        if (!(old_it->idx == new_it->idx) || !(old_it->elem.nds == new_it->elem.nds) ||
+            !(old_it->geometry == new_it->geometry) ||
+            !(old_it->tags == new_it->tags) || !(old_it->meta.timestamp == new_it->meta.timestamp))
+        {
+          // The elements differ
+          Double_Coords double_coords(old_it->geometry);
+          final_target->print_item(old_it->idx.val(), old_it->elem,
+                               (mode & Print_Target::PRINT_TAGS) ? &old_it->tags : 0,
+                               bound_variant(double_coords, mode),
+                               (mode & Print_Target::PRINT_GEOMETRY) ? &old_it->geometry : 0,
+                               (mode & Print_Target::PRINT_META) ? &old_it->meta : 0, users, MODIFY_OLD);
+	  
+          Double_Coords double_coords_new(new_it->geometry);
+          final_target->print_item(new_it->idx.val(), new_it->elem,
+                               (mode & Print_Target::PRINT_TAGS) ? &new_it->tags : 0,
+                               bound_variant(double_coords_new, mode),
+                               (mode & Print_Target::PRINT_GEOMETRY) ? &new_it->geometry : 0,
+                               (mode & Print_Target::PRINT_META) ? &new_it->meta : 0, users, MODIFY_NEW);
+        }
+	++old_it;
+	++new_it;
+      }
+      else
+      {
+        // No old element exists
+        Double_Coords double_coords(new_it->geometry);
+        final_target->print_item(new_it->idx.val(), new_it->elem,
+                                 (mode & Print_Target::PRINT_TAGS) ? &new_it->tags : 0,
+                                 bound_variant(double_coords, mode),
+                                 (mode & Print_Target::PRINT_GEOMETRY) ? &new_it->geometry : 0,
+                                 (mode & Print_Target::PRINT_META) ? &new_it->meta : 0, users, CREATE);
+	++new_it;
+      }
+    }
+  }
+  else if (add_deletion_information)
   {
     std::vector< Way_Skeleton::Id_Type > searched_ids;
     for (std::vector< Way_Entry >::const_iterator it = ways.begin(); it != ways.end(); ++it)
@@ -1738,57 +2042,65 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleto
 {
   if (final_target)
   {
-    std::vector< Relation_Entry >::iterator relations_it
-        = std::lower_bound(relations.begin(), relations.end(),
-            Relation_Entry(ll_upper, skel, std::vector< std::vector< Quad_Coord > >()));
-    
-    if (relations_it == relations.end() || skel.id < relations_it->elem.id)
+    if (order_by_id)
+      new_relations.push_back(Relation_Entry(ll_upper, skel,
+	  geometry ? *geometry : std::vector< std::vector< Quad_Coord > >(),
+	  meta ? *meta : OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
+	  tags ? *tags : std::vector< std::pair< std::string, std::string > >()));
+    else
     {
-      // No old element exists
-      if (geometry)
+      std::vector< Relation_Entry >::iterator relations_it
+	  = std::lower_bound(relations.begin(), relations.end(),
+	      Relation_Entry(ll_upper, skel, std::vector< std::vector< Quad_Coord > >()));
+    
+      if (relations_it == relations.end() || skel.id < relations_it->elem.id)
       {
-        Double_Coords double_coords(*geometry);
-        final_target->print_item(ll_upper, skel,
+	// No old element exists
+	if (geometry)
+	{
+	  Double_Coords double_coords(*geometry);
+	  final_target->print_item(ll_upper, skel,
                                  (mode & Print_Target::PRINT_TAGS) ? tags : 0,
                                  bound_variant(double_coords, mode),
                                  (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
                                  (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
-      }
-      else
-        final_target->print_item(ll_upper, skel,
+	}
+	else
+	  final_target->print_item(ll_upper, skel,
                                  (mode & Print_Target::PRINT_TAGS) ? tags : 0,
                                  0, 0,
                                  (mode & Print_Target::PRINT_META) ? meta : 0, users, CREATE);
-    }
-    else
-    {
-      if (!(relations_it->idx.val() == ll_upper) || !(relations_it->elem == skel) ||
-          (geometry && !(relations_it->geometry == *geometry)) ||
-          (tags && !(relations_it->tags == *tags)) || (meta && !(relations_it->meta.timestamp == meta->timestamp)))
+      }
+      else
       {
-        // The elements differ
-        Double_Coords double_coords(relations_it->geometry);
-        final_target->print_item(relations_it->idx.val(), relations_it->elem,
+	if (!(relations_it->idx.val() == ll_upper) || !(relations_it->elem.members == skel.members) ||
+	    (geometry && !(relations_it->geometry == *geometry)) ||
+	    (tags && !(relations_it->tags == *tags)) || (meta && !(relations_it->meta.timestamp == meta->timestamp)))
+	{
+	  // The elements differ
+	  Double_Coords double_coords(relations_it->geometry);
+	  final_target->print_item(relations_it->idx.val(), relations_it->elem,
                                  (mode & Print_Target::PRINT_TAGS) ? &relations_it->tags : 0,
                                  bound_variant(double_coords, mode),
                                  (mode & Print_Target::PRINT_GEOMETRY) ? &relations_it->geometry : 0,
                                  (mode & Print_Target::PRINT_META) ? &relations_it->meta : 0, users, MODIFY_OLD);
-	if (geometry)
-	{
-          Double_Coords double_coords_new(*geometry);
-          final_target->print_item(ll_upper, skel,
+	  if (geometry)
+	  {
+	    Double_Coords double_coords_new(*geometry);
+	    final_target->print_item(ll_upper, skel,
                                    (mode & Print_Target::PRINT_TAGS) ? tags : 0,
                                    bound_variant(double_coords_new, mode),
                                    (mode & Print_Target::PRINT_GEOMETRY) ? geometry : 0,
                                    (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
-	}
-	else
-          final_target->print_item(ll_upper, skel,
+	  }
+	  else
+	    final_target->print_item(ll_upper, skel,
                                    (mode & Print_Target::PRINT_TAGS) ? tags : 0,
                                    0, 0,
                                    (mode & Print_Target::PRINT_META) ? meta : 0, users, MODIFY_NEW);
+	}
+	relations_it->idx = 0xffu;
       }
-      relations_it->idx = 0xffu;
     }
   }
   else
@@ -1802,7 +2114,105 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleto
 void Collection_Print_Target::clear_relations
     (Resource_Manager& rman, const map< uint32, string >* users, bool add_deletion_information)
 {
-  if (add_deletion_information)
+  if (order_by_id)
+  {
+    std::sort(new_relations.begin(), new_relations.end());
+    std::vector< Relation_Entry >::const_iterator old_it = relations.begin();
+    std::vector< Relation_Entry >::const_iterator new_it = new_relations.begin();
+    
+    std::vector< Relation_Skeleton::Id_Type > found_ids;
+    std::map< Relation_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Relation::Id_Type > > found_meta;
+    if (add_deletion_information)
+    {
+      std::vector< Relation_Skeleton::Id_Type > searched_ids;
+      while (old_it != relations.end() || new_it != new_relations.end())
+      {
+        if (new_it == new_relations.end() || (old_it != relations.end() && old_it->elem.id < new_it->elem.id))
+        {
+	  searched_ids.push_back(old_it->elem.id);
+	  ++old_it;
+        }
+        else if (old_it != relations.end() && old_it->elem.id == new_it->elem.id)
+        {
+	  ++old_it;
+	  ++new_it;
+        }
+        else
+	  ++new_it;
+      }
+    
+      std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Relation_Skeleton >(searched_ids, rman, true);
+      find_still_existing_skeletons< Uint31_Index, Relation_Skeleton >(rman, req, searched_ids).swap(found_ids);
+      find_meta_elements< Uint31_Index, Relation_Skeleton >(rman, req, searched_ids).swap(found_meta);
+    }
+	
+    old_it = relations.begin();
+    new_it = new_relations.begin();
+    
+    while (old_it != relations.end() || new_it != new_relations.end())
+    {
+      if (new_it == new_relations.end() || (old_it != relations.end() && old_it->elem.id < new_it->elem.id))
+      {
+	std::map< Relation_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Relation::Id_Type > >::const_iterator
+	    meta_it = found_meta.find(old_it->elem.id);
+        // No corresponding new element exists, thus the old one has been deleted.
+        Double_Coords double_coords(old_it->geometry);
+	if (add_deletion_information)
+	  final_target->print_item(old_it->idx.val(), old_it->elem,
+                                 (mode & Print_Target::PRINT_TAGS) ? &old_it->tags : 0,
+                                 bound_variant(double_coords, mode),
+                                 (mode & Print_Target::PRINT_GEOMETRY) ? &old_it->geometry : 0,
+                                 (mode & Print_Target::PRINT_META) ? &old_it->meta : 0, users, DELETE,
+				 ((mode & Print_Target::PRINT_META) && meta_it != found_meta.end() ?
+				     &meta_it->second : 0),
+				 std::binary_search(found_ids.begin(), found_ids.end(), old_it->elem.id) ?
+				     visible_true : visible_false);
+	else
+	  final_target->print_item(old_it->idx.val(), old_it->elem,
+                                 (mode & Print_Target::PRINT_TAGS) ? &old_it->tags : 0,
+                                 bound_variant(double_coords, mode),
+                                 (mode & Print_Target::PRINT_GEOMETRY) ? &old_it->geometry : 0,
+                                 (mode & Print_Target::PRINT_META) ? &old_it->meta : 0, users, DELETE);
+	++old_it;
+      }
+      else if (old_it != relations.end() && old_it->elem.id == new_it->elem.id)
+      {
+        if (!(old_it->idx == new_it->idx) || !(old_it->elem.members == new_it->elem.members) ||
+            !(old_it->geometry == new_it->geometry) ||
+            !(old_it->tags == new_it->tags) || !(old_it->meta.timestamp == new_it->meta.timestamp))
+        {
+          // The elements differ
+          Double_Coords double_coords(old_it->geometry);
+          final_target->print_item(old_it->idx.val(), old_it->elem,
+                               (mode & Print_Target::PRINT_TAGS) ? &old_it->tags : 0,
+                               bound_variant(double_coords, mode),
+                               (mode & Print_Target::PRINT_GEOMETRY) ? &old_it->geometry : 0,
+                               (mode & Print_Target::PRINT_META) ? &old_it->meta : 0, users, MODIFY_OLD);
+	  
+          Double_Coords double_coords_new(new_it->geometry);
+          final_target->print_item(new_it->idx.val(), new_it->elem,
+                               (mode & Print_Target::PRINT_TAGS) ? &new_it->tags : 0,
+                               bound_variant(double_coords_new, mode),
+                               (mode & Print_Target::PRINT_GEOMETRY) ? &new_it->geometry : 0,
+                               (mode & Print_Target::PRINT_META) ? &new_it->meta : 0, users, MODIFY_NEW);
+        }
+	++old_it;
+	++new_it;
+      }
+      else
+      {
+        // No old element exists
+        Double_Coords double_coords(new_it->geometry);
+        final_target->print_item(new_it->idx.val(), new_it->elem,
+                                 (mode & Print_Target::PRINT_TAGS) ? &new_it->tags : 0,
+                                 bound_variant(double_coords, mode),
+                                 (mode & Print_Target::PRINT_GEOMETRY) ? &new_it->geometry : 0,
+                                 (mode & Print_Target::PRINT_META) ? &new_it->meta : 0, users, CREATE);
+	++new_it;
+      }
+    }
+  }
+  else if (add_deletion_information)
   {
     std::vector< Relation_Skeleton::Id_Type > searched_ids;
     for (std::vector< Relation_Entry >::const_iterator it = relations.begin(); it != relations.end(); ++it)
@@ -1894,7 +2304,7 @@ void Print_Statement::execute(Resource_Manager& rman)
   
   if (collection_mode == collect_rhs)
   {
-    collection_print_target->set_target(target);
+    collection_print_target->set_target(target, order == order_by_id);
     target = collection_print_target;
     mode = Print_Target::PRINT_IDS
         | Print_Target::PRINT_COORDS | Print_Target::PRINT_NDS | Print_Target::PRINT_MEMBERS
@@ -1935,69 +2345,61 @@ void Print_Statement::execute(Resource_Manager& rman)
   
     if (order == order_by_id)
     {
-      tags_by_id(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
-		 NODE_FLUSH_SIZE, *target, rman,
-		 *rman.get_transaction(),
-		 (mode & Print_Target::PRINT_META) ? meta_settings().NODES_META : 0,
-                 element_count);
-      
-      if (rman.get_desired_timestamp() != NOW)
-      {
-        tags_by_id_attic(mit->second.attic_nodes,
+      if (rman.get_desired_timestamp() == NOW)
+        tags_by_id(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
+		  NODE_FLUSH_SIZE, *target, rman,
+		  *rman.get_transaction(),
+		  (mode & Print_Target::PRINT_META) ? meta_settings().NODES_META : 0,
+		  element_count);
+      else
+        tags_by_id_attic(mit->second.nodes, mit->second.attic_nodes,
                    NODE_FLUSH_SIZE, *target, rman,
                    *rman.get_transaction(),
                    (mode & Print_Target::PRINT_META) ? meta_settings().NODES_META : 0,
                    (mode & Print_Target::PRINT_META) ? attic_settings().NODES_META : 0,
                    element_count);
-      }
       
       if (collection_mode == collect_rhs)
         collection_print_target->clear_nodes(rman, &user_data_cache->users(), add_deletion_information);
       
-      tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
-		 WAY_FLUSH_SIZE, *target, rman,
-		 *rman.get_transaction(),
-		 (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
-                 element_count);
-      
-      if (rman.get_desired_timestamp() != NOW)
-      {
-        tags_by_id_attic(mit->second.attic_ways,
+      if (rman.get_desired_timestamp() == NOW)
+        tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
+		  WAY_FLUSH_SIZE, *target, rman,
+		  *rman.get_transaction(),
+		  (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
+		  element_count);
+      else
+        tags_by_id_attic(mit->second.ways, mit->second.attic_ways,
                    WAY_FLUSH_SIZE, *target, rman,
                    *rman.get_transaction(),
                    (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
                    (mode & Print_Target::PRINT_META) ? attic_settings().WAYS_META : 0,
                    element_count);
-      }
       
       if (collection_mode == collect_rhs)
         collection_print_target->clear_ways(rman, &user_data_cache->users(), add_deletion_information);
       
-      tags_by_id(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
-		 RELATION_FLUSH_SIZE, *target, rman,
-		 *rman.get_transaction(),
-		 (mode & Print_Target::PRINT_META) ? meta_settings().RELATIONS_META : 0,
-                 element_count);
-      
-      if (rman.get_desired_timestamp() != NOW)
-      {
-        tags_by_id_attic(mit->second.attic_relations,
+      if (rman.get_desired_timestamp() == NOW)
+        tags_by_id(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
+		  RELATION_FLUSH_SIZE, *target, rman,
+		  *rman.get_transaction(),
+		  (mode & Print_Target::PRINT_META) ? meta_settings().RELATIONS_META : 0,
+		  element_count);
+      else
+        tags_by_id_attic(mit->second.relations, mit->second.attic_relations,
                    RELATION_FLUSH_SIZE, *target, rman,
                    *rman.get_transaction(),
                    (mode & Print_Target::PRINT_META) ? meta_settings().RELATIONS_META : 0,
                    (mode & Print_Target::PRINT_META) ? attic_settings().RELATIONS_META : 0,
                    element_count);
-      }
       
       if (collection_mode == collect_rhs)
         collection_print_target->clear_relations(rman, &user_data_cache->users(), add_deletion_information);
       
       if (rman.get_area_transaction())
-      {
 	tags_by_id(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
 		   AREA_FLUSH_SIZE, *target, rman,
 		   *rman.get_area_transaction(), 0, element_count);
-      }
     }
     else
     {
@@ -2080,18 +2482,18 @@ void Print_Statement::execute(Resource_Manager& rman)
   {
     if (order == order_by_id)
     {
-      by_id(mit->second.nodes, *target, *rman.get_transaction(), *this, limit, element_count);
-      by_id(mit->second.attic_nodes, *target, *rman.get_transaction(), *this, limit, element_count);
+      by_id(mit->second.nodes, mit->second.attic_nodes,
+	    *target, *rman.get_transaction(), *this, limit, element_count);
       if (collection_mode == collect_rhs)
         collection_print_target->clear_nodes(rman, 0, add_deletion_information);
       
-      by_id(mit->second.ways, *target, *rman.get_transaction(), *this, limit, element_count);
-      by_id(mit->second.attic_ways, *target, *rman.get_transaction(), *this, limit, element_count);
+      by_id(mit->second.ways, mit->second.attic_ways,
+	    *target, *rman.get_transaction(), *this, limit, element_count);
       if (collection_mode == collect_rhs)
         collection_print_target->clear_ways(rman, 0, add_deletion_information);
       
-      by_id(mit->second.relations, *target, *rman.get_transaction(), *this, limit, element_count);
-      by_id(mit->second.attic_relations, *target, *rman.get_transaction(), *this, limit, element_count);      
+      by_id(mit->second.relations, mit->second.attic_relations,
+	    *target, *rman.get_transaction(), *this, limit, element_count);      
       if (collection_mode == collect_rhs)
         collection_print_target->clear_relations(rman, 0, add_deletion_information);
       

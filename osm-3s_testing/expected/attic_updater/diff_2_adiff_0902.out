@@ -241,36 +241,6 @@
   </relation>
 </new>
 </action>
-<action type="modify">
-<old>
-  <node id="1404" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
-    <tag k="foo" v="bar_1404"/>
-    <tag k="foo_1404" v="bar"/>
-  </node>
-</old>
-<new>
-  <node id="1404" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
-    <tag k="foo" v="bar_1404"/>
-    <tag k="foo_1404" v="bar"/>
-  </node>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14041" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-</old>
-<new>
-  <node id="14041" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14042" lat="10.0010000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-</old>
-<new>
-  <node id="14042" lat="10.0010000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
-</new>
-</action>
 <action type="delete">
 <old>
   <node id="1401" lat="10.0000000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
@@ -302,6 +272,20 @@
 </old>
 <new>
   <node id="1403" visible="true" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="1404" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
+  </node>
+</old>
+<new>
+  <node id="1404" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
+  </node>
 </new>
 </action>
 <action type="delete">
@@ -346,6 +330,22 @@
 </action>
 <action type="modify">
 <old>
+  <node id="14041" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+</old>
+<new>
+  <node id="14041" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="14042" lat="10.0010000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+</old>
+<new>
+  <node id="14042" lat="10.0010000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
+</new>
+</action>
+<action type="modify">
+<old>
   <way id="1401" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.0000000" minlon="4.0100000" maxlat="10.0020000" maxlon="4.0100000"/>
     <nd ref="14011" lat="10.0000000" lon="4.0100000"/>
@@ -364,6 +364,21 @@
     <tag k="foo" v="bar_1401"/>
     <tag k="foo_1401" v="bar"/>
   </way>
+</new>
+</action>
+<action type="delete">
+<old>
+  <way id="1402" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="4.0200000" maxlat="10.0020000" maxlon="4.0200000"/>
+    <nd ref="14021" lat="10.0000000" lon="4.0200000"/>
+    <nd ref="14022" lat="10.0010000" lon="4.0200000"/>
+    <nd ref="14023" lat="10.0020000" lon="4.0200000"/>
+    <tag k="foo" v="bar_1402"/>
+    <tag k="foo_1402" v="bar"/>
+  </way>
+</old>
+<new>
+  <way id="1402" visible="true" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="modify">
@@ -386,21 +401,6 @@
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </way>
-</new>
-</action>
-<action type="delete">
-<old>
-  <way id="1402" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <bounds minlat="10.0000000" minlon="4.0200000" maxlat="10.0020000" maxlon="4.0200000"/>
-    <nd ref="14021" lat="10.0000000" lon="4.0200000"/>
-    <nd ref="14022" lat="10.0010000" lon="4.0200000"/>
-    <nd ref="14023" lat="10.0020000" lon="4.0200000"/>
-    <tag k="foo" v="bar_1402"/>
-    <tag k="foo_1402" v="bar"/>
-  </way>
-</old>
-<new>
-  <way id="1402" visible="true" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="modify">
@@ -451,6 +451,17 @@
   <relation id="1413" visible="true" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
+<action type="delete">
+<old>
+  <node id="1501" lat="10.0000000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1501"/>
+    <tag k="foo_1501" v="bar"/>
+  </node>
+</old>
+<new>
+  <node id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+</new>
+</action>
 <action type="modify">
 <old>
   <node id="1502" lat="10.0000000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
@@ -477,17 +488,6 @@
     <tag k="foo" v="bar_1503"/>
     <tag k="foo_1503" v="bar"/>
   </node>
-</new>
-</action>
-<action type="delete">
-<old>
-  <node id="1501" lat="10.0000000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <tag k="foo" v="bar_1501"/>
-    <tag k="foo_1501" v="bar"/>
-  </node>
-</old>
-<new>
-  <node id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="delete">
@@ -521,6 +521,21 @@
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </way>
+</action>
+<action type="delete">
+<old>
+  <way id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="5.0100000" maxlat="10.0020000" maxlon="5.0100000"/>
+    <nd ref="15011" lat="10.0000000" lon="5.0100000"/>
+    <nd ref="15012" lat="10.0010000" lon="5.0100000"/>
+    <nd ref="15013" lat="10.0020000" lon="5.0100000"/>
+    <tag k="foo" v="bar_1501"/>
+    <tag k="foo_1501" v="bar"/>
+  </way>
+</old>
+<new>
+  <way id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+</new>
 </action>
 <action type="modify">
 <old>
@@ -612,17 +627,16 @@
 </action>
 <action type="delete">
 <old>
-  <way id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <bounds minlat="10.0000000" minlon="5.0100000" maxlat="10.0020000" maxlon="5.0100000"/>
-    <nd ref="15011" lat="10.0000000" lon="5.0100000"/>
-    <nd ref="15012" lat="10.0010000" lon="5.0100000"/>
-    <nd ref="15013" lat="10.0020000" lon="5.0100000"/>
+  <relation id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0010000" minlon="5.0100000" maxlat="10.0020000" maxlon="5.0100000"/>
+    <member type="node" ref="150110" role="" lat="10.0010000" lon="5.0100000"/>
+    <member type="node" ref="150120" role="" lat="10.0020000" lon="5.0100000"/>
     <tag k="foo" v="bar_1501"/>
     <tag k="foo_1501" v="bar"/>
-  </way>
+  </relation>
 </old>
 <new>
-  <way id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="modify">
@@ -703,20 +717,6 @@
     <tag k="foo" v="bar_1505"/>
     <tag k="foo_1505" v="bar"/>
   </relation>
-</new>
-</action>
-<action type="delete">
-<old>
-  <relation id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <bounds minlat="10.0010000" minlon="5.0100000" maxlat="10.0020000" maxlon="5.0100000"/>
-    <member type="node" ref="150110" role="" lat="10.0010000" lon="5.0100000"/>
-    <member type="node" ref="150120" role="" lat="10.0020000" lon="5.0100000"/>
-    <tag k="foo" v="bar_1501"/>
-    <tag k="foo_1501" v="bar"/>
-  </relation>
-</old>
-<new>
-  <relation id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="create">
@@ -1009,36 +1009,6 @@
   </relation>
 </new>
 </action>
-<action type="modify">
-<old>
-  <node id="1404" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
-    <tag k="foo" v="bar_1404"/>
-    <tag k="foo_1404" v="bar"/>
-  </node>
-</old>
-<new>
-  <node id="1404" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
-    <tag k="foo" v="bar_1404"/>
-    <tag k="foo_1404" v="bar"/>
-  </node>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14041" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-</old>
-<new>
-  <node id="14041" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14042" lat="10.0010000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-</old>
-<new>
-  <node id="14042" lat="10.0010000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
-</new>
-</action>
 <action type="delete">
 <old>
   <node id="1401" lat="10.0000000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
@@ -1070,6 +1040,20 @@
 </old>
 <new>
   <node id="1403" visible="true" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="1404" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
+  </node>
+</old>
+<new>
+  <node id="1404" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
+  </node>
 </new>
 </action>
 <action type="delete">
@@ -1114,6 +1098,22 @@
 </action>
 <action type="modify">
 <old>
+  <node id="14041" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+</old>
+<new>
+  <node id="14041" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="14042" lat="10.0010000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+</old>
+<new>
+  <node id="14042" lat="10.0010000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
+</new>
+</action>
+<action type="modify">
+<old>
   <way id="1401" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <bounds minlat="10.0000000" minlon="4.0100000" maxlat="10.0020000" maxlon="4.0100000"/>
     <nd ref="14011"/>
@@ -1132,6 +1132,21 @@
     <tag k="foo" v="bar_1401"/>
     <tag k="foo_1401" v="bar"/>
   </way>
+</new>
+</action>
+<action type="delete">
+<old>
+  <way id="1402" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="4.0200000" maxlat="10.0020000" maxlon="4.0200000"/>
+    <nd ref="14021"/>
+    <nd ref="14022"/>
+    <nd ref="14023"/>
+    <tag k="foo" v="bar_1402"/>
+    <tag k="foo_1402" v="bar"/>
+  </way>
+</old>
+<new>
+  <way id="1402" visible="true" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="modify">
@@ -1154,21 +1169,6 @@
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </way>
-</new>
-</action>
-<action type="delete">
-<old>
-  <way id="1402" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <bounds minlat="10.0000000" minlon="4.0200000" maxlat="10.0020000" maxlon="4.0200000"/>
-    <nd ref="14021"/>
-    <nd ref="14022"/>
-    <nd ref="14023"/>
-    <tag k="foo" v="bar_1402"/>
-    <tag k="foo_1402" v="bar"/>
-  </way>
-</old>
-<new>
-  <way id="1402" visible="true" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="modify">
@@ -1219,6 +1219,17 @@
   <relation id="1413" visible="true" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
+<action type="delete">
+<old>
+  <node id="1501" lat="10.0000000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1501"/>
+    <tag k="foo_1501" v="bar"/>
+  </node>
+</old>
+<new>
+  <node id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+</new>
+</action>
 <action type="modify">
 <old>
   <node id="1502" lat="10.0000000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
@@ -1245,17 +1256,6 @@
     <tag k="foo" v="bar_1503"/>
     <tag k="foo_1503" v="bar"/>
   </node>
-</new>
-</action>
-<action type="delete">
-<old>
-  <node id="1501" lat="10.0000000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <tag k="foo" v="bar_1501"/>
-    <tag k="foo_1501" v="bar"/>
-  </node>
-</old>
-<new>
-  <node id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="delete">
@@ -1289,6 +1289,21 @@
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </way>
+</action>
+<action type="delete">
+<old>
+  <way id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="5.0100000" maxlat="10.0020000" maxlon="5.0100000"/>
+    <nd ref="15011"/>
+    <nd ref="15012"/>
+    <nd ref="15013"/>
+    <tag k="foo" v="bar_1501"/>
+    <tag k="foo_1501" v="bar"/>
+  </way>
+</old>
+<new>
+  <way id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+</new>
 </action>
 <action type="modify">
 <old>
@@ -1380,17 +1395,16 @@
 </action>
 <action type="delete">
 <old>
-  <way id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <bounds minlat="10.0000000" minlon="5.0100000" maxlat="10.0020000" maxlon="5.0100000"/>
-    <nd ref="15011"/>
-    <nd ref="15012"/>
-    <nd ref="15013"/>
+  <relation id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0010000" minlon="5.0100000" maxlat="10.0020000" maxlon="5.0100000"/>
+    <member type="node" ref="150110" role=""/>
+    <member type="node" ref="150120" role=""/>
     <tag k="foo" v="bar_1501"/>
     <tag k="foo_1501" v="bar"/>
-  </way>
+  </relation>
 </old>
 <new>
-  <way id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="modify">
@@ -1471,20 +1485,6 @@
     <tag k="foo" v="bar_1505"/>
     <tag k="foo_1505" v="bar"/>
   </relation>
-</new>
-</action>
-<action type="delete">
-<old>
-  <relation id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <bounds minlat="10.0010000" minlon="5.0100000" maxlat="10.0020000" maxlon="5.0100000"/>
-    <member type="node" ref="150110" role=""/>
-    <member type="node" ref="150120" role=""/>
-    <tag k="foo" v="bar_1501"/>
-    <tag k="foo_1501" v="bar"/>
-  </relation>
-</old>
-<new>
-  <relation id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="create">
@@ -1777,36 +1777,6 @@
   </relation>
 </new>
 </action>
-<action type="modify">
-<old>
-  <node id="1404" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
-    <tag k="foo" v="bar_1404"/>
-    <tag k="foo_1404" v="bar"/>
-  </node>
-</old>
-<new>
-  <node id="1404" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
-    <tag k="foo" v="bar_1404"/>
-    <tag k="foo_1404" v="bar"/>
-  </node>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14041" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-</old>
-<new>
-  <node id="14041" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14042" lat="10.0010000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-</old>
-<new>
-  <node id="14042" lat="10.0010000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
-</new>
-</action>
 <action type="delete">
 <old>
   <node id="1401" lat="10.0000000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
@@ -1838,6 +1808,20 @@
 </old>
 <new>
   <node id="1403" visible="true" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="1404" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
+  </node>
+</old>
+<new>
+  <node id="1404" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
+  </node>
 </new>
 </action>
 <action type="delete">
@@ -1882,6 +1866,22 @@
 </action>
 <action type="modify">
 <old>
+  <node id="14041" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+</old>
+<new>
+  <node id="14041" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="14042" lat="10.0010000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+</old>
+<new>
+  <node id="14042" lat="10.0010000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
+</new>
+</action>
+<action type="modify">
+<old>
   <way id="1401" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <center lat="10.0010000" lon="4.0100000"/>
     <nd ref="14011"/>
@@ -1900,6 +1900,21 @@
     <tag k="foo" v="bar_1401"/>
     <tag k="foo_1401" v="bar"/>
   </way>
+</new>
+</action>
+<action type="delete">
+<old>
+  <way id="1402" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <center lat="10.0010000" lon="4.0200000"/>
+    <nd ref="14021"/>
+    <nd ref="14022"/>
+    <nd ref="14023"/>
+    <tag k="foo" v="bar_1402"/>
+    <tag k="foo_1402" v="bar"/>
+  </way>
+</old>
+<new>
+  <way id="1402" visible="true" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="modify">
@@ -1922,21 +1937,6 @@
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </way>
-</new>
-</action>
-<action type="delete">
-<old>
-  <way id="1402" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <center lat="10.0010000" lon="4.0200000"/>
-    <nd ref="14021"/>
-    <nd ref="14022"/>
-    <nd ref="14023"/>
-    <tag k="foo" v="bar_1402"/>
-    <tag k="foo_1402" v="bar"/>
-  </way>
-</old>
-<new>
-  <way id="1402" visible="true" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="modify">
@@ -1987,6 +1987,17 @@
   <relation id="1413" visible="true" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
+<action type="delete">
+<old>
+  <node id="1501" lat="10.0000000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1501"/>
+    <tag k="foo_1501" v="bar"/>
+  </node>
+</old>
+<new>
+  <node id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+</new>
+</action>
 <action type="modify">
 <old>
   <node id="1502" lat="10.0000000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
@@ -2013,17 +2024,6 @@
     <tag k="foo" v="bar_1503"/>
     <tag k="foo_1503" v="bar"/>
   </node>
-</new>
-</action>
-<action type="delete">
-<old>
-  <node id="1501" lat="10.0000000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <tag k="foo" v="bar_1501"/>
-    <tag k="foo_1501" v="bar"/>
-  </node>
-</old>
-<new>
-  <node id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="delete">
@@ -2057,6 +2057,21 @@
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </way>
+</action>
+<action type="delete">
+<old>
+  <way id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <center lat="10.0010000" lon="5.0100000"/>
+    <nd ref="15011"/>
+    <nd ref="15012"/>
+    <nd ref="15013"/>
+    <tag k="foo" v="bar_1501"/>
+    <tag k="foo_1501" v="bar"/>
+  </way>
+</old>
+<new>
+  <way id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+</new>
 </action>
 <action type="modify">
 <old>
@@ -2148,17 +2163,16 @@
 </action>
 <action type="delete">
 <old>
-  <way id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <center lat="10.0010000" lon="5.0100000"/>
-    <nd ref="15011"/>
-    <nd ref="15012"/>
-    <nd ref="15013"/>
+  <relation id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <center lat="10.0015000" lon="5.0100000"/>
+    <member type="node" ref="150110" role=""/>
+    <member type="node" ref="150120" role=""/>
     <tag k="foo" v="bar_1501"/>
     <tag k="foo_1501" v="bar"/>
-  </way>
+  </relation>
 </old>
 <new>
-  <way id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="modify">
@@ -2239,20 +2253,6 @@
     <tag k="foo" v="bar_1505"/>
     <tag k="foo_1505" v="bar"/>
   </relation>
-</new>
-</action>
-<action type="delete">
-<old>
-  <relation id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <center lat="10.0015000" lon="5.0100000"/>
-    <member type="node" ref="150110" role=""/>
-    <member type="node" ref="150120" role=""/>
-    <tag k="foo" v="bar_1501"/>
-    <tag k="foo_1501" v="bar"/>
-  </relation>
-</old>
-<new>
-  <relation id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="create">
@@ -2533,36 +2533,6 @@
   </relation>
 </new>
 </action>
-<action type="modify">
-<old>
-  <node id="1404" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
-    <tag k="foo" v="bar_1404"/>
-    <tag k="foo_1404" v="bar"/>
-  </node>
-</old>
-<new>
-  <node id="1404" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
-    <tag k="foo" v="bar_1404"/>
-    <tag k="foo_1404" v="bar"/>
-  </node>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14041" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-</old>
-<new>
-  <node id="14041" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14042" lat="10.0010000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
-</old>
-<new>
-  <node id="14042" lat="10.0010000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
-</new>
-</action>
 <action type="delete">
 <old>
   <node id="1401" lat="10.0000000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
@@ -2594,6 +2564,20 @@
 </old>
 <new>
   <node id="1403" visible="true" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="1404" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
+  </node>
+</old>
+<new>
+  <node id="1404" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
+  </node>
 </new>
 </action>
 <action type="delete">
@@ -2638,6 +2622,22 @@
 </action>
 <action type="modify">
 <old>
+  <node id="14041" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+</old>
+<new>
+  <node id="14041" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="14042" lat="10.0010000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+</old>
+<new>
+  <node id="14042" lat="10.0010000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
+</new>
+</action>
+<action type="modify">
+<old>
   <way id="1401" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="14011"/>
     <nd ref="14012"/>
@@ -2654,6 +2654,20 @@
     <tag k="foo" v="bar_1401"/>
     <tag k="foo_1401" v="bar"/>
   </way>
+</new>
+</action>
+<action type="delete">
+<old>
+  <way id="1402" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="14021"/>
+    <nd ref="14022"/>
+    <nd ref="14023"/>
+    <tag k="foo" v="bar_1402"/>
+    <tag k="foo_1402" v="bar"/>
+  </way>
+</old>
+<new>
+  <way id="1402" visible="true" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="modify">
@@ -2674,20 +2688,6 @@
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </way>
-</new>
-</action>
-<action type="delete">
-<old>
-  <way id="1402" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-    <nd ref="14021"/>
-    <nd ref="14022"/>
-    <nd ref="14023"/>
-    <tag k="foo" v="bar_1402"/>
-    <tag k="foo_1402" v="bar"/>
-  </way>
-</old>
-<new>
-  <way id="1402" visible="true" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="modify">
@@ -2734,6 +2734,17 @@
   <relation id="1413" visible="true" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
+<action type="delete">
+<old>
+  <node id="1501" lat="10.0000000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1501"/>
+    <tag k="foo_1501" v="bar"/>
+  </node>
+</old>
+<new>
+  <node id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+</new>
+</action>
 <action type="modify">
 <old>
   <node id="1502" lat="10.0000000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
@@ -2760,17 +2771,6 @@
     <tag k="foo" v="bar_1503"/>
     <tag k="foo_1503" v="bar"/>
   </node>
-</new>
-</action>
-<action type="delete">
-<old>
-  <node id="1501" lat="10.0000000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <tag k="foo" v="bar_1501"/>
-    <tag k="foo_1501" v="bar"/>
-  </node>
-</old>
-<new>
-  <node id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="delete">
@@ -2803,6 +2803,20 @@
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </way>
+</action>
+<action type="delete">
+<old>
+  <way id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="15011"/>
+    <nd ref="15012"/>
+    <nd ref="15013"/>
+    <tag k="foo" v="bar_1501"/>
+    <tag k="foo_1501" v="bar"/>
+  </way>
+</old>
+<new>
+  <way id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+</new>
 </action>
 <action type="modify">
 <old>
@@ -2886,16 +2900,15 @@
 </action>
 <action type="delete">
 <old>
-  <way id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <nd ref="15011"/>
-    <nd ref="15012"/>
-    <nd ref="15013"/>
+  <relation id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <member type="node" ref="150110" role=""/>
+    <member type="node" ref="150120" role=""/>
     <tag k="foo" v="bar_1501"/>
     <tag k="foo_1501" v="bar"/>
-  </way>
+  </relation>
 </old>
 <new>
-  <way id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="modify">
@@ -2968,19 +2981,6 @@
     <tag k="foo" v="bar_1505"/>
     <tag k="foo_1505" v="bar"/>
   </relation>
-</new>
-</action>
-<action type="delete">
-<old>
-  <relation id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-    <member type="node" ref="150110" role=""/>
-    <member type="node" ref="150120" role=""/>
-    <tag k="foo" v="bar_1501"/>
-    <tag k="foo_1501" v="bar"/>
-  </relation>
-</old>
-<new>
-  <relation id="1501" visible="false" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
 </new>
 </action>
 <action type="create">
@@ -3269,36 +3269,6 @@
   </relation>
 </new>
 </action>
-<action type="modify">
-<old>
-  <node id="1404" lat="10.0000000" lon="4.0400000">
-    <tag k="foo" v="bar_1404"/>
-    <tag k="foo_1404" v="bar"/>
-  </node>
-</old>
-<new>
-  <node id="1404" lat="10.0000000" lon="4.0400000">
-    <tag k="foo" v="bar_1404"/>
-    <tag k="foo_1404" v="bar"/>
-  </node>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14041" lat="10.0000000" lon="4.0400000"/>
-</old>
-<new>
-  <node id="14041" lat="10.0000000" lon="4.0400000"/>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14042" lat="10.0010000" lon="4.0400000"/>
-</old>
-<new>
-  <node id="14042" lat="10.0010000" lon="4.0400000"/>
-</new>
-</action>
 <action type="delete">
 <old>
   <node id="1401" lat="10.0000000" lon="4.0100000">
@@ -3330,6 +3300,20 @@
 </old>
 <new>
   <node id="1403" visible="true"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="1404" lat="10.0000000" lon="4.0400000">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
+  </node>
+</old>
+<new>
+  <node id="1404" lat="10.0000000" lon="4.0400000">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
+  </node>
 </new>
 </action>
 <action type="delete">
@@ -3374,6 +3358,22 @@
 </action>
 <action type="modify">
 <old>
+  <node id="14041" lat="10.0000000" lon="4.0400000"/>
+</old>
+<new>
+  <node id="14041" lat="10.0000000" lon="4.0400000"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="14042" lat="10.0010000" lon="4.0400000"/>
+</old>
+<new>
+  <node id="14042" lat="10.0010000" lon="4.0400000"/>
+</new>
+</action>
+<action type="modify">
+<old>
   <way id="1401">
     <bounds minlat="10.0000000" minlon="4.0100000" maxlat="10.0020000" maxlon="4.0100000"/>
     <nd ref="14011" lat="10.0000000" lon="4.0100000"/>
@@ -3392,6 +3392,21 @@
     <tag k="foo" v="bar_1401"/>
     <tag k="foo_1401" v="bar"/>
   </way>
+</new>
+</action>
+<action type="delete">
+<old>
+  <way id="1402">
+    <bounds minlat="10.0000000" minlon="4.0200000" maxlat="10.0020000" maxlon="4.0200000"/>
+    <nd ref="14021" lat="10.0000000" lon="4.0200000"/>
+    <nd ref="14022" lat="10.0010000" lon="4.0200000"/>
+    <nd ref="14023" lat="10.0020000" lon="4.0200000"/>
+    <tag k="foo" v="bar_1402"/>
+    <tag k="foo_1402" v="bar"/>
+  </way>
+</old>
+<new>
+  <way id="1402" visible="true"/>
 </new>
 </action>
 <action type="modify">
@@ -3414,21 +3429,6 @@
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </way>
-</new>
-</action>
-<action type="delete">
-<old>
-  <way id="1402">
-    <bounds minlat="10.0000000" minlon="4.0200000" maxlat="10.0020000" maxlon="4.0200000"/>
-    <nd ref="14021" lat="10.0000000" lon="4.0200000"/>
-    <nd ref="14022" lat="10.0010000" lon="4.0200000"/>
-    <nd ref="14023" lat="10.0020000" lon="4.0200000"/>
-    <tag k="foo" v="bar_1402"/>
-    <tag k="foo_1402" v="bar"/>
-  </way>
-</old>
-<new>
-  <way id="1402" visible="true"/>
 </new>
 </action>
 <action type="modify">
@@ -3479,6 +3479,17 @@
   <relation id="1413" visible="true"/>
 </new>
 </action>
+<action type="delete">
+<old>
+  <node id="1501" lat="10.0000000" lon="5.0100000">
+    <tag k="foo" v="bar_1501"/>
+    <tag k="foo_1501" v="bar"/>
+  </node>
+</old>
+<new>
+  <node id="1501" visible="false"/>
+</new>
+</action>
 <action type="modify">
 <old>
   <node id="1502" lat="10.0000000" lon="5.0200000">
@@ -3505,17 +3516,6 @@
     <tag k="foo" v="bar_1503"/>
     <tag k="foo_1503" v="bar"/>
   </node>
-</new>
-</action>
-<action type="delete">
-<old>
-  <node id="1501" lat="10.0000000" lon="5.0100000">
-    <tag k="foo" v="bar_1501"/>
-    <tag k="foo_1501" v="bar"/>
-  </node>
-</old>
-<new>
-  <node id="1501" visible="false"/>
 </new>
 </action>
 <action type="delete">
@@ -3549,6 +3549,21 @@
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </way>
+</action>
+<action type="delete">
+<old>
+  <way id="1501">
+    <bounds minlat="10.0000000" minlon="5.0100000" maxlat="10.0020000" maxlon="5.0100000"/>
+    <nd ref="15011" lat="10.0000000" lon="5.0100000"/>
+    <nd ref="15012" lat="10.0010000" lon="5.0100000"/>
+    <nd ref="15013" lat="10.0020000" lon="5.0100000"/>
+    <tag k="foo" v="bar_1501"/>
+    <tag k="foo_1501" v="bar"/>
+  </way>
+</old>
+<new>
+  <way id="1501" visible="false"/>
+</new>
 </action>
 <action type="modify">
 <old>
@@ -3640,17 +3655,16 @@
 </action>
 <action type="delete">
 <old>
-  <way id="1501">
-    <bounds minlat="10.0000000" minlon="5.0100000" maxlat="10.0020000" maxlon="5.0100000"/>
-    <nd ref="15011" lat="10.0000000" lon="5.0100000"/>
-    <nd ref="15012" lat="10.0010000" lon="5.0100000"/>
-    <nd ref="15013" lat="10.0020000" lon="5.0100000"/>
+  <relation id="1501">
+    <bounds minlat="10.0010000" minlon="5.0100000" maxlat="10.0020000" maxlon="5.0100000"/>
+    <member type="node" ref="150110" role="" lat="10.0010000" lon="5.0100000"/>
+    <member type="node" ref="150120" role="" lat="10.0020000" lon="5.0100000"/>
     <tag k="foo" v="bar_1501"/>
     <tag k="foo_1501" v="bar"/>
-  </way>
+  </relation>
 </old>
 <new>
-  <way id="1501" visible="false"/>
+  <relation id="1501" visible="false"/>
 </new>
 </action>
 <action type="modify">
@@ -3731,20 +3745,6 @@
     <tag k="foo" v="bar_1505"/>
     <tag k="foo_1505" v="bar"/>
   </relation>
-</new>
-</action>
-<action type="delete">
-<old>
-  <relation id="1501">
-    <bounds minlat="10.0010000" minlon="5.0100000" maxlat="10.0020000" maxlon="5.0100000"/>
-    <member type="node" ref="150110" role="" lat="10.0010000" lon="5.0100000"/>
-    <member type="node" ref="150120" role="" lat="10.0020000" lon="5.0100000"/>
-    <tag k="foo" v="bar_1501"/>
-    <tag k="foo_1501" v="bar"/>
-  </relation>
-</old>
-<new>
-  <relation id="1501" visible="false"/>
 </new>
 </action>
 <action type="create">
@@ -4025,36 +4025,6 @@
   </relation>
 </new>
 </action>
-<action type="modify">
-<old>
-  <node id="1404" lat="10.0000000" lon="4.0400000">
-    <tag k="foo" v="bar_1404"/>
-    <tag k="foo_1404" v="bar"/>
-  </node>
-</old>
-<new>
-  <node id="1404" lat="10.0000000" lon="4.0400000">
-    <tag k="foo" v="bar_1404"/>
-    <tag k="foo_1404" v="bar"/>
-  </node>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14041" lat="10.0000000" lon="4.0400000"/>
-</old>
-<new>
-  <node id="14041" lat="10.0000000" lon="4.0400000"/>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14042" lat="10.0010000" lon="4.0400000"/>
-</old>
-<new>
-  <node id="14042" lat="10.0010000" lon="4.0400000"/>
-</new>
-</action>
 <action type="delete">
 <old>
   <node id="1401" lat="10.0000000" lon="4.0100000">
@@ -4086,6 +4056,20 @@
 </old>
 <new>
   <node id="1403" visible="true"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="1404" lat="10.0000000" lon="4.0400000">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
+  </node>
+</old>
+<new>
+  <node id="1404" lat="10.0000000" lon="4.0400000">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
+  </node>
 </new>
 </action>
 <action type="delete">
@@ -4130,6 +4114,22 @@
 </action>
 <action type="modify">
 <old>
+  <node id="14041" lat="10.0000000" lon="4.0400000"/>
+</old>
+<new>
+  <node id="14041" lat="10.0000000" lon="4.0400000"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="14042" lat="10.0010000" lon="4.0400000"/>
+</old>
+<new>
+  <node id="14042" lat="10.0010000" lon="4.0400000"/>
+</new>
+</action>
+<action type="modify">
+<old>
   <way id="1401">
     <nd ref="14011"/>
     <nd ref="14012"/>
@@ -4146,6 +4146,20 @@
     <tag k="foo" v="bar_1401"/>
     <tag k="foo_1401" v="bar"/>
   </way>
+</new>
+</action>
+<action type="delete">
+<old>
+  <way id="1402">
+    <nd ref="14021"/>
+    <nd ref="14022"/>
+    <nd ref="14023"/>
+    <tag k="foo" v="bar_1402"/>
+    <tag k="foo_1402" v="bar"/>
+  </way>
+</old>
+<new>
+  <way id="1402" visible="true"/>
 </new>
 </action>
 <action type="modify">
@@ -4166,20 +4180,6 @@
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </way>
-</new>
-</action>
-<action type="delete">
-<old>
-  <way id="1402">
-    <nd ref="14021"/>
-    <nd ref="14022"/>
-    <nd ref="14023"/>
-    <tag k="foo" v="bar_1402"/>
-    <tag k="foo_1402" v="bar"/>
-  </way>
-</old>
-<new>
-  <way id="1402" visible="true"/>
 </new>
 </action>
 <action type="modify">
@@ -4226,6 +4226,17 @@
   <relation id="1413" visible="true"/>
 </new>
 </action>
+<action type="delete">
+<old>
+  <node id="1501" lat="10.0000000" lon="5.0100000">
+    <tag k="foo" v="bar_1501"/>
+    <tag k="foo_1501" v="bar"/>
+  </node>
+</old>
+<new>
+  <node id="1501" visible="false"/>
+</new>
+</action>
 <action type="modify">
 <old>
   <node id="1502" lat="10.0000000" lon="5.0200000">
@@ -4252,17 +4263,6 @@
     <tag k="foo" v="bar_1503"/>
     <tag k="foo_1503" v="bar"/>
   </node>
-</new>
-</action>
-<action type="delete">
-<old>
-  <node id="1501" lat="10.0000000" lon="5.0100000">
-    <tag k="foo" v="bar_1501"/>
-    <tag k="foo_1501" v="bar"/>
-  </node>
-</old>
-<new>
-  <node id="1501" visible="false"/>
 </new>
 </action>
 <action type="delete">
@@ -4295,6 +4295,20 @@
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </way>
+</action>
+<action type="delete">
+<old>
+  <way id="1501">
+    <nd ref="15011"/>
+    <nd ref="15012"/>
+    <nd ref="15013"/>
+    <tag k="foo" v="bar_1501"/>
+    <tag k="foo_1501" v="bar"/>
+  </way>
+</old>
+<new>
+  <way id="1501" visible="false"/>
+</new>
 </action>
 <action type="modify">
 <old>
@@ -4378,16 +4392,15 @@
 </action>
 <action type="delete">
 <old>
-  <way id="1501">
-    <nd ref="15011"/>
-    <nd ref="15012"/>
-    <nd ref="15013"/>
+  <relation id="1501">
+    <member type="node" ref="150110" role=""/>
+    <member type="node" ref="150120" role=""/>
     <tag k="foo" v="bar_1501"/>
     <tag k="foo_1501" v="bar"/>
-  </way>
+  </relation>
 </old>
 <new>
-  <way id="1501" visible="false"/>
+  <relation id="1501" visible="false"/>
 </new>
 </action>
 <action type="modify">
@@ -4460,19 +4473,6 @@
     <tag k="foo" v="bar_1505"/>
     <tag k="foo_1505" v="bar"/>
   </relation>
-</new>
-</action>
-<action type="delete">
-<old>
-  <relation id="1501">
-    <member type="node" ref="150110" role=""/>
-    <member type="node" ref="150120" role=""/>
-    <tag k="foo" v="bar_1501"/>
-    <tag k="foo_1501" v="bar"/>
-  </relation>
-</old>
-<new>
-  <relation id="1501" visible="false"/>
 </new>
 </action>
 <action type="create">
@@ -4701,30 +4701,6 @@
   </relation>
 </new>
 </action>
-<action type="modify">
-<old>
-  <node id="1404" lat="10.0000000" lon="4.0400000"/>
-</old>
-<new>
-  <node id="1404" lat="10.0000000" lon="4.0400000"/>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14041" lat="10.0000000" lon="4.0400000"/>
-</old>
-<new>
-  <node id="14041" lat="10.0000000" lon="4.0400000"/>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14042" lat="10.0010000" lon="4.0400000"/>
-</old>
-<new>
-  <node id="14042" lat="10.0010000" lon="4.0400000"/>
-</new>
-</action>
 <action type="delete">
 <old>
   <node id="1401" lat="10.0000000" lon="4.0100000"/>
@@ -4747,6 +4723,14 @@
 </old>
 <new>
   <node id="1403" visible="true"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="1404" lat="10.0000000" lon="4.0400000"/>
+</old>
+<new>
+  <node id="1404" lat="10.0000000" lon="4.0400000"/>
 </new>
 </action>
 <action type="delete">
@@ -4791,6 +4775,22 @@
 </action>
 <action type="modify">
 <old>
+  <node id="14041" lat="10.0000000" lon="4.0400000"/>
+</old>
+<new>
+  <node id="14041" lat="10.0000000" lon="4.0400000"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="14042" lat="10.0010000" lon="4.0400000"/>
+</old>
+<new>
+  <node id="14042" lat="10.0010000" lon="4.0400000"/>
+</new>
+</action>
+<action type="modify">
+<old>
   <way id="1401">
     <nd ref="14011"/>
     <nd ref="14012"/>
@@ -4803,6 +4803,18 @@
     <nd ref="14012"/>
     <nd ref="14013"/>
   </way>
+</new>
+</action>
+<action type="delete">
+<old>
+  <way id="1402">
+    <nd ref="14021"/>
+    <nd ref="14022"/>
+    <nd ref="14023"/>
+  </way>
+</old>
+<new>
+  <way id="1402" visible="true"/>
 </new>
 </action>
 <action type="modify">
@@ -4819,18 +4831,6 @@
     <nd ref="14032"/>
     <nd ref="14033"/>
   </way>
-</new>
-</action>
-<action type="delete">
-<old>
-  <way id="1402">
-    <nd ref="14021"/>
-    <nd ref="14022"/>
-    <nd ref="14023"/>
-  </way>
-</old>
-<new>
-  <way id="1402" visible="true"/>
 </new>
 </action>
 <action type="modify">
@@ -4869,6 +4869,14 @@
   <relation id="1413" visible="true"/>
 </new>
 </action>
+<action type="delete">
+<old>
+  <node id="1501" lat="10.0000000" lon="5.0100000"/>
+</old>
+<new>
+  <node id="1501" visible="false"/>
+</new>
+</action>
 <action type="modify">
 <old>
   <node id="1502" lat="10.0000000" lon="5.0200000"/>
@@ -4883,14 +4891,6 @@
 </old>
 <new>
   <node id="1503" lat="10.0000001" lon="5.0300000"/>
-</new>
-</action>
-<action type="delete">
-<old>
-  <node id="1501" lat="10.0000000" lon="5.0100000"/>
-</old>
-<new>
-  <node id="1501" visible="false"/>
 </new>
 </action>
 <action type="delete">
@@ -4915,6 +4915,18 @@
     <nd ref="14032"/>
     <nd ref="14033"/>
   </way>
+</action>
+<action type="delete">
+<old>
+  <way id="1501">
+    <nd ref="15011"/>
+    <nd ref="15012"/>
+    <nd ref="15013"/>
+  </way>
+</old>
+<new>
+  <way id="1501" visible="false"/>
+</new>
 </action>
 <action type="modify">
 <old>
@@ -4982,14 +4994,13 @@
 </action>
 <action type="delete">
 <old>
-  <way id="1501">
-    <nd ref="15011"/>
-    <nd ref="15012"/>
-    <nd ref="15013"/>
-  </way>
+  <relation id="1501">
+    <member type="node" ref="150110" role=""/>
+    <member type="node" ref="150120" role=""/>
+  </relation>
 </old>
 <new>
-  <way id="1501" visible="false"/>
+  <relation id="1501" visible="false"/>
 </new>
 </action>
 <action type="modify">
@@ -5046,17 +5057,6 @@
     <member type="node" ref="150510" role=""/>
     <member type="node" ref="150530" role=""/>
   </relation>
-</new>
-</action>
-<action type="delete">
-<old>
-  <relation id="1501">
-    <member type="node" ref="150110" role=""/>
-    <member type="node" ref="150120" role=""/>
-  </relation>
-</old>
-<new>
-  <relation id="1501" visible="false"/>
 </new>
 </action>
 <action type="create">
@@ -5256,30 +5256,6 @@
   </relation>
 </new>
 </action>
-<action type="modify">
-<old>
-  <node id="1404" lat="10.0000000" lon="4.0400000"/>
-</old>
-<new>
-  <node id="1404" lat="10.0000000" lon="4.0400000"/>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14041" lat="10.0000000" lon="4.0400000"/>
-</old>
-<new>
-  <node id="14041" lat="10.0000000" lon="4.0400000"/>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14042" lat="10.0010000" lon="4.0400000"/>
-</old>
-<new>
-  <node id="14042" lat="10.0010000" lon="4.0400000"/>
-</new>
-</action>
 <action type="delete">
 <old>
   <node id="1401" lat="10.0000000" lon="4.0100000"/>
@@ -5302,6 +5278,14 @@
 </old>
 <new>
   <node id="1403" visible="true"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="1404" lat="10.0000000" lon="4.0400000"/>
+</old>
+<new>
+  <node id="1404" lat="10.0000000" lon="4.0400000"/>
 </new>
 </action>
 <action type="delete">
@@ -5346,6 +5330,22 @@
 </action>
 <action type="modify">
 <old>
+  <node id="14041" lat="10.0000000" lon="4.0400000"/>
+</old>
+<new>
+  <node id="14041" lat="10.0000000" lon="4.0400000"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="14042" lat="10.0010000" lon="4.0400000"/>
+</old>
+<new>
+  <node id="14042" lat="10.0010000" lon="4.0400000"/>
+</new>
+</action>
+<action type="modify">
+<old>
   <way id="1401">
     <bounds minlat="10.0000000" minlon="4.0100000" maxlat="10.0020000" maxlon="4.0100000"/>
   </way>
@@ -5354,6 +5354,16 @@
   <way id="1401">
     <bounds minlat="10.0010000" minlon="4.0100000" maxlat="20.0000000" maxlon="4.0100000"/>
   </way>
+</new>
+</action>
+<action type="delete">
+<old>
+  <way id="1402">
+    <bounds minlat="10.0000000" minlon="4.0200000" maxlat="10.0020000" maxlon="4.0200000"/>
+  </way>
+</old>
+<new>
+  <way id="1402" visible="true"/>
 </new>
 </action>
 <action type="modify">
@@ -5366,16 +5376,6 @@
   <way id="1403">
     <bounds minlat="10.0000000" minlon="4.0300000" maxlat="10.0020000" maxlon="24.0300000"/>
   </way>
-</new>
-</action>
-<action type="delete">
-<old>
-  <way id="1402">
-    <bounds minlat="10.0000000" minlon="4.0200000" maxlat="10.0020000" maxlon="4.0200000"/>
-  </way>
-</old>
-<new>
-  <way id="1402" visible="true"/>
 </new>
 </action>
 <action type="modify">
@@ -5410,6 +5410,14 @@
   <relation id="1413" visible="true"/>
 </new>
 </action>
+<action type="delete">
+<old>
+  <node id="1501" lat="10.0000000" lon="5.0100000"/>
+</old>
+<new>
+  <node id="1501" visible="false"/>
+</new>
+</action>
 <action type="modify">
 <old>
   <node id="1502" lat="10.0000000" lon="5.0200000"/>
@@ -5424,14 +5432,6 @@
 </old>
 <new>
   <node id="1503" lat="10.0000001" lon="5.0300000"/>
-</new>
-</action>
-<action type="delete">
-<old>
-  <node id="1501" lat="10.0000000" lon="5.0100000"/>
-</old>
-<new>
-  <node id="1501" visible="false"/>
 </new>
 </action>
 <action type="delete">
@@ -5454,6 +5454,16 @@
   <way id="1403">
     <bounds minlat="10.0000000" minlon="4.0300000" maxlat="10.0020000" maxlon="24.0300000"/>
   </way>
+</action>
+<action type="delete">
+<old>
+  <way id="1501">
+    <bounds minlat="10.0000000" minlon="5.0100000" maxlat="10.0020000" maxlon="5.0100000"/>
+  </way>
+</old>
+<new>
+  <way id="1501" visible="false"/>
+</new>
 </action>
 <action type="modify">
 <old>
@@ -5505,12 +5515,12 @@
 </action>
 <action type="delete">
 <old>
-  <way id="1501">
-    <bounds minlat="10.0000000" minlon="5.0100000" maxlat="10.0020000" maxlon="5.0100000"/>
-  </way>
+  <relation id="1501">
+    <bounds minlat="10.0010000" minlon="5.0100000" maxlat="10.0020000" maxlon="5.0100000"/>
+  </relation>
 </old>
 <new>
-  <way id="1501" visible="false"/>
+  <relation id="1501" visible="false"/>
 </new>
 </action>
 <action type="modify">
@@ -5559,16 +5569,6 @@
   <relation id="1505">
     <bounds minlat="10.0010000" minlon="5.0500000" maxlat="10.0030000" maxlon="15.0500000"/>
   </relation>
-</new>
-</action>
-<action type="delete">
-<old>
-  <relation id="1501">
-    <bounds minlat="10.0010000" minlon="5.0100000" maxlat="10.0020000" maxlon="5.0100000"/>
-  </relation>
-</old>
-<new>
-  <relation id="1501" visible="false"/>
 </new>
 </action>
 <action type="create">
@@ -5760,30 +5760,6 @@
   </relation>
 </new>
 </action>
-<action type="modify">
-<old>
-  <node id="1404" lat="10.0000000" lon="4.0400000"/>
-</old>
-<new>
-  <node id="1404" lat="10.0000000" lon="4.0400000"/>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14041" lat="10.0000000" lon="4.0400000"/>
-</old>
-<new>
-  <node id="14041" lat="10.0000000" lon="4.0400000"/>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14042" lat="10.0010000" lon="4.0400000"/>
-</old>
-<new>
-  <node id="14042" lat="10.0010000" lon="4.0400000"/>
-</new>
-</action>
 <action type="delete">
 <old>
   <node id="1401" lat="10.0000000" lon="4.0100000"/>
@@ -5806,6 +5782,14 @@
 </old>
 <new>
   <node id="1403" visible="true"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="1404" lat="10.0000000" lon="4.0400000"/>
+</old>
+<new>
+  <node id="1404" lat="10.0000000" lon="4.0400000"/>
 </new>
 </action>
 <action type="delete">
@@ -5850,6 +5834,22 @@
 </action>
 <action type="modify">
 <old>
+  <node id="14041" lat="10.0000000" lon="4.0400000"/>
+</old>
+<new>
+  <node id="14041" lat="10.0000000" lon="4.0400000"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="14042" lat="10.0010000" lon="4.0400000"/>
+</old>
+<new>
+  <node id="14042" lat="10.0010000" lon="4.0400000"/>
+</new>
+</action>
+<action type="modify">
+<old>
   <way id="1401">
     <center lat="10.0010000" lon="4.0100000"/>
   </way>
@@ -5858,6 +5858,16 @@
   <way id="1401">
     <center lat="15.0005000" lon="4.0100000"/>
   </way>
+</new>
+</action>
+<action type="delete">
+<old>
+  <way id="1402">
+    <center lat="10.0010000" lon="4.0200000"/>
+  </way>
+</old>
+<new>
+  <way id="1402" visible="true"/>
 </new>
 </action>
 <action type="modify">
@@ -5870,16 +5880,6 @@
   <way id="1403">
     <center lat="10.0010000" lon="14.0300000"/>
   </way>
-</new>
-</action>
-<action type="delete">
-<old>
-  <way id="1402">
-    <center lat="10.0010000" lon="4.0200000"/>
-  </way>
-</old>
-<new>
-  <way id="1402" visible="true"/>
 </new>
 </action>
 <action type="modify">
@@ -5914,6 +5914,14 @@
   <relation id="1413" visible="true"/>
 </new>
 </action>
+<action type="delete">
+<old>
+  <node id="1501" lat="10.0000000" lon="5.0100000"/>
+</old>
+<new>
+  <node id="1501" visible="false"/>
+</new>
+</action>
 <action type="modify">
 <old>
   <node id="1502" lat="10.0000000" lon="5.0200000"/>
@@ -5928,14 +5936,6 @@
 </old>
 <new>
   <node id="1503" lat="10.0000001" lon="5.0300000"/>
-</new>
-</action>
-<action type="delete">
-<old>
-  <node id="1501" lat="10.0000000" lon="5.0100000"/>
-</old>
-<new>
-  <node id="1501" visible="false"/>
 </new>
 </action>
 <action type="delete">
@@ -5958,6 +5958,16 @@
   <way id="1403">
     <center lat="10.0010000" lon="14.0300000"/>
   </way>
+</action>
+<action type="delete">
+<old>
+  <way id="1501">
+    <center lat="10.0010000" lon="5.0100000"/>
+  </way>
+</old>
+<new>
+  <way id="1501" visible="false"/>
+</new>
 </action>
 <action type="modify">
 <old>
@@ -6009,12 +6019,12 @@
 </action>
 <action type="delete">
 <old>
-  <way id="1501">
-    <center lat="10.0010000" lon="5.0100000"/>
-  </way>
+  <relation id="1501">
+    <center lat="10.0015000" lon="5.0100000"/>
+  </relation>
 </old>
 <new>
-  <way id="1501" visible="false"/>
+  <relation id="1501" visible="false"/>
 </new>
 </action>
 <action type="modify">
@@ -6063,16 +6073,6 @@
   <relation id="1505">
     <center lat="10.0020000" lon="10.0500000"/>
   </relation>
-</new>
-</action>
-<action type="delete">
-<old>
-  <relation id="1501">
-    <center lat="10.0015000" lon="5.0100000"/>
-  </relation>
-</old>
-<new>
-  <relation id="1501" visible="false"/>
 </new>
 </action>
 <action type="create">
@@ -6240,30 +6240,6 @@
   <relation id="1313"/>
 </new>
 </action>
-<action type="modify">
-<old>
-  <node id="1404"/>
-</old>
-<new>
-  <node id="1404"/>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14041"/>
-</old>
-<new>
-  <node id="14041"/>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="14042"/>
-</old>
-<new>
-  <node id="14042"/>
-</new>
-</action>
 <action type="delete">
 <old>
   <node id="1401"/>
@@ -6286,6 +6262,14 @@
 </old>
 <new>
   <node id="1403" visible="true"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="1404"/>
+</old>
+<new>
+  <node id="1404"/>
 </new>
 </action>
 <action type="delete">
@@ -6330,18 +6314,26 @@
 </action>
 <action type="modify">
 <old>
-  <way id="1401"/>
+  <node id="14041"/>
 </old>
 <new>
-  <way id="1401"/>
+  <node id="14041"/>
 </new>
 </action>
 <action type="modify">
 <old>
-  <way id="1403"/>
+  <node id="14042"/>
 </old>
 <new>
-  <way id="1403"/>
+  <node id="14042"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <way id="1401"/>
+</old>
+<new>
+  <way id="1401"/>
 </new>
 </action>
 <action type="delete">
@@ -6350,6 +6342,14 @@
 </old>
 <new>
   <way id="1402" visible="true"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <way id="1403"/>
+</old>
+<new>
+  <way id="1403"/>
 </new>
 </action>
 <action type="modify">
@@ -6376,28 +6376,28 @@
   <relation id="1413" visible="true"/>
 </new>
 </action>
-<action type="modify">
-<old>
-  <node id="1502"/>
-</old>
-<new>
-  <node id="1502"/>
-</new>
-</action>
-<action type="modify">
-<old>
-  <node id="1503"/>
-</old>
-<new>
-  <node id="1503"/>
-</new>
-</action>
 <action type="delete">
 <old>
   <node id="1501"/>
 </old>
 <new>
   <node id="1501" visible="false"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="1502"/>
+</old>
+<new>
+  <node id="1502"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <node id="1503"/>
+</old>
+<new>
+  <node id="1503"/>
 </new>
 </action>
 <action type="delete">
@@ -6419,38 +6419,6 @@
 <action type="create">
   <way id="1403"/>
 </action>
-<action type="modify">
-<old>
-  <way id="1502"/>
-</old>
-<new>
-  <way id="1502"/>
-</new>
-</action>
-<action type="modify">
-<old>
-  <way id="1503"/>
-</old>
-<new>
-  <way id="1503"/>
-</new>
-</action>
-<action type="modify">
-<old>
-  <way id="1504"/>
-</old>
-<new>
-  <way id="1504"/>
-</new>
-</action>
-<action type="modify">
-<old>
-  <way id="1505"/>
-</old>
-<new>
-  <way id="1505"/>
-</new>
-</action>
 <action type="delete">
 <old>
   <way id="1501"/>
@@ -6461,34 +6429,34 @@
 </action>
 <action type="modify">
 <old>
-  <relation id="1502"/>
+  <way id="1502"/>
 </old>
 <new>
-  <relation id="1502"/>
+  <way id="1502"/>
 </new>
 </action>
 <action type="modify">
 <old>
-  <relation id="1503"/>
+  <way id="1503"/>
 </old>
 <new>
-  <relation id="1503"/>
+  <way id="1503"/>
 </new>
 </action>
 <action type="modify">
 <old>
-  <relation id="1504"/>
+  <way id="1504"/>
 </old>
 <new>
-  <relation id="1504"/>
+  <way id="1504"/>
 </new>
 </action>
 <action type="modify">
 <old>
-  <relation id="1505"/>
+  <way id="1505"/>
 </old>
 <new>
-  <relation id="1505"/>
+  <way id="1505"/>
 </new>
 </action>
 <action type="delete">
@@ -6497,6 +6465,38 @@
 </old>
 <new>
   <relation id="1501" visible="false"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <relation id="1502"/>
+</old>
+<new>
+  <relation id="1502"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <relation id="1503"/>
+</old>
+<new>
+  <relation id="1503"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <relation id="1504"/>
+</old>
+<new>
+  <relation id="1504"/>
+</new>
+</action>
+<action type="modify">
+<old>
+  <relation id="1505"/>
+</old>
+<new>
+  <relation id="1505"/>
 </new>
 </action>
 <action type="create">

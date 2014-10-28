@@ -26,7 +26,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 
 class Area_Query_Statement : public Output_Statement
 {

@@ -39,6 +39,7 @@ struct Default_Dispatcher_Logger : public Dispatcher_Logger
   virtual void prolongate(pid_t pid);
   virtual void idle_counter(uint32 idle_count);
   virtual void read_finished(pid_t pid);
+  virtual void read_aborted(pid_t pid);
   virtual void purge(pid_t pid);
   
   private:
@@ -103,6 +104,13 @@ void Default_Dispatcher_Logger::read_finished(pid_t pid)
 {
   ostringstream out;
   out<<"read_finished of process "<<pid<<'.';
+  logger->annotated_log(out.str());
+}
+
+void Default_Dispatcher_Logger::read_aborted(pid_t pid)
+{
+  ostringstream out;
+  out<<"read_aborted of process "<<pid<<'.';
   logger->annotated_log(out.str());
 }
 

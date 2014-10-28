@@ -1252,7 +1252,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 
   bool check_keys_late = false;
   for (vector< Query_Constraint* >::iterator it = constraints.begin(); it != constraints.end(); ++it)
-    check_keys_late |= (*it)->delivers_data();
+    check_keys_late |= (*it)->delivers_data(rman);
 
   {
     vector< Node::Id_Type > node_ids;

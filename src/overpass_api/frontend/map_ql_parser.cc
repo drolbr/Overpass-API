@@ -1540,6 +1540,10 @@ void process_osm_script_statement(Statement::Factory& stmt_factory, Statement* b
 }
 
 
+void process_osm_script_statement(Statement_Dump::Factory&, Statement_Dump*,
+    const vector< Category_Filter >&, const Csv_Settings& csv_settings) {}
+
+    
 void process_osm_script_statement(Statement_Dump::Factory& stmt_factory, Statement_Dump* base_statement,
     const vector< Category_Filter >&)
 {

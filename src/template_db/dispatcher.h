@@ -59,6 +59,7 @@ struct Dispatcher_Logger
   virtual void prolongate(pid_t pid) = 0;
   virtual void idle_counter(uint32 idle_count) = 0;
   virtual void read_finished(pid_t pid) = 0;
+  virtual void read_aborted(pid_t pid) = 0;
   virtual void purge(pid_t pid) = 0;
 };
 
@@ -235,8 +236,11 @@ class Dispatcher
     /** Refreshes the timeout for a reading process. */
     void prolongate(pid_t pid);
     
-    /** Unregisters a reading process. */
+    /** Unregisters a reading process on its request. */
     void read_finished(pid_t pid);
+    
+    /** Unregisters a reading process for other reasons. */
+    void read_aborted(pid_t pid);
     
     /** Other operations: -------------------------------------------------- */
     

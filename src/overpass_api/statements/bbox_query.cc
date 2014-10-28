@@ -35,7 +35,7 @@ using namespace std;
 class Bbox_Constraint : public Query_Constraint
 {
   public:
-    bool delivers_data();
+    bool delivers_data(Resource_Manager& rman);
     
     Bbox_Constraint(Bbox_Query_Statement& bbox_) : bbox(&bbox_) {}
     bool get_ranges
@@ -51,7 +51,7 @@ class Bbox_Constraint : public Query_Constraint
 };
 
 
-bool Bbox_Constraint::delivers_data()
+bool Bbox_Constraint::delivers_data(Resource_Manager& rman)
 {
   if (!bbox)
     return false;

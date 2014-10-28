@@ -16,14 +16,15 @@
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <locale.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <list>
-
-#include <locale.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <sstream>
 
 #include "../../expat/expat_justparse_interface.h"
 #include "../../template_db/random_file.h"
@@ -37,11 +38,30 @@ int main(int argc, char* args[])
 {
   if (argc < 3)
   {
-    std::cout<<"Usage: "<<args[0]<<" db_dir target\n";
+    std::cout<<"Usage: "<<args[0]<<" db_dir target [--index=INDEX]\n";
     return 0;
   }
   
   string db_dir(args[1]);
+
+  uint32 index_int;
+  bool index_used = false;
+  if (argc >= 4)
+  {
+    index_used = true;
+    std::string index_s(args[3]);
+    if (index_s.size() >= 10 && index_s.substr(8, 2) == "0x")
+    {
+      std::istringstream in(&args[3][10]);
+      in>>std::hex>>index_int;
+    }
+    else
+    {
+      std::istringstream in(&args[3][8]);
+      in>>index_int;
+    }
+  }
+  Uint31_Index index(index_int);
   
   try
   {    
@@ -191,11 +211,33 @@ int main(int argc, char* args[])
     {
       Block_Backend< Uint31_Index, Way_Skeleton > db
           (transaction.data_index(osm_base_settings().WAYS));
-      for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      if (index_used)
       {
-        cout<<hex<<it.index().val()<<'\t'
-            <<dec<<it.object().id.val()<<'\n';
+	std::set< Uint31_Index > req;
+	req.insert(index);
+        for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
+             it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+        {
+          cout<<hex<<it.index().val()<<'\t'
+              <<dec<<it.object().id.val()<<'\n';
+        }
+      }
+      else
+      {
+        for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
+             it(db.flat_begin()); !(it == db.flat_end()); ++it)
+        {
+          cout<<hex<<it.index().val()<<'\t'
+              <<dec<<it.object().id.val()<<'\n';
+        }
+      }
+    }
+    else if (std::string("--ways-map") == args[2])
+    {
+      if (index_used)
+      {
+        Random_File< Uint31_Index > random(transaction.random_index(osm_base_settings().WAYS));
+	std::cout<<"0x"<<std::hex<<random.get(index.val()).val()<<'\n';
       }
     }
     else if (std::string("--ways-meta") == args[2])
@@ -249,31 +291,94 @@ int main(int argc, char* args[])
           (transaction.data_index(attic_settings().WAY_IDX_LIST));
       for (Block_Backend< Way_Skeleton::Id_Type, Uint31_Index >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
-        cout<<dec<<it.index().val()<<'\t'
-            <<hex<<it.object().val()<<'\n';
+        std::cout<<"0x"<<std::dec<<it.index().val()<<'\t'
+            <<"0x"<<std::hex<<it.object().val()<<'\n';
     }
     else if (std::string("--attic-ways") == args[2])
     {
       Block_Backend< Uint31_Index, Attic< Way_Skeleton > > db
           (transaction.data_index(attic_settings().WAYS));
-      for (Block_Backend< Uint31_Index, Attic< Way_Skeleton > >::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      if (index_used)
       {
-        cout<<hex<<it.index().val()<<'\t'
-            <<dec<<it.object().id.val()<<'\t'
-            <<it.object().timestamp<<'\n';
+	std::set< Uint31_Index > req;
+	req.insert(index);
+        for (Block_Backend< Uint31_Index, Attic< Way_Skeleton > >::Discrete_Iterator
+             it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+        {
+          cout<<hex<<it.index().val()<<'\t'
+              <<dec<<it.object().id.val()<<'\t'
+              <<it.object().timestamp<<'\n';
+        }
+      }
+      else
+      {
+        for (Block_Backend< Uint31_Index, Attic< Way_Skeleton > >::Flat_Iterator
+             it(db.flat_begin()); !(it == db.flat_end()); ++it)
+        {
+          cout<<hex<<it.index().val()<<'\t'
+              <<dec<<it.object().id.val()<<'\t'
+              <<it.object().timestamp<<'\n';
+        }
       }
     }
     else if (std::string("--attic-ways-delta") == args[2])
     {
       Block_Backend< Uint31_Index, Attic< Way_Delta > > db
           (transaction.data_index(attic_settings().WAYS));
-      for (Block_Backend< Uint31_Index, Attic< Way_Delta > >::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      if (index_used)
       {
-        cout<<hex<<it.index().val()<<'\t'
-            <<dec<<it.object().id.val()<<'\t'<<it.object().full<<'\t'
-            <<it.object().timestamp<<'\n';
+	std::set< Uint31_Index > req;
+	req.insert(index);
+        for (Block_Backend< Uint31_Index, Attic< Way_Delta > >::Discrete_Iterator
+             it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+        {
+          cout<<hex<<it.index().val()<<'\t'
+              <<dec<<it.object().id.val()<<'\t'<<it.object().full<<'\t'
+              <<it.object().timestamp<<'\n';
+        }
+      }
+      else
+      {
+        for (Block_Backend< Uint31_Index, Attic< Way_Delta > >::Flat_Iterator
+             it(db.flat_begin()); !(it == db.flat_end()); ++it)
+        {
+          cout<<hex<<it.index().val()<<'\t'
+              <<dec<<it.object().id.val()<<'\t'<<it.object().full<<'\t'
+              <<it.object().timestamp<<'\n';
+        }
+      }
+    }
+    else if (std::string("--attic-ways-map") == args[2])
+    {
+      if (index_used)
+      {
+        Random_File< Uint31_Index > random(transaction.random_index(attic_settings().WAYS));
+	std::cout<<"0x"<<std::hex<<random.get(index.val()).val()<<'\n';
+      }
+    }
+    else if (std::string("--attic-ways-idxs") == args[2])
+    {
+      Block_Backend< Way::Id_Type, Uint31_Index > db
+          (transaction.data_index(attic_settings().WAY_IDX_LIST));
+      if (index_used)
+      {
+	std::set< Way::Id_Type > req;
+	req.insert(index);
+        for (Block_Backend< Way::Id_Type, Uint31_Index >::Discrete_Iterator
+             it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+        {
+          cout<<dec<<it.index().val()<<'\t'
+              <<hex<<it.object().val()<<'\n';
+        }
+      }
+      else
+      {
+        for (Block_Backend< Way::Id_Type, Uint31_Index >::Flat_Iterator
+             it(db.flat_begin()); !(it == db.flat_end()); ++it)
+        {
+          cout<<dec<<it.index().val()<<'\t'
+              <<hex<<it.object().val()<<'\n';
+        }
       }
     }
     else if (std::string("--attic-ways-meta") == args[2])
