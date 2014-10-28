@@ -214,15 +214,8 @@ while [[ $II -lt 48 ]]; do
 echo "data=[out:json];(node(7);way(1);rel(1););out meta;" >input/interpreter_45/stdin.log
 echo "data=[out:custom];(node(7);way(1);rel(1););out meta;" >input/interpreter_46/stdin.log
 
-# Do all tests for output format out_csv here
-# Newer features should anyway always care for meta data
-# Trennzeichen " ", "   ", "\t", ",", "---"
-# mit/ohne Überschriften
-# alle Funktionsspalten, 0-2 Tag-Spalten
-echo "data=[out:json];(way(0,0,90,180););out meta;" >input/interpreter_47/stdin.log
-
 II=45
-while [[ $II -lt 48 ]]; do
+while [[ $II -lt 47 ]]; do
 {
   prepare_test_interpreter $II
   perform_test_interpreter $II
