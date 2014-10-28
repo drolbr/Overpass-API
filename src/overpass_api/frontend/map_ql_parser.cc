@@ -587,6 +587,13 @@ TStatement* create_changed_statement(typename TStatement::Factory& stmt_factory,
 
 //-----------------------------------------------------------------------------
 
+template< typename Factory >
+bool has_bbox_limitation(Factory& stmt_factory)
+{
+  return (stmt_factory.bbox_limitation != 0);
+}
+
+
 std::vector< std::string > parse_setup(Tokenizer_Wrapper& token, Error_Output* error_output,
       vector< Category_Filter >& categories, Csv_Settings& csv_settings)
 {
@@ -610,7 +617,7 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token, Error_Output* e
   else if (result.back() == "popup")
   {
     clear_until_after(token, error_output, "(", "]", false);
-    while (*token == "(")
+    while (token.good() && *token == "(")
     {
       ++token;
       
@@ -619,11 +626,11 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token, Error_Output* e
       category.title = get_text_token(token, error_output, "title");
       clear_until_after(token, error_output, ";", ")", true);
 
-      while (*token == "[")
+      while (token.good() && *token == "[")
       {	
 	vector< Tag_Filter > filter_conjunction;
 	
-        while (*token == "[")
+        while (token.good() && *token == "[")
 	{
 	  ++token;
 	  
@@ -1384,7 +1391,12 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
   {
     if (from == "")
     {
-      if (error_output)
+      if (has_bbox_limitation(stmt_factory))
+      {
+        statement = create_query_statement< TStatement >
+            (stmt_factory, type, into, query_line_col.first);
+      }
+      else if (error_output)
 	error_output->add_parse_error("An empty query is not allowed", token.line_col().first);
     }
     else
@@ -1528,8 +1540,12 @@ void process_osm_script_statement(Statement::Factory& stmt_factory, Statement* b
 }
 
 
-void process_osm_script_statement(Statement_Dump::Factory&, Statement_Dump*,
-    const vector< Category_Filter >&, const Csv_Settings& csv_settings) {}
+void process_osm_script_statement(Statement_Dump::Factory& stmt_factory, Statement_Dump* base_statement,
+    const vector< Category_Filter >&)
+{
+  if (base_statement && base_statement->name() == "osm-script" && base_statement->attribute("bbox") != "")
+    stmt_factory.bbox_limitation = 1;
+}
 
 
 template< class TStatement >

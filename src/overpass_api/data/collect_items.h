@@ -49,7 +49,7 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
     {
       count = 0;
       if (stmt)
-        rman.health_check(*stmt);
+        rman.health_check(*stmt, 0, eval_map(result));
     }
     if (timestamp < timestamp_of(it.object()))
     {

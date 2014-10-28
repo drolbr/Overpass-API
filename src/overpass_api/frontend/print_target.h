@@ -56,6 +56,7 @@ class Output_Handle
     void set_csv_settings(const Csv_Settings& csv_settings_) { csv_settings = csv_settings_; }
     
     void print_bounds(double south, double west, double north, double east);
+    void print_elements_header();
 
   private:
     string type;

@@ -26,10 +26,11 @@ int main(int argc, char *argv[])
 {
   char c;
   string buf;
+  cin.get(c);
   while (!cin.eof())
   {
-    cin.get(c);
     buf += c;
+    cin.get(c);
   }
   
   cout<<escape_xml(buf);

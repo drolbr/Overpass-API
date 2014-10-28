@@ -322,7 +322,7 @@ std::map< Tag_Index_Local, std::set< Attic< Node_Skeleton::Id_Type > > >
       // already before then we need to store explicit void tags for all tags that have not been
       // removed.
       const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
-      if (idx && !(it->idx == Uint31_Index(0u)))
+      if (idx && !(it->idx == Uint31_Index(0u)) && (idx->val() & 0x7fffff00) == (it->idx.val() & 0x7fffff00))
       {
         for (std::vector< std::pair< std::string, std::string > >::const_iterator tag_it = it->tags.begin();
              tag_it != it->tags.end(); ++tag_it)
@@ -331,7 +331,7 @@ std::map< Tag_Index_Local, std::set< Attic< Node_Skeleton::Id_Type > > >
       }
       else
       {
-	// This is object is just going to be undeleted
+	// This is object is just going to be undeleted or moved
 	// Explicitly add to undeleted all tags the object now gets
 	idx = binary_pair_search(existing_attic_map_positions, it->elem.id);
 	if (idx && !(it->idx == Uint31_Index(0u)))
@@ -350,9 +350,12 @@ std::map< Tag_Index_Local, std::set< Attic< Node_Skeleton::Id_Type > > >
       std::set< std::string > old_keys;
       std::vector< Data_By_Id< Node_Skeleton >::Entry >::const_iterator last_it = it;
       --last_it;
-      for (std::vector< std::pair< std::string, std::string > >::const_iterator
-           tag_it = last_it->tags.begin(); tag_it != last_it->tags.end(); ++tag_it)
-        old_keys.insert(tag_it->first);
+      if ((it->idx.val() & 0x7fffff00) == (last_it->idx.val() & 0x7fffff00))
+      {
+        for (std::vector< std::pair< std::string, std::string > >::const_iterator
+             tag_it = last_it->tags.begin(); tag_it != last_it->tags.end(); ++tag_it)
+          old_keys.insert(tag_it->first);
+      }
       
       for (std::vector< std::pair< std::string, std::string > >::const_iterator tag_it = it->tags.begin();
            tag_it != it->tags.end(); ++tag_it)

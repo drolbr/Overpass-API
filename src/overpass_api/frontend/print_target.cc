@@ -2123,6 +2123,19 @@ void Output_Handle::print_bounds(double south, double west, double north, double
   if (type == "xml")
     cout<<"  <bounds minlat=\""<<south<<"\" minlon=\""<<west<<"\" "
           "maxlat=\""<<north<<"\" maxlon=\""<<east<<"\"/>\n\n";
+  else if (type == "json")
+    cout<<"  \"bounds\": {\n"
+          "    \"minlat\": " << south << ",\n"
+          "    \"minlon\": " << west  << ",\n"
+          "    \"maxlat\": " << north << ",\n"
+          "    \"maxlon\": " << east  << "\n"
+          "  },\n";
+}
+
+void Output_Handle::print_elements_header()
+{
+  if (type == "json")
+    cout<< "  \"elements\": [\n\n";
 }
 
 
