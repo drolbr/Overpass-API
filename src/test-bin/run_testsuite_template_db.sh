@@ -54,7 +54,15 @@ evaluate_test()
       FAILED=YES
     }; else
     {
-      RES=`diff -q "../../expected/$DIRNAME/$FILE" "$FILE"`
+      pwd >"__temp"
+      if [[ "$FILE" == "test-shadow.lock" || ! -s "$FILE" ]]; then
+        echo "no" >>"__temp"
+      else
+        echo "yes" >>"__temp"
+      fi
+      cat "__temp" "../../expected/$DIRNAME/$FILE" | awk -f "../../expected/set_variables.awk" >"expected_$FILE"
+      RES=`diff -q "expected_$FILE" "$FILE"`
+      rm "__temp" #"expected_$FILE"
       if [[ -n $RES ]]; then
       {
         echo $RES
