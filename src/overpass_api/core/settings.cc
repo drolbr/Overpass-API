@@ -90,7 +90,7 @@ Basic_Settings::Basic_Settings()
 
   base_directory("./"),
   logfile_name("transactions.log"),
-  shared_name_base("/osm3s_v0.7.50")
+  shared_name_base("/osm3s_v0.7.51")
 {}
 
 Basic_Settings& basic_settings()
