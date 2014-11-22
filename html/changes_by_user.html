@@ -1,0 +1,47 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
+  <title>OSM3S Experimental Diff</title>
+  <script src="changeset_content_request.js"></script>
+  <script src="http_wrapper.js"></script>
+  <script src="osm_to_html.js"></script>
+  <script src="osm_xml_parser.js"></script>
+  <script type="text/javascript">
+  
+    function init()
+    {        
+      var text_area = OsmToHtml(document.getElementById("textual_results"));
+      var status_bar = document.getElementById("status");
+      httpXmlWrapper("/misc/changeset_25803449.xml",
+        function(doc)
+        {
+          status_bar.innerHTML = "received changeset list";
+          var changesets = doc.getElementsByTagName("changeset");
+          if (changesets.length > 0)
+          {
+            var id = "";
+            if (changesets[0].attributes && changesets[0].attributes.getNamedItem("id"))
+                id = changesets[0].attributes.getNamedItem("id").value;
+            ChangesetContentRequest()(changesets[0], status_bar, 
+                function(doc)
+                {
+                    if (status_bar && status_bar.innerHTML)
+                        status_bar.innerHTML = "received changeset " + id;
+                    var objectList = OsmXmlParser()(doc);
+                    for (var i = 0; i < objectList.length; ++i)
+                        text_area.print_single_elem(objectList[i]);
+                });
+          }
+        });
+    }
+
+  </script>
+</head>
+<body onload="init()">
+
+<p><strong id="status">&nbsp;</div></strong></p>
+
+<p id="textual_results">&nbsp;</p>
+
+</body>
+</html>
