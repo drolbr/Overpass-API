@@ -14,7 +14,8 @@ function OsmXmlParser()
             for (var i = 0; i < elem.children.length; ++i)
             {
                 var tag = elem.children.item(i);
-                if (tag && tag.attributes && tag.attributes.getNamedItem("k") && tag.attributes.getNamedItem("v"))
+                if (tag && tag.nodeName && tag.nodeName == "tag"
+		        && tag.attributes && tag.attributes.getNamedItem("k") && tag.attributes.getNamedItem("v"))
 		    result[tag.attributes.getNamedItem("k").value] = tag.attributes.getNamedItem("v").value;
             }
         }
@@ -23,19 +24,46 @@ function OsmXmlParser()
     }
     
     
-    function collect_geometry(elem)
+    function collect_coordinate(elem)
     {
         var result = {};
 	
-	if (elem && elem.nodeName == "node")
-	{
-	    if (elem && elem.attributes && elem.attributes.getNamedItem("lon"))
-	      result["x"] = elem.attributes.getNamedItem("lon").value;
-	    if (elem && elem.attributes && elem.attributes.getNamedItem("lat"))
-	      result["y"] = elem.attributes.getNamedItem("lat").value;
-	}
+	if (elem && elem.attributes && elem.attributes.getNamedItem("lon"))
+	    result["x"] = elem.attributes.getNamedItem("lon").value;
+	if (elem && elem.attributes && elem.attributes.getNamedItem("lat"))
+	    result["y"] = elem.attributes.getNamedItem("lat").value;
 	
 	return result;
+    }
+    
+    
+    function collect_geometry(elem)
+    {
+	if (elem && elem.nodeName == "node")
+	    return collect_coordinate(elem);
+	else if (elem && elem.nodeName == "way")
+	{
+            var result = [];
+	    var subline = [];
+	    
+            for (var i = 0; i < elem.children.length; ++i)
+            {
+                var nd = elem.children.item(i);
+                if (nd && nd.nodeName == "nd")
+		{
+		    var coord = collect_coordinate(nd);
+		    if (coord.x && coord.y)
+		        subline.push(coord);
+		    else if (subline.length > 0)
+		        result.push(subline);
+		}
+            }
+	    
+	    if (subline.length > 0)
+	        result.push(subline);
+	    
+	    return result;
+	}
     }
     
     

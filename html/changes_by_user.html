@@ -2,46 +2,251 @@
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
   <title>OSM3S Experimental Diff</title>
+  <script src="http://localhost/firebug-lite/content/lite/firebug.js"></script>
   <script src="changeset_content_request.js"></script>
   <script src="http_wrapper.js"></script>
   <script src="osm_to_html.js"></script>
-  <script src="osm_xml_parser.js"></script>
+  <script src="osm_xml_parser.js"></script> 
+  <script src="http://localhost/OpenLayers-2.13.1/OpenLayers.debug.js"></script>
+<!--  <script src="http://openlayers.org/api/2.13.1/OpenLayers.js"></script> -->
+  <script src="http://overpass-api.de/OpenStreetMap.js"></script>
   <script type="text/javascript">
+  
+    var lat = 50.734;
+    var lon = 7.100;
+    var zoom = 18;
+    var map;
+    var layerMapnik = false;    
+    
+    
+    function wgsPoint(lat, lon)
+    {
+        var web_mercator = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+        return new OpenLayers.Geometry.Point(web_mercator.lon, web_mercator.lat);
+    }
+    
+    
+    var feature_layer = {};
+    var osm_elements = [];
+
+    
+    var bounds = false;
+    
+    function add_to_viewport(point)
+    {
+        if (!bounds || !bounds.extend)
+	    bounds = new OpenLayers.Bounds(point.x, point.y, point.x, point.y);
+	else
+	    bounds.extend(point);
+    }
+
+    
+    function add_elem_to_viewport(elem)
+    {
+        if (elem.type == "node")
+	    add_to_viewport(wgsPoint(elem.geometry.y, elem.geometry.x));        
+    }
+
+        
+    function add_feature_to_viewport(elem)
+    {
+        if (elem.old)
+            add_elem_to_viewport(elem.old);
+        if (elem.new)
+            add_elem_to_viewport(elem.new);
+        if (elem.keep)
+            add_elem_to_viewport(elem.keep);
+    }
+
+    
+    function show_partial_element(elem, color)
+    {
+        if (!elem.geometry)
+            return;
+            
+        if (elem.type == "node")
+        {
+            var feature = new OpenLayers.Feature.Vector(
+                wgsPoint(elem.geometry.y, elem.geometry.x),
+		{ descr: "node " + elem.id },
+		{ fillColor: color,
+		  stroke: false,
+		  pointRadius: 12 });
+	    feature_layer.addFeatures([feature]);
+        }
+        else if (elem.type == "way")
+        {
+            for (var i = 0; i < elem.geometry.length; ++i)
+            {
+                var ol_points = [];
+                for (var j = 0; j < elem.geometry[i].length; ++j)
+                    ol_points.push(wgsPoint(elem.geometry[i][j].y, elem.geometry[i][j].x));
+                var feature = new OpenLayers.Feature.Vector(
+                    new OpenLayers.Geometry.LineString(ol_points),
+                    { descr: "way " + elem.id },
+                    { fill: false,
+		      strokeWidth: 10,
+		      strokeColor: color });
+	        feature_layer.addFeatures([feature]);
+            }
+        }
+    }
+    
+    
+    function equal_geometry(lhs, rhs)
+    {
+        if (lhs.x && lhs.y)
+            return (rhs.x && rhs.y && lhs.x == rhs.x && lhs.y == rhs.y);
+        if (rhs.x || rhs.y)
+            return false;
+        if (lhs.length != rhs.length)
+            return false;
+        for (var i = 0; i < lhs.length; ++i)
+        {
+            if (lhs[i].x && lhs[i].y &&
+                    !(rhs[i].x && rhs[i].y && lhs[i].x == rhs[i].x && lhs[i].y == rhs[i].y))
+                return false;
+        }
+        return true;
+    }
+    
+    
+    function show_element(index)
+    {
+        if (index >= 0 && index < osm_elements.length)
+        {
+            var elem = osm_elements[index];
+            if (elem.keep)
+                show_partial_element(elem.keep, "#0000ff");
+            else if (elem.old && elem.new && equal_geometry(elem.old.geometry, elem.new.geometry))
+                show_partial_element(elem.new, "#0000ff");
+            else
+            {
+                if (elem.old)
+                    show_partial_element(elem.old, "#ff0000");
+                if (elem.new)
+                    show_partial_element(elem.new, "#00ff00");
+            }
+        }
+    }
+    
+    
+    function show_all_elements()
+    {
+        for (var i = 0; i < osm_elements.length; ++i)
+            show_element(i);
+    }
+    
+    
+    function ShowEventClosure(index)
+    {
+        var i = index;
+        
+        function handler(event)
+        {
+            feature_layer.removeAllFeatures();
+            show_element(i);
+        }
+        
+        return handler;
+    }
+          
+  
+    function ShowAllEventClosure()
+    {
+        function handler(event)
+        {
+            show_all_elements();
+        }
+        
+        return handler;
+    }
+          
   
     function init()
     {        
-      var text_area = OsmToHtml(document.getElementById("textual_results"));
-      var status_bar = document.getElementById("status");
-      httpXmlWrapper("/misc/changeset_25803449.xml",
-        function(doc)
-        {
-          status_bar.innerHTML = "received changeset list";
-          var changesets = doc.getElementsByTagName("changeset");
-          if (changesets.length > 0)
-          {
-            var id = "";
-            if (changesets[0].attributes && changesets[0].attributes.getNamedItem("id"))
-                id = changesets[0].attributes.getNamedItem("id").value;
-            ChangesetContentRequest()(changesets[0], status_bar, 
-                function(doc)
+        map = new OpenLayers.Map ("map", {
+              maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
+              maxResolution: 156543.0399,
+              numZoomLevels: 19,
+              units: 'm',
+              projection: new OpenLayers.Projection("EPSG:900913"),
+              displayProjection: new OpenLayers.Projection("EPSG:4326")
+        } );
+
+        layerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
+        map.addLayer(layerMapnik);
+
+        var lonLat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+        map.setCenter(lonLat, zoom);
+
+        feature_layer = new OpenLayers.Layer.Vector("Changes", { /*style: { fillColor: "#ff0000", strokeColor: "#ff00ff" }*/ });
+        map.addLayers([feature_layer]);
+
+        var text_area = document.getElementById("textual_results");
+        var osm_to_html = OsmToHtml();
+        var status_bar = document.getElementById("status");
+        httpXmlWrapper("http://localhost/changeset_25803449.xml",
+            function(doc)
+            {
+                status_bar.innerHTML = "received changeset list";
+                var changesets = doc.getElementsByTagName("changeset");
+                if (changesets.length > 0)
                 {
-                    if (status_bar && status_bar.innerHTML)
-                        status_bar.innerHTML = "received changeset " + id;
-                    var objectList = OsmXmlParser()(doc);
-                    for (var i = 0; i < objectList.length; ++i)
-                        text_area.print_single_elem(objectList[i]);
-                });
-          }
-        });
+                    var id = "";
+                    if (changesets[0].attributes && changesets[0].attributes.getNamedItem("id"))
+                        id = changesets[0].attributes.getNamedItem("id").value;
+                    ChangesetContentRequest()(changesets[0], status_bar, 
+                        function(doc)
+                        {
+                            if (status_bar && status_bar.innerHTML)
+                                status_bar.innerHTML = "received changeset " + id;
+                            osm_elements = OsmXmlParser()(doc);
+                            
+                            text_area.appendChild(document.createTextNode("["));
+                            var a = document.createElement("a");
+                            a.setAttribute("href", "#");
+                            a.addEventListener("click",
+                                {
+                                    handleEvent: ShowAllEventClosure()
+                                }, false);
+                            a.appendChild(document.createTextNode("show all"));
+                            text_area.appendChild(a);
+                            text_area.appendChild(document.createTextNode("]"));
+                            text_area.appendChild(document.createElement("br"));
+                                
+                            for (var i = 0; i < osm_elements.length; ++i)
+                            {
+                                text_area.appendChild(document.createElement("br"));
+                                text_area.appendChild(document.createTextNode("["));
+                                var a = document.createElement("a");
+                                a.setAttribute("href", "#");
+                                a.addEventListener("click",
+                                    {
+                                        handleEvent: ShowEventClosure(i)
+                                    }, false);
+                                a.appendChild(document.createTextNode("show"));
+                                text_area.appendChild(a);
+                                text_area.appendChild(document.createTextNode("]"));
+                                osm_to_html.print_single_elem(osm_elements[i], text_area);
+                                add_feature_to_viewport(osm_elements[i]);
+                            }
+                            map.zoomToExtent(bounds);                            
+                        });
+                }
+            });        
     }
 
   </script>
 </head>
 <body onload="init()">
 
-<p><strong id="status">&nbsp;</div></strong></p>
-
-<p id="textual_results">&nbsp;</p>
+<div style="position:absolute; top:0%; left:0%; height:100%; width:30%; z-index:1">
+    <div style="height:10%"><strong id="status">&nbsp;</strong></div>
+    <div id="textual_results" style="height:90%; overflow-y:scroll"></div>
+</div>
+<div id="map" class="smallmap" style="position:absolute; top:0%; left:30%; height:100%; width:70%; z-index:1"></div>
 
 </body>
 </html>

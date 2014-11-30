@@ -35,7 +35,7 @@ function ChangesetContentRequest()
         {
             var date_delta = "\"" + created_at +"\",\""+ closed_at + "\"";
             var bbox = "(" + min_lat + "," + min_lon + "," + max_lat + "," + max_lon + ")";
-            var url = "/api/interpreter?data=[adiff:" + date_delta + "];"
+            var url = "http://overpass-api.de/api/interpreter?data=[adiff:" + date_delta + "];"
                 + "(node(changed:" + date_delta + ")" + bbox + ";"
                 + "way(changed:" + date_delta + ")" + bbox + ";"
                 + "rel(changed:" + date_delta + ")" + bbox + ";);out meta geom;";

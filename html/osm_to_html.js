@@ -1,105 +1,106 @@
 
 function OsmToHtml(dom_element)
 {
-    var target = dom_element;
-    
-    
-    function print_tags(tags)
+    function print_tags(tags, target)
     {
-        var result = "";
-        
-        if (tags)
-        {
-            for (var key in tags)
-		result += "<br/>" + key + " = " + tags[key];
-        }
-        
-        return result;
+        for (var key in tags)
+	{
+	    target.appendChild(document.createElement("br"));
+	    target.appendChild(document.createTextNode(key + " = " + tags[key]));
+	}
     }
 
     
-    function print_tags_diff(old_tags, new_tags)
+    function print_tags_diff(old_tags, new_tags, target)
     {
-        var result = "";
-        
-        if (old_tags && new_tags)
+        for (key in old_tags)
         {
-            for (key in old_tags)
-            {
-                if (!new_tags[key] || old_tags[key] != new_tags[key])
-                    result += "<br/><span style=\"color:red\">-&nbsp;"
-		        + key + " = " + old_tags[key] + "</span>";
+            if (!new_tags[key] || old_tags[key] != new_tags[key])
+	    {
+	        target.appendChild(document.createElement("br"));
+	        var span = document.createElement("span");
+	        span.setAttribute("style", "color:red");
+	        span.appendChild(document.createTextNode(
+		    "- " + key + " = " + old_tags[key]));
+		target.appendChild(span);
 	    }
+	}
             
-            for (key in new_tags)
-            {
-                if (!old_tags[key] || old_tags[key] != new_tags[key])
-                    result += "<br/><span style=\"color:green\">+&nbsp;"
-		        + key + " = " + new_tags[key] + "</span>";
+        for (key in new_tags)
+        {
+            if (!old_tags[key] || old_tags[key] != new_tags[key])
+	    {
+	        target.appendChild(document.createElement("br"));
+	        var span = document.createElement("span");
+	        span.setAttribute("style", "color:green");
+	        span.appendChild(document.createTextNode(
+		    "+ " + key + " = " + new_tags[key]));
+		target.appendChild(span);
 	    }
+	}
             
-            for (key in new_tags)
-            {
-                if (old_tags[key] && old_tags[key] == new_tags[key])
-                    result += "<br/>&nbsp;&nbsp;"
-		        + key + " = " + new_tags[key];
+        for (key in new_tags)
+        {
+            if (old_tags[key] && old_tags[key] == new_tags[key])
+	    {
+	        target.appendChild(document.createElement("br"));
+	        target.appendChild(document.createTextNode(
+		    "\u00A0 " + key + " = " + new_tags[key]));
 	    }
-        }
-        
-        return result;
+	}
     }
     
     
-    function print_elem(feature)
+    function print_elem(feature, target)
     {
         if (feature.keep)
         {
-            var result = "";
-        
             var elem = feature.keep;
-            result += "<br/>" + elem.type + " " + elem.id;
-            if (elem.children)
-                result += print_tags(elem.tags);
-            if (result != "")
-                result += "<br/>";
+	    target.appendChild(document.createElement("br"));
+	    target.appendChild(document.createTextNode(elem.type + " " + elem.id));
+	    if (elem.tags)
+	        print_tags(elem.tags, target);
+	    target.appendChild(document.createElement("br"));
         }
         
         if (feature.old && feature.new)
         {
-            var result = "";
-        
             var elem = feature.new;
-            result += "<br/><span style=\"color:blue\">changed " + elem.type + " " + elem.id + "</span>";
-            if (elem.tags && feature.old.tags)
-                result += print_tags_diff(feature.old.tags, elem.tags);
-            if (result != "")
-                result += "<br/>";            
+	    target.appendChild(document.createElement("br"));
+	    var span = document.createElement("span");
+	    span.setAttribute("style", "color:blue");
+	    span.appendChild(document.createTextNode(elem.type + " " + elem.id));
+	    target.appendChild(span);
+	    if (elem.tags && feature.old.tags)
+                print_tags_diff(feature.old.tags, elem.tags, target);
+	    target.appendChild(document.createElement("br"));
         }
         else if (feature.old)
         {
-            var result = "";
-        
             var elem = feature.old;
-            result += "<br/><span style=\"color:red\">old " + elem.type + " " + elem.id + "</span>";
-            if (elem.children)
-                result += print_tags(elem.tags);
-            if (result != "")
-                result += "<br/>";
+	    target.appendChild(document.createElement("br"));
+	    var span = document.createElement("span");
+	    span.setAttribute("style", "color:red");
+	    span.appendChild(document.createTextNode(elem.type + " " + elem.id));
+	    target.appendChild(span);
+	    if (elem.tags)
+	        print_tags(elem.tags, target);
+	    target.appendChild(document.createElement("br"));
         }
         else if (feature.new)
         {
-            var result = "";
-        
             var elem = feature.new;
-            result += "<br/><span style=\"color:green\">new " + elem.type + " " + elem.id + "</span>";
-            if (elem.children)
-                result += print_tags(elem.tags);
-            if (result != "")
-                result += "<br/>";
+	    target.appendChild(document.createElement("br"));
+	    var span = document.createElement("span");
+	    span.setAttribute("style", "color:green");
+	    span.appendChild(document.createTextNode(elem.type + " " + elem.id));
+	    target.appendChild(span);
+	    if (elem.tags)
+	        print_tags(elem.tags, target);
+	    target.appendChild(document.createElement("br"));
         }
         
-        if (target && target.innerHTML)
-            target.innerHTML += result;
+        return result;
     }
     
     
