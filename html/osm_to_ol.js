@@ -28,7 +28,15 @@ function OsmToOpenLayers(feature_layer_, osm_elements_)
     function add_elem_to_viewport(elem)
     {
         if (elem.type == "node")
-	    add_to_viewport(wgsPoint(elem.geometry.y, elem.geometry.x));        
+	    add_to_viewport(wgsPoint(elem.geometry.y, elem.geometry.x));
+        else if (elem.type == "way")
+	{
+            for (var i = 0; i < elem.geometry.length; ++i)
+            {
+                for (var j = 0; j < elem.geometry[i].length; ++j)
+	            add_to_viewport(wgsPoint(elem.geometry[i][j].y, elem.geometry[i][j].x));        
+	    }
+	}
     }
 
         
