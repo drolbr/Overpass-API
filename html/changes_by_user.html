@@ -6,6 +6,7 @@
   <script src="changeset_content_request.js"></script>
   <script src="http_wrapper.js"></script>
   <script src="osm_to_html.js"></script>
+  <script src="osm_to_ol.js"></script>
   <script src="osm_xml_parser.js"></script> 
   <script src="http://localhost/OpenLayers-2.13.1/OpenLayers.debug.js"></script>
 <!--  <script src="http://openlayers.org/api/2.13.1/OpenLayers.js"></script> -->
@@ -16,153 +17,11 @@
     var lon = 7.100;
     var zoom = 18;
     var map;
-    var layerMapnik = false;    
+    var layerMapnik = false;   
     
-    
-    function wgsPoint(lat, lon)
-    {
-        var web_mercator = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
-        return new OpenLayers.Geometry.Point(web_mercator.lon, web_mercator.lat);
-    }
-    
-    
-    var feature_layer = {};
     var osm_elements = [];
 
     
-    var bounds = false;
-    
-    function add_to_viewport(point)
-    {
-        if (!bounds || !bounds.extend)
-	    bounds = new OpenLayers.Bounds(point.x, point.y, point.x, point.y);
-	else
-	    bounds.extend(point);
-    }
-
-    
-    function add_elem_to_viewport(elem)
-    {
-        if (elem.type == "node")
-	    add_to_viewport(wgsPoint(elem.geometry.y, elem.geometry.x));        
-    }
-
-        
-    function add_feature_to_viewport(elem)
-    {
-        if (elem.old)
-            add_elem_to_viewport(elem.old);
-        if (elem.new)
-            add_elem_to_viewport(elem.new);
-        if (elem.keep)
-            add_elem_to_viewport(elem.keep);
-    }
-
-    
-    function show_partial_element(elem, color)
-    {
-        if (!elem.geometry)
-            return;
-            
-        if (elem.type == "node")
-        {
-            var feature = new OpenLayers.Feature.Vector(
-                wgsPoint(elem.geometry.y, elem.geometry.x),
-		{ descr: "node " + elem.id },
-		{ fillColor: color,
-		  stroke: false,
-		  pointRadius: 12 });
-	    feature_layer.addFeatures([feature]);
-        }
-        else if (elem.type == "way")
-        {
-            for (var i = 0; i < elem.geometry.length; ++i)
-            {
-                var ol_points = [];
-                for (var j = 0; j < elem.geometry[i].length; ++j)
-                    ol_points.push(wgsPoint(elem.geometry[i][j].y, elem.geometry[i][j].x));
-                var feature = new OpenLayers.Feature.Vector(
-                    new OpenLayers.Geometry.LineString(ol_points),
-                    { descr: "way " + elem.id },
-                    { fill: false,
-		      strokeWidth: 10,
-		      strokeColor: color });
-	        feature_layer.addFeatures([feature]);
-            }
-        }
-    }
-    
-    
-    function equal_geometry(lhs, rhs)
-    {
-        if (lhs.x && lhs.y)
-            return (rhs.x && rhs.y && lhs.x == rhs.x && lhs.y == rhs.y);
-        if (rhs.x || rhs.y)
-            return false;
-        if (lhs.length != rhs.length)
-            return false;
-        for (var i = 0; i < lhs.length; ++i)
-        {
-            if (lhs[i].x && lhs[i].y &&
-                    !(rhs[i].x && rhs[i].y && lhs[i].x == rhs[i].x && lhs[i].y == rhs[i].y))
-                return false;
-        }
-        return true;
-    }
-    
-    
-    function show_element(index)
-    {
-        if (index >= 0 && index < osm_elements.length)
-        {
-            var elem = osm_elements[index];
-            if (elem.keep)
-                show_partial_element(elem.keep, "#0000ff");
-            else if (elem.old && elem.new && equal_geometry(elem.old.geometry, elem.new.geometry))
-                show_partial_element(elem.new, "#0000ff");
-            else
-            {
-                if (elem.old)
-                    show_partial_element(elem.old, "#ff0000");
-                if (elem.new)
-                    show_partial_element(elem.new, "#00ff00");
-            }
-        }
-    }
-    
-    
-    function show_all_elements()
-    {
-        for (var i = 0; i < osm_elements.length; ++i)
-            show_element(i);
-    }
-    
-    
-    function ShowEventClosure(index)
-    {
-        var i = index;
-        
-        function handler(event)
-        {
-            feature_layer.removeAllFeatures();
-            show_element(i);
-        }
-        
-        return handler;
-    }
-          
-  
-    function ShowAllEventClosure()
-    {
-        function handler(event)
-        {
-            show_all_elements();
-        }
-        
-        return handler;
-    }
-          
-  
     function init()
     {        
         map = new OpenLayers.Map ("map", {
@@ -202,14 +61,15 @@
                         {
                             if (status_bar && status_bar.innerHTML)
                                 status_bar.innerHTML = "received changeset " + id;
-                            osm_elements = OsmXmlParser()(doc);
+                            osm_elements = OsmXmlParser().processXml(doc);
+                            var osm_to_ol = OsmToOpenLayers(feature_layer, osm_elements);
                             
                             text_area.appendChild(document.createTextNode("["));
                             var a = document.createElement("a");
                             a.setAttribute("href", "#");
                             a.addEventListener("click",
                                 {
-                                    handleEvent: ShowAllEventClosure()
+                                    handleEvent: osm_to_ol.show_all_elements
                                 }, false);
                             a.appendChild(document.createTextNode("show all"));
                             text_area.appendChild(a);
@@ -224,15 +84,15 @@
                                 a.setAttribute("href", "#");
                                 a.addEventListener("click",
                                     {
-                                        handleEvent: ShowEventClosure(i)
+                                        handleEvent: osm_to_ol.show_single_element_closure(i)
                                     }, false);
                                 a.appendChild(document.createTextNode("show"));
                                 text_area.appendChild(a);
                                 text_area.appendChild(document.createTextNode("]"));
                                 osm_to_html.print_single_elem(osm_elements[i], text_area);
-                                add_feature_to_viewport(osm_elements[i]);
+                                osm_to_ol.add_feature_to_viewport(i);
                             }
-                            map.zoomToExtent(bounds);                            
+                            map.zoomToExtent(osm_to_ol.get_bounds());
                         });
                 }
             });        

@@ -137,7 +137,7 @@ function OsmXmlParser()
     }
 
     
-    function processXML(doc)
+    function processXML_(doc)
     {
         var result = [];
         processElemClass("node", doc, result);
@@ -146,5 +146,29 @@ function OsmXmlParser()
         return result;
     }
     
-    return processXML;
+    
+    function equal_geometry_(lhs, rhs)
+    {
+        if (lhs.x && lhs.y)
+            return (rhs.x && rhs.y && lhs.x == rhs.x && lhs.y == rhs.y);
+        if (rhs.x || rhs.y)
+            return false;
+        if (lhs.length != rhs.length)
+            return false;
+        for (var i = 0; i < lhs.length; ++i)
+        {
+            if (lhs[i].x && lhs[i].y &&
+                    !(rhs[i].x && rhs[i].y && lhs[i].x == rhs[i].x && lhs[i].y == rhs[i].y))
+                return false;
+        }
+        return true;
+    }
+    
+
+    var result =
+    {
+        equal_geometry: equal_geometry_,
+        processXml: processXML_
+    }
+    return result;
 }
