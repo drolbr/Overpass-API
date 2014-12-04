@@ -23,7 +23,9 @@
 
     
     function init()
-    {        
+    {
+        var changeset_id = "26922456";//"25803449";
+    
         map = new OpenLayers.Map ("map", {
               maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
               maxResolution: 156543.0399,
@@ -46,7 +48,7 @@
         var text_area = document.getElementById("textual_results");
         var osm_to_html = OsmToHtml();
         var status_bar = document.getElementById("status");
-        httpXmlWrapper("http://localhost/changeset_25803449.xml",
+        httpXmlWrapper("http://www.openstreetmap.org/api/0.6/changeset/" + changeset_id,
             function(doc)
             {
                 status_bar.innerHTML = "received changeset list";

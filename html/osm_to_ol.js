@@ -5,6 +5,15 @@ function OsmToOpenLayers(feature_layer_, osm_elements_)
     var osm_elements = osm_elements_;
     var bounds = false;
     
+    var point_style =
+        { fillOpacity: 0.5,
+          stroke: false,
+          pointRadius: 12 };
+    var line_style =
+        { fill: false,
+          strokeWidth: 10,
+          strokeOpacity: 0.5 };
+        
   
     function wgsPoint(lat, lon)
     {
@@ -19,24 +28,29 @@ function OsmToOpenLayers(feature_layer_, osm_elements_)
     function add_to_viewport(point)
     {
         if (!bounds || !bounds.extend)
-	    bounds = new OpenLayers.Bounds(point.x, point.y, point.x, point.y);
-	else
-	    bounds.extend(point);
+            bounds = new OpenLayers.Bounds(point.x, point.y, point.x, point.y);
+        else
+            bounds.extend(point);
     }
 
     
     function add_elem_to_viewport(elem)
     {
         if (elem.type == "node")
-	    add_to_viewport(wgsPoint(elem.geometry.y, elem.geometry.x));
-        else if (elem.type == "way")
-	{
+            add_to_viewport(wgsPoint(elem.geometry.y, elem.geometry.x));
+        else if (elem.type == "way" || elem.type == "relation")
+        {
             for (var i = 0; i < elem.geometry.length; ++i)
             {
-                for (var j = 0; j < elem.geometry[i].length; ++j)
-	            add_to_viewport(wgsPoint(elem.geometry[i][j].y, elem.geometry[i][j].x));        
-	    }
-	}
+                if (elem.geometry[i].x && elem.geometry[i].y)
+                    add_to_viewport(wgsPoint(elem.geometry[i].y, elem.geometry[i].x));
+                else
+                {
+                    for (var j = 0; j < elem.geometry[i].length; ++j)
+                        add_to_viewport(wgsPoint(elem.geometry[i][j].y, elem.geometry[i][j].x));        
+                }
+            }
+        }
     }
 
         
@@ -52,11 +66,27 @@ function OsmToOpenLayers(feature_layer_, osm_elements_)
                 add_elem_to_viewport(elem.new);
             if (elem.keep)
                 add_elem_to_viewport(elem.keep);
-	}
+        }
     }
     
     
     //---------------------------------------------------------------------
+    
+    
+    function copy_properties(obj)
+    {
+        var copy = {}
+        for (key in obj)
+          copy[key] = obj[key];
+        return copy;
+    }
+    
+    
+    function set_property(obj, key, value)
+    {
+        obj[key] = value;
+        return obj;
+    }
 
     
     function show_partial_element(elem, color)
@@ -68,26 +98,33 @@ function OsmToOpenLayers(feature_layer_, osm_elements_)
         {
             var feature = new OpenLayers.Feature.Vector(
                 wgsPoint(elem.geometry.y, elem.geometry.x),
-		{ descr: "node " + elem.id },
-		{ fillColor: color,
-		  stroke: false,
-		  pointRadius: 12 });
-	    feature_layer.addFeatures([feature]);
+                { descr: "node " + elem.id },
+                set_property(copy_properties(point_style), "fillColor", color));
+            feature_layer.addFeatures([feature]);
         }
-        else if (elem.type == "way")
+        else if (elem.type == "way" || elem.type == "relation")
         {
             for (var i = 0; i < elem.geometry.length; ++i)
             {
-                var ol_points = [];
-                for (var j = 0; j < elem.geometry[i].length; ++j)
-                    ol_points.push(wgsPoint(elem.geometry[i][j].y, elem.geometry[i][j].x));
-                var feature = new OpenLayers.Feature.Vector(
-                    new OpenLayers.Geometry.LineString(ol_points),
-                    { descr: "way " + elem.id },
-                    { fill: false,
-		      strokeWidth: 10,
-		      strokeColor: color });
-	        feature_layer.addFeatures([feature]);
+                if (elem.geometry[i].x && elem.geometry[i].y)
+                {
+                    var feature = new OpenLayers.Feature.Vector(
+                        wgsPoint(elem.geometry[i].y, elem.geometry[i].x),
+                        { descr: elem.type + " " + elem.id },
+                        set_property(copy_properties(point_style), "fillColor", color));
+                    feature_layer.addFeatures([feature]);
+                }
+                else
+                {
+                    var ol_points = [];
+                    for (var j = 0; j < elem.geometry[i].length; ++j)
+                        ol_points.push(wgsPoint(elem.geometry[i][j].y, elem.geometry[i][j].x));
+                    var feature = new OpenLayers.Feature.Vector(
+                        new OpenLayers.Geometry.LineString(ol_points),
+                        { descr: elem.type + " " + elem.id },
+                        set_property(copy_properties(line_style), "strokeColor", color));
+                    feature_layer.addFeatures([feature]);
+                }
             }
         }
     }
@@ -116,7 +153,7 @@ function OsmToOpenLayers(feature_layer_, osm_elements_)
     function show_single_element_(index)
     {
         feature_layer.removeAllFeatures();
-	show_element(index);
+        show_element(index);
     }
     
     
@@ -149,10 +186,10 @@ function OsmToOpenLayers(feature_layer_, osm_elements_)
     
     var result = {
         add_feature_to_viewport: add_feature_to_viewport_,
-	get_bounds: get_bounds_,
+        get_bounds: get_bounds_,
         show_single_element: show_single_element_,
-	show_single_element_closure: show_single_element_closure_,
-	show_all_elements: show_all_elements_
+        show_single_element_closure: show_single_element_closure_,
+        show_all_elements: show_all_elements_
     };
     return result;
 }

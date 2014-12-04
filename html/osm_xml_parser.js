@@ -1,6 +1,7 @@
 /*
- * OsmXmlParser: an object that has only the method:
+ * OsmXmlParser: a closure that offers essetially an XML to OSM object parser:
  *   processXML: parses the given DOM tree into an array of OSM objects
+ *   equal_geometry: returns whether both objects represent the same geometry, element order matters
  */
 
 function OsmXmlParser()
@@ -15,8 +16,8 @@ function OsmXmlParser()
             {
                 var tag = elem.children.item(i);
                 if (tag && tag.nodeName && tag.nodeName == "tag"
-		        && tag.attributes && tag.attributes.getNamedItem("k") && tag.attributes.getNamedItem("v"))
-		    result[tag.attributes.getNamedItem("k").value] = tag.attributes.getNamedItem("v").value;
+                        && tag.attributes && tag.attributes.getNamedItem("k") && tag.attributes.getNamedItem("v"))
+                    result[tag.attributes.getNamedItem("k").value] = tag.attributes.getNamedItem("v").value;
             }
         }
         
@@ -27,66 +28,114 @@ function OsmXmlParser()
     function collect_coordinate(elem)
     {
         var result = {};
-	
-	if (elem && elem.attributes && elem.attributes.getNamedItem("lon"))
-	    result["x"] = elem.attributes.getNamedItem("lon").value;
-	if (elem && elem.attributes && elem.attributes.getNamedItem("lat"))
-	    result["y"] = elem.attributes.getNamedItem("lat").value;
-	
-	return result;
+        
+        if (elem && elem.attributes && elem.attributes.getNamedItem("lon"))
+            result["x"] = elem.attributes.getNamedItem("lon").value;
+        if (elem && elem.attributes && elem.attributes.getNamedItem("lat"))
+            result["y"] = elem.attributes.getNamedItem("lat").value;
+        
+        return result;
     }
     
     
     function collect_geometry(elem)
     {
-	if (elem && elem.nodeName == "node")
-	    return collect_coordinate(elem);
-	else if (elem && elem.nodeName == "way")
-	{
+        if (elem && elem.nodeName == "node")
+            return collect_coordinate(elem);
+        else if (elem && elem.nodeName == "way")
+        {
             var result = [];
-	    var subline = [];
-	    
+            var subline = [];
+            
             for (var i = 0; i < elem.children.length; ++i)
             {
                 var nd = elem.children.item(i);
                 if (nd && nd.nodeName == "nd")
-		{
-		    var coord = collect_coordinate(nd);
-		    if (coord.x && coord.y)
-		        subline.push(coord);
-		    else if (subline.length > 0)
-		        result.push(subline);
-		}
+                {
+                    var coord = collect_coordinate(nd);
+                    if (coord.x && coord.y)
+                        subline.push(coord);
+                    else if (subline.length > 0)
+		    {
+                        result.push(subline);
+			subline = [];
+		    }
+                }
             }
-	    
-	    if (subline.length > 0)
-	        result.push(subline);
-	    
-	    return result;
-	}
+            
+            if (subline.length > 0)
+                result.push(subline);
+            
+            return result;
+        }
+        else if (elem && elem.nodeName == "relation")
+        {
+            var result = [];
+            
+            for (var i = 0; i < elem.children.length; ++i)
+            {
+                var member = elem.children.item(i);
+                if (member && member.nodeName == "member" && member.attributes
+		        && member.attributes.getNamedItem("type"))
+                {
+		    if (member.attributes.getNamedItem("type").value == "node")
+		    {
+                        var coord = collect_coordinate(member);
+                        if (coord.x && coord.y)
+                            result.push(coord);
+		    }
+		    else if (member.attributes.getNamedItem("type").value == "way"
+		            && member.children)
+		    {
+			var subline = [];
+			
+			for (var i = 0; i < member.children.length; ++i)
+			{
+			    var nd = elem.children.item(i);
+			    if (nd && nd.nodeName == "nd")
+			    {
+				var coord = collect_coordinate(nd);
+				if (coord.x && coord.y)
+				    subline.push(coord);
+				else if (subline.length > 0)
+				{
+				    result.push(subline);
+				    subline = [];
+				}
+			    }
+			}
+            
+			if (subline.length > 0)
+			    result.push(subline);
+		    }
+                }
+            }
+            
+            return result;
+        }
     }
     
     
     function append_attribute_if_available(source, result, attr)
     {
-	if (source.attributes && source.attributes.getNamedItem(attr))
-	    result[attr] = source.attributes.getNamedItem(attr).value;
+        if (source.attributes && source.attributes.getNamedItem(attr))
+            result[attr] = source.attributes.getNamedItem(attr).value;
     }
     
     
     function parse(xml_node)
     {
         var result = {};
-	result["type"] = xml_node.nodeName;
-	append_attribute_if_available(xml_node, result, "id");
-	append_attribute_if_available(xml_node, result, "version");
-	append_attribute_if_available(xml_node, result, "timestamp");
-	append_attribute_if_available(xml_node, result, "changeset");
-	append_attribute_if_available(xml_node, result, "uid");
-	append_attribute_if_available(xml_node, result, "user");
-	result["tags"] = collect_tags(xml_node);
-	result["geometry"] = collect_geometry(xml_node);
-	return result;
+        result["type"] = xml_node.nodeName;
+        append_attribute_if_available(xml_node, result, "id");
+        append_attribute_if_available(xml_node, result, "version");
+        append_attribute_if_available(xml_node, result, "timestamp");
+        append_attribute_if_available(xml_node, result, "changeset");
+        append_attribute_if_available(xml_node, result, "uid");
+        append_attribute_if_available(xml_node, result, "user");
+        result["tags"] = collect_tags(xml_node);
+        result["geometry"] = collect_geometry(xml_node);
+        return result;
     }
     
     
@@ -121,7 +170,7 @@ function OsmXmlParser()
             else if (elem_list[i] && elem_list[i].parentNode && elem_list[i].parentNode.nodeName == "action"
                 && elem_list[i].parentNode.attributes
                 && elem_list[i].parentNode.attributes.getNamedItem("type")
-		&& elem_list[i].parentNode.attributes.getNamedItem("type").value == "create")
+                && elem_list[i].parentNode.attributes.getNamedItem("type").value == "create")
             {
                 var elem = {}
                 elem["new"] = parse(elem_list[i]);
@@ -157,9 +206,8 @@ function OsmXmlParser()
             return false;
         for (var i = 0; i < lhs.length; ++i)
         {
-            if (lhs[i].x && lhs[i].y &&
-                    !(rhs[i].x && rhs[i].y && lhs[i].x == rhs[i].x && lhs[i].y == rhs[i].y))
-                return false;
+	    if (!equal_geometry_(lhs[i], rhs[i]))
+	        return false;
         }
         return true;
     }
