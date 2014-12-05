@@ -89,9 +89,9 @@ function OsmXmlParser()
 		    {
 			var subline = [];
 			
-			for (var i = 0; i < member.children.length; ++i)
+			for (var j = 0; j < member.children.length; ++j)
 			{
-			    var nd = elem.children.item(i);
+			    var nd = member.children.item(j);
 			    if (nd && nd.nodeName == "nd")
 			    {
 				var coord = collect_coordinate(nd);

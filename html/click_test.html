@@ -22,6 +22,40 @@
     var osm_elements = [];
 
     
+    function fullDate(date)
+    {
+        var result = date.getUTCFullYear();
+        result += "-";
+
+        var month = date.getUTCMonth() + 1;
+        result += (month <= 9 ? ("0" + month) : month); 
+
+        result += "-";
+
+        var day = date.getUTCDate();
+        result += (day <= 9 ? ("0" + day) : day); 
+
+        result += "T";
+
+        var hour = date.getUTCHours();
+        result += (hour <= 9 ? ("0" + hour) : hour); 
+
+        result += ":";
+
+        var minute = date.getUTCMinutes();
+        result += (minute <= 9 ? ("0" + minute) : minute); 
+
+        result += ":";
+
+        var second = date.getUTCSeconds();
+        result += (second <= 9 ? ("0" + second) : second); 
+
+        result += "Z";
+
+        return result;
+    }
+
+      
     function refreshData()
     {
         var status_bar = document.getElementById("status");
@@ -43,11 +77,11 @@
         var text_area = document.getElementById("textual_results");
         var osm_to_html = OsmToHtml();
         
-        httpXmlWrapper("
+        httpXmlWrapper("http://overpass-api.de/api/interpreter"
             + "?data=[adiff:\"" + mindate + "\"" + maxdate + "];("
-            + "node(bbox)(changed:\"" + mindate + "\"" + maxdate");"
-            + "way(bbox)(changed:\"" + mindate + "\"" + maxdate");"
-            + "relation(bbox)(changed:\"" + mindate + "\"" + maxdate");"
+            + "node(bbox)(changed:\"" + mindate + "\"" + maxdate + ");"
+            + "way(bbox)(changed:\"" + mindate + "\"" + maxdate + ");"
+            + "relation(bbox)(changed:\"" + mindate + "\"" + maxdate + ");"
             + ");out meta geom(bbox);&bbox="
             + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
         function(doc)
@@ -91,6 +125,9 @@
             if (status_bar && status_bar.innerHTML)
                 status_bar.innerHTML = "data complete";
         });
+        
+        if (status_bar && status_bar.innerHTML)
+            status_bar.innerHTML = "waiting for results";
     }
 
     
@@ -114,6 +151,11 @@
 
         feature_layer = new OpenLayers.Layer.Vector("Changes", { /*style: { fillColor: "#ff0000", strokeColor: "#ff00ff" }*/ });
         map.addLayers([feature_layer]);
+
+        var yesterday = new Date(new Date().getTime() - 86400*1000);
+        var select_mindate = document.getElementById("select_mindate");
+        if (select_mindate)
+            select_mindate.value = fullDate(yesterday);
     }
 
   </script>
@@ -129,7 +171,7 @@
         </form>  
         <strong id="status">&nbsp;</strong>
     </div>
-    <div id="textual_results" style="height:90%; overflow-y:scroll"></div>
+    <div id="textual_results" style="height:80%; overflow-y:scroll"></div>
 </div>
 <div id="map" class="smallmap" style="position:absolute; top:0%; left:30%; height:100%; width:70%; z-index:1"></div>
 
