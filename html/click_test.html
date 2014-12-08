@@ -75,6 +75,8 @@
             maxdate = ",\"" + maxdate + "\"";
 
         var text_area = document.getElementById("textual_results");
+        while (text_area.firstChild)
+            text_area.removeChild(text_area.firstChild);
         var osm_to_html = OsmToHtml();
         
         httpXmlWrapper("http://overpass-api.de/api/interpreter"

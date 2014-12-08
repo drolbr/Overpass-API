@@ -63,7 +63,7 @@ function OsmToHtml(dom_element)
             target.appendChild(document.createElement("br"));
         }
         
-        if (feature.old && feature.new)
+        if (feature.old && feature.new && feature.action != "delete")
         {
             var elem = feature.new;
             target.appendChild(document.createElement("br"));

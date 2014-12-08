@@ -144,10 +144,20 @@ function OsmXmlParser()
         var elem_list = doc.getElementsByTagName(elem_name);
         for (var i = 0; i < elem_list.length; ++i)
         {
+	    var action = false;
+	    if (elem_list[i] && elem_list[i].parentNode
+	            && elem_list[i].parentNode.parentNode
+	            && elem_list[i].parentNode.parentNode.nodeName == "action"
+	            && elem_list[i].parentNode.parentNode.attributes
+	            && elem_list[i].parentNode.parentNode.attributes.getNamedItem("type"))
+	        action = elem_list[i].parentNode.parentNode.attributes.getNamedItem("type").value;
+	  
             if (elem_list[i] && elem_list[i].parentNode && elem_list[i].parentNode.nodeName == "old")
             {
                 var elem = {}
                 elem["old"] = parse(elem_list[i]);
+		if (action)
+		    elem["action"] = action;
                 result.push(elem);
             }
             else if (elem_list[i] && elem_list[i].parentNode && elem_list[i].parentNode.nodeName == "new")
@@ -164,6 +174,8 @@ function OsmXmlParser()
                 {
                     var elem = {}
                     elem["new"] = parse(elem_list[i]);
+		    if (action)
+		        elem["action"] = action;
                     result.push(elem);
                 }
             }
@@ -174,12 +186,16 @@ function OsmXmlParser()
             {
                 var elem = {}
                 elem["new"] = parse(elem_list[i]);
+		if (action)
+		    elem["action"] = action;
                 result.push(elem);
             }
             else
             {
                 var elem = {}
                 elem["keep"] = parse(elem_list[i]);
+		if (action)
+		    elem["action"] = action;
                 result.push(elem);
             }
         }
