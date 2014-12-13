@@ -91,11 +91,9 @@
 
 <h2><a name="xapi">XAPI compatibility layer</a></h2>
 
-<p>The XAPI compatibility layer is completely separated from the <a href="#core">core</a>. It consists of two components: for each query, a process <em>xapi</em> is started; it then calls the program <em>translate_xapi</em> to transform the query into an Overpass XML query. The transformed query is saved in a temporary file into the directory <em>/tmp/translate_xapi</em>. Then <em>xapi</em> invokes <em>osm3s_query</em> with the translated query.</p>
+<p>The XAPI compatibility layer is completely separated from the <a href="#core">core</a>. It consists of two components: for each query, a process <em>xapi</em> is started; it then calls the program <em>translate_xapi</em> to transform the query into an Overpass XML query. Then <em>xapi</em> invokes <em>osm3s_query</em> with the translated query.</p>
 
-<p>The second component is the permanetly running helper process <em>cleanup_xapi.sh</em>. This process creates the directory <em>/tmp/translate_xapi</em> and cares for the orphaned temporaries that result from aborted queries.</p>
-
-<p>The XAPI compatibility layer doesn't read or write directly any files beside the temporary files. It also doesn't directly log something. An XAPI query can only be reconstructed indirectly from the translated query in <em>transactions.log</em>.</p>
+<p>The XAPI compatibility layer doesn't read or write directly any files. It also doesn't directly log something. An XAPI query can only be reconstructed indirectly from the translated query in <em>transactions.log</em>.</p>
 
 
 <h2><a name="areas">Area Generator</a></h2>
