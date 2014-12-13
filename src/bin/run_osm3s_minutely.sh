@@ -153,4 +153,3 @@ if [[ $AREAS == "yes" ]]; then
 };fi
 sleep 5
 ./apply_osc_to_db.sh $DB_DIR/ $REPLICATE_DIR $RUN $META &
-./cleanup_xapi_tmp.sh &
