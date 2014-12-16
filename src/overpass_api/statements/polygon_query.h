@@ -53,6 +53,8 @@ class Polygon_Query_Statement : public Output_Statement
        const Way_Geometry_Store& way_geometries,
        bool add_border, const Statement& query, Resource_Manager& rman);
 
+    void convert_bounds(string bounds);
+
   private:
     unsigned int type;
     vector< Aligned_Segment > segments;

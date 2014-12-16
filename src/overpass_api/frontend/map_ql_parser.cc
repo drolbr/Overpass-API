@@ -501,9 +501,10 @@ TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_polygon_statement(typename TStatement::Factory& stmt_factory,
-				   string bounds, string into, uint line_nr)
+				   string bounds, string from, string into, uint line_nr)
 {
   map< string, string > attr;
+  attr["from"] = from;
   attr["bounds"] = bounds;
   attr["into"] = into;
   return stmt_factory.create_statement("polygon-query", line_nr, attr);
@@ -987,7 +988,7 @@ TStatement* create_query_substatement
          clause.attributes[0], into, clause.line_col.first);
   else if (clause.statement == "polygon")
     return create_polygon_statement< TStatement >
-        (stmt_factory, clause.attributes[0], into, clause.line_col.first);
+        (stmt_factory, clause.attributes[1], clause.attributes[0], into, clause.line_col.first);
   else if (clause.statement == "user")
     return create_user_statement< TStatement >
         (stmt_factory, type, clause.attributes[0], "", into, clause.line_col.first);
@@ -1238,12 +1239,21 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
       }
       else if (*token == "poly")
       {
-	Statement_Text clause("polygon", token.line_col());
-	++token;
-	clear_until_after(token, error_output, ":");
-	clause.attributes.push_back(get_text_token(token, error_output, "List of Coordinates"));
-	clear_until_after(token, error_output, ")");
-	clauses.push_back(clause);
+        Statement_Text clause("polygon", token.line_col());
+        ++token;
+        clause.attributes.push_back(probe_from(token, error_output));
+        clear_until_after(token, error_output, ":",")", false);
+        if (*token == ":")
+        {
+          ++token;
+          clause.attributes.push_back(get_text_token(token, error_output, "List of Coordinates"));
+        }
+        else
+        {
+          clause.attributes.push_back("");
+        }
+        clear_until_after(token, error_output, ")");
+        clauses.push_back(clause);
       }
       else if (*token == "user")
       {

@@ -233,6 +233,7 @@ Polygon_Query_Statement::Polygon_Query_Statement
 {
   map< string, string > attributes;
   
+  attributes["from"] = "_";
   attributes["into"] = "_";
   attributes["bounds"] = "";
   
@@ -240,8 +241,23 @@ Polygon_Query_Statement::Polygon_Query_Statement
   
   set_output(attributes["into"]);
   
+  if (attributes["bounds"] != "")
+    convert_bounds(attributes["bounds"]);
+
+}
+
+
+Polygon_Query_Statement::~Polygon_Query_Statement()
+{
+  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+      it != constraints.end(); ++it)
+    delete *it;
+}
+
+void Polygon_Query_Statement::convert_bounds(string bounds)
+{
   //convert bounds
-  istringstream in(attributes["bounds"]);
+  istringstream in(bounds);
   vector<double> v = vector<double>(istream_iterator<double>(in), istream_iterator<double>());
   if (v.size() % 2)
   {
@@ -308,14 +324,6 @@ Polygon_Query_Statement::Polygon_Query_Statement
   sort(segments.begin(), segments.end());
 
   add_segment_blocks(segments);
-}
-
-
-Polygon_Query_Statement::~Polygon_Query_Statement()
-{
-  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
-      it != constraints.end(); ++it)
-    delete *it;
 }
 
 
