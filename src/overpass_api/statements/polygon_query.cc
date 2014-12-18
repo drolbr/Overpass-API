@@ -64,6 +64,9 @@ bool Polygon_Constraint::delivers_data(Resource_Manager& rman)
 bool Polygon_Constraint::get_ranges
     (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
 {
+  if (polygon->polygons_from_inputset())
+    polygon->convert_inputset(rman);
+
   ranges = polygon->calc_ranges();
   return true;
 }
@@ -72,9 +75,13 @@ bool Polygon_Constraint::get_ranges
 bool Polygon_Constraint::get_ranges
     (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
+  if (polygon->polygons_from_inputset())
+    polygon->convert_inputset(rman);
+
   set< pair< Uint32_Index, Uint32_Index > > node_ranges = polygon->calc_ranges();
   ranges = calc_parents(node_ranges);
   return true;
+
 }
 
 
@@ -240,7 +247,10 @@ Polygon_Query_Statement::Polygon_Query_Statement
   eval_attributes_array(get_name(), attributes, input_attributes);
   
   set_output(attributes["into"]);
-  
+
+  input = attributes["from"];
+  has_bounds = (attributes["bounds"] != "");
+
   if (attributes["bounds"] != "")
     convert_bounds(attributes["bounds"]);
 
@@ -537,6 +547,16 @@ void Polygon_Query_Statement::collect_ways
   result.swap(ways);
 }
 
+void Polygon_Query_Statement::convert_inputset(Resource_Manager& rman)
+{
+  map< string, Set >::const_iterator mit = rman.sets().find(get_input());
+  if (mit == rman.sets().end())
+    return;
+
+  segments.clear();
+// TODO
+
+}
 
 void Polygon_Query_Statement::execute(Resource_Manager& rman)
 {

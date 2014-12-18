@@ -504,7 +504,7 @@ TStatement* create_polygon_statement(typename TStatement::Factory& stmt_factory,
 				   string bounds, string from, string into, uint line_nr)
 {
   map< string, string > attr;
-  attr["from"] = from;
+  attr["from"] = (from == "" ? "_" : from);
   attr["bounds"] = bounds;
   attr["into"] = into;
   return stmt_factory.create_statement("polygon-query", line_nr, attr);
