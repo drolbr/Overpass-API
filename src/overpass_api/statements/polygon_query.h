@@ -61,6 +61,8 @@ class Polygon_Query_Statement : public Output_Statement
     void convert_inputset(Resource_Manager& rman);
 
   private:
+    static Node::Id_Type check_node_parity(const Set& pivot);
+
     string input;
     unsigned int type;
     bool has_bounds;

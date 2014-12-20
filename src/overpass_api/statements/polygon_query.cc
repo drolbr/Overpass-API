@@ -547,6 +547,33 @@ void Polygon_Query_Statement::collect_ways
   result.swap(ways);
 }
 
+// taken over from make_area.cc
+Node::Id_Type Polygon_Query_Statement::check_node_parity(const Set& pivot)
+{
+  set< Node::Id_Type > node_parity_control;
+  for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
+    it(pivot.ways.begin()); it != pivot.ways.end(); ++it)
+  {
+    for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
+    it2 != it->second.end(); ++it2)
+    {
+      if (it2->nds.size() < 2)
+    continue;
+      pair< set< Node::Id_Type >::iterator, bool > npp(node_parity_control.insert
+          (it2->nds.front()));
+      if (!npp.second)
+    node_parity_control.erase(npp.first);
+      npp = node_parity_control.insert
+          (it2->nds.back());
+      if (!npp.second)
+    node_parity_control.erase(npp.first);
+    }
+  }
+  if (node_parity_control.size() > 0)
+    return *(node_parity_control.begin());
+  return Node::Id_Type(0ull);
+}
+
 void Polygon_Query_Statement::convert_inputset(Resource_Manager& rman)
 {
   map< string, Set >::const_iterator mit = rman.sets().find(get_input());
@@ -554,8 +581,77 @@ void Polygon_Query_Statement::convert_inputset(Resource_Manager& rman)
     return;
 
   segments.clear();
-// TODO
 
+  // check node parity
+  Node::Id_Type odd_id(check_node_parity(mit->second));
+  if (!(odd_id == Node::Id_Type(0ull)))
+  {
+    ostringstream temp;
+    temp<<"make-area: Node "<<odd_id.val()
+            <<" is contained in an odd number of ways.\n";
+    runtime_remark(temp.str());
+  }
+  /*
+  // create area blocks
+  map< Uint31_Index, vector< Area_Block > > area_blocks;
+  pair< Node::Id_Type, Way::Id_Type > odd_pair
+    (create_area_blocks(area_blocks, pivot_id, mit->second));
+  if (!(odd_pair.first == Node::Id_Type(0ull)))
+  {
+    ostringstream temp;
+    temp<<"make-area: Node "<<odd_pair.first.val()
+        <<" referred by way "<<odd_pair.second.val()
+        <<" is not contained in set \""<<input<<"\".\n";
+    runtime_remark(temp.str());
+  }
+   */
+
+  vector< Node > nodes;
+  for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
+      it(mit->second.nodes.begin()); it != mit->second.nodes.end(); ++it)
+  {
+    for (vector< Node_Skeleton >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      nodes.push_back(Node(it2->id.val(), it->first.val(), it2->ll_lower));
+  }
+
+  sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
+
+  for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
+      it(mit->second.ways.begin()); it != mit->second.ways.end(); ++it)
+  {
+    for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+    {
+      vector< Quad_Coord > coord = make_geometry(*it2, nodes);
+      vector< Quad_Coord >::const_iterator it4(coord.begin());
+
+      if (it4 == coord.end())
+        continue;
+
+      double last_lat = ::lat(it4->ll_upper, it4->ll_lower);
+      double last_lon = ::lon(it4->ll_upper, it4->ll_lower);
+
+      it4++;
+
+      while (it4 != coord.end())
+      {
+        double lat, lon;
+
+        lat = ::lat(it4->ll_upper, it4->ll_lower);;
+        lon = ::lon(it4->ll_upper, it4->ll_lower);
+
+        Area::calc_aligned_segments(segments, last_lat, last_lon, lat, lon);
+
+        last_lat = lat;
+        last_lon = lon;
+
+        it4++;
+      }
+   }
+  }
+  sort(segments.begin(), segments.end());
+  add_segment_blocks(segments);
 }
 
 void Polygon_Query_Statement::execute(Resource_Manager& rman)
