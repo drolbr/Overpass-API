@@ -74,6 +74,7 @@ struct Relation
     vector< unsigned int > forward_stops;
     vector< unsigned int > backward_stops;
     
+    string name;
     string ref;
     string network;
     string color;

@@ -70,6 +70,7 @@ namespace
   const unsigned int IN_NODE = 1;
   const unsigned int IN_RELATION = 2;
   bool is_stop = false;
+  bool is_stop_area = false;
   bool is_route = false;  
 
   vector< Relation >* relations;
@@ -720,8 +721,11 @@ void start(const char *el, const char **attr)
       else if (!strcmp(attr[i], "v"))
 	value = attr[i+1];
     }
-    if ((key == "name") && (parse_status == IN_NODE))
-      nnode.name = escape_xml(value);
+    if (key == "name")
+      if (parse_status == IN_NODE)
+        nnode.name = escape_xml(value);
+      else if(parse_status == IN_RELATION)
+        relation.name = escape_xml(value);
     if ((key == "ref") && (parse_status == IN_RELATION))
       relation.ref = escape_xml(value);
     if ((key == "network") && (parse_status == IN_RELATION))
@@ -746,6 +750,8 @@ void start(const char *el, const char **attr)
       is_stop = true;
     if ((key == "public_transport") && (value == "stop_position"))
       is_stop = true;
+    if ((key == "public_transport") && (value == "stop_area") && (parse_status == IN_RELATION))
+      is_stop_area = true;
     if ((key == "amenity") && (value == "ferry_terminal"))
       is_stop = true;
     if ((key == "route") && (value == "bus"))
@@ -867,6 +873,7 @@ void start(const char *el, const char **attr)
   else if (!strcmp(el, "relation"))
   {
     parse_status = IN_RELATION;
+    is_stop_area = false;
     is_route = false;
     relation = Relation();
   }
@@ -894,6 +901,16 @@ void end(const char *el)
       else
 	correspondences.push_back(relation);
     }
+    else if (is_stop_area)
+    {
+      for(vector< unsigned int >::const_iterator it(relation.forward_stops.begin());
+          it != relation.forward_stops.end(); ++it)
+      {
+        if ((nodes.find(*it) != nodes.end()) && (nodes.find(*it)->second.name == ""))
+          nodes.find(*it)->second.name = relation.name;
+      }
+    }
+
   }
 }
 
