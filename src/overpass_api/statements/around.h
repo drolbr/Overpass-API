@@ -133,12 +133,11 @@ class Around_Statement : public Output_Statement
     double lat;
     double lon;
     map< Uint32_Index, vector< pair< double, double > > > radius_lat_lons;
-    vector< Prepared_Point > simple_lat_lons;
-    vector< Prepared_Segment > simple_segments;
+    vector< pair< BBox, Prepared_Point> > simple_lat_lons;
+    vector< pair< BBox, Prepared_Segment> > simple_segments;
     vector< Query_Constraint* > constraints;
     vector< BBox > node_bboxes;
     vector< BBox > way_bboxes;
-    vector< BBox > rel_bboxes;
 };
 
 #endif

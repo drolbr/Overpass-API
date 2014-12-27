@@ -283,20 +283,13 @@ inline void BBox::merge(BBox & bbox_)
 
 inline bool BBox::intersects(const BBox & bbox_) const
 {
-  bool intersects_;
-
-  intersects_ = !( bbox_.max_lat + 1e-8 < min_lat ||
-                   bbox_.min_lat - 1e-8 > max_lat ||
-                   bbox_.max_lon + 1e-8 < min_lon ||
-                   bbox_.min_lon - 1e-8 > max_lon );
-
-  return intersects_;
-/*
- *   return ((lat >= south - 1e-8) && (lat <= north + 1e-8) &&
-      (((lon >= west - 1e-8) && (lon <= east + 1e-8)) ||
-          ((east < west) && ((lon >= west - 1e-8) || (lon <= east + 1e-8)))));
- *
- */
+  //TODO: east/west
+  bool intersects;
+  intersects = !( bbox_.max_lat + 1e-8 < min_lat ||
+                  bbox_.min_lat - 1e-8 > max_lat ||
+                  bbox_.max_lon + 1e-8 < min_lon ||
+                  bbox_.min_lon - 1e-8 > max_lon );
+  return intersects;
 }
 
 inline bool BBox::intersects(const vector < BBox > & bboxes) const
@@ -328,6 +321,14 @@ inline BBox lat_lon_bbox(double lat, double lon)
   bbox.min_lat = bbox.max_lat = lat;
   bbox.min_lon = bbox.max_lon = lon;
   return bbox;
+}
+
+inline BBox lat_lon_bbox(double lat1, double lon1, double lat2, double lon2)
+{
+  BBox bbox_result = ::lat_lon_bbox(lat1, lon1);
+  BBox bbox_second = ::lat_lon_bbox(lat2, lon2);
+  bbox_result.merge(bbox_second);
+  return bbox_result;
 }
 
 inline BBox way_geometry_bbox(const vector< Quad_Coord >& way_geometry)
@@ -882,7 +883,7 @@ set< pair< Uint32_Index, Uint32_Index > > Around_Statement::calc_ranges
 
 void add_coord(double lat, double lon, double radius,
 	       map< Uint32_Index, vector< pair< double, double > > >& radius_lat_lons,
-	       vector< Prepared_Point >& simple_lat_lons)
+	       vector< pair< BBox, Prepared_Point> >& simple_lat_lons)
 {
   double south = lat - radius*(360.0/(40000.0*1000.0));
   double north = lat + radius*(360.0/(40000.0*1000.0));
@@ -892,7 +893,9 @@ void add_coord(double lat, double lon, double radius,
   double west = lon - radius*(360.0/(40000.0*1000.0))/cos(scale_lat/90.0*acos(0));
   double east = lon + radius*(360.0/(40000.0*1000.0))/cos(scale_lat/90.0*acos(0));
   
-  simple_lat_lons.push_back(Prepared_Point(lat, lon));
+  BBox bbox_point = ::lat_lon_bbox(south, west, north, east);
+
+  simple_lat_lons.push_back(make_pair(bbox_point, Prepared_Point(lat, lon)));
   
   vector< pair< uint32, uint32 > > uint_ranges
       (calc_ranges(south, north, west, east));
@@ -908,7 +911,7 @@ void add_coord(double lat, double lon, double radius,
 
 void add_node(Uint32_Index idx, const Node_Skeleton& node, double radius,
               map< Uint32_Index, vector< pair< double, double > > >& radius_lat_lons,
-              vector< Prepared_Point >& simple_lat_lons,
+              vector< pair< BBox, Prepared_Point> >& simple_lat_lons,
               vector< BBox >& node_bboxes)
 {
   double lat = ::lat(idx.val(), node.ll_lower);
@@ -920,8 +923,8 @@ void add_node(Uint32_Index idx, const Node_Skeleton& node, double radius,
 
 void add_way(const vector< Quad_Coord >& way_geometry, double radius,
              map< Uint32_Index, vector< pair< double, double > > >& radius_lat_lons,
-             vector< Prepared_Point >& simple_lat_lons,
-             vector< Prepared_Segment >& simple_segments,
+             vector< pair< BBox, Prepared_Point> >& simple_lat_lons,
+             vector< pair< BBox, Prepared_Segment> >& simple_segments,
              vector< BBox >& way_bboxes)
 {
   // add nodes
@@ -951,7 +954,7 @@ void add_way(const vector< Quad_Coord >& way_geometry, double radius,
     double second_lat(::lat(nit->ll_upper, nit->ll_lower));
     double second_lon(::lon(nit->ll_upper, nit->ll_lower));
     
-    simple_segments.push_back(Prepared_Segment(first_lat, first_lon, second_lat, second_lon));
+    simple_segments.push_back(make_pair(way_bbox, Prepared_Segment(first_lat, first_lon, second_lat, second_lon)));
                                         
     first_lat = second_lat;
     first_lon = second_lon;
@@ -1057,7 +1060,6 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
   
   node_bboxes.clear();
   way_bboxes.clear();
-  rel_bboxes.clear();
 
   if (lat < 100.0)
   {
@@ -1097,16 +1099,14 @@ bool Around_Statement::matches_bboxes(double lat, double lon) const
 {
   BBox bbox_ = ::lat_lon_bbox(lat, lon);
   return bbox_.intersects(node_bboxes) ||
-         bbox_.intersects(way_bboxes) ||
-         bbox_.intersects(rel_bboxes);
+         bbox_.intersects(way_bboxes);
 
 }
 
 bool Around_Statement::matches_bboxes(const BBox & bbox_) const
 {
   return bbox_.intersects(node_bboxes) ||
-         bbox_.intersects(way_bboxes) ||
-         bbox_.intersects(rel_bboxes);
+         bbox_.intersects(way_bboxes);
 }
 
 
@@ -1126,16 +1126,19 @@ bool Around_Statement::is_inside(double lat, double lon) const
   }
   
   vector< double > coord_cartesian = cartesian(lat, lon);
-  for (vector< Prepared_Segment >::const_iterator
+  BBox bbox_lat_lon = ::lat_lon_bbox(lat, lon);
+
+  for (vector< pair< BBox, Prepared_Segment> >::const_iterator
       it = simple_segments.begin(); it != simple_segments.end(); ++it)
   {
-    if (great_circle_line_dist(*it, coord_cartesian) <= radius)
+    if (bbox_lat_lon.intersects(it->first) &&
+        great_circle_line_dist(it->second, coord_cartesian) <= radius)
     {
       double gcdist = great_circle_dist
-          (it->first_lat, it->first_lon, it->second_lat, it->second_lon);
+          (it->second.first_lat, it->second.first_lon, it->second.second_lat, it->second.second_lon);
       double limit = sqrt(gcdist*gcdist + radius*radius);
-      if (great_circle_dist(lat, lon, it->first_lat, it->first_lon) <= limit &&
-          great_circle_dist(lat, lon, it->second_lat, it->second_lon) <= limit)
+      if (great_circle_dist(lat, lon, it->second.first_lat, it->second.first_lon) <= limit &&
+          great_circle_dist(lat, lon, it->second.second_lat, it->second.second_lon) <= limit)
 	return true;
     }
   }
@@ -1147,24 +1150,27 @@ bool Around_Statement::is_inside
     (double first_lat, double first_lon, double second_lat, double second_lon) const
 {
   Prepared_Segment segment(first_lat, first_lon, second_lat, second_lon);
+  BBox bbox_segment = ::lat_lon_bbox(first_lat, first_lon, second_lat, second_lon);
   
-  for (vector< Prepared_Point >::const_iterator cit = simple_lat_lons.begin();
+  for (vector< pair< BBox, Prepared_Point> >::const_iterator cit = simple_lat_lons.begin();
       cit != simple_lat_lons.end(); ++cit)
   {
-    if (great_circle_line_dist(segment, cit->cartesian) <= radius)
+    if (bbox_segment.intersects(cit->first) &&
+        great_circle_line_dist(segment, cit->second.cartesian) <= radius)
     {
       double gcdist = great_circle_dist(first_lat, first_lon, second_lat, second_lon);
       double limit = sqrt(gcdist*gcdist + radius*radius);
-      if (great_circle_dist(cit->lat, cit->lon, first_lat, first_lon) <= limit &&
-	  great_circle_dist(cit->lat, cit->lon, second_lat, second_lon) <= limit)
+      if (great_circle_dist(cit->second.lat, cit->second.lon, first_lat, first_lon) <= limit &&
+	  great_circle_dist(cit->second.lat, cit->second.lon, second_lat, second_lon) <= limit)
         return true;
     }
   }
-  
-  for (vector< Prepared_Segment >::const_iterator
+
+  for (vector< pair< BBox, Prepared_Segment> >::const_iterator
       cit = simple_segments.begin(); cit != simple_segments.end(); ++cit)
   {
-    if (intersect(*cit, segment))
+    if (bbox_segment.intersects(cit->first) &&
+        intersect(cit->second, segment))
       return true;
   }
   
