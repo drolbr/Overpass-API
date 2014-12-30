@@ -369,6 +369,16 @@ TStatement* create_foreach_statement(typename TStatement::Factory& stmt_factory,
 }
 
 template< class TStatement >
+TStatement* create_complete_statement(typename TStatement::Factory& stmt_factory,
+    string into, string into_complete, uint line_nr)
+{
+  map< string, string > attr;
+  attr["into"] = into;
+  attr["into_complete"] = into_complete;
+  return stmt_factory.create_statement("complete", line_nr, attr);
+}
+
+template< class TStatement >
 TStatement* create_print_statement(typename TStatement::Factory& stmt_factory,
 				   string from, string mode, string order, string limit, string geometry,
                                    string south, string north, string west, string east,
@@ -814,6 +824,26 @@ TStatement* parse_foreach(typename TStatement::Factory& stmt_factory,
 
   TStatement* statement = create_foreach_statement< TStatement >
       (stmt_factory, from, into, line_col.first);
+  for (typename vector< TStatement* >::const_iterator it = substatements.begin();
+      it != substatements.end(); ++it)
+    statement->add_statement(*it, "");
+  return statement;
+}
+
+template< class TStatement >
+TStatement* parse_complete(typename TStatement::Factory& stmt_factory,
+              Tokenizer_Wrapper& token, Error_Output* error_output, int depth)
+{
+  pair< uint, uint > line_col = token.line_col();
+  ++token;
+
+  string into = probe_into(token, error_output);
+  vector< TStatement* > substatements =
+      collect_substatements< TStatement >(stmt_factory, token, error_output, depth);
+  string into_complete = probe_into(token, error_output);
+
+  TStatement* statement = create_complete_statement< TStatement >
+      (stmt_factory, into, into_complete, line_col.first);
   for (typename vector< TStatement* >::const_iterator it = substatements.begin();
       it != substatements.end(); ++it)
     statement->add_statement(*it, "");
@@ -1548,6 +1578,8 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory,
     return parse_union< TStatement >(stmt_factory, token, error_output, depth);
   else if (*token == "foreach")
     return parse_foreach< TStatement >(stmt_factory, token, error_output, depth);
+  else if (*token == "complete")
+    return parse_complete< TStatement >(stmt_factory, token, error_output, depth);
 
   string from = "";
   if (token.good() && *token == ".")

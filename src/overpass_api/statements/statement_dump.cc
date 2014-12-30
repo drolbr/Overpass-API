@@ -427,6 +427,27 @@ string Statement_Dump::dump_compact_map_ql() const
       result += (*it)->dump_compact_map_ql();
     result += ")";
   }
+  else if (name_ == "complete")
+  {
+    result += name_;
+
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+
+    result += "(";
+
+    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    if (it == substatements.end())
+      return result + ");";
+
+    result += (*it)->dump_compact_map_ql();
+    for (++it; it != substatements.end(); ++it)
+      result += (*it)->dump_compact_map_ql();
+    result += ")";
+
+    if (attributes.find("into_complete") != attributes.end() && attributes.find("into_complete")->second != "_")
+      result += "->." + attributes.find("into_complete")->second;
+  }
   else if (name_ == "query")
   {
     if (attributes.find("type") != attributes.end())
@@ -634,6 +655,27 @@ string Statement_Dump::dump_bbox_map_ql() const
       result += (*it)->dump_bbox_map_ql();
     result += ")";
   }
+  else if (name_ == "complete")
+  {
+    result += name_;
+
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+
+    result += "(";
+
+    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    if (it == substatements.end())
+      return result + ");";
+
+    result += (*it)->dump_bbox_map_ql();
+    for (++it; it != substatements.end(); ++it)
+      result += (*it)->dump_bbox_map_ql();
+    result += ")";
+
+    if (attributes.find("into_complete") != attributes.end() && attributes.find("into_complete")->second != "_")
+      result += "->." + attributes.find("into_complete")->second;
+  }
   else if (name_ == "query")
   {
     if (attributes.find("type") != attributes.end())
@@ -840,6 +882,27 @@ string Statement_Dump::dump_pretty_map_ql() const
     for (++it; it != substatements.end(); ++it)
       result += "\n" + indent((*it)->dump_pretty_map_ql());
     result += "\n)";
+  }
+  else if (name_ == "complete")
+  {
+    result += name_;
+
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+
+    result += "(";
+
+    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    if (it == substatements.end())
+      return result + ");";
+
+    result += "\n" + indent((*it)->dump_pretty_map_ql());
+    for (++it; it != substatements.end(); ++it)
+      result += "\n" + indent((*it)->dump_pretty_map_ql());
+    result += "\n)";
+
+    if (attributes.find("into_complete") != attributes.end() && attributes.find("into_complete")->second != "_")
+      result += "->." + attributes.find("into_complete")->second;
   }
   else if (name_ == "query")
   {

@@ -93,6 +93,7 @@ overpass_api/statements/area_query.cc \
 overpass_api/statements/around.cc \
 overpass_api/statements/bbox_query.cc \
 overpass_api/statements/changed.cc \
+overpass_api/statements/complete.cc \
 overpass_api/statements/coord_query.cc \
 overpass_api/statements/difference.cc \
 overpass_api/statements/foreach.cc \
