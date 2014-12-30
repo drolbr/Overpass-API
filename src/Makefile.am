@@ -79,7 +79,31 @@ templates_DATA = templates/default.wiki templates/base.wiki
 noinst_LTLIBRARIES = libcore.la libdata.la libdispatcher.la libexpatwrapper.la libfrontend.la liboutput.la libsettings.la libweboutput.la
 
 statements_dir = overpass_api/statements
-statements_cc = ${statements_dir}/statement.cc ${statements_dir}/area_query.cc ${statements_dir}/around.cc ${statements_dir}/bbox_query.cc ${statements_dir}/changed.cc ${statements_dir}/coord_query.cc ${statements_dir}/difference.cc ${statements_dir}/foreach.cc ${statements_dir}/id_query.cc ${statements_dir}/item.cc ${statements_dir}/make_area.cc ${statements_dir}/map_to_area.cc ${statements_dir}/newer.cc ${statements_dir}/osm_script.cc ${statements_dir}/pivot.cc ${statements_dir}/polygon_query.cc ${statements_dir}/print.cc ${statements_dir}/query.cc ${statements_dir}/recurse.cc ${statements_dir}/union.cc ${statements_dir}/user.cc overpass_api/frontend/print_target.cc expat/escape_xml.cc
+statements_cc = \
+  ${statements_dir}/statement.cc \
+  ${statements_dir}/area_query.cc \
+  ${statements_dir}/around.cc \
+  ${statements_dir}/bbox_query.cc \
+  ${statements_dir}/changed.cc \
+  ${statements_dir}/complete.cc \
+  ${statements_dir}/coord_query.cc \
+  ${statements_dir}/difference.cc \
+  ${statements_dir}/foreach.cc \
+  ${statements_dir}/id_query.cc \
+  ${statements_dir}/item.cc \
+  ${statements_dir}/make_area.cc \
+  ${statements_dir}/map_to_area.cc \
+  ${statements_dir}/newer.cc \
+  ${statements_dir}/osm_script.cc \
+  ${statements_dir}/pivot.cc \
+  ${statements_dir}/polygon_query.cc \
+  ${statements_dir}/print.cc \
+  ${statements_dir}/query.cc \
+  ${statements_dir}/recurse.cc \
+  ${statements_dir}/union.cc \
+  ${statements_dir}/user.cc \
+  overpass_api/frontend/print_target.cc \
+  expat/escape_xml.cc
 
 libcore_la_SOURCES = overpass_api/frontend/map_ql_parser.cc overpass_api/statements/statement_dump.cc expat/map_ql_input.cc
 libcore_la_LIBADD = libdispatcher.la libexpatwrapper.la libsettings.la libweboutput.la
