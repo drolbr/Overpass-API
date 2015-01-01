@@ -78,8 +78,29 @@ templates_DATA = templates/default.wiki templates/base.wiki
 
 noinst_LTLIBRARIES = libcore.la libdata.la libdispatcher.la libexpatwrapper.la libfrontend.la liboutput.la libsettings.la libweboutput.la
 
-statements_dir = overpass_api/statements
-statements_cc = ${statements_dir}/statement.cc ${statements_dir}/area_query.cc ${statements_dir}/around.cc ${statements_dir}/bbox_query.cc ${statements_dir}/changed.cc ${statements_dir}/coord_query.cc ${statements_dir}/difference.cc ${statements_dir}/foreach.cc ${statements_dir}/id_query.cc ${statements_dir}/item.cc ${statements_dir}/make_area.cc ${statements_dir}/map_to_area.cc ${statements_dir}/newer.cc ${statements_dir}/osm_script.cc ${statements_dir}/pivot.cc ${statements_dir}/polygon_query.cc ${statements_dir}/print.cc ${statements_dir}/query.cc ${statements_dir}/recurse.cc ${statements_dir}/union.cc ${statements_dir}/user.cc overpass_api/frontend/print_target.cc expat/escape_xml.cc
+statements_cc = \
+overpass_api/statements/statement.cc \
+overpass_api/statements/area_query.cc \
+overpass_api/statements/around.cc \
+overpass_api/statements/bbox_query.cc \
+overpass_api/statements/changed.cc \
+overpass_api/statements/coord_query.cc \
+overpass_api/statements/difference.cc \
+overpass_api/statements/foreach.cc \
+overpass_api/statements/id_query.cc \
+overpass_api/statements/item.cc \
+overpass_api/statements/make_area.cc \
+overpass_api/statements/map_to_area.cc \
+overpass_api/statements/newer.cc \
+overpass_api/statements/osm_script.cc \
+overpass_api/statements/pivot.cc \
+overpass_api/statements/polygon_query.cc \
+overpass_api/statements/print.cc \
+overpass_api/statements/query.cc \
+overpass_api/statements/recurse.cc \
+overpass_api/statements/union.cc \
+overpass_api/statements/user.cc \
+overpass_api/frontend/print_target.cc expat/escape_xml.cc
 
 libcore_la_SOURCES = overpass_api/frontend/map_ql_parser.cc overpass_api/statements/statement_dump.cc expat/map_ql_input.cc
 libcore_la_LIBADD = libdispatcher.la libexpatwrapper.la libsettings.la libweboutput.la
@@ -140,5 +161,4 @@ bin_process_augmented_diffs_LDADD = libexpatwrapper.la
 
 # Put test-bin here and test-bin/Makefile in configure.ac to activate test-bin
 SUBDIRS = test-bin
-
 #SUBDIRS =
