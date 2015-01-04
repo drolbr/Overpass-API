@@ -48,6 +48,7 @@ struct OSM_File_Properties : public File_Properties
   string get_shadow_suffix() const { return basic_settings().SHADOW_SUFFIX; }
   
   uint32 get_block_size() const { return block_size; }
+  uint32 get_max_size() const { return 1; }
   uint32 get_map_block_size() const { return map_block_size; }
   
   vector< bool > get_data_footprint(const string& db_dir) const
@@ -90,7 +91,7 @@ Basic_Settings::Basic_Settings()
 
   base_directory("./"),
   logfile_name("transactions.log"),
-  shared_name_base("/osm3s_v0.7.51")
+  shared_name_base("/osm3s_v0.7.52")
 {}
 
 Basic_Settings& basic_settings()

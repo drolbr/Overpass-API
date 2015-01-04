@@ -170,6 +170,11 @@ struct Test_File : File_Properties
     return 512;
   }
   
+  uint32 get_max_size() const
+  {
+    return 1;
+  }
+  
   uint32 get_map_block_size() const
   {
     return 16;

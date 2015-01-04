@@ -26,11 +26,11 @@
 #include <cerrno>
 #include <cstdlib>
 #include <list>
+#include <string>
 #include <vector>
 
 /** Declarations: -----------------------------------------------------------*/
 
-using namespace std;
 
 template< class TIndex >
 struct File_Block_Index_Entry
@@ -40,13 +40,15 @@ struct File_Block_Index_Entry
   static const int SEGMENT = 3;
   static const int LAST_SEGMENT = 4;
   
-  File_Block_Index_Entry(const TIndex& i, uint32 pos_, uint32 max_keysize_)
-    : index(i), pos(pos_), max_keysize(max_keysize_) {}
+  File_Block_Index_Entry(const TIndex& i, uint32 pos_, uint32 size_, uint32 max_keysize_)
+    : index(i), pos(pos_), size(size_), max_keysize(max_keysize_) {}
   
   TIndex index;
   uint32 pos;
+  uint32 size;
   uint32 max_keysize;
 };
+
 
 template< class TIndex >
 struct File_Blocks_Index : public File_Blocks_Index_Base
@@ -54,37 +56,42 @@ struct File_Blocks_Index : public File_Blocks_Index_Base
   public:
     File_Blocks_Index(const File_Properties& file_prop,
 		      bool writeable, bool use_shadow,
-		      string db_dir, string file_name_extension);
+		      const std::string& db_dir, const std::string& file_name_extension);
     virtual ~File_Blocks_Index();
     bool writeable() const { return (empty_index_file_name != ""); }
-    const string& file_name_extension() const { return file_name_extension_; }
+    const std::string& file_name_extension() const { return file_name_extension_; }
     
-    string get_data_file_name() const { return data_file_name; }
+    std::string get_data_file_name() const { return data_file_name; }
     uint64 get_block_size() const { return block_size_; }
+    uint32 get_max_size() const { return max_size; }
     
   private:
-    string index_file_name;
-    string empty_index_file_name;
-    string data_file_name;
-    string file_name_extension_;
+    std::string index_file_name;
+    std::string empty_index_file_name;
+    std::string data_file_name;
+    std::string file_name_extension_;
     
   public:
-    list< File_Block_Index_Entry< TIndex > > blocks;
-    vector< uint32 > void_blocks;
+    std::list< File_Block_Index_Entry< TIndex > > blocks;
+    std::vector< uint32 > void_blocks;
     uint32 block_count;
     uint64 block_size_;
+    uint32 max_size;
+    
+    static const int FILE_FORMAT_VERSION = 7511;
 };
- 
+
+
 template< class TIndex >
-vector< bool > get_data_index_footprint(const File_Properties& file_prop,
-					string db_dir);
+std::vector< bool > get_data_index_footprint(const File_Properties& file_prop,
+					std::string db_dir);
 
 /** Implementation File_Blocks_Index: ---------------------------------------*/
 
 template< class TIndex >
 File_Blocks_Index< TIndex >::File_Blocks_Index
     (const File_Properties& file_prop, bool writeable, bool use_shadow,
-     string db_dir, string file_name_extension) :
+     const std::string& db_dir, const std::string& file_name_extension) :
      index_file_name(db_dir + file_prop.get_file_name_trunk()
          + file_name_extension + file_prop.get_data_suffix()
          + file_prop.get_index_suffix()
@@ -96,7 +103,8 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
          + file_name_extension + file_prop.get_data_suffix()),
      file_name_extension_(file_name_extension),
      block_count(0),
-     block_size_(file_prop.get_block_size())
+     block_size_(file_prop.get_block_size()), // can be overwritten by index file
+     max_size(file_prop.get_max_size()) // can be overwritten by index file
 {
   try
   {
@@ -110,7 +118,7 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
     block_count = 0;
   }
   
-  vector< bool > is_referred(block_count, false);
+  std::vector< bool > is_referred(block_count, false);
   
   try
   {
@@ -122,20 +130,53 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
     Void_Pointer< uint8 > index_buf(index_size);
     source_file.read(index_buf.ptr, index_size, "File_Blocks_Index::File_Blocks_Index::5");
     
-    uint32 pos(0);
-    while (pos < index_size)
+    if (file_name_extension == ".legacy")
+      // We support this way the old format although it has no version marker.
     {
-      TIndex index(index_buf.ptr+pos);
-      File_Block_Index_Entry< TIndex >
-          entry(index,
-	  *(uint32*)(index_buf.ptr + (pos + TIndex::size_of(index_buf.ptr+pos))),
-	  *(uint32*)(index_buf.ptr + (pos + TIndex::size_of(index_buf.ptr+pos) + 4)));
-      blocks.push_back(entry);
-      if (entry.pos > block_count)
-	throw File_Error(0, index_file_name, "File_Blocks_Index: bad pos in index file");
-      else
-	is_referred[entry.pos] = true;
-      pos += TIndex::size_of(index_buf.ptr+pos) + 2*sizeof(uint32);
+      uint32 pos(0);
+      while (pos < index_size)
+      {
+        TIndex index(index_buf.ptr+pos);
+        File_Block_Index_Entry< TIndex >
+            entry(index,
+	    *(uint32*)(index_buf.ptr + (pos + TIndex::size_of(index_buf.ptr+pos))),
+	    1, //block size is always 1 in the legacy format
+	    *(uint32*)(index_buf.ptr + (pos + TIndex::size_of(index_buf.ptr+pos) + 4)));
+        blocks.push_back(entry);
+        if (entry.pos > block_count)
+	  throw File_Error(0, index_file_name, "File_Blocks_Index: bad pos in index file");
+        else
+	  is_referred[entry.pos] = true;
+        pos += TIndex::size_of(index_buf.ptr+pos) + 8;
+      }
+    }
+    else if (index_size > 0)
+    {
+      if (*(uint32*)index_buf.ptr != FILE_FORMAT_VERSION)
+	throw File_Error(0, index_file_name, "File_Blocks_Index: Unsupported index file format version");
+      block_size_ = *(uint64*)(index_buf.ptr + 4);
+      max_size = *(uint32*)(index_buf.ptr + 12);
+      
+      uint32 pos = 16;
+      while (pos < index_size)
+      {
+        TIndex index(index_buf.ptr + pos + 12);
+        File_Block_Index_Entry< TIndex >
+            entry(index,
+	    *(uint32*)(index_buf.ptr + pos),
+	    *(uint32*)(index_buf.ptr + pos + 4),
+	    *(uint32*)(index_buf.ptr + pos + 8));
+        blocks.push_back(entry);
+        if (entry.pos > block_count)
+	  throw File_Error(0, index_file_name, "File_Blocks_Index: bad pos in index file");
+        else
+	{
+	  for (uint32 i = 0; i < entry.size; ++i)
+	    is_referred[entry.pos + i] = true;
+	}
+	pos += 12;
+        pos += TIndex::size_of(index_buf.ptr + pos);
+      }
     }
   }
   catch (File_Error e)
@@ -181,22 +222,31 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
   if (empty_index_file_name == "")
     return;
 
-  uint32 index_size(0), pos(0);
-  for (typename list< File_Block_Index_Entry< TIndex > >::const_iterator
+  // Keep space for file version and size information
+  uint32 index_size = 16;
+  uint32 pos = 16;
+  
+  for (typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator
       it(blocks.begin()); it != blocks.end(); ++it)
-    index_size += 2*sizeof(uint32) + it->index.size_of();
+    index_size += 12 + it->index.size_of();
   
   Void_Pointer< uint8 > index_buf(index_size);
   
-  for (typename list< File_Block_Index_Entry< TIndex > >::const_iterator
+  *(uint32*)index_buf.ptr = FILE_FORMAT_VERSION;
+  *(uint64*)(index_buf.ptr + 4) = block_size_;
+  *(uint32*)(index_buf.ptr + 12) = max_size;
+  
+  for (typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator
       it(blocks.begin()); it != blocks.end(); ++it)
   {
+    *(uint32*)(index_buf.ptr+pos) = it->pos;
+    pos += 4;
+    *(uint32*)(index_buf.ptr+pos) = it->size;
+    pos += 4;
+    *(uint32*)(index_buf.ptr+pos) = it->max_keysize;
+    pos += 4;
     it->index.to_data(index_buf.ptr+pos);
     pos += it->index.size_of();
-    *(uint32*)(index_buf.ptr+pos) = it->pos;
-    pos += sizeof(uint32);
-    *(uint32*)(index_buf.ptr+pos) = it->max_keysize;
-    pos += sizeof(uint32);
   }
 
   Raw_File dest_file(index_file_name, O_RDWR|O_CREAT, S_666,
@@ -209,7 +259,7 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
   // Write void blocks
   Void_Pointer< uint8 > void_index_buf(void_blocks.size()*sizeof(uint32));
   uint32* it_ptr = (uint32*)void_index_buf.ptr;
-  for (vector< uint32 >::const_iterator it(void_blocks.begin());
+  for (std::vector< uint32 >::const_iterator it(void_blocks.begin());
       it != void_blocks.end(); ++it)
     *(it_ptr++) = *it;
   try
@@ -225,13 +275,13 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
 /** Implementation non-members: ---------------------------------------------*/
 
 template< class TIndex >
-vector< bool > get_data_index_footprint
-    (const File_Properties& file_prop, string db_dir)
+std::vector< bool > get_data_index_footprint
+    (const File_Properties& file_prop, std::string db_dir)
 {
   File_Blocks_Index< TIndex > index(file_prop, false, false, db_dir, "");
   
-  vector< bool > result(index.block_count, true);
-  for (typename vector< uint32 >::const_iterator
+  std::vector< bool > result(index.block_count, true);
+  for (typename std::vector< uint32 >::const_iterator
       it(index.void_blocks.begin()); it != index.void_blocks.end(); ++it)
     result[*it] = false;
   return result;
