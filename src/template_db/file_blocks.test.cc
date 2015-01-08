@@ -519,7 +519,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(89));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-    it(blocks.discrete_begin(indices.begin(), indices.end()));
+	it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     ++it;
     indices.clear();
@@ -575,7 +575,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(90));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-    it(blocks.discrete_begin(indices.begin(), indices.end()));
+        it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     work.clear();
     work.push_back(IntIndex(7));
@@ -623,7 +623,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(65));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-    it(blocks.discrete_begin(indices.begin(), indices.end()));
+        it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     it = blocks.replace_block(it, 0, 0);
     it = blocks.replace_block(it, 0, 0);
@@ -653,7 +653,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(90));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-    it(blocks.discrete_begin(indices.begin(), indices.end()));
+        it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     it = blocks.replace_block(it, 0, 0);
     it = blocks.replace_block(it, 0, 0);
@@ -683,7 +683,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(63));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-    it(blocks.discrete_begin(indices.begin(), indices.end()));
+        it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     ++it;
     for (unsigned int i(20); i < 30; ++i)
@@ -721,7 +721,7 @@ int main(int argc, char* args[])
       indices.push_back(IntIndex(i));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-    it(blocks.discrete_begin(indices.begin(), indices.end()));
+        it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     while (!(it == blocks.discrete_end()))
     {

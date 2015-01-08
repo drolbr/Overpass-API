@@ -210,6 +210,8 @@ private:
 
   Raw_File data_file;
   Void_Pointer< void > buffer;
+  
+  uint32 allocate_block(uint32 data_size);
 };
 
 
@@ -607,6 +609,79 @@ uint32 File_Blocks< TIndex, TIterator, TRangeIterator >::answer_size
 }
 
 
+template< typename Iterator, typename Object >
+void rearrange_block(const Iterator& begin, Iterator& it, Object to_move)
+{
+  
+  Iterator predecessor = it-1;
+  while (it != begin && to_move < *predecessor)
+  {
+    *it = *predecessor;
+    --it;
+    predecessor == it-1;
+  }
+  *it = to_move;
+}
+
+
+// Finds an appropriate block, removes it from the list of available blocks, and returns it
+template< typename TIndex, typename TIterator, typename TRangeIterator >
+uint32 File_Blocks< TIndex, TIterator, TRangeIterator >::allocate_block(uint32 data_size)
+{
+  uint32 result = this->index->block_count;
+  
+  if (this->index->void_blocks.empty())
+    this->index->block_count += data_size;
+  else
+  {
+    std::vector< std::pair< uint32, uint32 > >::iterator pos_it
+        = std::lower_bound(this->index->void_blocks.begin(), this->index->void_blocks.end(),
+			   std::make_pair(data_size, uint32(0)));
+      
+    if (pos_it != this->index->void_blocks.end() && pos_it->first == data_size)
+    {
+      // We have a gap of exactly the needed size.
+      result = pos_it->second;
+      this->index->void_blocks.erase(pos_it);
+    }
+    else
+    {
+      pos_it = --(this->index->void_blocks.end());
+      uint32 last_size = pos_it->first;
+      while (pos_it != this->index->void_blocks.begin() && last_size > data_size)
+      {
+	--pos_it;
+	if (last_size == pos_it->first)
+	{
+	  // We have a gap size that appears twice (or more often).
+	  // This is a good heuristic choice.
+	  result = pos_it->second;
+	  pos_it->first -= data_size;
+	  pos_it->second += data_size;
+	  rearrange_block(this->index->void_blocks.begin(), pos_it, *pos_it);
+	  return result;
+	}
+	last_size = pos_it->first;
+      }
+      
+      pos_it = --(this->index->void_blocks.end());
+      if (pos_it->first >= data_size)
+      {
+	// If no really matching block exists then we choose the largest one.
+	result = pos_it->second;
+	pos_it->first -= data_size;
+	pos_it->second += data_size;
+	rearrange_block(this->index->void_blocks.begin(), pos_it, *pos_it);
+      }
+      else
+	this->index->block_count += data_size;
+    }
+  }
+  
+  return result;
+}
+
+
 template< typename TIndex, typename TIterator, typename TRangeIterator >
 typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
     File_Blocks< TIndex, TIterator, TRangeIterator >::insert_block
@@ -617,18 +692,7 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
   
   uint32 data_size = *(uint32*)buf == 0 ? 0 : ((*(uint32*)buf) - 1) / block_size + 1;
     
-  //TODO: Algorithmus zur Blockwahl
-  uint32 pos;
-  if (this->index->void_blocks.empty())
-  {
-    pos = this->index->block_count;
-    this->index->block_count += data_size;
-  }
-  else
-  {
-    pos = index->void_blocks.back();
-    this->index->void_blocks.pop_back();
-  }
+  uint32 pos = allocate_block(data_size);
   
   // cerr<<dec<<pos<<"\t0x"; //Debug
   // for (uint i = 0; i < TIndex::size_of(((uint8*)buf)+(sizeof(uint32)+sizeof(uint32))); ++i)
@@ -664,17 +728,7 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
   {
     uint32 data_size = *(uint32*)buf == 0 ? 0 : ((*(uint32*)buf) - 1) / block_size + 1;
     
-    //TODO: Algorithmus zur Blockwahl
-    if (this->index->void_blocks.empty())
-    {
-      it.block_it->pos = this->index->block_count;
-      this->index->block_count += data_size;
-    }
-    else
-    {
-      it.block_it->pos = this->index->void_blocks.back();
-      this->index->void_blocks.pop_back();
-    }
+    it.block_it->pos = allocate_block(data_size);
     
     data_file.seek(((int64)it.block_it->pos)*block_size, "File_Blocks::replace_block::1");
     data_file.write((uint8*)buf, block_size * data_size, "File_Blocks::replace_block::2");

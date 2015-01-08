@@ -120,7 +120,7 @@ perform_serial_test()
   }; else
   {
     echo `date +%T` "Test $EXEC $I succeeded."
-    rm -R *
+#     rm -R *
   }; fi
   popd >/dev/null
 };

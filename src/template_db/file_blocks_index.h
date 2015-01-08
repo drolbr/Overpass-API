@@ -23,6 +23,7 @@
 
 #include <unistd.h>
 
+#include <algorithm>
 #include <cerrno>
 #include <cstdlib>
 #include <list>
@@ -73,7 +74,7 @@ struct File_Blocks_Index : public File_Blocks_Index_Base
     
   public:
     std::list< File_Block_Index_Entry< TIndex > > blocks;
-    std::vector< uint32 > void_blocks;
+    std::vector< std::pair< uint32, uint32 > > void_blocks;
     uint32 block_count;
     uint64 block_size_;
     uint32 max_size;
@@ -117,6 +118,7 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
       throw e;
     block_count = 0;
   }
+  // TODO: block_count should not depend on block_size_
   
   std::vector< bool > is_referred(block_count, false);
   
@@ -197,8 +199,8 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
 	Void_Pointer< uint8 > index_buf(void_index_size);
 	void_blocks_file.read(index_buf.ptr, void_index_size,
 			      "File_Blocks_Index::File_Blocks_Index::7");
-	for (uint32 i = 0; i < void_index_size/sizeof(uint32); ++i)
-	  void_blocks.push_back(*(uint32*)(index_buf.ptr + 4*i));
+	for (uint32 i = 0; i < void_index_size/8; ++i)
+	  void_blocks.push_back(*(std::pair< uint32, uint32 >*)(index_buf.ptr + 8*i));
 	empty_index_file_used = true;
       }
       catch (File_Error e) {}
@@ -207,11 +209,20 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
     if (!empty_index_file_used)
     {
       // determine void_blocks
-      for (uint32 i(0); i < block_count; ++i)
+      uint32 last_start = 0;
+      for (uint32 i = 0; i < block_count; ++i)
       {
-	if (!(is_referred[i]))
-	  void_blocks.push_back(i);
+	if (is_referred[i])
+	{
+	  if (last_start < i)
+	    void_blocks.push_back(std::make_pair(i - last_start, last_start));
+	  last_start = i+1;
+	}
       }
+      if (last_start < block_count)
+	void_blocks.push_back(std::make_pair(block_count - last_start, last_start));
+      
+      std::sort(void_blocks.begin(), void_blocks.end());
     }
   }
 }
@@ -257,11 +268,12 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
   dest_file.write(index_buf.ptr, index_size, "File_Blocks_Index::~File_Blocks_Index::4");
   
   // Write void blocks
-  Void_Pointer< uint8 > void_index_buf(void_blocks.size()*sizeof(uint32));
-  uint32* it_ptr = (uint32*)void_index_buf.ptr;
-  for (std::vector< uint32 >::const_iterator it(void_blocks.begin());
+  Void_Pointer< uint8 > void_index_buf(void_blocks.size() * 8);
+  std::pair< uint32, uint32 >* it_ptr = (std::pair< uint32, uint32 >*)(void_index_buf.ptr);
+  for (std::vector< std::pair< uint32, uint32 > >::const_iterator it(void_blocks.begin());
       it != void_blocks.end(); ++it)
     *(it_ptr++) = *it;
+  
   try
   {
     Raw_File void_file(empty_index_file_name, O_RDWR|O_TRUNC, S_666,
@@ -281,9 +293,12 @@ std::vector< bool > get_data_index_footprint
   File_Blocks_Index< TIndex > index(file_prop, false, false, db_dir, "");
   
   std::vector< bool > result(index.block_count, true);
-  for (typename std::vector< uint32 >::const_iterator
-      it(index.void_blocks.begin()); it != index.void_blocks.end(); ++it)
-    result[*it] = false;
+  for (typename std::vector< std::pair< uint32, uint32 > >::const_iterator
+      it = index.void_blocks.begin(); it != index.void_blocks.end(); ++it)
+  {
+    for (uint32 i = 0; i < it->first; ++i)
+      result[it->second + i] = false;
+  }
   return result;
 }
 
