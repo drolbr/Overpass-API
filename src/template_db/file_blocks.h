@@ -180,12 +180,12 @@ public:
       
   uint32 answer_size(const Flat_Iterator& it) const
   {
-    return (block_size * max_size - sizeof(uint32));
+    return (block_size * it.block_it->size - sizeof(uint32));
   }
   uint32 answer_size(const Discrete_Iterator& it) const;  
   uint32 answer_size(const Range_Iterator& it) const
   {
-    return (block_size * max_size - sizeof(uint32));
+    return (block_size * it.block_it->size - sizeof(uint32));
   }
   
   uint read_count() const { return read_count_; }
@@ -510,7 +510,7 @@ File_Blocks< TIndex, TIterator, TRangeIterator >::File_Blocks
      data_file(index->get_data_file_name(),
 	       writeable ? O_RDWR|O_CREAT : O_RDONLY,
 	       S_666, "File_Blocks::File_Blocks::1"),
-     buffer(index->get_block_size())
+     buffer(index->get_block_size() * index->get_max_size())
 {
   // cerr<<"  "<<index->get_data_file_name()<<'\n'; //Debug
   
@@ -602,8 +602,8 @@ uint32 File_Blocks< TIndex, TIterator, TRangeIterator >::answer_size
     ++count;
   }
   
-  if (count*(it.block_it->max_keysize) > block_size * max_size - sizeof(uint32))
-    return (block_size * max_size - sizeof(uint32));
+  if (count*(it.block_it->max_keysize) > block_size * it.block_it->size - sizeof(uint32))
+    return (block_size * it.block_it->size - sizeof(uint32));
   else
     return count*(it.block_it->max_keysize);
 }

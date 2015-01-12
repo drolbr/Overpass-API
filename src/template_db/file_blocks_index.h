@@ -107,20 +107,19 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
      block_size_(file_prop.get_block_size()), // can be overwritten by index file
      max_size(file_prop.get_max_size()) // can be overwritten by index file
 {
+  uint64 file_size = 0;
   try
   {
     Raw_File val_file(data_file_name, O_RDONLY, S_666, "File_Blocks_Index::File_Blocks_Index::1");
-    block_count = val_file.size("File_Blocks_Index::File_Blocks_Index::2")/block_size_;
+    file_size = val_file.size("File_Blocks_Index::File_Blocks_Index::2");
   }
   catch (File_Error e)
   {
     if (e.error_number != 2)
       throw e;
-    block_count = 0;
   }
-  // TODO: block_count should not depend on block_size_
   
-  std::vector< bool > is_referred(block_count, false);
+  std::vector< bool > is_referred;
   
   try
   {
@@ -135,6 +134,9 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
     if (file_name_extension == ".legacy")
       // We support this way the old format although it has no version marker.
     {
+      block_count = file_size / block_size_;
+      is_referred.resize(block_count, false);
+      
       uint32 pos(0);
       while (pos < index_size)
       {
@@ -158,6 +160,9 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
 	throw File_Error(0, index_file_name, "File_Blocks_Index: Unsupported index file format version");
       block_size_ = *(uint64*)(index_buf.ptr + 4);
       max_size = *(uint32*)(index_buf.ptr + 12);
+      
+      block_count = file_size / block_size_;
+      is_referred.resize(block_count, false);
       
       uint32 pos = 16;
       while (pos < index_size)

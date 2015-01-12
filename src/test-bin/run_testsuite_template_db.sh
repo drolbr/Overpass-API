@@ -169,7 +169,7 @@ dispatcher_two_clients()
 
 # Test template_db
 date +%T
-perform_test_loop file_blocks 12
+perform_test_loop file_blocks 23
 date +%T
 perform_test_loop block_backend 13
 date +%T
