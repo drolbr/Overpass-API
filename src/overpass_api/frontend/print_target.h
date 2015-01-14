@@ -52,8 +52,9 @@ class Output_Handle
     string get_output() const;
     uint32 get_written_elements_count() const;
 
-    void set_categories(const vector< Category_Filter >& categories_) { categories = categories_; }
-    void set_csv_settings(const Csv_Settings& csv_settings_) { csv_settings = csv_settings_; }
+    //TODO
+//     void set_categories(const vector< Category_Filter >& categories_) { categories = categories_; }
+//     void set_csv_settings(const Csv_Settings& csv_settings_) { csv_settings = csv_settings_; }
     
     void print_bounds(double south, double west, double north, double east);
     void print_elements_header();
@@ -69,8 +70,9 @@ class Output_Handle
     string node_template;
     string way_template;
     string relation_template;
-    vector< Category_Filter > categories;
-    Csv_Settings csv_settings;
+    //TODO
+//     vector< Category_Filter > categories;
+//     Csv_Settings csv_settings;
 };
 
 string::size_type find_block_end(string data, string::size_type pos);

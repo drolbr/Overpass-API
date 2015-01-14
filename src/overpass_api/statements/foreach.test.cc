@@ -28,6 +28,7 @@ using namespace std;
 
 Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint64 id)
 {
+  Parsed_Query global_settings;
   ostringstream buf("");
   buf<<id;
   string id_ = buf.str();
@@ -39,7 +40,7 @@ Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint64 i
   attributes[3] = id_.c_str();
   attributes[4] = 0;
   
-  Id_Query_Statement stmt(1, convert_c_pairs(attributes));
+  Id_Query_Statement stmt(1, convert_c_pairs(attributes), global_settings);
   stmt.execute(rman);
   
   return rman;
@@ -94,6 +95,7 @@ int main(int argc, char* args[])
   uint pattern_size = 0;
   pattern_size = atoi(args[2]);
   uint64 global_node_offset = atoll(args[4]);
+  Parsed_Query global_settings;
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -108,10 +110,10 @@ int main(int argc, char* args[])
       fill_loop_set(rman, "_", pattern_size, global_node_offset, transaction);
       {
 	const char* attributes[] = { 0 };
-	Foreach_Statement stmt1(0, convert_c_pairs(attributes));
+	Foreach_Statement stmt1(0, convert_c_pairs(attributes), global_settings);
 	
 	const char* attributes_print[] = { 0 };
-	Print_Statement stmt2(0, convert_c_pairs(attributes_print));
+	Print_Statement stmt2(0, convert_c_pairs(attributes_print), global_settings);
 	stmt1.add_statement(&stmt2, "");
 	
 	stmt1.execute(rman);
@@ -132,12 +134,12 @@ int main(int argc, char* args[])
       fill_loop_set(rman, "_", pattern_size, global_node_offset, transaction);
       {
 	const char* attributes[] = { 0 };
-	Foreach_Statement stmt1(0, convert_c_pairs(attributes));
+	Foreach_Statement stmt1(0, convert_c_pairs(attributes), global_settings);
 	stmt1.execute(rman);
       }
       {
 	const char* attributes_print[] = { 0 };
-	Print_Statement stmt(0, convert_c_pairs(attributes_print));
+	Print_Statement stmt(0, convert_c_pairs(attributes_print), global_settings);
 	stmt.execute(rman);
       }
     }
@@ -156,10 +158,10 @@ int main(int argc, char* args[])
       fill_loop_set(rman, "A", pattern_size, global_node_offset, transaction);
       {
 	const char* attributes[] = { "from", "A", "into", "B", 0 };
-	Foreach_Statement stmt1(0, convert_c_pairs(attributes));
+	Foreach_Statement stmt1(0, convert_c_pairs(attributes), global_settings);
 	
 	const char* attributes_print[] = { "from", "B", 0 };
-	Print_Statement stmt2(0, convert_c_pairs(attributes_print));
+	Print_Statement stmt2(0, convert_c_pairs(attributes_print), global_settings);
 	stmt1.add_statement(&stmt2, "");
 	
 	stmt1.execute(rman);
@@ -180,12 +182,12 @@ int main(int argc, char* args[])
       fill_loop_set(rman, "A", pattern_size, global_node_offset, transaction);
       {
 	const char* attributes[] = { "from", "A", "into", "B", 0 };
-	Foreach_Statement stmt1(0, convert_c_pairs(attributes));
+	Foreach_Statement stmt1(0, convert_c_pairs(attributes), global_settings);
 	stmt1.execute(rman);
       }
       {
 	const char* attributes[] = { "from", "A", 0 };
-	Print_Statement stmt(0, convert_c_pairs(attributes));
+	Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
     }

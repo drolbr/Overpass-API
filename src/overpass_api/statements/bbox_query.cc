@@ -292,7 +292,7 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 Generic_Statement_Maker< Bbox_Query_Statement > Bbox_Query_Statement::statement_maker("bbox-query");
 
 Bbox_Query_Statement::Bbox_Query_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
   map< string, string > attributes;
@@ -346,6 +346,10 @@ Bbox_Query_Statement::Bbox_Query_Statement
     add_static_error(temp.str());
   }
 }
+
+
+Bbox_Query_Statement::Bbox_Query_Statement(const Bbox& bbox)
+    : Output_Statement(0), south(bbox.south), north(bbox.north), west(bbox.west), east(bbox.east) {}
 
 
 Bbox_Query_Statement::~Bbox_Query_Statement()

@@ -31,7 +31,7 @@ class Newer_Statement : public Statement
 {
   public:
     Newer_Statement(int line_number_, const map< string, string >& input_attributes,
-                    Query_Constraint* bbox_limitation = 0);
+                    Parsed_Query& global_settings);
     virtual string get_name() const { return "newer"; }
     virtual string get_result_name() const { return ""; }
     virtual void execute(Resource_Manager& rman);

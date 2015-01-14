@@ -29,7 +29,7 @@ class Changed_Statement : public Output_Statement
 {
   public:
     Changed_Statement(int line_number_, const map< string, string >& attributes,
-                       Query_Constraint* bbox_limitation = 0);
+                       Parsed_Query& global_settings);
     virtual string get_name() const { return "changed"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Changed_Statement();

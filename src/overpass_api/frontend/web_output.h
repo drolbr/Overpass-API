@@ -19,9 +19,10 @@
 #ifndef DE__OSM3S___OVERPASS_API__FRONTEND__WEB_OUTPUT_H
 #define DE__OSM3S___OVERPASS_API__FRONTEND__WEB_OUTPUT_H
 
-#include "../core/datatypes.h"
 
-using namespace std;
+#include "../core/datatypes.h"
+#include "../frontend/output_handler.h"
+
 
 struct Web_Output : public Error_Output
 {
@@ -55,15 +56,19 @@ struct Web_Output : public Error_Output
   void write_html_header
       (const string& timestamp = "", const string& area_timestamp = "", uint write_mime = 200,
        bool write_js_init = false, bool write_remarks = true);
-  void write_xml_header
+  void write_payload_header
       (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
-  void write_json_header
-      (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
-  void write_text_header
-      (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
-  void write_csv_header
-      (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
+//   void write_xml_header
+//       (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
+//   void write_json_header
+//       (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
+//   void write_text_header
+//       (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
+//   void write_csv_header
+//       (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
   void write_footer();
+  
+  void set_output_handler(Output_Handler* output_handler_) { output_handler = output_handler_; }
   
 public:
   typedef enum { http_get, http_post, http_head, http_options } Http_Methods;
@@ -72,13 +77,15 @@ public:
   bool has_origin;
   
 private:
-  enum { not_yet, xml, html, json, text, csv, final } header_written;
+  enum { not_yet, payload, html, /*xml, json, text, csv,*/ final } header_written;
   bool encoding_errors;
   bool parse_errors;
   bool static_errors;
   uint log_level;
   string padding;
   string messages;
+  
+  Output_Handler* output_handler;
   
   void display_remark(const string& text);
   void display_error(const string& text, uint write_mime);

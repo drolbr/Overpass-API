@@ -18,6 +18,7 @@
 
 #include "resource_manager.h"
 #include "scripting_core.h"
+#include "../core/parsed_query.h"
 #include "../core/settings.h"
 #include "../frontend/console_output.h"
 #include "../frontend/map_ql_parser.h"
@@ -141,7 +142,7 @@ void end(const char *el)
 }
 
 bool parse_and_validate
-    (Statement::Factory& stmt_factory,
+    (Statement::Factory& stmt_factory, Parsed_Query& parsed_query,
      const string& xml_raw, Error_Output* error_output, Debug_Level debug_level)
 {
   if (error_output && error_output->display_encoding_errors())
@@ -211,20 +212,20 @@ bool parse_and_validate
   {
     if (debug_level == parser_execute)
     {
-      parse_and_validate_map_ql(stmt_factory, xml_raw, error_output);
+      parse_and_validate_map_ql(stmt_factory, xml_raw, error_output, parsed_query);
       Osm_Script_Statement* root =
           dynamic_cast< Osm_Script_Statement* >(get_statement_stack()->front());
       if (root)
 	root->set_factory(&stmt_factory);
     }
     else if (debug_level == parser_dump_xml)
-      parse_and_dump_xml_from_map_ql(xml_raw, error_output);
+      parse_and_dump_xml_from_map_ql(xml_raw, error_output, parsed_query);
     else if (debug_level == parser_dump_compact_map_ql)
-      parse_and_dump_compact_from_map_ql(xml_raw, error_output);
+      parse_and_dump_compact_from_map_ql(xml_raw, error_output, parsed_query);
     else if (debug_level == parser_dump_bbox_map_ql)
-      parse_and_dump_bbox_from_map_ql(xml_raw, error_output);
+      parse_and_dump_bbox_from_map_ql(xml_raw, error_output, parsed_query);
     else if (debug_level == parser_dump_pretty_map_ql)
-      parse_and_dump_pretty_from_map_ql(xml_raw, error_output);
+      parse_and_dump_pretty_from_map_ql(xml_raw, error_output, parsed_query);
   }
   
   if ((error_output) && (error_output->display_parse_errors()))

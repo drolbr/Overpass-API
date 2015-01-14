@@ -49,6 +49,7 @@ int main(int argc, char *argv[])
   
   try
   {
+    Parsed_Query global_settings;
     string url = "http://www.openstreetmap.org/browse/{{{type}}}/{{{id}}}";
     string template_name = "default.wiki";
     bool redirect = true;
@@ -58,9 +59,11 @@ int main(int argc, char *argv[])
     if (error_output.display_encoding_errors())
       return 0;
     
-    Statement::Factory stmt_factory;
-    if (!parse_and_validate(stmt_factory, xml_raw, &error_output, parser_execute))
+    Statement::Factory stmt_factory(global_settings);
+    if (!parse_and_validate(stmt_factory, global_settings, xml_raw, &error_output, parser_execute))
       return 0;
+    
+    error_output.set_output_handler(global_settings.get_output_handler());
     
     Osm_Script_Statement* osm_script = 0;
     if (!get_statement_stack()->empty())
@@ -75,7 +78,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-      Osm_Script_Statement temp(0, map< string, string >(), 0);
+      Osm_Script_Statement temp(0, map< string, string >(), global_settings);
       max_allowed_time = temp.get_max_allowed_time();
       max_allowed_space = temp.get_max_allowed_space();
     }
@@ -83,82 +86,86 @@ int main(int argc, char *argv[])
     if (error_output.http_method == error_output.http_options
         || error_output.http_method == error_output.http_head)
     {
-      if (!osm_script || osm_script->get_type() == "xml")
-        error_output.write_xml_header("", "");
-      else if (osm_script->get_type() == "json")
-        error_output.write_json_header("", "");
-      else if (osm_script->get_type() == "csv")
-        error_output.write_csv_header("", "");
-      else
-        osm_script->set_template_name(template_name);
+    //TODO
+//       if (!osm_script || osm_script->get_type() == "xml")
+//         error_output.write_xml_header("", "");
+//       else if (osm_script->get_type() == "json")
+//         error_output.write_json_header("", "");
+//       else if (osm_script->get_type() == "csv")
+//         error_output.write_csv_header("", "");
+//       else
+//         osm_script->set_template_name(template_name);
     }
     else
     {
       // open read transaction and log this.
       int area_level = determine_area_level(&error_output, 0);
       Dispatcher_Stub dispatcher("", &error_output, xml_raw,
-			         get_uses_meta_data(), area_level, max_allowed_time, max_allowed_space);
+			         get_uses_meta_data(), area_level,
+				 max_allowed_time, max_allowed_space, global_settings);
       if (osm_script && osm_script->get_desired_timestamp())
         dispatcher.resource_manager().set_desired_timestamp(osm_script->get_desired_timestamp());
     
-      if (!osm_script || osm_script->get_type() == "xml")
-        error_output.write_xml_header
-            (dispatcher.get_timestamp(),
-	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
-      else if (osm_script->get_type() == "json")
-        error_output.write_json_header
-            (dispatcher.get_timestamp(),
-	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
-      else if (osm_script->get_type() == "csv")
-        error_output.write_csv_header
-            (dispatcher.get_timestamp(),
-	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
-      else
-        osm_script->set_template_name(template_name);
+    //TODO
+//       if (!osm_script || osm_script->get_type() == "xml")
+//         error_output.write_xml_header
+//             (dispatcher.get_timestamp(),
+// 	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
+//       else if (osm_script->get_type() == "json")
+//         error_output.write_json_header
+//             (dispatcher.get_timestamp(),
+// 	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
+//       else if (osm_script->get_type() == "csv")
+//         error_output.write_csv_header
+//             (dispatcher.get_timestamp(),
+// 	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
+//       else
+//         osm_script->set_template_name(template_name);
       
       for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	   it != get_statement_stack()->end(); ++it)
         (*it)->execute(dispatcher.resource_manager());
 
-      if (osm_script && osm_script->get_type() == "custom")
-      {
-        uint32 count = osm_script->get_written_elements_count();
-        if (count == 0 && redirect)
-        {
-          error_output.write_html_header
-              (dispatcher.get_timestamp(),
-	       area_level > 0 ? dispatcher.get_area_timestamp() : "");
-	  cout<<"<p>No results found.</p>\n";
-	  error_output.write_footer();
-        }
-        else if (count == 1 && redirect)
-        {
-	  cout<<"Status: 302 Moved\n";
-	  cout<<"Location: "
-	      <<osm_script->adapt_url(url)
-	      <<"\n\n";
-        }
-        else
-        {
-          error_output.write_html_header
-              (dispatcher.get_timestamp(),
-	       area_level > 0 ? dispatcher.get_area_timestamp() : "", 200,
-	       osm_script->template_contains_js());
-	  osm_script->write_output();
-	  error_output.write_footer();
-        }
-      }
-      else if (osm_script && osm_script->get_type() == "popup")
-      {
-        error_output.write_html_header
-            (dispatcher.get_timestamp(),
-	     area_level > 0 ? dispatcher.get_area_timestamp() : "", 200,
-	     osm_script->template_contains_js(), false);
-        osm_script->write_output();
-        error_output.write_footer();
-      }
-      else
-        error_output.write_footer();
+    //TODO
+//       if (osm_script && osm_script->get_type() == "custom")
+//       {
+//         uint32 count = osm_script->get_written_elements_count();
+//         if (count == 0 && redirect)
+//         {
+//           error_output.write_html_header
+//               (dispatcher.get_timestamp(),
+// 	       area_level > 0 ? dispatcher.get_area_timestamp() : "");
+// 	  cout<<"<p>No results found.</p>\n";
+// 	  error_output.write_footer();
+//         }
+//         else if (count == 1 && redirect)
+//         {
+// 	  cout<<"Status: 302 Moved\n";
+// 	  cout<<"Location: "
+// 	      <<osm_script->adapt_url(url)
+// 	      <<"\n\n";
+//         }
+//         else
+//         {
+//           error_output.write_html_header
+//               (dispatcher.get_timestamp(),
+// 	       area_level > 0 ? dispatcher.get_area_timestamp() : "", 200,
+// 	       osm_script->template_contains_js());
+// 	  osm_script->write_output();
+// 	  error_output.write_footer();
+//         }
+//       }
+//       else if (osm_script && osm_script->get_type() == "popup")
+//       {
+//         error_output.write_html_header
+//             (dispatcher.get_timestamp(),
+// 	     area_level > 0 ? dispatcher.get_area_timestamp() : "", 200,
+// 	     osm_script->template_contains_js(), false);
+//         osm_script->write_output();
+//         error_output.write_footer();
+//       }
+//       else
+//         error_output.write_footer();
     }
   }
   catch(File_Error e)

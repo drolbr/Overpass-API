@@ -30,7 +30,7 @@ class Union_Statement : public Output_Statement
 {
   public:
     Union_Statement(int line_number_, const map< string, string >& input_attributes,
-                    Query_Constraint* bbox_limitation = 0);
+                    Parsed_Query& global_settings);
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "union"; }
     virtual void execute(Resource_Manager& rman);

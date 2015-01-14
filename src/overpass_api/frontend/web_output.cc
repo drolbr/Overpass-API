@@ -24,7 +24,7 @@
 #include <sstream>
 #include <string>
 
-using namespace std;
+
 
 void Web_Output::add_encoding_error(const string& error)
 {
@@ -37,6 +37,7 @@ void Web_Output::add_encoding_error(const string& error)
   encoding_errors = true;
 }
 
+
 void Web_Output::add_parse_error(const string& error, int line_number)
 {
   if (log_level != Error_Output::QUIET)
@@ -47,6 +48,7 @@ void Web_Output::add_parse_error(const string& error, int line_number)
   }
   parse_errors = true;
 }
+
 
 void Web_Output::add_static_error(const string& error, int line_number)
 {
@@ -59,6 +61,7 @@ void Web_Output::add_static_error(const string& error, int line_number)
   static_errors = true;
 }
 
+
 void Web_Output::add_encoding_remark(const string& error)
 {
   if (log_level == Error_Output::VERBOSE)
@@ -68,6 +71,7 @@ void Web_Output::add_encoding_remark(const string& error)
     display_remark(out.str());
   }
 }
+
 
 void Web_Output::add_parse_remark(const string& error, int line_number)
 {
@@ -79,6 +83,7 @@ void Web_Output::add_parse_remark(const string& error, int line_number)
   }
 }
 
+
 void Web_Output::add_static_remark(const string& error, int line_number)
 {
   if (log_level == Error_Output::VERBOSE)
@@ -88,6 +93,7 @@ void Web_Output::add_static_remark(const string& error, int line_number)
     display_remark(out.str());
   }
 }
+
 
 void Web_Output::runtime_error(const string& error)
 {
@@ -99,6 +105,7 @@ void Web_Output::runtime_error(const string& error)
   }
 }
 
+
 void Web_Output::runtime_remark(const string& error)
 {
   if (log_level == Error_Output::VERBOSE)
@@ -109,11 +116,13 @@ void Web_Output::runtime_remark(const string& error)
   }
 }
 
+
 void Web_Output::enforce_header(uint write_mime)
 {
   if (header_written == not_yet)
     write_html_header("", "", write_mime);
 }
+
 
 void Web_Output::write_html_header
     (const string& timestamp, const string& area_timestamp, uint write_mime, bool write_js_init,
@@ -173,12 +182,13 @@ void Web_Output::write_html_header
   }
 }
 
-void Web_Output::write_xml_header
+
+void Web_Output::write_payload_header
     (const string& timestamp, const string& area_timestamp, bool write_mime)
 {
   if (header_written != not_yet)
     return;    
-  header_written = xml;
+  header_written = payload;
   
   if (write_mime)
   {
@@ -190,144 +200,136 @@ void Web_Output::write_xml_header
     if (http_method == http_options)
       cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
             "Content-Length: 0\n";
-    cout<<"Content-type: application/osm3s+xml\n\n";
+    if (output_handler)
+      output_handler->write_http_headers();
+    cout<<'\n';
     if (http_method == http_options || http_method == http_head)
       return;
   }
   
-  cout<<
-  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm version=\"0.6\" generator=\"Overpass API\">\n"
-  "<note>The data included in this document is from www.openstreetmap.org. "
-  "The data is made available under ODbL.</note>\n";
-  cout<<"<meta osm_base=\""<<timestamp<<'\"';
-  if (area_timestamp != "")
-    cout<<" areas=\""<<area_timestamp<<"\"";
-  cout<<"/>\n\n";
+  if (output_handler)
+    output_handler->write_payload_header(timestamp, area_timestamp);
 }
 
-void Web_Output::write_json_header
-    (const string& timestamp, const string& area_timestamp, bool write_mime)
-{
-  if (header_written != not_yet)
-    return;    
-  header_written = json;
-  
-  if (write_mime)
-  {
-    if (allow_headers != "")
-      cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
-    if (has_origin)
-      cout<<"Access-Control-Allow-Origin: *\n"
-            "Access-Control-Max-Age: 600\n";
-    if (http_method == http_options)
-      cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
-            "Content-Length: 0\n";
-    cout<<"Content-type: application/json\n\n";
-    if (http_method == http_options || http_method == http_head)
-      return;
-  }
 
-  if (padding != "")
-    cout<<padding<<"(";
-    
-  cout<<"{\n"
-        "  \"version\": 0.6,\n"
-        "  \"generator\": \"Overpass API\",\n"
-        "  \"osm3s\": {\n"
-	"    \"timestamp_osm_base\": \""<<timestamp<<"\",\n";
-  if (area_timestamp != "")
-    cout<<"    \"timestamp_areas_base\": \""<<area_timestamp<<"\",\n";
-  cout<<"    \"copyright\": \"The data included in this document is from www.openstreetmap.org."
-	" The data is made available under ODbL.\"\n"
-        "  },\n";
+// void Web_Output::write_json_header
+//     (const string& timestamp, const string& area_timestamp, bool write_mime)
+// {
+//   if (header_written != not_yet)
+//     return;    
+//   header_written = json;
+//   
+//   if (write_mime)
+//   {
+//     if (allow_headers != "")
+//       cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
+//     if (has_origin)
+//       cout<<"Access-Control-Allow-Origin: *\n"
+//             "Access-Control-Max-Age: 600\n";
+//     if (http_method == http_options)
+//       cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
+//             "Content-Length: 0\n";
+//     cout<<"Content-type: application/json\n\n";
+//     if (http_method == http_options || http_method == http_head)
+//       return;
+//   }
+// 
+//   if (padding != "")
+//     cout<<padding<<"(";
+//     
+//   cout<<"{\n"
+//         "  \"version\": 0.6,\n"
+//         "  \"generator\": \"Overpass API\",\n"
+//         "  \"osm3s\": {\n"
+// 	"    \"timestamp_osm_base\": \""<<timestamp<<"\",\n";
+//   if (area_timestamp != "")
+//     cout<<"    \"timestamp_areas_base\": \""<<area_timestamp<<"\",\n";
+//   cout<<"    \"copyright\": \"The data included in this document is from www.openstreetmap.org."
+// 	" The data is made available under ODbL.\"\n"
+//         "  },\n";
 //  cout<< "  \"elements\": [\n\n";
-}
+// }
 
 
-void Web_Output::write_text_header
-    (const string& timestamp, const string& area_timestamp, bool write_mime)
-{
-  if (header_written != not_yet)
-    return;
-  header_written = text;
-  
-  if (write_mime)
-  {
-    if (allow_headers != "")
-      cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
-    if (has_origin)
-      cout<<"Access-Control-Allow-Origin: *\n"
-            "Access-Control-Max-Age: 600\n";
-    if (http_method == http_options)
-      cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
-            "Content-Length: 0\n";
-    cout<<"Content-type: text/plain\n\n";
-    if (http_method == http_options || http_method == http_head)
-      return;
-  }
+// void Web_Output::write_text_header
+//     (const string& timestamp, const string& area_timestamp, bool write_mime)
+// {
+//   if (header_written != not_yet)
+//     return;
+//   header_written = text;
+//   
+//   if (write_mime)
+//   {
+//     if (allow_headers != "")
+//       cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
+//     if (has_origin)
+//       cout<<"Access-Control-Allow-Origin: *\n"
+//             "Access-Control-Max-Age: 600\n";
+//     if (http_method == http_options)
+//       cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
+//             "Content-Length: 0\n";
+//     cout<<"Content-type: text/plain\n\n";
+//     if (http_method == http_options || http_method == http_head)
+//       return;
+//   }
+// 
+//   cout<<timestamp<<"\n";
+// }
 
-  cout<<timestamp<<"\n";
-}
 
-void Web_Output::write_csv_header
-    (const string& timestamp, const string& area_timestamp, bool write_mime)
-{
-  if (header_written != not_yet)
-    return;
-  header_written = csv;
-  
-  if (write_mime)
-  {
-    if (allow_headers != "")
-      cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
-    if (has_origin)
-      cout<<"Access-Control-Allow-Origin: *\n";
-    if (http_method == http_options)
-      cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
-            "Content-Length: 0\n";
-    cout<<"Content-type: text/csv\n\n";
-    if (http_method == http_options || http_method == http_head)
-      return;
-  }
-}
+// void Web_Output::write_csv_header
+//     (const string& timestamp, const string& area_timestamp, bool write_mime)
+// {
+//   if (header_written != not_yet)
+//     return;
+//   header_written = csv;
+//   
+//   if (write_mime)
+//   {
+//     if (allow_headers != "")
+//       cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
+//     if (has_origin)
+//       cout<<"Access-Control-Allow-Origin: *\n";
+//     if (http_method == http_options)
+//       cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
+//             "Content-Length: 0\n";
+//     cout<<"Content-type: text/csv\n\n";
+//     if (http_method == http_options || http_method == http_head)
+//       return;
+//   }
+// }
 
 
 void Web_Output::write_footer()
 {
-  if (http_method == http_options || http_method == http_head)
-    return;
-  if (header_written == xml)
-    cout<<"\n</osm>\n";
-  else if (header_written == html)
-    cout<<"\n</body>\n</html>\n";
-  else if (header_written == json)
-    cout<<"\n\n  ]"<<(messages != "" ? ",\n\"remark\": \"" + escape_cstr(messages) + "\"" : "")
-        <<"\n}"<<(padding != "" ? ");\n" : "\n");
+  if (output_handler)
+    output_handler->write_footer();
+  
   header_written = final;
 }
+
 
 void Web_Output::display_remark(const string& text)
 {
   enforce_header(200);
   if (http_method == http_options || http_method == http_head)
     return;
-  if (header_written == xml)
-    cout<<"<remark> "<<text<<" </remark>\n";
-  else if (header_written == html)
-    cout<<"<p><strong style=\"color:#00BB00\">Remark</strong>: "
+  if (header_written == html)
+    std::cout<<"<p><strong style=\"color:#00BB00\">Remark</strong>: "
         <<text<<" </p>\n";
+  else if (output_handler)
+    output_handler->display_remark(text);
 }
+
 
 void Web_Output::display_error(const string& text, uint write_mime)
 {
   enforce_header(write_mime);
   if (http_method == http_options || http_method == http_head)
     return;
-  if (header_written == xml)
-    cout<<"<remark> "<<text<<" </remark>\n";
-  else if (header_written == html)
+  if (header_written == html)
     cout<<"<p><strong style=\"color:#FF0000\">Error</strong>: "
         <<text<<" </p>\n";
-  else if (header_written == json)
-    messages += text;
+  else if (output_handler)
+    output_handler->display_error(text);
 }

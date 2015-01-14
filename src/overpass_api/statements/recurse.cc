@@ -2187,7 +2187,7 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
 //-----------------------------------------------------------------------------
 
 Recurse_Statement::Recurse_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_), restrict_to_role(false)
 {
   map< string, string > attributes;

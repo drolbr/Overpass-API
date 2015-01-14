@@ -73,7 +73,7 @@ class Print_Target
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0, const Action& action = KEEP) = 0;
 
-    virtual void print_item_count(const Output_Item_Count& item_count) = 0;
+    //TODO virtual void print_item_count(const Output_Item_Count& item_count) = 0;
 
     static const unsigned int PRINT_IDS = 1;
     static const unsigned int PRINT_COORDS = 2;
@@ -156,16 +156,13 @@ class Output_Handle;
 class Print_Statement : public Statement
 {
   public:
-    Print_Statement(int line_number_, const map< string, string >& attributes,
-                    Query_Constraint* bbox_limitation = 0);
+    Print_Statement(int line_number_, const map< string, string >& attributes, Parsed_Query& global_settings);
     virtual string get_name() const { return "print"; }
     virtual string get_result_name() const { return ""; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Print_Statement();
 
     static Generic_Statement_Maker< Print_Statement > statement_maker;
-    
-    void set_output_handle(Output_Handle* output_handle_) { output_handle = output_handle_; }
       
     void print_item(Print_Target& target, uint32 ll_upper, const Node_Skeleton& skel,
                     const vector< pair< string, string > >* tags = 0,
@@ -205,7 +202,6 @@ class Print_Statement : public Statement
     unsigned int mode;
     enum { order_by_id, order_by_quadtile } order;
     unsigned int limit;
-    Output_Handle* output_handle;
     Way_Bbox_Geometry_Store* way_geometry_store;
     Way_Bbox_Geometry_Store* attic_way_geometry_store;
     Relation_Geometry_Store* relation_geometry_store;

@@ -46,7 +46,7 @@ typedef enum
     Debug_Level;
     
 bool parse_and_validate
-    (Statement::Factory& stmt_factory,
+    (Statement::Factory& stmt_factory, Parsed_Query& parsed_query,
      const string& xml_raw, Error_Output* error_output, Debug_Level debug_type);
     
 vector< Statement* >* get_statement_stack();

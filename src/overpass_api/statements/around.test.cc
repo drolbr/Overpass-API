@@ -32,6 +32,7 @@ using namespace std;
 void perform_around_print(uint pattern_size, string radius, uint64 global_node_offset,
 			  Transaction& transaction)
 {
+  Parsed_Query global_settings;
   try
   {
     Resource_Manager rman(transaction);
@@ -41,17 +42,17 @@ void perform_around_print(uint pattern_size, string radius, uint64 global_node_o
       string buf_ = buf.str();
       
       const char* attributes[] = { "type", "node", "ref", buf_.c_str(), 0 };
-      Id_Query_Statement* stmt1 = new Id_Query_Statement(0, convert_c_pairs(attributes));
+      Id_Query_Statement* stmt1 = new Id_Query_Statement(0, convert_c_pairs(attributes), global_settings);
       stmt1->execute(rman);
     }
     {
       const char* attributes[] = { "radius", radius.c_str(), 0 };
-      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes));
+      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes), global_settings);
       stmt1->execute(rman);
     }
     {
       const char* attributes[] = { "order", "id", 0 };
-      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes));
+      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
       stmt1->execute(rman);
     }
   }
@@ -65,6 +66,7 @@ void perform_around_print(uint pattern_size, string radius, uint64 global_node_o
 void perform_coord_print(uint pattern_size, string radius, uint64 global_node_offset,
                           Transaction& transaction)
 {
+  Parsed_Query global_settings;
   try
   {
     Resource_Manager rman(transaction);
@@ -77,12 +79,12 @@ void perform_coord_print(uint pattern_size, string radius, uint64 global_node_of
       string lon = buf.str();
       
       const char* attributes[] = { "radius", radius.c_str(), "lat", lat.c_str(), "lon", lon.c_str(),  0 };
-      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes));
+      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes), global_settings);
       stmt1->execute(rman);
     }
     {
       const char* attributes[] = { "order", "id", 0 };
-      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes));
+      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
       stmt1->execute(rman);
     }
   }
@@ -106,6 +108,7 @@ int main(int argc, char* args[])
   uint64 global_node_offset = atoll(args[4]);
 
   Nonsynced_Transaction transaction(false, false, args[3], "");
+  Parsed_Query global_settings;
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -126,17 +129,17 @@ int main(int argc, char* args[])
       string buf_ = buf.str();
       
       const char* attributes[] = { "type", "node", "into", "foo", "ref", buf_.c_str(), 0 };
-      Id_Query_Statement* stmt1 = new Id_Query_Statement(0, convert_c_pairs(attributes));
+      Id_Query_Statement* stmt1 = new Id_Query_Statement(0, convert_c_pairs(attributes), global_settings);
       stmt1->execute(rman);
     }
     {
       const char* attributes[] = { "radius", "200.1", "from", "foo", 0 };
-      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes));
+      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes), global_settings);
       stmt1->execute(rman);
     }
     {
       const char* attributes[] = { "order", "id", 0 };
-      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes));
+      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
       stmt1->execute(rman);
     }
   }
@@ -149,17 +152,17 @@ int main(int argc, char* args[])
       string buf_ = buf.str();
       
       const char* attributes[] = { "type", "node", "ref", buf_.c_str(), 0 };
-      Id_Query_Statement* stmt1 = new Id_Query_Statement(0, convert_c_pairs(attributes));
+      Id_Query_Statement* stmt1 = new Id_Query_Statement(0, convert_c_pairs(attributes), global_settings);
       stmt1->execute(rman);
     }
     {
       const char* attributes[] = { "radius", "200.1", "into", "foo", 0 };
-      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes));
+      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes), global_settings);
       stmt1->execute(rman);
     }
     {
       const char* attributes[] = { "order", "id", "from", "foo", 0 };
-      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes));
+      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
       stmt1->execute(rman);
     }
   }
@@ -174,27 +177,27 @@ int main(int argc, char* args[])
       string buf2_ = buf2.str();
       
       const char* attributes[] = { 0 };
-      Union_Statement* stmt1 = new Union_Statement(0, convert_c_pairs(attributes));
+      Union_Statement* stmt1 = new Union_Statement(0, convert_c_pairs(attributes), global_settings);
       {
 	const char* attributes[] = { "type", "node", "ref", buf1_.c_str(), 0 };
-	Id_Query_Statement* stmt2 = new Id_Query_Statement(0, convert_c_pairs(attributes));
+	Id_Query_Statement* stmt2 = new Id_Query_Statement(0, convert_c_pairs(attributes), global_settings);
 	stmt1->add_statement(stmt2, "");
       }
       {
 	const char* attributes[] = { "type", "node", "ref", buf2_.c_str(), 0 };
-	Id_Query_Statement* stmt2 = new Id_Query_Statement(0, convert_c_pairs(attributes));
+	Id_Query_Statement* stmt2 = new Id_Query_Statement(0, convert_c_pairs(attributes), global_settings);
 	stmt1->add_statement(stmt2, "");
       }
       stmt1->execute(rman);
     }
     {
       const char* attributes[] = { "radius", "200.1", 0 };
-      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes));
+      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes), global_settings);
       stmt1->execute(rman);
     }
     {
       const char* attributes[] = { "order", "id", 0 };
-      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes));
+      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
       stmt1->execute(rman);
     }
   }

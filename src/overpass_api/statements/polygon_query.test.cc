@@ -36,14 +36,15 @@ void perform_polygon_print(string bounds, Transaction& transaction)
     // Select a polygon from the testset that contains one quarter
     // of only one polygon.
     Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
     {
       const char* attributes[] = { "bounds", bounds.c_str(), 0 };
-      Polygon_Query_Statement* stmt1 = new Polygon_Query_Statement(0, convert_c_pairs(attributes));
+      Polygon_Query_Statement* stmt1 = new Polygon_Query_Statement(0, convert_c_pairs(attributes), global_settings);
       stmt1->execute(rman);
     }
     {
       const char* attributes[] = { "mode", "body", "order", "id", 0 };
-      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes));
+      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
       stmt1->execute(rman);
     }
   }
@@ -62,25 +63,26 @@ void perform_query_polygon_print(string bounds, string type, Transaction& transa
     // Select a polygon from the testset that contains one quarter
     // of only one polygon.
     Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
     {
       const char* attributes[] = { "type", type.c_str(), 0 };
-      Query_Statement* stmt1 = new Query_Statement(0, convert_c_pairs(attributes));
+      Query_Statement* stmt1 = new Query_Statement(0, convert_c_pairs(attributes), global_settings);
       {
         const char* attributes[] = { "bounds", bounds.c_str(), 0 };
-        Polygon_Query_Statement* stmt2 = new Polygon_Query_Statement(0, convert_c_pairs(attributes));
+        Polygon_Query_Statement* stmt2 = new Polygon_Query_Statement(0, convert_c_pairs(attributes), global_settings);
         stmt1->add_statement(stmt2, "");
       }
       if (type == "node")
       {
         const char* attributes[] = { "k", "node_key_5", 0 };
-        Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0, convert_c_pairs(attributes));
+        Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0, convert_c_pairs(attributes), global_settings);
         stmt1->add_statement(stmt2, "");
       }
       stmt1->execute(rman);
     }
     {
       const char* attributes[] = { "mode", "body", "order", "id", 0 };
-      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes));
+      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
       stmt1->execute(rman);
     }
   }

@@ -107,7 +107,7 @@ Statement* Statement::Factory::create_statement
       Statement::maker_by_name().find(element);
   
   if (maker_it != Statement::maker_by_name().end())
-    statement = maker_it->second->create_statement(line_number, attributes, bbox_limitation);
+    statement = maker_it->second->create_statement(line_number, attributes, global_settings);
   
   if (statement)
     created_statements.push_back(statement);
@@ -119,10 +119,6 @@ Statement* Statement::Factory::create_statement
       error_output_->add_static_error(temp.str(), line_number);
   }
   
-  Osm_Script_Statement* base_statement = dynamic_cast< Osm_Script_Statement* >(statement);
-  if (base_statement && base_statement->get_bbox_limitation())
-    bbox_limitation = base_statement->get_bbox_limitation();
-      
   return statement;
 }
 

@@ -138,7 +138,7 @@ Generic_Statement_Maker< User_Statement > User_Statement::statement_maker("user"
 
 
 User_Statement::User_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
   map< string, string > attributes;

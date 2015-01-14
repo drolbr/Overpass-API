@@ -52,8 +52,9 @@ class SProxy
     
     TStatement& stmt()
     {
+      Parsed_Query global_settings;
       if (!stmt_)
-        stmt_ = new TStatement(0, attributes);
+        stmt_ = new TStatement(0, attributes, global_settings);
       
       return *stmt_;
     }

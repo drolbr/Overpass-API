@@ -27,6 +27,7 @@
 #include "../data/regular_expression.h"
 #include "meta_collector.h"
 #include "area_query.h"
+#include "bbox_query.h"
 #include "query.h"
 
 #include <algorithm>
@@ -40,8 +41,8 @@ bool Query_Statement::area_query_exists_ = false;
 Generic_Statement_Maker< Query_Statement > Query_Statement::statement_maker("query");
 
 Query_Statement::Query_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
-    : Output_Statement(line_number_)
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    : Output_Statement(line_number_), global_bbox_statement(0)
 {
   map< string, string > attributes;
   
@@ -70,9 +71,12 @@ Query_Statement::Query_Statement
 	<<" the only allowed values are \"node\", \"way\", \"relation\" or \"area\".";
     add_static_error(temp.str());
   }
-  
-  if (bbox_limitation)
-    constraints.push_back(bbox_limitation);
+
+  if (global_settings.get_global_bbox_limitation().valid())
+  {
+    global_bbox_statement = new Bbox_Query_Statement(global_settings.get_global_bbox_limitation());
+    constraints.push_back(global_bbox_statement->get_query_constraint());
+  }
 }
 
 void Query_Statement::add_statement(Statement* statement, string text)
@@ -1608,7 +1612,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 Generic_Statement_Maker< Has_Kv_Statement > Has_Kv_Statement::statement_maker("has-kv");
 
 Has_Kv_Statement::Has_Kv_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
     : Statement(line_number_), regex(0), key_regex(0), straight(true)
 {
   map< string, string > attributes;

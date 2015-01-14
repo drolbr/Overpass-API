@@ -22,6 +22,7 @@
 #include <ctime>
 #include "../../template_db/transaction.h"
 #include "../core/datatypes.h"
+#include "../core/parsed_query.h"
 #include "../osm-backend/area_updater.h"
 
 using namespace std;
@@ -36,22 +37,23 @@ struct Watchdog_Callback
 class Resource_Manager
 {
 public:
-  Resource_Manager(Transaction& transaction_, Watchdog_Callback* watchdog_ = 0,
+  Resource_Manager(Transaction& transaction_, Parsed_Query* global_settings_ = 0, Watchdog_Callback* watchdog_ = 0,
 		   Error_Output* error_output_ = 0)
       : transaction(&transaction_), error_output(error_output_),
         area_transaction(0), area_updater_(0),
-        watchdog(watchdog_),
+        watchdog(watchdog_), global_settings(global_settings_),
 	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
 	max_allowed_time(0), max_allowed_space(0),
 	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW) {}
   
-  Resource_Manager(Transaction& transaction_, Error_Output* error_output_,
+  Resource_Manager(Transaction& transaction_, Parsed_Query& global_settings_, Error_Output* error_output_,
 		   Transaction& area_transaction_, Watchdog_Callback* watchdog_,
 		   Area_Usage_Listener* area_updater__)
       : transaction(&transaction_), error_output(error_output_),
         area_transaction(&area_transaction_),
         area_updater_(area_updater__),
-	watchdog(watchdog_), start_time(time(NULL)), last_ping_time(0), last_report_time(0),
+	watchdog(watchdog_), global_settings(&global_settings_),
+	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
 	max_allowed_time(0), max_allowed_space(0),
 	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW) {}
 	
@@ -71,6 +73,8 @@ public:
   {
     return area_updater_;
   }
+  
+  Parsed_Query* get_global_settings() const { return global_settings; }
 
   void push_reference(const Set& set_);
   void pop_reference();
@@ -107,6 +111,7 @@ private:
   Transaction* area_transaction;
   Area_Usage_Listener* area_updater_;
   Watchdog_Callback* watchdog;
+  Parsed_Query* global_settings;
   int start_time;
   uint32 last_ping_time;
   uint32 last_report_time;

@@ -32,7 +32,7 @@ using namespace std;
 Generic_Statement_Maker< Foreach_Statement > Foreach_Statement::statement_maker("foreach");
 
 Foreach_Statement::Foreach_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
     : Statement(line_number_)
 {
   map< string, string > attributes;

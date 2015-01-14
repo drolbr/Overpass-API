@@ -552,4 +552,9 @@ template< > inline std::string name_of_type< Relation_Skeleton >() { return "Rel
 template< > inline std::string name_of_type< Area_Skeleton >() { return "Area"; }
 
 
+struct Derived_Skeleton
+{
+};
+
+
 #endif

@@ -32,7 +32,7 @@ class Recurse_Statement : public Output_Statement
 {
   public:
     Recurse_Statement(int line_number_, const map< string, string >& input_attributes,
-                      Query_Constraint* bbox_limitation = 0);
+                      Parsed_Query& global_settings);
     virtual string get_name() const { return "recurse"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Recurse_Statement();    

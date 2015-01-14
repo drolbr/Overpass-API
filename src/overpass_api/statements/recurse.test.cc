@@ -31,6 +31,7 @@ Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint64 i
   ostringstream buf("");
   buf<<id;
   string id_ = buf.str();
+  Parsed_Query global_settings;
   
   const char* attributes[5];
   attributes[0] = "type";
@@ -39,7 +40,7 @@ Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint64 i
   attributes[3] = id_.c_str();
   attributes[4] = 0;
   
-  Id_Query_Statement stmt(1, convert_c_pairs(attributes));
+  Id_Query_Statement stmt(1, convert_c_pairs(attributes), global_settings);
   stmt.execute(rman);
   
   return rman;
@@ -56,6 +57,7 @@ int main(int argc, char* args[])
   uint pattern_size = 0;
   pattern_size = atoi(args[2]);
   uint64 global_node_offset = atoll(args[4]);
+  Parsed_Query global_settings;
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -77,12 +79,12 @@ int main(int argc, char* args[])
       }
       {
 	const char* attributes[] = { "type", "way-node", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -111,12 +113,12 @@ int main(int argc, char* args[])
       }
       {
 	const char* attributes[] = { "type", "way-node", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -136,12 +138,12 @@ int main(int argc, char* args[])
       perform_id_query(rman, "node", 1 + global_node_offset);
       {
 	const char* attributes[] = { "type", "node-way", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
     }
@@ -161,12 +163,12 @@ int main(int argc, char* args[])
       perform_id_query(rman, "node", pattern_size*pattern_size + pattern_size*3/2 + 2 + global_node_offset);
       {
 	const char* attributes[] = { "type", "node-way", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
     }
@@ -195,12 +197,12 @@ int main(int argc, char* args[])
       }
       {
 	const char* attributes[] = { "type", "node-way", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -226,12 +228,12 @@ int main(int argc, char* args[])
       }
       {
 	const char* attributes[] = { "type", "relation-node", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -251,12 +253,12 @@ int main(int argc, char* args[])
       perform_id_query(rman, "node", 2 + global_node_offset);
       {
 	const char* attributes[] = { "type", "node-relation", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
     }
@@ -276,12 +278,12 @@ int main(int argc, char* args[])
       perform_id_query(total_rman, "relation", 8);
       {
 	const char* attributes[] = { "type", "relation-way", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -301,12 +303,12 @@ int main(int argc, char* args[])
       perform_id_query(rman, "way", 1);
       {
 	const char* attributes[] = { "type", "way-relation", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
     }
@@ -326,12 +328,12 @@ int main(int argc, char* args[])
       perform_id_query(total_rman, "relation", 10);
       {
 	const char* attributes[] = { "type", "relation-relation", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -351,12 +353,12 @@ int main(int argc, char* args[])
       perform_id_query(total_rman, "relation", 2);
       {
 	const char* attributes[] = { "type", "relation-backwards", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -376,12 +378,12 @@ int main(int argc, char* args[])
       perform_id_query(total_rman, "relation", 1);
       {
 	const char* attributes[] = { "type", "down", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -401,12 +403,12 @@ int main(int argc, char* args[])
       perform_id_query(total_rman, "relation", 6);
       {
 	const char* attributes[] = { "type", "down", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -426,12 +428,12 @@ int main(int argc, char* args[])
       perform_id_query(total_rman, "relation", 9);
       {
 	const char* attributes[] = { "type", "down-rel", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -451,12 +453,12 @@ int main(int argc, char* args[])
       perform_id_query(total_rman, "relation", 10);
       {
 	const char* attributes[] = { "type", "down-rel", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -476,12 +478,12 @@ int main(int argc, char* args[])
       perform_id_query(total_rman, "node", pattern_size + 2 + global_node_offset);
       {
 	const char* attributes[] = { "type", "up", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -501,12 +503,12 @@ int main(int argc, char* args[])
       perform_id_query(total_rman, "way", 1);
       {
 	const char* attributes[] = { "type", "up", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -526,12 +528,12 @@ int main(int argc, char* args[])
       perform_id_query(total_rman, "node", 2 + global_node_offset);
       {
 	const char* attributes[] = { "type", "up-rel", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -551,12 +553,12 @@ int main(int argc, char* args[])
       perform_id_query(total_rman, "way", 2);
       {
 	const char* attributes[] = { "type", "up-rel", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -576,12 +578,12 @@ int main(int argc, char* args[])
       perform_id_query(total_rman, "relation", 1);
       {
 	const char* attributes[] = { "type", "up-rel", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -601,12 +603,12 @@ int main(int argc, char* args[])
       perform_id_query(total_rman, "way", 1);
       {
 	const char* attributes[] = { "type", "down", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -626,12 +628,12 @@ int main(int argc, char* args[])
       perform_id_query(total_rman, "way", 1);
       {
 	const char* attributes[] = { "type", "down-rel", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -651,12 +653,12 @@ int main(int argc, char* args[])
       perform_id_query(total_rman, "relation", 1);
       {
         const char* attributes[] = { "type", "relation-node", "role", "one", 0 };
-        Recurse_Statement stmt(2, convert_c_pairs(attributes));
+        Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
       {
         const char* attributes[] = { 0 };
-        Print_Statement stmt(3, convert_c_pairs(attributes));
+        Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
     }
@@ -682,12 +684,12 @@ int main(int argc, char* args[])
       }
       {
         const char* attributes[] = { "type", "node-relation", "role", "zero", 0 };
-        Recurse_Statement stmt(2, convert_c_pairs(attributes));
+        Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
       {
         const char* attributes[] = { 0 };
-        Print_Statement stmt(3, convert_c_pairs(attributes));
+        Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
     }
@@ -707,12 +709,12 @@ int main(int argc, char* args[])
       perform_id_query(total_rman, "relation", 7);
       {
         const char* attributes[] = { "type", "relation-way", "role", "two", 0 };
-        Recurse_Statement stmt(2, convert_c_pairs(attributes));
+        Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
       {
         const char* attributes[] = { 0 };
-        Print_Statement stmt(3, convert_c_pairs(attributes));
+        Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
     }
@@ -732,12 +734,12 @@ int main(int argc, char* args[])
       perform_id_query(total_rman, "way", 1);
       {
         const char* attributes[] = { "type", "way-relation", "role", "two", 0 };
-        Recurse_Statement stmt(2, convert_c_pairs(attributes));
+        Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
       {
         const char* attributes[] = { 0 };
-        Print_Statement stmt(3, convert_c_pairs(attributes));
+        Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
     }
@@ -757,12 +759,12 @@ int main(int argc, char* args[])
       perform_id_query(total_rman, "relation", 9);
       {
         const char* attributes[] = { "type", "relation-relation", "role", "one", 0 };
-        Recurse_Statement stmt(2, convert_c_pairs(attributes));
+        Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
       {
         const char* attributes[] = { 0 };
-        Print_Statement stmt(3, convert_c_pairs(attributes));
+        Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
     }
@@ -788,12 +790,12 @@ int main(int argc, char* args[])
       }
       {
         const char* attributes[] = { "type", "relation-backwards", "role", "one", 0 };
-        Recurse_Statement stmt(2, convert_c_pairs(attributes));
+        Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
       {
         const char* attributes[] = { 0 };
-        Print_Statement stmt(3, convert_c_pairs(attributes));
+        Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
     }

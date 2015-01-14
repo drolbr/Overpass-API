@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "../core/datatypes.h"
+#include "../core/parsed_query.h"
 #include "../core/settings.h"
 #include "../dispatch/resource_manager.h"
 #include "../osm-backend/area_updater.h"
@@ -87,7 +88,7 @@ class Statement
   public:
     struct Factory
     {
-      Factory() : error_output_(error_output), bbox_limitation(0) {}
+      Factory(Parsed_Query& global_settings_) : error_output_(error_output), global_settings(global_settings_) {}
       ~Factory();
       
       Statement* create_statement(string element, int line_number,
@@ -95,14 +96,14 @@ class Statement
       
       vector< Statement* > created_statements;
       Error_Output* error_output_;
-      Query_Constraint* bbox_limitation;
+      Parsed_Query& global_settings;
     };
     
     class Statement_Maker
     {
       public:
 	virtual Statement* create_statement
-	    (int line_number, const map< string, string >& attributes, Query_Constraint* bbox_limitation) = 0;
+	    (int line_number, const map< string, string >& attributes, Parsed_Query& global_settings) = 0;
 	virtual ~Statement_Maker() {}
     };
     
@@ -175,9 +176,9 @@ class Generic_Statement_Maker : public Statement::Statement_Maker
 {
   public:
     virtual Statement* create_statement
-        (int line_number, const map< string, string >& attributes, Query_Constraint* bbox_limitation)
+        (int line_number, const map< string, string >& attributes, Parsed_Query& global_settings)
     {
-      return new TStatement(line_number, attributes, bbox_limitation);
+      return new TStatement(line_number, attributes, global_settings);
     }
     
     Generic_Statement_Maker(const string& name) { Statement::maker_by_name()[name] = this; }
