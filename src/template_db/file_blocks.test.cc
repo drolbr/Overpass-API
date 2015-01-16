@@ -143,6 +143,11 @@ struct Test_File : File_Properties
     return 1;
   }
   
+  uint32 get_compression_method() const
+  {
+    return 0;
+  }
+  
   uint32 get_map_block_size() const
   {
     return 16;
@@ -214,6 +219,11 @@ struct Compressed_Test_File : File_Properties
   uint32 get_max_size() const
   {
     return 8;
+  }
+  
+  uint32 get_compression_method() const
+  {
+    return 0;
   }
   
   uint32 get_map_block_size() const

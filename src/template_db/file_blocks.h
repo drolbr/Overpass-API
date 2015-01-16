@@ -201,6 +201,7 @@ private:
   File_Blocks_Index< TIndex >* index;
   uint32 block_size;
   uint32 max_size;
+  uint32 compression_method;
   bool writeable;
   mutable uint read_count_;
   
@@ -505,6 +506,7 @@ File_Blocks< TIndex, TIterator, TRangeIterator >::File_Blocks
      index((File_Blocks_Index< TIndex >*)index_),
      block_size(index->get_block_size()),
      max_size(index->get_max_size()),
+     compression_method(index->get_compression_method()),
      writeable(index->writeable()),
      read_count_(0),
      data_file(index->get_data_file_name(),

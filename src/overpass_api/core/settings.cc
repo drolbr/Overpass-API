@@ -49,6 +49,7 @@ struct OSM_File_Properties : public File_Properties
   
   uint32 get_block_size() const { return block_size; }
   uint32 get_max_size() const { return 1; }
+  uint32 get_compression_method() const { return 0; }
   uint32 get_map_block_size() const { return map_block_size; }
   
   vector< bool > get_data_footprint(const string& db_dir) const

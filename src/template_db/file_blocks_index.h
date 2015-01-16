@@ -65,6 +65,7 @@ struct File_Blocks_Index : public File_Blocks_Index_Base
     std::string get_data_file_name() const { return data_file_name; }
     uint64 get_block_size() const { return block_size_; }
     uint32 get_max_size() const { return max_size; }
+    uint32 get_compression_method() const { return compression_method; }
     
   private:
     std::string index_file_name;
@@ -78,8 +79,11 @@ struct File_Blocks_Index : public File_Blocks_Index_Base
     uint32 block_count;
     uint64 block_size_;
     uint32 max_size;
+    uint32 compression_method;
     
-    static const int FILE_FORMAT_VERSION = 7511;
+    static const int FILE_FORMAT_VERSION = 7512;
+    static const int NO_COMPRESSION = 0;
+    static const int ZLIB_COMPRESSION = 1;
 };
 
 
@@ -105,7 +109,8 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
      file_name_extension_(file_name_extension),
      block_count(0),
      block_size_(file_prop.get_block_size()), // can be overwritten by index file
-     max_size(file_prop.get_max_size()) // can be overwritten by index file
+     max_size(file_prop.get_max_size()), // can be overwritten by index file
+     compression_method(NO_COMPRESSION) // can be overwritten by index file
 {
   uint64 file_size = 0;
   try
@@ -158,13 +163,14 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
     {
       if (*(uint32*)index_buf.ptr != FILE_FORMAT_VERSION)
 	throw File_Error(0, index_file_name, "File_Blocks_Index: Unsupported index file format version");
-      block_size_ = *(uint64*)(index_buf.ptr + 4);
-      max_size = *(uint32*)(index_buf.ptr + 12);
+      block_size_ = 1ull<<*(uint8*)(index_buf.ptr + 4);
+      max_size = 1u<<*(uint8*)(index_buf.ptr + 5);
+      compression_method = *(uint16*)(index_buf.ptr + 6);
       
       block_count = file_size / block_size_;
       is_referred.resize(block_count, false);
       
-      uint32 pos = 16;
+      uint32 pos = 8;
       while (pos < index_size)
       {
         TIndex index(index_buf.ptr + pos + 12);
@@ -232,6 +238,20 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
   }
 }
 
+
+template< typename Int >
+int shift_log(Int val)
+{
+  int count = 0;
+  while (val > 1)
+  {
+    val = val>>1;
+    ++count;
+  }
+  return count;
+}
+
+
 template< class TIndex >
 File_Blocks_Index< TIndex >::~File_Blocks_Index()
 {
@@ -239,8 +259,8 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
     return;
 
   // Keep space for file version and size information
-  uint32 index_size = 16;
-  uint32 pos = 16;
+  uint32 index_size = 8;
+  uint32 pos = 8;
   
   for (typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator
       it(blocks.begin()); it != blocks.end(); ++it)
@@ -249,8 +269,9 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
   Void_Pointer< uint8 > index_buf(index_size);
   
   *(uint32*)index_buf.ptr = FILE_FORMAT_VERSION;
-  *(uint64*)(index_buf.ptr + 4) = block_size_;
-  *(uint32*)(index_buf.ptr + 12) = max_size;
+  *(uint8*)(index_buf.ptr + 4) = shift_log(block_size_);
+  *(uint8*)(index_buf.ptr + 5) = shift_log(max_size);
+  *(uint16*)(index_buf.ptr + 6) = compression_method;
   
   for (typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator
       it(blocks.begin()); it != blocks.end(); ++it)
