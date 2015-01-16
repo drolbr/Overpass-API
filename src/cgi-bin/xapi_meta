@@ -46,18 +46,18 @@ if [[ $EXITCODE -ne 0 ]]; then
   echo "Status: 400 Bad Request"
   echo
   echo "Error in [$BUF]:"
-  echo $REQUEST_BUFFER
+  echo "$REQUEST_BUFFER"
 };
 else
 {
   if [[ $DEBUG == "yes" ]]; then
   {
-    echo $REQUEST_BUFFER
+    echo "$REQUEST_BUFFER"
     echo
   };
   fi
   REQUEST_METHOD=
-  echo $REQUEST_BUFFER | ./interpreter
+  echo "$REQUEST_BUFFER" | ./interpreter
 };
 fi
 

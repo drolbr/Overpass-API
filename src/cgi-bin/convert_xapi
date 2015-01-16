@@ -60,13 +60,13 @@ if [[ $EXITCODE -ne 0 ]]; then
   echo "Content-Type: text/plain; charset=utf-8"
   echo
   echo "Error in [$BUF]:"
-echo $REQUEST_BUFFER
+  echo "$REQUEST_BUFFER"
 };
 else
 {
   if [[ $DEBUG == "yes" ]]; then
   {
-    echo $REQUEST_BUFFER
+    echo "$REQUEST_BUFFER"
     echo
   };
   fi
@@ -77,19 +77,19 @@ else
   {
     echo "Your query in pretty XML:"
     echo
-    echo $REQUEST_BUFFER | ../bin/osm3s_query --dump-xml
+    echo "$REQUEST_BUFFER" | ../bin/osm3s_query --dump-xml
   };
   elif [[ $OUTPUT_TYPE == "mapql" ]]; then
   {
     echo "Your query in pretty OverpassQL:"
     echo
-    echo $REQUEST_BUFFER | ../bin/osm3s_query --dump-pretty-map-ql
+    echo "$REQUEST_BUFFER" | ../bin/osm3s_query --dump-pretty-map-ql
   };
   elif [[ $OUTPUT_TYPE == "compact" ]]; then
   {
     echo "Your query in compact OverpassQL:"
     echo
-    echo $REQUEST_BUFFER | ../bin/osm3s_query --dump-compact-map-ql
+    echo "$REQUEST_BUFFER" | ../bin/osm3s_query --dump-compact-map-ql
     echo
   };
   fi
