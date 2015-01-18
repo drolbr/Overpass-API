@@ -47,9 +47,9 @@ struct OSM_File_Properties : public File_Properties
   string get_id_suffix() const { return basic_settings().ID_SUFFIX; }  
   string get_shadow_suffix() const { return basic_settings().SHADOW_SUFFIX; }
   
-  uint32 get_block_size() const { return block_size; }
-  uint32 get_max_size() const { return 1; }
-  uint32 get_compression_method() const { return 0; }
+  uint32 get_block_size() const { return block_size/4; }
+  uint32 get_max_size() const { return 4; }
+  uint32 get_compression_method() const { return File_Blocks_Index< TVal >::ZLIB_COMPRESSION; }
   uint32 get_map_block_size() const { return map_block_size; }
   
   vector< bool > get_data_footprint(const string& db_dir) const

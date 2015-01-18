@@ -110,7 +110,7 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
      block_count(0),
      block_size_(file_prop.get_block_size()), // can be overwritten by index file
      max_size(file_prop.get_max_size()), // can be overwritten by index file
-     compression_method(NO_COMPRESSION) // can be overwritten by index file
+     compression_method(file_prop.get_compression_method()) // can be overwritten by index file
 {
   uint64 file_size = 0;
   try

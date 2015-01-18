@@ -47,9 +47,9 @@ struct IntIndex
     *(uint32*)(((uint8*)data) + size - 4) = 0x5a5a5a5a;
     *(uint32*)data = value;
     uint32 i = 1;
-    while (i < size/4 && i < 1000000)
+    while (i < size/4)
     {
-      *(((uint8*)data) + 4*i) = 4*i/3;
+      *(uint32*)(((uint8*)data) + 4*i) = 4*i/3;
       ++i;
     }
   }
@@ -138,7 +138,7 @@ struct Test_File : File_Properties
   
   uint32 get_compression_method() const
   {
-    return 0;
+    return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
   }
   
   uint32 get_map_block_size() const
@@ -216,7 +216,7 @@ struct Variable_Block_Test_File : File_Properties
   
   uint32 get_compression_method() const
   {
-    return 0;
+    return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
   }
   
   uint32 get_map_block_size() const
@@ -294,7 +294,7 @@ struct Compressed_Test_File : File_Properties
   
   uint32 get_compression_method() const
   {
-    return 1;
+    return File_Blocks_Index< IntIndex >::ZLIB_COMPRESSION;
   }
   
   uint32 get_map_block_size() const
@@ -1585,6 +1585,12 @@ int main(int argc, char* args[])
   }
   if ((test_to_execute == "") || (test_to_execute == "25"))
     compressed_read_test();
+  
+  remove((BASE_DIRECTORY
+      + Compressed_Test_File().get_file_name_trunk() + Compressed_Test_File().get_data_suffix()
+      + Compressed_Test_File().get_index_suffix()).c_str());
+  remove((BASE_DIRECTORY
+      + Compressed_Test_File().get_file_name_trunk() + Compressed_Test_File().get_data_suffix()).c_str());
   
   return 0;
 }
