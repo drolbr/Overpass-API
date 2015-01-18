@@ -66,6 +66,32 @@ struct Osm_Base_Settings
 };
 
 
+struct Osm_Copy_Settings
+{
+  File_Properties* NODES;
+  File_Properties* NODE_TAGS_LOCAL;
+  File_Properties* NODE_TAGS_GLOBAL;
+  File_Properties* NODE_KEYS;
+  File_Properties* WAYS;
+  File_Properties* WAY_TAGS_LOCAL;
+  File_Properties* WAY_TAGS_GLOBAL;
+  File_Properties* WAY_KEYS;
+  File_Properties* RELATIONS;
+  File_Properties* RELATION_ROLES;
+  File_Properties* RELATION_TAGS_LOCAL;
+  File_Properties* RELATION_TAGS_GLOBAL;
+  File_Properties* RELATION_KEYS;
+  
+  std::string shared_name;
+  uint max_num_processes;
+  uint purge_timeout;
+  uint64 total_available_space;
+  uint64 total_available_time_units;
+  
+  Osm_Copy_Settings();
+};
+
+
 struct Area_Settings
 {
   File_Properties* AREA_BLOCKS;
@@ -92,6 +118,18 @@ struct Meta_Settings
   File_Properties* RELATIONS_META;
   
   Meta_Settings();
+};
+
+
+struct Meta_Copy_Settings
+{
+  File_Properties* USER_DATA;
+  File_Properties* USER_INDICES;
+  File_Properties* NODES_META;
+  File_Properties* WAYS_META;
+  File_Properties* RELATIONS_META;
+  
+  Meta_Copy_Settings();
 };
 
 
@@ -123,11 +161,43 @@ struct Attic_Settings
 };
 
 
+struct Attic_Copy_Settings
+{
+  File_Properties* NODES;
+  File_Properties* NODES_UNDELETED;
+  File_Properties* NODE_IDX_LIST;
+  File_Properties* NODE_TAGS_LOCAL;
+  File_Properties* NODE_TAGS_GLOBAL;
+  File_Properties* NODES_META;
+  File_Properties* NODE_CHANGELOG;
+  File_Properties* WAYS;
+  File_Properties* WAYS_UNDELETED;
+  File_Properties* WAY_IDX_LIST;
+  File_Properties* WAY_TAGS_LOCAL;
+  File_Properties* WAY_TAGS_GLOBAL;
+  File_Properties* WAYS_META;
+  File_Properties* WAY_CHANGELOG;
+  File_Properties* RELATIONS;
+  File_Properties* RELATIONS_UNDELETED;
+  File_Properties* RELATION_IDX_LIST;
+  File_Properties* RELATION_TAGS_LOCAL;
+  File_Properties* RELATION_TAGS_GLOBAL;
+  File_Properties* RELATIONS_META;
+  File_Properties* RELATION_CHANGELOG;
+  
+  Attic_Copy_Settings();
+};
+
+
 Basic_Settings& basic_settings();
 const Osm_Base_Settings& osm_base_settings();
 const Area_Settings& area_settings();
 const Meta_Settings& meta_settings();
 const Attic_Settings& attic_settings();
+
+const Osm_Copy_Settings& osm_copy_settings();
+const Meta_Copy_Settings& meta_copy_settings();
+const Attic_Copy_Settings& attic_copy_settings();
 
 void show_mem_status();
 
