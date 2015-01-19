@@ -977,7 +977,11 @@ TStatement* create_query_substatement
     return create_has_kv_statement< TStatement >
         (stmt_factory, clause.attributes[0], clause.attributes[1], haskv_icase, haskv_plain,
 	 (clause.attributes[2] == ""), clause.line_col.first);
-  else if (clause.statement == "has-kv_keyregex")
+  else if (clause.statement == "has-kv_keyregex_icase")
+    return create_has_kv_statement< TStatement >
+        (stmt_factory, clause.attributes[0], clause.attributes[1], haskv_icase, haskv_regex,
+     (clause.attributes[2] == ""), clause.line_col.first);
+    else if (clause.statement == "has-kv_keyregex")
     return create_has_kv_statement< TStatement >
         (stmt_factory, clause.attributes[0], clause.attributes[1], haskv_regex, haskv_regex,
 	 (clause.attributes[2] == ""), clause.line_col.first);
@@ -1175,7 +1179,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	  clear_until_after(token, error_output, ",", "]", false);
 	  if (*token == ",")
 	  {
-	    clause.statement = "has-kv_icase";
+	    clause.statement = "has-kv_keyregex_icase";
 	    ++token;
 	    clear_until_after(token, error_output, "i");
 	    clear_until_after(token, error_output, "]", false);
@@ -1408,6 +1412,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
        || clauses.front().statement == "has-kv_regex"
        || clauses.front().statement == "has-kv_keyregex"
        || clauses.front().statement == "has-kv_icase"
+       || clauses.front().statement == "has-kv_keyregex_icase"
        || (clauses.front().statement == "area" && type != "node")
        || (clauses.front().statement == "around" && type != "node")
        || (clauses.front().statement == "pivot" && type != "node")
