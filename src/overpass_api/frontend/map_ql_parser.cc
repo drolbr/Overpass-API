@@ -981,7 +981,7 @@ TStatement* create_query_substatement
     return create_has_kv_statement< TStatement >
         (stmt_factory, clause.attributes[0], clause.attributes[1], haskv_icase, haskv_regex,
      (clause.attributes[2] == ""), clause.line_col.first);
-    else if (clause.statement == "has-kv_keyregex")
+  else if (clause.statement == "has-kv_keyregex")
     return create_has_kv_statement< TStatement >
         (stmt_factory, clause.attributes[0], clause.attributes[1], haskv_regex, haskv_regex,
 	 (clause.attributes[2] == ""), clause.line_col.first);
