@@ -200,30 +200,30 @@ const Osm_Base_Settings& osm_base_settings()
 
 Osm_Copy_Settings::Osm_Copy_Settings()
 :
-  NODES(new OSM_File_Properties< Uint32_Index >("nodes", 512*1024, 64*1024)),
-  NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+  NODES(new OSM_Clone_Properties< Uint32_Index >("nodes", 512*1024, 64*1024)),
+  NODE_TAGS_LOCAL(new OSM_Clone_Properties< Tag_Index_Local >
       ("node_tags_local", 512*1024, 0)),
-  NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+  NODE_TAGS_GLOBAL(new OSM_Clone_Properties< Tag_Index_Global >
       ("node_tags_global", 512*1024, 0)),
-  NODE_KEYS(new OSM_File_Properties< Uint32_Index >
+  NODE_KEYS(new OSM_Clone_Properties< Uint32_Index >
       ("node_keys", 512*1024, 0)),
       
-  WAYS(new OSM_File_Properties< Uint31_Index >("ways", 512*1024, 64*1024)),
-  WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+  WAYS(new OSM_Clone_Properties< Uint31_Index >("ways", 512*1024, 64*1024)),
+  WAY_TAGS_LOCAL(new OSM_Clone_Properties< Tag_Index_Local >
       ("way_tags_local", 512*1024, 0)),
-  WAY_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+  WAY_TAGS_GLOBAL(new OSM_Clone_Properties< Tag_Index_Global >
       ("way_tags_global", 512*1024, 0)),
-  WAY_KEYS(new OSM_File_Properties< Uint32_Index >
+  WAY_KEYS(new OSM_Clone_Properties< Uint32_Index >
       ("way_keys", 512*1024, 0)),
       
-  RELATIONS(new OSM_File_Properties< Uint31_Index >("relations", 1024*1024, 64*1024)),
-  RELATION_ROLES(new OSM_File_Properties< Uint32_Index >
+  RELATIONS(new OSM_Clone_Properties< Uint31_Index >("relations", 1024*1024, 64*1024)),
+  RELATION_ROLES(new OSM_Clone_Properties< Uint32_Index >
       ("relation_roles", 512*1024, 0)),
-  RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+  RELATION_TAGS_LOCAL(new OSM_Clone_Properties< Tag_Index_Local >
       ("relation_tags_local", 512*1024, 0)),
-  RELATION_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+  RELATION_TAGS_GLOBAL(new OSM_Clone_Properties< Tag_Index_Global >
       ("relation_tags_global", 512*1024, 0)),
-  RELATION_KEYS(new OSM_File_Properties< Uint32_Index >
+  RELATION_KEYS(new OSM_Clone_Properties< Uint32_Index >
       ("relation_keys", 512*1024, 0)),
       
   shared_name(basic_settings().shared_name_base + "_osm_base"),
@@ -290,15 +290,15 @@ const Meta_Settings& meta_settings()
 
 Meta_Copy_Settings::Meta_Copy_Settings()
 :
-  USER_DATA(new OSM_File_Properties< Uint32_Index >
+  USER_DATA(new OSM_Clone_Properties< Uint32_Index >
       ("user_data", 512*1024, 0)),
-  USER_INDICES(new OSM_File_Properties< Uint32_Index >
+  USER_INDICES(new OSM_Clone_Properties< Uint32_Index >
       ("user_indices", 512*1024, 0)),
-  NODES_META(new OSM_File_Properties< Uint31_Index >
+  NODES_META(new OSM_Clone_Properties< Uint31_Index >
       ("nodes_meta", 512*1024, 0)),
-  WAYS_META(new OSM_File_Properties< Uint31_Index >
+  WAYS_META(new OSM_Clone_Properties< Uint31_Index >
       ("ways_meta", 512*1024, 0)),
-  RELATIONS_META(new OSM_File_Properties< Uint31_Index >
+  RELATIONS_META(new OSM_Clone_Properties< Uint31_Index >
       ("relations_meta", 512*1024, 0))
 {}
 
@@ -362,43 +362,43 @@ const Attic_Settings& attic_settings()
 
 Attic_Copy_Settings::Attic_Copy_Settings()
 :
-  NODES(new OSM_File_Properties< Uint31_Index >("nodes_attic", 512*1024, 64*1024)),
-  NODES_UNDELETED(new OSM_File_Properties< Uint31_Index >("nodes_attic_undeleted", 512*1024, 64*1024)),
-  NODE_IDX_LIST(new OSM_File_Properties< Node::Id_Type >
+  NODES(new OSM_Clone_Properties< Uint31_Index >("nodes_attic", 512*1024, 64*1024)),
+  NODES_UNDELETED(new OSM_Clone_Properties< Uint31_Index >("nodes_attic_undeleted", 512*1024, 64*1024)),
+  NODE_IDX_LIST(new OSM_Clone_Properties< Node::Id_Type >
       ("node_attic_indexes", 512*1024, 0)),
-  NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+  NODE_TAGS_LOCAL(new OSM_Clone_Properties< Tag_Index_Local >
       ("node_tags_local_attic", 512*1024, 0)),
-  NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+  NODE_TAGS_GLOBAL(new OSM_Clone_Properties< Tag_Index_Global >
       ("node_tags_global_attic", 2*1024*1024, 0)),
-  NODES_META(new OSM_File_Properties< Uint31_Index >
+  NODES_META(new OSM_Clone_Properties< Uint31_Index >
       ("nodes_meta_attic", 512*1024, 0)),
-  NODE_CHANGELOG(new OSM_File_Properties< Timestamp >
+  NODE_CHANGELOG(new OSM_Clone_Properties< Timestamp >
       ("node_changelog", 512*1024, 0)),
       
-  WAYS(new OSM_File_Properties< Uint31_Index >("ways_attic", 512*1024, 64*1024)),
-  WAYS_UNDELETED(new OSM_File_Properties< Uint31_Index >("ways_attic_undeleted", 512*1024, 64*1024)),
-  WAY_IDX_LIST(new OSM_File_Properties< Way::Id_Type >
+  WAYS(new OSM_Clone_Properties< Uint31_Index >("ways_attic", 512*1024, 64*1024)),
+  WAYS_UNDELETED(new OSM_Clone_Properties< Uint31_Index >("ways_attic_undeleted", 512*1024, 64*1024)),
+  WAY_IDX_LIST(new OSM_Clone_Properties< Way::Id_Type >
       ("way_attic_indexes", 512*1024, 0)),
-  WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+  WAY_TAGS_LOCAL(new OSM_Clone_Properties< Tag_Index_Local >
       ("way_tags_local_attic", 512*1024, 0)),
-  WAY_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+  WAY_TAGS_GLOBAL(new OSM_Clone_Properties< Tag_Index_Global >
       ("way_tags_global_attic", 2*1024*1024, 0)),
-  WAYS_META(new OSM_File_Properties< Uint31_Index >
+  WAYS_META(new OSM_Clone_Properties< Uint31_Index >
       ("ways_meta_attic", 512*1024, 0)),
-  WAY_CHANGELOG(new OSM_File_Properties< Timestamp >
+  WAY_CHANGELOG(new OSM_Clone_Properties< Timestamp >
       ("way_changelog", 512*1024, 0)),
       
-  RELATIONS(new OSM_File_Properties< Uint31_Index >("relations_attic", 1024*1024, 64*1024)),
-  RELATIONS_UNDELETED(new OSM_File_Properties< Uint31_Index >("relations_attic_undeleted", 512*1024, 64*1024)),
-  RELATION_IDX_LIST(new OSM_File_Properties< Relation::Id_Type >
+  RELATIONS(new OSM_Clone_Properties< Uint31_Index >("relations_attic", 1024*1024, 64*1024)),
+  RELATIONS_UNDELETED(new OSM_Clone_Properties< Uint31_Index >("relations_attic_undeleted", 512*1024, 64*1024)),
+  RELATION_IDX_LIST(new OSM_Clone_Properties< Relation::Id_Type >
       ("relation_attic_indexes", 512*1024, 0)),
-  RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+  RELATION_TAGS_LOCAL(new OSM_Clone_Properties< Tag_Index_Local >
       ("relation_tags_local_attic", 512*1024, 0)),
-  RELATION_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+  RELATION_TAGS_GLOBAL(new OSM_Clone_Properties< Tag_Index_Global >
       ("relation_tags_global_attic", 2*1024*1024, 0)),
-  RELATIONS_META(new OSM_File_Properties< Uint31_Index >
+  RELATIONS_META(new OSM_Clone_Properties< Uint31_Index >
       ("relations_meta_attic", 512*1024, 0)),
-  RELATION_CHANGELOG(new OSM_File_Properties< Timestamp >
+  RELATION_CHANGELOG(new OSM_Clone_Properties< Timestamp >
       ("relation_changelog", 512*1024, 0))
 {}
 

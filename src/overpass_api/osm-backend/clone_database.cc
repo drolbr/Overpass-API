@@ -40,7 +40,8 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
 {
   try
   {
-    if (src_file_prop.get_block_size() != dest_file_prop.get_block_size())
+    if (src_file_prop.get_block_size() * src_file_prop.get_max_size()
+        != dest_file_prop.get_block_size() * dest_file_prop.get_max_size())
     {
       std::cout<<"Block sizes of source and destination format are incompatible.\n";
       return;
