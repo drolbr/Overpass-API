@@ -537,8 +537,8 @@ void write_to_index_empty_file_data(const vector< bool >& footprint, string file
     *pos = std::make_pair(footprint.size() - last_start, last_start);
   
   Raw_File file(filename, O_RDWR|O_CREAT|O_TRUNC,
-		S_666, "write_to_index_empty_file:1");
-  file.write((uint8*)buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr), "Dispatcher:6");
+		S_666, "write_to_index_empty_file_data:1");
+  file.write((uint8*)buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr), "Dispatcher:26");
 }
 
 
@@ -556,8 +556,8 @@ void write_to_index_empty_file_ids(const vector< bool >& footprint, string filen
   }
   
   Raw_File file(filename, O_RDWR|O_CREAT|O_TRUNC,
-		S_666, "write_to_index_empty_file:1");
-  file.write((uint8*)buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr), "Dispatcher:6");
+		S_666, "write_to_index_empty_file_ids:1");
+  file.write((uint8*)buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr), "Dispatcher:36");
 }
 
 
