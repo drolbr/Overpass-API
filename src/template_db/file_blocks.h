@@ -202,7 +202,7 @@ private:
   File_Blocks_Index< TIndex >* index;
   uint32 block_size;
   uint32 max_size;
-  uint32 compression_method;
+  int compression_method;
   bool writeable;
   mutable uint read_count_;
   

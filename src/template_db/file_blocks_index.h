@@ -79,7 +79,7 @@ struct File_Blocks_Index : public File_Blocks_Index_Base
     uint32 block_count;
     uint64 block_size_;
     uint32 max_size;
-    uint32 compression_method;
+    int compression_method;
     
     static const int FILE_FORMAT_VERSION = 7512;
     static const int NO_COMPRESSION = 0;
