@@ -630,13 +630,16 @@ uint32 File_Blocks< TIndex, TIterator, TRangeIterator >::answer_size
 template< typename Iterator, typename Object >
 void rearrange_block(const Iterator& begin, Iterator& it, Object to_move)
 {
-  
-  Iterator predecessor = it-1;
-  while (it != begin && to_move < *predecessor)
+  Iterator predecessor = it;
+  if (it != begin)
+    --predecessor;
+  while (to_move < *predecessor)
   {
     *it = *predecessor;
     --it;
-    predecessor == it-1;
+    if (it == begin)
+      break;
+    --predecessor;
   }
   *it = to_move;
 }

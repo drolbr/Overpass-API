@@ -161,7 +161,7 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
     }
     else if (index_size > 0)
     {
-      if (*(uint32*)index_buf.ptr != FILE_FORMAT_VERSION)
+      if (*(int32*)index_buf.ptr != FILE_FORMAT_VERSION)
 	throw File_Error(0, index_file_name, "File_Blocks_Index: Unsupported index file format version");
       block_size_ = 1ull<<*(uint8*)(index_buf.ptr + 4);
       max_size = 1u<<*(uint8*)(index_buf.ptr + 5);
@@ -232,9 +232,9 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
       }
       if (last_start < block_count)
 	void_blocks.push_back(std::make_pair(block_count - last_start, last_start));
-      
-      std::sort(void_blocks.begin(), void_blocks.end());
     }
+    
+    std::stable_sort(void_blocks.begin(), void_blocks.end());
   }
 }
 
