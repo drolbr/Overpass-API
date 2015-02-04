@@ -30,7 +30,7 @@ class Bbox_Query_Statement : public Output_Statement
   public:
     Bbox_Query_Statement(int line_number_, const map< string, string >& attributes,
                          Parsed_Query& global_settings);
-    Bbox_Query_Statement(const Bbox& bbox);
+    Bbox_Query_Statement(const Bbox_Double& bbox);
     virtual string get_name() const { return "bbox-query"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Bbox_Query_Statement();    

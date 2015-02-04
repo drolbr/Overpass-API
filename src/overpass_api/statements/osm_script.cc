@@ -28,11 +28,9 @@
 #include "print.h"
 // #include "area_query.h"
 
-using namespace std;
-
-//-----------------------------------------------------------------------------
 
 Generic_Statement_Maker< Osm_Script_Statement > Osm_Script_Statement::statement_maker("osm-script");
+
 
 Osm_Script_Statement::Osm_Script_Statement
     (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
@@ -145,7 +143,7 @@ Osm_Script_Statement::Osm_Script_Statement
     
     if (south >= -90.0 && south <= 90.0 && north >= -90.0 && north <= 90.0
         && west >= -180.0 && west <= 180.0 && east >= -180.0 && east <= 180.0)
-      global_settings.set_global_bbox(Bbox(south, west, north, east));
+      global_settings.set_global_bbox(Bbox_Double(south, west, north, east));
   }
   
   if (attributes["date"] != "")
@@ -330,8 +328,7 @@ void Osm_Script_Statement::add_statement(Statement* statement, string text)
 void Osm_Script_Statement::execute(Resource_Manager& rman)
 {
   rman.set_limits(max_allowed_time, max_allowed_space);
-  if (rman.get_global_settings())
-    rman.get_global_settings()->trigger_print_bounds();
+  rman.get_global_settings().trigger_print_bounds();
 
   if (comparison_timestamp > 0)
   {

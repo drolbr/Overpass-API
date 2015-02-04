@@ -2330,6 +2330,7 @@ void Plain_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& skel,
       mode & Print_Target::PRINT_TAGS ? tags : 0,
       mode & Print_Target::PRINT_META ? meta : 0,
       mode & Print_Target::PRINT_META ? users : 0,
+      Output_Mode(mode),
       Output_Handler::keep, //TODO ab hier
       0, 0, 0);
   }
@@ -2345,7 +2346,63 @@ void Plain_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta,
 			    Show_New_Elem show_new_elem)
 {
-  //TODO
+  if (output)
+  {
+    if (geometry)
+    {
+      std::vector< Point_Double > coords;
+      for (std::vector< Quad_Coord >::const_iterator it = geometry->begin(); it != geometry->end(); ++it)
+	coords.push_back(Point_Double(::lat(it->ll_upper, it->ll_lower), ::lon(it->ll_upper, it->ll_lower)));
+      Linestring_Geometry geom(coords);
+      output->print_item(skel, geom,
+        mode & Print_Target::PRINT_TAGS ? tags : 0,
+        mode & Print_Target::PRINT_META ? meta : 0,
+        mode & Print_Target::PRINT_META ? users : 0,
+	Output_Mode(mode),
+        Output_Handler::keep, //TODO ab hier
+        0, 0, 0);
+    }
+    else if (bounds) 
+    {
+      if (bounds->second)
+      {
+	Bbox_Geometry geom(::lat(bounds->first.ll_upper, bounds->first.ll_lower),
+			   ::lon(bounds->first.ll_upper, bounds->first.ll_lower),
+			   ::lat(bounds->second->ll_upper, bounds->second->ll_lower),
+			   ::lon(bounds->second->ll_upper, bounds->second->ll_lower));
+        output->print_item(skel, geom,
+          mode & Print_Target::PRINT_TAGS ? tags : 0,
+          mode & Print_Target::PRINT_META ? meta : 0,
+          mode & Print_Target::PRINT_META ? users : 0,
+	  Output_Mode(mode),
+          Output_Handler::keep, //TODO ab hier
+          0, 0, 0);
+      }
+      else
+      {
+	Point_Geometry geom(::lat(bounds->first.ll_upper, bounds->first.ll_lower),
+			    ::lon(bounds->first.ll_upper, bounds->first.ll_lower));
+        output->print_item(skel, geom,
+          mode & Print_Target::PRINT_TAGS ? tags : 0,
+          mode & Print_Target::PRINT_META ? meta : 0,
+          mode & Print_Target::PRINT_META ? users : 0,
+	  Output_Mode(mode),
+          Output_Handler::keep, //TODO ab hier
+          0, 0, 0);
+      }
+    }
+    else
+    {
+      Null_Geometry geom;
+      output->print_item(skel, geom,
+        mode & Print_Target::PRINT_TAGS ? tags : 0,
+        mode & Print_Target::PRINT_META ? meta : 0,
+        mode & Print_Target::PRINT_META ? users : 0,
+	Output_Mode(mode),
+        Output_Handler::keep, //TODO ab hier
+        0, 0, 0);
+    }
+  }
 }
 
 
@@ -2406,7 +2463,7 @@ void Print_Statement::execute(Resource_Manager& rman)
   else
   {    
     output_target.obj =
-        new Plain_Print_Target(mode, *rman.get_transaction(), rman.get_global_settings()->get_output_handler());
+        new Plain_Print_Target(mode, *rman.get_transaction(), rman.get_global_settings().get_output_handler());
     target = output_target.obj;
   }
   

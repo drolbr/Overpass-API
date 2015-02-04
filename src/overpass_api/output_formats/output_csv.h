@@ -23,13 +23,20 @@ class Output_CSV : public Output_Handler
 public:
   Output_CSV(Csv_Settings csv_settings_) : csv_settings(csv_settings_) {}
   
-  void print_global_bbox(const Bbox& bbox) {}
+  virtual void write_http_headers();
+  virtual void write_payload_header(const string& timestamp, const string& area_timestamp);
+  virtual void write_footer();
+  virtual void display_remark(const std::string& text);
+  virtual void display_error(const std::string& text);
+
+  virtual void print_global_bbox(const Bbox_Double& bbox) {}
   
   virtual void print_item(const Node_Skeleton& skel,
       const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags = 0,
-      const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
-      const std::map< uint32, std::string >* users = 0,
+      const std::vector< std::pair< std::string, std::string > >* tags,
+      const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+      const std::map< uint32, std::string >* users,
+      Output_Mode mode,
       const Feature_Action& action = keep,
       const Opaque_Geometry* new_geometry = 0,
       const std::vector< std::pair< std::string, std::string > >* new_tags = 0,
@@ -37,28 +44,33 @@ public:
   
   virtual void print_item(const Way_Skeleton& skel,
       const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags = 0,
-      const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
-      const std::map< uint32, std::string >* users = 0,
+      const std::vector< std::pair< std::string, std::string > >* tags,
+      const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
+      const std::map< uint32, std::string >* users,
+      Output_Mode mode,
       const Feature_Action& action = keep,
+      const Way_Skeleton* new_skel = 0,
       const Opaque_Geometry* new_geometry = 0,
       const std::vector< std::pair< std::string, std::string > >* new_tags = 0,
       const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0);
       
   virtual void print_item(const Relation_Skeleton& skel,
       const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags = 0,
-      const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
-      const std::map< uint32, std::string >* roles = 0,
-      const map< uint32, string >* users = 0,
+      const std::vector< std::pair< std::string, std::string > >* tags,
+      const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
+      const std::map< uint32, std::string >* roles,
+      const map< uint32, string >* users,
+      Output_Mode mode,
       const Feature_Action& action = keep,
+      const Relation_Skeleton* new_skel = 0,
       const Opaque_Geometry* new_geometry = 0,
       const std::vector< std::pair< std::string, std::string > >* new_tags = 0,
       const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0);
                             
-  virtual void print_item(uint32 ll_upper, const Derived_Skeleton& skel,
+  virtual void print_item(const Derived_Skeleton& skel,
       const Opaque_Geometry& geometry,
-      const std::vector< std::pair< std::string, std::string > >* tags = 0);
+      const std::vector< std::pair< std::string, std::string > >* tags,
+      Output_Mode mode);
       
 private:
   Csv_Settings csv_settings;

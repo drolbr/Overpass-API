@@ -27,7 +27,8 @@
 struct Web_Output : public Error_Output
 {
   Web_Output(uint log_level_) : http_method(http_get), has_origin(false), header_written(not_yet),
-      encoding_errors(false), parse_errors(false), static_errors(false), log_level(log_level_) {}
+      encoding_errors(false), parse_errors(false), static_errors(false), log_level(log_level_),
+      output_handler(0) {}
   
   ~Web_Output() { write_footer(); }
   
@@ -58,14 +59,6 @@ struct Web_Output : public Error_Output
        bool write_js_init = false, bool write_remarks = true);
   void write_payload_header
       (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
-//   void write_xml_header
-//       (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
-//   void write_json_header
-//       (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
-//   void write_text_header
-//       (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
-//   void write_csv_header
-//       (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
   void write_footer();
   
   void set_output_handler(Output_Handler* output_handler_) { output_handler = output_handler_; }
@@ -77,7 +70,7 @@ public:
   bool has_origin;
   
 private:
-  enum { not_yet, payload, html, /*xml, json, text, csv,*/ final } header_written;
+  enum { not_yet, payload, html, final } header_written;
   bool encoding_errors;
   bool parse_errors;
   bool static_errors;

@@ -348,7 +348,7 @@ Bbox_Query_Statement::Bbox_Query_Statement
 }
 
 
-Bbox_Query_Statement::Bbox_Query_Statement(const Bbox& bbox)
+Bbox_Query_Statement::Bbox_Query_Statement(const Bbox_Double& bbox)
     : Output_Statement(0), south(bbox.south), north(bbox.north), west(bbox.west), east(bbox.east) {}
 
 

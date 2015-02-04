@@ -75,6 +75,7 @@ class Print_Target
 
     //TODO virtual void print_item_count(const Output_Item_Count& item_count) = 0;
 
+    //TODO: remove. Replaced by Output_Mode
     static const unsigned int PRINT_IDS = 1;
     static const unsigned int PRINT_COORDS = 2;
     static const unsigned int PRINT_NDS = 4;
