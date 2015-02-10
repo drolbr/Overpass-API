@@ -37,29 +37,6 @@
 using namespace std;
 
 
-Update_Way_Logger::~Update_Way_Logger()
-{
-  for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator it = insert.begin();
-      it != insert.end(); ++it)
-  {
-    if (it->second.second)
-      delete it->second.second;
-  }
-  for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator it = keep.begin();
-      it != keep.end(); ++it)
-  {
-    if (it->second.second)
-      delete it->second.second;
-  }
-  for (map< Way::Id_Type, pair< Way, OSM_Element_Metadata* > >::const_iterator it = erase.begin();
-      it != erase.end(); ++it)
-  {
-    if (it->second.second)
-      delete it->second.second;
-  }
-}
-
-
 Way_Updater::Way_Updater(Transaction& transaction_, meta_modes meta_)
   : update_counter(0), transaction(&transaction_),
     external_transaction(true), partial_possible(false), meta(meta_), keys(*osm_base_settings().WAY_KEYS)
@@ -620,19 +597,6 @@ void compute_geometry
 }
 
 
-// TODO: temporary helper function for update_logger
-void tell_update_logger_insertions
-    (const Data_By_Id< Way_Skeleton >::Entry& entry, Update_Way_Logger* update_logger)
-{
-  if (update_logger)
-  {
-    Way way(entry.elem.id.val(), entry.idx.val(), entry.elem.nds);
-    way.tags = entry.tags;
-    update_logger->insertion(way);
-  }
-}
-
-
 /* Adds to attic_skeletons and new_skeletons all those ways that have moved just because
    a node in these ways has moved.
    We assert that every node id that appears in a way in existing_skeletons has its Quad_Coord
@@ -643,8 +607,7 @@ void new_implicit_skeletons
      bool record_minuscule_moves,
      std::map< Uint31_Index, std::set< Way_Skeleton > >& attic_skeletons,
      std::map< Uint31_Index, std::set< Way_Skeleton > >& new_skeletons,
-     vector< pair< Way::Id_Type, Uint31_Index > >& moved_ways,
-     Update_Way_Logger* update_logger)
+     vector< pair< Way::Id_Type, Uint31_Index > >& moved_ways)
 {
   for (std::map< Uint31_Index, std::set< Way_Skeleton > >::const_iterator it = existing_skeletons.begin();
        it != existing_skeletons.end(); ++it)
@@ -792,7 +755,6 @@ std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > > compute
   
 
 void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
-              Update_Way_Logger* update_logger,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
               const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons)
@@ -863,11 +825,11 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
   attic_skeletons.clear();
   new_skeletons.clear();
   new_current_skeletons(new_data, existing_map_positions, existing_skeletons,
-      (update_logger != 0), attic_skeletons, new_skeletons, moved_ways);
+      0, attic_skeletons, new_skeletons, moved_ways);
   
   // Compute and add implicitly moved ways
   new_implicit_skeletons(new_node_idx_by_id, implicitly_moved_skeletons,
-      (update_logger != 0), attic_skeletons, new_skeletons, moved_ways, update_logger);
+      0, attic_skeletons, new_skeletons, moved_ways);
 
   // Compute which meta data really has changed
   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > attic_meta;
@@ -891,22 +853,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
       (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
   
   add_deleted_skeletons(attic_skeletons, new_positions);
-
-  // TODO: old code
-//   if (update_logger && meta)
-//   {
-//     for (vector< pair< OSM_Element_Metadata_Skeleton< Way::Id_Type >, uint32 > >::const_iterator
-//         it = ways_meta_to_insert.begin(); it != ways_meta_to_insert.end(); ++it)
-//     {
-//       OSM_Element_Metadata meta;
-//       meta.version = it->first.version;
-//       meta.timestamp = it->first.timestamp;
-//       meta.changeset = it->first.changeset;
-//       meta.user_id = it->first.user_id;
-//       meta.user_name = user_by_id[it->first.user_id];
-//       update_logger->insertion(it->first.ref, meta);
-//     }
-//   }
 
   callback->update_started();
   callback->prepare_delete_tags_finished();
@@ -1024,14 +970,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
   {
     copy_idxs_by_id(new_meta, idxs_by_id);
     process_user_data(*transaction, user_by_id, idxs_by_id);
-    
-//     if (update_logger)
-//     {
-//       stable_sort(ways_meta_to_delete.begin(), ways_meta_to_delete.begin());
-//       ways_meta_to_delete.erase(unique(ways_meta_to_delete.begin(), ways_meta_to_delete.end()),
-//                                  ways_meta_to_delete.end());
-//       update_logger->set_delete_meta_data(ways_meta_to_delete);
-//     }
   }
   callback->update_finished();
   
