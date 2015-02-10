@@ -229,7 +229,7 @@ void end(const char *el)
     if (osm_element_count >= 4*1024*1024)
     {
       callback->relation_elapsed(current_relation.id);
-      relation_updater->update(callback, 0,
+      relation_updater->update(callback,
                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
                           node_updater->get_new_attic_skeletons(),
                           way_updater->get_new_skeletons(), way_updater->get_attic_skeletons(),
@@ -301,7 +301,7 @@ int main(int argc, char* args[])
       else if (state == IN_RELATIONS)
       {
 	callback->relations_finished();
-	relation_updater->update(callback, 0,
+	relation_updater->update(callback,
                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
                           node_updater->get_new_attic_skeletons(),
                           way_updater->get_new_skeletons(), way_updater->get_attic_skeletons(),
