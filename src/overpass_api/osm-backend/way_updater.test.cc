@@ -108,7 +108,7 @@ void start(const char *el, const char **attr)
     if (state == IN_NODES)
     {
       callback->nodes_finished();
-      node_updater->update(callback, false, 0);
+      node_updater->update(callback, false);
       callback->parser_started();
       osm_element_count = 0;
       state = IN_WAYS;
@@ -135,7 +135,7 @@ void end(const char *el)
     if (osm_element_count >= 4*1024*1024)
     {
       callback->node_elapsed(current_node.id);
-      node_updater->update(callback, true, 0);
+      node_updater->update(callback, true);
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -206,7 +206,7 @@ int main(int argc, char* args[])
       if (state == IN_NODES)
       {
 	callback->nodes_finished();
-	node_updater->update(callback, false, 0);
+	node_updater->update(callback, false);
       }
       else if (state == IN_WAYS)
       {

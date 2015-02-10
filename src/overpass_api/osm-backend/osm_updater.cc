@@ -51,7 +51,6 @@
 namespace
 {
   Node_Updater* node_updater;
-  Update_Node_Logger* update_node_logger;
   Node current_node;
   Way_Updater* way_updater;
   Way current_way;
@@ -184,7 +183,7 @@ namespace
     if (osm_element_count >= flush_limit)
     {
       callback->node_elapsed(current_node.id);
-      node_updater->update(callback, true, update_node_logger);
+      node_updater->update(callback, true);
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -197,7 +196,7 @@ namespace
     if (state == IN_NODES)
     {
       callback->nodes_finished();
-      node_updater->update(callback, false, update_node_logger);
+      node_updater->update(callback, false);
       //way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
       callback->parser_started();
       osm_element_count = 0;
@@ -281,7 +280,7 @@ namespace
     if (state == IN_NODES)
     {
       callback->nodes_finished();
-      node_updater->update(callback, false, update_node_logger);
+      node_updater->update(callback, false);
 //       relation_updater->update_moved_idxs
 //           (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
       callback->parser_started();
@@ -427,27 +426,6 @@ void end(const char *el)
 }
 
 
-void complete_user_data(Transaction& transaction,
-			Update_Node_Logger& update_node_logger)
-{
-  map< uint32, string > user_names;
-
-  update_node_logger.request_user_names(user_names);
-   
-  Block_Backend< Uint32_Index, User_Data > user_db
-      (transaction.data_index(meta_settings().USER_DATA));
-  for (Block_Backend< Uint32_Index, User_Data >::Flat_Iterator
-      it(user_db.flat_begin()); !(it == user_db.flat_end()); ++it)
-  {
-    map< uint32, string >::iterator mit = user_names.find(it.object().id);
-    if (mit != user_names.end())
-      mit->second = it.object().name;
-  }
-
-  update_node_logger.set_user_names(user_names);
-}
-
-
 // Bitfield for change evaluation
 const int TAGS = 1;
 const int GEOMETRY = 2;
@@ -478,41 +456,6 @@ int detect_changes(const Node& old_node, const Node& new_node,
 }
 
 
-int detect_changes(const Way& old_way, const Way& new_way,
-		   const Update_Node_Logger& update_node_logger,
-		   const vector< Way::Id_Type >& ways_used_by_relations)
-{
-  int changes = 0;
-  if (old_way.index != new_way.index)
-    changes |= GEOMETRY;
-  if (old_way.tags != new_way.tags)
-    changes |= TAGS;
-  if (old_way.nds != new_way.nds)
-    changes |= GEOMETRY | MEMBERS;
-  else
-  {
-    for (vector< Node::Id_Type >::const_iterator it = old_way.nds.begin(); it != old_way.nds.end(); ++it)
-    {
-      const Node* old_node = update_node_logger.get_erased(*it);
-      const Node* new_node = update_node_logger.get_inserted(*it);
-      if (!old_node || !new_node)
-	changes |= GEOMETRY | MEMBER_PROPERTIES;
-      else
-      {
-	if (old_node->index != new_node->index
-	    || old_node->ll_lower_ != new_node->ll_lower_)
-	  changes |= GEOMETRY;
-	if (old_node->tags != new_node->tags)
-	  changes |= MEMBER_PROPERTIES;
-      }
-    }
-  }
-  if (binary_search(ways_used_by_relations.begin(), ways_used_by_relations.end(), old_way.id))
-    changes |= RELATION_MEMBERSHIP;
-  return changes;
-}
-
-
 void Osm_Updater::finish_updater()
 {
   if (state == IN_NODES)
@@ -524,7 +467,7 @@ void Osm_Updater::finish_updater()
   
   if (state == IN_NODES)
   {
-    node_updater->update(callback, false, update_node_logger);
+    node_updater->update(callback, false);
     //way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
     state = IN_WAYS;
   }
