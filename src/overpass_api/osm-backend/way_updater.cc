@@ -863,7 +863,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
   attic_skeletons.clear();
   new_skeletons.clear();
   new_current_skeletons(new_data, existing_map_positions, existing_skeletons,
-      (update_logger != 0), attic_skeletons, new_skeletons, moved_ways, update_logger);
+      (update_logger != 0), attic_skeletons, new_skeletons, moved_ways);
   
   // Compute and add implicitly moved ways
   new_implicit_skeletons(new_node_idx_by_id, implicitly_moved_skeletons,
@@ -882,7 +882,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
   // Compute which tags really have changed
   std::map< Tag_Index_Local, std::set< Way_Skeleton::Id_Type > > attic_local_tags;
   std::map< Tag_Index_Local, std::set< Way_Skeleton::Id_Type > > new_local_tags;
-  new_current_local_tags< Way_Skeleton, Update_Way_Logger, Way_Skeleton::Id_Type >
+  new_current_local_tags< Way_Skeleton, Way_Skeleton::Id_Type >
       (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
   new_implicit_local_tags(implicitly_moved_local_tags, new_positions, attic_local_tags, new_local_tags);
   std::map< Tag_Index_Global, std::set< Tag_Object_Global< Way_Skeleton::Id_Type > > > attic_global_tags;
@@ -918,16 +918,15 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
   callback->update_ids_finished();
   
   // Update skeletons
-  update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().WAYS, update_logger);
+  update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().WAYS);
   callback->update_coords_finished();
   
   // Update meta
   if (meta)
-    update_elements(attic_meta, new_meta, *transaction, *meta_settings().WAYS_META, update_logger);
+    update_elements(attic_meta, new_meta, *transaction, *meta_settings().WAYS_META);
   
   // Update local tags
-  update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().WAY_TAGS_LOCAL,
-                  update_logger);
+  update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().WAY_TAGS_LOCAL);
   callback->tags_local_finished();
   
   // Update global tags

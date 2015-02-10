@@ -535,7 +535,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
   attic_skeletons.clear();
   new_skeletons.clear();
   new_current_skeletons(new_data, existing_map_positions, existing_skeletons,
-      (update_logger != 0), attic_skeletons, new_skeletons, moved_nodes, update_logger);
+      (update_logger != 0), attic_skeletons, new_skeletons, moved_nodes);
       
   // Compute which meta data really has changed
   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > attic_meta;
@@ -545,7 +545,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
   // Compute which tags really have changed
   std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > > attic_local_tags;
   std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > > new_local_tags;
-  new_current_local_tags< Node_Skeleton, Update_Node_Logger, Node_Skeleton::Id_Type >
+  new_current_local_tags< Node_Skeleton, Node_Skeleton::Id_Type >
       (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
   std::map< Tag_Index_Global, std::set< Tag_Object_Global< Node_Skeleton::Id_Type > > > attic_global_tags;
   std::map< Tag_Index_Global, std::set< Tag_Object_Global< Node_Skeleton::Id_Type > > > new_global_tags;
@@ -585,16 +585,15 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial,
   callback->update_ids_finished();
   
   // Update skeletons
-  update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().NODES, update_logger);
+  update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().NODES);
   callback->update_coords_finished();
   
   // Update meta
   if (meta)
-    update_elements(attic_meta, new_meta, *transaction, *meta_settings().NODES_META, update_logger);
+    update_elements(attic_meta, new_meta, *transaction, *meta_settings().NODES_META);
   
   // Update local tags
-  update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().NODE_TAGS_LOCAL,
-                  update_logger);
+  update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().NODE_TAGS_LOCAL);
   callback->tags_local_finished();
   
   // Update global tags

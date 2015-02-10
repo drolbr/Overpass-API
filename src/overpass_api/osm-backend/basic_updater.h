@@ -159,7 +159,7 @@ std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_meta
 /* Compares the new data and the already existing skeletons to determine those that have
  * moved. This information is used to prepare the deletion and insertion lists for the
  * database operation.  Also, the list of moved objects is filled. */
-template< typename Element_Skeleton, typename Update_Logger, typename Index_Type >
+template< typename Element_Skeleton, typename Index_Type >
 void new_current_skeletons
     (const Data_By_Id< Element_Skeleton >& new_data,
      const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
@@ -167,8 +167,7 @@ void new_current_skeletons
      bool record_minuscule_moves,
      std::map< Uint31_Index, std::set< Element_Skeleton > >& attic_skeletons,
      std::map< Uint31_Index, std::set< Element_Skeleton > >& new_skeletons,
-     vector< pair< typename Element_Skeleton::Id_Type, Index_Type > >& moved_objects,
-     Update_Logger* update_logger)
+     vector< pair< typename Element_Skeleton::Id_Type, Index_Type > >& moved_objects)
 {
   attic_skeletons = existing_skeletons;
   
@@ -191,7 +190,6 @@ void new_current_skeletons
     if (!idx)
     {
       // No old data exists. So we can add the new data and are done.
-      tell_update_logger_insertions(*it, update_logger);
       new_skeletons[it->idx].insert(it->elem);
       continue;
     }
@@ -199,7 +197,6 @@ void new_current_skeletons
     {
       // The old and new version have different indexes. So they are surely different.
       moved_objects.push_back(make_pair(it->elem.id, Index_Type(idx->val())));
-      tell_update_logger_insertions(*it, update_logger);
       new_skeletons[it->idx].insert(it->elem);
       continue;
     }
@@ -209,7 +206,6 @@ void new_current_skeletons
     if (it_attic_idx == attic_skeletons.end())
     {
       // Something has gone wrong. Save at least the new object.
-      tell_update_logger_insertions(*it, update_logger);
       new_skeletons[it->idx].insert(it->elem);
       continue;
     }
@@ -219,7 +215,6 @@ void new_current_skeletons
     if (it_attic == it_attic_idx->second.end())
     {
       // Something has gone wrong. Save at least the new object.
-      tell_update_logger_insertions(*it, update_logger);
       new_skeletons[it->idx].insert(it->elem);
       continue;
     }
@@ -231,7 +226,6 @@ void new_current_skeletons
       it_attic_idx->second.erase(it_attic);
     else
     {
-      tell_update_logger_insertions(*it, update_logger);
       new_skeletons[it->idx].insert(it->elem);
       if (record_minuscule_moves)
         moved_objects.push_back(make_pair(it->elem.id, Index_Type(idx->val())));
@@ -287,7 +281,7 @@ void add_tags(Id_Type id, Uint31_Index idx,
 /* Compares the new data and the already existing skeletons to determine those that have
  * moved. This information is used to prepare the deletion and insertion lists for the
  * database operation.  Also, the list of moved nodes is filled. */
-template< typename Element_Skeleton, typename Update_Logger, typename Id_Type >
+template< typename Element_Skeleton, typename Id_Type >
 void new_current_local_tags
     (const Data_By_Id< Element_Skeleton >& new_data,
      const std::vector< std::pair< Id_Type, Uint31_Index > >& existing_map_positions,
@@ -399,21 +393,6 @@ void update_map_positions
   for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator
       it = new_idx_positions.begin(); it != new_idx_positions.end(); ++it)
     random.put(it->first.val(), it->second);
-}
-
-
-template< typename Index, typename Object, typename Update_Logger >
-void update_elements
-    (const std::map< Index, std::set< Object > >& attic_objects,
-     const std::map< Index, std::set< Object > >& new_objects,
-     Transaction& transaction, const File_Properties& file_properties,
-     Update_Logger* update_logger)
-{
-  Block_Backend< Index, Object > db(transaction.data_index(&file_properties));
-  if (update_logger)
-    db.update(attic_objects, new_objects, *update_logger);
-  else
-    db.update(attic_objects, new_objects);
 }
 
 

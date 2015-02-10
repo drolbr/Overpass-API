@@ -1116,7 +1116,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
   attic_skeletons.clear();
   new_skeletons.clear();
   new_current_skeletons(new_data, existing_map_positions, existing_skeletons,
-      (update_logger != 0), attic_skeletons, new_skeletons, moved_relations, update_logger);
+      (update_logger != 0), attic_skeletons, new_skeletons, moved_relations);
   
   // Compute and add implicitly moved relations
   new_implicit_skeletons(new_node_idx_by_id, new_way_idx_by_id, implicitly_moved_skeletons,
@@ -1135,7 +1135,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
   // Compute which tags really have changed
   std::map< Tag_Index_Local, std::set< Relation_Skeleton::Id_Type > > attic_local_tags;
   std::map< Tag_Index_Local, std::set< Relation_Skeleton::Id_Type > > new_local_tags;
-  new_current_local_tags< Relation_Skeleton, Update_Relation_Logger, Relation_Skeleton::Id_Type >
+  new_current_local_tags< Relation_Skeleton, Relation_Skeleton::Id_Type >
       (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
   new_implicit_local_tags(implicitly_moved_local_tags, new_positions, attic_local_tags, new_local_tags);
   std::map< Tag_Index_Global, std::set< Tag_Object_Global< Relation_Skeleton::Id_Type > > > attic_global_tags;
@@ -1171,16 +1171,15 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
   callback->update_ids_finished();
   
   // Update skeletons
-  update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().RELATIONS, update_logger);
+  update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().RELATIONS);
   callback->update_coords_finished();
   
   // Update meta
   if (meta)
-    update_elements(attic_meta, new_meta, *transaction, *meta_settings().RELATIONS_META, update_logger);
+    update_elements(attic_meta, new_meta, *transaction, *meta_settings().RELATIONS_META);
   
   // Update local tags
-  update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().RELATION_TAGS_LOCAL,
-                  update_logger);
+  update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().RELATION_TAGS_LOCAL);
   callback->tags_local_finished();
   
   // Update global tags
