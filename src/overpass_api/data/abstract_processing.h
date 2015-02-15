@@ -37,6 +37,10 @@ class And_Predicate
     {
       return (predicate_a.match(obj) && predicate_b.match(obj));
     }
+    bool match(const typename TObject::Id_Type id) const
+    {
+      return (predicate_a.match(id) && predicate_b.match(id));
+    }
     
   private:
     TPredicateA predicate_a;
@@ -52,6 +56,10 @@ class Or_Predicate
     bool match(const TObject& obj) const
     {
       return (predicate_a.match(obj) || predicate_b.match(obj));
+    }
+    bool match(const typename TObject::Id_Type id) const
+    {
+      return (predicate_a.match(id) || predicate_b.match(id));
     }
     
   private:
@@ -69,6 +77,10 @@ class Not_Predicate
     {
       return (!predicate_a.match(obj));
     }
+    bool match(const typename TObject::Id_Type id) const
+    {
+      return (!predicate_a.match(id));
+    }
     
   private:
     TPredicateA predicate_a;
@@ -80,6 +92,7 @@ class Trivial_Predicate
   public:
     Trivial_Predicate() {}
     bool match(const TObject& obj) const { return true; }
+    bool match(const typename TObject::Id_Type id) const { return true; }
 };
 
 //-----------------------------------------------------------------------------
@@ -93,6 +106,10 @@ class Id_Predicate
     bool match(const TObject& obj) const
     {
       return binary_search(ids.begin(), ids.end(), obj.id);
+    }
+    bool match(const typename TObject::Id_Type id) const
+    {
+      return binary_search(ids.begin(), ids.end(), id);
     }
     
   private:
