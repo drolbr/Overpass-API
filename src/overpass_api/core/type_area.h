@@ -288,7 +288,7 @@ struct Area_Skeleton
   
   static Area::Id_Type get_id(const void* data)
   {
-    return *(uint32*)data;
+    return *(const uint32*)data;
   }
 
   bool operator<(const Area_Skeleton& a) const

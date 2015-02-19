@@ -173,7 +173,7 @@ struct Relation_Skeleton
   
   static Relation::Id_Type get_id(const void* data)
   {
-    return *(uint32*)data;
+    return *(const uint32*)data;
   }
 
   bool operator<(const Relation_Skeleton& a) const

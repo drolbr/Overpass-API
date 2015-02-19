@@ -123,7 +123,7 @@ struct Node_Skeleton
   
   static Node::Id_Type get_id(const void* data)
   {
-    return *(uint64*)data;
+    return *(const uint64*)data;
   }
 
   bool operator<(const Node_Skeleton& a) const
