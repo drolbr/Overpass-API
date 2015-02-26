@@ -843,12 +843,6 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
       }
       while (it2 != it->second.end() || tit2 != tit->second.end())
       {
-// 	std::cerr<<dec<<it->first.val()<<'\t'
-// 	    <<(it2 == it->second.end() ? 0 : it2->timestamp)<<' '
-// 	    <<(it2 == it->second.end() ? 0 : it2->val())<<'\t'
-// 	    <<(tit2 == tit->second.end() ? 0 : tit2->timestamp)<<' '
-// 	    <<(tit2 == tit->second.end() ? "" : tit2->c_str())<<'\t'
-// 	    <<hex<<last_idx.val()<<'\t'<<last_value<<'\t';
         if (it2 == it->second.end() || (tit2 != tit->second.end() && it2->timestamp < tit2->timestamp))
         {
 	  // The more recent (thus relevant) timestamp is here tit2->timestamp.
@@ -864,12 +858,10 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
           if (last_idx.val() != 0u && last_value != *tit2 && (*tit2 != void_tag_value() + " "
 	      || it2 != it->second.end()
               || existing_attic_idxs.find(Uint31_Index(last_idx.val() & 0x7fffff00)) != existing_attic_idxs.end()))
-	  {
             result[Tag_Index_Local(Uint31_Index(last_idx.val() & 0x7fffff00), tit->first.second,
 		    *tit2 != void_tag_value() + " " ? *tit2 : void_tag_value())]
                 .insert(Attic< Id_Type >(it->first, tit2->timestamp));
-// 	    std::cerr<<'A';
-	  }
+		
           last_value = *tit2;
           ++tit2;
         }
@@ -888,18 +880,13 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
 	      && last_value != void_tag_value() && last_value != void_tag_value() + " ")
           {
             if (it2->val() != 0u)
-	    {
               result[Tag_Index_Local(Uint31_Index(it2->val() & 0x7fffff00), tit->first.second, last_value)]
                 .insert(Attic< Id_Type >(it->first, it2->timestamp));
-// 	      std::cerr<<'B';
-	    }
+		
             if (last_idx.val() != 0u)
-	    {
               result[Tag_Index_Local(Uint31_Index(last_idx.val() & 0x7fffff00),
                                      tit->first.second, void_tag_value())]
                   .insert(Attic< Id_Type >(it->first, it2->timestamp));
-// 	      std::cerr<<'C';
-	    }
           }
           last_idx = *it2;
           ++it2;
@@ -914,31 +901,22 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
 	    
 	    // If the younger index is non-void then we store for it a delimiter to the past
             if (last_idx.val() != 0u && last_value != void_tag_value() && last_value != void_tag_value() + " ")
-	    {
               result[Tag_Index_Local(Uint31_Index(last_idx.val() & 0x7fffff00),
                                      tit->first.second, void_tag_value())]
                   .insert(Attic< Id_Type >(it->first, it2->timestamp));
-// 	      std::cerr<<'D';
-	    }
 	    
 	    // If the older index is non-void then we write an entry for it
             if (it2->val() != 0u)
-	    {
               result[Tag_Index_Local(Uint31_Index(it2->val() & 0x7fffff00), tit->first.second, *tit2)]
                 .insert(Attic< Id_Type >(it->first, it2->timestamp));
-// 	      std::cerr<<'E';
-	    }	    
 	  }
 	  else
 	  {
 	    // This is similar to the case that only the tag value changes.
             if (last_idx.val() != 0u && last_value != *tit2)
-	    {
               result[Tag_Index_Local(Uint31_Index(last_idx.val() & 0x7fffff00), tit->first.second,
 		    *tit2 != void_tag_value() + " " ? *tit2 : void_tag_value())]
                   .insert(Attic< Id_Type >(it->first, tit2->timestamp));
-// 	      std::cerr<<'F';
-	    }	    
 	  }
 	  
           last_value = *tit2;
@@ -946,7 +924,6 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
           last_idx = *it2;
           ++it2;
         }
-//         std::cerr<<'\n';
       }
       
       ++tit;
@@ -1047,41 +1024,7 @@ std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >, std::vec
   
   for (typename std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >,
       std::vector< Attic< std::string > > >::iterator it = result.begin(); it != result.end(); ++it)
-//   {
     std::stable_sort(it->second.begin(), it->second.end(), Descending_By_Timestamp< Attic< std::string > >());
-    
-//     // Remove bogus void_tag_value entries
-//     std::vector< Attic< std::string > >::iterator wit = it->second.begin();
-//     long last_timestamp = NOW;
-//     std::string last_value = "";
-//     for (std::vector< Attic< std::string > >::const_iterator rit = it->second.begin(); rit != it->second.end(); ++rit)
-//     {
-//       if (rit->timestamp < last_timestamp)
-//       {
-//         last_timestamp = rit->timestamp;
-//         last_value = *rit;
-// 	*wit = *rit;
-// 	++wit;
-//       }
-//       else if (last_value == void_tag_value())
-// 	// In this case we should remove the last entry
-//       {
-//         last_timestamp = rit->timestamp;
-//         last_value = *rit;
-// 	--wit;
-// 	*wit = *rit;
-// 	++wit;
-//       }
-//       else if (*rit != void_tag_value())
-// 	// We don't support multiple entries for the same key officially, but we try our best
-//       {
-//         last_timestamp = rit->timestamp;
-//         last_value = *rit;
-// 	*wit = *rit;
-// 	++wit;
-//       }
-//     }
-//   }
 
   for (typename std::map< Tag_Index_Local, std::set< typename Element_Skeleton::Id_Type > >::const_iterator
       it = attic_local_tags.begin(); it != attic_local_tags.end(); ++it)
