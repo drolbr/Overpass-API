@@ -174,15 +174,9 @@ int main(int argc, char *argv[])
       dispatcher.resource_manager().set_desired_timestamp(osm_script->get_desired_timestamp());
  
     Web_Output web_output(log_level);
-    //TODO
-//     if (!osm_script || osm_script->get_type() == "xml")
-//       web_output.write_xml_header
-//           (dispatcher.get_timestamp(),
-// 	   area_level > 0 ? dispatcher.get_area_timestamp() : "", false);
-//     else if (osm_script->get_type() == "json")
-//       web_output.write_json_header
-//           (dispatcher.get_timestamp(),
-// 	   area_level > 0 ? dispatcher.get_area_timestamp() : "", false);
+    web_output.set_output_handler(global_settings.get_output_handler());
+    web_output.write_payload_header(dispatcher.get_timestamp(),
+ 	   area_level > 0 ? dispatcher.get_area_timestamp() : "", false);
     
 //   double timecounter = 0;
 //   timeval tv;

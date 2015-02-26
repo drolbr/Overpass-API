@@ -20,6 +20,7 @@
 #include <sstream>
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
+#include "../output_formats/output_xml.h"
 #include "id_query.h"
 #include "item.h"
 #include "print.h"
@@ -27,7 +28,6 @@
 #include "recurse.h"
 #include "difference.h"
 
-using namespace std;
 
 string to_string_(uint64 val)
 {
@@ -47,6 +47,7 @@ int main(int argc, char* args[])
   uint64 size = atoll(args[2]);
   uint64 global_node_offset = atoll(args[3]);
   Parsed_Query global_settings;
+  global_settings.set_output_handler(new Output_XML());
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -59,7 +60,7 @@ int main(int argc, char* args[])
     {
       {
 	Nonsynced_Transaction transaction(false, false, args[2], "");
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	
 	const char* attributes[] = { 0 };
 	Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
@@ -95,7 +96,7 @@ int main(int argc, char* args[])
     {
       {
         Nonsynced_Transaction transaction(false, false, args[2], "");
-        Resource_Manager rman(transaction);
+        Resource_Manager rman(transaction, &global_settings);
         
         const char* attributes[] = { 0 };
         Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
@@ -131,7 +132,7 @@ int main(int argc, char* args[])
     {
       {
         Nonsynced_Transaction transaction(false, false, args[2], "");
-        Resource_Manager rman(transaction);
+        Resource_Manager rman(transaction, &global_settings);
         
         const char* attributes[] = { 0 };
         Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
@@ -167,7 +168,7 @@ int main(int argc, char* args[])
     {
       {
         Nonsynced_Transaction transaction(false, false, args[2], "");
-        Resource_Manager rman(transaction);
+        Resource_Manager rman(transaction, &global_settings);
         
         const char* attributes[] = { 0 };
         Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
@@ -189,7 +190,7 @@ int main(int argc, char* args[])
       }
       {
         Nonsynced_Transaction transaction(false, false, args[2], "");
-        Resource_Manager rman(transaction);
+        Resource_Manager rman(transaction, &global_settings);
         
         const char* attributes[] = { 0 };
         Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
@@ -223,7 +224,7 @@ int main(int argc, char* args[])
     {
       {
         Nonsynced_Transaction transaction(false, false, args[2], "");
-        Resource_Manager rman(transaction);
+        Resource_Manager rman(transaction, &global_settings);
         
         const char* attributes[] = { "into", "A", 0 };
         Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);

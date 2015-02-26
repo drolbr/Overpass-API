@@ -10,7 +10,7 @@ statements_cc = ${statements_dir}/statement.cc ${statements_dir}/area_query.cc .
 
 output_formats_dir = ../overpass_api/output_formats
 
-testenv_cc = ${settings_cc} ../overpass_api/dispatch/resource_manager.cc ../overpass_api/frontend/console_output.cc ../overpass_api/frontend/user_interface.cc ../overpass_api/frontend/output.cc ../overpass_api/frontend/cgi-helper.cc ${output_formats_dir}/output_xml.cc ${output_formats_dir}/output_xml_factory.cc
+testenv_cc = ${settings_cc} ../overpass_api/dispatch/resource_manager.cc ../overpass_api/frontend/console_output.cc ../overpass_api/frontend/user_interface.cc ../overpass_api/frontend/output.cc ../overpass_api/frontend/cgi-helper.cc ../overpass_api/frontend/output_handler.cc ${output_formats_dir}/output_xml.cc ${output_formats_dir}/output_xml_factory.cc
 
 file_blocks_SOURCES = ../template_db/file_blocks.test.cc ../template_db/types.cc
 block_backend_SOURCES = ../template_db/block_backend.test.cc ../template_db/types.cc

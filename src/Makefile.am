@@ -114,13 +114,13 @@ bin_update_database_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/update_
 bin_update_database_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la
 bin_update_from_dir_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/update_from_dir.cc template_db/types.cc
 bin_update_from_dir_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la
-bin_osm3s_query_SOURCES = ${statements_cc} ${output_formats_cc} overpass_api/frontend/console_output.cc overpass_api/dispatch/osm3s_query.cc overpass_api/osm-backend/clone_database.cc overpass_api/core/geometry.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc overpass_api/frontend/map_ql_parser.cc overpass_api/frontend/tokenizer_utils.cc 
+bin_osm3s_query_SOURCES = ${statements_cc} ${output_formats_cc} overpass_api/frontend/output_handler.cc overpass_api/frontend/console_output.cc overpass_api/dispatch/osm3s_query.cc overpass_api/osm-backend/clone_database.cc overpass_api/core/geometry.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc overpass_api/frontend/map_ql_parser.cc overpass_api/frontend/tokenizer_utils.cc 
 bin_osm3s_query_LDADD = libcore.la libdata.la
 bin_dispatcher_SOURCES = overpass_api/dispatch/dispatcher_server.cc
 bin_dispatcher_LDADD = libdispatcher.la libfrontend.la libsettings.la
 
 
-cgi_bin_interpreter_SOURCES = ${statements_cc} ${output_formats_cc} overpass_api/dispatch/web_query.cc overpass_api/core/geometry.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc overpass_api/frontend/map_ql_parser.cc overpass_api/frontend/tokenizer_utils.cc
+cgi_bin_interpreter_SOURCES = ${statements_cc} ${output_formats_cc} overpass_api/frontend/output_handler.cc overpass_api/dispatch/web_query.cc overpass_api/core/geometry.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc overpass_api/frontend/map_ql_parser.cc overpass_api/frontend/tokenizer_utils.cc
 cgi_bin_interpreter_LDADD = libcore.la libdata.la
 cgi_bin_timestamp_SOURCES = overpass_api/dispatch/db_timestamp.cc overpass_api/core/geometry.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc
 cgi_bin_timestamp_LDADD = libdispatcher.la libsettings.la libweboutput.la

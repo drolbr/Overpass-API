@@ -26,6 +26,9 @@ struct Output_Mode
 };
 
 
+const std::string& member_type_name(uint32 type);
+
+
 class Output_Handler
 {
 public:

@@ -21,6 +21,7 @@
 #include <sstream>
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
+#include "../output_formats/output_xml.h"
 #include "around.h"
 #include "bbox_query.h"
 #include "id_query.h"
@@ -30,7 +31,6 @@
 #include "recurse.h"
 #include "union.h"
 
-using namespace std;
 
 template < class TStatement >
 class SProxy
@@ -53,6 +53,7 @@ class SProxy
     TStatement& stmt()
     {
       Parsed_Query global_settings;
+      global_settings.set_output_handler(new Output_XML());
       if (!stmt_)
         stmt_ = new TStatement(0, attributes, global_settings);
       
@@ -74,7 +75,9 @@ void perform_query(string type, string key, string value, string db_dir)
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(new Output_XML());
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -119,7 +122,9 @@ void perform_query
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(new Output_XML());
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -191,7 +196,9 @@ void perform_query
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(new Output_XML());
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -253,7 +260,9 @@ void perform_regex_query
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(new Output_XML());
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -296,7 +305,9 @@ void perform_key_regex_query
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(new Output_XML());
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -386,7 +397,9 @@ void perform_query_with_around
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(new Output_XML());
+    Resource_Manager rman(transaction, &global_settings);
     {
       ostringstream buf;
       if (id_type == "node" && type == "node")
@@ -507,7 +520,9 @@ void perform_query_with_around
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(new Output_XML());
+    Resource_Manager rman(transaction, &global_settings);
     {
       string lat, lon;
       if (type == "node")
@@ -567,7 +582,9 @@ void perform_query_with_bbox
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(new Output_XML());
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -618,7 +635,9 @@ void perform_multi_query_with_bbox
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(new Output_XML());
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -691,7 +710,9 @@ void perform_query_with_recurse
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(new Output_XML());
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Id_Query_Statement > stmt1;
       if (recurse_type == "way-node")
@@ -800,7 +821,9 @@ void perform_query_with_role_recurse
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(new Output_XML());
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Id_Query_Statement > stmt1;
       if (recurse_type == "relation-node")
@@ -848,7 +871,9 @@ void perform_query_with_id_query
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(new Output_XML());
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", query_type);

@@ -85,17 +85,7 @@ int main(int argc, char *argv[])
 
     if (error_output.http_method == error_output.http_options
         || error_output.http_method == error_output.http_head)
-    {
-    //TODO
-//       if (!osm_script || osm_script->get_type() == "xml")
-//         error_output.write_xml_header("", "");
-//       else if (osm_script->get_type() == "json")
-//         error_output.write_json_header("", "");
-//       else if (osm_script->get_type() == "csv")
-//         error_output.write_csv_header("", "");
-//       else
-//         osm_script->set_template_name(template_name);
-    }
+      error_output.write_payload_header("", "");
     else
     {
       // open read transaction and log this.
@@ -106,21 +96,8 @@ int main(int argc, char *argv[])
       if (osm_script && osm_script->get_desired_timestamp())
         dispatcher.resource_manager().set_desired_timestamp(osm_script->get_desired_timestamp());
     
-    //TODO
-//       if (!osm_script || osm_script->get_type() == "xml")
-//         error_output.write_xml_header
-//             (dispatcher.get_timestamp(),
-// 	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
-//       else if (osm_script->get_type() == "json")
-//         error_output.write_json_header
-//             (dispatcher.get_timestamp(),
-// 	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
-//       else if (osm_script->get_type() == "csv")
-//         error_output.write_csv_header
-//             (dispatcher.get_timestamp(),
-// 	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
-//       else
-//         osm_script->set_template_name(template_name);
+      error_output.write_payload_header(dispatcher.get_timestamp(),
+ 	  area_level > 0 ? dispatcher.get_area_timestamp() : "");
       
       for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	   it != get_statement_stack()->end(); ++it)

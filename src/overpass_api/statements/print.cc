@@ -2415,7 +2415,54 @@ void Plain_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleton& sk
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta,
 			    Show_New_Elem show_new_elem)
 {
-  //TODO
+  if (output)
+  {
+    if (geometry)
+      ; //TODO
+    else if (bounds) 
+    {
+      if (bounds->second)
+      {
+	Bbox_Geometry geom(::lat(bounds->first.ll_upper, bounds->first.ll_lower),
+			   ::lon(bounds->first.ll_upper, bounds->first.ll_lower),
+			   ::lat(bounds->second->ll_upper, bounds->second->ll_lower),
+			   ::lon(bounds->second->ll_upper, bounds->second->ll_lower));
+        output->print_item(skel, geom,
+          mode & Print_Target::PRINT_TAGS ? tags : 0,
+          mode & Print_Target::PRINT_META ? meta : 0,
+	  &roles,
+          mode & Print_Target::PRINT_META ? users : 0,
+	  Output_Mode(mode),
+          Output_Handler::keep, //TODO ab hier
+          0, 0, 0);
+      }
+      else
+      {
+	Point_Geometry geom(::lat(bounds->first.ll_upper, bounds->first.ll_lower),
+			    ::lon(bounds->first.ll_upper, bounds->first.ll_lower));
+        output->print_item(skel, geom,
+          mode & Print_Target::PRINT_TAGS ? tags : 0,
+          mode & Print_Target::PRINT_META ? meta : 0,
+	  &roles,
+          mode & Print_Target::PRINT_META ? users : 0,
+	  Output_Mode(mode),
+          Output_Handler::keep, //TODO ab hier
+          0, 0, 0);
+      }
+    }
+    else
+    {
+      Null_Geometry geom;
+      output->print_item(skel, geom,
+        mode & Print_Target::PRINT_TAGS ? tags : 0,
+        mode & Print_Target::PRINT_META ? meta : 0,
+	&roles,
+        mode & Print_Target::PRINT_META ? users : 0,
+	Output_Mode(mode),
+        Output_Handler::keep, //TODO ab hier
+        0, 0, 0);
+    }
+  }
 }
 
 

@@ -21,6 +21,7 @@
 #include <sstream>
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
+#include "../output_formats/output_xml.h"
 #include "polygon_query.h"
 #include "print.h"
 #include "query.h"
@@ -35,8 +36,9 @@ void perform_polygon_print(string bounds, Transaction& transaction)
   {
     // Select a polygon from the testset that contains one quarter
     // of only one polygon.
-    Resource_Manager rman(transaction);
     Parsed_Query global_settings;
+    global_settings.set_output_handler(new Output_XML());
+    Resource_Manager rman(transaction, &global_settings);
     {
       const char* attributes[] = { "bounds", bounds.c_str(), 0 };
       Polygon_Query_Statement* stmt1 = new Polygon_Query_Statement(0, convert_c_pairs(attributes), global_settings);
@@ -62,8 +64,9 @@ void perform_query_polygon_print(string bounds, string type, Transaction& transa
   {
     // Select a polygon from the testset that contains one quarter
     // of only one polygon.
-    Resource_Manager rman(transaction);
     Parsed_Query global_settings;
+    global_settings.set_output_handler(new Output_XML());
+    Resource_Manager rman(transaction, &global_settings);
     {
       const char* attributes[] = { "type", type.c_str(), 0 };
       Query_Statement* stmt1 = new Query_Statement(0, convert_c_pairs(attributes), global_settings);

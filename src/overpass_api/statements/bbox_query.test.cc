@@ -21,20 +21,21 @@
 #include <sstream>
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
+#include "../output_formats/output_xml.h"
 #include "bbox_query.h"
 #include "print.h"
 
-using namespace std;
 
 void perform_bbox_print(string south, string north, string west, string east,
 			Transaction& transaction)
 {
   Parsed_Query global_settings;
+  global_settings.set_output_handler(new Output_XML());
   try
   {
     // Select a bbox from the testset that contains one quarter
     // of only one bbox.
-    Resource_Manager rman(transaction);
+    Resource_Manager rman(transaction, &global_settings);
     {
       const char* attributes[] =
           { "s", south.c_str(), "n", north.c_str(),

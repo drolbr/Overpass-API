@@ -21,21 +21,22 @@
 #include <sstream>
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
+#include "../output_formats/output_xml.h"
 #include "around.h"
 #include "id_query.h"
 #include "print.h"
 #include "union.h"
 
-using namespace std;
 
 
 void perform_around_print(uint pattern_size, string radius, uint64 global_node_offset,
 			  Transaction& transaction)
 {
   Parsed_Query global_settings;
+  global_settings.set_output_handler(new Output_XML());
   try
   {
-    Resource_Manager rman(transaction);
+    Resource_Manager rman(transaction, &global_settings);
     {
       ostringstream buf;
       buf<<(2*pattern_size*pattern_size + 1 + global_node_offset);
@@ -67,9 +68,10 @@ void perform_coord_print(uint pattern_size, string radius, uint64 global_node_of
                           Transaction& transaction)
 {
   Parsed_Query global_settings;
+  global_settings.set_output_handler(new Output_XML());
   try
   {
-    Resource_Manager rman(transaction);
+    Resource_Manager rman(transaction, &global_settings);
     {
       ostringstream buf;
       buf<<setprecision(14)<<(47.9 + 0.1/pattern_size);
@@ -109,6 +111,7 @@ int main(int argc, char* args[])
 
   Nonsynced_Transaction transaction(false, false, args[3], "");
   Parsed_Query global_settings;
+  global_settings.set_output_handler(new Output_XML());
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -122,7 +125,7 @@ int main(int argc, char* args[])
     perform_around_print(pattern_size, "2001", global_node_offset, transaction);
   if ((test_to_execute == "") || (test_to_execute == "4"))
   {
-    Resource_Manager rman(transaction);
+    Resource_Manager rman(transaction, &global_settings);
     {
       ostringstream buf;
       buf<<(2*pattern_size*pattern_size + 1 + global_node_offset);
@@ -145,7 +148,7 @@ int main(int argc, char* args[])
   }
   if ((test_to_execute == "") || (test_to_execute == "5"))
   {
-    Resource_Manager rman(transaction);
+    Resource_Manager rman(transaction, &global_settings);
     {
       ostringstream buf;
       buf<<(2*pattern_size*pattern_size + 1 + global_node_offset);
@@ -168,7 +171,7 @@ int main(int argc, char* args[])
   }
   if ((test_to_execute == "") || (test_to_execute == "6"))
   {
-    Resource_Manager rman(transaction);
+    Resource_Manager rman(transaction, &global_settings);
     {
       ostringstream buf1, buf2;
       buf1<<(2*pattern_size*pattern_size + 1 + global_node_offset);

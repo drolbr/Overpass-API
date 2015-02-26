@@ -195,6 +195,68 @@ void print_members(const Way_Skeleton& skel, const Opaque_Geometry& geometry,
 }
 
 
+void print_members(const Relation_Skeleton& skel, const Opaque_Geometry& geometry,
+		   const std::map< uint32, std::string >& roles,
+		   Output_Mode mode, bool& inner_tags_printed)
+{
+  if ((mode.mode & Output_Mode::MEMBERS) && !skel.members.empty())
+  {
+    if (!inner_tags_printed)
+    {
+      std::cout<<">\n";
+      inner_tags_printed = true;
+    }
+//     const std::vector< Opaque_Geometry* >* member_geom = 0;
+//     if (geometry.has_member_geometry())
+//       member_geom = geometry.get_member_geometry();
+    for (uint i = 0; i < skel.members.size(); ++i)
+    {
+      std::map< uint32, std::string >::const_iterator it = roles.find(skel.members[i].role);
+      std::cout<<"    <member type=\""<<member_type_name(skel.members[i].type)
+	  <<"\" ref=\""<<skel.members[i].ref.val()
+	  <<"\" role=\""<<escape_xml(it != roles.end() ? it->second : "???")<<"\"";
+//             
+//         if (geometry && skel.members[i].type == Relation_Entry::NODE
+//             && !((*geometry)[i][0] == Quad_Coord(0u, 0u)))
+//           cout<<" lat=\""<<fixed<<setprecision(7)
+//               <<::lat((*geometry)[i][0].ll_upper, (*geometry)[i][0].ll_lower)
+//               <<"\" lon=\""<<fixed<<setprecision(7)
+//               <<::lon((*geometry)[i][0].ll_upper, (*geometry)[i][0].ll_lower)<<'\"';
+//               
+//         if (geometry && skel.members[i].type == Relation_Entry::WAY && !(*geometry)[i].empty())
+//         {
+//           cout<<">\n";
+//           for (std::vector< Quad_Coord >::const_iterator it = (*geometry)[i].begin();
+//                it != (*geometry)[i].end(); ++it)
+//           {
+//             cout<<"      <nd";
+//             if (!(*it == Quad_Coord(0u, 0u)))
+//               cout<<" lat=\""<<fixed<<setprecision(7)
+//                   <<::lat(it->ll_upper, it->ll_lower)
+//                   <<"\" lon=\""<<fixed<<setprecision(7)
+//                   <<::lon(it->ll_upper, it->ll_lower)<<"\"";
+//             cout<<"/>\n";
+//           }
+//           cout<<"    </member>\n";
+//         }
+//         else
+//           cout<<"/>\n";
+// //         if (geometry)
+// //         {
+// //           for (uint j = 0; j < (*geometry)[i].size(); ++j)
+// //             std::cout<<fixed<<setprecision(7)<<::lat((*geometry)[i][j].ll_upper, (*geometry)[i][j].ll_lower)<<", "
+// //                 <<fixed<<setprecision(7)<<::lon((*geometry)[i][j].ll_upper, (*geometry)[i][j].ll_lower)<<'\n';
+// //         }
+	  
+//       if (line_nodes)
+//         std::cout<<" lat=\""<<std::fixed<<std::setprecision(7)<<(*line_nodes)[i].lat
+//             <<"\" lon=\""<<std::fixed<<std::setprecision(7)<<(*line_nodes)[i].lon<<'\"';
+      std::cout<<"/>\n";
+    }
+  }
+}
+
+
 void print_node(const Node_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
@@ -242,6 +304,32 @@ void print_way(const Way_Skeleton& skel,
     std::cout<<"/>\n";
   else
     std::cout<<"  </way>\n";
+}
+
+
+void print_relation(const Relation_Skeleton& skel,
+      const Opaque_Geometry& geometry,
+      const std::vector< std::pair< std::string, std::string > >* tags,
+      const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
+      const std::map< uint32, std::string >* roles,
+      const std::map< uint32, string >* users,
+      Output_Mode mode)
+{
+  std::cout<<"  <relation";
+  if (mode.mode & Output_Mode::ID)
+    std::cout<<" id=\""<<skel.id.val()<<'\"';
+  if ((mode.mode & (Output_Mode::VERSION | Output_Mode::META)) && meta && users)
+    print_meta_xml(*meta, *users);
+  
+  bool inner_tags_printed = false;
+  if (roles)
+    print_members(skel, geometry, *roles, mode, inner_tags_printed);
+  print_tags(tags, mode, inner_tags_printed);
+  print_bounds(geometry, mode, inner_tags_printed);
+  if (!inner_tags_printed)
+    std::cout<<"/>\n";
+  else
+    std::cout<<"  </relation>\n";
 }
 
 
@@ -313,13 +401,13 @@ void Output_XML::print_item(const Relation_Skeleton& skel,
 {
   prepend_action(action);
   
-  //TODO
+  print_relation(skel, geometry, tags, meta, roles, users, mode);
   
   if (action != Output_Handler::keep && action != Output_Handler::create)
   {
     insert_action(action);
     
-    //TODO
+    print_relation(*new_skel, *new_geometry, new_tags, new_meta, roles, users, mode);
   }
   
   append_action(action);
