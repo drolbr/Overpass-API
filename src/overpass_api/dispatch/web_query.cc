@@ -44,12 +44,12 @@
 
 int main(int argc, char *argv[])
 {
+  Parsed_Query global_settings;
   Web_Output error_output(Error_Output::ASSISTING);
   Statement::set_error_output(&error_output);
   
   try
   {
-    Parsed_Query global_settings;
     string url = "http://www.openstreetmap.org/browse/{{{type}}}/{{{id}}}";
     string template_name = "default.wiki";
     bool redirect = true;
