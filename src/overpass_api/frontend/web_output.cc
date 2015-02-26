@@ -302,7 +302,7 @@ void Web_Output::write_payload_header
 
 void Web_Output::write_footer()
 {
-  if (output_handler)
+  if (header_written != final && output_handler)
     output_handler->write_footer();
   
   header_written = final;
