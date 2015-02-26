@@ -920,6 +920,13 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
                                        existing_map_positions, existing_idx_lists);
     std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > > >
         new_attic_global_tags = compute_attic_global_tags(new_attic_local_tags);
+	
+//     std::cerr<<'\n';
+//     for (std::map< Tag_Index_Local, std::set< Attic< Way_Skeleton::Id_Type > > >::const_iterator it = new_attic_local_tags.begin(); it != new_attic_local_tags.end(); ++it)
+//     {
+//       for (std::set< Attic< Way_Skeleton::Id_Type > >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+//         std::cerr<<hex<<it->first.index<<'\t'<<it->first.key<<'\t'<<it->first.value<<'\t'<<dec<<it2->val()<<'\t'<<Timestamp(it2->timestamp).str()<<'\n';
+//     }
     
     // Compute changelog
     std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > > changelog

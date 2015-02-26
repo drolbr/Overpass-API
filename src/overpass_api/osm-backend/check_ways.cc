@@ -37,6 +37,24 @@
 #include "node_updater.h"
 
 
+struct Local_Key_Entry
+{
+  Local_Key_Entry(Way_Skeleton::Id_Type id_, long timestamp_) : id(id_), timestamp(timestamp_) {}
+  
+  Way_Skeleton::Id_Type id;
+  long timestamp;
+  
+  bool operator<(const Local_Key_Entry& rhs) const
+  {
+    if (id < rhs.id)
+      return true;
+    if (rhs.id < id)
+      return false;
+    return timestamp < rhs.timestamp;
+  }
+};
+
+
 int main(int argc, char* args[])
 {
   if (argc < 3)
@@ -80,18 +98,55 @@ int main(int argc, char* args[])
       range_req.insert(std::make_pair(Uint31_Index(i), Uint31_Index(i + 0x10000)));
       
       std::map< Uint31_Index, std::vector< Way_Skeleton > > elements;
-      map< Uint31_Index, vector< Attic< Way_Skeleton > > > attic_elements;
+      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > attic_elements;
       
       collect_items_range_by_timestamp(0, rman, range_req,
 	  Trivial_Predicate< Way_Skeleton >(), elements, attic_elements);
       
       std::cerr<<' '<<std::dec<<elements.size() + attic_elements.size()<<" indexes reconstructed.\n";
     }
+
+    std::string last_key = " ";
+    last_key[1] = 0xff;
+    std::vector< Local_Key_Entry > local_key_entries;
+    
+    Block_Backend< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > > db
+        (transaction.data_index(attic_settings().WAY_TAGS_LOCAL));
+    for (Block_Backend< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >::Flat_Iterator
+         it(db.flat_begin()); !(it == db.flat_end()); ++it)
+    {
+      if (last_key != it.index().key)
+      {
+	std::sort(local_key_entries.begin(), local_key_entries.end());
+	for (std::vector< Local_Key_Entry >::size_type i = 0; i+1 < local_key_entries.size(); ++i)
+	{
+	  if (local_key_entries[i].timestamp == local_key_entries[i+1].timestamp
+	      && local_key_entries[i].id == local_key_entries[i+1].id)
+	    std::cerr<<"Multiple entries for way "<<local_key_entries[i].id.val()<<" at timestamp "
+	        <<local_key_entries[i].timestamp<<" and key "<<last_key<<'\n';
+	}
+	local_key_entries.clear();
+	
+	last_key = it.index().key;
+      }
+      
+      local_key_entries.push_back(Local_Key_Entry(it.object(), it.object().timestamp));
+    }
+    
+    std::sort(local_key_entries.begin(), local_key_entries.end());
+    for (std::vector< Local_Key_Entry >::size_type i = 0; i+1 < local_key_entries.size(); ++i)
+    {
+      if (local_key_entries[i].timestamp == local_key_entries[i+1].timestamp
+	  && local_key_entries[i].id == local_key_entries[i+1].id)
+	std::cerr<<"Multiple entries for way "<<local_key_entries[i].id.val()<<" at timestamp "
+	    <<Timestamp(local_key_entries[i].timestamp).str()<<" and key "<<last_key<<'\n';
+    }    
   }
   catch (File_Error e)
   {
     std::cerr<<e.origin<<' '<<e.filename<<' '<<e.error_number<<'\n';
   }
+  
   
   return 0;
 }
