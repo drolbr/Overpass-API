@@ -21,6 +21,7 @@
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
 #include "../frontend/console_output.h"
+#include "../output_formats/output_xml.h"
 #include "area_query.h"
 #include "bbox_query.h"
 #include "coord_query.h"
@@ -101,6 +102,7 @@ int main(int argc, char* args[])
   Nonsynced_Transaction transaction(false, false, db_dir, "");
   Nonsynced_Transaction area_transaction(true, false, db_dir, "");
   Parsed_Query global_settings;
+  global_settings.set_output_handler(new Output_XML());
   Resource_Manager rman(transaction, global_settings, 0, area_transaction, 0, new Area_Updater(area_transaction));
   
   if (test_to_execute == "create")

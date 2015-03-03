@@ -297,9 +297,9 @@ void print_way(const Way_Skeleton& skel,
     print_meta_xml(*meta, *users);
   
   bool inner_tags_printed = false;
+  print_bounds(geometry, mode, inner_tags_printed);
   print_members(skel, geometry, mode, inner_tags_printed);
   print_tags(tags, mode, inner_tags_printed);
-  print_bounds(geometry, mode, inner_tags_printed);
   if (!inner_tags_printed)
     std::cout<<"/>\n";
   else
@@ -322,10 +322,10 @@ void print_relation(const Relation_Skeleton& skel,
     print_meta_xml(*meta, *users);
   
   bool inner_tags_printed = false;
+  print_bounds(geometry, mode, inner_tags_printed);
   if (roles)
     print_members(skel, geometry, *roles, mode, inner_tags_printed);
   print_tags(tags, mode, inner_tags_printed);
-  print_bounds(geometry, mode, inner_tags_printed);
   if (!inner_tags_printed)
     std::cout<<"/>\n";
   else
@@ -419,5 +419,15 @@ void Output_XML::print_item(const Derived_Skeleton& skel,
       const std::vector< std::pair< std::string, std::string > >* tags,
       Output_Mode mode)
 {
-  //TODO
+  std::cout<<"  <"<<skel.type_name;
+  if (mode.mode & Output_Mode::ID)
+    std::cout<<" id=\""<<skel.id.val()<<'\"';
+  
+  bool inner_tags_printed = false;
+  print_bounds(geometry, mode, inner_tags_printed);
+  print_tags(tags, mode, inner_tags_printed);
+  if (!inner_tags_printed)
+    std::cout<<"/>\n";
+  else
+    std::cout<<"  </"<<skel.type_name<<">\n";
 }

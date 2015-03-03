@@ -554,6 +554,12 @@ template< > inline std::string name_of_type< Area_Skeleton >() { return "Area"; 
 
 struct Derived_Skeleton
 {
+  typedef Uint64 Id_Type;
+  
+  Derived_Skeleton(const std::string& type_name_, Id_Type id_) : type_name(type_name_), id(id_) {}
+  
+  std::string type_name;
+  Id_Type id;
 };
 
 

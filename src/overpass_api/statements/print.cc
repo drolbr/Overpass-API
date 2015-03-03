@@ -2471,7 +2471,14 @@ void Plain_Print_Target::print_item(uint32 ll_upper, const Area_Skeleton& skel,
                             const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta,
                             const map< uint32, string >* users, const Action& action)
 {
-  //TODO
+  if (output)
+  {
+    Null_Geometry geom;
+    Derived_Skeleton derived("area", Uint64(skel.id.val()));
+    output->print_item(derived, geom,
+        mode & Print_Target::PRINT_TAGS ? tags : 0,
+	Output_Mode(mode));
+  }
 }
                             
                             
@@ -2489,7 +2496,7 @@ void Print_Statement::execute(Resource_Manager& rman)
 {
   if (rman.area_updater())
     rman.area_updater()->flush();
-  
+
   map< string, Set >::const_iterator mit(rman.sets().find(input));
   uint32 element_count = 0;
   if (mit == rman.sets().end())

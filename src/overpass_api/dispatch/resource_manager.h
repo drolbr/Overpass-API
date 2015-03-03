@@ -46,7 +46,7 @@ public:
       : transaction(&transaction_), error_output(error_output_),
         area_transaction(&area_transaction_),
         area_updater_(area_updater__),
-	watchdog(watchdog_), global_settings(&global_settings_),
+	watchdog(watchdog_), global_settings(&global_settings_), global_settings_owned(false),
 	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
 	max_allowed_time(0), max_allowed_space(0),
 	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW) {}
