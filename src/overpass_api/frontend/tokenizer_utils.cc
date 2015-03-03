@@ -20,11 +20,11 @@
 #include "tokenizer_utils.h"
 
 
-string decode_to_utf8(const string& token, string::size_type& pos, Error_Output* error_output)
+std::string decode_to_utf8(const std::string& token, std::string::size_type& pos, Error_Output* error_output)
 {
   uint val = 0;
   pos += 2;
-  string::size_type max_pos = pos + 4;
+  std::string::size_type max_pos = pos + 4;
   if (token.size() < max_pos)
     max_pos = token.size();
   while (pos < max_pos &&
@@ -48,20 +48,20 @@ string decode_to_utf8(const string& token, string::size_type& pos, Error_Output*
   }
   else if (val < 0x80)
   {
-    string buf = " ";
+    std::string buf = " ";
     buf[0] = val;
     return buf;
   }
   else if (val < 0x800)
   {
-    string buf = "  ";
+    std::string buf = "  ";
     buf[0] = (0xc0 | (val>>6));
     buf[1] = (0x80 | (val & 0x3f));
     return buf;
   }
   else
   {
-    string buf = "   ";
+    std::string buf = "   ";
     buf[0] = (0xe0 | (val>>12));
     buf[1] = (0x80 | ((val>>6) & 0x3f));
     buf[2] = (0x80 | (val & 0x3f));
@@ -71,19 +71,19 @@ string decode_to_utf8(const string& token, string::size_type& pos, Error_Output*
 }
 
 
-string get_text_token(Tokenizer_Wrapper& token, Error_Output* error_output,
-		      string type_of_token)
+std::string get_text_token(Tokenizer_Wrapper& token, Error_Output* error_output,
+		      std::string type_of_token)
 {
-  string result = "";
+  std::string result = "";
   bool result_valid = true;
 
   if (!token.good() || (*token).size() == 0)
     result_valid = false;
   else if ((*token)[0] == '"' || (*token)[0] == '\'')
   {
-    string::size_type start = 1;
-    string::size_type pos = (*token).find('\\');
-    while (pos != string::npos)
+    std::string::size_type start = 1;
+    std::string::size_type pos = (*token).find('\\');
+    while (pos != std::string::npos)
     {
       result += (*token).substr(start, pos - start);
       if ((*token)[pos + 1] == 'n')
@@ -134,12 +134,12 @@ void process_after(Tokenizer_Wrapper& token, Error_Output* error_output, bool af
 
 
 void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
-		       string target_1, bool after)
+		       std::string target_1, bool after)
 {
   if (*token != target_1)
   {
     if (error_output)
-      error_output->add_parse_error(string("'") + target_1 + "' expected - '"
+      error_output->add_parse_error(std::string("'") + target_1 + "' expected - '"
           + *token + "' found.", token.line_col().first);
     ++token;
   }
@@ -150,13 +150,13 @@ void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
 
 
 void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
-		       string target_1, string target_2, bool after)
+		       std::string target_1, std::string target_2, bool after)
 {
   if (*token != target_1 && *token != target_2)
   {
     if (error_output)
       error_output->add_parse_error
-          (string("'") + target_1 + "' or '" + target_2 + "' expected - '"
+          (std::string("'") + target_1 + "' or '" + target_2 + "' expected - '"
 	      + *token + "' found.", token.line_col().first);
     ++token;
   }
@@ -167,13 +167,13 @@ void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
 
 
 void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
-		       string target_1, string target_2, string target_3, bool after)
+		       std::string target_1, std::string target_2, std::string target_3, bool after)
 {
   if (*token != target_1 && *token != target_2 && *token != target_3)
   {
     if (error_output)
       error_output->add_parse_error
-      (string("'") + target_1 + "', '" + target_2 + "', or '" + target_3 + "'  expected - '"
+      (std::string("'") + target_1 + "', '" + target_2 + "', or '" + target_3 + "'  expected - '"
 	      + *token + "' found.", token.line_col().first);
     ++token;
   }
@@ -184,14 +184,14 @@ void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
 
 
 void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
-		       string target_1, string target_2, string target_3, string target_4,
+		       std::string target_1, std::string target_2, std::string target_3, std::string target_4,
 		       bool after)
 {
   if (*token != target_1 && *token != target_2 && *token != target_3 && *token != target_4)
   {
     if (error_output)
       error_output->add_parse_error
-          (string("'") + target_1 + "', '" + target_2 + "', '" + target_3 + "', or '"
+          (std::string("'") + target_1 + "', '" + target_2 + "', '" + target_3 + "', or '"
               + target_4 + "'  expected - '"
 	      + *token + "' found.", token.line_col().first);
     ++token;
@@ -204,15 +204,15 @@ void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
 
 
 void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
-		       string target_1, string target_2, string target_3, string target_4,
-		       string target_5, bool after)
+		       std::string target_1, std::string target_2, std::string target_3, std::string target_4,
+		       std::string target_5, bool after)
 {
   if (*token != target_1 && *token != target_2 && *token != target_3
       && *token != target_4 && *token != target_5)
   {
     if (error_output)
       error_output->add_parse_error
-          (string("'") + target_1 + "', '" + target_2 + "', '" + target_3+ "', '" + target_4
+          (std::string("'") + target_1 + "', '" + target_2 + "', '" + target_3+ "', '" + target_4
 	      + "', or '" + target_5 + "'  expected - '"
 	      + *token + "' found.", token.line_col().first);
     ++token;

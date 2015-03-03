@@ -30,7 +30,6 @@
 
 #include "basic_types.h"
 
-using namespace std;
 
 struct Aligned_Segment
 {
@@ -70,7 +69,7 @@ struct Area
   }
   
   static void calc_horiz_aligned_segments
-      (vector< Aligned_Segment >& aligned_segments,
+      (std::vector< Aligned_Segment >& aligned_segments,
        uint32 from_lat, uint32 from_lon, uint32 to_lat, uint32 to_lon)
   {
     if ((from_lat & 0xfff00000) == (to_lat & 0xfff00000))
@@ -114,7 +113,7 @@ struct Area
   
   
   static void calc_vert_aligned_segments
-      (vector< Aligned_Segment >& aligned_segments,
+      (std::vector< Aligned_Segment >& aligned_segments,
        uint32 from_lat, int32 from_lon, uint32 to_lat, int32 to_lon)
   {
     if ((from_lon & 0xfff00000) == (to_lon & 0xfff00000))
@@ -158,7 +157,7 @@ struct Area
   
   
   static void calc_aligned_segments
-      (vector< Aligned_Segment >& aligned_segments,
+      (std::vector< Aligned_Segment >& aligned_segments,
        uint32 from_lat, int32 from_lon, uint32 to_lat, int32 to_lon)
   {
     if ((from_lon < -900000000) && (to_lon > 900000000))
@@ -190,7 +189,7 @@ struct Area
       
       
   static void calc_aligned_segments
-      (vector< Aligned_Segment >& aligned_segments,
+      (std::vector< Aligned_Segment >& aligned_segments,
        uint64 from, uint64 to)
   {
     uint32 from_lat = ::ilat(from>>32, from&0xffffffff);
@@ -204,7 +203,7 @@ struct Area
         
       
   static void calc_aligned_segments
-      (vector< Aligned_Segment >& aligned_segments,
+      (std::vector< Aligned_Segment >& aligned_segments,
        double from_lat, double from_lon, double to_lat, double to_lon)
   {
     calc_aligned_segments(aligned_segments,
@@ -216,12 +215,12 @@ struct Area
 struct Area_Location
 {
   uint32 id;
-  vector< uint32 > used_indices;
-  vector< pair< string, string > > tags;
+  std::vector< uint32 > used_indices;
+  std::vector< std::pair< std::string, std::string > > tags;
   
   Area_Location() {}
   
-  Area_Location(uint32 id_, const vector< uint32 >& used_indices_)
+  Area_Location(uint32 id_, const std::vector< uint32 >& used_indices_)
   : id(id_), used_indices(used_indices_) {}
   
   bool operator<(const Area_Location& a) const
@@ -249,7 +248,7 @@ struct Area_Skeleton
   typedef Area::Id_Type Id_Type;
   
   Id_Type id;
-  vector< uint32 > used_indices;
+  std::vector< uint32 > used_indices;
   
   Area_Skeleton() : id(0u) {}
   
@@ -278,7 +277,7 @@ struct Area_Skeleton
     *(uint32*)data = id.val();
     *((uint32*)data + 1) = used_indices.size();
     uint i(2);
-    for (vector< uint32 >::const_iterator it(used_indices.begin());
+    for (std::vector< uint32 >::const_iterator it(used_indices.begin());
     it != used_indices.end(); ++it)
     {
       *((uint32*)data + i) = *it;
@@ -302,7 +301,7 @@ struct Area_Block
   typedef Area::Id_Type Id_Type;
   
   Id_Type id;
-  vector< uint64 > coors;
+  std::vector< uint64 > coors;
   
   Area_Block() : id(0u) {}
   
@@ -314,7 +313,7 @@ struct Area_Block
       coors[i] = (*(uint64*)((uint8*)data + 6 + 5*i)) & (uint64)0xffffffffffull;
   }
   
-  Area_Block(uint32 id_, const vector< uint64 >& coors_)
+  Area_Block(uint32 id_, const std::vector< uint64 >& coors_)
   : id(id_), coors(coors_) {}
   
   uint32 size_of() const

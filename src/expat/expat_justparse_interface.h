@@ -40,14 +40,13 @@
 
 #define BUFFSIZE        8192
 
-using namespace std;
 
 typedef unsigned int uint;
 
 struct Parse_Error
 {
-  Parse_Error(string s) : message(s) {}
-  string message;
+  Parse_Error(std::string s) : message(s) {}
+  std::string message;
 };
 
 struct Script_Parser
@@ -63,7 +62,7 @@ struct Script_Parser
     XML_ParserFree(p);
   }
   
-  void parse(const string& input,
+  void parse(const std::string& input,
 	void (*start)(const char*, const char**),
 	void (*end)(const char*))
   {
@@ -118,7 +117,7 @@ struct Script_Parser
     ((Script_Parser*)userData)->result_buf.append(s, len);
   }
 
-  string get_parsed_text()
+  std::string get_parsed_text()
   {
     return result_buf;
   }
@@ -131,7 +130,7 @@ struct Script_Parser
 private:
   XML_Parser p;
   bool parser_online;  
-  string result_buf;
+  std::string result_buf;
 
   void (*working_start)(const char*, const char**);
   void (*working_end)(const char*);

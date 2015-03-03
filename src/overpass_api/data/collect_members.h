@@ -28,7 +28,6 @@
 #include <set>
 #include <vector>
 
-using namespace std;
 
 class Resource_Manager;
 class Statement;

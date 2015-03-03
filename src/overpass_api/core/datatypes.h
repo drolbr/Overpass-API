@@ -37,10 +37,10 @@
 
 struct String_Object
 {
-  String_Object(string s) : value(s) {}
+  String_Object(std::string s) : value(s) {}
   String_Object(void* data) : value()
   {
-    value = string(((int8*)data + 2), *(uint16*)data);
+    value = std::string(((int8*)data + 2), *(uint16*)data);
   }
   
   uint32 size_of() const
@@ -69,19 +69,19 @@ struct String_Object
     return this->value == index.value;
   }
   
-  string val() const
+  std::string val() const
   {
     return value;
   }
   
   protected:
-    string value;
+    std::string value;
 };
 
 
 template< typename First, typename Second >
 struct Pair_Comparator_By_Id {
-  bool operator() (const pair< First, Second >& a, const pair< First, Second >& b)
+  bool operator() (const std::pair< First, Second >& a, const std::pair< First, Second >& b)
   {
     return (a.first < b.first);
   }
@@ -90,7 +90,7 @@ struct Pair_Comparator_By_Id {
 
 template< typename First, typename Second >
 struct Pair_Equal_Id {
-  bool operator() (const pair< First, Second >& a, const pair< First, Second >& b)
+  bool operator() (const std::pair< First, Second >& a, const std::pair< First, Second >& b)
   {
     return (a.first == b.first);
   }
@@ -98,7 +98,7 @@ struct Pair_Equal_Id {
 
 
 template < class T >
-const T* binary_search_for_id(const vector< T >& vect, typename T::Id_Type id)
+const T* binary_search_for_id(const std::vector< T >& vect, typename T::Id_Type id)
 {
   uint32 lower(0);
   uint32 upper(vect.size());
@@ -118,7 +118,7 @@ const T* binary_search_for_id(const vector< T >& vect, typename T::Id_Type id)
 
 
 template < class TObject >
-TObject* binary_ptr_search_for_id(const vector< TObject* >& vect, typename TObject::Id_Type id)
+TObject* binary_ptr_search_for_id(const std::vector< TObject* >& vect, typename TObject::Id_Type id)
 {
   uint32 lower(0);
   uint32 upper(vect.size());
@@ -138,7 +138,7 @@ TObject* binary_ptr_search_for_id(const vector< TObject* >& vect, typename TObje
 
 
 template < class Id_Type, class TObject >
-const TObject* binary_pair_search(const vector< pair< Id_Type, TObject> >& vect, Id_Type id)
+const TObject* binary_pair_search(const std::vector< std::pair< Id_Type, TObject> >& vect, Id_Type id)
 {
   uint32 lower(0);
   uint32 upper(vect.size());
@@ -162,15 +162,15 @@ const TObject* binary_pair_search(const vector< pair< Id_Type, TObject> >& vect,
   */
 struct Set
 {
-  map< Uint32_Index, vector< Node_Skeleton > > nodes;
-  map< Uint31_Index, vector< Way_Skeleton > > ways;
-  map< Uint31_Index, vector< Relation_Skeleton > > relations;
+  std::map< Uint32_Index, std::vector< Node_Skeleton > > nodes;
+  std::map< Uint31_Index, std::vector< Way_Skeleton > > ways;
+  std::map< Uint31_Index, std::vector< Relation_Skeleton > > relations;
   
-  map< Uint32_Index, vector< Attic< Node_Skeleton > > > attic_nodes;
-  map< Uint31_Index, vector< Attic< Way_Skeleton > > > attic_ways;
-  map< Uint31_Index, vector< Attic< Relation_Skeleton > > > attic_relations;
+  std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > attic_nodes;
+  std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > attic_ways;
+  std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > > attic_relations;
   
-  map< Uint31_Index, vector< Area_Skeleton > > areas;
+  std::map< Uint31_Index, std::vector< Area_Skeleton > > areas;
   
   void swap(Set& rhs)
   {
@@ -198,28 +198,28 @@ struct Set
 
 struct Error_Output
 {
-  virtual void add_encoding_error(const string& error) = 0;
-  virtual void add_parse_error(const string& error, int line_number) = 0;
-  virtual void add_static_error(const string& error, int line_number) = 0;
-  // void add_sanity_error(const string& error);
+  virtual void add_encoding_error(const std::string& error) = 0;
+  virtual void add_parse_error(const std::string& error, int line_number) = 0;
+  virtual void add_static_error(const std::string& error, int line_number) = 0;
+  // void add_sanity_error(const std::string& error);
   
-  virtual void add_encoding_remark(const string& error) = 0;
-  virtual void add_parse_remark(const string& error, int line_number) = 0;
-  virtual void add_static_remark(const string& error, int line_number) = 0;
-  // void add_sanity_remark(const string& error);
+  virtual void add_encoding_remark(const std::string& error) = 0;
+  virtual void add_parse_remark(const std::string& error, int line_number) = 0;
+  virtual void add_static_remark(const std::string& error, int line_number) = 0;
+  // void add_sanity_remark(const std::string& error);
   
-  virtual void runtime_error(const string& error) = 0;
-  virtual void runtime_remark(const string& error) = 0;
+  virtual void runtime_error(const std::string& error) = 0;
+  virtual void runtime_remark(const std::string& error) = 0;
   
   virtual void display_statement_progress
-    (uint timer, const string& name, int progress, int line_number,
-     const vector< pair< uint, uint > >& stack) = 0;
+    (uint timer, const std::string& name, int progress, int line_number,
+     const std::vector< std::pair< uint, uint > >& stack) = 0;
   
   virtual bool display_encoding_errors() = 0;
   virtual bool display_parse_errors() = 0;
   virtual bool display_static_errors() = 0;
   
-  virtual void add_padding(const string& padding) = 0;
+  virtual void add_padding(const std::string& padding) = 0;
   
   static const uint QUIET = 1;
   static const uint CONCISE = 2;
@@ -266,14 +266,14 @@ class Osm_Backend_Callback
 struct User_Data
 {
   uint32 id;
-  string name;
+  std::string name;
   
   User_Data() : id(0) {}
   
   User_Data(void* data)
   {
     id = *(uint32*)data;
-    name = string(((int8*)data + 6), *(uint16*)((int8*)data + 4));
+    name = std::string(((int8*)data + 6), *(uint16*)((int8*)data + 4));
   }
   
   uint32 size_of() const
@@ -313,7 +313,7 @@ struct OSM_Element_Metadata
   uint64 timestamp;
   uint32 changeset;
   uint32 user_id;
-  string user_name;
+  std::string user_name;
   
   bool operator<(const OSM_Element_Metadata&) const { return false; }
 };
@@ -389,8 +389,8 @@ struct OSM_Element_Metadata_Skeleton
 
 
 template< class TIndex, class TObject >
-const pair< TIndex, const TObject* >* binary_search_for_pair_id
-    (const vector< pair< TIndex, const TObject* > >& vect, typename TObject::Id_Type id)
+const std::pair< TIndex, const TObject* >* binary_search_for_pair_id
+    (const std::vector< std::pair< TIndex, const TObject* > >& vect, typename TObject::Id_Type id)
 {
   uint32 lower(0);
   uint32 upper(vect.size());

@@ -35,7 +35,7 @@ public:
   enum Feature_Action { keep, modify, push_away, pull_in, erase, create };
   
   virtual void write_http_headers() = 0;
-  virtual void write_payload_header(const string& timestamp, const string& area_timestamp) = 0;
+  virtual void write_payload_header(const std::string& timestamp, const std::string& area_timestamp) = 0;
   virtual void write_footer() = 0;
   virtual void display_remark(const std::string& text) = 0;
   virtual void display_error(const std::string& text) = 0;
@@ -70,7 +70,7 @@ public:
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
       const std::map< uint32, std::string >* roles,
-      const map< uint32, string >* users,
+      const std::map< uint32, std::string >* users,
       Output_Mode mode,
       const Feature_Action& action = keep,
       const Relation_Skeleton* new_skel = 0,

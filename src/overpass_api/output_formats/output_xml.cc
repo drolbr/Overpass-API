@@ -43,7 +43,7 @@ void Output_XML::display_error(const std::string& text)
 
 template< typename Id_Type >
 void print_meta_xml(const OSM_Element_Metadata_Skeleton< Id_Type >& meta,
-		    const std::map< uint32, string >& users)
+		    const std::map< uint32, std::string >& users)
 {
   uint32 year = Timestamp::year(meta.timestamp);
   uint32 month = Timestamp::month(meta.timestamp);
@@ -68,7 +68,7 @@ void print_meta_xml(const OSM_Element_Metadata_Skeleton< Id_Type >& meta,
   timestamp[18] = second % 10 + '0';
   std::cout<<" version=\""<<meta.version<<"\" timestamp=\""<<timestamp
       <<"\" changeset=\""<<meta.changeset<<"\" uid=\""<<meta.user_id<<"\"";
-  std::map< uint32, string >::const_iterator it = users.find(meta.user_id);
+  std::map< uint32, std::string >::const_iterator it = users.find(meta.user_id);
   if (it != users.end())
     std::cout<<" user=\""<<escape_xml(it->second)<<"\"";
 }
@@ -149,10 +149,10 @@ void print_bounds(const Opaque_Geometry& geometry, Output_Mode mode, bool& inner
       inner_tags_printed = true;
     }
     std::cout<<"    <bounds"
-        " minlat=\""<<fixed<<setprecision(7)<<geometry.south()<<"\""
-        " minlon=\""<<fixed<<setprecision(7)<<geometry.west()<<"\""
-        " maxlat=\""<<fixed<<setprecision(7)<<geometry.north()<<"\""
-        " maxlon=\""<<fixed<<setprecision(7)<<geometry.east()<<"\""
+        " minlat=\""<<std::fixed<<std::setprecision(7)<<geometry.south()<<"\""
+        " minlon=\""<<std::fixed<<std::setprecision(7)<<geometry.west()<<"\""
+        " maxlat=\""<<std::fixed<<std::setprecision(7)<<geometry.north()<<"\""
+        " maxlon=\""<<std::fixed<<std::setprecision(7)<<geometry.east()<<"\""
         "/>\n";
   }
   else if ((mode.mode & Output_Mode::CENTER) && geometry.has_center())
@@ -163,8 +163,8 @@ void print_bounds(const Opaque_Geometry& geometry, Output_Mode mode, bool& inner
       inner_tags_printed = true;
     }
     std::cout<<"    <center"
-        " lat=\""<<fixed<<setprecision(7)<<geometry.center_lat()<<"\""
-        " lon=\""<<fixed<<setprecision(7)<<geometry.center_lon()<<"\""
+        " lat=\""<<std::fixed<<std::setprecision(7)<<geometry.center_lat()<<"\""
+        " lon=\""<<std::fixed<<std::setprecision(7)<<geometry.center_lon()<<"\""
         "/>\n";
   }
 }
@@ -269,8 +269,8 @@ void print_node(const Node_Skeleton& skel,
     std::cout<<" id=\""<<skel.id.val()<<'\"';
   if ((mode.mode & (Output_Mode::COORDS | Output_Mode::GEOMETRY | Output_Mode::BOUNDS | Output_Mode::CENTER))
       && geometry.has_center())
-    std::cout<<" lat=\""<<fixed<<setprecision(7)<<geometry.center_lat()
-        <<"\" lon=\""<<fixed<<setprecision(7)<<geometry.center_lon()<<'\"';
+    std::cout<<" lat=\""<<std::fixed<<std::setprecision(7)<<geometry.center_lat()
+        <<"\" lon=\""<<std::fixed<<std::setprecision(7)<<geometry.center_lon()<<'\"';
   if ((mode.mode & (Output_Mode::VERSION | Output_Mode::META)) && meta && users)
     print_meta_xml(*meta, *users);
   
@@ -312,7 +312,7 @@ void print_relation(const Relation_Skeleton& skel,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
       const std::map< uint32, std::string >* roles,
-      const std::map< uint32, string >* users,
+      const std::map< uint32, std::string >* users,
       Output_Mode mode)
 {
   std::cout<<"  <relation";
@@ -391,7 +391,7 @@ void Output_XML::print_item(const Relation_Skeleton& skel,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
       const std::map< uint32, std::string >* roles,
-      const map< uint32, string >* users,
+      const std::map< uint32, std::string >* users,
       Output_Mode mode,
       const Feature_Action& action,
       const Relation_Skeleton* new_skel,

@@ -24,7 +24,7 @@ public:
   Output_CSV(Csv_Settings csv_settings_) : csv_settings(csv_settings_) {}
   
   virtual void write_http_headers();
-  virtual void write_payload_header(const string& timestamp, const string& area_timestamp);
+  virtual void write_payload_header(const std::string& timestamp, const std::string& area_timestamp);
   virtual void write_footer();
   virtual void display_remark(const std::string& text);
   virtual void display_error(const std::string& text);
@@ -59,7 +59,7 @@ public:
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
       const std::map< uint32, std::string >* roles,
-      const map< uint32, string >* users,
+      const std::map< uint32, std::string >* users,
       Output_Mode mode,
       const Feature_Action& action = keep,
       const Relation_Skeleton* new_skel = 0,
