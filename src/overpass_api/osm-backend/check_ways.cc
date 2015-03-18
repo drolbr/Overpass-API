@@ -26,15 +26,11 @@
 #include <list>
 #include <sstream>
 
-#include "../../expat/expat_justparse_interface.h"
-#include "../../template_db/random_file.h"
 #include "../../template_db/transaction.h"
-#include "../core/settings.h"
-#include "../core/settings.h"
+#include "../core/datatypes.h"
 #include "../data/abstract_processing.h"
+#include "../dispatch/resource_manager.h"
 #include "../frontend/console_output.h"
-#include "../frontend/output.h"
-#include "node_updater.h"
 
 
 struct Local_Key_Entry
@@ -106,6 +102,7 @@ int main(int argc, char* args[])
       std::cerr<<' '<<std::dec<<elements.size() + attic_elements.size()<<" indexes reconstructed.\n";
     }
 
+    Uint31_Index last_index(0xffffffffu);
     std::string last_key = " ";
     last_key[1] = 0xff;
     std::vector< Local_Key_Entry > local_key_entries;
@@ -115,7 +112,7 @@ int main(int argc, char* args[])
     for (Block_Backend< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >::Flat_Iterator
          it(db.flat_begin()); !(it == db.flat_end()); ++it)
     {
-      if (last_key != it.index().key)
+      if (!(last_index == it.index().index) || last_key != it.index().key)
       {
 	std::sort(local_key_entries.begin(), local_key_entries.end());
 	for (std::vector< Local_Key_Entry >::size_type i = 0; i+1 < local_key_entries.size(); ++i)
@@ -127,6 +124,7 @@ int main(int argc, char* args[])
 	}
 	local_key_entries.clear();
 	
+	last_index = it.index().index;
 	last_key = it.index().key;
       }
       
