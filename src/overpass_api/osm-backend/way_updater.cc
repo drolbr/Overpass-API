@@ -133,9 +133,6 @@ void add_intermediate_versions
      std::map< Uint31_Index, std::set< Attic< Way_Skeleton::Id_Type > > >& new_undeleted,
      std::map< Way_Skeleton::Id_Type, std::set< Uint31_Index > >& idx_lists)
 {
-//   std::cout<<std::dec<<skeleton.id.val()<<'\t'
-//       <<Timestamp(old_timestamp).str()<<'\t'<<Timestamp(new_timestamp).str()<<'\t'<<add_last_version<<'\n';
-  
   std::vector< uint64 > relevant_timestamps;
   for (std::vector< Node_Skeleton::Id_Type >::const_iterator it = skeleton.nds.begin();
        it != skeleton.nds.end(); ++it)
@@ -317,24 +314,18 @@ void compute_new_attic_skeletons
     if (next_it != new_data.data.end() && it->elem.id == next_it->elem.id)
     {
       if (it->idx.val() != 0)
-      {
-//         std::cout<<"A\t";
         add_intermediate_versions(it->elem, next_it->elem, it->meta.timestamp, next_it->meta.timestamp,
                                   nodes_by_id,
                                   // Add last version only if it differs from the next version
                                   (next_it->idx.val() == 0 || !geometrically_equal(it->elem, next_it->elem)),
                                   Uint31_Index(0u), full_attic, new_undeleted, idx_lists);
-      }
     }
     
     if (next_it == new_data.data.end() || !(it->elem.id == next_it->elem.id))
       // This is the latest version of this element. Care here for changes since this element.
-    {
-//       std::cout<<"B\t";
       add_intermediate_versions(it->elem, Way_Skeleton(), it->meta.timestamp, NOW,
                                 nodes_by_id, false, Uint31_Index(0u),
                                 full_attic, new_undeleted, idx_lists);
-    }
 
     if (last_id == it->elem.id)
     {
@@ -390,7 +381,6 @@ void compute_new_attic_skeletons
     
     std::map< Way_Skeleton::Id_Type, Timestamp >::const_iterator it_attic_time
         = existing_attic_skeleton_timestamps.find(it->elem.id);
-//     std::cout<<"C\t";
     add_intermediate_versions(*it_attic, it->elem,
 			      it_attic_time == existing_attic_skeleton_timestamps.end() ?
 			          uint64(0u) : it_attic_time->second.timestamp,
@@ -404,12 +394,9 @@ void compute_new_attic_skeletons
       it = implicitly_moved_skeletons.begin(); it != implicitly_moved_skeletons.end(); ++it)
   {
     for (std::set< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-    {
-//       std::cout<<"D\t";
       add_intermediate_versions(*it2,*it2, 0, NOW, nodes_by_id,
                                 false, it->first,
                                 full_attic, new_undeleted, idx_lists);
-    }
   }
 }
 
@@ -917,7 +904,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
     std::map< Way_Skeleton::Id_Type, Timestamp > existing_attic_skeleton_timestamps
       = get_existing_attic_skeleton_timestamps< Way_Skeleton, Way_Delta >
       (existing_attic_map_positions, existing_idx_lists, *transaction, *attic_settings().WAYS);
-//     std::cout<<existing_attic_skeleton_timestamps.size()<<"\n";
         
     // Compute which objects really have changed
     new_attic_skeletons.clear();
@@ -929,14 +915,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
                                 new_node_idx_by_id, new_attic_node_skeletons,
                                 new_attic_skeletons, new_undeleted, new_attic_idx_lists);
     
-//     for (std::map< Uint31_Index, std::set< Attic< Way_Delta > > >::const_iterator it = new_attic_skeletons.begin();
-// 	 it != new_attic_skeletons.end(); ++it)
-//     {
-//       for (std::set< Attic< Way_Delta > >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-//         std::cout<<std::hex<<it->first.val()<<'\t'
-//             <<std::dec<<it2->id.val()<<'\t'<<Timestamp(it2->timestamp).str()<<'\n';
-//     }
-
     std::map< Way_Skeleton::Id_Type, std::vector< Attic< Uint31_Index > > > new_attic_idx_by_id_and_time =
         compute_new_attic_idx_by_id_and_time(new_data, new_skeletons, new_attic_skeletons);
         
