@@ -783,6 +783,7 @@ void compute_new_attic_skeletons
      const std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
      const std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > >& attic_map_positions,
      const std::map< Uint31_Index, std::set< Relation_Skeleton > >& attic_skeletons,
+     const std::map< Relation_Skeleton::Id_Type, Timestamp >& existing_attic_skeleton_timestamps,
      const std::map< Node_Skeleton::Id_Type, Quad_Coord >& new_node_idx_by_id,
      const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
      const std::map< Way_Skeleton::Id_Type, Uint31_Index >& new_way_idx_by_id,
@@ -878,7 +879,12 @@ void compute_new_attic_skeletons
       // Something has gone wrong. Skip this object.
       continue;
 
-    add_intermediate_versions(*it_attic, it->elem, 0, it->meta.timestamp, nodes_by_id, ways_by_id,
+    std::map< Relation_Skeleton::Id_Type, Timestamp >::const_iterator it_attic_time
+        = existing_attic_skeleton_timestamps.find(it->elem.id);
+    add_intermediate_versions(*it_attic, it->elem,
+			      it_attic_time == existing_attic_skeleton_timestamps.end() ?
+			          uint64(0u) : it_attic_time->second.timestamp,
+			      it->meta.timestamp, nodes_by_id, ways_by_id,
                               (it->idx.val() == 0 || !geometrically_equal(*it_attic, it->elem)),
                               *idx, full_attic, new_undeleted, idx_lists);
   }
@@ -1152,12 +1158,19 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
         = get_existing_idx_lists(ids_to_update_, existing_attic_map_positions,
                                  *transaction, *attic_settings().RELATION_IDX_LIST);
         
+    // Collect known change times of attic elements. This allows that
+    // for each object no older version than the youngest known attic version can be written
+    std::map< Relation_Skeleton::Id_Type, Timestamp > existing_attic_skeleton_timestamps
+      = get_existing_attic_skeleton_timestamps< Relation_Skeleton, Relation_Delta >
+      (existing_attic_map_positions, existing_idx_lists, *transaction, *attic_settings().RELATIONS);
+        
     // Compute which objects really have changed
     new_attic_skeletons.clear();
     std::map< Relation_Skeleton::Id_Type, std::set< Uint31_Index > > new_attic_idx_lists = existing_idx_lists;
     std::map< Uint31_Index, std::set< Attic< Relation_Skeleton::Id_Type > > > new_undeleted;
     compute_new_attic_skeletons(new_data, implicitly_moved_skeletons,
                                 existing_map_positions, existing_attic_map_positions, attic_skeletons,
+				existing_attic_skeleton_timestamps,
                                 new_node_idx_by_id, new_attic_node_skeletons,
                                 new_way_idx_by_id, new_attic_way_skeletons,
                                 new_attic_skeletons, new_undeleted, new_attic_idx_lists);

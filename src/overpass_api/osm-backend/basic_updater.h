@@ -130,6 +130,47 @@ std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_skeletons
 }
 
 
+template< typename Element_Skeleton, typename Element_Skeleton_Delta >
+std::map< typename Element_Skeleton::Id_Type, Timestamp > get_existing_attic_skeleton_timestamps
+    (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& ids_with_position,
+     const std::map< typename Element_Skeleton::Id_Type, std::set< Uint31_Index > >& existing_idx_lists,
+     Transaction& transaction, const File_Properties& file_properties)
+{
+  std::set< Uint31_Index > req;
+  for (typename std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >::const_iterator
+      it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
+    req.insert(it->second);
+  
+  for (typename std::map< typename Element_Skeleton::Id_Type, std::set< Uint31_Index > >::const_iterator
+      it = existing_idx_lists.begin(); it != existing_idx_lists.end(); ++it)
+  {
+    for (std::set< Uint31_Index >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      req.insert(*it2);
+  }
+  
+  std::map< typename Element_Skeleton::Id_Type, Timestamp > result;
+  Idx_Agnostic_Compare< typename Element_Skeleton::Id_Type > comp;
+  
+  Block_Backend< Uint31_Index, Attic< Element_Skeleton_Delta > > db(transaction.data_index(&file_properties));
+  for (typename Block_Backend< Uint31_Index, Attic< Element_Skeleton_Delta > >::Discrete_Iterator
+      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+  {
+    if (binary_search(ids_with_position.begin(), ids_with_position.end(),
+        make_pair(it.object().id, 0), comp))
+    {
+      typename std::map< typename Element_Skeleton::Id_Type, Timestamp >::iterator rit
+          = result.find(it.object().id);
+      if (rit == result.end())
+	result.insert(std::make_pair(it.object().id, Timestamp(it.object().timestamp)));
+      else if (it.object().timestamp < rit->second.timestamp)
+        rit->second = Timestamp(it.object().timestamp);
+    }
+  }
+
+  return result;
+}
+
+
 template< typename Element_Skeleton >
 std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_meta
     (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& ids_with_position,
