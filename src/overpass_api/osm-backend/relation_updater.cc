@@ -628,7 +628,8 @@ void add_intermediate_versions
   if (idx.val() == 0 || !relevant_timestamps.empty())
     compute_idx_and_geometry(idx, cur_skeleton, new_timestamp, nodes_by_id, ways_by_id);
     
-  if (add_last_version || (!relevant_timestamps.empty() && relevant_timestamps.back() == new_timestamp))
+  if ((add_last_version && old_timestamp < new_timestamp)
+      || (!relevant_timestamps.empty() && relevant_timestamps.back() == new_timestamp))
   {
     Uint31_Index reference_idx;
     Relation_Skeleton reference_skel = reference;

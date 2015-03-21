@@ -162,7 +162,7 @@ std::map< typename Element_Skeleton::Id_Type, Timestamp > get_existing_attic_ske
           = result.find(it.object().id);
       if (rit == result.end())
 	result.insert(std::make_pair(it.object().id, Timestamp(it.object().timestamp)));
-      else if (it.object().timestamp < rit->second.timestamp)
+      else if (rit->second.timestamp < it.object().timestamp)
         rit->second = Timestamp(it.object().timestamp);
     }
   }
