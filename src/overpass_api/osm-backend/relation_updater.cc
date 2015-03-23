@@ -896,9 +896,16 @@ void compute_new_attic_skeletons
   {
     for (std::set< Relation_Skeleton >::const_iterator it2 = it->second.begin();
          it2 != it->second.end(); ++it2)
-      add_intermediate_versions(*it2, *it2, 0, NOW, nodes_by_id, ways_by_id,
+    {
+      std::map< Relation_Skeleton::Id_Type, Timestamp >::const_iterator it_attic_time
+          = existing_attic_skeleton_timestamps.find(it2->id);
+      add_intermediate_versions(*it2, *it2,
+			        it_attic_time == existing_attic_skeleton_timestamps.end() ?
+			            uint64(0u) : it_attic_time->second.timestamp,
+				NOW, nodes_by_id, ways_by_id,
                                 false, it->first,
                                 full_attic, new_undeleted, idx_lists);
+    }
   }
 }
 

@@ -378,7 +378,6 @@ void compute_new_attic_skeletons
     if (it_attic == it_attic_idx->second.end())
       // Something has gone wrong. Skip this object.
       continue;
-
     
     std::map< Way_Skeleton::Id_Type, Timestamp >::const_iterator it_attic_time
         = existing_attic_skeleton_timestamps.find(it->elem.id);
@@ -393,11 +392,18 @@ void compute_new_attic_skeletons
   // Add the missing elements that result from node moves only
   for (std::map< Uint31_Index, std::set< Way_Skeleton > >::const_iterator
       it = implicitly_moved_skeletons.begin(); it != implicitly_moved_skeletons.end(); ++it)
-  {
+  {    
     for (std::set< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      add_intermediate_versions(*it2,*it2, 0, NOW, nodes_by_id,
+    {
+      std::map< Way_Skeleton::Id_Type, Timestamp >::const_iterator it_attic_time
+          = existing_attic_skeleton_timestamps.find(it2->id);
+      add_intermediate_versions(*it2,*it2,
+			        it_attic_time == existing_attic_skeleton_timestamps.end() ?
+			            uint64(0u) : it_attic_time->second.timestamp,
+				NOW, nodes_by_id,
                                 false, it->first,
                                 full_attic, new_undeleted, idx_lists);
+    }
   }
 }
 
