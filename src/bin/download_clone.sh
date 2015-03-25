@@ -26,7 +26,7 @@ META=
 
 if [[ -z $1 ]]; then
 {
-  echo "Usage: $0 --db-dir=database_dir --source=http://overpass-api.de/api/ --meta=(yes|no)"
+  echo "Usage: $0 --db-dir=database_dir --source=http://dev.overpass-api.de/api/ --meta=(yes|no|attic)"
   exit 0
 }; fi
 
@@ -56,9 +56,24 @@ if [[ -n $1  ]]; then process_param $1; fi
 if [[ -n $2  ]]; then process_param $2; fi
 if [[ -n $3  ]]; then process_param $3; fi
 
-FILES_BASE="nodes.bin nodes.map node_tags_local.bin node_tags_global.bin ways.bin ways.map way_tags_local.bin way_tags_global.bin relations.bin relations.map relation_roles.bin relation_tags_local.bin relation_tags_global.bin"
+FILES_BASE="\
+nodes.bin nodes.map node_tags_local.bin node_tags_global.bin node_keys.bin \
+ways.bin ways.map way_tags_local.bin way_tags_global.bin way_keys.bin \
+relations.bin relations.map relation_roles.bin relation_tags_local.bin relation_tags_global.bin relation_keys.bin"
 
-FILES_META="nodes_meta.bin ways_meta.bin relations_meta.bin user_data.bin user_indices.bin"
+FILES_META="\
+nodes_meta.bin \
+ways_meta.bin \
+relations_meta.bin \
+user_data.bin user_indices.bin"
+
+FILES_ATTIC="\
+nodes_attic.bin nodes_attic.map nodes_attic_indexes.bin nodes_attic_undeleted.bin nodes_meta_attic.bin \
+node_changelog.bin node_tags_local_attic.bin node_tags_global_attic.bin \
+ways_attic.bin ways_attic.map ways_attic_indexes.bin ways_attic_undeleted.bin ways_meta_attic.bin \
+way_changelog.bin way_tags_local_attic.bin way_tags_global_attic.bin \
+relations_attic.bin relations_attic.map relations_attic_indexes.bin relations_attic_undeleted.bin relations_meta_attic.bin \
+relation_changelog.bin relation_tags_local_attic.bin relation_tags_global_attic.bin"
 
 # $1 - remote source
 # $2 - local destination
@@ -107,9 +122,17 @@ for I in $FILES_BASE; do
   download_file $I
 }; done
 
-if [[ $META == "yes" ]]; then
+if [[ $META == "yes" || $META == "attic" ]]; then
 {
   for I in $FILES_META; do
+  {
+    download_file $I
+  }; done
+}; fi
+
+if [[ $META == "attic" ]]; then
+{
+  for I in $FILES_ATTIC; do
   {
     download_file $I
   }; done
@@ -127,9 +150,17 @@ while [[ $DONE != "yes" ]]; do
     check_gz $I
   }; done
 
-  if [[ $META == "yes" ]]; then
+  if [[ $META == "yes" || $META == "attic" ]]; then
   {
     for I in $FILES_META; do
+    {
+      check_gz $I
+    }; done
+  }; fi
+
+  if [[ $META == "attic" ]]; then
+  {
+    for I in $FILES_ATTIC; do
     {
       check_gz $I
     }; done

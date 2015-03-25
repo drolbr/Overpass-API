@@ -21,7 +21,26 @@ EXEC_DIR="`pwd`/../"
 DB_DIR=`../bin/dispatcher --show-dir`
 CLONE_DIR="$1"
 
-FILES_TO_HANDLE="nodes.bin nodes.map node_tags_local.bin node_tags_global.bin ways.bin ways.map way_tags_local.bin way_tags_global.bin relations.bin relations.map relation_roles.bin relation_tags_local.bin relation_tags_global.bin nodes_meta.bin ways_meta.bin relations_meta.bin user_data.bin user_indices.bin"
+FILES_BASE="\
+nodes.bin nodes.map node_tags_local.bin node_tags_global.bin node_keys.bin \
+ways.bin ways.map way_tags_local.bin way_tags_global.bin way_keys.bin \
+relations.bin relations.map relation_roles.bin relation_tags_local.bin relation_tags_global.bin relation_keys.bin"
+
+FILES_META="\
+nodes_meta.bin \
+ways_meta.bin \
+relations_meta.bin \
+user_data.bin user_indices.bin"
+
+FILES_ATTIC="\
+nodes_attic.bin nodes_attic.map nodes_attic_indexes.bin nodes_attic_undeleted.bin nodes_meta_attic.bin \
+node_changelog.bin node_tags_local_attic.bin node_tags_global_attic.bin \
+ways_attic.bin ways_attic.map ways_attic_indexes.bin ways_attic_undeleted.bin ways_meta_attic.bin \
+way_changelog.bin way_tags_local_attic.bin way_tags_global_attic.bin \
+relations_attic.bin relations_attic.map relations_attic_indexes.bin relations_attic_undeleted.bin relations_meta_attic.bin \
+relation_changelog.bin relation_tags_local_attic.bin relation_tags_global_attic.bin"
+
+FILES_TO_HANDLE="$FILES_BASE $FILES_META $FILES_ATTIC"
 
 compress_file()
 {
