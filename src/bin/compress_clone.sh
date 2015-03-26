@@ -33,11 +33,11 @@ relations_meta.bin \
 user_data.bin user_indices.bin"
 
 FILES_ATTIC="\
-nodes_attic.bin nodes_attic.map nodes_attic_indexes.bin nodes_attic_undeleted.bin nodes_meta_attic.bin \
+nodes_attic.bin nodes_attic.map node_attic_indexes.bin nodes_attic_undeleted.bin nodes_meta_attic.bin \
 node_changelog.bin node_tags_local_attic.bin node_tags_global_attic.bin \
-ways_attic.bin ways_attic.map ways_attic_indexes.bin ways_attic_undeleted.bin ways_meta_attic.bin \
+ways_attic.bin ways_attic.map way_attic_indexes.bin ways_attic_undeleted.bin ways_meta_attic.bin \
 way_changelog.bin way_tags_local_attic.bin way_tags_global_attic.bin \
-relations_attic.bin relations_attic.map relations_attic_indexes.bin relations_attic_undeleted.bin relations_meta_attic.bin \
+relations_attic.bin relations_attic.map relation_attic_indexes.bin relations_attic_undeleted.bin relations_meta_attic.bin \
 relation_changelog.bin relation_tags_local_attic.bin relation_tags_global_attic.bin"
 
 FILES_TO_HANDLE="$FILES_BASE $FILES_META $FILES_ATTIC"
