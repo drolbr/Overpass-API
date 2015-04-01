@@ -1026,6 +1026,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
   
   // Prepare collecting all data of existing skeletons
   std::sort(new_data.data.begin(), new_data.data.end());
+  remove_time_inconsistent_versions(new_data);
   std::vector< Relation_Skeleton::Id_Type > ids_to_update_ = ids_to_update(new_data);
   
   // Collect all data of existing id indexes

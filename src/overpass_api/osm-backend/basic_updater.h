@@ -59,6 +59,29 @@ struct Data_By_Id
   std::vector< Entry > data;
 };
 
+
+template< typename Skeleton >
+void remove_time_inconsistent_versions(Data_By_Id< Skeleton >& new_data)
+{
+  typename std::vector< typename Data_By_Id< Skeleton >::Entry >::iterator from_it = new_data.data.begin();
+  typename std::vector< typename Data_By_Id< Skeleton >::Entry >::iterator to_it = new_data.data.begin();
+  if (from_it != new_data.data.end())
+    ++from_it;
+  while (from_it != new_data.data.end())
+  {
+    if (to_it->elem.id == from_it->elem.id && from_it->meta.timestamp <= to_it->meta.timestamp)
+      std::cerr<<"Version "<<to_it->meta.version<<
+          " has a later or equal timestamp ("<<Timestamp(to_it->meta.timestamp).str()<<")"
+	  " than version "<<from_it->meta.version<<" ("<<Timestamp(from_it->meta.timestamp).str()<<")"
+	  " of "<<name_of_type< Skeleton >()<<" "<<from_it->elem.id.val()<<'\n';
+    else
+      ++to_it;
+    *to_it = *from_it;
+    ++from_it;
+  }
+}
+
+
 // ----------------------------------------------------------------------------
 // generic updater functions
 
