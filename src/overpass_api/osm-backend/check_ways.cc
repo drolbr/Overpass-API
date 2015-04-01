@@ -33,11 +33,12 @@
 #include "../frontend/console_output.h"
 
 
+template< typename Id_Type >
 struct Local_Key_Entry
 {
-  Local_Key_Entry(Way_Skeleton::Id_Type id_, long timestamp_) : id(id_), timestamp(timestamp_) {}
+  Local_Key_Entry(Id_Type id_, long timestamp_) : id(id_), timestamp(timestamp_) {}
   
-  Way_Skeleton::Id_Type id;
+  Id_Type id;
   long timestamp;
   
   bool operator<(const Local_Key_Entry& rhs) const
@@ -49,6 +50,22 @@ struct Local_Key_Entry
     return timestamp < rhs.timestamp;
   }
 };
+
+
+template< typename Id_Type >
+void eval_local_key_entries(
+    std::vector< Local_Key_Entry< Id_Type > >& local_key_entries,
+    const std::string& last_key)
+{
+  std::sort(local_key_entries.begin(), local_key_entries.end());
+  for (typename std::vector< Local_Key_Entry< Id_Type > >::size_type i = 0; i+1 < local_key_entries.size(); ++i)
+  {
+    if (local_key_entries[i].timestamp == local_key_entries[i+1].timestamp
+	&& local_key_entries[i].id == local_key_entries[i+1].id)
+      std::cerr<<"Multiple entries for way "<<local_key_entries[i].id.val()<<" at timestamp "
+	  <<Timestamp(local_key_entries[i].timestamp).str()<<" and key "<<last_key<<'\n';
+  }
+}
 
 
 int main(int argc, char* args[])
@@ -89,7 +106,7 @@ int main(int argc, char* args[])
 
     for (unsigned int i = 0; i < 0x80000000u; i += 0x10000)
     {
-      std::cerr<<"Checking index "<<std::hex<<i<<" ...";
+      std::cerr<<"Checking way index "<<std::hex<<i<<" ...";
       std::set< std::pair< Uint31_Index, Uint31_Index > > range_req;
       range_req.insert(std::make_pair(Uint31_Index(i), Uint31_Index(i + 0x10000)));
       
@@ -102,43 +119,72 @@ int main(int argc, char* args[])
       std::cerr<<' '<<std::dec<<elements.size() + attic_elements.size()<<" indexes reconstructed.\n";
     }
 
-    Uint31_Index last_index(0xffffffffu);
-    std::string last_key = " ";
-    last_key[1] = 0xff;
-    std::vector< Local_Key_Entry > local_key_entries;
-    
-    Block_Backend< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > > db
-        (transaction.data_index(attic_settings().WAY_TAGS_LOCAL));
-    for (Block_Backend< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >::Flat_Iterator
-         it(db.flat_begin()); !(it == db.flat_end()); ++it)
     {
-      if (!(last_index == it.index().index) || last_key != it.index().key)
+      Uint31_Index last_index(0xffffffffu);
+      std::string last_key = " ";
+      last_key[1] = 0xff;
+      std::vector< Local_Key_Entry< Way_Skeleton::Id_Type > > local_key_entries;
+    
+      Block_Backend< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > > db
+          (transaction.data_index(attic_settings().WAY_TAGS_LOCAL));
+      for (Block_Backend< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >::Flat_Iterator
+          it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-	std::sort(local_key_entries.begin(), local_key_entries.end());
-	for (std::vector< Local_Key_Entry >::size_type i = 0; i+1 < local_key_entries.size(); ++i)
-	{
-	  if (local_key_entries[i].timestamp == local_key_entries[i+1].timestamp
-	      && local_key_entries[i].id == local_key_entries[i+1].id)
-	    std::cerr<<"Multiple entries for way "<<local_key_entries[i].id.val()<<" at timestamp "
-	        <<local_key_entries[i].timestamp<<" and key "<<last_key<<'\n';
-	}
-	local_key_entries.clear();
+        if (!(last_index == it.index().index) || last_key != it.index().key)
+        {
+	  eval_local_key_entries(local_key_entries, last_key);
+	  local_key_entries.clear();
 	
-	last_index = it.index().index;
-	last_key = it.index().key;
-      }
+	  last_index = it.index().index;
+	  last_key = it.index().key;
+        }
       
-      local_key_entries.push_back(Local_Key_Entry(it.object(), it.object().timestamp));
-    }
+        local_key_entries.push_back(Local_Key_Entry< Way_Skeleton::Id_Type >(it.object(), it.object().timestamp));
+      }
     
-    std::sort(local_key_entries.begin(), local_key_entries.end());
-    for (std::vector< Local_Key_Entry >::size_type i = 0; i+1 < local_key_entries.size(); ++i)
+      eval_local_key_entries(local_key_entries, last_key);
+    }
+
+    for (unsigned int i = 0; i < 0x80000000u; i += 0x10000)
     {
-      if (local_key_entries[i].timestamp == local_key_entries[i+1].timestamp
-	  && local_key_entries[i].id == local_key_entries[i+1].id)
-	std::cerr<<"Multiple entries for way "<<local_key_entries[i].id.val()<<" at timestamp "
-	    <<Timestamp(local_key_entries[i].timestamp).str()<<" and key "<<last_key<<'\n';
-    }    
+      std::cerr<<"Checking relation index "<<std::hex<<i<<" ...";
+      std::set< std::pair< Uint31_Index, Uint31_Index > > range_req;
+      range_req.insert(std::make_pair(Uint31_Index(i), Uint31_Index(i + 0x10000)));
+      
+      std::map< Uint31_Index, std::vector< Relation_Skeleton > > elements;
+      std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > > attic_elements;
+      
+      collect_items_range_by_timestamp(0, rman, range_req,
+	  Trivial_Predicate< Relation_Skeleton >(), elements, attic_elements);
+      
+      std::cerr<<' '<<std::dec<<elements.size() + attic_elements.size()<<" indexes reconstructed.\n";
+    }
+
+    {
+      Uint31_Index last_index(0xffffffffu);
+      std::string last_key = " ";
+      last_key[1] = 0xff;
+      std::vector< Local_Key_Entry< Relation_Skeleton::Id_Type > > local_key_entries;
+    
+      Block_Backend< Tag_Index_Local, Attic< Relation_Skeleton::Id_Type > > db
+          (transaction.data_index(attic_settings().WAY_TAGS_LOCAL));
+      for (Block_Backend< Tag_Index_Local, Attic< Relation_Skeleton::Id_Type > >::Flat_Iterator
+          it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        if (!(last_index == it.index().index) || last_key != it.index().key)
+        {
+	  eval_local_key_entries(local_key_entries, last_key);
+	  local_key_entries.clear();
+	
+	  last_index = it.index().index;
+	  last_key = it.index().key;
+        }
+      
+        local_key_entries.push_back(Local_Key_Entry< Relation_Skeleton::Id_Type >(it.object(), it.object().timestamp));
+      }
+    
+      eval_local_key_entries(local_key_entries, last_key);
+    }
   }
   catch (File_Error e)
   {
