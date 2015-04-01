@@ -167,7 +167,7 @@ int main(int argc, char* args[])
       std::vector< Local_Key_Entry< Relation_Skeleton::Id_Type > > local_key_entries;
     
       Block_Backend< Tag_Index_Local, Attic< Relation_Skeleton::Id_Type > > db
-          (transaction.data_index(attic_settings().WAY_TAGS_LOCAL));
+          (transaction.data_index(attic_settings().RELATION_TAGS_LOCAL));
       for (Block_Backend< Tag_Index_Local, Attic< Relation_Skeleton::Id_Type > >::Flat_Iterator
           it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
