@@ -35,7 +35,6 @@
 #define open64 open
 #endif
 
-using namespace std;
 
 typedef unsigned int uint;
 
@@ -53,12 +52,12 @@ const int S_666 = S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH;
 
 struct File_Error
 {
-  File_Error(uint32 errno_, string filename_, string origin_)
+  File_Error(uint32 errno_, const std::string& filename_, const std::string& origin_)
   : error_number(errno_), filename(filename_), origin(origin_) {}
   
   uint32 error_number;
-  string filename;
-  string origin;
+  std::string filename;
+  std::string origin;
 };
 
 struct File_Properties_Exception
@@ -75,21 +74,21 @@ struct File_Blocks_Index_Base
 
 struct File_Properties
 {
-  virtual string get_file_name_trunk() const = 0;
-  virtual string get_index_suffix() const = 0;
-  virtual string get_data_suffix() const = 0;
-  virtual string get_id_suffix() const = 0;
-  virtual string get_shadow_suffix() const = 0;
+  virtual const std::string& get_file_name_trunk() const = 0;
+  virtual const std::string& get_index_suffix() const = 0;
+  virtual const std::string& get_data_suffix() const = 0;
+  virtual const std::string& get_id_suffix() const = 0;
+  virtual const std::string& get_shadow_suffix() const = 0;
   virtual uint32 get_block_size() const = 0;
   virtual uint32 get_map_block_size() const = 0;
-  virtual vector< bool > get_data_footprint(const string& db_dir) const = 0;
-  virtual vector< bool > get_map_footprint(const string& db_dir) const = 0;
+  virtual std::vector< bool > get_data_footprint(const std::string& db_dir) const = 0;
+  virtual std::vector< bool > get_map_footprint(const std::string& db_dir) const = 0;
   virtual uint32 id_max_size_of() const = 0;
   
   // The returned object is of type File_Blocks_Index< .. >*
   // and goes into the ownership of the caller.
   virtual File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, string db_dir, string file_name_extension)
+      (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const = 0;
 };
 
@@ -100,18 +99,18 @@ class Raw_File
   Raw_File operator=(const Raw_File&);
   
   public:
-    Raw_File(string name, int oflag, mode_t mode, string caller_id);
+    Raw_File(const std::string& name, int oflag, mode_t mode, const std::string& caller_id);
     ~Raw_File() { close(fd_); }
     int fd() const { return fd_; }
-    uint64 size(string caller_id) const;
-    void resize(uint64 size, string caller_id) const;
-    void read(uint8* buf, uint64 size, string caller_id) const;
-    void write(uint8* buf, uint64 size, string caller_id) const;
-    void seek(uint64 pos, string caller_id) const;
+    uint64 size(const std::string& caller_id) const;
+    void resize(uint64 size, const std::string& caller_id) const;
+    void read(uint8* buf, uint64 size, const std::string& caller_id) const;
+    void write(uint8* buf, uint64 size, const std::string& caller_id) const;
+    void seek(uint64 pos, const std::string& caller_id) const;
     
   private:
     int fd_;
-    string name;
+    std::string name;
 };
 
 /** Simple RAII class to keep a pointer to some memory on the heap. */
@@ -128,14 +127,14 @@ class Void_Pointer
     T* ptr;
 };
 
-inline bool file_exists(const string& filename)
+inline bool file_exists(const std::string& filename)
 {
   return (access(filename.c_str(), F_OK) == 0);
 }
 
 //-----------------------------------------------------------------------------
 
-inline Raw_File::Raw_File(string name_, int oflag, mode_t mode, string caller_id)
+inline Raw_File::Raw_File(const std::string& name_, int oflag, mode_t mode, const std::string& caller_id)
   : fd_(0), name(name_)
 {
   fd_ = open64(name.c_str(), oflag, mode);
@@ -149,7 +148,7 @@ inline Raw_File::Raw_File(string name_, int oflag, mode_t mode, string caller_id
   }
 }
 
-inline uint64 Raw_File::size(string caller_id) const
+inline uint64 Raw_File::size(const std::string& caller_id) const
 {
   uint64 size = lseek64(fd_, 0, SEEK_END);
   uint64 foo = lseek64(fd_, 0, SEEK_SET);
@@ -158,28 +157,28 @@ inline uint64 Raw_File::size(string caller_id) const
   return size;
 }
 
-inline void Raw_File::resize(uint64 size, string caller_id) const
+inline void Raw_File::resize(uint64 size, const std::string& caller_id) const
 {
   uint64 foo = ftruncate64(fd_, size);
   if (foo != 0)
     throw File_Error(errno, name, caller_id);
 }
 
-inline void Raw_File::read(uint8* buf, uint64 size, string caller_id) const
+inline void Raw_File::read(uint8* buf, uint64 size, const std::string& caller_id) const
 {
   uint64 foo = ::read(fd_, buf, size);
   if (foo != size)
     throw File_Error(errno, name, caller_id);
 }
 
-inline void Raw_File::write(uint8* buf, uint64 size, string caller_id) const
+inline void Raw_File::write(uint8* buf, uint64 size, const std::string& caller_id) const
 {
   uint64 foo = ::write(fd_, buf, size);
   if (foo != size)
     throw File_Error(errno, name, caller_id);
 }
 
-inline void Raw_File::seek(uint64 pos, string caller_id) const
+inline void Raw_File::seek(uint64 pos, const std::string& caller_id) const
 {
   uint64 foo = lseek64(fd_, pos, SEEK_SET);
   if (foo != pos)
@@ -188,6 +187,9 @@ inline void Raw_File::seek(uint64 pos, string caller_id) const
 
 
 int& global_read_counter();
+
+
+void millisleep(uint32 milliseconds);
 
 
 #endif

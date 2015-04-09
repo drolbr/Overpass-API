@@ -18,6 +18,7 @@
 
 #include "block_backend.h"
 #include "dispatcher.h"
+#include "dispatcher_client.h"
 #include "file_blocks.h"
 #include "random_file.h"
 #include "transaction.h"
@@ -26,7 +27,6 @@
 #include <iostream>
 #include <sstream>
 
-using namespace std;
 
 //-----------------------------------------------------------------------------
 
@@ -115,11 +115,12 @@ struct IntObject
 string BASE_DIRECTORY("./");
 string ID_SUFFIX(".map");
 
+
 struct Test_File : File_Properties
 {
   Test_File(string basename_) : basename(basename_), basedir(BASE_DIRECTORY) {}
   
-  string get_basedir() const
+  const std::string& get_basedir() const
   {
     return basedir;
   }
@@ -129,31 +130,34 @@ struct Test_File : File_Properties
     basedir = basedir_;
   }
   
-  string get_file_name_trunk() const
+  const std::string& get_file_name_trunk() const
   {
     return basename;
   }
   
-  string get_index_suffix() const
+  const std::string& get_index_suffix() const
   {
-    return ".idx";
+    static std::string result(".idx");
+    return result;
   }
-  
-  string get_data_suffix() const
+
+  const std::string& get_data_suffix() const
   {
-    return ".bin";
+    static std::string result(".bin");
+    return result;
   }
-  
-  string get_id_suffix() const
+
+  const std::string& get_id_suffix() const
   {
     return ID_SUFFIX;
   }
-  
-  string get_shadow_suffix() const
+
+  const std::string& get_shadow_suffix() const
   {
-    return ".shadow";
+    static std::string result(".shadow");
+    return result;
   }
-  
+
   uint32 get_block_size() const
   {
     return 512;
@@ -164,23 +168,23 @@ struct Test_File : File_Properties
     return 16*IntIndex::max_size_of();
   }
   
-  vector< bool > get_data_footprint(const string& db_dir) const
+  vector< bool > get_data_footprint(const std::string& db_dir) const
   {
     return get_data_index_footprint< IntIndex >(*this, db_dir);
   }
   
-  vector< bool > get_map_footprint(const string& db_dir) const
+  vector< bool > get_map_footprint(const std::string& db_dir) const
   {
     return get_map_index_footprint(*this, db_dir);
   }  
-  
+
   uint32 id_max_size_of() const
   {
     return IntIndex::max_size_of();
   }
   
   File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, string db_dir, string file_name_extension)
+      (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const
   {
     return new File_Blocks_Index< IntIndex >

@@ -25,23 +25,21 @@
 #include <set>
 #include <vector>
 
-using namespace std;
-
 
 class Idx_Footprints
 {
   public:
     typedef uint pid_t;
     
-    void set_current_footprint(const vector< bool >& footprint);
+    void set_current_footprint(const std::vector< bool >& footprint);
     void register_pid(pid_t pid); 
     void unregister_pid(pid_t pid); 
-    vector< pid_t > registered_processes() const;
-    vector< bool > total_footprint() const;
+    std::vector< pid_t > registered_processes() const;
+    std::vector< bool > total_footprint() const;
     
   private:
-    vector< bool > current_footprint;
-    map< pid_t, vector< bool > > footprint_per_pid;
+    std::vector< bool > current_footprint;
+    std::map< pid_t, std::vector< bool > > footprint_per_pid;
 };
 
 
@@ -50,7 +48,7 @@ struct Dispatcher_Logger
 {
   typedef uint pid_t;
   
-  virtual void write_start(pid_t pid, const vector< pid_t >& registered) = 0;
+  virtual void write_start(pid_t pid, const std::vector< pid_t >& registered) = 0;
   virtual void write_rollback(pid_t pid) = 0;
   virtual void write_commit(pid_t pid) = 0;
   virtual void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space)
@@ -71,7 +69,7 @@ struct Blocking_Client_Socket
 {
   Blocking_Client_Socket(int socket_descriptor_);
   uint32 get_command();
-  vector< uint32 > get_arguments(int num_arguments);
+  std::vector< uint32 > get_arguments(int num_arguments);
   void clear_state();
   void send_result(uint32 result);
   ~Blocking_Client_Socket();
@@ -89,7 +87,7 @@ public:
     
   Blocking_Client_Socket* get(pid_t pid)
   {
-    map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.find(pid);    
+    std::map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.find(pid);    
     if (it != connection_per_pid.end())
       return it->second;
     else
@@ -98,7 +96,7 @@ public:
   
   void set(pid_t pid, Blocking_Client_Socket* socket)
   {
-    map< pid_t, Blocking_Client_Socket* >::iterator it = connection_per_pid.find(pid);
+    std::map< pid_t, Blocking_Client_Socket* >::iterator it = connection_per_pid.find(pid);
     if (it != connection_per_pid.end())
       delete it->second;
     if (socket != 0)
@@ -107,10 +105,10 @@ public:
       connection_per_pid.erase(pid);
   }
   
-  const map< pid_t, Blocking_Client_Socket* >& base_map() const { return connection_per_pid; }
+  const std::map< pid_t, Blocking_Client_Socket* >& base_map() const { return connection_per_pid; }
   
 private:
-  map< pid_t, Blocking_Client_Socket* > connection_per_pid;
+  std::map< pid_t, Blocking_Client_Socket* > connection_per_pid;
 };
 
 
@@ -154,7 +152,7 @@ struct Reader_Entry
   uint32 max_time;
   uint32 client_token;
 
-  static map< uint32, uint > active_client_tokens;
+  static std::map< uint32, uint > active_client_tokens;
 };
 
 
@@ -194,14 +192,14 @@ class Dispatcher
     /** Opens a shared memory for dispatcher communication. Furthermore,
       * detects whether idx or idy are valid, clears to idx if necessary,
       * and loads them into the shared memory idx_share_name. */
-    Dispatcher(string dispatcher_share_name,
-	       string index_share_name,
-	       string shadow_name,
-	       string db_dir,
+    Dispatcher(std::string dispatcher_share_name,
+	       std::string index_share_name,
+	       std::string shadow_name,
+	       std::string db_dir,
 	       uint max_num_reading_processes, uint purge_timeout,
 	       uint64 total_available_space,
 	       uint64 total_available_time_units,
-	       const vector< File_Properties* >& controlled_files,
+	       const std::vector< File_Properties* >& controlled_files,
 	       Dispatcher_Logger* logger = 0);
 	       
     ~Dispatcher();
@@ -256,13 +254,13 @@ class Dispatcher
     void set_rate_limit(uint rate_limit_) { rate_limit = rate_limit_; }
     
   private:
-    vector< File_Properties* > controlled_files;
-    vector< Idx_Footprints > data_footprints;
-    vector< Idx_Footprints > map_footprints;
-    set< pid_t > processes_reading_idx;
-    map< pid_t, Reader_Entry > processes_reading;
-    string shadow_name, db_dir;
-    string dispatcher_share_name;
+    std::vector< File_Properties* > controlled_files;
+    std::vector< Idx_Footprints > data_footprints;
+    std::vector< Idx_Footprints > map_footprints;
+    std::set< pid_t > processes_reading_idx;
+    std::map< pid_t, Reader_Entry > processes_reading;
+    std::string shadow_name, db_dir;
+    std::string dispatcher_share_name;
     int dispatcher_shm_fd;
     uint max_num_reading_processes;
     uint rate_limit;
@@ -272,91 +270,19 @@ class Dispatcher
     volatile uint8* dispatcher_shm_ptr;
     Dispatcher_Logger* logger;
     int socket_descriptor;
-    vector< int > started_connections;
+    std::vector< int > started_connections;
     Connection_Per_Pid_Map connection_per_pid;
-    set< pid_t > disconnected;
+    std::set< pid_t > disconnected;
     bool pending_commit;
     
     void copy_shadows_to_mains();
     void copy_mains_to_shadows();
     void remove_shadows();
     void set_current_footprints();
-    vector< pid_t > write_index_of_empty_blocks();
+    std::vector< pid_t > write_index_of_empty_blocks();
     void check_and_purge();
     uint64 total_claimed_space() const;
     uint64 total_claimed_time_units() const;
-};
-
-
-class Dispatcher_Client
-{
-  public:
-    /** Opens a shared memory for dispatcher communication.*/
-    Dispatcher_Client(string dispatcher_share_name);
-    ~Dispatcher_Client();
-
-    /** Write operations: -------------------------------------------------- */
-	       
-    /** Allocates a write lock. Waits if necessary. */
-    void write_start();
-    
-    /** Aborts an active writing operation. Results are undefined if it is
-        called outside a writing operation. */
-    void write_rollback();
-    
-    /** Commits an active writing operation. Results are undefined if it is
-        called outside a writing operation. */
-    void write_commit();
-    
-    /** Read operations: --------------------------------------------------- */
-
-    /** Request the index for a read operation and registers the reading process.
-    Reading the index files should be taking a quick copy, because if any process
-    is in this state, write_commits are blocked. */
-    void request_read_and_idx(uint32 max_allowed_time, uint64 max_allowed_space,
-			      uint32 client_token);
-    
-    /** Changes the registered state from reading the index to reading the
-    database. Can be safely called multiple times for the same process. */
-    void read_idx_finished();
-    
-    /** Unregisteres a reading process. */
-    void read_finished();
-    
-    /** Other operations: -------------------------------------------------- */
-    
-    /** Terminate another instance running in the standby_loop. */
-    void terminate();
-
-    /** Let another instance running in the standby_loop output its status. */
-    void output_status();
-    
-    /** Purge another instance. */
-    void purge(uint32 pid);
-    
-    /** Query the pid of the instance with the given token. */
-    pid_t query_by_token(uint32 token);
-    
-    /** Purge another instance. */
-    void set_global_limits(uint64 max_allowed_space, uint64 max_allowed_time_units, int rate_limit);
-    
-    /** Called regularly to tell the dispatcher that this process is still alive */
-    void ping();
-    
-    const string& get_db_dir() { return db_dir; }
-    const string& get_shadow_name() { return shadow_name; }
-    
-  private:
-    string dispatcher_share_name;
-    int dispatcher_shm_fd;
-    volatile uint8* dispatcher_shm_ptr;
-    string db_dir, shadow_name;
-    int socket_descriptor;
-    
-    uint32 ack_arrived();
-    
-    template< class TObject >
-    void send_message(TObject message, string source_pos);
 };
 
 
