@@ -1423,4 +1423,96 @@ int main(int argc, char* args[])
           <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
   }
+  
+  if ((test_to_execute == "") || (test_to_execute == "27r"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    try
+    {
+      {
+	//sleep for a second
+	struct timeval timeout_;
+	timeout_.tv_sec = 0;
+	timeout_.tv_usec = 1000*1000;
+	select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      }
+      
+      Dispatcher_Client dispatcher_client("osm3s_share_test");
+      test_file.set_basedir(dispatcher_client.get_db_dir());
+      
+      sync_log("Try request_read().\n");
+      dispatcher_client.request_read_and_idx(24*60, 1024*1024, 0);
+      sync_log("request_read() done.\n");
+      
+      Nonsynced_Transaction transaction
+          (false, false, dispatcher_client.get_db_dir(), "");
+      transaction.data_index(&test_file);
+      
+      dispatcher_client.read_idx_finished();
+      sync_log("read_idx_finished() done.\n");
+      
+      {
+	//sleep for two seconds
+	struct timeval timeout_;
+	timeout_.tv_sec = 0;
+	timeout_.tv_usec = 2*1000*1000;
+	select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      }
+      
+      data_read_test(test_file, transaction);
+      
+      sync_log("Announce read_finished().\n");
+      dispatcher_client.read_finished();
+      sync_log("read_finished() done.\n");
+    }
+    catch (File_Error e)
+    {
+      cout<<"File error catched: "
+          <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "27w"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    try
+    {
+      Dispatcher_Client dispatcher_client("osm3s_share_test");
+      test_file.set_basedir(dispatcher_client.get_db_dir());
+      
+      {
+	//sleep for a seconds
+	struct timeval timeout_;
+	timeout_.tv_sec = 0;
+	timeout_.tv_usec = 1000*1000;
+	select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      }
+      
+      sync_log("Request output status.\n");
+      dispatcher_client.output_status();      
+      sync_log("Request output status finished.\n");
+      
+      {
+	//sleep for a seconds
+	struct timeval timeout_;
+	timeout_.tv_sec = 0;
+	timeout_.tv_usec = 2*1000*1000;
+	select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      }
+      
+      remove((dispatcher_client.get_db_dir() + "Test_File.bin").c_str());
+      remove((dispatcher_client.get_db_dir() + "Test_File.bin.idx").c_str());
+    }
+    catch (File_Error e)
+    {
+      cout<<"File error catched: "
+          <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }  
 }

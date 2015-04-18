@@ -183,3 +183,6 @@ dispatcher_client_server 23
 dispatcher_client_server 24
 dispatcher_two_clients 25
 dispatcher_two_clients 26
+
+# don't use that test because we cannot control the assigned pids
+#dispatcher_two_clients 27

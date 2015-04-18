@@ -19,24 +19,18 @@
 #include "dispatcher_client.h"
 #include "dispatcher.h"
 
-// #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/mman.h>
-// #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
-// #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/un.h>
-// #include <unistd.h>
 
-// #include <deque>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
-// #include <iostream>
-// #include <sstream>
+#include <iostream>
 
 
 Dispatcher_Client::Dispatcher_Client
@@ -110,14 +104,15 @@ uint32 Dispatcher_Client::ack_arrived()
     millisleep(50);
     bytes_read = recv(socket_descriptor, &answer, sizeof(uint32), 0);
   }
-  if (bytes_read == 4)
+  if (bytes_read == sizeof(uint32))
     return answer;
-  
-  uint32 pid = getpid();
-  if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
-    return 1;
-  millisleep(50);  
-  return (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid ? 1 : 0);
+
+  return 0;  
+//   uint32 pid = getpid();
+//   if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
+//     return 1;
+//   millisleep(50);  
+//   return (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid ? 1 : 0);
 }
 
 
@@ -213,7 +208,7 @@ void Dispatcher_Client::write_commit()
 void Dispatcher_Client::request_read_and_idx(uint32 max_allowed_time, uint64 max_allowed_space,
 					     uint32 client_token)
 {
-  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+//   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
   
   uint counter = 0;
   uint32 ack = 0;
@@ -240,7 +235,7 @@ void Dispatcher_Client::request_read_and_idx(uint32 max_allowed_time, uint64 max
 
 void Dispatcher_Client::read_idx_finished()
 {
-  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+//   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
 		     
   uint counter = 0;
   while (++counter <= 300)
@@ -256,7 +251,7 @@ void Dispatcher_Client::read_idx_finished()
 
 void Dispatcher_Client::read_finished()
 {
-  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+//   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
   
   uint counter = 0;
   while (++counter <= 300)
@@ -272,7 +267,7 @@ void Dispatcher_Client::read_finished()
 
 void Dispatcher_Client::purge(uint32 pid)
 {
-  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+//   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
 		     
   while (true)
   {
@@ -287,7 +282,7 @@ void Dispatcher_Client::purge(uint32 pid)
 
 pid_t Dispatcher_Client::query_by_token(uint32 token)
 {
-  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+//   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
 		     
   send_message(Dispatcher::QUERY_BY_TOKEN, "Dispatcher_Client::query_by_token::socket::1");
   send_message(token, "Dispatcher_Client::query_by_token::socket::2");
@@ -299,7 +294,7 @@ pid_t Dispatcher_Client::query_by_token(uint32 token)
 void Dispatcher_Client::set_global_limits(uint64 max_allowed_space, uint64 max_allowed_time_units,
                                           int rate_limit)
 {
-  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+//   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
 		     
   while (true)
   {
@@ -324,7 +319,7 @@ void Dispatcher_Client::ping()
 
 void Dispatcher_Client::terminate()
 {
-  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+//   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
 		     
   while (true)
   {
@@ -338,13 +333,22 @@ void Dispatcher_Client::terminate()
 
 void Dispatcher_Client::output_status()
 {
-  *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
+//   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
 		     
   while (true)
   {
     send_message(Dispatcher::OUTPUT_STATUS, "Dispatcher_Client::output_status::socket");
     
     if (ack_arrived())
-      return;
+      break;
+  }
+
+  std::ifstream status((shadow_name + ".status").c_str());
+  std::string buffer;
+  std::getline(status, buffer);
+  while (status.good())
+  {
+    std::cout<<buffer<<'\n';
+    std::getline(status, buffer);
   }
 }

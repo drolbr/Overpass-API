@@ -63,48 +63,7 @@ struct Dispatcher_Logger
 };
 
 
-struct Reader_Entry
-{
-  Reader_Entry(uint32 ping_time_, uint64 max_space_, uint32 max_time_, uint32 client_token_)
-    : ping_time(ping_time_), max_space(max_space_), max_time(max_time_), client_token(client_token_)
-  {
-    ++active_client_tokens[client_token];
-  }
-  
-  Reader_Entry() : ping_time(0), max_space(0), max_time(0), client_token(0) {}
-  
-  Reader_Entry(const Reader_Entry& e)
-    : ping_time(e.ping_time), max_space(e.max_space), max_time(e.max_time), client_token(e.client_token)
-  {
-    ++active_client_tokens[client_token];
-  }
-  
-  Reader_Entry& operator=(const Reader_Entry& e)
-  {
-    --active_client_tokens[client_token];
-    
-    ping_time = e.ping_time;
-    max_space = e.max_space;
-    max_time = e.max_time;
-    client_token = e.client_token;
-    
-    ++active_client_tokens[client_token];
-    
-    return *this;
-  }
-  
-  ~Reader_Entry()
-  {
-    --active_client_tokens[client_token];
-  }
-  
-  uint32 ping_time;
-  uint64 max_space;
-  uint32 max_time;
-  uint32 client_token;
-
-  static std::map< uint32, uint > active_client_tokens;
-};
+struct Reader_Entry;
 
 
 // Cares for the communication between server and client
@@ -244,6 +203,8 @@ class Dispatcher
     Dispatcher_Logger* logger;
     std::set< pid_t > disconnected;
     bool pending_commit;
+    uint32 requests_started_counter;
+    uint32 requests_finished_counter;
     
     void copy_shadows_to_mains();
     void copy_mains_to_shadows();

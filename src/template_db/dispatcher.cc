@@ -34,8 +34,51 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
-#include <sstream>
 #include <vector>
+
+
+struct Reader_Entry
+{
+  Reader_Entry(uint32 ping_time_, uint64 max_space_, uint32 max_time_, uint32 client_token_)
+    : ping_time(ping_time_), max_space(max_space_), max_time(max_time_), client_token(client_token_)
+  {
+    ++active_client_tokens[client_token];
+  }
+  
+  Reader_Entry() : ping_time(0), max_space(0), max_time(0), client_token(0) {}
+  
+  Reader_Entry(const Reader_Entry& e)
+    : ping_time(e.ping_time), max_space(e.max_space), max_time(e.max_time), client_token(e.client_token)
+  {
+    ++active_client_tokens[client_token];
+  }
+  
+  Reader_Entry& operator=(const Reader_Entry& e)
+  {
+    --active_client_tokens[client_token];
+    
+    ping_time = e.ping_time;
+    max_space = e.max_space;
+    max_time = e.max_time;
+    client_token = e.client_token;
+    
+    ++active_client_tokens[client_token];
+    
+    return *this;
+  }
+  
+  ~Reader_Entry()
+  {
+    --active_client_tokens[client_token];
+  }
+  
+  uint32 ping_time;
+  uint64 max_space;
+  uint32 max_time;
+  uint32 client_token;
+
+  static std::map< uint32, uint > active_client_tokens;
+};
 
 
 std::map< uint32, uint > Reader_Entry::active_client_tokens;
@@ -155,7 +198,9 @@ Dispatcher::Dispatcher
       total_available_space(total_available_space_),
       total_available_time_units(total_available_time_units_),
       logger(logger_),
-      pending_commit(false)
+      pending_commit(false),
+      requests_started_counter(0),
+      requests_finished_counter(0)    
 {
   signal(SIGPIPE, SIG_IGN);
   
@@ -295,6 +340,8 @@ void Dispatcher::request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64
 {
   if (logger)
     logger->request_read_and_idx(pid, max_allowed_time, max_allowed_space);
+  ++requests_started_counter;
+  
   for (std::vector< Idx_Footprints >::iterator it(data_footprints.begin());
       it != data_footprints.end(); ++it)
     it->register_pid(pid);
@@ -326,6 +373,8 @@ void Dispatcher::read_finished(pid_t pid)
 {
   if (logger)
     logger->read_finished(pid);
+  ++requests_finished_counter;
+  
   for (std::vector< Idx_Footprints >::iterator it(data_footprints.begin());
       it != data_footprints.end(); ++it)
     it->unregister_pid(pid);
@@ -519,11 +568,10 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     uint32 client_pid = 0;    
     connection_per_pid.poll_command_round_robin(command, client_pid);
     
-    if (command == Dispatcher::HANGUP
-        && processes_reading.find(client_pid) != processes_reading.end())
-      command = Dispatcher::READ_ABORTED;
+    if (command == HANGUP && processes_reading.find(client_pid) != processes_reading.end())
+      command = READ_ABORTED;
     
-    if (*(uint32*)dispatcher_shm_ptr == 0 && command == 0)
+    if (command == 0)
     {
       ++counter;
       ++idle_counter;
@@ -540,64 +588,50 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 
     try
     {
-      if (command == 0)
+      if (command == TERMINATE || command == OUTPUT_STATUS)
       {
-        command = *(uint32*)dispatcher_shm_ptr;
-        *(uint32*)dispatcher_shm_ptr = 0;
-        client_pid = *(uint32*)(dispatcher_shm_ptr + sizeof(uint32));
+	if (command == OUTPUT_STATUS)
+	  output_status();
+	  
+	connection_per_pid.get(client_pid)->send_result(command);
+	connection_per_pid.set(client_pid, 0);
+
+	if (command == TERMINATE)
+	  break;
       }
-      // Set command state to zero.
-      *(uint32*)dispatcher_shm_ptr = 0;
-      if (command == TERMINATE)
+      else if (command == WRITE_START || command == WRITE_ROLLBACK || command == WRITE_COMMIT)
       {
-	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
-      
-	if (connection_per_pid.get(client_pid) != 0)
+	if (command == WRITE_START)
 	{
-	  connection_per_pid.get(client_pid)->send_result(command);
-	  connection_per_pid.set(client_pid, 0);
+	  check_and_purge();
+	  write_start(client_pid);
 	}
-	
-	break;
-      }
-      else if (command == OUTPUT_STATUS)
-      {
-	output_status();
-	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
-	
-	if (connection_per_pid.get(client_pid) != 0)
+	else if (command == WRITE_COMMIT)
 	{
-	  connection_per_pid.get(client_pid)->send_result(command);
-	  connection_per_pid.set(client_pid, 0);
+	  check_and_purge();
+	  write_commit(client_pid);
 	}
-      }
-      else if (command == WRITE_START)
-      {
-	check_and_purge();
-	write_start(client_pid);
+	else if (command == WRITE_ROLLBACK)
+	  write_rollback(client_pid);
+	
 	connection_per_pid.get(client_pid)->send_result(command);
       }
-      else if (command == WRITE_ROLLBACK)
+      else if (command == HANGUP || command == READ_ABORTED || command == READ_FINISHED)
       {
-	write_rollback(client_pid);
-	connection_per_pid.get(client_pid)->send_result(command);
+	if (command == READ_ABORTED)
+	  read_aborted(client_pid);
+	else if (command == READ_FINISHED)
+	{
+	  read_finished(client_pid);	
+	  connection_per_pid.get(client_pid)->send_result(command);
+	}
+	connection_per_pid.set(client_pid, 0);
       }
-      else if (command == WRITE_COMMIT)
+      else if (command == READ_IDX_FINISHED)
       {
-	check_and_purge();
-	write_commit(client_pid);
-	connection_per_pid.get(client_pid)->send_result(command);
-      }
-      else if (command == HANGUP)
-      {
-	if (connection_per_pid.get(client_pid) != 0)
-	  connection_per_pid.set(client_pid, 0);
-      }
-      else if (command == READ_ABORTED)
-      {
-	read_aborted(client_pid);
-	if (connection_per_pid.get(client_pid) != 0)
-	  connection_per_pid.set(client_pid, 0);
+	read_idx_finished(client_pid);
+        if (connection_per_pid.get(client_pid) != 0)
+	  connection_per_pid.get(client_pid)->send_result(command);
       }
       else if (command == REQUEST_READ_AND_IDX)
       {
@@ -605,6 +639,16 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	if (arguments.size() < 4)
 	{
 	  connection_per_pid.get(client_pid)->send_result(0);
+	  continue;
+	}	
+	uint32 max_allowed_time = arguments[0];
+	uint64 max_allowed_space = (((uint64)arguments[2])<<32 | arguments[1]);
+	uint32 client_token = arguments[3];
+	
+	if (rate_limit > 0 && client_token > 0
+            && Reader_Entry::active_client_tokens[client_token] >= rate_limit)
+	{
+	  connection_per_pid.get(client_pid)->send_result(RATE_LIMITED);
 	  continue;
 	}
 	
@@ -621,10 +665,6 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	  continue;
 	}
 	
-	uint32 max_allowed_time = arguments[0];
-	uint64 max_allowed_space = (((uint64)arguments[2])<<32 | arguments[1]);
-	uint32 client_token = arguments[3];
-	
 	if (max_allowed_space > (total_available_space - total_claimed_space())/2)
 	{
 	  connection_per_pid.get(client_pid)->send_result(0);
@@ -637,33 +677,8 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	  continue;
 	}
 	
-	if (rate_limit > 0 && client_token > 0
-            && Reader_Entry::active_client_tokens[client_token] >= rate_limit)
-	{
-	  connection_per_pid.get(client_pid)->send_result(RATE_LIMITED);
-	  continue;
-	}
-	
 	request_read_and_idx(client_pid, max_allowed_time, max_allowed_space, client_token);
 	connection_per_pid.get(client_pid)->send_result(command);
-	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
-      }
-      else if (command == READ_IDX_FINISHED)
-      {
-	read_idx_finished(client_pid);
-        if (connection_per_pid.get(client_pid) != 0)
-	  connection_per_pid.get(client_pid)->send_result(command);
-	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
-      }
-      else if (command == READ_FINISHED)
-      {
-	read_finished(client_pid);	
-	if (connection_per_pid.get(client_pid) != 0)
-	{
-	  connection_per_pid.get(client_pid)->send_result(command);
-	  connection_per_pid.set(client_pid, 0);
-	}
-	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == PURGE)
       {
@@ -680,7 +695,6 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         }
         
 	connection_per_pid.get(client_pid)->send_result(command);
-	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == QUERY_BY_TOKEN)
       {
@@ -698,7 +712,6 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	}
 	
 	connection_per_pid.get(client_pid)->send_result(target_pid);
-	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
       else if (command == SET_GLOBAL_LIMITS)
       {
@@ -718,15 +731,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
           rate_limit = rate_limit_;
 	
 	connection_per_pid.get(client_pid)->send_result(command);
-	*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = client_pid;
       }
-// Ping-Feature removed. The concept of unassured messages doesn't fit in the context of strict
-// two-directional communication.
-//       else if (command == PING)
-//       {
-// 	prolongate(client_pid);
-// 	connection_per_pid.get(client_pid)->send_result(0);
-//       }
     }
     catch (File_Error e)
     {
@@ -746,14 +751,17 @@ void Dispatcher::output_status()
 {
   try
   {
-    std::ostringstream status("");
+    std::ofstream status((shadow_name + ".status").c_str());
     
-    status<<"Not yet opened connections: "<<socket.num_started_connections()<<'\n';
-    
-    status<<connection_per_pid.base_map().size()
-        <<' '<<rate_limit
-        <<' '<<total_available_space<<' '<<total_claimed_space()
-	<<' '<<total_available_time_units<<' '<<total_claimed_time_units()<<'\n';
+    status<<"Number of not yet opened connections: "<<socket.num_started_connections()<<'\n'
+        <<"Number of connected clients: "<<connection_per_pid.base_map().size()<<'\n'
+        <<"Rate limit: "<<connection_per_pid.base_map().size()<<'\n'
+        <<"Total available space: "<<total_available_space<<'\n'
+        <<"Total claimed space: "<<total_claimed_space()<<'\n'
+        <<"Total available time units: "<<total_available_time_units<<'\n'
+        <<"Total claimed time units: "<<total_claimed_time_units()<<'\n'
+        <<"Counter of started requests: "<<requests_started_counter<<'\n'
+        <<"Counter of finished requests: "<<requests_finished_counter<<'\n';
     
     for (std::set< pid_t >::const_iterator it = processes_reading_idx.begin();
         it != processes_reading_idx.end(); ++it)
@@ -799,10 +807,6 @@ void Dispatcher::output_status()
 	  && collected_pids.find(it->first) == collected_pids.end())
 	status<<"pending\t"<<it->first<<'\n';
     }
-    
-    std::ofstream status_file((shadow_name + ".status").c_str());
-    status_file<<status.str();
-    std::cout<<status.str();
   }
   catch (...) {}
 }
