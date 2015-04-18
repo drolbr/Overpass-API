@@ -40,31 +40,16 @@
 std::map< uint32, uint > Reader_Entry::active_client_tokens;
 
 
-Dispatcher::Dispatcher
-    (std::string dispatcher_share_name_,
-     std::string index_share_name,
-     std::string shadow_name_,
-     std::string db_dir_,
-     uint max_num_reading_processes_, uint purge_timeout_,
-     uint64 total_available_space_,
-     uint64 total_available_time_units_,
-     const std::vector< File_Properties* >& controlled_files_,
-     Dispatcher_Logger* logger_)
-    : controlled_files(controlled_files_),
-      data_footprints(controlled_files_.size()),
-      map_footprints(controlled_files_.size()),
-      shadow_name(shadow_name_), db_dir(db_dir_),
-      dispatcher_share_name(dispatcher_share_name_),
-      max_num_reading_processes(max_num_reading_processes_),
-      rate_limit(0),
-      purge_timeout(purge_timeout_),
-      total_available_space(total_available_space_),
-      total_available_time_units(total_available_time_units_),
-      logger(logger_),
-      pending_commit(false)
+Dispatcher_Socket::Dispatcher_Socket
+    (const std::string& dispatcher_share_name,
+     const std::string& shadow_name_,
+     const std::string& db_dir_,
+     uint max_num_reading_processes)
 {
   signal(SIGPIPE, SIG_IGN);
   
+  std::string shadow_name = shadow_name_;
+  std::string db_dir = db_dir_;
   // get the absolute pathname of the current directory
   if (db_dir.substr(0, 1) != "/")
     db_dir = getcwd() + db_dir_;
@@ -72,7 +57,8 @@ Dispatcher::Dispatcher
     shadow_name = getcwd() + shadow_name_;
   
   // initialize the socket for the server
-  std::string socket_name = db_dir + dispatcher_share_name;
+  socket_name = db_dir + dispatcher_share_name;
+  
   socket_descriptor = socket(AF_UNIX, SOCK_STREAM, 0);
   if (socket_descriptor == -1)
     throw File_Error
@@ -93,26 +79,104 @@ Dispatcher::Dispatcher
   if (listen(socket_descriptor, max_num_reading_processes) == -1)
     throw File_Error
         (errno, socket_name, "Dispatcher_Server::5");
+}
+
+
+Dispatcher_Socket::~Dispatcher_Socket()
+{
+  close(socket_descriptor);
+  remove(socket_name.c_str());
+}
+
+
+void Dispatcher_Socket::look_for_a_new_connection()
+{    
+  struct sockaddr_un sockaddr_un_dummy;
+  uint sockaddr_un_dummy_size = sizeof(sockaddr_un_dummy);
+  int socket_fd = accept(socket_descriptor, (sockaddr*)&sockaddr_un_dummy,
+			 (socklen_t*)&sockaddr_un_dummy_size);
+  if (socket_fd == -1)
+  {
+    if (errno != EAGAIN && errno != EWOULDBLOCK)
+      throw File_Error
+	    (errno, "(socket)", "Dispatcher_Server::6");
+  }
+  else
+  {
+    if (fcntl(socket_fd, F_SETFL, O_RDWR|O_NONBLOCK) == -1)
+      throw File_Error
+	    (errno, "(socket)", "Dispatcher_Server::7");  
+    started_connections.push_back(socket_fd);
+  }
+
+  // associate to a new connection the pid of the sender
+  for (std::vector< int >::iterator it = started_connections.begin();
+      it != started_connections.end(); ++it)
+  {
+    pid_t pid;
+    int bytes_read = recv(*it, &pid, sizeof(pid_t), 0);
+    if (bytes_read == -1)
+      ;
+    else
+    {
+      if (bytes_read != 0)
+	connection_per_pid.set(pid, new Blocking_Client_Socket(*it));
+      else
+	close(*it);
+	
+      *it = started_connections.back();
+      started_connections.pop_back();
+      break;
+    }
+  }
+}
+
+
+Dispatcher::Dispatcher
+    (std::string dispatcher_share_name_,
+     std::string index_share_name,
+     std::string shadow_name_,
+     std::string db_dir_,
+     uint max_num_reading_processes_, uint purge_timeout_,
+     uint64 total_available_space_,
+     uint64 total_available_time_units_,
+     const std::vector< File_Properties* >& controlled_files_,
+     Dispatcher_Logger* logger_)
+    : socket(dispatcher_share_name_, shadow_name_, db_dir_, max_num_reading_processes_),
+      controlled_files(controlled_files_),
+      data_footprints(controlled_files_.size()),
+      map_footprints(controlled_files_.size()),
+      shadow_name(shadow_name_), db_dir(db_dir_),
+      dispatcher_share_name(dispatcher_share_name_),
+      max_num_reading_processes(max_num_reading_processes_),
+      rate_limit(0),
+      purge_timeout(purge_timeout_),
+      total_available_space(total_available_space_),
+      total_available_time_units(total_available_time_units_),
+      logger(logger_),
+      pending_commit(false)
+{
+  signal(SIGPIPE, SIG_IGN);
+  
+  // get the absolute pathname of the current directory
+  if (db_dir.substr(0, 1) != "/")
+    db_dir = getcwd() + db_dir_;
+  if (shadow_name.substr(0, 1) != "/")
+    shadow_name = getcwd() + shadow_name_;
   
   // open dispatcher_share
 #ifdef __APPLE__
   dispatcher_shm_fd = shm_open
       (dispatcher_share_name.c_str(), O_RDWR|O_CREAT, S_666);
   if (dispatcher_shm_fd < 0)
-  {
-    remove(socket_name.c_str());
     throw File_Error
         (errno, dispatcher_share_name, "Dispatcher_Server::APPLE::1");
-  }
 #else
   dispatcher_shm_fd = shm_open
       (dispatcher_share_name.c_str(), O_RDWR|O_CREAT|O_TRUNC|O_EXCL, S_666);
   if (dispatcher_shm_fd < 0)
-  {
-    remove(socket_name.c_str());
     throw File_Error
         (errno, dispatcher_share_name, "Dispatcher_Server::1");
-  }
   fchmod(dispatcher_shm_fd, S_666);
 #endif
   
@@ -146,10 +210,8 @@ Dispatcher::Dispatcher
 
 Dispatcher::~Dispatcher()
 {
-  close(socket_descriptor);
   munmap((void*)dispatcher_shm_ptr, SHM_SIZE + db_dir.size() + shadow_name.size());
   shm_unlink(dispatcher_share_name.c_str());
-  remove((db_dir + dispatcher_share_name).c_str());
 }
 
 
@@ -451,44 +513,8 @@ void Dispatcher::standby_loop(uint64 milliseconds)
   uint32 last_pid = 0;
   while ((milliseconds == 0) || (counter < milliseconds/100))
   {
-    struct sockaddr_un sockaddr_un_dummy;
-    uint sockaddr_un_dummy_size = sizeof(sockaddr_un_dummy);
-    int socket_fd = accept(socket_descriptor, (sockaddr*)&sockaddr_un_dummy,
-			   (socklen_t*)&sockaddr_un_dummy_size);
-    if (socket_fd == -1)
-    {
-      if (errno != EAGAIN && errno != EWOULDBLOCK)
-	throw File_Error
-	    (errno, "(socket)", "Dispatcher_Server::6");
-    }
-    else
-    {
-      if (fcntl(socket_fd, F_SETFL, O_RDWR|O_NONBLOCK) == -1)
-	throw File_Error
-	    (errno, "(socket)", "Dispatcher_Server::7");  
-      started_connections.push_back(socket_fd);
-    }
-
-    // associate to a new connection the pid of the sender
-    for (std::vector< int >::iterator it = started_connections.begin();
-        it != started_connections.end(); ++it)
-    {
-      pid_t pid;
-      int bytes_read = recv(*it, &pid, sizeof(pid_t), 0);
-      if (bytes_read == -1)
-	;
-      else
-      {
-	if (bytes_read != 0)
-	  connection_per_pid.set(pid, new Blocking_Client_Socket(*it));
-	else
-	  close(*it);
-	
-	*it = started_connections.back();
-	started_connections.pop_back();
-	break;
-      }
-    }
+    socket.look_for_a_new_connection();
+    Connection_Per_Pid_Map& connection_per_pid = socket.connection_per_pid;
     
     uint32 command = 0;
     uint32 client_pid = 0;
@@ -751,7 +777,7 @@ void Dispatcher::output_status()
   {
     std::ofstream status((shadow_name + ".status").c_str());
     
-    status<<started_connections.size()<<' '<<connection_per_pid.base_map().size()
+    status<<socket.started_connections.size()<<' '<<socket.connection_per_pid.base_map().size()
         <<' '<<rate_limit
         <<' '<<total_available_space<<' '<<total_claimed_space()
 	<<' '<<total_available_time_units<<' '<<total_claimed_time_units()<<'\n';
@@ -793,8 +819,8 @@ void Dispatcher::output_status()
 	  <<' '<<processes_reading[*it].max_time<<'\n';
     }
     
-    for (std::map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.base_map().begin();
-	 it != connection_per_pid.base_map().end(); ++it)
+    for (std::map< pid_t, Blocking_Client_Socket* >::const_iterator it = socket.connection_per_pid.base_map().begin();
+	 it != socket.connection_per_pid.base_map().end(); ++it)
     {
       if (processes_reading_idx.find(it->first) == processes_reading_idx.end()
 	  && collected_pids.find(it->first) == collected_pids.end())

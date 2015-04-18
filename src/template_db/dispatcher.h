@@ -107,6 +107,27 @@ struct Reader_Entry
 };
 
 
+// Cares for the communication between server and client
+class Dispatcher_Socket
+{
+public:
+  Dispatcher_Socket(const std::string& dispatcher_share_name,
+		    const std::string& shadow_name_,
+		    const std::string& db_dir_,
+		    uint max_num_reading_processes_);
+  ~Dispatcher_Socket();
+  
+  void look_for_a_new_connection();
+  
+  Connection_Per_Pid_Map connection_per_pid;
+  std::vector< int > started_connections;  
+  
+private:
+  int socket_descriptor;
+  std::string socket_name;
+};
+
+
 class Dispatcher
 {
   public:
@@ -205,6 +226,7 @@ class Dispatcher
     void set_rate_limit(uint rate_limit_) { rate_limit = rate_limit_; }
     
   private:
+    Dispatcher_Socket socket;
     std::vector< File_Properties* > controlled_files;
     std::vector< Idx_Footprints > data_footprints;
     std::vector< Idx_Footprints > map_footprints;
@@ -220,9 +242,6 @@ class Dispatcher
     uint64 total_available_time_units;
     volatile uint8* dispatcher_shm_ptr;
     Dispatcher_Logger* logger;
-    int socket_descriptor;
-    std::vector< int > started_connections;
-    Connection_Per_Pid_Map connection_per_pid;
     std::set< pid_t > disconnected;
     bool pending_commit;
     
