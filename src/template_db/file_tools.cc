@@ -182,3 +182,57 @@ Blocking_Client_Socket::~Blocking_Client_Socket()
 {
   close(socket_descriptor);
 }
+
+  
+Blocking_Client_Socket* Connection_Per_Pid_Map::get(pid_t pid)
+{
+  std::map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.find(pid);    
+  if (it != connection_per_pid.end())
+    return it->second;
+  else
+    return 0;
+}
+
+  
+void Connection_Per_Pid_Map::set(pid_t pid, Blocking_Client_Socket* socket)
+{
+  std::map< pid_t, Blocking_Client_Socket* >::iterator it = connection_per_pid.find(pid);
+  if (it != connection_per_pid.end())
+    delete it->second;
+  if (socket != 0)
+    connection_per_pid[pid] = socket;
+  else
+    connection_per_pid.erase(pid);
+}
+
+  
+void Connection_Per_Pid_Map::poll_command_round_robin(uint32& command, uint32& client_pid)
+{
+  // poll all open connections round robin
+  for (std::map< pid_t, Blocking_Client_Socket* >::const_iterator
+      it = connection_per_pid.upper_bound(last_pid);
+      it != connection_per_pid.end(); ++it)
+  {
+    command = it->second->get_command();
+    if (command != 0)
+    {
+      client_pid = it->first;
+      break;
+    }
+  }
+  if (command == 0)
+  {
+    for (std::map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.begin();
+        it != connection_per_pid.upper_bound(last_pid); ++it)
+    {
+      command = it->second->get_command();
+      if (command != 0)
+      {
+	client_pid = it->first;
+	break;
+      }
+    }
+  }
+  if (command != 0)
+    last_pid = client_pid;
+}

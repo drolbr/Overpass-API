@@ -48,31 +48,18 @@ class Connection_Per_Pid_Map
 {
 public:
   typedef uint pid_t;
+  
+  Connection_Per_Pid_Map() : last_pid(0) {}
     
-  Blocking_Client_Socket* get(pid_t pid)
-  {
-    std::map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.find(pid);    
-    if (it != connection_per_pid.end())
-      return it->second;
-    else
-      return 0;
-  }
-  
-  void set(pid_t pid, Blocking_Client_Socket* socket)
-  {
-    std::map< pid_t, Blocking_Client_Socket* >::iterator it = connection_per_pid.find(pid);
-    if (it != connection_per_pid.end())
-      delete it->second;
-    if (socket != 0)
-      connection_per_pid[pid] = socket;
-    else
-      connection_per_pid.erase(pid);
-  }
-  
+  Blocking_Client_Socket* get(pid_t pid);
+  void set(pid_t pid, Blocking_Client_Socket* socket);
   const std::map< pid_t, Blocking_Client_Socket* >& base_map() const { return connection_per_pid; }
+  
+  void poll_command_round_robin(uint32& command, uint32& client_pid);
   
 private:
   std::map< pid_t, Blocking_Client_Socket* > connection_per_pid;
+  uint32 last_pid;
 };
 
 

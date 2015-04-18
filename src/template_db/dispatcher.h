@@ -117,14 +117,13 @@ public:
 		    uint max_num_reading_processes_);
   ~Dispatcher_Socket();
   
-  void look_for_a_new_connection();
-  
-  Connection_Per_Pid_Map connection_per_pid;
-  std::vector< int > started_connections;  
-  
+  void look_for_a_new_connection(Connection_Per_Pid_Map& connection_per_pid);
+  std::vector< int >::size_type num_started_connections() { return started_connections.size(); }
+    
 private:
   int socket_descriptor;
   std::string socket_name;
+  std::vector< int > started_connections;  
 };
 
 
@@ -227,6 +226,7 @@ class Dispatcher
     
   private:
     Dispatcher_Socket socket;
+    Connection_Per_Pid_Map connection_per_pid;
     std::vector< File_Properties* > controlled_files;
     std::vector< Idx_Footprints > data_footprints;
     std::vector< Idx_Footprints > map_footprints;

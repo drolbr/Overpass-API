@@ -34,6 +34,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 
@@ -89,7 +90,7 @@ Dispatcher_Socket::~Dispatcher_Socket()
 }
 
 
-void Dispatcher_Socket::look_for_a_new_connection()
+void Dispatcher_Socket::look_for_a_new_connection(Connection_Per_Pid_Map& connection_per_pid)
 {    
   struct sockaddr_un sockaddr_un_dummy;
   uint sockaddr_un_dummy_size = sizeof(sockaddr_un_dummy);
@@ -510,47 +511,17 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 {
   uint32 counter = 0;
   uint32 idle_counter = 0;
-  uint32 last_pid = 0;
   while ((milliseconds == 0) || (counter < milliseconds/100))
   {
-    socket.look_for_a_new_connection();
-    Connection_Per_Pid_Map& connection_per_pid = socket.connection_per_pid;
+    socket.look_for_a_new_connection(connection_per_pid);
     
     uint32 command = 0;
-    uint32 client_pid = 0;
-    
-    // poll all open connections round robin
-    for (std::map< pid_t, Blocking_Client_Socket* >::const_iterator
-        it = connection_per_pid.base_map().upper_bound(last_pid);
-        it != connection_per_pid.base_map().end(); ++it)
-    {
-      command = it->second->get_command();
-      if (command != 0)
-      {
-	client_pid = it->first;
-	break;
-      }
-    }
-    if (command == 0)
-    {
-      for (std::map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.base_map().begin();
-          it != connection_per_pid.base_map().upper_bound(last_pid); ++it)
-      {
-        command = it->second->get_command();
-        if (command != 0)
-        {
-	  client_pid = it->first;
-	  break;
-        }
-      }
-    }
-    if (command != 0)
-      last_pid = client_pid;
+    uint32 client_pid = 0;    
+    connection_per_pid.poll_command_round_robin(command, client_pid);
     
     if (command == Dispatcher::HANGUP
         && processes_reading.find(client_pid) != processes_reading.end())
       command = Dispatcher::READ_ABORTED;
-
     
     if (*(uint32*)dispatcher_shm_ptr == 0 && command == 0)
     {
@@ -775,9 +746,11 @@ void Dispatcher::output_status()
 {
   try
   {
-    std::ofstream status((shadow_name + ".status").c_str());
+    std::ostringstream status("");
     
-    status<<socket.started_connections.size()<<' '<<socket.connection_per_pid.base_map().size()
+    status<<"Not yet opened connections: "<<socket.num_started_connections()<<'\n';
+    
+    status<<connection_per_pid.base_map().size()
         <<' '<<rate_limit
         <<' '<<total_available_space<<' '<<total_claimed_space()
 	<<' '<<total_available_time_units<<' '<<total_claimed_time_units()<<'\n';
@@ -819,13 +792,17 @@ void Dispatcher::output_status()
 	  <<' '<<processes_reading[*it].max_time<<'\n';
     }
     
-    for (std::map< pid_t, Blocking_Client_Socket* >::const_iterator it = socket.connection_per_pid.base_map().begin();
-	 it != socket.connection_per_pid.base_map().end(); ++it)
+    for (std::map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.base_map().begin();
+	 it != connection_per_pid.base_map().end(); ++it)
     {
       if (processes_reading_idx.find(it->first) == processes_reading_idx.end()
 	  && collected_pids.find(it->first) == collected_pids.end())
 	status<<"pending\t"<<it->first<<'\n';
     }
+    
+    std::ofstream status_file((shadow_name + ".status").c_str());
+    status_file<<status.str();
+    std::cout<<status.str();
   }
   catch (...) {}
 }
