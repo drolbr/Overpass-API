@@ -66,5 +66,5 @@ union_SOURCES = ${statements_dir}/union.test.cc ${statements_cc} ${testenv_cc}
 union_LDADD = 
 #benchmark_SOURCES = ${statements_dir}/benchmark.cc ${statements_cc} ${testenv_cc}
 #benchmark_LDADD = 
-test_dispatcher_SOURCES = ../template_db/dispatcher.test.cc ../template_db/dispatcher_client.cc ../template_db/dispatcher.cc ../template_db/types.cc
+test_dispatcher_SOURCES = ../template_db/dispatcher.test.cc ../template_db/dispatcher_client.cc ../template_db/dispatcher.cc ../template_db/file_tools.cc ../template_db/types.cc
 test_dispatcher_LDADD = 

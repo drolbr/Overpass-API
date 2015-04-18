@@ -19,6 +19,7 @@
 #ifndef DE__OSM3S___TEMPLATE_DB__DISPATCHER_H
 #define DE__OSM3S___TEMPLATE_DB__DISPATCHER_H
 
+#include "file_tools.h"
 #include "types.h"
 
 #include <map>
@@ -59,56 +60,6 @@ struct Dispatcher_Logger
   virtual void read_finished(pid_t pid) = 0;
   virtual void read_aborted(pid_t pid) = 0;
   virtual void purge(pid_t pid) = 0;
-};
-
-
-/* Represents the connection to a client that is blocking after it has send a command until
- * it gets an answer about the command execution state. This class ensures that the software cannot
- * fail due to a broken pipe. */
-struct Blocking_Client_Socket
-{
-  Blocking_Client_Socket(int socket_descriptor_);
-  uint32 get_command();
-  std::vector< uint32 > get_arguments(int num_arguments);
-  void clear_state();
-  void send_result(uint32 result);
-  ~Blocking_Client_Socket();
-private:
-  int socket_descriptor;
-  enum { waiting, processing_command, disconnected } state;
-  uint32 last_command;
-};
-
-
-class Connection_Per_Pid_Map
-{
-public:
-  typedef uint pid_t;
-    
-  Blocking_Client_Socket* get(pid_t pid)
-  {
-    std::map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.find(pid);    
-    if (it != connection_per_pid.end())
-      return it->second;
-    else
-      return 0;
-  }
-  
-  void set(pid_t pid, Blocking_Client_Socket* socket)
-  {
-    std::map< pid_t, Blocking_Client_Socket* >::iterator it = connection_per_pid.find(pid);
-    if (it != connection_per_pid.end())
-      delete it->second;
-    if (socket != 0)
-      connection_per_pid[pid] = socket;
-    else
-      connection_per_pid.erase(pid);
-  }
-  
-  const std::map< pid_t, Blocking_Client_Socket* >& base_map() const { return connection_per_pid; }
-  
-private:
-  std::map< pid_t, Blocking_Client_Socket* > connection_per_pid;
 };
 
 
@@ -284,9 +235,6 @@ class Dispatcher
     uint64 total_claimed_space() const;
     uint64 total_claimed_time_units() const;
 };
-
-
-void millisleep(uint32 milliseconds);
 
 
 #endif
