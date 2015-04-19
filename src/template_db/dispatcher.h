@@ -63,7 +63,70 @@ struct Dispatcher_Logger
 };
 
 
-struct Reader_Entry;
+struct Reader_Entry
+{
+  Reader_Entry(uint32 client_pid_, uint64 max_space_, uint32 max_time_, uint32 client_token_)
+    : client_pid(client_pid_), max_space(max_space_), max_time(max_time_), client_token(client_token_) {}
+  
+  uint32 client_pid;
+  uint64 max_space;
+  uint32 max_time;
+  uint32 start_time;
+  uint32 client_token;
+};
+
+
+struct Quota_Entry
+{
+  Quota_Entry(uint32 client_token_, uint32 expiration_time_)
+    : client_token(client_token_), expiration_time(expiration_time_) {}
+  
+  uint32 client_token;
+  uint32 expiration_time;
+};
+
+
+class Global_Resource_Planner
+{
+public:
+  Global_Resource_Planner(uint32 global_available_time_, uint64 global_available_space_, uint32 rate_limit_)
+      : global_used_time(0), global_available_time(global_available_time_),
+        global_used_space(0), global_available_space(global_available_space_),
+        rate_limit(rate_limit_) {}
+  
+  // Returns true if the process is acceptable in terms of server load and quotas
+  // In this case it is registered as running
+  int probe(uint32 pid, uint32 client_token, uint32 time_units, uint64 max_space);
+
+  // Unregisters the process
+  void remove(uint32 pid);
+
+  // Unregister all processes that don't have a connection anymore
+  void purge(Connection_Per_Pid_Map& connection_per_pid);
+    
+  void set_total_available_time(uint32 global_available_time_) { global_available_time = global_available_time_; }
+  void set_total_available_space(uint64 global_available_space_) { global_available_space = global_available_space_; }
+  void set_rate_limit(uint rate_limit_) { rate_limit = rate_limit_; }
+
+  const std::vector< Reader_Entry >& get_active() const { return active; }
+  const std::vector< Quota_Entry >& get_afterwards() const { return afterwards; }  
+  uint32 get_total_claimed_time() const { return global_used_time; }
+  uint32 get_total_available_time() const { return global_available_time; }
+  uint64 get_total_claimed_space() const { return global_used_space; }
+  uint64 get_total_available_space() const { return global_available_space; }
+  uint32 get_rate_limit() const { return rate_limit; }
+
+private:
+  std::vector< Reader_Entry > active;
+  std::vector< Quota_Entry > afterwards;
+  uint32 global_used_time;
+  uint32 global_available_time;
+  uint64 global_used_space;
+  uint64 global_available_space;
+  uint32 rate_limit;
+  
+  void remove_entry(std::vector< Reader_Entry >::iterator& it);
+};
 
 
 // Cares for the communication between server and client
@@ -161,9 +224,6 @@ class Dispatcher
         database. Can be safely called multiple times for the same process. */
     void read_idx_finished(pid_t pid);
     
-    /** Refreshes the timeout for a reading process. */
-    void prolongate(pid_t pid);
-    
     /** Unregisters a reading process on its request. */
     void read_finished(pid_t pid);
     
@@ -181,7 +241,7 @@ class Dispatcher
     void output_status();
     
     /** Set the limit of simultaneous queries from a single IP address. */
-    void set_rate_limit(uint rate_limit_) { rate_limit = rate_limit_; }
+    void set_rate_limit(uint rate_limit) { global_resource_planner.set_rate_limit(rate_limit); }
     
   private:
     Dispatcher_Socket socket;
@@ -190,21 +250,16 @@ class Dispatcher
     std::vector< Idx_Footprints > data_footprints;
     std::vector< Idx_Footprints > map_footprints;
     std::set< pid_t > processes_reading_idx;
-    std::map< pid_t, Reader_Entry > processes_reading;
     std::string shadow_name, db_dir;
     std::string dispatcher_share_name;
     int dispatcher_shm_fd;
-    uint max_num_reading_processes;
-    uint rate_limit;
-    uint purge_timeout;
-    uint64 total_available_space;
-    uint64 total_available_time_units;
     volatile uint8* dispatcher_shm_ptr;
     Dispatcher_Logger* logger;
     std::set< pid_t > disconnected;
     bool pending_commit;
     uint32 requests_started_counter;
     uint32 requests_finished_counter;
+    Global_Resource_Planner global_resource_planner;
     
     void copy_shadows_to_mains();
     void copy_mains_to_shadows();

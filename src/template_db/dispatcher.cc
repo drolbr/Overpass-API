@@ -37,53 +37,6 @@
 #include <vector>
 
 
-struct Reader_Entry
-{
-  Reader_Entry(uint32 ping_time_, uint64 max_space_, uint32 max_time_, uint32 client_token_)
-    : ping_time(ping_time_), max_space(max_space_), max_time(max_time_), client_token(client_token_)
-  {
-    ++active_client_tokens[client_token];
-  }
-  
-  Reader_Entry() : ping_time(0), max_space(0), max_time(0), client_token(0) {}
-  
-  Reader_Entry(const Reader_Entry& e)
-    : ping_time(e.ping_time), max_space(e.max_space), max_time(e.max_time), client_token(e.client_token)
-  {
-    ++active_client_tokens[client_token];
-  }
-  
-  Reader_Entry& operator=(const Reader_Entry& e)
-  {
-    --active_client_tokens[client_token];
-    
-    ping_time = e.ping_time;
-    max_space = e.max_space;
-    max_time = e.max_time;
-    client_token = e.client_token;
-    
-    ++active_client_tokens[client_token];
-    
-    return *this;
-  }
-  
-  ~Reader_Entry()
-  {
-    --active_client_tokens[client_token];
-  }
-  
-  uint32 ping_time;
-  uint64 max_space;
-  uint32 max_time;
-  uint32 client_token;
-
-  static std::map< uint32, uint > active_client_tokens;
-};
-
-
-std::map< uint32, uint > Reader_Entry::active_client_tokens;
-
-
 Dispatcher_Socket::Dispatcher_Socket
     (const std::string& dispatcher_share_name,
      const std::string& shadow_name_,
@@ -176,6 +129,92 @@ void Dispatcher_Socket::look_for_a_new_connection(Connection_Per_Pid_Map& connec
 }
 
 
+int Global_Resource_Planner::probe(uint32 pid, uint32 client_token, uint32 time_units, uint64 max_space)
+{
+  if (rate_limit > 0)
+  {
+    uint32 token_count = 0;
+    for (std::vector< Reader_Entry >::const_iterator it = active.begin(); it != active.end(); ++it)
+    {
+      if (it->client_token == client_token)
+	++token_count;
+    }
+    if (token_count >= rate_limit)
+      return Dispatcher::RATE_LIMITED;
+    
+    uint32 current_time = time(0);    
+    for (std::vector< Quota_Entry >::iterator it = afterwards.begin(); it != afterwards.end(); )
+    {
+      if (it->expiration_time < current_time)
+      {
+	*it = afterwards.back();
+	afterwards.pop_back();
+      }
+      else if (it->client_token == client_token)
+	++token_count;
+    }
+    if (token_count >= rate_limit)
+      return Dispatcher::RATE_LIMITED;    
+  }
+  
+  // Simple checks: is the query acceptable from a global point of view?
+  if (time_units > (global_available_time - global_used_time)/2 ||
+      max_space > (global_available_space - global_used_space)/2)
+    return 0;
+  
+  global_used_space += time_units;
+  global_used_time += max_space;
+  return Dispatcher::REQUEST_READ_AND_IDX;
+}
+
+
+void Global_Resource_Planner::remove_entry(std::vector< Reader_Entry >::iterator& it)
+{
+  // Adjust global counters
+  global_used_space -= it->max_space;
+  global_used_time -= it->max_time;
+  
+  // Caculate afterwards blocking time
+  uint32 end_time = time(0);
+  uint32 penalty_time =
+      std::max(global_available_space * (end_time - it->start_time + 1)
+          / (global_available_space - global_used_space),
+	  uint64(global_available_time) * (end_time - it->start_time + 1) 
+	  / (global_available_time - global_used_time))
+      - (end_time - it->start_time + 1);
+  afterwards.push_back(Quota_Entry(it->client_token, penalty_time + end_time));
+  
+  // Really remove the element
+  *it = active.back();
+  active.pop_back();
+}
+
+
+void Global_Resource_Planner::remove(uint32 pid)
+{
+  for (std::vector< Reader_Entry >::iterator it = active.begin(); it != active.end(); ++it)
+  {
+    if (it->client_pid == pid)
+    {
+      remove_entry(it);
+      break;
+    }
+  }
+}
+
+
+void Global_Resource_Planner::purge(Connection_Per_Pid_Map& connection_per_pid)
+{
+  for (std::vector< Reader_Entry >::iterator it = active.begin(); it != active.end(); )
+  {
+    if (connection_per_pid.get(it->client_pid) == 0)
+      remove_entry(it);
+    else
+      ++it;
+  }
+}
+
+
 Dispatcher::Dispatcher
     (std::string dispatcher_share_name_,
      std::string index_share_name,
@@ -192,15 +231,11 @@ Dispatcher::Dispatcher
       map_footprints(controlled_files_.size()),
       shadow_name(shadow_name_), db_dir(db_dir_),
       dispatcher_share_name(dispatcher_share_name_),
-      max_num_reading_processes(max_num_reading_processes_),
-      rate_limit(0),
-      purge_timeout(purge_timeout_),
-      total_available_space(total_available_space_),
-      total_available_time_units(total_available_time_units_),
       logger(logger_),
       pending_commit(false),
       requests_started_counter(0),
-      requests_finished_counter(0)    
+      requests_finished_counter(0),
+      global_resource_planner(total_available_time_units_, total_available_space_, 0)
 {
   signal(SIGPIPE, SIG_IGN);
   
@@ -337,7 +372,7 @@ void Dispatcher::write_commit(pid_t pid)
 
 void Dispatcher::request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space,
 				      uint32 client_token)
-{
+{ 
   if (logger)
     logger->request_read_and_idx(pid, max_allowed_time, max_allowed_space);
   ++requests_started_counter;
@@ -348,8 +383,8 @@ void Dispatcher::request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64
   for (std::vector< Idx_Footprints >::iterator it(map_footprints.begin());
       it != map_footprints.end(); ++it)
     it->register_pid(pid);
+  
   processes_reading_idx.insert(pid);
-  processes_reading[pid] = Reader_Entry(time(NULL), max_allowed_space, max_allowed_time, client_token);
 }
 
 
@@ -358,14 +393,6 @@ void Dispatcher::read_idx_finished(pid_t pid)
   if (logger)
     logger->read_idx_finished(pid);
   processes_reading_idx.erase(pid);
-}
-
-
-void Dispatcher::prolongate(pid_t pid)
-{
-  if (logger)
-    logger->prolongate(pid);
-  processes_reading[pid].ping_time = time(NULL);
 }
 
 
@@ -382,7 +409,6 @@ void Dispatcher::read_finished(pid_t pid)
       it != map_footprints.end(); ++it)
     it->unregister_pid(pid);
   processes_reading_idx.erase(pid);
-  processes_reading.erase(pid);
   disconnected.erase(pid);
 }
 
@@ -398,7 +424,6 @@ void Dispatcher::read_aborted(pid_t pid)
       it != map_footprints.end(); ++it)
     it->unregister_pid(pid);
   processes_reading_idx.erase(pid);
-  processes_reading.erase(pid);
   disconnected.erase(pid);
 }
 
@@ -568,7 +593,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     uint32 client_pid = 0;    
     connection_per_pid.poll_command_round_robin(command, client_pid);
     
-    if (command == HANGUP && processes_reading.find(client_pid) != processes_reading.end())
+    if (command == HANGUP)
       command = READ_ABORTED;
     
     if (command == 0)
@@ -645,39 +670,16 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	uint64 max_allowed_space = (((uint64)arguments[2])<<32 | arguments[1]);
 	uint32 client_token = arguments[3];
 	
-	if (rate_limit > 0 && client_token > 0
-            && Reader_Entry::active_client_tokens[client_token] >= rate_limit)
-	{
-	  connection_per_pid.get(client_pid)->send_result(RATE_LIMITED);
-	  continue;
-	}
-	
-	if (processes_reading.size() >= max_num_reading_processes)
-	{
-	  check_and_purge();
-	  connection_per_pid.get(client_pid)->send_result(0);
-	  continue;
-	}
-	
 	if (pending_commit)
 	{
 	  connection_per_pid.get(client_pid)->send_result(0);
 	  continue;
 	}
 	
-	if (max_allowed_space > (total_available_space - total_claimed_space())/2)
-	{
-	  connection_per_pid.get(client_pid)->send_result(0);
-	  continue;
-	}
+	command = global_resource_planner.probe(client_pid, client_token, max_allowed_time, max_allowed_space);
+	if (command == REQUEST_READ_AND_IDX)
+	  request_read_and_idx(client_pid, max_allowed_time, max_allowed_space, client_token);
 	
-	if (max_allowed_time > (total_available_time_units - total_claimed_time_units())/2)
-	{
-	  connection_per_pid.get(client_pid)->send_result(0);
-	  continue;
-	}
-	
-	request_read_and_idx(client_pid, max_allowed_time, max_allowed_space, client_token);
 	connection_per_pid.get(client_pid)->send_result(command);
       }
       else if (command == PURGE)
@@ -704,11 +706,11 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	uint32 target_token = arguments[0];
 
 	pid_t target_pid = 0;
-	for (std::map< pid_t, Reader_Entry >::const_iterator it = processes_reading.begin();
-	     it != processes_reading.end(); ++it)
+        for (std::vector< Reader_Entry >::const_iterator it = global_resource_planner.get_active().begin();
+	    it != global_resource_planner.get_active().end(); ++it)
 	{
-	  if (it->second.client_token == target_token)
-	    target_pid = it->first;
+	  if (it->client_token == target_token)
+	    target_pid = it->client_pid;
 	}
 	
 	connection_per_pid.get(client_pid)->send_result(target_pid);
@@ -724,11 +726,11 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         int rate_limit_ = arguments[4];
 	
 	if (new_total_available_space > 0)
-	  total_available_space = new_total_available_space;
+	  global_resource_planner.set_total_available_space(new_total_available_space);
 	if (new_total_available_time_units > 0)
-	  total_available_time_units = new_total_available_time_units;
+	  global_resource_planner.set_total_available_time(new_total_available_time_units);
         if (rate_limit_ > -1)
-          rate_limit = rate_limit_;
+          global_resource_planner.set_rate_limit(rate_limit_);
 	
 	connection_per_pid.get(client_pid)->send_result(command);
       }
@@ -755,22 +757,28 @@ void Dispatcher::output_status()
     
     status<<"Number of not yet opened connections: "<<socket.num_started_connections()<<'\n'
         <<"Number of connected clients: "<<connection_per_pid.base_map().size()<<'\n'
-        <<"Rate limit: "<<connection_per_pid.base_map().size()<<'\n'
-        <<"Total available space: "<<total_available_space<<'\n'
-        <<"Total claimed space: "<<total_claimed_space()<<'\n'
-        <<"Total available time units: "<<total_available_time_units<<'\n'
-        <<"Total claimed time units: "<<total_claimed_time_units()<<'\n'
+        <<"Rate limit: "<<global_resource_planner.get_rate_limit()<<'\n'
+        <<"Total available space: "<<global_resource_planner.get_total_available_space()<<'\n'
+        <<"Total claimed space: "<<global_resource_planner.get_total_claimed_space()<<'\n'
+        <<"Total available time units: "<<global_resource_planner.get_total_available_time()<<'\n'
+        <<"Total claimed time units: "<<global_resource_planner.get_total_claimed_time()<<'\n'
         <<"Counter of started requests: "<<requests_started_counter<<'\n'
         <<"Counter of finished requests: "<<requests_finished_counter<<'\n';
-    
-    for (std::set< pid_t >::const_iterator it = processes_reading_idx.begin();
-        it != processes_reading_idx.end(); ++it)
-    {
-      status<<REQUEST_READ_AND_IDX<<' '<<*it
-	  <<' '<<processes_reading[*it].max_space
-	  <<' '<<processes_reading[*it].max_time<<'\n';
-    }
+
     std::set< pid_t > collected_pids;
+    
+    for (std::vector< Reader_Entry >::const_iterator it = global_resource_planner.get_active().begin();
+	 it != global_resource_planner.get_active().end(); ++it)
+    {
+      if (processes_reading_idx.find(it->client_pid) != processes_reading_idx.end())
+	status<<REQUEST_READ_AND_IDX;
+      else
+	status<<READ_IDX_FINISHED;
+      status<<' '<<it->client_pid<<' '<<it->max_space<<' '<<it->max_time<<' '<<it->start_time<<'\n';
+        
+      collected_pids.insert(it->client_pid);
+    }
+        
     for (std::vector< Idx_Footprints >::iterator it(data_footprints.begin());
         it != data_footprints.end(); ++it)
     {
@@ -787,25 +795,19 @@ void Dispatcher::output_status()
           it != registered_processes.end(); ++it)
 	collected_pids.insert(*it);
     }
-    for (std::map< pid_t, Reader_Entry >::const_iterator it = processes_reading.begin();
-        it != processes_reading.end(); ++it)
-      collected_pids.insert(it->first);
-    
-    for (std::set< pid_t >::const_iterator it = collected_pids.begin();
-        it != collected_pids.end(); ++it)
-    {
-      if (processes_reading_idx.find(*it) == processes_reading_idx.end())
-	status<<READ_IDX_FINISHED<<' '<<*it
-	  <<' '<<processes_reading[*it].max_space
-	  <<' '<<processes_reading[*it].max_time<<'\n';
-    }
-    
+
     for (std::map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.base_map().begin();
 	 it != connection_per_pid.base_map().end(); ++it)
     {
       if (processes_reading_idx.find(it->first) == processes_reading_idx.end()
 	  && collected_pids.find(it->first) == collected_pids.end())
 	status<<"pending\t"<<it->first<<'\n';
+    }
+    
+    for (std::vector< Quota_Entry >::const_iterator it = global_resource_planner.get_afterwards().begin();
+	 it != global_resource_planner.get_afterwards().end(); ++it)
+    {
+      status<<"quota\t"<<it->client_token<<' '<<it->expiration_time<<'\n';
     }
   }
   catch (...) {}
@@ -854,66 +856,7 @@ std::vector< bool > Idx_Footprints::total_footprint() const
 }
 
 
-uint64 Dispatcher::total_claimed_space() const
-{
-  uint64 result = 0;
-  for (std::map< pid_t, Reader_Entry >::const_iterator it = processes_reading.begin();
-      it != processes_reading.end(); ++it)
-    result += it->second.max_space;
-  
-  return result;
-}
-
-
-uint64 Dispatcher::total_claimed_time_units() const
-{
-  uint64 result = 0;
-  for (std::map< pid_t, Reader_Entry >::const_iterator it = processes_reading.begin();
-      it != processes_reading.end(); ++it)
-    result += it->second.max_time;
-  
-  return result;
-}
-
-
 void Dispatcher::check_and_purge()
 {
-  std::set< pid_t > collected_pids;
-  for (std::vector< Idx_Footprints >::iterator it(data_footprints.begin());
-      it != data_footprints.end(); ++it)
-  {
-    std::vector< Idx_Footprints::pid_t > registered_processes = it->registered_processes();
-    for (std::vector< Idx_Footprints::pid_t >::const_iterator it = registered_processes.begin();
-        it != registered_processes.end(); ++it)
-      collected_pids.insert(*it);
-  }
-  for (std::vector< Idx_Footprints >::iterator it(map_footprints.begin());
-      it != map_footprints.end(); ++it)
-  {
-    std::vector< Idx_Footprints::pid_t > registered_processes = it->registered_processes();
-    for (std::vector< Idx_Footprints::pid_t >::const_iterator it = registered_processes.begin();
-        it != registered_processes.end(); ++it)
-      collected_pids.insert(*it);
-  }
-  for (std::map< pid_t, Reader_Entry >::const_iterator it = processes_reading.begin();
-      it != processes_reading.end(); ++it)
-    collected_pids.insert(it->first);
-  
-  uint32 current_time = time(NULL);
-  for (std::set< pid_t >::const_iterator it = collected_pids.begin();
-      it != collected_pids.end(); ++it)
-  {
-    std::map< pid_t, Reader_Entry >::const_iterator alive_it = processes_reading.find(*it);
-    if ((alive_it != processes_reading.end()) &&
-        (alive_it->second.ping_time + purge_timeout > current_time))
-      continue;
-    if (disconnected.find(*it) != disconnected.end()
-        || alive_it == processes_reading.end()
-	|| alive_it->second.ping_time + purge_timeout > current_time)
-    {
-      if (logger)
-	logger->purge(*it);
-      read_aborted(*it);
-    }
-  }
+  global_resource_planner.purge(connection_per_pid);
 }

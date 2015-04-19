@@ -158,7 +158,6 @@ int main(int argc, char *argv[])
   uint log_level = Error_Output::ASSISTING;
 
   const int META = 1;
-  int mode = META;
   int area_level = 0;
 
   int argpos = 1;
@@ -170,8 +169,6 @@ int main(int argc, char *argv[])
       if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
 	db_dir += '/';
     }
-    else if (!(strcmp(argv[argpos], "--meta")))
-      mode = META;
     else if (!(strcmp(argv[argpos], "--quiet")))
       log_level = Error_Output::QUIET;
     else if (!(strcmp(argv[argpos], "--concise")))
