@@ -22,7 +22,7 @@
 #include "tags_updater.h"
 #include "way_updater.h"
 #include "../../expat/expat_justparse_interface.h"
-#include "../../template_db/dispatcher.h"
+#include "../../template_db/dispatcher_client.h"
 #include "../../template_db/random_file.h"
 #include "../../template_db/transaction.h"
 #include "../core/settings.h"

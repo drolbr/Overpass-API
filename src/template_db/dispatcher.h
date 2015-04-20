@@ -19,13 +19,12 @@
 #ifndef DE__OSM3S___TEMPLATE_DB__DISPATCHER_H
 #define DE__OSM3S___TEMPLATE_DB__DISPATCHER_H
 
+#include "file_tools.h"
 #include "types.h"
 
 #include <map>
 #include <set>
 #include <vector>
-
-using namespace std;
 
 
 class Idx_Footprints
@@ -33,15 +32,15 @@ class Idx_Footprints
   public:
     typedef uint pid_t;
     
-    void set_current_footprint(const vector< bool >& footprint);
+    void set_current_footprint(const std::vector< bool >& footprint);
     void register_pid(pid_t pid); 
     void unregister_pid(pid_t pid); 
-    vector< pid_t > registered_processes() const;
-    vector< bool > total_footprint() const;
+    std::vector< pid_t > registered_processes() const;
+    std::vector< bool > total_footprint() const;
     
   private:
-    vector< bool > current_footprint;
-    map< pid_t, vector< bool > > footprint_per_pid;
+    std::vector< bool > current_footprint;
+    std::map< pid_t, std::vector< bool > > footprint_per_pid;
 };
 
 
@@ -50,7 +49,7 @@ struct Dispatcher_Logger
 {
   typedef uint pid_t;
   
-  virtual void write_start(pid_t pid, const vector< pid_t >& registered) = 0;
+  virtual void write_start(pid_t pid, const std::vector< pid_t >& registered) = 0;
   virtual void write_rollback(pid_t pid) = 0;
   virtual void write_commit(pid_t pid) = 0;
   virtual void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space)
@@ -64,97 +63,90 @@ struct Dispatcher_Logger
 };
 
 
-/* Represents the connection to a client that is blocking after it has send a command until
- * it gets an answer about the command execution state. This class ensures that the software cannot
- * fail due to a broken pipe. */
-struct Blocking_Client_Socket
-{
-  Blocking_Client_Socket(int socket_descriptor_);
-  uint32 get_command();
-  vector< uint32 > get_arguments(int num_arguments);
-  void clear_state();
-  void send_result(uint32 result);
-  ~Blocking_Client_Socket();
-private:
-  int socket_descriptor;
-  enum { waiting, processing_command, disconnected } state;
-  uint32 last_command;
-};
-
-
-class Connection_Per_Pid_Map
-{
-public:
-  typedef uint pid_t;
-    
-  Blocking_Client_Socket* get(pid_t pid)
-  {
-    map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.find(pid);    
-    if (it != connection_per_pid.end())
-      return it->second;
-    else
-      return 0;
-  }
-  
-  void set(pid_t pid, Blocking_Client_Socket* socket)
-  {
-    map< pid_t, Blocking_Client_Socket* >::iterator it = connection_per_pid.find(pid);
-    if (it != connection_per_pid.end())
-      delete it->second;
-    if (socket != 0)
-      connection_per_pid[pid] = socket;
-    else
-      connection_per_pid.erase(pid);
-  }
-  
-  const map< pid_t, Blocking_Client_Socket* >& base_map() const { return connection_per_pid; }
-  
-private:
-  map< pid_t, Blocking_Client_Socket* > connection_per_pid;
-};
-
-
 struct Reader_Entry
 {
-  Reader_Entry(uint32 ping_time_, uint64 max_space_, uint32 max_time_, uint32 client_token_)
-    : ping_time(ping_time_), max_space(max_space_), max_time(max_time_), client_token(client_token_)
-  {
-    ++active_client_tokens[client_token];
-  }
+  Reader_Entry(uint32 client_pid_, uint64 max_space_, uint32 max_time_, uint32 client_token_, uint32 start_time_)
+    : client_pid(client_pid_), max_space(max_space_), max_time(max_time_), start_time(start_time_),
+      client_token(client_token_) {}
   
-  Reader_Entry() : ping_time(0), max_space(0), max_time(0), client_token(0) {}
-  
-  Reader_Entry(const Reader_Entry& e)
-    : ping_time(e.ping_time), max_space(e.max_space), max_time(e.max_time), client_token(e.client_token)
-  {
-    ++active_client_tokens[client_token];
-  }
-  
-  Reader_Entry& operator=(const Reader_Entry& e)
-  {
-    --active_client_tokens[client_token];
-    
-    ping_time = e.ping_time;
-    max_space = e.max_space;
-    max_time = e.max_time;
-    client_token = e.client_token;
-    
-    ++active_client_tokens[client_token];
-    
-    return *this;
-  }
-  
-  ~Reader_Entry()
-  {
-    --active_client_tokens[client_token];
-  }
-  
-  uint32 ping_time;
+  uint32 client_pid;
   uint64 max_space;
   uint32 max_time;
+  uint32 start_time;
   uint32 client_token;
+};
 
-  static map< uint32, uint > active_client_tokens;
+
+struct Quota_Entry
+{
+  Quota_Entry(uint32 client_token_, uint32 expiration_time_)
+    : client_token(client_token_), expiration_time(expiration_time_) {}
+  
+  uint32 client_token;
+  uint32 expiration_time;
+};
+
+
+class Global_Resource_Planner
+{
+public:
+  Global_Resource_Planner(uint32 global_available_time_, uint64 global_available_space_, uint32 rate_limit_)
+      : global_used_time(0), global_available_time(global_available_time_),
+        global_used_space(0), global_available_space(global_available_space_),
+        rate_limit(rate_limit_) {}
+  
+  // Returns true if the process is acceptable in terms of server load and quotas
+  // In this case it is registered as running
+  int probe(uint32 pid, uint32 client_token, uint32 time_units, uint64 max_space);
+
+  // Unregisters the process
+  void remove(uint32 pid);
+
+  // Unregister all processes that don't have a connection anymore
+  void purge(Connection_Per_Pid_Map& connection_per_pid);
+    
+  void set_total_available_time(uint32 global_available_time_) { global_available_time = global_available_time_; }
+  void set_total_available_space(uint64 global_available_space_) { global_available_space = global_available_space_; }
+  void set_rate_limit(uint rate_limit_) { rate_limit = rate_limit_; }
+
+  const std::vector< Reader_Entry >& get_active() const { return active; }
+  const std::vector< Quota_Entry >& get_afterwards() const { return afterwards; }  
+  uint32 get_total_claimed_time() const { return global_used_time; }
+  uint32 get_total_available_time() const { return global_available_time; }
+  uint64 get_total_claimed_space() const { return global_used_space; }
+  uint64 get_total_available_space() const { return global_available_space; }
+  uint32 get_rate_limit() const { return rate_limit; }
+
+private:
+  std::vector< Reader_Entry > active;
+  std::vector< Quota_Entry > afterwards;
+  uint32 global_used_time;
+  uint32 global_available_time;
+  uint64 global_used_space;
+  uint64 global_available_space;
+  uint32 rate_limit;
+  
+  void remove_entry(std::vector< Reader_Entry >::iterator& it);
+};
+
+
+// Cares for the communication between server and client
+class Dispatcher_Socket
+{
+public:
+  Dispatcher_Socket(const std::string& dispatcher_share_name,
+		    const std::string& shadow_name_,
+		    const std::string& db_dir_,
+		    uint max_num_reading_processes_);
+  ~Dispatcher_Socket();
+  
+  void look_for_a_new_connection(Connection_Per_Pid_Map& connection_per_pid);
+  std::vector< int >::size_type num_started_connections() { return started_connections.size(); }
+    
+private:
+  int socket_descriptor;
+  std::string socket_name;
+  std::vector< int > started_connections;  
 };
 
 
@@ -194,14 +186,14 @@ class Dispatcher
     /** Opens a shared memory for dispatcher communication. Furthermore,
       * detects whether idx or idy are valid, clears to idx if necessary,
       * and loads them into the shared memory idx_share_name. */
-    Dispatcher(string dispatcher_share_name,
-	       string index_share_name,
-	       string shadow_name,
-	       string db_dir,
+    Dispatcher(std::string dispatcher_share_name,
+	       std::string index_share_name,
+	       std::string shadow_name,
+	       std::string db_dir,
 	       uint max_num_reading_processes, uint purge_timeout,
 	       uint64 total_available_space,
 	       uint64 total_available_time_units,
-	       const vector< File_Properties* >& controlled_files,
+	       const std::vector< File_Properties* >& controlled_files,
 	       Dispatcher_Logger* logger = 0);
 	       
     ~Dispatcher();
@@ -233,9 +225,6 @@ class Dispatcher
         database. Can be safely called multiple times for the same process. */
     void read_idx_finished(pid_t pid);
     
-    /** Refreshes the timeout for a reading process. */
-    void prolongate(pid_t pid);
-    
     /** Unregisters a reading process on its request. */
     void read_finished(pid_t pid);
     
@@ -253,114 +242,35 @@ class Dispatcher
     void output_status();
     
     /** Set the limit of simultaneous queries from a single IP address. */
-    void set_rate_limit(uint rate_limit_) { rate_limit = rate_limit_; }
+    void set_rate_limit(uint rate_limit) { global_resource_planner.set_rate_limit(rate_limit); }
     
   private:
-    vector< File_Properties* > controlled_files;
-    vector< Idx_Footprints > data_footprints;
-    vector< Idx_Footprints > map_footprints;
-    set< pid_t > processes_reading_idx;
-    map< pid_t, Reader_Entry > processes_reading;
-    string shadow_name, db_dir;
-    string dispatcher_share_name;
+    Dispatcher_Socket socket;
+    Connection_Per_Pid_Map connection_per_pid;
+    std::vector< File_Properties* > controlled_files;
+    std::vector< Idx_Footprints > data_footprints;
+    std::vector< Idx_Footprints > map_footprints;
+    std::set< pid_t > processes_reading_idx;
+    std::string shadow_name, db_dir;
+    std::string dispatcher_share_name;
     int dispatcher_shm_fd;
-    uint max_num_reading_processes;
-    uint rate_limit;
-    uint purge_timeout;
-    uint64 total_available_space;
-    uint64 total_available_time_units;
     volatile uint8* dispatcher_shm_ptr;
     Dispatcher_Logger* logger;
-    int socket_descriptor;
-    vector< int > started_connections;
-    Connection_Per_Pid_Map connection_per_pid;
-    set< pid_t > disconnected;
+    std::set< pid_t > disconnected;
     bool pending_commit;
+    uint32 requests_started_counter;
+    uint32 requests_finished_counter;
+    Global_Resource_Planner global_resource_planner;
     
     void copy_shadows_to_mains();
     void copy_mains_to_shadows();
     void remove_shadows();
     void set_current_footprints();
-    vector< pid_t > write_index_of_empty_blocks();
+    std::vector< pid_t > write_index_of_empty_blocks();
     void check_and_purge();
     uint64 total_claimed_space() const;
     uint64 total_claimed_time_units() const;
 };
-
-
-class Dispatcher_Client
-{
-  public:
-    /** Opens a shared memory for dispatcher communication.*/
-    Dispatcher_Client(string dispatcher_share_name);
-    ~Dispatcher_Client();
-
-    /** Write operations: -------------------------------------------------- */
-	       
-    /** Allocates a write lock. Waits if necessary. */
-    void write_start();
-    
-    /** Aborts an active writing operation. Results are undefined if it is
-        called outside a writing operation. */
-    void write_rollback();
-    
-    /** Commits an active writing operation. Results are undefined if it is
-        called outside a writing operation. */
-    void write_commit();
-    
-    /** Read operations: --------------------------------------------------- */
-
-    /** Request the index for a read operation and registers the reading process.
-    Reading the index files should be taking a quick copy, because if any process
-    is in this state, write_commits are blocked. */
-    void request_read_and_idx(uint32 max_allowed_time, uint64 max_allowed_space,
-			      uint32 client_token);
-    
-    /** Changes the registered state from reading the index to reading the
-    database. Can be safely called multiple times for the same process. */
-    void read_idx_finished();
-    
-    /** Unregisteres a reading process. */
-    void read_finished();
-    
-    /** Other operations: -------------------------------------------------- */
-    
-    /** Terminate another instance running in the standby_loop. */
-    void terminate();
-
-    /** Let another instance running in the standby_loop output its status. */
-    void output_status();
-    
-    /** Purge another instance. */
-    void purge(uint32 pid);
-    
-    /** Query the pid of the instance with the given token. */
-    pid_t query_by_token(uint32 token);
-    
-    /** Purge another instance. */
-    void set_global_limits(uint64 max_allowed_space, uint64 max_allowed_time_units, int rate_limit);
-    
-    /** Called regularly to tell the dispatcher that this process is still alive */
-    void ping();
-    
-    const string& get_db_dir() { return db_dir; }
-    const string& get_shadow_name() { return shadow_name; }
-    
-  private:
-    string dispatcher_share_name;
-    int dispatcher_shm_fd;
-    volatile uint8* dispatcher_shm_ptr;
-    string db_dir, shadow_name;
-    int socket_descriptor;
-    
-    uint32 ack_arrived();
-    
-    template< class TObject >
-    void send_message(TObject message, string source_pos);
-};
-
-
-void millisleep(uint32 milliseconds);
 
 
 #endif

@@ -18,6 +18,7 @@
 
 #include "block_backend.h"
 #include "dispatcher.h"
+#include "dispatcher_client.h"
 #include "file_blocks.h"
 #include "random_file.h"
 #include "transaction.h"
@@ -26,7 +27,6 @@
 #include <iostream>
 #include <sstream>
 
-using namespace std;
 
 //-----------------------------------------------------------------------------
 
@@ -115,11 +115,12 @@ struct IntObject
 string BASE_DIRECTORY("./");
 string ID_SUFFIX(".map");
 
+
 struct Test_File : File_Properties
 {
   Test_File(string basename_) : basename(basename_), basedir(BASE_DIRECTORY) {}
   
-  string get_basedir() const
+  const std::string& get_basedir() const
   {
     return basedir;
   }
@@ -129,31 +130,34 @@ struct Test_File : File_Properties
     basedir = basedir_;
   }
   
-  string get_file_name_trunk() const
+  const std::string& get_file_name_trunk() const
   {
     return basename;
   }
   
-  string get_index_suffix() const
+  const std::string& get_index_suffix() const
   {
-    return ".idx";
+    static std::string result(".idx");
+    return result;
   }
-  
-  string get_data_suffix() const
+
+  const std::string& get_data_suffix() const
   {
-    return ".bin";
+    static std::string result(".bin");
+    return result;
   }
-  
-  string get_id_suffix() const
+
+  const std::string& get_id_suffix() const
   {
     return ID_SUFFIX;
   }
-  
-  string get_shadow_suffix() const
+
+  const std::string& get_shadow_suffix() const
   {
-    return ".shadow";
+    static std::string result(".shadow");
+    return result;
   }
-  
+
   uint32 get_block_size() const
   {
     return 512;
@@ -174,23 +178,23 @@ struct Test_File : File_Properties
     return 16*IntIndex::max_size_of();
   }
   
-  vector< bool > get_data_footprint(const string& db_dir) const
+  vector< bool > get_data_footprint(const std::string& db_dir) const
   {
     return get_data_index_footprint< IntIndex >(*this, db_dir);
   }
   
-  vector< bool > get_map_footprint(const string& db_dir) const
+  vector< bool > get_map_footprint(const std::string& db_dir) const
   {
     return get_map_index_footprint(*this, db_dir);
   }  
-  
+
   uint32 id_max_size_of() const
   {
     return IntIndex::max_size_of();
   }
   
   File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, string db_dir, string file_name_extension)
+      (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const
   {
     return new File_Blocks_Index< IntIndex >
@@ -1429,4 +1433,96 @@ int main(int argc, char* args[])
           <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
   }
+  
+  if ((test_to_execute == "") || (test_to_execute == "27r"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    try
+    {
+      {
+	//sleep for a second
+	struct timeval timeout_;
+	timeout_.tv_sec = 0;
+	timeout_.tv_usec = 1000*1000;
+	select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      }
+      
+      Dispatcher_Client dispatcher_client("osm3s_share_test");
+      test_file.set_basedir(dispatcher_client.get_db_dir());
+      
+      sync_log("Try request_read().\n");
+      dispatcher_client.request_read_and_idx(24*60, 1024*1024, 0);
+      sync_log("request_read() done.\n");
+      
+      Nonsynced_Transaction transaction
+          (false, false, dispatcher_client.get_db_dir(), "");
+      transaction.data_index(&test_file);
+      
+      dispatcher_client.read_idx_finished();
+      sync_log("read_idx_finished() done.\n");
+      
+      {
+	//sleep for two seconds
+	struct timeval timeout_;
+	timeout_.tv_sec = 0;
+	timeout_.tv_usec = 2*1000*1000;
+	select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      }
+      
+      data_read_test(test_file, transaction);
+      
+      sync_log("Announce read_finished().\n");
+      dispatcher_client.read_finished();
+      sync_log("read_finished() done.\n");
+    }
+    catch (File_Error e)
+    {
+      cout<<"File error catched: "
+          <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "27w"))
+  {
+    Test_File test_file("Test_File");
+    
+    vector< File_Properties* > file_properties;
+    file_properties.push_back(&test_file);
+    try
+    {
+      Dispatcher_Client dispatcher_client("osm3s_share_test");
+      test_file.set_basedir(dispatcher_client.get_db_dir());
+      
+      {
+	//sleep for a seconds
+	struct timeval timeout_;
+	timeout_.tv_sec = 0;
+	timeout_.tv_usec = 1000*1000;
+	select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      }
+      
+      sync_log("Request output status.\n");
+      dispatcher_client.output_status();      
+      sync_log("Request output status finished.\n");
+      
+      {
+	//sleep for a seconds
+	struct timeval timeout_;
+	timeout_.tv_sec = 0;
+	timeout_.tv_usec = 2*1000*1000;
+	select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+      }
+      
+      remove((dispatcher_client.get_db_dir() + "Test_File.bin").c_str());
+      remove((dispatcher_client.get_db_dir() + "Test_File.bin.idx").c_str());
+    }
+    catch (File_Error e)
+    {
+      cout<<"File error catched: "
+          <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }  
 }

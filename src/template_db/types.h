@@ -54,7 +54,7 @@ const int S_666 = S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH;
 
 struct File_Error
 {
-  File_Error(uint32 errno_, std::string filename_, std::string origin_)
+  File_Error(uint32 errno_, const std::string& filename_, const std::string& origin_)
   : error_number(errno_), filename(filename_), origin(origin_) {}
   
   uint32 error_number;
@@ -79,11 +79,11 @@ struct File_Blocks_Index_Base
 
 struct File_Properties
 {
-  virtual std::string get_file_name_trunk() const = 0;
-  virtual std::string get_index_suffix() const = 0;
-  virtual std::string get_data_suffix() const = 0;
-  virtual std::string get_id_suffix() const = 0;
-  virtual std::string get_shadow_suffix() const = 0;
+  virtual const std::string& get_file_name_trunk() const = 0;
+  virtual const std::string& get_index_suffix() const = 0;
+  virtual const std::string& get_data_suffix() const = 0;
+  virtual const std::string& get_id_suffix() const = 0;
+  virtual const std::string& get_shadow_suffix() const = 0;
   virtual uint32 get_block_size() const = 0;
   virtual uint32 get_max_size() const = 0;
   virtual uint32 get_compression_method() const = 0;
@@ -95,7 +95,7 @@ struct File_Properties
   // The returned object is of type File_Blocks_Index< .. >*
   // and goes into the ownership of the caller.
   virtual File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, std::string db_dir, std::string file_name_extension)
+      (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const = 0;
 };
 
@@ -107,14 +107,14 @@ class Raw_File
   Raw_File operator=(const Raw_File&);
   
   public:
-    Raw_File(std::string name, int oflag, mode_t mode, std::string caller_id);
+    Raw_File(const std::string& name, int oflag, mode_t mode, const std::string& caller_id);
     ~Raw_File() { close(fd_); }
     int fd() const { return fd_; }
-    uint64 size(std::string caller_id) const;
-    void resize(uint64 size, std::string caller_id) const;
-    void read(uint8* buf, uint64 size, std::string caller_id) const;
-    void write(uint8* buf, uint64 size, std::string caller_id) const;
-    void seek(uint64 pos, std::string caller_id) const;
+    uint64 size(const std::string& caller_id) const;
+    void resize(uint64 size, const std::string& caller_id) const;
+    void read(uint8* buf, uint64 size, const std::string& caller_id) const;
+    void write(uint8* buf, uint64 size, const std::string& caller_id) const;
+    void seek(uint64 pos, const std::string& caller_id) const;
     
   private:
     int fd_;
@@ -142,7 +142,7 @@ inline bool file_exists(const std::string& filename)
 
 //-----------------------------------------------------------------------------
 
-inline Raw_File::Raw_File(std::string name_, int oflag, mode_t mode, std::string caller_id)
+inline Raw_File::Raw_File(const std::string& name_, int oflag, mode_t mode, const std::string& caller_id)
   : fd_(0), name(name_)
 {
   fd_ = open64(name.c_str(), oflag, mode);
@@ -156,7 +156,7 @@ inline Raw_File::Raw_File(std::string name_, int oflag, mode_t mode, std::string
   }
 }
 
-inline uint64 Raw_File::size(std::string caller_id) const
+inline uint64 Raw_File::size(const std::string& caller_id) const
 {
   uint64 size = lseek64(fd_, 0, SEEK_END);
   uint64 foo = lseek64(fd_, 0, SEEK_SET);
@@ -165,28 +165,28 @@ inline uint64 Raw_File::size(std::string caller_id) const
   return size;
 }
 
-inline void Raw_File::resize(uint64 size, std::string caller_id) const
+inline void Raw_File::resize(uint64 size, const std::string& caller_id) const
 {
   uint64 foo = ftruncate64(fd_, size);
   if (foo != 0)
     throw File_Error(errno, name, caller_id);
 }
 
-inline void Raw_File::read(uint8* buf, uint64 size, std::string caller_id) const
+inline void Raw_File::read(uint8* buf, uint64 size, const std::string& caller_id) const
 {
   uint64 foo = ::read(fd_, buf, size);
   if (foo != size)
     throw File_Error(errno, name, caller_id);
 }
 
-inline void Raw_File::write(uint8* buf, uint64 size, std::string caller_id) const
+inline void Raw_File::write(uint8* buf, uint64 size, const std::string& caller_id) const
 {
   uint64 foo = ::write(fd_, buf, size);
   if (foo != size)
     throw File_Error(errno, name, caller_id);
 }
 
-inline void Raw_File::seek(uint64 pos, std::string caller_id) const
+inline void Raw_File::seek(uint64 pos, const std::string& caller_id) const
 {
   uint64 foo = lseek64(fd_, pos, SEEK_SET);
   if (foo != pos)
@@ -195,6 +195,9 @@ inline void Raw_File::seek(uint64 pos, std::string caller_id) const
 
 
 int& global_read_counter();
+
+
+void millisleep(uint32 milliseconds);
 
 
 #endif

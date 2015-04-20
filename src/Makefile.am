@@ -106,7 +106,7 @@ libcore_la_SOURCES = overpass_api/frontend/map_ql_parser.cc overpass_api/stateme
 libcore_la_LIBADD = libdispatcher.la libexpatwrapper.la libsettings.la libweboutput.la
 libdata_la_SOURCES = overpass_api/data/collect_members.cc
 libdata_la_LIBADD =
-libdispatcher_la_SOURCES = template_db/dispatcher.cc overpass_api/dispatch/resource_manager.cc overpass_api/osm-backend/area_updater.cc
+libdispatcher_la_SOURCES = template_db/dispatcher_client.cc overpass_api/dispatch/resource_manager.cc overpass_api/osm-backend/area_updater.cc
 libdispatcher_la_LIBADD = -lrt
 libexpatwrapper_la_SOURCES = expat/expat_justparse_interface.cc
 libexpatwrapper_la_LIBADD = -lexpat
@@ -130,7 +130,7 @@ bin_update_from_dir_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/update_
 bin_update_from_dir_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la -lz
 bin_osm3s_query_SOURCES = ${statements_cc} overpass_api/frontend/console_output.cc overpass_api/dispatch/osm3s_query.cc overpass_api/osm-backend/clone_database.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc template_db/zlib_wrapper.cc
 bin_osm3s_query_LDADD = libcore.la libdata.la -lz
-bin_dispatcher_SOURCES = overpass_api/dispatch/dispatcher_server.cc
+bin_dispatcher_SOURCES = template_db/dispatcher.cc template_db/file_tools.cc template_db/types.cc overpass_api/dispatch/dispatcher_server.cc
 bin_dispatcher_LDADD = libdispatcher.la libfrontend.la libsettings.la
 
 
