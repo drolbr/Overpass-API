@@ -65,8 +65,9 @@ struct Dispatcher_Logger
 
 struct Reader_Entry
 {
-  Reader_Entry(uint32 client_pid_, uint64 max_space_, uint32 max_time_, uint32 client_token_)
-    : client_pid(client_pid_), max_space(max_space_), max_time(max_time_), client_token(client_token_) {}
+  Reader_Entry(uint32 client_pid_, uint64 max_space_, uint32 max_time_, uint32 client_token_, uint32 start_time_)
+    : client_pid(client_pid_), max_space(max_space_), max_time(max_time_), start_time(start_time_),
+      client_token(client_token_) {}
   
   uint32 client_pid;
   uint64 max_space;

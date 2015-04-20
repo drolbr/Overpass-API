@@ -131,7 +131,7 @@ void Dispatcher_Socket::look_for_a_new_connection(Connection_Per_Pid_Map& connec
 
 int Global_Resource_Planner::probe(uint32 pid, uint32 client_token, uint32 time_units, uint64 max_space)
 {
-  if (rate_limit > 0)
+  if (rate_limit > 0 && client_token > 0)
   {
     uint32 token_count = 0;
     for (std::vector< Reader_Entry >::const_iterator it = active.begin(); it != active.end(); ++it)
@@ -150,8 +150,12 @@ int Global_Resource_Planner::probe(uint32 pid, uint32 client_token, uint32 time_
 	*it = afterwards.back();
 	afterwards.pop_back();
       }
-      else if (it->client_token == client_token)
-	++token_count;
+      else 
+      {
+	if (it->client_token == client_token)
+	  ++token_count;
+        ++it;
+      }
     }
     if (token_count >= rate_limit)
       return Dispatcher::RATE_LIMITED;    
@@ -162,8 +166,10 @@ int Global_Resource_Planner::probe(uint32 pid, uint32 client_token, uint32 time_
       max_space > (global_available_space - global_used_space)/2)
     return 0;
   
-  global_used_space += time_units;
-  global_used_time += max_space;
+  active.push_back(Reader_Entry(pid, max_space, time_units, client_token, time(0)));
+  
+  global_used_space += max_space;
+  global_used_time += time_units;
   return Dispatcher::REQUEST_READ_AND_IDX;
 }
 
@@ -174,15 +180,18 @@ void Global_Resource_Planner::remove_entry(std::vector< Reader_Entry >::iterator
   global_used_space -= it->max_space;
   global_used_time -= it->max_time;
   
-  // Caculate afterwards blocking time
-  uint32 end_time = time(0);
-  uint32 penalty_time =
+  if (rate_limit > 0 && it->client_token > 0)
+  {
+    // Caculate afterwards blocking time
+    uint32 end_time = time(0);
+    uint32 penalty_time =
       std::max(global_available_space * (end_time - it->start_time + 1)
           / (global_available_space - global_used_space),
 	  uint64(global_available_time) * (end_time - it->start_time + 1) 
 	  / (global_available_time - global_used_time))
       - (end_time - it->start_time + 1);
-  afterwards.push_back(Quota_Entry(it->client_token, penalty_time + end_time));
+    afterwards.push_back(Quota_Entry(it->client_token, penalty_time + end_time));
+  }
   
   // Really remove the element
   *it = active.back();
@@ -410,6 +419,7 @@ void Dispatcher::read_finished(pid_t pid)
     it->unregister_pid(pid);
   processes_reading_idx.erase(pid);
   disconnected.erase(pid);
+  global_resource_planner.remove(pid);
 }
 
 
@@ -425,6 +435,7 @@ void Dispatcher::read_aborted(pid_t pid)
     it->unregister_pid(pid);
   processes_reading_idx.erase(pid);
   disconnected.erase(pid);
+  global_resource_planner.remove(pid);
 }
 
 
@@ -774,7 +785,8 @@ void Dispatcher::output_status()
 	status<<REQUEST_READ_AND_IDX;
       else
 	status<<READ_IDX_FINISHED;
-      status<<' '<<it->client_pid<<' '<<it->max_space<<' '<<it->max_time<<' '<<it->start_time<<'\n';
+      status<<' '<<it->client_pid<<' '<<it->client_token<<' '
+          <<it->max_space<<' '<<it->max_time<<' '<<it->start_time<<'\n';
         
       collected_pids.insert(it->client_pid);
     }
