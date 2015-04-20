@@ -131,30 +131,7 @@ void process_meta_data
   
   Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Id_Type > > user_db
       (&file_blocks_index);
-  user_db.update(db_to_delete, db_to_insert);
-}
-
-
-template< class Update_Logger, class Id_Type >
-void process_meta_data
-  (File_Blocks_Index_Base& file_blocks_index,
-   vector< pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 > >& meta_to_insert,
-   const vector< pair< Id_Type, bool > >& ids_to_modify,
-   const map< uint32, vector< Id_Type > >& to_delete,
-   Update_Logger* update_logger)
-{
-  map< Uint31_Index, set< OSM_Element_Metadata_Skeleton< Id_Type > > > db_to_delete;
-  map< Uint31_Index, set< OSM_Element_Metadata_Skeleton< Id_Type > > > db_to_insert;
-
-  process_meta_data(file_blocks_index, meta_to_insert, ids_to_modify,
-		    to_delete, db_to_delete, db_to_insert);
-  
-  Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Id_Type > > user_db
-      (&file_blocks_index);
-  if (update_logger)
-    user_db.update(db_to_delete, db_to_insert, *update_logger);
-  else
-    user_db.update(db_to_delete, db_to_insert);  
+  user_db.update(db_to_delete, db_to_insert);  
 }
 
 

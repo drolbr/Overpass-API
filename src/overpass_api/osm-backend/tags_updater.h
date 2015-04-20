@@ -43,12 +43,11 @@ void prepare_tags
      vector< Tag_Entry< typename TObject::Id_Type > >& tags_to_delete,
      const map< uint32, vector< typename TObject::Id_Type > >& to_delete);
 
-template< class TObject, class Update_Logger >
+template< class TObject >
 void update_tags_local
     (File_Blocks_Index_Base& tags_local, const vector< TObject* >& elems_ptr,
      const vector< pair< typename TObject::Id_Type, bool > >& ids_to_modify,
-     const vector< Tag_Entry< typename TObject::Id_Type > >& tags_to_delete,
-     Update_Logger* update_logger);
+     const vector< Tag_Entry< typename TObject::Id_Type > >& tags_to_delete);
 
 template< class TObject >
 void update_tags_global
@@ -289,12 +288,11 @@ void prepare_tags
 }
 
 
-template < class TObject, class Update_Logger >
+template < class TObject >
 void update_tags_local
     (File_Blocks_Index_Base& tags_local, const vector< TObject* >& elems_ptr,
      const vector< pair< typename TObject::Id_Type, bool > >& ids_to_modify,
-     const vector< Tag_Entry< typename TObject::Id_Type > >& tags_to_delete,
-     Update_Logger* update_logger)
+     const vector< Tag_Entry< typename TObject::Id_Type > >& tags_to_delete)
 {
   map< Tag_Index_Local, set< typename TObject::Id_Type > > db_to_delete;
   map< Tag_Index_Local, set< typename TObject::Id_Type > > db_to_insert;
@@ -340,10 +338,7 @@ void update_tags_local
   }
   
   Block_Backend< Tag_Index_Local, typename TObject::Id_Type > elem_db(&tags_local);
-  if (update_logger)
-    elem_db.update(db_to_delete, db_to_insert, *update_logger);
-  else
-    elem_db.update(db_to_delete, db_to_insert);
+  elem_db.update(db_to_delete, db_to_insert);
 }
 
 

@@ -59,6 +59,29 @@ struct Data_By_Id
   std::vector< Entry > data;
 };
 
+
+template< typename Skeleton >
+void remove_time_inconsistent_versions(Data_By_Id< Skeleton >& new_data)
+{
+  typename std::vector< typename Data_By_Id< Skeleton >::Entry >::iterator from_it = new_data.data.begin();
+  typename std::vector< typename Data_By_Id< Skeleton >::Entry >::iterator to_it = new_data.data.begin();
+  if (from_it != new_data.data.end())
+    ++from_it;
+  while (from_it != new_data.data.end())
+  {
+    if (to_it->elem.id == from_it->elem.id && from_it->meta.timestamp <= to_it->meta.timestamp)
+      std::cerr<<"Version "<<to_it->meta.version<<
+          " has a later or equal timestamp ("<<Timestamp(to_it->meta.timestamp).str()<<")"
+	  " than version "<<from_it->meta.version<<" ("<<Timestamp(from_it->meta.timestamp).str()<<")"
+	  " of "<<name_of_type< Skeleton >()<<" "<<from_it->elem.id.val()<<'\n';
+    else
+      ++to_it;
+    *to_it = *from_it;
+    ++from_it;
+  }
+}
+
+
 // ----------------------------------------------------------------------------
 // generic updater functions
 
@@ -130,6 +153,47 @@ std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_skeletons
 }
 
 
+template< typename Element_Skeleton, typename Element_Skeleton_Delta >
+std::map< typename Element_Skeleton::Id_Type, Timestamp > get_existing_attic_skeleton_timestamps
+    (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& ids_with_position,
+     const std::map< typename Element_Skeleton::Id_Type, std::set< Uint31_Index > >& existing_idx_lists,
+     Transaction& transaction, const File_Properties& file_properties)
+{
+  std::set< Uint31_Index > req;
+  for (typename std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >::const_iterator
+      it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
+    req.insert(it->second);
+  
+  for (typename std::map< typename Element_Skeleton::Id_Type, std::set< Uint31_Index > >::const_iterator
+      it = existing_idx_lists.begin(); it != existing_idx_lists.end(); ++it)
+  {
+    for (std::set< Uint31_Index >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      req.insert(*it2);
+  }
+  
+  std::map< typename Element_Skeleton::Id_Type, Timestamp > result;
+  Idx_Agnostic_Compare< typename Element_Skeleton::Id_Type > comp;
+  
+  Block_Backend< Uint31_Index, Attic< Element_Skeleton_Delta > > db(transaction.data_index(&file_properties));
+  for (typename Block_Backend< Uint31_Index, Attic< Element_Skeleton_Delta > >::Discrete_Iterator
+      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+  {
+    if (binary_search(ids_with_position.begin(), ids_with_position.end(),
+        make_pair(it.object().id, 0), comp))
+    {
+      typename std::map< typename Element_Skeleton::Id_Type, Timestamp >::iterator rit
+          = result.find(it.object().id);
+      if (rit == result.end())
+	result.insert(std::make_pair(it.object().id, Timestamp(it.object().timestamp)));
+      else if (rit->second.timestamp < it.object().timestamp)
+        rit->second = Timestamp(it.object().timestamp);
+    }
+  }
+
+  return result;
+}
+
+
 template< typename Element_Skeleton >
 std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_meta
     (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& ids_with_position,
@@ -159,7 +223,7 @@ std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_meta
 /* Compares the new data and the already existing skeletons to determine those that have
  * moved. This information is used to prepare the deletion and insertion lists for the
  * database operation.  Also, the list of moved objects is filled. */
-template< typename Element_Skeleton, typename Update_Logger, typename Index_Type >
+template< typename Element_Skeleton, typename Index_Type >
 void new_current_skeletons
     (const Data_By_Id< Element_Skeleton >& new_data,
      const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
@@ -167,8 +231,7 @@ void new_current_skeletons
      bool record_minuscule_moves,
      std::map< Uint31_Index, std::set< Element_Skeleton > >& attic_skeletons,
      std::map< Uint31_Index, std::set< Element_Skeleton > >& new_skeletons,
-     vector< pair< typename Element_Skeleton::Id_Type, Index_Type > >& moved_objects,
-     Update_Logger* update_logger)
+     vector< pair< typename Element_Skeleton::Id_Type, Index_Type > >& moved_objects)
 {
   attic_skeletons = existing_skeletons;
   
@@ -191,7 +254,6 @@ void new_current_skeletons
     if (!idx)
     {
       // No old data exists. So we can add the new data and are done.
-      tell_update_logger_insertions(*it, update_logger);
       new_skeletons[it->idx].insert(it->elem);
       continue;
     }
@@ -199,7 +261,6 @@ void new_current_skeletons
     {
       // The old and new version have different indexes. So they are surely different.
       moved_objects.push_back(make_pair(it->elem.id, Index_Type(idx->val())));
-      tell_update_logger_insertions(*it, update_logger);
       new_skeletons[it->idx].insert(it->elem);
       continue;
     }
@@ -209,7 +270,6 @@ void new_current_skeletons
     if (it_attic_idx == attic_skeletons.end())
     {
       // Something has gone wrong. Save at least the new object.
-      tell_update_logger_insertions(*it, update_logger);
       new_skeletons[it->idx].insert(it->elem);
       continue;
     }
@@ -219,7 +279,6 @@ void new_current_skeletons
     if (it_attic == it_attic_idx->second.end())
     {
       // Something has gone wrong. Save at least the new object.
-      tell_update_logger_insertions(*it, update_logger);
       new_skeletons[it->idx].insert(it->elem);
       continue;
     }
@@ -231,7 +290,6 @@ void new_current_skeletons
       it_attic_idx->second.erase(it_attic);
     else
     {
-      tell_update_logger_insertions(*it, update_logger);
       new_skeletons[it->idx].insert(it->elem);
       if (record_minuscule_moves)
         moved_objects.push_back(make_pair(it->elem.id, Index_Type(idx->val())));
@@ -287,7 +345,7 @@ void add_tags(Id_Type id, Uint31_Index idx,
 /* Compares the new data and the already existing skeletons to determine those that have
  * moved. This information is used to prepare the deletion and insertion lists for the
  * database operation.  Also, the list of moved nodes is filled. */
-template< typename Element_Skeleton, typename Update_Logger, typename Id_Type >
+template< typename Element_Skeleton, typename Id_Type >
 void new_current_local_tags
     (const Data_By_Id< Element_Skeleton >& new_data,
      const std::vector< std::pair< Id_Type, Uint31_Index > >& existing_map_positions,
@@ -399,21 +457,6 @@ void update_map_positions
   for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator
       it = new_idx_positions.begin(); it != new_idx_positions.end(); ++it)
     random.put(it->first.val(), it->second);
-}
-
-
-template< typename Index, typename Object, typename Update_Logger >
-void update_elements
-    (const std::map< Index, std::set< Object > >& attic_objects,
-     const std::map< Index, std::set< Object > >& new_objects,
-     Transaction& transaction, const File_Properties& file_properties,
-     Update_Logger* update_logger)
-{
-  Block_Backend< Index, Object > db(transaction.data_index(&file_properties));
-  if (update_logger)
-    db.update(attic_objects, new_objects, *update_logger);
-  else
-    db.update(attic_objects, new_objects);
 }
 
 
@@ -828,6 +871,10 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
   {
     while (tit != tags_by_id_and_time.end() && tit->first.first == it->first)
     {
+      // We handle in this loop body a single combination of an object (by its id) and a key.
+      // The indices used by the object come from it->second.
+      // The values the tag takes come from tit->second.
+      
       // Use that one cannot insert the same value twice in a set
       
       typename std::vector< Attic< std::string > >::const_iterator tit2 = tit->second.begin();
@@ -862,24 +909,44 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
       {
         if (it2 == it->second.end() || (tit2 != tit->second.end() && it2->timestamp < tit2->timestamp))
         {
-          if (last_idx.val() != 0u && last_value != *tit2 && (it2 != it->second.end()
-                  || *tit2 != void_tag_value() + " " ||
-              existing_attic_idxs.find(Uint31_Index(last_idx.val() & 0x7fffff00))
-                  != existing_attic_idxs.end()))
+	  // The more recent (thus relevant) timestamp is here tit2->timestamp.
+	  // In particular, the index of the object doesn't change at this time.
+	  
+	  // We generate an entry for the older tag situation here. This means:
+	  // - If the tag was deleted at this point in time (last_index == 0u) then the tag is invalid anyway.
+	  // - If the value doesn't differ from the previous value then also no entry is necessary.
+	  // We then write the old tag value (maybe empty) if
+	  // - the older value is not the oldest known state
+	  // - or there is an even older version in this update process
+	  
+          if (last_idx.val() != 0u && last_value != *tit2 && (*tit2 != void_tag_value() + " "
+	      || it2 != it->second.end()
+              || existing_attic_idxs.find(Uint31_Index(last_idx.val() & 0x7fffff00)) != existing_attic_idxs.end()))
             result[Tag_Index_Local(Uint31_Index(last_idx.val() & 0x7fffff00), tit->first.second,
 		    *tit2 != void_tag_value() + " " ? *tit2 : void_tag_value())]
                 .insert(Attic< Id_Type >(it->first, tit2->timestamp));
+		
           last_value = *tit2;
           ++tit2;
         }
         else if (tit2 == tit->second.end() || tit2->timestamp < it2->timestamp)
         {
+	  // The more recent (thus relevant) timestamp is here it2->timestamp.
+	  // In particular, the tag has before and after the value last_value.
+	  
+	  // We only need to write something if
+	  // - the index really changes
+	  // - and the tag is really set
+	  // In this case we write an entry at the old index that the tag has expired
+	  // and an entry at the new index that the tag wasn't set here before.
+	  
           if (!((last_idx.val() & 0x7fffff00) == (it2->val() & 0x7fffff00))
 	      && last_value != void_tag_value() && last_value != void_tag_value() + " ")
           {
             if (it2->val() != 0u)
               result[Tag_Index_Local(Uint31_Index(it2->val() & 0x7fffff00), tit->first.second, last_value)]
                 .insert(Attic< Id_Type >(it->first, it2->timestamp));
+		
             if (last_idx.val() != 0u)
               result[Tag_Index_Local(Uint31_Index(last_idx.val() & 0x7fffff00),
                                      tit->first.second, void_tag_value())]
@@ -890,16 +957,32 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
         }
         else
         {
-          if (it2->val() != 0u &&
-	      (!((last_idx.val() & 0x7fffff00) == (it2->val() & 0x7fffff00)) || last_value != *tit2))
-            result[Tag_Index_Local(Uint31_Index(it2->val() & 0x7fffff00), tit->first.second,
-		*tit2 != void_tag_value() + " " ? *tit2 : void_tag_value())]
-                .insert(Attic< Id_Type >(it->first, tit2->timestamp));
-          if (!((last_idx.val() & 0x7fffff00) == (it2->val() & 0x7fffff00)) && last_idx.val() != 0u)
-            result[Tag_Index_Local(Uint31_Index(last_idx.val() & 0x7fffff00),
-                                   tit->first.second, void_tag_value())]
-                .insert(Attic< Id_Type >(it->first, tit2->timestamp));
-                
+	  // Both timestamps are equal. We need to do different things if the effective index has changed or not.
+	  
+	  if (!((last_idx.val() & 0x7fffff00) == (it2->val() & 0x7fffff00)))
+	  {
+	    // This is similar to the case that only the index changes.
+	    
+	    // If the younger index is non-void then we store for it a delimiter to the past
+            if (last_idx.val() != 0u && last_value != void_tag_value() && last_value != void_tag_value() + " ")
+              result[Tag_Index_Local(Uint31_Index(last_idx.val() & 0x7fffff00),
+                                     tit->first.second, void_tag_value())]
+                  .insert(Attic< Id_Type >(it->first, it2->timestamp));
+	    
+	    // If the older index is non-void then we write an entry for it
+            if (it2->val() != 0u)
+              result[Tag_Index_Local(Uint31_Index(it2->val() & 0x7fffff00), tit->first.second, *tit2)]
+                .insert(Attic< Id_Type >(it->first, it2->timestamp));
+	  }
+	  else
+	  {
+	    // This is similar to the case that only the tag value changes.
+            if (last_idx.val() != 0u && last_value != *tit2)
+              result[Tag_Index_Local(Uint31_Index(last_idx.val() & 0x7fffff00), tit->first.second,
+		    *tit2 != void_tag_value() + " " ? *tit2 : void_tag_value())]
+                  .insert(Attic< Id_Type >(it->first, tit2->timestamp));
+	  }
+	  
           last_value = *tit2;
           ++tit2;
           last_idx = *it2;
@@ -958,9 +1041,12 @@ std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >, std::vec
 {
   std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >,
       std::vector< Attic< std::string > > > result;
-      
+    
+  // Contains for each OSM object its oldest appearing timestamp.
   std::map< typename Element_Skeleton::Id_Type, uint64 > timestamp_per_id;
 
+  // Convert new_data into a list of pairs of tag values and their expiration date.
+  
   typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
       next_it = new_data.data.begin();
   if (next_it != new_data.data.end())
@@ -971,7 +1057,9 @@ std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >, std::vec
   for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
       it = new_data.data.begin(); it != new_data.data.end(); ++it)
   {
+    // The expiration date of this version.
     uint64 next_timestamp = NOW;
+    
     if (next_it != new_data.data.end())
     {
       if (next_it->elem.id == it->elem.id)
@@ -987,9 +1075,10 @@ std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >, std::vec
       std::vector< Attic< std::string > >& result_ref = result[std::make_pair(it->elem.id, it2->first)];
       if (result_ref.empty())
       {
-	result_ref.push_back(Attic< std::string >(void_tag_value(), it->meta.timestamp));
 	if (it->meta.timestamp == timestamp_per_id[it->elem.id])
-          result_ref.push_back(Attic< std::string >(void_tag_value() + " ", timestamp_per_id[it->elem.id]));
+          result_ref.push_back(Attic< std::string >(void_tag_value() + " ", it->meta.timestamp));
+	else
+	  result_ref.push_back(Attic< std::string >(void_tag_value(), it->meta.timestamp));
       }
       else if (result_ref.back().timestamp < it->meta.timestamp)
         result_ref.push_back(Attic< std::string >(void_tag_value(), it->meta.timestamp));
@@ -999,7 +1088,7 @@ std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >, std::vec
   
   for (typename std::map< std::pair< typename Element_Skeleton::Id_Type, std::string >,
       std::vector< Attic< std::string > > >::iterator it = result.begin(); it != result.end(); ++it)
-    std::sort(it->second.begin(), it->second.end(), Descending_By_Timestamp< Attic< std::string > >());
+    std::stable_sort(it->second.begin(), it->second.end(), Descending_By_Timestamp< Attic< std::string > >());
 
   for (typename std::map< Tag_Index_Local, std::set< typename Element_Skeleton::Id_Type > >::const_iterator
       it = attic_local_tags.begin(); it != attic_local_tags.end(); ++it)
