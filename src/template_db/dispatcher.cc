@@ -517,13 +517,13 @@ void Dispatcher::set_current_footprints()
 
 void write_to_index_empty_file(const vector< bool >& footprint, string filename)
 {
-  Void_Pointer< uint32 > buffer(footprint.size()*sizeof(uint32));  
-  uint32* pos = buffer.ptr;
+  Void_Pointer< std::pair< uint32, uint32 > > buffer(footprint.size() * 8);  
+  std::pair< uint32, uint32 >* pos = buffer.ptr;
   for (uint32 i = 0; i < footprint.size(); ++i)
   {
     if (!footprint[i])
     {
-      *pos = i;
+      *pos = std::make_pair(1, i);
       ++pos;
     }
   }

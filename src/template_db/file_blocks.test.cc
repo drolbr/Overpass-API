@@ -38,41 +38,34 @@ struct IntIndex
   IntIndex(uint32 i) : value(i) {}
   IntIndex(void* data) : value(*(uint32*)data) {}
   
-  uint32 size_of() const
-  {
-    return (value < 24 ? 12 : value-12);
-  }
-  
-  static uint32 size_of(void* data)
-  {
-    return ((*(uint32*)data) < 24 ? 12 : (*(uint32*)data)-12);
-  }
+  uint32 size_of() const { return (value < 24 ? 12 : value-12); }
+  static uint32 size_of(void* data) { return ((*(uint32*)data) < 24 ? 12 : (*(uint32*)data)-12); }
   
   void to_data(void* data) const
   {
+    uint32 size = size_of();
+    *(uint32*)(((uint8*)data) + size - 4) = 0x5a5a5a5a;
     *(uint32*)data = value;
+    uint32 i = 1;
+    while (i < size/4)
+    {
+      *(uint32*)(((uint8*)data) + 4*i) = 4*i/3;
+      ++i;
+    }
   }
   
-  bool operator<(const IntIndex& index) const
-  {
-    return this->value < index.value;
-  }
+  bool operator<(const IntIndex& index) const { return this->value < index.value; }
+  bool operator==(const IntIndex& index) const { return this->value == index.value; }
   
-  bool operator==(const IntIndex& index) const
-  {
-    return this->value == index.value;
-  }
-  
-  uint32 val() const
-  {
-    return value;
-  }
+  uint32 val() const { return value; }
   
   private:
     uint32 value;
 };
 
+
 typedef list< IntIndex >::const_iterator IntIterator;
+
 
 struct IntRangeIterator : list< pair< IntIndex, IntIndex > >::const_iterator
 {
@@ -99,6 +92,7 @@ struct IntRangeIterator : list< pair< IntIndex, IntIndex > >::const_iterator
 string BASE_DIRECTORY("./");
 string DATA_SUFFIX(".bin");
 string INDEX_SUFFIX(".idx");
+
 
 struct Test_File : File_Properties
 {
@@ -137,9 +131,175 @@ struct Test_File : File_Properties
     return 512;
   }
   
+  uint32 get_max_size() const
+  {
+    return 1;
+  }
+  
+  uint32 get_compression_method() const
+  {
+    return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
+  }
+  
   uint32 get_map_block_size() const
   {
     return 16;
+  }
+  
+  vector< bool > get_data_footprint(const string& db_dir) const
+  {
+    return vector< bool >();
+  }
+  
+  vector< bool > get_map_footprint(const string& db_dir) const
+  {
+    return vector< bool >();
+  }  
+
+  uint32 id_max_size_of() const
+  {
+    throw string();
+    return 0;
+  }
+  
+  File_Blocks_Index_Base* new_data_index
+      (bool writeable, bool use_shadow, string db_dir, string file_name_extension)
+      const
+  {
+    return new File_Blocks_Index< IntIndex >
+        (*this, writeable, use_shadow, db_dir, file_name_extension);
+  }
+};
+
+
+struct Variable_Block_Test_File : File_Properties
+{
+  string get_basedir() const
+  {
+    return BASE_DIRECTORY;
+  }
+  
+  string get_file_name_trunk() const
+  {
+    return "variable";
+  }
+  
+  string get_index_suffix() const
+  {
+    return INDEX_SUFFIX;
+  }
+
+  string get_data_suffix() const
+  {
+    return DATA_SUFFIX;
+  }
+
+  string get_id_suffix() const
+  {
+    return "";
+  }
+
+  string get_shadow_suffix() const
+  {
+    return ".shadow";
+  }
+
+  uint32 get_block_size() const
+  {
+    return 64;
+  }
+  
+  uint32 get_max_size() const
+  {
+    return 8;
+  }
+  
+  uint32 get_compression_method() const
+  {
+    return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
+  }
+  
+  uint32 get_map_block_size() const
+  {
+    return 16;
+  }
+  
+  vector< bool > get_data_footprint(const string& db_dir) const
+  {
+    return vector< bool >();
+  }
+  
+  vector< bool > get_map_footprint(const string& db_dir) const
+  {
+    return vector< bool >();
+  }  
+
+  uint32 id_max_size_of() const
+  {
+    throw string();
+    return 0;
+  }
+  
+  File_Blocks_Index_Base* new_data_index
+      (bool writeable, bool use_shadow, string db_dir, string file_name_extension)
+      const
+  {
+    return new File_Blocks_Index< IntIndex >
+        (*this, writeable, use_shadow, db_dir, file_name_extension);
+  }
+};
+
+
+struct Compressed_Test_File : File_Properties
+{
+  string get_basedir() const
+  {
+    return BASE_DIRECTORY;
+  }
+  
+  string get_file_name_trunk() const
+  {
+    return "compressed";
+  }
+  
+  string get_index_suffix() const
+  {
+    return INDEX_SUFFIX;
+  }
+
+  string get_data_suffix() const
+  {
+    return DATA_SUFFIX;
+  }
+
+  string get_id_suffix() const
+  {
+    return "";
+  }
+
+  string get_shadow_suffix() const
+  {
+    return ".shadow";
+  }
+
+  uint32 get_block_size() const
+  {
+    return 8*1024;
+  }
+  
+  uint32 get_max_size() const
+  {
+    return 8;
+  }
+  
+  uint32 get_compression_method() const
+  {
+    return File_Blocks_Index< IntIndex >::ZLIB_COMPRESSION;
+  }
+  
+  uint32 get_map_block_size() const
+  {
+    return 4*1024;
   }
   
   vector< bool > get_data_footprint(const string& db_dir) const
@@ -241,6 +401,7 @@ void read_loop
     ++it;
   }
 }
+
 
 void read_test()
 {
@@ -361,6 +522,77 @@ void read_test()
   }
 }
 
+
+void variable_block_read_test()
+{
+  try
+  {
+    cout<<"Compressed Read test\n";
+    Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
+    Variable_Block_Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+
+    vector< bool > footprint = get_data_index_footprint< IntIndex >
+        (Variable_Block_Test_File(), BASE_DIRECTORY);
+    cout<<"Index footprint: ";
+    for (vector< bool >::const_iterator it(footprint.begin()); it != footprint.end();
+        ++it)
+      cout<<*it;
+    cout<<'\n';
+
+    cout<<"Reading all blocks ...\n";
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
+	fit(blocks.flat_begin());
+    read_loop(blocks, fit);
+    cout<<"... all blocks read.\n";
+  
+    cout<<"This block of read tests is complete.\n";
+  }
+  catch (File_Error e)
+  {
+    cout<<"File error catched: "
+	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cout<<"(This is the expected correct behaviour)\n";
+  }
+}
+
+
+void compressed_read_test()
+{
+  try
+  {
+    cout<<"Compressed Read test\n";
+    Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
+    Compressed_Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+
+    vector< bool > footprint = get_data_index_footprint< IntIndex >
+        (Variable_Block_Test_File(), BASE_DIRECTORY);
+    cout<<"Index footprint: ";
+    for (vector< bool >::const_iterator it(footprint.begin()); it != footprint.end();
+        ++it)
+      cout<<*it;
+    cout<<'\n';
+
+    cout<<"Reading all blocks ...\n";
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
+	fit(blocks.flat_begin());
+    read_loop(blocks, fit);
+    cout<<"... all blocks read.\n";
+  
+    cout<<"This block of read tests is complete.\n";
+  }
+  catch (File_Error e)
+  {
+    cout<<"File error catched: "
+	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cout<<"(This is the expected correct behaviour)\n";
+  }
+}
+
+
 uint32 prepare_block(void* block, const list< IntIndex >& indices)
 {
   uint32 max_keysize(0);
@@ -379,7 +611,7 @@ uint32 prepare_block(void* block, const list< IntIndex >& indices)
       max_keysize = (*it).val() + 12;
     
     *(uint32*)(((uint8*)block)+pos) = (*it).val() + 12;
-    *(uint32*)(((uint8*)block)+pos+sizeof(uint32)) = (*it).val();
+    (*it).to_data(((uint8*)block)+pos+sizeof(uint32));
     pos += (*it).val() + 12;
   }
   
@@ -425,7 +657,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(49));
     indices.push_back(IntIndex(50));
     void* buf = malloc(Test_File().get_block_size());
-    uint32 max_keysize(prepare_block(buf, indices));
+    uint32 max_keysize = prepare_block(buf, indices);
     blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
     free(buf);
   }
@@ -514,7 +746,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(89));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-    it(blocks.discrete_begin(indices.begin(), indices.end()));
+	it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     ++it;
     indices.clear();
@@ -570,7 +802,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(90));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-    it(blocks.discrete_begin(indices.begin(), indices.end()));
+        it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     work.clear();
     work.push_back(IntIndex(7));
@@ -618,7 +850,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(65));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-    it(blocks.discrete_begin(indices.begin(), indices.end()));
+        it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     it = blocks.replace_block(it, 0, 0);
     it = blocks.replace_block(it, 0, 0);
@@ -648,7 +880,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(90));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-    it(blocks.discrete_begin(indices.begin(), indices.end()));
+        it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     it = blocks.replace_block(it, 0, 0);
     it = blocks.replace_block(it, 0, 0);
@@ -678,7 +910,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(63));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-    it(blocks.discrete_begin(indices.begin(), indices.end()));
+        it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     ++it;
     for (unsigned int i(20); i < 30; ++i)
@@ -716,7 +948,7 @@ int main(int argc, char* args[])
       indices.push_back(IntIndex(i));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-    it(blocks.discrete_begin(indices.begin(), indices.end()));
+        it(blocks.discrete_begin(indices.begin(), indices.end()));
     
     while (!(it == blocks.discrete_end()))
     {
@@ -853,6 +1085,512 @@ int main(int argc, char* args[])
       + Test_File().get_shadow_suffix()).c_str());
   remove((BASE_DIRECTORY
       + Test_File().get_file_name_trunk() + Test_File().get_data_suffix()).c_str());
+  
+  
+  data_fd = open64
+      ((BASE_DIRECTORY
+        + Variable_Block_Test_File().get_file_name_trunk()
+	+ Variable_Block_Test_File().get_data_suffix()).c_str(),
+       O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  close(data_fd);
+  index_fd = open64
+      ((BASE_DIRECTORY
+        + Variable_Block_Test_File().get_file_name_trunk()
+	+ Variable_Block_Test_File().get_data_suffix()
+        + Variable_Block_Test_File().get_index_suffix()).c_str(),
+       O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  close(index_fd);
+  if ((test_to_execute == "") || (test_to_execute == "13"))
+  {
+    cout<<"** Test the behaviour for an empty file\n";
+    variable_block_read_test();
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "14"))
+    cout<<"** Test the behaviour for a compressed file with one entry - part 1\n";
+  try
+  {
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Variable_Block_Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+    list< IntIndex > indices;
+    
+    indices.clear();
+    indices.push_back(IntIndex(20));
+    indices.push_back(IntIndex(21));
+    indices.push_back(IntIndex(22));
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    uint32 max_keysize(prepare_block(buf, indices));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    free(buf);
+  }
+  catch (File_Error e)
+  {
+    cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cout<<"(This is unexpected)\n";
+  }
+  if ((test_to_execute == "") || (test_to_execute == "14"))
+    variable_block_read_test();
+  
+  if ((test_to_execute == "") || (test_to_execute == "15"))
+    cout<<"** Test the behaviour for a compressed file with multiple small entries\n";
+  try
+  {
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Variable_Block_Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+    list< IntIndex > indices;
+    
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    
+    indices.clear();
+    indices.push_back(IntIndex(30));
+    indices.push_back(IntIndex(31));
+    indices.push_back(IntIndex(32));
+    uint32 max_keysize = prepare_block(buf, indices);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    
+    indices.clear();
+    indices.push_back(IntIndex(33));
+    indices.push_back(IntIndex(34));
+    indices.push_back(IntIndex(35));
+    max_keysize = prepare_block(buf, indices);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    
+    indices.clear();
+    indices.push_back(IntIndex(36));
+    indices.push_back(IntIndex(37));
+    max_keysize = prepare_block(buf, indices);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    
+    indices.clear();
+    indices.push_back(IntIndex(38));
+    indices.push_back(IntIndex(39));
+    max_keysize = prepare_block(buf, indices);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    
+    indices.clear();
+    indices.push_back(IntIndex(40));
+    max_keysize = prepare_block(buf, indices);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    
+    indices.clear();
+    indices.push_back(IntIndex(41));
+    max_keysize = prepare_block(buf, indices);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    
+    indices.clear();
+    indices.push_back(IntIndex(50));
+    indices.push_back(IntIndex(51));
+    indices.push_back(IntIndex(52));
+    indices.push_back(IntIndex(53));
+    indices.push_back(IntIndex(54));
+    indices.push_back(IntIndex(55));
+    indices.push_back(IntIndex(56));
+    max_keysize = prepare_block(buf, indices);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    
+    indices.clear();
+    indices.push_back(IntIndex(57));
+    max_keysize = prepare_block(buf, indices);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    
+    indices.clear();
+    indices.push_back(IntIndex(60));
+    indices.push_back(IntIndex(61));
+    max_keysize = prepare_block(buf, indices);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    
+    indices.clear();
+    indices.push_back(IntIndex(62));
+    indices.push_back(IntIndex(63));
+    max_keysize = prepare_block(buf, indices);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    
+    free(buf);
+  }
+  catch (File_Error e)
+  {
+    cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cout<<"(This is unexpected)\n";
+  }
+  if ((test_to_execute == "") || (test_to_execute == "15"))
+    variable_block_read_test();
+  
+  if ((test_to_execute == "") || (test_to_execute == "16"))
+    cout<<"** Test the behaviour for a compressed file with multiple deletions\n";
+  try
+  {
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Variable_Block_Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+	
+    list< IntIndex > indices;
+    for (int i = 0; i < 100; ++i)
+      indices.push_back(IntIndex(i));
+    
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
+        it = blocks.discrete_begin(indices.begin(), indices.end());
+
+    ++it;
+    it = blocks.replace_block(it, 0, 0);
+    ++it;
+    it = blocks.replace_block(it, 0, 0);
+    ++it;
+    it = blocks.replace_block(it, 0, 0);
+    ++it;
+    it = blocks.replace_block(it, 0, 0);
+    ++it;
+    it = blocks.replace_block(it, 0, 0);
+  }
+  catch (File_Error e)
+  {
+    cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cout<<"(This is unexpected)\n";
+  }
+  if ((test_to_execute == "") || (test_to_execute == "16"))
+    variable_block_read_test();
+  
+  if ((test_to_execute == "") || (test_to_execute == "17"))
+    cout<<"** Test the behaviour for the gap filling strategy - part 1\n";
+  try
+  {
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Variable_Block_Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+	
+    list< IntIndex > indices;
+    for (int i = 0; i < 100; ++i)
+      indices.push_back(IntIndex(i));
+    
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
+        it = blocks.discrete_begin(indices.begin(), indices.end());
+    
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    
+    while (!(it == blocks.discrete_end()) && it.block_it->index < 25)
+      ++it;
+    indices.clear();
+    indices.push_back(IntIndex(25));
+    uint32 max_keysize = prepare_block(buf, indices);
+    it = blocks.insert_block(it, buf, max_keysize);
+    
+    free(buf);
+  }
+  catch (File_Error e)
+  {
+    cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cout<<"(This is unexpected)\n";
+  }
+  if ((test_to_execute == "") || (test_to_execute == "17"))
+    variable_block_read_test();
+  
+  if ((test_to_execute == "") || (test_to_execute == "18"))
+    cout<<"** Test the behaviour for the gap filling strategy - part 2\n";
+  try
+  {
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Variable_Block_Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+	
+    list< IntIndex > indices;
+    for (int i = 0; i < 100; ++i)
+      indices.push_back(IntIndex(i));
+    
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
+        it = blocks.discrete_begin(indices.begin(), indices.end());
+    
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    
+    while (!(it == blocks.discrete_end()) && it.block_it->index < 26)
+      ++it;
+    indices.clear();
+    indices.push_back(IntIndex(26));
+    uint32 max_keysize = prepare_block(buf, indices);
+    it = blocks.insert_block(it, buf, max_keysize);
+    
+    free(buf);
+  }
+  catch (File_Error e)
+  {
+    cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cout<<"(This is unexpected)\n";
+  }
+  if ((test_to_execute == "") || (test_to_execute == "18"))
+    variable_block_read_test();
+  
+  if ((test_to_execute == "") || (test_to_execute == "19"))
+    cout<<"** Test the behaviour for the gap filling strategy - part 3\n";
+  try
+  {
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Variable_Block_Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+	
+    list< IntIndex > indices;
+    for (int i = 0; i < 100; ++i)
+      indices.push_back(IntIndex(i));
+    
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
+        it = blocks.discrete_begin(indices.begin(), indices.end());
+    
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    
+    while (!(it == blocks.discrete_end()) && it.block_it->index < 60)
+      ++it;
+    indices.clear();
+    indices.push_back(IntIndex(60));
+    indices.push_back(IntIndex(61));
+    uint32 max_keysize = prepare_block(buf, indices);
+    it = blocks.insert_block(it, buf, max_keysize);
+    
+    free(buf);
+  }
+  catch (File_Error e)
+  {
+    cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cout<<"(This is unexpected)\n";
+  }
+  if ((test_to_execute == "") || (test_to_execute == "19"))
+    variable_block_read_test();
+  
+  if ((test_to_execute == "") || (test_to_execute == "20"))
+    cout<<"** Test the behaviour for the gap filling strategy - part 4\n";
+  try
+  {
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Variable_Block_Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+	
+    list< IntIndex > indices;
+    for (int i = 0; i < 100; ++i)
+      indices.push_back(IntIndex(i));
+    
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
+        it = blocks.discrete_begin(indices.begin(), indices.end());
+    
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    
+    while (!(it == blocks.discrete_end()) && it.block_it->index < 65)
+      ++it;
+    indices.clear();
+    indices.push_back(IntIndex(65));
+    indices.push_back(IntIndex(66));
+    indices.push_back(IntIndex(67));
+    uint32 max_keysize = prepare_block(buf, indices);
+    it = blocks.insert_block(it, buf, max_keysize);
+    
+    free(buf);
+  }
+  catch (File_Error e)
+  {
+    cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cout<<"(This is unexpected)\n";
+  }
+  if ((test_to_execute == "") || (test_to_execute == "20"))
+    variable_block_read_test();
+  
+  if ((test_to_execute == "") || (test_to_execute == "21"))
+    cout<<"** Test the behaviour for the gap filling strategy - part 5\n";
+  try
+  {
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Variable_Block_Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+	
+    list< IntIndex > indices;
+    for (int i = 0; i < 100; ++i)
+      indices.push_back(IntIndex(i));
+    
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
+        it = blocks.discrete_begin(indices.begin(), indices.end());
+    
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    
+    while (!(it == blocks.discrete_end()) && it.block_it->index < 68)
+      ++it;
+    indices.clear();
+    indices.push_back(IntIndex(68));
+    indices.push_back(IntIndex(69));
+    uint32 max_keysize = prepare_block(buf, indices);
+    it = blocks.insert_block(it, buf, max_keysize);
+    
+    free(buf);
+  }
+  catch (File_Error e)
+  {
+    cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cout<<"(This is unexpected)\n";
+  }
+  if ((test_to_execute == "") || (test_to_execute == "21"))
+    variable_block_read_test();
+  
+  if ((test_to_execute == "") || (test_to_execute == "22"))
+    cout<<"** Test the behaviour for the gap filling strategy - part 6\n";
+  try
+  {
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Variable_Block_Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+	
+    list< IntIndex > indices;
+    for (int i = 0; i < 100; ++i)
+      indices.push_back(IntIndex(i));
+    
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
+        it = blocks.discrete_begin(indices.begin(), indices.end());
+    
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    
+    while (!(it == blocks.discrete_end()) && it.block_it->index < 70)
+      ++it;
+    indices.clear();
+    indices.push_back(IntIndex(70));
+    indices.push_back(IntIndex(71));
+    indices.push_back(IntIndex(72));
+    uint32 max_keysize = prepare_block(buf, indices);
+    it = blocks.insert_block(it, buf, max_keysize);
+    
+    free(buf);
+  }
+  catch (File_Error e)
+  {
+    cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cout<<"(This is unexpected)\n";
+  }
+  if ((test_to_execute == "") || (test_to_execute == "22"))
+    variable_block_read_test();
+  
+  if ((test_to_execute == "") || (test_to_execute == "23"))
+    cout<<"** Test the behaviour for the gap filling strategy - with replace block\n";
+  try
+  {
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Variable_Block_Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+	
+    list< IntIndex > indices;
+    for (int i = 0; i < 100; ++i)
+      indices.push_back(IntIndex(i));
+    
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
+        it = blocks.discrete_begin(indices.begin(), indices.end());
+    
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    
+    while (!(it == blocks.discrete_end()) && it.block_it->index < 20)
+      ++it;
+    indices.clear();
+    indices.push_back(IntIndex(20));
+    indices.push_back(IntIndex(22));
+    uint32 max_keysize = prepare_block(buf, indices);
+    it = blocks.replace_block(it, buf, max_keysize);
+      
+    free(buf);
+  }
+  catch (File_Error e)
+  {
+    cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cout<<"(This is unexpected)\n";
+  }
+  if ((test_to_execute == "") || (test_to_execute == "23"))
+    variable_block_read_test();
+  
+  remove((BASE_DIRECTORY
+      + Variable_Block_Test_File().get_file_name_trunk() + Variable_Block_Test_File().get_data_suffix()
+      + Variable_Block_Test_File().get_index_suffix()).c_str());
+  remove((BASE_DIRECTORY
+      + Variable_Block_Test_File().get_file_name_trunk() + Variable_Block_Test_File().get_data_suffix()
+      + Variable_Block_Test_File().get_shadow_suffix()).c_str());
+  remove((BASE_DIRECTORY
+      + Variable_Block_Test_File().get_file_name_trunk() + Variable_Block_Test_File().get_data_suffix()).c_str());
+    
+  
+  data_fd = open64
+      ((BASE_DIRECTORY
+        + Compressed_Test_File().get_file_name_trunk()
+	+ Compressed_Test_File().get_data_suffix()).c_str(),
+       O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  close(data_fd);
+  index_fd = open64
+      ((BASE_DIRECTORY
+        + Compressed_Test_File().get_file_name_trunk()
+	+ Compressed_Test_File().get_data_suffix()
+        + Compressed_Test_File().get_index_suffix()).c_str(),
+       O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  close(index_fd);
+  if ((test_to_execute == "") || (test_to_execute == "24"))
+  {
+    cout<<"** Test the behaviour for an empty file\n";
+    compressed_read_test();
+  }
+  
+  if ((test_to_execute == "") || (test_to_execute == "25"))
+    cout<<"** Test the behaviour for a compressed file with some entries\n";
+  try
+  {
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Compressed_Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+    list< IntIndex > indices;
+    
+    void* buf = malloc(Compressed_Test_File().get_block_size() * Compressed_Test_File().get_max_size());
+    
+    indices.clear();
+    for (int i = 20; i < 21; ++i)
+      indices.push_back(IntIndex(i));
+    uint32 max_keysize = prepare_block(buf, indices);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    
+    indices.clear();
+    for (int i = 100; i < 280; ++i)
+      indices.push_back(IntIndex(i));
+    max_keysize = prepare_block(buf, indices);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    
+    indices.clear();
+    for (int i = 1000; i < 1060; ++i)
+      indices.push_back(IntIndex(i));
+    max_keysize = prepare_block(buf, indices);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    
+    free(buf);
+  }
+  catch (File_Error e)
+  {
+    cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cout<<"(This is unexpected)\n";
+  }
+  if ((test_to_execute == "") || (test_to_execute == "25"))
+    compressed_read_test();
+  
+  remove((BASE_DIRECTORY
+      + Compressed_Test_File().get_file_name_trunk() + Compressed_Test_File().get_data_suffix()
+      + Compressed_Test_File().get_index_suffix()).c_str());
+  remove((BASE_DIRECTORY
+      + Compressed_Test_File().get_file_name_trunk() + Compressed_Test_File().get_data_suffix()).c_str());
   
   return 0;
 }
