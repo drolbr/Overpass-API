@@ -165,7 +165,7 @@ struct Test_File : File_Properties
   }
   
   File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, string db_dir, string file_name_extension)
+      (bool writeable, bool use_shadow, const string& db_dir, const string& file_name_extension)
       const
   {
     return new File_Blocks_Index< IntIndex >
@@ -176,34 +176,37 @@ struct Test_File : File_Properties
 
 struct Variable_Block_Test_File : File_Properties
 {
-  string get_basedir() const
+  const string& get_basedir() const
   {
     return BASE_DIRECTORY;
   }
   
-  string get_file_name_trunk() const
+  const string& get_file_name_trunk() const
   {
-    return "variable";
+    static std::string result("variable");
+    return result;
   }
   
-  string get_index_suffix() const
+  const string& get_index_suffix() const
   {
     return INDEX_SUFFIX;
   }
 
-  string get_data_suffix() const
+  const string& get_data_suffix() const
   {
     return DATA_SUFFIX;
   }
 
-  string get_id_suffix() const
+  const string& get_id_suffix() const
   {
-    return "";
+    static std::string result("");
+    return result;
   }
 
-  string get_shadow_suffix() const
+  const string& get_shadow_suffix() const
   {
-    return ".shadow";
+    static std::string result(".shadow");
+    return result;
   }
 
   uint32 get_block_size() const
@@ -254,34 +257,37 @@ struct Variable_Block_Test_File : File_Properties
 
 struct Compressed_Test_File : File_Properties
 {
-  string get_basedir() const
+  const string& get_basedir() const
   {
     return BASE_DIRECTORY;
   }
   
-  string get_file_name_trunk() const
+  const string& get_file_name_trunk() const
   {
-    return "compressed";
+    static std::string result("compressed");
+    return result;
   }
   
-  string get_index_suffix() const
+  const string& get_index_suffix() const
   {
     return INDEX_SUFFIX;
   }
 
-  string get_data_suffix() const
+  const string& get_data_suffix() const
   {
     return DATA_SUFFIX;
   }
 
-  string get_id_suffix() const
+  const string& get_id_suffix() const
   {
-    return "";
+    static std::string result("");
+    return result;
   }
 
-  string get_shadow_suffix() const
+  const string& get_shadow_suffix() const
   {
-    return ".shadow";
+    static std::string result(".shadow");
+    return result;
   }
 
   uint32 get_block_size() const
@@ -321,7 +327,7 @@ struct Compressed_Test_File : File_Properties
   }
   
   File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, string db_dir, string file_name_extension)
+      (bool writeable, bool use_shadow, const string& db_dir, const string& file_name_extension)
       const
   {
     return new File_Blocks_Index< IntIndex >
