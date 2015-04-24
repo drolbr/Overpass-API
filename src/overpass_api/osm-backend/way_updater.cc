@@ -194,9 +194,6 @@ Way_Skeleton add_intermediate_versions
     last_skeleton = cur_skeleton;
   }
   
-  std::cerr<<std::dec<<last_skeleton.id.val()<<'\t'<<std::hex<<last_idx.val()<<'\t'<<attic_idx.val()
-      <<'\t'<<std::dec<<old_timestamp
-      <<'\t'<<(relevant_timestamps.empty() ? 0 : relevant_timestamps.front())<<'\n';
   if (last_idx == attic_idx)
     return last_skeleton;
   else
@@ -404,9 +401,9 @@ void compute_new_attic_skeletons
 			          it->meta.timestamp, nodes_by_id,
                                   (it->idx.val() == 0 || !geometrically_equal(*it_attic, it->elem)),
                                   *idx, full_attic, new_undeleted, idx_lists);
-    if (it_attic_time != existing_attic_skeleton_timestamps.end())
+    if (it_attic_time != existing_attic_skeleton_timestamps.end()
+        && it_attic_time->second.second.id == it->elem.id)
     {
-      std::cerr<<"A\t"<<oldest_new.id.val()<<"\n";
       adapt_newest_existing_attic(it_attic_time->second.first, *idx, it_attic_time->second.second,
           *it_attic, oldest_new, attic_skeletons_to_delete, full_attic);
     }
@@ -427,9 +424,9 @@ void compute_new_attic_skeletons
 				  NOW, nodes_by_id,
                                   false, it->first,
                                   full_attic, new_undeleted, idx_lists);
-      if (it_attic_time != existing_attic_skeleton_timestamps.end())
+      if (it_attic_time != existing_attic_skeleton_timestamps.end()
+          && it_attic_time->second.second.id == it2->id)
       {
-        std::cerr<<"B\t"<<oldest_new.id.val()<<"\n";
         adapt_newest_existing_attic(it_attic_time->second.first, it->first, it_attic_time->second.second,
 	    *it2, oldest_new, attic_skeletons_to_delete, full_attic);
       }
@@ -942,7 +939,8 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
     std::map< Way_Skeleton::Id_Type, std::pair< Uint31_Index, Attic< Way_Delta > > >
         existing_attic_skeleton_timestamps
         = get_existing_attic_skeleton_timestamps< Uint31_Index, Way_Skeleton, Way_Delta >
-            (existing_attic_map_positions, existing_idx_lists, *transaction, *attic_settings().WAYS);
+            (existing_attic_map_positions, existing_idx_lists,
+	     *transaction, *attic_settings().WAYS, *attic_settings().WAYS_UNDELETED);
         
     // Compute which objects really have changed
     new_attic_skeletons.clear();

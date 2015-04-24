@@ -576,7 +576,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
     std::map< Node_Skeleton::Id_Type, std::pair< Uint31_Index, Attic< Node_Skeleton > > >
         existing_attic_skeleton_timestamps
         = get_existing_attic_skeleton_timestamps< Uint31_Index, Node_Skeleton, Node_Skeleton >
-            (existing_attic_map_positions, existing_idx_lists, *transaction, *attic_settings().NODES);
+            (existing_attic_map_positions, existing_idx_lists,
+	     *transaction, *attic_settings().NODES, *attic_settings().NODES_UNDELETED);
         
     // Compute which objects really have changed
     new_attic_skeletons.clear();

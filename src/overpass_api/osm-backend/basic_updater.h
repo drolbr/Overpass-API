@@ -158,7 +158,8 @@ std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_S
     get_existing_attic_skeleton_timestamps
     (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& ids_with_position,
      const std::map< typename Element_Skeleton::Id_Type, std::set< Uint31_Index > >& existing_idx_lists,
-     Transaction& transaction, const File_Properties& file_properties)
+     Transaction& transaction, const File_Properties& skel_file_properties,
+     const File_Properties& undelete_file_properties)
 {
   std::set< Uint31_Index > req;
   for (typename std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >::const_iterator
@@ -175,7 +176,7 @@ std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_S
   std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_Skeleton_Delta > > > result;
   Idx_Agnostic_Compare< typename Element_Skeleton::Id_Type > comp;
   
-  Block_Backend< Uint31_Index, Attic< Element_Skeleton_Delta > > db(transaction.data_index(&file_properties));
+  Block_Backend< Uint31_Index, Attic< Element_Skeleton_Delta > > db(transaction.data_index(&skel_file_properties));
   for (typename Block_Backend< Uint31_Index, Attic< Element_Skeleton_Delta > >::Discrete_Iterator
       it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
   {
@@ -189,6 +190,26 @@ std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_S
 	result.insert(std::make_pair(it.object().id, std::make_pair(it.index(), it.object())));
       else if (rit->second.second.timestamp < it.object().timestamp)
         rit->second = std::make_pair(it.index(), it.object());
+    }
+  }
+  
+  Block_Backend< Uint31_Index, Attic< typename Element_Skeleton::Id_Type > >
+      undelete_db(transaction.data_index(&undelete_file_properties));
+  for (typename Block_Backend< Uint31_Index, Attic< typename Element_Skeleton::Id_Type > >::Discrete_Iterator
+      it(undelete_db.discrete_begin(req.begin(), req.end())); !(it == undelete_db.discrete_end()); ++it)
+  {
+    if (binary_search(ids_with_position.begin(), ids_with_position.end(),
+        std::pair< typename Element_Skeleton::Id_Type, Uint31_Index >(it.object(), 0u), comp))
+    {
+      typename std::map< typename Element_Skeleton::Id_Type,
+          std::pair< Index, Attic< Element_Skeleton_Delta > > >::iterator
+          rit = result.find(it.object());
+      if (rit == result.end())
+	result.insert(std::make_pair(it.object(), std::make_pair(it.index(),
+	    Attic< Element_Skeleton_Delta >(Element_Skeleton_Delta(), it.object().timestamp))));
+      else if (rit->second.second.timestamp < it.object().timestamp)
+        rit->second = std::make_pair(it.index(),
+	    Attic< Element_Skeleton_Delta >(Element_Skeleton_Delta(), it.object().timestamp));
     }
   }
 

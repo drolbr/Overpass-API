@@ -921,7 +921,8 @@ void compute_new_attic_skeletons
 			      it->meta.timestamp, nodes_by_id, ways_by_id,
                               (it->idx.val() == 0 || !geometrically_equal(*it_attic, it->elem)),
                               *idx, full_attic, new_undeleted, idx_lists);
-    if (it_attic_time != existing_attic_skeleton_timestamps.end())
+    if (it_attic_time != existing_attic_skeleton_timestamps.end()
+        && it_attic_time->second.second.id == it->elem.id)
       adapt_newest_existing_attic(it_attic_time->second.first, *idx, it_attic_time->second.second,
 	  *it_attic, oldest_new, attic_skeletons_to_delete, full_attic);
   }
@@ -942,7 +943,8 @@ void compute_new_attic_skeletons
 				NOW, nodes_by_id, ways_by_id,
                                 false, it->first,
                                 full_attic, new_undeleted, idx_lists);
-      if (it_attic_time != existing_attic_skeleton_timestamps.end())
+      if (it_attic_time != existing_attic_skeleton_timestamps.end()
+          && it_attic_time->second.second.id == it2->id)
         adapt_newest_existing_attic(it_attic_time->second.first, it->first, it_attic_time->second.second,
 	    *it2, oldest_new, attic_skeletons_to_delete, full_attic);
     }
@@ -1212,7 +1214,8 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
     std::map< Relation_Skeleton::Id_Type, std::pair< Uint31_Index, Attic< Relation_Delta > > >
         existing_attic_skeleton_timestamps
         = get_existing_attic_skeleton_timestamps< Uint31_Index, Relation_Skeleton, Relation_Delta >
-        (existing_attic_map_positions, existing_idx_lists, *transaction, *attic_settings().RELATIONS);
+        (existing_attic_map_positions, existing_idx_lists,
+	 *transaction, *attic_settings().RELATIONS, *attic_settings().RELATIONS_UNDELETED);
         
     // Compute which objects really have changed
     new_attic_skeletons.clear();
