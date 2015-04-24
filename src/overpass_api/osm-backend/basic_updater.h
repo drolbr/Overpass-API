@@ -153,8 +153,9 @@ std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_skeletons
 }
 
 
-template< typename Element_Skeleton, typename Element_Skeleton_Delta >
-std::map< typename Element_Skeleton::Id_Type, Timestamp > get_existing_attic_skeleton_timestamps
+template< typename Index, typename Element_Skeleton, typename Element_Skeleton_Delta >
+std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_Skeleton_Delta > > >
+    get_existing_attic_skeleton_timestamps
     (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& ids_with_position,
      const std::map< typename Element_Skeleton::Id_Type, std::set< Uint31_Index > >& existing_idx_lists,
      Transaction& transaction, const File_Properties& file_properties)
@@ -171,7 +172,7 @@ std::map< typename Element_Skeleton::Id_Type, Timestamp > get_existing_attic_ske
       req.insert(*it2);
   }
   
-  std::map< typename Element_Skeleton::Id_Type, Timestamp > result;
+  std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_Skeleton_Delta > > > result;
   Idx_Agnostic_Compare< typename Element_Skeleton::Id_Type > comp;
   
   Block_Backend< Uint31_Index, Attic< Element_Skeleton_Delta > > db(transaction.data_index(&file_properties));
@@ -181,12 +182,13 @@ std::map< typename Element_Skeleton::Id_Type, Timestamp > get_existing_attic_ske
     if (binary_search(ids_with_position.begin(), ids_with_position.end(),
         make_pair(it.object().id, 0), comp))
     {
-      typename std::map< typename Element_Skeleton::Id_Type, Timestamp >::iterator rit
-          = result.find(it.object().id);
+      typename std::map< typename Element_Skeleton::Id_Type,
+          std::pair< Index, Attic< Element_Skeleton_Delta > > >::iterator
+          rit = result.find(it.object().id);
       if (rit == result.end())
-	result.insert(std::make_pair(it.object().id, Timestamp(it.object().timestamp)));
-      else if (rit->second.timestamp < it.object().timestamp)
-        rit->second = Timestamp(it.object().timestamp);
+	result.insert(std::make_pair(it.object().id, std::make_pair(it.index(), it.object())));
+      else if (rit->second.second.timestamp < it.object().timestamp)
+        rit->second = std::make_pair(it.index(), it.object());
     }
   }
 
