@@ -546,7 +546,7 @@ void write_to_index_empty_file_data(const std::vector< bool >& footprint, const 
 }
 
 
-void write_to_index_empty_file_ids(const vector< bool >& footprint, string filename)
+void write_to_index_empty_file_ids(const std::vector< bool >& footprint, const std::string& filename)
 {
   Void_Pointer< uint32 > buffer(footprint.size() * 4);  
   uint32* pos = buffer.ptr;
