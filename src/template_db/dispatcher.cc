@@ -520,22 +520,48 @@ void Dispatcher::set_current_footprints()
 }
 
 
-void write_to_index_empty_file(const std::vector< bool >& footprint, std::string filename)
+void write_to_index_empty_file_data(const std::vector< bool >& footprint, const std::string& filename)
 {
   Void_Pointer< std::pair< uint32, uint32 > > buffer(footprint.size() * 8);  
   std::pair< uint32, uint32 >* pos = buffer.ptr;
+  uint32 last_start = 0;
+  for (uint32 i = 0; i < footprint.size(); ++i)
+  {
+    if (footprint[i])
+    {
+      if (last_start < i)
+      {
+	*pos = std::make_pair(i - last_start, last_start);
+	++pos;
+      }
+      last_start = i+1;
+    }
+  }
+  if (last_start < footprint.size())
+    *pos = std::make_pair(footprint.size() - last_start, last_start);
+  
+  Raw_File file(filename, O_RDWR|O_CREAT|O_TRUNC,
+		S_666, "write_to_index_empty_file_data:1");
+  file.write((uint8*)buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr), "Dispatcher:26");
+}
+
+
+void write_to_index_empty_file_ids(const vector< bool >& footprint, string filename)
+{
+  Void_Pointer< uint32 > buffer(footprint.size() * 4);  
+  uint32* pos = buffer.ptr;
   for (uint32 i = 0; i < footprint.size(); ++i)
   {
     if (!footprint[i])
     {
-      *pos = std::make_pair(1, i);
+      *pos = i;
       ++pos;
     }
   }
   
   Raw_File file(filename, O_RDWR|O_CREAT|O_TRUNC,
-		S_666, "write_to_index_empty_file:1");
-  file.write((uint8*)buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr), "Dispatcher:6");
+		S_666, "write_to_index_empty_file_ids:1");
+  file.write((uint8*)buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr), "Dispatcher:36");
 }
 
 
@@ -567,7 +593,7 @@ std::vector< Dispatcher::pid_t > Dispatcher::write_index_of_empty_blocks()
 	+ controlled_files[i]->get_index_suffix()
 	+ controlled_files[i]->get_shadow_suffix()))
     {
-      write_to_index_empty_file
+      write_to_index_empty_file_data
           (data_footprints[i].total_footprint(),
 	   db_dir + controlled_files[i]->get_file_name_trunk()
 	   + controlled_files[i]->get_data_suffix()
@@ -578,7 +604,7 @@ std::vector< Dispatcher::pid_t > Dispatcher::write_index_of_empty_blocks()
 	+ controlled_files[i]->get_index_suffix()
 	+ controlled_files[i]->get_shadow_suffix()))
     {
-      write_to_index_empty_file
+      write_to_index_empty_file_ids
           (map_footprints[i].total_footprint(),
 	   db_dir + controlled_files[i]->get_file_name_trunk()
 	   + controlled_files[i]->get_id_suffix()
