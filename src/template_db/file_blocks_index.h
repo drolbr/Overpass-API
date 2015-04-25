@@ -136,7 +136,7 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
     Void_Pointer< uint8 > index_buf(index_size);
     source_file.read(index_buf.ptr, index_size, "File_Blocks_Index::File_Blocks_Index::5");
     
-    if (file_name_extension == ".legacy" || compression_method == NO_COMPRESSION)
+    if (file_name_extension == ".legacy")
       // We support this way the old format although it has no version marker.
     {
       block_count = file_size / block_size_;
