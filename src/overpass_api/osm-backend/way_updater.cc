@@ -143,7 +143,7 @@ Way_Skeleton add_intermediate_versions
   
   if (!relevant_timestamps.empty() && relevant_timestamps.back() == NOW)
     relevant_timestamps.pop_back();
-    
+  
   if ((add_last_version && old_timestamp < new_timestamp)
       || (!relevant_timestamps.empty() && relevant_timestamps.back() == new_timestamp))
   {
@@ -403,10 +403,9 @@ void compute_new_attic_skeletons
                                   *idx, full_attic, new_undeleted, idx_lists);
     if (it_attic_time != existing_attic_skeleton_timestamps.end()
         && it_attic_time->second.second.id == it->elem.id)
-    {
       adapt_newest_existing_attic(it_attic_time->second.first, *idx, it_attic_time->second.second,
-          *it_attic, oldest_new, attic_skeletons_to_delete, full_attic);
-    }
+          *it_attic, it_attic_time->second.second.timestamp < it->meta.timestamp ? oldest_new : Way_Skeleton(),
+	  attic_skeletons_to_delete, full_attic);
   }
   
   // Add the missing elements that result from node moves only
@@ -426,10 +425,8 @@ void compute_new_attic_skeletons
                                   full_attic, new_undeleted, idx_lists);
       if (it_attic_time != existing_attic_skeleton_timestamps.end()
           && it_attic_time->second.second.id == it2->id)
-      {
         adapt_newest_existing_attic(it_attic_time->second.first, it->first, it_attic_time->second.second,
 	    *it2, oldest_new, attic_skeletons_to_delete, full_attic);
-      }
     }
   }
 }

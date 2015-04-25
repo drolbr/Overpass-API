@@ -924,7 +924,8 @@ void compute_new_attic_skeletons
     if (it_attic_time != existing_attic_skeleton_timestamps.end()
         && it_attic_time->second.second.id == it->elem.id)
       adapt_newest_existing_attic(it_attic_time->second.first, *idx, it_attic_time->second.second,
-	  *it_attic, oldest_new, attic_skeletons_to_delete, full_attic);
+	  *it_attic, it_attic_time->second.second.timestamp < it->meta.timestamp ? oldest_new : Relation_Skeleton(),
+	  attic_skeletons_to_delete, full_attic);
   }
   
   // Add the missing elements that result from node moves only
