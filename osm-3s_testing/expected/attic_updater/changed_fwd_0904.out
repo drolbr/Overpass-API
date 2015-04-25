@@ -113,6 +113,8 @@
   <node id="132113" lat="10.2010000" lon="3.0103000" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
   <node id="132511" lat="10.2010000" lon="3.0501001" version="2" timestamp="2013-07-01T09:02:15Z" changeset="496" uid="42" user="foo"/>
   <node id="132522" lat="10.2020000" lon="3.0502001" version="2" timestamp="2013-07-01T09:02:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="132611" lat="10.2010000" lon="3.0601000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
+  <node id="132622" lat="10.2020000" lon="3.0602000" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo"/>
   <node id="132711" lat="10.2010000" lon="3.0701001" version="2" timestamp="2013-07-01T09:02:17Z" changeset="496" uid="42" user="foo"/>
   <node id="132722" lat="10.2020000" lon="3.0702001" version="2" timestamp="2013-07-01T09:02:17Z" changeset="496" uid="42" user="foo"/>
   <node id="133210" lat="10.3010000" lon="3.0200001" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
@@ -396,6 +398,14 @@
     <nd ref="132521"/>
     <nd ref="132522"/>
   </way>
+  <way id="13261" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
+    <nd ref="132611"/>
+    <nd ref="132612"/>
+  </way>
+  <way id="13262" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
+    <nd ref="132621"/>
+    <nd ref="132622"/>
+  </way>
   <way id="13271" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo">
     <nd ref="132711"/>
     <nd ref="132712"/>
@@ -614,6 +624,12 @@
     <member type="way" ref="13252" role=""/>
     <tag k="foo" v="bar_1325"/>
     <tag k="foo_1325" v="bar"/>
+  </relation>
+  <relation id="1326" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
+    <member type="way" ref="13261" role=""/>
+    <member type="way" ref="13262" role=""/>
+    <tag k="foo" v="bar_1326"/>
+    <tag k="foo_1326" v="bar"/>
   </relation>
   <relation id="1327" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="13271" role=""/>
