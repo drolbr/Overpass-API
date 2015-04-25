@@ -158,7 +158,6 @@ int main(int argc, char *argv[])
   uint log_level = Error_Output::ASSISTING;
 
   const int META = 1;
-  int mode = META;
   int area_level = 0;
 
   int argpos = 1;
@@ -170,8 +169,6 @@ int main(int argc, char *argv[])
       if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
 	db_dir += '/';
     }
-    else if (!(strcmp(argv[argpos], "--meta")))
-      mode = META;
     else if (!(strcmp(argv[argpos], "--quiet")))
       log_level = Error_Output::QUIET;
     else if (!(strcmp(argv[argpos], "--concise")))
@@ -224,7 +221,7 @@ int main(int argc, char *argv[])
       File_Blocks_Index< Uint31_Index >* index = (File_Blocks_Index< Uint31_Index >*)index_base;
       cout<<"ways_meta";
       for (int i = 0; i < (int)index->void_blocks.size(); ++i)
-	cout<<' '<<index->void_blocks[i];
+	cout<<' '<<index->void_blocks[i].first<<' '<<index->void_blocks[i].second;
       cout<<'\n';
       Flat_Meta_Collector< Uint31_Index, Way::Id_Type > meta_collector
           (*rman.get_transaction(), props);

@@ -32,22 +32,25 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+
 template < typename TVal >
 struct OSM_File_Properties : public File_Properties
 {
-  OSM_File_Properties(string file_base_name_, uint32 block_size_,
+  OSM_File_Properties(const string& file_base_name_, uint32 block_size_,
 		      uint32 map_block_size_)
     : file_base_name(file_base_name_), block_size(block_size_),
       map_block_size(map_block_size_ > 0 ? map_block_size_*TVal::max_size_of() : 0) {}
   
-  string get_file_name_trunk() const { return file_base_name; }
+  const string& get_file_name_trunk() const { return file_base_name; }
   
-  string get_index_suffix() const { return basic_settings().INDEX_SUFFIX; }
-  string get_data_suffix() const { return basic_settings().DATA_SUFFIX; }
-  string get_id_suffix() const { return basic_settings().ID_SUFFIX; }  
-  string get_shadow_suffix() const { return basic_settings().SHADOW_SUFFIX; }
+  const string& get_index_suffix() const { return basic_settings().INDEX_SUFFIX; }
+  const string& get_data_suffix() const { return basic_settings().DATA_SUFFIX; }
+  const string& get_id_suffix() const { return basic_settings().ID_SUFFIX; }  
+  const string& get_shadow_suffix() const { return basic_settings().SHADOW_SUFFIX; }
   
-  uint32 get_block_size() const { return block_size; }
+  uint32 get_block_size() const { return block_size/4; }
+  uint32 get_max_size() const { return 4; }
+  uint32 get_compression_method() const { return File_Blocks_Index< TVal >::ZLIB_COMPRESSION; }
   uint32 get_map_block_size() const { return map_block_size; }
   
   vector< bool > get_data_footprint(const string& db_dir) const
@@ -67,7 +70,7 @@ struct OSM_File_Properties : public File_Properties
   }
   
   File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, string db_dir, string file_name_extension)
+      (bool writeable, bool use_shadow, const string& db_dir, const string& file_name_extension)
       const
   {
     return new File_Blocks_Index< TVal >
@@ -78,6 +81,7 @@ struct OSM_File_Properties : public File_Properties
   uint32 block_size;
   uint32 map_block_size;
 };
+
 
 //-----------------------------------------------------------------------------
 
@@ -280,7 +284,7 @@ void Logger::raw_log(const string& message)
   out<<message<<'\n';
 }
 
-string get_logfile_name()
+const string& get_logfile_name()
 {
   return basic_settings().logfile_name;
 }
