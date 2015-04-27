@@ -209,6 +209,7 @@ void Global_Resource_Planner::remove_entry(std::vector< Reader_Entry >::iterator
     last_used_space = 0;
     last_used_time = 0;
     last_counted = 0;
+    last_update_time = end_time;
   }
   last_used_space += global_used_space;
   last_used_time += global_used_time;
