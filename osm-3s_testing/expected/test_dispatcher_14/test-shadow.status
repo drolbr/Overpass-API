@@ -3,7 +3,9 @@ Number of connected clients: 0
 Rate limit: 0
 Total available space: 1073741824
 Total claimed space: 0
+Average claimed space: 0
 Total available time units: 1048576
 Total claimed time units: 0
+Average claimed time units: 0
 Counter of started requests: 1
 Counter of finished requests: 1

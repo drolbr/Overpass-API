@@ -93,7 +93,9 @@ public:
   Global_Resource_Planner(uint32 global_available_time_, uint64 global_available_space_, uint32 rate_limit_)
       : global_used_time(0), global_available_time(global_available_time_),
         global_used_space(0), global_available_space(global_available_space_),
-        rate_limit(rate_limit_) {}
+        rate_limit(rate_limit_), recent_average_used_time(15), recent_average_used_space(15),
+        last_update_time(0), last_used_time(0), last_used_space(0), last_counted(0),
+        average_used_time(0), average_used_space(0) {}
   
   // Returns true if the process is acceptable in terms of server load and quotas
   // In this case it is registered as running
@@ -116,6 +118,8 @@ public:
   uint64 get_total_claimed_space() const { return global_used_space; }
   uint64 get_total_available_space() const { return global_available_space; }
   uint32 get_rate_limit() const { return rate_limit; }
+  uint32 get_average_claimed_time() const { return average_used_time; }
+  uint64 get_average_claimed_space() const { return average_used_space; }
 
 private:
   std::vector< Reader_Entry > active;
@@ -125,6 +129,15 @@ private:
   uint64 global_used_space;
   uint64 global_available_space;
   uint32 rate_limit;
+  
+  std::vector< uint32 > recent_average_used_time;
+  std::vector< uint64 > recent_average_used_space;
+  uint32 last_update_time;
+  uint64 last_used_time;
+  uint64 last_used_space;
+  uint32 last_counted;
+  uint32 average_used_time;
+  uint64 average_used_space;
   
   void remove_entry(std::vector< Reader_Entry >::iterator& it);
 };

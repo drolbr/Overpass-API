@@ -176,19 +176,56 @@ int Global_Resource_Planner::probe(uint32 pid, uint32 client_token, uint32 time_
 
 void Global_Resource_Planner::remove_entry(std::vector< Reader_Entry >::iterator& it)
 {
+  uint32 end_time = time(0);
+  if (last_update_time < end_time && last_counted > 0)
+  {
+    if (end_time - last_update_time < 15)
+    {
+      for (uint32 i = last_update_time; i < end_time; ++i)
+      {
+	recent_average_used_space[i % 15] = last_used_space / last_counted;
+	recent_average_used_time[i % 15] = last_used_time / last_counted;
+      }
+    }
+    else
+    {
+      for (uint32 i = 0; i < 15; ++i)
+      {
+	recent_average_used_space[i] = last_used_space / last_counted;
+	recent_average_used_time[i] = last_used_time / last_counted;
+      }
+    }
+    
+    average_used_space = 0;
+    average_used_time = 0;
+    for (uint32 i = 0; i < 15; ++i)
+    {
+      average_used_space += recent_average_used_space[i];
+      average_used_time += recent_average_used_time[i];
+    }
+    average_used_space = average_used_space / 15;
+    average_used_time = average_used_time / 15;
+    
+    last_used_space = 0;
+    last_used_time = 0;
+    last_counted = 0;
+  }
+  last_used_space += global_used_space;
+  last_used_time += global_used_time;
+  ++last_counted;
+  
   // Adjust global counters
   global_used_space -= it->max_space;
   global_used_time -= it->max_time;
   
   if (rate_limit > 0 && it->client_token > 0)
   {
-    // Caculate afterwards blocking time
-    uint32 end_time = time(0);
+    // Calculate afterwards blocking time
     uint32 penalty_time =
       std::max(global_available_space * (end_time - it->start_time + 1)
-          / (global_available_space - global_used_space),
+          / (global_available_space - average_used_space),
 	  uint64(global_available_time) * (end_time - it->start_time + 1) 
-	  / (global_available_time - global_used_time))
+	  / (global_available_time - average_used_time))
       - (end_time - it->start_time + 1);
     afterwards.push_back(Quota_Entry(it->client_token, penalty_time + end_time));
   }
@@ -771,8 +808,10 @@ void Dispatcher::output_status()
         <<"Rate limit: "<<global_resource_planner.get_rate_limit()<<'\n'
         <<"Total available space: "<<global_resource_planner.get_total_available_space()<<'\n'
         <<"Total claimed space: "<<global_resource_planner.get_total_claimed_space()<<'\n'
+        <<"Average claimed space: "<<global_resource_planner.get_average_claimed_space()<<'\n'
         <<"Total available time units: "<<global_resource_planner.get_total_available_time()<<'\n'
         <<"Total claimed time units: "<<global_resource_planner.get_total_claimed_time()<<'\n'
+        <<"Average claimed time units: "<<global_resource_planner.get_average_claimed_time()<<'\n'
         <<"Counter of started requests: "<<requests_started_counter<<'\n'
         <<"Counter of finished requests: "<<requests_finished_counter<<'\n';
 
