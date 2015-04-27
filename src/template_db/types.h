@@ -48,7 +48,9 @@ typedef unsigned short int uint16;
 typedef unsigned int uint32;
 typedef unsigned long long uint64;
 
+
 const int S_666 = S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH;
+
 
 struct File_Error
 {
@@ -60,6 +62,7 @@ struct File_Error
   std::string origin;
 };
 
+
 struct File_Properties_Exception
 {
   File_Properties_Exception(int32 i) : id(i) {}
@@ -67,10 +70,12 @@ struct File_Properties_Exception
   int32 id;
 };
 
+
 struct File_Blocks_Index_Base
 {
   virtual ~File_Blocks_Index_Base() {}
 };
+
 
 struct File_Properties
 {
@@ -80,6 +85,8 @@ struct File_Properties
   virtual const std::string& get_id_suffix() const = 0;
   virtual const std::string& get_shadow_suffix() const = 0;
   virtual uint32 get_block_size() const = 0;
+  virtual uint32 get_max_size() const = 0;
+  virtual uint32 get_compression_method() const = 0;
   virtual uint32 get_map_block_size() const = 0;
   virtual std::vector< bool > get_data_footprint(const std::string& db_dir) const = 0;
   virtual std::vector< bool > get_map_footprint(const std::string& db_dir) const = 0;
@@ -91,6 +98,7 @@ struct File_Properties
       (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const = 0;
 };
+
 
 /** Simple RAII class to keep a file descriptor. */
 class Raw_File

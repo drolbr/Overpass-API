@@ -56,7 +56,7 @@ class Bbox_Query_Statement : public Output_Statement
 
 inline bool Bbox_Query_Statement::matches_bbox(double lat, double lon) const
 {
-  return ((lat >= south - 1e-8) && (lat <= north + 1e+8) &&
+  return ((lat >= south - 1e-8) && (lat <= north + 1e-8) &&
       (((lon >= west - 1e-8) && (lon <= east + 1e-8)) ||
           ((east < west) && ((lon >= west - 1e-8) || (lon <= east + 1e-8)))));
 }

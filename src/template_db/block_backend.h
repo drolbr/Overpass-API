@@ -701,7 +701,7 @@ bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::read_block()
 template< class TIndex, class TObject, class TIterator >
 Block_Backend< TIndex, TObject, TIterator >::Block_Backend(File_Blocks_Index_Base* index_)
   : file_blocks(index_),
-    block_size(((File_Blocks_Index< TIndex >*)index_)->get_block_size()),
+    block_size(((File_Blocks_Index< TIndex >*)index_)->get_block_size() * ((File_Blocks_Index< TIndex >*)index_)->get_max_size()),
     data_filename
       (((File_Blocks_Index< TIndex >*)index_)->get_data_file_name())
 {

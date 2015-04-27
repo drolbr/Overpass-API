@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
       File_Blocks_Index< Uint31_Index >* index = (File_Blocks_Index< Uint31_Index >*)index_base;
       cout<<"ways_meta";
       for (int i = 0; i < (int)index->void_blocks.size(); ++i)
-	cout<<' '<<index->void_blocks[i];
+	cout<<' '<<index->void_blocks[i].first<<' '<<index->void_blocks[i].second;
       cout<<'\n';
       Flat_Meta_Collector< Uint31_Index, Way::Id_Type > meta_collector
           (*rman.get_transaction(), props);
