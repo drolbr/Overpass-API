@@ -68,7 +68,7 @@ struct Timespan
 struct Relation
 {
   public:
-    Relation() : forward_stops(), backward_stops(), ref(""), network(""),
+    Relation() : forward_stops(), backward_stops(), name(""), ref(""), network(""),
       color(""), from(""), to(""), direction(0), opening_hours() {}
     
     vector< unsigned int > forward_stops;
