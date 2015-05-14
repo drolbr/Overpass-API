@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm-script timeout="86400" element-limit="2073741824">
+
+<union>
+  <query type="relation">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="type" v="multipolygon"/>
+    <has-kv k="name"/>
+  </query>
+  <query type="relation">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="type" v="boundary"/>
+    <has-kv k="name"/>
+  </query>
+  <query type="relation">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="admin_level"/>
+    <has-kv k="name"/>
+  </query>
+  <query type="relation">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="postal_code"/>
+  </query>
+  <query type="relation">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="addr:postcode"/>
+  </query>
+</union>
+<foreach into="pivot">
+  <union>
+    <recurse type="relation-way" from="pivot"/>
+    <recurse type="way-node"/>
+  </union>
+  <make-area pivot="pivot"/>
+</foreach>
+<union>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="area" v="yes"/>
+    <has-kv k="name"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="building"/>
+    <has-kv k="building" v="no" modv="not"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="highway" v="services"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="highway" v="rest_area"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="highway" v="escape"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="natural"/>
+    <has-kv k="natural" v="no" modv="not"/>
+    <has-kv k="natural" v="coastline" modv="not"/>
+    <has-kv k="natural" v="ridge" modv="not"/>
+    <has-kv k="natural" v="arete" modv="not"/>
+    <has-kv k="natural" v="tree_row" modv="not"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="landuse"/>
+    <has-kv k="landuse" v="no" modv="not"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="waterway" v="riverbank"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="waterway" v="dock"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="waterway" v="boatyard"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="waterway" v="dam"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="amenity"/>
+    <has-kv k="amenity" v="no" modv="not"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="leisure"/>
+    <has-kv k="leisure" v="no" modv="not"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="barrier" v="city_wall"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="barrier" v="ditch"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="barrier" v="hedge"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="barrier" v="retaining_wall"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="barrier" v="wall"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="barrier" v="spikes"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="railway" v="station"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="railway" v="turntable"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="railway" v="roundhouse"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="railway" v="platform"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="boundary"/>
+    <has-kv k="boundary" v="no" modv="not"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="man_made"/>
+    <has-kv k="man_made" v="no" modv="not"/>
+    <has-kv k="man_made" v="cutline" modv="not"/>
+    <has-kv k="man_made" v="embankment" modv="not"/>
+    <has-kv k="man_made" v="pipeline" modv="not"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="power" v="generator"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="power" v="station"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="power" v="sub_station"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="power" v="transformer"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="place"/>
+    <has-kv k="place" v="no" modv="not"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="shop"/>
+    <has-kv k="shop" v="no" modv="not"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="aeroway"/>
+    <has-kv k="aeroway" v="no" modv="not"/>
+    <has-kv k="aeroway" v="taxiway" modv="not"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="tourism"/>
+    <has-kv k="tourism" v="no" modv="not"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="historic"/>
+    <has-kv k="historic" v="no" modv="not"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="public_transport"/>
+    <has-kv k="public_transport" v="no" modv="not"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="office"/>
+    <has-kv k="office" v="no" modv="not"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="building:part"/>
+    <has-kv k="building:part" v="no" modv="not"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="military"/>
+    <has-kv k="military" v="no" modv="not"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
+    <changed since="{{area_version}}" until="{{area_version}}"/>
+    <has-kv k="craft"/>
+    <has-kv k="craft" v="no" modv="not"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+</union>
+<foreach into="pivot">
+  <union>
+    <item set="pivot"/>
+    <recurse type="way-node" from="pivot"/>
+  </union>
+  <make-area pivot="pivot"/>
+</foreach>
+
+</osm-script>
+
+    
