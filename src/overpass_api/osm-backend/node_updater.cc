@@ -755,7 +755,7 @@ void Node_Updater::update_node_ids
       (unique(ids_to_modify.rbegin(), ids_to_modify.rend(), pair_equal_id).base());
   ids_to_modify.erase(ids_to_modify.begin(), modi_begin);
   
-  Random_File< Uint32_Index > random
+  Random_File< Node_Skeleton::Id_Type, Uint32_Index > random
       (transaction->random_index(osm_base_settings().NODES));
   for (vector< pair< Node::Id_Type, bool > >::const_iterator it(ids_to_modify.begin());
       it != ids_to_modify.end(); ++it)

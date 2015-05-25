@@ -178,6 +178,11 @@ struct Test_File : File_Properties
     return 16*IntIndex::max_size_of();
   }
   
+  uint32 get_map_max_size() const
+  {
+    return 1;
+  }
+  
   vector< bool > get_data_footprint(const std::string& db_dir) const
   {
     return get_data_index_footprint< IntIndex >(*this, db_dir);
@@ -338,9 +343,9 @@ void map_read_test(bool use_shadow = false)
 
     Nonsynced_Transaction transaction(false, use_shadow, BASE_DIRECTORY, "");
     Test_File tf("Test_File");
-    Random_File< IntIndex > id_file(transaction.random_index(&tf));
+    Random_File< IntIndex, IntIndex > id_file(transaction.random_index(&tf));
     
-    cout<<id_file.get(0).val()<<'\n';
+    cout<<id_file.get(0u).val()<<'\n';
     
     cout<<"This block of read tests is complete.\n";
   }
@@ -512,8 +517,8 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 1);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 1);
     }
     map_read_test(true);
     remove("Test_File.map");
@@ -542,8 +547,8 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 1);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 1);
     }
     map_read_test(true);
     remove("Test_File.map");
@@ -563,8 +568,8 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 1);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 1);
     }
     dispatcher.write_commit(0);
     map_read_test();
@@ -585,16 +590,16 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 1);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 1);
     }
     dispatcher.write_commit(0);
     dispatcher.write_start(481);
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 2);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 2);
     }
     dispatcher.write_commit(0);
     map_read_test();
@@ -615,24 +620,24 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 1);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 1);
     }
     dispatcher.write_commit(0);
     dispatcher.write_start(481);
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 2);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 2);
     }
     dispatcher.write_commit(0);
     dispatcher.write_start(482);
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 3);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 3);
     }
     dispatcher.write_commit(0);
     map_read_test();
@@ -713,8 +718,8 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 1);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 1);
     }
     dispatcher.request_read_and_idx(640, 180, 512*1024*1024, 640);
     dispatcher.output_status();
@@ -746,8 +751,8 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 1);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 1);
     }
     dispatcher.read_finished(640);
     dispatcher.write_commit(0);
@@ -757,8 +762,8 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 2);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 2);
     }
     dispatcher.read_finished(641);
     dispatcher.write_commit(0);
@@ -768,8 +773,8 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 3);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 3);
     }
     dispatcher.read_finished(642);
     dispatcher.write_commit(0);
@@ -824,8 +829,8 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 1);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 1);
     }
     dispatcher.write_commit(0);
     dispatcher.request_read_and_idx(640, 180, 512*1024*1024, 640);
@@ -834,8 +839,8 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 2);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 2);
     }
     dispatcher.write_commit(0);
     dispatcher.write_start(482);
@@ -843,8 +848,8 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 3);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 3);
     }
     dispatcher.write_commit(0);
     map_read_test();
@@ -891,8 +896,8 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 1);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 1);
     }
     dispatcher.write_commit(0);
     dispatcher.request_read_and_idx(640, 180, 512*1024*1024, 640);
@@ -901,16 +906,16 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 2);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 2);
     }
     dispatcher.write_commit(0);
     dispatcher.write_start(482);
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 3);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 3);
     }
     dispatcher.write_commit(0);
     dispatcher.write_start(483);
@@ -918,8 +923,8 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
-      blocks.put(0, 4);
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
+      blocks.put(0u, 4);
     }
     dispatcher.write_commit(0);
     map_read_test();

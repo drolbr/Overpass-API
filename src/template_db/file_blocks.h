@@ -627,24 +627,6 @@ uint32 File_Blocks< TIndex, TIterator, TRangeIterator >::answer_size
 }
 
 
-template< typename Iterator, typename Object >
-void rearrange_block(const Iterator& begin, Iterator& it, Object to_move)
-{
-  Iterator predecessor = it;
-  if (it != begin)
-    --predecessor;
-  while (to_move < *predecessor)
-  {
-    *it = *predecessor;
-    --it;
-    if (it == begin)
-      break;
-    --predecessor;
-  }
-  *it = to_move;
-}
-
-
 // Finds an appropriate block, removes it from the list of available blocks, and returns it
 template< typename TIndex, typename TIterator, typename TRangeIterator >
 uint32 File_Blocks< TIndex, TIterator, TRangeIterator >::allocate_block(uint32 data_size)

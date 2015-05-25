@@ -173,7 +173,7 @@ std::vector< Uint31_Index > collect_relation_req
 {
   std::vector< Uint31_Index > req;
   
-  Random_File< Uint31_Index > random
+  Random_File< Relation_Skeleton::Id_Type, Uint31_Index > random
       (rman.get_transaction()->random_index(osm_base_settings().RELATIONS));
   for (std::vector< Relation::Id_Type >::const_iterator
       it(map_ids.begin()); it != map_ids.end(); ++it)
@@ -216,7 +216,7 @@ std::vector< Uint31_Index > collect_way_req
 {
   std::vector< Uint31_Index > req = calc_children(parents);
   
-  Random_File< Uint31_Index > random
+  Random_File< Way_Skeleton::Id_Type, Uint31_Index > random
       (rman.get_transaction()->random_index(osm_base_settings().WAYS));
   for (std::vector< uint32 >::const_iterator
       it(map_ids.begin()); it != map_ids.end(); ++it)
@@ -243,7 +243,7 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > collect_node_req
 {
   std::set< std::pair< Uint32_Index, Uint32_Index > > req = calc_node_children_ranges(parents);
   
-  Random_File< Uint32_Index > random
+  Random_File< Node_Skeleton::Id_Type, Uint32_Index > random
       (rman.get_transaction()->random_index(osm_base_settings().NODES));
   for (std::vector< Node::Id_Type >::const_iterator
       it(map_ids.begin()); it != map_ids.end(); ++it)

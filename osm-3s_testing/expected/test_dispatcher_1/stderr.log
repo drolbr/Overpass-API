@@ -1,4 +1,4 @@
 File_Error 0 Success ${testdir}/./Test_File_1.bin.idx File_Blocks_Index: Unsupported index file format version
-File_Error 0 Success ${testdir}/./Test_File_2.map.idx Random_File: bad pos in index file
+File_Error 0 Success ${testdir}/./Test_File_2.map.idx Random_File_Index: Unsupported index file format version
 File_Error 0 Success ${testdir}/./Test_File_3.bin.idx File_Blocks_Index: Unsupported index file format version
-File_Error 0 Success ${testdir}/./Test_File_3.map.idx Random_File: bad pos in index file
+File_Error 0 Success ${testdir}/./Test_File_3.map.idx Random_File_Index: Unsupported index file format version

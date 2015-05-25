@@ -41,8 +41,8 @@ struct File_Block_Index_Entry
   static const int SEGMENT = 3;
   static const int LAST_SEGMENT = 4;
   
-  File_Block_Index_Entry(const TIndex& i, uint32 pos_, uint32 size_, uint32 max_keysize_)
-    : index(i), pos(pos_), size(size_), max_keysize(max_keysize_) {}
+  File_Block_Index_Entry(const TIndex& index_, uint32 pos_, uint32 size_, uint32 max_keysize_)
+    : index(index_), pos(pos_), size(size_), max_keysize(max_keysize_) {}
   
   TIndex index;
   uint32 pos;
@@ -142,7 +142,7 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
       block_count = file_size / block_size_;
       is_referred.resize(block_count, false);
       
-      uint32 pos(0);
+      uint32 pos = 0;
       while (pos < index_size)
       {
         TIndex index(index_buf.ptr+pos);
@@ -236,19 +236,6 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
     
     std::stable_sort(void_blocks.begin(), void_blocks.end());
   }
-}
-
-
-template< typename Int >
-int shift_log(Int val)
-{
-  int count = 0;
-  while (val > 1)
-  {
-    val = val>>1;
-    ++count;
-  }
-  return count;
 }
 
 

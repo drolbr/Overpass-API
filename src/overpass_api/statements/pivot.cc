@@ -36,7 +36,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
 {
   set< TIndex > req;
   {
-    Random_File< TIndex > random(rman.get_transaction()->random_index(&prop));
+    Random_File< typename TObject::Id_Type, TIndex > random(rman.get_transaction()->random_index(&prop));
     for (typename vector< typename TObject::Id_Type >::const_iterator
         it = ids.begin(); it != ids.end(); ++it)
       req.insert(random.get(it->val()));

@@ -104,7 +104,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > get_existing_map_positions
     (const std::vector< Id_Type >& ids,
      Transaction& transaction, const File_Properties& file_properties)
 {
-  Random_File< Uint31_Index > random(transaction.random_index(&file_properties));
+  Random_File< Id_Type, Uint31_Index > random(transaction.random_index(&file_properties));
   
   std::vector< std::pair< Id_Type, Uint31_Index > > result;
   for (typename std::vector< Id_Type >::const_iterator it = ids.begin(); it != ids.end(); ++it)
@@ -475,7 +475,7 @@ void update_map_positions
     (std::vector< std::pair< Id_Type, Uint31_Index > > new_idx_positions,
      Transaction& transaction, const File_Properties& file_properties)
 {
-  Random_File< Uint31_Index > random(transaction.random_index(&file_properties));
+  Random_File< Id_Type, Uint31_Index > random(transaction.random_index(&file_properties));
   
   for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator
       it = new_idx_positions.begin(); it != new_idx_positions.end(); ++it)
