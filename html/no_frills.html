@@ -22,12 +22,12 @@
 The comands are explained afterwards:</p>
 
 <p><a href="#required">Install required software packages (on Ubuntu)</a>:</p>
-<pre>sudo apt-get install wget g++ make expat libexpat1-dev</pre>
+<pre>sudo apt-get install wget g++ make expat libexpat1-dev zlib1g-dev</pre>
 
 <p><a href="#install">Install the Overpass API software</a>:</p>
-<pre>wget http://overpass-api.de/misc/osm-3s_v0.7.3.tar.gz
-gunzip &lt;osm-3s_v0.7.3.tar.gz | tar xvf -
-cd osm-3s_v0.7.3/build/
+<pre>wget http://dev.overpass-api.de/releases/osm-3s_v0.7.52.tar.gz
+gunzip &lt;osm-3s_v0.7.52.tar.gz | tar xvf -
+cd osm-3s_v0.7.52/build/
 ../src/configure --prefix=&quot;`pwd`/../&quot;
 make CXXFLAGS=&quot;-O3&quot; install</pre>
 
@@ -39,7 +39,7 @@ make CXXFLAGS=&quot;-O3&quot; install</pre>
 
 <p><a href="#minute_updates">Activate minutely updates</a>:</p>
 <pre>nohup ../bin/dispatcher --osm-base --meta --db-dir=&quot;../db/&quot; &amp;
-chmod 666 &quot;../db/osm3s_v0.7.3_osm_base&quot;
+chmod 666 &quot;../db/osm3s_v0.7.52_osm_base&quot;
 nohup ../bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/replication/minute/&quot; &quot;../minute-diffs/&quot; &amp;
 nohup ../bin/apply_osc_to_db.sh &quot;../minute-diffs/&quot; <em>id</em> --meta=yes --augmented_diffs=no &amp;</pre>
 
@@ -64,10 +64,10 @@ nohup ../bin/apply_osc_to_db.sh &quot;../minute-diffs/&quot; <em>id</em> --meta=
 
 <h2><a name="install">Software Installation</a></h2>
 
-<p>First, you need to download <a href="http://overpass-api.de/misc/osm-3s_v0.7.3.tar.gz">the tarball of the latest version</a>:</p>
-<pre>wget http://overpass-api.de/misc/osm-3s_v0.7.3.tar.gz
-gunzip &lt;osm-3s_v0.7.3.tar.gz | tar xvf -
-cd osm-3s_v0.7.3/build/</pre>
+<p>First, you need to download <a href="http://dev.overpass-api.de/releases/osm-3s_v0.7.52.tar.gz">the tarball of the latest version</a>:</p>
+<pre>wget http://overpass-api.de/misc/osm-3s_v0.7.52.tar.gz
+gunzip &lt;osm-3s_v0.7.52.tar.gz | tar xvf -
+cd osm-3s_v0.7.52/build/</pre>
 
 <p>You need to choose a directory where you put the executable files. You can later move them to a different directory. But the default choice of the installation program <em>automake</em>, /usr/bin, requires root permissions, although no root permissions are really necessary to run the program. I suggest the parent directory of the source code directory: this can be reached with &quot;`pwd`/../&quot;. To configure this output directory and detect necessary adaptions of your system, run in the <em>build</em> subdirectory:</p>
 <pre>../src/configure --prefix=&quot;`pwd`/../&quot;</pre>
@@ -111,7 +111,7 @@ cd osm-3s_v0.7.3/build/</pre>
 
 <p>But maybe you also want minutely updates. In this case, run the commands:</p>
 <pre>nohup ../bin/dispatcher --osm-base --meta --db-dir=&quot;../db/&quot; &amp;</pre>
-<pre>chmod 666 &quot;../db/osm3s_v0.7.3_osm_base&quot;</pre>
+<pre>chmod 666 &quot;../db/osm3s_v0.7.52_osm_base&quot;</pre>
 <pre>nohup ../bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/replication/minute/&quot; &quot;../minute-diffs/&quot; &amp;</pre>
 <pre>nohup ../bin/apply_osc_to_db.sh &quot;../minute-diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
 <p>These commands don't make sense without <em>nohup</em>, because the programs become daemons and never terminate. Once again, you need to replace parameters: you always need to replace <em>id</em> by the replicate id to start from. Search on <a href="http://planet.openstreetmap.org/replication/minute/">http://planet.openstreetmap.org/replication/minute/</a> with your browser for the last replication diff that has been created before the planet creation date.</p>
