@@ -699,7 +699,9 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
   if (compression_method == File_Blocks_Index< TIndex >::ZLIB_COMPRESSION)
   {
     target = buffer.ptr;
-    data_size = (Zlib_Deflate(1).compress(buf, *(uint32*)buf, target, block_size * max_size) - 1) / block_size + 1;
+    uint32 compressed_size = Zlib_Deflate(1).compress(buf, *(uint32*)buf, target, block_size * max_size);
+    data_size = (compressed_size - 1) / block_size + 1;
+    zero_padding((uint8*)target + compressed_size, block_size * data_size - compressed_size); 
   }
     
   uint32 pos = allocate_block(data_size);

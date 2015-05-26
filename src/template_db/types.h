@@ -228,6 +228,13 @@ void rearrange_block(const Iterator& begin, Iterator& it, Object to_move)
 }
 
 
+inline void zero_padding(uint8* from, uint32 bytes)
+{
+  for (uint32 i = 0; i < bytes; ++i)
+    *(from + i) = 0;
+}
+
+
 //-----------------------------------------------------------------------------
 
 

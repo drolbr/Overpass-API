@@ -124,8 +124,10 @@ void Random_File< Key, Value >::move_cache_window(uint32 pos)
     if (index->compression_method == Random_File_Index::ZLIB_COMPRESSION)
     {
       target = buffer.ptr;
-      data_size = (Zlib_Deflate(1).compress
-          (cache.ptr, block_size * max_size, target, block_size * index->max_size) - 1) / block_size + 1;
+      uint32 compressed_size = Zlib_Deflate(1)
+          .compress(cache.ptr, block_size * max_size, target, block_size * index->max_size);
+      data_size = (compressed_size - 1) / block_size + 1;
+      zero_padding((uint8*)target + compressed_size, block_size * data_size - compressed_size); 
     }
 
     uint32 disk_pos = allocate_block(data_size);

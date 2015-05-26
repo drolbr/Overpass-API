@@ -157,7 +157,6 @@ int main(int argc, char *argv[])
   string db_dir;
   uint log_level = Error_Output::ASSISTING;
 
-  const int META = 1;
   int area_level = 0;
 
   int argpos = 1;
