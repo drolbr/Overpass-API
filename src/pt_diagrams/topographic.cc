@@ -1,6 +1,6 @@
 #include "read_input.h"
 #include "test_output.h"
-#include "../../src/expat/expat_justparse_interface.h"
+#include "../expat/expat_justparse_interface.h"
 
 #include <algorithm>
 #include <cmath>
