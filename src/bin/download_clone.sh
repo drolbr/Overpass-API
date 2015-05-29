@@ -26,7 +26,7 @@ META=
 
 if [[ -z $1 ]]; then
 {
-  echo "Usage: $0 --db-dir=database_dir --source=http://dev.overpass-api.de/api/ --meta=(yes|no|attic)"
+  echo "Usage: $0 --db-dir=database_dir --source=http://dev.overpass-api.de/api_drolbr/ --meta=(yes|no|attic)"
   exit 0
 }; fi
 
@@ -94,26 +94,17 @@ retry_fetch_file()
 download_file()
 {
   echo
-  echo "Fetching $1.gz"
-  retry_fetch_file "$REMOTE_DIR/$1.gz" "$CLONE_DIR/$1.gz"
-  gunzip "$CLONE_DIR/$1.gz" &
-  echo "Uncompressing it in the background."
+  echo "Fetching $1"
+  retry_fetch_file "$REMOTE_DIR/$1" "$CLONE_DIR/$1"
   echo "Fetching $1.idx"
   retry_fetch_file "$REMOTE_DIR/$1.idx" "$CLONE_DIR/$1.idx"
-}
-
-check_gz()
-{
-  if [[ -s "$1.gz" ]]; then {
-    DONE=
-  }; fi
 }
 
 fetch_file "$SOURCE/trigger_clone" "$CLONE_DIR/base-url"
 
 REMOTE_DIR=`cat <"$CLONE_DIR/base-url"`
-echo "Triggered generation of a recent clone"
-sleep 30
+#echo "Triggered generation of a recent clone"
+#sleep 30
 
 retry_fetch_file "$REMOTE_DIR/replicate_id" "$CLONE_DIR/replicate_id"
 
@@ -137,36 +128,5 @@ if [[ $META == "attic" ]]; then
     download_file $I
   }; done
 }; fi
-
-echo "Waiting for all files to be uncompressed "
-DONE=
-while [[ $DONE != "yes" ]]; do
-{
-  DONE="yes"
-  echo -n "."
-
-  for I in $FILES_BASE; do
-  {
-    check_gz $I
-  }; done
-
-  if [[ $META == "yes" || $META == "attic" ]]; then
-  {
-    for I in $FILES_META; do
-    {
-      check_gz $I
-    }; done
-  }; fi
-
-  if [[ $META == "attic" ]]; then
-  {
-    for I in $FILES_ATTIC; do
-    {
-      check_gz $I
-    }; done
-  }; fi
-
-  sleep 1
-}; done
 
 echo " database ready."
