@@ -28,12 +28,12 @@ The comands are explained afterwards:</p>
 <pre>wget http://dev.overpass-api.de/releases/osm-3s_v0.7.52.tar.gz
 gunzip &lt;osm-3s_v0.7.52.tar.gz | tar xvf -
 cd osm-3s_v0.7.52/
-./configure --prefix=&quot;`pwd`/../&quot;
+./configure --prefix=&quot;`pwd`&quot;
 make CXXFLAGS=&quot;-O3&quot;</pre>
 
 <p><a href="#clone">Clone the database</a> or <a href="#startup">import a planet file</a>:</p>
 <pre>mkdir -p db</pre>
-<pre>bin/download_clone.sh --source=http://overpass-api.de/api/ --db-dir=&quot;db/&quot; --meta=no</pre>
+<pre>bin/download_clone.sh --source=http://dev.overpass-api.de/api_drolbr/ --db-dir=&quot;db/&quot; --meta=no</pre>
 <p>or</p>
 <pre>wget -O planet.osm.bz2 &quot;http://ftp.heanet.ie/mirrors/openstreetmap.org/planet-latest.osm.bz2&quot;
 ../bin/init_osm3s.sh planet.osm.bz2 &quot;db/&quot; &quot;./&quot; --meta</pre>
@@ -48,7 +48,7 @@ nohup bin/apply_osc_to_db.sh &quot;minute-diffs/&quot; <em>id</em> --meta=yes --
 
 <h2><a name="required">Requirements</a></h2>
 
-<p>With a POSIX confirming operating system (this includes all kinds of Linux as well as FreeBSD, OpenBSD and several others), you have already fulfilled most base requirements.</p>
+<p>With a POSIX conforming operating system (this includes all kinds of Linux as well as FreeBSD, OpenBSD and several others), you have already fulfilled most base requirements.</p>
 
 <p>Concerning hardware, I suggest at least 4 GB of RAM. The more RAM is available, the better, because caching of disk content in the RAM will significantly speed up Overpass API. The processor speed will have little relevance. For the hard disk, it depends on what you want to install. A full planet database with minutely updates should have at least 250 GB of hard disk space at disposal. Without minute diffs and meta data, 100 GB would already suffice.</p>
 
