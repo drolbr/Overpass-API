@@ -80,6 +80,7 @@ struct Random_File_Index
     static const int FILE_FORMAT_VERSION = 7512;
     static const int NO_COMPRESSION = 0;
     static const int ZLIB_COMPRESSION = 1;
+    static const int LZ4_COMPRESSION = 2;
 };
 
 

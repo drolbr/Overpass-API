@@ -21,6 +21,7 @@
 
 #include "random_file_index.h"
 #include "types.h"
+#include "lz4_wrapper.h"
 #include "zlib_wrapper.h"
 
 #include <unistd.h>
@@ -77,7 +78,7 @@ Random_File< Key, Value >::Random_File(Random_File_Index* index_)
   index(index_),
   cache(index_->get_block_size() * index_->get_max_size()), cache_pos(index->npos),
   block_size(index_->get_block_size()),
-  buffer(index_->get_block_size() * index_->get_max_size() * 2)
+  buffer(index_->get_block_size() * index_->get_max_size() * 2)  // increased buffer size for lz4
 {}
 
 
@@ -129,6 +130,14 @@ void Random_File< Key, Value >::move_cache_window(uint32 pos)
       data_size = (compressed_size - 1) / block_size + 1;
       zero_padding((uint8*)target + compressed_size, block_size * data_size - compressed_size); 
     }
+    else if (index->compression_method == Random_File_Index::LZ4_COMPRESSION)
+    {
+      target = buffer.ptr;
+      uint32 compressed_size = LZ4_Deflate()
+          .compress(cache.ptr, block_size * max_size, target, block_size * index->max_size * 2);
+      data_size = (compressed_size - 1) / block_size + 1;
+      zero_padding((uint8*)target + compressed_size, block_size * data_size - compressed_size);
+    }
 
     uint32 disk_pos = allocate_block(data_size);
     
@@ -162,6 +171,12 @@ void Random_File< Key, Value >::move_cache_window(uint32 pos)
     {
       val_file.read(buffer.ptr, block_size * index->blocks[pos].size, "Random_File:24");
       Zlib_Inflate().decompress
+          (buffer.ptr, block_size * index->blocks[pos].size, cache.ptr, block_size * index->max_size);
+    }
+    else if (index->compression_method == Random_File_Index::LZ4_COMPRESSION)
+    {
+      val_file.read(buffer.ptr, block_size * index->blocks[pos].size, "Random_File:24");
+      LZ4_Inflate().decompress
           (buffer.ptr, block_size * index->blocks[pos].size, cache.ptr, block_size * index->max_size);
     }
   }
