@@ -35,7 +35,7 @@ cgi_bin_public_transport =
 cgi_bin_script_public_transport = cgi-bin/draw-line cgi-bin/sketch-line cgi-bin/sketch-options cgi-bin/sketch-route
 
 bin_convenience =
-bin_script_convenience = bin/run_osm3s_minutely.sh bin/fetch_osc_and_apply.sh
+bin_script_convenience = bin/fetch_osc_and_apply.sh bin/init_osm3s.sh bin/run_osm3s_minutely.sh
 cgi_bin_convenience =
 cgi_bin_script_convenience = cgi-bin/ping cgi-bin/sitemap
 
