@@ -66,9 +66,16 @@ Dispatcher_Client::Dispatcher_Client
         (errno, socket_name, "Dispatcher_Client::2");  
   struct sockaddr_un local;
   local.sun_family = AF_UNIX;
-  strcpy(local.sun_path, socket_name.c_str());
+  if (socket_name.size() < sizeof local.sun_path - 1)
+    strcpy(local.sun_path, socket_name.c_str());
+  else
+    throw File_Error
+        (0, socket_name, "Dispatcher_Client::5");
+#ifdef __APPLE__
+  local.sun_len = socket_name.size() + 1;
+#endif
   if (connect(socket_descriptor, (struct sockaddr*)&local,
-      sizeof(local.sun_family) + strlen(local.sun_path)) == -1)
+      sizeof(struct sockaddr_un)) == -1)
     throw File_Error
         (errno, socket_name, "Dispatcher_Client::3");
   
