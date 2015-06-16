@@ -25,7 +25,6 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/un.h>
 
 #include <cstdlib>
 #include <cstring>
@@ -35,7 +34,7 @@
 
 Dispatcher_Client::Dispatcher_Client
     (const std::string& dispatcher_share_name_)
-    : dispatcher_share_name(dispatcher_share_name_)
+    : dispatcher_share_name(dispatcher_share_name_), socket("")
 {
   signal(SIGPIPE, SIG_IGN);
   
@@ -59,35 +58,17 @@ Dispatcher_Client::Dispatcher_Client
 		       4*sizeof(uint32)));
 
   // initialize the socket for the client
+  socket.open(db_dir + dispatcher_share_name_);  
   std::string socket_name = db_dir + dispatcher_share_name_;
-  socket_descriptor = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (socket_descriptor == -1)
-    throw File_Error
-        (errno, socket_name, "Dispatcher_Client::2");  
-  struct sockaddr_un local;
-  local.sun_family = AF_UNIX;
-  if (socket_name.size() < sizeof local.sun_path - 1)
-    strcpy(local.sun_path, socket_name.c_str());
-  else
-    throw File_Error
-        (0, socket_name, "Dispatcher_Client::5");
-#ifdef __APPLE__
-  local.sun_len = socket_name.size() + 1;
-#endif
-  if (connect(socket_descriptor, (struct sockaddr*)&local,
-      sizeof(struct sockaddr_un)) == -1)
-    throw File_Error
-        (errno, socket_name, "Dispatcher_Client::3");
   
   pid_t pid = getpid();
-  if (send(socket_descriptor, &pid, sizeof(pid_t), 0) == -1)
+  if (send(socket.descriptor(), &pid, sizeof(pid_t), 0) == -1)
     throw File_Error(errno, dispatcher_share_name, "Dispatcher_Client::4");
 }
 
 
 Dispatcher_Client::~Dispatcher_Client()
 {
-  close(socket_descriptor);
   munmap((void*)dispatcher_shm_ptr,
 	 Dispatcher::SHM_SIZE + db_dir.size() + shadow_name.size());
   close(dispatcher_shm_fd);
@@ -97,7 +78,7 @@ Dispatcher_Client::~Dispatcher_Client()
 template< class TObject >
 void Dispatcher_Client::send_message(TObject message, const std::string& source_pos)
 {
-  if (send(socket_descriptor, &message, sizeof(TObject), 0) == -1)
+  if (send(socket.descriptor(), &message, sizeof(TObject), 0) == -1)
     throw File_Error(errno, dispatcher_share_name, source_pos);
 }
 
@@ -105,11 +86,11 @@ void Dispatcher_Client::send_message(TObject message, const std::string& source_
 uint32 Dispatcher_Client::ack_arrived()
 {
   uint32 answer = 0;
-  int bytes_read = recv(socket_descriptor, &answer, sizeof(uint32), 0);
+  int bytes_read = recv(socket.descriptor(), &answer, sizeof(uint32), 0);
   while (bytes_read == -1)
   {
     millisleep(50);
-    bytes_read = recv(socket_descriptor, &answer, sizeof(uint32), 0);
+    bytes_read = recv(socket.descriptor(), &answer, sizeof(uint32), 0);
   }
   if (bytes_read == sizeof(uint32))
     return answer;

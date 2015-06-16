@@ -42,53 +42,23 @@ Dispatcher_Socket::Dispatcher_Socket
      const std::string& shadow_name_,
      const std::string& db_dir_,
      uint max_num_reading_processes)
+  : socket("", max_num_reading_processes)
 {
   signal(SIGPIPE, SIG_IGN);
   
-  std::string shadow_name = shadow_name_;
   std::string db_dir = db_dir_;
   // get the absolute pathname of the current directory
   if (db_dir.substr(0, 1) != "/")
     db_dir = getcwd() + db_dir_;
-  if (shadow_name.substr(0, 1) != "/")
-    shadow_name = getcwd() + shadow_name_;
   
   // initialize the socket for the server
   socket_name = db_dir + dispatcher_share_name;
-  
-  socket_descriptor = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (socket_descriptor == -1)
-    throw File_Error
-        (errno, socket_name, "Dispatcher_Server::2");
-  if (fcntl(socket_descriptor, F_SETFL, O_RDWR|O_NONBLOCK) == -1)
-    throw File_Error
-        (errno, socket_name, "Dispatcher_Server::3");  
-  struct sockaddr_un local;
-  local.sun_family = AF_UNIX;
-  if (socket_name.size() < sizeof local.sun_path - 1)
-    strcpy(local.sun_path, socket_name.c_str());
-  else
-    throw File_Error
-        (0, socket_name, "Dispatcher_Server::9");
-#ifdef __APPLE__
-  local.sun_len = socket_name.size() + 1;
-#endif
-  if (bind(socket_descriptor, (struct sockaddr*)&local,
-      sizeof(struct sockaddr_un)) == -1)
-    throw File_Error
-        (errno, socket_name, "Dispatcher_Server::4");
-  if (chmod(socket_name.c_str(), S_666) == -1)
-    throw File_Error
-        (errno, socket_name, "Dispatcher_Server::8");
-  if (listen(socket_descriptor, max_num_reading_processes) == -1)
-    throw File_Error
-        (errno, socket_name, "Dispatcher_Server::5");
+  socket.open(socket_name);
 }
 
 
 Dispatcher_Socket::~Dispatcher_Socket()
 {
-  close(socket_descriptor);
   remove(socket_name.c_str());
 }
 
@@ -97,7 +67,7 @@ void Dispatcher_Socket::look_for_a_new_connection(Connection_Per_Pid_Map& connec
 {    
   struct sockaddr_un sockaddr_un_dummy;
   uint sockaddr_un_dummy_size = sizeof(sockaddr_un_dummy);
-  int socket_fd = accept(socket_descriptor, (sockaddr*)&sockaddr_un_dummy,
+  int socket_fd = accept(socket.descriptor(), (sockaddr*)&sockaddr_un_dummy,
 			 (socklen_t*)&sockaddr_un_dummy_size);
   if (socket_fd == -1)
   {

@@ -157,7 +157,7 @@ public:
   std::vector< int >::size_type num_started_connections() { return started_connections.size(); }
     
 private:
-  int socket_descriptor;
+  Unix_Socket socket;
   std::string socket_name;
   std::vector< int > started_connections;  
 };

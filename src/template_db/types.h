@@ -121,6 +121,7 @@ class Raw_File
     std::string name;
 };
 
+
 /** Simple RAII class to keep a pointer to some memory on the heap. */
 template < class T >
 class Void_Pointer
@@ -135,10 +136,28 @@ class Void_Pointer
     T* ptr;
 };
 
+
 inline bool file_exists(const std::string& filename)
 {
   return (access(filename.c_str(), F_OK) == 0);
 }
+
+
+/** Simple RAII class to keep a unix socket. */
+class Unix_Socket
+{
+public:
+  Unix_Socket(const std::string& socket_name = "", uint max_num_reading_processes = 0);
+  void open(const std::string& socket_name);
+  ~Unix_Socket();
+  
+  int descriptor() const { return socket_descriptor; }
+  
+private:
+  int socket_descriptor;
+  uint max_num_reading_processes;
+};
+
 
 //-----------------------------------------------------------------------------
 

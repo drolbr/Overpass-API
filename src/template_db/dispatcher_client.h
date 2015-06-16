@@ -87,7 +87,7 @@ class Dispatcher_Client
     int dispatcher_shm_fd;
     volatile uint8* dispatcher_shm_ptr;
     std::string db_dir, shadow_name;
-    int socket_descriptor;
+    Unix_Socket socket;
     
     uint32 ack_arrived();
     
