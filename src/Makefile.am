@@ -62,7 +62,16 @@ dist_bin_SCRIPTS = \
   
 
 cgibindir = ${prefix}/cgi-bin
-cgibin_PROGRAMS = ${cgi_bin_mandatory}
+cgibin_PROGRAMS = \
+  ${cgi_bin_mandatory} \
+  ${cgi_bin_customoutput} \
+  ${cgi_bin_clone} \
+  ${cgi_bin_augmented_diffs} \
+  ${cgi_bin_xapi_layer} \
+  ${cgi_bin_openlayers} \
+  ${cgi_bin_public_transport} \
+  ${cgi_bin_convenience}
+
 dist_cgibin_SCRIPTS = \
   ${cgi_bin_script_mandatory} \
   ${cgi_bin_script_customoutput} \

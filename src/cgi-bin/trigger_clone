@@ -21,7 +21,7 @@ CLONE_DIR="/var/www/clone"
 
 echo "Content-Type: text/plain; charset=utf-8"
 echo
-echo "http://overpass-api.de/clone/"
+echo "http://dev.overpass-api.de/clone/"
 
 touch "$CLONE_DIR/trigger"
 chmod 666 "$CLONE_DIR/trigger"
