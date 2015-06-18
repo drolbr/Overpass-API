@@ -209,7 +209,7 @@ inline Random_File_Index::Random_File_Index
 	uint32 void_index_size = void_blocks_file.size("Random_File:11");
 	Void_Pointer< uint8 > index_buf(void_index_size);
 	void_blocks_file.read(index_buf.ptr, void_index_size, "Random_File:15");
-	for (uint32 i = 0; i < void_index_size/sizeof(uint32); ++i)
+	for (uint32 i = 0; i < void_index_size/8; ++i)
 	  void_blocks.push_back(*(std::pair< uint32, uint32 >*)(index_buf.ptr + 8*i));
 	empty_index_file_used = true;
       }
