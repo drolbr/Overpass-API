@@ -66,6 +66,18 @@ int main(int argc, char* argv[])
       if (flush_limit == 0)
         flush_limit = std::numeric_limits< unsigned int >::max();
     }
+    else if (!(strncmp(argv[argpos], "--compression_method=", 21)))
+    {
+      if (string(argv[argpos]).substr(21) == "no")
+	basic_settings().compression_method = File_Blocks_Index< Uint31_Index >::NO_COMPRESSION;
+      else if (string(argv[argpos]).substr(21) == "gz")
+	basic_settings().compression_method = File_Blocks_Index< Uint31_Index >::ZLIB_COMPRESSION;
+      else
+      {
+        cerr<<"For --compression_method, please use \"no\" or \"gz\" as value.\n";
+        abort = true;
+      }
+    }
     else
     {
       cerr<<"Unkown argument: "<<argv[argpos]<<'\n';
