@@ -67,7 +67,7 @@ struct Block_Backend_Basic_Iterator
   const TIndex& index();
   const TObject& object();
   
-  int read_whole_key(std::vector< TObject >& result_values);
+  int read_whole_key_base(std::vector< TObject >& result_values);
   
   uint32 block_size;
   uint32 pos;
@@ -96,6 +96,8 @@ struct Block_Backend_Flat_Iterator : Block_Backend_Basic_Iterator< TIndex, TObje
   const Block_Backend_Flat_Iterator& operator=(const Block_Backend_Flat_Iterator& it);
   bool operator==(const Block_Backend_Flat_Iterator& it) const;
   const Block_Backend_Flat_Iterator& operator++();
+  
+  int read_whole_key(std::vector< TObject >& result_values);
   
   const File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > >& file_blocks;
   typename File_Blocks_::Flat_Iterator file_it;
@@ -139,6 +141,8 @@ struct Block_Backend_Discrete_Iterator : Block_Backend_Basic_Iterator< TIndex, T
   bool operator==(const Block_Backend_Discrete_Iterator& it) const;
   const Block_Backend_Discrete_Iterator& operator++();
   
+  int read_whole_key(std::vector< TObject >& result_values);
+  
   const File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > >& file_blocks;
   typename File_Blocks_::Discrete_Iterator file_it;
   typename File_Blocks_::Discrete_Iterator file_end;
@@ -175,6 +179,8 @@ struct Block_Backend_Range_Iterator : Block_Backend_Basic_Iterator< TIndex, TObj
       (const Block_Backend_Range_Iterator& it);
   bool operator==(const Block_Backend_Range_Iterator& it) const;
   const Block_Backend_Range_Iterator& operator++();
+  
+  int read_whole_key(std::vector< TObject >& result_values);
   
   const File_Blocks_& file_blocks;
   typename File_Blocks_::Range_Iterator file_it;
@@ -276,6 +282,26 @@ const TObject& Block_Backend_Basic_Iterator< TIndex, TObject >::object()
 }
 
 
+template< class TIndex, class TObject >
+int Block_Backend_Basic_Iterator< TIndex, TObject >::read_whole_key_base(std::vector< TObject >& result_values)
+{
+  if (result_values.empty())
+    result_values.reserve((*current_idx_pos - pos) / TObject::size_of((void*)(buffer.ptr + pos)));
+      // a simple estimation that works at least for fixed size objects
+  
+  int result_size = 0;
+  
+  do
+  {
+    result_size += TObject::size_of((void*)(buffer.ptr + pos));
+    result_values.push_back(TObject((void*)(buffer.ptr + pos)));
+  }
+  while (advance());
+  
+  return result_size;
+}
+
+
 /** Implementation Block_Backend_Flat_Iterator: ----------------------------*/
 
 template< class TIndex, class TObject, class TIterator >
@@ -342,6 +368,32 @@ const Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >&
     ++file_it;
     if (read_block())
       return *this;
+  }
+}
+
+
+template< class TIndex, class TObject, class TIterator >
+int Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >::read_whole_key(std::vector< TObject >& result_values)
+{
+  result_values.clear();
+  TIndex current_idx = this->index();
+  
+  int result = this->read_whole_key_base(result_values);
+  while (true)
+  {
+    if (search_next_index())
+    {
+      if (current_idx == this->index())
+	result += this->read_whole_key_base(result_values);
+      else
+        return result;
+    }
+    else
+    {
+      ++file_it;
+      if (read_block())
+        return result;
+    }
   }
 }
 
@@ -454,6 +506,32 @@ const Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >&
     ++file_it;
     if (read_block())
       return *this;
+  }
+}
+
+
+template< class TIndex, class TObject, class TIterator >
+int Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::read_whole_key(std::vector< TObject >& result_values)
+{
+  result_values.clear();
+  TIndex current_idx = this->index();
+  
+  int result = this->read_whole_key_base(result_values);
+  while (true)
+  {
+    if (search_next_index())
+    {
+      if (current_idx == this->index())
+	result += this->read_whole_key_base(result_values);
+      else
+        return result;
+    }
+    else
+    {
+      ++file_it;
+      if (read_block())
+        return result;
+    }
   }
 }
 
@@ -582,6 +660,32 @@ const Block_Backend_Range_Iterator< TIndex, TObject, TIterator >&
     ++file_it;
     if (read_block())
       return *this;
+  }
+}
+
+
+template< class TIndex, class TObject, class TIterator >
+int Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::read_whole_key(std::vector< TObject >& result_values)
+{
+  result_values.clear();
+  TIndex current_idx = this->index();
+  
+  int result = this->read_whole_key_base(result_values);
+  while (true)
+  {
+    if (search_next_index())
+    {
+      if (current_idx == this->index())
+	result += this->read_whole_key_base(result_values);
+      else
+        return result;
+    }
+    else
+    {
+      ++file_it;
+      if (read_block())
+        return result;
+    }
   }
 }
 

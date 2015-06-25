@@ -16,7 +16,35 @@ Index 81: 1181
 Index 90: 1090 
 Index 99: 1999 
 ... all blocks read.
+Keywise reading all blocks ...
+Index 0: 1000 
+Index 9: 1909 
+Index 18: 1818 
+Index 27: 1727 
+Index 36: 1636 
+Index 45: 1545 
+Index 54: 1454 
+Index 63: 1363 
+Index 72: 1272 
+Index 81: 1181 
+Index 90: 1090 
+Index 99: 1999 
+... all blocks read.
 Reading blocks with indices {0, 9, ..., 99} ...
+Index 0: 1000 
+Index 9: 1909 
+Index 18: 1818 
+Index 27: 1727 
+Index 36: 1636 
+Index 45: 1545 
+Index 54: 1454 
+Index 63: 1363 
+Index 72: 1272 
+Index 81: 1181 
+Index 90: 1090 
+Index 99: 1999 
+... all blocks read.
+Keywise reading blocks with indices {0, 9, ..., 99} ...
 Index 0: 1000 
 Index 9: 1909 
 Index 18: 1818 
@@ -34,7 +62,15 @@ Reading blocks with indices {0, 1, ..., 9} ...
 Index 0: 1000 
 Index 9: 1909 
 ... all blocks read.
+Keywise reading blocks with indices {0, 1, ..., 9} ...
+Index 0: 1000 
+Index 9: 1909 
+... all blocks read.
 Reading blocks with indices [0, 10[ ...
+Index 0: 1000 
+Index 9: 1909 
+... all blocks read.
+Keywise reading blocks with indices [0, 10[ ...
 Index 0: 1000 
 Index 9: 1909 
 ... all blocks read.
@@ -42,14 +78,28 @@ Reading blocks with indices {90, 91, ..., 99} ...
 Index 90: 1090 
 Index 99: 1999 
 ... all blocks read.
+Keywise reading blocks with indices {90, 91, ..., 99} ...
+Index 90: 1090 
+Index 99: 1999 
+... all blocks read.
 Reading blocks with indices [90, 100[ ...
+Index 90: 1090 
+Index 99: 1999 
+... all blocks read.
+Keywise reading blocks with indices [90, 100[ ...
 Index 90: 1090 
 Index 99: 1999 
 ... all blocks read.
 Reading blocks with index 50 ...
 [empty]
 ... all blocks read.
+Keywise reading blocks with index 50 ...
+[empty]
+... all blocks read.
 Reading blocks with indices [50, 51[ ...
+[empty]
+... all blocks read.
+Keywise reading blocks with indices [50, 51[ ...
 [empty]
 ... all blocks read.
 Reading blocks with indices [0,10[\cup [50, 51[\cup [90, 100[ ...
@@ -58,7 +108,16 @@ Index 9: 1909
 Index 90: 1090 
 Index 99: 1999 
 ... all blocks read.
+Keywise reading blocks with indices [0,10[\cup [50, 51[\cup [90, 100[ ...
+Index 0: 1000 
+Index 9: 1909 
+Index 90: 1090 
+Index 99: 1999 
+... all blocks read.
 Reading blocks with indices \emptyset ...
+[empty]
+... all blocks read.
+Keywise reading blocks with indices \emptyset ...
 [empty]
 ... all blocks read.
 This block of read tests is complete.

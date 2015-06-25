@@ -287,6 +287,28 @@ void read_loop(Block_Backend< IntIndex, IntObject >& blocks, Iterator& it)
 }
 
 
+template< typename Iterator >
+void key_vector_read_loop(Block_Backend< IntIndex, IntObject >& blocks, Iterator& it)
+{
+  if (is_end(blocks, it))
+  {
+    std::cout<<"[empty]\n";
+    return;
+  }
+  while (!is_end(blocks, it))
+  {
+    std::cout<<"Index "<<it.index().val()<<": ";
+    
+    std::vector< IntObject > values;
+    it.read_whole_key(values);
+    
+    for (std::vector< IntObject >::const_iterator it2 = values.begin(); it2 != values.end(); ++it2)
+      std::cout<<it2->val()<<' ';
+    std::cout<<'\n';
+  }
+}
+
+
 void read_test(unsigned int step)
 {
   try
@@ -302,14 +324,23 @@ void read_test(unsigned int step)
     Block_Backend< IntIndex, IntObject >::Flat_Iterator fit(db_backend.flat_begin());
     read_loop(db_backend, fit);
     std::cout<<"... all blocks read.\n";
+    std::cout<<"Keywise reading all blocks ...\n";
+    fit = db_backend.flat_begin();
+    key_vector_read_loop(db_backend, fit);
+    std::cout<<"... all blocks read.\n";
 
     std::set< IntIndex > index_list;
     for (unsigned int i(0); i < 100; i += 9)
       index_list.insert(&i);
+    
     std::cout<<"Reading blocks with indices {0, 9, ..., 99} ...\n";
     Block_Backend< IntIndex, IntObject >::Discrete_Iterator
 	it(db_backend.discrete_begin(index_list.begin(), index_list.end()));
     read_loop(db_backend, it);
+    std::cout<<"... all blocks read.\n";
+    std::cout<<"Keywise reading blocks with indices {0, 9, ..., 99} ...\n";
+    it = db_backend.discrete_begin(index_list.begin(), index_list.end());
+    key_vector_read_loop(db_backend, it);
     std::cout<<"... all blocks read.\n";
   
     index_list.clear();
@@ -318,6 +349,10 @@ void read_test(unsigned int step)
     std::cout<<"Reading blocks with indices {0, 1, ..., 9} ...\n";
     it = db_backend.discrete_begin(index_list.begin(), index_list.end());
     read_loop(db_backend, it);
+    std::cout<<"... all blocks read.\n";
+    std::cout<<"Keywise reading blocks with indices {0, 1, ..., 9} ...\n";
+    it = db_backend.discrete_begin(index_list.begin(), index_list.end());
+    key_vector_read_loop(db_backend, it);
     std::cout<<"... all blocks read.\n";
 
     std::set< std::pair< IntIndex, IntIndex > > range_list;
@@ -330,6 +365,12 @@ void read_test(unsigned int step)
 	 Default_Range_Iterator< IntIndex >(range_list.end())));
     read_loop(db_backend, rit);
     std::cout<<"... all blocks read.\n";
+    std::cout<<"Keywise reading blocks with indices [0, 10[ ...\n";
+    rit = db_backend.range_begin
+	(Default_Range_Iterator< IntIndex >(range_list.begin()),
+	 Default_Range_Iterator< IntIndex >(range_list.end()));
+    key_vector_read_loop(db_backend, rit);
+    std::cout<<"... all blocks read.\n";
   
     index_list.clear();
     for (unsigned int i(90); i < 100; ++i)
@@ -337,6 +378,10 @@ void read_test(unsigned int step)
     std::cout<<"Reading blocks with indices {90, 91, ..., 99} ...\n";
     it = db_backend.discrete_begin(index_list.begin(), index_list.end());
     read_loop(db_backend, it);
+    std::cout<<"... all blocks read.\n";
+    std::cout<<"Keywise reading blocks with indices {90, 91, ..., 99} ...\n";
+    it = db_backend.discrete_begin(index_list.begin(), index_list.end());
+    key_vector_read_loop(db_backend, it);
     std::cout<<"... all blocks read.\n";
   
     range_list.clear();
@@ -349,6 +394,12 @@ void read_test(unsigned int step)
 	 Default_Range_Iterator< IntIndex >(range_list.end()));
     read_loop(db_backend, rit);
     std::cout<<"... all blocks read.\n";
+    std::cout<<"Keywise reading blocks with indices [90, 100[ ...\n";
+    rit = db_backend.range_begin
+	(Default_Range_Iterator< IntIndex >(range_list.begin()),
+	 Default_Range_Iterator< IntIndex >(range_list.end()));
+    key_vector_read_loop(db_backend, rit);
+    std::cout<<"... all blocks read.\n";
   
     index_list.clear();
     uint32 foo(50);
@@ -356,6 +407,10 @@ void read_test(unsigned int step)
     std::cout<<"Reading blocks with index 50 ...\n";
     it = db_backend.discrete_begin(index_list.begin(), index_list.end());
     read_loop(db_backend, it);
+    std::cout<<"... all blocks read.\n";
+    std::cout<<"Keywise reading blocks with index 50 ...\n";
+    it = db_backend.discrete_begin(index_list.begin(), index_list.end());
+    key_vector_read_loop(db_backend, it);
     std::cout<<"... all blocks read.\n";
   
     range_list.clear();
@@ -367,6 +422,12 @@ void read_test(unsigned int step)
 	(Default_Range_Iterator< IntIndex >(range_list.begin()),
 	 Default_Range_Iterator< IntIndex >(range_list.end()));
     read_loop(db_backend, rit);
+    std::cout<<"... all blocks read.\n";
+    std::cout<<"Keywise reading blocks with indices [50, 51[ ...\n";
+    rit = db_backend.range_begin
+	(Default_Range_Iterator< IntIndex >(range_list.begin()),
+	 Default_Range_Iterator< IntIndex >(range_list.end()));
+    key_vector_read_loop(db_backend, rit);
     std::cout<<"... all blocks read.\n";
   
     range_list.clear();
@@ -385,11 +446,21 @@ void read_test(unsigned int step)
 	 Default_Range_Iterator< IntIndex >(range_list.end()));
     read_loop(db_backend, rit);
     std::cout<<"... all blocks read.\n";
+    std::cout<<"Keywise reading blocks with indices [0,10[\\cup [50, 51[\\cup [90, 100[ ...\n";
+    rit = db_backend.range_begin
+	(Default_Range_Iterator< IntIndex >(range_list.begin()),
+	 Default_Range_Iterator< IntIndex >(range_list.end()));
+    key_vector_read_loop(db_backend, rit);
+    std::cout<<"... all blocks read.\n";
   
     index_list.clear();
     std::cout<<"Reading blocks with indices \\emptyset ...\n";
     it = db_backend.discrete_begin(index_list.begin(), index_list.end());
     read_loop(db_backend, it);
+    std::cout<<"... all blocks read.\n";
+    std::cout<<"Keywise reading blocks with indices \\emptyset ...\n";
+    it = db_backend.discrete_begin(index_list.begin(), index_list.end());
+    key_vector_read_loop(db_backend, it);
     std::cout<<"... all blocks read.\n";
   
     std::cout<<"This block of read tests is complete.\n";
