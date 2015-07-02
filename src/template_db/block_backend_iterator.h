@@ -97,7 +97,7 @@ struct Block_Backend_Flat_Iterator : Block_Backend_Basic_Iterator< TIndex, TObje
   bool operator==(const Block_Backend_Flat_Iterator& it) const;
   const Block_Backend_Flat_Iterator& operator++();
   
-  int read_whole_key(std::vector< TObject >& result_values);
+  std::pair< int, TIndex > read_whole_key(std::vector< TObject >& result_values);
   
   const File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > >& file_blocks;
   typename File_Blocks_::Flat_Iterator file_it;
@@ -141,7 +141,7 @@ struct Block_Backend_Discrete_Iterator : Block_Backend_Basic_Iterator< TIndex, T
   bool operator==(const Block_Backend_Discrete_Iterator& it) const;
   const Block_Backend_Discrete_Iterator& operator++();
   
-  int read_whole_key(std::vector< TObject >& result_values);
+  std::pair< int, TIndex > read_whole_key(std::vector< TObject >& result_values);
   
   const File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > >& file_blocks;
   typename File_Blocks_::Discrete_Iterator file_it;
@@ -180,7 +180,7 @@ struct Block_Backend_Range_Iterator : Block_Backend_Basic_Iterator< TIndex, TObj
   bool operator==(const Block_Backend_Range_Iterator& it) const;
   const Block_Backend_Range_Iterator& operator++();
   
-  int read_whole_key(std::vector< TObject >& result_values);
+  std::pair< int, TIndex > read_whole_key(std::vector< TObject >& result_values);
   
   const File_Blocks_& file_blocks;
   typename File_Blocks_::Range_Iterator file_it;
@@ -243,22 +243,16 @@ bool Block_Backend_Basic_Iterator< TIndex, TObject >::advance()
   pos += TObject::size_of((void*)(buffer.ptr + pos));
   
   // invalidate cached object
-  if (current_object != 0)
-  {
-    delete current_object;
-    current_object = 0;
-  }
+  delete current_object;
+  current_object = 0;
   
   // if we have still the same index, we're done
   if (pos < *current_idx_pos)
     return true;
   
   // invalidate cached index
-  if (current_index != 0)
-  {
-    delete current_index;
-    current_index = 0;
-  }
+  delete current_index;
+  current_index = 0;
   
   return false;
 }
@@ -373,26 +367,32 @@ const Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >&
 
 
 template< class TIndex, class TObject, class TIterator >
-int Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >::read_whole_key(std::vector< TObject >& result_values)
+std::pair< int, TIndex > Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >::read_whole_key
+    (std::vector< TObject >& result_values)
 {
   result_values.clear();
   TIndex current_idx = this->index();
+  TIndex result_idx = current_idx;
   
   int result = this->read_whole_key_base(result_values);
   while (true)
   {
+    if (current_idx == result_idx && this->pos < *(uint32*)(this->buffer.ptr))
+      result_idx = TIndex((this->buffer.ptr) + this->pos + 4);
     if (search_next_index())
     {
       if (current_idx == this->index())
 	result += this->read_whole_key_base(result_values);
       else
-        return result;
+        return std::make_pair(result, result_idx);
     }
     else
     {
+      if (current_idx == result_idx)
+	result_idx = file_it.next_index();
       ++file_it;
       if (read_block())
-        return result;
+        return std::make_pair(result, result_idx);
     }
   }
 }
@@ -406,8 +406,7 @@ bool Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >::search_next_inde
   this->current_idx_pos = (uint32*)((this->buffer.ptr) + this->pos);
   if (this->pos < *(uint32*)(this->buffer.ptr))
   {
-    if (this->current_index)
-      delete this->current_index;
+    delete this->current_index;
     this->current_index = new TIndex((void*)(this->current_idx_pos + 1));
     typename File_Blocks_::Flat_Iterator next_it(file_it);
     if (file_it.is_out_of_range(*this->current_index))
@@ -511,26 +510,32 @@ const Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >&
 
 
 template< class TIndex, class TObject, class TIterator >
-int Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::read_whole_key(std::vector< TObject >& result_values)
+std::pair< int, TIndex > Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::read_whole_key
+    (std::vector< TObject >& result_values)
 {
   result_values.clear();
   TIndex current_idx = this->index();
+  TIndex result_idx = current_idx;
   
-  int result = this->read_whole_key_base(result_values);
+  int result = this->read_whole_key_base(result_values);  
   while (true)
   {
+    if (current_idx == result_idx && this->pos < *(uint32*)(this->buffer.ptr))
+      result_idx = TIndex((this->buffer.ptr) + this->pos + 4);
     if (search_next_index())
     {
       if (current_idx == this->index())
 	result += this->read_whole_key_base(result_values);
       else
-        return result;
+        return std::make_pair(result, result_idx);
     }
     else
     {
+      if (current_idx == result_idx)
+	result_idx = file_it.next_index();
       ++file_it;
       if (read_block())
-        return result;
+        return std::make_pair(result, result_idx);
     }
   }
 }
@@ -546,8 +551,7 @@ bool Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::search_next_
   {
     this->pos += 4;
     
-    if (this->current_index)
-      delete this->current_index;
+    delete this->current_index;
     this->current_index = new TIndex((void*)((this->buffer.ptr) + this->pos));
     while ((index_it != index_end) && (*index_it < *(this->current_index)))
       ++index_it;
@@ -665,26 +669,32 @@ const Block_Backend_Range_Iterator< TIndex, TObject, TIterator >&
 
 
 template< class TIndex, class TObject, class TIterator >
-int Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::read_whole_key(std::vector< TObject >& result_values)
+std::pair< int, TIndex > Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::read_whole_key
+    (std::vector< TObject >& result_values)
 {
   result_values.clear();
   TIndex current_idx = this->index();
+  TIndex result_idx = current_idx;
   
-  int result = this->read_whole_key_base(result_values);
+  int result = this->read_whole_key_base(result_values);  
   while (true)
   {
+    if (current_idx == result_idx && this->pos < *(uint32*)(this->buffer.ptr))
+      result_idx = TIndex((this->buffer.ptr) + this->pos + 4);
     if (search_next_index())
     {
       if (current_idx == this->index())
 	result += this->read_whole_key_base(result_values);
       else
-        return result;
+        return std::make_pair(result, result_idx);
     }
     else
     {
+      if (current_idx == result_idx)
+	result_idx = file_it.next_index();
       ++file_it;
       if (read_block())
-        return result;
+        return std::make_pair(result, result_idx);
     }
   }
 }
@@ -700,8 +710,7 @@ bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::search_next_ind
   {
     this->pos += 4;
     
-    if (this->current_index)
-      delete this->current_index;
+    delete this->current_index;
     this->current_index = new TIndex((void*)((this->buffer.ptr) + this->pos));
     while ((index_it != index_end) &&
       (!(*(this->current_index) < index_it.upper_bound())))

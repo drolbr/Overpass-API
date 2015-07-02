@@ -18,17 +18,29 @@ Index 99: 1999
 ... all blocks read.
 Keywise reading all blocks ...
 Index 0: 1000 
+Total size: 4, next index: 9
 Index 9: 1909 
+Total size: 4, next index: 18
 Index 18: 1818 
+Total size: 4, next index: 27
 Index 27: 1727 
+Total size: 4, next index: 36
 Index 36: 1636 
+Total size: 4, next index: 45
 Index 45: 1545 
+Total size: 4, next index: 54
 Index 54: 1454 
+Total size: 4, next index: 63
 Index 63: 1363 
+Total size: 4, next index: 72
 Index 72: 1272 
+Total size: 4, next index: 81
 Index 81: 1181 
+Total size: 4, next index: 90
 Index 90: 1090 
+Total size: 4, next index: 99
 Index 99: 1999 
+Total size: 4, next index: -1
 ... all blocks read.
 Reading blocks with indices {0, 9, ..., 99} ...
 Index 0: 1000 
@@ -46,17 +58,29 @@ Index 99: 1999
 ... all blocks read.
 Keywise reading blocks with indices {0, 9, ..., 99} ...
 Index 0: 1000 
+Total size: 4, next index: 9
 Index 9: 1909 
+Total size: 4, next index: 18
 Index 18: 1818 
+Total size: 4, next index: 27
 Index 27: 1727 
+Total size: 4, next index: 36
 Index 36: 1636 
+Total size: 4, next index: 45
 Index 45: 1545 
+Total size: 4, next index: 54
 Index 54: 1454 
+Total size: 4, next index: 63
 Index 63: 1363 
+Total size: 4, next index: 72
 Index 72: 1272 
+Total size: 4, next index: 81
 Index 81: 1181 
+Total size: 4, next index: 90
 Index 90: 1090 
+Total size: 4, next index: 99
 Index 99: 1999 
+Total size: 4, next index: -1
 ... all blocks read.
 Reading blocks with indices {0, 1, ..., 9} ...
 Index 0: 1000 
@@ -64,7 +88,9 @@ Index 9: 1909
 ... all blocks read.
 Keywise reading blocks with indices {0, 1, ..., 9} ...
 Index 0: 1000 
+Total size: 4, next index: 9
 Index 9: 1909 
+Total size: 4, next index: 18
 ... all blocks read.
 Reading blocks with indices [0, 10[ ...
 Index 0: 1000 
@@ -72,7 +98,9 @@ Index 9: 1909
 ... all blocks read.
 Keywise reading blocks with indices [0, 10[ ...
 Index 0: 1000 
+Total size: 4, next index: 9
 Index 9: 1909 
+Total size: 4, next index: 18
 ... all blocks read.
 Reading blocks with indices {90, 91, ..., 99} ...
 Index 90: 1090 
@@ -80,7 +108,9 @@ Index 99: 1999
 ... all blocks read.
 Keywise reading blocks with indices {90, 91, ..., 99} ...
 Index 90: 1090 
+Total size: 4, next index: 99
 Index 99: 1999 
+Total size: 4, next index: -1
 ... all blocks read.
 Reading blocks with indices [90, 100[ ...
 Index 90: 1090 
@@ -88,7 +118,9 @@ Index 99: 1999
 ... all blocks read.
 Keywise reading blocks with indices [90, 100[ ...
 Index 90: 1090 
+Total size: 4, next index: 99
 Index 99: 1999 
+Total size: 4, next index: -1
 ... all blocks read.
 Reading blocks with index 50 ...
 [empty]
@@ -110,9 +142,13 @@ Index 99: 1999
 ... all blocks read.
 Keywise reading blocks with indices [0,10[\cup [50, 51[\cup [90, 100[ ...
 Index 0: 1000 
+Total size: 4, next index: 9
 Index 9: 1909 
+Total size: 4, next index: 18
 Index 90: 1090 
+Total size: 4, next index: 99
 Index 99: 1999 
+Total size: 4, next index: -1
 ... all blocks read.
 Reading blocks with indices \emptyset ...
 [empty]

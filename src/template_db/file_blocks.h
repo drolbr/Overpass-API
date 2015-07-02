@@ -45,6 +45,8 @@ struct File_Blocks_Basic_Iterator
     is_empty(a.is_empty) {}
     
   int block_type() const;
+  
+  TIndex next_index() const;
    
   typename std::list< File_Block_Index_Entry< TIndex > >::iterator block_begin;
   typename std::list< File_Block_Index_Entry< TIndex > >::iterator block_it;
@@ -253,6 +255,19 @@ int File_Blocks_Basic_Iterator< TIndex >::block_type() const
     return File_Block_Index_Entry< TIndex >::LAST_SEGMENT;
   else
     return File_Block_Index_Entry< TIndex >::GROUP;
+}
+
+
+template< typename TIndex >
+TIndex File_Blocks_Basic_Iterator< TIndex >::next_index() const
+{
+  if (block_it == block_end)
+    return TIndex();
+  
+  typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator it = block_it;
+  ++it;
+  
+  return it == block_end ? TIndex() : it->index;
 }
 
 

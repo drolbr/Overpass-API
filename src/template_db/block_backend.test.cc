@@ -37,6 +37,7 @@ struct IntIndex
 {
   IntIndex(void* data) : value(*(uint32*)data) {}
   IntIndex(int i) : value(i) {}
+  IntIndex() : value(std::numeric_limits< uint32 >::max()) {}
   
   uint32 size_of() const
   {
@@ -300,11 +301,11 @@ void key_vector_read_loop(Block_Backend< IntIndex, IntObject >& blocks, Iterator
     std::cout<<"Index "<<it.index().val()<<": ";
     
     std::vector< IntObject > values;
-    it.read_whole_key(values);
+    std::pair< int, IntIndex > meta = it.read_whole_key(values);
     
     for (std::vector< IntObject >::const_iterator it2 = values.begin(); it2 != values.end(); ++it2)
       std::cout<<it2->val()<<' ';
-    std::cout<<'\n';
+    std::cout<<"\nTotal size: "<<meta.first<<", next index: "<<meta.second.val()<<'\n';
   }
 }
 
