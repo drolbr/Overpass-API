@@ -68,6 +68,9 @@ struct File_Blocks_Flat_Iterator : File_Blocks_Basic_Iterator< TIndex >
   
   ~File_Blocks_Flat_Iterator() {}
   
+  // Returns whether a new block needs to be loaded
+  bool skip_to_index(const TIndex& index);
+  
   const File_Blocks_Flat_Iterator& operator=
       (const File_Blocks_Flat_Iterator& a);
   bool operator==(const File_Blocks_Flat_Iterator& a) const;
@@ -100,6 +103,9 @@ struct File_Blocks_Discrete_Iterator : File_Blocks_Basic_Iterator< TIndex >
       index_end(a.index_end), just_inserted(a.just_inserted) {}
     
   ~File_Blocks_Discrete_Iterator() {}
+  
+  // Returns whether a new block needs to be loaded
+  bool skip_to_index(const TIndex& index);
     
   const File_Blocks_Discrete_Iterator& operator=
       (const File_Blocks_Discrete_Iterator& a);
@@ -142,6 +148,9 @@ struct File_Blocks_Range_Iterator : File_Blocks_Basic_Iterator< TIndex >
       index_it(a.index_it), index_end(a.index_end) {}
     
   ~File_Blocks_Range_Iterator() {}
+  
+  // Returns whether a new block needs to be loaded
+  bool skip_to_index(const TIndex& index);
     
   const File_Blocks_Range_Iterator& operator=
       (const File_Blocks_Range_Iterator& a);
@@ -273,6 +282,34 @@ TIndex File_Blocks_Basic_Iterator< TIndex >::next_index() const
 
 /** Implementation File_Blocks_Flat_Iterator: -------------------------------*/
 
+  
+template< typename TIndex >
+bool File_Blocks_Flat_Iterator< TIndex >::skip_to_index(const TIndex& index)
+{
+  if (this->block_it == this->block_end)
+    return false;
+  
+  typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator it = this->block_it;
+  ++it;
+
+  bool result = false;
+  while (it != this->block_end && (it->index < index || (!(index < it->index) && this->block_it->index < index)))
+  {
+    result = true;
+    while (it != this->block_end && it->index == this->block_it->index)
+    {
+      ++it;
+      ++(this->block_it);
+    }
+    if (it != this->block_end)
+      ++it;
+    ++(this->block_it);
+  }
+  
+  return result;
+}
+
+
 template< typename TIndex >
 const File_Blocks_Flat_Iterator< TIndex >& File_Blocks_Flat_Iterator< TIndex >::operator=
 (const File_Blocks_Flat_Iterator& a)
@@ -321,6 +358,37 @@ bool File_Blocks_Flat_Iterator< TIndex >::is_out_of_range(const TIndex& index)
 
 
 /** Implementation File_Blocks_Discrete_Iterator: ---------------------------*/
+
+
+template< typename TIndex, typename TIterator >
+bool File_Blocks_Discrete_Iterator< TIndex, TIterator >::skip_to_index(const TIndex& index)
+{
+  if (this->block_it == this->block_end)
+    return false;
+  
+  typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator it = this->block_it;
+  ++it;
+
+  bool result = false;
+  while (it != this->block_end && (it->index < index || (!(index < it->index) && this->block_it->index < index)))
+  {
+    result = true;
+    while (it != this->block_end && it->index == this->block_it->index)
+    {
+      ++it;
+      ++(this->block_it);
+    }
+    this->operator++();
+    if (this->block_it == this->block_end)
+      break;
+    it = this->block_it;
+    if (it != this->block_end)
+      ++it;
+  }
+  
+  return result;
+}
+
 
 template< typename TIndex, typename TIterator >
 const File_Blocks_Discrete_Iterator< TIndex, TIterator >&
@@ -439,6 +507,37 @@ void File_Blocks_Discrete_Iterator< TIndex, TIterator >::find_next_block()
 
 
 /** Implementation File_Blocks_Range_Iterator: ------------------------------*/
+
+
+template< typename TIndex, typename TRangeIterator >
+bool File_Blocks_Range_Iterator< TIndex, TRangeIterator >::skip_to_index(const TIndex& index)
+{
+  if (this->block_it == this->block_end)
+    return false;
+  
+  typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator it = this->block_it;
+  ++it;
+
+  bool result = false;
+  while (it != this->block_end && (it->index < index || (!(index < it->index) && this->block_it->index < index)))
+  {
+    result = true;
+    while (it != this->block_end && it->index == this->block_it->index)
+    {
+      ++it;
+      ++(this->block_it);
+    }
+    this->operator++();
+    if (this->block_it == this->block_end)
+      break;
+    it = this->block_it;
+    if (it != this->block_end)
+      ++it;
+  }
+  
+  return result;
+}
+
 
 template< typename TIndex, typename TRangeIterator >
 const File_Blocks_Range_Iterator< TIndex, TRangeIterator >&

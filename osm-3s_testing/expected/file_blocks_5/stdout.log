@@ -44,3 +44,32 @@ Predicted size 508, real size 105 bytes, first block size 101 bytes, first index
 Reading blocks with indices \emptyset ...
 ... all blocks read.
 This block of read tests is complete.
+Read test
+Reading all blocks with a Flat_Iterator ...
+... skipping to index 10 ... true
+Predicted size 508, real size 26 bytes, first block size 22 bytes, first index 10
+... skipping to index 55 ... false
+Predicted size 508, real size 67 bytes, first block size 63 bytes, first index 51
+... skipping to index 65 ... true
+Predicted size 508, real size 81 bytes, first block size 77 bytes, first index 65
+Predicted size 508, real size 105 bytes, first block size 101 bytes, first index 89
+... all blocks read.
+Reading all blocks with a Discrete_Iterator ...
+... skipping to index 10 ... true
+Predicted size 508, real size 26 bytes, first block size 22 bytes, first index 10
+... skipping to index 55 ... false
+Predicted size 508, real size 67 bytes, first block size 63 bytes, first index 51
+... skipping to index 65 ... true
+Predicted size 508, real size 81 bytes, first block size 77 bytes, first index 65
+Predicted size 508, real size 105 bytes, first block size 101 bytes, first index 89
+... all blocks read.
+Reading all blocks with a Range_Iterator ...
+... skipping to index 10 ... true
+Predicted size 508, real size 26 bytes, first block size 22 bytes, first index 10
+... skipping to index 55 ... false
+Predicted size 508, real size 67 bytes, first block size 63 bytes, first index 51
+... skipping to index 65 ... true
+Predicted size 508, real size 81 bytes, first block size 77 bytes, first index 65
+Predicted size 508, real size 105 bytes, first block size 101 bytes, first index 89
+... all blocks read.
+This block of read tests is complete.

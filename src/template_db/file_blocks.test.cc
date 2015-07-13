@@ -337,11 +337,13 @@ struct Compressed_Test_File : File_Properties
 
 //-----------------------------------------------------------------------------
 
+
 void read_loop
     (File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
-     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator& it)
+     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator& it,
+     int max_count)
 {
-  while (!(it == blocks.flat_end()))
+  while (--max_count != 0 && !(it == blocks.flat_end()))
   {
     cout<<"Predicted size "<<blocks.answer_size(it);
     uint8* data((uint8*)(blocks.read_block(it)));
@@ -360,11 +362,13 @@ void read_loop
   }
 }
 
+
 void read_loop
   (File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
-   File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator& it)
+   File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator& it,
+   int max_count)
 {
-  while (!(it == blocks.discrete_end()))
+  while (--max_count != 0 && !(it == blocks.discrete_end()))
   {
     uint32 answer_size(blocks.answer_size(it));
     cout<<"Predicted size "<<answer_size;
@@ -387,11 +391,14 @@ void read_loop
   }
 }
 
+
 void read_loop
   (File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
-   File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Range_Iterator& it)
+   File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Range_Iterator& it,
+   int max_count)
 {
-  while (!(it == blocks.range_end()))
+  // On purpose only positive values for the counter cause a loop break.
+  while (--max_count != 0 && !(it == blocks.range_end()))
   {
     cout<<"Predicted size "<<blocks.answer_size(it);
     uint8* data((uint8*)(blocks.read_block(it)));
@@ -432,7 +439,7 @@ void read_test()
     cout<<"Reading all blocks ...\n";
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
 	fit(blocks.flat_begin());
-    read_loop(blocks, fit);
+    read_loop(blocks, fit, 0);
     cout<<"... all blocks read.\n";
 
     list< IntIndex > index_list;
@@ -441,7 +448,7 @@ void read_test()
     cout<<"Reading blocks with indices {0, 9, ..., 99} ...\n";
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
 	it(blocks.discrete_begin(index_list.begin(), index_list.end()));
-    read_loop(blocks, it);
+    read_loop(blocks, it, 0);
     cout<<"... all blocks read.\n";
   
     index_list.clear();
@@ -449,7 +456,7 @@ void read_test()
       index_list.push_back(&i);
     cout<<"Reading blocks with indices {0, 1, ..., 9} ...\n";
     it = blocks.discrete_begin(index_list.begin(), index_list.end());
-    read_loop(blocks, it);
+    read_loop(blocks, it, 0);
     cout<<"... all blocks read.\n";
 
     list< pair< IntIndex, IntIndex > > range_list;
@@ -459,7 +466,7 @@ void read_test()
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Range_Iterator
 	rit(blocks.range_begin
 	(IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end())));
-    read_loop(blocks, rit);
+    read_loop(blocks, rit, 0);
     cout<<"... all blocks read.\n";
   
     index_list.clear();
@@ -467,7 +474,7 @@ void read_test()
       index_list.push_back(&i);
     cout<<"Reading blocks with indices {90, 91, ..., 99} ...\n";
     it = blocks.discrete_begin(index_list.begin(), index_list.end());
-    read_loop(blocks, it);
+    read_loop(blocks, it, 0);
     cout<<"... all blocks read.\n";
   
     range_list.clear();
@@ -477,7 +484,7 @@ void read_test()
     cout<<"Reading blocks with indices [90, 100[ ...\n";
     rit = blocks.range_begin
 	(IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end()));
-    read_loop(blocks, rit);
+    read_loop(blocks, rit, 0);
     cout<<"... all blocks read.\n";
   
     index_list.clear();
@@ -485,7 +492,7 @@ void read_test()
     index_list.push_back(&foo);
     cout<<"Reading blocks with index 50 ...\n";
     it = blocks.discrete_begin(index_list.begin(), index_list.end());
-    read_loop(blocks, it);
+    read_loop(blocks, it, 0);
     cout<<"... all blocks read.\n";
   
     range_list.clear();
@@ -495,7 +502,7 @@ void read_test()
     cout<<"Reading blocks with indices [50, 51[ ...\n";
     rit = blocks.range_begin
 	(IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end()));
-    read_loop(blocks, rit);
+    read_loop(blocks, rit, 0);
     cout<<"... all blocks read.\n";
   
     range_list.clear();
@@ -511,13 +518,133 @@ void read_test()
     cout<<"Reading blocks with indices [0,10[\\cup [50, 51[\\cup [90, 100[ ...\n";
     rit = blocks.range_begin
 	(IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end()));
-    read_loop(blocks, rit);
+    read_loop(blocks, rit, 0);
     cout<<"... all blocks read.\n";
   
     index_list.clear();
     cout<<"Reading blocks with indices \\emptyset ...\n";
     it = blocks.discrete_begin(index_list.begin(), index_list.end());
-    read_loop(blocks, it);
+    read_loop(blocks, it, 0);
+    cout<<"... all blocks read.\n";
+  
+    cout<<"This block of read tests is complete.\n";
+  }
+  catch (File_Error e)
+  {
+    cout<<"File error catched: "
+	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cout<<"(This is the expected correct behaviour)\n";
+  }
+}
+  
+
+void read_and_skip_test_part_1()
+{
+  try
+  {
+    cout<<"Read test\n";
+    Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
+    Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+
+    cout<<"Reading all blocks with a Flat_Iterator ...\n";
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
+	fit(blocks.flat_begin());
+    read_loop(blocks, fit, 1);
+    cout<<"... skipping to index 10 ... "<<(fit.skip_to_index(IntIndex(10)) ? "true" : "false")<<'\n';
+    read_loop(blocks, fit, 2);
+    cout<<"... skipping to index 55 ... "<<(fit.skip_to_index(IntIndex(55)) ? "true" : "false")<<'\n';
+    read_loop(blocks, fit, 2);
+    cout<<"... skipping to index 65 ... "<<(fit.skip_to_index(IntIndex(65)) ? "true" : "false")<<'\n';
+    read_loop(blocks, fit, 0);
+    cout<<"... all blocks read.\n";
+  
+    cout<<"Reading all blocks with a Discrete_Iterator ...\n";
+    list< IntIndex > index_list;
+    for (unsigned int i(0); i < 100; ++i)
+      index_list.push_back(&i);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
+	dit(blocks.discrete_begin(index_list.begin(), index_list.end()));
+    read_loop(blocks, dit, 1);
+    cout<<"... skipping to index 10 ... "<<(dit.skip_to_index(IntIndex(10)) ? "true" : "false")<<'\n';
+    read_loop(blocks, dit, 2);
+    cout<<"... skipping to index 55 ... "<<(dit.skip_to_index(IntIndex(55)) ? "true" : "false")<<'\n';
+    read_loop(blocks, dit, 2);
+    cout<<"... skipping to index 65 ... "<<(dit.skip_to_index(IntIndex(65)) ? "true" : "false")<<'\n';
+    read_loop(blocks, dit, 0);
+    cout<<"... all blocks read.\n";
+  
+    cout<<"Reading all blocks with a Range_Iterator ...\n";
+    list< pair< IntIndex, IntIndex > > range_list;
+    uint32 fool(0), foou(100);
+    range_list.push_back(make_pair(IntIndex(&fool), IntIndex(&foou)));
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Range_Iterator
+	rit(blocks.range_begin(IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end())));
+    read_loop(blocks, rit, 1);
+    cout<<"... skipping to index 10 ... "<<(rit.skip_to_index(IntIndex(10)) ? "true" : "false")<<'\n';
+    read_loop(blocks, rit, 2);
+    cout<<"... skipping to index 55 ... "<<(rit.skip_to_index(IntIndex(55)) ? "true" : "false")<<'\n';
+    read_loop(blocks, rit, 2);
+    cout<<"... skipping to index 65 ... "<<(rit.skip_to_index(IntIndex(65)) ? "true" : "false")<<'\n';
+    read_loop(blocks, rit, 0);
+    cout<<"... all blocks read.\n";
+  
+    cout<<"This block of read tests is complete.\n";
+  }
+  catch (File_Error e)
+  {
+    cout<<"File error catched: "
+	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    cout<<"(This is the expected correct behaviour)\n";
+  }
+}
+
+
+void read_and_skip_test_part_2()
+{
+  try
+  {
+    cout<<"Read test\n";
+    Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
+    Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+
+    cout<<"Reading all blocks with a Flat_Iterator ...\n";
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
+	fit(blocks.flat_begin());
+    read_loop(blocks, fit, 3);
+    cout<<"... skipping to index 90 ... "<<(fit.skip_to_index(IntIndex(90)) ? "true" : "false")<<'\n';
+    read_loop(blocks, fit, 3);
+    cout<<"... skipping to index 100 ... "<<(fit.skip_to_index(IntIndex(100)) ? "true" : "false")<<'\n';
+    read_loop(blocks, fit, 0);
+    cout<<"... all blocks read.\n";
+  
+    cout<<"Reading all blocks with a Discrete_Iterator ...\n";
+    list< IntIndex > index_list;
+    for (unsigned int i(0); i < 100; ++i)
+      index_list.push_back(&i);
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
+	dit(blocks.discrete_begin(index_list.begin(), index_list.end()));
+    read_loop(blocks, dit, 4);
+    cout<<"... skipping to index 90 ... "<<(dit.skip_to_index(IntIndex(90)) ? "true" : "false")<<'\n';
+    read_loop(blocks, dit, 4);
+    cout<<"... skipping to index 100 ... "<<(dit.skip_to_index(IntIndex(100)) ? "true" : "false")<<'\n';
+    read_loop(blocks, dit, 0);
+    cout<<"... all blocks read.\n";
+  
+    cout<<"Reading all blocks with a Range_Iterator ...\n";
+    list< pair< IntIndex, IntIndex > > range_list;
+    uint32 fool(0), foou(100);
+    range_list.push_back(make_pair(IntIndex(&fool), IntIndex(&foou)));
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Range_Iterator
+	rit(blocks.range_begin(IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end())));
+    read_loop(blocks, rit, 3);
+    cout<<"... skipping to index 90 ... "<<(rit.skip_to_index(IntIndex(90)) ? "true" : "false")<<'\n';
+    read_loop(blocks, rit, 3);
+    cout<<"... skipping to index 100 ... "<<(rit.skip_to_index(IntIndex(100)) ? "true" : "false")<<'\n';
+    read_loop(blocks, rit, 0);
     cout<<"... all blocks read.\n";
   
     cout<<"This block of read tests is complete.\n";
@@ -552,7 +679,7 @@ void variable_block_read_test()
     cout<<"Reading all blocks ...\n";
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
 	fit(blocks.flat_begin());
-    read_loop(blocks, fit);
+    read_loop(blocks, fit, 0);
     cout<<"... all blocks read.\n";
   
     cout<<"This block of read tests is complete.\n";
@@ -587,7 +714,7 @@ void compressed_read_test()
     cout<<"Reading all blocks ...\n";
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
 	fit(blocks.flat_begin());
-    read_loop(blocks, fit);
+    read_loop(blocks, fit, 0);
     cout<<"... all blocks read.\n";
   
     cout<<"This block of read tests is complete.\n";
@@ -627,6 +754,7 @@ uint32 prepare_block(void* block, const list< IntIndex >& indices)
   
   return max_keysize;
 }
+
 
 int main(int argc, char* args[])
 {
@@ -677,7 +805,7 @@ int main(int argc, char* args[])
   }
   if ((test_to_execute == "") || (test_to_execute == "2"))
     read_test();
-  
+
   if ((test_to_execute == "") || (test_to_execute == "3"))
     cout<<"** Test the behaviour for a file with one entry - part 2\n";
   try
@@ -790,7 +918,10 @@ int main(int argc, char* args[])
     cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "5"))
+  {
     read_test();
+    read_and_skip_test_part_1();
+  }
   
   if ((test_to_execute == "") || (test_to_execute == "6"))
     cout<<"** Test to replace blocks\n";
@@ -1083,7 +1214,10 @@ int main(int argc, char* args[])
     cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "12"))
+  {
     read_test();
+    read_and_skip_test_part_2();
+  }
   
   remove((BASE_DIRECTORY
       + Test_File().get_file_name_trunk() + Test_File().get_data_suffix()
