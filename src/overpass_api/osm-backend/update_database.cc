@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
   }
   if (abort)
   {
-    cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--produce-diff]\n";
+    cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--compression_method=(no|gz)]\n";
     return 0;
   }
   
