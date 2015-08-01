@@ -265,7 +265,7 @@ bool is_end(Block_Backend< IntIndex, IntObject >& blocks,
 
 
 template< typename Iterator >
-void read_loop(Block_Backend< IntIndex, IntObject >& blocks, Iterator& it)
+void read_loop(Block_Backend< IntIndex, IntObject >& blocks, Iterator& it, int max_count = 0)
 {
   if (is_end(blocks, it))
   {
@@ -274,7 +274,7 @@ void read_loop(Block_Backend< IntIndex, IntObject >& blocks, Iterator& it)
   }
   IntIndex current_idx(it.index());
   std::cout<<"Index "<<current_idx.val()<<": ";
-  while (!is_end(blocks, it))
+  while (--max_count != 0 && !is_end(blocks, it))
   {
     if (!(current_idx == it.index()))
     {
@@ -476,6 +476,274 @@ void read_test(unsigned int step)
   }
 }
 
+
+void read_test_skip_part_1(unsigned int step)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
+    Test_File tf;
+    Block_Backend< IntIndex, IntObject >
+	db_backend(transaction.data_index(&tf));
+    
+    std::cout<<"Read and skip test\n";
+  
+    std::cout<<"Reading all blocks ...\n";
+    Block_Backend< IntIndex, IntObject >::Flat_Iterator fit(db_backend.flat_begin());
+    read_loop(db_backend, fit, 2);
+    std::cout<<"... skip to index 9 ...\n";
+    fit.skip_to_index(IntIndex(9));
+    read_loop(db_backend, fit, 2);
+    std::cout<<"... skip to index 21 ...\n";
+    fit.skip_to_index(IntIndex(21));
+    read_loop(db_backend, fit, 2);
+    std::cout<<"... skip to index 99 ...\n";
+    fit.skip_to_index(IntIndex(99));
+    read_loop(db_backend, fit, 0);
+    std::cout<<"... all blocks read.\n";
+
+    std::set< IntIndex > index_list;
+    for (unsigned int i(0); i < 100; i += 9)
+      index_list.insert(&i);
+    
+    std::cout<<"Reading blocks with indices {0, 9, ..., 99} ...\n";
+    Block_Backend< IntIndex, IntObject >::Discrete_Iterator
+	dit(db_backend.discrete_begin(index_list.begin(), index_list.end()));
+    read_loop(db_backend, dit, 2);
+    std::cout<<"... skip to index 9 ...\n";
+    dit.skip_to_index(IntIndex(9));
+    read_loop(db_backend, dit, 2);
+    std::cout<<"... skip to index 21 ...\n";
+    dit.skip_to_index(IntIndex(21));
+    read_loop(db_backend, dit, 2);
+    std::cout<<"... skip to index 99 ...\n";
+    dit.skip_to_index(IntIndex(99));
+    read_loop(db_backend, dit, 0);
+    std::cout<<"... all blocks read.\n";
+  
+    index_list.clear();
+    for (unsigned int i(0); i < 10; ++i)
+      index_list.insert(&i);
+    std::cout<<"Reading blocks with indices {0, 1, ..., 9} ...\n";
+    dit = db_backend.discrete_begin(index_list.begin(), index_list.end());
+    read_loop(db_backend, dit, 2);
+    std::cout<<"... skip to index 9 ...\n";
+    dit.skip_to_index(IntIndex(9));
+    read_loop(db_backend, dit, 2);
+    std::cout<<"... skip to index 21 ...\n";
+    dit.skip_to_index(IntIndex(21));
+    read_loop(db_backend, dit, 2);
+    std::cout<<"... skip to index 99 ...\n";
+    dit.skip_to_index(IntIndex(99));
+    read_loop(db_backend, dit, 0);
+    std::cout<<"... all blocks read.\n";
+
+    std::set< std::pair< IntIndex, IntIndex > > range_list;
+    uint32 fool(0), foou(10);
+    range_list.insert(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
+    std::cout<<"Reading blocks with indices [0, 10[ ...\n";
+    Block_Backend< IntIndex, IntObject >::Range_Iterator
+	rit(db_backend.range_begin
+	(Default_Range_Iterator< IntIndex >(range_list.begin()),
+	 Default_Range_Iterator< IntIndex >(range_list.end())));
+    read_loop(db_backend, rit, 2);
+    std::cout<<"... skip to index 9 ...\n";
+    rit.skip_to_index(IntIndex(9));
+    read_loop(db_backend, rit, 2);
+    std::cout<<"... skip to index 21 ...\n";
+    rit.skip_to_index(IntIndex(21));
+    read_loop(db_backend, rit, 2);
+    std::cout<<"... skip to index 99 ...\n";
+    rit.skip_to_index(IntIndex(99));
+    read_loop(db_backend, rit, 0);
+    std::cout<<"... all blocks read.\n";
+  
+    index_list.clear();
+    for (unsigned int i(90); i < 100; ++i)
+      index_list.insert(&i);
+    std::cout<<"Reading blocks with indices {90, 91, ..., 99} ...\n";
+    dit = db_backend.discrete_begin(index_list.begin(), index_list.end());
+    read_loop(db_backend, dit, 2);
+    std::cout<<"... skip to index 9 ...\n";
+    dit.skip_to_index(IntIndex(9));
+    read_loop(db_backend, dit, 2);
+    std::cout<<"... skip to index 21 ...\n";
+    dit.skip_to_index(IntIndex(21));
+    read_loop(db_backend, dit, 2);
+    std::cout<<"... skip to index 99 ...\n";
+    dit.skip_to_index(IntIndex(99));
+    read_loop(db_backend, dit, 0);
+    std::cout<<"... all blocks read.\n";
+  
+    range_list.clear();
+    fool = 90;
+    foou = 100;
+    range_list.insert(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
+    std::cout<<"Reading blocks with indices [90, 100[ ...\n";
+    rit = db_backend.range_begin
+	(Default_Range_Iterator< IntIndex >(range_list.begin()),
+	 Default_Range_Iterator< IntIndex >(range_list.end()));
+    read_loop(db_backend, rit, 2);
+    std::cout<<"... skip to index 9 ...\n";
+    rit.skip_to_index(IntIndex(9));
+    read_loop(db_backend, rit, 2);
+    std::cout<<"... skip to index 21 ...\n";
+    rit.skip_to_index(IntIndex(21));
+    read_loop(db_backend, rit, 2);
+    std::cout<<"... skip to index 99 ...\n";
+    rit.skip_to_index(IntIndex(99));
+    read_loop(db_backend, rit, 0);
+    std::cout<<"... all blocks read.\n";
+  
+    index_list.clear();
+    uint32 foo(50);
+    index_list.insert(&foo);
+    std::cout<<"Reading blocks with index 50 ...\n";
+    dit = db_backend.discrete_begin(index_list.begin(), index_list.end());
+    read_loop(db_backend, dit, 2);
+    std::cout<<"... skip to index 9 ...\n";
+    dit.skip_to_index(IntIndex(9));
+    read_loop(db_backend, dit, 2);
+    std::cout<<"... skip to index 21 ...\n";
+    dit.skip_to_index(IntIndex(21));
+    read_loop(db_backend, dit, 2);
+    std::cout<<"... skip to index 99 ...\n";
+    dit.skip_to_index(IntIndex(99));
+    read_loop(db_backend, dit, 0);
+    std::cout<<"... all blocks read.\n";
+  
+    range_list.clear();
+    fool = 50;
+    foou = 51;
+    range_list.insert(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
+    std::cout<<"Reading blocks with indices [50, 51[ ...\n";
+    rit = db_backend.range_begin
+	(Default_Range_Iterator< IntIndex >(range_list.begin()),
+	 Default_Range_Iterator< IntIndex >(range_list.end()));
+    read_loop(db_backend, rit, 2);
+    std::cout<<"... skip to index 9 ...\n";
+    rit.skip_to_index(IntIndex(9));
+    read_loop(db_backend, rit, 2);
+    std::cout<<"... skip to index 21 ...\n";
+    rit.skip_to_index(IntIndex(21));
+    read_loop(db_backend, rit, 2);
+    std::cout<<"... skip to index 99 ...\n";
+    rit.skip_to_index(IntIndex(99));
+    read_loop(db_backend, rit, 0);
+    std::cout<<"... all blocks read.\n";
+  
+    range_list.clear();
+    fool = 0;
+    foou = 10;
+    range_list.insert(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
+    fool = 50;
+    foou = 51;
+    range_list.insert(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
+    fool = 90;
+    foou = 100;
+    range_list.insert(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
+    std::cout<<"Reading blocks with indices [0,10[\\cup [50, 51[\\cup [90, 100[ ...\n";
+    rit = db_backend.range_begin
+	(Default_Range_Iterator< IntIndex >(range_list.begin()),
+	 Default_Range_Iterator< IntIndex >(range_list.end()));
+    read_loop(db_backend, rit, 2);
+    std::cout<<"... skip to index 9 ...\n";
+    rit.skip_to_index(IntIndex(9));
+    read_loop(db_backend, rit, 2);
+    std::cout<<"... skip to index 21 ...\n";
+    rit.skip_to_index(IntIndex(21));
+    read_loop(db_backend, rit, 2);
+    std::cout<<"... skip to index 99 ...\n";
+    rit.skip_to_index(IntIndex(99));
+    read_loop(db_backend, rit, 0);
+    std::cout<<"... all blocks read.\n";
+  
+    std::cout<<"This block of read and skip tests is complete.\n";
+  }
+  catch (File_Error& e)
+  {
+    std::cout<<"File error catched in part "<<step<<": "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    std::cout<<"(This is unexpected)\n";
+    
+    throw;
+  }
+}
+
+
+void read_test_skip_part_2(unsigned int step)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
+    Test_File tf;
+    Block_Backend< IntIndex, IntObject >
+	db_backend(transaction.data_index(&tf));
+
+// sktp_to_index:
+// - in 4: skip to next index 9, skip to nonexist 21, skip close to end 99 (with all variants)
+// - in 9: skip between blocks to 49, skip beyond end 100, (0, 48, 50, 99), [47, 52[
+    
+    std::cout<<"Read and skip test\n";
+  
+    std::cout<<"Reading all blocks ...\n";
+    Block_Backend< IntIndex, IntObject >::Flat_Iterator fit(db_backend.flat_begin());
+    read_loop(db_backend, fit, 2);
+    std::cout<<"... skip to index 49 ...\n";
+    fit.skip_to_index(IntIndex(49));
+    read_loop(db_backend, fit, 2);
+    std::cout<<"... skip to index 100 ...\n";
+    fit.skip_to_index(IntIndex(100));
+    read_loop(db_backend, fit, 0);
+    std::cout<<"... all blocks read.\n";
+
+    std::set< IntIndex > index_list;
+    index_list.insert(0);
+    index_list.insert(48);
+    index_list.insert(50);
+    index_list.insert(99);
+    
+    std::cout<<"Reading blocks with indices {0, 48, 50, 99} ...\n";
+    Block_Backend< IntIndex, IntObject >::Discrete_Iterator
+	dit(db_backend.discrete_begin(index_list.begin(), index_list.end()));
+    read_loop(db_backend, dit, 2);
+    std::cout<<"... skip to index 49 ...\n";
+    dit.skip_to_index(IntIndex(49));
+    read_loop(db_backend, dit, 2);
+    std::cout<<"... skip to index 100 ...\n";
+    dit.skip_to_index(IntIndex(100));
+    read_loop(db_backend, dit, 0);
+    std::cout<<"... all blocks read.\n";
+  
+    std::set< std::pair< IntIndex, IntIndex > > range_list;
+    range_list.insert(std::make_pair(IntIndex(47), IntIndex(52)));
+    std::cout<<"Reading blocks with indices [47, 52[ ...\n";
+    Block_Backend< IntIndex, IntObject >::Range_Iterator
+	rit(db_backend.range_begin
+	(Default_Range_Iterator< IntIndex >(range_list.begin()),
+	 Default_Range_Iterator< IntIndex >(range_list.end())));
+    read_loop(db_backend, rit, 2);
+    std::cout<<"... skip to index 49 ...\n";
+    rit.skip_to_index(IntIndex(49));
+    read_loop(db_backend, rit, 2);
+    std::cout<<"... skip to index 100 ...\n";
+    rit.skip_to_index(IntIndex(100));
+    read_loop(db_backend, rit, 0);
+    std::cout<<"... all blocks read.\n";
+  
+    std::cout<<"This block of read and skip tests is complete.\n";
+  }
+  catch (File_Error& e)
+  {
+    std::cout<<"File error catched in part "<<step<<": "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    std::cout<<"(This is unexpected)\n";
+    
+    throw;
+  }
+}
+
+
 int main(int argc, char* args[])
 {
   string test_to_execute;
@@ -537,7 +805,10 @@ int main(int argc, char* args[])
   
   fill_db(to_delete, to_insert, 6);
   if ((test_to_execute == "") || (test_to_execute == "4"))
+  {
     read_test(4);
+    read_test_skip_part_1(4);
+  }
   
   if ((test_to_execute == "") || (test_to_execute == "5"))
     std::cout<<"** Delete an item\n";
@@ -609,7 +880,10 @@ int main(int argc, char* args[])
   
   fill_db(to_delete, to_insert, 16);
   if ((test_to_execute == "") || (test_to_execute == "9"))
+  {
     read_test(9);
+    read_test_skip_part_2(9);
+  }
   
   if ((test_to_execute == "") || (test_to_execute == "10"))
     std::cout<<"** Blow up further the same index\n";
