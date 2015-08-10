@@ -5,32 +5,32 @@ dist_testbin_SCRIPTS = apply_osc.test.sh run_testsuite.sh run_testsuite_template
 expat_cc = ../expat/expat_justparse_interface.cc
 settings_cc = ../overpass_api/core/settings.cc
 output_cc = ../overpass_api/frontend/output.cc
-statements_cc = ../overpass_api/statements/statement.cc ../overpass_api/statements/area_query.cc ../overpass_api/osm-backend/area_updater.cc ../overpass_api/statements/around.cc ../overpass_api/statements/bbox_query.cc ../overpass_api/statements/changed.cc ../overpass_api/statements/coord_query.cc ../overpass_api/statements/difference.cc ../overpass_api/statements/foreach.cc ../overpass_api/statements/id_query.cc ../overpass_api/statements/item.cc ../overpass_api/statements/make_area.cc ../overpass_api/statements/map_to_area.cc ../overpass_api/statements/newer.cc ../overpass_api/statements/osm_script.cc ../overpass_api/statements/pivot.cc ../overpass_api/statements/polygon_query.cc ../overpass_api/statements/print.cc ../overpass_api/statements/query.cc ../overpass_api/statements/recurse.cc ../overpass_api/statements/union.cc ../overpass_api/statements/user.cc ../overpass_api/frontend/print_target.cc ../expat/escape_xml.cc ../overpass_api/data/collect_members.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
+statements_cc = ../overpass_api/statements/statement.cc ../overpass_api/statements/area_query.cc ../overpass_api/osm-backend/area_updater.cc ../overpass_api/statements/around.cc ../overpass_api/statements/bbox_query.cc ../overpass_api/statements/changed.cc ../overpass_api/statements/coord_query.cc ../overpass_api/statements/difference.cc ../overpass_api/statements/foreach.cc ../overpass_api/statements/id_query.cc ../overpass_api/statements/item.cc ../overpass_api/statements/make_area.cc ../overpass_api/statements/map_to_area.cc ../overpass_api/statements/newer.cc ../overpass_api/statements/osm_script.cc ../overpass_api/statements/pivot.cc ../overpass_api/statements/polygon_query.cc ../overpass_api/statements/print.cc ../overpass_api/statements/query.cc ../overpass_api/statements/recurse.cc ../overpass_api/statements/union.cc ../overpass_api/statements/user.cc ../overpass_api/frontend/print_target.cc ../expat/escape_xml.cc ../overpass_api/data/collect_members.cc ../template_db/transaction.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
 
 testenv_cc = ${settings_cc} ../overpass_api/dispatch/resource_manager.cc ../overpass_api/frontend/console_output.cc ../overpass_api/frontend/user_interface.cc ../overpass_api/frontend/output.cc ../overpass_api/frontend/cgi-helper.cc
 
-file_blocks_SOURCES = ../template_db/file_blocks.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
+file_blocks_SOURCES = ../template_db/file_blocks.test.cc ../template_db/transaction.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
 file_blocks_LDADD = -lz
 
-block_backend_SOURCES = ../template_db/block_backend.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
+block_backend_SOURCES = ../template_db/block_backend.test.cc ../template_db/transaction.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
 block_backend_LDADD = -lz
 
-random_file_SOURCES = ../template_db/random_file.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
+random_file_SOURCES = ../template_db/random_file.test.cc ../template_db/transaction.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
 random_file_LDADD = -lz
 
-node_updater_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/osm-backend/area_updater.cc ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm-backend/basic_updater.cc ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/node_updater.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
+node_updater_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/osm-backend/area_updater.cc ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm-backend/basic_updater.cc ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/node_updater.test.cc ../template_db/transaction.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
 node_updater_LDADD = -lexpat -lz
-way_updater_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/osm-backend/area_updater.cc ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm-backend/basic_updater.cc ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/way_updater.cc ../overpass_api/osm-backend/way_updater.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
+way_updater_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/osm-backend/area_updater.cc ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm-backend/basic_updater.cc ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/way_updater.cc ../overpass_api/osm-backend/way_updater.test.cc ../template_db/transaction.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
 way_updater_LDADD = -lexpat -lz
-relation_updater_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/osm-backend/area_updater.cc ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm-backend/basic_updater.cc ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/way_updater.cc ../overpass_api/osm-backend/relation_updater.cc ../overpass_api/osm-backend/relation_updater.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
+relation_updater_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/osm-backend/area_updater.cc ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm-backend/basic_updater.cc ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/way_updater.cc ../overpass_api/osm-backend/relation_updater.cc ../overpass_api/osm-backend/relation_updater.test.cc ../template_db/transaction.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
 relation_updater_LDADD = -lexpat -lz
 #complete_updater_SOURCES = ${expat_cc} ${settings_cc} ../overpass_api/osm-backend/complete_updater.test.cc 
 #complete_updater_LDADD = -lexpat
-diff_updater_SOURCES = ${settings_cc} ../overpass_api/osm-backend/diff_updater.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
+diff_updater_SOURCES = ${settings_cc} ../overpass_api/osm-backend/diff_updater.test.cc ../template_db/transaction.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
 diff_updater_LDADD = -lz
-compare_osm_base_maps_SOURCES = ${settings_cc} ../overpass_api/osm-backend/compare_osm_base_maps.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
+compare_osm_base_maps_SOURCES = ${settings_cc} ../overpass_api/osm-backend/compare_osm_base_maps.test.cc ../template_db/transaction.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
 compare_osm_base_maps_LDADD = -lz
-dump_database_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/osm-backend/area_updater.cc ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm-backend/basic_updater.cc ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/way_updater.cc ../overpass_api/osm-backend/relation_updater.cc ../overpass_api/osm-backend/dump_database.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
+dump_database_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/osm-backend/area_updater.cc ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm-backend/basic_updater.cc ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/way_updater.cc ../overpass_api/osm-backend/relation_updater.cc ../overpass_api/osm-backend/dump_database.test.cc ../template_db/transaction.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
 dump_database_LDADD = -lexpat -lz
 consistency_check_SOURCES = ../overpass_api/dispatch/consistency_check.cc ${statements_cc} ${testenv_cc} ../overpass_api/dispatch/scripting_core.cc ../overpass_api/dispatch/dispatcher_stub.cc ../overpass_api/frontend/map_ql_parser.cc ../overpass_api/statements/statement_dump.cc ../expat/map_ql_input.cc ../template_db/dispatcher_client.cc
 # consistency_check_SOURCES = ../overpass_api/dispatch/consistency_check.cc ${statements_cc} ../overpass_api/core/settings.cc ../overpass_api/frontend/console_output.cc ../overpass_api/dispatch/scripting_core.cc ../template_db/dispatcher.cc
@@ -70,5 +70,5 @@ union_SOURCES = ../overpass_api/statements/union.test.cc ${statements_cc} ${test
 union_LDADD = -lz
 #benchmark_SOURCES = ../overpass_api/statements/benchmark.cc ${statements_cc} ${testenv_cc}
 #benchmark_LDADD = 
-test_dispatcher_SOURCES = ../template_db/dispatcher.test.cc ../template_db/dispatcher_client.cc ../template_db/dispatcher.cc ../template_db/file_tools.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
+test_dispatcher_SOURCES = ../template_db/dispatcher.test.cc ../template_db/dispatcher_client.cc ../template_db/dispatcher.cc ../template_db/file_tools.cc ../template_db/transaction.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc
 test_dispatcher_LDADD = -lz
