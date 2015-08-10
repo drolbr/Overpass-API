@@ -54,7 +54,7 @@ std::set< pair< Tag_Index_Global, Tag_Index_Global > > get_regk_req
   std::set< pair< Tag_Index_Global, Tag_Index_Global > > result;
   
   Block_Backend< Uint32_Index, String_Object > db
-      (rman.get_transaction()->data_index(key_file_properties< Skeleton >()));
+      (rman.get_transaction()->data_index(*key_file_properties< Skeleton >()));
   for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
        it(db.flat_begin()); !(it == db.flat_end()); ++it)
   {

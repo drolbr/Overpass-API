@@ -229,7 +229,7 @@ void fill_db
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     Block_Backend< IntIndex, IntObject > db_backend
-        (transaction.data_index(&tf));
+        (transaction.data_index(tf));
     db_backend.update(to_delete, to_insert);
   }
   catch (File_Error& e)
@@ -316,8 +316,7 @@ void read_test(unsigned int step)
   {
     Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
     Test_File tf;
-    Block_Backend< IntIndex, IntObject >
-	db_backend(transaction.data_index(&tf));
+    Block_Backend< IntIndex, IntObject > db_backend(transaction.data_index(tf));
     
     std::cout<<"Read test\n";
   
@@ -483,8 +482,7 @@ void read_test_skip_part_1(unsigned int step)
   {
     Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
     Test_File tf;
-    Block_Backend< IntIndex, IntObject >
-	db_backend(transaction.data_index(&tf));
+    Block_Backend< IntIndex, IntObject > db_backend(transaction.data_index(tf));
     
     std::cout<<"Read and skip test\n";
   
@@ -677,8 +675,7 @@ void read_test_skip_part_2(unsigned int step)
   {
     Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
     Test_File tf;
-    Block_Backend< IntIndex, IntObject >
-	db_backend(transaction.data_index(&tf));
+    Block_Backend< IntIndex, IntObject > db_backend(transaction.data_index(tf));
 
 // sktp_to_index:
 // - in 4: skip to next index 9, skip to nonexist 21, skip close to end 99 (with all variants)
@@ -760,8 +757,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
     Test_File tf;
-    Block_Backend< IntIndex, IntIndex > db_backend
-        (transaction.data_index(&tf));
+    Block_Backend< IntIndex, IntIndex > db_backend(transaction.data_index(tf));
   }
   catch (File_Error e)
   {

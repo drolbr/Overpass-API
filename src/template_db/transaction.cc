@@ -53,18 +53,17 @@ void Nonsynced_Transaction::flush()
 }
 
 
-File_Blocks_Index_Base* Nonsynced_Transaction::data_index
-    (const File_Properties* fp)
+File_Blocks_Index_Base* Nonsynced_Transaction::data_index(const File_Properties& fp)
 { 
   std::map< const File_Properties*, std::pair< File_Blocks_Index_Base*, Block_Backend_Cache_Base* > >::iterator
-      it = data_files.find(fp);
+      it = data_files.find(&fp);
   if (it != data_files.end())
     return it->second.first;
 
-  File_Blocks_Index_Base* data_index = fp->new_data_index
+  File_Blocks_Index_Base* data_index = fp.new_data_index
       (writeable, use_shadow, db_dir, file_name_extension);
   if (data_index != 0)
-    data_files[fp] = std::pair< File_Blocks_Index_Base*, Block_Backend_Cache_Base* >(data_index, 0);
+    data_files[&fp] = std::pair< File_Blocks_Index_Base*, Block_Backend_Cache_Base* >(data_index, 0);
   return data_index;
 }
 

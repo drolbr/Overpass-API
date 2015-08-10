@@ -30,7 +30,6 @@
 #include "node_updater.h"
 #include "way_updater.h"
 
-using namespace std;
 
 /**
  * Tests the library way_updater with a sample OSM file
@@ -224,7 +223,7 @@ int main(int argc, char* args[])
     
     // check update_members - compare both files for the result
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-	(transaction.data_index(osm_base_settings().WAYS));
+	(transaction.data_index(*osm_base_settings().WAYS));
     for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
 	 it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
     {
@@ -236,7 +235,7 @@ int main(int argc, char* args[])
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Local, Uint32_Index > ways_local_db
-	(transaction.data_index(osm_base_settings().WAY_TAGS_LOCAL));
+	(transaction.data_index(*osm_base_settings().WAY_TAGS_LOCAL));
     for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(ways_local_db.flat_begin()); !(it == ways_local_db.flat_end()); ++it)
     {
@@ -246,7 +245,7 @@ int main(int argc, char* args[])
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > > ways_global_db
-	(transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL));
+	(transaction.data_index(*osm_base_settings().WAY_TAGS_GLOBAL));
     for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > >::Flat_Iterator
 	 it(ways_global_db.flat_begin()); !(it == ways_global_db.flat_end()); ++it)
     {

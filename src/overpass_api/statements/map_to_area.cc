@@ -19,7 +19,6 @@
 #include "../../template_db/block_backend.h"
 #include "map_to_area.h"
 
-using namespace std;
 
 Generic_Statement_Maker< Map_To_Area_Statement > Map_To_Area_Statement::statement_maker("map-to-area");
 
@@ -118,7 +117,7 @@ void collect_elems_flat(Resource_Manager& rman,
   vector<Area_Skeleton::Id_Type>::const_iterator upper = max_element(ids.begin(), ids.end());
 
   Block_Backend< Uint31_Index, Area_Skeleton > elems_db
-      (rman.get_transaction()->data_index(area_settings().AREAS));
+      (rman.get_transaction()->data_index(*area_settings().AREAS));
   for (Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
       it = elems_db.flat_begin(); !(it == elems_db.flat_end()); ++it)
   {

@@ -299,7 +299,7 @@ void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
 {
   uint32 count = 0;
   Block_Backend< Index, Object, typename Container::const_iterator > db
-      (rman.get_transaction()->data_index(&file_properties));
+      (rman.get_transaction()->data_index(file_properties));
   for (typename Block_Backend< Index, Object, typename Container
       ::const_iterator >::Discrete_Iterator
       it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
@@ -323,7 +323,7 @@ void collect_items_discrete(Transaction& transaction,
                    map< Index, vector< Object > >& result)
 {
   Block_Backend< Index, Object, typename Container::const_iterator > db
-      (transaction.data_index(&file_properties));
+      (transaction.data_index(file_properties));
   for (typename Block_Backend< Index, Object, typename Container
       ::const_iterator >::Discrete_Iterator
       it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
@@ -341,9 +341,9 @@ void collect_items_discrete_by_timestamp(const Statement* stmt, Resource_Manager
                    map< Index, vector< Attic< Object > > >& attic_result)
 {
   Block_Backend< Index, Object, typename Container::const_iterator > current_db
-      (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
+      (rman.get_transaction()->data_index(*current_skeleton_file_properties< Object >()));
   Block_Backend< Index, Attic< typename Object::Delta >, typename Container::const_iterator > attic_db
-      (rman.get_transaction()->data_index(attic_skeleton_file_properties< Object >()));
+      (rman.get_transaction()->data_index(*attic_skeleton_file_properties< Object >()));
   collect_items_by_timestamp(stmt, rman,
       current_db.discrete_begin(req.begin(), req.end()), current_db.discrete_end(),
       attic_db.discrete_begin(req.begin(), req.end()), attic_db.discrete_end(),
@@ -359,7 +359,7 @@ void collect_items_range(const Statement* stmt, Resource_Manager& rman,
 {
   uint32 count = 0;
   Block_Backend< Index, Object, typename Container::const_iterator > db
-      (rman.get_transaction()->data_index(&file_properties));
+      (rman.get_transaction()->data_index(file_properties));
   for (typename Block_Backend< Index, Object, typename Container
       ::const_iterator >::Range_Iterator
       it(db.range_begin(req.begin(), req.end()));
@@ -383,9 +383,9 @@ void collect_items_range_by_timestamp(const Statement* stmt, Resource_Manager& r
                    map< Index, vector< Attic< Object > > >& attic_result)
 {
   Block_Backend< Index, Object, typename Container::const_iterator > current_db
-      (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
+      (rman.get_transaction()->data_index(*current_skeleton_file_properties< Object >()));
   Block_Backend< Index, Attic< typename Object::Delta >, typename Container::const_iterator > attic_db
-      (rman.get_transaction()->data_index(attic_skeleton_file_properties< Object >()));
+      (rman.get_transaction()->data_index(*attic_skeleton_file_properties< Object >()));
   collect_items_by_timestamp(stmt, rman,
       current_db.range_begin(req.begin(), req.end()), current_db.range_end(),
       attic_db.range_begin(req.begin(), req.end()), attic_db.range_end(),
@@ -400,7 +400,7 @@ void collect_items_flat(const Statement& stmt, Resource_Manager& rman,
 {
   uint32 count = 0;
   Block_Backend< Index, Object > db
-      (rman.get_transaction()->data_index(&file_properties));
+      (rman.get_transaction()->data_index(file_properties));
   for (typename Block_Backend< Index, Object >::Flat_Iterator
       it(db.flat_begin()); !(it == db.flat_end()); ++it)
   {
@@ -422,9 +422,9 @@ void collect_items_flat_by_timestamp(const Statement& stmt, Resource_Manager& rm
                    map< Index, vector< Attic< Object > > >& attic_result)
 {
   Block_Backend< Index, Object > current_db
-      (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
+      (rman.get_transaction()->data_index(*current_skeleton_file_properties< Object >()));
   Block_Backend< Index, Attic< typename Object::Delta > > attic_db
-      (rman.get_transaction()->data_index(attic_skeleton_file_properties< Object >()));
+      (rman.get_transaction()->data_index(*attic_skeleton_file_properties< Object >()));
   collect_items_by_timestamp(&stmt, rman,
       current_db.flat_begin(), current_db.flat_end(),
       attic_db.flat_begin(), attic_db.flat_end(),
@@ -467,7 +467,7 @@ std::vector< Index > get_indexes_
     }
   
     Block_Backend< typename Skeleton::Id_Type, Index > idx_list_db
-        (rman.get_transaction()->data_index(attic_idx_list_properties< Skeleton >()));
+        (rman.get_transaction()->data_index(*attic_idx_list_properties< Skeleton >()));
     for (typename Block_Backend< typename Skeleton::Id_Type, Index >::Discrete_Iterator
         it(idx_list_db.discrete_begin(idx_list_ids.begin(), idx_list_ids.end()));
         !(it == idx_list_db.discrete_end()); ++it)

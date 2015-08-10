@@ -381,7 +381,7 @@ void data_read_test(const Test_File& tf, Transaction& transaction)
   try
   {
     Block_Backend< IntIndex, IntObject >
-        db_backend(transaction.data_index(&tf));
+        db_backend(transaction.data_index(tf));
     
     cout<<"Read test\n";
     vector< bool > footprint = get_data_index_footprint< IntIndex >
@@ -419,7 +419,7 @@ void put_elem(uint32 idx, uint32 val, const Test_File& tf,
   {
     Nonsynced_Transaction transaction(true, true, db_dir, "");
     Block_Backend< IntIndex, IntObject > db_backend
-        (transaction.data_index(&tf));
+        (transaction.data_index(tf));
     db_backend.update(to_delete, to_insert);
   }
   catch (File_Error e)
@@ -1352,7 +1352,7 @@ int main(int argc, char* args[])
       
       Nonsynced_Transaction transaction
           (false, false, dispatcher_client.get_db_dir(), "");
-      transaction.data_index(&test_file);
+      transaction.data_index(test_file);
       
       dispatcher_client.read_idx_finished();
       sync_log("read_idx_finished() done.\n");
@@ -1459,7 +1459,7 @@ int main(int argc, char* args[])
       
       Nonsynced_Transaction transaction
           (false, false, dispatcher_client.get_db_dir(), "");
-      transaction.data_index(&test_file);
+      transaction.data_index(test_file);
       
       dispatcher_client.read_idx_finished();
       sync_log("read_idx_finished() done.\n");

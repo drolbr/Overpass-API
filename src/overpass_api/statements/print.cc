@@ -594,7 +594,7 @@ void Print_Statement::tags_quadtile
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, typename Object::Id_Type > items_db
-      (transaction.data_index(&file_prop));
+      (transaction.data_index(file_prop));
   typename Block_Backend< Tag_Index_Local, typename Object::Id_Type >::Range_Iterator
     tag_it(items_db.range_begin
     (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
@@ -661,7 +661,7 @@ void Print_Statement::tags_quadtile_attic
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, typename Object::Id_Type > current_tags_db
-      (transaction.data_index(current_local_tags_file_properties< Object >()));
+      (transaction.data_index(*current_local_tags_file_properties< Object >()));
   typename Block_Backend< Tag_Index_Local, typename Object::Id_Type >::Range_Iterator
     current_tag_it(current_tags_db.range_begin
     (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
@@ -669,7 +669,7 @@ void Print_Statement::tags_quadtile_attic
       
   // iterate over the result
   Block_Backend< Tag_Index_Local, Attic< typename Object::Id_Type > > attic_tags_db
-      (transaction.data_index(attic_local_tags_file_properties< Object >()));
+      (transaction.data_index(*attic_local_tags_file_properties< Object >()));
   typename Block_Backend< Tag_Index_Local, Attic< typename Object::Id_Type > >::Range_Iterator
     attic_tag_it(attic_tags_db.range_begin
     (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
@@ -897,7 +897,7 @@ void Print_Statement::tags_by_id
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db
-      (transaction.data_index(&file_prop));
+      (transaction.data_index(file_prop));
   for (typename TObject::Id_Type id_pos; id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
   {
     // Disable health_check: This ensures that a result will be always printed completely
@@ -1026,9 +1026,9 @@ void Print_Statement::tags_by_id_attic
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, typename Object::Id_Type > current_tags_db
-      (transaction.data_index(current_local_tags_file_properties< Object >()));
+      (transaction.data_index(*current_local_tags_file_properties< Object >()));
   Block_Backend< Tag_Index_Local, Attic< typename Object::Id_Type > > attic_tags_db
-      (transaction.data_index(attic_local_tags_file_properties< Object >()));
+      (transaction.data_index(*attic_local_tags_file_properties< Object >()));
       
   for (typename Object::Id_Type id_pos; id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
   {
@@ -1620,7 +1620,7 @@ std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Sk
   
   Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
         typename std::vector< Index >::const_iterator >
-      attic_meta_db(rman.get_transaction()->data_index(attic_meta_file_properties< Skeleton >()));
+      attic_meta_db(rman.get_transaction()->data_index(*attic_meta_file_properties< Skeleton >()));
   for (typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
           typename std::vector< Index >::const_iterator >::Discrete_Iterator
       it = attic_meta_db.discrete_begin(idx_set.begin(), idx_set.end());
@@ -1641,7 +1641,7 @@ std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Sk
   // Same thing with current meta data
   Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
           typename std::vector< Index >::const_iterator >
-      meta_db(rman.get_transaction()->data_index(current_meta_file_properties< Skeleton >()));
+      meta_db(rman.get_transaction()->data_index(*current_meta_file_properties< Skeleton >()));
         
   for (typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
           typename std::vector< Index >::const_iterator >::Discrete_Iterator

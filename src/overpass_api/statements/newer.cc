@@ -27,9 +27,6 @@
 #include <sstream>
 #include <vector>
 
-using namespace std;
-
-//-----------------------------------------------------------------------------
 
 class Newer_Constraint : public Query_Constraint
 {

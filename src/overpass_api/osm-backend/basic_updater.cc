@@ -38,7 +38,7 @@ void Key_Storage::flush_keys(Transaction& transaction)
       max_key_id = it->second + 1;
   }
   
-  Block_Backend< Uint32_Index, String_Object > keys_db(transaction.data_index(file_properties));
+  Block_Backend< Uint32_Index, String_Object > keys_db(transaction.data_index(*file_properties));
   keys_db.update(db_to_delete, db_to_insert);
   max_written_key_id = max_key_id;
 }
@@ -46,7 +46,7 @@ void Key_Storage::flush_keys(Transaction& transaction)
 
 void Key_Storage::load_keys(Transaction& transaction)
 {
-  Block_Backend< Uint32_Index, String_Object > keys_db(transaction.data_index(file_properties));
+  Block_Backend< Uint32_Index, String_Object > keys_db(transaction.data_index(*file_properties));
   for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
       it = keys_db.flat_begin(); !(it == keys_db.flat_end()); ++it)
   {

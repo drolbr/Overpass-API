@@ -110,14 +110,14 @@ Meta_Collector< Index, Id_Type >::Meta_Collector
   
   generate_index_query(used_indices, items);
   meta_db = new Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >
-      (transaction.data_index(meta_file_prop));
+      (transaction.data_index(*meta_file_prop));
 	  
   reset();
   
   if (user_data)
   {
     Block_Backend< Uint32_Index, User_Data > user_db
-        (transaction.data_index(meta_settings().USER_DATA));
+        (transaction.data_index(*meta_settings().USER_DATA));
     for (Block_Backend< Uint32_Index, User_Data >::Flat_Iterator it = user_db.flat_begin();
         !(it == user_db.flat_end()); ++it)
       users_[it.object().id] = it.object().name;
@@ -135,7 +135,7 @@ Meta_Collector< Index, Id_Type >::Meta_Collector
     return;
   
   meta_db = new Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >
-      (transaction.data_index(meta_file_prop));
+      (transaction.data_index(*meta_file_prop));
       
   reset();
 }
@@ -264,7 +264,7 @@ const OSM_Element_Metadata_Skeleton< Id_Type >* Meta_Collector< Index, Id_Type >
 inline User_Data_Cache::User_Data_Cache(Transaction& transaction)
 {
   Block_Backend< Uint32_Index, User_Data > user_db
-      (transaction.data_index(meta_settings().USER_DATA));
+      (transaction.data_index(*meta_settings().USER_DATA));
   for (Block_Backend< Uint32_Index, User_Data >::Flat_Iterator it = user_db.flat_begin();
       !(it == user_db.flat_end()); ++it)
     users_[it.object().id] = it.object().name;

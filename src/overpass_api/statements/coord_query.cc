@@ -32,7 +32,6 @@
 #include "../../template_db/block_backend.h"
 #include "coord_query.h"
 
-using namespace std;
 
 bool Coord_Query_Statement::is_used_ = false;
 
@@ -233,7 +232,7 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   Uint31_Index last_idx = req.empty() ? Uint31_Index(0u) : *req.begin();
   
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
-      (rman.get_area_transaction()->data_index(area_settings().AREA_BLOCKS));
+      (rman.get_area_transaction()->data_index(*area_settings().AREA_BLOCKS));
   for (Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
       it(area_blocks_db.discrete_begin(req.begin(), req.end()));
       !(it == area_blocks_db.discrete_end()); ++it)
@@ -303,7 +302,7 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
     idx_req.push_back(*it);
   sort(idx_req.begin(), idx_req.end());
   Block_Backend< Uint31_Index, Area_Skeleton, vector< Uint31_Index >::const_iterator > area_locations_db
-      (rman.get_area_transaction()->data_index(area_settings().AREAS));
+      (rman.get_area_transaction()->data_index(*area_settings().AREAS));
   for (Block_Backend< Uint31_Index, Area_Skeleton, vector< Uint31_Index >::const_iterator >::Discrete_Iterator
       it = area_locations_db.discrete_begin(idx_req.begin(), idx_req.end());
       !(it == area_locations_db.discrete_end()); ++it)

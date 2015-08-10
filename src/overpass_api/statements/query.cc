@@ -208,11 +208,11 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_ids
     return std::vector< std::pair< Id_Type, Uint31_Index > >();
   
   Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > > tags_db
-      (rman.get_transaction()->data_index(&file_prop));
+      (rman.get_transaction()->data_index(file_prop));
   Optional< Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > > > attic_tags_db
       (timestamp == NOW ? 0 :
         new Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >
-        (rman.get_transaction()->data_index(&attic_file_prop)));
+        (rman.get_transaction()->data_index(attic_file_prop)));
   
   // Handle simple Key-Value pairs
   std::vector< std::pair< Id_Type, Uint31_Index > > new_ids;
@@ -301,7 +301,7 @@ vector< Id_Type > Query_Statement::collect_ids
     return vector< Id_Type >();
  
   Block_Backend< Tag_Index_Global, Id_Type > tags_db
-      (rman.get_transaction()->data_index(&file_prop));
+      (rman.get_transaction()->data_index(file_prop));
   
   // Handle simple Key-Value pairs
   vector< Id_Type > new_ids;
@@ -367,11 +367,11 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_non_i
     return std::vector< std::pair< Id_Type, Uint31_Index > >();
  
   Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > > tags_db
-      (rman.get_transaction()->data_index(&file_prop));
+      (rman.get_transaction()->data_index(file_prop));
   Optional< Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > > > attic_tags_db
       (timestamp == NOW ? 0 :
         new Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >
-        (rman.get_transaction()->data_index(&attic_file_prop)));
+        (rman.get_transaction()->data_index(attic_file_prop)));
   
   std::vector< std::pair< Id_Type, Uint31_Index > > new_ids;
 
@@ -443,7 +443,7 @@ vector< Id_Type > Query_Statement::collect_non_ids
     return vector< Id_Type >();
  
   Block_Backend< Tag_Index_Global, Id_Type > tags_db
-      (rman.get_transaction()->data_index(&file_prop));
+      (rman.get_transaction()->data_index(file_prop));
   
   vector< Id_Type > new_ids;
 
@@ -753,7 +753,7 @@ void Query_Statement::filter_by_tags
   uint coarse_count = 0;
   
   Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db
-      (transaction.data_index(&file_prop));
+      (transaction.data_index(file_prop));
   typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
     tag_it(items_db.range_begin
     (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
@@ -794,7 +794,7 @@ void Query_Statement::filter_by_tags
   else
   {
     Block_Backend< Tag_Index_Local, Attic< typename TObject::Id_Type > > attic_items_db
-        (transaction.data_index(attic_file_prop));
+        (transaction.data_index(*attic_file_prop));
     typename Block_Backend< Tag_Index_Local, Attic< typename TObject::Id_Type > >::Range_Iterator
       attic_tag_it(attic_items_db.range_begin
       (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
@@ -900,7 +900,7 @@ void Query_Statement::filter_by_tags
   else
   {
     Block_Backend< Tag_Index_Local, Attic< typename TObject::Id_Type > > attic_items_db
-        (transaction.data_index(attic_file_prop));
+        (transaction.data_index(*attic_file_prop));
     typename Block_Backend< Tag_Index_Local, Attic< typename TObject::Id_Type > >::Range_Iterator
       attic_ntag_it(attic_items_db.range_begin
       (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
@@ -986,7 +986,7 @@ void Query_Statement::filter_by_tags
   uint coarse_count = 0;
   
   Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db
-      (transaction.data_index(&file_prop));
+      (transaction.data_index(file_prop));
   typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
     tag_it(items_db.range_begin
     (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),

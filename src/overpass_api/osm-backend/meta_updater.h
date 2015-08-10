@@ -31,8 +31,6 @@
 #include "../core/settings.h"
 #include "../../template_db/transaction.h"
 
-using namespace std;
-
 
 template< typename Id_Type >  
 struct Meta_Comparator_By_Id {
@@ -231,7 +229,7 @@ Block_Backend_Collection< TIndex, TObject >::Block_Backend_Collection
 {
   for (vector< Transaction* >::const_iterator it = transactions.transactions.begin();
       it != transactions.transactions.end(); ++it)
-    dbs.push_back(new Block_Backend< TIndex, TObject >((*it)->data_index(&file_prop)));  
+    dbs.push_back(new Block_Backend< TIndex, TObject >((*it)->data_index(file_prop)));  
 }
 
 template < typename TIndex, typename TObject >
@@ -279,7 +277,7 @@ void merge_files
 	  if (++item_count > 4*1024*1024)
 	  {
 	    Block_Backend< TIndex, TObject > into_db
-	        (into_transaction.data_index(&file_prop));
+	        (into_transaction.data_index(file_prop));
 	    into_db.update(db_to_delete, db_to_insert);
 	    db_to_insert.clear();
 	    item_count = 0;
@@ -291,7 +289,7 @@ void merge_files
     }
     
     Block_Backend< TIndex, TObject > into_db
-        (into_transaction.data_index(&file_prop));
+        (into_transaction.data_index(file_prop));
     into_db.update(db_to_delete, db_to_insert);
   }
   from_transaction.remove_referred_files(file_prop);

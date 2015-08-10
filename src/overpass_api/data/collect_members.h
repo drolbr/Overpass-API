@@ -28,7 +28,6 @@
 #include <set>
 #include <vector>
 
-using namespace std;
 
 class Resource_Manager;
 class Statement;
@@ -280,7 +279,7 @@ void filter_attic_elements
     std::map< Index, std::vector< typename Skeleton::Id_Type > > deleted_items;
     
     Block_Backend< Index, Attic< typename Skeleton::Id_Type >, typename std::vector< Index >::const_iterator >
-        undeleted_db(rman.get_transaction()->data_index(attic_undeleted_file_properties< Skeleton >()));
+        undeleted_db(rman.get_transaction()->data_index(*attic_undeleted_file_properties< Skeleton >()));
     for (typename Block_Backend< Index, Attic< typename Skeleton::Id_Type >,
             typename std::vector< Index >::const_iterator >
         ::Discrete_Iterator
@@ -350,7 +349,7 @@ void filter_attic_elements
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
             typename std::vector< Index >::const_iterator >
         attic_meta_db(rman.get_transaction()->data_index
-          (attic_meta_file_properties< Skeleton >()));
+          (*attic_meta_file_properties< Skeleton >()));
     for (typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
             typename std::vector< Index >::const_iterator >
         ::Discrete_Iterator
@@ -372,7 +371,7 @@ void filter_attic_elements
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
             typename std::vector< Index >::const_iterator >
         meta_db(rman.get_transaction()->data_index
-          (current_meta_file_properties< Skeleton >()));
+          (*current_meta_file_properties< Skeleton >()));
         
     for (typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
             typename std::vector< Index >::const_iterator >

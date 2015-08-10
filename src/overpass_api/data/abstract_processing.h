@@ -387,7 +387,7 @@ std::pair< std::vector< Index >, std::vector< Index > > get_indexes
     }
   
     Block_Backend< typename Skeleton::Id_Type, Index > idx_list_db
-        (rman.get_transaction()->data_index(attic_idx_list_properties< Skeleton >()));
+        (rman.get_transaction()->data_index(*attic_idx_list_properties< Skeleton >()));
     for (typename Block_Backend< typename Skeleton::Id_Type, Index >::Discrete_Iterator
         it(idx_list_db.discrete_begin(idx_list_ids.begin(), idx_list_ids.end()));
         !(it == idx_list_db.discrete_end()); ++it)

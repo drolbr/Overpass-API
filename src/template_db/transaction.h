@@ -40,7 +40,7 @@ class Transaction
 {
   public:
     virtual ~Transaction() {}
-    virtual File_Blocks_Index_Base* data_index(const File_Properties*) = 0;
+    virtual File_Blocks_Index_Base* data_index(const File_Properties&) = 0;
     virtual Random_File_Index* random_index(const File_Properties*) = 0;
     virtual std::string get_db_dir() const = 0;
     
@@ -57,7 +57,7 @@ class Nonsynced_Transaction : public Transaction
 	 const std::string& db_dir, const std::string& file_name_extension, long long max_cache_size_ = 0);
     virtual ~Nonsynced_Transaction();
     
-    virtual File_Blocks_Index_Base* data_index(const File_Properties*);
+    virtual File_Blocks_Index_Base* data_index(const File_Properties&);
     virtual Random_File_Index* random_index(const File_Properties*);
     
     void flush();

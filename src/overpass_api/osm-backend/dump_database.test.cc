@@ -34,7 +34,6 @@
 #include "relation_updater.h"
 #include "way_updater.h"
 
-using namespace std;
 
 uint32 osm_element_count;
 
@@ -76,7 +75,7 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
   Ofstream_Collection node_tags_global_out(db_dir + "after_node_tags_", "_global.csv");
     
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-      (transaction.data_index(osm_base_settings().NODES));
+      (transaction.data_index(*osm_base_settings().NODES));
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
       it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
   {
@@ -89,7 +88,7 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
     
   // check update_node_tags_local - compare both files for the result
   Block_Backend< Tag_Index_Local, Node_Skeleton::Id_Type > nodes_local_db
-      (transaction.data_index(osm_base_settings().NODE_TAGS_LOCAL));
+      (transaction.data_index(*osm_base_settings().NODE_TAGS_LOCAL));
   for (Block_Backend< Tag_Index_Local, Node_Skeleton::Id_Type >::Flat_Iterator
       it(nodes_local_db.flat_begin());
       !(it == nodes_local_db.flat_end()); ++it)
@@ -101,7 +100,7 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
   
   // check update_node_tags_global - compare both files for the result
   Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > > nodes_global_db
-      (transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL));
+      (transaction.data_index(*osm_base_settings().NODE_TAGS_GLOBAL));
   for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > >::Flat_Iterator
       it(nodes_global_db.flat_begin());
       !(it == nodes_global_db.flat_end()); ++it)
@@ -122,7 +121,7 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
     Ofstream_Collection node_attic_tags_global_out(db_dir + "after_node_attic_tags_", "_global.csv");
     
     Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > nodes_meta_db
-        (transaction.data_index(meta_settings().NODES_META));
+        (transaction.data_index(*meta_settings().NODES_META));
     for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >::Flat_Iterator
         it(nodes_meta_db.flat_begin()); !(it == nodes_meta_db.flat_end()); ++it)
     {
@@ -140,7 +139,7 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
     }
     
     Block_Backend< Uint31_Index, Attic< Node_Skeleton > > nodes_db
-        (transaction.data_index(attic_settings().NODES));
+        (transaction.data_index(*attic_settings().NODES));
     for (Block_Backend< Uint31_Index, Attic< Node_Skeleton > >::Flat_Iterator
         it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
     {
@@ -158,7 +157,7 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
     }
     
     Block_Backend< Uint31_Index, Attic< Node_Skeleton::Id_Type > > nodes_undeleted_db
-        (transaction.data_index(attic_settings().NODES_UNDELETED));
+        (transaction.data_index(*attic_settings().NODES_UNDELETED));
     for (Block_Backend< Uint31_Index, Attic< Node_Skeleton::Id_Type > >::Flat_Iterator
         it(nodes_undeleted_db.flat_begin()); !(it == nodes_undeleted_db.flat_end()); ++it)
     {
@@ -174,7 +173,7 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
     }
     
     Block_Backend< Node::Id_Type, Uint31_Index > idx_db
-        (transaction.data_index(attic_settings().NODE_IDX_LIST));
+        (transaction.data_index(*attic_settings().NODE_IDX_LIST));
     for (Block_Backend< Node::Id_Type, Uint31_Index >::Flat_Iterator
         it(idx_db.flat_begin()); !(it == idx_db.flat_end()); ++it)
     {
@@ -183,7 +182,7 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
     }
     
     Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > nodes_attic_meta_db
-        (transaction.data_index(attic_settings().NODES_META));
+        (transaction.data_index(*attic_settings().NODES_META));
     for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >::Flat_Iterator
         it(nodes_attic_meta_db.flat_begin()); !(it == nodes_attic_meta_db.flat_end()); ++it)
     {
@@ -201,7 +200,7 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
     }
     
     Block_Backend< Tag_Index_Local, Attic< Node_Skeleton::Id_Type > > nodes_local_db
-        (transaction.data_index(attic_settings().NODE_TAGS_LOCAL));
+        (transaction.data_index(*attic_settings().NODE_TAGS_LOCAL));
     for (Block_Backend< Tag_Index_Local, Attic< Node_Skeleton::Id_Type > >::Flat_Iterator
         it(nodes_local_db.flat_begin());
         !(it == nodes_local_db.flat_end()); ++it)
@@ -218,7 +217,7 @@ void dump_nodes(Transaction& transaction, const string& db_dir, bool attic)
     }
   
     Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Node_Skeleton::Id_Type > > > nodes_global_db
-        (transaction.data_index(attic_settings().NODE_TAGS_GLOBAL));
+        (transaction.data_index(*attic_settings().NODE_TAGS_GLOBAL));
     for (Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Node_Skeleton::Id_Type > > >::Flat_Iterator
         it(nodes_global_db.flat_begin());
         !(it == nodes_global_db.flat_end()); ++it)
@@ -242,7 +241,7 @@ void check_nodes(Transaction& transaction)
   ofstream out("/dev/null");
   
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-      (transaction.data_index(osm_base_settings().NODES));
+      (transaction.data_index(*osm_base_settings().NODES));
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
     it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
   {
@@ -255,7 +254,7 @@ void check_nodes(Transaction& transaction)
   
   // check update_node_tags_local - compare both files for the result
   Block_Backend< Tag_Index_Local, Uint32_Index > nodes_local_db
-      (transaction.data_index(osm_base_settings().NODE_TAGS_LOCAL));
+      (transaction.data_index(*osm_base_settings().NODE_TAGS_LOCAL));
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
     it(nodes_local_db.flat_begin());
   !(it == nodes_local_db.flat_end()); ++it)
@@ -268,7 +267,7 @@ void check_nodes(Transaction& transaction)
   
   // check update_node_tags_global - compare both files for the result
   Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > > nodes_global_db
-      (transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL));
+      (transaction.data_index(*osm_base_settings().NODE_TAGS_GLOBAL));
   for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > >::Flat_Iterator
     it(nodes_global_db.flat_begin());
   !(it == nodes_global_db.flat_end()); ++it)
@@ -288,7 +287,7 @@ void dump_ways(Transaction& transaction, const string& db_dir)
     
   // check update_members - compare both files for the result
   Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-      (transaction.data_index(osm_base_settings().WAYS));
+      (transaction.data_index(*osm_base_settings().WAYS));
   for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
       it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
   {
@@ -301,7 +300,7 @@ void dump_ways(Transaction& transaction, const string& db_dir)
     
   // check update_way_tags_local - compare both files for the result
   Block_Backend< Tag_Index_Local, Uint32_Index > ways_local_db
-      (transaction.data_index(osm_base_settings().WAY_TAGS_LOCAL));
+      (transaction.data_index(*osm_base_settings().WAY_TAGS_LOCAL));
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
       it(ways_local_db.flat_begin());
       !(it == ways_local_db.flat_end()); ++it)
@@ -313,7 +312,7 @@ void dump_ways(Transaction& transaction, const string& db_dir)
   
   // check update_way_tags_global - compare both files for the result
   Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > > ways_global_db
-      (transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL));
+      (transaction.data_index(*osm_base_settings().WAY_TAGS_GLOBAL));
   for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > >::Flat_Iterator
       it(ways_global_db.flat_begin());
       !(it == ways_global_db.flat_end()); ++it)
@@ -331,7 +330,7 @@ void check_ways(Transaction& transaction)
     
   // check update_members - compare both files for the result
   Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-      (transaction.data_index(osm_base_settings().WAYS));
+      (transaction.data_index(*osm_base_settings().WAYS));
   for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
       it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
   {
@@ -345,7 +344,7 @@ void check_ways(Transaction& transaction)
     
   // check update_way_tags_local - compare both files for the result
   Block_Backend< Tag_Index_Local, Uint32_Index > ways_local_db
-      (transaction.data_index(osm_base_settings().WAY_TAGS_LOCAL));
+      (transaction.data_index(*osm_base_settings().WAY_TAGS_LOCAL));
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
       it(ways_local_db.flat_begin());
       !(it == ways_local_db.flat_end()); ++it)
@@ -358,7 +357,7 @@ void check_ways(Transaction& transaction)
     
   // check update_way_tags_global - compare both files for the result
   Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > > ways_global_db
-      (transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL));
+      (transaction.data_index(*osm_base_settings().WAY_TAGS_GLOBAL));
   for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > >::Flat_Iterator
       it(ways_global_db.flat_begin());
       !(it == ways_global_db.flat_end()); ++it)
@@ -379,14 +378,14 @@ void dump_relations(Transaction& transaction, const string& db_dir)
     // prepare check update_members - load roles
     map< uint32, string > roles;
     Block_Backend< Uint32_Index, String_Object > roles_db
-      (transaction.data_index(osm_base_settings().RELATION_ROLES));
+      (transaction.data_index(*osm_base_settings().RELATION_ROLES));
     for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
         it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
       roles[it.index().val()] = it.object().val();
     
     // check update_members - compare both files for the result
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(transaction.data_index(osm_base_settings().RELATIONS));
+	(transaction.data_index(*osm_base_settings().RELATIONS));
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
 	 it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
     {
@@ -401,7 +400,7 @@ void dump_relations(Transaction& transaction, const string& db_dir)
     
     // check update_relation_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Local, Uint32_Index > relations_local_db
-	(transaction.data_index(osm_base_settings().RELATION_TAGS_LOCAL));
+	(transaction.data_index(*osm_base_settings().RELATION_TAGS_LOCAL));
     for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(relations_local_db.flat_begin());
          !(it == relations_local_db.flat_end()); ++it)
@@ -413,7 +412,7 @@ void dump_relations(Transaction& transaction, const string& db_dir)
     
     // check update_relation_tags_global - compare both files for the result
     Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > > relations_global_db
-	(transaction.data_index(osm_base_settings().RELATION_TAGS_GLOBAL));
+	(transaction.data_index(*osm_base_settings().RELATION_TAGS_GLOBAL));
     for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > >::Flat_Iterator
 	 it(relations_global_db.flat_begin());
          !(it == relations_global_db.flat_end()); ++it)
@@ -432,14 +431,14 @@ void check_relations(Transaction& transaction)
   // prepare check update_members - load roles
   map< uint32, string > roles;
   Block_Backend< Uint32_Index, String_Object > roles_db
-  (transaction.data_index(osm_base_settings().RELATION_ROLES));
+  (transaction.data_index(*osm_base_settings().RELATION_ROLES));
   for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
     it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
     roles[it.index().val()] = it.object().val();
   
   // check update_members - compare both files for the result
   Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-  (transaction.data_index(osm_base_settings().RELATIONS));
+  (transaction.data_index(*osm_base_settings().RELATIONS));
   for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
     it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
   {
@@ -455,7 +454,7 @@ void check_relations(Transaction& transaction)
   
   // check update_relation_tags_local - compare both files for the result
   Block_Backend< Tag_Index_Local, Uint32_Index > relations_local_db
-  (transaction.data_index(osm_base_settings().RELATION_TAGS_LOCAL));
+  (transaction.data_index(*osm_base_settings().RELATION_TAGS_LOCAL));
   for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
       it(relations_local_db.flat_begin());
       !(it == relations_local_db.flat_end()); ++it)
@@ -468,7 +467,7 @@ void check_relations(Transaction& transaction)
   
   // check update_relation_tags_global - compare both files for the result
   Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > > relations_global_db
-  (transaction.data_index(osm_base_settings().RELATION_TAGS_GLOBAL));
+  (transaction.data_index(*osm_base_settings().RELATION_TAGS_GLOBAL));
   for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > >::Flat_Iterator
     it(relations_global_db.flat_begin());
   !(it == relations_global_db.flat_end()); ++it)

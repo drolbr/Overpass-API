@@ -29,7 +29,6 @@
 #include "../core/settings.h"
 #include "area_updater.h"
 
-using namespace std;
 
 Area_Updater::Area_Updater(Transaction& transaction_)
   : update_counter(0), transaction(&transaction_),
@@ -90,7 +89,7 @@ void Area_Updater::update_area_ids
   
   // process the areas themselves
   Block_Backend< Uint31_Index, Area_Skeleton > area_locations_db
-      (transaction->data_index(area_settings().AREAS));
+      (transaction->data_index(*area_settings().AREAS));
   for (Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
       it(area_locations_db.flat_begin());
       !(it == area_locations_db.flat_end()); ++it)
@@ -105,7 +104,7 @@ void Area_Updater::update_area_ids
   }
   
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
-      (transaction->data_index(area_settings().AREA_BLOCKS));
+      (transaction->data_index(*area_settings().AREA_BLOCKS));
   for (Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
       it(area_blocks_db.discrete_begin(blocks_req.begin(), blocks_req.end()));
       !(it == area_blocks_db.discrete_end()); ++it)
@@ -125,7 +124,7 @@ void Area_Updater::update_members
     locations_to_insert[it->second].insert(Area_Skeleton(it->first));
   
   Block_Backend< Uint31_Index, Area_Skeleton > area_locations
-      (transaction->data_index(area_settings().AREAS));
+      (transaction->data_index(*area_settings().AREAS));
   area_locations.update(locations_to_delete, locations_to_insert);
   
   map< Uint31_Index, set< Area_Block > > blocks_to_insert;
@@ -138,7 +137,7 @@ void Area_Updater::update_members
   }
   
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
-      (transaction->data_index(area_settings().AREA_BLOCKS));
+      (transaction->data_index(*area_settings().AREA_BLOCKS));
   area_blocks_db.update(blocks_to_delete, blocks_to_insert);
 }
 
@@ -174,7 +173,7 @@ void Area_Updater::prepare_delete_tags
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, Uint32_Index > areas_db
-      (transaction->data_index(area_settings().AREA_TAGS_LOCAL));
+      (transaction->data_index(*area_settings().AREA_TAGS_LOCAL));
   Tag_Index_Local current_index;
   Tag_Entry< uint32 > tag_entry;
   current_index.index = 0xffffffff;
@@ -254,7 +253,7 @@ void Area_Updater::prepare_tags
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, Uint32_Index > areas_db
-      (transaction->data_index(area_settings().AREA_TAGS_LOCAL));
+      (transaction->data_index(*area_settings().AREA_TAGS_LOCAL));
   Tag_Index_Local current_index;
   Tag_Entry< uint32 > tag_entry;
   current_index.index = 0xffffffff;
@@ -333,7 +332,7 @@ void Area_Updater::update_area_tags_local
   }
   
   Block_Backend< Tag_Index_Local, Uint32_Index > areas_db
-      (transaction->data_index(area_settings().AREA_TAGS_LOCAL));
+      (transaction->data_index(*area_settings().AREA_TAGS_LOCAL));
   areas_db.update(db_to_delete, db_to_insert);
 }
 
@@ -377,6 +376,6 @@ void Area_Updater::update_area_tags_global
   }
   
   Block_Backend< Tag_Index_Global, Uint32_Index > areas_db
-      (transaction->data_index(area_settings().AREA_TAGS_GLOBAL));
+      (transaction->data_index(*area_settings().AREA_TAGS_GLOBAL));
   areas_db.update(db_to_delete, db_to_insert);
 }

@@ -26,7 +26,6 @@
 #include "../data/filenames.h"
 #include "id_query.h"
 
-using namespace std;
 
 bool Id_Query_Statement::area_query_exists_ = false;
 
@@ -44,7 +43,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
     for (Uint64 i = lower; i < upper; ++i)
       req.insert(random.get(i.val()));
   }    
-  Block_Backend< TIndex, TObject > elems_db(rman.get_transaction()->data_index(&prop));
+  Block_Backend< TIndex, TObject > elems_db(rman.get_transaction()->data_index(prop));
   for (typename Block_Backend< TIndex, TObject >::Discrete_Iterator
       it(elems_db.discrete_begin(req.begin(), req.end()));
       !(it == elems_db.discrete_end()); ++it)
@@ -70,7 +69,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
         req.insert(random.get(i.val()));
     }
   }    
-  Block_Backend< TIndex, TObject > elems_db(rman.get_transaction()->data_index(&prop));
+  Block_Backend< TIndex, TObject > elems_db(rman.get_transaction()->data_index(prop));
   for (typename Block_Backend< TIndex, TObject >::Discrete_Iterator
       it(elems_db.discrete_begin(req.begin(), req.end()));
       !(it == elems_db.discrete_end()); ++it)
@@ -88,7 +87,7 @@ void collect_elems_flat(Resource_Manager& rman,
 		   map< Uint31_Index, vector< Area_Skeleton > >& elems)
 {
   Block_Backend< Uint31_Index, Area_Skeleton > elems_db
-      (rman.get_transaction()->data_index(area_settings().AREAS));
+      (rman.get_transaction()->data_index(*area_settings().AREAS));
   for (Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
       it = elems_db.flat_begin(); !(it == elems_db.flat_end()); ++it)
   {

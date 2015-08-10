@@ -501,7 +501,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
   // Collect all data of existing tags
   std::vector< Tag_Entry< Node_Skeleton::Id_Type > > existing_local_tags;
   get_existing_tags< Node_Skeleton::Id_Type >
-      (existing_map_positions, *transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL),
+      (existing_map_positions, *transaction->data_index(*osm_base_settings().NODE_TAGS_LOCAL),
        existing_local_tags);
 
   // Compute which objects really have changed

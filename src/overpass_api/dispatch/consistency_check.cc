@@ -40,7 +40,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 
 template< class TIndex, class Id_Type >
 struct Flat_Meta_Collector
@@ -76,7 +75,7 @@ Flat_Meta_Collector< TIndex, Id_Type >::Flat_Meta_Collector
   : meta_db(0), db_it(0), current_index(0)
 {
   meta_db = new Block_Backend< TIndex, OSM_Element_Metadata_Skeleton< Id_Type > >
-      (transaction.data_index(meta_file_prop));
+      (transaction.data_index(*meta_file_prop));
 	  
   reset();
 }
@@ -197,7 +196,7 @@ int main(int argc, char *argv[])
       Flat_Meta_Collector< Uint32_Index, Node::Id_Type > meta_collector
           (*rman.get_transaction(), meta_settings().NODES_META);
       Block_Backend< Uint32_Index, Node_Skeleton > db
-          (rman.get_transaction()->data_index(osm_base_settings().NODES));
+          (rman.get_transaction()->data_index(*osm_base_settings().NODES));
       for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
           it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
@@ -216,7 +215,7 @@ int main(int argc, char *argv[])
     {
       uint32 count = 0;
       File_Properties* props = meta_settings().WAYS_META;
-      File_Blocks_Index_Base* index_base = rman.get_transaction()->data_index(props);
+      File_Blocks_Index_Base* index_base = rman.get_transaction()->data_index(*props);
       cout<<"ways_meta address "<<index_base<<'\n';
       File_Blocks_Index< Uint31_Index >* index = (File_Blocks_Index< Uint31_Index >*)index_base;
       cout<<"ways_meta";
@@ -226,7 +225,7 @@ int main(int argc, char *argv[])
       Flat_Meta_Collector< Uint31_Index, Way::Id_Type > meta_collector
           (*rman.get_transaction(), props);
       Block_Backend< Uint31_Index, Way_Skeleton > db
-          (rman.get_transaction()->data_index(osm_base_settings().WAYS));
+          (rman.get_transaction()->data_index(*osm_base_settings().WAYS));
       for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
           it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
@@ -247,7 +246,7 @@ int main(int argc, char *argv[])
       Flat_Meta_Collector< Uint31_Index, Relation::Id_Type > meta_collector
           (*rman.get_transaction(), meta_settings().RELATIONS_META);
       Block_Backend< Uint31_Index, Relation_Skeleton > db
-          (rman.get_transaction()->data_index(osm_base_settings().RELATIONS));
+          (rman.get_transaction()->data_index(*osm_base_settings().RELATIONS));
       for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
           it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {

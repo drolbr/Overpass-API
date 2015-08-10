@@ -30,8 +30,6 @@
 #include "../core/settings.h"
 #include "meta_updater.h"
 
-using namespace std;
-
 
 void process_user_data(Transaction& transaction, map< uint32, string >& user_by_id,
 		       map< uint32, vector< uint32 > >& idxs_by_user_id)
@@ -57,8 +55,7 @@ void process_user_data(Transaction& transaction, map< uint32, string >& user_by_
     }
     user_by_id.clear();
   
-    Block_Backend< Uint32_Index, User_Data > user_db
-        (transaction.data_index(meta_settings().USER_DATA));
+    Block_Backend< Uint32_Index, User_Data > user_db(transaction.data_index(*meta_settings().USER_DATA));
     user_db.update(db_to_delete, db_to_insert);
   }
   {
@@ -82,8 +79,7 @@ void process_user_data(Transaction& transaction, map< uint32, string >& user_by_
 	ins.insert(Uint31_Index(*it2));
     }
   
-    Block_Backend< Uint32_Index, Uint31_Index > user_db
-        (transaction.data_index(meta_settings().USER_INDICES));
+    Block_Backend< Uint32_Index, Uint31_Index > user_db(transaction.data_index(*meta_settings().USER_INDICES));
     user_db.update(db_to_delete, db_to_insert);
   }
 }

@@ -140,7 +140,7 @@ std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_skeletons
   std::map< Uint31_Index, std::set< Element_Skeleton > > result;
   Idx_Agnostic_Compare< typename Element_Skeleton::Id_Type > comp;
   
-  Block_Backend< Uint31_Index, Element_Skeleton > db(transaction.data_index(&file_properties));
+  Block_Backend< Uint31_Index, Element_Skeleton > db(transaction.data_index(file_properties));
   for (typename Block_Backend< Uint31_Index, Element_Skeleton >::Discrete_Iterator
       it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
   {
@@ -176,7 +176,7 @@ std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_S
   std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_Skeleton_Delta > > > result;
   Idx_Agnostic_Compare< typename Element_Skeleton::Id_Type > comp;
   
-  Block_Backend< Uint31_Index, Attic< Element_Skeleton_Delta > > db(transaction.data_index(&skel_file_properties));
+  Block_Backend< Uint31_Index, Attic< Element_Skeleton_Delta > > db(transaction.data_index(skel_file_properties));
   for (typename Block_Backend< Uint31_Index, Attic< Element_Skeleton_Delta > >::Discrete_Iterator
       it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
   {
@@ -194,7 +194,7 @@ std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_S
   }
   
   Block_Backend< Uint31_Index, Attic< typename Element_Skeleton::Id_Type > >
-      undelete_db(transaction.data_index(&undelete_file_properties));
+      undelete_db(transaction.data_index(undelete_file_properties));
   for (typename Block_Backend< Uint31_Index, Attic< typename Element_Skeleton::Id_Type > >::Discrete_Iterator
       it(undelete_db.discrete_begin(req.begin(), req.end())); !(it == undelete_db.discrete_end()); ++it)
   {
@@ -230,7 +230,7 @@ std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_meta
   std::map< Uint31_Index, std::set< Element_Skeleton > > result;
   Idx_Agnostic_Compare< typename Element_Skeleton::Id_Type > comp;
   
-  Block_Backend< Uint31_Index, Element_Skeleton > db(transaction.data_index(&file_properties));
+  Block_Backend< Uint31_Index, Element_Skeleton > db(transaction.data_index(file_properties));
   for (typename Block_Backend< Uint31_Index, Element_Skeleton >::Discrete_Iterator
       it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
   {
@@ -489,7 +489,7 @@ void update_elements
      const std::map< Index, std::set< Object > >& new_objects,
      Transaction& transaction, const File_Properties& file_properties)
 {
-  Block_Backend< Index, Object > db(transaction.data_index(&file_properties));
+  Block_Backend< Index, Object > db(transaction.data_index(file_properties));
   db.update(attic_objects, new_objects);
 }
 
@@ -517,7 +517,7 @@ std::map< Id_Type, std::set< Uint31_Index > > get_existing_idx_lists
     }
   }
   
-  Block_Backend< Id_Type, Uint31_Index > db(transaction.data_index(&file_properties));
+  Block_Backend< Id_Type, Uint31_Index > db(transaction.data_index(file_properties));
   for (typename Block_Backend< Id_Type, Uint31_Index >::Discrete_Iterator
       it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
     result[it.index()].insert(it.object());

@@ -465,7 +465,7 @@ std::map< Uint31_Index, std::set< Way_Skeleton > > get_implicitly_moved_skeleton
   
   std::map< Uint31_Index, std::set< Way_Skeleton > > result;
   
-  Block_Backend< Uint31_Index, Way_Skeleton > db(transaction.data_index(&file_properties));
+  Block_Backend< Uint31_Index, Way_Skeleton > db(transaction.data_index(file_properties));
   for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
       it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
   {
@@ -832,13 +832,13 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
   // Collect all data of existing tags
   std::vector< Tag_Entry< Way_Skeleton::Id_Type > > existing_local_tags;
   get_existing_tags< Way_Skeleton::Id_Type >
-      (existing_map_positions, *transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
+      (existing_map_positions, *transaction->data_index(*osm_base_settings().WAY_TAGS_LOCAL),
        existing_local_tags);
       
   // Collect all data of existing tags for moved ways
   std::vector< Tag_Entry< Way_Skeleton::Id_Type > > implicitly_moved_local_tags;
   get_existing_tags< Way_Skeleton::Id_Type >
-      (implicitly_moved_positions, *transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL),
+      (implicitly_moved_positions, *transaction->data_index(*osm_base_settings().WAY_TAGS_LOCAL),
        implicitly_moved_local_tags);
 
   // Create a node directory id to idx:

@@ -33,7 +33,6 @@
 #include "../core/datatypes.h"
 #include "../core/settings.h"
 
-using namespace std;
 
 // not const - sorts its container first and clears it afterwards.
 void clear_nodes_to_map(vector< pair< uint32, Uint32_Index > >& id_to_idx,
@@ -70,7 +69,7 @@ void dump_nodes(string db_dir)
   
   Nonsynced_Transaction transaction(false, false, db_dir, "");
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-      (transaction.data_index(osm_base_settings().NODES));
+      (transaction.data_index(*osm_base_settings().NODES));
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
       it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
   {
@@ -116,7 +115,7 @@ void dump_ways(string db_dir)
   
   Nonsynced_Transaction transaction(false, false, db_dir, "");
   Block_Backend< Uint31_Index, Way_Skeleton > ways_db
-      (transaction.data_index(osm_base_settings().WAYS));
+      (transaction.data_index(*osm_base_settings().WAYS));
   for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
       it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
   {
@@ -162,7 +161,7 @@ void dump_relations(string db_dir)
   
   Nonsynced_Transaction transaction(false, false, db_dir, "");
   Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-      (transaction.data_index(osm_base_settings().RELATIONS));
+      (transaction.data_index(*osm_base_settings().RELATIONS));
   for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
       it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
   {

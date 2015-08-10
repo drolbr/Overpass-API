@@ -62,7 +62,7 @@ std::vector< typename Skeleton::Id_Type > collect_changed_elements
   std::vector< typename Skeleton::Id_Type > ids;
   
   Block_Backend< Timestamp, Change_Entry< typename Skeleton::Id_Type > > changelog_db
-      (rman.get_transaction()->data_index(changelog_file_properties< Skeleton >()));
+      (rman.get_transaction()->data_index(*changelog_file_properties< Skeleton >()));
   for (typename Block_Backend< Timestamp, Change_Entry< typename Skeleton::Id_Type > >::Range_Iterator
       it = changelog_db.range_begin(Default_Range_Iterator< Timestamp >(range.begin()),
             Default_Range_Iterator< Timestamp >(range.end()));

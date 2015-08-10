@@ -94,55 +94,55 @@ Dispatcher_Stub::Dispatcher_Stub
     transaction = new Nonsynced_Transaction
         (false, false, dispatcher_client->get_db_dir(), "");
   
-    transaction->data_index(osm_base_settings().NODES);
+    transaction->data_index(*osm_base_settings().NODES);
     transaction->random_index(osm_base_settings().NODES);
-    transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL);
-    transaction->data_index(osm_base_settings().NODE_TAGS_GLOBAL);
-    transaction->data_index(osm_base_settings().NODE_KEYS);
-    transaction->data_index(osm_base_settings().WAYS);
+    transaction->data_index(*osm_base_settings().NODE_TAGS_LOCAL);
+    transaction->data_index(*osm_base_settings().NODE_TAGS_GLOBAL);
+    transaction->data_index(*osm_base_settings().NODE_KEYS);
+    transaction->data_index(*osm_base_settings().WAYS);
     transaction->random_index(osm_base_settings().WAYS);
-    transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL);
-    transaction->data_index(osm_base_settings().WAY_TAGS_GLOBAL);
-    transaction->data_index(osm_base_settings().WAY_KEYS);
-    transaction->data_index(osm_base_settings().RELATIONS);
+    transaction->data_index(*osm_base_settings().WAY_TAGS_LOCAL);
+    transaction->data_index(*osm_base_settings().WAY_TAGS_GLOBAL);
+    transaction->data_index(*osm_base_settings().WAY_KEYS);
+    transaction->data_index(*osm_base_settings().RELATIONS);
     transaction->random_index(osm_base_settings().RELATIONS);
-    transaction->data_index(osm_base_settings().RELATION_ROLES);
-    transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL);
-    transaction->data_index(osm_base_settings().RELATION_TAGS_GLOBAL);
-    transaction->data_index(osm_base_settings().RELATION_KEYS);
+    transaction->data_index(*osm_base_settings().RELATION_ROLES);
+    transaction->data_index(*osm_base_settings().RELATION_TAGS_LOCAL);
+    transaction->data_index(*osm_base_settings().RELATION_TAGS_GLOBAL);
+    transaction->data_index(*osm_base_settings().RELATION_KEYS);
     
     if (meta == keep_meta || meta == keep_attic)
     {
-      transaction->data_index(meta_settings().NODES_META);
-      transaction->data_index(meta_settings().WAYS_META);
-      transaction->data_index(meta_settings().RELATIONS_META);
-      transaction->data_index(meta_settings().USER_DATA);
-      transaction->data_index(meta_settings().USER_INDICES);
+      transaction->data_index(*meta_settings().NODES_META);
+      transaction->data_index(*meta_settings().WAYS_META);
+      transaction->data_index(*meta_settings().RELATIONS_META);
+      transaction->data_index(*meta_settings().USER_DATA);
+      transaction->data_index(*meta_settings().USER_INDICES);
     }
     
     if (meta == keep_attic)
     {
-      transaction->data_index(attic_settings().NODES);
-      transaction->data_index(attic_settings().NODES_UNDELETED);
-      transaction->data_index(attic_settings().NODE_IDX_LIST);
-      transaction->data_index(attic_settings().NODE_TAGS_LOCAL);
-      transaction->data_index(attic_settings().NODE_TAGS_GLOBAL);
-      transaction->data_index(attic_settings().NODES_META);
-      transaction->data_index(attic_settings().NODE_CHANGELOG);
-      transaction->data_index(attic_settings().WAYS);
-      transaction->data_index(attic_settings().WAYS_UNDELETED);
-      transaction->data_index(attic_settings().WAY_IDX_LIST);
-      transaction->data_index(attic_settings().WAY_TAGS_LOCAL);
-      transaction->data_index(attic_settings().WAY_TAGS_GLOBAL);
-      transaction->data_index(attic_settings().WAYS_META);
-      transaction->data_index(attic_settings().WAY_CHANGELOG);
-      transaction->data_index(attic_settings().RELATIONS);
-      transaction->data_index(attic_settings().RELATIONS_UNDELETED);
-      transaction->data_index(attic_settings().RELATION_IDX_LIST);
-      transaction->data_index(attic_settings().RELATION_TAGS_LOCAL);
-      transaction->data_index(attic_settings().RELATION_TAGS_GLOBAL);
-      transaction->data_index(attic_settings().RELATIONS_META);
-      transaction->data_index(attic_settings().RELATION_CHANGELOG);
+      transaction->data_index(*attic_settings().NODES);
+      transaction->data_index(*attic_settings().NODES_UNDELETED);
+      transaction->data_index(*attic_settings().NODE_IDX_LIST);
+      transaction->data_index(*attic_settings().NODE_TAGS_LOCAL);
+      transaction->data_index(*attic_settings().NODE_TAGS_GLOBAL);
+      transaction->data_index(*attic_settings().NODES_META);
+      transaction->data_index(*attic_settings().NODE_CHANGELOG);
+      transaction->data_index(*attic_settings().WAYS);
+      transaction->data_index(*attic_settings().WAYS_UNDELETED);
+      transaction->data_index(*attic_settings().WAY_IDX_LIST);
+      transaction->data_index(*attic_settings().WAY_TAGS_LOCAL);
+      transaction->data_index(*attic_settings().WAY_TAGS_GLOBAL);
+      transaction->data_index(*attic_settings().WAYS_META);
+      transaction->data_index(*attic_settings().WAY_CHANGELOG);
+      transaction->data_index(*attic_settings().RELATIONS);
+      transaction->data_index(*attic_settings().RELATIONS_UNDELETED);
+      transaction->data_index(*attic_settings().RELATION_IDX_LIST);
+      transaction->data_index(*attic_settings().RELATION_TAGS_LOCAL);
+      transaction->data_index(*attic_settings().RELATION_TAGS_GLOBAL);
+      transaction->data_index(*attic_settings().RELATIONS_META);
+      transaction->data_index(*attic_settings().RELATION_CHANGELOG);
     }
     
     {
@@ -219,10 +219,10 @@ Dispatcher_Stub::Dispatcher_Stub
 	}
       }
       
-      area_transaction->data_index(area_settings().AREAS);
-      area_transaction->data_index(area_settings().AREA_BLOCKS);
-      area_transaction->data_index(area_settings().AREA_TAGS_LOCAL);
-      area_transaction->data_index(area_settings().AREA_TAGS_GLOBAL);
+      area_transaction->data_index(*area_settings().AREAS);
+      area_transaction->data_index(*area_settings().AREA_BLOCKS);
+      area_transaction->data_index(*area_settings().AREA_TAGS_LOCAL);
+      area_transaction->data_index(*area_settings().AREA_TAGS_GLOBAL);
 
       if (area_level == 1)
       {

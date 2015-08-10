@@ -32,7 +32,6 @@
 #include "../frontend/output.h"
 #include "node_updater.h"
 
-using namespace std;
 
 /**
  * Tests the library node_updater with a sample OSM file
@@ -177,7 +176,7 @@ int main(int argc, char* args[])
 
     // check update_coords - compare both files for the result
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-	(transaction.data_index(osm_base_settings().NODES));
+	(transaction.data_index(*osm_base_settings().NODES));
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
 	 it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
     {
@@ -188,7 +187,7 @@ int main(int argc, char* args[])
     
     // check update_node_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Local, Uint32_Index > nodes_local_db
-	(transaction.data_index(osm_base_settings().NODE_TAGS_LOCAL));
+	(transaction.data_index(*osm_base_settings().NODE_TAGS_LOCAL));
     for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(nodes_local_db.flat_begin()); !(it == nodes_local_db.flat_end()); ++it)
     {
@@ -198,7 +197,7 @@ int main(int argc, char* args[])
     
     // check update_node_tags_global - compare both files for the result
     Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > > nodes_global_db
-	(transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL));
+	(transaction.data_index(*osm_base_settings().NODE_TAGS_GLOBAL));
     for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > >::Flat_Iterator
 	 it(nodes_global_db.flat_begin()); !(it == nodes_global_db.flat_end()); ++it)
     {

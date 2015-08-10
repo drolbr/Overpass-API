@@ -1190,7 +1190,7 @@ const std::map< uint32, string >& relation_member_roles(Transaction& transaction
   if (roles.empty())
   {
     Block_Backend< Uint32_Index, String_Object > roles_db
-        (transaction.data_index(osm_base_settings().RELATION_ROLES));
+        (transaction.data_index(*osm_base_settings().RELATION_ROLES));
     for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
         it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
       roles[it.index().val()] = it.object().val();

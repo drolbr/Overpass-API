@@ -24,7 +24,6 @@
 #include "pivot.h"
 #include "query.h"
 
-using namespace std;
 
 Generic_Statement_Maker< Pivot_Statement > Pivot_Statement::statement_maker("pivot");
 
@@ -41,7 +40,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
         it = ids.begin(); it != ids.end(); ++it)
       req.insert(random.get(it->val()));
   }    
-  Block_Backend< TIndex, TObject > elems_db(rman.get_transaction()->data_index(&prop));
+  Block_Backend< TIndex, TObject > elems_db(rman.get_transaction()->data_index(prop));
   for (typename Block_Backend< TIndex, TObject >::Discrete_Iterator
       it(elems_db.discrete_begin(req.begin(), req.end()));
       !(it == elems_db.discrete_end()); ++it)

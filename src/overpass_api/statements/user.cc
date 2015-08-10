@@ -28,9 +28,6 @@
 #include <sstream>
 #include <vector>
 
-using namespace std;
-
-//-----------------------------------------------------------------------------
 
 class User_Constraint : public Query_Constraint
 {
@@ -175,7 +172,7 @@ User_Statement::~User_Statement()
 uint32 get_user_id(const string& user_name, Transaction& transaction)
 {
   Block_Backend< Uint32_Index, User_Data > user_db
-      (transaction.data_index(meta_settings().USER_DATA));
+      (transaction.data_index(*meta_settings().USER_DATA));
   for (Block_Backend< Uint32_Index, User_Data >::Flat_Iterator
       user_it = user_db.flat_begin(); !(user_it == user_db.flat_end()); ++user_it)
   {
@@ -204,7 +201,7 @@ void calc_ranges
   req.insert(user_id);
   
   Block_Backend< Uint32_Index, Uint31_Index > user_db
-      (transaction.data_index(meta_settings().USER_INDICES));
+      (transaction.data_index(*meta_settings().USER_INDICES));
   for (Block_Backend< Uint32_Index, Uint31_Index >::Discrete_Iterator
       user_it = user_db.discrete_begin(req.begin(), req.end());
       !(user_it == user_db.discrete_end()); ++user_it)

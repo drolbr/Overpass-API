@@ -34,7 +34,6 @@
 #include "relation_updater.h"
 #include "way_updater.h"
 
-using namespace std;
 
 /**
  * Tests the library relation_updater with a sample OSM file
@@ -317,14 +316,14 @@ int main(int argc, char* args[])
     // prepare check update_members - load roles
     map< uint32, string > roles;
     Block_Backend< Uint32_Index, String_Object > roles_db
-      (transaction.data_index(osm_base_settings().RELATION_ROLES));
+      (transaction.data_index(*osm_base_settings().RELATION_ROLES));
     for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
         it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
       roles[it.index().val()] = it.object().val();
     
     // check update_members - compare both files for the result
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
-	(transaction.data_index(osm_base_settings().RELATIONS));
+	(transaction.data_index(*osm_base_settings().RELATIONS));
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
 	 it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
     {
@@ -338,7 +337,7 @@ int main(int argc, char* args[])
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Local, Uint32_Index > relations_local_db
-	(transaction.data_index(osm_base_settings().RELATION_TAGS_LOCAL));
+	(transaction.data_index(*osm_base_settings().RELATION_TAGS_LOCAL));
     for (Block_Backend< Tag_Index_Local, Uint32_Index >::Flat_Iterator
 	 it(relations_local_db.flat_begin());
          !(it == relations_local_db.flat_end()); ++it)
@@ -349,7 +348,7 @@ int main(int argc, char* args[])
     
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > > relations_global_db
-	(transaction.data_index(osm_base_settings().RELATION_TAGS_GLOBAL));
+	(transaction.data_index(*osm_base_settings().RELATION_TAGS_GLOBAL));
     for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > >::Flat_Iterator
 	 it(relations_global_db.flat_begin());
          !(it == relations_global_db.flat_end()); ++it)

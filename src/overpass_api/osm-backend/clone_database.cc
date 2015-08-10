@@ -48,7 +48,7 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
     }
     
     File_Blocks_Index< TIndex >& src_idx =
-        *dynamic_cast< File_Blocks_Index< TIndex >* >(transaction.data_index(&src_file_prop));
+        *dynamic_cast< File_Blocks_Index< TIndex >* >(transaction.data_index(src_file_prop));
     File_Blocks< TIndex, typename set< TIndex >::const_iterator, Default_Range_Iterator< TIndex > >
 	src_file(&src_idx);
     
