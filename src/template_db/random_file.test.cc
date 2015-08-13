@@ -24,7 +24,6 @@
 #include "random_file.h"
 #include "transaction.h"
 
-using namespace std;
 
 /**
  * Tests the library random_file
@@ -76,17 +75,27 @@ string ID_SUFFIX(".map");
 
 struct Test_File : File_Properties
 {
-  const std::string& get_basedir() const
-  {
-    return BASE_DIRECTORY;
-  }
+  const std::string& get_basedir() const { return BASE_DIRECTORY; }
+
+  uint32 get_block_size() const { return 512; }
+  uint32 get_max_size() const { return 1; }
+  uint32 get_compression_method() const { return 0; }
   
+  vector< bool > get_data_footprint(const string& db_dir) const { return vector< bool >(); }
+  vector< bool > get_map_footprint(const string& db_dir) const { return vector< bool >(); }  
+
   const std::string& get_file_name_trunk() const
   {
     static std::string result("testfile");
     return result;
   }
   
+  const std::string& get_shadow_suffix() const
+  {
+    static std::string result(".shadow");
+    return result;
+  }
+      
   const std::string& get_index_suffix() const
   {
     static std::string result(".idx");
@@ -104,42 +113,11 @@ struct Test_File : File_Properties
     return ID_SUFFIX;
   }
 
-  const std::string& get_shadow_suffix() const
-  {
-    static std::string result(".shadow");
-    return result;
-  }
-
-  uint32 get_block_size() const
-  {
-    return 512;
-  }
-  
-  uint32 get_max_size() const
-  {
-    return 1;
-  }
-  
-  uint32 get_compression_method() const
-  {
-    return 0;
-  }
-  
   uint32 get_map_block_size() const
   {
     return 16*IntIndex::max_size_of();
   }
   
-  vector< bool > get_data_footprint(const std::string& db_dir) const
-  {
-    return vector< bool >();
-  }
-  
-  vector< bool > get_map_footprint(const std::string& db_dir) const
-  {
-    return vector< bool >();
-  }  
-
   uint32 id_max_size_of() const
   {
     return IntIndex::max_size_of();
@@ -152,6 +130,10 @@ struct Test_File : File_Properties
     throw string();
     return 0;
   }
+
+  virtual Block_Backend_Cache_Base* new_cache
+      (File_Blocks_Index_Base& db_index_, Transaction& transaction_) const
+      { return 0; }
 };
 
 //-----------------------------------------------------------------------------

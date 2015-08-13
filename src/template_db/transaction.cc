@@ -16,6 +16,7 @@
 * along with Template_DB.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "block_backend_cache.h"
 #include "transaction.h"
 
 #include <map>
@@ -63,7 +64,8 @@ File_Blocks_Index_Base* Nonsynced_Transaction::data_index(const File_Properties&
   File_Blocks_Index_Base* data_index = fp.new_data_index
       (writeable, use_shadow, db_dir, file_name_extension);
   if (data_index != 0)
-    data_files[&fp] = std::pair< File_Blocks_Index_Base*, Block_Backend_Cache_Base* >(data_index, 0);
+    data_files[&fp] = std::pair< File_Blocks_Index_Base*, Block_Backend_Cache_Base* >
+        (data_index, fp.new_cache(*data_index, *this));
   return data_index;
 }
 
@@ -78,7 +80,8 @@ Block_Backend_Cache_Base& Nonsynced_Transaction::get_cache(const File_Properties
   File_Blocks_Index_Base* data_index = fp.new_data_index
       (writeable, use_shadow, db_dir, file_name_extension);
   if (data_index != 0)
-    data_files[&fp] = std::pair< File_Blocks_Index_Base*, Block_Backend_Cache_Base* >(data_index, 0);
+    data_files[&fp] = std::pair< File_Blocks_Index_Base*, Block_Backend_Cache_Base* >
+      (data_index, fp.new_cache(*data_index, *this));
   return *data_files[&fp].second;
 }
 

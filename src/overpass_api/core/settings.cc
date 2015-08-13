@@ -19,6 +19,7 @@
 #include "datatypes.h"
 #include "settings.h"
 
+#include "../../template_db/block_backend_cache.h"
 #include "../../template_db/file_blocks.h"
 #include "../../template_db/file_blocks_index.h"
 #include "../../template_db/random_file_index.h"
@@ -33,13 +34,13 @@
 #include <unistd.h>
 
 
-template < typename TVal >
+template < typename Key, typename Value >
 struct OSM_File_Properties : public File_Properties
 {
   OSM_File_Properties(const string& file_base_name_, uint32 block_size_,
 		      uint32 map_block_size_)
     : file_base_name(file_base_name_), block_size(block_size_),
-      map_block_size(map_block_size_ > 0 ? map_block_size_*TVal::max_size_of() : 0) {}
+      map_block_size(map_block_size_ > 0 ? map_block_size_ * Key::max_size_of() : 0) {}
   
   const string& get_file_name_trunk() const { return file_base_name; }
   
@@ -50,12 +51,12 @@ struct OSM_File_Properties : public File_Properties
   
   uint32 get_block_size() const { return block_size/4; }
   uint32 get_max_size() const { return 4; }
-  uint32 get_compression_method() const { return File_Blocks_Index< TVal >::ZLIB_COMPRESSION; }
+  uint32 get_compression_method() const { return File_Blocks_Index< Key >::ZLIB_COMPRESSION; }
   uint32 get_map_block_size() const { return map_block_size; }
   
   vector< bool > get_data_footprint(const string& db_dir) const
   {
-    vector< bool > temp = get_data_index_footprint< TVal >(*this, db_dir);
+    vector< bool > temp = get_data_index_footprint< Key >(*this, db_dir);
     return temp;
   }
   
@@ -66,15 +67,21 @@ struct OSM_File_Properties : public File_Properties
   
   uint32 id_max_size_of() const
   {
-    return TVal::max_size_of();
+    return Key::max_size_of();
   }
   
   File_Blocks_Index_Base* new_data_index
       (bool writeable, bool use_shadow, const string& db_dir, const string& file_name_extension)
       const
   {
-    return new File_Blocks_Index< TVal >
+    return new File_Blocks_Index< Key >
         (*this, writeable, use_shadow, db_dir, file_name_extension);
+  }
+  
+  Block_Backend_Cache_Base* new_cache
+      (File_Blocks_Index_Base& db_index_, Transaction& transaction_) const
+  {
+    return new Block_Backend_Cache< Key, Value >(db_index_, transaction_);
   }
 
   string file_base_name;
@@ -107,30 +114,30 @@ Basic_Settings& basic_settings()
 
 Osm_Base_Settings::Osm_Base_Settings()
 :
-  NODES(new OSM_File_Properties< Uint32_Index >("nodes", 512*1024, 64*1024)),
-  NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+  NODES(new OSM_File_Properties< Uint32_Index, Node_Skeleton >("nodes", 512*1024, 64*1024)),
+  NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local, Node_Skeleton::Id_Type >
       ("node_tags_local", 512*1024, 0)),
-  NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+  NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > >
       ("node_tags_global", 512*1024, 0)),
-  NODE_KEYS(new OSM_File_Properties< Uint32_Index >
+  NODE_KEYS(new OSM_File_Properties< Uint32_Index, String_Object >
       ("node_keys", 512*1024, 0)),
       
-  WAYS(new OSM_File_Properties< Uint31_Index >("ways", 512*1024, 64*1024)),
-  WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+  WAYS(new OSM_File_Properties< Uint31_Index, Way_Skeleton >("ways", 512*1024, 64*1024)),
+  WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local, Way_Skeleton::Id_Type >
       ("way_tags_local", 512*1024, 0)),
-  WAY_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+  WAY_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > >
       ("way_tags_global", 512*1024, 0)),
-  WAY_KEYS(new OSM_File_Properties< Uint32_Index >
+  WAY_KEYS(new OSM_File_Properties< Uint32_Index, String_Object >
       ("way_keys", 512*1024, 0)),
       
-  RELATIONS(new OSM_File_Properties< Uint31_Index >("relations", 1024*1024, 64*1024)),
-  RELATION_ROLES(new OSM_File_Properties< Uint32_Index >
+  RELATIONS(new OSM_File_Properties< Uint31_Index, Relation_Skeleton >("relations", 1024*1024, 64*1024)),
+  RELATION_ROLES(new OSM_File_Properties< Uint32_Index, String_Object >
       ("relation_roles", 512*1024, 0)),
-  RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+  RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local, Relation_Skeleton::Id_Type >
       ("relation_tags_local", 512*1024, 0)),
-  RELATION_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+  RELATION_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > >
       ("relation_tags_global", 512*1024, 0)),
-  RELATION_KEYS(new OSM_File_Properties< Uint32_Index >
+  RELATION_KEYS(new OSM_File_Properties< Uint32_Index, String_Object >
       ("relation_keys", 512*1024, 0)),
       
   shared_name(basic_settings().shared_name_base + "_osm_base"),
@@ -150,12 +157,12 @@ const Osm_Base_Settings& osm_base_settings()
 
 Area_Settings::Area_Settings()
 :
-  AREA_BLOCKS(new OSM_File_Properties< Uint31_Index >
+  AREA_BLOCKS(new OSM_File_Properties< Uint31_Index, Area_Block >
       ("area_blocks", 512*1024, 64*1024)),
-  AREAS(new OSM_File_Properties< Uint31_Index >("areas", 2*1024*1024, 64*1024)),
-  AREA_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+  AREAS(new OSM_File_Properties< Uint31_Index, Area_Skeleton >("areas", 2*1024*1024, 64*1024)),
+  AREA_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local, Area_Skeleton::Id_Type >
       ("area_tags_local", 256*1024, 0)),
-  AREA_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+  AREA_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global, Area_Skeleton::Id_Type >
       ("area_tags_global", 512*1024, 0)),
       
   shared_name(basic_settings().shared_name_base + "_areas"),
@@ -175,15 +182,15 @@ const Area_Settings& area_settings()
 
 Meta_Settings::Meta_Settings()
 :
-  USER_DATA(new OSM_File_Properties< Uint32_Index >
+  USER_DATA(new OSM_File_Properties< Uint32_Index, User_Data >
       ("user_data", 512*1024, 0)),
-  USER_INDICES(new OSM_File_Properties< Uint32_Index >
+  USER_INDICES(new OSM_File_Properties< Uint32_Index, Uint31_Index >
       ("user_indices", 512*1024, 0)),
-  NODES_META(new OSM_File_Properties< Uint31_Index >
+  NODES_META(new OSM_File_Properties< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >
       ("nodes_meta", 512*1024, 0)),
-  WAYS_META(new OSM_File_Properties< Uint31_Index >
+  WAYS_META(new OSM_File_Properties< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
       ("ways_meta", 512*1024, 0)),
-  RELATIONS_META(new OSM_File_Properties< Uint31_Index >
+  RELATIONS_META(new OSM_File_Properties< Uint31_Index, OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > >
       ("relations_meta", 512*1024, 0))
 {}
 
@@ -197,43 +204,48 @@ const Meta_Settings& meta_settings()
 
 Attic_Settings::Attic_Settings()
 :
-  NODES(new OSM_File_Properties< Uint31_Index >("nodes_attic", 512*1024, 64*1024)),
-  NODES_UNDELETED(new OSM_File_Properties< Uint31_Index >("nodes_attic_undeleted", 512*1024, 64*1024)),
-  NODE_IDX_LIST(new OSM_File_Properties< Node::Id_Type >
+  NODES(new OSM_File_Properties< Uint31_Index, Attic< Node_Skeleton > >("nodes_attic", 512*1024, 64*1024)),
+  NODES_UNDELETED(new OSM_File_Properties< Uint31_Index, Attic< Node_Skeleton::Id_Type > >
+      ("nodes_attic_undeleted", 512*1024, 64*1024)),
+  NODE_IDX_LIST(new OSM_File_Properties< Node::Id_Type, Uint31_Index >
       ("node_attic_indexes", 512*1024, 0)),
-  NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+  NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local, Attic< Node_Skeleton::Id_Type > >
       ("node_tags_local_attic", 512*1024, 0)),
-  NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+  NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global, Attic< Tag_Object_Global< Node_Skeleton::Id_Type > > >
       ("node_tags_global_attic", 2*1024*1024, 0)),
-  NODES_META(new OSM_File_Properties< Uint31_Index >
+  NODES_META(new OSM_File_Properties< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >
       ("nodes_meta_attic", 512*1024, 0)),
-  NODE_CHANGELOG(new OSM_File_Properties< Timestamp >
+  NODE_CHANGELOG(new OSM_File_Properties< Timestamp, Change_Entry< Node_Skeleton::Id_Type > >
       ("node_changelog", 512*1024, 0)),
       
-  WAYS(new OSM_File_Properties< Uint31_Index >("ways_attic", 512*1024, 64*1024)),
-  WAYS_UNDELETED(new OSM_File_Properties< Uint31_Index >("ways_attic_undeleted", 512*1024, 64*1024)),
-  WAY_IDX_LIST(new OSM_File_Properties< Way::Id_Type >
+  WAYS(new OSM_File_Properties< Uint31_Index, Attic< Way_Skeleton > >("ways_attic", 512*1024, 64*1024)),
+  WAYS_UNDELETED(new OSM_File_Properties< Uint31_Index, Attic< Way_Skeleton::Id_Type > >
+      ("ways_attic_undeleted", 512*1024, 64*1024)),
+  WAY_IDX_LIST(new OSM_File_Properties< Way::Id_Type, Uint31_Index >
       ("way_attic_indexes", 512*1024, 0)),
-  WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+  WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
       ("way_tags_local_attic", 512*1024, 0)),
-  WAY_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+  WAY_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global, Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > >
       ("way_tags_global_attic", 2*1024*1024, 0)),
-  WAYS_META(new OSM_File_Properties< Uint31_Index >
+  WAYS_META(new OSM_File_Properties< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
       ("ways_meta_attic", 512*1024, 0)),
-  WAY_CHANGELOG(new OSM_File_Properties< Timestamp >
+  WAY_CHANGELOG(new OSM_File_Properties< Timestamp, Change_Entry< Way_Skeleton::Id_Type > >
       ("way_changelog", 512*1024, 0)),
       
-  RELATIONS(new OSM_File_Properties< Uint31_Index >("relations_attic", 1024*1024, 64*1024)),
-  RELATIONS_UNDELETED(new OSM_File_Properties< Uint31_Index >("relations_attic_undeleted", 512*1024, 64*1024)),
-  RELATION_IDX_LIST(new OSM_File_Properties< Relation::Id_Type >
+  RELATIONS(new OSM_File_Properties< Uint31_Index, Attic< Relation_Skeleton > >
+      ("relations_attic", 1024*1024, 64*1024)),
+  RELATIONS_UNDELETED(new OSM_File_Properties< Uint31_Index, Attic< Relation_Skeleton::Id_Type > >
+      ("relations_attic_undeleted", 512*1024, 64*1024)),
+  RELATION_IDX_LIST(new OSM_File_Properties< Relation::Id_Type, Uint31_Index >
       ("relation_attic_indexes", 512*1024, 0)),
-  RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+  RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local, Attic< Relation_Skeleton::Id_Type > >
       ("relation_tags_local_attic", 512*1024, 0)),
-  RELATION_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+  RELATION_TAGS_GLOBAL(new OSM_File_Properties
+      < Tag_Index_Global, Attic< Tag_Object_Global< Relation_Skeleton::Id_Type > > >
       ("relation_tags_global_attic", 2*1024*1024, 0)),
-  RELATIONS_META(new OSM_File_Properties< Uint31_Index >
+  RELATIONS_META(new OSM_File_Properties< Uint31_Index, OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > >
       ("relations_meta_attic", 512*1024, 0)),
-  RELATION_CHANGELOG(new OSM_File_Properties< Timestamp >
+  RELATION_CHANGELOG(new OSM_File_Properties< Timestamp, Change_Entry< Relation_Skeleton::Id_Type > >
       ("relation_changelog", 512*1024, 0))
 {}
 

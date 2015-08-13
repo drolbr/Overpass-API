@@ -193,13 +193,17 @@ struct Test_File : File_Properties
     return IntIndex::max_size_of();
   }
   
-  File_Blocks_Index_Base* new_data_index
+  virtual File_Blocks_Index_Base* new_data_index
       (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const
   {
     return new File_Blocks_Index< IntIndex >
         (*this, writeable, use_shadow, db_dir, file_name_extension);
   }
+
+  virtual Block_Backend_Cache_Base* new_cache
+      (File_Blocks_Index_Base& db_index_, Transaction& transaction_) const
+      { return 0; }
   
   string basename, basedir;
 };

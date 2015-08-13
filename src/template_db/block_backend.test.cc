@@ -136,26 +136,17 @@ string INDEX_SUFFIX(".idx");
 
 struct Test_File : File_Properties
 {
-  const std::string& get_basedir() const
-  {
-    return BASE_DIRECTORY;
-  }
-  
-  const std::string& get_file_name_trunk() const
-  {
-    static std::string result("testfile");
-    return result;
-  }
-  
-  const std::string& get_index_suffix() const
-  {
-    return INDEX_SUFFIX;
-  }
+  const std::string& get_basedir() const { return BASE_DIRECTORY; }
+  const std::string& get_index_suffix() const { return INDEX_SUFFIX; }
+  const std::string& get_data_suffix() const { return DATA_SUFFIX; }
 
-  const std::string& get_data_suffix() const
-  {
-    return DATA_SUFFIX;
-  }
+  uint32 get_block_size() const { return 512; }
+  uint32 get_max_size() const { return 1; }
+  uint32 get_compression_method() const { return File_Blocks_Index< IntIndex >::NO_COMPRESSION; }
+  uint32 get_map_block_size() const { return 16; }
+  
+  vector< bool > get_data_footprint(const string& db_dir) const { return vector< bool >(); }
+  vector< bool > get_map_footprint(const string& db_dir) const { return vector< bool >(); }  
 
   const std::string& get_id_suffix() const
   {
@@ -163,41 +154,17 @@ struct Test_File : File_Properties
     return result;
   }
 
+  const std::string& get_file_name_trunk() const
+  {
+    static std::string result("testfile");
+    return result;
+  }
+  
   const std::string& get_shadow_suffix() const
   {
     static std::string result(".shadow");
     return result;
   }
-
-  uint32 get_block_size() const
-  {
-    return 512;
-  }
-  
-  uint32 get_max_size() const
-  {
-    return 1;
-  }
-  
-  uint32 get_compression_method() const
-  {
-    return 0;
-  }
-  
-  uint32 get_map_block_size() const
-  {
-    return 16;
-  }
-  
-  vector< bool > get_data_footprint(const std::string& db_dir) const
-  {
-    return vector< bool >();
-  }
-  
-  vector< bool > get_map_footprint(const std::string& db_dir) const
-  {
-    return vector< bool >();
-  }  
 
   uint32 id_max_size_of() const
   {
@@ -205,13 +172,17 @@ struct Test_File : File_Properties
     return 0;
   }
   
-  File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
+  virtual File_Blocks_Index_Base* new_data_index
+      (bool writeable, bool use_shadow, const string& db_dir, const string& file_name_extension)
       const
   {
     return new File_Blocks_Index< IntIndex >
         (*this, writeable, use_shadow, db_dir, file_name_extension);
   }
+  
+  virtual Block_Backend_Cache_Base* new_cache
+      (File_Blocks_Index_Base& db_index_, Transaction& transaction_) const
+      { return 0; }
 };
 
 

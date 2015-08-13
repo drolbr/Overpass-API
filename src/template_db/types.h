@@ -77,6 +77,19 @@ struct File_Blocks_Index_Base
 };
 
 
+struct Block_Backend_Cache_Base
+{
+  virtual long long get_total_size() = 0;
+  virtual void trim_non_reserved() = 0;
+  virtual void trim_reserved() = 0;
+  
+  virtual ~Block_Backend_Cache_Base() {}
+};
+
+
+class Transaction;
+
+
 struct File_Properties
 {
   virtual const std::string& get_file_name_trunk() const = 0;
@@ -97,6 +110,8 @@ struct File_Properties
   virtual File_Blocks_Index_Base* new_data_index
       (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const = 0;
+  virtual Block_Backend_Cache_Base* new_cache
+      (File_Blocks_Index_Base& db_index_, Transaction& transaction_) const = 0;
 };
 
 
