@@ -23,6 +23,7 @@
 #include <cstdio>
 
 #include "block_backend.h"
+#include "block_backend_cache.h"
 #include "transaction.h"
 
 
@@ -182,7 +183,9 @@ struct Test_File : File_Properties
   
   virtual Block_Backend_Cache_Base* new_cache
       (File_Blocks_Index_Base& db_index_, Transaction& transaction_) const
-      { return 0; }
+  {
+    return new Block_Backend_Cache< IntIndex, IntObject >(db_index_, transaction_);
+  }
 };
 
 
@@ -298,6 +301,19 @@ void read_test(unsigned int step)
     std::cout<<"Keywise reading all blocks ...\n";
     fit = db_backend.flat_begin();
     key_vector_read_loop(db_backend, fit);
+    std::cout<<"... all blocks read.\n";
+    
+    std::cout<<"Reading all blocks with cache ...\n";
+    Block_Backend_Flat_Cached_Request< IntIndex, IntObject >
+        request(dynamic_cast< Block_Backend_Cache< IntIndex, IntObject >& >(transaction.get_cache(tf)), time(0));
+    std::vector< IntObject >* values = request.read_whole_key();
+    if (!values)
+      std::cout<<"[empty]\n";
+    while (values)
+    {
+      std::cout<<values->size()<<" values read, first value is "<<values->front().val()<<'\n';
+      values = request.read_whole_key();
+    }
     std::cout<<"... all blocks read.\n";
 
     std::set< IntIndex > index_list;

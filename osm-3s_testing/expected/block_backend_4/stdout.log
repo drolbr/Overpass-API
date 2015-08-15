@@ -45,6 +45,21 @@ Total size: 4, next index: 99
 Index 99: 1999 
 Total size: 4, next index: -1
 ... all blocks read.
+Reading all blocks with cache ...
+1 values read, first value is 1000
+1 values read, first value is 1909
+1 values read, first value is 1818
+1 values read, first value is 1727
+1 values read, first value is 1636
+1 values read, first value is 642
+1 values read, first value is 1545
+1 values read, first value is 1454
+1 values read, first value is 1363
+1 values read, first value is 1272
+1 values read, first value is 1181
+1 values read, first value is 1090
+1 values read, first value is 1999
+... all blocks read.
 Reading blocks with indices {0, 9, ..., 99} ...
 Index 0: 1000 
 Index 9: 1909 

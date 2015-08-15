@@ -52,13 +52,13 @@ public:
   virtual void trim_non_reserved();
   virtual void trim_reserved();
   
-  virtual ~Block_Backend_Cache() {}
+  virtual ~Block_Backend_Cache() { delete db; }
   
   std::vector< Value >* read_whole_key(Block_Backend_Basic_Cached_Request< Key, Value >& request);
   
   void register_request(Block_Backend_Basic_Cached_Request< Key, Value >& request);
   void unregister_request(Block_Backend_Basic_Cached_Request< Key, Value >& request);
-  Block_Backend< Key, Value >& get_db() { return *db; }
+  Block_Backend< Key, Value >& get_db();
   
 private:
   File_Blocks_Index_Base* db_index;
@@ -73,8 +73,8 @@ template< typename Key, typename Value >
 class Block_Backend_Basic_Cached_Request
 {
 public:
-  Block_Backend_Basic_Cached_Request(int used_timestamp);
-  virtual ~Block_Backend_Basic_Cached_Request();
+  Block_Backend_Basic_Cached_Request(int used_timestamp) : used_timestamp_(used_timestamp) {}
+  virtual ~Block_Backend_Basic_Cached_Request() {}
   
   virtual bool is_reserved(const Key& key) = 0;
   virtual const Key& frontend_index() const = 0;
@@ -95,6 +95,9 @@ template< typename Key, typename Value >
 std::vector< Value >* Block_Backend_Cache< Key, Value >::read_whole_key
     (Block_Backend_Basic_Cached_Request< Key, Value >& request)
 {
+  if (request.frontend_index() == Key())
+    return 0;
+  
   typename std::map< Key, Cache_Entry< Key, Value > >::iterator
       cache_it = cached_blocks.find(request.frontend_index());
   
@@ -102,14 +105,15 @@ std::vector< Value >* Block_Backend_Cache< Key, Value >::read_whole_key
   {
     transaction->trim_cache();
     
-    cache_it = cached_blocks.insert(Cache_Entry< Key, Value >(request.used_timestamp())).first;
+    cache_it = cached_blocks.insert(std::make_pair
+        (request.frontend_index(), Cache_Entry< Key, Value >(request.used_timestamp()))).first;
     std::pair< int, Key > size_and_next = request.read_whole_key_base(cache_it->second.values);
     cache_it->second.size = size_and_next.first;
     cache_it->second.next_key = size_and_next.second;
   }
   
-  std::vector< Value >* result = &cache_it->values;
-  cache_it->used_timestamp = request.used_timestamp();
+  std::vector< Value >* result = &cache_it->second.values;
+  cache_it->second.used_timestamp = request.used_timestamp();
   
   request.skip_frontend_index(cache_it->second.next_key);
   
@@ -164,15 +168,44 @@ void Block_Backend_Cache< Key, Value >::trim_reserved()
 }
 
 
+template< typename Key, typename Value >
+Block_Backend< Key, Value >& Block_Backend_Cache< Key, Value >::get_db()
+{
+  if (!db)
+    db = new Block_Backend< Key, Value >(db_index);
+  return *db;
+}
+
+
+template< typename Key, typename Value >
+void Block_Backend_Cache< Key, Value >::register_request(Block_Backend_Basic_Cached_Request< Key, Value >& request)
+{
+  registered_requests.push_back(&request);
+}
+
+
+template< typename Key, typename Value >
+void Block_Backend_Cache< Key, Value >::unregister_request(Block_Backend_Basic_Cached_Request< Key, Value >& request)
+{
+  typename std::vector< Block_Backend_Basic_Cached_Request< Key, Value >* >::iterator
+      it = registered_requests.begin();
+  while (it != registered_requests.end() && *it != &request)
+    ++it;
+  if (it != registered_requests.end())
+  {
+    *it = registered_requests.back();
+    registered_requests.pop_back();
+  }
+  
+  if (registered_requests.empty())
+  {
+    delete db;
+    db = 0;
+  }
+}
+
+
 // Implementation of Block_Backend_Flat_Cached_Request: ------------------------
-
-
-/* read_whole_key
- - liefert die Values zum frontend_index des request zurück (ggf. leer)
- - lässt den request auf den nächsten sinnvollen frontend_index weiterschalten
- */
-
-//TODO: Transaction::get_cache()
 
 
 template< typename Key, typename Value >
@@ -199,7 +232,9 @@ private:
 template< typename Key, typename Value >
 Block_Backend_Flat_Cached_Request< Key, Value >::Block_Backend_Flat_Cached_Request
     (Block_Backend_Cache< Key, Value >& cache_, int used_timestamp)
-    : cache(&cache_), backend_it(cache->get_db().flat_begin()), frontend_index_(backend_it.index())
+    : Block_Backend_Basic_Cached_Request< Key, Value >(used_timestamp),
+      cache(&cache_), backend_it(cache->get_db().flat_begin()),
+      frontend_index_(backend_it == cache->get_db().flat_end() ? Key() : backend_it.index())
 {
   cache->register_request(*this);
 }
@@ -209,7 +244,7 @@ template< typename Key, typename Value >
 std::pair< int, Key > Block_Backend_Flat_Cached_Request< Key, Value >
     ::read_whole_key_base(std::vector< Value >& result_values)
 {
-  return backend_it.read_whole_key_base(result_values);
+  return backend_it.read_whole_key(result_values);
 }
 
 

@@ -9,6 +9,9 @@ Keywise reading all blocks ...
 Index 42: 642 
 Total size: 4, next index: -1
 ... all blocks read.
+Reading all blocks with cache ...
+1 values read, first value is 642
+... all blocks read.
 Reading blocks with indices {0, 9, ..., 99} ...
 [empty]
 ... all blocks read.
