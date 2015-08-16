@@ -512,12 +512,34 @@ TStatement* create_polygon_statement(typename TStatement::Factory& stmt_factory,
 template< class TStatement >
 TStatement* create_user_statement
     (typename TStatement::Factory& stmt_factory,
-     string type, string name, string uid, string into, uint line_nr)
+     string type, vector< string > name, vector< string > uid, string into, uint line_nr)
 {
   map< string, string > attr;
+  std::vector< string >::iterator it;
+  int i;
+
   attr["into"] = into;
-  attr["uid"] = uid;
-  attr["name"] = name;
+
+  if (uid.empty())
+    attr["uid"] = "0";
+
+  if (name.empty())
+    attr["name"] = "";
+
+  for(it = name.begin(), i = 0 ; it != name.end(); ++it, ++i)
+  {
+    std::stringstream id;
+    id << "name_" << i;
+    attr[id.str()] = *it;
+  }
+
+  for(it = uid.begin(), i = 0 ; it != uid.end(); ++it, ++i)
+  {
+    std::stringstream id;
+    id << "uid_" << i;
+    attr[id.str()] = *it;
+  }
+
   attr["type"] = type;
   return stmt_factory.create_statement("user", line_nr, attr);
 }
@@ -990,10 +1012,10 @@ TStatement* create_query_substatement
         (stmt_factory, clause.attributes[0], into, clause.line_col.first);
   else if (clause.statement == "user")
     return create_user_statement< TStatement >
-        (stmt_factory, type, clause.attributes[0], "", into, clause.line_col.first);
+        (stmt_factory, type, clause.attributes, vector<string>(), into, clause.line_col.first);
   else if (clause.statement == "uid")
     return create_user_statement< TStatement >
-        (stmt_factory, type, "", clause.attributes[0], into, clause.line_col.first);
+        (stmt_factory, type, vector<string>(), clause.attributes, into, clause.line_col.first);
   else if (clause.statement == "newer")
     return create_newer_statement< TStatement >
         (stmt_factory, clause.attributes[0], clause.line_col.first);
@@ -1249,18 +1271,36 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
       {
 	Statement_Text clause("user", token.line_col());
 	++token;
-	clear_until_after(token, error_output, ":");
-	clause.attributes.push_back(get_text_token(token, error_output, "User name"));
-	clear_until_after(token, error_output, ")");
+	clear_until_after(token, error_output, ":", false);
+    if (*token == ":")
+	{
+	  do
+	  {
+	      ++token;
+	      clause.attributes.push_back(get_text_token(token, error_output, "User name"));
+	      clear_until_after(token, error_output, ",", ")", false);
+	  } while (token.good() && *token == ",");
+
+      clear_until_after(token, error_output, ")");
+    }
 	clauses.push_back(clause);
       }
       else if (*token == "uid")
       {
 	Statement_Text clause("uid", token.line_col());
 	++token;
-	clear_until_after(token, error_output, ":");
-	clause.attributes.push_back(get_text_token(token, error_output, "Positive integer"));
-	clear_until_after(token, error_output, ")");
+	clear_until_after(token, error_output, ":", false);
+    if (*token == ":")
+    {
+      do
+      {
+          ++token;
+          clause.attributes.push_back(get_text_token(token, error_output, "Positive integer"));
+	      clear_until_after(token, error_output, ",", ")", false);
+      } while (token.good() && *token == ",");
+
+      clear_until_after(token, error_output, ")");
+    }
 	clauses.push_back(clause);
       }
       else if (*token == "newer")
