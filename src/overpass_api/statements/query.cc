@@ -605,10 +605,12 @@ void filter_ids_by_ntags
   
   sort(removed_ids.begin(), removed_ids.end());
   removed_ids.erase(unique(removed_ids.begin(), removed_ids.end()), removed_ids.end());
+
+  sort(new_ids.begin(), new_ids.end());
+  new_ids.erase(unique(new_ids.begin(), new_ids.end()), new_ids.end());
+
   new_ids.erase(set_difference(new_ids.begin(), new_ids.end(),
                 removed_ids.begin(), removed_ids.end(), new_ids.begin()), new_ids.end());
-  
-  sort(new_ids.begin(), new_ids.end());
 }
 
 
