@@ -212,7 +212,7 @@ template< typename Key, typename Value >
 class Block_Backend_Flat_Cached_Request : Block_Backend_Basic_Cached_Request< Key, Value >
 {
 public:
-  Block_Backend_Flat_Cached_Request(Block_Backend_Cache< Key, Value >& cache_, int used_timestamp);
+  Block_Backend_Flat_Cached_Request(Block_Backend_Cache_Base& cache_, int used_timestamp);
   virtual ~Block_Backend_Flat_Cached_Request() { cache->unregister_request(*this); }
   
   virtual bool is_reserved(const Key& key) { return !(key < frontend_index_); }
@@ -221,6 +221,7 @@ public:
   virtual std::pair< int, Key > read_whole_key_base(std::vector< Value >& result_values);
   
   std::vector< Value >* read_whole_key();  
+  const Key& get_key();  
   
 private:
   Block_Backend_Cache< Key, Value >* cache;
@@ -231,9 +232,10 @@ private:
 
 template< typename Key, typename Value >
 Block_Backend_Flat_Cached_Request< Key, Value >::Block_Backend_Flat_Cached_Request
-    (Block_Backend_Cache< Key, Value >& cache_, int used_timestamp)
+    (Block_Backend_Cache_Base& cache_, int used_timestamp)
     : Block_Backend_Basic_Cached_Request< Key, Value >(used_timestamp),
-      cache(&cache_), backend_it(cache->get_db().flat_begin()),
+      cache(dynamic_cast< Block_Backend_Cache< Key, Value >* >(&cache_)),
+      backend_it(cache->get_db().flat_begin()),
       frontend_index_(backend_it == cache->get_db().flat_end() ? Key() : backend_it.index())
 {
   cache->register_request(*this);
@@ -252,6 +254,13 @@ template< typename Key, typename Value >
 std::vector< Value >* Block_Backend_Flat_Cached_Request< Key, Value >::read_whole_key()
 {
   return cache->read_whole_key(*this);
+}
+
+
+template< typename Key, typename Value >
+const Key& Block_Backend_Flat_Cached_Request< Key, Value >::get_key()
+{
+  return frontend_index_;
 }
 
 
