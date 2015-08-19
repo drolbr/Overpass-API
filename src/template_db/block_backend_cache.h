@@ -54,7 +54,8 @@ public:
   
   virtual ~Block_Backend_Cache() { delete db; }
   
-  std::vector< Value >* read_whole_key(Block_Backend_Basic_Cached_Request< Key, Value >& request);
+  std::pair< Key, const std::vector< Value >* > read_whole_key
+      (Block_Backend_Basic_Cached_Request< Key, Value >& request);
   
   void register_request(Block_Backend_Basic_Cached_Request< Key, Value >& request);
   void unregister_request(Block_Backend_Basic_Cached_Request< Key, Value >& request);
@@ -92,11 +93,11 @@ private:
 
 
 template< typename Key, typename Value >
-std::vector< Value >* Block_Backend_Cache< Key, Value >::read_whole_key
+std::pair< Key, const std::vector< Value >* > Block_Backend_Cache< Key, Value >::read_whole_key
     (Block_Backend_Basic_Cached_Request< Key, Value >& request)
 {
   if (request.frontend_index() == Key())
-    return 0;
+    return std::pair< Key, const std::vector< Value >* >(request.frontend_index(), 0);
   
   typename std::map< Key, Cache_Entry< Key, Value > >::iterator
       cache_it = cached_blocks.find(request.frontend_index());
@@ -112,7 +113,8 @@ std::vector< Value >* Block_Backend_Cache< Key, Value >::read_whole_key
     cache_it->second.next_key = size_and_next.second;
   }
   
-  std::vector< Value >* result = &cache_it->second.values;
+  std::pair< Key, const std::vector< Value >* > result
+      = std::make_pair(request.frontend_index(), &cache_it->second.values);
   cache_it->second.used_timestamp = request.used_timestamp();
   
   request.skip_frontend_index(cache_it->second.next_key);
@@ -213,19 +215,18 @@ class Block_Backend_Flat_Cached_Request : Block_Backend_Basic_Cached_Request< Ke
 {
 public:
   Block_Backend_Flat_Cached_Request(Block_Backend_Cache_Base& cache_, int used_timestamp);
-  virtual ~Block_Backend_Flat_Cached_Request() { cache->unregister_request(*this); }
+  virtual ~Block_Backend_Flat_Cached_Request();
   
   virtual bool is_reserved(const Key& key) { return !(key < frontend_index_); }
   virtual const Key& frontend_index() const { return frontend_index_; }
   virtual void skip_frontend_index(const Key& target) { frontend_index_ = target; }
   virtual std::pair< int, Key > read_whole_key_base(std::vector< Value >& result_values);
   
-  std::vector< Value >* read_whole_key();  
-  const Key& get_key();  
+  std::pair< Key, const std::vector< Value >* > read_whole_key();  
   
 private:
   Block_Backend_Cache< Key, Value >* cache;
-  typename Block_Backend< Key, Value >::Flat_Iterator backend_it;
+  typename Block_Backend< Key, Value >::Flat_Iterator* backend_it;
   Key frontend_index_;
 };
 
@@ -235,10 +236,18 @@ Block_Backend_Flat_Cached_Request< Key, Value >::Block_Backend_Flat_Cached_Reque
     (Block_Backend_Cache_Base& cache_, int used_timestamp)
     : Block_Backend_Basic_Cached_Request< Key, Value >(used_timestamp),
       cache(dynamic_cast< Block_Backend_Cache< Key, Value >* >(&cache_)),
-      backend_it(cache->get_db().flat_begin()),
-      frontend_index_(backend_it == cache->get_db().flat_end() ? Key() : backend_it.index())
+      backend_it(new typename Block_Backend< Key, Value >::Flat_Iterator(cache->get_db().flat_begin())),
+      frontend_index_((*backend_it == cache->get_db().flat_end()) ? Key() : backend_it->index())
 {
   cache->register_request(*this);
+}
+
+
+template< typename Key, typename Value >
+Block_Backend_Flat_Cached_Request< Key, Value >::~Block_Backend_Flat_Cached_Request()
+{
+  cache->unregister_request(*this);
+  delete backend_it;
 }
 
 
@@ -246,21 +255,16 @@ template< typename Key, typename Value >
 std::pair< int, Key > Block_Backend_Flat_Cached_Request< Key, Value >
     ::read_whole_key_base(std::vector< Value >& result_values)
 {
-  return backend_it.read_whole_key(result_values);
+  if (!backend_it)
+    backend_it = new typename Block_Backend< Key, Value >::Flat_Iterator(cache->get_db().flat_begin());
+  return backend_it->read_whole_key(result_values);
 }
 
 
 template< typename Key, typename Value >
-std::vector< Value >* Block_Backend_Flat_Cached_Request< Key, Value >::read_whole_key()
+std::pair< Key, const std::vector< Value >* > Block_Backend_Flat_Cached_Request< Key, Value >::read_whole_key()
 {
   return cache->read_whole_key(*this);
-}
-
-
-template< typename Key, typename Value >
-const Key& Block_Backend_Flat_Cached_Request< Key, Value >::get_key()
-{
-  return frontend_index_;
 }
 
 

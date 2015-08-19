@@ -305,18 +305,16 @@ void read_test(unsigned int step)
     
     std::cout<<"Reading all blocks with cache ...\n";
     Block_Backend_Flat_Cached_Request< IntIndex, IntObject > request(transaction.get_cache(tf), time(0));
-    IntIndex key = request.get_key();
-    std::vector< IntObject >* values = request.read_whole_key();
-    if (!values)
+    std::pair< IntIndex, const std::vector< IntObject >* > payload = request.read_whole_key();
+    if (!payload.second)
       std::cout<<"[empty]\n";
-    while (values)
+    while (payload.second)
     {
-      std::cout<<"Index "<<key.val()<<": ";
-      for (std::vector< IntObject >::const_iterator it = values->begin(); it != values->end(); ++it)
+      std::cout<<"Index "<<payload.first.val()<<": ";
+      for (std::vector< IntObject >::const_iterator it = payload.second->begin(); it != payload.second->end(); ++it)
 	std::cout<<it->val()<<' ';
       std::cout<<'\n';
-      key = request.get_key();
-      values = request.read_whole_key();
+      payload = request.read_whole_key();
     }
     std::cout<<"... all blocks read.\n";
 
