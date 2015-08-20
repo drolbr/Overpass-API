@@ -444,6 +444,20 @@ Total size: 12, next index: 91
 Index 99: 1999 999 2099 
 Total size: 12, next index: -1
 ... all blocks read.
+Reading blocks with indices {0, 9, ..., 99} with cache ...
+Index 0: 1000 900 2000 
+Index 9: 1909 909 2009 
+Index 18: 1818 918 2018 
+Index 27: 1727 927 2027 
+Index 36: 1636 936 2036 
+Index 45: 1545 945 2045 
+Index 54: 1454 954 2054 
+Index 63: 1363 963 2063 
+Index 72: 1272 972 2072 
+Index 81: 1181 981 2081 
+Index 90: 1090 990 2090 
+Index 99: 1999 999 2099 
+... all blocks read.
 Reading blocks with indices {0, 1, ..., 9} ...
 Index 0: 1000 900 2000 
 Index 1: 901 2001 

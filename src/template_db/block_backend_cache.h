@@ -25,6 +25,9 @@
 #include <vector>
 
 
+// TODO: concurrency protection (blocked key), size control, statistics, lazy iterator for discrete
+
+
 template< typename Key, typename Value >
 struct Cache_Entry
 {
@@ -263,6 +266,89 @@ std::pair< int, Key > Block_Backend_Flat_Cached_Request< Key, Value >
 
 template< typename Key, typename Value >
 std::pair< Key, const std::vector< Value >* > Block_Backend_Flat_Cached_Request< Key, Value >::read_whole_key()
+{
+  return cache->read_whole_key(*this);
+}
+
+
+// Implementation of Block_Backend_Discrete_Cached_Request: ------------------------
+
+
+template< typename Key, typename Value, typename Iterator = typename std::set< Key >::const_iterator >
+class Block_Backend_Discrete_Cached_Request : Block_Backend_Basic_Cached_Request< Key, Value >
+{
+public:
+  Block_Backend_Discrete_Cached_Request(Block_Backend_Cache_Base& cache_, int used_timestamp,
+      const Iterator& begin_, const Iterator& end_);
+  virtual ~Block_Backend_Discrete_Cached_Request();
+  
+  virtual bool is_reserved(const Key& key) { return !(key < frontend_index_); }
+  virtual const Key& frontend_index() const { return frontend_index_; }
+  virtual void skip_frontend_index(const Key& target);
+  virtual std::pair< int, Key > read_whole_key_base(std::vector< Value >& result_values);
+  
+  std::pair< Key, const std::vector< Value >* > read_whole_key();  
+  
+private:
+  Block_Backend_Discrete_Cached_Request(const Block_Backend_Discrete_Cached_Request&);
+
+  Block_Backend_Cache< Key, Value >* cache;
+  typename Block_Backend< Key, Value, Iterator >::Discrete_Iterator* backend_it;
+  Key frontend_index_;
+  Iterator begin;
+  Iterator end;
+};
+
+
+template< typename Key, typename Value, typename Iterator >
+Block_Backend_Discrete_Cached_Request< Key, Value, Iterator >::Block_Backend_Discrete_Cached_Request
+    (Block_Backend_Cache_Base& cache_, int used_timestamp,
+     const Iterator& begin_, const Iterator& end_)
+    : Block_Backend_Basic_Cached_Request< Key, Value >(used_timestamp),
+      cache(dynamic_cast< Block_Backend_Cache< Key, Value >* >(&cache_)),
+      backend_it(new typename Block_Backend< Key, Value >::Discrete_Iterator
+          (cache->get_db().discrete_begin(begin_, end_))),
+      frontend_index_((*backend_it == cache->get_db().discrete_end()) ? Key() : backend_it->index()),
+      begin(begin_), end(end_)
+{
+  cache->register_request(*this);
+}
+
+
+template< typename Key, typename Value, typename Iterator >
+Block_Backend_Discrete_Cached_Request< Key, Value, Iterator >::~Block_Backend_Discrete_Cached_Request()
+{
+  cache->unregister_request(*this);
+  delete backend_it;
+}
+
+
+template< typename Key, typename Value, typename Iterator >
+void Block_Backend_Discrete_Cached_Request< Key, Value, Iterator >::skip_frontend_index(const Key& target)
+{
+  while (!(begin == end) && *begin < target)
+    ++begin;
+  if (begin == end)
+    frontend_index_ = Key();
+  else
+    frontend_index_ = *begin;
+}
+
+
+template< typename Key, typename Value, typename Iterator >
+std::pair< int, Key > Block_Backend_Discrete_Cached_Request< Key, Value, Iterator >
+    ::read_whole_key_base(std::vector< Value >& result_values)
+{
+  if (!backend_it)
+    backend_it = new typename Block_Backend< Key, Value >::Discrete_Iterator
+        (cache->get_db().discrete_begin(begin, end));
+  return backend_it->read_whole_key(result_values);
+}
+
+
+template< typename Key, typename Value, typename Iterator >
+std::pair< Key, const std::vector< Value >* >
+    Block_Backend_Discrete_Cached_Request< Key, Value, Iterator >::read_whole_key()
 {
   return cache->read_whole_key(*this);
 }
