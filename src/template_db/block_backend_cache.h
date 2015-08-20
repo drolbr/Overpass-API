@@ -83,7 +83,7 @@ public:
   virtual bool is_reserved(const Key& key) = 0;
   virtual const Key& frontend_index() const = 0;
   virtual void skip_frontend_index(const Key& target) = 0;
-  virtual std::pair< int, Key > read_whole_key_base(std::vector< Value >& result_values) = 0;
+  virtual std::pair< int, Key > read_whole_key_base(const Key& key, std::vector< Value >& result_values) = 0;
   
   int used_timestamp() const { return used_timestamp_; }
   
@@ -99,30 +99,35 @@ template< typename Key, typename Value >
 std::pair< Key, const std::vector< Value >* > Block_Backend_Cache< Key, Value >::read_whole_key
     (Block_Backend_Basic_Cached_Request< Key, Value >& request)
 {
-  if (request.frontend_index() == Key())
-    return std::pair< Key, const std::vector< Value >* >(request.frontend_index(), 0);
-  
-  typename std::map< Key, Cache_Entry< Key, Value > >::iterator
-      cache_it = cached_blocks.find(request.frontend_index());
-  
-  if (cache_it == cached_blocks.end())
+  while (true)
   {
-    transaction->trim_cache();
+    if (request.frontend_index() == Key())
+      return std::pair< Key, const std::vector< Value >* >(request.frontend_index(), 0);
+  
+    typename std::map< Key, Cache_Entry< Key, Value > >::iterator
+        cache_it = cached_blocks.find(request.frontend_index());
+  
+    if (cache_it == cached_blocks.end())
+    {
+      transaction->trim_cache();
     
-    cache_it = cached_blocks.insert(std::make_pair
-        (request.frontend_index(), Cache_Entry< Key, Value >(request.used_timestamp()))).first;
-    std::pair< int, Key > size_and_next = request.read_whole_key_base(cache_it->second.values);
-    cache_it->second.size = size_and_next.first;
-    cache_it->second.next_key = size_and_next.second;
+      cache_it = cached_blocks.insert(std::make_pair
+          (request.frontend_index(), Cache_Entry< Key, Value >(request.used_timestamp()))).first;
+      std::pair< int, Key > size_and_next
+          = request.read_whole_key_base(request.frontend_index(), cache_it->second.values);
+      cache_it->second.size = size_and_next.first;
+      cache_it->second.next_key = size_and_next.second;
+    }
+  
+    std::pair< Key, const std::vector< Value >* > result
+        = std::make_pair(request.frontend_index(), &cache_it->second.values);
+    cache_it->second.used_timestamp = request.used_timestamp();
+  
+    request.skip_frontend_index(cache_it->second.next_key);
+
+    if (!cache_it->second.values.empty())
+      return result;
   }
-  
-  std::pair< Key, const std::vector< Value >* > result
-      = std::make_pair(request.frontend_index(), &cache_it->second.values);
-  cache_it->second.used_timestamp = request.used_timestamp();
-  
-  request.skip_frontend_index(cache_it->second.next_key);
-  
-  return result;
 }
 
 
@@ -223,7 +228,7 @@ public:
   virtual bool is_reserved(const Key& key) { return !(key < frontend_index_); }
   virtual const Key& frontend_index() const { return frontend_index_; }
   virtual void skip_frontend_index(const Key& target) { frontend_index_ = target; }
-  virtual std::pair< int, Key > read_whole_key_base(std::vector< Value >& result_values);
+  virtual std::pair< int, Key > read_whole_key_base(const Key& key, std::vector< Value >& result_values);
   
   std::pair< Key, const std::vector< Value >* > read_whole_key();  
   
@@ -256,11 +261,15 @@ Block_Backend_Flat_Cached_Request< Key, Value >::~Block_Backend_Flat_Cached_Requ
 
 template< typename Key, typename Value >
 std::pair< int, Key > Block_Backend_Flat_Cached_Request< Key, Value >
-    ::read_whole_key_base(std::vector< Value >& result_values)
+    ::read_whole_key_base(const Key& key, std::vector< Value >& result_values)
 {
   if (!backend_it)
     backend_it = new typename Block_Backend< Key, Value >::Flat_Iterator(cache->get_db().flat_begin());
-  return backend_it->read_whole_key(result_values);
+  
+  if (backend_it->index() == key)
+    return backend_it->read_whole_key(result_values);
+  result_values.clear();
+  return std::make_pair(0, backend_it->index());
 }
 
 
@@ -285,7 +294,7 @@ public:
   virtual bool is_reserved(const Key& key) { return !(key < frontend_index_); }
   virtual const Key& frontend_index() const { return frontend_index_; }
   virtual void skip_frontend_index(const Key& target);
-  virtual std::pair< int, Key > read_whole_key_base(std::vector< Value >& result_values);
+  virtual std::pair< int, Key > read_whole_key_base(const Key& key, std::vector< Value >& result_values);
   
   std::pair< Key, const std::vector< Value >* > read_whole_key();  
   
@@ -306,9 +315,7 @@ Block_Backend_Discrete_Cached_Request< Key, Value, Iterator >::Block_Backend_Dis
      const Iterator& begin_, const Iterator& end_)
     : Block_Backend_Basic_Cached_Request< Key, Value >(used_timestamp),
       cache(dynamic_cast< Block_Backend_Cache< Key, Value >* >(&cache_)),
-      backend_it(new typename Block_Backend< Key, Value >::Discrete_Iterator
-          (cache->get_db().discrete_begin(begin_, end_))),
-      frontend_index_((*backend_it == cache->get_db().discrete_end()) ? Key() : backend_it->index()),
+      backend_it(0), frontend_index_(begin_ == end_ ? Key() : *begin_),
       begin(begin_), end(end_)
 {
   cache->register_request(*this);
@@ -326,23 +333,35 @@ Block_Backend_Discrete_Cached_Request< Key, Value, Iterator >::~Block_Backend_Di
 template< typename Key, typename Value, typename Iterator >
 void Block_Backend_Discrete_Cached_Request< Key, Value, Iterator >::skip_frontend_index(const Key& target)
 {
-  while (!(begin == end) && *begin < target)
-    ++begin;
-  if (begin == end)
-    frontend_index_ = Key();
+  if (target == Key())
+    frontend_index_ = target;
   else
-    frontend_index_ = *begin;
+  {
+    while (!(begin == end) && *begin < target)
+      ++begin;
+    if (begin == end)
+      frontend_index_ = Key();
+    else
+      frontend_index_ = *begin;
+  }
 }
 
 
 template< typename Key, typename Value, typename Iterator >
 std::pair< int, Key > Block_Backend_Discrete_Cached_Request< Key, Value, Iterator >
-    ::read_whole_key_base(std::vector< Value >& result_values)
+    ::read_whole_key_base(const Key& key, std::vector< Value >& result_values)
 {
   if (!backend_it)
     backend_it = new typename Block_Backend< Key, Value >::Discrete_Iterator
         (cache->get_db().discrete_begin(begin, end));
-  return backend_it->read_whole_key(result_values);
+  if (*backend_it == cache->get_db().discrete_end())
+    return std::make_pair(0, Key());
+  
+  if (backend_it->index() == key)
+    return backend_it->read_whole_key(result_values);
+  result_values.clear();
+  //TODO: return the correct next index
+  return std::make_pair(0, backend_it->index());    
 }
 
 

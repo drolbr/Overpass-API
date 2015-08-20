@@ -226,7 +226,8 @@ Block_Backend_Basic_Iterator< TIndex, TObject >::
   current_idx_pos(0), current_index(0), current_object(0), buffer(block_size)
 {
   memcpy(buffer.ptr, it.buffer.ptr, block_size);
-  current_idx_pos = (uint32*)(buffer.ptr + ((uint8*)it.current_idx_pos - it.buffer.ptr));
+  if (it.current_idx_pos)
+    current_idx_pos = (uint32*)(buffer.ptr + ((uint8*)it.current_idx_pos - it.buffer.ptr));
 }
 
 

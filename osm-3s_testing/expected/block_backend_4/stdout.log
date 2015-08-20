@@ -144,6 +144,10 @@ Total size: 4, next index: 99
 Index 99: 1999 
 Total size: 4, next index: -1
 ... all blocks read.
+Reading blocks with indices {90, 91, ..., 99} with cache ...
+Index 90: 1090 
+Index 99: 1999 
+... all blocks read.
 Reading blocks with indices [90, 100[ ...
 Index 90: 1090 
 Index 99: 1999 
