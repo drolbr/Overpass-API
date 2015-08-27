@@ -133,3 +133,63 @@ void Nonsynced_Transaction::trim_cache() const
     }
   }
 }
+
+  
+uint64 Nonsynced_Transaction::size_cached() const
+{
+  uint64 result = 0;
+  for (std::map< const File_Properties*, std::pair< File_Blocks_Index_Base*, Block_Backend_Cache_Base* > >
+      ::const_iterator it = data_files.begin(); it != data_files.end(); ++it)
+    result += it->second.second ? it->second.second->size_cached() : 0;
+  return result;
+}
+
+
+uint64 Nonsynced_Transaction::size_total_requested() const
+{
+  uint64 result = 0;
+  for (std::map< const File_Properties*, std::pair< File_Blocks_Index_Base*, Block_Backend_Cache_Base* > >
+      ::const_iterator it = data_files.begin(); it != data_files.end(); ++it)
+    result += it->second.second ? it->second.second->size_total_requested() : 0;
+  return result;
+}
+
+
+uint64 Nonsynced_Transaction::size_read_from_disk() const
+{
+  uint64 result = 0;
+  for (std::map< const File_Properties*, std::pair< File_Blocks_Index_Base*, Block_Backend_Cache_Base* > >
+      ::const_iterator it = data_files.begin(); it != data_files.end(); ++it)
+    result += it->second.second ? it->second.second->size_read_from_disk() : 0;
+  return result;
+}
+
+
+uint32 Nonsynced_Transaction::num_cached() const
+{
+  uint64 result = 0;
+  for (std::map< const File_Properties*, std::pair< File_Blocks_Index_Base*, Block_Backend_Cache_Base* > >
+      ::const_iterator it = data_files.begin(); it != data_files.end(); ++it)
+    result += it->second.second ? it->second.second->num_cached() : 0;
+  return result;
+}
+
+
+uint32 Nonsynced_Transaction::num_total_requested() const
+{
+  uint64 result = 0;
+  for (std::map< const File_Properties*, std::pair< File_Blocks_Index_Base*, Block_Backend_Cache_Base* > >
+      ::const_iterator it = data_files.begin(); it != data_files.end(); ++it)
+    result += it->second.second ? it->second.second->num_total_requested() : 0;
+  return result;
+}
+
+
+uint32 Nonsynced_Transaction::num_read_from_disk() const
+{
+  uint64 result = 0;
+  for (std::map< const File_Properties*, std::pair< File_Blocks_Index_Base*, Block_Backend_Cache_Base* > >
+      ::const_iterator it = data_files.begin(); it != data_files.end(); ++it)
+    result += it->second.second ? it->second.second->num_read_from_disk() : 0;
+  return result;
+}

@@ -9,24 +9,45 @@ Keywise reading all blocks ...
 Index 42: 642 
 Total size: 4, next index: -1
 ... all blocks read.
+Total read: 0 bytes in 0 blocks.
+Read from disk: 0 bytes in 0 blocks.
+Cached: 0 bytes in 0 blocks.
 Reading all blocks with cache ...
 Index 42: 642 
 ... all blocks read.
+Total read: 4 bytes in 1 blocks.
+Read from disk: 4 bytes in 1 blocks.
+Cached: 4 bytes in 1 blocks.
 Reading blocks with indices {0, 9, ..., 99} ...
 [empty]
 ... all blocks read.
 Keywise reading blocks with indices {0, 9, ..., 99} ...
 [empty]
 ... all blocks read.
+Total read: 4 bytes in 1 blocks.
+Read from disk: 4 bytes in 1 blocks.
+Cached: 4 bytes in 1 blocks.
 Reading blocks with indices {0, 9, ..., 99} with cache ...
 [empty]
 ... all blocks read.
+Total read: 4 bytes in 1 blocks.
+Read from disk: 4 bytes in 2 blocks.
+Cached: 4 bytes in 2 blocks.
 Reading blocks with indices {0, 1, ..., 9} ...
 [empty]
 ... all blocks read.
 Keywise reading blocks with indices {0, 1, ..., 9} ...
 [empty]
 ... all blocks read.
+Total read: 4 bytes in 1 blocks.
+Read from disk: 4 bytes in 2 blocks.
+Cached: 4 bytes in 2 blocks.
+Reading blocks with indices {0, 1, ..., 9} with cache ...
+[empty]
+... all blocks read.
+Total read: 4 bytes in 1 blocks.
+Read from disk: 4 bytes in 2 blocks.
+Cached: 4 bytes in 2 blocks.
 Reading blocks with indices [0, 10[ ...
 [empty]
 ... all blocks read.
@@ -39,9 +60,15 @@ Reading blocks with indices {90, 91, ..., 99} ...
 Keywise reading blocks with indices {90, 91, ..., 99} ...
 [empty]
 ... all blocks read.
+Total read: 4 bytes in 1 blocks.
+Read from disk: 4 bytes in 2 blocks.
+Cached: 4 bytes in 2 blocks.
 Reading blocks with indices {90, 91, ..., 99} with cache ...
 [empty]
 ... all blocks read.
+Total read: 4 bytes in 1 blocks.
+Read from disk: 4 bytes in 2 blocks.
+Cached: 4 bytes in 2 blocks.
 Reading blocks with indices [90, 100[ ...
 [empty]
 ... all blocks read.

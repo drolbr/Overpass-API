@@ -45,6 +45,9 @@ Total size: 4, next index: 99
 Index 99: 1999 
 Total size: 4, next index: -1
 ... all blocks read.
+Total read: 0 bytes in 0 blocks.
+Read from disk: 0 bytes in 0 blocks.
+Cached: 0 bytes in 0 blocks.
 Reading all blocks with cache ...
 Index 0: 1000 
 Index 9: 1909 
@@ -60,6 +63,9 @@ Index 81: 1181
 Index 90: 1090 
 Index 99: 1999 
 ... all blocks read.
+Total read: 52 bytes in 13 blocks.
+Read from disk: 52 bytes in 13 blocks.
+Cached: 52 bytes in 13 blocks.
 Reading blocks with indices {0, 9, ..., 99} ...
 Index 0: 1000 
 Index 9: 1909 
@@ -100,6 +106,9 @@ Total size: 4, next index: 99
 Index 99: 1999 
 Total size: 4, next index: -1
 ... all blocks read.
+Total read: 52 bytes in 13 blocks.
+Read from disk: 52 bytes in 13 blocks.
+Cached: 52 bytes in 13 blocks.
 Reading blocks with indices {0, 9, ..., 99} with cache ...
 Index 0: 1000 
 Index 9: 1909 
@@ -114,6 +123,9 @@ Index 81: 1181
 Index 90: 1090 
 Index 99: 1999 
 ... all blocks read.
+Total read: 100 bytes in 25 blocks.
+Read from disk: 52 bytes in 13 blocks.
+Cached: 52 bytes in 13 blocks.
 Reading blocks with indices {0, 1, ..., 9} ...
 Index 0: 1000 
 Index 9: 1909 
@@ -124,6 +136,16 @@ Total size: 4, next index: 9
 Index 9: 1909 
 Total size: 4, next index: 18
 ... all blocks read.
+Total read: 100 bytes in 25 blocks.
+Read from disk: 52 bytes in 13 blocks.
+Cached: 52 bytes in 13 blocks.
+Reading blocks with indices {0, 1, ..., 9} with cache ...
+Index 0: 1000 
+Index 9: 1909 
+... all blocks read.
+Total read: 108 bytes in 27 blocks.
+Read from disk: 52 bytes in 13 blocks.
+Cached: 52 bytes in 13 blocks.
 Reading blocks with indices [0, 10[ ...
 Index 0: 1000 
 Index 9: 1909 
@@ -144,10 +166,16 @@ Total size: 4, next index: 99
 Index 99: 1999 
 Total size: 4, next index: -1
 ... all blocks read.
+Total read: 108 bytes in 27 blocks.
+Read from disk: 52 bytes in 13 blocks.
+Cached: 52 bytes in 13 blocks.
 Reading blocks with indices {90, 91, ..., 99} with cache ...
 Index 90: 1090 
 Index 99: 1999 
 ... all blocks read.
+Total read: 116 bytes in 29 blocks.
+Read from disk: 52 bytes in 13 blocks.
+Cached: 52 bytes in 13 blocks.
 Reading blocks with indices [90, 100[ ...
 Index 90: 1090 
 Index 99: 1999 

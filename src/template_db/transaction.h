@@ -36,6 +36,13 @@ class Transaction
     
     virtual Block_Backend_Cache_Base& get_cache(const File_Properties&) = 0;
     virtual void trim_cache() const = 0;
+  
+    virtual uint64 size_cached() const = 0;
+    virtual uint64 size_total_requested() const = 0;
+    virtual uint64 size_read_from_disk() const = 0;
+    virtual uint32 num_cached() const = 0;
+    virtual uint32 num_total_requested() const = 0;
+    virtual uint32 num_read_from_disk() const = 0;
 };
 
 
@@ -55,6 +62,13 @@ class Nonsynced_Transaction : public Transaction
     
     virtual Block_Backend_Cache_Base& get_cache(const File_Properties&);
     virtual void trim_cache() const;
+  
+    virtual uint64 size_cached() const;
+    virtual uint64 size_total_requested() const;
+    virtual uint64 size_read_from_disk() const;
+    virtual uint32 num_cached() const;
+    virtual uint32 num_total_requested() const;
+    virtual uint32 num_read_from_disk() const;
     
   private:
     std::map< const File_Properties*, std::pair< File_Blocks_Index_Base*, Block_Backend_Cache_Base* > >

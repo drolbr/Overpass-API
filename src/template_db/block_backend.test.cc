@@ -284,6 +284,16 @@ void key_vector_read_loop(Block_Backend< IntIndex, IntObject >& blocks, Iterator
 }
 
 
+void print_statistics(const Transaction& transaction)
+{
+  std::cout<<"Total read: "<<transaction.size_total_requested()<<" bytes in "
+      <<transaction.num_total_requested()<<" blocks.\n";
+  std::cout<<"Read from disk: "<<transaction.size_read_from_disk()<<" bytes in "
+      <<transaction.num_read_from_disk()<<" blocks.\n";
+  std::cout<<"Cached: "<<transaction.size_cached()<<" bytes in "<<transaction.num_cached()<<" blocks.\n";
+}
+
+
 void read_test(unsigned int step)
 {
   try
@@ -303,6 +313,7 @@ void read_test(unsigned int step)
     key_vector_read_loop(db_backend, fit);
     std::cout<<"... all blocks read.\n";
     
+    print_statistics(transaction);
     std::cout<<"Reading all blocks with cache ...\n";
     Block_Backend_Flat_Cached_Request< IntIndex, IntObject > flat_request(transaction.get_cache(tf), time(0));
     std::pair< IntIndex, const std::vector< IntObject >* > payload = flat_request.read_whole_key();
@@ -317,6 +328,7 @@ void read_test(unsigned int step)
       payload = flat_request.read_whole_key();
     }
     std::cout<<"... all blocks read.\n";
+    print_statistics(transaction);
 
     std::set< IntIndex > index_list;
     for (unsigned int i(0); i < 100; i += 9)
@@ -332,6 +344,7 @@ void read_test(unsigned int step)
     key_vector_read_loop(db_backend, it);
     std::cout<<"... all blocks read.\n";
     
+    print_statistics(transaction);
     std::cout<<"Reading blocks with indices {0, 9, ..., 99} with cache ...\n";
     {
       Block_Backend_Discrete_Cached_Request< IntIndex, IntObject > discrete_request
@@ -349,6 +362,7 @@ void read_test(unsigned int step)
       }
     }
     std::cout<<"... all blocks read.\n";
+    print_statistics(transaction);
   
     index_list.clear();
     for (unsigned int i(0); i < 10; ++i)
@@ -361,6 +375,26 @@ void read_test(unsigned int step)
     it = db_backend.discrete_begin(index_list.begin(), index_list.end());
     key_vector_read_loop(db_backend, it);
     std::cout<<"... all blocks read.\n";
+    
+    print_statistics(transaction);
+    std::cout<<"Reading blocks with indices {0, 1, ..., 9} with cache ...\n";
+    {
+      Block_Backend_Discrete_Cached_Request< IntIndex, IntObject > discrete_request
+          (transaction.get_cache(tf), time(0), index_list.begin(), index_list.end());
+      payload = discrete_request.read_whole_key();
+      if (!payload.second)
+        std::cout<<"[empty]\n";
+      while (payload.second)
+      {
+        std::cout<<"Index "<<payload.first.val()<<": ";
+        for (std::vector< IntObject >::const_iterator it = payload.second->begin(); it != payload.second->end(); ++it)
+	  std::cout<<it->val()<<' ';
+        std::cout<<'\n';
+        payload = discrete_request.read_whole_key();
+      }
+    }
+    std::cout<<"... all blocks read.\n";
+    print_statistics(transaction);
 
     std::set< std::pair< IntIndex, IntIndex > > range_list;
     uint32 fool(0), foou(10);
@@ -391,6 +425,7 @@ void read_test(unsigned int step)
     key_vector_read_loop(db_backend, it);
     std::cout<<"... all blocks read.\n";
     
+    print_statistics(transaction);
     std::cout<<"Reading blocks with indices {90, 91, ..., 99} with cache ...\n";
     {
       Block_Backend_Discrete_Cached_Request< IntIndex, IntObject > discrete_request
@@ -408,6 +443,7 @@ void read_test(unsigned int step)
       }
     }
     std::cout<<"... all blocks read.\n";
+    print_statistics(transaction);
   
     range_list.clear();
     fool = 90;

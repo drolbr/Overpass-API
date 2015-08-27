@@ -83,6 +83,13 @@ struct Block_Backend_Cache_Base
   virtual void trim_non_reserved() = 0;
   virtual void trim_reserved() = 0;
   
+  virtual uint64 size_cached() const = 0;
+  virtual uint64 size_total_requested() const = 0;
+  virtual uint64 size_read_from_disk() const = 0;
+  virtual uint32 num_cached() const = 0;
+  virtual uint32 num_total_requested() const = 0;
+  virtual uint32 num_read_from_disk() const = 0;
+  
   virtual ~Block_Backend_Cache_Base() {}
 };
 
