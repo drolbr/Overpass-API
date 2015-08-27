@@ -294,11 +294,11 @@ void print_statistics(const Transaction& transaction)
 }
 
 
-void read_test(unsigned int step)
+void read_test(unsigned int step, long long max_cache_size = 0)
 {
   try
   {
-    Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "", max_cache_size);
     Test_File tf;
     Block_Backend< IntIndex, IntObject > db_backend(transaction.data_index(tf));
     
@@ -907,7 +907,10 @@ int main(int argc, char* args[])
   
   fill_db(to_delete, to_insert, 12);
   if ((test_to_execute == "") || (test_to_execute == "7"))
+  {
     read_test(7);
+    read_test(7, 100);
+  }
   
   if ((test_to_execute == "") || (test_to_execute == "8"))
     std::cout<<"** Blow up a single index\n";

@@ -51,7 +51,7 @@ class Nonsynced_Transaction : public Transaction
   public:
     Nonsynced_Transaction
         (bool writeable, bool use_shadow,
-	 const std::string& db_dir, const std::string& file_name_extension, long long max_cache_size_ = 0);
+	 const std::string& db_dir, const std::string& file_name_extension, uint64 max_cache_size_ = 0);
     virtual ~Nonsynced_Transaction();
     
     virtual File_Blocks_Index_Base* data_index(const File_Properties&);
@@ -77,7 +77,7 @@ class Nonsynced_Transaction : public Transaction
       random_files;
     bool writeable, use_shadow;
     std::string file_name_extension, db_dir;
-    long long max_cache_size;
+    uint64 max_cache_size;
 };
 
 

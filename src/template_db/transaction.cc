@@ -26,7 +26,7 @@
 
 Nonsynced_Transaction::Nonsynced_Transaction
     (bool writeable_, bool use_shadow_,
-     const std::string& db_dir_, const std::string& file_name_extension_, long long max_cache_size_)
+     const std::string& db_dir_, const std::string& file_name_extension_, uint64 max_cache_size_)
   : writeable(writeable_), use_shadow(use_shadow_),
     file_name_extension(file_name_extension_), db_dir(db_dir_),
     max_cache_size(max_cache_size_) {}
@@ -103,11 +103,7 @@ void Nonsynced_Transaction::trim_cache() const
   if (max_cache_size == 0)
     return;
   
-  long long total_size = 0;
-  for (std::map< const File_Properties*, std::pair< File_Blocks_Index_Base*, Block_Backend_Cache_Base* > >
-      ::const_iterator it = data_files.begin(); it != data_files.end(); ++it)
-    total_size += it->second.second ? it->second.second->get_total_size() : 0;
-  
+  uint64 total_size = size_cached();
   if (total_size > max_cache_size)
   {
     for (std::map< const File_Properties*, std::pair< File_Blocks_Index_Base*, Block_Backend_Cache_Base* > >
@@ -118,11 +114,8 @@ void Nonsynced_Transaction::trim_cache() const
     }
   }
   
-  total_size = 0;
-  for (std::map< const File_Properties*, std::pair< File_Blocks_Index_Base*, Block_Backend_Cache_Base* > >
-      ::const_iterator it = data_files.begin(); it != data_files.end(); ++it)
-    total_size += it->second.second ? it->second.second->get_total_size() : 0;
-  
+  // size has changed because we have dropped part of the cache
+  total_size = size_cached();
   if (total_size > max_cache_size)
   {
     for (std::map< const File_Properties*, std::pair< File_Blocks_Index_Base*, Block_Backend_Cache_Base* > >

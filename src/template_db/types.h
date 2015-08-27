@@ -79,7 +79,6 @@ struct File_Blocks_Index_Base
 
 struct Block_Backend_Cache_Base
 {
-  virtual long long get_total_size() = 0;
   virtual void trim_non_reserved() = 0;
   virtual void trim_reserved() = 0;
   

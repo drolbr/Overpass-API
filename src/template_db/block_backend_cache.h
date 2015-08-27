@@ -25,7 +25,7 @@
 #include <vector>
 
 
-// TODO: concurrency protection (blocked key), size control, statistics
+// TODO: concurrency protection (blocked key), size control
 
 
 template< typename Key, typename Value >
@@ -53,7 +53,6 @@ public:
       size_cached_(0), size_total_requested_(0), size_read_from_disk_(0),
       num_total_requested_(0), num_read_from_disk_(0) {}
   
-  virtual long long get_total_size();
   virtual void trim_non_reserved();
   virtual void trim_reserved();
   
@@ -176,18 +175,6 @@ std::pair< Key, const std::vector< Value >* > Block_Backend_Cache< Key, Value >:
   
   // Will never be executed
   return std::pair< Key, const std::vector< Value >* >(Key(), 0);
-}
-
-
-template< typename Key, typename Value >
-long long Block_Backend_Cache< Key, Value >::get_total_size()
-{
-  long long result = 0;
-  for (typename std::map< Key, Cache_Entry< Key, Value > >::const_iterator it = cached_blocks.begin();
-       it != cached_blocks.end(); ++it)
-    result += it->second.size;
-  
-  return result;
 }
 
 
