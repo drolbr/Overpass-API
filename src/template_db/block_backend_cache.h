@@ -25,9 +25,6 @@
 #include <vector>
 
 
-// TODO: concurrency protection (blocked key), size control
-
-
 template< typename Key, typename Value >
 struct Cache_Entry
 {
@@ -94,16 +91,19 @@ public:
   virtual Key backend_key() const = 0;
   virtual bool is_end() const = 0;
   virtual bool is_reserved(const Key& key) = 0;
+  bool is_blocked(const Key& key) { return last_used_key == key; }
   
   virtual void skip_frontend_iterator(const Key& target) = 0;
   virtual void skip_backend_iterator() = 0;
   virtual void set_end() = 0;
   virtual std::pair< int, Key > read_whole_key_base(const Key& key, std::vector< Value >& result_values) = 0;
+  void set_last_used_key(const Key& key) { last_used_key = key; }
   
   int used_timestamp() const { return used_timestamp_; }
   
 private:
   int used_timestamp_;
+  Key last_used_key;
 };
 
 
@@ -169,6 +169,7 @@ std::pair< Key, const std::vector< Value >* > Block_Backend_Cache< Key, Value >:
     {
       ++num_total_requested_;
       size_total_requested_ += cache_it->second.size;
+      request.set_last_used_key(key);
       return std::make_pair(key, &cache_it->second.values);
     }
   }
@@ -188,7 +189,7 @@ void Block_Backend_Cache< Key, Value >::trim_non_reserved()
     for (typename std::vector< Block_Backend_Basic_Cached_Request< Key, Value >* >::const_iterator
         it2 = registered_requests.begin(); it2 != registered_requests.end(); ++it2)
     {
-      if ((*it2)->is_reserved(it->first))
+      if ((*it2)->is_blocked(it->first) || (*it2)->is_reserved(it->first))
       {
 	reserved = true;
 	break;
@@ -210,8 +211,29 @@ void Block_Backend_Cache< Key, Value >::trim_non_reserved()
 template< typename Key, typename Value >
 void Block_Backend_Cache< Key, Value >::trim_reserved()
 {
-  cached_blocks.clear();
-  size_cached_ = 0;
+  typename std::map< Key, Cache_Entry< Key, Value > >::iterator it = cached_blocks.begin();
+  while (it != cached_blocks.end())
+  {
+    bool reserved = false;
+    for (typename std::vector< Block_Backend_Basic_Cached_Request< Key, Value >* >::const_iterator
+        it2 = registered_requests.begin(); it2 != registered_requests.end(); ++it2)
+    {
+      if ((*it2)->is_blocked(it->first))
+      {
+	reserved = true;
+	break;
+      }
+    }
+    if (reserved)
+      ++it;
+    else
+    {
+      size_cached_ -= it->second.size;
+      typename std::map< Key, Cache_Entry< Key, Value > >::iterator erase_it = it;
+      ++it;
+      cached_blocks.erase(erase_it);
+    }
+  }
 }
 
 

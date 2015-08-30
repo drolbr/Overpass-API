@@ -363,6 +363,54 @@ void read_test(unsigned int step, long long max_cache_size = 0)
     }
     std::cout<<"... all blocks read.\n";
     print_statistics(transaction);
+    
+    if (max_cache_size > 0)
+    {
+      std::cout<<"Check whether exposed cache value block is sticky ...\n";
+      Block_Backend_Discrete_Cached_Request< IntIndex, IntObject > discrete_request
+          (transaction.get_cache(tf), time(0), index_list.begin(), index_list.end());
+      std::pair< IntIndex, const std::vector< IntObject >* > discrete_payload = discrete_request.read_whole_key();
+      if (!discrete_payload.second)
+        std::cout<<"[empty]\n";
+      
+      print_statistics(transaction);
+      std::cout<<"Execute flat request to flush cache ...\n";
+      Block_Backend_Flat_Cached_Request< IntIndex, IntObject > flat_request(transaction.get_cache(tf), time(0));
+      std::pair< IntIndex, const std::vector< IntObject >* > flat_payload = flat_request.read_whole_key();
+      if (!flat_payload.second)
+        std::cout<<"[empty]\n";
+      while (flat_payload.second)
+      {
+        std::cout<<"Index "<<flat_payload.first.val()<<": ";
+        for (std::vector< IntObject >::const_iterator it = flat_payload.second->begin();
+	     it != flat_payload.second->end(); ++it)
+	  std::cout<<it->val()<<' ';
+        std::cout<<'\n';
+        flat_payload = flat_request.read_whole_key();
+      }
+      std::cout<<"... flat request completed.\n";
+      print_statistics(transaction);
+      
+      Block_Backend_Discrete_Cached_Request< IntIndex, IntObject > discrete_request_2
+          (transaction.get_cache(tf), time(0), index_list.begin(), index_list.end());
+      std::pair< IntIndex, const std::vector< IntObject >* > discrete_payload_2 = discrete_request_2.read_whole_key();
+      if (!discrete_payload_2.second)
+        std::cout<<"[empty]\n";
+      
+      std::cout<<"Identical array for both discrete requests: "
+          <<(discrete_payload.second == discrete_payload_2.second)<<'\n';
+      
+      while (discrete_payload.second)
+      {
+        std::cout<<"Index "<<discrete_payload.first.val()<<": ";
+        for (std::vector< IntObject >::const_iterator it = discrete_payload.second->begin();
+	     it != discrete_payload.second->end(); ++it)
+	  std::cout<<it->val()<<' ';
+        std::cout<<'\n';
+        discrete_payload = discrete_request.read_whole_key();
+      }
+      std::cout<<"... done.\n";
+    }
   
     index_list.clear();
     for (unsigned int i(0); i < 10; ++i)

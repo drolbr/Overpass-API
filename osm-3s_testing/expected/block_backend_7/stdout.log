@@ -1146,7 +1146,7 @@ Index 99: 1999 999 2099
 ... all blocks read.
 Total read: 848 bytes in 100 blocks.
 Read from disk: 848 bytes in 100 blocks.
-Cached: 104 bytes in 12 blocks.
+Cached: 68 bytes in 8 blocks.
 Reading blocks with indices {0, 9, ..., 99} ...
 Index 0: 1000 900 2000 
 Index 9: 1909 909 2009 
@@ -1189,7 +1189,7 @@ Total size: 12, next index: -1
 ... all blocks read.
 Total read: 848 bytes in 100 blocks.
 Read from disk: 848 bytes in 100 blocks.
-Cached: 104 bytes in 12 blocks.
+Cached: 68 bytes in 8 blocks.
 Reading blocks with indices {0, 9, ..., 99} with cache ...
 Index 0: 1000 900 2000 
 Index 9: 1909 909 2009 
@@ -1205,8 +1205,131 @@ Index 90: 1090 990 2090
 Index 99: 1999 999 2099 
 ... all blocks read.
 Total read: 992 bytes in 112 blocks.
+Read from disk: 980 bytes in 111 blocks.
+Cached: 104 bytes in 11 blocks.
+Check whether exposed cache value block is sticky ...
+Total read: 1004 bytes in 113 blocks.
 Read from disk: 992 bytes in 112 blocks.
-Cached: 36 bytes in 3 blocks.
+Cached: 24 bytes in 2 blocks.
+Execute flat request to flush cache ...
+Index 0: 1000 900 2000 
+Index 1: 901 2001 
+Index 2: 902 2002 
+Index 3: 903 2003 
+Index 4: 904 2004 
+Index 5: 905 2005 
+Index 6: 906 2006 
+Index 7: 907 2007 
+Index 8: 908 2008 
+Index 9: 1909 909 2009 
+Index 10: 910 2010 
+Index 11: 911 2011 
+Index 12: 912 2012 
+Index 13: 913 2013 
+Index 14: 914 2014 
+Index 15: 915 2015 
+Index 16: 916 2016 
+Index 17: 917 2017 
+Index 18: 1818 918 2018 
+Index 19: 919 2019 
+Index 20: 920 2020 
+Index 21: 921 2021 
+Index 22: 922 2022 
+Index 23: 923 2023 
+Index 24: 924 2024 
+Index 25: 925 2025 
+Index 26: 926 2026 
+Index 27: 1727 927 2027 
+Index 28: 928 2028 
+Index 29: 929 2029 
+Index 30: 930 2030 
+Index 31: 931 2031 
+Index 32: 932 2032 
+Index 33: 933 2033 
+Index 34: 934 2034 
+Index 35: 935 2035 
+Index 36: 1636 936 2036 
+Index 37: 937 2037 
+Index 38: 938 2038 
+Index 39: 939 2039 
+Index 40: 940 2040 
+Index 41: 941 2041 
+Index 42: 942 2042 
+Index 43: 943 2043 
+Index 44: 944 2044 
+Index 45: 1545 945 2045 
+Index 46: 946 2046 
+Index 47: 947 2047 
+Index 48: 948 2048 
+Index 49: 949 2049 
+Index 50: 950 2050 
+Index 51: 951 2051 
+Index 52: 952 2052 
+Index 53: 953 2053 
+Index 54: 1454 954 2054 
+Index 55: 955 2055 
+Index 56: 956 2056 
+Index 57: 957 2057 
+Index 58: 958 2058 
+Index 59: 959 2059 
+Index 60: 960 2060 
+Index 61: 961 2061 
+Index 62: 962 2062 
+Index 63: 1363 963 2063 
+Index 64: 964 2064 
+Index 65: 965 2065 
+Index 66: 966 2066 
+Index 67: 967 2067 
+Index 68: 968 2068 
+Index 69: 969 2069 
+Index 70: 970 2070 
+Index 71: 971 2071 
+Index 72: 1272 972 2072 
+Index 73: 973 2073 
+Index 74: 974 2074 
+Index 75: 975 2075 
+Index 76: 976 2076 
+Index 77: 977 2077 
+Index 78: 978 2078 
+Index 79: 979 2079 
+Index 80: 980 2080 
+Index 81: 1181 981 2081 
+Index 82: 982 2082 
+Index 83: 983 2083 
+Index 84: 984 2084 
+Index 85: 985 2085 
+Index 86: 986 2086 
+Index 87: 987 2087 
+Index 88: 988 2088 
+Index 89: 989 2089 
+Index 90: 1090 990 2090 
+Index 91: 991 2091 
+Index 92: 992 2092 
+Index 93: 993 2093 
+Index 94: 994 2094 
+Index 95: 995 2095 
+Index 96: 996 2096 
+Index 97: 997 2097 
+Index 98: 998 2098 
+Index 99: 1999 999 2099 
+... flat request completed.
+Total read: 1852 bytes in 213 blocks.
+Read from disk: 1816 bytes in 210 blocks.
+Cached: 100 bytes in 11 blocks.
+Identical array for both discrete requests: 1
+Index 0: 1000 900 2000 
+Index 9: 1909 909 2009 
+Index 18: 1818 918 2018 
+Index 27: 1727 927 2027 
+Index 36: 1636 936 2036 
+Index 45: 1545 945 2045 
+Index 54: 1454 954 2054 
+Index 63: 1363 963 2063 
+Index 72: 1272 972 2072 
+Index 81: 1181 981 2081 
+Index 90: 1090 990 2090 
+Index 99: 1999 999 2099 
+... done.
 Reading blocks with indices {0, 1, ..., 9} ...
 Index 0: 1000 900 2000 
 Index 1: 901 2001 
@@ -1241,9 +1364,9 @@ Total size: 8, next index: 9
 Index 9: 1909 909 2009 
 Total size: 12, next index: 10
 ... all blocks read.
-Total read: 992 bytes in 112 blocks.
-Read from disk: 992 bytes in 112 blocks.
-Cached: 36 bytes in 3 blocks.
+Total read: 1996 bytes in 225 blocks.
+Read from disk: 1936 bytes in 220 blocks.
+Cached: 72 bytes in 6 blocks.
 Reading blocks with indices {0, 1, ..., 9} with cache ...
 Index 0: 1000 900 2000 
 Index 1: 901 2001 
@@ -1256,9 +1379,9 @@ Index 7: 907 2007
 Index 8: 908 2008 
 Index 9: 1909 909 2009 
 ... all blocks read.
-Total read: 1080 bytes in 122 blocks.
-Read from disk: 1080 bytes in 122 blocks.
-Cached: 56 bytes in 5 blocks.
+Total read: 2084 bytes in 235 blocks.
+Read from disk: 2012 bytes in 229 blocks.
+Cached: 112 bytes in 11 blocks.
 Reading blocks with indices [0, 10[ ...
 Index 0: 1000 900 2000 
 Index 1: 901 2001 
@@ -1327,9 +1450,9 @@ Total size: 8, next index: 99
 Index 99: 1999 999 2099 
 Total size: 12, next index: -1
 ... all blocks read.
-Total read: 1080 bytes in 122 blocks.
-Read from disk: 1080 bytes in 122 blocks.
-Cached: 56 bytes in 5 blocks.
+Total read: 2084 bytes in 235 blocks.
+Read from disk: 2012 bytes in 229 blocks.
+Cached: 112 bytes in 11 blocks.
 Reading blocks with indices {90, 91, ..., 99} with cache ...
 Index 90: 1090 990 2090 
 Index 91: 991 2091 
@@ -1342,9 +1465,9 @@ Index 97: 997 2097
 Index 98: 998 2098 
 Index 99: 1999 999 2099 
 ... all blocks read.
-Total read: 1168 bytes in 132 blocks.
-Read from disk: 1144 bytes in 130 blocks.
-Cached: 28 bytes in 3 blocks.
+Total read: 2172 bytes in 245 blocks.
+Read from disk: 2076 bytes in 237 blocks.
+Cached: 88 bytes in 10 blocks.
 Reading blocks with indices [90, 100[ ...
 Index 90: 1090 990 2090 
 Index 91: 991 2091 
