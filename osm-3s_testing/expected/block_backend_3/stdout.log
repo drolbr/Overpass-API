@@ -54,6 +54,15 @@ Reading blocks with indices [0, 10[ ...
 Keywise reading blocks with indices [0, 10[ ...
 [empty]
 ... all blocks read.
+Total read: 4 bytes in 1 blocks.
+Read from disk: 4 bytes in 2 blocks.
+Cached: 4 bytes in 2 blocks.
+Reading blocks with indices [0, 10[ with cache ...
+[empty]
+... all blocks read.
+Total read: 4 bytes in 1 blocks.
+Read from disk: 4 bytes in 2 blocks.
+Cached: 4 bytes in 2 blocks.
 Reading blocks with indices {90, 91, ..., 99} ...
 [empty]
 ... all blocks read.
@@ -75,6 +84,15 @@ Reading blocks with indices [90, 100[ ...
 Keywise reading blocks with indices [90, 100[ ...
 [empty]
 ... all blocks read.
+Total read: 4 bytes in 1 blocks.
+Read from disk: 4 bytes in 2 blocks.
+Cached: 4 bytes in 2 blocks.
+Reading blocks with indices [90, 100[ with cache ...
+[empty]
+... all blocks read.
+Total read: 4 bytes in 1 blocks.
+Read from disk: 4 bytes in 2 blocks.
+Cached: 4 bytes in 2 blocks.
 Reading blocks with index 50 ...
 [empty]
 ... all blocks read.
@@ -93,6 +111,15 @@ Reading blocks with indices [0,10[\cup [50, 51[\cup [90, 100[ ...
 Keywise reading blocks with indices [0,10[\cup [50, 51[\cup [90, 100[ ...
 [empty]
 ... all blocks read.
+Total read: 4 bytes in 1 blocks.
+Read from disk: 4 bytes in 2 blocks.
+Cached: 4 bytes in 2 blocks.
+Reading blocks with indices [0,10[\cup [50, 51[\cup [90, 100[ with cache ...
+[empty]
+... all blocks read.
+Total read: 4 bytes in 1 blocks.
+Read from disk: 4 bytes in 2 blocks.
+Cached: 4 bytes in 2 blocks.
 Reading blocks with indices \emptyset ...
 [empty]
 ... all blocks read.

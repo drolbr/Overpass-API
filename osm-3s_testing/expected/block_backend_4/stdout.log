@@ -156,6 +156,16 @@ Total size: 4, next index: 9
 Index 9: 1909 
 Total size: 4, next index: 18
 ... all blocks read.
+Total read: 108 bytes in 27 blocks.
+Read from disk: 52 bytes in 13 blocks.
+Cached: 52 bytes in 13 blocks.
+Reading blocks with indices [0, 10[ with cache ...
+Index 0: 1000 
+Index 9: 1909 
+... all blocks read.
+Total read: 116 bytes in 29 blocks.
+Read from disk: 52 bytes in 13 blocks.
+Cached: 52 bytes in 13 blocks.
 Reading blocks with indices {90, 91, ..., 99} ...
 Index 90: 1090 
 Index 99: 1999 
@@ -166,14 +176,14 @@ Total size: 4, next index: 99
 Index 99: 1999 
 Total size: 4, next index: -1
 ... all blocks read.
-Total read: 108 bytes in 27 blocks.
+Total read: 116 bytes in 29 blocks.
 Read from disk: 52 bytes in 13 blocks.
 Cached: 52 bytes in 13 blocks.
 Reading blocks with indices {90, 91, ..., 99} with cache ...
 Index 90: 1090 
 Index 99: 1999 
 ... all blocks read.
-Total read: 116 bytes in 29 blocks.
+Total read: 124 bytes in 31 blocks.
 Read from disk: 52 bytes in 13 blocks.
 Cached: 52 bytes in 13 blocks.
 Reading blocks with indices [90, 100[ ...
@@ -186,6 +196,16 @@ Total size: 4, next index: 99
 Index 99: 1999 
 Total size: 4, next index: -1
 ... all blocks read.
+Total read: 124 bytes in 31 blocks.
+Read from disk: 52 bytes in 13 blocks.
+Cached: 52 bytes in 13 blocks.
+Reading blocks with indices [90, 100[ with cache ...
+Index 90: 1090 
+Index 99: 1999 
+... all blocks read.
+Total read: 132 bytes in 33 blocks.
+Read from disk: 52 bytes in 13 blocks.
+Cached: 52 bytes in 13 blocks.
 Reading blocks with index 50 ...
 [empty]
 ... all blocks read.
@@ -214,6 +234,18 @@ Total size: 4, next index: 99
 Index 99: 1999 
 Total size: 4, next index: -1
 ... all blocks read.
+Total read: 132 bytes in 33 blocks.
+Read from disk: 52 bytes in 13 blocks.
+Cached: 52 bytes in 13 blocks.
+Reading blocks with indices [0,10[\cup [50, 51[\cup [90, 100[ with cache ...
+Index 0: 1000 
+Index 9: 1909 
+Index 90: 1090 
+Index 99: 1999 
+... all blocks read.
+Total read: 148 bytes in 37 blocks.
+Read from disk: 52 bytes in 13 blocks.
+Cached: 52 bytes in 13 blocks.
 Reading blocks with indices \emptyset ...
 [empty]
 ... all blocks read.

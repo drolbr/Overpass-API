@@ -560,6 +560,24 @@ Total size: 8, next index: 9
 Index 9: 1909 909 2009 
 Total size: 12, next index: 10
 ... all blocks read.
+Total read: 1080 bytes in 122 blocks.
+Read from disk: 848 bytes in 100 blocks.
+Cached: 848 bytes in 100 blocks.
+Reading blocks with indices [0, 10[ with cache ...
+Index 0: 1000 900 2000 
+Index 1: 901 2001 
+Index 2: 902 2002 
+Index 3: 903 2003 
+Index 4: 904 2004 
+Index 5: 905 2005 
+Index 6: 906 2006 
+Index 7: 907 2007 
+Index 8: 908 2008 
+Index 9: 1909 909 2009 
+... all blocks read.
+Total read: 1168 bytes in 132 blocks.
+Read from disk: 848 bytes in 100 blocks.
+Cached: 848 bytes in 100 blocks.
 Reading blocks with indices {90, 91, ..., 99} ...
 Index 90: 1090 990 2090 
 Index 91: 991 2091 
@@ -594,7 +612,7 @@ Total size: 8, next index: 99
 Index 99: 1999 999 2099 
 Total size: 12, next index: -1
 ... all blocks read.
-Total read: 1080 bytes in 122 blocks.
+Total read: 1168 bytes in 132 blocks.
 Read from disk: 848 bytes in 100 blocks.
 Cached: 848 bytes in 100 blocks.
 Reading blocks with indices {90, 91, ..., 99} with cache ...
@@ -609,7 +627,7 @@ Index 97: 997 2097
 Index 98: 998 2098 
 Index 99: 1999 999 2099 
 ... all blocks read.
-Total read: 1168 bytes in 132 blocks.
+Total read: 1256 bytes in 142 blocks.
 Read from disk: 848 bytes in 100 blocks.
 Cached: 848 bytes in 100 blocks.
 Reading blocks with indices [90, 100[ ...
@@ -646,6 +664,24 @@ Total size: 8, next index: 99
 Index 99: 1999 999 2099 
 Total size: 12, next index: -1
 ... all blocks read.
+Total read: 1256 bytes in 142 blocks.
+Read from disk: 848 bytes in 100 blocks.
+Cached: 848 bytes in 100 blocks.
+Reading blocks with indices [90, 100[ with cache ...
+Index 90: 1090 990 2090 
+Index 91: 991 2091 
+Index 92: 992 2092 
+Index 93: 993 2093 
+Index 94: 994 2094 
+Index 95: 995 2095 
+Index 96: 996 2096 
+Index 97: 997 2097 
+Index 98: 998 2098 
+Index 99: 1999 999 2099 
+... all blocks read.
+Total read: 1344 bytes in 152 blocks.
+Read from disk: 848 bytes in 100 blocks.
+Cached: 848 bytes in 100 blocks.
 Reading blocks with index 50 ...
 Index 50: 950 2050 
 ... all blocks read.
@@ -727,6 +763,35 @@ Total size: 8, next index: 99
 Index 99: 1999 999 2099 
 Total size: 12, next index: -1
 ... all blocks read.
+Total read: 1344 bytes in 152 blocks.
+Read from disk: 848 bytes in 100 blocks.
+Cached: 848 bytes in 100 blocks.
+Reading blocks with indices [0,10[\cup [50, 51[\cup [90, 100[ with cache ...
+Index 0: 1000 900 2000 
+Index 1: 901 2001 
+Index 2: 902 2002 
+Index 3: 903 2003 
+Index 4: 904 2004 
+Index 5: 905 2005 
+Index 6: 906 2006 
+Index 7: 907 2007 
+Index 8: 908 2008 
+Index 9: 1909 909 2009 
+Index 50: 950 2050 
+Index 90: 1090 990 2090 
+Index 91: 991 2091 
+Index 92: 992 2092 
+Index 93: 993 2093 
+Index 94: 994 2094 
+Index 95: 995 2095 
+Index 96: 996 2096 
+Index 97: 997 2097 
+Index 98: 998 2098 
+Index 99: 1999 999 2099 
+... all blocks read.
+Total read: 1528 bytes in 173 blocks.
+Read from disk: 848 bytes in 100 blocks.
+Cached: 848 bytes in 100 blocks.
 Reading blocks with indices \emptyset ...
 [empty]
 ... all blocks read.
@@ -1416,6 +1481,24 @@ Total size: 8, next index: 9
 Index 9: 1909 909 2009 
 Total size: 12, next index: 10
 ... all blocks read.
+Total read: 2084 bytes in 235 blocks.
+Read from disk: 2012 bytes in 229 blocks.
+Cached: 112 bytes in 11 blocks.
+Reading blocks with indices [0, 10[ with cache ...
+Index 0: 1000 900 2000 
+Index 1: 901 2001 
+Index 2: 902 2002 
+Index 3: 903 2003 
+Index 4: 904 2004 
+Index 5: 905 2005 
+Index 6: 906 2006 
+Index 7: 907 2007 
+Index 8: 908 2008 
+Index 9: 1909 909 2009 
+... all blocks read.
+Total read: 2172 bytes in 245 blocks.
+Read from disk: 2100 bytes in 239 blocks.
+Cached: 100 bytes in 11 blocks.
 Reading blocks with indices {90, 91, ..., 99} ...
 Index 90: 1090 990 2090 
 Index 91: 991 2091 
@@ -1450,9 +1533,9 @@ Total size: 8, next index: 99
 Index 99: 1999 999 2099 
 Total size: 12, next index: -1
 ... all blocks read.
-Total read: 2084 bytes in 235 blocks.
-Read from disk: 2012 bytes in 229 blocks.
-Cached: 112 bytes in 11 blocks.
+Total read: 2172 bytes in 245 blocks.
+Read from disk: 2100 bytes in 239 blocks.
+Cached: 100 bytes in 11 blocks.
 Reading blocks with indices {90, 91, ..., 99} with cache ...
 Index 90: 1090 990 2090 
 Index 91: 991 2091 
@@ -1465,8 +1548,8 @@ Index 97: 997 2097
 Index 98: 998 2098 
 Index 99: 1999 999 2099 
 ... all blocks read.
-Total read: 2172 bytes in 245 blocks.
-Read from disk: 2076 bytes in 237 blocks.
+Total read: 2260 bytes in 255 blocks.
+Read from disk: 2176 bytes in 248 blocks.
 Cached: 88 bytes in 10 blocks.
 Reading blocks with indices [90, 100[ ...
 Index 90: 1090 990 2090 
@@ -1502,6 +1585,24 @@ Total size: 8, next index: 99
 Index 99: 1999 999 2099 
 Total size: 12, next index: -1
 ... all blocks read.
+Total read: 2260 bytes in 255 blocks.
+Read from disk: 2176 bytes in 248 blocks.
+Cached: 88 bytes in 10 blocks.
+Reading blocks with indices [90, 100[ with cache ...
+Index 90: 1090 990 2090 
+Index 91: 991 2091 
+Index 92: 992 2092 
+Index 93: 993 2093 
+Index 94: 994 2094 
+Index 95: 995 2095 
+Index 96: 996 2096 
+Index 97: 997 2097 
+Index 98: 998 2098 
+Index 99: 1999 999 2099 
+... all blocks read.
+Total read: 2348 bytes in 265 blocks.
+Read from disk: 2176 bytes in 248 blocks.
+Cached: 88 bytes in 10 blocks.
 Reading blocks with index 50 ...
 Index 50: 950 2050 
 ... all blocks read.
@@ -1583,6 +1684,35 @@ Total size: 8, next index: 99
 Index 99: 1999 999 2099 
 Total size: 12, next index: -1
 ... all blocks read.
+Total read: 2348 bytes in 265 blocks.
+Read from disk: 2176 bytes in 248 blocks.
+Cached: 88 bytes in 10 blocks.
+Reading blocks with indices [0,10[\cup [50, 51[\cup [90, 100[ with cache ...
+Index 0: 1000 900 2000 
+Index 1: 901 2001 
+Index 2: 902 2002 
+Index 3: 903 2003 
+Index 4: 904 2004 
+Index 5: 905 2005 
+Index 6: 906 2006 
+Index 7: 907 2007 
+Index 8: 908 2008 
+Index 9: 1909 909 2009 
+Index 50: 950 2050 
+Index 90: 1090 990 2090 
+Index 91: 991 2091 
+Index 92: 992 2092 
+Index 93: 993 2093 
+Index 94: 994 2094 
+Index 95: 995 2095 
+Index 96: 996 2096 
+Index 97: 997 2097 
+Index 98: 998 2098 
+Index 99: 1999 999 2099 
+... all blocks read.
+Total read: 2532 bytes in 286 blocks.
+Read from disk: 2272 bytes in 259 blocks.
+Cached: 108 bytes in 12 blocks.
 Reading blocks with indices \emptyset ...
 [empty]
 ... all blocks read.

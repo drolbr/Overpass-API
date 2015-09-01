@@ -460,6 +460,28 @@ void read_test(unsigned int step, long long max_cache_size = 0)
 	 Default_Range_Iterator< IntIndex >(range_list.end()));
     key_vector_read_loop(db_backend, rit);
     std::cout<<"... all blocks read.\n";
+    
+    print_statistics(transaction);
+    std::cout<<"Reading blocks with indices [0, 10[ with cache ...\n";
+    {
+      Block_Backend_Range_Cached_Request< IntIndex, IntObject > range_request
+          (transaction.get_cache(tf), time(0),
+	   Default_Range_Iterator< IntIndex >(range_list.begin()),
+	   Default_Range_Iterator< IntIndex >(range_list.end()));
+      payload = range_request.read_whole_key();
+      if (!payload.second)
+        std::cout<<"[empty]\n";
+      while (payload.second)
+      {
+        std::cout<<"Index "<<payload.first.val()<<": ";
+        for (std::vector< IntObject >::const_iterator it = payload.second->begin(); it != payload.second->end(); ++it)
+	  std::cout<<it->val()<<' ';
+        std::cout<<'\n';
+        payload = range_request.read_whole_key();
+      }
+    }
+    std::cout<<"... all blocks read.\n";
+    print_statistics(transaction);
   
     index_list.clear();
     for (unsigned int i(90); i < 100; ++i)
@@ -509,6 +531,28 @@ void read_test(unsigned int step, long long max_cache_size = 0)
 	 Default_Range_Iterator< IntIndex >(range_list.end()));
     key_vector_read_loop(db_backend, rit);
     std::cout<<"... all blocks read.\n";
+    
+    print_statistics(transaction);
+    std::cout<<"Reading blocks with indices [90, 100[ with cache ...\n";
+    {
+      Block_Backend_Range_Cached_Request< IntIndex, IntObject > range_request
+          (transaction.get_cache(tf), time(0),
+	   Default_Range_Iterator< IntIndex >(range_list.begin()),
+	   Default_Range_Iterator< IntIndex >(range_list.end()));
+      payload = range_request.read_whole_key();
+      if (!payload.second)
+        std::cout<<"[empty]\n";
+      while (payload.second)
+      {
+        std::cout<<"Index "<<payload.first.val()<<": ";
+        for (std::vector< IntObject >::const_iterator it = payload.second->begin(); it != payload.second->end(); ++it)
+	  std::cout<<it->val()<<' ';
+        std::cout<<'\n';
+        payload = range_request.read_whole_key();
+      }
+    }
+    std::cout<<"... all blocks read.\n";
+    print_statistics(transaction);
   
     index_list.clear();
     uint32 foo(50);
@@ -561,6 +605,28 @@ void read_test(unsigned int step, long long max_cache_size = 0)
 	 Default_Range_Iterator< IntIndex >(range_list.end()));
     key_vector_read_loop(db_backend, rit);
     std::cout<<"... all blocks read.\n";
+    
+    print_statistics(transaction);
+    std::cout<<"Reading blocks with indices [0,10[\\cup [50, 51[\\cup [90, 100[ with cache ...\n";
+    {
+      Block_Backend_Range_Cached_Request< IntIndex, IntObject > range_request
+          (transaction.get_cache(tf), time(0),
+	   Default_Range_Iterator< IntIndex >(range_list.begin()),
+	   Default_Range_Iterator< IntIndex >(range_list.end()));
+      payload = range_request.read_whole_key();
+      if (!payload.second)
+        std::cout<<"[empty]\n";
+      while (payload.second)
+      {
+        std::cout<<"Index "<<payload.first.val()<<": ";
+        for (std::vector< IntObject >::const_iterator it = payload.second->begin(); it != payload.second->end(); ++it)
+	  std::cout<<it->val()<<' ';
+        std::cout<<'\n';
+        payload = range_request.read_whole_key();
+      }
+    }
+    std::cout<<"... all blocks read.\n";
+    print_statistics(transaction);
   
     index_list.clear();
     std::cout<<"Reading blocks with indices \\emptyset ...\n";

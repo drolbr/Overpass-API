@@ -500,4 +500,132 @@ std::pair< Key, const std::vector< Value >* >
 }
 
 
+// Implementation of Block_Backend_Range_Cached_Request: ------------------------
+
+
+template< typename Key, typename Value, typename Iterator = typename std::set< Key >::const_iterator >
+class Block_Backend_Range_Cached_Request : Block_Backend_Basic_Cached_Request< Key, Value >
+{
+public:
+  Block_Backend_Range_Cached_Request(Block_Backend_Cache_Base& cache_, int used_timestamp,
+      const Default_Range_Iterator< Key >& begin_, const Default_Range_Iterator< Key >& end_);
+  virtual ~Block_Backend_Range_Cached_Request();
+  
+  virtual const Key& frontend_key() const { return frontend_index_; }
+  virtual Key backend_key() const;
+  virtual bool is_end() const { return request_it == end; }
+  virtual bool is_reserved(const Key& key) { return !(key < frontend_index_); }
+  
+  virtual void skip_frontend_iterator(const Key& target);
+  virtual void skip_backend_iterator();
+  virtual void set_end() { request_it = end; }
+  virtual std::pair< int, Key > read_whole_key_base(const Key& key, std::vector< Value >& result_values);
+  
+  std::pair< Key, const std::vector< Value >* > read_whole_key();  
+  
+private:
+  Block_Backend_Range_Cached_Request(const Block_Backend_Range_Cached_Request&);
+
+  Block_Backend_Cache< Key, Value >* cache;
+  typename Block_Backend< Key, Value, Iterator >::Range_Iterator* backend_it;
+  Key frontend_index_;
+  Default_Range_Iterator< Key > request_it;
+  Default_Range_Iterator< Key > end;
+};
+
+
+template< typename Key, typename Value, typename Iterator >
+Block_Backend_Range_Cached_Request< Key, Value, Iterator >::Block_Backend_Range_Cached_Request
+    (Block_Backend_Cache_Base& cache_, int used_timestamp,
+     const Default_Range_Iterator< Key >& begin_, const Default_Range_Iterator< Key >& end_)
+    : Block_Backend_Basic_Cached_Request< Key, Value >(used_timestamp),
+      cache(dynamic_cast< Block_Backend_Cache< Key, Value >* >(&cache_)),
+      backend_it(0), frontend_index_(begin_ == end_ ? Key() : begin_.lower_bound()),
+      request_it(begin_), end(end_)
+{
+  cache->register_request(*this);
+}
+
+
+template< typename Key, typename Value, typename Iterator >
+Block_Backend_Range_Cached_Request< Key, Value, Iterator >::~Block_Backend_Range_Cached_Request()
+{
+  cache->unregister_request(*this);
+  delete backend_it;
+}
+
+
+template< typename Key, typename Value, typename Iterator >
+Key Block_Backend_Range_Cached_Request< Key, Value, Iterator >::backend_key() const
+{
+  if (is_end())
+    return Key();
+  
+  if (backend_it)
+    return backend_it->index();
+  else
+    return Key();
+}
+
+
+template< typename Key, typename Value, typename Iterator >
+void Block_Backend_Range_Cached_Request< Key, Value, Iterator >::skip_frontend_iterator(const Key& target)
+{
+  if (target == Key())
+    request_it = end;
+  else
+  {
+    while (!(request_it == end) && !(target < request_it.upper_bound()))
+      ++request_it;
+    if (request_it == end)
+      frontend_index_ = Key();
+    else if (target < request_it.lower_bound())
+      frontend_index_ = request_it.lower_bound();
+    else
+      frontend_index_ = target;
+  }
+}
+
+
+template< typename Key, typename Value, typename Iterator >
+void Block_Backend_Range_Cached_Request< Key, Value, Iterator >::skip_backend_iterator()
+{
+  if (!backend_it)
+    backend_it = new typename Block_Backend< Key, Value >::Range_Iterator
+        (cache->get_db().range_begin(request_it, end));
+  
+  if (!(*backend_it == cache->get_db().range_end()))
+    backend_it->skip_to_index(frontend_index_);
+  
+  if (*backend_it == cache->get_db().range_end())
+  {
+    set_end();
+    delete backend_it;
+    backend_it = 0;
+  }
+}
+
+      
+template< typename Key, typename Value, typename Iterator >
+std::pair< int, Key > Block_Backend_Range_Cached_Request< Key, Value, Iterator >
+    ::read_whole_key_base(const Key& key, std::vector< Value >& result_values)
+{
+  if (!backend_it)
+    backend_it = new typename Block_Backend< Key, Value >::Range_Iterator
+        (cache->get_db().range_begin(request_it, end));
+  if (*backend_it == cache->get_db().range_end())
+    return std::make_pair(0, Key());
+  
+  return backend_it->read_whole_key(result_values);
+}
+
+
+template< typename Key, typename Value, typename Iterator >
+std::pair< Key, const std::vector< Value >* >
+    Block_Backend_Range_Cached_Request< Key, Value, Iterator >::read_whole_key()
+{
+  return cache->read_whole_key(*this);
+}
+
+
 #endif
