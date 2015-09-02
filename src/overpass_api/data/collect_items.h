@@ -21,6 +21,7 @@
 #define DE__OSM3S___OVERPASS_API__DATA__COLLECT_ITEMS_H
 
 #include "filenames.h"
+#include "../../template_db/block_backend_cache.h"
 
 #include <exception>
 
@@ -313,6 +314,28 @@ void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
     if (predicate.match(it.object()))
       result[it.index()].push_back(it.object());
   }
+  
+//   Block_Backend_Discrete_Cached_Request< Index, Object, typename Container::const_iterator > cache
+//       (rman.get_transaction()->get_cache(file_properties), time(0), req.begin(), req.end());
+//   std::pair< Index, const std::vector< Object >* > payload = cache.read_whole_key();
+//   while (payload.second)
+//   {
+//     if (count >= 64*1024)
+//     {
+//       count = 0;
+//       if (stmt)
+//         rman.health_check(*stmt, 0, eval_map(result));
+//     }
+//     
+//     for (typename std::vector< Object >::const_iterator it = payload.second->begin();
+// 	 it != payload.second->end(); ++it)
+//     {
+//       if (predicate.match(*it))
+//         result[payload.first].push_back(*it);
+//     }
+//     count += result[payload.first].size();
+//     payload = cache.read_whole_key();
+//   }
 }
 
 
@@ -331,6 +354,20 @@ void collect_items_discrete(Transaction& transaction,
     if (predicate.match(it.object()))
       result[it.index()].push_back(it.object());
   }
+
+//   Block_Backend_Discrete_Cached_Request< Index, Object, typename Container::const_iterator > cache
+//       (transaction.get_cache(file_properties), time(0), req.begin(), req.end());
+//   std::pair< Index, const std::vector< Object >* > payload = cache.read_whole_key();
+//   while (payload.second)
+//   {
+//     for (typename std::vector< Object >::const_iterator it = payload.second->begin();
+// 	 it != payload.second->end(); ++it)
+//     {
+//       if (predicate.match(*it))
+//         result[payload.first].push_back(*it);
+//     }
+//     payload = cache.read_whole_key();
+//   }
 }
 
 

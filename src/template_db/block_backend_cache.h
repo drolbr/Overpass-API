@@ -46,21 +46,22 @@ class Block_Backend_Cache : public Block_Backend_Cache_Base
 {
 public:
   Block_Backend_Cache(File_Blocks_Index_Base& db_index_, Transaction& transaction_)
-    : db_index(&db_index_), db(0), transaction(&transaction_),
+    : db_index(&db_index_), transaction(&transaction_),
       size_cached_(0), size_total_requested_(0), size_read_from_disk_(0),
       num_total_requested_(0), num_read_from_disk_(0) {}
   
   virtual void trim_non_reserved();
   virtual void trim_reserved();
   
-  virtual ~Block_Backend_Cache() { delete db; }
+  virtual ~Block_Backend_Cache() {}
   
   std::pair< Key, const std::vector< Value >* > read_whole_key
       (Block_Backend_Basic_Cached_Request< Key, Value >& request);
   
   void register_request(Block_Backend_Basic_Cached_Request< Key, Value >& request);
   void unregister_request(Block_Backend_Basic_Cached_Request< Key, Value >& request);
-  Block_Backend< Key, Value >& get_db();
+  
+  File_Blocks_Index_Base* get_db_index() const { return db_index; }
   
   virtual uint64 size_cached() const { return size_cached_; }
   virtual uint64 size_total_requested() const { return size_total_requested_; }
@@ -71,7 +72,6 @@ public:
   
 private:
   File_Blocks_Index_Base* db_index;
-  Block_Backend< Key, Value >* db;
   Transaction* transaction;
   std::map< Key, Cache_Entry< Key, Value > > cached_blocks;
   std::vector< Block_Backend_Basic_Cached_Request< Key, Value >* > registered_requests;
@@ -238,15 +238,6 @@ void Block_Backend_Cache< Key, Value >::trim_reserved()
 
 
 template< typename Key, typename Value >
-Block_Backend< Key, Value >& Block_Backend_Cache< Key, Value >::get_db()
-{
-  if (!db)
-    db = new Block_Backend< Key, Value >(db_index);
-  return *db;
-}
-
-
-template< typename Key, typename Value >
 void Block_Backend_Cache< Key, Value >::register_request(Block_Backend_Basic_Cached_Request< Key, Value >& request)
 {
   registered_requests.push_back(&request);
@@ -264,12 +255,6 @@ void Block_Backend_Cache< Key, Value >::unregister_request(Block_Backend_Basic_C
   {
     *it = registered_requests.back();
     registered_requests.pop_back();
-  }
-  
-  if (registered_requests.empty())
-  {
-    delete db;
-    db = 0;
   }
 }
 
@@ -298,6 +283,7 @@ public:
   
 private:
   Block_Backend_Cache< Key, Value >* cache;
+  Block_Backend< Key, Value >* db;
   typename Block_Backend< Key, Value >::Flat_Iterator* backend_it;
   Key frontend_index_;
 };
@@ -308,8 +294,9 @@ Block_Backend_Flat_Cached_Request< Key, Value >::Block_Backend_Flat_Cached_Reque
     (Block_Backend_Cache_Base& cache_, int used_timestamp)
     : Block_Backend_Basic_Cached_Request< Key, Value >(used_timestamp),
       cache(dynamic_cast< Block_Backend_Cache< Key, Value >* >(&cache_)),
-      backend_it(new typename Block_Backend< Key, Value >::Flat_Iterator(cache->get_db().flat_begin())),
-      frontend_index_((*backend_it == cache->get_db().flat_end()) ? Key() : backend_it->index())
+      db(new Block_Backend< Key, Value >(cache->get_db_index())),
+      backend_it(new typename Block_Backend< Key, Value >::Flat_Iterator(db->flat_begin())),
+      frontend_index_((*backend_it == db->flat_end()) ? Key() : backend_it->index())
 {
   cache->register_request(*this);
 }
@@ -320,6 +307,7 @@ Block_Backend_Flat_Cached_Request< Key, Value >::~Block_Backend_Flat_Cached_Requ
 {
   cache->unregister_request(*this);
   delete backend_it;
+  delete db;
 }
 
 
@@ -340,12 +328,12 @@ template< typename Key, typename Value >
 void Block_Backend_Flat_Cached_Request< Key, Value >::skip_backend_iterator()
 {
   if (!backend_it)
-    backend_it = new typename Block_Backend< Key, Value >::Flat_Iterator(cache->get_db().flat_begin());
+    backend_it = new typename Block_Backend< Key, Value >::Flat_Iterator(db->flat_begin());
   
-  if (!(*backend_it == cache->get_db().flat_end()))
+  if (!(*backend_it == db->flat_end()))
     backend_it->skip_to_index(frontend_index_);
   
-  if (*backend_it == cache->get_db().flat_end())
+  if (*backend_it == db->flat_end())
   {
     set_end();
     delete backend_it;
@@ -359,8 +347,8 @@ std::pair< int, Key > Block_Backend_Flat_Cached_Request< Key, Value >
     ::read_whole_key_base(const Key& key, std::vector< Value >& result_values)
 {
   if (!backend_it)
-    backend_it = new typename Block_Backend< Key, Value >::Flat_Iterator(cache->get_db().flat_begin());
-  if (*backend_it == cache->get_db().flat_end())
+    backend_it = new typename Block_Backend< Key, Value >::Flat_Iterator(db->flat_begin());
+  if (*backend_it == db->flat_end())
     return std::make_pair(0, Key());  
   
   return backend_it->read_whole_key(result_values);
@@ -401,6 +389,7 @@ private:
   Block_Backend_Discrete_Cached_Request(const Block_Backend_Discrete_Cached_Request&);
 
   Block_Backend_Cache< Key, Value >* cache;
+  Block_Backend< Key, Value, Iterator >* db;
   typename Block_Backend< Key, Value, Iterator >::Discrete_Iterator* backend_it;
   Key frontend_index_;
   Iterator request_it;
@@ -413,7 +402,7 @@ Block_Backend_Discrete_Cached_Request< Key, Value, Iterator >::Block_Backend_Dis
     (Block_Backend_Cache_Base& cache_, int used_timestamp,
      const Iterator& begin_, const Iterator& end_)
     : Block_Backend_Basic_Cached_Request< Key, Value >(used_timestamp),
-      cache(dynamic_cast< Block_Backend_Cache< Key, Value >* >(&cache_)),
+      cache(dynamic_cast< Block_Backend_Cache< Key, Value >* >(&cache_)), db(0),
       backend_it(0), frontend_index_(begin_ == end_ ? Key() : *begin_),
       request_it(begin_), end(end_)
 {
@@ -426,6 +415,7 @@ Block_Backend_Discrete_Cached_Request< Key, Value, Iterator >::~Block_Backend_Di
 {
   cache->unregister_request(*this);
   delete backend_it;
+  delete db;
 }
 
 
@@ -462,14 +452,16 @@ void Block_Backend_Discrete_Cached_Request< Key, Value, Iterator >::skip_fronten
 template< typename Key, typename Value, typename Iterator >
 void Block_Backend_Discrete_Cached_Request< Key, Value, Iterator >::skip_backend_iterator()
 {
+  if (!db)
+    db = new Block_Backend< Key, Value >(cache->get_db_index());
   if (!backend_it)
-    backend_it = new typename Block_Backend< Key, Value >::Discrete_Iterator
-        (cache->get_db().discrete_begin(request_it, end));
+    backend_it = new typename Block_Backend< Key, Value, Iterator >::Discrete_Iterator
+        (db->discrete_begin(request_it, end));
   
-  if (!(*backend_it == cache->get_db().discrete_end()))
+  if (!(*backend_it == db->discrete_end()))
     backend_it->skip_to_index(frontend_index_);
   
-  if (*backend_it == cache->get_db().discrete_end())
+  if (*backend_it == db->discrete_end())
   {
     set_end();
     delete backend_it;
@@ -482,10 +474,12 @@ template< typename Key, typename Value, typename Iterator >
 std::pair< int, Key > Block_Backend_Discrete_Cached_Request< Key, Value, Iterator >
     ::read_whole_key_base(const Key& key, std::vector< Value >& result_values)
 {
+  if (!db)
+    db = new Block_Backend< Key, Value >(cache->get_db_index());
   if (!backend_it)
-    backend_it = new typename Block_Backend< Key, Value >::Discrete_Iterator
-        (cache->get_db().discrete_begin(request_it, end));
-  if (*backend_it == cache->get_db().discrete_end())
+    backend_it = new typename Block_Backend< Key, Value, Iterator >::Discrete_Iterator
+        (db->discrete_begin(request_it, end));
+  if (*backend_it == db->discrete_end())
     return std::make_pair(0, Key());
   
   return backend_it->read_whole_key(result_values);
@@ -527,6 +521,7 @@ private:
   Block_Backend_Range_Cached_Request(const Block_Backend_Range_Cached_Request&);
 
   Block_Backend_Cache< Key, Value >* cache;
+  Block_Backend< Key, Value, Iterator >* db;
   typename Block_Backend< Key, Value, Iterator >::Range_Iterator* backend_it;
   Key frontend_index_;
   Default_Range_Iterator< Key > request_it;
@@ -539,7 +534,7 @@ Block_Backend_Range_Cached_Request< Key, Value, Iterator >::Block_Backend_Range_
     (Block_Backend_Cache_Base& cache_, int used_timestamp,
      const Default_Range_Iterator< Key >& begin_, const Default_Range_Iterator< Key >& end_)
     : Block_Backend_Basic_Cached_Request< Key, Value >(used_timestamp),
-      cache(dynamic_cast< Block_Backend_Cache< Key, Value >* >(&cache_)),
+      cache(dynamic_cast< Block_Backend_Cache< Key, Value >* >(&cache_)), db(0),
       backend_it(0), frontend_index_(begin_ == end_ ? Key() : begin_.lower_bound()),
       request_it(begin_), end(end_)
 {
@@ -552,6 +547,7 @@ Block_Backend_Range_Cached_Request< Key, Value, Iterator >::~Block_Backend_Range
 {
   cache->unregister_request(*this);
   delete backend_it;
+  delete db;
 }
 
 
@@ -590,14 +586,15 @@ void Block_Backend_Range_Cached_Request< Key, Value, Iterator >::skip_frontend_i
 template< typename Key, typename Value, typename Iterator >
 void Block_Backend_Range_Cached_Request< Key, Value, Iterator >::skip_backend_iterator()
 {
+  if (!db)
+    db = new Block_Backend< Key, Value >(cache->get_db_index());
   if (!backend_it)
     backend_it = new typename Block_Backend< Key, Value >::Range_Iterator
-        (cache->get_db().range_begin(request_it, end));
-  
-  if (!(*backend_it == cache->get_db().range_end()))
+        (db->range_begin(request_it, end));  
+  if (!(*backend_it == db->range_end()))
     backend_it->skip_to_index(frontend_index_);
   
-  if (*backend_it == cache->get_db().range_end())
+  if (*backend_it == db->range_end())
   {
     set_end();
     delete backend_it;
@@ -610,10 +607,12 @@ template< typename Key, typename Value, typename Iterator >
 std::pair< int, Key > Block_Backend_Range_Cached_Request< Key, Value, Iterator >
     ::read_whole_key_base(const Key& key, std::vector< Value >& result_values)
 {
+  if (!db)
+    db = new Block_Backend< Key, Value >(cache->get_db_index());
   if (!backend_it)
     backend_it = new typename Block_Backend< Key, Value >::Range_Iterator
-        (cache->get_db().range_begin(request_it, end));
-  if (*backend_it == cache->get_db().range_end())
+        (db->range_begin(request_it, end));
+  if (*backend_it == db->range_end())
     return std::make_pair(0, Key());
   
   return backend_it->read_whole_key(result_values);
