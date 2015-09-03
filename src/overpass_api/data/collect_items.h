@@ -299,43 +299,43 @@ void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
 		   map< Index, vector< Object > >& result)
 {
   uint32 count = 0;
-  Block_Backend< Index, Object, typename Container::const_iterator > db
-      (rman.get_transaction()->data_index(file_properties));
-  for (typename Block_Backend< Index, Object, typename Container
-      ::const_iterator >::Discrete_Iterator
-      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
-  {
-    if (++count >= 256*1024)
-    {
-      count = 0;
-      if (stmt)
-        rman.health_check(*stmt, 0, eval_map(result));
-    }
-    if (predicate.match(it.object()))
-      result[it.index()].push_back(it.object());
-  }
-  
-//   Block_Backend_Discrete_Cached_Request< Index, Object, typename Container::const_iterator > cache
-//       (rman.get_transaction()->get_cache(file_properties), time(0), req.begin(), req.end());
-//   std::pair< Index, const std::vector< Object >* > payload = cache.read_whole_key();
-//   while (payload.second)
+//   Block_Backend< Index, Object, typename Container::const_iterator > db
+//       (rman.get_transaction()->data_index(file_properties));
+//   for (typename Block_Backend< Index, Object, typename Container
+//       ::const_iterator >::Discrete_Iterator
+//       it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
 //   {
-//     if (count >= 64*1024)
+//     if (++count >= 256*1024)
 //     {
 //       count = 0;
 //       if (stmt)
 //         rman.health_check(*stmt, 0, eval_map(result));
 //     }
-//     
-//     for (typename std::vector< Object >::const_iterator it = payload.second->begin();
-// 	 it != payload.second->end(); ++it)
-//     {
-//       if (predicate.match(*it))
-//         result[payload.first].push_back(*it);
-//     }
-//     count += result[payload.first].size();
-//     payload = cache.read_whole_key();
+//     if (predicate.match(it.object()))
+//       result[it.index()].push_back(it.object());
 //   }
+  
+  Block_Backend_Discrete_Cached_Request< Index, Object, typename Container::const_iterator > cache
+      (rman.get_transaction()->get_cache(file_properties), time(0), req.begin(), req.end());
+  std::pair< Index, const std::vector< Object >* > payload = cache.read_whole_key();
+  while (payload.second)
+  {
+    if (count >= 64*1024)
+    {
+      count = 0;
+      if (stmt)
+        rman.health_check(*stmt, 0, eval_map(result));
+    }
+    
+    for (typename std::vector< Object >::const_iterator it = payload.second->begin();
+	 it != payload.second->end(); ++it)
+    {
+      if (predicate.match(*it))
+        result[payload.first].push_back(*it);
+    }
+    count += result[payload.first].size();
+    payload = cache.read_whole_key();
+  }
 }
 
 
@@ -345,29 +345,29 @@ void collect_items_discrete(Transaction& transaction,
                    const Container& req, const Predicate& predicate,
                    map< Index, vector< Object > >& result)
 {
-  Block_Backend< Index, Object, typename Container::const_iterator > db
-      (transaction.data_index(file_properties));
-  for (typename Block_Backend< Index, Object, typename Container
-      ::const_iterator >::Discrete_Iterator
-      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
-  {
-    if (predicate.match(it.object()))
-      result[it.index()].push_back(it.object());
-  }
-
-//   Block_Backend_Discrete_Cached_Request< Index, Object, typename Container::const_iterator > cache
-//       (transaction.get_cache(file_properties), time(0), req.begin(), req.end());
-//   std::pair< Index, const std::vector< Object >* > payload = cache.read_whole_key();
-//   while (payload.second)
+//   Block_Backend< Index, Object, typename Container::const_iterator > db
+//       (transaction.data_index(file_properties));
+//   for (typename Block_Backend< Index, Object, typename Container
+//       ::const_iterator >::Discrete_Iterator
+//       it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
 //   {
-//     for (typename std::vector< Object >::const_iterator it = payload.second->begin();
-// 	 it != payload.second->end(); ++it)
-//     {
-//       if (predicate.match(*it))
-//         result[payload.first].push_back(*it);
-//     }
-//     payload = cache.read_whole_key();
+//     if (predicate.match(it.object()))
+//       result[it.index()].push_back(it.object());
 //   }
+
+  Block_Backend_Discrete_Cached_Request< Index, Object, typename Container::const_iterator > cache
+      (transaction.get_cache(file_properties), time(0), req.begin(), req.end());
+  std::pair< Index, const std::vector< Object >* > payload = cache.read_whole_key();
+  while (payload.second)
+  {
+    for (typename std::vector< Object >::const_iterator it = payload.second->begin();
+	 it != payload.second->end(); ++it)
+    {
+      if (predicate.match(*it))
+        result[payload.first].push_back(*it);
+    }
+    payload = cache.read_whole_key();
+  }
 }
 
 
@@ -395,20 +395,42 @@ void collect_items_range(const Statement* stmt, Resource_Manager& rman,
 		   map< Index, vector< Object > >& result)
 {
   uint32 count = 0;
-  Block_Backend< Index, Object, typename Container::const_iterator > db
-      (rman.get_transaction()->data_index(file_properties));
-  for (typename Block_Backend< Index, Object, typename Container
-      ::const_iterator >::Range_Iterator
-      it(db.range_begin(req.begin(), req.end()));
-	   !(it == db.range_end()); ++it)
+//   Block_Backend< Index, Object, typename Container::const_iterator > db
+//       (rman.get_transaction()->data_index(file_properties));
+//   for (typename Block_Backend< Index, Object, typename Container
+//       ::const_iterator >::Range_Iterator
+//       it(db.range_begin(req.begin(), req.end()));
+// 	   !(it == db.range_end()); ++it)
+//   {
+//     if (++count >= 256*1024 && stmt)
+//     {
+//       count = 0;
+//       rman.health_check(*stmt, 0, eval_map(result));
+//     }
+//     if (predicate.match(it.object()))
+//       result[it.index()].push_back(it.object());
+//   }
+  
+  Block_Backend_Range_Cached_Request< Index, Object, typename Container::const_iterator > cache
+      (rman.get_transaction()->get_cache(file_properties), time(0), req.begin(), req.end());
+  std::pair< Index, const std::vector< Object >* > payload = cache.read_whole_key();
+  while (payload.second)
   {
-    if (++count >= 256*1024 && stmt)
+    if (count >= 64*1024)
     {
       count = 0;
-      rman.health_check(*stmt, 0, eval_map(result));
+      if (stmt)
+        rman.health_check(*stmt, 0, eval_map(result));
     }
-    if (predicate.match(it.object()))
-      result[it.index()].push_back(it.object());
+    
+    for (typename std::vector< Object >::const_iterator it = payload.second->begin();
+	 it != payload.second->end(); ++it)
+    {
+      if (predicate.match(*it))
+        result[payload.first].push_back(*it);
+    }
+    count += result[payload.first].size();
+    payload = cache.read_whole_key();
   }
 }
 

@@ -192,6 +192,8 @@ int main(int argc, char *argv[])
 	 it != get_statement_stack()->end(); ++it)
       (*it)->execute(dispatcher.resource_manager());
     
+    error_output->dump_cache_statistics(*dispatcher.resource_manager().get_transaction());
+    
 //   gettimeofday(&tv, 0);
 //   timecounter += tv.tv_sec + double(tv.tv_usec)/1000000;
 //   std::cerr<<timecounter<<'\n';

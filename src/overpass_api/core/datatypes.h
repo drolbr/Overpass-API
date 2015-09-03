@@ -197,6 +197,9 @@ struct Set
 };
 
 
+class Transaction;
+
+
 struct Error_Output
 {
   virtual void add_encoding_error(const string& error) = 0;
@@ -219,6 +222,8 @@ struct Error_Output
   virtual bool display_encoding_errors() = 0;
   virtual bool display_parse_errors() = 0;
   virtual bool display_static_errors() = 0;
+  
+  virtual void dump_cache_statistics(Transaction&) = 0;
   
   virtual void add_padding(const string& padding) = 0;
   

@@ -301,7 +301,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   {
     ostringstream temp;
     temp<<"make-area: Node "<<odd_id.val()
-        <<" is contained in an odd number of ways.\n";
+        <<" is contained in an odd number of ways.";
     runtime_remark(temp.str());
   }
   
@@ -314,7 +314,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
     ostringstream temp;
     temp<<"make-area: Node "<<odd_pair.first.val()
         <<" referred by way "<<odd_pair.second.val()
-        <<" is not contained in set \""<<input<<"\".\n";
+        <<" is not contained in set \""<<input<<"\".";
     runtime_remark(temp.str());
   }
   

@@ -92,7 +92,7 @@ Dispatcher_Stub::Dispatcher_Stub
       throw;
     }
     transaction = new Nonsynced_Transaction
-        (false, false, dispatcher_client->get_db_dir(), "");
+        (false, false, dispatcher_client->get_db_dir(), "", max_allowed_space/2);
   
     transaction->data_index(*osm_base_settings().NODES);
     transaction->random_index(osm_base_settings().NODES);

@@ -453,7 +453,7 @@ template< typename Key, typename Value, typename Iterator >
 void Block_Backend_Discrete_Cached_Request< Key, Value, Iterator >::skip_backend_iterator()
 {
   if (!db)
-    db = new Block_Backend< Key, Value >(cache->get_db_index());
+    db = new Block_Backend< Key, Value, Iterator >(cache->get_db_index());
   if (!backend_it)
     backend_it = new typename Block_Backend< Key, Value, Iterator >::Discrete_Iterator
         (db->discrete_begin(request_it, end));
@@ -475,7 +475,7 @@ std::pair< int, Key > Block_Backend_Discrete_Cached_Request< Key, Value, Iterato
     ::read_whole_key_base(const Key& key, std::vector< Value >& result_values)
 {
   if (!db)
-    db = new Block_Backend< Key, Value >(cache->get_db_index());
+    db = new Block_Backend< Key, Value, Iterator >(cache->get_db_index());
   if (!backend_it)
     backend_it = new typename Block_Backend< Key, Value, Iterator >::Discrete_Iterator
         (db->discrete_begin(request_it, end));
@@ -587,9 +587,9 @@ template< typename Key, typename Value, typename Iterator >
 void Block_Backend_Range_Cached_Request< Key, Value, Iterator >::skip_backend_iterator()
 {
   if (!db)
-    db = new Block_Backend< Key, Value >(cache->get_db_index());
+    db = new Block_Backend< Key, Value, Iterator >(cache->get_db_index());
   if (!backend_it)
-    backend_it = new typename Block_Backend< Key, Value >::Range_Iterator
+    backend_it = new typename Block_Backend< Key, Value, Iterator >::Range_Iterator
         (db->range_begin(request_it, end));  
   if (!(*backend_it == db->range_end()))
     backend_it->skip_to_index(frontend_index_);
@@ -608,9 +608,9 @@ std::pair< int, Key > Block_Backend_Range_Cached_Request< Key, Value, Iterator >
     ::read_whole_key_base(const Key& key, std::vector< Value >& result_values)
 {
   if (!db)
-    db = new Block_Backend< Key, Value >(cache->get_db_index());
+    db = new Block_Backend< Key, Value, Iterator >(cache->get_db_index());
   if (!backend_it)
-    backend_it = new typename Block_Backend< Key, Value >::Range_Iterator
+    backend_it = new typename Block_Backend< Key, Value, Iterator >::Range_Iterator
         (db->range_begin(request_it, end));
   if (*backend_it == db->range_end())
     return std::make_pair(0, Key());
