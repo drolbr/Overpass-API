@@ -436,7 +436,7 @@ template< typename Key, typename Value, typename Iterator >
 void Block_Backend_Discrete_Cached_Request< Key, Value, Iterator >::skip_frontend_iterator(const Key& target)
 {
   if (target == Key())
-    request_it = end;
+    set_end();
   else
   {
     while (!(request_it == end) && *request_it < target)
@@ -568,7 +568,7 @@ template< typename Key, typename Value, typename Iterator >
 void Block_Backend_Range_Cached_Request< Key, Value, Iterator >::skip_frontend_iterator(const Key& target)
 {
   if (target == Key())
-    request_it = end;
+    set_end();
   else
   {
     while (!(request_it == end) && !(target < request_it.upper_bound()))
@@ -590,7 +590,7 @@ void Block_Backend_Range_Cached_Request< Key, Value, Iterator >::skip_backend_it
     db = new Block_Backend< Key, Value, Iterator >(cache->get_db_index());
   if (!backend_it)
     backend_it = new typename Block_Backend< Key, Value, Iterator >::Range_Iterator
-        (db->range_begin(request_it, end));  
+        (db->range_begin(request_it, end));
   if (!(*backend_it == db->range_end()))
     backend_it->skip_to_index(frontend_index_);
   

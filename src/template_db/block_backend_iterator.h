@@ -625,6 +625,8 @@ std::pair< int, TIndex > Block_Backend_Discrete_Iterator< TIndex, TObject, TIter
 template< class TIndex, class TObject, class TIterator >
 void Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::skip_to_index(const TIndex& index)
 {
+  if (index_it == index_end)
+    return;
   if (!(this->index() < index))
     return;
   if (file_it.skip_to_index(index))
@@ -633,22 +635,21 @@ void Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::skip_to_inde
       return;
   }
   else
-    this->pos = *this->current_idx_pos;
-  
-  while (search_next_index() && this->index() < index)
     this->set_pos_to_next_index_pos();
   
-  if (this->pos_is_valid())
-    return;
-  
-  if (file_it.skip_to_index(index))
+  while (true)
   {
+    while (search_next_index())
+    {
+      if (!(this->index() < index))
+	return;
+      this->set_pos_to_next_index_pos();
+    }
+    
+    ++file_it;
     if (read_block())
       return;
   }
-  
-  file_it = file_end;
-  this->set_pos_to_zero();
 }
 
 
@@ -810,6 +811,8 @@ std::pair< int, TIndex > Block_Backend_Range_Iterator< TIndex, TObject, TIterato
 template< class TIndex, class TObject, class TIterator >
 void Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::skip_to_index(const TIndex& index)
 {
+  if (index_it == index_end)
+    return;
   if (!(this->index() < index))
     return;
   if (file_it.skip_to_index(index))
@@ -818,22 +821,21 @@ void Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::skip_to_index(c
       return;
   }
   else
-    this->pos = *this->current_idx_pos;
-  
-  while (search_next_index() && this->index() < index)
     this->set_pos_to_next_index_pos();
   
-  if (this->pos_is_valid())
-    return;
-  
-  if (file_it.skip_to_index(index))
+  while (true)
   {
+    while (search_next_index())
+    {
+      if (!(this->index() < index))
+	return;
+      this->set_pos_to_next_index_pos();
+    }
+    
+    ++file_it;
     if (read_block())
       return;
   }
-  
-  file_it = file_end;
-  this->set_pos_to_zero();
 }
 
 

@@ -1,3 +1,6 @@
 encoding remark: Please enter your query and terminate it with CTRL+D.
 encoding remark: Your input contains an 'osm-script' tag. Thus, a line with the
 datatype declaration is added. This shifts line numbering by -1 line(s).
+Total read: 12 bytes in 1 blocks.
+Read from disk: 12 bytes in 1 blocks.
+Cached: 12 bytes in 1 blocks.

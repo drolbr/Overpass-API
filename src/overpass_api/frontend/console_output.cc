@@ -104,7 +104,7 @@ void Console_Output::display_statement_progress
 
 void Console_Output::dump_cache_statistics(Transaction& transaction)
 {
-  if (log_level < Error_Output::PROGRESS)
+  if (log_level < Error_Output::VERBOSE)
     return;
   
   std::cerr<<"Total read: "<<transaction.size_total_requested()<<" bytes in "
