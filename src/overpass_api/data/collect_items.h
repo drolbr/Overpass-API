@@ -264,8 +264,8 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
                    Current_Iterator current_begin, Current_Iterator current_end,
                    Attic_Iterator attic_begin, Attic_Iterator attic_end,
                    const Predicate& predicate,
-                   map< Index, vector< Way_Skeleton > >& result,
-                   map< Index, vector< Attic< Way_Skeleton > > >& attic_result)
+                   std::map< Index, std::vector< Way_Skeleton > >& result,
+                   std::map< Index, std::vector< Attic< Way_Skeleton > > >& attic_result)
 {
   std::vector< std::pair< Way_Skeleton::Id_Type, uint64 > > timestamp_by_id;
 
@@ -296,7 +296,7 @@ template < class Index, class Object, class Container, class Predicate >
 void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
 		   File_Properties& file_properties,
 		   const Container& req, const Predicate& predicate,
-		   map< Index, vector< Object > >& result)
+		   std::map< Index, std::vector< Object > >& result)
 {
   uint32 count = 0;
 //   Block_Backend< Index, Object, typename Container::const_iterator > db
@@ -320,6 +320,7 @@ void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
   std::pair< Index, const std::vector< Object >* > payload = cache.read_whole_key();
   while (payload.second)
   {
+    ++count;
     if (count >= 64*1024)
     {
       count = 0;
@@ -327,13 +328,21 @@ void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
         rman.health_check(*stmt, 0, eval_map(result));
     }
     
+    std::vector< Object >* values = 0;
     for (typename std::vector< Object >::const_iterator it = payload.second->begin();
 	 it != payload.second->end(); ++it)
     {
       if (predicate.match(*it))
-        result[payload.first].push_back(*it);
+      {
+	++count;
+	if (!values)
+	{
+	  values = &result[payload.first];
+	  values->clear();
+	}
+        values->push_back(*it);
+      }
     }
-    count += result[payload.first].size();
     payload = cache.read_whole_key();
   }
 }
@@ -343,7 +352,7 @@ template < class Index, class Object, class Container, class Predicate >
 void collect_items_discrete(Transaction& transaction,
                    File_Properties& file_properties,
                    const Container& req, const Predicate& predicate,
-                   map< Index, vector< Object > >& result)
+                   std::map< Index, std::vector< Object > >& result)
 {
 //   Block_Backend< Index, Object, typename Container::const_iterator > db
 //       (transaction.data_index(file_properties));
@@ -360,11 +369,19 @@ void collect_items_discrete(Transaction& transaction,
   std::pair< Index, const std::vector< Object >* > payload = cache.read_whole_key();
   while (payload.second)
   {
+    std::vector< Object >* values = 0;
     for (typename std::vector< Object >::const_iterator it = payload.second->begin();
 	 it != payload.second->end(); ++it)
     {
       if (predicate.match(*it))
-        result[payload.first].push_back(*it);
+      {
+	if (!values)
+	{
+	  values = &result[payload.first];
+	  values->clear();
+	}
+        values->push_back(*it);
+      }
     }
     payload = cache.read_whole_key();
   }
@@ -374,8 +391,8 @@ void collect_items_discrete(Transaction& transaction,
 template < class Index, class Object, class Container, class Predicate >
 void collect_items_discrete_by_timestamp(const Statement* stmt, Resource_Manager& rman,
                    const Container& req, const Predicate& predicate,
-                   map< Index, vector< Object > >& result,
-                   map< Index, vector< Attic< Object > > >& attic_result)
+                   std::map< Index, std::vector< Object > >& result,
+                   std::map< Index, std::vector< Attic< Object > > >& attic_result)
 {
   Block_Backend< Index, Object, typename Container::const_iterator > current_db
       (rman.get_transaction()->data_index(*current_skeleton_file_properties< Object >()));
@@ -392,7 +409,7 @@ template < class Index, class Object, class Container, class Predicate >
 void collect_items_range(const Statement* stmt, Resource_Manager& rman,
 		   File_Properties& file_properties,
 		   const Container& req, const Predicate& predicate,
-		   map< Index, vector< Object > >& result)
+		   std::map< Index, std::vector< Object > >& result)
 {
   uint32 count = 0;
 //   Block_Backend< Index, Object, typename Container::const_iterator > db
@@ -416,6 +433,7 @@ void collect_items_range(const Statement* stmt, Resource_Manager& rman,
   std::pair< Index, const std::vector< Object >* > payload = cache.read_whole_key();
   while (payload.second)
   {
+    ++count;
     if (count >= 64*1024)
     {
       count = 0;
@@ -423,13 +441,21 @@ void collect_items_range(const Statement* stmt, Resource_Manager& rman,
         rman.health_check(*stmt, 0, eval_map(result));
     }
     
+    std::vector< Object >* values = 0;
     for (typename std::vector< Object >::const_iterator it = payload.second->begin();
 	 it != payload.second->end(); ++it)
     {
       if (predicate.match(*it))
-        result[payload.first].push_back(*it);
+      {
+	++count;
+	if (!values)
+	{
+	  values = &result[payload.first];
+	  values->clear();
+	}
+        values->push_back(*it);
+      }
     }
-    count += result[payload.first].size();
     payload = cache.read_whole_key();
   }
 }
@@ -438,8 +464,8 @@ void collect_items_range(const Statement* stmt, Resource_Manager& rman,
 template < class Index, class Object, class Container, class Predicate >
 void collect_items_range_by_timestamp(const Statement* stmt, Resource_Manager& rman,
                    const Container& req, const Predicate& predicate,
-                   map< Index, vector< Object > >& result,
-                   map< Index, vector< Attic< Object > > >& attic_result)
+                   std::map< Index, std::vector< Object > >& result,
+                   std::map< Index, std::vector< Attic< Object > > >& attic_result)
 {
   Block_Backend< Index, Object, typename Container::const_iterator > current_db
       (rman.get_transaction()->data_index(*current_skeleton_file_properties< Object >()));
@@ -455,7 +481,7 @@ void collect_items_range_by_timestamp(const Statement* stmt, Resource_Manager& r
 template < class Index, class Object, class Predicate >
 void collect_items_flat(const Statement& stmt, Resource_Manager& rman,
 		   File_Properties& file_properties, const Predicate& predicate,
-		   map< Index, vector< Object > >& result)
+		   std::map< Index, std::vector< Object > >& result)
 {
   uint32 count = 0;
   Block_Backend< Index, Object > db
@@ -477,8 +503,8 @@ void collect_items_flat(const Statement& stmt, Resource_Manager& rman,
 template < class Index, class Object, class Predicate >
 void collect_items_flat_by_timestamp(const Statement& stmt, Resource_Manager& rman,
                    const Predicate& predicate,
-                   map< Index, vector< Object > >& result,
-                   map< Index, vector< Attic< Object > > >& attic_result)
+                   std::map< Index, std::vector< Object > >& result,
+                   std::map< Index, std::vector< Attic< Object > > >& attic_result)
 {
   Block_Backend< Index, Object > current_db
       (rman.get_transaction()->data_index(*current_skeleton_file_properties< Object >()));
