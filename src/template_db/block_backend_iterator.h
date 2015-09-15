@@ -286,21 +286,32 @@ const TObject& Block_Backend_Basic_Iterator< TIndex, TObject >::object()
 }
 
 
+#include <iostream>
+#include <ctime>
 template< class TIndex, class TObject >
 int Block_Backend_Basic_Iterator< TIndex, TObject >::read_whole_key_base(std::vector< TObject >& result_values)
 {
-  if (result_values.empty())
-    result_values.reserve((*current_idx_pos - pos) / TObject::size_of((void*)(buffer.ptr + pos)));
-      // a simple estimation that works at least for fixed size objects
+	    
+//   static double total_time = 0;
+//   static int message_time = 1;
+//   clock_t start = clock();
   
-  int result_size = 0;
+  int result_size = *current_idx_pos - pos;
+  
+  if (result_values.empty() && result_size > 0)
+    result_values.reserve(result_size / TObject::size_of((void*)(buffer.ptr + pos)));
+    // a simple estimation that works at least for fixed size objects
   
   do
-  {
-    result_size += TObject::size_of((void*)(buffer.ptr + pos));
     result_values.push_back(TObject((void*)(buffer.ptr + pos)));
-  }
-  while (advance());
+  while (advance());  
+  
+//   total_time += double(clock() - start)/CLOCKS_PER_SEC;
+//   if (total_time > message_time)
+//   {
+//     std::cerr<<"Time elapsed a: "<<total_time<<'\n';
+//     ++message_time;
+//   }
   
   return result_size;
 }
@@ -780,6 +791,11 @@ template< class TIndex, class TObject, class TIterator >
 std::pair< int, TIndex > Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::read_whole_key
     (std::vector< TObject >& result_values)
 {
+	    
+//   static double total_time = 0;
+//   static int message_time = 1;
+//   clock_t start = clock();
+  
   result_values.clear();
   TIndex current_idx = this->index();
   TIndex result_idx = current_idx;
@@ -794,7 +810,17 @@ std::pair< int, TIndex > Block_Backend_Range_Iterator< TIndex, TObject, TIterato
       if (current_idx == this->index())
 	result += this->read_whole_key_base(result_values);
       else
+      {
+  
+//   total_time += double(clock() - start)/CLOCKS_PER_SEC;
+//   if (total_time > message_time)
+//   {
+//     std::cerr<<"Time elapsed c: "<<total_time<<'\n';
+//     ++message_time;
+//   }
+  
         return std::make_pair(result, result_idx);
+      }
     }
     else
     {
@@ -802,7 +828,17 @@ std::pair< int, TIndex > Block_Backend_Range_Iterator< TIndex, TObject, TIterato
 	result_idx = file_it.next_index();
       ++file_it;
       if (read_block())
+      {
+  
+//   total_time += double(clock() - start)/CLOCKS_PER_SEC;
+//   if (total_time > message_time)
+//   {
+//     std::cerr<<"Time elapsed c: "<<total_time<<'\n';
+//     ++message_time;
+//   }
+  
         return std::make_pair(result, result_idx);
+      }
     }
   }
 }
@@ -843,6 +879,11 @@ void Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::skip_to_index(c
 template< class TIndex, class TObject, class TIterator >
 bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::search_next_index()
 {
+	    
+//   static double total_time = 0;
+//   static int message_time = 1;
+//   clock_t start = clock();
+  
   // search for the next suitable index
   while (this->pos_is_valid())
   {
@@ -855,12 +896,28 @@ bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::search_next_ind
       // there cannot be data anymore, because there is no valid index left
       file_it = file_end;
       this->set_pos_to_zero();
+  
+//   total_time += double(clock() - start)/CLOCKS_PER_SEC;
+//   if (total_time > message_time)
+//   {
+//     std::cerr<<"Time elapsed b: "<<total_time<<'\n';
+//     ++message_time;
+//   }
+  
       return true;
     }
     if (!(*(this->current_index) < index_it.lower_bound()))
     {
       // we have reached the next valid index
       this->set_pos_to_first_object();
+  
+//   total_time += double(clock() - start)/CLOCKS_PER_SEC;
+//   if (total_time > message_time)
+//   {
+//     std::cerr<<"Time elapsed b: "<<total_time<<'\n';
+//     ++message_time;
+//   }
+  
       return true;
     }
     delete this->current_index;
@@ -869,6 +926,13 @@ bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::search_next_ind
     this->set_pos_to_next_index_pos();
   }
   
+//   total_time += double(clock() - start)/CLOCKS_PER_SEC;
+//   if (total_time > message_time)
+//   {
+//     std::cerr<<"Time elapsed b: "<<total_time<<'\n';
+//     ++message_time;
+//   }
+    
   return false;
 }
 
@@ -877,6 +941,11 @@ bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::search_next_ind
 template< class TIndex, class TObject, class TIterator >
 bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::read_block()
 {
+	    
+//   static double total_time = 0;
+//   static int message_time = 1;
+//   clock_t start = clock();
+  
   // we need to load a new block
   if (file_it == file_end)
   {
@@ -886,6 +955,14 @@ bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::read_block()
   }
   this->set_pos_to_first_index();
   file_blocks.read_block(file_it, this->buffer.ptr);
+  
+  
+//   total_time += double(clock() - start)/CLOCKS_PER_SEC;
+//   if (total_time > message_time)
+//   {
+//     std::cerr<<"Time elapsed d: "<<total_time<<'\n';
+//     ++message_time;
+//   }
   
   return false;
 }
