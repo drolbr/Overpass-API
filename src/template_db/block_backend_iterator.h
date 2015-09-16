@@ -149,7 +149,7 @@ struct Block_Backend_Discrete_Iterator : Block_Backend_Basic_Iterator< TIndex, T
   const Block_Backend_Discrete_Iterator& operator++();
   
   std::pair< int, TIndex > read_whole_key(std::vector< TObject >& result_values);
-  void skip_to_index(const TIndex& index);
+  TIndex skip_to_index(const TIndex& index);
   
   const File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > >& file_blocks;
   typename File_Blocks_::Discrete_Iterator file_it;
@@ -189,7 +189,7 @@ struct Block_Backend_Range_Iterator : Block_Backend_Basic_Iterator< TIndex, TObj
   const Block_Backend_Range_Iterator& operator++();
   
   std::pair< int, TIndex > read_whole_key(std::vector< TObject >& result_values);
-  void skip_to_index(const TIndex& index);
+  TIndex skip_to_index(const TIndex& index);
   
   const File_Blocks_& file_blocks;
   typename File_Blocks_::Range_Iterator file_it;
@@ -634,33 +634,44 @@ std::pair< int, TIndex > Block_Backend_Discrete_Iterator< TIndex, TObject, TIter
 
 
 template< class TIndex, class TObject, class TIterator >
-void Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::skip_to_index(const TIndex& index)
+TIndex Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::skip_to_index(const TIndex& index)
 {
   if (index_it == index_end)
-    return;
+    return TIndex();
   if (!(this->index() < index))
-    return;
+    return this->index();
+  
   if (file_it.skip_to_index(index))
   {
     if (read_block())
-      return;
+      return TIndex();
   }
   else
     this->set_pos_to_next_index_pos();
+    
+  while (this->pos_is_valid())
+  {
+    this->create_index_from_current_pos();
+    if (!(this->index() < index))
+      break;
+    this->set_pos_to_next_index_pos();
+  }  
+  TIndex result = this->pos_is_valid() ? this->index() : file_it.next_index();
   
   while (true)
   {
     while (search_next_index())
     {
       if (!(this->index() < index))
-	return;
+	return result;
       this->set_pos_to_next_index_pos();
     }
     
     ++file_it;
     if (read_block())
-      return;
+      return result;
   }
+  return result;
 }
 
 
@@ -845,33 +856,44 @@ std::pair< int, TIndex > Block_Backend_Range_Iterator< TIndex, TObject, TIterato
 
 
 template< class TIndex, class TObject, class TIterator >
-void Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::skip_to_index(const TIndex& index)
+TIndex Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::skip_to_index(const TIndex& index)
 {
   if (index_it == index_end)
-    return;
+    return TIndex();
   if (!(this->index() < index))
-    return;
+    return this->index();
+  
   if (file_it.skip_to_index(index))
   {
     if (read_block())
-      return;
+      return TIndex();
   }
   else
     this->set_pos_to_next_index_pos();
+    
+  while (this->pos_is_valid())
+  {
+    this->create_index_from_current_pos();
+    if (!(this->index() < index))
+      break;
+    this->set_pos_to_next_index_pos();
+  }  
+  TIndex result = this->pos_is_valid() ? this->index() : file_it.next_index();
   
   while (true)
   {
     while (search_next_index())
     {
       if (!(this->index() < index))
-	return;
+	return result;
       this->set_pos_to_next_index_pos();
     }
     
     ++file_it;
     if (read_block())
-      return;
+      return result;
   }
+  return result;
 }
 
 
