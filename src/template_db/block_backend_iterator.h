@@ -639,7 +639,7 @@ TIndex Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::skip_to_in
   if (index_it == index_end)
     return TIndex();
   if (!(this->index() < index))
-    return this->index();
+    return index;
   
   if (file_it.skip_to_index(index))
   {
@@ -861,7 +861,7 @@ TIndex Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::skip_to_index
   if (index_it == index_end)
     return TIndex();
   if (!(this->index() < index))
-    return this->index();
+    return index;
   
   if (file_it.skip_to_index(index))
   {

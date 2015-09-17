@@ -159,11 +159,14 @@ std::pair< Key, const std::vector< Value >* > Block_Backend_Cache< Key, Value >:
 	
 	++num_read_from_disk_;
       }
+      else
+      {
+	request.skip_frontend_iterator(request.backend_key());
+	continue;
+      }
     }
     
-    if (cache_it == cached_blocks.end())
-      request.skip_frontend_iterator(request.backend_key());
-    else if (cache_it->second.next_key == Key())
+    if (cache_it->second.next_key == Key())
       request.set_end();
     else
       request.skip_frontend_iterator(cache_it->second.next_key);

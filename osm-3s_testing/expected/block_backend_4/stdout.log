@@ -274,7 +274,7 @@ Index 99: 1999
 ... all blocks read.
 Reading blocks with indices {0, 1, ..., 9} ...
 Index 0: 1000 
-... skip to index 5 ... 9
+... skip to index 5 ... 5
 Index 9: 1909 
 ... skip to index 21 ...
 [empty]
