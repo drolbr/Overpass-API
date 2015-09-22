@@ -757,7 +757,7 @@ inline void blur_index(uint32 distance, uint32 bitmask, uint32 lower_idx, uint32
   result.push_back(make_interval(ll_upper(max_lat<<16, max_lon<<16) | bitmask));
 }
 
-inline void add_decomp_range(const std::pair< Uint32_Index, Uint32_Index >& range,
+inline void add_decomp_range(const std::pair< Uint31_Index, Uint31_Index >& range,
 			     std::vector< std::pair< Uint32_Index, Uint32_Index > >& node_decomp)
 {
   uint32 lower = range.first.val();
@@ -802,10 +802,10 @@ inline void add_decomp_range(const std::pair< Uint32_Index, Uint32_Index >& rang
 }
 
 inline std::set< std::pair< Uint31_Index, Uint31_Index > > calc_parents
-    (const std::set< std::pair< Uint32_Index, Uint32_Index > >& node_idxs)
+    (const std::set< std::pair< Uint31_Index, Uint31_Index > >& node_idxs)
 {
   std::vector< std::pair< Uint32_Index, Uint32_Index > > node_decomp;
-  for (std::set< std::pair< Uint32_Index, Uint32_Index > >::const_iterator
+  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator
       it = node_idxs.begin(); it != node_idxs.end(); ++it)
     add_decomp_range(*it, node_decomp);
   
@@ -931,17 +931,17 @@ inline std::vector< std::pair< uint32, uint32 > > calc_ranges
 }
 
 
-inline std::set< std::pair< Uint32_Index, Uint32_Index > > get_ranges_32(
+inline std::set< std::pair< Uint31_Index, Uint31_Index > > get_ranges_32(
     double south, double north, double west, double east)
 {
-  std::set< std::pair< Uint32_Index, Uint32_Index > > ranges;
+  std::set< std::pair< Uint31_Index, Uint31_Index > > ranges;
   
   std::vector< std::pair< uint32, uint32 > > uint_ranges = ::calc_ranges(south, north, west, east);
   for (std::vector< std::pair< uint32, uint32 > >::const_iterator
       it(uint_ranges.begin()); it != uint_ranges.end(); ++it)
   {
-    std::pair< Uint32_Index, Uint32_Index > range
-      (std::make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
+    std::pair< Uint31_Index, Uint31_Index > range
+      (std::make_pair(Uint31_Index(it->first), Uint31_Index(it->second)));
     ranges.insert(range);
   }
     
@@ -1082,7 +1082,7 @@ inline int32 ilon(double lon)
 // convert interleaved coordinates to plain integers
 inline uint32 ilat(uint32 ll_upper, uint32 ll_lower)
 {  
-  uint32 upper = ll_upper & 0xaaaaaaaa;
+  uint32 upper = ll_upper & 0x2aaaaaaa;
   upper = (upper | (upper<<1)) & 0xcccccccc;
   upper = (upper | (upper<<2)) & 0xf0f0f0f0;
   upper = (upper | (upper<<4)) & 0xff00ff00;

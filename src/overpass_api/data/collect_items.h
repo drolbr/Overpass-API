@@ -294,7 +294,7 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
 
 template < class Index, class Object, class Container, class Predicate >
 void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
-		   File_Properties& file_properties,
+		   Typed_File_Properties< Index, Object >& file_properties,
 		   const Container& req, const Predicate& predicate,
 		   std::map< Index, std::vector< Object > >& result)
 {
@@ -350,7 +350,7 @@ void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
 
 template < class Index, class Object, class Container, class Predicate >
 void collect_items_discrete(Transaction& transaction,
-                   File_Properties& file_properties,
+                   Typed_File_Properties< Index, Object >& file_properties,
                    const Container& req, const Predicate& predicate,
                    std::map< Index, std::vector< Object > >& result)
 {
@@ -407,7 +407,7 @@ void collect_items_discrete_by_timestamp(const Statement* stmt, Resource_Manager
 
 template < class Index, class Object, class Container, class Predicate >
 void collect_items_range(const Statement* stmt, Resource_Manager& rman,
-		   File_Properties& file_properties,
+		   Typed_File_Properties< Index, Object >& file_properties,
 		   const Container& req, const Predicate& predicate,
 		   std::map< Index, std::vector< Object > >& result)
 {
@@ -480,7 +480,7 @@ void collect_items_range_by_timestamp(const Statement* stmt, Resource_Manager& r
 
 template < class Index, class Object, class Predicate >
 void collect_items_flat(const Statement& stmt, Resource_Manager& rman,
-		   File_Properties& file_properties, const Predicate& predicate,
+		   Typed_File_Properties< Index, Object >& file_properties, const Predicate& predicate,
 		   std::map< Index, std::vector< Object > >& result)
 {
   uint32 count = 0;

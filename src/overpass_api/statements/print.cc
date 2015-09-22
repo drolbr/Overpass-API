@@ -1195,16 +1195,16 @@ Relation_Geometry_Store::Relation_Geometry_Store
     south = 1;
   }
   
-  std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
+  std::set< std::pair< Uint31_Index, Uint31_Index > > node_ranges;
   if (south <= north)
     get_ranges_32(south_, north_, west_, east_).swap(node_ranges);
   
   // Retrieve all nodes referred by the relations.
-  std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
+  std::map< Uint31_Index, std::vector< Node_Skeleton > > node_members
       = relation_node_members(&query, rman, relations, north < south ? 0 : &node_ranges);
   
   // Order node ids by id.
-  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = node_members.begin();
+  for (std::map< Uint31_Index, std::vector< Node_Skeleton > >::iterator it = node_members.begin();
       it != node_members.end(); ++it)
   {
     for (std::vector< Node_Skeleton >::const_iterator iit = it->second.begin();
@@ -1248,26 +1248,26 @@ Relation_Geometry_Store::Relation_Geometry_Store
     south = 1;
   }
   
-  std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
+  std::set< std::pair< Uint31_Index, Uint31_Index > > node_ranges;
   if (south <= north)
     get_ranges_32(south_, north_, west_, east_).swap(node_ranges);
   
   // Retrieve all nodes referred by the relations.
-  std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
-      std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > nodes_by_idx
+  std::pair< std::map< Uint31_Index, std::vector< Node_Skeleton > >,
+      std::map< Uint31_Index, std::vector< Attic< Node_Skeleton > > > > nodes_by_idx
       = relation_node_members(&query, rman,
           std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations, timestamp,
           north < south ? 0 : &node_ranges);
   
   // Order node ids by id.
-  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = nodes_by_idx.first.begin();
+  for (std::map< Uint31_Index, std::vector< Node_Skeleton > >::iterator it = nodes_by_idx.first.begin();
       it != nodes_by_idx.first.end(); ++it)
   {
     for (std::vector< Node_Skeleton >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
       nodes.push_back(Node(iit->id, it->first.val(), iit->ll_lower));
   }
-  for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::iterator it = nodes_by_idx.second.begin();
+  for (std::map< Uint31_Index, std::vector< Attic< Node_Skeleton > > >::iterator it = nodes_by_idx.second.begin();
       it != nodes_by_idx.second.end(); ++it)
   {
     for (std::vector< Attic< Node_Skeleton > >::const_iterator iit = it->second.begin();
@@ -1694,9 +1694,9 @@ void Collection_Print_Target::clear_nodes
 	  ++new_it;
       }
     
-      std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(searched_ids, rman, true);
-      find_still_existing_skeletons< Uint32_Index, Node_Skeleton >(rman, req, searched_ids).swap(found_ids);
-      find_meta_elements< Uint32_Index, Node_Skeleton >(rman, req, searched_ids).swap(found_meta);
+      std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Node_Skeleton >(searched_ids, rman, true);
+      find_still_existing_skeletons< Uint31_Index, Node_Skeleton >(rman, req, searched_ids).swap(found_ids);
+      find_meta_elements< Uint31_Index, Node_Skeleton >(rman, req, searched_ids).swap(found_meta);
     }
 	
     old_it = nodes.begin();
@@ -1756,13 +1756,13 @@ void Collection_Print_Target::clear_nodes
       searched_ids.push_back(it->elem.id);
     std::sort(searched_ids.begin(), searched_ids.end());
     searched_ids.erase(std::unique(searched_ids.begin(), searched_ids.end()), searched_ids.end());
-    std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(searched_ids, rman, true);
+    std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Node_Skeleton >(searched_ids, rman, true);
     
     std::vector< Node_Skeleton::Id_Type > found_ids
-        = find_still_existing_skeletons< Uint32_Index, Node_Skeleton >(rman, req, searched_ids);
+        = find_still_existing_skeletons< Uint31_Index, Node_Skeleton >(rman, req, searched_ids);
     
     std::map< Node_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Node::Id_Type > > found_meta
-        = find_meta_elements< Uint32_Index, Node_Skeleton >(rman, req, searched_ids);
+        = find_meta_elements< Uint31_Index, Node_Skeleton >(rman, req, searched_ids);
 	
     for (std::vector< Node_Entry >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
     {

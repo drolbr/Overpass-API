@@ -69,40 +69,40 @@ map< Uint31_Index, vector< Attic< Way_Skeleton > > > relation_way_members
      uint64 timestamp,
      const set< pair< Uint31_Index, Uint31_Index > >* way_ranges = 0);
 
-map< Uint32_Index, vector< Node_Skeleton > > relation_node_members
+map< Uint31_Index, vector< Node_Skeleton > > relation_node_members
     (const Statement* stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
-     const set< pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
+     const set< pair< Uint31_Index, Uint31_Index > >* node_ranges = 0,
      const vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
     
-std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
-    std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > relation_node_members
+std::pair< std::map< Uint31_Index, std::vector< Node_Skeleton > >,
+    std::map< Uint31_Index, std::vector< Attic< Node_Skeleton > > > > relation_node_members
     (const Statement* stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
      const map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_relations,
      uint64 timestamp,
-     const set< pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
+     const set< pair< Uint31_Index, Uint31_Index > >* node_ranges = 0,
      const vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
     
-map< Uint32_Index, vector< Attic< Node_Skeleton > > > relation_node_members
+map< Uint31_Index, vector< Attic< Node_Skeleton > > > relation_node_members
     (const Statement* stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& relations,
      uint64 timestamp,
-     const set< pair< Uint32_Index, Uint32_Index > >* node_ranges = 0);
+     const set< pair< Uint31_Index, Uint31_Index > >* node_ranges = 0);
  
-map< Uint32_Index, vector< Node_Skeleton > > way_members
+map< Uint31_Index, vector< Node_Skeleton > > way_members
     (const Statement* stmt, Resource_Manager& rman,
      const map< Uint31_Index, vector< Way_Skeleton > >& ways,
-     const set< pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
+     const set< pair< Uint31_Index, Uint31_Index > >* node_ranges = 0,
      const vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false);
 
-std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
-    std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > way_members
+std::pair< std::map< Uint31_Index, std::vector< Node_Skeleton > >,
+    std::map< Uint31_Index, std::vector< Attic< Node_Skeleton > > > > way_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
      const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
      uint64 timestamp,
-     const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
+     const std::set< std::pair< Uint31_Index, Uint31_Index > >* node_ranges = 0,
      const std::vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false);
      
 template< typename Relation_Skeleton >
@@ -210,7 +210,8 @@ void get_elements_by_id_from_db
      const vector< typename TObject::Id_Type >& ids, bool invert_ids, uint64 timestamp,
      const set< pair< TIndex, TIndex > >& range_req,
      const Statement& query, Resource_Manager& rman,
-     File_Properties& file_prop, File_Properties& attic_file_prop)
+     Typed_File_Properties< TIndex, TObject >& file_prop,
+     Typed_File_Properties< TIndex, Attic< TObject > >& attic_file_prop)
 {
   elements.clear();
   attic_elements.clear();
@@ -713,7 +714,7 @@ vector< pair< Index, const Skeleton* > > order_attic_by_id
 
 
 template< typename Relation_Skeleton >
-void filter_relations_expensive(const vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id,
+void filter_relations_expensive(const vector< pair< Uint31_Index, const Node_Skeleton* > > node_members_by_id,
 				const vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id,
 				map< Uint31_Index, vector< Relation_Skeleton > >& relations)
 {
@@ -729,7 +730,7 @@ void filter_relations_expensive(const vector< pair< Uint32_Index, const Node_Ske
       {
         if (nit->type == Relation_Entry::NODE)
         {
-          const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
+          const pair< Uint31_Index, const Node_Skeleton* >* second_nd =
               binary_search_for_pair_id(node_members_by_id, nit->ref);
           if (second_nd)
           {

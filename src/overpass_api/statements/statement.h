@@ -28,7 +28,6 @@
 #include "../dispatch/resource_manager.h"
 #include "../osm-backend/area_updater.h"
 
-using namespace std;
 
 class Query_Constraint
 {
@@ -40,11 +39,11 @@ class Query_Constraint
     virtual bool collect(Resource_Manager& rman, Set& into,
 			 int type, const vector< Uint32_Index >& ids, bool invert_ids) { return false; }
 			 
-    virtual bool get_ranges
+    virtual bool get_node_ranges
         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
       { return false; }
-    virtual bool get_ranges
-        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+    virtual bool get_compound_ranges
+        (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
       { return false; }
       
     virtual bool get_node_ids
@@ -58,7 +57,7 @@ class Query_Constraint
       { return false; }
       
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-			  const set< pair< Uint32_Index, Uint32_Index > >& ranges,
+			  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
 			  const vector< Node::Id_Type >& ids,
                           bool invert_ids, uint64 timestamp)
       { return false; }

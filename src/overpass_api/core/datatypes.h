@@ -163,11 +163,11 @@ const TObject* binary_pair_search(const vector< pair< Id_Type, TObject> >& vect,
   */
 struct Set
 {
-  map< Uint32_Index, vector< Node_Skeleton > > nodes;
+  map< Uint31_Index, vector< Node_Skeleton > > nodes;
   map< Uint31_Index, vector< Way_Skeleton > > ways;
   map< Uint31_Index, vector< Relation_Skeleton > > relations;
   
-  map< Uint32_Index, vector< Attic< Node_Skeleton > > > attic_nodes;
+  map< Uint31_Index, vector< Attic< Node_Skeleton > > > attic_nodes;
   map< Uint31_Index, vector< Attic< Way_Skeleton > > > attic_ways;
   map< Uint31_Index, vector< Attic< Relation_Skeleton > > > attic_relations;
   

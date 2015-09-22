@@ -24,7 +24,6 @@
 #include "../core/datatypes.h"
 #include "../osm-backend/area_updater.h"
 
-using namespace std;
 
 class Statement;
 
@@ -119,11 +118,11 @@ private:
 };
 
 
-uint64 eval_map(const std::map< Uint32_Index, vector< Node_Skeleton > >& nodes);
+uint64 eval_map(const std::map< Uint31_Index, vector< Node_Skeleton > >& nodes);
 uint64 eval_map(const std::map< Uint31_Index, vector< Way_Skeleton > >& ways);
 uint64 eval_map(const std::map< Uint31_Index, vector< Relation_Skeleton > >& relations);
 
-uint64 eval_map(const std::map< Uint32_Index, vector< Attic< Node_Skeleton > > >& nodes);
+uint64 eval_map(const std::map< Uint31_Index, vector< Attic< Node_Skeleton > > >& nodes);
 uint64 eval_map(const std::map< Uint31_Index, vector< Attic< Way_Skeleton > > >& ways);
 uint64 eval_map(const std::map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& relations);
 

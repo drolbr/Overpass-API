@@ -493,7 +493,7 @@ vector< Id_Type > Query_Statement::collect_non_ids
 void Query_Statement::get_elements_by_id_from_db
     (map< Uint31_Index, vector< Area_Skeleton > >& elements,
      const vector< Area_Skeleton::Id_Type >& ids, bool invert_ids,
-     Resource_Manager& rman, File_Properties& file_prop)
+     Resource_Manager& rman, Typed_File_Properties< Uint31_Index, Area_Skeleton >& file_prop)
 {
   if (!invert_ids)
     collect_items_flat(*this, rman, file_prop,
@@ -1259,14 +1259,14 @@ void Query_Statement::execute(Resource_Manager& rman)
     vector< Uint32_Index > ids;
     bool invert_ids = false;
 
-    set< pair< Uint32_Index, Uint32_Index > > range_req_32;
-    std::vector< Uint32_Index > range_vec_32;
+    set< pair< Uint31_Index, Uint31_Index > > range_req_32;
+    std::vector< Uint31_Index > range_vec_32;
     set< pair< Uint31_Index, Uint31_Index > > range_req_31;
     std::vector< Uint31_Index > range_vec_31;
 
     if (type == QUERY_NODE)
     {
-      progress_1< Node_Skeleton, Node::Id_Type, Uint32_Index >(
+      progress_1< Node_Skeleton, Node::Id_Type, Uint31_Index >(
 	  node_ids, range_vec_32, invert_ids, timestamp, answer_state, check_keys_late,
           *osm_base_settings().NODE_TAGS_GLOBAL, *attic_settings().NODE_TAGS_GLOBAL, rman);
       collect_nodes(node_ids, invert_ids, answer_state, into, rman);
@@ -1373,8 +1373,8 @@ void Query_Statement::execute(Resource_Manager& rman)
       for (vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && answer_state < data_collected; ++it)
       {
-        set< pair< Uint32_Index, Uint32_Index > > range_req;
-        if ((*it)->get_ranges(rman, range_req))
+        set< pair< Uint31_Index, Uint31_Index > > range_req;
+        if ((*it)->get_node_ranges(rman, range_req))
         {
           if (answer_state < ranges_collected)
             range_req.swap(range_req_32);
@@ -1390,7 +1390,7 @@ void Query_Statement::execute(Resource_Manager& rman)
         {
           answer_state = ranges_collected;
           range_req_32.clear();
-          range_req_32.insert(std::make_pair(Uint32_Index(0u), Uint32_Index(0xffffffff)));
+          range_req_32.insert(std::make_pair(Uint31_Index(0u), Uint31_Index(0xffffffff)));
           intersect_ranges(range_req_32, range_vec_32).swap(range_req_32);
         }
         else
@@ -1403,7 +1403,7 @@ void Query_Statement::execute(Resource_Manager& rman)
           it != constraints.end() && answer_state < data_collected; ++it)
       {
         set< pair< Uint31_Index, Uint31_Index > > range_req;
-	if ((*it)->get_ranges(rman, range_req))
+	if ((*it)->get_compound_ranges(rman, range_req))
         {
           if (answer_state < ranges_collected)
             range_req.swap(range_req_31);
@@ -1457,7 +1457,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 //       std::cout<<it->val()<<'\n';
 //     for (vector< Node::Id_Type >::const_iterator it = node_ids.begin(); it != node_ids.end(); ++it)
 //       std::cout<<it->val()<<'\n';
-//     for (set< pair< Uint32_Index, Uint32_Index > >::const_iterator it = range_req_32.begin();
+//     for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = range_req_32.begin();
 //         it != range_req_32.end(); ++it)
 //       std::cout<<hex<<it->first.val()<<'\t'<<it->second.val()<<'\n';
 //     std::cout<<dec<<answer_state<<'\n';
@@ -1468,11 +1468,11 @@ void Query_Statement::execute(Resource_Manager& rman)
       {
         if (range_req_32.empty() && answer_state < ranges_collected && !invert_ids)
 	{
-          std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(node_ids, rman);  
-          for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-            range_req_32.insert(std::make_pair(*it, ++Uint32_Index(*it)));
+          std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Node_Skeleton >(node_ids, rman);  
+          for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+            range_req_32.insert(std::make_pair(*it, inc(*it)));
 	}
-        ::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
+        ::get_elements_by_id_from_db< Uint31_Index, Node_Skeleton >
             (into.nodes, into.attic_nodes,
              node_ids, invert_ids, timestamp, range_req_32, *this, rman,
              *osm_base_settings().NODES, *attic_settings().NODES);
@@ -1521,14 +1521,14 @@ void Query_Statement::execute(Resource_Manager& rman)
   rman.health_check(*this);
 
 //   std::cout<<'\n';
-//   for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator it = into.nodes.begin();
+//   for (map< Uint31_Index, vector< Node_Skeleton > >::const_iterator it = into.nodes.begin();
 //        it != into.nodes.end(); ++it)
 //   {
 //     for (vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
 //       std::cout<<it2->id.val()<<'\n';
 //   }
 //   std::cout<<'\n';
-//   for (map< Uint32_Index, vector< Attic< Node_Skeleton > > >::const_iterator
+//   for (map< Uint31_Index, vector< Attic< Node_Skeleton > > >::const_iterator
 //        it = into.attic_nodes.begin(); it != into.attic_nodes.end(); ++it)
 //   {
 //     for (vector< Attic< Node_Skeleton > >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)

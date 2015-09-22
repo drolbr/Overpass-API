@@ -85,7 +85,7 @@ class Changed_Constraint : public Query_Constraint
     bool delivers_data(Resource_Manager& rman) { return true; }
     
 //     bool get_ranges
-//         (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
+//         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
 //     bool get_ranges
 //         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
 	
@@ -106,7 +106,7 @@ class Changed_Constraint : public Query_Constraint
 
 bool Changed_Constraint::get_node_ids(Resource_Manager& rman, vector< Node_Skeleton::Id_Type >& ids)
 {
-  ids = collect_changed_elements< Uint32_Index, Node_Skeleton >(
+  ids = collect_changed_elements< Uint31_Index, Node_Skeleton >(
       stmt->get_since(rman), stmt->get_until(rman), rman);
   return true;
 }
@@ -128,16 +128,16 @@ bool Changed_Constraint::get_relation_ids(Resource_Manager& rman, vector< Relati
 }
 
 
-// bool Changed_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+// bool Changed_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 // {
 //   std::vector< Node_Skeleton::Id_Type > ids
-//       = collect_changed_elements< Uint32_Index, Node_Skeleton >(stmt->get_since(rman), stmt->get_until(rman), rman);
+//       = collect_changed_elements< Uint31_Index, Node_Skeleton >(stmt->get_since(rman), stmt->get_until(rman), rman);
 //       
-//   std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(ids, rman);
+//   std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Node_Skeleton >(ids, rman);
 //   
 //   ranges.clear();
-//   for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-//     ranges.insert(std::make_pair(*it, ++Uint32_Index(*it)));
+//   for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+//     ranges.insert(std::make_pair(*it, ++Uint31_Index(*it)));
 //   
 //   return true;
 // }
@@ -168,7 +168,7 @@ void Changed_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
 {
   {
     std::vector< Node_Skeleton::Id_Type > ids =
-        collect_changed_elements< Uint32_Index, Node_Skeleton >
+        collect_changed_elements< Uint31_Index, Node_Skeleton >
         (stmt->get_since(rman), stmt->get_until(rman), rman);
       
     filter_elems(ids, into.nodes);

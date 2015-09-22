@@ -34,7 +34,6 @@
 #include "make_area.h"
 #include "recurse.h"
 
-using namespace std;
 
 class Area_Constraint : public Query_Constraint
 {
@@ -43,9 +42,9 @@ class Area_Constraint : public Query_Constraint
 
     bool delivers_data(Resource_Manager& rman);
     
-    bool get_ranges
-        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
-    bool get_ranges
+    bool get_node_ranges
+        (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
+    bool get_compound_ranges
         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
     void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
@@ -57,8 +56,8 @@ class Area_Constraint : public Query_Constraint
 };
 
 
-bool Area_Constraint::get_ranges
-    (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+bool Area_Constraint::get_node_ranges
+    (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
   if (area->areas_from_input())
   {
@@ -75,11 +74,11 @@ bool Area_Constraint::get_ranges
 }
 
 
-bool Area_Constraint::get_ranges
+bool Area_Constraint::get_compound_ranges
     (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
-  set< pair< Uint32_Index, Uint32_Index > > node_ranges;
-  this->get_ranges(rman, node_ranges);
+  set< pair< Uint31_Index, Uint31_Index > > node_ranges;
+  this->get_node_ranges(rman, node_ranges);
   ranges = calc_parents(node_ranges);
   return true;
 }
@@ -88,7 +87,7 @@ bool Area_Constraint::get_ranges
 void Area_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   set< pair< Uint31_Index, Uint31_Index > > ranges;
-  get_ranges(rman, ranges);
+  get_compound_ranges(rman, ranges);
   
   // pre-process ways to reduce the load of the expensive filter
   filter_ways_by_ranges(into.ways, ranges);
@@ -107,7 +106,7 @@ void Area_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp
 void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   set< Uint31_Index > area_blocks_req;
-  set< pair< Uint32_Index, Uint32_Index > > range_req;
+  set< pair< Uint31_Index, Uint31_Index > > range_req;
   if (area->areas_from_input())
   {
     map< string, Set >::const_iterator mit = rman.sets().find(area->get_input());
@@ -127,9 +126,9 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   //Process relations
     
   // Retrieve all nodes referred by the relations.
-  set< pair< Uint32_Index, Uint32_Index > > node_ranges;
-  get_ranges(rman, node_ranges);
-  std::map< Uint32_Index, vector< Node_Skeleton > > node_members
+  set< pair< Uint31_Index, Uint31_Index > > node_ranges;
+  get_node_ranges(rman, node_ranges);
+  std::map< Uint31_Index, vector< Node_Skeleton > > node_members
       = relation_node_members(&query, rman, into.relations, &node_ranges);
   
   // filter for those nodes that are in one of the areas
@@ -137,7 +136,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   
   // Retrieve all ways referred by the relations.
   set< pair< Uint31_Index, Uint31_Index > > way_ranges;
-  get_ranges(rman, way_ranges);    
+  get_compound_ranges(rman, way_ranges);    
   std::map< Uint31_Index, vector< Way_Skeleton > > way_members_
       = relation_way_members(&query, rman, into.relations, &way_ranges);
   
@@ -161,9 +160,9 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     //Process relations
     
     // Retrieve all nodes referred by the relations.
-    set< pair< Uint32_Index, Uint32_Index > > node_ranges;
-    get_ranges(rman, node_ranges);
-    map< Uint32_Index, vector< Attic< Node_Skeleton > > > node_members
+    set< pair< Uint31_Index, Uint31_Index > > node_ranges;
+    get_node_ranges(rman, node_ranges);
+    map< Uint31_Index, vector< Attic< Node_Skeleton > > > node_members
         = relation_node_members(&query, rman, into.attic_relations, timestamp, &node_ranges);
   
     // filter for those nodes that are in one of the areas
@@ -171,7 +170,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   
     // Retrieve all ways referred by the relations.
     set< pair< Uint31_Index, Uint31_Index > > way_ranges;
-    get_ranges(rman, way_ranges);    
+    get_compound_ranges(rman, way_ranges);    
     map< Uint31_Index, vector< Attic< Way_Skeleton > > > way_members_
         = relation_way_members(&query, rman, into.attic_relations, timestamp, &way_ranges);
   
@@ -231,7 +230,7 @@ Area_Query_Statement::~Area_Query_Statement()
 
 
 void Area_Query_Statement::get_ranges
-    (set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
+    (set< pair< Uint31_Index, Uint31_Index > >& nodes_req,
      set< Uint31_Index >& area_block_req,
      Resource_Manager& rman)
 {
@@ -247,8 +246,8 @@ void Area_Query_Statement::get_ranges
           it2 != it.object().used_indices.end(); ++it2)
       {
 	area_block_req.insert(Uint31_Index(*it2));
-	pair< Uint32_Index, Uint32_Index > range
-	    (make_pair(Uint32_Index(*it2), Uint32_Index((*it2) + 0x100)));
+	pair< Uint31_Index, Uint31_Index > range
+	    (make_pair(Uint31_Index(*it2), Uint31_Index((*it2) + 0x100)));
 	nodes_req.insert(range);
       }
     }
@@ -258,7 +257,7 @@ void Area_Query_Statement::get_ranges
 
 void Area_Query_Statement::get_ranges
     (const map< Uint31_Index, vector< Area_Skeleton > >& input_areas,
-     set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
+     set< pair< Uint31_Index, Uint31_Index > >& nodes_req,
      set< Uint31_Index >& area_block_req,
      Resource_Manager& rman)
 {
@@ -274,8 +273,8 @@ void Area_Query_Statement::get_ranges
           it3 != it2->used_indices.end(); ++it3)
       {
         area_block_req.insert(Uint31_Index(*it3));
-        pair< Uint32_Index, Uint32_Index > range
-	    (make_pair(Uint32_Index(*it3), Uint32_Index((*it3) + 0x100)));
+        pair< Uint31_Index, Uint31_Index > range
+	    (make_pair(Uint31_Index(*it3), Uint31_Index((*it3) + 0x100)));
         nodes_req.insert(range);
       }
     }
@@ -311,19 +310,19 @@ bool Area_Constraint::delivers_data(Resource_Manager& rman)
 
 
 void Area_Query_Statement::collect_nodes
-    (const set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
+    (const set< pair< Uint31_Index, Uint31_Index > >& nodes_req,
      const set< Uint31_Index >& req,
      vector< Node::Id_Type >* ids,
-     map< Uint32_Index, vector< Node_Skeleton > >& nodes,
+     map< Uint31_Index, vector< Node_Skeleton > >& nodes,
      Resource_Manager& rman)
 {
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
       (rman.get_area_transaction()->data_index(*area_settings().AREA_BLOCKS));
-  Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
+  Block_Backend< Uint31_Index, Node_Skeleton > nodes_db
       (rman.get_transaction()->data_index(*osm_base_settings().NODES));
   Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
       area_it(area_blocks_db.discrete_begin(req.begin(), req.end()));
-  Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
+  Block_Backend< Uint31_Index, Node_Skeleton >::Range_Iterator
       nodes_it(nodes_db.range_begin(nodes_req.begin(), nodes_req.end()));
   uint32 current_idx(0);
   if (!(area_it == area_blocks_db.discrete_end()))
@@ -386,7 +385,7 @@ void Area_Query_Statement::collect_nodes
 
 template< typename Node_Skeleton >
 void Area_Query_Statement::collect_nodes
-    (map< Uint32_Index, vector< Node_Skeleton > >& nodes,
+    (map< Uint31_Index, vector< Node_Skeleton > >& nodes,
      const set< Uint31_Index >& req, bool add_border,
      Resource_Manager& rman)
 {
@@ -395,7 +394,7 @@ void Area_Query_Statement::collect_nodes
   Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
       area_it(area_blocks_db.discrete_begin(req.begin(), req.end()));
 
-  typename std::map< Uint32_Index, vector< Node_Skeleton > >::iterator nodes_it = nodes.begin();
+  typename std::map< Uint31_Index, vector< Node_Skeleton > >::iterator nodes_it = nodes.begin();
   
   uint32 current_idx(0);
   while (!(area_it == area_blocks_db.discrete_end()))
@@ -790,16 +789,16 @@ void Area_Query_Statement::collect_ways
 
 
 void collect_nodes_from_req
-    (const set< pair< Uint32_Index, Uint32_Index > >& req,
-     map< Uint32_Index, vector< Node_Skeleton > >& nodes,
+    (const set< pair< Uint31_Index, Uint31_Index > >& req,
+     map< Uint31_Index, vector< Node_Skeleton > >& nodes,
      Resource_Manager& rman)
 {
-  Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
+  Block_Backend< Uint31_Index, Node_Skeleton > nodes_db
       (rman.get_transaction()->data_index(*osm_base_settings().NODES));
-  for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
+  for (Block_Backend< Uint31_Index, Node_Skeleton >::Range_Iterator
       it(nodes_db.range_begin
-      (Default_Range_Iterator< Uint32_Index >(req.begin()),
-       Default_Range_Iterator< Uint32_Index >(req.end())));
+      (Default_Range_Iterator< Uint31_Index >(req.begin()),
+       Default_Range_Iterator< Uint31_Index >(req.end())));
       !(it == nodes_db.range_end()); ++it)
     nodes[it.index()].push_back(it.object());    
 }
@@ -810,9 +809,9 @@ void Area_Query_Statement::execute(Resource_Manager& rman)
   Set into;
   
   Area_Constraint constraint(*this);
-  set< pair< Uint32_Index, Uint32_Index > > ranges;
-  constraint.get_ranges(rman, ranges);
-  get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
+  set< pair< Uint31_Index, Uint31_Index > > ranges;
+  constraint.get_node_ranges(rman, ranges);
+  get_elements_by_id_from_db< Uint31_Index, Node_Skeleton >
       (into.nodes, into.attic_nodes,
        vector< Node::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
        *osm_base_settings().NODES, *attic_settings().NODES);  

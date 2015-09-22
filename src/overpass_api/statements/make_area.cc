@@ -63,7 +63,7 @@ pair< uint32, Uint64 > Make_Area_Statement::detect_pivot(const Set& pivot)
 {
   uint32 pivot_type(0);
   Node::Id_Type pivot_id(0ull);
-  map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
+  map< Uint31_Index, vector< Node_Skeleton > >::const_iterator
       nit(pivot.nodes.begin());
   while ((pivot_id.val() == 0) && (nit != pivot.nodes.end()))
   {
@@ -132,7 +132,7 @@ pair< Node::Id_Type, Uint32_Index > Make_Area_Statement::create_area_blocks
      uint32 id, const Set& pivot)
 {
   vector< Node > nodes;
-  for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
+  for (map< Uint31_Index, vector< Node_Skeleton > >::const_iterator
       it(pivot.nodes.begin()); it != pivot.nodes.end(); ++it)
   {
     for (vector< Node_Skeleton >::const_iterator it2(it->second.begin());

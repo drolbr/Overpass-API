@@ -28,7 +28,6 @@
 #include "query.h"
 #include "union.h"
 
-using namespace std;
 
 void draw_item(vector< string >& visual, uint32 index, const Node_Skeleton& node, char c)
 {
@@ -42,8 +41,8 @@ void draw_item(vector< string >& visual, uint32 index, const Node_Skeleton& node
 
 void comp_sets(Set& s1, Set& s2)
 {
-  map< Uint32_Index, vector< Node_Skeleton > >::iterator it1(s1.nodes.begin());
-  map< Uint32_Index, vector< Node_Skeleton > >::iterator it2(s2.nodes.begin());
+  map< Uint31_Index, vector< Node_Skeleton > >::iterator it1(s1.nodes.begin());
+  map< Uint31_Index, vector< Node_Skeleton > >::iterator it2(s2.nodes.begin());
   vector< string > visual(600, string(1000, '.'));
   
   while ((it1 != s1.nodes.end()) && (it2 != s2.nodes.end()))

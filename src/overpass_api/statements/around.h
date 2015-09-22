@@ -26,8 +26,6 @@
 #include "../data/collect_members.h"
 #include "statement.h"
 
-using namespace std;
-
 
 struct Prepared_Segment
 {
@@ -67,7 +65,7 @@ class Around_Statement : public Output_Statement
     
     string get_source_name() const { return input; }
 
-    set< pair< Uint32_Index, Uint32_Index > > calc_ranges
+    set< pair< Uint31_Index, Uint31_Index > > calc_ranges
         (const Set& input_nodes, Resource_Manager& rman) const;
 
     void calc_lat_lons(const Set& input_nodes, Statement& query, Resource_Manager& rman);
@@ -79,7 +77,7 @@ class Around_Statement : public Output_Statement
     double get_radius() const { return radius; }
     
     template< typename Node_Skeleton >
-    void add_nodes(const map< Uint32_Index, vector< Node_Skeleton > >& nodes);
+    void add_nodes(const map< Uint31_Index, vector< Node_Skeleton > >& nodes);
     
     template< typename Way_Skeleton >
     void add_ways(const map< Uint31_Index, vector< Way_Skeleton > >& ways,
@@ -89,7 +87,7 @@ class Around_Statement : public Output_Statement
     double radius;
     double lat;
     double lon;
-    map< Uint32_Index, vector< pair< double, double > > > radius_lat_lons;
+    map< Uint31_Index, vector< pair< double, double > > > radius_lat_lons;
     vector< Prepared_Point > simple_lat_lons;
     vector< Prepared_Segment > simple_segments;
     vector< Query_Constraint* > constraints;

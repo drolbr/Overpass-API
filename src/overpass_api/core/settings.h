@@ -23,6 +23,7 @@
 #include <string>
 
 #include "../../template_db/types.h"
+#include "datatypes.h"
 
 
 struct Basic_Settings
@@ -40,21 +41,25 @@ struct Basic_Settings
 };
 
 
+template < typename Key, typename Value >
+struct Typed_File_Properties : public File_Properties {};
+
+
 struct Osm_Base_Settings
 {
-  File_Properties* NODES;
-  File_Properties* NODE_TAGS_LOCAL;
-  File_Properties* NODE_TAGS_GLOBAL;
-  File_Properties* NODE_KEYS;
-  File_Properties* WAYS;
-  File_Properties* WAY_TAGS_LOCAL;
-  File_Properties* WAY_TAGS_GLOBAL;
-  File_Properties* WAY_KEYS;
-  File_Properties* RELATIONS;
-  File_Properties* RELATION_ROLES;
-  File_Properties* RELATION_TAGS_LOCAL;
-  File_Properties* RELATION_TAGS_GLOBAL;
-  File_Properties* RELATION_KEYS;
+  Typed_File_Properties< Uint31_Index, Node_Skeleton >* NODES;
+  Typed_File_Properties< Tag_Index_Local, Node_Skeleton::Id_Type >* NODE_TAGS_LOCAL;
+  Typed_File_Properties< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > >* NODE_TAGS_GLOBAL;
+  Typed_File_Properties< Uint32_Index, String_Object >* NODE_KEYS;
+  Typed_File_Properties< Uint31_Index, Way_Skeleton >* WAYS;
+  Typed_File_Properties< Tag_Index_Local, Way_Skeleton::Id_Type >* WAY_TAGS_LOCAL;
+  Typed_File_Properties< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > >* WAY_TAGS_GLOBAL;
+  Typed_File_Properties< Uint32_Index, String_Object >* WAY_KEYS;
+  Typed_File_Properties< Uint31_Index, Relation_Skeleton >* RELATIONS;
+  Typed_File_Properties< Uint32_Index, String_Object >* RELATION_ROLES;
+  Typed_File_Properties< Tag_Index_Local, Relation_Skeleton::Id_Type >* RELATION_TAGS_LOCAL;
+  Typed_File_Properties< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > >* RELATION_TAGS_GLOBAL;
+  Typed_File_Properties< Uint32_Index, String_Object >* RELATION_KEYS;
   
   std::string shared_name;
   uint max_num_processes;
@@ -68,10 +73,10 @@ struct Osm_Base_Settings
 
 struct Area_Settings
 {
-  File_Properties* AREA_BLOCKS;
-  File_Properties* AREAS;
-  File_Properties* AREA_TAGS_LOCAL;
-  File_Properties* AREA_TAGS_GLOBAL;
+  Typed_File_Properties< Uint31_Index, Area_Block >* AREA_BLOCKS;
+  Typed_File_Properties< Uint31_Index, Area_Skeleton >* AREAS;
+  Typed_File_Properties< Tag_Index_Local, Area_Skeleton::Id_Type >* AREA_TAGS_LOCAL;
+  Typed_File_Properties< Tag_Index_Global, Area_Skeleton::Id_Type >* AREA_TAGS_GLOBAL;
   
   std::string shared_name;
   uint max_num_processes;
@@ -85,11 +90,11 @@ struct Area_Settings
 
 struct Meta_Settings
 {
-  File_Properties* USER_DATA;
-  File_Properties* USER_INDICES;
-  File_Properties* NODES_META;
-  File_Properties* WAYS_META;
-  File_Properties* RELATIONS_META;
+  Typed_File_Properties< Uint32_Index, User_Data >* USER_DATA;
+  Typed_File_Properties< Uint32_Index, Uint31_Index >* USER_INDICES;
+  Typed_File_Properties< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >* NODES_META;
+  Typed_File_Properties< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >* WAYS_META;
+  Typed_File_Properties< Uint31_Index, OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > >* RELATIONS_META;
   
   Meta_Settings();
 };
@@ -97,28 +102,30 @@ struct Meta_Settings
 
 struct Attic_Settings
 {
-  File_Properties* NODES;
-  File_Properties* NODES_UNDELETED;
-  File_Properties* NODE_IDX_LIST;
-  File_Properties* NODE_TAGS_LOCAL;
-  File_Properties* NODE_TAGS_GLOBAL;
-  File_Properties* NODES_META;
-  File_Properties* NODE_CHANGELOG;
-  File_Properties* WAYS;
-  File_Properties* WAYS_UNDELETED;
-  File_Properties* WAY_IDX_LIST;
-  File_Properties* WAY_TAGS_LOCAL;
-  File_Properties* WAY_TAGS_GLOBAL;
-  File_Properties* WAYS_META;
-  File_Properties* WAY_CHANGELOG;
-  File_Properties* RELATIONS;
-  File_Properties* RELATIONS_UNDELETED;
-  File_Properties* RELATION_IDX_LIST;
-  File_Properties* RELATION_TAGS_LOCAL;
-  File_Properties* RELATION_TAGS_GLOBAL;
-  File_Properties* RELATIONS_META;
-  File_Properties* RELATION_CHANGELOG;
+  Typed_File_Properties< Uint31_Index, Attic< Node_Skeleton > >* NODES;
+  Typed_File_Properties< Uint31_Index, Attic< Node_Skeleton::Id_Type > >* NODES_UNDELETED;
+  Typed_File_Properties< Node::Id_Type, Uint31_Index >* NODE_IDX_LIST;
+  Typed_File_Properties< Tag_Index_Local, Attic< Node_Skeleton::Id_Type > >* NODE_TAGS_LOCAL;
+  Typed_File_Properties< Tag_Index_Global, Attic< Tag_Object_Global< Node_Skeleton::Id_Type > > >* NODE_TAGS_GLOBAL;
+  Typed_File_Properties< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >* NODES_META;
+  Typed_File_Properties< Timestamp, Change_Entry< Node_Skeleton::Id_Type > >* NODE_CHANGELOG;
   
+  Typed_File_Properties< Uint31_Index, Attic< Way_Skeleton > >* WAYS;
+  Typed_File_Properties< Uint31_Index, Attic< Way_Skeleton::Id_Type > >* WAYS_UNDELETED;
+  Typed_File_Properties< Way::Id_Type, Uint31_Index >* WAY_IDX_LIST;
+  Typed_File_Properties< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >* WAY_TAGS_LOCAL;
+  Typed_File_Properties< Tag_Index_Global, Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > >* WAY_TAGS_GLOBAL;
+  Typed_File_Properties< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >* WAYS_META;
+  Typed_File_Properties< Timestamp, Change_Entry< Way_Skeleton::Id_Type > >* WAY_CHANGELOG;
+  
+  Typed_File_Properties< Uint31_Index, Attic< Relation_Skeleton > >* RELATIONS;
+  Typed_File_Properties< Uint31_Index, Attic< Relation_Skeleton::Id_Type > >* RELATIONS_UNDELETED;
+  Typed_File_Properties< Relation::Id_Type, Uint31_Index >* RELATION_IDX_LIST;
+  Typed_File_Properties< Tag_Index_Local, Attic< Relation_Skeleton::Id_Type > >* RELATION_TAGS_LOCAL;
+  Typed_File_Properties< Tag_Index_Global, Attic< Tag_Object_Global< Relation_Skeleton::Id_Type > > >* RELATION_TAGS_GLOBAL;
+  Typed_File_Properties< Uint31_Index, OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > >* RELATIONS_META;
+  Typed_File_Properties< Timestamp, Change_Entry< Relation_Skeleton::Id_Type > >* RELATION_CHANGELOG;
+
   Attic_Settings();
 };
 

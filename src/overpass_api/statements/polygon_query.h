@@ -26,8 +26,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
-
 
 class Polygon_Query_Statement : public Output_Statement
 {
@@ -42,10 +40,10 @@ class Polygon_Query_Statement : public Output_Statement
     
     virtual Query_Constraint* get_query_constraint();
     
-    set< pair< Uint32_Index, Uint32_Index > > calc_ranges();
+    set< pair< Uint31_Index, Uint31_Index > > calc_ranges();
 
     template< typename Node_Skeleton >
-    void collect_nodes(map< Uint32_Index, vector< Node_Skeleton > >& nodes, bool add_border);
+    void collect_nodes(map< Uint31_Index, vector< Node_Skeleton > >& nodes, bool add_border);
        
     template< typename Way_Skeleton >
     void collect_ways

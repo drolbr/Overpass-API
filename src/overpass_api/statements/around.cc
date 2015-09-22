@@ -29,9 +29,6 @@
 #include <sstream>
 #include <vector>
 
-using namespace std;
-
-//-----------------------------------------------------------------------------
 
 template < class TIndex, class TObject >
 set< pair< TIndex, TIndex > > ranges(const map< TIndex, vector< TObject > >& elems)
@@ -57,10 +54,10 @@ set< pair< TIndex, TIndex > > ranges(const map< TIndex, vector< TObject > >& ele
 }
 
 
-set< pair< Uint32_Index, Uint32_Index > > ranges(double lat, double lon)
+set< pair< Uint31_Index, Uint31_Index > > ranges(double lat, double lon)
 {
-  Uint32_Index idx = ::ll_upper_(lat, lon);
-  set< pair< Uint32_Index, Uint32_Index > > result;
+  Uint31_Index idx = ::ll_upper_(lat, lon);
+  set< pair< Uint31_Index, Uint31_Index > > result;
   result.insert(make_pair(idx, inc(idx)));
   return result;
 }
@@ -97,16 +94,18 @@ set< pair< TIndex, TIndex > > set_union_(const set< pair< TIndex, TIndex > >& a,
   return result;
 }
 
-set< pair< Uint32_Index, Uint32_Index > > blockwise_split
-    (const set< pair< Uint32_Index, Uint32_Index > >& idxs)
+set< pair< Uint31_Index, Uint31_Index > > blockwise_split
+    (const set< pair< Uint31_Index, Uint31_Index > >& idxs)
 {
-  set< pair< Uint32_Index, Uint32_Index > > result;
+  set< pair< Uint31_Index, Uint31_Index > > result;
   
-  for (set< pair< Uint32_Index, Uint32_Index > >::const_iterator it = idxs.begin();
+  for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = idxs.begin();
       it != idxs.end(); ++it)
   {
-    uint32 start = it->first.val();
-    while (start < it->second.val())
+    uint32 start = it->first.val() & 0x7fffffff;
+    uint32 upper_end = ((it->second.val() & 0x80000000) ?
+        (it->second.val() & 0x7fffffff) + 1 : it->second.val());
+    while (start < upper_end)
     {
       uint32 end;
       if ((start & 0x3) != 0 || it->second.val() < start + 0x4)
@@ -126,7 +125,7 @@ set< pair< Uint32_Index, Uint32_Index > > blockwise_split
       else
 	end = start + 0x4000000;
       
-      result.insert(make_pair(Uint32_Index(start), Uint32_Index(end)));
+      result.insert(make_pair(Uint31_Index(start), Uint31_Index(end)));
       start = end;
     }
   }
@@ -134,26 +133,26 @@ set< pair< Uint32_Index, Uint32_Index > > blockwise_split
   return result;
 }
 
-set< pair< Uint32_Index, Uint32_Index > > calc_ranges_
+set< pair< Uint31_Index, Uint31_Index > > calc_ranges_
     (double south, double north, double west, double east)
 {
   vector< pair< uint32, uint32 > > ranges = calc_ranges(south, north, west, east);
   
-  set< pair< Uint32_Index, Uint32_Index > > result;
+  set< pair< Uint31_Index, Uint31_Index > > result;
   for (vector< pair< uint32, uint32 > >::const_iterator it = ranges.begin();
       it != ranges.end(); ++it)
-    result.insert(make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
+    result.insert(make_pair(Uint31_Index(it->first), Uint31_Index(it->second)));
   
   return result;
 }
 
-set< pair< Uint32_Index, Uint32_Index > > expand
-    (const set< pair< Uint32_Index, Uint32_Index > >& idxs, double radius)
+set< pair< Uint31_Index, Uint31_Index > > expand
+    (const set< pair< Uint31_Index, Uint31_Index > >& idxs, double radius)
 {
-  set< pair< Uint32_Index, Uint32_Index > > blockwise_idxs = blockwise_split(idxs);
+  set< pair< Uint31_Index, Uint31_Index > > blockwise_idxs = blockwise_split(idxs);
 
-  set< pair< Uint32_Index, Uint32_Index > > result;
-  for (set< pair< Uint32_Index, Uint32_Index > >::const_iterator it = blockwise_idxs.begin();
+  set< pair< Uint31_Index, Uint31_Index > > result;
+  for (set< pair< Uint31_Index, Uint31_Index > >::const_iterator it = blockwise_idxs.begin();
       it != blockwise_idxs.end(); ++it)
   {
     double south = ::lat(it->first.val(), 0) - radius*(90.0/10/1000/1000);
@@ -169,10 +168,10 @@ set< pair< Uint32_Index, Uint32_Index > > expand
   return result;
 }
 
-set< pair< Uint32_Index, Uint32_Index > > children
+set< pair< Uint31_Index, Uint31_Index > > children
     (const set< pair< Uint31_Index, Uint31_Index > >& way_rel_idxs)
 {
-  set< pair< Uint32_Index, Uint32_Index > > result;
+  set< pair< Uint31_Index, Uint31_Index > > result;
 
   vector< pair< uint32, uint32 > > ranges;
   
@@ -257,7 +256,7 @@ set< pair< Uint32_Index, Uint32_Index > > children
   {
     if (pos < it->first)
       pos = it->first;
-    result.insert(make_pair(Uint32_Index(pos), Uint32_Index(it->second)));
+    result.insert(make_pair(Uint31_Index(pos), Uint31_Index(it->second)));
   }
   
   return result;
@@ -272,9 +271,9 @@ class Around_Constraint : public Query_Constraint
     
     bool delivers_data(Resource_Manager& rman) { return (around->get_radius() < 2000); }
     
-    bool get_ranges
-        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
-    bool get_ranges
+    bool get_node_ranges
+        (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
+    bool get_compound_ranges
         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
     void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
@@ -286,21 +285,20 @@ class Around_Constraint : public Query_Constraint
 };
 
 
-bool Around_Constraint::get_ranges
-    (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+bool Around_Constraint::get_node_ranges
+    (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
-  ranges_used = true;
-  
+  ranges_used = true;  
   ranges = around->calc_ranges(rman.sets()[around->get_source_name()], rman);
   return true;
 }
 
 
-bool Around_Constraint::get_ranges
+bool Around_Constraint::get_compound_ranges
     (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
-  set< pair< Uint32_Index, Uint32_Index > > node_ranges;
-  this->get_ranges(rman, node_ranges);
+  set< pair< Uint31_Index, Uint31_Index > > node_ranges;
+  this->get_node_ranges(rman, node_ranges);
   ranges = calc_parents(node_ranges);
   return true;
 }
@@ -309,11 +307,11 @@ bool Around_Constraint::get_ranges
 void Around_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   {
-    set< pair< Uint32_Index, Uint32_Index > > ranges;
-    get_ranges(rman, ranges);
+    set< pair< Uint31_Index, Uint31_Index > > ranges;
+    get_node_ranges(rman, ranges);
     
-    set< pair< Uint32_Index, Uint32_Index > >::const_iterator ranges_it = ranges.begin();
-    map< Uint32_Index, vector< Node_Skeleton > >::iterator nit = into.nodes.begin();
+    set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it = ranges.begin();
+    map< Uint31_Index, vector< Node_Skeleton > >::iterator nit = into.nodes.begin();
     for (; nit != into.nodes.end() && ranges_it != ranges.end(); )
     {
       if (!(nit->first < ranges_it->second))
@@ -330,7 +328,7 @@ void Around_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timesta
       nit->second.clear();
     
     ranges_it = ranges.begin();
-    map< Uint32_Index, vector< Attic< Node_Skeleton > > >::iterator it = into.attic_nodes.begin();
+    map< Uint31_Index, vector< Attic< Node_Skeleton > > >::iterator it = into.attic_nodes.begin();
     for (; it != into.attic_nodes.end() && ranges_it != ranges.end(); )
     {
       if (!(it->first < ranges_it->second))
@@ -348,7 +346,7 @@ void Around_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timesta
   }
   
   set< pair< Uint31_Index, Uint31_Index > > ranges;
-  get_ranges(rman, ranges);
+  get_compound_ranges(rman, ranges);
   
   // pre-process ways to reduce the load of the expensive filter
   // pre-filter ways
@@ -367,9 +365,9 @@ void Around_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timesta
 
 template< typename Node_Skeleton >
 void filter_nodes_expensive(const Around_Statement& around,
-                            map< Uint32_Index, vector< Node_Skeleton > >& nodes)
+                            map< Uint31_Index, vector< Node_Skeleton > >& nodes)
 {
-  for (typename map< Uint32_Index, vector< Node_Skeleton > >::iterator it = nodes.begin();
+  for (typename map< Uint31_Index, vector< Node_Skeleton > >::iterator it = nodes.begin();
       it != nodes.end(); ++it)
   {
     vector< Node_Skeleton > local_into;
@@ -408,7 +406,7 @@ void filter_ways_expensive(const Around_Statement& around,
 
 template< typename Relation_Skeleton >
 void filter_relations_expensive(const Around_Statement& around,
-                                const vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id,
+                                const vector< pair< Uint31_Index, const Node_Skeleton* > > node_members_by_id,
                                 const vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id,
                                 const Way_Geometry_Store& way_geometries,
                                 map< Uint31_Index, vector< Relation_Skeleton > >& relations)
@@ -425,7 +423,7 @@ void filter_relations_expensive(const Around_Statement& around,
       {
 	if (nit->type == Relation_Entry::NODE)
 	{
-          const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
+          const pair< Uint31_Index, const Node_Skeleton* >* second_nd =
               binary_search_for_pair_id(node_members_by_id, nit->ref);
 	  if (!second_nd)
 	    continue;
@@ -468,17 +466,17 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
     //Process relations
     
     // Retrieve all node and way members referred by the relations.
-    set< pair< Uint32_Index, Uint32_Index > > node_ranges;
-    get_ranges(rman, node_ranges);
+    set< pair< Uint31_Index, Uint31_Index > > node_ranges;
+    get_node_ranges(rman, node_ranges);
     
-    map< Uint32_Index, vector< Node_Skeleton > > node_members
+    map< Uint31_Index, vector< Node_Skeleton > > node_members
         = relation_node_members(&query, rman, into.relations, &node_ranges);
-    vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
+    vector< pair< Uint31_Index, const Node_Skeleton* > > node_members_by_id
         = order_by_id(node_members, Order_By_Node_Id());
 	
     // Retrieve all ways referred by the relations.
     set< pair< Uint31_Index, Uint31_Index > > way_ranges;
-    get_ranges(rman, way_ranges);
+    get_compound_ranges(rman, way_ranges);
     
     map< Uint31_Index, vector< Way_Skeleton > > way_members_
         = relation_way_members(&query, rman, into.relations, &way_ranges);
@@ -497,17 +495,17 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
   
     {
       //Process relations
-      set< pair< Uint32_Index, Uint32_Index > > node_ranges;
-      get_ranges(rman, node_ranges);
+      set< pair< Uint31_Index, Uint31_Index > > node_ranges;
+      get_node_ranges(rman, node_ranges);
     
-      map< Uint32_Index, vector< Attic< Node_Skeleton > > > node_members
+      map< Uint31_Index, vector< Attic< Node_Skeleton > > > node_members
           = relation_node_members(&query, rman, into.attic_relations, timestamp, &node_ranges);
-      vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
+      vector< pair< Uint31_Index, const Node_Skeleton* > > node_members_by_id
           = order_attic_by_id(node_members, Order_By_Node_Id());
     
       // Retrieve all ways referred by the relations.
       set< pair< Uint31_Index, Uint31_Index > > way_ranges;
-      get_ranges(rman, way_ranges);
+      get_compound_ranges(rman, way_ranges);
     
       map< Uint31_Index, vector< Attic< Way_Skeleton > > > way_members_
           = relation_way_members(&query, rman, into.attic_relations, timestamp, &way_ranges);
@@ -728,7 +726,7 @@ bool intersect(double alat1, double alon1, double alat2, double alon2,
 }
 
 
-set< pair< Uint32_Index, Uint32_Index > > Around_Statement::calc_ranges
+set< pair< Uint31_Index, Uint31_Index > > Around_Statement::calc_ranges
     (const Set& input, Resource_Manager& rman) const
 {
   if (lat < 100.0)
@@ -744,7 +742,7 @@ set< pair< Uint32_Index, Uint32_Index > > Around_Statement::calc_ranges
 
 
 void add_coord(double lat, double lon, double radius,
-	       map< Uint32_Index, vector< pair< double, double > > >& radius_lat_lons,
+	       map< Uint31_Index, vector< pair< double, double > > >& radius_lat_lons,
 	       vector< Prepared_Point >& simple_lat_lons)
 {
   double south = lat - radius*(360.0/(40000.0*1000.0));
@@ -762,18 +760,18 @@ void add_coord(double lat, double lon, double radius,
   for (vector< pair< uint32, uint32 > >::const_iterator
       it(uint_ranges.begin()); it != uint_ranges.end(); ++it)
   {
-    pair< Uint32_Index, Uint32_Index > range
-        (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
+    pair< Uint31_Index, Uint31_Index > range
+        (make_pair(Uint31_Index(it->first), Uint31_Index(it->second)));
     
-    for (uint32 idx = Uint32_Index(it->first).val();
-        idx < Uint32_Index(it->second).val(); ++idx)
+    for (uint32 idx = Uint31_Index(it->first).val();
+        idx < Uint31_Index(it->second).val(); ++idx)
       radius_lat_lons[idx].push_back(make_pair(lat, lon));
   }
 }
 
 
-void add_node(Uint32_Index idx, const Node_Skeleton& node, double radius,
-              map< Uint32_Index, vector< pair< double, double > > >& radius_lat_lons,
+void add_node(Uint31_Index idx, const Node_Skeleton& node, double radius,
+              map< Uint31_Index, vector< pair< double, double > > >& radius_lat_lons,
               vector< Prepared_Point >& simple_lat_lons)
 {
   add_coord(::lat(idx.val(), node.ll_lower), ::lon(idx.val(), node.ll_lower),
@@ -782,7 +780,7 @@ void add_node(Uint32_Index idx, const Node_Skeleton& node, double radius,
 
 
 void add_way(const vector< Quad_Coord >& way_geometry, double radius,
-             map< Uint32_Index, vector< pair< double, double > > >& radius_lat_lons,
+             map< Uint31_Index, vector< pair< double, double > > >& radius_lat_lons,
              vector< Prepared_Point >& simple_lat_lons,
              vector< Prepared_Segment >& simple_segments)
 {
@@ -819,7 +817,7 @@ struct Relation_Member_Collection
 {
   Relation_Member_Collection(const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
 			     const Statement& query, Resource_Manager& rman,
-			     set< pair< Uint32_Index, Uint32_Index > >* node_ranges,
+			     set< pair< Uint31_Index, Uint31_Index > >* node_ranges,
 			     set< pair< Uint31_Index, Uint31_Index > >* way_ranges)
       : query_(query),
 	way_members(relation_way_members(&query, rman, relations, way_ranges)),
@@ -828,7 +826,7 @@ struct Relation_Member_Collection
     // Retrieve all nodes referred by the ways.    
     
     // Order node ids by id.
-    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = node_members.begin();
+    for (map< Uint31_Index, vector< Node_Skeleton > >::iterator it = node_members.begin();
         it != node_members.end(); ++it)
     {
       for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
@@ -852,9 +850,9 @@ struct Relation_Member_Collection
     sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_way_id);
   }
   
-  const pair< Uint32_Index, const Node_Skeleton* >* get_node_by_id(Uint64 id) const
+  const pair< Uint31_Index, const Node_Skeleton* >* get_node_by_id(Uint64 id) const
   {
-    const pair< Uint32_Index, const Node_Skeleton* >* node =
+    const pair< Uint31_Index, const Node_Skeleton* >* node =
         binary_search_for_pair_id(node_members_by_id, id);
     
     return node;
@@ -870,16 +868,16 @@ struct Relation_Member_Collection
 
   const Statement& query_;
   map< Uint31_Index, vector< Way_Skeleton > > way_members;
-  map< Uint32_Index, vector< Node_Skeleton > > node_members;
+  map< Uint31_Index, vector< Node_Skeleton > > node_members;
   vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id;
-  vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id;
+  vector< pair< Uint31_Index, const Node_Skeleton* > > node_members_by_id;
 };
 
 
 template< typename Node_Skeleton >
-void Around_Statement::add_nodes(const map< Uint32_Index, vector< Node_Skeleton > >& nodes)
+void Around_Statement::add_nodes(const map< Uint31_Index, vector< Node_Skeleton > >& nodes)
 {
-  for (typename map< Uint32_Index, vector< Node_Skeleton > >::const_iterator iit(nodes.begin());
+  for (typename map< Uint31_Index, vector< Node_Skeleton > >::const_iterator iit(nodes.begin());
       iit != nodes.end(); ++iit)
   {
     for (typename vector< Node_Skeleton >::const_iterator nit(iit->second.begin());
@@ -947,7 +945,7 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
 
 bool Around_Statement::is_inside(double lat, double lon) const
 {
-  map< Uint32_Index, vector< pair< double, double > > >::const_iterator mit
+  map< Uint31_Index, vector< pair< double, double > > >::const_iterator mit
       = radius_lat_lons.find(::ll_upper_(lat, lon));
   if (mit != radius_lat_lons.end())
   {
@@ -1046,9 +1044,9 @@ void Around_Statement::execute(Resource_Manager& rman)
   Set into;
   
   Around_Constraint constraint(*this);
-  set< pair< Uint32_Index, Uint32_Index > > ranges;
-  constraint.get_ranges(rman, ranges);
-  get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
+  set< pair< Uint31_Index, Uint31_Index > > ranges;
+  constraint.get_node_ranges(rman, ranges);
+  get_elements_by_id_from_db< Uint31_Index, Node_Skeleton >
       (into.nodes, into.attic_nodes,
        vector< Node::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
        *osm_base_settings().NODES, *attic_settings().NODES);

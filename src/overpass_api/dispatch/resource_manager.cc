@@ -21,12 +21,11 @@
 
 #include <sstream>
 
-using namespace std;
 
 uint count_set(const Set& set_)
 {
   uint size(0);
-  for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
+  for (map< Uint31_Index, vector< Node_Skeleton > >::const_iterator
       it(set_.nodes.begin()); it != set_.nodes.end(); ++it)
     size += it->second.size();
   for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
@@ -36,7 +35,7 @@ uint count_set(const Set& set_)
       it(set_.relations.begin()); it != set_.relations.end(); ++it)
     size += it->second.size();
   
-  for (map< Uint32_Index, vector< Attic< Node_Skeleton > > >::const_iterator
+  for (map< Uint31_Index, vector< Attic< Node_Skeleton > > >::const_iterator
       it(set_.attic_nodes.begin()); it != set_.attic_nodes.end(); ++it)
     size += it->second.size();
   for (map< Uint31_Index, vector< Attic< Way_Skeleton > > >::const_iterator
@@ -54,10 +53,10 @@ uint count_set(const Set& set_)
 }
 
 
-uint64 eval_map(const std::map< Uint32_Index, vector< Node_Skeleton > >& nodes)
+uint64 eval_map(const std::map< Uint31_Index, vector< Node_Skeleton > >& nodes)
 {
   uint64 size(0);
-  for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
+  for (map< Uint31_Index, vector< Node_Skeleton > >::const_iterator
       it(nodes.begin()); it != nodes.end(); ++it)
     size += it->second.size()*8 + 64;
   return size;
@@ -84,10 +83,10 @@ uint64 eval_map(const std::map< Uint31_Index, vector< Relation_Skeleton > >& rel
 }
 
 
-uint64 eval_map(const std::map< Uint32_Index, vector< Attic< Node_Skeleton > > >& nodes)
+uint64 eval_map(const std::map< Uint31_Index, vector< Attic< Node_Skeleton > > >& nodes)
 {
   uint64 size(0);
-  for (map< Uint32_Index, vector< Attic< Node_Skeleton > > >::const_iterator
+  for (map< Uint31_Index, vector< Attic< Node_Skeleton > > >::const_iterator
       it(nodes.begin()); it != nodes.end(); ++it)
     size += it->second.size()*16 + 64;
   return size;

@@ -24,7 +24,6 @@
 #include <vector>
 #include "statement.h"
 
-using namespace std;
 
 const int QUERY_NODE = 1;
 const int QUERY_WAY = 2;
@@ -87,7 +86,7 @@ class Query_Statement : public Output_Statement
     void get_elements_by_id_from_db
         (map< Uint31_Index, vector< Area_Skeleton > >& elements,
 	 const vector< Area_Skeleton::Id_Type >& ids, bool invert_ids,
-         Resource_Manager& rman, File_Properties& file_prop);
+         Resource_Manager& rman, Typed_File_Properties< Uint31_Index, Area_Skeleton >& file_prop);
 
     template< class TIndex, class TObject >
     void filter_by_tags

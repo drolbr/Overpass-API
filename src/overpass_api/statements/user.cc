@@ -36,8 +36,8 @@ class User_Constraint : public Query_Constraint
 
     bool delivers_data(Resource_Manager& rman) { return false; }
     
-    bool get_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
-    bool get_ranges(Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
+    bool get_node_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
+    bool get_compound_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
     void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~User_Constraint() {}
     
@@ -193,7 +193,7 @@ uint32 User_Statement::get_id(Transaction& transaction)
 
 
 void calc_ranges
-  (set< pair< Uint32_Index, Uint32_Index > >& node_req,
+  (set< pair< Uint31_Index, Uint31_Index > >& node_req,
    set< pair< Uint31_Index, Uint31_Index > >& other_req,
    uint32 user_id, Transaction& transaction)
 {
@@ -208,8 +208,8 @@ void calc_ranges
   {
     if ((user_it.object().val() & 0x80000000) == 0)
     {
-      node_req.insert(make_pair(Uint32_Index(user_it.object().val()),
-			        Uint32_Index(user_it.object().val() + 0x100)));
+      node_req.insert(make_pair(Uint31_Index(user_it.object().val()),
+			        Uint31_Index(user_it.object().val() + 0x100)));
       other_req.insert(make_pair(Uint31_Index(user_it.object().val()),
 			         Uint31_Index(user_it.object().val() + 0x100)));
     }
@@ -223,8 +223,8 @@ void calc_ranges
 }
 
 
-bool User_Constraint::get_ranges
-    (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+bool User_Constraint::get_node_ranges
+    (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
   set< pair< Uint31_Index, Uint31_Index > > nonnodes;
   calc_ranges(ranges, nonnodes, user->get_id(*rman.get_transaction()), *rman.get_transaction());
@@ -232,17 +232,17 @@ bool User_Constraint::get_ranges
 }
 
 
-bool User_Constraint::get_ranges
+bool User_Constraint::get_compound_ranges
     (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
-  set< pair< Uint32_Index, Uint32_Index > > nodes;
+  set< pair< Uint31_Index, Uint31_Index > > nodes;
   calc_ranges(nodes, ranges, user->get_id(*rman.get_transaction()), *rman.get_transaction());
   return true;
 }
 
 
 void User_Statement::calc_ranges
-    (set< pair< Uint32_Index, Uint32_Index > >& node_req,
+    (set< pair< Uint31_Index, Uint31_Index > >& node_req,
      set< pair< Uint31_Index, Uint31_Index > >& other_req,
      Transaction& transaction)
 {
@@ -260,9 +260,9 @@ void User_Statement::execute(Resource_Manager& rman)
   if ((result_type == "") || (result_type == "node"))
   {
     User_Constraint constraint(*this);
-    set< pair< Uint32_Index, Uint32_Index > > ranges;
-    constraint.get_ranges(rman, ranges);
-    get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
+    set< pair< Uint31_Index, Uint31_Index > > ranges;
+    constraint.get_node_ranges(rman, ranges);
+    get_elements_by_id_from_db< Uint31_Index, Node_Skeleton >
         (into.nodes, into.attic_nodes,
          vector< Node::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
          *osm_base_settings().NODES, *attic_settings().NODES);  
@@ -274,7 +274,7 @@ void User_Statement::execute(Resource_Manager& rman)
   {
     User_Constraint constraint(*this);
     set< pair< Uint31_Index, Uint31_Index > > ranges;
-    constraint.get_ranges(rman, ranges);
+    constraint.get_compound_ranges(rman, ranges);
     get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
         (into.ways, into.attic_ways,
          vector< Way::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
@@ -287,7 +287,7 @@ void User_Statement::execute(Resource_Manager& rman)
   {
     User_Constraint constraint(*this);
     set< pair< Uint31_Index, Uint31_Index > > ranges;
-    constraint.get_ranges(rman, ranges);
+    constraint.get_compound_ranges(rman, ranges);
     get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
         (into.relations, into.attic_relations,
          vector< Relation::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,

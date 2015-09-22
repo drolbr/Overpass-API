@@ -40,26 +40,26 @@ class Area_Query_Statement : public Output_Statement
     virtual Query_Constraint* get_query_constraint();
     
     void get_ranges
-      (set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
+      (set< pair< Uint31_Index, Uint31_Index > >& nodes_req,
        set< Uint31_Index >& area_block_req,
        Resource_Manager& rman);
 
     void get_ranges
       (const map< Uint31_Index, vector< Area_Skeleton > >& input_areas,
-       set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
+       set< pair< Uint31_Index, Uint31_Index > >& nodes_req,
        set< Uint31_Index >& area_block_req,
        Resource_Manager& rman);
 
     void collect_nodes
-      (const set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
+      (const set< pair< Uint31_Index, Uint31_Index > >& nodes_req,
        const set< Uint31_Index >& req,
        vector< Node::Id_Type >* ids,
-       map< Uint32_Index, vector< Node_Skeleton > >& nodes,
+       map< Uint31_Index, vector< Node_Skeleton > >& nodes,
        Resource_Manager& rman);
        
     template< typename Node_Skeleton >
     void collect_nodes
-      (map< Uint32_Index, vector< Node_Skeleton > >& nodes,
+      (map< Uint31_Index, vector< Node_Skeleton > >& nodes,
        const set< Uint31_Index >& req, bool add_border,
        Resource_Manager& rman);
        

@@ -25,18 +25,21 @@
 
 
 template< typename Skeleton >
-File_Properties* current_skeleton_file_properties()
+Typed_File_Properties< Uint31_Index, Skeleton >* current_skeleton_file_properties()
 {
   return 0;
 }
 
-template< > inline File_Properties* current_skeleton_file_properties< Node_Skeleton >()
+template< > inline Typed_File_Properties< Uint31_Index, Node_Skeleton >*
+    current_skeleton_file_properties< Node_Skeleton >()
 { return osm_base_settings().NODES; }
 
-template< > inline File_Properties* current_skeleton_file_properties< Way_Skeleton >()
+template< > inline Typed_File_Properties< Uint31_Index, Way_Skeleton >*
+    current_skeleton_file_properties< Way_Skeleton >()
 { return osm_base_settings().WAYS; }
 
-template< > inline File_Properties* current_skeleton_file_properties< Relation_Skeleton >()
+template< > inline Typed_File_Properties< Uint31_Index, Relation_Skeleton >*
+    current_skeleton_file_properties< Relation_Skeleton >()
 { return osm_base_settings().RELATIONS; }
 
 

@@ -25,7 +25,6 @@
 #include <vector>
 #include "statement.h"
 
-using namespace std;
 
 class User_Statement : public Output_Statement
 {
@@ -41,7 +40,7 @@ class User_Statement : public Output_Statement
     virtual Query_Constraint* get_query_constraint();
     
     void calc_ranges
-        (set< pair< Uint32_Index, Uint32_Index > >& node_req,
+        (set< pair< Uint31_Index, Uint31_Index > >& node_req,
          set< pair< Uint31_Index, Uint31_Index > >& other_req,
          Transaction& transaction);
 	 

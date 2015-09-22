@@ -27,10 +27,6 @@
 #include "bbox_query.h"
 #include "recurse.h"
 
-using namespace std;
-
-//-----------------------------------------------------------------------------
-
     
 class Bbox_Constraint : public Query_Constraint
 {
@@ -38,9 +34,9 @@ class Bbox_Constraint : public Query_Constraint
     bool delivers_data(Resource_Manager& rman);
     
     Bbox_Constraint(Bbox_Query_Statement& bbox_) : bbox(&bbox_) {}
-    bool get_ranges
-        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
-    bool get_ranges
+    bool get_node_ranges
+        (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
+    bool get_compound_ranges
         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
     void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
@@ -61,15 +57,15 @@ bool Bbox_Constraint::delivers_data(Resource_Manager& rman)
 }
 
 
-bool Bbox_Constraint::get_ranges
-    (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+bool Bbox_Constraint::get_node_ranges
+    (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
   ranges = bbox->get_ranges_32();
   return true;
 }
 
 
-bool Bbox_Constraint::get_ranges
+bool Bbox_Constraint::get_compound_ranges
     (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
   ranges = bbox->get_ranges_31();
@@ -85,7 +81,7 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp
   int32 west_ = ilon_(bbox->get_west());
   int32 east_ = ilon_(bbox->get_east());
   
-  for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = into.nodes.begin();
+  for (map< Uint31_Index, vector< Node_Skeleton > >::iterator it = into.nodes.begin();
       it != into.nodes.end(); ++it)
   {
     vector< Node_Skeleton > local_into;
@@ -102,7 +98,7 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp
     it->second.swap(local_into);
   }  
   
-  for (map< Uint32_Index, vector< Attic< Node_Skeleton > > >::iterator it = into.attic_nodes.begin();
+  for (map< Uint31_Index, vector< Attic< Node_Skeleton > > >::iterator it = into.attic_nodes.begin();
       it != into.attic_nodes.end(); ++it)
   {
     vector< Attic< Node_Skeleton > > local_into;
@@ -180,7 +176,7 @@ void filter_ways_expensive(const Bbox_Query_Statement& bbox,
 
 template< typename Relation_Skeleton >
 void filter_relations_expensive(const Bbox_Query_Statement& bbox,
-                           const vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id,
+                           const vector< pair< Uint31_Index, const Node_Skeleton* > > node_members_by_id,
                            const vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id,
                            const Way_Geometry_Store& way_geometries,
                            map< Uint31_Index, vector< Relation_Skeleton > >& relations)
@@ -197,7 +193,7 @@ void filter_relations_expensive(const Bbox_Query_Statement& bbox,
       {
         if (nit->type == Relation_Entry::NODE)
         {
-          const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
+          const pair< Uint31_Index, const Node_Skeleton* >* second_nd =
               binary_search_for_pair_id(node_members_by_id, nit->ref);
           if (!second_nd)
             continue;
@@ -238,11 +234,11 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     //Process relations
     
     // Retrieve all nodes referred by the relations.
-    const set< pair< Uint32_Index, Uint32_Index > >& node_ranges = bbox->get_ranges_32();
+    const set< pair< Uint31_Index, Uint31_Index > >& node_ranges = bbox->get_ranges_32();
     
-    map< Uint32_Index, vector< Node_Skeleton > > node_members
+    map< Uint31_Index, vector< Node_Skeleton > > node_members
         = relation_node_members(&query, rman, into.relations, &node_ranges);
-    vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
+    vector< pair< Uint31_Index, const Node_Skeleton* > > node_members_by_id
         = order_by_id(node_members, Order_By_Node_Id());
     
     // Retrieve all ways referred by the relations.
@@ -265,11 +261,11 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     //Process attic relations
     
     // Retrieve all nodes referred by the relations.
-    const set< pair< Uint32_Index, Uint32_Index > >& node_ranges = bbox->get_ranges_32();
+    const set< pair< Uint31_Index, Uint31_Index > >& node_ranges = bbox->get_ranges_32();
     
-    map< Uint32_Index, vector< Attic< Node_Skeleton > > > node_members
+    map< Uint31_Index, vector< Attic< Node_Skeleton > > > node_members
         = relation_node_members(&query, rman, into.attic_relations, timestamp, &node_ranges);
-    vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
+    vector< pair< Uint31_Index, const Node_Skeleton* > > node_members_by_id
         = order_attic_by_id(node_members, Order_By_Node_Id());
     
     // Retrieve all ways referred by the relations.
@@ -356,7 +352,7 @@ Bbox_Query_Statement::~Bbox_Query_Statement()
 }
 
 
-const set< pair< Uint32_Index, Uint32_Index > >& Bbox_Query_Statement::get_ranges_32()
+const set< pair< Uint31_Index, Uint31_Index > >& Bbox_Query_Statement::get_ranges_32()
 {
   if (ranges_32.empty())
     ::get_ranges_32(south, north, west, east).swap(ranges_32);
@@ -377,9 +373,9 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
   Set into;
   
   Bbox_Constraint constraint(*this);
-  set< pair< Uint32_Index, Uint32_Index > > ranges;
-  constraint.get_ranges(rman, ranges);
-  get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
+  set< pair< Uint31_Index, Uint31_Index > > ranges;
+  constraint.get_node_ranges(rman, ranges);
+  get_elements_by_id_from_db< Uint31_Index, Node_Skeleton >
       (into.nodes, into.attic_nodes,
        vector< Node::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
        *osm_base_settings().NODES, *attic_settings().NODES);  

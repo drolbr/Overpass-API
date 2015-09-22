@@ -27,7 +27,6 @@
 
 #include "foreach.h"
 
-using namespace std;
 
 Generic_Statement_Maker< Foreach_Statement > Foreach_Statement::statement_maker("foreach");
 
@@ -65,7 +64,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
   Set base_set(rman.sets()[input]);
   rman.push_reference(base_set);
   
-  for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
+  for (map< Uint31_Index, vector< Node_Skeleton > >::const_iterator
       it(base_set.nodes.begin()); it != base_set.nodes.end(); ++it)
   {
     for (vector< Node_Skeleton >::const_iterator it2(it->second.begin());

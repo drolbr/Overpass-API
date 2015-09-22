@@ -126,9 +126,9 @@ class Id_Query_Constraint : public Query_Constraint
     
     bool delivers_data(Resource_Manager& rman) { return true; }
     
-    bool get_ranges
-        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
-    bool get_ranges
+    bool get_node_ranges
+        (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
+    bool get_compound_ranges
         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
 	
     bool get_node_ids
@@ -182,22 +182,22 @@ bool Id_Query_Constraint::get_relation_ids(Resource_Manager& rman, vector< Relat
 }
 
 
-bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+bool Id_Query_Constraint::get_node_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
   std::vector< Node_Skeleton::Id_Type > ids;
   for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
     ids.push_back(i);
-  std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(ids, rman);
+  std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Node_Skeleton >(ids, rman);
   
   ranges.clear();
-  for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-    ranges.insert(std::make_pair(*it, ++Uint32_Index(*it)));
+  for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+    ranges.insert(std::make_pair(*it, inc(*it)));
   
   return true;
 }
 
 
-bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
+bool Id_Query_Constraint::get_compound_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
   std::vector< Uint31_Index > req;
   if (stmt->get_type() == Statement::WAY)

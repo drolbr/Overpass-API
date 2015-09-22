@@ -35,7 +35,7 @@
 
 
 template < typename Key, typename Value >
-struct OSM_File_Properties : public File_Properties
+struct OSM_File_Properties : public Typed_File_Properties< Key, Value >
 {
   OSM_File_Properties(const string& file_base_name_, uint32 block_size_,
 		      uint32 map_block_size_)
@@ -114,7 +114,7 @@ Basic_Settings& basic_settings()
 
 Osm_Base_Settings::Osm_Base_Settings()
 :
-  NODES(new OSM_File_Properties< Uint32_Index, Node_Skeleton >("nodes", 512*1024, 64*1024)),
+  NODES(new OSM_File_Properties< Uint31_Index, Node_Skeleton >("nodes", 512*1024, 64*1024)),
   NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local, Node_Skeleton::Id_Type >
       ("node_tags_local", 512*1024, 0)),
   NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > >

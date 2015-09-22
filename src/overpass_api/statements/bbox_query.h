@@ -37,7 +37,7 @@ class Bbox_Query_Statement : public Output_Statement
     
     virtual Query_Constraint* get_query_constraint();
     
-    const set< pair< Uint32_Index, Uint32_Index > >& get_ranges_32();
+    const set< pair< Uint31_Index, Uint31_Index > >& get_ranges_32();
     const set< pair< Uint31_Index, Uint31_Index > >& get_ranges_31();
     
     double get_south() const { return south; }
@@ -48,7 +48,7 @@ class Bbox_Query_Statement : public Output_Statement
 
   private:
     double south, north, west, east;
-    set< pair< Uint32_Index, Uint32_Index > > ranges_32;
+    set< pair< Uint31_Index, Uint31_Index > > ranges_32;
     set< pair< Uint31_Index, Uint31_Index > > ranges_31;
     vector< Query_Constraint* > constraints;
 };

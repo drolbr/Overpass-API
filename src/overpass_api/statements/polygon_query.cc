@@ -31,9 +31,6 @@
 #include "polygon_query.h"
 #include "recurse.h"
 
-using namespace std;
-
-//-----------------------------------------------------------------------------
 
 class Polygon_Constraint : public Query_Constraint
 {
@@ -41,9 +38,9 @@ class Polygon_Constraint : public Query_Constraint
     bool delivers_data(Resource_Manager& rman);
     
     Polygon_Constraint(Polygon_Query_Statement& polygon_) : polygon(&polygon_) {}
-    bool get_ranges
-        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
-    bool get_ranges
+    bool get_node_ranges
+        (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
+    bool get_compound_ranges
         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
     void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
@@ -60,18 +57,18 @@ bool Polygon_Constraint::delivers_data(Resource_Manager& rman)
 }
 
 
-bool Polygon_Constraint::get_ranges
-    (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+bool Polygon_Constraint::get_node_ranges
+    (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
   ranges = polygon->calc_ranges();
   return true;
 }
 
 
-bool Polygon_Constraint::get_ranges
+bool Polygon_Constraint::get_compound_ranges
     (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
-  set< pair< Uint32_Index, Uint32_Index > > node_ranges = polygon->calc_ranges();
+  set< pair< Uint31_Index, Uint31_Index > > node_ranges = polygon->calc_ranges();
   ranges = calc_parents(node_ranges);
   return true;
 }
@@ -84,7 +81,7 @@ void Polygon_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
     polygon->collect_nodes(into.attic_nodes, true);
   
   set< pair< Uint31_Index, Uint31_Index > > ranges;
-  get_ranges(rman, ranges);
+  get_compound_ranges(rman, ranges);
   
   // pre-process ways to reduce the load of the expensive filter
   filter_ways_by_ranges(into.ways, ranges);
@@ -108,9 +105,9 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
   //Process relations
   
   // Retrieve all nodes referred by the relations.
-  set< pair< Uint32_Index, Uint32_Index > > node_ranges;
-  get_ranges(rman, node_ranges);
-  map< Uint32_Index, vector< Node_Skeleton > > node_members
+  set< pair< Uint31_Index, Uint31_Index > > node_ranges;
+  get_node_ranges(rman, node_ranges);
+  map< Uint31_Index, vector< Node_Skeleton > > node_members
       = relation_node_members(&query, rman, into.relations, &node_ranges);
   
   // filter for those nodes that are in one of the areas
@@ -118,7 +115,7 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
   
   // Retrieve all ways referred by the relations.
   set< pair< Uint31_Index, Uint31_Index > > way_ranges;
-  get_ranges(rman, way_ranges);  
+  get_compound_ranges(rman, way_ranges);  
   map< Uint31_Index, vector< Way_Skeleton > > way_members_
       = relation_way_members(&query, rman, into.relations, &way_ranges);
   
@@ -137,7 +134,7 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
     //Process relations
   
     // Retrieve all nodes referred by the relations.
-    map< Uint32_Index, vector< Attic< Node_Skeleton > > > node_members
+    map< Uint31_Index, vector< Attic< Node_Skeleton > > > node_members
         = relation_node_members(&query, rman, into.attic_relations, timestamp, &node_ranges);
   
     // filter for those nodes that are in one of the areas
@@ -272,9 +269,9 @@ Polygon_Query_Statement::~Polygon_Query_Statement()
 }
 
 
-set< pair< Uint32_Index, Uint32_Index > > Polygon_Query_Statement::calc_ranges()
+set< pair< Uint31_Index, Uint31_Index > > Polygon_Query_Statement::calc_ranges()
 {
-  set< pair< Uint32_Index, Uint32_Index > > result;
+  set< pair< Uint31_Index, Uint31_Index > > result;
   for (vector< Aligned_Segment >::const_iterator it = segments.begin(); it != segments.end(); ++it)
     result.insert(make_pair(it->ll_upper_, it->ll_upper_ + 0x100));
   return result;
@@ -282,11 +279,11 @@ set< pair< Uint32_Index, Uint32_Index > > Polygon_Query_Statement::calc_ranges()
 
 
 template< typename Node_Skeleton >
-void Polygon_Query_Statement::collect_nodes(map< Uint32_Index, vector< Node_Skeleton > >& nodes,
+void Polygon_Query_Statement::collect_nodes(map< Uint31_Index, vector< Node_Skeleton > >& nodes,
                                             bool add_border)
 {
   vector< Aligned_Segment >::const_iterator area_it = segments.begin();
-  typename map< Uint32_Index, vector< Node_Skeleton > >::iterator nodes_it = nodes.begin();
+  typename map< Uint31_Index, vector< Node_Skeleton > >::iterator nodes_it = nodes.begin();
   
   uint32 current_idx(0);
   
@@ -488,9 +485,9 @@ void Polygon_Query_Statement::execute(Resource_Manager& rman)
   Set into;
   
   Polygon_Constraint constraint(*this);
-  set< pair< Uint32_Index, Uint32_Index > > ranges;
-  constraint.get_ranges(rman, ranges);
-  get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
+  set< pair< Uint31_Index, Uint31_Index > > ranges;
+  constraint.get_node_ranges(rman, ranges);
+  get_elements_by_id_from_db< Uint31_Index, Node_Skeleton >
       (into.nodes, into.attic_nodes,
        vector< Node::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
        *osm_base_settings().NODES, *attic_settings().NODES);  
