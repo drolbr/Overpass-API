@@ -56,6 +56,82 @@ struct Index_Collection
 };
 
 
+template< typename Object >
+struct Direct_Push_Vector
+{
+public:
+  Direct_Push_Vector() : base_memory(0), end_(0), size_(0), capacity(0) {}
+  ~Direct_Push_Vector() { clear(); }
+  
+  typedef const Object* const_iterator;
+  const_iterator begin() const { return base_memory; }
+  const_iterator end() const { return end_; }
+  
+  typedef Object* iterator;
+  iterator begin() { return base_memory; }
+  iterator end() { return end_; }
+  
+  Object& operator[](uint32 i) { return base_memory[i]; }
+  const Object& operator[](uint32 i) const { return base_memory[i]; }
+  
+  bool empty() const { return !size_; }
+  uint32 size() const { return size_; }
+  
+  void reserve(uint32 capacity);
+  void* push_back();
+  void clear();
+  
+private:
+  Direct_Push_Vector(const Direct_Push_Vector&);
+  Direct_Push_Vector& operator=(const Direct_Push_Vector&);
+  
+  Object* base_memory;
+  Object* end_;
+  uint32 size_;
+  uint32 capacity;
+};
+
+
+template< typename Object >
+void Direct_Push_Vector< Object >::reserve(uint32 new_capacity)
+{
+  if (capacity < new_capacity)
+  {
+    base_memory = (Object*) realloc(base_memory, sizeof(Object) * new_capacity);
+    end_ = base_memory + size_;
+    capacity = new_capacity;
+  }
+}
+
+
+template< typename Object >
+void* Direct_Push_Vector< Object >::push_back()
+{
+  if (size_ == capacity)
+    reserve(2 + 3*capacity/2);
+    
+  ++size_;
+  return end_++;
+}
+
+
+template< typename Object >
+void Direct_Push_Vector< Object >::clear()
+{
+  if (!size_)
+    return;
+  
+  for (iterator it = begin(); it != end(); ++it)
+    it->~Object();
+  
+  free(base_memory);
+  base_memory = 0;
+  end_ = 0;
+  size_ = 0;
+  capacity = 0;
+}
+
+
 template< class TIndex, class TObject >
 struct Block_Backend_Basic_Iterator
 {
@@ -67,7 +143,7 @@ struct Block_Backend_Basic_Iterator
   const TIndex& index();
   const TObject& object();
   
-  int read_whole_key_base(std::vector< TObject >& result_values);
+  int read_whole_key_base(Direct_Push_Vector< TObject >& result_values);
   void set_pos_to_next_index_pos();
   void set_pos_to_first_index();
   void set_pos_to_first_object();
@@ -103,7 +179,7 @@ struct Block_Backend_Flat_Iterator : Block_Backend_Basic_Iterator< TIndex, TObje
   bool operator==(const Block_Backend_Flat_Iterator& it) const;
   const Block_Backend_Flat_Iterator& operator++();
   
-  std::pair< int, TIndex > read_whole_key(std::vector< TObject >& result_values);
+  std::pair< int, TIndex > read_whole_key(Direct_Push_Vector< TObject >& result_values);
   void skip_to_index(const TIndex& index);
   
   const File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > >& file_blocks;
@@ -148,7 +224,7 @@ struct Block_Backend_Discrete_Iterator : Block_Backend_Basic_Iterator< TIndex, T
   bool operator==(const Block_Backend_Discrete_Iterator& it) const;
   const Block_Backend_Discrete_Iterator& operator++();
   
-  std::pair< int, TIndex > read_whole_key(std::vector< TObject >& result_values);
+  std::pair< int, TIndex > read_whole_key(Direct_Push_Vector< TObject >& result_values);
   TIndex skip_to_index(const TIndex& index);
   
   const File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > >& file_blocks;
@@ -188,7 +264,7 @@ struct Block_Backend_Range_Iterator : Block_Backend_Basic_Iterator< TIndex, TObj
   bool operator==(const Block_Backend_Range_Iterator& it) const;
   const Block_Backend_Range_Iterator& operator++();
   
-  std::pair< int, TIndex > read_whole_key(std::vector< TObject >& result_values);
+  std::pair< int, TIndex > read_whole_key(Direct_Push_Vector< TObject >& result_values);
   TIndex skip_to_index(const TIndex& index);
   
   const File_Blocks_& file_blocks;
@@ -289,9 +365,10 @@ const TObject& Block_Backend_Basic_Iterator< TIndex, TObject >::object()
 #include <iostream>
 #include <ctime>
 template< class TIndex, class TObject >
-int Block_Backend_Basic_Iterator< TIndex, TObject >::read_whole_key_base(std::vector< TObject >& result_values)
+int Block_Backend_Basic_Iterator< TIndex, TObject >::read_whole_key_base
+    (Direct_Push_Vector< TObject >& result_values)
 {
-	    
+    
 //   static double total_time = 0;
 //   static int message_time = 1;
 //   clock_t start = clock();
@@ -303,7 +380,8 @@ int Block_Backend_Basic_Iterator< TIndex, TObject >::read_whole_key_base(std::ve
     // a simple estimation that works at least for fixed size objects
   
   do
-    result_values.push_back(TObject((void*)(buffer.ptr + pos)));
+    new (result_values.push_back()) TObject((void*)(buffer.ptr + pos));
+    //result_values.push_back(TObject((void*)(buffer.ptr + pos)));
   while (advance());  
   
 //   total_time += double(clock() - start)/CLOCKS_PER_SEC;
@@ -433,7 +511,7 @@ const Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >&
 
 template< class TIndex, class TObject, class TIterator >
 std::pair< int, TIndex > Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >::read_whole_key
-    (std::vector< TObject >& result_values)
+    (Direct_Push_Vector< TObject >& result_values)
 {
   result_values.clear();
   TIndex current_idx = this->index();
@@ -603,7 +681,7 @@ const Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >&
 
 template< class TIndex, class TObject, class TIterator >
 std::pair< int, TIndex > Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::read_whole_key
-    (std::vector< TObject >& result_values)
+    (Direct_Push_Vector< TObject >& result_values)
 {
   result_values.clear();
   TIndex current_idx = this->index();
@@ -800,7 +878,7 @@ const Block_Backend_Range_Iterator< TIndex, TObject, TIterator >&
 
 template< class TIndex, class TObject, class TIterator >
 std::pair< int, TIndex > Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::read_whole_key
-    (std::vector< TObject >& result_values)
+    (Direct_Push_Vector< TObject >& result_values)
 {
 	    
 //   static double total_time = 0;

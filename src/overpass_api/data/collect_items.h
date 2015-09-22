@@ -317,7 +317,7 @@ void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
   
   Block_Backend_Discrete_Cached_Request< Index, Object, typename Container::const_iterator > cache
       (rman.get_transaction()->get_cache(file_properties), time(0), req.begin(), req.end());
-  std::pair< Index, const std::vector< Object >* > payload = cache.read_whole_key();
+  std::pair< Index, const Direct_Push_Vector< Object >* > payload = cache.read_whole_key();
   while (payload.second)
   {
     ++count;
@@ -329,7 +329,7 @@ void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
     }
     
     std::vector< Object >* values = 0;
-    for (typename std::vector< Object >::const_iterator it = payload.second->begin();
+    for (typename Direct_Push_Vector< Object >::const_iterator it = payload.second->begin();
 	 it != payload.second->end(); ++it)
     {
       if (predicate.match(*it))
@@ -366,11 +366,11 @@ void collect_items_discrete(Transaction& transaction,
 
   Block_Backend_Discrete_Cached_Request< Index, Object, typename Container::const_iterator > cache
       (transaction.get_cache(file_properties), time(0), req.begin(), req.end());
-  std::pair< Index, const std::vector< Object >* > payload = cache.read_whole_key();
+  std::pair< Index, const Direct_Push_Vector< Object >* > payload = cache.read_whole_key();
   while (payload.second)
   {
     std::vector< Object >* values = 0;
-    for (typename std::vector< Object >::const_iterator it = payload.second->begin();
+    for (typename Direct_Push_Vector< Object >::const_iterator it = payload.second->begin();
 	 it != payload.second->end(); ++it)
     {
       if (predicate.match(*it))
@@ -430,7 +430,7 @@ void collect_items_range(const Statement* stmt, Resource_Manager& rman,
   
   Block_Backend_Range_Cached_Request< Index, Object, typename Container::const_iterator > cache
       (rman.get_transaction()->get_cache(file_properties), time(0), req.begin(), req.end());
-  std::pair< Index, const std::vector< Object >* > payload = cache.read_whole_key();
+  std::pair< Index, const Direct_Push_Vector< Object >* > payload = cache.read_whole_key();
   while (payload.second)
   {
     ++count;
@@ -442,7 +442,7 @@ void collect_items_range(const Statement* stmt, Resource_Manager& rman,
     }
     
     std::vector< Object >* values = 0;
-    for (typename std::vector< Object >::const_iterator it = payload.second->begin();
+    for (typename Direct_Push_Vector< Object >::const_iterator it = payload.second->begin();
 	 it != payload.second->end(); ++it)
     {
       if (predicate.match(*it))

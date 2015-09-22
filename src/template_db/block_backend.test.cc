@@ -274,10 +274,10 @@ void key_vector_read_loop(Block_Backend< IntIndex, IntObject >& blocks, Iterator
   {
     std::cout<<"Index "<<it.index().val()<<": ";
     
-    std::vector< IntObject > values;
+    Direct_Push_Vector< IntObject > values;
     std::pair< int, IntIndex > meta = it.read_whole_key(values);
     
-    for (std::vector< IntObject >::const_iterator it2 = values.begin(); it2 != values.end(); ++it2)
+    for (Direct_Push_Vector< IntObject >::const_iterator it2 = values.begin(); it2 != values.end(); ++it2)
       std::cout<<it2->val()<<' ';
     std::cout<<"\nTotal size: "<<meta.first<<", next index: "<<meta.second.val()<<'\n';
   }
@@ -316,13 +316,14 @@ void read_test(unsigned int step, long long max_cache_size = 0)
     print_statistics(transaction);
     std::cout<<"Reading all blocks with cache ...\n";
     Block_Backend_Flat_Cached_Request< IntIndex, IntObject > flat_request(transaction.get_cache(tf), time(0));
-    std::pair< IntIndex, const std::vector< IntObject >* > payload = flat_request.read_whole_key();
+    std::pair< IntIndex, const Direct_Push_Vector< IntObject >* > payload = flat_request.read_whole_key();
     if (!payload.second)
       std::cout<<"[empty]\n";
     while (payload.second)
     {
       std::cout<<"Index "<<payload.first.val()<<": ";
-      for (std::vector< IntObject >::const_iterator it = payload.second->begin(); it != payload.second->end(); ++it)
+      for (Direct_Push_Vector< IntObject >::const_iterator it = payload.second->begin();
+	  it != payload.second->end(); ++it)
 	std::cout<<it->val()<<' ';
       std::cout<<'\n';
       payload = flat_request.read_whole_key();
@@ -355,7 +356,8 @@ void read_test(unsigned int step, long long max_cache_size = 0)
       while (payload.second)
       {
         std::cout<<"Index "<<payload.first.val()<<": ";
-        for (std::vector< IntObject >::const_iterator it = payload.second->begin(); it != payload.second->end(); ++it)
+        for (Direct_Push_Vector< IntObject >::const_iterator it = payload.second->begin();
+	    it != payload.second->end(); ++it)
 	  std::cout<<it->val()<<' ';
         std::cout<<'\n';
         payload = discrete_request.read_whole_key();
@@ -369,20 +371,21 @@ void read_test(unsigned int step, long long max_cache_size = 0)
       std::cout<<"Check whether exposed cache value block is sticky ...\n";
       Block_Backend_Discrete_Cached_Request< IntIndex, IntObject > discrete_request
           (transaction.get_cache(tf), time(0), index_list.begin(), index_list.end());
-      std::pair< IntIndex, const std::vector< IntObject >* > discrete_payload = discrete_request.read_whole_key();
+      std::pair< IntIndex, const Direct_Push_Vector< IntObject >* > discrete_payload =
+          discrete_request.read_whole_key();
       if (!discrete_payload.second)
         std::cout<<"[empty]\n";
       
       print_statistics(transaction);
       std::cout<<"Execute flat request to flush cache ...\n";
       Block_Backend_Flat_Cached_Request< IntIndex, IntObject > flat_request(transaction.get_cache(tf), time(0));
-      std::pair< IntIndex, const std::vector< IntObject >* > flat_payload = flat_request.read_whole_key();
+      std::pair< IntIndex, const Direct_Push_Vector< IntObject >* > flat_payload = flat_request.read_whole_key();
       if (!flat_payload.second)
         std::cout<<"[empty]\n";
       while (flat_payload.second)
       {
         std::cout<<"Index "<<flat_payload.first.val()<<": ";
-        for (std::vector< IntObject >::const_iterator it = flat_payload.second->begin();
+        for (Direct_Push_Vector< IntObject >::const_iterator it = flat_payload.second->begin();
 	     it != flat_payload.second->end(); ++it)
 	  std::cout<<it->val()<<' ';
         std::cout<<'\n';
@@ -393,7 +396,8 @@ void read_test(unsigned int step, long long max_cache_size = 0)
       
       Block_Backend_Discrete_Cached_Request< IntIndex, IntObject > discrete_request_2
           (transaction.get_cache(tf), time(0), index_list.begin(), index_list.end());
-      std::pair< IntIndex, const std::vector< IntObject >* > discrete_payload_2 = discrete_request_2.read_whole_key();
+      std::pair< IntIndex, const Direct_Push_Vector< IntObject >* > discrete_payload_2 =
+          discrete_request_2.read_whole_key();
       if (!discrete_payload_2.second)
         std::cout<<"[empty]\n";
       
@@ -403,7 +407,7 @@ void read_test(unsigned int step, long long max_cache_size = 0)
       while (discrete_payload.second)
       {
         std::cout<<"Index "<<discrete_payload.first.val()<<": ";
-        for (std::vector< IntObject >::const_iterator it = discrete_payload.second->begin();
+        for (Direct_Push_Vector< IntObject >::const_iterator it = discrete_payload.second->begin();
 	     it != discrete_payload.second->end(); ++it)
 	  std::cout<<it->val()<<' ';
         std::cout<<'\n';
@@ -435,7 +439,8 @@ void read_test(unsigned int step, long long max_cache_size = 0)
       while (payload.second)
       {
         std::cout<<"Index "<<payload.first.val()<<": ";
-        for (std::vector< IntObject >::const_iterator it = payload.second->begin(); it != payload.second->end(); ++it)
+        for (Direct_Push_Vector< IntObject >::const_iterator it = payload.second->begin();
+	    it != payload.second->end(); ++it)
 	  std::cout<<it->val()<<' ';
         std::cout<<'\n';
         payload = discrete_request.read_whole_key();
@@ -474,7 +479,8 @@ void read_test(unsigned int step, long long max_cache_size = 0)
       while (payload.second)
       {
         std::cout<<"Index "<<payload.first.val()<<": ";
-        for (std::vector< IntObject >::const_iterator it = payload.second->begin(); it != payload.second->end(); ++it)
+        for (Direct_Push_Vector< IntObject >::const_iterator it = payload.second->begin();
+	    it != payload.second->end(); ++it)
 	  std::cout<<it->val()<<' ';
         std::cout<<'\n';
         payload = range_request.read_whole_key();
@@ -506,7 +512,8 @@ void read_test(unsigned int step, long long max_cache_size = 0)
       while (payload.second)
       {
         std::cout<<"Index "<<payload.first.val()<<": ";
-        for (std::vector< IntObject >::const_iterator it = payload.second->begin(); it != payload.second->end(); ++it)
+        for (Direct_Push_Vector< IntObject >::const_iterator it = payload.second->begin();
+	    it != payload.second->end(); ++it)
 	  std::cout<<it->val()<<' ';
         std::cout<<'\n';
         payload = discrete_request.read_whole_key();
@@ -545,7 +552,8 @@ void read_test(unsigned int step, long long max_cache_size = 0)
       while (payload.second)
       {
         std::cout<<"Index "<<payload.first.val()<<": ";
-        for (std::vector< IntObject >::const_iterator it = payload.second->begin(); it != payload.second->end(); ++it)
+        for (Direct_Push_Vector< IntObject >::const_iterator it = payload.second->begin();
+	    it != payload.second->end(); ++it)
 	  std::cout<<it->val()<<' ';
         std::cout<<'\n';
         payload = range_request.read_whole_key();
@@ -619,7 +627,8 @@ void read_test(unsigned int step, long long max_cache_size = 0)
       while (payload.second)
       {
         std::cout<<"Index "<<payload.first.val()<<": ";
-        for (std::vector< IntObject >::const_iterator it = payload.second->begin(); it != payload.second->end(); ++it)
+        for (Direct_Push_Vector< IntObject >::const_iterator it = payload.second->begin();
+	    it != payload.second->end(); ++it)
 	  std::cout<<it->val()<<' ';
         std::cout<<'\n';
         payload = range_request.read_whole_key();
