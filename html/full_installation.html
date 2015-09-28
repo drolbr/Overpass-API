@@ -37,8 +37,8 @@
 
 <h2><a name="install">Software Installation</a></h2>
 
-<p>You need to choose a directory where you put the executable files. You can later move them to a different directory. But the default choice of the installation program <em>automake</em>, /usr/bin, requires root permissions, although no root permissions are really necessary to run the program. I suggest subdirectories of the source code directory: this can be reached with &quot;`pwd`&quot;. To configure this output directory and detect necessary adaptions of your system, run in the <em>build</em> subdirectory:</p>
-<pre>../src/configure --prefix=&quot;`pwd`&quot;</pre>
+<p>You need to choose a directory where you put the executable files. You can later move them to a different directory. But the default choice of the installation program <em>automake</em>, /usr/bin, requires root permissions, although no root permissions are really necessary to run the program. I suggest subdirectories of the source code directory: this can be achieved with &quot;`pwd`&quot;. To configure this output directory and detect necessary adaptions of your system, run:</p>
+<pre>./configure --prefix=&quot;`pwd`&quot;</pre>
 
 <p>Generate the executables:</p>
 <pre>make CXXFLAGS=&quot;-O3&quot;</pre>
@@ -50,11 +50,11 @@
 
 <p>Since version 0.6.98, the database can be cloned from an exisiting instance rather than created from scratch. This only takes 4 to 8 hours in comparison to 24 to 48 hours for an update from the planet file. Note that this feature is still rather experimental - please report any problems by eMail to me (roland.olbricht at gmx.de). If you don't want the entire planet or prefer a manually planet import for some other reason, use the <a href="#startup">manual import</a> instead.</p>
 
-<p>Download a clone of the database at <em>overpass-api.de</em> with the command:</p>
-<pre>../bin/download_clone.sh --source=http://overpass-api.de/api/ --db-dir=&quot;db/&quot; --meta=no</pre>
+<p>Download a clone of the database at <em>dev.overpass-api.de</em> with the command:</p>
+<pre>bin/download_clone.sh --source=http://dev.overpass-api.de/api_drolbr/ --db-dir=&quot;db/&quot; --meta=no</pre>
 <p>or</p>
-<pre><strong>nohup</strong> ../bin/download_clone.sh --source=http://dev.overpass-api.de/api_drolbr/ --db-dir=&quot;db/&quot; --meta=no <strong>&amp;</strong></pre>
-<p>If you want meta data, use <em>--meta=yes</em> instead of <em>--meta=no</em>. This downloads about 30 GB (50 GB with meta data) in several compressed files and uncompresses them to a ready-to-use database.</p>
+<pre><strong>nohup</strong> bin/download_clone.sh --source=http://dev.overpass-api.de/api_drolbr/ --db-dir=&quot;db/&quot; --meta=no <strong>&amp;</strong></pre>
+<p>If you want meta data, use <em>--meta=yes</em> instead of <em>--meta=no</em>. If you want attic data (since 2012) then use <em>--meta=attic</em>. This downloads about 40 GB (70 GB with meta data, 170 GB with attic data) in several compressed files and uncompresses them to a ready-to-use database.</p>
 
 <p>Now you can proceed with <a href="#minute_updates">minute updates</a>.</p>
 
@@ -63,13 +63,13 @@
 
 <p>The standard use case is to set up the database with the whole planet data and including meta data. If you haven't downloaded an <a href="http://wiki.openstreetmap.org/wiki/Planet.osm">OSM XML planet file</a> yet, you can fetch one for example with:</p>
 <pre>wget -O planet.osm.bz2 &quot;http://ftp.heanet.ie/mirrors/openstreetmap.org/planet-latest.osm.bz2&quot;</pre>
-<p>This file has a size of more than 20 GB. Thus, depending on your internet connection, it may take between 4 hours (fastest possible) and 22 hours (with 2 MBit) to download the file. If you are not working on your local machine, you may want the download to continue even if you logout. Use <em>nohup</em> for this:</p>
+<p>This file has a size of about 30 GB. Thus, depending on your internet connection, it may take between 4 hours (fastest possible) and 22 hours (with 2 MBit) to download the file. If you are not working on your local machine, you may want the download to continue even if you logout. Use <em>nohup</em> for this:</p>
 <pre><strong>nohup</strong> wget -O planet.osm.bz2 &quot;http://ftp.heanet.ie/mirrors/openstreetmap.org/planet-latest.osm.bz2&quot; <strong>&amp;</strong></pre>
 
 <p>Once you have the file, you can start the import. The import again may take up to 48 hours:</p>
-<pre>../bin/init_osm3s.sh planet.osm.bz2 &quot;db/&quot; &quot;../&quot; --meta</pre>
+<pre>bin/init_osm3s.sh planet.osm.bz2 &quot;db/&quot; &quot;../&quot; --meta</pre>
 <p>or</p>
-<pre>nohup ../src/bin/init_osm3s.sh planet.osm.bz2 &quot;db/&quot; &quot;./&quot; --meta &amp;</pre>
+<pre>nohup bin/init_osm3s.sh planet.osm.bz2 &quot;db/&quot; &quot;./&quot; --meta &amp;</pre>
 <p>You may need to adapt the parameters: The first parameter <em>planet.osm.bz2</em> is the osm file to process, the second parameter <em>&quot;db/&quot;</em> is the directory where the database should go to, and the third parameter <em>&quot;./&quot;</em> is the base directory of the executables, i.e. there must exist <em>update_database</em> in the subdirectory <em>bin</em> of the location where the third parameter points to.</p>
 
 <p>You can also use any other osm file. If you want to save half of the hard disk space and reduce the startup and update time by up to two thirds, you can omit meta data by omitting the <em>--meta</em> parameter.</p>
@@ -86,7 +86,7 @@
 <p>(without <em>--meta</em> if you have not processed meta data)</p>
 <p>The dispatcher has been successfully started if you find a line &quot;<em>Dispatcher just started.</em>&quot; with correct date (in UTC) in the file <em>transactions.log</em> in the database directory.</p>
 
-<pre>nohup bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/minute-replicate/&quot; &quot;diffs/&quot; &amp;</pre>
+<pre>nohup bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/replication/minute/&quot; &quot;diffs/&quot; &amp;</pre>
 <p>This should start to fill the directory <em>&quot;diffs/&quot;</em> with subdirectories which have three digits as name and finally contain files ending in <em>osc.gz</em> and <em>state.txt</em>.</p>
 
 <pre>nohup bin/apply_osc_to_db.sh &quot;db/&quot; &quot;diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
