@@ -362,17 +362,11 @@ const TObject& Block_Backend_Basic_Iterator< TIndex, TObject >::object()
 }
 
 
-#include <iostream>
-#include <ctime>
 template< class TIndex, class TObject >
 int Block_Backend_Basic_Iterator< TIndex, TObject >::read_whole_key_base
     (Direct_Push_Vector< TObject >& result_values)
 {
     
-//   static double total_time = 0;
-//   static int message_time = 1;
-//   clock_t start = clock();
-  
   int result_size = *current_idx_pos - pos;
   
   if (result_values.empty() && result_size > 0)
@@ -381,15 +375,7 @@ int Block_Backend_Basic_Iterator< TIndex, TObject >::read_whole_key_base
   
   do
     new (result_values.push_back()) TObject((void*)(buffer.ptr + pos));
-    //result_values.push_back(TObject((void*)(buffer.ptr + pos)));
   while (advance());  
-  
-//   total_time += double(clock() - start)/CLOCKS_PER_SEC;
-//   if (total_time > message_time)
-//   {
-//     std::cerr<<"Time elapsed a: "<<total_time<<'\n';
-//     ++message_time;
-//   }
   
   return result_size;
 }
