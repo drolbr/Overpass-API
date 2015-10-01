@@ -38,25 +38,6 @@
 #include <vector>
 
 
-void copy_file(const std::string& source, const std::string& dest)
-{
-  if (!file_exists(source))
-    return;
-  
-  Raw_File source_file(source, O_RDONLY, S_666, "Dispatcher:1");
-  uint64 size = source_file.size("Dispatcher:2");
-  Raw_File dest_file(dest, O_RDWR|O_CREAT, S_666, "Dispatcher:3");
-  dest_file.resize(size, "Dispatcher:4");
-  
-  Void_Pointer< uint8 > buf(64*1024);
-  while (size > 0)
-  {
-    size = read(source_file.fd(), buf.ptr, 64*1024);
-    dest_file.write(buf.ptr, size, "Dispatcher:5");
-  }
-}
-
-
 std::string getcwd()
 {
   int size = 256;

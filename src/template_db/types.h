@@ -219,4 +219,7 @@ int& global_read_counter();
 void millisleep(uint32 milliseconds);
 
 
+void copy_file(const std::string& source, const std::string& dest);
+
+
 #endif

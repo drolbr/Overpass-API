@@ -63,9 +63,6 @@ private:
 };
 
 
-void copy_file(const std::string& source, const std::string& dest);
-
-
 std::string getcwd();
 
 
